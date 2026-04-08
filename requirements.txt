@@ -1,0 +1,4 @@
+requests
+stripe
+python-dotenv
+pyyaml
