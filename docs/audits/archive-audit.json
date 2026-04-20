@@ -1,0 +1,3719 @@
+{
+  "generated_at": "2026-04-20T00:06:47.156837Z",
+  "total_issues": 344,
+  "issues_with_findings": 64,
+  "reports": [
+    {
+      "number": 1,
+      "path": "_site/archive/1/index.html",
+      "subject": "Weekly Thing for May 13, 2017",
+      "findings": []
+    },
+    {
+      "number": 2,
+      "path": "_site/archive/2/index.html",
+      "subject": "Weekly Thing for May 20, 2017",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "network error: ConnectError: [Errno 8] nodename nor servname provided, or not known",
+          "snippet": "http://gallery.tinyletterapp.com/178527e39f3fdfbc6cb90d7ad4c92f8cc7481ff2/images/25192a65-96d3-4b97-ab6b-d324e8bf8d42.png",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "path": "_site/archive/3/index.html",
+      "subject": "Weekly Thing for May 27, 2017",
+      "findings": []
+    },
+    {
+      "number": 4,
+      "path": "_site/archive/4/index.html",
+      "subject": "Weekly Thing for June 3, 2017",
+      "findings": []
+    },
+    {
+      "number": 5,
+      "path": "_site/archive/5/index.html",
+      "subject": "Weekly Thing for June 10, 2017",
+      "findings": []
+    },
+    {
+      "number": 6,
+      "path": "_site/archive/6/index.html",
+      "subject": "Weekly Thing for June 17, 2017",
+      "findings": []
+    },
+    {
+      "number": 7,
+      "path": "_site/archive/7/index.html",
+      "subject": "Weekly Thing for June 24, 2017",
+      "findings": []
+    },
+    {
+      "number": 8,
+      "path": "_site/archive/8/index.html",
+      "subject": "Weekly Thing for July 1, 2017",
+      "findings": []
+    },
+    {
+      "number": 9,
+      "path": "_site/archive/9/index.html",
+      "subject": "Weekly Thing for July 8, 2017",
+      "findings": []
+    },
+    {
+      "number": 10,
+      "path": "_site/archive/10/index.html",
+      "subject": "Weekly Thing for July 15, 2017",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 415",
+          "snippet": "https://assets.buttondown.email/internet-archive.png?AWSAccessKeyId=AKIAJEXF6S6TCOKT7N3Q&Signature=DC32nL3%2F5W9EgTWxWcCPp55TF94%3D&Expires…",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 11,
+      "path": "_site/archive/11/index.html",
+      "subject": "Weekly Thing for July 22, 2017",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 415",
+          "snippet": "https://assets.buttondown.email/Lets-Encrypt.png?AWSAccessKeyId=AKIAJEXF6S6TCOKT7N3Q&Signature=38GtC7f5JibrUizvcGLgYvObAlg%3D&Expires=17075…",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 12,
+      "path": "_site/archive/12/index.html",
+      "subject": "Weekly Thing for July 29, 2017",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 415",
+          "snippet": "https://assets.buttondown.email/wikitribune.png?AWSAccessKeyId=AKIAJEXF6S6TCOKT7N3Q&Signature=5wh9BQPQOOjWMV03EtZW3I9gmaw%3D&Expires=170755…",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 13,
+      "path": "_site/archive/13/index.html",
+      "subject": "Weekly Thing for August 5, 2017",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 415",
+          "snippet": "https://assets.buttondown.email/eff.png?AWSAccessKeyId=AKIAJEXF6S6TCOKT7N3Q&Signature=lL2eoakEQfEm5MsbmxupmyCNpJw%3D&Expires=1707555883",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 14,
+      "path": "_site/archive/14/index.html",
+      "subject": "Weekly Thing for August 12, 2017",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 415",
+          "snippet": "https://assets.buttondown.email/Wikimedia_Foundation_logo.png?AWSAccessKeyId=AKIAJEXF6S6TCOKT7N3Q&Signature=9jZCP1IxiEk1k4NaedoLNOrGYYM%3D&…",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 15,
+      "path": "_site/archive/15/index.html",
+      "subject": "Weekly Thing for August 19, 2017",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 415",
+          "snippet": "https://assets.buttondown.email/eff.png?AWSAccessKeyId=AKIAJEXF6S6TCOKT7N3Q&Signature=M7t0aPh%2Fx95EmGoeg6LdrIVj2hQ%3D&Expires=1707556418",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 16,
+      "path": "_site/archive/16/index.html",
+      "subject": "Weekly Thing for August 26, 2017",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 415",
+          "snippet": "https://assets.buttondown.email/creative-commons.png?AWSAccessKeyId=AKIAJEXF6S6TCOKT7N3Q&Signature=J%2BQ5JdRiEGPjh69GPTmD3CUU7ZU%3D&Expires…",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 17,
+      "path": "_site/archive/17/index.html",
+      "subject": "Weekly Thing for September 2, 2017",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 415",
+          "snippet": "https://assets.buttondown.email/Minnestar.png?AWSAccessKeyId=AKIAJEXF6S6TCOKT7N3Q&Signature=eUOodusAi8sZmdiM79h8sSUgRNY%3D&Expires=17075569…",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 18,
+      "path": "_site/archive/18/index.html",
+      "subject": "Weekly Thing for September 9, 2017",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 415",
+          "snippet": "https://assets.buttondown.email/creative-commons.png?AWSAccessKeyId=AKIAJEXF6S6TCOKT7N3Q&Signature=FKU02xqCU7MP8UJAdtv%2BWzLrwOk%3D&Expires…",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 19,
+      "path": "_site/archive/19/index.html",
+      "subject": "Weekly Thing for September 16, 2017",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 415",
+          "snippet": "https://assets.buttondown.email/eff.png?AWSAccessKeyId=AKIAJEXF6S6TCOKT7N3Q&Signature=Svi%2FXVP%2FXfd5T0OGxWLVYaLNe6s%3D&Expires=1707557505",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 20,
+      "path": "_site/archive/20/index.html",
+      "subject": "Weekly Thing for September 23, 2017",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 415",
+          "snippet": "https://assets.buttondown.email/eff.png?AWSAccessKeyId=AKIAJEXF6S6TCOKT7N3Q&Signature=y9qu57DmH%2Frxr5zas%2BqFSc129yo%3D&Expires=1707557735",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 21,
+      "path": "_site/archive/21/index.html",
+      "subject": "Weekly Thing for September 30, 2017",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 415",
+          "snippet": "https://assets.buttondown.email/Lets-Encrypt.png?AWSAccessKeyId=AKIAJEXF6S6TCOKT7N3Q&Signature=hUSClBOkm0pHCspROkAUjrZ%2BHL4%3D&Expires=170…",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 22,
+      "path": "_site/archive/22/index.html",
+      "subject": "Weekly Thing for October 7, 2017",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 415",
+          "snippet": "https://assets.buttondown.email/hack-the-gap.png?AWSAccessKeyId=AKIAJEXF6S6TCOKT7N3Q&Signature=jQHY%2F9plJZ0yxkjgQdb%2Bh3lxanY%3D&Expires=1…",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 23,
+      "path": "_site/archive/23/index.html",
+      "subject": "Weekly Thing for October 14, 2017",
+      "findings": []
+    },
+    {
+      "number": 24,
+      "path": "_site/archive/24/index.html",
+      "subject": "Weekly Thing for October 21, 2017",
+      "findings": []
+    },
+    {
+      "number": 25,
+      "path": "_site/archive/25/index.html",
+      "subject": "Weekly Thing for October 28, 2017",
+      "findings": []
+    },
+    {
+      "number": 26,
+      "path": "_site/archive/26/index.html",
+      "subject": "Weekly Thing for November 4, 2017",
+      "findings": []
+    },
+    {
+      "number": 27,
+      "path": "_site/archive/27/index.html",
+      "subject": "Weekly Thing for November 11, 2017",
+      "findings": []
+    },
+    {
+      "number": 28,
+      "path": "_site/archive/28/index.html",
+      "subject": "Weekly Thing for November 18, 2017",
+      "findings": []
+    },
+    {
+      "number": 29,
+      "path": "_site/archive/29/index.html",
+      "subject": "Weekly Thing for November 25, 2017",
+      "findings": []
+    },
+    {
+      "number": 30,
+      "path": "_site/archive/30/index.html",
+      "subject": "Weekly Thing for December 2, 2017",
+      "findings": []
+    },
+    {
+      "number": 31,
+      "path": "_site/archive/31/index.html",
+      "subject": "Weekly Thing for December 9, 2017",
+      "findings": []
+    },
+    {
+      "number": 32,
+      "path": "_site/archive/32/index.html",
+      "subject": "Weekly Thing for December 16, 2017",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Brandi Carlile - The Mother (Live) - YouTube",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "10 Reasons Why We Don’t Stick to Things : zen habits",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Jay Rosen: This is what a news organization built on reader trust looks like » Nieman Journalism Lab",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Universal Basic Income explained",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Some thoughts on social networks | mathew’s web site",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "How Duterte Turned Facebook Into a Weapon—With Help From Facebook - Bloomberg",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Learning with Privacy at Scale - Apple",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Please invest responsibly — an important message from the Coinbase team",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Calm Technology",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "SQS & Lambda: teaming up – IOpipe Blog",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Maker vs. Manager: How Your Schedule Can Make or Break You",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Time Well Spent",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "SEC.gov | Statement on Cryptocurrencies and Initial Coin Offerings",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Even more sieve extensions | FastMail Blog",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Lua for Programmers Part 1: Language Essentials",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Millennials Are Screwed - The Huffington Post",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "You Give Up a Lot of Privacy Just Opening Emails. Here’s How to Stop It | WIRED",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "The FCC just killed net neutrality - The Verge",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Say Farewell to Putty as Microsoft adds an OpenSSH Client to Windows 10",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Popular Destinations rerouted to Russia | BGPmon",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Black Friday & Cyber Monday Performance Report 2017 - Catchpoint’s Blog - Web Performance Monitoring",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Moment – Automatically track your and your family’s daily iPhone and iPad use",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "In digital innovation era, this technologist focuses on empathy in tech - SiliconANGLE",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Google sent more traffic to publishers than Facebook in 2017 - Recode",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Lua Records — PowerDNS Recursor 4.1.1-pre documentation",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Former Facebook exec says social media is ripping apart society - The Verge",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Book: Why We Sleep - Feld Thoughts",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Getting Things Done® | Get a Grip on Your Process, or Give It Up",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "AWS Lambda in Production: State of Serverless Report 2017",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "8 emerging trends in container orchestration",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "By the Time I Get to Phoenix - Wikipedia",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Freedom ™",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 33,
+      "path": "_site/archive/33/index.html",
+      "subject": "Weekly Thing for December 23, 2017",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Dozens of Companies Are Using Facebook to Exclude Older… — ProPublica",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Equifinality - Wikipedia",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "GTD Podcast Episode #35 – The Case For Capturing",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "My Must-Have iOS Apps, 2017 Edition – MacStories",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Monitoring FastMail with Prometheus | FastMail Blog",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "AWS re:Invent Videos",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Mehdi Cherti – Improving my productivity using Pomodoro: takeaways after 2 years of practice",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Let’s bury the hustle – Signal v. Noise",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "10 years of professional blogging - what I’ve learned at andrewchen",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Once, We Were Explorers – Rhoneisms",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "boardgame.io",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Tips for in-house teams in a free market software culture",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Facebook admits it poses mental health risk – but says using site more can help | Technology | The Guardian",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "A shell command to create JSON: jo",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "If You Aspire to Be a Great Leader, Be Present",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Are Men Just ‘Babies’ When They Get the Flu? Maybe Not – WebMD",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Why Lightroom CC Is a Big Step Up from Apple’s Photos - TidBITS",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 34,
+      "path": "_site/archive/34/index.html",
+      "subject": "Weekly Thing for December 30, 2017",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "What apps make you better?",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "The Lowertown Line - Twin Cities PBS",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "What work really is, or 17 things I learned about productivity in 2017 - a n n i e m u e l l e r",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "A pattern language for microservices",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Checklist for Plain Language | plainlanguage.gov",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "2018 and the Internet: our predictions",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "OpenEvents",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Daring Fireball: The iPhone X",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "One Year with Apple AirPods | Beardy Guy Musings",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "One-on-one meetings are underrated, whereas group meetings waste time | Smash Company",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "How to Write Articles and Essays Quickly and Expertly ~ Stephen Downes",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Lanier’s Social Medium Ultimatum | James Shelley",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Computer latency: 1977-2017",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Ten years in, nobody has come up with a use for blockchain",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "How to be a 10x engineer: Business value for technologists – Striving for greatness",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Santa Facts —xkcd.com",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "A long time ago, in a Glasgow far, far, away… – Three Letter Acronym",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Zines are the future of media",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "The best board games of 2017 | Ars Technica",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Google Maps’s Moat",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Snowden-Backed App ‘Haven’ Turns Your Phone Into a Home Security System | WIRED",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Foo Fighters: Christmas Medley (Live) - SNL - YouTube",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Tetris: The Games People Play",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 35,
+      "path": "_site/archive/35/index.html",
+      "subject": "Weekly Thing for January 6, 2018",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Prometheus Blog Series (Part 1): Metrics and Labels",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Dan Harris Knows All Your Excuses for Not Meditating - Note to Self - WNYC",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "‘Kernel memory leaking’ Intel processor design flaw forces Linux, Windows redesign • The Register",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Simulating Chutes & Ladders in Python | Pythonic Perambulations",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "How cloud speed helps SQL Server DBAs | Blog | Microsoft Azure",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "2017 in Numbers • Aaron Parecki",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Ad targeters are pulling data from your browser’s password manager - The Verge",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Spamnesty - Home",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Sense: Track energy use in real time",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Encryption Lava Lamps – San Francisco, California - Atlas Obscura",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Best of 2017: iOS Apps - BrettTerpstra.com",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "To Serve Man, with Software",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Life Stack – AnomaLily.net",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Checklist-Checklist: 🌈 A Curated List of Checklists ✔︎✔︎",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "IKEA effect - Wikipedia",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Monitoring Home Power Consumption for less than $25",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 36,
+      "path": "_site/archive/36/index.html",
+      "subject": "Weekly Thing for January 13, 2018",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "SPS Tower has a nice ring to it | SPS Commerce",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Rightsizing Infrastructure Can Cut Costs 36% – AWS Enterprise Collection – Medium",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Apache Airflow (incubating) Documentation — Airflow Documentation",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Tesla Model 3: The First Serious Review - The Drive",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "xkcd: Meltdown and Spectre",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "The T2 chip makes the iMac Pro the start of a Mac revolution | Macworld",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "The Tesla Model 3 Makes The Future Feel Normal",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Show your work: The new terms for trust in journalism - PressThink",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Learning to operate Kubernetes reliably",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Birdcage liners – Joel on Software",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Legends of the Ancient Web",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "No tracking, no revenue: Apple’s privacy feature costs ad companies millions | Technology | The Guardian",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Cory Doctorow: Persuasion, Adaptation, and the Arms Race for Your Attention – Locus Online",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "The Strange Brands in Your Instagram Feed - The Atlantic",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "One Player’s 21,000 Hole Quest to Beat the Seemingly Endless ‘Desert Golf’ - Waypoint",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Get Slack-style emoji everywhere with Rocket",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Feedbin is the Best Way to Read Twitter",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "This Is Water - David Foster Wallace Commencement Speech - YouTube",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "📙 Emojipedia — 😃 Home of Emoji Meanings 💁👌🎍😍",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "California Legislature to Hear EFF’s License Plate Cover Bill | Electronic Frontier Foundation",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Book: Principles by Ray Dalio - Feld Thoughts",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Q&A: Edward Snowden on rights, privacy, secrets and leaks in conversation with Jimmy Wales – Wikitribune",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "10% Happier: How I Tamed the Voice in My Head, Reduced Stress Without Losing My Edge, and Found Self-Help That Actually Works–A True Story",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Headspace: Meditation",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 37,
+      "path": "_site/archive/37/index.html",
+      "subject": "Weekly Thing for January 20, 2018",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "James Clear: There are 7 minutes/day you need to master to be productive - RescueTime",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Bootstrap 4 · Bootstrap",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "HEY META - Website Meta Tag Check",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Nintendo Labo Official Site – Trailer, product information",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "My Raspberry Pi Kubernetes Cluster",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Here’s The Vikings’ Unbelievable Last-Second, Game-Winning Touchdown Over The Saints - Digg",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Datasette Publish: a web app for publishing CSV files as an online database",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "افكار و احلام » Two weeks with Micro.blog",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Share to Micro.blog",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Open source container-native workflow engine for Kubernetes | Argo",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Comparing Kubernetes to Pivotal Cloud Foundry — A Developer’s Perspective",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "The Internet of Things’ Dangerous Future: Bruce Schneier",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Rise - Nutrition & Weight Loss Coach",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 38,
+      "path": "_site/archive/38/index.html",
+      "subject": "Weekly Thing for January 27, 2018",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "2017 in Meetings",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "2017 in Links",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "HomePod vs. Amazon Echo vs. Google Home Max vs. Sonos One: Speaker showdown | iMore",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Coming in 2018: OmniFocus 3 for Mac & iOS —Learn OmniFocus",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "2018 Developer Skills Report by HackerRank",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "‘Never get high on your own supply’ – why social media bosses don’t use social media | Media | The Guardian",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Growing apart and losing touch is human and healthy",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Daring Fireball: Apple Previews iOS 11.3",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Amazon Go and the Future – Stratechery by Ben Thompson",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "ActivityPub",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Zstandard - Real-time data compression algorithm",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "BeyondCorp: How Google Ditched VPNs for Remote Employee Access - The New Stack",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Privacy, simplified.",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "The Best Productivity and GTD App for Mac, iPhone, and iPad",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Personal Data Representatives: An Idea – Tom Steinberg – Medium",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Settlers of Catan and the Invasion of the German Board Games - The Atlantic",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "ARK Invest - Big Ideas 2018 - Disruptive Innovation",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Coraline Ada Ehmke — Not Applicable: What Your Job Post Is Really Saying",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Facebook’s Motivations – Stratechery by Ben Thompson",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "JS things I never knew existed",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "CES 2018: Real Advances, Real Progress, Real Questions",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "The hidden costs of serverless – A Cloud Guru",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Google’s Fuchsia OS on the Pixelbook: It works! It actually works! | Ars Technica",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Craft Beer Is the Strangest, Happiest Economic Story in America - The Atlantic",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Satan Makes His Pitch to Amazon.com - McSweeney’s Internet Tendency",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "The techlash against Amazon, Facebook and Google—and what they can do - A memo to big tech",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "The iOS Economy, Updated | Asymco",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "The Fall of Travis Kalanick Was a Lot Weirder and Darker Than You Thought - Bloomberg",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Die With Me",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "xkcd: The End of the Rainbow",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Toggl",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 39,
+      "path": "_site/archive/39/index.html",
+      "subject": "Weekly Thing for February 3, 2018",
+      "findings": []
+    },
+    {
+      "number": 40,
+      "path": "_site/archive/40/index.html",
+      "subject": "Weekly Thing for February 10, 2018",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Identify Addictive Application Patterns",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Forestry.io",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 41,
+      "path": "_site/archive/41/index.html",
+      "subject": "Weekly Thing for February 17, 2018",
+      "findings": []
+    },
+    {
+      "number": 42,
+      "path": "_site/archive/42/index.html",
+      "subject": "Weekly Thing #42 / Feb 24, 2018",
+      "findings": []
+    },
+    {
+      "number": 43,
+      "path": "_site/archive/43/index.html",
+      "subject": "Weekly Thing #43 / Mar 3, 2018",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[Thinking inside a large box]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 44,
+      "path": "_site/archive/44/index.html",
+      "subject": "Weekly Thing #44 / Mar 10, 2018",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[University Name]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 45,
+      "path": "_site/archive/45/index.html",
+      "subject": "Weekly Thing #45 / Mar 17, 2018",
+      "findings": []
+    },
+    {
+      "number": 46,
+      "path": "_site/archive/46/index.html",
+      "subject": "Weekly Thing #46 / Mar 24, 2018",
+      "findings": []
+    },
+    {
+      "number": 47,
+      "path": "_site/archive/47/index.html",
+      "subject": "Weekly Thing #47 / Mar 31, 2018",
+      "findings": []
+    },
+    {
+      "number": 48,
+      "path": "_site/archive/48/index.html",
+      "subject": "Weekly Thing #48 / Apr 7, 2018",
+      "findings": []
+    },
+    {
+      "number": 49,
+      "path": "_site/archive/49/index.html",
+      "subject": "Weekly Thing #49 / Apr 14, 2018",
+      "findings": []
+    },
+    {
+      "number": 50,
+      "path": "_site/archive/50/index.html",
+      "subject": "Weekly Thing #50 / Apr 21, 2018",
+      "findings": []
+    },
+    {
+      "number": 51,
+      "path": "_site/archive/51/index.html",
+      "subject": "Weekly Thing #51 / Apr 28, 2018",
+      "findings": []
+    },
+    {
+      "number": 52,
+      "path": "_site/archive/52/index.html",
+      "subject": "Weekly Thing #52 / May 5, 2018",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[video]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 53,
+      "path": "_site/archive/53/index.html",
+      "subject": "Weekly Thing #53 / May 12, 2018",
+      "findings": []
+    },
+    {
+      "number": 54,
+      "path": "_site/archive/54/index.html",
+      "subject": "Weekly Thing #54 / May 19, 2018",
+      "findings": []
+    },
+    {
+      "number": 55,
+      "path": "_site/archive/55/index.html",
+      "subject": "Weekly Thing #55 / May 26, 2018",
+      "findings": []
+    },
+    {
+      "number": 56,
+      "path": "_site/archive/56/index.html",
+      "subject": "Weekly Thing #56 / Jun 2, 2018",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Humble Leadership Profile",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 57,
+      "path": "_site/archive/57/index.html",
+      "subject": "Weekly Thing #57 / Jun 9, 2018",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "DevOps Minneapolis: Changing the Enterprise Session",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 58,
+      "path": "_site/archive/58/index.html",
+      "subject": "Weekly Thing #58 / Jun 16, 2018",
+      "findings": []
+    },
+    {
+      "number": 59,
+      "path": "_site/archive/59/index.html",
+      "subject": "Weekly Thing #59 / Jun 23, 2018",
+      "findings": []
+    },
+    {
+      "number": 60,
+      "path": "_site/archive/60/index.html",
+      "subject": "Weekly Thing #60 / Jun 30, 2018",
+      "findings": []
+    },
+    {
+      "number": 61,
+      "path": "_site/archive/61/index.html",
+      "subject": "Weekly Thing #61 / Jul 7, 2018",
+      "findings": []
+    },
+    {
+      "number": 62,
+      "path": "_site/archive/62/index.html",
+      "subject": "Weekly Thing #62 / Jul 14, 2018",
+      "findings": []
+    },
+    {
+      "number": 63,
+      "path": "_site/archive/63/index.html",
+      "subject": "Weekly Thing #63 / Jul 21, 2018",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (3 occurrences)",
+          "snippet": "[LWN.net]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 64,
+      "path": "_site/archive/64/index.html",
+      "subject": "Weekly Thing #64 / Jul 28, 2018",
+      "findings": []
+    },
+    {
+      "number": 65,
+      "path": "_site/archive/65/index.html",
+      "subject": "Weekly Thing #65 / Aug 4, 2018",
+      "findings": []
+    },
+    {
+      "number": 66,
+      "path": "_site/archive/66/index.html",
+      "subject": "Weekly Thing #66 / Aug 11, 2018",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[Really]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 67,
+      "path": "_site/archive/67/index.html",
+      "subject": "Weekly Thing #67 / Aug 18, 2018",
+      "findings": []
+    },
+    {
+      "number": 68,
+      "path": "_site/archive/68/index.html",
+      "subject": "Weekly Thing #68 / Aug 25, 2018",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Goodbye to my friend, David Hussman",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 69,
+      "path": "_site/archive/69/index.html",
+      "subject": "Weekly Thing #69 / Sep 1, 2018",
+      "findings": []
+    },
+    {
+      "number": 70,
+      "path": "_site/archive/70/index.html",
+      "subject": "Weekly Thing #70 / Sep 8, 2018",
+      "findings": []
+    },
+    {
+      "number": 71,
+      "path": "_site/archive/71/index.html",
+      "subject": "Weekly Thing #71 / Sep 15, 2018",
+      "findings": []
+    },
+    {
+      "number": 72,
+      "path": "_site/archive/72/index.html",
+      "subject": "Weekly Thing #72 / Sep 22, 2018",
+      "findings": []
+    },
+    {
+      "number": 73,
+      "path": "_site/archive/73/index.html",
+      "subject": "Weekly Thing #73 / Sep 29, 2018",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Goodbye Chase",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 74,
+      "path": "_site/archive/74/index.html",
+      "subject": "Weekly Thing #74 / Oct 6, 2018",
+      "findings": []
+    },
+    {
+      "number": 75,
+      "path": "_site/archive/75/index.html",
+      "subject": "Weekly Thing #75 / Oct 13, 2018",
+      "findings": []
+    },
+    {
+      "number": 76,
+      "path": "_site/archive/76/index.html",
+      "subject": "Weekly Thing #76 / Oct 20, 2018",
+      "findings": []
+    },
+    {
+      "number": 77,
+      "path": "_site/archive/77/index.html",
+      "subject": "Weekly Thing #77 / Oct 27, 2018",
+      "findings": []
+    },
+    {
+      "number": 78,
+      "path": "_site/archive/78/index.html",
+      "subject": "Weekly Thing #78 / Nov 3, 2018",
+      "findings": []
+    },
+    {
+      "number": 79,
+      "path": "_site/archive/79/index.html",
+      "subject": "Weekly Thing #79 / Nov 10, 2018",
+      "findings": []
+    },
+    {
+      "number": 80,
+      "path": "_site/archive/80/index.html",
+      "subject": "Weekly Thing #80 / Nov 17, 2018",
+      "findings": []
+    },
+    {
+      "number": 81,
+      "path": "_site/archive/81/index.html",
+      "subject": "Weekly Thing #81 / Nov 24, 2018",
+      "findings": []
+    },
+    {
+      "number": 82,
+      "path": "_site/archive/82/index.html",
+      "subject": "Weekly Thing #82 / Dec 1, 2018",
+      "findings": []
+    },
+    {
+      "number": 83,
+      "path": "_site/archive/83/index.html",
+      "subject": "Weekly Thing #83 / Dec 8, 2018",
+      "findings": []
+    },
+    {
+      "number": 84,
+      "path": "_site/archive/84/index.html",
+      "subject": "Weekly Thing #84 / Dec 15, 2018",
+      "findings": []
+    },
+    {
+      "number": 85,
+      "path": "_site/archive/85/index.html",
+      "subject": "Weekly Thing #85 / Dec 22, 2018",
+      "findings": []
+    },
+    {
+      "number": 86,
+      "path": "_site/archive/86/index.html",
+      "subject": "Weekly Thing #86 / Dec 29, 2018",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Book: When Breath Becomes Air",
+          "location": ""
+        },
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[LWN.net]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 87,
+      "path": "_site/archive/87/index.html",
+      "subject": "Weekly Thing #87 / Jan 5, 2019",
+      "findings": []
+    },
+    {
+      "number": 88,
+      "path": "_site/archive/88/index.html",
+      "subject": "Weekly Thing #88 / Jan 12, 2019",
+      "findings": []
+    },
+    {
+      "number": 89,
+      "path": "_site/archive/89/index.html",
+      "subject": "Weekly Thing #89 / Jan 19, 2019",
+      "findings": []
+    },
+    {
+      "number": 90,
+      "path": "_site/archive/90/index.html",
+      "subject": "Weekly Thing #90 / Jan 26, 2019",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Using API Credentials in Shortcuts",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 91,
+      "path": "_site/archive/91/index.html",
+      "subject": "Weekly Thing #91 / Feb 2, 2019",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Hack the Gap 2019",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 92,
+      "path": "_site/archive/92/index.html",
+      "subject": "Weekly Thing #92 / Feb 9, 2019",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Book: Scale",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "JSONFeed on Blot",
+          "location": ""
+        },
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Minnesota Kubb 2019 Winter Tournament",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 93,
+      "path": "_site/archive/93/index.html",
+      "subject": "Weekly Thing #93 / Feb 16, 2019",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[Etsy]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 94,
+      "path": "_site/archive/94/index.html",
+      "subject": "Weekly Thing #94 / Feb 23, 2019",
+      "findings": []
+    },
+    {
+      "number": 95,
+      "path": "_site/archive/95/index.html",
+      "subject": "Weekly Thing #95 / Mar 2, 2019",
+      "findings": []
+    },
+    {
+      "number": 96,
+      "path": "_site/archive/96/index.html",
+      "subject": "Weekly Thing #96 / Mar 9, 2019",
+      "findings": []
+    },
+    {
+      "number": 97,
+      "path": "_site/archive/97/index.html",
+      "subject": "Weekly Thing #97 / Mar 16, 2019",
+      "findings": []
+    },
+    {
+      "number": 98,
+      "path": "_site/archive/98/index.html",
+      "subject": "Weekly Thing #98 / Mar 23, 2019",
+      "findings": []
+    },
+    {
+      "number": 99,
+      "path": "_site/archive/99/index.html",
+      "subject": "Weekly Thing #99 / Mar 30, 2019",
+      "findings": []
+    },
+    {
+      "number": 100,
+      "path": "_site/archive/100/index.html",
+      "subject": "Weekly Thing #100 / Apr 6, 2019",
+      "findings": []
+    },
+    {
+      "number": 101,
+      "path": "_site/archive/101/index.html",
+      "subject": "Weekly Thing #101 / Apr 13, 2019",
+      "findings": []
+    },
+    {
+      "number": 102,
+      "path": "_site/archive/102/index.html",
+      "subject": "Weekly Thing #102 / Apr 20, 2019",
+      "findings": []
+    },
+    {
+      "number": 103,
+      "path": "_site/archive/103/index.html",
+      "subject": "Weekly Thing #103 / Apr 27, 2019",
+      "findings": []
+    },
+    {
+      "number": 104,
+      "path": "_site/archive/104/index.html",
+      "subject": "Weekly Thing #104 / May 4, 2019",
+      "findings": []
+    },
+    {
+      "number": 105,
+      "path": "_site/archive/105/index.html",
+      "subject": "Weekly Thing #105 / May 11, 2019",
+      "findings": []
+    },
+    {
+      "number": 106,
+      "path": "_site/archive/106/index.html",
+      "subject": "Weekly Thing #106 / May 18, 2019",
+      "findings": []
+    },
+    {
+      "number": 107,
+      "path": "_site/archive/107/index.html",
+      "subject": "Weekly Thing #107 / May 25, 2019",
+      "findings": []
+    },
+    {
+      "number": 108,
+      "path": "_site/archive/108/index.html",
+      "subject": "Weekly Thing #108 / Jun 1, 2019",
+      "findings": []
+    },
+    {
+      "number": 109,
+      "path": "_site/archive/109/index.html",
+      "subject": "Weekly Thing #109 / Jun 8, 2019",
+      "findings": []
+    },
+    {
+      "number": 110,
+      "path": "_site/archive/110/index.html",
+      "subject": "Weekly Thing #110 / Jun 15, 2019",
+      "findings": []
+    },
+    {
+      "number": 111,
+      "path": "_site/archive/111/index.html",
+      "subject": "Weekly Thing #111 / Jun 22, 2019",
+      "findings": []
+    },
+    {
+      "number": 112,
+      "path": "_site/archive/112/index.html",
+      "subject": "Weekly Thing #112 / Jun 29, 2019",
+      "findings": []
+    },
+    {
+      "number": 113,
+      "path": "_site/archive/113/index.html",
+      "subject": "Weekly Thing #113 / Aug 17, 2019",
+      "findings": []
+    },
+    {
+      "number": 114,
+      "path": "_site/archive/114/index.html",
+      "subject": "Weekly Thing #114 / Aug 24, 2019",
+      "findings": []
+    },
+    {
+      "number": 115,
+      "path": "_site/archive/115/index.html",
+      "subject": "Weekly Thing #115 / Aug 31, 2019",
+      "findings": []
+    },
+    {
+      "number": 116,
+      "path": "_site/archive/116/index.html",
+      "subject": "Weekly Thing #116 / Sep 7, 2019",
+      "findings": []
+    },
+    {
+      "number": 117,
+      "path": "_site/archive/117/index.html",
+      "subject": "Weekly Thing #117 / Sep 14, 2019",
+      "findings": []
+    },
+    {
+      "number": 118,
+      "path": "_site/archive/118/index.html",
+      "subject": "Weekly Thing #118 / Sep 21, 2019",
+      "findings": []
+    },
+    {
+      "number": 119,
+      "path": "_site/archive/119/index.html",
+      "subject": "Weekly Thing #119 / Sep 28, 2019",
+      "findings": []
+    },
+    {
+      "number": 120,
+      "path": "_site/archive/120/index.html",
+      "subject": "Weekly Thing #120 / Oct 5, 2019",
+      "findings": []
+    },
+    {
+      "number": 121,
+      "path": "_site/archive/121/index.html",
+      "subject": "Weekly Thing #121 / Oct 12, 2019",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "First try having Tesla “Come to me”",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 122,
+      "path": "_site/archive/122/index.html",
+      "subject": "Weekly Thing #122 / Oct 19, 2019",
+      "findings": []
+    },
+    {
+      "number": 123,
+      "path": "_site/archive/123/index.html",
+      "subject": "Weekly Thing #123 / Oct 26, 2019",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[Why Richard Stallman doesn’t matter | ]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 124,
+      "path": "_site/archive/124/index.html",
+      "subject": "Weekly Thing #124 / Nov 2, 2019",
+      "findings": []
+    },
+    {
+      "number": 125,
+      "path": "_site/archive/125/index.html",
+      "subject": "Weekly Thing #125 / Nov 9, 2019",
+      "findings": []
+    },
+    {
+      "number": 126,
+      "path": "_site/archive/126/index.html",
+      "subject": "Weekly Thing #126 / Nov 16, 2019",
+      "findings": []
+    },
+    {
+      "number": 127,
+      "path": "_site/archive/127/index.html",
+      "subject": "Weekly Thing #127 / Nov 23, 2019",
+      "findings": []
+    },
+    {
+      "number": 128,
+      "path": "_site/archive/128/index.html",
+      "subject": "Weekly Thing #128 / Nov 30, 2019",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Kyiv Photowalk",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 129,
+      "path": "_site/archive/129/index.html",
+      "subject": "Weekly Thing #129 / Dec 7, 2019",
+      "findings": []
+    },
+    {
+      "number": 130,
+      "path": "_site/archive/130/index.html",
+      "subject": "Weekly Thing #130 / Dec 14, 2019",
+      "findings": []
+    },
+    {
+      "number": 131,
+      "path": "_site/archive/131/index.html",
+      "subject": "Weekly Thing #131 / GoatCounter, Hobbies, AR, Leadership, Ring",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://blotcdn.com/blog_9b22fef1ce9945619fd5d5ec617b3deb/_image_cache/b0d97f7e-05b6-42d9-9d1e-4c26d1e0b656.jpg",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 132,
+      "path": "_site/archive/132/index.html",
+      "subject": "Weekly Thing #132 / Backdoors, Espresso, Technical Debt, Coaching, Studio Ghibli",
+      "findings": []
+    },
+    {
+      "number": 133,
+      "path": "_site/archive/133/index.html",
+      "subject": "Weekly Thing #133 / Clayton Christensen, iPad at 10, Ukraine, Nintendo Switch, Apple Map Expansion",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://blotcdn.com/blog_9b22fef1ce9945619fd5d5ec617b3deb/_image_cache/d96f4887-7edb-4901-86b8-a149309998de.jpeg",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 134,
+      "path": "_site/archive/134/index.html",
+      "subject": "Weekly Thing #134 / Platform & Product, Corporate Athlete, Mindfulness",
+      "findings": []
+    },
+    {
+      "number": 135,
+      "path": "_site/archive/135/index.html",
+      "subject": "Weekly Thing #135 / Spy Emails, Engineering Strategy, True Fans",
+      "findings": []
+    },
+    {
+      "number": 136,
+      "path": "_site/archive/136/index.html",
+      "subject": "Weekly Thing #136 / Wikipedia, Side Quest, Latency, Signal",
+      "findings": []
+    },
+    {
+      "number": 137,
+      "path": "_site/archive/137/index.html",
+      "subject": "Weekly Thing #137 / Let's Encrypt, Fraidycat, Metagame, Real-Flame what?",
+      "findings": []
+    },
+    {
+      "number": 138,
+      "path": "_site/archive/138/index.html",
+      "subject": "Weekly Thing #138 / Covid-19, Credibility, Clearview AI, Hair Freezing",
+      "findings": []
+    },
+    {
+      "number": 139,
+      "path": "_site/archive/139/index.html",
+      "subject": "Weekly Thing #139 / Control, Energy",
+      "findings": []
+    },
+    {
+      "number": 140,
+      "path": "_site/archive/140/index.html",
+      "subject": "Weekly Thing #140 / Conversations, Leadership, Remote, iPad",
+      "findings": []
+    },
+    {
+      "number": 141,
+      "path": "_site/archive/141/index.html",
+      "subject": "Weekly Thing #141 / We provided 147,360 meals for those in need!",
+      "findings": []
+    },
+    {
+      "number": 142,
+      "path": "_site/archive/142/index.html",
+      "subject": "Weekly Thing #142 / Signaling, Zoom, Bill Gates, Decision Journal",
+      "findings": []
+    },
+    {
+      "number": 143,
+      "path": "_site/archive/143/index.html",
+      "subject": "Weekly Thing #143 / Archetypes, Wear a Mask, Zoom",
+      "findings": []
+    },
+    {
+      "number": 144,
+      "path": "_site/archive/144/index.html",
+      "subject": "Weekly Thing #144 / Contact Tracing, Stockdale Paradox, John Prine, Goat 2 Meeting",
+      "findings": []
+    },
+    {
+      "number": 145,
+      "path": "_site/archive/145/index.html",
+      "subject": "Weekly Thing #145 / Permanent, Coronavirus, Zoom Fatigue",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[Guide]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 146,
+      "path": "_site/archive/146/index.html",
+      "subject": "Weekly Thing #146 / Stoics, Lockdown, MnTech, Learning a Language",
+      "findings": []
+    },
+    {
+      "number": 147,
+      "path": "_site/archive/147/index.html",
+      "subject": "Weekly Thing #147 / Do The Work, Good Writing, Bye Amazon",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (2 occurrences)",
+          "snippet": "['content_html']",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 148,
+      "path": "_site/archive/148/index.html",
+      "subject": "Weekly Thing #148 / What Day Is It?, Written Communication, Lisp",
+      "findings": []
+    },
+    {
+      "number": 149,
+      "path": "_site/archive/149/index.html",
+      "subject": "Weekly Thing #149 / RSS, Blogs, Giphy, Flour",
+      "findings": []
+    },
+    {
+      "number": 150,
+      "path": "_site/archive/150/index.html",
+      "subject": "Weekly Thing #150 / Speed, Insane Videoconferencing, OmniFocus, LaTeX",
+      "findings": []
+    },
+    {
+      "number": 151,
+      "path": "_site/archive/151/index.html",
+      "subject": "Weekly Thing #151 / George Floyd, I Can’t Breathe, Black Lives Matter",
+      "findings": []
+    },
+    {
+      "number": 152,
+      "path": "_site/archive/152/index.html",
+      "subject": "Weekly Thing #152 / Juneteenth, Uncomfortable Conversations, Facebook",
+      "findings": []
+    },
+    {
+      "number": 153,
+      "path": "_site/archive/153/index.html",
+      "subject": "Weekly Thing #153 / Values Oasis, Bison, Masks",
+      "findings": []
+    },
+    {
+      "number": 154,
+      "path": "_site/archive/154/index.html",
+      "subject": "Weekly Thing #154 / Giving Feedback, Apple WWDC, Anti-Encryption",
+      "findings": []
+    },
+    {
+      "number": 155,
+      "path": "_site/archive/155/index.html",
+      "subject": "Weekly Thing #155 / Menu Engineers, Halo, RFC8890",
+      "findings": []
+    },
+    {
+      "number": 156,
+      "path": "_site/archive/156/index.html",
+      "subject": "Weekly Thing #156 / Identity, AI, Peloton, UPSERT",
+      "findings": []
+    },
+    {
+      "number": 157,
+      "path": "_site/archive/157/index.html",
+      "subject": "Weekly Thing #157 / Superpower, Dune, Three Year Rule",
+      "findings": []
+    },
+    {
+      "number": 158,
+      "path": "_site/archive/158/index.html",
+      "subject": "Weekly Thing #158 / Blacklight, Whistleblower, Fly Fishing",
+      "findings": []
+    },
+    {
+      "number": 159,
+      "path": "_site/archive/159/index.html",
+      "subject": "Weekly Thing #159 / 911 Outage, Small Tech, Workflows",
+      "findings": []
+    },
+    {
+      "number": 160,
+      "path": "_site/archive/160/index.html",
+      "subject": "Weekly Thing #160 / Unlived Life, Disinformation, Snowflake ❄️",
+      "findings": []
+    },
+    {
+      "number": 161,
+      "path": "_site/archive/161/index.html",
+      "subject": "Weekly Thing #161 / Letter, Asterisk, You Should Write ✍️",
+      "findings": []
+    },
+    {
+      "number": 162,
+      "path": "_site/archive/162/index.html",
+      "subject": "Weekly Thing #162 / iPhone 12, Lidar, Quibi",
+      "findings": []
+    },
+    {
+      "number": 163,
+      "path": "_site/archive/163/index.html",
+      "subject": "Weekly Thing #163 / BeOS, Management Track, Writing is Thinking",
+      "findings": []
+    },
+    {
+      "number": 164,
+      "path": "_site/archive/164/index.html",
+      "subject": "Weekly Thing #164 / Raspberry Pi 400, Time Blocking, Platform",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[Event Title]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 165,
+      "path": "_site/archive/165/index.html",
+      "subject": "Weekly Thing #165 / Sessions, Friluftsliv, Everlong",
+      "findings": []
+    },
+    {
+      "number": 166,
+      "path": "_site/archive/166/index.html",
+      "subject": "Weekly Thing #166 / Chess, Disruption, M1 Macs, Five Hindrances",
+      "findings": []
+    },
+    {
+      "number": 167,
+      "path": "_site/archive/167/index.html",
+      "subject": "Weekly Thing #167 / Production Oriented Development, Fathom",
+      "findings": []
+    },
+    {
+      "number": 168,
+      "path": "_site/archive/168/index.html",
+      "subject": "Weekly Thing #168 / Buy Gifts, Gratitude, DeepMind",
+      "findings": []
+    },
+    {
+      "number": 169,
+      "path": "_site/archive/169/index.html",
+      "subject": "Weekly Thing #169 / Ted Lasso, Think for Yourself, Range",
+      "findings": []
+    },
+    {
+      "number": 170,
+      "path": "_site/archive/170/index.html",
+      "subject": "Weekly Thing #170 / MeetingBar, Platforms, Wikipedia",
+      "findings": []
+    },
+    {
+      "number": 171,
+      "path": "_site/archive/171/index.html",
+      "subject": "Weekly Thing #171 / Earthrise, Firecracker, Rivian",
+      "findings": []
+    },
+    {
+      "number": 172,
+      "path": "_site/archive/172/index.html",
+      "subject": "Weekly Thing #172 / Blockchain, Bezos, Privacy",
+      "findings": []
+    },
+    {
+      "number": 173,
+      "path": "_site/archive/173/index.html",
+      "subject": "Weekly Thing #173 / Minot, Unicorn, Bunch",
+      "findings": []
+    },
+    {
+      "number": 174,
+      "path": "_site/archive/174/index.html",
+      "subject": "Weekly Thing #174 / Responsively, Underline, Skittish",
+      "findings": []
+    },
+    {
+      "number": 175,
+      "path": "_site/archive/175/index.html",
+      "subject": "Weekly Thing #175 / Crontab, Fry's, Daft Punk",
+      "findings": []
+    },
+    {
+      "number": 176,
+      "path": "_site/archive/176/index.html",
+      "subject": "Weekly Thing #176 / Brave Search, Speed, Finger.Farm",
+      "findings": []
+    },
+    {
+      "number": 177,
+      "path": "_site/archive/177/index.html",
+      "subject": "Weekly Thing #177 / NFTs, Roblox, HEY World, Exchange",
+      "findings": []
+    },
+    {
+      "number": 178,
+      "path": "_site/archive/178/index.html",
+      "subject": "Weekly Thing #178 / Reverse Meetings, OODA Loop, Hockey Goalies",
+      "findings": []
+    },
+    {
+      "number": 179,
+      "path": "_site/archive/179/index.html",
+      "subject": "Weekly Thing #179 / Nemawashi, Transformation, Geldingadalur",
+      "findings": []
+    },
+    {
+      "number": 180,
+      "path": "_site/archive/180/index.html",
+      "subject": "Weekly Thing #180 / Tetris, Ever Given, Backstory",
+      "findings": []
+    },
+    {
+      "number": 181,
+      "path": "_site/archive/181/index.html",
+      "subject": "Weekly Thing #181 / Grit, Collectible, Crypto",
+      "findings": []
+    },
+    {
+      "number": 182,
+      "path": "_site/archive/182/index.html",
+      "subject": "Weekly Thing #182 / Technical Debt, Identity, Neeva",
+      "findings": []
+    },
+    {
+      "number": 183,
+      "path": "_site/archive/183/index.html",
+      "subject": "Weekly Thing #183 / Visidata, FTP, Amazon",
+      "findings": []
+    },
+    {
+      "number": 184,
+      "path": "_site/archive/184/index.html",
+      "subject": "Weekly Thing #184 / UML, Vizy, Markdown",
+      "findings": []
+    },
+    {
+      "number": 185,
+      "path": "_site/archive/185/index.html",
+      "subject": "Weekly Thing #185 / Signal, Peloton, Meebits",
+      "findings": []
+    },
+    {
+      "number": 186,
+      "path": "_site/archive/186/index.html",
+      "subject": "Weekly Thing #186 / Blockchain, Pairing, Sharding",
+      "findings": []
+    },
+    {
+      "number": 187,
+      "path": "_site/archive/187/index.html",
+      "subject": "Weekly Thing #187 / AirTags, M1 iPad Pro, Flamingo",
+      "findings": []
+    },
+    {
+      "number": 188,
+      "path": "_site/archive/188/index.html",
+      "subject": "Weekly Thing #188 / Ethereum, Emulator, Ephemerality",
+      "findings": []
+    },
+    {
+      "number": 189,
+      "path": "_site/archive/189/index.html",
+      "subject": "Weekly Thing #189 / TiddlyWiki, JsonLogic, Smiling",
+      "findings": []
+    },
+    {
+      "number": 190,
+      "path": "_site/archive/190/index.html",
+      "subject": "Weekly Thing #190 / WWDC, Passport, Roll",
+      "findings": []
+    },
+    {
+      "number": 191,
+      "path": "_site/archive/191/index.html",
+      "subject": "Weekly Thing #191 / Decentralizing, Coffee, Future",
+      "findings": []
+    },
+    {
+      "number": 192,
+      "path": "_site/archive/192/index.html",
+      "subject": "Weekly Thing #192 / Endemic, Solidify, Zsync",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "odd count of '**' (1)",
+          "snippet": "",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 193,
+      "path": "_site/archive/193/index.html",
+      "subject": "Weekly Thing #193 / POAPs, DAOs, NFTs",
+      "findings": []
+    },
+    {
+      "number": 194,
+      "path": "_site/archive/194/index.html",
+      "subject": "Weekly Thing #194 / Writing, Playdate, OpenMoji",
+      "findings": []
+    },
+    {
+      "number": 195,
+      "path": "_site/archive/195/index.html",
+      "subject": "Weekly Thing #195 / Privacy, Loot, Minus",
+      "findings": []
+    },
+    {
+      "number": 196,
+      "path": "_site/archive/196/index.html",
+      "subject": "Weekly Thing #196 / iPhone 13, iOS 15, watchOS 8",
+      "findings": []
+    },
+    {
+      "number": 197,
+      "path": "_site/archive/197/index.html",
+      "subject": "Weekly Thing #197 / Cloudflare, Bunches, Float",
+      "findings": []
+    },
+    {
+      "number": 198,
+      "path": "_site/archive/198/index.html",
+      "subject": "Weekly Thing #198 / Facebook, News, Kyiv",
+      "findings": []
+    },
+    {
+      "number": 199,
+      "path": "_site/archive/199/index.html",
+      "subject": "Weekly Thing #199 / Revolutions, Dopamine, Reconsolidation",
+      "findings": []
+    },
+    {
+      "number": 200,
+      "path": "_site/archive/200/index.html",
+      "subject": "Weekly Thing #200 / Developers, Org Design, Types",
+      "findings": []
+    },
+    {
+      "number": 201,
+      "path": "_site/archive/201/index.html",
+      "subject": "Weekly Thing #201 / Collecting, Smart, Stupid",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[[WM:TECHBLOG]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 202,
+      "path": "_site/archive/202/index.html",
+      "subject": "Weekly Thing #202 / Goalies, Curves, Spiders",
+      "findings": []
+    },
+    {
+      "number": 203,
+      "path": "_site/archive/203/index.html",
+      "subject": "Weekly Thing #203 / Discord, Family, Names",
+      "findings": []
+    },
+    {
+      "number": 204,
+      "path": "_site/archive/204/index.html",
+      "subject": "Weekly Thing #204 / Containers, Constitution, Cancel",
+      "findings": []
+    },
+    {
+      "number": 205,
+      "path": "_site/archive/205/index.html",
+      "subject": "Weekly Thing #205 / Hurl, Faster, Web3",
+      "findings": []
+    },
+    {
+      "number": 206,
+      "path": "_site/archive/206/index.html",
+      "subject": "Weekly Thing #206 / Omicron, Overengineering, Endaoment",
+      "findings": []
+    },
+    {
+      "number": 207,
+      "path": "_site/archive/207/index.html",
+      "subject": "Weekly Thing #207 / Architecture, Contrarian, Storytelling",
+      "findings": []
+    },
+    {
+      "number": 208,
+      "path": "_site/archive/208/index.html",
+      "subject": "Weekly Thing #208 / GPS, Intel, Omicron",
+      "findings": []
+    },
+    {
+      "number": 209,
+      "path": "_site/archive/209/index.html",
+      "subject": "Weekly Thing #209 / PGP, Soulbound, Mosey",
+      "findings": []
+    },
+    {
+      "number": 210,
+      "path": "_site/archive/210/index.html",
+      "subject": "Weekly Thing #210 / Wyoming, WebAssembly, Wordle",
+      "findings": []
+    },
+    {
+      "number": 211,
+      "path": "_site/archive/211/index.html",
+      "subject": "Weekly Thing #211 / Polar Bears, Delegating, Capes",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://www.thingelstad.com/uploads/2022/7a51035a83.jpg",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 212,
+      "path": "_site/archive/212/index.html",
+      "subject": "Weekly Thing #212 / Words, Mermaid, Beats",
+      "findings": []
+    },
+    {
+      "number": 213,
+      "path": "_site/archive/213/index.html",
+      "subject": "Weekly Thing #213 / Ukraine",
+      "findings": []
+    },
+    {
+      "number": 214,
+      "path": "_site/archive/214/index.html",
+      "subject": "Weekly Thing #214 / Support Ukraine",
+      "findings": []
+    },
+    {
+      "number": 215,
+      "path": "_site/archive/215/index.html",
+      "subject": "Weekly Thing #215 / Queues, Tor, Venting",
+      "findings": []
+    },
+    {
+      "number": 216,
+      "path": "_site/archive/216/index.html",
+      "subject": "Weekly Thing #216 / NFT, DST, PDP",
+      "findings": []
+    },
+    {
+      "number": 217,
+      "path": "_site/archive/217/index.html",
+      "subject": "Weekly Thing #217 / Ukraine, Coaching, Population",
+      "findings": []
+    },
+    {
+      "number": 218,
+      "path": "_site/archive/218/index.html",
+      "subject": "Weekly Thing #218 / An unscheduled break",
+      "findings": []
+    },
+    {
+      "number": 219,
+      "path": "_site/archive/219/index.html",
+      "subject": "Weekly Thing #219 / Friendships, FloriNouns, Rich Strike",
+      "findings": []
+    },
+    {
+      "number": 220,
+      "path": "_site/archive/220/index.html",
+      "subject": "Weekly Thing #220 / Ukraine DAO, Nouns, Icebergs",
+      "findings": []
+    },
+    {
+      "number": 221,
+      "path": "_site/archive/221/index.html",
+      "subject": "Weekly Thing #221 / Rebooting, Incidents, Risk",
+      "findings": []
+    },
+    {
+      "number": 222,
+      "path": "_site/archive/222/index.html",
+      "subject": "Weekly Thing #222 / Smalltalk, Friendships, Automata",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[proposals]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 223,
+      "path": "_site/archive/223/index.html",
+      "subject": "Weekly Thing #223 / Digital Identity, Finding a Mode, WWDC",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[People]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 224,
+      "path": "_site/archive/224/index.html",
+      "subject": "Weekly Thing #224 / Self, Learning, Identity",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[0-9]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 225,
+      "path": "_site/archive/225/index.html",
+      "subject": "Weekly Thing #225 / Prestige, WebAssembly, PhizFans",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[beep]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 226,
+      "path": "_site/archive/226/index.html",
+      "subject": "Weekly Thing #226 / Patagonia, Merge, Walrus",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[Let’s Encrypt]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 227,
+      "path": "_site/archive/227/index.html",
+      "subject": "Weekly Thing #227 / Attention, Minnedemo, Learning",
+      "findings": []
+    },
+    {
+      "number": 228,
+      "path": "_site/archive/228/index.html",
+      "subject": "Weekly Thing #228 / Technical, Adversarial, Overcomplicating",
+      "findings": []
+    },
+    {
+      "number": 229,
+      "path": "_site/archive/229/index.html",
+      "subject": "Weekly Thing #229 / Time, Zolatron, Maigret",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (3 occurrences)",
+          "snippet": "[+]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 230,
+      "path": "_site/archive/230/index.html",
+      "subject": "Weekly Thing #230 / Calendar, Fractal, Reminiscing",
+      "findings": []
+    },
+    {
+      "number": 231,
+      "path": "_site/archive/231/index.html",
+      "subject": "Weekly Thing #231 / UNIX Pipe, Slow Roads, Personal Brand",
+      "findings": []
+    },
+    {
+      "number": 232,
+      "path": "_site/archive/232/index.html",
+      "subject": "Weekly Thing #232 / Fiber, Decker, Privacy",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Weekly Thing on Reddit?",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 233,
+      "path": "_site/archive/233/index.html",
+      "subject": "Weekly Thing #233 / Versepad, \"Just\", Mastadon",
+      "findings": []
+    },
+    {
+      "number": 234,
+      "path": "_site/archive/234/index.html",
+      "subject": "Weekly Thing #234 / Distributed, Principles, Drivers",
+      "findings": []
+    },
+    {
+      "number": 235,
+      "path": "_site/archive/235/index.html",
+      "subject": "Weekly Thing #235 / TikTok, Busy, Stories",
+      "findings": []
+    },
+    {
+      "number": 236,
+      "path": "_site/archive/236/index.html",
+      "subject": "Weekly Thing #236 / ChatGPT, Reading, Legitimacy",
+      "findings": []
+    },
+    {
+      "number": 237,
+      "path": "_site/archive/237/index.html",
+      "subject": "Weekly Thing #237 / Ethereum, Zelensky, Fadell + Erratic Narratives",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "odd count of '**' (1)",
+          "snippet": "",
+          "location": ""
+        },
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (2 occurrences)",
+          "snippet": "[# -1]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 238,
+      "path": "_site/archive/238/index.html",
+      "subject": "Weekly Thing #238 / Addiction, Disruption, Intentional",
+      "findings": []
+    },
+    {
+      "number": 239,
+      "path": "_site/archive/239/index.html",
+      "subject": "Weekly Thing #239 / Helmets, Bear, Smile",
+      "findings": []
+    },
+    {
+      "number": 240,
+      "path": "_site/archive/240/index.html",
+      "subject": "Weekly Thing #240 / Shapes, Tags, Ubiquity",
+      "findings": []
+    },
+    {
+      "number": 241,
+      "path": "_site/archive/241/index.html",
+      "subject": "Weekly Thing #241 / Wildebeest, Reputation, Zero",
+      "findings": []
+    },
+    {
+      "number": 242,
+      "path": "_site/archive/242/index.html",
+      "subject": "Weekly Thing #242 / Stories, Volcano, Decemberists",
+      "findings": []
+    },
+    {
+      "number": 243,
+      "path": "_site/archive/243/index.html",
+      "subject": "Weekly Thing #243 / Montaigne, Ordinals, Salsa + Ukraine Fundraiser!",
+      "findings": []
+    },
+    {
+      "number": 244,
+      "path": "_site/archive/244/index.html",
+      "subject": "Weekly Thing #244 / Fans, Sameness, Fediverse + Ukraine Fundraiser!",
+      "findings": []
+    },
+    {
+      "number": 245,
+      "path": "_site/archive/245/index.html",
+      "subject": "Weekly Thing #245 / Curation, Outcomes, Disturbed",
+      "findings": []
+    },
+    {
+      "number": 246,
+      "path": "_site/archive/246/index.html",
+      "subject": "Weekly Thing #246 / Banks, Stablecoin, Trust",
+      "findings": []
+    },
+    {
+      "number": 247,
+      "path": "_site/archive/247/index.html",
+      "subject": "Weekly Thing #247 / New York, Fingerprints, Snitch",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[Twitter]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 248,
+      "path": "_site/archive/248/index.html",
+      "subject": "Weekly Thing #248 / Bicycle, Attention, Shapella",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[were]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 249,
+      "path": "_site/archive/249/index.html",
+      "subject": "Weekly Thing #249 / GPT, Privacy, Crypto",
+      "findings": []
+    },
+    {
+      "number": 250,
+      "path": "_site/archive/250/index.html",
+      "subject": "Weekly Thing #250 / LLM, Shanghai, Wing",
+      "findings": []
+    },
+    {
+      "number": 251,
+      "path": "_site/archive/251/index.html",
+      "subject": "Weekly Thing #251 / Moloch, Chess, Protocol",
+      "findings": []
+    },
+    {
+      "number": 252,
+      "path": "_site/archive/252/index.html",
+      "subject": "Weekly Thing #252 / Elevator, Evidence, Everything",
+      "findings": []
+    },
+    {
+      "number": 253,
+      "path": "_site/archive/253/index.html",
+      "subject": "Weekly Thing #253 / Domains, Anybox, Currl",
+      "findings": []
+    },
+    {
+      "number": 254,
+      "path": "_site/archive/254/index.html",
+      "subject": "Weekly Thing #254 / Redis, Dooce, Batteries",
+      "findings": []
+    },
+    {
+      "number": 255,
+      "path": "_site/archive/255/index.html",
+      "subject": "Weekly Thing #255 / Lassie, Vore, Alby",
+      "findings": []
+    },
+    {
+      "number": 256,
+      "path": "_site/archive/256/index.html",
+      "subject": "Weekly Thing #2^8 / Bitcoin, Kagi, Brink",
+      "findings": []
+    },
+    {
+      "number": 257,
+      "path": "_site/archive/257/index.html",
+      "subject": "Weekly Thing #257 / Nostr, Time, Bcrypt",
+      "findings": []
+    },
+    {
+      "number": 258,
+      "path": "_site/archive/258/index.html",
+      "subject": "Weekly Thing #258 / Vision, Strike, Reputation",
+      "findings": []
+    },
+    {
+      "number": 259,
+      "path": "_site/archive/259/index.html",
+      "subject": "Weekly Thing #259 / Vision Pro, Tiny Awards, Mental Liquidity",
+      "findings": []
+    },
+    {
+      "number": 260,
+      "path": "_site/archive/260/index.html",
+      "subject": "Weekly Thing #260 / Rash, Hashing, Arguably",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://www.thingelstad.com/uploads/2023/media.jpg",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 261,
+      "path": "_site/archive/261/index.html",
+      "subject": "Weekly Thing 261 / Bloomfield Bridge, Critical Ignoring, Subscription Era",
+      "findings": []
+    },
+    {
+      "number": 262,
+      "path": "_site/archive/262/index.html",
+      "subject": "Weekly Thing 262 / Simulator, System, Snoopy",
+      "findings": []
+    },
+    {
+      "number": 263,
+      "path": "_site/archive/263/index.html",
+      "subject": "Weekly Thing 263 / Copilot, Del.icio.us, Pancake",
+      "findings": []
+    },
+    {
+      "number": 264,
+      "path": "_site/archive/264/index.html",
+      "subject": "Weekly Thing 264 / Dazed, Zany, Llama",
+      "findings": []
+    },
+    {
+      "number": 265,
+      "path": "_site/archive/265/index.html",
+      "subject": "Weekly Thing 265 / Magic, Copilot, Shortery",
+      "findings": []
+    },
+    {
+      "number": 266,
+      "path": "_site/archive/266/index.html",
+      "subject": "Weekly Thing 266 / Obsessed, DiceRight, Omnivore",
+      "findings": []
+    },
+    {
+      "number": 267,
+      "path": "_site/archive/267/index.html",
+      "subject": "Weekly Thing 267 / Generative, Ghibli, Mermaid",
+      "findings": []
+    },
+    {
+      "number": 268,
+      "path": "_site/archive/268/index.html",
+      "subject": "Weekly Thing 268 / Schema, Achtung, Gamification",
+      "findings": []
+    },
+    {
+      "number": 269,
+      "path": "_site/archive/269/index.html",
+      "subject": "Weekly Thing 269 / Phind, Textcasting, Tailspin",
+      "findings": []
+    },
+    {
+      "number": 270,
+      "path": "_site/archive/270/index.html",
+      "subject": "Weekly Thing 270 / Panoramic, RCS, Finnegans",
+      "findings": []
+    },
+    {
+      "number": 271,
+      "path": "_site/archive/271/index.html",
+      "subject": "Weekly Thing 271 / Imperfectionist, Zeitgeisty, Inko",
+      "findings": []
+    },
+    {
+      "number": 272,
+      "path": "_site/archive/272/index.html",
+      "subject": "Weekly Thing 272 / Escape, Fuzzy, Melodrip",
+      "findings": []
+    },
+    {
+      "number": 273,
+      "path": "_site/archive/273/index.html",
+      "subject": "Weekly Thing 273 / Trippy, Buffalo, Bitkey",
+      "findings": []
+    },
+    {
+      "number": 274,
+      "path": "_site/archive/274/index.html",
+      "subject": "Weekly Thing 274 / Gibberish, Happyfeed, Airshow",
+      "findings": []
+    },
+    {
+      "number": 275,
+      "path": "_site/archive/275/index.html",
+      "subject": "Weekly Thing 275 / Vision, Sense, Magic",
+      "findings": []
+    },
+    {
+      "number": 276,
+      "path": "_site/archive/276/index.html",
+      "subject": "Weekly Thing 276 / Contextual, Copilot, Collections",
+      "findings": []
+    },
+    {
+      "number": 277,
+      "path": "_site/archive/277/index.html",
+      "subject": "Weekly Thing 277 / Privacy, Scammed, OmniFocus",
+      "findings": []
+    },
+    {
+      "number": 278,
+      "path": "_site/archive/278/index.html",
+      "subject": "Weekly Thing 278 / Groq, GraphRAG, Gasless",
+      "findings": []
+    },
+    {
+      "number": 279,
+      "path": "_site/archive/279/index.html",
+      "subject": "Weekly Thing 279 / Nushell, BlackCat, Daemons",
+      "findings": []
+    },
+    {
+      "number": 280,
+      "path": "_site/archive/280/index.html",
+      "subject": "Weekly Thing 280 / Canvas, Undersea, Documents",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "network error: ConnectError: [Errno 8] nodename nor servname provided, or not known",
+          "snippet": "https://cdn.glitch.global/d45aff89-36ba-46db-8c7c-3da7c8a93931/IMG_3448.gif",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 281,
+      "path": "_site/archive/281/index.html",
+      "subject": "Weekly Thing 281 / Fediverse, Odyssey, Echo Chess",
+      "findings": []
+    },
+    {
+      "number": 282,
+      "path": "_site/archive/282/index.html",
+      "subject": "Weekly Thing 282 / Decentralized, Blobs, Rewards",
+      "findings": []
+    },
+    {
+      "number": 283,
+      "path": "_site/archive/283/index.html",
+      "subject": "Weekly Thing 283 / Betula, Blocky, Tables",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (4 occurrences)",
+          "snippet": "[Pro]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 284,
+      "path": "_site/archive/284/index.html",
+      "subject": "Weekly Thing 284 / Playdate, Tetris, Calvin",
+      "findings": []
+    },
+    {
+      "number": 285,
+      "path": "_site/archive/285/index.html",
+      "subject": "Weekly Thing 285 / Voyager, ActivityPub, Trackers",
+      "findings": []
+    },
+    {
+      "number": 286,
+      "path": "_site/archive/286/index.html",
+      "subject": "Weekly Thing 286 / Cypherpunk, Printing music, Rabbit",
+      "findings": []
+    },
+    {
+      "number": 287,
+      "path": "_site/archive/287/index.html",
+      "subject": "Weekly Thing 287 / Plinky, Piccolo, Privacy",
+      "findings": []
+    },
+    {
+      "number": 288,
+      "path": "_site/archive/288/index.html",
+      "subject": "Weekly Thing 288 / Hackerverse, Symbolica, Curators",
+      "findings": []
+    },
+    {
+      "number": 289,
+      "path": "_site/archive/289/index.html",
+      "subject": "Weekly Thing 289 / Queueing, Counting, Mapping",
+      "findings": []
+    },
+    {
+      "number": 290,
+      "path": "_site/archive/290/index.html",
+      "subject": "Weekly Thing 290 / Kino, Krebs, Kagi",
+      "findings": []
+    },
+    {
+      "number": 291,
+      "path": "_site/archive/291/index.html",
+      "subject": "Weekly Thing 291 / Ireland 🇮🇪",
+      "findings": []
+    },
+    {
+      "number": 292,
+      "path": "_site/archive/292/index.html",
+      "subject": "Weekly Thing 292 / Signal, Checkboxes, Hope",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "bracketed text with no link (1 occurrence)",
+          "snippet": "[The Knowledge Project Ep. #202]",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 293,
+      "path": "_site/archive/293/index.html",
+      "subject": "Weekly Thing 293 / WHOIS, Glowtime, Place",
+      "findings": []
+    },
+    {
+      "number": 294,
+      "path": "_site/archive/294/index.html",
+      "subject": "Weekly Thing 294 / Vaporizing, Intelligence, Contraption",
+      "findings": []
+    },
+    {
+      "number": 295,
+      "path": "_site/archive/295/index.html",
+      "subject": "Weekly Thing 295 / Links, Surveillance, POSSE",
+      "findings": []
+    },
+    {
+      "number": 296,
+      "path": "_site/archive/296/index.html",
+      "subject": "Weekly Thing 296 / Awk, Fav, Alarmo",
+      "findings": []
+    },
+    {
+      "number": 297,
+      "path": "_site/archive/297/index.html",
+      "subject": "Weekly Thing 297 / People, Building, \"Pure Blogger\"",
+      "findings": []
+    },
+    {
+      "number": 298,
+      "path": "_site/archive/298/index.html",
+      "subject": "Weekly Thing 298 / Tool, Solar, Circles",
+      "findings": []
+    },
+    {
+      "number": 299,
+      "path": "_site/archive/299/index.html",
+      "subject": "Weekly Thing 299 / Apples, Abundance, Australia",
+      "findings": []
+    },
+    {
+      "number": 300,
+      "path": "_site/archive/300/index.html",
+      "subject": "Weekly Thing 300 / Traceroute, 34x34x34, Typst",
+      "findings": []
+    },
+    {
+      "number": 301,
+      "path": "_site/archive/301/index.html",
+      "subject": "Weekly Thing 301 / TinyTroupe, Monarch, Leaving",
+      "findings": []
+    },
+    {
+      "number": 302,
+      "path": "_site/archive/302/index.html",
+      "subject": "Weekly Thing 302 / Recipe, Poetry, OnAir",
+      "findings": []
+    },
+    {
+      "number": 303,
+      "path": "_site/archive/303/index.html",
+      "subject": "Weekly Thing 303 / Petnames, Synapse, jless",
+      "findings": []
+    },
+    {
+      "number": 304,
+      "path": "_site/archive/304/index.html",
+      "subject": "Weekly Thing 304 / Connections, Vince, Markwhen",
+      "findings": []
+    },
+    {
+      "number": 305,
+      "path": "_site/archive/305/index.html",
+      "subject": "Weekly Thing 305 / Lighthouse, Willow, Artemis",
+      "findings": []
+    },
+    {
+      "number": 306,
+      "path": "_site/archive/306/index.html",
+      "subject": "Weekly Thing 306 / Spell, McLarens, Lynch",
+      "findings": [
+        {
+          "category": "header-hierarchy",
+          "detail": "H3 before first H2 (orphan subheading)",
+          "snippet": "Introducing the Christmas Blogs",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 307,
+      "path": "_site/archive/307/index.html",
+      "subject": "Weekly Thing 307 / Attention, Goose, Pulse",
+      "findings": []
+    },
+    {
+      "number": 308,
+      "path": "_site/archive/308/index.html",
+      "subject": "Weekly Thing 308 / Tapestry, Terminal, Tab",
+      "findings": []
+    },
+    {
+      "number": 309,
+      "path": "_site/archive/309/index.html",
+      "subject": "Weekly Thing 309 / Programming, Silence, Drones",
+      "findings": []
+    },
+    {
+      "number": 310,
+      "path": "_site/archive/310/index.html",
+      "subject": "Weekly Thing 310 / Signals, Research, Playlist",
+      "findings": [
+        {
+          "category": "malformed-markdown",
+          "detail": "odd count of '**' (1)",
+          "snippet": "",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 311,
+      "path": "_site/archive/311/index.html",
+      "subject": "Weekly Thing 311 / WikiTok, Bookmarklets, Tapestry",
+      "findings": []
+    },
+    {
+      "number": 312,
+      "path": "_site/archive/312/index.html",
+      "subject": "Weekly Thing 312 / Tangled, Graphing, Starlink",
+      "findings": []
+    },
+    {
+      "number": 313,
+      "path": "_site/archive/313/index.html",
+      "subject": "Weekly Thing 313 / Agentic, Shadows, WireMock",
+      "findings": []
+    },
+    {
+      "number": 314,
+      "path": "_site/archive/314/index.html",
+      "subject": "Weekly Thing 314 / Interfaces, π, Bubbles",
+      "findings": []
+    },
+    {
+      "number": 315,
+      "path": "_site/archive/315/index.html",
+      "subject": "Weekly Thing 315 / Innovation, Yak, Calligraphr",
+      "findings": []
+    },
+    {
+      "number": 316,
+      "path": "_site/archive/316/index.html",
+      "subject": "Weekly Thing 316 / Blogroll, CaMeL, Insider",
+      "findings": []
+    },
+    {
+      "number": 317,
+      "path": "_site/archive/317/index.html",
+      "subject": "Weekly Thing 317 / Assembly, Blogging, Cyberpunk",
+      "findings": []
+    },
+    {
+      "number": 318,
+      "path": "_site/archive/318/index.html",
+      "subject": "Weekly Thing 318 / Sycophancy, Rollerblades, Yoga",
+      "findings": []
+    },
+    {
+      "number": 319,
+      "path": "_site/archive/319/index.html",
+      "subject": "Weekly Thing 319 / Embeddings, Passkeys, Macros",
+      "findings": [
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/cover.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/97b75bddc6.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/ef013dea9b.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/415ce30cac.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/bbf7e88ee8-m.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/6128c2f367-m.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/0472baa392-m.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/40961d69e5-m.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/da3b9c7779-m.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/3bdd9e289a-m.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/8c3d96f536.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/ddf556f001.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/a411033742.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/8fe89d6b8b.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/1723ab307b.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/f3323a549f-m.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/cfd181712b-m.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/9de23b9529-m.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/83ac1c6b29-m.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/b7dadef8af-m.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/a1e49ac6e9-m.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/c97f02f44c-m.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/32765b61b0.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/c9b63fd5d5.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/f82a1684c7.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/1ec261c810.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/7d8d92faf0.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/535d1ed1a7.png",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/2738ba8ed9.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/8e2e474df1.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/375977e388.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/5c3475fc37.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/b53f514d98.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/ab607c7ba7.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/b5038a5751.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/adc189b8d7.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/ab018c5525.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/62e999281d.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/ff02a88a7c.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/555d2825cd.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/e8682c985a.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/d44a90334c.png",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/ee099c038c.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/62373a7a9d.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/7f1c7fd2f7.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/366cbf164b.jpg",
+          "location": ""
+        },
+        {
+          "category": "broken-image",
+          "detail": "HTTP 404",
+          "snippet": "https://files.thingelstad.com/weekly-thing/319/journal/458201db2e.jpg",
+          "location": ""
+        }
+      ]
+    },
+    {
+      "number": 320,
+      "path": "_site/archive/320/index.html",
+      "subject": "Weekly Thing 320 / Octopus, Agentic, Voyager",
+      "findings": []
+    },
+    {
+      "number": 321,
+      "path": "_site/archive/321/index.html",
+      "subject": "Weekly Thing 321 / Saluting, Tetris, Sky",
+      "findings": []
+    },
+    {
+      "number": 322,
+      "path": "_site/archive/322/index.html",
+      "subject": "Weekly Thing 322 / Banff & Lake Louise",
+      "findings": []
+    },
+    {
+      "number": 323,
+      "path": "_site/archive/323/index.html",
+      "subject": "Weekly Thing 323 / Context, Dithering, Liquid Glass",
+      "findings": []
+    },
+    {
+      "number": 324,
+      "path": "_site/archive/324/index.html",
+      "subject": "Weekly Thing 324 / Agents, Shortcuts, Joy",
+      "findings": []
+    },
+    {
+      "number": 325,
+      "path": "_site/archive/325/index.html",
+      "subject": "Weekly Thing 325 / Platform, Agents, Legacy",
+      "findings": []
+    },
+    {
+      "number": 326,
+      "path": "_site/archive/326/index.html",
+      "subject": "Weekly Thing 326 / Tempo, Seedship, Refraction",
+      "findings": []
+    },
+    {
+      "number": 327,
+      "path": "_site/archive/327/index.html",
+      "subject": "Weekly Thing 327 / Prototypes, Tahoe, UTF-8",
+      "findings": []
+    },
+    {
+      "number": 328,
+      "path": "_site/archive/328/index.html",
+      "subject": "Weekly Thing 328 / Agents, Pulse, Vision",
+      "findings": []
+    },
+    {
+      "number": 329,
+      "path": "_site/archive/329/index.html",
+      "subject": "Weekly Thing 329 / Another Thing",
+      "findings": []
+    },
+    {
+      "number": 330,
+      "path": "_site/archive/330/index.html",
+      "subject": "Weekly Thing 330 / Music, Intervals, Nanochat",
+      "findings": []
+    },
+    {
+      "number": 331,
+      "path": "_site/archive/331/index.html",
+      "subject": "Weekly Thing 331 / RFC, Security, Tokens",
+      "findings": []
+    },
+    {
+      "number": 332,
+      "path": "_site/archive/332/index.html",
+      "subject": "Weekly Thing 332 / Compute, Avatar, Cryptography",
+      "findings": []
+    },
+    {
+      "number": 333,
+      "path": "_site/archive/333/index.html",
+      "subject": "Weekly Thing 333 / Gemini, LangChain, Illusion",
+      "findings": []
+    },
+    {
+      "number": 334,
+      "path": "_site/archive/334/index.html",
+      "subject": "Weekly Thing 334 / Privacy, Shopping, Consciousness",
+      "findings": []
+    },
+    {
+      "number": 335,
+      "path": "_site/archive/335/index.html",
+      "subject": "Weekly Thing 335 / Complexity, Fizzy, Soul",
+      "findings": []
+    },
+    {
+      "number": 336,
+      "path": "_site/archive/336/index.html",
+      "subject": "Weekly Thing 336 / Culture, Retention, Transmission",
+      "findings": []
+    },
+    {
+      "number": 337,
+      "path": "_site/archive/337/index.html",
+      "subject": "Weekly Thing 337 / Sunrise, Vision, Offline",
+      "findings": []
+    },
+    {
+      "number": 338,
+      "path": "_site/archive/338/index.html",
+      "subject": "Weekly Thing 338 / Authority, Humanizer, Left",
+      "findings": []
+    },
+    {
+      "number": 339,
+      "path": "_site/archive/339/index.html",
+      "subject": "Weekly Thing 339 / OpenClaw, Isometric, Prism",
+      "findings": []
+    },
+    {
+      "number": 340,
+      "path": "_site/archive/340/index.html",
+      "subject": "Weekly Thing 340 / Moltbook, Frontier, Poster",
+      "findings": []
+    },
+    {
+      "number": 341,
+      "path": "_site/archive/341/index.html",
+      "subject": "Weekly Thing 341 / Minions, MAX, ReMemory",
+      "findings": []
+    },
+    {
+      "number": 342,
+      "path": "_site/archive/342/index.html",
+      "subject": "Weekly Thing 342 / Claude, Otto, Elixir",
+      "findings": []
+    },
+    {
+      "number": 343,
+      "path": "_site/archive/343/index.html",
+      "subject": "Weekly Thing 343 / Commune, Chaos, Renaissance",
+      "findings": []
+    },
+    {
+      "number": 344,
+      "path": "_site/archive/344/index.html",
+      "subject": "Weekly Thing 344 / Mythos, Artemis, Signals",
+      "findings": []
+    }
+  ]
+}
