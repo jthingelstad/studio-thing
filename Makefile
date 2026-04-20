@@ -1,4 +1,4 @@
-.PHONY: build serve clean data sync
+.PHONY: build serve clean data sync refresh-copy refresh-copy-dry
 
 data:
 	python scripts/build_data.py
@@ -26,3 +26,9 @@ sync-push:
 sync-issue:
 	@read -p "Issue number: " num; \
 	python scripts/sync_to_buttondown.py --issue $$num
+
+refresh-copy:
+	python scripts/refresh_marketing_copy.py
+
+refresh-copy-dry:
+	python scripts/refresh_marketing_copy.py --dry-run
