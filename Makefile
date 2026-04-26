@@ -1,7 +1,16 @@
-.PHONY: build serve clean data fresh content-pull content-pull-latest content-build content-diff content-push content-push-live fetch-latest sync sync-push sync-issue refresh-copy refresh-copy-dry
+.PHONY: build serve clean data librarian-corpus librarian-corpus-upload librarian-deploy fresh content-pull content-pull-latest content-build content-diff content-push content-push-live fetch-latest sync sync-push sync-issue refresh-copy refresh-copy-dry
 
 data:
 	npm run data
+
+librarian-corpus:
+	npm run librarian:corpus
+
+librarian-corpus-upload:
+	npm run librarian:corpus:upload
+
+librarian-deploy:
+	npm run librarian:deploy
 
 build: data
 	npm run build:all
