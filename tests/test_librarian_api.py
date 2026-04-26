@@ -250,7 +250,7 @@ class LibrarianApiTests(unittest.TestCase):
         self.assertEqual(payload["value"], "member=hash-123;citations=3")
         self.assertEqual(payload["path"], "/librarian/api")
         self.assertEqual(payload["source"], "librarian-api")
-        self.assertNotIn("ip_address", payload)
+        self.assertEqual(payload["ip_address"], "203.0.113.50")
         self.assertNotIn("user_agent", payload)
 
     @mock.patch("librarian_api.app.httpx.post")

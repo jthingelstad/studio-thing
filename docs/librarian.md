@@ -80,7 +80,7 @@ Premium subscribers get a small Supporting Member thank-you before entering chat
 
 Lambda writes structured JSON logs to CloudWatch. Logs include request ID, route, status code, duration, subscriber email hash, retrieval mode, citation count, upstream status/duration, and error type. Raw email addresses, API keys, session tokens, prompts, and answers are not logged.
 
-Server-side Tinylytics events use the subscriber email hash as `visitor_id` and, when useful, include the same hash in the event `value` as `member=...`. They do not include raw email addresses, IP addresses, user agents, questions, answers, tokens, or request IDs. Tinylytics API failures are logged as warnings and do not fail the user request.
+Server-side Tinylytics events use the subscriber email hash as `visitor_id`, pass the visitor IP address as `ip_address` so Tinylytics can resolve geography, and, when useful, include the same hash in the event `value` as `member=...`. They do not include raw email addresses, user agents, questions, answers, tokens, or request IDs. Tinylytics API failures are logged as warnings and do not fail the user request.
 
 Every API response includes an `x-request-id` header. Browser-visible errors include that reference so the matching CloudWatch request can be found quickly.
 
