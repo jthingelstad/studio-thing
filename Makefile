@@ -1,34 +1,36 @@
-.PHONY: build serve clean data sync refresh-copy refresh-copy-dry
+.PHONY: build serve clean data fresh fetch-latest sync sync-push sync-issue refresh-copy refresh-copy-dry
 
 data:
-	python scripts/build_data.py
+	npm run data
 
 build: data
-	npx @11ty/eleventy
-	npx pagefind --site _site --glob "**/*.html"
+	npm run build:all
 
 serve: data
-	npx @11ty/eleventy --serve
+	npm run serve
 
 clean:
 	rm -rf _site cache
 
 fresh:
-	python scripts/build_data.py --no-cache
-	npx @11ty/eleventy --serve
+	npm run data:fresh
+	npm run serve
+
+fetch-latest:
+	npm run fetch:latest
 
 sync:
-	python scripts/sync_to_buttondown.py --dry-run
+	npm run sync
 
 sync-push:
-	python scripts/sync_to_buttondown.py
+	npm run sync:push
 
 sync-issue:
 	@read -p "Issue number: " num; \
 	python scripts/sync_to_buttondown.py --issue $$num
 
 refresh-copy:
-	python scripts/refresh_marketing_copy.py
+	npm run refresh-copy
 
 refresh-copy-dry:
-	python scripts/refresh_marketing_copy.py --dry-run
+	npm run refresh-copy:dry
