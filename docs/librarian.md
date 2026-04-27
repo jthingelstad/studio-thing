@@ -5,7 +5,7 @@ Thingy is a subscriber-gated chat interface for the Weekly Thing archive.
 ## Local Artifacts
 
 - `npm run librarian:corpus` builds `data/librarian/corpus.json` from the cleaned generated archive.
-- The tracked corpus is text-only and citation-ready.
+- The tracked corpus is text-only and citation-ready. It includes issue summaries, topic metadata, and chunk-level retrieval metadata.
 - Embedded corpus files should not be committed. Use the upload command to generate embeddings and push the deployable corpus to S3.
 
 ## AWS Runtime
@@ -26,6 +26,7 @@ The browser fetches generated suggested questions from `site.librarianApiUrl + /
 
 ```sh
 npm run librarian:corpus
+npm run librarian:eval
 npm run librarian:corpus:upload
 npm run librarian:deploy
 ```
@@ -74,7 +75,7 @@ The deploy script passes `LIBRARIAN_CLOUDFORMATION_ROLE_ARN` to CloudFormation w
 
 Thingy uses a soft subscriber gate. A visitor enters an email address, Lambda validates that email against Buttondown, and then returns a short-lived signed session token for active `regular` and `premium` subscribers. This does not prove inbox ownership; it is a pragmatic gate for a low-risk, rate-limited archive feature.
 
-Premium subscribers get a small Supporting Member thank-you before entering chat. Unknown email addresses can opt in from the librarian page; those signups are created in Buttondown with the `sub_tag_3ts444xst99y08j8bqfnwt1g4h` source tag and must confirm their email before using Thingy. Unconfirmed subscribers can request Buttondown's confirmation reminder email from the same page. The logout control is local-only: it clears the browser's stored session token and returns to the email gate.
+Premium subscribers get a small LLM-generated Supporting Member thank-you before entering chat, with a fixed fallback if OpenAI is unavailable. Unknown email addresses can opt in from the librarian page; those signups are created in Buttondown with the `sub_tag_3ts444xst99y08j8bqfnwt1g4h` source tag and must confirm their email before using Thingy. Unconfirmed subscribers can request Buttondown's confirmation reminder email from the same page. The logout control is local-only: it clears the browser's stored session token and returns to the email gate.
 
 ## Logging
 
@@ -87,6 +88,8 @@ Every API response includes an `x-request-id` header. Browser-visible errors inc
 `GET /health` is available as a cheap smoke-test endpoint. It verifies API Gateway and Lambda routing without calling Buttondown, OpenAI, DynamoDB, or S3.
 
 `POST /prompts` requires a valid session token. It returns three generated suggested questions and falls back to a static set if OpenAI is unavailable.
+
+Thingy uses hybrid retrieval. It merges semantic embedding matches, lexical matches, and issue-summary/topic graph matches, then applies context-aware recency and issue diversity before sending sources to OpenAI. Current/recommendation questions prefer newer material when relevance is close. History/evolution questions intentionally preserve sources across eras.
 
 Thingy answers cite issue numbers inline, and the browser turns matching `#123` references into archive links with native tooltips containing the source details. The API still returns citation metadata for rendering and analytics, but the page does not show a separate Sources block.
 

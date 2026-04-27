@@ -33,8 +33,14 @@ class LibrarianCorpusTests(unittest.TestCase):
 
         self.assertEqual(result["issue_count"], 1)
         self.assertGreaterEqual(result["chunk_count"], 1)
+        self.assertEqual(result["version"], 2)
+        self.assertIn("topics", result)
+        self.assertIn("summary", result["issues"][0])
+        self.assertIn("body_hash", result["issues"][0])
         self.assertEqual(result["chunks"][0]["issue_number"], 1)
         self.assertEqual(result["chunks"][0]["url"], "/archive/1/")
+        self.assertEqual(result["chunks"][0]["source_kind"], "chunk")
+        self.assertIn("content_kind", result["chunks"][0])
 
     def test_rejects_template_leaks(self):
         with tempfile.TemporaryDirectory() as tmp:
