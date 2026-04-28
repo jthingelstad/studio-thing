@@ -17,14 +17,6 @@ STACK_NAME = "weekly-thing-librarian"
 TABLE_LOGICAL_ID = "LibrarianTable"
 
 
-def prefer_cli_aws_credentials() -> None:
-    if os.environ.get("LIBRARIAN_USE_ENV_AWS_CREDENTIALS") == "1":
-        return
-    os.environ.pop("AWS_ACCESS_KEY_ID", None)
-    os.environ.pop("AWS_SECRET_ACCESS_KEY", None)
-    os.environ.pop("AWS_SESSION_TOKEN", None)
-
-
 def table_name_from_stack(stack_name: str) -> str:
     client = boto3.client("cloudformation")
     response = client.describe_stack_resource(StackName=stack_name, LogicalResourceId=TABLE_LOGICAL_ID)
@@ -68,7 +60,6 @@ def print_text(items: list[dict[str, Any]]) -> None:
 
 def main() -> int:
     load_dotenv()
-    prefer_cli_aws_credentials()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stack-name", default=os.environ.get("LIBRARIAN_STACK_NAME", STACK_NAME))
     parser.add_argument("--table-name", default=os.environ.get("LIBRARIAN_TABLE_NAME"))

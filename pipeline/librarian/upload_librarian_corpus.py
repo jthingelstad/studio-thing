@@ -15,17 +15,8 @@ import build_librarian_corpus
 import build_librarian_graph
 
 
-def prefer_cli_aws_credentials() -> None:
-    if os.environ.get("LIBRARIAN_USE_ENV_AWS_CREDENTIALS") == "1":
-        return
-    os.environ.pop("AWS_ACCESS_KEY_ID", None)
-    os.environ.pop("AWS_SECRET_ACCESS_KEY", None)
-    os.environ.pop("AWS_SESSION_TOKEN", None)
-
-
 def main() -> int:
     load_dotenv()
-    prefer_cli_aws_credentials()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bucket", default=os.environ.get("AWS_S3_BUCKET"))
     parser.add_argument("--key", default=os.environ.get("LIBRARIAN_CORPUS_KEY", "librarian/corpus.json"))
@@ -41,7 +32,6 @@ def main() -> int:
 
     corpus = build_librarian_corpus.build_corpus(include_issue_bodies=True)
     build_librarian_corpus.add_bedrock_embeddings(corpus, args.embedding_model, args.embedding_dimensions)
-    prefer_cli_aws_credentials()
 
     if args.keep_output:
         upload_path = Path(args.keep_output)

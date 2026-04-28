@@ -45,7 +45,7 @@ For raw JSON conversation review:
 npm run librarian:conversations -- --limit 25 --json
 ```
 
-After deployment, set `site.librarianApiUrl` in `site/_data/site.js` to the `LibrarianApiUrl` output by CloudFormation and `site.librarianStreamUrl` to `LibrarianStreamUrl`. The current production values are already stored in `site/_data/site.js`.
+After deployment, the deploy script writes the CloudFormation `LibrarianApiUrl` and `LibrarianStreamUrl` outputs to `.env` as `LIBRARIAN_API_URL` and `LIBRARIAN_STREAM_URL`. The static site reads those values during build, with the current production URLs kept only as a fallback in `site/_data/site.js`.
 
 ## Required Secrets
 
@@ -58,9 +58,14 @@ CloudFormation parameters:
 Local `.env` values used by upload/build scripts:
 
 - `BUTTONDOWN_API_KEY`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN` (only if using temporary credentials)
 - `TINYLYTICS_SITE_UID` or `TINYLYTICS_SITE_ID` for the static website embed, not the API.
 - `AWS_S3_BUCKET`
 - `AWS_DEFAULT_REGION`
+- `LIBRARIAN_API_URL` (written by deploy; used by static site build)
+- `LIBRARIAN_STREAM_URL` (written by deploy; used by static site build)
 - `BEDROCK_AGENT_MODEL` (optional; defaults to `us.anthropic.claude-sonnet-4-6`, the US Bedrock inference profile for Claude Sonnet 4.6)
 - `BEDROCK_EMBEDDING_MODEL` (optional; defaults to `cohere.embed-english-v3`)
 - `BEDROCK_RERANK_MODEL` (optional; defaults to `cohere.rerank-v3-5:0`)
@@ -71,11 +76,11 @@ Local `.env` values used by upload/build scripts:
 - `LIBRARIAN_CONVERSATION_LOGGING` (optional; defaults to enabled. Set to `0` to disable beta transcript logging.)
 - `LIBRARIAN_CONVERSATION_LOG_TTL_DAYS` (optional; defaults to 60 days.)
 
-By default, deploy scripts ignore `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` from `.env` and use the configured AWS CLI credentials instead. Set `LIBRARIAN_USE_ENV_AWS_CREDENTIALS=1` only if those `.env` credentials should deploy infrastructure.
+Deploy, corpus upload, and conversation review scripts load AWS credentials from `.env` through `python-dotenv` before creating `boto3` clients. They do not intentionally fall back to AWS CLI profile authentication.
 
 ## Permanent IAM Setup
 
-The first deploy can use local AWS CLI credentials to bootstrap the stack. Routine deploys currently use the `wt-archive` IAM user with an attached `WeeklyThingLibrarianDeploy` managed policy. That policy grants enough access to upload `s3://files.thingelstad.com/librarian/*` artifacts and update the `weekly-thing-librarian` CloudFormation stack.
+Deploys use the AWS credentials loaded from `.env`. Routine deploys currently use the `wt-archive` IAM user with an attached `WeeklyThingLibrarianDeploy` managed policy. That policy grants enough access to upload `s3://files.thingelstad.com/librarian/*` artifacts and update the `weekly-thing-librarian` CloudFormation stack.
 
 The long-term cleanup is still a dedicated CloudFormation service role.
 

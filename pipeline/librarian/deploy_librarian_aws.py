@@ -39,14 +39,6 @@ def require_env(name: str) -> str:
     return value
 
 
-def prefer_cli_aws_credentials() -> None:
-    if os.environ.get("LIBRARIAN_USE_ENV_AWS_CREDENTIALS") == "1":
-        return
-    os.environ.pop("AWS_ACCESS_KEY_ID", None)
-    os.environ.pop("AWS_SECRET_ACCESS_KEY", None)
-    os.environ.pop("AWS_SESSION_TOKEN", None)
-
-
 def run(args: list[str], cwd: Path = REPO) -> None:
     subprocess.run(args, cwd=cwd, check=True)
 
@@ -178,9 +170,24 @@ def stack_outputs(cloudformation, stack_name: str) -> dict[str, str]:
     return result
 
 
+def update_env_file(values: dict[str, str]) -> None:
+    env_path = REPO / ".env"
+    lines = env_path.read_text(encoding="utf-8").splitlines() if env_path.exists() else []
+    remaining = {key: value for key, value in values.items() if value}
+    updated: list[str] = []
+    for line in lines:
+        key = line.split("=", 1)[0] if "=" in line else ""
+        if key in remaining:
+            updated.append(f"{key}={remaining.pop(key)}")
+        else:
+            updated.append(line)
+    for key, value in remaining.items():
+        updated.append(f"{key}={value}")
+    env_path.write_text("\n".join(updated).rstrip() + "\n", encoding="utf-8")
+
+
 def main() -> int:
     load_dotenv()
-    prefer_cli_aws_credentials()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stack-name", default=STACK_NAME)
     parser.add_argument("--bucket", default=os.environ.get("AWS_S3_BUCKET"))
@@ -227,6 +234,12 @@ def main() -> int:
     )
     for key, value in sorted(outputs.items()):
         print(f"{key}={value}")
+    update_env_file(
+        {
+            "LIBRARIAN_API_URL": outputs.get("LibrarianApiUrl", ""),
+            "LIBRARIAN_STREAM_URL": outputs.get("LibrarianStreamUrl", ""),
+        }
+    )
     if generated_session_secret:
         print("Generated an initial session secret for this stack. Future updates will reuse it unless LIBRARIAN_SESSION_SECRET is set.")
     return 0
