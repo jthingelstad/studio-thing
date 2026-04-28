@@ -176,6 +176,67 @@ test('librarian auth handles signup and unconfirmed states', async ({ page }) =>
   await expect(page.getByText('Confirmation email sent. Check your inbox.')).toBeVisible();
 });
 
+test('librarian query parameters prefill email and auto-submit prompt', async ({ page }) => {
+  const authRequests = [];
+  const chatRequests = [];
+  await page.addInitScript(() => {
+    window.WEEKLY_THING_LIBRARIAN_API = 'https://mock-librarian.test';
+    window.WEEKLY_THING_LIBRARIAN_STREAM_API = 'https://mock-librarian-stream.test';
+    window.localStorage.clear();
+    window.sessionStorage.setItem('weeklyThingLibrarianBetaNotice', 'dismissed');
+  });
+  await page.route('https://mock-librarian.test/auth', async (route) => {
+    authRequests.push(route.request().postDataJSON());
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({ status: 'active', token: 'mock-token', expires_at: 9999999999 }),
+    });
+  });
+  await page.route('https://mock-librarian-stream.test/chat', async (route) => {
+    chatRequests.push(route.request().postDataJSON());
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/event-stream',
+      headers: { 'access-control-allow-origin': '*' },
+      body: [
+        'event: meta',
+        'data: {"request_id":"mock-query-param-request"}',
+        '',
+        'event: answer_delta',
+        'data: {"delta":"Here is an answer from Thingy."}',
+        '',
+        'event: done',
+        'data: {"request_id":"mock-query-param-request"}',
+        '',
+        ''
+      ].join('\n'),
+    });
+  });
+
+  const prompt = 'What has Jamie written about RSS?';
+  await page.goto(`/thingy/?email=reader%40example.com&prompt=${encodeURIComponent(prompt)}`);
+  await expect(page.getByLabel('Subscriber email')).toHaveValue('reader@example.com');
+  await page.getByRole('button', { name: 'Enter' }).click();
+  await expect(page.locator('#librarian-chat')).toBeVisible();
+  await expect.poll(() => chatRequests.length).toBe(1);
+  expect(authRequests[0]).toMatchObject({ email: 'reader@example.com', action: 'check' });
+  expect(chatRequests[0]).toMatchObject({ message: prompt, history: [] });
+  await expect(page.locator('#librarian-prompts')).toBeHidden();
+
+  await page.getByRole('button', { name: 'Use a different email' }).click();
+  authRequests.length = 0;
+  chatRequests.length = 0;
+  await page.goto(`/thingy/?prompt=${encodeURIComponent(prompt)}`);
+  await expect(page.getByLabel('Subscriber email')).toHaveValue('');
+  await page.getByLabel('Subscriber email').fill('manual@example.com');
+  await page.getByRole('button', { name: 'Enter' }).click();
+  await expect.poll(() => chatRequests.length).toBe(1);
+  expect(authRequests[0]).toMatchObject({ email: 'manual@example.com', action: 'check' });
+  expect(chatRequests[0]).toMatchObject({ message: prompt, history: [] });
+});
+
 test('librarian starter prompts and inline citations render with mocked APIs', async ({ page }) => {
   const chatRequests = [];
   await page.addInitScript(() => {
