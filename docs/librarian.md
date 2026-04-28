@@ -70,7 +70,6 @@ Local `.env` values used by upload/build scripts:
 - `BEDROCK_EMBEDDING_MODEL` (optional; defaults to `cohere.embed-english-v3`)
 - `BEDROCK_RERANK_MODEL` (optional; defaults to `cohere.rerank-v3-5:0`)
 - `BEDROCK_RERANK_REGION` (optional; defaults to `us-west-2`, where the Bedrock Rerank API exposes Cohere Rerank 3.5)
-- `LIBRARIAN_AGENT_ENABLED` (runtime flag; deployed as `1`; set to `0` for rollback to the single-shot Bedrock path)
 - `LIBRARIAN_LOG_LEVEL` (optional; defaults to `INFO`)
 - `LIBRARIAN_AUTH_RATE_LIMIT_MAX` (optional; defaults to 30 auth attempts per client identity per hour)
 - `LIBRARIAN_CONVERSATION_LOGGING` (optional; defaults to enabled. Set to `0` to disable beta transcript logging.)
@@ -126,7 +125,7 @@ npm run librarian:conversations -- --limit 25
 
 The script resolves the DynamoDB table name from the `weekly-thing-librarian` CloudFormation stack unless `LIBRARIAN_TABLE_NAME` is set.
 
-The beta popup on `/librarian/` tells authenticated users that beta conversations may be logged and reviewed to improve Thingy.
+The beta popup on `/thingy/` tells authenticated users that beta conversations may be logged and reviewed to improve Thingy.
 
 `GET /health` is available as a cheap smoke-test endpoint. It verifies API Gateway and Lambda routing without calling Buttondown, Bedrock, DynamoDB, or S3.
 
@@ -136,7 +135,7 @@ The beta popup on `/librarian/` tells authenticated users that beta conversation
 
 Thingy uses hybrid retrieval. It merges semantic embedding matches, lexical matches, and issue-summary/topic graph matches, reranks the top candidates with Cohere Rerank 3.5 through the Bedrock Agent Runtime rerank API, then applies context-aware recency and issue diversity. Current/recommendation questions prefer newer material when relevance is close. History/evolution questions intentionally preserve sources across eras.
 
-When `LIBRARIAN_AGENT_ENABLED=1`, chat requests run through a tool-using Claude Sonnet 4.6 loop capped by `MAX_TOOL_TURNS` (default 8). The agent can call:
+Chat requests run through a tool-using Claude Sonnet 4.6 loop capped by `MAX_TOOL_TURNS` (default 8). The agent can call:
 
 - `search_archive(query, year_range?, section?, limit?)`
 - `get_issue(number)`
@@ -147,7 +146,7 @@ When `LIBRARIAN_AGENT_ENABLED=1`, chat requests run through a tool-using Claude 
 - `list_issues(year?, topic?, entity?)`
 - `compare_eras(topic, year_a, year_b)`
 
-The agent uses the same subscriber gate, rate limits, browser-supplied history, and DynamoDB logging as the baseline path. Tool status is emitted over the existing streaming Function URL as `status` events.
+Thingy uses the subscriber gate, rate limits, browser-supplied history, and DynamoDB logging. Tool status is emitted over the existing streaming Function URL as `status` events.
 
 The graph artifact is built offline from the corpus and archive front matter. It stores per-issue entities, recurring tropes/stances, and top-K similar issues from issue-level embedding averages. `pipeline/librarian/build_librarian_graph.py --use-bedrock-extraction` can use Sonnet for entity/trope extraction; the default heuristic mode is available for cheap local refreshes.
 

@@ -11,7 +11,7 @@ test('main navigation stays on one row at mobile widths', async ({ page }) => {
 
   for (const viewport of sizes) {
     await page.setViewportSize(viewport);
-    await page.goto('http://localhost:8080/', { waitUntil: 'domcontentloaded' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
 
     const navLayout = await page.locator('.site-nav').evaluate((nav) => {
       const links = Array.from(nav.querySelectorAll('a'));
@@ -33,4 +33,20 @@ test('main navigation stays on one row at mobile widths', async ({ page }) => {
     expect(navLayout.firstLinkLeft, `${viewport.width}px first link`).toBeGreaterThanOrEqual(0);
     expect(navLayout.lastLinkRight, `${viewport.width}px last link`).toBeLessThanOrEqual(navLayout.viewportWidth);
   }
+});
+
+test('main navigation marks the current section', async ({ page }) => {
+  await page.goto('/thingy/');
+
+  await expect(page.locator('.site-nav a.is-active')).toHaveText('Thingy');
+  await expect(page.locator('.site-nav a[aria-current="page"]')).toHaveAttribute('href', '/thingy/');
+  await expect(page.getByText('Thingy is your guide to the entire Weekly Thing archive')).toBeVisible();
+  await expect(page.locator('.librarian-persona')).toBeVisible();
+});
+
+test('old librarian URL redirects to Thingy', async ({ page }) => {
+  await page.goto('/librarian');
+
+  await expect(page).toHaveURL(/\/thingy\/$/);
+  await expect(page.locator('h1')).toContainText('Thingy');
 });

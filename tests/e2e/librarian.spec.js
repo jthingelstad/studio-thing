@@ -80,14 +80,15 @@ test('librarian email form submits in a visible way', async ({ page }) => {
     }
   });
 
-  await page.goto('http://localhost:8080/librarian/');
+  await page.goto('/thingy/');
   await page.getByLabel('Subscriber email').fill('jamiethingelstad@icloud.com');
   await page.getByRole('button', { name: 'Enter' }).click();
   await expect(page.locator('#librarian-chat')).toBeVisible({ timeout: 30000 });
   await page.getByRole('button', { name: 'I understand' }).click();
 
-  await page.getByLabel('Ask Thingy').fill('What has the archive said about RSS and the open web?');
-  await page.keyboard.press('Enter');
+  const questionBox = page.getByLabel('Ask Thingy');
+  await questionBox.fill('What has the archive said about RSS and the open web?');
+  await questionBox.press('Enter');
   await expect(page.locator('#librarian-prompts')).toBeHidden();
   await expect(page.locator('.librarian-message-assistant a[href^="/archive/"]').first()).toBeVisible({ timeout: 90000 });
 
@@ -190,7 +191,7 @@ test('librarian auth handles signup and unconfirmed states', async ({ page }) =>
     });
   });
 
-  await page.goto('http://localhost:8080/librarian/');
+  await page.goto('/thingy/');
   await page.getByLabel('Subscriber email').fill('new@example.com');
   await page.getByRole('button', { name: 'Enter' }).click();
   await expect(page.getByText('That email is not subscribed. Would you like to be added?')).toBeVisible();
@@ -275,7 +276,7 @@ test('librarian prompts and inline citations render with mocked APIs', async ({ 
     });
   });
 
-  await page.goto('http://localhost:8080/librarian/');
+  await page.goto('/thingy/');
   await page.getByLabel('Subscriber email').fill('reader@example.com');
   await page.getByRole('button', { name: 'Enter' }).click();
   await page.getByRole('button', { name: 'I understand' }).click();
@@ -290,12 +291,20 @@ test('librarian prompts and inline citations render with mocked APIs', async ({ 
   expect(chatRequests[0].history).toEqual([]);
 
   await page.getByLabel('Ask Thingy').fill('Tell me more about privacy.');
-  await page.keyboard.press('Enter');
+  await page.getByLabel('Ask Thingy').press('Enter');
   await expect.poll(() => chatRequests.length).toBe(2);
   expect(chatRequests[1].history).toEqual([
     { role: 'user', content: 'What does the archive say about the open web?' },
     { role: 'assistant', content: 'The archive connects RSS to open-web agency (#336, #233).' },
   ]);
+
+  await page.getByRole('button', { name: 'Start over' }).click();
+  await expect(page.locator('.librarian-message-user')).toHaveCount(0);
+  await expect(page.locator('.librarian-message-assistant')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Open web' })).toBeVisible();
+  await page.getByRole('button', { name: 'Open web' }).click();
+  await expect.poll(() => chatRequests.length).toBe(3);
+  expect(chatRequests[2].history).toEqual([]);
 
   await page.getByLabel('Ask Thingy').fill('First line');
   await page.keyboard.down('Shift');
