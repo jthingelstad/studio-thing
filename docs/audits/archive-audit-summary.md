@@ -2,24 +2,24 @@
 
 Two audits have been run end-to-end:
 
-1. **Static audit** (`scripts/audit_archive.py`) — regex + DOM inspection of the rendered HTML in `_site/archive/`. Catches structural breakage (broken images, header hierarchy, malformed markdown, template-tag leakage).
-2. **LLM audit** (`scripts/llm_audit_archive.py`) — Claude Opus 4.7 reading the raw markdown body of each issue with era context + the static findings. Catches semantic issues the regex can't see (typos, mid-sentence truncation, dropped-URL links, leftover Micropub form tokens, narrative breaks from migration). Snippets are verified verbatim against source to filter hallucinations.
+1. **Static audit** (`pipeline/audits/audit_archive.py`) — regex + DOM inspection of the rendered HTML in `_site/archive/`. Catches structural breakage (broken images, header hierarchy, malformed markdown, template-tag leakage).
+2. **LLM audit** (`pipeline/audits/llm_audit_archive.py`) — Claude Opus 4.7 reading the raw markdown body of each issue with era context + the static findings. Catches semantic issues the regex can't see (typos, mid-sentence truncation, dropped-URL links, leftover Micropub form tokens, narrative breaks from migration). Snippets are verified verbatim against source to filter hallucinations.
 
 **Deliverables in `tmp/`:**
 - `archive-audit.md` / `.json` — static audit output
 - `llm-audit.md` / `.json` — LLM audit output
 - `archive-audit-summary.md` — this file (hand-written overview, not regenerated)
 
-**Re-run:** `python scripts/audit_archive.py`, or `python scripts/llm_audit_archive.py --full`.
+**Re-run:** `python pipeline/audits/audit_archive.py`, or `python pipeline/audits/llm_audit_archive.py --full`.
 
 ---
 
 ## What I fixed
 
-13 unambiguous fixes applied. Two scripts in `scripts/` are idempotent and re-runnable:
+13 unambiguous fixes applied. Two scripts in `pipeline/one-shot/` are idempotent and re-runnable:
 
-- `scripts/fix_archive_headings.py` — issues **132–136** used `# Section` for section titles instead of `## Section`, which made the TOC empty (TOC only picks up H2/H3). Script demotes `# Section` → `## Section` **and** demotes `## [Link](url)` → `### [Link](url)` so link titles sit under section titles.
-- `scripts/fix_archive_links.py` — 8 exact-string fixes for malformed markdown links:
+- `pipeline/one-shot/fix_archive_headings.py` — issues **132–136** used `# Section` for section titles instead of `## Section`, which made the TOC empty (TOC only picks up H2/H3). Script demotes `# Section` → `## Section` **and** demotes `## [Link](url)` → `### [Link](url)` so link titles sit under section titles.
+- `pipeline/one-shot/fix_archive_links.py` — 8 exact-string fixes for malformed markdown links:
   - **#40** — `(activist)` parens in Wikipedia URL cascaded and ate the whole sentence's two links
   - **#82** — missing `[` before "Machine Learning University" link text
   - **#126** — `(band)` and `(musician)` parens in Wikipedia URLs broke 3 consecutive links
@@ -31,18 +31,18 @@ Two audits have been run end-to-end:
 
 ### Caveat about persistence
 
-The data pipeline (`scripts/build_data.py`) **regenerates `src/archive/N.md` from the Buttondown API cache**, overwriting local edits. After my fixes:
+The data pipeline (`pipeline/content/build_data.py`) **regenerates `site/archive/N.md` from the Buttondown API cache**, overwriting local edits. After my fixes:
 
-1. The 13 edits exist in `src/archive/{40,82,126,132,133,134,135,136,161,221,291}.md` right now.
+1. The 13 edits exist in `site/archive/{40,82,126,132,133,134,135,136,161,221,291}.md` right now.
 2. `_site/` reflects them (I ran `npx @11ty/eleventy` after fixing, not `build_data.py`).
 3. The **next** `make serve` / `make build` / `make fresh` will clobber them unless the Buttondown source is updated.
 
 To make the fixes durable, push to Buttondown:
 
 ```bash
-python scripts/sync_to_buttondown.py --dry-run                 # preview
-python scripts/sync_to_buttondown.py --issue 40                # per-issue push
-python scripts/sync_to_buttondown.py --issue 82
+python pipeline/content/sync_to_buttondown.py --dry-run                 # preview
+python pipeline/content/sync_to_buttondown.py --issue 40                # per-issue push
+python pipeline/content/sync_to_buttondown.py --issue 82
 # …etc for 126, 132, 133, 134, 135, 136, 161, 221, 291
 ```
 
@@ -210,7 +210,7 @@ Most HIGH findings are MailChimp-era link-anchor placement errors: `[went ahead 
 
 ## No fixes applied from the LLM audit
 
-I did **not** apply any of the 1,391 LLM findings. Unlike the 13 static-audit fixes — which were pattern-matched broken markdown with exact known-good replacements — LLM findings benefit from human review before bulk edits. `scripts/fix_archive_headings.py` and `scripts/fix_archive_links.py` remain as references for the pattern if you want to write targeted fix scripts for the systemic issues in the table above.
+I did **not** apply any of the 1,391 LLM findings. Unlike the 13 static-audit fixes — which were pattern-matched broken markdown with exact known-good replacements — LLM findings benefit from human review before bulk edits. `pipeline/one-shot/fix_archive_headings.py` and `pipeline/one-shot/fix_archive_links.py` remain as references for the pattern if you want to write targeted fix scripts for the systemic issues in the table above.
 
 ## Suggested next steps
 

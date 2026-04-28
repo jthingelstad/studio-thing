@@ -8,14 +8,14 @@ Thingy is a subscriber-gated chat interface for the Weekly Thing archive.
 - The tracked corpus is text-only and citation-ready. It includes issue summaries, topic metadata, and chunk-level retrieval metadata.
 - Embedded corpus files should not be committed. Use the upload command to generate Bedrock Cohere embeddings and push the deployable corpus to S3.
 - `npm run librarian:graph` builds `data/librarian/graph.json`, the offline entity/trope/similarity artifact used by the archive tools.
-- `scripts/eval_librarian_rag.py` prints retrieval and reranker diagnostics for standard or multi-hop question sets.
-- `scripts/eval_librarian_answers.py` runs baseline or agentic answer generation, then asks Bedrock to judge answer quality. Results are written to `tmp/librarian-answer-eval.json`.
-- The `weekly-agent` eval suite covers 20 recall, synthesis, recommendation, pattern, voice, tricky retrieval, and edge-case prompts: `python scripts/eval_librarian_answers.py --mode agent --question-set weekly-agent --sample-limit 20`.
-- `scripts/review_librarian_conversations.py` reads beta conversation logs from DynamoDB for review.
+- `pipeline/librarian/eval_librarian_rag.py` prints retrieval and reranker diagnostics for standard or multi-hop question sets.
+- `pipeline/librarian/eval_librarian_answers.py` runs baseline or agentic answer generation, then asks Bedrock to judge answer quality. Results are written to `tmp/librarian-answer-eval.json`.
+- The `weekly-agent` eval suite covers 20 recall, synthesis, recommendation, pattern, voice, tricky retrieval, and edge-case prompts: `python pipeline/librarian/eval_librarian_answers.py --mode agent --question-set weekly-agent --sample-limit 20`.
+- `pipeline/librarian/review_librarian_conversations.py` reads beta conversation logs from DynamoDB for review.
 
 ## AWS Runtime
 
-The backend is defined in `aws/cloudformation.yaml`. Auth, health checks, and the buffered JSON chat fallback run behind API Gateway/Lambda. Streaming chat runs through a Lambda Function URL with response streaming enabled. It uses:
+The backend is defined in `infra/librarian/cloudformation.yaml`. Auth and auth health checks run behind API Gateway/Lambda. Streaming chat, generated prompts, and stream health checks run through a Lambda Function URL with response streaming enabled. It uses:
 
 - Buttondown API for subscriber lookup.
 - Amazon Bedrock Claude Sonnet 4.6 for prompts, premium messages, baseline synthesis, and the agent loop.
@@ -23,10 +23,9 @@ The backend is defined in `aws/cloudformation.yaml`. Auth, health checks, and th
 - Amazon Bedrock Cohere Rerank 3.5 after archive searches.
 - DynamoDB for session and rate-limit state.
 - S3 for the embedded archive corpus and the offline graph artifact.
-- Tinylytics API for server-side activity events.
 - CloudWatch Logs for structured JSON request, retrieval, upstream, and error logs.
 
-The browser fetches generated suggested questions from `site.librarianApiUrl + /prompts` after subscriber validation. It prefers `site.librarianStreamUrl` for chat and falls back to `site.librarianApiUrl + /chat` if no stream URL is configured.
+The browser fetches generated suggested questions from `site.librarianStreamUrl + /prompts` after subscriber validation. Chat streams from `site.librarianStreamUrl + /chat`; there is no buffered API Gateway chat fallback.
 
 ## Commands
 
@@ -46,24 +45,20 @@ For raw JSON conversation review:
 npm run librarian:conversations -- --limit 25 --json
 ```
 
-After deployment, set `site.librarianApiUrl` in `src/_data/site.js` to the `LibrarianApiUrl` output by CloudFormation and `site.librarianStreamUrl` to `LibrarianStreamUrl`. The current production values are already stored in `src/_data/site.js`.
+After deployment, set `site.librarianApiUrl` in `site/_data/site.js` to the `LibrarianApiUrl` output by CloudFormation and `site.librarianStreamUrl` to `LibrarianStreamUrl`. The current production values are already stored in `site/_data/site.js`.
 
 ## Required Secrets
 
 CloudFormation parameters:
 
 - `ButtondownApiKey`
-- `TinylyticsApiKey`
-- `TinylyticsSiteId`
 - `SessionSecret`
 - `CorpusBucket`
 
 Local `.env` values used by upload/build scripts:
 
 - `BUTTONDOWN_API_KEY`
-- `TINYLYTICS_API_KEY`
-- `TINYLYTICS_SITE_ID` (numeric API site ID, currently `3063`)
-- `TINYLYTICS_SITE_UID` (optional public embed UID for the static site, currently `a2YQr3ZMqkySNYSwz4uF`)
+- `TINYLYTICS_SITE_UID` or `TINYLYTICS_SITE_ID` for the static website embed, not the API.
 - `AWS_S3_BUCKET`
 - `AWS_DEFAULT_REGION`
 - `BEDROCK_AGENT_MODEL` (optional; defaults to `us.anthropic.claude-sonnet-4-6`, the US Bedrock inference profile for Claude Sonnet 4.6)
@@ -101,9 +96,7 @@ Premium subscribers get a small Bedrock-generated Supporting Member thank-you be
 
 ## Logging And Review
 
-Lambda writes structured JSON logs to CloudWatch. Logs include request ID, route, status code, duration, subscriber email hash, retrieval mode, citation count, upstream status/duration, and error type. Raw email addresses, API keys, and session tokens are not logged.
-
-Server-side Tinylytics events use the subscriber email hash as `visitor_id`, pass the visitor IP address as `ip_address` so Tinylytics can resolve geography, and, when useful, include the same hash in the event `value` as `member=...`. They do not include raw email addresses, user agents, questions, answers, tokens, or request IDs. Tinylytics API failures are logged as warnings and do not fail the user request.
+Lambda writes structured JSON logs to CloudWatch. Logs include request ID, route, status code, duration, subscriber email hash, retrieval mode, citation count, upstream status/duration, and error type. Raw email addresses, API keys, and session tokens are not logged. The backend does not call Tinylytics; server-side activity should come from CloudWatch logs, metrics, and DynamoDB conversation review.
 
 Every API response includes an `x-request-id` header. Browser-visible errors include that reference so the matching CloudWatch request can be found quickly.
 
@@ -131,7 +124,7 @@ The beta popup on `/librarian/` tells authenticated users that beta conversation
 
 `GET /health` is available as a cheap smoke-test endpoint. It verifies API Gateway and Lambda routing without calling Buttondown, Bedrock, DynamoDB, or S3.
 
-`POST /prompts` requires a valid session token. It returns three generated suggested questions and falls back to a static set if Bedrock is unavailable.
+`POST /prompts` is served by the streaming Lambda Function URL and requires a valid session token. It returns three generated suggested questions and falls back to a static set if Bedrock is unavailable.
 
 Thingy uses hybrid retrieval. It merges semantic embedding matches, lexical matches, and issue-summary/topic graph matches, reranks the top candidates with Cohere Rerank 3.5 through the Bedrock Agent Runtime rerank API, then applies context-aware recency and issue diversity. Current/recommendation questions prefer newer material when relevance is close. History/evolution questions intentionally preserve sources across eras.
 
@@ -146,13 +139,13 @@ When `LIBRARIAN_AGENT_ENABLED=1`, chat requests run through a tool-using Claude 
 - `list_issues(year?, topic?, entity?)`
 - `compare_eras(topic, year_a, year_b)`
 
-The agent uses the same subscriber gate, rate limits, browser-supplied history, DynamoDB logging, and Tinylytics event surface as the baseline path. Tool status is emitted over the existing streaming Function URL as `status` events; no frontend API change is required.
+The agent uses the same subscriber gate, rate limits, browser-supplied history, and DynamoDB logging as the baseline path. Tool status is emitted over the existing streaming Function URL as `status` events.
 
-The graph artifact is built offline from the corpus and archive front matter. It stores per-issue entities, recurring tropes/stances, and top-K similar issues from issue-level embedding averages. `scripts/build_librarian_graph.py --use-bedrock-extraction` can use Sonnet for entity/trope extraction; the default heuristic mode is available for cheap local refreshes.
+The graph artifact is built offline from the corpus and archive front matter. It stores per-issue entities, recurring tropes/stances, and top-K similar issues from issue-level embedding averages. `pipeline/librarian/build_librarian_graph.py --use-bedrock-extraction` can use Sonnet for entity/trope extraction; the default heuristic mode is available for cheap local refreshes.
 
 Typical cost is controlled by prompt caching on the stable system prompt and tool definitions, reranking only the top search candidates, limiting tool turns, and clipping tool result text. The target remains under $0.20 for typical questions and under $0.50 for worst-case multi-hop questions.
 
-Thingy answers cite issue numbers inline, and the browser turns matching `#123` references into archive links with native tooltips containing the source details. The API still returns citation metadata for rendering and analytics, but the page does not show a separate Sources block.
+Thingy answers cite issue numbers inline, and the browser turns matching `#123` references into archive links with native tooltips containing the source details. The API still returns citation metadata for rendering, but the page does not show a separate Sources block.
 
 The browser sends a compact recent conversation history with each chat request so follow-up questions can refer to earlier turns. The history is kept in browser memory only, clipped before sending, and is not written as a separate session transcript. Successful individual turns are written to DynamoDB for beta review as described above.
 
@@ -180,15 +173,7 @@ The site loads Tinylytics with `events` and `beacon` enabled. Thingy emits these
 - `librarian.beta_notice_shown`
 - `librarian.beta_notice_dismissed`
 
-The Librarian API also emits server-side events:
-
-- `librarian.auth_success` with the hashed member ID and subscriber status.
-- `librarian.prompts_generated` with `generated` or `fallback`.
-- `librarian.chat_success` with hashed member ID, citation count, history count, and question length.
-- `librarian.chat_no_sources` with hashed member ID, history count, and question length.
-- `librarian.api_error` with hashed member ID when available, route, and error type.
-
-Tinylytics events do not include raw email addresses, questions, answers, tokens, or request IDs.
+Tinylytics is only used by the website/browser. The Librarian API does not emit server-side Tinylytics events.
 
 ## Deployment Checklist
 
@@ -206,10 +191,11 @@ npm run librarian:deploy
 
 `npm run librarian:deploy` packages both Lambdas, uploads their zip files, builds/uploads the embedded corpus, builds/uploads the graph artifact, and updates the CloudFormation stack. Use `npm run librarian:corpus:upload` by itself only when the deployed code is unchanged and only data artifacts need to be refreshed; it uploads both corpus and graph unless `--skip-graph` is passed.
 
-The deploy script packages both Lambda runtimes:
+The deploy script packages both Lambda entrypoints from one Node source tree:
 
-- `librarian_api/`: Python API Gateway Lambda for auth, prompts, health checks, and buffered JSON chat fallback.
-- `librarian_stream/`: Node.js Lambda Function URL for streaming chat.
+- `services/librarian/auth/`: API Gateway Lambda for Buttondown auth and auth health checks.
+- `services/librarian/chat/`: Lambda Function URL for streaming chat, generated prompts, and stream health checks.
+- `services/librarian/shared/` and `services/librarian/prompts/`: shared code and editable prompt files included in both packages.
 
 After deploy:
 

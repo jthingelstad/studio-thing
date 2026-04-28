@@ -1,6 +1,6 @@
 # Creative Brief — The Weekly Thing
 
-This file is the persistent context for the "creative team" pipeline (`scripts/refresh_marketing_copy.py`). It is read at the start of every refresh run and rewritten at the end so observations accumulate over time. Git is the version history.
+This file is the persistent context for the "creative team" pipeline (`pipeline/content/refresh_marketing_copy.py`). It is read at the start of every refresh run and rewritten at the end so observations accumulate over time. Git is the version history.
 
 Jamie can hand-edit this file at any time. Whatever is here on the next run becomes ground truth.
 

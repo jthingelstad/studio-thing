@@ -8,10 +8,10 @@ future sessions can pick up the thread without re-running everything.
 | File | What it is |
 |---|---|
 | `archive-audit-summary.md` | **Start here.** Hand-written handoff tying both audits together, applied fixes, and remaining decisions. |
-| `archive-audit.md` / `.json` | Static regex/DOM audit of rendered HTML. Broken images, header hierarchy, malformed markdown, template-tag leakage. Produced by `scripts/audit_archive.py`. |
-| `llm-audit.md` / `.json` | LLM (Claude Opus 4.7) semantic audit of raw markdown. Typos, narrative breaks, dropped-URL links, migration artifacts. Produced by `scripts/llm_audit_archive.py`. |
-| `missing-photos.md` / `.json` | Micropost photos silently lost during the MailChimp → Buttondown migration (no `mp-photo-alt[]=` marker to signal them). Produced by `scripts/audit_missing_micropost_photos.py`. |
-| `missing-microblog-posts.md` / `.json` | 199 micro.blog posts referenced from newsletter issues that now 404 on `thingelstad.com`. Enriched with Wayback snapshot URLs, newsletter heading, and body paragraph for recovery. Produced by `scripts/build_missing_posts_report.py`. Tracked as GitHub issue (see repo issues). |
+| `archive-audit.md` / `.json` | Static regex/DOM audit of rendered HTML. Broken images, header hierarchy, malformed markdown, template-tag leakage. Produced by `pipeline/audits/audit_archive.py`. |
+| `llm-audit.md` / `.json` | LLM (Claude Opus 4.7) semantic audit of raw markdown. Typos, narrative breaks, dropped-URL links, migration artifacts. Produced by `pipeline/audits/llm_audit_archive.py`. |
+| `missing-photos.md` / `.json` | Micropost photos silently lost during the MailChimp → Buttondown migration (no `mp-photo-alt[]=` marker to signal them). Produced by `pipeline/audits/audit_missing_micropost_photos.py`. |
+| `missing-microblog-posts.md` / `.json` | 199 micro.blog posts referenced from newsletter issues that now 404 on `thingelstad.com`. Enriched with Wayback snapshot URLs, newsletter heading, and body paragraph for recovery. Produced by `pipeline/audits/build_missing_posts_report.py`. Tracked as GitHub issue (see repo issues). |
 
 ## How to regenerate
 
@@ -20,16 +20,16 @@ All scripts write to `tmp/` (gitignored) by default — copy results into
 
 ```bash
 # Static audit (requires fresh _site/; rebuild with `npx @11ty/eleventy` first)
-python scripts/audit_archive.py
+python pipeline/audits/audit_archive.py
 
 # LLM audit (~$20 on Opus 4.7, ~8 minutes at concurrency 8)
-python scripts/llm_audit_archive.py --full --concurrency 8
+python pipeline/audits/llm_audit_archive.py --full --concurrency 8
 
 # Missing micropost photo audit
-python scripts/audit_missing_micropost_photos.py
+python pipeline/audits/audit_missing_micropost_photos.py
 
 # Enriched missing-microblog report (with Wayback lookups)
-python scripts/build_missing_posts_report.py
+python pipeline/audits/build_missing_posts_report.py
 
 # Snapshot all outputs into docs/audits/
 cp tmp/archive-audit*.md tmp/archive-audit*.json \
@@ -41,14 +41,14 @@ cp tmp/archive-audit*.md tmp/archive-audit*.json \
 
 ## Fixes applied (as of this snapshot)
 
-Synced to Buttondown via `scripts/sync_to_buttondown.py --yes`:
+Synced to Buttondown via `pipeline/content/sync_to_buttondown.py --yes`:
 
 | Fix | Issues | Script |
 |---|---|---|
-| Demote in-body H1 section titles → H2 (plus link H2 → H3) | 132–136 | `scripts/fix_archive_headings.py` |
-| 8 malformed markdown links (parens in URLs, spaces, stray chars) | 40, 82, 126, 132, 136, 161, 221, 291 | `scripts/fix_archive_links.py` |
-| Restore micropost photos where `mp-photo-alt[]=` markers survived (146 photos, 21 issues) | 84, 86, 91, 92, 94–102, 105, 107, 108, 111, 114–116, 118 | `scripts/fix_micropost_photos.py` |
-| Restore silently-lost single-photo micropost photos (407 photos, 60 issues) | 43–130 MailChimp + 1 Tinyletter | `scripts/restore_missing_micropost_photos.py` |
+| Demote in-body H1 section titles → H2 (plus link H2 → H3) | 132–136 | `pipeline/one-shot/fix_archive_headings.py` |
+| 8 malformed markdown links (parens in URLs, spaces, stray chars) | 40, 82, 126, 132, 136, 161, 221, 291 | `pipeline/one-shot/fix_archive_links.py` |
+| Restore micropost photos where `mp-photo-alt[]=` markers survived (146 photos, 21 issues) | 84, 86, 91, 92, 94–102, 105, 107, 108, 111, 114–116, 118 | `pipeline/audits/fix_micropost_photos.py` |
+| Restore silently-lost single-photo micropost photos (407 photos, 60 issues) | 43–130 MailChimp + 1 Tinyletter | `pipeline/audits/restore_missing_micropost_photos.py` |
 
 Total: **~550 photos restored**, many dozens of structural/typo fixes.
 

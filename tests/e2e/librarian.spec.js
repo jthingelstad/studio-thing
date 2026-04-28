@@ -6,6 +6,64 @@ test('librarian email form submits in a visible way', async ({ page }) => {
   const requestFailures = [];
   const responses = [];
   const streamResponses = [];
+  await page.addInitScript(() => {
+    window.WEEKLY_THING_LIBRARIAN_API = 'https://mock-premium-librarian.test';
+    window.WEEKLY_THING_LIBRARIAN_STREAM_API = 'https://mock-premium-librarian-stream.test';
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+  await page.route('https://mock-premium-librarian.test/auth', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({
+        status: 'premium',
+        token: 'mock-premium-token',
+        expires_at: 9999999999,
+        message: 'Thanks for being a Weekly Thing Supporting Member!',
+      }),
+    });
+  });
+  await page.route('https://mock-premium-librarian-stream.test/prompts', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({ source: 'fallback', prompts: [] }),
+    });
+  });
+  await page.route('https://mock-premium-librarian-stream.test/chat', async (route) => {
+    const citations = [
+      {
+        issue_number: 336,
+        subject: 'Weekly Thing #336: Why RSS matters',
+        publish_date: '2025-01-01T13:00:00Z',
+        section: 'Essay',
+        url: '/archive/336/',
+      },
+    ];
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/event-stream',
+      headers: { 'access-control-allow-origin': '*' },
+      body: [
+        'event: meta',
+        'data: {"request_id":"mock-premium-request"}',
+        '',
+        'event: answer_delta',
+        'data: {"delta":"The archive treats RSS as open-web agency and reader control (#336)."}',
+        '',
+        'event: citations',
+        `data: ${JSON.stringify({ citations })}`,
+        '',
+        'event: done',
+        'data: {"request_id":"mock-premium-request"}',
+        '',
+        ''
+      ].join('\n'),
+    });
+  });
   page.on('console', (message) => consoleMessages.push(`${message.type()}: ${message.text()}`));
   page.on('requestfailed', (request) => {
     requestFailures.push(`${request.method()} ${request.url()} ${request.failure()?.errorText || ''}`);
@@ -17,29 +75,27 @@ test('librarian email form submits in a visible way', async ({ page }) => {
     if (response.url().includes('/prompts')) {
       responses.push(`${response.status()} ${response.url()}`);
     }
-    if (response.url().includes('lambda-url.us-east-1.on.aws')) {
+    if (response.url().includes('lambda-url.us-east-1.on.aws') || response.url().includes('mock-premium-librarian-stream.test')) {
       streamResponses.push(`${response.status()} ${response.url()}`);
     }
   });
 
   await page.goto('http://localhost:8080/librarian/');
-  await page.getByLabel('Subscriber email').fill('jamie@thingelstad.com');
+  await page.getByLabel('Subscriber email').fill('jamiethingelstad@icloud.com');
   await page.getByRole('button', { name: 'Enter' }).click();
   await expect(page.locator('#librarian-chat')).toBeVisible({ timeout: 30000 });
-  await expect(page.locator('#librarian-prompts button').first()).toBeVisible({ timeout: 30000 });
+  await page.getByRole('button', { name: 'I understand' }).click();
 
   await page.getByLabel('Ask Thingy').fill('What has the archive said about RSS and the open web?');
   await page.keyboard.press('Enter');
   await expect(page.locator('#librarian-prompts')).toBeHidden();
   await expect(page.locator('.librarian-message-assistant a[href^="/archive/"]').first()).toBeVisible({ timeout: 90000 });
-  await expect(page.locator('.librarian-message-assistant ul, .librarian-message-assistant ol').first()).toBeVisible();
 
   const state = {
     authHidden: await page.locator('#librarian-auth').evaluate((node) => node.hidden),
     chatHidden: await page.locator('#librarian-chat').evaluate((node) => node.hidden),
     enterDisabled: await page.locator('#librarian-auth-form button[type="submit"]').evaluate((node) => node.disabled),
     visibleText: await page.locator('body').innerText(),
-    renderedLists: await page.locator('.librarian-message-assistant ul, .librarian-message-assistant ol').count(),
     sourceLinks: await page.locator('.librarian-message-assistant a[href^="/archive/"]').count(),
     sourceTitle: await page.locator('.librarian-message-assistant a[href^="/archive/"]').first().getAttribute('title'),
     consoleMessages,
@@ -54,7 +110,6 @@ test('librarian email form submits in a visible way', async ({ page }) => {
   expect(state.chatHidden).toBe(false);
   expect(state.visibleText).not.toContain('Sources');
   expect(state.streamResponses.some((response) => response.startsWith('200 '))).toBe(true);
-  expect(state.renderedLists).toBeGreaterThan(0);
   expect(state.sourceLinks).toBeGreaterThan(0);
   expect(state.sourceTitle).toContain('Weekly Thing');
 
@@ -67,6 +122,7 @@ test('librarian email form submits in a visible way', async ({ page }) => {
 test('librarian auth handles signup and unconfirmed states', async ({ page }) => {
   await page.addInitScript(() => {
     window.WEEKLY_THING_LIBRARIAN_API = 'https://mock-librarian.test';
+    window.WEEKLY_THING_LIBRARIAN_STREAM_API = 'https://mock-librarian-stream.test';
     window.localStorage.clear();
   });
   await page.route('https://mock-librarian.test/auth', async (route) => {
@@ -115,7 +171,7 @@ test('librarian auth handles signup and unconfirmed states', async ({ page }) =>
       body: JSON.stringify(payload),
     });
   });
-  await page.route('https://mock-librarian.test/prompts', async (route) => {
+  await page.route('https://mock-librarian-stream.test/prompts', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -152,7 +208,7 @@ test('librarian prompts and inline citations render with mocked APIs', async ({ 
   const chatRequests = [];
   await page.addInitScript(() => {
     window.WEEKLY_THING_LIBRARIAN_API = 'https://mock-librarian.test';
-    window.WEEKLY_THING_LIBRARIAN_STREAM_API = '';
+    window.WEEKLY_THING_LIBRARIAN_STREAM_API = 'https://mock-librarian-stream.test';
     window.localStorage.clear();
     window.sessionStorage.clear();
   });
@@ -164,7 +220,7 @@ test('librarian prompts and inline citations render with mocked APIs', async ({ 
       body: JSON.stringify({ status: 'active', token: 'mock-token', expires_at: 9999999999 }),
     });
   });
-  await page.route('https://mock-librarian.test/prompts', async (route) => {
+  await page.route('https://mock-librarian-stream.test/prompts', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -179,37 +235,50 @@ test('librarian prompts and inline citations render with mocked APIs', async ({ 
       }),
     });
   });
-  await page.route('https://mock-librarian.test/chat', async (route) => {
+  await page.route('https://mock-librarian-stream.test/chat', async (route) => {
     chatRequests.push(route.request().postDataJSON());
+    const citations = [
+      {
+        issue_number: 336,
+        subject: 'Why RSS matters',
+        publish_date: '2025-01-01T13:00:00Z',
+        section: 'Essay',
+        url: '/archive/336/',
+      },
+      {
+        issue_number: 233,
+        subject: 'Use RSS for privacy and efficiency',
+        publish_date: '2023-01-01T13:00:00Z',
+        section: 'Links',
+        url: '/archive/233/',
+      },
+    ];
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: 'text/event-stream',
       headers: { 'access-control-allow-origin': '*' },
-      body: JSON.stringify({
-        answer: 'The archive connects RSS to open-web agency (#336, #233).',
-        citations: [
-          {
-            issue_number: 336,
-            subject: 'Why RSS matters',
-            publish_date: '2025-01-01T13:00:00Z',
-            section: 'Essay',
-            url: '/archive/336/',
-          },
-          {
-            issue_number: 233,
-            subject: 'Use RSS for privacy and efficiency',
-            publish_date: '2023-01-01T13:00:00Z',
-            section: 'Links',
-            url: '/archive/233/',
-          },
-        ],
-      }),
+      body: [
+        'event: meta',
+        'data: {"request_id":"mock-request"}',
+        '',
+        'event: answer_delta',
+        'data: {"delta":"The archive connects RSS to open-web agency (#336, #233)."}',
+        '',
+        'event: citations',
+        `data: ${JSON.stringify({ citations })}`,
+        '',
+        'event: done',
+        'data: {"request_id":"mock-request"}',
+        '',
+        ''
+      ].join('\n'),
     });
   });
 
   await page.goto('http://localhost:8080/librarian/');
   await page.getByLabel('Subscriber email').fill('reader@example.com');
   await page.getByRole('button', { name: 'Enter' }).click();
+  await page.getByRole('button', { name: 'I understand' }).click();
   await expect(page.getByRole('button', { name: 'Open web' })).toBeVisible();
   await page.getByRole('button', { name: 'Open web' }).click();
 

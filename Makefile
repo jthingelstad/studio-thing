@@ -25,7 +25,10 @@ serve: data
 	npm run serve
 
 clean:
-	rm -rf _site cache
+	rm -rf _site cache tmp test-results playwright-report
+	rm -f data/librarian/*.embedded.json
+	find . -type d \( -name __pycache__ -o -name .pytest_cache \) -prune -exec rm -rf {} +
+	find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
 
 fresh:
 	npm run data:fresh
@@ -60,7 +63,7 @@ sync-push:
 
 sync-issue:
 	@read -p "Issue number: " num; \
-	python scripts/content.py push --issue $$num --dry-run
+	python pipeline/content/content.py push --issue $$num --dry-run
 
 refresh-copy:
 	npm run refresh-copy
