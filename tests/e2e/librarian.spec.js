@@ -25,14 +25,6 @@ test('librarian email form submits in a visible way', async ({ page }) => {
       }),
     });
   });
-  await page.route('https://mock-premium-librarian-stream.test/prompts', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      headers: { 'access-control-allow-origin': '*' },
-      body: JSON.stringify({ source: 'fallback', prompts: [] }),
-    });
-  });
   await page.route('https://mock-premium-librarian-stream.test/chat', async (route) => {
     const citations = [
       {
@@ -72,9 +64,6 @@ test('librarian email form submits in a visible way', async ({ page }) => {
     if (response.url().includes('/auth')) {
       responses.push(`${response.status()} ${response.url()}`);
     }
-    if (response.url().includes('/prompts')) {
-      responses.push(`${response.status()} ${response.url()}`);
-    }
     if (response.url().includes('lambda-url.us-east-1.on.aws') || response.url().includes('mock-premium-librarian-stream.test')) {
       streamResponses.push(`${response.status()} ${response.url()}`);
     }
@@ -85,6 +74,7 @@ test('librarian email form submits in a visible way', async ({ page }) => {
   await page.getByRole('button', { name: 'Enter' }).click();
   await expect(page.locator('#librarian-chat')).toBeVisible({ timeout: 30000 });
   await page.getByRole('button', { name: 'I understand' }).click();
+  await expect(page.locator('#librarian-prompts button')).toHaveCount(3);
 
   const questionBox = page.getByLabel('Ask Thingy');
   await questionBox.fill('What has the archive said about RSS and the open web?');
@@ -172,25 +162,6 @@ test('librarian auth handles signup and unconfirmed states', async ({ page }) =>
       body: JSON.stringify(payload),
     });
   });
-  await page.route('https://mock-librarian-stream.test/prompts', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      headers: {
-        'access-control-allow-origin': '*',
-        'access-control-allow-headers': 'content-type, authorization',
-      },
-      body: JSON.stringify({
-        source: 'generated',
-        prompts: [
-          { label: 'Archive one', question: 'Question one?' },
-          { label: 'Archive two', question: 'Question two?' },
-          { label: 'Archive three', question: 'Question three?' },
-        ],
-      }),
-    });
-  });
-
   await page.goto('/thingy/');
   await page.getByLabel('Subscriber email').fill('new@example.com');
   await page.getByRole('button', { name: 'Enter' }).click();
@@ -205,7 +176,7 @@ test('librarian auth handles signup and unconfirmed states', async ({ page }) =>
   await expect(page.getByText('Confirmation email sent. Check your inbox.')).toBeVisible();
 });
 
-test('librarian prompts and inline citations render with mocked APIs', async ({ page }) => {
+test('librarian starter prompts and inline citations render with mocked APIs', async ({ page }) => {
   const chatRequests = [];
   await page.addInitScript(() => {
     window.WEEKLY_THING_LIBRARIAN_API = 'https://mock-librarian.test';
@@ -219,21 +190,6 @@ test('librarian prompts and inline citations render with mocked APIs', async ({ 
       contentType: 'application/json',
       headers: { 'access-control-allow-origin': '*' },
       body: JSON.stringify({ status: 'active', token: 'mock-token', expires_at: 9999999999 }),
-    });
-  });
-  await page.route('https://mock-librarian-stream.test/prompts', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      headers: { 'access-control-allow-origin': '*' },
-      body: JSON.stringify({
-        source: 'generated',
-        prompts: [
-          { label: 'Open web', question: 'What does the archive say about the open web?' },
-          { label: 'AI notes', question: 'Where does AI show up?' },
-          { label: 'Systems', question: 'What systems are discussed?' },
-        ],
-      }),
     });
   });
   await page.route('https://mock-librarian-stream.test/chat', async (route) => {
@@ -280,30 +236,36 @@ test('librarian prompts and inline citations render with mocked APIs', async ({ 
   await page.getByLabel('Subscriber email').fill('reader@example.com');
   await page.getByRole('button', { name: 'Enter' }).click();
   await page.getByRole('button', { name: 'I understand' }).click();
-  await expect(page.getByRole('button', { name: 'Open web' })).toBeVisible();
-  await page.getByRole('button', { name: 'Open web' }).click();
+  const promptButtons = page.locator('#librarian-prompts button');
+  await expect(promptButtons).toHaveCount(3);
+  const firstPrompt = promptButtons.first();
+  const firstPromptQuestion = await firstPrompt.getAttribute('data-question');
+  await firstPrompt.click();
 
   await expect(page.locator('#librarian-prompts')).toBeHidden();
   await expect(page.locator('.librarian-citations')).toHaveCount(0);
   await expect(page.locator('.librarian-message-assistant a[href="/archive/336/"]')).toHaveText('#336');
   await expect(page.locator('.librarian-message-assistant a[href="/archive/233/"]')).toHaveText('#233');
   await expect(page.locator('.librarian-message-assistant a[href="/archive/336/"]')).toHaveAttribute('title', /Why RSS matters/);
+  expect(chatRequests[0].message).toEqual(firstPromptQuestion);
   expect(chatRequests[0].history).toEqual([]);
 
   await page.getByLabel('Ask Thingy').fill('Tell me more about privacy.');
   await page.getByLabel('Ask Thingy').press('Enter');
   await expect.poll(() => chatRequests.length).toBe(2);
   expect(chatRequests[1].history).toEqual([
-    { role: 'user', content: 'What does the archive say about the open web?' },
+    { role: 'user', content: firstPromptQuestion },
     { role: 'assistant', content: 'The archive connects RSS to open-web agency (#336, #233).' },
   ]);
 
   await page.getByRole('button', { name: 'Start over' }).click();
   await expect(page.locator('.librarian-message-user')).toHaveCount(0);
   await expect(page.locator('.librarian-message-assistant')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Open web' })).toBeVisible();
-  await page.getByRole('button', { name: 'Open web' }).click();
+  await expect(promptButtons).toHaveCount(3);
+  const restartPromptQuestion = await promptButtons.first().getAttribute('data-question');
+  await promptButtons.first().click();
   await expect.poll(() => chatRequests.length).toBe(3);
+  expect(chatRequests[2].message).toEqual(restartPromptQuestion);
   expect(chatRequests[2].history).toEqual([]);
 
   await page.getByLabel('Ask Thingy').fill('First line');

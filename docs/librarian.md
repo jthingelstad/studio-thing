@@ -15,17 +15,19 @@ Thingy is a subscriber-gated chat interface for the Weekly Thing archive.
 
 ## AWS Runtime
 
-The backend is defined in `infra/librarian/cloudformation.yaml`. Auth and auth health checks run behind API Gateway/Lambda. Streaming chat, generated prompts, and stream health checks run through a Lambda Function URL with response streaming enabled. It uses:
+The backend is defined in `infra/librarian/cloudformation.yaml`. Auth and auth health checks run behind API Gateway/Lambda. Streaming chat and stream health checks run through a Lambda Function URL with response streaming enabled. It uses:
 
 - Buttondown API for subscriber lookup.
-- Amazon Bedrock Claude Sonnet 4.6 for prompts, premium messages, baseline synthesis, and the agent loop.
+- Amazon Bedrock Claude Sonnet 4.6 for premium messages and the agent loop.
 - Amazon Bedrock Cohere Embed v3 for query-to-archive retrieval.
 - Amazon Bedrock Cohere Rerank 3.5 after archive searches.
 - DynamoDB for session and rate-limit state.
 - S3 for the embedded archive corpus and the offline graph artifact.
 - CloudWatch Logs for structured JSON request, retrieval, upstream, and error logs.
 
-The browser fetches generated suggested questions from `site.librarianStreamUrl + /prompts` after subscriber validation. Chat streams from `site.librarianStreamUrl + /chat`; there is no buffered API Gateway chat fallback.
+The browser samples three static starter questions locally after subscriber validation. Chat streams from `site.librarianStreamUrl + /chat`; there is no buffered API Gateway chat fallback.
+
+The FAQ content lives in `services/librarian/shared/faq.json`. Eleventy renders `/faq/` from that file, and the streaming Lambda packages the same file so Thingy can answer site, subscription, membership, RSS, privacy, and logistics questions through the `search_faq` tool.
 
 ## Commands
 
@@ -129,14 +131,13 @@ The beta popup on `/thingy/` tells authenticated users that beta conversations m
 
 `GET /health` is available as a cheap smoke-test endpoint. It verifies API Gateway and Lambda routing without calling Buttondown, Bedrock, DynamoDB, or S3.
 
-`POST /prompts` is served by the streaming Lambda Function URL and requires a valid session token. It returns three generated suggested questions and falls back to a static set if Bedrock is unavailable.
-
 `POST /feedback` is served by the streaming Lambda Function URL and requires a valid session token. It accepts `request_id` plus `reaction` (`up` or `down`) and updates the matching DynamoDB conversation record when it belongs to the same subscriber hash.
 
 Thingy uses hybrid retrieval. It merges semantic embedding matches, lexical matches, and issue-summary/topic graph matches, reranks the top candidates with Cohere Rerank 3.5 through the Bedrock Agent Runtime rerank API, then applies context-aware recency and issue diversity. Current/recommendation questions prefer newer material when relevance is close. History/evolution questions intentionally preserve sources across eras.
 
 Chat requests run through a tool-using Claude Sonnet 4.6 loop capped by `MAX_TOOL_TURNS` (default 8). The agent can call:
 
+- `search_faq(query, limit?)`
 - `search_archive(query, year_range?, section?, limit?)`
 - `get_issue(number)`
 - `get_section(number, section)`
@@ -170,8 +171,7 @@ The site loads Tinylytics with `events` and `beacon` enabled. Thingy emits these
 - `librarian.auth_inactive`
 - `librarian.logout`
 - `librarian.session_resume`
-- `librarian.prompts_loaded` with value `generated` or `fallback`
-- `librarian.prompts_error` with value `client` or `server`
+- `librarian.prompts_loaded` with value `static`
 - `librarian.prompt_select` with the prompt position
 - `librarian.question_submit`
 - `librarian.answer_success` with value `{question-size}.{citation-count}`
@@ -203,7 +203,7 @@ npm run librarian:deploy
 The deploy script packages both Lambda entrypoints from one Node source tree:
 
 - `services/librarian/auth/`: API Gateway Lambda for Buttondown auth and auth health checks.
-- `services/librarian/chat/`: Lambda Function URL for streaming chat, generated prompts, and stream health checks.
+- `services/librarian/chat/`: Lambda Function URL for streaming chat and stream health checks.
 - `services/librarian/shared/` and `services/librarian/prompts/`: shared code and editable prompt files included in both packages.
 
 After deploy:
