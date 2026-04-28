@@ -48,9 +48,18 @@ def format_text(value: Any, width: int = 1000) -> str:
 def print_text(items: list[dict[str, Any]]) -> None:
     for item in items:
         issues = ", ".join(str(issue) for issue in item.get("source_issues", []))
+        feedback = str(item.get("feedback_reaction") or "-")
+        feedback_at = str(item.get("feedback_at") or "")
+        feedback_revision = item.get("feedback_revision")
+        feedback_parts = [f"feedback={feedback}"]
+        if feedback_at:
+            feedback_parts.append(f"at={feedback_at}")
+        if feedback_revision:
+            feedback_parts.append(f"rev={feedback_revision}")
         print("=" * 88)
         print(f"{item.get('created_at')}  request={item.get('request_id')}  route={item.get('route')}")
         print(f"subscriber={item.get('subscriber_hash')}  citations={item.get('citation_count')}  issues={issues}")
+        print("  ".join(feedback_parts))
         print("\nQUESTION")
         print(format_text(item.get("question")))
         print("\nANSWER")

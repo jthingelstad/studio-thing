@@ -115,6 +115,7 @@ Successful beta conversations are stored in the existing DynamoDB table when `LI
 - citation count
 - source issue numbers
 - citation metadata
+- optional thumb feedback (`up` or `down`) and feedback timestamp
 - TTL, defaulting to 60 days
 
 Review recent conversations with:
@@ -130,6 +131,8 @@ The beta popup on `/librarian/` tells authenticated users that beta conversation
 `GET /health` is available as a cheap smoke-test endpoint. It verifies API Gateway and Lambda routing without calling Buttondown, Bedrock, DynamoDB, or S3.
 
 `POST /prompts` is served by the streaming Lambda Function URL and requires a valid session token. It returns three generated suggested questions and falls back to a static set if Bedrock is unavailable.
+
+`POST /feedback` is served by the streaming Lambda Function URL and requires a valid session token. It accepts `request_id` plus `reaction` (`up` or `down`) and updates the matching DynamoDB conversation record when it belongs to the same subscriber hash.
 
 Thingy uses hybrid retrieval. It merges semantic embedding matches, lexical matches, and issue-summary/topic graph matches, reranks the top candidates with Cohere Rerank 3.5 through the Bedrock Agent Runtime rerank API, then applies context-aware recency and issue diversity. Current/recommendation questions prefer newer material when relevance is close. History/evolution questions intentionally preserve sources across eras.
 
@@ -174,6 +177,8 @@ The site loads Tinylytics with `events` and `beacon` enabled. Thingy emits these
 - `librarian.question_submit`
 - `librarian.answer_success` with value `{question-size}.{citation-count}`
 - `librarian.answer_error` with value `client` or `server`
+- `librarian.feedback_submit` with value `up` or `down`
+- `librarian.feedback_error` with value `client` or `server`
 - `librarian.source_click` with the cited issue number
 - `librarian.beta_notice_shown`
 - `librarian.beta_notice_dismissed`
