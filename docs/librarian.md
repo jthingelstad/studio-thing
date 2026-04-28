@@ -6,9 +6,11 @@ Thingy is a subscriber-gated chat interface for the Weekly Thing archive.
 
 - `npm run librarian:corpus` builds `data/librarian/corpus.json` from the cleaned generated archive.
 - The tracked corpus is text-only and citation-ready. It includes issue summaries, topic metadata, and chunk-level retrieval metadata.
-- Embedded corpus files should not be committed. Use the upload command to generate embeddings and push the deployable corpus to S3.
-- `scripts/eval_librarian_rag.py` prints retrieval diagnostics for a fixed question set.
-- `scripts/eval_librarian_answers.py` runs local retrieval plus OpenAI answer generation, then asks OpenAI to judge answer quality. Results are written to `tmp/librarian-answer-eval.json`.
+- Embedded corpus files should not be committed. Use the upload command to generate Bedrock Cohere embeddings and push the deployable corpus to S3.
+- `npm run librarian:graph` builds `data/librarian/graph.json`, the offline entity/trope/similarity artifact used by the archive tools.
+- `scripts/eval_librarian_rag.py` prints retrieval and reranker diagnostics for standard or multi-hop question sets.
+- `scripts/eval_librarian_answers.py` runs baseline or agentic answer generation, then asks Bedrock to judge answer quality. Results are written to `tmp/librarian-answer-eval.json`.
+- The `weekly-agent` eval suite covers 20 recall, synthesis, recommendation, pattern, voice, tricky retrieval, and edge-case prompts: `python scripts/eval_librarian_answers.py --mode agent --question-set weekly-agent --sample-limit 20`.
 - `scripts/review_librarian_conversations.py` reads beta conversation logs from DynamoDB for review.
 
 ## AWS Runtime
@@ -16,10 +18,11 @@ Thingy is a subscriber-gated chat interface for the Weekly Thing archive.
 The backend is defined in `aws/cloudformation.yaml`. Auth, health checks, and the buffered JSON chat fallback run behind API Gateway/Lambda. Streaming chat runs through a Lambda Function URL with response streaming enabled. It uses:
 
 - Buttondown API for subscriber lookup.
-- OpenAI embeddings for query-to-archive retrieval.
-- OpenAI Responses API for Thingy's final answer.
+- Amazon Bedrock Claude Sonnet 4.6 for prompts, premium messages, baseline synthesis, and the agent loop.
+- Amazon Bedrock Cohere Embed v3 for query-to-archive retrieval.
+- Amazon Bedrock Cohere Rerank 3.5 after archive searches.
 - DynamoDB for session and rate-limit state.
-- S3 for the embedded archive corpus.
+- S3 for the embedded archive corpus and the offline graph artifact.
 - Tinylytics API for server-side activity events.
 - CloudWatch Logs for structured JSON request, retrieval, upstream, and error logs.
 
@@ -29,6 +32,7 @@ The browser fetches generated suggested questions from `site.librarianApiUrl + /
 
 ```sh
 npm run librarian:corpus
+npm run librarian:graph
 npm run librarian:eval
 npm run librarian:eval:answers
 npm run librarian:conversations -- --limit 25
@@ -49,7 +53,6 @@ After deployment, set `site.librarianApiUrl` in `src/_data/site.js` to the `Libr
 CloudFormation parameters:
 
 - `ButtondownApiKey`
-- `OpenAIApiKey`
 - `TinylyticsApiKey`
 - `TinylyticsSiteId`
 - `SessionSecret`
@@ -58,12 +61,16 @@ CloudFormation parameters:
 Local `.env` values used by upload/build scripts:
 
 - `BUTTONDOWN_API_KEY`
-- `OPENAI_API_KEY`
 - `TINYLYTICS_API_KEY`
 - `TINYLYTICS_SITE_ID` (numeric API site ID, currently `3063`)
 - `TINYLYTICS_SITE_UID` (optional public embed UID for the static site, currently `a2YQr3ZMqkySNYSwz4uF`)
 - `AWS_S3_BUCKET`
 - `AWS_DEFAULT_REGION`
+- `BEDROCK_AGENT_MODEL` (optional; defaults to `us.anthropic.claude-sonnet-4-6`, the US Bedrock inference profile for Claude Sonnet 4.6)
+- `BEDROCK_EMBEDDING_MODEL` (optional; defaults to `cohere.embed-english-v3`)
+- `BEDROCK_RERANK_MODEL` (optional; defaults to `cohere.rerank-v3-5:0`)
+- `BEDROCK_RERANK_REGION` (optional; defaults to `us-west-2`, where the Bedrock Rerank API exposes Cohere Rerank 3.5)
+- `LIBRARIAN_AGENT_ENABLED` (runtime flag; deployed as `1`; set to `0` for rollback to the single-shot Bedrock path)
 - `LIBRARIAN_LOG_LEVEL` (optional; defaults to `INFO`)
 - `LIBRARIAN_AUTH_RATE_LIMIT_MAX` (optional; defaults to 30 auth attempts per client identity per hour)
 - `LIBRARIAN_CONVERSATION_LOGGING` (optional; defaults to enabled. Set to `0` to disable beta transcript logging.)
@@ -90,7 +97,7 @@ The deploy script passes `LIBRARIAN_CLOUDFORMATION_ROLE_ARN` to CloudFormation w
 
 Thingy uses a soft subscriber gate. A visitor enters an email address, Lambda validates that email against Buttondown, and then returns a short-lived signed session token for active `regular` and `premium` subscribers. This does not prove inbox ownership; it is a pragmatic gate for a low-risk, rate-limited archive feature.
 
-Premium subscribers get a small LLM-generated Supporting Member thank-you before entering chat, with a fixed fallback if OpenAI is unavailable. Unknown email addresses can opt in from the librarian page; those signups are created in Buttondown with the `sub_tag_3ts444xst99y08j8bqfnwt1g4h` source tag and must confirm their email before using Thingy. Unconfirmed subscribers can request Buttondown's confirmation reminder email from the same page. The logout control is local-only: it clears the browser's stored session token and returns to the email gate.
+Premium subscribers get a small Bedrock-generated Supporting Member thank-you before entering chat, with a fixed fallback if Bedrock is unavailable. Unknown email addresses can opt in from the librarian page; those signups are created in Buttondown with the `sub_tag_3ts444xst99y08j8bqfnwt1g4h` source tag and must confirm their email before using Thingy. Unconfirmed subscribers can request Buttondown's confirmation reminder email from the same page. The logout control is local-only: it clears the browser's stored session token and returns to the email gate.
 
 ## Logging And Review
 
@@ -122,11 +129,28 @@ The script resolves the DynamoDB table name from the `weekly-thing-librarian` Cl
 
 The beta popup on `/librarian/` tells authenticated users that beta conversations may be logged and reviewed to improve Thingy.
 
-`GET /health` is available as a cheap smoke-test endpoint. It verifies API Gateway and Lambda routing without calling Buttondown, OpenAI, DynamoDB, or S3.
+`GET /health` is available as a cheap smoke-test endpoint. It verifies API Gateway and Lambda routing without calling Buttondown, Bedrock, DynamoDB, or S3.
 
-`POST /prompts` requires a valid session token. It returns three generated suggested questions and falls back to a static set if OpenAI is unavailable.
+`POST /prompts` requires a valid session token. It returns three generated suggested questions and falls back to a static set if Bedrock is unavailable.
 
-Thingy uses hybrid retrieval. It merges semantic embedding matches, lexical matches, and issue-summary/topic graph matches, then applies context-aware recency and issue diversity before sending sources to OpenAI. Current/recommendation questions prefer newer material when relevance is close. History/evolution questions intentionally preserve sources across eras.
+Thingy uses hybrid retrieval. It merges semantic embedding matches, lexical matches, and issue-summary/topic graph matches, reranks the top candidates with Cohere Rerank 3.5 through the Bedrock Agent Runtime rerank API, then applies context-aware recency and issue diversity. Current/recommendation questions prefer newer material when relevance is close. History/evolution questions intentionally preserve sources across eras.
+
+When `LIBRARIAN_AGENT_ENABLED=1`, chat requests run through a tool-using Claude Sonnet 4.6 loop capped by `MAX_TOOL_TURNS` (default 8). The agent can call:
+
+- `search_archive(query, year_range?, section?, limit?)`
+- `get_issue(number)`
+- `get_section(number, section)`
+- `find_links(domain?, topic?, year_range?)`
+- `domain_history(domain)`
+- `quote_search(phrase)`
+- `list_issues(year?, topic?, entity?)`
+- `compare_eras(topic, year_a, year_b)`
+
+The agent uses the same subscriber gate, rate limits, browser-supplied history, DynamoDB logging, and Tinylytics event surface as the baseline path. Tool status is emitted over the existing streaming Function URL as `status` events; no frontend API change is required.
+
+The graph artifact is built offline from the corpus and archive front matter. It stores per-issue entities, recurring tropes/stances, and top-K similar issues from issue-level embedding averages. `scripts/build_librarian_graph.py --use-bedrock-extraction` can use Sonnet for entity/trope extraction; the default heuristic mode is available for cheap local refreshes.
+
+Typical cost is controlled by prompt caching on the stable system prompt and tool definitions, reranking only the top search candidates, limiting tool turns, and clipping tool result text. The target remains under $0.20 for typical questions and under $0.50 for worst-case multi-hop questions.
 
 Thingy answers cite issue numbers inline, and the browser turns matching `#123` references into archive links with native tooltips containing the source details. The API still returns citation metadata for rendering and analytics, but the page does not show a separate Sources block.
 
@@ -180,7 +204,7 @@ For a full corpus refresh and deploy:
 npm run librarian:deploy
 ```
 
-`npm run librarian:deploy` packages both Lambdas, uploads their zip files, builds/uploads the embedded corpus, and updates the CloudFormation stack. Use `npm run librarian:corpus:upload` by itself only when the deployed code is unchanged and only the corpus needs to be refreshed.
+`npm run librarian:deploy` packages both Lambdas, uploads their zip files, builds/uploads the embedded corpus, builds/uploads the graph artifact, and updates the CloudFormation stack. Use `npm run librarian:corpus:upload` by itself only when the deployed code is unchanged and only data artifacts need to be refreshed; it uploads both corpus and graph unless `--skip-graph` is passed.
 
 The deploy script packages both Lambda runtimes:
 
