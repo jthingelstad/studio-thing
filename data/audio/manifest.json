@@ -1,0 +1,15 @@
+{
+  "345": {
+    "briefly_synthesis_hash": "sha256:cb1450825e0df42717fe133c28672d86c9eed3c60346d3952380823ec7f31106",
+    "briefly_syntheses": {
+      "sha256:38f8c9fd86c43b17e7b5b5df0ce9a9bd06fef6ad499ca694ee953af5a0376378": "This week's Briefly section wanders across a few different eras of technology and culture. There's a deep-dive into the Ada programming language — the argument being that it solved problems decades before the rest of the industry caught up. On the current end of things, a look at how Claude's system prompt shifted between two recent releases, which is a small window into how these models actually change under the hood. A good chunk of the links orbit Apple — Tim Cook's community letter, John Gruber's take on the CEO transition, and the less comfortable territory of Trump weighing in. Respect for what Cook built, some unease about recent directions, and not much to add on that last one. There's a personal thread running through it too. A Noah Kahan Tiny Desk concert — the whole family is into his music and they've got tickets this summer in Minneapolis. And a genuinely nostalgic detour into Zip drives, that brief moment in the nineties when a hundred megabytes felt like infinite space. Rounding it out, a piece on using wikis as a collaboration layer with AI agents, and an Acquired episode on Ferrari that's worth the time if you follow Formula 1 at all. All of these are linked in the web archive."
+    },
+    "briefly_synthesis_text": "This week's Briefly section wanders across a few different eras of technology and culture. There's a deep-dive into the Ada programming language — the argument being that it solved problems decades before the rest of the industry caught up. On the current end of things, a look at how Claude's system prompt shifted between two recent releases, which is a small window into how these models actually change under the hood. A good chunk of the links orbit Apple — Tim Cook's community letter, John Gruber's take on the CEO transition, and the less comfortable territory of Trump weighing in. Respect for what Cook built, some unease about recent directions, and not much to add on that last one. There's a personal thread running through it too. A Noah Kahan Tiny Desk concert — the whole family is into his music and they've got tickets this summer in Minneapolis. And a genuinely nostalgic detour into Zip drives, that brief moment in the nineties when a hundred megabytes felt like infinite space. Rounding it out, a piece on using wikis as a collaboration layer with AI agents, and an Acquired episode on Ferrari that's worth the time if you follow Formula 1 at all. All of these are linked in the web archive.",
+    "audio_url": "https://files.thingelstad.com/weekly-thing/345/weekly-thing-345.mp3",
+    "audio_duration_seconds": 1277,
+    "audio_voice": "openai-tts-1-hd:echo",
+    "audio_script_hash": "sha256:384f189b18c04ae22346605fd9e9e6890ea12f1a96e9a3344361e7f0f028f475",
+    "generated_at": "2026-04-29T01:06:41Z",
+    "byte_size": 25537485
+  }
+}

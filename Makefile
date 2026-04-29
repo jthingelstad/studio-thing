@@ -1,4 +1,4 @@
-.PHONY: build serve clean data librarian-corpus librarian-corpus-upload librarian-graph librarian-graph-upload librarian-deploy fresh content-pull content-pull-latest content-build content-diff content-push content-push-live fetch-latest sync sync-push sync-issue refresh-copy refresh-copy-dry
+.PHONY: build serve clean data librarian-corpus librarian-corpus-upload librarian-graph librarian-graph-upload librarian-deploy fresh content-pull content-pull-latest content-build content-diff content-push content-push-live fetch-latest sync sync-push sync-issue refresh-copy refresh-copy-dry audio audio-issue
 
 data:
 	npm run data
@@ -70,3 +70,9 @@ refresh-copy:
 
 refresh-copy-dry:
 	npm run refresh-copy:dry
+
+audio:
+	python pipeline/audio/audio.py build --latest
+
+audio-issue:
+	python pipeline/audio/audio.py build --issue $(ISSUE)

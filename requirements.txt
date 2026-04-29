@@ -2,6 +2,7 @@ anthropic
 beautifulsoup4
 boto3
 httpx
+openai
 pydantic
 python-dotenv
 pyyaml

@@ -39,6 +39,7 @@ SNAPSHOT_ROOT = REPO / "data" / "buttondown"
 SNAPSHOT_DIR = SNAPSHOT_ROOT / "emails"
 BODY_DIR = SNAPSHOT_ROOT / "bodies"
 MANIFEST_PATH = SNAPSHOT_ROOT / "manifest.json"
+AUDIO_MANIFEST_PATH = REPO / "data" / "audio" / "manifest.json"
 API_BASE = fetch_emails.API_BASE
 
 SNAPSHOT_METADATA_FIELDS = [
@@ -91,6 +92,26 @@ def canonical_hash(data: dict[str, Any]) -> str:
 def write_json(path: Path, data: Any, ensure_ascii: bool = False) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=ensure_ascii, indent=2) + "\n", encoding="utf-8")
+
+
+def load_audio_manifest() -> dict[str, Any]:
+    if not AUDIO_MANIFEST_PATH.exists():
+        return {}
+    return json.loads(AUDIO_MANIFEST_PATH.read_text(encoding="utf-8"))
+
+
+def audio_fields_for_issue(number: Any, audio_manifest: dict[str, Any]) -> dict[str, Any]:
+    record = audio_manifest.get(str(number))
+    if not isinstance(record, dict) or not record.get("audio_url"):
+        return {}
+    fields = {
+        "audio_url": record.get("audio_url"),
+        "audio_duration_seconds": record.get("audio_duration_seconds"),
+        "audio_voice": record.get("audio_voice"),
+    }
+    if record.get("byte_size") is not None:
+        fields["audio_byte_size"] = record.get("byte_size")
+    return {key: value for key, value in fields.items() if value not in (None, "")}
 
 
 def make_snapshot(issue: dict[str, Any], fetched_at: str | None = None) -> dict[str, Any]:
@@ -384,6 +405,7 @@ def issue_from_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
 
 def write_emails_json(issues: list[dict[str, Any]]) -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
+    audio_manifest = load_audio_manifest()
     entries = []
     for issue in issues:
         entries.append(
@@ -401,6 +423,7 @@ def write_emails_json(issues: list[dict[str, Any]]) -> None:
                 "notable_links": issue.get("notable_links", []),
                 "briefly_links": issue.get("briefly_links", []),
                 "word_count": issue.get("word_count", 0),
+                **audio_fields_for_issue(issue["number"], audio_manifest),
             }
         )
     write_json(DATA_DIR / "emails.json", entries, ensure_ascii=True)
@@ -408,6 +431,7 @@ def write_emails_json(issues: list[dict[str, Any]]) -> None:
 
 
 def write_archive_md(issues: list[dict[str, Any]], prune: bool = False) -> None:
+    audio_manifest = load_audio_manifest()
     ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
     if prune:
         expected = {f"{issue['number']}.md" for issue in issues}
@@ -432,6 +456,7 @@ def write_archive_md(issues: list[dict[str, Any]], prune: bool = False) -> None:
             "word_count": issue.get("word_count", 0),
             "permalink": f"/archive/{issue['number']}/",
             "tags": "issue",
+            **audio_fields_for_issue(issue["number"], audio_manifest),
         }
         fm_str = yaml.dump(
             front_matter,
