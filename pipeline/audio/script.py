@@ -153,8 +153,25 @@ LINK_SECTION_HEADINGS = {
     "Must Read",
 }
 
+# Sections whose paragraphs use the inline `<commentary> → **[title](url)**`
+# form. We announce each as `Link N. "title"` and then read the commentary,
+# matching the cadence of LINK_SECTION_HEADINGS.
+BRIEFLY_SECTION_HEADINGS = {
+    "Briefly",
+    "Recommended Links",
+    "FYI",
+    "Yet More Links",
+}
+
 # Sections whose H3 entries are personal journal posts.
 JOURNAL_SECTION_HEADINGS = {"Journal"}
+
+BRIEFLY_LINK_RE = re.compile(r"\*\*\[([^\]]+)]\([^)]+\)\*\*")
+REDDIT_DISCUSS_RE = re.compile(
+    r"^[ \t]*_You can discuss any of these links at the "
+    r"\[[^\]]*r/WeeklyThing[^\]]*]\([^)]+\)\._[ \t]*$",
+    re.MULTILINE,
+)
 
 
 def strip_emoji(text: str) -> str:
@@ -283,6 +300,10 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
     # Strip the templated "Would you like to discuss..." closing CTA. The
     # audio's own closing line takes its place.
     body = re.sub(r"^Would you like to discuss[^\n]*$", "", body, flags=re.MULTILINE)
+    # Strip the italicized "_You can discuss... r/WeeklyThing..._" line that
+    # opens the Notable section in recent issues. Audio shouldn't push readers
+    # off to Reddit.
+    body = REDDIT_DISCUSS_RE.sub("", body)
 
     output: list[str] = [preamble(frontmatter), ""]
     quote_lines: list[str] = []
@@ -358,6 +379,22 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
             if text:
                 output.extend([text, ""])
             continue
+
+        # Briefly-style line: `<commentary> → **[Title](url)**`. Announce
+        # `Link N. "Title"` then read the commentary, matching Notable.
+        if current_section in BRIEFLY_SECTION_HEADINGS:
+            briefly_match = BRIEFLY_LINK_RE.search(line)
+            if briefly_match:
+                title = clean_inline(briefly_match.group(1)).rstrip(" .")
+                commentary_raw = line[: briefly_match.start()]
+                commentary_raw = re.sub(r"\s*[→][ \t]*$", "", commentary_raw)
+                commentary = clean_inline(commentary_raw)
+                if title:
+                    link_index += 1
+                    output.extend([f"Link {_number_word(link_index)}. \"{title}\"", ""])
+                if commentary:
+                    output.extend([commentary, ""])
+                continue
 
         text = clean_inline(line)
         if text:

@@ -12,11 +12,12 @@ from typing import Any
 import yaml
 from dotenv import load_dotenv
 
-from briefly import apply_briefly_synthesis, find_briefly_sections, section_cache
 from manifest import hash_text, now_iso, read_manifest, script_path, write_manifest
 from script import body_to_audio_script
 from synthesize import AUDIO_VOICE, chunk_plan, synthesize_mp3
 from upload import object_exists, public_url, upload_audio
+
+LEGACY_BRIEFLY_FIELDS = ("briefly_synthesis_hash", "briefly_synthesis_text", "briefly_syntheses")
 
 REPO = Path(__file__).resolve().parents[2]
 ARCHIVE_DIR = REPO / "site" / "archive"
@@ -83,14 +84,19 @@ def selected_issues(args: argparse.Namespace) -> list[str]:
     return [latest_issue()]
 
 
-def render_script(issue: str, manifest_entry: dict[str, Any], dry_run: bool) -> tuple[str, dict[str, Any]]:
+def render_script(issue: str) -> str:
     frontmatter, body = parse_archive_file(archive_path(issue))
-    sections = find_briefly_sections(body)
-    cache = section_cache(manifest_entry)
-    if sections and not dry_run and any(section.source_hash not in cache for section in sections):
-        print(f"Issue #{issue}: synthesizing Briefly overview")
-    body, briefly_metadata = apply_briefly_synthesis(body, manifest_entry, dry_run=dry_run)
-    return body_to_audio_script(body, frontmatter), briefly_metadata
+    return body_to_audio_script(body, frontmatter)
+
+
+def scrub_legacy_briefly_fields(manifest: dict[str, dict[str, Any]]) -> bool:
+    changed = False
+    for entry in manifest.values():
+        for field in LEGACY_BRIEFLY_FIELDS:
+            if field in entry:
+                entry.pop(field, None)
+                changed = True
+    return changed
 
 
 def is_up_to_date(issue: str, script_hash: str, manifest_entry: dict[str, Any]) -> bool:
@@ -113,7 +119,7 @@ def write_dry_run(issue: str, text: str) -> None:
 
 def build_issue(issue: str, manifest: dict[str, dict[str, Any]], dry_run: bool, force: bool) -> bool:
     entry = manifest.get(issue, {})
-    text, briefly_metadata = render_script(issue, entry, dry_run=dry_run)
+    text = render_script(issue)
     script_hash = hash_text(text)
 
     if dry_run:
@@ -135,7 +141,8 @@ def build_issue(issue: str, manifest: dict[str, dict[str, Any]], dry_run: bool, 
     url, byte_size = upload_audio(issue, output_path)
 
     existing = dict(entry)
-    existing.update(briefly_metadata)
+    for field in LEGACY_BRIEFLY_FIELDS:
+        existing.pop(field, None)
     existing.update(
         {
             "audio_url": url,
@@ -164,6 +171,9 @@ def run_content_build() -> None:
 
 def cmd_build(args: argparse.Namespace) -> None:
     manifest = read_manifest()
+    if scrub_legacy_briefly_fields(manifest) and not args.dry_run:
+        write_manifest(manifest)
+        print("Removed legacy briefly_synthesis fields from audio manifest")
     changed = False
     for issue in selected_issues(args):
         changed = build_issue(issue, manifest, dry_run=args.dry_run, force=args.force) or changed
@@ -173,16 +183,7 @@ def cmd_build(args: argparse.Namespace) -> None:
 
 def status_for_issue(issue: str, manifest: dict[str, dict[str, Any]]) -> tuple[str, str]:
     entry = manifest.get(issue, {})
-    sections = find_briefly_sections(parse_archive_file(archive_path(issue))[1])
-    uncached_sections = [
-        section
-        for section in sections
-        if section.source_hash not in (entry.get("briefly_syntheses") or {})
-        and section.source_hash != entry.get("briefly_synthesis_hash")
-    ]
-    if uncached_sections:
-        return "render", "briefly synthesis missing or stale"
-    text, _ = render_script(issue, entry, dry_run=True)
+    text = render_script(issue)
     script_hash = hash_text(text)
     if entry.get("audio_script_hash") != script_hash:
         return "render", "audio script changed"
@@ -198,6 +199,9 @@ def status_for_issue(issue: str, manifest: dict[str, dict[str, Any]]) -> tuple[s
 
 def cmd_status(args: argparse.Namespace) -> None:
     manifest = read_manifest()
+    if scrub_legacy_briefly_fields(manifest):
+        write_manifest(manifest)
+        print("Removed legacy briefly_synthesis fields from audio manifest")
     for issue in selected_issues(args):
         state, reason = status_for_issue(issue, manifest)
         print(f"{state:7} #{issue}: {reason}")

@@ -28,7 +28,6 @@ specific issue.
 ## Requirements
 
 - `OPENAI_API_KEY` for OpenAI `tts-1-hd`.
-- `ANTHROPIC_API_KEY` for Briefly section synthesis.
 - AWS credentials with S3 access to `files.thingelstad.com`.
 - `ffmpeg` and `ffprobe` available on `PATH`.
 
