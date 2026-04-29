@@ -181,11 +181,11 @@ def guardrail_config() -> dict:
         "blockedOutputsMessaging": "I cannot provide that answer. Ask me about The Weekly Thing archive instead.",
         "contentPolicyConfig": {
             "filtersConfig": [
-                {"type": "HATE", "inputStrength": "HIGH", "outputStrength": "HIGH"},
-                {"type": "INSULTS", "inputStrength": "MEDIUM", "outputStrength": "MEDIUM"},
-                {"type": "SEXUAL", "inputStrength": "HIGH", "outputStrength": "HIGH"},
-                {"type": "VIOLENCE", "inputStrength": "MEDIUM", "outputStrength": "MEDIUM"},
-                {"type": "MISCONDUCT", "inputStrength": "HIGH", "outputStrength": "HIGH"},
+                {"type": "HATE", "inputStrength": "NONE", "outputStrength": "NONE"},
+                {"type": "INSULTS", "inputStrength": "NONE", "outputStrength": "NONE"},
+                {"type": "SEXUAL", "inputStrength": "LOW", "outputStrength": "NONE"},
+                {"type": "VIOLENCE", "inputStrength": "NONE", "outputStrength": "NONE"},
+                {"type": "MISCONDUCT", "inputStrength": "NONE", "outputStrength": "NONE"},
             ]
         },
         "contextualGroundingPolicyConfig": {
@@ -196,25 +196,9 @@ def guardrail_config() -> dict:
         },
         "sensitiveInformationPolicyConfig": {
             "piiEntitiesConfig": [
-                {"type": "ADDRESS", "action": "BLOCK"},
+                {"type": "ADDRESS", "action": "NONE"},
                 {"type": "EMAIL", "action": "ANONYMIZE"},
-                {"type": "PHONE", "action": "BLOCK"},
-            ]
-        },
-        "topicPolicyConfig": {
-            "topicsConfig": [
-                {
-                    "name": "PrivatePersonalInformation",
-                    "type": "DENY",
-                    "definition": "Requests for Jamie Thingelstad's private home address, personal phone number, private family contact details, or other non-public personal information.",
-                    "examples": ["Where does Jamie live?", "What is Jamie's personal phone number?"],
-                },
-                {
-                    "name": "RegulatedAdvice",
-                    "type": "DENY",
-                    "definition": "Requests for personalized medical, legal, financial, or investment advice.",
-                    "examples": ["Should I buy this stock?", "What medicine should I take?"],
-                },
+                {"type": "PHONE", "action": "ANONYMIZE"},
             ]
         },
     }
