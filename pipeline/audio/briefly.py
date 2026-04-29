@@ -55,6 +55,9 @@ def spoken_heading(value: str) -> str:
     return value
 
 
+_HRULE_RE = re.compile(r"^[ \t]*-{3,}[ \t]*$", re.MULTILINE)
+
+
 def find_briefly_sections(markdown_body: str) -> list[BrieflySection]:
     sections: list[BrieflySection] = []
     pattern = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
@@ -63,7 +66,12 @@ def find_briefly_sections(markdown_body: str) -> list[BrieflySection]:
         heading = normalize_section_name(match.group(1))
         if heading not in process_emails.BRIEFLY_SECTIONS:
             continue
-        end = matches[index + 1].start() if index + 1 < len(matches) else len(markdown_body)
+        next_h2 = matches[index + 1].start() if index + 1 < len(matches) else len(markdown_body)
+        # Also stop at the first horizontal rule after the heading. This
+        # prevents the trailing haiku / closing block from being swallowed
+        # into the Briefly summary when no further H2 follows.
+        rule = _HRULE_RE.search(markdown_body, match.end())
+        end = rule.start() if rule and rule.start() < next_h2 else next_h2
         sections.append(
             BrieflySection(
                 heading=spoken_heading(heading),
