@@ -18,9 +18,9 @@ import build_librarian_graph
 def main() -> int:
     load_dotenv()
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--bucket", default=os.environ.get("AWS_S3_BUCKET"))
-    parser.add_argument("--key", default=os.environ.get("LIBRARIAN_CORPUS_KEY", "librarian/corpus.json"))
-    parser.add_argument("--graph-key", default=os.environ.get("LIBRARIAN_GRAPH_KEY", "librarian/graph.json"))
+    parser.add_argument("--bucket", default=os.environ.get("LIBRARIAN_BUCKET") or "weekly-thing-librarian")
+    parser.add_argument("--key", default=os.environ.get("LIBRARIAN_CORPUS_KEY", "artifacts/corpus.json"))
+    parser.add_argument("--graph-key", default=os.environ.get("LIBRARIAN_GRAPH_KEY", "artifacts/graph.json"))
     parser.add_argument("--embedding-model", default=build_librarian_corpus.DEFAULT_EMBEDDING_MODEL)
     parser.add_argument("--embedding-dimensions", type=int, default=build_librarian_corpus.DEFAULT_EMBEDDING_DIMENSIONS)
     parser.add_argument("--keep-output", help="Optional local path for the embedded corpus JSON")
@@ -28,7 +28,7 @@ def main() -> int:
     args = parser.parse_args()
 
     if not args.bucket:
-        raise RuntimeError("Provide --bucket or AWS_S3_BUCKET")
+        raise RuntimeError("Provide --bucket or LIBRARIAN_BUCKET")
 
     corpus = build_librarian_corpus.build_corpus(include_issue_bodies=True)
     build_librarian_corpus.add_bedrock_embeddings(corpus, args.embedding_model, args.embedding_dimensions)

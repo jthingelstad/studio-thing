@@ -10,6 +10,8 @@ Thingy is a subscriber-gated chat interface for the Weekly Thing archive.
 - `npm run librarian:graph` builds `data/librarian/graph.json`, the offline entity/trope/similarity artifact used by the archive tools.
 - `pipeline/librarian/eval_librarian_rag.py` prints retrieval and reranker diagnostics for standard or multi-hop question sets.
 - `pipeline/librarian/eval_librarian_answers.py` runs baseline or agentic answer generation, then asks Bedrock to judge answer quality. Results are written to `tmp/librarian-answer-eval.json`.
+- `pipeline/librarian/run_eval_job.py` prepares a Bedrock Model Evaluation JSONL dataset from `eval_questions.json` and can start an on-demand Bedrock Evaluation job from precomputed Thingy responses.
+- `pipeline/librarian/configure_bedrock_logging.py` inspects or enables account-level Bedrock invocation logging to the private Librarian bucket.
 - The `weekly-agent` eval suite covers 20 recall, synthesis, recommendation, pattern, voice, tricky retrieval, and edge-case prompts: `python pipeline/librarian/eval_librarian_answers.py --mode agent --question-set weekly-agent --sample-limit 20`.
 - `pipeline/librarian/review_librarian_conversations.py` reads beta conversation logs from DynamoDB for review.
 
@@ -36,9 +38,17 @@ npm run librarian:corpus
 npm run librarian:graph
 npm run librarian:eval
 npm run librarian:eval:answers
+npm run librarian:eval:bedrock -- --responses tmp/librarian-answer-eval.json
+npm run librarian:bedrock:logging
 npm run librarian:conversations -- --limit 25
 npm run librarian:corpus:upload
 npm run librarian:deploy
+```
+
+To start a Bedrock Model Evaluation job, first generate complete precomputed Thingy responses, then upload and start the job:
+
+```sh
+npm run librarian:eval:bedrock -- --generate-responses-live --session-secret-from-lambda weekly-thing-librarian-LibrarianStreamFunction-... --responses tmp/librarian-answer-eval.json --start-job
 ```
 
 For raw JSON conversation review:
@@ -64,7 +74,10 @@ Local `.env` values used by upload/build scripts:
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_SESSION_TOKEN` (only if using temporary credentials)
 - `TINYLYTICS_SITE_UID` or `TINYLYTICS_SITE_ID` for the static website embed, not the API.
-- `AWS_S3_BUCKET`
+- `WEEKLY_THING_ASSETS_BUCKET` for public archive assets under `files.thingelstad.com/weekly-thing/`.
+- `LIBRARIAN_BUCKET` for private Thingy code, corpus, eval, and log artifacts. Defaults to `weekly-thing-librarian`.
+- `LIBRARIAN_CORPUS_KEY` (optional; defaults to `artifacts/corpus.json`)
+- `LIBRARIAN_GRAPH_KEY` (optional; defaults to `artifacts/graph.json`)
 - `AWS_DEFAULT_REGION`
 - `LIBRARIAN_API_URL` (written by deploy; used by static site build)
 - `LIBRARIAN_STREAM_URL` (written by deploy; used by static site build)
@@ -76,20 +89,26 @@ Local `.env` values used by upload/build scripts:
 - `LIBRARIAN_AUTH_RATE_LIMIT_MAX` (optional; defaults to 30 auth attempts per client identity per hour)
 - `LIBRARIAN_CONVERSATION_LOGGING` (optional; defaults to enabled. Set to `0` to disable beta transcript logging.)
 - `LIBRARIAN_CONVERSATION_LOG_TTL_DAYS` (optional; defaults to 60 days.)
+- `BEDROCK_GUARDRAIL_ENABLED` (optional; defaults to disabled. Pass `--guardrail-enabled` to the deploy script to create and wire the Bedrock Guardrail.)
+- `BEDROCK_GUARDRAIL_TRACE` (optional; defaults to `enabled`)
+- `BEDROCK_GUARDRAIL_STREAM_PROCESSING_MODE` (optional; defaults to `sync`)
+- `BEDROCK_EVAL_ROLE_ARN` (required only when starting Bedrock Evaluation jobs)
 
 Deploy, corpus upload, and conversation review scripts load AWS credentials from `.env` through `python-dotenv` before creating `boto3` clients. They do not intentionally fall back to AWS CLI profile authentication.
 
 ## Permanent IAM Setup
 
-Deploys use the AWS credentials loaded from `.env`. Routine deploys currently use the `wt-archive` IAM user with an attached `WeeklyThingLibrarianDeploy` managed policy. That policy grants enough access to upload `s3://files.thingelstad.com/librarian/*` artifacts and update the `weekly-thing-librarian` CloudFormation stack.
+Deploys use the AWS credentials loaded from `.env`. Routine deploys currently use the `wt-archive` IAM user with an attached `WeeklyThingLibrarianDeploy` managed policy. That policy grants enough access to create or harden the private `weekly-thing-librarian` bucket, upload `s3://weekly-thing-librarian/code/*` and `s3://weekly-thing-librarian/artifacts/*`, and update the `weekly-thing-librarian` CloudFormation stack.
+
+`files.thingelstad.com` is the public website asset bucket. Thingy code packages, corpus files, evaluation datasets, evaluation outputs, and future Bedrock invocation logs belong in the private `LIBRARIAN_BUCKET`.
 
 The long-term cleanup is still a dedicated CloudFormation service role.
 
 The stack already creates a Lambda execution role for Thingy. The remaining production cleanup is a dedicated deployment path:
 
 - Create a `weekly-thing-librarian-cloudformation` service role trusted by CloudFormation.
-- Give that service role permissions only for the Librarian stack resources: Lambda, API Gateway HTTP API, DynamoDB table, the Lambda execution role, CloudWatch log group, and `s3://$AWS_S3_BUCKET/librarian/*`.
-- Create a narrow deploy identity, preferably a GitHub Actions OIDC role if deployments move into Actions, that can upload `librarian/*` S3 artifacts and update only the `weekly-thing-librarian` CloudFormation stack.
+- Give that service role permissions only for the Librarian stack resources: Lambda, API Gateway HTTP API, DynamoDB table, the Lambda execution role, CloudWatch log groups, CloudWatch alarms/dashboard, Bedrock Guardrail resources, and `s3://$LIBRARIAN_BUCKET/*`.
+- Create a narrow deploy identity, preferably a GitHub Actions OIDC role if deployments move into Actions, that can upload private Librarian S3 artifacts and update only the `weekly-thing-librarian` CloudFormation stack.
 - Set `LIBRARIAN_CLOUDFORMATION_ROLE_ARN` to the service role ARN before running `npm run librarian:deploy`.
 
 The deploy script passes `LIBRARIAN_CLOUDFORMATION_ROLE_ARN` to CloudFormation when present, so the caller only needs permission to upload artifacts, update the stack, and pass that one service role.
@@ -112,6 +131,8 @@ Both parameters are independent. `/thingy/?prompt=What%20has%20Jamie%20written%2
 ## Logging And Review
 
 Lambda writes structured JSON logs to CloudWatch. Logs include request ID, route, status code, duration, subscriber email hash, retrieval mode, citation count, upstream status/duration, and error type. Raw email addresses, API keys, and session tokens are not logged. The backend does not call Tinylytics; server-side activity should come from CloudWatch logs, metrics, and DynamoDB conversation review.
+
+The active deploy template is `infra/librarian/cloudformation.yaml`. `infra/librarian/template.yaml` is a legacy SAM template and should not be treated as the source of truth unless it is brought back in sync.
 
 Every API response includes an `x-request-id` header. Browser-visible errors include that reference so the matching CloudWatch request can be found quickly.
 
