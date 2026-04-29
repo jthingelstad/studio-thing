@@ -218,7 +218,6 @@ test('librarian query parameters prefill email and auto-submit prompt', async ({
   const prompt = 'What has Jamie written about RSS?';
   await page.goto(`/thingy/?email=reader%40example.com&prompt=${encodeURIComponent(prompt)}`);
   await expect(page.getByLabel('Subscriber email')).toHaveValue('reader@example.com');
-  await page.getByRole('button', { name: 'Enter' }).click();
   await expect(page.locator('#librarian-chat')).toBeVisible();
   await expect.poll(() => chatRequests.length).toBe(1);
   expect(authRequests[0]).toMatchObject({ email: 'reader@example.com', action: 'check' });
