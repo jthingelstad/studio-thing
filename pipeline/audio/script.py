@@ -343,7 +343,7 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
             if title:
                 if current_section in LINK_SECTION_HEADINGS:
                     link_index += 1
-                    output.extend([f"Link {_number_word(link_index)}. {title}", ""])
+                    output.extend([f"Link {_number_word(link_index)}. \"{title}\"", ""])
                 elif current_section in JOURNAL_SECTION_HEADINGS:
                     link_index += 1
                     output.extend([f"Journal entry {_number_word(link_index)}. {title}", ""])

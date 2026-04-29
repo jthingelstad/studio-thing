@@ -1,4 +1,4 @@
-The Weekly Thing, issue 345. Weekly Thing 345 / Codex, Headless, Wikiwise. Published April 26, twenty twenty six. By Jamie Thingelstad.
+The Weekly Thing, issue 345. Codex, Headless, Wikiwise. Published April 26, twenty twenty six. By Jamie Thingelstad. In this issue: OpenAI Codex App, Cloudflare Email Service, Headless everything for personal AI, Claude Design, Dad brains, ChatGPT Images 2.0, GPT-5.5.
 
 Good morning! ☕️
 
@@ -12,24 +12,15 @@ But today we have more important things. Today is Tammy's birthday and we are go
 
 Enjoy the links and have a great day!
 
----
-
-Incredible light coming into Sagrada Familia. (I’m still using photos from our trip to Europe a few weeks ago.)
-
-March 25, twenty twenty six
-Barcelona, Spain
-
----
-
-Notable.
+Now, the Notable section.
 
 You can discuss any of these links at the Weekly Thing 345 tag in r/WeeklyThing.
 
-OpenAI’s New Codex App Has the Best ‘Computer Use’ Feature I’ve Ever Tested - MacStories
+Link one. "OpenAI’s New Codex App Has the Best ‘Computer Use’ Feature I’ve Ever Tested - MacStories"
 
 Add this to the long list of things I need to directly play with. I will share that I've been incredibly frustrated with OpenClaw and am about to give up on it. The continued progression of Claude Cowork and now Codex computer-use features seem like they are much more mature and reliable to get work done.
 
-Cloudflare Email Service: now in public beta. Ready for your agents
+Link two. "Cloudflare Email Service: now in public beta. Ready for your agents"
 
 There are a lot of email services but not many that are fully designed for agents. Agents are going to want email as a core service just like we do, but they are going to want their email inbox to work differently. This is going to happen with many, many services.
 
@@ -37,7 +28,7 @@ I have to share that I have some flashbacks here to the period when we were maki
 
 I think this time is very different.
 
-Headless everything for personal AI
+Link three. "Headless everything for personal AI"
 
 This "headless" term is pure marketing and I sure hope it blows by, but the concept I agree with completely. Matter of fact I’m already playing here with my mb project. I've been working on a lot of agent building and thinking about how agentic systems compare with typical product building that has been the focus of most things I've done for my career.
 
@@ -49,7 +40,7 @@ There is overlap between these but less than you might think. Part of the reason
 
 And on top of that, you can just ask the agent how it is working. You can ask another LLM to generate interactive test data. You can move so much faster.
 
-Introducing Claude Design by Anthropic Labs
+Link four. "Introducing Claude Design by Anthropic Labs"
 
 Anthropic's newest major capability for Claude is Claude Design. I wanted to get my hands dirty with it so I pointed it at the POAP KINGS website which was entirely created with Claude Code, including the design. I thought the design was okay but I had just added a blog feature and it was getting unruly. I pointed Claude Design at the Github repo and it went to work. I answered a number of questions about what I was hoping for and over the course of several prompts it provided a very solid iteration forward.
 
@@ -57,59 +48,57 @@ The most helpful thing in Claude Design is that you can select a specific elemen
 
 Impressive, particularly for a beta, and the connectedness with Claude Code is very powerful.
 
-Dad brains: How fatherhood rewires the male mind
+Link five. "Dad brains: How fatherhood rewires the male mind"
 
 Interesting read filled with what seems like a decent amount of common sense.
 
+Quote.
 Their findings are not unique. Other teams have also found that drops in testosterone during their partner's pregnancy are also linked with higher investment, commitment and satisfaction after birth, and that this hormone's level was even linked to the men's reactions to baby cries: it made them more alert and responsive. In twenty eighteen, a team in Gettler's lab also concluded that fathers with lower levels of testosterone tend to be more involved in caring for babies and toddlers.
+End quote.
 
 Tons of podcasts and newsletters for men are focusing on keeping your testosterone high and that it is a problem for men as they age. Data also shows that being in a good relationship and having kids drops testosterone levels. We shouldn't ignore either to the disadvantage of the other, but it is also important to not just look at one thing in isolation.
 
-Introducing ChatGPT Images 2.0 | OpenAI
+Link six. "Introducing ChatGPT Images 2.0 | OpenAI"
 
 Incredible example images created by the newest image models from OpenAI. I know everyone, including me, is all focused on Anthropic right now but GPT-5.5 and this are pretty impressive.
 
-Mac Power Users #845: Intentional Technology with Patrick Rhone - Relay
+Link seven. "Mac Power Users #845: Intentional Technology with Patrick Rhone - Relay"
 
 Was great to see the Twin Cities own Patrick Rhone on the latest episode of Mac Power Users!
 
-An MCP server for Fastmail — National Email Day
+Link eight. "An MCP server for Fastmail — National Email Day"
 
 This might be the first MCP server that becomes my BFF. I’ve been a Fastmail user for many years and when I saw this I instantly went into Claude and added the connection. It was super-simple and then I asked Claude if it could see my email and there it was. I've not done anything all that advanced with it but I’m very happy with how seamless and easy it is. It is also great that it connects to my Claude account and instantly was available on all of my Claude interfaces. Oh how I wish I had a similar MCP for OmniFocus.
 
-Is Your Site Agent-Ready?
+Link nine. "Is Your Site Agent-Ready?"
 
 Tool that inspects a website to see what AI capabilities it is advertising. Useful if you wish to make your site as useful for agents as possible. I’m surprised thought that it didn’t look for llms.txt support.
 
-Introducing GPT-5.5 | OpenAI
+Link ten. "Introducing GPT-5.5 | OpenAI"
 
 Most of the highlights here are about coding. I fired up codex on Elixir's code and asked it to do a review and assessment. It came forward with strong suggestions and quickly understood everything. The model seemed notably fast to me. Just overall it is still mind-blowing how this is all evolving.
 
----
+That's the end of Notable.
 
----
+Now, the Journal section.
 
-Journal.
-
-Apr 17, twenty twenty six at 7:47 PM
+Journal entry one.
 
 Tyler and I are going to do a Minnebar session this year -- Elixir: Creating An Ai Agent For Our Clash Royale Clan. This will be a lot of fun to share with everyone and tell some of the POAP KINGS and Elixir story.
 
-Apr 18, twenty twenty six at 4:01 PM
+Journal entry two.
 
 There is a fox that has been mostly living at our cabin property for a couple of years now. This year she had pups and they sure are cute to see scamper around.
 
-Apr 18, twenty twenty six at 4:02 PM
+Journal entry three.
 
 It is still such a “wow” when you hit print and go downstairs a few hours later to grab something useful. Tyler and I are having a great time with the Bambu Labs P2S.
 
-Apr 18, twenty twenty six at 8:30 PM
+Journal entry four.
 
 Cold April night for MNUFC v Portland match. ⚽️🥶
 
-Software Is Liquid
-
-Apr 20, twenty twenty six at 7:52 PM
+Journal entry five. Software Is Liquid
 
 This started as a talk I gave internally to a group of technology leaders. I’ve adapted it here, stripping out the company-specific material, because the core ideas apply well beyond any one organization.
 
@@ -223,22 +212,30 @@ I hope you heard something here that grounds you.
 
 Software is liquid. The fundamental economic paradigms have changed. You are able to lead through this.
 
-Hypergrowth
-
-Apr 22, twenty twenty six at 6:00 PM
+Journal entry six. Hypergrowth
 
 This growth is hard to even comprehend.
 
+Quote.
 Anthropic says Claude Code is now growing revenues at a 2 dollars.5 billion run-rate, a number that has doubled since January 1. Claude Code was launched in May twenty twenty five. Six months later it was at 1 dollar billion. Its sales are growing faster than a 1980s F1 monster, pulling the whole company along with it. Anthropic hit 14 dollars billion in ARR in February, 19 dollars billion in March, and around 30 dollars billion this month. -- Software Eats Its Own
+End quote.
 
 Even being prepared for that level of scaling is impressive.
 
-Apr 23, twenty twenty six at 9:00 PM
+Journal entry seven.
 
 We had a great presence from TeamSPS at the Aspirations in Computing awards event tonight and welcomed three of the four high-school interns that will be working with us this summer!
 
----
+That's the end of the Journal.
 
-Briefly.
+Now, the Briefly section.
 
-This week's Briefly section wanders across a few different eras of technology and culture. There's a deep-dive into the Ada programming language — the argument being that it solved problems decades before the rest of the industry caught up. On the current end of things, a look at how Claude's system prompt shifted between two recent releases, which is a small window into how these models actually change under the hood. A good chunk of the links orbit Apple — Tim Cook's community letter, John Gruber's take on the CEO transition, and the less comfortable territory of Trump weighing in. Respect for what Cook built, some unease about recent directions, and not much to add on that last one. There's a personal thread running through it too. A Noah Kahan Tiny Desk concert — the whole family is into his music and they've got tickets this summer in Minneapolis. And a genuinely nostalgic detour into Zip drives, that brief moment in the nineties when a hundred megabytes felt like infinite space. Rounding it out, a piece on using wikis as a collaboration layer with AI agents, and an Acquired episode on Ferrari that's worth the time if you follow Formula 1 at all. All of these are linked in the web archive.
+The Briefly section this week wanders across a few different worlds. There's a deep dive into the Ada programming language — the argument being that it solved problems decades before the rest of the industry caught up. A piece on using wikis as a collaboration layer with AI agents, which feels like a practical answer to a real workflow problem. And some genuinely interesting detail on what changed between Claude releases at the system prompt level. A good chunk of the links circle around Apple and Tim Cook — Gruber weighs in a couple of times on the CEO transition, and there's a Trump moment that gets a grimacing emoji and nothing more, which feels about right. On a warmer note, the whole family has tickets to see Noah Kahan in Minneapolis this summer, and the Tiny Desk concert is worth your time. And there's a lovely nostalgia hit about Zip drives — that mix of excitement and obsolescence that defined so much of nineties computing. Rounding it out, a long-form Acquired episode on Ferrari, which lands differently when you're actually a fan of the team. All of these are linked in the web archive.
+
+A haiku to leave you with…
+
+Wiki of my own,
+Clouds of email drift in play —
+Agents sip the sky.
+
+That brings us to the end of the Weekly Thing, issue 345. Thanks for listening, and I'll see you next time.
