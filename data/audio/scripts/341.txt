@@ -10,8 +10,6 @@ Now onto the links and have a great rest of your Sunday!
 
 Now, the Notable section.
 
-You can discuss any of these links at the Weekly Thing 341 tag in r/WeeklyThing.
-
 Link one. "My AI Adoption Journey – Mitchell Hashimoto"
 
 Hashimoto shares his journey from chatting with AI to adopting fully agentic processes.
@@ -159,7 +157,37 @@ That's the end of the Journal.
 
 Now, the Briefly section.
 
-There's a lot of ground covered this week. On the technology side, ENS is staying on Ethereum's Layer 1, which feels like good news for one of the more meaningful applications in that space. Agentic commerce is getting serious attention — both O'Reilly and Snowflake are mapping out how AI agents will reshape shopping, marketing, and payments. And there's a personal note: SPS Commerce just introduced MAX, a product Jamie was part of building, and the excitement there is genuine. On the surveillance front, a piece on Ring cameras lands with some editorial weight — the argument being that consumer-grade doorbell cameras are quietly assembling a dragnet that anyone can access for a price. The UniFi alternative gets a mention. Then there's music, which shows up twice. Andrea Bocelli's Nessun dorma from the Winter Olympics opening ceremony apparently nearly brought tears — Pavarotti's version is the lasagna-making standard, but this one cleared the bar. And a local Minnesota musician, Humbird, gets a warm nod. Gaming culture gets a moment too, with Lil Wayne crossing over into Clash Royale territory. All of these are linked in the web archive.
+Link one. "ENS is staying on Ethereum | ENS Blog"
+
+This makes me happy on two counts — that Ethereum is scaling well and that ENS, one of the most meaningful apps on it, will stay on Layer 1.
+
+Link two. "Lil Wayne X Clash Royal Music Video - YouTube"
+
+Marketing collab with Clash Royale. Gaming culture continues merging more into other areas.
+
+Link three. "Andrea Bocelli's sweeping vocals overtake Opening Ceremony | Winter Olympics twenty twenty six | NBC Sports - YouTube"
+
+This performance of Nessun dorma was incredible and nearly brought me to tears. I listen to this performed by Pavarotti when I make my lasagna. Bocelli's version here is next level. 🥲
+
+Link four. "The Agentic Commerce Revolution – O’Reilly"
+
+Just some of the ways that Agents are going to change shopping experiences, marketing, and payment handling.
+
+Link five. "Humbird - February (Official Video) - YouTube"
+
+Wonderful local musician. 🎶
+
+Link six. "SPS Commerce Introduces MAX - SPS Commerce"
+
+I’m so excited to see MAX now getting introduced to customers. This has been one of the most exciting new products I've been lucky to be part of.
+
+Link seven. "AI In Shopping: Implications and a Roadmap for Consumer Goods Leaders"
+
+Snowflake on how they see agentic impacting retail.
+
+Link eight. "With Ring, American Consumers Built a Surveillance Dragnet"
+
+I’m no fan of Ring cameras. I use UniFi devices that record video in our home for this same purpose. Deploying Ring devices is literally building a surveillance network for anyone that is willing to pay Ring a few bucks.
 
 A haiku to leave you with…
 

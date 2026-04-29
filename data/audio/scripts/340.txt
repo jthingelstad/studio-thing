@@ -16,8 +16,6 @@ Have a great weekend.
 
 Now, the Notable section.
 
-You can discuss any of these links at the Weekly Thing 340 tag in r/WeeklyThing.
-
 Link one. "moltbook - the front page of the agent internet"
 
 OpenClaw (aka ClawdBot, MoltBot) took the AI world by storm last week. Just days later someone figured "hey, what would be cooler than having unrestricted AI do whatever it wants? I know, let's have them talk to each other on a social platform". This is the point where many folks roll their eyes and say "why oh why are you doing everything you can to encourage the robot uprising!"
@@ -217,7 +215,37 @@ That's the end of the Journal.
 
 Now, the Briefly section.
 
-Here's a 30-60 second spoken summary in Jamie's voice: --- There's a mix of the playful and the serious this week. The LEGO-Crocs partnership dropped on April first, which feels about right. On the more earnest side, a piece about whether our blogs will outlive us landed close to home — the answer, at least for Jamie, is to keep things simple: text, files, cheap hosting. Om Malik shows up twice, once on why tech and media have such a complicated relationship, and again on what he's calling the announcement economy — the idea that announcements are just memes now, which tracks with what Scott Galloway has said about storytelling being the most valuable skill around. OpenAI shipped a Codex app, which is an improvement, though the observation is that they still lag in the programming space because their whole approach is just different. Ethereum Name Service keeps building what feels like genuine utility in a space full of noise, and GitHub is being smart by letting teams bring whatever agents they want. And there's a map-to-poster tool that's visually satisfying, even if the coordinate control could use some work. All of these are linked in the web archive.
+Link one. "The LEGO Group and Crocs Enter Multi-Year Global Partnership - LEGO.com"
+
+Is it April first?
+
+Link two. "Will They Inherit Our Blogs? | Kev Quirk"
+
+I truly hope my blog stays around for as long as possible. I’m going to make that easy by keeping it all text and files. It is incredibly cheap to host such a thing.
+
+Link three. "Why Tech ( and ) Media is complicated – On my Om"
+
+Another great essay from Om Malik.
+
+Link four. "Introducing the Codex app | OpenAI"
+
+Installed this right away and definitely an improvement. OpenAI still lags behind in the programming space though. I think because their approach is just different.
+
+Link five. "The New Announcement Economy – On my Om"
+
+Scott Galloway has said something similar very well — the most valuable skill in the world is storytelling. Announcements are just a kind of meme. It’s all memes.
+
+Link six. "Introducing the ENS App Alpha | ENS Blog"
+
+I think Ethereum Name Service is continuing to lead the way for building real solutions on crypto, and seeing their continued evolution and progress is interesting. I’m a fan and think this is building real utility.
+
+Link seven. "Pick your agent: Use Claude and Codex on Agent HQ - The GitHub Blog"
+
+Github smartly allowing teams to use whatever agents they want.
+
+Link eight. "Map to Poster - Generate Beautiful City Map Posters"
+
+Cool visual builder off of maps. I wish the map control was more accurate though. I would like to put a specific coordinate in.
 
 A haiku to leave you with…
 

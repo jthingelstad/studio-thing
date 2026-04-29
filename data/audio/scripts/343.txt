@@ -16,8 +16,6 @@ I'll be back with another note in your inbox on April fourth or fifth!
 
 Now, the Notable section.
 
-You can discuss any of these links at the Weekly Thing 343 tag in r/WeeklyThing.
-
 Link one. "GNU and the AI reimplementations -"
 
 Using coding agents to create IP free copies of things. Similar to the "decompilation threat" this is a unique new vector. I was working on a project to give agentic documentation for an API recently and realized this is a possible topic there. Instead of relying on copyrighted API documentation, why not have an agent just inspect and explore the API and everything it can see in the API calls, which are not copyrighted, and infer its own documentation set from that. I might do this as a test to see how far it can get.
@@ -110,7 +108,57 @@ That's the end of the Journal.
 
 Now, the Briefly section.
 
-Here's a 30-60 second spoken summary in Jamie's voice: --- There's a lot of agentic AI energy in this batch. Remote sessions with Claude Code, scheduled prompt loops, Stripe making token-based billing trivially easy — the infrastructure for agents doing real work is quietly snapping into place. On a lighter note, there's a video of ringing the Nasdaq closing bell, which is a moment worth marking. The phishing story from Matt Mullenweg is a good reminder that even people who know better can get close to the edge — worth reading carefully. RSS keeps coming up as a theme, and there's a nice blog discovery tool to go along with it. Claude for Excel apparently embarrasses Microsoft's own Copilot effort, which feels like a fair observation. ENS gets some attention too, with a longer view that crypto infrastructure becomes more interesting once agents need to actually move money around. And somewhere in there, a tool that turns your handwriting into a font, which has been on the wishlist for a while. All of these are linked in the web archive.
+Link one. "Continue local sessions from any device with Remote Control - Claude Code Docs"
+
+This feature is more of a "sign of the times" and thinking about how far agentic engineering has come. Coordinating with Claude while you are away from your computer!
+
+Link two. "Your binary is no longer safe: Decompilation"
+
+Hadn't considered how Agents could dig into decompilation! 😳
+
+Link three. "Ringing the Nasdaq Closing Bell | Celebrating 100 Consecutive Quarters of Growth - YouTube"
+
+Video of us ringing the bell at Nasdaq! 🔔
+
+Link four. "Miniroll Global Feed | Chris Hannah"
+
+Great way to discover blogs!
+
+Link five. "Introducing ChatGPT for Excel and new financial data integrations | OpenAI"
+
+Claude for Excel has been around for a bit and is very powerful. It should be embarrassing for Microsoft that both Anthropic and OpenAI are doing better at bringing AI to Excel and PowerPoint than they are with Copilot. 😬
+
+Link six. "Gone (Almost) Phishin’ | Matt Mullenweg"
+
+Good story of almost getting identity stolen. I read and share these as a reminder that even experts can be fooled, or at least almost. Stay safe!
+
+Link seven. "Clash Royale CHAOS Mode - March twenty twenty six - Clash Royale News Blog - RoyaleAPI"
+
+Clash Royale is the one game I play and I've been having a lot of fun with it. Tyler showed me CHAOS mode and it is a trip. I’m having fun learning the innovation cycle in mobile gaming.
+
+Link eight. "Billing for LLM tokens | Stripe Documentation"
+
+Brilliant move from Stripe to make it super easy for companies to bill based on token consumption.
+
+Link nine. "FontCrafter: Create Your Handwriting Font for Free"
+
+It is like these folks looked at my "Someday / Maybe" list and saw the "Custom font" wishlist item.
+
+Link ten. "The Death of Social Media is the Renaissance of RSS – Smartlab"
+
+More love for RSS. Jump on in! 🤩
+
+Link eleven. "Run prompts on a schedule - Claude Code Docs"
+
+Looping a prompt is pretty simple but can be very powerful too. It is the foundation of an agentic loop.
+
+Link twelve. "10 Must-Have Skills for Claude in twenty twenty six | Medium"
+
+Click-baity "listicle" but these resources are still good to scan.
+
+Link thirteen. "on.eth: Names For Chains and Interoperable Names | ENS Blog"
+
+I 💙 ENS and love how they continue to push forward on blockchain improvements. Long-term I still see crypto as a foundational technology. The most obvious connection is when agents need to manage currency. ENS is a big enabler for all things crypto.
 
 A haiku to leave you with…
 

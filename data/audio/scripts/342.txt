@@ -241,8 +241,6 @@ That's the end of Wrap.
 
 Now, the Notable section.
 
-You can discuss any of these links at the Weekly Thing 342 tag in r/WeeklyThing.
-
 Link one. "Redis Patterns for Coding Agents"
 
 In addition to software for agents we also need to think about documentation for agents. You can write in a more direct and context-friendly way for agents. Raw markdown index is a huge win. Sadly a lot of projects block agents from accessing their site because of Cloudflare anti-bot mechanisms. That is going to prove an absolutely terrible decision and lead to less adoption of your software.
@@ -329,7 +327,13 @@ That's the end of the Journal.
 
 Now, the Briefly section.
 
-The open web keeps coming up, and Doc Searls puts it plainly — the internet can't just be malls. We need something more like public parks. That framing stuck with me. And on the agentic side, there's a nice observation that the old Unix command line virtues — non-blocking, good flags, solid documentation — turn out to be exactly what AI agents need. Which is part of why I built mb, my agent-first micro.blog client, the way I did. Old ideas, new reasons to care about them. All of these are linked in the web archive.
+Link one. "For Public Parks on the Internet – Doc Searls Weblog"
+
+We need something like this. The Internet represents our digital world, and it cannot just be malls!
+
+Link two. "MCP is dead. Long live the CLI"
+
+Agentic-first capabilities thrive in the traditional world of Unix command line best practices. Non-blocking, good flags, and documentation. This is the reason behind my mb - agent first micro.blog client.
 
 A haiku to leave you with…
 

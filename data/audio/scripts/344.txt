@@ -12,8 +12,6 @@ Now I’m back and typing to you here on a Sunday morning. Should we get back ri
 
 Now, the Notable section.
 
-You can discuss any of these links at the Weekly Thing 344 tag in r/WeeklyThing.
-
 Link one. "Working with agents doesn't feel like flow — Bill de hÓra"
 
 I have been working with many agents building and exploring things and I've been curious to observe what it feels like. I think that we will find that for people working closely with agents that doing that for 2-3 hours at a time is probably a limit. Maybe a little bit more, but co-creating alongside an agent takes a different kind of energy. This blog post commenting on flow and that feeling was interesting to me.
@@ -120,7 +118,65 @@ That's the end of the Journal.
 
 Now, the Briefly section.
 
-Here's a 30-60 second spoken summary in Jamie's voice: --- This week's Briefly section wanders across a few different obsessions. There's a thread running through several links about agentic AI — what it looks like when systems get more capable, how people are actually building with them, and some honest skepticism along the way. The Obsidian note on agents using it as a knowledge store is a good example: maybe that tool was never meant for humans in the first place. Bitcoin's miner reward math gets a look, with some real uncertainty about whether transaction fees can carry the ecosystem long-term. On the hardware side, a new Bambu Lab 3D printer and a comparison to how DJI took over drones — that framing landed as reassuring, not just hype. There's a security reminder that WordPress plugins remain a supply chain waiting to go wrong. And then some genuine delight: NASA Artemis wallpapers, a trip into Nintendo DS programming, and the Apple Frames shortcut doing things that make you appreciate what Shortcuts can actually do. Neurosymbolic AI gets a flag as something worth paying attention to, and Ethereum's slow, quiet progress gets a mention while everyone else is looking the other direction. All of these are linked in the web archive.
+Link one. "Artemis II Mobile Wallpapers - NASA"
+
+Beautiful images from NASA's Artemis mission to adorn your phone with.
+
+Link two. "SQLite Release 3.53.0"
+
+I've been using SQLite in some of my agentic apps and it is just a wonderful piece of software.
+
+Link three. "From Assistant to Collaborator: How My AI Second Brain Grew Up — Elezea"
+
+Interesting and short read on how folks are making agentic systems even more capable.
+
+Link four. "How I run multiple 10 dollarsK MRR companies on a 20 dollars/month tech stack | Steve Hanov's Blog"
+
+The title on this is so clickbait I feel gross even including it, but I find these articles compelling to read anyway to expand thinking and see what folks are doing that are pushing agentic capabilities.
+
+Link five. "Cowork - How to AI"
+
+Good primer on getting more out of Claude Cowork. I’m close to dumping OpenClaw and instead just running Cowork with Claude Dispatch on my phone.
+
+Link six. "Bitcoin miners are losing 19,000 dollars on every BTC produced as difficulty drops 7.8%"
+
+Bitcoin intentionally drops miner rewards over time. The math is sensible. In the early days miners should be compensated through direct mining activity, but over time Bitcoin should transition to fees paid for transactions. That transition is still in front of the Bitcoin ecosystem and given that Bitcoin has landed more as digital gold than cash, the transaction fees may be hard to get profitable?
+
+Link seven. "Introduction to Nintendo DS Programming"
+
+Delightful trip with the awesome Nintendo DS platform.
+
+Link eight. "Introducing Apple Frames 4 - MacStories"
+
+This shortcut is one of the more powerful that exist, and really highlights how you can make some incredible solutions in Shortcuts.
+
+Link nine. "Someone Bought 30 WordPress Plugins and Planted a Backdoor in All of Them"
+
+WordPress Plugins are a security nightmare, but this strategy can be applied to many software pipelines.
+
+Link ten. "The biggest advance in AI since the LLM - Gary Marcus"
+
+Time to read up on neurosymbolic AI!
+
+Link eleven. "Gas Town: from Clown Show to v1.0 | Steve Yegge"
+
+Beads was one of the first products I remember reading about that was specifically made for an agent as a user. I find this category of software fascinating.
+
+Link twelve. "obsidian-skills: Agent skills for Obsidian"
+
+I've tried using Obsidian multiple times and concluded every time that it is a rabbit hole that productive time sinks into. However, having your agent use it to store knowledge? That is rather interesting. Maybe Obsidian should have never been used by people. I can mostly agree with that.
+
+Link thirteen. "Bambu Lab X2D Signals Potential Shift Toward Consumer-Focused 3D Printing Market « Fabbaloo"
+
+I recently bought a Bambu Lab P2S and have been loving it. This article comparing their strategy to what DJI did with drones seems spot on, and was part of why I felt good buying one of their printers!
+
+Link fourteen. "A Deeper Look at the ENS App | ENS Blog"
+
+Everyone is all AI all the time but I believe that crypto tech, particularly Ethereum, will continue to slowly grow in importance and ENS is continuing to incrementally improve. Great stuff.
+
+Link fifteen. "We gave an AI a 3 year retail lease in SF and asked it to make a profit | Andon Labs"
+
+Interesting project to see how far an AI can run something on its own.
 
 A haiku to leave you with…
 

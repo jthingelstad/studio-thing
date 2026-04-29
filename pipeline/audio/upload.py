@@ -80,5 +80,8 @@ def upload_audio(issue: str, path: Path, bucket: str = BUCKET) -> tuple[str, int
     }
     key = s3_key(issue)
     s3_client().upload_file(str(path), bucket, key, ExtraArgs=extra_args)
-    invalidate_path(key)
+    try:
+        invalidate_path(key)
+    except Exception as exc:  # noqa: BLE001 — invalidation is best-effort
+        print(f"  warning: CloudFront invalidation skipped ({exc})")
     return public_url(issue, bucket), os.path.getsize(path)

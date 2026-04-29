@@ -14,8 +14,6 @@ Enjoy the links and have a great day!
 
 Now, the Notable section.
 
-You can discuss any of these links at the Weekly Thing 345 tag in r/WeeklyThing.
-
 Link one. "OpenAI’s New Codex App Has the Best ‘Computer Use’ Feature I’ve Ever Tested - MacStories"
 
 Add this to the long list of things I need to directly play with. I will share that I've been incredibly frustrated with OpenClaw and am about to give up on it. The continued progression of Claude Cowork and now Codex computer-use features seem like they are much more mature and reliable to get work done.
@@ -230,7 +228,41 @@ That's the end of the Journal.
 
 Now, the Briefly section.
 
-The Briefly section this week wanders across a few different worlds. There's a deep dive into the Ada programming language — the argument being that it solved problems decades before the rest of the industry caught up. A piece on using wikis as a collaboration layer with AI agents, which feels like a practical answer to a real workflow problem. And some genuinely interesting detail on what changed between Claude releases at the system prompt level. A good chunk of the links circle around Apple and Tim Cook — Gruber weighs in a couple of times on the CEO transition, and there's a Trump moment that gets a grimacing emoji and nothing more, which feels about right. On a warmer note, the whole family has tickets to see Noah Kahan in Minneapolis this summer, and the Tiny Desk concert is worth your time. And there's a lovely nostalgia hit about Zip drives — that mix of excitement and obsolescence that defined so much of nineties computing. Rounding it out, a long-form Acquired episode on Ferrari, which lands differently when you're actually a fan of the team. All of these are linked in the web archive.
+Link one. "On Ada, Its Design, and the Language That Built the Languages"
+
+Long article but I like these kind of deep-dives into languages. This one makes the case that Ada was well ahead of its time in many ways.
+
+Link two. "Wikiwise — Build your own Wikipedia"
+
+I am a fan of wikis but getting them integrated into your knowledge system isn't easy. Using a wiki to collaborate with an agent seems like a solid path.
+
+Link three. "Changes in the system prompt between Claude Opus 4.6 and 4.7"
+
+It is super interesting to see the changes that AI models get between releases.
+
+Link four. "Daring Fireball: 'Community Letter From Tim'"
+
+I'll miss Tim Cook being at the helm of Apple. I've got a ton of respect for what he has built and how he has led Apple (with a couple of recent exceptions).
+
+Link five. "Noah Kahan: Tiny Desk Concert: NPR"
+
+We have tickets to go see Noah Kahan in Minneapolis this summer. Our whole family is really into his music.
+
+Link six. "Daring Fireball: Trump on Tim Apple"
+
+Nothing much to add. 😬
+
+Link seven. "Daring Fireball: Another Day Has Come"
+
+John Gruber commenting on the CEO transition at Apple. Gruber is my go to for deep Apple insights.
+
+Link eight. "Why Zip drives dominated the 90s, then vanished almost overnight"
+
+This brought me back! I remember being so excited when I got my Zip drive back in the day. It seemed so fast and could hold so much!
+
+Link nine. "Ferrari: The Prancing Horse and the Business of Desire — Acquired"
+
+As a fan of Ferrari and specifically Ferrari Formula 1 I greatly enjoyed this episode of Acquired.
 
 A haiku to leave you with…
 
