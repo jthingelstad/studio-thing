@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -90,11 +91,34 @@ def s3_object_metadata(bucket: str, key: str) -> dict | None:
         head = boto3.client("s3").head_object(Bucket=bucket, Key=key)
     except (ClientError, NoCredentialsError):
         return None
-    return {
+    metadata = {
         "size": head.get("ContentLength"),
         "last_modified": head.get("LastModified").isoformat().replace("+00:00", "Z") if head.get("LastModified") else None,
         "etag": head.get("ETag", "").strip('"'),
     }
+    # The corpus is too big to download whole, but the top-level metadata
+    # (embedding_model, embedding_dimensions, issue_count, chunk_count)
+    # lives in the first ~200 bytes — readable with a Range GET. Best
+    # effort; we keep the metadata even if the parse fails.
+    if key.endswith("corpus.json"):
+        try:
+            head_bytes = boto3.client("s3").get_object(
+                Bucket=bucket, Key=key, Range="bytes=0-2047"
+            )["Body"].read()
+            text = head_bytes.decode("utf-8", errors="ignore")
+            for field in ("embedding_model", "embedding_dimensions", "issue_count", "chunk_count"):
+                m = re.search(rf'"{field}"\s*:\s*("?)([^,"\n}}]+)\1', text)
+                if m:
+                    val = m.group(2)
+                    if val.isdigit():
+                        metadata[field] = int(val)
+                    elif val == "null":
+                        metadata[field] = None
+                    else:
+                        metadata[field] = val
+        except (ClientError, NoCredentialsError, UnicodeDecodeError):
+            pass
+    return metadata
 
 
 def collect_issues() -> list[dict]:
