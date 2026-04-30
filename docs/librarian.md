@@ -129,8 +129,6 @@ Both parameters are independent. `/thingy/?prompt=What%20has%20Jamie%20written%2
 
 Lambda writes structured JSON logs to CloudWatch. Logs include request ID, route, status code, duration, subscriber email hash, retrieval mode, citation count, upstream status/duration, and error type. Raw email addresses, API keys, and session tokens are not logged. The backend does not call Tinylytics; server-side activity should come from CloudWatch logs, metrics, and DynamoDB conversation review.
 
-The active deploy template is `infra/librarian/cloudformation.yaml`. `infra/librarian/template.yaml` is a legacy SAM template and should not be treated as the source of truth unless it is brought back in sync.
-
 Every API response includes an `x-request-id` header. Browser-visible errors include that reference so the matching CloudWatch request can be found quickly.
 
 Successful beta conversations are stored in the existing DynamoDB table when `LIBRARIAN_CONVERSATION_LOGGING` is enabled. These records are intended for answer-quality review and include:
