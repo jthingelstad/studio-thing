@@ -54,7 +54,7 @@ QUOTES_PATH = DATA / "quotes.json"
 TMP = REPO / "tmp"
 TMP.mkdir(exist_ok=True)
 
-SONNET = "claude-sonnet-4-6"
+SONNET = "claude-sonnet-4-7"
 OPUS = "claude-opus-4-7"
 DEFAULT_SAMPLE = 32
 DEFAULT_WINDOW_DAYS = 730

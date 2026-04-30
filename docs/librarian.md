@@ -20,7 +20,7 @@ Thingy is a subscriber-gated chat interface for the Weekly Thing archive.
 The backend is defined in `infra/librarian/cloudformation.yaml`. Auth and auth health checks run behind API Gateway/Lambda. Streaming chat and stream health checks run through a Lambda Function URL with response streaming enabled. It uses:
 
 - Buttondown API for subscriber lookup.
-- Amazon Bedrock Claude Sonnet 4.6 for premium messages and the agent loop.
+- Amazon Bedrock Claude Sonnet 4.7 for premium messages and the agent loop.
 - Amazon Bedrock Cohere Embed v3 for query-to-archive retrieval.
 - Amazon Bedrock Cohere Rerank 3.5 after archive searches.
 - DynamoDB for session and rate-limit state.
@@ -81,7 +81,7 @@ Local `.env` values used by upload/build scripts:
 - `AWS_DEFAULT_REGION`
 - `LIBRARIAN_API_URL` (written by deploy; used by static site build)
 - `LIBRARIAN_STREAM_URL` (written by deploy; used by static site build)
-- `BEDROCK_AGENT_MODEL` (optional; defaults to `us.anthropic.claude-sonnet-4-6`, the US Bedrock inference profile for Claude Sonnet 4.6)
+- `BEDROCK_AGENT_MODEL` (optional; defaults to `us.anthropic.claude-sonnet-4-7`, the US Bedrock inference profile for Claude Sonnet 4.7)
 - `BEDROCK_EMBEDDING_MODEL` (optional; defaults to `cohere.embed-english-v3`)
 - `BEDROCK_RERANK_MODEL` (optional; defaults to `cohere.rerank-v3-5:0`)
 - `BEDROCK_RERANK_REGION` (optional; defaults to `us-west-2`, where the Bedrock Rerank API exposes Cohere Rerank 3.5)
@@ -165,7 +165,7 @@ The beta popup on `/thingy/` tells authenticated users that beta conversations m
 
 Thingy uses hybrid retrieval. It merges semantic embedding matches, lexical matches, and issue-summary/topic graph matches, reranks the top candidates with Cohere Rerank 3.5 through the Bedrock Agent Runtime rerank API, then applies context-aware recency and issue diversity. Current/recommendation questions prefer newer material when relevance is close. History/evolution questions intentionally preserve sources across eras.
 
-Chat requests run through a tool-using Claude Sonnet 4.6 loop capped by `MAX_TOOL_TURNS` (default 8). The agent can call:
+Chat requests run through a tool-using Claude Sonnet 4.7 loop capped by `MAX_TOOL_TURNS` (default 8). The agent can call:
 
 - `search_faq(query, limit?)`
 - `search_archive(query, year_range?, section?, limit?)`

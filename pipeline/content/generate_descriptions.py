@@ -35,7 +35,7 @@ ALL_EDITORIAL_SECTIONS = MAIN_SECTIONS | {
     "Briefly", "Recommended Links", "FYI", "Yet More Links 🍞",
 }
 
-MODEL = "claude-sonnet-4-6"
+MODEL = "claude-sonnet-4-7"
 
 SYSTEM_PROMPT = """\
 You write meta descriptions for issues of the Weekly Thing, a newsletter by Jamie Thingelstad. Each description appears as (a) a subtitle on the web archive, (b) og:description and other meta tags, and (c) the preheader in email clients — rendered right next to the subject line, so avoid repeating subject-line topics verbatim when possible.

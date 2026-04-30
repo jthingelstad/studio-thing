@@ -143,7 +143,7 @@ def main() -> int:
     parser.add_argument("--offset", type=int, default=0, help="Number of selected questions to skip before evaluating.")
     parser.add_argument("--mode", choices=["baseline", "agent"], default="baseline")
     parser.add_argument("--question-set", choices=["standard", "multi-hop", "weekly-agent", "all"], default="standard")
-    parser.add_argument("--judge-model", default=os.environ.get("BEDROCK_EVAL_MODEL", "us.anthropic.claude-sonnet-4-6"))
+    parser.add_argument("--judge-model", default=os.environ.get("BEDROCK_EVAL_MODEL", "us.anthropic.claude-sonnet-4-7"))
     parser.add_argument("--output", default="tmp/librarian-answer-eval.json")
     args = parser.parse_args()
 
@@ -212,7 +212,7 @@ def main() -> int:
     summary = {
         "mode": args.mode,
         "question_set": args.question_set,
-        "answer_model": os.environ.get("BEDROCK_AGENT_MODEL", "us.anthropic.claude-sonnet-4-6"),
+        "answer_model": os.environ.get("BEDROCK_AGENT_MODEL", "us.anthropic.claude-sonnet-4-7"),
         "judge_model": args.judge_model,
         "averages": {
             key: round(mean(item["score"][key] for item in results), 2)
