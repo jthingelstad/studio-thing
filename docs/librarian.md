@@ -89,9 +89,6 @@ Local `.env` values used by upload/build scripts:
 - `LIBRARIAN_AUTH_RATE_LIMIT_MAX` (optional; defaults to 30 auth attempts per client identity per hour)
 - `LIBRARIAN_CONVERSATION_LOGGING` (optional; defaults to enabled. Set to `0` to disable beta transcript logging.)
 - `LIBRARIAN_CONVERSATION_LOG_TTL_DAYS` (optional; defaults to 60 days.)
-- `BEDROCK_GUARDRAIL_ENABLED` (optional; defaults to disabled. Pass `--guardrail-enabled` to the deploy script to create and wire the Bedrock Guardrail.)
-- `BEDROCK_GUARDRAIL_TRACE` (optional; defaults to `enabled`)
-- `BEDROCK_GUARDRAIL_STREAM_PROCESSING_MODE` (optional; defaults to `sync`)
 - `BEDROCK_EVAL_ROLE_ARN` (required only when starting Bedrock Evaluation jobs)
 
 Deploy, corpus upload, and conversation review scripts load AWS credentials from `.env` through `python-dotenv` before creating `boto3` clients. They do not intentionally fall back to AWS CLI profile authentication.
@@ -107,7 +104,7 @@ The long-term cleanup is still a dedicated CloudFormation service role.
 The stack already creates a Lambda execution role for Thingy. The remaining production cleanup is a dedicated deployment path:
 
 - Create a `weekly-thing-librarian-cloudformation` service role trusted by CloudFormation.
-- Give that service role permissions only for the Librarian stack resources: Lambda, API Gateway HTTP API, DynamoDB table, the Lambda execution role, CloudWatch log groups, CloudWatch alarms/dashboard, Bedrock Guardrail resources, and `s3://$LIBRARIAN_BUCKET/*`.
+- Give that service role permissions only for the Librarian stack resources: Lambda, API Gateway HTTP API, DynamoDB table, the Lambda execution role, CloudWatch log groups, CloudWatch alarms/dashboard, and `s3://$LIBRARIAN_BUCKET/*`.
 - Create a narrow deploy identity, preferably a GitHub Actions OIDC role if deployments move into Actions, that can upload private Librarian S3 artifacts and update only the `weekly-thing-librarian` CloudFormation stack.
 - Set `LIBRARIAN_CLOUDFORMATION_ROLE_ARN` to the service role ARN before running `npm run librarian:deploy`.
 
