@@ -1,4 +1,36 @@
 {
+  "336": {
+    "audio_url": "https://files.thingelstad.com/weekly-thing/336/weekly-thing-336.mp3",
+    "audio_duration_seconds": 938,
+    "audio_voice": "openai-tts-1-hd:echo",
+    "audio_script_hash": "sha256:095c428e0b232df774e69a26f3cc1ff1be3c6eaa4ee085a1d1c04b162a0825f5",
+    "generated_at": "2026-04-30T12:09:29Z",
+    "byte_size": 18751245
+  },
+  "337": {
+    "audio_url": "https://files.thingelstad.com/weekly-thing/337/weekly-thing-337.mp3",
+    "audio_duration_seconds": 1297,
+    "audio_voice": "openai-tts-1-hd:echo",
+    "audio_script_hash": "sha256:e76db86185fc0fa0ebed950f88e535546e5740595f64fbba7a85f4ff61de1cfa",
+    "generated_at": "2026-04-30T12:36:56Z",
+    "byte_size": 25934925
+  },
+  "338": {
+    "audio_url": "https://files.thingelstad.com/weekly-thing/338/weekly-thing-338.mp3",
+    "audio_duration_seconds": 1043,
+    "audio_voice": "openai-tts-1-hd:echo",
+    "audio_script_hash": "sha256:7ded7ad9661dd462a0df8fce5fc320bb79a38135cf8cb06373a9aba8360890e2",
+    "generated_at": "2026-04-30T12:41:24Z",
+    "byte_size": 20857965
+  },
+  "339": {
+    "audio_url": "https://files.thingelstad.com/weekly-thing/339/weekly-thing-339.mp3",
+    "audio_duration_seconds": 1201,
+    "audio_voice": "openai-tts-1-hd:echo",
+    "audio_script_hash": "sha256:6fb2aff8dad01cb40984625f15adea9e490b6f8b911187bab1ae5d7cfded424b",
+    "generated_at": "2026-04-30T12:45:49Z",
+    "byte_size": 24019725
+  },
   "340": {
     "audio_url": "https://files.thingelstad.com/weekly-thing/340/weekly-thing-340.mp3",
     "audio_duration_seconds": 1090,
