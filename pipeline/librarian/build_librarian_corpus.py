@@ -341,8 +341,23 @@ def fetch_bedrock_embeddings(inputs: list[str], model: str, input_type: str = "s
 def add_bedrock_embeddings(corpus: dict[str, Any], model: str, dimensions: int, batch_size: int = 96) -> None:
     load_dotenv()
     chunks = corpus["chunks"]
-    for start in range(0, len(chunks), batch_size):
-        batch = chunks[start : start + batch_size]
+    # Only embed chunks that don't already have an embedding. Callers (the
+    # upload script) may have hydrated unchanged chunks from a previous
+    # corpus's cache before calling this; those chunks already carry their
+    # vector and re-embedding them would just burn money.
+    pending = [chunk for chunk in chunks if not chunk.get("embedding")]
+    if not pending:
+        # All embeddings reused from cache. Set model/dimensions from
+        # whatever's already on the chunks.
+        corpus["embedding_model"] = model
+        if chunks and chunks[0].get("embedding"):
+            corpus["embedding_dimensions"] = len(chunks[0]["embedding"])
+        else:
+            corpus["embedding_dimensions"] = dimensions
+        print(f"All {len(chunks)} chunk embeddings reused from cache; skipped Bedrock call.")
+        return
+    for start in range(0, len(pending), batch_size):
+        batch = pending[start : start + batch_size]
         inputs = [
             "\n".join(
                 [
@@ -357,9 +372,12 @@ def add_bedrock_embeddings(corpus: dict[str, Any], model: str, dimensions: int, 
         embeddings = fetch_bedrock_embeddings(inputs, model)
         for chunk, embedding in zip(batch, embeddings):
             chunk["embedding"] = embedding
-        print(f"Embedded chunks {start + 1}-{start + len(batch)} of {len(chunks)}")
+        print(f"Embedded chunks {start + 1}-{start + len(batch)} of {len(pending)} pending")
     corpus["embedding_model"] = model
-    corpus["embedding_dimensions"] = len(chunks[0]["embedding"]) if chunks else 0
+    # Derive dimensions from a chunk that has an embedding (works whether
+    # this batch added new ones or all were already cached).
+    sample = next((c for c in chunks if c.get("embedding")), None)
+    corpus["embedding_dimensions"] = len(sample["embedding"]) if sample else dimensions
 
 
 def main() -> int:
