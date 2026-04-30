@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
-"""Refresh the home page marketing copy using an LLM 'creative team'.
+"""Refresh the home page voice samples and creative brief.
 
-Two-pass pipeline:
-  1. Sonnet 4.6 reads a stratified sample of recent issues (~48 issues
-     over the last 2 years) plus the creative brief. Returns structured
-     findings: themes, voice markers, candidate pull-quotes, running
-     observations.
-  2. Opus 4.7 reads the analyst's findings + the brief + the current
-     copy.json + archive stats. Returns new copy.json fields, polished
-     voiceSamples, and a rewritten brief.
+Single-pass pipeline:
+  Sonnet 4.7 reads a stratified sample of recent issues (~32 issues over
+  the last 2 years) plus the existing creative brief, reader survey data,
+  and reader testimonials. It returns: themes, voice markers, candidate
+  pull-quotes (verbatim), the 3–5 selected voice samples for the home
+  page, running observations, and a fully rewritten brief.
 
-Writes three files (unless --dry-run):
-  - site/_data/copy.json
+Writes two files (unless --dry-run):
   - site/_data/voiceSamples.json
   - docs/creative/brief.md
 
@@ -33,7 +30,6 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Optional
 
 import anthropic
 from dotenv import load_dotenv
@@ -46,7 +42,6 @@ REPO = Path(__file__).resolve().parents[2]
 ARCHIVE = REPO / "site" / "archive"
 DATA = REPO / "site" / "_data"
 BRIEF_PATH = REPO / "docs" / "creative" / "brief.md"
-COPY_PATH = DATA / "copy.json"
 VOICE_PATH = DATA / "voiceSamples.json"
 EMAILS_PATH = DATA / "emails.json"
 SURVEY_PATH = DATA / "survey.json"
@@ -55,7 +50,6 @@ TMP = REPO / "tmp"
 TMP.mkdir(exist_ok=True)
 
 SONNET = "claude-sonnet-4-7"
-OPUS = "claude-opus-4-7"
 DEFAULT_SAMPLE = 32
 DEFAULT_WINDOW_DAYS = 730
 RECENT_ANCHOR = 6
@@ -89,53 +83,10 @@ class SonnetFindings(BaseModel):
     themes: list[Theme] = Field(description="3–6 recurring themes visible across the sample (not just topics — recurring moves/angles).")
     voiceMarkers: list[str] = Field(description="3–6 short evidence-based observations about how Jamie writes.")
     candidateQuotes: list[VoiceSample] = Field(description="6–12 candidate pull-quotes, verbatim. Favor passages where Jamie's voice is on display.")
+    selectedQuotes: list[VoiceSample] = Field(description="3–5 quotes from candidateQuotes, ordered by strength. These become the voice samples on the home page.")
     observations: str = Field(description="2–4 sentence running-notes paragraph for the brief's Open observations section.")
     recurringThemesNotes: str = Field(description="Markdown-bulleted list (3–6 bullets) for the brief's Recurring themes section. Each bullet ≤20 words.")
-
-
-class HeroCopy(BaseModel):
-    eyebrow: str = Field(description="≤50 chars. Byline framing.")
-    tagline: str = Field(description="1–2 sentences describing what the newsletter is. Concrete, specific.")
-
-
-class ValueProp(BaseModel):
-    headline: str = Field(description="Main value-prop headline. A single '<br>' is allowed for a deliberate line break; no other HTML.")
-    paragraphs: list[str] = Field(description="2–3 paragraphs. Each is plain prose. No HTML.")
-
-
-class WhatYouGet(BaseModel):
-    headline: str = Field(description="Section headline, ≤50 chars.")
-    lede: str = Field(description="One-sentence intro above the theme cards.")
-    themes: list[Theme] = Field(description="3–4 theme cards, each with a real exampleIssue from the sample.")
-
-
-class CTA(BaseModel):
-    headline: Optional[str] = None
-    proof: Optional[str] = None
-    body: Optional[str] = None
-
-
-class Sections(BaseModel):
-    readersSay: str
-    voiceTitle: str
-    membership: str
-
-
-class CTAs(BaseModel):
-    hero: CTA
-    mid1: CTA
-    mid2: CTA
-    footer: CTA
-
-
-class OpusOutput(BaseModel):
-    hero: HeroCopy
-    valueProp: ValueProp
-    whatYouGet: WhatYouGet
-    sections: Sections
-    ctas: CTAs
-    voiceSamples: list[VoiceSample] = Field(description="3–5 voice samples drawn from the analyst's candidateQuotes, ordered by strength.")
-    updatedBrief: str = Field(description="Full rewritten docs/creative/brief.md. Preserve the Voice / What makes it unique / What to avoid sections verbatim; only update Recurring themes and Open observations.")
+    updatedBrief: str = Field(description="Full rewritten content of docs/creative/brief.md. Preserve the Voice / What makes it unique / What to avoid sections verbatim from the existing brief; only update Recurring themes and Open observations sections using your recurringThemesNotes and observations. Preserve all headings and markdown formatting.")
 
 
 # ───────────────────────── loading / sampling ─────────────────────────
@@ -195,86 +146,21 @@ def stratified_sample(emails: list[dict], n: int, window_days: int, seed: int) -
     return sorted(ordered[:n])
 
 
-def load_archive_stats() -> dict:
-    """Read the computed archive stats by shelling to node. Simpler and
-    more accurate than re-implementing the .js logic here."""
-    # Fallback: compute minimal stats from emails.json directly.
-    emails = json.loads(EMAILS_PATH.read_text())
-    numbers = []
-    for e in emails:
-        n = e.get("number")
-        if n is None:
-            continue
-        try:
-            numbers.append(int(n))
-        except (ValueError, TypeError):
-            continue
-    by_year: dict[str, int] = {}
-    for e in emails:
-        if not e.get("publish_date"):
-            continue
-        y = str(parse_pub(e).year)
-        by_year[y] = by_year.get(y, 0) + 1
-    return {
-        "total_issues": len(numbers),
-        "earliest_issue": min(numbers) if numbers else None,
-        "latest_issue": max(numbers) if numbers else None,
-        "issues_by_year": dict(sorted(by_year.items())),
-        "years_active": max(1, len(by_year)),
-    }
-
-
 # ───────────────────────── prompt building ─────────────────────────
 
-SONNET_SYSTEM_TMPL = """You are the analyst for "The Weekly Thing," a newsletter Jamie Thingelstad has published weekly since May 2017.
+SONNET_SYSTEM_TMPL = """You are the analyst and editor for "The Weekly Thing," a newsletter Jamie Thingelstad has published weekly since May 2017.
 
-Your role: read a sample of recent issues plus the existing creative brief, reader survey data, and reader testimonials, then extract the raw material the copywriter will use. You do NOT write marketing copy. You analyze.
+Your role: read a sample of recent issues plus the existing creative brief, reader survey data, and reader testimonials. Produce (a) raw analytical material about themes and voice, (b) the 3–5 selected verbatim pull-quotes that should appear on the home page's "How it sounds" section, and (c) a refreshed creative brief.
+
+You do NOT write marketing copy. Your job is editorial: surface what's actually in the archive and let it speak for itself.
 
 ## The current creative brief
 
 {brief}
 
-## Reader survey data (what real subscribers say)
+## Reader survey data
 
-Use this to ground your themes and voice markers in what readers actually value. If readers consistently report feeling a certain way, note whether the sampled issues justify that.
-
-```json
-{survey}
-```
-
-## Reader testimonial quotes (authentic reader voice)
-
-These are real subscriber quotes from reader surveys. Treat them as evidence of how readers describe the newsletter — useful for identifying language the copywriter can lean on.
-
-```json
-{quotes}
-```
-
-## What to return
-
-- themes: 3–6 recurring themes observable across the sample. Not topics — recurring angles or moves (e.g., "uses personal anecdote to frame a technology argument," not "AI"). Each theme needs a real exampleIssue from the sample.
-- voiceMarkers: 3–6 short, evidence-based observations about how Jamie writes. Ground each in something you saw.
-- candidateQuotes: 6–12 verbatim excerpts (1–3 sentences, ≤350 chars each) that are characteristic. Prefer passages where Jamie's voice is on display — curiosity, opinion, observation, not just description or link summary. The text must appear EXACTLY as written in the source. issueTitle format: "#N — Subject" using the real subject line.
-- observations: 2–4 sentences for the brief's "Open observations" section. What's interesting? What's shifted lately? Write in a voice suitable for a long-lived working document, not a report.
-- recurringThemesNotes: 3–6 markdown bullets for the brief's "Recurring themes" section. Each bullet ≤20 words.
-
-## Rules
-
-- Issue numbers must be real and present in the sample.
-- Quote text must be verbatim from an issue body.
-- No hype, no superlatives, no invention.
-- If a theme isn't clearly recurring, don't force it — return fewer."""
-
-
-OPUS_SYSTEM_TMPL = """You are the copywriter for the home page of "The Weekly Thing," a newsletter by Jamie Thingelstad. You rewrite the site copy based on (a) the creative brief (authoritative guardrails), (b) the analyst's findings from the recent archive, and (c) real reader survey data and testimonial quotes.
-
-## Creative brief
-
-{brief}
-
-## Reader survey data (the only numbers about readers you may cite)
-
-These are real survey results. You may reference the numeric stats verbatim (recommendation score, read-whole-issue rate, long-time reader rate) and you may use the feeling-word list to inform tone — but do not invent new statistics or attribute specific percentages to effects not measured here.
+These are real survey results. The numbers reflect how readers describe the newsletter. They may inform your understanding of voice but do not appear in your output.
 
 ```json
 {survey}
@@ -282,48 +168,31 @@ These are real survey results. You may reference the numeric stats verbatim (rec
 
 ## Reader testimonial quotes
 
-Real subscriber quotes. Use these to hear how readers describe the newsletter in their own words. You may borrow phrasings and framings from these, but do not put quotation marks around invented reader speech.
+Real subscriber quotes. They may inform your understanding of voice but do not appear in your output.
 
 ```json
 {quotes}
 ```
 
-## Hard guardrails — these override everything
-
-- No superlatives: "best," "amazing," "unmatched," "premier," "leading," "essential."
-- No empty marketing phrases: "cutting-edge," "curated with care," "hand-picked," "thought leader," "game-changing."
-- No second-person ad-speak: "Level up!" "Unlock!" "Supercharge!"
-- No invented statistics. Only use the numbers in the Archive stats block below.
-- No claims about reader benefits that aren't demonstrable from the sampled issues.
-- Match Jamie's voice as evidenced in the analyst's candidate quotes: observational, dry, curious, specific.
-- Prefer concrete over general. "47 links about agentic engineering in the last year" beats "stay on top of AI."
-- The value-prop headline may use one `<br>` tag for a deliberate line break; no other HTML anywhere.
-- Do not use em-dashes in CTA headlines. Em-dashes are fine in prose.
-
-## Current home page copy (what you are replacing)
-
-```json
-{current_copy}
-```
-
-## Archive stats (the only numbers you may cite)
-
-```json
-{stats}
-```
-
 ## Output rules
 
-- Every field is required.
-- Vary phrasing across the four CTAs (`ctas.hero.proof`, `ctas.mid1.headline`, `ctas.mid2.headline`, `ctas.footer.headline`/`body`). They all appear on the same page; seeing the same sentence four times is embarrassing.
-- `whatYouGet.themes`: 3–4 cards. Each theme label is 2–4 words. Each description is one concrete sentence. Each `exampleIssue` must come from the analyst's themes or sample.
-- `voiceSamples`: 3–5 quotes from the analyst's `candidateQuotes`. Prefer range (observational + opinionated + personal + curious). Keep text verbatim.
-- `updatedBrief`: return the complete rewritten content of `docs/creative/brief.md`. Copy the Voice, What makes it unique, and What to avoid sections VERBATIM from the creative brief above. Update only the Recurring themes and Open observations sections using the analyst's `recurringThemesNotes` and `observations`. Preserve all headings and markdown formatting.
+- `themes`: 3–6 recurring themes (not topics — recurring moves/angles like "engineering with care" or "small craft notices"). Each `exampleIssue` must be a number from the sample.
+- `voiceMarkers`: 3–6 short observations about how Jamie writes. Be specific and evidence-based.
+- `candidateQuotes`: 6–12 verbatim pull-quotes. Favor passages where Jamie's voice is on display: observational, dry, curious, specific, occasionally opinionated. No editorial brackets or ellipses unless present in source.
+- `selectedQuotes`: 3–5 of the candidateQuotes ordered by strength. These will appear on the home page. Prefer range (observational + opinionated + personal + curious). Keep text VERBATIM — they will be machine-verified against the issue body.
+- `observations`: 2–4 sentence running-notes paragraph for the brief's "Open observations" section.
+- `recurringThemesNotes`: Markdown-bulleted list (3–6 bullets) for the brief's "Recurring themes" section. Each bullet ≤20 words.
+- `updatedBrief`: Return the complete rewritten content of `docs/creative/brief.md`. Copy the Voice, What makes it unique, and What to avoid sections VERBATIM from the creative brief above. Update only the Recurring themes and Open observations sections using your `recurringThemesNotes` and `observations`. Preserve all headings and markdown formatting.
 
-Return one structured response and nothing else."""
+## Hard rules
+
+- Issue numbers must be real and present in the sample.
+- Quote text must be verbatim from an issue body — including punctuation and capitalization.
+- No hype, no superlatives, no invention.
+- If a theme isn't clearly recurring, don't force it — return fewer."""
 
 
-# ───────────────────────── API calls ─────────────────────────
+# ───────────────────────── API call ─────────────────────────
 
 def call_sonnet(
     client: anthropic.Anthropic,
@@ -342,7 +211,7 @@ def call_sonnet(
     t0 = time.monotonic()
     resp = client.messages.parse(
         model=SONNET,
-        max_tokens=6000,
+        max_tokens=8000,
         system=[{"type": "text", "text": system}],
         messages=[{"role": "user", "content": user}],
         output_format=SonnetFindings,
@@ -353,53 +222,8 @@ def call_sonnet(
         "output_tokens": resp.usage.output_tokens,
         "duration_s": dur,
     }
-    # Sonnet 4.6: ~$3/M in, $15/M out
+    # Sonnet 4.7: ~$3/M in, $15/M out
     cost = (usage["input_tokens"] * 3.0 + usage["output_tokens"] * 15.0) / 1_000_000
-    usage["est_cost_usd"] = round(cost, 4)
-    return resp.parsed_output, usage
-
-
-def call_opus(
-    client: anthropic.Anthropic,
-    brief: str,
-    current_copy: dict,
-    findings: SonnetFindings,
-    stats: dict,
-    survey: dict,
-    quotes: list,
-) -> tuple[OpusOutput, dict]:
-    system = OPUS_SYSTEM_TMPL.format(
-        brief=brief,
-        current_copy=json.dumps(current_copy, indent=2),
-        stats=json.dumps(stats, indent=2),
-        survey=json.dumps(survey, indent=2),
-        quotes=json.dumps(quotes, indent=2),
-    )
-    user = (
-        "The analyst has returned the following findings. Use them to "
-        "write the final home page copy.\n\n"
-        "```json\n"
-        f"{findings.model_dump_json(indent=2)}\n"
-        "```\n\n"
-        "Return the complete structured output."
-    )
-
-    t0 = time.monotonic()
-    resp = client.messages.parse(
-        model=OPUS,
-        max_tokens=8000,
-        system=[{"type": "text", "text": system}],
-        messages=[{"role": "user", "content": user}],
-        output_format=OpusOutput,
-    )
-    dur = round(time.monotonic() - t0, 2)
-    usage = {
-        "input_tokens": resp.usage.input_tokens,
-        "output_tokens": resp.usage.output_tokens,
-        "duration_s": dur,
-    }
-    # Opus 4.7: ~$5/M in, $25/M out (same as 4.x — approximation)
-    cost = (usage["input_tokens"] * 5.0 + usage["output_tokens"] * 25.0) / 1_000_000
     usage["est_cost_usd"] = round(cost, 4)
     return resp.parsed_output, usage
 
@@ -408,10 +232,10 @@ def call_opus(
 
 def _norm(s: str) -> str:
     return (
-        s.replace("\u2018", "'").replace("\u2019", "'")
-         .replace("\u201c", '"').replace("\u201d", '"')
-         .replace("\u2013", "-").replace("\u2014", "-")
-         .replace("\u00a0", " ")
+        s.replace("‘", "'").replace("’", "'")
+         .replace("“", '"').replace("”", '"')
+         .replace("–", "-").replace("—", "-")
+         .replace(" ", " ")
          .strip()
     )
 
@@ -428,6 +252,20 @@ def verify_voice_samples(
         else:
             rejected.append({"issue": s.issueNumber, "text": s.text[:120]})
     return ok, rejected
+
+
+def select_voice_samples(
+    findings: SonnetFindings, bodies: dict[int, str]
+) -> tuple[list[VoiceSample], list[dict]]:
+    """Verify selectedQuotes; if too few pass, fall back to candidateQuotes."""
+    verified, rejected = verify_voice_samples(findings.selectedQuotes, bodies)
+    if len(verified) >= 3:
+        return verified, rejected
+    # Fall back: try candidateQuotes that aren't already in verified set.
+    seen = {(s.issueNumber, s.text) for s in verified}
+    extras = [c for c in findings.candidateQuotes if (c.issueNumber, c.text) not in seen]
+    extra_verified, extra_rejected = verify_voice_samples(extras, bodies)
+    return verified + extra_verified[: max(0, 5 - len(verified))], rejected + extra_rejected
 
 
 # ───────────────────────── main ─────────────────────────
@@ -448,27 +286,9 @@ def format_corpus(numbers: list[int]) -> tuple[str, dict[int, str]]:
 
 
 def write_outputs(
-    out: OpusOutput,
+    findings: SonnetFindings,
     verified_samples: list[VoiceSample],
-    sampled_numbers: list[int],
 ) -> None:
-    new_copy = {
-        "hero": out.hero.model_dump(),
-        "valueProp": out.valueProp.model_dump(),
-        "whatYouGet": out.whatYouGet.model_dump(),
-        "sections": out.sections.model_dump(),
-        "ctas": {
-            "hero": out.ctas.hero.model_dump(exclude_none=True),
-            "mid1": out.ctas.mid1.model_dump(exclude_none=True),
-            "mid2": out.ctas.mid2.model_dump(exclude_none=True),
-            "footer": out.ctas.footer.model_dump(exclude_none=True),
-        },
-        "generatedAt": datetime.now(timezone.utc).isoformat(),
-        "sampledIssues": sampled_numbers,
-    }
-    COPY_PATH.write_text(json.dumps(new_copy, indent=2, ensure_ascii=False) + "\n")
-    print(f"[refresh] wrote {COPY_PATH.relative_to(REPO)}", flush=True)
-
     VOICE_PATH.write_text(
         json.dumps(
             [s.model_dump() for s in verified_samples], indent=2, ensure_ascii=False
@@ -476,7 +296,7 @@ def write_outputs(
     )
     print(f"[refresh] wrote {VOICE_PATH.relative_to(REPO)}", flush=True)
 
-    BRIEF_PATH.write_text(out.updatedBrief.rstrip() + "\n")
+    BRIEF_PATH.write_text(findings.updatedBrief.rstrip() + "\n")
     print(f"[refresh] wrote {BRIEF_PATH.relative_to(REPO)}", flush=True)
 
 
@@ -517,8 +337,6 @@ def main() -> int:
         return 0
 
     brief = BRIEF_PATH.read_text()
-    current_copy = json.loads(COPY_PATH.read_text())
-    stats = load_archive_stats()
     survey = json.loads(SURVEY_PATH.read_text())
     quotes = json.loads(QUOTES_PATH.read_text())
 
@@ -536,19 +354,11 @@ def main() -> int:
         flush=True,
     )
     print(f"[refresh]  themes: {len(findings.themes)}, "
-          f"quotes: {len(findings.candidateQuotes)}, "
+          f"candidates: {len(findings.candidateQuotes)}, "
+          f"selected: {len(findings.selectedQuotes)}, "
           f"markers: {len(findings.voiceMarkers)}", flush=True)
 
-    print(f"[refresh] calling Opus ({OPUS})...", flush=True)
-    out, opus_usage = call_opus(client, brief, current_copy, findings, stats, survey, quotes)
-    print(
-        f"[refresh]  opus:   {opus_usage['input_tokens']:,}+{opus_usage['output_tokens']:,} tok, "
-        f"{opus_usage['duration_s']}s, ~${opus_usage['est_cost_usd']}",
-        flush=True,
-    )
-
-    # Verify voice samples are verbatim
-    verified, rejected = verify_voice_samples(out.voiceSamples, bodies)
+    verified, rejected = select_voice_samples(findings, bodies)
     if rejected:
         print(f"[refresh] WARNING: dropped {len(rejected)} voice sample(s) not found verbatim:", flush=True)
         for r in rejected:
@@ -562,35 +372,25 @@ def main() -> int:
         "sample": numbers,
         "seed": args.seed,
         "sonnet_usage": sonnet_usage,
-        "opus_usage": opus_usage,
-        "total_cost_usd": round(sonnet_usage["est_cost_usd"] + opus_usage["est_cost_usd"], 4),
+        "total_cost_usd": sonnet_usage["est_cost_usd"],
         "findings": findings.model_dump(),
-        "output": out.model_dump(),
         "verified_samples": [s.model_dump() for s in verified],
         "rejected_samples": rejected,
     }, indent=2, ensure_ascii=False))
     print(f"[refresh] run log: {run_log_path.relative_to(REPO)}", flush=True)
-
-    total_cost = round(sonnet_usage["est_cost_usd"] + opus_usage["est_cost_usd"], 4)
-    print(f"[refresh] total estimated cost: ~${total_cost}", flush=True)
+    print(f"[refresh] total estimated cost: ~${sonnet_usage['est_cost_usd']}", flush=True)
 
     if args.dry_run:
         print("\n[refresh] --dry-run: not writing output files.")
-        print("\n--- proposed hero ---")
-        print(json.dumps(out.hero.model_dump(), indent=2, ensure_ascii=False))
-        print("\n--- proposed valueProp ---")
-        print(json.dumps(out.valueProp.model_dump(), indent=2, ensure_ascii=False))
-        print("\n--- proposed whatYouGet ---")
-        print(json.dumps(out.whatYouGet.model_dump(), indent=2, ensure_ascii=False))
-        print("\n--- proposed CTAs ---")
-        print(json.dumps({k: getattr(out.ctas, k).model_dump(exclude_none=True) for k in ("hero", "mid1", "mid2", "footer")}, indent=2, ensure_ascii=False))
         print("\n--- voice samples (verified) ---")
         for s in verified:
             print(f"  #{s.issueNumber}: {s.text[:120]}...")
+        print("\n--- updated brief (first 600 chars) ---")
+        print(findings.updatedBrief[:600])
         return 0
 
-    write_outputs(out, verified, numbers)
-    print_git_diff_stat([COPY_PATH, VOICE_PATH, BRIEF_PATH])
+    write_outputs(findings, verified)
+    print_git_diff_stat([VOICE_PATH, BRIEF_PATH])
     return 0
 
 
