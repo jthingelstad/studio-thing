@@ -109,8 +109,11 @@ def audio_fields_for_issue(number: Any, audio_manifest: dict[str, Any]) -> dict[
         "audio_duration_seconds": record.get("audio_duration_seconds"),
         "audio_voice": record.get("audio_voice"),
     }
-    if record.get("byte_size") is not None:
-        fields["audio_byte_size"] = record.get("byte_size")
+    byte_size = record.get("audio_byte_size")
+    if byte_size is None:
+        byte_size = record.get("byte_size")
+    if byte_size is not None:
+        fields["audio_byte_size"] = byte_size
     return {key: value for key, value in fields.items() if value not in (None, "")}
 
 

@@ -18,6 +18,16 @@ TTS_VOICE = "echo"
 AUDIO_VOICE = f"openai-{TTS_MODEL}:{TTS_VOICE}"
 MAX_CHARS = 3800
 
+# Bump to invalidate every published MP3 and force reassembly without re-running TTS.
+LOUDNORM_VERSION = "v1"
+LOUDNORM_TARGET_I = -16.0
+LOUDNORM_TARGET_TP = -1.5
+LOUDNORM_TARGET_LRA = 11.0
+HIGHPASS_HZ = 80
+FINAL_BITRATE = "192k"
+FINAL_SAMPLE_RATE = 44100
+FINAL_CHANNELS = 1
+
 load_dotenv(REPO / ".env")
 
 
@@ -75,47 +85,160 @@ def chunk_plan(text: str) -> list[dict[str, int]]:
     ]
 
 
-def synthesize_mp3(issue: str, text: str) -> tuple[Path, int]:
-    ensure_audio_tools()
+def _openai_client():
     try:
         from openai import OpenAI
     except ImportError as exc:
         raise RuntimeError("The openai package is required for audio synthesis.") from exc
+    return OpenAI(timeout=60.0, max_retries=1)
 
+
+def synthesize_text_to_mp3(text: str, output_path: Path, label: str = "audio") -> Path:
+    """TTS the given text, concat into a single MP3 at output_path. No normalization."""
+    ensure_audio_tools()
     chunks = chunk_text(text)
-    workdir = TMP_DIR / str(issue)
+    workdir = output_path.parent
     workdir.mkdir(parents=True, exist_ok=True)
+    client = _openai_client()
     chunk_paths: list[Path] = []
-    client = OpenAI(timeout=60.0, max_retries=1)
-
     for index, chunk in enumerate(chunks):
-        print(f"Issue #{issue}: synthesizing chunk {index + 1}/{len(chunks)} ({len(chunk)} chars)")
-        path = workdir / f"chunk-{index:03d}.mp3"
+        print(f"{label}: synthesizing chunk {index + 1}/{len(chunks)} ({len(chunk)} chars)")
+        chunk_path = workdir / f"{output_path.stem}-chunk-{index:03d}.mp3"
         response = client.audio.speech.create(
             model=TTS_MODEL,
             voice=TTS_VOICE,
             input=chunk,
             response_format="mp3",
         )
-        path.write_bytes(response.content)
-        chunk_paths.append(path)
+        chunk_path.write_bytes(response.content)
+        chunk_paths.append(chunk_path)
 
-    list_path = workdir / "concat.txt"
-    list_path.write_text(
-        "".join(f"file '{path.resolve()}'\n" for path in chunk_paths),
+    _ffmpeg_concat_copy(chunk_paths, output_path)
+    return output_path
+
+
+def render_body(issue: str, text: str) -> tuple[Path, int]:
+    """Render an issue body to a single MP3 (no bumpers, no normalization)."""
+    workdir = TMP_DIR / str(issue)
+    body_path = workdir / "body.mp3"
+    synthesize_text_to_mp3(text, body_path, label=f"Issue #{issue}")
+    return body_path, probe_duration_seconds(body_path)
+
+
+def assemble_final(
+    issue: str,
+    intro_path: Path,
+    body_path: Path,
+    outro_path: Path,
+    output_path: Path | None = None,
+) -> tuple[Path, int]:
+    """Concat intro+body+outro and apply loudnorm (two-pass) for podcast-grade output."""
+    ensure_audio_tools()
+    workdir = TMP_DIR / str(issue)
+    workdir.mkdir(parents=True, exist_ok=True)
+    if output_path is None:
+        output_path = workdir / f"weekly-thing-{issue}.mp3"
+
+    concat_path = workdir / "final-concat.txt"
+    raw_combined = workdir / "raw-combined.mp3"
+    concat_path.write_text(
+        "".join(f"file '{path.resolve()}'\n" for path in (intro_path, body_path, outro_path)),
         encoding="utf-8",
     )
-    output = workdir / "audio.mp3"
-    subprocess.run(
-        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(list_path), "-c", "copy", str(output)],
+    _run(
+        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_path), "-c", "copy", str(raw_combined)],
+        cwd=REPO,
+    )
+
+    measured = _loudnorm_measure(raw_combined)
+    filter_chain = (
+        f"highpass=f={HIGHPASS_HZ},"
+        f"loudnorm=I={LOUDNORM_TARGET_I}:TP={LOUDNORM_TARGET_TP}:LRA={LOUDNORM_TARGET_LRA}"
+        f":measured_I={measured['input_i']}"
+        f":measured_TP={measured['input_tp']}"
+        f":measured_LRA={measured['input_lra']}"
+        f":measured_thresh={measured['input_thresh']}"
+        f":offset={measured['target_offset']}"
+        f":linear=true:print_format=summary"
+    )
+    _run(
+        [
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(raw_combined),
+            "-af",
+            filter_chain,
+            "-ar",
+            str(FINAL_SAMPLE_RATE),
+            "-ac",
+            str(FINAL_CHANNELS),
+            "-c:a",
+            "libmp3lame",
+            "-b:a",
+            FINAL_BITRATE,
+            "-write_xing",
+            "1",
+            str(output_path),
+        ],
+        cwd=REPO,
+    )
+    return output_path, probe_duration_seconds(output_path)
+
+
+def _ffmpeg_concat_copy(input_paths: list[Path], output_path: Path) -> None:
+    list_path = output_path.with_suffix(output_path.suffix + ".concat.txt")
+    list_path.write_text(
+        "".join(f"file '{path.resolve()}'\n" for path in input_paths),
+        encoding="utf-8",
+    )
+    _run(
+        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(list_path), "-c", "copy", str(output_path)],
+        cwd=REPO,
+    )
+
+
+def _loudnorm_measure(input_path: Path) -> dict[str, str]:
+    """Run pass-1 loudnorm in measurement mode and return parsed values."""
+    result = subprocess.run(
+        [
+            "ffmpeg",
+            "-hide_banner",
+            "-nostats",
+            "-i",
+            str(input_path),
+            "-af",
+            (
+                f"highpass=f={HIGHPASS_HZ},"
+                f"loudnorm=I={LOUDNORM_TARGET_I}:TP={LOUDNORM_TARGET_TP}:LRA={LOUDNORM_TARGET_LRA}"
+                ":print_format=json"
+            ),
+            "-f",
+            "null",
+            "-",
+        ],
         cwd=REPO,
         check=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
     )
-    duration = probe_duration_seconds(output)
-    return output, duration
+    # ffmpeg prints the JSON block on stderr.
+    stderr = result.stderr
+    start = stderr.rfind("{")
+    end = stderr.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        raise RuntimeError("Could not parse loudnorm measurement output from ffmpeg")
+    payload = json.loads(stderr[start : end + 1])
+    required = ("input_i", "input_tp", "input_lra", "input_thresh", "target_offset")
+    missing = [key for key in required if key not in payload]
+    if missing:
+        raise RuntimeError(f"loudnorm output missing fields: {', '.join(missing)}")
+    return {key: str(payload[key]) for key in required}
+
+
+def _run(cmd: list[str], cwd: Path) -> None:
+    subprocess.run(cmd, cwd=cwd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 
 def probe_duration_seconds(path: Path) -> int:

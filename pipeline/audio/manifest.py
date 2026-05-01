@@ -12,6 +12,9 @@ REPO = Path(__file__).resolve().parents[2]
 AUDIO_DIR = REPO / "data" / "audio"
 MANIFEST_PATH = AUDIO_DIR / "manifest.json"
 SCRIPT_DIR = AUDIO_DIR / "scripts"
+BUMPERS_DIR = AUDIO_DIR / "bumpers"
+BUMPERS_KEY = "_bumpers"
+BUMPER_NAMES = ("intro", "outro")
 
 
 def now_iso() -> str:
@@ -49,12 +52,42 @@ def read_manifest(path: Path = MANIFEST_PATH) -> dict[str, dict[str, Any]]:
 
 def write_manifest(data: dict[str, dict[str, Any]], path: Path = MANIFEST_PATH) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    ordered = {
-        key: data[key]
-        for key in sorted((str(key) for key in data.keys()), key=issue_sort_key)
-    }
+    bumpers = data.get(BUMPERS_KEY)
+    issue_keys = sorted(
+        (str(key) for key in data.keys() if key != BUMPERS_KEY),
+        key=issue_sort_key,
+    )
+    ordered: dict[str, Any] = {}
+    if isinstance(bumpers, dict):
+        ordered[BUMPERS_KEY] = bumpers
+    for key in issue_keys:
+        ordered[key] = data[key]
     path.write_text(json.dumps(ordered, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def script_path(issue: Any) -> Path:
     return SCRIPT_DIR / f"{issue_key(issue)}.txt"
+
+
+def bumper_path(name: str) -> Path:
+    return BUMPERS_DIR / f"{name}.mp3"
+
+
+def bumpers_state(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    state = manifest.get(BUMPERS_KEY)
+    if not isinstance(state, dict):
+        return {}
+    return {name: state[name] for name in BUMPER_NAMES if isinstance(state.get(name), dict)}
+
+
+def set_bumper_state(manifest: dict[str, Any], name: str, hash_: str, voice: str) -> None:
+    block = manifest.setdefault(BUMPERS_KEY, {})
+    block[name] = {"hash": hash_, "voice": voice, "generated_at": now_iso()}
+
+
+def issue_entries(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    return {
+        key: value
+        for key, value in manifest.items()
+        if key != BUMPERS_KEY and isinstance(value, dict)
+    }
