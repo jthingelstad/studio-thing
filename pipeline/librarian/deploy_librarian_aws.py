@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
+import re
 import secrets
 import shutil
 import subprocess
@@ -34,6 +36,42 @@ PRIVATE_GRAPH_KEY = "artifacts/graph.json"
 DEFAULT_ALLOWED_ORIGINS = "https://weekly.thingelstad.com,http://localhost:8080,http://127.0.0.1:8080"
 PROJECT_TAG_KEY = "project"
 PROJECT_TAG_VALUE = "Thingy"
+
+
+def agent_model_from_template() -> str:
+    text = TEMPLATE.read_text()
+    match = re.search(r"BEDROCK_AGENT_MODEL:\s*(\S+)", text)
+    if not match:
+        raise RuntimeError(f"Could not find BEDROCK_AGENT_MODEL in {TEMPLATE}")
+    return match.group(1)
+
+
+def smoke_test_agent_model(model_id: str) -> None:
+    print(f"Smoke testing Bedrock InvokeModel for {model_id}...")
+    region = os.environ.get("AWS_DEFAULT_REGION") or os.environ.get("AWS_REGION") or "us-east-1"
+    client = boto3.client("bedrock-runtime", region_name=region)
+    body = json.dumps(
+        {
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 5,
+            "messages": [{"role": "user", "content": "ping"}],
+        }
+    )
+    try:
+        client.invoke_model(modelId=model_id, contentType="application/json", body=body)
+    except ClientError as exc:
+        code = exc.response.get("Error", {}).get("Code", "")
+        if code == "ValidationException":
+            raise RuntimeError(
+                f"Bedrock rejected model id {model_id!r}. Verify the inference profile exists "
+                f"with `aws bedrock list-inference-profiles`. Re-run with --skip-smoke-test to override."
+            ) from exc
+        if code == "AccessDeniedException":
+            raise RuntimeError(
+                f"Caller lacks bedrock:InvokeModel for {model_id!r}. Check IAM on the deploying identity."
+            ) from exc
+        raise
+    print("  OK")
 
 
 def require_env(name: str) -> str:
@@ -320,11 +358,15 @@ def main() -> int:
     parser.add_argument("--auth-rate-limit-max", default=os.environ.get("LIBRARIAN_AUTH_RATE_LIMIT_MAX", "30"))
     parser.add_argument("--skip-corpus-upload", action="store_true")
     parser.add_argument("--skip-bucket-bootstrap", action="store_true")
+    parser.add_argument("--skip-smoke-test", action="store_true")
     args = parser.parse_args()
 
     bucket = args.bucket
     if not bucket:
         raise RuntimeError("Provide --bucket or LIBRARIAN_BUCKET")
+
+    if not args.skip_smoke_test:
+        smoke_test_agent_model(agent_model_from_template())
 
     if not args.skip_bucket_bootstrap:
         ensure_private_bucket(bucket)
