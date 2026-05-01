@@ -20,7 +20,7 @@ import build_librarian_corpus
 REPO = Path(__file__).resolve().parents[2]
 DEFAULT_CORPUS_PATH = REPO / "data" / "librarian" / "corpus.json"
 DEFAULT_OUTPUT_PATH = REPO / "data" / "librarian" / "graph.json"
-DEFAULT_MODEL = "us.anthropic.claude-sonnet-4-7"
+DEFAULT_MODEL = "us.anthropic.claude-sonnet-4-6"
 ENTITY_RE = re.compile(r"\b(?:[A-Z][A-Za-z0-9&'.-]+(?:\s+[A-Z][A-Za-z0-9&'.-]+){0,4})\b")
 STOP_ENTITIES = {
     "Weekly Thing",

@@ -2,7 +2,7 @@
 """Refresh the home page voice samples and creative brief.
 
 Single-pass pipeline:
-  Sonnet 4.7 reads a stratified sample of recent issues (~32 issues over
+  Sonnet 4.6 reads a stratified sample of recent issues (~32 issues over
   the last 2 years) plus the existing creative brief, reader survey data,
   and reader testimonials. It returns: themes, voice markers, candidate
   pull-quotes (verbatim), the 3–5 selected voice samples for the home
@@ -49,7 +49,7 @@ QUOTES_PATH = DATA / "quotes.json"
 TMP = REPO / "tmp"
 TMP.mkdir(exist_ok=True)
 
-SONNET = "claude-sonnet-4-7"
+SONNET = "claude-sonnet-4-6"
 DEFAULT_SAMPLE = 32
 DEFAULT_WINDOW_DAYS = 730
 RECENT_ANCHOR = 6
@@ -222,7 +222,7 @@ def call_sonnet(
         "output_tokens": resp.usage.output_tokens,
         "duration_s": dur,
     }
-    # Sonnet 4.7: ~$3/M in, $15/M out
+    # Sonnet 4.6: ~$3/M in, $15/M out
     cost = (usage["input_tokens"] * 3.0 + usage["output_tokens"] * 15.0) / 1_000_000
     usage["est_cost_usd"] = round(cost, 4)
     return resp.parsed_output, usage
