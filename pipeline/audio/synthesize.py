@@ -94,16 +94,20 @@ def _openai_client():
 
 
 def synthesize_text_to_mp3(text: str, output_path: Path, label: str = "audio") -> Path:
-    """TTS the given text, concat into a single MP3 at output_path. No normalization."""
+    """TTS the given text, concat into a single MP3 at output_path. No normalization.
+
+    Intermediate chunk MP3s and the concat list live in tmp/ keyed by the output
+    file stem, so we never pollute committed-data directories with workfiles."""
     ensure_audio_tools()
     chunks = chunk_text(text)
-    workdir = output_path.parent
+    workdir = TMP_DIR / "synthesize" / output_path.stem
     workdir.mkdir(parents=True, exist_ok=True)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     client = _openai_client()
     chunk_paths: list[Path] = []
     for index, chunk in enumerate(chunks):
         print(f"{label}: synthesizing chunk {index + 1}/{len(chunks)} ({len(chunk)} chars)")
-        chunk_path = workdir / f"{output_path.stem}-chunk-{index:03d}.mp3"
+        chunk_path = workdir / f"chunk-{index:03d}.mp3"
         response = client.audio.speech.create(
             model=TTS_MODEL,
             voice=TTS_VOICE,
@@ -113,7 +117,15 @@ def synthesize_text_to_mp3(text: str, output_path: Path, label: str = "audio") -
         chunk_path.write_bytes(response.content)
         chunk_paths.append(chunk_path)
 
-    _ffmpeg_concat_copy(chunk_paths, output_path)
+    list_path = workdir / "concat.txt"
+    list_path.write_text(
+        "".join(f"file '{path.resolve()}'\n" for path in chunk_paths),
+        encoding="utf-8",
+    )
+    _run(
+        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(list_path), "-c", "copy", str(output_path)],
+        cwd=REPO,
+    )
     return output_path
 
 

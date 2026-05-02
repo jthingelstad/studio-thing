@@ -23,9 +23,13 @@ from manifest import (
     issue_entries,
     now_iso,
     read_manifest,
+    read_script_status,
     script_path,
+    SCRIPT_STATUS_SCHEMA_VERSION,
     write_manifest,
+    write_script_status,
 )
+from script_validate import VALIDATOR_VERSION, run_validators
 from synthesize import (
     AUDIO_VOICE,
     LOUDNORM_VERSION,
@@ -118,10 +122,35 @@ def selected_issues(args: argparse.Namespace) -> list[str]:
 
 
 def render_script(issue: str) -> str:
+    """Render the audio script from the archive markdown via script.py.
+
+    Used by `scripts build` to (re)write the committed file. Audio build does
+    not call this — it reads the committed script from disk."""
     from script import body_to_audio_script
 
     frontmatter, body = parse_archive_file(archive_path(issue))
     return body_to_audio_script(body, frontmatter)
+
+
+def read_script(issue: str) -> str:
+    """Read the committed audio script from disk. Source of truth for audio build."""
+    path = script_path(issue)
+    if not path.exists():
+        raise RuntimeError(
+            f"Audio script not found: {path}. Run "
+            f"`python pipeline/audio/audio.py scripts build --issue {issue}` first."
+        )
+    return path.read_text(encoding="utf-8")
+
+
+def write_script_file(issue: str, text: str) -> bool:
+    """Write the script if it differs from the existing file. Returns True if written."""
+    path = script_path(issue)
+    if path.exists() and path.read_text(encoding="utf-8") == text:
+        return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    return True
 
 
 def scrub_legacy_briefly_fields(manifest: dict[str, dict[str, Any]]) -> bool:
@@ -198,7 +227,7 @@ def build_issue(
     reassemble_only: bool,
 ) -> bool:
     entry = dict(manifest.get(issue, {}))
-    text = render_script(issue)
+    text = read_script(issue)
     script_hash = hash_text(text)
 
     if dry_run:
@@ -220,12 +249,6 @@ def build_issue(
     final_fresh = body_fresh and final_is_up_to_date(issue, entry)
 
     if not force and final_fresh:
-        existing_script = script_path(issue)
-        if not existing_script.exists() or hash_text(existing_script.read_text(encoding="utf-8")) != script_hash:
-            existing_script.parent.mkdir(parents=True, exist_ok=True)
-            existing_script.write_text(text, encoding="utf-8")
-            print(f"Issue #{issue}: restored tracked audio script")
-            return True
         print(f"Issue #{issue}: audio is up to date")
         return False
 
@@ -298,9 +321,6 @@ def build_issue(
     cleaned["byte_size"] = final_size
     manifest[issue] = cleaned
 
-    existing_script = script_path(issue)
-    existing_script.parent.mkdir(parents=True, exist_ok=True)
-    existing_script.write_text(text, encoding="utf-8")
     write_manifest(manifest)
     print(f"Issue #{issue}: uploaded {final_url}")
     return True
@@ -319,11 +339,30 @@ def cmd_build(args: argparse.Namespace) -> None:
     if scrub_legacy_briefly_fields(manifest) and not args.dry_run:
         write_manifest(manifest)
         print("Removed legacy briefly_synthesis fields from audio manifest")
+
+    issues = selected_issues(args)
+    if not args.dry_run:
+        blocked = issues_blocked_by_validation(issues)
+        if blocked:
+            if args.all and not args.allow_unvalidated:
+                print(
+                    f"audio build --all: {len(blocked)} issue(s) blocked by validation. "
+                    "Run `scripts build` and `scripts validate`, fix script.py until clean, "
+                    "or pass --allow-unvalidated to override."
+                )
+                for issue, findings in blocked.items():
+                    top = findings[0]
+                    print(f"  #{issue}: {top.get('rule')} — {top.get('message', '')}")
+                sys.exit(1)
+            for issue, findings in blocked.items():
+                top = findings[0]
+                print(f"Issue #{issue}: warning — {top.get('rule')}: {top.get('message', '')}")
+
     if not args.dry_run:
         if ensure_bumpers(manifest, force=False):
             write_manifest(manifest)
     changed = False
-    for issue in selected_issues(args):
+    for issue in issues:
         try:
             changed = build_issue(
                 issue,
@@ -349,7 +388,9 @@ def cmd_bumpers(args: argparse.Namespace) -> None:
 
 def status_for_issue(issue: str, manifest: dict[str, dict[str, Any]]) -> tuple[str, str]:
     entry = manifest.get(issue, {})
-    text = render_script(issue)
+    if not script_path(issue).exists():
+        return "scripts-missing", "no committed script (run `scripts build`)"
+    text = read_script(issue)
     script_hash = hash_text(text)
     if entry.get("audio_voice") != AUDIO_VOICE:
         return "body-render", "voice changed"
@@ -373,6 +414,98 @@ def status_for_issue(issue: str, manifest: dict[str, dict[str, Any]]) -> tuple[s
     except Exception as exc:
         return "unknown", f"S3 HEAD failed: {exc}"
     return "skip", "up to date"
+
+
+def cmd_scripts_build(args: argparse.Namespace) -> None:
+    written = 0
+    for issue in selected_issues(args):
+        text = render_script(issue)
+        if write_script_file(issue, text):
+            written += 1
+            print(f"Issue #{issue}: wrote {script_path(issue).relative_to(REPO)}")
+        else:
+            print(f"Issue #{issue}: script unchanged")
+    print(f"scripts build: {written} script(s) written/updated")
+
+
+def _validation_result_for_issue(issue: str) -> dict[str, Any]:
+    text = read_script(issue)
+    errors, warnings = run_validators(text)
+    return {
+        "script_hash": hash_text(text),
+        "validated_at": now_iso(),
+        "errors": [finding.to_dict() for finding in errors],
+        "warnings": [finding.to_dict() for finding in warnings],
+    }
+
+
+def cmd_scripts_validate(args: argparse.Namespace) -> None:
+    status = read_script_status()
+    status["schema_version"] = SCRIPT_STATUS_SCHEMA_VERSION
+    status["validator_version"] = VALIDATOR_VERSION
+    issues_status = status.setdefault("issues", {})
+    total_errors = 0
+    total_warnings = 0
+    issues_with_errors: list[str] = []
+    for issue in selected_issues(args):
+        try:
+            result = _validation_result_for_issue(issue)
+        except RuntimeError as exc:
+            print(f"Issue #{issue}: skipped ({exc})")
+            continue
+        issues_status[issue] = result
+        n_errors = len(result["errors"])
+        n_warnings = len(result["warnings"])
+        total_errors += n_errors
+        total_warnings += n_warnings
+        if n_errors:
+            issues_with_errors.append(issue)
+        marker = "ERROR" if n_errors else ("warn" if n_warnings else "ok")
+        print(f"{marker:5} #{issue}: {n_errors} error(s), {n_warnings} warning(s)")
+        for finding in result["errors"][:5]:
+            print(f"      E line {finding['line']} {finding['rule']}: {finding['snippet']}")
+        for finding in result["warnings"][:3]:
+            print(f"      W line {finding['line']} {finding['rule']}: {finding['snippet']}")
+    write_script_status(status)
+    print(
+        f"scripts validate: {total_errors} error(s), {total_warnings} warning(s) "
+        f"across {len(issues_status)} tracked issue(s)"
+    )
+    if issues_with_errors:
+        print(f"Issues with errors: {', '.join(issues_with_errors)}")
+        sys.exit(1)
+
+
+def cmd_scripts(args: argparse.Namespace) -> None:
+    if args.scripts_command == "build":
+        cmd_scripts_build(args)
+    elif args.scripts_command == "validate":
+        cmd_scripts_validate(args)
+
+
+def issues_blocked_by_validation(issues: list[str]) -> dict[str, list[dict[str, Any]]]:
+    """Return {issue: [error findings]} for issues that fail validation against the script on disk."""
+    status = read_script_status()
+    issues_status = status.get("issues") or {}
+    blocked: dict[str, list[dict[str, Any]]] = {}
+    for issue in issues:
+        path = script_path(issue)
+        if not path.exists():
+            blocked[issue] = [{"rule": "scripts_missing", "message": "no committed script"}]
+            continue
+        text = path.read_text(encoding="utf-8")
+        current_hash = hash_text(text)
+        record = issues_status.get(issue)
+        if not isinstance(record, dict):
+            blocked[issue] = [{"rule": "unvalidated", "message": "no validation record"}]
+            continue
+        if record.get("script_hash") != current_hash:
+            blocked[issue] = [{"rule": "stale_validation", "message": "validation predates current script"}]
+            continue
+        errors = record.get("errors") or []
+        if errors:
+            blocked[issue] = errors
+    return blocked
 
 
 def cmd_status(args: argparse.Namespace) -> None:
@@ -407,11 +540,26 @@ def main() -> None:
         help="Only reassemble final MP3s for issues that already have a body in S3 (no TTS)",
     )
     build_parser.add_argument("--fail-fast", action="store_true", help="Abort on first per-issue failure")
+    build_parser.add_argument(
+        "--allow-unvalidated",
+        action="store_true",
+        help="Allow --all to proceed even if some scripts have validation errors",
+    )
 
     bumpers_parser = subparsers.add_parser("bumpers", help="Manage podcast intro/outro bumpers")
     bumpers_subparsers = bumpers_parser.add_subparsers(dest="bumpers_command", required=True)
     bumpers_build = bumpers_subparsers.add_parser("build", help="Render bumpers if missing or text changed")
     bumpers_build.add_argument("--force", action="store_true", help="Re-render even if up to date")
+
+    scripts_parser = subparsers.add_parser("scripts", help="Manage committed audio scripts")
+    scripts_subparsers = scripts_parser.add_subparsers(dest="scripts_command", required=True)
+    for action in ("build", "validate"):
+        sp = scripts_subparsers.add_parser(action, help=f"{action} audio scripts")
+        group = sp.add_mutually_exclusive_group()
+        group.add_argument("--issue", help="Issue number")
+        group.add_argument("--latest", action="store_true", help=f"{action} latest issue only")
+        group.add_argument("--all", action="store_true", help=f"{action} every issue")
+        sp.add_argument("--limit", type=int, help="Cap how many issues are processed")
 
     status_parser = subparsers.add_parser("status", help="Show issues needing render")
     status_group = status_parser.add_mutually_exclusive_group()
@@ -426,6 +574,8 @@ def main() -> None:
     elif args.command == "bumpers":
         if args.bumpers_command == "build":
             cmd_bumpers(args)
+    elif args.command == "scripts":
+        cmd_scripts(args)
     elif args.command == "status":
         cmd_status(args)
 

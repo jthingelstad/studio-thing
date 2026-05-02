@@ -1,4 +1,16 @@
 {
+  "_bumpers": {
+    "intro": {
+      "hash": "sha256:b8f6ddbc649c051bf87547c55aa2e916f4d048e21b845ebb36fca186d8512443",
+      "voice": "openai-tts-1-hd:echo",
+      "generated_at": "2026-05-02T01:00:12Z"
+    },
+    "outro": {
+      "hash": "sha256:fcc6096d97ac7a2cef370451819340c10ce9d06bbd68136d0dfd246cf7084cfa",
+      "voice": "openai-tts-1-hd:echo",
+      "generated_at": "2026-05-02T01:00:15Z"
+    }
+  },
   "336": {
     "audio_url": "https://files.thingelstad.com/weekly-thing/336/weekly-thing-336.mp3",
     "audio_duration_seconds": 938,

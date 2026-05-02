@@ -12,9 +12,11 @@ REPO = Path(__file__).resolve().parents[2]
 AUDIO_DIR = REPO / "data" / "audio"
 MANIFEST_PATH = AUDIO_DIR / "manifest.json"
 SCRIPT_DIR = AUDIO_DIR / "scripts"
+SCRIPT_STATUS_PATH = AUDIO_DIR / "script_status.json"
 BUMPERS_DIR = AUDIO_DIR / "bumpers"
 BUMPERS_KEY = "_bumpers"
 BUMPER_NAMES = ("intro", "outro")
+SCRIPT_STATUS_SCHEMA_VERSION = 1
 
 
 def now_iso() -> str:
@@ -91,3 +93,35 @@ def issue_entries(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
         for key, value in manifest.items()
         if key != BUMPERS_KEY and isinstance(value, dict)
     }
+
+
+def script_status_path() -> Path:
+    return SCRIPT_STATUS_PATH
+
+
+def read_script_status(path: Path = SCRIPT_STATUS_PATH) -> dict[str, Any]:
+    if not path.exists():
+        return {"schema_version": SCRIPT_STATUS_SCHEMA_VERSION, "validator_version": "", "issues": {}}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise RuntimeError(f"{path} must contain a JSON object")
+    issues = data.get("issues") or {}
+    if not isinstance(issues, dict):
+        raise RuntimeError(f"{path}: 'issues' must be an object")
+    data["issues"] = {str(key): value for key, value in issues.items()}
+    return data
+
+
+def write_script_status(data: dict[str, Any], path: Path = SCRIPT_STATUS_PATH) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    issues = data.get("issues") or {}
+    ordered_issues = {
+        key: issues[key]
+        for key in sorted((str(key) for key in issues.keys()), key=issue_sort_key)
+    }
+    payload = {
+        "schema_version": data.get("schema_version", SCRIPT_STATUS_SCHEMA_VERSION),
+        "validator_version": data.get("validator_version", ""),
+        "issues": ordered_issues,
+    }
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
