@@ -153,7 +153,7 @@ A super abbreviated history to get to the name.
 
 It starts with Tim O’Reilly and O’Reilly Media. At one point O’Reilly hosted these “Friends of O’Reilly” events which as an acronym is FOO. It was Friends of O’Reilly, or Foo Camp. These were special events with an open agenda. Think wiki meets conference -- or unconference.
 
-The community decided there should be more of these to encourage sharing ideas in an unstructured way. In two thousand five the first BarCamp was hosted to do that. In programming the most common variable reference is foobar, which isn’t the military fubar). So, not FooCamp but BarCamp.
+The community decided there should be more of these to encourage sharing ideas in an unstructured way. In two thousand five the first BarCamp was hosted to do that. In programming the most common variable reference is foobar, which isn’t the military fubar. So, not FooCamp but BarCamp.
 
 There were BarCamps all over the place. It was a big trend. So when Ben, Luke, and a handful of folks decided we should have one in Minneapolis. But instead of it being BarCamp Minneapolis, let’s brand it a bit. Minnebar!
 

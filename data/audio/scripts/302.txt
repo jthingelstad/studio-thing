@@ -138,7 +138,7 @@ Tammy and I went to A Real Pain tonight. I thought it was fine and a bit boring.
 
 Journal entry two. How I’m handling Twitter embeds from deleted accounts
 
-I'm seeing a lot of people that I was connected with on Twitter X deleting their profiles. This actually ends up having an impact on my blog because of embeddings. When I left Twitter years ago I exported my archive and imported it into my blog. Over the years I’ve merged that content in as “native” as I can. The reality is that Twitter status updates are often very different than a blog post.
+I'm seeing a lot of people that I was connected with on X deleting their profiles. This actually ends up having an impact on my blog because of embeddings. When I left Twitter years ago I exported my archive and imported it into my blog. Over the years I’ve merged that content in as “native” as I can. The reality is that Twitter status updates are often very different than a blog post.
 
 There were a number of retweets that I did that I also migrated. When I did those I used Hugo’s ability to embed a Tweet using a shortcode. That results though in build errors if those Tweets become unavailable. I get an error that looks like this (I anonymized the identifiers).
 
@@ -162,7 +162,7 @@ But the fun turned sour over years. I don’t believe there is a good form of so
 
 I honestly can’t think of an innovative new thing to come from social media in the last several years. It isn’t about the product anymore, it is just marketing.
 
-So in November twenty twenty four, it was time to cut the last vestige of social media I had. It was time to delete my Twitter X profile. I had destroyed everything else I had on that site but had left my profile there. The only utility of that was to hold my username. But I don’t want any connection to these networks. It isn’t about the brand. I believe they all end up in the same place. There is no healthy cigarette. No good form of gambling.
+So in November twenty twenty four, it was time to cut the last vestige of social media I had. It was time to delete my X profile. I had destroyed everything else I had on that site but had left my profile there. The only utility of that was to hold my username. But I don’t want any connection to these networks. It isn’t about the brand. I believe they all end up in the same place. There is no healthy cigarette. No good form of gambling.
 
 By way of this post please be aware that any content or information that may appear on X is absolutely not from me.
 

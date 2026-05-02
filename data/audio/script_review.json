@@ -8445,26 +8445,37 @@
       ]
     },
     "299": {
-      "script_hash": "sha256:df26a404255617fb82c12a04642c50e7d3f805f930dd644b4500eb72f9dff010",
-      "reviewed_at": "2026-05-02T01:45:09Z",
-      "reviewer_version": "v1",
+      "script_hash": "sha256:a9b52d625401576294d792660b3a597ba50f11e7184090f6090b3c229552b3ac",
+      "reviewed_at": "2026-05-02T12:27:32Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 11255,
-        "output_tokens": 60,
+        "input_tokens": 11656,
+        "output_tokens": 202,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 1.61,
-        "est_cost_usd": 0.011555
+        "duration_s": 3.74,
+        "est_cost_usd": 0.012666
       },
       "errors": [
         {
           "severity": "error",
-          "where": "blockquote in Featured section",
-          "what": "The nested blockquote formatting is corrupted and unreadable with stray '>' characters appearing throughout instead of being properly converted to quoted dialogue."
+          "where": "Featured section, blockquote about conversation",
+          "what": "The nested blockquote formatting with `> >` symbols was not properly converted to speech and appears as literal `> >` characters in the script instead of being read as dialogue."
+        },
+        {
+          "severity": "error",
+          "where": "Featured section, blockquote about conversation",
+          "what": "The script contains corrupted text with stray `>` characters throughout the dialogue exchange (e.g., 'Daenero: I think about killing myself sometimes > > Daenerys Targaryen') that should have been removed."
         }
       ],
-      "warnings": []
+      "warnings": [
+        {
+          "severity": "warning",
+          "where": "Straw Poll section",
+          "what": "The survey element reference `{{ survey.strawpoll299 }}` was replaced with generic text about subscribing, which may lose the interactive element that was in the original."
+        }
+      ]
     },
     "300": {
       "script_hash": "sha256:7efa219eaaf687097ba75712b02507b34cd5ad485c2313c8e9d544acd4b65742",
@@ -8517,106 +8528,100 @@
       ]
     },
     "302": {
-      "script_hash": "sha256:e2c81b6f03725e6321058667882a117c35f28daf2f595674b0753f8950dd75e9",
-      "reviewed_at": "2026-05-02T01:42:30Z",
-      "reviewer_version": "v1",
+      "script_hash": "sha256:7d9118142c7c2e5f9cd660d95d8fe7d5364d9ea0ffa76c0b345eb4995ebd1fb2",
+      "reviewed_at": "2026-05-02T12:27:35Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 17880,
-        "output_tokens": 188,
+        "input_tokens": 18276,
+        "output_tokens": 64,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 3.3,
-        "est_cost_usd": 0.01882
+        "duration_s": 2.06,
+        "est_cost_usd": 0.018596
       },
       "errors": [
         {
           "severity": "error",
           "where": "\"Error: ERROR Failed to get JSON resource\"",
-          "what": "The error message text is corrupted and incomplete; the URL is broken mid-line with 'and url=' instead of continuing the proper URL structure."
-        },
-        {
-          "severity": "error",
-          "where": "\"Kieran Culkin)'s character behavior\"",
-          "what": "There is a stray closing parenthesis in the link URL that should have been removed during transformation."
+          "what": "A complex error message with URL and JSON payload has been corrupted into incomplete fragments; the original message appears truncated or garbled in the script."
         }
       ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "\"I come from family where lefse\"",
-          "what": "The sentence in the script appears to be truncated or incomplete compared to the body text which reads 'I come from famil' (also truncated in the source), but the script continues naturally, suggesting possible text loss at a boundary."
-        }
-      ]
+      "warnings": []
     },
     "303": {
-      "script_hash": "sha256:a27cd88d9156a98fee87f161c4018197d856709ac1fee702594cd08b49b20335",
-      "reviewed_at": "2026-05-02T02:20:59Z",
+      "script_hash": "sha256:b5b7052404f03e961bc058493e64533933fec229e42fed128003caae7df98455",
+      "reviewed_at": "2026-05-02T12:27:39Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 12151,
-        "output_tokens": 195,
+        "input_tokens": 12150,
+        "output_tokens": 324,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 4.56,
-        "est_cost_usd": 0.013126
+        "duration_s": 4.43,
+        "est_cost_usd": 0.01377
       },
       "errors": [
         {
           "severity": "error",
-          "where": "petnames section, quoted text",
-          "what": "The Unicode arrow characters (⇒) in the source body were removed in the script, breaking the intended structure of the edge names example (\"dns ⇒ example.org\" became \"dns example.org\")."
+          "where": "petnames section, edge names bullet",
+          "what": "The arrow character (⇒) was removed from the edge names examples, changing 'dns ⇒ example.org' to 'dns example.org' and 'Uncle Bob ⇒ Sarah Smith' to 'Uncle Bob Sarah Smith', which obscures the relationship notation in the original text."
         },
         {
           "severity": "error",
-          "where": "journal entry 12",
-          "what": "The link title \"Wicked\" is corrupted in the script as \"Wicked)\" with a stray closing parenthesis."
+          "where": "Straw Poll section, dollar amounts",
+          "what": "Dollar amounts are incorrectly normalized: '$5,000' should be 'five thousand dollars' not '5,000 dollars', and '$1,000,000' should be 'one million dollars' not '1,000,000 dollars'."
+        },
+        {
+          "severity": "error",
+          "where": "Journal entry four, Elon Musk quote",
+          "what": "The date 'November 23rd 2024' was converted to 'November twenty third twenty twenty four' but the publication date in the quote should reference '2024' as the year, creating inconsistency in how dates are handled in quoted material from The Economist."
         }
       ],
       "warnings": [
         {
           "severity": "warning",
-          "where": "Notable section, second blockquote",
-          "what": "The blockquote formatting with embedded bold text (**accuracy of 100%** and **loss of 0.156**) lost its emphasis markers, making the important metrics less distinct in the audio script."
+          "where": "Straw Poll section, image caption",
+          "what": "The image showing the strawpoll results (strawpoll302.png) is not mentioned or described in the script, though the section discusses analyzing the results from it."
         }
       ]
     },
     "304": {
-      "script_hash": "sha256:2e7c13742a34889012d5ffc8a1d13ce1b7cd03cbe6980e77bbd25ecf9c59a07a",
-      "reviewed_at": "2026-05-02T02:20:59Z",
+      "script_hash": "sha256:ac21abba288f8d61a7ed220a589d1f109adcee85ff54ac831d2d173bb295a85e",
+      "reviewed_at": "2026-05-02T12:27:45Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 15341,
-        "output_tokens": 262,
+        "input_tokens": 15339,
+        "output_tokens": 389,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 4.08,
-        "est_cost_usd": 0.016651
+        "duration_s": 5.17,
+        "est_cost_usd": 0.017284
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Journal entry four",
-          "what": "The text \"Elf)\" is corrupted with a stray closing parenthesis; it should be \"Elf\" or \"Elf (film)\"."
+          "where": "\"7 Databases in 7 Weeks for twenty twenty five\"",
+          "what": "The link title was changed from '2025' in the body to 'twenty twenty five' in the script, but the original body says '7 Databases in 7 Weeks for 2025' which should be normalized to 'twenty twenty five' — however, checking the source body shows it actually says 'for 2025', so the script's 'twenty twenty five' is correct; no error here."
         },
         {
           "severity": "error",
-          "where": "Journal entry seven",
-          "what": "The word \"tonightt\" appears with a doubled 't' and should be \"tonight\"."
+          "where": "\"We saw The Best Christmas Pageant Ever tonightt.\"",
+          "what": "The source body contains a typo 'tonightt' (double t) which is preserved in the script, but this is a pre-existing typo in the source, not a transformation bug."
         },
         {
           "severity": "error",
-          "where": "Briefly section, Link four",
-          "what": "The phrase \"Gift Link\" appears after the link description but the gift link indicator emoji or context from the source body is missing or unclear in transcription."
+          "where": "\"Also wee Gruber writeup.\"",
+          "what": "The script contains 'wee' which should be 'via' — this is a corrupted transformation of the original text 'Also wee [Gruber writeup]' where 'wee' appears to be a transcription error for 'via'."
         }
       ],
       "warnings": [
         {
           "severity": "warning",
-          "where": "Notable section, Link six title",
-          "what": "The title \"7 Databases in 7 Weeks for twenty twenty five\" has been transformed with a year that doesn't match the source (which says \"2025\"), and the source body references \"2025\" as well, but the issue is dated December 1, 2024, making a reference to a future \"twenty twenty five\" guide potentially inconsistent with publication date."
+          "where": "\"The published date appears as 'December 8, twenty twenty four' in the opening\"",
+          "what": "The body does not explicitly state 'December 8, twenty twenty four' as a publication date in the content; the latest journal entry is December 4, 2024, so the script's stated publication date of December 8 may be inferred but is not clearly sourced from the body text."
         }
       ]
     },
@@ -8649,119 +8654,97 @@
       ]
     },
     "306": {
-      "script_hash": "sha256:3c0913f92541ab35c5a2531df82b741044148cbe1c5454192397d9fb683d8f62",
-      "reviewed_at": "2026-05-02T01:45:11Z",
-      "reviewer_version": "v1",
+      "script_hash": "sha256:503f8656493434c77cc59a5cf67d111810e82c5ac5cc715742719f034b486013",
+      "reviewed_at": "2026-05-02T12:27:49Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 13381,
-        "output_tokens": 189,
+        "input_tokens": 13776,
+        "output_tokens": 255,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 3.2,
-        "est_cost_usd": 0.014326
+        "duration_s": 3.85,
+        "est_cost_usd": 0.015051
       },
       "errors": [
         {
           "severity": "error",
-          "where": "\"Welcome five new blogs to the Internet! love love love love love\"",
-          "what": "The emoji hearts (💙) were converted to the word \"love\" repeated five times instead of being removed or described properly."
+          "where": "\"Welcome five new blogs to the Internet! love\"",
+          "what": "The heart emoji (💙💙💙💙💙) was replaced with the word \"love\" once, but there are five heart emojis in the source that should have been replaced with five instances of \"love\" or handled differently."
         },
         {
           "severity": "error",
-          "where": "\"Link two. \"People and Blogs: Annie Mueller\"\"",
-          "what": "Link title should be \"People & Blogs: Annie Mueller\" but the ampersand was converted to \"and\" within the link title itself, changing the proper name of the newsletter."
+          "where": "\"The Wikipedia page) has more info.\"",
+          "what": "There is a stray closing parenthesis with no matching opening parenthesis in the script."
         }
       ],
       "warnings": [
         {
           "severity": "warning",
-          "where": "\"The Wikipedia page) has more info.\"",
-          "what": "Appears to be a syntax error with a closing parenthesis but no opening parenthesis or link reference, suggesting corrupted or incomplete text."
+          "where": "\"Marcos D Alves: Marcos has written a blog in the past but for a few reasons had to stop. He lives in São Paulo, Brazil, with his wife and two daughters. He spent 35 years in the IT industry and love to tinker.\"",
+          "what": "The phrase \"and love to tinker\" should be \"and loves to tinker\" but the source body says \"love to tinker\", so this is a pre-existing typo in the source, not a transformation error."
         }
       ]
     },
     "307": {
       "script_hash": "sha256:6a6cae77b38c4791a8fbe897e4198c189694a5771ab26324b7cb47c153769627",
-      "reviewed_at": "2026-05-02T01:42:28Z",
-      "reviewer_version": "v1",
+      "reviewed_at": "2026-05-02T12:27:51Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 10438,
+        "input_tokens": 10837,
         "output_tokens": 8,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 1.03,
-        "est_cost_usd": 0.010478
+        "duration_s": 0.9,
+        "est_cost_usd": 0.010877
       },
       "errors": [],
       "warnings": []
     },
     "308": {
-      "script_hash": "sha256:9dedf403ef4731d2d346267f2ff46d1480dbf199fcd09e9e40776565b0c30d8d",
-      "reviewed_at": "2026-05-02T02:21:00Z",
+      "script_hash": "sha256:b55f378d8a7825b68aac403d92749df8022ec86f911aa97d8b2d65eeea216d4c",
+      "reviewed_at": "2026-05-02T12:27:53Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 12541,
-        "output_tokens": 259,
+        "input_tokens": 12539,
+        "output_tokens": 63,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 3.2,
-        "est_cost_usd": 0.013836
+        "duration_s": 1.61,
+        "est_cost_usd": 0.012854
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Journal entry one: \"Game Night)\"",
-          "what": "The closing parenthesis in the film title is corrupted and appears without an opening parenthesis."
-        },
-        {
-          "severity": "error",
-          "where": "Journal entry seven: \"Scrapper)\"",
-          "what": "The closing parenthesis in the film title is corrupted and appears without an opening parenthesis."
-        },
-        {
-          "severity": "error",
-          "where": "Briefly, Link nine: \"Explainer: What's R1 and Everything Else?\"",
-          "what": "The ampersand in the original title \"What's R1 & Everything Else?\" was replaced with \"and\" but this should have been \"and\" only in spoken form, not in the link title itself where it should remain as part of the original title text."
+          "where": "\"10 dollars-50k\"",
+          "what": "Dollar amount is malformed; should be \"10 to 50 thousand dollars\" or similar, not \"10 dollars-50k\"."
         }
       ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "Notable, Link six blockquote",
-          "what": "The quote contains \"10 dollars-50k\" which appears to be a malformed transformation of \"$10-50k\" (the dollar sign and formatting got corrupted during number conversion)."
-        }
-      ]
+      "warnings": []
     },
     "309": {
-      "script_hash": "sha256:8e8b49d32d7caef2b6dd06ba2fb8130b8dc485942bbc4a2f30dfccb941bc6ebc",
-      "reviewed_at": "2026-05-02T01:38:17Z",
-      "reviewer_version": "v1",
+      "script_hash": "sha256:2b7288708f7f57566fca2001f266367f6fb003c420b4cce36c3cdba5bb74fcf4",
+      "reviewed_at": "2026-05-02T12:27:55Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 11850,
-        "output_tokens": 162,
+        "input_tokens": 12248,
+        "output_tokens": 74,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 3.48,
-        "est_cost_usd": 0.01266
+        "duration_s": 2.16,
+        "est_cost_usd": 0.012618
       },
       "errors": [
         {
           "severity": "error",
-          "where": "\"Good morning afternoon?\"",
-          "what": "The strikethrough markdown from the body ('Good <strike>morning</strike> afternoon?') was not processed; the script should read 'Good afternoon' not 'Good morning afternoon'."
+          "where": "Journal entry three, \"Spencer was a great opener with a novel-like background of being a funderal director in a small town.\"",
+          "what": "The word \"funderal\" is a corruption of \"funeral\" and should have been corrected during transformation."
         }
       ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "\"Link five. 'The sound of silence | ᕕ( ᐛ )ᕗ Herman's blog'\"",
-          "what": "The unicode emoticon 'ᕕ( ᐛ )ᕗ' from the blog title appears in the script when it should have been removed as inline emoji."
-        }
-      ]
+      "warnings": []
     },
     "310": {
       "script_hash": "sha256:1bafdd444fac41054bc9ee8cec35eebf98423f163996bb6d77964dabc1498f5c",
@@ -8798,111 +8781,121 @@
     },
     "311": {
       "script_hash": "sha256:3606e67ab08e315bb6f3554b085eda926b59cb5ceed4e04c0ca2a2c9f028495a",
-      "reviewed_at": "2026-05-02T01:42:29Z",
-      "reviewer_version": "v1",
+      "reviewed_at": "2026-05-02T12:27:58Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 13385,
-        "output_tokens": 53,
+        "input_tokens": 13784,
+        "output_tokens": 116,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 1.61,
-        "est_cost_usd": 0.01365
+        "duration_s": 2.2,
+        "est_cost_usd": 0.014364
       },
       "errors": [
         {
           "severity": "error",
           "where": "\"canary statementof sorts\"",
-          "what": "Missing space between \"statement\" and \"of\" in the word \"canary statement of sorts\"."
+          "what": "The phrase \"canary statement\" is missing a space before \"of\", appearing as \"canary statementof sorts\" instead of \"canary statement of sorts\"."
+        },
+        {
+          "severity": "error",
+          "where": "\"1/seventh of the way\"",
+          "what": "The ordinal should be \"one seventh\" not \"1/seventh\" when read aloud in the audio script."
         }
       ],
       "warnings": []
     },
     "312": {
-      "script_hash": "sha256:9376e7f38719dd08e96ba8ff1f12536528898c9c9d653c53affa7e9fed0643a2",
-      "reviewed_at": "2026-05-02T01:38:19Z",
-      "reviewer_version": "v1",
+      "script_hash": "sha256:b4f274b519504344d545715a0b715844016b33e37f9a58d1d382d2083aec78ca",
+      "reviewed_at": "2026-05-02T12:28:02Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 10026,
-        "output_tokens": 120,
+        "input_tokens": 10424,
+        "output_tokens": 196,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 4.29,
-        "est_cost_usd": 0.010626
+        "duration_s": 3.35,
+        "est_cost_usd": 0.011404
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Briefly section, Link nine",
-          "what": "The phrase 'new solutions open-source solutions' is garbled and should be 'new open-source solutions' or similar."
+          "where": "\"The $100 Trillion Disruption\"",
+          "what": "The script says \"The 100 trillion dollars Disruption\" but the body says \"The $100 Trillion Disruption\" — the word \"dollars\" should not appear in the title transformation."
+        },
+        {
+          "severity": "error",
+          "where": "\"Kaguya | Track, Review & Discover Books\"",
+          "what": "The script says \"Track, Review and Discover Books\" but the body has \"Track, Review & Discover Books\" with an ampersand that should have been converted to \"and\" (which it was), but the ampersand replacement is correct; however, the original title in the body uses \"&\" not \"and\", so the script's transformation is correct — no error here. Retracting this."
         }
       ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "Briefly section, Link five",
-          "what": "The link title 'Kaguya | Track, Review and Discover Books' is missing an ampersand that appears in the body as 'Track, Review & Discover Books'."
-        }
-      ]
+      "warnings": []
     },
     "313": {
-      "script_hash": "sha256:ec5b916e2c9822fd9563207e253c1ecd00882d7b0c207feb54109f1952902254",
-      "reviewed_at": "2026-05-02T02:21:03Z",
+      "script_hash": "sha256:5ea0f1205c03dabc836ec42cc89c0626695cc92346740f71efccafef106b1430",
+      "reviewed_at": "2026-05-02T12:28:07Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
         "input_tokens": 16416,
-        "output_tokens": 151,
+        "output_tokens": 298,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 3.89,
-        "est_cost_usd": 0.017171
+        "duration_s": 4.82,
+        "est_cost_usd": 0.017906
       },
       "errors": [
         {
           "severity": "error",
           "where": "Journal entry six",
-          "what": "The script says \"Weekly Thing 212 in twenty twenty two\" but the body says \"Weekly Thing 212\" in \"2022\"; the script should say \"twenty twenty two\" only if referencing the year, but this appears to have incorrectly inserted a year when the body doesn't explicitly state one in that sentence."
+          "what": "The year '2022' is incorrectly normalized from '2018' in the source (the script says 'Weekly Thing 212 in twenty twenty two' when the body says 'Weekly Thing 212' which is from 2022, but the correct answer stated in the same entry is 'Weekly Thing 53' from '2018', not '2018' — the script correctly says 'twenty eighteen' for that, but the error is that the wrong issue number/year pair is being read aloud)."
         },
         {
           "severity": "error",
-          "where": "\"70 °F from the sun\"",
-          "what": "The degree symbol and Fahrenheit abbreviation were not properly normalized to spoken form (should be \"70 degrees Fahrenheit\" or similar)."
-        }
-      ],
-      "warnings": []
-    },
-    "314": {
-      "script_hash": "sha256:de4755f75c9bff791bdb46f5700bbf5a466cdee6fd6e32480e7bcf37076a171e",
-      "reviewed_at": "2026-05-02T02:21:03Z",
-      "reviewer_version": "v2",
-      "model": "claude-haiku-4-5-20251001",
-      "usage": {
-        "input_tokens": 15259,
-        "output_tokens": 228,
-        "cache_read_input_tokens": 0,
-        "cache_creation_input_tokens": 0,
-        "duration_s": 3.3,
-        "est_cost_usd": 0.016399
-      },
-      "errors": [
-        {
-          "severity": "error",
-          "where": "\"Never Let Me Go) was the first Ishiguro\"",
-          "what": "The link title is truncated with a stray closing parenthesis and missing opening bracket; should be \"Never Let Me Go\" (the title of the book)."
-        },
-        {
-          "severity": "error",
-          "where": "\"the Seneca – Norbauer and Co\"",
-          "what": "The company name is incomplete; should be \"Norbauer & Co\" with an ampersand, not just \"and Co\"."
+          "where": "Journal entry six, Briefly section Link nine quote",
+          "what": "The sentence 'Simple and free service for forward a domain to another' at the end of Briefly section is grammatically broken in both source and script ('for forward' should be 'to forward'), but this is a pre-existing source typo, not a transformation bug."
         }
       ],
       "warnings": [
         {
           "severity": "warning",
-          "where": "\"30 Charts That Show How Covid Changed Everything in March twenty twenty\"",
-          "what": "The year normalization appears inconsistent; the body shows \"March 2020\" but the script says \"March twenty twenty\" which is correct, but the title itself in the body is \"March 2020\" not \"2020\", so this may be a source inconsistency rather than a transform bug."
+          "where": "Notable section, Link eleven blockquote",
+          "what": "The nested blockquote with the MobileMe anecdote uses malformed quote markup in the source (extra `>` characters), and while the script reads it as continuous quoted text, the formatting corruption makes it unclear if this transformation is correct."
+        }
+      ]
+    },
+    "314": {
+      "script_hash": "sha256:c76709d5dcb55eee34ac0142f3b464ce0c364c3c33b0f5a7789a0c49fa47ee06",
+      "reviewed_at": "2026-05-02T12:28:10Z",
+      "reviewer_version": "v2",
+      "model": "claude-haiku-4-5-20251001",
+      "usage": {
+        "input_tokens": 15258,
+        "output_tokens": 214,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "duration_s": 2.85,
+        "est_cost_usd": 0.016328
+      },
+      "errors": [
+        {
+          "severity": "error",
+          "where": "Link two in Briefly section",
+          "what": "The text 'Never Let Me Go)' is corrupted with a stray closing parenthesis and should be 'Never Let Me Go'."
+        },
+        {
+          "severity": "error",
+          "where": "Link eight in Briefly section",
+          "what": "The text 'Norbauer and Co' should be 'Norbauer & Co' to match the source, and the dollar sign formatting is incorrect ('3,600 dollars' should be '3,600 dollar')."
+        }
+      ],
+      "warnings": [
+        {
+          "severity": "warning",
+          "where": "Link five in Briefly section",
+          "what": "The year 'twenty twenty' should be 'twenty twenty' but the title 'March twenty twenty' normalizes the year '2020' which is acceptable, though the comma after 'March 2020' in the original title may have been lost in transformation."
         }
       ]
     },
@@ -8945,91 +8938,81 @@
       ]
     },
     "316": {
-      "script_hash": "sha256:156284a75a067f1fb7537f5cd3c6f5f57d2889796423f3261b81276e8b74c9b9",
-      "reviewed_at": "2026-05-02T02:21:06Z",
+      "script_hash": "sha256:80c33c271448422058037c67ede16a5808116c160696890d0edad573bab712ea",
+      "reviewed_at": "2026-05-02T12:28:12Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
         "input_tokens": 11866,
-        "output_tokens": 228,
+        "output_tokens": 84,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 5.41,
-        "est_cost_usd": 0.013006
+        "duration_s": 1.83,
+        "est_cost_usd": 0.012286
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Journal entry seven",
-          "what": "The text \"Paska)\" has a stray closing parenthesis that should not be there."
-        },
-        {
-          "severity": "error",
-          "where": "Briefly section, Link four",
-          "what": "The text \"Anderson)\" has a stray closing parenthesis that should not be there; it should be \"Anderson\"."
-        },
-        {
-          "severity": "error",
-          "where": "Briefly section, Link three",
-          "what": "The link title \"AI twenty twenty seven\" is incorrect; it should be \"AI two thousand twenty seven\" or similar, as \"2027\" should normalize to \"twenty twenty seven\", not \"twenty twenty seven\"."
+          "where": "\"OpenAI's Sam Altman Talks ChatGPT, AI Agents and Superintelligence — Live at TED2025 - YouTube\"",
+          "what": "The script reads \"Anderson)\" with a stray closing parenthesis instead of the proper name \"Anderson\"."
         }
       ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "preamble",
-          "what": "The preamble says \"Published April 20, twenty twenty five\" but the source material indicates this is issue 316 dated April 16, 2025; the publication date appears to be wrong."
-        }
-      ]
+      "warnings": []
     },
     "317": {
-      "script_hash": "sha256:d226960305fb4eb04ac2fed162d9e6fdb7e41cde4272006e5c97b0f589b84661",
-      "reviewed_at": "2026-05-02T02:21:07Z",
+      "script_hash": "sha256:fdbdb8e7cc465e84e26da9f3d21976aa4124bc51c54244428e329cd2f4377410",
+      "reviewed_at": "2026-05-02T12:28:15Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 17453,
-        "output_tokens": 54,
+        "input_tokens": 17452,
+        "output_tokens": 117,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 6.01,
-        "est_cost_usd": 0.017723
+        "duration_s": 2.56,
+        "est_cost_usd": 0.018037
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Journal entry twelve",
-          "what": "The text \"Dog)\" is corrupted; it should be \"Dog\" (the opening parenthesis is missing its URL)."
+          "where": "\"seventeenth position on the top 20 leaderboard\"",
+          "what": "The ordinal 'seventeenth' should have been transformed from '17th' but the script says 'seventeenth' when the body says '17th position' - this is correct transformation, but checking the actual text: the body says '17th position' and script says 'seventeenth position', which is proper ordinal normalization and is acceptable."
         }
       ],
       "warnings": []
     },
     "318": {
-      "script_hash": "sha256:a72bec41c4e5cae8c9216acb78538e46d394e48584c21cb4763fe5019c34daf1",
-      "reviewed_at": "2026-05-02T02:21:07Z",
+      "script_hash": "sha256:bac28cfcdcb962859bd3eae951ffedfaf72f9b913c09a56553d2224bd4665aa6",
+      "reviewed_at": "2026-05-02T12:28:19Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
         "input_tokens": 13403,
-        "output_tokens": 210,
+        "output_tokens": 205,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 5.2,
-        "est_cost_usd": 0.014453
+        "duration_s": 3.36,
+        "est_cost_usd": 0.014428
       },
       "errors": [
         {
           "severity": "error",
-          "where": "\"This highlight \"using a vibe-coded bash script",
-          "what": "The sentence fragment \"This highlight\" is missing a verb; in the source it reads \"This highlight 'using a vibe-coded bash script that I forgot to save anywhere' feels about right\" but the script omits the predicate \"feels about right\" at the end of that thought."
+          "where": "llm-prices.com section",
+          "what": "The sentence 'this short writeup highlights how is using LLMs' is missing the subject pronoun after 'how' (should be 'how he is using' or similar)."
         },
         {
           "severity": "error",
-          "where": "\"In two thousand five the first BarCamp\"",
-          "what": "The year \"2005\" was transformed to \"two thousand five\" but the source says \"In 2005 the first BarCamp was hosted\" — this is an acceptable transformation per the rules, but the script then has \"In programming the most common variable reference is foobar, which isn't the military fubar).\" with an extra closing parenthesis with no matching opening parenthesis."
+          "where": "closing section",
+          "what": "The closing says 'Thanks for listening' but this is a newsletter text transformation to audio—this closing phrase was not in the original body and appears to be an added narrator line that doesn't match the source material."
         }
       ],
-      "warnings": []
+      "warnings": [
+        {
+          "severity": "warning",
+          "where": "Briefly section, link five",
+          "what": "The title reads 'How I Created Perfect Wiki and Reached 250 thousand dollars' but the source shows '$250K', which could be ambiguous whether it should be 'two hundred and fifty thousand dollars' or parsed differently."
+        }
+      ]
     },
     "319": {
       "script_hash": "sha256:dc4040b4289a6d3b3a6e21725c3108bd2421fe874131cfd357be9f372fde0fd0",
@@ -9103,40 +9086,40 @@
       ]
     },
     "321": {
-      "script_hash": "sha256:55c617bd95f5c41289277b7327639fe00fdca267f416a9a46bd3a87527c4a304",
-      "reviewed_at": "2026-05-02T02:21:08Z",
+      "script_hash": "sha256:a50e364ea52edb5fb8e425078c7c71210e8597f0ba2e52a32ea7a11f2a4d0d31",
+      "reviewed_at": "2026-05-02T12:28:31Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 15539,
-        "output_tokens": 307,
+        "input_tokens": 15538,
+        "output_tokens": 296,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 4.73,
-        "est_cost_usd": 0.017074
+        "duration_s": 11.58,
+        "est_cost_usd": 0.017018
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Journal entry nine, \"I'm not eager to have someone riding my bumper\"",
-          "what": "The quote \"BACK OFF BUMPER HUMPER!!!\" is incomplete in the script—it should be followed by \"MY BREAKS ARE GOOD! HOW ABOUT YOUR INSURANCE?\" but the script breaks the quote mid-stanza and has garbled syntax."
+          "where": "Journal entry nine quote",
+          "what": "The quoted text is truncated; only \"BACK OFF BUMPER HUMPER!!!\" appears in the quote block, but \"MY BREAKS ARE GOOD! HOW ABOUT YOUR INSURANCE?\" follows outside it without proper closure."
         },
         {
           "severity": "error",
-          "where": "Briefly section, Link seventeen",
-          "what": "The text \"love love\" appears at the end instead of the Ukrainian flag emoji being converted to \"love\" (only one instance needed)."
+          "where": "Briefly, Link six",
+          "what": "The year \"2025\" is incorrectly transformed to \"twenty twenty five\" in the link title \"twenty twenty five Milky Way Photographer of the Year\" when it should have remained \"2025 Milky Way Photographer of the Year\"."
         },
         {
           "severity": "error",
-          "where": "Briefly section, Link six",
-          "what": "The title reads \"twenty twenty five Milky Way Photographer\" but the source body says \"2025 Milky Way Photographer\"—the year normalization is inconsistent with the acceptable pattern (it should be normalized in the preamble/title context, not in the link title itself where it refers to the award year)."
+          "where": "Briefly, Link seventeen",
+          "what": "The heart emoji replacement is corrupted; it appears as \"love\" without a space or proper integration, reading \"need our support. love\" instead of \"need our support\" or a proper spoken equivalent."
         }
       ],
       "warnings": [
         {
           "severity": "warning",
-          "where": "Notable section, first quote in link one",
-          "what": "The quote ends with \"_ _So on this benchmark\" which appears to have spacing artifacts from markdown; while quote markers are added, the internal spacing issue suggests potential source corruption that should be verified."
+          "where": "Preamble",
+          "what": "The preamble mentions \"Saluting, Tetris, Sky\" as subtitle content, but these appear to be emoji from the body's opening (👋, 🧩, 🤔) rather than actual section themes, which may represent unclear transformation logic."
         }
       ]
     },
@@ -9195,42 +9178,26 @@
       ]
     },
     "324": {
-      "script_hash": "sha256:04dedbc7b8d7fc1a95566721797e77ca537227ca28aea0ea971f45ddbabf0a37",
-      "reviewed_at": "2026-05-02T02:21:13Z",
+      "script_hash": "sha256:13d9d0f11e15736a665a82085d0b1383d39562e8f7d79a68898642816a50ab2e",
+      "reviewed_at": "2026-05-02T12:28:35Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
         "input_tokens": 16735,
-        "output_tokens": 254,
+        "output_tokens": 97,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 6.27,
-        "est_cost_usd": 0.018005
+        "duration_s": 2.72,
+        "est_cost_usd": 0.01722
       },
       "errors": [
         {
           "severity": "error",
-          "where": "\"Basket Case)\"",
-          "what": "The opening parenthesis is missing before \"Basket Case\" in the song title reference."
-        },
-        {
-          "severity": "error",
-          "where": "\"blog.stackblitz.com, kjl.name\"",
-          "what": "The blockquote in the Conversational SDLC section contains broken link references that should have been stripped or handled differently—they appear as bare domain names interrupting the flow of the quoted text."
-        },
-        {
-          "severity": "error",
-          "where": "\"Texas A and M University Engineering\"",
-          "what": "The ampersand in \"Texas A&M University\" was replaced with \"and\", which is acceptable for normalization, but \"A and M\" reads awkwardly and should preserve the proper noun form or use the ampersand symbol."
+          "where": "Link six in Briefly, \"Websites Are Tracking You Via Browser Fingerprinting | Texas A and M University Engineering\"",
+          "what": "The university name is corrupted as \"Texas A and M\" instead of \"Texas A&M\" (the ampersand was replaced but should be read as \"and\", not written out and missing the M connection)."
         }
       ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "\"Supporting Membership\" section",
-          "what": "The entire Supporting Membership section with Buttondown template tags and conditional logic has been removed from the script, though this appears to be intentional template removal rather than a bug."
-        }
-      ]
+      "warnings": []
     },
     "325": {
       "script_hash": "sha256:99ad7edbf41e753519878646a00413417058e2a94ecc4883c796e591a74f8313",
@@ -9261,136 +9228,106 @@
       ]
     },
     "326": {
-      "script_hash": "sha256:6332f412b19bf5dd80dcdfc8aaa5b6a53975d64dbd61d92823a0c05e01673e04",
-      "reviewed_at": "2026-05-02T02:21:09Z",
+      "script_hash": "sha256:c2ac07abb8529b5c438e39eff2978d7c582945d96cf7af28e0142be75b7fa1fd",
+      "reviewed_at": "2026-05-02T12:28:37Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 11093,
-        "output_tokens": 8,
+        "input_tokens": 11091,
+        "output_tokens": 61,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 0.9,
-        "est_cost_usd": 0.011133
+        "duration_s": 1.91,
+        "est_cost_usd": 0.011396
       },
-      "errors": [],
+      "errors": [
+        {
+          "severity": "error",
+          "where": "\"1 mile from the school\"",
+          "what": "The numeral '1' should have been normalized to the word 'one' for audio consistency with other number transformations in the script."
+        }
+      ],
       "warnings": []
     },
     "327": {
       "script_hash": "sha256:e72ae8c79862ce100606d6092a16ceaae297388ced8debe4fb37dcc376b83dec",
-      "reviewed_at": "2026-05-02T01:45:13Z",
-      "reviewer_version": "v1",
+      "reviewed_at": "2026-05-02T12:28:40Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 14343,
-        "output_tokens": 127,
+        "input_tokens": 14742,
+        "output_tokens": 111,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 2.42,
-        "est_cost_usd": 0.014978
+        "duration_s": 2.53,
+        "est_cost_usd": 0.015297
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Journal entry nine, GPT-5 prompt",
-          "what": "The script contains leftover markdown underscores around \"single product\" (\"_single product_that\") that should have been stripped."
+          "where": "\"The original form of an FDE is to send them to not just one, but to multiple customers, so they can personally and directly see the similarities and the differences, with the goal of creating a _single product_that can serve the needs of multiple customers.\"",
+          "what": "The underscore formatting cruft (_single product_that) was not stripped and appears as raw markdown syntax in the script instead of being converted to plain text."
         }
       ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "Briefly section, Link one",
-          "what": "The word \"love\" appears without context at the end of the link description (\"Let's keep the Web Weird! love\"), which looks like a corrupted or incomplete transformation of a heart emoji."
-        }
-      ]
+      "warnings": []
     },
     "328": {
-      "script_hash": "sha256:696620447b8652e365c85d05aee4577102b1fa2bd92764f8f6b2519be9883e7d",
-      "reviewed_at": "2026-05-02T01:38:27Z",
-      "reviewer_version": "v1",
+      "script_hash": "sha256:1dea90d111dcdd2e716a734813a49cbbda8b66b1f677767dac2e00f2938a1849",
+      "reviewed_at": "2026-05-02T12:28:42Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 12535,
-        "output_tokens": 374,
+        "input_tokens": 12929,
+        "output_tokens": 60,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 3.17,
-        "est_cost_usd": 0.014405
+        "duration_s": 1.58,
+        "est_cost_usd": 0.013229
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Journal entry nine, \"Perrserker) is the closest\"",
-          "what": "The name \"Perrserker\" has a closing parenthesis instead of opening bracket, appearing as \"Perrserker)\" which looks like corrupted text from failed link removal."
-        },
-        {
-          "severity": "error",
-          "where": "Journal entry nine, \"Perrserker evolves from Meowth)\"",
-          "what": "The name \"Meowth\" has a closing parenthesis instead of opening bracket, appearing as \"Meowth)\" which looks like corrupted text from failed link removal."
-        },
-        {
-          "severity": "error",
-          "where": "Journal entry nine, \"Alakazam) is technically psychic\"",
-          "what": "The name \"Alakazam\" has a closing parenthesis instead of opening bracket, appearing as \"Alakazam)\" which looks like corrupted text from failed link removal."
-        },
-        {
-          "severity": "error",
-          "where": "Journal entry nine, \"I may grab a Kadabra) or Abra)\"",
-          "what": "The names \"Kadabra\" and \"Abra\" have closing parentheses instead of opening brackets, appearing as \"Kadabra)\" and \"Abra)\" which looks like corrupted text from failed link removal."
-        },
-        {
-          "severity": "error",
-          "where": "Journal entry thirteen, \"I just got my first CharGPT Pulse\"",
-          "what": "The product name is corrupted as \"CharGPT\" when it should be \"ChatGPT\" (missing the 'a')."
+          "where": "\"CharGPT Pulse\"",
+          "what": "The product name is corrupted; it should be \"ChatGPT Pulse\" not \"CharGPT Pulse\"."
         }
       ],
       "warnings": []
     },
     "329": {
       "script_hash": "sha256:02888224473bea3950d87a02d078886989b3b30835f92364b0557534555f895b",
-      "reviewed_at": "2026-05-02T01:42:36Z",
-      "reviewer_version": "v1",
+      "reviewed_at": "2026-05-02T12:28:48Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 12740,
-        "output_tokens": 468,
+        "input_tokens": 13139,
+        "output_tokens": 260,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 6.34,
-        "est_cost_usd": 0.01508
+        "duration_s": 5.24,
+        "est_cost_usd": 0.014439
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Link two. \"vb.lk: vibe link\"",
-          "what": "The script says 'I tried this using and the non-deterministic nature showed up' but omits the example URL 'http://vb.lk/thingelstad' that appears in the body."
+          "where": "Link two vb.lk section",
+          "what": "The example URL 'http://vb.lk/thingelstad' was removed from the script, leaving an incomplete sentence that reads 'I tried this using and the non-deterministic nature showed up.'"
         },
         {
           "severity": "error",
-          "where": "Journal entry ten. John Prine quote",
-          "what": "The blockquote is malformed: 'End quote.' appears after only the first line ('Blow up your TV, throw away your paper,') instead of after the complete four-line verse."
+          "where": "Journal entry eight",
+          "what": "Journal entry eight is missing all content—the script says 'Journal entry eight.' with no text following it, while the body contains an image and date reference."
         },
         {
           "severity": "error",
-          "where": "Journal entry eight.",
-          "what": "Journal entry eight is empty in the script (listed but has no content), whereas the body contains an image with a timestamp of Sep 28, 2025 at 1:12 PM."
-        },
-        {
-          "severity": "error",
-          "where": "Notable section header transformation",
-          "what": "The body has multiple section intros ('Now, the X section.') but also says 'Link one.', 'Link two.' which creates numbering/cueing inconsistency — the script should either use 'Link one' style throughout Notable or use a different cue structure."
+          "where": "Journal entry ten quote",
+          "what": "The blockquote is broken across the script; 'Quote. Blow up your TV, throw away your paper, End quote.' appears before the rest of the verse, fragmenting the poem and breaking the intended formatting."
         }
       ],
       "warnings": [
         {
           "severity": "warning",
-          "where": "Link five. \"twenty twenty five NIST password guidelines\"",
-          "what": "The link title was transformed to 'twenty twenty five NIST password guidelines' but the body shows '2025 NIST password guidelines' — the year transformation looks inconsistent with how dates are normally handled in this script (the body's '2025' should remain as context, not become part of the title)."
-        },
-        {
-          "severity": "warning",
-          "where": "\"Plausible Analtyics 2\"",
-          "what": "The script preserves the typo 'Plausible Analtyics 2' from the body instead of correcting it, which may be intentional fidelity but is worth noting as a potential transcription error in the source."
+          "where": "Link five title",
+          "what": "The title reads '2025 NIST password guidelines' in the body but '\"twenty twenty five NIST password guidelines\"' in the script—the year normalization is unusual inside a quoted title."
         }
       ]
     },
@@ -9538,30 +9475,35 @@
       ]
     },
     "333": {
-      "script_hash": "sha256:c9cbb7cdfed7a17fc3909ea4d06f68f7cb6d333db520e2b89820985666ae1c39",
-      "reviewed_at": "2026-05-02T02:21:15Z",
+      "script_hash": "sha256:c22054c1696473e7b24af4128f620955a2f0c652104fc43877ea7dd6b2e3bf73",
+      "reviewed_at": "2026-05-02T12:28:54Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 17599,
-        "output_tokens": 142,
+        "input_tokens": 17592,
+        "output_tokens": 214,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 3.69,
-        "est_cost_usd": 0.018309
+        "duration_s": 4.79,
+        "est_cost_usd": 0.018662
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Journal entry thirteen. Gall's Law",
-          "what": "The URL reference contains a malformed link fragment: 'Gall's Law#Gall's_law' should be a complete URL."
+          "where": "Journal entry fifteen",
+          "what": "The final sentence about the Farewell Ponder POAP and email request is missing from the script (\"If you would like one, send me an email and I'll get you a claim code!\")."
+        },
+        {
+          "severity": "error",
+          "where": "Journal entry eleven",
+          "what": "A heart emoji at the end of the entry (\"❤️\") was converted to the word \"love\" but it should have been removed entirely since it's a trailing emoji that doesn't represent a verb in \"selling 321 candles! ❤️\"."
         }
       ],
       "warnings": [
         {
           "severity": "warning",
-          "where": "Journal entry eleven",
-          "what": "A heart emoji at the end of 'selling 321 candles!' was converted to 'love' but the sentence structure reads awkwardly ('selling 321 candles! love' instead of the original 'selling 321 candles! ❤️')."
+          "where": "Briefly section intro",
+          "what": "The script says \"Now, the Briefly section\" but the body markdown shows no explicit \"Briefly\" heading; this section appears to be unlabeled in the source and may have been inferred by the transform."
         }
       ]
     },

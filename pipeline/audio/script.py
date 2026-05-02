@@ -8,8 +8,10 @@ from typing import Any
 
 HTML_COMMENT_RE = re.compile(r"<!--[\s\S]*?-->")
 FENCED_CODE_RE = re.compile(r"^(```|~~~)[\s\S]*?^\1\s*$", re.MULTILINE)
-IMAGE_RE = re.compile(r"!\[[^\]]*]\([^)]+\)")
-LINK_RE = re.compile(r"(?<!!)\[([^\]]+)]\(([^)]+)\)")
+IMAGE_RE = re.compile(r"!\[[^\]]*]\((?:[^)\\]|\\.)+\)")
+# URL portion may contain escaped parens (`\(film\)`) — common for Wikipedia
+# disambiguation links. Treat `\(` and `\)` as part of the URL, not terminators.
+LINK_RE = re.compile(r"(?<!!)\[([^\]]+)]\(((?:[^)\\]|\\.)+)\)")
 HTML_TAG_RE = re.compile(r"<[^>]+>")
 BARE_URL_RE = re.compile(r"https?://\S+")
 
@@ -167,6 +169,11 @@ BRIEFLY_SECTION_HEADINGS = {
 JOURNAL_SECTION_HEADINGS = {"Journal"}
 
 BRIEFLY_LINK_RE = re.compile(r"\*\*\[([^\]]+)]\([^)]+\)\*\*")
+STRIKETHROUGH_HTML_RE = re.compile(
+    r"<(strike|del|s)\b[^>]*>.*?</\1>",
+    re.IGNORECASE | re.DOTALL,
+)
+
 REDDIT_DISCUSS_RE = re.compile(
     r"^[ \t]*_You can discuss any of these links at the "
     r"\[[^\]]*r/WeeklyThing[^\]]*]\([^)]+\)\._[ \t]*$",
@@ -181,7 +188,7 @@ SIGNED_BY_RE = re.compile(
 )
 
 
-_HEART_EMOJI_RE = re.compile(r"[❤♥\U0001F49B\U0001F49A\U0001F499\U0001F49C\U0001F5A4\U0001F90D\U0001F90E\U0001F9E1]️?")
+_HEART_EMOJI_RE = re.compile(r"(?:[❤♥\U0001F49B\U0001F49A\U0001F499\U0001F49C\U0001F5A4\U0001F90D\U0001F90E\U0001F9E1]️?)+")
 
 
 def strip_emoji(text: str) -> str:
@@ -365,6 +372,7 @@ def _strip_cover_blocks(body: str) -> str:
 
 def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
     body = HTML_COMMENT_RE.sub("", body)
+    body = STRIKETHROUGH_HTML_RE.sub("", body)
     body = FENCED_CODE_RE.sub("", body)
     body = _strip_cover_blocks(body)
     body = IMAGE_RE.sub("", body)

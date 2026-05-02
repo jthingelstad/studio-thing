@@ -198,7 +198,7 @@ The prompt requests valid JSON output. I extract the JSON and use the “Get Dic
 
 Fortune
 
-The fortune first showed up in Weekly Thing 53 and has been the last thing in the emails for a while. I got the inspiration for this from the fortune command in Unix). The text files that serve as the “database” for fortune are easy enough to find, and building a Shortcut around them was simple. I randomly select fortunes until I find one I like.
+The fortune first showed up in Weekly Thing 53 and has been the last thing in the emails for a while. I got the inspiration for this from the fortune command in Unix. The text files that serve as the “database” for fortune are easy enough to find, and building a Shortcut around them was simple. I randomly select fortunes until I find one I like.
 
 But with an LLM, I thought -- why not make the fortune relevant to each issue's content?
 
