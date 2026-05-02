@@ -275,10 +275,6 @@ Now, the Signature section.
 
 "Weekly Thing #257 / Nostr, Time, Bcrypt" is signed…
 
-Signed by thingelstad.eth: 0x9119c04cc5035aae560b94f92a56ba09605661acd19705f4bedfb897b208eacf74cc7605915dbb0e4a1e3017d1d6457afd8ac1ab3dd1dd9f4e14a0768a4a7ecb1b
-
-Signed by weeklything.eth: 0x974643015a627a755842e8b842769edea5d23716793d826abbd4ba2921cfa734156beeda9f0fcd4bf5fff2773466784458fa4a4686b7d48234a4eb39e1d826f91b
-
 Fortune
 
 Don't feed the bats tonight.

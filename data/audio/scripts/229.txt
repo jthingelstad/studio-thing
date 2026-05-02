@@ -78,7 +78,7 @@ This is a very interesting tool that allows you to search hundreds of websites f
 It found me all over the place.
 
 Quote.
-Search by username thingles returned 39 accounts. Found target's other IDs: dem5f4jv7dx2eb9mc978q7ucnw (yandexpublicid), 76561198286324524 (steamid). Search by yandexpublicid dem5f4jv7dx2eb9mc978q7ucnw returned 4 accounts. Search by steamid 76561198286324524 returned 3 accounts. Extended info extracted from 10 accounts. Countries: us, ru, in, tw, ca, cn, de Interests (tags): gaming, photo, news, sharing, music, tech, shopping, hobby, stock, streaming, trading, video, messaging, wiki, documents, discussion, reading, writing, finance, coding, maps, forum
+Search by username thingles returned 39 accounts. Found target's other IDs: dem5f4jv7dx2eb9mc978q7ucnw (yandex_public_id), 76561198286324524 (steam_id). Search by yandex_public_id dem5f4jv7dx2eb9mc978q7ucnw returned 4 accounts. Search by steam_id 76561198286324524 returned 3 accounts. Extended info extracted from 10 accounts. Countries: us, ru, in, tw, ca, cn, de Interests (tags): gaming, photo, news, sharing, music, tech, shopping, hobby, stock, streaming, trading, video, messaging, wiki, documents, discussion, reading, writing, finance, coding, maps, forum
 End quote.
 
 Here are the details that it got from just one service, Disqus. Note that maigret did not need authentication to get this. It was able to pull all of this information with just a username.
@@ -165,7 +165,7 @@ There was an hour for networking and food with a handful of people displaying pr
 
 For the panels and presenters it started out with storage and the blockchain and a session with Filecoin and StorJ. They are each solving the problem from a different angle with Filecoin more focused on long-term archival and StorJ on distribution and CDN functions. They'll both cross over into each other space.
 
-Disclosure: I am a small investor in a Filecoin provider and hold Filecoin tokens._
+Disclosure: I am a small investor in a Filecoin provider and hold Filecoin tokens.
 
 It was really cool to see UMN Blockchain club there. The club has over 300 people engaged and an active community. They won the Columbia University hackathon for crypto.
 

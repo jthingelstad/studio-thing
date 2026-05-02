@@ -173,6 +173,13 @@ REDDIT_DISCUSS_RE = re.compile(
     re.MULTILINE,
 )
 
+# Signing receipts in newer issues — `Signed by name.eth: 0x...` followed by
+# a long hex hash. Useless in audio (TTS would spell every hex digit).
+SIGNED_BY_RE = re.compile(
+    r"^[ \t]*Signed by [^:\n]+:\s*0x[0-9a-fA-F]+[ \t]*$",
+    re.MULTILINE,
+)
+
 
 def strip_emoji(text: str) -> str:
     return "".join(
@@ -192,11 +199,15 @@ def clean_inline(text: str) -> str:
     text = IMAGE_RE.sub("", text)
     text = LINK_RE.sub(r"\1", text)
     text = re.sub(r"`([^`]*)`", r"\1", text)
-    text = re.sub(r"[*_]{1,3}([^*_]+)[*_]{1,3}", r"\1", text)
-    # Strip leftover bold/italic markers from multi-line spans (e.g. a
-    # haiku wrapped in **...** across three lines).
+    # Asterisk emphasis: *text*, **text**, ***text***.
+    text = re.sub(r"\*{1,3}([^*]+)\*{1,3}", r"\1", text)
+    # Underscore emphasis: only treat `_` as a delimiter when it's NOT part of
+    # an identifier (e.g. `schema_version`, `group_concat`). Word characters
+    # on either side mean the underscore is intra-word.
+    text = re.sub(r"(?<![A-Za-z0-9_])_{1,3}([^_\n]+?)_{1,3}(?![A-Za-z0-9_])", r"\1", text)
+    # Strip leftover bold markers from multi-line spans (e.g. a haiku wrapped
+    # in **...** across three lines).
     text = re.sub(r"\*{2,3}", "", text)
-    text = re.sub(r"_{2,3}", "", text)
     text = HTML_TAG_RE.sub(" ", text)
     text = BARE_URL_RE.sub("", text)
     text = text.replace("\\|", "|")
@@ -352,6 +363,7 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
     # opens the Notable section in recent issues. Audio shouldn't push readers
     # off to Reddit.
     body = REDDIT_DISCUSS_RE.sub("", body)
+    body = SIGNED_BY_RE.sub("", body)
 
     output: list[str] = [preamble(frontmatter), ""]
     quote_lines: list[str] = []

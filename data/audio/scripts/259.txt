@@ -242,9 +242,9 @@ I curate and collect URLs and am always on the lookout for tracking information 
 
 This is what URL surveillance looks like from a link I recently received from a friend. The link itself was a slight 28 characters. The surveillance was 302 characters. Over 90% of the information in the URL was to surveil and track the users of the link. I've changed the specifics so this isn't a valid link, but here is what it looks like split onto multiple lines for readability.
 
-?utmsource=InstagramStories
-and utmmedium=adstory_smartly
-and utmcampaign=123456msp
+?utm_source=Instagram_Stories
+and utm_medium=ad_story_smartly
+and utm_campaign=123456_msp
 and ad_id=123456789012
 and utm_term=987654321098765
 and fbclid=PAAaZnG…5kyWFFJ
@@ -338,10 +338,6 @@ That's the end of Briefly.
 Now, the Signature section.
 
 "Weekly Thing #259 / Vision Pro, Tiny Awards, Mental Liquidity" is signed…
-
-Signed by thingelstad.eth: 0xfb32562a2324a2f0ba948454a40b779f1b15e24733bba858987f96743da40d97477672a763abe01fa6a14b7d866ef34238dcb5fb6ba36fd84bb295d8e8f7a2461c
-
-Signed by weeklything.eth: 0xc93d492837cda8752898f622971fcbd36d539a67050c35615f52fa58e9d6c07b0f946650e4dc83e081f310cebbff931e0646ac01ce8beba1ba2009cdc76c1af71b
 
 Fortune
 

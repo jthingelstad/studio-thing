@@ -385,10 +385,6 @@ Now, the Signature section.
 
 "Weekly Thing #253 / Domains, Anybox, Currl" is signed…
 
-Signed by thingelstad.eth: 0xca27df41f47e2a3e0ee0e9922deb055ffd50a58fe6128de84eb6f6428206f77753ab69dfe3e0a0569f963bc82980c4aff27276c0f1008e78ce1e9a9e8ec127ea1b
-
-Signed by weeklything.eth: 0x235cebdad2de3dd566df15feffa8a508843e3e2b49ef5c21947a00da1cb835717c6d8dc2cf5ced3524cf58da192dc10c051970b8487cc46f7e31b304847064ae1c
-
 Fortune
 
 You single-handedly fought your way into this hopeless mess.

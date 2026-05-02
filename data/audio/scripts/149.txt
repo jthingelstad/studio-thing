@@ -71,7 +71,7 @@ Quote.
 The Security Service of Ukraine (SBU) on Tuesday announced the detention of a hacker known as Sanix (a.k.a. "Sanixer") from the Ivano-Frankivsk region of the country. The SBU said they found on Sanix’s computer records showing he sold databases with "logins and passwords to e-mail boxes, PIN codes for bank cards, e-wallets of cryptocurrencies, PayPal accounts, and information about computers hacked for further use in botnets and for organizing distributed denial-of-service (DDoS) attacks."
 End quote.
 
-@georgemack: Tobi Lutke (@tobi) is the CEO of Shopify, he's one of my favorite CLEAR thinkers
+@george__mack: Tobi Lutke (@tobi) is the CEO of Shopify, he's one of my favorite CLEAR thinkers
 
 I greatly dislike Twitter threads. This is what a blog was made for. When you have something more meaningful to share, don't tweet it out in some linked list of blurps to connect together. Anyway, sometimes one is good enough that I'll detangle it with a thread reader and share.
 

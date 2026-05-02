@@ -277,10 +277,6 @@ Now, the Signature section.
 
 "Weekly Thing #255 / Lassie, Vore, Alby" is signed…
 
-Signed by thingelstad.eth: 0x5c69e9f0634739d357e38e805a240cce9167a166a5d59be2b4b2c024ba9a39b85b3a608b8a44d14d4acc6efc0841382dc86a27418fde5828af1b1e06aaa0239d1c
-
-Signed by weeklything.eth: 0x87ee6fa1f594db6debc360b526cf462e123aca82bb3a47efa23b24dabf7b245e75eacf4e2f28302f5a05bef06cad05bf8533285ce80a1399a48ec7c236f2d7ba1b
-
 Fortune
 
 Tomorrow, you can be anywhere.

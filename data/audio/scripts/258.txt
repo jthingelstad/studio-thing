@@ -398,10 +398,6 @@ Now, the Signature section.
 
 "Weekly Thing #258 / Vision, Strike, Reputation" is signed…
 
-Signed by thingelstad.eth: 0xec5eb3274f4f5eaf2283a4eb53978cbe15590f6790968ca7426a3a76b2cedd8e75696e02d1d602f2b3e0673047f954a034e10f2e6ab7c676660249fe9f68901a1c
-
-Signed by weeklything.eth: 0xce1cb39aa0f1a68f9db7c3e7a42b95c85600f56f12ed5a32ad95c8273ff929304f2e7f3c9b041381d07f3ebe10f8af7d2cb54081d4d98da2af832ea32c6e41601c
-
 Fortune
 
 There is a fly on your nose.

@@ -168,10 +168,6 @@ Now, the Signature section.
 
 "Weekly Thing #254 / Redis, Dooce, Batteries" is signed…
 
-Signed by thingelstad.eth: 0x135e1d88deee5e3d9371222776b3af507c4e28cf34ae6fb83b1b274722993d035cc06cc97164ac70d7f0ac41fc17a3c2c09dabde3e98e17f6f45d055d163bb841c
-
-Signed by weeklything.eth: 0xf51455e0f9bf349bd997fd79b9f6b399d7b146a1f275265c952d8e15da6f06ce5158cc4bc8a8f7396ff2f65257b2f8587e5d87c4367a010aa5ec377592547c8d1b
-
 Fortune
 
 It's all in the mind, ya know.

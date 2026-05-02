@@ -244,10 +244,6 @@ Now, the Signature section.
 
 "Weekly Thing #252 / Elevator, Evidence, Everything" is signed…
 
-Signed by thingelstad.eth: 0x120efb786f0ce52c82753e43aa010779e39791f39eb3dd360cf31175ed9e068b0f21b96e64c4920833f5e41f89858827471436dd4b2844881810ee3537a72aae1c
-
-Signed by weeklything.eth: 0x80d2fe51f4aee91d9c4f92eae5a30b484d618928735e61878cdcdb9d42ce5a8b47822f571c901f6e63c13885ff41c2a269677c86a901d0af704271eb1f5ffdd71c
-
 Fortune
 
 It was all so different before everything changed.

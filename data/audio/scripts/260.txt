@@ -282,10 +282,6 @@ Now, the Signature section.
 
 "Weekly Thing #260 / Rash, Hashing, Arguably" is signed…
 
-Signed by thingelstad.eth: 0x3a900307b4245a77b53b7a2f4bfc2126f71968fd9cb7e8c297e1ead0b418fbe84fa2f7f536669fc3a552ff518aa86b16bad6d9b442066f0f0afed783b0b81b331c
-
-Signed by weeklything.eth: 0x479817c090c61b58fe5943cdac67394b738c201de52e8b0f31cf45e20923df48284d04e594a38f66483d58ceaac0c5ff74ff6cec484c03c1729e7df90d4859891c
-
 Fortune
 
 You have a reputation for being thoroughly reliable and trustworthy.

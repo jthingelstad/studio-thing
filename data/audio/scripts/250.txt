@@ -107,7 +107,7 @@ Link five. "Running Python micro-benchmarks using the ChatGPT Code Interpreter a
 This is an incredible way to use ChatGPT. It requires some alpha plug-in access most people don't have.
 
 Quote.
-Here's the initial prompt I sent it: > In Python create an in-memory SQLite database with 100 tables each with 10 columns. > > Time how long it takes to execute PRAGMA schemaversion against that database 100 times. > > Then add another 100 tables and time PRAGMA schemaversion 100 times again. > > Now run the whole benchmark a second time, but instead of PRAGMA schemaversion time how long it takes to run hashlib.md5(db.execute("select groupconcat(sql) from sqlite_master").fetchall()[0]).hexdigest() instead
+Here's the initial prompt I sent it: > In Python create an in-memory SQLite database with 100 tables each with 10 columns. > > Time how long it takes to execute PRAGMA schema_version against that database 100 times. > > Then add another 100 tables and time PRAGMA schema_version 100 times again. > > Now run the whole benchmark a second time, but instead of PRAGMA schema_version time how long it takes to run hashlib.md5(db.execute("select group_concat(sql) from sqlite_master").fetchall()[0]).hexdigest() instead
 End quote.
 
 Okay, that is a wild set of requirements that would take a significant amount of time to write a testing harness for.

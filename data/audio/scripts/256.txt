@@ -427,10 +427,6 @@ Now, the Signature section.
 
 "Weekly Thing #2^8 / Bitcoin, Kagi, Brink" is signed…
 
-Signed by thingelstad.eth: 0xc6f607b7ab411615502eac61e4d4971178d1744a48c1cbcf77ceb5de35f871ec7311719bd33abc12c1969e2c4cbcb376b45297f27a24c31510d9c7d04ae3cb821b
-
-Signed by weeklything.eth: 0x22f01fd02dc2365fea5e0b838bb3a1043cb010c84d71bb08919542f77af7050d0ea48392a4bf299c014a5e66bef1ff83a9ae1a86aeaaac12fc85053d823923d81b
-
 Fortune
 
 Don't worry so loud, your roommate can't think.

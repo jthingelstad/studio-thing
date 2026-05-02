@@ -262,7 +262,7 @@ The JSON Feed file is great, but the content is in HTML and I need Markdown to g
 
 This one line of code just made me gleeful.
 
-md = pypandoc.converttext(i['contenthtml'], 'md', format='html')
+md = pypandoc.convert_text(i['content_html'], 'md', format='html')
 
 That's the end of Content is in HTML.
 

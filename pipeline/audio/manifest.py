@@ -13,6 +13,7 @@ AUDIO_DIR = REPO / "data" / "audio"
 MANIFEST_PATH = AUDIO_DIR / "manifest.json"
 SCRIPT_DIR = AUDIO_DIR / "scripts"
 SCRIPT_STATUS_PATH = AUDIO_DIR / "script_status.json"
+SCRIPT_REVIEW_PATH = AUDIO_DIR / "script_review.json"
 BUMPERS_DIR = AUDIO_DIR / "bumpers"
 BUMPERS_KEY = "_bumpers"
 BUMPER_NAMES = ("intro", "outro")
@@ -122,6 +123,31 @@ def write_script_status(data: dict[str, Any], path: Path = SCRIPT_STATUS_PATH) -
     payload = {
         "schema_version": data.get("schema_version", SCRIPT_STATUS_SCHEMA_VERSION),
         "validator_version": data.get("validator_version", ""),
+        "issues": ordered_issues,
+    }
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def read_script_review(path: Path = SCRIPT_REVIEW_PATH) -> dict[str, Any]:
+    if not path.exists():
+        return {"schema_version": SCRIPT_STATUS_SCHEMA_VERSION, "reviewer_version": "", "model": "", "issues": {}}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    issues = data.get("issues") or {}
+    data["issues"] = {str(key): value for key, value in issues.items()}
+    return data
+
+
+def write_script_review(data: dict[str, Any], path: Path = SCRIPT_REVIEW_PATH) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    issues = data.get("issues") or {}
+    ordered_issues = {
+        key: issues[key]
+        for key in sorted((str(key) for key in issues.keys()), key=issue_sort_key)
+    }
+    payload = {
+        "schema_version": data.get("schema_version", SCRIPT_STATUS_SCHEMA_VERSION),
+        "reviewer_version": data.get("reviewer_version", ""),
+        "model": data.get("model", ""),
         "issues": ordered_issues,
     }
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
