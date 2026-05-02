@@ -72,7 +72,7 @@ Current highest bidder is 5.25 WETH or just over 18,500 dollars. There is no exp
 
 Link five. "Let’s Encrypt serving Shopify’s 4.5 million domains - Let's Encrypt"
 
-Let's Encrypt has to be the single most important service brought to the open web in the last several years. We have an incredibly more secure web as a result. We simply could not have gotten HTTPS by default without it. I Let's Encrypt. Join me and donate to help keep the web secure.
+Let's Encrypt has to be the single most important service brought to the open web in the last several years. We have an incredibly more secure web as a result. We simply could not have gotten HTTPS by default without it. I love Let's Encrypt. Join me and donate to help keep the web secure.
 
 Link six. "How Endemic COVID Becomes a Manageable Risk - The Atlantic"
 

@@ -286,15 +286,15 @@ Link twenty. "Basecoat"
 
 It’s been a while since I've seen some new CSS frameworks hitting the open source world. This one is nice and clean. Good base for many projects.
 
-Link 21. "Sam and Jony introduce io | OpenAI"
+Link twenty one. "Sam and Jony introduce io | OpenAI"
 
 Big news from Ive and Altman. What a strange photo. Nothing for technologists yet, more a pitch for investors. We'll see what comes. Can the magic that Ive and Jobs had be replicated? I’m doubtful, things are more complex than they seem.
 
-Link 22. "Google I/O twenty twenty five: 100 things Google announced"
+Link twenty two. "Google I/O twenty twenty five: 100 things Google announced"
 
 So many things getting announced it is crazy fast even for the already crazy fast world of tech.
 
-Link 23. "Introducing Claude 4 Anthropic"
+Link twenty three. "Introducing Claude 4 Anthropic"
 
 New models from Anthropic and enhancements to Claude Code. Claude is my second most frequently used AI tools, behind ChatGPT and ahead of Gemini.
 

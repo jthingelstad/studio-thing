@@ -98,7 +98,7 @@ I've read some of these stories of spouses spying on their partner using their p
 
 Crontab.guru - The cron schedule expression editor
 
-I cron. The syntax is pretty simple, but some of the more complicated use cases can be confusing to understand. This tool makes it very easy to understand the more complicated configurations.
+I love cron. The syntax is pretty simple, but some of the more complicated use cases can be confusing to understand. This tool makes it very easy to understand the more complicated configurations.
 
 I helped build ByteDance's censorship machine - Protocol — The people, power and politics of tech
 

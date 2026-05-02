@@ -123,8 +123,6 @@ Internet Archive is a non-profit library of millions of free books, movies, soft
 - Watched Arthur Christmas again last night with the kids. That movie might get a spot on the annual Christmas movie list next to (but lower than) Elf.
 - Been getting errors on disk 3 in one of my Synology DS416 units. Swapped out the bad disk and started volume repair. Now seeing errors on disk 2 and failing volume repair. Uh oh. Luckily this data is all mirrored.
 
-Now, the The end section.
-
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 
 That brings us to the end of the Weekly Thing, issue 34. Thanks for listening, and I'll see you next time.

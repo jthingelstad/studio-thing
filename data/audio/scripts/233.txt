@@ -113,7 +113,7 @@ At the end the article connects this back to Bitcoin and asks the Bitcoin commun
 
 Link thirteen. "Use RSS for privacy and efficiency"
 
-Longtime readers of the Weekly Thing know that I RSS and Feedbin is my RSS reader of choice. It is a win for privacy, focus, attention, liberty, agency. I could go on and on. But using an RSS solution to connect you to other platforms works great.
+Longtime readers of the Weekly Thing know that I love RSS and Feedbin is my RSS reader of choice. It is a win for privacy, focus, attention, liberty, agency. I could go on and on. But using an RSS solution to connect you to other platforms works great.
 
 Quote.
 This might sound somewhat selfish but I have stopped subscribing/following anything/anyone online. When every interaction on a site is being tracked and used against you to sell your data, serve targeted ads, I don't think this is surprising. Instead I use my RSS feed reader. There is no need to log into YouTube and "subscribe" to channels to view new uploads from my favorite channels or "join" subreddits to keep up with top posts on Reddit, or "follow" an account on Twitter. These are things that can be managed with a good feed reader.

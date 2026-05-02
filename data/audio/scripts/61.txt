@@ -151,11 +151,11 @@ Link twenty. "How my role as CTO has changed as we've grown to 100 engineers"
 
 One persons path from sole-developer (aka CTO) in a startup to leading a larger team and managing that transition. I can relate to much of this myself.
 
-Link 21. "Maskmail"
+Link twenty one. "Maskmail"
 
 I've advocated for strong password management for years, and it’s critical for security. But for privacy one of the key things to do is not use the same email address on every service. There are many anonymous email address services, but frankly most of them are highly suspect and I don't know their revenue strategy. Maskmail looks very legitimate and I like that they have a straight-forward subscription offering. I've started using it and it’s fast, well-designed and just works. 10 dollars/year is cheap.
 
-Link 22. "A Reuters Visual Guide: Blockchain explained"
+Link twenty two. "A Reuters Visual Guide: Blockchain explained"
 
 A very well done overview of blockchain technology covering all of the primary concepts of blockchain. This is one of the best of these I've seen.
 
@@ -214,7 +214,7 @@ Keeping an eye on the Big Green Egg and brisket using the iGrill 2.
 
 Tuesday @ 9:26 PM
 
-“Full packer” beef brisket on the Big Green Egg for the night! Time for a good smoke and see where things are in the morning! ⏲
+“Full packer” beef brisket on the Big Green Egg for the night! Time for a good smoke and see where things are in the morning!
 
 Monday @ 9:56 PM
 

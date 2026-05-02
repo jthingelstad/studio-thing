@@ -26,7 +26,7 @@ Austin Mann writes about cameras as a working photographer does, not megapixels,
 
 Link four. "watchOS 4: The MacStories Review"
 
-Very thorough overview of all of the improvements in watchOS 4. Take for a read if you have an Apple Watch since some of the improvements are subtle and sometimes hard to discover on the very small screen. ⌚
+Very thorough overview of all of the improvements in watchOS 4. Take for a read if you have an Apple Watch since some of the improvements are subtle and sometimes hard to discover on the very small screen.
 
 Link five. "iPhone 8 Is World's Fastest Phone (It's Not Even Close)"
 
@@ -96,53 +96,51 @@ Link twenty. "Use OmniFocus with Drag and Drop and Siri on iOS 11 —Learn OmniF
 
 Nice, quick primer to using the new drag and drop feature in iOS 11 inside of OmniFocus. Many of the use cases that are highlighted for drag and drop are between applications but this shows how powerful these features are inside one application.
 
-Link 21. "The iPhones 8 —Daring Fireball"
+Link twenty one. "The iPhones 8 —Daring Fireball"
 
 Quote.
 These are solid year-over-year updates — at least as impressive as the iPhone 7 was over the iPhone 6S. If they hadn’t debuted alongside the iPhone X we’d be arguing about whether these are the most impressive new iPhone models since the iPhone 6.
 End quote.
 
-Link 22. "Here are 11 quick tips for using iOS 11 —The Sweet Setup"
+Link twenty two. "Here are 11 quick tips for using iOS 11 —The Sweet Setup"
 
 Good list of features in iOS 11. Take a read and see some of the things that you may not know about.
 
-Link 23. "watchOS 4 now available for download —Apple World Today"
+Link twenty three. "watchOS 4 now available for download —Apple World Today"
 
-I switched to the Siri face immediately after updating to watchOS 4. ⌚ I’m curious to see how it does anticipating what information I will need throughout the day.
+I switched to the Siri face immediately after updating to watchOS 4. I’m curious to see how it does anticipating what information I will need throughout the day.
 
-Link 24. "tvOS 11 rolls out with AirPlay 2 support —Apple World Today"
+Link twenty four. "tvOS 11 rolls out with AirPlay 2 support —Apple World Today"
 
 Multi speaker support in AirPlay 2 is a big deal. I have 5 AirPort destinations and only iTunes on my Mac can send to multiple.
 
-Link 25. "iOS 11: The MacStories Review – MacStories"
+Link twenty five. "iOS 11: The MacStories Review – MacStories"
 
 The monster iOS 11 review from MacStories!
 
-Link 26. "AUTOMATICA - Nigel Stanford"
+Link twenty six. "AUTOMATICA - Nigel Stanford"
 
 Programming robot control arms to play music! It’s a good song too. Nigel Stanford spent a month programming these robots to play this. Hat tip to my friend Dennys for this link.
 
-Link 27. "Second-Hand Misogyny – Transposit"
+Link twenty seven. "Second-Hand Misogyny – Transposit"
 
 This article from a male co-founder reflecting on how his female co-founder was dismissed and not recognized by people they met with is illuminating. This stuff happens all the time in tech and I found this an illuminating article.
 
-Link 28. "An open letter to the W3C Director, CEO, team and membership | Electronic Frontier Foundation"
+Link twenty eight. "An open letter to the W3C Director, CEO, team and membership | Electronic Frontier Foundation"
 
 I linked to this W3C DRM decision and now we see the EFF reaction to endorse "Encrypted Media Extensions", to make DRM possible, on the web. You have to search long and hard to find an independent technologist who believes that DRM is possible, let alone a good idea. Yet, somewhere along the way, the business values of those outside the web got important enough, and the values of technologists who built it got disposable enough, that even the wise elders who make our standards voted for something they know to be a fool's errand. I’m not sure what I think about leaving the W3C to protest this but I do believe the EFF is on the right side of this position. Check out Gruber's comments on the same article.
 
-Link 29. "Netlify: All-in-one platform for automating modern web projects."
+Link twenty nine. "Netlify: All-in-one platform for automating modern web projects."
 
 Impressive platform for hosting static web projects. Some interesting hooks for things like Identity and Form handling as well which can be very tricky in a static site.
 
-Link 30. "Migrating from Jekyll+Github Pages to Hugo+Netlify"
+Link thirty. "Migrating from Jekyll+Github Pages to Hugo+Netlify"
 
 I looked into Hugo a while back and was very impressed, but Github Pages native support for Jekyll keeps things really simple. This post highlights an interesting path to make a transition and introduced me to the very impressive Netlify service. I will very likely be moving Link Thing to Hugo for performance reasons alone.
 
 That's the end of Links.
 
 Now, the Promotion section.
-
-[](
 
 The Electronic Frontier Foundation is the leading nonprofit organization defending civil liberties in the digital world. I have been a member of the EFF for years. Not only is the EFF working hard to protect you on the Internet they have also recently launched solutions like Privacy Badger and the critically important Let's Encrypt service to make encrypting web servers free to anyone. Support the EFF with a donation!
 
@@ -172,8 +170,6 @@ Now, the Microblog updates section.
 - Moved two small static sites to Netlify and am very impressed. Powerful and easy. Plus opens Hugo as an option.
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

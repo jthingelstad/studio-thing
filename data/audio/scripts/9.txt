@@ -94,27 +94,27 @@ Link twenty. "Facebook, for the first time, acknowledges election manipulation -
 
 This seems so obvious. And to be clear, this isn't partisan as influence was peddled in all ways. Facebook was designed, and generates tremendous revenue, by selling you advertisements. It dresses up as a place for friends and a commons for people to connect and have dialog. That's all a side-show to sell you. You are their product. So, should it be remotely surprising that they can also sell political ideas? We now have 2 billion people on a platform whose purpose is to influence their thinking. Seems dangerous. Happy to not be a Facebook user.
 
-Link 21. "Facebook can track your browsing even after you've logged out, judge says | Technology | The Guardian"
+Link twenty one. "Facebook can track your browsing even after you've logged out, judge says | Technology | The Guardian"
 
 Assume Facebook knows every website you ever go to and has a massive profile of you. Facebook knows more about you than any other organization in the world. If you don't want that you have to use tools to block it. Little Snitch can be used to make sure your computer isn't allowed to make network connections to Facebook. I also use 1Blocker with a custom rule that stops my web browser from talking to any Facebook domains.
 
-Link 22. "Little Snitch 4"
+Link twenty two. "Little Snitch 4"
 
 Little Snitch upgraded to 4.0. This is one of the utilities that I should use but have never dove in. It allows for complete control at the network layer of what apps are doing. If you are very focused on privacy (which I am!) you should be running Little Snitch.
 
-Link 23. "ongoing by Tim Bray · Bye, Rune"
+Link twenty three. "ongoing by Tim Bray · Bye, Rune"
 
 A very nice and thoughtful write up from Tim Bray on his cat Rune that recently passed away.
 
-Link 24. "71% of Americans use emojis, stickers, GIFs when texting or using mobile apps —Apple World Today"
+Link twenty four. "71% of Americans use emojis, stickers, GIFs when texting or using mobile apps —Apple World Today"
 
 Need to keep this link for those times Tammy gives me an eye roll for emoji or sticker use.
 
-Link 25. "Stop waiting for perfection and learn from your mistakes - All Things Distributed"
+Link twenty five. "Stop waiting for perfection and learn from your mistakes - All Things Distributed"
 
 Great article and I wholly endorse the push to design for failure. The problem isn't failure, it's allowing failure to cascade to something bigger. Well designed systems can and should absorb small and even large failure conditions. I'd love to see technology teams and even Universities adopting this thinking even more.
 
-Link 26. "Women in Tech Speak Frankly on Culture of Harassment - NYTimes.com"
+Link twenty six. "Women in Tech Speak Frankly on Culture of Harassment - NYTimes.com"
 
 The tech industry has a problem with gender diversity. Certainly that problem extends well beyond startups, but I think it is reasonable to believe that the patterns and examples set by VC's impact how startups (particularly in the Valley) behave.
 
@@ -133,8 +133,6 @@ My Book Club picked this for our next meeting and I’m very interested to learn
 That's the end of Now Reading.
 
 Now, the Promotion section.
-
-[](
 
 Creative Commons helps you legally share your knowledge and creativity to build a more equitable, accessible, and innovative world — unlocking the full potential of the internet to drive a new era of development, growth, and productivity. I have been a supporter of Creative Commons for years. Larry Lessig, the founder of Creative Commons, has done the world a great thing by creating a legal structure to help authors and creators encourage remix culture. In addition to donating, you should consider making your content under a Creative Commons license. Donate to Creative Commons today!
 
@@ -176,8 +174,6 @@ Now, the Microblog updates section.
 - Self-service toll booths on I-90 by Chicago are terribly slow. Bring the people back!
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

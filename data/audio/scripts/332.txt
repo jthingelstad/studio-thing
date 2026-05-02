@@ -118,7 +118,7 @@ Now, the Journal section.
 
 Journal entry one.
 
-Making more candles for the Things 4 Good Candle Fundraiser for next week! I got the labels a little faster so we can put those on before pouring making it a bit more efficient. ⏱
+Making more candles for the Things 4 Good Candle Fundraiser for next week! I got the labels a little faster so we can put those on before pouring making it a bit more efficient.
 
 Journal entry two. Bill and Ted's Excellent Adventure
 
@@ -269,11 +269,11 @@ Link twenty. "Cryptography 101 with Alfred Menezes – Video lectures, notes, an
 
 An incredible array of learning materials for cryptography.
 
-Link 21. "Apple rolls out Digital ID in Apple Wallet for U.S. passport holders – Six Colors"
+Link twenty one. "Apple rolls out Digital ID in Apple Wallet for U.S. passport holders – Six Colors"
 
 I was bummed to see Minnesota is not one of the states that you can import your drivers license for. However I’m excited to see I can add my passport.
 
-Link 22. "How ENS Is Approaching ICANN's gTLD Expansion Program | ENS Blog"
+Link twenty two. "How ENS Is Approaching ICANN's gTLD Expansion Program | ENS Blog"
 
 The fact that Ethereum Name Service has a clear plain to work alongside, instead of in opposition to, the traditional Domain Name Service is one of the things that excited me the most about it. Web3 needs to integrate into the web.
 

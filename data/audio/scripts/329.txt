@@ -202,17 +202,17 @@ Journal entry twenty.
 
 At the Minnesota Card Show Pokémon event today with Tyler and saw the most expensive thing we’ve ever seen at a card show -- 100,000 dollars for the sealed Pokémon Base Set Shadowless Booster Box.
 
-Journal entry 21. Plausible Analytics Plug-in for Micro.blog
+Journal entry twenty one. Plausible Analytics Plug-in for Micro.blog
 
 I’ve been using Plausible Analytics for over a year and have been using the Plausible Analytics Plug-in created by @lukas to add it to my blog. It hasn’t been updated for a long time and the embed code, while still working, is very outdated. I finally decided to take a few minutes to fork that plug-in and create my own Plausible Analtyics 2 for micro.blog.
 
 It now uses the current code snippet and also sports a Plausible icon as well. Plus, I now have a plug-in in the directory. If you use Plausible Analytics on micro.blog I would definitely suggest switching.
 
-Journal entry 22.
+Journal entry twenty two.
 
 Recording in triplicate.
 
-Journal entry 23.
+Journal entry twenty three.
 
 Tammy and I saw Mumford and Sons for the second time tonight and for the second time they were incredible live. We like their music but there is something about the energy they bring on stage that is so powerful. The setlist was great. I loved the aesthetic and how they had it all setup.
 

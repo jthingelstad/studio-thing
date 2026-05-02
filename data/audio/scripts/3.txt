@@ -113,7 +113,7 @@ My biggest issue with Bear was lack of support for sketching. May have to dive b
 Link seventeen. "The largest Git repo on the planet | Brian Harry's blog"
 
 Quote.
-It’s been 3 months since I first wrote about our efforts to scale Git to extremely large projects and teams with an effort we called “Git Virtual File System”. As a reminder, GVFS, together with a set of enhancements to Git, enables Git to scale to VERY large repos by virtualizing both the.git folder and the working directory.
+It’s been 3 months since I first wrote about our efforts to scale Git to extremely large projects and teams with an effort we called “Git Virtual File System”. As a reminder, GVFS, together with a set of enhancements to Git, enables Git to scale to VERY large repos by virtualizing both the .git folder and the working directory.
 End quote.
 
 Link eighteen. "First week of JSON Feed | Manton Reece"
@@ -128,73 +128,73 @@ So much truth to this image.
 
 Link twenty. "Stack Overflow: Helping One Million Developers Exit Vim - Stack Overflow Blog"
 
-In the last year, How to exit the Vim editor has made up about.005% of question traffic: that is, one out of every 20,000 visits to Stack Overflow questions. That means during peak traffic hours on weekdays, there are about 80 people per hour that need help getting out of Vim.
+In the last year, How to exit the Vim editor has made up about .005% of question traffic: that is, one out of every 20,000 visits to Stack Overflow questions. That means during peak traffic hours on weekdays, there are about 80 people per hour that need help getting out of Vim.
 
-Link 21. "5 Good Summer Reads | Bill Gates"
+Link twenty one. "5 Good Summer Reads | Bill Gates"
 
 Quote.
 Summer is a great time to escape: to the beach, to the mountains, or to the world of a great book. This year, I found myself drawn even more than usual to books that took me outside (and I don’t mean the great outdoors).
 End quote.
 
-Link 22. "In The Shop: The Marc Newson Hourglass For HODINKEE"
+Link twenty two. "In The Shop: The Marc Newson Hourglass For HODINKEE"
 
 Quote.
 This limited edition timekeeper sits at the nexus of art, design, and engineering. Sometimes you see an object and it just captivates you. You can't look away.
 End quote.
 
-Link 23. "How AWS Cloud is demolishing the cult of youth – James Governor's Monkchips"
+Link twenty three. "How AWS Cloud is demolishing the cult of youth – James Governor's Monkchips"
 
 Quote.
 We live in a society obsessed with youth. Tech is no different from the wider culture. Startup culture in particular thrives on the idea that you’re past it by the time you’re 30.
 End quote.
 
-Link 24. "1Password Adds ‘Travel Mode’ Feature for Added Security While Traveling – MacStories"
+Link twenty four. "1Password Adds ‘Travel Mode’ Feature for Added Security While Traveling – MacStories"
 
 Quote.
 AgileBits has announced a new 1Password feature launching today that travelers will appreciate. Rick Fillion shares the details: Travel Mode is a new feature we’re making available to everyone with a 1Password membership.
 End quote.
 
-Link 25. "How Anker is beating Apple and Samsung at their own accessory game - The Verge"
+Link twenty five. "How Anker is beating Apple and Samsung at their own accessory game - The Verge"
 
 Anker is the company I prefer to buy my USB and battery related accessories from. Interesting to read the background on the company.
 
-Link 26. "Supreme Court limits locations of patent lawsuits - The Washington Post"
+Link twenty six. "Supreme Court limits locations of patent lawsuits - The Washington Post"
 
 This is a good thing. Patent trolls plague the tech industry and this should remove some of the gaming. There is still a long way to go on patent reform though. This line caught my eye though. That has resulted in nearly half of the lawsuits being filed in the Eastern District of Texas in Marshall, where cases move quickly and the court is seen as sympathetic to plaintiffs. That by itself should be enough to validate that we need some significant focus on improving patent litigation.
 
-Link 27. "Software Engineering Professionals (SEP) Acquires Visual Story Mapping Software, CardBoard | Business Wire"
+Link twenty seven. "Software Engineering Professionals (SEP) Acquires Visual Story Mapping Software, CardBoard | Business Wire"
 
 Congratulations to my friend David Hussman on this! Will be fun to see what they do with CardBoard!
 
-Link 28. "Feedbin Supports JSON Feed! —Feedbin"
+Link twenty eight. "Feedbin Supports JSON Feed! —Feedbin"
 
 I’m a Feedbin subscriber and was happy to see them jump quickly on the JSON Feed bandwagon!
 
-Link 29. "Star Tribune 50: The twenty sixth Annual Report"
+Link twenty nine. "Star Tribune 50: The twenty sixth Annual Report"
 
 The Star Tribune 50 is a measure of the largest publicly held companies with headquarters in Minnesota ranked by revenue.
 
-Link 30. "Every Color Of Cardigan Mister Rogers Wore From 1979–two thousand one"
+Link thirty. "Every Color Of Cardigan Mister Rogers Wore From 1979–two thousand one"
 
-This is the kind of project that makes me the Internet.
+This is the kind of project that makes me love the Internet.
 
-Link 31. "The Andon cord and ITSM’s DevOps challenge – Jon Hall – Medium"
+Link thirty one. "The Andon cord and ITSM’s DevOps challenge – Jon Hall – Medium"
 
 This is Andon, automated: nothing gets to production if anything is going to break production.
 
-Link 32. "Salesforce, already committed to hiring 800 in Indianapolis, plans to add 500 apprentices"
+Link thirty two. "Salesforce, already committed to hiring 800 in Indianapolis, plans to add 500 apprentices"
 
 Quote.
 Salesforce is expanding its hiring plans in Indiana beyond the 800 staff positions it has committed to adding in the coming years. The San Francisco-based cloud company wants to add 500 apprentices by twenty twenty.
 End quote.
 
-Link 33. "My social media fast"
+Link thirty three. "My social media fast"
 
 Quote.
 Last week (approx. May 7-14), I stopped using social media for an entire week. I logged out of all the sites and deleted the apps from my phone.
 End quote.
 
-Link 34. "iOS 11: iPad Wishes and Concept Video – MacStories"
+Link thirty four. "iOS 11: iPad Wishes and Concept Video – MacStories"
 
 Quote.
 Once heralded as a promising sign of Apple's renewed commitment to the iPad, iOS 9 has begun to feel like a one-hit wonder. iOS 9 represented a profound change for Apple's approach to the iPad. After years of stagnation and uninspired imitation of iPhone interface paradigms, iOS 9 allowed the iPad to explore the true potential of its large canvas; for the first time since the original tablet, Apple was creating new iPad-only features rather than adapting them from the iPhone.
@@ -203,8 +203,6 @@ End quote.
 That's the end of Links.
 
 Now, the Promotion section.
-
-[](
 
 Creative Commons helps you legally share your knowledge and creativity to build a more equitable, accessible, and innovative world — unlocking the full potential of the internet to drive a new era of development, growth, and productivity. I have been a supporter of Creative Commons for years. Larry Lessig, the founder of Creative Commons, has done the world a great thing by creating a legal structure to help authors and creators encourage remix culture. In addition to donating, you should consider making your content under a Creative Commons license. Donate to Creative Commons today!
 
@@ -229,8 +227,6 @@ Now, the Microblog updates section.
 - Fabulous spin class this morning. High intensity, felt good.
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank your or subscribing. If you know of people that would like the Weekly Thing please forward it to them and spread the word!
 

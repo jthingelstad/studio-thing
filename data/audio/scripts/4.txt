@@ -126,29 +126,29 @@ Quote.
 What is time blocking? Time blocking is the act of scheduling sessions of work on a calendar. By deliberately assigning work time on a calendar, we automatically acknowledge the immutable resource of time.
 End quote.
 
-Link 21. "Linea + iCloud: Your Sketches, Everywhere You Need Them • The Breakroom"
+Link twenty one. "Linea + iCloud: Your Sketches, Everywhere You Need Them • The Breakroom"
 
 Nice improvements in a very solid drawing app for the iPad Pro.
 
-Link 22. "Blockchains from the ground up: Part 1 - John Mathews"
+Link twenty two. "Blockchains from the ground up: Part 1 - John Mathews"
 
 Quote.
 Using a scenario that begins with the exchange of apples for oranges, understand the essential concepts and advantages of blockchains. This is part 1 of an introduction to the key features of a generalised blockchain.
 End quote.
 
-Link 23. "Yoink"
+Link twenty three. "Yoink"
 
 Quote.
 Simplify and Improve Drag and Drop on your Mac and speed up your daily workflow.
 End quote.
 
-Link 24. "WhereGoes?"
+Link twenty four. "WhereGoes?"
 
 Quote.
 WhereGoes does 1 thing: it takes a URL and shows you the entire path of redirects and meta-refreshes that leads to the final destination. It's a unique utility that lets you troubleshoot links and perform competitive intelligence in a way that wasn't possible before.
 End quote.
 
-Link 25. "Platform Tech Strategy: The Three Layers | ThoughtWorks"
+Link twenty five. "Platform Tech Strategy: The Three Layers | ThoughtWorks"
 
 Quote.
 It feels like everyone is talking about platforms. Platform Thinking, Platform Strategies even the Platform Revolution. Platforms, it is argued, are the disruptive secret upon which a digital business is formed.
@@ -157,8 +157,6 @@ End quote.
 That's the end of Links.
 
 Now, the Promotion section.
-
-[](
 
 Minnestar is the technology community for Minnesota. If you are passionate about technology you need to go to Minnebar and Minnedemo. Did you know that Minnebar is the largest BarCamp in North America and one of the largest in the world? It’s also been going on for over 10 years? Minnedemo is the best place to hear about innovative tech and fun projects in the Twin Cities area. I am on the Minnestar board and I focus on Minnestar as one of the driving forces improving and expanding the technology community in the area. Minnestar is a 501c3 non-profit. Become a Community Supporter today!
 
@@ -181,8 +179,6 @@ Now, the Microblog updates section.
 - Ringer! #horseshoes
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank your or subscribing. If you know of people that would like the Weekly Thing please forward it to them and spread the word! The archive is also available to see this and all past issues.
 

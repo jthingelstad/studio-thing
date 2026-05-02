@@ -17,7 +17,7 @@ End quote.
 That is great progress for something that only started in February twenty nineteen. Also, I love how you can use POAP tokens along with other concepts like DAOs.
 
 Quote.
-For example, a DAO could decide to weigh votes on treasury spending proposals with more power going to wallets that hold multiple DAO poaps (Poaps for contributing to the codebase, attending IRL community events, being active in town hall calls,.etc.) instead of weighting voting power according to who holds the most DAO tokens. Poap already has native integrations with Snapshot for DAO governance.
+For example, a DAO could decide to weigh votes on treasury spending proposals with more power going to wallets that hold multiple DAO poaps (Poaps for contributing to the codebase, attending IRL community events, being active in town hall calls, .etc.) instead of weighting voting power according to who holds the most DAO tokens. Poap already has native integrations with Snapshot for DAO governance.
 End quote.
 
 I subscribed to NiftyTable, it seems like a good way to stay in the flow of NFT activity. If you want even more check out the Proof podcast.
@@ -156,7 +156,7 @@ Schools are open and kids are heading off for first days. It is a good thing for
 
 Link seventeen. "Full DNS Namespace Integration to ENS Now on Mainnet by Brantly Millegan | The Ethereum Name Service | Medium"
 
-I've been playing with a number of Web3 applications and using a name for your Ethereum wallet makes everything much easier to use. I registered thingelstad.eth and a handful of other names on ENS. I also registered thingelstad.xyz, which is a DNS name but registered on ENS as well. This announcement extends the trust model that ENS built for.xyz and extends it to other DNS top-level domains. The DNSSEC requirements in the step-by-step guide are a little challenging, but only because many DNS providers doin't support the specific requirements. The comparison to ENS registration is a very good read because there are still good reasons to use.eth as well. DNS is centrally controlled, and if some entity could make up a reason to remove my rights to thingelstad.com they could. However, that isn't possible with thingelstad.eth, which is owned in my wallet and is an asset (technically it is an NFT!).
+I've been playing with a number of Web3 applications and using a name for your Ethereum wallet makes everything much easier to use. I registered thingelstad.eth and a handful of other names on ENS. I also registered thingelstad.xyz, which is a DNS name but registered on ENS as well. This announcement extends the trust model that ENS built for .xyz and extends it to other DNS top-level domains. The DNSSEC requirements in the step-by-step guide are a little challenging, but only because many DNS providers doin't support the specific requirements. The comparison to ENS registration is a very good read because there are still good reasons to use .eth as well. DNS is centrally controlled, and if some entity could make up a reason to remove my rights to thingelstad.com they could. However, that isn't possible with thingelstad.eth, which is owned in my wallet and is an asset (technically it is an NFT!).
 
 This is a good step towards merging web3 concepts into the existing web. DNS and ENS collaborating, and then getting better wallet integration in browsers, creates a pretty amazing on-ramp for crypto powered capabilities.
 

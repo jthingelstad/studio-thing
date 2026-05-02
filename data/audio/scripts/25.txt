@@ -95,7 +95,7 @@ Link twenty. "Low-risk Monolith to Microservice Evolution Part I – Software Bl
 
 Excellent writeup on approaching a large-scale monolithic application and beginning to decompose it. I've seen these approaches used first-hand and they work. However, it takes a lot of time. The time probably goes up more than linear as size of the monolith goes up. Check out part 2 of the article as well.
 
-Link 21. "Feedbin as a Multi-Device Reader"
+Link twenty one. "Feedbin as a Multi-Device Reader"
 
 I've been a Feedbin user for years now and highly recommend them. One of the best 30 dollars a year I spend. If you have never experienced using a feed reader I would highly recommend giving it a try. This post doesn't highlight it but I also liked that Feedbin added JSON Feed support right away.
 
@@ -111,9 +111,7 @@ Now, the Featured App section.
 
 FROST
 
-That's the end of Featured App.
-
-Now, the by kunabi brother GmbH section.
+by kunabi brother GmbH
 
 Draw paths to guide the flocking spirits to their home planets. Watch countless beautiful creatures emerge from light, bring balance to a world in constant motion, and unravel its mysteries.
 
@@ -121,7 +119,7 @@ I don't do a lot of games but I do enjoy some of these "zen" like games on iOS. 
 
 4 dollars and 99 cents 5/5 stars
 
-That's the end of by kunabi brother GmbH.
+That's the end of Featured App.
 
 Now, the Microblog updates section.
 
@@ -136,8 +134,6 @@ Now, the Microblog updates section.
 - Campfire donuts, but on a grill.
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

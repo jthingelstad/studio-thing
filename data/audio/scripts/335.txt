@@ -54,7 +54,7 @@ New product from 37 Signals — a super simple and straightforward Kanban servic
 
 Link five. "Dotprompt: Executable GenAI Prompt Templates"
 
-A pretty cool idea to have a simple text file with YAML front matter and embedded prompts that you can then run as a Unix executable. This is a pretty cool idea and very extensible. It reminds me a bit of what I've done with Shortcuts and "Use Model" but incredibly more extensible. You can then pair this with something like runprompt which as a Python program that will run your.prompt files for you.
+A pretty cool idea to have a simple text file with YAML front matter and embedded prompts that you can then run as a Unix executable. This is a pretty cool idea and very extensible. It reminds me a bit of what I've done with Shortcuts and "Use Model" but incredibly more extensible. You can then pair this with something like runprompt which as a Python program that will run your .prompt files for you.
 
 Link six. "Shai Hulud 2.0 Strikes Again: Malware Supply-Chain Attack Hits Zapier and ENS Domains"
 

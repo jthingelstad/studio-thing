@@ -181,13 +181,21 @@ SIGNED_BY_RE = re.compile(
 )
 
 
+_HEART_EMOJI_RE = re.compile(r"[❤♥\U0001F49B\U0001F49A\U0001F499\U0001F49C\U0001F5A4\U0001F90D\U0001F90E\U0001F9E1]️?")
+
+
 def strip_emoji(text: str) -> str:
+    # Heart emoji is used as the verb "love" in many micro-posts ("I ❤️ X").
+    # Stripping it leaves a sentence fragment, so substitute the word.
+    text = _HEART_EMOJI_RE.sub(" love ", text)
     return "".join(
         char
         for char in text
         if not (
             0x1F000 <= ord(char) <= 0x1FAFF
+            or 0x2300 <= ord(char) <= 0x24FF  # misc technical (⌚, ⌛, etc.) + enclosed alphanumerics
             or 0x2600 <= ord(char) <= 0x27BF
+            or 0x2B00 <= ord(char) <= 0x2BFF  # misc symbols and arrows
             or ord(char) == 0xFE0F  # variation selector
             or ord(char) == 0x200D  # zero-width joiner (used in compound emoji)
             or ord(char) == 0x2060  # word joiner
@@ -212,6 +220,9 @@ def clean_inline(text: str) -> str:
     text = BARE_URL_RE.sub("", text)
     text = text.replace("\\|", "|")
     text = text.replace("\\", "")
+    # Inline `>` blockquote markers that didn't make it onto their own line in
+    # the source — strip when they sit between sentences.
+    text = re.sub(r"([.!?])\s+>\s+", r"\1 ", text)
     # Strip inline emoji — TTS would otherwise speak the unicode names
     # ("smiling face with smiling eyes"), which is jarring in prose.
     text = strip_emoji(text)
@@ -233,7 +244,11 @@ def normalize_text(text: str) -> str:
     )
     text = re.sub(r"\b(20[0-2]\d)\b", lambda m: YEAR_WORDS.get(int(m.group(1)), m.group(1)), text)
     text = re.sub(r"[ \t]+", " ", text)
-    text = re.sub(r" *([,.;:!?])", r"\1", text)
+    # Collapse a leading space before punctuation only when the punctuation is
+    # actually terminal (followed by whitespace/punctuation/EOL). This keeps
+    # leading-dot tokens like ".feedback", ".net", ".com" from being merged
+    # with the previous word ("The .feedback scam" stays intact).
+    text = re.sub(r" +([,.;:!?])(?=[\s\W]|$)", r"\1", text)
     return text.strip()
 
 
@@ -353,6 +368,10 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
     body = FENCED_CODE_RE.sub("", body)
     body = _strip_cover_blocks(body)
     body = IMAGE_RE.sub("", body)
+    # Stripping an image inside a link (`[![alt](src)](url)`) leaves the empty
+    # link `[](url)` behind. Same pattern shows up when an issue has a logo
+    # wrapped in a link. Drop those entirely.
+    body = re.sub(r"\[\s*\]\([^)\n]*\)", "", body)
     # Strip remaining standalone horizontal rules so TTS doesn't read "dash
     # dash dash". Cover blocks above are already removed.
     body = re.sub(r"^[ \t]*-{3,}[ \t]*$", "", body, flags=re.MULTILINE)
@@ -396,6 +415,24 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
         h2 = re.match(r"^##\s+(.+)$", line)
         if h2:
             new_section = heading_text(h2.group(1))
+            # Sign-off H2s like "## The end 🎬" — the audio script's own
+            # closing line takes their place.
+            if new_section.lower().strip() in {"the end", "end", "fin"}:
+                if current_section_label:
+                    output.extend(["", f"That's the end of {current_section_label}.", ""])
+                current_section = None
+                current_section_label = None
+                link_index = 0
+                skip_next_date = False
+                continue
+            # Subtitle/byline disguised as H2 (e.g. "## by kunabi brother GmbH"
+            # under a Featured App in early MailChimp issues). Don't open or
+            # close a section — let it fall through as a plain text line.
+            if re.match(r"^by\s+", new_section, re.IGNORECASE):
+                cleaned_text = clean_inline(h2.group(1))
+                if cleaned_text:
+                    output.extend([cleaned_text, ""])
+                continue
             new_label = heading_label(h2.group(1))
             if current_section_label:
                 output.extend(["", f"That's the end of {current_section_label}.", ""])
@@ -512,8 +549,19 @@ _NUMBER_WORDS = [
     "seventeen", "eighteen", "nineteen", "twenty",
 ]
 
+_TENS_WORDS = {
+    20: "twenty", 30: "thirty", 40: "forty", 50: "fifty",
+    60: "sixty", 70: "seventy", 80: "eighty", 90: "ninety",
+}
+
 
 def _number_word(n: int) -> str:
     if 0 <= n < len(_NUMBER_WORDS):
         return _NUMBER_WORDS[n]
+    if 21 <= n <= 99:
+        tens = (n // 10) * 10
+        ones = n % 10
+        if ones == 0:
+            return _TENS_WORDS[tens]
+        return f"{_TENS_WORDS[tens]} {_NUMBER_WORDS[ones]}"
     return str(n)

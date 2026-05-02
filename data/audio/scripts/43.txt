@@ -86,7 +86,7 @@ That's the end of Business.
 
 Now, the Programming section.
 
-Forde's Tenth Rule, or, "How I Learned to Stop Worrying and the State Machine"
+Forde's Tenth Rule, or, "How I Learned to Stop Worrying and love the State Machine"
 raganwald.com
 
 Good introduction to state machines and how they are used in programming to deal with complexity. If you are around programmers and have heard state machines referenced this is a good introduction to the concepts and benefits.

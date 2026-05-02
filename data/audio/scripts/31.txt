@@ -69,7 +69,7 @@ With the launch this week of Apple Pay Cash this is a nice overview of how to se
 
 Link eleven. "Google's AlphaZero Destroys Stockfish In 100-Game Match - Chess.com"
 
-It’s absolutely stunning that AlphaZero did this well so quickly. > Oh, and it took AlphaZero only four hours to "learn" chess. Sorry humans, you had a good run. This is another case where the algorithm just learned by playing.
+It’s absolutely stunning that AlphaZero did this well so quickly. Oh, and it took AlphaZero only four hours to "learn" chess. Sorry humans, you had a good run. This is another case where the algorithm just learned by playing.
 
 Link twelve. "iPhone X Camera Review - A Week in Italy — Nanda Kusumadi"
 
@@ -107,7 +107,7 @@ Link twenty. "Oura Ring | Sleep Tracker and Smart Ring with a Heart Rate Monitor
 
 Some interesting and cool tech. Many (most?) people wear rings all the time. This seems like the simplest, least intrusive option there could be to passively collect biometric data on a person. It’s interesting that they are first focusing on sleep.
 
-Link 21. "Is the economy suffering from the crisis of attention? | Bank Underground"
+Link twenty one. "Is the economy suffering from the crisis of attention? | Bank Underground"
 
 Interesting article theorizing on a possible connection between economic growth and the rise of mobile and social technology. The suggestion is that one of two things is happening: time on social is taking away from productive time or time on social is yielding a distracted population that is less productive. I would suggest both are likely true. Cal Newport gave a thoughtful summary of this article as well.
 
@@ -151,8 +151,6 @@ Now, the Microblog updates section.
 - First trip to Lucky Oven Bakery; very good food, broad menu, good coffee. Very busy though, expect will settle down after a few weeks.
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

@@ -106,23 +106,23 @@ Link twenty. "“One Damn Slide After Another”: PowerPoint at Every Occasion f
 Wow! This is a tour de force on the evolution and use of slides and presentation software evolution. It's a long read but pretty interesting and importantly balanced. It is not a takedown of PowerPoint but instead a robust exploration of the act of presenting and persuading. This essay critically contextualizes PowerPoint. We argue that many of the stylistic conventions associated with slideware have long been part of business communications. Personal computing, however, scaled up the production of presentations. Doing so linked knowledge work with personal expression. The result has been the rise of presentation culture. In an information society, nearly everyone presents. Analyzing presentation software makes visible the largely under-appreciated reliance on performative authority in knowledge production. The conclusion brings it home. I've never thought of PowerPoint as a part of visual culture! PowerPoint is not a slide projector without a slide tray. It is not a
 neutral automation of existing processes. It is a part of visual culture, an increasingly everyday experience at every kind of occasion for speech. Worth reading. Even if you skim sections like I did.
 
-Link 21. "A Year of Tech Solidarity | Civicist"
+Link twenty one. "A Year of Tech Solidarity | Civicist"
 
 Politics and tech are largely a strange null set. Maciej Ceglowski, the owner of Pinboard which I use to keep all my bookmarks on, has been actively working to change that through basic, old school organizing. This article is a reflection on the slow going he's had in the first year doing that.
 
-Link 22. "Move Slowly and Fix Things – Signal v. Noise"
+Link twenty two. "Move Slowly and Fix Things – Signal v. Noise"
 
 This article embodies many of the concepts that I highlight for ethics training for people that build software ecosystems. We spend more and more of our life inside, or alongside, a software ecosystem designed by builders with little thought to the social impact it has on people.
 
-Link 23. "Products Over Projects"
+Link twenty three. "Products Over Projects"
 
 I've operated all of the tech organizations I've led in this product mode. Ive found it much simpler to insure that investment follows opportunity and to give teams clear ownership of their deliverables. You build services differently when you know you own them for the long haul.
 
-Link 24. "The twenty seventeen Christmas Catalog — Tools and Toys"
+Link twenty four. "The twenty seventeen Christmas Catalog — Tools and Toys"
 
 Well thought through list of Christmas presents for people that like a certain kind of thing. I’m actually not sure what that is, but I would fit in that category.
 
-Link 25. "Your personality and your brain | Scott Schwefel | TEDxBrookings - YouTube"
+Link twenty five. "Your personality and your brain | Scott Schwefel | TEDxBrookings - YouTube"
 
 I’m a big fan of Insights Discovery and an equally big fan of Scott Schwefel. I met Scott when we were both on the CaringBridge board and got exposed to the Insights program in an offsite we did with that board. I've brought more than a hundred people through the program at SPS and I find it an immensely valuable training and tool. I didn’t know that Scott did this TEDx talk. He's a great presenter with equally great content.
 
@@ -151,10 +151,10 @@ That's the end of Featured App.
 Now, the Microblog updates section.
 
 - Official start of Christmas with tree up and watching Elf tonight.
-- 56k modem for the win!.net Monopoly.
-- I had to buy Sun Microsystems in.com Monopoly.
-- Google and Amazon are not on The.com Edition Monopoly board.
-- Playing The.com Edition of Monopoly, of course. Hilarious tiles. Game starts with 1.5 billion dollars per player. CBS MarketWatch has a tile, right next to Sun Microsystems!
+- 56k modem for the win! .net Monopoly.
+- I had to buy Sun Microsystems in .com Monopoly. love
+- Google and Amazon are not on The .com Edition Monopoly board.
+- Playing The .com Edition of Monopoly, of course. Hilarious tiles. Game starts with 1.5 billion dollars per player. CBS MarketWatch has a tile, right next to Sun Microsystems!
 - Very true “You are either building a learning organization, or you are losing to one who is.” — John Allspaw @allspaw
 - Christmas Tree decorating and reminiscing.
 - I don’t get 1000%+ price increase in BTC.
@@ -167,8 +167,6 @@ Now, the Microblog updates section.
 - Fair State Coop Brewing Keller Kazbek. Delicious!
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

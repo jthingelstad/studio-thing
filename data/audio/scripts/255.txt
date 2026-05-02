@@ -2,7 +2,7 @@ The Weekly Thing, issue 255. Lassie, Vore, Alby. Published May 20, twenty twenty
 
 I do something that is a bit weird, and that very few people do — I unsubscribe from unwanted email that I get. I've been doing this for a long time, usually in small batches.
 
-When you first start doing it you won't notice any difference. But after a while, you start to see less unwanted email. Less stuff to have to mentally process and delete. Over time, you can win the battle. And really, if you plan to keep your email address it is worth doing this. LLMs are going to make spam detection harder, so it is a good time to get off of mailing lists.⏳
+When you first start doing it you won't notice any difference. But after a while, you start to see less unwanted email. Less stuff to have to mentally process and delete. Over time, you can win the battle. And really, if you plan to keep your email address it is worth doing this. LLMs are going to make spam detection harder, so it is a good time to get off of mailing lists.
 
 When you do this you get to see how many companies try to trick you and use the worst user experience tricks possible to make it hard to unsubscribe. They use odd language, make you think you are confirming when your really hitting a button that says you "changed your mind". It is a pretty gross example of the worst of the web.
 
@@ -42,7 +42,7 @@ Fairly shallow article but interesting to read about the progression of approach
 
 Link four. "New TLDs: Not Bad, Actually – text/plain"
 
-There has been some hand wringing and concern about these new top-level domains like.zip and.mov, because they are the same as file extensions. These are good arguments for why it is fine.
+There has been some hand wringing and concern about these new top-level domains like .zip and .mov, because they are the same as file extensions. These are good arguments for why it is fine.
 
 Link five. "CryptoHack – A fun, free platform for learning cryptography"
 

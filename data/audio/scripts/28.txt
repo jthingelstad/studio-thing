@@ -74,7 +74,7 @@ This is worth looking at just for the video of the robots on an elevated grid or
 
 Link fourteen. "Glitch: write fun small web projects instantly - Julia Evans"
 
-Overview of Glitch that sounds pretty awesome for doing small web projects and sharing them.
+Overview of Glitch that sounds pretty awesome for doing small web projects and sharing them. love
 
 Link fifteen. "Turn off retweets!"
 
@@ -111,8 +111,6 @@ Now, the Microblog updates section.
 - Went to a Bat Mitzvah for the first time today and was taken at the beauty of the ceremony!
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

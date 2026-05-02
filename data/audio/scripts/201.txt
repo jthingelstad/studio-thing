@@ -178,7 +178,7 @@ From Gruber, that is a huge statement.
 
 Link fourteen. "Omni Apps Now Support Shortcuts on macOS Monterey - The Omni Group"
 
-I Automation, and I OmniFocus. The Omni Group has created their own Automation Framework for their apps, and now that macOS supports Shortcuts they have made the two automation frameworks interoperable!
+I love Automation, and I love OmniFocus. The Omni Group has created their own Automation Framework for their apps, and now that macOS supports Shortcuts they have made the two automation frameworks interoperable!
 
 Quote.
 In addition to bringing over the OmniFocus Shortcuts actions we already support and ship on iPhone and iPad, we’ve added two new Shortcuts actions to all our apps which integrate with Omni Automation. By including "Omni Automation Script" and "Omni Automation Plug-In" actions with each of Omni’s applications, our robust device-independent application scripting merges with Apple’s updated Shortcuts automation frameworks in the iOS, iPadOS, and macOS operating systems.

@@ -17,7 +17,7 @@ import time
 import anthropic
 from pydantic import BaseModel, Field
 
-REVIEWER_VERSION = "v1"
+REVIEWER_VERSION = "v2"
 HAIKU_MODEL = "claude-haiku-4-5-20251001"
 MAX_INPUT_CHARS = 32_000  # cap per side; longest body+script under this comfortably
 
@@ -75,6 +75,16 @@ Acceptable transformations — DO NOT flag any of these:
 - Multiple blank lines collapsed
 - Headings rephrased into "Now, the X section." form
 - Subject line emojis removed from the preamble
+- Year normalization applied even inside link titles or proper-noun phrases ("2017 Internet Trends" → "twenty seventeen Internet Trends" is fine)
+- Ordinal normalization applied anywhere ("1st" → "first", "26th" → "twenty sixth", "31st" → "thirty first" — all fine)
+- Heart emoji (❤️, ♥️, 💙, 💚, 💛, 🧡, 💜, 🖤) replaced with the word "love" (it's used as a verb in micro-posts: "I ❤️ X" → "I love X")
+- Decorative leading characters in titles being removed (★, ☆, ◉, ✪, etc. at the start of a link title)
+- Source typos that exist in BOTH the body and the script (e.g. "your" instead of "you", "droped" instead of "dropped", "Wintegreen") — these are not transformation bugs, they are pre-existing in the source
+- Author names or other text that contains spaced letters in the SOURCE body (e.g. "a n n i e m u e l l e r" — if the body has it spaced that way, the script preserving it spaced is correct)
+- Section headings of the form "## by <name>" appearing as plain text instead of section cues
+- "## The end" / "## End" / "## Fin" sign-off H2s removed
+- A microblog/journal entry losing its trailing emoji that doesn't represent a verb (e.g. "great match! ⚽️" → "great match!" is fine)
+- Stylistic emoji separators or page breaks removed
 
 Flag (these ARE bugs):
 - A substantive sentence or paragraph from the body that has no equivalent content in the script (excluding everything in the acceptable list above)

@@ -16,7 +16,7 @@ Now, the Notable section.
 
 Link one. "SPS Commerce CEO: How A Miserable Job Can Pay Off | Investor's Business Daily"
 
-This is a great interview with our CEO Archie Black. Everything in here is spot on and Archie's focus on our local community comes through very strong. Lead the way #TeamSPS!
+This is a great interview with our CEO Archie Black. Everything in here is spot on and Archie's focus on our local community comes through very strong. Lead the way #TeamSPS! love
 
 Link two. "The Financialization of Everything - The Atlantic"
 
@@ -171,7 +171,7 @@ Extended my registration periods for thingelstad.eth and weeklything.eth so the 
 
 Sunday @ 8:06 AM
 
-Now that you can register any DNS.com domain on ENS I would love to dual-register thingelstad.com but the gas is beyond ridiculous. The registration is 25 dollars, but even at 85 Gwei, the gas fees to cross register would be 1,341 dollars!
+Now that you can register any DNS .com domain on ENS I would love to dual-register thingelstad.com but the gas is beyond ridiculous. The registration is 25 dollars, but even at 85 Gwei, the gas fees to cross register would be 1,341 dollars!
 
 Saturday @ 9:26 PM
 

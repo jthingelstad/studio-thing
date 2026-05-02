@@ -142,7 +142,7 @@ I've enjoyed reading Taleb's books. You can see his personality in this short Q 
 - How To Achieve Your 10-Year Plan In The Next 6 Months medium.com
 Like slam poetry for productivity.
 - One space between each sentence, they said. Science just proved them wrong. - The Washington Post www.washingtonpost.com
-I’m solidly a one space person. ⌨
+I’m solidly a one space person.
 - square/sudo_pair: Plugin for sudo that requires another human to approve and monitor privileged sudo sessions github.com
 Like nuclear launch keys.
 - Kubernetes on Azure: Industry’s best end-to-end Kubernetes experience — Microsoft Azure azure.microsoft.com

@@ -64,7 +64,7 @@ Super-simple overview of various ways to move data around. The highlight to me h
 
 The iconic watches that inspired Apple Watch faces
 
-This article is probably just for watch geeks. It is a cool to see the design inspiration largely from mechanical watches of the past that have been brought forward to the digital watch faces on the Apple Watch. ⌚
+This article is probably just for watch geeks. It is a cool to see the design inspiration largely from mechanical watches of the past that have been brought forward to the digital watch faces on the Apple Watch.
 
 Moderation in Infrastructure – Stratechery by Ben Thompson
 

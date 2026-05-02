@@ -112,7 +112,7 @@ Now, the Journal section.
 
 Journal entry one.
 
-We had friends and colleagues from Ukraine as well as local folks that have moved from Ukraine over for dinner, lots of wine, and even more stories and laughs. It was a wonderful evening for my spirit and soul.
+We had friends and colleagues from Ukraine as well as local folks that have moved from Ukraine over for dinner, lots of wine, and even more stories and laughs. It was a wonderful evening for my spirit and soul. love love
 
 Journal entry two.
 
@@ -163,7 +163,7 @@ Journal entry ten. ENS: Blockchain Native Organization
 The section from the ENS DAO February thirteenth update impressed me.
 
 Quote.
-In January twenty twenty four, the ENS Protocol registered 39.8k new.eth domains, bringing the total to 2.1 million. The protocol generated revenue of 1.3 million dollars during this period, all of which was allocated to the ENS DAO. The number of Ethereum account holders with at least one ENS name increased by 33.9k, totaling 818k. There were 31.7k primary ENS names set, making the overall count 737k. Additionally, 8k new avatar records were created, reaching a cumulative total of 149k.
+In January twenty twenty four, the ENS Protocol registered 39.8k new .eth domains, bringing the total to 2.1 million. The protocol generated revenue of 1.3 million dollars during this period, all of which was allocated to the ENS DAO. The number of Ethereum account holders with at least one ENS name increased by 33.9k, totaling 818k. There were 31.7k primary ENS names set, making the overall count 737k. Additionally, 8k new avatar records were created, reaching a cumulative total of 149k.
 End quote.
 
 Ethereum Name Service is doing an amazing job showing how a crypto service can work. This is a 15.6 million dollars run rate driven completely off the protocol. That all goes into the DAO with a robust governance structure. As an ENS token holder I can vote in the DAO, or delegate to others.
@@ -210,11 +210,11 @@ Journal entry twenty.
 
 On Artist Point in Grand Marais in pre-dawn light to catch the sunrise.
 
-Journal entry 21.
+Journal entry twenty one.
 
 Reviewing my On This Day page today made me do a double take -- so few posts. Then I remembered it is leap day, and February 29, twenty twenty four is only the sixth leap day since my blog was started.
 
-Journal entry 22. How I burned 10,000 dollars
+Journal entry twenty two. How I burned 10,000 dollars
 
 Meme coins are one of the parts of the crypto ecosystem that I have no interest in. They are pure speculation. I'm fine if folks want to do that, but it's not my thing. I’ve never owned any Dogecoin. A little over a year ago when BONK launched as a Solana version of Dogecoin I didn't pay any attention.
 
@@ -226,7 +226,7 @@ I guess “easy come, easy go” as they say. On the bright side I don’t have 
 
 Posting this on leap day means I’ll only revisit this mistake once every four years in my On This Day page.
 
-Journal entry 23. Winter Along the Gunflint Photography Workshop
+Journal entry twenty three. Winter Along the Gunflint Photography Workshop
 
 Last weekend I drove up to Grand Marais to take Winter Along the Gunflint Photography Workshop with Bryan Hansel. It has been a decade since I took a workshop and Tammy decided it was time for me to get out in the field and shoot for a weekend so she got me this great workshop for my birthday. I was eager to go, and also a little anxious since I hadn’t done more serious photography for a few years. I was rusty for sure.
 

@@ -1,4 +1,4 @@
-The Weekly Thing, issue 94. Feb 23, twenty nineteen. Published February 23, twenty nineteen. By Jamie Thingelstad. In this issue: Tetris 99 gameplay revolution, Stephen Wolfram personal infrastructure, WiFi inside a USB cable, WorldWideWeb CERN rebuild,.dev domains, privacy is a commons.
+The Weekly Thing, issue 94. Feb 23, twenty nineteen. Published February 23, twenty nineteen. By Jamie Thingelstad. In this issue: Tetris 99 gameplay revolution, Stephen Wolfram personal infrastructure, WiFi inside a USB cable, WorldWideWeb CERN rebuild, .dev domains, privacy is a commons.
 
 This week we broke the all-time record for February snowfall! It’s fairly easy to tell with the giant piles of snow everywhere you look. I’m busy putting together some last minute things for Tyler’s birthday breakfast that we are hosting tomorrow (Nordic Waffles!) so I’m going to leave it short this week and get straight to the links!
 
@@ -64,7 +64,7 @@ Link ten. "On being an Engineering Manager | Nick McHardy"
 
 One persons experience trying out the role of being an engineering manager, and then opting to ultimately stay in an individual contributor role. Good breakdown of the decision process he went through.
 
-Link eleven. "Introducing.dev domains from Google Registry"
+Link eleven. "Introducing .dev domains from Google Registry"
 
 Interesting way that Google is rolling this out charging very high amounts to register early, avoiding domain squatters trying to take domains and hold them ransom.
 

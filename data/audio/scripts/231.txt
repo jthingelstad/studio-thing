@@ -135,7 +135,7 @@ Link fourteen. "How to Build Software like an SRE — willett dot io"
 
 Good list of practices to focus on resiliency of solutions. Some of these are challenging, like strict RPC settings. It is easy for teams to to just add retries and extend timeouts to work through issues, but it creates unpredictability during execution.
 
-Link fifteen. "Federation ⌐◨-◨"
+Link fifteen. "Federation ◨-◨"
 
 This is a super interesting piece of DAO capability coming out of the Nouns ecosystem, which I have a lot of fun playing with.
 

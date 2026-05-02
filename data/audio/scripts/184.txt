@@ -125,11 +125,11 @@ Four Great Years of Micro.blogging!
 
 When people write about blogging platforms or services they often focus on features and functions. I say hogwash to that. There is only one thing that matters about a blogging solution — does it create an environment where you want to write? For me, micro.blog does that better than any other service I've used. I'm happy to mark today as my fourth year using micro.blog. Four years ago I was poking around having waited for my invite code. This has been my favorite four years of blogging since I started in two thousand four.
 
-Over those 17 years I've used:.Text WordPress SquareSpace Pelican Jekyll micro.blog. (those are all links to the relevant posts )
+Over those 17 years I've used: .Text WordPress SquareSpace Pelican Jekyll micro.blog. (those are all links to the relevant posts )
 
 Micro.blog let's me pull out my phone and with extraordinarily low effort put a picture or two along with some text on the web. Nothing is faster and easier. I love that Micro.blog is built on a static blog engine, Hugo, since I never have to worry about performance. It is fast. It is great that I can hit a link in my favorites and have a text area on a web page to type and post. It is awesome that it can handle short things, a couple sentences, and really long things. The pages function is simple, but really powerful. I have 124 pages of content that goes with my blog. My lists are my favorite. Automatic categories based on text patterns in the posts is a very powerful feature. It doesn't have tags, I’m fine with that, I curate collections instead. There is no library of 5,000 plugins, good. This just lets me focus more on writing.
 
-2,039 posts. That is what micro.blog has enabled since April twenty seventeen. I micro.blog. Thank you Manton and Jean for making such a great service!
+2,039 posts. That is what micro.blog has enabled since April twenty seventeen. I love micro.blog. Thank you Manton and Jean for making such a great service!
 
 Now 2,040 posts…
 

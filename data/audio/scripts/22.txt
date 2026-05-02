@@ -128,39 +128,39 @@ Link twenty. "Electric Bike Reviews - Prices, Specs, Videos, Photos"
 
 Website dedicated to only reviewing electric bikes.
 
-Link 21. "50 - One more thing…"
+Link twenty one. "50 - One more thing…"
 
 Patrick Rhone sharing wisdom with all of us on the occasion of his 50th birthday via his newsletter. Happy Birthday Patrick!
 
-Link 22. "Zuckerberg’s Preposterous Defense of Facebook - NYTimes.com"
+Link twenty two. "Zuckerberg’s Preposterous Defense of Facebook - NYTimes.com"
 
 I think this argument is missing a fundamental issue. Facebook is a for-profit company that is allowed to operate on it’s own rules, referenced in it’s Terms of Service and it’s Privacy Policy (which change frequently). Facebook is not the open web, it is not a neutral platform. The best analogy for Facebook is your local mall. If it were an open platform, like the web, the content on it would not be subject to the Terms of Service of Facebook. As such, Facebook must have an opinion about the content that appears on the site. All of the content. Why? Because it does have an opinion about the content that doesn't appear on the site! You cannot have the right to manage content on one side, but not the other. If your local shopping mall had a store that was appalling to you it would be on them, they wouldn't get away with some "well, we are an open platform" argument. Because they are not. It is a chosen set of actions for a business goal. That is what Facebook is too, it just likes to pretend that it is something else so you don't realize you are being monitored and monetized.
 
-Link 23. "Ikea has bought TaskRabbit - Recode"
+Link twenty three. "Ikea has bought TaskRabbit - Recode"
 
 Interesting and unexpected (to me at least) acquisition by Ikea. Does make sense though as a way to distribute the installation work of the products that Ikea sells.
 
-Link 24. "Game Pick: Flower —macsparky"
+Link twenty four. "Game Pick: Flower —macsparky"
 
 Based on David Spark's recommendation I purchased Flower this morning and it is a treat. Fun and relaxing game with very nice animations and gameplay. It takes a bit to figure out what you are doing, but after you get the hang of it it’s a lot of fun.
 
-Link 25. "Apple Watch Series 3 review: A solid improvement over the original Apple Watch —Apple World Today"
+Link twenty five. "Apple Watch Series 3 review: A solid improvement over the original Apple Watch —Apple World Today"
 
 I've had my Series 3 Apple Watch for two days now and I can attest that everything in this article is spot on.
 
-Link 26. "Why SQL is beating NoSQL, and what this means for the future of data"
+Link twenty six. "Why SQL is beating NoSQL, and what this means for the future of data"
 
 Timescale sells a SQL-based time series database so their opinion on SQL versus NoSQL may be a little skewed. With that in mind this is still a well thought out post about the strengths and advantages that SQL has.
 
-Link 27. "Application Network Functions With ESBs, API Management, and Now.. Service Mesh? – Software Blog"
+Link twenty seven. "Application Network Functions With ESBs, API Management, and Now.. Service Mesh? – Software Blog"
 
 Analysis of a handful of different enterprise architecture patterns and the strengths and weaknesses of each. Good article to consider the dimensions and layers to think about architecture on.
 
-Link 28. "How to build a dashboard for your grill using Arduino and React"
+Link twenty eight. "How to build a dashboard for your grill using Arduino and React"
 
 I’m still firmly opposed to introducing technology to my grilling and smoking setup. I believe the best smoked food comes from careful management of fire and air combined with wisdom. With that said, these DIY tech projects are pretty fun to read about. Thanks to Dan Grigsby for the link.
 
-Link 29. "Coffee Roasting, Mathematical Modelling, and Asymptotic Analysis"
+Link twenty nine. "Coffee Roasting, Mathematical Modelling, and Asymptotic Analysis"
 
 Love this deep mathematical look at roasting coffee beans using a more advanced model:
 
@@ -172,7 +172,6 @@ That's the end of Links.
 
 Now, the Now Reading section.
 
-[](
 A Crack in Creation: Gene Editing and the Unthinkable Power to Control Evolution
 
 by Jennifer Doudna, Samuel Sternberg
@@ -185,15 +184,12 @@ That's the end of Now Reading.
 
 Now, the Promotion section.
 
-[](
-
 The mission of Hack the Gap is to amplify the voices and cultivate talents of underserved people in our community. I serve on the board of Minnestar with Jenna Pederson, one of the founders of Hack the Gap, and I love what this organization is focusing on. Gender diversity in tech is a real problem and it’s far too often brushed off as some endemic issue that cannot be solved. That isn't the case at all. Hack the Gap is creating a way for people to get into the technology industry and breaking down barriers. Donate to Hack the Gap today!
 
 That's the end of Promotion.
 
 Now, the Highlighted iOS App section.
 
-[](
 Flower
 
 by Annapurna Interactive
@@ -217,8 +213,6 @@ Now, the Microblog updates section.
 - My brother Isaiah came to town to help me rebuild the kids playset. Mission accomplished!
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

@@ -1,4 +1,4 @@
-The Weekly Thing, issue 135. Spy Emails, Engineering Strategy, True Fans. Published February 15, twenty twenty. By Jamie Thingelstad. In this issue: Hundred-Year Marathon, engineering strategy, mailing list spying, single.txt file, 100 True Fans, Voyager 2 online, Brandi Carlile.
+The Weekly Thing, issue 135. Spy Emails, Engineering Strategy, True Fans. Published February 15, twenty twenty. By Jamie Thingelstad. In this issue: Hundred-Year Marathon, engineering strategy, mailing list spying, single .txt file, 100 True Fans, Voyager 2 online, Brandi Carlile.
 
 Happy Valentines Day to all of you! Our Valentine's Day was surprisingly great. I don't mean that to imply that previous years were not good, but this year seemed different. Tammy stated it best that everyone kind of quietly planned their own thing, and then it all came together adorably. It is so fun to watch your kids come into their own personalities and to express their own love for each other.
 
@@ -47,7 +47,7 @@ Never been promoted? You’re not alone.
 
 Another critical article reflecting on various issues that women face in technology. This is essential reading for men in technology, to gain awareness, understanding, and develop means to overcome these problems. The Twitter poll that starts this off is far from a statistically relevant sample. Still, the read is enlightening for the experiences and perspectives shared.
 
-My productivity app is a single.txt file
+My productivity app is a single .txt file
 
 If you desire a productivity solution that meets the KISS principle this is for you. I admire the arcana of it and love the flexibility of simple text. This wouldn't satisfy my particular strand of OCD, though.
 

@@ -47,7 +47,7 @@ End quote.
 The pull request has more details:
 
 Quote.
-This PR implements a new resolver that can be set as a wildcard resolver for any TLD other than.eth. Once set, it resolves all subdomains that do not exist in the registry by making CCIP-Read calls to a DNS gateway, which returns signed DNS TXT records. It verifies those using the DNSSEC oracle in a call operation, and thus makes it possible to find the resolver for a name without any gas required to set it.
+This PR implements a new resolver that can be set as a wildcard resolver for any TLD other than .eth. Once set, it resolves all subdomains that do not exist in the registry by making CCIP-Read calls to a DNS gateway, which returns signed DNS TXT records. It verifies those using the DNSSEC oracle in a call operation, and thus makes it possible to find the resolver for a name without any gas required to set it.
 End quote.
 
 Brilliant bridge to connect two incredible important systems.

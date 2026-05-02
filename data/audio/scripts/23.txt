@@ -95,19 +95,19 @@ Link twenty. "Workflow to Collect All Links"
 
 This is a great example of the power of Workflow. I have a number of workflows like this and they are surprisingly easy to do on iOS, and really not easy to do on any other platform. I have several workflows that increase my efficiency significantly. I find inspiration in seeing what other people do with this powerful tool.
 
-Link 21. "Overland GPS Tracking App for iPhone"
+Link twenty one. "Overland GPS Tracking App for iPhone"
 
 Aaron Parecki released the iOS app that he uses to record his location and use on his website. If you love location tracking but what to own your data this is a cool option. This is only the client though, you have to have a server to send the events to. It would be perfectly paired with a cloud-based serverless API to receive these events, record them and serve them up to other services. Someone want to make that?
 
-Link 22. "Licensed Mugs From Star Wars, Marvel, and More | Geeki Tikis"
+Link twenty two. "Licensed Mugs From Star Wars, Marvel, and More | Geeki Tikis"
 
 We got some of these for my brother-in-law for Christmas and I was checking out his full collection yesterday. Perfect gift for the geek you know. Wish they would make some Game of Thrones ones.
 
-Link 23. "'Our minds can be hijacked': the tech insiders who fear a smartphone dystopia | Technology | The Guardian"
+Link twenty three. "'Our minds can be hijacked': the tech insiders who fear a smartphone dystopia | Technology | The Guardian"
 
 Read this article! I've had discussions close to many of the topic in this article with many of my most tech focused friends. There is something to take note of when the most aggressive adopters of new and interesting tech (for no reason than the tech itself) start abandoning an entire type of application. Is it a canary warning everyone? I think it is.
 
-Link 24. "security.txt"
+Link twenty four. "security.txt"
 
 This seems like a good idea. I don't know that anyone would ever need to notify me, but I went ahead and created a security.txt anyway. It complements my robots.txt and humans.txt.
 
@@ -123,9 +123,7 @@ Now, the Featured App section.
 
 Through the Ages
 
-That's the end of Featured App.
-
-Now, the by Czech Games Edition section.
+by Czech Games Edition
 
 The official adaptation of Vlaada Chvátil’s strategy classic, the second best board game ever according to the Board Game Geek website. You begin with a small tribe. As you expand your farms and mines, you lay the groundwork for technological advancements, better governments, and grand wonders. Your military might supports your political skill as you guide your civilization to greatness.
 
@@ -133,7 +131,7 @@ If you are into complicated board games this is a great one and it has a great t
 
 9 dollars and 99 cents 5/5 stars
 
-That's the end of by Czech Games Edition.
+That's the end of Featured App.
 
 Now, the Microblog updates section.
 
@@ -159,8 +157,6 @@ Now, the Microblog updates section.
 - Recommend registering your email at ’;–have i been pwned?. Great awareness tool of data breaches!
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

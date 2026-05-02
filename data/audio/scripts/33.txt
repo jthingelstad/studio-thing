@@ -2,7 +2,7 @@ The Weekly Thing, issue 33. Weekly Thing for December 23, twenty seventeen. Publ
 
 It’s Christmas Eve Eve and we are in the final approach for the big day. There is much excitement to open presents and play, the kids are pretty eager too. We're spending Christmas at the lake which is really nice. It’s quiet and relaxing. We'll make excursions to family on Christmas Eve and Christmas Day as well. A batch of Wassail Tea is ready and I’m on deck to make Glorified Rice and some Jell-O with floating fruit!
 
-I have a suggestion for everyone, one that I’m giving myself as well. Disconnect from the phone. I use Forest and will be trying to plant as many trees as I can over Christmas. You can't use your phone while planting a tree, and yes I see the irony of using an app on your phone to help you to use your phone less. I've removed all social apps from my devices and block all social networks in my browser. It’s amazing how much noise goes away. Have a great holiday with hugs and love and laughter. Cheers!
+I have a suggestion for everyone, one that I’m giving myself as well. Disconnect from the phone. I use Forest and will be trying to plant as many trees as I can over Christmas. You can't use your phone while planting a tree, and yes I see the irony of using an app on your phone to help you to use your phone less. I've removed all social apps from my devices and block all social networks in my browser. It’s amazing how much noise goes away. Have a great holiday with hugs and love love and laughter. Cheers!
 
 Semisonic performing Feeling Strangely Fine in it's entirety at First Ave -- awesome!
 
@@ -51,7 +51,7 @@ What a great piece of writing from Patrick Rhone. I say we continue to explore�
 
 boardgame.io
 
-This is a nifty framework to make multiplayer boardgames in Javascript. > The goal of this framework is to allow a game author to essentially translate the rules of a game to a series of simple functions that describe how the game state changes when a particular move is made, and the framework takes care of the rest.
+This is a nifty framework to make multiplayer boardgames in Javascript. The goal of this framework is to allow a game author to essentially translate the rules of a game to a series of simple functions that describe how the game state changes when a particular move is made, and the framework takes care of the rest.
 
 Tips for in-house teams in a free market software culture
 
@@ -59,11 +59,11 @@ Development teams that build software for other development teams often have a u
 
 Facebook admits it poses mental health risk – but says using site more can help | Technology | The Guardian
 
-Facebook acknowledging downsides of addictively using their platform. > Studies have repeatedly found that Facebook, Twitter and other social media sites can damage the emotional wellbeing of heavy users, particularly younger people. This seems like tobacco companies putting warnings on cigarettes.
+Facebook acknowledging downsides of addictively using their platform. Studies have repeatedly found that Facebook, Twitter and other social media sites can damage the emotional wellbeing of heavy users, particularly younger people. This seems like tobacco companies putting warnings on cigarettes.
 
 A shell command to create JSON: jo
 
-Oh, I just this! A small shell command that will create a JSON object? What a perfect embodiment of the Unix philosophy of Do One Thing and Do It Well. This is a super handy utility to place at the end of your shell scripts or to create a solid interface between systems or services. Nifty!
+Oh, I just love this! A small shell command that will create a JSON object? What a perfect embodiment of the Unix philosophy of Do One Thing and Do It Well. This is a super handy utility to place at the end of your shell scripts or to create a solid interface between systems or services. Nifty!
 
 If You Aspire to Be a Great Leader, Be Present
 
@@ -87,15 +87,13 @@ Internet Archive is a non-profit library of millions of free books, movies, soft
 - … when you sit down to do something quick on your computer and you spend 30 mins fixing cable modem issues.
 - Trying to figure out what size rubber grommet I need for my espresso knock box bar. A bit bewildering.
 - Think I might have finally fixed a really annoying Time Machine v. Synology NAS behavior.
-- I this! #TeamSPS slide to highlight my disdain for pie charts. The exploded slices are a great touch! I’ll stick to pie you eat, thanks.
+- I love this! #TeamSPS slide to highlight my disdain for pie charts. The exploded slices are a great touch! I’ll stick to pie you eat, thanks.
 - We went to Martina for the first time last night and I was very impressed! The space is great and we got to sit right by the kitchen and watch the woodfire grill being stoked. We started with the Crab Cakes which were amazing. Then we had the Pork Chop Pizzaiola and Fusilli with Lamb Shoulder for the main and both were fabulous. The Panqueque dessert was delicious. The meal didn’t cost an arm and a leg and they even have a kids menu and mocktails, which we will likely try out next time when we bring the whole family.
 - Tammy and I went to see Lady Bird last night. It was really good and I liked it a lot, despite my bias against coming of age stories.
 - Semisonic at First Ave!
 - Excited for tonight’s Semisonic show!
 - Snowy field along the Northstar Train route.
 - Afternoon father-son excursion on the Northstar Train to Big Lake and back.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

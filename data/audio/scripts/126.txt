@@ -1,4 +1,4 @@
-The Weekly Thing, issue 126. Nov 16, twenty nineteen. Published November 16, twenty nineteen. By Jamie Thingelstad. In this issue: Lifelong networking, 1000 True Fans, Salesforce on Azure, Private Equity acquires.Org, Toolbox Pro, XML versus JSON, Yahoo Groups deletion, Postgres pub/sub.
+The Weekly Thing, issue 126. Nov 16, twenty nineteen. Published November 16, twenty nineteen. By Jamie Thingelstad. In this issue: Lifelong networking, 1000 True Fans, Salesforce on Azure, Private Equity acquires .Org, Toolbox Pro, XML versus JSON, Yahoo Groups deletion, Postgres pub/sub.
 
 Like clockwork cold weather arrived and I got a low-grade cold. Not the kind of cold that takes you out of commission. More the kind of cold that feels like the parking brake is half-way applied all the time, and makes you cough and sneeze, but not all the time. I'm trying to drown it out with a barrage of vitamins. Premium Insurance Caps combined with Emergen-C. It was one of those weeks where I needed to be fully ON for a full raft of things on both the work and home calendars. I’m looking back now from Friday night and am happy that I successfully made it through.
 
@@ -40,7 +40,7 @@ Link one. "Salesforce announces it’s moving Marketing Cloud to Microsoft Azure
 
 This is a big win for Azure. I don't know how meaningful these megadeal announcements with cloud providers that are obviously negotiated at the CEO level really mean, but they do give credibility to providers.
 
-Link two. "Breaking: Private Equity company acquires.Org registry - Domain Name Wire | Domain Name News"
+Link two. "Breaking: Private Equity company acquires .Org registry - Domain Name Wire | Domain Name News"
 
 The physical world works better because we have zoning — residential, commercial, industrial, etc. You don't expect to be sold things when in a park. You shouldn't expect privacy and freedom of speech in a commercial zone. I wish the domain name systems served a similar purpose, but it seems we are getting even further away from that.
 

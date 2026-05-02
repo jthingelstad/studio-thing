@@ -88,7 +88,7 @@ Most people I know that use Amazon get frustrated with this. Personally I pay cl
 
 Link nine. "Introducing nushell"
 
-I that people are still innovating with shells and lower level geeky stuff. I've never played with PowerShell but am familiar with it’s concepts. This new shell, which borrows from PowerShells concepts, looks interesting. I'll likely still stick to fish, but I bet there are some things that nushell would do very well.
+I love that people are still innovating with shells and lower level geeky stuff. I've never played with PowerShell but am familiar with it’s concepts. This new shell, which borrows from PowerShells concepts, looks interesting. I'll likely still stick to fish, but I bet there are some things that nushell would do very well.
 
 That's the end of Notable Links.
 

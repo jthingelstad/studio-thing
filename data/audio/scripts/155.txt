@@ -124,7 +124,7 @@ These are all interesting metrics, and are ones that technology teams should see
 
 .new - Google Registry
 
-I don't get this much at all. Adopting a new URL with a.new suffix is forcing some form of user behavior change that seems difficult. And then, why would you trust Google to run this? They will minimally collect information on the usage of these to gain insight into these other services. They could even take over the names, and say, redirect a zoom.new request to their own service.
+I don't get this much at all. Adopting a new URL with a .new suffix is forcing some form of user behavior change that seems difficult. And then, why would you trust Google to run this? They will minimally collect information on the usage of these to gain insight into these other services. They could even take over the names, and say, redirect a zoom.new request to their own service.
 
 That's the end of Recommended Links.
 

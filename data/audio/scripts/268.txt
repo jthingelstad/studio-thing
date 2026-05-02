@@ -4,7 +4,7 @@ Today was an absolute blast with the first day of our Candle Fundraiser done. It
 
 I’m going to keep things short this week and just get to the links. This week seems to be filled with more links that were deeply thought provoking in a few ways. Some talks, podcasts, etc. A few things this week that made me think deeply.
 
-Have a great weekend, and hope that those of you that adjust your clocks like we do adapt quickly. Next on my to do list is to change all the clocks. ⏰
+Have a great weekend, and hope that those of you that adjust your clocks like we do adapt quickly. Next on my to do list is to change all the clocks.
 
 Now, the Featured section.
 
@@ -139,7 +139,7 @@ Link six. "How to (and how not to) design REST APIs · stickfigure"
 Schnitzer with design suggestions for REST APIs. This is pretty straightforward, and I that it stays pretty simple and has a clear focus on usability.
 
 Quote.
-1. DO use plural nouns for collections 2. DON'T add unnecessary path segments 3. DON'T add.json or other extensions to the url 4. DON'T return arrays as top level responses 5. DON'T return map structures 6. DO use strings for all identifiers 7. DO prefix your identifiers 8. DON'T use 404 to indicate "not found" 9. BE consistent 10. DO use a structured error format 11. DO provide idempotence mechanisms
+1. DO use plural nouns for collections 2. DON'T add unnecessary path segments 3. DON'T add .json or other extensions to the url 4. DON'T return arrays as top level responses 5. DON'T return map structures 6. DO use strings for all identifiers 7. DO prefix your identifiers 8. DON'T use 404 to indicate "not found" 9. BE consistent 10. DO use a structured error format 11. DO provide idempotence mechanisms
 End quote.
 
 Of all of them, I think 9 is one of the most important.

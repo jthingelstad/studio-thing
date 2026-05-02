@@ -102,7 +102,7 @@ Link twenty. "Should your Engineering Lead be fired? – It’s Your Turn"
 
 Does Medium require the use of very inflammatory headlines? This post is titled terribly, but the questions it lists are worthy of thinking through if you lead technology teams (or in some cases any kind of team!).
 
-Link 21. "Instagram Makes a Smooth Move to Python 3 - The New Stack"
+Link twenty one. "Instagram Makes a Smooth Move to Python 3 - The New Stack"
 
 Send this to the folks that highlight how Python, or any interpreted language really, just cannot scale.
 
@@ -110,15 +110,13 @@ That's the end of Links.
 
 Now, the Promotion section.
 
-[](
-
 Minnestar is the technology community for Minnesota. If you are passionate about technology you need to go to Minnebar and Minnedemo. Did you know that Minnebar is the largest BarCamp in North America and one of the largest in the world? Its also been going on for over 10 years? Minnedemo is the best place to hear about innovative tech and fun projects in the Twin Cities area. I am on the Minnestar board and I focus on Minnestar as one of the driving forces improving and expanding the technology community in the area. Minnestar is a 501c3 non-profit. Become a Community Supporter today!
 
 That's the end of Promotion.
 
 Now, the Microblog updates section.
 
-- Updating my Bose QuietComfort 35’s firmware from 1.0.6 to 1.3.2. I updating firmware.
+- Updating my Bose QuietComfort 35’s firmware from 1.0.6 to 1.3.2. I love updating firmware.
 - Great night with @peterzaballos taking in a MN United win!
 - TeamSPS Ice Cream social today!
 - Genius design for Pokémon themed bags boards.
@@ -133,8 +131,6 @@ Now, the Microblog updates section.
 - Family selfie! @ Mill City Museum
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

@@ -80,7 +80,7 @@ Frameworks like this are often under used. This would be great for smaller proje
 
 Production Oriented Development
 
-I this article and the framework put forth. This is the model that I have been using in technology organizations for a long time.
+I love this article and the framework put forth. This is the model that I have been using in technology organizations for a long time.
 
 Quote.
 This perspective probably comes from years sitting in between operations and product development. I strongly believe that teams should optimize for getting code to production as quickly as possible as well as responding to incidents in production.

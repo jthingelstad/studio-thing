@@ -62,7 +62,7 @@ Facebook moved quick with the React license and now also has moved GraphQL to a 
 
 Link thirteen. "Jared Sinclair | Blog | Apple Watch Series 3 First Impression:..."
 
-This article exactly captures why I decided to order the Series 3 with LTE. ⌚
+This article exactly captures why I decided to order the Series 3 with LTE.
 
 Link fourteen. "Never Give Up, Retry: How Software Should Deal with Failures"
 
@@ -88,15 +88,12 @@ That's the end of Links.
 
 Now, the Promotion section.
 
-[](
-
 Let's Encrypt is a free, automated, and open certificate authority, run for the public’s benefit. All connections to web servers should be encrypted! The biggest challenge with encrypting the web historically has been the cost and hassle of getting an SSL certificate. Let's Encrypt has changed that entirely by being a free certificate authority. Let's Encrypt is possibly one of the most important things to happen on the web in recent years. Donate to Let's Encrypt today!
 
 That's the end of Promotion.
 
 Now, the Highlighted iOS App section.
 
-[](
 Cribbage With Grandpas
 
 by Less Than Three Interactive
@@ -111,7 +108,7 @@ That's the end of Highlighted iOS App.
 
 Now, the Microblog updates section.
 
-- Got my Series 3 Apple Watch today! Way faster than original. Have LTE setup too! ⌚
+- Got my Series 3 Apple Watch today! Way faster than original. Have LTE setup too!
 - Setup iCloud Family Sharing for storage. Nice to have that option now!
 - Gave another copy of Getting Things Done to a #TeamSPS member. One of my favorite things to do!
 - I added search to my link blog! It uses Lunr.js and is all client side. It takes a bit to load with 9,000 links to index, but is very fast once loaded. Give it a try and let me know what you think. The search as you type method is fun to discover things.
@@ -127,8 +124,6 @@ Now, the Microblog updates section.
 - I enjoyed the Defiant One fat tire bike so much that I ended up buying one! Took it for an inaugural ride this morning!
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

@@ -23,7 +23,7 @@ The origin story of the Internet is all around decentralization. In practice, it
 
 Link three. "iPhone X: Tomorrow's iPhone today - Six Colors"
 
-Jason Snell writes about his experience with the iPhone X and the beginning of the next era of the iPhone. > The iPhone X is as close as Apple has come yet to the ultimate form of a smartphone: a glass slab made entirely of touchscreen.
+Jason Snell writes about his experience with the iPhone X and the beginning of the next era of the iPhone. The iPhone X is as close as Apple has come yet to the ultimate form of a smartphone: a glass slab made entirely of touchscreen.
 
 That's the end of Links.
 
@@ -33,7 +33,7 @@ On the twentieth anniversary of the launch of MarketWatch Larry Kramer wrote an 
 
 GraphQL at massive scale: GraphQL as the glue in a microservice architecture
 
-Interesting article on IBM's adoption of GraphQL at large scale. > He got excited about the potential of GraphQL very quickly, but received pushback from others initially. This is the story of how he shepherded adoption of GraphQL at IBM to the point where, today, it is deployed at massive scale.
+Interesting article on IBM's adoption of GraphQL at large scale. He got excited about the potential of GraphQL very quickly, but received pushback from others initially. This is the story of how he shepherded adoption of GraphQL at IBM to the point where, today, it is deployed at massive scale.
 
 Super Mario Run’s 200 million downloads didn’t result in ‘acceptable profit’ for Nintendo - The Verge
 
@@ -69,7 +69,7 @@ Whoa, nice call out in The Economist to my friend Jim Bernard and the work his t
 
 Seashells
 
-Huh, this is sort of whacky and geeky-cool. > Seashells lets you pipe output from command-line programs to the web in real-time, even without installing any new software on your machine. I've used netcat a couple of times for some weird use cases, but turning that into something that you can use easily via the web seems interesting. I have no idea what I'd use it for though.
+Huh, this is sort of whacky and geeky-cool. Seashells lets you pipe output from command-line programs to the web in real-time, even without installing any new software on your machine. I've used netcat a couple of times for some weird use cases, but turning that into something that you can use easily via the web seems interesting. I have no idea what I'd use it for though.
 
 1Password 7 now Available for iOS —Tools and Toys
 
@@ -131,9 +131,7 @@ Now, the Featured App section.
 
 Carcassonne
 
-That's the end of Featured App.
-
-Now, the by TheCodingMonkeys section.
+by TheCodingMonkeys
 
 Famous boardgame and great iOS experience, with expansions as in-app purchases.
 
@@ -141,7 +139,7 @@ This is a fabulous iOS interpretation of the famous board game. Happily it doesn
 
 9 dollars and 99 cents 4.5/5 stars
 
-That's the end of by TheCodingMonkeys.
+That's the end of Featured App.
 
 Now, the Microblog updates section.
 
@@ -155,15 +153,13 @@ Now, the Microblog updates section.
 - US Internet put the conduit from our boulevard to the house. Only a couple more weeks to gig!
 - Happy Halloween!
 - Ready for tomorrow!
-- Moving 15 years of blog content to Jekyll and Markdown files is surprisingly difficult. My blog first ran on.Text, then WordPress, then Squarespace. Each step along the way was a full migration. No content lost. Now I’m in Jekyll and trying to get links working and validated in posts. And the media files, oh what a mess. Progress is made but it is slow and even with extensive scripting skills there is still much to do manually. It feels like I’ll be in a good spot when done, but it’s a lot more than I planned.
+- Moving 15 years of blog content to Jekyll and Markdown files is surprisingly difficult. My blog first ran on .Text, then WordPress, then Squarespace. Each step along the way was a full migration. No content lost. Now I’m in Jekyll and trying to get links working and validated in posts. And the media files, oh what a mess. Progress is made but it is slow and even with extensive scripting skills there is still much to do manually. It feels like I’ll be in a good spot when done, but it’s a lot more than I planned.
 - Watched Dope tonight. Really good movie.
 - New Glarus Belgain Red - one of my favorite beers!
 - Pretending I’m a rancher and burning brush.
 - Restrung a guitar for first time. Now if I could do anything else with it.
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

@@ -60,7 +60,7 @@ Link seven. "Why we moved our servers to Iceland · Simple Analytics"
 
 Surveillance pushing data to other countries.
 
-Although, Iceland is somewhat following the laws of the European Economic Area, it has its own approach to privacy. For example, the Icelandic Data Protection Act encourages anonymity of user data. ISPs and content hosts are not held legally liable for the content that they host or transmit. According to Icelandic law, its not the domain name provider, but the registrant of an.is domain name that is responsible for ensuring the use of the domain is within the limits of the law (ISNIC). The government does not place any restrictions on anonymous communication and no registration is required when purchasing a SIM card.
+Although, Iceland is somewhat following the laws of the European Economic Area, it has its own approach to privacy. For example, the Icelandic Data Protection Act encourages anonymity of user data. ISPs and content hosts are not held legally liable for the content that they host or transmit. According to Icelandic law, its not the domain name provider, but the registrant of an .is domain name that is responsible for ensuring the use of the domain is within the limits of the law (ISNIC). The government does not place any restrictions on anonymous communication and no registration is required when purchasing a SIM card.
 
 Iceland has been making strides to be a data haven for digital rights. I do wonder how they can have enough bandwidth for serious use though, given they are a remote island in a very difficult climate.
 

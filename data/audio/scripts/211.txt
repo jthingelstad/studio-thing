@@ -100,17 +100,7 @@ I find Nerdle much harder than Wordle.
 
 nerdlegame 19 5/6
 
-⬜⬜⬜
-⬜⬜
-⬜⬜
-
 nerdlegame 20 6/6
-
-⬜⬜⬜⬜⬜
-⬜⬜⬜⬜⬜
-⬜⬜
-⬜⬜
-⬜⬜
 
 Sunday @ 10:42 AM
 

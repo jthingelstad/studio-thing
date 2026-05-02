@@ -56,7 +56,7 @@ It lowers YouTube (Google's) revenue by blocking this stuff. I wouldn't expect m
 
 Link six. "RSSMailer"
 
-Simple app to send emails when an item appears in an RSS feed. Cool tools like this are just one of the reasons I RSS.
+Simple app to send emails when an item appears in an RSS feed. Cool tools like this are just one of the reasons I love RSS.
 
 Link seven. "Python is eating the world: How one developer's side project became the hottest programming language on the planet | ZDNet"
 

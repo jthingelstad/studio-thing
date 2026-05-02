@@ -100,15 +100,13 @@ Link twenty. "Diversity in Open Source Is Even Worse Than in Tech Overall | WIRE
 
 This isn't at all surprising but falls in the category of 'when you thought it couldn't get any worse, then this.' Remember when you read that diversity in tech is a culture problem.
 
-Link 21. "Corporate Surveillance in Everyday Life"
+Link twenty one. "Corporate Surveillance in Everyday Life"
 
 I think a lot about digital tracking and privacy online. It worries me greatly as one of the least appreciated aspects of so much activity online. People shrug this off as not important but nearly everyone does that with no appreciation of the issue or how deep the surveillance goes. I haven't read this whole report, but it’s on my list to read in it’s entirety. I think I’m going to start using the word surveillance instead of tracking. It’s more accurate.
 
 That's the end of Links.
 
 Now, the Promotion section.
-
-[](
 
 Creative Commons helps you legally share your knowledge and creativity to build a more equitable, accessible, and innovative world — unlocking the full potential of the internet to drive a new era of development, growth, and productivity. I have been a supporter of Creative Commons for years. Larry Lessig, the founder of Creative Commons, has done the world a great thing by creating a legal structure to help authors and creators encourage remix culture. In addition to donating, you should consider making your content under a Creative Commons license. Donate to Creative Commons today!
 
@@ -130,8 +128,6 @@ Now, the Microblog updates section.
 - Put the archive of the Open Loop podcast that @garrickvanburen and I did in twenty twelve back online. Fun stuff. Lot’s of Kubb.
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

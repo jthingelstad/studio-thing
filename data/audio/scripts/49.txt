@@ -32,7 +32,7 @@ Interesting service to be the back end of activity streams for various products.
 The best text editor for macOS – The Sweet Setup
 thesweetsetup.com
 
-I’m sticking with Sublime Text as my editor of choice but it is interesting to read about Atom and it’s model for extensibility. I agree with this writeup about BBEdit. It is historically great, but if you don't know it I don't think I would be investing in learning it due to the lack of extensibility. ⌨
+I’m sticking with Sublime Text as my editor of choice but it is interesting to read about Atom and it’s model for extensibility. I agree with this writeup about BBEdit. It is historically great, but if you don't know it I don't think I would be investing in learning it due to the lack of extensibility.
 
 That's the end of Software.
 

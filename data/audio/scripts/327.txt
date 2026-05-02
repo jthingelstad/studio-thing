@@ -229,7 +229,7 @@ Now, the Briefly section.
 
 Link one. "The internet’s hidden creative renaissance (and how to find it)"
 
-I love all that is the IndieWeb. Let's keep the Web Weird!
+I love all that is the IndieWeb. Let's keep the Web Weird! love
 
 Link two. "What I think about when I think about Claude Code"
 

@@ -195,7 +195,7 @@ Link four. "Arthur Ventures Raises 375,000,000 dollars in New Capital — Arthur
 
 Congrats to local fund!
 
-Link five. "The Perils of an.xyz Domain"
+Link five. "The Perils of an .xyz Domain"
 
 Good examples of how DNS reputation can impact your service.
 

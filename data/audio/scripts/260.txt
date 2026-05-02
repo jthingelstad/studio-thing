@@ -26,7 +26,7 @@ It took me a while to figure out what Tab Groups would be useful for, and then I
 
 Link three. "Style your RSS feed"
 
-I RSS so much, but it is confusing to users if you accidentally load an RSS feed and are staring at a bunch of XML in your browser. This styling "how to" is really simple and makes RSS feeds both intelligible, as well as nearly usable standalone without a feed reader.
+I love RSS so much, but it is confusing to users if you accidentally load an RSS feed and are staring at a bunch of XML in your browser. This styling "how to" is really simple and makes RSS feeds both intelligible, as well as nearly usable standalone without a feed reader.
 
 Link four. "Project management | Seth's Blog"
 

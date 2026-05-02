@@ -121,7 +121,7 @@ Tammy read this book and really liked it. She found a lot of compelling informat
 
 Getting Things Done® | Get a Grip on Your Process, or Give It Up
 
-David Allen getting real with some tough love.
+David Allen getting real with some tough love. love
 
 AWS Lambda in Production: State of Serverless Report twenty seventeen
 
@@ -137,7 +137,7 @@ This is fabulous story about this song. Thanks to Steve Yaeger for the introduct
 
 Freedom (TM)
 
-Now, the by Daniel Suarez section.
+by Daniel Suarez
 
 The New York Times bestseller Daemon unleashed a terrifying technological vision of an all-powerful, malicious computer program. Now, our world is the Daemon's world—unless someone stops it once and for all...
 
@@ -159,10 +159,6 @@ If you use Git as part of your toolchain and you want to do more on your iOS dev
 - Somebody thought these red sunglasses with flashing lights were a good idea?
 - Spent a lot of time in this while (sick) { sleep(); } loop today.
 - Earned the botanist badge in Forest!
-
-That's the end of by Daniel Suarez.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

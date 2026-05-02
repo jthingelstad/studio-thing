@@ -146,7 +146,7 @@ Now, the Microblog updates section.
 - BTC went up 21% in the last week!
 - I just donated to @internetarchive. Support free access to knowledge! Donate!
 - Happy to support Let’s Encrypt on it’s mission to provide free SSL for anyone! Donate!
-- I @creativecommons! I’m a proud donor of CC. Join me in building a vibrant global commons - donate now!
+- I love @creativecommons! I’m a proud donor of CC. Join me in building a vibrant global commons - donate now!
 - Join me in supporting the Electronic Frontier Foundation in their twenty seventeen fundraising campaign with matching challenge grant!
 - Gas station on my commute just added Apple Pay to pumps. Hope that is a trend that accelerates.
 - Realized today that the group gasket and shower screen on my espresso machine is supposed to be replaced every year. I guess 10 times that long isn’t too bad. Replacements on the way!
@@ -155,8 +155,6 @@ Now, the Microblog updates section.
 - Family night out with dinner at Bacio and then went to Coco. What a great movie! Highly recommended!
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

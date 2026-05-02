@@ -180,7 +180,7 @@ Now that we have Jack Dorsey using “Web5” I assume all DNS and ENS names of 
 
 Friday @ 10:40 PM
 
-I can now declare some level of basic competency with the irrigation controller and its various programs, schedules, start times, durations, and zones. ⭐
+I can now declare some level of basic competency with the irrigation controller and its various programs, schedules, start times, durations, and zones.
 
 I successfully have three programs running complementary and differing start times and durations.
 
@@ -216,7 +216,7 @@ In general, I think we can agree that leading your company via tweet is not a gr
 
 Link four. "Clarus Returns Home"
 
-Clarus the Dogcow makes a return in macOS.
+Clarus the Dogcow makes a return in macOS. love
 
 Link five. "Apple and MLS to present all MLS matches for 10 years, beginning in twenty twenty three - Apple"
 

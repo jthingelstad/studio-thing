@@ -265,7 +265,7 @@ Collection of examples for building on the OpenAI API.
 
 Link four. "A Good Enough Guestbook"
 
-A long, long time ago, before blogs commonly had comments, they would often have a Guest Book. Some page on the site that the author could put emails they got, or if it was really fancy the visitor could add to the guest book using a form. I love Good Enough's Guestbook populated with drawings from their Internet Printer.
+A long, long time ago, before blogs commonly had comments, they would often have a Guest Book. Some page on the site that the author could put emails they got, or if it was really fancy the visitor could add to the guest book using a form. I love Good Enough's Guestbook populated with drawings from their Internet Printer. love
 
 Link five. "The Musk Algorithm"
 

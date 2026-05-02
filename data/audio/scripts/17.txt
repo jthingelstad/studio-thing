@@ -82,15 +82,12 @@ That's the end of Links.
 
 Now, the Promotion section.
 
-[](
-
 Minnestar is the technology community for Minnesota. If you are passionate about technology you need to go to Minnebar and Minnedemo. Did you know that Minnebar is the largest BarCamp in North America and one of the largest in the world? Its also been going on for over 10 years? Minnedemo is the best place to hear about innovative tech and fun projects in the Twin Cities area. I am on the Minnestar board and I focus on Minnestar as one of the driving forces improving and expanding the technology community in the area. Minnestar is a 501c3 non-profit. Become a Community Supporter today!
 
 That's the end of Promotion.
 
 Now, the Highlighted iOS App section.
 
-[](
 Day One Journal
 
 by Bloom Built Inc
@@ -115,8 +112,6 @@ Now, the Microblog updates section.
 - Drinking delicious coffee with the morning breeze editing the Weekly Thing for this week!
 
 That's the end of Microblog updates.
-
-Now, the The end section.
 
 Thank you for subscribing to the Weekly Thing! If you know of people that would like the Weekly Thing please forward it along!
 

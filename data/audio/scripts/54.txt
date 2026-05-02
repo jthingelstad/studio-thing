@@ -106,7 +106,7 @@ Following the path of this story, my daughter has found this fascinating.
 - The Original Hacker's Dictionary www.dourish.com
 The original jargon.txt file from around 1998. Many of these terms are still in active use.
 - Regex Crossword regexcrossword.com
-This is awesome! Learn Regex and have geeky fun at the same time.
+This is awesome! love Learn Regex and have geeky fun at the same time.
 - Your serverless Raspberry Pi cluster with Docker blog.alexellis.io
 Why not? Similar to Raspberry Pi Kubernetes Cluster.
 - Meet Surface Hub 2 - Microsoft Devices BlogMicrosoft Devices Blog blogs.windows.com

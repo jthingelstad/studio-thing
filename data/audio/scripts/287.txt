@@ -1,4 +1,4 @@
-The Weekly Thing, issue 287. Plinky, Piccolo, Privacy. Published May 11, twenty twenty four. By Jamie Thingelstad. In this issue: Piccolo stackless Lua, differential privacy, ENS Labs.box domains, Amazon margin expansion, Marvel Vision Pro, Scott Galloway TED.
+The Weekly Thing, issue 287. Plinky, Piccolo, Privacy. Published May 11, twenty twenty four. By Jamie Thingelstad. In this issue: Piccolo stackless Lua, differential privacy, ENS Labs .box domains, Amazon margin expansion, Marvel Vision Pro, Scott Galloway TED.
 
 Good morning!
 
@@ -40,9 +40,9 @@ Link three. "Companies Are Just a Graph of Algorithms"
 
 Interesting framing from Miessler. To reinforce his thought process I would highlight the importance of System Thinking to most businesses. The reason it is important is that any company of size has to think of the systems in the business and optimize them. Additionally think about organizational design. Many of those models focus on functional units with inputs and outputs. Combine those things and you get far away from some organic jazz band and into a choreographed symphony working with a clear set of systems and processes. Given that framing, AI can be very effective at many of those parts.
 
-Link four. "ENS Labs Unveils Integration with.box Domains: A New Era for Web3 Identities | ENS Blog"
+Link four. "ENS Labs Unveils Integration with .box Domains: A New Era for Web3 Identities | ENS Blog"
 
-I have a thesis around Web3 technology that it will blend into the existing web and be the central force behind a push, which I’m not sure will be big or small, to decentralize services. I dislike how it is used as opposition to the current web stack. And the best example I see for exemplifying this is what the ENS team is doing. Ethereum Name Service is a critical capability that turns thingelstad.eth into my wallet address, just like DNS turns thingelstad.com into my website address. Several months back ENS also made it so I can put my wallet address in DNS and now ENS can resolve thingelstad.com to my wallet address too. The next step is to have a completely merged top-level domain that blends traditional DNS and ENS into one, and that is what I think we'll see figured out with.box.
+I have a thesis around Web3 technology that it will blend into the existing web and be the central force behind a push, which I’m not sure will be big or small, to decentralize services. I dislike how it is used as opposition to the current web stack. And the best example I see for exemplifying this is what the ENS team is doing. Ethereum Name Service is a critical capability that turns thingelstad.eth into my wallet address, just like DNS turns thingelstad.com into my website address. Several months back ENS also made it so I can put my wallet address in DNS and now ENS can resolve thingelstad.com to my wallet address too. The next step is to have a completely merged top-level domain that blends traditional DNS and ENS into one, and that is what I think we'll see figured out with .box.
 
 Link five. "The defensive arrogance of TL;DR | Seth's Blog"
 
