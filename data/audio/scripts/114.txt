@@ -20,7 +20,7 @@ Simple and clear. Aligned with the user and what they should get.
 
 Link two. "The WeWork IPO – Stratechery by Ben Thompson"
 
-WeWork filed it’s S-1 to go public and it is drawing a lot of attention. There was a lot written about it, but I could only get time to read one of them so I picked Ben Thompson's. Two other articles worth a look are WeWork isn’t a tech company; it’s a soap opera - The Verge which is a bit more salicious, and a detailed article What is We!? Understanding the WeWork IPO - Byrne Hobart - Medium by a former banker.
+WeWork filed it’s S-1 to go public and it is drawing a lot of attention. There was a lot written about it, but I could only get time to read one of them so I picked Ben Thompson's. Two other articles worth a look are WeWork isn't a tech company; it's a soap opera - The Verge which is a bit more salicious, and a detailed article What is We!? Understanding the WeWork IPO - Byrne Hobart - Medium by a former banker.
 
 I like Thompson's two-sided Bull and Bear look at WeWork. Comparing it to AWS is good, but I think the demand and adoption curve is so different that the comparison is strained. The references to WeWork Corporate Governance issues are worth noting. After Uber's horrible culture, one has to wonder about a company that seems to have so much self-dealing. Add to that the vast amount of money involved and I wonder if this isn't a future Enron-like story.
 
@@ -46,7 +46,7 @@ Endorsement of WebKits new Tracking Policy from the very important EFF.
 
 Link three. "Apple Card launches today for all US customers - Apple"
 
-I really don't need another credit card. But, I really want to get the new Apple Card. I’m curious to see how the interface works. It seems like a good deal as far as a card goes. Plus, the card is made of Titanium! If you do get it, check out the related You should opt out of the Apple Card’s arbitration clause — here’s how article.
+I really don't need another credit card. But, I really want to get the new Apple Card. I’m curious to see how the interface works. It seems like a good deal as far as a card goes. Plus, the card is made of Titanium! If you do get it, check out the related You should opt out of the Apple Card's arbitration clause — here's how article.
 
 Link four. "Exclusive: Automattic CEO Matt Mullenweg on what’s next for Tumblr - The Verge"
 
@@ -80,7 +80,7 @@ That's the end of Notable Links.
 
 Now, more links.
 
-- Amazon Forecast – Now Generally Available | AWS News Blog aws.amazon.com
+- Amazon Forecast – Now Generally Available | AWS News Blog
 Interesting new offering that could bring more sophisticated forecasting capabilities to a larger audience.
 - Eivind Hjertnes | The “I” in Team hjertnes.social
 - Chart.xkcd | xkcd styled chart lib timqian.com

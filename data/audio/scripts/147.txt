@@ -182,9 +182,7 @@ The Importance, Accessibility, and Inclusivity of Connecting Online
 
 We have all shifted quickly to online platforms for many of our interactions. It is easy to see some of the challenges with this. Technical barriers. Cognitive confusion leading to "zoom fatigue". There are also some powerful benefits online that were not as obvious before.
 
-That's the end of Stream.
-
-Now, the Work section.
+Work
 
 For "knowledge workers," most everyone is doing their work distributed, and I have noticed an equalizing aspect to it. The two dimensions that I see the most are geography differences being lessened, and more balance between those that are outgoing versus more introverted. When everyone you work with is in an equally sized video frame right in front of you, geography is only notable to the extent that it may be evening where they are and morning for you. I've had many team members share with me that they have never felt more connected with the members of our various offices. And perhaps more powerfully, our team members in other offices have felt like they can contribute and engage better with the rest of the teams.
 
@@ -192,7 +190,7 @@ This reinforces one of my beliefs about remote versus centralized teams that it 
 
 Large group gatherings have also surprised me online. They work very well, as long as you keep the time short. And one of my favorite parts is that you can successfully engage in Q and A with the audience. I've held team all-hands meetings for decades, and I long ago decided to not open up time for Q and A because the chances of someone asking a question were near nil. The social dynamics of being that one person in a room of 250 that stands up with a question are just too challenging for most individuals to navigate. Online tools though by necessity must create a feature to do this. They have to enable it. And in doing so, they remove the barriers that inhibit people. I've found much more engagement than I've ever seen in in-person large group meetings.
 
-That's the end of Work.
+That's the end of Stream.
 
 Now, the mini minnebar section.
 

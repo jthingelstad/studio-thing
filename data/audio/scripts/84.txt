@@ -118,7 +118,7 @@ That's the end of Give Back.
 
 Now, more links.
 
-- TECHdotMN Bootstrapped Software Maker Propelware Scooped Up By Right Networks - TECHdotMN tech.mn
+- TECHdotMN Bootstrapped Software Maker Propelware Scooped Up By Right Networks - TECHdotMN
 Local software company acquired.
 - Scripting API now in public beta! | Minecraft minecraft.net
 I sense a sudden surge of kids learning Javascript!

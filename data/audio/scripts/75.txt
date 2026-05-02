@@ -2,11 +2,11 @@ The Weekly Thing, issue 75. Oct 13, twenty eighteen. Published October 13, twent
 
 You could call this the New York issue of the Weekly Thing. For years I’ve told my kids that when they turn 13 I will take them on a trip, just Dad and them, to New York City to see the sights. Mazie is 13 so we boarded our flight to Newark on Friday and spent the weekend seeing NYC in all of it’s grandeur.
 
-It was so great to see the city through her eyes. She loved the experience of New York. For sure School of Rock: The Musical was a big highlight for her. We saw the Statue of Liberty and also looked up my Great Grandfather Josef Gins in Ellis Island. It was amazing for my daughter to think of him at 15 years old, just two years older than her, immigrating to the United States all on his own.
+It was so great to see the city through her eyes. She loved the experience of New York. For sure, School of Rock: The Musical was a big highlight for her. We saw the Statue of Liberty and also looked up my Great Grandfather Josef Gins in Ellis Island. It was amazing for my daughter to think of him at 15 years old, just two years older than her, immigrating to the United States all on his own.
 
 We had a fabulous time and we need to make this the first, not the last, of trips like this.
 
-I also want to welcome a group of subscribers that discovered the Weekly Thing via Azeem Azhar’s Exponential View! I subscribe to EV and they welcome subscribers to share things they are working on. In issue #186, there is a mention of the Weekly Thing in the “What you are up to” section. Welcome to my little spot in your mailbox to share what was interesting to me over the last week. I hope you enjoy it!
+I also want to welcome a group of subscribers that discovered the Weekly Thing via Azeem Azhar's Exponential View! I subscribe to EV and they welcome subscribers to share things they are working on. In issue #186, there is a mention of the Weekly Thing in the “What you are up to” section. Welcome to my little spot in your mailbox to share what was interesting to me over the last week. I hope you enjoy it!
 
 Now, the Featured Links section.
 
@@ -84,9 +84,9 @@ That's the end of Give Back.
 
 Now, more links.
 
-- Rosie Pattern Language: Improving on 50-year Old Regular Expression Technology - Strange Loop thestrangeloop.com
+- Rosie Pattern Language: Improving on 50-year Old Regular Expression Technology - Strange Loop
 I didn’t even know there was an alternative to regular expressions like this.
-- The Pixel 3: Everything You Need To Know About Google’s New Phone www.buzzfeednews.com
+- The Pixel 3: Everything You Need To Know About Google's New Phone
 Google’s newest incarnation of their flagship phone. Some cool innovations.
 - Latest Revision to ARM Instruction Set Includes Optimizations Just for JavaScript — Daring Fireball twitter.com
 This explains why Javascript is so fast for certain benchmarks on the iPhone XS!

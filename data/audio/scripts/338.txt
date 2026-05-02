@@ -112,7 +112,7 @@ I hope that reading this gives you a perspective, a different edge, to look at w
 
 I think what we need to counter this velocity meme train is perspective, and control, and even a bit of meditation on a regular basis.
 
-Link seven. "Claude's new constitution Anthropic"
+Link seven. "Claude's new constitution | Anthropic"
 
 Anthropic has been a leading voice, and an open one, on how they build their models. This new "constitution" is part of how they "program" (is teach a better word?) it.
 

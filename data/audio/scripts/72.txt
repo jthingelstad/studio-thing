@@ -6,7 +6,7 @@ Now, the Featured Links section.
 
 Link one. "LKML: Linus Torvalds: Linux 4.19-rc4 released, an apology, and a maintainership note"
 
-The technology industry has an unusual amount of overly aggressive communication and criticism. Flame wars and such got their start somewhere. Linus Torvald's, the creator of Linux and Git, two of the most important software products of our era is legend for being a complete jerk to people. This about face and apology is significant.
+The technology industry has an unusual amount of overly aggressive communication and criticism. Flame wars and such got their start somewhere. Linus Torvalds, the creator of Linux and Git, two of the most important software products of our era, is legend for being a complete jerk to people. This about face and apology is significant.
 
 This week people in our community confronted me about my lifetime of not understanding emotions. My flippant attacks in emails have been both unprofessional and uncalled for. Especially at times when I made it personal. In my quest for a better patch, this made sense to me. I know now this was not OK and I am truly sorry.
 

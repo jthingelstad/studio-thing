@@ -50,7 +50,7 @@ An interesting read looking at organizational design along synchronous v. asynch
 
 Link three. "52 Things I Know At 52 – Rhoneisms"
 
-My friend Patrick Rhone reflecting on his 52nd birthday, or version 52.0.0 (what? ).
+My friend Patrick Rhone reflecting on his 52nd birthday, or version 52.0.0 (what?).
 
 Link four. "Beachheads and Obstacles – Stratechery by Ben Thompson"
 
@@ -96,8 +96,8 @@ That's the end of Notable Links.
 
 Now, more links.
 
-- Where to find the hours to make it happen | Derek Sivers sivers.org
-- Bike crash left Spokane man unconscious, so his Apple Watch called 911 | The Seattle Times www.seattletimes.com
+- How to find the hours to make it happen – Derek Sivers
+- Bike crash left Spokane man unconscious, so his Apple Watch Bike crash left Spokane man unconscious, but his Apple Watch called 911 — The Seattle Times
 Cool how some wearable tech is having a significant impact for people.
 - Daring Fireball: Richard Stallman’s Disgrace daringfireball.net
 More on Stallman's interactions and behavior.

@@ -56,7 +56,7 @@ Losing friends because you’re not on Facebook is only a valid concern to the e
 
 [Python post-Guido [LWN.net]](
 
-It is interesting to watch the self-organizing starting around governance of Python and it’s future direction post Guido Van Possum. Governance, constitutions, voting, quorum all come into play.
+It is interesting to watch the self-organizing starting around governance of Python and it’s future direction post Guido van Rossum. Governance, constitutions, voting, quorum all come into play.
 
 Link five. "Event-Driven Architecture – @herbertograca"
 
@@ -149,7 +149,7 @@ Custom calculators for all sorts of different scenarios. Interesting idea.
 - Walmart establishes strategic partnership with Microsoft to further accelerate digital innovation in retail news.walmart.com
 Walmart inks long-term partnership with Microsoft in the cloud.
 - [[python-committers] Transfer of power]( www.mail-archive.com
-Wow, Guido von Rossum, creator of Python, is stepping aside as Benevolent Dictator for Life!
+Guido van Rossum, creator of Python, is stepping Benevolent Dictator for Life!
 
 That's the end of More Links.
 

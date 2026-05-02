@@ -1,6 +1,6 @@
 The Weekly Thing, issue 58. Jun 16, twenty eighteen. Published June 16, twenty eighteen. By Jamie Thingelstad. In this issue: Siri Shortcuts iOS automation, Tim Cook interview, psychology of dread tasks, Living APIs GraphQL, Intelligent Tracking Prevention 2.0.
 
-Hello from Bayfield, Wisconsin! We are hear to see Brandi Carlile play at the Big Top Chautauqua. It looks like the other thing we'll be doing is getting rained on. No trip to Bayfield would be complete without a visit to the Candy Shoppe as well for some delicious wine bread.
+Hello from Bayfield, Wisconsin! We are here to see Brandi Carlile play at the Big Top Chautauqua. It looks like the other thing we'll be doing is getting rained on. No trip to Bayfield would be complete without a visit to the Candy Shoppe as well for some delicious wine bread.
 
 Now, the Featured Links section.
 

@@ -68,7 +68,7 @@ The 65 billion dollars gain is nonetheless real – rest assured of that. But on
 
 44% of their gain was a result of the tax overhaul. The read on his 10-year "bet" against managed funds is very good (news flash, the index fund won). Plus bonus points for quoting Kipling.
 
-Flavors of Engineering Management [· [Thinking inside a large box];](
+Flavors of Engineering Management · Thinking inside a large box
 blog.benjamin-encz.de
 
 Interesting look at some different ways to manage engineering teams. I've always done "Product Team Engineering Manager" structure.

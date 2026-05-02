@@ -122,21 +122,21 @@ That's the end of Notable Links.
 
 Now, more links.
 
-- MakePass: Create Your Own Apple Wallet Passes on the Mac - MacStories www.macstories.net
+- MakePass: Create Your Own Apple Wallet Passes on the Mac - MacStories
 Neat app. I bought it for 1 dollar to see if I could get rid of some of the cards in my wallet.
 - Cool New Features in Python 3.8 – Real Python realpython.com
 Some great new features in Python!
-- Fish (shell) fun: event handlers - BrettTerpstra.com brettterpstra.com
+- (Fish shell) fun: event handlers - BrettTerpstra.com brettterpstra.com
 I switched to fish shell a while ago, after over a decade of zsh, but I haven't gotten all geeked out on this stuff. Yet.
 - The Unix Game www.unixgame.io
 Now this is the kind of game I can dig!
-- Disgraced Google Exec Andy Rubin Quietly Left His Venture Firm Earlier This Year www.buzzfeednews.com
+- Disgraced Google Exec Andy Rubin Quietly Left His Venture Firm Earlier This Year
 Rubin get's paid 90 million dollars to leave Google, then 9 million dollars to leave the next company. This guy is toxic.
 - Brainstorming techniques, ideas and rules for group brainstorming miro.com
 Great guidelines for running brainstorming sessions. I love the callout to have a facilitator.
 - UTF-8 history www.cl.cam.ac.uk
 Ken Thompson created so much foundational tech.
-- Eliud Kipchoge Breaks Two-Hour Marathon Barrier - The New York Times www.nytimes.com
+- Eliud Kipchoge Breaks Two-Hour Marathon Barrier - The New York Times
 Sure this was optimized to do everything to help him hit the time, but it’s still an absolutely amazing achievement!
 
 That's the end of More Links.

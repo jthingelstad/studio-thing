@@ -20,7 +20,6 @@ Now, the My Weekly Photo section.
 
 The People's Friendship Arch in Kyiv, Ukraine. Under the arch are two figures, a Ukrainian and Russian worker standing together. Note the crack that has been painted on the arch.
 
-The People's Friendship Arch in Kyiv, Ukraine. Under the arch are two figures, a Ukrainian and Russian worker standing together. Note the crack that has been painted on the arch.
 Nov 17, twenty nineteen at 9:01 AM
 Kyiv, Ukraine
 
@@ -129,7 +128,7 @@ Thursday @ 7:16 PM
 
 Great to see #TeamSPS wrapping up a fantastic trip to #KubeCon!
 
-It’s incredibly hard to leave #KubeCon in sunny San Diego. I wish it was here every year! #TeamSPS had an awesome trip filled with tons of learning and new friends. Cheers to the continued growth of a great community! pic.twitter.com/awKFrxse4w
+It's incredibly hard to leave #KubeCon in sunny San Diego. I wish it was here every year! #TeamSPS had an awesome trip filled with tons of learning and new friends. Cheers to the continued growth of a great community! pic.twitter.com/awKFrxse4w
 — Andy Domeier (@AndyJD_) November 22, twenty nineteen
 
 Thursday @ 3:10 PM
@@ -152,7 +151,7 @@ Tuesday @ 9:37 PM
 
 Kubernetes on jets? Neat!
 
-I have to say, I’m really blown away by the #DOD talk at #KubeCon! Really impressive to see the stacks they are using. “We don’t run huge clusters, we run many little clusters, weapon systems, business systems, etc… “ They are even running #kubernetes and #istio on jets! pic.twitter.com/HwmTFi0Qrt
+I have to say, I’m really blown away by the #DOD talk at #KubeCon! Really impressive to see the stacks they are using. "We don't run huge clusters, we run many little clusters, weapon systems, business systems, etc… " They are even running #kubernetes #istio on jets! pic.twitter.com/HwmTFi0Qrt
 — Andy Domeier (@AndyJD_) November 19, twenty nineteen
 
 Tuesday @ 10:01 AM

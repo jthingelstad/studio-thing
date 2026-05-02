@@ -42,7 +42,7 @@ From time to time someone will do something really strange and compare XML and J
 
 Link two. "Thank you, Guido | Dropbox Blog"
 
-A very sincere and heartfelt thank you to the former Benevolent Dictator for Life (BDFL) of Python, Guido van Rossum, as a retires from Dropbox. Dropbox was pretty lucky to get someone of his background on their team, and reading how much Dropbox uses Python I suspect it was hugely beneficial to him to work with the language he created operating at such scale!
+A very sincere and heartfelt thank you to the former Benevolent Dictator for Life (BDFL) of Python, Guido van Rossum, as he retires from Dropbox. Dropbox was pretty lucky to get someone of his background on their team, and reading how much Dropbox uses Python I suspect it was hugely beneficial to him to work with the language he created operating at such scale!
 
 Link three. "5 things Rob Pike attributes to Go's success —The Changelog"
 

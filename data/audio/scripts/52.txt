@@ -6,11 +6,11 @@ I published the first Weekly Thing on May 13, twenty seventeen. That first one w
 
 Thank you for subscribing and let's get on to the second year of Weekly Things! As always, if you know others that you think would enjoy the Weekly Thing send them to to sign up!
 
-Now, the Featured section.
+Now, the Featured Links section.
 
 Don't miss these gems from the past week.
 
-The Numbers Behind WeWork’s Growing Empire - Bloomberg
+The Numbers Behind WeWork's Growing Empire - Bloomberg
 www.bloomberg.com
 
 This doesn't read like a healthy company. CEO Adam Neumann has 65% of the voting shares, and in the last two years has paid 9.8 million dollars in leases to properties owned by officers and affiliates of the company, with 90 million dollars in future lease payments. Meanwhile the companies costs are rising faster than revenue. 220,000 members with 251,000 desks? I would think they would have more subscribers than desks.
@@ -29,7 +29,7 @@ stackoverflow.blog
 
 Even in my casual use of Stack Overflow I have come across some of the abrasive culture items noted in this post from their EVP of Culture and Experience, Jay Hanlon. This is a good statement of the problem and where they are starting. The whole time I read it I kept thinking how incredibly hard it is to build community on the Internet. Your average community in the real world seems to trend to nice, but online seems to trend the other way.
 
-That's the end of Featured.
+That's the end of Featured Links.
 
 Now, the Photo section.
 
@@ -99,7 +99,7 @@ medium.freecodecamp.org
 
 Nicely put together list of Do's and Don'ts for conducting code reviews in a way that helps and improves your culture. This is a topic more should be written about. Reviewing someone else's work without regard has a lot of downside potential.
 
-[Incident Management at Netflix Velocity [video]](
+Incident Management at Netflix Velocity (video)
 www.infoq.com
 
 I like the stated goals of incident management: Short, Unique, and Never Forget. I've seen many incident management processes and I don't know that many of them state their goals up front. They are often assumed. They also enumerate the strategies for those goals: Engagement, Communication, Coordination, and Memorialization. I like the clarity of goal versus strategy. Often times communication is stated as a goal, not a strategy, of incident management.
@@ -112,7 +112,7 @@ After reading A Crack in Creation I continue to find updates on CRISPR interesti
 The Best VPN Service: Reviews by Wirecutter | A New York Times Company
 thewirecutter.com
 
-VPN services used to be the domain business alone but with more focus on privacy, less trust of the providers that bring us our connectivity, and more security issues I know a lot of people are buying their own VPN services. This is the most comprehensive and researched view of VPN services I've seen to date. I personally use Enrypt.me which is bundled in with Eero Plus, but I have had a number of issues with it.
+VPN services used to be the domain business alone but with more focus on privacy, less trust of the providers that bring us our connectivity, and more security issues I know a lot of people are buying their own VPN services. This is the most comprehensive and researched view of VPN services I've seen to date. I personally use Encrypt.me which is bundled in with Eero Plus, but I have had a number of issues with it.
 
 Humans broke the internet, understanding them better might help fix it — SAGE Ocean | Big Data, New Tech, Social Science
 ocean.sagepub.com

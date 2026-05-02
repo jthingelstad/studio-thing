@@ -32,8 +32,6 @@ Now, the My Weekly Photo section.
 
 During blustery fall days the autumn leaves cling to the trees, flapping in the wind. You can hear them crinkle as they blur into a rusty orange pile on the ground.
 
-During blustery fall days the autumn leaves cling to the trees, flapping in the wind.
-Oct 20, twenty eighteen at 12:40 PM
 300 Eagle Dr, Park Rapids MN
 
 That's the end of My Weekly Photo.
@@ -135,7 +133,7 @@ That's the end of Give Back.
 
 Now, more links.
 
-- How Google Protected Andy Rubin, the ‘Father of Android’ - The New York Times www.nytimes.com
+- How Google Protected Andy Rubin, the 'Father of Android' - The New York Times www.nytimes.com
 Is this Technologies #MeToo moment?
 - Meow Hash mollyrocket.com
 This is an interesting hashing algorithm. I've worked with solutions that use cryptographic hashes and they can be challenging to scale. This hash is specifically not cryptographically sound, but is highly performant.
@@ -174,7 +172,7 @@ Kubb, king of lawn games. Still love this painted set I won at the US National K
 
 Saturday @ 4:54 PM
 
-Fun (and chilly!) day playing Kubb and Mölkky (%5Ben.wikipedia.org/wiki/M%5D( at the Olson Family Weekend!
+Fun (and chilly!) day playing Kubb and Mölkky at the Olson Family Weekend!
 
 Saturday @ 10:15 AM
 

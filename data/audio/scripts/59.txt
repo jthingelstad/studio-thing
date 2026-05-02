@@ -44,11 +44,11 @@ Nice article from Chip Pearson describing how established companies in Minnesota
 
 Link three. "WhenWorks Ends the Scheduling Back-and-Forth – MacStories"
 
-Good overview of new service, WhenWorks. In the past I've used Calendly to do this. WhenWorks has a great set of features and using an iOS app to bridge to your calendars instead of doing server-to-server integration on the backend is novel. Services like this are very useful for people with busy calendars. It still doesn't solve the group scheduling problem which I still use Doodle for.
+Good overview of new service, WhenWorks. In the past I've used Calendly to do this. WhenWorks has a great set of features and using an iOS app to bridge to your calendars instead of doing server-to-server integration on the backend is novel. Services like this are very useful for people with busy calendars. It still doesn't solve the group scheduling problem, which I still use Doodle for.
 
 Link four. "Introducing YNAB’s API | YNAB"
 
-Cool news from You Need a Budget!, they have a new YNAB API. We have been using YNAB for a few years now and it works great for our family. Their transition a couple of years ago to a service-offering is allowing them to grow into new stuff like this API. I’m hopeful that this soon appears in Zapier and IFTTT so I can build with it even more easily.
+Cool news from You Need a Budget!, YNAB API. We have been using YNAB for a few years now and it works great for our family. Their transition a couple of years ago to a service-offering is allowing them to grow into new stuff like this API. I’m hopeful that this soon appears in Zapier and IFTTT so I can build with it even more easily.
 
 Link five. "Shortage of skilled workers challenges Twin Cities tech firms - StarTribune.com"
 
@@ -100,13 +100,13 @@ I can see how this would be handy at times, particularly in scripts.
 
 Link fourteen. "Survivorship Bias and Startup Hype"
 
-I first read about survivorship bias in Nassim Nicholas Taleb 's "Fooled by Randomness" (which is a great read!). When you look for it, you see survivorship bias everywhere.
+I first read about survivorship bias in Nassim Nicholas Taleb's "Fooled by Randomness" (which is a great read!). When you look for it, you see survivorship bias everywhere.
 
 That's the end of Notable Links.
 
 Now, the Give Back section.
 
-Let's Encrypt is a free, automated, and open certificate authority, run for the public’s benefit. All connections to web servers should be encrypted! The biggest challenge with encrypting the web historically has been the cost and hassle of getting an SSL certificate. Let's Encrypt has changed that entirely by being a free certificate authority. Let's Encrypt is possibly one of the most important things to happen on the web in recent years. Donate to Let's Encrypt today!
+Let's Encrypt is a free, automated, and open certificate authority, run for the public’s benefit. All connections to web servers should be encrypted! The biggest challenge with encrypting the web historically has been the cost and hassle of getting an SSL certificate. Let's Encrypt has changed that entirely by being a free certificate authority. Let's Encrypt is possibly one of the most important things to happen on the web in recent years. [Donate to Let's Encrypt today!
 
 That's the end of Give Back.
 
@@ -124,7 +124,7 @@ AWS SAM CLI is a CLI tool for local development and testing of Serverless applic
 I liked this just for the graphs and the interactive elements.
 - xmysql github.com
 One command to generate REST APIs for any MySql Database.
-- It Looks Like I’m Gonna Be Super Busy Til I’m Dead - McSweeney’s Internet Tendency www.mcsweeneys.net
+- It Looks Like I'm Gonna Be Super Busy Til I'm Dead - McSweeney's Internet Tendency www.mcsweeneys.net
 - Ballerina - A cloud native programming language for integration - Ballerina Blog blog.ballerina.io
 
 That's the end of More Links.

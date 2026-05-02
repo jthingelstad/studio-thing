@@ -85,7 +85,7 @@ johncarlis.weebly.com
 
 John Carlis was the Dean of Undergraduate Studies when I was in the Computer Science at the University of Minnesota. I took Lisp from John, and on several occasions we got a chance to catch up. He was an amazing professor and human being. Sadly the last time I saw him was at John Riedl's funeral. Also see In Memoriam: John Carlis.
 
-Stephen Hawking, one of the world’s great scientists, has died - Physics
+Stephen Hawking, one of the world's great scientists, has died - Physics
 www.economist.com
 
 The world lost a bright star with the passing of Stephen Hawking. This obituary ends poetically:
@@ -107,7 +107,7 @@ That's the end of Productivity.
 
 Now, the Business section.
 
-Toys R Us to close all 800 of its U.S. stores - The Washington Post
+Toys R Us to close all 800 of its Toys R Us to close all 800 of its U.S. stores - The Washington Post
 www.washingtonpost.com
 
 Large amounts of debt, and declining brand value.
@@ -147,7 +147,7 @@ That's the end of Web.
 
 Now, the Promotion section.
 
-WikiTribune is a news platform that brings journalists and a community of volunteers together. WikiTribune just got funded and I became a backer. I've been impressed with Wikipedia and am excited about Jimmy Wales and team focusing on the news ecosystem. I am very curious to see how they realize these objectives. I've previously thought about how news can be reinvented. I focused more on the open source model instead of wiki, but either way I feel like a fundamental rethink is possible! Let's see how they tackle this. Become a supporter today!
+WikiTribune is a news platform that brings journalists and a community of volunteers together. WikiTribune just got funded and I became a backer. I've been impressed with Wikipedia and am excited about Jimmy Wales and team focusing on the news ecosystem. I am very curious to see how they realize these objectives. I've previously thought about how news can be reinvented. I focused more on the open source model instead of wiki, but either way I feel like a fundamental rethink is possible! Let's see how they Become a supporter today!
 
 That's the end of Promotion.
 

@@ -36,7 +36,8 @@ medium.com
 
 I'd rather this was just called "Thinking" instead of "Deep Thinking". We don't need to "Deep Think" and "Deep Work" all the time. I'd rather focus on creating time to not be distracted. One of the things I've done in this area is to find common situations where I habitually grab my phone, elevator rides are a common one, and force myself to stop doing that. If you take transit, do one day a week with no mobile.
 
-Why am I unhappy? A new study explains Americas unhappiness epidemic — Quartz
+Why am I unhappy? A new study explains America's unhappiness epidemic — Quartz
+
 qz.com
 
 Another study suggesting that the increase of time spent in the digital world correlates strongly with unhappiness.
@@ -73,7 +74,7 @@ Workato is the fabric with which you can weave a very intelligent nervous system
 
 The fluffy language aside, it seems like a useful tool.
 
-What it’s like to be a developer at … – Increment: Development
+What it’s like to be a What it's like to be a developer at … – Increment: Development
 increment.com
 
 Cool article that gives a little glimpse of what it’s like to be a developer at a handful of different companies.

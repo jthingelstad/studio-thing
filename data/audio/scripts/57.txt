@@ -2,11 +2,13 @@ The Weekly Thing, issue 57. Jun 9, twenty eighteen. Published June 9, twenty eig
 
 With much fanfare and anticipation the school year has ended, and with it summer has officially started! Now is the time to take a moment to savor it all. In a blink it will be fall, the kids will be heading back to school and it will have felt like 5 minutes. I'm hoping to soak in the summer a bit more this year.
 
-My Blog Posts
+Now, the My Blog Posts section.
 
 DevOps Minneapolis: Changing the Enterprise Session
 
 I was on a panel this week at the DevOps meetup and got to speak to a number of topics about tech, best practices and some of my approaches to common problems in tech.
+
+That's the end of My Blog Posts.
 
 Now, the Featured Links section.
 

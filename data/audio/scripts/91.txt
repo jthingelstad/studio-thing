@@ -92,13 +92,13 @@ That's the end of Give Back.
 
 Now, more links.
 
-- Facebook Moves to Block Ad Transparency Tools — ProPublica www.propublica.org
+- Facebook Moves to Block Ad Transparency Tools — ProPublica
 At this point nothing should really surprise us from Facebook right?
 - Maze Design www.cgl.uwaterloo.ca
 Turns out generating mazes is pretty complex.
 - Omni Roadmap twenty nineteen - The Omni Group www.omnigroup.com
 Basically finish up what they were hoping to get done in twenty eighteen. I do think the JavaScript automation for OmniFocus will be a big deal.
-- Custom Mission Patches - design and print NASA-style mission patch stickers for your team. mission-patch.com
+- Custom Mission Patches - design and print NASA-style mission patch stickers for your team.
 These are a lot of fun!
 - Cronios – tow.com tow.com
 This is really janky and you have to build it yourself with Xcode but I it’s pretty cool to be able to run a Shortcut on a schedule like cron.

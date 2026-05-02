@@ -116,7 +116,7 @@ Now, more links.
 The demos of this library are mesmerizing.
 - xkcd: Voting Software xkcd.com
 True!
-- OmniFocus 3 for Mac Sneak Peek —Rosemary Orchard “I am once again lucky enough to be in the early preview for OmniFocus 3 - this time on the Mac!” www.rosemaryorchard.com
+- OmniFocus 3 for Mac Sneak Peek —Rosemary Orchard "I am once again lucky enough to be in the early preview for OmniFocus 3 - this time on the Mac!" www.rosemaryorchard.com
 First peak of OmniFocus 3 beta for the Mac.
 - Horrors of using Azure Kubernetes Service in production movingfulcrum.com
 I surely hope this isn’t the typical experience with Azure Kubernetes Service.
@@ -201,7 +201,7 @@ Tyler and I still have fun with Pokémon GO! My Trainer Code is 9399 2668 4290 i
 
 Saturday @ 12:46 PM
 
-Enjoying a delicious lunch at Dinosaur Bar-B-Que! Thanks Jason Greenberg @SPSJasonG for the recommendation!
+Enjoying a delicious lunch at Dinosaur Bar-B-Que Jason Greenberg @SPSJasonG for the recommendation!
 
 Friday @ 11:23 PM
 

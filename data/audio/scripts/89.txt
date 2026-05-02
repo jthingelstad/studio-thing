@@ -128,14 +128,14 @@ That's the end of Give Back.
 
 Now, more links.
 
-- More PM Problem Areas | Silicon Valley Product Group svpg.com
+- More PM Problem Areas | Silicon Valley Product Group
 Some areas to look out for development opportunities with product management teams.
 - Why did the PGP Web of Trust fail? – Henry Story – Medium medium.com
 TL;DR? Just way too hard.
-- mailtolink.me | markup generator for mailto links mailtolink.me
-Cool utility to generate a mailto link. These are handy (mailto:jamie@thingelstad?subject=Mail%20to%20links%20are%20great! and body=What's%20up%3F) and this makes them easy to make.
+- mailtolink.me | markup generator for mailto links
+Cool utility to generate a mailto link. These are handy and this makes them easy to make.
 - Re-decentralizing the Web, for good this time | Ruben Verborgh ruben.verborgh.org
-This is the best description of what Tim Berners-Lee 's Solid is about.
+This is the best description of what Tim Berners-Lee's Solid is about.
 - The unlikely resurgence of Dungeons and Dragons makes its way to the Inland Northwest | The Pacific Northwest Inlander www.inlander.com
 - The Art of Being an Instagram Husband - The Atlantic www.theatlantic.com
 When did "Influencer" become a profession?

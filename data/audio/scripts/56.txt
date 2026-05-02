@@ -2,11 +2,13 @@ The Weekly Thing, issue 56. Jun 2, twenty eighteen. Published June 2, twenty eig
 
 Weekly Thing is now privacy enhanced. By default, MailChimp tracks when people open newsletters and what links you click on. Most of the people that read this know that I value my privacy, and I don't like the idea of being watched. So, in accordance with not being a hypocrite, I've disabled those features. I'm not sure if MailChimp will honor them both, it may still put tracking code on the links, but I know it will not track opens. Enjoy reading with more privacy.
 
-My Blog Posts
+Now, the My Blog Posts section.
 
 Humble Leadership Profile
 
 My thoughts on the topic of Humble Leadership, particularly as it relates to leading technology teams.
+
+That's the end of My Blog Posts.
 
 Now, the Featured Links section.
 
@@ -149,7 +151,7 @@ That's the end of Give Back.
 
 Now, more links.
 
-- Microsoft has leapfrogged Alphabet to become the world's third most valuable company — Quartz qz.com
+- Microsoft has leapfrogged Alphabet to become the world's third most valuable company — Quartz
 Under Nadella's leadership Microsoft is doing interesting things. In the last 2 years the market has taken note.
 - PagerDuty + Atlassian: Taking Modern Incident Response in Stride | PagerDuty www.pagerduty.com
 - Incident Management at Spotify | Labs labs.spotify.com

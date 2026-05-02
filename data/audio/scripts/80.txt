@@ -98,11 +98,11 @@ That's the end of Give Back.
 
 Now, more links.
 
-- Delay, Deny and Deflect: How Facebook’s Leaders Fought Through Crisis - The New York Times www.nytimes.com
+- Delay, Deny and Deflect: How Facebook's Leaders Fought Through Crisis - The New York Times
 An expose into the messy response inside Facebook to the last year.
-- Mosaic Versions | National Center for Supercomputing Applications (NCSA) at the University of Illinois www.ncsa.illinois.edu
+- Mosaic Versions | National Center for Supercomputing Applications (NCSA) at the University of Illinois
 It’s been 25 years since Mosaic v1.0 shipped. Wow!
-- Front-end Web Development on iPad Pro (twenty eighteen) – Craig Morey – Medium medium.com
+- Front-end Web Development on iPad Pro (twenty eighteen) – Craig Morey – Medium
 This is a robust breakdown of the limits of using iOS for development like work. Most things in here would apply to other intense workloads.
 - The History of Unix, Rob Pike www.youtube.com
 Fabulous presentation from Rob Pike. Such a rich history here.

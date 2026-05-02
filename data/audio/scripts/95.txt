@@ -106,9 +106,9 @@ Now, more links.
 
 - k3s - Lightweight Kubernetes | k3s k3s.io
 Kubernetes on a diet?
-- bullet: Beautiful Python Prompts Made Simple github.com
+- bullet: Beautiful Python Prompts Made Simple
 Nice library for building menus in CLI tools.
-- Carrot | Leadership communication for fast-growing and remote teams. carrot.io
+- Carrot | Leadership communication for fast-growing and remote teams.
 This looks interesting but I don't totally get how the product work, and where Slack ends and it starts.
 - AWS API Performance Comparison: Serverless versus Containers versus API Gateway integration www.alexdebrie.com
 Performance metrics of various API methods in AWS. Some nice data.

@@ -60,7 +60,7 @@ I've been amazed at the innovations that have arrived via computational photogra
 
 Link four. "Kubernetes 101: Pods, Nodes, Containers, and Clusters"
 
-This is a very easy to understand breakdown of the basic components of Kubernetes. It’s a good read if you are just trying to ground yourself with the basic terms. Via Leah Cunningham.
+This is a very easy to understand breakdown of the basic components of Kubernetes. It's a good read if you are just trying to ground yourself with the basic terms. Via Leah Cunningham.
 
 Link five. "A Different Photography Workflow – The Sweet Setup"
 
@@ -136,7 +136,7 @@ That's the end of Give Back.
 
 Now, more links.
 
-- If you want to understand Silicon Valley, watch Silicon Valley | Bill Gates www.gatesnotes.com
+- If you want to understand Silicon Valley, watch Silicon Valley | Bill Gates
 Bill Gates watches Silicon Valley? Huh!
 - Mini Kubb | Table Top Block Toppling Game | Scienz Games Co. shop.minibeerpong.com
 None of these table top Kubb games are very playable, but they are still kind of fun.

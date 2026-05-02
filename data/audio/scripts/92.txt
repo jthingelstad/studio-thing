@@ -56,7 +56,7 @@ Long live email!
 
 Link three. "Sheety - Turn your Google Sheet into an API"
 
-This seems like a cool capability for smaller projects or for just trying things out. Looks like it’s read only. Reminds me of datasette.
+This seems like a cool capability for smaller projects or for just trying things out. Looks like it's read only. Reminds me of datasette..
 
 Link four. "Fortnite’s Marshmello concert was a bizarre and exciting glimpse of the future - The Verge"
 
@@ -98,13 +98,13 @@ Now, more links.
 
 - stylelint stylelint.io
 Handy tool for helping with CSS.
-- My Brand New Logo – logo maker | create your own logo mybrandnewlogo.com
+- My Brand New Logo – logo maker | create your own logo
 Neat tool.
 - Homebrew 2.0.0 brew.sh
 Homebrew makes using your Mac so much easier, and now with support for Linux and Windows 10 Linux subsystem.
 - Humaaans: Mix- and -Match illustration library www.humaaans.com
 Robust graphic library with a variety of images for people.
-- Lapis - A web framework for Lua or MoonScript powered by OpenResty leafo.net
+- Lapis - A web framework for Lua or MoonScript powered by OpenResty
 I continue to find Lua a bit fascinating, and dig the idea of putting Lua right in the web server.
 - Notepin - Extremely simple blogging notepin.co
 Another simple blogging platform. Let's keep these options flourishing!

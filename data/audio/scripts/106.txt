@@ -110,7 +110,9 @@ Now, the Give Back section.
 
 Minnestar ( is the technology community for Minnesota. If you are passionate about technology you need to go to Minnebar and Minnedemo. Did you know that Minnebar is the largest BarCamp ( in North America and one of the largest in the world? Its also been going on for over 10 years? Minnedemo is the best place to hear about innovative tech and fun projects in the Twin Cities area. I am on the Minnestar board and I focus on Minnestar as one of the driving forces improving and expanding the technology community in the area. Minnestar is a 501c3 non-profit. Become a Community Supporter today! (
 
-Yet More Links
+That's the end of Give Back.
+
+Now, more links.
 
 * Denver votes to decriminalise magic mushrooms by razor-thin margin - BBC News ( www.bbc.com
 I bet this vote doesn't go this way without Michael Pollan's recent book How to Change Your Mind (. It’s a good and enlightening read.
@@ -119,7 +121,7 @@ Changing how S3 handles paths is a huge migration effort for a large part of the
 * Why Go? – Key advantages you may have overlooked · YourBasic Go ( yourbasic.org
 Arguments for Go with comparisons to Java and Python.
 
-That's the end of Give Back.
+That's the end of More Links.
 
 Now, the Microposts section.
 

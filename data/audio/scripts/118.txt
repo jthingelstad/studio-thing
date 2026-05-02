@@ -142,7 +142,7 @@ Now, more links.
 If you want to learn how to use Shortcuts, MacSparky's field guide is probably the best 29 dollars you can spend.
 - PCalc 3.9 Adds Dark Mode and the Latest Shortcuts Features, Expanding the App's Automation Capabilities - MacStories www.macstories.net
 What PCalc is doing with Shortcuts is very cool.
-- ICONSVG - Quick customizable SVG icons for your project iconsvg.xyz
+- ICONSVG - Quick customizable SVG icons for your project
 Very handy SVG icon library.
 - Camera Drone Follows Rollercoaster to Capture Dizzying Cinematic Footage petapixel.com
 This is some amazing drone flying, and great video.

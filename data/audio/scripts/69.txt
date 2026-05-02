@@ -131,15 +131,15 @@ Now, more links.
 
 - Exclusive: Apple Watch Series 4 revealed — massive display, dense watch face, more | 9to5Mac 9to5mac.com
 Every millimeter matters on a display as small as the Apple Watch.
-- Exclusive: This is ‘iPhone XS’ — design, larger version, and gold colors confirmed | 9to5Mac 9to5mac.com
+- Exclusive: This is ‘iPhone XS’ — design, larger version, iPhone XS' — design, larger version, and gold colors confirmed | 9to5Mac 9to5mac.com
 I know what my next iPhone will be now.
 - dategrep: print lines matching a time range github.com
 Super handy for log files.
-- Sinkholes: When the Earth Opens Up - The Atlantic www.theatlantic.com
+- Sinkholes: When the Earth Opens Up - The Atlantic
 The third one looks like something out of a movie.
 - The Rise and Rise of JSON twobithistory.org
 Cool early history on the birth of JSON.
-- Serverless Best Practices – Paul Johnston – Medium medium.com
+- Serverless Best Practices – Paul Johnston – Medium
 Good set of things to consider when designing serverless.
 - Manifesto for Minimalist Software Engineers | Minifesto.org minifesto.org
 10 principles to guide minimal software.

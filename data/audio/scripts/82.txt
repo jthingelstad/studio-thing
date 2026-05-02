@@ -144,7 +144,7 @@ AWS re:Invent house band playing Blackbird) from The Beatles went from just bein
 
 Wednesday @ 10:59 AM
 
-“Announcing AWS Lake Formation!” — “Sounds glacial!”
+"Announcing AWS Lake Formation!" — "Sounds glacial!"
 
 Wednesday @ 10:48 AM
 

@@ -50,7 +50,7 @@ This is the kind of scam/garbage that was warned about when top-level domains we
 
 Link nine. "Milestone: 100 Million Certificates Issued - Let's Encrypt - Free SSL/TLS Certificates"
 
-I’m a big fan of Le's Encrypt and I’m very happy to see it being adopted as widely as it has been. Amazing success story and what a great mission. Let's Encrypt is a major milestone to a completely encrypted web. Also worth reading the EFF writeup on this milestone.
+I’m a big fan of Let's Encrypt and I’m very happy to see it being adopted as widely as it has been. Amazing success story and what a great mission. Let's Encrypt is a major milestone to a completely encrypted web. Also worth reading the EFF writeup on this milestone.
 
 Link ten. "Day One Goes Premium – Day One – Medium"
 

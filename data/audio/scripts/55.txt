@@ -126,7 +126,7 @@ That's the end of Highlighted iOS App.
 
 Now, more links.
 
-- GDPR —xkcd.com “ ” xkcd.com
+- GDPR — xkcd.com xkcd.com
 GPDR XKCD FTW!
 - Winds 2.0: It’s Time to Revive RSS - The Stream Blog getstream.io
 - 1Password 7 for Mac: The Best Ever — AgileBits Blog blog.agilebits.com

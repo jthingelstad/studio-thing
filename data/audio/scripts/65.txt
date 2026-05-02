@@ -120,7 +120,7 @@ OKR platform for teams.
 Team software that enables OKR systems.
 - Perdoo. OKR software for leaders and teams. www.perdoo.com
 An OKR platform for teams.
-- OKR (Objectives and Key results) Software for Teams - Weekdone weekdone.com
+- OKR (Objectives and Key results) Software for Teams - Weekdone
 OKR platform along with mobile solution.
 - The Road to QUIC blog.cloudflare.com
 The next step in the evolution of HTTP.

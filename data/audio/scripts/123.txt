@@ -72,7 +72,7 @@ Link eight. "The Internet and the Third Estate – Stratechery by Ben Thompson"
 
 Wide ranging reaction to Zuckerberg's framing of Facebook, or generally social media, as the Fifth Estate. An interesting read.
 
-[Why Richard Stallman doesn’t matter | ] Stefano Maffulli
+Link nine. "Why Richard Stallman doesn't matter | Stefano Maffulli"
 
 There is so much truth to this. I like the vision and mission of the Free Software Foundation, but under Stallman's "leadership", it has ignored the internet.
 
@@ -80,19 +80,19 @@ That’s because Stallman’s world was and still is, stuck in the 80s: computer
 
 I shared my story of meeting Stallman before and he really didn’t see the Internet as a thing that mattered. Mostly this was because he wouldn't use it? He famously is the person who used an emacs, email, bash script thing to pull web pages when he needed information. That's crazy. The real Free Software challenge has moved online and Stallman was still thinking about a open BIOS.
 
-Link nine. "Highlights from "The Checklist Manifesto" by Atul Gawande - Chester Grant"
+Link ten. "Highlights from "The Checklist Manifesto" by Atul Gawande - Chester Grant"
 
 This is one of my favorite books ever. I highly recommend you get a copy and read the whole thing. Read it a couple times actually. But if you still need to be convinced this article has some good highlights.
 
-Link ten. "Which Way Do You Run? - Andreessen Horowitz"
+Link eleven. "Which Way Do You Run? - Andreessen Horowitz"
 
 There is nothing limited to Founder/CEO's about the feeling in this article. Leaders tend to have these feelings. "I used to become physically ill whenever there was something wrong in the company — even if I didn’t know what it was." I totally get that and feel it myself. The act of running towards what scares you and your fears is one of the hardest things about leading. You have to, and you have to be the first to do it.
 
-Link eleven. "The Atomic Minimalist: My Conversation with James Clear - Study Hacks - Cal Newport"
+Link twelve. "The Atomic Minimalist: My Conversation with James Clear - Study Hacks - Cal Newport"
 
 If you are a fan of either Cal Newport or James Clear this will be an interesting listen. I find the core concepts that both of them are writing about interesting and found this podcast informative and thought provoking.
 
-Link twelve. "GitLab reset --hard bad1dea: Biz U-turns, unbans office political chat, will vet customers • The Register"
+Link thirteen. "GitLab reset --hard bad1dea: Biz U-turns, unbans office political chat, will vet customers • The Register"
 
 This is the followup to another article highlighting the change being made to policies at Gitlab. Just one day later another article and a reversal of the policy change highlighted in the first article. These matters are complicated and right or wrong, it seems like Gitlab's initial action was poorly planned and executed.
 

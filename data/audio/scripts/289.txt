@@ -51,7 +51,7 @@ Quote.
 The end result — assuming that reviewed performance measures up to Microsoft’s claims — is an array of hardware from both Microsoft and its OEM partners that is MacBook Air-esque, but, unlike Apple’s offering, actually meaningfully integrated with AI in a way that not only seems useful today, but also creates the foundation to be dramatically more useful as developers leverage Microsoft’s AI capabilities going forward. I’m not going to switch (yet), but it’s the first time I’ve been tempted; at a minimum the company set a clear bar for Apple to clear at next month’s WWDC.
 End quote.
 
-Link five. "Mapping the Mind of a Large Language Model Anthropic"
+Link five. "Mapping the Mind of a Large Language Model | Anthropic"
 
 Interesting analysis from Anthropic figuring out how to model out the "feature" components of an LLMs data (brain?) and then modify the priority of a "feature" to change the way in which it engages.
 
@@ -99,7 +99,7 @@ With just one final left next week Mazie is wrapping up her Freshman year at St.
 
 Journal entry three.
 
-We visited the Quaking Bog at Theodore Wirth today. We’d never been there and I was lucky enough to have wore my Chaco sandals. If you go, be prepared for your feet to get wet. It is a cool spot.y
+We visited the Quaking Bog at Theodore Wirth today. We’d never been there and I was lucky enough to have wore my Chaco sandals. If you go, be prepared for your feet to get wet. It is a cool spot.
 
 Journal entry four.
 

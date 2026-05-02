@@ -2,11 +2,13 @@ The Weekly Thing, issue 90. Jan 26, twenty nineteen. Published January 26, twent
 
 Hello from the Bold, and Frozen, North! We are looking at several days with the thermometer never getting into positive numbers. There should be plenty of opportunities to curate some fun links by the fire.
 
-My Blog Posts
+Now, the My Blog Posts section.
 
 Using API Credentials in Shortcuts
 
 Powerful method to store secrets like API tokens and passwords for Shortcuts.
+
+That's the end of My Blog Posts.
 
 Now, the Featured Links section.
 

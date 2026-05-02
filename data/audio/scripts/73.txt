@@ -32,7 +32,6 @@ Now, the My Weekly Photo section.
 
 Blooming Rose in the Lyndale Park Rose Garden.
 
-Rose in the Lyndale Park Rose Garden.
 Sep 23, twenty eighteen at 1:36 PM
 Lyndale Park Rose Garden, 1500 E Lake Harriet Blvd, Minneapolis MN 55409
 
@@ -72,7 +71,8 @@ What a cool project -- making a very low-tech, carbon neutral website. "This is 
 
 Our new web design addresses both these issues. Thanks to a low-tech web design, we managed to decrease the average page size of the blog by a factor of five compared to the old design – all while making the website visually more attractive (and mobile-friendly). Secondly, our new website runs 100% on solar power, not just in words, but in reality: it has its own energy storage and will go off-line during longer periods of cloudy weather.
 
-Exclusive: WhatsApp Cofounder Brian Acton Gives The Inside Story On #DeleteFacebook And Why He Left 850 million dollars Behind
+Link five. "Exclusive: WhatsApp Cofounder Brian Acton Gives The Inside Story On #DeleteFacebook And Why He Left 850 million dollars Behind"
+
 www.forbes.com
 
 The inside scoop on WhatsApp founders break with Facebook.
@@ -81,7 +81,7 @@ His motto at WhatsApp had been “No ads, no games, no gimmicks”—a direct co
 
 Aren't ads, games and gimmicks pretty much all Facebook is? All about the.
 
-Link five. "Instagram’s CEO – Stratechery by Ben Thompson"
+Link six. "Instagram’s CEO – Stratechery by Ben Thompson"
 
 Insightful analysis by Ben Thompson on Instagram's founders departures from Facebook.
 
@@ -91,49 +91,49 @@ The difference from Zuckerberg — Instagram’s real CEO — is stark. Facebook
 
 Wether it is Instagram or WhatsApp, the founders that sold those companies were made extraordinarily wealthy. They should not be surprised when the company that made them that wealthy takes the products in exactly the direction that was supremely obvious they would — advertising and mining private data.
 
-Link six. "macOS 10.14 Mojave: The Ars Technica review | Ars Technica"
+Link seven. "macOS 10.14 Mojave: The Ars Technica review | Ars Technica"
 
 Ars continues the in-depth macOS reviews made famous by John Siracusa, and now continued by Andrew Cunningham.
 
-Link seven. "OmniFocus 3 for Mac: Multiple Tags, Enhanced Forecast, Powerful Perspectives – MacStories"
+Link eight. "OmniFocus 3 for Mac: Multiple Tags, Enhanced Forecast, Powerful Perspectives – MacStories"
 
 New OmniFocus 3 for the Mac and with that Omni Group has transitioned all the OmniFocus platforms onto the newest solutions! I eagerly bought my license within 5 minutes of the go live last night.
 
-Link eight. "ShortcutsGallery.com - Download or share Siri Shortcuts"
+Link nine. "ShortcutsGallery.com - Download or share Siri Shortcuts"
 
 Good place to share user created shortcuts for iOS 12. The Workflow app used to have a place to do this and that went away with Shortcuts. It’s nice to see an independent site picking that up. There are some nice shortcuts in here to use, or take apart to understand how to build your own.
 
-Link nine. "Engineering Productivity – Camille Fournier – Medium"
+Link ten. "Engineering Productivity – Camille Fournier – Medium"
 
 Productivity of software teams is a very fuzzy space. Companies have tried to figure out some way to evaluate this for 50 years now, and have gotten nowhere. It’s knowledge work, and as such isn't linear at all. Fournier's view of engineering management "… a great engineering manager is capable of creating a highly productive engineering team" is great, and I like the three key factors she highlights for achieving that.
 
-Link ten. "watchOS 5: The BirchTree Review – BirchTree"
+Link eleven. "watchOS 5: The BirchTree Review – BirchTree"
 
 This is a fantastic review of watchOS 5. I've read a couple of detailed reviews and still learned a number of cool things I could do in watchOS 5 in this. I had no idea I could get favorites sports teams into the Siri face for example!
 
-Link eleven. "Strap on the Fitbit: John Hancock to sell only interactive life insurance | Reuters"
+Link twelve. "Strap on the Fitbit: John Hancock to sell only interactive life insurance | Reuters"
 
 Interactive Life Insurance? Oh no. This seems like a terrible thing.
 
-Link twelve. "Chrome is a Google Service that happens to include a Browser Engine"
+Link thirteen. "Chrome is a Google Service that happens to include a Browser Engine"
 
 I've never used Chrome for privacy reasons, it’s too closely connected to the worlds largest advertising platform with a huge profit motive to collect information. Chrome was the last browser to support Do Not Track while it prided itself on supporting new capabilities before everyone else. Now Google has tied Chrome even closer to it’s services. If you want private browsing Firefox is a good bet with enough extensions, and Safari does more to fight privacy invading trackers than any other browser out of the box. Matthew Greene has a more direct reaction to this, and is done with Chrome. "Don't be evil."
 
-Link thirteen. "Cloudflare Turns 8 — here’s what we mean by a “better Internet”"
+Link fourteen. "Cloudflare Turns 8 — here’s what we mean by a “better Internet”"
 
 This is a great mission piece from Cloudflare. I don't use Cloudflare but I have growing respect for the amazing work and services they provide. I like their values and am curious to see what they release this week!
 
-Link fourteen. "New zine: Help! I have a manager! - Julia Evans"
+Link fifteen. "New zine: Help! I have a manager! - Julia Evans"
 
 I love these zines that Julia Evans has been creating and this is a stellar idea to make one for people to better understand what their manager is doing and how to work with them. It’s a managers job to work and coordinate with their team, but this seems like a great idea to help folks learn as well.
 
-Link fifteen. "There is no longer any such thing as Computer Security"
+Link sixteen. "There is no longer any such thing as Computer Security"
 
 I like this position, computer security is just security, and it’s really easy these days to get exploited. This is a good overview particularly on phishing and what you can most easily do to protect yourself.
 
-Link sixteen. "Google Suppresses Memo Revealing Plans to Closely Track Search Users in China"
+Link seventeen. "Google Suppresses Memo Revealing Plans to Closely Track Search Users in China"
 
-Link seventeen. "“Don’t be evil.”"
+Link eighteen. "“Don’t be evil.”"
 
 The memo, authored by a Google engineer who was asked to work on the project, disclosed that the search system, codenamed Dragonfly, would require users to log in to perform searches, track their location — and share the resulting history with a Chinese partner who would have “unilateral access” to the data.
 
@@ -157,9 +157,9 @@ I've used GPG Suite at times to encrypt mail, and it’s been sad to me to see h
 Subscriber only link. Interesting real world use of Blockchain in retail's. Food seems to be one avenue where blockchain has some immediate use cases.
 - Manyverse www.manyver.se
 I've read about Scuttlebutt before and found it intriguing, but this new application built on that protocol seems to be something normal folks could actually use.
-- macOS Mojave: The MacStories Review – MacStories www.macstories.net
+- macOS Mojave: The MacStories Review – MacStories
 Everything you ever wanted to know about the newest macOS.
-- Apple and Salesforce partner to help redefine customer experiences on iOS - Apple www.apple.com
+- Apple and Salesforce partner to help redefine customer experiences on iOS - Apple
 Not a lot of details but sounds to some extent like what they announced with IBM a while back.
 - Simple Analytics simpleanalytics.io
 Nice and easy, simple, web analytics offering that respects privacy and just gives you the handful of metrics that actually matter. I’m still on the side of not collecting this data at all unless you really need it.

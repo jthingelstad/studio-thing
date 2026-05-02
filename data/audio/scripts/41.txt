@@ -35,7 +35,7 @@ Now, the Software section.
 
 Evergreen
 
-I like what Brent Simmons is doing with this project. I’m a big user of feed readers. I use Feedbin along ReadKit and Unread. Brent has a history with readers having created NetNewsWire in two thousand two. I also love the story behind the name. love
+I like what Brent Simmons is doing with this project. I'm a big user of feed readers. I use Feedbin along with ReadKit and Unread. Brent has a history with readers having created NetNewsWire in two thousand two. I also love the story behind the name. love
 
 But the name is a prayer for the open web — may it remain evergreen.
 
@@ -65,7 +65,7 @@ Now, the Web section.
 
 Bringing the power of AMP to Gmail
 
-Ugh. This is a horrible idea. AMP was a bad idea to start with and extending it into email, effectively putting a little website into an email, is a terrible idea for privacy or even just our sanity as advertisers will use this to put all sorts of digital Jack In The Box traps in our email!
+Ugh. AMP was a bad idea to start with and extending it into email, effectively putting a little website into an email, is a terrible idea for privacy or even just our sanity as advertisers will use this to put all sorts of digital Jack In The Box traps in our email!
 
 Solid
 
@@ -73,7 +73,7 @@ It’s not very clear what this is attempting to do, but I like the blurb.
 
 Solid (derived from "social linked data") is a proposed set of conventions and tools for building decentralized social applications based on Linked Data principles. Solid is modular and extensible and it relies as much as possible on existing W3C standards and protocols.
 
-Notable that Tim Berners-Lee is involved.
+Tim Berners-Lee is involved.
 
 Last blog standing, “last guy dancing”: How Jason Kottke is thinking about kottke.org at 20 » Nieman Journalism Lab
 
@@ -81,7 +81,7 @@ Kottke.org defined for many people what a blog is. Now at 20 years old this inte
 
 Let's Encrypt Hits 50 Million Active Certificates and Counting | Electronic Frontier Foundation
 
-The web has *50 million more secure HTTPS endpoints now in part thanks to Let's Encrypt. I continue to believe Let's Encrypt is one of the best things to happen online in the last couple of years. My sites are secured with free certificates from Let's Encrypt. You should support this, even if you aren't publishing content. Securing web sites is important for your privacy and security!
+The web has 50 million more secure HTTPS endpoints now in part thanks to Let's Encrypt. I continue to believe Let's Encrypt is one of the best things to happen online in the last couple of years. My sites are secured with free certificates from Let's Encrypt. You should support this, even if you aren't publishing content. Securing web sites is important for your privacy and security!
 
 That's the end of Web.
 

@@ -324,7 +324,9 @@ Signed by thingelstad.eth:
 Signed by weeklything.eth:
 0xf14546e995d50a61e06f91431326bf01304e6b154d030bb3d2784b49dd2e6a800495e2d820e5cc4c4004d82a2d43ce6d65964aa8e322d8f2cb47516d01af57f21c
 
-Fortune
+That's the end of Signature.
+
+Now, the Fortune section.
 
 Here is your fortune…
 
