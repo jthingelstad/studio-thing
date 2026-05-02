@@ -19,7 +19,9 @@ AUDIO_VOICE = f"openai-{TTS_MODEL}:{TTS_VOICE}"
 MAX_CHARS = 3800
 
 # Bump to invalidate every published MP3 and force reassembly without re-running TTS.
-LOUDNORM_VERSION = "v1"
+# v2: added ID3v2.3 tags + embedded cover art.
+# v3: cover art center-cropped to square (was 1200×675 landscape).
+LOUDNORM_VERSION = "v3"
 LOUDNORM_TARGET_I = -16.0
 LOUDNORM_TARGET_TP = -1.5
 LOUDNORM_TARGET_LRA = 11.0
@@ -27,6 +29,12 @@ HIGHPASS_HZ = 80
 FINAL_BITRATE = "192k"
 FINAL_SAMPLE_RATE = 44100
 FINAL_CHANNELS = 1
+
+ID3_ARTIST = "Jamie Thingelstad"
+ID3_ALBUM = "The Weekly Thing"
+ID3_ALBUM_ARTIST = "Jamie Thingelstad"
+ID3_GENRE = "Technology"
+ID3_COMMENT = "AI-generated audio version of The Weekly Thing newsletter. weekly.thingelstad.com"
 
 load_dotenv(REPO / ".env")
 
@@ -142,9 +150,11 @@ def assemble_final(
     intro_path: Path,
     body_path: Path,
     outro_path: Path,
+    metadata: dict[str, str],
+    cover_path: Path,
     output_path: Path | None = None,
 ) -> tuple[Path, int]:
-    """Concat intro+body+outro and apply loudnorm (two-pass) for podcast-grade output."""
+    """Concat intro+body+outro, apply loudnorm, and embed ID3 tags + cover art."""
     ensure_audio_tools()
     workdir = TMP_DIR / str(issue)
     workdir.mkdir(parents=True, exist_ok=True)
@@ -173,29 +183,57 @@ def assemble_final(
         f":offset={measured['target_offset']}"
         f":linear=true:print_format=summary"
     )
-    _run(
-        [
-            "ffmpeg",
-            "-y",
-            "-i",
-            str(raw_combined),
-            "-af",
-            filter_chain,
-            "-ar",
-            str(FINAL_SAMPLE_RATE),
-            "-ac",
-            str(FINAL_CHANNELS),
-            "-c:a",
-            "libmp3lame",
-            "-b:a",
-            FINAL_BITRATE,
-            "-write_xing",
-            "1",
-            str(output_path),
-        ],
-        cwd=REPO,
-    )
+
+    cmd: list[str] = [
+        "ffmpeg",
+        "-y",
+        "-i", str(raw_combined),
+        "-i", str(cover_path),
+        "-map", "0:a",
+        "-map", "1:v",
+        "-c:v", "copy",
+        "-disposition:v", "attached_pic",
+        "-af", filter_chain,
+        "-ar", str(FINAL_SAMPLE_RATE),
+        "-ac", str(FINAL_CHANNELS),
+        "-c:a", "libmp3lame",
+        "-b:a", FINAL_BITRATE,
+        "-write_xing", "1",
+        "-id3v2_version", "3",
+    ]
+    for key, value in metadata.items():
+        cmd.extend(["-metadata", f"{key}={value}"])
+    cmd.extend([
+        "-metadata:s:v", "title=Album cover",
+        "-metadata:s:v", "comment=Cover (front)",
+        str(output_path),
+    ])
+    _run(cmd, cwd=REPO)
     return output_path, probe_duration_seconds(output_path)
+
+
+def build_id3_metadata(number: str, frontmatter: dict) -> dict[str, str]:
+    """Build the per-issue ID3 tag dict from archive frontmatter."""
+    subject = (frontmatter.get("subject") or "").strip()
+    if " / " in subject:
+        topical = subject.rsplit(" / ", 1)[1].strip()
+        title = f"{number}: {topical}"
+    else:
+        title = subject or f"Weekly Thing {number}"
+
+    publish_date = str(frontmatter.get("publish_date") or "")
+    date = publish_date[:10] if len(publish_date) >= 10 else publish_date
+
+    return {
+        "title": title,
+        "artist": ID3_ARTIST,
+        "album": ID3_ALBUM,
+        "album_artist": ID3_ALBUM_ARTIST,
+        "date": date,
+        "genre": ID3_GENRE,
+        "track": str(number),
+        "comment": ID3_COMMENT,
+    }
 
 
 def _ffmpeg_concat_copy(input_paths: list[Path], output_path: Path) -> None:

@@ -32,11 +32,13 @@ from manifest import (
     write_script_status,
 )
 from script_validate import VALIDATOR_VERSION, run_validators
+from cover import ensure_cover
 from synthesize import (
     AUDIO_VOICE,
     LOUDNORM_VERSION,
     TMP_DIR,
     assemble_final,
+    build_id3_metadata,
     chunk_plan,
     probe_duration_seconds,
     render_body,
@@ -291,8 +293,13 @@ def build_issue(
             "Bumpers are missing. Run `python pipeline/audio/audio.py bumpers build` first."
         )
 
-    print(f"Issue #{issue}: assembling final with bumpers + loudnorm")
-    final_path, final_duration = assemble_final(issue, intro_path, body_path, outro_path)
+    frontmatter, _ = parse_archive_file(archive_path(issue))
+    metadata = build_id3_metadata(issue, frontmatter)
+    cover_path = ensure_cover(issue, frontmatter.get("image"))
+    print(f"Issue #{issue}: assembling final with bumpers + loudnorm + tags")
+    final_path, final_duration = assemble_final(
+        issue, intro_path, body_path, outro_path, metadata, cover_path
+    )
     final_url, final_size = upload_audio(issue, final_path)
 
     if body_duration is None and body_path.exists():
