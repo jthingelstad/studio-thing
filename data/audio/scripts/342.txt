@@ -90,7 +90,7 @@ With OpenClaw actually working I finally got my opportunity to create my own age
 
 You are Otto.
 
-My agent liked that name. It decided to pick the 🦦 emoji its signature. Otto asked me who I was.
+My agent liked that name. It decided to pick the emoji its signature. Otto asked me who I was.
 
 I am Jamie.
 
@@ -255,7 +255,7 @@ It is time to officially celebrate Pokémon Day. Rip 'em!
 
 Journal entry two.
 
-Feb 28 and 20 °F in Minnesota -- let's play soccer! Go United! Home opener. ⚽️
+Feb 28 and 20 °F in Minnesota -- let's play soccer! Go United! Home opener.
 
 Journal entry three.
 
@@ -267,7 +267,7 @@ Working with Claude Code to create mb, a micro.blog client optimized for agents.
 
 Journal entry five.
 
-If your reading my blog you should really consider reading my daughter's blog too. @mthingelstad has gotten the blogger vibes and is sharing amazing stories on her semester abroad. I think you'll like reading her posts even though you aren't her dad! 🤩
+If your reading my blog you should really consider reading my daughter's blog too. @mthingelstad has gotten the blogger vibes and is sharing amazing stories on her semester abroad. I think you'll like reading her posts even though you aren't her dad!
 
 Journal entry six.
 
@@ -293,7 +293,7 @@ Wonderful evening photo walk around Manhattan tonight.
 
 Journal entry eleven.
 
-I can certainly do a lot with OpenClaw, but when you turn around and realize you used 30 dollars of LLM tokens in a single day it gives you pause. 😬💸
+I can certainly do a lot with OpenClaw, but when you turn around and realize you used 30 dollars of LLM tokens in a single day it gives you pause.
 
 Journal entry twelve.
 
@@ -309,7 +309,7 @@ This third visit was to celebrate hitting 100 Quarters of Growth -- 25 years of 
 
 Journal entry fourteen.
 
-I just learned that you can register a Shortcut in Unread to create your own actions for feed items. This is huge for my workflows! 🤯🥳
+I just learned that you can register a Shortcut in Unread to create your own actions for feed items. This is huge for my workflows!
 
 Journal entry fifteen.
 
@@ -317,7 +317,7 @@ Our ride home parked at gate 83.
 
 Journal entry sixteen.
 
-I have @ottoai exercising the agent-first mb micro.blog client and have Claude Code working on the codebase. I’m in Telegram with Otto discussing features. Otto is my user giving me feedback, I’m the product manager, and Claude Code is building. 🤯
+I have @ottoai exercising the agent-first mb micro.blog client and have Claude Code working on the codebase. I’m in Telegram with Otto discussing features. Otto is my user giving me feedback, I’m the product manager, and Claude Code is building.
 
 Journal entry seventeen.
 

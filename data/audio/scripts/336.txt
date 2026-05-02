@@ -1,18 +1,18 @@
 The Weekly Thing, issue 336. Culture, Retention, Transmission. Published December 13, twenty twenty five. By Jamie Thingelstad. In this issue: Crucial exits consumer RAM, AI transforming work at Anthropic, Perl's cultural decline, why RSS matters, Let's Encrypt 10 years, why we need to die.
 
-Good morning! ☕️
+Good morning!
 
-I hope your weekend is getting off to a great start. We've had what feels like an unusually cold start to our winter. There is already plenty of snow and we are getting below zero temperatures. It is a little bracing! 🥶
+I hope your weekend is getting off to a great start. We've had what feels like an unusually cold start to our winter. There is already plenty of snow and we are getting below zero temperatures. It is a little bracing!
 
 This is my last Weekly Thing of twenty twenty five. I know, I know. What will you do without a too-long email landing in your mailbox every weekend? Have no worries, I'll be back after January fifteenth with more links and many other things.
 
-In the meantime, if you want to share some links of your own the new version of our forum, r/WeeklyThing on Reddit, has a good number of folks joining and a bit of dialog starting. And a special POAP through the end of the year. 🤩
+In the meantime, if you want to share some links of your own the new version of our forum, r/WeeklyThing on Reddit, has a good number of folks joining and a bit of dialog starting. And a special POAP through the end of the year.
 
-Have a great Christmas 🎄 and a wonderful New Year! 🍾 Be back in twenty twenty six!
+Have a great Christmas and a wonderful New Year! Be back in twenty twenty six!
 
 Now, the Currently section.
 
-Installing: I downloaded Vellum and have been playing around with it to see how difficult it is to create a book. I've got a little project in mind to tinker with. 😏
+Installing: I downloaded Vellum and have been playing around with it to see how difficult it is to create a book. I've got a little project in mind to tinker with.
 
 That's the end of Currently.
 
@@ -86,7 +86,7 @@ End quote.
 
 This might seem like technical gibberish but this is what makes your web connection secure. Before Let's Encrypt this stuff was so hard, expensive, and effectively off limits to non-commercial users.
 
-Now we have an ever more secure web, open to all, and funded by a non-profit. I love this project and what it has done for the world. I've been a proud supporter since they launched. If you use the web, you should send them a few bucks. Really. 🔐
+Now we have an ever more secure web, open to all, and funded by a non-profit. I love this project and what it has done for the world. I've been a proud supporter since they launched. If you use the web, you should send them a few bucks. Really.
 
 Link seven. "What '67' Reveals About Childhood Creativity - Atlas Obscura"
 
@@ -110,10 +110,6 @@ The fact that there is a "last time" of something is what makes it special.
 
 That's the end of Notable.
 
-Now, the Supporting Membership section.
-
-That's the end of Supporting Membership.
-
 Now, the Journal section.
 
 Journal entry one.
@@ -124,7 +120,7 @@ Clash Royale check-in:
 - Heroic Mini P.E.K.K.A. is incredible.
 - Currently playing a “Hog Deck”, I guess?
 
-Stats: 71 days; 7,271 trophies; level 39; arena 19; In-app purchases: 😬. Connect.
+Stats: 71 days; 7,271 trophies; level 39; arena 19; In-app purchases:. Connect.
 
 Coach: Tyler
 
@@ -134,11 +130,11 @@ I love the words play and tinker.
 
 It is very important for me to have projects that I can play and tinker with.
 
-Thankfully I have more than enough of them. 😆
+Thankfully I have more than enough of them.
 
 Journal entry three.
 
-Excited for this year's New Standards Holiday Show! 🎄🎅
+Excited for this year's New Standards Holiday Show!
 
 Journal entry four.
 
@@ -217,7 +213,7 @@ The crazy thing is that social media doesn't even hide the status game. Your fol
 
 Link six. "The Land of Giants Transmission Towers"
 
-I love these! Mark this as another thing to see the next time in Iceland. Kudos Iceland! 🇮🇸
+I love these! Mark this as another thing to see the next time in Iceland. Kudos Iceland!
 
 Link seven. "Engineer proves that Kohler’s smart toilet cameras aren’t very private - Ars Technica"
 
@@ -251,6 +247,6 @@ A haiku to leave you with…
 
 RSS feeds the mind
 Let's Encrypt guards web's embrace
-Status loops undone 👊
+Status loops undone
 
 That brings us to the end of the Weekly Thing, issue 336. Thanks for listening, and I'll see you next time.

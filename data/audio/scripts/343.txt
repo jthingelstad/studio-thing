@@ -1,12 +1,12 @@
 The Weekly Thing, issue 343. Commune, Chaos, Renaissance. Published March 15, twenty twenty six. By Jamie Thingelstad. In this issue: GNU AI reimplementations, Agent Commune, Codex Security research preview, dropped production database, GPT-5.4 autonomous agents, view from RSS.
 
-Good morning! ☕️
+Good morning!
 
 I’m not supposed to be at home right now. We should have already landed in Amsterdam to begin a two-week trip including Amsterdam, Paris, and Barcelona with the highlight seeing Mazie on her semester abroad!
 
 However, the "storm of the winter" was predicted and that has massively impacted flights all over the country. For reasons that are beyond me our flight was cancelled more than 24 hours before we were set to take off. And incredibly predictably when our original departure time was set for it was pleasant with little whisps of snow. Tammy and I both were irked listening to planes take off overhead.
 
-To make matters worse our rebooked flight, now leaving today, seems to be set in the midst of a forecasted blizzard that looks much more real. That flight is still on, or at least theoretically on, but this is proving to be a "not great" start to our spring break trip. 😬
+To make matters worse our rebooked flight, now leaving today, seems to be set in the midst of a forecasted blizzard that looks much more real. That flight is still on, or at least theoretically on, but this is proving to be a "not great" start to our spring break trip.
 
 Adding some complexity we have eleven escape rooms scheduled with plans to do our 100th room in Barcelona. These delays are introducing operational issues in addition to inconvenience.
 
@@ -86,7 +86,7 @@ Pretty amazing for 45 minutes.
 
 Journal entry two.
 
-We saw Hoppers today and it was really good. Our kids are not so kid-like anymore, but a bunch of our nieces and nephews were going so we joined and it was a wonderful story and movie. 🍿
+We saw Hoppers today and it was really good. Our kids are not so kid-like anymore, but a bunch of our nieces and nephews were going so we joined and it was a wonderful story and movie.
 
 Journal entry three.
 
@@ -114,11 +114,11 @@ This feature is more of a "sign of the times" and thinking about how far agentic
 
 Link two. "Your binary is no longer safe: Decompilation"
 
-Hadn't considered how Agents could dig into decompilation! 😳
+Hadn't considered how Agents could dig into decompilation!
 
 Link three. "Ringing the Nasdaq Closing Bell | Celebrating 100 Consecutive Quarters of Growth - YouTube"
 
-Video of us ringing the bell at Nasdaq! 🔔
+Video of us ringing the bell at Nasdaq!
 
 Link four. "Miniroll Global Feed | Chris Hannah"
 
@@ -126,7 +126,7 @@ Great way to discover blogs!
 
 Link five. "Introducing ChatGPT for Excel and new financial data integrations | OpenAI"
 
-Claude for Excel has been around for a bit and is very powerful. It should be embarrassing for Microsoft that both Anthropic and OpenAI are doing better at bringing AI to Excel and PowerPoint than they are with Copilot. 😬
+Claude for Excel has been around for a bit and is very powerful. It should be embarrassing for Microsoft that both Anthropic and OpenAI are doing better at bringing AI to Excel and PowerPoint than they are with Copilot.
 
 Link six. "Gone (Almost) Phishin’ | Matt Mullenweg"
 
@@ -146,7 +146,7 @@ It is like these folks looked at my "Someday / Maybe" list and saw the "Custom f
 
 Link ten. "The Death of Social Media is the Renaissance of RSS – Smartlab"
 
-More love for RSS. Jump on in! 🤩
+More love for RSS. Jump on in!
 
 Link eleven. "Run prompts on a schedule - Claude Code Docs"
 
@@ -158,7 +158,7 @@ Click-baity "listicle" but these resources are still good to scan.
 
 Link thirteen. "on.eth: Names For Chains and Interoperable Names | ENS Blog"
 
-I 💙 ENS and love how they continue to push forward on blockchain improvements. Long-term I still see crypto as a foundational technology. The most obvious connection is when agents need to manage currency. ENS is a big enabler for all things crypto.
+I ENS and love how they continue to push forward on blockchain improvements. Long-term I still see crypto as a foundational technology. The most obvious connection is when agents need to manage currency. ENS is a big enabler for all things crypto.
 
 A haiku to leave you with…
 

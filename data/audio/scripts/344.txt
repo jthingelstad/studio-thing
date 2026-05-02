@@ -1,6 +1,6 @@
 The Weekly Thing, issue 344. Mythos, Artemis, Signals. Published April 19, twenty twenty six. By Jamie Thingelstad. In this issue: Working with agents, economics of software teams, evals as new PRD, OpenAI Codex superapp, saying goodbye to Agile, cybersecurity proof of work.
 
-Good morning! ☕️
+Good morning!
 
 It’s been a bit. I shared in WT343 that we were going on a trip to Europe for two weeks so I was taking a little break. That trip got off to a rocky start with a blizzard causing a flight cancellation but after that bump we had a wonderful time in Amsterdam, Paris, and Barcelona. Mazie joined us in Paris for a quick stint at Disneyland Paris and then we rejoined here in Barcelona. It was so great to see her on her semester abroad and I'll point you to her blog where she has been writing regularly. Her most recent update from a weekend in the Azores. You can see our trip logs from Escape in Europe for more.
 
@@ -8,7 +8,7 @@ More than any prior trip this one was anchored with escape rooms. Tammy found us
 
 Back to the timeline. Just two days after Tyler and I got back home I came down with an infection that started in my left ear and then went to the whole left side of my head and down my neck. Within 24 hours I went from totally fine to being at the emergency room, very "out of it", and getting admitted to the hospital. I blogged a bit about my bout with facial cellulitis. After two days of IV antibiotics I was feeling much better and able to go back home. Thank you modern medicine. The outcome for a sepsis diagnosis in your head is very bleak without antibiotics.
 
-Now I’m back and typing to you here on a Sunday morning. Should we get back right to it with some links? Yes, we should! ✅
+Now I’m back and typing to you here on a Sunday morning. Should we get back right to it with some links? Yes, we should!
 
 Now, the Notable section.
 
@@ -130,7 +130,7 @@ Link three. "From Assistant to Collaborator: How My AI Second Brain Grew Up — 
 
 Interesting and short read on how folks are making agentic systems even more capable.
 
-Link four. "How I run multiple 10 dollarsK MRR companies on a 20 dollars/month tech stack | Steve Hanov's Blog"
+Link four. "How I run multiple 10 thousand dollars MRR companies on a 20 dollars/month tech stack | Steve Hanov's Blog"
 
 The title on this is so clickbait I feel gross even including it, but I find these articles compelling to read anyway to expand thinking and see what folks are doing that are pushing agentic capabilities.
 
@@ -180,7 +180,7 @@ Interesting project to see how far an AI can run something on its own.
 
 A haiku to leave you with…
 
-Clouds of data drift ☁️
+Clouds of data drift
 Agents browse, whisper ideas —
 Profit hides in code.
 

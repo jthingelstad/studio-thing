@@ -1,6 +1,6 @@
 The Weekly Thing, issue 345. Codex, Headless, Wikiwise. Published April 26, twenty twenty six. By Jamie Thingelstad. In this issue: OpenAI Codex App, Cloudflare Email Service, Headless everything for personal AI, Claude Design, Dad brains, ChatGPT Images 2.0, GPT-5.5.
 
-Good morning! ☕️
+Good morning!
 
 I hope your weekend is off to a great start!
 
@@ -8,7 +8,7 @@ This week was filled with big tech stuff: Apple CEO transition, GPT 5.5, Claude 
 
 I have a long blog post in this issue that is a talk I gave turned into a post that hits on speed and how fast things are changing.
 
-But today we have more important things. Today is Tammy's birthday and we are going to be making the most of it! 🎉
+But today we have more important things. Today is Tammy's birthday and we are going to be making the most of it!
 
 Enjoy the links and have a great day!
 
@@ -94,7 +94,7 @@ It is still such a “wow” when you hit print and go downstairs a few hours la
 
 Journal entry four.
 
-Cold April night for MNUFC v Portland match. ⚽️🥶
+Cold April night for MNUFC v Portland match.
 
 Journal entry five. Software Is Liquid
 
@@ -215,7 +215,7 @@ Journal entry six. Hypergrowth
 This growth is hard to even comprehend.
 
 Quote.
-Anthropic says Claude Code is now growing revenues at a 2 dollars.5 billion run-rate, a number that has doubled since January 1. Claude Code was launched in May twenty twenty five. Six months later it was at 1 dollar billion. Its sales are growing faster than a 1980s F1 monster, pulling the whole company along with it. Anthropic hit 14 dollars billion in ARR in February, 19 dollars billion in March, and around 30 dollars billion this month. -- Software Eats Its Own
+Anthropic says Claude Code is now growing revenues at a 2.5 billion dollars run-rate, a number that has doubled since January 1. Claude Code was launched in May twenty twenty five. Six months later it was at 1 billion dollars. Its sales are growing faster than a 1980s F1 monster, pulling the whole company along with it. Anthropic hit 14 billion dollars in ARR in February, 19 billion dollars in March, and around 30 billion dollars this month. -- Software Eats Its Own
 End quote.
 
 Even being prepared for that level of scaling is impressive.
@@ -250,7 +250,7 @@ We have tickets to go see Noah Kahan in Minneapolis this summer. Our whole famil
 
 Link six. "Daring Fireball: Trump on Tim Apple"
 
-Nothing much to add. 😬
+Nothing much to add.
 
 Link seven. "Daring Fireball: Another Day Has Come"
 

@@ -17,7 +17,7 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 
-VALIDATOR_VERSION = "v1"
+VALIDATOR_VERSION = "v2"
 
 # Errors block `audio build --all`. Warnings always print but never gate.
 Severity = str  # "error" | "warning"
@@ -73,6 +73,7 @@ _BARE_URL_RE = re.compile(r"https?://\S+")
 _EDITOR_MODE_RE = re.compile(r"buttondown-editor-mode", re.IGNORECASE)
 _MAILCHIMP_TEMPLATE_RE = re.compile(r"\*\|[A-Z_]+\|\*|Permalink \(\*\|")
 _UNICODE_ARROW_RE = re.compile(r"[→⟶⇒]| => ")
+_BOTCHED_DOLLAR_RE = re.compile(r"\bdollars?\.\d|\bdollars?\s*[KMBT]\b|\bdollars?\s+(?:thousand|million|billion|trillion)\b", re.IGNORECASE)
 
 
 def rule_markdown_link(text: str, lines: list[str]) -> list[Finding]:
@@ -213,6 +214,16 @@ def rule_mailchimp_template_artifacts(text: str, lines: list[str]) -> list[Findi
         "warning",
         "Looks like a leftover MailChimp template token",
         _MAILCHIMP_TEMPLATE_RE,
+        lines,
+    )
+
+
+def rule_botched_dollar(text: str, lines: list[str]) -> list[Finding]:
+    return _line_findings(
+        "botched_dollar",
+        "error",
+        "Dollar amount normalization left behind a magnitude or decimal that won't speak well",
+        _BOTCHED_DOLLAR_RE,
         lines,
     )
 
@@ -393,6 +404,7 @@ ERROR_RULES = (
     rule_template_tag,
     rule_bare_url,
     rule_editor_mode_marker,
+    rule_botched_dollar,
     rule_chunk_too_long,
     rule_script_too_short,
     rule_empty_section,

@@ -1,12 +1,12 @@
 The Weekly Thing, issue 338. Authority, Humanizer, Left. Published January 24, twenty twenty six. By Jamie Thingelstad. In this issue: ChatGPT advertising, Miniroll blogroll, time left widgets, capability overhang, velocity as authority, Claude's new constitution.
 
-Hello there! 👏
+Hello there!
 
-I’m finishing up this email as it is -17 °F and waiting for the sun to rise. Yesterday it was -22 °F at this time so it is warming. This is the kind of cold that even hardy Minnesotan's take note of. 🥶
+I’m finishing up this email as it is -17 °F and waiting for the sun to rise. Yesterday it was -22 °F at this time so it is warming. This is the kind of cold that even hardy Minnesotan's take note of.
 
-The Federal presence in Minnesota continues to be an ever present cause of anxiety. I feel like I hear police or ambulance sirens several times a day over the last two weeks. Please join me in supporting the Immigrant Law Center of Minnesota who has been working with immigrants and refugees in Minnesota for 50 years and the Immigrant Rapid Response Fund (administered by the Women's Foundation of Minnesota) which is routing support to dozens of organizations that are helping people with immigration-related emergencies. 🫶
+The Federal presence in Minnesota continues to be an ever present cause of anxiety. I feel like I hear police or ambulance sirens several times a day over the last two weeks. Please join me in supporting the Immigrant Law Center of Minnesota who has been working with immigrants and refugees in Minnesota for 50 years and the Immigrant Rapid Response Fund (administered by the Women's Foundation of Minnesota) which is routing support to dozens of organizations that are helping people with immigration-related emergencies.
 
-I mentioned last week that Mazie is off to Barcelona for the semester. She's having a great time and has been sharing her experiences on her blog! It all makes a Dad proud. 😁
+I mentioned last week that Mazie is off to Barcelona for the semester. She's having a great time and has been sharing her experiences on her blog! It all makes a Dad proud.
 
 Now, the Yearly Thing twenty twenty five section.
 
@@ -36,7 +36,7 @@ I hope this is a way for people to go back to topics and reflect on them more. M
 - Purchasers of the printed book that would like the eBook as well can contact me and I will get you the eBook files.
 - Anyone that purchases the Yearly Thing twenty twenty five in the first 2 months will receive a special Yearly Thing twenty twenty five POAP to collect!
 
-This may be the first of many Yearly Things that you can collect over time. 🤔
+This may be the first of many Yearly Things that you can collect over time.
 
 PS: Unfortunately I don't know who purchases the paperback on Lulu. If you do, please send me an email letting me know and I will send you the POAP claim code!
 
@@ -76,7 +76,7 @@ People tend to feel like they can identify AI writing — by looking for — lot
 
 Link four. "Left – Widgets for Time Left"
 
-Little app I discovered via MacSparky and grabbed for myself. I’m a fan of visualization of time, and this has a bunch of really interesting ones. I was surprised that one of the whole tabs in this app is "You" where it gets your birthday and some info and give you a "Left" for you. It is a bit like my Four Thousand Weeks as Rings gauge, but this moves in seconds! It says I have 287.32335 months left right now. 🤔
+Little app I discovered via MacSparky and grabbed for myself. I’m a fan of visualization of time, and this has a bunch of really interesting ones. I was surprised that one of the whole tabs in this app is "You" where it gets your birthday and some info and give you a "Left" for you. It is a bit like my Four Thousand Weeks as Rings gauge, but this moves in seconds! It says I have 287.32335 months left right now.
 
 Link five. "How countries can end the capability overhang | OpenAI"
 
@@ -130,10 +130,6 @@ Super interesting approach and structure. You can read the full Constitution for
 
 That's the end of Notable.
 
-Now, the Supporting Membership section.
-
-That's the end of Supporting Membership.
-
 Now, the Journal section.
 
 Journal entry one.
@@ -158,7 +154,7 @@ Tammy and I saw Marty Supreme at the Edina 4 theatre this afternoon. Fantastic p
 
 Journal entry six.
 
-We watched Knives Out tonight, again. Tyler hadn’t seen it and now that there are two sequels we’re going to watch those together. I didn’t remember that much after seven years so was still fun to watch again. 🍿
+We watched Knives Out tonight, again. Tyler hadn’t seen it and now that there are two sequels we’re going to watch those together. I didn’t remember that much after seven years so was still fun to watch again.
 
 Journal entry seven.
 
@@ -182,11 +178,11 @@ Yadda, yadda about access. Really about raising ceiling of average revenue per u
 
 Link two. "Signal creator Moxie Marlinspike wants to do for AI what he did for messaging - Ars Technica"
 
-Love that Marlinspike is bringing his privacy ethos to the world of AI. 🧠
+Love that Marlinspike is bringing his privacy ethos to the world of AI.
 
 Link three. "I spent 8 months testing every brand of canned tomato with a controlled pasta sauce recipe. Full rankings inside.: r/Cooking"
 
-This is why I love the web. If only it were a blog post, but this will do. 🍅
+This is why I love the web. If only it were a blog post, but this will do.
 
 Link four. "A Complete Guide To AGENTS.md"
 
@@ -206,7 +202,7 @@ First major version in 10 years, and "the final release".
 
 Link eight. "Are arrays functions?"
 
-This one had me at "indexable arrays, which may be thought of as functions whose domains are isomorphic to contiguous subsets of the integers". 🤓
+This one had me at "indexable arrays, which may be thought of as functions whose domains are isomorphic to contiguous subsets of the integers".
 
 Link nine. "Busy Simulator"
 

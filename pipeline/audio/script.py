@@ -201,13 +201,19 @@ def clean_inline(text: str) -> str:
     text = BARE_URL_RE.sub("", text)
     text = text.replace("\\|", "|")
     text = text.replace("\\", "")
+    # Strip inline emoji — TTS would otherwise speak the unicode names
+    # ("smiling face with smiling eyes"), which is jarring in prose.
+    text = strip_emoji(text)
+    # Strip unicode arrows — used in old micro-posts as link separators
+    # ("commentary. → title") and in Tinyletter-era end-of-bullet markers.
+    text = re.sub(r"\s*[→⟶⇒]\s*", " ", text)
     return normalize_text(text)
 
 
 def normalize_text(text: str) -> str:
     for pattern, replacement in NORMALIZER_REPLACEMENTS:
         text = pattern.sub(replacement, text)
-    text = re.sub(r"\$(\d[\d,]*)(?:\.(\d{2}))?", _replace_dollars, text)
+    text = DOLLAR_AMOUNT_RE.sub(_replace_dollars, text)
     text = re.sub(
         r"\b([1-9]|[12]\d|3[01])(st|nd|rd|th)\b",
         lambda m: ORDINALS.get(m.group(0).lower(), m.group(0)),
@@ -220,13 +226,55 @@ def normalize_text(text: str) -> str:
     return text.strip()
 
 
+# Match `$<int>(.<frac>)?` optionally followed by a magnitude word or
+# letter (K/M/B/T or thousand/million/billion/trillion). Captures groups:
+#   1 = whole dollars (may include commas)
+#   2 = fractional digits (1+ digits) or None
+#   3 = magnitude word/letter or None
+DOLLAR_AMOUNT_RE = re.compile(
+    r"\$(\d[\d,]*)(?:\.(\d+))?(?:\s*(thousand|million|billion|trillion|trn|bn|tn|mn|[KMBT]))?\b",
+    re.IGNORECASE,
+)
+
+_MAGNITUDE_WORDS = {
+    "k": "thousand",
+    "m": "million",
+    "b": "billion",
+    "t": "trillion",
+    "bn": "billion",
+    "mn": "million",
+    "tn": "trillion",
+    "trn": "trillion",
+    "thousand": "thousand",
+    "million": "million",
+    "billion": "billion",
+    "trillion": "trillion",
+}
+
+
 def _replace_dollars(match: re.Match[str]) -> str:
     dollars = match.group(1)
-    cents = match.group(2)
-    amount = f"{dollars} dollar" + ("" if dollars == "1" else "s")
-    if cents and cents != "00":
-        amount += f" and {int(cents)} cents"
-    return amount
+    frac = match.group(2)
+    magnitude_raw = (match.group(3) or "").strip().lower()
+    magnitude = _MAGNITUDE_WORDS.get(magnitude_raw) if magnitude_raw else None
+
+    if magnitude:
+        # "$2.5 billion" → "2.5 billion dollars"; "$9M" → "9 million dollars".
+        number = dollars + (f".{frac}" if frac else "")
+        return f"{number} {magnitude} dollars"
+
+    if frac is not None:
+        if len(frac) == 2:
+            # "$50.25" → "50 dollars and 25 cents"; "$50.00" → "50 dollars".
+            amount = f"{dollars} dollar" + ("" if dollars == "1" else "s")
+            if frac != "00":
+                amount += f" and {int(frac)} cents"
+            return amount
+        # Single-decimal or odd-length fractional with no magnitude word —
+        # rare in prose but read it as "<n> point <frac> dollars".
+        return f"{dollars} point {frac} dollars"
+
+    return f"{dollars} dollar" + ("" if dollars == "1" else "s")
 
 
 def heading_text(raw: str) -> str:
@@ -259,14 +307,14 @@ def published_date(value: Any) -> str:
 
 def preamble(frontmatter: dict[str, Any]) -> str:
     number = frontmatter.get("number", "")
-    subject = (frontmatter.get("subject") or "").strip()
+    subject = strip_emoji((frontmatter.get("subject") or "").strip()).strip()
     # The subject typically reads "Weekly Thing 345 / Codex, Headless,
     # Wikiwise". Drop the prefix duplicate and keep only the topical
     # tail so the audio doesn't say the issue number twice.
     if " / " in subject:
         subject = subject.rsplit(" / ", 1)[1].strip()
     date = published_date(frontmatter.get("publish_date", ""))
-    description = (frontmatter.get("description") or "").strip()
+    description = strip_emoji((frontmatter.get("description") or "").strip()).strip()
     parts = [f"The Weekly Thing, issue {number}."]
     if subject:
         parts.append(subject.rstrip(".") + ".")
@@ -403,6 +451,7 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
 
     flush_quote()
     output.extend(["", closing(frontmatter)])
+    output = _drop_empty_sections(output)
     # Drop any line that, after emoji stripping, is empty — these are
     # decorative lone-emoji lines (e.g. "👋", "👨‍💻") that TTS would otherwise
     # read as their unicode names.
@@ -414,6 +463,35 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
     script = "\n".join(cleaned)
     script = re.sub(r"\n{3,}", "\n\n", script)
     return script.strip() + "\n"
+
+
+_INTRO_LINE_RE = re.compile(r"^Now, the .+? section\.$|^Now, more links\.$|^Now, for your information\.$")
+_END_LINE_RE = re.compile(r"^That's the end of .+\.$")
+
+
+def _drop_empty_sections(lines: list[str]) -> list[str]:
+    """Remove `Now, the X section.` followed only by blanks then `That's the end of X.`.
+
+    These appear when an H2 section has no entries we keep — e.g. early MailChimp
+    `## Links` dividers above sub-section H2s, or modern `## Supporting Membership`
+    blocks where the content (Liquid templates + HTML CTAs) strips to nothing."""
+    result = list(lines)
+    i = 0
+    while i < len(result):
+        if result[i].strip() and _INTRO_LINE_RE.match(result[i].strip()):
+            j = i + 1
+            while j < len(result) and not result[j].strip():
+                j += 1
+            if j < len(result) and _END_LINE_RE.match(result[j].strip()):
+                # Also consume one trailing blank if present so we don't leave
+                # a double blank in its place.
+                end = j + 1
+                if end < len(result) and not result[end].strip():
+                    end += 1
+                del result[i:end]
+                continue
+        i += 1
+    return result
 
 
 _NUMBER_WORDS = [

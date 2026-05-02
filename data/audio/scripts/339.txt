@@ -1,6 +1,6 @@
 The Weekly Thing, issue 339. OpenClaw, Isometric, Prism. Published February 1, twenty twenty six. By Jamie Thingelstad. In this issue: Isometric NYC, lost art of XML, Claude Code best practices, LED lighting visual performance, OpenClaw personal AI, management as AI superpower.
 
-Hello there! 👋
+Hello there!
 
 I had sort of given up on sending an email this week. The week was busy and heavy. My backlog of links to read was lengthy. I was behind on publishing to my blog.
 
@@ -25,7 +25,7 @@ I hope this is a way for people to go back to topics and reflect on them more. M
 - Purchasers of the printed book that would like the eBook as well can contact me and I will get you the eBook files.
 - Anyone that purchases the Yearly Thing twenty twenty five in the first 2 months will receive a special Yearly Thing twenty twenty five POAP to collect!
 
-This may be the first of many Yearly Things that you can collect over time. 🤔
+This may be the first of many Yearly Things that you can collect over time.
 
 Paperback on Lulu
 
@@ -37,7 +37,7 @@ Now, the Notable section.
 
 Link one. "Isometric NYC"
 
-When I was younger I loved to play SimCity before they ruined that game. So these isometric scenes always remind me of that. This view of New York City is incredible to play around with. But even more incredible is the article about building it! This is an incredible amount of data and detail and it was made possible using agentic tools and LLMs. 🤯
+When I was younger I loved to play SimCity before they ruined that game. So these isometric scenes always remind me of that. This view of New York City is incredible to play around with. But even more incredible is the article about building it! This is an incredible amount of data and detail and it was made possible using agentic tools and LLMs.
 
 Link two. "I'm addicted to being useful"
 
@@ -117,7 +117,7 @@ Sadly I still haven't had time to install this myself and now reading some of th
 
 There are a ton of extensions to this project at ClawHub, and this recap of multiple reactions to OpenClaw from Tsai is a good read too.
 
-Now I just need to play with this — and sadly the week ahead is completely busy. 😬
+Now I just need to play with this — and sadly the week ahead is completely busy.
 
 Link eight. "Management as AI superpower - Ethan Mollick"
 
@@ -161,7 +161,7 @@ We had a great time at the TCG only Minnesota Card Show at Canterbury today.
 
 Journal entry four.
 
-We enjoyed watching Finch) tonight. The story was surprisingly touching given that it is just one character, Finch, with a dog and a robot (two robots actually). 🍿
+We enjoyed watching Finch) tonight. The story was surprisingly touching given that it is just one character, Finch, with a dog and a robot (two robots actually).
 
 Journal entry five.
 
@@ -189,7 +189,7 @@ I dig this way of looking at the weather between cities. Useful and way better t
 
 Link four. "A Year of 3D Printing"
 
-This is a very risky article for someone that has been eyeing a Bambu Lab P2S 3D Printer for some time. 😬
+This is a very risky article for someone that has been eyeing a Bambu Lab P2S 3D Printer for some time.
 
 Link five. "ChartGPU: Beautiful, open source, WebGPU-based charting library"
 
@@ -201,7 +201,7 @@ I have an Elgato Key Light in my home office and it is fabulous for video meetin
 
 Link seven. "EFF Statement on ICE and CBP Violence | Electronic Frontier Foundation"
 
-Happy to be a long-time supporter of the EFF. The EFF is also the organization the Weekly Thing Community Supporter program is raising funds for this year. 👏
+Happy to be a long-time supporter of the EFF. The EFF is also the organization the Weekly Thing Community Supporter program is raising funds for this year.
 
 Link eight. "Does Evidence Even Matter? – On my Om"
 

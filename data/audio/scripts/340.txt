@@ -6,9 +6,9 @@ I was planning to send you this email yesterday morning.
 
 Then I sat down at the computer and instead I fired up Claude Code to work on a little project. Two very productive hours passed and I hadn't done anything for the Weekly Thing.
 
-Oops! 😁
+Oops!
 
-It almost happened again today with another rabbit hole I was exploring. It can be really fun to jump into rabbit holes sometimes. 😅
+It almost happened again today with another rabbit hole I was exploring. It can be really fun to jump into rabbit holes sometimes.
 
 Then I dialed into my OmniFocus project!
 
@@ -22,7 +22,7 @@ OpenClaw (aka ClawdBot, MoltBot) took the AI world by storm last week. Just days
 
 The outcome is pretty wild. These agents seem to like to share information. It is a way for them to share solutions and collaborate. It is also a way for them to complain about their users. Check out Best of Moltbook for some of the highlights.
 
-It is a Brave New World. 😬
+It is a Brave New World.
 
 Link two. "Automatic programming -"
 
@@ -74,7 +74,7 @@ This started in June twenty twenty five and persisted through December twenty tw
 
 Short of that though, software developers could still use their own signing authority to insure that the signed app they have out there will only update itself with a similarly signed app.
 
-Link six. "BlogBook — WordPress, Micro.blog, or Ghost → Markdown Book"
+Link six. "BlogBook — WordPress, Micro.blog, or Ghost Markdown Book"
 
 Brett Terpstra shared that he was building this app and it instantly caught my attention. I just created the Yearly Thing book which started as Markdown. Vellum did a great job of producing the final book, but in the middle I had to convert from Markdown to Microsoft Word files. That part freaked me out. My Markdown was super clean and known to be correct. Pandoc made it easy to convert to word, but that conversion then into Vellum to me felt like it could introduce all sorts of weird complexities. It was okay for me, but I would have preferred to stay in Markdown all the way to publish and BlogBook amongst other things looks like it will allow that.
 
@@ -123,7 +123,7 @@ I hope this is a way for people to go back to topics and reflect on them more. M
 - Purchasers of the printed book that would like the eBook as well can contact me and I will get you the eBook files.
 - Anyone that purchases the Yearly Thing twenty twenty five in the first 2 months will receive a special Yearly Thing twenty twenty five POAP to collect!
 
-This may be the first of many Yearly Things that you can collect over time. 🤔
+This may be the first of many Yearly Things that you can collect over time.
 
 Paperback on Lulu
 
@@ -153,11 +153,11 @@ Watched Bruce Springsteen: Deliver Me From Nowhere today and it was great. I’m
 
 Journal entry four.
 
-Much needed sauna time. 🔥
+Much needed sauna time.
 
 Journal entry five.
 
-Crisp morning with light snow. Perfect time for a soak. ❄️🔥💦
+Crisp morning with light snow. Perfect time for a soak.
 
 Journal entry six.
 
@@ -185,7 +185,7 @@ POAP 7561204 at The Molt Epoch Begins.
 
 Journal entry eleven.
 
-Om Malik has been writing incredible blog posts lately! Velocity was amazing, Evidence continued, Tech and Media, and now FOMO. Delights me that he is still sharing his writing and thoughts with us -- long after the days of Gigaom. 👏
+Om Malik has been writing incredible blog posts lately! Velocity was amazing, Evidence continued, Tech and Media, and now FOMO. Delights me that he is still sharing his writing and thoughts with us -- long after the days of Gigaom.
 
 Journal entry twelve.
 
@@ -250,7 +250,7 @@ Cool visual builder off of maps. I wish the map control was more accurate though
 A haiku to leave you with…
 
 Tiny agents hum —
-Crocs meet LEGO in the sun ☀️
+Crocs meet LEGO in the sun
 Playtime never ends.
 
 That brings us to the end of the Weekly Thing, issue 340. Thanks for listening, and I'll see you next time.

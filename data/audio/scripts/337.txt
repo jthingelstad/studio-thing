@@ -1,6 +1,6 @@
 The Weekly Thing, issue 337. Sunrise, Vision, Offline. Published January 18, twenty twenty six. By Jamie Thingelstad. In this issue: Markdown takeover, Open Infrastructure Map, Oh My Zsh, anti-AI hype, ICE surveillance, MCP fad, Vision Pro, Claude Cowork, Ozempic food habits.
 
-Hello there! 👋
+Hello there!
 
 Here I am with the first Weekly Thing of twenty twenty six! Yes it is a bit later in the day than planned, but better late than never, right?
 
@@ -55,7 +55,7 @@ Link six. "ICE Is Going on a Surveillance Shopping Spree | Electronic Frontier F
 This is an incredible amount of surveillance infrastructure and capability.
 
 Quote.
-A twenty twenty two report by Georgetown Law's Center for Privacy and Technology found the following: - ICE had scanned the driver's license photos of 1 in 3 adults. - ICE had access to the driver's license data of 3 in 4 adults. - ICE was tracking the movements of drivers in cities home to 3 in 4 adults. - ICE could locate 3 in 4 adults through their utility records. - ​​ICE built its surveillance dragnet by tapping data from private companies and state and local bureaucracies. - ICE spent approximately 2 dollars.8 billion between two thousand eight and twenty twenty one on new surveillance, data collection and data-sharing programs. With a budget for twenty twenty five that is 10 times the size of the agency's total surveillance spending over the last 13 years, ICE is going on a shopping spree, creating one of the largest, most comprehensive domestic surveillance machines in history.
+A twenty twenty two report by Georgetown Law's Center for Privacy and Technology found the following: - ICE had scanned the driver's license photos of 1 in 3 adults. - ICE had access to the driver's license data of 3 in 4 adults. - ICE was tracking the movements of drivers in cities home to 3 in 4 adults. - ICE could locate 3 in 4 adults through their utility records. - ​​ICE built its surveillance dragnet by tapping data from private companies and state and local bureaucracies. - ICE spent approximately 2.8 billion dollars between two thousand eight and twenty twenty one on new surveillance, data collection and data-sharing programs. With a budget for twenty twenty five that is 10 times the size of the agency's total surveillance spending over the last 13 years, ICE is going on a shopping spree, creating one of the largest, most comprehensive domestic surveillance machines in history.
 End quote.
 
 The ICE budget has nearly tripled in just the last two years, and some chunk of that is going to building an incredible surveillance network. And you might think no big deal since the FBI and CIA have huge surveillance functions, but those are entirely different as they are in the intelligence community. This surveillance is less regulated.
@@ -122,11 +122,11 @@ Now, the Journal section.
 
 Journal entry one.
 
-Stone Pit Old Fashioned (bourbon, apricot, demerara, peach tincture) at Animale's. Tasty. 🥃
+Stone Pit Old Fashioned (bourbon, apricot, demerara, peach tincture) at Animale's. Tasty.
 
 Journal entry two.
 
-I’ve always thought it would be amazing to go to a World Cup match and with the twenty twenty six FIFA World Cup being in North America it is time! Tammy did the research and Tyler and I will be at Lumen Field in Seattle on July sixth watching W81 v W82 in the Round of 16! ⚽️
+I’ve always thought it would be amazing to go to a World Cup match and with the twenty twenty six FIFA World Cup being in North America it is time! Tammy did the research and Tyler and I will be at Lumen Field in Seattle on July sixth watching W81 v W82 in the Round of 16!
 
 Journal entry three.
 
@@ -136,9 +136,9 @@ Journal entry four. Escape Rooms of twenty twenty five
 
 This year we jumped way into our Escape Room adventures, more than any previous year. We completed 25 rooms in twenty twenty five!
 
-This year we went through all of our records and made sure we had a complete inventory of all of our rooms, resulting in our Escape Rooms list. We are getting close to having 100 rooms so that we can become TERPECA voters! Speaking of TERPECA, we did seven rooms that were in the top 100 for twenty twenty four of the Top Escape Rooms Project. Note the ⭐️ next to those rooms in the list.
+This year we went through all of our records and made sure we had a complete inventory of all of our rooms, resulting in our Escape Rooms list. We are getting close to having 100 rooms so that we can become TERPECA voters! Speaking of TERPECA, we did seven rooms that were in the top 100 for twenty twenty four of the Top Escape Rooms Project. Note the ⭐ next to those rooms in the list.
 
-It was a super fun year for escape rooms! 🤩
+It was a super fun year for escape rooms!
 
 Our log for twenty twenty five was…
 
@@ -148,7 +148,7 @@ Our log for twenty twenty five was…
 63. No Esc Puzzle Collective - Sherwood Forest in Shakopee, MN. See post!
 64. Enigma Adventures - The Istanbul Gambit in Bloomington, MN. See post!
 65. Puzzleworks - The Hospital in St. Pual, MN. See post!
-66. Doldrick's Escape Room - Crazy Train ⭐️ in Orlando, FL. See post!
+66. Doldrick's Escape Room - Crazy Train ⭐ in Orlando, FL. See post!
 67. Puzzleworks - The Dungeon in St. Paul, MN. See post!
 68. Puzzleworks - The Anomaly in St. Paul, MN. See post!
 69. Enigma Adventures - Pirates of the Spanish Main in Maple Grove, MN. See post!
@@ -156,12 +156,12 @@ Our log for twenty twenty five was…
 71. Solve Escape Rooms - Caper in the Escape Room in Waukesha, WI.
 72. Solve Escape Rooms - 14 Floors Below in Waukesha, WI.
 73. Escape in Time - Gold Rush in Madison, WI. See post!
-74. Cabinet Mysteriis - The Dreamwalkers ⭐️ in Quebec. See post!
-75. Cabinet Mysteriis - two thousand two: The Bovine Odyssey ⭐️ in Quebec. See post!
-76. Cabinet Mysterlis - Screaming Metal ⭐️ in Quebec. See post!
-77. Escaparium - Lost Island of the Voodoo Queen ⭐️ in Quebec. See post!
-78. Escaparium - Wardrobe for sale ⭐️ in Quebec. See post!
-79. Escaparium - Magnifico ⭐️ in Quebec. See post! Number 1 on TERPECA twenty twenty four and twenty twenty five!
+74. Cabinet Mysteriis - The Dreamwalkers ⭐ in Quebec. See post!
+75. Cabinet Mysteriis - two thousand two: The Bovine Odyssey ⭐ in Quebec. See post!
+76. Cabinet Mysterlis - Screaming Metal ⭐ in Quebec. See post!
+77. Escaparium - Lost Island of the Voodoo Queen ⭐ in Quebec. See post!
+78. Escaparium - Wardrobe for sale ⭐ in Quebec. See post!
+79. Escaparium - Magnifico ⭐ in Quebec. See post! Number 1 on TERPECA twenty twenty four and twenty twenty five!
 80. Escape Room Alexandria - The Experiment in Alexandria. See post!
 81. Puzzled Escape Rooms - Time Machine in Fargo. See post!
 82. Breakout ND - Gemini Quantum Quest in Bismarck. See post!
@@ -170,15 +170,15 @@ Our log for twenty twenty five was…
 
 Journal entry five.
 
-Mazie is doing her final packing and preparation to depart tomorrow for her semester abroad in Barcelona. I'm excited and proud of her, and as her Dad nervous and hopeful, as she embarks on her biggest excursion yet. Starting tomorrow I’ll be counting the days until we visit her. 🇪🇸✈️
+Mazie is doing her final packing and preparation to depart tomorrow for her semester abroad in Barcelona. I'm excited and proud of her, and as her Dad nervous and hopeful, as she embarks on her biggest excursion yet. Starting tomorrow I’ll be counting the days until we visit her.
 
 Journal entry six.
 
-Excited to see the MSP airport has been added to the Airport POAP Rally! Follow the Rally. ✈️
+Excited to see the MSP airport has been added to the Airport POAP Rally! Follow the Rally.
 
 Journal entry seven.
 
-I’ve been having fun playing Clash Royale with Tyler -- he’s my coach and is really good at the game! The game had some big changes recently that are not being well received by the community. He wrote up where he thinks Supercell is going wrong. Spot on! 🎯
+I’ve been having fun playing Clash Royale with Tyler -- he’s my coach and is really good at the game! The game had some big changes recently that are not being well received by the community. He wrote up where he thinks Supercell is going wrong. Spot on!
 
 Journal entry eight.
 
@@ -186,7 +186,7 @@ POAP 7550517 at TeamSPS Cyberweek twenty twenty five.
 
 Journal entry nine.
 
-At our very first Minnesota Gophers basketball game in the Barn Lofts! 🏀
+At our very first Minnesota Gophers basketball game in the Barn Lofts!
 
 Journal entry ten.
 
@@ -194,15 +194,11 @@ POAP 7552077 at You've met Jamie Thingelstad in Winter twenty twenty six.
 
 That's the end of the Journal.
 
-Now, the Supporting Membership section.
-
-That's the end of Supporting Membership.
-
 Now, the Briefly section.
 
 Link one. "The struggle of resizing windows on macOS Tahoe – no.heger"
 
-This drives me crazy when I’m using my Mac. 😡
+This drives me crazy when I’m using my Mac.
 
 Link two. "WORDS.ZIP - Infinite Collaborative Word Search Game Online"
 
@@ -256,9 +252,9 @@ Link fourteen. "Hacker News Book Map"
 
 Interesting visualization of the 1,000 most commonly referenced books on Hacker News along with clustering. The site is slow to load but an interesting reference, particularly if lookin for reading ideas.
 
-Link fifteen. "Python Software Foundation News: Anthropic invests 1 dollar.5 million in the Python Software Foundation and open source security"
+Link fifteen. "Python Software Foundation News: Anthropic invests 1.5 million dollars in the Python Software Foundation and open source security"
 
-Well done Anthropic! 👏
+Well done Anthropic!
 
 Link sixteen. "Date is out, Temporal is in - Piccalilli"
 
@@ -270,16 +266,16 @@ Mesmerizing.
 
 Link eighteen. "Wikipedia at 25: What the web can be - Anil Dash"
 
-Happy Birthday Wikipedia! 🥳
+Happy Birthday Wikipedia!
 
 Link nineteen. "CreepyLink"
 
-Fun little URL shortener that makes links that look incredibly suspicious. I made one to go to the Weekly Thing landing page and it definitely looks like something you shouldn't click on. I’m not going to add it here as it would certainly cause this email to get flagged as suspicious. 😬
+Fun little URL shortener that makes links that look incredibly suspicious. I made one to go to the Weekly Thing landing page and it definitely looks like something you shouldn't click on. I’m not going to add it here as it would certainly cause this email to get flagged as suspicious.
 
 A haiku to leave you with…
 
 Markdown rules the land,
 Code whispers in silent lines—
-Pens weep in defeat. 📝
+Pens weep in defeat.
 
 That brings us to the end of the Weekly Thing, issue 337. Thanks for listening, and I'll see you next time.
