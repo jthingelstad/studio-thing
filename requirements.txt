@@ -6,5 +6,6 @@ openai
 pydantic
 python-dotenv
 pyyaml
+rank_bm25
 requests
 stripe

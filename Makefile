@@ -1,4 +1,4 @@
-.PHONY: build serve clean data librarian-corpus librarian-corpus-upload librarian-graph librarian-graph-upload librarian-deploy fresh content-pull content-pull-latest content-build content-diff content-push content-push-live fetch-latest sync sync-push sync-issue refresh-copy refresh-copy-dry audio audio-issue
+.PHONY: build serve clean data librarian-corpus librarian-corpus-upload librarian-graph librarian-graph-upload librarian-deploy librarian-ask fresh content-pull content-pull-latest content-build content-diff content-push content-push-live fetch-latest sync sync-push sync-issue refresh-copy refresh-copy-dry audio audio-issue
 
 data:
 	npm run data
@@ -17,6 +17,9 @@ librarian-graph-upload:
 
 librarian-deploy:
 	npm run librarian:deploy
+
+librarian-ask:
+	python pipeline/librarian/archive_chat.py $(ARGS)
 
 build: data
 	npm run build:all
