@@ -223,10 +223,12 @@ def clean_inline(text: str) -> str:
     text = IMAGE_RE.sub("", text)
     text = LINK_RE.sub(r"\1", text)
     text = re.sub(r"`([^`]*)`", r"\1", text)
-    # Asterisk emphasis: *text*, **text**, ***text***. Pad with spaces in
-    # case the source had no whitespace separator (`**democracy**and` →
-    # ` democracy and`); the later whitespace-collapse step cleans up.
-    text = re.sub(r"\*{1,3}([^*]+)\*{1,3}", r" \1 ", text)
+    # Asterisk emphasis: *text*, **text**, ***text***. Use `\*+` (any run)
+    # so unbalanced source like `**Solo**](url)**` doesn't leave a stray `*`.
+    # Pad with spaces in case the source had no whitespace separator
+    # (`**democracy**and` → ` democracy and`); the later whitespace-collapse
+    # step cleans up.
+    text = re.sub(r"\*+([^*]+)\*+", r" \1 ", text)
     # Underscore emphasis: only treat `_` as a delimiter when it's NOT part of
     # an identifier (e.g. `schema_version`, `group_concat`). Word characters
     # on either side mean the underscore is intra-word.
@@ -397,6 +399,9 @@ def _strip_cover_blocks(body: str) -> str:
 def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
     body = HTML_COMMENT_RE.sub("", body)
     body = STRIKETHROUGH_HTML_RE.sub("", body)
+    # If a strikethrough was the entire content of a list item, the leading
+    # `- ` is now alone on its line — drop those orphan bullets.
+    body = re.sub(r"^[ \t]*[-*][ \t]*$", "", body, flags=re.MULTILINE)
     body = FENCED_CODE_RE.sub("", body)
     body = _strip_cover_blocks(body)
     body = IMAGE_RE.sub("", body)

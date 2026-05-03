@@ -7565,19 +7565,31 @@
     },
     "267": {
       "script_hash": "sha256:a8b3be8c5b3ab69edb962a1ea23089d434c7619470ca9b03fc84329a592829f8",
-      "reviewed_at": "2026-05-02T01:42:23Z",
-      "reviewer_version": "v1",
+      "reviewed_at": "2026-05-03T12:10:51Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 13747,
-        "output_tokens": 8,
+        "input_tokens": 14146,
+        "output_tokens": 155,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 1.08,
-        "est_cost_usd": 0.013787
+        "duration_s": 5.62,
+        "est_cost_usd": 0.014921
       },
-      "errors": [],
-      "warnings": []
+      "errors": [
+        {
+          "severity": "error",
+          "where": "\"1st rule of RSS Club is\"",
+          "what": "Ordinal normalization changed \"1st\", \"2nd\", \"3rd\" to \"first\", \"second\", \"third\" but lost the leading dash formatting that makes the list structure clear."
+        }
+      ],
+      "warnings": [
+        {
+          "severity": "warning",
+          "where": "\"On the infrastructural disadvantage\" quote",
+          "what": "The phrase \"(bolding mine)\" appears before the quote but the actual bolded text \"If you want to process a request to Signal...\" in the body is not marked in the script, making the callout seem disconnected from its target."
+        }
+      ]
     },
     "268": {
       "script_hash": "sha256:dbab4c0f0be6617528c06099d814ca9140b924a4a30243b16cae4a5e19217766",
@@ -7614,16 +7626,16 @@
     },
     "269": {
       "script_hash": "sha256:72bc01f7eaed4339b68993c25bd55eed211554504fdff4e05f9f0d60bc6d42f1",
-      "reviewed_at": "2026-05-02T01:37:58Z",
-      "reviewer_version": "v1",
+      "reviewed_at": "2026-05-03T12:10:53Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 9892,
+        "input_tokens": 10291,
         "output_tokens": 8,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 0.85,
-        "est_cost_usd": 0.009932
+        "duration_s": 1.25,
+        "est_cost_usd": 0.010331
       },
       "errors": [],
       "warnings": []
@@ -7657,59 +7669,47 @@
       ]
     },
     "271": {
-      "script_hash": "sha256:471328a5b5bb1b14ed69b8f702d8d878fa0ea6152ab266c7537085113d32eae8",
-      "reviewed_at": "2026-05-02T02:20:42Z",
+      "script_hash": "sha256:7c0ba2bbbe5bd51b0f1375b34e034f3761f5172a6e9a862fe2683bcb45c97718",
+      "reviewed_at": "2026-05-03T12:10:55Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 11122,
-        "output_tokens": 76,
+        "input_tokens": 11121,
+        "output_tokens": 8,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 3.42,
-        "est_cost_usd": 0.011502
+        "duration_s": 1.07,
+        "est_cost_usd": 0.011161
       },
-      "errors": [
-        {
-          "severity": "error",
-          "where": "\"We estimate that by twenty twenty five, Signal will require approximately 50 million dollars dollars a year to operate\"",
-          "what": "Double \"dollars\" appears in the dollar amount normalization (\"50 million dollars dollars\" instead of \"50 million dollars\")."
-        }
-      ],
+      "errors": [],
       "warnings": []
     },
     "272": {
-      "script_hash": "sha256:2259976bfb12fb685dd6591782bdf5c71cfc92f639a9652d351e4e43d8d0ec4a",
-      "reviewed_at": "2026-05-02T02:20:43Z",
+      "script_hash": "sha256:02bd0874bda33b3254840e0d0f6e1406d96f10243163aa5a924ed88889cc5e40",
+      "reviewed_at": "2026-05-03T12:10:58Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 17000,
-        "output_tokens": 147,
+        "input_tokens": 16995,
+        "output_tokens": 168,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 4.84,
-        "est_cost_usd": 0.017735
+        "duration_s": 2.88,
+        "est_cost_usd": 0.017835
       },
       "errors": [
         {
           "severity": "error",
-          "where": "\"democracyand differential\"",
-          "what": "Missing space between \"democracy\" and \"and\" in the quoted blockquote from Vitalik Buterin."
+          "where": "closing section",
+          "what": "The script ends abruptly with 'MySQL scaled to tremendous levels' and appears truncated before completing the sentence about GitHub's MySQL upgrade, then jumps to a 'Fortune' section that does not appear in the source body."
         },
         {
           "severity": "error",
-          "where": "\"1. iPhone)\"",
-          "what": "Stray closing parenthesis after \"iPhone\" in the numbered list of iPhones owned."
+          "where": "MySQL section in Briefly",
+          "what": "The script text 'MySQL scaled to tremendous levels — 1,200 hosts, 300 TB of data. How do you upgrade them all through a major version change? Carefully.' appears to be incomplete compared to what should be a full link entry, and the source body itself is cut off mid-sentence at 'MySQL scaled to tremendous'"
         }
       ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "\"MySQL scaled to tremendous\"",
-          "what": "The \"Briefly\" section link about MySQL is incomplete; the script cuts off mid-sentence without the full title or description."
-        }
-      ]
+      "warnings": []
     },
     "273": {
       "script_hash": "sha256:d6390ce5dbdc165a4e3cbd5eff072c60f53e9358c25c7a3e031e97c60724da64",
@@ -7728,63 +7728,47 @@
       "warnings": []
     },
     "274": {
-      "script_hash": "sha256:33212d6acab225073e6d22149de489af800857c6625a2b592e31b7ecb446493d",
-      "reviewed_at": "2026-05-02T01:38:03Z",
-      "reviewer_version": "v1",
+      "script_hash": "sha256:e769c99464285b5d4004469cbe970c1f679a1052064c5c1bf3b7ab9fe7b38cb0",
+      "reviewed_at": "2026-05-03T12:11:02Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 17259,
-        "output_tokens": 255,
+        "input_tokens": 17660,
+        "output_tokens": 143,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 4.15,
-        "est_cost_usd": 0.018534
+        "duration_s": 3.19,
+        "est_cost_usd": 0.018375
       },
       "errors": [
         {
           "severity": "error",
           "where": "preamble",
-          "what": "The script preamble says \"Gibberish, Happyfeed, Airshow\" which does not appear anywhere in the newsletter body and appears to be corrupted placeholder text."
-        },
-        {
-          "severity": "error",
-          "where": "\"612 Series Landmarks:\" list",
-          "what": "The landmarks list in the quote is corrupted with missing text after several landmark names (e.g., \"Stone Arch Bridge)\" has a closing parenthesis with no opening, \"The Walker\" missing paren, multiple landmarks have stray closing parens)."
-        },
-        {
-          "severity": "error",
-          "where": "\"ISDN History\" section",
-          "what": "The album reference reads \"Future Sound of London's album ISDN)\" with a stray closing parenthesis where the link URL was removed."
+          "what": "The preamble lists 'Gibberish, Happyfeed, Airshow' as subject line emojis, but these words do not appear in the newsletter body and are not recognizable as emojis or standard newsletter elements."
         }
       ],
       "warnings": [
         {
           "severity": "warning",
-          "where": "Journal section",
-          "what": "The journal entries appear truncated at \"Wallet of Satoshi is n\" with no completion, suggesting the script was cut off mid-sentence rather than deliberately ending there."
+          "where": "\"Later they fixed it, but what made this particular one so unforgivable was that the new dates of the event were never made widely known.\"",
+          "what": "A substantive sentence from the body appears to be missing from the script entirely."
         }
       ]
     },
     "275": {
-      "script_hash": "sha256:b545edcd8b094b597cc6d4133072355b93e44e99bebcf67b07531b6a060f0830",
-      "reviewed_at": "2026-05-02T02:20:45Z",
+      "script_hash": "sha256:a8aefaba1f4e223c5b9da7603eec9e1346c96a1130a5e82dc37a1b3788221cb3",
+      "reviewed_at": "2026-05-03T12:11:03Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 12337,
-        "output_tokens": 96,
+        "input_tokens": 12336,
+        "output_tokens": 8,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 4.87,
-        "est_cost_usd": 0.012817
+        "duration_s": 0.99,
+        "est_cost_usd": 0.012376
       },
-      "errors": [
-        {
-          "severity": "error",
-          "where": "\"That's the beautiful thing about bullshit, it can't be outsourced.\" — Cory Ellison, The Morning Show) (S3E4)",
-          "what": "The attribution has an unmatched closing parenthesis—\"The Morning Show)\" should be \"The Morning Show\" with the episode citation moved outside or properly formatted."
-        }
-      ],
+      "errors": [],
       "warnings": []
     },
     "276": {
@@ -7805,126 +7789,120 @@
     },
     "277": {
       "script_hash": "sha256:f54ff7fafa1ca4f2590defdc5f50bf73f795d5f83eed0d34d0f903fc7fb03260",
-      "reviewed_at": "2026-05-02T01:38:05Z",
-      "reviewer_version": "v1",
-      "model": "claude-haiku-4-5-20251001",
-      "usage": {
-        "input_tokens": 8519,
-        "output_tokens": 155,
-        "cache_read_input_tokens": 0,
-        "cache_creation_input_tokens": 0,
-        "duration_s": 4.7,
-        "est_cost_usd": 0.009294
-      },
-      "errors": [
-        {
-          "severity": "error",
-          "where": "\"I'm looking forwarding to celebrating\"",
-          "what": "The word \"forwarding\" should be \"forward\" (missing \"to\" is acceptable, but \"forwarding\" is a typo/corruption)."
-        }
-      ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "\"Omni Roadmap twenty twenty four - The Omni Group\"",
-          "what": "The link title in the script reads \"Omni Roadmap twenty twenty four\" but the body shows \"Omni Roadmap 2024\"; year normalization is acceptable but the script lacks \"- The Omni Group\" suffix present in the body."
-        }
-      ]
-    },
-    "278": {
-      "script_hash": "sha256:233efec010e9b367863dfef3b7aa447854cb3c9df2f6d2ad0500f7520b7bf657",
-      "reviewed_at": "2026-05-02T02:20:46Z",
+      "reviewed_at": "2026-05-03T12:11:06Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 16025,
-        "output_tokens": 234,
+        "input_tokens": 8918,
+        "output_tokens": 141,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 4.75,
-        "est_cost_usd": 0.017195
+        "duration_s": 2.9,
+        "est_cost_usd": 0.009623
       },
       "errors": [
         {
           "severity": "error",
-          "where": "\"Pausing & Resuming\"",
-          "what": "The ampersand in \"Pausing & Resuming\" was replaced with \"and\" in the script (\"Pausing and Resuming\"), but this is acceptable per the transformation rules."
-        },
-        {
-          "severity": "error",
-          "where": "Journal entry two, \"<0xa0>\" characters",
-          "what": "The script says \"found random characters\" but the body specifies \"found random `<0xa0>` characters\" — the actual character notation was removed without explanation, making it unclear what the problem was."
+          "where": "\"Omni Roadmap twenty twenty four - The Omni Group\"",
+          "what": "The link title was transformed from \"Omni Roadmap 2024\" to \"Omni Roadmap twenty twenty four\", but the body text clearly shows the year should appear in the title as a numeral or at least consistently with how years are normalized elsewhere; however, checking the source, the original body says \"Omni Roadmap 2024\" and this should normalize to \"twenty twenty four\" — this is actually correct per the acceptable transformations."
         }
       ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "Briefly section, \"wiling\" vs \"willing\"",
-          "what": "The body contains a typo \"wiling\" instead of \"willing\" in the phrase \"seems to be a tradeoff some are wiling to make\" — this is reproduced in the script, confirming it's a pre-existing source typo, not a transformation bug."
-        }
-      ]
+      "warnings": []
     },
-    "279": {
-      "script_hash": "sha256:7480b6910b458d018c88e4dbcbbb7fcd86193ddb411296c854c76f22e2e947dd",
-      "reviewed_at": "2026-05-02T01:38:05Z",
-      "reviewer_version": "v1",
+    "278": {
+      "script_hash": "sha256:8a05510cdbb9c01431233f93b23804c6e2a9177c5550615af7125a798c936cea",
+      "reviewed_at": "2026-05-03T12:11:08Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 9647,
-        "output_tokens": 200,
+        "input_tokens": 16023,
+        "output_tokens": 8,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 3.81,
-        "est_cost_usd": 0.010647
+        "duration_s": 1.08,
+        "est_cost_usd": 0.016063
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "279": {
+      "script_hash": "sha256:a41398f247c2e0e86d3659c7779439aee788e2f7df0119d6b5c40c3147893b86",
+      "reviewed_at": "2026-05-03T12:11:12Z",
+      "reviewer_version": "v2",
+      "model": "claude-haiku-4-5-20251001",
+      "usage": {
+        "input_tokens": 10037,
+        "output_tokens": 262,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "duration_s": 4.04,
+        "est_cost_usd": 0.011347
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Journal entry three, list item one",
-          "what": "The strikethrough item 'Replace halogen puck light with LED' appears in the script as a regular list item without any indication it was struck through in the original."
+          "where": "Journal entry three, home electric upgrade list",
+          "what": "A bullet point line is completely empty where \"Replace halogen puck light with LED.\" should appear (it was struck through in the body but should have been dropped entirely, not left as a blank line)."
         },
         {
           "severity": "error",
           "where": "Journal entry six",
-          "what": "The script says 'entire hose' but the body says 'entire house' — this is a transcription error."
+          "what": "The word \"hose\" should be \"house\" (\"Power has been shut off to the entire hose now\")."
+        },
+        {
+          "severity": "error",
+          "where": "Link six, REST quote",
+          "what": "The quote uses \"for example\" instead of \"e.g.\" in two places, which is acceptable transformation, but the list structure is mangled — the dashes and line breaks within the blockquote have been collapsed into a single run-on sentence rather than preserved as a readable list."
         }
       ],
       "warnings": [
         {
           "severity": "warning",
-          "where": "Notable section, Link six blockquote",
-          "what": "The blockquote in the script runs list items together without line breaks ('- Level 1: Resources (for example a resource-aware URL layout, contrasted with an opaque URL layout as in XML-RPC) - Level 2:...'), making it harder to parse than the original formatted list."
+          "where": "Link five, graph datatype section",
+          "what": "The name \"Hou\" appears instead of what should likely be a different name or correction — this looks like a corrupted or truncated word from the original text."
         }
       ]
     },
     "280": {
       "script_hash": "sha256:c303965732b98b376bd96cdf9344ebae0f770f091a5a506a472192329da9df02",
-      "reviewed_at": "2026-05-02T01:42:25Z",
-      "reviewer_version": "v1",
+      "reviewed_at": "2026-05-03T12:11:15Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 10849,
-        "output_tokens": 8,
+        "input_tokens": 11248,
+        "output_tokens": 129,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 0.91,
-        "est_cost_usd": 0.010889
+        "duration_s": 2.83,
+        "est_cost_usd": 0.011893
       },
-      "errors": [],
-      "warnings": []
+      "errors": [
+        {
+          "severity": "error",
+          "where": "\"Berners-Lee hits frames his two primary concerns\"",
+          "what": "The sentence has garbled syntax with \"hits frames\" appearing to be a corrupted phrase that should likely be a single verb."
+        }
+      ],
+      "warnings": [
+        {
+          "severity": "warning",
+          "where": "\"You have know how to work with others\"",
+          "what": "The phrase \"You have know\" is grammatically incorrect and appears in both the body blockquote and the script, suggesting this is a pre-existing source typo rather than a transformation bug."
+        }
+      ]
     },
     "281": {
-      "script_hash": "sha256:3402f2787b4f963b4d83b35def3ebd1c5e7059fa4fcd32ae8a32155ae35a64a4",
-      "reviewed_at": "2026-05-02T01:45:06Z",
-      "reviewer_version": "v1",
+      "script_hash": "sha256:836078fc0ca5ed0eb93fe426aa1ec4b92336615595b9773cc4d85b95da77a63b",
+      "reviewed_at": "2026-05-03T12:11:17Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 17224,
+        "input_tokens": 17622,
         "output_tokens": 8,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 0.89,
-        "est_cost_usd": 0.017264
+        "duration_s": 0.99,
+        "est_cost_usd": 0.017662
       },
       "errors": [],
       "warnings": []
@@ -7946,272 +7924,183 @@
       "warnings": []
     },
     "283": {
-      "script_hash": "sha256:dff87dad0ecdb4651637b8289a052c9782202d05b7ffaa818a62c9ebeef9543f",
-      "reviewed_at": "2026-05-02T02:20:55Z",
+      "script_hash": "sha256:3fd448563589452a8ba0725da8d085ee3a59665190d74a8fb29ebdc1a77dc3ab",
+      "reviewed_at": "2026-05-03T12:11:19Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 10632,
-        "output_tokens": 840,
+        "input_tokens": 10630,
+        "output_tokens": 53,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 11.15,
-        "est_cost_usd": 0.014832
+        "duration_s": 2.02,
+        "est_cost_usd": 0.010895
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Journal entry one",
-          "what": "The sentence \"We watched Howl's Moving Castle) tonight\" has a stray closing parenthesis with no matching opening parenthesis."
-        },
-        {
-          "severity": "error",
-          "where": "\"Closing Time)\"",
-          "what": "The song title \"Closing Time)\" has a stray closing parenthesis with no matching opening parenthesis."
-        },
-        {
-          "severity": "error",
-          "where": "Briefly, Link three description",
-          "what": "The sentence \"Thing I thought was notable is Fediverse support to you can subscribe to links from it\" is missing a word—it should read \"so you can subscribe\" or similar."
-        },
-        {
-          "severity": "error",
-          "where": "Journal entry one opening",
-          "what": "The journal entry is missing the date stamp that appears in the source (\"Apr 5, 2024 at 9:53 PM\"), though date removal is acceptable; however, the opening text \"We watched Howl's Moving Castle) tonight\" also lacks the title/link reference that should precede it."
-        },
-        {
-          "severity": "error",
-          "where": "Briefly, Link four",
-          "what": "The link title is malformed—it should be properly punctuated but the trailing emoji and quotation are missing, making it unclear."
-        },
-        {
-          "severity": "error",
-          "where": "year normalization in Briefly",
-          "what": "\"The Best Photos and Videos of the twenty twenty four Solar Eclipse\" should be \"twenty twenty four\" but the source shows \"2024\" which should normalize to \"twenty twenty four\"—this appears correct, so no error."
-        },
-        {
-          "severity": "error",
-          "where": "Briefly, link three",
-          "what": "The phrase \"Fediverse support to you can subscribe\" has broken syntax; it is missing a word or connector between \"to\" and \"you.\""
-        },
-        {
-          "severity": "error",
-          "where": "Journal entry four",
-          "what": "The quote block contains raw markdown list formatting with hyphens and brackets (\"- Custom Perspectives [Pro] –\") that should have been stripped; these are leftover formatting artifacts."
-        },
-        {
-          "severity": "error",
-          "where": "Journal entry one opening",
-          "what": "The text should include a link title or reference but instead begins abruptly with \"We watched Howl's Moving Castle) tonight\" after \"Journal entry one,\" missing the introductory context from the source."
-        },
-        {
-          "severity": "error",
-          "where": "Closing line of preamble",
-          "what": "The preamble lists topics \"IRC client in motherboard, go players after AI, Digital Equipment Corp saved Ethernet, Twitter pivot to X.com phishers, follow the CAPEX\" but omits several major topics from the Notable section such as the LLMs article, which should have been included or the list should match what's covered."
+          "where": "Journal entry three",
+          "what": "The text \"Solo: A Show About Friendship *\" contains a stray asterisk that should have been removed during transformation."
         }
       ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "Journal entry three preamble",
-          "what": "The text \"Solo: A Show About Friendship*\" contains a trailing asterisk that appears to be leftover formatting cruft from the source markdown."
-        },
-        {
-          "severity": "warning",
-          "where": "support section, Share line",
-          "what": "The template variable placeholder text \"Weekly Thing 283 / Betula, Blocky, Tables\" appears to be a substitution for the original {{ email.subject }}, but the phrasing is awkward and may not match the original intent."
-        },
-        {
-          "severity": "warning",
-          "where": "Journal entry 2 title spacing",
-          "what": "\"Journal entry two. Semisonic at the Palace Theatre\" appears to separate the entry number from the title, but the source shows it on the same line as a heading; this may indicate a structural interpretation issue."
-        }
-      ]
+      "warnings": []
     },
     "284": {
-      "script_hash": "sha256:87212a643d777d331af6696bf10d961c58b50f2c630106fc99f930d2d23429f9",
-      "reviewed_at": "2026-05-02T02:20:48Z",
+      "script_hash": "sha256:a2dd850bffdb842cd02128b4707112e17e0dfd9b16b1d9fa4f11107e94509c27",
+      "reviewed_at": "2026-05-03T12:11:22Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 10237,
-        "output_tokens": 128,
+        "input_tokens": 10235,
+        "output_tokens": 71,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 3.61,
-        "est_cost_usd": 0.010877
+        "duration_s": 1.76,
+        "est_cost_usd": 0.01059
       },
       "errors": [
         {
           "severity": "error",
-          "where": "\"_Calvin and Hobbes _showed me\"",
-          "what": "The script contains leftover markdown formatting with unmatched underscores around \"Calvin and Hobbes\" that should have been stripped."
+          "where": "Journal entry nine preamble",
+          "what": "The date \"Apr 18, 2024 at 9:30 PM\" from the body was transformed into \"twenty twenty four\" in the script, which is incomplete and corrupted."
         }
       ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "Journal entry nine heading",
-          "what": "The script reads \"twenty twenty four Minnesota Aspirations in Computing Award Ceremony\" but the body has the date as part of the entry metadata separate from the title, making the phrasing awkward in the script."
-        }
-      ]
+      "warnings": []
     },
     "285": {
       "script_hash": "sha256:9efdb56a22c6b29e30c78aedab92bf955dcfb77ad827bdb09611370ad5a4688c",
-      "reviewed_at": "2026-05-02T01:38:06Z",
-      "reviewer_version": "v1",
+      "reviewed_at": "2026-05-03T12:11:23Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 11948,
+        "input_tokens": 12347,
         "output_tokens": 8,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 3.06,
-        "est_cost_usd": 0.011988
+        "duration_s": 0.8,
+        "est_cost_usd": 0.012387
       },
       "errors": [],
       "warnings": []
     },
     "286": {
-      "script_hash": "sha256:568bc4aa52db88956fd534366d00643dfaeffe3ba518e243b8bba633e34a7506",
-      "reviewed_at": "2026-05-02T02:20:50Z",
+      "script_hash": "sha256:0dabcaa3e4f588e0a01e42c59db2787c253c8db2f95d7a1384041b76857c26c1",
+      "reviewed_at": "2026-05-03T12:11:26Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 10466,
-        "output_tokens": 248,
+        "input_tokens": 10465,
+        "output_tokens": 105,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 5.73,
-        "est_cost_usd": 0.011706
+        "duration_s": 2.79,
+        "est_cost_usd": 0.01099
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Hard Miles journal entry",
-          "what": "The text 'Grand Canyon))' has a double closing parenthesis that should be single."
-        },
-        {
-          "severity": "error",
-          "where": "Briefly section, link three",
-          "what": "The link title in the body is 'Bill Gates, Man United and 20 other sites that ban linking to them' but the script says 'twenty' instead of preserving '20'."
-        },
-        {
-          "severity": "error",
-          "where": "Briefly section, link five",
-          "what": "The link title 'ffs: the file fileystem' contains the typo 'fileystem' (missing 's' in filesystem) which exists in the source body and is correctly preserved in the script, but this appears to be a pre-existing source typo rather than a transformation bug."
+          "where": "Journal entry six",
+          "what": "The phrase 'It is there hardest room' contains a typo ('there' instead of 'their') that exists in both the body and script, but this is a pre-existing source error, not a transformation bug. However, the script also drops the linked reference 'See list of escape rooms' which should be preserved as substantive content related to the entry."
         }
       ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "\"I've always wanted to…\" caption",
-          "what": "The ellipsis text appears incomplete in both body and script, but it is presented as-is without apparent truncation during transformation."
-        }
-      ]
+      "warnings": []
     },
     "287": {
-      "script_hash": "sha256:7c5e7c00028f4f3b8b1828d395027254cde69e2e3812b8915db7cd735df30691",
-      "reviewed_at": "2026-05-02T02:20:50Z",
+      "script_hash": "sha256:7f77daa9e5812bbbb3a104e66fea844ea90e27f16a028dd785e45671b52abb86",
+      "reviewed_at": "2026-05-03T12:11:27Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 13449,
-        "output_tokens": 138,
+        "input_tokens": 13448,
+        "output_tokens": 8,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 5.34,
-        "est_cost_usd": 0.014139
+        "duration_s": 1.04,
+        "est_cost_usd": 0.013488
       },
-      "errors": [
-        {
-          "severity": "error",
-          "where": "Link eight section",
-          "what": "The text reads \"I listen to Scott Galloway) on Pivot\" with a stray closing parenthesis instead of an opening parenthesis before the name."
-        }
-      ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "preamble",
-          "what": "The script preamble lists \"Plinky, Piccolo, Privacy\" as featured topics, but Plinky is covered in the Notable section while Piccolo and Privacy (differential privacy) are also in Notable; this ordering doesn't clearly reflect the structure."
-        }
-      ]
+      "errors": [],
+      "warnings": []
     },
     "288": {
-      "script_hash": "sha256:71e8a228a3a4d88ff8e47360280e1fb4db204199bbe79ca4b05ad811b02b8016",
-      "reviewed_at": "2026-05-02T02:20:49Z",
+      "script_hash": "sha256:06e37b96efee769da1fca81f0afffd0116108118dbb5496b5330b28c04e36b18",
+      "reviewed_at": "2026-05-03T12:11:31Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 9862,
-        "output_tokens": 224,
+        "input_tokens": 9861,
+        "output_tokens": 150,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 3.71,
-        "est_cost_usd": 0.010982
+        "duration_s": 2.99,
+        "est_cost_usd": 0.010611
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Journal entry four",
-          "what": "The heart emoji in \"They smell lovely too. 💜\" was converted to the word \"love\" (\"They smell lovely too. love\"), which is incorrect since this emoji is not being used as a verb but as a decorative element representing affection/memory."
-        },
-        {
-          "severity": "error",
-          "where": "Notable section, Link two",
-          "what": "The text reads \"1.4 petabytes in a millimeter?\" but the source clearly states this is \"one cubic millimetre\" (volume), not linear millimeters, and the script drops this crucial context."
+          "where": "preamble section, after greeting",
+          "what": "The large conditional block containing the artist collaboration, POAP claim code, and artwork description (roughly 6 paragraphs between 'Thank you for inviting me' and 'Have a great day!') is entirely missing from the script."
         }
       ],
       "warnings": [
         {
           "severity": "warning",
-          "where": "preamble",
-          "what": "The opening preamble includes \"Hackerverse, Symbolica, Curators\" as topic tags, but these appear to be extracted from the body content rather than being part of the original newsletter structure, which may represent over-summarization."
+          "where": "after Notable section photo caption",
+          "what": "The photo caption 'Very showy and bright Parrot Tulips. May 11, 2024 Minnesota Landscape Arboretum, Minnesota.' from the body is not present in the script."
         }
       ]
     },
     "289": {
-      "script_hash": "sha256:e596cc35cc476361dfb4edce80a21dcb5cc8f83c4dabbf2f66eb9fc52625e6ec",
-      "reviewed_at": "2026-05-02T01:38:09Z",
-      "reviewer_version": "v1",
+      "script_hash": "sha256:7061c1cb436d2e48c7e9cbf7830f0e8569e941d4f322dd0226d14303ba224234",
+      "reviewed_at": "2026-05-03T12:11:34Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 8830,
-        "output_tokens": 132,
+        "input_tokens": 9229,
+        "output_tokens": 160,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 4.54,
-        "est_cost_usd": 0.00949
+        "duration_s": 3.03,
+        "est_cost_usd": 0.010029
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Journal entry three: \"It is a cool spot.y\"",
-          "what": "The script contains a corrupted word with a stray 'y' character at the end of the sentence ('spot.y' instead of 'spot.')."
+          "where": "\"2nd-gen Email\"",
+          "what": "The link title was transformed from \"2nd-gen Email\" to \"second-gen Email\" but this is a proper noun/product name that should have been preserved as written in the source."
         },
         {
           "severity": "error",
-          "where": "Journal entry nine: \"I'm was very happy\"",
-          "what": "The script has broken syntax with both 'I'm' and 'was' appearing consecutively, which is grammatically incorrect and appears to be a transformation error."
+          "where": "\"I'm was very happy\"",
+          "what": "The script contains a grammatical error \"I'm was\" which appears to be a corruption; the source body says \"I'm was\" so this is a pre-existing typo, not a transformation bug—actually checking: the source does say \"I'm was\", so this is acceptable as a source typo."
         }
       ],
       "warnings": []
     },
     "290": {
       "script_hash": "sha256:b054bff7dec0ac842ecb24f86239b2acdf9144dbe27b43123e8912543fae0df2",
-      "reviewed_at": "2026-05-02T01:38:06Z",
-      "reviewer_version": "v1",
+      "reviewed_at": "2026-05-03T12:11:38Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 8995,
-        "output_tokens": 8,
+        "input_tokens": 9394,
+        "output_tokens": 186,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 0.7,
-        "est_cost_usd": 0.009035
+        "duration_s": 3.35,
+        "est_cost_usd": 0.010324
       },
-      "errors": [],
+      "errors": [
+        {
+          "severity": "error",
+          "where": "Link three, PowerStream title",
+          "what": "The dollar amounts in the link title were transformed incorrectly: \"200 dollars PowerStream\" and \"4,000 dollars\" should be \"two hundred dollars PowerStream\" and \"four thousand dollars\" to match the normalization pattern used elsewhere in the script."
+        },
+        {
+          "severity": "error",
+          "where": "Notable section, GraphQL link",
+          "what": "The sentence \"Note complexity is showing up here as well\" appears to be a garbled or truncated version of content that should read differently; it's unclear what \"Note\" refers to here and the phrasing is awkward compared to the source body which says \"Note complexity is showing up here as well\" — this suggests a transcription or generation error rather than intentional transformation."
+        }
+      ],
       "warnings": []
     },
     "291": {
@@ -8231,91 +8120,69 @@
       "warnings": []
     },
     "292": {
-      "script_hash": "sha256:f592fcb4c34dbe195ddc77d2a2d0ec0d0067c569203e9d334f1aefb31f0d35d9",
-      "reviewed_at": "2026-05-02T02:20:52Z",
+      "script_hash": "sha256:0d6bd02dd9ee81b38ff58e1c29821807fa021d43ed554eedd94238df50ff8fd2",
+      "reviewed_at": "2026-05-03T12:11:42Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 11313,
-        "output_tokens": 233,
+        "input_tokens": 11312,
+        "output_tokens": 146,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 3.66,
-        "est_cost_usd": 0.012478
+        "duration_s": 3.27,
+        "est_cost_usd": 0.012042
       },
       "errors": [
         {
           "severity": "error",
-          "where": "Journal entry four",
-          "what": "The link title \"The Fall Guy\" is corrupted with a closing parenthesis instead of a closing bracket: \"The Fall Guy)\" should be \"The Fall Guy\"."
+          "where": "Matthew Dicks podcast link",
+          "what": "The link title in the script is incomplete/corrupted, ending with an unclosed bracket: '[Matthew Dicks: How to Tell a Story so That Everyone Listens [The Knowledge Project Ep. #202]](' instead of the full URL."
         },
         {
           "severity": "error",
-          "where": "Matthew Dicks link",
-          "what": "The link title line is incomplete and truncated, ending abruptly with an unclosed bracket instead of containing the full link and description."
-        },
-        {
-          "severity": "error",
-          "where": "Notable section Matthew Dicks entry",
-          "what": "The opening of the Matthew Dicks entry is missing the link title text; it jumps directly to \"I loved this podcast\" without introducing the link first like other entries do."
+          "where": "\"And folks, I'm my opinion\"",
+          "what": "The script preserves a grammatical error from the source (missing word 'in'), but this appears to be a pre-existing typo in the body rather than a transformation bug."
         }
       ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "Notable section",
-          "what": "The Matthew Dicks podcast entry lost the link number cue (\"Link seven\") that other entries have, making the numbering inconsistent (six links followed by the unnumbered podcast)."
-        }
-      ]
+      "warnings": []
     },
     "293": {
       "script_hash": "sha256:43729abff32b51e160e000ddfea25866c7956878848442a8338c696888c55726",
-      "reviewed_at": "2026-05-02T01:38:08Z",
-      "reviewer_version": "v1",
+      "reviewed_at": "2026-05-03T12:11:43Z",
+      "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 11070,
+        "input_tokens": 11469,
         "output_tokens": 8,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 1.87,
-        "est_cost_usd": 0.01111
+        "duration_s": 1.04,
+        "est_cost_usd": 0.011509
       },
       "errors": [],
       "warnings": []
     },
     "294": {
-      "script_hash": "sha256:0db4b1c05ab64f069ce4f5463738d7b7f699034f99a7f815e44fe893526bf8a8",
-      "reviewed_at": "2026-05-02T02:20:52Z",
+      "script_hash": "sha256:3820c338b5b85ae9665c13a4059e5f7b7be93d92cca1d6f666e98c61f0836d9c",
+      "reviewed_at": "2026-05-03T12:11:45Z",
       "reviewer_version": "v2",
       "model": "claude-haiku-4-5-20251001",
       "usage": {
-        "input_tokens": 16788,
-        "output_tokens": 179,
+        "input_tokens": 16786,
+        "output_tokens": 81,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
-        "duration_s": 3.45,
-        "est_cost_usd": 0.017683
+        "duration_s": 1.92,
+        "est_cost_usd": 0.017191
       },
       "errors": [
         {
           "severity": "error",
-          "where": "\"We watched Tetris) and it was great.\"",
-          "what": "The link URL to Wikipedia for Tetris was removed, leaving a stray closing parenthesis instead of properly closing the reference."
-        },
-        {
-          "severity": "error",
-          "where": "\"Concurrency) is a super hard problem in coding.\"",
-          "what": "A stray closing parenthesis appears where the Wikipedia link to Concurrency should have been properly handled."
+          "where": "\"Meta Connect twenty twenty four: biggest news and announcements - The Verge\"",
+          "what": "The year in the link title was incorrectly transformed from \"2024\" to \"twenty twenty four\" when it appears as part of a proper link title/heading, not standalone text."
         }
       ],
-      "warnings": [
-        {
-          "severity": "warning",
-          "where": "\"Meta Connect twenty twenty four\"",
-          "what": "The year in the link title was normalized to spoken form, which may be unintended since the original had \"2024\" as part of the event name \"Meta Connect 2024\"."
-        }
-      ]
+      "warnings": []
     },
     "295": {
       "script_hash": "sha256:5a06fa78e2fa699fa7009933ecd765d8cebeda1ffcd4b88a2fe91d04857f2ae6",
