@@ -21,7 +21,7 @@ Vitalik Buterin, founder of Ethereum blockchain, with his own take on "techno-op
 I liked reading Buterin's view, and how he thinks through it. His general push toward defensive technology is interesting.
 
 Quote.
-Across the board, I see far too many plans to save the world that involve giving a small group of people extreme and opaque power and hoping that they use it wisely. And so I find myself drawn to a different philosophy, one that has detailed ideas for how to deal with risks, but which seeks to create and maintain a more democratic world and tries to avoid centralization as the go-to solution to our problems. This philosophy also goes quite a bit broader than AI, and I would argue that it applies well even in worlds where AI risk concerns turn out to be largely unfounded. I will refer to this philosophy by the name of d/acc. The "d" here can stand for many things; particularly, defense, decentralization, democracyand differential. First, think of it about defense, and then we can see how this ties into the other interpretations.
+Across the board, I see far too many plans to save the world that involve giving a small group of people extreme and opaque power and hoping that they use it wisely. And so I find myself drawn to a different philosophy, one that has detailed ideas for how to deal with risks, but which seeks to create and maintain a more democratic world and tries to avoid centralization as the go-to solution to our problems. This philosophy also goes quite a bit broader than AI, and I would argue that it applies well even in worlds where AI risk concerns turn out to be largely unfounded. I will refer to this philosophy by the name of d/acc. The "d" here can stand for many things; particularly, defense, decentralization, democracy and differential. First, think of it about defense, and then we can see how this ties into the other interpretations.
 End quote.
 
 Reading through this brought many ideas from Taleb's Anti-Fragile to my mind as well. Investing in defensive technology to make people and society more resilient.
@@ -52,7 +52,7 @@ Now, the Currently section.
 
 Dining: Tammy and I went to El Sazon Cocina and Tragos on Lyndale for the first time and thought it was great. The Queso Fondue was delicious and we shared the Enchiladas D'mole Negro which was great as well. It is near our house and we'll definitely be back.
 
-Watching: Our family likes to have a fun show to watch together. We've bifurcated this a bit with Mazie at St. Olaf now. So, on nights when Mazie is home we tend to watch Home Economics) and when she is at school we watch Fresh Off the Boat. It took me a while to warm up to both of them but they grew on me. On the opposite end of the spectrum Tammy and I are watching All the Light We Cannot See), which is great.
+Watching: Our family likes to have a fun show to watch together. We've bifurcated this a bit with Mazie at St. Olaf now. So, on nights when Mazie is home we tend to watch Home Economics and when she is at school we watch Fresh Off the Boat. It took me a while to warm up to both of them but they grew on me. On the opposite end of the spectrum Tammy and I are watching All the Light We Cannot See, which is great.
 
 That's the end of Currently.
 

@@ -36,7 +36,7 @@ Performance is an enabler to so many good things.
 
 Link three. "Finger.Farm"
 
-This service won me over right away. It instantly took me back to the 90's sitting in the Computer Science building at the University of Minnesota on some SunOS machines exploring the pre-web Internet. IRC and Talk) were the jam back then. And Finger was a great command to see if your friends were online. I haven't used finger in decades but I setup an account on this great site and now have one. Drop to your terminal and do finger jthingelstad@finger.farm to see the awesome-ness. It works on pretty much any Unix-based host. If terminals sound scary, you can see my info on the web. I'll write a blog post later about what is actually on my finger info, it is pretty fun.
+This service won me over right away. It instantly took me back to the 90's sitting in the Computer Science building at the University of Minnesota on some SunOS machines exploring the pre-web Internet. IRC and Talk were the jam back then. And Finger was a great command to see if your friends were online. I haven't used finger in decades but I setup an account on this great site and now have one. Drop to your terminal and do finger jthingelstad@finger.farm to see the awesome-ness. It works on pretty much any Unix-based host. If terminals sound scary, you can see my info on the web. I'll write a blog post later about what is actually on my finger info, it is pretty fun.
 
 That's the end of Must Read.
 
@@ -90,7 +90,7 @@ With that said, interesting to read about and explore.
 
 Education, Diversity: Personal Passions for Trustee Archie Black | St. Thomas Newsroom
 
-Great article about our CEO Archie Black's commitment to education and specifically focusing on the racial disparities in education and society as a whole. Lead the way! love
+Great article about our CEO Archie Black's commitment to education and specifically focusing on the racial disparities in education and society as a whole. Lead the way!
 
 The small web is beautiful
 

@@ -41,7 +41,7 @@ I keep a profile on Signal and I have it on my iPhone so that folks can reach me
 This post details some of the cost structure for running Signal.
 
 Quote.
-We estimate that by twenty twenty five, Signal will require approximately 50 million dollars dollars a year to operate — and this is very lean compared to other popular messaging apps that don’t respect your privacy.
+We estimate that by twenty twenty five, Signal will require approximately 50 million dollars a year to operate — and this is very lean compared to other popular messaging apps that don’t respect your privacy.
 End quote.
 
 I am very familiar with technology costs to run services, and I was still reasonably surprised at some of these numbers. 6 million dollars a year to send SMS verification codes is wild.

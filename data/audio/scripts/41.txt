@@ -35,7 +35,7 @@ Now, the Software section.
 
 Evergreen
 
-I like what Brent Simmons is doing with this project. I'm a big user of feed readers. I use Feedbin along with ReadKit and Unread. Brent has a history with readers having created NetNewsWire in two thousand two. I also love the story behind the name. love
+I like what Brent Simmons is doing with this project. I'm a big user of feed readers. I use Feedbin along with ReadKit and Unread. Brent has a history with readers having created NetNewsWire in two thousand two. I also love the story behind the name.
 
 But the name is a prayer for the open web — may it remain evergreen.
 

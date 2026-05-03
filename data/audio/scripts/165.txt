@@ -228,7 +228,7 @@ Big step to getting to the other side of this pandemic!
 
 dog: Command-line DNS client
 
-Compelling tool for working with DNS records. Improvement over dig).
+Compelling tool for working with DNS records. Improvement over dig.
 
 Apple Unveils New M1 Apple Silicon Chip for Macs - MacStories
 

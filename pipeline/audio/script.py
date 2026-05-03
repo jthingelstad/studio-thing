@@ -8,10 +8,13 @@ from typing import Any
 
 HTML_COMMENT_RE = re.compile(r"<!--[\s\S]*?-->")
 FENCED_CODE_RE = re.compile(r"^(```|~~~)[\s\S]*?^\1\s*$", re.MULTILINE)
-IMAGE_RE = re.compile(r"!\[[^\]]*]\((?:[^)\\]|\\.)+\)")
-# URL portion may contain escaped parens (`\(film\)`) — common for Wikipedia
-# disambiguation links. Treat `\(` and `\)` as part of the URL, not terminators.
-LINK_RE = re.compile(r"(?<!!)\[([^\]]+)]\(((?:[^)\\]|\\.)+)\)")
+# URL portion may contain escaped parens (`\(film\)`) OR a single level of
+# nested unescaped parens (`(computer_science)`) — both common for Wikipedia
+# disambiguation links. The `(?:...)` alternation handles all three cases:
+# normal char, escaped sequence, or a parenthesized group.
+_URL_PORTION = r"(?:[^()\\]|\\.|\([^)]*\))+"
+IMAGE_RE = re.compile(rf"!\[[^\]]*]\({_URL_PORTION}\)")
+LINK_RE = re.compile(rf"(?<!!)\[([^\]]+)]\(({_URL_PORTION})\)")
 HTML_TAG_RE = re.compile(r"<[^>]+>")
 BARE_URL_RE = re.compile(r"https?://\S+")
 
@@ -189,12 +192,18 @@ SIGNED_BY_RE = re.compile(
 
 
 _HEART_EMOJI_RE = re.compile(r"(?:[❤♥\U0001F49B\U0001F49A\U0001F499\U0001F49C\U0001F5A4\U0001F90D\U0001F90E\U0001F9E1]️?)+")
+# Heart only acts as the verb "love" when followed by space + a word.
+# At end of sentence/line it's decorative — strip without "love".
+_HEART_AS_VERB_RE = re.compile(
+    r"(?:[❤♥\U0001F49B\U0001F49A\U0001F499\U0001F49C\U0001F5A4\U0001F90D\U0001F90E\U0001F9E1]️?)+(?=\s+[A-Za-z])"
+)
 
 
 def strip_emoji(text: str) -> str:
-    # Heart emoji is used as the verb "love" in many micro-posts ("I ❤️ X").
-    # Stripping it leaves a sentence fragment, so substitute the word.
-    text = _HEART_EMOJI_RE.sub(" love ", text)
+    # First, replace verb-position hearts ("I ❤️ X") with the word "love".
+    text = _HEART_AS_VERB_RE.sub(" love", text)
+    # Any remaining hearts are decorative ("Lovely day! ❤️") — just strip.
+    text = _HEART_EMOJI_RE.sub("", text)
     return "".join(
         char
         for char in text
@@ -214,12 +223,19 @@ def clean_inline(text: str) -> str:
     text = IMAGE_RE.sub("", text)
     text = LINK_RE.sub(r"\1", text)
     text = re.sub(r"`([^`]*)`", r"\1", text)
-    # Asterisk emphasis: *text*, **text**, ***text***.
-    text = re.sub(r"\*{1,3}([^*]+)\*{1,3}", r"\1", text)
+    # Asterisk emphasis: *text*, **text**, ***text***. Pad with spaces in
+    # case the source had no whitespace separator (`**democracy**and` →
+    # ` democracy and`); the later whitespace-collapse step cleans up.
+    text = re.sub(r"\*{1,3}([^*]+)\*{1,3}", r" \1 ", text)
     # Underscore emphasis: only treat `_` as a delimiter when it's NOT part of
     # an identifier (e.g. `schema_version`, `group_concat`). Word characters
     # on either side mean the underscore is intra-word.
     text = re.sub(r"(?<![A-Za-z0-9_])_{1,3}([^_\n]+?)_{1,3}(?![A-Za-z0-9_])", r"\1", text)
+    # Italic phrases with internal whitespace and a sloppy closing underscore
+    # (`_Calvin and Hobbes _showed me`). Strict pass above misses these because
+    # the closing `_` touches a letter. Spaces inside the wrapped content
+    # signal a phrase, not an identifier — safe to strip.
+    text = re.sub(r"(?<![A-Za-z0-9_])_{1,3}([^_\n]*\s[^_\n]*)_{1,3}", r"\1", text)
     # Strip leftover bold markers from multi-line spans (e.g. a haiku wrapped
     # in **...** across three lines).
     text = re.sub(r"\*{2,3}", "", text)
@@ -243,6 +259,14 @@ def normalize_text(text: str) -> str:
     for pattern, replacement in NORMALIZER_REPLACEMENTS:
         text = pattern.sub(replacement, text)
     text = DOLLAR_AMOUNT_RE.sub(_replace_dollars, text)
+    # Source sometimes writes "$50 million dollars" redundantly. After
+    # normalization that becomes "50 million dollars dollars". Collapse.
+    text = re.sub(
+        r"\b(thousand|million|billion|trillion)\s+dollars\s+dollars\b",
+        r"\1 dollars",
+        text,
+        flags=re.IGNORECASE,
+    )
     text = re.sub(
         r"\b([1-9]|[12]\d|3[01])(st|nd|rd|th)\b",
         lambda m: ORDINALS.get(m.group(0).lower(), m.group(0)),

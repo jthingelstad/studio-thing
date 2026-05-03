@@ -12,7 +12,7 @@ Now, the Must Read section.
 
 Link one. "The Instagram ads Facebook won't show you — Signal"
 
-I love THIS! Signal went ahead and used Facebooks targeting system to send very plain descriptions of how you are being tracked.
+I THIS! Signal went ahead and used Facebooks targeting system to send very plain descriptions of how you are being tracked.
 
 Quote.
 We created a multi-variant targeted ad designed to show you the personal data that Facebook collects about you and sells access to. The ad would simply display some of the information collected about the viewer which the advertising platform uses. Facebook was not into that idea.
@@ -66,7 +66,7 @@ I don't understand everything here, but the power built into this seems pretty i
 
 osmosfeed: Turn GitHub into an RSS reader
 
-A Planet) style aggregator to pull in multiple RSS feeds and publish an aggregated site and feed, all running on GitHub and using GitHub actions to update. The last time I used a planet-like system like this was to run the Planet Kubb feed.
+A Planet style aggregator to pull in multiple RSS feeds and publish an aggregated site and feed, all running on GitHub and using GitHub actions to update. The last time I used a planet-like system like this was to run the Planet Kubb feed.
 
 Amazon Q1 twenty twenty one — ongoing by Tim Bray
 

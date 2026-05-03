@@ -121,7 +121,7 @@ Tammy read this book and really liked it. She found a lot of compelling informat
 
 Getting Things Done® | Get a Grip on Your Process, or Give It Up
 
-David Allen getting real with some tough love. love
+David Allen getting real with some tough love.
 
 AWS Lambda in Production: State of Serverless Report twenty seventeen
 

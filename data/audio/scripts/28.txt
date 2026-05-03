@@ -73,7 +73,7 @@ This is worth looking at just for the video of the robots on an elevated grid or
 
 Link fourteen. "Glitch: write fun small web projects instantly - Julia Evans"
 
-Overview of Glitch that sounds pretty awesome for doing small web projects and sharing them. love
+Overview of Glitch that sounds pretty awesome for doing small web projects and sharing them.
 
 Link fifteen. "Turn off retweets!"
 

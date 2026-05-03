@@ -128,7 +128,7 @@ This article from a male co-founder reflecting on how his female co-founder was 
 
 Link twenty eight. "An open letter to the W3C Director, CEO, team and membership | Electronic Frontier Foundation"
 
-I linked to this W3C DRM decision and now we see the EFF reaction to endorse "Encrypted Media Extensions", to make DRM possible, on the web. You have to search long and hard to find an independent technologist who believes that DRM is possible, let alone a good idea. Yet, somewhere along the way, the business values of those outside the web got important enough, and the values of technologists who built it got disposable enough, that even the wise elders who make our standards voted for something they know to be a fool's errand. I’m not sure what I think about leaving the W3C to protest this but I do believe the EFF is on the right side of this position. Check out Gruber's comments on the same article.
+I linked to this W3C DRM decision and now we see the EFF reaction to endorse "Encrypted Media Extensions", to make DRM possible, on the web.  You have to search long and hard to find an independent technologist who believes that DRM is possible, let alone a good idea. Yet, somewhere along the way, the business values of those outside the web got important enough, and the values of technologists who built it got disposable enough, that even the wise elders who make our standards voted for something they know to be a fool's errand. I’m not sure what I think about leaving the W3C to protest this but I do believe the EFF is on the right side of this position. Check out Gruber's comments on the same article.
 
 Link twenty nine. "Netlify: All-in-one platform for automating modern web projects."
 

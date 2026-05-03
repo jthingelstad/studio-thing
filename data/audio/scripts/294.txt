@@ -286,7 +286,7 @@ This video left me flabbergasted at all the different ways of moving balls aroun
 
 Link eight. "Swift 6 - Michael Tsai"
 
-Concurrency) is a super hard problem in coding. The reactions to initial Swift 6 concurrency features made me chuckle.
+Concurrency is a super hard problem in coding. The reactions to initial Swift 6 concurrency features made me chuckle.
 
 Link nine. "Behold, the black Apple Watch Ultra 2 - The Verge"
 

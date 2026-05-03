@@ -25,7 +25,7 @@ End quote.
 The packages documentation highlights a number of interesting use cases.
 
 Quote.
-- Advertisement: TinyTroupe can evaluate digital ads (for example, Bing Ads) offline with a simulated audience before spending money on them! - Product and project management: TinyTroupe can read project or product proposalsand give feedback from the perspective of specific personas (for example, physicians, lawyers, and knowledge workers in general). - Brainstorming: TinyTroupe can simulate focus groups and deliver great product feedback at a fraction of the cost!
+- Advertisement: TinyTroupe can evaluate digital ads (for example, Bing Ads) offline with a simulated audience before spending money on them! - Product and project management: TinyTroupe can read project or product proposals and give feedback from the perspective of specific personas (for example, physicians, lawyers, and knowledge workers in general). - Brainstorming: TinyTroupe can simulate focus groups and deliver great product feedback at a fraction of the cost!
 End quote.
 
 Where do I want to take this?
@@ -239,7 +239,7 @@ Also see twenty twenty four Fall Fundraiser Results.
 
 Journal entry nine. Things 4 Good Four Year Impact
 
-We’ve now done our Things 4 Good Fall Fundraiser for four years. With the amazing support of this community we have raised 22,739 dollars for non-profits! Thank you so much. love
+We’ve now done our Things 4 Good Fall Fundraiser for four years. With the amazing support of this community we have raised 22,739 dollars for non-profits! Thank you so much.
 
 Opening the sale to the public via the Mt. Olivet Holiday Boutique was a great way to get to a lot of new people with a nearly 50% jump in candle sales this year!
 

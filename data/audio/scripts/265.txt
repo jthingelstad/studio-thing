@@ -113,7 +113,7 @@ The last thing after collecting a link and then reading and reviewing it is opti
 
 To curate I take the link from Safari Reading List, usually add a paragraph or two, possibly an excerpt, and add that to the description in Pinboard. I then delete it from Safari Reading List. That link is now in link archive permanently. To me this feels like an ever growing database of knowledge. I’d love to do more with this database and have some ideas on my “Someday, Maybe” list.
 
-Going back to how I build the Weekly Thing I then pull this information via the Pinboard API and it becomes part of each issue. Pinboard allows me to add a tag to a link. If I want the link in the Featured section I add the _feature tag, and if it goes in the Brief list on the bottom I add _brief. Why the underscore? I use to tag my links in Pinboard with topics so the underscore was used to indicate these are “special” tags.
+Going back to how I build the Weekly Thing I then pull this information via the Pinboard API and it becomes part of each issue. Pinboard allows me to add a tag to a link. If I want the link in the Featured section I add the feature tag, and if it goes in the Brief list on the bottom I add brief. Why the underscore? I use to tag my links in Pinboard with topics so the underscore was used to indicate these are “special” tags.
 
 Summary
 

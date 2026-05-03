@@ -74,7 +74,7 @@ Using ChatGPT as a bridge between the hurried expert Doctor and the family that 
 
 Link nine. "Rash - The Reckless Racket Shell"
 
-I love that there is still broad experimentation in shells. I hadn't heard of Racket before but it is a Lisp language) based on Scheme. The wild thing about Rash is that you can mix and match shell operators, pipes, and Racket code completely inline. The demo video is an easy introduction to some of the capabilities. It feels a bit like Rash is to Racket like Emacs is to Lisp. The tool and the language blend in ways that are hard to even distinguish.
+I love that there is still broad experimentation in shells. I hadn't heard of Racket before but it is a Lisp language based on Scheme. The wild thing about Rash is that you can mix and match shell operators, pipes, and Racket code completely inline. The demo video is an easy introduction to some of the capabilities. It feels a bit like Rash is to Racket like Emacs is to Lisp. The tool and the language blend in ways that are hard to even distinguish.
 
 Link ten. "My Father’s Death in 7 Gigabytes | WIRED"
 

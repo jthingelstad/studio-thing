@@ -6,7 +6,7 @@ I made a minor tweak this week to the titles of the links sections, and a minor 
 
 There is a lot in this weeks issue, so let's get straight to it!
 
-"My biggest life hack I can give you: Pay attention. Paying attention to the food I eat has made it pretty easy and painless for me to lose 18 pounds in 2 months. Paying attention to how I feel after I walk versus how I feel after I run taught me I am a walker and not a runner, and paying attention to what people respond to has made me a better writer. Pay attention." — Hugh Hollowell, Life is so Beautiful, May twenty fourth twenty twenty one
+"My biggest life hack I can give you: Pay attention. Paying attention to the food I eat has made it pretty easy and painless for me to lose 18 pounds in 2 months. Paying attention to how I feel after I walk versus how I feel after I run taught me I am a walker and not a runner, and paying attention to what people respond to has made me a better writer. Pay attention. " — Hugh Hollowell, Life is so Beautiful, May twenty fourth twenty twenty one
 
 Now, the Featured section.
 
@@ -18,7 +18,7 @@ Quote.
 Ethereum is so much more than a cryptocurrency. It’s a "world computer," and the "value layer" of the internet. It lets people build apps and products with money baked into the code. If you believe that web3 is going to continue to grow, then you likely believe that over time, Ethereum will become the settlement layer of a new internet. All sorts of transactions, whether they happen on Ethereum, another blockchain, or even Visa, will turn to Ethereum to exchange funds and keep secure, immutable records. A year ago, I wouldn’t have said that.
 End quote.
 
-This is why I will continue to build up knowledge and capital in Ethereum. It feels like the very early days of the web, when Mosaic) was still in beta.
+This is why I will continue to build up knowledge and capital in Ethereum. It feels like the very early days of the web, when Mosaic was still in beta.
 
 Link two. "Status Anxiety as a Service - Noahpinion"
 

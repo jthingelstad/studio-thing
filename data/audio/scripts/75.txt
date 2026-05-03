@@ -91,7 +91,7 @@ Google’s newest incarnation of their flagship phone. Some cool innovations.
 - Latest Revision to ARM Instruction Set Includes Optimizations Just for JavaScript — Daring Fireball twitter.com
 This explains why Javascript is so fast for certain benchmarks on the iPhone XS!
 - The Internet’s keepers? “Some call us hoarders—I like to say we’re archivists” | Ars Technica arstechnica.com
-I’m a fan of Internet Archive. love
+I’m a fan of Internet Archive.
 - Facebook announces Portal, an Echo Show rival focused on video chat - The Verge www.theverge.com
 I’m skeptical of these "Smart Screens". I’m downright cynical of one made by Facebook.
 - Statement from DHS Press Secretary on Recent Media Reports of Potential Supply Chain Compromise | Homeland Security www.dhs.gov

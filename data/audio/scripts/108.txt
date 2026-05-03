@@ -38,7 +38,7 @@ This is exactly why I will not use Chrome as my primary browser. It is a great b
 
 Link three. "Announcing Minnestar's Newest Board Members - Minnestar"
 
-I’m so happy to welcome these new members to the Minnestar board! love
+I’m so happy to welcome these new members to the Minnestar board!
 
 Link four. "ongoing by Tim Bray · On SQS"
 
@@ -82,7 +82,7 @@ Link nine. "How Data (and Some Breathtaking Soccer) Brought Liverpool to the Cus
 
 Good read for Liverpool fans coming into the UEFA Champions League this weekend. It's nice to see the data driven analysis made famous in Moneyball is thriving in soccer too!
 
-(Don't Fear) The Reaper-The-Reaper)
+(Don't Fear) The Reaper
 www.highcaffeinecontent.com
 
 Next week Apple WWDC twenty nineteen will likely begin the transition to an entirely new UI framework for macOS. This article does a good job putting that in context and looking at the last time that happened, when NeXT OPENSTEP was in the mix.

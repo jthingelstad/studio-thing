@@ -91,7 +91,7 @@ End quote.
 The magic is less about the domains and figuring out how you generalize any of this into repeatable solutions. Building a single widget is fine. Building a machine that builds a million widgets is a whole different thing.
 
 Quote.
-The original form of an FDE is to send them to not just one, but to multiple customers, so they can personally and directly see the similarities and the differences, with the goal of creating a _single product_that can serve the needs of multiple customers. This is the essence of customer discovery.
+The original form of an FDE is to send them to not just one, but to multiple customers, so they can personally and directly see the similarities and the differences, with the goal of creating a single productthat can serve the needs of multiple customers. This is the essence of customer discovery.
 End quote.
 
 Not everyone can do everything. We need specialization, even with AI coming onto the scene. However it would be good at regular times for any team making a product, regardless of your materials and your domains, to just remind themselves that they all have one job — to make the product.
@@ -229,7 +229,7 @@ Now, the Briefly section.
 
 Link one. "The internet’s hidden creative renaissance (and how to find it)"
 
-I love all that is the IndieWeb. Let's keep the Web Weird! love
+I love all that is the IndieWeb. Let's keep the Web Weird!
 
 Link two. "What I think about when I think about Claude Code"
 

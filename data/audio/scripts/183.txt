@@ -84,7 +84,7 @@ End quote.
 
 There are a number of times I've used spreadsheets to move around CSV files. This looks like a much better way to do that.
 
-PS: I find the authors About page delightful. I love this line "I live in Seattle but the terminal is my home." He's building an "ecosystem of textpunk powertools". love
+PS: I find the authors About page delightful. I love this line "I live in Seattle but the terminal is my home." He's building an "ecosystem of textpunk powertools".
 
 Questionable Advice: "What Should I Say In My Exit Interview?" – charity.wtf
 

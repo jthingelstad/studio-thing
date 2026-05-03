@@ -27,7 +27,7 @@ Link one. "How I used o3 to find CVE-twenty twenty five-37899, a remote zeroday 
 One of the amazing use cases for LLMs and code is to find security vulnerabilities. Here Heelan uses it to see how well it can find very difficult Linux kernel bugs. I love how he uses multiple iterations and does a sort of Monte Carlo run. And wild that it finds it in some, but very few iterations.
 
 Quote.
-o3 finds the kerberos authentication vulnerability in the benchmark in 8 of the 100 runs. In another 66 of the runs o3 concludes there is no bug present in the code (false negatives), and the remaining 28 reports are false positives. For comparison, Claude Sonnet 3.7 finds it 3 out of 100 runs and Claude Sonnet 3.5 does not find it in 100 runs._ _So on this benchmark at least we have a 2x-3x improvement in o3 over Claude Sonnet 3.7.
+o3 finds the kerberos authentication vulnerability in the benchmark in 8 of the 100 runs. In another 66 of the runs o3 concludes there is no bug present in the code (false negatives), and the remaining 28 reports are false positives. For comparison, Claude Sonnet 3.7 finds it 3 out of 100 runs and Claude Sonnet 3.5 does not find it in 100 runs. So on this benchmark at least we have a 2x-3x improvement in o3 over Claude Sonnet 3.7.
 End quote.
 
 And in the resolution? His initial remediation wasn't sufficient and o3 helped identify that in a small subset of runs.
@@ -267,7 +267,7 @@ The font here is nice enough, but the thing I really liked in this article is th
 
 Link seventeen. "Russia launches one of biggest drone attacks on Kyiv since start of war | Ukraine | The Guardian"
 
-Russia's attacks on Ukraine continue and have escalated. Three years on and the people of Ukraine need our support. love
+Russia's attacks on Ukraine continue and have escalated. Three years on and the people of Ukraine need our support.
 
 Link eighteen. "The David Lynch Collection"
 

@@ -46,7 +46,7 @@ End quote.
 
 There is so much more to explore. So much more to build. So much more to discover.
 
-I love that. love
+I love that.
 
 That's the end of Featured.
 
@@ -60,7 +60,7 @@ Highlights from me:
 
 1. I’m amazed at how much error correction information a QR code has so it can be resilient to damage and being partially obscured.
 2. The version 40 QR code is gigantic!
-3. How amazing that the company that invented them made them free by never exercising their patent. love
+3. How amazing that the company that invented them made them free by never exercising their patent.
 
 Take a dig through this and be amazed.
 
