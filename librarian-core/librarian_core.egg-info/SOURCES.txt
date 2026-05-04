@@ -1,0 +1,10 @@
+pyproject.toml
+librarian_core/__init__.py
+librarian_core/corpus.py
+librarian_core/paths.py
+librarian_core/retrieval.py
+librarian_core.egg-info/PKG-INFO
+librarian_core.egg-info/SOURCES.txt
+librarian_core.egg-info/dependency_links.txt
+librarian_core.egg-info/requires.txt
+librarian_core.egg-info/top_level.txt

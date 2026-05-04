@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "librarian-core"
+version = "0.1.0"
+description = "Shared retrieval primitives for The Weekly Thing archive (corpus loader, BM25, chunk schemas)."
+requires-python = ">=3.11"
+dependencies = [
+    "boto3",
+    "python-dotenv",
+    "pyyaml",
+    "rank_bm25",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["librarian_core*"]

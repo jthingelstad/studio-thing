@@ -18,7 +18,13 @@ import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 from dotenv import load_dotenv
 
-import build_librarian_corpus
+from librarian_core.corpus import (
+    DEFAULT_EMBEDDING_DIMENSIONS,
+    DEFAULT_EMBEDDING_MODEL,
+    add_bedrock_embeddings,
+    build_corpus,
+)
+
 import build_librarian_graph
 
 
@@ -95,8 +101,8 @@ def main() -> int:
     parser.add_argument("--bucket", default=os.environ.get("LIBRARIAN_BUCKET") or "weekly-thing-librarian")
     parser.add_argument("--key", default=os.environ.get("LIBRARIAN_CORPUS_KEY", "artifacts/corpus.json"))
     parser.add_argument("--graph-key", default=os.environ.get("LIBRARIAN_GRAPH_KEY", "artifacts/graph.json"))
-    parser.add_argument("--embedding-model", default=build_librarian_corpus.DEFAULT_EMBEDDING_MODEL)
-    parser.add_argument("--embedding-dimensions", type=int, default=build_librarian_corpus.DEFAULT_EMBEDDING_DIMENSIONS)
+    parser.add_argument("--embedding-model", default=DEFAULT_EMBEDDING_MODEL)
+    parser.add_argument("--embedding-dimensions", type=int, default=DEFAULT_EMBEDDING_DIMENSIONS)
     parser.add_argument("--keep-output", help="Optional local path for the embedded corpus JSON")
     parser.add_argument("--skip-graph", action="store_true", help="Only upload the corpus, not the graph artifact")
     parser.add_argument("--full", action="store_true", help="Skip the incremental cache and re-embed every chunk")
@@ -105,7 +111,7 @@ def main() -> int:
     if not args.bucket:
         raise RuntimeError("Provide --bucket or LIBRARIAN_BUCKET")
 
-    corpus = build_librarian_corpus.build_corpus(include_issue_bodies=True)
+    corpus = build_corpus(include_issue_bodies=True)
 
     if not args.full:
         existing = fetch_existing_corpus(args.bucket, args.key)
@@ -113,7 +119,7 @@ def main() -> int:
             cache = build_chunk_cache(existing, args.embedding_model, args.embedding_dimensions)
             merge_cached_embeddings(corpus, cache)
 
-    build_librarian_corpus.add_bedrock_embeddings(corpus, args.embedding_model, args.embedding_dimensions)
+    add_bedrock_embeddings(corpus, args.embedding_model, args.embedding_dimensions)
 
     if args.keep_output:
         upload_path = Path(args.keep_output)

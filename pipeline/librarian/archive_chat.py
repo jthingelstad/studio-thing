@@ -26,10 +26,9 @@ import anthropic
 from dotenv import load_dotenv
 from rank_bm25 import BM25Okapi
 
-REPO = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO))
-
-from pipeline.librarian.build_librarian_corpus import build_corpus, OUT_PATH
+from librarian_core.corpus import build_corpus
+from librarian_core.paths import CORPUS_PATH as OUT_PATH
+from librarian_core.retrieval import build_index, retrieve
 
 MODELS = {
     "sonnet": "claude-sonnet-4-6",
@@ -40,16 +39,6 @@ DEFAULT_TOP_K = 12
 MAX_HISTORY_TURNS = 10
 BRIEF_MAX_CHARS = 50_000
 MAX_OUTPUT_TOKENS = 4000
-
-STOPLIST = {
-    "the", "a", "an", "and", "or", "but", "if", "of", "to", "in", "on", "at",
-    "for", "with", "by", "from", "as", "is", "are", "was", "were", "be", "been",
-    "being", "this", "that", "these", "those", "it", "its", "i", "you", "he",
-    "she", "we", "they", "what", "which", "who", "how", "why", "when", "where",
-    "do", "does", "did", "have", "has", "had", "not", "no", "so", "than", "then",
-}
-
-WORD_RE = re.compile(r"[a-z0-9']+")
 
 SYSTEM_PRIMARY = (
     "You are a research assistant for Jamie Thingelstad, the author of \"The Weekly Thing\" "
@@ -66,10 +55,6 @@ SYSTEM_PRIMARY = (
 )
 
 
-def tokenize(text: str) -> list[str]:
-    return [t for t in WORD_RE.findall(text.lower()) if t not in STOPLIST and len(t) > 1]
-
-
 def load_or_build_corpus(rebuild: bool, corpus_path: Path) -> dict[str, Any]:
     if corpus_path.exists() and not rebuild:
         return json.loads(corpus_path.read_text(encoding="utf-8"))
@@ -78,19 +63,6 @@ def load_or_build_corpus(rebuild: bool, corpus_path: Path) -> dict[str, Any]:
     corpus_path.parent.mkdir(parents=True, exist_ok=True)
     corpus_path.write_text(json.dumps(corpus, ensure_ascii=False), encoding="utf-8")
     return corpus
-
-
-def build_index(chunks: list[dict[str, Any]]) -> BM25Okapi:
-    return BM25Okapi([tokenize(chunk["text"]) for chunk in chunks])
-
-
-def retrieve(bm25: BM25Okapi, chunks: list[dict[str, Any]], query: str, k: int) -> list[dict[str, Any]]:
-    tokens = tokenize(query)
-    if not tokens:
-        return []
-    scores = bm25.get_scores(tokens)
-    ranked = sorted(enumerate(scores), key=lambda x: x[1], reverse=True)
-    return [chunks[i] for i, score in ranked[:k] if score > 0]
 
 
 def format_issue_index(issues: list[dict[str, Any]]) -> str:

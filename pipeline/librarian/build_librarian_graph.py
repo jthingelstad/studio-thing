@@ -14,12 +14,12 @@ from typing import Any
 import boto3
 from dotenv import load_dotenv
 
-import build_librarian_corpus
+from librarian_core.corpus import build_corpus
+from librarian_core.paths import CORPUS_PATH, GRAPH_PATH
 
 
-REPO = Path(__file__).resolve().parents[2]
-DEFAULT_CORPUS_PATH = REPO / "data" / "librarian" / "corpus.json"
-DEFAULT_OUTPUT_PATH = REPO / "data" / "librarian" / "graph.json"
+DEFAULT_CORPUS_PATH = CORPUS_PATH
+DEFAULT_OUTPUT_PATH = GRAPH_PATH
 DEFAULT_MODEL = "us.anthropic.claude-sonnet-4-6"
 ENTITY_RE = re.compile(r"\b(?:[A-Z][A-Za-z0-9&'.-]+(?:\s+[A-Z][A-Za-z0-9&'.-]+){0,4})\b")
 STOP_ENTITIES = {
@@ -48,13 +48,13 @@ def load_corpus(path: Path) -> dict[str, Any]:
         corpus = json.loads(path.read_text(encoding="utf-8"))
         if any(issue.get("body") for issue in corpus.get("issues", [])):
             return corpus
-        fresh = build_librarian_corpus.build_corpus(include_issue_bodies=True)
+        fresh = build_corpus(include_issue_bodies=True)
         if any(chunk.get("embedding") for chunk in corpus.get("chunks", [])):
             fresh["chunks"] = corpus.get("chunks", [])
             fresh["embedding_model"] = corpus.get("embedding_model")
             fresh["embedding_dimensions"] = corpus.get("embedding_dimensions")
         return fresh
-    return build_librarian_corpus.build_corpus(include_issue_bodies=True)
+    return build_corpus(include_issue_bodies=True)
 
 def clean_entity(value: str) -> str:
     value = " ".join(value.strip(" .,:;!?()[]{}").split())
