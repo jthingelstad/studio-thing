@@ -17,7 +17,7 @@ Thingy is a subscriber-gated chat interface for the Weekly Thing archive.
 
 ## AWS Runtime
 
-The backend is defined in `infra/librarian/cloudformation.yaml`. Auth and auth health checks run behind API Gateway/Lambda. Streaming chat and stream health checks run through a Lambda Function URL with response streaming enabled. It uses:
+The backend is defined in `apps/librarian/infra/cloudformation.yaml`. Auth and auth health checks run behind API Gateway/Lambda. Streaming chat and stream health checks run through a Lambda Function URL with response streaming enabled. It uses:
 
 - Buttondown API for subscriber lookup.
 - Amazon Bedrock Claude Sonnet 4.6 for premium messages and the agent loop.
@@ -29,7 +29,7 @@ The backend is defined in `infra/librarian/cloudformation.yaml`. Auth and auth h
 
 The browser samples three static starter questions locally after subscriber validation. Chat streams from `site.librarianStreamUrl + /chat`; there is no buffered API Gateway chat fallback.
 
-The FAQ content lives in `services/librarian/shared/faq.json`. Eleventy renders `/faq/` from that file, and the streaming Lambda packages the same file so Thingy can answer site, subscription, membership, RSS, privacy, and logistics questions through the `search_faq` tool.
+The FAQ content lives in `apps/librarian/lambda/shared/faq.json`. Eleventy renders `/faq/` from that file, and the streaming Lambda packages the same file so Thingy can answer site, subscription, membership, RSS, privacy, and logistics questions through the `search_faq` tool.
 
 ## Commands
 
@@ -227,9 +227,9 @@ npm run librarian:deploy
 
 The deploy script packages both Lambda entrypoints from one Node source tree:
 
-- `services/librarian/auth/`: API Gateway Lambda for Buttondown auth and auth health checks.
-- `services/librarian/chat/`: Lambda Function URL for streaming chat and stream health checks.
-- `services/librarian/shared/` and `services/librarian/prompts/`: shared code and editable prompt files included in both packages.
+- `apps/librarian/lambda/auth/`: API Gateway Lambda for Buttondown auth and auth health checks.
+- `apps/librarian/lambda/chat/`: Lambda Function URL for streaming chat and stream health checks.
+- `apps/librarian/lambda/shared/` and `apps/librarian/lambda/prompts/`: shared code and editable prompt files included in both packages.
 
 After deploy:
 

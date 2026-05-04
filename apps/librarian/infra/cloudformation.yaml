@@ -1,0 +1,433 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Weekly Thing Archive Librarian API
+
+Parameters:
+  AllowedOrigin:
+    Type: CommaDelimitedList
+    Default: https://weekly.thingelstad.com,http://localhost:8080,http://127.0.0.1:8080
+  CodeBucket:
+    Type: String
+    Description: S3 bucket containing the packaged Lambda code.
+  CodeKey:
+    Type: String
+    Description: S3 key for the packaged Lambda code.
+  StreamCodeKey:
+    Type: String
+    Description: S3 key for the packaged streaming Lambda code.
+  CorpusBucket:
+    Type: String
+    Description: S3 bucket containing the embedded librarian corpus JSON.
+  CorpusKey:
+    Type: String
+    Default: artifacts/corpus.json
+  GraphKey:
+    Type: String
+    Default: artifacts/graph.json
+  ButtondownApiKey:
+    Type: String
+    NoEcho: true
+  SessionSecret:
+    Type: String
+    NoEcho: true
+  LogLevel:
+    Type: String
+    Default: INFO
+    AllowedValues:
+      - DEBUG
+      - INFO
+      - WARNING
+      - ERROR
+  AuthRateLimitMax:
+    Type: Number
+    Default: 30
+    MinValue: 1
+    Description: Maximum auth attempts per client identity per hour.
+Resources:
+  LibrarianTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: project
+          Value: Thingy
+
+  LibrarianFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Tags:
+        - Key: project
+          Value: Thingy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: LibrarianDataAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                Resource: !GetAtt LibrarianTable.Arn
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource:
+                  - !Sub arn:aws:s3:::${CorpusBucket}/${CorpusKey}
+                  - !Sub arn:aws:s3:::${CorpusBucket}/${GraphKey}
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource:
+                  - !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/us.anthropic.claude-sonnet-4-6
+                  - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.nova-pro-v1:0
+                  - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/anthropic.claude-sonnet-4-6
+                  - arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-sonnet-4-6
+                  - arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-sonnet-4-6
+                  - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/cohere.embed-english-v3
+                  - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/cohere.rerank-v3-5:0
+                  - arn:aws:bedrock:us-west-2::foundation-model/cohere.rerank-v3-5:0
+                  - arn:aws:bedrock:ca-central-1::foundation-model/cohere.rerank-v3-5:0
+                  - arn:aws:bedrock:eu-central-1::foundation-model/cohere.rerank-v3-5:0
+                  - arn:aws:bedrock:ap-northeast-1::foundation-model/cohere.rerank-v3-5:0
+              - Effect: Allow
+                Action: bedrock:Rerank
+                Resource: "*"
+
+  LibrarianFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - arm64
+      Code:
+        S3Bucket: !Ref CodeBucket
+        S3Key: !Ref CodeKey
+      Environment:
+        Variables:
+          ALLOWED_ORIGIN: !Join [",", !Ref AllowedOrigin]
+          TABLE_NAME: !Ref LibrarianTable
+          CORPUS_BUCKET: !Ref CorpusBucket
+          CORPUS_KEY: !Ref CorpusKey
+          GRAPH_KEY: !Ref GraphKey
+          BUTTONDOWN_API_KEY: !Ref ButtondownApiKey
+          SESSION_SECRET: !Ref SessionSecret
+          LOG_LEVEL: !Ref LogLevel
+          AUTH_RATE_LIMIT_MAX: !Ref AuthRateLimitMax
+          BEDROCK_AGENT_MODEL: us.anthropic.claude-sonnet-4-6
+      Handler: auth/handler.handler
+      MemorySize: 1024
+      Role: !GetAtt LibrarianFunctionRole.Arn
+      Runtime: nodejs20.x
+      Timeout: 35
+      Tags:
+        - Key: project
+          Value: Thingy
+
+  LibrarianStreamFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - arm64
+      Code:
+        S3Bucket: !Ref CodeBucket
+        S3Key: !Ref StreamCodeKey
+      Environment:
+        Variables:
+          ALLOWED_ORIGIN: !Join [",", !Ref AllowedOrigin]
+          TABLE_NAME: !Ref LibrarianTable
+          CORPUS_BUCKET: !Ref CorpusBucket
+          CORPUS_KEY: !Ref CorpusKey
+          GRAPH_KEY: !Ref GraphKey
+          SESSION_SECRET: !Ref SessionSecret
+          LOG_LEVEL: !Ref LogLevel
+          BEDROCK_AGENT_MODEL: us.anthropic.claude-sonnet-4-6
+          BEDROCK_EMBEDDING_MODEL: cohere.embed-english-v3
+          BEDROCK_RERANK_MODEL: cohere.rerank-v3-5:0
+          BEDROCK_RERANK_REGION: us-west-2
+      Handler: chat/handler.handler
+      MemorySize: 1536
+      ReservedConcurrentExecutions: 5
+      Role: !GetAtt LibrarianFunctionRole.Arn
+      Runtime: nodejs20.x
+      Timeout: 90
+      Tags:
+        - Key: project
+          Value: Thingy
+
+  LibrarianStreamFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      Cors:
+        AllowHeaders:
+          - content-type
+          - authorization
+        AllowMethods:
+          - GET
+          - POST
+        AllowOrigins: !Ref AllowedOrigin
+      InvokeMode: RESPONSE_STREAM
+      TargetFunctionArn: !Ref LibrarianStreamFunction
+
+  LibrarianStreamInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !Ref LibrarianStreamFunction
+      FunctionUrlAuthType: NONE
+      Principal: "*"
+
+  LibrarianStreamInvokeFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LibrarianStreamFunction
+      InvokedViaFunctionUrl: true
+      Principal: "*"
+
+  LibrarianApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: weekly-thing-librarian
+      ProtocolType: HTTP
+      Tags:
+        project: Thingy
+      CorsConfiguration:
+        AllowHeaders:
+          - content-type
+          - authorization
+        AllowMethods:
+          - GET
+          - OPTIONS
+          - POST
+        AllowOrigins: !Ref AllowedOrigin
+
+  LibrarianIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref LibrarianApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt LibrarianFunction.Arn
+      PayloadFormatVersion: "2.0"
+
+  AuthRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref LibrarianApi
+      RouteKey: POST /auth
+      Target: !Sub integrations/${LibrarianIntegration}
+
+  HealthRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref LibrarianApi
+      RouteKey: GET /health
+      Target: !Sub integrations/${LibrarianIntegration}
+
+  LibrarianStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref LibrarianApi
+      StageName: $default
+      AutoDeploy: true
+      Tags:
+        project: Thingy
+
+  LibrarianInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LibrarianFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${LibrarianApi}/*/*/*
+
+  LibrarianAuthErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Thingy auth Lambda has errors.
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref LibrarianFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Tags:
+        - Key: project
+          Value: Thingy
+
+  LibrarianStreamErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Thingy stream Lambda has errors.
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref LibrarianStreamFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Tags:
+        - Key: project
+          Value: Thingy
+
+  LibrarianStreamThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Thingy stream Lambda is throttling.
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref LibrarianStreamFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Tags:
+        - Key: project
+          Value: Thingy
+
+  BedrockEvaluationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Tags:
+        - Key: project
+          Value: Thingy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: bedrock.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ThingyBedrockEvaluationAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub arn:aws:s3:::${CorpusBucket}/eval/datasets/*
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                Resource:
+                  - !Sub arn:aws:s3:::${CorpusBucket}/eval/runs/*
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${CorpusBucket}
+                Condition:
+                  StringLike:
+                    s3:prefix:
+                      - eval/datasets/*
+                      - eval/runs/*
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource:
+                  - !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/us.anthropic.claude-sonnet-4-6
+                  - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.nova-pro-v1:0
+                  - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/anthropic.claude-sonnet-4-6
+                  - arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-sonnet-4-6
+                  - arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-sonnet-4-6
+
+  LibrarianDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: weekly-thing-librarian
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 0,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "region": "${AWS::Region}",
+                "title": "Thingy Lambda invocations and errors",
+                "metrics": [
+                  [ "AWS/Lambda", "Invocations", "FunctionName", "${LibrarianFunction}" ],
+                  [ ".", "Errors", ".", "." ],
+                  [ ".", "Invocations", "FunctionName", "${LibrarianStreamFunction}" ],
+                  [ ".", "Errors", ".", "." ]
+                ],
+                "stat": "Sum",
+                "period": 300
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12,
+              "y": 0,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "region": "${AWS::Region}",
+                "title": "Thingy Lambda duration",
+                "metrics": [
+                  [ "AWS/Lambda", "Duration", "FunctionName", "${LibrarianFunction}" ],
+                  [ ".", ".", ".", "${LibrarianStreamFunction}" ]
+                ],
+                "stat": "Average",
+                "period": 300
+              }
+            }
+          ]
+        }
+
+Outputs:
+  LibrarianApiUrl:
+    Description: Base URL for the Archive Librarian API.
+    Value: !Sub https://${LibrarianApi}.execute-api.${AWS::Region}.amazonaws.com
+  LibrarianStreamUrl:
+    Description: Streaming URL for the Archive Librarian chat API.
+    Value: !GetAtt LibrarianStreamFunctionUrl.FunctionUrl
+  BedrockEvalRoleArn:
+    Description: IAM role ARN used by on-demand Bedrock Model Evaluation jobs.
+    Value: !GetAtt BedrockEvaluationRole.Arn

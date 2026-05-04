@@ -22,8 +22,8 @@ from dotenv import load_dotenv
 
 REPO = Path(__file__).resolve().parents[2]
 STACK_NAME = "weekly-thing-librarian"
-TEMPLATE = REPO / "infra" / "librarian" / "cloudformation.yaml"
-LAMBDA_DIR = REPO / "services" / "librarian"
+TEMPLATE = REPO / "apps" / "librarian" / "infra" / "cloudformation.yaml"
+LAMBDA_DIR = REPO / "apps" / "librarian" / "lambda"
 BUILD_DIR = REPO / "tmp" / "librarian_lambda"
 STREAM_BUILD_DIR = REPO / "tmp" / "librarian_chat_lambda"
 ZIP_PATH = REPO / "tmp" / "librarian_lambda.zip"

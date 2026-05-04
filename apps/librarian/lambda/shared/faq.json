@@ -1,0 +1,167 @@
+{
+  "sections": [
+    {
+      "title": "The Basics",
+      "entries": [
+        {
+          "question": "What is the Weekly Thing?",
+          "answer": "A weekly newsletter curated by [Jamie Thingelstad](/about/). Each issue is a collection of interesting links, commentary, and observations spanning technology, culture, the indie web, and whatever else catches Jamie's eye. It's one person's lens on what's interesting — not an algorithm, not a feed, just considered curation."
+        },
+        {
+          "question": "How much does it cost?",
+          "answer": "Nothing. The Weekly Thing is free and always will be. If you'd like to go further, [Supporting Members](/members/) contribute to a nonprofit selected each year — but subscribing is always free."
+        },
+        {
+          "question": "When does it come out?",
+          "answer": "Most weekends, typically Saturday."
+        },
+        {
+          "question": "Are there any scheduled breaks?",
+          "answer": "Yes — two each year, and they're intentional:\n\n- **Summer break** — July and August. No issues.\n- **Winter break** — roughly **December 15 through January 15**. No issues.\n\nOutside of those windows, expect an issue most Saturdays. If it's mid-July or late December and your inbox is quiet, that's why — the newsletter will be back."
+        },
+        {
+          "question": "How long has it been running?",
+          "answer": "Since May 2017 — over {{yearsActive}} years and {{issueCount}} issues."
+        },
+        {
+          "question": "Who writes it?",
+          "answer": "Just Jamie. There's no staff, no editor, no syndication deal. Every link is read, every comment is written, and every issue is sent by one person. That's the point."
+        }
+      ]
+    },
+    {
+      "title": "Subscribing & Reading",
+      "entries": [
+        {
+          "question": "How do I subscribe?",
+          "answer": "Enter your email on the [homepage](/) or in any subscribe form on this site. You'll receive a confirmation email. That's it — no account needed."
+        },
+        {
+          "question": "How do I unsubscribe?",
+          "answer": "Every issue includes an unsubscribe link at the bottom. One click, no questions asked."
+        },
+        {
+          "question": "Can I read it without subscribing?",
+          "answer": "Yes. The full [archive](/archive/) is public, and you can follow along via [RSS](/feed.xml) without ever giving up your email address."
+        },
+        {
+          "question": "Can I read past issues?",
+          "answer": "Yes! The full [archive](/archive/) goes back to the very first issue in May 2017. You can also [search](/search/) across all issues."
+        },
+        {
+          "question": "How do I find a specific link or topic from a past issue?",
+          "answer": "Use the [search page](/search/) — it indexes the full text of every issue, including link titles, commentary, and Jamie's notes. Powered by Pagefind, it runs entirely in your browser."
+        },
+        {
+          "question": "Is there an RSS feed?",
+          "answer": "Yes. The main feed is at [/feed.xml](/feed.xml). Each individual issue also has a links feed, like `/archive/343/links.xml`, that lists every link featured in that issue — useful for automation."
+        },
+        {
+          "question": "What email client renders it best?",
+          "answer": "The Weekly Thing is designed to look good in plain HTML email clients — Apple Mail, Gmail, Outlook, Fastmail, and reader apps like NetNewsWire via RSS all render it well. It is intentionally not dependent on tracking pixels or web fonts."
+        }
+      ]
+    },
+    {
+      "title": "What's Inside an Issue",
+      "entries": [
+        {
+          "question": "What kinds of things show up in the newsletter?",
+          "answer": "A typical issue blends:\n\n- **Technology & web** — interesting tools, platforms, standards, and ideas\n- **Indie web & open standards** — personal sites, RSS, ownership of identity and content\n- **Culture & ideas** — essays, talks, books, and the occasional rabbit hole\n- **Visual** — a photo, illustration, or thing-of-the-week\n- **Personal commentary** — short notes from Jamie on why a link mattered"
+        },
+        {
+          "question": "What's Thingy?",
+          "answer": "[Thingy](/thingy/) is an experimental, AI-assisted way to explore the archive — ask questions, find issues by theme, or rediscover links you half-remember. It's one of several experiments running on the Weekly Thing site."
+        },
+        {
+          "question": "Do issues have numbers?",
+          "answer": "Yes. Every issue is sequentially numbered from #1, published in May 2017, onward. URLs follow the pattern `/archive/{number}/` — for example, `/archive/343/` is issue 343. This makes individual issues easy to link to, cite, and reference."
+        },
+        {
+          "question": "Does the Weekly Thing follow a fixed format?",
+          "answer": "Roughly, yes — but Jamie reserves the right to break the mold. Some weeks are link-heavy, some lean into a single theme, and some include longer-form commentary. The goal is signal, not formula."
+        }
+      ]
+    },
+    {
+      "title": "Membership & Funding",
+      "entries": [
+        {
+          "question": "What's a Supporting Member?",
+          "answer": "Supporting Members pay a small annual fee, and 100% of that money goes to a nonprofit selected each year. Members get a gold star recognition in each issue. The newsletter itself remains completely free. Learn more on the [members page](/members/)."
+        },
+        {
+          "question": "How is the nonprofit chosen each year?",
+          "answer": "Jamie selects a nonprofit annually and announces it on the [members page](/members/). Past recipients reflect causes Jamie cares about — community, education, and digital citizenship."
+        },
+        {
+          "question": "Are there ads or sponsorships?",
+          "answer": "No. The Weekly Thing has never run ads, sponsored links, or affiliate deals, and that's not changing. Links appear because they're interesting, full stop."
+        },
+        {
+          "question": "Can a company pay to be featured?",
+          "answer": "No. There is no paid placement of any kind. If something appears in the newsletter, it's because Jamie found it independently and thought it was worth your time."
+        }
+      ]
+    },
+    {
+      "title": "Community & Contributing",
+      "entries": [
+        {
+          "question": "Can I suggest a link?",
+          "answer": "Absolutely. Just reply to any issue — replies go directly to Jamie's inbox."
+        },
+        {
+          "question": "Is there a community?",
+          "answer": "There's a subreddit at [r/weeklything](https://www.reddit.com/r/weeklything/) where links from each issue are posted and can be discussed."
+        },
+        {
+          "question": "Can I share or repost issues?",
+          "answer": "Yes. Content is published under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) — you can share, quote, and build on it as long as you provide attribution and share-alike. Linking back to the original issue URL is the easiest way to do this."
+        },
+        {
+          "question": "Can I get in touch with Jamie?",
+          "answer": "The simplest path is replying to any issue. You can also find Jamie at [thingelstad.com](https://www.thingelstad.com) and across the open web from there."
+        }
+      ]
+    },
+    {
+      "title": "Privacy & Data",
+      "entries": [
+        {
+          "question": "What do you do with my email address?",
+          "answer": "It's used to deliver the newsletter. Nothing else — no resale, no sharing, no cross-promotion with other newsletters."
+        },
+        {
+          "question": "Is there tracking in the emails?",
+          "answer": "Open-tracking and click-tracking are kept minimal and only used in aggregate to understand which issues land. There's no per-reader profiling, and you'll never receive automated re-engagement campaigns."
+        },
+        {
+          "question": "Where is my email stored?",
+          "answer": "Subscriber lists are managed through [Buttondown](https://buttondown.com/), an independent newsletter platform. The custom site at weekly.thingelstad.com handles archives, search, and membership separately."
+        }
+      ]
+    },
+    {
+      "title": "Technical & Indie Web",
+      "entries": [
+        {
+          "question": "How is this site built?",
+          "answer": "The site is a custom static build using [Eleventy (11ty)](https://www.11ty.dev/) for the archive pages, with [Pagefind](https://pagefind.app/) for search and [Tinylytics](https://tinylytics.app/) for lightweight analytics. Issues are stored as individual markdown files and synced bidirectionally with Buttondown. It's an indie-web project, owned end-to-end."
+        },
+        {
+          "question": "Why a custom site instead of using Buttondown's hosted archive?",
+          "answer": "Two reasons. First, ownership — running the archive on Jamie's own domain keeps the URLs, search, and reader experience under his control. Second, flexibility — features like Thingy, per-issue link feeds, and Pagefind search aren't possible on a hosted archive page."
+        },
+        {
+          "question": "Is the source code available?",
+          "answer": "Parts of the tooling and supporting projects are open. Watch [thingelstad.com](https://www.thingelstad.com) for posts about the build."
+        },
+        {
+          "question": "Can I read every issue offline or archive my own copy?",
+          "answer": "Yes — the archive is plain HTML, the markdown files are stable, and the RSS feed can be ingested by any reader or archiving tool. Owning your inbox and your reading list is encouraged."
+        }
+      ]
+    }
+  ]
+}
