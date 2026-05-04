@@ -19,7 +19,7 @@ librarian-deploy:
 	npm run librarian:deploy
 
 librarian-ask:
-	python pipeline/librarian/archive_chat.py $(ARGS)
+	python apps/archive-chat/archive_chat.py $(ARGS)
 
 build: data
 	npm run build:all
