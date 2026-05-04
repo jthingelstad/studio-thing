@@ -1,9 +1,0 @@
-Metadata-Version: 2.4
-Name: librarian-core
-Version: 0.1.0
-Summary: Shared retrieval primitives for The Weekly Thing archive (corpus loader, BM25, chunk schemas).
-Requires-Python: >=3.11
-Requires-Dist: boto3
-Requires-Dist: python-dotenv
-Requires-Dist: pyyaml
-Requires-Dist: rank_bm25

@@ -1,1 +1,0 @@
-librarian_core

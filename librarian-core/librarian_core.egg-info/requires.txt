@@ -1,4 +1,0 @@
-boto3
-python-dotenv
-pyyaml
-rank_bm25
