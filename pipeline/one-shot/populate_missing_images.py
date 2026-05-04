@@ -37,7 +37,7 @@ import yaml
 sys.stdout.reconfigure(line_buffering=True)
 
 ROOT = Path(__file__).resolve().parents[2]
-ARCHIVE_DIR = ROOT / "site" / "archive"
+ARCHIVE_DIR = ROOT / "apps" / "site" / "archive"
 CAMPAIGNS_CACHE = ROOT / "cache" / "mailchimp_campaigns.json"
 ISSUE_MAP_CACHE = ROOT / "cache" / "mailchimp_issue_map.json"
 

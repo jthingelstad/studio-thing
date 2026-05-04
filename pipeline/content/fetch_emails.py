@@ -85,7 +85,7 @@ def fetch_stripe_balance():
 def fetch(no_cache=False):
     """Main fetch function. Returns list of email objects.
 
-    Also fetches subscriber stats and writes site/_data/stats.json.
+    Also fetches subscriber stats and writes apps/site/_data/stats.json.
     The no_cache argument is accepted for compatibility with older callers.
     """
     print("Fetching emails from Buttondown API...")
@@ -94,7 +94,7 @@ def fetch(no_cache=False):
     print(f"Fetched {len(emails)} emails")
 
     # Fetch live stats — preserve existing stats.json if API calls fail
-    stats_output = Path(__file__).resolve().parents[2] / "site" / "_data" / "stats.json"
+    stats_output = Path(__file__).resolve().parents[2] / "apps" / "site" / "_data" / "stats.json"
     existing_stats = {}
     if stats_output.exists():
         with open(stats_output) as f:

@@ -22,7 +22,7 @@ from pathlib import Path
 sys.stdout.reconfigure(line_buffering=True)
 
 ROOT = Path(__file__).resolve().parents[2]
-FP = ROOT / "site" / "archive" / "106.md"
+FP = ROOT / "apps" / "site" / "archive" / "106.md"
 
 SECTION_HEADINGS = [
     "Featured Links 🏅",

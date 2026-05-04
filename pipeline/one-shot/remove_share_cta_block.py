@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.stdout.reconfigure(line_buffering=True)
 
-ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "site" / "archive"
+ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "apps" / "site" / "archive"
 
 # Match the heading line + immediately following bullet lines + any
 # interleaved/trailing blank lines. Stop at the first line that is not

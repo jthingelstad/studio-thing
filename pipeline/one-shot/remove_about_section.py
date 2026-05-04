@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.stdout.reconfigure(line_buffering=True)
 
-ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "site" / "archive"
+ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "apps" / "site" / "archive"
 
 HEADING_RE = re.compile(r"^(#{2,3})\s+About\s*$", re.MULTILINE)
 

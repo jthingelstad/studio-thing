@@ -34,7 +34,7 @@ import httpx
 sys.stdout.reconfigure(line_buffering=True)
 
 REPO = Path(__file__).resolve().parents[2]
-ARCHIVE = REPO / "site" / "archive"
+ARCHIVE = REPO / "apps" / "site" / "archive"
 
 H3_RE = re.compile(r'^### \[[^\]]+\]\((https?://[^)]+)\)')
 MP_LINE_RE = re.compile(r'^mp-photo-alt\[\](?:=mp-photo-alt\[\])*=?\s*$')

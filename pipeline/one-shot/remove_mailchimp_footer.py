@@ -26,7 +26,7 @@ from pathlib import Path
 
 sys.stdout.reconfigure(line_buffering=True)
 
-ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "site" / "archive"
+ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "apps" / "site" / "archive"
 
 # Pattern A: find the last `## Thanks 🎬` in the file and cut from there.
 # The section's contents are always short (a thank-you + unsubscribe line)

@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 sys.stdout.reconfigure(line_buffering=True)
 load_dotenv()
 
-ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "site" / "archive"
+ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "apps" / "site" / "archive"
 
 MAIN_SECTIONS = {
     "Notable", "Featured", "Must Read",

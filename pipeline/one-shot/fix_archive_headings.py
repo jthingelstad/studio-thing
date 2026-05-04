@@ -16,7 +16,7 @@ from pathlib import Path
 sys.stdout.reconfigure(line_buffering=True)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-ARCHIVE = REPO_ROOT / "site" / "archive"
+ARCHIVE = REPO_ROOT / "apps" / "site" / "archive"
 ISSUES = [132, 133, 134, 135, 136]
 
 FRONTMATTER_RE = re.compile(r"^(---\n.*?\n---\n)", re.S)

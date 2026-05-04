@@ -31,7 +31,7 @@ from pathlib import Path
 
 sys.stdout.reconfigure(line_buffering=True)
 
-ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "site" / "archive"
+ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "apps" / "site" / "archive"
 
 HEADER_A = re.compile(
     r"^(?:##\s+Weekly Thing\s*\n+)?"  # optional "## Weekly Thing" heading (#53–#58)

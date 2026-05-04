@@ -9,7 +9,7 @@ Single-pass pipeline:
   page, running observations, and a fully rewritten brief.
 
 Writes two files (unless --dry-run):
-  - site/_data/voiceSamples.json
+  - apps/site/_data/voiceSamples.json
   - docs/creative/brief.md
 
 Also writes a run log to tmp/copy-refresh-<ts>.json for auditability.
@@ -39,8 +39,8 @@ sys.stdout.reconfigure(line_buffering=True)
 load_dotenv()
 
 REPO = Path(__file__).resolve().parents[2]
-ARCHIVE = REPO / "site" / "archive"
-DATA = REPO / "site" / "_data"
+ARCHIVE = REPO / "apps" / "site" / "archive"
+DATA = REPO / "apps" / "site" / "_data"
 BRIEF_PATH = REPO / "docs" / "creative" / "brief.md"
 VOICE_PATH = DATA / "voiceSamples.json"
 EMAILS_PATH = DATA / "emails.json"

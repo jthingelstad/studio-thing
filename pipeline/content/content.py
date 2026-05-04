@@ -176,7 +176,7 @@ def write_manifest(snapshots: list[dict[str, Any]]) -> None:
                 "fetched_at": item.get("fetched_at", ""),
                 "snapshot_path": f"data/buttondown/emails/{item['number']}.json",
                 "body_path": f"data/buttondown/bodies/{item['number']}.md",
-                "archive_path": f"site/archive/{item['number']}.md",
+                "archive_path": f"apps/site/archive/{item['number']}.md",
             }
         )
     write_json(

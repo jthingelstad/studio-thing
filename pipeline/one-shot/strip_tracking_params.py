@@ -19,7 +19,7 @@ from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
 sys.stdout.reconfigure(line_buffering=True)
 
-ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "site" / "archive"
+ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "apps" / "site" / "archive"
 
 STRIP_PARAMS = {"mc_cid", "mc_eid"}
 

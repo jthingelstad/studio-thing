@@ -17,7 +17,7 @@ spec.loader.exec_module(audio_script)
 
 
 def archive_fixture(issue):
-    raw = (REPO / "site" / "archive" / f"{issue}.md").read_text(encoding="utf-8")
+    raw = (REPO / "apps" / "site" / "archive" / f"{issue}.md").read_text(encoding="utf-8")
     match = re.match(r"^---\n(.+?)\n---\n(.*)", raw, re.DOTALL)
     frontmatter = yaml.safe_load(match.group(1))
     body = re.sub(

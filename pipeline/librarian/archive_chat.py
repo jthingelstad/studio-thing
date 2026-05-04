@@ -1,6 +1,6 @@
 """Admin-only CLI to ask unrestricted questions against the archive corpus.
 
-Loads the same corpus Thingy uses (built locally from site/archive/*.md), runs
+Loads the same corpus Thingy uses (built locally from apps/site/archive/*.md), runs
 BM25 lexical retrieval, and calls the Anthropic API directly with a minimal
 admin system prompt -- no Bedrock, no Thingy persona, no guardrails.
 

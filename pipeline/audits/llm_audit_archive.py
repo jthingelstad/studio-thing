@@ -34,7 +34,7 @@ from pydantic import BaseModel, Field
 sys.stdout.reconfigure(line_buffering=True)
 
 REPO = Path(__file__).resolve().parents[2]
-ARCHIVE = REPO / "site" / "archive"
+ARCHIVE = REPO / "apps" / "site" / "archive"
 OUT = REPO / "tmp"
 OUT.mkdir(exist_ok=True)
 

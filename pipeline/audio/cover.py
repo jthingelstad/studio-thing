@@ -3,7 +3,7 @@
 Per-issue covers live at the URL in the frontmatter `image` field
 (typically `https://files.thingelstad.com/weekly-thing/<N>/cover.jpg`).
 Issues without a per-issue cover fall back to the show-level
-`site/img/podcast-cover.png` that the podcast feed already advertises.
+`apps/site/img/podcast-cover.png` that the podcast feed already advertises.
 
 Per-issue covers are 1200×675 landscape banners; podcast art conventions
 expect square. We center-crop to a square at the shorter side.
@@ -23,7 +23,7 @@ from urllib.parse import urlparse
 
 REPO = Path(__file__).resolve().parents[2]
 COVER_CACHE_DIR = REPO / "tmp" / "audio" / "covers"
-FALLBACK_COVER = REPO / "site" / "img" / "podcast-cover.png"
+FALLBACK_COVER = REPO / "apps" / "site" / "img" / "podcast-cover.png"
 
 
 def _cached_cover_path(issue: str, image_url: str) -> Path:

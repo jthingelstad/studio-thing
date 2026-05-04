@@ -26,7 +26,7 @@ from pathlib import Path
 sys.stdout.reconfigure(line_buffering=True)
 
 ROOT = Path(__file__).resolve().parents[2]
-ARCHIVE_DIR = ROOT / "site" / "archive"
+ARCHIVE_DIR = ROOT / "apps" / "site" / "archive"
 OPENERS_FILE = Path(__file__).parent / "intro_openers.txt"
 
 EDITOR_COMMENT_RE = re.compile(r"^<!--\s*buttondown-editor-mode:[^>]*-->")

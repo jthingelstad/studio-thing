@@ -30,7 +30,7 @@ from script import body_to_audio_script  # noqa: E402
 BUTTONDOWN_MANIFEST = REPO / "data" / "buttondown" / "manifest.json"
 BUTTONDOWN_BODIES = REPO / "data" / "buttondown" / "bodies"
 AUDIO_MANIFEST = REPO / "data" / "audio" / "manifest.json"
-ARCHIVE = REPO / "site" / "archive"
+ARCHIVE = REPO / "apps" / "site" / "archive"
 LIBRARIAN_BUCKET = os.environ.get("LIBRARIAN_BUCKET", "weekly-thing-librarian")
 LIBRARIAN_CORPUS_KEY = os.environ.get("LIBRARIAN_CORPUS_KEY", "artifacts/corpus.json")
 LIBRARIAN_GRAPH_KEY = os.environ.get("LIBRARIAN_GRAPH_KEY", "artifacts/graph.json")

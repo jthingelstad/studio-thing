@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CACHE_DIR = ROOT / "cache"
 CAMPAIGNS_CACHE = CACHE_DIR / "mailchimp_campaigns.json"
 ISSUE_MAP_CACHE = CACHE_DIR / "mailchimp_issue_map.json"
-EMAILS_JSON = ROOT / "site" / "_data" / "emails.json"
+EMAILS_JSON = ROOT / "apps" / "site" / "_data" / "emails.json"
 
 
 def get_base_and_auth():

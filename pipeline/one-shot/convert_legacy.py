@@ -17,7 +17,7 @@ import re
 import sys
 from pathlib import Path
 
-ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "site" / "archive"
+ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "apps" / "site" / "archive"
 
 # Issues that are already markdown and should be skipped
 SKIP_ISSUES = {2}  # Issue 2 is an early markdown experiment

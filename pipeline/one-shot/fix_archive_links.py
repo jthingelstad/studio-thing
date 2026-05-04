@@ -12,7 +12,7 @@ from pathlib import Path
 sys.stdout.reconfigure(line_buffering=True)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-ARCHIVE = REPO_ROOT / "site" / "archive"
+ARCHIVE = REPO_ROOT / "apps" / "site" / "archive"
 
 FIXES: list[tuple[int, str, str, str]] = [
     (

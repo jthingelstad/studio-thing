@@ -9,6 +9,6 @@ from __future__ import annotations
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-ARCHIVE_DIR = REPO / "site" / "archive"
+ARCHIVE_DIR = REPO / "apps" / "site" / "archive"
 CORPUS_PATH = REPO / "data" / "librarian" / "corpus.json"
 GRAPH_PATH = REPO / "data" / "librarian" / "graph.json"

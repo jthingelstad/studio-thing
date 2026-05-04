@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.stdout.reconfigure(line_buffering=True)
 
-ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "site" / "archive"
+ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "apps" / "site" / "archive"
 
 # The exact fingerprint: ** on its own, newline, then ≥5 hyphens (the old
 # template used 60), optional trailing newlines. Always replace with a

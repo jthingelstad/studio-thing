@@ -31,7 +31,7 @@ from botocore.exceptions import ClientError
 sys.stdout.reconfigure(line_buffering=True)
 
 ROOT = Path(__file__).resolve().parents[2]
-ARCHIVE_DIR = ROOT / "site" / "archive"
+ARCHIVE_DIR = ROOT / "apps" / "site" / "archive"
 
 GALLERY_URL_RE = re.compile(r"https?://gallery\.mailchimp\.com/[^\s\")\]]+")
 

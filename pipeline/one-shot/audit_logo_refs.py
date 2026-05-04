@@ -11,7 +11,7 @@ import requests
 
 sys.stdout.reconfigure(line_buffering=True)
 
-ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "site" / "archive"
+ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "apps" / "site" / "archive"
 REPORT_FILE = Path("/tmp/logo-refs.txt")
 
 URL_RE = re.compile(r"https?://(?:www\.)?thingelstad\.com/assets/logos/[^\s)\"'>]+")
