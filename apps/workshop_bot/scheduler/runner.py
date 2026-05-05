@@ -142,15 +142,22 @@ class Runner:
                         logger.exception("scheduler: also failed to post error notice")
 
 
-# ---- CLI: list jobs / fire one manually ----
+# ---- CLI: inspect configured jobs ----
+#
+# Manual job firing (the previous `--once <job_id>` flag) needed a live
+# Discord-connected team registry, which a standalone CLI can't provide.
+# Drop it; ``Runner.fire_once`` is still callable in-process if a future
+# slash command needs it.
 
 def _build_argparser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--list", action="store_true", help="List configured jobs")
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument(
-        "--once",
-        metavar="JOB_ID",
-        help="Fire one job by id (no scheduler loop). Requires the bot to be running.",
+        "--list",
+        action="store_true",
+        help="List configured jobs and where they post.",
     )
     return parser
 
@@ -161,7 +168,10 @@ def main() -> int:
     if args.list:
         for job in jobs_module.JOBS:
             mark = "✓" if job.enabled else "✗"
-            print(f"{mark} {job.id:32} {job.cron:20} -> {job.func.__module__}.{job.func.__name__}")
+            print(
+                f"{mark} {job.id:32} {job.cron:20} -> "
+                f"{job.func.__module__}.{job.func.__name__}"
+            )
         return 0
     parser.print_help()
     return 0

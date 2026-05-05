@@ -11,6 +11,7 @@ A single tool result over ~50KB will be truncated when serialized.
 from __future__ import annotations
 
 import logging
+import re
 from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
@@ -78,7 +79,6 @@ def t_get_issue(deps, number: int | str) -> dict[str, Any] | str:
 
 def t_get_section(deps, number: int | str, section: str) -> dict[str, Any] | str:
     """Pull one named section (`Notable`, `Briefly`, `Featured`, `Microposts`, etc.)."""
-    import re
     issue = archive.read_issue(int(str(number).split("-", 1)[0]))
     if issue is None:
         return f"no archive file for #{number}"
