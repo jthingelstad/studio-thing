@@ -1,365 +1,288 @@
 # Workshop Bot — Discord Agent Runtime
 
-> Author-only Discord bot hosting four AI agents that assist with creating *The Weekly Thing* newsletter. Part of the `weekly.thingelstad.com` monorepo.
+> Author-only Discord bot for *The Weekly Thing*. Five personas: four agents that help Jamie assemble each week's issue, plus a public-facing bridge to Thingy (the production Librarian Lambda).
 
 ---
 
-## Project Context
+## What lives here
 
-This bot is one component of a larger system. The Weekly Thing already has:
+`apps/workshop_bot/` is one Python process running five `discord.py` clients in the same asyncio loop. Each persona is a separate Discord application (own bot token, own avatar) so messages appear under the right name.
 
-- **Thingy** — production Lambda agent answering reader questions about the archive (lives at `apps/librarian/lambda/`, deployed to AWS). NOT built here.
-- **archive_chat** — local CLI for unrestricted author research against the archive (`apps/archive-chat/archive_chat.py`). NOT replaced.
+| Persona | Role | Default model | Home channel |
+|---|---|---|---|
+| **Eddy** (he/him) | Editor — sharpens drafts, watches voice | Opus 4.7 | `#editorial` |
+| **Linky** (he/him) | Link curation — Pinboard queue, popular feed, archive recall | Sonnet 4.6 | `#research` |
+| **Marky** (she/her) | Promotion — subject lines, descriptions, engagement reports | Sonnet 4.6 | `#promotion` |
+| **Patty** (she/her) | Supporter steward — writes the per-issue `member.json` (signed by Thingy in print) | Sonnet 4.6 | `#supporters` |
+| **Thingy** (bridge) | Public archive Q&A — forwards to the Librarian Lambda | n/a (LLM lives in the Lambda) | `#ask-thingy` |
+
+The four agent personas share a tool surface (archive, memory, S3 workspace, persona-specific extras) and the agent loop in `personas/base.py:PersonaBot`. Thingy is intentionally isolated — same process, but doesn't run the local agent loop and doesn't peer-react.
+
+---
+
+## Project context
+
+Other components in the larger system:
+- **Thingy Lambda** at `apps/librarian/lambda/` — production agent for reader Q&A. The bridge forwards to it; the bot does not replicate it.
+- **archive-chat** at `apps/archive-chat/` — local CLI for unrestricted author research against the archive. Not replaced.
 - **Eleventy site** — `weekly.thingelstad.com` static site.
-- **Buttondown** — newsletter platform; content is synced to `data/buttondown/`.
-- **Shortcuts pipeline** — Jamie's iOS Shortcuts build the actual newsletter, using DataJar for inter-shortcut state.
-
-This repo will add **four new agents** that run as a Discord bot, plus the supporting database and S3 integration. Thingy exists; we're not modifying it.
+- **Buttondown** — newsletter platform; content synced to `data/buttondown/`.
+- **Shortcuts pipeline** — Jamie's iOS Shortcuts assemble each issue Sunday morning, reading from `s3://files.thingelstad.com/weekly-thing/issues/{N}/`.
 
 ---
 
-## The Four Agents
+## Routing
 
-| Agent  | Role                | Trigger                         | Primary Output                      |
-|--------|---------------------|---------------------------------|-------------------------------------|
-| Eddy   | Editor              | On-demand (Discord mention)     | Draft critique, voice feedback      |
-| Linky | Link Curator        | Weekly + on-demand              | Curated unpublished Pinboard preview|
-| Marky  | Promotion           | Daily + on-demand               | Stats, subject lines, descriptions  |
-| Patty  | Supporter Steward   | Weekly Friday + Buttondown evts | Supporter signals, CTA snippet      |
+Each agent persona (Eddy/Linky/Marky/Patty) responds when:
+- the persona is @-mentioned in any channel,
+- a human posts in its home channel without @-mentioning a different persona,
+- the `@Team` role is mentioned (one bot wins the lock and orchestrates a sequential round; later personas see earlier replies in their history),
+- another bot posts in `#workshop` (peer reactions; default response is the literal token `PASS`).
 
-Each agent is a distinct system prompt + a set of tools. They share corpus access, share the SQLite DB, and can read each other's outputs.
-
-### Agent jobs in detail
-
-**Eddy** — reads drafts, gives editorial critique with archive-aware voice analysis. Reads draft from S3 (drafts are too long for Discord 2000-char limit). Posts summary in `#editorial`, writes detailed feedback to SQLite for follow-up queries.
-
-**Linky** — forward-looking, NOT archive research. Reads unpublished Pinboard bookmarks, finds themes, suggests groupings, helps Jamie curate what should go in the next issue. Outputs a structured preview with link summaries, theme clusters, and confidence notes.
-
-**Marky** — has two modes:
-- *Scheduled (daily)*: fetch Tinylytics, post engagement summary in `#chatter`, write to SQLite.
-- *On-demand*: given a draft + photo on S3, generate subject line (3-word convention used by The Weekly Thing) and issue description. Write back to S3 for Shortcuts pipeline to pick up.
-
-**Patty** — supporter program steward (NOT subscription tier; this is a nonprofit-spirited support program). Two jobs:
-- *Scheduled weekly*: draft the supporter CTA snippet for the next issue. Output goes to S3 (public, since it's going into the newsletter anyway). Attributed to Thingy in the published issue, not Patty — Patty is invisible to readers.
-- *Event-driven*: when Buttondown reports new/churned supporters, post in `#chatter` (tagged as signup/churn signal).
+Thingy listens only in `#ask-thingy` and answers direct in-channel questions. It never appears in the workshop or chatter.
 
 ---
 
-## Discord Server Structure
+## Memory
 
-Author-only for now (single user: Jamie). May open `#ask-thingy` to supporters in the future, but that's out of scope for v1.
+Each agent has long-term memory via `remember`/`recall`/`forget_note` tools backed by an `agent_notes` SQLite table. Notes are shared across personas and attributed by author. Use cases: tonal preferences Jamie expressed, themes building across weeks, todos for future runs, observations worth carrying forward.
 
-```
-WORKSHOP (category)
-├─ #editorial      → Eddy work (drafts, critique, voice)
-├─ #research       → Linky work (Pinboard curation)
-├─ #promotion      → Marky work (subject lines, descriptions, angles)
-├─ #supporters     → Patty work (CTA drafts, supporter analysis)
-├─ #workshop       → multi-agent collaboration; bring drafts/ideas, any agent responds
-└─ #chatter     → operational heartbeat:
-                       - signups (new supporters from Patty)
-                       - churn (unsubscribes from Patty)
-                       - engagement (daily Tinylytics from Marky)
-                       - deployments (build/publish notifications)
-```
-
-`#chatter` is read-mostly — agents post status updates here automatically. The signal types are differentiated by message format and bot identity, not by separate channels. Keeps signal density high in one place rather than spreading thin across four channels.
-
-`#workshop` is the multi-agent collaboration room. When you want multiple agents weighing in on the same thing — bring a draft, ask Eddy first, then ask Marky to react, then ask Patty for the supporter angle — that happens here. Each agent in `#workshop` sees the full thread history including other agents' responses.
-
-The four single-agent channels (`#editorial`, `#research`, `#promotion`, `#supporters`) are for focused work with one agent. Less context-switching.
+Thingy users (web and Discord) also have per-user memory in the Lambda's DynamoDB table. The Lambda Bedrock-summarizes each session when the token rotates and surfaces prior-session summaries in the `/auth` response so the bridge can offer "welcome back" UX. See [`docs/librarian.md`](../../docs/librarian.md) for the Thingy-side specifics.
 
 ---
 
-## Storage Architecture
+## Scheduled jobs
 
-Two distinct storage layers with different access boundaries:
+`scheduler/jobs.py` declares cron-triggered jobs as plain Python functions in `scheduler/handlers.py`. Most handlers are pure code (fetch + format + post); a few call into the agent loop where LLM judgment is genuinely needed. The split is deliberate — the LLM is a tool the handler reaches for, not the default execution path.
 
-### SQLite (private, local) — operational state
-Path: `apps/workshop_bot/data/workshop.db` (gitignored).
+| Job | When (Central) | Mode | Channel |
+|---|---|---|---|
+| `linky-wednesday-check` | Wed 10:30 | code | `#research` |
+| `linky-friday-curation` | Fri 16:00 | LLM | `#research` |
+| `linky-popular-scan` | every 6h | code + LLM filter | `#research` |
+| `linky-research-unread` | 10:00 + 16:00 daily | LLM | `#research` |
+| `marky-daily-engagement` | daily 09:00 | code | `#chatter` |
+| `marky-weekly-subscribers` | Mon 11:00 | code | `#promotion` |
+| `patty-thursday-member-json` | Thu 18:00 | LLM | `#supporters` + S3 |
+| `eddy-saturday-prep` | Sat 08:00 | code | `#editorial` |
 
-Used for:
-- Agent outputs (drafts, analyses, research notes)
-- Marky's analytics history
-- Linky's link analysis
-- Patty's supporter tracking
-- Agent execution log
-- Conversation context for multi-turn threads
-
-### S3 (public, `files.thingelstad.com`) — build pipeline artifacts
-Bucket already exists for the static site. Add a prefix:
-```
-s3://files.thingelstad.com/weekly-thing/issues/{issue_number}/
-├── draft.md            # Jamie's draft, dual-written from Shortcuts
-├── photo.jpg           # already there
-├── photo-caption.txt   # already there
-├── metadata.json       # subject, description, etc.
-├── patty-cta.json      # Patty's CTA snippet (written by agent)
-└── marky-meta.json     # Marky's subject + description (written by agent)
-```
-
-S3 is what Shortcuts can read (public HTTP). SQLite is what agents read among themselves.
-
-**Important rule:** agents write to S3 ONLY for things meant to be published or read by the Shortcuts build automation. Internal analysis, research notes, supporter tracking — all SQLite, never S3.
+CLI: `python -m apps.workshop_bot.scheduler.runner --list` to inspect, `--once <job_id>` to fire manually. Disable the whole scheduler with `WORKSHOP_SCHEDULER_ENABLED=0`.
 
 ---
 
-## Repo Location
+## The in-flight issue
 
-This bot lives at `apps/workshop_bot/` in the existing monorepo. Shared retrieval/corpus primitives already live in `librarian-core/` (installed editable) — import from there. The Thingy Lambda at `apps/librarian/lambda/` is Node and not directly importable from Python; copy patterns rather than code.
+The published archive (corpus) holds issues already shipped — `#1` through `#N`. The issue Jamie is *currently writing* is `#N+1` and lives in the S3 workspace at `s3://files.thingelstad.com/weekly-thing/issues/{N+1}/` — **not in the archive corpus.** Every persona has the universal `current_issue_number` tool that resolves "the issue I'm working on" by combining S3 workspace folders with the corpus's latest published issue.
+
+S3 workspace conventions:
+
+```
+weekly-thing/issues/{N}/
+├── draft.md            ← Jamie's draft (from Shortcuts)
+├── photo.jpg
+├── photo-caption.txt
+├── metadata.json       ← Shortcuts-managed
+├── member.json         ← Patty writes Thursday 18:00 CT (CTA + progress update)
+├── marky-meta.json     ← (planned — Marky doesn't auto-write yet)
+└── eddy-edits.md       ← (when Eddy posts a substantial revision)
+```
+
+The S3 helper at `tools/s3.py` enforces a strict allow-list: only md/markdown/txt/json/yaml/yml/csv/html files; bare-component filenames (no slashes, no `..`); 256 KB cap per file. Any path outside `weekly-thing/issues/{N}/` is rejected before the request reaches AWS.
+
+---
+
+## Storage architecture
+
+Two layers with hard boundaries.
+
+**SQLite** at `apps/workshop_bot/data/workshop.db` (gitignored) — operational state. Anything not destined for the published newsletter lives here: agent outputs, run logs, memory notes, link candidates, subscriber events, Pinboard dedup state, Thingy bridge token cache.
+
+**S3** at `s3://files.thingelstad.com/weekly-thing/issues/{N}/` — only files the iOS Shortcuts assemble pipeline reads on Sunday. Internal observations, research notes, draft versions never go to S3.
+
+---
+
+## The Thingy bridge
+
+`#ask-thingy` is a public-facing surface (author-only for now; opens to supporters later). Each message is forwarded to the production Librarian Lambda's `/chat` endpoint via `personas/thingy.py`.
+
+Auth uses a Lambda action `/auth?action=discord_bridge` gated by a shared secret (`DISCORD_BRIDGE_SECRET` on the Lambda; `LIBRARIAN_BRIDGE_SECRET` on the bot — same value). The Lambda mints session tokens whose `sub` is `discord:<sha256(user_id)[:32]>`, so per-Discord-user rate limits work transparently against the Lambda's existing `payload.sub` rate-limit bucket.
+
+The bridge:
+- Caches tokens in SQLite (`thingy_tokens`); refreshes ~10 min before expiry.
+- Streams the Lambda's SSE response (`event: meta` / `answer_delta` / `citations` / `done`) and reassembles the answer.
+- Rewrites `#NNN` citations into clickable Discord links: `[#287](https://weekly.thingelstad.com/archive/287/)`.
+- Adds 👍/👎 reactions; clicks fire the Lambda's `/feedback` endpoint as the original asker.
+- Greets returning users on fresh-token mints with their last session's Bedrock-synthesized summary (from the Lambda's user-memory).
+
+---
+
+## Repo layout
 
 ```
 apps/workshop_bot/
 ├── README.md
-├── pyproject.toml or requirements.txt
 ├── bot.py                    # entrypoint
+├── eval.py                   # offline persona testing (no Discord)
 ├── personas/
-│   ├── __init__.py
-│   ├── eddy.py
-│   ├── linky.py
-│   ├── marky.py
-│   └── patty.py
-├── prompts/                  # editable system prompts
-│   ├── eddy.md
-│   ├── linky.md
-│   ├── marky.md
-│   └── patty.md
-├── tools/                    # shared agent tools
-│   ├── corpus.py             # archive retrieval (reuse from librarian-core)
-│   ├── pinboard.py           # Pinboard MCP / API client
-│   ├── tinylytics.py         # Tinylytics API client
-│   ├── buttondown.py         # Buttondown API client
-│   └── s3.py                 # S3 read/write helpers
-├── db/
-│   ├── schema.sql
-│   └── migrations/
+│   ├── base.py               # PersonaBot — routing, peer reactions, agent loop
+│   ├── team.py               # @Team round orchestration
+│   ├── eddy.py / linky.py / marky.py / patty.py
+│   └── thingy.py             # Lambda bridge (no agent loop)
+├── prompts/
+│   ├── team.md               # shared team-level prompt (cached system block)
+│   └── eddy.md / linky.md / marky.md / patty.md
+├── tools/
+│   ├── agent_loop.py         # tool-using turn (asyncio.to_thread wrapper)
+│   ├── agent_tools.py        # tool registry + ContextVar persona attribution
+│   ├── anthropic_client.py   # client + prompt loader
+│   ├── archive.py            # read archive issues from disk
+│   ├── corpus.py             # BM25 corpus from librarian-core
+│   ├── conversation.py       # Discord history → Anthropic messages
+│   ├── discord_io.py         # chunked send, attachment read
+│   ├── db.py                 # SQLite helpers + idempotent column migrations
+│   ├── pinboard.py           # Pinboard REST + popular RSS feed
+│   ├── support_state.py      # current nonprofit state for Patty
+│   ├── buttondown.py         # subscriber API
+│   ├── tinylytics.py         # engagement API
+│   ├── web.py                # fetch_url
+│   ├── s3.py                 # per-issue S3 workspace
+│   ├── startup.py            # boot self-check + announce
+│   ├── thingy_client.py      # Lambda bridge HTTP/SSE client
+│   └── thingy_render.py      # citation injection + history compaction
 ├── scheduler/
-│   └── jobs.py               # APScheduler or similar
+│   ├── jobs.py               # JobSpec declarations
+│   ├── handlers.py           # per-job functions
+│   └── runner.py             # APScheduler + dispatch
+├── db/
+│   └── schema.sql            # SQLite schema (Python ALTER migrations in db.py)
 ├── data/                     # gitignored
 │   └── workshop.db
 └── tests/
+    └── test_*.py             # 81 unit tests; discord/anthropic/httpx stubbed
 ```
 
 ---
 
-## Tech Stack
+## Tech stack
 
-- **Language**: Python 3.11
-- **Discord**: `discord.py` (preferred, async, mature) or `nextcord`
-- **LLM**: Anthropic API directly (`anthropic` package). Claude Sonnet 4.6 for most agents; Opus 4.7 for Eddy (where quality matters most).
-- **Database**: SQLite via `sqlite3` stdlib or `sqlmodel` for ORM if useful
-- **Scheduling**: `APScheduler` for cron-style jobs in-process
-- **AWS**: `boto3` for S3 access (use existing `weekly-thing` credentials)
-- **Pinboard**: existing Pinboard MCP server Jamie built, OR direct API
-- **Tinylytics**: REST API
-- **Buttondown**: REST API (`api.buttondown.com/v1/`)
-- **Env management**: `python-dotenv`, secrets in `.env`
+- Python 3.13
+- `discord.py >= 2.4` — async Discord client
+- `anthropic` — Claude API
+- `apscheduler >= 3.10` — cron-style jobs
+- `boto3` — S3 access
+- `httpx` — Lambda bridge HTTP/SSE
+- `requests` — Pinboard / Buttondown / Tinylytics REST
+- `beautifulsoup4` — `fetch_url` HTML cleanup, Pinboard RSS parsing
+- `python-dotenv` — env loading
 
-Match the existing codebase conventions in `librarian-core/`, `apps/archive-chat/`, and `apps/librarian/lambda/`.
-
----
-
-## Architectural Principles
-
-1. **One bot, multiple personas.** Single Python process, single Discord connection, four agent personalities dispatched by channel + mention.
-2. **Personas are config, not code.** Each agent's system prompt lives in `prompts/{name}.md` so they're editable without code changes.
-3. **Shared corpus.** All agents that need archive access import the same retrieval module. Don't duplicate the BM25 logic.
-4. **Discord history is session state.** When an agent responds in a thread, it reads the last N messages of that thread for context. No separate session table for chat continuity.
-5. **SQLite for persistence beyond chat.** Analytics, research notes, supporter tracking, scheduled job outputs — all in SQLite.
-6. **S3 only for build pipeline artifacts.** If it doesn't go into the newsletter or get read by Shortcuts, it doesn't go to S3.
-7. **Scheduled jobs are first-class.** Most agents run on a cadence, not just on-demand. The bot is a scheduled worker as much as it is a chat interface.
-8. **Cross-talk is just shared thread visibility.** When agents are in the same thread, each can see what the others wrote. No orchestrator. Jamie moderates by asking follow-ups.
+LLM models are configurable per-persona (`preferred_model` class attr), per-message (`--haiku` / `--sonnet` / `--opus` flag in the message body), or globally (`WORKSHOP_DEFAULT_MODEL` env var). Default cascade: per-message flag → persona preferred → env var → `haiku` fallback.
 
 ---
 
-## Database Schema (Starting Point)
+## Database
 
-```sql
--- Agent outputs and work-in-progress
-CREATE TABLE agent_outputs (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  agent_name TEXT NOT NULL,         -- 'eddy', 'linky', 'marky', 'patty'
-  output_type TEXT NOT NULL,        -- 'critique', 'link_preview', 'analytics',
-                                    -- 'cta_draft', 'subject_line', etc.
-  content TEXT NOT NULL,            -- JSON string of the output
-  metadata TEXT,                    -- JSON for agent-specific context
-  status TEXT DEFAULT 'ready',      -- 'pending', 'ready', 'used', 'archived'
-  created_at TEXT DEFAULT (datetime('now')),
-  related_issue INTEGER             -- issue number if applicable
-);
+Tables in `db/schema.sql`. New columns added later go through idempotent `ALTER TABLE` migrations in `db._COLUMN_MIGRATIONS` so existing DBs and fresh installs converge.
 
--- Tinylytics & engagement metrics from Marky
-CREATE TABLE analytics (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  metric_date TEXT NOT NULL,
-  metric_type TEXT NOT NULL,        -- 'page_views', 'unique_visitors', etc.
-  value INTEGER,
-  details TEXT,                     -- JSON of full Tinylytics response
-  created_at TEXT DEFAULT (datetime('now'))
-);
+| Table | Purpose | Status |
+|---|---|---|
+| `agent_outputs` | Per-turn agent reply records | active |
+| `agent_runs` | Per-run status + duration log | active |
+| `agent_notes` | Long-term memory (kind, key, content, agent author) | active |
+| `link_candidates` | Pinboard bookmarks Linky has seen | active |
+| `pinboard_popular_seen` | URLs Linky has surfaced from the popular feed | active |
+| `pinboard_research_done` | URLs Linky has researched from the to-read pile | active |
+| `subscriber_events_seen` | Buttondown subscriber activity Marky has logged | active |
+| `thingy_tokens` | Cached Lambda tokens + profile per Discord user | active |
+| `thingy_requests` | Bridge request log (for `/feedback` lookup) | active |
+| `analytics` | Reserved for Marky's metric history | unused |
+| `supporter_events` | Reserved (older shape; superseded by `subscriber_events_seen`) | unused |
+| `channel_routes` | Reserved (channels are env-var-resolved today) | unused |
 
--- Pinboard link analysis from Linky
-CREATE TABLE link_candidates (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  url TEXT NOT NULL,
-  title TEXT,
-  description TEXT,
-  pinboard_tags TEXT,               -- comma-separated
-  linky_summary TEXT,
-  linky_themes TEXT,               -- JSON array
-  archive_resonance TEXT,           -- what archive issues this connects to
-  status TEXT DEFAULT 'unpublished',-- 'unpublished', 'selected', 'published'
-  pinboard_added TEXT,
-  created_at TEXT DEFAULT (datetime('now')),
-  used_in_issue INTEGER
-);
+---
 
--- Supporter signals from Patty
-CREATE TABLE supporter_events (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  email_hash TEXT NOT NULL,         -- never store raw emails
-  event_type TEXT NOT NULL,         -- 'joined', 'churned', 'milestone'
-  event_date TEXT NOT NULL,
-  details TEXT,                     -- JSON
-  created_at TEXT DEFAULT (datetime('now'))
-);
+## Configuration
 
--- Agent execution log
-CREATE TABLE agent_runs (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  agent_name TEXT NOT NULL,
-  trigger TEXT NOT NULL,            -- 'scheduled', 'mention', 'webhook'
-  status TEXT NOT NULL,             -- 'success', 'error', 'partial'
-  duration_ms INTEGER,
-  error TEXT,
-  records_written INTEGER,
-  started_at TEXT DEFAULT (datetime('now')),
-  ended_at TEXT
-);
+All configuration is via env vars in `.env` (see `.env.example` at the repo root).
 
--- Discord channel routing config (lookup table; small)
-CREATE TABLE channel_routes (
-  channel_name TEXT PRIMARY KEY,
-  channel_id TEXT NOT NULL,
-  primary_agent TEXT,
-  category TEXT                     -- 'workshop' or 'heartbeat'
-);
+**Per-persona Discord apps** — each is its own bot token, so the bot can show all five avatars simultaneously:
+- `DISCORD_TOKEN_EDDY`, `DISCORD_TOKEN_LINKY`, `DISCORD_TOKEN_MARKY`, `DISCORD_TOKEN_PATTY`, `DISCORD_TOKEN_THINGY`
+
+A persona with a missing token is skipped at startup; the rest still run.
+
+**Server + channels:**
+- `DISCORD_SERVER_ID`, `DISCORD_WORKSHOP_CATEGORY_ID`, `DISCORD_TEAM_ROLE_ID`
+- `DISCORD_CHANNEL_EDITORIAL`, `_RESEARCH`, `_PROMOTION`, `_SUPPORTERS`, `_WORKSHOP`, `_CHATTER`, `_ASK_THINGY`
+
+**Per-service API access:**
+- `ANTHROPIC_API_KEY`
+- `BUTTONDOWN_API_KEY`, `TINYLYTICS_API_KEY`, `TINYLYTICS_SITE_UID`, `PINBOARD_API_TOKEN`
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `WEEKLY_THING_ASSETS_BUCKET`
+
+**Thingy bridge:**
+- `LIBRARIAN_API_URL`, `LIBRARIAN_STREAM_URL` — defaults match `apps/site/_data/site.js`
+- `LIBRARIAN_BRIDGE_SECRET` — must match the Lambda's `DISCORD_BRIDGE_SECRET`
+- `WEEKLY_THING_SITE_URL` (default `https://weekly.thingelstad.com`)
+
+**Runtime:**
+- `WORKSHOP_DB_PATH` (default `apps/workshop_bot/data/workshop.db`)
+- `WORKSHOP_LOG_LEVEL` (default `INFO`)
+- `WORKSHOP_DEFAULT_MODEL` (default `haiku`; per-persona overrides take precedence)
+- `WORKSHOP_SCHEDULER_ENABLED` (`0` to disable scheduled jobs)
+
+---
+
+## Architectural principles
+
+1. **One process, multiple personas.** Single asyncio loop; separate `discord.py` clients with separate tokens so each persona has its own avatar.
+2. **Personas are config, not code.** Class-level attributes (`tools`, `home_channel_env`, `preferred_model`, `empty_greeting`) drive behavior; the agent loop is shared in `PersonaBot.handle()`.
+3. **Prompts as `.md` files.** `prompts/team.md` carries shared identity and rules; per-persona prompts carry only what's distinctive. The team prompt is cached at the API; per-persona prompts inherit the prefix cache.
+4. **Memory beyond chat.** `agent_notes` for cross-session continuity; Discord history alone is too short to remember preferences week to week.
+5. **SQLite for operational state, S3 only for build artifacts.** Strict boundary; the S3 helper enforces it at the path level.
+6. **Scheduled jobs are first-class.** Most jobs are pure-code data shuffling; only compose-style work hits the LLM.
+7. **Cross-talk via shared visibility.** Agents see each other's messages in `#workshop`; the PASS rule keeps overhearing from becoming chatter. `#chatter` is a status firehose with no peer reactions.
+8. **Thingy is a bridge, not a teammate.** Same process; isolated surface. The four agent personas don't see Thingy's conversations and don't peer-react in `#ask-thingy`.
+
+---
+
+## Running it
+
+```bash
+python -m venv venv && source venv/bin/activate
+pip install -r ../../requirements.txt
+cp ../../.env.example ../../.env  # then fill in values
+python -m apps.workshop_bot.bot
+```
+
+Tests (no SDK dependencies needed; discord/anthropic/httpx are stubbed):
+
+```bash
+python -m unittest discover -s apps/workshop_bot/tests -t .
+```
+
+Offline persona eval (no Discord):
+
+```bash
+python -m apps.workshop_bot.eval --persona eddy --model sonnet
 ```
 
 ---
 
-## Implementation Approach (Recommended Order)
+## Conventions
 
-### Phase 1 — Foundation (build first)
-1. Repo skeleton at `apps/workshop_bot/` with the structure above.
-2. SQLite schema + migration runner.
-3. Discord bot connection, channel-to-agent routing.
-4. Shared `tools/anthropic_client.py` wrapper with prompt caching.
-5. Single agent end-to-end: pick **Eddy** because Jamie can test it on a real draft.
-
-### Phase 2 — Eddy works
-6. Eddy reads draft from S3 path, fetches archive context via shared retrieval.
-7. Eddy posts summary in `#editorial` thread, full critique in SQLite.
-8. Verify with a real draft.
-
-### Phase 3 — Add the other on-demand agents
-9. Marky on-demand: subject + description generation given S3 draft path.
-10. Linky on-demand: pull unpublished Pinboard items, return curated preview.
-11. Patty on-demand: draft CTA snippet (writes to S3 + SQLite).
-
-### Phase 4 — Scheduling
-12. APScheduler setup.
-13. Marky daily Tinylytics fetch → `#chatter` (tagged as engagement signal).
-14. Linky weekly Pinboard scan → `#research`.
-15. Patty weekly CTA draft → S3.
-
-### Phase 5 — Webhooks (later)
-16. Buttondown webhook receiver for `subscriber.created` / `subscriber.deleted` → Patty posts in `#chatter` (tagged as signup/churn signal).
-
-### Phase 6 — Cross-talk
-17. Agents in `#chatter` see and respond to each other's posts. This is mostly system-prompt work, not new code.
+- Citation format: `#NNN` consistent with Thingy and archive-chat.
+- Prompts are markdown files cached in-process at first read; restart the bot to pick up edits.
+- Logging: structured `logger.info("event_name %s", arg)` style. The format is plain but the messages are CloudWatch-readable if this ever moves to Lambda.
+- `.env` for secrets — never commit. `.env.example` is the source of truth for required keys.
+- New schema columns go in `db/schema.sql` for fresh DBs and in `db._COLUMN_MIGRATIONS` for existing DBs (idempotent ALTER).
 
 ---
 
-## What NOT to Build (Yet)
+## What's still missing
 
-- Reader-facing Discord (no supporters in the server yet).
-- Thingy in Discord (Thingy stays on the website for v1).
-- Voice match enforcement / style checkers (Eddy can flag, but no automated rejection).
-- Web UI / dashboard (Discord IS the dashboard).
-- Authentication for multiple users (single-user system).
-- Agent autonomy on publishing (agents propose, Jamie approves manually except for Patty's CTA which is auto-included via S3).
+The README above describes what's built. A few items are still on the cutting room floor:
 
----
-
-## Conventions to Match
-
-This repo already has conventions worth respecting:
-
-- Python style follows what's in `librarian-core/` and `apps/archive-chat/`.
-- Prompts as separate `.md` files (see `apps/librarian/lambda/prompts/`).
-- `.env` for secrets, never commit. Use `.env.example`.
-- Logging: structured, JSON-friendly. CloudWatch-compatible if it ever moves to Lambda.
-- Citation convention: when agents reference archive issues, use `#NNN` format consistent with Thingy and archive_chat.
-
----
-
-## Secrets Needed
-
-Add to `.env.example`:
-
-```
-# Discord
-DISCORD_BOT_TOKEN=
-DISCORD_GUILD_ID=
-DISCORD_WORKSHOP_CATEGORY_ID=
-
-# Anthropic (already in repo)
-ANTHROPIC_API_KEY=
-
-# AWS S3 (already in repo)
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_DEFAULT_REGION=
-WEEKLY_THING_ASSETS_BUCKET=files.thingelstad.com
-
-# Pinboard
-PINBOARD_API_TOKEN=
-
-# Tinylytics
-TINYLYTICS_API_KEY=
-TINYLYTICS_SITE_UID=
-
-# Buttondown (already in repo)
-BUTTONDOWN_API_KEY=
-
-# Workshop Bot
-WORKSHOP_DB_PATH=apps/workshop_bot/data/workshop.db
-WORKSHOP_LOG_LEVEL=INFO
-```
-
----
-
-## First Task for Claude Code
-
-Start by:
-
-1. Reading the existing repo structure: `apps/archive-chat/archive_chat.py`, `apps/librarian/lambda/`, `librarian-core/`, `data/buttondown/`, top-level `Makefile`, `requirements.txt`.
-2. Asking Jamie any clarifying questions before scaffolding.
-3. Proposing the v1 directory structure for `apps/workshop_bot/` and a minimal working example: bot connects to Discord, responds to `@eddy hello` with a placeholder reply.
-4. Once that works, building Eddy end-to-end against a real S3 draft path.
-
-Don't try to build all four agents at once. One agent fully working is more valuable than four agents half-built.
-
----
-
-## Open Questions for Jamie
-
-(Things to confirm before deep implementation)
-
-- Discord library: `discord.py` or `nextcord`? (Recommend `discord.py`.)
-- Hosting: where does the bot run? Mac mini (alongside Otto Thing)? Lambda with a long-lived container? Fly.io? Recommend Mac mini for v1 — same pattern as Elixir bot.
-- Pinboard access: use the MCP server you already built, or direct API in this bot?
-- Discord IDs: provide channel IDs or have the bot discover them by name on first run?
-- S3 prefix for build artifacts: confirm `weekly-thing/issues/{n}/` is the right path under `files.thingelstad.com`.
-- Subject line convention: Marky needs the rule. Is it always exactly 3 words, or "around 3 words"?
+- **Buttondown supporter-event webhook.** Today Marky polls weekly. Real-time signups/churn → `#chatter` would need a small HTTP listener (Flask or aiohttp). The `subscriber_events_seen` table is ready for it.
+- **Auto-shipped `marky-meta.json`.** Patty's Thursday `member.json` job has the shape; Marky needs a parallel scheduled job that composes `{ "subject": "Three Words Title", "description": "..." }` and writes it to S3.
+- **Eddy auto-critique on new draft.** Today Eddy reads drafts on demand. Could poll S3 for a fresh `draft.md` per the in-flight issue and post a critique automatically.
+- **`agent_outputs.status` lifecycle.** Field exists with `pending` / `ready` / `used` / `archived` values, but nothing transitions outputs after Jamie pulls them.
+- **Decommission dead tables.** `analytics`, `supporter_events`, `channel_routes` are reserved but unused.
