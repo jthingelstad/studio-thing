@@ -271,6 +271,32 @@ class SseParserTests(unittest.TestCase):
         self.assertEqual(name, "meta")
         self.assertEqual(data, {"id": 1})
 
+    def test_multiline_data_field_concatenates(self):
+        # SSE spec: multiple `data:` lines in a block concatenate with
+        # newlines. We use this for multi-line tool result payloads.
+        block = "event: status\ndata: line one\ndata: line two"
+        parsed = thingy_client._parse_sse_block(block)
+        assert parsed is not None
+        name, data = parsed
+        self.assertEqual(name, "status")
+        # Falls back to {"raw": ...} since the joined string isn't JSON.
+        self.assertEqual(data, {"raw": "line one\nline two"})
+
+    def test_block_with_only_event_line_skipped(self):
+        # No `data:` line means nothing to yield.
+        self.assertIsNone(thingy_client._parse_sse_block("event: ping\n:keepalive"))
+
+    def test_data_with_json_array_top_level(self):
+        # Defensively handle an SSE block whose JSON top-level is a list,
+        # not an object. The runtime currently expects dicts so we wrap.
+        block = 'event: citations\ndata: [{"issue_number": 1}]'
+        parsed = thingy_client._parse_sse_block(block)
+        assert parsed is not None
+        name, data = parsed
+        self.assertEqual(name, "citations")
+        # Wrapped as {"value": [...]} so callers can dispatch uniformly.
+        self.assertIn("value", data)
+
 
 class ThingyDbHelperTests(unittest.TestCase):
     """End-to-end DB exercise of thingy_tokens + thingy_requests."""
