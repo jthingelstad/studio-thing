@@ -8,12 +8,12 @@ Thingy is a subscriber-gated chat interface for the Weekly Thing archive.
 - The local corpus is text-only and citation-ready. It includes issue summaries, topic metadata, and chunk-level retrieval metadata. It is gitignored and rebuilt on demand.
 - Embedded corpus files should not be committed. `npm run librarian:corpus:upload` generates Bedrock Cohere embeddings and pushes the deployable corpus to S3. **Incremental by default**: it fetches the existing S3 corpus once at the start, copies cached embeddings onto unchanged chunks (matched by content-deterministic chunk_id), and only sends the leftover chunks to Bedrock. Pass `--full` to skip the cache and re-embed everything — needed only after a chunking-schema change or to repair a corrupted cache. The cache is automatically invalidated if the deployed corpus's `embedding_model` or `embedding_dimensions` no longer match the current request, with a warning.
 - `npm run librarian:graph` builds `data/librarian/graph.json`, the offline entity/trope/similarity artifact used by the archive tools.
-- `pipeline/librarian/eval_librarian_rag.py` prints retrieval and reranker diagnostics for standard or multi-hop question sets.
-- `pipeline/librarian/eval_librarian_answers.py` runs baseline or agentic answer generation, then asks Bedrock to judge answer quality. Results are written to `tmp/librarian-answer-eval.json`.
-- `pipeline/librarian/run_eval_job.py` prepares a Bedrock Model Evaluation JSONL dataset from `eval_questions.json` and can start an on-demand Bedrock Evaluation job from precomputed Thingy responses.
-- `pipeline/librarian/configure_bedrock_logging.py` inspects or enables account-level Bedrock invocation logging to the private Librarian bucket.
-- The `weekly-agent` eval suite covers 20 recall, synthesis, recommendation, pattern, voice, tricky retrieval, and edge-case prompts: `python pipeline/librarian/eval_librarian_answers.py --mode agent --question-set weekly-agent --sample-limit 20`.
-- `pipeline/librarian/review_librarian_conversations.py` reads beta conversation logs from DynamoDB for review.
+- `pipeline/eval/rag.py` prints retrieval and reranker diagnostics for standard or multi-hop question sets.
+- `pipeline/eval/answers.py` runs baseline or agentic answer generation, then asks Bedrock to judge answer quality. Results are written to `tmp/librarian-answer-eval.json`.
+- `pipeline/eval/run_job.py` prepares a Bedrock Model Evaluation JSONL dataset from `pipeline/eval/questions.json` and can start an on-demand Bedrock Evaluation job from precomputed Thingy responses.
+- `pipeline/deploy/bedrock_logging.py` inspects or enables account-level Bedrock invocation logging to the private Librarian bucket.
+- The `weekly-agent` eval suite covers 20 recall, synthesis, recommendation, pattern, voice, tricky retrieval, and edge-case prompts: `python pipeline/eval/answers.py --mode agent --question-set weekly-agent --sample-limit 20`.
+- `pipeline/eval/review_conversations.py` reads beta conversation logs from DynamoDB for review.
 
 ## AWS Runtime
 
@@ -174,7 +174,7 @@ Chat requests run through a tool-using Claude Sonnet 4.6 loop capped by `MAX_TOO
 
 Thingy uses the subscriber gate, rate limits, browser-supplied history, and DynamoDB logging. Tool status is emitted over the existing streaming Function URL as `status` events.
 
-The graph artifact is built offline from the corpus and archive front matter. It stores per-issue entities, recurring tropes/stances, and top-K similar issues from issue-level embedding averages. `pipeline/librarian/build_librarian_graph.py --use-bedrock-extraction` can use Sonnet for entity/trope extraction; the default heuristic mode is available for cheap local refreshes.
+The graph artifact is built offline from the corpus and archive front matter. It stores per-issue entities, recurring tropes/stances, and top-K similar issues from issue-level embedding averages. `pipeline/graph/build.py --use-bedrock-extraction` can use Sonnet for entity/trope extraction; the default heuristic mode is available for cheap local refreshes.
 
 Typical cost is controlled by prompt caching on the stable system prompt and tool definitions, reranking only the top search candidates, limiting tool turns, and clipping tool result text. The target remains under $0.20 for typical questions and under $0.50 for worst-case multi-hop questions.
 

@@ -382,7 +382,7 @@ def main() -> int:
 
     if not args.skip_corpus_upload:
         embedded_corpus = REPO / "tmp" / "librarian_embedded_corpus.json"
-        run([sys.executable, "pipeline/librarian/upload_librarian_corpus.py", "--bucket", bucket, "--key", args.corpus_key, "--graph-key", args.graph_key, "--keep-output", str(embedded_corpus)])
+        run([sys.executable, "pipeline/deploy/upload_corpus.py", "--bucket", bucket, "--key", args.corpus_key, "--graph-key", args.graph_key, "--keep-output", str(embedded_corpus)])
 
     session_secret = os.environ.get("LIBRARIAN_SESSION_SECRET")
     outputs, generated_session_secret = deploy_stack(

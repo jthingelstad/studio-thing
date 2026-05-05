@@ -24,8 +24,7 @@ from librarian_core.corpus import (
     add_bedrock_embeddings,
     build_corpus,
 )
-
-import build_librarian_graph
+from librarian_core.graph import build_graph
 
 
 def fetch_existing_corpus(bucket: str, key: str) -> dict | None:
@@ -133,7 +132,7 @@ def main() -> int:
     boto3.client("s3").upload_file(str(upload_path), args.bucket, args.key, ExtraArgs={"ContentType": "application/json"})
     print(f"Uploaded embedded librarian corpus to s3://{args.bucket}/{args.key}")
     if not args.skip_graph:
-        graph = build_librarian_graph.build_graph(corpus)
+        graph = build_graph(corpus)
         with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".json", delete=False) as handle:
             handle.write(json.dumps(graph, ensure_ascii=False) + "\n")
             graph_path = Path(handle.name)

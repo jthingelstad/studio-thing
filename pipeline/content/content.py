@@ -32,7 +32,7 @@ sys.stdout.reconfigure(line_buffering=True)
 load_dotenv()
 
 REPO = Path(__file__).resolve().parents[2]
-SITE_DIR = REPO / "site"
+SITE_DIR = REPO / "apps" / "site"
 DATA_DIR = SITE_DIR / "_data"
 ARCHIVE_DIR = SITE_DIR / "archive"
 SNAPSHOT_ROOT = REPO / "data" / "buttondown"

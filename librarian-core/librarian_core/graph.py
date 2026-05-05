@@ -1,25 +1,25 @@
-"""Build the offline archive graph used by the librarian tools."""
+"""Build the offline archive graph from a corpus.
+
+Derives per-issue entities (heuristic regex or Bedrock extraction), recurring
+tropes, and similarity edges between issues from chunk-level embedding
+averages. Consumed by Thingy's runtime, the upload pipeline, and any future
+graph-aware tooling.
+"""
 
 from __future__ import annotations
 
-import argparse
-from datetime import datetime, timezone
 import json
 import math
-import os
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import boto3
-from dotenv import load_dotenv
 
-from librarian_core.corpus import build_corpus
-from librarian_core.paths import CORPUS_PATH, GRAPH_PATH
+from .corpus import build_corpus
 
 
-DEFAULT_CORPUS_PATH = CORPUS_PATH
-DEFAULT_OUTPUT_PATH = GRAPH_PATH
 DEFAULT_MODEL = "us.anthropic.claude-sonnet-4-6"
 ENTITY_RE = re.compile(r"\b(?:[A-Z][A-Za-z0-9&'.-]+(?:\s+[A-Z][A-Za-z0-9&'.-]+){0,4})\b")
 STOP_ENTITIES = {
@@ -55,6 +55,7 @@ def load_corpus(path: Path) -> dict[str, Any]:
             fresh["embedding_dimensions"] = corpus.get("embedding_dimensions")
         return fresh
     return build_corpus(include_issue_bodies=True)
+
 
 def clean_entity(value: str) -> str:
     value = " ".join(value.strip(" .,:;!?()[]{}").split())
@@ -196,34 +197,3 @@ def build_graph(corpus: dict[str, Any], *, use_bedrock: bool = False, model: str
         "entity_index": entity_index,
         "trope_index": trope_index,
     }
-
-
-def main() -> int:
-    load_dotenv()
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--corpus", default=str(DEFAULT_CORPUS_PATH))
-    parser.add_argument("--output", default=str(DEFAULT_OUTPUT_PATH))
-    parser.add_argument("--use-bedrock-extraction", action="store_true")
-    parser.add_argument("--model", default=os.environ.get("BEDROCK_AGENT_MODEL", DEFAULT_MODEL))
-    parser.add_argument("--upload-bucket", default=os.environ.get("AWS_S3_BUCKET"))
-    parser.add_argument("--upload-key", default=os.environ.get("LIBRARIAN_GRAPH_KEY", "librarian/graph.json"))
-    parser.add_argument("--upload", action="store_true")
-    args = parser.parse_args()
-
-    corpus = load_corpus(Path(args.corpus))
-    graph = build_graph(corpus, use_bedrock=args.use_bedrock_extraction, model=args.model)
-    output = Path(args.output)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(graph, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote graph for {graph['issue_count']} issues to {output}")
-
-    if args.upload:
-        if not args.upload_bucket:
-            raise RuntimeError("Provide --upload-bucket or AWS_S3_BUCKET")
-        boto3.client("s3").upload_file(str(output), args.upload_bucket, args.upload_key, ExtraArgs={"ContentType": "application/json"})
-        print(f"Uploaded librarian graph to s3://{args.upload_bucket}/{args.upload_key}")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

@@ -5,9 +5,9 @@ from pathlib import Path
 
 
 REPO = Path(__file__).resolve().parents[1]
-SCRIPT = REPO / "pipeline" / "librarian" / "build_librarian_corpus.py"
+SCRIPT = REPO / "pipeline" / "corpus" / "build.py"
 
-spec = importlib.util.spec_from_file_location("build_librarian_corpus", SCRIPT)
+spec = importlib.util.spec_from_file_location("pipeline_corpus_build", SCRIPT)
 corpus = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(corpus)
 
