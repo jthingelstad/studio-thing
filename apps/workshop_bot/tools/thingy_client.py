@@ -63,17 +63,35 @@ def _bridge_secret() -> str:
 
 # ---------- auth ----------
 
-async def get_or_refresh_token(discord_user_id: str) -> str:
+class TokenResult:
+    """Return value from :func:`get_or_refresh_token`. Carries the token
+    plus enough context for the persona to decide whether to greet a
+    returning user."""
+
+    __slots__ = ("token", "fresh", "profile")
+
+    def __init__(self, *, token: str, fresh: bool, profile: Optional[dict[str, Any]]):
+        self.token = token
+        self.fresh = fresh
+        self.profile = profile or {}
+
+
+async def get_or_refresh_token(discord_user_id: str) -> TokenResult:
     """Return a valid Lambda session token for the given Discord user.
 
     Reuses a cached token if present and not within the refresh buffer of
     expiry; otherwise mints a fresh one via the Lambda's
-    ``/auth?action=discord_bridge`` endpoint and caches it.
+    ``/auth?action=discord_bridge`` endpoint and caches it. The cached
+    auth-response ``profile`` is returned alongside the token so the
+    persona can offer a "welcome back" prompt for returning users.
     """
     cached = db.get_thingy_token(discord_user_id)
     now = int(time.time())
     if cached and int(cached.get("expires_at", 0)) - REFRESH_BUFFER_SECS > now:
-        return str(cached["token"])
+        profile = cached.get("profile") if isinstance(cached.get("profile"), dict) else None
+        return TokenResult(
+            token=str(cached["token"]), fresh=False, profile=profile,
+        )
 
     secret = _bridge_secret()
     payload = {
@@ -101,6 +119,7 @@ async def get_or_refresh_token(discord_user_id: str) -> str:
     data = resp.json() or {}
     token = data.get("token")
     expires_at = data.get("expires_at")
+    profile = data.get("profile") if isinstance(data.get("profile"), dict) else None
     if not token or not expires_at:
         raise ThingyError("Thingy auth returned no token")
 
@@ -108,12 +127,21 @@ async def get_or_refresh_token(discord_user_id: str) -> str:
         discord_user_id=discord_user_id,
         token=str(token),
         expires_at=int(expires_at),
+        profile=profile,
     )
     logger.info(
-        "thingy: minted token for discord user (expires in %ds)",
+        "thingy: minted token for discord user (expires in %ds, returning=%s)",
         int(expires_at) - now,
+        bool(profile and profile.get("returning")),
     )
-    return str(token)
+    return TokenResult(token=str(token), fresh=True, profile=profile)
+
+
+async def get_token(discord_user_id: str) -> str:
+    """Backwards-compatible helper for code paths that just need a token
+    string (e.g. the feedback handler). Discards the freshness signal."""
+    result = await get_or_refresh_token(discord_user_id)
+    return result.token
 
 
 # ---------- chat (SSE) ----------

@@ -35,6 +35,39 @@ THUMBS_UP = "👍"
 THUMBS_DOWN = "👎"
 
 
+def _profile_is_returning(profile: dict[str, Any]) -> bool:
+    return bool(profile) and bool(profile.get("returning"))
+
+
+def _format_welcome_back(profile: dict[str, Any]) -> str:
+    """Compose a short welcome-back message for a returning user.
+
+    Pulls from the auth response's `profile` field. Mentions the most
+    recent Bedrock-synthesized session summary if there is one;
+    otherwise notes the recent question count and offers to pick up
+    from there. Always under 400 chars so it doesn't bury the answer.
+    """
+    summaries = profile.get("prior_session_summaries") or []
+    recent_qs = profile.get("current_session_questions") or []
+    if summaries:
+        last = summaries[-1].get("summary", "").strip()
+        if last:
+            preview = last if len(last) <= 220 else last[:217] + "…"
+            return (
+                f"👋 Welcome back. Last time we were on: _{preview}_\n"
+                "Want to keep going there, or something fresh?"
+            )
+    if recent_qs:
+        last_q = (recent_qs[-1].get("question") or "").strip()
+        if last_q:
+            preview = last_q if len(last_q) <= 180 else last_q[:177] + "…"
+            return (
+                "👋 Welcome back. The last thing you asked me was: "
+                f"_\"{preview}\"_  — want to pick up from there?"
+            )
+    return "👋 Welcome back. What can I dig up for you today?"
+
+
 class ThingyBot(PersonaBot):
     persona = "thingy"
     name = "Thingy"
@@ -126,7 +159,7 @@ class ThingyBot(PersonaBot):
         ).rstrip("/")
 
         try:
-            token = await thingy_client.get_or_refresh_token(discord_user_id)
+            auth_result = await thingy_client.get_or_refresh_token(discord_user_id)
         except thingy_client.ThingyError as exc:
             db.update_thingy_request(
                 run_row,
@@ -139,6 +172,20 @@ class ThingyBot(PersonaBot):
                 mention_author=False,
             )
             return
+
+        token = auth_result.token
+        # Welcome-back applies only on fresh-token mints (token cache is
+        # ~12h, so this naturally rate-limits to once per session). Sent
+        # as a separate message before the answer so it reads as a
+        # personal "hey" rather than appearing inline with the response.
+        if auth_result.fresh and _profile_is_returning(auth_result.profile):
+            try:
+                await message.channel.send(
+                    _format_welcome_back(auth_result.profile)
+                )
+                db.mark_thingy_welcomed(discord_user_id)
+            except discord.DiscordException:
+                logger.exception("thingy: failed to post welcome-back")
 
         deltas: list[str] = []
         citations: list[dict[str, Any]] = []
@@ -271,9 +318,7 @@ class ThingyBot(PersonaBot):
         # Use the original asker's token for the feedback POST so the
         # Lambda attributes feedback to the user who triggered the answer.
         try:
-            token = await thingy_client.get_or_refresh_token(
-                str(record["discord_user_id"])
-            )
+            token = await thingy_client.get_token(str(record["discord_user_id"]))
         except thingy_client.ThingyError as exc:
             logger.warning("thingy feedback skipped — auth failed: %s", exc)
             return

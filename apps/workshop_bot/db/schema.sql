@@ -144,7 +144,14 @@ CREATE TABLE IF NOT EXISTS thingy_tokens (
   discord_user_id TEXT PRIMARY KEY,
   token TEXT NOT NULL,
   expires_at INTEGER NOT NULL,                 -- epoch seconds (matches Lambda payload.exp)
-  issued_at TEXT NOT NULL DEFAULT (datetime('now'))
+  issued_at TEXT NOT NULL DEFAULT (datetime('now')),
+  -- Profile snapshot returned by the Lambda's /auth response. JSON of
+  -- { returning, last_seen_at, turn_count, prior_session_summaries,
+  --   current_session_questions }. Updated whenever a new token is minted.
+  profile TEXT,
+  -- When we last greeted this user with a "welcome back" blurb. Lets
+  -- the bridge avoid re-greeting on every fresh-token mint.
+  last_welcomed_at TEXT
 );
 
 -- Thingy bridge — one row per question forwarded to the Lambda. Lets

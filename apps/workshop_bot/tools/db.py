@@ -48,7 +48,37 @@ def run_migrations() -> None:
     schema = SCHEMA_PATH.read_text(encoding="utf-8")
     with connect() as conn:
         conn.executescript(schema)
+        _apply_column_migrations(conn)
     logger.info("workshop.db ready at %s", db_path())
+
+
+# SQLite has no "ADD COLUMN IF NOT EXISTS". For columns added after the
+# initial table creation, run ALTER TABLE and tolerate the "duplicate
+# column" error so a fresh DB and a long-lived DB both end up identical.
+_COLUMN_MIGRATIONS: tuple[tuple[str, str, str], ...] = (
+    # (table, column, full ADD COLUMN clause)
+    ("thingy_tokens", "profile", "ALTER TABLE thingy_tokens ADD COLUMN profile TEXT"),
+    ("thingy_tokens", "last_welcomed_at",
+     "ALTER TABLE thingy_tokens ADD COLUMN last_welcomed_at TEXT"),
+)
+
+
+def _apply_column_migrations(conn: sqlite3.Connection) -> None:
+    for table, column, sql in _COLUMN_MIGRATIONS:
+        try:
+            existing = {
+                row["name"]
+                for row in conn.execute(f"PRAGMA table_info({table})")
+            }
+        except sqlite3.Error:
+            continue
+        if column in existing:
+            continue
+        try:
+            conn.execute(sql)
+        except sqlite3.OperationalError:
+            # Column was added concurrently by another process; ignore.
+            pass
 
 
 def insert_agent_output(
@@ -329,28 +359,56 @@ def mark_url_researched(
 # ---------- Thingy bridge ----------
 
 def get_thingy_token(discord_user_id: str) -> Optional[dict[str, Any]]:
-    """Cached session token for a Discord user, if any."""
+    """Cached session token + profile for a Discord user, if any."""
     with connect() as conn:
         row = conn.execute(
-            "SELECT discord_user_id, token, expires_at, issued_at "
+            "SELECT discord_user_id, token, expires_at, issued_at, profile, "
+            "       last_welcomed_at "
             "FROM thingy_tokens WHERE discord_user_id = ?",
             (discord_user_id,),
         ).fetchone()
-    return dict(row) if row else None
+    if row is None:
+        return None
+    out = dict(row)
+    raw_profile = out.get("profile")
+    if isinstance(raw_profile, str) and raw_profile:
+        try:
+            out["profile"] = json.loads(raw_profile)
+        except json.JSONDecodeError:
+            out["profile"] = None
+    return out
 
 
 def upsert_thingy_token(
-    *, discord_user_id: str, token: str, expires_at: int
+    *,
+    discord_user_id: str,
+    token: str,
+    expires_at: int,
+    profile: Optional[dict[str, Any]] = None,
 ) -> None:
+    """Insert/refresh a token row, optionally storing the auth response's
+    `profile` snapshot. ``last_welcomed_at`` is preserved across upserts."""
+    profile_json = json.dumps(profile) if profile is not None else None
     with connect() as conn:
         conn.execute(
-            "INSERT INTO thingy_tokens (discord_user_id, token, expires_at) "
-            "VALUES (?, ?, ?) "
+            "INSERT INTO thingy_tokens "
+            "(discord_user_id, token, expires_at, profile) "
+            "VALUES (?, ?, ?, ?) "
             "ON CONFLICT(discord_user_id) DO UPDATE SET "
             "  token = excluded.token, "
             "  expires_at = excluded.expires_at, "
-            "  issued_at = datetime('now')",
-            (discord_user_id, token, int(expires_at)),
+            "  issued_at = datetime('now'), "
+            "  profile = COALESCE(excluded.profile, thingy_tokens.profile)",
+            (discord_user_id, token, int(expires_at), profile_json),
+        )
+
+
+def mark_thingy_welcomed(discord_user_id: str) -> None:
+    with connect() as conn:
+        conn.execute(
+            "UPDATE thingy_tokens SET last_welcomed_at = datetime('now') "
+            "WHERE discord_user_id = ?",
+            (discord_user_id,),
         )
 
 
