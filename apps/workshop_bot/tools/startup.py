@@ -34,6 +34,10 @@ CHANNELS_BY_PERSONA: dict[str, list[tuple[str, str]]] = {
     "linky": [("DISCORD_CHANNEL_RESEARCH",   "primary"),
               ("DISCORD_CHANNEL_WORKSHOP",   "workshop"),
               ("DISCORD_CHANNEL_CHATTER",  "chatter")],
+    # Thingy is a public-facing bridge — it only needs visibility into
+    # its own #ask-thingy channel. It deliberately doesn't see #workshop
+    # or #chatter (no peer reactions, no operational stream).
+    "thingy": [("DISCORD_CHANNEL_ASK_THINGY", "primary")],
 }
 
 REQUIRED_PERMS = ("view_channel", "send_messages", "read_message_history")

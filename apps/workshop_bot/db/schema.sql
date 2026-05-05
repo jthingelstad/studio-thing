@@ -136,3 +136,32 @@ CREATE TABLE IF NOT EXISTS pinboard_research_done (
   fit_note TEXT,
   researched_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Thingy bridge — cached Lambda session tokens, one per Discord user.
+-- The bridge mints a token via /auth?action=discord_bridge, stores it
+-- here, and reuses it until expires_at approaches.
+CREATE TABLE IF NOT EXISTS thingy_tokens (
+  discord_user_id TEXT PRIMARY KEY,
+  token TEXT NOT NULL,
+  expires_at INTEGER NOT NULL,                 -- epoch seconds (matches Lambda payload.exp)
+  issued_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Thingy bridge — one row per question forwarded to the Lambda. Lets
+-- the reaction handler look up which Lambda request_id corresponds to
+-- a given Discord bot reply when Jamie reacts 👍/👎 to it.
+CREATE TABLE IF NOT EXISTS thingy_requests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  discord_user_id TEXT NOT NULL,
+  discord_message_id TEXT NOT NULL,
+  bot_response_message_id TEXT,
+  request_id TEXT,
+  question TEXT NOT NULL,
+  status TEXT NOT NULL,                        -- 'pending' / 'ok' / 'error'
+  error TEXT,
+  duration_ms INTEGER,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_thingy_requests_bot_msg
+  ON thingy_requests(bot_response_message_id);

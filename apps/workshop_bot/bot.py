@@ -23,6 +23,7 @@ from .personas.linky import LinkyBot
 from .personas.marky import MarkyBot
 from .personas.patty import PattyBot
 from .personas.team import TeamRegistry
+from .personas.thingy import ThingyBot
 from .scheduler.runner import Runner as SchedulerRunner
 from .tools import corpus, db, startup
 
@@ -33,6 +34,10 @@ PERSONAS: list[tuple[str, str, type]] = [
     ("linky", "DISCORD_TOKEN_LINKY", LinkyBot),
     ("marky", "DISCORD_TOKEN_MARKY", MarkyBot),
     ("patty", "DISCORD_TOKEN_PATTY", PattyBot),
+    # Thingy is the public-facing bridge to the Librarian Lambda. Skipped
+    # automatically by collect_tokens() if DISCORD_TOKEN_THINGY isn't set,
+    # so the bot still starts cleanly while Jamie creates the Discord app.
+    ("thingy", "DISCORD_TOKEN_THINGY", ThingyBot),
 ]
 
 

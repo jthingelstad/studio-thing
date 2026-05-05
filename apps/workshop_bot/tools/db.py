@@ -326,6 +326,102 @@ def mark_url_researched(
         return cur.rowcount > 0
 
 
+# ---------- Thingy bridge ----------
+
+def get_thingy_token(discord_user_id: str) -> Optional[dict[str, Any]]:
+    """Cached session token for a Discord user, if any."""
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT discord_user_id, token, expires_at, issued_at "
+            "FROM thingy_tokens WHERE discord_user_id = ?",
+            (discord_user_id,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def upsert_thingy_token(
+    *, discord_user_id: str, token: str, expires_at: int
+) -> None:
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO thingy_tokens (discord_user_id, token, expires_at) "
+            "VALUES (?, ?, ?) "
+            "ON CONFLICT(discord_user_id) DO UPDATE SET "
+            "  token = excluded.token, "
+            "  expires_at = excluded.expires_at, "
+            "  issued_at = datetime('now')",
+            (discord_user_id, token, int(expires_at)),
+        )
+
+
+def insert_thingy_request(
+    *,
+    discord_user_id: str,
+    discord_message_id: str,
+    question: str,
+    status: str = "pending",
+) -> int:
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO thingy_requests "
+            "(discord_user_id, discord_message_id, question, status) "
+            "VALUES (?, ?, ?, ?)",
+            (discord_user_id, discord_message_id, question, status),
+        )
+        return int(cur.lastrowid or 0)
+
+
+def update_thingy_request(
+    request_row_id: int,
+    *,
+    status: Optional[str] = None,
+    error: Optional[str] = None,
+    duration_ms: Optional[int] = None,
+    request_id: Optional[str] = None,
+    bot_response_message_id: Optional[str] = None,
+) -> None:
+    fields: list[str] = []
+    params: list[Any] = []
+    if status is not None:
+        fields.append("status = ?")
+        params.append(status)
+    if error is not None:
+        fields.append("error = ?")
+        params.append(error)
+    if duration_ms is not None:
+        fields.append("duration_ms = ?")
+        params.append(int(duration_ms))
+    if request_id is not None:
+        fields.append("request_id = ?")
+        params.append(request_id)
+    if bot_response_message_id is not None:
+        fields.append("bot_response_message_id = ?")
+        params.append(bot_response_message_id)
+    if not fields:
+        return
+    params.append(request_row_id)
+    with connect() as conn:
+        conn.execute(
+            f"UPDATE thingy_requests SET {', '.join(fields)} WHERE id = ?",
+            params,
+        )
+
+
+def lookup_thingy_request_by_response(
+    bot_response_message_id: str,
+) -> Optional[dict[str, Any]]:
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT id, discord_user_id, discord_message_id, "
+            "       bot_response_message_id, request_id, question, status "
+            "FROM thingy_requests "
+            "WHERE bot_response_message_id = ? "
+            "ORDER BY id DESC LIMIT 1",
+            (bot_response_message_id,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
 def recent_subscriber_events(
     *, limit: int = 30, event_type: Optional[str] = None
 ) -> list[dict[str, Any]]:
