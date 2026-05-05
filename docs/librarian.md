@@ -102,6 +102,27 @@ The workshop-bot Discord bridge (`apps/workshop_bot/personas/thingy.py`) gets a 
 
 The bridge action is gated by `DISCORD_BRIDGE_SECRET` (CloudFormation parameter `DiscordBridgeSecret`). When that env var is empty the action returns 503 ("Discord bridge is not enabled"), so the bridge is off by default until the secret is configured. Token mints are rate-limited per Discord user (default 60/hour, override via `DISCORD_BRIDGE_RATE_LIMIT_MAX`).
 
+### Per-user memory
+
+Both auth flows return a `profile` field in the response, populated from a per-user memory row in the existing DynamoDB table (key `user#{sub}` / `memory`). The chat handler updates this row at the end of each turn and Bedrock-summarizes the previous session's questions when the session id rotates, rolling them into a per-user `synthesized_history` (one short paragraph per past session, capped at the most recent 8).
+
+The `profile` shape is:
+
+```json
+{
+  "returning": true,
+  "first_seen_at": "...",
+  "last_seen_at": "...",
+  "turn_count": 7,
+  "current_session_questions": [{"ts": "...", "question": "..."}],
+  "prior_session_summaries": [{"summary": "...", "started_at": "...", "ended_at": "...", "turn_count": 3}]
+}
+```
+
+The chat handler also injects a compact memory-context block as a second (uncached) system message, so Thingy can naturally reference what a returning reader has been exploring in past sessions. The static system prompt stays cached.
+
+Memory rows carry a one-year TTL (`LIBRARIAN_USER_MEMORY_TTL_DAYS`, default 365); the row is rewritten on every turn so active users effectively never expire.
+
 ## Link Parameters
 
 `/thingy/` accepts optional query parameters for subscriber-friendly deep links:

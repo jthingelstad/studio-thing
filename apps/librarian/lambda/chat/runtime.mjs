@@ -12,6 +12,11 @@ import {
   agentUserPrompt,
   loadToolSpecs
 } from '../shared/prompts.mjs';
+import {
+  getUserMemory,
+  memoryContextBlock,
+  recordUserTurn
+} from '../shared/user-memory.mjs';
 
 const DEFAULT_AGENT_MODEL = 'us.anthropic.claude-sonnet-4-6';
 const DEFAULT_EMBEDDING_MODEL = 'cohere.embed-english-v3';
@@ -833,8 +838,9 @@ function prioritizeCitationsForAnswer(citations, answer) {
     .map(({ citation }) => citation);
 }
 
-async function streamBedrockAgentAnswer(question, history, responseStream) {
+async function streamBedrockAgentAnswer(question, history, responseStream, options = {}) {
   const start = performance.now();
+  const memoryContext = String(options.memoryContext || '').trim();
   const messages = [{
     role: 'user',
     content: [{
@@ -849,10 +855,17 @@ async function streamBedrockAgentAnswer(question, history, responseStream) {
   let usage = {};
   let stopReason = '';
   const maxTurns = Number(process.env.MAX_TOOL_TURNS || DEFAULT_MAX_TOOL_TURNS);
+  // The static system prompt is cached. Per-user memory is appended after
+  // the cachePoint as a separate block — uncached, since it varies per
+  // request, but it doesn't bust the prefix cache for the static prompt.
+  const systemBlocks = [{ text: AGENT_SYSTEM_PROMPT }, { cachePoint: { type: 'default' } }];
+  if (memoryContext) {
+    systemBlocks.push({ text: memoryContext });
+  }
   for (let turn = 0; turn <= maxTurns; turn += 1) {
     const response = await bedrock.send(new ConverseStreamCommand({
       modelId: agentModel(),
-      system: [{ text: AGENT_SYSTEM_PROMPT }, { cachePoint: { type: 'default' } }],
+      system: systemBlocks,
       messages,
       toolConfig: { tools: toolSpecs() },
       inferenceConfig: commandInferenceConfig()
@@ -1001,6 +1014,12 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       return;
     }
 
+    // Fetch user memory once at turn start. Used to inject prior-session
+    // context into Thingy's system prompt so the agent can respond more
+    // personally; also recorded back at turn end.
+    const userMemory = await getUserMemory(subscriberHash);
+    const memoryContext = memoryContextBlock(userMemory);
+
     writeSse(stream, 'meta', { request_id: requestId });
     const guardedAnswer = privacyGuardAnswer(question);
     if (guardedAnswer) {
@@ -1009,6 +1028,9 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       writeSse(stream, 'citations', { citations });
       writeSse(stream, 'done', { request_id: requestId });
       await recordConversation({ event, subscriberHash, question, answer: guardedAnswer, historyCount: history.length, citations, route: 'stream', requestId });
+      // Privacy-guarded turn still updates memory — the question text was
+      // recorded above, so let the user-memory row reflect that turn too.
+      await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question });
       return;
     }
 
@@ -1024,7 +1046,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     }, 55000);
     let result;
     try {
-      result = await streamBedrockAgentAnswer(question, history, stream);
+      result = await streamBedrockAgentAnswer(question, history, stream, { memoryContext });
     } finally {
       clearTimeout(deadlineTimer);
     }
@@ -1043,6 +1065,10 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       route: 'stream',
       requestId
     });
+    // Update per-user memory after the answer ships. If the sid has
+    // rotated since the prior turn, this also triggers a Bedrock-
+    // synthesized summary of the previous session.
+    await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question });
     logEvent('info', 'chat_completed', {
       subscriber_hash: subscriberHash,
       question_chars: question.length,

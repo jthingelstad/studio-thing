@@ -5,6 +5,7 @@ import { createSubscriber, fetchSubscriber, sendSubscriberReminder, subscriberSt
 import { eventSummary, jsonResponse, methodAndPath, parseBody, clientSourceIp, userAgent } from '../shared/http.mjs';
 import { checkRateLimit } from '../shared/rate-limit.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, stableHash } from '../shared/session.mjs';
+import { authProfile, getUserMemory } from '../shared/user-memory.mjs';
 import crypto from 'node:crypto';
 import { logEvent } from '../shared/logging.mjs';
 import { premiumThankYouSystemPrompt } from '../shared/prompts.mjs';
@@ -93,7 +94,13 @@ async function authSuccessResponse(email, subscriber, event, start) {
     subscriber_status: status,
     duration_ms: Math.round(performance.now() - start)
   });
-  const payload = { status, token, expires_at: expiresAt };
+  const memory = await getUserMemory(emailHash(email));
+  const payload = {
+    status,
+    token,
+    expires_at: expiresAt,
+    profile: authProfile(memory)
+  };
   if (status === 'premium') {
     try {
       payload.message = await generatePremiumThankYou();
@@ -146,16 +153,19 @@ async function handleDiscordBridge(event, body, start) {
     return jsonResponse(429, { error: 'Bridge token requests rate-limited.' }, event);
   }
   const session = createSessionTokenForSub(sub);
+  const memory = await getUserMemory(sub);
   logEvent('info', 'auth_discord_bridge_issued', {
     discord_sub: sub,
     subscriber_source: 'discord',
+    returning: Boolean(memory && (memory.turn_count || 0) > 0),
     duration_ms: Math.round(performance.now() - start)
   });
   return jsonResponse(200, {
     status: 'active',
     source: 'discord',
     token: session.token,
-    expires_at: session.expiresAt
+    expires_at: session.expiresAt,
+    profile: authProfile(memory)
   }, event);
 }
 
