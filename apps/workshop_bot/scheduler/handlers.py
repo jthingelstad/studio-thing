@@ -19,6 +19,7 @@ Conventions:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from datetime import datetime, timezone
@@ -68,7 +69,7 @@ async def linky_wednesday_check(ctx: "JobContext") -> None:
         return
 
     try:
-        unread = pinboard.all_unread(limit=200)
+        unread = await asyncio.to_thread(pinboard.all_unread, limit=200)
     except Exception as exc:  # noqa: BLE001
         await ctx.post(channel, f"Wednesday check skipped — Pinboard fetch failed: `{exc}`")
         return
@@ -140,7 +141,7 @@ async def linky_popular_scan(ctx: "JobContext") -> None:
         return
 
     try:
-        items = pinboard.popular(limit=30)
+        items = await asyncio.to_thread(pinboard.popular, limit=30)
     except Exception as exc:  # noqa: BLE001
         logger.warning("popular scan: fetch failed: %s", exc)
         return
@@ -208,7 +209,7 @@ async def linky_research_unread(ctx: "JobContext") -> None:
         return
 
     try:
-        unread = pinboard.all_unread(limit=200)
+        unread = await asyncio.to_thread(pinboard.all_unread, limit=200)
     except Exception as exc:  # noqa: BLE001
         logger.warning("to-read research: Pinboard fetch failed: %s", exc)
         return
@@ -301,10 +302,10 @@ async def marky_daily_engagement(ctx: "JobContext") -> None:
     if channel is None:
         return
 
-    summary = tinylytics.safe_summary(days=7)
+    summary = await asyncio.to_thread(tinylytics.safe_summary, days=7)
     counts = {}
     try:
-        counts = buttondown.counts()
+        counts = await asyncio.to_thread(buttondown.counts)
     except Exception as exc:  # noqa: BLE001
         logger.warning("buttondown.counts failed: %s", exc)
 
@@ -344,12 +345,12 @@ async def marky_weekly_subscriber_report(ctx: "JobContext") -> None:
         return
 
     try:
-        recent = buttondown.recent_subscribers(limit=25)
+        recent = await asyncio.to_thread(buttondown.recent_subscribers, limit=25)
     except Exception as exc:  # noqa: BLE001
         await ctx.post(channel, f"Weekly subscriber report skipped — Buttondown fetch failed: `{exc}`")
         return
     try:
-        churn = buttondown.recent_unsubscribes(limit=15)
+        churn = await asyncio.to_thread(buttondown.recent_unsubscribes, limit=15)
     except Exception as exc:  # noqa: BLE001
         churn = []
         logger.warning("buttondown.recent_unsubscribes failed: %s", exc)

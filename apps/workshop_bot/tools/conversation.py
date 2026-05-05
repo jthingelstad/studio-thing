@@ -59,7 +59,7 @@ async def build_history(
             if msg.author.id == bot_user_id:
                 raw.append(("assistant", content))
             elif msg.author.bot:
-                speaker = _short_bot_name(msg.author.display_name or msg.author.name)
+                speaker = short_bot_name(msg.author.display_name or msg.author.name)
                 raw.append(("user", f"[{speaker}] {content}"))
             else:
                 raw.append(("user", content))
