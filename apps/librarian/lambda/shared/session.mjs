@@ -45,6 +45,21 @@ export function createSessionToken(email, sessionId = crypto.randomBytes(18).toS
   };
 }
 
+// Mint a session token for a non-email subject — used by the Discord
+// bridge, which identifies users by Discord user id rather than email.
+// `sub` should be a stable, namespaced string like "discord:<hash>".
+export function createSessionTokenForSub(sub, sessionId = crypto.randomBytes(18).toString('base64url')) {
+  if (!sub || typeof sub !== 'string') {
+    throw new Error('createSessionTokenForSub: sub must be a non-empty string');
+  }
+  const expiresAt = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
+  return {
+    sessionId,
+    expiresAt,
+    token: signPayload({ sid: sessionId, sub, exp: expiresAt })
+  };
+}
+
 export function verifyToken(token) {
   try {
     const [encoded, signature] = String(token || '').split('.', 2);

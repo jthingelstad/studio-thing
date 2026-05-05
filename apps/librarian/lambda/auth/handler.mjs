@@ -4,11 +4,14 @@ import { bedrock, dynamodb, agentModel } from '../shared/aws-clients.mjs';
 import { createSubscriber, fetchSubscriber, sendSubscriberReminder, subscriberStatus } from '../shared/buttondown.mjs';
 import { eventSummary, jsonResponse, methodAndPath, parseBody, clientSourceIp, userAgent } from '../shared/http.mjs';
 import { checkRateLimit } from '../shared/rate-limit.mjs';
-import { createSessionToken, emailHash, normalizeEmail, stableHash } from '../shared/session.mjs';
+import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, stableHash } from '../shared/session.mjs';
+import crypto from 'node:crypto';
 import { logEvent } from '../shared/logging.mjs';
 import { premiumThankYouSystemPrompt } from '../shared/prompts.mjs';
 
 const AUTH_RATE_LIMIT_MAX = 30;
+const DISCORD_BRIDGE_RATE_LIMIT_MAX = 60;
+const DISCORD_USER_ID_RE = /^[A-Za-z0-9_:.-]{1,64}$/;
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const ALLOWED_SOURCES = new Set([
   'thingy',
@@ -105,6 +108,57 @@ async function authSuccessResponse(email, subscriber, event, start) {
   return jsonResponse(200, payload, event);
 }
 
+function bridgeUserSub(discordUserId) {
+  // Stable, namespaced subject id. Hashed so the Lambda's logs and rate-limit
+  // bucket key never carry the raw Discord user id.
+  return 'discord:' + stableHash(discordUserId).slice(0, 32);
+}
+
+async function handleDiscordBridge(event, body, start) {
+  const expected = process.env.DISCORD_BRIDGE_SECRET || '';
+  if (!expected) {
+    logEvent('warning', 'auth_discord_bridge_disabled');
+    return jsonResponse(503, { error: 'Discord bridge is not enabled.' }, event);
+  }
+  const supplied = String(body.bridge_secret || '');
+  const expectedBuf = Buffer.from(expected, 'utf8');
+  const suppliedBuf = Buffer.from(supplied, 'utf8');
+  const secretsMatch =
+    expectedBuf.length === suppliedBuf.length &&
+    crypto.timingSafeEqual(expectedBuf, suppliedBuf);
+  if (!secretsMatch) {
+    logEvent('warning', 'auth_discord_bridge_bad_secret');
+    return jsonResponse(401, { error: 'Bridge secret rejected.' }, event);
+  }
+  const discordUserId = String(body.discord_user_id || '').trim();
+  if (!DISCORD_USER_ID_RE.test(discordUserId)) {
+    logEvent('info', 'auth_discord_bridge_invalid_user_id');
+    return jsonResponse(400, { error: 'discord_user_id is required.' }, event);
+  }
+  // Per-Discord-user rate limit on bridge minting (separate from the IP-based
+  // auth limit checked above).
+  const sub = bridgeUserSub(discordUserId);
+  const bridgeLimit = Number(
+    process.env.DISCORD_BRIDGE_RATE_LIMIT_MAX || DISCORD_BRIDGE_RATE_LIMIT_MAX
+  );
+  if (!(await checkRateLimit(`auth#bridge:${sub}`, bridgeLimit))) {
+    logEvent('warning', 'auth_discord_bridge_rate_limited', { discord_sub: sub });
+    return jsonResponse(429, { error: 'Bridge token requests rate-limited.' }, event);
+  }
+  const session = createSessionTokenForSub(sub);
+  logEvent('info', 'auth_discord_bridge_issued', {
+    discord_sub: sub,
+    subscriber_source: 'discord',
+    duration_ms: Math.round(performance.now() - start)
+  });
+  return jsonResponse(200, {
+    status: 'active',
+    source: 'discord',
+    token: session.token,
+    expires_at: session.expiresAt
+  }, event);
+}
+
 async function authHandler(event) {
   const start = performance.now();
   const body = parseBody(event);
@@ -118,13 +172,23 @@ async function authHandler(event) {
     logEvent('warning', 'auth_rate_limited', { email_hash: hashedEmail });
     return jsonResponse(429, { error: 'Too many access attempts. Please try again later.' }, event);
   }
+  if (!['check', 'subscribe', 'resend_confirmation', 'discord_bridge'].includes(action)) {
+    logEvent('info', 'auth_rejected_invalid_action', { email_hash: hashedEmail, action });
+    return jsonResponse(400, { error: 'Unsupported subscriber action.' }, event);
+  }
+
+  // Discord bridge mints tokens without an email address — Discord membership
+  // is the auth boundary. Runs before EMAIL_RE so the email check doesn't
+  // reject the request. Gated by a shared secret in DISCORD_BRIDGE_SECRET;
+  // if the secret isn't configured the action returns 503 so the bridge
+  // surfaces "not enabled" rather than silently passing.
+  if (action === 'discord_bridge') {
+    return await handleDiscordBridge(event, body, start);
+  }
+
   if (!EMAIL_RE.test(email)) {
     logEvent('info', 'auth_rejected_invalid_email', { email_hash: hashedEmail });
     return jsonResponse(400, { error: 'Enter a valid email address.' }, event);
-  }
-  if (!['check', 'subscribe', 'resend_confirmation'].includes(action)) {
-    logEvent('info', 'auth_rejected_invalid_action', { email_hash: hashedEmail, action });
-    return jsonResponse(400, { error: 'Unsupported subscriber action.' }, event);
   }
 
   if (action === 'subscribe') {

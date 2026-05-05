@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderFaqAnswer, searchFaq } from '../shared/faq.mjs';
-import { createSessionToken, emailHash, normalizeEmail, verifyToken } from '../shared/session.mjs';
+import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, verifyToken } from '../shared/session.mjs';
 import { renderTemplate, agentUserPrompt } from '../shared/prompts.mjs';
 import { subscriberStatus } from '../shared/buttondown.mjs';
 import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
@@ -15,6 +15,25 @@ test('session token round trips and rejects tampering', () => {
   assert.equal(payload.sid, 'session-1');
   assert.equal(payload.sub, emailHash('reader@example.com'));
   assert.equal(verifyToken(`${token}x`), null);
+});
+
+test('discord bridge token round trips with non-email sub', () => {
+  process.env.SESSION_SECRET = 'test-secret';
+  const sub = 'discord:0123456789abcdef0123456789abcdef';
+  const { token, sessionId, expiresAt } = createSessionTokenForSub(sub, 'session-d1');
+  assert.equal(sessionId, 'session-d1');
+  assert.ok(expiresAt > Math.floor(Date.now() / 1000));
+
+  const payload = verifyToken(token);
+  assert.equal(payload.sid, 'session-d1');
+  assert.equal(payload.sub, sub);
+  assert.equal(verifyToken(`${token}x`), null);
+});
+
+test('createSessionTokenForSub rejects empty sub', () => {
+  process.env.SESSION_SECRET = 'test-secret';
+  assert.throws(() => createSessionTokenForSub(''), /non-empty string/);
+  assert.throws(() => createSessionTokenForSub(null), /non-empty string/);
 });
 
 test('email normalization is stable', () => {
