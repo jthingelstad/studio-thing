@@ -24,9 +24,11 @@ from __future__ import annotations
 import re
 from typing import Any, Iterable, Optional
 
-# The frontend uses this same regex (apps/site/librarian.njk). Keep them
-# aligned — it's the boundary at which we decide what's a citation token.
-CITATION_RE = re.compile(r"(^|[^\w&])#(\d{1,4})\b")
+# The frontend uses essentially the same regex (apps/site/librarian.njk).
+# Allow up to 5 digits — the archive will hit issue 10000 in many years
+# but the bound is arbitrary; #cybersecurity-style word tags are still
+# excluded by the `\b` after a `\d+` capture.
+CITATION_RE = re.compile(r"(^|[^\w&])#(\d{1,5})\b")
 
 DEFAULT_SITE_URL = "https://weekly.thingelstad.com"
 

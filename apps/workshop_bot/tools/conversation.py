@@ -32,6 +32,25 @@ def short_bot_name(display_name: str) -> str:
     return parts[-1].strip() or display_name
 
 
+def coalesce_messages(raw: list[tuple[str, str]]) -> list[dict[str, str]]:
+    """Coalesce consecutive same-role turns and trim any leading assistant
+    turns so the result is a valid Anthropic conversation prefix.
+
+    Shared between ``build_history`` (single-persona path) and
+    ``team._build_round_history`` (team-round path); the rule should
+    not differ between them.
+    """
+    coalesced: list[list[str]] = []
+    for role, content in raw:
+        if coalesced and coalesced[-1][0] == role:
+            coalesced[-1][1] = coalesced[-1][1] + "\n\n" + content
+        else:
+            coalesced.append([role, content])
+    while coalesced and coalesced[0][0] == "assistant":
+        coalesced.pop(0)
+    return [{"role": role, "content": content} for role, content in coalesced]
+
+
 async def build_history(
     channel: "discord.abc.Messageable",
     *,
@@ -64,19 +83,10 @@ async def build_history(
             else:
                 raw.append(("user", content))
     except Exception:  # noqa: BLE001
-        logger.exception("history fetch failed; continuing without it")
+        logger.warning(
+            "history fetch failed; continuing without prior context",
+            exc_info=True,
+        )
         return []
-
     raw.reverse()  # oldest first
-
-    coalesced: list[list[str]] = []
-    for role, content in raw:
-        if coalesced and coalesced[-1][0] == role:
-            coalesced[-1][1] = coalesced[-1][1] + "\n\n" + content
-        else:
-            coalesced.append([role, content])
-
-    while coalesced and coalesced[0][0] == "assistant":
-        coalesced.pop(0)
-
-    return [{"role": role, "content": content} for role, content in coalesced]
+    return coalesce_messages(raw)

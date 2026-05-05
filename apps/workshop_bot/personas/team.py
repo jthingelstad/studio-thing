@@ -199,13 +199,4 @@ class TeamRegistry:
         except Exception:  # noqa: BLE001
             logger.exception("history fetch (between) failed")
 
-        combined = pre + between
-        coalesced: list[list[str]] = []
-        for role, content in combined:
-            if coalesced and coalesced[-1][0] == role:
-                coalesced[-1][1] = coalesced[-1][1] + "\n\n" + content
-            else:
-                coalesced.append([role, content])
-        while coalesced and coalesced[0][0] == "assistant":
-            coalesced.pop(0)
-        return [{"role": r, "content": c} for r, c in coalesced]
+        return conversation.coalesce_messages(pre + between)

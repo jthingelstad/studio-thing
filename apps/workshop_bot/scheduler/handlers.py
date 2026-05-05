@@ -22,10 +22,81 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
 from ..tools import buttondown, db, pinboard, s3, tinylytics
+
+# ---------- LLM output parsers (extracted so they're testable) ----------
+
+# Strip ```json ... ``` markdown fences. Tolerant of stray whitespace
+# and case variants (``` json, ```JSON). The LLM occasionally wraps a
+# JSON-only response in fences despite being told not to.
+_FENCE_RE = re.compile(
+    r"\A\s*```(?:json|JSON)?\s*\n?(.*?)\n?\s*```\s*\Z",
+    re.DOTALL,
+)
+
+# Markdown links Linky's research-pass digest emits: [title](url). Used
+# as a fallback when the explicit RESEARCHED: line is malformed.
+_MD_LINK_RE = re.compile(r"\[[^\]]+\]\((https?://[^)\s]+)\)")
+
+
+def strip_json_fences(raw: str) -> str:
+    """Strip outer ```...``` fences from an LLM response if present.
+    Returns the inner payload (or the original string if there were no
+    fences). Whitespace-tolerant on both ends."""
+    if not raw:
+        return ""
+    text = raw.strip()
+    match = _FENCE_RE.match(text)
+    return (match.group(1) if match else text).strip()
+
+
+def parse_researched_line(answer: str) -> tuple[Optional[list[str]], str]:
+    """Pull the `RESEARCHED: [...]` line out of Linky's research digest.
+
+    Returns ``(urls, body)`` where ``urls`` is a list of researched URLs
+    (or None if the line is missing/malformed) and ``body`` is the
+    digest with the RESEARCHED line removed. When the line is malformed,
+    falls back to extracting URLs from markdown link syntax in the body
+    so the runtime can still mark items researched and avoid an
+    indefinite stall on the same batch.
+    """
+    body = answer
+    explicit: Optional[list[str]] = None
+    for line in answer.splitlines():
+        stripped = line.strip()
+        if stripped.upper().startswith("RESEARCHED:"):
+            payload = stripped.split(":", 1)[1].strip()
+            try:
+                parsed = json.loads(payload)
+                if isinstance(parsed, list):
+                    explicit = [str(u) for u in parsed]
+            except (json.JSONDecodeError, ValueError):
+                explicit = None
+            body = "\n".join(
+                ln for ln in answer.splitlines()
+                if ln.strip().upper() != stripped.upper()
+            ).strip()
+            break
+    if explicit is not None:
+        return explicit, body
+    # Fallback: pull URLs from any `[text](url)` markdown links the LLM
+    # included in the digest. Better to mark them researched than to
+    # have the same batch resurface every run.
+    fallback = _MD_LINK_RE.findall(body)
+    if fallback:
+        # Dedupe while preserving order.
+        seen: set[str] = set()
+        out: list[str] = []
+        for u in fallback:
+            if u not in seen:
+                seen.add(u)
+                out.append(u)
+        return out, body
+    return None, body
 
 if TYPE_CHECKING:
     from .runner import JobContext
@@ -270,19 +341,14 @@ async def linky_research_unread(ctx: "JobContext") -> None:
         logger.info("to-read research: Linky found nothing worth surfacing in batch")
         return
 
-    # Pull the RESEARCHED line out of the answer and use it to mark items.
-    body_text = answer
-    researched_urls: list[str] = []
-    for line in answer.splitlines():
-        line = line.strip()
-        if line.upper().startswith("RESEARCHED:"):
-            payload = line.split(":", 1)[1].strip()
-            try:
-                researched_urls = [str(u) for u in json.loads(payload)]
-            except Exception:  # noqa: BLE001
-                logger.warning("to-read research: couldn't parse RESEARCHED line %r", line)
-            body_text = answer.replace(line, "").strip()
-            break
+    # Pull the RESEARCHED line out of the answer and use it to mark
+    # items. If the line is missing or malformed, parse_researched_line
+    # falls back to URLs found in the digest's markdown links so a bad
+    # batch doesn't stall the job indefinitely.
+    researched_urls, body_text = parse_researched_line(answer)
+    if researched_urls is None:
+        logger.warning("to-read research: no usable RESEARCHED list; not marking any URLs done")
+        researched_urls = []
 
     for url in researched_urls:
         title = by_url.get(url, (None, None))[0]
@@ -432,11 +498,7 @@ async def patty_thursday_member_json(ctx: "JobContext") -> None:
     )
 
     answer, meta = await bot.core(latest=prompt, history=[], model=None)
-    raw = (answer or "").strip()
-    if raw.startswith("```"):
-        raw = raw.strip("`")
-        if raw.startswith("json"):
-            raw = raw[len("json"):].strip()
+    raw = strip_json_fences(answer or "")
     try:
         parsed = json.loads(raw)
         cta = parsed.get("cta", "").strip()

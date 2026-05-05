@@ -103,6 +103,7 @@ export async function getUserMemory(sub) {
     const item = response.Item;
     return {
       sub,
+      version: Number(item.version?.N || 0),
       first_seen_at: item.first_seen_at?.S || '',
       last_seen_at: item.last_seen_at?.S || '',
       turn_count: Number(item.turn_count?.N || 0),
@@ -172,9 +173,12 @@ export async function recordUserTurn(sub, { sid, question }) {
       ].slice(-CURRENT_SESSION_QUESTIONS_MAX);
     }
 
+    const priorVersion = Number(existing?.version || 0);
+    const nextVersion = priorVersion + 1;
     const item = {
       pk: dynamoString(`user#${sub}`),
       sk: dynamoString('memory'),
+      version: dynamoNumber(nextVersion),
       first_seen_at: dynamoString(existing?.first_seen_at || nowIso),
       last_seen_at: dynamoString(nowIso),
       turn_count: dynamoNumber((existing?.turn_count || 0) + 1),
@@ -186,11 +190,35 @@ export async function recordUserTurn(sub, { sid, question }) {
     };
     const { PutItemCommand } = await import('@aws-sdk/client-dynamodb');
     const { dynamodb } = await import('./aws-clients.mjs');
-    await dynamodb.send(new PutItemCommand({ TableName: tableName, Item: item }));
+    // Optimistic lock: only write if `version` is exactly what we read
+    // (or absent for a brand-new row). On contention, log and skip —
+    // one lost turn is better than clobbering a concurrent writer's
+    // appended question.
+    try {
+      await dynamodb.send(new PutItemCommand({
+        TableName: tableName,
+        Item: item,
+        ConditionExpression: priorVersion === 0
+          ? 'attribute_not_exists(version)'
+          : 'version = :prior_version',
+        ExpressionAttributeValues: priorVersion === 0
+          ? undefined
+          : { ':prior_version': dynamoNumber(priorVersion) }
+      }));
+    } catch (error) {
+      if (error?.name === 'ConditionalCheckFailedException') {
+        logEvent('info', 'user_memory_write_contended', {
+          prior_version: priorVersion
+        });
+        return;
+      }
+      throw error;
+    }
     logEvent('info', 'user_memory_recorded', {
       turn_count: (existing?.turn_count || 0) + 1,
       session_rotated: sessionRotated || false,
       synthesized_history_len: synthesizedHistory.length,
+      version: nextVersion,
       duration_ms: Date.now() - start
     });
   } catch (error) {
