@@ -1,15 +1,15 @@
 # Content Pipeline
 
-The archive is generated from a tracked Buttondown baseline. The source of truth for archive cleanup is `data/buttondown/`, not `site/archive/`.
+The archive is generated from a tracked Buttondown baseline. The source of truth for archive cleanup is `data/buttondown/`, not `apps/site/archive/`.
 
 ## Directory Roles
 
 - `data/buttondown/emails/*.json`: tracked metadata snapshots for each Buttondown issue. These include ID, issue number, subject, description, image, slug, publish date, status, source hash, and a `body_path`.
 - `data/buttondown/bodies/*.md`: tracked raw Buttondown body content before archive transformation. This is the right place for broad body scans and cleanup edits.
 - `data/buttondown/manifest.json`: generated manifest mapping issue numbers to snapshot, body, and archive paths.
-- `site/archive/*.md`: generated Eleventy issue pages. These files include a generated notice and should not be edited by hand.
-- `site/_data/emails.json`: generated archive index data used by Eleventy templates.
-- `site/_data/stats.json`: generated subscriber/supporting-member stats.
+- `apps/site/archive/*.md`: generated Eleventy issue pages. These files include a generated notice and should not be edited by hand.
+- `apps/site/_data/emails.json`: generated archive index data used by Eleventy templates.
+- `apps/site/_data/stats.json`: generated subscriber/supporting-member stats.
 - `data/librarian/corpus.json`: generated, tracked text-only corpus for Thingy. Embedded corpus files are generated for upload and should not be committed.
 
 ## Normal Workflows
@@ -60,11 +60,11 @@ npm run librarian:corpus
 npm run build
 ```
 
-Do not edit `site/archive/N.md` directly. Those files are regenerated from `data/buttondown/` and local edits will be overwritten.
+Do not edit `apps/site/archive/N.md` directly. Those files are regenerated from `data/buttondown/` and local edits will be overwritten.
 
 ## Buttondown Template Handling
 
-Raw Buttondown bodies can contain Liquid/Django-style template tags. The archive renderer in `pipeline/content/content.py` tokenizes these tags before writing `site/archive/`.
+Raw Buttondown bodies can contain Liquid/Django-style template tags. The archive renderer in `pipeline/content/content.py` tokenizes these tags before writing `apps/site/archive/`.
 
 Current archive behavior:
 

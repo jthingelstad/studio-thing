@@ -1,7 +1,7 @@
 # Weekly Thing Audio Pipeline
 
 This stage runs after `pipeline/content/content.py build` and consumes the
-canonical archive markdown in `site/archive/`. It does not read raw Buttondown
+canonical archive markdown in `apps/site/archive/`. It does not read raw Buttondown
 bodies and does not depend on the Librarian service.
 
 ## Three stages

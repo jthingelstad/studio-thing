@@ -11,6 +11,7 @@ Thingy — the AWS Lambda agent that answers questions against the Weekly Thing 
   - `prompts/` — editable system prompts (`agent-system.md`, etc.) packaged into both Lambdas
   - `tests/` — Node tests (`npm test`)
 - `infra/cloudformation.yaml` — full stack: Lambdas, API Gateway, DynamoDB, IAM, CloudWatch
+- `admin/` — operator scripts for the live stack (conversation review, eval harness, log inspection). Scaffolding only — see [`admin/README.md`](admin/README.md).
 
 ## Deploy
 

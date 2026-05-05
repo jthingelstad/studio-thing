@@ -31,9 +31,9 @@ Two audits have been run end-to-end:
 
 ### Caveat about persistence
 
-The data pipeline (`pipeline/content/build_data.py`) **regenerates `site/archive/N.md` from the Buttondown API cache**, overwriting local edits. After my fixes:
+The data pipeline (`pipeline/content/build_data.py`) **regenerates `apps/site/archive/N.md` from the Buttondown API cache**, overwriting local edits. After my fixes:
 
-1. The 13 edits exist in `site/archive/{40,82,126,132,133,134,135,136,161,221,291}.md` right now.
+1. The 13 edits exist in `apps/site/archive/{40,82,126,132,133,134,135,136,161,221,291}.md` right now.
 2. `_site/` reflects them (I ran `npx @11ty/eleventy` after fixing, not `build_data.py`).
 3. The **next** `make serve` / `make build` / `make fresh` will clobber them unless the Buttondown source is updated.
 

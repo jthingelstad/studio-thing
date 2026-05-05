@@ -8,12 +8,9 @@ Thingy is a subscriber-gated chat interface for the Weekly Thing archive.
 - The local corpus is text-only and citation-ready. It includes issue summaries, topic metadata, and chunk-level retrieval metadata. It is gitignored and rebuilt on demand.
 - Embedded corpus files should not be committed. `npm run librarian:corpus:upload` generates Bedrock Cohere embeddings and pushes the deployable corpus to S3. **Incremental by default**: it fetches the existing S3 corpus once at the start, copies cached embeddings onto unchanged chunks (matched by content-deterministic chunk_id), and only sends the leftover chunks to Bedrock. Pass `--full` to skip the cache and re-embed everything — needed only after a chunking-schema change or to repair a corrupted cache. The cache is automatically invalidated if the deployed corpus's `embedding_model` or `embedding_dimensions` no longer match the current request, with a warning.
 - `npm run librarian:graph` builds `data/librarian/graph.json`, the offline entity/trope/similarity artifact used by the archive tools.
-- `pipeline/eval/rag.py` prints retrieval and reranker diagnostics for standard or multi-hop question sets.
-- `pipeline/eval/answers.py` runs baseline or agentic answer generation, then asks Bedrock to judge answer quality. Results are written to `tmp/librarian-answer-eval.json`.
-- `pipeline/eval/run_job.py` prepares a Bedrock Model Evaluation JSONL dataset from `pipeline/eval/questions.json` and can start an on-demand Bedrock Evaluation job from precomputed Thingy responses.
 - `pipeline/deploy/bedrock_logging.py` inspects or enables account-level Bedrock invocation logging to the private Librarian bucket.
-- The `weekly-agent` eval suite covers 20 recall, synthesis, recommendation, pattern, voice, tricky retrieval, and edge-case prompts: `python pipeline/eval/answers.py --mode agent --question-set weekly-agent --sample-limit 20`.
-- `pipeline/eval/review_conversations.py` reads beta conversation logs from DynamoDB for review.
+
+The previous Python eval pipeline under `pipeline/eval/` (retrieval diagnostics, answer-quality scoring, Bedrock Model Evaluation, DynamoDB conversation review) was removed. A new eval approach for Thingy is planned.
 
 ## AWS Runtime
 
@@ -36,28 +33,12 @@ The FAQ content lives in `apps/librarian/lambda/shared/faq.json`. Eleventy rende
 ```sh
 npm run librarian:corpus
 npm run librarian:graph
-npm run librarian:eval
-npm run librarian:eval:answers
-npm run librarian:eval:bedrock -- --responses tmp/librarian-answer-eval.json
 npm run librarian:bedrock:logging
-npm run librarian:conversations -- --limit 25
 npm run librarian:corpus:upload
 npm run librarian:deploy
 ```
 
-To start a Bedrock Model Evaluation job, first generate complete precomputed Thingy responses, then upload and start the job:
-
-```sh
-npm run librarian:eval:bedrock -- --generate-responses-live --session-secret-from-lambda weekly-thing-librarian-LibrarianStreamFunction-... --responses tmp/librarian-answer-eval.json --start-job
-```
-
-For raw JSON conversation review:
-
-```sh
-npm run librarian:conversations -- --limit 25 --json
-```
-
-After deployment, the deploy script writes the CloudFormation `LibrarianApiUrl` and `LibrarianStreamUrl` outputs to `.env` as `LIBRARIAN_API_URL` and `LIBRARIAN_STREAM_URL`. The static site reads those values during build, with the current production URLs kept only as a fallback in `site/_data/site.js`.
+After deployment, the deploy script writes the CloudFormation `LibrarianApiUrl` and `LibrarianStreamUrl` outputs to `.env` as `LIBRARIAN_API_URL` and `LIBRARIAN_STREAM_URL`. The static site reads those values during build, with the current production URLs kept only as a fallback in `apps/site/_data/site.js`.
 
 ## Required Secrets
 
@@ -75,7 +56,7 @@ Local `.env` values used by upload/build scripts:
 - `AWS_SESSION_TOKEN` (only if using temporary credentials)
 - `TINYLYTICS_SITE_UID` or `TINYLYTICS_SITE_ID` for the static website embed, not the API.
 - `WEEKLY_THING_ASSETS_BUCKET` for public archive assets under `files.thingelstad.com/weekly-thing/`.
-- `LIBRARIAN_BUCKET` for private Thingy code, corpus, eval, and log artifacts. Defaults to `weekly-thing-librarian`.
+- `LIBRARIAN_BUCKET` for private Thingy code, corpus, and log artifacts. Defaults to `weekly-thing-librarian`.
 - `LIBRARIAN_CORPUS_KEY` (optional; defaults to `artifacts/corpus.json`)
 - `LIBRARIAN_GRAPH_KEY` (optional; defaults to `artifacts/graph.json`)
 - `AWS_DEFAULT_REGION`
@@ -89,15 +70,14 @@ Local `.env` values used by upload/build scripts:
 - `LIBRARIAN_AUTH_RATE_LIMIT_MAX` (optional; defaults to 30 auth attempts per client identity per hour)
 - `LIBRARIAN_CONVERSATION_LOGGING` (optional; defaults to enabled. Set to `0` to disable beta transcript logging.)
 - `LIBRARIAN_CONVERSATION_LOG_TTL_DAYS` (optional; defaults to 60 days.)
-- `BEDROCK_EVAL_ROLE_ARN` (required only when starting Bedrock Evaluation jobs)
 
-Deploy, corpus upload, and conversation review scripts load AWS credentials from `.env` through `python-dotenv` before creating `boto3` clients. They do not intentionally fall back to AWS CLI profile authentication.
+Deploy and corpus upload scripts load AWS credentials from `.env` through `python-dotenv` before creating `boto3` clients. They do not intentionally fall back to AWS CLI profile authentication.
 
 ## Permanent IAM Setup
 
 Deploys use the AWS credentials loaded from `.env`. Routine deploys currently use the `wt-archive` IAM user with an attached `WeeklyThingLibrarianDeploy` managed policy. That policy grants enough access to create or harden the private `weekly-thing-librarian` bucket, upload `s3://weekly-thing-librarian/code/*` and `s3://weekly-thing-librarian/artifacts/*`, and update the `weekly-thing-librarian` CloudFormation stack.
 
-`files.thingelstad.com` is the public website asset bucket. Thingy code packages, corpus files, evaluation datasets, evaluation outputs, and future Bedrock invocation logs belong in the private `LIBRARIAN_BUCKET`.
+`files.thingelstad.com` is the public website asset bucket. Thingy code packages, corpus files, and Bedrock invocation logs belong in the private `LIBRARIAN_BUCKET`.
 
 The long-term cleanup is still a dedicated CloudFormation service role.
 
@@ -144,13 +124,7 @@ Successful beta conversations are stored in the existing DynamoDB table when `LI
 - optional thumb feedback (`up` or `down`) and feedback timestamp
 - TTL, defaulting to 60 days
 
-Review recent conversations with:
-
-```sh
-npm run librarian:conversations -- --limit 25
-```
-
-The script resolves the DynamoDB table name from the `weekly-thing-librarian` CloudFormation stack unless `LIBRARIAN_TABLE_NAME` is set.
+Records can be reviewed directly via the AWS console or `aws dynamodb` CLI against the `weekly-thing-librarian` stack's conversations table. The previous `npm run librarian:conversations` script was removed alongside the eval pipeline; a replacement review tool is planned.
 
 The beta popup on `/thingy/` tells authenticated users that beta conversations may be logged and reviewed to improve Thingy.
 

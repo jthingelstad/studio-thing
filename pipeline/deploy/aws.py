@@ -406,7 +406,6 @@ def main() -> int:
         {
             "LIBRARIAN_API_URL": outputs.get("LibrarianApiUrl", ""),
             "LIBRARIAN_STREAM_URL": outputs.get("LibrarianStreamUrl", ""),
-            "BEDROCK_EVAL_ROLE_ARN": outputs.get("BedrockEvalRoleArn", ""),
         }
     )
     if generated_session_secret:

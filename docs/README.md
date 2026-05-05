@@ -16,4 +16,4 @@ npm run librarian:corpus
 npm run librarian:deploy
 ```
 
-The generated files in `site/archive/` are not the editing surface. Archive cleanup should happen in `data/buttondown/bodies/` and the metadata snapshots in `data/buttondown/emails/`, then be rebuilt with `npm run content:build`.
+The generated files in `apps/site/archive/` are not the editing surface. Archive cleanup should happen in `data/buttondown/bodies/` and the metadata snapshots in `data/buttondown/emails/`, then be rebuilt with `npm run content:build`.

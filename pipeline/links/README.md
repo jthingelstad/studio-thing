@@ -4,7 +4,7 @@ This directory is reserved for the next data pipeline step: retrieving and aggre
 
 Expected inputs:
 
-- `site/archive/*.md` front matter link records
+- `apps/site/archive/*.md` front matter link records
 - `data/librarian/corpus.json` link records, when a built corpus is more convenient
 
 Expected outputs:
