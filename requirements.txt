@@ -1,6 +1,7 @@
 anthropic
 beautifulsoup4
 boto3
+discord.py>=2.4
 httpx
 openai
 pydantic
