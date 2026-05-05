@@ -221,6 +221,7 @@ def deploy_stack(
     allowed_origin: str,
     buttondown_api_key: str,
     session_secret: str | None,
+    discord_bridge_secret: str | None,
     log_level: str,
     auth_rate_limit_max: str,
     cloudformation_role_arn: str | None,
@@ -244,6 +245,18 @@ def deploy_stack(
         session_parameter = {"ParameterKey": "SessionSecret", "ParameterValue": secrets.token_urlsafe(48)}
         generated_session_secret = True
 
+    bridge_parameter: dict[str, str | bool]
+    if discord_bridge_secret:
+        bridge_parameter = {
+            "ParameterKey": "DiscordBridgeSecret",
+            "ParameterValue": discord_bridge_secret,
+        }
+    elif exists:
+        bridge_parameter = {"ParameterKey": "DiscordBridgeSecret", "UsePreviousValue": True}
+    else:
+        # No env value and no existing stack — leave empty (bridge disabled).
+        bridge_parameter = {"ParameterKey": "DiscordBridgeSecret", "ParameterValue": ""}
+
     parameters = [
         {"ParameterKey": "AllowedOrigin", "ParameterValue": allowed_origin},
         {"ParameterKey": "CodeBucket", "ParameterValue": bucket},
@@ -254,6 +267,7 @@ def deploy_stack(
         {"ParameterKey": "GraphKey", "ParameterValue": graph_key},
         {"ParameterKey": "ButtondownApiKey", "ParameterValue": buttondown_api_key},
         session_parameter,
+        bridge_parameter,
         {"ParameterKey": "LogLevel", "ParameterValue": log_level},
         {"ParameterKey": "AuthRateLimitMax", "ParameterValue": auth_rate_limit_max},
     ]
@@ -385,6 +399,7 @@ def main() -> int:
         run([sys.executable, "pipeline/deploy/upload_corpus.py", "--bucket", bucket, "--key", args.corpus_key, "--graph-key", args.graph_key, "--keep-output", str(embedded_corpus)])
 
     session_secret = os.environ.get("LIBRARIAN_SESSION_SECRET")
+    discord_bridge_secret = os.environ.get("LIBRARIAN_BRIDGE_SECRET") or None
     outputs, generated_session_secret = deploy_stack(
         stack_name=args.stack_name,
         bucket=bucket,
@@ -395,6 +410,7 @@ def main() -> int:
         allowed_origin=args.allowed_origin,
         buttondown_api_key=require_env("BUTTONDOWN_API_KEY"),
         session_secret=session_secret,
+        discord_bridge_secret=discord_bridge_secret,
         log_level=args.log_level.upper(),
         auth_rate_limit_max=str(args.auth_rate_limit_max),
         cloudformation_role_arn=args.cloudformation_role_arn,
