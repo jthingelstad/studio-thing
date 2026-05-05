@@ -2,8 +2,8 @@
 
 Reads ``apps/site/archive/*.md``, splits each issue into chunks with topic/section
 metadata, and (optionally) calls Bedrock Cohere to embed every chunk. The
-resulting dict is JSON-serializable and is consumed by Thingy, archive_chat,
-the eval scripts, and the graph builder.
+resulting dict is JSON-serializable and is consumed by Thingy, the workshop
+bot, and the graph builder.
 """
 
 from __future__ import annotations

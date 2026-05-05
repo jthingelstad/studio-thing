@@ -24,7 +24,6 @@ The four agent personas share a tool surface (archive, memory, S3 workspace, per
 
 Other components in the larger system:
 - **Thingy Lambda** at `apps/librarian/lambda/` — production agent for reader Q&A. The bridge forwards to it; the bot does not replicate it.
-- **archive-chat** at `apps/archive-chat/` — local CLI for unrestricted author research against the archive. Not replaced.
 - **Eleventy site** — `weekly.thingelstad.com` static site.
 - **Buttondown** — newsletter platform; content synced to `data/buttondown/`.
 - **Shortcuts pipeline** — Jamie's iOS Shortcuts assemble each issue Sunday morning, reading from `s3://files.thingelstad.com/weekly-thing/issues/{N}/`.
@@ -269,7 +268,7 @@ python -m apps.workshop_bot.eval --persona eddy --model sonnet
 
 ## Conventions
 
-- Citation format: `#NNN` consistent with Thingy and archive-chat.
+- Citation format: `#NNN` consistent with Thingy.
 - Prompts are markdown files cached in-process at first read; restart the bot to pick up edits.
 - Logging: structured `logger.info("event_name %s", arg)` style. The format is plain but the messages are CloudWatch-readable if this ever moves to Lambda.
 - `.env` for secrets — never commit. `.env.example` is the source of truth for required keys.
