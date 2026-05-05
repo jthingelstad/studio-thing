@@ -1,27 +1,31 @@
 """Multi-turn tool-using agent loop.
 
 Each persona's ``core()`` calls ``run()`` here. The loop:
-1. Calls Claude with the persona's system prompt + tools + conversation.
+1. Calls Claude with team + persona system prompts + tools + conversation.
 2. If Claude returns a final text response, returns it.
 3. If Claude returns ``tool_use`` blocks, runs each tool synchronously in
    the calling thread (tools are local, fast, sync) and appends a
    ``tool_result`` block per call as the next user message.
 4. Repeats until either we get a final text response or hit max_iterations.
 
-Cache control: persona prompt is small and gets a single ephemeral cache
-mark; the issue index, if supplied, gets its own ephemeral mark. Tools
-are cached automatically by Anthropic when the tool list ends with a
-``cache_control`` marker on the last tool.
+Cache control: the shared team prompt is the largest stable block and gets
+the first ephemeral mark (cached across all four personas via prefix-match);
+the issue index gets a second mark so persona-prompt edits don't bust the
+issue-index cache. The tool list also gets an ephemeral mark on its last
+entry.
+
+The Anthropic call is synchronous, so ``run_async`` wraps the loop in a
+worker thread to keep each persona's discord.py event loop free for
+gateway heartbeats.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import time
 from typing import Any, Optional
-
-import anthropic
 
 from . import agent_tools, anthropic_client
 
@@ -30,12 +34,19 @@ logger = logging.getLogger("workshop.agent_loop")
 DEFAULT_MAX_ITERATIONS = 8
 MAX_TOOL_RESULT_CHARS = 50_000
 MAX_OUTPUT_TOKENS = 4096
+TEAM_PROMPT = "team"
 
 
 def _build_system_blocks(
     persona: str, *, issue_index: Optional[str] = None
 ) -> list[dict[str, Any]]:
+    """[team] [persona] [issue_index?] — cache markers on team and issue_index."""
     blocks: list[dict[str, Any]] = [
+        {
+            "type": "text",
+            "text": anthropic_client.load_prompt(TEAM_PROMPT),
+            "cache_control": {"type": "ephemeral"},
+        },
         {"type": "text", "text": anthropic_client.load_prompt(persona)},
     ]
     if issue_index:
@@ -76,7 +87,12 @@ def _execute_tool(name: str, deps: Any, raw_input: dict[str, Any]) -> str:
     logger.info("tool %s ok (%dms, args=%s)", name, dt_ms, _short_args(raw_input))
     payload = json.dumps(result, ensure_ascii=False, default=str)
     if len(payload) > MAX_TOOL_RESULT_CHARS:
-        payload = payload[:MAX_TOOL_RESULT_CHARS] + '..."[truncated]"'
+        original_len = len(payload)
+        payload = (
+            payload[:MAX_TOOL_RESULT_CHARS]
+            + f"\n\n[truncated; tool result was {original_len:,} chars, "
+            f"showing first {MAX_TOOL_RESULT_CHARS:,}]"
+        )
     return payload
 
 
@@ -198,4 +214,30 @@ def run(
             "tool_calls": tool_calls,
             "stop_reason": "max_iterations",
         },
+    )
+
+
+async def run_async(
+    *,
+    persona: str,
+    user_message: str,
+    history: Optional[list[dict[str, Any]]] = None,
+    tools: list[str],
+    deps: Any,
+    model: Optional[str] = None,
+    issue_index: Optional[str] = None,
+    max_iterations: int = DEFAULT_MAX_ITERATIONS,
+) -> tuple[str, dict[str, Any]]:
+    """Async wrapper around ``run`` so the calling Discord client's event loop
+    keeps running (gateway heartbeats, other messages) during the LLM turn."""
+    return await asyncio.to_thread(
+        run,
+        persona=persona,
+        user_message=user_message,
+        history=history,
+        tools=tools,
+        deps=deps,
+        model=model,
+        issue_index=issue_index,
+        max_iterations=max_iterations,
     )
