@@ -126,37 +126,169 @@ async def linky_friday_curation(ctx: "JobContext") -> None:
 
 
 async def linky_popular_scan(ctx: "JobContext") -> None:
-    """Pure code. Fetch Pinboard's popular feed; post anything that doesn't
-    already match recent archive coverage."""
+    """Hybrid. Fetch Pinboard's popular feed every 6 hours, dedup against
+    URLs we've already shown Jamie, then ask Linky (LLM) to filter what's
+    left to items Jamie would actually be interested in. Post only the
+    curated subset; if nothing passes the filter, post nothing.
+
+    Mark every fetched item as seen regardless of LLM verdict — better to
+    let one borderline item slip past than to spam Jamie with the same
+    items every 6 hours.
+    """
     channel = ctx.channel("DISCORD_CHANNEL_RESEARCH")
     if channel is None:
         return
 
     try:
-        items = pinboard.popular(limit=20)
+        items = pinboard.popular(limit=30)
     except Exception as exc:  # noqa: BLE001
-        await ctx.post(channel, f"Popular feed scan skipped — fetch failed: `{exc}`")
+        logger.warning("popular scan: fetch failed: %s", exc)
         return
 
-    if not items:
-        await ctx.post(channel, "Pinboard popular feed was empty just now.")
+    new_items = db.filter_unseen_popular(items)
+    if not new_items:
+        logger.info("popular scan: %d items, 0 new — nothing to post", len(items))
         return
 
-    lines = [f"Popular on Pinboard ({len(items)} items):"]
-    for item in items:
-        title = item.get("title", "").strip() or "(untitled)"
-        url = item.get("url", "")
-        lines.append(f"- [{title}]({url})")
-    body = "\n".join(lines)
-    body += "\n\n_(Anything catch your eye? Send to me with `@Linky` and I'll dig in.)_"
-    await ctx.post(channel, body)
-    db.insert_agent_note(
-        agent_name="linky",
-        kind="observation",
-        key="linky:popular-scan",
-        content=body,
-        metadata={"item_count": len(items), "fired_at": datetime.now(timezone.utc).isoformat()},
+    bot = ctx.bot("linky")
+    if bot is None:
+        # No Linky to judge; mark seen and move on.
+        db.mark_popular_seen(new_items)
+        return
+
+    item_block = "\n".join(
+        f"- {it.get('title', '(untitled)')!r}  {it.get('url', '')}"
+        f"  (saved by {it.get('posted_by', '?')})"
+        for it in new_items
     )
+    prompt = (
+        "6-hour check on Pinboard's popular feed. Here are NEW items since "
+        "your last scan (you've never shown these to Jamie):\n\n"
+        f"{item_block}\n\n"
+        "For each, judge whether Jamie would actually want to see it. Use "
+        "`search_archive` to check whether he's covered the topic — skip "
+        "anything that just rehashes recent ground. Use `recall(kind=\"theme\")` "
+        "to see what themes you've been tracking — items that connect to a "
+        "live theme are extra interesting. **Default is to skip.** Better to "
+        "post 0 items than to spam.\n\n"
+        "If you find items worth surfacing, return a short markdown list, "
+        "one bullet per item, formatted exactly like:\n"
+        "  - [title](url) — one sentence on why it caught your eye\n\n"
+        "If nothing rises above the bar, return exactly: NONE"
+    )
+
+    try:
+        answer, meta = await bot.core(latest=prompt, history=[], model=None)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("popular scan: LLM filter failed: %s", exc)
+        db.mark_popular_seen(new_items)
+        return
+
+    answer = (answer or "").strip()
+    db.mark_popular_seen(new_items)  # always mark, regardless of judgment
+
+    if not answer or answer.upper().startswith("NONE"):
+        logger.info("popular scan: %d new items, all PASSed by Linky", len(new_items))
+        return
+
+    body = (
+        f"Popular on Pinboard right now (filtered to what looks relevant):\n\n{answer}"
+    )
+    await ctx.post(channel, body)
+
+
+async def linky_research_unread(ctx: "JobContext") -> None:
+    """LLM job. Pick a few unresearched items from Jamie's `to read` queue,
+    fetch each URL, write a short research note, post the digest. Marks
+    each item researched so the next run picks up where this left off.
+    """
+    channel = ctx.channel("DISCORD_CHANNEL_RESEARCH")
+    bot = ctx.bot("linky")
+    if channel is None or bot is None:
+        return
+
+    try:
+        unread = pinboard.all_unread(limit=200)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("to-read research: Pinboard fetch failed: %s", exc)
+        return
+
+    if not unread:
+        return
+
+    candidate_urls = [
+        (p.get("url"), p.get("title"), p.get("tags"))
+        for p in unread
+        if p.get("url")
+    ]
+    unresearched = db.filter_unresearched_urls([u for u, _, _ in candidate_urls])
+    if not unresearched:
+        logger.info("to-read research: nothing left unresearched (%d in queue)", len(unread))
+        return
+
+    # Hand Linky a manageable batch and let her judgment pick which to actually
+    # read. Limit batch size so a single run doesn't burn a huge token budget.
+    batch_urls = unresearched[:8]
+    by_url = {u: (t, tg) for u, t, tg in candidate_urls if u in set(batch_urls)}
+
+    catalog_block = "\n".join(
+        f"- {by_url[u][0] or '(untitled)'}  {u}  [tags: {by_url[u][1] or '(none)'}]"
+        for u in batch_urls
+    )
+
+    prompt = (
+        "Time to do some research on Jamie's `to read` pile. Here are items "
+        "you haven't yet researched:\n\n"
+        f"{catalog_block}\n\n"
+        "Pick the 2-3 most promising. For each one you pick:\n"
+        "  1. `fetch_url` to actually read it.\n"
+        "  2. Write a 2-3 sentence research note: what the piece actually "
+        "says, what's the angle a Weekly Thing reader would care about, and "
+        "a confidence flag (✦ Notable / · Briefly / ⊘ skip).\n\n"
+        "Return your output as a markdown list, one block per item, formatted "
+        "exactly like:\n"
+        "  ### [title](url) ✦\n"
+        "  Two-or-three-sentence research note.\n\n"
+        "Then on a separate final line, return a JSON array of just the URLs "
+        "you actually researched (so the runtime can mark them done), prefixed "
+        "with the literal token `RESEARCHED:` — for example:\n"
+        "  RESEARCHED: [\"https://...\", \"https://...\"]\n\n"
+        "If nothing in the batch is worth a research pass, return exactly: NONE"
+    )
+
+    try:
+        answer, meta = await bot.core(latest=prompt, history=[], model=None)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("to-read research: LLM call failed: %s", exc)
+        return
+
+    answer = (answer or "").strip()
+    if not answer or answer.upper().startswith("NONE"):
+        # Nothing worth posting; don't mark anything researched so they
+        # come back next run.
+        logger.info("to-read research: Linky found nothing worth surfacing in batch")
+        return
+
+    # Pull the RESEARCHED line out of the answer and use it to mark items.
+    body_text = answer
+    researched_urls: list[str] = []
+    for line in answer.splitlines():
+        line = line.strip()
+        if line.upper().startswith("RESEARCHED:"):
+            payload = line.split(":", 1)[1].strip()
+            try:
+                researched_urls = [str(u) for u in json.loads(payload)]
+            except Exception:  # noqa: BLE001
+                logger.warning("to-read research: couldn't parse RESEARCHED line %r", line)
+            body_text = answer.replace(line, "").strip()
+            break
+
+    for url in researched_urls:
+        title = by_url.get(url, (None, None))[0]
+        db.mark_url_researched(url=url, title=title, summary=body_text[:2000])
+
+    if body_text:
+        await ctx.post(channel, f"Research notes from the to-read pile:\n\n{body_text}")
 
 
 # ============================================================
@@ -264,10 +396,11 @@ async def marky_weekly_subscriber_report(ctx: "JobContext") -> None:
     await ctx.post(channel, "\n".join(lines))
 
 
-async def marky_thursday_member_json(ctx: "JobContext") -> None:
-    """LLM job. Compose CTA + progress update, write to S3 member.json."""
-    bot = ctx.bot("marky")
-    channel = ctx.channel("DISCORD_CHANNEL_PROMOTION")
+async def patty_thursday_member_json(ctx: "JobContext") -> None:
+    """LLM job. Patty composes the supporter CTA + progress update and writes
+    them to the in-flight issue's member.json on S3."""
+    bot = ctx.bot("patty")
+    channel = ctx.channel("DISCORD_CHANNEL_SUPPORTERS")
     if bot is None or channel is None:
         return
 
@@ -277,20 +410,22 @@ async def marky_thursday_member_json(ctx: "JobContext") -> None:
         return
 
     prompt = (
-        f"Time to write member.json for issue #{issue} (the in-flight issue, not "
-        "in your archive corpus yet). Steps:\n"
+        f"Time to write member.json for issue #{issue} (the in-flight issue, "
+        "not in your archive corpus yet). Steps:\n"
         "1. `get_support_state` for the current nonprofit, supporter count, "
         "dollars raised.\n"
-        "2. `recall(agent_name='patty')` to pick up tonal calls Patty has noted.\n"
-        "3. Search the archive for the last 3-4 supporter CTAs Jamie shipped — "
-        "do not echo last week's framing.\n"
-        "4. Compose two pieces:\n"
-        "   - **CTA** (60-120 words, plain markdown, no headings, invisible "
-        "narrator). Names the current nonprofit and what they do; warm "
-        "acknowledgment of existing supporters.\n"
+        "2. Search the archive for the last 3-4 supporter CTAs Jamie shipped — "
+        "voice match them, do not echo last week's framing.\n"
+        "3. Compose two pieces, both in **Thingy's** voice (the only agent "
+        "readers know — Patty is invisible). Warm, personal, on Jamie's "
+        "behalf; never Jamie's first person, never sales-y.\n"
+        "   - **CTA** (60-120 words, plain markdown, no headings). Names the "
+        "current nonprofit and what they do; warm acknowledgment of existing "
+        "supporters. Don't include a sign-off — Jamie's pipeline attributes "
+        "it to Thingy.\n"
         "   - **Progress update** (~80 words, addressed to current supporters). "
         "What their support has funded this year, in concrete terms.\n"
-        "5. Return ONLY a JSON object with shape "
+        "4. Return ONLY a JSON object with shape "
         "`{\"cta\": \"...\", \"progress\": \"...\", \"nonprofit\": \"...\"}` — "
         "no markdown fences, no commentary."
     )
@@ -309,9 +444,9 @@ async def marky_thursday_member_json(ctx: "JobContext") -> None:
     except Exception as exc:  # noqa: BLE001
         await ctx.post(channel, f"member.json compose returned non-JSON: `{exc}`. Raw output saved to memory.")
         db.insert_agent_note(
-            agent_name="marky",
+            agent_name="patty",
             kind="todo",
-            key="marky:member-json-fallback",
+            key="patty:member-json-fallback",
             content=raw,
             related_issue=issue,
         )
@@ -333,21 +468,21 @@ async def marky_thursday_member_json(ctx: "JobContext") -> None:
     except Exception as exc:  # noqa: BLE001
         await ctx.post(channel, f"member.json compose ok, but S3 write failed: `{exc}`")
         db.insert_agent_note(
-            agent_name="marky",
+            agent_name="patty",
             kind="todo",
-            key="marky:member-json-pending",
+            key="patty:member-json-pending",
             content=payload,
             related_issue=issue,
         )
         return
 
     db.insert_agent_note(
-        agent_name="marky",
+        agent_name="patty",
         kind="todo",
-        key="marky:member-json-this-week",
+        key="patty:member-json-this-week",
         content=payload,
         related_issue=issue,
-        metadata={"job_id": "marky-thursday-member-json"},
+        metadata={"job_id": "patty-thursday-member-json"},
     )
 
     summary = (

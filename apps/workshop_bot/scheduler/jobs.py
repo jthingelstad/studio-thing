@@ -55,8 +55,13 @@ JOBS: tuple[JobSpec, ...] = (
     ),
     JobSpec(
         id="linky-popular-scan",
-        cron="0 12 * * 1,4",  # Mon + Thu noon Central
+        cron="0 */6 * * *",  # Every 6 hours (00, 06, 12, 18 Central)
         func=handlers.linky_popular_scan,
+    ),
+    JobSpec(
+        id="linky-research-unread",
+        cron="0 10,16 * * *",  # 10am + 4pm Central
+        func=handlers.linky_research_unread,
     ),
 
     # ---------- Marky ----------
@@ -72,10 +77,16 @@ JOBS: tuple[JobSpec, ...] = (
         cron="0 11 * * 1",
         func=handlers.marky_weekly_subscriber_report,
     ),
+
+    # ---------- Patty ----------
+    # Patty owns the supporter CTA voice and writes the per-issue
+    # member.json (CTA + progress update). Marky promotes; Patty
+    # stewards. The artifact lands in S3 for the iOS Shortcuts
+    # assemble pipeline to pull on Sunday morning.
     JobSpec(
-        id="marky-thursday-member-json",
-        cron="0 18 * * 4",
-        func=handlers.marky_thursday_member_json,
+        id="patty-thursday-member-json",
+        cron="0 18 * * 4",  # Thu 6pm Central
+        func=handlers.patty_thursday_member_json,
     ),
 
     # ---------- Eddy ----------

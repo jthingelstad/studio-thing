@@ -234,6 +234,98 @@ def upsert_subscriber_event(
         return cur.rowcount > 0
 
 
+# ---------- Linky: popular feed dedup + to-read research ----------
+
+def filter_unseen_popular(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return only items whose URL isn't yet in pinboard_popular_seen."""
+    if not items:
+        return []
+    urls = [it.get("url", "") for it in items if it.get("url")]
+    if not urls:
+        return []
+    placeholders = ",".join("?" * len(urls))
+    with connect() as conn:
+        rows = conn.execute(
+            f"SELECT url FROM pinboard_popular_seen WHERE url IN ({placeholders})",
+            urls,
+        ).fetchall()
+    seen = {r["url"] for r in rows}
+    return [it for it in items if it.get("url") and it["url"] not in seen]
+
+
+def mark_popular_seen(
+    items: list[dict[str, Any]],
+    *,
+    judged: Optional[dict[str, tuple[bool, str]]] = None,
+) -> int:
+    """Insert ``items`` into pinboard_popular_seen (no-op on conflict).
+
+    ``judged`` is an optional ``url -> (interesting?, note)`` mapping
+    from the LLM filter, persisted alongside the row so future audits
+    can see what Linky judged interesting vs not.
+    """
+    n = 0
+    judged = judged or {}
+    with connect() as conn:
+        for it in items:
+            url = it.get("url")
+            if not url:
+                continue
+            interesting_flag: Optional[int] = None
+            note: Optional[str] = None
+            if url in judged:
+                ok, note = judged[url]
+                interesting_flag = 1 if ok else 0
+            cur = conn.execute(
+                "INSERT OR IGNORE INTO pinboard_popular_seen "
+                "(url, title, posted_by, judged_interesting, judgment_note) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (
+                    url,
+                    it.get("title"),
+                    it.get("posted_by"),
+                    interesting_flag,
+                    note,
+                ),
+            )
+            if cur.rowcount:
+                n += 1
+    return n
+
+
+def filter_unresearched_urls(urls: list[str]) -> list[str]:
+    """Return only URLs not yet present in pinboard_research_done."""
+    if not urls:
+        return []
+    placeholders = ",".join("?" * len(urls))
+    with connect() as conn:
+        rows = conn.execute(
+            f"SELECT url FROM pinboard_research_done WHERE url IN ({placeholders})",
+            urls,
+        ).fetchall()
+    done = {r["url"] for r in rows}
+    return [u for u in urls if u not in done]
+
+
+def mark_url_researched(
+    *,
+    url: str,
+    title: Optional[str],
+    summary: str,
+    confidence: Optional[str] = None,
+    fit_note: Optional[str] = None,
+) -> bool:
+    """Insert a research record. Returns True if newly inserted."""
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT OR IGNORE INTO pinboard_research_done "
+            "(url, title, summary, confidence, fit_note) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (url, title, summary, confidence, fit_note),
+        )
+        return cur.rowcount > 0
+
+
 def recent_subscriber_events(
     *, limit: int = 30, event_type: Optional[str] = None
 ) -> list[dict[str, Any]]:

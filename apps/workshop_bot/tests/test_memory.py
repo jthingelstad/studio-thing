@@ -148,5 +148,78 @@ class MemoryRoundtripTests(unittest.TestCase):
             agent_tools.active_persona.reset(t)
 
 
+class PinboardDedupTests(unittest.TestCase):
+    """Linky's popular feed (every 6h) and to-read research (twice daily)
+    rely on these dedup helpers to avoid re-showing items each tick.
+    """
+
+    def setUp(self):
+        self._tmpdir = tempfile.TemporaryDirectory()
+        self._orig_path = os.environ.get("WORKSHOP_DB_PATH")
+        os.environ["WORKSHOP_DB_PATH"] = str(Path(self._tmpdir.name) / "test.db")
+        db.run_migrations()
+
+    def tearDown(self):
+        if self._orig_path is None:
+            os.environ.pop("WORKSHOP_DB_PATH", None)
+        else:
+            os.environ["WORKSHOP_DB_PATH"] = self._orig_path
+        self._tmpdir.cleanup()
+
+    def test_filter_unseen_popular_first_run(self):
+        items = [
+            {"url": "https://a.example/1", "title": "A", "posted_by": "alice"},
+            {"url": "https://b.example/2", "title": "B", "posted_by": "bob"},
+        ]
+        unseen = db.filter_unseen_popular(items)
+        self.assertEqual({i["url"] for i in unseen}, {i["url"] for i in items})
+
+    def test_mark_popular_seen_then_filter(self):
+        items = [
+            {"url": "https://a.example/1", "title": "A"},
+            {"url": "https://b.example/2", "title": "B"},
+        ]
+        n = db.mark_popular_seen(items)
+        self.assertEqual(n, 2)
+        # second call: same items, all seen
+        unseen = db.filter_unseen_popular(items)
+        self.assertEqual(unseen, [])
+
+    def test_mark_popular_seen_idempotent(self):
+        item = [{"url": "https://a.example/1", "title": "A"}]
+        self.assertEqual(db.mark_popular_seen(item), 1)
+        # No-op on second insert.
+        self.assertEqual(db.mark_popular_seen(item), 0)
+
+    def test_mark_popular_seen_records_judgment(self):
+        items = [{"url": "https://a.example/1", "title": "A"}]
+        db.mark_popular_seen(items, judged={"https://a.example/1": (True, "fits ai theme")})
+        rows = db.query_agent_notes()  # unrelated; just confirming nothing crashes
+        # Verify directly.
+        with db.connect() as conn:
+            row = conn.execute(
+                "SELECT judged_interesting, judgment_note FROM pinboard_popular_seen "
+                "WHERE url = ?",
+                ("https://a.example/1",),
+            ).fetchone()
+        self.assertEqual(row["judged_interesting"], 1)
+        self.assertEqual(row["judgment_note"], "fits ai theme")
+
+    def test_filter_unresearched_urls(self):
+        urls = ["u1", "u2", "u3"]
+        self.assertEqual(db.filter_unresearched_urls(urls), urls)
+        db.mark_url_researched(url="u2", title="t2", summary="s2")
+        self.assertEqual(db.filter_unresearched_urls(urls), ["u1", "u3"])
+
+    def test_mark_url_researched_idempotent(self):
+        self.assertTrue(db.mark_url_researched(url="x", title="t", summary="s"))
+        self.assertFalse(db.mark_url_researched(url="x", title="t", summary="s"))
+
+    def test_filter_helpers_handle_empty(self):
+        self.assertEqual(db.filter_unseen_popular([]), [])
+        self.assertEqual(db.filter_unresearched_urls([]), [])
+        self.assertEqual(db.mark_popular_seen([]), 0)
+
+
 if __name__ == "__main__":
     unittest.main()

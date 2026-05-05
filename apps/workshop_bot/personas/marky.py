@@ -13,9 +13,6 @@ class MarkyBot(PersonaBot):
     tools = tuple(agent_tools.UNIVERSAL) + (
         "fetch_tinylytics",
         "fetch_buttondown_subscribers",
-        # Marky writes member.json on Thursdays — needs the support state
-        # tool to pull the current nonprofit and dollars-raised numbers.
-        "get_support_state",
     )
     empty_greeting = "Hey — what are you working on?"
     preferred_model = "sonnet"

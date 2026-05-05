@@ -112,3 +112,27 @@ CREATE TABLE IF NOT EXISTS subscriber_events_seen (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriber_events_external
   ON subscriber_events_seen(external_id, event_type);
+
+-- URLs Linky has already shown to Jamie from Pinboard's popular feed.
+-- The popular handler runs every 6 hours; we dedup against this table so
+-- Jamie only sees each item once regardless of how long it stays popular.
+CREATE TABLE IF NOT EXISTS pinboard_popular_seen (
+  url TEXT PRIMARY KEY,
+  title TEXT,
+  posted_by TEXT,
+  judged_interesting INTEGER,                  -- 1 / 0 / NULL (not judged yet)
+  judgment_note TEXT,
+  first_seen_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Items from Jamie's Pinboard "to read" pile that Linky has already
+-- researched (URL fetched, summary written). Lets the research handler
+-- pick up where it left off across runs.
+CREATE TABLE IF NOT EXISTS pinboard_research_done (
+  url TEXT PRIMARY KEY,
+  title TEXT,
+  summary TEXT,
+  confidence TEXT,                             -- ✦ / · / ⊘
+  fit_note TEXT,
+  researched_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
