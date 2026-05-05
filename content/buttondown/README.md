@@ -13,4 +13,4 @@ Issue bodies and per-email metadata are pulled from Buttondown by `pipeline/cont
 
 ## Sync
 
-Sync scripts will live in `pipeline/buttondown/` (`pull_newsletter.py`, `push_newsletter.py`, `pull_automations.py`, `push_automations.py`, `diff_buttondown.py`). Not implemented yet — the directories exist as scaffolding for the next workshop-bot milestone.
+Sync scripts (`pull_newsletter.py`, `push_newsletter.py`, `pull_automations.py`, `push_automations.py`, `diff_buttondown.py`) are not implemented yet. They'll live alongside `pipeline/content/content.py` when added.

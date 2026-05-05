@@ -11,4 +11,4 @@ welcome-sequence/
 └── action-02-day-7.md       # body of the second action
 ```
 
-Sync scripts (`pipeline/buttondown/pull_automations.py`, `push_automations.py`) are not implemented yet.
+Sync scripts (`pull_automations.py`, `push_automations.py`) are not implemented yet.

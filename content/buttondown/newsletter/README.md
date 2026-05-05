@@ -14,4 +14,4 @@ transactional/
 └── confirmation_reminder.md
 ```
 
-Sync scripts (`pipeline/buttondown/pull_newsletter.py`, `push_newsletter.py`) are not implemented yet. The current production email CSS lives at `docs/email/buttondown-email.css`; it will move here when sync lands.
+Sync scripts (`pull_newsletter.py`, `push_newsletter.py`) are not implemented yet. The current production email CSS lives at `docs/email/buttondown-email.css`; it will move here when sync lands.
