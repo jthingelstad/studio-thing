@@ -10,6 +10,12 @@ class LinkyBot(PersonaBot):
     persona = "linky"
     name = "Linky"
     home_channel_env = "DISCORD_CHANNEL_RESEARCH"
-    tools = tuple(agent_tools.UNIVERSAL) + ("fetch_pinboard", "read_stored_bookmarks")
+    tools = tuple(agent_tools.UNIVERSAL) + (
+        "fetch_pinboard",
+        "fetch_pinboard_unread",
+        "fetch_pinboard_popular",
+        "read_stored_bookmarks",
+        "fetch_url",
+    )
     empty_greeting = "Hey — want a curation pass, or asking about a specific link?"
     preferred_model = "sonnet"

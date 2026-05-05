@@ -71,3 +71,44 @@ CREATE TABLE IF NOT EXISTS channel_routes (
   primary_agent TEXT,
   category TEXT
 );
+
+-- Agent memory — notes a persona wants to carry forward beyond the
+-- conversation in any one Discord thread. Shared across personas (by
+-- design — Eddy can read what Patty observed, Marky can see what Linky
+-- noticed) and attributed via agent_name.
+CREATE TABLE IF NOT EXISTS agent_notes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  agent_name TEXT NOT NULL,
+  kind TEXT NOT NULL,                          -- 'preference', 'observation',
+                                               -- 'todo', 'context', 'theme'
+  key TEXT,                                    -- short label, optional
+  content TEXT NOT NULL,
+  related_issue INTEGER,
+  status TEXT NOT NULL DEFAULT 'active',       -- 'active', 'resolved', 'stale'
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  expires_at TEXT,
+  metadata TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_agent_notes_agent_status_created
+  ON agent_notes(agent_name, status, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_agent_notes_kind_status
+  ON agent_notes(kind, status);
+
+-- Subscriber activity Marky surfaces — populated either by webhook (later)
+-- or by a periodic Buttondown poll. Email is hashed before storage so we
+-- never persist raw email addresses for the supporter program tracking.
+CREATE TABLE IF NOT EXISTS subscriber_events_seen (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  external_id TEXT NOT NULL,                   -- Buttondown subscriber id
+  email_hash TEXT NOT NULL,
+  event_type TEXT NOT NULL,                    -- 'created', 'unsubscribed',
+                                               -- 'churned'
+  event_date TEXT NOT NULL,
+  metadata TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriber_events_external
+  ON subscriber_events_seen(external_id, event_type);

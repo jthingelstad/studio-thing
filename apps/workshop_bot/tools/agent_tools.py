@@ -11,13 +11,19 @@ A single tool result over ~50KB will be truncated when serialized.
 from __future__ import annotations
 
 import logging
+from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from . import archive, db, pinboard, support_state
+from . import archive, buttondown, db, pinboard, s3, support_state, tinylytics, web
 
 logger = logging.getLogger("workshop.tools")
+
+# The agent loop sets this before each tool execution so memory tools
+# (`remember`, `recall`) can attribute notes to the calling persona
+# without leaning on a shared, mutable Deps object.
+active_persona: ContextVar[str] = ContextVar("active_persona", default="unknown")
 
 REPO = Path(__file__).resolve().parents[3]
 SECTION_RE_TEMPLATE = r"(?im)^##+\s*{section}\s*[^\n]*\n([\s\S]*?)(?=^##+\s|\Z)"
@@ -162,9 +168,221 @@ def t_fetch_pinboard(deps, count: int = 50) -> list[dict[str, Any]]:
     return posts
 
 
+def t_fetch_pinboard_unread(deps, limit: int = 100, tag: Optional[str] = None) -> list[dict[str, Any]]:
+    """Pinboard items Jamie has marked ``to read`` — the queue Linky is here to
+    help drain. Persists to SQLite like ``fetch_pinboard``."""
+    raw = pinboard.all_unread(limit=int(limit), tag=tag)
+    posts = [pinboard.normalize_post(p) for p in raw]
+    for p in posts:
+        db.upsert_link_candidate(
+            url=p["url"],
+            title=p["title"],
+            description=p["description"],
+            pinboard_tags=p["tags"],
+            pinboard_added=p["added"],
+        )
+    return posts
+
+
 def t_read_stored_bookmarks(deps, limit: int = 30) -> list[dict[str, Any]]:
     """Most recent bookmarks already in SQLite (no live API call)."""
     return db.recent_link_candidates(limit=int(limit))
+
+
+def t_fetch_pinboard_popular(deps, limit: int = 30) -> list[dict[str, Any]]:
+    """Pinboard's site-wide popular feed — the discovery surface Jamie scans
+    manually. Use to suggest interesting items he might not have seen yet."""
+    return pinboard.popular(limit=int(limit))
+
+
+def t_fetch_url(deps, url: str, max_chars: int = 12_000) -> dict[str, Any]:
+    """Fetch a URL and return readable text. Use for Linky to actually read what
+    a bookmark is about before recommending it."""
+    return web.fetch_text(url, max_chars=int(max_chars))
+
+
+# ---------- current issue resolver ----------
+
+def t_current_issue_number(deps) -> dict[str, Any]:
+    """Resolve which issue is being assembled this week.
+
+    Combines two signals:
+      - the highest issue folder in S3 (where Jamie's iOS Shortcuts stage drafts)
+      - the highest published issue in the archive corpus (the reference baseline)
+
+    The working issue is **not** in the archive corpus — it's a draft. Use
+    this when Jamie says "the current issue", "this weekend's issue", or
+    "the one I'm working on" so you don't accidentally treat the most
+    recently *published* issue as the in-flight one.
+    """
+    try:
+        ws = s3.list_workspaces()
+        s3_max = ws.get("current_issue_number")
+    except Exception as exc:  # noqa: BLE001
+        s3_max = None
+        ws = {"error": f"{type(exc).__name__}: {exc}"}
+
+    published_latest = None
+    if deps is not None and getattr(deps, "corpus", None) is not None:
+        published_latest = deps.corpus.latest_issue_number
+
+    # If S3 has a workspace newer than the archive, that's the in-flight issue.
+    # Otherwise the in-flight issue is published_latest + 1 and no workspace
+    # has been created yet.
+    if s3_max is not None and (published_latest is None or s3_max > published_latest):
+        working = s3_max
+        has_workspace = True
+    elif published_latest is not None:
+        working = published_latest + 1
+        has_workspace = False
+    else:
+        working = None
+        has_workspace = False
+
+    return {
+        "working_issue_number": working,
+        "has_s3_workspace": has_workspace,
+        "s3_max_workspace": s3_max,
+        "published_latest_issue": published_latest,
+        "note": (
+            "The working issue is the in-flight draft — it is NOT in your "
+            "archive corpus yet. search_archive / get_issue won't find it."
+        ),
+    }
+
+
+# ---------- Marky ----------
+
+def t_fetch_tinylytics(deps, days: int = 7) -> dict[str, Any]:
+    """Trailing-window engagement summary: top pages, referrers, custom events."""
+    return tinylytics.safe_summary(days=int(days))
+
+
+def t_fetch_buttondown_subscribers(
+    deps, kind: str = "recent", limit: int = 25
+) -> dict[str, Any]:
+    """Subscriber activity. ``kind`` is one of:
+      - ``"recent"``       — newest subscribers
+      - ``"unsubscribed"`` — recent unsubscribes/churn
+      - ``"counts"``       — total/premium/unsubscribed counts only
+    Email addresses are hashed before they ever reach the LLM.
+    """
+    kind = (kind or "recent").lower()
+    if kind == "counts":
+        return {"counts": buttondown.counts()}
+    if kind == "unsubscribed":
+        return {"kind": "unsubscribed", "subscribers": buttondown.recent_unsubscribes(limit=int(limit))}
+    return {"kind": "recent", "subscribers": buttondown.recent_subscribers(limit=int(limit))}
+
+
+# ---------- memory (universal) ----------
+
+def t_remember(
+    deps,
+    content: str,
+    kind: str = "observation",
+    key: Optional[str] = None,
+    related_issue: Optional[int] = None,
+    expires_in_days: Optional[int] = None,
+) -> dict[str, Any]:
+    """Save a note to long-term memory. Notes are visible to all teammates
+    and persist across sessions. ``kind`` is one of:
+      preference / observation / todo / context / theme.
+    Use ``key`` for a short retrieval label (e.g. ``"jamie:ai-fatigue"``)."""
+    if kind not in db.NOTE_KINDS:
+        return {"error": f"kind must be one of {list(db.NOTE_KINDS)}"}
+    expires_at: Optional[str] = None
+    if expires_in_days is not None:
+        from datetime import datetime, timedelta, timezone
+        expires_at = (
+            datetime.now(timezone.utc) + timedelta(days=int(expires_in_days))
+        ).strftime("%Y-%m-%d %H:%M:%S")
+    # Persona name comes from the calling persona via deps.
+    note_id = db.insert_agent_note(
+        agent_name=active_persona.get() or "unknown",
+        kind=kind,
+        content=content,
+        key=key,
+        related_issue=int(related_issue) if related_issue is not None else None,
+        expires_at=expires_at,
+    )
+    return {"id": note_id, "kind": kind, "key": key, "saved": True}
+
+
+def t_recall(
+    deps,
+    query: Optional[str] = None,
+    kind: Optional[str] = None,
+    agent_name: Optional[str] = None,
+    limit: int = 20,
+    include_resolved: bool = False,
+) -> list[dict[str, Any]]:
+    """Read notes from long-term memory. Default is your own active notes;
+    pass ``agent_name="*"`` to see everyone's, or a specific persona name
+    to see one teammate's. ``query`` does a substring match across content
+    and key."""
+    if agent_name == "*":
+        agent_name = None
+    elif not agent_name:
+        agent_name = active_persona.get()
+    return db.query_agent_notes(
+        agent_name=agent_name,
+        kind=kind,
+        query=query,
+        include_resolved=bool(include_resolved),
+        limit=int(limit),
+    )
+
+
+def t_forget_note(deps, note_id: int, status: str = "resolved") -> dict[str, Any]:
+    """Mark a note as resolved or stale. Notes are never hard-deleted —
+    they fall off ``recall`` results unless ``include_resolved=true``."""
+    if status not in ("resolved", "stale", "active"):
+        return {"error": "status must be resolved, stale, or active"}
+    ok = db.update_agent_note_status(int(note_id), status)
+    return {"id": int(note_id), "status": status, "updated": ok}
+
+
+# ---------- S3 issue workspace (universal) ----------
+
+def t_s3_list_issue_workspaces(deps) -> dict[str, Any]:
+    """List every issue workspace folder in S3 with file counts and
+    last-modified timestamps. The highest issue number is the issue
+    currently being assembled."""
+    return s3.list_workspaces()
+
+
+def t_s3_list_issue(deps, issue_number: int) -> dict[str, Any]:
+    """List the per-issue files in the S3 workspace
+    (``s3://files.thingelstad.com/weekly-thing/issues/{N}/``)."""
+    try:
+        return s3.list_issue(int(issue_number))
+    except s3.S3PathError as exc:
+        return {"error": str(exc)}
+
+
+def t_s3_read_issue_file(deps, issue_number: int, filename: str) -> dict[str, Any]:
+    """Read one file from the per-issue S3 workspace. Text only — binary
+    objects (photos) are reported but not returned. Filename must be a
+    bare component (no slashes, no '..')."""
+    try:
+        return s3.read_issue_file(int(issue_number), filename)
+    except s3.S3PathError as exc:
+        return {"error": str(exc)}
+
+
+def t_s3_write_issue_file(
+    deps, issue_number: int, filename: str, content: str
+) -> dict[str, Any]:
+    """Write one file to the per-issue S3 workspace. Use for files that
+    need to be picked up by the iOS Shortcuts assemble pipeline (e.g.
+    ``patty-cta.json``, ``marky-meta.json``, ``linky-curation.md``).
+    256KB max per file. Allowed extensions: md, txt, json, yaml, yml,
+    csv, html. Filename must be a bare component."""
+    try:
+        return s3.write_issue_file(int(issue_number), filename, content)
+    except s3.S3PathError as exc:
+        return {"error": str(exc)}
 
 
 # ---------- specs (Anthropic format) ----------
@@ -268,6 +486,218 @@ SPECS: dict[str, dict[str, Any]] = {
             "properties": {"limit": {"type": "integer", "description": "default 30"}},
         },
     },
+    "fetch_pinboard_unread": {
+        "name": "fetch_pinboard_unread",
+        "description": (
+            "Live-fetch bookmarks Jamie has marked as `to read` on Pinboard. This is "
+            "the working queue for what could go in the next issue. Persists to SQLite."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "limit": {"type": "integer", "description": "default 100, max 1000"},
+                "tag": {"type": "string", "description": "optional Pinboard tag filter"},
+            },
+        },
+    },
+    "fetch_pinboard_popular": {
+        "name": "fetch_pinboard_popular",
+        "description": (
+            "Pinboard's site-wide popular bookmarks feed — the discovery surface "
+            "Jamie scans manually. Use to suggest items he might not have seen yet, "
+            "or to ground 'what's resonating across Pinboard right now'. Returns "
+            "title, url, description, posted_by."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "limit": {"type": "integer", "description": "default 30"},
+            },
+        },
+    },
+    "fetch_url": {
+        "name": "fetch_url",
+        "description": (
+            "Fetch a URL and return readable text (title + extracted body). Use to actually "
+            "read what a bookmark is about — Pinboard's title and tags often aren't enough "
+            "to judge fit. Truncates long pages; binary content rejected; ~12KB cap on text."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string"},
+                "max_chars": {"type": "integer", "description": "default 12000"},
+            },
+            "required": ["url"],
+        },
+    },
+    "fetch_tinylytics": {
+        "name": "fetch_tinylytics",
+        "description": (
+            "Trailing-window engagement summary for weekly.thingelstad.com: "
+            "stats, top pages, referrers, and custom events (donate, membership). "
+            "Use to ground 'what's working lately'. Returns partial data even if "
+            "individual endpoints fail."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "days": {"type": "integer", "description": "trailing days; default 7"},
+            },
+        },
+    },
+    "fetch_buttondown_subscribers": {
+        "name": "fetch_buttondown_subscribers",
+        "description": (
+            "Subscriber activity from Buttondown. `kind`: 'recent' (newest signups), "
+            "'unsubscribed' (recent churn), or 'counts' (totals only). Email addresses "
+            "are hashed before they ever reach this tool — never raw emails."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "kind": {"type": "string", "enum": ["recent", "unsubscribed", "counts"]},
+                "limit": {"type": "integer", "description": "default 25"},
+            },
+        },
+    },
+    "remember": {
+        "name": "remember",
+        "description": (
+            "Save a note to long-term memory — visible to all teammates and persists across "
+            "sessions. Use for: preferences Jamie has expressed, observations to carry "
+            "forward, todos for yourself, themes you're tracking, context that mattered. "
+            "`kind` is one of: preference, observation, todo, context, theme. `key` is an "
+            "optional short retrieval label (e.g. 'jamie:ai-fatigue')."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "content": {"type": "string"},
+                "kind": {
+                    "type": "string",
+                    "enum": ["preference", "observation", "todo", "context", "theme"],
+                },
+                "key": {"type": "string"},
+                "related_issue": {"type": "integer"},
+                "expires_in_days": {"type": "integer"},
+            },
+            "required": ["content"],
+        },
+    },
+    "recall": {
+        "name": "recall",
+        "description": (
+            "Read notes from long-term memory. Default scope is your own active notes; "
+            "set `agent_name` to a teammate's name to read theirs, or '*' to read everyone's. "
+            "`query` does substring search across content and key. Use to surface relevant "
+            "preferences/themes/todos before answering."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "kind": {"type": "string"},
+                "agent_name": {"type": "string"},
+                "limit": {"type": "integer", "description": "default 20"},
+                "include_resolved": {"type": "boolean"},
+            },
+        },
+    },
+    "forget_note": {
+        "name": "forget_note",
+        "description": (
+            "Mark a memory note as resolved (the todo is done) or stale (no longer "
+            "applicable). Notes are never hard-deleted; resolved/stale notes drop out of "
+            "default recall results."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "note_id": {"type": "integer"},
+                "status": {"type": "string", "enum": ["resolved", "stale", "active"]},
+            },
+            "required": ["note_id"],
+        },
+    },
+    "current_issue_number": {
+        "name": "current_issue_number",
+        "description": (
+            "Resolve the in-flight issue number — the one Jamie is assembling "
+            "this week. **The in-flight issue is NOT in your archive corpus** "
+            "(search_archive / get_issue won't find it; it's a draft). This tool "
+            "combines two signals: the highest workspace folder in S3 and the "
+            "highest published issue in the corpus. Use when Jamie says 'the "
+            "current issue', 'this weekend's issue', or 'the one I'm working on'. "
+            "No arguments."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    "s3_list_issue_workspaces": {
+        "name": "s3_list_issue_workspaces",
+        "description": (
+            "List every issue workspace folder in S3 (under "
+            "s3://files.thingelstad.com/weekly-thing/issues/). Returns each issue's "
+            "number, file count, and most-recent modification time. The highest "
+            "issue number is the issue currently being assembled — call "
+            "`current_issue_number` for the resolved working number, or use this "
+            "when you need the per-folder modification times. No arguments."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    "s3_list_issue": {
+        "name": "s3_list_issue",
+        "description": (
+            "List the per-issue files in the S3 workspace at "
+            "s3://files.thingelstad.com/weekly-thing/issues/{N}/. This is where "
+            "Jamie's iOS Shortcuts read/write draft.md, photo.jpg, photo-caption.txt, "
+            "metadata.json, and where you write outputs the assemble pipeline picks up."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"issue_number": {"type": "integer"}},
+            "required": ["issue_number"],
+        },
+    },
+    "s3_read_issue_file": {
+        "name": "s3_read_issue_file",
+        "description": (
+            "Read one file from the per-issue S3 workspace. Text only — binary "
+            "objects like photo.jpg are reported but their bytes aren't returned. "
+            "Filename must be a bare component (no slashes, no '..')."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "issue_number": {"type": "integer"},
+                "filename": {
+                    "type": "string",
+                    "description": "e.g. 'draft.md', 'metadata.json'",
+                },
+            },
+            "required": ["issue_number", "filename"],
+        },
+    },
+    "s3_write_issue_file": {
+        "name": "s3_write_issue_file",
+        "description": (
+            "Write one file to the per-issue S3 workspace. Use to drop outputs "
+            "the Shortcuts assemble pipeline picks up — e.g. patty-cta.json, "
+            "marky-meta.json, linky-curation.md. 256KB cap per file. Allowed "
+            "extensions: md, txt, json, yaml, yml, csv, html. The path is "
+            "scoped to weekly-thing/issues/{issue_number}/ — you can't write "
+            "outside that prefix."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "issue_number": {"type": "integer"},
+                "filename": {"type": "string"},
+                "content": {"type": "string"},
+            },
+            "required": ["issue_number", "filename", "content"],
+        },
+    },
 }
 
 
@@ -279,17 +709,41 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "quote_search": t_quote_search,
     "get_support_state": t_get_support_state,
     "fetch_pinboard": t_fetch_pinboard,
+    "fetch_pinboard_unread": t_fetch_pinboard_unread,
+    "fetch_pinboard_popular": t_fetch_pinboard_popular,
     "read_stored_bookmarks": t_read_stored_bookmarks,
+    "fetch_url": t_fetch_url,
+    "current_issue_number": t_current_issue_number,
+    "fetch_tinylytics": t_fetch_tinylytics,
+    "fetch_buttondown_subscribers": t_fetch_buttondown_subscribers,
+    "remember": t_remember,
+    "recall": t_recall,
+    "forget_note": t_forget_note,
+    "s3_list_issue_workspaces": t_s3_list_issue_workspaces,
+    "s3_list_issue": t_s3_list_issue,
+    "s3_read_issue_file": t_s3_read_issue_file,
+    "s3_write_issue_file": t_s3_write_issue_file,
 }
 
 
 # Universal tool set every persona gets unless they explicitly drop one.
+# Memory, the per-issue S3 workspace, and the in-flight issue resolver
+# are all universal — every persona needs to know what week it is and
+# read/write artifacts that flow through Jamie's assemble pipeline.
 UNIVERSAL = (
     "search_archive",
     "get_issue",
     "get_section",
     "list_recent_issues",
     "quote_search",
+    "remember",
+    "recall",
+    "forget_note",
+    "current_issue_number",
+    "s3_list_issue_workspaces",
+    "s3_list_issue",
+    "s3_read_issue_file",
+    "s3_write_issue_file",
 )
 
 

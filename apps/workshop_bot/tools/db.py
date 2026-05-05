@@ -128,6 +128,130 @@ def recent_link_candidates(limit: int = 30) -> list[dict[str, Any]]:
     return [dict(r) for r in rows]
 
 
+# ---------- agent memory ----------
+
+NOTE_KINDS = ("preference", "observation", "todo", "context", "theme")
+
+
+def insert_agent_note(
+    *,
+    agent_name: str,
+    kind: str,
+    content: str,
+    key: Optional[str] = None,
+    related_issue: Optional[int] = None,
+    expires_at: Optional[str] = None,
+    metadata: Optional[dict[str, Any]] = None,
+) -> int:
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO agent_notes "
+            "(agent_name, kind, key, content, related_issue, expires_at, metadata) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                agent_name,
+                kind,
+                key,
+                content,
+                related_issue,
+                expires_at,
+                json.dumps(metadata) if metadata else None,
+            ),
+        )
+        return int(cur.lastrowid or 0)
+
+
+def query_agent_notes(
+    *,
+    agent_name: Optional[str] = None,
+    kind: Optional[str] = None,
+    query: Optional[str] = None,
+    include_resolved: bool = False,
+    limit: int = 20,
+) -> list[dict[str, Any]]:
+    """Return notes ordered newest-first. Filter by agent, kind, or text match."""
+    sql_parts = [
+        "SELECT id, agent_name, kind, key, content, related_issue, status, "
+        "       created_at, expires_at "
+        "FROM agent_notes WHERE 1=1"
+    ]
+    params: list[Any] = []
+    if agent_name:
+        sql_parts.append("AND agent_name = ?")
+        params.append(agent_name)
+    if kind:
+        sql_parts.append("AND kind = ?")
+        params.append(kind)
+    if not include_resolved:
+        sql_parts.append("AND status = 'active'")
+    if query:
+        sql_parts.append("AND (content LIKE ? OR key LIKE ?)")
+        like = f"%{query}%"
+        params.extend([like, like])
+    sql_parts.append(
+        "AND (expires_at IS NULL OR expires_at > datetime('now')) "
+        "ORDER BY created_at DESC LIMIT ?"
+    )
+    params.append(limit)
+    with connect() as conn:
+        rows = conn.execute(" ".join(sql_parts), params).fetchall()
+    return [dict(r) for r in rows]
+
+
+def update_agent_note_status(note_id: int, status: str) -> bool:
+    with connect() as conn:
+        cur = conn.execute(
+            "UPDATE agent_notes SET status = ? WHERE id = ?",
+            (status, note_id),
+        )
+        return cur.rowcount > 0
+
+
+# ---------- subscriber events (Marky) ----------
+
+def upsert_subscriber_event(
+    *,
+    external_id: str,
+    email_hash: str,
+    event_type: str,
+    event_date: str,
+    metadata: Optional[dict[str, Any]] = None,
+) -> bool:
+    """Returns True if this is a new (external_id, event_type) pair."""
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT OR IGNORE INTO subscriber_events_seen "
+            "(external_id, email_hash, event_type, event_date, metadata) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (
+                external_id,
+                email_hash,
+                event_type,
+                event_date,
+                json.dumps(metadata) if metadata else None,
+            ),
+        )
+        return cur.rowcount > 0
+
+
+def recent_subscriber_events(
+    *, limit: int = 30, event_type: Optional[str] = None
+) -> list[dict[str, Any]]:
+    sql = (
+        "SELECT external_id, email_hash, event_type, event_date, created_at "
+        "FROM subscriber_events_seen"
+    )
+    params: list[Any] = []
+    if event_type:
+        sql += " WHERE event_type = ?"
+        params.append(event_type)
+    sql += " ORDER BY event_date DESC LIMIT ?"
+    params.append(limit)
+    with connect() as conn:
+        rows = conn.execute(sql, params).fetchall()
+    return [dict(r) for r in rows]
+
+
 class AgentRun:
     """Context manager that opens an agent_runs row and closes it with the result."""
 

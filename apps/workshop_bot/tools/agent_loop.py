@@ -71,18 +71,31 @@ def _build_tool_specs(tool_names: list[str]) -> list[dict[str, Any]]:
     return specs
 
 
-def _execute_tool(name: str, deps: Any, raw_input: dict[str, Any]) -> str:
+def _execute_tool(
+    name: str,
+    deps: Any,
+    raw_input: dict[str, Any],
+    *,
+    persona: Optional[str] = None,
+) -> str:
     func = agent_tools.FUNCS.get(name)
     if func is None:
         return json.dumps({"error": f"unknown tool {name!r}"})
     t0 = time.monotonic()
+    token = None
+    if persona is not None:
+        token = agent_tools.active_persona.set(persona)
     try:
-        result = func(deps, **(raw_input or {}))
-    except TypeError as exc:
-        return json.dumps({"error": f"bad arguments to {name}: {exc}"})
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("tool %s raised", name)
-        return json.dumps({"error": f"{type(exc).__name__}: {exc}"})
+        try:
+            result = func(deps, **(raw_input or {}))
+        except TypeError as exc:
+            return json.dumps({"error": f"bad arguments to {name}: {exc}"})
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("tool %s raised", name)
+            return json.dumps({"error": f"{type(exc).__name__}: {exc}"})
+    finally:
+        if token is not None:
+            agent_tools.active_persona.reset(token)
     dt_ms = int((time.monotonic() - t0) * 1000)
     logger.info("tool %s ok (%dms, args=%s)", name, dt_ms, _short_args(raw_input))
     payload = json.dumps(result, ensure_ascii=False, default=str)
@@ -190,7 +203,9 @@ def run(
         # Execute tools and assemble a single user message of tool_results.
         tool_result_blocks: list[dict[str, Any]] = []
         for tu in tool_uses:
-            payload = _execute_tool(tu.name, deps, dict(tu.input or {}))
+            payload = _execute_tool(
+                tu.name, deps, dict(tu.input or {}), persona=persona
+            )
             tool_result_blocks.append(
                 {"type": "tool_result", "tool_use_id": tu.id, "content": payload}
             )
