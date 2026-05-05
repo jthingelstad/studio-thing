@@ -194,7 +194,7 @@ async def linky_friday_curation(ctx: "JobContext") -> None:
         "Jamie can pull it up by name. Plain markdown."
     )
     answer, meta = await bot.core(latest=prompt, history=[], model=None)
-    await ctx.post(channel, answer or "(curation pass produced nothing)")
+    await ctx.post(channel, answer or "(curation pass produced nothing)", suppress_embeds=True)
 
 
 async def linky_popular_scan(ctx: "JobContext") -> None:
@@ -266,7 +266,7 @@ async def linky_popular_scan(ctx: "JobContext") -> None:
     body = (
         f"Popular on Pinboard right now (filtered to what looks relevant):\n\n{answer}"
     )
-    await ctx.post(channel, body)
+    await ctx.post(channel, body, suppress_embeds=True)
 
 
 async def linky_research_unread(ctx: "JobContext") -> None:
@@ -355,7 +355,7 @@ async def linky_research_unread(ctx: "JobContext") -> None:
         db.mark_url_researched(url=url, title=title, summary=body_text[:2000])
 
     if body_text:
-        await ctx.post(channel, f"Research notes from the to-read pile:\n\n{body_text}")
+        await ctx.post(channel, f"Research notes from the to-read pile:\n\n{body_text}", suppress_embeds=True)
 
 
 # ============================================================
