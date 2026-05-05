@@ -33,6 +33,7 @@ logger = logging.getLogger("workshop.thingy")
 FEEDBACK_EMOJI = {"👍": "up", "👎": "down"}
 THUMBS_UP = "👍"
 THUMBS_DOWN = "👎"
+ACK_EMOJI = "✅"
 
 
 def _profile_is_returning(profile: dict[str, Any]) -> bool:
@@ -122,6 +123,7 @@ class ThingyBot(PersonaBot):
                 await message.reply(
                     f"Sorry — Thingy hit a snag: `{type(exc).__name__}: {exc}`"[:1900],
                     mention_author=False,
+                    suppress_embeds=True,
                 )
             except discord.DiscordException:
                 logger.exception("thingy: also failed to post error notice")
@@ -137,7 +139,9 @@ class ThingyBot(PersonaBot):
     ) -> None:
         question = (attachment or body).strip()
         if not question:
-            await message.reply(self.empty_greeting, mention_author=False)
+            await message.reply(
+                self.empty_greeting, mention_author=False, suppress_embeds=True,
+            )
             return
 
         # Build the conversation history from this channel's recent
@@ -170,6 +174,7 @@ class ThingyBot(PersonaBot):
             await message.reply(
                 f"I can't reach the archive right now: `{exc}`",
                 mention_author=False,
+                suppress_embeds=True,
             )
             return
 
@@ -181,7 +186,8 @@ class ThingyBot(PersonaBot):
         if auth_result.fresh and _profile_is_returning(auth_result.profile):
             try:
                 await message.channel.send(
-                    _format_welcome_back(auth_result.profile)
+                    _format_welcome_back(auth_result.profile),
+                    suppress_embeds=True,
                 )
                 db.mark_thingy_welcomed(discord_user_id)
             except discord.DiscordException:
@@ -223,7 +229,9 @@ class ThingyBot(PersonaBot):
                     request_id=request_id,
                 )
                 await message.reply(
-                    f"Thingy couldn't answer: `{exc}`", mention_author=False,
+                    f"Thingy couldn't answer: `{exc}`",
+                    mention_author=False,
+                    suppress_embeds=True,
                 )
                 return
 
@@ -241,43 +249,50 @@ class ThingyBot(PersonaBot):
             await message.reply(
                 "Thingy didn't return anything. Try rephrasing?",
                 mention_author=False,
+                suppress_embeds=True,
             )
             return
 
-        sent_first = await self._send_answer(message, answer)
+        sent_last = await self._send_answer(message, answer)
 
         db.update_thingy_request(
             run_row,
             status="ok",
             duration_ms=int((time.monotonic() - t0) * 1000),
             request_id=request_id,
-            bot_response_message_id=str(sent_first.id) if sent_first else None,
+            bot_response_message_id=str(sent_last.id) if sent_last else None,
         )
 
-        # Add reaction prompts so users can rate without typing. Only on
-        # the first chunk so a multi-chunk answer doesn't get reactions
-        # spread across messages.
-        if sent_first is not None and request_id:
+        # Reactions go on the LAST chunk of the answer so they sit at
+        # the visual end of the reply (long answers split into multiple
+        # Discord messages — putting reactions on the first chunk made
+        # users think the response had ended early).
+        if sent_last is not None and request_id:
             for emoji in (THUMBS_UP, THUMBS_DOWN):
                 try:
-                    await sent_first.add_reaction(emoji)
+                    await sent_last.add_reaction(emoji)
                 except discord.DiscordException:
                     logger.exception("thingy: failed to add %s reaction", emoji)
 
     async def _send_answer(
         self, message: discord.Message, answer: str
     ) -> Optional[discord.Message]:
-        """Send the answer chunked. Return the first reply message so we
-        can attach reactions to it."""
+        """Send the answer chunked. Every chunk is a reply to the user's
+        original message so the chain visually holds together. Returns
+        the LAST chunk so the caller can attach feedback reactions
+        there — reactions land at the visual end of the response.
+
+        ``suppress_embeds=True`` keeps Discord from auto-previewing
+        archive URLs in the citations — those previews crowd the answer.
+        """
         if not answer.strip():
             return None
-        first_msg: Optional[discord.Message] = None
+        last_msg: Optional[discord.Message] = None
         for chunk in discord_io.split_for_discord(answer):
-            if first_msg is None:
-                first_msg = await message.reply(chunk, mention_author=False)
-            else:
-                await message.channel.send(chunk)
-        return first_msg
+            last_msg = await message.reply(
+                chunk, mention_author=False, suppress_embeds=True,
+            )
+        return last_msg
 
     async def _build_thingy_history(
         self, message: discord.Message
@@ -331,3 +346,21 @@ class ThingyBot(PersonaBot):
             "thingy feedback %s for request %s: %s",
             reaction, record["request_id"], "ok" if ok else "failed",
         )
+        if ok:
+            await self._ack_feedback(payload)
+
+    async def _ack_feedback(
+        self, payload: discord.RawReactionActionEvent
+    ) -> None:
+        """Add a ✅ to the answer message so the user sees the thumbs-up
+        / thumbs-down was registered. Quiet failure on Discord errors —
+        feedback already landed; the ack is just a visual receipt.
+        """
+        try:
+            channel = self.get_channel(payload.channel_id)
+            if channel is None:
+                channel = await self.fetch_channel(payload.channel_id)
+            msg = await channel.fetch_message(payload.message_id)
+            await msg.add_reaction(ACK_EMOJI)
+        except discord.DiscordException:
+            logger.exception("thingy: failed to add ✅ acknowledgment")

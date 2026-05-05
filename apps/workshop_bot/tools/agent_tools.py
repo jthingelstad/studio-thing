@@ -186,7 +186,12 @@ def t_fetch_pinboard_unread(deps, limit: int = 100, tag: Optional[str] = None) -
 
 def t_read_stored_bookmarks(deps, limit: int = 30) -> list[dict[str, Any]]:
     """Most recent bookmarks already in SQLite (no live API call)."""
-    return db.recent_link_candidates(limit=int(limit))
+    rows = db.recent_link_candidates(limit=int(limit))
+    for row in rows:
+        url = row.get("url") or ""
+        if url:
+            row["pinboard_url"] = pinboard.bookmark_url(url)
+    return rows
 
 
 def t_fetch_pinboard_popular(deps, limit: int = 30) -> list[dict[str, Any]]:

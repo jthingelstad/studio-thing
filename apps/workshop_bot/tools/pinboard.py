@@ -6,6 +6,7 @@ Auth token comes from PINBOARD_API_TOKEN. The token is in the form
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 from typing import Any
@@ -22,6 +23,28 @@ def _token() -> str:
     if not tok:
         raise RuntimeError("PINBOARD_API_TOKEN is not set")
     return tok
+
+
+def _username() -> str:
+    """Pinboard username, parsed from PINBOARD_API_TOKEN (`user:HEX`)."""
+    tok = os.environ.get("PINBOARD_API_TOKEN") or ""
+    if ":" in tok:
+        return tok.split(":", 1)[0]
+    return ""
+
+
+def bookmark_url(url: str) -> str:
+    """Permalink to this user's bookmark of ``url`` on Pinboard.
+
+    Pinboard's per-user bookmark URL is
+    ``https://pinboard.in/u:{username}/b:{md5(url)}/``. Returns empty if
+    we don't have a username (token unset / malformed) or no URL.
+    """
+    user = _username()
+    if not (user and url):
+        return ""
+    h = hashlib.md5(url.encode("utf-8")).hexdigest()
+    return f"https://pinboard.in/u:{user}/b:{h}/"
 
 
 def recent_posts(count: int = 50, tag: str | None = None) -> list[dict[str, Any]]:
@@ -71,13 +94,15 @@ def all_unread(
 
 def normalize_post(post: dict[str, Any]) -> dict[str, Any]:
     """Trim Pinboard's record to the fields Linky cares about."""
+    href = post.get("href", "")
     return {
-        "url": post.get("href", ""),
+        "url": href,
         "title": post.get("description", ""),  # Pinboard's "description" is the title
         "description": post.get("extended", ""),  # Pinboard's "extended" is the body
         "tags": post.get("tags", ""),
         "added": post.get("time", ""),
         "toread": post.get("toread", "") == "yes",
+        "pinboard_url": bookmark_url(href),
     }
 
 

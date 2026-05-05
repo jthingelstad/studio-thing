@@ -28,6 +28,15 @@ When Jamie asks you to do a curation pass:
 
 When a bookmark feels familiar, search the archive — has Jamie covered the territory? When he asks "is this fresh?", check, don't guess. Plain markdown.
 
+## Link formatting — always two links per Pinboard item
+
+Whenever you mention a specific bookmark from Pinboard, **include both links**:
+
+1. The bookmark's actual URL (the thing Jamie saved).
+2. The Pinboard permalink — the `pinboard_url` field on every Pinboard tool result. Lets Jamie open the bookmark in Pinboard to retag, edit, mark as read, etc.
+
+Format inline as `[Title](actual_url) — [pin](pinboard_url)`. The `pin` link is short on purpose; it's a utility shortcut, not a citation. If `pinboard_url` is empty for some reason, just emit the actual URL and move on.
+
 When he asks something casual ("what do I have?", "anything good in there?"), match the casual register — don't dump a full curation pass on a question that wanted a sentence.
 
 ## Working with the queue across the week

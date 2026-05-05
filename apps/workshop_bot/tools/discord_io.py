@@ -37,18 +37,17 @@ def split_for_discord(text: str, limit: int = DISCORD_MAX) -> list[str]:
 
 
 async def send_chunked(message: "discord.Message", text: str) -> None:
-    """Reply to a Discord message, splitting into multiple messages if needed."""
+    """Reply to a Discord message, splitting into multiple messages if needed.
+
+    Every chunk is a reply to the same originating message so all chunks
+    visually point back to the question that prompted them — a long
+    response keeps its chain instead of having half float away.
+    """
     if not text.strip():
         await message.reply("(empty response)", mention_author=False)
         return
-    parts = split_for_discord(text)
-    first = True
-    for part in parts:
-        if first:
-            await message.reply(part, mention_author=False)
-            first = False
-        else:
-            await message.channel.send(part)
+    for part in split_for_discord(text):
+        await message.reply(part, mention_author=False)
 
 
 async def read_text_attachments(message: "discord.Message", max_bytes: int = 200_000) -> str:
