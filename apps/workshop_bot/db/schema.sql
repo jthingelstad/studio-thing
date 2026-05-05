@@ -71,3 +71,104 @@ CREATE TABLE IF NOT EXISTS channel_routes (
   primary_agent TEXT,
   category TEXT
 );
+
+-- Agent memory — notes a persona wants to carry forward beyond the
+-- conversation in any one Discord thread. Shared across personas (by
+-- design — Eddy can read what Patty observed, Marky can see what Linky
+-- noticed) and attributed via agent_name.
+CREATE TABLE IF NOT EXISTS agent_notes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  agent_name TEXT NOT NULL,
+  kind TEXT NOT NULL,                          -- 'preference', 'observation',
+                                               -- 'todo', 'context', 'theme'
+  key TEXT,                                    -- short label, optional
+  content TEXT NOT NULL,
+  related_issue INTEGER,
+  status TEXT NOT NULL DEFAULT 'active',       -- 'active', 'resolved', 'stale'
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  expires_at TEXT,
+  metadata TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_agent_notes_agent_status_created
+  ON agent_notes(agent_name, status, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_agent_notes_kind_status
+  ON agent_notes(kind, status);
+
+-- Subscriber activity Marky surfaces — populated either by webhook (later)
+-- or by a periodic Buttondown poll. Email is hashed before storage so we
+-- never persist raw email addresses for the supporter program tracking.
+CREATE TABLE IF NOT EXISTS subscriber_events_seen (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  external_id TEXT NOT NULL,                   -- Buttondown subscriber id
+  email_hash TEXT NOT NULL,
+  event_type TEXT NOT NULL,                    -- 'created', 'unsubscribed',
+                                               -- 'churned'
+  event_date TEXT NOT NULL,
+  metadata TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriber_events_external
+  ON subscriber_events_seen(external_id, event_type);
+
+-- URLs Linky has already shown to Jamie from Pinboard's popular feed.
+-- The popular handler runs every 6 hours; we dedup against this table so
+-- Jamie only sees each item once regardless of how long it stays popular.
+CREATE TABLE IF NOT EXISTS pinboard_popular_seen (
+  url TEXT PRIMARY KEY,
+  title TEXT,
+  posted_by TEXT,
+  judged_interesting INTEGER,                  -- 1 / 0 / NULL (not judged yet)
+  judgment_note TEXT,
+  first_seen_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Items from Jamie's Pinboard "to read" pile that Linky has already
+-- researched (URL fetched, summary written). Lets the research handler
+-- pick up where it left off across runs.
+CREATE TABLE IF NOT EXISTS pinboard_research_done (
+  url TEXT PRIMARY KEY,
+  title TEXT,
+  summary TEXT,
+  confidence TEXT,                             -- ✦ / · / ⊘
+  fit_note TEXT,
+  researched_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Thingy bridge — cached Lambda session tokens, one per Discord user.
+-- The bridge mints a token via /auth?action=discord_bridge, stores it
+-- here, and reuses it until expires_at approaches.
+CREATE TABLE IF NOT EXISTS thingy_tokens (
+  discord_user_id TEXT PRIMARY KEY,
+  token TEXT NOT NULL,
+  expires_at INTEGER NOT NULL,                 -- epoch seconds (matches Lambda payload.exp)
+  issued_at TEXT NOT NULL DEFAULT (datetime('now')),
+  -- Profile snapshot returned by the Lambda's /auth response. JSON of
+  -- { returning, last_seen_at, turn_count, prior_session_summaries,
+  --   current_session_questions }. Updated whenever a new token is minted.
+  profile TEXT,
+  -- When we last greeted this user with a "welcome back" blurb. Lets
+  -- the bridge avoid re-greeting on every fresh-token mint.
+  last_welcomed_at TEXT
+);
+
+-- Thingy bridge — one row per question forwarded to the Lambda. Lets
+-- the reaction handler look up which Lambda request_id corresponds to
+-- a given Discord bot reply when Jamie reacts 👍/👎 to it.
+CREATE TABLE IF NOT EXISTS thingy_requests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  discord_user_id TEXT NOT NULL,
+  discord_message_id TEXT NOT NULL,
+  bot_response_message_id TEXT,
+  request_id TEXT,
+  question TEXT NOT NULL,
+  status TEXT NOT NULL,                        -- 'pending' / 'ok' / 'error'
+  error TEXT,
+  duration_ms INTEGER,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_thingy_requests_bot_msg
+  ON thingy_requests(bot_response_message_id);

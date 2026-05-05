@@ -1,8 +1,8 @@
-"""Anthropic API wrapper for workshop bot personas.
+"""Anthropic client + prompt loading for workshop bot personas.
 
-Loads persona system prompts from prompts/{name}.md, builds system blocks
-with cache_control on shared/static content, and exposes a single
-``complete()`` entrypoint. Mirrors the pattern in apps/archive-chat/archive_chat.py.
+The agent loop (`tools/agent_loop.py`) drives the actual completion calls;
+this module owns the singleton client, the model registry, and the
+on-disk prompt loader. Prompts live in `prompts/{name}.md`.
 """
 
 from __future__ import annotations
@@ -26,6 +26,10 @@ MODELS = {
 
 FALLBACK_MODEL = "haiku"
 MAX_OUTPUT_TOKENS = 4096
+# Generous bound on a single tool-using turn (a long Eddy critique with several
+# tool calls can run 20-40s). Well below discord.py's gateway heartbeat needs
+# now that the LLM call runs in a worker thread.
+DEFAULT_API_TIMEOUT_SECS = 90.0
 
 
 def default_model() -> str:
@@ -34,6 +38,8 @@ def default_model() -> str:
 
 logger = logging.getLogger("workshop.anthropic")
 
+# Prompts are cached in-process at first read. Edits to prompts/*.md require a
+# bot restart to take effect.
 _prompt_cache: dict[str, str] = {}
 _client: Optional[anthropic.Anthropic] = None
 
@@ -41,7 +47,7 @@ _client: Optional[anthropic.Anthropic] = None
 def client() -> anthropic.Anthropic:
     global _client
     if _client is None:
-        _client = anthropic.Anthropic()
+        _client = anthropic.Anthropic(timeout=DEFAULT_API_TIMEOUT_SECS)
     return _client
 
 
@@ -70,89 +76,3 @@ def format_issue_index(issues: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def format_retrieved(chunks: list[dict[str, Any]]) -> str:
-    if not chunks:
-        return "(no archive excerpts retrieved for this query)"
-    parts = ["# Retrieved archive excerpts", ""]
-    for chunk in chunks:
-        number = chunk.get("issue_number", "?")
-        date = (chunk.get("publish_date") or "")[:10]
-        subject = chunk.get("subject", "")
-        section = chunk.get("section") or "Issue"
-        parts.append(f'[#{number} - {date} - "{subject}" - section: {section}]')
-        parts.append(chunk["text"].strip())
-        parts.append("")
-    return "\n".join(parts).rstrip()
-
-
-def build_system_blocks(
-    persona: str,
-    *,
-    issue_index: Optional[str] = None,
-    extras: Optional[list[str]] = None,
-) -> list[dict[str, Any]]:
-    """Persona prompt first (small, may evolve), then cached static blocks."""
-    blocks: list[dict[str, Any]] = [
-        {"type": "text", "text": load_prompt(persona)},
-    ]
-    if issue_index:
-        blocks.append({
-            "type": "text",
-            "text": issue_index,
-            "cache_control": {"type": "ephemeral"},
-        })
-    for extra in extras or []:
-        blocks.append({
-            "type": "text",
-            "text": extra,
-            "cache_control": {"type": "ephemeral"},
-        })
-    return blocks
-
-
-def complete(
-    *,
-    persona: str,
-    user_message: Optional[str] = None,
-    history: Optional[list[dict[str, str]]] = None,
-    issue_index: Optional[str] = None,
-    extras: Optional[list[str]] = None,
-    model: Optional[str] = None,
-    max_tokens: int = MAX_OUTPUT_TOKENS,
-) -> tuple[str, dict[str, int]]:
-    """Run a single completion turn.
-
-    `history` is the prior conversation as Anthropic-shaped messages.
-    `user_message` is the new turn appended to that history. If only one of
-    them is given, this still works.
-    """
-    system_blocks = build_system_blocks(persona, issue_index=issue_index, extras=extras)
-    messages: list[dict[str, str]] = list(history or [])
-    if user_message is not None:
-        messages.append({"role": "user", "content": user_message})
-    if not messages:
-        raise ValueError("complete() needs either history or user_message")
-    chosen_model = model or default_model()
-    response = client().messages.create(
-        model=MODELS[chosen_model],
-        max_tokens=max_tokens,
-        system=system_blocks,
-        messages=messages,
-    )
-    text = "".join(block.text for block in response.content if block.type == "text")
-    usage = {
-        "input": response.usage.input_tokens,
-        "output": response.usage.output_tokens,
-        "cache_read": getattr(response.usage, "cache_read_input_tokens", 0) or 0,
-        "cache_create": getattr(response.usage, "cache_creation_input_tokens", 0) or 0,
-    }
-    logger.info(
-        "%s complete (%s): in=%d out=%d cache_r=%d cache_c=%d",
-        persona,
-        chosen_model,
-        usage["input"],
-        usage["output"],
-        usage["cache_read"],
-        usage["cache_create"],
-    )
-    return text.strip(), usage

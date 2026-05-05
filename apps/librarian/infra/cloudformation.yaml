@@ -29,6 +29,15 @@ Parameters:
   SessionSecret:
     Type: String
     NoEcho: true
+  DiscordBridgeSecret:
+    Type: String
+    NoEcho: true
+    Default: ""
+    Description: >
+      Shared secret for the Discord bridge auth action. When set, the
+      /auth endpoint accepts action=discord_bridge requests carrying this
+      secret + a discord_user_id and mints a session token for that user.
+      Leave empty to disable the bridge action (returns 503).
   LogLevel:
     Type: String
     Default: INFO
@@ -136,6 +145,7 @@ Resources:
           GRAPH_KEY: !Ref GraphKey
           BUTTONDOWN_API_KEY: !Ref ButtondownApiKey
           SESSION_SECRET: !Ref SessionSecret
+          DISCORD_BRIDGE_SECRET: !Ref DiscordBridgeSecret
           LOG_LEVEL: !Ref LogLevel
           AUTH_RATE_LIMIT_MAX: !Ref AuthRateLimitMax
           BEDROCK_AGENT_MODEL: us.anthropic.claude-sonnet-4-6

@@ -1,4 +1,9 @@
-"""PersonaBot — shared base for the four discord.py clients."""
+"""PersonaBot — shared base for the four discord.py clients.
+
+Each persona is a subclass that sets a few class attributes (name, tools,
+preferred model, home channel env var) and inherits the routing,
+peer-reaction protocol, and team-round handling defined here.
+"""
 
 from __future__ import annotations
 
@@ -7,12 +12,12 @@ import logging
 import os
 import re
 import traceback
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Optional
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, ClassVar, Optional
 
 import discord
 
-from ..tools import anthropic_client, conversation, discord_io
+from ..tools import agent_loop, anthropic_client, conversation, db, discord_io
 
 if TYPE_CHECKING:
     from ..tools.corpus import CorpusHandle
@@ -30,7 +35,7 @@ MODEL_FLAG_RE = re.compile(r"\B(--haiku|--sonnet|--opus)\b")
 ROUND_HISTORY_DEPTH = 20  # how far back to scan for a human round anchor
 
 # Strip common markdown / punctuation / quoting; if what's left is just the
-# word PASS, treat it as a no-reply signal regardless of how Haiku wrapped it.
+# word PASS, treat it as a no-reply signal regardless of how the model wrapped it.
 _PASS_STRIP_RE = re.compile(r"[\s*_`~\"'()<>\[\]\.\!\?,;:\\\-—–]+")
 
 
@@ -49,40 +54,65 @@ class Deps:
     team: Optional["TeamRegistry"] = None
 
 
-def _team_role_id() -> Optional[str]:
+def _read_env_int(key: str) -> Optional[int]:
+    raw = (os.environ.get(key) or "").strip()
+    if not raw:
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        return None
+
+
+def team_role_id() -> Optional[str]:
+    """Read once; env doesn't change at runtime."""
     raw = (os.environ.get("DISCORD_TEAM_ROLE_ID") or "").strip()
     return raw or None
 
 
-def _dialog_channel_ids() -> set[int]:
+def dialog_channel_ids() -> set[int]:
     """Channel IDs where inter-agent reactions are allowed.
 
     Only #workshop. #chatter is a status firehose — agents post there but
     never react to each other (avoids turning the log stream into chatter).
     """
-    out: set[int] = set()
-    raw = (os.environ.get("DISCORD_CHANNEL_WORKSHOP") or "").strip()
-    try:
-        out.add(int(raw))
-    except ValueError:
-        pass
-    return out
+    cid = _read_env_int("DISCORD_CHANNEL_WORKSHOP")
+    return {cid} if cid is not None else set()
 
 
 class PersonaBot(discord.Client):
     """Base class for the four persona bots.
 
-    Each subclass overrides ``handle()``. ``on_message`` dispatches when:
-    - this specific bot is @-mentioned (single-persona reply), or
-    - the @Team role is mentioned (the TeamRegistry runs all four sequentially,
-      one bot orchestrating).
+    Subclasses set:
+      - ``persona`` / ``name``         — identity
+      - ``home_channel_env``           — env var holding the channel id where
+                                         this persona answers without an
+                                         @-mention
+      - ``tools``                      — list of tool names from agent_tools
+      - ``empty_greeting``             — reply when @-mentioned with no body
+      - ``preferred_model`` (optional) — overrides the WORKSHOP_DEFAULT_MODEL
+                                         env default for this persona
+
+    ``on_message`` dispatches when:
+      - this specific bot is @-mentioned (single-persona reply), or
+      - the @Team role is mentioned (TeamRegistry runs all four sequentially,
+        one bot orchestrating), or
+      - a human posts in this persona's home channel and no other bot is
+        mentioned.
     """
 
-    persona: str = "base"
-    name: str = "Persona"
-    # Env var holding the Discord channel id where this persona should respond
-    # to any human message *without* needing an @-mention. Override per persona.
-    home_channel_env: Optional[str] = None
+    persona: ClassVar[str] = "base"
+    name: ClassVar[str] = "Persona"
+    home_channel_env: ClassVar[Optional[str]] = None
+    tools: ClassVar[tuple[str, ...]] = ()
+    empty_greeting: ClassVar[str] = "Hey — what are we looking at?"
+    preferred_model: ClassVar[Optional[str]] = None
+
+    # Class-level lock so peer-reaction slot checks across the four persona
+    # clients (all in this same asyncio event loop) serialize. Protects
+    # against the TOCTOU race when two peers are evaluating the same human
+    # anchor concurrently.
+    _peer_react_lock: ClassVar[asyncio.Lock] = asyncio.Lock()
 
     def __init__(self, deps: Deps) -> None:
         intents = discord.Intents.default()
@@ -91,6 +121,9 @@ class PersonaBot(discord.Client):
         super().__init__(intents=intents)
         self.deps = deps
         self.ready_event = asyncio.Event()
+        self._home_channel_id: Optional[int] = (
+            _read_env_int(self.home_channel_env) if self.home_channel_env else None
+        )
 
     async def on_ready(self) -> None:  # type: ignore[override]
         user = self.user
@@ -98,15 +131,33 @@ class PersonaBot(discord.Client):
         self.ready_event.set()
 
     def _is_home_channel(self, channel_id: int) -> bool:
-        if not self.home_channel_env:
-            return False
-        raw = (os.environ.get(self.home_channel_env) or "").strip()
-        if not raw:
-            return False
-        try:
-            return int(raw) == channel_id
-        except ValueError:
-            return False
+        return self._home_channel_id is not None and self._home_channel_id == channel_id
+
+    def _resolve_model(self, override: Optional[str]) -> str:
+        return override or self.preferred_model or anthropic_client.default_model()
+
+    async def core(
+        self,
+        *,
+        latest: str,
+        history: Optional[list[dict[str, str]]] = None,
+        model: Optional[str] = None,
+    ) -> tuple[str, dict[str, Any]]:
+        """Single source of truth for a persona turn. Each subclass inherits
+        this; all variation is via class attrs (``tools``, ``preferred_model``).
+        """
+        issue_index = anthropic_client.format_issue_index(
+            self.deps.corpus.corpus["issues"]
+        )
+        return await agent_loop.run_async(
+            persona=self.persona,
+            user_message=latest or "(no new content; continue from history)",
+            history=history or [],
+            tools=list(self.tools),
+            deps=self.deps,
+            model=self._resolve_model(model),
+            issue_index=issue_index,
+        )
 
     async def on_message(self, message: discord.Message) -> None:  # type: ignore[override]
         # Always ignore self.
@@ -122,22 +173,23 @@ class PersonaBot(discord.Client):
         # reaction per "round" (anchored on the last human message in this
         # channel). LLM decides whether to PASS.
         if message.author.bot:
-            if message.channel.id not in _dialog_channel_ids():
+            if message.channel.id not in dialog_channel_ids():
                 return
             # Don't peer-react to messages the team orchestrator posted —
             # the team is already running each persona in sequence.
             if self.deps.team is not None and self.deps.team.is_team_post(message.id):
                 return
-            if not await self._can_react_to_peer(message.channel):
-                return
-            await self._react_to_peer(message)
+            async with PersonaBot._peer_react_lock:
+                if not await self._can_react_to_peer(message.channel):
+                    return
+                await self._react_to_peer(message)
             return
 
         is_self_mention = self.user in message.mentions
-        team_role_id = _team_role_id()
+        role_id = team_role_id()
         is_team_mention = bool(
-            team_role_id
-            and any(str(r.id) == team_role_id for r in (message.role_mentions or []))
+            role_id
+            and any(str(r.id) == role_id for r in (message.role_mentions or []))
         )
         # "Stopping by my desk" — Jamie posts in this persona's home channel
         # without an @-mention. Yield to any specific persona he @-mentioned.
@@ -200,25 +252,6 @@ class PersonaBot(discord.Client):
             except discord.DiscordException:
                 logger.error("could not reply with error: %s", traceback.format_exc())
 
-    def _parse_body(self, message: discord.Message) -> tuple[str, str]:
-        """Strip mentions + model flags, return (body, model)."""
-        text = message.content or ""
-        # Strip our own user mention.
-        text = text.replace(f"<@{self.user.id}>", "").replace(f"<@!{self.user.id}>", "")
-        # Strip the team role mention if present.
-        team_role_id = _team_role_id()
-        if team_role_id:
-            text = text.replace(f"<@&{team_role_id}>", "")
-
-        # --haiku / --sonnet / --opus flags override the env default.
-        model = anthropic_client.default_model()
-        match = MODEL_FLAG_RE.search(text)
-        if match:
-            model = MODEL_FLAGS[match.group(1)]
-            text = MODEL_FLAG_RE.sub("", text)
-
-        return text.strip(), model
-
     async def handle(
         self,
         *,
@@ -228,7 +261,63 @@ class PersonaBot(discord.Client):
         model: str,
         history: list[dict[str, str]],
     ) -> None:
-        raise NotImplementedError
+        """Default handler: run the agent loop, log the run, send chunked reply.
+
+        Subclasses can override for specialized behavior; most don't need to.
+        """
+        latest = (attachment or body).strip()
+        if not latest and not history:
+            await message.reply(self.empty_greeting, mention_author=False)
+            return
+
+        async with message.channel.typing():
+            with db.AgentRun(self.persona, trigger="mention") as run:
+                answer, meta = await self.core(
+                    latest=latest, history=history, model=model
+                )
+                output_id = db.insert_agent_output(
+                    agent_name=self.persona,
+                    output_type="reply",
+                    content=answer,
+                    metadata={
+                        **meta,
+                        "discord_message_id": str(message.id),
+                        "discord_channel_id": str(message.channel.id),
+                    },
+                )
+                run.records_written = 1
+                logger.info(
+                    "%s reply #%d (%d iter, %d tool calls)",
+                    self.persona,
+                    output_id,
+                    meta.get("iterations", 0),
+                    len(meta.get("tool_calls") or []),
+                )
+
+        await discord_io.send_chunked(message, answer)
+
+    def _parse_body(self, message: discord.Message) -> tuple[str, Optional[str]]:
+        """Strip mentions + model flags, return (body, model_override).
+
+        ``model_override`` is None unless Jamie included a ``--haiku`` /
+        ``--sonnet`` / ``--opus`` flag.
+        """
+        text = message.content or ""
+        # Strip our own user mention.
+        text = text.replace(f"<@{self.user.id}>", "").replace(f"<@!{self.user.id}>", "")
+        # Strip the team role mention if present.
+        role_id = team_role_id()
+        if role_id:
+            text = text.replace(f"<@&{role_id}>", "")
+
+        # --haiku / --sonnet / --opus flags override the persona/env default.
+        model: Optional[str] = None
+        match = MODEL_FLAG_RE.search(text)
+        if match:
+            model = MODEL_FLAGS[match.group(1)]
+            text = MODEL_FLAG_RE.sub("", text)
+
+        return text.strip(), model
 
     # ---- Inter-agent reactions ----
 
@@ -258,9 +347,7 @@ class PersonaBot(discord.Client):
         peer_name = (
             getattr(message.author, "display_name", "") or message.author.name or "a colleague"
         )
-        # Trim "Weekly Thing - X" → "X"
-        if " - " in peer_name:
-            peer_name = peer_name.rsplit(" - ", 1)[-1].strip()
+        peer_name = conversation.short_bot_name(peer_name)
 
         peer_text = (message.content or "").strip()
         if not peer_text:
@@ -277,12 +364,11 @@ class PersonaBot(discord.Client):
             "any doubt, respond with exactly: PASS]"
         )
         body = f"{meta}\n\n[{peer_name}] {peer_text}"
-        model = anthropic_client.default_model()
 
         # Reuse the persona's core() — same agent loop, same tools.
         try:
             answer, run_meta = await self.handle_peer(
-                body=body, history=history, model=model,
+                body=body, history=history, model=None,
             )
         except Exception:  # noqa: BLE001
             logger.exception("%s: peer reaction core failed", self.name)
@@ -305,7 +391,11 @@ class PersonaBot(discord.Client):
             logger.exception("%s: failed to send peer reaction", self.name)
 
     async def handle_peer(
-        self, *, body: str, history: list[dict[str, str]], model: str
+        self,
+        *,
+        body: str,
+        history: list[dict[str, str]],
+        model: Optional[str] = None,
     ) -> tuple[str, dict]:
         """Persona-level peer reaction. Default: dispatch through core()."""
-        return await self.core(latest=body, history=history, model=model)  # type: ignore[attr-defined]
+        return await self.core(latest=body, history=history, model=model)

@@ -48,7 +48,37 @@ def run_migrations() -> None:
     schema = SCHEMA_PATH.read_text(encoding="utf-8")
     with connect() as conn:
         conn.executescript(schema)
+        _apply_column_migrations(conn)
     logger.info("workshop.db ready at %s", db_path())
+
+
+# SQLite has no "ADD COLUMN IF NOT EXISTS". For columns added after the
+# initial table creation, run ALTER TABLE and tolerate the "duplicate
+# column" error so a fresh DB and a long-lived DB both end up identical.
+_COLUMN_MIGRATIONS: tuple[tuple[str, str, str], ...] = (
+    # (table, column, full ADD COLUMN clause)
+    ("thingy_tokens", "profile", "ALTER TABLE thingy_tokens ADD COLUMN profile TEXT"),
+    ("thingy_tokens", "last_welcomed_at",
+     "ALTER TABLE thingy_tokens ADD COLUMN last_welcomed_at TEXT"),
+)
+
+
+def _apply_column_migrations(conn: sqlite3.Connection) -> None:
+    for table, column, sql in _COLUMN_MIGRATIONS:
+        try:
+            existing = {
+                row["name"]
+                for row in conn.execute(f"PRAGMA table_info({table})")
+            }
+        except sqlite3.Error:
+            continue
+        if column in existing:
+            continue
+        try:
+            conn.execute(sql)
+        except sqlite3.OperationalError:
+            # Column was added concurrently by another process; ignore.
+            pass
 
 
 def insert_agent_output(
@@ -125,6 +155,346 @@ def recent_link_candidates(limit: int = 30) -> list[dict[str, Any]]:
             "LIMIT ?",
             (limit,),
         ).fetchall()
+    return [dict(r) for r in rows]
+
+
+# ---------- agent memory ----------
+
+NOTE_KINDS = ("preference", "observation", "todo", "context", "theme")
+
+
+def insert_agent_note(
+    *,
+    agent_name: str,
+    kind: str,
+    content: str,
+    key: Optional[str] = None,
+    related_issue: Optional[int] = None,
+    expires_at: Optional[str] = None,
+    metadata: Optional[dict[str, Any]] = None,
+) -> int:
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO agent_notes "
+            "(agent_name, kind, key, content, related_issue, expires_at, metadata) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                agent_name,
+                kind,
+                key,
+                content,
+                related_issue,
+                expires_at,
+                json.dumps(metadata) if metadata else None,
+            ),
+        )
+        return int(cur.lastrowid or 0)
+
+
+def query_agent_notes(
+    *,
+    agent_name: Optional[str] = None,
+    kind: Optional[str] = None,
+    query: Optional[str] = None,
+    include_resolved: bool = False,
+    limit: int = 20,
+) -> list[dict[str, Any]]:
+    """Return notes ordered newest-first. Filter by agent, kind, or text match."""
+    sql_parts = [
+        "SELECT id, agent_name, kind, key, content, related_issue, status, "
+        "       created_at, expires_at "
+        "FROM agent_notes WHERE 1=1"
+    ]
+    params: list[Any] = []
+    if agent_name:
+        sql_parts.append("AND agent_name = ?")
+        params.append(agent_name)
+    if kind:
+        sql_parts.append("AND kind = ?")
+        params.append(kind)
+    if not include_resolved:
+        sql_parts.append("AND status = 'active'")
+    if query:
+        sql_parts.append("AND (content LIKE ? OR key LIKE ?)")
+        like = f"%{query}%"
+        params.extend([like, like])
+    sql_parts.append(
+        "AND (expires_at IS NULL OR expires_at > datetime('now')) "
+        "ORDER BY created_at DESC LIMIT ?"
+    )
+    params.append(limit)
+    with connect() as conn:
+        rows = conn.execute(" ".join(sql_parts), params).fetchall()
+    return [dict(r) for r in rows]
+
+
+def update_agent_note_status(note_id: int, status: str) -> bool:
+    with connect() as conn:
+        cur = conn.execute(
+            "UPDATE agent_notes SET status = ? WHERE id = ?",
+            (status, note_id),
+        )
+        return cur.rowcount > 0
+
+
+# ---------- subscriber events (Marky) ----------
+
+def upsert_subscriber_event(
+    *,
+    external_id: str,
+    email_hash: str,
+    event_type: str,
+    event_date: str,
+    metadata: Optional[dict[str, Any]] = None,
+) -> bool:
+    """Returns True if this is a new (external_id, event_type) pair."""
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT OR IGNORE INTO subscriber_events_seen "
+            "(external_id, email_hash, event_type, event_date, metadata) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (
+                external_id,
+                email_hash,
+                event_type,
+                event_date,
+                json.dumps(metadata) if metadata else None,
+            ),
+        )
+        return cur.rowcount > 0
+
+
+# ---------- Linky: popular feed dedup + to-read research ----------
+
+def filter_unseen_popular(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return only items whose URL isn't yet in pinboard_popular_seen."""
+    if not items:
+        return []
+    urls = [it.get("url", "") for it in items if it.get("url")]
+    if not urls:
+        return []
+    placeholders = ",".join("?" * len(urls))
+    with connect() as conn:
+        rows = conn.execute(
+            f"SELECT url FROM pinboard_popular_seen WHERE url IN ({placeholders})",
+            urls,
+        ).fetchall()
+    seen = {r["url"] for r in rows}
+    return [it for it in items if it.get("url") and it["url"] not in seen]
+
+
+def mark_popular_seen(
+    items: list[dict[str, Any]],
+    *,
+    judged: Optional[dict[str, tuple[bool, str]]] = None,
+) -> int:
+    """Insert ``items`` into pinboard_popular_seen (no-op on conflict).
+
+    ``judged`` is an optional ``url -> (interesting?, note)`` mapping
+    from the LLM filter, persisted alongside the row so future audits
+    can see what Linky judged interesting vs not.
+    """
+    n = 0
+    judged = judged or {}
+    with connect() as conn:
+        for it in items:
+            url = it.get("url")
+            if not url:
+                continue
+            interesting_flag: Optional[int] = None
+            note: Optional[str] = None
+            if url in judged:
+                ok, note = judged[url]
+                interesting_flag = 1 if ok else 0
+            cur = conn.execute(
+                "INSERT OR IGNORE INTO pinboard_popular_seen "
+                "(url, title, posted_by, judged_interesting, judgment_note) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (
+                    url,
+                    it.get("title"),
+                    it.get("posted_by"),
+                    interesting_flag,
+                    note,
+                ),
+            )
+            if cur.rowcount:
+                n += 1
+    return n
+
+
+def filter_unresearched_urls(urls: list[str]) -> list[str]:
+    """Return only URLs not yet present in pinboard_research_done."""
+    if not urls:
+        return []
+    placeholders = ",".join("?" * len(urls))
+    with connect() as conn:
+        rows = conn.execute(
+            f"SELECT url FROM pinboard_research_done WHERE url IN ({placeholders})",
+            urls,
+        ).fetchall()
+    done = {r["url"] for r in rows}
+    return [u for u in urls if u not in done]
+
+
+def mark_url_researched(
+    *,
+    url: str,
+    title: Optional[str],
+    summary: str,
+    confidence: Optional[str] = None,
+    fit_note: Optional[str] = None,
+) -> bool:
+    """Insert a research record. Returns True if newly inserted."""
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT OR IGNORE INTO pinboard_research_done "
+            "(url, title, summary, confidence, fit_note) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (url, title, summary, confidence, fit_note),
+        )
+        return cur.rowcount > 0
+
+
+# ---------- Thingy bridge ----------
+
+def get_thingy_token(discord_user_id: str) -> Optional[dict[str, Any]]:
+    """Cached session token + profile for a Discord user, if any."""
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT discord_user_id, token, expires_at, issued_at, profile, "
+            "       last_welcomed_at "
+            "FROM thingy_tokens WHERE discord_user_id = ?",
+            (discord_user_id,),
+        ).fetchone()
+    if row is None:
+        return None
+    out = dict(row)
+    raw_profile = out.get("profile")
+    if isinstance(raw_profile, str) and raw_profile:
+        try:
+            out["profile"] = json.loads(raw_profile)
+        except json.JSONDecodeError:
+            out["profile"] = None
+    return out
+
+
+def upsert_thingy_token(
+    *,
+    discord_user_id: str,
+    token: str,
+    expires_at: int,
+    profile: Optional[dict[str, Any]] = None,
+) -> None:
+    """Insert/refresh a token row, optionally storing the auth response's
+    `profile` snapshot. ``last_welcomed_at`` is preserved across upserts."""
+    profile_json = json.dumps(profile) if profile is not None else None
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO thingy_tokens "
+            "(discord_user_id, token, expires_at, profile) "
+            "VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(discord_user_id) DO UPDATE SET "
+            "  token = excluded.token, "
+            "  expires_at = excluded.expires_at, "
+            "  issued_at = datetime('now'), "
+            "  profile = COALESCE(excluded.profile, thingy_tokens.profile)",
+            (discord_user_id, token, int(expires_at), profile_json),
+        )
+
+
+def mark_thingy_welcomed(discord_user_id: str) -> None:
+    with connect() as conn:
+        conn.execute(
+            "UPDATE thingy_tokens SET last_welcomed_at = datetime('now') "
+            "WHERE discord_user_id = ?",
+            (discord_user_id,),
+        )
+
+
+def insert_thingy_request(
+    *,
+    discord_user_id: str,
+    discord_message_id: str,
+    question: str,
+    status: str = "pending",
+) -> int:
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO thingy_requests "
+            "(discord_user_id, discord_message_id, question, status) "
+            "VALUES (?, ?, ?, ?)",
+            (discord_user_id, discord_message_id, question, status),
+        )
+        return int(cur.lastrowid or 0)
+
+
+def update_thingy_request(
+    request_row_id: int,
+    *,
+    status: Optional[str] = None,
+    error: Optional[str] = None,
+    duration_ms: Optional[int] = None,
+    request_id: Optional[str] = None,
+    bot_response_message_id: Optional[str] = None,
+) -> None:
+    fields: list[str] = []
+    params: list[Any] = []
+    if status is not None:
+        fields.append("status = ?")
+        params.append(status)
+    if error is not None:
+        fields.append("error = ?")
+        params.append(error)
+    if duration_ms is not None:
+        fields.append("duration_ms = ?")
+        params.append(int(duration_ms))
+    if request_id is not None:
+        fields.append("request_id = ?")
+        params.append(request_id)
+    if bot_response_message_id is not None:
+        fields.append("bot_response_message_id = ?")
+        params.append(bot_response_message_id)
+    if not fields:
+        return
+    params.append(request_row_id)
+    with connect() as conn:
+        conn.execute(
+            f"UPDATE thingy_requests SET {', '.join(fields)} WHERE id = ?",
+            params,
+        )
+
+
+def lookup_thingy_request_by_response(
+    bot_response_message_id: str,
+) -> Optional[dict[str, Any]]:
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT id, discord_user_id, discord_message_id, "
+            "       bot_response_message_id, request_id, question, status "
+            "FROM thingy_requests "
+            "WHERE bot_response_message_id = ? "
+            "ORDER BY id DESC LIMIT 1",
+            (bot_response_message_id,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def recent_subscriber_events(
+    *, limit: int = 30, event_type: Optional[str] = None
+) -> list[dict[str, Any]]:
+    sql = (
+        "SELECT external_id, email_hash, event_type, event_date, created_at "
+        "FROM subscriber_events_seen"
+    )
+    params: list[Any] = []
+    if event_type:
+        sql += " WHERE event_type = ?"
+        params.append(event_type)
+    sql += " ORDER BY event_date DESC LIMIT ?"
+    params.append(limit)
+    with connect() as conn:
+        rows = conn.execute(sql, params).fetchall()
     return [dict(r) for r in rows]
 
 

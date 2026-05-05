@@ -23,6 +23,8 @@ from .personas.linky import LinkyBot
 from .personas.marky import MarkyBot
 from .personas.patty import PattyBot
 from .personas.team import TeamRegistry
+from .personas.thingy import ThingyBot
+from .scheduler.runner import Runner as SchedulerRunner
 from .tools import corpus, db, startup
 
 logger = logging.getLogger("workshop.bot")
@@ -32,6 +34,10 @@ PERSONAS: list[tuple[str, str, type]] = [
     ("linky", "DISCORD_TOKEN_LINKY", LinkyBot),
     ("marky", "DISCORD_TOKEN_MARKY", MarkyBot),
     ("patty", "DISCORD_TOKEN_PATTY", PattyBot),
+    # Thingy is the public-facing bridge to the Librarian Lambda. Skipped
+    # automatically by collect_tokens() if DISCORD_TOKEN_THINGY isn't set,
+    # so the bot still starts cleanly while Jamie creates the Discord app.
+    ("thingy", "DISCORD_TOKEN_THINGY", ThingyBot),
 ]
 
 
@@ -108,6 +114,11 @@ async def run() -> int:
 
     tasks = [asyncio.create_task(_start(b, t), name=f"persona:{n}") for n, b, t in bots]
 
+    scheduler_enabled = (
+        os.environ.get("WORKSHOP_SCHEDULER_ENABLED", "1").strip() not in ("0", "false", "")
+    )
+    runner = SchedulerRunner(team) if scheduler_enabled else None
+
     async def _post_startup() -> None:
         # Wait until every persona has fired on_ready.
         for _, client, _ in bots:
@@ -119,12 +130,24 @@ async def run() -> int:
         logger.info("startup audit:\n%s", summary)
         announcer = next((b for n, b, _ in bots if n == startup.ANNOUNCER), bots[0][1])
         await startup.announce(announcer, summary)
+        # Start scheduled jobs only after every persona is ready, so we don't
+        # fire a Marky daily job into a Marky client that hasn't connected.
+        if runner is not None:
+            try:
+                runner.start()
+            except Exception:  # noqa: BLE001
+                logger.exception("scheduler: failed to start")
 
     tasks.append(asyncio.create_task(_post_startup(), name="startup-announce"))
 
     try:
         await stop_event.wait()
     finally:
+        if runner is not None:
+            try:
+                runner.shutdown()
+            except Exception:  # noqa: BLE001
+                logger.exception("scheduler: error during shutdown")
         for _, client, _ in bots:
             try:
                 await client.close()

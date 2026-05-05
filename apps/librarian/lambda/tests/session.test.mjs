@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderFaqAnswer, searchFaq } from '../shared/faq.mjs';
-import { createSessionToken, emailHash, normalizeEmail, verifyToken } from '../shared/session.mjs';
+import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, verifyToken } from '../shared/session.mjs';
+import { authProfile, memoryContextBlock } from '../shared/user-memory.mjs';
 import { renderTemplate, agentUserPrompt } from '../shared/prompts.mjs';
 import { subscriberStatus } from '../shared/buttondown.mjs';
 import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
@@ -15,6 +16,89 @@ test('session token round trips and rejects tampering', () => {
   assert.equal(payload.sid, 'session-1');
   assert.equal(payload.sub, emailHash('reader@example.com'));
   assert.equal(verifyToken(`${token}x`), null);
+});
+
+test('discord bridge token round trips with non-email sub', () => {
+  process.env.SESSION_SECRET = 'test-secret';
+  const sub = 'discord:0123456789abcdef0123456789abcdef';
+  const { token, sessionId, expiresAt } = createSessionTokenForSub(sub, 'session-d1');
+  assert.equal(sessionId, 'session-d1');
+  assert.ok(expiresAt > Math.floor(Date.now() / 1000));
+
+  const payload = verifyToken(token);
+  assert.equal(payload.sid, 'session-d1');
+  assert.equal(payload.sub, sub);
+  assert.equal(verifyToken(`${token}x`), null);
+});
+
+test('createSessionTokenForSub rejects empty sub', () => {
+  process.env.SESSION_SECRET = 'test-secret';
+  assert.throws(() => createSessionTokenForSub(''), /non-empty string/);
+  assert.throws(() => createSessionTokenForSub(null), /non-empty string/);
+});
+
+test('authProfile returns returning=false for first-time users', () => {
+  assert.deepEqual(authProfile(null), { returning: false });
+});
+
+test('authProfile reflects turn_count and surfaces recent topics', () => {
+  const memory = {
+    first_seen_at: '2026-01-01T00:00:00Z',
+    last_seen_at: '2026-04-01T00:00:00Z',
+    turn_count: 7,
+    current_session_questions: [
+      { ts: '2026-04-01T00:00:00Z', question: 'What about RSS?' },
+      { ts: '2026-04-01T00:01:00Z', question: 'Did Jamie mention Atom?' }
+    ],
+    synthesized_history: [
+      { started_at: '2026-03-01', ended_at: '2026-03-01', summary: 'RSS week.', turn_count: 3 },
+      { started_at: '2026-03-15', ended_at: '2026-03-15', summary: 'Indie web week.', turn_count: 4 }
+    ]
+  };
+  const profile = authProfile(memory);
+  assert.equal(profile.returning, true);
+  assert.equal(profile.turn_count, 7);
+  assert.equal(profile.current_session_questions.length, 2);
+  assert.equal(profile.prior_session_summaries.length, 2);
+  assert.equal(profile.prior_session_summaries[1].summary, 'Indie web week.');
+});
+
+test('authProfile caps recent topics at 5 + 3', () => {
+  const memory = {
+    turn_count: 50,
+    current_session_questions: Array.from({ length: 12 }, (_, i) => ({ ts: '', question: `q${i}` })),
+    synthesized_history: Array.from({ length: 8 }, (_, i) => ({
+      summary: `s${i}`, started_at: '', ended_at: '', turn_count: 1
+    }))
+  };
+  const profile = authProfile(memory);
+  assert.equal(profile.current_session_questions.length, 5);
+  assert.equal(profile.prior_session_summaries.length, 3);
+  // Most recent kept.
+  assert.equal(profile.current_session_questions[4].question, 'q11');
+  assert.equal(profile.prior_session_summaries[2].summary, 's7');
+});
+
+test('memoryContextBlock returns empty string when nothing useful', () => {
+  assert.equal(memoryContextBlock(null), '');
+  assert.equal(memoryContextBlock({}), '');
+  assert.equal(memoryContextBlock({ synthesized_history: [], current_session_questions: [] }), '');
+});
+
+test('memoryContextBlock formats prior summaries and current questions', () => {
+  const block = memoryContextBlock({
+    synthesized_history: [
+      { summary: 'RSS exploration.', ended_at: '2026-03-01T00:00:00Z' }
+    ],
+    current_session_questions: [
+      { question: 'What did Jamie say about Atom?' }
+    ]
+  });
+  assert.match(block, /past sessions/);
+  assert.match(block, /RSS exploration\./);
+  assert.match(block, /\(2026-03-01\)/);
+  assert.match(block, /Earlier in this same session/);
+  assert.match(block, /Atom\?/);
 });
 
 test('email normalization is stable', () => {

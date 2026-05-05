@@ -1,7 +1,7 @@
 """Startup self-check + announcement.
 
 After all four persona bots fire on_ready, audit each bot's required channels
-and basic permissions, then post one summary message to #cross-talk via the
+and basic permissions, then post one summary message to #chatter via the
 designated announcer (Eddy by default).
 """
 
@@ -24,16 +24,20 @@ REPO = Path(__file__).resolve().parents[3]
 CHANNELS_BY_PERSONA: dict[str, list[tuple[str, str]]] = {
     "eddy":  [("DISCORD_CHANNEL_EDITORIAL",  "primary"),
               ("DISCORD_CHANNEL_WORKSHOP",   "workshop"),
-              ("DISCORD_CHANNEL_CROSSTALK",  "chatter")],
+              ("DISCORD_CHANNEL_CHATTER",  "chatter")],
     "marky": [("DISCORD_CHANNEL_PROMOTION",  "primary"),
               ("DISCORD_CHANNEL_WORKSHOP",   "workshop"),
-              ("DISCORD_CHANNEL_CROSSTALK",  "chatter")],
+              ("DISCORD_CHANNEL_CHATTER",  "chatter")],
     "patty": [("DISCORD_CHANNEL_SUPPORTERS", "primary"),
               ("DISCORD_CHANNEL_WORKSHOP",   "workshop"),
-              ("DISCORD_CHANNEL_CROSSTALK",  "chatter")],
+              ("DISCORD_CHANNEL_CHATTER",  "chatter")],
     "linky": [("DISCORD_CHANNEL_RESEARCH",   "primary"),
               ("DISCORD_CHANNEL_WORKSHOP",   "workshop"),
-              ("DISCORD_CHANNEL_CROSSTALK",  "chatter")],
+              ("DISCORD_CHANNEL_CHATTER",  "chatter")],
+    # Thingy is a public-facing bridge — it only needs visibility into
+    # its own #ask-thingy channel. It deliberately doesn't see #workshop
+    # or #chatter (no peer reactions, no operational stream).
+    "thingy": [("DISCORD_CHANNEL_ASK_THINGY", "primary")],
 }
 
 REQUIRED_PERMS = ("view_channel", "send_messages", "read_message_history")
@@ -124,17 +128,17 @@ def format_summary(audit_results: dict, *, hash_str: str, dirty: bool) -> str:
 
 
 async def announce(announcer: "PersonaBot", message: str) -> None:
-    cid_raw = os.environ.get("DISCORD_CHANNEL_CROSSTALK", "").strip()
+    cid_raw = os.environ.get("DISCORD_CHANNEL_CHATTER", "").strip()
     if not cid_raw:
-        logger.warning("DISCORD_CHANNEL_CROSSTALK not set; not posting startup announce")
+        logger.warning("DISCORD_CHANNEL_CHATTER not set; not posting startup announce")
         return
     try:
         channel = announcer.get_channel(int(cid_raw))
     except ValueError:
-        logger.warning("DISCORD_CHANNEL_CROSSTALK is not a valid id")
+        logger.warning("DISCORD_CHANNEL_CHATTER is not a valid id")
         return
     if channel is None:
-        logger.warning("cross-talk channel not visible to announcer %s", announcer.name)
+        logger.warning("chatter channel not visible to announcer %s", announcer.name)
         return
     try:
         await channel.send(message)

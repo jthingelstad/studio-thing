@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections import OrderedDict
 from typing import TYPE_CHECKING
 
 from ..tools import conversation, discord_io
@@ -33,19 +34,28 @@ logger = logging.getLogger("workshop.team")
 TEAM_ORDER: tuple[str, ...] = ("eddy", "marky", "patty", "linky")
 
 # Bound how many message ids we remember to avoid unbounded growth on a
-# long-lived process.
+# long-lived process. ``OrderedDict``-as-set gives FIFO eviction.
 RECENT_ID_CAP = 500
 POSTED_ID_CAP = 1000
+
+
+def _trim_ordered_set(data: "OrderedDict[int, None]", cap: int) -> None:
+    """In-place FIFO trim to ``cap`` entries."""
+    while len(data) > cap:
+        data.popitem(last=False)
 
 
 class TeamRegistry:
     def __init__(self) -> None:
         self.bots: dict[str, "PersonaBot"] = {}
-        self._handled: set[int] = set()
+        # ``OrderedDict``-as-ordered-set keyed by message_id; values unused.
+        # Insertion order is preserved by the language, so FIFO eviction
+        # is deterministic (unlike a plain set).
+        self._handled: "OrderedDict[int, None]" = OrderedDict()
         self._claim_lock = asyncio.Lock()
         # Message ids the team orchestrator has posted. Peer-reaction code
         # skips these so we don't double-evaluate during a team round.
-        self._posted_message_ids: set[int] = set()
+        self._posted_message_ids: "OrderedDict[int, None]" = OrderedDict()
 
     def is_team_post(self, message_id: int) -> bool:
         return message_id in self._posted_message_ids
@@ -58,11 +68,8 @@ class TeamRegistry:
         async with self._claim_lock:
             if message_id in self._handled:
                 return False
-            self._handled.add(message_id)
-            if len(self._handled) > RECENT_ID_CAP:
-                # Trim oldest-ish — set order isn't deterministic but that's fine
-                # for a memory cap.
-                self._handled = set(list(self._handled)[-RECENT_ID_CAP // 2 :])
+            self._handled[message_id] = None
+            _trim_ordered_set(self._handled, RECENT_ID_CAP)
             return True
 
     async def orchestrate(
@@ -71,7 +78,7 @@ class TeamRegistry:
         message: "discord.Message",
         body: str,
         attachment: str,
-        model: str,
+        model: "str | None",
     ) -> None:
         latest = (attachment or body).strip()
         if not latest:
@@ -132,11 +139,8 @@ class TeamRegistry:
             return
         for chunk in discord_io.split_for_discord(text):
             sent = await channel.send(chunk)
-            self._posted_message_ids.add(sent.id)
-        if len(self._posted_message_ids) > POSTED_ID_CAP:
-            self._posted_message_ids = set(
-                list(self._posted_message_ids)[-POSTED_ID_CAP // 2 :]
-            )
+            self._posted_message_ids[sent.id] = None
+        _trim_ordered_set(self._posted_message_ids, POSTED_ID_CAP)
 
     async def _build_round_history(
         self,
@@ -163,7 +167,7 @@ class TeamRegistry:
                 if msg.author.id == bot_user_id:
                     pre.append(("assistant", content))
                 elif msg.author.bot:
-                    name = conversation._short_bot_name(
+                    name = conversation.short_bot_name(
                         msg.author.display_name or msg.author.name
                     )
                     pre.append(("user", f"[{name}] {content}"))
@@ -186,7 +190,7 @@ class TeamRegistry:
                 if msg.author.id == bot_user_id:
                     between.append(("assistant", content))
                 elif msg.author.bot:
-                    name = conversation._short_bot_name(
+                    name = conversation.short_bot_name(
                         msg.author.display_name or msg.author.name
                     )
                     between.append(("user", f"[{name}] {content}"))
@@ -195,13 +199,4 @@ class TeamRegistry:
         except Exception:  # noqa: BLE001
             logger.exception("history fetch (between) failed")
 
-        combined = pre + between
-        coalesced: list[list[str]] = []
-        for role, content in combined:
-            if coalesced and coalesced[-1][0] == role:
-                coalesced[-1][1] = coalesced[-1][1] + "\n\n" + content
-            else:
-                coalesced.append([role, content])
-        while coalesced and coalesced[0][0] == "assistant":
-            coalesced.pop(0)
-        return [{"role": r, "content": c} for r, c in coalesced]
+        return conversation.coalesce_messages(pre + between)
