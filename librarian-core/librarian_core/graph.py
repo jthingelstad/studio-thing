@@ -23,15 +23,50 @@ from .corpus import build_corpus
 DEFAULT_MODEL = "us.anthropic.claude-sonnet-4-6"
 ENTITY_RE = re.compile(r"\b(?:[A-Z][A-Za-z0-9&'.-]+(?:\s+[A-Z][A-Za-z0-9&'.-]+){0,4})\b")
 STOP_ENTITIES = {
-    "Weekly Thing",
-    "Jamie",
-    "The Weekly Thing",
-    "Thingy",
-    "Featured",
-    "Notable",
-    "Briefly",
-    "Journal",
-    "Currently",
+    # Brand / template tokens (matched lowercase below)
+    "weekly thing",
+    "jamie",
+    "the weekly thing",
+    "thingy",
+    "featured",
+    "notable",
+    "briefly",
+    "journal",
+    "currently",
+    # English function words and sentence-starters that the regex
+    # captures because they appear capitalized at the start of
+    # sentences. None of these are real entities.
+    "the", "this", "that", "these", "those", "there", "here",
+    "and", "but", "or", "so", "if", "as", "of", "in", "on", "at",
+    "for", "from", "with", "by", "to", "into", "onto",
+    "i", "i've", "i'm", "i'd", "i'll", "we", "we've", "we're",
+    "you", "you've", "you're", "they", "they've", "they're",
+    "he", "she", "it", "them", "us", "our", "your", "their", "his", "her",
+    "what", "when", "where", "why", "how", "who", "whom", "which",
+    "now", "then", "today", "tomorrow", "yesterday",
+    "first", "second", "third", "last", "next", "previous",
+    "good", "great", "new", "best", "most", "more", "less",
+    "all", "also", "some", "any", "every", "each", "many", "few",
+    "one", "two", "three", "four", "five", "six", "seven", "eight",
+    "nine", "ten", "much", "such", "very", "even", "only", "still",
+    "well", "back", "way", "ways", "lot", "lots", "interesting",
+    "really", "quite", "hard", "easy", "long", "short", "old",
+    "however", "moreover", "therefore", "thus", "hence", "furthermore",
+    "instead", "indeed", "anyway", "anyhow", "besides",
+    "yes", "no", "ok", "stop", "go",
+    "do", "does", "did", "done",
+    "is", "are", "was", "were", "be", "been", "being",
+    "have", "has", "had", "having",
+    "can", "could", "should", "would", "will", "may", "might", "must",
+    "found", "followed", "thought", "things", "thing",
+    # Days / months — frequently capitalized but not topical entities
+    "monday", "tuesday", "wednesday", "thursday", "friday",
+    "saturday", "sunday",
+    "january", "february", "march", "april", "may", "june", "july",
+    "august", "september", "october", "november", "december",
+    "jan", "feb", "mar", "apr", "jun", "jul",
+    "aug", "sep", "sept", "oct", "nov", "dec",
+    "day", "days", "week", "weeks", "month", "months", "year", "years",
 }
 TROPE_KEYWORDS = {
     "open web and ownership": {"rss", "blog", "blogs", "website", "web", "open web", "feed", "feeds", "domain"},
@@ -73,7 +108,7 @@ def heuristic_entities(issue: dict[str, Any], limit: int = 40) -> list[str]:
     counts: dict[str, int] = {}
     for match in ENTITY_RE.finditer(text):
         entity = clean_entity(match.group(0))
-        if len(entity) < 3 or entity in STOP_ENTITIES or entity.lower().startswith("weekly thing"):
+        if len(entity) < 3 or entity.lower() in STOP_ENTITIES or entity.lower().startswith("weekly thing"):
             continue
         if entity.isupper() and len(entity) <= 2:
             continue
