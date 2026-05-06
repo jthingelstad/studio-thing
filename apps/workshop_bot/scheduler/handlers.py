@@ -135,7 +135,7 @@ def _resolve_working_issue(ctx: "JobContext") -> Optional[int]:
 
 async def linky_wednesday_check(ctx: "JobContext") -> None:
     """Pure code. Count items added since Sunday; ping if light."""
-    channel = ctx.channel("DISCORD_CHANNEL_RESEARCH")
+    channel = ctx.channel("DISCORD_CHANNEL_RESEARCH", persona="linky")
     if channel is None:
         return
 
@@ -180,7 +180,7 @@ async def linky_wednesday_check(ctx: "JobContext") -> None:
 async def linky_friday_curation(ctx: "JobContext") -> None:
     """LLM job — full curation pass. Reuses the agent loop with Linky's tools."""
     bot = ctx.bot("linky")
-    channel = ctx.channel("DISCORD_CHANNEL_RESEARCH")
+    channel = ctx.channel("DISCORD_CHANNEL_RESEARCH", persona="linky")
     if bot is None or channel is None:
         return
 
@@ -207,7 +207,7 @@ async def linky_popular_scan(ctx: "JobContext") -> None:
     let one borderline item slip past than to spam Jamie with the same
     items every 6 hours.
     """
-    channel = ctx.channel("DISCORD_CHANNEL_RESEARCH")
+    channel = ctx.channel("DISCORD_CHANNEL_RESEARCH", persona="linky")
     if channel is None:
         return
 
@@ -274,7 +274,7 @@ async def linky_research_unread(ctx: "JobContext") -> None:
     fetch each URL, write a short research note, post the digest. Marks
     each item researched so the next run picks up where this left off.
     """
-    channel = ctx.channel("DISCORD_CHANNEL_RESEARCH")
+    channel = ctx.channel("DISCORD_CHANNEL_RESEARCH", persona="linky")
     bot = ctx.bot("linky")
     if channel is None or bot is None:
         return
@@ -364,7 +364,7 @@ async def linky_research_unread(ctx: "JobContext") -> None:
 
 async def marky_daily_engagement(ctx: "JobContext") -> None:
     """Pure code: trailing-7-day Tinylytics + subscriber counts → #chatter."""
-    channel = ctx.channel("DISCORD_CHANNEL_CHATTER")
+    channel = ctx.channel("DISCORD_CHANNEL_CHATTER", persona="marky")
     if channel is None:
         return
 
@@ -406,7 +406,7 @@ async def marky_daily_engagement(ctx: "JobContext") -> None:
 
 async def marky_weekly_subscriber_report(ctx: "JobContext") -> None:
     """Pure code: subscriber recent + churn → #promotion."""
-    channel = ctx.channel("DISCORD_CHANNEL_PROMOTION")
+    channel = ctx.channel("DISCORD_CHANNEL_PROMOTION", persona="marky")
     if channel is None:
         return
 
@@ -467,7 +467,7 @@ async def patty_thursday_member_json(ctx: "JobContext") -> None:
     """LLM job. Patty composes the supporter CTA + progress update and writes
     them to the in-flight issue's member.json on S3."""
     bot = ctx.bot("patty")
-    channel = ctx.channel("DISCORD_CHANNEL_SUPPORTERS")
+    channel = ctx.channel("DISCORD_CHANNEL_SUPPORTERS", persona="patty")
     if bot is None or channel is None:
         return
 
@@ -568,7 +568,7 @@ async def eddy_saturday_prep(ctx: "JobContext") -> None:
     The LLM is only used if there's enough material that a synthesis is
     actually useful; otherwise we just list what we found.
     """
-    channel = ctx.channel("DISCORD_CHANNEL_EDITORIAL")
+    channel = ctx.channel("DISCORD_CHANNEL_EDITORIAL", persona="eddy")
     if channel is None:
         return
 

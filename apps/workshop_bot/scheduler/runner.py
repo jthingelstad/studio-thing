@@ -41,10 +41,15 @@ class JobContext:
         self.team = team
         self.job = job
 
-    def channel(self, env_var: str):
-        """Resolve a Discord channel id from an env var. Uses any persona's
-        client (they share the guild). Returns None if anything goes wrong;
-        the handler posts/logs accordingly."""
+    def channel(self, env_var: str, *, persona: Optional[str] = None):
+        """Resolve a Discord channel id from an env var.
+
+        When ``persona`` is given, the channel object is bound to that
+        bot's client so ``channel.send`` posts as that persona. Without
+        ``persona``, falls back to any bot that can see the channel —
+        only safe for channels every persona has send permission on
+        (e.g. #chatter).
+        """
         cid_raw = (os.environ.get(env_var) or "").strip()
         if not cid_raw:
             logger.warning("scheduler: %s not set; %s skipped", env_var, self.job.id)
@@ -54,6 +59,15 @@ class JobContext:
         except ValueError:
             logger.warning("scheduler: %s=%r not a channel id", env_var, cid_raw)
             return None
+        if persona is not None:
+            bot = self.team.bots.get(persona)
+            if bot is None or bot.user is None:
+                logger.warning("scheduler: persona %r not available for %s", persona, self.job.id)
+                return None
+            ch = bot.get_channel(cid)
+            if ch is None:
+                logger.warning("scheduler: channel %s not visible to %s", cid, persona)
+            return ch
         # Any persona's client can resolve the channel (they share the guild).
         for bot in self.team.bots.values():
             if bot.user is None:
