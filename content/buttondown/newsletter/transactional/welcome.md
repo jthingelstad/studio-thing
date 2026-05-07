@@ -1,10 +1,10 @@
 ---
-subject: Welcome to Weekly Thing
+subject: Welcome to the Weekly Thing
 ---
 
 Welcome aboard.
 
-You'll get the next [Weekly Thing](https://weekly.thingelstad.com/) in your inbox this weekend. A few things worth knowing while you wait.
+You'll get the next [Weekly Thing](https://weekly.thingelstad.com/) in your inbox this weekend. While you wait, here are a few things worth knowing about the newsletter and what's around it.
 
 The newsletter is free and stays free. There's no paid tier, no affiliate links, no side hustle — just a personal pick of links and notes each week. If at some point you'd like to do more than read, you can [become a Supporting Member]({{ premium_subscribe_url }}) — that contribution goes 100% to a nonprofit I pick each year, and members read the same newsletter everyone else does. (More on the program is on the [members page](https://weekly.thingelstad.com/members/).)
 
@@ -14,4 +14,4 @@ If something in an issue gets you thinking, hit reply. I read every email and an
 
 The [archive](https://weekly.thingelstad.com/archive/) goes back to May 2017 if you'd like to poke around in the meantime.
 
-— Jamie
+Over the next few weeks, I'll send a handful of short notes about parts of Weekly Thing worth knowing — the podcast version of each issue, an AI agent that knows the entire archive, the reader community, and the Supporting Member program. One per email so they don't pile up. The first one — about the podcast — will arrive in a few days.
