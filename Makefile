@@ -1,4 +1,4 @@
-.PHONY: build serve clean data librarian-corpus librarian-corpus-upload librarian-graph librarian-graph-upload librarian-deploy fresh content-pull content-pull-latest content-build content-diff content-push content-push-live fetch-latest sync sync-push sync-issue refresh-copy refresh-copy-dry audio audio-issue
+.PHONY: build serve clean data librarian-corpus librarian-corpus-upload librarian-graph librarian-graph-upload librarian-deploy fresh content-pull content-pull-latest content-build content-diff content-push content-push-live sync-issue refresh-copy refresh-copy-dry audio audio-issue
 
 data:
 	npm run data
@@ -31,7 +31,7 @@ clean:
 	find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
 
 fresh:
-	npm run data:fresh
+	npm run content:pull
 	npm run serve
 
 content-pull:
@@ -51,15 +51,6 @@ content-push:
 
 content-push-live:
 	npm run content:push:live
-
-fetch-latest:
-	npm run fetch:latest
-
-sync:
-	npm run sync
-
-sync-push:
-	npm run sync:push
 
 sync-issue:
 	@read -p "Issue number: " num; \

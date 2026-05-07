@@ -41,9 +41,9 @@ class AudioScriptTests(unittest.TestCase):
         frontmatter, body = archive_fixture(107)
         rendered = audio_script.body_to_audio_script(body, frontmatter)
 
-        self.assertIn("\n\nFeatured links.\n\n", rendered)
-        self.assertIn("\n\nNotable links.\n\n", rendered)
-        self.assertIn("\n\nYet more links.\n\n", rendered)
+        self.assertIn("Now, the Featured Links section.", rendered)
+        self.assertIn("Now, the Notable Links section.", rendered)
+        self.assertIn("Now, more links.", rendered)
         self.assertNotIn("🏅", rendered)
         self.assertNotIn("📌", rendered)
         self.assertNotIn("🍞", rendered)
@@ -77,7 +77,7 @@ This is `inline code` with [a link](https://example.com), e.g. a test & sample.
 """
         rendered = audio_script.body_to_audio_script(body, frontmatter)
 
-        self.assertIn("\n\nThis is quoted text versus normal text. It cost 12 dollars and 50 cents on the twenty first.\n\n", rendered)
+        self.assertIn("Quote.\nThis is quoted text versus normal text. It cost 12 dollars and 50 cents on the twenty first.\nEnd quote.", rendered)
         self.assertNotIn("skip me", rendered)
         self.assertIn("inline code with a link, for example a test and sample.", rendered)
 

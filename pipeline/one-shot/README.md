@@ -33,9 +33,4 @@ Do not re-run these against the current archive unless you explicitly intend to 
 
 ## Active scripts
 
-The `pipeline/` folder contains the current, re-runnable tools:
-
-- **Content:** `pipeline/content/content.py`, `fetch_emails.py`, `process_emails.py`, `domain_exclusions.py` (`build_data.py`, `fetch_latest.py`, and `sync_to_buttondown.py` are compatibility wrappers)
-- **Audit:** `pipeline/audits/audit_archive.py`, `llm_audit_archive.py`, `audit_missing_micropost_photos.py`, `build_missing_posts_report.py`
-- **Reusable fixes:** `pipeline/audits/fix_micropost_photos.py`, `restore_missing_micropost_photos.py`, `migrate_images_to_s3.py`
-- **Utilities:** `generate_descriptions.py`
+The current, re-runnable pipeline lives in sibling directories under `pipeline/` — `content/`, `audits/`, `corpus/`, `graph/`, `audio/`, `deploy/`, plus `status.py`. The unified content entrypoint is `pipeline/content/content.py`. See `CLAUDE.md` for the operator overview.
