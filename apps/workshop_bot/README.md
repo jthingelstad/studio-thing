@@ -164,7 +164,7 @@ apps/workshop_bot/
 
 ## Tech stack
 
-- Python 3.13
+- Python 3.14
 - `discord.py >= 2.4` — async Discord client
 - `anthropic` — Claude API
 - `apscheduler >= 3.10` — cron-style jobs

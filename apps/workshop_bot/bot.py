@@ -14,6 +14,7 @@ import logging
 import os
 import signal
 import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -44,12 +45,30 @@ PERSONAS: list[tuple[str, str, type]] = [
 def configure_logging() -> None:
     level_name = os.environ.get("WORKSHOP_LOG_LEVEL", "INFO").upper()
     level = getattr(logging, level_name, logging.INFO)
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s %(levelname)-7s %(name)s | %(message)s",
-        datefmt="%H:%M:%S",
-        stream=sys.stderr,
+
+    log_file = os.environ.get(
+        "WORKSHOP_LOG_FILE",
+        str(Path(__file__).resolve().parent / "logs" / "workshop.log"),
     )
+    Path(log_file).parent.mkdir(parents=True, exist_ok=True)
+
+    fmt = logging.Formatter(
+        fmt="%(asctime)s %(levelname)-7s %(name)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    # Always log to file; mirror to stderr only when running interactively
+    # (under launchd stderr is a file, so we'd just duplicate into workshop.err).
+    handlers: list[logging.Handler] = [logging.FileHandler(log_file)]
+    if sys.stderr.isatty():
+        handlers.append(logging.StreamHandler(sys.stderr))
+
+    root = logging.getLogger()
+    root.setLevel(level)
+    for h in handlers:
+        h.setFormatter(fmt)
+        root.addHandler(h)
+
     # Quiet discord.py's gateway noise unless DEBUG is on.
     if level > logging.DEBUG:
         logging.getLogger("discord").setLevel(logging.WARNING)
