@@ -8,6 +8,7 @@ lxml
 openai
 pydantic
 python-dotenv
+pytest
 pyyaml
 rank_bm25
 requests
