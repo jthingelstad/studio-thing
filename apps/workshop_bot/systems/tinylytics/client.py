@@ -131,70 +131,40 @@ def user_journeys(days: int = 7, limit: int = 20) -> dict[str, Any]:
     }
 
 
-def sources(
-    days: int = 30, limit: int = 20, max_pages: int = 10
-) -> dict[str, Any]:
-    """Aggregate the ``source`` field on raw hits over a trailing window.
+def sources(days: int = 30, limit: int = 20) -> dict[str, Any]:
+    """Top per-hit ``source`` values over a trailing window.
 
     Tinylytics auto-extracts ``?ref=<x>`` and ``?utm_source=<x>`` from
-    landing URLs into the per-hit ``source`` field. The API does NOT
-    support ``group_by=source`` (returns HTTP 400), so this paginates
-    raw hits and aggregates client-side. Each hit costs ~1 request per
-    1000 hits in the window.
+    landing URLs into the per-hit ``source`` field. Aggregated
+    server-side via ``group_by=source``.
 
     This is the right tool for "where did the DenseDiscovery / LinkedIn /
     etc. traffic land this week" — `referrers` answers a different
     question (HTTP Referer header, e.g. linkedin.com).
 
-    Returns ``{days, hits_seen, with_source, by_source, by_path,
-    samples}`` where ``by_source`` maps source → count, ``by_path``
-    maps path → count for hits that carried a source, and ``samples``
-    has up to 5 example URLs for spot-checking.
+    Returns ``{days, by_source, total_sources}`` where ``by_source``
+    maps source → hit_count (sorted desc, truncated to ``limit``) and
+    ``total_sources`` is the count of distinct sources in the window
+    (may exceed ``limit``).
     """
-    window = _date_window(days)
-    by_source: dict[str, int] = {}
-    by_path: dict[str, int] = {}
-    samples: list[dict[str, Any]] = []
-    seen = 0
-    with_source = 0
-    for page in range(1, int(max_pages) + 1):
-        params: dict[str, Any] = {**window, "per_page": 1000, "page": page}
-        data = _request("/hits", params=params)
-        hits = data.get("hits") or []
-        if not hits:
-            break
-        for row in hits:
-            seen += 1
-            src = (row.get("source") or "").strip()
-            if not src:
-                continue
-            with_source += 1
-            by_source[src] = by_source.get(src, 0) + 1
-            path = row.get("path") or "/"
-            by_path[path] = by_path.get(path, 0) + 1
-            if len(samples) < 5:
-                samples.append(
-                    {
-                        "source": src,
-                        "url": row.get("url"),
-                        "path": path,
-                        "created_at": row.get("created_at"),
-                    }
-                )
-        pagination = data.get("pagination") or {}
-        if int(pagination.get("current_page") or page) >= int(
-            pagination.get("total_pages") or page
-        ):
-            break
-    sorted_sources = sorted(by_source.items(), key=lambda kv: -kv[1])
-    sorted_paths = sorted(by_path.items(), key=lambda kv: -kv[1])
+    params: dict[str, Any] = {
+        **_date_window(days),
+        "grouped": "true",
+        "group_by": "source",
+        "per_page": min(int(limit), 1000),
+    }
+    data = _request("/hits", params=params)
+    rows = data.get("grouped_hits") or []
+    by_source = {
+        (row.get("source") or "(none)"): int(row.get("hit_count") or 0)
+        for row in rows
+    }
+    pagination = data.get("pagination") or {}
+    total_sources = int(pagination.get("total_count") or len(rows))
     return {
         "days": int(days),
-        "hits_seen": seen,
-        "with_source": with_source,
-        "by_source": dict(sorted_sources[: int(limit)]),
-        "by_path": dict(sorted_paths[: int(limit)]),
-        "samples": samples,
+        "by_source": by_source,
+        "total_sources": total_sources,
     }
 
 

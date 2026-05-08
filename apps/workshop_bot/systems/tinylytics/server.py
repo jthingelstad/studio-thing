@@ -72,14 +72,14 @@ class TinylyticsServer:
             ToolDef(
                 name="sources",
                 description=(
-                    "Aggregate the per-hit `source` field over a trailing "
-                    "window. Tinylytics auto-extracts `?ref=<x>` and "
-                    "`?utm_source=<x>` from landing URLs into this field. "
-                    "Use this — NOT `referrers` — to answer 'where did "
-                    "DenseDiscovery / LinkedIn / etc. traffic land this "
-                    "week.' Returns {days, hits_seen, with_source, "
-                    "by_source, by_path, samples}. The API has no "
-                    "group_by=source so this paginates raw hits."
+                    "Top per-hit `source` values over a trailing window "
+                    "(server-side group_by=source). Tinylytics auto-extracts "
+                    "`?ref=<x>` and `?utm_source=<x>` from landing URLs "
+                    "into this field. Use this — NOT `referrers` — to "
+                    "answer 'where did DenseDiscovery / LinkedIn / etc. "
+                    "traffic land this week.' Returns {days, by_source, "
+                    "total_sources}; by_source maps source → hit_count "
+                    "(sorted desc, truncated to `limit`)."
                 ),
                 input_schema={
                     "type": "object",

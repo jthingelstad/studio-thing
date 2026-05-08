@@ -348,6 +348,33 @@ class TinylyticsServerTests(unittest.TestCase):
         self.assertEqual(out[0]["referrer"], "https://x.example/")
         self.assertEqual(captured[0]["params"]["group_by"], "referrer")
 
+    def test_sources_uses_server_side_group_by(self):
+        captured: list[dict] = []
+
+        def fake_request(path, *, params=None):
+            captured.append({"path": path, "params": dict(params or {})})
+            return {
+                "grouped_hits": [
+                    {"source": "densediscovery", "hit_count": 12},
+                    {"source": "powrss.com", "hit_count": 4},
+                ],
+                "pagination": {"total_count": 2},
+            }
+
+        original = tl_client._request
+        tl_client._request = fake_request  # type: ignore[assignment]
+        try:
+            out = self.tools["sources"].handler(deps=None, days=30, limit=10)
+        finally:
+            tl_client._request = original  # type: ignore[assignment]
+        self.assertEqual(captured[0]["path"], "/hits")
+        self.assertEqual(captured[0]["params"]["grouped"], "true")
+        self.assertEqual(captured[0]["params"]["group_by"], "source")
+        self.assertEqual(captured[0]["params"]["per_page"], 10)
+        self.assertEqual(out["days"], 30)
+        self.assertEqual(out["total_sources"], 2)
+        self.assertEqual(out["by_source"], {"densediscovery": 12, "powrss.com": 4})
+
 
 class PinboardServerTests(unittest.TestCase):
     def setUp(self):
