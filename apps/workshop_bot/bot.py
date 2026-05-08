@@ -47,9 +47,12 @@ RATE_LIMIT_BACKOFFS = (300, 600, 1200, 1800)  # 5m, 10m, 20m, 30m
 RATE_LIMIT_BACKOFF_CAP = 1800  # 30m
 RATE_LIMIT_JITTER = 0.10  # ±10% so the 5 personas don't wake in lockstep
 
-# Cap discord.py's internal retry-after sleep. Without this, a 429 triggers
-# 5 retries × Discord's retry_after, all from the same IP — the herd we're
-# trying to avoid. We do our own slow backoff above instead.
+# Cap discord.py's internal retry-after sleep, applied only around login().
+# Without this, a 429 on the login storm triggers 5 retries × Discord's
+# retry_after, all from the same IP — the herd we're trying to avoid. We do
+# our own slow backoff above instead. Restored to None (discord.py's default,
+# wait as long as needed) once login succeeds, so routine post-login calls
+# like typing/send/reactions can ride out small cooldowns silently.
 HTTP_RATELIMIT_TIMEOUT = 1.0
 
 PERSONAS: list[tuple[str, str, type]] = [
@@ -159,9 +162,14 @@ async def run() -> int:
             return False
 
     async def _start(name: str, client, token: str) -> None:
-        client.http.max_ratelimit_timeout = HTTP_RATELIMIT_TIMEOUT
         attempt = 0
         while not stop_event.is_set():
+            # Cap the HTTP retry only around login() so the herd-of-5 cold
+            # start fails fast on 40062 instead of compounding into 25 hammered
+            # requests. Restore the default after login so routine calls
+            # (typing, sends, reactions) can ride out their small cooldowns
+            # silently the way discord.py intends.
+            client.http.max_ratelimit_timeout = HTTP_RATELIMIT_TIMEOUT
             try:
                 await client.login(token)
             except asyncio.CancelledError:
@@ -189,9 +197,12 @@ async def run() -> int:
                 _request_stop()
                 return
 
-            # Logged in. Reset backoff and run the gateway. If it drops, we
-            # loop back to login() — discord.py's reconnect=True handles
-            # transient gateway blips, so we only re-enter on harder failures.
+            # Logged in. Restore the default so post-login HTTP calls don't
+            # surface every short cooldown as RateLimited. Reset backoff and
+            # run the gateway. If it drops, we loop back to login() —
+            # discord.py's reconnect=True handles transient gateway blips, so
+            # we only re-enter on harder failures.
+            client.http.max_ratelimit_timeout = None
             attempt = 0
             try:
                 await client.connect(reconnect=True)
