@@ -102,6 +102,8 @@ install_bot() {
     <false/>
     <key>KeepAlive</key>
     <true/>
+    <key>ThrottleInterval</key>
+    <integer>300</integer>
     <key>StandardOutPath</key>
     <string>$LOG_DIR/workshop.log</string>
     <key>StandardErrorPath</key>
