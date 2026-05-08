@@ -17,7 +17,6 @@ import asyncio
 import os
 import sys
 import tempfile
-import types
 import unittest
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
@@ -25,44 +24,9 @@ from unittest.mock import AsyncMock, MagicMock
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
 
+from apps.workshop_bot.tests import _stubs  # noqa: E402
 
-def _install_stubs() -> None:
-    if "discord" not in sys.modules:
-        discord = types.ModuleType("discord")
-
-        class _Client:
-            def __init__(self, *a, **k):
-                self.user = None
-
-        class _Intents:
-            message_content = False
-            guilds = False
-
-            @staticmethod
-            def default():
-                return _Intents()
-
-        discord.Client = _Client  # type: ignore[attr-defined]
-        discord.Intents = _Intents  # type: ignore[attr-defined]
-        discord.Message = object  # type: ignore[attr-defined]
-        discord.DiscordException = Exception  # type: ignore[attr-defined]
-        abc_mod = types.ModuleType("discord.abc")
-        abc_mod.Messageable = object  # type: ignore[attr-defined]
-        sys.modules["discord"] = discord
-        sys.modules["discord.abc"] = abc_mod
-
-    if "anthropic" not in sys.modules:
-        anthropic = types.ModuleType("anthropic")
-
-        class _A:
-            def __init__(self, *a, **k):
-                pass
-
-        anthropic.Anthropic = _A  # type: ignore[attr-defined]
-        sys.modules["anthropic"] = anthropic
-
-
-_install_stubs()
+_stubs.install()
 
 
 from apps.workshop_bot.scheduler import handlers  # noqa: E402
@@ -127,16 +91,18 @@ class HeartbeatDispatchTests(unittest.TestCase):
     def test_pass_swallowed_no_post(self):
         bot = _make_bot(persona="marky", reply="PASS")
         ctx = _FakeCtx(bot=bot, channel=MagicMock())
-        asyncio.run(handlers.heartbeat(ctx, "marky"))
+        result = asyncio.run(handlers.heartbeat(ctx, "marky"))
         self.assertTrue(bot.core.await_count == 1)
         self.assertEqual(ctx.posted, [])
+        self.assertEqual(result, "pass")
 
     def test_non_pass_posts_to_home_channel(self):
         reply = "Marky here — referral spike on dd-2026-05-15."
         bot = _make_bot(persona="marky", reply=reply)
         ctx = _FakeCtx(bot=bot, channel=MagicMock())
-        asyncio.run(handlers.heartbeat(ctx, "marky"))
+        result = asyncio.run(handlers.heartbeat(ctx, "marky"))
         self.assertEqual(ctx.posted, [reply])
+        self.assertEqual(result, "posted")
 
     def test_loads_persona_heartbeat_prompt(self):
         bot = _make_bot(persona="marky", reply="PASS")
@@ -151,16 +117,18 @@ class HeartbeatDispatchTests(unittest.TestCase):
         os.environ["WORKSHOP_HEARTBEATS_ENABLED"] = "0"
         bot = _make_bot(persona="marky", reply="anything")
         ctx = _FakeCtx(bot=bot, channel=MagicMock())
-        asyncio.run(handlers.heartbeat(ctx, "marky"))
+        result = asyncio.run(handlers.heartbeat(ctx, "marky"))
         # Bot.core never called.
         self.assertEqual(bot.core.await_count, 0)
         self.assertEqual(ctx.posted, [])
+        self.assertEqual(result, "disabled")
 
     def test_unknown_persona_returns_silently(self):
         ctx = _FakeCtx(bot=None, channel=MagicMock())
         # Should not raise.
-        asyncio.run(handlers.heartbeat(ctx, "nonexistent"))
+        result = asyncio.run(handlers.heartbeat(ctx, "nonexistent"))
         self.assertEqual(ctx.posted, [])
+        self.assertEqual(result, "skipped")
 
     def test_pass_variants_swallowed(self):
         for variant in ("PASS", "pass", " PASS\n", "**PASS**", "`PASS`"):
@@ -181,8 +149,9 @@ class HeartbeatDispatchTests(unittest.TestCase):
         bot.core = AsyncMock(side_effect=RuntimeError("bedrock unavailable"))
         ctx = _FakeCtx(bot=bot, channel=MagicMock())
         # Should not raise.
-        asyncio.run(handlers.heartbeat(ctx, "marky"))
+        result = asyncio.run(handlers.heartbeat(ctx, "marky"))
         self.assertEqual(ctx.posted, [])
+        self.assertEqual(result, "error")
 
     def test_passes_heartbeat_model_from_env(self):
         os.environ["WORKSHOP_HEARTBEAT_MODEL"] = "sonnet"

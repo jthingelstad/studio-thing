@@ -25,7 +25,9 @@ import logging
 import os
 import re
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Literal, Optional
+
+HeartbeatResult = Literal["pass", "posted", "disabled", "skipped", "error"]
 
 from ..personas.base import is_pass_response
 from ..systems.buttondown import client as buttondown
@@ -80,7 +82,7 @@ def _heartbeats_enabled() -> bool:
     return raw not in ("0", "false", "no", "off", "")
 
 
-async def heartbeat(ctx: "JobContext", persona: str) -> None:
+async def heartbeat(ctx: "JobContext", persona: str) -> HeartbeatResult:
     """A persona's scheduled wake-up turn.
 
     Loads ``prompts/<persona>/heartbeat.md`` as the user message, runs
@@ -92,22 +94,24 @@ async def heartbeat(ctx: "JobContext", persona: str) -> None:
 
     Wired into ``scheduler/jobs.py`` as
     ``functools.partial(handlers.heartbeat, persona='<name>')`` per
-    each persona's heartbeat JobSpec.
+    each persona's heartbeat JobSpec. Also reachable from the
+    ``/workshop heartbeat`` slash command, which uses the return value
+    to ack the invoker honestly (PASS vs posted vs error).
     """
     if not _heartbeats_enabled():
         logger.info("heartbeat: disabled via WORKSHOP_HEARTBEATS_ENABLED=0; skipping %s", persona)
-        return
+        return "disabled"
 
     bot = ctx.bot(persona)
     if bot is None:
         logger.warning("heartbeat: persona %r not registered; skipping", persona)
-        return
+        return "skipped"
 
     try:
         prompt_text = anthropic_client.load_prompt(f"{persona}-heartbeat")
     except OSError as exc:
         logger.warning("heartbeat: prompt for %r unreadable: %s", persona, exc)
-        return
+        return "skipped"
 
     model = (os.environ.get("WORKSHOP_HEARTBEAT_MODEL") or "haiku").strip() or None
 
@@ -120,21 +124,22 @@ async def heartbeat(ctx: "JobContext", persona: str) -> None:
         except Exception as exc:  # noqa: BLE001
             run.error = f"{type(exc).__name__}: {exc}"
             logger.exception("heartbeat %s: agent loop failed", persona)
-            return
+            return "error"
         run.records_written = 0 if (not answer or is_pass_response(answer)) else 1
 
     if not answer or is_pass_response(answer):
         logger.info("heartbeat %s: PASS", persona)
-        return
+        return "pass"
 
     home_env = bot.home_channel_env
     if not home_env:
         logger.warning("heartbeat %s: no home_channel_env; dropping reply", persona)
-        return
+        return "skipped"
     channel = ctx.channel(home_env, persona=persona)
     if channel is None:
-        return
+        return "skipped"
     await ctx.post(channel, answer, suppress_embeds=True)
+    return "posted"
 
 
 # ============================================================

@@ -18,40 +18,9 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
 
+from apps.workshop_bot.tests import _stubs  # noqa: E402
 
-def _install_stubs() -> None:
-    if "discord" not in sys.modules:
-        discord = types.ModuleType("discord")
-
-        class _Client:
-            def __init__(self, *a, **k):
-                self.user = None
-
-        class _Intents:
-            message_content = False
-            guilds = False
-
-            @staticmethod
-            def default():
-                return _Intents()
-
-        discord.Client = _Client  # type: ignore[attr-defined]
-        discord.Intents = _Intents  # type: ignore[attr-defined]
-        discord.Message = object  # type: ignore[attr-defined]
-        discord.RawReactionActionEvent = object  # type: ignore[attr-defined]
-        discord.DiscordException = Exception  # type: ignore[attr-defined]
-        abc_mod = types.ModuleType("discord.abc")
-        abc_mod.Messageable = object  # type: ignore[attr-defined]
-        sys.modules["discord"] = discord
-        sys.modules["discord.abc"] = abc_mod
-
-    if "anthropic" not in sys.modules:
-        anthropic = types.ModuleType("anthropic")
-        anthropic.Anthropic = type("A", (), {"__init__": lambda self, *a, **k: None})  # type: ignore[attr-defined]
-        sys.modules["anthropic"] = anthropic
-
-
-_install_stubs()
+_stubs.install()
 
 
 from apps.workshop_bot.personas import base  # noqa: E402
