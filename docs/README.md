@@ -4,6 +4,7 @@ This directory contains operational notes for the Weekly Thing archive site.
 
 - [Content pipeline](content-pipeline.md): Buttondown pulls, tracked raw snapshots, generated archive files, and syncing edits back to Buttondown.
 - [Archive Librarian](librarian.md): Thingy architecture, AWS runtime, deployment, observability, beta logging, and review commands.
+- [External systems](systems/README.md): Auth quirks, endpoint catalogs, and gotchas for Buttondown / Pinboard / Stripe / Tinylytics.
 - [Audits](audits/README.md): Archive audit outputs and one-off cleanup references.
 
 ## Common Commands

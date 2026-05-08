@@ -263,7 +263,7 @@ class ButtondownServerTests(unittest.TestCase):
 class TinylyticsServerTests(unittest.TestCase):
     def setUp(self):
         os.environ.setdefault("TINYLYTICS_API_KEY", "stub")
-        os.environ.setdefault("TINYLYTICS_SITE_UID", "stub-uid")
+        os.environ.setdefault("TINYLYTICS_SITE_ID", "3063")
         self.server = TinylyticsServer()
         self.tools = {t.name: t for t in self.server.list_tools()}
 
@@ -273,20 +273,20 @@ class TinylyticsServerTests(unittest.TestCase):
     def test_list_tools_returns_expected_set(self):
         self.assertEqual(
             set(self.tools),
-            {"summary", "ref_traffic", "top_pages", "referrers", "events"},
+            {"summary", "top_pages", "referrers"},
         )
 
     def test_summary_dispatch(self):
         def fake_request(path, *, params=None):
-            if path == "/stats":
-                return {"hits": 10}
-            if path == "/pages":
-                return [{"path": "/", "hits": 5}]
-            if path == "/referrers":
-                return [{"source": "bsky", "hits": 2}]
-            if path == "/events":
-                return []
-            raise AssertionError(f"unexpected path {path!r}")
+            if path != "/hits":
+                raise AssertionError(f"unexpected path {path!r}")
+            if not params.get("grouped"):
+                return {"pagination": {"total_count": 421}}
+            if params.get("group_by") == "path":
+                return {"grouped_hits": [{"path": "/", "views": 100, "unique_views": 80}]}
+            if params.get("group_by") == "referrer":
+                return {"grouped_hits": [{"referrer": "https://buttondown.com/", "hit_count": 27}]}
+            raise AssertionError(f"unexpected params {params!r}")
 
         original = tl_client._request
         tl_client._request = fake_request  # type: ignore[assignment]
@@ -295,45 +295,16 @@ class TinylyticsServerTests(unittest.TestCase):
         finally:
             tl_client._request = original  # type: ignore[assignment]
         self.assertEqual(out["days"], 7)
-        self.assertEqual(out["stats"], {"hits": 10})
-        self.assertEqual(out["top_pages"], [{"path": "/", "hits": 5}])
-        self.assertEqual(out["referrers"], [{"source": "bsky", "hits": 2}])
+        self.assertEqual(out["total_hits"], 421)
+        self.assertEqual(out["top_pages"][0]["views"], 100)
+        self.assertEqual(out["referrers"][0]["hit_count"], 27)
 
-    def test_ref_traffic_filters_and_aggregates(self):
+    def test_top_pages_passes_grouped_params(self):
         captured: list[dict] = []
 
         def fake_request(path, *, params=None):
-            captured.append({"path": path, "params": params})
-            return [
-                {"path": "/?ref=dd-2026-05-15", "hits": 7},
-                {"path": "/archive/348/?ref=dd-2026-05-15", "hits": 3},
-                {"path": "/?ref=other-tag", "hits": 99},
-                {"path": "/about/", "hits": 4},
-            ]
-
-        original = tl_client._request
-        tl_client._request = fake_request  # type: ignore[assignment]
-        try:
-            out = self.tools["ref_traffic"].handler(
-                deps=None, tag="dd-2026-05-15", days=14
-            )
-        finally:
-            tl_client._request = original  # type: ignore[assignment]
-        self.assertEqual(out["tag"], "dd-2026-05-15")
-        self.assertEqual(out["hits"], 10)
-        self.assertEqual(len(out["paths"]), 2)
-        # Forwarded the `days` param to the upstream call.
-        self.assertEqual(captured[0]["params"], {"days": 14, "limit": 200})
-
-    def test_ref_traffic_rejects_blank_tag(self):
-        out = self.tools["ref_traffic"].handler(deps=None, tag="   ", days=7)
-        self.assertIn("error", out)
-
-    def test_top_pages_passthrough(self):
-        def fake_request(path, *, params=None):
-            self.assertEqual(path, "/pages")
-            self.assertEqual(params, {"days": 14, "limit": 5})
-            return [{"path": "/foo", "hits": 1}]
+            captured.append({"path": path, "params": dict(params or {})})
+            return {"grouped_hits": [{"path": "/foo", "views": 1, "unique_views": 1}]}
 
         original = tl_client._request
         tl_client._request = fake_request  # type: ignore[assignment]
@@ -341,7 +312,30 @@ class TinylyticsServerTests(unittest.TestCase):
             out = self.tools["top_pages"].handler(deps=None, days=14, limit=5)
         finally:
             tl_client._request = original  # type: ignore[assignment]
-        self.assertEqual(out, [{"path": "/foo", "hits": 1}])
+        self.assertEqual(out, [{"path": "/foo", "views": 1, "unique_views": 1}])
+        self.assertEqual(captured[0]["path"], "/hits")
+        self.assertEqual(captured[0]["params"]["grouped"], "true")
+        self.assertEqual(captured[0]["params"]["group_by"], "path")
+        self.assertEqual(captured[0]["params"]["per_page"], 5)
+        # Date window forwarded.
+        self.assertIn("start_date", captured[0]["params"])
+        self.assertIn("end_date", captured[0]["params"])
+
+    def test_referrers_passes_grouped_params(self):
+        captured: list[dict] = []
+
+        def fake_request(path, *, params=None):
+            captured.append({"path": path, "params": dict(params or {})})
+            return {"grouped_hits": [{"referrer": "https://x.example/", "hit_count": 9}]}
+
+        original = tl_client._request
+        tl_client._request = fake_request  # type: ignore[assignment]
+        try:
+            out = self.tools["referrers"].handler(deps=None, days=7, limit=5)
+        finally:
+            tl_client._request = original  # type: ignore[assignment]
+        self.assertEqual(out[0]["referrer"], "https://x.example/")
+        self.assertEqual(captured[0]["params"]["group_by"], "referrer")
 
 
 class PinboardServerTests(unittest.TestCase):
@@ -695,7 +689,7 @@ class RegistryIntegrationTests(unittest.TestCase):
         os.environ.setdefault("PINBOARD_API_TOKEN", "jthingelstad:STUB")
         os.environ.setdefault("STRIPE_API_KEY", "rk_test_stub")
         os.environ.setdefault("TINYLYTICS_API_KEY", "stub")
-        os.environ.setdefault("TINYLYTICS_SITE_UID", "stub-uid")
+        os.environ.setdefault("TINYLYTICS_SITE_ID", "3063")
         self.registry = agent_tools.ToolRegistry()
         agent_tools.register_local_helpers(self.registry)
         self.registry.register_system(ButtondownServer())
@@ -758,10 +752,8 @@ class RegistryIntegrationTests(unittest.TestCase):
     def test_dotted_tinylytics_names_come_from_system(self):
         for new in (
             "tinylytics.summary",
-            "tinylytics.ref_traffic",
             "tinylytics.top_pages",
             "tinylytics.referrers",
-            "tinylytics.events",
         ):
             tool = self.registry.get(new)
             self.assertIsNotNone(tool, new)

@@ -15,9 +15,10 @@ You see every tool the team has access to (the registry is uniform), but stay in
 
 ### Tinylytics — site engagement
 
-- `tinylytics.summary(days)` — trailing-window engagement summary: stats + top pages + referrers + custom events (donate, membership). Use to ground "what's working lately" instead of guessing.
-- `tinylytics.ref_traffic(tag, days)` — page hits attributed to a specific `?ref=<tag>` URL. Use to watch a campaign you're tracking; pass the ref tag (e.g. `dd-2026-05-15`) and the lookback window. Returns total hits and per-path breakdown.
-- `tinylytics.top_pages(days, limit)` / `tinylytics.referrers(days, limit)` / `tinylytics.events(days, limit)` — finer-grained reads when `summary` doesn't have what you need.
+- `tinylytics.summary(days)` — trailing-window engagement: total hits + top pages + top referrers. Use to ground "what's working lately" instead of guessing.
+- `tinylytics.top_pages(days, limit)` / `tinylytics.referrers(days, limit)` — finer-grained reads when `summary` doesn't have what you need.
+
+**Tinylytics does not capture query strings.** A landing-page hit at `https://weekly.thingelstad.com/?ref=dd-2026-05-15` shows up as a hit on path `/` — the `?ref=` segment is dropped before storage. Don't try to use Tinylytics for ref-campaign attribution; that lives on the Stripe + Buttondown side via `metadata.ref` (see the campaign ledger below).
 
 ### Buttondown — subscribers and emails
 
@@ -79,11 +80,13 @@ Do not start polling Tinylytics until the campaign is `live` — a `drafted` ref
 
 Once a campaign is `live`, every time you check on it (heartbeat, ad-hoc, etc.):
 
-1. `tinylytics.ref_traffic(tag=<ref_tag>, days=14)` — pull current site hits for the ref tag.
-2. `stripe.donations_by_ref(days=90)` — check whether any donations carry that same ref tag. **Note:** until the donate flow is wired up to set `ref` on Checkout Session metadata, this returns `(no-ref)` for everything; a campaign showing donation impact is the signal that the wiring is live.
-3. Compare both numbers against the most recent `metrics_history` entry. If hits and donations are unchanged or trivially different (±1), don't append a duplicate — just use the existing entry.
-4. If anything changed materially, append `{"polled_at": "<ISO>", "hits": <int>, "paths": <list>, "donations_count": <int>, "donations_usd": <float>}` to `metrics_history` and `s3_personas.write_file` the JSON back.
-5. If something noteworthy is happening (first hits, first donation under the ref tag, traffic spike, going quiet after strong start), call it out in `#chatter`. Otherwise, silence — the JSON has the timeline.
+1. `stripe.donations_by_ref(days=90)` — check whether any donations carry that ref tag. **Note:** until the donate flow is wired up to set `ref` on Checkout Session metadata, this returns `(no-ref)` for everything; a campaign showing donation impact is the signal that the wiring is live.
+2. `buttondown.list_subscribers(limit=25)` and scan each record's `metadata.ref` for new signups carrying the campaign tag (the site relays `?ref=<tag>` to Buttondown subscriber metadata).
+3. Compare both numbers against the most recent `metrics_history` entry. If donations and signups are unchanged or trivially different (±1), don't append a duplicate — just use the existing entry.
+4. If anything changed materially, append `{"polled_at": "<ISO>", "donations_count": <int>, "donations_usd": <float>, "signups_count": <int>}` to `metrics_history` and `s3_personas.write_file` the JSON back.
+5. If something noteworthy is happening (first donation under the ref tag, signup surge, going quiet after strong start), call it out in `#chatter`. Otherwise, silence — the JSON has the timeline.
+
+(Tinylytics doesn't see the `?ref=` query string — landing-page hits show up on bare paths. Don't reach for it for campaign attribution; rely on Stripe + Buttondown.)
 
 For cross-week patterns ("LinkedIn lands harder on Tuesday than Sunday"), `memory.remember(kind="observation", key="marky:platform-timing")` — those belong in your SQLite memory because they're queryable across campaigns. The campaign JSON holds the per-campaign timeline; observations cross campaigns.
 
