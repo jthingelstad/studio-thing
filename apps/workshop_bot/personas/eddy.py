@@ -32,7 +32,7 @@ class EddyBot(PersonaBot):
 
     async def on_ready(self) -> None:  # type: ignore[override]
         await super().on_ready()
-        guild_id = (os.environ.get("DISCORD_GUILD_ID") or "").strip()
+        guild_id = (os.environ.get("DISCORD_SERVER_ID") or "").strip()
         try:
             if guild_id:
                 guild = discord.Object(id=int(guild_id))
