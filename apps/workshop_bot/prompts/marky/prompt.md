@@ -79,10 +79,11 @@ Do not start polling Tinylytics until the campaign is `live` — a `drafted` ref
 
 Once a campaign is `live`, every time you check on it (heartbeat, ad-hoc, etc.):
 
-1. `tinylytics.ref_traffic(tag=<ref_tag>, days=14)` — pull current hits.
-2. Compare against the most recent `metrics_history` entry. If hits unchanged or trivially different (±1), don't append a duplicate — just use the existing entry.
-3. If the number changed materially, append `{"polled_at": "<ISO>", "hits": <int>, "paths": <list>}` to `metrics_history` and `s3_personas.write_file` the JSON back.
-4. If something noteworthy is happening (first hits, traffic spike, going quiet after strong start), call it out in `#chatter`. Otherwise, silence — the JSON has the timeline.
+1. `tinylytics.ref_traffic(tag=<ref_tag>, days=14)` — pull current site hits for the ref tag.
+2. `stripe.donations_by_ref(days=90)` — check whether any donations carry that same ref tag. **Note:** until the donate flow is wired up to set `ref` on Checkout Session metadata, this returns `(no-ref)` for everything; a campaign showing donation impact is the signal that the wiring is live.
+3. Compare both numbers against the most recent `metrics_history` entry. If hits and donations are unchanged or trivially different (±1), don't append a duplicate — just use the existing entry.
+4. If anything changed materially, append `{"polled_at": "<ISO>", "hits": <int>, "paths": <list>, "donations_count": <int>, "donations_usd": <float>}` to `metrics_history` and `s3_personas.write_file` the JSON back.
+5. If something noteworthy is happening (first hits, first donation under the ref tag, traffic spike, going quiet after strong start), call it out in `#chatter`. Otherwise, silence — the JSON has the timeline.
 
 For cross-week patterns ("LinkedIn lands harder on Tuesday than Sunday"), `memory.remember(kind="observation", key="marky:platform-timing")` — those belong in your SQLite memory because they're queryable across campaigns. The campaign JSON holds the per-campaign timeline; observations cross campaigns.
 

@@ -63,6 +63,8 @@ from apps.workshop_bot.systems.buttondown import client as bd_client  # noqa: E4
 from apps.workshop_bot.systems.buttondown.server import ButtondownServer  # noqa: E402
 from apps.workshop_bot.systems.pinboard import client as pb_client  # noqa: E402
 from apps.workshop_bot.systems.pinboard.server import PinboardServer  # noqa: E402
+from apps.workshop_bot.systems.stripe import client as st_client  # noqa: E402
+from apps.workshop_bot.systems.stripe.server import StripeServer  # noqa: E402
 from apps.workshop_bot.systems.tinylytics import client as tl_client  # noqa: E402
 from apps.workshop_bot.systems.tinylytics.server import TinylyticsServer  # noqa: E402
 from apps.workshop_bot.tools import agent_tools  # noqa: E402
@@ -448,18 +450,257 @@ class PinboardServerTests(unittest.TestCase):
         self.assertEqual(counts["climate"], 1)
 
 
+class StripeServerTests(unittest.TestCase):
+    def setUp(self):
+        os.environ.setdefault("STRIPE_API_KEY", "rk_test_stub")
+        self.server = StripeServer()
+        self.tools = {t.name: t for t in self.server.list_tools()}
+
+    def test_namespace_is_stripe(self):
+        self.assertEqual(self.server.name, "stripe")
+
+    def test_list_tools_returns_expected_set(self):
+        self.assertEqual(
+            set(self.tools),
+            {
+                "balance",
+                "recent_donations",
+                "donations_by_month",
+                "donations_by_ref",
+                "year_to_date",
+            },
+        )
+
+    def test_each_tool_has_description_and_schema(self):
+        for tool in self.tools.values():
+            self.assertIsInstance(tool, ToolDef)
+            self.assertTrue(tool.description.strip())
+            self.assertEqual(tool.input_schema.get("type"), "object")
+
+    def test_balance_sums_usd_only(self):
+        class _FakeBalance:
+            @staticmethod
+            def retrieve():
+                return {
+                    "available": [
+                        {"currency": "usd", "amount": 1000},
+                        {"currency": "eur", "amount": 5000},  # filtered out
+                    ],
+                    "pending": [
+                        {"currency": "usd", "amount": 358},
+                    ],
+                }
+
+        original = st_client.stripe.Balance
+        st_client.stripe.Balance = _FakeBalance  # type: ignore[assignment]
+        try:
+            out = self.tools["balance"].handler(deps=None)
+        finally:
+            st_client.stripe.Balance = original  # type: ignore[assignment]
+        self.assertEqual(out["available_usd"], 10.00)
+        self.assertEqual(out["pending_usd"], 3.58)
+        self.assertEqual(out["total_usd"], 13.58)
+
+    def test_recent_donations_hashes_donor_pii(self):
+        now_secs = int(_dt.datetime.now(_dt.timezone.utc).timestamp())
+        page = {
+            "data": [
+                {
+                    "id": "ch_1",
+                    "amount": 1500,
+                    "currency": "usd",
+                    "created": now_secs,
+                    "status": "succeeded",
+                    "paid": True,
+                    "billing_details": {
+                        "email": "JAMIE@example.com",
+                        "name": "Jamie Thingelstad",
+                    },
+                    "metadata": {"ref": "dd-2026-05-15"},
+                    "payment_intent": "pi_1",
+                },
+            ],
+            "has_more": False,
+        }
+
+        class _FakeCharge:
+            @staticmethod
+            def list(**kwargs):
+                return page
+
+        original = st_client.stripe.Charge
+        st_client.stripe.Charge = _FakeCharge  # type: ignore[assignment]
+        try:
+            out = self.tools["recent_donations"].handler(deps=None, limit=5)
+        finally:
+            st_client.stripe.Charge = original  # type: ignore[assignment]
+        self.assertEqual(len(out), 1)
+        rec = out[0]
+        self.assertEqual(rec["amount_usd"], 15.0)
+        self.assertEqual(rec["donor_domain"], "example.com")
+        self.assertEqual(len(rec["donor_hash"]), 32)
+        self.assertEqual(rec["ref_tag"], "dd-2026-05-15")
+        # Raw PII never appears.
+        self.assertNotIn("billing_details", rec)
+        self.assertNotIn("email", rec)
+        self.assertNotIn("name", rec)
+
+    def test_recent_donations_skips_unsucceeded(self):
+        now_secs = int(_dt.datetime.now(_dt.timezone.utc).timestamp())
+        page = {
+            "data": [
+                {
+                    "id": "ch_pending",
+                    "amount": 500,
+                    "currency": "usd",
+                    "created": now_secs,
+                    "status": "pending",
+                    "paid": False,
+                    "billing_details": {},
+                    "metadata": {},
+                },
+                {
+                    "id": "ch_ok",
+                    "amount": 1000,
+                    "currency": "usd",
+                    "created": now_secs,
+                    "status": "succeeded",
+                    "paid": True,
+                    "billing_details": {},
+                    "metadata": {},
+                },
+            ],
+            "has_more": False,
+        }
+
+        class _FakeCharge:
+            @staticmethod
+            def list(**kwargs):
+                return page
+
+        original = st_client.stripe.Charge
+        st_client.stripe.Charge = _FakeCharge  # type: ignore[assignment]
+        try:
+            out = self.tools["recent_donations"].handler(deps=None, limit=5)
+        finally:
+            st_client.stripe.Charge = original  # type: ignore[assignment]
+        ids = [r["id"] for r in out]
+        self.assertEqual(ids, ["ch_ok"])
+
+    def test_donations_by_ref_buckets_no_ref_separately(self):
+        now_secs = int(_dt.datetime.now(_dt.timezone.utc).timestamp())
+        page = {
+            "data": [
+                {
+                    "id": "ch_a",
+                    "amount": 1000,
+                    "currency": "usd",
+                    "created": now_secs,
+                    "status": "succeeded",
+                    "paid": True,
+                    "billing_details": {},
+                    "metadata": {"ref": "dd-2026-05-15"},
+                },
+                {
+                    "id": "ch_b",
+                    "amount": 500,
+                    "currency": "usd",
+                    "created": now_secs,
+                    "status": "succeeded",
+                    "paid": True,
+                    "billing_details": {},
+                    "metadata": {"ref": "dd-2026-05-15"},
+                },
+                {
+                    "id": "ch_c",
+                    "amount": 2500,
+                    "currency": "usd",
+                    "created": now_secs,
+                    "status": "succeeded",
+                    "paid": True,
+                    "billing_details": {},
+                    "metadata": {},  # no ref
+                },
+            ],
+            "has_more": False,
+        }
+
+        class _FakeCharge:
+            @staticmethod
+            def list(**kwargs):
+                return page
+
+        original = st_client.stripe.Charge
+        st_client.stripe.Charge = _FakeCharge  # type: ignore[assignment]
+        try:
+            out = self.tools["donations_by_ref"].handler(deps=None, days=90)
+        finally:
+            st_client.stripe.Charge = original  # type: ignore[assignment]
+        self.assertEqual(out["total_count"], 3)
+        self.assertEqual(out["total_usd"], 40.0)
+        self.assertEqual(out["by_ref"]["dd-2026-05-15"], {"count": 2, "total_usd": 15.0})
+        self.assertEqual(out["by_ref"]["(no-ref)"], {"count": 1, "total_usd": 25.0})
+
+    def test_year_to_date_returns_current_nonprofit(self):
+        now_secs = int(_dt.datetime.now(_dt.timezone.utc).timestamp())
+        page = {
+            "data": [
+                {
+                    "id": "ch_a",
+                    "amount": 1000,
+                    "currency": "usd",
+                    "created": now_secs,
+                    "status": "succeeded",
+                    "paid": True,
+                    "billing_details": {},
+                    "metadata": {},
+                },
+                {
+                    "id": "ch_b",
+                    "amount": 500,
+                    "currency": "usd",
+                    "created": now_secs,
+                    "status": "succeeded",
+                    "paid": True,
+                    "billing_details": {},
+                    "metadata": {},
+                },
+            ],
+            "has_more": False,
+        }
+
+        class _FakeCharge:
+            @staticmethod
+            def list(**kwargs):
+                return page
+
+        original = st_client.stripe.Charge
+        st_client.stripe.Charge = _FakeCharge  # type: ignore[assignment]
+        try:
+            out = self.tools["year_to_date"].handler(deps=None)
+        finally:
+            st_client.stripe.Charge = original  # type: ignore[assignment]
+        self.assertEqual(out["count"], 2)
+        self.assertEqual(out["total_usd"], 15.0)
+        self.assertEqual(out["average_usd"], 7.50)
+        # Reads from support.json; current nonprofit short_name is "EFF".
+        self.assertEqual(out["current_nonprofit"], "EFF")
+
+
 class RegistryIntegrationTests(unittest.TestCase):
     """Exercising the bot.py composition path: local helpers + system modules."""
 
     def setUp(self):
         os.environ.setdefault("BUTTONDOWN_API_KEY", "stub")
         os.environ.setdefault("PINBOARD_API_TOKEN", "jthingelstad:STUB")
+        os.environ.setdefault("STRIPE_API_KEY", "rk_test_stub")
         os.environ.setdefault("TINYLYTICS_API_KEY", "stub")
         os.environ.setdefault("TINYLYTICS_SITE_UID", "stub-uid")
         self.registry = agent_tools.ToolRegistry()
         agent_tools.register_local_helpers(self.registry)
         self.registry.register_system(ButtondownServer())
         self.registry.register_system(PinboardServer())
+        self.registry.register_system(StripeServer())
         self.registry.register_system(TinylyticsServer())
 
     def test_legacy_names_still_dispatch(self):
@@ -501,6 +742,18 @@ class RegistryIntegrationTests(unittest.TestCase):
             tool = self.registry.get(new)
             self.assertIsNotNone(tool, new)
             self.assertEqual(tool.source, "system:pinboard")
+
+    def test_dotted_stripe_names_come_from_system(self):
+        for new in (
+            "stripe.balance",
+            "stripe.recent_donations",
+            "stripe.donations_by_month",
+            "stripe.donations_by_ref",
+            "stripe.year_to_date",
+        ):
+            tool = self.registry.get(new)
+            self.assertIsNotNone(tool, new)
+            self.assertEqual(tool.source, "system:stripe")
 
     def test_dotted_tinylytics_names_come_from_system(self):
         for new in (
