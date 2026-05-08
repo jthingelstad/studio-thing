@@ -113,10 +113,13 @@ class TeamRegistry:
                     trigger=message,
                     bot_user_id=bot.user.id,
                 )
-                async with channel.typing():
-                    answer, meta = await bot.core(
-                        latest=latest, history=history, model=model
-                    )
+                try:
+                    await channel.trigger_typing()
+                except Exception:  # noqa: BLE001 — typing pulse is decorative
+                    pass
+                answer, meta = await bot.core(
+                    latest=latest, history=history, model=model
+                )
                 if answer.strip():
                     await self._send_via(channel, answer)
                 logger.info(

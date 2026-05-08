@@ -197,43 +197,50 @@ class ThingyBot(PersonaBot):
         citations: list[dict[str, Any]] = []
         request_id: Optional[str] = None
 
-        async with message.channel.typing():
-            try:
-                async for event_name, data in thingy_client.chat_stream(
-                    token=token, message=question, history=compact_history,
-                ):
-                    if event_name == "meta":
-                        request_id = str(data.get("request_id") or "") or None
-                    elif event_name == "answer_delta":
-                        delta = data.get("delta")
-                        if isinstance(delta, str):
-                            deltas.append(delta)
-                    elif event_name == "citations":
-                        items = data.get("citations")
-                        if isinstance(items, list):
-                            citations = items
-                    elif event_name == "status":
-                        # Status updates are intentionally not posted to
-                        # Discord — the channel would get noisy. Log only.
-                        msg = data.get("message")
-                        if msg:
-                            logger.info("thingy status: %s", msg)
-                    elif event_name == "done":
-                        break
-            except thingy_client.ThingyError as exc:
-                db.update_thingy_request(
-                    run_row,
-                    status="error",
-                    error=str(exc),
-                    duration_ms=int((time.monotonic() - t0) * 1000),
-                    request_id=request_id,
-                )
-                await message.reply(
-                    f"Thingy couldn't answer: `{exc}`",
-                    mention_author=False,
-                    suppress_embeds=True,
-                )
-                return
+        # One typing pulse instead of discord.py's Typing context manager —
+        # the keepalive cycle (every 5s) blew the per-channel typing rate
+        # limit on long agent loops. ~10s in the client UI is plenty for the
+        # common case; long answers just lose the dots.
+        try:
+            await message.channel.trigger_typing()
+        except discord.DiscordException:
+            pass
+        try:
+            async for event_name, data in thingy_client.chat_stream(
+                token=token, message=question, history=compact_history,
+            ):
+                if event_name == "meta":
+                    request_id = str(data.get("request_id") or "") or None
+                elif event_name == "answer_delta":
+                    delta = data.get("delta")
+                    if isinstance(delta, str):
+                        deltas.append(delta)
+                elif event_name == "citations":
+                    items = data.get("citations")
+                    if isinstance(items, list):
+                        citations = items
+                elif event_name == "status":
+                    # Status updates are intentionally not posted to
+                    # Discord — the channel would get noisy. Log only.
+                    msg = data.get("message")
+                    if msg:
+                        logger.info("thingy status: %s", msg)
+                elif event_name == "done":
+                    break
+        except thingy_client.ThingyError as exc:
+            db.update_thingy_request(
+                run_row,
+                status="error",
+                error=str(exc),
+                duration_ms=int((time.monotonic() - t0) * 1000),
+                request_id=request_id,
+            )
+            await message.reply(
+                f"Thingy couldn't answer: `{exc}`",
+                mention_author=False,
+                suppress_embeds=True,
+            )
+            return
 
         answer = thingy_render.format_for_discord(
             deltas, citations, site_url=site_url,
