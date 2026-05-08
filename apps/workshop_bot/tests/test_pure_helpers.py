@@ -10,6 +10,7 @@ Broader integration runs through ``apps/workshop_bot/eval.py``.
 
 from __future__ import annotations
 
+import asyncio
 import sys
 import types
 import unittest
@@ -91,6 +92,31 @@ class IsPassResponseTests(unittest.TestCase):
         self.assertFalse(base.is_pass_response("PASS — nothing to add"))
         self.assertFalse(base.is_pass_response("Pass on this one"))
         self.assertFalse(base.is_pass_response("I'll pass"))
+
+    def test_trailing_pass_after_reasoning_paragraph(self):
+        # Real heartbeat output: persona shows its work, then closes with
+        # PASS on its own line. Treat the trailing token as the verdict.
+        text = (
+            "No inbox items, no stored preferences or themes, and issue "
+            "347 hasn't started drafting yet. Last three shipped issues "
+            "show a steady rhythm—travel, speed, big tech movement. "
+            "Nothing to flag this morning.\n\nPASS"
+        )
+        self.assertTrue(base.is_pass_response(text))
+
+    def test_trailing_pass_single_newline(self):
+        # Same idea without a paragraph break — just a final-line PASS.
+        self.assertTrue(base.is_pass_response("scanned the queue\nPASS"))
+
+    def test_trailing_pass_with_formatting(self):
+        self.assertTrue(base.is_pass_response("nothing material\n\n**PASS**"))
+        self.assertTrue(base.is_pass_response("nothing material\n`PASS`"))
+
+    def test_pass_followed_by_content_is_not_pass(self):
+        # If PASS comes first and content follows, it isn't a PASS verdict.
+        self.assertFalse(
+            base.is_pass_response("PASS\nactually wait, here's a thing")
+        )
 
     def test_empty_string(self):
         self.assertFalse(base.is_pass_response(""))
@@ -235,6 +261,113 @@ class ApiSafeNameTests(unittest.TestCase):
         deps = types.SimpleNamespace(registry=registry)
         specs = agent_loop._build_tool_specs(["ns.thing"], deps=deps)
         self.assertEqual(specs[0]["name"], "ns__thing")
+
+
+class ReactAddTests(unittest.TestCase):
+    """``react.add`` is a tool that schedules ``Message.add_reaction`` on
+    the persona's bot loop. These tests stub the bot + loop so the tool
+    runs without a live Discord connection."""
+
+    def setUp(self):
+        # Wipe any context from previous tests.
+        agent_tools.active_react_target.set(None)
+        agent_tools.active_persona.set("eddy")
+
+    def tearDown(self):
+        agent_tools.active_react_target.set(None)
+        agent_tools.active_persona.set("unknown")
+
+    def test_no_message_in_context_returns_error(self):
+        agent_tools.active_react_target.set(None)
+        deps = types.SimpleNamespace(team=types.SimpleNamespace(bots={}))
+        out = agent_tools.t_react_add(deps, emoji="👀")
+        self.assertIn("error", out)
+        self.assertIn("no message in context", out["error"])
+
+    def test_empty_emoji_returns_error(self):
+        agent_tools.active_react_target.set((1, 2))
+        deps = types.SimpleNamespace(team=types.SimpleNamespace(bots={}))
+        out = agent_tools.t_react_add(deps, emoji="   ")
+        self.assertIn("error", out)
+        self.assertIn("emoji", out["error"])
+
+    def test_missing_team_returns_error(self):
+        agent_tools.active_react_target.set((1, 2))
+        deps = types.SimpleNamespace()
+        out = agent_tools.t_react_add(deps, emoji="🔥")
+        self.assertEqual(out, {"error": "team registry unavailable"})
+
+    def test_persona_not_registered_returns_error(self):
+        agent_tools.active_react_target.set((1, 2))
+        deps = types.SimpleNamespace(team=types.SimpleNamespace(bots={}))
+        out = agent_tools.t_react_add(deps, emoji="🔥")
+        self.assertIn("error", out)
+        self.assertIn("eddy", out["error"])
+
+    def test_happy_path_calls_add_reaction_via_bot_loop(self):
+        # Build a fake bot whose ``loop`` is a real running asyncio loop in
+        # a dedicated thread, so ``run_coroutine_threadsafe`` can schedule
+        # work on it from the test thread (mirrors the agent-loop worker).
+        import threading
+
+        loop_ready = threading.Event()
+        loop_holder: dict = {}
+
+        def _runner():
+            loop = asyncio.new_event_loop()
+            loop_holder["loop"] = loop
+            asyncio.set_event_loop(loop)
+            loop_ready.set()
+            try:
+                loop.run_forever()
+            finally:
+                loop.close()
+
+        t = threading.Thread(target=_runner, daemon=True)
+        t.start()
+        loop_ready.wait()
+        loop = loop_holder["loop"]
+
+        try:
+            captured: dict = {}
+
+            class _FakePartialMessage:
+                async def add_reaction(self, emoji):
+                    captured["emoji"] = emoji
+                    captured["channel_id"] = self._cid
+                    captured["message_id"] = self._mid
+
+            class _FakePartialMessageable:
+                def __init__(self, cid):
+                    self._cid = cid
+
+                def get_partial_message(self, mid):
+                    pm = _FakePartialMessage()
+                    pm._cid = self._cid
+                    pm._mid = mid
+                    return pm
+
+            class _FakeBot:
+                user = object()
+
+                def get_partial_messageable(self, cid):
+                    return _FakePartialMessageable(cid)
+
+            bot = _FakeBot()
+            bot.loop = loop  # type: ignore[attr-defined]
+            deps = types.SimpleNamespace(
+                team=types.SimpleNamespace(bots={"eddy": bot})
+            )
+            agent_tools.active_react_target.set((42, 4242))
+
+            out = agent_tools.t_react_add(deps, emoji="📝")
+            self.assertEqual(out, {"ok": True, "emoji": "📝"})
+            self.assertEqual(
+                captured, {"emoji": "📝", "channel_id": 42, "message_id": 4242}
+            )
+        finally:
+            loop.call_soon_threadsafe(loop.stop)
+            t.join(timeout=2)
 
 
 class TrimOrderedSetTests(unittest.TestCase):

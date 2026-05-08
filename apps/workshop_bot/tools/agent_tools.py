@@ -10,6 +10,7 @@ A single tool result over ~50KB will be truncated when serialized.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from contextvars import ContextVar
@@ -36,6 +37,14 @@ logger = logging.getLogger("workshop.tools")
 # `s3_personas.*`) can attribute their work to the calling persona
 # without leaning on a shared, mutable Deps object.
 active_persona: ContextVar[str] = ContextVar("active_persona", default="unknown")
+
+# Mention/peer/team handlers set this so ``react.add`` knows which
+# Discord message to attach the emoji to. ``None`` means the persona
+# was not invoked from a Discord message (e.g. heartbeat) and the
+# react tool should refuse with a clear error.
+active_react_target: ContextVar[Optional[tuple[int, int]]] = ContextVar(
+    "active_react_target", default=None
+)
 
 REPO = Path(__file__).resolve().parents[3]
 SECTION_RE_TEMPLATE = r"(?im)^##+\s*{section}\s*[^\n]*\n([\s\S]*?)(?=^##+\s|\Z)"
@@ -326,6 +335,48 @@ def t_persona_write(deps, path: str, content: str) -> dict[str, Any]:
         return {"error": str(exc)}
 
 
+# ---------- Discord reactions ----------
+
+def t_react_add(deps, emoji: str) -> dict[str, Any]:
+    """Add a single emoji reaction to the message currently being responded to.
+
+    Routed through this persona's Discord client so the reaction shows
+    under the persona's avatar. Reads ``active_react_target`` (set by
+    the mention/peer/team handler) and ``active_persona`` from
+    ContextVars; refuses cleanly when neither is in context (heartbeat
+    path, eval scripts).
+    """
+    target = active_react_target.get()
+    if target is None:
+        return {"error": "no message in context to react to"}
+    if not isinstance(emoji, str) or not emoji.strip():
+        return {"error": "emoji must be a non-empty string"}
+
+    persona = active_persona.get()
+    team = getattr(deps, "team", None)
+    if team is None:
+        return {"error": "team registry unavailable"}
+    bot = team.bots.get(persona)
+    if bot is None or bot.user is None or getattr(bot, "loop", None) is None:
+        return {"error": f"persona {persona!r} unavailable"}
+
+    channel_id, message_id = target
+
+    async def _do() -> None:
+        ch = bot.get_partial_messageable(channel_id)
+        msg = ch.get_partial_message(message_id)
+        await msg.add_reaction(emoji)
+
+    try:
+        fut = asyncio.run_coroutine_threadsafe(_do(), bot.loop)
+        fut.result(timeout=8)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("react.add %s by %s failed", emoji, persona)
+        return {"error": f"{type(exc).__name__}: {exc}"}
+
+    return {"ok": True, "emoji": emoji}
+
+
 # ---------- specs (Anthropic format) ----------
 
 SPECS: dict[str, dict[str, Any]] = {
@@ -609,6 +660,32 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["path", "content"],
         },
     },
+    "react.add": {
+        "name": "react.add",
+        "description": (
+            "Add a single emoji reaction to the message you're currently "
+            "responding to (mention, peer message, or team-round trigger). "
+            "Posts under your persona's avatar — Eddy's react shows as Eddy. "
+            "Especially useful in `#workshop`: when a peer's message lands "
+            "but you wouldn't add anything in prose, drop a brief reaction "
+            "and PASS instead of staying invisible. Use sparingly — one "
+            "reaction per message, only when the emoji is your honest take. "
+            "Picks should match your persona: Eddy 📝👀🤔, Linky 🔗📚⭐, "
+            "Marky 📈🔥, Patty 🤝💚 — but anything fitting works. Returns "
+            "{ok, emoji} on success, {error: …} if there's no message in "
+            "context (heartbeat path) or Discord rejects the emoji."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "emoji": {
+                    "type": "string",
+                    "description": "Single Discord emoji (unicode, e.g. 👀). Custom guild emoji as <:name:id>.",
+                },
+            },
+            "required": ["emoji"],
+        },
+    },
 }
 
 
@@ -631,6 +708,7 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "s3_personas.list": t_persona_list,
     "s3_personas.read_file": t_persona_read,
     "s3_personas.write_file": t_persona_write,
+    "react.add": t_react_add,
 }
 
 

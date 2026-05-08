@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Optional
 
 import discord
 
-from ..tools import agent_loop, anthropic_client, conversation, db, discord_io
+from ..tools import agent_loop, agent_tools, anthropic_client, conversation, db, discord_io
 
 if TYPE_CHECKING:
     from ..tools.agent_tools import ToolRegistry
@@ -41,10 +41,30 @@ _PASS_STRIP_RE = re.compile(r"[\s*_`~\"'()<>\[\]\.\!\?,;:\\\-—–]+")
 
 
 def is_pass_response(text: str) -> bool:
+    """True if ``text`` is a no-reply signal.
+
+    Matches three shapes:
+
+      - The whole response reduces to ``PASS`` after stripping
+        markdown/punctuation (``**PASS**``, ``\`PASS\```, ``(PASS).``).
+      - The last non-empty line reduces to ``PASS`` — covers the
+        common drift where a persona writes its reasoning and then
+        closes with ``PASS`` on its own line. Treat the trailing
+        token as the verdict and discard the prose.
+
+    "I'll PASS on this proposal" stays in-sentence and does not match.
+    """
     if not text:
         return False
     cleaned = _PASS_STRIP_RE.sub("", text)
-    return cleaned.upper() == "PASS"
+    if cleaned.upper() == "PASS":
+        return True
+    lines = [line for line in text.splitlines() if line.strip()]
+    if lines:
+        last = _PASS_STRIP_RE.sub("", lines[-1])
+        if last.upper() == "PASS":
+            return True
+    return False
 
 
 @dataclass
@@ -276,29 +296,35 @@ class PersonaBot(discord.Client):
             await message.reply(self.empty_greeting, mention_author=False)
             return
 
-        async with message.channel.typing():
-            with db.AgentRun(self.persona, trigger="mention") as run:
-                answer, meta = await self.core(
-                    latest=latest, history=history, model=model
-                )
-                output_id = db.insert_agent_output(
-                    agent_name=self.persona,
-                    output_type="reply",
-                    content=answer,
-                    metadata={
-                        **meta,
-                        "discord_message_id": str(message.id),
-                        "discord_channel_id": str(message.channel.id),
-                    },
-                )
-                run.records_written = 1
-                logger.info(
-                    "%s reply #%d (%d iter, %d tool calls)",
-                    self.persona,
-                    output_id,
-                    meta.get("iterations", 0),
-                    len(meta.get("tool_calls") or []),
-                )
+        token = agent_tools.active_react_target.set(
+            (message.channel.id, message.id)
+        )
+        try:
+            async with message.channel.typing():
+                with db.AgentRun(self.persona, trigger="mention") as run:
+                    answer, meta = await self.core(
+                        latest=latest, history=history, model=model
+                    )
+                    output_id = db.insert_agent_output(
+                        agent_name=self.persona,
+                        output_type="reply",
+                        content=answer,
+                        metadata={
+                            **meta,
+                            "discord_message_id": str(message.id),
+                            "discord_channel_id": str(message.channel.id),
+                        },
+                    )
+                    run.records_written = 1
+                    logger.info(
+                        "%s reply #%d (%d iter, %d tool calls)",
+                        self.persona,
+                        output_id,
+                        meta.get("iterations", 0),
+                        len(meta.get("tool_calls") or []),
+                    )
+        finally:
+            agent_tools.active_react_target.reset(token)
 
         await discord_io.send_chunked(message, answer)
 
@@ -366,12 +392,18 @@ class PersonaBot(discord.Client):
             "lens here (editorial, promotion, supporter, or link-curation — whichever "
             "you are). Do NOT react just to be social, supportive, or to add color. Do "
             "NOT validate or echo what they said. If you do react, your reply must be "
-            "1-3 short sentences, no preamble, no \"good point\", no headings. If in "
+            "1-3 short sentences, no preamble, no \"good point\", no headings. "
+            "Alternatively, if the message lands but you wouldn't add anything new "
+            "in prose, you can drop a brief emoji reaction with `react.add` and then "
+            "PASS — that's a low-cost co-sign without filling the channel. If in "
             "any doubt, respond with exactly: PASS]"
         )
         body = f"{meta}\n\n[{peer_name}] {peer_text}"
 
         # Reuse the persona's core() — same agent loop, same tools.
+        token = agent_tools.active_react_target.set(
+            (message.channel.id, message.id)
+        )
         try:
             answer, run_meta = await self.handle_peer(
                 body=body, history=history, model=None,
@@ -379,6 +411,8 @@ class PersonaBot(discord.Client):
         except Exception:  # noqa: BLE001
             logger.exception("%s: peer reaction core failed", self.name)
             return
+        finally:
+            agent_tools.active_react_target.reset(token)
 
         if not answer or is_pass_response(answer):
             logger.info("%s PASS on peer message from %s", self.name, peer_name)

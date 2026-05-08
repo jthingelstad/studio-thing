@@ -20,7 +20,7 @@ import logging
 from collections import OrderedDict
 from typing import TYPE_CHECKING
 
-from ..tools import conversation, discord_io
+from ..tools import agent_tools, conversation, discord_io
 
 if TYPE_CHECKING:
     import discord
@@ -102,6 +102,9 @@ class TeamRegistry:
                 )
                 continue
 
+            token = agent_tools.active_react_target.set(
+                (message.channel.id, message.id)
+            )
             try:
                 # Pre-trigger history + this-round agent replies, but not the
                 # trigger itself (we pass that as `latest` below).
@@ -128,6 +131,8 @@ class TeamRegistry:
                     await channel.send(f"(Sorry, {persona_name.capitalize()} hit an error and bowed out.)")
                 except Exception:  # noqa: BLE001
                     pass
+            finally:
+                agent_tools.active_react_target.reset(token)
 
     async def _send_via(self, channel, text: str) -> None:
         """Post chunked text via a specific bot's channel object.
