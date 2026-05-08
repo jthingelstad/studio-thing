@@ -80,7 +80,7 @@ def _heartbeats_enabled() -> bool:
     return raw not in ("0", "false", "no", "off", "")
 
 
-async def heartbeat(persona: str, ctx: "JobContext") -> None:
+async def heartbeat(ctx: "JobContext", persona: str) -> None:
     """A persona's scheduled wake-up turn.
 
     Loads ``prompts/<persona>/heartbeat.md`` as the user message, runs

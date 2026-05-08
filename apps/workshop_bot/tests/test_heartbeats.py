@@ -1,6 +1,6 @@
 """Heartbeat dispatch tests.
 
-The shared ``handlers.heartbeat(persona, ctx)`` handler:
+The shared ``handlers.heartbeat(ctx, persona)`` handler:
 - loads ``prompts/<persona>/heartbeat.md`` as the user message,
 - invokes the persona's agent loop once,
 - swallows ``PASS`` (silent default),
@@ -127,7 +127,7 @@ class HeartbeatDispatchTests(unittest.TestCase):
     def test_pass_swallowed_no_post(self):
         bot = _make_bot(persona="marky", reply="PASS")
         ctx = _FakeCtx(bot=bot, channel=MagicMock())
-        asyncio.run(handlers.heartbeat("marky", ctx))
+        asyncio.run(handlers.heartbeat(ctx, "marky"))
         self.assertTrue(bot.core.await_count == 1)
         self.assertEqual(ctx.posted, [])
 
@@ -135,13 +135,13 @@ class HeartbeatDispatchTests(unittest.TestCase):
         reply = "Marky here — referral spike on dd-2026-05-15."
         bot = _make_bot(persona="marky", reply=reply)
         ctx = _FakeCtx(bot=bot, channel=MagicMock())
-        asyncio.run(handlers.heartbeat("marky", ctx))
+        asyncio.run(handlers.heartbeat(ctx, "marky"))
         self.assertEqual(ctx.posted, [reply])
 
     def test_loads_persona_heartbeat_prompt(self):
         bot = _make_bot(persona="marky", reply="PASS")
         ctx = _FakeCtx(bot=bot, channel=MagicMock())
-        asyncio.run(handlers.heartbeat("marky", ctx))
+        asyncio.run(handlers.heartbeat(ctx, "marky"))
         # bot.core was called with the heartbeat prompt body as `latest`.
         kwargs = bot.core.call_args.kwargs
         self.assertIn("latest", kwargs)
@@ -151,7 +151,7 @@ class HeartbeatDispatchTests(unittest.TestCase):
         os.environ["WORKSHOP_HEARTBEATS_ENABLED"] = "0"
         bot = _make_bot(persona="marky", reply="anything")
         ctx = _FakeCtx(bot=bot, channel=MagicMock())
-        asyncio.run(handlers.heartbeat("marky", ctx))
+        asyncio.run(handlers.heartbeat(ctx, "marky"))
         # Bot.core never called.
         self.assertEqual(bot.core.await_count, 0)
         self.assertEqual(ctx.posted, [])
@@ -159,7 +159,7 @@ class HeartbeatDispatchTests(unittest.TestCase):
     def test_unknown_persona_returns_silently(self):
         ctx = _FakeCtx(bot=None, channel=MagicMock())
         # Should not raise.
-        asyncio.run(handlers.heartbeat("nonexistent", ctx))
+        asyncio.run(handlers.heartbeat(ctx, "nonexistent"))
         self.assertEqual(ctx.posted, [])
 
     def test_pass_variants_swallowed(self):
@@ -167,13 +167,13 @@ class HeartbeatDispatchTests(unittest.TestCase):
             with self.subTest(variant=variant):
                 bot = _make_bot(persona="marky", reply=variant)
                 ctx = _FakeCtx(bot=bot, channel=MagicMock())
-                asyncio.run(handlers.heartbeat("marky", ctx))
+                asyncio.run(handlers.heartbeat(ctx, "marky"))
                 self.assertEqual(ctx.posted, [], f"variant {variant!r} not treated as PASS")
 
     def test_empty_answer_treated_as_pass(self):
         bot = _make_bot(persona="marky", reply="")
         ctx = _FakeCtx(bot=bot, channel=MagicMock())
-        asyncio.run(handlers.heartbeat("marky", ctx))
+        asyncio.run(handlers.heartbeat(ctx, "marky"))
         self.assertEqual(ctx.posted, [])
 
     def test_agent_loop_exception_is_swallowed(self):
@@ -181,7 +181,7 @@ class HeartbeatDispatchTests(unittest.TestCase):
         bot.core = AsyncMock(side_effect=RuntimeError("bedrock unavailable"))
         ctx = _FakeCtx(bot=bot, channel=MagicMock())
         # Should not raise.
-        asyncio.run(handlers.heartbeat("marky", ctx))
+        asyncio.run(handlers.heartbeat(ctx, "marky"))
         self.assertEqual(ctx.posted, [])
 
     def test_passes_heartbeat_model_from_env(self):
@@ -189,7 +189,7 @@ class HeartbeatDispatchTests(unittest.TestCase):
         try:
             bot = _make_bot(persona="marky", reply="PASS")
             ctx = _FakeCtx(bot=bot, channel=MagicMock())
-            asyncio.run(handlers.heartbeat("marky", ctx))
+            asyncio.run(handlers.heartbeat(ctx, "marky"))
             kwargs = bot.core.call_args.kwargs
             self.assertEqual(kwargs.get("model"), "sonnet")
         finally:

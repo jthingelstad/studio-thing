@@ -113,6 +113,22 @@ class JobConfigTests(unittest.TestCase):
             personas.add(job.func.keywords["persona"])
         self.assertEqual(personas, {"eddy", "linky", "marky", "patty"})
 
+    def test_heartbeat_partial_binds_under_dispatcher_call(self):
+        # The scheduler dispatcher invokes ``await job.func(ctx)``. With
+        # ``partial(heartbeat, persona=...)``, that means ``ctx`` must
+        # land in the first positional slot without colliding with the
+        # bound ``persona`` kwarg. Regression for the
+        # "multiple values for argument 'persona'" TypeError.
+        sentinel_ctx = object()
+        for job in jobs_module.JOBS:
+            if not job.id.endswith("-heartbeat"):
+                continue
+            with self.subTest(job=job.id):
+                sig = inspect.signature(job.func)
+                # Should bind cleanly with a single positional ctx.
+                bound = sig.bind(sentinel_ctx)
+                bound.apply_defaults()
+
     def test_known_handlers_referenced(self):
         # Sanity: every handler we ship should be wired to a job.
         wired: set[object] = set()
