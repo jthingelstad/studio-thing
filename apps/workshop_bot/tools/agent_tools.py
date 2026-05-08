@@ -17,7 +17,20 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from . import archive, buttondown, db, persona_s3, pinboard, s3, support_state, tinylytics, web
+from . import (
+    archive,
+    buttondown,
+    db,
+    inbox,
+    issue,
+    persona_s3,
+    pinboard,
+    s3,
+    support_state,
+    tinylytics,
+    web,
+)
+from ..systems._base import SystemServer
 
 logger = logging.getLogger("workshop.tools")
 
@@ -37,6 +50,7 @@ class Tool:
     name: str
     spec: dict[str, Any]
     func: Callable[..., Any]
+    source: str = "local"  # "local" or "system:<name>"
 
 
 # ---------- archive tools ----------
@@ -208,52 +222,11 @@ def t_fetch_url(deps, url: str, max_chars: int = 12_000) -> dict[str, Any]:
 
 # ---------- current issue resolver ----------
 
-def t_current_issue_number(deps) -> dict[str, Any]:
-    """Resolve which issue is being assembled this week.
-
-    Combines two signals:
-      - the highest issue folder in S3 (where Jamie's iOS Shortcuts stage drafts)
-      - the highest published issue in the archive corpus (the reference baseline)
-
-    The working issue is **not** in the archive corpus — it's a draft. Use
-    this when Jamie says "the current issue", "this weekend's issue", or
-    "the one I'm working on" so you don't accidentally treat the most
-    recently *published* issue as the in-flight one.
-    """
-    try:
-        ws = s3.list_workspaces()
-        s3_max = ws.get("current_issue_number")
-    except Exception as exc:  # noqa: BLE001
-        s3_max = None
-        ws = {"error": f"{type(exc).__name__}: {exc}"}
-
-    published_latest = None
-    if deps is not None and getattr(deps, "corpus", None) is not None:
-        published_latest = deps.corpus.latest_issue_number
-
-    # If S3 has a workspace newer than the archive, that's the in-flight issue.
-    # Otherwise the in-flight issue is published_latest + 1 and no workspace
-    # has been created yet.
-    if s3_max is not None and (published_latest is None or s3_max > published_latest):
-        working = s3_max
-        has_workspace = True
-    elif published_latest is not None:
-        working = published_latest + 1
-        has_workspace = False
-    else:
-        working = None
-        has_workspace = False
-
-    return {
-        "working_issue_number": working,
-        "has_s3_workspace": has_workspace,
-        "s3_max_workspace": s3_max,
-        "published_latest_issue": published_latest,
-        "note": (
-            "The working issue is the in-flight draft — it is NOT in your "
-            "archive corpus yet. search_archive / get_issue won't find it."
-        ),
-    }
+# Canonical implementation lives in `tools/issue.py` so the registry can
+# expose it under the dotted ``issue.current_number`` namespace; we
+# re-export it here for backward compatibility with the flat
+# ``FUNCS`` / ``SPECS`` lookup pattern.
+t_current_issue_number = issue.t_current_issue_number
 
 
 # ---------- Marky ----------
@@ -908,9 +881,146 @@ UNIVERSAL = (
 )
 
 
+# ---------- dotted-name aliases (workshop-bot redesign Phase 0) ----------
+#
+# Every tool gets a dotted name in the new namespace. The old flat name
+# remains registered alongside the dotted one — both point at the same
+# handler — so personas (and tests) that haven't migrated keep working
+# during the transition. Phase 5 cleanup deletes the old names.
+
+RENAMES: dict[str, str] = {
+    "search_archive": "archive.search",
+    "get_issue": "archive.get_issue",
+    "get_section": "archive.get_section",
+    "list_recent_issues": "archive.list_recent",
+    "quote_search": "archive.quote_search",
+    "remember": "memory.remember",
+    "recall": "memory.recall",
+    "forget_note": "memory.forget",
+    "current_issue_number": "issue.current_number",
+    "s3_list_issue_workspaces": "s3_issues.list_workspaces",
+    "s3_list_issue": "s3_issues.list",
+    "s3_read_issue_file": "s3_issues.read_file",
+    "s3_write_issue_file": "s3_issues.write_file",
+    "persona_list": "s3_personas.list",
+    "persona_read": "s3_personas.read_file",
+    "persona_write": "s3_personas.write_file",
+    "fetch_pinboard": "pinboard.recent",
+    "fetch_pinboard_unread": "pinboard.unread",
+    "fetch_pinboard_popular": "pinboard.popular",
+    "read_stored_bookmarks": "pinboard.stored_recent",
+    "fetch_url": "web.fetch_url",
+    "fetch_tinylytics": "tinylytics.summary",
+    "fetch_tinylytics_ref": "tinylytics.ref_traffic",
+    "fetch_buttondown_subscribers": "buttondown.list_subscribers",
+    "get_support_state": "site.support_state",
+}
+
+
+def _install_dotted_aliases() -> None:
+    """Mirror every entry in ``FUNCS`` / ``SPECS`` under its dotted name.
+
+    Idempotent — safe if called more than once.
+    """
+    for old, new in RENAMES.items():
+        if old not in FUNCS or old not in SPECS:
+            raise RuntimeError(
+                f"rename mapping points at missing source tool {old!r}"
+            )
+        if new not in FUNCS:
+            FUNCS[new] = FUNCS[old]
+        if new not in SPECS:
+            new_spec = dict(SPECS[old])
+            new_spec["name"] = new
+            SPECS[new] = new_spec
+
+
+_install_dotted_aliases()
+
+
 def get(name: str) -> Tool:
     return Tool(name=name, spec=SPECS[name], func=FUNCS[name])
 
 
 def get_many(names: list[str]) -> list[Tool]:
     return [get(n) for n in names]
+
+
+# ---------- ToolRegistry (workshop-bot redesign Phase 0) ----------
+
+
+class ToolRegistry:
+    """Composes external-system tools and local helpers into one namespace.
+
+    Phase 0: only local helpers are registered (under both old and new
+    dotted names) so the model still sees the same tools it sees today.
+    System modules land in phases 1–3 and call ``register_system``.
+    """
+
+    def __init__(self) -> None:
+        self._tools: dict[str, Tool] = {}
+
+    def register(
+        self,
+        name: str,
+        spec: dict[str, Any],
+        func: Callable[..., Any],
+        source: str = "local",
+    ) -> None:
+        if name in self._tools:
+            raise ValueError(f"duplicate tool registration: {name!r}")
+        spec_with_name = dict(spec)
+        spec_with_name["name"] = name
+        self._tools[name] = Tool(
+            name=name, spec=spec_with_name, func=func, source=source
+        )
+
+    def register_system(self, server: SystemServer) -> None:
+        for tdef in server.list_tools():
+            full = f"{server.name}.{tdef.name}"
+            spec = {
+                "name": full,
+                "description": tdef.description,
+                "input_schema": tdef.input_schema,
+            }
+            self.register(full, spec, tdef.handler, source=f"system:{server.name}")
+
+    def get(self, name: str) -> Optional[Tool]:
+        return self._tools.get(name)
+
+    def all_specs(self) -> list[dict[str, Any]]:
+        return [dict(t.spec) for t in self._tools.values()]
+
+    def all_names(self) -> list[str]:
+        return list(self._tools.keys())
+
+    def dispatch(
+        self,
+        name: str,
+        deps: Any,
+        args: dict[str, Any],
+        persona: str,
+    ) -> Any:
+        tool = self._tools.get(name)
+        if tool is None:
+            raise KeyError(f"unknown tool {name!r}")
+        token = active_persona.set(persona)
+        try:
+            return tool.func(deps, **(args or {}))
+        finally:
+            active_persona.reset(token)
+
+
+def register_local_helpers(registry: ToolRegistry) -> None:
+    """Register every entry in ``FUNCS`` / ``SPECS`` plus the inbox tools.
+
+    After phase 0 each name is registered exactly once — there's no
+    duplication between the flat module dicts and the registry. Both old
+    and new dotted names appear because ``_install_dotted_aliases`` has
+    already mirrored them into ``FUNCS`` / ``SPECS``.
+    """
+    for name in sorted(FUNCS):
+        spec = SPECS[name]
+        registry.register(name, spec, FUNCS[name], source="local")
+    for name, spec in inbox.tool_specs().items():
+        registry.register(name, spec, inbox.tool_handlers()[name], source="local")

@@ -172,3 +172,27 @@ CREATE TABLE IF NOT EXISTS thingy_requests (
 
 CREATE INDEX IF NOT EXISTS idx_thingy_requests_bot_msg
   ON thingy_requests(bot_response_message_id);
+
+-- Inbox — structured handoffs between personas. Complements Discord
+-- channels (free-form chatter) and agent_notes (persistent memory) by
+-- giving agents a typed, addressable surface for "I finished X, you
+-- should pick it up." The recipient is a persona name or 'team'; the
+-- sender is derived from the active_persona ContextVar at post time.
+-- Heartbeats open with `inbox.list(filter='unread')` so handoffs are
+-- the first thing each persona reads on every wake-up.
+CREATE TABLE IF NOT EXISTS agent_inbox (
+  id INTEGER PRIMARY KEY,
+  recipient TEXT NOT NULL,                     -- persona name or 'team'
+  sender TEXT NOT NULL,                        -- persona name or 'system'
+  kind TEXT NOT NULL,                          -- 'handoff' | 'request' | 'fyi' | 'completed'
+  subject TEXT NOT NULL,
+  body TEXT NOT NULL,                          -- markdown payload
+  metadata TEXT,                               -- JSON, optional
+  related_issue INTEGER,                       -- optional
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  read_at TEXT,                                -- null until recipient marks read
+  expires_at TEXT                              -- optional
+);
+
+CREATE INDEX IF NOT EXISTS idx_agent_inbox_recipient
+  ON agent_inbox(recipient, read_at);

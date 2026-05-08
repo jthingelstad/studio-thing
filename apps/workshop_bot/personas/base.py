@@ -20,6 +20,7 @@ import discord
 from ..tools import agent_loop, anthropic_client, conversation, db, discord_io
 
 if TYPE_CHECKING:
+    from ..tools.agent_tools import ToolRegistry
     from ..tools.corpus import CorpusHandle
     from .team import TeamRegistry
 
@@ -52,6 +53,11 @@ class Deps:
 
     corpus: "CorpusHandle"
     team: Optional["TeamRegistry"] = None
+    # Composed at boot in ``bot.py``. ``personas/base.py`` keeps passing the
+    # per-persona ``tools`` ClassVar into the agent loop in phase 0 — the
+    # registry is plumbed but persona behavior is unchanged. Phase 1 drops
+    # the per-persona tuple and starts using ``registry.all_names()``.
+    registry: Optional["ToolRegistry"] = None
 
 
 def _read_env_int(key: str) -> Optional[int]:

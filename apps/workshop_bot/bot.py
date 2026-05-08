@@ -26,7 +26,7 @@ from .personas.patty import PattyBot
 from .personas.team import TeamRegistry
 from .personas.thingy import ThingyBot
 from .scheduler.runner import Runner as SchedulerRunner
-from .tools import corpus, db, startup
+from .tools import agent_tools, corpus, db, startup
 
 logger = logging.getLogger("workshop.bot")
 
@@ -96,7 +96,9 @@ async def run() -> int:
     db.run_migrations()
     corpus_handle = corpus.load()
     team = TeamRegistry()
-    deps = Deps(corpus=corpus_handle, team=team)
+    registry = agent_tools.ToolRegistry()
+    agent_tools.register_local_helpers(registry)
+    deps = Deps(corpus=corpus_handle, team=team, registry=registry)
 
     resolved = collect_tokens()
     if not resolved:
