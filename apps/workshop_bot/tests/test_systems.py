@@ -403,7 +403,19 @@ class PinboardServerTests(unittest.TestCase):
     def test_list_tools_returns_expected_set(self):
         self.assertEqual(
             set(self.tools),
-            {"recent", "unread", "popular", "stored_recent", "tag_summary"},
+            {
+                "recent",
+                "unread",
+                "popular",
+                "stored_recent",
+                "tag_summary",
+                "update_check",
+                "lookup_url",
+                "suggest_tags",
+                "archive_tags",
+                "bookmark_dates",
+                "save",
+            },
         )
 
     def test_each_tool_has_description_and_schema(self):
