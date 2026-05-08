@@ -22,11 +22,13 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import re
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
-from ..tools import buttondown, db, pinboard, s3, tinylytics
+from ..personas.base import is_pass_response
+from ..tools import anthropic_client, buttondown, db, pinboard, s3, tinylytics
 
 # ---------- LLM output parsers (extracted so they're testable) ----------
 
@@ -127,6 +129,73 @@ def _resolve_working_issue(ctx: "JobContext") -> Optional[int]:
     if published is not None:
         return published + 1
     return None
+
+
+# ============================================================
+# Heartbeat — shared LLM-driven scheduled check-in
+# ============================================================
+
+def _heartbeats_enabled() -> bool:
+    """Honor ``WORKSHOP_HEARTBEATS_ENABLED`` (default 1)."""
+    raw = (os.environ.get("WORKSHOP_HEARTBEATS_ENABLED") or "1").strip().lower()
+    return raw not in ("0", "false", "no", "off", "")
+
+
+async def heartbeat(persona: str, ctx: "JobContext") -> None:
+    """A persona's scheduled wake-up turn.
+
+    Loads ``prompts/<persona>/heartbeat.md`` as the user message, runs
+    the persona's full agent loop, and posts the answer to its home
+    channel — unless the answer is ``PASS`` (the default), in which case
+    the heartbeat exits silently. Heartbeats are wrapped in their own
+    ``db.AgentRun`` so the persona's scheduled token spend is visible
+    alongside its mention-driven turns.
+
+    Wired into ``scheduler/jobs.py`` as
+    ``functools.partial(handlers.heartbeat, persona='<name>')`` per
+    each persona's heartbeat JobSpec.
+    """
+    if not _heartbeats_enabled():
+        logger.info("heartbeat: disabled via WORKSHOP_HEARTBEATS_ENABLED=0; skipping %s", persona)
+        return
+
+    bot = ctx.bot(persona)
+    if bot is None:
+        logger.warning("heartbeat: persona %r not registered; skipping", persona)
+        return
+
+    try:
+        prompt_text = anthropic_client.load_prompt(f"{persona}-heartbeat")
+    except OSError as exc:
+        logger.warning("heartbeat: prompt for %r unreadable: %s", persona, exc)
+        return
+
+    model = (os.environ.get("WORKSHOP_HEARTBEAT_MODEL") or "haiku").strip() or None
+
+    answer = ""
+    with db.AgentRun(persona, trigger="heartbeat") as run:
+        try:
+            answer, _meta = await bot.core(
+                latest=prompt_text, history=[], model=model
+            )
+        except Exception as exc:  # noqa: BLE001
+            run.error = f"{type(exc).__name__}: {exc}"
+            logger.exception("heartbeat %s: agent loop failed", persona)
+            return
+        run.records_written = 0 if (not answer or is_pass_response(answer)) else 1
+
+    if not answer or is_pass_response(answer):
+        logger.info("heartbeat %s: PASS", persona)
+        return
+
+    home_env = bot.home_channel_env
+    if not home_env:
+        logger.warning("heartbeat %s: no home_channel_env; dropping reply", persona)
+        return
+    channel = ctx.channel(home_env, persona=persona)
+    if channel is None:
+        return
+    await ctx.post(channel, answer, suppress_embeds=True)
 
 
 # ============================================================

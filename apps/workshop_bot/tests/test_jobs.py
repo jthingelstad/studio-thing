@@ -7,6 +7,7 @@ and a handler function that exists and is async.
 from __future__ import annotations
 
 import asyncio
+import functools
 import inspect
 import sys
 import types
@@ -78,13 +79,19 @@ class JobConfigTests(unittest.TestCase):
         for job in jobs_module.JOBS:
             with self.subTest(job=job.id):
                 self.assertTrue(callable(job.func), f"job {job.id} func is not callable")
+                # Heartbeats wire ``functools.partial(handlers.heartbeat, persona=...)``
+                # into ``func``. Unwrap once so the underlying coroutine
+                # function and source module land cleanly.
+                underlying = (
+                    job.func.func if isinstance(job.func, functools.partial)
+                    else job.func
+                )
                 self.assertTrue(
-                    inspect.iscoroutinefunction(job.func),
+                    inspect.iscoroutinefunction(underlying),
                     f"job {job.id} func must be async",
                 )
-                # Defined in handlers module (or somewhere we can find).
                 self.assertEqual(
-                    job.func.__module__,
+                    underlying.__module__,
                     handlers.__name__,
                     f"job {job.id} func should live in handlers.py",
                 )
@@ -94,15 +101,36 @@ class JobConfigTests(unittest.TestCase):
             self.assertIs(jobs_module.by_id(job.id), job)
         self.assertIsNone(jobs_module.by_id("nonexistent"))
 
+    def test_every_persona_has_a_heartbeat(self):
+        heartbeat_jobs = [
+            j for j in jobs_module.JOBS if j.id.endswith("-heartbeat")
+        ]
+        self.assertEqual(len(heartbeat_jobs), 4)
+        personas = set()
+        for job in heartbeat_jobs:
+            self.assertIsInstance(job.func, functools.partial)
+            self.assertIs(job.func.func, handlers.heartbeat)
+            personas.add(job.func.keywords["persona"])
+        self.assertEqual(personas, {"eddy", "linky", "marky", "patty"})
+
     def test_known_handlers_referenced(self):
-        # Sanity: every handler we ship should be wired to a job.
-        wired = {job.func for job in jobs_module.JOBS}
+        # Sanity: every handler we ship should be wired to a job — except
+        # the explicitly folded handlers preserved as a one-release
+        # safety net (see jobs.FOLDED_HANDLER_NAMES).
+        wired: set[object] = set()
+        for job in jobs_module.JOBS:
+            underlying = (
+                job.func.func if isinstance(job.func, functools.partial)
+                else job.func
+            )
+            wired.add(underlying)
         for name in dir(handlers):
             obj = getattr(handlers, name)
             if (
                 inspect.iscoroutinefunction(obj)
                 and obj.__module__ == handlers.__name__
                 and not name.startswith("_")
+                and name not in jobs_module.FOLDED_HANDLER_NAMES
             ):
                 self.assertIn(
                     obj, wired,

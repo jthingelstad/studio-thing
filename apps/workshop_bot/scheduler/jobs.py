@@ -2,16 +2,18 @@
 
 Each ``JobSpec`` is just a cron string and a Python function. The function
 runs at the scheduled time and does whatever it needs to: pull data,
-format a report, post to a channel, write S3, save memory. Most jobs
-are pure code (engagement reports, popular-feed scans, subscriber
-deltas) — fetch + format + post, no LLM tokens spent.
+format a report, post to a channel, write S3, save memory.
 
-A few jobs *do* benefit from LLM judgment — composing a fresh CTA,
-doing a real curation pass, picking out which preferences are worth
-surfacing on Saturday morning. Those handlers call ``bot.core(...)``
-explicitly. The split is deliberate: the LLM is a tool the handler
-reaches for when judgment is needed, not the default execution path
-for every cron tick.
+The four personas each get a **heartbeat** — a scheduled agent turn
+firing on a cadence with that persona's ``heartbeat.md`` prompt. The
+default is ``PASS``; heartbeats only post when the persona has
+something concrete to surface. Heartbeats use ``handlers.heartbeat``
+via ``functools.partial`` so the dispatcher signature stays the same.
+
+A few high-care **rituals** still run as bespoke jobs (Friday curation,
+Monday subscriber report, Thursday member.json) — those are deliberate
+weekly artifacts that benefit from a tight prompt rather than a
+default-PASS heartbeat.
 
 To add a job: write a new handler function in ``handlers.py``, add a
 ``JobSpec`` here, restart the bot.
@@ -19,6 +21,7 @@ To add a job: write a new handler function in ``handlers.py``, add a
 
 from __future__ import annotations
 
+import functools
 from dataclasses import dataclass
 from typing import Awaitable, Callable, TYPE_CHECKING
 
@@ -40,63 +43,52 @@ class JobSpec:
 
 
 JOBS: tuple[JobSpec, ...] = (
-    # ---------- Linky ----------
-    # Three jobs: a Wednesday queue check (pure code), a Friday curation
-    # pass (LLM — needs judgment), and a popular-feed scan (pure code).
+    # ---------- Heartbeats ----------
+    # One scheduled wake-up per persona. Default response is PASS;
+    # the persona only posts when there's something concrete to
+    # surface. Folded the lighter previous jobs (linky-wednesday-check,
+    # linky-popular-scan, linky-research-unread, marky-daily-engagement,
+    # eddy-saturday-prep) into these.
     JobSpec(
-        id="linky-wednesday-check",
-        cron="30 10 * * 3",
-        func=handlers.linky_wednesday_check,
+        id="eddy-heartbeat",
+        cron="30 8 * * *",                               # Daily 08:30 Central — before Jamie's writing window.
+        func=functools.partial(handlers.heartbeat, persona="eddy"),
     ),
     JobSpec(
+        id="linky-heartbeat",
+        cron="0 6-22/6 * * *",                           # Every 6h within 06:00–22:00 Central.
+        func=functools.partial(handlers.heartbeat, persona="linky"),
+    ),
+    JobSpec(
+        id="marky-heartbeat",
+        cron="0 7-22/3 * * *",                           # Every 3h within 07:00–22:00 Central.
+        func=functools.partial(handlers.heartbeat, persona="marky"),
+    ),
+    JobSpec(
+        id="patty-heartbeat",
+        cron="0 9 * * *",                                # Daily 09:00 Central.
+        func=functools.partial(handlers.heartbeat, persona="patty"),
+    ),
+
+    # ---------- Rituals (preserved) ----------
+    # High-care, deliberately preserved scheduled jobs. Each has its own
+    # bespoke prompt under handlers.<name> rather than a generic
+    # heartbeat — these produce specific weekly artifacts that benefit
+    # from tight, fixed instructions.
+    JobSpec(
         id="linky-friday-curation",
-        cron="0 16 * * 5",
+        cron="0 16 * * 5",                               # Friday 16:00 Central.
         func=handlers.linky_friday_curation,
     ),
     JobSpec(
-        id="linky-popular-scan",
-        cron="0 */6 * * *",  # Every 6 hours (00, 06, 12, 18 Central)
-        func=handlers.linky_popular_scan,
-    ),
-    JobSpec(
-        id="linky-research-unread",
-        cron="0 10,16 * * *",  # 10am + 4pm Central
-        func=handlers.linky_research_unread,
-    ),
-
-    # ---------- Marky ----------
-    # Daily and weekly reports are pure data. Thursday's member.json
-    # write is composition — uses the LLM.
-    JobSpec(
-        id="marky-daily-engagement",
-        cron="0 9 * * *",
-        func=handlers.marky_daily_engagement,
-    ),
-    JobSpec(
         id="marky-weekly-subscriber-report",
-        cron="0 11 * * 1",
+        cron="0 11 * * 1",                               # Monday 11:00 Central.
         func=handlers.marky_weekly_subscriber_report,
     ),
-
-    # ---------- Patty ----------
-    # Patty owns the supporter CTA voice and writes the per-issue
-    # member.json (CTA + progress update). Marky promotes; Patty
-    # stewards. The artifact lands in S3 for the iOS Shortcuts
-    # assemble pipeline to pull on Sunday morning.
     JobSpec(
         id="patty-thursday-member-json",
-        cron="0 18 * * 4",  # Thu 6pm Central
+        cron="0 18 * * 4",                               # Thursday 18:00 Central — member.json write.
         func=handlers.patty_thursday_member_json,
-    ),
-
-    # ---------- Eddy ----------
-    # Saturday prep is light and benefits from LLM judgment ("which of
-    # these preferences are still relevant?"), but the handler can also
-    # run as pure recall + post if the LLM call fails.
-    JobSpec(
-        id="eddy-saturday-prep",
-        cron="0 8 * * 6",
-        func=handlers.eddy_saturday_prep,
     ),
 )
 
@@ -106,3 +98,16 @@ def by_id(job_id: str) -> JobSpec | None:
         if job.id == job_id:
             return job
     return None
+
+
+# Folded handlers — defined in ``handlers.py`` but no longer wired to a
+# JobSpec because their behavior was absorbed into a heartbeat (see
+# spec §10). Kept as a one-release safety net in case heartbeats need
+# to be reverted; phase 5 cleanup deletes them.
+FOLDED_HANDLER_NAMES: frozenset[str] = frozenset({
+    "linky_wednesday_check",
+    "linky_popular_scan",
+    "linky_research_unread",
+    "marky_daily_engagement",
+    "eddy_saturday_prep",
+})
