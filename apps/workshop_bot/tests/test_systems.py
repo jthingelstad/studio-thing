@@ -118,6 +118,7 @@ class ButtondownServerTests(unittest.TestCase):
                 "list_subscribers",
                 "recent_unsubscribes",
                 "subscriber_sources",
+                "attribution_summary",
                 "subscriber_growth",
                 "list_recent_emails",
                 "email_engagement",
@@ -273,7 +274,17 @@ class TinylyticsServerTests(unittest.TestCase):
     def test_list_tools_returns_expected_set(self):
         self.assertEqual(
             set(self.tools),
-            {"summary", "top_pages", "referrers"},
+            {
+                "summary",
+                "top_pages",
+                "referrers",
+                "sources",
+                "leaderboard",
+                "user_journeys",
+                "kudos",
+                "insights",
+                "uptime",
+            },
         )
 
     def test_summary_dispatch(self):

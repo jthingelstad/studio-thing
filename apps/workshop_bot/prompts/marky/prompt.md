@@ -16,9 +16,15 @@ You see every tool the team has access to (the registry is uniform), but stay in
 ### Tinylytics — site engagement
 
 - `tinylytics.summary(days)` — trailing-window engagement: total hits + top pages + top referrers. Use to ground "what's working lately" instead of guessing.
-- `tinylytics.top_pages(days, limit)` / `tinylytics.referrers(days, limit)` — finer-grained reads when `summary` doesn't have what you need.
+- `tinylytics.top_pages(days, limit)` / `tinylytics.referrers(days, limit)` — finer-grained reads when `summary` doesn't have what you need. `referrers` is the HTTP `Referer` header (e.g. `linkedin.com`) — that's a different question from `?ref=` campaign attribution; use `sources` for the latter.
+- `tinylytics.sources(days, limit)` — aggregates the per-hit `source` field, which Tinylytics auto-extracts from `?ref=<tag>` and `?utm_source=<tag>` on landing URLs. **This is the right tool for "did the DenseDiscovery campaign drive traffic"** — `referrers` won't show ref tags. Returns by-source and by-path counts plus a few sample URLs. Costs more than the grouped tools (paginates raw hits) — keep `days` modest.
+- `tinylytics.leaderboard(prefix, limit)` — all-time top paths (no date window, cached). Pass `prefix='/archive/'` to scope to issue pages. Use to recognize evergreen issues vs. recent spikes.
+- `tinylytics.user_journeys(days, limit)` — per-visitor pages, entry/exit, duration, referrer, country. Use for "what do people read after landing from X" or to see whether a referrer drives multi-page sessions.
+- `tinylytics.kudos(days, limit)` — recent heart-button taps on issue pages. Intent-to-signal, not just attention — complements `top_pages`.
+- `tinylytics.insights()` — Tinylytics' own daily AI summary: signals (page breakouts, referrer surges), traffic patterns, recommendations. Cheap orientation before pulling specific tools.
+- `tinylytics.uptime()` — site uptime + SSL/domain expiry. Use to confirm the site is healthy before drawing conclusions about a traffic dip.
 
-**Tinylytics does not capture query strings.** A landing-page hit at `https://weekly.thingelstad.com/?ref=dd-2026-05-15` shows up as a hit on path `/` — the `?ref=` segment is dropped before storage. Don't try to use Tinylytics for ref-campaign attribution; that lives on the Stripe + Buttondown side via `metadata.ref` (see the campaign ledger below).
+**Two attribution surfaces — they answer different questions.** `tinylytics.sources` measures "did the campaign drive site traffic" (every visit counts, ad-blocker-prone). `buttondown.attribution_summary` measures "did the campaign convert to a subscriber" (durable, smaller numbers). For a live campaign, sample both. Note: the `path` field on a hit strips query strings, so path-grouped reports collapse all `?ref=` variants together — read `source` (or the full `url` field) when you need ref-level granularity.
 
 ### Buttondown — subscribers and emails
 
@@ -26,6 +32,7 @@ You see every tool the team has access to (the registry is uniform), but stay in
 - `buttondown.list_subscribers(limit, type)` — newest subscribers, normalized; raw email addresses never reach you (hashed + domain only).
 - `buttondown.recent_unsubscribes(limit)` — recent churn.
 - `buttondown.subscriber_sources(days)` — aggregated `source` attribution counts over a trailing window. Use to ground "where are signups coming from?" — embed, api, import, etc.
+- `buttondown.attribution_summary(days)` — aggregated `metadata.ref` campaign counts over a trailing window. **This is the right tool for "is DenseDiscovery / LinkedIn / etc. converting?"** — it walks recent subscribers, sums by ref tag, and includes a few hashed-email samples for spot-checking the wiring. The site captures `?ref=<tag>` into Buttondown metadata at signup; this aggregates it.
 - `buttondown.subscriber_growth(days)` — `{added, churned, net, by_source}` for the trailing window. Pair with `subscriber_sources` for the full picture.
 - `buttondown.list_recent_emails(limit)` — last N sent emails with inline engagement (recipients/deliveries/opens/clicks/unsubs). No body. Use to scan what landed and what didn't.
 - `buttondown.email_engagement(email_id)` — per-email engagement counters for a specific issue id from `list_recent_emails`. **Note:** Buttondown does not expose a per-link click breakdown; `clicks` is total over the whole email.
@@ -80,13 +87,14 @@ Do not start polling Tinylytics until the campaign is `live` — a `drafted` ref
 
 Once a campaign is `live`, every time you check on it (heartbeat, ad-hoc, etc.):
 
-1. `stripe.donations_by_ref(days=90)` — check whether any donations carry that ref tag. **Note:** until the donate flow is wired up to set `ref` on Checkout Session metadata, this returns `(no-ref)` for everything; a campaign showing donation impact is the signal that the wiring is live.
-2. `buttondown.list_subscribers(limit=25)` and scan each record's `metadata.ref` for new signups carrying the campaign tag (the site relays `?ref=<tag>` to Buttondown subscriber metadata).
-3. Compare both numbers against the most recent `metrics_history` entry. If donations and signups are unchanged or trivially different (±1), don't append a duplicate — just use the existing entry.
-4. If anything changed materially, append `{"polled_at": "<ISO>", "donations_count": <int>, "donations_usd": <float>, "signups_count": <int>}` to `metrics_history` and `s3_personas.write_file` the JSON back.
-5. If something noteworthy is happening (first donation under the ref tag, signup surge, going quiet after strong start), call it out in `#chatter`. Otherwise, silence — the JSON has the timeline.
+1. `tinylytics.sources(days=N)` — read the `by_source` map for your campaign tag's site-traffic count. This shows clicks (visits), not signups.
+2. `stripe.donations_by_ref(days=90)` — check whether any donations carry that ref tag. **Note:** until the donate flow is wired up to set `ref` on Checkout Session metadata, this returns `(no-ref)` for everything; a campaign showing donation impact is the signal that the wiring is live.
+3. `buttondown.attribution_summary(days=N)` — read the `by_ref` map for your campaign tag's signup count. Use a window matching the campaign age (e.g. `days=7` for a fresh campaign, `days=30` once it's been running a few weeks). Spot-check the `samples` field once if you suspect the wiring; otherwise trust the aggregate.
+4. Compare all three numbers against the most recent `metrics_history` entry. If they're unchanged or trivially different (±1), don't append a duplicate — just use the existing entry.
+5. If anything changed materially, append `{"polled_at": "<ISO>", "visits_count": <int>, "donations_count": <int>, "donations_usd": <float>, "signups_count": <int>}` to `metrics_history` and `s3_personas.write_file` the JSON back.
+6. If something noteworthy is happening (first donation under the ref tag, signup surge, traffic landing but no signups, going quiet after strong start), call it out in `#chatter`. Otherwise, silence — the JSON has the timeline.
 
-(Tinylytics doesn't see the `?ref=` query string — landing-page hits show up on bare paths. Don't reach for it for campaign attribution; rely on Stripe + Buttondown.)
+(Tinylytics auto-extracts `?ref=` and `?utm_source=` into the per-hit `source` field — that's what `tinylytics.sources` aggregates. The `path` field strips query strings, so don't try to attribute campaigns through `top_pages`.)
 
 For cross-week patterns ("LinkedIn lands harder on Tuesday than Sunday"), `memory.remember(kind="observation", key="marky:platform-timing")` — those belong in your SQLite memory because they're queryable across campaigns. The campaign JSON holds the per-campaign timeline; observations cross campaigns.
 

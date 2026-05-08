@@ -162,6 +162,94 @@ def subscriber_sources(*, days: int = 30, max_pages: int = 20) -> dict[str, Any]
     }
 
 
+def _extract_ref_tag(row: dict[str, Any]) -> str:
+    """Pull the ref tag from a subscriber row, preferring metadata over tags.
+
+    Site-side `?ref=<tag>` capture flows through the Lambda /auth
+    handler, which sets BOTH `metadata.ref = <tag>` and a
+    `source:<tag>` tag on the subscriber. Buttondown reliably persists
+    the tag; metadata is sometimes returned empty even when set on
+    create (verified May 2026 against site 3063 signups). Prefer
+    metadata when present; fall back to scanning tags.
+    """
+    meta = row.get("metadata") or {}
+    if isinstance(meta, dict):
+        ref = (meta.get("ref") or "").strip()
+        if ref:
+            return ref
+    for tag in row.get("tags") or []:
+        name = tag if isinstance(tag, str) else (tag or {}).get("name")
+        if isinstance(name, str) and name.startswith("source:"):
+            slug = name[len("source:"):].strip()
+            if slug:
+                return slug
+    return ""
+
+
+def attribution_summary(*, days: int = 30, max_pages: int = 20) -> dict[str, Any]:
+    """Aggregate `?ref=<tag>` campaign attribution over a trailing window.
+
+    Reads the ref tag per subscriber, preferring `metadata.ref` and
+    falling back to the `source:<tag>` tag (Buttondown sometimes drops
+    metadata on the response even when set on create). Walks recent
+    subscribers newest-first, stops at the cutoff. Use to ground "is
+    DenseDiscovery / LinkedIn / etc. growing the audience" instead of
+    scanning records by hand.
+
+    Returns ``{days, subscribers_seen, with_ref, by_ref, by_landing,
+    samples}`` where ``samples`` is up to 5 newest records that carried
+    a ref (hashed email + ref + landing_url + first_referrer +
+    created_at) for spot-checking the wiring. ``by_landing`` only
+    populates when `metadata.landing_url` survived on the upstream
+    record.
+    """
+    cutoff = _dt.datetime.now(_dt.timezone.utc) - _dt.timedelta(days=int(days))
+    by_ref: Counter[str] = Counter()
+    by_landing: Counter[str] = Counter()
+    seen = 0
+    with_ref = 0
+    samples: list[dict[str, Any]] = []
+    for row in _iter_subscribers(
+        page_size=100,
+        ordering="-creation_date",
+        max_pages=max_pages,
+    ):
+        created = _parse_dt(row.get("creation_date"))
+        if created is not None and created < cutoff:
+            break
+        seen += 1
+        ref = _extract_ref_tag(row)
+        if not ref:
+            continue
+        with_ref += 1
+        by_ref[ref] += 1
+        meta = row.get("metadata") or {}
+        landing = (meta.get("landing_url") or "").strip() if isinstance(meta, dict) else ""
+        if landing:
+            by_landing[landing] += 1
+        if len(samples) < 5:
+            email = row.get("email_address") or row.get("email") or ""
+            samples.append(
+                {
+                    "email_hash": _hash_email(email),
+                    "ref": ref,
+                    "landing_url": landing or None,
+                    "first_referrer": (meta.get("first_referrer") or None)
+                    if isinstance(meta, dict)
+                    else None,
+                    "created_at": row.get("creation_date"),
+                }
+            )
+    return {
+        "days": int(days),
+        "subscribers_seen": seen,
+        "with_ref": with_ref,
+        "by_ref": dict(by_ref.most_common()),
+        "by_landing": dict(by_landing.most_common(10)),
+        "samples": samples,
+    }
+
+
 def subscriber_growth(*, days: int = 30, max_pages: int = 20) -> dict[str, Any]:
     """Net subscriber delta over the trailing window plus a cohort-by-source breakdown.
 

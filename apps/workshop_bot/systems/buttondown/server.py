@@ -85,6 +85,28 @@ class ButtondownServer:
                 ),
             ),
             ToolDef(
+                name="attribution_summary",
+                description=(
+                    "Aggregate `metadata.ref` campaign attribution for "
+                    "recent signups over a trailing window. Returns "
+                    "{days, subscribers_seen, with_ref, by_ref, by_landing, "
+                    "samples}. `by_ref` is the ground-truth answer to 'is "
+                    "DenseDiscovery / LinkedIn / etc. converting?' — "
+                    "Tinylytics drops query strings, so this is the right "
+                    "tool, not `tinylytics.referrers`. Use after a campaign "
+                    "goes live to track signups by ref tag."
+                ),
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "days": {"type": "integer", "description": "default 30"},
+                    },
+                },
+                handler=lambda deps, days=30, **_kw: client.attribution_summary(
+                    days=int(days)
+                ),
+            ),
+            ToolDef(
                 name="subscriber_growth",
                 description=(
                     "Net subscriber delta over the trailing window plus a "

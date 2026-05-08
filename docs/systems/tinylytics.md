@@ -74,12 +74,35 @@ For a cheap total-count over a window: `?per_page=1` and read `pagination.total_
 ### `GET /sites/:id/leaderboard`
 **All-time** path ranking with caching — does **not** accept `start_date`/`end_date`. Returns `{leaderboard: [{path, total_hits, unique_hits, percentage}], site, pagination, cache_info, filters}`.
 
-Path filter on this endpoint **is** partial (case-insensitive prefix-ish), unlike `/hits`'s exact match. `path=email` returns all `/email/*` paths.
+Path filter on this endpoint **is** partial (case-insensitive prefix-ish), unlike `/hits`'s exact match. `path=/archive/` returns all `/archive/*` paths.
 
-We don't ship a tool for this surface today — the windowed `tinylytics.top_pages` covers the more common need.
+Exposed as `tinylytics.leaderboard(prefix, limit)`.
 
 ### `GET /sites/:id/kudos`
-Reads the kudos heart-button records (per-path, with date filters). Not currently exposed as a workshop-bot tool.
+Reads kudos heart-button records (per-path, with `start_date`/`end_date` filters). Each entry: `id, uid, path, created_at`. The kudos button is wired on per-issue archive pages so most paths look like `/archive/<n>/`.
+
+Exposed as `tinylytics.kudos(days, limit)`.
+
+### `GET /sites/:id/user_journeys`
+Per-visitor journey rows over a date window: `visitor_hash, page_count, duration_minutes, pages, entry_page, exit_page, referrer, country, browser`. Plus a `summary` block with `total_visitors` + `bounce_rate`. Useful for "what do people read after they land from referrer X".
+
+Exposed as `tinylytics.user_journeys(days, limit)`.
+
+### `GET /sites/:id/insights` (subscription-gated)
+Latest daily AI insights — Tinylytics' own narrative summary plus structured `signals` (page breakouts, referrer surges, traffic shifts), `traffic_patterns`, `recommendations`. Generated daily at ~01:00 in the account timezone. Needs ≥10 hits in the last 7 days.
+
+Exposed as `tinylytics.insights()`. Cheap orientation before reaching for finer-grained tools.
+
+### `GET /sites/:id/uptime` (subscription-gated)
+Site uptime monitor + SSL/domain expiry. Returns `{monitor: {uptime, last_check_at, last_status_code, ssl, domain, ...}, downtimes: [...]}`.
+
+Exposed as `tinylytics.uptime()`.
+
+### `GET /sites/:id/content` (subscription-gated)
+Broken-link + mixed-content scanner output. Not currently exposed as a workshop-bot tool.
+
+### `POST /sites/:id/events` and `POST /sites/:id/hits`
+Server-side write endpoints. Both accept a `source` field in the body. We don't currently use either — the site fires events via `data-tinylytics-event` attributes from the browser, which is the right thing for browser-originated work. These endpoints would be useful if we wanted to backfill historical data or attribute server-side events.
 
 ## Tool surface (workshop bot)
 
@@ -89,12 +112,31 @@ What the dotted tools in `apps/workshop_bot/systems/tinylytics/server.py` actual
 |---|---|---|
 | `tinylytics.summary(days)` | three calls: ungrouped `/hits` (for `total_count`), grouped-by-path `/hits`, grouped-by-referrer `/hits` | Returns `{days, total_hits, top_pages, referrers}`. Each sub-call is wrapped so a single upstream failure doesn't blank the whole report. |
 | `tinylytics.top_pages(days, limit)` | `/hits?grouped=true&group_by=path&start_date=...&end_date=...` | Returns the raw `grouped_hits` list. |
-| `tinylytics.referrers(days, limit)` | `/hits?grouped=true&group_by=referrer&start_date=...&end_date=...` | Same. `referrer` may be `null` (direct visit) or `""` (header stripped). |
+| `tinylytics.referrers(days, limit)` | `/hits?grouped=true&group_by=referrer&start_date=...&end_date=...` | Same. `referrer` may be `null` (direct visit) or `""` (header stripped). HTTP Referer header — different from `source`. |
+| `tinylytics.sources(days, limit)` | paginates raw `/hits` and aggregates `source` client-side | Source is auto-extracted from `?ref=`/`?utm_source=`. Costs ~1 request per 1000 hits in the window; capped by `max_pages=10`. |
+| `tinylytics.leaderboard(prefix, limit)` | `/leaderboard?path=<prefix>&per_page=<limit>` | All-time, cached; ignores date window. `prefix` is partial. |
+| `tinylytics.user_journeys(days, limit)` | `/user_journeys?start_date=...&end_date=...&per_page=<limit>` | Returns `{user_journeys, summary}`. |
+| `tinylytics.kudos(days, limit)` | `/kudos?start_date=...&end_date=...&per_page=<limit>` | Each entry: `id, uid, path, created_at`. |
+| `tinylytics.insights()` | `/insights` | Subscription-gated; AI-generated daily summary + signals. |
+| `tinylytics.uptime()` | `/uptime` | Subscription-gated; uptime + SSL/domain expiry. |
 
 ## Quirks + dead ends
 
-### Tinylytics does not capture query strings
-The `path` field on a hit is the URL path component **only**. A landing-page hit at `https://weekly.thingelstad.com/?ref=dd-2026-05-15` is recorded as `path = "/"` — the `?ref=…` part is dropped before storage. **Implication:** ref-campaign attribution can't run through Tinylytics. Use `stripe.donations_by_ref` and Buttondown subscriber `metadata.ref` instead.
+### Query strings — what's stored and where
+A landing-page hit at `https://weekly.thingelstad.com/?ref=DenseDiscovery-388` ends up split across the hit row like this:
+
+| Field | Value | Notes |
+|---|---|---|
+| `path` | `"/"` | Query string stripped. |
+| `url` | `"https://weekly.thingelstad.com/?ref=DenseDiscovery-388"` | Full URL preserved. |
+| `source` | `"DenseDiscovery-388"` | Auto-extracted from `?ref=` or `?utm_source=`. |
+| `referrer` | `"https://www.densediscovery.com/issues/388"` | HTTP `Referer` header — separate from `source`. |
+
+So **`?ref=` and `?utm_source=` are first-class campaign attribution** in Tinylytics — verified May 2026 against site 3063 with real-world hits like `?ref=powrss.com`, `?utm_source=densediscovery`, etc. Earlier internal docs claimed query strings were stripped before storage; that was wrong. The `path` field is stripped (so path-grouped reports collapse `/?ref=foo` and `/?ref=bar` into one bucket), but the per-hit `source` and `url` fields preserve the attribution.
+
+**API gotcha:** `group_by` doesn't accept `source` — only `path | country | referrer | browser_name | platform_name`. To aggregate by source, paginate raw hits and tally client-side; that's what `tinylytics.sources` does. (A feature request to add `source` to the `group_by` enum would be a clean upstream fix.)
+
+**Subscriber attribution is separate:** ref tags also flow site-side → `attribution-capture.njk` → Buttondown subscriber `metadata.ref` + `source:<tag>` tag (see `apps/librarian/lambda/shared/buttondown.mjs`). For "did this campaign convert to a subscriber" use `buttondown.attribution_summary`; for "did this campaign drive site traffic" use `tinylytics.sources`. The two answer different questions.
 
 (There's no per-link click breakdown either: clicks register as ordinary hits on the destination page, with the `referrer` field set to the source page. Aggregating "clicks on link X from page Y" requires walking individual hits.)
 
@@ -119,8 +161,11 @@ A wrong/expired Bearer token causes the request to redirect to the marketing lan
 ## Site-side usage
 
 The published site uses Tinylytics for browser-side hits + custom events:
-- Pixel script tag, identified by `TINYLYTICS_SITE_UID` (the hash, not the numeric ID).
+- Pixel script tag in `apps/site/_includes/layouts/base.njk`, identified by `TINYLYTICS_SITE_UID` (the hash, not the numeric ID). Loaded with `?kudos=custom&hits&countries&events&beacon` — beacon mode for reliable event delivery on page exit.
 - `data-tinylytics-event="<category>.<action>"` attributes on links/buttons fire events. See `apps/site/librarian.njk` and `apps/site/support.njk` for the conventions.
-- Currently tracked event categories (non-exhaustive): `librarian.*`, `search.*`, `support.*`.
+- Currently tracked event categories (non-exhaustive): `home.*`, `archive.*`, `issue.*`, `search.*`, `support.*`, `subscribe.*`, `librarian.*`, `topic.*`, `feed.*`.
+- Pixel `<img>` tags in `apps/site/feed.njk` and `apps/site/issue-links-feed.njk` track Atom feed reads — paths `/feed/<n>/` and `/feed-links/<n>/`. Buttondown email bodies also embed a per-issue pixel at `/email/<n>/` (managed in Buttondown, not this repo).
+- Webmention endpoint registered via `<link rel="webmention" href="https://tinylytics.app/webmention/<uid>">` in `<head>`.
+- Per-issue kudos heart on `apps/site/_includes/layouts/issue.njk`, custom-styled (`tinylytics_kudos`).
 
 Reading those events back from the bot side is **not possible** via the current API — events are write-only from the SDK's perspective.
