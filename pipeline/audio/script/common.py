@@ -1,4 +1,10 @@
-"""Transform archive markdown into plain text suitable for TTS."""
+"""Shared utilities for audio script transforms.
+
+Pure text-level rules — inline cleaning, normalization, helpers, post-processing —
+that apply identically across every era The Weekly Thing has been published on.
+Era-specific modules (modern.py, legacy.py) supply the section vocabulary and
+parsing strategy; this module is what they both stand on.
+"""
 
 from __future__ import annotations
 
@@ -42,6 +48,12 @@ _MONTHS = "Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec"
 JOURNAL_DATE_RE = re.compile(
     rf"^\s*(?:\[)?(?:{_MONTHS})[a-z]*\s+\d{{1,2}},?\s+\d{{4}}"
     r"\s+at\s+\d{1,2}:\d{2}\s*(?:[AaPp]\.?[Mm]\.?)\s*\]?(?:\([^)]+\))?\s*$"
+)
+
+BRIEFLY_LINK_RE = re.compile(r"\*\*\[([^\]]+)]\([^)]+\)\*\*")
+STRIKETHROUGH_HTML_RE = re.compile(
+    r"<(strike|del|s)\b[^>]*>.*?</\1>",
+    re.IGNORECASE | re.DOTALL,
 )
 
 NORMALIZER_REPLACEMENTS = [
@@ -118,78 +130,6 @@ YEAR_WORDS = {
     2028: "twenty twenty eight",
     2029: "twenty twenty nine",
 }
-
-HEADING_INTROS = {
-    "Featured": "Now, the Featured section.",
-    "Featured Links": "Now, the Featured Links section.",
-    "Notable": "Now, the Notable section.",
-    "Notable Links": "Now, the Notable Links section.",
-    "Links": "Now, the Links section.",
-    "Must Read": "Now, the Must Read section.",
-    "Briefly": "Now, the Briefly section.",
-    "Recommended Links": "Now, the Recommended Links section.",
-    "FYI": "Now, for your information.",
-    "Yet More Links": "Now, more links.",
-    "Journal": "Now, the Journal section.",
-}
-
-# Short label used in the closing cue ("That's the end of {label}.")
-HEADING_LABELS = {
-    "Featured": "Featured",
-    "Featured Links": "Featured Links",
-    "Notable": "Notable",
-    "Notable Links": "Notable Links",
-    "Links": "Links",
-    "Must Read": "Must Read",
-    "Briefly": "Briefly",
-    "Recommended Links": "Recommended Links",
-    "FYI": "the FYI section",
-    "Yet More Links": "More Links",
-    "Journal": "the Journal",
-}
-
-# Sections whose H3 entries are individual links worth signposting.
-LINK_SECTION_HEADINGS = {
-    "Featured",
-    "Featured Links",
-    "Notable",
-    "Notable Links",
-    "Links",
-    "Must Read",
-}
-
-# Sections whose paragraphs use the inline `<commentary> → **[title](url)**`
-# form. We announce each as `Link N. "title"` and then read the commentary,
-# matching the cadence of LINK_SECTION_HEADINGS.
-BRIEFLY_SECTION_HEADINGS = {
-    "Briefly",
-    "Recommended Links",
-    "FYI",
-    "Yet More Links",
-}
-
-# Sections whose H3 entries are personal journal posts.
-JOURNAL_SECTION_HEADINGS = {"Journal"}
-
-BRIEFLY_LINK_RE = re.compile(r"\*\*\[([^\]]+)]\([^)]+\)\*\*")
-STRIKETHROUGH_HTML_RE = re.compile(
-    r"<(strike|del|s)\b[^>]*>.*?</\1>",
-    re.IGNORECASE | re.DOTALL,
-)
-
-REDDIT_DISCUSS_RE = re.compile(
-    r"^[ \t]*_You can discuss any of these links at the "
-    r"\[[^\]]*r/WeeklyThing[^\]]*]\([^)]+\)\._[ \t]*$",
-    re.MULTILINE,
-)
-
-# Signing receipts in newer issues — `Signed by name.eth: 0x...` followed by
-# a long hex hash. Useless in audio (TTS would spell every hex digit).
-SIGNED_BY_RE = re.compile(
-    r"^[ \t]*Signed by [^:\n]+:\s*0x[0-9a-fA-F]+[ \t]*$",
-    re.MULTILINE,
-)
-
 
 _HEART_EMOJI_RE = re.compile(r"(?:[❤♥\U0001F49B\U0001F49A\U0001F499\U0001F49C\U0001F5A4\U0001F90D\U0001F90E\U0001F9E1]️?)+")
 # Heart only acts as the verb "love" when followed by space + a word.
@@ -337,20 +277,11 @@ def _replace_dollars(match: re.Match[str]) -> str:
 
 
 def heading_text(raw: str) -> str:
+    """Normalize an H2/H3 heading: strip markdown, emoji, and trailing dots."""
     text = clean_inline(raw)
     text = strip_emoji(text)
     text = re.sub(r"\s+", " ", text).strip(" .")
     return text
-
-
-def heading_intro(raw: str) -> str:
-    text = heading_text(raw)
-    return HEADING_INTROS.get(text, f"Now, the {text} section.")
-
-
-def heading_label(raw: str) -> str:
-    text = heading_text(raw)
-    return HEADING_LABELS.get(text, text)
 
 
 def published_date(value: Any) -> str:
@@ -392,170 +323,15 @@ def closing(frontmatter: dict[str, Any]) -> str:
     )
 
 
-def _strip_cover_blocks(body: str) -> str:
+def strip_cover_blocks(body: str) -> str:
     return COVER_BLOCK_RE.sub("", body)
-
-
-def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
-    body = HTML_COMMENT_RE.sub("", body)
-    body = STRIKETHROUGH_HTML_RE.sub("", body)
-    # If a strikethrough was the entire content of a list item, the leading
-    # `- ` is now alone on its line — drop those orphan bullets.
-    body = re.sub(r"^[ \t]*[-*][ \t]*$", "", body, flags=re.MULTILINE)
-    body = FENCED_CODE_RE.sub("", body)
-    body = _strip_cover_blocks(body)
-    body = IMAGE_RE.sub("", body)
-    # Stripping an image inside a link (`[![alt](src)](url)`) leaves the empty
-    # link `[](url)` behind. Same pattern shows up when an issue has a logo
-    # wrapped in a link. Drop those entirely.
-    body = re.sub(r"\[\s*\]\([^)\n]*\)", "", body)
-    # Strip remaining standalone horizontal rules so TTS doesn't read "dash
-    # dash dash". Cover blocks above are already removed.
-    body = re.sub(r"^[ \t]*-{3,}[ \t]*$", "", body, flags=re.MULTILINE)
-    # Strip the templated "Would you like to discuss..." closing CTA. The
-    # audio's own closing line takes its place.
-    body = re.sub(r"^Would you like to discuss[^\n]*$", "", body, flags=re.MULTILINE)
-    # Strip the italicized "_You can discuss... r/WeeklyThing..._" line that
-    # opens the Notable section in recent issues. Audio shouldn't push readers
-    # off to Reddit.
-    body = REDDIT_DISCUSS_RE.sub("", body)
-    body = SIGNED_BY_RE.sub("", body)
-
-    output: list[str] = [preamble(frontmatter), ""]
-    quote_lines: list[str] = []
-    current_section: str | None = None
-    current_section_label: str | None = None
-    link_index: int = 0
-    skip_next_date: bool = False
-
-    def flush_quote() -> None:
-        if not quote_lines:
-            return
-        quote = clean_inline(" ".join(quote_lines))
-        quote_lines.clear()
-        if quote:
-            output.extend(["", "Quote.", quote, "End quote.", ""])
-
-    for raw_line in body.splitlines():
-        line = raw_line.rstrip()
-        if re.match(r"^\s*>", line):
-            quote_lines.append(re.sub(r"^\s*>\s?", "", line).strip())
-            continue
-
-        flush_quote()
-
-        if not line.strip():
-            if output and output[-1] != "":
-                output.append("")
-            continue
-
-        h2 = re.match(r"^##\s+(.+)$", line)
-        if h2:
-            new_section = heading_text(h2.group(1))
-            # Sign-off H2s like "## The end 🎬" — the audio script's own
-            # closing line takes their place.
-            if new_section.lower().strip() in {"the end", "end", "fin"}:
-                if current_section_label:
-                    output.extend(["", f"That's the end of {current_section_label}.", ""])
-                current_section = None
-                current_section_label = None
-                link_index = 0
-                skip_next_date = False
-                continue
-            # Subtitle/byline disguised as H2 (e.g. "## by kunabi brother GmbH"
-            # under a Featured App in early MailChimp issues). Don't open or
-            # close a section — let it fall through as a plain text line.
-            if re.match(r"^by\s+", new_section, re.IGNORECASE):
-                cleaned_text = clean_inline(h2.group(1))
-                if cleaned_text:
-                    output.extend([cleaned_text, ""])
-                continue
-            new_label = heading_label(h2.group(1))
-            if current_section_label:
-                output.extend(["", f"That's the end of {current_section_label}.", ""])
-            intro = heading_intro(h2.group(1))
-            if intro:
-                output.extend(["", intro, ""])
-            current_section = new_section
-            current_section_label = new_label
-            link_index = 0
-            skip_next_date = False
-            continue
-
-        # Journal-style date stamps: drop the line, and in micro-entry case
-        # use the stamp as the entry boundary so it gets a numbered cue.
-        if current_section in JOURNAL_SECTION_HEADINGS and JOURNAL_DATE_RE.match(line):
-            if skip_next_date:
-                skip_next_date = False
-                continue
-            link_index += 1
-            output.extend([f"Journal entry {_number_word(link_index)}.", ""])
-            continue
-
-        h3_link = re.match(r"^###\s+\[([^\]]+)]\([^)]+\)\s*$", line)
-        if h3_link:
-            title = clean_inline(h3_link.group(1))
-            if title:
-                if current_section in LINK_SECTION_HEADINGS:
-                    link_index += 1
-                    output.extend([f"Link {_number_word(link_index)}. \"{title}\"", ""])
-                elif current_section in JOURNAL_SECTION_HEADINGS:
-                    link_index += 1
-                    output.extend([f"Journal entry {_number_word(link_index)}. {title}", ""])
-                    skip_next_date = True
-                else:
-                    output.extend([title, ""])
-            continue
-
-        heading = re.match(r"^#{3,6}\s+(.+)$", line)
-        if heading:
-            text = clean_inline(heading.group(1))
-            if text:
-                output.extend([text, ""])
-            continue
-
-        # Briefly-style line: `<commentary> → **[Title](url)**`. Announce
-        # `Link N. "Title"` then read the commentary, matching Notable.
-        if current_section in BRIEFLY_SECTION_HEADINGS:
-            briefly_match = BRIEFLY_LINK_RE.search(line)
-            if briefly_match:
-                title = clean_inline(briefly_match.group(1)).rstrip(" .")
-                commentary_raw = line[: briefly_match.start()]
-                commentary_raw = re.sub(r"\s*[→][ \t]*$", "", commentary_raw)
-                commentary = clean_inline(commentary_raw)
-                if title:
-                    link_index += 1
-                    output.extend([f"Link {_number_word(link_index)}. \"{title}\"", ""])
-                if commentary:
-                    output.extend([commentary, ""])
-                continue
-
-        text = clean_inline(line)
-        if text:
-            output.append(text)
-            skip_next_date = False
-
-    flush_quote()
-    output.extend(["", closing(frontmatter)])
-    output = _drop_empty_sections(output)
-    # Drop any line that, after emoji stripping, is empty — these are
-    # decorative lone-emoji lines (e.g. "👋", "👨‍💻") that TTS would otherwise
-    # read as their unicode names.
-    cleaned: list[str] = []
-    for entry in output:
-        if entry and not strip_emoji(entry).strip():
-            continue
-        cleaned.append(entry)
-    script = "\n".join(cleaned)
-    script = re.sub(r"\n{3,}", "\n\n", script)
-    return script.strip() + "\n"
 
 
 _INTRO_LINE_RE = re.compile(r"^Now, the .+? section\.$|^Now, more links\.$|^Now, for your information\.$")
 _END_LINE_RE = re.compile(r"^That's the end of .+\.$")
 
 
-def _drop_empty_sections(lines: list[str]) -> list[str]:
+def drop_empty_sections(lines: list[str]) -> list[str]:
     """Remove `Now, the X section.` followed only by blanks then `That's the end of X.`.
 
     These appear when an H2 section has no entries we keep — e.g. early MailChimp
@@ -592,7 +368,7 @@ _TENS_WORDS = {
 }
 
 
-def _number_word(n: int) -> str:
+def number_word(n: int) -> str:
     if 0 <= n < len(_NUMBER_WORDS):
         return _NUMBER_WORDS[n]
     if 21 <= n <= 99:
@@ -602,3 +378,19 @@ def _number_word(n: int) -> str:
             return _TENS_WORDS[tens]
         return f"{_TENS_WORDS[tens]} {_NUMBER_WORDS[ones]}"
     return str(n)
+
+
+def finalize_script(output: list[str]) -> str:
+    """Final-pass cleanup shared by every era: drop empty sections, lone-emoji
+    decorative lines, then collapse runs of blank lines."""
+    output = drop_empty_sections(output)
+    cleaned: list[str] = []
+    for entry in output:
+        # Lines that strip to nothing after emoji removal are decorative
+        # ("👋", "👨‍💻") — TTS would otherwise speak their unicode names.
+        if entry and not strip_emoji(entry).strip():
+            continue
+        cleaned.append(entry)
+    script = "\n".join(cleaned)
+    script = re.sub(r"\n{3,}", "\n\n", script)
+    return script.strip() + "\n"

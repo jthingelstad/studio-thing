@@ -1,4 +1,3 @@
-import importlib.util
 import re
 import sys
 import unittest
@@ -11,9 +10,7 @@ REPO = Path(__file__).resolve().parents[1]
 AUDIO = REPO / "pipeline" / "audio"
 sys.path.insert(0, str(AUDIO))
 
-spec = importlib.util.spec_from_file_location("audio_script", AUDIO / "script.py")
-audio_script = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(audio_script)
+import script as audio_script  # noqa: E402  (path-extended import)
 
 
 def archive_fixture(issue):

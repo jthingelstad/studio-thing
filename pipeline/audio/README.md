@@ -14,7 +14,7 @@ audio build         → reads committed scripts; refuses --all on validation err
 
 `scripts build` produces the script that will be spoken. The committed file is
 the source of truth — `audio build` reads it from disk rather than regenerating
-from `script.py` on every run, so changes to the script transform don't
+from the `script/` package on every run, so changes to the script transform don't
 silently invalidate every issue's audio.
 
 `scripts validate` runs static checks (no LLM, no API calls) for transformation
