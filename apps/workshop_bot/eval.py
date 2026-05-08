@@ -84,7 +84,7 @@ Output JSON only — a JSON array of {n} strings. No prose, no markdown fences. 
 
 
 def load_persona_prompt(name: str) -> str:
-    return (PROMPTS_DIR / f"{name}.md").read_text(encoding="utf-8").strip()
+    return (PROMPTS_DIR / name / "prompt.md").read_text(encoding="utf-8").strip()
 
 
 def parse_json_array(text: str) -> list[str]:

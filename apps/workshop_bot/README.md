@@ -16,7 +16,9 @@
 | **Patty** (she/her) | Supporter steward — writes the per-issue `member.json` (signed by Thingy in print) | Sonnet 4.6 | `#supporters` |
 | **Thingy** (bridge) | Public archive Q&A — forwards to the Librarian Lambda | n/a (LLM lives in the Lambda) | `#ask-thingy` |
 
-The four agent personas share a tool surface (archive, memory, S3 workspace, persona-specific extras) and the agent loop in `personas/base.py:PersonaBot`. Thingy is intentionally isolated — same process, but doesn't run the local agent loop and doesn't peer-react.
+The four agent personas share the **full** tool surface — every tool is available to every persona. Lane discipline lives in the persona prompts, not in a per-persona allowlist. Tools follow `<system>.<action>` dotted naming (`archive.search`, `memory.remember`, `buttondown.list_subscribers`, `inbox.post`). External-system tool surfaces live under `apps/workshop_bot/systems/<name>/`; local helpers live under `apps/workshop_bot/tools/`. Both are composed into the same `ToolRegistry` at boot.
+
+Thingy is intentionally isolated — same process, but doesn't run the local agent loop and doesn't peer-react.
 
 ---
 
@@ -42,9 +44,11 @@ Thingy listens only in `#ask-thingy` and answers direct in-channel questions. It
 
 ---
 
-## Memory
+## Memory + inbox
 
-Each agent has long-term memory via `remember`/`recall`/`forget_note` tools backed by an `agent_notes` SQLite table. Notes are shared across personas and attributed by author. Use cases: tonal preferences Jamie expressed, themes building across weeks, todos for future runs, observations worth carrying forward.
+Each agent has long-term memory via `memory.remember` / `memory.recall` / `memory.forget` tools backed by an `agent_notes` SQLite table. Notes are shared across personas and attributed by author. Use cases: tonal preferences Jamie expressed, themes building across weeks, todos for future runs, observations worth carrying forward.
+
+For typed agent-to-agent handoffs that complement free-form `#workshop` chatter, the `inbox.*` tools (`post`, `list`, `read`, `mark_read`) are backed by a separate `agent_inbox` table. Each persona's heartbeat opens with `inbox.list(filter='unread')` so handoffs are the first thing the agent reads on each wake-up. Recipients can be a persona name (`eddy`, `linky`, `marky`, `patty`) or `team` for shared handoffs.
 
 Thingy users (web and Discord) also have per-user memory in the Lambda's DynamoDB table. The Lambda Bedrock-summarizes each session when the token rotates and surfaces prior-session summaries in the `/auth` response so the bridge can offer "welcome back" UX. See [`docs/librarian.md`](../../docs/librarian.md) for the Thingy-side specifics.
 
@@ -52,26 +56,27 @@ Thingy users (web and Discord) also have per-user memory in the Lambda's DynamoD
 
 ## Scheduled jobs
 
-`scheduler/jobs.py` declares cron-triggered jobs as plain Python functions in `scheduler/handlers.py`. Most handlers are pure code (fetch + format + post); a few call into the agent loop where LLM judgment is genuinely needed. The split is deliberate — the LLM is a tool the handler reaches for, not the default execution path.
+`scheduler/jobs.py` declares cron-triggered jobs as plain Python functions in `scheduler/handlers.py`. Two shapes: **heartbeats** (one per persona; default `PASS` unless something material changed) and **rituals** (high-care weekly artifacts with bespoke prompts).
 
-| Job | When (Central) | Mode | Channel |
-|---|---|---|---|
-| `linky-wednesday-check` | Wed 10:30 | code | `#research` |
-| `linky-friday-curation` | Fri 16:00 | LLM | `#research` |
-| `linky-popular-scan` | every 6h | code + LLM filter | `#research` |
-| `linky-research-unread` | 10:00 + 16:00 daily | LLM | `#research` |
-| `marky-daily-engagement` | daily 09:00 | code | `#chatter` |
-| `marky-weekly-subscribers` | Mon 11:00 | code | `#promotion` |
-| `patty-thursday-member-json` | Thu 18:00 | LLM | `#supporters` + S3 |
-| `eddy-saturday-prep` | Sat 08:00 | code | `#editorial` |
+| Job | When (Central) | Shape |
+|---|---|---|
+| `eddy-heartbeat` | daily 08:30 | LLM heartbeat → `#editorial` (or `PASS`) |
+| `linky-heartbeat` | every 6h, 06–22 | LLM heartbeat → `#research` (or `PASS`) |
+| `marky-heartbeat` | every 3h, 07–22 | LLM heartbeat → `#promotion` (or `PASS`) |
+| `patty-heartbeat` | daily 09:00 | LLM heartbeat → `#supporters` (or `PASS`) |
+| `linky-friday-curation` | Fri 16:00 | LLM ritual → `#research` |
+| `marky-weekly-subscriber-report` | Mon 11:00 | code → `#promotion` |
+| `patty-thursday-member-json` | Thu 18:00 | LLM ritual → `#supporters` + S3 |
 
-CLI: `python -m apps.workshop_bot.scheduler.runner --list` to inspect, `--once <job_id>` to fire manually. Disable the whole scheduler with `WORKSHOP_SCHEDULER_ENABLED=0`.
+Heartbeats are dispatched by a shared `handlers.heartbeat(persona, ctx)` wired into each `JobSpec` via `functools.partial`. Each loads `prompts/<persona>/heartbeat.md`, runs the agent loop with `WORKSHOP_HEARTBEAT_MODEL` (default `haiku`), and posts only if the answer isn't `PASS`.
+
+CLI: `python -m apps.workshop_bot.scheduler.runner --list` to inspect. Disable the whole scheduler with `WORKSHOP_SCHEDULER_ENABLED=0`; silence heartbeats only (rituals keep running) with `WORKSHOP_HEARTBEATS_ENABLED=0`. Rehearse one heartbeat offline with `python -m apps.workshop_bot.eval --heartbeat <persona>`.
 
 ---
 
 ## The in-flight issue
 
-The published archive (corpus) holds issues already shipped — `#1` through `#N`. The issue Jamie is *currently writing* is `#N+1` and lives in the S3 workspace at `s3://files.thingelstad.com/weekly-thing/issues/{N+1}/` — **not in the archive corpus.** Every persona has the universal `current_issue_number` tool that resolves "the issue I'm working on" by combining S3 workspace folders with the corpus's latest published issue.
+The published archive (corpus) holds issues already shipped — `#1` through `#N`. The issue Jamie is *currently writing* is `#N+1` and lives in the S3 workspace at `s3://files.thingelstad.com/weekly-thing/issues/{N+1}/` — **not in the archive corpus.** Every persona has the `issue.current_number` tool that resolves "the issue I'm working on" by combining S3 workspace folders with the corpus's latest published issue.
 
 S3 workspace conventions:
 
@@ -120,44 +125,52 @@ The bridge:
 ```
 apps/workshop_bot/
 ├── README.md
-├── bot.py                    # entrypoint
-├── eval.py                   # offline persona testing (no Discord)
+├── bot.py                    # entrypoint — composes ToolRegistry, starts clients + scheduler
+├── eval.py                   # offline persona testing (no Discord); --heartbeat to rehearse one heartbeat
 ├── personas/
 │   ├── base.py               # PersonaBot — routing, peer reactions, agent loop
 │   ├── team.py               # @Team round orchestration
 │   ├── eddy.py / linky.py / marky.py / patty.py
 │   └── thingy.py             # Lambda bridge (no agent loop)
 ├── prompts/
-│   ├── team.md               # shared team-level prompt (cached system block)
-│   └── eddy.md / linky.md / marky.md / patty.md
+│   ├── shared/team.md        # shared team-level prompt (cached system block)
+│   └── <persona>/
+│       ├── prompt.md         # the persona's identity / lane / voice
+│       └── heartbeat.md      # the scheduled wake-up prompt (default PASS)
+├── systems/                  # external-system tool surfaces (one subpackage per system)
+│   ├── _base.py              # SystemServer Protocol + ToolDef dataclass
+│   ├── buttondown/{client,server}.py
+│   ├── pinboard/{client,server}.py
+│   ├── stripe/{client,server}.py
+│   └── tinylytics/{client,server}.py
 ├── tools/
 │   ├── agent_loop.py         # tool-using turn (asyncio.to_thread wrapper)
-│   ├── agent_tools.py        # tool registry + ContextVar persona attribution
-│   ├── anthropic_client.py   # client + prompt loader
+│   ├── agent_tools.py        # ToolRegistry, FUNCS/SPECS, register_local_helpers
+│   ├── anthropic_client.py   # client + prompt loader (resolves <persona>-heartbeat)
 │   ├── archive.py            # read archive issues from disk
 │   ├── corpus.py             # BM25 corpus from librarian-core
 │   ├── conversation.py       # Discord history → Anthropic messages
 │   ├── discord_io.py         # chunked send, attachment read
 │   ├── db.py                 # SQLite helpers + idempotent column migrations
-│   ├── pinboard.py           # Pinboard REST + popular RSS feed
+│   ├── inbox.py              # agent_inbox table + four inbox.* tool handlers
+│   ├── issue.py              # issue.current_number resolver
 │   ├── support_state.py      # current nonprofit state for Patty
-│   ├── buttondown.py         # subscriber API
-│   ├── tinylytics.py         # engagement API
-│   ├── web.py                # fetch_url
+│   ├── persona_s3.py         # per-persona scratchpad S3 helper
 │   ├── s3.py                 # per-issue S3 workspace
+│   ├── web.py                # web.fetch_url
 │   ├── startup.py            # boot self-check + announce
 │   ├── thingy_client.py      # Lambda bridge HTTP/SSE client
 │   └── thingy_render.py      # citation injection + history compaction
 ├── scheduler/
-│   ├── jobs.py               # JobSpec declarations
-│   ├── handlers.py           # per-job functions
+│   ├── jobs.py               # JobSpec declarations (4 heartbeats + 3 rituals)
+│   ├── handlers.py           # heartbeat dispatcher + per-ritual functions
 │   └── runner.py             # APScheduler + dispatch
 ├── db/
 │   └── schema.sql            # SQLite schema (Python ALTER migrations in db.py)
 ├── data/                     # gitignored
 │   └── workshop.db
 └── tests/
-    └── test_*.py             # 81 unit tests; discord/anthropic/httpx stubbed
+    └── test_*.py             # ~200 unit tests; discord/anthropic/httpx stubbed
 ```
 
 ---
@@ -187,6 +200,7 @@ Tables in `db/schema.sql`. New columns added later go through idempotent `ALTER 
 | `agent_outputs` | Per-turn agent reply records | active |
 | `agent_runs` | Per-run status + duration log | active |
 | `agent_notes` | Long-term memory (kind, key, content, agent author) | active |
+| `agent_inbox` | Structured agent-to-agent handoffs (recipient, sender, kind, body) | active |
 | `link_candidates` | Pinboard bookmarks Linky has seen | active |
 | `pinboard_popular_seen` | URLs Linky has surfaced from the popular feed | active |
 | `pinboard_research_done` | URLs Linky has researched from the to-read pile | active |
@@ -214,7 +228,7 @@ A persona with a missing token is skipped at startup; the rest still run.
 
 **Per-service API access:**
 - `ANTHROPIC_API_KEY`
-- `BUTTONDOWN_API_KEY`, `TINYLYTICS_API_KEY`, `TINYLYTICS_SITE_UID`, `PINBOARD_API_TOKEN`
+- `BUTTONDOWN_API_KEY`, `TINYLYTICS_API_KEY`, `TINYLYTICS_SITE_UID`, `PINBOARD_API_TOKEN`, `STRIPE_API_KEY`
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `WEEKLY_THING_ASSETS_BUCKET`
 
 **Thingy bridge:**
@@ -226,15 +240,18 @@ A persona with a missing token is skipped at startup; the rest still run.
 - `WORKSHOP_DB_PATH` (default `apps/workshop_bot/data/workshop.db`)
 - `WORKSHOP_LOG_LEVEL` (default `INFO`)
 - `WORKSHOP_DEFAULT_MODEL` (default `haiku`; per-persona overrides take precedence)
-- `WORKSHOP_SCHEDULER_ENABLED` (`0` to disable scheduled jobs)
+- `WORKSHOP_SCHEDULER_ENABLED` (`0` to disable all scheduled jobs)
+- `WORKSHOP_HEARTBEATS_ENABLED` (default `1`; set to `0` to silence heartbeats while leaving rituals running)
+- `WORKSHOP_HEARTBEAT_MODEL` (default `haiku`)
+- `WORKSHOP_BUCKET` (per-persona scratchpad bucket; default `weekly-thing-workshop`)
 
 ---
 
 ## Architectural principles
 
 1. **One process, multiple personas.** Single asyncio loop; separate `discord.py` clients with separate tokens so each persona has its own avatar.
-2. **Personas are config, not code.** Class-level attributes (`tools`, `home_channel_env`, `preferred_model`, `empty_greeting`) drive behavior; the agent loop is shared in `PersonaBot.handle()`.
-3. **Prompts as `.md` files.** `prompts/team.md` carries shared identity and rules; per-persona prompts carry only what's distinctive. The team prompt is cached at the API; per-persona prompts inherit the prefix cache.
+2. **Personas are config, not code.** Class-level attributes (`home_channel_env`, `preferred_model`, `empty_greeting`) drive behavior; every persona sees the full `Deps.registry` tool surface; the agent loop is shared in `PersonaBot.core()`.
+3. **Prompts as `.md` files.** `prompts/shared/team.md` carries shared identity and rules; `prompts/<persona>/prompt.md` carries the persona's distinctive lane; `prompts/<persona>/heartbeat.md` is the scheduled wake-up prompt. The team prompt is cached at the API; persona prompts inherit the prefix cache.
 4. **Memory beyond chat.** `agent_notes` for cross-session continuity; Discord history alone is too short to remember preferences week to week.
 5. **SQLite for operational state, S3 only for build artifacts.** Strict boundary; the S3 helper enforces it at the path level.
 6. **Scheduled jobs are first-class.** Most jobs are pure-code data shuffling; only compose-style work hits the LLM.
@@ -280,8 +297,9 @@ python -m apps.workshop_bot.eval --persona eddy --model sonnet
 
 The README above describes what's built. A few items are still on the cutting room floor:
 
-- **Buttondown supporter-event webhook.** Today Marky polls weekly. Real-time signups/churn → `#chatter` would need a small HTTP listener (Flask or aiohttp). The `subscriber_events_seen` table is ready for it.
+- **Buttondown supporter-event webhook.** Today Marky polls. Real-time signups/churn → `#chatter` would need a small HTTP listener (Flask or aiohttp). The `subscriber_events_seen` table is ready for it.
 - **Auto-shipped `marky-meta.json`.** Patty's Thursday `member.json` job has the shape; Marky needs a parallel scheduled job that composes `{ "subject": "Three Words Title", "description": "..." }` and writes it to S3.
 - **Eddy auto-critique on new draft.** Today Eddy reads drafts on demand. Could poll S3 for a fresh `draft.md` per the in-flight issue and post a critique automatically.
 - **`agent_outputs.status` lifecycle.** Field exists with `pending` / `ready` / `used` / `archived` values, but nothing transitions outputs after Jamie pulls them.
+- **Stripe Payment Link `ref` metadata.** `stripe.donations_by_ref` returns mostly `(no-ref)` until the donate flow is configured to set `ref` on Checkout Session metadata. Documented in the tool description.
 - **Decommission dead tables.** `analytics`, `supporter_events`, `channel_routes` are reserved but unused.

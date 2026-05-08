@@ -98,16 +98,3 @@ def by_id(job_id: str) -> JobSpec | None:
         if job.id == job_id:
             return job
     return None
-
-
-# Folded handlers — defined in ``handlers.py`` but no longer wired to a
-# JobSpec because their behavior was absorbed into a heartbeat (see
-# spec §10). Kept as a one-release safety net in case heartbeats need
-# to be reverted; phase 5 cleanup deletes them.
-FOLDED_HANDLER_NAMES: frozenset[str] = frozenset({
-    "linky_wednesday_check",
-    "linky_popular_scan",
-    "linky_research_unread",
-    "marky_daily_engagement",
-    "eddy_saturday_prep",
-})

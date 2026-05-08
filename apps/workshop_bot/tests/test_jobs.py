@@ -114,9 +114,7 @@ class JobConfigTests(unittest.TestCase):
         self.assertEqual(personas, {"eddy", "linky", "marky", "patty"})
 
     def test_known_handlers_referenced(self):
-        # Sanity: every handler we ship should be wired to a job — except
-        # the explicitly folded handlers preserved as a one-release
-        # safety net (see jobs.FOLDED_HANDLER_NAMES).
+        # Sanity: every handler we ship should be wired to a job.
         wired: set[object] = set()
         for job in jobs_module.JOBS:
             underlying = (
@@ -130,7 +128,6 @@ class JobConfigTests(unittest.TestCase):
                 inspect.iscoroutinefunction(obj)
                 and obj.__module__ == handlers.__name__
                 and not name.startswith("_")
-                and name not in jobs_module.FOLDED_HANDLER_NAMES
             ):
                 self.assertIn(
                     obj, wired,

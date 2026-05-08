@@ -19,15 +19,12 @@ from typing import Any, Callable, Optional
 
 from . import (
     archive,
-    buttondown,
     db,
     inbox,
     issue,
     persona_s3,
-    pinboard,
     s3,
     support_state,
-    tinylytics,
     web,
 )
 from ..systems._base import SystemServer
@@ -165,54 +162,7 @@ def t_get_support_state(deps) -> str:
     return support_state.render_state(support_state.read())
 
 
-# ---------- Linky ----------
-
-def t_fetch_pinboard(deps, count: int = 50) -> list[dict[str, Any]]:
-    """Live fetch from Pinboard (and persist to SQLite)."""
-    raw = pinboard.recent_posts(count=int(count))
-    posts = [pinboard.normalize_post(p) for p in raw]
-    for p in posts:
-        db.upsert_link_candidate(
-            url=p["url"],
-            title=p["title"],
-            description=p["description"],
-            pinboard_tags=p["tags"],
-            pinboard_added=p["added"],
-        )
-    return posts
-
-
-def t_fetch_pinboard_unread(deps, limit: int = 100, tag: Optional[str] = None) -> list[dict[str, Any]]:
-    """Pinboard items Jamie has marked ``to read`` — the queue Linky is here to
-    help drain. Persists to SQLite like ``fetch_pinboard``."""
-    raw = pinboard.all_unread(limit=int(limit), tag=tag)
-    posts = [pinboard.normalize_post(p) for p in raw]
-    for p in posts:
-        db.upsert_link_candidate(
-            url=p["url"],
-            title=p["title"],
-            description=p["description"],
-            pinboard_tags=p["tags"],
-            pinboard_added=p["added"],
-        )
-    return posts
-
-
-def t_read_stored_bookmarks(deps, limit: int = 30) -> list[dict[str, Any]]:
-    """Most recent bookmarks already in SQLite (no live API call)."""
-    rows = db.recent_link_candidates(limit=int(limit))
-    for row in rows:
-        url = row.get("url") or ""
-        if url:
-            row["pinboard_url"] = pinboard.bookmark_url(url)
-    return rows
-
-
-def t_fetch_pinboard_popular(deps, limit: int = 30) -> list[dict[str, Any]]:
-    """Pinboard's site-wide popular feed — the discovery surface Jamie scans
-    manually. Use to suggest interesting items he might not have seen yet."""
-    return pinboard.popular(limit=int(limit))
-
+# ---------- web ----------
 
 def t_fetch_url(deps, url: str, max_chars: int = 12_000) -> dict[str, Any]:
     """Fetch a URL and return readable text. Use for Linky to actually read what
@@ -227,68 +177,6 @@ def t_fetch_url(deps, url: str, max_chars: int = 12_000) -> dict[str, Any]:
 # re-export it here for backward compatibility with the flat
 # ``FUNCS`` / ``SPECS`` lookup pattern.
 t_current_issue_number = issue.t_current_issue_number
-
-
-# ---------- Marky ----------
-
-def t_fetch_tinylytics_ref(deps, tag: str, days: int = 14) -> dict[str, Any]:
-    """Aggregate page hits attributed to a `?ref=<tag>` URL.
-
-    Wraps tinylytics.top_pages and filters entries whose path contains
-    `ref=<tag>` (substring match). Sums hits across matching paths and
-    returns the per-path breakdown so Marky can see which destinations
-    the tag drove traffic to.
-    """
-    if not isinstance(tag, str) or not tag.strip():
-        return {"error": "tag is required"}
-    needle = f"ref={tag.strip()}"
-    try:
-        pages = tinylytics.top_pages(days=days, limit=200)
-    except Exception as exc:  # noqa: BLE001 — surface upstream failures cleanly
-        return {"error": f"{type(exc).__name__}: {exc}"}
-    hits_total = 0
-    matches: list[dict[str, Any]] = []
-    for entry in pages or []:
-        if not isinstance(entry, dict):
-            continue
-        path = entry.get("path") or entry.get("url") or entry.get("page") or ""
-        if needle not in path:
-            continue
-        hits = entry.get("hits") or entry.get("count") or entry.get("views") or 0
-        try:
-            hits = int(hits)
-        except (TypeError, ValueError):
-            hits = 0
-        matches.append({"path": path, "hits": hits})
-        hits_total += hits
-    return {
-        "tag": tag.strip(),
-        "days": days,
-        "hits": hits_total,
-        "paths": matches,
-    }
-
-
-def t_fetch_tinylytics(deps, days: int = 7) -> dict[str, Any]:
-    """Trailing-window engagement summary: top pages, referrers, custom events."""
-    return tinylytics.safe_summary(days=int(days))
-
-
-def t_fetch_buttondown_subscribers(
-    deps, kind: str = "recent", limit: int = 25
-) -> dict[str, Any]:
-    """Subscriber activity. ``kind`` is one of:
-      - ``"recent"``       — newest subscribers
-      - ``"unsubscribed"`` — recent unsubscribes/churn
-      - ``"counts"``       — total/premium/unsubscribed counts only
-    Email addresses are hashed before they ever reach the LLM.
-    """
-    kind = (kind or "recent").lower()
-    if kind == "counts":
-        return {"counts": buttondown.counts()}
-    if kind == "unsubscribed":
-        return {"kind": "unsubscribed", "subscribers": buttondown.recent_unsubscribes(limit=int(limit))}
-    return {"kind": "recent", "subscribers": buttondown.recent_subscribers(limit=int(limit))}
 
 
 # ---------- memory (universal) ----------
@@ -440,8 +328,8 @@ def t_persona_write(deps, path: str, content: str) -> dict[str, Any]:
 # ---------- specs (Anthropic format) ----------
 
 SPECS: dict[str, dict[str, Any]] = {
-    "search_archive": {
-        "name": "search_archive",
+    "archive.search": {
+        "name": "archive.search",
         "description": (
             "BM25 lexical search over Weekly Thing archive chunks. Default first stop for broad topics, "
             "themes, and evidence gathering. Iterate — refine the query based on what comes back."
@@ -455,8 +343,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["query"],
         },
     },
-    "get_issue": {
-        "name": "get_issue",
+    "archive.get_issue": {
+        "name": "archive.get_issue",
         "description": (
             "Return one full issue (front matter + body, truncated if very long). "
             "Use when you need full context for a specific issue you already have a number for."
@@ -467,11 +355,11 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["number"],
         },
     },
-    "get_section": {
-        "name": "get_section",
+    "archive.get_section": {
+        "name": "archive.get_section",
         "description": (
             "Pull one named section from one issue (e.g. 'Notable', 'Briefly', 'Featured', 'Microposts'). "
-            "Cheaper than get_issue when you only need that section."
+            "Cheaper than archive.get_issue when you only need that section."
         ),
         "input_schema": {
             "type": "object",
@@ -482,8 +370,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["number", "section"],
         },
     },
-    "list_recent_issues": {
-        "name": "list_recent_issues",
+    "archive.list_recent": {
+        "name": "archive.list_recent",
         "description": (
             "Last N issues by number (newest first), with date, subject, topics, and abstract. "
             "Use to ground 'the latest', 'last few', 'recent' references."
@@ -493,11 +381,11 @@ SPECS: dict[str, dict[str, Any]] = {
             "properties": {"limit": {"type": "integer", "description": "default 10"}},
         },
     },
-    "quote_search": {
-        "name": "quote_search",
+    "archive.quote_search": {
+        "name": "archive.quote_search",
         "description": (
             "Exact substring search across issue bodies. Use to verify a specific phrase or product name "
-            "actually appears in the archive — do not infer presence from search_archive hits alone."
+            "actually appears in the archive — do not infer presence from archive.search hits alone."
         ),
         "input_schema": {
             "type": "object",
@@ -508,67 +396,16 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["phrase"],
         },
     },
-    "get_support_state": {
-        "name": "get_support_state",
+    "site.support_state": {
+        "name": "site.support_state",
         "description": (
             "Current support program state: this year's nonprofit, supporter count, amount raised, "
             "past nonprofits. No arguments."
         ),
         "input_schema": {"type": "object", "properties": {}},
     },
-    "fetch_pinboard": {
-        "name": "fetch_pinboard",
-        "description": (
-            "Live-fetch the most recent N bookmarks from Pinboard and persist them to SQLite. "
-            "Costs an HTTP round trip — use only when the user explicitly wants fresh data."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {"count": {"type": "integer", "description": "default 50, max 100"}},
-        },
-    },
-    "read_stored_bookmarks": {
-        "name": "read_stored_bookmarks",
-        "description": (
-            "Read the most recent N bookmarks already stored in SQLite (no live API call). "
-            "Use this before reaching for fetch_pinboard."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {"limit": {"type": "integer", "description": "default 30"}},
-        },
-    },
-    "fetch_pinboard_unread": {
-        "name": "fetch_pinboard_unread",
-        "description": (
-            "Live-fetch bookmarks Jamie has marked as `to read` on Pinboard. This is "
-            "the working queue for what could go in the next issue. Persists to SQLite."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "limit": {"type": "integer", "description": "default 100, max 1000"},
-                "tag": {"type": "string", "description": "optional Pinboard tag filter"},
-            },
-        },
-    },
-    "fetch_pinboard_popular": {
-        "name": "fetch_pinboard_popular",
-        "description": (
-            "Pinboard's site-wide popular bookmarks feed — the discovery surface "
-            "Jamie scans manually. Use to suggest items he might not have seen yet, "
-            "or to ground 'what's resonating across Pinboard right now'. Returns "
-            "title, url, description, posted_by."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "limit": {"type": "integer", "description": "default 30"},
-            },
-        },
-    },
-    "fetch_url": {
-        "name": "fetch_url",
+    "web.fetch_url": {
+        "name": "web.fetch_url",
         "description": (
             "Fetch a URL and return readable text (title + extracted body). Use to actually "
             "read what a bookmark is about — Pinboard's title and tags often aren't enough "
@@ -583,38 +420,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["url"],
         },
     },
-    "fetch_tinylytics": {
-        "name": "fetch_tinylytics",
-        "description": (
-            "Trailing-window engagement summary for weekly.thingelstad.com: "
-            "stats, top pages, referrers, and custom events (donate, membership). "
-            "Use to ground 'what's working lately'. Returns partial data even if "
-            "individual endpoints fail."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "days": {"type": "integer", "description": "trailing days; default 7"},
-            },
-        },
-    },
-    "fetch_buttondown_subscribers": {
-        "name": "fetch_buttondown_subscribers",
-        "description": (
-            "Subscriber activity from Buttondown. `kind`: 'recent' (newest signups), "
-            "'unsubscribed' (recent churn), or 'counts' (totals only). Email addresses "
-            "are hashed before they ever reach this tool — never raw emails."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "kind": {"type": "string", "enum": ["recent", "unsubscribed", "counts"]},
-                "limit": {"type": "integer", "description": "default 25"},
-            },
-        },
-    },
-    "remember": {
-        "name": "remember",
+    "memory.remember": {
+        "name": "memory.remember",
         "description": (
             "Save a note to long-term memory — visible to all teammates and persists across "
             "sessions. Use for: preferences Jamie has expressed, observations to carry "
@@ -637,8 +444,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["content"],
         },
     },
-    "recall": {
-        "name": "recall",
+    "memory.recall": {
+        "name": "memory.recall",
         "description": (
             "Read notes from long-term memory. Default scope is your own active notes; "
             "set `agent_name` to a teammate's name to read theirs, or '*' to read everyone's. "
@@ -656,12 +463,12 @@ SPECS: dict[str, dict[str, Any]] = {
             },
         },
     },
-    "forget_note": {
-        "name": "forget_note",
+    "memory.forget": {
+        "name": "memory.forget",
         "description": (
             "Mark a memory note as resolved (the todo is done) or stale (no longer "
             "applicable). Notes are never hard-deleted; resolved/stale notes drop out of "
-            "default recall results."
+            "default memory.recall results."
         ),
         "input_schema": {
             "type": "object",
@@ -672,33 +479,33 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["note_id"],
         },
     },
-    "current_issue_number": {
-        "name": "current_issue_number",
+    "issue.current_number": {
+        "name": "issue.current_number",
         "description": (
             "Resolve the in-flight issue number — the one Jamie is assembling "
             "this week. **The in-flight issue is NOT in your archive corpus** "
-            "(search_archive / get_issue won't find it; it's a draft). This tool "
-            "combines two signals: the highest workspace folder in S3 and the "
-            "highest published issue in the corpus. Use when Jamie says 'the "
-            "current issue', 'this weekend's issue', or 'the one I'm working on'. "
+            "(archive.search / archive.get_issue won't find it; it's a draft). "
+            "This tool combines two signals: the highest workspace folder in S3 "
+            "and the highest published issue in the corpus. Use when Jamie says "
+            "'the current issue', 'this weekend's issue', or 'the one I'm working on'. "
             "No arguments."
         ),
         "input_schema": {"type": "object", "properties": {}},
     },
-    "s3_list_issue_workspaces": {
-        "name": "s3_list_issue_workspaces",
+    "s3_issues.list_workspaces": {
+        "name": "s3_issues.list_workspaces",
         "description": (
             "List every issue workspace folder in S3 (under "
             "s3://files.thingelstad.com/weekly-thing/issues/). Returns each issue's "
             "number, file count, and most-recent modification time. The highest "
             "issue number is the issue currently being assembled — call "
-            "`current_issue_number` for the resolved working number, or use this "
+            "`issue.current_number` for the resolved working number, or use this "
             "when you need the per-folder modification times. No arguments."
         ),
         "input_schema": {"type": "object", "properties": {}},
     },
-    "s3_list_issue": {
-        "name": "s3_list_issue",
+    "s3_issues.list": {
+        "name": "s3_issues.list",
         "description": (
             "List the per-issue files in the S3 workspace at "
             "s3://files.thingelstad.com/weekly-thing/issues/{N}/. This is where "
@@ -711,8 +518,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["issue_number"],
         },
     },
-    "s3_read_issue_file": {
-        "name": "s3_read_issue_file",
+    "s3_issues.read_file": {
+        "name": "s3_issues.read_file",
         "description": (
             "Read one file from the per-issue S3 workspace. Text only — binary "
             "objects like photo.jpg are reported but their bytes aren't returned. "
@@ -730,8 +537,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["issue_number", "filename"],
         },
     },
-    "s3_write_issue_file": {
-        "name": "s3_write_issue_file",
+    "s3_issues.write_file": {
+        "name": "s3_issues.write_file",
         "description": (
             "Write one file to the per-issue S3 workspace. Use to drop outputs "
             "the Shortcuts assemble pipeline picks up — e.g. patty-cta.json, "
@@ -750,8 +557,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["issue_number", "filename", "content"],
         },
     },
-    "persona_list": {
-        "name": "persona_list",
+    "s3_personas.list": {
+        "name": "s3_personas.list",
         "description": (
             "List files in your private S3 scratchpad. This is your own "
             "persistent file space — separate from the per-issue workspace, "
@@ -768,8 +575,8 @@ SPECS: dict[str, dict[str, Any]] = {
             },
         },
     },
-    "persona_read": {
-        "name": "persona_read",
+    "s3_personas.read_file": {
+        "name": "s3_personas.read_file",
         "description": (
             "Read one file from your private S3 scratchpad. The `path` is "
             "relative to your scratchpad root and may contain subdirectories "
@@ -782,32 +589,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["path"],
         },
     },
-    "fetch_tinylytics_ref": {
-        "name": "fetch_tinylytics_ref",
-        "description": (
-            "Aggregate page hits attributed to a ?ref=<tag> URL over a "
-            "trailing window. Use this to watch a campaign you're tracking — "
-            "pass the ref tag (e.g. 'dd-2026-05-15') and the lookback in days. "
-            "Returns total hits and the per-path breakdown so you can see "
-            "which destinations the tag drove traffic to."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "tag": {
-                    "type": "string",
-                    "description": "The ref-tag value to look for (without 'ref=').",
-                },
-                "days": {
-                    "type": "integer",
-                    "description": "Trailing window in days. Default 14.",
-                },
-            },
-            "required": ["tag"],
-        },
-    },
-    "persona_write": {
-        "name": "persona_write",
+    "s3_personas.write_file": {
+        "name": "s3_personas.write_file",
         "description": (
             "Write one file under your private S3 scratchpad. Use this to "
             "maintain campaign ledgers, drafts, multi-step thinking, anything "
@@ -829,113 +612,25 @@ SPECS: dict[str, dict[str, Any]] = {
 
 
 FUNCS: dict[str, Callable[..., Any]] = {
-    "search_archive": t_search_archive,
-    "get_issue": t_get_issue,
-    "get_section": t_get_section,
-    "list_recent_issues": t_list_recent_issues,
-    "quote_search": t_quote_search,
-    "get_support_state": t_get_support_state,
-    "fetch_pinboard": t_fetch_pinboard,
-    "fetch_pinboard_unread": t_fetch_pinboard_unread,
-    "fetch_pinboard_popular": t_fetch_pinboard_popular,
-    "read_stored_bookmarks": t_read_stored_bookmarks,
-    "fetch_url": t_fetch_url,
-    "current_issue_number": t_current_issue_number,
-    "fetch_tinylytics": t_fetch_tinylytics,
-    "fetch_tinylytics_ref": t_fetch_tinylytics_ref,
-    "fetch_buttondown_subscribers": t_fetch_buttondown_subscribers,
-    "remember": t_remember,
-    "recall": t_recall,
-    "forget_note": t_forget_note,
-    "s3_list_issue_workspaces": t_s3_list_issue_workspaces,
-    "s3_list_issue": t_s3_list_issue,
-    "s3_read_issue_file": t_s3_read_issue_file,
-    "s3_write_issue_file": t_s3_write_issue_file,
-    "persona_list": t_persona_list,
-    "persona_read": t_persona_read,
-    "persona_write": t_persona_write,
+    "archive.search": t_search_archive,
+    "archive.get_issue": t_get_issue,
+    "archive.get_section": t_get_section,
+    "archive.list_recent": t_list_recent_issues,
+    "archive.quote_search": t_quote_search,
+    "site.support_state": t_get_support_state,
+    "web.fetch_url": t_fetch_url,
+    "issue.current_number": t_current_issue_number,
+    "memory.remember": t_remember,
+    "memory.recall": t_recall,
+    "memory.forget": t_forget_note,
+    "s3_issues.list_workspaces": t_s3_list_issue_workspaces,
+    "s3_issues.list": t_s3_list_issue,
+    "s3_issues.read_file": t_s3_read_issue_file,
+    "s3_issues.write_file": t_s3_write_issue_file,
+    "s3_personas.list": t_persona_list,
+    "s3_personas.read_file": t_persona_read,
+    "s3_personas.write_file": t_persona_write,
 }
-
-
-# Universal tool set every persona gets unless they explicitly drop one.
-# Memory, the per-issue S3 workspace, and the in-flight issue resolver
-# are all universal — every persona needs to know what week it is and
-# read/write artifacts that flow through Jamie's assemble pipeline.
-UNIVERSAL = (
-    "search_archive",
-    "get_issue",
-    "get_section",
-    "list_recent_issues",
-    "quote_search",
-    "remember",
-    "recall",
-    "forget_note",
-    "current_issue_number",
-    "s3_list_issue_workspaces",
-    "s3_list_issue",
-    "s3_read_issue_file",
-    "s3_write_issue_file",
-    "persona_list",
-    "persona_read",
-    "persona_write",
-)
-
-
-# ---------- dotted-name aliases (workshop-bot redesign Phase 0) ----------
-#
-# Every tool gets a dotted name in the new namespace. The old flat name
-# remains registered alongside the dotted one — both point at the same
-# handler — so personas (and tests) that haven't migrated keep working
-# during the transition. Phase 5 cleanup deletes the old names.
-
-RENAMES: dict[str, str] = {
-    "search_archive": "archive.search",
-    "get_issue": "archive.get_issue",
-    "get_section": "archive.get_section",
-    "list_recent_issues": "archive.list_recent",
-    "quote_search": "archive.quote_search",
-    "remember": "memory.remember",
-    "recall": "memory.recall",
-    "forget_note": "memory.forget",
-    "current_issue_number": "issue.current_number",
-    "s3_list_issue_workspaces": "s3_issues.list_workspaces",
-    "s3_list_issue": "s3_issues.list",
-    "s3_read_issue_file": "s3_issues.read_file",
-    "s3_write_issue_file": "s3_issues.write_file",
-    "persona_list": "s3_personas.list",
-    "persona_read": "s3_personas.read_file",
-    "persona_write": "s3_personas.write_file",
-    "fetch_url": "web.fetch_url",
-    "get_support_state": "site.support_state",
-    # buttondown.*, pinboard.*, and tinylytics.* dotted names are owned by
-    # the system modules (see bot.py — register_system(...) calls). The
-    # legacy tool names (e.g. `fetch_buttondown_subscribers`,
-    # `fetch_pinboard_unread`, `fetch_tinylytics_ref`) remain registered as
-    # local helpers for personas that haven't migrated yet, but they don't
-    # claim the dotted names — the registry would reject the duplicate
-    # registration.
-}
-
-
-def _install_dotted_aliases() -> None:
-    """Mirror every entry in ``FUNCS`` / ``SPECS`` under its dotted name.
-
-    Idempotent — safe if called more than once.
-    """
-    for old, new in RENAMES.items():
-        if old not in FUNCS or old not in SPECS:
-            raise RuntimeError(
-                f"rename mapping points at missing source tool {old!r}"
-            )
-        if new not in FUNCS:
-            FUNCS[new] = FUNCS[old]
-        if new not in SPECS:
-            new_spec = dict(SPECS[old])
-            new_spec["name"] = new
-            SPECS[new] = new_spec
-
-
-_install_dotted_aliases()
 
 
 def get(name: str) -> Tool:
@@ -946,15 +641,17 @@ def get_many(names: list[str]) -> list[Tool]:
     return [get(n) for n in names]
 
 
-# ---------- ToolRegistry (workshop-bot redesign Phase 0) ----------
+# ---------- ToolRegistry ----------
 
 
 class ToolRegistry:
     """Composes external-system tools and local helpers into one namespace.
 
-    Phase 0: only local helpers are registered (under both old and new
-    dotted names) so the model still sees the same tools it sees today.
-    System modules land in phases 1–3 and call ``register_system``.
+    Tool names follow ``<system>.<action>`` (dotted) — ``archive.search``,
+    ``memory.remember``, ``inbox.post``, ``buttondown.list_subscribers``.
+    Local helpers live in ``FUNCS`` / ``SPECS`` keyed by their dotted name;
+    external systems are added by ``register_system(server)`` from
+    ``apps/workshop_bot/systems/``.
     """
 
     def __init__(self) -> None:
@@ -1012,12 +709,12 @@ class ToolRegistry:
 
 
 def register_local_helpers(registry: ToolRegistry) -> None:
-    """Register every entry in ``FUNCS`` / ``SPECS`` plus the inbox tools.
+    """Register the local-helper tools (everything in ``FUNCS`` / ``SPECS``
+    plus the inbox tools).
 
-    After phase 0 each name is registered exactly once — there's no
-    duplication between the flat module dicts and the registry. Both old
-    and new dotted names appear because ``_install_dotted_aliases`` has
-    already mirrored them into ``FUNCS`` / ``SPECS``.
+    External systems (``buttondown``, ``pinboard``, ``stripe``,
+    ``tinylytics``) are added separately via ``registry.register_system``
+    from ``bot.py``.
     """
     for name in sorted(FUNCS):
         spec = SPECS[name]

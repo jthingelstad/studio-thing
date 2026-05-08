@@ -54,33 +54,16 @@ from apps.workshop_bot.systems._base import SystemServer, ToolDef  # noqa: E402
 from apps.workshop_bot.tools import agent_tools  # noqa: E402
 
 
-class DottedAliasTests(unittest.TestCase):
-    """Every old name has a dotted twin pointing at the same handler."""
+class DottedNameTests(unittest.TestCase):
+    """Every local helper is keyed under a dotted name."""
 
-    def test_every_renamed_tool_has_dotted_alias(self):
-        for old, new in agent_tools.RENAMES.items():
-            self.assertIn(old, agent_tools.FUNCS, msg=f"missing source: {old}")
-            self.assertIn(new, agent_tools.FUNCS, msg=f"missing alias: {new}")
-            self.assertIs(
-                agent_tools.FUNCS[old],
-                agent_tools.FUNCS[new],
-                msg=f"alias {new!r} should share handler with {old!r}",
-            )
+    def test_every_local_helper_uses_dotted_name(self):
+        for name in agent_tools.FUNCS:
+            self.assertIn(".", name, msg=f"flat name still in FUNCS: {name!r}")
 
-    def test_dotted_alias_spec_has_correct_name(self):
-        for old, new in agent_tools.RENAMES.items():
-            self.assertEqual(agent_tools.SPECS[new]["name"], new)
-            # Description and schema preserved verbatim from the old spec.
-            self.assertEqual(
-                agent_tools.SPECS[new]["description"],
-                agent_tools.SPECS[old]["description"],
-            )
-
-    def test_install_dotted_aliases_is_idempotent(self):
-        before = dict(agent_tools.SPECS)
-        agent_tools._install_dotted_aliases()
-        agent_tools._install_dotted_aliases()
-        self.assertEqual(set(agent_tools.SPECS), set(before))
+    def test_spec_name_field_matches_key(self):
+        for name, spec in agent_tools.SPECS.items():
+            self.assertEqual(spec["name"], name)
 
 
 class ToolRegistryCompositionTests(unittest.TestCase):
@@ -88,24 +71,38 @@ class ToolRegistryCompositionTests(unittest.TestCase):
         self.registry = agent_tools.ToolRegistry()
         agent_tools.register_local_helpers(self.registry)
 
-    def test_registry_includes_old_and_new_names(self):
+    def test_registry_includes_local_helpers(self):
         names = set(self.registry.all_names())
-        for old, new in agent_tools.RENAMES.items():
-            self.assertIn(old, names)
-            self.assertIn(new, names)
+        # Spot-check a few; full coverage lives in DottedNameTests.
+        for tool in (
+            "archive.search",
+            "memory.remember",
+            "issue.current_number",
+            "s3_issues.list",
+            "s3_personas.read_file",
+            "site.support_state",
+            "web.fetch_url",
+        ):
+            self.assertIn(tool, names)
 
     def test_registry_includes_inbox_tools(self):
         names = set(self.registry.all_names())
         for tool in ("inbox.post", "inbox.list", "inbox.read", "inbox.mark_read"):
             self.assertIn(tool, names)
 
-    def test_old_and_new_names_dispatch_to_same_handler(self):
-        for old, new in agent_tools.RENAMES.items():
-            t_old = self.registry.get(old)
-            t_new = self.registry.get(new)
-            self.assertIsNotNone(t_old)
-            self.assertIsNotNone(t_new)
-            self.assertIs(t_old.func, t_new.func)
+    def test_legacy_flat_names_are_gone(self):
+        names = set(self.registry.all_names())
+        for legacy in (
+            "search_archive",
+            "fetch_url",
+            "fetch_pinboard",
+            "fetch_buttondown_subscribers",
+            "remember",
+            "current_issue_number",
+            "persona_read",
+            "get_support_state",
+        ):
+            self.assertNotIn(legacy, names, msg=f"legacy name {legacy!r} should be gone")
 
     def test_all_specs_have_name_field(self):
         for spec in self.registry.all_specs():

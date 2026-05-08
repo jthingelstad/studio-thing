@@ -703,9 +703,9 @@ class RegistryIntegrationTests(unittest.TestCase):
         self.registry.register_system(StripeServer())
         self.registry.register_system(TinylyticsServer())
 
-    def test_legacy_names_still_dispatch(self):
-        # Old multi-purpose tools stay available for personas that haven't
-        # migrated yet; system modules' replacements live alongside.
+    def test_legacy_flat_names_no_longer_registered(self):
+        # Phase 5 cleanup removed the dual-name aliases; only the dotted
+        # forms exist now.
         for legacy in (
             "fetch_buttondown_subscribers",
             "fetch_tinylytics",
@@ -715,7 +715,7 @@ class RegistryIntegrationTests(unittest.TestCase):
             "fetch_pinboard_popular",
             "read_stored_bookmarks",
         ):
-            self.assertIsNotNone(self.registry.get(legacy), legacy)
+            self.assertIsNone(self.registry.get(legacy), legacy)
 
     def test_dotted_buttondown_names_come_from_system(self):
         for new in (
