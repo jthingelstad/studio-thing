@@ -141,7 +141,7 @@ async def announce(announcer: "PersonaBot", message: str) -> None:
         logger.warning("chatter channel not visible to announcer %s", announcer.name)
         return
     try:
-        await channel.send(message)
+        await channel.send(message, suppress_embeds=True)
         logger.info("startup announcement posted to #%s by %s", getattr(channel, "name", "?"), announcer.name)
     except Exception:  # noqa: BLE001
         logger.exception("failed to post startup announcement")

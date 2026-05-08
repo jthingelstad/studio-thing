@@ -44,10 +44,10 @@ async def send_chunked(message: "discord.Message", text: str) -> None:
     response keeps its chain instead of having half float away.
     """
     if not text.strip():
-        await message.reply("(empty response)", mention_author=False)
+        await message.reply("(empty response)", mention_author=False, suppress_embeds=True)
         return
     for part in split_for_discord(text):
-        await message.reply(part, mention_author=False)
+        await message.reply(part, mention_author=False, suppress_embeds=True)
 
 
 async def read_text_attachments(message: "discord.Message", max_bytes: int = 200_000) -> str:

@@ -87,7 +87,7 @@ class TeamRegistry:
             if first is not None:
                 channel = first.get_channel(message.channel.id)
                 if channel is not None:
-                    await channel.send("Team's here. What's up?")
+                    await channel.send("Team's here. What's up?", suppress_embeds=True)
             return
 
         for persona_name in TEAM_ORDER:
@@ -128,7 +128,10 @@ class TeamRegistry:
             except Exception:  # noqa: BLE001
                 logger.exception("team: %s core failed", persona_name)
                 try:
-                    await channel.send(f"(Sorry, {persona_name.capitalize()} hit an error and bowed out.)")
+                    await channel.send(
+                        f"(Sorry, {persona_name.capitalize()} hit an error and bowed out.)",
+                        suppress_embeds=True,
+                    )
                 except Exception:  # noqa: BLE001
                     pass
             finally:
@@ -143,7 +146,7 @@ class TeamRegistry:
         if not text.strip():
             return
         for chunk in discord_io.split_for_discord(text):
-            sent = await channel.send(chunk)
+            sent = await channel.send(chunk, suppress_embeds=True)
             self._posted_message_ids[sent.id] = None
         _trim_ordered_set(self._posted_message_ids, POSTED_ID_CAP)
 

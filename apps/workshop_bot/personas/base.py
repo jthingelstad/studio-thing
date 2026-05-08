@@ -250,6 +250,7 @@ class PersonaBot(discord.Client):
                     await message.reply(
                         f"Sorry — team round hit an error: `{type(exc).__name__}: {exc}`"[:1900],
                         mention_author=False,
+                        suppress_embeds=True,
                     )
                 except discord.DiscordException:
                     logger.error("could not reply with error: %s", traceback.format_exc())
@@ -274,7 +275,7 @@ class PersonaBot(discord.Client):
             logger.exception("%s: handler raised", self.name)
             err = f"Sorry — something went wrong: `{type(exc).__name__}: {exc}`"
             try:
-                await message.reply(err[:1900], mention_author=False)
+                await message.reply(err[:1900], mention_author=False, suppress_embeds=True)
             except discord.DiscordException:
                 logger.error("could not reply with error: %s", traceback.format_exc())
 
@@ -293,7 +294,7 @@ class PersonaBot(discord.Client):
         """
         latest = (attachment or body).strip()
         if not latest and not history:
-            await message.reply(self.empty_greeting, mention_author=False)
+            await message.reply(self.empty_greeting, mention_author=False, suppress_embeds=True)
             return
 
         token = agent_tools.active_react_target.set(
@@ -426,7 +427,7 @@ class PersonaBot(discord.Client):
         )
         try:
             for chunk in discord_io.split_for_discord(answer):
-                await message.channel.send(chunk)
+                await message.channel.send(chunk, suppress_embeds=True)
         except discord.DiscordException:
             logger.exception("%s: failed to send peer reaction", self.name)
 

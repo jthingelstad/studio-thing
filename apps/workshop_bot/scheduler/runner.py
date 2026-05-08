@@ -82,7 +82,7 @@ class JobContext:
     def bot(self, persona: str) -> Optional["PersonaBot"]:
         return self.team.bots.get(persona)
 
-    async def post(self, channel, text: str, *, suppress_embeds: bool = False) -> None:
+    async def post(self, channel, text: str, *, suppress_embeds: bool = True) -> None:
         """Post (chunked) to a Discord channel."""
         if not text or not text.strip():
             return
