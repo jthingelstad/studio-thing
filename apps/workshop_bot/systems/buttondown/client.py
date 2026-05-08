@@ -1,14 +1,9 @@
 """Buttondown REST client.
 
-Canonical implementation for the Buttondown system module — wraps the
-public REST API at ``https://api.buttondown.com/v1`` with auth via
-``BUTTONDOWN_API_KEY``. The PII rule for the workshop bot is enforced
-here: raw email addresses never leave this module — only a stable
-short hash and a coarse domain hint.
-
-The legacy ``apps/workshop_bot/tools/buttondown.py`` is a thin re-export
-shim so any existing call sites keep working during the redesign
-phasing.
+Wraps the public REST API at ``https://api.buttondown.com/v1`` with
+auth via ``BUTTONDOWN_API_KEY``. The PII rule for the workshop bot is
+enforced here: raw email addresses never leave this module — only a
+stable short hash and a coarse domain hint.
 """
 
 from __future__ import annotations

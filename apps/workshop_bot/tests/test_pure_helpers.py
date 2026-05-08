@@ -175,26 +175,24 @@ class TruncateMarkerTests(unittest.TestCase):
 
     def test_marker_is_plain_text(self):
         big_value = "x" * (agent_loop.MAX_TOOL_RESULT_CHARS + 10)
-        agent_tools.SPECS["__test__"] = {
-            "name": "__test__",
-            "description": "test",
-            "input_schema": {"type": "object", "properties": {}},
-        }
 
         def fake(_deps, **_kwargs):
             return big_value
 
-        agent_tools.FUNCS["__test__"] = fake
-        try:
-            result = agent_loop._execute_tool("__test__", deps=None, raw_input={})
-            self.assertIn("[truncated;", result)
-            self.assertNotIn('..."[truncated]"', result)
-            self.assertLessEqual(
-                len(result), agent_loop.MAX_TOOL_RESULT_CHARS + 200
-            )
-        finally:
-            agent_tools.SPECS.pop("__test__", None)
-            agent_tools.FUNCS.pop("__test__", None)
+        registry = agent_tools.ToolRegistry()
+        registry.register(
+            "test.huge",
+            {"description": "test", "input_schema": {"type": "object", "properties": {}}},
+            fake,
+        )
+        deps = types.SimpleNamespace(registry=registry)
+
+        result = agent_loop._execute_tool("test.huge", deps=deps, raw_input={})
+        self.assertIn("[truncated;", result)
+        self.assertNotIn('..."[truncated]"', result)
+        self.assertLessEqual(
+            len(result), agent_loop.MAX_TOOL_RESULT_CHARS + 200
+        )
 
 
 class TrimOrderedSetTests(unittest.TestCase):

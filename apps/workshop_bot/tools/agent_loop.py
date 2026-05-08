@@ -80,21 +80,15 @@ def _build_system_blocks(
 
 
 def _build_tool_specs(
-    tool_names: list[str], deps: Any = None
+    tool_names: list[str], deps: Any
 ) -> list[dict[str, Any]]:
-    """Build Anthropic tool specs for ``tool_names``.
-
-    Prefers ``deps.registry`` when present (the production path after the
-    redesign Phase 0 wiring); falls back to the module-level
-    ``agent_tools.get`` for callers (older tests, eval rehearsals) that
-    don't compose a registry into ``Deps``.
-    """
-    registry = getattr(deps, "registry", None) if deps is not None else None
+    """Build Anthropic tool specs for ``tool_names`` from ``deps.registry``."""
+    registry = deps.registry
     specs: list[dict[str, Any]] = []
     for name in tool_names:
-        tool = registry.get(name) if registry is not None else None
+        tool = registry.get(name)
         if tool is None:
-            tool = agent_tools.get(name)
+            raise KeyError(f"unknown tool {name!r}")
         specs.append(dict(tool.spec))  # shallow copy so we can add cache_control
     if specs:
         # Cache the tool list — last entry gets the marker.
@@ -109,16 +103,10 @@ def _execute_tool(
     *,
     persona: Optional[str] = None,
 ) -> str:
-    registry = getattr(deps, "registry", None) if deps is not None else None
-    func = None
-    if registry is not None:
-        tool = registry.get(name)
-        if tool is not None:
-            func = tool.func
-    if func is None:
-        func = agent_tools.FUNCS.get(name)
-    if func is None:
+    tool = deps.registry.get(name)
+    if tool is None:
         return json.dumps({"error": f"unknown tool {name!r}"})
+    func = tool.func
     t0 = time.monotonic()
     token = None
     if persona is not None:

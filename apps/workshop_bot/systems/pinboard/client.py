@@ -1,11 +1,7 @@
 """Pinboard REST client.
 
-Canonical implementation for the Pinboard system module — wraps the
-public REST API at ``https://api.pinboard.in/v1``. Auth via
-``PINBOARD_API_TOKEN`` (form: ``user:HEX``).
-
-The legacy ``apps/workshop_bot/tools/pinboard.py`` is a thin re-export
-shim so existing call sites keep working during the redesign phasing.
+Wraps the public REST API at ``https://api.pinboard.in/v1``. Auth
+via ``PINBOARD_API_TOKEN`` (form: ``user:HEX``).
 """
 
 from __future__ import annotations

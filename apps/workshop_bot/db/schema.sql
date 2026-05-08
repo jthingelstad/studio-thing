@@ -191,6 +191,7 @@ CREATE TABLE IF NOT EXISTS agent_inbox (
   related_issue INTEGER,                       -- optional
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   read_at TEXT,                                -- null until recipient marks read
+  read_status TEXT,                            -- 'read' | 'acted' | 'dismissed' (set with read_at)
   expires_at TEXT                              -- optional
 );
 

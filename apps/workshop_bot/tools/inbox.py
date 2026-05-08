@@ -82,7 +82,7 @@ def query_inbox(
 ) -> list[dict[str, Any]]:
     sql_parts = [
         "SELECT id, recipient, sender, kind, subject, body, metadata, "
-        "       related_issue, created_at, read_at, expires_at "
+        "       related_issue, created_at, read_at, read_status, expires_at "
         "FROM agent_inbox WHERE recipient = ?"
     ]
     params: list[Any] = [recipient]
@@ -108,7 +108,7 @@ def get_inbox_item(item_id: int) -> Optional[dict[str, Any]]:
     with db.connect() as conn:
         row = conn.execute(
             "SELECT id, recipient, sender, kind, subject, body, metadata, "
-            "       related_issue, created_at, read_at, expires_at "
+            "       related_issue, created_at, read_at, read_status, expires_at "
             "FROM agent_inbox WHERE id = ?",
             (int(item_id),),
         ).fetchone()
@@ -118,21 +118,12 @@ def get_inbox_item(item_id: int) -> Optional[dict[str, Any]]:
 def mark_inbox_read(item_id: int, status: str = "read") -> bool:
     with db.connect() as conn:
         cur = conn.execute(
-            "UPDATE agent_inbox SET read_at = datetime('now') WHERE id = ?",
-            (int(item_id),),
+            "UPDATE agent_inbox "
+            "SET read_at = datetime('now'), read_status = ? "
+            "WHERE id = ?",
+            (status, int(item_id)),
         )
-        ok = cur.rowcount > 0
-        if ok and status != "read":
-            # Status is recorded inside the metadata JSON so the table
-            # stays simple. acted/dismissed are read-state nuances, not
-            # separate workflow states.
-            conn.execute(
-                "UPDATE agent_inbox SET metadata = json_set("
-                "  COALESCE(metadata, '{}'), '$.read_status', ?) "
-                "WHERE id = ?",
-                (status, int(item_id)),
-            )
-        return ok
+        return cur.rowcount > 0
 
 
 # ---------- tool handlers ----------

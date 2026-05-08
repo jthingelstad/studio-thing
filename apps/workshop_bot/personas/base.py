@@ -52,12 +52,8 @@ class Deps:
     """Shared resources injected into every persona."""
 
     corpus: "CorpusHandle"
+    registry: "ToolRegistry"
     team: Optional["TeamRegistry"] = None
-    # Composed at boot in ``bot.py``. ``personas/base.py`` keeps passing the
-    # per-persona ``tools`` ClassVar into the agent loop in phase 0 — the
-    # registry is plumbed but persona behavior is unchanged. Phase 1 drops
-    # the per-persona tuple and starts using ``registry.all_names()``.
-    registry: Optional["ToolRegistry"] = None
 
 
 def _read_env_int(key: str) -> Optional[int]:
@@ -156,11 +152,6 @@ class PersonaBot(discord.Client):
         Pulls the full tool surface from ``deps.registry``; every persona
         sees every tool. Lane discipline is enforced by the persona prompt.
         """
-        if self.deps.registry is None:
-            raise RuntimeError(
-                "PersonaBot.core requires deps.registry to be composed "
-                "(see bot.py boot path)"
-            )
         issue_index = anthropic_client.format_issue_index(
             self.deps.corpus.corpus["issues"]
         )

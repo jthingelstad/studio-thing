@@ -1,11 +1,8 @@
 """Tinylytics REST client.
 
-Canonical implementation for the Tinylytics system module — wraps the
-public ``https://tinylytics.app/api/v2/sites/{site_uid}/...`` surface.
-Auth via ``TINYLYTICS_API_KEY``; site UID via ``TINYLYTICS_SITE_UID``.
-
-The legacy ``apps/workshop_bot/tools/tinylytics.py`` is a thin re-export
-shim so existing call sites keep working during the redesign phasing.
+Wraps the public ``https://tinylytics.app/api/v2/sites/{site_uid}/...``
+surface. Auth via ``TINYLYTICS_API_KEY``; site UID via
+``TINYLYTICS_SITE_UID``.
 """
 
 from __future__ import annotations

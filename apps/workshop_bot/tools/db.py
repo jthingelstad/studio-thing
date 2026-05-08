@@ -60,6 +60,8 @@ _COLUMN_MIGRATIONS: tuple[tuple[str, str, str], ...] = (
     ("thingy_tokens", "profile", "ALTER TABLE thingy_tokens ADD COLUMN profile TEXT"),
     ("thingy_tokens", "last_welcomed_at",
      "ALTER TABLE thingy_tokens ADD COLUMN last_welcomed_at TEXT"),
+    ("agent_inbox", "read_status",
+     "ALTER TABLE agent_inbox ADD COLUMN read_status TEXT"),
 )
 
 

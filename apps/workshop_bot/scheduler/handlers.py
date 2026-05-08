@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, Optional
 
 from ..personas.base import is_pass_response
 from ..systems.buttondown import client as buttondown
-from ..tools import anthropic_client, db, s3
+from ..tools import anthropic_client, db, issue, s3
 
 # ---------- LLM output parsers (extracted so they're testable) ----------
 
@@ -61,26 +61,13 @@ logger = logging.getLogger("workshop.scheduler.handlers")
 # ---------- helpers ----------
 
 def _resolve_working_issue(ctx: "JobContext") -> Optional[int]:
-    """The current in-flight issue number. Tries S3 first, falls back to
-    ``corpus.latest_issue_number + 1``.
+    """The current in-flight issue number. Delegates to the shared
+    ``issue.current_number`` resolver.
     """
-    try:
-        ws = s3.list_workspaces()
-        s3_max = ws.get("current_issue_number")
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("scheduler: S3 list_workspaces failed: %s", exc)
-        s3_max = None
-
-    published = None
     bot = next(iter(ctx.team.bots.values()), None)
-    if bot is not None and bot.deps.corpus is not None:
-        published = bot.deps.corpus.latest_issue_number
-
-    if s3_max is not None and (published is None or s3_max > published):
-        return s3_max
-    if published is not None:
-        return published + 1
-    return None
+    if bot is None:
+        return None
+    return issue.t_current_issue_number(bot.deps).get("working_issue_number")
 
 
 # ============================================================

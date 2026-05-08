@@ -1,10 +1,4 @@
-"""In-flight issue resolver — exposed as ``issue.current_number``.
-
-Extracted from ``agent_tools.py`` so the registry can register it under
-the dotted ``issue.*`` namespace without keeping the implementation in
-the larger module. Behavior is unchanged from the original
-``t_current_issue_number`` helper.
-"""
+"""In-flight issue resolver — exposed as ``issue.current_number``."""
 
 from __future__ import annotations
 

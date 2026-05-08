@@ -31,8 +31,9 @@ from ..systems._base import SystemServer
 
 logger = logging.getLogger("workshop.tools")
 
-# The agent loop sets this before each tool execution so memory tools
-# (`remember`, `recall`) can attribute notes to the calling persona
+# The agent loop sets this before each tool execution so per-persona
+# tools (`memory.remember`, `memory.recall`, `inbox.post`,
+# `s3_personas.*`) can attribute their work to the calling persona
 # without leaning on a shared, mutable Deps object.
 active_persona: ContextVar[str] = ContextVar("active_persona", default="unknown")
 
@@ -631,14 +632,6 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "s3_personas.read_file": t_persona_read,
     "s3_personas.write_file": t_persona_write,
 }
-
-
-def get(name: str) -> Tool:
-    return Tool(name=name, spec=SPECS[name], func=FUNCS[name])
-
-
-def get_many(names: list[str]) -> list[Tool]:
-    return [get(n) for n in names]
 
 
 # ---------- ToolRegistry ----------

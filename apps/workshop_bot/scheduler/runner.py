@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import functools
 import logging
 import os
 from typing import TYPE_CHECKING, Optional
@@ -125,13 +126,6 @@ class Runner:
             self.scheduler.shutdown(wait=False)
             logger.info("scheduler: stopped")
 
-    async def fire_once(self, job_id: str) -> None:
-        """Manually fire a job by id (CLI / debugging)."""
-        job = jobs_module.by_id(job_id)
-        if job is None:
-            raise ValueError(f"unknown job id: {job_id}")
-        await self._run(job)
-
     async def _run(self, job: jobs_module.JobSpec) -> None:
         logger.info("scheduler: firing %s", job.id)
         ctx = JobContext(team=self.team, job=job)
@@ -157,11 +151,6 @@ class Runner:
 
 
 # ---- CLI: inspect configured jobs ----
-#
-# Manual job firing (the previous `--once <job_id>` flag) needed a live
-# Discord-connected team registry, which a standalone CLI can't provide.
-# Drop it; ``Runner.fire_once`` is still callable in-process if a future
-# slash command needs it.
 
 def _build_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -182,9 +171,22 @@ def main() -> int:
     if args.list:
         for job in jobs_module.JOBS:
             mark = "✓" if job.enabled else "✗"
+            # Heartbeat JobSpecs wrap the dispatcher in functools.partial;
+            # unwrap once so the printed reference points at the real
+            # coroutine function rather than crashing on missing __name__.
+            underlying = (
+                job.func.func if isinstance(job.func, functools.partial)
+                else job.func
+            )
+            persona = (
+                f"(persona={job.func.keywords['persona']!r})"
+                if isinstance(job.func, functools.partial)
+                and "persona" in job.func.keywords
+                else ""
+            )
             print(
                 f"{mark} {job.id:32} {job.cron:20} -> "
-                f"{job.func.__module__}.{job.func.__name__}"
+                f"{underlying.__module__}.{underlying.__name__}{persona}"
             )
         return 0
     parser.print_help()
