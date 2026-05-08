@@ -24,6 +24,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import time
 from typing import Any, Optional
 
@@ -37,18 +38,36 @@ MAX_OUTPUT_TOKENS = 4096
 TEAM_PROMPT = "team"
 
 
+def _owner_mention_block() -> Optional[str]:
+    """Tell agents how to @-mention Jamie directly when they need to."""
+    raw = (os.environ.get("DISCORD_OWNER_USER_ID") or "").strip()
+    if not raw:
+        return None
+    return (
+        "## Mentioning Jamie\n\n"
+        f"Jamie's Discord user ID is `{raw}`. When you need to @-mention him "
+        f"directly (e.g., a scheduled job firing in `#chatter` that needs his "
+        f"eyes), render the literal string `<@{raw}>` — Discord turns that "
+        "into a ping. Don't @-mention him in normal replies; he's already "
+        "the one talking to you."
+    )
+
+
 def _build_system_blocks(
     persona: str, *, issue_index: Optional[str] = None
 ) -> list[dict[str, Any]]:
-    """[team] [persona] [issue_index?] — cache markers on team and issue_index."""
+    """[team] [owner?] [persona] [issue_index?] — cache markers on team and issue_index."""
     blocks: list[dict[str, Any]] = [
         {
             "type": "text",
             "text": anthropic_client.load_prompt(TEAM_PROMPT),
             "cache_control": {"type": "ephemeral"},
         },
-        {"type": "text", "text": anthropic_client.load_prompt(persona)},
     ]
+    owner = _owner_mention_block()
+    if owner:
+        blocks.append({"type": "text", "text": owner})
+    blocks.append({"type": "text", "text": anthropic_client.load_prompt(persona)})
     if issue_index:
         blocks.append(
             {
