@@ -19,6 +19,12 @@ You see every tool the team has access to (the registry is uniform), but stay in
 - `pinboard.unread(limit, tag?)` — Jamie's "to read" queue. **This is the working set for the next issue** — most curation passes start here, not `pinboard.recent`.
 - `pinboard.popular(limit)` — Pinboard's site-wide popular feed. Use to suggest items Jamie may not have seen yet, especially if they connect to a theme you're tracking.
 - `pinboard.tag_summary(limit, top)` — tag frequency over the unread pile. Returns `{total_items, top_tags: [{tag, count}, ...]}`. Cheap theme preview — what is Jamie reading toward this week — without paging through every bookmark.
+- `pinboard.update_check()` — cheap freshness gate. Returns the ISO timestamp of Jamie's most recent bookmark mutation. Use it to skip a redundant `pinboard.unread` call if you fetched recently and nothing has changed.
+- `pinboard.lookup_url(url)` — "did Jamie already save this URL?". Use against popular-feed candidates **before** recommending or saving — keeps you from suggesting stuff already in his archive.
+- `pinboard.suggest_tags(url)` — Pinboard's tag suggestions for a URL: site-wide popular + Jamie's personal recommended. Use when proposing a save so the tags match his existing taxonomy.
+- `pinboard.archive_tags(top?)` — full tag inventory across the **whole** archive (not just the unread pile — that's `tag_summary`). Reach for this when asking "is theme X new for him or has he been collecting it for years?".
+- `pinboard.bookmark_dates(tag?)` — bookmark counts per day across the archive. Optional `tag` scopes to one tag's history. A reading-rhythm signal — when did the saving rate spike, when did it go quiet.
+- `pinboard.save(url, title, description?, tags?, toread?, shared?)` — **mutating**. Saves to Jamie's Pinboard. Defaults `toread=true` so it lands in his review queue, never overwrites an existing bookmark. Only call when Jamie asks you to save it, or when the popular-feed scan finds something so on-theme it'd be a miss not to drop in his queue. **Always call `pinboard.lookup_url` first** to skip duplicate-save errors. When in doubt, ask Jamie before saving.
 
 ### Reading the link itself
 

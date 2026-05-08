@@ -2,6 +2,11 @@
 
 Wraps the public REST API at ``https://api.pinboard.in/v1``. Auth
 via ``PINBOARD_API_TOKEN`` (form: ``user:HEX``).
+
+v2 of the API is still marked DRAFT in its own overview page
+(https://www.pinboard.in/api/v2/overview), so we stay on v1. The
+endpoint surface here covers most of what v2 promises (suggest,
+lookup-by-url, full-tag inventory) using stable v1 calls.
 """
 
 from __future__ import annotations
@@ -9,6 +14,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+import time
 from collections import Counter
 from typing import Any
 
@@ -16,6 +22,16 @@ import requests
 
 API_BASE = "https://api.pinboard.in/v1"
 POPULAR_FEED = "https://feeds.pinboard.in/rss/popular/"
+
+# Documented Pinboard cadence caps (seconds between calls per endpoint
+# family). Used for *logging* only — we don't block. See
+# https://www.pinboard.in/api/ "Rate Limits".
+_CADENCE_SECONDS: dict[str, float] = {
+    "all": 5 * 60.0,       # /posts/all — 1 call / 5 min
+    "recent": 60.0,        # /posts/recent — 1 call / min
+    "standard": 3.0,       # everything else — 1 call / 3 sec
+}
+_last_request_at: dict[str, float] = {}
 
 logger = logging.getLogger("workshop.systems.pinboard")
 
@@ -48,6 +64,33 @@ def bookmark_url(url: str) -> str:
     return f"https://pinboard.in/u:{user}/b:{h}/"
 
 
+def _note_cadence(family: str) -> None:
+    """Log if we're calling ``family`` faster than the documented cadence."""
+    cap = _CADENCE_SECONDS.get(family, _CADENCE_SECONDS["standard"])
+    now = time.monotonic()
+    last = _last_request_at.get(family)
+    if last is not None and (now - last) < cap:
+        logger.warning(
+            "pinboard: %s called %.1fs after previous call (documented cadence: %.0fs)",
+            family, now - last, cap,
+        )
+    _last_request_at[family] = now
+
+
+def _get(path: str, params: dict[str, Any], *, family: str = "standard",
+         timeout: float = 20.0) -> requests.Response:
+    """GET a v1 endpoint, log cadence violations, surface 429 Retry-After."""
+    _note_cadence(family)
+    resp = requests.get(f"{API_BASE}{path}", params=params, timeout=timeout)
+    if resp.status_code == 429:
+        retry_after = resp.headers.get("Retry-After", "?")
+        logger.warning(
+            "pinboard: 429 from %s (Retry-After=%s)", path, retry_after,
+        )
+    resp.raise_for_status()
+    return resp
+
+
 def recent_posts(count: int = 50, tag: str | None = None) -> list[dict[str, Any]]:
     """Up to ``count`` most recent bookmarks. Pinboard caps ``count`` at 100."""
     params: dict[str, Any] = {
@@ -57,8 +100,7 @@ def recent_posts(count: int = 50, tag: str | None = None) -> list[dict[str, Any]
     }
     if tag:
         params["tag"] = tag
-    resp = requests.get(f"{API_BASE}/posts/recent", params=params, timeout=20)
-    resp.raise_for_status()
+    resp = _get("/posts/recent", params, family="recent")
     data = resp.json()
     posts: list[dict[str, Any]] = data.get("posts", []) or []
     logger.info("pinboard: fetched %d recent posts (tag=%s)", len(posts), tag or "-")
@@ -87,11 +129,144 @@ def all_unread(
         params["tag"] = tag
     if fromdt:
         params["fromdt"] = fromdt
-    resp = requests.get(f"{API_BASE}/posts/all", params=params, timeout=30)
-    resp.raise_for_status()
+    resp = _get("/posts/all", params, family="all", timeout=30)
     posts: list[dict[str, Any]] = resp.json() or []
     logger.info("pinboard: fetched %d unread posts (tag=%s)", len(posts), tag or "-")
     return posts
+
+
+def posts_update() -> str:
+    """Most recent bookmark mutation timestamp (ISO-8601, UTC).
+
+    Cheap freshness gate — call this before paying the 5-minute toll on
+    ``/posts/all`` to confirm the unread queue actually changed since
+    the last fetch.
+    """
+    params = {"auth_token": _token(), "format": "json"}
+    resp = _get("/posts/update", params)
+    data = resp.json() or {}
+    return str(data.get("update_time", ""))
+
+
+def posts_get(url: str) -> dict[str, Any]:
+    """Lookup an exact URL in Jamie's bookmarks.
+
+    Returns the raw Pinboard payload: ``{date, user, posts: [...]}``.
+    ``posts`` is empty if Jamie hasn't saved this URL. ``meta=yes`` so
+    callers see the change-detection signature.
+    """
+    params = {
+        "auth_token": _token(),
+        "format": "json",
+        "url": url,
+        "meta": "yes",
+    }
+    resp = _get("/posts/get", params)
+    return resp.json() or {}
+
+
+def posts_suggest(url: str) -> dict[str, list[str]]:
+    """Tag suggestions for ``url`` — both site-wide popular and personal recs.
+
+    Returns ``{popular: [...], recommended: [...]}``. Pinboard returns a
+    list of two single-key dicts; we flatten to the conventional shape.
+    """
+    params = {"auth_token": _token(), "format": "json", "url": url}
+    resp = _get("/posts/suggest", params)
+    raw = resp.json() or []
+    out: dict[str, list[str]] = {"popular": [], "recommended": []}
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+        for key in ("popular", "recommended"):
+            if key in entry:
+                value = entry[key] or []
+                if isinstance(value, list):
+                    out[key] = [str(t) for t in value]
+    return out
+
+
+def posts_dates(tag: str | None = None) -> dict[str, int]:
+    """Bookmark counts per day across the whole archive.
+
+    Returns ``{YYYY-MM-DD: count, ...}``. Cheap rhythm signal.
+
+    Note: Pinboard's ``/posts/dates`` returns an empty body when called
+    with ``format=json`` (long-standing API quirk). We request XML and
+    parse it, since the shape is trivial.
+    """
+    params: dict[str, Any] = {"auth_token": _token()}
+    if tag:
+        params["tag"] = tag
+    resp = _get("/posts/dates", params)
+    # Imported lazily to keep bs4 a soft dep.
+    from xml.etree import ElementTree as ET
+    root = ET.fromstring(resp.text)
+    return {
+        elem.attrib["date"]: int(elem.attrib.get("count", "0"))
+        for elem in root.findall("date")
+    }
+
+
+def tags_get() -> list[dict[str, Any]]:
+    """Full tag inventory across every bookmark.
+
+    Returns ``[{tag, count}, ...]`` sorted by count descending. Distinct
+    from ``tag_summary``, which only scans the unread pile.
+    """
+    params = {"auth_token": _token(), "format": "json"}
+    resp = _get("/tags/get", params)
+    data = resp.json() or {}
+    items = [
+        {"tag": str(tag), "count": int(count)}
+        for tag, count in data.items()
+    ]
+    items.sort(key=lambda r: r["count"], reverse=True)
+    return items
+
+
+def posts_add(
+    url: str,
+    title: str,
+    *,
+    description: str = "",
+    tags: str = "",
+    toread: bool = True,
+    shared: bool = True,
+    replace: bool = False,
+) -> dict[str, Any]:
+    """Save ``url`` to Jamie's Pinboard. Mutating.
+
+    Defaults are conservative: ``replace=no`` so we never silently
+    overwrite an existing bookmark, and ``toread=yes`` so saves land in
+    Jamie's unread review queue rather than the public feed of read
+    items.
+
+    Returns ``{result_code, pinboard_url}``. ``result_code`` is "done"
+    on success or e.g. "item already exists" on a duplicate-with-replace=no.
+    """
+    params: dict[str, Any] = {
+        "auth_token": _token(),
+        "format": "json",
+        "url": url,
+        "description": title,  # Pinboard's "description" is the title
+        "extended": description,
+        "tags": tags,
+        "toread": "yes" if toread else "no",
+        "shared": "yes" if shared else "no",
+        "replace": "yes" if replace else "no",
+    }
+    resp = _get("/posts/add", params)
+    data = resp.json() or {}
+    result_code = str(data.get("result_code", ""))
+    logger.info(
+        "pinboard: posts/add url=%s result=%s replace=%s toread=%s",
+        url, result_code, replace, toread,
+    )
+    return {
+        "result_code": result_code,
+        "pinboard_url": bookmark_url(url),
+    }
 
 
 def normalize_post(post: dict[str, Any]) -> dict[str, Any]:
@@ -104,6 +279,9 @@ def normalize_post(post: dict[str, Any]) -> dict[str, Any]:
         "tags": post.get("tags", ""),
         "added": post.get("time", ""),
         "toread": post.get("toread", "") == "yes",
+        "shared": post.get("shared", "") == "yes",
+        "hash": post.get("hash", ""),
+        "meta": post.get("meta", ""),
         "pinboard_url": bookmark_url(href),
     }
 
