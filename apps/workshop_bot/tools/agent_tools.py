@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from . import archive, buttondown, db, pinboard, s3, support_state, tinylytics, web
+from . import archive, buttondown, db, persona_s3, pinboard, s3, support_state, tinylytics, web
 
 logger = logging.getLogger("workshop.tools")
 
@@ -390,6 +390,42 @@ def t_s3_write_issue_file(
         return {"error": str(exc)}
 
 
+# ---------- S3 persona scratchpad (universal) ----------
+
+def t_persona_list(deps, prefix: Optional[str] = None) -> dict[str, Any]:
+    """List files in this persona's private scratchpad on S3. Optionally
+    scope to a sub-prefix (e.g. ``"campaigns"``). Returns paths relative
+    to the persona root."""
+    try:
+        return persona_s3.list_persona(active_persona.get(), prefix=prefix)
+    except persona_s3.S3PathError as exc:
+        return {"error": str(exc)}
+
+
+def t_persona_read(deps, path: str) -> dict[str, Any]:
+    """Read one file from this persona's private scratchpad. ``path`` is
+    relative to the persona root and may contain subdirectories
+    (``campaigns/dd-2026-05-15.json``, ``notes/2026-05-08.md``). Text
+    only — binary objects are reported but not returned."""
+    try:
+        return persona_s3.read_persona_file(active_persona.get(), path)
+    except persona_s3.S3PathError as exc:
+        return {"error": str(exc)}
+
+
+def t_persona_write(deps, path: str, content: str) -> dict[str, Any]:
+    """Write one file under this persona's private scratchpad. ``path`` is
+    relative to the persona root and may contain subdirectories. 256KB
+    max per file. Allowed extensions: md, txt, json, yaml, yml, csv,
+    html. Use this to maintain campaign ledgers, drafts, multi-step
+    notes — anything that needs to survive across hosts and process
+    restarts."""
+    try:
+        return persona_s3.write_persona_file(active_persona.get(), path, content)
+    except persona_s3.S3PathError as exc:
+        return {"error": str(exc)}
+
+
 # ---------- specs (Anthropic format) ----------
 
 SPECS: dict[str, dict[str, Any]] = {
@@ -703,6 +739,57 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["issue_number", "filename", "content"],
         },
     },
+    "persona_list": {
+        "name": "persona_list",
+        "description": (
+            "List files in your private S3 scratchpad. This is your own "
+            "persistent file space — separate from the per-issue workspace, "
+            "and not visible to other personas. Optionally pass a `prefix` "
+            "to scope to a sub-folder (e.g. \"campaigns\", \"notes\")."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "prefix": {
+                    "type": "string",
+                    "description": "Optional sub-folder under your scratchpad to list.",
+                },
+            },
+        },
+    },
+    "persona_read": {
+        "name": "persona_read",
+        "description": (
+            "Read one file from your private S3 scratchpad. The `path` is "
+            "relative to your scratchpad root and may contain subdirectories "
+            "(e.g. \"campaigns/dd-2026-05-15.json\", \"notes/2026-05-08.md\"). "
+            "Text only — binary objects are reported but not returned."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"path": {"type": "string"}},
+            "required": ["path"],
+        },
+    },
+    "persona_write": {
+        "name": "persona_write",
+        "description": (
+            "Write one file under your private S3 scratchpad. Use this to "
+            "maintain campaign ledgers, drafts, multi-step thinking, anything "
+            "that needs to survive across hosts and restarts. The `path` is "
+            "relative to your scratchpad root and may contain subdirectories. "
+            "256KB cap per file. Allowed extensions: md, txt, json, yaml, yml, "
+            "csv, html. Other personas cannot read or overwrite your files."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string"},
+                "content": {"type": "string"},
+            },
+            "required": ["path", "content"],
+        },
+    },
 }
 
 
@@ -728,6 +815,9 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "s3_list_issue": t_s3_list_issue,
     "s3_read_issue_file": t_s3_read_issue_file,
     "s3_write_issue_file": t_s3_write_issue_file,
+    "persona_list": t_persona_list,
+    "persona_read": t_persona_read,
+    "persona_write": t_persona_write,
 }
 
 
@@ -749,6 +839,9 @@ UNIVERSAL = (
     "s3_list_issue",
     "s3_read_issue_file",
     "s3_write_issue_file",
+    "persona_list",
+    "persona_read",
+    "persona_write",
 )
 
 

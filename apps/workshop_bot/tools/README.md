@@ -60,6 +60,9 @@ Available to Eddy, Linky, Marky, Patty by default (Thingy gets none — it's a b
 | `s3_list_issue(issue_number)` | List the files under one workspace folder. |
 | `s3_read_issue_file(issue_number, filename)` | Read a text file from `s3://files.thingelstad.com/weekly-thing/issues/{N}/{filename}`. |
 | `s3_write_issue_file(issue_number, filename, content)` | Write a text file to that path. Locked: bare filename only, whitelisted extensions, 256 KB max. |
+| `persona_list(prefix?)` | List files in this persona's private S3 scratchpad on `weekly-thing-workshop`. Optional sub-prefix scopes the listing. |
+| `persona_read(path)` | Read one file from the persona's scratchpad. `path` is relative to the persona root and may contain subdirectories (e.g. `campaigns/dd-2026-05-15.json`). |
+| `persona_write(path, content)` | Write a file under the persona's scratchpad. 256 KB max. Path-locked: persona name comes from the `active_persona` ContextVar — one persona cannot write into another's namespace. |
 
 ### Per-persona tools
 
@@ -115,6 +118,7 @@ tools/
 ├── corpus.py              ← Archive corpus handle (loaded once at boot)
 ├── db.py                  ← SQLite — agent_notes (memory) + agent_runs (telemetry)
 ├── discord_io.py          ← Chunking + posting helpers for Discord 2000-char limit
+├── persona_s3.py          ← Per-persona scratchpad S3 helper (separate bucket, path-locked)
 ├── pinboard.py            ← Pinboard API: live, unread, popular, stored
 ├── s3.py                  ← Per-issue workspace S3 helper with path-locking
 ├── startup.py             ← Boot-time announce/coordinate across personas
