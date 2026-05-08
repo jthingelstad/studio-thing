@@ -1,7 +1,7 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { bedrock, dynamodb, agentModel } from '../shared/aws-clients.mjs';
-import { createSubscriber, fetchSubscriber, sendSubscriberReminder, subscriberStatus } from '../shared/buttondown.mjs';
+import { createSubscriber, ensureThingyTag, fetchSubscriber, sanitizeAttribution, sendSubscriberReminder, subscriberStatus } from '../shared/buttondown.mjs';
 import { eventSummary, jsonResponse, methodAndPath, parseBody, clientSourceIp, userAgent } from '../shared/http.mjs';
 import { checkRateLimit } from '../shared/rate-limit.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, stableHash } from '../shared/session.mjs';
@@ -24,7 +24,6 @@ const ALLOWED_SOURCES = new Set([
   'about',
   'issue'
 ]);
-
 function normalizeSource(value) {
   const raw = String(value || '').trim().toLowerCase();
   if (!raw) return 'site';
@@ -85,7 +84,7 @@ async function generatePremiumThankYou() {
   return text;
 }
 
-async function authSuccessResponse(email, subscriber, event, start) {
+async function authSuccessResponse(email, subscriber, source, event, start) {
   const { sessionId, expiresAt, token } = createSessionToken(email);
   await recordSession(sessionId, email, expiresAt);
   const status = subscriberStatus(subscriber);
@@ -94,6 +93,11 @@ async function authSuccessResponse(email, subscriber, event, start) {
     subscriber_status: status,
     duration_ms: Math.round(performance.now() - start)
   });
+  if (source === 'thingy') {
+    // Best-effort: ensure the wt-thingy user tag is on this subscriber. Don't
+    // block the auth response — a transient Buttondown error must not break login.
+    ensureThingyTag(subscriber).catch(() => { /* swallowed; ensureThingyTag logs internally */ });
+  }
   const memory = await getUserMemory(emailHash(email));
   const payload = {
     status,
@@ -175,6 +179,7 @@ async function authHandler(event) {
   const email = normalizeEmail(body.email);
   const action = String(body.action || 'check').trim().toLowerCase();
   const source = normalizeSource(body.source);
+  const attribution = sanitizeAttribution(body.attribution);
   const hashedEmail = email ? emailHash(email) : undefined;
 
   const authLimit = Number(process.env.AUTH_RATE_LIMIT_MAX || AUTH_RATE_LIMIT_MAX);
@@ -203,9 +208,14 @@ async function authHandler(event) {
 
   if (action === 'subscribe') {
     try {
-      const subscriber = await createSubscriber(email, event, source);
+      const subscriber = await createSubscriber(email, event, source, attribution);
       const status = subscriberStatus(subscriber);
-      logEvent('info', 'auth_subscribe_completed', { email_hash: hashedEmail, subscriber_status: status, subscriber_source: source });
+      logEvent('info', 'auth_subscribe_completed', {
+        email_hash: hashedEmail,
+        subscriber_status: status,
+        subscriber_source: source,
+        campaign_ref: attribution?.ref || null
+      });
       return jsonResponse(200, {
         status: 'subscribed',
         subscriber_status: status,
@@ -251,7 +261,7 @@ async function authHandler(event) {
     logEvent('info', 'auth_subscriber_inactive', { email_hash: hashedEmail });
     return jsonResponse(403, { status, error: 'That subscription is not active.' }, event);
   }
-  return authSuccessResponse(email, subscriber, event, start);
+  return authSuccessResponse(email, subscriber, source, event, start);
 }
 
 function healthHandler(event) {
