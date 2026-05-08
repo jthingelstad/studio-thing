@@ -51,10 +51,24 @@ def client() -> anthropic.Anthropic:
     return _client
 
 
+def _resolve_prompt_path(name: str) -> Path:
+    """Map a prompt name to its on-disk path under prompts/.
+
+    - ``"team"`` → ``prompts/shared/team.md``
+    - ``"<persona>"`` → ``prompts/<persona>/prompt.md``
+    - ``"<persona>-heartbeat"`` → ``prompts/<persona>/heartbeat.md``
+    """
+    if name == "team":
+        return PROMPTS_DIR / "shared" / "team.md"
+    if name.endswith("-heartbeat"):
+        persona = name[: -len("-heartbeat")]
+        return PROMPTS_DIR / persona / "heartbeat.md"
+    return PROMPTS_DIR / name / "prompt.md"
+
+
 def load_prompt(name: str) -> str:
     if name not in _prompt_cache:
-        path = PROMPTS_DIR / f"{name}.md"
-        _prompt_cache[name] = path.read_text(encoding="utf-8").strip()
+        _prompt_cache[name] = _resolve_prompt_path(name).read_text(encoding="utf-8").strip()
     return _prompt_cache[name]
 
 
