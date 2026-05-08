@@ -12,10 +12,12 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import random
 import signal
 import sys
 from pathlib import Path
 
+import discord
 from dotenv import load_dotenv
 
 from .personas.base import Deps
@@ -33,6 +35,22 @@ from .systems.tinylytics.server import TinylyticsServer
 from .tools import agent_tools, corpus, db, startup
 
 logger = logging.getLogger("workshop.bot")
+
+# Stagger between persona logins on cold start so 5 simultaneous /users/@me
+# calls from the same IP don't trip Discord's CloudFlare global rate limit.
+LOGIN_STAGGER_SECONDS = 2.0
+
+# Exponential backoff schedule when a login is rate-limited (Discord error
+# 40062). Long by design: 40062 cooldowns can run minutes-to-hours, and
+# pounding the endpoint deepens the hole.
+RATE_LIMIT_BACKOFFS = (300, 600, 1200, 1800)  # 5m, 10m, 20m, 30m
+RATE_LIMIT_BACKOFF_CAP = 1800  # 30m
+RATE_LIMIT_JITTER = 0.10  # ±10% so the 5 personas don't wake in lockstep
+
+# Cap discord.py's internal retry-after sleep. Without this, a 429 triggers
+# 5 retries × Discord's retry_after, all from the same IP — the herd we're
+# trying to avoid. We do our own slow backoff above instead.
+HTTP_RATELIMIT_TIMEOUT = 1.0
 
 PERSONAS: list[tuple[str, str, type]] = [
     ("eddy", "DISCORD_TOKEN_EDDY", EddyBot),
@@ -132,16 +150,66 @@ async def run() -> int:
         except NotImplementedError:  # Windows
             pass
 
-    async def _start(client, token: str) -> None:
+    async def _sleep_or_stop(seconds: float) -> bool:
+        """Sleep up to ``seconds``, returning True if stop was requested."""
         try:
-            await client.start(token)
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            logger.exception("client start failed")
-            _request_stop()
+            await asyncio.wait_for(stop_event.wait(), timeout=seconds)
+            return True
+        except asyncio.TimeoutError:
+            return False
 
-    tasks = [asyncio.create_task(_start(b, t), name=f"persona:{n}") for n, b, t in bots]
+    async def _start(name: str, client, token: str) -> None:
+        client.http.max_ratelimit_timeout = HTTP_RATELIMIT_TIMEOUT
+        attempt = 0
+        while not stop_event.is_set():
+            try:
+                await client.login(token)
+            except asyncio.CancelledError:
+                raise
+            except discord.HTTPException as e:
+                if getattr(e, "code", None) == 40062 or e.status == 429:
+                    base = RATE_LIMIT_BACKOFFS[
+                        min(attempt, len(RATE_LIMIT_BACKOFFS) - 1)
+                    ] if attempt < len(RATE_LIMIT_BACKOFFS) else RATE_LIMIT_BACKOFF_CAP
+                    jitter = base * RATE_LIMIT_JITTER * (2 * random.random() - 1)
+                    delay = max(60.0, base + jitter)
+                    logger.warning(
+                        "[%s] Discord rate-limited login (code=%s); sleeping %.0fs before retry",
+                        name, getattr(e, "code", "?"), delay,
+                    )
+                    if await _sleep_or_stop(delay):
+                        return
+                    attempt += 1
+                    continue
+                logger.exception("[%s] login failed (non-rate-limit)", name)
+                _request_stop()
+                return
+            except Exception:
+                logger.exception("[%s] login failed", name)
+                _request_stop()
+                return
+
+            # Logged in. Reset backoff and run the gateway. If it drops, we
+            # loop back to login() — discord.py's reconnect=True handles
+            # transient gateway blips, so we only re-enter on harder failures.
+            attempt = 0
+            try:
+                await client.connect(reconnect=True)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                logger.exception("[%s] gateway dropped; will re-login", name)
+                if await _sleep_or_stop(30):
+                    return
+                continue
+            return  # clean disconnect
+
+    tasks: list[asyncio.Task] = []
+    for n, b, t in bots:
+        tasks.append(asyncio.create_task(_start(n, b, t), name=f"persona:{n}"))
+        # Space out the initial login burst so we don't trip 40062 from the herd.
+        if await _sleep_or_stop(LOGIN_STAGGER_SECONDS):
+            break
 
     scheduler_enabled = (
         os.environ.get("WORKSHOP_SCHEDULER_ENABLED", "1").strip() not in ("0", "false", "")
