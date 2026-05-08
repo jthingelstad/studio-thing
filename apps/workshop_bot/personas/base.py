@@ -94,10 +94,13 @@ class PersonaBot(discord.Client):
       - ``home_channel_env``           — env var holding the channel id where
                                          this persona answers without an
                                          @-mention
-      - ``tools``                      — list of tool names from agent_tools
       - ``empty_greeting``             — reply when @-mentioned with no body
       - ``preferred_model`` (optional) — overrides the WORKSHOP_DEFAULT_MODEL
                                          env default for this persona
+
+    Tool surface comes from ``deps.registry`` (the ``ToolRegistry``
+    composed at boot in ``bot.py``). Every persona sees every tool;
+    lane discipline lives in the persona prompt.
 
     ``on_message`` dispatches when:
       - this specific bot is @-mentioned (single-persona reply), or
@@ -110,7 +113,6 @@ class PersonaBot(discord.Client):
     persona: ClassVar[str] = "base"
     name: ClassVar[str] = "Persona"
     home_channel_env: ClassVar[Optional[str]] = None
-    tools: ClassVar[tuple[str, ...]] = ()
     empty_greeting: ClassVar[str] = "Hey — what are we looking at?"
     preferred_model: ClassVar[Optional[str]] = None
 
@@ -149,9 +151,16 @@ class PersonaBot(discord.Client):
         history: Optional[list[dict[str, str]]] = None,
         model: Optional[str] = None,
     ) -> tuple[str, dict[str, Any]]:
-        """Single source of truth for a persona turn. Each subclass inherits
-        this; all variation is via class attrs (``tools``, ``preferred_model``).
+        """Single source of truth for a persona turn.
+
+        Pulls the full tool surface from ``deps.registry``; every persona
+        sees every tool. Lane discipline is enforced by the persona prompt.
         """
+        if self.deps.registry is None:
+            raise RuntimeError(
+                "PersonaBot.core requires deps.registry to be composed "
+                "(see bot.py boot path)"
+            )
         issue_index = anthropic_client.format_issue_index(
             self.deps.corpus.corpus["issues"]
         )
@@ -159,7 +168,7 @@ class PersonaBot(discord.Client):
             persona=self.persona,
             user_message=latest or "(no new content; continue from history)",
             history=history or [],
-            tools=list(self.tools),
+            tools=self.deps.registry.all_names(),
             deps=self.deps,
             model=self._resolve_model(model),
             issue_index=issue_index,
