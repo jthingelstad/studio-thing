@@ -258,6 +258,44 @@ def t_current_issue_number(deps) -> dict[str, Any]:
 
 # ---------- Marky ----------
 
+def t_fetch_tinylytics_ref(deps, tag: str, days: int = 14) -> dict[str, Any]:
+    """Aggregate page hits attributed to a `?ref=<tag>` URL.
+
+    Wraps tinylytics.top_pages and filters entries whose path contains
+    `ref=<tag>` (substring match). Sums hits across matching paths and
+    returns the per-path breakdown so Marky can see which destinations
+    the tag drove traffic to.
+    """
+    if not isinstance(tag, str) or not tag.strip():
+        return {"error": "tag is required"}
+    needle = f"ref={tag.strip()}"
+    try:
+        pages = tinylytics.top_pages(days=days, limit=200)
+    except Exception as exc:  # noqa: BLE001 — surface upstream failures cleanly
+        return {"error": f"{type(exc).__name__}: {exc}"}
+    hits_total = 0
+    matches: list[dict[str, Any]] = []
+    for entry in pages or []:
+        if not isinstance(entry, dict):
+            continue
+        path = entry.get("path") or entry.get("url") or entry.get("page") or ""
+        if needle not in path:
+            continue
+        hits = entry.get("hits") or entry.get("count") or entry.get("views") or 0
+        try:
+            hits = int(hits)
+        except (TypeError, ValueError):
+            hits = 0
+        matches.append({"path": path, "hits": hits})
+        hits_total += hits
+    return {
+        "tag": tag.strip(),
+        "days": days,
+        "hits": hits_total,
+        "paths": matches,
+    }
+
+
 def t_fetch_tinylytics(deps, days: int = 7) -> dict[str, Any]:
     """Trailing-window engagement summary: top pages, referrers, custom events."""
     return tinylytics.safe_summary(days=int(days))
@@ -771,6 +809,30 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["path"],
         },
     },
+    "fetch_tinylytics_ref": {
+        "name": "fetch_tinylytics_ref",
+        "description": (
+            "Aggregate page hits attributed to a ?ref=<tag> URL over a "
+            "trailing window. Use this to watch a campaign you're tracking — "
+            "pass the ref tag (e.g. 'dd-2026-05-15') and the lookback in days. "
+            "Returns total hits and the per-path breakdown so you can see "
+            "which destinations the tag drove traffic to."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tag": {
+                    "type": "string",
+                    "description": "The ref-tag value to look for (without 'ref=').",
+                },
+                "days": {
+                    "type": "integer",
+                    "description": "Trailing window in days. Default 14.",
+                },
+            },
+            "required": ["tag"],
+        },
+    },
     "persona_write": {
         "name": "persona_write",
         "description": (
@@ -807,6 +869,7 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "fetch_url": t_fetch_url,
     "current_issue_number": t_current_issue_number,
     "fetch_tinylytics": t_fetch_tinylytics,
+    "fetch_tinylytics_ref": t_fetch_tinylytics_ref,
     "fetch_buttondown_subscribers": t_fetch_buttondown_subscribers,
     "remember": t_remember,
     "recall": t_recall,

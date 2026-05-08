@@ -12,6 +12,7 @@ class MarkyBot(PersonaBot):
     home_channel_env = "DISCORD_CHANNEL_PROMOTION"
     tools = tuple(agent_tools.UNIVERSAL) + (
         "fetch_tinylytics",
+        "fetch_tinylytics_ref",
         "fetch_buttondown_subscribers",
     )
     empty_greeting = "Hey — what are you working on?"

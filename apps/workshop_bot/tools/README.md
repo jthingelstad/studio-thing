@@ -70,7 +70,7 @@ Available to Eddy, Linky, Marky, Patty by default (Thingy gets none — it's a b
 |---|---|---|
 | **Eddy** | `fetch_url` | Pull readable text from an external URL — used when reviewing a draft that references an article. |
 | **Linky** | `fetch_pinboard`, `fetch_pinboard_unread`, `fetch_pinboard_popular`, `read_stored_bookmarks`, `fetch_url` | Pinboard suite. `fetch_pinboard_unread` is the working set for the next issue (the "to read" pile). `fetch_pinboard_popular` is the site-wide discovery surface. `read_stored_bookmarks` is the cached recent bookmarks (no API hit). |
-| **Marky** | `fetch_tinylytics`, `fetch_buttondown_subscribers` | Engagement and subscriber telemetry. Tinylytics is trailing-window; Buttondown subscriber emails are hashed before reaching the model. |
+| **Marky** | `fetch_tinylytics`, `fetch_tinylytics_ref`, `fetch_buttondown_subscribers` | Engagement and subscriber telemetry. `fetch_tinylytics_ref` filters page hits by `?ref=<tag>` for tracking individual promotion campaigns. Buttondown subscriber emails are hashed before reaching the model. |
 | **Patty** | `get_support_state` | Current nonprofit + dollars-raised + member count, pulled from `apps/site/_data/{stats,support}.json`. |
 | **Thingy** | (none) | Thingy is a bridge to the Librarian Lambda — it doesn't run the agent loop. |
 
