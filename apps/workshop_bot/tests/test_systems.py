@@ -61,6 +61,8 @@ _install_stubs()
 from apps.workshop_bot.systems._base import ToolDef  # noqa: E402
 from apps.workshop_bot.systems.buttondown import client as bd_client  # noqa: E402
 from apps.workshop_bot.systems.buttondown.server import ButtondownServer  # noqa: E402
+from apps.workshop_bot.systems.pinboard import client as pb_client  # noqa: E402
+from apps.workshop_bot.systems.pinboard.server import PinboardServer  # noqa: E402
 from apps.workshop_bot.systems.tinylytics import client as tl_client  # noqa: E402
 from apps.workshop_bot.systems.tinylytics.server import TinylyticsServer  # noqa: E402
 from apps.workshop_bot.tools import agent_tools  # noqa: E402
@@ -340,25 +342,137 @@ class TinylyticsServerTests(unittest.TestCase):
         self.assertEqual(out, [{"path": "/foo", "hits": 1}])
 
 
+class PinboardServerTests(unittest.TestCase):
+    def setUp(self):
+        os.environ.setdefault("PINBOARD_API_TOKEN", "jthingelstad:STUB")
+        # Use a fresh temp DB so the SQLite-side effects of pinboard.recent /
+        # pinboard.unread / pinboard.stored_recent don't accumulate across tests.
+        import tempfile
+        self._tmpdir = tempfile.TemporaryDirectory()
+        self._orig_db = os.environ.get("WORKSHOP_DB_PATH")
+        os.environ["WORKSHOP_DB_PATH"] = str(Path(self._tmpdir.name) / "test.db")
+        from apps.workshop_bot.tools import db as _db
+        _db.run_migrations()
+        self.server = PinboardServer()
+        self.tools = {t.name: t for t in self.server.list_tools()}
+
+    def tearDown(self):
+        if self._orig_db is None:
+            os.environ.pop("WORKSHOP_DB_PATH", None)
+        else:
+            os.environ["WORKSHOP_DB_PATH"] = self._orig_db
+        self._tmpdir.cleanup()
+
+    def test_namespace_is_pinboard(self):
+        self.assertEqual(self.server.name, "pinboard")
+
+    def test_list_tools_returns_expected_set(self):
+        self.assertEqual(
+            set(self.tools),
+            {"recent", "unread", "popular", "stored_recent", "tag_summary"},
+        )
+
+    def test_each_tool_has_description_and_schema(self):
+        for tool in self.tools.values():
+            self.assertIsInstance(tool, ToolDef)
+            self.assertTrue(tool.description.strip())
+            self.assertEqual(tool.input_schema.get("type"), "object")
+
+    def test_recent_normalizes_and_persists(self):
+        page = {
+            "posts": [
+                {
+                    "href": "https://example.com/a",
+                    "description": "Title A",
+                    "extended": "body A",
+                    "tags": "ai writing",
+                    "time": "2026-05-08T00:00:00Z",
+                    "toread": "no",
+                },
+            ],
+        }
+
+        def fake_get(url, params=None, timeout=None, headers=None):
+            return _FakeResp(page)
+
+        with _patch_requests_get(pb_client, fake_get):
+            out = self.tools["recent"].handler(deps=None, count=10)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["url"], "https://example.com/a")
+        self.assertEqual(out[0]["title"], "Title A")
+        self.assertTrue(out[0]["pinboard_url"].startswith("https://pinboard.in/u:"))
+        # stored_recent should now find it without a live API call.
+        stored = self.tools["stored_recent"].handler(deps=None, limit=10)
+        self.assertEqual(len(stored), 1)
+        self.assertEqual(stored[0]["url"], "https://example.com/a")
+
+    def test_unread_passes_toread_flag(self):
+        captured: list[dict] = []
+
+        def fake_get(url, params=None, timeout=None, headers=None):
+            captured.append({"url": url, "params": dict(params or {})})
+            return _FakeResp([
+                {
+                    "href": "https://x/1",
+                    "description": "X",
+                    "extended": "",
+                    "tags": "ai",
+                    "time": "2026-05-08T00:00:00Z",
+                    "toread": "yes",
+                },
+            ])
+
+        with _patch_requests_get(pb_client, fake_get):
+            out = self.tools["unread"].handler(deps=None, limit=50, tag="ai")
+        self.assertEqual(len(out), 1)
+        self.assertEqual(captured[0]["params"]["toread"], "yes")
+        self.assertEqual(captured[0]["params"]["tag"], "ai")
+        self.assertEqual(captured[0]["params"]["results"], 50)
+
+    def test_tag_summary_aggregates(self):
+        def fake_get(url, params=None, timeout=None, headers=None):
+            return _FakeResp([
+                {"href": "u1", "description": "A", "tags": "ai writing"},
+                {"href": "u2", "description": "B", "tags": "ai climate"},
+                {"href": "u3", "description": "C", "tags": "writing"},
+                {"href": "u4", "description": "D", "tags": ""},
+            ])
+
+        with _patch_requests_get(pb_client, fake_get):
+            out = self.tools["tag_summary"].handler(deps=None, limit=200, top=5)
+        self.assertEqual(out["total_items"], 4)
+        # ai appears 2x, writing 2x, climate 1x; ordering is most_common.
+        counts = {entry["tag"]: entry["count"] for entry in out["top_tags"]}
+        self.assertEqual(counts["ai"], 2)
+        self.assertEqual(counts["writing"], 2)
+        self.assertEqual(counts["climate"], 1)
+
+
 class RegistryIntegrationTests(unittest.TestCase):
     """Exercising the bot.py composition path: local helpers + system modules."""
 
     def setUp(self):
         os.environ.setdefault("BUTTONDOWN_API_KEY", "stub")
+        os.environ.setdefault("PINBOARD_API_TOKEN", "jthingelstad:STUB")
         os.environ.setdefault("TINYLYTICS_API_KEY", "stub")
         os.environ.setdefault("TINYLYTICS_SITE_UID", "stub-uid")
         self.registry = agent_tools.ToolRegistry()
         agent_tools.register_local_helpers(self.registry)
         self.registry.register_system(ButtondownServer())
+        self.registry.register_system(PinboardServer())
         self.registry.register_system(TinylyticsServer())
 
-    def test_legacy_marky_names_still_dispatch(self):
-        # Old multi-purpose tool stays available for personas that haven't
-        # migrated yet; system module's split tools live alongside.
+    def test_legacy_names_still_dispatch(self):
+        # Old multi-purpose tools stay available for personas that haven't
+        # migrated yet; system modules' replacements live alongside.
         for legacy in (
             "fetch_buttondown_subscribers",
             "fetch_tinylytics",
             "fetch_tinylytics_ref",
+            "fetch_pinboard",
+            "fetch_pinboard_unread",
+            "fetch_pinboard_popular",
+            "read_stored_bookmarks",
         ):
             self.assertIsNotNone(self.registry.get(legacy), legacy)
 
@@ -375,6 +489,18 @@ class RegistryIntegrationTests(unittest.TestCase):
             tool = self.registry.get(new)
             self.assertIsNotNone(tool, new)
             self.assertEqual(tool.source, "system:buttondown")
+
+    def test_dotted_pinboard_names_come_from_system(self):
+        for new in (
+            "pinboard.recent",
+            "pinboard.unread",
+            "pinboard.popular",
+            "pinboard.stored_recent",
+            "pinboard.tag_summary",
+        ):
+            tool = self.registry.get(new)
+            self.assertIsNotNone(tool, new)
+            self.assertEqual(tool.source, "system:pinboard")
 
     def test_dotted_tinylytics_names_come_from_system(self):
         for new in (

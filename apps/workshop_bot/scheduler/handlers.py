@@ -140,12 +140,12 @@ async def linky_wednesday_check(ctx: "JobContext") -> None:
         return
 
     try:
-        unread = await asyncio.to_thread(pinboard.all_unread, limit=200)
+        summary = await asyncio.to_thread(pinboard.tag_summary, limit=200, top=5)
     except Exception as exc:  # noqa: BLE001
         await ctx.post(channel, f"Wednesday check skipped — Pinboard fetch failed: `{exc}`")
         return
 
-    week_count = len(unread)
+    week_count = int(summary.get("total_items") or 0)
     if week_count == 0:
         msg = "Wednesday check-in: nothing in the unread queue. Want to send anything my way?"
     elif week_count < 8:
@@ -154,13 +154,11 @@ async def linky_wednesday_check(ctx: "JobContext") -> None:
             "Want to send anything my way? Or want me to scan the popular feed for ideas?"
         )
     else:
-        # Group by tag to give a quick theme preview.
-        tag_counts: dict[str, int] = {}
-        for p in unread:
-            for t in (p.get("tags") or "").split():
-                tag_counts[t] = tag_counts.get(t, 0) + 1
-        top_tags = sorted(tag_counts.items(), key=lambda kv: -kv[1])[:5]
-        tag_line = ", ".join(f"`{t}` ({n})" for t, n in top_tags) or "(no tags yet)"
+        top_tags = summary.get("top_tags") or []
+        tag_line = (
+            ", ".join(f"`{t['tag']}` ({t['count']})" for t in top_tags)
+            or "(no tags yet)"
+        )
         msg = (
             f"Wednesday check-in: **{week_count}** items in the unread queue.\n"
             f"Top tags: {tag_line}\n"
@@ -186,12 +184,12 @@ async def linky_friday_curation(ctx: "JobContext") -> None:
 
     prompt = (
         "Friday afternoon — Jamie writes Sunday morning. Do a full curation pass "
-        "on the unread Pinboard queue: fetch_pinboard_unread (limit 200), group "
+        "on the unread Pinboard queue: pinboard.unread (limit 200), group "
         "into 2-5 themes, tag each item ✦/·/⊘, and flag anything paywalled or "
         "context-dependent. Search the archive when a bookmark feels familiar — "
         "has Jamie covered this territory recently? After you write the pass, "
-        "save it with `remember(kind='context', key='linky:friday-curation')` so "
-        "Jamie can pull it up by name. Plain markdown."
+        "save it with `memory.remember(kind='context', key='linky:friday-curation')` "
+        "so Jamie can pull it up by name. Plain markdown."
     )
     answer, meta = await bot.core(latest=prompt, history=[], model=None)
     await ctx.post(channel, answer or "(curation pass produced nothing)", suppress_embeds=True)
@@ -238,8 +236,8 @@ async def linky_popular_scan(ctx: "JobContext") -> None:
         "your last scan (you've never shown these to Jamie):\n\n"
         f"{item_block}\n\n"
         "For each, judge whether Jamie would actually want to see it. Use "
-        "`search_archive` to check whether he's covered the topic — skip "
-        "anything that just rehashes recent ground. Use `recall(kind=\"theme\")` "
+        "`archive.search` to check whether he's covered the topic — skip "
+        "anything that just rehashes recent ground. Use `memory.recall(kind=\"theme\")` "
         "to see what themes you've been tracking — items that connect to a "
         "live theme are extra interesting. **Default is to skip.** Better to "
         "post 0 items than to spam.\n\n"
@@ -313,7 +311,7 @@ async def linky_research_unread(ctx: "JobContext") -> None:
         "you haven't yet researched:\n\n"
         f"{catalog_block}\n\n"
         "Pick the 2-3 most promising. For each one you pick:\n"
-        "  1. `fetch_url` to actually read it.\n"
+        "  1. `web.fetch_url` to actually read it.\n"
         "  2. Write a 2-3 sentence research note: what the piece actually "
         "says, what's the angle a Weekly Thing reader would care about, and "
         "a confidence flag (✦ Notable / · Briefly / ⊘ skip).\n\n"

@@ -27,6 +27,7 @@ from .personas.team import TeamRegistry
 from .personas.thingy import ThingyBot
 from .scheduler.runner import Runner as SchedulerRunner
 from .systems.buttondown.server import ButtondownServer
+from .systems.pinboard.server import PinboardServer
 from .systems.tinylytics.server import TinylyticsServer
 from .tools import agent_tools, corpus, db, startup
 
@@ -101,6 +102,7 @@ async def run() -> int:
     registry = agent_tools.ToolRegistry()
     agent_tools.register_local_helpers(registry)
     registry.register_system(ButtondownServer())
+    registry.register_system(PinboardServer())
     registry.register_system(TinylyticsServer())
     deps = Deps(corpus=corpus_handle, team=team, registry=registry)
 

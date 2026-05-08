@@ -905,18 +905,15 @@ RENAMES: dict[str, str] = {
     "persona_list": "s3_personas.list",
     "persona_read": "s3_personas.read_file",
     "persona_write": "s3_personas.write_file",
-    "fetch_pinboard": "pinboard.recent",
-    "fetch_pinboard_unread": "pinboard.unread",
-    "fetch_pinboard_popular": "pinboard.popular",
-    "read_stored_bookmarks": "pinboard.stored_recent",
     "fetch_url": "web.fetch_url",
     "get_support_state": "site.support_state",
-    # buttondown.* and tinylytics.* dotted names are owned by the system
-    # modules (see bot.py — register_system(ButtondownServer()/TinylyticsServer())).
-    # The legacy tool names (`fetch_buttondown_subscribers`, `fetch_tinylytics`,
-    # `fetch_tinylytics_ref`) remain registered as local helpers for personas
-    # that haven't migrated yet, but they don't claim the dotted names — the
-    # registry would reject the duplicate registration.
+    # buttondown.*, pinboard.*, and tinylytics.* dotted names are owned by
+    # the system modules (see bot.py — register_system(...) calls). The
+    # legacy tool names (e.g. `fetch_buttondown_subscribers`,
+    # `fetch_pinboard_unread`, `fetch_tinylytics_ref`) remain registered as
+    # local helpers for personas that haven't migrated yet, but they don't
+    # claim the dotted names — the registry would reject the duplicate
+    # registration.
 }
 
 
