@@ -16,8 +16,7 @@ class TinylyticsServer:
                 description=(
                     "Trailing-window engagement summary for "
                     "weekly.thingelstad.com: total hits + top pages + top "
-                    "referrers. Use to ground 'what's working lately'. "
-                    "Returns partial data even if individual endpoints fail."
+                    "referrers. Returns partial data on partial failure."
                 ),
                 input_schema={
                     "type": "object",
@@ -34,8 +33,7 @@ class TinylyticsServer:
                 name="top_pages",
                 description=(
                     "Highest-traffic pages over the trailing window. Each "
-                    "entry has path, views, unique_views. Use to see which "
-                    "issues or topic pages are getting traction right now."
+                    "entry has path, views, unique_views."
                 ),
                 input_schema={
                     "type": "object",
@@ -51,12 +49,11 @@ class TinylyticsServer:
             ToolDef(
                 name="referrers",
                 description=(
-                    "Top external referrers over the trailing window — "
-                    "where readers are coming from off-site. Each entry has "
-                    "referrer + hit_count. Use to spot an inbound link or "
-                    "platform pickup. Note: a `referrer` of null means "
-                    "direct visit; empty string means the referrer header "
-                    "was stripped."
+                    "Top external referrers (HTTP `Referer` header, e.g. "
+                    "`linkedin.com`) over the trailing window. NOT for "
+                    "`?ref=` campaign attribution — use `sources` for that. "
+                    "`referrer` null = direct visit; empty string = header "
+                    "stripped."
                 ),
                 input_schema={
                     "type": "object",
@@ -72,14 +69,11 @@ class TinylyticsServer:
             ToolDef(
                 name="sources",
                 description=(
-                    "Top per-hit `source` values over a trailing window "
-                    "(server-side group_by=source). Tinylytics auto-extracts "
-                    "`?ref=<x>` and `?utm_source=<x>` from landing URLs "
-                    "into this field. Use this — NOT `referrers` — to "
-                    "answer 'where did DenseDiscovery / LinkedIn / etc. "
-                    "traffic land this week.' Returns {days, by_source, "
-                    "total_sources}; by_source maps source → hit_count "
-                    "(sorted desc, truncated to `limit`)."
+                    "Top per-hit `source` values over a trailing window. "
+                    "Tinylytics auto-extracts `?ref=<x>` and `?utm_source=<x>` "
+                    "from landing URLs into this field. Use this — NOT "
+                    "`referrers` — for ref-tag traffic attribution. Returns "
+                    "{days, by_source, total_sources}."
                 ),
                 input_schema={
                     "type": "object",
@@ -95,11 +89,10 @@ class TinylyticsServer:
             ToolDef(
                 name="leaderboard",
                 description=(
-                    "All-time top paths on the site (cached server-side, "
-                    "no date window). Pass prefix='/archive/' to scope to "
-                    "issue pages. Each entry has path, total_hits, "
-                    "unique_hits, percentage. Use to recognize evergreen "
-                    "issues vs. recent spikes."
+                    "All-time top paths on the site (cached, no date "
+                    "window). Pass prefix='/archive/' to scope to issue "
+                    "pages. Each entry has path, total_hits, unique_hits, "
+                    "percentage."
                 ),
                 input_schema={
                     "type": "object",
@@ -118,12 +111,9 @@ class TinylyticsServer:
             ToolDef(
                 name="user_journeys",
                 description=(
-                    "Recent visitor journeys over the trailing window: per "
-                    "visitor, the pages they hit, entry/exit, duration, "
-                    "referrer, country. Use to answer 'what do people read "
-                    "after landing from X' or to spot multi-page sessions. "
-                    "Returns {user_journeys, summary} where summary has "
-                    "total_visitors and bounce_rate."
+                    "Recent visitor journeys: per-visitor pages, entry/exit, "
+                    "duration, referrer, country. Returns {user_journeys, "
+                    "summary} (summary has total_visitors and bounce_rate)."
                 ),
                 input_schema={
                     "type": "object",
@@ -141,8 +131,7 @@ class TinylyticsServer:
                 description=(
                     "Recent kudos (heart-button taps on per-issue archive "
                     "pages) over the trailing window. Each entry has id, "
-                    "uid, path, created_at. Complements top_pages — kudos "
-                    "is intent-to-signal, not just attention."
+                    "uid, path, created_at."
                 ),
                 input_schema={
                     "type": "object",
@@ -158,11 +147,9 @@ class TinylyticsServer:
             ToolDef(
                 name="insights",
                 description=(
-                    "Latest daily AI insights generated by Tinylytics: "
-                    "summary text, signals (page breakouts, referrer surges, "
-                    "traffic shifts), traffic patterns, recommendations. "
-                    "Updated daily ~01:00 in the account timezone. Use as "
-                    "an opening orientation before pulling specific tools."
+                    "Tinylytics' daily AI summary for the site: signals "
+                    "(page breakouts, referrer surges), traffic patterns, "
+                    "recommendations. Subscription-gated."
                 ),
                 input_schema={"type": "object", "properties": {}},
                 handler=lambda deps, **_kw: client.insights(),
@@ -170,11 +157,9 @@ class TinylyticsServer:
             ToolDef(
                 name="uptime",
                 description=(
-                    "Site uptime + SSL/domain expiry monitor. Returns "
-                    "current uptime %, last_check_at, last_status_code, "
-                    "ssl.expires_at, domain.expires_at. Use to confirm the "
-                    "site is healthy before drawing conclusions about a "
-                    "traffic dip."
+                    "Site uptime + SSL/domain expiry. Returns uptime %, "
+                    "last_check_at, last_status_code, ssl.expires_at, "
+                    "domain.expires_at. Subscription-gated."
                 ),
                 input_schema={"type": "object", "properties": {}},
                 handler=lambda deps, **_kw: client.uptime(),

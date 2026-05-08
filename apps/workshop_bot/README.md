@@ -16,7 +16,7 @@
 | **Patty** (she/her) | Supporter steward — writes the per-issue `member.json` (signed by Thingy in print) | Sonnet 4.6 | `#supporters` |
 | **Thingy** (bridge) | Public archive Q&A — forwards to the Librarian Lambda | n/a (LLM lives in the Lambda) | `#ask-thingy` |
 
-The four agent personas share the **full** tool surface — every tool is available to every persona. Lane discipline lives in the persona prompts, not in a per-persona allowlist. Tools follow `<system>.<action>` dotted naming (`archive.search`, `memory.remember`, `buttondown.list_subscribers`, `inbox.post`). External-system tool surfaces live under `apps/workshop_bot/systems/<name>/`; local helpers live under `apps/workshop_bot/tools/`. Both are composed into the same `ToolRegistry` at boot.
+The four agent personas share **almost** the full tool surface — every tool is available to every persona, with one privacy-scoped exception: `stripe.*` is restricted to Patty (donor data should never enter the other personas' surfaces). Lane discipline otherwise lives in the persona prompts, not in a per-persona allowlist. Tools follow `<system>.<action>` dotted naming (`archive.search`, `memory.remember`, `buttondown.list_subscribers`, `inbox.post`). External-system tool surfaces live under `apps/workshop_bot/systems/<name>/`; local helpers live under `apps/workshop_bot/tools/`. Both are composed into the same `ToolRegistry` at boot. A system can declare `restricted_to = {"<persona>", ...}` to scope visibility — `ToolRegistry.names_for(persona)` filters and `dispatch()` enforces (defense in depth, even if a model invents a name for a restricted tool).
 
 Thingy is intentionally isolated — same process, but doesn't run the local agent loop and doesn't peer-react.
 

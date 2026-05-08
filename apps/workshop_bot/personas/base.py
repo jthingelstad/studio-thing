@@ -179,7 +179,7 @@ class PersonaBot(discord.Client):
             persona=self.persona,
             user_message=latest or "(no new content; continue from history)",
             history=history or [],
-            tools=self.deps.registry.all_names(),
+            tools=self.deps.registry.names_for(self.persona),
             deps=self.deps,
             model=self._resolve_model(model),
             issue_index=issue_index,

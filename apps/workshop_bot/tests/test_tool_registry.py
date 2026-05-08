@@ -166,5 +166,70 @@ class SystemServerRegistrationTests(unittest.TestCase):
         self.assertEqual(out, {"ok": True})
 
 
+class RestrictedSystemTests(unittest.TestCase):
+    """A system declaring `restricted_to` is only visible to the named personas."""
+
+    def _registry_with_restricted_fake(self):
+        class RestrictedServer:
+            name = "vault"
+            restricted_to = {"patty"}
+
+            def list_tools(self):
+                return [
+                    ToolDef(
+                        name="read",
+                        description="read the vault",
+                        input_schema={"type": "object", "properties": {}},
+                        handler=lambda deps, **_: {"secret": "ok"},
+                    ),
+                ]
+
+        registry = agent_tools.ToolRegistry()
+        registry.register_system(RestrictedServer())
+        return registry
+
+    def test_restricted_tool_visible_only_to_allowed_persona(self):
+        registry = self._registry_with_restricted_fake()
+        # all_names() ignores restrictions — it's the unscoped view.
+        self.assertIn("vault.read", registry.all_names())
+        # names_for(persona) is the scoped view the agent loop uses.
+        self.assertIn("vault.read", registry.names_for("patty"))
+        for other in ("eddy", "linky", "marky"):
+            self.assertNotIn(
+                "vault.read",
+                registry.names_for(other),
+                msg=f"vault.read should be hidden from {other!r}",
+            )
+
+    def test_dispatch_refuses_restricted_tool_for_other_persona(self):
+        registry = self._registry_with_restricted_fake()
+        # Patty can call it.
+        out = registry.dispatch("vault.read", deps=None, args={}, persona="patty")
+        self.assertEqual(out, {"secret": "ok"})
+        # Marky cannot — even if she tries to invoke it directly.
+        with self.assertRaises(PermissionError):
+            registry.dispatch("vault.read", deps=None, args={}, persona="marky")
+
+    def test_unrestricted_system_visible_to_everyone(self):
+        class OpenServer:
+            name = "public"
+            # No `restricted_to` attribute → visible to all.
+
+            def list_tools(self):
+                return [
+                    ToolDef(
+                        name="ping",
+                        description="public ping",
+                        input_schema={"type": "object", "properties": {}},
+                        handler=lambda deps, **_: "pong",
+                    ),
+                ]
+
+        registry = agent_tools.ToolRegistry()
+        registry.register_system(OpenServer())
+        for persona in ("eddy", "linky", "marky", "patty"):
+            self.assertIn("public.ping", registry.names_for(persona))
+
+
 if __name__ == "__main__":
     unittest.main()

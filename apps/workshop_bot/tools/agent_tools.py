@@ -58,6 +58,11 @@ class Tool:
     spec: dict[str, Any]
     func: Callable[..., Any]
     source: str = "local"  # "local" or "system:<name>"
+    # Personas that can see this tool. ``None`` (the default) means
+    # unrestricted — every persona sees it. A frozenset means only those
+    # personas see it (e.g. Stripe is restricted to ``{"patty"}`` so
+    # donor data never enters Eddy/Linky/Marky's tool surface).
+    restricted_to: Optional[frozenset[str]] = None
 
 
 # ---------- archive tools ----------
@@ -734,16 +739,29 @@ class ToolRegistry:
         spec: dict[str, Any],
         func: Callable[..., Any],
         source: str = "local",
+        restricted_to: Optional[frozenset[str]] = None,
     ) -> None:
         if name in self._tools:
             raise ValueError(f"duplicate tool registration: {name!r}")
         spec_with_name = dict(spec)
         spec_with_name["name"] = name
         self._tools[name] = Tool(
-            name=name, spec=spec_with_name, func=func, source=source
+            name=name,
+            spec=spec_with_name,
+            func=func,
+            source=source,
+            restricted_to=restricted_to,
         )
 
     def register_system(self, server: SystemServer) -> None:
+        # Systems may declare a `restricted_to` attribute (a set/iterable
+        # of persona names) to scope visibility — e.g. StripeServer sets
+        # ``restricted_to = {"patty"}`` so donor data never reaches
+        # Eddy/Linky/Marky's tool surface.
+        restricted_raw = getattr(server, "restricted_to", None)
+        restricted = (
+            frozenset(restricted_raw) if restricted_raw is not None else None
+        )
         for tdef in server.list_tools():
             full = f"{server.name}.{tdef.name}"
             spec = {
@@ -751,7 +769,13 @@ class ToolRegistry:
                 "description": tdef.description,
                 "input_schema": tdef.input_schema,
             }
-            self.register(full, spec, tdef.handler, source=f"system:{server.name}")
+            self.register(
+                full,
+                spec,
+                tdef.handler,
+                source=f"system:{server.name}",
+                restricted_to=restricted,
+            )
 
     def get(self, name: str) -> Optional[Tool]:
         return self._tools.get(name)
@@ -760,7 +784,20 @@ class ToolRegistry:
         return [dict(t.spec) for t in self._tools.values()]
 
     def all_names(self) -> list[str]:
+        """Every registered tool name, ignoring per-persona restrictions.
+        Use ``names_for(persona)`` for the persona-scoped surface that
+        the agent loop should actually see."""
         return list(self._tools.keys())
+
+    def names_for(self, persona: str) -> list[str]:
+        """Tool names visible to ``persona``. Filters out tools whose
+        ``restricted_to`` set doesn't include this persona.
+        """
+        return [
+            n
+            for n, t in self._tools.items()
+            if t.restricted_to is None or persona in t.restricted_to
+        ]
 
     def dispatch(
         self,
@@ -772,6 +809,13 @@ class ToolRegistry:
         tool = self._tools.get(name)
         if tool is None:
             raise KeyError(f"unknown tool {name!r}")
+        # Defense in depth: even if the model invents a name for a
+        # restricted tool, the dispatcher refuses to run it for a
+        # persona that isn't in the allowlist.
+        if tool.restricted_to is not None and persona not in tool.restricted_to:
+            raise PermissionError(
+                f"tool {name!r} is not visible to persona {persona!r}"
+            )
         token = active_persona.set(persona)
         try:
             return tool.func(deps, **(args or {}))

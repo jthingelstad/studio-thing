@@ -9,10 +9,11 @@ It's a 3-hour heartbeat (07:00–22:00 Central). Default is `PASS` unless engage
 ## Step 2 — campaign ledger
 
 - `s3_personas.list(prefix='campaigns')` — list active campaigns. For each `live` campaign:
-    - `stripe.donations_by_ref(days=90)` — donation impact under that ref. (Returns `(no-ref)` for everything until the donate flow's wired up.)
-    - `buttondown.list_subscribers(limit=25)` and scan `metadata.ref` for new signups carrying the campaign tag.
-    - Compare against the most recent `metrics_history` entry. If donations and signups are unchanged or trivially different (±1), nothing to do.
+    - `tinylytics.sources(days=N)` — site-traffic count under the ref tag.
+    - `buttondown.attribution_summary(days=N)` — signup count under the ref tag.
+    - Compare against the most recent `metrics_history` entry. If unchanged or trivially different (±1), nothing to do.
     - If anything moved materially, append the new metric and `s3_personas.write_file` the JSON back. The campaign JSON holds the timeline.
+    - Donation attribution is Patty's lane — `inbox.post(recipient='patty', kind='request', …)` if you need it.
 
 ## Step 3 — subscribers + engagement
 

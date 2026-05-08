@@ -17,9 +17,8 @@ class PinboardServer:
             ToolDef(
                 name="recent",
                 description=(
-                    "Live-fetch the most recent N bookmarks from Pinboard "
-                    "and persist them to SQLite. Costs an HTTP round trip — "
-                    "use only when the user explicitly wants fresh data."
+                    "Live-fetch the N most recent bookmarks from Pinboard. "
+                    "Persists to SQLite. Costs an HTTP round trip."
                 ),
                 input_schema={
                     "type": "object",
@@ -35,9 +34,8 @@ class PinboardServer:
             ToolDef(
                 name="unread",
                 description=(
-                    "Live-fetch bookmarks Jamie has marked as `to read` on "
-                    "Pinboard. This is the working queue for the next "
-                    "issue. Persists to SQLite."
+                    "Live-fetch bookmarks marked `to read` on Pinboard. "
+                    "Persists to SQLite."
                 ),
                 input_schema={
                     "type": "object",
@@ -57,10 +55,7 @@ class PinboardServer:
             ToolDef(
                 name="popular",
                 description=(
-                    "Pinboard's site-wide popular bookmarks feed — the "
-                    "discovery surface Jamie scans manually. Use to suggest "
-                    "items he might not have seen yet, or to ground "
-                    "'what's resonating across Pinboard right now'. Returns "
+                    "Pinboard's site-wide popular bookmarks feed. Returns "
                     "title, url, description, posted_by."
                 ),
                 input_schema={
@@ -74,9 +69,8 @@ class PinboardServer:
             ToolDef(
                 name="stored_recent",
                 description=(
-                    "Read the most recent N bookmarks already stored in "
-                    "SQLite (no live API call). Reach for this before "
-                    "`pinboard.recent` when freshness isn't critical."
+                    "Read the N most recent bookmarks already stored in "
+                    "SQLite (no live API call)."
                 ),
                 input_schema={
                     "type": "object",
@@ -90,9 +84,7 @@ class PinboardServer:
                 name="tag_summary",
                 description=(
                     "Tag frequency across the unread pile. Returns "
-                    "{total_items, top_tags: [{tag, count}, ...]}. Use as a "
-                    "quick theme preview — what is Jamie reading toward "
-                    "this week — without paging through every bookmark."
+                    "{total_items, top_tags}."
                 ),
                 input_schema={
                     "type": "object",
@@ -114,11 +106,8 @@ class PinboardServer:
             ToolDef(
                 name="update_check",
                 description=(
-                    "Cheap freshness gate — returns the ISO timestamp of "
-                    "Jamie's most recent bookmark mutation. Call this "
-                    "before `pinboard.unread` if you've fetched recently "
-                    "and want to skip the expensive call when nothing has "
-                    "changed."
+                    "ISO timestamp of the most recent Pinboard mutation. "
+                    "Cheap freshness gate."
                 ),
                 input_schema={"type": "object", "properties": {}},
                 handler=lambda deps, **_kw: {"update_time": client.posts_update()},
@@ -126,10 +115,8 @@ class PinboardServer:
             ToolDef(
                 name="lookup_url",
                 description=(
-                    "Did Jamie already save this URL? Returns the bookmark "
-                    "if found, empty list otherwise. Use against popular-"
-                    "feed candidates BEFORE recommending or saving — keeps "
-                    "you from suggesting things already in his archive."
+                    "Look up a URL in Jamie's Pinboard. Returns the "
+                    "bookmark if saved, empty list otherwise."
                 ),
                 input_schema={
                     "type": "object",
@@ -143,11 +130,8 @@ class PinboardServer:
             ToolDef(
                 name="suggest_tags",
                 description=(
-                    "Tag suggestions for a URL — both site-wide popular "
-                    "tags and Jamie's personal recommended tags. Returns "
-                    "{popular: [...], recommended: [...]}. Useful when "
-                    "proposing a save from the popular feed so the tags "
-                    "match Jamie's existing taxonomy."
+                    "Pinboard's tag suggestions for a URL. Returns "
+                    "{popular, recommended}."
                 ),
                 input_schema={
                     "type": "object",
@@ -161,11 +145,8 @@ class PinboardServer:
             ToolDef(
                 name="archive_tags",
                 description=(
-                    "Full tag inventory across Jamie's WHOLE archive (not "
-                    "just the unread pile — use `tag_summary` for that). "
-                    "Returns the top N tags by count. Reach for this when "
-                    "asking 'is theme X new for him or has he been "
-                    "collecting it for years?'."
+                    "Top N tags across Jamie's whole Pinboard archive "
+                    "(not just unread — that's `tag_summary`)."
                 ),
                 input_schema={
                     "type": "object",
@@ -182,10 +163,8 @@ class PinboardServer:
                 name="bookmark_dates",
                 description=(
                     "Bookmark counts per day across the whole archive. "
-                    "Returns {YYYY-MM-DD: count, ...}. Optional `tag` "
-                    "filter scopes to one tag's history. A reading-rhythm "
-                    "signal — when did the saving rate spike, when did it "
-                    "go quiet."
+                    "Returns {YYYY-MM-DD: count}. Optional `tag` scopes to "
+                    "one tag's history."
                 ),
                 input_schema={
                     "type": "object",
@@ -204,14 +183,9 @@ class PinboardServer:
                 name="save",
                 description=(
                     "MUTATING — saves a bookmark to Jamie's Pinboard. "
-                    "Defaults: toread=true (lands in his review queue), "
-                    "shared=true, replace=false (will NOT overwrite an "
-                    "existing bookmark). Always call `lookup_url` first to "
-                    "avoid duplicate-save errors. Only call when Jamie "
-                    "asks you to save it, OR when scanning the popular "
-                    "feed turns up something so on-theme it would be a "
-                    "miss not to drop in his queue. When in doubt, ask "
-                    "first."
+                    "Defaults: toread=true, shared=true, replace=false (will "
+                    "NOT overwrite). Always call `lookup_url` first to avoid "
+                    "duplicate-save errors."
                 ),
                 input_schema={
                     "type": "object",

@@ -21,9 +21,8 @@ class ButtondownServer:
             ToolDef(
                 name="counts",
                 description=(
-                    "Top-level subscriber counts for the newsletter: total, "
-                    "premium, unsubscribed. Cheap — three single-row API "
-                    "calls. No arguments."
+                    "Top-level subscriber counts: total, premium, "
+                    "unsubscribed."
                 ),
                 input_schema={"type": "object", "properties": {}},
                 handler=lambda deps, **_kw: client.counts(),
@@ -31,10 +30,9 @@ class ButtondownServer:
             ToolDef(
                 name="list_subscribers",
                 description=(
-                    "Most recent subscribers, newest first. Returns "
-                    "normalized records with hashed email + email domain "
-                    "(raw email addresses never reach the model). Pass "
-                    "type='premium' or type='unsubscribed' to filter."
+                    "Most recent subscribers, newest first. Hashed email + "
+                    "domain only — raw addresses never reach the model. "
+                    "Optional `type` filter: 'premium', 'unsubscribed'."
                 ),
                 input_schema={
                     "type": "object",
@@ -51,9 +49,8 @@ class ButtondownServer:
             ToolDef(
                 name="recent_unsubscribes",
                 description=(
-                    "Recently churned subscribers, newest first. Same "
-                    "normalized shape as list_subscribers. Email addresses "
-                    "are hashed before reaching you."
+                    "Recently churned subscribers. Same hashed shape as "
+                    "list_subscribers."
                 ),
                 input_schema={
                     "type": "object",
@@ -68,11 +65,8 @@ class ButtondownServer:
             ToolDef(
                 name="subscriber_sources",
                 description=(
-                    "Aggregated source attribution counts over a trailing "
-                    "window. Returns {days, subscribers_seen, by_source} "
-                    "where by_source is a dict like {'embed': 42, 'api': "
-                    "13, …}. Use to ground 'where are signups coming from?' "
-                    "instead of guessing."
+                    "Aggregated `source` attribution counts over a trailing "
+                    "window. Returns {days, subscribers_seen, by_source}."
                 ),
                 input_schema={
                     "type": "object",
@@ -87,14 +81,11 @@ class ButtondownServer:
             ToolDef(
                 name="attribution_summary",
                 description=(
-                    "Aggregate `metadata.ref` campaign attribution for "
-                    "recent signups over a trailing window. Returns "
-                    "{days, subscribers_seen, with_ref, by_ref, by_landing, "
-                    "samples}. `by_ref` is the ground-truth answer to 'is "
-                    "DenseDiscovery / LinkedIn / etc. converting?' — "
-                    "Tinylytics drops query strings, so this is the right "
-                    "tool, not `tinylytics.referrers`. Use after a campaign "
-                    "goes live to track signups by ref tag."
+                    "Aggregated `metadata.ref` campaign attribution — "
+                    "answers 'is this campaign converting to **subscribers**?'. "
+                    "Different question from `tinylytics.sources` (traffic). "
+                    "Returns {by_ref, by_landing, samples} with hashed-email "
+                    "samples."
                 ),
                 input_schema={
                     "type": "object",
@@ -109,10 +100,9 @@ class ButtondownServer:
             ToolDef(
                 name="subscriber_growth",
                 description=(
-                    "Net subscriber delta over the trailing window plus a "
-                    "cohort-by-source breakdown. Returns {added, churned, "
-                    "net, by_source}. Pair with subscriber_sources for the "
-                    "full picture."
+                    "Net subscriber delta over the trailing window plus "
+                    "cohort-by-source. Returns {added, churned, net, "
+                    "by_source}."
                 ),
                 input_schema={
                     "type": "object",
@@ -127,11 +117,8 @@ class ButtondownServer:
             ToolDef(
                 name="list_recent_emails",
                 description=(
-                    "Last N sent emails: id, subject, publish_date, status, "
-                    "and inline engagement counters (recipients, deliveries, "
-                    "opens, clicks, unsubscriptions). No body. Use to scan "
-                    "what landed and what didn't before reaching for "
-                    "email_engagement on a specific id."
+                    "Last N sent emails: id, subject, send timestamps, plus "
+                    "inline engagement counters. No body."
                 ),
                 input_schema={
                     "type": "object",
@@ -146,12 +133,9 @@ class ButtondownServer:
             ToolDef(
                 name="email_engagement",
                 description=(
-                    "Per-email engagement counters for one sent email by "
-                    "Buttondown id. Returns the analytics dict (recipients, "
-                    "deliveries, opens, clicks, unsubscriptions, "
-                    "subscriptions, replies). NOTE: Buttondown does not "
-                    "expose a per-link click breakdown — `clicks` is a "
-                    "single integer over the whole email."
+                    "Per-email engagement counters by Buttondown id. NOTE: "
+                    "no per-link click breakdown — `clicks` is a single "
+                    "integer over the whole email."
                 ),
                 input_schema={
                     "type": "object",

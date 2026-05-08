@@ -88,11 +88,12 @@ Do not start polling Tinylytics until the campaign is `live` — a `drafted` ref
 Once a campaign is `live`, every time you check on it (heartbeat, ad-hoc, etc.):
 
 1. `tinylytics.sources(days=N)` — read the `by_source` map for your campaign tag's site-traffic count. This shows clicks (visits), not signups.
-2. `stripe.donations_by_ref(days=90)` — check whether any donations carry that ref tag. **Note:** until the donate flow is wired up to set `ref` on Checkout Session metadata, this returns `(no-ref)` for everything; a campaign showing donation impact is the signal that the wiring is live.
-3. `buttondown.attribution_summary(days=N)` — read the `by_ref` map for your campaign tag's signup count. Use a window matching the campaign age (e.g. `days=7` for a fresh campaign, `days=30` once it's been running a few weeks). Spot-check the `samples` field once if you suspect the wiring; otherwise trust the aggregate.
-4. Compare all three numbers against the most recent `metrics_history` entry. If they're unchanged or trivially different (±1), don't append a duplicate — just use the existing entry.
-5. If anything changed materially, append `{"polled_at": "<ISO>", "visits_count": <int>, "donations_count": <int>, "donations_usd": <float>, "signups_count": <int>}` to `metrics_history` and `s3_personas.write_file` the JSON back.
-6. If something noteworthy is happening (first donation under the ref tag, signup surge, traffic landing but no signups, going quiet after strong start), call it out in `#chatter`. Otherwise, silence — the JSON has the timeline.
+2. `buttondown.attribution_summary(days=N)` — read the `by_ref` map for your campaign tag's signup count. Use a window matching the campaign age (e.g. `days=7` for a fresh campaign, `days=30` once it's been running a few weeks). Spot-check the `samples` field once if you suspect the wiring; otherwise trust the aggregate.
+3. Compare both numbers against the most recent `metrics_history` entry. If they're unchanged or trivially different (±1), don't append a duplicate — just use the existing entry.
+4. If anything changed materially, append `{"polled_at": "<ISO>", "visits_count": <int>, "signups_count": <int>}` to `metrics_history` and `s3_personas.write_file` the JSON back.
+5. If something noteworthy is happening (signup surge, traffic landing but no signups, going quiet after strong start), call it out in `#chatter`. Otherwise, silence — the JSON has the timeline.
+
+Donation attribution is **Patty's** lane, not yours — Stripe tools are not in your surface. If a campaign question genuinely needs a donation lookup ("did anyone who came in via dd-2026-05-15 actually donate?"), `inbox.post(recipient='patty', kind='request', ...)` and let her answer.
 
 (Tinylytics auto-extracts `?ref=` and `?utm_source=` into the per-hit `source` field — that's what `tinylytics.sources` aggregates. The `path` field strips query strings, so don't try to attribute campaigns through `top_pages`.)
 

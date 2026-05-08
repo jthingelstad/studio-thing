@@ -8,15 +8,21 @@ from . import client
 
 class StripeServer:
     name = "stripe"
+    # Donor data is privacy-sensitive. Patty is the only persona that
+    # ever reaches for Stripe (Thursday member.json composition,
+    # daily heartbeat). The other personas don't see these tools at
+    # all — registry filtering enforces it. If campaign attribution
+    # ever needs Stripe data, hand off to Patty via `inbox.post`.
+    restricted_to = {"patty"}
 
     def list_tools(self) -> list[ToolDef]:
         return [
             ToolDef(
                 name="balance",
                 description=(
-                    "Current Stripe balance — available + pending + total in "
-                    "USD. The total reads as 'amount raised so far' for the "
-                    "current support cycle. No arguments."
+                    "Stripe balance: available + pending + total in USD. "
+                    "Total reads as 'amount raised so far' for the current "
+                    "cycle."
                 ),
                 input_schema={"type": "object", "properties": {}},
                 handler=lambda deps, **_kw: client.balance(),
@@ -24,10 +30,9 @@ class StripeServer:
             ToolDef(
                 name="recent_donations",
                 description=(
-                    "Last N successful donations, newest first. Each record "
-                    "has id, amount_usd, created_at, donor_hash, donor_domain, "
-                    "ref_tag (if set on charge metadata), payment_intent. "
-                    "Donor name and email are hashed before reaching you — "
+                    "Last N successful donations. Each record: id, "
+                    "amount_usd, created_at, donor_hash, donor_domain, "
+                    "ref_tag, payment_intent. Donor name + email hashed — "
                     "never raw PII."
                 ),
                 input_schema={
@@ -44,9 +49,7 @@ class StripeServer:
                 name="donations_by_month",
                 description=(
                     "Trailing N months of donations aggregated by month. "
-                    "Returns {months: [{month: 'YYYY-MM', count, total_usd}]}. "
-                    "Use to spot a month-over-month trend (cohort size, "
-                    "amount-per-donor) without paging through every charge."
+                    "Returns {months: [{month: 'YYYY-MM', count, total_usd}]}."
                 ),
                 input_schema={
                     "type": "object",
@@ -65,11 +68,10 @@ class StripeServer:
                 name="donations_by_ref",
                 description=(
                     "Aggregate donations by `metadata.ref` over the trailing "
-                    "window. Returns {days, total_count, total_usd, by_ref: "
-                    "{<ref>: {count, total_usd}}}. Charges without a ref are "
-                    "bucketed under '(no-ref)'. NOTE: returns mostly '(no-ref)' "
-                    "until the donate flow (Stripe Payment Link) is configured "
-                    "to set `ref` on Checkout Session metadata."
+                    "window. Returns {days, total_count, total_usd, by_ref}. "
+                    "NOTE: returns mostly '(no-ref)' until the donate flow "
+                    "(Stripe Payment Link) is configured to set `ref` on "
+                    "Checkout Session metadata."
                 ),
                 input_schema={
                     "type": "object",
@@ -87,10 +89,9 @@ class StripeServer:
             ToolDef(
                 name="year_to_date",
                 description=(
-                    "Current-calendar-year donation totals + the configured "
+                    "Current-calendar-year donation totals + configured "
                     "nonprofit. Returns {year, count, total_usd, average_usd, "
-                    "current_nonprofit}. Use as the single tool for the "
-                    "Thursday member.json progress update."
+                    "current_nonprofit}."
                 ),
                 input_schema={"type": "object", "properties": {}},
                 handler=lambda deps, **_kw: client.year_to_date(),
