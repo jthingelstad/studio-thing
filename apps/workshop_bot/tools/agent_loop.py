@@ -79,6 +79,23 @@ def _build_system_blocks(
     return blocks
 
 
+def _api_safe_name(name: str) -> str:
+    """Translate an internal dotted tool name to an API-safe form.
+
+    The Anthropic API enforces ``^[a-zA-Z0-9_-]{1,128}$`` on custom
+    tool names — dots are rejected. We map ``.`` → ``__`` going out
+    and reverse it on the way back in (see ``_internal_name``). The
+    double-underscore is unambiguous because no internal name uses
+    consecutive underscores.
+    """
+    return name.replace(".", "__")
+
+
+def _internal_name(api_name: str) -> str:
+    """Reverse of ``_api_safe_name`` for tool-use blocks coming back."""
+    return api_name.replace("__", ".")
+
+
 def _build_tool_specs(
     tool_names: list[str], deps: Any
 ) -> list[dict[str, Any]]:
@@ -89,7 +106,10 @@ def _build_tool_specs(
         tool = registry.get(name)
         if tool is None:
             raise KeyError(f"unknown tool {name!r}")
-        specs.append(dict(tool.spec))  # shallow copy so we can add cache_control
+        spec = dict(tool.spec)  # shallow copy so we can add cache_control
+        # Translate dotted internal name to API-safe form (no ``.``).
+        spec["name"] = _api_safe_name(spec["name"])
+        specs.append(spec)
     if specs:
         # Cache the tool list — last entry gets the marker.
         specs[-1] = {**specs[-1], "cache_control": {"type": "ephemeral"}}
@@ -227,15 +247,20 @@ def run(
         messages.append({"role": "assistant", "content": response.content})
 
         # Execute tools and assemble a single user message of tool_results.
+        # The model sees API-safe names (no dots), so translate back to
+        # the registry's dotted internal form before dispatch.
         tool_result_blocks: list[dict[str, Any]] = []
         for tu in tool_uses:
+            internal_name = _internal_name(tu.name)
             payload = _execute_tool(
-                tu.name, deps, dict(tu.input or {}), persona=persona
+                internal_name, deps, dict(tu.input or {}), persona=persona
             )
             tool_result_blocks.append(
                 {"type": "tool_result", "tool_use_id": tu.id, "content": payload}
             )
-            tool_calls.append({"name": tu.name, "input": dict(tu.input or {})})
+            tool_calls.append(
+                {"name": internal_name, "input": dict(tu.input or {})}
+            )
         messages.append({"role": "user", "content": tool_result_blocks})
 
     # Hit max iterations without a stop_reason != tool_use.

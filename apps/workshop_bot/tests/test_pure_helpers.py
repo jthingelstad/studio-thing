@@ -195,6 +195,48 @@ class TruncateMarkerTests(unittest.TestCase):
         )
 
 
+class ApiSafeNameTests(unittest.TestCase):
+    """Anthropic rejects custom tool names containing ``.``; the boundary
+    translates ``.`` → ``__`` going out and reverses on the way back."""
+
+    def test_dotted_name_becomes_double_underscore(self):
+        self.assertEqual(
+            agent_loop._api_safe_name("archive.search"), "archive__search"
+        )
+        self.assertEqual(
+            agent_loop._api_safe_name("s3_issues.list_workspaces"),
+            "s3_issues__list_workspaces",
+        )
+
+    def test_round_trip(self):
+        for name in (
+            "archive.search",
+            "tinylytics.sources",
+            "memory.remember",
+            "s3_issues.list_workspaces",
+            "archive.list_recent",
+        ):
+            with self.subTest(name=name):
+                api = agent_loop._api_safe_name(name)
+                self.assertNotIn(".", api)
+                self.assertEqual(agent_loop._internal_name(api), name)
+
+    def test_build_tool_specs_translates_names(self):
+        registry = agent_tools.ToolRegistry()
+        registry.register(
+            "ns.thing",
+            {
+                "name": "ns.thing",
+                "description": "test",
+                "input_schema": {"type": "object", "properties": {}},
+            },
+            lambda _deps, **_kw: "ok",
+        )
+        deps = types.SimpleNamespace(registry=registry)
+        specs = agent_loop._build_tool_specs(["ns.thing"], deps=deps)
+        self.assertEqual(specs[0]["name"], "ns__thing")
+
+
 class TrimOrderedSetTests(unittest.TestCase):
     """``_trim_ordered_set`` evicts oldest entries first. The prior trim
     relied on plain-set order, which Python sets don't guarantee."""
