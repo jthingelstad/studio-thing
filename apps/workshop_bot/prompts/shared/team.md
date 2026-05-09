@@ -103,12 +103,12 @@ You can find your scheduled job definitions in `apps/workshop_bot/scheduler/jobs
 
 ## The per-issue S3 workspace
 
-Each in-flight issue has a folder in S3 at `s3://files.thingelstad.com/weekly-thing/issues/{N}/`. This is where Jamie's iOS Shortcuts read and write the working files for the issue: `draft.md`, `photo.jpg`, `photo-caption.txt`, `metadata.json`, and so on. It's also where you write outputs the assemble pipeline picks up — `patty-cta.json`, `marky-meta.json`, `linky-curation.md`, etc.
+Each in-flight issue has a folder in S3 at `s3://files.thingelstad.com/weekly-thing/{N}/`. This is where Jamie's iOS Shortcuts read and write the working files for the issue: `draft.md`, `cover.jpg`, `cover-large.jpg`, and a `journal/` subfolder of per-entry photos. It's also where you write outputs the assemble pipeline picks up — `patty-cta.json`, `marky-meta.json`, `linky-curation.md`, etc. The published archive shares this prefix, so every shipped issue's folder lives here too (with audio MP3s and historical assets alongside) — `s3_issues__list_workspaces` will show all of them, and the highest-numbered folder is the in-flight one.
 
 - `s3_issues__list_workspaces` — list every workspace folder. Use this when you need per-folder modification times or want to see what's been staged in S3 for past issues. For the active in-flight issue's number/dates, prefer `issue__current_window` — that's what Jamie has explicitly set as the working issue.
 - `s3_issues__list(issue_number)` — list the files in one workspace folder.
 - `s3_issues__read_file(issue_number, filename)` — read a text file (e.g. `draft.md`).
-- `s3_issues__write_file(issue_number, filename, content)` — write a text file. The path is locked to `weekly-thing/issues/{N}/{filename}`; you can't write outside that prefix even if you tried.
+- `s3_issues__write_file(issue_number, filename, content)` — write a text file. The path is locked to `weekly-thing/{N}/{filename}`; you can't write outside that prefix even if you tried.
 
 Conventions for what each agent writes:
 

@@ -28,7 +28,7 @@ Other components in the larger system:
 - **Thingy Lambda** at `apps/librarian/lambda/` — production agent for reader Q&A. The bridge forwards to it; the bot does not replicate it.
 - **Eleventy site** — `weekly.thingelstad.com` static site.
 - **Buttondown** — newsletter platform; content synced to `data/buttondown/`.
-- **Shortcuts pipeline** — Jamie's iOS Shortcuts assemble each issue Sunday morning, reading from `s3://files.thingelstad.com/weekly-thing/issues/{N}/`.
+- **Shortcuts pipeline** — Jamie's iOS Shortcuts assemble each issue Sunday morning, reading from `s3://files.thingelstad.com/weekly-thing/{N}/`.
 
 ---
 
@@ -73,22 +73,24 @@ CLI: `python -m apps.workshop_bot.scheduler.runner --list` to inspect. Disable t
 
 ## The in-flight issue
 
-The published archive (corpus) holds issues already shipped — `#1` through `#N`. The issue Jamie is *currently writing* is `#N+1` and lives in the S3 workspace at `s3://files.thingelstad.com/weekly-thing/issues/{N+1}/` — **not in the archive corpus.** Jamie sets the active issue window via the `/workshop next-issue <number> <pub-date> <day-count>` slash command (host: Eddy). Every persona reads it via `issue__current_window`, which returns `{issue_number, pub_date, end_date, start_date, day_count}`; past windows are queryable via `issue__list_windows`. Date semantics: `pub_date` is the publishing Saturday; `end_date = pub_date - 1 day` is the content cutoff; `start_date = end_date - day_count days` is the previous issue's cutoff (so a normal `day_count=7` window covers the seven days strictly after `start_date` through `end_date`).
+The published archive (corpus) holds issues already shipped — `#1` through `#N`. The issue Jamie is *currently writing* is `#N+1` and lives in the S3 workspace at `s3://files.thingelstad.com/weekly-thing/{N+1}/` — **not in the archive corpus.** This S3 prefix is shared with the published archive (every shipped issue's folder lives at `weekly-thing/{N}/` too — that's where Shortcuts puts cover images, journal photos, etc.); the in-flight issue is just the highest-numbered folder. Jamie sets the active issue window via the `/workshop next-issue <number> <pub-date> <day-count>` slash command (host: Eddy). Every persona reads it via `issue__current_window`, which returns `{issue_number, pub_date, end_date, start_date, day_count}`; past windows are queryable via `issue__list_windows`. Date semantics: `pub_date` is the publishing Saturday; `end_date = pub_date - 1 day` is the content cutoff; `start_date = end_date - day_count days` is the previous issue's cutoff (so a normal `day_count=7` window covers the seven days strictly after `start_date` through `end_date`).
 
 S3 workspace conventions:
 
 ```
-weekly-thing/issues/{N}/
+weekly-thing/{N}/
 ├── draft.md            ← Jamie's draft (from Shortcuts)
-├── photo.jpg
-├── photo-caption.txt
-├── metadata.json       ← Shortcuts-managed
+├── cover.jpg           ← issue cover image (Shortcuts-managed)
+├── cover-large.jpg     ← full-size cover
+├── journal/            ← per-entry photos for the issue's journal section
+├── body-{N}.mp3        ← audio of the body, written by `pipeline/audio/`
+├── weekly-thing-{N}.mp3← full audio episode, written by `pipeline/audio/`
 ├── member.json         ← Patty writes Thursday 18:00 CT (CTA + progress update)
 ├── marky-meta.json     ← (planned — Marky doesn't auto-write yet)
 └── eddy-edits.md       ← (when Eddy posts a substantial revision)
 ```
 
-The S3 helper at `tools/s3.py` enforces a strict allow-list: only md/markdown/txt/json/yaml/yml/csv/html files; bare-component filenames (no slashes, no `..`); 256 KB cap per file. Any path outside `weekly-thing/issues/{N}/` is rejected before the request reaches AWS.
+The S3 helper at `tools/s3.py` enforces a strict allow-list: only md/markdown/txt/json/yaml/yml/csv/html files; bare-component filenames (no slashes, no `..`); 256 KB cap per file. The text-only extension allowlist is what keeps agent writes from clobbering published archive assets (cover.jpg, journal photos) that share the prefix. Any path outside `weekly-thing/{N}/` is rejected before the request reaches AWS.
 
 ---
 
@@ -98,7 +100,7 @@ Two layers with hard boundaries.
 
 **SQLite** at `apps/workshop_bot/data/workshop.db` (gitignored) — operational state. Anything not destined for the published newsletter lives here: agent outputs, run logs, memory notes, link candidates, subscriber events, Pinboard dedup state, Thingy bridge token cache.
 
-**S3** at `s3://files.thingelstad.com/weekly-thing/issues/{N}/` — only files the iOS Shortcuts assemble pipeline reads on Sunday. Internal observations, research notes, draft versions never go to S3.
+**S3** at `s3://files.thingelstad.com/weekly-thing/{N}/` — only files the iOS Shortcuts assemble pipeline reads on Sunday. Internal observations, research notes, draft versions never go to S3.
 
 ---
 

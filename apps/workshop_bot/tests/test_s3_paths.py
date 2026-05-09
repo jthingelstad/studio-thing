@@ -1,8 +1,8 @@
 """S3 path validation tests.
 
 The S3 helpers expose write power to the agents. These tests pin the
-boundary: anything outside ``weekly-thing/issues/{N}/<filename>`` must
-be rejected before a request ever leaves the process.
+boundary: anything outside ``weekly-thing/{N}/<filename>`` must be
+rejected before a request ever leaves the process.
 """
 
 from __future__ import annotations
@@ -65,7 +65,7 @@ class ResolveKeyTests(unittest.TestCase):
     def test_happy_path(self):
         self.assertEqual(
             s3._resolve_key(347, "draft.md"),
-            "weekly-thing/issues/347/draft.md",
+            "weekly-thing/347/draft.md",
         )
 
     def test_rejects_path_traversal(self):

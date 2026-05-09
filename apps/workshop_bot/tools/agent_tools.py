@@ -274,7 +274,7 @@ def t_s3_list_issue_workspaces(deps) -> dict[str, Any]:
 
 def t_s3_list_issue(deps, issue_number: int) -> dict[str, Any]:
     """List the per-issue files in the S3 workspace
-    (``s3://files.thingelstad.com/weekly-thing/issues/{N}/``)."""
+    (``s3://files.thingelstad.com/weekly-thing/{N}/``)."""
     try:
         return s3.list_issue(int(issue_number))
     except s3.S3PathError as exc:
@@ -573,12 +573,14 @@ SPECS: dict[str, dict[str, Any]] = {
         "name": "s3_issues__list_workspaces",
         "description": (
             "List every issue workspace folder in S3 (under "
-            "s3://files.thingelstad.com/weekly-thing/issues/). Returns each issue's "
-            "number, file count, and most-recent modification time. Use this when "
-            "you need per-folder modification times or want to see what's been "
-            "staged for past issues. For the active in-flight issue's number "
-            "and dates, call `issue__current_window` (the operator-set source "
-            "of truth). No arguments."
+            "s3://files.thingelstad.com/weekly-thing/). Returns each issue's "
+            "number, file count, and most-recent modification time. Note: this "
+            "prefix is shared with the published archive, so every shipped issue "
+            "shows up here too — the highest-numbered folder is the in-flight "
+            "issue. Use this when you need per-folder modification times or want "
+            "to see what's been staged for past issues. For the active in-flight "
+            "issue's number and dates, call `issue__current_window` (the "
+            "operator-set source of truth). No arguments."
         ),
         "input_schema": {"type": "object", "properties": {}},
     },
@@ -586,9 +588,10 @@ SPECS: dict[str, dict[str, Any]] = {
         "name": "s3_issues__list",
         "description": (
             "List the per-issue files in the S3 workspace at "
-            "s3://files.thingelstad.com/weekly-thing/issues/{N}/. This is where "
-            "Jamie's iOS Shortcuts read/write draft.md, photo.jpg, photo-caption.txt, "
-            "metadata.json, and where you write outputs the assemble pipeline picks up."
+            "s3://files.thingelstad.com/weekly-thing/{N}/. This is where "
+            "Jamie's iOS Shortcuts read/write draft.md, cover.jpg, cover-large.jpg, "
+            "and the journal/ photo subfolder, and where you write outputs the "
+            "assemble pipeline picks up."
         ),
         "input_schema": {
             "type": "object",
@@ -600,7 +603,7 @@ SPECS: dict[str, dict[str, Any]] = {
         "name": "s3_issues__read_file",
         "description": (
             "Read one file from the per-issue S3 workspace. Text only — binary "
-            "objects like photo.jpg are reported but their bytes aren't returned. "
+            "objects like cover.jpg are reported but their bytes aren't returned. "
             "Filename must be a bare component (no slashes, no '..')."
         ),
         "input_schema": {
@@ -622,7 +625,7 @@ SPECS: dict[str, dict[str, Any]] = {
             "the Shortcuts assemble pipeline picks up — e.g. patty-cta.json, "
             "marky-meta.json, linky-curation.md. 256KB cap per file. Allowed "
             "extensions: md, txt, json, yaml, yml, csv, html. The path is "
-            "scoped to weekly-thing/issues/{issue_number}/ — you can't write "
+            "scoped to weekly-thing/{issue_number}/ — you can't write "
             "outside that prefix."
         ),
         "input_schema": {

@@ -66,7 +66,7 @@ These are the tools registered by `register_local_helpers`. Every persona sees a
 | `issue__list_windows(limit?)` | Recent issue windows, newest first, with `is_active` flag. Use to answer "when did issue #N ship?". |
 | `s3_issues__list_workspaces()` | List every per-issue workspace folder. Use for per-folder modification times; for the active issue's number/dates, prefer `issue__current_window`. |
 | `s3_issues__list(issue_number)` | List the files under one workspace folder. |
-| `s3_issues__read_file(issue_number, filename)` | Read a text file from `s3://files.thingelstad.com/weekly-thing/issues/{N}/{filename}`. |
+| `s3_issues__read_file(issue_number, filename)` | Read a text file from `s3://files.thingelstad.com/weekly-thing/{N}/{filename}`. |
 | `s3_issues__write_file(issue_number, filename, content)` | Write a text file to that path. Locked: bare filename only, whitelisted extensions, 256 KB max. |
 | `s3_personas__list(prefix?)` | List files in this persona's private S3 scratchpad on `weekly-thing-workshop`. Optional sub-prefix scopes the listing. |
 | `s3_personas__read_file(path)` | Read one file from the persona's scratchpad. `path` is relative to the persona root and may contain subdirectories. |
@@ -93,7 +93,7 @@ Composed at boot in `bot.py` via `registry.register_system(...)`. Source code li
 
 The `s3_issues__*` and `s3_personas__*` tools are write-locked via `_resolve_key` in `s3.py` / `persona_s3.py`:
 
-- For `s3_issues`, the path is always `weekly-thing/issues/{int issue_number}/{filename}` — no other prefix is reachable.
+- For `s3_issues`, the path is always `weekly-thing/{int issue_number}/{filename}` — no other prefix is reachable. The published archive shares this prefix; the extension allowlist (text-only) is what keeps agents from clobbering shipped image assets.
 - For `s3_personas`, the path is always `personas/{active_persona}/{path}` on the workshop bucket.
 - `filename` / `path` components must match `^[A-Za-z0-9][A-Za-z0-9._-]{0,80}$` — no slashes, no `..`.
 - Extension must be in `ALLOWED_EXTENSIONS` (`.md`, `.markdown`, `.txt`, `.json`, `.yaml`, `.yml`, `.csv`, `.html`).

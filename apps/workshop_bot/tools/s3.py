@@ -1,9 +1,13 @@
 """S3 helper for the per-issue file workspace.
 
 Every read and write goes through ``_resolve_key`` which forces the path
-into ``weekly-thing/issues/{N}/{filename}`` — no traversal, no other
-prefixes, no other buckets. The agents have read/write power over a
-single tightly-scoped namespace. Anything else is rejected.
+into ``weekly-thing/{N}/{filename}`` — no traversal, no other prefixes,
+no other buckets. The agents have read/write power over a single
+tightly-scoped namespace. Anything else is rejected.
+
+The published archive shares this prefix (e.g. ``weekly-thing/100/cover.jpg``),
+so the helper's extension allowlist excludes image and binary types to
+keep agent writes from clobbering shipped assets.
 
 Bucket name comes from ``WEEKLY_THING_ASSETS_BUCKET`` (defaults to
 ``files.thingelstad.com``). Auth via the standard boto3 chain (env vars,
@@ -20,7 +24,7 @@ from typing import Any, Optional
 logger = logging.getLogger("workshop.s3")
 
 DEFAULT_BUCKET = "files.thingelstad.com"
-ROOT_PREFIX = "weekly-thing/issues"
+ROOT_PREFIX = "weekly-thing"
 
 # Single path component, allowed extension set, no traversal. Must be
 # strict — these names go into S3 keys without further escaping.
@@ -70,9 +74,13 @@ def _resolve_key(issue_number: int, filename: str) -> str:
 
 
 def list_workspaces() -> dict[str, Any]:
-    """List every per-issue workspace folder under
-    ``weekly-thing/issues/``. Used to figure out which issue is currently
-    being assembled — the highest folder number is the working issue.
+    """List every per-issue workspace folder under ``weekly-thing/``.
+    Used to figure out which issue is currently being assembled — the
+    highest folder number is the working issue.
+
+    Folders whose first path component is not an integer (e.g.
+    ``weekly-thing/forum/``, ``weekly-thing/2017/``) are skipped, so
+    historical year buckets and other non-issue prefixes don't show up.
 
     Returns each issue's number, file count, and most-recent modification
     time across its files.
@@ -118,7 +126,7 @@ def list_workspaces() -> dict[str, Any]:
 
 
 def list_issue(issue_number: int) -> dict[str, Any]:
-    """List objects stored under ``weekly-thing/issues/{N}/``."""
+    """List objects stored under ``weekly-thing/{N}/``."""
     if not isinstance(issue_number, int) or issue_number <= 0:
         raise S3PathError(f"issue_number must be a positive integer; got {issue_number!r}")
     bucket = _bucket()
