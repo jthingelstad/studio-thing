@@ -318,7 +318,7 @@ def popular(limit: int = 30) -> list[dict[str, Any]]:
                 "posted_by": posted_by,
             }
         )
-    logger.info("pinboard.popular: %d items from %s", len(out), POPULAR_FEED)
+    logger.info("pinboard__popular: %d items from %s", len(out), POPULAR_FEED)
     return out
 
 

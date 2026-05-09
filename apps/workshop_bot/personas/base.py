@@ -395,7 +395,7 @@ class PersonaBot(discord.Client):
             "NOT validate or echo what they said. If you do react, your reply must be "
             "1-3 short sentences, no preamble, no \"good point\", no headings. "
             "Alternatively, if the message lands but you wouldn't add anything new "
-            "in prose, you can drop a brief emoji reaction with `react.add` and then "
+            "in prose, you can drop a brief emoji reaction with `react__add` and then "
             "PASS — that's a low-cost co-sign without filling the channel. If in "
             "any doubt, respond with exactly: PASS]"
         )

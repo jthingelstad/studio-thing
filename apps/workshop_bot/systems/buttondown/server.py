@@ -1,7 +1,7 @@
 """ButtondownServer — registry-facing tool surface for the buttondown system.
 
-The registry prefixes each tool's action name with ``buttondown.`` so
-the model sees ``buttondown.list_subscribers``, ``buttondown.counts``,
+The registry prefixes each tool's action name with ``buttondown__`` so
+the model sees ``buttondown__list_subscribers``, ``buttondown__counts``,
 etc.
 """
 
@@ -83,7 +83,7 @@ class ButtondownServer:
                 description=(
                     "Aggregated `metadata.ref` campaign attribution — "
                     "answers 'is this campaign converting to **subscribers**?'. "
-                    "Different question from `tinylytics.sources` (traffic). "
+                    "Different question from `tinylytics__sources` (traffic). "
                     "Returns {by_ref, by_landing, samples} with hashed-email "
                     "samples."
                 ),

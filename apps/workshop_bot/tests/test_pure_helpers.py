@@ -65,7 +65,7 @@ _install_stubs()
 
 from apps.workshop_bot.personas import base  # noqa: E402
 from apps.workshop_bot.personas import team as team_mod  # noqa: E402
-from apps.workshop_bot.tools import agent_loop, agent_tools, conversation, discord_io  # noqa: E402
+from apps.workshop_bot.tools import agent_loop, agent_tools, conversation, discord_io, issue  # noqa: E402
 
 
 class IsPassResponseTests(unittest.TestCase):
@@ -207,13 +207,13 @@ class TruncateMarkerTests(unittest.TestCase):
 
         registry = agent_tools.ToolRegistry()
         registry.register(
-            "test.huge",
+            "test__huge",
             {"description": "test", "input_schema": {"type": "object", "properties": {}}},
             fake,
         )
         deps = types.SimpleNamespace(registry=registry)
 
-        result = agent_loop._execute_tool("test.huge", deps=deps, raw_input={})
+        result = agent_loop._execute_tool("test__huge", deps=deps, raw_input={})
         self.assertIn("[truncated;", result)
         self.assertNotIn('..."[truncated]"', result)
         self.assertLessEqual(
@@ -221,50 +221,149 @@ class TruncateMarkerTests(unittest.TestCase):
         )
 
 
-class ApiSafeNameTests(unittest.TestCase):
-    """Anthropic rejects custom tool names containing ``.``; the boundary
-    translates ``.`` → ``__`` going out and reverses on the way back."""
+class ExecuteToolRestrictedTests(unittest.TestCase):
+    """The agent loop's ``_execute_tool`` must enforce ``restricted_to``
+    independently of registry filtering. Even if a model invents a name
+    for a restricted tool, the loop refuses to run it for a non-allowed
+    persona."""
 
-    def test_dotted_name_becomes_double_underscore(self):
-        self.assertEqual(
-            agent_loop._api_safe_name("archive.search"), "archive__search"
-        )
-        self.assertEqual(
-            agent_loop._api_safe_name("s3_issues.list_workspaces"),
-            "s3_issues__list_workspaces",
-        )
+    def test_refuses_restricted_tool_for_other_persona(self):
+        called = []
 
-    def test_round_trip(self):
-        for name in (
-            "archive.search",
-            "tinylytics.sources",
-            "memory.remember",
-            "s3_issues.list_workspaces",
-            "archive.list_recent",
-        ):
-            with self.subTest(name=name):
-                api = agent_loop._api_safe_name(name)
-                self.assertNotIn(".", api)
-                self.assertEqual(agent_loop._internal_name(api), name)
+        def fake(_deps, **_kw):
+            called.append(True)
+            return {"ok": True}
 
-    def test_build_tool_specs_translates_names(self):
         registry = agent_tools.ToolRegistry()
         registry.register(
-            "ns.thing",
+            "vault__read",
+            {"description": "test", "input_schema": {"type": "object", "properties": {}}},
+            fake,
+            restricted_to=frozenset({"patty"}),
+        )
+        deps = types.SimpleNamespace(registry=registry)
+
+        result = agent_loop._execute_tool(
+            "vault__read", deps=deps, raw_input={}, persona="eddy"
+        )
+        self.assertIn("not available to persona", result)
+        self.assertEqual(called, [])
+
+    def test_allows_restricted_tool_for_allowed_persona(self):
+        def fake(_deps, **_kw):
+            return {"ok": True}
+
+        registry = agent_tools.ToolRegistry()
+        registry.register(
+            "vault__read",
+            {"description": "test", "input_schema": {"type": "object", "properties": {}}},
+            fake,
+            restricted_to=frozenset({"patty"}),
+        )
+        deps = types.SimpleNamespace(registry=registry)
+
+        result = agent_loop._execute_tool(
+            "vault__read", deps=deps, raw_input={}, persona="patty"
+        )
+        self.assertIn('"ok": true', result)
+
+
+class ComputeIssueWindowTests(unittest.TestCase):
+    """``/workshop next-issue`` validates inputs through ``compute_window``.
+    These rules are load-bearing — once a window is committed the
+    scheduler reads it, so bad data poisons the rituals."""
+
+    def test_happy_path_seven_days(self):
+        # 2026-05-09 is a Saturday.
+        out = issue.compute_window("2026-05-09", 7)
+        self.assertEqual(out["pub_date"], "2026-05-09")
+        self.assertEqual(out["end_date"], "2026-05-08")  # Friday before pub
+        self.assertEqual(out["start_date"], "2026-05-01")  # 7 days earlier
+        self.assertEqual(out["day_count"], 7)
+
+    def test_double_issue(self):
+        out = issue.compute_window("2026-05-09", 14)
+        self.assertEqual(out["start_date"], "2026-04-24")
+        self.assertEqual(out["day_count"], 14)
+
+    def test_strips_whitespace(self):
+        out = issue.compute_window("  2026-05-09  ", 7)
+        self.assertEqual(out["pub_date"], "2026-05-09")
+
+    def test_rejects_non_saturday(self):
+        # 2026-05-10 is a Sunday.
+        with self.assertRaises(issue.IssueWindowError) as ctx:
+            issue.compute_window("2026-05-10", 7)
+        self.assertIn("Sunday", str(ctx.exception))
+
+    def test_rejects_unparseable_date(self):
+        with self.assertRaises(issue.IssueWindowError):
+            issue.compute_window("not-a-date", 7)
+
+    def test_rejects_zero_day_count(self):
+        with self.assertRaises(issue.IssueWindowError):
+            issue.compute_window("2026-05-09", 0)
+
+    def test_rejects_negative_day_count(self):
+        with self.assertRaises(issue.IssueWindowError):
+            issue.compute_window("2026-05-09", -3)
+
+    def test_rejects_non_int_day_count(self):
+        with self.assertRaises(issue.IssueWindowError):
+            issue.compute_window("2026-05-09", "seven")  # type: ignore[arg-type]
+
+
+class ApiSafeNameTests(unittest.TestCase):
+    """Tool names go to the API verbatim — registry rejects anything
+    that doesn't fit Anthropic's ``^[a-zA-Z0-9_-]{1,128}$`` regex.
+    Catches accidental reintroduction of the dotted form."""
+
+    def test_register_rejects_dotted_name(self):
+        registry = agent_tools.ToolRegistry()
+        with self.assertRaises(ValueError):
+            registry.register(
+                "archive.search",
+                {"description": "x", "input_schema": {}},
+                lambda _deps, **_kw: None,
+            )
+
+    def test_register_rejects_special_chars(self):
+        registry = agent_tools.ToolRegistry()
+        for bad in ("foo bar", "foo:bar", "foo!", "", "x" * 129):
+            with self.subTest(bad=bad):
+                with self.assertRaises(ValueError):
+                    registry.register(
+                        bad,
+                        {"description": "x", "input_schema": {}},
+                        lambda _deps, **_kw: None,
+                    )
+
+    def test_register_accepts_double_underscore_form(self):
+        registry = agent_tools.ToolRegistry()
+        registry.register(
+            "archive__search",
+            {"description": "x", "input_schema": {}},
+            lambda _deps, **_kw: None,
+        )
+        self.assertIn("archive__search", registry.all_names())
+
+    def test_build_tool_specs_passes_name_through(self):
+        registry = agent_tools.ToolRegistry()
+        registry.register(
+            "ns__thing",
             {
-                "name": "ns.thing",
                 "description": "test",
                 "input_schema": {"type": "object", "properties": {}},
             },
             lambda _deps, **_kw: "ok",
         )
         deps = types.SimpleNamespace(registry=registry)
-        specs = agent_loop._build_tool_specs(["ns.thing"], deps=deps)
+        specs = agent_loop._build_tool_specs(["ns__thing"], deps=deps)
         self.assertEqual(specs[0]["name"], "ns__thing")
 
 
 class ReactAddTests(unittest.TestCase):
-    """``react.add`` is a tool that schedules ``Message.add_reaction`` on
+    """``react__add`` is a tool that schedules ``Message.add_reaction`` on
     the persona's bot loop. These tests stub the bot + loop so the tool
     runs without a live Discord connection."""
 

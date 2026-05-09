@@ -111,12 +111,24 @@ class TreeRegistrationTests(unittest.TestCase):
         bot = self._stub_bot()
         tree = commands_module.register_workshop_commands(bot)
         group = tree.groups[0]
-        self.assertEqual(len(group.commands), 1)
-        cmd = group.commands[0]
-        self.assertEqual(cmd._cmd_name, "heartbeat")
-        choices = cmd._choices["agent"]
+        # Two subcommands now: heartbeat + next-issue.
+        self.assertEqual(
+            sorted(c._cmd_name for c in group.commands),
+            ["heartbeat", "next-issue"],
+        )
+        heartbeat = next(c for c in group.commands if c._cmd_name == "heartbeat")
+        choices = heartbeat._choices["agent"]
         values = sorted(c.value for c in choices)
         self.assertEqual(values, ["eddy", "linky", "marky", "patty", "team"])
+
+    def test_next_issue_subcommand_describes_required_args(self):
+        bot = self._stub_bot()
+        tree = commands_module.register_workshop_commands(bot)
+        group = tree.groups[0]
+        next_issue = next(c for c in group.commands if c._cmd_name == "next-issue")
+        described = getattr(next_issue, "_describe", {})
+        for arg in ("number", "pub_date", "day_count"):
+            self.assertIn(arg, described, msg=f"missing describe for {arg}")
 
     def test_workshop_group_requires_manage_guild(self):
         bot = self._stub_bot()

@@ -379,8 +379,8 @@ class TinylyticsServerTests(unittest.TestCase):
 class PinboardServerTests(unittest.TestCase):
     def setUp(self):
         os.environ.setdefault("PINBOARD_API_TOKEN", "jthingelstad:STUB")
-        # Use a fresh temp DB so the SQLite-side effects of pinboard.recent /
-        # pinboard.unread / pinboard.stored_recent don't accumulate across tests.
+        # Use a fresh temp DB so the SQLite-side effects of pinboard__recent /
+        # pinboard__unread / pinboard__stored_recent don't accumulate across tests.
         import tempfile
         self._tmpdir = tempfile.TemporaryDirectory()
         self._orig_db = os.environ.get("WORKSHOP_DB_PATH")
@@ -763,13 +763,13 @@ class RegistryIntegrationTests(unittest.TestCase):
 
     def test_dotted_buttondown_names_come_from_system(self):
         for new in (
-            "buttondown.counts",
-            "buttondown.list_subscribers",
-            "buttondown.recent_unsubscribes",
-            "buttondown.subscriber_sources",
-            "buttondown.subscriber_growth",
-            "buttondown.list_recent_emails",
-            "buttondown.email_engagement",
+            "buttondown__counts",
+            "buttondown__list_subscribers",
+            "buttondown__recent_unsubscribes",
+            "buttondown__subscriber_sources",
+            "buttondown__subscriber_growth",
+            "buttondown__list_recent_emails",
+            "buttondown__email_engagement",
         ):
             tool = self.registry.get(new)
             self.assertIsNotNone(tool, new)
@@ -777,11 +777,11 @@ class RegistryIntegrationTests(unittest.TestCase):
 
     def test_dotted_pinboard_names_come_from_system(self):
         for new in (
-            "pinboard.recent",
-            "pinboard.unread",
-            "pinboard.popular",
-            "pinboard.stored_recent",
-            "pinboard.tag_summary",
+            "pinboard__recent",
+            "pinboard__unread",
+            "pinboard__popular",
+            "pinboard__stored_recent",
+            "pinboard__tag_summary",
         ):
             tool = self.registry.get(new)
             self.assertIsNotNone(tool, new)
@@ -789,11 +789,11 @@ class RegistryIntegrationTests(unittest.TestCase):
 
     def test_dotted_stripe_names_come_from_system(self):
         for new in (
-            "stripe.balance",
-            "stripe.recent_donations",
-            "stripe.donations_by_month",
-            "stripe.donations_by_ref",
-            "stripe.year_to_date",
+            "stripe__balance",
+            "stripe__recent_donations",
+            "stripe__donations_by_month",
+            "stripe__donations_by_ref",
+            "stripe__year_to_date",
         ):
             tool = self.registry.get(new)
             self.assertIsNotNone(tool, new)
@@ -801,9 +801,9 @@ class RegistryIntegrationTests(unittest.TestCase):
 
     def test_dotted_tinylytics_names_come_from_system(self):
         for new in (
-            "tinylytics.summary",
-            "tinylytics.top_pages",
-            "tinylytics.referrers",
+            "tinylytics__summary",
+            "tinylytics__top_pages",
+            "tinylytics__referrers",
         ):
             tool = self.registry.get(new)
             self.assertIsNotNone(tool, new)

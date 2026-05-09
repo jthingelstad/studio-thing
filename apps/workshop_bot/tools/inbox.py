@@ -3,7 +3,7 @@
 Complements Discord channels (free-form chatter) and ``agent_notes``
 (persistent memory) by giving agents a typed, addressable surface for
 "I finished X, you should pick it up." Every persona's heartbeat opens
-with ``inbox.list(filter='unread')`` so handoffs are the first thing
+with ``inbox__list(filter='unread')`` so handoffs are the first thing
 the agent reads on each wake-up.
 
 The recipient is a persona name or ``team``. The sender is derived
@@ -205,7 +205,7 @@ def t_inbox_list(
 
 
 def t_inbox_read(deps, id: int) -> dict[str, Any]:
-    """Read one inbox item. Does NOT mark it read — call ``inbox.mark_read``
+    """Read one inbox item. Does NOT mark it read — call ``inbox__mark_read``
     when you've acted on it."""
     item = get_inbox_item(int(id))
     if item is None:
@@ -231,8 +231,8 @@ def tool_specs() -> dict[str, dict[str, Any]]:
     """Return Anthropic tool specs for the four inbox tools, keyed by full
     dotted name."""
     return {
-        "inbox.post": {
-            "name": "inbox.post",
+        "inbox__post": {
+            "name": "inbox__post",
             "description": (
                 "Send a structured message to another persona or to the team. "
                 "Use for handoffs ('I finished curation, you can pick up'), "
@@ -254,8 +254,8 @@ def tool_specs() -> dict[str, dict[str, Any]]:
                 "required": ["recipient", "kind", "subject", "body"],
             },
         },
-        "inbox.list": {
-            "name": "inbox.list",
+        "inbox__list": {
+            "name": "inbox__list",
             "description": (
                 "List your inbox. Default returns unread items addressed to "
                 "you. Pass filter='all' for read+unread, filter='kind=handoff' "
@@ -271,11 +271,11 @@ def tool_specs() -> dict[str, dict[str, Any]]:
                 },
             },
         },
-        "inbox.read": {
-            "name": "inbox.read",
+        "inbox__read": {
+            "name": "inbox__read",
             "description": (
                 "Read the full body of one inbox item by id. Does NOT mark "
-                "it read — call inbox.mark_read once you've acted on it."
+                "it read — call inbox__mark_read once you've acted on it."
             ),
             "input_schema": {
                 "type": "object",
@@ -283,8 +283,8 @@ def tool_specs() -> dict[str, dict[str, Any]]:
                 "required": ["id"],
             },
         },
-        "inbox.mark_read": {
-            "name": "inbox.mark_read",
+        "inbox__mark_read": {
+            "name": "inbox__mark_read",
             "description": (
                 "Mark an inbox item read. Status defaults to 'read' but may "
                 "also be 'acted' (you took action) or 'dismissed' (you "
@@ -305,8 +305,8 @@ def tool_specs() -> dict[str, dict[str, Any]]:
 def tool_handlers() -> dict[str, Any]:
     """Return tool handler functions keyed by full dotted name."""
     return {
-        "inbox.post": t_inbox_post,
-        "inbox.list": t_inbox_list,
-        "inbox.read": t_inbox_read,
-        "inbox.mark_read": t_inbox_mark_read,
+        "inbox__post": t_inbox_post,
+        "inbox__list": t_inbox_list,
+        "inbox__read": t_inbox_read,
+        "inbox__mark_read": t_inbox_mark_read,
     }

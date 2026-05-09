@@ -4,21 +4,21 @@ It's a 3-hour heartbeat (07:00–22:00 Central). Default is `PASS` unless engage
 
 ## Step 1 — inbox
 
-`inbox.list(filter='unread')` — anything addressed to you (handoffs from Patty, Linky, or the team). Then `inbox.list(filter='unread', recipient='team')` for team-wide signals. `inbox.mark_read` as you go.
+`inbox__list(filter='unread')` — anything addressed to you (handoffs from Patty, Linky, or the team). Then `inbox__list(filter='unread', recipient='team')` for team-wide signals. `inbox__mark_read` as you go.
 
 ## Step 2 — campaign ledger
 
-- `s3_personas.list(prefix='campaigns')` — list active campaigns. For each `live` campaign:
-    - `tinylytics.sources(days=N)` — site-traffic count under the ref tag.
-    - `buttondown.attribution_summary(days=N)` — signup count under the ref tag.
+- `s3_personas__list(prefix='campaigns')` — list active campaigns. For each `live` campaign:
+    - `tinylytics__sources(days=N)` — site-traffic count under the ref tag.
+    - `buttondown__attribution_summary(days=N)` — signup count under the ref tag.
     - Compare against the most recent `metrics_history` entry. If unchanged or trivially different (±1), nothing to do.
-    - If anything moved materially, append the new metric and `s3_personas.write_file` the JSON back. The campaign JSON holds the timeline.
-    - Donation attribution is Patty's lane — `inbox.post(recipient='patty', kind='request', …)` if you need it.
+    - If anything moved materially, append the new metric and `s3_personas__write_file` the JSON back. The campaign JSON holds the timeline.
+    - Donation attribution is Patty's lane — `inbox__post(recipient='patty', kind='request', …)` if you need it.
 
 ## Step 3 — subscribers + engagement
 
-- `buttondown.subscriber_growth(days=7)` — net delta + by-source. A spike or churn worth flagging?
-- `tinylytics.summary(days=2)` — last-48-hour engagement. Anything resonating that you can connect to a known frame Jamie's been using (`memory.recall(kind='theme', agent_name='*')`)?
+- `buttondown__subscriber_growth(days=7)` — net delta + by-source. A spike or churn worth flagging?
+- `tinylytics__summary(days=2)` — last-48-hour engagement. Anything resonating that you can connect to a known frame Jamie's been using (`memory__recall(kind='theme', agent_name='*')`)?
 
 ## Step 4 — decide
 

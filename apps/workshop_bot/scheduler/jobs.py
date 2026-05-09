@@ -10,10 +10,11 @@ default is ``PASS``; heartbeats only post when the persona has
 something concrete to surface. Heartbeats use ``handlers.heartbeat``
 via ``functools.partial`` so the dispatcher signature stays the same.
 
-A few high-care **rituals** still run as bespoke jobs (Friday curation,
-Monday subscriber report, Thursday member.json) — those are deliberate
-weekly artifacts that benefit from a tight prompt rather than a
-default-PASS heartbeat.
+Heartbeats are the only scheduled surface today. The earlier "rituals"
+(Friday curation, Monday subscriber report, Thursday member.json) were
+removed pending a deliberate redesign of how the team helps Jamie
+assemble each issue. Until that work lands, on-demand operator
+commands and the heartbeat cadence cover everything the team does.
 
 To add a job: write a new handler function in ``handlers.py``, add a
 ``JobSpec`` here, restart the bot.
@@ -46,9 +47,13 @@ JOBS: tuple[JobSpec, ...] = (
     # ---------- Heartbeats ----------
     # One scheduled wake-up per persona. Default response is PASS;
     # the persona only posts when there's something concrete to
-    # surface. Folded the lighter previous jobs (linky-wednesday-check,
+    # surface. The earlier-era specialized jobs (linky-wednesday-check,
     # linky-popular-scan, linky-research-unread, marky-daily-engagement,
-    # eddy-saturday-prep) into these.
+    # eddy-saturday-prep, linky-friday-curation, marky-weekly-subscriber-
+    # report, patty-thursday-member-json) were folded into these
+    # heartbeats — the team-redesign work on how to actually help Jamie
+    # assemble each issue is pending, and until then heartbeats plus
+    # on-demand `/workshop` commands carry the load.
     JobSpec(
         id="eddy-heartbeat",
         cron="30 8 * * *",                               # Daily 08:30 Central — before Jamie's writing window.
@@ -68,27 +73,6 @@ JOBS: tuple[JobSpec, ...] = (
         id="patty-heartbeat",
         cron="0 9 * * *",                                # Daily 09:00 Central.
         func=functools.partial(handlers.heartbeat, persona="patty"),
-    ),
-
-    # ---------- Rituals (preserved) ----------
-    # High-care, deliberately preserved scheduled jobs. Each has its own
-    # bespoke prompt under handlers.<name> rather than a generic
-    # heartbeat — these produce specific weekly artifacts that benefit
-    # from tight, fixed instructions.
-    JobSpec(
-        id="linky-friday-curation",
-        cron="0 16 * * 5",                               # Friday 16:00 Central.
-        func=handlers.linky_friday_curation,
-    ),
-    JobSpec(
-        id="marky-weekly-subscriber-report",
-        cron="0 11 * * 1",                               # Monday 11:00 Central.
-        func=handlers.marky_weekly_subscriber_report,
-    ),
-    JobSpec(
-        id="patty-thursday-member-json",
-        cron="0 18 * * 4",                               # Thursday 18:00 Central — member.json write.
-        func=handlers.patty_thursday_member_json,
     ),
 )
 

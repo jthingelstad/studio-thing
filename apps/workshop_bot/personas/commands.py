@@ -29,6 +29,7 @@ from discord import app_commands
 from ..scheduler import handlers
 from ..scheduler import jobs as jobs_module
 from ..scheduler.runner import JobContext
+from ..tools import db, issue
 
 if TYPE_CHECKING:
     from .base import PersonaBot
@@ -126,6 +127,55 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
         result = await run_one_heartbeat(team, agent.value)
         await interaction.followup.send(
             f"`{agent.value}`: {render_result(result)}",
+            ephemeral=True,
+        )
+
+    @workshop.command(
+        name="next-issue",
+        description="Set the in-flight issue window (number, Saturday pub date, day count).",
+    )
+    @app_commands.describe(
+        number="Issue number being assembled (e.g. 348)",
+        pub_date="Publishing Saturday (YYYY-MM-DD)",
+        day_count="Days to include before the cutoff — usually 7, sometimes 14",
+    )
+    async def next_issue_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction,
+        number: int,
+        pub_date: str,
+        day_count: int = 7,
+    ) -> None:
+        await interaction.response.defer(ephemeral=True, thinking=False)
+        try:
+            window = issue.compute_window(pub_date, int(day_count))
+        except issue.IssueWindowError as exc:
+            await interaction.followup.send(f"❌ {exc}", ephemeral=True)
+            return
+
+        try:
+            db.set_issue_window(
+                issue_number=int(number),
+                pub_date=window["pub_date"],
+                end_date=window["end_date"],
+                start_date=window["start_date"],
+                day_count=window["day_count"],
+                set_by=str(interaction.user),
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("/workshop next-issue: db write failed")
+            await interaction.followup.send(
+                f"❌ Couldn't save window: `{type(exc).__name__}: {exc}`",
+                ephemeral=True,
+            )
+            return
+
+        days_word = "day" if window["day_count"] == 1 else "days"
+        await interaction.followup.send(
+            f"✅ Issue **#{number}** set as active.\n"
+            f"- Publish: **{window['pub_date']}** (Sat)\n"
+            f"- Content cutoff (end_date): **{window['end_date']}**\n"
+            f"- Window start (prior cutoff): **{window['start_date']}**\n"
+            f"- Span: **{window['day_count']} {days_word}**",
             ephemeral=True,
         )
 

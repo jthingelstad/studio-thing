@@ -4,16 +4,16 @@ It's a daily heartbeat (09:00 Central). Default is `PASS` unless a supporter mil
 
 ## Step 1 — inbox
 
-`inbox.list(filter='unread')` — anything addressed to you (likely a handoff from Marky about CTA tone, or a request about supporter framing). Then `inbox.list(filter='unread', recipient='team')`. Mark each item read or acted before moving on.
+`inbox__list(filter='unread')` — anything addressed to you (likely a handoff from Marky about CTA tone, or a request about supporter framing). Then `inbox__list(filter='unread', recipient='team')`. Mark each item read or acted before moving on.
 
 ## Step 2 — supporter activity
 
-- `stripe.recent_donations(limit=5)` — anything new since yesterday? Compare against `memory.recall(query='last-checked', agent_name='patty', limit=3)` so you don't double-flag a donation you already noticed.
-- `stripe.year_to_date` — the running total. Flag a milestone (a round number crossed, the goal hit, a stall worth noting). Update `memory.remember(kind='context', key='patty:last-checked-ytd')` after each check.
+- `stripe__recent_donations(limit=5)` — anything new since yesterday? Compare against `memory__recall(query='last-checked', agent_name='patty', limit=3)` so you don't double-flag a donation you already noticed.
+- `stripe__year_to_date` — the running total. Flag a milestone (a round number crossed, the goal hit, a stall worth noting). Update `memory__remember(kind='context', key='patty:last-checked-ytd')` after each check.
 
 ## Step 3 — the program voice
 
-If the inbox or recent activity hands you a tonal note for this week's CTA (a phrase landing well, a frame to retire, a supporter comment worth weaving in), `memory.remember(kind='observation', key='patty:cta-<theme>')` so Thursday's `member.json` writer can `memory.recall` it.
+If the inbox or recent activity hands you a tonal note for this week's CTA (a phrase landing well, a frame to retire, a supporter comment worth weaving in), `memory__remember(kind='observation', key='patty:cta-<theme>')` so Thursday's `member.json` writer can `memory__recall` it.
 
 ## Step 4 — decide
 

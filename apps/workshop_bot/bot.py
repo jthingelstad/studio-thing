@@ -55,6 +55,12 @@ RATE_LIMIT_JITTER = 0.10  # ±10% so the 5 personas don't wake in lockstep
 # like typing/send/reactions can ride out small cooldowns silently.
 HTTP_RATELIMIT_TIMEOUT = 1.0
 
+# Per-persona ceiling on waiting for on_ready before declaring the persona
+# missing. With LOGIN_STAGGER_SECONDS=2 between five personas plus normal
+# login + gateway + READY latency, fully healthy startups land in <60s.
+# 90s leaves slack without paying the full 5m+ rate-limit ladder.
+READY_WAIT_SECONDS = 90.0
+
 PERSONAS: list[tuple[str, str, type]] = [
     ("eddy", "DISCORD_TOKEN_EDDY", EddyBot),
     ("linky", "DISCORD_TOKEN_LINKY", LinkyBot),
@@ -201,7 +207,11 @@ async def run() -> int:
             # surface every short cooldown as RateLimited. Reset backoff and
             # run the gateway. If it drops, we loop back to login() —
             # discord.py's reconnect=True handles transient gateway blips, so
-            # we only re-enter on harder failures.
+            # we only re-enter on harder failures. Resetting ``attempt`` here
+            # (not at top-of-loop) is intentional: a successful login proves
+            # we're not in a 40062 hole, so the next gateway-failure cycle
+            # should start a fresh rate-limit ladder rather than inherit the
+            # last cycle's backoff.
             client.http.max_ratelimit_timeout = None
             attempt = 0
             try:
@@ -228,18 +238,44 @@ async def run() -> int:
     runner = SchedulerRunner(team) if scheduler_enabled else None
 
     async def _post_startup() -> None:
-        # Wait until every persona has fired on_ready.
-        for _, client, _ in bots:
-            await client.ready_event.wait()
-        results = startup.audit([b for _, b, _ in bots])
+        # Wait for each persona's on_ready, but with a per-persona timeout
+        # so a stubbornly rate-limited bot (40062 cooldowns can run minutes
+        # to hours) doesn't block the scheduler from starting for the
+        # personas that did come up. Missing personas will be reported in
+        # the audit summary; the scheduler skips jobs whose persona is
+        # absent (see scheduler/runner.py JobContext.bot/channel).
+        ready_bots: list = []
+        missing: list[str] = []
+        for name, client, _ in bots:
+            try:
+                await asyncio.wait_for(
+                    client.ready_event.wait(), timeout=READY_WAIT_SECONDS,
+                )
+                ready_bots.append(client)
+            except asyncio.TimeoutError:
+                logger.warning(
+                    "%s: not ready after %ds; proceeding without it",
+                    name, READY_WAIT_SECONDS,
+                )
+                missing.append(name)
+        if not ready_bots:
+            logger.error("no personas reached ready in %ds; skipping audit + scheduler", READY_WAIT_SECONDS)
+            return
+        results = startup.audit(ready_bots)
         summary = startup.format_summary(
             results, hash_str=startup.git_hash(), dirty=startup.git_dirty(),
         )
+        if missing:
+            summary += f"\n\n⚠️ not ready after {READY_WAIT_SECONDS}s: {', '.join(missing)}"
         logger.info("startup audit:\n%s", summary)
-        announcer = next((b for n, b, _ in bots if n == startup.ANNOUNCER), bots[0][1])
+        announcer = next(
+            (b for n, b, _ in bots if n == startup.ANNOUNCER and b in ready_bots),
+            ready_bots[0],
+        )
         await startup.announce(announcer, summary)
-        # Start scheduled jobs only after every persona is ready, so we don't
-        # fire a Marky daily job into a Marky client that hasn't connected.
+        # Start scheduled jobs once we have at least one ready persona —
+        # individual jobs gracefully skip if their target persona is
+        # missing, so we don't need to wait for everyone.
         if runner is not None:
             try:
                 runner.start()

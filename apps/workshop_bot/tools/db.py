@@ -500,6 +500,90 @@ def recent_subscriber_events(
     return [dict(r) for r in rows]
 
 
+# ---------- issue windows (operator-set publishing schedule) ----------
+
+
+def set_issue_window(
+    *,
+    issue_number: int,
+    pub_date: str,
+    end_date: str,
+    start_date: str,
+    day_count: int,
+    set_by: Optional[str] = None,
+) -> dict[str, Any]:
+    """Atomically deactivate any current active window and upsert this
+    issue's row as the new active window.
+
+    Returns the resulting active row.
+    """
+    with connect() as conn:
+        # The connection runs in autocommit (isolation_level=None) so
+        # explicit BEGIN/COMMIT brackets the two writes into one
+        # transaction — keeps the partial-unique-on-is_active index
+        # from tripping mid-update.
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            conn.execute(
+                "UPDATE issue_windows SET is_active = 0 WHERE is_active = 1"
+            )
+            conn.execute(
+                "INSERT INTO issue_windows "
+                "(issue_number, pub_date, end_date, start_date, day_count, "
+                " is_active, set_at, set_by) "
+                "VALUES (?, ?, ?, ?, ?, 1, datetime('now'), ?) "
+                "ON CONFLICT(issue_number) DO UPDATE SET "
+                "  pub_date=excluded.pub_date, "
+                "  end_date=excluded.end_date, "
+                "  start_date=excluded.start_date, "
+                "  day_count=excluded.day_count, "
+                "  is_active=1, "
+                "  set_at=datetime('now'), "
+                "  set_by=excluded.set_by",
+                (issue_number, pub_date, end_date, start_date, day_count, set_by),
+            )
+            conn.execute("COMMIT")
+        except Exception:
+            conn.execute("ROLLBACK")
+            raise
+    return get_active_issue_window() or {}
+
+
+def get_active_issue_window() -> Optional[dict[str, Any]]:
+    """Return the currently active issue window, or None if none set."""
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT issue_number, pub_date, end_date, start_date, day_count, "
+            "       set_at, set_by "
+            "FROM issue_windows WHERE is_active = 1 LIMIT 1"
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def get_issue_window(issue_number: int) -> Optional[dict[str, Any]]:
+    """Return one issue window by number (active or not)."""
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT issue_number, pub_date, end_date, start_date, day_count, "
+            "       is_active, set_at, set_by "
+            "FROM issue_windows WHERE issue_number = ?",
+            (int(issue_number),),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def list_issue_windows(*, limit: int = 12) -> list[dict[str, Any]]:
+    """Return recent issue windows, newest issue number first."""
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT issue_number, pub_date, end_date, start_date, day_count, "
+            "       is_active, set_at, set_by "
+            "FROM issue_windows ORDER BY issue_number DESC LIMIT ?",
+            (int(limit),),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
 class AgentRun:
     """Context manager that opens an agent_runs row and closes it with the result."""
 

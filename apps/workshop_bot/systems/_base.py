@@ -3,7 +3,7 @@
 A system module exposes a ``SystemServer`` whose ``list_tools()``
 returns ``ToolDef`` records. The registry in ``tools/agent_tools.py``
 prefixes each tool's action name with the server's namespace
-(``buttondown.list_subscribers`` etc.) when registering.
+(``buttondown__list_subscribers`` etc.) when registering.
 
 The shape mirrors MCP's ``list_tools`` so a single server can be lifted
 to a real MCP server later by adding a transport adapter.

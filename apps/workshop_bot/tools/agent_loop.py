@@ -14,6 +14,12 @@ the issue index gets a second mark so persona-prompt edits don't bust the
 issue-index cache. The tool list also gets an ephemeral mark on its last
 entry.
 
+Tool names use the ``<system>__<action>`` shape natively (e.g.
+``archive__search``, ``buttondown__list_subscribers``). The Anthropic
+API enforces ``^[a-zA-Z0-9_-]{1,128}$`` on custom tool names — the
+double-underscore separator is API-safe and round-trips without any
+boundary translation.
+
 The Anthropic call is synchronous, so ``run_async`` wraps the loop in a
 worker thread to keep each persona's discord.py event loop free for
 gateway heartbeats.
@@ -79,27 +85,15 @@ def _build_system_blocks(
     return blocks
 
 
-def _api_safe_name(name: str) -> str:
-    """Translate an internal dotted tool name to an API-safe form.
-
-    The Anthropic API enforces ``^[a-zA-Z0-9_-]{1,128}$`` on custom
-    tool names — dots are rejected. We map ``.`` → ``__`` going out
-    and reverse it on the way back in (see ``_internal_name``). The
-    double-underscore is unambiguous because no internal name uses
-    consecutive underscores.
-    """
-    return name.replace(".", "__")
-
-
-def _internal_name(api_name: str) -> str:
-    """Reverse of ``_api_safe_name`` for tool-use blocks coming back."""
-    return api_name.replace("__", ".")
-
-
 def _build_tool_specs(
     tool_names: list[str], deps: Any
 ) -> list[dict[str, Any]]:
-    """Build Anthropic tool specs for ``tool_names`` from ``deps.registry``."""
+    """Build Anthropic tool specs for ``tool_names`` from ``deps.registry``.
+
+    Tool names use the API-safe ``<system>__<action>`` shape natively
+    (registered that way at boot), so no name translation happens at
+    the API boundary.
+    """
     registry = deps.registry
     specs: list[dict[str, Any]] = []
     for name in tool_names:
@@ -107,8 +101,6 @@ def _build_tool_specs(
         if tool is None:
             raise KeyError(f"unknown tool {name!r}")
         spec = dict(tool.spec)  # shallow copy so we can add cache_control
-        # Translate dotted internal name to API-safe form (no ``.``).
-        spec["name"] = _api_safe_name(spec["name"])
         specs.append(spec)
     if specs:
         # Cache the tool list — last entry gets the marker.
@@ -126,6 +118,24 @@ def _execute_tool(
     tool = deps.registry.get(name)
     if tool is None:
         return json.dumps({"error": f"unknown tool {name!r}"})
+    # Enforce per-persona scoping at execution time, even though
+    # ``names_for(persona)`` already filters the model's tool list. If a
+    # model invents a name for a restricted tool (prompt injection,
+    # cross-persona context bleed, hallucination), refuse here so donor
+    # data and other privacy-scoped surfaces never reach the wrong
+    # persona's transcript.
+    if (
+        persona is not None
+        and tool.restricted_to is not None
+        and persona not in tool.restricted_to
+    ):
+        logger.warning(
+            "tool %s refused: persona %r not in %s",
+            name, persona, sorted(tool.restricted_to),
+        )
+        return json.dumps(
+            {"error": f"tool {name!r} is not available to persona {persona!r}"}
+        )
     func = tool.func
     t0 = time.monotonic()
     token = None
@@ -246,20 +256,19 @@ def run(
         # Persist assistant turn including tool_use blocks.
         messages.append({"role": "assistant", "content": response.content})
 
-        # Execute tools and assemble a single user message of tool_results.
-        # The model sees API-safe names (no dots), so translate back to
-        # the registry's dotted internal form before dispatch.
+        # Execute tools and assemble a single user message of
+        # tool_results. Tool names round-trip unchanged — the registry
+        # stores them in API-safe ``<system>__<action>`` form natively.
         tool_result_blocks: list[dict[str, Any]] = []
         for tu in tool_uses:
-            internal_name = _internal_name(tu.name)
             payload = _execute_tool(
-                internal_name, deps, dict(tu.input or {}), persona=persona
+                tu.name, deps, dict(tu.input or {}), persona=persona
             )
             tool_result_blocks.append(
                 {"type": "tool_result", "tool_use_id": tu.id, "content": payload}
             )
             tool_calls.append(
-                {"name": internal_name, "input": dict(tu.input or {})}
+                {"name": tu.name, "input": dict(tu.input or {})}
             )
         messages.append({"role": "user", "content": tool_result_blocks})
 

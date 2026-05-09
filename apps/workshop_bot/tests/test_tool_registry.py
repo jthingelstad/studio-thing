@@ -54,12 +54,14 @@ from apps.workshop_bot.systems._base import SystemServer, ToolDef  # noqa: E402
 from apps.workshop_bot.tools import agent_tools  # noqa: E402
 
 
-class DottedNameTests(unittest.TestCase):
-    """Every local helper is keyed under a dotted name."""
+class NamespaceFormatTests(unittest.TestCase):
+    """Every local helper uses the ``<system>__<action>`` form so the
+    name round-trips to the API verbatim."""
 
-    def test_every_local_helper_uses_dotted_name(self):
+    def test_every_local_helper_uses_double_underscore(self):
         for name in agent_tools.FUNCS:
-            self.assertIn(".", name, msg=f"flat name still in FUNCS: {name!r}")
+            self.assertIn("__", name, msg=f"flat name still in FUNCS: {name!r}")
+            self.assertNotIn(".", name, msg=f"dotted name still in FUNCS: {name!r}")
 
     def test_spec_name_field_matches_key(self):
         for name, spec in agent_tools.SPECS.items():
@@ -75,19 +77,20 @@ class ToolRegistryCompositionTests(unittest.TestCase):
         names = set(self.registry.all_names())
         # Spot-check a few; full coverage lives in DottedNameTests.
         for tool in (
-            "archive.search",
-            "memory.remember",
-            "issue.current_number",
-            "s3_issues.list",
-            "s3_personas.read_file",
-            "site.support_state",
-            "web.fetch_url",
+            "archive__search",
+            "memory__remember",
+            "issue__current_window",
+            "issue__list_windows",
+            "s3_issues__list",
+            "s3_personas__read_file",
+            "site__support_state",
+            "web__fetch_url",
         ):
             self.assertIn(tool, names)
 
     def test_registry_includes_inbox_tools(self):
         names = set(self.registry.all_names())
-        for tool in ("inbox.post", "inbox.list", "inbox.read", "inbox.mark_read"):
+        for tool in ("inbox__post", "inbox__list", "inbox__read", "inbox__mark_read"):
             self.assertIn(tool, names)
 
     def test_legacy_flat_names_are_gone(self):
@@ -99,6 +102,11 @@ class ToolRegistryCompositionTests(unittest.TestCase):
             "fetch_buttondown_subscribers",
             "remember",
             "current_issue_number",
+            "issue.current_number",
+            "issue.current_window",       # dotted form is retired
+            "archive.search",
+            "memory.remember",
+            "buttondown.list_subscribers",
             "persona_read",
             "get_support_state",
         ):
@@ -113,14 +121,14 @@ class ToolRegistryCompositionTests(unittest.TestCase):
     def test_duplicate_registration_raises(self):
         with self.assertRaises(ValueError):
             self.registry.register(
-                "memory.remember",
+                "memory__remember",
                 {"description": "x", "input_schema": {}},
                 lambda deps, **kw: None,
             )
 
     def test_unknown_dispatch_raises(self):
         with self.assertRaises(KeyError):
-            self.registry.dispatch("nonexistent.tool", deps=None, args={}, persona="eddy")
+            self.registry.dispatch("nonexistent__tool", deps=None, args={}, persona="eddy")
 
     def test_dispatch_sets_active_persona(self):
         seen: list[str] = []
@@ -130,8 +138,8 @@ class ToolRegistryCompositionTests(unittest.TestCase):
             return "ok"
 
         registry = agent_tools.ToolRegistry()
-        registry.register("test.echo", {"description": "x", "input_schema": {}}, handler)
-        result = registry.dispatch("test.echo", deps=None, args={}, persona="marky")
+        registry.register("test__echo", {"description": "x", "input_schema": {}}, handler)
+        result = registry.dispatch("test__echo", deps=None, args={}, persona="marky")
         self.assertEqual(result, "ok")
         self.assertEqual(seen, ["marky"])
         # ContextVar was reset after dispatch.
@@ -139,7 +147,8 @@ class ToolRegistryCompositionTests(unittest.TestCase):
 
 
 class SystemServerRegistrationTests(unittest.TestCase):
-    """A SystemServer round-trips list_tools() into dotted-name registration."""
+    """A SystemServer round-trips list_tools() into ``<system>__<action>``
+    registration."""
 
     def test_register_system_namespaces_each_tool(self):
         class FakeServer:
@@ -158,11 +167,11 @@ class SystemServerRegistrationTests(unittest.TestCase):
         registry = agent_tools.ToolRegistry()
         registry.register_system(FakeServer())
 
-        self.assertIn("fake.ping", registry.all_names())
-        tool = registry.get("fake.ping")
+        self.assertIn("fake__ping", registry.all_names())
+        tool = registry.get("fake__ping")
         self.assertEqual(tool.source, "system:fake")
-        self.assertEqual(tool.spec["name"], "fake.ping")
-        out = registry.dispatch("fake.ping", deps=None, args={}, persona="eddy")
+        self.assertEqual(tool.spec["name"], "fake__ping")
+        out = registry.dispatch("fake__ping", deps=None, args={}, persona="eddy")
         self.assertEqual(out, {"ok": True})
 
 
@@ -191,24 +200,24 @@ class RestrictedSystemTests(unittest.TestCase):
     def test_restricted_tool_visible_only_to_allowed_persona(self):
         registry = self._registry_with_restricted_fake()
         # all_names() ignores restrictions — it's the unscoped view.
-        self.assertIn("vault.read", registry.all_names())
+        self.assertIn("vault__read", registry.all_names())
         # names_for(persona) is the scoped view the agent loop uses.
-        self.assertIn("vault.read", registry.names_for("patty"))
+        self.assertIn("vault__read", registry.names_for("patty"))
         for other in ("eddy", "linky", "marky"):
             self.assertNotIn(
-                "vault.read",
+                "vault__read",
                 registry.names_for(other),
-                msg=f"vault.read should be hidden from {other!r}",
+                msg=f"vault__read should be hidden from {other!r}",
             )
 
     def test_dispatch_refuses_restricted_tool_for_other_persona(self):
         registry = self._registry_with_restricted_fake()
         # Patty can call it.
-        out = registry.dispatch("vault.read", deps=None, args={}, persona="patty")
+        out = registry.dispatch("vault__read", deps=None, args={}, persona="patty")
         self.assertEqual(out, {"secret": "ok"})
         # Marky cannot — even if she tries to invoke it directly.
         with self.assertRaises(PermissionError):
-            registry.dispatch("vault.read", deps=None, args={}, persona="marky")
+            registry.dispatch("vault__read", deps=None, args={}, persona="marky")
 
     def test_unrestricted_system_visible_to_everyone(self):
         class OpenServer:
@@ -228,7 +237,7 @@ class RestrictedSystemTests(unittest.TestCase):
         registry = agent_tools.ToolRegistry()
         registry.register_system(OpenServer())
         for persona in ("eddy", "linky", "marky", "patty"):
-            self.assertIn("public.ping", registry.names_for(persona))
+            self.assertIn("public__ping", registry.names_for(persona))
 
 
 if __name__ == "__main__":

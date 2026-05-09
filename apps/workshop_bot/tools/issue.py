@@ -1,52 +1,87 @@
-"""In-flight issue resolver — exposed as ``issue.current_number``."""
+"""In-flight issue window — operator-set, persisted in SQLite.
+
+Replaces the old auto-derived resolver (S3 folder names + corpus
+latest). Jamie sets the active window via the ``/workshop next-issue``
+slash command; agents read it via ``issue__current_window`` and look up
+historical windows via ``issue__list_windows``.
+
+Date semantics
+--------------
+``pub_date``     YYYY-MM-DD, must be a Saturday — the day the issue
+                 is published (for display; actual send may slip to
+                 Sunday).
+``end_date``     ``pub_date - 1 day`` — the content cutoff for this
+                 issue.
+``start_date``   ``end_date - day_count days`` — the previous issue's
+                 cutoff. Items whose timestamp is strictly after
+                 ``start_date`` and not after ``end_date`` belong to
+                 this issue's content window.
+``day_count``    Almost always 7. 14 for double issues. Any positive
+                 integer is accepted.
+"""
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from typing import Any
 
-from . import s3
+from . import db
 
 
-def t_current_issue_number(deps) -> dict[str, Any]:
-    """Resolve which issue is being assembled this week.
+class IssueWindowError(ValueError):
+    """Raised when ``/workshop next-issue`` arguments don't validate."""
 
-    Combines two signals:
-      - the highest issue folder in S3 (where Jamie's iOS Shortcuts stage drafts)
-      - the highest published issue in the archive corpus (the reference baseline)
 
-    The working issue is **not** in the archive corpus — it's a draft. Use
-    this when Jamie says "the current issue", "this weekend's issue", or
-    "the one I'm working on" so you don't accidentally treat the most
-    recently *published* issue as the in-flight one.
+def compute_window(pub_date_iso: str, day_count: int) -> dict[str, Any]:
+    """Validate inputs and derive the full window dict.
+
+    ``pub_date_iso`` must parse as YYYY-MM-DD on a Saturday.
+    ``day_count`` must be a positive integer.
     """
+    raw = (pub_date_iso or "").strip()
     try:
-        ws = s3.list_workspaces()
-        s3_max = ws.get("current_issue_number")
-    except Exception as exc:  # noqa: BLE001
-        s3_max = None
-        ws = {"error": f"{type(exc).__name__}: {exc}"}
-
-    published_latest = None
-    if deps is not None and getattr(deps, "corpus", None) is not None:
-        published_latest = deps.corpus.latest_issue_number
-
-    if s3_max is not None and (published_latest is None or s3_max > published_latest):
-        working = s3_max
-        has_workspace = True
-    elif published_latest is not None:
-        working = published_latest + 1
-        has_workspace = False
-    else:
-        working = None
-        has_workspace = False
-
+        pub = datetime.strptime(raw, "%Y-%m-%d").date()
+    except ValueError as exc:
+        raise IssueWindowError(
+            f"pub_date must be YYYY-MM-DD; got {pub_date_iso!r}"
+        ) from exc
+    if pub.weekday() != 5:  # 0=Mon … 5=Sat … 6=Sun
+        raise IssueWindowError(
+            f"pub_date {raw} is a {pub.strftime('%A')}; must be Saturday"
+        )
+    try:
+        n = int(day_count)
+    except (TypeError, ValueError) as exc:
+        raise IssueWindowError(
+            f"day_count must be a positive integer; got {day_count!r}"
+        ) from exc
+    if n <= 0:
+        raise IssueWindowError(
+            f"day_count must be a positive integer; got {n}"
+        )
+    end = pub - timedelta(days=1)
+    start = end - timedelta(days=n)
     return {
-        "working_issue_number": working,
-        "has_s3_workspace": has_workspace,
-        "s3_max_workspace": s3_max,
-        "published_latest_issue": published_latest,
-        "note": (
-            "The working issue is the in-flight draft — it is NOT in your "
-            "archive corpus yet. search_archive / get_issue won't find it."
-        ),
+        "pub_date": pub.isoformat(),
+        "end_date": end.isoformat(),
+        "start_date": start.isoformat(),
+        "day_count": n,
     }
+
+
+def t_current_issue_window(deps) -> dict[str, Any]:
+    """Return the active issue window, or an error if none is set."""
+    row = db.get_active_issue_window()
+    if row is None:
+        return {
+            "error": (
+                "No active issue window. Jamie sets this via "
+                "/workshop next-issue <number> <YYYY-MM-DD> <day_count>."
+            ),
+        }
+    return row
+
+
+def t_list_issue_windows(deps, limit: int = 12) -> list[dict[str, Any]]:
+    """Return recent issue windows (newest issue number first)."""
+    return db.list_issue_windows(limit=int(limit))

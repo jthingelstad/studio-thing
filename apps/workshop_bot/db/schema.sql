@@ -178,7 +178,7 @@ CREATE INDEX IF NOT EXISTS idx_thingy_requests_bot_msg
 -- giving agents a typed, addressable surface for "I finished X, you
 -- should pick it up." The recipient is a persona name or 'team'; the
 -- sender is derived from the active_persona ContextVar at post time.
--- Heartbeats open with `inbox.list(filter='unread')` so handoffs are
+-- Heartbeats open with `inbox__list(filter='unread')` so handoffs are
 -- the first thing each persona reads on every wake-up.
 CREATE TABLE IF NOT EXISTS agent_inbox (
   id INTEGER PRIMARY KEY,
@@ -197,3 +197,35 @@ CREATE TABLE IF NOT EXISTS agent_inbox (
 
 CREATE INDEX IF NOT EXISTS idx_agent_inbox_recipient
   ON agent_inbox(recipient, read_at);
+
+-- Issue windows — operator-set publishing schedule. Replaces the prior
+-- auto-derived in-flight resolver (which combined S3 folder names with
+-- the latest published issue). Jamie sets the active window via the
+-- ``/workshop next-issue`` slash command; agents read it via
+-- ``issue__current_window`` and historical metadata via
+-- ``issue__list_windows``.
+--
+-- Date semantics:
+--   - pub_date is the Saturday the issue is published (display).
+--   - end_date = pub_date - 1 day (content cutoff).
+--   - start_date = end_date - day_count days (previous issue's cutoff;
+--     so day_count=7 captures the seven days strictly after start_date
+--     up to and including end_date).
+--   - day_count is usually 7; 14 for double issues.
+--
+-- Exactly one row may have is_active=1; enforced by the partial unique
+-- index below.
+CREATE TABLE IF NOT EXISTS issue_windows (
+  issue_number INTEGER PRIMARY KEY,
+  pub_date TEXT NOT NULL,                        -- YYYY-MM-DD, Saturday
+  end_date TEXT NOT NULL,                        -- YYYY-MM-DD = pub_date - 1
+  start_date TEXT NOT NULL,                      -- YYYY-MM-DD = end_date - day_count
+  day_count INTEGER NOT NULL,
+  is_active INTEGER NOT NULL DEFAULT 0,
+  set_at TEXT NOT NULL DEFAULT (datetime('now')),
+  set_by TEXT
+);
+
+-- At most one active window at a time.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_issue_windows_active_unique
+  ON issue_windows(is_active) WHERE is_active = 1;

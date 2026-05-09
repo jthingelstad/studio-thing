@@ -33,12 +33,12 @@ from ..systems._base import SystemServer
 logger = logging.getLogger("workshop.tools")
 
 # The agent loop sets this before each tool execution so per-persona
-# tools (`memory.remember`, `memory.recall`, `inbox.post`,
-# `s3_personas.*`) can attribute their work to the calling persona
+# tools (`memory__remember`, `memory__recall`, `inbox__post`,
+# `s3_personas__*`) can attribute their work to the calling persona
 # without leaning on a shared, mutable Deps object.
 active_persona: ContextVar[str] = ContextVar("active_persona", default="unknown")
 
-# Mention/peer/team handlers set this so ``react.add`` knows which
+# Mention/peer/team handlers set this so ``react__add`` knows which
 # Discord message to attach the emoji to. ``None`` means the persona
 # was not invoked from a Discord message (e.g. heartbeat) and the
 # react tool should refuse with a clear error.
@@ -185,13 +185,14 @@ def t_fetch_url(deps, url: str, max_chars: int = 12_000) -> dict[str, Any]:
     return web.fetch_text(url, max_chars=int(max_chars))
 
 
-# ---------- current issue resolver ----------
+# ---------- current issue window (operator-set) ----------
 
-# Canonical implementation lives in `tools/issue.py` so the registry can
-# expose it under the dotted ``issue.current_number`` namespace; we
-# re-export it here for backward compatibility with the flat
-# ``FUNCS`` / ``SPECS`` lookup pattern.
-t_current_issue_number = issue.t_current_issue_number
+# Canonical implementations live in `tools/issue.py`. Jamie sets the
+# active window via the ``/workshop next-issue`` slash command; agents
+# read it here via ``issue__current_window`` (active row) and
+# ``issue__list_windows`` (historical metadata).
+t_current_issue_window = issue.t_current_issue_window
+t_list_issue_windows = issue.t_list_issue_windows
 
 
 # ---------- memory (universal) ----------
@@ -376,7 +377,7 @@ def t_react_add(deps, emoji: str) -> dict[str, Any]:
         fut = asyncio.run_coroutine_threadsafe(_do(), bot.loop)
         fut.result(timeout=8)
     except Exception as exc:  # noqa: BLE001
-        logger.exception("react.add %s by %s failed", emoji, persona)
+        logger.exception("react__add %s by %s failed", emoji, persona)
         return {"error": f"{type(exc).__name__}: {exc}"}
 
     return {"ok": True, "emoji": emoji}
@@ -385,8 +386,8 @@ def t_react_add(deps, emoji: str) -> dict[str, Any]:
 # ---------- specs (Anthropic format) ----------
 
 SPECS: dict[str, dict[str, Any]] = {
-    "archive.search": {
-        "name": "archive.search",
+    "archive__search": {
+        "name": "archive__search",
         "description": (
             "BM25 lexical search over Weekly Thing archive chunks. Default first stop for broad topics, "
             "themes, and evidence gathering. Iterate — refine the query based on what comes back."
@@ -400,8 +401,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["query"],
         },
     },
-    "archive.get_issue": {
-        "name": "archive.get_issue",
+    "archive__get_issue": {
+        "name": "archive__get_issue",
         "description": (
             "Return one full issue (front matter + body, truncated if very long). "
             "Use when you need full context for a specific issue you already have a number for."
@@ -412,11 +413,11 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["number"],
         },
     },
-    "archive.get_section": {
-        "name": "archive.get_section",
+    "archive__get_section": {
+        "name": "archive__get_section",
         "description": (
             "Pull one named section from one issue (e.g. 'Notable', 'Briefly', 'Featured', 'Microposts'). "
-            "Cheaper than archive.get_issue when you only need that section."
+            "Cheaper than archive__get_issue when you only need that section."
         ),
         "input_schema": {
             "type": "object",
@@ -427,8 +428,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["number", "section"],
         },
     },
-    "archive.list_recent": {
-        "name": "archive.list_recent",
+    "archive__list_recent": {
+        "name": "archive__list_recent",
         "description": (
             "Last N issues by number (newest first), with date, subject, topics, and abstract. "
             "Use to ground 'the latest', 'last few', 'recent' references."
@@ -438,11 +439,11 @@ SPECS: dict[str, dict[str, Any]] = {
             "properties": {"limit": {"type": "integer", "description": "default 10"}},
         },
     },
-    "archive.quote_search": {
-        "name": "archive.quote_search",
+    "archive__quote_search": {
+        "name": "archive__quote_search",
         "description": (
             "Exact substring search across issue bodies. Use to verify a specific phrase or product name "
-            "actually appears in the archive — do not infer presence from archive.search hits alone."
+            "actually appears in the archive — do not infer presence from archive__search hits alone."
         ),
         "input_schema": {
             "type": "object",
@@ -453,16 +454,16 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["phrase"],
         },
     },
-    "site.support_state": {
-        "name": "site.support_state",
+    "site__support_state": {
+        "name": "site__support_state",
         "description": (
             "Current support program state: this year's nonprofit, supporter count, amount raised, "
             "past nonprofits. No arguments."
         ),
         "input_schema": {"type": "object", "properties": {}},
     },
-    "web.fetch_url": {
-        "name": "web.fetch_url",
+    "web__fetch_url": {
+        "name": "web__fetch_url",
         "description": (
             "Fetch a URL and return readable text (title + extracted body). Use to actually "
             "read what a bookmark is about — Pinboard's title and tags often aren't enough "
@@ -477,8 +478,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["url"],
         },
     },
-    "memory.remember": {
-        "name": "memory.remember",
+    "memory__remember": {
+        "name": "memory__remember",
         "description": (
             "Save a note to long-term memory — visible to all teammates and persists across "
             "sessions. Use for: preferences Jamie has expressed, observations to carry "
@@ -501,8 +502,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["content"],
         },
     },
-    "memory.recall": {
-        "name": "memory.recall",
+    "memory__recall": {
+        "name": "memory__recall",
         "description": (
             "Read notes from long-term memory. Default scope is your own active notes; "
             "set `agent_name` to a teammate's name to read theirs, or '*' to read everyone's. "
@@ -520,12 +521,12 @@ SPECS: dict[str, dict[str, Any]] = {
             },
         },
     },
-    "memory.forget": {
-        "name": "memory.forget",
+    "memory__forget": {
+        "name": "memory__forget",
         "description": (
             "Mark a memory note as resolved (the todo is done) or stale (no longer "
             "applicable). Notes are never hard-deleted; resolved/stale notes drop out of "
-            "default memory.recall results."
+            "default memory__recall results."
         ),
         "input_schema": {
             "type": "object",
@@ -536,33 +537,53 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["note_id"],
         },
     },
-    "issue.current_number": {
-        "name": "issue.current_number",
+    "issue__current_window": {
+        "name": "issue__current_window",
         "description": (
-            "Resolve the in-flight issue number — the one Jamie is assembling "
-            "this week. **The in-flight issue is NOT in your archive corpus** "
-            "(archive.search / archive.get_issue won't find it; it's a draft). "
-            "This tool combines two signals: the highest workspace folder in S3 "
-            "and the highest published issue in the corpus. Use when Jamie says "
-            "'the current issue', 'this weekend's issue', or 'the one I'm working on'. "
-            "No arguments."
+            "Return the active in-flight issue window — the one Jamie is "
+            "assembling this week. Returns {issue_number, pub_date, end_date, "
+            "start_date, day_count, set_at, set_by}. **The in-flight issue is "
+            "NOT in your archive corpus** (archive__search / archive__get_issue "
+            "won't find it; it's a draft). Date semantics: pub_date is the "
+            "Saturday it ships; end_date = pub_date - 1 day is the content "
+            "cutoff; start_date = end_date - day_count days is the prior "
+            "issue's cutoff (so a normal issue covers the 7 days from "
+            "start_date+1 through end_date). Returns {error: ...} when Jamie "
+            "hasn't set a window yet. Use when Jamie says 'the current "
+            "issue', 'this weekend's issue', or 'the one I'm working on'."
         ),
         "input_schema": {"type": "object", "properties": {}},
     },
-    "s3_issues.list_workspaces": {
-        "name": "s3_issues.list_workspaces",
+    "issue__list_windows": {
+        "name": "issue__list_windows",
+        "description": (
+            "List recent issue windows (newest issue number first). Same "
+            "shape as issue__current_window plus an is_active flag. Use to "
+            "answer 'when did issue #N ship?' or 'what content window did "
+            "the last double issue cover?'."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "limit": {"type": "integer", "description": "default 12"},
+            },
+        },
+    },
+    "s3_issues__list_workspaces": {
+        "name": "s3_issues__list_workspaces",
         "description": (
             "List every issue workspace folder in S3 (under "
             "s3://files.thingelstad.com/weekly-thing/issues/). Returns each issue's "
-            "number, file count, and most-recent modification time. The highest "
-            "issue number is the issue currently being assembled — call "
-            "`issue.current_number` for the resolved working number, or use this "
-            "when you need the per-folder modification times. No arguments."
+            "number, file count, and most-recent modification time. Use this when "
+            "you need per-folder modification times or want to see what's been "
+            "staged for past issues. For the active in-flight issue's number "
+            "and dates, call `issue__current_window` (the operator-set source "
+            "of truth). No arguments."
         ),
         "input_schema": {"type": "object", "properties": {}},
     },
-    "s3_issues.list": {
-        "name": "s3_issues.list",
+    "s3_issues__list": {
+        "name": "s3_issues__list",
         "description": (
             "List the per-issue files in the S3 workspace at "
             "s3://files.thingelstad.com/weekly-thing/issues/{N}/. This is where "
@@ -575,8 +596,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["issue_number"],
         },
     },
-    "s3_issues.read_file": {
-        "name": "s3_issues.read_file",
+    "s3_issues__read_file": {
+        "name": "s3_issues__read_file",
         "description": (
             "Read one file from the per-issue S3 workspace. Text only — binary "
             "objects like photo.jpg are reported but their bytes aren't returned. "
@@ -594,8 +615,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["issue_number", "filename"],
         },
     },
-    "s3_issues.write_file": {
-        "name": "s3_issues.write_file",
+    "s3_issues__write_file": {
+        "name": "s3_issues__write_file",
         "description": (
             "Write one file to the per-issue S3 workspace. Use to drop outputs "
             "the Shortcuts assemble pipeline picks up — e.g. patty-cta.json, "
@@ -614,8 +635,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["issue_number", "filename", "content"],
         },
     },
-    "s3_personas.list": {
-        "name": "s3_personas.list",
+    "s3_personas__list": {
+        "name": "s3_personas__list",
         "description": (
             "List files in your private S3 scratchpad. This is your own "
             "persistent file space — separate from the per-issue workspace, "
@@ -632,8 +653,8 @@ SPECS: dict[str, dict[str, Any]] = {
             },
         },
     },
-    "s3_personas.read_file": {
-        "name": "s3_personas.read_file",
+    "s3_personas__read_file": {
+        "name": "s3_personas__read_file",
         "description": (
             "Read one file from your private S3 scratchpad. The `path` is "
             "relative to your scratchpad root and may contain subdirectories "
@@ -646,8 +667,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["path"],
         },
     },
-    "s3_personas.write_file": {
-        "name": "s3_personas.write_file",
+    "s3_personas__write_file": {
+        "name": "s3_personas__write_file",
         "description": (
             "Write one file under your private S3 scratchpad. Use this to "
             "maintain campaign ledgers, drafts, multi-step thinking, anything "
@@ -665,8 +686,8 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["path", "content"],
         },
     },
-    "react.add": {
-        "name": "react.add",
+    "react__add": {
+        "name": "react__add",
         "description": (
             "Add a single emoji reaction to the message you're currently "
             "responding to (mention, peer message, or team-round trigger). "
@@ -695,25 +716,26 @@ SPECS: dict[str, dict[str, Any]] = {
 
 
 FUNCS: dict[str, Callable[..., Any]] = {
-    "archive.search": t_search_archive,
-    "archive.get_issue": t_get_issue,
-    "archive.get_section": t_get_section,
-    "archive.list_recent": t_list_recent_issues,
-    "archive.quote_search": t_quote_search,
-    "site.support_state": t_get_support_state,
-    "web.fetch_url": t_fetch_url,
-    "issue.current_number": t_current_issue_number,
-    "memory.remember": t_remember,
-    "memory.recall": t_recall,
-    "memory.forget": t_forget_note,
-    "s3_issues.list_workspaces": t_s3_list_issue_workspaces,
-    "s3_issues.list": t_s3_list_issue,
-    "s3_issues.read_file": t_s3_read_issue_file,
-    "s3_issues.write_file": t_s3_write_issue_file,
-    "s3_personas.list": t_persona_list,
-    "s3_personas.read_file": t_persona_read,
-    "s3_personas.write_file": t_persona_write,
-    "react.add": t_react_add,
+    "archive__search": t_search_archive,
+    "archive__get_issue": t_get_issue,
+    "archive__get_section": t_get_section,
+    "archive__list_recent": t_list_recent_issues,
+    "archive__quote_search": t_quote_search,
+    "site__support_state": t_get_support_state,
+    "web__fetch_url": t_fetch_url,
+    "issue__current_window": t_current_issue_window,
+    "issue__list_windows": t_list_issue_windows,
+    "memory__remember": t_remember,
+    "memory__recall": t_recall,
+    "memory__forget": t_forget_note,
+    "s3_issues__list_workspaces": t_s3_list_issue_workspaces,
+    "s3_issues__list": t_s3_list_issue,
+    "s3_issues__read_file": t_s3_read_issue_file,
+    "s3_issues__write_file": t_s3_write_issue_file,
+    "s3_personas__list": t_persona_list,
+    "s3_personas__read_file": t_persona_read,
+    "s3_personas__write_file": t_persona_write,
+    "react__add": t_react_add,
 }
 
 
@@ -723,15 +745,25 @@ FUNCS: dict[str, Callable[..., Any]] = {
 class ToolRegistry:
     """Composes external-system tools and local helpers into one namespace.
 
-    Tool names follow ``<system>.<action>`` (dotted) — ``archive.search``,
-    ``memory.remember``, ``inbox.post``, ``buttondown.list_subscribers``.
-    Local helpers live in ``FUNCS`` / ``SPECS`` keyed by their dotted name;
+    Tool names follow ``<system>__<action>`` — ``archive__search``,
+    ``memory__remember``, ``inbox__post``, ``buttondown__list_subscribers``.
+    The double-underscore separator is API-safe (Anthropic enforces
+    ``^[a-zA-Z0-9_-]{1,128}$`` on custom tool names) so the same name is
+    used in the registry, the API, and prompts — no boundary translation.
+
+    Local helpers live in ``FUNCS`` / ``SPECS`` keyed by their full name;
     external systems are added by ``register_system(server)`` from
     ``apps/workshop_bot/systems/``.
     """
 
     def __init__(self) -> None:
         self._tools: dict[str, Tool] = {}
+
+    # Enforced API-safe tool names. Anthropic's regex is
+    # ``^[a-zA-Z0-9_-]{1,128}$`` — we additionally forbid the dotted
+    # form so an accidental rename ("archive.search") fails loudly at
+    # boot rather than at the first API call.
+    _NAME_RE = re.compile(r"^[a-zA-Z0-9_-]{1,128}$")
 
     def register(
         self,
@@ -741,6 +773,11 @@ class ToolRegistry:
         source: str = "local",
         restricted_to: Optional[frozenset[str]] = None,
     ) -> None:
+        if not self._NAME_RE.match(name):
+            raise ValueError(
+                f"tool name {name!r} is not API-safe; expected "
+                f"<system>__<action> using [a-zA-Z0-9_-]"
+            )
         if name in self._tools:
             raise ValueError(f"duplicate tool registration: {name!r}")
         spec_with_name = dict(spec)
@@ -763,7 +800,7 @@ class ToolRegistry:
             frozenset(restricted_raw) if restricted_raw is not None else None
         )
         for tdef in server.list_tools():
-            full = f"{server.name}.{tdef.name}"
+            full = f"{server.name}__{tdef.name}"
             spec = {
                 "name": full,
                 "description": tdef.description,
@@ -809,9 +846,10 @@ class ToolRegistry:
         tool = self._tools.get(name)
         if tool is None:
             raise KeyError(f"unknown tool {name!r}")
-        # Defense in depth: even if the model invents a name for a
-        # restricted tool, the dispatcher refuses to run it for a
-        # persona that isn't in the allowlist.
+        # Per-persona scoping. Mirrors the same check in
+        # ``agent_loop._execute_tool`` so both call paths (this
+        # synchronous dispatcher and the async loop's direct
+        # ``tool.func`` invocation) enforce restrictions identically.
         if tool.restricted_to is not None and persona not in tool.restricted_to:
             raise PermissionError(
                 f"tool {name!r} is not visible to persona {persona!r}"

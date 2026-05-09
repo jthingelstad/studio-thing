@@ -12,7 +12,7 @@ class StripeServer:
     # ever reaches for Stripe (Thursday member.json composition,
     # daily heartbeat). The other personas don't see these tools at
     # all — registry filtering enforces it. If campaign attribution
-    # ever needs Stripe data, hand off to Patty via `inbox.post`.
+    # ever needs Stripe data, hand off to Patty via `inbox__post`.
     restricted_to = {"patty"}
 
     def list_tools(self) -> list[ToolDef]:
