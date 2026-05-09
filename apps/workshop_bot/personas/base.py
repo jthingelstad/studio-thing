@@ -300,38 +300,30 @@ class PersonaBot(discord.Client):
         token = agent_tools.active_react_target.set(
             (message.channel.id, message.id)
         )
-        # One typing pulse instead of discord.py's Typing context manager,
-        # which re-pings /typing every 5s and trivially exceeds the per-channel
-        # typing rate limit on long agent loops or concurrent persona replies.
-        # A single trigger lasts ~10s in the client UI; long replies just lose
-        # the dots, which is fine.
         try:
-            await message.channel.trigger_typing()
-        except discord.DiscordException:
-            pass
-        try:
-            with db.AgentRun(self.persona, trigger="mention") as run:
-                answer, meta = await self.core(
-                    latest=latest, history=history, model=model
-                )
-                output_id = db.insert_agent_output(
-                    agent_name=self.persona,
-                    output_type="reply",
-                    content=answer,
-                    metadata={
-                        **meta,
-                        "discord_message_id": str(message.id),
-                        "discord_channel_id": str(message.channel.id),
-                    },
-                )
-                run.records_written = 1
-                logger.info(
-                    "%s reply #%d (%d iter, %d tool calls)",
-                    self.persona,
-                    output_id,
-                    meta.get("iterations", 0),
-                    len(meta.get("tool_calls") or []),
-                )
+            async with message.channel.typing():
+                with db.AgentRun(self.persona, trigger="mention") as run:
+                    answer, meta = await self.core(
+                        latest=latest, history=history, model=model
+                    )
+                    output_id = db.insert_agent_output(
+                        agent_name=self.persona,
+                        output_type="reply",
+                        content=answer,
+                        metadata={
+                            **meta,
+                            "discord_message_id": str(message.id),
+                            "discord_channel_id": str(message.channel.id),
+                        },
+                    )
+                    run.records_written = 1
+                    logger.info(
+                        "%s reply #%d (%d iter, %d tool calls)",
+                        self.persona,
+                        output_id,
+                        meta.get("iterations", 0),
+                        len(meta.get("tool_calls") or []),
+                    )
         finally:
             agent_tools.active_react_target.reset(token)
 
