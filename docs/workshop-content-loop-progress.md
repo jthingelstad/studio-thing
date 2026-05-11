@@ -93,6 +93,15 @@ Reviewed the Shortcut-produced raw bodies (`data/buttondown/bodies/343–346.md`
 - **`build-publish`** — joins top-level parts `---`-fenced (intro, the cover block from `cover.md` + image, the non-empty `## …` sections, CTAs at placements, then `A haiku to leave you with…` + the haiku + the closing line). `## Haiku` → the prose close.
 - `draft.py:SECTION_BLOCKS` / `update_draft.py:SECTION_BLOCKS` / `_ASSET_FILE` gained `cover`. Tests: rewrote the affected `BuildPublish`/`UpdateDraft` assertions, added `SectionRendererTests` (the loops + `format_haiku`) and a template-shape check; `_filled_final` fixture's Briefly default updated to the new form. Docs (`CLAUDE.md` "Issue-markdown shape", `README.md`) updated. **354 tests pass.** Bot restarted. (Not represented in the draft: the membership CTA — composed separately, assembled into `publish.md` — and the email tracking pixel, a Buttondown artifact.)
 
+### New description prompt — single comma-separated topic line (2026-05-11, cont'd)
+
+Jamie supplied a refined, standalone description-writing prompt. Adopted it verbatim and simplified `compose-meta`'s second step:
+
+- `prompts/eddy/compose-description.md` = Jamie's prompt verbatim. Output is *a single line* — a comma-separated list of concrete topics lifted from the body, 130–150 chars (max 160), ending in a period, lead with the strongest item. Few-shot examples included for tone calibration.
+- `compose-meta` step 2 is now a one-shot: load prompt, substitute `<<<ISSUE_TEXT>>>`, one `bot.core` call, `_first_nonempty_line(reply)` is the description. No picker, no refresh loop — the prompt is deterministic enough that re-rolling rarely improves it. If the description doesn't land, Jamie edits in Buttondown or re-runs `compose-meta`. The success post in `#editorial` now surfaces both subject and description so a bad one is visible immediately.
+- Removed the dead `_recent_subjects` helper (the new subject and description prompts are both self-contained — neither references recent subjects).
+- Tests: rewrote `test_writes_metadata_json`, added `test_empty_description_reply_writes_empty_description` + `test_first_nonempty_line`. **355 tests pass.** Bot restarted.
+
 ## Blockers
 (none — S3 versioning on `files.thingelstad.com` confirmed `Enabled`; the Step-4 pre-flight is satisfied)
 
