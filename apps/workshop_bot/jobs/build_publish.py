@@ -16,11 +16,12 @@ missing list to ``#editorial`` with the slash command(s) to run.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 
 from ..tools import draft as draft_mod
-from ..tools import s3
+from ..tools import render, s3
 from . import _base
 
 logger = logging.getLogger("workshop.jobs.build_publish")
@@ -139,13 +140,21 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
 
             published = "\n\n".join(p.strip() for p in parts if p.strip()).strip() + "\n"
             s3.write_issue_file(n, "publish.md", published)
+            html_url = await asyncio.to_thread(
+                render.render_and_upload_html, n, "publish", published,
+                title=f"Weekly Thing {n}", subtitle=None,
+            )
+            view = f"\n📄 [view it]({html_url})" if html_url else ""
             await ctx.post(
                 "DISCORD_CHANNEL_EDITORIAL",
-                f"✅ `publish.md` ready for **WT{n}** (~{len(published.split())} words) — "
-                f"push via `pipeline/content/content.py publish --issue {n}` (creates a Buttondown draft) when you're ready.",
+                f"✅ `publish.md` ready for **WT{n}** (~{len(published.split())} words){view}\n"
+                f"Push via `pipeline/content/content.py publish --issue {n}` (creates a Buttondown draft) when you're ready.",
                 persona="eddy",
             )
     except _base.JobLocked as exc:
         return _base.JobResult(False, f"⏳ `build-publish` is already running ({exc.holder_desc}).")
-    return _base.JobResult(True, f"publish.md written for #{n} (~{len(published.split())} words).",
-                           data={"issue_number": n})
+    return _base.JobResult(
+        True,
+        f"publish.md written for #{n} (~{len(published.split())} words){f' · 📄 {html_url}' if html_url else ''}.",
+        data={"issue_number": n, "preview_url": html_url},
+    )

@@ -42,6 +42,13 @@ After a full-project review, addressed:
 
 318 tests pass.
 
+### Browser-viewable HTML previews + a few follow-ups (2026-05-11, cont'd)
+
+- **`draft.html` / `final.html` / `publish.html`.** `update-draft` / `create-final` / `build-publish` now write a self-contained HTML twin alongside their `.md` (`tools/render.py` — Python-Markdown → a styled page; `draft`/`final` strip the block markers and get a "DRAFT…/FINAL…" banner; `publish` renders clean). Uploaded with `Cache-Control: no-cache` and a CloudFront invalidation of that path (`tools/cdn.py`, distribution `WEEKLY_THING_CDN_DISTRIBUTION_ID`, default the prod one — set to empty to disable). The URL surfaces in the job result and (for `update-draft`, Tue–Fri) on Eddy's review card, so Jamie can pull up `https://files.thingelstad.com/weekly-thing/{N}/draft.html` and watch the issue come together. Best-effort: a render/invalidation hiccup never fails the job. Pages carry `<meta robots noindex>`, and `files.thingelstad.com/robots.txt` is already `Disallow: /` (checked) — so the in-progress drafts aren't indexed (they're publicly reachable by URL, same as `draft.md` always has been there — which the user is fine with: the finished product is public anyway). Added `markdown` to `requirements.txt`. New `test_render.py`. The render was eyeballed on a realistic draft.
+- **micro.blog adjacent images** — `<img><img>` gallery posts now render as separate paragraphs (`![](a)\n\n![](b)`) instead of running together; `update-draft` runs the journal-image rehost + HTML write inside the same `asyncio.to_thread` as the source pulls.
+
+331 tests pass.
+
 ## Blockers
 (none — S3 versioning on `files.thingelstad.com` confirmed `Enabled`; the Step-4 pre-flight is satisfied)
 

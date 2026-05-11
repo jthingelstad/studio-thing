@@ -22,7 +22,7 @@ import os
 from datetime import datetime
 
 from ..systems.pinboard import client as pinboard
-from ..tools import anthropic_client, context, db, draft as draft_mod, journal_images, microblog, s3
+from ..tools import anthropic_client, context, db, draft as draft_mod, journal_images, microblog, render, s3
 from . import _base
 
 logger = logging.getLogger("workshop.jobs.update_draft")
@@ -161,7 +161,7 @@ def _is_pass(text: str) -> bool:
 
 
 async def _maybe_eddy_review(
-    ctx: "_base.JobContext", window: dict, st: dict, prev_digest, today
+    ctx: "_base.JobContext", window: dict, st: dict, prev_digest, today, *, view_url=None
 ) -> str:
     if today.weekday() not in _EDDY_REVIEW_WEEKDAYS:
         logger.info("update-draft: %s — Eddy stays silent", today.strftime("%a"))
@@ -188,6 +188,8 @@ async def _maybe_eddy_review(
         run.records_written = 0 if (not answer or _is_pass(answer)) else 1
     if not answer or _is_pass(answer):
         return "Eddy: PASS (nothing to flag)."
+    if view_url:
+        answer = answer.rstrip() + f"\n\n📄 [view draft]({view_url})"
     posted = await ctx.post("DISCORD_CHANNEL_EDITORIAL", answer, persona="eddy")
     return "Eddy posted a review to #editorial." if posted else "(couldn't post Eddy's review)"
 
@@ -236,9 +238,17 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             prev_digest = db.latest_draft_digest(n)
             today = datetime.now().date()
 
+            # Browser-viewable preview (no-cache + CDN invalidation); best-effort.
+            html_url = await asyncio.to_thread(
+                render.render_and_upload_html, n, "draft", text,
+                title=f"WT{n} — draft",
+                subtitle=f"DRAFT · WT{n} · refreshed {today} · ~{st['word_count']} words · not the final issue",
+                strip_block_markers=True,
+            )
+
             review_note = ""
             try:
-                review_note = await _maybe_eddy_review(ctx, window, st, prev_digest, today)
+                review_note = await _maybe_eddy_review(ctx, window, st, prev_digest, today, view_url=html_url)
             except Exception:  # noqa: BLE001
                 logger.exception("update-draft: Eddy review failed for #%d", n)
                 review_note = "(Eddy review errored — see logs)"
@@ -264,12 +274,13 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         )
 
     missing = ", ".join(st["required_missing"]) or "nothing"
+    view = f" · 📄 {html_url}" if html_url else ""
     return _base.JobResult(
         True,
         f"refreshed `draft.md` for #{n} (~{st['word_count']} words; "
         f"{st['sections']['notable']['item_count']} Notable / "
         f"{st['sections']['brief']['item_count']} Briefly / "
-        f"{st['sections']['journal']['item_count']} Journal). "
+        f"{st['sections']['journal']['item_count']} Journal){view}. "
         f"Still missing for ship: {missing}. {review_note}".strip(),
-        data={"issue_number": n, "section_status": st, "review": review_note},
+        data={"issue_number": n, "section_status": st, "review": review_note, "preview_url": html_url},
     )

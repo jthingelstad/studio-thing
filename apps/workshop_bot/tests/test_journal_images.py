@@ -149,6 +149,23 @@ class RehostInMarkdownTests(unittest.TestCase):
             out = journal_images.rehost_in_markdown(md, 458)
         self.assertIn("![](https://www.thingelstad.com/uploads/2026/z.jpg)", out)
 
+    def test_adjacent_imgs_separated_by_blank_line(self):
+        md = ('Race day!\n\n'
+              '<img src="https://www.thingelstad.com/uploads/2026/a814739f8a.jpg" width="600" height="450" alt="">'
+              '<img src="https://www.thingelstad.com/uploads/2026/08388e7462.jpg" width="600" height="450" alt="">')
+        with patch.object(s3, "journal_image_exists", lambda i, n: True), \
+             patch.object(s3, "journal_image_url", lambda i, n: f"https://files.thingelstad.com/weekly-thing/{i}/journal/{n}"):
+            out = journal_images.rehost_in_markdown(md, 458)
+        # Two separate paragraphs, not "![](a)![](b)".
+        self.assertNotIn(").jpg)![", out)
+        self.assertNotIn(")![", out)
+        self.assertIn(
+            "![](https://files.thingelstad.com/weekly-thing/458/journal/a814739f8a.jpg)\n\n"
+            "![](https://files.thingelstad.com/weekly-thing/458/journal/08388e7462.jpg)",
+            out,
+        )
+        self.assertTrue(out.startswith("Race day!\n\n"))
+
     def test_no_images_passthrough(self):
         md = "Just text with a [link](http://x.example) and no images."
         self.assertEqual(journal_images.rehost_in_markdown(md, 458), md)

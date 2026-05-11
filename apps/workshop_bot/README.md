@@ -89,9 +89,10 @@ weekly-thing/{N}/
 ├── draft.md            ← update-draft writes (regenerable projection of all the above + upstream)
 ├── final.md            ← create-final writes (post-Eddy ordering)    [required]
 ├── publish.md          ← build-publish writes (sections assembled, empties dropped; the ship artifact)
+├── draft.html / final.html / publish.html ← browser-viewable HTML twins (tools.render; no-cache + CDN-invalidated)
 ├── cover.jpg           ← issue cover image (iOS Shortcuts)            [required]
 ├── cover-large.jpg     ← full-size cover (iOS Shortcuts)
-├── journal/            ← per-entry photos (iOS Shortcuts)
+├── journal/<hash>.jpg  ← per-entry photos — iOS Shortcuts AND update-draft's journal-image rehost
 ├── body-{N}.mp3 / weekly-thing-{N}.mp3 ← audio, written by `pipeline/audio/`
 └── eddy-edits.md       ← (rare — when Eddy posts a substantial revision worth preserving)
 ```
@@ -172,6 +173,8 @@ apps/workshop_bot/
 │   ├── interaction.py        # await_choice / await_approval — reaction primitive for jobs
 │   ├── microblog.py          # micro.blog client — Micropub q=source → native markdown (no fallback; API key required)
 │   ├── journal_images.py     # rehost micro.blog photo uploads → resized copies in weekly-thing/{N}/journal/
+│   ├── render.py             # markdown → standalone HTML preview page (draft/final/publish .html twins)
+│   ├── cdn.py                # CloudFront invalidation (best-effort) for the public assets bucket
 │   ├── rss.py                # latest_published_issue() from weekly.thingelstad.com/feed.xml
 │   ├── support_state.py      # current nonprofit state for Patty
 │   ├── s3.py                 # per-issue S3 workspace — backs workspace__*

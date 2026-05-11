@@ -5,6 +5,7 @@ boto3
 discord.py>=2.4
 httpx
 lxml
+markdown
 openai
 Pillow
 pydantic

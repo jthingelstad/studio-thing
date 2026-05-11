@@ -43,10 +43,14 @@ class FakeWorkspace:
                     "text": self.files[key], "size": len(self.files[key])}
         return {"key": f"weekly-thing/{issue_number}/{filename}", "found": False}
 
-    def write_issue_file(self, issue_number, filename, content, *, content_type=None):
+    def write_issue_file(self, issue_number, filename, content, *, content_type=None, cache_control=None):
         self.files[(int(issue_number), filename)] = content
         return {"key": f"weekly-thing/{issue_number}/{filename}", "written": True,
-                "size": len(content)}
+                "size": len(content), "url": f"https://files.thingelstad.com/weekly-thing/{issue_number}/{filename}"}
+
+    def write_issue_html(self, issue_number, filename, html_text):
+        # No CloudFront invalidation in tests.
+        return self.write_issue_file(issue_number, filename, html_text)
 
     def list_issue(self, issue_number):
         n = int(issue_number)
@@ -60,6 +64,7 @@ def _patch_s3(ws: FakeWorkspace):
     return [
         patch.object(s3, "read_issue_file", ws.read_issue_file),
         patch.object(s3, "write_issue_file", ws.write_issue_file),
+        patch.object(s3, "write_issue_html", ws.write_issue_html),
         patch.object(s3, "list_issue", ws.list_issue),
     ]
 
@@ -393,6 +398,12 @@ class UpdateDraftRealFillsTests(_DBTestCase):
         self.assertEqual(dig["notable_count"], 2)
         self.assertEqual(dig["brief_count"], 1)
         self.assertEqual(dig["journal_count"], 2)
+        # An HTML preview was written too, and its URL surfaced in the result.
+        html = self.ws.files[(458, "draft.html")]
+        self.assertTrue(html.startswith("<!DOCTYPE html>"))
+        self.assertIn("Why it matters.", html)               # markdown rendered
+        self.assertIn("DRAFT · WT458", html)                 # work-in-progress banner
+        self.assertEqual(result.data["preview_url"], "https://files.thingelstad.com/weekly-thing/458/draft.html")
 
     def test_idempotent_with_stable_sources(self):
         self._set_window()
@@ -1005,6 +1016,13 @@ class BuildPublishTests(_DBTestCase):
         # CTA placed after the Briefly section, before Journal.
         self.assertLess(pub.index("Support the EFF."), pub.index("## Journal"))
         self.assertGreater(pub.index("Support the EFF."), pub.index("## Briefly"))
+        # publish.html written too (no draft banner — it's the ship body).
+        html = self.ws.files[(458, "publish.html")]
+        self.assertTrue(html.startswith("<!DOCTYPE html>"))
+        self.assertIn("<title>Weekly Thing 458</title>", html)
+        self.assertNotIn('class="banner"', html)
+        self.assertIn("Support the EFF.", html)
+        self.assertEqual(result.data["preview_url"], "https://files.thingelstad.com/weekly-thing/458/publish.html")
 
     def test_no_currently_means_no_currently_heading(self):
         self._window()
@@ -1175,6 +1193,12 @@ class CreateFinalTests(_DBTestCase):
         self.assertIn("compose-haiku", result.message)
         # ...and Eddy never touched any other job.
         self.assertFalse(hasattr(create_final, "compose_haiku"))
+        # final.html preview written, banner says FINAL.
+        html = self.ws.files[(458, "final.html")]
+        self.assertTrue(html.startswith("<!DOCTYPE html>"))
+        self.assertIn("FINAL (post-Eddy ordering) · WT458", html)
+        self.assertIn("Z reordered", html)
+        self.assertEqual(result.data["preview_url"], "https://files.thingelstad.com/weekly-thing/458/final.html")
 
     def test_reject_uses_draft_body(self):
         proposed = _filled_final(notable="### [Z reordered](http://z)\n\nlead")

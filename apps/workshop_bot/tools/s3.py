@@ -218,14 +218,23 @@ def read_issue_file(issue_number: int, filename: str, *, max_bytes: int = READ_M
     }
 
 
+def issue_file_url(issue_number: int, filename: str) -> str:
+    """Public URL for a file in the issue workspace (the bucket is a
+    CDN-fronted domain, so ``https://{bucket}/{key}``)."""
+    return f"https://{_bucket()}/{_resolve_key(int(issue_number), filename)}"
+
+
 def write_issue_file(
     issue_number: int,
     filename: str,
     content: str,
     *,
     content_type: Optional[str] = None,
+    cache_control: Optional[str] = None,
 ) -> dict[str, Any]:
-    """Write a text file under the issue's scoped prefix."""
+    """Write a text file under the issue's scoped prefix. ``cache_control``,
+    if given, is set on the object (used for the HTML previews, which are
+    overwritten frequently and want ``no-cache``)."""
     key = _resolve_key(issue_number, filename)
     if not isinstance(content, str):
         raise S3PathError("content must be a string")
@@ -247,16 +256,38 @@ def write_issue_file(
             ".html": "text/html; charset=utf-8",
         }.get(suffix, "text/plain; charset=utf-8")
     bucket = _bucket()
-    client = _client()
-    client.put_object(Bucket=bucket, Key=key, Body=body, ContentType=content_type)
+    put_kwargs: dict[str, Any] = {"Bucket": bucket, "Key": key, "Body": body, "ContentType": content_type}
+    if cache_control:
+        put_kwargs["CacheControl"] = cache_control
+    _client().put_object(**put_kwargs)
     logger.info("s3.write_issue_file(%d, %s) -> %d bytes", issue_number, filename, len(body))
     return {
         "key": key,
         "bucket": bucket,
+        "url": f"https://{bucket}/{key}",
         "size": len(body),
         "content_type": content_type,
         "written": True,
     }
+
+
+def write_issue_html(issue_number: int, filename: str, html_text: str) -> dict[str, Any]:
+    """Write an ``.html`` preview to the issue workspace with
+    ``Cache-Control: no-cache`` and then invalidate the CloudFront path for
+    it (best-effort). Returns the same dict as :func:`write_issue_file`,
+    including ``url``."""
+    if not filename.endswith(".html"):
+        raise S3PathError("write_issue_html expects an .html filename")
+    res = write_issue_file(
+        int(issue_number), filename, html_text,
+        content_type="text/html; charset=utf-8", cache_control="no-cache, max-age=0",
+    )
+    try:
+        from . import cdn
+        cdn.invalidate([f"/{res['key']}"])
+    except Exception as exc:  # noqa: BLE001 — invalidation is best-effort
+        logger.warning("s3.write_issue_html: CDN invalidation skipped (%s)", exc)
+    return res
 
 
 # ---------- journal images (binary; update-draft rehosting only) ----------

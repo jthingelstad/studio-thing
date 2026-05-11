@@ -201,20 +201,26 @@ def _rewrite_url(url: str, issue_number: int) -> str:
 
 def rehost_in_markdown(content_md: str, issue_number: int) -> str:
     """Rehost blog-hosted images in one journal post's markdown and rewrite
-    the references; normalize ``<img>`` tags to ``![alt](url)``. Idempotent
-    and robust — a per-image failure leaves that image's reference as-is."""
+    the references; normalize ``<img>`` tags to ``![alt](url)``, each on its
+    own paragraph (micro.blog emits photo-gallery posts as adjacent
+    ``<img><img>`` — left as ``![](a)![](b)`` they'd run together, so we
+    force a blank line between). Idempotent and robust — a per-image failure
+    leaves that image's reference as-is."""
     if not content_md:
         return content_md
     n = int(issue_number)
 
-    # 1. Markdown images: ![alt](url) — rewrite the url if it's a blog image.
+    # 1. Markdown images already in the source: ![alt](url) — just rewrite
+    #    the url if it's a blog image (don't reflow; it might be inline).
     def _md_sub(m: re.Match) -> str:
         alt, url = m.group(1), m.group(2).strip()
         return f"![{alt}]({_rewrite_url(url, n)})"
 
     out = _MD_IMG_RE.sub(_md_sub, content_md)
 
-    # 2. <img ...> HTML tags → ![alt](url), rehosting blog images.
+    # 2. <img ...> HTML tags (micro.blog photo uploads) → ![alt](url),
+    #    rehosting blog images. Wrap each in blank lines so adjacent images
+    #    end up as separate paragraphs.
     def _img_sub(m: re.Match) -> str:
         tag = m.group(0)
         src_m = _SRC_RE.search(tag)
@@ -223,6 +229,8 @@ def rehost_in_markdown(content_md: str, issue_number: int) -> str:
         url = src_m.group(1).strip()
         alt_m = _ALT_RE.search(tag)
         alt = (alt_m.group(1) if alt_m else "").strip()
-        return f"![{alt}]({_rewrite_url(url, n)})"
+        return f"\n\n![{alt}]({_rewrite_url(url, n)})\n\n"
 
-    return _IMG_TAG_RE.sub(_img_sub, out)
+    out = _IMG_TAG_RE.sub(_img_sub, out)
+    out = re.sub(r"\n{3,}", "\n\n", out)  # collapse the runaway blank lines we just made
+    return out.strip()

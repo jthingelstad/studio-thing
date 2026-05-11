@@ -14,10 +14,11 @@ Refuses if ``final.md`` already exists — delete it explicitly to re-run.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 
-from ..tools import anthropic_client, db, interaction, s3
+from ..tools import anthropic_client, db, interaction, render, s3
 from . import _base, _compose
 
 logger = logging.getLogger("workshop.jobs.create_final")
@@ -84,12 +85,18 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 final_body = proposed if (approved is True and proposed) else draft
                 break
             s3.write_issue_file(n, "final.md", final_body if final_body.endswith("\n") else final_body + "\n")
-            await channel.send(f"✅ `final.md` written for WT{n}.\n\n{_NEXT_STEPS}", suppress_embeds=True)
+            html_url = await asyncio.to_thread(
+                render.render_and_upload_html, n, "final", final_body,
+                title=f"WT{n} — final", subtitle=f"FINAL (post-Eddy ordering) · WT{n} · awaiting publish.md",
+                strip_block_markers=True,
+            )
+            view = f"\n\n📄 [view final]({html_url})" if html_url else ""
+            await channel.send(f"✅ `final.md` written for WT{n}.{view}\n\n{_NEXT_STEPS}", suppress_embeds=True)
     except _base.JobLocked as exc:
         return _base.JobResult(False, f"⏳ `create-final` already running ({exc.holder_desc}).")
 
     return _base.JobResult(
         True,
-        f"`final.md` written for WT{n}. {_NEXT_STEPS}",
-        data={"issue_number": n},
+        f"`final.md` written for WT{n}{f' · 📄 {html_url}' if html_url else ''}. {_NEXT_STEPS}",
+        data={"issue_number": n, "preview_url": html_url},
     )
