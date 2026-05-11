@@ -118,5 +118,40 @@ class WriteContentValidationTests(unittest.TestCase):
             s3.write_issue_file(347, "draft.md", big)
 
 
+class JournalImageKeyTests(unittest.TestCase):
+    """``_resolve_journal_key`` — image-only allowlist, journal/ subdir."""
+
+    def test_happy_path(self):
+        self.assertEqual(
+            s3._resolve_journal_key(458, "428e3db12e.jpg"),
+            "weekly-thing/458/journal/428e3db12e.jpg",
+        )
+
+    def test_allows_image_extensions(self):
+        for ext in ("jpg", "jpeg", "png", "gif", "webp"):
+            with self.subTest(ext=ext):
+                self.assertTrue(s3._resolve_journal_key(1, f"x.{ext}").endswith(f".{ext}"))
+
+    def test_rejects_text_extensions(self):
+        for bad in ("x.md", "x.json", "x.txt", "x"):
+            with self.subTest(name=bad):
+                with self.assertRaises(s3.S3PathError):
+                    s3._resolve_journal_key(1, bad)
+
+    def test_rejects_traversal_and_slashes(self):
+        for bad in ("../x.jpg", "a/b.jpg", "/x.jpg", "..jpg"):
+            with self.subTest(name=bad):
+                with self.assertRaises(s3.S3PathError):
+                    s3._resolve_journal_key(1, bad)
+
+    def test_journal_image_url(self):
+        url = s3.journal_image_url(458, "x.png")
+        self.assertEqual(url, "https://files.thingelstad.com/weekly-thing/458/journal/x.png")
+
+    def test_write_rejects_non_bytes(self):
+        with self.assertRaises(s3.S3PathError):
+            s3.write_journal_image(1, "x.jpg", "not bytes")  # type: ignore[arg-type]
+
+
 if __name__ == "__main__":
     unittest.main()

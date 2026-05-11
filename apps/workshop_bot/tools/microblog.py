@@ -1,23 +1,21 @@
 """micro.blog client — Jamie's posts for the issue's Journal section.
 
-Two paths, in order of preference:
+Uses the Micropub source query (`GET {MICROBLOG_MICROPUB_URL}?q=source`,
+``Authorization: Bearer {MICROBLOG_API_KEY}``), which returns posts as
+mf2-JSON with ``properties.content`` carrying the **native markdown Jamie
+wrote** (a string for markdown-authored posts — the common case — or an
+``{html: …}`` / ``{markdown: …}`` dict otherwise). No round-trip through
+rendered HTML. ``MICROBLOG_API_KEY`` is required — there is no fallback;
+if micro.blog is unreachable, ``journal.fill`` degrades to a placeholder
+line.
 
-1. **Micropub source query** (`GET {MICROBLOG_MICROPUB_URL}?q=source`,
-   ``Authorization: Bearer {MICROBLOG_API_KEY}``) — returns posts as
-   mf2-JSON, with ``properties.content`` carrying the **native markdown
-   Jamie wrote** for markdown-authored posts (the common case). This is
-   the one we want: no markdown → HTML → markdown round-trip.
-2. **Public JSON Feed** (`MICROBLOG_FEED_URL`, default
-   ``https://www.thingelstad.com/feed.json``) — fallback when there's no
-   API key or the Micropub call fails. Its ``content_html`` is the
-   *rendered* HTML, so we run a best-effort HTML → markdown-ish pass.
+micro.blog embeds photo uploads as ``<img src="https://www.thingelstad.com/uploads/…">``
+HTML tags inside the markdown; those references are rehosted (downloaded,
+resized for email, copied into the issue workspace) by ``tools.journal_images``
+at ``update-draft`` time — not here.
 
-``posts_in_window`` filters either source by the post's authored date.
-
-NOTE for the operator: the JSON-feed default assumes Jamie's micro.blog
-hostname is ``www.thingelstad.com``; the Micropub default is the
-micro.blog hosted endpoint. Set ``MICROBLOG_FEED_URL`` /
-``MICROBLOG_MICROPUB_URL`` if either is wrong.
+``posts_in_window`` returns the in-window posts (``q=source`` is capped at
+~100 recent posts, far more than any week needs), oldest first.
 """
 
 from __future__ import annotations
@@ -28,19 +26,20 @@ import os
 import re
 from datetime import date, datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import requests
 
 logger = logging.getLogger("workshop.microblog")
 
-DEFAULT_FEED_URL = "https://www.thingelstad.com/feed.json"
 DEFAULT_MICROPUB_URL = "https://micro.blog/micropub"
+# The Weekly Thing's issue cadence is Jamie's local day; a post's "issue
+# date" is the date in this zone (which is also what micro.blog bakes into
+# the post URL slug — that's the primary signal we use).
+_LOCAL_TZ = ZoneInfo("America/Chicago")
+_URL_DATE_RE = re.compile(r"/(\d{4})/(\d{2})/(\d{2})/")
 _TIMEOUT = 20.0
 _UA = "WeeklyThing-WorkshopBot/1.0"
-
-
-def feed_url() -> str:
-    return (os.environ.get("MICROBLOG_FEED_URL") or DEFAULT_FEED_URL).strip()
 
 
 def micropub_url() -> str:
@@ -51,7 +50,7 @@ def _api_key() -> str:
     return (os.environ.get("MICROBLOG_API_KEY") or "").strip()
 
 
-# --- date parsing ---
+# --- date parsing / windowing ---
 
 def _parse_dt(raw: Any) -> datetime | None:
     if not raw:
@@ -62,11 +61,22 @@ def _parse_dt(raw: Any) -> datetime | None:
         return None
 
 
-def _in_window(published_iso: str, sd: date, ed: date) -> bool:
-    dt = _parse_dt(published_iso)
+def _post_date(post: dict) -> date | None:
+    """The post's "issue date" — Jamie's local date. micro.blog's URL slug
+    (``/YYYY/MM/DD/…``) is that date verbatim; fall back to converting the
+    ``published`` timestamp into the local zone."""
+    m = _URL_DATE_RE.search(str(post.get("url") or ""))
+    if m:
+        try:
+            return date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        except ValueError:
+            pass
+    dt = _parse_dt(post.get("published"))
     if dt is None:
-        return False
-    return sd < dt.date() <= ed
+        return None
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(_LOCAL_TZ)
+    return dt.date()
 
 
 def _first(props: dict, *keys: str):
@@ -80,26 +90,39 @@ def _first(props: dict, *keys: str):
     return None
 
 
-# --- HTML → markdown-ish (JSON-feed fallback, and Micropub {html:...} content) ---
+# --- HTML → markdown-ish, only for {html:…}-content posts (rare) ---
 
 _TAG_RE = re.compile(r"<[^>]+>")
 _A_RE = re.compile(
     r'<a\b[^>]*?href=["\']([^"\']*)["\'][^>]*>(.*?)</a>', re.DOTALL | re.IGNORECASE
 )
-_IMG_RE = re.compile(r'<img\b[^>]*?src=["\']([^"\']*)["\'][^>]*?/?>', re.IGNORECASE)
 _BLOCK_END_RE = re.compile(r"</(p|div|li|blockquote|h[1-6]|ul|ol)>", re.IGNORECASE)
 _BR_RE = re.compile(r"<br\s*/?>", re.IGNORECASE)
 
 
+_IMG_TAG_RE = re.compile(r"<img\b[^>]*?>", re.IGNORECASE | re.DOTALL)
+_IMG_SRC_RE = re.compile(r'src\s*=\s*["\']([^"\']+)["\']', re.IGNORECASE)
+_IMG_ALT_RE = re.compile(r'alt\s*=\s*["\']([^"\']*)["\']', re.IGNORECASE)
+
+
+def _img_to_md(tag: str) -> str:
+    src_m = _IMG_SRC_RE.search(tag)
+    if not src_m:
+        return ""
+    alt_m = _IMG_ALT_RE.search(tag)
+    return f"![{(alt_m.group(1).strip() if alt_m else '')}]({src_m.group(1).strip()})"
+
+
 def html_to_markdownish(content_html: str) -> str:
-    """Best-effort HTML → markdown for micro.blog post bodies: keeps links
-    and images, collapses block tags to paragraph breaks, drops the rest.
-    Only used on the JSON-feed fallback path (or HTML-authored posts)."""
+    """Best-effort HTML → markdown for an HTML-authored micro.blog post:
+    keeps links, turns ``<img>`` into ``![alt](src)`` (tools.journal_images
+    rehosts the src later), drops other tags, collapses block tags to
+    paragraph breaks. Only used on the ``{html:…}``-content path."""
     if not content_html:
         return ""
     s = content_html
     s = _A_RE.sub(lambda m: f"[{_TAG_RE.sub('', m.group(2)).strip()}]({m.group(1).strip()})", s)
-    s = _IMG_RE.sub(lambda m: f"\n\n![]({m.group(1).strip()})\n\n", s)
+    s = _IMG_TAG_RE.sub(lambda m: _img_to_md(m.group(0)), s)
     s = _BR_RE.sub("\n", s)
     s = _BLOCK_END_RE.sub("\n\n", s)
     s = _TAG_RE.sub("", s)
@@ -111,8 +134,9 @@ def html_to_markdownish(content_html: str) -> str:
 
 def _content_to_markdown(content: Any) -> str:
     """Coerce an mf2 ``content`` value to markdown. micro.blog returns the
-    raw markdown *string* for markdown-authored posts; an ``{html: ...}``
-    (or ``{markdown: ...}``) dict otherwise."""
+    raw markdown *string* for markdown-authored posts (with ``<img>`` tags
+    embedded — left intact here); an ``{html:…}`` / ``{markdown:…}`` dict
+    otherwise."""
     if isinstance(content, str):
         return content.strip()
     if isinstance(content, dict):
@@ -128,15 +152,15 @@ def _content_to_markdown(content: Any) -> str:
     return ""
 
 
-# --- the two source paths ---
+# --- the source query ---
 
-def _micropub_source_posts() -> list[dict[str, Any]]:
+def _source_posts() -> list[dict[str, Any]]:
     """All posts from the Micropub ``q=source`` query, as
-    ``[{url, title, published, content_md}]``. Raises on transport/parse
-    errors and on missing auth — the caller falls back to the JSON feed."""
+    ``[{url, title, published, content_md}]``. Skips drafts. Raises on a
+    missing key or any transport/parse error."""
     token = _api_key()
     if not token:
-        raise RuntimeError("MICROBLOG_API_KEY not set")
+        raise RuntimeError("MICROBLOG_API_KEY is required (no fallback)")
     resp = requests.get(
         micropub_url(),
         params={"q": "source"},
@@ -147,7 +171,7 @@ def _micropub_source_posts() -> list[dict[str, Any]]:
     data = resp.json()
     items = data.get("items") if isinstance(data, dict) else None
     if items is None:
-        raise ValueError("Micropub q=source returned no `items`")
+        raise ValueError("micro.blog Micropub q=source returned no `items`")
     out: list[dict[str, Any]] = []
     for it in items:
         if not isinstance(it, dict):
@@ -156,67 +180,31 @@ def _micropub_source_posts() -> list[dict[str, Any]]:
         status = _first(props, "post-status")
         if status and str(status).lower() not in ("published", "publish"):
             continue  # drafts etc.
-        content_md = _content_to_markdown(props.get("content"))
-        published = _first(props, "published", "publish-date") or ""
         out.append({
             "url": str(_first(props, "url") or "").strip(),
             "title": str(_first(props, "name") or "").strip(),
-            "published": str(published),
-            "content_md": content_md,
+            "published": str(_first(props, "published", "publish-date") or ""),
+            "content_md": _content_to_markdown(props.get("content")),
         })
-    logger.info("microblog: Micropub q=source -> %d posts", len(out))
-    return out
-
-
-def _jsonfeed_posts() -> list[dict[str, Any]]:
-    """All posts from the public JSON Feed, as ``[{url, title, published,
-    content_md}]`` (content from ``content_html`` via html_to_markdownish,
-    or ``content_text`` if there's no HTML)."""
-    resp = requests.get(feed_url(), timeout=_TIMEOUT, headers={"User-Agent": _UA})
-    resp.raise_for_status()
-    data = resp.json()
-    if not isinstance(data, dict):
-        raise ValueError(f"micro.blog feed at {feed_url()} did not return a JSON object")
-    out: list[dict[str, Any]] = []
-    for it in data.get("items") or []:
-        if not isinstance(it, dict):
-            continue
-        body = html_to_markdownish(it.get("content_html") or "") or (it.get("content_text") or "").strip()
-        out.append({
-            "url": str(it.get("url") or "").strip(),
-            "title": str(it.get("title") or "").strip(),
-            "published": str(it.get("date_published") or it.get("date_modified") or ""),
-            "content_md": body,
-        })
-    logger.info("microblog: JSON feed -> %d posts", len(out))
+    logger.info("microblog: q=source -> %d published posts", len(out))
     return out
 
 
 def posts_in_window(start_date: str, end_date: str) -> list[dict[str, Any]]:
-    """micro.blog posts whose authored date falls in
-    ``(start_date, end_date]`` (calendar dates, ``YYYY-MM-DD``), oldest
-    first. Each result: ``{url, title, published (ISO), content_md}``.
-
-    Prefers the Micropub source query (native markdown) when
-    ``MICROBLOG_API_KEY`` is set; falls back to the public JSON Feed
-    (HTML → markdown-ish) otherwise or on failure. Raises only if *both*
-    paths fail — ``journal.fill`` catches that and degrades to a
-    placeholder line.
+    """micro.blog posts whose authored date falls in ``(start_date, end_date]``
+    (calendar dates, ``YYYY-MM-DD``), oldest first. Each result:
+    ``{url, title, published (ISO), content_md}`` — ``content_md`` is the
+    native markdown Jamie wrote (with photo ``<img>`` tags still embedded;
+    those are rehosted at update-draft time). Raises if the Micropub call
+    fails — ``journal.fill`` catches that and degrades to a placeholder line.
     """
     sd = datetime.strptime(start_date, "%Y-%m-%d").date()
     ed = datetime.strptime(end_date, "%Y-%m-%d").date()
-
-    posts: list[dict[str, Any]] | None = None
-    if _api_key():
-        try:
-            posts = _micropub_source_posts()
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("microblog: Micropub source failed (%s) — falling back to JSON feed", exc)
-            posts = None
-    if posts is None:
-        posts = _jsonfeed_posts()
-
-    windowed = [p for p in posts if _in_window(p.get("published", ""), sd, ed)]
-    windowed.sort(key=lambda r: r.get("published") or "")
-    logger.info("microblog: %d posts in window %s..%s", len(windowed), start_date, end_date)
-    return windowed
+    posts = []
+    for p in _source_posts():
+        d = _post_date(p)
+        if d is not None and sd < d <= ed:
+            posts.append(p)
+    posts.sort(key=lambda r: r.get("published") or "")
+    logger.info("microblog: %d posts in window %s..%s", len(posts), start_date, end_date)
+    return posts

@@ -554,38 +554,33 @@ class MicroblogTests(unittest.TestCase):
         self.assertIn("[x](http://y)", microblog._content_to_markdown({"html": '<a href="http://y">x</a>'}))
         self.assertEqual(microblog._content_to_markdown(None), "")
 
-    def test_jsonfeed_fallback_filters_by_date(self):
-        # No MICROBLOG_API_KEY → JSON-feed path.
+    def test_requires_api_key(self):
         os.environ.pop("MICROBLOG_API_KEY", None)
-        jsonfeed = [
-            {"url": "https://x/1", "published": "2026-05-08T10:00:00-05:00", "content_md": "before"},
-            {"url": "https://x/2", "published": "2026-05-09T10:00:00-05:00", "content_md": "early"},
-            {"url": "https://x/3", "published": "2026-05-15T23:00:00-05:00", "content_md": "late"},
-            {"url": "https://x/4", "published": "2026-05-16T01:00:00-05:00", "content_md": "after"},
-        ]
-        with patch.object(microblog, "_jsonfeed_posts", lambda: jsonfeed):
-            out = microblog.posts_in_window("2026-05-08", "2026-05-15")
-        self.assertEqual([p["url"] for p in out], ["https://x/2", "https://x/3"])
+        with self.assertRaises(RuntimeError):
+            microblog.posts_in_window("2026-05-08", "2026-05-15")
 
-    def test_micropub_source_preferred_returns_native_markdown(self):
+    def test_source_query_returns_native_markdown_in_window(self):
         os.environ["MICROBLOG_API_KEY"] = "tok"
+        # Shape mirrors a real micro.blog q=source response: content is the
+        # raw markdown string, with photo uploads embedded as <img> tags.
         mf2 = {
             "items": [
-                {"type": ["h-entry"], "properties": {
+                {"type": "h-entry", "properties": {
+                    "uid": [5863257], "name": [""],
                     "url": ["https://www.thingelstad.com/2026/05/12/a.html"],
-                    "published": ["2026-05-12T15:02:00-05:00"],
+                    "published": ["2026-05-12T15:02:00+00:00"],
                     "post-status": ["published"],
-                    "content": ["This is **raw markdown** with a [link](http://x.example)."],
+                    "content": ['Got a card. ([cert](https://psacard.com/cert/x))\n\n<img src="https://www.thingelstad.com/uploads/2026/428e3db12e.jpg" width="363" height="600" alt="">'],
                 }},
-                {"type": ["h-entry"], "properties": {
+                {"type": "h-entry", "properties": {
                     "url": ["https://www.thingelstad.com/2026/05/01/old.html"],
-                    "published": ["2026-05-01T09:00:00-05:00"],
+                    "published": ["2026-05-01T09:00:00+00:00"],
                     "post-status": ["published"],
                     "content": ["out of window"],
                 }},
-                {"type": ["h-entry"], "properties": {
+                {"type": "h-entry", "properties": {
                     "url": ["https://www.thingelstad.com/2026/05/13/draft.html"],
-                    "published": ["2026-05-13T09:00:00-05:00"],
+                    "published": ["2026-05-13T09:00:00+00:00"],
                     "post-status": ["draft"],
                     "content": ["a draft, should be skipped"],
                 }},
@@ -596,22 +591,14 @@ class MicroblogTests(unittest.TestCase):
         fake_resp.raise_for_status = MagicMock()
         with patch.object(microblog.requests, "get", return_value=fake_resp) as g:
             out = microblog.posts_in_window("2026-05-08", "2026-05-15")
-        # Only the in-window published post; content is the *native markdown*.
         self.assertEqual([p["url"] for p in out], ["https://www.thingelstad.com/2026/05/12/a.html"])
-        self.assertEqual(out[0]["content_md"], "This is **raw markdown** with a [link](http://x.example).")
+        # Native markdown — including the embedded <img> tag (rehosted later).
+        self.assertIn("Got a card.", out[0]["content_md"])
+        self.assertIn('<img src="https://www.thingelstad.com/uploads/2026/428e3db12e.jpg"', out[0]["content_md"])
         # Hit the Micropub endpoint with the source query + bearer auth.
         kwargs = g.call_args.kwargs
         self.assertEqual(kwargs["params"], {"q": "source"})
         self.assertTrue(kwargs["headers"]["Authorization"].startswith("Bearer "))
-
-    def test_micropub_failure_falls_back_to_jsonfeed(self):
-        os.environ["MICROBLOG_API_KEY"] = "tok"
-        jsonfeed = [{"url": "https://x/2", "published": "2026-05-12T10:00:00-05:00", "content_md": "from feed"}]
-        with patch.object(microblog, "_micropub_source_posts", side_effect=RuntimeError("micropub down")), \
-             patch.object(microblog, "_jsonfeed_posts", lambda: jsonfeed):
-            out = microblog.posts_in_window("2026-05-08", "2026-05-15")
-        self.assertEqual([p["url"] for p in out], ["https://x/2"])
-        self.assertEqual(out[0]["content_md"], "from feed")
 
 
 class DraftSectionStatusToolTests(_DBTestCase):

@@ -35,6 +35,18 @@ ALLOWED_EXTENSIONS = {
 WRITE_MAX_BYTES = 256 * 1024  # 256 KB
 READ_MAX_BYTES = 512 * 1024
 
+# Journal images live one level deeper (weekly-thing/{N}/journal/{name})
+# and are binary (resized photos rehosted from micro.blog). This is *not*
+# an agent-callable surface — only update-draft's journal fill uses it —
+# so a separate, image-only allowlist is fine here.
+JOURNAL_PREFIX = "journal"
+JOURNAL_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+JOURNAL_IMAGE_MAX_BYTES = 4 * 1024 * 1024  # 4 MB — a resized image should be far under this
+_JOURNAL_CONTENT_TYPES = {
+    ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
+    ".gif": "image/gif", ".webp": "image/webp",
+}
+
 
 class S3PathError(ValueError):
     """The supplied issue/filename pair is not a valid scoped path."""
@@ -245,3 +257,64 @@ def write_issue_file(
         "content_type": content_type,
         "written": True,
     }
+
+
+# ---------- journal images (binary; update-draft rehosting only) ----------
+
+
+def _resolve_journal_key(issue_number: int, filename: str) -> str:
+    if not isinstance(issue_number, int) or issue_number <= 0:
+        raise S3PathError(f"issue_number must be a positive integer; got {issue_number!r}")
+    name = (filename or "").strip()
+    if not FILENAME_RE.match(name) or "/" in name or "\\" in name or ".." in name:
+        raise S3PathError("journal image filename must be a single safe path component")
+    suffix = "." + name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    if suffix not in JOURNAL_IMAGE_EXTENSIONS:
+        raise S3PathError(
+            f"journal image extension {suffix or '(none)'!r} not allowed; "
+            f"allowed: {sorted(JOURNAL_IMAGE_EXTENSIONS)}"
+        )
+    return f"{ROOT_PREFIX}/{issue_number}/{JOURNAL_PREFIX}/{name}"
+
+
+def journal_image_url(issue_number: int, filename: str) -> str:
+    """Public URL for a rehosted journal image (the bucket is a CDN-fronted
+    domain, so ``https://{bucket}/{key}``)."""
+    key = _resolve_journal_key(int(issue_number), filename)
+    return f"https://{_bucket()}/{key}"
+
+
+def journal_image_exists(issue_number: int, filename: str) -> bool:
+    """True if the journal image is already in the workspace (a cheap HEAD —
+    lets update-draft skip re-downloading/resizing on daily re-runs)."""
+    key = _resolve_journal_key(int(issue_number), filename)
+    client = _client()
+    try:
+        client.head_object(Bucket=_bucket(), Key=key)
+        return True
+    except client.exceptions.NoSuchKey:
+        return False
+    except Exception as exc:  # noqa: BLE001 — botocore 404 is a ClientError, not NoSuchKey, on head
+        code = getattr(getattr(exc, "response", {}), "get", lambda *_a: {})("Error", {}).get("Code", "")
+        if code in ("404", "NoSuchKey", "NotFound"):
+            return False
+        raise
+
+
+def write_journal_image(
+    issue_number: int, filename: str, body: bytes, *, content_type: Optional[str] = None
+) -> dict[str, Any]:
+    """Upload a (resized) journal image to ``weekly-thing/{N}/journal/{name}``.
+    Binary; not exposed as an agent tool."""
+    key = _resolve_journal_key(int(issue_number), filename)
+    if not isinstance(body, (bytes, bytearray)):
+        raise S3PathError("journal image body must be bytes")
+    if len(body) > JOURNAL_IMAGE_MAX_BYTES:
+        raise S3PathError(f"journal image is {len(body):,} bytes; max is {JOURNAL_IMAGE_MAX_BYTES:,}")
+    if content_type is None:
+        suffix = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+        content_type = _JOURNAL_CONTENT_TYPES.get(suffix, "application/octet-stream")
+    bucket = _bucket()
+    _client().put_object(Bucket=bucket, Key=key, Body=bytes(body), ContentType=content_type)
+    logger.info("s3.write_journal_image(%d, %s) -> %d bytes", issue_number, filename, len(body))
+    return {"key": key, "url": f"https://{bucket}/{key}", "size": len(body), "content_type": content_type}

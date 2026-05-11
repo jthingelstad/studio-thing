@@ -15,13 +15,14 @@ refuses (re-firing would silently produce a stale ``draft.md``).
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import logging
 import os
 from datetime import datetime
 
 from ..systems.pinboard import client as pinboard
-from ..tools import anthropic_client, context, db, draft as draft_mod, microblog, s3
+from ..tools import anthropic_client, context, db, draft as draft_mod, journal_images, microblog, s3
 from . import _base
 
 logger = logging.getLogger("workshop.jobs.update_draft")
@@ -111,6 +112,11 @@ def _gather_fills(window: dict) -> dict[str, str]:
 
     try:
         posts = microblog.posts_in_window(window["start_date"], window["end_date"])
+        for p in posts:
+            try:
+                p["content_md"] = journal_images.rehost_in_markdown(p.get("content_md") or "", n)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("update-draft: journal image rehost failed for %s: %s", p.get("url"), exc)
         fills["journal"] = _render_journal(posts)
     except Exception as exc:  # noqa: BLE001
         logger.warning("update-draft: micro.blog pull failed for #%d: %s", n, exc)
@@ -207,7 +213,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     try:
         with _base.job_lock([asset], NAME):
             text = _load_draft(n)
-            fills = _gather_fills(window)
+            # _gather_fills does blocking HTTP (Pinboard, micro.blog,
+            # journal-image download/resize/upload) — off the event loop.
+            fills = await asyncio.to_thread(_gather_fills, window)
             for block in SECTION_BLOCKS:
                 text = _base.replace_block(text, block, fills.get(block, ""))
             try:

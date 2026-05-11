@@ -170,7 +170,8 @@ apps/workshop_bot/
 │   ├── draft.py              # parse draft.md for section/asset completeness (draft__section_status)
 │   ├── context.py            # build_{eddy,linky,patty,marky}_context — dynamic prompt blocks
 │   ├── interaction.py        # await_choice / await_approval — reaction primitive for jobs
-│   ├── microblog.py          # micro.blog client (Micropub source → native markdown; JSON-Feed fallback)
+│   ├── microblog.py          # micro.blog client — Micropub q=source → native markdown (no fallback; API key required)
+│   ├── journal_images.py     # rehost micro.blog photo uploads → resized copies in weekly-thing/{N}/journal/
 │   ├── rss.py                # latest_published_issue() from weekly.thingelstad.com/feed.xml
 │   ├── support_state.py      # current nonprofit state for Patty
 │   ├── s3.py                 # per-issue S3 workspace — backs workspace__*

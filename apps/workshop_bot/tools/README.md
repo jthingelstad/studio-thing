@@ -101,7 +101,7 @@ Any new S3-touching tool should follow the same pattern: a private `_resolve_key
 - **JSON-serializable returns.** No `datetime`, no `Path`, no custom classes — convert at the tool boundary.
 - **Hash sensitive data.** `buttondown__list_subscribers` and `stripe__recent_donations` hash emails/names inside the system module. Apply the same rule to any future tool that touches PII.
 - **Per-persona scope via `active_persona`.** When a tool's behavior depends on which persona called it, read `active_persona.get()` rather than asking the model to pass its own name — the model can lie or get confused, the ContextVar can't.
-- **`PASS` no-reply convention.** Personas can return the literal string `PASS` (no quotes, no markdown) to indicate "nothing worth saying right now". The team-orchestration handler and the heartbeat dispatcher both swallow `PASS` responses without posting. Keep this consistent in new prompts.
+- **`PASS` no-reply convention.** Personas / jobs can return the literal string `PASS` (no quotes, no markdown) to indicate "nothing worth saying right now". The team-orchestration handler and the agent-loop jobs (Eddy's review, `pinboard-scan`, `daily-metrics`) swallow `PASS` responses without posting. Keep this consistent in new prompts.
 
 ## Module layout
 
@@ -110,18 +110,20 @@ tools/
 ├── README.md              ← this file
 ├── agent_loop.py          ← multi-turn tool-using agent loop, tool dispatch
 ├── agent_tools.py         ← ToolRegistry, FUNCS/SPECS, register_local_helpers
-├── anthropic_client.py    ← Claude SDK wrapper, prompt loader, model registry
-├── archive.py             ← read archive issues from disk
-├── conversation.py        ← Discord history → agent-loop history conversion
-├── corpus.py              ← Archive corpus handle (loaded once at boot)
-├── db.py                  ← SQLite — agent_notes, agent_runs, link_candidates, issue_windows, …
-├── discord_io.py          ← Chunking + posting helpers for Discord 2000-char limit
+├── anthropic_client.py    ← Claude SDK wrapper, prompt loader (<persona>-<file> → prompts/<persona>/<file>.md)
+├── archive.py / corpus.py / conversation.py / discord_io.py
+├── db.py                  ← SQLite — agent_notes, agent_runs, link_candidates, issue_windows, job_locks, draft_digests, goals, campaigns, …
 ├── issue.py               ← issue-window compute + tool handlers
-├── s3.py                  ← Per-issue workspace S3 helper (path-locked) — backs workspace__*
+├── draft.py               ← parse draft.md for section/asset completeness (draft__section_status)
+├── context.py             ← build_{eddy,linky,patty,marky}_context — dynamic prompt blocks
+├── interaction.py         ← await_choice / await_approval — reaction primitive for the interactive jobs
+├── microblog.py           ← micro.blog Micropub q=source client (journal source; native markdown)
+├── journal_images.py      ← rehost micro.blog photo uploads → resized copies in weekly-thing/{N}/journal/
+├── rss.py                 ← latest_published_issue() from weekly.thingelstad.com/feed.xml (Marky's trigger)
+├── s3.py                  ← per-issue workspace S3 helper (path-locked) — backs workspace__*; + write_journal_image (binary, journal/ sub-prefix, not an agent tool)
 ├── startup.py             ← Boot-time announce/coordinate across personas
 ├── support_state.py       ← Reads apps/site/_data/{stats,support}.json
-├── thingy_client.py       ← Thingy bridge HTTP client (Lambda /chat)
-├── thingy_render.py       ← Format Lambda streaming output for Discord
+├── thingy_client.py / thingy_render.py  ← Thingy bridge (Lambda /chat) + output formatting
 └── web.py                 ← fetch_url helper (readable text only)
 ```
 

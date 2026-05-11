@@ -6,6 +6,7 @@ discord.py>=2.4
 httpx
 lxml
 openai
+Pillow
 pydantic
 python-dotenv
 pytest

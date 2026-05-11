@@ -22,7 +22,7 @@ Codebase is in a buildable state: `python -m unittest discover -s apps/workshop_
 
 ### What wants a human eye before it's trusted in production
 - The agent-loop jobs (Eddy's review, the compose-* JSON-output prompts, Linky's pinboard-scan, Marky's promotion-prep + daily-metrics) are wired and unit-tested with mocked LLM/Discord/source calls — but the actual prompt behavior (do the JSON shapes come back parseable? does Eddy's review card read well?) needs a real run.
-- `MICROBLOG_FEED_URL` defaults to `https://www.thingelstad.com/feed.json` — verify that's Jamie's micro.blog hostname on the first `update-draft` (journal fill); set the env var if not.
+- micro.blog journal fetch + image rehosting were tested live against the API (see the "Post-landing" section); the Micropub `q=source` shape and the `www.thingelstad.com/uploads/` image host are confirmed. `q=source` returns ~100 recent posts (no date filter on that query) — fine for a week.
 - `pipeline/content/content.py publish` (create a Buttondown draft from `publish.md` + `metadata.json`) is implemented but untested against the live Buttondown API — exercise it on a real ship before relying on it.
 - The reaction-interaction flow (`tools/interaction.py` + the compose-* / create-final jobs) needs a live Discord test — confirm `DISCORD_OWNER_USER_ID` is set and the bots have the reactions intent so `wait_for("raw_reaction_add")` fires.
 - The `popular_unseen` avoid-domains list and `create-final`'s per-section approval loop are noted refinements (see the `## Notes` in `apps/workshop_bot/CLAUDE.md` for the full follow-up list).
@@ -37,9 +37,10 @@ After a full-project review, addressed:
 - **All per-persona heartbeats removed** — nothing meaningful ran on a heartbeat anymore (everything's a job). Deleted the four `heartbeat.md` files, `handlers.heartbeat` / `_heartbeats_enabled`, `eval --heartbeat`, `WORKSHOP_HEARTBEATS_ENABLED` / `WORKSHOP_HEARTBEAT_MODEL`, `test_heartbeats.py`.
 - **`compose-cta`'s dead refresh loop** removed (it was always single-pass).
 - **`_compose.resolve_bot_and_channel` → `(bot, channel, reason)`** with clean unpacking; `build_marky_context` calls `db.active_campaigns_with_age()` directly.
-- **micro.blog journal source now prefers native markdown** — `tools/microblog.py` uses the Micropub `q=source` query (`Authorization: Bearer MICROBLOG_API_KEY`) and reads the raw markdown out of `properties.content`; falls back to the public JSON Feed (HTML → markdown-ish) when there's no key or the call fails.
+- **micro.blog journal source: native markdown, no fallback.** `tools/microblog.py` uses the Micropub `q=source` query (`Authorization: Bearer MICROBLOG_API_KEY`) and reads the raw markdown out of `properties.content`. `MICROBLOG_API_KEY` is now required — the JSON-Feed fallback was removed (micro.blog being up is a hard dependency; `journal.fill` leaves a placeholder line if it's down). Post "issue date" is taken from the micro.blog URL slug (`/YYYY/MM/DD/`) — Jamie's local date — not the UTC `published` timestamp, so a Friday-evening post doesn't get bumped to the next issue. Tested live against the API.
+- **Journal images are rehosted** — `tools/journal_images.py` (called from `journal.fill`): each `<img>` / `![]()` on Jamie's upload host(s) (`MICROBLOG_IMAGE_HOSTS`) is downloaded, resized for email (`MICROBLOG_IMAGE_MAX_DIM`, default 600px long side; JPEG q80 / PNG optimized — ~7 MB originals → ~50–70 KB), and copied into `weekly-thing/{N}/journal/<name>` (reusing the micro.blog hash basename); the reference is rewritten to the local URL and `<img>` tags normalized to `![alt](url)`. A HEAD-skip keeps daily re-runs cheap; a per-image failure leaves that one's original URL alone. Binary writes via a new `s3.write_journal_image` (image-only allowlist, `journal/` sub-prefix, not an agent tool). `update-draft` now runs `_gather_fills` (the blocking source pulls + image rehosting) via `asyncio.to_thread`. Added `Pillow` to `requirements.txt`. New `test_journal_images.py`; the live API was used to verify the end-to-end flow.
 
-296 tests pass.
+318 tests pass.
 
 ## Blockers
 (none — S3 versioning on `files.thingelstad.com` confirmed `Enabled`; the Step-4 pre-flight is satisfied)
