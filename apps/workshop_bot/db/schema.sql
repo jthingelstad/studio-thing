@@ -264,3 +264,33 @@ CREATE TABLE IF NOT EXISTS goals (
 INSERT INTO goals (target_kind, target_value, started_at)
 SELECT 'members', 50, '2026-05-11'
 WHERE NOT EXISTS (SELECT 1 FROM goals);
+
+-- Campaigns — Marky's ad-placement ledger. One row per `?ref=<tag>`
+-- campaign, created by /workshop job add-campaign. Status: 'live' while
+-- it's running, 'sunset' once it's over.
+CREATE TABLE IF NOT EXISTS campaigns (
+  name TEXT PRIMARY KEY,
+  ref TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'live',
+  started_at TEXT NOT NULL DEFAULT (date('now')),
+  ends_at TEXT,
+  expected_signups INTEGER,
+  expected_traffic INTEGER,
+  notes TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_campaigns_ref ON campaigns(ref);
+
+-- Campaign metrics — append-only per-poll history. daily-metrics inserts
+-- one row per active campaign each run; a 90-day window is plenty, older
+-- rows can age out.
+CREATE TABLE IF NOT EXISTS campaign_metrics (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaign_name TEXT NOT NULL REFERENCES campaigns(name),
+  ran_at TEXT NOT NULL DEFAULT (datetime('now')),
+  signups INTEGER,
+  traffic INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_campaign_metrics_name
+  ON campaign_metrics(campaign_name, ran_at DESC, id DESC);

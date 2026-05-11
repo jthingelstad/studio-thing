@@ -101,21 +101,21 @@ class JobConfigTests(unittest.TestCase):
             self.assertIs(jobs_module.by_id(job.id), job)
         self.assertIsNone(jobs_module.by_id("nonexistent"))
 
-    def test_heartbeat_jobs_well_formed(self):
-        # Heartbeats are being retired as the content-loop jobs land
-        # (Linky→pinboard-scan in Step 5, Eddy/Patty in Step 6, Marky in
-        # Step 8), so we don't pin which personas still have one — just
-        # that every heartbeat JobSpec is a partial of handlers.heartbeat
-        # bound to a valid persona.
-        heartbeat_jobs = [j for j in jobs_module.JOBS if j.id.endswith("-heartbeat")]
-        self.assertTrue(heartbeat_jobs, "expected at least one heartbeat job")
-        for job in heartbeat_jobs:
-            self.assertIsInstance(job.func, functools.partial)
-            self.assertIs(job.func.func, handlers.heartbeat)
-            self.assertIn(job.func.keywords["persona"], {"eddy", "linky", "marky", "patty"})
-        # Linky's heartbeat was replaced by the pinboard-scan job.
-        self.assertNotIn("linky-heartbeat", [j.id for j in jobs_module.JOBS])
-        self.assertIn("linky-pinboard-scan", [j.id for j in jobs_module.JOBS])
+    def test_heartbeats_retired(self):
+        # The per-persona heartbeats were all retired as the content-loop
+        # jobs took over (Linky→pinboard-scan, Eddy job-triggered, Patty's
+        # only job is compose-cta, Marky→promotion-prep + daily-metrics).
+        ids = [j.id for j in jobs_module.JOBS]
+        for hb in ("eddy-heartbeat", "linky-heartbeat", "marky-heartbeat", "patty-heartbeat"):
+            self.assertNotIn(hb, ids)
+        # Any heartbeat JobSpec that *does* exist must still be well-formed.
+        for job in jobs_module.JOBS:
+            if job.id.endswith("-heartbeat"):
+                self.assertIsInstance(job.func, functools.partial)
+                self.assertIs(job.func.func, handlers.heartbeat)
+        # The content-loop jobs are present.
+        for jid in ("update-draft-daily", "linky-pinboard-scan", "marky-rss-check", "marky-daily-metrics"):
+            self.assertIn(jid, ids)
 
     def test_heartbeat_partial_binds_under_dispatcher_call(self):
         # The scheduler dispatcher invokes ``await job.func(ctx)``. With
@@ -134,7 +134,10 @@ class JobConfigTests(unittest.TestCase):
                 bound.apply_defaults()
 
     def test_known_handlers_referenced(self):
-        # Sanity: every handler we ship should be wired to a job.
+        # Sanity: every handler we ship is wired to a job — except the ones
+        # in this allowlist, which are kept for ad-hoc / eval use but are no
+        # longer scheduled.
+        unwired_ok = {handlers.heartbeat}
         wired: set[object] = set()
         for job in jobs_module.JOBS:
             underlying = (
@@ -149,6 +152,8 @@ class JobConfigTests(unittest.TestCase):
                 and obj.__module__ == handlers.__name__
                 and not name.startswith("_")
             ):
+                if obj in unwired_ok:
+                    continue
                 self.assertIn(
                     obj, wired,
                     f"handler {name} is defined but no JobSpec references it",

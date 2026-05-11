@@ -697,6 +697,100 @@ def mark_goal_achieved(goal_id: int, *, achieved_at: Optional[str] = None) -> bo
         return cur.rowcount > 0
 
 
+# ---------- campaigns (Marky's ad-placement ledger) ----------
+
+
+def insert_campaign(
+    *,
+    name: str,
+    ref: str,
+    expected_signups: Optional[int] = None,
+    expected_traffic: Optional[int] = None,
+    started_at: Optional[str] = None,
+    ends_at: Optional[str] = None,
+    notes: Optional[str] = None,
+) -> bool:
+    """Insert a campaign. Returns False if a campaign with that name
+    already exists (ON CONFLICT DO NOTHING)."""
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO campaigns (name, ref, status, started_at, ends_at, "
+            " expected_signups, expected_traffic, notes) "
+            "VALUES (?, ?, 'live', COALESCE(?, date('now')), ?, ?, ?, ?) "
+            "ON CONFLICT(name) DO NOTHING",
+            (name, ref, started_at, ends_at,
+             int(expected_signups) if expected_signups is not None else None,
+             int(expected_traffic) if expected_traffic is not None else None, notes),
+        )
+        return cur.rowcount > 0
+
+
+def get_campaign(name: str) -> Optional[dict[str, Any]]:
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT name, ref, status, started_at, ends_at, expected_signups, "
+            "       expected_traffic, notes FROM campaigns WHERE name = ?",
+            (name,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def active_campaigns() -> list[dict[str, Any]]:
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT name, ref, status, started_at, ends_at, expected_signups, "
+            "       expected_traffic, notes FROM campaigns WHERE status = 'live' "
+            "ORDER BY started_at DESC"
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def active_campaigns_with_age() -> list[dict[str, Any]]:
+    """Active campaigns annotated with ``days_running`` — used by
+    ``build_marky_context``."""
+    from datetime import datetime as _dt
+
+    out: list[dict[str, Any]] = []
+    today = _dt.now().date()
+    for c in active_campaigns():
+        days = None
+        try:
+            d = _dt.strptime(str(c.get("started_at"))[:10], "%Y-%m-%d").date()
+            days = (today - d).days
+        except (TypeError, ValueError):
+            pass
+        out.append({**c, "days_running": days})
+    return out
+
+
+def set_campaign_status(name: str, status: str) -> bool:
+    with connect() as conn:
+        cur = conn.execute("UPDATE campaigns SET status = ? WHERE name = ?", (status, name))
+        return cur.rowcount > 0
+
+
+def insert_campaign_metric(*, campaign_name: str, signups: Optional[int],
+                           traffic: Optional[int]) -> int:
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO campaign_metrics (campaign_name, signups, traffic) VALUES (?, ?, ?)",
+            (campaign_name,
+             int(signups) if signups is not None else None,
+             int(traffic) if traffic is not None else None),
+        )
+        return int(cur.lastrowid or 0)
+
+
+def latest_campaign_metric(campaign_name: str) -> Optional[dict[str, Any]]:
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT id, campaign_name, ran_at, signups, traffic FROM campaign_metrics "
+            "WHERE campaign_name = ? ORDER BY ran_at DESC, id DESC LIMIT 1",
+            (campaign_name,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
 # ---------- draft digests (Eddy's delta context for update-draft) ----------
 
 

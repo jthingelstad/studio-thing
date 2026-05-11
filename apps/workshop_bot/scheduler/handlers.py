@@ -110,12 +110,13 @@ async def heartbeat(ctx: "JobContext", persona: str) -> HeartbeatResult:
 # lazy so importing scheduler.handlers doesn't pull the whole jobs graph
 # at module load.
 def _content_job_runner(name: str):
-    from ..jobs import pinboard_scan, promotion_prep, update_draft
+    from ..jobs import daily_metrics, pinboard_scan, promotion_prep, update_draft
 
     return {
         "update-draft": update_draft.run,
         "pinboard-scan": pinboard_scan.run,
         "promotion-prep": promotion_prep.run,
+        "daily-metrics": daily_metrics.run,
     }.get(name)
 
 

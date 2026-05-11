@@ -98,6 +98,31 @@ class ButtondownServer:
                 ),
             ),
             ToolDef(
+                name="campaign_signups",
+                description=(
+                    "Subscriber signups attributed to one campaign ref tag "
+                    "over a trailing window — the answer to 'did the "
+                    "dd-2026-05-15 placement convert'. Returns {ref, days, "
+                    "signups}. (Wraps `attribution_summary` and reads "
+                    "by_ref[ref]; this is the verb daily-metrics / "
+                    "campaign-report reach for. Use a window matching the "
+                    "campaign's age — 7d fresh, 30d after a few weeks.)"
+                ),
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "ref": {"type": "string", "description": "the ?ref= tag, e.g. 'dd-2026-05-15'"},
+                        "days": {"type": "integer", "description": "trailing window; default 30"},
+                    },
+                    "required": ["ref"],
+                },
+                handler=lambda deps, ref, days=30, **_kw: {
+                    "ref": str(ref),
+                    "days": int(days),
+                    "signups": int((client.attribution_summary(days=int(days)).get("by_ref") or {}).get(str(ref), 0)),
+                },
+            ),
+            ToolDef(
                 name="subscriber_growth",
                 description=(
                     "Net subscriber delta over the trailing window plus "

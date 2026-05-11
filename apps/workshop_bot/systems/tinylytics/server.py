@@ -87,6 +87,29 @@ class TinylyticsServer:
                 ),
             ),
             ToolDef(
+                name="campaign_traffic",
+                description=(
+                    "Site visits attributed to one campaign ref tag over a "
+                    "trailing window — the answer to 'did the dd-2026-05-15 "
+                    "placement drive traffic'. Returns {ref, days, visits}. "
+                    "(Wraps `sources` and reads by_source[ref]; this is the "
+                    "verb daily-metrics / campaign-report reach for.)"
+                ),
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "ref": {"type": "string", "description": "the ?ref= tag, e.g. 'dd-2026-05-15'"},
+                        "days": {"type": "integer", "description": "trailing window; default 30"},
+                    },
+                    "required": ["ref"],
+                },
+                handler=lambda deps, ref, days=30, **_kw: {
+                    "ref": str(ref),
+                    "days": int(days),
+                    "visits": int((client.sources(days=int(days)).get("by_source") or {}).get(str(ref), 0)),
+                },
+            ),
+            ToolDef(
                 name="leaderboard",
                 description=(
                     "All-time top paths on the site (cached, no date "

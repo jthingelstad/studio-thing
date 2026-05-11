@@ -16,10 +16,10 @@ async ``run(ctx, …)``, and acks the invoker ephemerally with the job's
 result message. Jobs that also need to post to a channel during the run
 do so via ``ctx.post(...)``.
 
-Wired so far: ``start-issue``, ``update-draft``, ``issue-status``,
+Wired: ``start-issue``, ``update-draft``, ``issue-status``,
 ``pinboard-scan``, ``create-final``, ``compose-haiku`` / ``-meta`` /
-``-cta``, ``build-publish``, ``promotion-prep``. Later steps add
-``daily-metrics``, ``add-campaign``, ``campaign-report``.
+``-cta``, ``build-publish``, ``promotion-prep``, ``daily-metrics``,
+``add-campaign``, ``campaign-report``.
 """
 
 from __future__ import annotations
@@ -32,11 +32,14 @@ from discord import app_commands
 
 from ..jobs import _base as jobs_base
 from ..jobs import (
+    add_campaign,
     build_publish,
+    campaign_report,
     compose_cta,
     compose_haiku,
     compose_meta,
     create_final,
+    daily_metrics,
     issue_status,
     pinboard_scan,
     promotion_prep,
@@ -181,6 +184,47 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
     )
     async def promotion_prep_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: promotion_prep.run(_ctx(bot)), "promotion-prep")
+
+    @job.command(
+        name="daily-metrics",
+        description="Run Marky's daily website + subscriber + campaign report now (default-PASS if quiet).",
+    )
+    async def daily_metrics_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: daily_metrics.run(_ctx(bot)), "daily-metrics")
+
+    @job.command(
+        name="add-campaign",
+        description="Register an ad campaign for Marky to track (name, ?ref= tag, optional expected signups/traffic).",
+    )
+    @app_commands.describe(
+        name="A short name for the campaign (e.g. dense-discovery-may-2026)",
+        ref="The ?ref= tag used in the campaign URL (e.g. dd-2026-05-15)",
+        expected_signups="Optional — how many subscribers you expect from it",
+        expected_traffic="Optional — how many visits you expect from it",
+    )
+    async def add_campaign_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction,
+        name: str,
+        ref: str,
+        expected_signups: int = 0,
+        expected_traffic: int = 0,
+    ) -> None:
+        await _run_and_ack(
+            interaction,
+            lambda: add_campaign.run(
+                _ctx(bot), name=name, ref=ref,
+                expected_signups=(expected_signups or None),
+                expected_traffic=(expected_traffic or None),
+            ),
+            "add-campaign",
+        )
+
+    @job.command(
+        name="campaign-report",
+        description="List active campaigns + current performance vs expected.",
+    )
+    async def campaign_report_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: campaign_report.run(_ctx(bot)), "campaign-report")
 
     tree.add_command(workshop)
     return tree

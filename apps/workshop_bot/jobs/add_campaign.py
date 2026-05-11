@@ -1,0 +1,64 @@
+"""``add-campaign`` — register an ad campaign for Marky to track.
+
+Writes a row into the ``campaigns`` SQLite table. Pure DB write, no LLM,
+no Discord post beyond the invoker ack. ``daily-metrics`` then polls the
+campaign and appends a ``campaign_metrics`` row each run.
+"""
+
+from __future__ import annotations
+
+import logging
+import re
+from typing import Optional
+
+from ..tools import db
+from . import _base
+
+logger = logging.getLogger("workshop.jobs.add_campaign")
+
+NAME = "add-campaign"
+
+_REF_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
+
+
+def _as_int(v) -> Optional[int]:
+    if v is None or v == "":
+        return None
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return None
+
+
+async def run(
+    ctx: "_base.JobContext",
+    *,
+    name: str,
+    ref: str,
+    expected_signups=None,
+    expected_traffic=None,
+) -> "_base.JobResult":
+    name = (str(name) or "").strip()
+    ref = (str(ref) or "").strip().lower()
+    if not name:
+        return _base.JobResult(False, "❌ campaign name is required.")
+    if not _REF_RE.match(ref):
+        return _base.JobResult(
+            False, f"❌ ref tag {ref!r} must be lowercase, hyphenated/dotted, ≤64 chars (e.g. `dd-2026-05-15`)."
+        )
+    es, et = _as_int(expected_signups), _as_int(expected_traffic)
+    created = db.insert_campaign(name=name, ref=ref, expected_signups=es, expected_traffic=et)
+    if not created:
+        existing = db.get_campaign(name) or {}
+        return _base.JobResult(
+            False,
+            f"⚠️ a campaign named `{name}` already exists (ref `{existing.get('ref')}`, "
+            f"status `{existing.get('status')}`). Pick a different name.",
+        )
+    bits = [f"✅ Campaign **{name}** registered (ref `{ref}`, status `live`)."]
+    if es is not None:
+        bits.append(f"Expected signups: {es}.")
+    if et is not None:
+        bits.append(f"Expected traffic: {et}.")
+    bits.append("`daily-metrics` will poll it each run; `/workshop job campaign-report` for a summary.")
+    return _base.JobResult(True, " ".join(bits), data={"name": name, "ref": ref})

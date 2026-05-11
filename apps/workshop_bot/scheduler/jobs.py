@@ -4,24 +4,26 @@ Each ``JobSpec`` is just a cron string and a Python function. The function
 runs at the scheduled time and does whatever it needs to: pull data,
 format a report, post to a channel, write S3, save memory.
 
-Two shapes today:
+The scheduled surface is the ``apps/workshop_bot/jobs/`` content-loop
+pipeline, fired from cron via ``functools.partial(handlers.content_job,
+job=…)`` (or, for ``rss-check``, the bare ``handlers.rss_check``). Today:
 
-- **Heartbeats** — a scheduled agent turn per persona, firing on a
-  cadence with that persona's ``heartbeat.md`` prompt. Default ``PASS``;
-  posts only when there's something concrete to surface. They guard on
-  the active issue window (see the heartbeat prompts) and are being
-  retired as the content-loop jobs take over (Step 5/6/8 of the
-  redesign). Wired via ``functools.partial(handlers.heartbeat, persona=…)``.
-- **Content-loop jobs** — the ``apps/workshop_bot/jobs/`` pipeline,
-  fired from cron via ``functools.partial(handlers.content_job, job=…)``.
-  Today: ``update-draft`` daily at 17:00 CT (PASSes if no issue is in
-  flight or it's locked; Eddy reviews Tue–Fri), ``pinboard-scan`` Mon–Fri
-  06:30 & 18:30 CT (Linky's twice-daily Pinboard pass), and ``rss-check``
-  on a weekend cadence (``handlers.rss_check`` — detects a newly-published
-  issue and auto-fires ``promotion-prep``).
+- ``update-draft`` — daily 17:00 CT. Projects upstream content into
+  ``draft.md``; PASSes if no issue is in flight or it's locked
+  (``final.md`` exists); Eddy posts a review Tue–Fri.
+- ``pinboard-scan`` — Mon–Fri 06:30 & 18:30 CT. Linky's Pinboard pass;
+  PASSes when no issue is in flight or today is outside the window.
+- ``rss-check`` — Sat & Sun, every 4h 09:00–21:00 CT. Detects a
+  newly-published issue and auto-fires ``promotion-prep``.
+- ``daily-metrics`` — daily 19:00 CT. Polls active campaigns, checks
+  subscriber growth + engagement; PASSes silently when nothing material
+  moved, else posts a report.
 
-To add a job: write/extend a handler in ``handlers.py`` (or a job module
-under ``jobs/``), add a ``JobSpec`` here, restart the bot.
+The per-persona heartbeats were all retired as these jobs took over (see
+the JOBS comment). ``handlers.heartbeat`` still exists for ad-hoc / eval
+use but isn't scheduled. To add a job: write/extend a handler in
+``handlers.py`` (or a job module under ``jobs/``), add a ``JobSpec``
+here, restart the bot.
 """
 
 from __future__ import annotations
@@ -48,18 +50,12 @@ class JobSpec:
 
 
 JOBS: tuple[JobSpec, ...] = (
-    # ---------- Heartbeats (being retired as content-loop jobs land) ----------
-    # Linky's heartbeat became the `pinboard-scan` job (Step 5); Eddy's
-    # and Patty's were retired in Step 6 (Eddy is job-triggered via
-    # update-draft / create-final / compose-*; Patty has no heartbeat
-    # surface — compose-cta is her only job). Marky's heartbeat goes away
-    # in Step 8. The one remaining heartbeat guards on the active issue
-    # window — see prompts/marky/heartbeat.md.
-    JobSpec(
-        id="marky-heartbeat",
-        cron="0 7-22/3 * * *",                           # Every 3h within 07:00–22:00 Central.
-        func=functools.partial(handlers.heartbeat, persona="marky"),
-    ),
+    # All per-persona heartbeats have been retired in favor of the
+    # content-loop jobs below: Linky → pinboard-scan (Step 5), Eddy
+    # job-triggered via update-draft / create-final / compose-* (Step 6),
+    # Patty's only job is compose-cta (Step 6), Marky → promotion-prep +
+    # daily-metrics (Steps 7–8). handlers.heartbeat still exists for
+    # ad-hoc / eval use but isn't scheduled.
     # ---------- Content-loop jobs ----------
     JobSpec(
         id="update-draft-daily",
@@ -86,6 +82,15 @@ JOBS: tuple[JobSpec, ...] = (
                                                          # promotion-prep for it (deduped via
                                                          # agent_notes).
         func=handlers.rss_check,
+    ),
+    JobSpec(
+        id="marky-daily-metrics",
+        cron="0 19 * * *",                               # Daily 19:00 Central. Polls active
+                                                         # campaigns (appends a metrics row each
+                                                         # run), checks subscriber growth +
+                                                         # engagement; PASSes silently when nothing
+                                                         # material moved.
+        func=functools.partial(handlers.content_job, job="daily-metrics"),
     ),
 )
 
