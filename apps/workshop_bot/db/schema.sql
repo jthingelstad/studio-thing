@@ -212,3 +212,15 @@ CREATE TABLE IF NOT EXISTS issue_windows (
 -- At most one active window at a time.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_issue_windows_active_unique
   ON issue_windows(is_active) WHERE is_active = 1;
+
+-- Job locks — single-asset serialization for the jobs pipeline. A job
+-- acquires a row per file it intends to write before starting; another
+-- job that wants the same file sees the row and bails with an "already
+-- running" message. Released on completion (success or failure). A lock
+-- whose pid is no longer a live process is treated as stale and stolen.
+CREATE TABLE IF NOT EXISTS job_locks (
+  asset TEXT PRIMARY KEY,                        -- e.g. '458/draft.md'
+  job TEXT NOT NULL,                             -- job name holding the lock
+  started_at TEXT NOT NULL DEFAULT (datetime('now')),
+  pid INTEGER NOT NULL
+);

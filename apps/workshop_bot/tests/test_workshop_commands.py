@@ -56,12 +56,13 @@ class TreeRegistrationTests(unittest.TestCase):
         subgroup_names = [getattr(c, "name", None) for c in workshop.commands]
         self.assertIn("job", subgroup_names)
 
-    def test_job_subgroup_has_start_issue(self):
+    def test_job_subgroup_has_the_wired_jobs(self):
         tree = commands_module.register_workshop_commands(_stub_bot())
         workshop = tree.groups[0]
         job = next(c for c in workshop.commands if getattr(c, "name", None) == "job")
-        cmd_names = [getattr(c, "_cmd_name", None) for c in job.commands]
-        self.assertIn("start-issue", cmd_names)
+        cmd_names = {getattr(c, "_cmd_name", None) for c in job.commands}
+        for name in ("start-issue", "update-draft", "issue-status"):
+            self.assertIn(name, cmd_names)
 
     def test_start_issue_describes_required_args(self):
         tree = commands_module.register_workshop_commands(_stub_bot())

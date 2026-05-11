@@ -3,6 +3,7 @@
 ## Completed
 - [2026-05-11] Step 1 — Decommission inbox + persona-scratchpad machinery; rename `s3_issues__*` → `workspace__*`; `/workshop next-issue` → `/workshop job start-issue` (now a `job` subcommand group); drop `agent_inbox` table; remove `WORKSHOP_BUCKET`. 203 tests pass.
 - [2026-05-11] Step 2 — Heartbeat prompts (eddy/linky/patty/marky) now open with an `issue__current_window` guard: PASS+stop when no active window, or when today is outside `[start_date, pub_date]` (Marky also keeps running while a campaign is live). 203 tests pass.
+- [2026-05-11] Step 3 — Job runtime: `jobs/_base.py` (JobContext, single-asset locking via `job_locks` table + dead-pid steal, draft-block replace/get helpers), `templates/draft_starter.md`, `jobs/start_issue.py` / `update_draft.py` (stub fills) / `issue_status.py`; `/workshop job start-issue|update-draft|issue-status` wired. New `test_content_jobs.py`. 221 tests pass.
 
 ## Blockers
 (none — S3 versioning on `files.thingelstad.com` confirmed `Enabled`; the Step-4 pre-flight is satisfied)

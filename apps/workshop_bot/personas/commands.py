@@ -11,13 +11,15 @@ shape::
     /workshop job <name> [<args>]
 
 ``job`` is a subcommand group under ``workshop``; job names are flat and
-hyphenated, no further nesting.
+hyphenated, no further nesting. Each subcommand defers, runs the job's
+async ``run(ctx, …)``, and acks the invoker ephemerally with the job's
+result message. Jobs that also need to post to a channel during the run
+do so via ``ctx.post(...)``.
 
-This step (Step 1 of the content-loop redesign) wires only ``start-issue``
-— it records the in-flight issue window in workshop.db. Later steps extend
-it (create the S3 folder, write ``draft.md`` from the starter template,
-auto-fire ``update-draft``) and add the rest of the job tree
-(``update-draft``, ``issue-status``, the compose jobs, …).
+Wired so far: ``start-issue``, ``update-draft``, ``issue-status``. Later
+steps add ``create-final``, ``compose-haiku`` / ``-meta`` / ``-cta``,
+``build-publish``, ``pinboard-scan``, ``promotion-prep``, ``daily-metrics``,
+``add-campaign``, ``campaign-report``.
 """
 
 from __future__ import annotations
@@ -28,12 +30,24 @@ from typing import TYPE_CHECKING
 import discord
 from discord import app_commands
 
-from ..tools import db, issue
+from ..jobs import _base as jobs_base
+from ..jobs import issue_status, start_issue, update_draft
 
 if TYPE_CHECKING:
     from .base import PersonaBot
 
 logger = logging.getLogger("workshop.commands")
+
+# Discord ephemeral followup cap is 2000 chars; leave headroom.
+_MSG_CAP = 1900
+
+
+def _ctx(bot) -> "jobs_base.JobContext":
+    return jobs_base.JobContext(deps=getattr(bot, "deps", None), trigger="manual")
+
+
+def _clip(text: str) -> str:
+    return text if len(text) <= _MSG_CAP else text[: _MSG_CAP - 1] + "…"
 
 
 def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
@@ -55,12 +69,24 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
         parent=workshop,
     )
 
+    async def _run_and_ack(interaction, coro_factory, label: str) -> None:
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        try:
+            result = await coro_factory()
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("/workshop job %s failed", label)
+            await interaction.followup.send(
+                f"❌ `{label}` hit an error: `{type(exc).__name__}: {exc}`", ephemeral=True
+            )
+            return
+        await interaction.followup.send(_clip(result.message), ephemeral=True)
+
     @job.command(
         name="start-issue",
         description="Start a new in-flight issue (number, Saturday pub date, day count).",
     )
     @app_commands.describe(
-        number="Issue number being assembled (e.g. 348)",
+        number="Issue number being assembled (e.g. 458)",
         pub_date="Publishing Saturday (YYYY-MM-DD)",
         day_count="Days to include before the cutoff — usually 7, sometimes 14",
     )
@@ -70,39 +96,31 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
         pub_date: str,
         day_count: int = 7,
     ) -> None:
-        await interaction.response.defer(ephemeral=True, thinking=False)
-        try:
-            window = issue.compute_window(pub_date, int(day_count))
-        except issue.IssueWindowError as exc:
-            await interaction.followup.send(f"❌ {exc}", ephemeral=True)
-            return
-
-        try:
-            db.set_issue_window(
-                issue_number=int(number),
-                pub_date=window["pub_date"],
-                end_date=window["end_date"],
-                start_date=window["start_date"],
-                day_count=window["day_count"],
+        await _run_and_ack(
+            interaction,
+            lambda: start_issue.run(
+                _ctx(bot),
+                number=number,
+                pub_date=pub_date,
+                day_count=int(day_count),
                 set_by=str(interaction.user),
-            )
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("/workshop job start-issue: db write failed")
-            await interaction.followup.send(
-                f"❌ Couldn't save window: `{type(exc).__name__}: {exc}`",
-                ephemeral=True,
-            )
-            return
-
-        days_word = "day" if window["day_count"] == 1 else "days"
-        await interaction.followup.send(
-            f"✅ Issue **#{number}** set as the in-flight issue.\n"
-            f"- Publish: **{window['pub_date']}** (Sat)\n"
-            f"- Content cutoff (end_date): **{window['end_date']}**\n"
-            f"- Window start (prior cutoff): **{window['start_date']}**\n"
-            f"- Span: **{window['day_count']} {days_word}**",
-            ephemeral=True,
+            ),
+            "start-issue",
         )
+
+    @job.command(
+        name="update-draft",
+        description="Re-project upstream content into the in-flight issue's draft.md.",
+    )
+    async def update_draft_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: update_draft.run(_ctx(bot)), "update-draft")
+
+    @job.command(
+        name="issue-status",
+        description="Read-only state report on the in-flight issue.",
+    )
+    async def issue_status_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: issue_status.run(_ctx(bot)), "issue-status")
 
     tree.add_command(workshop)
     return tree
