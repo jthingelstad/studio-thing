@@ -654,6 +654,52 @@ def list_job_locks() -> list[dict[str, Any]]:
     return [dict(r) for r in rows]
 
 
+# ---------- draft digests (Eddy's delta context for update-draft) ----------
+
+
+def insert_draft_digest(
+    *,
+    issue: int,
+    word_count: int,
+    notable_count: int,
+    brief_count: int,
+    journal_count: int,
+    intro_present: bool,
+    currently_present: bool,
+    haiku_present: bool,
+    cover_present: bool,
+    source_hash: Optional[str] = None,
+) -> int:
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO draft_digests "
+            "(issue, word_count, notable_count, brief_count, journal_count, "
+            " intro_present, currently_present, haiku_present, cover_present, source_hash) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                int(issue), int(word_count), int(notable_count), int(brief_count),
+                int(journal_count),
+                1 if intro_present else 0, 1 if currently_present else 0,
+                1 if haiku_present else 0, 1 if cover_present else 0, source_hash,
+            ),
+        )
+        return int(cur.lastrowid or 0)
+
+
+def latest_draft_digest(issue: int) -> Optional[dict[str, Any]]:
+    """Most recent digest row for ``issue`` — i.e. the prior update-draft
+    run's snapshot, used to compute the delta for the current run."""
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT id, issue, ran_at, word_count, notable_count, brief_count, "
+            "       journal_count, intro_present, currently_present, haiku_present, "
+            "       cover_present, source_hash "
+            "FROM draft_digests WHERE issue = ? ORDER BY ran_at DESC, id DESC LIMIT 1",
+            (int(issue),),
+        ).fetchone()
+    return dict(row) if row else None
+
+
 class AgentRun:
     """Context manager that opens an agent_runs row and closes it with the result."""
 

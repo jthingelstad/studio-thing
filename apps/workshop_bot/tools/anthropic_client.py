@@ -51,18 +51,23 @@ def client() -> anthropic.Anthropic:
     return _client
 
 
+_KNOWN_PERSONAS = ("eddy", "linky", "marky", "patty")
+
+
 def _resolve_prompt_path(name: str) -> Path:
     """Map a prompt name to its on-disk path under prompts/.
 
     - ``"team"`` → ``prompts/shared/team.md``
     - ``"<persona>"`` → ``prompts/<persona>/prompt.md``
-    - ``"<persona>-heartbeat"`` → ``prompts/<persona>/heartbeat.md``
+    - ``"<persona>-<file>"`` → ``prompts/<persona>/<file>.md`` (e.g.
+      ``"eddy-heartbeat"`` → ``prompts/eddy/heartbeat.md``,
+      ``"eddy-update-review"`` → ``prompts/eddy/update-review.md``)
     """
     if name == "team":
         return PROMPTS_DIR / "shared" / "team.md"
-    if name.endswith("-heartbeat"):
-        persona = name[: -len("-heartbeat")]
-        return PROMPTS_DIR / persona / "heartbeat.md"
+    head, sep, rest = name.partition("-")
+    if sep and head in _KNOWN_PERSONAS and rest:
+        return PROMPTS_DIR / head / f"{rest}.md"
     return PROMPTS_DIR / name / "prompt.md"
 
 

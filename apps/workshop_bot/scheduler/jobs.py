@@ -4,20 +4,21 @@ Each ``JobSpec`` is just a cron string and a Python function. The function
 runs at the scheduled time and does whatever it needs to: pull data,
 format a report, post to a channel, write S3, save memory.
 
-The four personas each get a **heartbeat** — a scheduled agent turn
-firing on a cadence with that persona's ``heartbeat.md`` prompt. The
-default is ``PASS``; heartbeats only post when the persona has
-something concrete to surface. Heartbeats use ``handlers.heartbeat``
-via ``functools.partial`` so the dispatcher signature stays the same.
+Two shapes today:
 
-Heartbeats are the only scheduled surface today. The earlier "rituals"
-(Friday curation, Monday subscriber report, Thursday member.json) were
-removed pending a deliberate redesign of how the team helps Jamie
-assemble each issue. Until that work lands, on-demand operator
-commands and the heartbeat cadence cover everything the team does.
+- **Heartbeats** — a scheduled agent turn per persona, firing on a
+  cadence with that persona's ``heartbeat.md`` prompt. Default ``PASS``;
+  posts only when there's something concrete to surface. They guard on
+  the active issue window (see the heartbeat prompts) and are being
+  retired as the content-loop jobs take over (Step 5/6/8 of the
+  redesign). Wired via ``functools.partial(handlers.heartbeat, persona=…)``.
+- **Content-loop jobs** — the ``apps/workshop_bot/jobs/`` pipeline,
+  fired from cron via ``functools.partial(handlers.content_job, job=…)``.
+  Today: ``update-draft`` daily at 17:00 CT (PASSes if no issue is in
+  flight or it's locked; Eddy reviews Tue–Fri).
 
-To add a job: write a new handler function in ``handlers.py``, add a
-``JobSpec`` here, restart the bot.
+To add a job: write/extend a handler in ``handlers.py`` (or a job module
+under ``jobs/``), add a ``JobSpec`` here, restart the bot.
 """
 
 from __future__ import annotations
@@ -73,6 +74,16 @@ JOBS: tuple[JobSpec, ...] = (
         id="patty-heartbeat",
         cron="0 9 * * *",                                # Daily 09:00 Central.
         func=functools.partial(handlers.heartbeat, persona="patty"),
+    ),
+    # ---------- Content-loop jobs ----------
+    JobSpec(
+        id="update-draft-daily",
+        cron="0 17 * * *",                               # Daily 17:00 Central — projects the day's
+                                                         # upstream content into draft.md. The job
+                                                         # PASSes cleanly if no issue is in flight
+                                                         # or the issue is locked (final.md exists);
+                                                         # Eddy posts a review only Tue–Fri.
+        func=functools.partial(handlers.content_job, job="update-draft"),
     ),
 )
 

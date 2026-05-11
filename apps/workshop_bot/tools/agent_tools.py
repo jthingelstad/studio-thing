@@ -21,6 +21,7 @@ from typing import Any, Callable, Optional
 from . import (
     archive,
     db,
+    draft,
     issue,
     s3,
     support_state,
@@ -300,6 +301,25 @@ def t_workspace_write(
         return s3.write_issue_file(int(issue_number), filename, content)
     except s3.S3PathError as exc:
         return {"error": str(exc)}
+
+
+# ---------- draft completeness (in-flight issue) ----------
+
+def t_draft_section_status(deps) -> dict[str, Any]:
+    """Section + asset completeness for the in-flight issue's ``draft.md``:
+    per-section item counts and 'present' flags (Notable/Briefly/Journal),
+    standalone-asset presence (intro/currently/haiku/cover/final/metadata),
+    word count, the list of what's still missing for ship, and a
+    ``ship_ready`` flag. Deterministic — read it, don't recompute it."""
+    window = db.get_active_issue_window()
+    if window is None:
+        return {
+            "error": "No active issue window. Jamie sets it via /workshop job start-issue."
+        }
+    try:
+        return draft.section_status(int(window["issue_number"]))
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"{type(exc).__name__}: {exc}"}
 
 
 # ---------- Discord reactions ----------
@@ -600,6 +620,20 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["issue_number", "filename", "content"],
         },
     },
+    "draft__section_status": {
+        "name": "draft__section_status",
+        "description": (
+            "Deterministic completeness report for the in-flight issue's "
+            "draft.md: per-section item counts + 'present' flags for "
+            "Notable / Briefly / Journal, presence of the standalone assets "
+            "(intro.md, currently.md, haiku.md, cover.jpg, final.md, "
+            "metadata.json, cta-*.md), word count, the list of what's still "
+            "missing for ship, and a ship_ready flag. Read this rather than "
+            "eyeballing the draft and counting headings yourself. Returns "
+            "{error: ...} if no issue is in flight. No arguments."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
     "react__add": {
         "name": "react__add",
         "description": (
@@ -646,6 +680,7 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "workspace__list_files": t_workspace_list_files,
     "workspace__read": t_workspace_read,
     "workspace__write": t_workspace_write,
+    "draft__section_status": t_draft_section_status,
     "react__add": t_react_add,
 }
 

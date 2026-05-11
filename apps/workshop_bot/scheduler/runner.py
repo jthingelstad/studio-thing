@@ -38,9 +38,18 @@ logger = logging.getLogger("workshop.scheduler")
 class JobContext:
     """Per-fire context handed to each job function."""
 
-    def __init__(self, *, team: "TeamRegistry", job: jobs_module.JobSpec) -> None:
+    def __init__(
+        self,
+        *,
+        team: "TeamRegistry",
+        job: jobs_module.JobSpec,
+        deps: Optional[object] = None,
+    ) -> None:
         self.team = team
         self.job = job
+        # The shared ``Deps`` (corpus, registry, team). Content-loop jobs
+        # need it to run a persona's agent loop; heartbeats don't.
+        self.deps = deps
 
     def channel(self, env_var: str, *, persona: Optional[str] = None):
         """Resolve a Discord channel id from an env var.
@@ -91,8 +100,9 @@ class JobContext:
 
 
 class Runner:
-    def __init__(self, team: "TeamRegistry") -> None:
+    def __init__(self, team: "TeamRegistry", *, deps: Optional[object] = None) -> None:
         self.team = team
+        self.deps = deps
         self.scheduler: Optional[AsyncIOScheduler] = None
 
     def start(self) -> None:
@@ -128,7 +138,7 @@ class Runner:
 
     async def _run(self, job: jobs_module.JobSpec) -> None:
         logger.info("scheduler: firing %s", job.id)
-        ctx = JobContext(team=self.team, job=job)
+        ctx = JobContext(team=self.team, job=job, deps=self.deps)
         with db.AgentRun("scheduler", trigger=f"scheduled:{job.id}") as run:
             try:
                 await job.func(ctx)
@@ -178,15 +188,14 @@ def main() -> int:
                 job.func.func if isinstance(job.func, functools.partial)
                 else job.func
             )
-            persona = (
-                f"(persona={job.func.keywords['persona']!r})"
-                if isinstance(job.func, functools.partial)
-                and "persona" in job.func.keywords
+            bound = (
+                "(" + ", ".join(f"{k}={v!r}" for k, v in job.func.keywords.items()) + ")"
+                if isinstance(job.func, functools.partial) and job.func.keywords
                 else ""
             )
             print(
                 f"{mark} {job.id:32} {job.cron:20} -> "
-                f"{underlying.__module__}.{underlying.__name__}{persona}"
+                f"{underlying.__module__}.{underlying.__name__}{bound}"
             )
         return 0
     parser.print_help()

@@ -84,6 +84,7 @@ class ToolRegistryCompositionTests(unittest.TestCase):
             "workspace__list_files",
             "workspace__read",
             "workspace__write",
+            "draft__section_status",
             "site__support_state",
             "web__fetch_url",
         ):

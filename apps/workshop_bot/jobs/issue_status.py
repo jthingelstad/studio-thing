@@ -1,27 +1,33 @@
 """``issue-status`` — read-only state report on the in-flight issue.
 
-Lists which required / optional assets are present in the per-issue
-workspace. Step 4 adds section-completeness (``draft__section_status``)
-and queue-depth context; for now this is a file-presence report.
+Reports section completeness (from parsing ``draft.md``) and
+required/optional asset presence (from the workspace listing) plus
+days-to-pub. Delegates the computation to ``tools.draft.section_status``.
 """
 
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 
-from ..tools import db, s3
+from ..tools import db, draft as draft_mod
 from . import _base
 
 logger = logging.getLogger("workshop.jobs.issue_status")
 
 NAME = "issue-status"
 
-# Required-for-ship assets (build-publish refuses without these). The
-# Notable / Brief / Journal *sections* are also required — Step 4's
-# draft__section_status check covers those; here we just confirm draft.md
-# exists.
-REQUIRED_FILES = ("final.md", "haiku.md", "metadata.json", "intro.md", "cover.jpg")
-OPTIONAL_FILES = ("currently.md",)
+
+def _days_to(target_iso: str) -> str:
+    try:
+        d = (datetime.strptime(target_iso, "%Y-%m-%d").date() - datetime.now().date()).days
+    except (TypeError, ValueError):
+        return "?"
+    if d == 0:
+        return "today"
+    if d > 0:
+        return f"in {d}d"
+    return f"{-d}d ago"
 
 
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
@@ -32,38 +38,45 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         )
     n = int(window["issue_number"])
     try:
-        listing = s3.list_issue(n)
-        files = {o.get("filename") for o in listing.get("objects", []) if o.get("filename")}
+        st = draft_mod.section_status(n)
     except Exception as exc:  # noqa: BLE001
-        logger.exception("issue-status: failed to list workspace for #%d", n)
-        return _base.JobResult(
-            False, f"❌ couldn't list the workspace for #{n}: `{type(exc).__name__}: {exc}`"
-        )
+        logger.exception("issue-status: section_status failed for #%d", n)
+        return _base.JobResult(False, f"❌ couldn't read the workspace for #{n}: `{type(exc).__name__}: {exc}`")
 
-    def mark(name: str) -> str:
-        return "✅" if name in files else "❌"
+    def m(flag: bool) -> str:
+        return "✅" if flag else "❌"
 
-    cta_files = sorted(f for f in files if f.startswith("cta-") and f.endswith(".md"))
+    sec = st["sections"]
+
+    def secline(name: str, label: str) -> str:
+        s = sec[name]
+        if s["placeholder"]:
+            tag = "⚠️ placeholder"
+        elif s["present"]:
+            tag = f"{s['item_count']} item{'s' if s['item_count'] != 1 else ''}"
+        else:
+            tag = "empty"
+        return f"  {m(s['present'])} {label} ({tag})"
 
     lines = [
-        f"📋 **WT{n}** — issue status · pub {window['pub_date']} · cutoff {window['end_date']}",
-        "",
-        f"{'✅' if 'draft.md' in files else '❌'} `draft.md`"
-        + (f" · {'✅' if 'final.md' in files else '⚪'} `final.md`"
-           f" · {'✅' if 'publish.md' in files else '⚪'} `publish.md`"),
+        f"📋 **WT{n}** — issue status · pub {window['pub_date']} ({_days_to(window['pub_date'])}) · cutoff {window['end_date']}",
+        f"draft.md: {m(st['assets'].get('draft.md', False))}  ·  final.md: {m(st['assets'].get('final.md', False))}  ·  publish.md: {m(st['assets'].get('publish.md', False))}  ·  ~{st['word_count']} words",
         "",
         "**Required for ship:**",
+        secline("notable", "Notable"),
+        secline("brief", "Briefly"),
+        secline("journal", "Journal"),
+        f"  {m(st['assets'].get('haiku.md', False))} `haiku.md`" + ("" if st["assets"].get("haiku.md") else " → `/workshop job compose-haiku`"),
+        f"  {m(st['assets'].get('metadata.json', False))} `metadata.json`" + ("" if st["assets"].get("metadata.json") else " → `/workshop job compose-meta`"),
+        f"  {m(st['intro_present'])} `intro.md`" + ("" if st["intro_present"] else " → write it, push via Shortcut"),
+        f"  {m(st['cover_present'])} `cover.jpg`",
+        f"  {m(st['assets'].get('final.md', False))} `final.md`" + ("" if st["assets"].get("final.md") else " → `/workshop job create-final`"),
+        "",
+        "**Optional:**",
+        f"  {m(st['currently_present'])} `currently.md`",
+        "  " + (f"✅ CTAs: {', '.join('`' + c + '`' for c in st['cta_files'])}" if st["cta_files"] else "⚪ CTAs: none (compose-cta not run / 0 CTAs)"),
+        "",
+        ("✅ **ship-ready** — `build-publish` would proceed." if st["ship_ready"]
+         else f"❌ **not ship-ready** — missing: {', '.join(st['required_missing'])}"),
     ]
-    for name in REQUIRED_FILES:
-        lines.append(f"  {mark(name)} `{name}`")
-    lines.append("")
-    lines.append("**Optional:**")
-    for name in OPTIONAL_FILES:
-        lines.append(f"  {mark(name)} `{name}`")
-    lines.append(
-        "  " + (f"✅ CTAs: {', '.join('`' + c + '`' for c in cta_files)}" if cta_files
-                else "⚪ CTAs: none yet")
-    )
-    return _base.JobResult(
-        True, "\n".join(lines), data={"issue_number": n, "files": sorted(files)}
-    )
+    return _base.JobResult(True, "\n".join(lines), data={"issue_number": n, "section_status": st})

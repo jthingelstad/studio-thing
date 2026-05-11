@@ -135,6 +135,86 @@ def all_unread(
     return posts
 
 
+def posts_all(
+    *,
+    fromdt: str | None = None,
+    todt: str | None = None,
+    tag: str | None = None,
+    results: int = 1000,
+) -> list[dict[str, Any]]:
+    """All bookmarks (read *and* unread), optionally scoped by an
+    ISO-UTC date range (Pinboard's ``fromdt``/``todt`` are bound-exclusive)
+    and/or a tag. Same heavy endpoint as ``all_unread`` — 1 call / 5 min.
+    """
+    params: dict[str, Any] = {
+        "auth_token": _token(),
+        "format": "json",
+        "results": min(max(int(results), 1), 1000),
+    }
+    if fromdt:
+        params["fromdt"] = fromdt
+    if todt:
+        params["todt"] = todt
+    if tag:
+        params["tag"] = tag
+    resp = _get("/posts/all", params, family="all", timeout=30)
+    posts: list[dict[str, Any]] = resp.json() or []
+    logger.info(
+        "pinboard: fetched %d posts (fromdt=%s todt=%s tag=%s)",
+        len(posts), fromdt, todt, tag or "-",
+    )
+    return posts
+
+
+BRIEF_TAG = "_brief"
+
+
+def issue_window_candidates(start_date: str, end_date: str) -> dict[str, list[dict[str, Any]]]:
+    """Bookmarks added in the issue window ``(start_date, end_date]``
+    (calendar dates, ``YYYY-MM-DD``), partitioned into:
+
+    - ``notable`` — items not tagged ``_brief``
+    - ``brief``   — items tagged ``_brief``
+
+    Each item is a :func:`normalize_post` record plus ``added_date``;
+    oldest first within each list. (Earlier issues used a separate
+    ``_featured`` tag for a Featured section that's been retired — that
+    tag is no longer recognized.)
+
+    The Pinboard ``fromdt``/``todt`` filter is widened a day on each side
+    and the precise calendar-date filter is applied in Python, since
+    Pinboard's bounds are datetime-exclusive.
+    """
+    from datetime import datetime as _dt, timedelta as _td
+
+    sd = _dt.strptime(start_date, "%Y-%m-%d").date()
+    ed = _dt.strptime(end_date, "%Y-%m-%d").date()
+    fromdt = f"{(sd - _td(days=0)).isoformat()}T00:00:00Z"
+    todt = f"{(ed + _td(days=2)).isoformat()}T00:00:00Z"
+    raw = posts_all(fromdt=fromdt, todt=todt)
+    notable: list[dict[str, Any]] = []
+    brief: list[dict[str, Any]] = []
+    for post in raw:
+        time_raw = str(post.get("time") or "")
+        try:
+            d = _dt.fromisoformat(time_raw.replace("Z", "+00:00")).date()
+        except ValueError:
+            continue
+        if not (sd < d <= ed):
+            continue
+        norm = normalize_post(post)
+        norm["added_date"] = d.isoformat()
+        tags = set((post.get("tags") or "").split())
+        (brief if BRIEF_TAG in tags else notable).append(norm)
+    notable.sort(key=lambda r: r.get("added", ""))
+    brief.sort(key=lambda r: r.get("added", ""))
+    logger.info(
+        "pinboard: issue window %s..%s -> %d notable, %d brief",
+        start_date, end_date, len(notable), len(brief),
+    )
+    return {"notable": notable, "brief": brief}
+
+
 def posts_update() -> str:
     """Most recent bookmark mutation timestamp (ISO-8601, UTC).
 

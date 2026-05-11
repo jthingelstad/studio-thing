@@ -100,3 +100,37 @@ async def heartbeat(ctx: "JobContext", persona: str) -> HeartbeatResult:
         return "skipped"
     await ctx.post(channel, answer, suppress_embeds=True)
     return "posted"
+
+
+# ============================================================
+# Content-loop jobs — fired from cron via a thin bridge
+# ============================================================
+
+# Maps a job name to its async ``run(ctx, **kwargs)`` entrypoint. Kept
+# lazy so importing scheduler.handlers doesn't pull the whole jobs graph
+# at module load.
+def _content_job_runner(name: str):
+    from ..jobs import update_draft
+
+    return {
+        "update-draft": update_draft.run,
+    }.get(name)
+
+
+async def content_job(ctx: "JobContext", *, job: str, **kwargs) -> str:
+    """Run a content-loop job (``apps/workshop_bot/jobs/<job>.py``) on the
+    scheduler. Bridges the scheduler's ``JobContext`` (which carries
+    ``team`` and, post-Step-4, ``deps``) to the jobs package's own
+    ``JobContext``. The job itself posts whatever it needs to a channel;
+    this handler just logs the outcome."""
+    from ..jobs import _base as jobs_base
+
+    runner = _content_job_runner(job)
+    if runner is None:
+        logger.warning("content_job: no runner registered for %r", job)
+        return "skipped"
+    deps = getattr(ctx, "deps", None)
+    job_ctx = jobs_base.JobContext(deps=deps, trigger="scheduled")
+    result = await runner(job_ctx, **kwargs)
+    logger.info("content_job %s -> ok=%s: %s", job, getattr(result, "ok", "?"), getattr(result, "message", ""))
+    return "ok" if getattr(result, "ok", False) else "noop"

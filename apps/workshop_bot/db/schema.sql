@@ -224,3 +224,24 @@ CREATE TABLE IF NOT EXISTS job_locks (
   started_at TEXT NOT NULL DEFAULT (datetime('now')),
   pid INTEGER NOT NULL
 );
+
+-- Draft digests — one row per update-draft run, so Eddy's post-update
+-- review can compute "since yesterday: +2 Notable, +380 words, intro now
+-- present" rather than re-summarizing the whole draft.
+CREATE TABLE IF NOT EXISTS draft_digests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  issue INTEGER NOT NULL,
+  ran_at TEXT NOT NULL DEFAULT (datetime('now')),
+  word_count INTEGER,
+  notable_count INTEGER,
+  brief_count INTEGER,
+  journal_count INTEGER,
+  intro_present INTEGER,
+  currently_present INTEGER,
+  haiku_present INTEGER,
+  cover_present INTEGER,
+  source_hash TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_draft_digests_issue
+  ON draft_digests(issue, ran_at DESC, id DESC);

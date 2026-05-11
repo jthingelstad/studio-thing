@@ -235,7 +235,7 @@ async def run() -> int:
     scheduler_enabled = (
         os.environ.get("WORKSHOP_SCHEDULER_ENABLED", "1").strip() not in ("0", "false", "")
     )
-    runner = SchedulerRunner(team) if scheduler_enabled else None
+    runner = SchedulerRunner(team, deps=deps) if scheduler_enabled else None
 
     async def _post_startup() -> None:
         # Wait for each persona's on_ready, but with a per-persona timeout

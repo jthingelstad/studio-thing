@@ -277,7 +277,7 @@ class IssueStatusTests(_DBTestCase):
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
-        self.ws.write_issue_file(458, "draft.md", "x")
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
         self.ws.write_issue_file(458, "intro.md", "x")
         self.ws.write_issue_file(458, "cta-1.md", "x")
         result = asyncio.run(issue_status.run(_base.JobContext()))
@@ -287,7 +287,298 @@ class IssueStatusTests(_DBTestCase):
         # final.md / haiku.md / metadata.json / cover.jpg missing → ❌ markers.
         self.assertIn("❌ `final.md`", result.message)
         self.assertIn("cta-1.md", result.message)
-        self.assertEqual(set(result.data["files"]), {"draft.md", "intro.md", "cta-1.md"})
+        st = result.data["section_status"]
+        self.assertEqual(st["issue_number"], 458)
+        self.assertEqual(st["cta_files"], ["cta-1.md"])
+        self.assertFalse(st["ship_ready"])
+
+
+# ---------- Step 4: real fills + section_status + context + Eddy review ----------
+
+from datetime import date  # noqa: E402
+from unittest.mock import AsyncMock, MagicMock  # noqa: E402
+
+from apps.workshop_bot.tools import context, draft as draft_mod, microblog  # noqa: E402
+from apps.workshop_bot.systems.pinboard import client as pinboard_client  # noqa: E402
+
+
+_FAKE_CANDIDATES = {
+    "notable": [
+        {"url": "https://a.example/one", "title": "Thing One", "description": "Why it matters."},
+        {"url": "https://b.example/two", "title": "Thing Two", "description": ""},
+    ],
+    "brief": [
+        {"url": "https://c.example/three", "title": "Thing Three", "description": "A one-liner."},
+    ],
+}
+
+_FAKE_MICROBLOG = [
+    {"url": "https://www.thingelstad.com/2026/05/12/post-a.html", "title": "",
+     "published": "2026-05-12T15:02:00-05:00", "content_md": "First post in the window."},
+    {"url": "https://www.thingelstad.com/2026/05/13/post-b.html", "title": "",
+     "published": "2026-05-13T09:00:00-05:00", "content_md": "Second post.\n\n![](https://cdn.uploads.micro.blog/x.jpg)"},
+]
+
+
+class DraftSectionStatusTests(unittest.TestCase):
+    def test_counts_and_placeholder_detection(self):
+        tpl = _base.starter_template()
+        d = _base.replace_block(tpl, "notable",
+                                "### [A](http://a)\n\nblurb\n\n### [B](http://b)\n\nblurb")
+        d = _base.replace_block(d, "brief", "**[C](http://c)** — x\n\n**[D](http://d)** — y")
+        d = _base.replace_block(d, "journal",
+                                "[May 12, 2026 at 3:02 PM](https://www.thingelstad.com/x.html)\n\ntext")
+        st = draft_mod.section_status(458, draft_text=d, list_objects=set())
+        self.assertEqual(st["sections"]["notable"]["item_count"], 2)
+        self.assertTrue(st["sections"]["notable"]["present"])
+        self.assertEqual(st["sections"]["brief"]["item_count"], 2)
+        self.assertEqual(st["sections"]["journal"]["item_count"], 1)
+        # All three sections have content, so the "sections" gap is gone;
+        # only the standalone assets are still missing.
+        self.assertNotIn("sections (notable/brief/journal)", st["required_missing"])
+        self.assertIn("haiku.md", st["required_missing"])
+        self.assertIn("metadata.json", st["required_missing"])
+
+    def test_placeholder_block_is_not_present(self):
+        tpl = _base.replace_block(_base.starter_template(), "notable",
+                                  "_Notable — couldn't pull from Pinboard (RequestException)._")
+        st = draft_mod.section_status(458, draft_text=tpl, list_objects=set())
+        self.assertTrue(st["sections"]["notable"]["placeholder"])
+        self.assertFalse(st["sections"]["notable"]["present"])
+
+    def test_ship_ready_when_everything_present(self):
+        d = _base.replace_block(_base.starter_template(), "notable", "### [A](http://a)")
+        d = _base.replace_block(d, "brief", "**[B](http://b)** — x")
+        d = _base.replace_block(d, "journal", "[May 12, 2026 at 3:02 PM](https://x.example/y)\n\nt")
+        files = {"final.md", "haiku.md", "metadata.json", "intro.md", "cover.jpg", "draft.md"}
+        st = draft_mod.section_status(458, draft_text=d, list_objects=files)
+        self.assertTrue(st["ship_ready"], st["required_missing"])
+
+
+class UpdateDraftRealFillsTests(_DBTestCase):
+    def _set_window(self, n=458, pub="2026-05-16"):
+        from apps.workshop_bot.tools import issue as issue_mod
+        w = issue_mod.compute_window(pub, 7)
+        db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
+                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        return db.get_active_issue_window()
+
+    def setUp(self):
+        super().setUp()
+        self._extra = [
+            patch.object(pinboard_client, "issue_window_candidates", lambda s, e: _FAKE_CANDIDATES),
+            patch.object(microblog, "posts_in_window", lambda s, e: list(_FAKE_MICROBLOG)),
+        ]
+        for p in self._extra:
+            p.start()
+
+    def tearDown(self):
+        for p in self._extra:
+            p.stop()
+        super().tearDown()
+
+    def test_fills_render_real_content(self):
+        self._set_window()
+        result = asyncio.run(update_draft.run(_base.JobContext()))
+        self.assertTrue(result.ok, result.message)
+        d = self.ws.files[(458, "draft.md")]
+        self.assertIn("### [Thing One](https://a.example/one)", d)
+        self.assertIn("Why it matters.", d)
+        self.assertIn("**[Thing Three](https://c.example/three)** — A one-liner.", d)
+        self.assertIn("[May 12, 2026 at 3:02 PM](https://www.thingelstad.com/2026/05/12/post-a.html)", d)
+        self.assertIn("First post in the window.", d)
+        # A digest row was written.
+        dig = db.latest_draft_digest(458)
+        self.assertIsNotNone(dig)
+        self.assertEqual(dig["notable_count"], 2)
+        self.assertEqual(dig["brief_count"], 1)
+        self.assertEqual(dig["journal_count"], 2)
+
+    def test_idempotent_with_stable_sources(self):
+        self._set_window()
+        asyncio.run(update_draft.run(_base.JobContext()))
+        first = self.ws.files[(458, "draft.md")]
+        asyncio.run(update_draft.run(_base.JobContext()))
+        second = self.ws.files[(458, "draft.md")]
+        self.assertEqual(first, second)
+        # Two runs → two digest rows.
+        with db.connect() as conn:
+            n = conn.execute("SELECT COUNT(*) c FROM draft_digests WHERE issue=458").fetchone()["c"]
+        self.assertEqual(n, 2)
+
+    def test_refuses_when_final_exists(self):
+        self._set_window()
+        self.ws.write_issue_file(458, "final.md", "locked")
+        result = asyncio.run(update_draft.run(_base.JobContext()))
+        self.assertFalse(result.ok)
+        self.assertIn("locked", result.message.lower())
+
+    def test_source_failure_degrades_to_placeholder(self):
+        self._set_window()
+        def _boom(s, e):
+            raise RuntimeError("pinboard down")
+        with patch.object(pinboard_client, "issue_window_candidates", _boom):
+            result = asyncio.run(update_draft.run(_base.JobContext()))
+        self.assertTrue(result.ok, result.message)
+        d = self.ws.files[(458, "draft.md")]
+        self.assertIn("couldn't pull from Pinboard", d)
+        # Journal still pulled fine.
+        self.assertIn("First post in the window.", d)
+
+
+class EddyReviewTests(_DBTestCase):
+    def _window(self, n=458, pub="2026-05-16"):
+        from apps.workshop_bot.tools import issue as issue_mod
+        w = issue_mod.compute_window(pub, 7)
+        db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
+                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        return db.get_active_issue_window()
+
+    def _fake_team_with_eddy(self, reply="📋 WT458 — draft refreshed\n\nLooks good."):
+        fake_channel = MagicMock()
+        fake_channel.send = AsyncMock()
+        fake_eddy = MagicMock()
+        fake_eddy.user = object()
+        fake_eddy.get_channel = MagicMock(return_value=fake_channel)
+        fake_eddy.core = AsyncMock(return_value=(reply, {"iterations": 1}))
+        team = MagicMock()
+        team.bots = {"eddy": fake_eddy}
+        deps = MagicMock()
+        deps.team = team
+        return deps, fake_eddy, fake_channel
+
+    def test_review_silent_on_non_review_day(self):
+        window = self._window()
+        deps, fake_eddy, _ = self._fake_team_with_eddy()
+        ctx = _base.JobContext(deps=deps)
+        st = draft_mod.section_status(458, draft_text=_base.starter_template(), list_objects=set())
+        # Monday — Eddy stays silent.
+        out = asyncio.run(update_draft._maybe_eddy_review(ctx, window, st, None, date(2026, 5, 11)))
+        self.assertIn("silent", out.lower())
+        fake_eddy.core.assert_not_awaited()
+
+    def test_review_posts_on_review_day(self):
+        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "12345"
+        try:
+            window = self._window()
+            deps, fake_eddy, fake_channel = self._fake_team_with_eddy()
+            ctx = _base.JobContext(deps=deps)
+            st = draft_mod.section_status(458, draft_text=_base.starter_template(), list_objects=set())
+            out = asyncio.run(update_draft._maybe_eddy_review(ctx, window, st, None, date(2026, 5, 12)))  # Tuesday
+            self.assertIn("posted a review", out.lower())
+            fake_eddy.core.assert_awaited()
+            fake_channel.send.assert_awaited()
+            # The dynamic context block was prepended to the user message.
+            sent_user_msg = fake_eddy.core.call_args.kwargs["latest"]
+            self.assertIn("## Today", sent_user_msg)
+            self.assertIn("active_issue", sent_user_msg)
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
+
+    def test_review_swallows_pass(self):
+        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "12345"
+        try:
+            window = self._window()
+            deps, fake_eddy, fake_channel = self._fake_team_with_eddy(reply="PASS")
+            ctx = _base.JobContext(deps=deps)
+            st = draft_mod.section_status(458, draft_text=_base.starter_template(), list_objects=set())
+            out = asyncio.run(update_draft._maybe_eddy_review(ctx, window, st, None, date(2026, 5, 12)))
+            self.assertIn("pass", out.lower())
+            fake_channel.send.assert_not_awaited()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
+
+    def test_review_model_scales(self):
+        self.assertEqual(update_draft._review_model(1), "haiku")   # Tue
+        self.assertEqual(update_draft._review_model(2), "haiku")   # Wed
+        self.assertEqual(update_draft._review_model(3), "sonnet")  # Thu
+        self.assertEqual(update_draft._review_model(4), "sonnet")  # Fri
+        os.environ["WORKSHOP_EDDY_REVIEW_MODEL"] = "opus"
+        try:
+            self.assertEqual(update_draft._review_model(1), "opus")
+        finally:
+            os.environ.pop("WORKSHOP_EDDY_REVIEW_MODEL", None)
+
+
+class EddyContextTests(_DBTestCase):
+    def test_delta_against_prior_digest(self):
+        from apps.workshop_bot.tools import issue as issue_mod
+        w = issue_mod.compute_window("2026-05-16", 7)
+        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
+                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        # Prior run: 2 Notable, 0 intro.
+        db.insert_draft_digest(issue=458, word_count=1200, notable_count=2, brief_count=1,
+                               journal_count=0, intro_present=False, currently_present=False,
+                               haiku_present=False, cover_present=False, source_hash="aaa")
+        d = _base.replace_block(_base.starter_template(), "notable",
+                                "### [A](http://a)\n\nx\n\n### [B](http://b)\n\ny\n\n### [C](http://c)\n\nz")
+        d = _base.replace_block(d, "intro", "Now there's an intro.")
+        self.ws.write_issue_file(458, "draft.md", d)
+        ctx = context.build_eddy_context(ref_date=date(2026, 5, 12))
+        self.assertEqual(ctx["active_issue"], 458)
+        self.assertEqual(ctx["sections"]["notable"]["item_count"], 3)
+        delta = ctx["delta_since_last_run"]
+        self.assertIsNotNone(delta)
+        self.assertEqual(delta["notable"], 1)  # 3 - 2
+        self.assertTrue(delta["intro_now_present"])
+
+    def test_no_digest_means_no_delta(self):
+        from apps.workshop_bot.tools import issue as issue_mod
+        w = issue_mod.compute_window("2026-05-16", 7)
+        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
+                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        ctx = context.build_eddy_context(ref_date=date(2026, 5, 12))
+        self.assertIsNone(ctx["delta_since_last_run"])
+
+    def test_no_window(self):
+        ctx = context.build_eddy_context(ref_date=date(2026, 5, 12))
+        self.assertIsNone(ctx["active_issue"])
+
+
+class MicroblogParseTests(unittest.TestCase):
+    def test_html_to_markdownish(self):
+        h = '<p>Hello <a href="https://x.example/y">there</a>.</p><p>Pic:</p><p><img src="https://cdn.uploads.micro.blog/z.jpg"></p>'
+        md = microblog.html_to_markdownish(h)
+        self.assertIn("[there](https://x.example/y)", md)
+        self.assertIn("![](https://cdn.uploads.micro.blog/z.jpg)", md)
+        self.assertNotIn("<p>", md)
+
+    def test_posts_in_window_filters_by_date(self):
+        feed = {
+            "version": "https://jsonfeed.org/version/1.1",
+            "items": [
+                {"url": "https://x/1", "date_published": "2026-05-08T10:00:00-05:00", "content_html": "<p>before window</p>"},
+                {"url": "https://x/2", "date_published": "2026-05-09T10:00:00-05:00", "content_html": "<p>in window early</p>"},
+                {"url": "https://x/3", "date_published": "2026-05-15T23:00:00-05:00", "content_html": "<p>in window late</p>"},
+                {"url": "https://x/4", "date_published": "2026-05-16T01:00:00-05:00", "content_html": "<p>after window</p>"},
+            ],
+        }
+        with patch.object(microblog, "_fetch_feed", lambda: feed):
+            out = microblog.posts_in_window("2026-05-08", "2026-05-15")
+        self.assertEqual([p["url"] for p in out], ["https://x/2", "https://x/3"])
+        self.assertEqual(out[0]["content_md"], "in window early")
+
+
+class DraftSectionStatusToolTests(_DBTestCase):
+    def test_tool_returns_status_for_active_issue(self):
+        from apps.workshop_bot.tools import agent_tools, issue as issue_mod
+        w = issue_mod.compute_window("2026-05-16", 7)
+        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
+                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        self.ws.write_issue_file(458, "draft.md", _base.replace_block(_base.starter_template(), "notable", "### [A](http://a)"))
+        registry = agent_tools.ToolRegistry()
+        agent_tools.register_local_helpers(registry)
+        out = registry.dispatch("draft__section_status", deps=None, args={}, persona="eddy")
+        self.assertEqual(out["issue_number"], 458)
+        self.assertEqual(out["sections"]["notable"]["item_count"], 1)
+
+    def test_tool_errors_without_window(self):
+        from apps.workshop_bot.tools import agent_tools
+        registry = agent_tools.ToolRegistry()
+        agent_tools.register_local_helpers(registry)
+        out = registry.dispatch("draft__section_status", deps=None, args={}, persona="eddy")
+        self.assertIn("error", out)
 
 
 if __name__ == "__main__":
