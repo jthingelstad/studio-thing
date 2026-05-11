@@ -246,6 +246,7 @@ def extract_subject_number(subject):
       "Weekly Thing 343 / ..."
       "Special Thing #140 / ..."
       "Weekly Thing #2^8 / ..." → 256
+      "WT347 — ..."   (the current short-form convention)
     """
     # Handle exponential notation (e.g., #2^8 = 256)
     m_exp = re.search(r"(?:Weekly|Special)\s+Thing\s*#?\s*(\d+)\^(\d+)", subject)
@@ -255,6 +256,11 @@ def extract_subject_number(subject):
     m = re.search(r"(?:Weekly|Special)\s+Thing\s*#?\s*(\d+)", subject)
     if m:
         return int(m.group(1))
+
+    # Short form: "WT347 — Theme" (workshop_bot's compose-meta convention).
+    m_wt = re.search(r"\bWT\s*#?\s*(\d+)\b", subject)
+    if m_wt:
+        return int(m_wt.group(1))
     return None
 
 

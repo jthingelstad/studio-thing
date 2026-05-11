@@ -1120,27 +1120,75 @@ class ComposeMetaTests(_DBTestCase):
         os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
         super().tearDown()
 
-    def test_writes_metadata_json(self):
+    def _window(self, n=458):
         from apps.workshop_bot.tools import issue as issue_mod
         w = issue_mod.compute_window("2026-05-16", 7)
-        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
+        db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+
+    def test_writes_metadata_json(self):
+        self._window()
         self.ws.write_issue_file(458, "draft.md", _base.starter_template())
-        reply = '{"options": [{"subject": "Weekly Thing 458 / One, Two, Three", "description": "A week."}]}'
-        fc = _FakeBotChannel(persona="eddy", reply=reply)
+        subj_reply = ("Here are the options:\n\n"
+                      "1. WT458 — The Death of Scrum\n2. WT458 — Value Over Token Consumption\n"
+                      "3. WT458 — How Companies Learn With AI\n4. WT458 — Agentic Coding Is a Trap\n"
+                      "5. WT458 — Scrum, FilamentHound, DO_NOT_TRACK")
+        desc_reply = "1. A calm survey of the week.\n2. A different framing.\n3. A third take on the issue."
+        fc = _FakeBotChannel(persona="eddy")
+        fc.bot.core = AsyncMock(side_effect=[(subj_reply, {"iterations": 1}), (desc_reply, {"iterations": 1})])
         os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
-        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)), \
-             patch.object(compose_meta, "_recent_subjects", lambda limit=10: []):
+        with patch.object(interaction, "await_choice", AsyncMock(side_effect=[0, 2])), \
+             patch.object(compose_meta, "_recent_subjects", lambda limit=10: ["Weekly Thing 457 / Old, Words, Here"]):
             result = asyncio.run(compose_meta.run(ctx))
         self.assertTrue(result.ok, result.message)
         import json as _j
         meta = _j.loads(self.ws.files[(458, "metadata.json")])
         self.assertEqual(meta["number"], 458)
-        self.assertEqual(meta["subject"], "Weekly Thing 458 / One, Two, Three")
+        self.assertEqual(meta["subject"], "WT458 — The Death of Scrum")
+        self.assertEqual(meta["description"], "A third take on the issue.")
         self.assertEqual(meta["slug"], "458")
         self.assertTrue(meta["image"].endswith("/458/cover.jpg"))
         self.assertTrue(meta["publish_date"].startswith("2026-05-16"))
+
+    def test_no_description_pick_still_writes_metadata(self):
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        fc = _FakeBotChannel(persona="eddy")
+        fc.bot.core = AsyncMock(side_effect=[("1. WT458 — Picked Subject\n2. WT458 — B", {}), ("1. d1\n2. d2", {})])
+        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(side_effect=[0, None])), \
+             patch.object(compose_meta, "_recent_subjects", lambda limit=10: []):
+            result = asyncio.run(compose_meta.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        import json as _j
+        meta = _j.loads(self.ws.files[(458, "metadata.json")])
+        self.assertEqual(meta["subject"], "WT458 — Picked Subject")
+        self.assertEqual(meta["description"], "")
+
+    def test_no_subject_pick_fails_cleanly(self):
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        fc = _FakeBotChannel(persona="eddy", reply="1. WT458 — A\n2. WT458 — B")
+        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=None)), \
+             patch.object(compose_meta, "_recent_subjects", lambda limit=10: []):
+            result = asyncio.run(compose_meta.run(ctx))
+        self.assertFalse(result.ok)
+        self.assertNotIn((458, "metadata.json"), self.ws.files)
+
+    def test_parse_numbered_list_tolerates_wrappers(self):
+        text = ("Sure — here you go:\n\n"
+                "1.  **WT458 — One**  \n"
+                "2. `WT458 — Two`\n"
+                "3. WT458 — Three\n\n"
+                "Hope that helps.")
+        self.assertEqual(
+            compose_meta._parse_numbered_list(text, 8),
+            ["WT458 — One", "WT458 — Two", "WT458 — Three"],
+        )
 
 
 class ComposeCtaTests(_DBTestCase):

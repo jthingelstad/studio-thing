@@ -72,6 +72,15 @@ Jamie flagged that `draft.md` / `draft.html` had the sections out of order vs. r
 - `tools/render.py` `_CSS` rewritten to mirror `content/buttondown/newsletter/buttondown-email.css`: brand token palette, Source Sans body / Source Serif headings / JetBrains Mono meta, the email's h1 masthead + h2 rhythm, accent links + blockquote, the WIP banner restyled in brand blue. Added the `smarty` markdown extension so the preview gets the published curly quotes / em-dashes.
 - Tests: `test_assembles_publish_md` rewritten to assert the new order + `after_notable` CTA placement; added `test_cta_default_placement_is_after_notable` and `test_starter_template_section_order`. **347 tests pass.** Bot restarted; the in-flight `draft.md` self-corrects on the next `update-draft` (scheduled 17:00 CT or `/workshop job update-draft`).
 
+### New subject-line prompt in compose-meta — 5 options (2026-05-11, cont'd)
+
+Jamie supplied a refined, standalone subject-line prompt (worked out with Claude). Adopted it verbatim and split `compose-meta` into two reaction picks:
+
+- `prompts/eddy/compose-subject.md` = Jamie's prompt **verbatim** (the `<NUM>` and `<<<ISSUE_TEXT>>>` placeholders are substituted by the job). It produces a numbered list of **5 `WT<N> — <theme>` options** (3–6-word title-case themes, ≤50 chars, no clickbait, special-issue handling, at least one comma-separated-token fallback). New subject convention is `WT<N> — <theme>` with an em-dash — *no* `Weekly Thing N /` and no slash.
+- `compose-meta` now: step 1 — load that prompt, substitute, ask Eddy, parse the numbered list, post the 5 to `#editorial`, Jamie reacts 1️⃣–5️⃣ (🔄 = refresh, ≤3 rounds). Step 2 — `prompts/eddy/compose-description.md` (new; ~3 description options, fed the recent subjects + the chosen subject), Jamie picks. Then write `metadata.json`. If Jamie skips the description pick it still writes `metadata.json` with an empty description so the subject pick isn't wasted. Deleted `prompts/eddy/compose-meta.md`.
+- `pipeline/content/process_emails.py:extract_subject_number` now also matches the `WT<n>` short form (it only knew `Weekly Thing <n>` / `Special Thing <n>`), so the new subject format round-trips into the archive's issue-number assignment. Backward-compatible — old subjects still match.
+- New helper `compose_meta._parse_numbered_list` (tolerates a stray preamble / code fences / bold-or-quote wrappers around the items). Tests: `ComposeMetaTests` rewritten (two-step flow, `WT<N> —` subjects, the no-description-pick and no-subject-pick paths, the parser); `CLAUDE.md` / `README.md` / the slash-command help string updated. **350 tests pass.** Bot restarted.
+
 ## Blockers
 (none — S3 versioning on `files.thingelstad.com` confirmed `Enabled`; the Step-4 pre-flight is satisfied)
 

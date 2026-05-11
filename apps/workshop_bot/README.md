@@ -154,7 +154,7 @@ apps/workshop_bot/
 │   └── <persona>/
 │       ├── prompt.md         # the persona's identity / lane / voice
 │       └── <job>.md          # job prompts: eddy/update-review.md, eddy/create-final.md,
-│                             #   eddy/compose-{haiku,meta}.md, linky/pinboard-scan.md,
+│                             #   eddy/compose-{haiku,subject,description}.md, linky/pinboard-scan.md,
 │                             #   patty/compose-cta.md, marky/promotion-prep.md, marky/daily-metrics.md
 ├── systems/                  # external-system tool surfaces (one subpackage per system)
 │   ├── _base.py              # SystemServer Protocol + ToolDef dataclass

@@ -200,12 +200,12 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
 
     @job.command(
         name="compose-meta",
-        description="Generate subject + description options for the in-flight issue → metadata.json.",
+        description="Pick the subject (5 options) then the description for the in-flight issue → metadata.json.",
     )
     async def compose_meta_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_interactive(
             interaction, lambda: compose_meta.run(_ctx(bot)), "compose-meta",
-            "Starting `compose-meta` — options will post in #editorial; react there to pick.",
+            "Starting `compose-meta` — 5 subject options then description options will post in #editorial; react there to pick.",
         )
 
     @job.command(
