@@ -245,3 +245,22 @@ CREATE TABLE IF NOT EXISTS draft_digests (
 
 CREATE INDEX IF NOT EXISTS idx_draft_digests_issue
   ON draft_digests(issue, ran_at DESC, id DESC);
+
+-- Goals — Patty's milestone progression. At most one row with
+-- achieved_at IS NULL (the active goal). Jamie marks achieved_at when a
+-- milestone hits and inserts the next. target_kind is 'members' (live
+-- count from Buttondown) or 'dollars' (live total from Stripe).
+CREATE TABLE IF NOT EXISTS goals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  target_kind TEXT NOT NULL,
+  target_value INTEGER NOT NULL,
+  started_at TEXT NOT NULL DEFAULT (date('now')),
+  achieved_at TEXT,
+  notes TEXT
+);
+
+-- Seed Jamie's current active milestone if the table is empty (idempotent —
+-- this whole file re-runs on every boot).
+INSERT INTO goals (target_kind, target_value, started_at)
+SELECT 'members', 50, '2026-05-11'
+WHERE NOT EXISTS (SELECT 1 FROM goals);

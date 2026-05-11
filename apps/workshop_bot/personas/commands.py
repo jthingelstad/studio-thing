@@ -17,8 +17,8 @@ result message. Jobs that also need to post to a channel during the run
 do so via ``ctx.post(...)``.
 
 Wired so far: ``start-issue``, ``update-draft``, ``issue-status``,
-``pinboard-scan``. Later steps add ``create-final``, ``compose-haiku`` /
-``-meta`` / ``-cta``, ``build-publish``, ``promotion-prep``,
+``pinboard-scan``, ``create-final``, ``compose-haiku`` / ``-meta`` /
+``-cta``, ``build-publish``. Later steps add ``promotion-prep``,
 ``daily-metrics``, ``add-campaign``, ``campaign-report``.
 """
 
@@ -31,7 +31,17 @@ import discord
 from discord import app_commands
 
 from ..jobs import _base as jobs_base
-from ..jobs import issue_status, pinboard_scan, start_issue, update_draft
+from ..jobs import (
+    build_publish,
+    compose_cta,
+    compose_haiku,
+    compose_meta,
+    create_final,
+    issue_status,
+    pinboard_scan,
+    start_issue,
+    update_draft,
+)
 
 if TYPE_CHECKING:
     from .base import PersonaBot
@@ -128,6 +138,41 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
     )
     async def pinboard_scan_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: pinboard_scan.run(_ctx(bot)), "pinboard-scan")
+
+    @job.command(
+        name="create-final",
+        description="Eddy's reorder review → final.md, then auto-fires the compose chain.",
+    )
+    async def create_final_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: create_final.run(_ctx(bot)), "create-final")
+
+    @job.command(
+        name="compose-haiku",
+        description="Generate haiku options for the in-flight issue → haiku.md.",
+    )
+    async def compose_haiku_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: compose_haiku.run(_ctx(bot)), "compose-haiku")
+
+    @job.command(
+        name="compose-meta",
+        description="Generate subject + description options for the in-flight issue → metadata.json.",
+    )
+    async def compose_meta_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: compose_meta.run(_ctx(bot)), "compose-meta")
+
+    @job.command(
+        name="compose-cta",
+        description="Patty's membership-CTA proposal for the in-flight issue → cta-*.md.",
+    )
+    async def compose_cta_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: compose_cta.run(_ctx(bot)), "compose-cta")
+
+    @job.command(
+        name="build-publish",
+        description="Assemble publish.md from final.md + assets (refuses if anything required is missing).",
+    )
+    async def build_publish_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: build_publish.run(_ctx(bot)), "build-publish")
 
     tree.add_command(workshop)
     return tree

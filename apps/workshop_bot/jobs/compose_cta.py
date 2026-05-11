@@ -1,0 +1,116 @@
+"""``compose-cta`` (Patty) — the per-issue membership CTA(s).
+
+Patty decides on 0, 1, or 2 CTAs for the issue and drafts 1–2 framings
+per slot, in **Thingy's** voice (the public-facing librarian persona —
+not Jamie's first person, not salesy). Reads ``final.md`` (or ``draft.md``),
+recent supporting-member activity, the current goal + progress (via the
+dynamic context block), and the last 3–4 issues' ``publish.md`` files for
+arc continuity. Posts proposals to ``#supporters``; on Jamie's pick per
+slot, writes ``cta-1.md`` / ``cta-2.md`` with ``placement:`` YAML
+frontmatter. Optional for ship (Patty may choose 0 CTAs).
+"""
+
+from __future__ import annotations
+
+import logging
+
+from ..tools import anthropic_client, context, db, interaction, s3
+from . import _base, _compose
+
+logger = logging.getLogger("workshop.jobs.compose_cta")
+
+NAME = "compose-cta"
+MAX_ROUNDS = 3
+_PLACEMENTS = ("after_notable", "after_brief", "after_journal", "before_haiku")
+
+
+def _recent_publish_excerpts(issue_number: int, count: int = 4) -> str:
+    out: list[str] = []
+    for prev in range(issue_number - 1, issue_number - 1 - count, -1):
+        if prev < 1:
+            break
+        res = s3.read_issue_file(prev, "publish.md")
+        if res.get("found") and isinstance(res.get("text"), str) and res["text"].strip():
+            out.append(f"--- WT{prev} publish.md ---\n{res['text'][:4000]}")
+    return "\n\n".join(out) if out else "(no prior publish.md files available)"
+
+
+async def run(ctx: "_base.JobContext") -> "_base.JobResult":
+    window = db.get_active_issue_window()
+    if window is None:
+        return _base.JobResult(False, "❌ no active issue window.")
+    n = int(window["issue_number"])
+    body = _compose.final_or_draft(n)
+    if not body.strip():
+        return _base.JobResult(False, f"❌ no `final.md`/`draft.md` for WT{n} yet.")
+    bot, channel = _compose.resolve_bot_and_channel(ctx, "patty", "DISCORD_CHANNEL_SUPPORTERS")
+    if bot is None:
+        return _base.JobResult(True, f"(compose-cta skipped — {channel})", data={"posted": False})
+
+    # Lock both slots up front so a concurrent re-fire bounces.
+    assets = [f"{n}/cta-1.md", f"{n}/cta-2.md"]
+    try:
+        with _base.job_lock(assets, NAME):
+            base_prompt = anthropic_client.load_prompt("patty-compose-cta")
+            patty_ctx = context.build_patty_context()
+            user_msg = (
+                f"{context.render_block(patty_ctx)}\n\n{base_prompt}\n\n"
+                f"---\n\nRecent issues (for arc continuity — your previous CTAs are in these):\n\n"
+                f"{_recent_publish_excerpts(n)}\n\n"
+                f"---\n\nThis issue (WT{n}):\n\n```markdown\n{body[:_compose.ISSUE_BODY_CAP]}\n```"
+            )
+            ctas = None
+            for _round in range(MAX_ROUNDS):
+                with db.AgentRun("patty", trigger="compose-cta") as agent_run:
+                    reply, _meta = await bot.core(latest=user_msg, history=[], model=None)
+                    agent_run.records_written = 1
+                data = _compose.parse_json_payload(reply)
+                ctas = (data or {}).get("ctas")
+                if not isinstance(ctas, list):
+                    return _base.JobResult(False, "compose-cta: model didn't return a parseable `ctas` list.")
+                if len(ctas) == 0:
+                    await channel.send(f"💝 Patty's call for WT{n}: **no CTA this issue.**", suppress_embeds=True)
+                    return _base.JobResult(True, f"compose-cta for WT{n}: 0 CTAs (Patty's call).",
+                                           data={"issue_number": n, "ctas_written": 0, "posted": True})
+                # Got CTAs — break out of the refresh loop and present them.
+                break
+            else:
+                return _base.JobResult(False, "compose-cta: out of refreshes.", data={"posted": True})
+
+            written = 0
+            for idx, cta in enumerate(ctas[:2]):
+                if not isinstance(cta, dict):
+                    continue
+                placement = str(cta.get("placement") or "after_brief").strip()
+                if placement not in _PLACEMENTS:
+                    placement = "after_brief"
+                framings = [str(f).strip() for f in (cta.get("framings") or []) if str(f).strip()][:2]
+                if not framings:
+                    continue
+                pretty = [f"> {f}" for f in framings]
+                slot_label = f"Slot {idx + 1} (placement: `{placement}`)"
+                pick = await interaction.await_choice(
+                    bot, channel, pretty,
+                    prompt=f"💝 Patty's CTA proposal for WT{n} — {slot_label}:",
+                    allow_refresh=True,
+                )
+                if pick == "refresh":
+                    # Re-running the whole job is the clean way to refresh; ask Jamie to re-fire.
+                    await channel.send(
+                        f"(For fresh CTA framings, re-fire `/workshop job compose-cta` — "
+                        f"slot {idx + 1} for WT{n} left unwritten.)",
+                        suppress_embeds=True,
+                    )
+                    continue
+                if pick is None or pick >= len(framings):
+                    await channel.send(f"(No pick for slot {idx + 1} of WT{n} — left unwritten.)", suppress_embeds=True)
+                    continue
+                chosen = framings[pick]
+                content = f"---\nplacement: {placement}\n---\n\n{chosen}\n"
+                s3.write_issue_file(n, f"cta-{idx + 1}.md", content)
+                written += 1
+            await channel.send(f"✅ {written} CTA(s) written for WT{n}.", suppress_embeds=True)
+            return _base.JobResult(True, f"compose-cta for WT{n}: {written} CTA(s) written.",
+                                   data={"issue_number": n, "ctas_written": written, "posted": True})
+    except _base.JobLocked as exc:
+        return _base.JobResult(False, f"⏳ `compose-cta` already running ({exc.holder_desc}).")

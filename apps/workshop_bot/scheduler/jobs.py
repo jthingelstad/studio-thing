@@ -47,24 +47,16 @@ class JobSpec:
 
 JOBS: tuple[JobSpec, ...] = (
     # ---------- Heartbeats (being retired as content-loop jobs land) ----------
-    # Linky's heartbeat became the `pinboard-scan` job (Step 5). Eddy's
-    # and Patty's go away in Step 6 (Eddy is job-triggered; Patty has no
-    # heartbeat surface); Marky's in Step 8. Each remaining heartbeat
-    # guards on the active issue window — see the heartbeat prompts.
-    JobSpec(
-        id="eddy-heartbeat",
-        cron="30 8 * * *",                               # Daily 08:30 Central — before Jamie's writing window.
-        func=functools.partial(handlers.heartbeat, persona="eddy"),
-    ),
+    # Linky's heartbeat became the `pinboard-scan` job (Step 5); Eddy's
+    # and Patty's were retired in Step 6 (Eddy is job-triggered via
+    # update-draft / create-final / compose-*; Patty has no heartbeat
+    # surface — compose-cta is her only job). Marky's heartbeat goes away
+    # in Step 8. The one remaining heartbeat guards on the active issue
+    # window — see prompts/marky/heartbeat.md.
     JobSpec(
         id="marky-heartbeat",
         cron="0 7-22/3 * * *",                           # Every 3h within 07:00–22:00 Central.
         func=functools.partial(handlers.heartbeat, persona="marky"),
-    ),
-    JobSpec(
-        id="patty-heartbeat",
-        cron="0 9 * * *",                                # Daily 09:00 Central.
-        func=functools.partial(handlers.heartbeat, persona="patty"),
     ),
     # ---------- Content-loop jobs ----------
     JobSpec(

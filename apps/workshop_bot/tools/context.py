@@ -12,12 +12,17 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any, Optional
 
 from . import db, draft
 
 logger = logging.getLogger("workshop.context")
+
+# Issue #1 of The Weekly Thing shipped 2017-05-13; the May 13 anniversary
+# is pacing context for Patty (year-rhythm, issues remaining), not a goal
+# anchor.
+_ANNIVERSARY_MONTH, _ANNIVERSARY_DAY = 5, 13
 
 
 def _today() -> date:
@@ -158,6 +163,108 @@ def build_linky_context(*, ref_date: Optional[date] = None) -> dict[str, Any]:
         "days_into_window": ((today - sd).days if sd else None),
         "toread_count": toread_count,
         "brief_captured_this_week": brief_captured,
+    }
+
+
+def _next_anniversary(today: date) -> date:
+    this_year = date(today.year, _ANNIVERSARY_MONTH, _ANNIVERSARY_DAY)
+    return this_year if today <= this_year else date(today.year + 1, _ANNIVERSARY_MONTH, _ANNIVERSARY_DAY)
+
+
+def _is_no_publish_saturday(d: date) -> bool:
+    """No-publish weeks: July, August, and Dec 15 – Jan 15."""
+    if d.month in (7, 8):
+        return True
+    if d.month == 12 and d.day >= 15:
+        return True
+    if d.month == 1 and d.day <= 15:
+        return True
+    return False
+
+
+def _saturdays_between(after: date, through: date):
+    """Saturdays strictly after ``after`` up to and including ``through``."""
+    ahead = (5 - after.weekday()) % 7  # 5 == Saturday
+    if ahead == 0:
+        ahead = 7
+    d = after + timedelta(days=ahead)
+    while d <= through:
+        yield d
+        d += timedelta(days=7)
+
+
+def _expected_issues_remaining(today: date, anniversary: date) -> int:
+    return sum(1 for s in _saturdays_between(today, anniversary) if not _is_no_publish_saturday(s))
+
+
+def build_patty_context(*, ref_date: Optional[date] = None) -> dict[str, Any]:
+    """Patty's ``## Today`` block for compose-cta: today's date, days to
+    the next May 13 anniversary (pacing context only), expected publishing
+    Saturdays remaining before then, the current active goal + live
+    progress (member count from Buttondown for kind='members', total
+    raised from Stripe for kind='dollars'), recent achieved goals + their
+    durations, and the current nonprofit. The model reads this; it doesn't
+    recompute it."""
+    today = ref_date or _today()
+    ann = _next_anniversary(today)
+    goal = db.get_active_goal()
+    progress: Optional[float] = None
+    if goal:
+        try:
+            if goal["target_kind"] == "members":
+                from ..systems.buttondown import client as _bd
+                progress = _bd.counts().get("premium")
+            elif goal["target_kind"] == "dollars":
+                from ..systems.stripe import client as _st
+                progress = _st.year_to_date().get("total_usd")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("build_patty_context: progress lookup failed: %s", exc)
+
+    recent: list[dict[str, Any]] = []
+    for g in db.recent_achieved_goals(3):
+        dur = None
+        try:
+            s = datetime.strptime(g["started_at"], "%Y-%m-%d").date()
+            a = datetime.strptime(g["achieved_at"], "%Y-%m-%d").date()
+            dur = (a - s).days
+        except (TypeError, ValueError):
+            pass
+        recent.append({
+            "kind": g["target_kind"], "target": g["target_value"],
+            "started": g["started_at"], "achieved": g["achieved_at"], "duration_days": dur,
+        })
+
+    current_nonprofit: Optional[dict[str, Any]] = None
+    try:
+        from . import support_state
+        cur = (support_state.read().get("support") or {}).get("current") or {}
+        if cur:
+            current_nonprofit = {
+                "name": cur.get("nonprofit"), "short_name": cur.get("short_name"),
+                "year": cur.get("year"), "year_label": cur.get("year_label"),
+                "description": cur.get("description"),
+            }
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("build_patty_context: support_state read failed: %s", exc)
+
+    window = db.get_active_issue_window()
+    return {
+        "today": today.isoformat(),
+        "weekday": today.strftime("%a"),
+        "active_issue": (int(window["issue_number"]) if window else None),
+        "pub_date": (window["pub_date"] if window else None),
+        "days_to_anniversary": (ann - today).days,
+        "next_anniversary": ann.isoformat(),
+        "expected_issues_before_anniversary": _expected_issues_remaining(today, ann),
+        "active_goal": (
+            {"kind": goal["target_kind"], "target_value": goal["target_value"],
+             "started_at": goal["started_at"],
+             "current_progress": progress,
+             "remaining": (goal["target_value"] - progress) if (progress is not None) else None}
+            if goal else None
+        ),
+        "recent_achieved_goals": recent,
+        "current_nonprofit": current_nonprofit,
     }
 
 

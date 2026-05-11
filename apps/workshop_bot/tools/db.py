@@ -654,6 +654,49 @@ def list_job_locks() -> list[dict[str, Any]]:
     return [dict(r) for r in rows]
 
 
+# ---------- goals (Patty's milestone progression) ----------
+
+
+def get_active_goal() -> Optional[dict[str, Any]]:
+    """The current goal — the row with ``achieved_at IS NULL`` — or None."""
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT id, target_kind, target_value, started_at, achieved_at, notes "
+            "FROM goals WHERE achieved_at IS NULL ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def recent_achieved_goals(limit: int = 3) -> list[dict[str, Any]]:
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT id, target_kind, target_value, started_at, achieved_at, notes "
+            "FROM goals WHERE achieved_at IS NOT NULL ORDER BY achieved_at DESC LIMIT ?",
+            (int(limit),),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def insert_goal(*, target_kind: str, target_value: int, started_at: Optional[str] = None,
+                notes: Optional[str] = None) -> int:
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO goals (target_kind, target_value, started_at, notes) "
+            "VALUES (?, ?, COALESCE(?, date('now')), ?)",
+            (target_kind, int(target_value), started_at, notes),
+        )
+        return int(cur.lastrowid or 0)
+
+
+def mark_goal_achieved(goal_id: int, *, achieved_at: Optional[str] = None) -> bool:
+    with connect() as conn:
+        cur = conn.execute(
+            "UPDATE goals SET achieved_at = COALESCE(?, date('now')) WHERE id = ? AND achieved_at IS NULL",
+            (achieved_at, int(goal_id)),
+        )
+        return cur.rowcount > 0
+
+
 # ---------- draft digests (Eddy's delta context for update-draft) ----------
 
 

@@ -804,5 +804,418 @@ class LinkyContextTests(_DBTestCase):
         self.assertEqual(ctx["days_into_window"], (date(2026, 5, 12) - date(2026, 5, 8)).days)
 
 
+# ---------- Step 6: create-final + compose chain + build-publish ----------
+
+from apps.workshop_bot.jobs import (  # noqa: E402
+    build_publish, compose_cta, compose_haiku, compose_meta, create_final,
+)
+from apps.workshop_bot.tools import interaction  # noqa: E402
+
+
+def _filled_final(*, notable="### [A](http://a)\n\nx", brief="**[B](http://b)** — y",
+                  journal="[May 12, 2026 at 3:02 PM](https://x.example/p)\n\nt") -> str:
+    d = _base.starter_template()
+    d = _base.replace_block(d, "notable", notable)
+    d = _base.replace_block(d, "brief", brief)
+    d = _base.replace_block(d, "journal", journal)
+    return d
+
+
+class _FakeBotChannel:
+    """A persona bot + a channel, enough for the compose/build jobs."""
+
+    def __init__(self, persona="eddy", reply='{"options": []}'):
+        self.persona = persona
+        self.channel = MagicMock()
+        self.channel.send = AsyncMock()
+        self.bot = MagicMock()
+        self.bot.user = object()
+        self.bot.get_channel = MagicMock(return_value=self.channel)
+        self.bot.core = AsyncMock(return_value=(reply, {"iterations": 1}))
+
+    def deps(self):
+        team = MagicMock()
+        team.bots = {self.persona: self.bot}
+        d = MagicMock()
+        d.team = team
+        return d
+
+
+def _ctx_for(persona, reply, channel_env_value="123"):
+    fc = _FakeBotChannel(persona=persona, reply=reply)
+    os.environ[channel_env_value if channel_env_value.startswith("DISCORD") else "DISCORD_CHANNEL_EDITORIAL"] = "123"
+    return fc
+
+
+class InteractionPrimitiveTests(unittest.TestCase):
+    def _bot_channel(self):
+        channel = MagicMock()
+        msg = MagicMock()
+        msg.id = 4242
+        msg.add_reaction = AsyncMock()
+        channel.send = AsyncMock(return_value=msg)
+        bot = MagicMock()
+        return bot, channel, msg
+
+    def test_await_choice_returns_index(self):
+        os.environ["DISCORD_OWNER_USER_ID"] = "777"
+        try:
+            bot, channel, msg = self._bot_channel()
+            payload = MagicMock(); payload.message_id = 4242; payload.user_id = 777
+            payload.emoji = MagicMock(); payload.emoji.name = interaction.DIGIT_EMOJI[1]  # picks "2"
+            bot.wait_for = AsyncMock(return_value=payload)
+            out = asyncio.run(interaction.await_choice(bot, channel, ["a", "b", "c"], prompt="pick"))
+            self.assertEqual(out, 1)
+            self.assertTrue(msg.add_reaction.await_count >= 3)
+        finally:
+            os.environ.pop("DISCORD_OWNER_USER_ID", None)
+
+    def test_await_choice_refresh(self):
+        os.environ["DISCORD_OWNER_USER_ID"] = "777"
+        try:
+            bot, channel, msg = self._bot_channel()
+            payload = MagicMock(); payload.message_id = 4242; payload.user_id = 777
+            payload.emoji = MagicMock(); payload.emoji.name = interaction.REFRESH_EMOJI
+            bot.wait_for = AsyncMock(return_value=payload)
+            out = asyncio.run(interaction.await_choice(bot, channel, ["a", "b"], prompt="pick"))
+            self.assertEqual(out, "refresh")
+        finally:
+            os.environ.pop("DISCORD_OWNER_USER_ID", None)
+
+    def test_await_choice_timeout(self):
+        os.environ["DISCORD_OWNER_USER_ID"] = "777"
+        try:
+            bot, channel, msg = self._bot_channel()
+            bot.wait_for = AsyncMock(side_effect=asyncio.TimeoutError())
+            out = asyncio.run(interaction.await_choice(bot, channel, ["a"], prompt="pick"))
+            self.assertIsNone(out)
+        finally:
+            os.environ.pop("DISCORD_OWNER_USER_ID", None)
+
+    def test_await_choice_no_owner(self):
+        # No DISCORD_OWNER_USER_ID → can't wait → None immediately.
+        os.environ.pop("DISCORD_OWNER_USER_ID", None)
+        bot, channel, msg = self._bot_channel()
+        bot.wait_for = AsyncMock()
+        out = asyncio.run(interaction.await_choice(bot, channel, ["a"], prompt="pick"))
+        self.assertIsNone(out)
+        bot.wait_for.assert_not_awaited()
+
+    def test_await_approval(self):
+        os.environ["DISCORD_OWNER_USER_ID"] = "777"
+        try:
+            bot, channel, msg = self._bot_channel()
+            payload = MagicMock(); payload.message_id = 4242; payload.user_id = 777
+            payload.emoji = MagicMock(); payload.emoji.name = interaction.YES_EMOJI
+            bot.wait_for = AsyncMock(return_value=payload)
+            self.assertIs(asyncio.run(interaction.await_approval(bot, channel, prompt="ok?")), True)
+            payload.emoji.name = interaction.NO_EMOJI
+            self.assertIs(asyncio.run(interaction.await_approval(bot, channel, prompt="ok?")), False)
+        finally:
+            os.environ.pop("DISCORD_OWNER_USER_ID", None)
+
+
+class BuildPublishTests(_DBTestCase):
+    def _window(self, n=458, pub="2026-05-16"):
+        from apps.workshop_bot.tools import issue as issue_mod
+        w = issue_mod.compute_window(pub, 7)
+        db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
+                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+
+    def _ctx(self, persona="eddy"):
+        fc = _FakeBotChannel(persona=persona)
+        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
+        return _base.JobContext(deps=fc.deps()), fc
+
+    def tearDown(self):
+        os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
+        super().tearDown()
+
+    def test_refuses_with_missing_list(self):
+        self._window()
+        self.ws.write_issue_file(458, "final.md", _filled_final())
+        # Missing haiku.md, metadata.json, intro.md, cover.jpg.
+        ctx, fc = self._ctx()
+        result = asyncio.run(build_publish.run(ctx))
+        self.assertFalse(result.ok)
+        for r in ("haiku.md", "metadata.json", "intro.md", "cover.jpg"):
+            self.assertIn(r, result.message)
+        fc.channel.send.assert_awaited()  # posted the missing list
+
+    def test_assembles_publish_md(self):
+        self._window()
+        self.ws.write_issue_file(458, "final.md", _filled_final())
+        self.ws.write_issue_file(458, "intro.md", "Welcome to the issue.")
+        self.ws.write_issue_file(458, "haiku.md", "line one\nline two\nline three")
+        self.ws.write_issue_file(458, "currently.md", "Reading: a book.")
+        self.ws.write_issue_file(458, "metadata.json", '{"subject":"x"}')
+        self.ws.write_issue_file(458, "cover.jpg", "(binary)")  # presence only
+        self.ws.write_issue_file(458, "cta-1.md", "---\nplacement: after_brief\n---\n\nSupport the EFF.")
+        ctx, fc = self._ctx()
+        result = asyncio.run(build_publish.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        pub = self.ws.files[(458, "publish.md")]
+        self.assertIn("Welcome to the issue.", pub)
+        self.assertIn("line two", pub)
+        self.assertIn("Reading: a book.", pub)
+        self.assertIn("Support the EFF.", pub)
+        self.assertNotIn("<!-- block:", pub)            # markers stripped
+        self.assertIn("## Notable", pub)
+        # CTA placed after the Briefly section, before Journal.
+        self.assertLess(pub.index("Support the EFF."), pub.index("## Journal"))
+        self.assertGreater(pub.index("Support the EFF."), pub.index("## Briefly"))
+
+
+class ComposeHaikuTests(_DBTestCase):
+    def _window(self, n=458):
+        from apps.workshop_bot.tools import issue as issue_mod
+        w = issue_mod.compute_window("2026-05-16", 7)
+        db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
+                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+
+    def tearDown(self):
+        os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
+        super().tearDown()
+
+    def _ctx(self, reply='{"options": ["one\\ntwo\\nthree", "a\\nb\\nc"]}'):
+        fc = _FakeBotChannel(persona="eddy", reply=reply)
+        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
+        return _base.JobContext(deps=fc.deps()), fc
+
+    def test_writes_haiku_on_pick(self):
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        ctx, fc = self._ctx()
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=1)):
+            result = asyncio.run(compose_haiku.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(self.ws.files[(458, "haiku.md")].strip(), "a\nb\nc")
+
+    def test_refresh_then_pick(self):
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        ctx, fc = self._ctx()
+        with patch.object(interaction, "await_choice", AsyncMock(side_effect=["refresh", 0])):
+            result = asyncio.run(compose_haiku.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(self.ws.files[(458, "haiku.md")].strip(), "one\ntwo\nthree")
+        self.assertEqual(fc.bot.core.await_count, 2)  # initial + refresh
+
+    def test_no_pick_no_write(self):
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        ctx, fc = self._ctx()
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=None)):
+            result = asyncio.run(compose_haiku.run(ctx))
+        self.assertFalse(result.ok)
+        self.assertNotIn((458, "haiku.md"), self.ws.files)
+
+
+class ComposeMetaTests(_DBTestCase):
+    def tearDown(self):
+        os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
+        super().tearDown()
+
+    def test_writes_metadata_json(self):
+        from apps.workshop_bot.tools import issue as issue_mod
+        w = issue_mod.compute_window("2026-05-16", 7)
+        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
+                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        reply = '{"options": [{"subject": "Weekly Thing 458 / One, Two, Three", "description": "A week."}]}'
+        fc = _FakeBotChannel(persona="eddy", reply=reply)
+        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)), \
+             patch.object(compose_meta, "_recent_subjects", lambda limit=10: []):
+            result = asyncio.run(compose_meta.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        import json as _j
+        meta = _j.loads(self.ws.files[(458, "metadata.json")])
+        self.assertEqual(meta["number"], 458)
+        self.assertEqual(meta["subject"], "Weekly Thing 458 / One, Two, Three")
+        self.assertEqual(meta["slug"], "458")
+        self.assertTrue(meta["image"].endswith("/458/cover.jpg"))
+        self.assertTrue(meta["publish_date"].startswith("2026-05-16"))
+
+
+class ComposeCtaTests(_DBTestCase):
+    def tearDown(self):
+        os.environ.pop("DISCORD_CHANNEL_SUPPORTERS", None)
+        super().tearDown()
+
+    def _window(self):
+        from apps.workshop_bot.tools import issue as issue_mod
+        w = issue_mod.compute_window("2026-05-16", 7)
+        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
+                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+
+    def test_zero_ctas(self):
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        fc = _FakeBotChannel(persona="patty", reply='{"ctas": []}')
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        result = asyncio.run(compose_cta.run(ctx))
+        self.assertTrue(result.ok)
+        self.assertEqual(result.data["ctas_written"], 0)
+        self.assertNotIn((458, "cta-1.md"), self.ws.files)
+
+    def test_one_cta_written_with_frontmatter(self):
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        reply = '{"ctas": [{"placement": "after_brief", "framings": ["Thingy here. Your support funds the EFF."]}]}'
+        fc = _FakeBotChannel(persona="patty", reply=reply)
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
+            result = asyncio.run(compose_cta.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(result.data["ctas_written"], 1)
+        cta = self.ws.files[(458, "cta-1.md")]
+        self.assertIn("placement: after_brief", cta)
+        self.assertIn("Thingy here.", cta)
+
+
+class CreateFinalTests(_DBTestCase):
+    def tearDown(self):
+        os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
+        super().tearDown()
+
+    def _setup(self, reply):
+        from apps.workshop_bot.tools import issue as issue_mod
+        w = issue_mod.compute_window("2026-05-16", 7)
+        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
+                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        self.ws.write_issue_file(458, "draft.md", _filled_final())
+        fc = _FakeBotChannel(persona="eddy", reply=reply)
+        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
+        return _base.JobContext(deps=fc.deps()), fc
+
+    def test_refuses_if_final_exists(self):
+        from apps.workshop_bot.tools import issue as issue_mod
+        w = issue_mod.compute_window("2026-05-16", 7)
+        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
+                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        self.ws.write_issue_file(458, "draft.md", _filled_final())
+        self.ws.write_issue_file(458, "final.md", "already there")
+        ctx, fc = self._setup("ignored")
+        self.ws.files[(458, "final.md")] = "already there"  # _setup overwrote draft only
+        result = asyncio.run(create_final.run(ctx))
+        self.assertFalse(result.ok)
+        self.assertIn("already has", result.message)
+
+    def test_accept_uses_eddy_body_and_fires_chain(self):
+        proposed = _filled_final(notable="### [Z reordered](http://z)\n\nlead")
+        reply = f"Reordered Notable to lead with Z.\n\n```markdown\n{proposed}\n```"
+        ctx, fc = self._setup(reply)
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)), \
+             patch.object(create_final.compose_haiku, "run", AsyncMock(return_value=_base.JobResult(True, "haiku ok"))), \
+             patch.object(create_final.compose_meta, "run", AsyncMock(return_value=_base.JobResult(True, "meta ok"))), \
+             patch.object(create_final.compose_cta, "run", AsyncMock(return_value=_base.JobResult(True, "cta ok"))), \
+             patch.object(create_final.build_publish, "run", AsyncMock(return_value=_base.JobResult(True, "publish.md written"))):
+            result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertIn("Z reordered", self.ws.files[(458, "final.md")])
+        self.assertIn("build-publish: publish.md written", result.message)
+
+    def test_reject_uses_draft_body(self):
+        proposed = _filled_final(notable="### [Z reordered](http://z)\n\nlead")
+        reply = f"here's a take\n\n```markdown\n{proposed}\n```"
+        ctx, fc = self._setup(reply)
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=False)), \
+             patch.object(create_final.compose_haiku, "run", AsyncMock(return_value=_base.JobResult(False, "no pick"))), \
+             patch.object(create_final.compose_meta, "run", AsyncMock(return_value=_base.JobResult(True, "meta ok"))), \
+             patch.object(create_final.compose_cta, "run", AsyncMock(return_value=_base.JobResult(True, "cta ok"))), \
+             patch.object(create_final.build_publish, "run", AsyncMock(return_value=_base.JobResult(True, "x"))):
+            result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        # Draft body used, not the proposed reorder.
+        self.assertIn("### [A](http://a)", self.ws.files[(458, "final.md")])
+        self.assertNotIn("Z reordered", self.ws.files[(458, "final.md")])
+        # build-publish NOT auto-fired (haiku didn't complete).
+        self.assertIn("not auto-fired", result.message)
+
+
+class GoalsAndPattyContextTests(_DBTestCase):
+    def test_goal_seeded(self):
+        g = db.get_active_goal()
+        self.assertIsNotNone(g)
+        self.assertEqual(g["target_kind"], "members")
+        self.assertEqual(g["target_value"], 50)
+
+    def test_goal_lifecycle(self):
+        g = db.get_active_goal()
+        self.assertTrue(db.mark_goal_achieved(g["id"], achieved_at="2026-08-01"))
+        self.assertIsNone(db.get_active_goal())
+        nid = db.insert_goal(target_kind="dollars", target_value=10000, started_at="2026-08-02")
+        active = db.get_active_goal()
+        self.assertEqual(active["id"], nid)
+        recent = db.recent_achieved_goals(3)
+        self.assertEqual(len(recent), 1)
+        self.assertEqual(recent[0]["target_kind"], "members")
+
+    def test_patty_context_anniversary_math(self):
+        from apps.workshop_bot.tools import context
+        # 2026-05-11 (Mon) -> next May 13 is 2026-05-13, 2 days out, 0 issues before.
+        ctx = context.build_patty_context(ref_date=date(2026, 5, 11))
+        self.assertEqual(ctx["days_to_anniversary"], 2)
+        self.assertEqual(ctx["next_anniversary"], "2026-05-13")
+        self.assertEqual(ctx["expected_issues_before_anniversary"], 0)
+        # From 2026-05-20: next anniversary is 2027-05-13. Saturdays in
+        # range minus July/August/Dec15-Jan15 Saturdays.
+        ctx2 = context.build_patty_context(ref_date=date(2026, 5, 20))
+        self.assertEqual(ctx2["next_anniversary"], "2027-05-13")
+        self.assertGreater(ctx2["expected_issues_before_anniversary"], 30)  # ~52 weeks - ~13 no-publish
+
+    def test_no_publish_saturday(self):
+        from apps.workshop_bot.tools import context
+        self.assertTrue(context._is_no_publish_saturday(date(2026, 7, 4)))
+        self.assertTrue(context._is_no_publish_saturday(date(2026, 8, 15)))
+        self.assertTrue(context._is_no_publish_saturday(date(2026, 12, 20)))
+        self.assertTrue(context._is_no_publish_saturday(date(2027, 1, 10)))
+        self.assertFalse(context._is_no_publish_saturday(date(2026, 5, 16)))
+        self.assertFalse(context._is_no_publish_saturday(date(2026, 12, 13)))
+
+
+class PublishToButtondownTests(unittest.TestCase):
+    def setUp(self):
+        # Importing pipeline/content/content.py runs load_dotenv() at module
+        # load, which would pour the developer's .env into os.environ for the
+        # rest of the test run (PINBOARD_API_TOKEN etc.). Snapshot + restore.
+        self._env_snapshot = dict(os.environ)
+
+    def tearDown(self):
+        os.environ.clear()
+        os.environ.update(self._env_snapshot)
+
+    def _content_module(self):
+        import sys as _sys
+        from pathlib import Path as _P
+        cd = str(_P(__file__).resolve().parents[3] / "pipeline" / "content")
+        if cd not in _sys.path:
+            _sys.path.insert(0, cd)
+        import content  # noqa: F401
+        return content
+
+    def test_refuses_without_publish_md(self):
+        content = self._content_module()
+        import types
+        with patch.object(content, "_workspace_get_text", lambda n, f: None):
+            with self.assertRaises(SystemExit):
+                content.publish_to_buttondown(types.SimpleNamespace(issue="458", dry_run=True))
+
+    def test_dry_run_with_assets(self):
+        content = self._content_module()
+        import types
+
+        def fake_get(n, f):
+            return "## Notable\n\nbody" if f == "publish.md" else '{"subject":"Weekly Thing 458 / A, B, C","description":"d","slug":"458"}'
+
+        with patch.object(content, "_workspace_get_text", fake_get):
+            # dry-run: no HTTP, no exception.
+            content.publish_to_buttondown(types.SimpleNamespace(issue="458", dry_run=True))
+
+
 if __name__ == "__main__":
     unittest.main()

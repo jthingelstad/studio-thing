@@ -761,6 +761,79 @@ def push(args: argparse.Namespace) -> None:
     write_manifest(list(refreshed.values()))
 
 
+WEEKLY_THING_ASSETS_BUCKET = os.environ.get("WEEKLY_THING_ASSETS_BUCKET", "files.thingelstad.com")
+
+
+def _workspace_get_text(issue_number: str, filename: str) -> str | None:
+    """Read a text file from the per-issue S3 workspace
+    (``s3://{bucket}/weekly-thing/{N}/{filename}``). Returns None if absent."""
+    import boto3  # lazy — not every content.py invocation needs S3
+
+    client = boto3.client("s3")
+    key = f"weekly-thing/{issue_number}/{filename}"
+    try:
+        resp = client.get_object(Bucket=WEEKLY_THING_ASSETS_BUCKET, Key=key)
+    except client.exceptions.NoSuchKey:
+        return None
+    except Exception as exc:  # noqa: BLE001 — botocore ClientError shape varies
+        code = getattr(getattr(exc, "response", None), "get", lambda *_a: {})("Error", {}).get("Code", "")
+        if code in ("NoSuchKey", "404", "NotFound"):
+            return None
+        raise
+    return resp["Body"].read().decode("utf-8")
+
+
+def publish_to_buttondown(args: argparse.Namespace) -> None:
+    """Create a Buttondown draft from the issue's ``publish.md`` +
+    ``metadata.json`` in the S3 workspace.
+
+    workshop_bot's ``build-publish`` job writes those files; this is the
+    handoff into Buttondown. Refuses if ``publish.md`` isn't there yet —
+    the issue isn't ready, and Jamie should let workshop_bot finish.
+    Creates the email in ``draft`` status; Jamie reviews it in the
+    Buttondown UI and schedules the send.
+    """
+    number = str(args.issue)
+    body = _workspace_get_text(number, "publish.md")
+    if body is None:
+        raise SystemExit(
+            f"No publish.md at s3://{WEEKLY_THING_ASSETS_BUCKET}/weekly-thing/{number}/publish.md — "
+            "the issue isn't ready. Let workshop_bot finish (`/workshop job build-publish`)."
+        )
+    meta_raw = _workspace_get_text(number, "metadata.json")
+    if meta_raw is None:
+        raise SystemExit(
+            f"No metadata.json for #{number} — run `/workshop job compose-meta` first."
+        )
+    meta = json.loads(meta_raw)
+    subject = meta.get("subject") or f"Weekly Thing {number}"
+    description = meta.get("description") or ""
+    image = meta.get("image") or ""
+    slug = str(meta.get("slug") or number)
+    payload: dict[str, Any] = {
+        "subject": subject,
+        "body": body,
+        "status": "draft",
+        "email_type": "public",
+        "slug": slug,
+        "description": description,
+    }
+    if image:
+        payload["image"] = image
+    if getattr(args, "dry_run", False):
+        print(
+            f"[dry-run] would create a Buttondown draft for #{number}: "
+            f"subject={subject!r}, slug={slug!r}, body={len(body)} chars, description={len(description)} chars"
+        )
+        return
+    response = requests.post(f"{API_BASE}/emails", headers=headers(content_type=True), json=payload)
+    if response.status_code >= 400:
+        raise SystemExit(f"Buttondown create failed ({response.status_code}): {response.text[:500]}")
+    data = response.json()
+    print(f"Created Buttondown draft for #{number}: id={data.get('id')} subject={subject!r}")
+    print("Review it in the Buttondown UI, then schedule the send.")
+
+
 def cmd_build(args: argparse.Namespace) -> None:
     build_from_snapshots(prune=args.prune)
 
@@ -793,6 +866,13 @@ def main() -> None:
     push_parser.add_argument("--yes", action="store_true", help="Actually PATCH Buttondown")
     push_parser.add_argument("--force", action="store_true", help="Push local changes even if remote changed")
 
+    publish_parser = subparsers.add_parser(
+        "publish",
+        help="Create a Buttondown draft from the issue's publish.md + metadata.json in S3",
+    )
+    publish_parser.add_argument("--issue", required=True, help="Issue number to publish (its S3 workspace must have publish.md)")
+    publish_parser.add_argument("--dry-run", action="store_true", help="Preview without creating the draft")
+
     args = parser.parse_args()
     if args.command == "pull" and args.all:
         pull_all(args)
@@ -804,6 +884,8 @@ def main() -> None:
         cmd_diff(args)
     elif args.command == "push":
         push(args)
+    elif args.command == "publish":
+        publish_to_buttondown(args)
 
 
 if __name__ == "__main__":
