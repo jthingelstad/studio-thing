@@ -101,17 +101,21 @@ class JobConfigTests(unittest.TestCase):
             self.assertIs(jobs_module.by_id(job.id), job)
         self.assertIsNone(jobs_module.by_id("nonexistent"))
 
-    def test_every_persona_has_a_heartbeat(self):
-        heartbeat_jobs = [
-            j for j in jobs_module.JOBS if j.id.endswith("-heartbeat")
-        ]
-        self.assertEqual(len(heartbeat_jobs), 4)
-        personas = set()
+    def test_heartbeat_jobs_well_formed(self):
+        # Heartbeats are being retired as the content-loop jobs land
+        # (Linky→pinboard-scan in Step 5, Eddy/Patty in Step 6, Marky in
+        # Step 8), so we don't pin which personas still have one — just
+        # that every heartbeat JobSpec is a partial of handlers.heartbeat
+        # bound to a valid persona.
+        heartbeat_jobs = [j for j in jobs_module.JOBS if j.id.endswith("-heartbeat")]
+        self.assertTrue(heartbeat_jobs, "expected at least one heartbeat job")
         for job in heartbeat_jobs:
             self.assertIsInstance(job.func, functools.partial)
             self.assertIs(job.func.func, handlers.heartbeat)
-            personas.add(job.func.keywords["persona"])
-        self.assertEqual(personas, {"eddy", "linky", "marky", "patty"})
+            self.assertIn(job.func.keywords["persona"], {"eddy", "linky", "marky", "patty"})
+        # Linky's heartbeat was replaced by the pinboard-scan job.
+        self.assertNotIn("linky-heartbeat", [j.id for j in jobs_module.JOBS])
+        self.assertIn("linky-pinboard-scan", [j.id for j in jobs_module.JOBS])
 
     def test_heartbeat_partial_binds_under_dispatcher_call(self):
         # The scheduler dispatcher invokes ``await job.func(ctx)``. With

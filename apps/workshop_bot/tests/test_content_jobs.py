@@ -295,7 +295,7 @@ class IssueStatusTests(_DBTestCase):
 
 # ---------- Step 4: real fills + section_status + context + Eddy review ----------
 
-from datetime import date  # noqa: E402
+from datetime import date, datetime  # noqa: E402
 from unittest.mock import AsyncMock, MagicMock  # noqa: E402
 
 from apps.workshop_bot.tools import context, draft as draft_mod, microblog  # noqa: E402
@@ -579,6 +579,229 @@ class DraftSectionStatusToolTests(_DBTestCase):
         agent_tools.register_local_helpers(registry)
         out = registry.dispatch("draft__section_status", deps=None, args={}, persona="eddy")
         self.assertIn("error", out)
+
+
+# ---------- Step 5: Linky pinboard-scan + new Pinboard verbs ----------
+
+from apps.workshop_bot.jobs import pinboard_scan  # noqa: E402
+
+
+class _FakeLinkyTeam:
+    def __init__(self, reply="- [thing](http://x) — looks good — [pin](http://pin)"):
+        self.channel = MagicMock()
+        self.channel.send = AsyncMock()
+        self.linky = MagicMock()
+        self.linky.user = object()
+        self.linky.get_channel = MagicMock(return_value=self.channel)
+        self.linky.core = AsyncMock(return_value=(reply, {"iterations": 1}))
+        self.bots = {"linky": self.linky}
+
+
+def _deps_with_linky_team(team):
+    deps = MagicMock()
+    deps.team = team
+    return deps
+
+
+class PinboardScanJobTests(_DBTestCase):
+    def _window(self, n=458, pub="2026-05-16"):
+        from apps.workshop_bot.tools import issue as issue_mod
+        w = issue_mod.compute_window(pub, 7)
+        db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
+                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        return db.get_active_issue_window()
+
+    def test_pass_no_window(self):
+        result = asyncio.run(pinboard_scan.run(_base.JobContext()))
+        self.assertTrue(result.ok)
+        self.assertFalse(result.data["posted"])
+        self.assertIn("no active issue window", result.message.lower())
+
+    def test_pass_outside_window(self):
+        # Window 2026-05-08..2026-05-15; pick a 'today' well outside it by
+        # patching the job module's datetime.
+        self._window(pub="2026-05-16")  # window: 2026-05-08 .. 2026-05-15
+
+        class _FakeDT(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return cls(2026, 6, 1, 12, 0, 0)
+
+        with patch.object(pinboard_scan, "datetime", _FakeDT):
+            result = asyncio.run(pinboard_scan.run(_base.JobContext()))
+        self.assertTrue(result.ok)
+        self.assertFalse(result.data["posted"])
+        self.assertIn("outside the issue window", result.message.lower())
+
+    def test_skips_when_no_team(self):
+        self._window()
+
+        class _FakeDT(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return cls(2026, 5, 12, 9, 0, 0)  # in window
+
+        with patch.object(pinboard_scan, "datetime", _FakeDT):
+            result = asyncio.run(pinboard_scan.run(_base.JobContext()))
+        self.assertTrue(result.ok)
+        self.assertFalse(result.data["posted"])
+
+    def test_runs_linky_and_posts_when_active(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        try:
+            self._window()
+            team = _FakeLinkyTeam()
+            ctx = _base.JobContext(deps=_deps_with_linky_team(team))
+
+            class _FakeDT(datetime):
+                @classmethod
+                def now(cls, tz=None):
+                    return cls(2026, 5, 12, 9, 0, 0)  # Tuesday, in window
+
+            # build_linky_context calls pinboard posts_all; stub it.
+            from apps.workshop_bot.systems.pinboard import client as pbc
+            with patch.object(pinboard_scan, "datetime", _FakeDT), \
+                 patch.object(pbc, "posts_all", lambda **kw: []):
+                result = asyncio.run(pinboard_scan.run(ctx))
+            self.assertTrue(result.ok, result.message)
+            self.assertTrue(result.data["posted"])
+            team.linky.core.assert_awaited()
+            team.channel.send.assert_awaited()
+            sent_user_msg = team.linky.core.call_args.kwargs["latest"]
+            self.assertIn("## Today", sent_user_msg)
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+    def test_linky_pass_not_posted(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        try:
+            self._window()
+            team = _FakeLinkyTeam(reply="PASS")
+            ctx = _base.JobContext(deps=_deps_with_linky_team(team))
+
+            class _FakeDT(datetime):
+                @classmethod
+                def now(cls, tz=None):
+                    return cls(2026, 5, 12, 9, 0, 0)
+
+            from apps.workshop_bot.systems.pinboard import client as pbc
+            with patch.object(pinboard_scan, "datetime", _FakeDT), \
+                 patch.object(pbc, "posts_all", lambda **kw: []):
+                result = asyncio.run(pinboard_scan.run(ctx))
+            self.assertTrue(result.ok)
+            self.assertFalse(result.data["posted"])
+            team.channel.send.assert_not_awaited()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+
+class PinboardClientNewVerbsTests(unittest.TestCase):
+    def test_capture_blurb_merges_tags_and_clears_toread(self):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        captured = {}
+
+        def fake_get(url):
+            return {"posts": [{
+                "href": url, "description": "Some Title", "extended": "old body",
+                "tags": "ai toread", "shared": "yes",
+            }]}
+
+        def fake_add(*, url, title, description, tags, toread, shared, replace):
+            captured.update(dict(url=url, title=title, description=description, tags=tags,
+                                 toread=toread, shared=shared, replace=replace))
+            return {"result_code": "done", "pinboard_url": f"https://pinboard.in/b/{url}"}
+
+        with patch.object(pbc, "posts_get", fake_get), patch.object(pbc, "posts_add", fake_add):
+            out = pbc.capture_blurb("https://example.com/x", "Jamie's verbatim one-liner.")
+        self.assertEqual(out["result_code"], "done")
+        self.assertEqual(captured["description"], "Jamie's verbatim one-liner.")
+        self.assertFalse(captured["toread"])
+        self.assertTrue(captured["replace"])
+        self.assertIn("_brief", captured["tags"].split())
+        self.assertNotIn("toread", captured["tags"].split())
+        self.assertIn("ai", captured["tags"].split())  # preserved
+        self.assertEqual(captured["title"], "Some Title")  # preserved
+
+    def test_capture_blurb_errors_when_not_bookmarked(self):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        with patch.object(pbc, "posts_get", lambda url: {"posts": []}):
+            out = pbc.capture_blurb("https://example.com/missing", "blurb")
+        self.assertIn("error", out)
+
+    def test_archive_search_substring_match(self):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        feed = [
+            {"href": "https://a/1", "description": "Elixir Phoenix", "extended": "", "tags": "elixir web", "time": "2026-05-01T00:00:00Z"},
+            {"href": "https://a/2", "description": "Rust async", "extended": "tokio runtime", "tags": "rust", "time": "2026-05-02T00:00:00Z"},
+            {"href": "https://a/3", "description": "Nothing", "extended": "", "tags": "misc", "time": "2026-05-03T00:00:00Z"},
+        ]
+        with patch.object(pbc, "posts_all", lambda **kw: feed):
+            hits = pbc.archive_search("tokio", k=8)
+        self.assertEqual([h["url"] for h in hits], ["https://a/2"])
+
+    def test_issue_window_candidates_partitions_on_brief_tag(self):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        feed = [
+            {"href": "https://n/1", "description": "Notable one", "extended": "blurb", "tags": "ai", "time": "2026-05-10T12:00:00Z"},
+            {"href": "https://b/1", "description": "Brief one", "extended": "tiny", "tags": "ai _brief", "time": "2026-05-11T12:00:00Z"},
+            {"href": "https://x/1", "description": "Out of window", "extended": "", "tags": "ai", "time": "2026-05-08T12:00:00Z"},
+        ]
+        with patch.object(pbc, "posts_all", lambda **kw: feed):
+            out = pbc.issue_window_candidates("2026-05-08", "2026-05-15")
+        self.assertEqual([n["url"] for n in out["notable"]], ["https://n/1"])
+        self.assertEqual([b["url"] for b in out["brief"]], ["https://b/1"])
+
+
+class PinboardServerNewToolsTests(unittest.TestCase):
+    def _server(self):
+        from apps.workshop_bot.systems.pinboard.server import PinboardServer
+        return {t.name: t for t in PinboardServer().list_tools()}
+
+    def test_new_verbs_registered(self):
+        tools = self._server()
+        for name in ("issue_candidates", "capture_blurb", "popular_unseen", "mark_seen",
+                     "estimate_read_length", "queue_depth_vs_deadline", "archive_recall"):
+            self.assertIn(name, tools, f"missing pinboard verb {name}")
+        # Thin mirrors still present.
+        for name in ("recent", "unread", "popular", "save", "lookup_url"):
+            self.assertIn(name, tools)
+
+    def test_issue_candidates_section_enum(self):
+        tools = self._server()
+        schema = tools["issue_candidates"].input_schema
+        self.assertEqual(schema["properties"]["section"]["enum"], ["notable", "brief"])
+
+    def test_estimate_read_length_buckets(self):
+        from apps.workshop_bot.systems.pinboard import server as srv
+        with patch.object(srv.web, "fetch_text", lambda url, max_chars=0: {"text": "word " * 100}):
+            out = srv._estimate_read_length("http://x")
+        self.assertEqual(out["bucket"], "short")
+        with patch.object(srv.web, "fetch_text", lambda url, max_chars=0: {"text": "word " * 5000}):
+            out = srv._estimate_read_length("http://x")
+        self.assertEqual(out["bucket"], "long")
+        with patch.object(srv.web, "fetch_text", lambda url, max_chars=0: {"error": "paywall"}):
+            out = srv._estimate_read_length("http://x")
+        self.assertEqual(out["bucket"], "unknown")
+
+
+class LinkyContextTests(_DBTestCase):
+    def test_build_linky_context(self):
+        from apps.workshop_bot.tools import issue as issue_mod, context
+        w = issue_mod.compute_window("2026-05-16", 7)
+        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
+                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        feed = [
+            {"href": "https://a/1", "tags": "ai", "toread": "yes", "time": "2026-05-10T00:00:00Z"},
+            {"href": "https://a/2", "tags": "ai _brief", "toread": "no", "time": "2026-05-11T00:00:00Z"},
+            {"href": "https://a/3", "tags": "rust", "toread": "no", "time": "2026-05-03T00:00:00Z"},
+        ]
+        with patch.object(pbc, "posts_all", lambda **kw: feed):
+            ctx = context.build_linky_context(ref_date=date(2026, 5, 12))
+        self.assertEqual(ctx["active_issue"], 458)
+        self.assertEqual(ctx["toread_count"], 1)
+        self.assertEqual(ctx["brief_captured_this_week"], 1)
+        self.assertEqual(ctx["days_into_window"], (date(2026, 5, 12) - date(2026, 5, 8)).days)
 
 
 if __name__ == "__main__":

@@ -215,6 +215,65 @@ def issue_window_candidates(start_date: str, end_date: str) -> dict[str, list[di
     return {"notable": notable, "brief": brief}
 
 
+def capture_blurb(url: str, blurb: str) -> dict[str, Any]:
+    """Atomic 'capture this for Briefly': writes ``blurb`` as the bookmark's
+    description, adds the ``_brief`` tag, and clears ``toread``. Preserves
+    the existing title and any other tags. Pinboard has no patch endpoint,
+    so this is fetch → merge → ``posts/add`` with ``replace=yes``.
+
+    Returns ``{result_code, pinboard_url, tags, replaced}``. If the bookmark
+    isn't in Jamie's Pinboard yet, returns ``{error: "not bookmarked"}`` —
+    Linky only captures items already in the queue.
+    """
+    existing = posts_get(url)
+    posts = existing.get("posts") or []
+    if not posts:
+        return {"error": f"{url} isn't bookmarked on Pinboard yet — nothing to capture"}
+    post = posts[0]
+    title = post.get("description", "") or url  # Pinboard's "description" is the title
+    tags = [t for t in (post.get("tags") or "").split() if t and t != "toread"]
+    if BRIEF_TAG not in tags:
+        tags.append(BRIEF_TAG)
+    shared = (post.get("shared", "yes") != "no")
+    res = posts_add(
+        url=url,
+        title=title,
+        description=str(blurb or ""),
+        tags=" ".join(tags),
+        toread=False,
+        shared=shared,
+        replace=True,
+    )
+    logger.info("pinboard: capture_blurb url=%s tags=%s result=%s", url, tags, res.get("result_code"))
+    return {
+        "result_code": res.get("result_code"),
+        "pinboard_url": res.get("pinboard_url") or bookmark_url(url),
+        "tags": tags,
+        "replaced": res.get("result_code") == "done",
+    }
+
+
+def archive_search(query: str, k: int = 8, *, scan: int = 1000) -> list[dict[str, Any]]:
+    """Substring search across Jamie's *whole* Pinboard archive (not just
+    the unread pile). Fetches up to ``scan`` bookmarks via ``/posts/all``
+    and filters on title / description / tags. Returns up to ``k``
+    :func:`normalize_post` records, newest first."""
+    needle = (query or "").strip().lower()
+    if not needle:
+        return []
+    raw = posts_all(results=int(scan))
+    hits: list[dict[str, Any]] = []
+    for post in raw:
+        hay = " ".join(
+            str(post.get(f, "") or "") for f in ("description", "extended", "tags", "href")
+        ).lower()
+        if needle in hay:
+            hits.append(normalize_post(post))
+            if len(hits) >= int(k):
+                break
+    return hits
+
+
 def posts_update() -> str:
     """Most recent bookmark mutation timestamp (ISO-8601, UTC).
 

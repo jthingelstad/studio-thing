@@ -16,10 +16,10 @@ async ``run(ctx, …)``, and acks the invoker ephemerally with the job's
 result message. Jobs that also need to post to a channel during the run
 do so via ``ctx.post(...)``.
 
-Wired so far: ``start-issue``, ``update-draft``, ``issue-status``. Later
-steps add ``create-final``, ``compose-haiku`` / ``-meta`` / ``-cta``,
-``build-publish``, ``pinboard-scan``, ``promotion-prep``, ``daily-metrics``,
-``add-campaign``, ``campaign-report``.
+Wired so far: ``start-issue``, ``update-draft``, ``issue-status``,
+``pinboard-scan``. Later steps add ``create-final``, ``compose-haiku`` /
+``-meta`` / ``-cta``, ``build-publish``, ``promotion-prep``,
+``daily-metrics``, ``add-campaign``, ``campaign-report``.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ import discord
 from discord import app_commands
 
 from ..jobs import _base as jobs_base
-from ..jobs import issue_status, start_issue, update_draft
+from ..jobs import issue_status, pinboard_scan, start_issue, update_draft
 
 if TYPE_CHECKING:
     from .base import PersonaBot
@@ -121,6 +121,13 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
     )
     async def issue_status_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: issue_status.run(_ctx(bot)), "issue-status")
+
+    @job.command(
+        name="pinboard-scan",
+        description="Run Linky's Pinboard scan now (popular + toread + Briefly-suggest).",
+    )
+    async def pinboard_scan_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: pinboard_scan.run(_ctx(bot)), "pinboard-scan")
 
     tree.add_command(workshop)
     return tree

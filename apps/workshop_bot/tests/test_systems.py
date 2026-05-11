@@ -404,6 +404,15 @@ class PinboardServerTests(unittest.TestCase):
         self.assertEqual(
             set(self.tools),
             {
+                # job-oriented verbs
+                "issue_candidates",
+                "capture_blurb",
+                "popular_unseen",
+                "mark_seen",
+                "estimate_read_length",
+                "queue_depth_vs_deadline",
+                "archive_recall",
+                # thin API mirrors
                 "recent",
                 "unread",
                 "popular",

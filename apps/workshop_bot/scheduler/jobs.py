@@ -15,7 +15,8 @@ Two shapes today:
 - **Content-loop jobs** — the ``apps/workshop_bot/jobs/`` pipeline,
   fired from cron via ``functools.partial(handlers.content_job, job=…)``.
   Today: ``update-draft`` daily at 17:00 CT (PASSes if no issue is in
-  flight or it's locked; Eddy reviews Tue–Fri).
+  flight or it's locked; Eddy reviews Tue–Fri), and ``pinboard-scan``
+  Mon–Fri 06:30 & 18:30 CT (Linky's twice-daily Pinboard pass).
 
 To add a job: write/extend a handler in ``handlers.py`` (or a job module
 under ``jobs/``), add a ``JobSpec`` here, restart the bot.
@@ -45,25 +46,15 @@ class JobSpec:
 
 
 JOBS: tuple[JobSpec, ...] = (
-    # ---------- Heartbeats ----------
-    # One scheduled wake-up per persona. Default response is PASS;
-    # the persona only posts when there's something concrete to
-    # surface. The earlier-era specialized jobs (linky-wednesday-check,
-    # linky-popular-scan, linky-research-unread, marky-daily-engagement,
-    # eddy-saturday-prep, linky-friday-curation, marky-weekly-subscriber-
-    # report, patty-thursday-member-json) were folded into these
-    # heartbeats — the team-redesign work on how to actually help Jamie
-    # assemble each issue is pending, and until then heartbeats plus
-    # on-demand `/workshop` commands carry the load.
+    # ---------- Heartbeats (being retired as content-loop jobs land) ----------
+    # Linky's heartbeat became the `pinboard-scan` job (Step 5). Eddy's
+    # and Patty's go away in Step 6 (Eddy is job-triggered; Patty has no
+    # heartbeat surface); Marky's in Step 8. Each remaining heartbeat
+    # guards on the active issue window — see the heartbeat prompts.
     JobSpec(
         id="eddy-heartbeat",
         cron="30 8 * * *",                               # Daily 08:30 Central — before Jamie's writing window.
         func=functools.partial(handlers.heartbeat, persona="eddy"),
-    ),
-    JobSpec(
-        id="linky-heartbeat",
-        cron="0 6-22/6 * * *",                           # Every 6h within 06:00–22:00 Central.
-        func=functools.partial(handlers.heartbeat, persona="linky"),
     ),
     JobSpec(
         id="marky-heartbeat",
@@ -79,11 +70,19 @@ JOBS: tuple[JobSpec, ...] = (
     JobSpec(
         id="update-draft-daily",
         cron="0 17 * * *",                               # Daily 17:00 Central — projects the day's
-                                                         # upstream content into draft.md. The job
-                                                         # PASSes cleanly if no issue is in flight
-                                                         # or the issue is locked (final.md exists);
-                                                         # Eddy posts a review only Tue–Fri.
+                                                         # upstream content into draft.md. PASSes
+                                                         # cleanly if no issue is in flight or the
+                                                         # issue is locked (final.md exists); Eddy
+                                                         # posts a review only Tue–Fri.
         func=functools.partial(handlers.content_job, job="update-draft"),
+    ),
+    JobSpec(
+        id="linky-pinboard-scan",
+        cron="30 6,18 * * 1-5",                          # Mon–Fri 06:30 & 18:30 Central. PASSes
+                                                         # when no issue is in flight or today is
+                                                         # outside the window; Linky's prompt does
+                                                         # the finer "nothing to do" judgment.
+        func=functools.partial(handlers.content_job, job="pinboard-scan"),
     ),
 )
 

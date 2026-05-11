@@ -109,6 +109,58 @@ def build_eddy_context(
     }
 
 
+def build_linky_context(*, ref_date: Optional[date] = None) -> dict[str, Any]:
+    """Linky's ``## Today`` block for a pinboard-scan: today's date,
+    days-to-publish, days into the window, toread queue depth, and how many
+    items have been captured to Briefly so far this week. One ``/posts/all``
+    call derives the last two; on failure they come back as ``None`` and
+    Linky can fall back to the tools."""
+    today = ref_date or _today()
+    window = db.get_active_issue_window()
+    if window is None:
+        return {"today": today.isoformat(), "weekday": today.strftime("%a"), "active_issue": None}
+    n = int(window["issue_number"])
+    try:
+        sd = datetime.strptime(window["start_date"], "%Y-%m-%d").date()
+        ed = datetime.strptime(window["end_date"], "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        sd = ed = None
+
+    toread_count: Optional[int] = None
+    brief_captured: Optional[int] = None
+    try:
+        from ..systems.pinboard import client as _pb  # lazy — keeps tools import-light
+        all_posts = _pb.posts_all(results=1000)
+        toread_count = sum(1 for p in all_posts if (p.get("toread") == "yes"))
+        if sd and ed:
+            bc = 0
+            for p in all_posts:
+                if "_brief" not in set((p.get("tags") or "").split()):
+                    continue
+                try:
+                    d = datetime.fromisoformat(str(p.get("time") or "").replace("Z", "+00:00")).date()
+                except ValueError:
+                    continue
+                if sd < d <= ed:
+                    bc += 1
+            brief_captured = bc
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("build_linky_context: pinboard fetch failed: %s", exc)
+
+    return {
+        "today": today.isoformat(),
+        "weekday": today.strftime("%a"),
+        "active_issue": n,
+        "pub_date": window["pub_date"],
+        "end_date": window["end_date"],
+        "start_date": window["start_date"],
+        "days_to_pub": _days_until(window["pub_date"], today),
+        "days_into_window": ((today - sd).days if sd else None),
+        "toread_count": toread_count,
+        "brief_captured_this_week": brief_captured,
+    }
+
+
 def _word_band(wc: int) -> str:
     if wc < 1500:
         return "short (<1500 — note it, not necessarily a problem)"
