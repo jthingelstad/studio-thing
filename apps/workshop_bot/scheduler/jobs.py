@@ -15,8 +15,10 @@ Two shapes today:
 - **Content-loop jobs** — the ``apps/workshop_bot/jobs/`` pipeline,
   fired from cron via ``functools.partial(handlers.content_job, job=…)``.
   Today: ``update-draft`` daily at 17:00 CT (PASSes if no issue is in
-  flight or it's locked; Eddy reviews Tue–Fri), and ``pinboard-scan``
-  Mon–Fri 06:30 & 18:30 CT (Linky's twice-daily Pinboard pass).
+  flight or it's locked; Eddy reviews Tue–Fri), ``pinboard-scan`` Mon–Fri
+  06:30 & 18:30 CT (Linky's twice-daily Pinboard pass), and ``rss-check``
+  on a weekend cadence (``handlers.rss_check`` — detects a newly-published
+  issue and auto-fires ``promotion-prep``).
 
 To add a job: write/extend a handler in ``handlers.py`` (or a job module
 under ``jobs/``), add a ``JobSpec`` here, restart the bot.
@@ -75,6 +77,15 @@ JOBS: tuple[JobSpec, ...] = (
                                                          # outside the window; Linky's prompt does
                                                          # the finer "nothing to do" judgment.
         func=functools.partial(handlers.content_job, job="pinboard-scan"),
+    ),
+    JobSpec(
+        id="marky-rss-check",
+        cron="0 9-21/4 * * 6,0",                         # Sat & Sun, every 4h 09:00–21:00 Central.
+                                                         # Detects a newly-published issue in the
+                                                         # RSS feed; on a new number, fires
+                                                         # promotion-prep for it (deduped via
+                                                         # agent_notes).
+        func=handlers.rss_check,
     ),
 )
 

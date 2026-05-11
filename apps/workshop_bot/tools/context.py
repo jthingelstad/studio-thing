@@ -278,6 +278,54 @@ def _word_band(wc: int) -> str:
     return "over (>3000 — firm pushback, name concrete cut candidates)"
 
 
+def build_marky_context(
+    *,
+    ref_date: Optional[date] = None,
+    latest_issue: Optional[int] = None,
+    ship_date: Optional[str] = None,
+) -> dict[str, Any]:
+    """Marky's ``## Today`` block for promotion-prep / daily-metrics:
+    today's date, the latest *published* issue (from the RSS feed,
+    independent of the in-flight one) + ship date + days since ship, and
+    active ad campaigns with how long they've been running. ``latest_issue``
+    / ``ship_date`` may be supplied (rss-check already fetched them) to
+    skip a second feed fetch."""
+    today = ref_date or _today()
+    if latest_issue is None:
+        try:
+            from . import rss as _rss
+            li = _rss.latest_published_issue()
+            if li:
+                latest_issue = li.get("number")
+                ship_date = ship_date or li.get("ship_date")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("build_marky_context: RSS lookup failed: %s", exc)
+    days_since_ship = None
+    if ship_date:
+        try:
+            d = datetime.strptime(str(ship_date)[:10], "%Y-%m-%d").date()
+            days_since_ship = (today - d).days
+        except (TypeError, ValueError):
+            pass
+    # Active ad campaigns — the `campaigns` table lands in Step 8; degrade
+    # gracefully until then.
+    campaigns: list[dict[str, Any]] = []
+    fn = getattr(db, "active_campaigns_with_age", None)
+    if callable(fn):
+        try:
+            campaigns = fn()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("build_marky_context: campaign lookup failed: %s", exc)
+    return {
+        "today": today.isoformat(),
+        "weekday": today.strftime("%a"),
+        "latest_published_issue": latest_issue,
+        "ship_date": ship_date,
+        "days_since_ship": days_since_ship,
+        "active_campaigns": campaigns,
+    }
+
+
 def render_block(ctx: dict[str, Any], heading: str = "Today") -> str:
     """Render a context dict as a markdown block to prepend to a prompt."""
     return (

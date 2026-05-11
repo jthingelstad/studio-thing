@@ -110,12 +110,62 @@ async def heartbeat(ctx: "JobContext", persona: str) -> HeartbeatResult:
 # lazy so importing scheduler.handlers doesn't pull the whole jobs graph
 # at module load.
 def _content_job_runner(name: str):
-    from ..jobs import pinboard_scan, update_draft
+    from ..jobs import pinboard_scan, promotion_prep, update_draft
 
     return {
         "update-draft": update_draft.run,
         "pinboard-scan": pinboard_scan.run,
+        "promotion-prep": promotion_prep.run,
     }.get(name)
+
+
+# ============================================================
+# RSS detection — sees a new published issue, fires promotion-prep
+# ============================================================
+
+_MARKY_LAST_DETECTED_KEY = "marky:last-detected-issue"
+
+
+async def rss_check(ctx: "JobContext") -> str:
+    """Poll ``weekly.thingelstad.com/feed.xml`` for a newly-published
+    issue. If the latest issue number is higher than the one we last saw
+    (recorded in ``agent_notes``), record it and auto-fire
+    ``promotion-prep`` for it. Scheduled on a weekend cadence."""
+    from ..jobs import _base as jobs_base
+    from ..jobs import promotion_prep
+    from ..tools import db, rss
+
+    try:
+        latest = rss.latest_published_issue()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("rss_check: feed fetch/parse failed: %s", exc)
+        return "noop"
+    if not latest or not latest.get("number"):
+        return "noop"
+    n = int(latest["number"])
+
+    prior = db.query_agent_notes(
+        agent_name="marky", kind="context", query=_MARKY_LAST_DETECTED_KEY,
+        include_resolved=True, limit=1,
+    )
+    last_seen = 0
+    if prior:
+        try:
+            last_seen = int(str(prior[0].get("content") or "0"))
+        except (TypeError, ValueError):
+            last_seen = 0
+    if n <= last_seen:
+        return "noop"
+
+    db.insert_agent_note(
+        agent_name="marky", kind="context", key=_MARKY_LAST_DETECTED_KEY, content=str(n),
+        related_issue=n,
+    )
+    logger.info("rss_check: new issue detected (#%d, was #%d) — firing promotion-prep", n, last_seen)
+    job_ctx = jobs_base.JobContext(deps=getattr(ctx, "deps", None), trigger="rss-detected")
+    result = await promotion_prep.run(job_ctx, issue_number=n)
+    logger.info("rss_check -> promotion-prep #%d: ok=%s: %s", n, getattr(result, "ok", "?"), getattr(result, "message", ""))
+    return "fired" if getattr(result, "ok", False) else "fired-noop"
 
 
 async def content_job(ctx: "JobContext", *, job: str, **kwargs) -> str:

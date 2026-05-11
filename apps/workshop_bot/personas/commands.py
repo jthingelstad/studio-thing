@@ -18,7 +18,7 @@ do so via ``ctx.post(...)``.
 
 Wired so far: ``start-issue``, ``update-draft``, ``issue-status``,
 ``pinboard-scan``, ``create-final``, ``compose-haiku`` / ``-meta`` /
-``-cta``, ``build-publish``. Later steps add ``promotion-prep``,
+``-cta``, ``build-publish``, ``promotion-prep``. Later steps add
 ``daily-metrics``, ``add-campaign``, ``campaign-report``.
 """
 
@@ -39,6 +39,7 @@ from ..jobs import (
     create_final,
     issue_status,
     pinboard_scan,
+    promotion_prep,
     start_issue,
     update_draft,
 )
@@ -173,6 +174,13 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
     )
     async def build_publish_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: build_publish.run(_ctx(bot)), "build-publish")
+
+    @job.command(
+        name="promotion-prep",
+        description="Draft syndication content (Reddit + LinkedIn) for the latest published issue → #promotion.",
+    )
+    async def promotion_prep_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: promotion_prep.run(_ctx(bot)), "promotion-prep")
 
     tree.add_command(workshop)
     return tree
