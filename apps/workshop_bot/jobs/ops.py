@@ -1,0 +1,102 @@
+"""Operator pokes at the goals + campaigns ledgers — small, no-LLM jobs.
+
+These don't touch S3, Discord, or the agent loop; they just record a
+decision Jamie made. Wired onto the slash surface as ``/workshop job
+set-goal`` / ``goal-achieved`` / ``campaign-sunset``.
+
+- ``set-goal <kind> <value> [notes]`` — open a new active milestone for
+  Patty. Refuses if one's already active (the ``goals`` table allows only
+  one row with ``achieved_at IS NULL``) — close it with ``goal-achieved``
+  first.
+- ``goal-achieved [notes]`` — mark the active milestone hit (today). The
+  note, if given, is appended to whatever was recorded when the goal was
+  set.
+- ``campaign-sunset <name>`` — flip a campaign's status to ``sunset`` so
+  ``daily-metrics`` stops polling it.
+"""
+
+from __future__ import annotations
+
+import logging
+
+from ..tools import db
+from . import _base
+
+logger = logging.getLogger("workshop.jobs.ops")
+
+GOAL_KINDS = ("members", "dollars")
+
+
+async def set_goal(
+    ctx: "_base.JobContext", *, kind: str, value: int, notes: str | None = None
+) -> "_base.JobResult":
+    kind = (kind or "").strip().lower()
+    if kind not in GOAL_KINDS:
+        return _base.JobResult(
+            False, f"❌ goal kind must be one of: {', '.join(GOAL_KINDS)} — got `{kind}`."
+        )
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        return _base.JobResult(False, f"❌ goal value must be a whole number — got `{value}`.")
+    if value <= 0:
+        return _base.JobResult(False, "❌ goal value must be positive.")
+    active = db.get_active_goal()
+    if active is not None:
+        return _base.JobResult(
+            False,
+            f"❌ there's already an active goal — **{active['target_kind']} → "
+            f"{active['target_value']}** (since {active.get('started_at', '?')}). "
+            "Mark it hit with `/workshop job goal-achieved` first.",
+        )
+    notes = (notes or "").strip() or None
+    db.insert_goal(target_kind=kind, target_value=value, notes=notes)
+    return _base.JobResult(
+        True,
+        f"🎯 new goal: **{kind} → {value}**" + (f" — {notes}" if notes else "") + ".",
+        data={"target_kind": kind, "target_value": value},
+    )
+
+
+async def goal_achieved(ctx: "_base.JobContext", *, notes: str | None = None) -> "_base.JobResult":
+    active = db.get_active_goal()
+    if active is None:
+        return _base.JobResult(
+            False,
+            "❌ no active goal to mark achieved. Set one with "
+            "`/workshop job set-goal <kind> <value>`.",
+        )
+    notes = (notes or "").strip() or None
+    merged = active.get("notes") or None
+    if notes:
+        merged = f"{merged} · {notes}" if merged else notes
+    ok = db.mark_goal_achieved(int(active["id"]), notes=merged)
+    if not ok:
+        return _base.JobResult(False, "❌ couldn't mark the goal achieved (already closed?).")
+    return _base.JobResult(
+        True,
+        f"✅ goal hit: **{active['target_kind']} → {active['target_value']}**"
+        + (f" — {notes}" if notes else "")
+        + ". Set the next one with `/workshop job set-goal <kind> <value>`.",
+        data={"goal_id": active["id"]},
+    )
+
+
+async def campaign_sunset(ctx: "_base.JobContext", *, name: str) -> "_base.JobResult":
+    name = (name or "").strip()
+    if not name:
+        return _base.JobResult(False, "❌ give the campaign name to sunset.")
+    c = db.get_campaign(name)
+    if c is None:
+        return _base.JobResult(
+            False, f"❌ no campaign named `{name}` — see `/workshop job campaign-report`."
+        )
+    if c.get("status") == "sunset":
+        return _base.JobResult(True, f"`{name}` is already sunset — nothing to do.")
+    db.set_campaign_status(name, "sunset")
+    return _base.JobResult(
+        True,
+        f"🌅 campaign `{name}` (ref `{c.get('ref')}`) marked **sunset** — "
+        "`daily-metrics` will stop polling it.",
+        data={"name": name},
+    )

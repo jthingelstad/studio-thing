@@ -243,7 +243,7 @@ async def run() -> int:
         # to hours) doesn't block the scheduler from starting for the
         # personas that did come up. Missing personas will be reported in
         # the audit summary; the scheduler skips jobs whose persona is
-        # absent (see scheduler/runner.py JobContext.bot/channel).
+        # absent (see scheduler/runner.py JobContext.channel).
         ready_bots: list = []
         missing: list[str] = []
         for name, client, _ in bots:

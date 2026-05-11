@@ -29,10 +29,13 @@ Two dispatch shapes:
 
 Jobs that post to a channel during the run do so via ``ctx.post(...)``.
 
-Wired: ``start-issue``, ``update-draft``, ``issue-status``,
-``pinboard-scan``, ``create-final``, ``compose-haiku`` / ``-meta`` /
-``-cta``, ``build-publish``, ``promotion-prep``, ``daily-metrics``,
-``add-campaign``, ``campaign-report``.
+Wired under ``/workshop job``: ``start-issue``, ``update-draft``,
+``issue-status``, ``pinboard-scan``, ``create-final``, ``compose-haiku`` /
+``-meta`` / ``-cta``, ``build-publish``, ``promotion-prep``,
+``daily-metrics``, ``add-campaign``, ``campaign-report``, ``set-goal``,
+``goal-achieved``, ``campaign-sunset``. Plus a top-level ``/workshop
+status`` — a read-only ops snapshot (issue window, goal/campaigns, held
+locks, recent runs).
 """
 
 from __future__ import annotations
@@ -44,6 +47,7 @@ import discord
 from discord import app_commands
 
 from ..jobs import _base as jobs_base
+from ..jobs import status as status_job
 from ..jobs import (
     add_campaign,
     build_publish,
@@ -54,6 +58,7 @@ from ..jobs import (
     create_final,
     daily_metrics,
     issue_status,
+    ops,
     pinboard_scan,
     promotion_prep,
     start_issue,
@@ -267,6 +272,57 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
     )
     async def campaign_report_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: campaign_report.run(_ctx(bot)), "campaign-report")
+
+    @job.command(
+        name="set-goal",
+        description="Open a new Patty milestone — refuses if one's already active (mark it hit first).",
+    )
+    @app_commands.describe(
+        kind="members (live Buttondown count) or dollars (live Stripe total)",
+        value="The target to hit (e.g. 75)",
+        notes="Optional context for the goal",
+    )
+    async def set_goal_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, kind: str, value: int, notes: str = ""
+    ) -> None:
+        await _run_and_ack(
+            interaction,
+            lambda: ops.set_goal(_ctx(bot), kind=kind, value=int(value), notes=(notes or None)),
+            "set-goal",
+        )
+
+    @job.command(
+        name="goal-achieved",
+        description="Mark the active Patty milestone hit (today) — then set the next with set-goal.",
+    )
+    @app_commands.describe(notes="Optional note about hitting it")
+    async def goal_achieved_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, notes: str = ""
+    ) -> None:
+        await _run_and_ack(
+            interaction,
+            lambda: ops.goal_achieved(_ctx(bot), notes=(notes or None)),
+            "goal-achieved",
+        )
+
+    @job.command(
+        name="campaign-sunset",
+        description="Mark an ad campaign over — daily-metrics stops polling it.",
+    )
+    @app_commands.describe(name="The campaign name (as registered with add-campaign)")
+    async def campaign_sunset_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, name: str
+    ) -> None:
+        await _run_and_ack(
+            interaction, lambda: ops.campaign_sunset(_ctx(bot), name=name), "campaign-sunset"
+        )
+
+    @workshop.command(
+        name="status",
+        description="Ops snapshot — issue window, goal/campaigns, held job locks, recent runs.",
+    )
+    async def status_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: status_job.run(_ctx(bot)), "status")
 
     tree.add_command(workshop)
     return tree

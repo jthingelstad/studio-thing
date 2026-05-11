@@ -14,15 +14,6 @@ CREATE TABLE IF NOT EXISTS agent_outputs (
 CREATE INDEX IF NOT EXISTS idx_agent_outputs_agent_created
   ON agent_outputs(agent_name, created_at DESC);
 
-CREATE TABLE IF NOT EXISTS analytics (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  metric_date TEXT NOT NULL,
-  metric_type TEXT NOT NULL,
-  value INTEGER,
-  details TEXT,
-  created_at TEXT DEFAULT (datetime('now'))
-);
-
 CREATE TABLE IF NOT EXISTS link_candidates (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   url TEXT NOT NULL,
@@ -41,15 +32,6 @@ CREATE TABLE IF NOT EXISTS link_candidates (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_link_candidates_url
   ON link_candidates(url);
 
-CREATE TABLE IF NOT EXISTS supporter_events (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  email_hash TEXT NOT NULL,
-  event_type TEXT NOT NULL,
-  event_date TEXT NOT NULL,
-  details TEXT,
-  created_at TEXT DEFAULT (datetime('now'))
-);
-
 CREATE TABLE IF NOT EXISTS agent_runs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   agent_name TEXT NOT NULL,
@@ -64,13 +46,6 @@ CREATE TABLE IF NOT EXISTS agent_runs (
 
 CREATE INDEX IF NOT EXISTS idx_agent_runs_agent_started
   ON agent_runs(agent_name, started_at DESC);
-
-CREATE TABLE IF NOT EXISTS channel_routes (
-  channel_name TEXT PRIMARY KEY,
-  channel_id TEXT NOT NULL,
-  primary_agent TEXT,
-  category TEXT
-);
 
 -- Agent memory — notes a persona wants to carry forward beyond the
 -- conversation in any one Discord thread. Shared across personas (by
@@ -173,13 +148,21 @@ CREATE TABLE IF NOT EXISTS thingy_requests (
 CREATE INDEX IF NOT EXISTS idx_thingy_requests_bot_msg
   ON thingy_requests(bot_response_message_id);
 
--- The agent_inbox table (typed inter-agent handoffs) was decommissioned
--- in the content-loop redesign — the new architecture is closed-loop with
--- no agent-to-agent messaging; Jamie is the integrator. Dropped here so a
--- long-lived DB converges with a fresh install. (Idempotent: no-op if it
--- never existed.)
+-- Decommissioned tables — dropped here so a long-lived DB converges with
+-- a fresh install. (Idempotent: no-op if they never existed.)
+--   agent_inbox    — typed inter-agent handoffs; the content-loop redesign
+--                    is closed-loop with no agent-to-agent messaging
+--                    (Jamie is the integrator).
+--   analytics      — superseded by campaign_metrics + the live tinylytics/
+--                    buttondown surfaces; never populated.
+--   supporter_events / channel_routes — reserved in the original sketch,
+--                    never wired; the goals table + env-var channel ids
+--                    cover the same ground.
 DROP INDEX IF EXISTS idx_agent_inbox_recipient;
 DROP TABLE IF EXISTS agent_inbox;
+DROP TABLE IF EXISTS analytics;
+DROP TABLE IF EXISTS supporter_events;
+DROP TABLE IF EXISTS channel_routes;
 
 -- Issue windows — operator-set publishing schedule. Replaces the prior
 -- auto-derived in-flight resolver (which combined S3 folder names with

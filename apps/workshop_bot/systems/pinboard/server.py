@@ -18,7 +18,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
-from ...tools import db, web
+from ...tools import avoid_domains, db, web
 from .._base import ToolDef
 from . import client
 
@@ -86,11 +86,13 @@ class PinboardServer:
             ToolDef(
                 name="popular_unseen",
                 description=(
-                    "Pinboard's site-wide popular feed, minus anything you've "
-                    "already surfaced to Jamie (deduped against "
-                    "pinboard_popular_seen). Returns [{url, title, "
-                    "description, posted_by}]. Cap your surfacing at one item "
-                    "per scan — better silence than spam."
+                    "Pinboard's site-wide popular feed, minus (a) anything "
+                    "you've already surfaced to Jamie (deduped against "
+                    "pinboard_popular_seen) and (b) utility / CDN / social / "
+                    "Jamie's-own-domain noise (the same exclusion list the "
+                    "archive uses). Returns [{url, title, description, "
+                    "posted_by}]. Cap your surfacing at one item per scan — "
+                    "better silence than spam."
                 ),
                 input_schema={
                     "type": "object",
@@ -475,7 +477,10 @@ def _handle_issue_candidates(
 
 
 def _handle_popular_unseen(deps: Any, limit: int = 30, **_kw: Any) -> list[dict[str, Any]]:
-    feed = client.popular(limit=int(limit))
+    feed = [
+        it for it in client.popular(limit=int(limit))
+        if it.get("url") and not avoid_domains.is_excluded_url(it["url"])
+    ]
     return db.filter_unseen_popular(feed)
 
 

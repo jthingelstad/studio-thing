@@ -20,6 +20,7 @@ finer "nothing to do this scan → PASS" judgment. (A locked issue —
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime
 
@@ -71,7 +72,8 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     if linky is None or getattr(linky, "user", None) is None:
         return _base.JobResult(True, "(Linky unavailable — pinboard-scan skipped)", data={"posted": False})
 
-    linky_ctx = context.build_linky_context(ref_date=today)
+    # build_linky_context hits Pinboard (posts/all) — keep it off the event loop.
+    linky_ctx = await asyncio.to_thread(context.build_linky_context, ref_date=today)
     try:
         scan_prompt = anthropic_client.load_prompt("linky-pinboard-scan")
     except OSError as exc:

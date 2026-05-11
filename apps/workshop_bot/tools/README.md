@@ -119,6 +119,9 @@ tools/
 ├── interaction.py         ← await_choice / await_approval — reaction primitive for the interactive jobs
 ├── microblog.py           ← micro.blog Micropub q=source client (journal source; native markdown)
 ├── journal_images.py      ← rehost micro.blog photo uploads → resized copies in weekly-thing/{N}/journal/
+├── render.py              ← markdown → standalone HTML preview page (draft/final/publish .html twins)
+├── cdn.py                 ← CloudFront invalidation (best-effort) for the public assets bucket
+├── avoid_domains.py       ← popular-feed exclusion set (copy of pipeline/content/domain_exclusions.py) — used by pinboard__popular_unseen
 ├── rss.py                 ← latest_published_issue() from weekly.thingelstad.com/feed.xml (Marky's trigger)
 ├── s3.py                  ← per-issue workspace S3 helper (path-locked) — backs workspace__*; + write_journal_image (binary, journal/ sub-prefix, not an agent tool)
 ├── startup.py             ← Boot-time announce/coordinate across personas

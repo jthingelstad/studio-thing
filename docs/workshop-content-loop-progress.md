@@ -49,6 +49,19 @@ After a full-project review, addressed:
 
 331 tests pass.
 
+### Hardening batch — ops commands, status, avoid-domains, off-loop fetches, dead-table cleanup (2026-05-11, cont'd)
+
+Scan of the landed project surfaced a batch of small follow-ups; built them all:
+
+- **Goal/campaign ops slash commands** — `jobs/ops.py` (`set_goal` / `goal_achieved` / `campaign_sunset` — tiny no-LLM ledger pokes), wired as `/workshop job set-goal <kind> <value> [notes]` (refuses if a goal's already active — the `goals` table allows one open row), `/workshop job goal-achieved [notes]` (marks the active goal hit today, appending the note), `/workshop job campaign-sunset <name>` (status → `sunset` so `daily-metrics` stops polling). `db.mark_goal_achieved` grew an optional `notes` kwarg.
+- **`/workshop status`** — `jobs/status.py`, wired as a *top-level* `/workshop` subcommand (not under `job`). Read-only, DB-only: active issue window, active goal + live campaigns, any held `job_locks` (a deadlock would show here), the last 8 `agent_runs`. New `db.recent_agent_runs(limit)`. Discord allows a command group to carry both a subcommand and a subcommand-group, so this coexists with `/workshop job …`.
+- **`pinboard__popular_unseen` avoid-domains** — `tools/avoid_domains.py` (a hand-maintained copy of `pipeline/content/domain_exclusions.py`; `pipeline/` isn't importable from `apps/workshop_bot/`). `_handle_popular_unseen` now drops own-domain / Buttondown / image-CDN / shortener / social / Wikipedia / YouTube-Spotify-Vimeo / generic-CDN hosts *before* the `pinboard_popular_seen` dedup, so Linky never even considers them.
+- **Off-loop blocking fetches** — `pinboard-scan` (`build_linky_context` → Pinboard `/posts/all`), `daily-metrics` (`_poll_campaigns` + `buttondown.subscriber_growth` + `tinylytics.summary` + `build_marky_context`), and `promotion-prep` (`rss.latest_published_issue` + `s3.read_issue_file` + `build_marky_context`) now wrap their blocking calls in `asyncio.to_thread` — matching what `update-draft`'s `_gather_fills` already did — so a slow upstream round trip doesn't stall the Discord gateway.
+- **Dead tables dropped** — `analytics`, `supporter_events`, `channel_routes` (reserved in the original sketch, never wired). `db/schema.sql` now `DROP TABLE IF EXISTS`es them (alongside `agent_inbox`) so long-lived DBs converge with fresh installs; the README's table list is updated.
+- **Trivial** — removed the dead `scheduler.runner.JobContext.bot(persona)` method (unused since heartbeats went away) and refreshed its module docstring.
+
+New `test_ops_and_status.py` (ops jobs, the status snapshot, `db.recent_agent_runs`, the avoid-domains filter, the new slash wiring); `test_workshop_commands.py` extended. Docs updated: `apps/workshop_bot/{CLAUDE.md,README.md}`, `apps/workshop_bot/tools/README.md` (also picked up the previously-missing `render.py` / `cdn.py` entries). **345 tests pass.**
+
 ## Blockers
 (none — S3 versioning on `files.thingelstad.com` confirmed `Enabled`; the Step-4 pre-flight is satisfied)
 
@@ -56,4 +69,3 @@ After a full-project review, addressed:
 - **`apps/workshop_bot/CLAUDE.md` did not exist before this session.** The brief (Step 8.5) said "The existing apps/workshop_bot/CLAUDE.md describes the prior design…" but there was no such file; Step 8.5 created it new and updated the project-root CLAUDE.md.
 - **`create-final` does a single approval round** (Eddy proposes the whole reordered `final.md` body inside a fenced block; Jamie ✅/❌/🔄), not the brief's per-section loop. Defensible interpretation of "Eddy proposes, Jamie disposes"; per-section is a refinement.
 - **The buttondown/tinylytics/stripe tool-surface prune-and-rename** the brief mentions for Step 8 is mostly deferred — the existing verbs are already job-shaped and the instruction is open-ended. Only `buttondown__campaign_signups` / `tinylytics__campaign_traffic` were added.
-- **The legacy `prompts/<persona>/heartbeat.md` files were kept** even though no heartbeat is scheduled anymore — they're harmless, `eval --heartbeat <persona>` still uses them, and removing them would churn `test_heartbeats.py`.

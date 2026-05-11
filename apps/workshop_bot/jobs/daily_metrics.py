@@ -13,6 +13,7 @@ it to ``#promotion``.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from ..systems.buttondown import client as buttondown
@@ -100,14 +101,15 @@ def _moved(growth: dict, campaigns: list[dict]) -> bool:
 
 
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
-    campaigns = _poll_campaigns()
+    # All of these hit external APIs — keep them off the event loop.
+    campaigns = await asyncio.to_thread(_poll_campaigns)
     try:
-        growth = buttondown.subscriber_growth(days=7)
+        growth = await asyncio.to_thread(buttondown.subscriber_growth, days=7)
     except Exception as exc:  # noqa: BLE001
         logger.warning("daily-metrics: subscriber_growth failed: %s", exc)
         growth = {}
     try:
-        engagement = tinylytics.summary(days=2)
+        engagement = await asyncio.to_thread(tinylytics.summary, days=2)
     except Exception as exc:  # noqa: BLE001
         logger.warning("daily-metrics: tinylytics summary failed: %s", exc)
         engagement = {}
@@ -123,7 +125,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         return _base.JobResult(True, "(daily-metrics: something moved but no Discord — not posted)",
                                data={"posted": False, "campaigns": campaigns})
 
-    marky_ctx = context.build_marky_context()
+    marky_ctx = await asyncio.to_thread(context.build_marky_context)
     payload = {
         "subscriber_growth_7d": growth,
         "engagement_48h": engagement,

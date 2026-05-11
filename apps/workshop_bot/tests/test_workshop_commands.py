@@ -61,8 +61,17 @@ class TreeRegistrationTests(unittest.TestCase):
         workshop = tree.groups[0]
         job = next(c for c in workshop.commands if getattr(c, "name", None) == "job")
         cmd_names = {getattr(c, "_cmd_name", None) for c in job.commands}
-        for name in ("start-issue", "update-draft", "issue-status"):
+        for name in (
+            "start-issue", "update-draft", "issue-status",
+            "set-goal", "goal-achieved", "campaign-sunset",
+        ):
             self.assertIn(name, cmd_names)
+
+    def test_workshop_group_has_top_level_status_command(self):
+        tree = commands_module.register_workshop_commands(_stub_bot())
+        workshop = tree.groups[0]
+        top_names = {getattr(c, "_cmd_name", None) for c in workshop.commands}
+        self.assertIn("status", top_names)
 
     def test_start_issue_describes_required_args(self):
         tree = commands_module.register_workshop_commands(_stub_bot())

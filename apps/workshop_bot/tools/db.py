@@ -688,11 +688,19 @@ def insert_goal(*, target_kind: str, target_value: int, started_at: Optional[str
         return int(cur.lastrowid or 0)
 
 
-def mark_goal_achieved(goal_id: int, *, achieved_at: Optional[str] = None) -> bool:
+def mark_goal_achieved(
+    goal_id: int, *, achieved_at: Optional[str] = None, notes: Optional[str] = None
+) -> bool:
+    sets = ["achieved_at = COALESCE(?, date('now'))"]
+    params: list[Any] = [achieved_at]
+    if notes is not None:
+        sets.append("notes = ?")
+        params.append(notes)
+    params.append(int(goal_id))
     with connect() as conn:
         cur = conn.execute(
-            "UPDATE goals SET achieved_at = COALESCE(?, date('now')) WHERE id = ? AND achieved_at IS NULL",
-            (achieved_at, int(goal_id)),
+            f"UPDATE goals SET {', '.join(sets)} WHERE id = ? AND achieved_at IS NULL",
+            params,
         )
         return cur.rowcount > 0
 
@@ -835,6 +843,19 @@ def latest_draft_digest(issue: int) -> Optional[dict[str, Any]]:
             (int(issue),),
         ).fetchone()
     return dict(row) if row else None
+
+
+def recent_agent_runs(limit: int = 8) -> list[dict[str, Any]]:
+    """Most recent agent_runs rows, newest first — for the ``/workshop
+    status`` snapshot ("what's the bot done lately / did anything fail")."""
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT id, agent_name, trigger, status, duration_ms, error, "
+            "       records_written, started_at, ended_at "
+            "FROM agent_runs ORDER BY id DESC LIMIT ?",
+            (int(limit),),
+        ).fetchall()
+    return [dict(r) for r in rows]
 
 
 class AgentRun:

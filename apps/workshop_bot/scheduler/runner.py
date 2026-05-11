@@ -5,9 +5,12 @@ APScheduler's ``AsyncIOScheduler``. Each job in ``jobs.py`` declares a
 cron string and a Python function. At fire time the runner calls the
 function with a ``JobContext`` and lets it do the work.
 
-Most handlers do their job in pure Python — fetch, format, post. The
-ones that need LLM judgment call ``ctx.bot(persona).core(...)`` directly.
-The runner doesn't make that decision; the handler does.
+Handlers are thin: ``content_job`` bridges a cron ``JobSpec`` to a
+``jobs/<name>.py`` module's ``run(ctx, …)`` (translating this
+``JobContext`` to the jobs package's own), and ``rss_check`` polls the
+feed and auto-fires ``promotion-prep``. The job decides everything —
+including whether to invoke a persona's agent loop; the runner just
+fires it on schedule.
 
 A failed job logs the error and posts a short notice to its channel so
 Jamie sees it without tailing logs. It does not crash the bot.
@@ -29,7 +32,6 @@ from ..tools import db, discord_io
 from . import jobs as jobs_module
 
 if TYPE_CHECKING:
-    from ..personas.base import PersonaBot
     from ..personas.team import TeamRegistry
 
 logger = logging.getLogger("workshop.scheduler")
@@ -87,9 +89,6 @@ class JobContext:
                 return ch
         logger.warning("scheduler: channel %s not visible to any persona", cid)
         return None
-
-    def bot(self, persona: str) -> Optional["PersonaBot"]:
-        return self.team.bots.get(persona)
 
     async def post(self, channel, text: str, *, suppress_embeds: bool = True) -> None:
         """Post (chunked) to a Discord channel."""
@@ -181,9 +180,10 @@ def main() -> int:
     if args.list:
         for job in jobs_module.JOBS:
             mark = "✓" if job.enabled else "✗"
-            # Heartbeat JobSpecs wrap the dispatcher in functools.partial;
-            # unwrap once so the printed reference points at the real
-            # coroutine function rather than crashing on missing __name__.
+            # content_job JobSpecs wrap the dispatcher in
+            # functools.partial(content_job, job="<name>"); unwrap once so
+            # the printed reference points at the real coroutine function
+            # rather than crashing on a missing __name__.
             underlying = (
                 job.func.func if isinstance(job.func, functools.partial)
                 else job.func

@@ -58,7 +58,7 @@ Thingy users (web and Discord) also have per-user memory in the Lambda's DynamoD
 
 Every workshop_bot action is a **job** — deterministic Python in `apps/workshop_bot/jobs/`, fired by the `/workshop job <name>` slash surface (host: Eddy; `job` is a subcommand group; `manage_guild`-gated) and/or by cron. `jobs/_base.py` is the runtime (`JobContext`, `JobResult`, single-asset `job_lock`, draft-block helpers). See [`CLAUDE.md`](CLAUDE.md) for the full job table and [`docs/workshop-content-loop-design-brief.md`](../../docs/workshop-content-loop-design-brief.md) for the design.
 
-Issue-assembly flow: `start-issue` → `update-draft` (pure projection of Pinboard/micro.blog/asset files into `draft.md`; Eddy reviews Tue–Fri) → `create-final` (Eddy reorder → `final.md`) → `compose-haiku` / `compose-meta` / `compose-cta` (run on demand, any order) → `build-publish` (assembles `publish.md`; refuses with a missing-list until the required assets exist). Parallel: `pinboard-scan` (Linky), `promotion-prep` + `daily-metrics` + `add-campaign` / `campaign-report` (Marky).
+Issue-assembly flow: `start-issue` → `update-draft` (pure projection of Pinboard/micro.blog/asset files into `draft.md`; Eddy reviews Tue–Fri) → `create-final` (Eddy reorder → `final.md`) → `compose-haiku` / `compose-meta` / `compose-cta` (run on demand, any order) → `build-publish` (assembles `publish.md`; refuses with a missing-list until the required assets exist). Parallel: `pinboard-scan` (Linky), `promotion-prep` + `daily-metrics` + `add-campaign` / `campaign-report` / `campaign-sunset` (Marky). Ledger pokes: `set-goal` / `goal-achieved` (Patty's milestone progression) and `campaign-sunset` are tiny no-LLM `/workshop job` commands. `/workshop status` is a top-level (not under `job`) read-only ops snapshot — active issue window, active goal/campaigns, any held job locks, the last few `agent_runs`.
 
 Scheduled (`scheduler/jobs.py`, Central time):
 
@@ -69,7 +69,7 @@ Scheduled (`scheduler/jobs.py`, Central time):
 | `marky-rss-check` | Sat & Sun, every 4h 09–21 | `handlers.rss_check` — detects a new published issue, fires `promotion-prep` |
 | `marky-daily-metrics` | daily 19:00 | `content_job` → `jobs/daily_metrics.py`; PASSes silently when nothing moved |
 
-There are no per-persona heartbeats — everything an agent does on a cadence is a job. The slash layer dispatches *fast* jobs as defer → run → ack, and *interactive* jobs (`create-final`, `compose-haiku`/`-meta`/`-cta` — they wait on Jamie's reaction, possibly longer than the ~15-min interaction token) as ack-immediately → run → the job posts its own outcome to the channel. CLI: `python -m apps.workshop_bot.scheduler.runner --list`. Disable the scheduler with `WORKSHOP_SCHEDULER_ENABLED=0`.
+There are no per-persona heartbeats — everything an agent does on a cadence is a job. The slash layer dispatches *fast* jobs as defer → run → ack, and *interactive* jobs (`create-final`, `compose-haiku`/`-meta`/`-cta` — they wait on Jamie's reaction, possibly longer than the ~15-min interaction token) as ack-immediately → run → the job posts its own outcome to the channel. (`/workshop status` is the one subcommand that sits directly under `workshop` rather than under `job` — it's a bot-health view, not a content-loop job.) CLI: `python -m apps.workshop_bot.scheduler.runner --list`. Disable the scheduler with `WORKSHOP_SCHEDULER_ENABLED=0`.
 
 ---
 
@@ -136,8 +136,9 @@ apps/workshop_bot/
 ├── jobs/                     # the content-loop spine (deterministic, schedulable, /workshop-triggerable)
 │   ├── _base.py              # JobContext, JobResult, single-asset job_lock, draft-block helpers
 │   ├── _compose.py           # shared helpers for the compose-* jobs + create-final
-│   ├── start_issue.py / update_draft.py / issue_status.py
+│   ├── start_issue.py / update_draft.py / issue_status.py / status.py   # status.py backs /workshop status
 │   ├── create_final.py / compose_haiku.py / compose_meta.py / compose_cta.py / build_publish.py
+│   ├── ops.py                # set-goal / goal-achieved / campaign-sunset (no-LLM ledger pokes)
 │   ├── pinboard_scan.py      # Linky's four-lane Pinboard pass
 │   └── promotion_prep.py / daily_metrics.py / add_campaign.py / campaign_report.py   # Marky
 ├── templates/
@@ -175,6 +176,7 @@ apps/workshop_bot/
 │   ├── journal_images.py     # rehost micro.blog photo uploads → resized copies in weekly-thing/{N}/journal/
 │   ├── render.py             # markdown → standalone HTML preview page (draft/final/publish .html twins)
 │   ├── cdn.py                # CloudFront invalidation (best-effort) for the public assets bucket
+│   ├── avoid_domains.py      # popular-feed exclusion list (mirrors pipeline/content/domain_exclusions.py)
 │   ├── rss.py                # latest_published_issue() from weekly.thingelstad.com/feed.xml
 │   ├── support_state.py      # current nonprofit state for Patty
 │   ├── s3.py                 # per-issue S3 workspace — backs workspace__*
@@ -227,11 +229,13 @@ Tables in `db/schema.sql`. New columns added later go through idempotent `ALTER 
 | `subscriber_events_seen` | Buttondown subscriber activity Marky has logged | active |
 | `thingy_tokens` | Cached Lambda tokens + profile per Discord user | active |
 | `thingy_requests` | Bridge request log (for `/feedback` lookup) | active |
-| `analytics` | Reserved for Marky's metric history | unused |
-| `supporter_events` | Reserved (older shape; superseded by `subscriber_events_seen`) | unused |
-| `channel_routes` | Reserved (channels are env-var-resolved today) | unused |
+| `job_locks` | Single-asset serialization for the jobs pipeline (dead-pid steal) | active |
+| `draft_digests` | Per-`update-draft`-run snapshot — Eddy's "since yesterday" delta | active |
+| `goals` | Patty's milestone progression (one active row; `set-goal` / `goal-achieved`) | active |
+| `campaigns` | Marky's `?ref=` ad-placement ledger (`add-campaign` / `campaign-sunset`) | active |
+| `campaign_metrics` | Append-only per-poll campaign traffic + signups (`daily-metrics`) | active |
 
-(`agent_inbox` was dropped in the content-loop redesign — `db/schema.sql` carries a `DROP TABLE IF EXISTS` so long-lived DBs converge with fresh installs.)
+(`agent_inbox`, `analytics`, `supporter_events`, `channel_routes` were dropped — `db/schema.sql` carries `DROP TABLE IF EXISTS` for each so long-lived DBs converge with fresh installs. `agent_inbox` went with the content-loop redesign's closed-loop architecture; the other three were reserved-but-never-wired.)
 
 ---
 
@@ -319,10 +323,8 @@ The README above describes what's built. Open items:
 
 - **`create-final` per-section approval.** It does one approval round (Eddy proposes the whole reordered body, Jamie ✅/❌/🔄); the design brief's per-section loop (approve Notable order, then Briefly, then Journal) is a refinement.
 - **Deeper tool-surface pass on buttondown/tinylytics/stripe.** Step 5 reshaped Pinboard; Step 8 added `buttondown__campaign_signups` / `tinylytics__campaign_traffic`, but the broader "drop verbs that don't serve a job, rename verbs that describe the API" pass is deferred.
-- **`popular_unseen` avoid-domains.** Dedups against `pinboard_popular_seen` only; the avoid-domains list the brief mentions isn't wired.
 - **`pipeline/content/content.py publish`** (create a Buttondown draft from `publish.md` + `metadata.json`) is implemented but untested against the live API.
 - **Retire the iOS Shortcuts pipeline** — kept as a recovery tool until 3–4 successful ships via the new flow (Step 9 of the design brief).
 - **Buttondown supporter-event webhook.** Today Marky polls. Real-time signups/churn → `#chatter` would need a small HTTP listener. The `subscriber_events_seen` table is ready for it.
 - **`agent_outputs.status` lifecycle.** Field exists (`pending` / `ready` / `used` / `archived`) but nothing transitions outputs after Jamie pulls them.
 - **Stripe Payment Link `ref` metadata.** `stripe__donations_by_ref` returns mostly `(no-ref)` until the donate flow sets `ref` on Checkout Session metadata.
-- **Decommission dead tables.** `analytics`, `supporter_events`, `channel_routes` are reserved but unused.
