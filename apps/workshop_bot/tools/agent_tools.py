@@ -21,9 +21,7 @@ from typing import Any, Callable, Optional
 from . import (
     archive,
     db,
-    inbox,
     issue,
-    persona_s3,
     s3,
     support_state,
     web,
@@ -33,9 +31,8 @@ from ..systems._base import SystemServer
 logger = logging.getLogger("workshop.tools")
 
 # The agent loop sets this before each tool execution so per-persona
-# tools (`memory__remember`, `memory__recall`, `inbox__post`,
-# `s3_personas__*`) can attribute their work to the calling persona
-# without leaning on a shared, mutable Deps object.
+# tools (`memory__remember`, `memory__recall`) can attribute their work
+# to the calling persona without leaning on a shared, mutable Deps object.
 active_persona: ContextVar[str] = ContextVar("active_persona", default="unknown")
 
 # Mention/peer/team handlers set this so ``react__add`` knows which
@@ -188,7 +185,7 @@ def t_fetch_url(deps, url: str, max_chars: int = 12_000) -> dict[str, Any]:
 # ---------- current issue window (operator-set) ----------
 
 # Canonical implementations live in `tools/issue.py`. Jamie sets the
-# active window via the ``/workshop next-issue`` slash command; agents
+# active window via the ``/workshop job start-issue`` slash command; agents
 # read it here via ``issue__current_window`` (active row) and
 # ``issue__list_windows`` (historical metadata).
 t_current_issue_window = issue.t_current_issue_window
@@ -265,14 +262,14 @@ def t_forget_note(deps, note_id: int, status: str = "resolved") -> dict[str, Any
 
 # ---------- S3 issue workspace (universal) ----------
 
-def t_s3_list_issue_workspaces(deps) -> dict[str, Any]:
+def t_workspace_list_all(deps) -> dict[str, Any]:
     """List every issue workspace folder in S3 with file counts and
     last-modified timestamps. The highest issue number is the issue
     currently being assembled."""
     return s3.list_workspaces()
 
 
-def t_s3_list_issue(deps, issue_number: int) -> dict[str, Any]:
+def t_workspace_list_files(deps, issue_number: int) -> dict[str, Any]:
     """List the per-issue files in the S3 workspace
     (``s3://files.thingelstad.com/weekly-thing/{N}/``)."""
     try:
@@ -281,7 +278,7 @@ def t_s3_list_issue(deps, issue_number: int) -> dict[str, Any]:
         return {"error": str(exc)}
 
 
-def t_s3_read_issue_file(deps, issue_number: int, filename: str) -> dict[str, Any]:
+def t_workspace_read(deps, issue_number: int, filename: str) -> dict[str, Any]:
     """Read one file from the per-issue S3 workspace. Text only — binary
     objects (photos) are reported but not returned. Filename must be a
     bare component (no slashes, no '..')."""
@@ -291,53 +288,17 @@ def t_s3_read_issue_file(deps, issue_number: int, filename: str) -> dict[str, An
         return {"error": str(exc)}
 
 
-def t_s3_write_issue_file(
+def t_workspace_write(
     deps, issue_number: int, filename: str, content: str
 ) -> dict[str, Any]:
-    """Write one file to the per-issue S3 workspace. Use for files that
-    need to be picked up by the iOS Shortcuts assemble pipeline (e.g.
-    ``patty-cta.json``, ``marky-meta.json``, ``linky-curation.md``).
-    256KB max per file. Allowed extensions: md, txt, json, yaml, yml,
-    csv, html. Filename must be a bare component."""
+    """Write one file to the per-issue S3 workspace. Use for the issue
+    text/JSON assets the assemble pipeline reads (e.g. ``intro.md``,
+    ``currently.md``, ``metadata.json``, ``cta-1.md``). 256KB max per
+    file. Allowed extensions: md, txt, json, yaml, yml, csv, html.
+    Filename must be a bare component."""
     try:
         return s3.write_issue_file(int(issue_number), filename, content)
     except s3.S3PathError as exc:
-        return {"error": str(exc)}
-
-
-# ---------- S3 persona scratchpad (universal) ----------
-
-def t_persona_list(deps, prefix: Optional[str] = None) -> dict[str, Any]:
-    """List files in this persona's private scratchpad on S3. Optionally
-    scope to a sub-prefix (e.g. ``"campaigns"``). Returns paths relative
-    to the persona root."""
-    try:
-        return persona_s3.list_persona(active_persona.get(), prefix=prefix)
-    except persona_s3.S3PathError as exc:
-        return {"error": str(exc)}
-
-
-def t_persona_read(deps, path: str) -> dict[str, Any]:
-    """Read one file from this persona's private scratchpad. ``path`` is
-    relative to the persona root and may contain subdirectories
-    (``campaigns/dd-2026-05-15.json``, ``notes/2026-05-08.md``). Text
-    only — binary objects are reported but not returned."""
-    try:
-        return persona_s3.read_persona_file(active_persona.get(), path)
-    except persona_s3.S3PathError as exc:
-        return {"error": str(exc)}
-
-
-def t_persona_write(deps, path: str, content: str) -> dict[str, Any]:
-    """Write one file under this persona's private scratchpad. ``path`` is
-    relative to the persona root and may contain subdirectories. 256KB
-    max per file. Allowed extensions: md, txt, json, yaml, yml, csv,
-    html. Use this to maintain campaign ledgers, drafts, multi-step
-    notes — anything that needs to survive across hosts and process
-    restarts."""
-    try:
-        return persona_s3.write_persona_file(active_persona.get(), path, content)
-    except persona_s3.S3PathError as exc:
         return {"error": str(exc)}
 
 
@@ -569,10 +530,10 @@ SPECS: dict[str, dict[str, Any]] = {
             },
         },
     },
-    "s3_issues__list_workspaces": {
-        "name": "s3_issues__list_workspaces",
+    "workspace__list_all": {
+        "name": "workspace__list_all",
         "description": (
-            "List every issue workspace folder in S3 (under "
+            "List every per-issue workspace folder in S3 (under "
             "s3://files.thingelstad.com/weekly-thing/). Returns each issue's "
             "number, file count, and most-recent modification time. Note: this "
             "prefix is shared with the published archive, so every shipped issue "
@@ -584,14 +545,15 @@ SPECS: dict[str, dict[str, Any]] = {
         ),
         "input_schema": {"type": "object", "properties": {}},
     },
-    "s3_issues__list": {
-        "name": "s3_issues__list",
+    "workspace__list_files": {
+        "name": "workspace__list_files",
         "description": (
-            "List the per-issue files in the S3 workspace at "
-            "s3://files.thingelstad.com/weekly-thing/{N}/. This is where "
-            "Jamie's iOS Shortcuts read/write draft.md, cover.jpg, cover-large.jpg, "
-            "and the journal/ photo subfolder, and where you write outputs the "
-            "assemble pipeline picks up."
+            "List the files in one per-issue workspace folder at "
+            "s3://files.thingelstad.com/weekly-thing/{N}/. This is the issue's "
+            "working directory: draft.md, final.md, publish.md, intro.md, "
+            "currently.md, haiku.md, metadata.json, cta-*.md (text assets the "
+            "jobs write) alongside cover.jpg, cover-large.jpg, journal/ photos, "
+            "and audio MP3s (binaries written by other pipelines)."
         ),
         "input_schema": {
             "type": "object",
@@ -599,10 +561,10 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["issue_number"],
         },
     },
-    "s3_issues__read_file": {
-        "name": "s3_issues__read_file",
+    "workspace__read": {
+        "name": "workspace__read",
         "description": (
-            "Read one file from the per-issue S3 workspace. Text only — binary "
+            "Read one file from a per-issue workspace folder. Text only — binary "
             "objects like cover.jpg are reported but their bytes aren't returned. "
             "Filename must be a bare component (no slashes, no '..')."
         ),
@@ -618,15 +580,15 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["issue_number", "filename"],
         },
     },
-    "s3_issues__write_file": {
-        "name": "s3_issues__write_file",
+    "workspace__write": {
+        "name": "workspace__write",
         "description": (
-            "Write one file to the per-issue S3 workspace. Use to drop outputs "
-            "the Shortcuts assemble pipeline picks up — e.g. patty-cta.json, "
-            "marky-meta.json, linky-curation.md. 256KB cap per file. Allowed "
-            "extensions: md, txt, json, yaml, yml, csv, html. The path is "
-            "scoped to weekly-thing/{issue_number}/ — you can't write "
-            "outside that prefix."
+            "Write one text/JSON file to a per-issue workspace folder. Use for "
+            "the issue assets the assemble pipeline reads — intro.md, currently.md, "
+            "metadata.json, cta-1.md, etc. 256KB cap per file. Allowed extensions: "
+            "md, txt, json, yaml, yml, csv, html. The path is scoped to "
+            "weekly-thing/{issue_number}/ — you can't write outside that prefix, "
+            "and the text-only extension allowlist prevents clobbering binaries."
         ),
         "input_schema": {
             "type": "object",
@@ -636,57 +598,6 @@ SPECS: dict[str, dict[str, Any]] = {
                 "content": {"type": "string"},
             },
             "required": ["issue_number", "filename", "content"],
-        },
-    },
-    "s3_personas__list": {
-        "name": "s3_personas__list",
-        "description": (
-            "List files in your private S3 scratchpad. This is your own "
-            "persistent file space — separate from the per-issue workspace, "
-            "and not visible to other personas. Optionally pass a `prefix` "
-            "to scope to a sub-folder (e.g. \"campaigns\", \"notes\")."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "prefix": {
-                    "type": "string",
-                    "description": "Optional sub-folder under your scratchpad to list.",
-                },
-            },
-        },
-    },
-    "s3_personas__read_file": {
-        "name": "s3_personas__read_file",
-        "description": (
-            "Read one file from your private S3 scratchpad. The `path` is "
-            "relative to your scratchpad root and may contain subdirectories "
-            "(e.g. \"campaigns/dd-2026-05-15.json\", \"notes/2026-05-08.md\"). "
-            "Text only — binary objects are reported but not returned."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {"path": {"type": "string"}},
-            "required": ["path"],
-        },
-    },
-    "s3_personas__write_file": {
-        "name": "s3_personas__write_file",
-        "description": (
-            "Write one file under your private S3 scratchpad. Use this to "
-            "maintain campaign ledgers, drafts, multi-step thinking, anything "
-            "that needs to survive across hosts and restarts. The `path` is "
-            "relative to your scratchpad root and may contain subdirectories. "
-            "256KB cap per file. Allowed extensions: md, txt, json, yaml, yml, "
-            "csv, html. Other personas cannot read or overwrite your files."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "path": {"type": "string"},
-                "content": {"type": "string"},
-            },
-            "required": ["path", "content"],
         },
     },
     "react__add": {
@@ -731,13 +642,10 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "memory__remember": t_remember,
     "memory__recall": t_recall,
     "memory__forget": t_forget_note,
-    "s3_issues__list_workspaces": t_s3_list_issue_workspaces,
-    "s3_issues__list": t_s3_list_issue,
-    "s3_issues__read_file": t_s3_read_issue_file,
-    "s3_issues__write_file": t_s3_write_issue_file,
-    "s3_personas__list": t_persona_list,
-    "s3_personas__read_file": t_persona_read,
-    "s3_personas__write_file": t_persona_write,
+    "workspace__list_all": t_workspace_list_all,
+    "workspace__list_files": t_workspace_list_files,
+    "workspace__read": t_workspace_read,
+    "workspace__write": t_workspace_write,
     "react__add": t_react_add,
 }
 
@@ -749,7 +657,7 @@ class ToolRegistry:
     """Composes external-system tools and local helpers into one namespace.
 
     Tool names follow ``<system>__<action>`` — ``archive__search``,
-    ``memory__remember``, ``inbox__post``, ``buttondown__list_subscribers``.
+    ``memory__remember``, ``workspace__read``, ``buttondown__list_subscribers``.
     The double-underscore separator is API-safe (Anthropic enforces
     ``^[a-zA-Z0-9_-]{1,128}$`` on custom tool names) so the same name is
     used in the registry, the API, and prompts — no boundary translation.
@@ -865,8 +773,7 @@ class ToolRegistry:
 
 
 def register_local_helpers(registry: ToolRegistry) -> None:
-    """Register the local-helper tools (everything in ``FUNCS`` / ``SPECS``
-    plus the inbox tools).
+    """Register the local-helper tools (everything in ``FUNCS`` / ``SPECS``).
 
     External systems (``buttondown``, ``pinboard``, ``stripe``,
     ``tinylytics``) are added separately via ``registry.register_system``
@@ -875,5 +782,3 @@ def register_local_helpers(registry: ToolRegistry) -> None:
     for name in sorted(FUNCS):
         spec = SPECS[name]
         registry.register(name, spec, FUNCS[name], source="local")
-    for name, spec in inbox.tool_specs().items():
-        registry.register(name, spec, inbox.tool_handlers()[name], source="local")

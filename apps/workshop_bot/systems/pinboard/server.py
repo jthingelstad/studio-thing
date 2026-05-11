@@ -13,8 +13,7 @@ class PinboardServer:
     name = "pinboard"
     # Pinboard is Linky's lane — link curation. Mutating tools (`save`)
     # plus the same-domain query surface live here, so other personas
-    # have no business reaching for them. Hand off via `inbox__post` if
-    # another persona genuinely needs a bookmark saved.
+    # have no business reaching for them.
     restricted_to = {"linky"}
 
     def list_tools(self) -> list[ToolDef]:

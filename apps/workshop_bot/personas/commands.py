@@ -1,73 +1,39 @@
-"""Discord slash-command surface — ``/workshop``.
+"""Discord slash-command surface — ``/workshop job <name>``.
 
-First operator-facing slash command on workshop_bot. Hosted on a single
+The operator-facing slash command for workshop_bot, hosted on a single
 persona bot (Eddy) — slash commands are scoped per Discord application
-token, and one host is the cleanest first cut.
+token, and one host is the cleanest cut.
 
-Subcommands today:
+All workshop_bot user-facing actions are **jobs** — deterministic Python
+in ``apps/workshop_bot/jobs/``. The slash surface fires them. One command
+shape::
 
-  - ``/workshop heartbeat <agent>`` — fire one persona's heartbeat on
-    demand. ``<agent>`` is one of the four personas, or ``team`` to
-    fire all four in parallel via ``asyncio.gather``.
+    /workshop job <name> [<args>]
 
-The handler reuses the existing ``scheduler.handlers.heartbeat`` so a
-manual fire is indistinguishable from a scheduled fire (same
-``db.AgentRun`` rows, same home-channel post, same PASS-swallow). The
-invoker always gets an ephemeral ack — including on PASS — so a quiet
-heartbeat doesn't look like a silent failure.
+``job`` is a subcommand group under ``workshop``; job names are flat and
+hyphenated, no further nesting.
+
+This step (Step 1 of the content-loop redesign) wires only ``start-issue``
+— it records the in-flight issue window in workshop.db. Later steps extend
+it (create the S3 folder, write ``draft.md`` from the starter template,
+auto-fire ``update-draft``) and add the rest of the job tree
+(``update-draft``, ``issue-status``, the compose jobs, …).
 """
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
 
-from ..scheduler import handlers
-from ..scheduler import jobs as jobs_module
-from ..scheduler.runner import JobContext
 from ..tools import db, issue
 
 if TYPE_CHECKING:
     from .base import PersonaBot
-    from .team import TeamRegistry
 
 logger = logging.getLogger("workshop.commands")
-
-PERSONAS: tuple[str, ...] = ("eddy", "linky", "marky", "patty")
-
-_RESULT_LABELS: dict[str, str] = {
-    "posted": "posted to home channel",
-    "pass": "PASS (nothing to surface)",
-    "disabled": "skipped — heartbeats disabled",
-    "skipped": "skipped — persona/prompt unavailable",
-    "error": "error during agent loop",
-}
-
-
-def render_result(result: str) -> str:
-    return _RESULT_LABELS.get(result, result)
-
-
-async def run_one_heartbeat(team: "TeamRegistry", persona: str) -> str:
-    """Fire one persona's heartbeat and return its status string.
-
-    Reuses the persona's existing heartbeat ``JobSpec`` as a cheap
-    context carrier so manual fires share the scheduled path's
-    ``ctx.job`` shape (handler logs reference ``ctx.job.id``).
-    """
-    spec = jobs_module.by_id(f"{persona}-heartbeat")
-    if spec is None:
-        return "skipped"
-    ctx = JobContext(team=team, job=spec)
-    try:
-        return await handlers.heartbeat(ctx, persona)
-    except Exception:  # noqa: BLE001
-        logger.exception("/workshop heartbeat %s: unexpected error", persona)
-        return "error"
 
 
 def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
@@ -83,63 +49,22 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
         description="Workshop bot ops commands",
         default_permissions=discord.Permissions(manage_guild=True),
     )
-
-    agent_choices = [
-        app_commands.Choice(name=p, value=p) for p in PERSONAS
-    ] + [app_commands.Choice(name="team", value="team")]
-
-    @workshop.command(
-        name="heartbeat",
-        description="Force a heartbeat on demand for one persona, or 'team' for all four.",
+    job = app_commands.Group(
+        name="job",
+        description="Run a workshop job",
+        parent=workshop,
     )
-    @app_commands.describe(agent="Which persona, or 'team' for all four")
-    @app_commands.choices(agent=agent_choices)
-    async def heartbeat_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction,
-        agent: app_commands.Choice[str],
-    ) -> None:
-        # Heartbeats can take 20–40s; defer immediately so Discord's
-        # 3-second response window doesn't expire on us.
-        await interaction.response.defer(ephemeral=True, thinking=True)
 
-        team = bot.deps.team
-        if team is None:
-            await interaction.followup.send(
-                "Team registry unavailable; can't dispatch heartbeat.",
-                ephemeral=True,
-            )
-            return
-
-        if agent.value == "team":
-            results = await asyncio.gather(
-                *(run_one_heartbeat(team, p) for p in PERSONAS),
-                return_exceptions=False,
-            )
-            lines = [
-                f"`{p}`: {render_result(r)}" for p, r in zip(PERSONAS, results)
-            ]
-            await interaction.followup.send(
-                "**Team heartbeat**\n" + "\n".join(lines),
-                ephemeral=True,
-            )
-            return
-
-        result = await run_one_heartbeat(team, agent.value)
-        await interaction.followup.send(
-            f"`{agent.value}`: {render_result(result)}",
-            ephemeral=True,
-        )
-
-    @workshop.command(
-        name="next-issue",
-        description="Set the in-flight issue window (number, Saturday pub date, day count).",
+    @job.command(
+        name="start-issue",
+        description="Start a new in-flight issue (number, Saturday pub date, day count).",
     )
     @app_commands.describe(
         number="Issue number being assembled (e.g. 348)",
         pub_date="Publishing Saturday (YYYY-MM-DD)",
         day_count="Days to include before the cutoff — usually 7, sometimes 14",
     )
-    async def next_issue_cmd(  # type: ignore[misc]
+    async def start_issue_cmd(  # type: ignore[misc]
         interaction: discord.Interaction,
         number: int,
         pub_date: str,
@@ -162,7 +87,7 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
                 set_by=str(interaction.user),
             )
         except Exception as exc:  # noqa: BLE001
-            logger.exception("/workshop next-issue: db write failed")
+            logger.exception("/workshop job start-issue: db write failed")
             await interaction.followup.send(
                 f"❌ Couldn't save window: `{type(exc).__name__}: {exc}`",
                 ephemeral=True,
@@ -171,7 +96,7 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
 
         days_word = "day" if window["day_count"] == 1 else "days"
         await interaction.followup.send(
-            f"✅ Issue **#{number}** set as active.\n"
+            f"✅ Issue **#{number}** set as the in-flight issue.\n"
             f"- Publish: **{window['pub_date']}** (Sat)\n"
             f"- Content cutoff (end_date): **{window['end_date']}**\n"
             f"- Window start (prior cutoff): **{window['start_date']}**\n"

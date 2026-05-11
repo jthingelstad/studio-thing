@@ -16,7 +16,7 @@
 | **Patty** (she/her) | Supporter steward — writes the per-issue `member.json` (signed by Thingy in print) | Sonnet 4.6 | `#supporters` |
 | **Thingy** (bridge) | Public archive Q&A — forwards to the Librarian Lambda | n/a (LLM lives in the Lambda) | `#ask-thingy` |
 
-The four agent personas share **almost** the full tool surface — every tool is available to every persona, with one privacy-scoped exception: `stripe.*` is restricted to Patty (donor data should never enter the other personas' surfaces). Lane discipline otherwise lives in the persona prompts, not in a per-persona allowlist. Tools follow `<system>.<action>` dotted naming (`archive__search`, `memory__remember`, `buttondown__list_subscribers`, `inbox__post`). External-system tool surfaces live under `apps/workshop_bot/systems/<name>/`; local helpers live under `apps/workshop_bot/tools/`. Both are composed into the same `ToolRegistry` at boot. A system can declare `restricted_to = {"<persona>", ...}` to scope visibility — `ToolRegistry.names_for(persona)` filters and `dispatch()` enforces (defense in depth, even if a model invents a name for a restricted tool).
+The four agent personas share **almost** the full tool surface — every tool is available to every persona, with two privacy-scoped exceptions: `stripe__*` is restricted to Patty (donor data should never enter the other personas' surfaces) and `pinboard__*` to Linky (mutating bookmark tools). Lane discipline otherwise lives in the persona prompts, not in a per-persona allowlist. Tools follow `<system>__<action>` naming (`archive__search`, `memory__remember`, `buttondown__list_subscribers`, `workspace__read`). External-system tool surfaces live under `apps/workshop_bot/systems/<name>/`; local helpers live under `apps/workshop_bot/tools/`. Both are composed into the same `ToolRegistry` at boot. A system can declare `restricted_to = {"<persona>", ...}` to scope visibility — `ToolRegistry.names_for(persona)` filters and `dispatch()` enforces (defense in depth, even if a model invents a name for a restricted tool).
 
 Thingy is intentionally isolated — same process, but doesn't run the local agent loop and doesn't peer-react.
 
@@ -44,11 +44,11 @@ Thingy listens only in `#ask-thingy` and answers direct in-channel questions. It
 
 ---
 
-## Memory + inbox
+## Memory
 
 Each agent has long-term memory via `memory__remember` / `memory__recall` / `memory__forget` tools backed by an `agent_notes` SQLite table. Notes are shared across personas and attributed by author. Use cases: tonal preferences Jamie expressed, themes building across weeks, todos for future runs, observations worth carrying forward.
 
-For typed agent-to-agent handoffs that complement free-form `#workshop` chatter, the `inbox.*` tools (`post`, `list`, `read`, `mark_read`) are backed by a separate `agent_inbox` table. Each persona's heartbeat opens with `inbox__list(filter='unread')` so handoffs are the first thing the agent reads on each wake-up. Recipients can be a persona name (`eddy`, `linky`, `marky`, `patty`) or `team` for shared handoffs.
+(The earlier `agent_inbox` typed-handoff surface was decommissioned in the content-loop redesign — the new architecture is closed-loop with no agent-to-agent messaging; Jamie is the integrator.)
 
 Thingy users (web and Discord) also have per-user memory in the Lambda's DynamoDB table. The Lambda Bedrock-summarizes each session when the token rotates and surfaces prior-session summaries in the `/auth` response so the bridge can offer "welcome back" UX. See [`docs/librarian.md`](../../docs/librarian.md) for the Thingy-side specifics.
 
@@ -73,7 +73,7 @@ CLI: `python -m apps.workshop_bot.scheduler.runner --list` to inspect. Disable t
 
 ## The in-flight issue
 
-The published archive (corpus) holds issues already shipped — `#1` through `#N`. The issue Jamie is *currently writing* is `#N+1` and lives in the S3 workspace at `s3://files.thingelstad.com/weekly-thing/{N+1}/` — **not in the archive corpus.** This S3 prefix is shared with the published archive (every shipped issue's folder lives at `weekly-thing/{N}/` too — that's where Shortcuts puts cover images, journal photos, etc.); the in-flight issue is just the highest-numbered folder. Jamie sets the active issue window via the `/workshop next-issue <number> <pub-date> <day-count>` slash command (host: Eddy). Every persona reads it via `issue__current_window`, which returns `{issue_number, pub_date, end_date, start_date, day_count}`; past windows are queryable via `issue__list_windows`. Date semantics: `pub_date` is the publishing Saturday; `end_date = pub_date - 1 day` is the content cutoff; `start_date = end_date - day_count days` is the previous issue's cutoff (so a normal `day_count=7` window covers the seven days strictly after `start_date` through `end_date`).
+The published archive (corpus) holds issues already shipped — `#1` through `#N`. The issue Jamie is *currently writing* is `#N+1` and lives in the S3 workspace at `s3://files.thingelstad.com/weekly-thing/{N+1}/` — **not in the archive corpus.** This S3 prefix is shared with the published archive (every shipped issue's folder lives at `weekly-thing/{N}/` too — that's where Shortcuts puts cover images, journal photos, etc.); the in-flight issue is just the highest-numbered folder. Jamie sets the active issue window via the `/workshop job start-issue <number> <pub-date> <day-count>` slash command (host: Eddy). Every persona reads it via `issue__current_window`, which returns `{issue_number, pub_date, end_date, start_date, day_count}`; past windows are queryable via `issue__list_windows`. Date semantics: `pub_date` is the publishing Saturday; `end_date = pub_date - 1 day` is the content cutoff; `start_date = end_date - day_count days` is the previous issue's cutoff (so a normal `day_count=7` window covers the seven days strictly after `start_date` through `end_date`).
 
 S3 workspace conventions:
 
@@ -151,11 +151,9 @@ apps/workshop_bot/
 │   ├── conversation.py       # Discord history → Anthropic messages
 │   ├── discord_io.py         # chunked send, attachment read
 │   ├── db.py                 # SQLite helpers + idempotent column migrations
-│   ├── inbox.py              # agent_inbox table + four inbox.* tool handlers
-│   ├── issue.py              # issue.current_number resolver
+│   ├── issue.py              # issue-window compute + tool handlers
 │   ├── support_state.py      # current nonprofit state for Patty
-│   ├── persona_s3.py         # per-persona scratchpad S3 helper
-│   ├── s3.py                 # per-issue S3 workspace
+│   ├── s3.py                 # per-issue S3 workspace — backs workspace__*
 │   ├── web.py                # web__fetch_url
 │   ├── startup.py            # boot self-check + announce
 │   ├── thingy_client.py      # Lambda bridge HTTP/SSE client
@@ -199,7 +197,7 @@ Tables in `db/schema.sql`. New columns added later go through idempotent `ALTER 
 | `agent_outputs` | Per-turn agent reply records | active |
 | `agent_runs` | Per-run status + duration log | active |
 | `agent_notes` | Long-term memory (kind, key, content, agent author) | active |
-| `agent_inbox` | Structured agent-to-agent handoffs (recipient, sender, kind, body) | active |
+| `issue_windows` | Operator-set in-flight issue windows (one active row) | active |
 | `link_candidates` | Pinboard bookmarks Linky has seen | active |
 | `pinboard_popular_seen` | URLs Linky has surfaced from the popular feed | active |
 | `pinboard_research_done` | URLs Linky has researched from the to-read pile | active |
@@ -209,6 +207,8 @@ Tables in `db/schema.sql`. New columns added later go through idempotent `ALTER 
 | `analytics` | Reserved for Marky's metric history | unused |
 | `supporter_events` | Reserved (older shape; superseded by `subscriber_events_seen`) | unused |
 | `channel_routes` | Reserved (channels are env-var-resolved today) | unused |
+
+(`agent_inbox` was dropped in the content-loop redesign — `db/schema.sql` carries a `DROP TABLE IF EXISTS` so long-lived DBs converge with fresh installs.)
 
 ---
 
@@ -240,9 +240,8 @@ A persona with a missing token is skipped at startup; the rest still run.
 - `WORKSHOP_LOG_LEVEL` (default `INFO`)
 - `WORKSHOP_DEFAULT_MODEL` (default `haiku`; per-persona overrides take precedence)
 - `WORKSHOP_SCHEDULER_ENABLED` (`0` to disable all scheduled jobs)
-- `WORKSHOP_HEARTBEATS_ENABLED` (default `1`; set to `0` to silence heartbeats — equivalent to disabling the only scheduled surface today)
+- `WORKSHOP_HEARTBEATS_ENABLED` (default `1`; set to `0` to silence heartbeats)
 - `WORKSHOP_HEARTBEAT_MODEL` (default `haiku`)
-- `WORKSHOP_BUCKET` (per-persona scratchpad bucket; default `weekly-thing-workshop`)
 
 ---
 

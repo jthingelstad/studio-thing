@@ -81,17 +81,26 @@ class ToolRegistryCompositionTests(unittest.TestCase):
             "memory__remember",
             "issue__current_window",
             "issue__list_windows",
-            "s3_issues__list",
-            "s3_personas__read_file",
+            "workspace__list_files",
+            "workspace__read",
+            "workspace__write",
             "site__support_state",
             "web__fetch_url",
         ):
             self.assertIn(tool, names)
 
-    def test_registry_includes_inbox_tools(self):
+    def test_decommissioned_tool_surfaces_are_gone(self):
         names = set(self.registry.all_names())
-        for tool in ("inbox__post", "inbox__list", "inbox__read", "inbox__mark_read"):
-            self.assertIn(tool, names)
+        # The inbox tools (typed inter-agent handoffs) and the per-persona
+        # S3 scratchpad tools were removed in the content-loop redesign;
+        # ``s3_issues__*`` was renamed to ``workspace__*``.
+        for gone in (
+            "inbox__post", "inbox__list", "inbox__read", "inbox__mark_read",
+            "s3_personas__list", "s3_personas__read_file", "s3_personas__write_file",
+            "s3_issues__list", "s3_issues__list_workspaces",
+            "s3_issues__read_file", "s3_issues__write_file",
+        ):
+            self.assertNotIn(gone, names, msg=f"decommissioned tool {gone!r} should be gone")
 
     def test_legacy_flat_names_are_gone(self):
         names = set(self.registry.all_names())

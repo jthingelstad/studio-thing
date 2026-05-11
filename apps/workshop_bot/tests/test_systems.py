@@ -727,8 +727,10 @@ class StripeServerTests(unittest.TestCase):
         self.assertEqual(out["count"], 2)
         self.assertEqual(out["total_usd"], 15.0)
         self.assertEqual(out["average_usd"], 7.50)
-        # Reads from support.json; current nonprofit short_name is "EFF".
-        self.assertEqual(out["current_nonprofit"], "EFF")
+        # Reads from support.json's `current.short_name` — assert it's
+        # non-empty rather than pinning a specific org so the test doesn't
+        # rot when the annual nonprofit changes.
+        self.assertTrue(out["current_nonprofit"])
 
 
 class RegistryIntegrationTests(unittest.TestCase):

@@ -6,7 +6,7 @@ The intent of this README is to be a primer — a future reviewer (human or anot
 
 ## Naming convention
 
-Every tool the model sees uses a **dotted** `<system>.<action>` name — `archive__search`, `memory__remember`, `s3_issues__write_file`, `buttondown__list_subscribers`, `inbox__post`. There are no flat names; the migration window where both flat and dotted forms coexisted ended in phase 5 of the redesign.
+Every tool the model sees uses a `<system>__<action>` name — `archive__search`, `memory__remember`, `workspace__write`, `buttondown__list_subscribers`. There are no flat names; the migration window where both flat and dotted forms coexisted ended in phase 5 of the original redesign.
 
 ## Registration pattern
 
@@ -14,7 +14,7 @@ Each tool is a Python function plus an Anthropic JSON-schema spec. The agent loo
 
 Two paths into the registry, both composed at boot in `bot.py`:
 
-- `register_local_helpers(registry)` — registers every entry in `agent_tools.FUNCS` / `SPECS` (the local-helper tools defined in this directory), plus the inbox tools from `tools/inbox.py`.
+- `register_local_helpers(registry)` — registers every entry in `agent_tools.FUNCS` / `SPECS` (the local-helper tools defined in this directory).
 - `registry.register_system(server)` — registers every tool exposed by a `SystemServer` under its `<server.name>__<tool.name>` prefix (e.g. `ButtondownServer.list_tools()` → `buttondown__<action>`).
 
 The registry rejects duplicate names at registration time. Each `Tool` carries a `source` tag (`"local"` or `"system:<name>"`) so the boot path can audit composition and tests can assert provenance.
@@ -31,7 +31,7 @@ Tools that don't need any of these ignore the parameter — Python's `(deps, **k
 
 ### `active_persona` — the ContextVar
 
-`agent_tools.active_persona` is a `ContextVar[str]` set by the loop before each tool call to the calling persona's name (`"eddy"`, `"marky"`, etc.). Memory tools (`memory__remember`, `memory__recall`, `memory__forget`), inbox tools (`inbox__post` derives sender; `inbox__list` defaults recipient to the caller), and persona-scratchpad tools (`s3_personas.*`) all read this so per-persona state is correctly attributed without threading the persona name through every call.
+`agent_tools.active_persona` is a `ContextVar[str]` set by the loop before each tool call to the calling persona's name (`"eddy"`, `"marky"`, etc.). The memory tools (`memory__remember`, `memory__recall`, `memory__forget`) read this so per-persona state is correctly attributed without threading the persona name through every call.
 
 The default `"unknown"` should never appear in production; if it does, the loop is calling a tool outside its `_execute_tool` wrapper.
 
@@ -62,21 +62,15 @@ These are the tools registered by `register_local_helpers`. Every persona sees a
 | `memory__remember(content, kind, key?, related_issue?, expires_in_days?)` | Write a per-persona note to SQLite. `kind` ∈ `preference, observation, todo, context, theme`. |
 | `memory__recall(query?, kind?, agent_name?, limit?)` | Read notes. Default: own active notes. `agent_name="*"` reads all personas; pass a name to read theirs. |
 | `memory__forget(note_id, status)` | Mark a note `resolved` (todo done) or `stale` (no longer applies). Notes are never hard-deleted. |
-| `issue__current_window()` | Return the active in-flight issue window — `{issue_number, pub_date, end_date, start_date, day_count}`. Operator-set via `/workshop next-issue`. Returns `{error: ...}` when unset. |
+| `issue__current_window()` | Return the active in-flight issue window — `{issue_number, pub_date, end_date, start_date, day_count}`. Operator-set via `/workshop job start-issue`. Returns `{error: ...}` when unset. |
 | `issue__list_windows(limit?)` | Recent issue windows, newest first, with `is_active` flag. Use to answer "when did issue #N ship?". |
-| `s3_issues__list_workspaces()` | List every per-issue workspace folder. Use for per-folder modification times; for the active issue's number/dates, prefer `issue__current_window`. |
-| `s3_issues__list(issue_number)` | List the files under one workspace folder. |
-| `s3_issues__read_file(issue_number, filename)` | Read a text file from `s3://files.thingelstad.com/weekly-thing/{N}/{filename}`. |
-| `s3_issues__write_file(issue_number, filename, content)` | Write a text file to that path. Locked: bare filename only, whitelisted extensions, 256 KB max. |
-| `s3_personas__list(prefix?)` | List files in this persona's private S3 scratchpad on `weekly-thing-workshop`. Optional sub-prefix scopes the listing. |
-| `s3_personas__read_file(path)` | Read one file from the persona's scratchpad. `path` is relative to the persona root and may contain subdirectories. |
-| `s3_personas__write_file(path, content)` | Write a file under the persona's scratchpad. 256 KB max. Path-locked: persona name comes from the `active_persona` ContextVar — one persona cannot write into another's namespace. |
-| `inbox__post(recipient, kind, subject, body, related_issue?, metadata?)` | Send a structured message to another persona or `team`. Kind ∈ `handoff, request, fyi, completed`. |
-| `inbox__list(filter?, limit?, recipient?)` | List your inbox. Default returns unread items addressed to you. `filter` accepts `unread`, `all`, `kind=...`, `related_issue=N`. |
-| `inbox__read(id)` | Read one inbox item. Does NOT mark read. |
-| `inbox__mark_read(id, status?)` | Mark an item read. `status` ∈ `read, acted, dismissed`. |
+| `workspace__list_all()` | List every per-issue workspace folder. Use for per-folder modification times; for the active issue's number/dates, prefer `issue__current_window`. |
+| `workspace__list_files(issue_number)` | List the files under one workspace folder. |
+| `workspace__read(issue_number, filename)` | Read a text file from `s3://files.thingelstad.com/weekly-thing/{N}/{filename}`. |
+| `workspace__write(issue_number, filename, content)` | Write a text file to that path. Locked: bare filename only, text-only extension allowlist, 256 KB max. |
 | `web__fetch_url(url, max_chars?)` | Fetch a URL and return readable text. ~12 KB cap by default. |
 | `site__support_state()` | Current nonprofit + supporter count + past nonprofits, read from `apps/site/_data/{stats,support}.json` (no live API). |
+| `react__add(emoji)` | Add one emoji reaction to the message being responded to (posts under the persona's avatar). No-op outside a Discord message turn. |
 
 ## Tool inventory — system modules
 
@@ -85,17 +79,16 @@ Composed at boot in `bot.py` via `registry.register_system(...)`. Source code li
 | Namespace | Purpose | Auth |
 |---|---|---|
 | `buttondown__*` | Subscriber + email engagement (counts, list_subscribers, recent_unsubscribes, subscriber_sources, subscriber_growth, list_recent_emails, email_engagement). Email addresses hashed inside the module. | `BUTTONDOWN_API_KEY` |
-| `pinboard__*` (Linky-only) | Bookmark surfaces (recent, unread, popular, stored_recent, tag_summary, lookup_url, save, …). Restricted to Linky — handoff via `inbox__post` if another persona needs a bookmark saved. | `PINBOARD_API_TOKEN` |
+| `pinboard__*` (Linky-only) | Bookmark surfaces (recent, unread, popular, stored_recent, tag_summary, lookup_url, save, …). Restricted to Linky. | `PINBOARD_API_TOKEN` |
 | `stripe__*` (Patty-only) | Read-only donation surface (balance, recent_donations, donations_by_month, donations_by_ref, year_to_date). Donor name + email hashed inside the module. Restricted to Patty — donor data never enters the other personas' transcripts. | `STRIPE_API_KEY` |
 | `tinylytics__*` | Site engagement (summary, top_pages, referrers, sources, leaderboard, journeys, kudos, insights, uptime, attribution). | `TINYLYTICS_API_KEY`, `TINYLYTICS_SITE_UID` |
 
 ## Path-locking convention (S3 tools)
 
-The `s3_issues__*` and `s3_personas__*` tools are write-locked via `_resolve_key` in `s3.py` / `persona_s3.py`:
+The `workspace__*` tools are write-locked via `_resolve_key` in `s3.py`:
 
-- For `s3_issues`, the path is always `weekly-thing/{int issue_number}/{filename}` — no other prefix is reachable. The published archive shares this prefix; the extension allowlist (text-only) is what keeps agents from clobbering shipped image assets.
-- For `s3_personas`, the path is always `personas/{active_persona}/{path}` on the workshop bucket.
-- `filename` / `path` components must match `^[A-Za-z0-9][A-Za-z0-9._-]{0,80}$` — no slashes, no `..`.
+- The path is always `weekly-thing/{int issue_number}/{filename}` — no other prefix is reachable. The published archive shares this prefix; the extension allowlist (text-only) is what keeps agents from clobbering shipped image/audio assets.
+- `filename` must match `^[A-Za-z0-9][A-Za-z0-9._-]{0,80}$` — no slashes, no `..`.
 - Extension must be in `ALLOWED_EXTENSIONS` (`.md`, `.markdown`, `.txt`, `.json`, `.yaml`, `.yml`, `.csv`, `.html`).
 - 512 KB read cap, 256 KB write cap.
 
@@ -121,12 +114,10 @@ tools/
 ├── archive.py             ← read archive issues from disk
 ├── conversation.py        ← Discord history → agent-loop history conversion
 ├── corpus.py              ← Archive corpus handle (loaded once at boot)
-├── db.py                  ← SQLite — agent_notes, agent_inbox, agent_runs, link_candidates, …
+├── db.py                  ← SQLite — agent_notes, agent_runs, link_candidates, issue_windows, …
 ├── discord_io.py          ← Chunking + posting helpers for Discord 2000-char limit
-├── inbox.py               ← agent_inbox SQL helpers + four inbox.* tool handlers
-├── issue.py               ← issue.current_number resolver
-├── persona_s3.py          ← Per-persona scratchpad S3 helper (path-locked)
-├── s3.py                  ← Per-issue workspace S3 helper (path-locked)
+├── issue.py               ← issue-window compute + tool handlers
+├── s3.py                  ← Per-issue workspace S3 helper (path-locked) — backs workspace__*
 ├── startup.py             ← Boot-time announce/coordinate across personas
 ├── support_state.py       ← Reads apps/site/_data/{stats,support}.json
 ├── thingy_client.py       ← Thingy bridge HTTP client (Lambda /chat)

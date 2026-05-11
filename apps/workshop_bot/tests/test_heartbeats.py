@@ -166,8 +166,8 @@ class HeartbeatDispatchTests(unittest.TestCase):
 
 
 class HeartbeatPromptFilesTests(unittest.TestCase):
-    """Smoke check that each persona has a heartbeat.md on disk and its
-    contents look like a heartbeat prompt (mention `inbox` + `PASS`)."""
+    """Smoke check that each persona has a heartbeat.md on disk and it
+    carries the PASS default convention."""
 
     def test_each_persona_has_heartbeat_md(self):
         prompts = REPO / "apps" / "workshop_bot" / "prompts"
@@ -176,7 +176,6 @@ class HeartbeatPromptFilesTests(unittest.TestCase):
                 path = prompts / persona / "heartbeat.md"
                 self.assertTrue(path.exists(), f"missing {path}")
                 body = path.read_text(encoding="utf-8")
-                self.assertIn("inbox", body.lower())
                 self.assertIn("PASS", body)
 
 

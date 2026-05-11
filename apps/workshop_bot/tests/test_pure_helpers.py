@@ -269,9 +269,9 @@ class ExecuteToolRestrictedTests(unittest.TestCase):
 
 
 class ComputeIssueWindowTests(unittest.TestCase):
-    """``/workshop next-issue`` validates inputs through ``compute_window``.
+    """``/workshop job start-issue`` validates inputs through ``compute_window``.
     These rules are load-bearing — once a window is committed the
-    scheduler reads it, so bad data poisons the rituals."""
+    scheduler and the jobs read it, so bad data poisons the issue."""
 
     def test_happy_path_seven_days(self):
         # 2026-05-09 is a Saturday.

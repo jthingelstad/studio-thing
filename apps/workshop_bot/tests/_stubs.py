@@ -82,11 +82,20 @@ def _install_discord() -> None:
             return cls
 
     class _Group:
-        def __init__(self, *, name=None, description=None, default_permissions=None):
+        def __init__(
+            self, *, name=None, description=None, default_permissions=None, parent=None
+        ):
             self.name = name
             self.description = description
             self.default_permissions = default_permissions
+            self.parent = parent
+            # ``commands`` holds both leaf commands (functions) and
+            # nested subgroups (other ``_Group`` instances), mirroring
+            # discord.py's ``Group.commands``.
             self.commands: list = []
+            self._cmd_name = name  # so a subgroup looks like a "command" to a parent
+            if parent is not None:
+                parent.commands.append(self)
 
         def command(self, *, name=None, description=None):
             def deco(fn):
