@@ -81,6 +81,18 @@ Jamie supplied a refined, standalone subject-line prompt (worked out with Claude
 - `pipeline/content/process_emails.py:extract_subject_number` now also matches the `WT<n>` short form (it only knew `Weekly Thing <n>` / `Special Thing <n>`), so the new subject format round-trips into the archive's issue-number assignment. Backward-compatible — old subjects still match.
 - New helper `compose_meta._parse_numbered_list` (tolerates a stray preamble / code fences / bold-or-quote wrappers around the items). Tests: `ComposeMetaTests` rewritten (two-step flow, `WT<N> —` subjects, the no-description-pick and no-subject-pick paths, the parser); `CLAUDE.md` / `README.md` / the slash-command help string updated. **350 tests pass.** Bot restarted.
 
+### Match draft template + section generators to the iOS-Shortcut markdown (2026-05-11, cont'd)
+
+Reviewed the Shortcut-produced raw bodies (`data/buttondown/bodies/343–346.md`) and reworked the template + generators so `draft.md` / `publish.md` look like a real issue:
+
+- **Template (`draft_starter.md`)** — blocks are now `---`-fenced; the order is intro → **cover** (new block) → Currently → Notable → Journal → Briefly → `A haiku to leave you with…` (no more `## Haiku`) → the static closing line (`Check out the [Weekly Thing on Reddit]… 👋` + `👨‍💻`). New `cover` block ↔ new `cover.md` asset (Jamie writes the caption + `Month D, YYYY  \nLocation`; `update-draft` prepends the derived `![](.../cover.jpg)`). `update-draft` now rebuilds `draft.md` from the template **every run** (it was preserving the on-disk structure).
+- **Notable** — `_render_notable(items, n)` leads with `_You can discuss any of these links at the [Weekly Thing {N} tag in r/WeeklyThing](…flair_name%3A%22Weekly%20Thing%20{N}%22)._`, then `### [Title](url)\n\n{commentary}` items **two blank lines apart**.
+- **Briefly** — `_render_brief` now emits `{commentary} → **[Title](url)**` (commentary first, then the `→` arrow, then the bolded link — *not* the old `**[Title](url)** — {desc}`), one blank line apart.
+- **Journal** — `_render_journal` emits a status update as `[Mon D, YYYY at H:MM AM/PM](url)\n\n{content}` and an *elevated* (titled) post as `### [Title](url)  \n{date}\n\n{content}` (H3 link + hard break, date plain on the next line), entries two blank lines apart. Photos stay inside `content_md` (rehosted), each on its own paragraph.
+- **Haiku** — new `_base.format_haiku` renders `**line one  \nline two  \nline three**` (bold + markdown hard breaks); applied in both `update-draft` (filling the block) and `build-publish` (the close). Idempotent.
+- **`build-publish`** — joins top-level parts `---`-fenced (intro, the cover block from `cover.md` + image, the non-empty `## …` sections, CTAs at placements, then `A haiku to leave you with…` + the haiku + the closing line). `## Haiku` → the prose close.
+- `draft.py:SECTION_BLOCKS` / `update_draft.py:SECTION_BLOCKS` / `_ASSET_FILE` gained `cover`. Tests: rewrote the affected `BuildPublish`/`UpdateDraft` assertions, added `SectionRendererTests` (the loops + `format_haiku`) and a template-shape check; `_filled_final` fixture's Briefly default updated to the new form. Docs (`CLAUDE.md` "Issue-markdown shape", `README.md`) updated. **354 tests pass.** Bot restarted. (Not represented in the draft: the membership CTA — composed separately, assembled into `publish.md` — and the email tracking pixel, a Buttondown artifact.)
+
 ## Blockers
 (none — S3 versioning on `files.thingelstad.com` confirmed `Enabled`; the Step-4 pre-flight is satisfied)
 

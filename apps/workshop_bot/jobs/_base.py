@@ -205,3 +205,23 @@ def replace_block(text: str, name: str, content: str) -> str:
 
 def starter_template() -> str:
     return (TEMPLATES_DIR / "draft_starter.md").read_text(encoding="utf-8")
+
+
+# ---------- content-formatting helpers ----------
+
+def format_haiku(text: str) -> str:
+    """Render a haiku the way the published issue does:
+    ``**line one  \\nline two  \\nline three**`` — bold-wrapped, with a
+    markdown hard break (two trailing spaces) between lines. Idempotent:
+    peels an existing ``** … **`` wrapper and trailing hard-break spaces
+    first, so re-running it doesn't double up. Returns ``""`` for empty
+    input."""
+    raw = (text or "").strip()
+    if not raw:
+        return ""
+    if len(raw) > 4 and raw.startswith("**") and raw.endswith("**"):
+        raw = raw[2:-2].strip()
+    lines = [ln.strip() for ln in raw.splitlines() if ln.strip()]
+    if not lines:
+        return ""
+    return "**" + "  \n".join(lines) + "**"

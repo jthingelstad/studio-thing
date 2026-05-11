@@ -81,21 +81,24 @@ S3 workspace conventions — every piece of issue content is a standalone file (
 
 ```
 weekly-thing/{N}/
-├── intro.md            ← Jamie writes (Drafts → Shortcut)            [required]
-├── currently.md        ← Jamie writes (Drafts → Shortcut)            [optional]
-├── haiku.md            ← compose-haiku writes                        [required]
-├── metadata.json       ← compose-meta writes (subject + description) [required]
-├── cta-1.md / cta-2.md ← compose-cta writes (placement: frontmatter) [optional, 0–2]
-├── draft.md            ← update-draft writes (regenerable projection of all the above + upstream)
-├── final.md            ← create-final writes (post-Eddy ordering)    [required]
-├── publish.md          ← build-publish writes (sections assembled, empties dropped; the ship artifact)
+├── intro.md            ← opener prose — Jamie writes (Drafts → Shortcut)  [required]
+├── cover.md            ← cover photo caption + "Month D, YYYY  \nLocation" — Jamie writes  [optional]
+├── currently.md        ← the optional "Currently" section — Jamie writes  [optional]
+├── haiku.md            ← compose-haiku writes (bold/hard-break rendered at draft/publish time)  [required]
+├── metadata.json       ← compose-meta writes (subject + description)       [required]
+├── cta-1.md / cta-2.md ← compose-cta writes (placement: frontmatter)       [optional, 0–2]
+├── draft.md            ← update-draft writes — rebuilt from templates/draft_starter.md each run; shaped like a delivered issue
+├── final.md            ← create-final writes (post-Eddy ordering)          [required]
+├── publish.md          ← build-publish writes (---fenced parts: intro, cover, the non-empty ## sections, CTAs, haiku close; the ship artifact)
 ├── draft.html / final.html / publish.html ← browser-viewable HTML twins (tools.render; no-cache + CDN-invalidated)
-├── cover.jpg           ← issue cover image (iOS Shortcuts)            [required]
+├── cover.jpg           ← issue cover image (iOS Shortcuts)                  [required]
 ├── cover-large.jpg     ← full-size cover (iOS Shortcuts)
 ├── journal/<hash>.jpg  ← per-entry photos — iOS Shortcuts AND update-draft's journal-image rehost
 ├── body-{N}.mp3 / weekly-thing-{N}.mp3 ← audio, written by `pipeline/audio/`
 └── eddy-edits.md       ← (rare — when Eddy posts a substantial revision worth preserving)
 ```
+
+The exact markdown shape (the `---`-fenced blocks, the Notable "discuss on Reddit" line, `### [Title](url)` headings, the `→ **[Title](url)**` Briefly form, elevated Journal posts, the `A haiku to leave you with…` close) mirrors the iOS-Shortcut bodies in `data/buttondown/bodies/` — see [`CLAUDE.md`](CLAUDE.md) ("Issue-markdown shape") for the per-loop formatting rules.
 
 The S3 helper at `tools/s3.py` enforces a strict allow-list: only md/markdown/txt/json/yaml/yml/csv/html files; bare-component filenames (no slashes, no `..`); 256 KB cap per file. The text-only extension allowlist is what keeps agent writes from clobbering published archive assets (cover.jpg, journal photos) that share the prefix. Any path outside `weekly-thing/{N}/` is rejected before the request reaches AWS.
 

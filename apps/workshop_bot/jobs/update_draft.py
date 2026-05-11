@@ -2,12 +2,16 @@
 
 A *pure projection*: re-run it and you get the same output (modulo
 upstream changes). The draft is rebuilt from ``templates/draft_starter.md``
-every run — so the section order always tracks the template — and each
-block is filled wholesale from its source. No additive merge; nothing
+every run — so the layout / section order always tracks the template — and
+each block is filled wholesale from its source. No additive merge; nothing
 on the existing ``draft.md`` is preserved. Real authoring lives upstream
-(Pinboard for links, micro.blog for the journal, Drafts → Shortcut for
-``intro.md`` / ``currently.md``); the haiku is a composed asset
-(``compose-haiku``).
+(Pinboard for the Notable / Briefly links, micro.blog for the Journal,
+Drafts → Shortcut for ``intro.md`` / ``cover.md`` / ``currently.md``); the
+haiku is a composed asset (``compose-haiku``). The shape mirrors a
+delivered issue: ``---``-fenced blocks, the Notable "discuss on Reddit"
+line, ``### [Title](url)`` link headings, the ``→ **[Title](url)**``
+Briefly form, elevated (titled) Journal posts, the ``A haiku to leave you
+with…`` close.
 
 After the fills the job writes ``draft.md`` back, records a ``draft_digests``
 row (so Eddy's review can compute the delta), and — on Tue–Fri — runs
@@ -35,8 +39,10 @@ NAME = "update-draft"
 # Block fill order is irrelevant (each replace_block is independent); the
 # *layout* order lives in templates/draft_starter.md. Listed here in the
 # published section order for readability.
-SECTION_BLOCKS = ("intro", "currently", "notable", "journal", "brief", "haiku")
-_ASSET_FILE = {"intro": "intro.md", "currently": "currently.md", "haiku": "haiku.md"}
+SECTION_BLOCKS = ("intro", "cover", "currently", "notable", "journal", "brief", "haiku")
+# Blocks that are just a verbatim copy of an authored asset file.
+_ASSET_FILE = {"intro": "intro.md", "cover": "cover.md", "currently": "currently.md", "haiku": "haiku.md"}
+_COVER_IMAGE = "https://files.thingelstad.com/weekly-thing/{n}/cover.jpg"
 
 # Eddy posts a review only Tue–Fri (weekday 1..4, Mon=0). Sat/Sun/Mon the
 # job runs but Eddy stays silent — issues just shipped Saturday and the
@@ -53,31 +59,51 @@ def _read_asset(issue_number: int, filename: str) -> str:
     return ""
 
 
-def _render_notable(items: list[dict]) -> str:
-    out: list[str] = []
+# ---- Notable ----
+# H3-link headings, two blank lines apart, prefaced by the "discuss these
+# links on Reddit" line. That line carries the issue number, so it's
+# generated here rather than baked into the template.
+
+def _reddit_tag_line(issue_number: int) -> str:
+    return (
+        f"_You can discuss any of these links at the "
+        f"[Weekly Thing {issue_number} tag in r/WeeklyThing]"
+        f"(https://www.reddit.com/r/weeklything/?f=flair_name%3A%22Weekly%20Thing%20{issue_number}%22)._"
+    )
+
+
+def _render_notable(items: list[dict], issue_number: int) -> str:
+    blocks: list[str] = []
     for it in items:
         url = (it.get("url") or "").strip()
         title = (it.get("title") or url or "(untitled)").strip()
-        desc = (it.get("description") or "").strip()
+        commentary = (it.get("description") or "").strip()
         block = f"### [{title}]({url})"
-        if desc:
-            block += f"\n\n{desc}"
-        out.append(block)
-    return "\n\n".join(out)
+        if commentary:
+            block += f"\n\n{commentary}"
+        blocks.append(block)
+    if not blocks:
+        return ""
+    # Reddit line · one blank line · items two blank lines apart.
+    return _reddit_tag_line(issue_number) + "\n\n" + "\n\n\n".join(blocks)
 
+
+# ---- Briefly ----
+# Each item is "<commentary> → **[Title](url)**" — commentary first, then
+# the arrow, then the bolded link. One blank line between items; no headings.
 
 def _render_brief(items: list[dict]) -> str:
     out: list[str] = []
     for it in items:
         url = (it.get("url") or "").strip()
         title = (it.get("title") or url or "(untitled)").strip()
-        desc = (it.get("description") or "").strip()
-        line = f"**[{title}]({url})**"
-        if desc:
-            line += f" — {desc}"
-        out.append(line)
+        commentary = (it.get("description") or "").strip()
+        link = f"**[{title}]({url})**"
+        out.append(f"{commentary} → {link}" if commentary else link)
     return "\n\n".join(out)
 
+
+# ---- Journal ----
 
 def _journal_label(published_iso) -> str:
     try:
@@ -90,14 +116,25 @@ def _journal_label(published_iso) -> str:
 
 
 def _render_journal(posts: list[dict]) -> str:
+    """micro.blog posts in window, two blank lines apart. A status update
+    (no title) leads with the date as a link; a titled post is *elevated* —
+    an H3 link with a markdown hard break, the date plain on the next line.
+    Photos already live inside ``content_md`` (rehosted), each on its own
+    paragraph, so nothing extra is appended here."""
     out: list[str] = []
     for p in posts:
         url = (p.get("url") or "").strip()
+        title = (p.get("title") or "").strip()
         label = _journal_label(p.get("published"))
-        head = f"[{label}]({url})" if url else label
         body = (p.get("content_md") or "").strip()
+        if title and url:
+            head = f"### [{title}]({url})  \n{label}"
+        elif url:
+            head = f"[{label}]({url})"
+        else:
+            head = label
         out.append(f"{head}\n\n{body}" if body else head)
-    return "\n\n".join(out)
+    return "\n\n\n".join(out)
 
 
 def _gather_fills(window: dict) -> dict[str, str]:
@@ -106,10 +143,17 @@ def _gather_fills(window: dict) -> dict[str, str]:
     breaking the run."""
     n = int(window["issue_number"])
     fills: dict[str, str] = {block: _read_asset(n, _ASSET_FILE[block]) for block in _ASSET_FILE}
+    # The haiku ships bold-wrapped with hard breaks; normalize whatever the
+    # composed haiku.md holds.
+    fills["haiku"] = _base.format_haiku(fills.get("haiku", ""))
+    # The cover block leads with the issue's cover image (a derived URL),
+    # then whatever caption / location / date cover.md holds.
+    if fills.get("cover"):
+        fills["cover"] = f"![]({_COVER_IMAGE.format(n=n)})\n\n{fills['cover']}"
 
     try:
         cand = pinboard.issue_window_candidates(window["start_date"], window["end_date"])
-        fills["notable"] = _render_notable(cand.get("notable", []))
+        fills["notable"] = _render_notable(cand.get("notable", []), n)
         fills["brief"] = _render_brief(cand.get("brief", []))
     except Exception as exc:  # noqa: BLE001
         logger.warning("update-draft: Pinboard pull failed for #%d: %s", n, exc)

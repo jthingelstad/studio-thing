@@ -1,13 +1,13 @@
 """``build-publish`` — assemble ``publish.md`` from ``final.md`` + assets.
 
-The ship artifact. Walks the issue's sections in order and emits each as
-``## Header\n\n{content}`` — but **only when the content is non-empty**, so
-an absent ``currently.md`` (or any optional section) just drops out rather
-than leaving a bare heading (the "a section that didn't run is a clean
-NULL" pattern). The intro goes at the very top with no header; the haiku
-closes the issue; CTAs are inserted at their declared placements. The
-``<!-- block:… -->`` markers from ``draft.md`` / ``final.md`` never appear
-in ``publish.md``.
+The ship artifact, shaped like a real Weekly Thing issue. Top-level parts —
+the intro (which carries its own ``---`` and cover block), each non-empty
+section as ``## Header\n\n{content}`` (an absent ``currently.md`` or any
+empty section just drops out — "a section that didn't run is a clean
+NULL"), the CTAs at their placements, and ``A haiku to leave you with…`` +
+the bold/hard-break haiku + the closing "discuss on Reddit" line — are
+joined ``---``-fenced. The ``<!-- block:… -->`` markers from ``draft.md`` /
+``final.md`` never appear in ``publish.md``.
 
 Refuses (PASSes loudly) if any required asset is missing: ``final.md``,
 ``haiku.md``, ``metadata.json``, ``intro.md``, ``cover.jpg``. Posts the
@@ -53,6 +53,14 @@ _ORDER = ("currently", "notable", "journal", "brief")
 
 _PLACEMENTS = ("after_notable", "after_journal", "after_brief", "before_haiku")
 _DEFAULT_PLACEMENT = "after_notable"
+
+# The closing boilerplate every issue ends with, after the haiku (no `---`
+# between the haiku and this — they're one chunk).
+_CLOSING = (
+    "Would you like to discuss the topics in the Weekly Thing further? "
+    "Check out the [Weekly Thing on Reddit](https://www.reddit.com/r/weeklything/). 👋\n\n"
+    "👨‍💻"
+)
 
 
 def _read(issue_number: int, filename: str) -> str:
@@ -103,8 +111,8 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
 
             final_text = _read(n, "final.md")
             blocks = draft_mod.parse_blocks(final_text)
-            # intro / currently / haiku are file-backed; their blocks in
-            # final.md are empty (they get filled here).
+            # intro / cover / currently / haiku are file-backed; their
+            # blocks in final.md are empty (they get filled here).
             section_content = {
                 "notable": (blocks.get("notable") or "").strip(),
                 "brief": (blocks.get("brief") or "").strip(),
@@ -112,6 +120,11 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 "currently": _read(n, "currently.md").strip(),
             }
             intro_text = _read(n, "intro.md").strip()
+            cover_text = _read(n, "cover.md").strip()
+            cover_block = (
+                f"![](https://files.thingelstad.com/weekly-thing/{n}/cover.jpg)\n\n{cover_text}"
+                if cover_text else ""
+            )
             haiku_text = _read(n, "haiku.md").strip()
 
             # CTAs by placement (cta-1.md / cta-2.md, ordered).
@@ -129,6 +142,8 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             parts: list[str] = []
             if intro_text:
                 parts.append(intro_text)
+            if cover_block:
+                parts.append(cover_block)
             for name in _ORDER:
                 content = section_content.get(name, "")
                 if not content:
@@ -139,9 +154,14 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             for cta in cta_by_placement.get("before_haiku", []):
                 parts.append(cta)
             if haiku_text:
-                parts.append(f"## Haiku\n\n{haiku_text}")
+                parts.append(
+                    f"A haiku to leave you with…\n\n{_base.format_haiku(haiku_text)}\n\n{_CLOSING}"
+                )
+            else:
+                parts.append(_CLOSING)
 
-            published = "\n\n".join(p.strip() for p in parts if p.strip()).strip() + "\n"
+            # Each top-level part is `---`-fenced, the way a published issue is.
+            published = "\n\n---\n\n".join(p.strip() for p in parts if p.strip()).strip() + "\n"
             s3.write_issue_file(n, "publish.md", published)
             html_url = await asyncio.to_thread(
                 render.render_and_upload_html, n, "publish", published,

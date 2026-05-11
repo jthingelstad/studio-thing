@@ -124,14 +124,81 @@ class BlockHelperTests(unittest.TestCase):
         self.assertIn("## Journal", out)
 
     def test_starter_template_section_order(self):
-        # Matches recently-published issues: Currently → Notable → Journal → Briefly,
-        # with the intro at the very top (no heading) and the haiku closing.
+        # Matches recently-published issues: intro → cover → Currently →
+        # Notable → Journal → Briefly → the "A haiku to leave you with…" close.
         tpl = _base.starter_template()
-        order = [tpl.index(h) for h in ("## Currently", "## Notable", "## Journal", "## Briefly", "## Haiku")]
+        markers = (
+            "<!-- block:intro -->", "<!-- block:cover -->", "## Currently",
+            "## Notable", "## Journal", "## Briefly",
+            "A haiku to leave you with", "<!-- block:haiku -->",
+        )
+        order = [tpl.index(m) for m in markers]
         self.assertEqual(order, sorted(order), tpl)
-        # intro block precedes the first heading; haiku block follows the last.
-        self.assertLess(tpl.index("<!-- block:intro -->"), tpl.index("## Currently"))
-        self.assertGreater(tpl.index("<!-- block:haiku -->"), tpl.index("## Briefly"))
+        # `---` rules fence the blocks; the closing "discuss on Reddit" line is present.
+        self.assertIn("\n---\n", tpl)
+        self.assertIn("Check out the [Weekly Thing on Reddit]", tpl)
+
+
+# ---------- section renderers (the repeated list loops) ----------
+
+class SectionRendererTests(unittest.TestCase):
+    def test_render_notable_reddit_line_headings_and_spacing(self):
+        out = update_draft._render_notable(
+            [
+                {"title": "Thing One", "url": "https://a.example/1", "description": "Why it's good.\n\nMore."},
+                {"title": "Thing Two", "url": "https://b.example/2", "description": ""},
+            ],
+            347,
+        )
+        # Reddit line first, with the issue number in the link text and URL.
+        self.assertTrue(out.startswith("_You can discuss any of these links at the "
+                                       "[Weekly Thing 347 tag in r/WeeklyThing]"))
+        self.assertIn("flair_name%3A%22Weekly%20Thing%20347%22", out)
+        # H3-link headings; the bare one (no commentary) is just the heading.
+        self.assertIn("### [Thing One](https://a.example/1)\n\nWhy it's good.\n\nMore.", out)
+        self.assertIn("### [Thing Two](https://b.example/2)", out)
+        # Two blank lines between items.
+        self.assertIn("More.\n\n\n### [Thing Two]", out)
+        # No items → empty block (no orphan Reddit line).
+        self.assertEqual(update_draft._render_notable([], 347), "")
+
+    def test_render_brief_commentary_arrow_link(self):
+        out = update_draft._render_brief([
+            {"title": "Skeleton Key", "url": "https://x.example/sk", "description": "Cool app."},
+            {"title": "Bare One", "url": "https://x.example/b", "description": ""},
+        ])
+        self.assertIn("Cool app. → **[Skeleton Key](https://x.example/sk)**", out)
+        self.assertIn("**[Bare One](https://x.example/b)**", out)
+        # One blank line between items.
+        self.assertIn("**\n\n**[Bare One]", out)
+
+    def test_render_journal_standard_and_elevated(self):
+        out = update_draft._render_journal([
+            {"url": "https://www.thingelstad.com/2026/05/12/a.html",
+             "title": "", "published": "2026-05-12T15:02:00-05:00",
+             "content_md": "A status update.\n\n![](https://files.thingelstad.com/weekly-thing/9/journal/x.jpg)"},
+            {"url": "https://www.thingelstad.com/2026/05/13/software-is-liquid.html",
+             "title": "Software Is Liquid", "published": "2026-05-13T07:52:00-05:00",
+             "content_md": "A talk turned post."},
+        ])
+        # Standard entry: date as a link, then content (with the image in-content).
+        self.assertIn("[May 12, 2026 at 3:02 PM](https://www.thingelstad.com/2026/05/12/a.html)\n\n"
+                      "A status update.\n\n![](https://files.thingelstad.com/weekly-thing/9/journal/x.jpg)", out)
+        # Elevated (titled) entry: H3 link with a hard break, date plain on the next line.
+        self.assertIn("### [Software Is Liquid](https://www.thingelstad.com/2026/05/13/software-is-liquid.html)  \n"
+                      "May 13, 2026 at 7:52 AM\n\nA talk turned post.", out)
+        # Two blank lines between entries.
+        self.assertIn("/journal/x.jpg)\n\n\n### [Software Is Liquid]", out)
+
+    def test_format_haiku(self):
+        self.assertEqual(_base.format_haiku("line one\nline two\nline three"),
+                         "**line one  \nline two  \nline three**")
+        # Idempotent — peels an existing wrapper / re-runs cleanly.
+        self.assertEqual(_base.format_haiku("**line one  \nline two  \nline three**"),
+                         "**line one  \nline two  \nline three**")
+        self.assertEqual(_base.format_haiku("**a\nb**"), "**a  \nb**")
+        self.assertEqual(_base.format_haiku("   "), "")
+        self.assertEqual(_base.format_haiku(""), "")
 
 
 # ---------- locking ----------
@@ -399,7 +466,10 @@ class UpdateDraftRealFillsTests(_DBTestCase):
         d = self.ws.files[(458, "draft.md")]
         self.assertIn("### [Thing One](https://a.example/one)", d)
         self.assertIn("Why it matters.", d)
-        self.assertIn("**[Thing Three](https://c.example/three)** — A one-liner.", d)
+        # Notable carries the "discuss on Reddit" line with the issue number.
+        self.assertIn("[Weekly Thing 458 tag in r/WeeklyThing]", d)
+        # Briefly items are "<commentary> → **[Title](url)**".
+        self.assertIn("A one-liner. → **[Thing Three](https://c.example/three)**", d)
         self.assertIn("[May 12, 2026 at 3:02 PM](https://www.thingelstad.com/2026/05/12/post-a.html)", d)
         self.assertIn("First post in the window.", d)
         # A digest row was written.
@@ -874,7 +944,7 @@ from apps.workshop_bot.jobs import (  # noqa: E402
 from apps.workshop_bot.tools import interaction  # noqa: E402
 
 
-def _filled_final(*, notable="### [A](http://a)\n\nx", brief="**[B](http://b)** — y",
+def _filled_final(*, notable="### [A](http://a)\n\nx", brief="A blurb. → **[B](http://b)**",
                   journal="[May 12, 2026 at 3:02 PM](https://x.example/p)\n\nt") -> str:
     d = _base.starter_template()
     d = _base.replace_block(d, "notable", notable)
@@ -1008,6 +1078,7 @@ class BuildPublishTests(_DBTestCase):
         self._window()
         self.ws.write_issue_file(458, "final.md", _filled_final())
         self.ws.write_issue_file(458, "intro.md", "Welcome to the issue.")
+        self.ws.write_issue_file(458, "cover.md", "Docks on the lake.\n\nApril 26, 2026  \nExcelsior, MN")
         self.ws.write_issue_file(458, "haiku.md", "line one\nline two\nline three")
         self.ws.write_issue_file(458, "currently.md", "Reading: a book.")
         self.ws.write_issue_file(458, "metadata.json", '{"subject":"x"}')
@@ -1021,13 +1092,23 @@ class BuildPublishTests(_DBTestCase):
         self.assertIn("line two", pub)
         self.assertIn("Reading: a book.", pub)
         self.assertNotIn("<!-- block:", pub)            # markers stripped
+        # Cover block — image (derived URL) then the caption/date/location.
+        self.assertIn("![](https://files.thingelstad.com/weekly-thing/458/cover.jpg)", pub)
+        self.assertIn("Docks on the lake.", pub)
+        # `---`-fenced, the way a real issue is.
+        self.assertIn("\n\n---\n\n", pub)
         # Section order matches recently-published issues:
-        # intro → Currently → Notable → Journal → Briefly → Haiku.
-        order = [pub.index(h) for h in ("## Currently", "## Notable", "## Journal", "## Briefly", "## Haiku")]
+        # intro → cover → Currently → Notable → Journal → Briefly → haiku.
+        order = [pub.index(h) for h in (
+            "/cover.jpg)", "## Currently", "## Notable", "## Journal", "## Briefly",
+            "A haiku to leave you with",
+        )]
         self.assertEqual(order, sorted(order), pub)
         # CTA with placement after_notable lands between Notable and Journal.
         self.assertGreater(pub.index("Support the EFF."), pub.index("## Notable"))
         self.assertLess(pub.index("Support the EFF."), pub.index("## Journal"))
+        # Closing boilerplate after the haiku.
+        self.assertIn("Check out the [Weekly Thing on Reddit]", pub)
         # publish.html written too (no draft banner — it's the ship body).
         html = self.ws.files[(458, "publish.html")]
         self.assertTrue(html.startswith("<!DOCTYPE html>"))
@@ -1059,14 +1140,15 @@ class BuildPublishTests(_DBTestCase):
         self.ws.write_issue_file(458, "haiku.md", "a\nb\nc")
         self.ws.write_issue_file(458, "metadata.json", '{"subject":"x"}')
         self.ws.write_issue_file(458, "cover.jpg", "(binary)")
-        # No currently.md.
+        # No currently.md, no cover.md.
         ctx, fc = self._ctx()
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
         pub = self.ws.files[(458, "publish.md")]
-        self.assertNotIn("## Currently", pub)   # empty optional section dropped
+        self.assertNotIn("## Currently", pub)            # empty optional section dropped
+        self.assertNotIn("/cover.jpg)", pub)             # no cover.md → no cover block
         self.assertIn("## Notable", pub)
-        self.assertIn("## Haiku", pub)
+        self.assertIn("A haiku to leave you with", pub)
         self.assertTrue(pub.startswith("Intro."))
 
 
