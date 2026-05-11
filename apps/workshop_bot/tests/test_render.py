@@ -70,6 +70,35 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
         self.assertIn("<pre>", page)
         self.assertIn("# raw", page)
 
+    def test_review_md_adds_a_toggle_drawer_hidden_by_default(self):
+        page = render.markdown_to_html_page(
+            "# WT458\n\n## Notable\n\n### [A](http://a)\n\nblurb.",
+            title="WT458 — draft", subtitle="DRAFT · WT458",
+            review_md="## Notable\n\n- The `wuphf` blurb runs long — cut the Office tangent.\n",
+        )
+        # The toggle button + the drawer + the rendered review are all there.
+        self.assertIn('<button id="rv-toggle"', page)
+        self.assertIn('<aside id="rv-panel"', page)
+        self.assertIn("Editorial review", page)
+        self.assertIn("the Office tangent", page)
+        # Hidden by default: the drawer is off-screen until body.rv-open.
+        self.assertIn("transform: translateX(100%)", page)
+        self.assertIn("body.rv-open #rv-panel { transform: translateX(0); }", page)
+        # A toggle script wires the button to body.rv-open.
+        self.assertIn("classList.toggle('rv-open')", page)
+        # The actual draft content is untouched (not edited by the review).
+        self.assertIn("<h2>Notable</h2>", page)
+        self.assertIn('<a href="http://a">A</a>', page)
+
+    def test_no_review_md_no_chrome(self):
+        page = render.markdown_to_html_page("# X\n\nbody.", title="t")
+        self.assertNotIn('id="rv-toggle"', page)
+        self.assertNotIn('id="rv-panel"', page)
+        self.assertNotIn("<script>", page)
+        # Empty / whitespace review_md is treated the same as none.
+        page2 = render.markdown_to_html_page("# X\n\nbody.", title="t", review_md="   \n  ")
+        self.assertNotIn('id="rv-toggle"', page2)
+
 
 class RenderAndUploadHtmlTests(unittest.TestCase):
     def test_uploads_and_returns_url(self):

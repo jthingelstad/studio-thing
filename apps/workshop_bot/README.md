@@ -90,7 +90,7 @@ weekly-thing/{N}/
 ├── draft.md            ← update-draft writes — rebuilt from templates/draft_starter.md each run; shaped like a delivered issue
 ├── final.md            ← create-final writes (post-Eddy ordering)          [required]
 ├── publish.md          ← build-publish writes (---fenced parts: intro, cover, the non-empty ## sections, CTAs, haiku close; the ship artifact)
-├── draft.html / final.html / publish.html ← browser-viewable HTML twins (tools.render; no-cache + CDN-invalidated)
+├── draft.html / final.html / publish.html ← browser-viewable HTML twins (tools.render; no-cache + CDN-invalidated). draft.html also carries a "Show review" toggle → a slide-in drawer with Eddy's editorial suggestions, hidden by default.
 ├── cover.jpg           ← issue cover image (iOS Shortcuts)                  [required]
 ├── cover-large.jpg     ← full-size cover (iOS Shortcuts)
 ├── journal/<hash>.jpg  ← per-entry photos — iOS Shortcuts AND update-draft's journal-image rehost
@@ -156,7 +156,7 @@ apps/workshop_bot/
 │   ├── shared/team.md        # shared team-level prompt (cached system block)
 │   └── <persona>/
 │       ├── prompt.md         # the persona's identity / lane / voice
-│       └── <job>.md          # job prompts: eddy/update-review.md, eddy/create-final.md,
+│       └── <job>.md          # job prompts: eddy/update-review.md, eddy/draft-review.md, eddy/create-final.md,
 │                             #   eddy/compose-{haiku,subject,description}.md, linky/pinboard-scan.md,
 │                             #   patty/compose-cta.md, marky/promotion-prep.md, marky/daily-metrics.md
 ├── systems/                  # external-system tool surfaces (one subpackage per system)
@@ -177,7 +177,7 @@ apps/workshop_bot/
 │   ├── interaction.py        # await_choice / await_approval — reaction primitive for jobs
 │   ├── microblog.py          # micro.blog client — Micropub q=source → native markdown (no fallback; API key required)
 │   ├── journal_images.py     # rehost micro.blog photo uploads → resized copies in weekly-thing/{N}/journal/
-│   ├── render.py             # markdown → standalone HTML preview page (draft/final/publish .html twins)
+│   ├── render.py             # markdown → standalone HTML preview page (draft/final/publish .html twins) + the draft.html "Show review" toggle drawer
 │   ├── cdn.py                # CloudFront invalidation (best-effort) for the public assets bucket
 │   ├── avoid_domains.py      # popular-feed exclusion list (mirrors pipeline/content/domain_exclusions.py)
 │   ├── rss.py                # latest_published_issue() from weekly.thingelstad.com/feed.xml

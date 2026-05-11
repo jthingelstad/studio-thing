@@ -3,9 +3,14 @@
 ``update-draft`` / ``create-final`` / ``build-publish`` write a ``.md``;
 they also write a ``.html`` twin so Jamie can pull the issue up in a
 browser and see it "in progress" (or, for ``publish.html``, as it'll
-ship). The page is self-contained — a small bit of CSS, no remote assets
-— and the ``.html`` is uploaded with ``Cache-Control: no-cache`` plus a
-CloudFront invalidation so the browser always sees the latest.
+ship). The page is self-contained — a small bit of CSS + JS, no remote
+assets — and the ``.html`` is uploaded with ``Cache-Control: no-cache``
+plus a CloudFront invalidation so the browser always sees the latest.
+
+If a ``review_md`` is supplied (the ``update-draft`` HTML pass), it's
+rendered into a slide-in drawer that's **hidden by default** and revealed
+by a fixed "Show review" button — so the same shareable link reads as the
+clean draft until someone toggles the editorial suggestions on.
 
 ``render_and_upload_html(issue, name, md, …)`` does the whole thing:
 render → wrap → ``s3.write_issue_html`` (which sets the no-cache header
@@ -82,6 +87,38 @@ hr { border: none; border-top: 1px solid var(--wt-line); margin: 32px 0; }
   background: var(--wt-accent-soft); border-left: 4px solid var(--wt-accent);
   color: var(--wt-accent-deep); padding: 10px 14px; border-radius: 3px; margin: 0 0 32px;
 }
+/* Editorial-review drawer — hidden until "Show review" is pressed. */
+#rv-toggle {
+  position: fixed; top: 14px; right: 14px; z-index: 30; cursor: pointer;
+  font-family: var(--wt-mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 8px 14px; border-radius: 999px; border: 1px solid var(--wt-accent);
+  background: var(--wt-accent-soft); color: var(--wt-accent-deep);
+}
+#rv-toggle:hover { background: var(--wt-accent); color: #fff; }
+#rv-panel {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 94vw);
+  overflow-y: auto; padding: 58px 24px 32px; z-index: 20;
+  background: var(--wt-bg); border-left: 1px solid var(--wt-line);
+  box-shadow: -10px 0 28px rgba(0, 0, 0, 0.12);
+  transform: translateX(100%); transition: transform 0.22s ease;
+}
+body.rv-open #rv-panel { transform: translateX(0); }
+#rv-panel .rv-h {
+  font-family: var(--wt-mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--wt-accent); border: none; padding: 0; margin: 0 0 2px;
+}
+#rv-panel .rv-sub {
+  font-family: var(--wt-mono); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--wt-muted); margin: 0 0 18px;
+}
+#rv-panel h2 { font-size: 18px; margin: 22px 0 6px; padding: 0; border: none; }
+#rv-panel h3 { font-size: 15.5px; margin: 14px 0 4px; }
+#rv-panel p, #rv-panel li { font-size: 14.5px; line-height: 1.55; }
+#rv-panel ul, #rv-panel ol { padding-left: 20px; margin: 0 0 12px; }
+#rv-panel blockquote { font-size: 14px; margin: 8px 0 12px; padding: 2px 0 2px 14px; }
+@media (max-width: 600px) { #rv-panel { width: 94vw; } }
+@media print { #rv-toggle, #rv-panel { display: none !important; } }
+
 @media (max-width: 600px) {
   body { padding: 20px 18px 48px; font-size: 16px; }
   h1 { font-size: 26px; } h2 { font-size: 22px; } li { font-size: 16px; }
@@ -107,12 +144,34 @@ _PAGE = """\
 <style>{css}</style>
 </head>
 <body>
-{banner}<article>
+{review_chrome}{banner}<article>
 {body}
 </article>
-</body>
+{review_script}</body>
 </html>
 """
+
+# The review drawer's HTML (button + aside) — injected only when there's a
+# review. ``{review_html}`` is the rendered review markdown.
+_REVIEW_CHROME = """\
+<button id="rv-toggle" type="button" aria-expanded="false">Show review</button>
+<aside id="rv-panel" aria-label="Editorial review">
+<p class="rv-h">Editorial review</p>
+<p class="rv-sub">Suggestions only — the draft itself is unchanged.</p>
+{review_html}
+</aside>
+"""
+
+# Toggles ``body.rv-open`` and swaps the button label. Passed as a value
+# (not literal in ``_PAGE``) so the braces don't trip ``str.format``.
+_REVIEW_SCRIPT = (
+    "<script>(function(){var b=document.getElementById('rv-toggle');if(!b)return;"
+    "b.addEventListener('click',function(){"
+    "var on=document.body.classList.toggle('rv-open');"
+    "b.textContent=on?'Hide review':'Show review';"
+    "b.setAttribute('aria-expanded',on?'true':'false');"
+    "var p=document.getElementById('rv-panel');if(on&&p)p.scrollTop=0;});})();</script>\n"
+)
 
 
 def _markdown_to_html(md: str) -> str:
@@ -130,18 +189,29 @@ def _markdown_to_html(md: str) -> str:
 
 
 def markdown_to_html_page(md: str, *, title: str, subtitle: Optional[str] = None,
-                          strip_block_markers: bool = False) -> str:
+                          strip_block_markers: bool = False,
+                          review_md: Optional[str] = None) -> str:
     """Wrap ``md`` (rendered to HTML) in a standalone, self-contained page.
     If ``strip_block_markers``, the ``<!-- block:X -->`` comments are
     removed first. ``subtitle``, if given, renders as a small banner above
-    the content (used to mark drafts as work-in-progress)."""
+    the content (used to mark drafts as work-in-progress). ``review_md``,
+    if given, is rendered into a slide-in drawer that's hidden until the
+    fixed "Show review" button is pressed."""
     src = md or ""
     if strip_block_markers:
         src = _BLOCK_MARKER_RE.sub("", src)
         src = re.sub(r"\n{3,}", "\n\n", src).strip() + "\n"
     body = _markdown_to_html(src)
     banner = f'<p class="banner">{_html.escape(subtitle)}</p>\n' if subtitle else ""
-    return _PAGE.format(title=_html.escape(title), css=_CSS, banner=banner, body=body)
+    if review_md and review_md.strip():
+        review_chrome = _REVIEW_CHROME.format(review_html=_markdown_to_html(review_md))
+        review_script = _REVIEW_SCRIPT
+    else:
+        review_chrome = review_script = ""
+    return _PAGE.format(
+        title=_html.escape(title), css=_CSS, banner=banner, body=body,
+        review_chrome=review_chrome, review_script=review_script,
+    )
 
 
 def render_and_upload_html(
@@ -152,6 +222,7 @@ def render_and_upload_html(
     title: str,
     subtitle: Optional[str] = None,
     strip_block_markers: bool = False,
+    review_md: Optional[str] = None,
 ) -> Optional[str]:
     """Render ``md`` to ``{name}.html`` in the issue workspace (no-cache +
     CDN invalidation) and return its public URL. Best-effort: returns None
@@ -159,7 +230,8 @@ def render_and_upload_html(
     optional."""
     try:
         page = markdown_to_html_page(
-            md, title=title, subtitle=subtitle, strip_block_markers=strip_block_markers
+            md, title=title, subtitle=subtitle,
+            strip_block_markers=strip_block_markers, review_md=review_md,
         )
         res = s3.write_issue_html(int(issue_number), f"{name}.html", page)
         return res.get("url")

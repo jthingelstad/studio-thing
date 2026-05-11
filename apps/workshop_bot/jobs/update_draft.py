@@ -203,6 +203,40 @@ def _is_pass(text: str) -> bool:
     return bool(lines) and strip.sub("", lines[-1]).upper() == "PASS"
 
 
+async def _draft_review(
+    ctx: "_base.JobContext", window: dict, st: dict, prev_digest, today, draft_text: str,
+) -> str:
+    """A solid editorial pass for the shareable ``draft.html`` — suggestions
+    only, embedded behind a "Show review" toggle (hidden by default). Runs
+    on every ``update-draft`` (not weekday-gated like the ``#editorial``
+    card — the shareable preview should always carry the latest pass).
+    Returns the review markdown, or ``""`` when there's no Eddy / the
+    prompt is missing / Eddy responds ``PASS`` (an empty draft)."""
+    team = getattr(getattr(ctx, "deps", None), "team", None)
+    if team is None:
+        return ""
+    eddy = team.bots.get("eddy")
+    if eddy is None or getattr(eddy, "user", None) is None:
+        return ""
+    try:
+        prompt = anthropic_client.load_prompt("eddy-draft-review")
+    except OSError as exc:
+        logger.warning("update-draft: draft-review prompt missing: %s", exc)
+        return ""
+    n = int(window["issue_number"])
+    eddy_ctx = context.build_eddy_context(ref_date=today, section_status=st, prev_digest=prev_digest)
+    user_msg = (
+        f"{context.render_block(eddy_ctx)}\n\n{prompt}\n\n"
+        f"---\n\nThe current draft (WT{n}):\n\n```markdown\n{draft_text}\n```"
+    )
+    with db.AgentRun("eddy", trigger="update-draft-html-review") as run:
+        answer, _m = await eddy.core(latest=user_msg, history=[], model="sonnet")
+        run.records_written = 0 if (not answer or _is_pass(answer)) else 1
+    if not answer or _is_pass(answer):
+        return ""
+    return answer.strip()
+
+
 async def _maybe_eddy_review(
     ctx: "_base.JobContext", window: dict, st: dict, prev_digest, today, *, view_url=None
 ) -> str:
@@ -284,12 +318,20 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             prev_digest = db.latest_draft_digest(n)
             today = datetime.now().date()
 
+            # Solid editorial pass for the shareable HTML preview — embedded
+            # behind a "Show review" toggle, hidden by default. Best-effort.
+            review_md = ""
+            try:
+                review_md = await _draft_review(ctx, window, st, prev_digest, today, text)
+            except Exception:  # noqa: BLE001
+                logger.exception("update-draft: HTML draft review failed for #%d", n)
+
             # Browser-viewable preview (no-cache + CDN invalidation); best-effort.
             html_url = await asyncio.to_thread(
                 render.render_and_upload_html, n, "draft", text,
                 title=f"WT{n} — draft",
                 subtitle=f"DRAFT · WT{n} · refreshed {today} · ~{st['word_count']} words · not the final issue",
-                strip_block_markers=True,
+                strip_block_markers=True, review_md=review_md,
             )
 
             review_note = ""
@@ -320,7 +362,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         )
 
     missing = ", ".join(st["required_missing"]) or "nothing"
-    view = f" · 📄 {html_url}" if html_url else ""
+    view = (f" · 📄 {html_url}" + (" (with review — hit “Show review”)" if review_md else "")) if html_url else ""
     return _base.JobResult(
         True,
         f"refreshed `draft.md` for #{n} (~{st['word_count']} words; "
@@ -328,5 +370,6 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         f"{st['sections']['brief']['item_count']} Briefly / "
         f"{st['sections']['journal']['item_count']} Journal){view}. "
         f"Still missing for ship: {missing}. {review_note}".strip(),
-        data={"issue_number": n, "section_status": st, "review": review_note, "preview_url": html_url},
+        data={"issue_number": n, "section_status": st, "review": review_note,
+              "preview_url": html_url, "html_review": bool(review_md)},
     )

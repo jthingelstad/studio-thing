@@ -1483,5 +1483,34 @@ class PublishToButtondownTests(unittest.TestCase):
             content.publish_to_buttondown(types.SimpleNamespace(issue="458", dry_run=True))
 
 
+class DraftReviewTests(_DBTestCase):
+    """update_draft._draft_review — the editorial pass embedded in draft.html."""
+
+    def _args(self):
+        from datetime import date
+        st = draft_mod.section_status(458, draft_text=_base.starter_template(), list_objects=set())
+        return {"issue_number": 458}, st, None, date.today(), "## Notable\n\n### [A](http://a)\n\nblurb."
+
+    def test_returns_review_markdown_when_eddy_replies(self):
+        window, st, prev, today, draft_text = self._args()
+        fc = _FakeBotChannel(persona="eddy", reply="## Notable\n\n- Tighten the wuphf blurb.")
+        ctx = _base.JobContext(deps=fc.deps())
+        out = asyncio.run(update_draft._draft_review(ctx, window, st, prev, today, draft_text))
+        self.assertEqual(out, "## Notable\n\n- Tighten the wuphf blurb.")
+        fc.bot.core.assert_awaited()
+
+    def test_pass_reply_yields_empty_review(self):
+        window, st, prev, today, draft_text = self._args()
+        fc = _FakeBotChannel(persona="eddy", reply="PASS")
+        ctx = _base.JobContext(deps=fc.deps())
+        out = asyncio.run(update_draft._draft_review(ctx, window, st, prev, today, draft_text))
+        self.assertEqual(out, "")
+
+    def test_no_team_yields_empty_review(self):
+        window, st, prev, today, draft_text = self._args()
+        out = asyncio.run(update_draft._draft_review(_base.JobContext(), window, st, prev, today, draft_text))
+        self.assertEqual(out, "")
+
+
 if __name__ == "__main__":
     unittest.main()

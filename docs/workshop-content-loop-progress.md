@@ -102,6 +102,15 @@ Jamie supplied a refined, standalone description-writing prompt. Adopted it verb
 - Removed the dead `_recent_subjects` helper (the new subject and description prompts are both self-contained — neither references recent subjects).
 - Tests: rewrote `test_writes_metadata_json`, added `test_empty_description_reply_writes_empty_description` + `test_first_nonempty_line`. **355 tests pass.** Bot restarted.
 
+### Toggleable LLM editorial review in draft.html (2026-05-11, cont'd)
+
+Jamie loves the web draft preview (also uses it to share an in-progress draft for review). Added an LLM editorial pass that lives in `draft.html`, hidden by default, revealed by a button:
+
+- `prompts/eddy/draft-review.md` (new) — a *solid* editorial pass: anchored, concrete *suggestions only*, never a rewrite. Walks intro → Notable (per item: blurb length, awkward SEO-title headings, a Notable that's really a Briefly, ordering) → Journal (thin entries, mis-elevated posts) → Briefly (two-sentence one-liners, awkward `→` lines) → whole-issue (word band, section weight, a frame echoing a recent issue, off-tone). `PASS` (and no review) if the draft's essentially empty.
+- `update_draft._draft_review` runs it on **every** `update-draft` (not weekday-gated like the `#editorial` card — the shareable preview should always carry the latest pass), on sonnet, with the draft text inline + the `## Today` context block. Best-effort: a failure / `PASS` / no-team just means no review. The Discord `#editorial` post-update card (`update-review.md`, Tue–Fri) is untouched — separate audience.
+- `tools/render.py` — `markdown_to_html_page(..., review_md=…)` injects a fixed "Show review" pill button (top-right) and a slide-in drawer on the right with the rendered review. **Hidden by default** (`transform: translateX(100%)`, revealed by `body.rv-open` via a tiny inline `<script>` toggle that also swaps the button label). No review → no button, no drawer — the link reads as the clean draft. `@media print` hides the chrome.
+- Tests: `test_render.py` (review chrome present + hidden-by-default + absent without `review_md`), `test_content_jobs.DraftReviewTests` (`_draft_review` returns the markdown / `""` on `PASS` / `""` with no team). Docs (`CLAUDE.md` — the `update-draft` row + a new "draft.html editorial-review drawer" conventions bullet; `README.md`). **360 tests pass.** Bot restarted.
+
 ## Blockers
 (none — S3 versioning on `files.thingelstad.com` confirmed `Enabled`; the Step-4 pre-flight is satisfied)
 
