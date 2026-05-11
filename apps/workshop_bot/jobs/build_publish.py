@@ -1,11 +1,13 @@
 """``build-publish`` — assemble ``publish.md`` from ``final.md`` + assets.
 
-The ship artifact. Reads ``final.md`` (post-Eddy, block-structured) and
-inlines the standalone assets at their positions: ``intro.md`` at the top
-(the intro block), ``haiku.md`` at the end (the haiku block),
-``currently.md`` if present (the currently block), and ``cta-*.md`` at
-their declared placements. Strips the ``<!-- block:… -->`` markers. Writes
-``publish.md`` — the artifact the existing pipeline/content push reads.
+The ship artifact. Walks the issue's sections in order and emits each as
+``## Header\n\n{content}`` — but **only when the content is non-empty**, so
+an absent ``currently.md`` (or any optional section) just drops out rather
+than leaving a bare heading (the "a section that didn't run is a clean
+NULL" pattern). The intro goes at the very top with no header; the haiku
+closes the issue; CTAs are inserted at their declared placements. The
+``<!-- block:… -->`` markers from ``draft.md`` / ``final.md`` never appear
+in ``publish.md``.
 
 Refuses (PASSes loudly) if any required asset is missing: ``final.md``,
 ``haiku.md``, ``metadata.json``, ``intro.md``, ``cover.jpg``. Posts the
@@ -17,6 +19,7 @@ from __future__ import annotations
 import logging
 import re
 
+from ..tools import draft as draft_mod
 from ..tools import s3
 from . import _base
 
@@ -34,17 +37,25 @@ _FIX_HINT = {
     "final.md": "→ `/workshop job create-final`",
 }
 
-# CTA placement → where it goes in the body. ``after_X`` = immediately
-# after the closing block marker for X; ``before_haiku`` = right before
-# the ## Haiku heading. Never above the intro.
+# (block name, published heading). intro/haiku are special-cased (no
+# header / closes the issue); the rest are emitted in this order, each
+# only if its content is non-empty.
+_SECTION_HEADINGS = {
+    "notable": "## Notable",
+    "brief": "## Briefly",
+    "journal": "## Journal",
+    "currently": "## Currently",
+}
+_ORDER = ("notable", "brief", "journal", "currently")
+
 _PLACEMENTS = ("after_notable", "after_brief", "after_journal", "before_haiku")
 
 
-def _read(issue_number: int, filename: str) -> tuple[bool, str]:
+def _read(issue_number: int, filename: str) -> str:
     res = s3.read_issue_file(issue_number, filename)
     if res.get("found") and isinstance(res.get("text"), str):
-        return True, res["text"]
-    return bool(res.get("found")), ""
+        return res["text"]
+    return ""
 
 
 def _strip_frontmatter(text: str) -> tuple[dict, str]:
@@ -61,37 +72,9 @@ def _strip_frontmatter(text: str) -> tuple[dict, str]:
     return meta, m.group(2).lstrip("\n")
 
 
-def _insert_cta(body: str, placement: str, cta_text: str) -> str:
-    cta_block = f"\n\n{cta_text.strip()}\n"
-    if placement == "before_haiku":
-        anchor = "## Haiku"
-        i = body.find(anchor)
-        if i >= 0:
-            return body[:i] + cta_text.strip() + "\n\n" + body[i:]
-        return body.rstrip() + cta_block  # fallback: append
-    section = {"after_notable": "notable", "after_brief": "brief", "after_journal": "journal"}.get(placement)
-    if section:
-        marker = f"<!-- /block:{section} -->"
-        i = body.find(marker)
-        if i >= 0:
-            j = i + len(marker)
-            return body[:j] + cta_block + body[j:]
-    # Unknown placement → drop it after Briefly as a safe default.
-    marker = "<!-- /block:brief -->"
-    i = body.find(marker)
-    if i >= 0:
-        j = i + len(marker)
-        return body[:j] + cta_block + body[j:]
-    return body.rstrip() + cta_block
-
-
-def _strip_block_markers(text: str) -> str:
-    text = re.sub(r"<!--\s*/?block:[a-z0-9_-]+\s*-->\n?", "", text)
-    return re.sub(r"\n{3,}", "\n\n", text).strip() + "\n"
-
-
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     from ..tools import db
+
     window = db.get_active_issue_window()
     if window is None:
         return _base.JobResult(False, "❌ no active issue window — run `/workshop job start-issue` first.")
@@ -114,33 +97,52 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
                 return _base.JobResult(False, msg, data={"issue_number": n, "missing": missing})
 
-            ok_final, final_text = _read(n, "final.md")
-            ok_intro, intro_text = _read(n, "intro.md")
-            ok_haiku, haiku_text = _read(n, "haiku.md")
-            ok_currently, currently_text = _read(n, "currently.md")
+            final_text = _read(n, "final.md")
+            blocks = draft_mod.parse_blocks(final_text)
+            # intro / currently / haiku are file-backed; their blocks in
+            # final.md are empty (they get filled here).
+            section_content = {
+                "notable": (blocks.get("notable") or "").strip(),
+                "brief": (blocks.get("brief") or "").strip(),
+                "journal": (blocks.get("journal") or "").strip(),
+                "currently": _read(n, "currently.md").strip(),
+            }
+            intro_text = _read(n, "intro.md").strip()
+            haiku_text = _read(n, "haiku.md").strip()
 
-            body = _base.replace_block(final_text, "intro", intro_text)
-            body = _base.replace_block(body, "haiku", haiku_text)
-            if ok_currently and currently_text.strip():
-                body = _base.replace_block(body, "currently", currently_text)
-
-            # CTAs — read cta-1.md / cta-2.md, place by frontmatter.
+            # CTAs by placement (cta-1.md / cta-2.md, ordered).
+            cta_by_placement: dict[str, list[str]] = {}
             for cta_name in sorted(f for f in files if f.startswith("cta-") and f.endswith(".md")):
-                _ok, raw = _read(n, cta_name)
+                raw = _read(n, cta_name)
                 if not raw.strip():
                     continue
                 meta, cta_body = _strip_frontmatter(raw)
                 placement = (meta.get("placement") or "after_brief").strip()
                 if placement not in _PLACEMENTS:
                     placement = "after_brief"
-                body = _insert_cta(body, placement, cta_body)
+                cta_by_placement.setdefault(placement, []).append(cta_body.strip())
 
-            published = _strip_block_markers(body)
+            parts: list[str] = []
+            if intro_text:
+                parts.append(intro_text)
+            for name in _ORDER:
+                content = section_content.get(name, "")
+                if not content:
+                    continue
+                parts.append(f"{_SECTION_HEADINGS[name]}\n\n{content}")
+                for cta in cta_by_placement.get(f"after_{name}", []):
+                    parts.append(cta)
+            for cta in cta_by_placement.get("before_haiku", []):
+                parts.append(cta)
+            if haiku_text:
+                parts.append(f"## Haiku\n\n{haiku_text}")
+
+            published = "\n\n".join(p.strip() for p in parts if p.strip()).strip() + "\n"
             s3.write_issue_file(n, "publish.md", published)
             await ctx.post(
                 "DISCORD_CHANNEL_EDITORIAL",
                 f"✅ `publish.md` ready for **WT{n}** (~{len(published.split())} words) — "
-                "push via the existing `pipeline/content/` Buttondown flow whenever you're ready.",
+                f"push via `pipeline/content/content.py publish --issue {n}` (creates a Buttondown draft) when you're ready.",
                 persona="eddy",
             )
     except _base.JobLocked as exc:

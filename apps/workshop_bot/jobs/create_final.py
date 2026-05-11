@@ -1,25 +1,24 @@
-"""``create-final`` — Eddy's reorder review → ``final.md``, then the compose chain.
+"""``create-final`` — Eddy's reorder review → ``final.md``.
 
 Reads ``draft.md``, asks Eddy for a reordered/curated final (Notable
 narrative flow, Briefly thematic grouping, Journal cuts/elevations),
 posts the proposal to ``#editorial`` for Jamie's accept/skip/refresh, and
 writes ``final.md`` (Eddy's version on accept, the draft as-is on skip/
-timeout). Then auto-fires ``compose-haiku`` + ``compose-meta`` +
-``compose-cta`` in parallel; when all three complete and the required
-Jamie-authored assets (``intro.md``, ``cover.jpg``) are present,
-auto-fires ``build-publish``.
+timeout). Then tells Jamie what comes next — the compose jobs and
+``build-publish`` are run on demand; ``build-publish`` refuses (with a
+missing-list) until ``haiku.md`` / ``metadata.json`` / ``intro.md`` /
+``cover.jpg`` are all present.
 
 Refuses if ``final.md`` already exists — delete it explicitly to re-run.
 """
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import re
 
 from ..tools import anthropic_client, db, interaction, s3
-from . import _base, _compose, build_publish, compose_cta, compose_haiku, compose_meta
+from . import _base, _compose
 
 logger = logging.getLogger("workshop.jobs.create_final")
 
@@ -27,6 +26,12 @@ NAME = "create-final"
 MAX_ROUNDS = 3
 
 _FENCE_RE = re.compile(r"```(?:markdown|md)?\s*\n(.*?)\n?```", re.DOTALL)
+
+_NEXT_STEPS = (
+    "Next, in any order: `/workshop job compose-haiku`, `/workshop job compose-meta`, "
+    "`/workshop job compose-cta` — then `/workshop job build-publish` (it'll list "
+    "anything still missing if you run it early)."
+)
 
 
 def _draft_text(n: int) -> str:
@@ -39,14 +44,6 @@ def _extract_proposed_body(reply: str):
     return m.group(1).strip() if m else None
 
 
-def _is_jobresult(x) -> bool:
-    return isinstance(x, _base.JobResult)
-
-
-def _msg(x) -> str:
-    return x.message if _is_jobresult(x) else f"errored ({type(x).__name__}: {x})"
-
-
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     window = db.get_active_issue_window()
     if window is None:
@@ -57,9 +54,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     draft = _draft_text(n)
     if not draft.strip():
         return _base.JobResult(False, f"❌ no `draft.md` for WT{n} — run `/workshop job update-draft` first.")
-    bot, channel = _compose.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
+    bot, channel, reason = _compose.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
     if bot is None:
-        return _base.JobResult(False, f"(create-final skipped — {channel})")
+        return _base.JobResult(False, f"(create-final skipped — {reason})")
 
     asset = f"{n}/final.md"
     try:
@@ -87,38 +84,12 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 final_body = proposed if (approved is True and proposed) else draft
                 break
             s3.write_issue_file(n, "final.md", final_body if final_body.endswith("\n") else final_body + "\n")
-            await channel.send(
-                f"✅ `final.md` written for WT{n}. Firing the compose chain (haiku / meta / cta)…",
-                suppress_embeds=True,
-            )
+            await channel.send(f"✅ `final.md` written for WT{n}.\n\n{_NEXT_STEPS}", suppress_embeds=True)
     except _base.JobLocked as exc:
         return _base.JobResult(False, f"⏳ `create-final` already running ({exc.holder_desc}).")
 
-    # Auto-fire the compose chain in parallel; each runs its own review loop.
-    haiku_r, meta_r, cta_r = await asyncio.gather(
-        compose_haiku.run(_base.JobContext(deps=ctx.deps, trigger="chained")),
-        compose_meta.run(_base.JobContext(deps=ctx.deps, trigger="chained")),
-        compose_cta.run(_base.JobContext(deps=ctx.deps, trigger="chained")),
-        return_exceptions=True,
-    )
-
-    if _is_jobresult(haiku_r) and haiku_r.ok and _is_jobresult(meta_r) and meta_r.ok and _is_jobresult(cta_r) and cta_r.ok:
-        bp = await build_publish.run(_base.JobContext(deps=ctx.deps, trigger="chained"))
-        publish_note = f"build-publish: {_msg(bp)}"
-    else:
-        publish_note = (
-            "build-publish not auto-fired — re-run any compose job that didn't complete, "
-            "then `/workshop job build-publish`."
-        )
-
     return _base.JobResult(
         True,
-        " | ".join([
-            f"final.md written for WT{n}.",
-            f"compose-haiku: {_msg(haiku_r)}",
-            f"compose-meta: {_msg(meta_r)}",
-            f"compose-cta: {_msg(cta_r)}",
-            publish_note,
-        ]),
+        f"`final.md` written for WT{n}. {_NEXT_STEPS}",
         data={"issue_number": n},
     )

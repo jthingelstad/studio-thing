@@ -79,9 +79,9 @@ class JobConfigTests(unittest.TestCase):
         for job in jobs_module.JOBS:
             with self.subTest(job=job.id):
                 self.assertTrue(callable(job.func), f"job {job.id} func is not callable")
-                # Heartbeats wire ``functools.partial(handlers.heartbeat, persona=...)``
-                # into ``func``. Unwrap once so the underlying coroutine
-                # function and source module land cleanly.
+                # content_job is wired as ``functools.partial(content_job,
+                # job="<name>")``; rss_check is bare. Unwrap the partial so
+                # the underlying coroutine function and module land cleanly.
                 underlying = (
                     job.func.func if isinstance(job.func, functools.partial)
                     else job.func
@@ -96,48 +96,39 @@ class JobConfigTests(unittest.TestCase):
                     f"job {job.id} func should live in handlers.py",
                 )
 
+    def test_partial_binds_under_dispatcher_call(self):
+        # The scheduler invokes ``await job.func(ctx)``. With
+        # ``partial(content_job, job="<name>")``, ``ctx`` must land in the
+        # first positional slot without colliding with the bound ``job``
+        # kwarg. (Regression guard for the "multiple values for argument"
+        # TypeError class.)
+        sentinel_ctx = object()
+        for job in jobs_module.JOBS:
+            if not isinstance(job.func, functools.partial):
+                continue
+            with self.subTest(job=job.id):
+                sig = inspect.signature(job.func)
+                bound = sig.bind(sentinel_ctx)
+                bound.apply_defaults()
+
     def test_by_id_lookup(self):
         for job in jobs_module.JOBS:
             self.assertIs(jobs_module.by_id(job.id), job)
         self.assertIsNone(jobs_module.by_id("nonexistent"))
 
     def test_heartbeats_retired(self):
-        # The per-persona heartbeats were all retired as the content-loop
-        # jobs took over (Linky→pinboard-scan, Eddy job-triggered, Patty's
-        # only job is compose-cta, Marky→promotion-prep + daily-metrics).
+        # Every per-persona heartbeat was retired as the content-loop jobs
+        # took over (Linky→pinboard-scan, Eddy job-triggered, Patty's only
+        # job is compose-cta, Marky→promotion-prep + daily-metrics).
         ids = [j.id for j in jobs_module.JOBS]
-        for hb in ("eddy-heartbeat", "linky-heartbeat", "marky-heartbeat", "patty-heartbeat"):
-            self.assertNotIn(hb, ids)
-        # Any heartbeat JobSpec that *does* exist must still be well-formed.
-        for job in jobs_module.JOBS:
-            if job.id.endswith("-heartbeat"):
-                self.assertIsInstance(job.func, functools.partial)
-                self.assertIs(job.func.func, handlers.heartbeat)
+        self.assertFalse([i for i in ids if i.endswith("-heartbeat")], f"unexpected heartbeat job(s): {ids}")
+        self.assertFalse(hasattr(handlers, "heartbeat"), "handlers.heartbeat should be gone")
         # The content-loop jobs are present.
         for jid in ("update-draft-daily", "linky-pinboard-scan", "marky-rss-check", "marky-daily-metrics"):
             self.assertIn(jid, ids)
 
-    def test_heartbeat_partial_binds_under_dispatcher_call(self):
-        # The scheduler dispatcher invokes ``await job.func(ctx)``. With
-        # ``partial(heartbeat, persona=...)``, that means ``ctx`` must
-        # land in the first positional slot without colliding with the
-        # bound ``persona`` kwarg. Regression for the
-        # "multiple values for argument 'persona'" TypeError.
-        sentinel_ctx = object()
-        for job in jobs_module.JOBS:
-            if not job.id.endswith("-heartbeat"):
-                continue
-            with self.subTest(job=job.id):
-                sig = inspect.signature(job.func)
-                # Should bind cleanly with a single positional ctx.
-                bound = sig.bind(sentinel_ctx)
-                bound.apply_defaults()
-
     def test_known_handlers_referenced(self):
-        # Sanity: every handler we ship is wired to a job — except the ones
-        # in this allowlist, which are kept for ad-hoc / eval use but are no
-        # longer scheduled.
-        unwired_ok = {handlers.heartbeat}
+        # Sanity: every async handler we ship is wired to a JobSpec.
         wired: set[object] = set()
         for job in jobs_module.JOBS:
             underlying = (
@@ -149,11 +140,9 @@ class JobConfigTests(unittest.TestCase):
             obj = getattr(handlers, name)
             if (
                 inspect.iscoroutinefunction(obj)
-                and obj.__module__ == handlers.__name__
+                and getattr(obj, "__module__", None) == handlers.__name__
                 and not name.startswith("_")
             ):
-                if obj in unwired_ok:
-                    continue
                 self.assertIn(
                     obj, wired,
                     f"handler {name} is defined but no JobSpec references it",

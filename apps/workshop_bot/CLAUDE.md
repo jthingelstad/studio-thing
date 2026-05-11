@@ -17,18 +17,20 @@ Every workshop_bot action — pulling content into the draft, reordering for the
 | `start-issue <n> <pub-date> <days>` | manual | Records the issue window in `workshop.db`, seeds `draft.md` from `templates/draft_starter.md`, auto-fires `update-draft`. The only job that takes the issue number explicitly. |
 | `update-draft` | daily 17:00 CT + after `start-issue` + manual | Pure projection: fills the draft's section blocks from upstream (Pinboard for Notable/Briefly, micro.blog for Journal) and from standalone asset files (`intro.md` / `currently.md` / `haiku.md`). Idempotent; replaces block content wholesale. Writes a `draft_digests` row; on Tue–Fri runs Eddy's post-update review (`prompts/eddy/update-review.md`) → `#editorial`; silent Sat/Sun/Mon. Refuses (loudly) if `final.md` exists — the issue is locked. |
 | `issue-status` | manual | Read-only section + asset completeness report. |
-| `create-final` | manual | Eddy proposes a reordered/curated final (fenced markdown block); Jamie ✅/❌/🔄; writes `final.md`. Then auto-fires `compose-haiku` + `compose-meta` + `compose-cta` in parallel; when all three complete, auto-fires `build-publish`. |
-| `compose-haiku` | auto on `create-final`; manual | Eddy returns JSON haiku options → `#editorial`; Jamie picks → `haiku.md`. Required for ship. |
-| `compose-meta` | auto on `create-final`; manual | Eddy returns JSON (subject, description) options → `#editorial`; Jamie picks → `metadata.json` (subject/description generated; image/slug/number/publish_date deterministic). Reads `data/buttondown/emails/*.json` for recent subjects to avoid repetition. Required for ship. |
-| `compose-cta` | auto on `create-final`; manual | Patty decides 0/1/2 CTAs, 1–2 framings each, in **Thingy's** voice; → `#supporters`; Jamie picks per slot → `cta-1.md` / `cta-2.md` (each with `placement:` YAML frontmatter). Optional. |
-| `build-publish` | auto when the three compose jobs + required Jamie assets are present; manual | Reads `final.md` + assets, inlines `intro.md` / `haiku.md` / `currently.md` + CTAs at their placements, strips block markers, writes `publish.md` (the ship artifact). Refuses with a missing-list (→ `#editorial`) if any required asset is absent: `final.md`, `haiku.md`, `metadata.json`, `intro.md`, `cover.jpg`. |
+| `create-final` | manual | Eddy proposes a reordered/curated final (fenced markdown block); Jamie ✅/❌/🔄; writes `final.md`; posts "next: run compose-haiku/meta/cta, then build-publish". No auto-chain — each downstream job is run on demand and refuses-with-a-list until its prerequisites exist. |
+| `compose-haiku` | manual | Eddy returns JSON haiku options → `#editorial`; Jamie picks → `haiku.md`. Required for ship. |
+| `compose-meta` | manual | Eddy returns JSON (subject, description) options → `#editorial`; Jamie picks → `metadata.json` (subject/description generated; image/slug/number/publish_date deterministic). Reads `data/buttondown/emails/*.json` for recent subjects to avoid repetition. Required for ship. |
+| `compose-cta` | manual | Patty decides 0/1/2 CTAs, 1–2 framings each, in **Thingy's** voice; → `#supporters`; Jamie picks per slot → `cta-1.md` / `cta-2.md` (each with `placement:` YAML frontmatter). Optional. |
+| `build-publish` | manual | Assembles `publish.md` section by section from `final.md`'s blocks + `intro.md` / `haiku.md` / `currently.md` + CTAs at their placements — each section emitted as `## Header\n\n{content}` only if non-empty (an absent optional section just drops out), no block markers in the output. Refuses with a missing-list (→ `#editorial`) if any required asset is absent: `final.md`, `haiku.md`, `metadata.json`, `intro.md`, `cover.jpg`. |
 | `pinboard-scan` | Mon–Fri 06:30 & 18:30 CT during the issue window; manual | Linky's four-lane Pinboard pass (popular review / toread tending / Briefly capture / read-length + queue-depth) → `#research`. Active only when an issue window is set and today ∈ `[start_date, end_date]`. |
 | `promotion-prep` | auto on RSS detection; manual | Marky drafts syndication content (LinkedIn + r/WeeklyThing megathread + per-link threads, 2–3 framings each) for the latest *published* issue's `publish.md` → `#promotion`. Never auto-posts. |
 | `daily-metrics` | daily 19:00 CT; manual | Polls active campaigns (Tinylytics `?ref=` traffic + Buttondown ref signups → a `campaign_metrics` row each run), checks subscriber growth + engagement; PASSes silently when nothing material moved, else Marky composes a terse report → `#promotion`. |
 | `add-campaign <name> <ref> [signups] [traffic]` | manual | Inserts a row into the `campaigns` table. |
 | `campaign-report` | manual | Active campaigns + current performance vs expected. |
 
-Scheduler: `scheduler/jobs.py` declares the cron `JobSpec`s; `scheduler/handlers.py` has `content_job` (the bridge cron→jobs) and `rss_check` (poll the feed, dedupe via `agent_notes`, auto-fire `promotion-prep`). `handlers.heartbeat` still exists (eval / ad-hoc) but **no heartbeat is scheduled anymore** — every per-persona heartbeat was retired as the jobs took over.
+Scheduler: `scheduler/jobs.py` declares the cron `JobSpec`s; `scheduler/handlers.py` has `content_job` (the bridge cron→jobs, wired as `functools.partial(content_job, job="<name>")`) and `rss_check` (poll the feed, dedupe via `agent_notes`, auto-fire `promotion-prep`). There are **no per-persona heartbeats** — everything an agent does on a cadence is a job.
+
+Slash dispatch (`personas/commands.py`): the fast jobs `defer` → run → ack with the result (the followup send is wrapped in try/except — a Discord interaction token only lasts ~15 min). The **interactive** jobs (`create-final`, `compose-haiku`/`-meta`/`-cta` — they post options to a channel and wait for Jamie's reaction, which can outlast the token) instead ack *immediately* ("started — react in #editorial / #supporters") and then run; the job posts its own outcome to the channel, so no second followup is needed.
 
 ### The unified asset pattern
 
@@ -37,8 +39,8 @@ Every piece of issue content is a standalone file in the S3 workspace `s3://file
 - `intro.md`, `currently.md` — Jamie writes (Drafts → Shortcut); `update-draft` reads them into the draft.
 - `haiku.md` — `compose-haiku` writes; `metadata.json` — `compose-meta` writes; `cta-1.md` / `cta-2.md` — `compose-cta` writes.
 - `draft.md` — `update-draft` writes (a regenerable pure projection of all the above + upstream).
-- `final.md` — `create-final` writes (post-Eddy ordering).
-- `publish.md` — `build-publish` writes (everything inlined; the artifact `pipeline/content/content.py publish` pushes to Buttondown as a draft).
+- `final.md` — `create-final` writes (post-Eddy ordering; still block-structured).
+- `publish.md` — `build-publish` writes (sections assembled `## Header\n\n{content}`, empties dropped, no block markers; the artifact `pipeline/content/content.py publish --issue N` pushes to Buttondown as a draft).
 - `cover.jpg`, `cover-large.jpg`, `journal/*.jpg`, `body-{N}.mp3`, `weekly-thing-{N}.mp3` — written by the iOS Shortcuts and `pipeline/audio/`; agents can't touch them (the `tools/s3.py` extension allowlist is text-only). `eddy-edits.md` — Eddy, rarely, for a preserved revision proposal.
 
 `tools/draft.py` (`section_status`) parses the draft for section item counts + asset presence + what's still missing for ship; `draft__section_status` is the agent tool over it. `tools/context.py` builds the per-persona dynamic-context blocks (`build_eddy_context` / `build_linky_context` / `build_patty_context` / `build_marky_context`) — runtime-computed facts injected into job prompts so the model doesn't recompute date math, word counts, queue depths, goal progress.
@@ -63,7 +65,7 @@ There is **no private workshop bucket** anymore. Decommissioned in the redesign:
 ## Conventions worth remembering
 
 - **Pinboard tag convention is strict: only `_brief`.** Untagged-in-window = Notable; `_brief` = Briefly. The old `_featured` tag/section is retired. `pinboard__capture_blurb` writes a blurb verbatim + tags `_brief` + clears `toread` atomically.
-- **micro.blog: pull everything in window, no tag filtering** (`tools/microblog.py`, public JSON Feed at `MICROBLOG_FEED_URL`, default `https://www.thingelstad.com/feed.json`). Filtering/curation happens at `create-final` (Eddy can cut Journal entries).
+- **micro.blog: pull everything in window, no tag filtering** (`tools/microblog.py`). When `MICROBLOG_API_KEY` is set it uses the Micropub source query (`GET {MICROBLOG_MICROPUB_URL}?q=source`, Bearer auth) to get the **native markdown** Jamie wrote; otherwise it falls back to the public JSON Feed at `MICROBLOG_FEED_URL` and a best-effort HTML→markdown conversion. Filtering/curation happens at `create-final` (Eddy can cut Journal entries).
 - **Marky operates on the last *published* issue**, not the in-flight one — the RSS feed (`tools/rss.py`) is her trigger; she reads `publish.md`.
 - **`update-draft` is a pure projection** — never an additive merge. Real authoring lives upstream. Re-running it gives the same output modulo upstream changes.
 - **Job prompts get a `## Today` dynamic-context block.** Read it; don't recompute date math / counts / queue depth / goal progress.

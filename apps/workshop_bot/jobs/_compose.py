@@ -49,17 +49,18 @@ def parse_json_payload(reply: str) -> Optional[dict[str, Any]]:
 
 
 def resolve_bot_and_channel(ctx: "_base.JobContext", persona: str, channel_env: str):
-    """Return ``(bot, channel)`` for ``persona`` (its discord.Client and
-    the env-named channel bound to it), or ``(None, reason)`` if either is
-    unavailable. ``bot`` has ``wait_for`` (it's a discord.Client subclass);
-    ``channel`` has ``send`` and yields messages with ``add_reaction``."""
+    """Return ``(bot, channel, None)`` for ``persona`` (its discord.Client
+    and the env-named channel bound to it), or ``(None, None, reason)`` if
+    either is unavailable. ``bot`` has ``wait_for`` (it's a discord.Client
+    subclass); ``channel`` has ``send`` and yields messages with
+    ``add_reaction``."""
     team = getattr(getattr(ctx, "deps", None), "team", None)
     if team is None:
-        return None, "no Discord (team registry unavailable)"
+        return None, None, "no Discord (team registry unavailable)"
     bot = team.bots.get(persona)
     if bot is None or getattr(bot, "user", None) is None:
-        return None, f"{persona} unavailable"
+        return None, None, f"{persona} unavailable"
     channel = ctx.channel(channel_env, persona=persona)
     if channel is None:
-        return None, f"can't resolve {channel_env}"
-    return bot, channel
+        return None, None, f"can't resolve {channel_env}"
+    return bot, channel, None

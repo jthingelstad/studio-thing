@@ -53,9 +53,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     body = _compose.final_or_draft(n)
     if not body.strip():
         return _base.JobResult(False, f"❌ no `final.md`/`draft.md` for WT{n} yet.")
-    bot, channel = _compose.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
+    bot, channel, reason = _compose.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
     if bot is None:
-        return _base.JobResult(True, f"(compose-meta skipped — {channel})", data={"posted": False})
+        return _base.JobResult(True, f"(compose-meta skipped — {reason})", data={"posted": False})
 
     asset = f"{n}/metadata.json"
     try:

@@ -27,6 +27,20 @@ Codebase is in a buildable state: `python -m unittest discover -s apps/workshop_
 - The reaction-interaction flow (`tools/interaction.py` + the compose-* / create-final jobs) needs a live Discord test — confirm `DISCORD_OWNER_USER_ID` is set and the bots have the reactions intent so `wait_for("raw_reaction_add")` fires.
 - The `popular_unseen` avoid-domains list and `create-final`'s per-section approval loop are noted refinements (see the `## Notes` in `apps/workshop_bot/CLAUDE.md` for the full follow-up list).
 
+## Post-landing code-review fixes (2026-05-11)
+
+After a full-project review, addressed:
+
+- **`create-final` no longer auto-chains** the compose jobs / `build-publish` — it does the reorder → `final.md` → posts "next: compose-haiku/meta/cta, then build-publish". Each downstream job is run on demand and refuses-with-a-list until its prerequisites exist (`build-publish` already did). This shortens `create-final` to ~one reaction.
+- **Slash-layer interaction-token fix.** The interactive jobs (`create-final`, `compose-*`) wait on Jamie's reaction, which can outlast the ~15-min Discord interaction token. They now ack *immediately* ("started — react in #editorial/#supporters") and the job posts its own outcome to the channel; no second followup. Fast jobs keep defer→run→ack, with the followup wrapped in try/except.
+- **`build-publish` assembles `publish.md` section by section** — `## Header\n\n{content}` only for non-empty sections — so an absent `currently.md` (or any optional section) drops out instead of leaving a bare heading.
+- **All per-persona heartbeats removed** — nothing meaningful ran on a heartbeat anymore (everything's a job). Deleted the four `heartbeat.md` files, `handlers.heartbeat` / `_heartbeats_enabled`, `eval --heartbeat`, `WORKSHOP_HEARTBEATS_ENABLED` / `WORKSHOP_HEARTBEAT_MODEL`, `test_heartbeats.py`.
+- **`compose-cta`'s dead refresh loop** removed (it was always single-pass).
+- **`_compose.resolve_bot_and_channel` → `(bot, channel, reason)`** with clean unpacking; `build_marky_context` calls `db.active_campaigns_with_age()` directly.
+- **micro.blog journal source now prefers native markdown** — `tools/microblog.py` uses the Micropub `q=source` query (`Authorization: Bearer MICROBLOG_API_KEY`) and reads the raw markdown out of `properties.content`; falls back to the public JSON Feed (HTML → markdown-ish) when there's no key or the call fails.
+
+296 tests pass.
+
 ## Blockers
 (none — S3 versioning on `files.thingelstad.com` confirmed `Enabled`; the Step-4 pre-flight is satisfied)
 

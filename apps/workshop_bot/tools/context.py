@@ -307,15 +307,11 @@ def build_marky_context(
             days_since_ship = (today - d).days
         except (TypeError, ValueError):
             pass
-    # Active ad campaigns — the `campaigns` table lands in Step 8; degrade
-    # gracefully until then.
     campaigns: list[dict[str, Any]] = []
-    fn = getattr(db, "active_campaigns_with_age", None)
-    if callable(fn):
-        try:
-            campaigns = fn()
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("build_marky_context: campaign lookup failed: %s", exc)
+    try:
+        campaigns = db.active_campaigns_with_age()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("build_marky_context: campaign lookup failed: %s", exc)
     return {
         "today": today.isoformat(),
         "weekday": today.strftime("%a"),

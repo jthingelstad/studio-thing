@@ -20,7 +20,6 @@ from . import _base, _compose
 logger = logging.getLogger("workshop.jobs.compose_cta")
 
 NAME = "compose-cta"
-MAX_ROUNDS = 3
 _PLACEMENTS = ("after_notable", "after_brief", "after_journal", "before_haiku")
 
 
@@ -43,11 +42,13 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     body = _compose.final_or_draft(n)
     if not body.strip():
         return _base.JobResult(False, f"❌ no `final.md`/`draft.md` for WT{n} yet.")
-    bot, channel = _compose.resolve_bot_and_channel(ctx, "patty", "DISCORD_CHANNEL_SUPPORTERS")
+    bot, channel, reason = _compose.resolve_bot_and_channel(ctx, "patty", "DISCORD_CHANNEL_SUPPORTERS")
     if bot is None:
-        return _base.JobResult(True, f"(compose-cta skipped — {channel})", data={"posted": False})
+        return _base.JobResult(True, f"(compose-cta skipped — {reason})", data={"posted": False})
 
-    # Lock both slots up front so a concurrent re-fire bounces.
+    # Lock both slots up front so a concurrent re-fire bounces. (No
+    # refresh-in-loop here — Patty composes the full CTA set in one pass;
+    # for fresh framings Jamie re-fires the whole job.)
     assets = [f"{n}/cta-1.md", f"{n}/cta-2.md"]
     try:
         with _base.job_lock(assets, NAME):
@@ -59,23 +60,17 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 f"{_recent_publish_excerpts(n)}\n\n"
                 f"---\n\nThis issue (WT{n}):\n\n```markdown\n{body[:_compose.ISSUE_BODY_CAP]}\n```"
             )
-            ctas = None
-            for _round in range(MAX_ROUNDS):
-                with db.AgentRun("patty", trigger="compose-cta") as agent_run:
-                    reply, _meta = await bot.core(latest=user_msg, history=[], model=None)
-                    agent_run.records_written = 1
-                data = _compose.parse_json_payload(reply)
-                ctas = (data or {}).get("ctas")
-                if not isinstance(ctas, list):
-                    return _base.JobResult(False, "compose-cta: model didn't return a parseable `ctas` list.")
-                if len(ctas) == 0:
-                    await channel.send(f"💝 Patty's call for WT{n}: **no CTA this issue.**", suppress_embeds=True)
-                    return _base.JobResult(True, f"compose-cta for WT{n}: 0 CTAs (Patty's call).",
-                                           data={"issue_number": n, "ctas_written": 0, "posted": True})
-                # Got CTAs — break out of the refresh loop and present them.
-                break
-            else:
-                return _base.JobResult(False, "compose-cta: out of refreshes.", data={"posted": True})
+            with db.AgentRun("patty", trigger="compose-cta") as agent_run:
+                reply, _meta = await bot.core(latest=user_msg, history=[], model=None)
+                agent_run.records_written = 1
+            data = _compose.parse_json_payload(reply)
+            ctas = (data or {}).get("ctas")
+            if not isinstance(ctas, list):
+                return _base.JobResult(False, "compose-cta: model didn't return a parseable `ctas` list.")
+            if len(ctas) == 0:
+                await channel.send(f"💝 Patty's call for WT{n}: **no CTA this issue.**", suppress_embeds=True)
+                return _base.JobResult(True, f"compose-cta for WT{n}: 0 CTAs (Patty's call).",
+                                       data={"issue_number": n, "ctas_written": 0, "posted": True})
 
             written = 0
             for idx, cta in enumerate(ctas[:2]):

@@ -11,7 +11,6 @@ Run:
     python -m apps.workshop_bot.eval                          # full run
     python -m apps.workshop_bot.eval --regen                  # regenerate question set
     python -m apps.workshop_bot.eval --persona eddy           # one persona only
-    python -m apps.workshop_bot.eval --heartbeat marky        # rehearse one heartbeat
 
 Cost: ~80 Haiku calls + 4 question-gen calls. <$1 per run.
 """
@@ -228,39 +227,10 @@ def _build_registry() -> agent_tools.ToolRegistry:
     return registry
 
 
-async def rehearse_heartbeat(persona_name: str, model: str) -> int:
-    """Run one persona's heartbeat once, offline. No Discord post — the
-    answer (or PASS) is printed to stdout."""
-    if persona_name not in PERSONAS:
-        logger.error("unknown persona %r; choose one of %s", persona_name, list(PERSONAS))
-        return 2
-    db.run_migrations()
-    corpus_handle = corpus.load()
-    deps = Deps(corpus=corpus_handle, registry=_build_registry())
-
-    bot = PERSONAS[persona_name](deps)
-    prompt_text = anthropic_client.load_prompt(f"{persona_name}-heartbeat")
-    logger.info("rehearsing %s heartbeat with model=%s", persona_name, model)
-    answer, meta = await bot.core(latest=prompt_text, history=[], model=model)
-    print(f"\n----- {persona_name} heartbeat -----")
-    print(answer or "(empty)")
-    print("----- meta -----")
-    usage = (meta or {}).get("usage") or {}
-    print(
-        f"iterations={meta.get('iterations', 0)} "
-        f"in={usage.get('input', 0)} out={usage.get('output', 0)} "
-        f"cache_r={usage.get('cache_read', 0)}"
-    )
-    return 0
-
-
 async def run(args: argparse.Namespace) -> int:
     if not os.environ.get("ANTHROPIC_API_KEY"):
         logger.error("ANTHROPIC_API_KEY is not set")
         return 2
-
-    if args.heartbeat:
-        return await rehearse_heartbeat(args.heartbeat, args.model)
 
     db.run_migrations()
     corpus_handle = corpus.load()
@@ -318,12 +288,6 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--regen", action="store_true", help="regenerate the cached question set")
     parser.add_argument("--persona", choices=list(PERSONAS), help="run only one persona")
-    parser.add_argument(
-        "--heartbeat",
-        choices=list(PERSONAS),
-        help="rehearse one persona's heartbeat once and print the result; "
-        "no Discord post, no question set",
-    )
     parser.add_argument("--model", default="haiku", choices=list(anthropic_client.MODELS))
     args = parser.parse_args()
     return asyncio.run(run(args))

@@ -58,7 +58,7 @@ Thingy users (web and Discord) also have per-user memory in the Lambda's DynamoD
 
 Every workshop_bot action is a **job** — deterministic Python in `apps/workshop_bot/jobs/`, fired by the `/workshop job <name>` slash surface (host: Eddy; `job` is a subcommand group; `manage_guild`-gated) and/or by cron. `jobs/_base.py` is the runtime (`JobContext`, `JobResult`, single-asset `job_lock`, draft-block helpers). See [`CLAUDE.md`](CLAUDE.md) for the full job table and [`docs/workshop-content-loop-design-brief.md`](../../docs/workshop-content-loop-design-brief.md) for the design.
 
-Issue-assembly flow: `start-issue` → `update-draft` (pure projection of Pinboard/micro.blog/asset files into `draft.md`; Eddy reviews Tue–Fri) → `create-final` (Eddy reorder → `final.md`) → `compose-haiku` + `compose-meta` + `compose-cta` in parallel → `build-publish` (→ `publish.md`). Parallel: `pinboard-scan` (Linky), `promotion-prep` + `daily-metrics` + `add-campaign` / `campaign-report` (Marky).
+Issue-assembly flow: `start-issue` → `update-draft` (pure projection of Pinboard/micro.blog/asset files into `draft.md`; Eddy reviews Tue–Fri) → `create-final` (Eddy reorder → `final.md`) → `compose-haiku` / `compose-meta` / `compose-cta` (run on demand, any order) → `build-publish` (assembles `publish.md`; refuses with a missing-list until the required assets exist). Parallel: `pinboard-scan` (Linky), `promotion-prep` + `daily-metrics` + `add-campaign` / `campaign-report` (Marky).
 
 Scheduled (`scheduler/jobs.py`, Central time):
 
@@ -69,7 +69,7 @@ Scheduled (`scheduler/jobs.py`, Central time):
 | `marky-rss-check` | Sat & Sun, every 4h 09–21 | `handlers.rss_check` — detects a new published issue, fires `promotion-prep` |
 | `marky-daily-metrics` | daily 19:00 | `content_job` → `jobs/daily_metrics.py`; PASSes silently when nothing moved |
 
-Per-persona heartbeats are retired; `handlers.heartbeat` is kept for eval / ad-hoc only. CLI: `python -m apps.workshop_bot.scheduler.runner --list`. Disable the scheduler with `WORKSHOP_SCHEDULER_ENABLED=0`.
+There are no per-persona heartbeats — everything an agent does on a cadence is a job. The slash layer dispatches *fast* jobs as defer → run → ack, and *interactive* jobs (`create-final`, `compose-haiku`/`-meta`/`-cta` — they wait on Jamie's reaction, possibly longer than the ~15-min interaction token) as ack-immediately → run → the job posts its own outcome to the channel. CLI: `python -m apps.workshop_bot.scheduler.runner --list`. Disable the scheduler with `WORKSHOP_SCHEDULER_ENABLED=0`.
 
 ---
 
@@ -88,7 +88,7 @@ weekly-thing/{N}/
 ├── cta-1.md / cta-2.md ← compose-cta writes (placement: frontmatter) [optional, 0–2]
 ├── draft.md            ← update-draft writes (regenerable projection of all the above + upstream)
 ├── final.md            ← create-final writes (post-Eddy ordering)    [required]
-├── publish.md          ← build-publish writes (everything inlined; the ship artifact)
+├── publish.md          ← build-publish writes (sections assembled, empties dropped; the ship artifact)
 ├── cover.jpg           ← issue cover image (iOS Shortcuts)            [required]
 ├── cover-large.jpg     ← full-size cover (iOS Shortcuts)
 ├── journal/            ← per-entry photos (iOS Shortcuts)
@@ -151,7 +151,6 @@ apps/workshop_bot/
 │   ├── shared/team.md        # shared team-level prompt (cached system block)
 │   └── <persona>/
 │       ├── prompt.md         # the persona's identity / lane / voice
-│       ├── heartbeat.md      # legacy heartbeat prompt (kept; no longer scheduled)
 │       └── <job>.md          # job prompts: eddy/update-review.md, eddy/create-final.md,
 │                             #   eddy/compose-{haiku,meta}.md, linky/pinboard-scan.md,
 │                             #   patty/compose-cta.md, marky/promotion-prep.md, marky/daily-metrics.md
@@ -171,7 +170,7 @@ apps/workshop_bot/
 │   ├── draft.py              # parse draft.md for section/asset completeness (draft__section_status)
 │   ├── context.py            # build_{eddy,linky,patty,marky}_context — dynamic prompt blocks
 │   ├── interaction.py        # await_choice / await_approval — reaction primitive for jobs
-│   ├── microblog.py          # micro.blog JSON Feed client (journal source)
+│   ├── microblog.py          # micro.blog client (Micropub source → native markdown; JSON-Feed fallback)
 │   ├── rss.py                # latest_published_issue() from weekly.thingelstad.com/feed.xml
 │   ├── support_state.py      # current nonprofit state for Patty
 │   ├── s3.py                 # per-issue S3 workspace — backs workspace__*
@@ -180,7 +179,7 @@ apps/workshop_bot/
 │   └── thingy_client.py / thingy_render.py   # Lambda bridge
 ├── scheduler/
 │   ├── jobs.py               # cron JobSpec declarations (update-draft, pinboard-scan, rss-check, daily-metrics)
-│   ├── handlers.py           # content_job bridge + rss_check + (legacy) heartbeat
+│   ├── handlers.py           # content_job bridge (cron → jobs/) + rss_check
 │   └── runner.py             # APScheduler + dispatch
 ├── db/
 │   └── schema.sql            # SQLite schema (Python ALTER migrations in db.py)
@@ -260,8 +259,7 @@ A persona with a missing token is skipped at startup; the rest still run.
 - `WORKSHOP_LOG_LEVEL` (default `INFO`)
 - `WORKSHOP_DEFAULT_MODEL` (default `haiku`; per-persona overrides take precedence)
 - `WORKSHOP_SCHEDULER_ENABLED` (`0` to disable all scheduled jobs)
-- `WORKSHOP_HEARTBEATS_ENABLED` (default `1`; set to `0` to silence heartbeats)
-- `WORKSHOP_HEARTBEAT_MODEL` (default `haiku`)
+- `WORKSHOP_EDDY_REVIEW_MODEL` (optional; default: haiku Tue/Wed, sonnet Thu/Fri for Eddy's post-update review)
 
 ---
 
@@ -269,7 +267,7 @@ A persona with a missing token is skipped at startup; the rest still run.
 
 1. **One process, multiple personas.** Single asyncio loop; separate `discord.py` clients with separate tokens so each persona has its own avatar.
 2. **Personas are config, not code.** Class-level attributes (`home_channel_env`, `preferred_model`, `empty_greeting`) drive behavior; every persona sees the full `Deps.registry` tool surface; the agent loop is shared in `PersonaBot.core()`.
-3. **Prompts as `.md` files.** `prompts/shared/team.md` carries shared identity and rules; `prompts/<persona>/prompt.md` carries the persona's distinctive lane; `prompts/<persona>/heartbeat.md` is the scheduled wake-up prompt. The team prompt is cached at the API; persona prompts inherit the prefix cache.
+3. **Prompts as `.md` files.** `prompts/shared/team.md` carries shared identity and rules; `prompts/<persona>/prompt.md` carries the persona's distinctive lane; `prompts/<persona>/<job>.md` carries a job's task brief. The team prompt is cached at the API; persona prompts inherit the prefix cache.
 4. **Memory beyond chat.** `agent_notes` for cross-session continuity; Discord history alone is too short to remember preferences week to week.
 5. **SQLite for operational state, S3 only for build artifacts.** Strict boundary; the S3 helper enforces it at the path level.
 6. **Scheduled jobs are first-class.** Most jobs are pure-code data shuffling; only compose-style work hits the LLM.

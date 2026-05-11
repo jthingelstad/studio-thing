@@ -55,6 +55,12 @@ def _install_discord() -> None:
         def __init__(self, id):
             self.id = id
 
+    class _DiscordException(Exception):
+        pass
+
+    class _HTTPException(_DiscordException):
+        pass
+
     discord.Client = _Client  # type: ignore[attr-defined]
     discord.Intents = _Intents  # type: ignore[attr-defined]
     discord.Permissions = _Permissions  # type: ignore[attr-defined]
@@ -62,7 +68,9 @@ def _install_discord() -> None:
     discord.Message = object  # type: ignore[attr-defined]
     discord.Interaction = object  # type: ignore[attr-defined]
     discord.RawReactionActionEvent = object  # type: ignore[attr-defined]
-    discord.DiscordException = Exception  # type: ignore[attr-defined]
+    discord.DiscordException = _DiscordException  # type: ignore[attr-defined]
+    discord.HTTPException = _HTTPException  # type: ignore[attr-defined]
+    discord.NotFound = _HTTPException  # type: ignore[attr-defined]
 
     abc_mod = types.ModuleType("discord.abc")
     abc_mod.Messageable = object  # type: ignore[attr-defined]

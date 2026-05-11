@@ -536,7 +536,10 @@ class EddyContextTests(_DBTestCase):
         self.assertIsNone(ctx["active_issue"])
 
 
-class MicroblogParseTests(unittest.TestCase):
+class MicroblogTests(unittest.TestCase):
+    def tearDown(self):
+        os.environ.pop("MICROBLOG_API_KEY", None)
+
     def test_html_to_markdownish(self):
         h = '<p>Hello <a href="https://x.example/y">there</a>.</p><p>Pic:</p><p><img src="https://cdn.uploads.micro.blog/z.jpg"></p>'
         md = microblog.html_to_markdownish(h)
@@ -544,20 +547,71 @@ class MicroblogParseTests(unittest.TestCase):
         self.assertIn("![](https://cdn.uploads.micro.blog/z.jpg)", md)
         self.assertNotIn("<p>", md)
 
-    def test_posts_in_window_filters_by_date(self):
-        feed = {
-            "version": "https://jsonfeed.org/version/1.1",
-            "items": [
-                {"url": "https://x/1", "date_published": "2026-05-08T10:00:00-05:00", "content_html": "<p>before window</p>"},
-                {"url": "https://x/2", "date_published": "2026-05-09T10:00:00-05:00", "content_html": "<p>in window early</p>"},
-                {"url": "https://x/3", "date_published": "2026-05-15T23:00:00-05:00", "content_html": "<p>in window late</p>"},
-                {"url": "https://x/4", "date_published": "2026-05-16T01:00:00-05:00", "content_html": "<p>after window</p>"},
-            ],
-        }
-        with patch.object(microblog, "_fetch_feed", lambda: feed):
+    def test_content_to_markdown_variants(self):
+        self.assertEqual(microblog._content_to_markdown("raw **markdown**"), "raw **markdown**")
+        self.assertEqual(microblog._content_to_markdown(["raw md from list"]), "raw md from list")
+        self.assertEqual(microblog._content_to_markdown({"markdown": "explicit md"}), "explicit md")
+        self.assertIn("[x](http://y)", microblog._content_to_markdown({"html": '<a href="http://y">x</a>'}))
+        self.assertEqual(microblog._content_to_markdown(None), "")
+
+    def test_jsonfeed_fallback_filters_by_date(self):
+        # No MICROBLOG_API_KEY → JSON-feed path.
+        os.environ.pop("MICROBLOG_API_KEY", None)
+        jsonfeed = [
+            {"url": "https://x/1", "published": "2026-05-08T10:00:00-05:00", "content_md": "before"},
+            {"url": "https://x/2", "published": "2026-05-09T10:00:00-05:00", "content_md": "early"},
+            {"url": "https://x/3", "published": "2026-05-15T23:00:00-05:00", "content_md": "late"},
+            {"url": "https://x/4", "published": "2026-05-16T01:00:00-05:00", "content_md": "after"},
+        ]
+        with patch.object(microblog, "_jsonfeed_posts", lambda: jsonfeed):
             out = microblog.posts_in_window("2026-05-08", "2026-05-15")
         self.assertEqual([p["url"] for p in out], ["https://x/2", "https://x/3"])
-        self.assertEqual(out[0]["content_md"], "in window early")
+
+    def test_micropub_source_preferred_returns_native_markdown(self):
+        os.environ["MICROBLOG_API_KEY"] = "tok"
+        mf2 = {
+            "items": [
+                {"type": ["h-entry"], "properties": {
+                    "url": ["https://www.thingelstad.com/2026/05/12/a.html"],
+                    "published": ["2026-05-12T15:02:00-05:00"],
+                    "post-status": ["published"],
+                    "content": ["This is **raw markdown** with a [link](http://x.example)."],
+                }},
+                {"type": ["h-entry"], "properties": {
+                    "url": ["https://www.thingelstad.com/2026/05/01/old.html"],
+                    "published": ["2026-05-01T09:00:00-05:00"],
+                    "post-status": ["published"],
+                    "content": ["out of window"],
+                }},
+                {"type": ["h-entry"], "properties": {
+                    "url": ["https://www.thingelstad.com/2026/05/13/draft.html"],
+                    "published": ["2026-05-13T09:00:00-05:00"],
+                    "post-status": ["draft"],
+                    "content": ["a draft, should be skipped"],
+                }},
+            ]
+        }
+        fake_resp = MagicMock()
+        fake_resp.json.return_value = mf2
+        fake_resp.raise_for_status = MagicMock()
+        with patch.object(microblog.requests, "get", return_value=fake_resp) as g:
+            out = microblog.posts_in_window("2026-05-08", "2026-05-15")
+        # Only the in-window published post; content is the *native markdown*.
+        self.assertEqual([p["url"] for p in out], ["https://www.thingelstad.com/2026/05/12/a.html"])
+        self.assertEqual(out[0]["content_md"], "This is **raw markdown** with a [link](http://x.example).")
+        # Hit the Micropub endpoint with the source query + bearer auth.
+        kwargs = g.call_args.kwargs
+        self.assertEqual(kwargs["params"], {"q": "source"})
+        self.assertTrue(kwargs["headers"]["Authorization"].startswith("Bearer "))
+
+    def test_micropub_failure_falls_back_to_jsonfeed(self):
+        os.environ["MICROBLOG_API_KEY"] = "tok"
+        jsonfeed = [{"url": "https://x/2", "published": "2026-05-12T10:00:00-05:00", "content_md": "from feed"}]
+        with patch.object(microblog, "_micropub_source_posts", side_effect=RuntimeError("micropub down")), \
+             patch.object(microblog, "_jsonfeed_posts", lambda: jsonfeed):
+            out = microblog.posts_in_window("2026-05-08", "2026-05-15")
+        self.assertEqual([p["url"] for p in out], ["https://x/2"])
+        self.assertEqual(out[0]["content_md"], "from feed")
 
 
 class DraftSectionStatusToolTests(_DBTestCase):
@@ -965,6 +1019,23 @@ class BuildPublishTests(_DBTestCase):
         self.assertLess(pub.index("Support the EFF."), pub.index("## Journal"))
         self.assertGreater(pub.index("Support the EFF."), pub.index("## Briefly"))
 
+    def test_no_currently_means_no_currently_heading(self):
+        self._window()
+        self.ws.write_issue_file(458, "final.md", _filled_final())
+        self.ws.write_issue_file(458, "intro.md", "Intro.")
+        self.ws.write_issue_file(458, "haiku.md", "a\nb\nc")
+        self.ws.write_issue_file(458, "metadata.json", '{"subject":"x"}')
+        self.ws.write_issue_file(458, "cover.jpg", "(binary)")
+        # No currently.md.
+        ctx, fc = self._ctx()
+        result = asyncio.run(build_publish.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        pub = self.ws.files[(458, "publish.md")]
+        self.assertNotIn("## Currently", pub)   # empty optional section dropped
+        self.assertIn("## Notable", pub)
+        self.assertIn("## Haiku", pub)
+        self.assertTrue(pub.startswith("Intro."))
+
 
 class ComposeHaikuTests(_DBTestCase):
     def _window(self, n=458):
@@ -1105,36 +1176,37 @@ class CreateFinalTests(_DBTestCase):
         self.assertFalse(result.ok)
         self.assertIn("already has", result.message)
 
-    def test_accept_uses_eddy_body_and_fires_chain(self):
+    def test_accept_uses_eddy_body(self):
         proposed = _filled_final(notable="### [Z reordered](http://z)\n\nlead")
         reply = f"Reordered Notable to lead with Z.\n\n```markdown\n{proposed}\n```"
         ctx, fc = self._setup(reply)
-        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)), \
-             patch.object(create_final.compose_haiku, "run", AsyncMock(return_value=_base.JobResult(True, "haiku ok"))), \
-             patch.object(create_final.compose_meta, "run", AsyncMock(return_value=_base.JobResult(True, "meta ok"))), \
-             patch.object(create_final.compose_cta, "run", AsyncMock(return_value=_base.JobResult(True, "cta ok"))), \
-             patch.object(create_final.build_publish, "run", AsyncMock(return_value=_base.JobResult(True, "publish.md written"))):
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
         self.assertIn("Z reordered", self.ws.files[(458, "final.md")])
-        self.assertIn("build-publish: publish.md written", result.message)
+        # No auto-chain: the result points Jamie at the compose jobs.
+        self.assertIn("compose-haiku", result.message)
+        # ...and Eddy never touched any other job.
+        self.assertFalse(hasattr(create_final, "compose_haiku"))
 
     def test_reject_uses_draft_body(self):
         proposed = _filled_final(notable="### [Z reordered](http://z)\n\nlead")
         reply = f"here's a take\n\n```markdown\n{proposed}\n```"
         ctx, fc = self._setup(reply)
-        with patch.object(interaction, "await_approval", AsyncMock(return_value=False)), \
-             patch.object(create_final.compose_haiku, "run", AsyncMock(return_value=_base.JobResult(False, "no pick"))), \
-             patch.object(create_final.compose_meta, "run", AsyncMock(return_value=_base.JobResult(True, "meta ok"))), \
-             patch.object(create_final.compose_cta, "run", AsyncMock(return_value=_base.JobResult(True, "cta ok"))), \
-             patch.object(create_final.build_publish, "run", AsyncMock(return_value=_base.JobResult(True, "x"))):
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=False)):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
         # Draft body used, not the proposed reorder.
         self.assertIn("### [A](http://a)", self.ws.files[(458, "final.md")])
         self.assertNotIn("Z reordered", self.ws.files[(458, "final.md")])
-        # build-publish NOT auto-fired (haiku didn't complete).
-        self.assertIn("not auto-fired", result.message)
+
+    def test_timeout_writes_draft_and_returns(self):
+        ctx, fc = self._setup("here's a take\n\n```markdown\n" + _filled_final(notable="### [Z](http://z)") + "\n```")
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=None)):
+            result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        # On timeout the draft body is written as-is (don't block forever).
+        self.assertIn("### [A](http://a)", self.ws.files[(458, "final.md")])
 
 
 class GoalsAndPattyContextTests(_DBTestCase):

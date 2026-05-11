@@ -11,10 +11,23 @@ shape::
     /workshop job <name> [<args>]
 
 ``job`` is a subcommand group under ``workshop``; job names are flat and
-hyphenated, no further nesting. Each subcommand defers, runs the job's
-async ``run(ctx, …)``, and acks the invoker ephemerally with the job's
-result message. Jobs that also need to post to a channel during the run
-do so via ``ctx.post(...)``.
+hyphenated, no further nesting.
+
+Two dispatch shapes:
+
+- **Fast jobs** (most): defer, run the job's async ``run(ctx, …)``, ack
+  the invoker ephemerally with the job's result message. (The followup
+  send is wrapped in try/except — a Discord interaction token is only
+  good for ~15 min, and although these jobs finish well inside that, a
+  slow LLM hiccup shouldn't surface as a command error.)
+- **Interactive jobs** (``create-final``, ``compose-haiku`` / ``-meta`` /
+  ``-cta``): these post options to a channel and wait for Jamie's
+  reaction — possibly far longer than the 15-min token window. So the
+  command acks *immediately* ("started — react in #editorial / #supporters"),
+  then awaits the job, which posts its own outcome to the channel. We never
+  send a second followup; the channel posts carry the result.
+
+Jobs that post to a channel during the run do so via ``ctx.post(...)``.
 
 Wired: ``start-issue``, ``update-draft``, ``issue-status``,
 ``pinboard-scan``, ``create-final``, ``compose-haiku`` / ``-meta`` /
@@ -83,17 +96,34 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
         parent=workshop,
     )
 
+    async def _ack(interaction, text: str) -> None:
+        """Send an ephemeral followup, swallowing an expired-token error."""
+        try:
+            await interaction.followup.send(_clip(text), ephemeral=True)
+        except discord.HTTPException:  # token gone (>15 min) or transient — the work still happened
+            logger.warning("/workshop: couldn't ack invoker (interaction expired?)")
+
     async def _run_and_ack(interaction, coro_factory, label: str) -> None:
+        """Fast jobs: defer, run, ack with the result."""
         await interaction.response.defer(ephemeral=True, thinking=True)
         try:
             result = await coro_factory()
         except Exception as exc:  # noqa: BLE001
             logger.exception("/workshop job %s failed", label)
-            await interaction.followup.send(
-                f"❌ `{label}` hit an error: `{type(exc).__name__}: {exc}`", ephemeral=True
-            )
+            await _ack(interaction, f"❌ `{label}` hit an error: `{type(exc).__name__}: {exc}`")
             return
-        await interaction.followup.send(_clip(result.message), ephemeral=True)
+        await _ack(interaction, result.message)
+
+    async def _run_interactive(interaction, coro_factory, label: str, started: str) -> None:
+        """Interactive jobs: ack immediately, then run (it can wait on a
+        reaction for far longer than the interaction token lasts). The job
+        posts its own outcome to the channel; we don't send a followup."""
+        await interaction.response.send_message(started, ephemeral=True)
+        try:
+            await coro_factory()
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("/workshop job %s failed", label)
+            await _ack(interaction, f"❌ `{label}` hit an error: `{type(exc).__name__}: {exc}` — see logs / the channel.")
 
     @job.command(
         name="start-issue",
@@ -145,31 +175,43 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
 
     @job.command(
         name="create-final",
-        description="Eddy's reorder review → final.md, then auto-fires the compose chain.",
+        description="Eddy's reorder review → final.md (then run compose-haiku/meta/cta and build-publish).",
     )
     async def create_final_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: create_final.run(_ctx(bot)), "create-final")
+        await _run_interactive(
+            interaction, lambda: create_final.run(_ctx(bot)), "create-final",
+            "Starting `create-final` — Eddy will post a reorder proposal in #editorial; react there.",
+        )
 
     @job.command(
         name="compose-haiku",
         description="Generate haiku options for the in-flight issue → haiku.md.",
     )
     async def compose_haiku_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: compose_haiku.run(_ctx(bot)), "compose-haiku")
+        await _run_interactive(
+            interaction, lambda: compose_haiku.run(_ctx(bot)), "compose-haiku",
+            "Starting `compose-haiku` — options will post in #editorial; react there to pick.",
+        )
 
     @job.command(
         name="compose-meta",
         description="Generate subject + description options for the in-flight issue → metadata.json.",
     )
     async def compose_meta_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: compose_meta.run(_ctx(bot)), "compose-meta")
+        await _run_interactive(
+            interaction, lambda: compose_meta.run(_ctx(bot)), "compose-meta",
+            "Starting `compose-meta` — options will post in #editorial; react there to pick.",
+        )
 
     @job.command(
         name="compose-cta",
         description="Patty's membership-CTA proposal for the in-flight issue → cta-*.md.",
     )
     async def compose_cta_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: compose_cta.run(_ctx(bot)), "compose-cta")
+        await _run_interactive(
+            interaction, lambda: compose_cta.run(_ctx(bot)), "compose-cta",
+            "Starting `compose-cta` — Patty will post CTA framings in #supporters; react there to pick.",
+        )
 
     @job.command(
         name="build-publish",

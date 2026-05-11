@@ -48,9 +48,9 @@ async def run(ctx: "_base.JobContext", *, issue_number: Optional[int] = None) ->
         )
     publish_body = res["text"]
 
-    bot, channel = _compose.resolve_bot_and_channel(ctx, "marky", "DISCORD_CHANNEL_PROMOTION")
+    bot, channel, reason = _compose.resolve_bot_and_channel(ctx, "marky", "DISCORD_CHANNEL_PROMOTION")
     if bot is None:
-        return _base.JobResult(True, f"(promotion-prep skipped — {channel})", data={"posted": False})
+        return _base.JobResult(True, f"(promotion-prep skipped — {reason})", data={"posted": False})
 
     asset = f"{n}/promotion-drafts"  # not a real file — just a lock key so a re-fire bounces
     try:
