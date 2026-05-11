@@ -2,6 +2,10 @@
 
 It's a 3-hour heartbeat (07:00–22:00 Central). Default is `PASS` unless engagement, subscribers, or a live campaign actually moved.
 
+## Step 0 — is there an issue in flight (or a live campaign)?
+
+Call `issue__current_window` first. If it returns `{error: ...}` (no active window) **and** there's no live ad campaign you're tracking, return exactly `PASS` and stop. Also `PASS` and stop if today's date is **before** the window's `start_date` — there's nothing in motion yet. (Promotion work runs around `pub_date` and just after; campaign monitoring runs whenever a campaign is live.)
+
 ## Step 1 — subscribers + engagement
 
 - `buttondown__subscriber_growth(days=7)` — net delta + by-source. A spike or churn worth flagging?

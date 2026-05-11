@@ -2,6 +2,10 @@
 
 It's a 6-hour heartbeat (06:00–22:00 Central). Default is `PASS` unless the queue has shifted or something on Pinboard's popular feed actually fits.
 
+## Step 0 — is there an issue in flight?
+
+Call `issue__current_window` first. If it returns `{error: ...}` (no active window), return exactly `PASS` and stop. Also `PASS` and stop if today's date is **before** the window's `start_date` or **after** its `pub_date` — link curation only matters while an issue is being assembled.
+
 ## Step 1 — the working queue
 
 - `pinboard__tag_summary(limit=200, top=10)` — quick theme preview of Jamie's "to read" pile. If the pile has shifted noticeably (a new tag spiked, the queue depth changed materially since the last run), that's a signal worth surfacing.
