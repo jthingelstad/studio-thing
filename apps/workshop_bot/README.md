@@ -10,10 +10,10 @@
 
 | Persona | Role | Default model | Home channel |
 |---|---|---|---|
-| **Eddy** (he/him) | Editor — sharpens drafts, watches voice | Opus 4.7 | `#editorial` |
-| **Linky** (he/him) | Link curation — Pinboard queue, popular feed, archive recall | Sonnet 4.6 | `#research` |
-| **Marky** (she/her) | Promotion — subject lines, descriptions, engagement reports | Sonnet 4.6 | `#promotion` |
-| **Patty** (she/her) | Supporter steward — writes the per-issue `member.json` (signed by Thingy in print) | Sonnet 4.6 | `#supporters` |
+| **Eddy** (he/him) | Editor — `update-draft` reviews (Tue–Fri), `create-final` reorder, `compose-haiku`/`-meta`. No heartbeat; mention-driven asks still work. | Opus 4.7 | `#editorial` |
+| **Linky** (he/him) | Link curation — `pinboard-scan` (Mon–Fri 06:30/18:30 during the issue window). Pinboard ↔ `#research` ↔ Jamie; no agent-to-agent handoffs. | Sonnet 4.6 | `#research` |
+| **Marky** (she/her) | Promotion — `promotion-prep` (RSS-triggered post-ship) + `daily-metrics` (daily); owns the campaign ledger. Drafts in Jamie's voice; never auto-posts. | Sonnet 4.6 | `#promotion` |
+| **Patty** (she/her) | Supporter steward — `compose-cta` writes the per-issue membership CTA in **Thingy's** voice (Patty is invisible to readers). Milestone-driven via the `goals` table. | Sonnet 4.6 | `#supporters` |
 | **Thingy** (bridge) | Public archive Q&A — forwards to the Librarian Lambda | n/a (LLM lives in the Lambda) | `#ask-thingy` |
 
 The four agent personas share **almost** the full tool surface — every tool is available to every persona, with two privacy-scoped exceptions: `stripe__*` is restricted to Patty (donor data should never enter the other personas' surfaces) and `pinboard__*` to Linky (mutating bookmark tools). Lane discipline otherwise lives in the persona prompts, not in a per-persona allowlist. Tools follow `<system>__<action>` naming (`archive__search`, `memory__remember`, `buttondown__list_subscribers`, `workspace__read`). External-system tool surfaces live under `apps/workshop_bot/systems/<name>/`; local helpers live under `apps/workshop_bot/tools/`. Both are composed into the same `ToolRegistry` at boot. A system can declare `restricted_to = {"<persona>", ...}` to scope visibility — `ToolRegistry.names_for(persona)` filters and `dispatch()` enforces (defense in depth, even if a model invents a name for a restricted tool).
@@ -54,20 +54,22 @@ Thingy users (web and Discord) also have per-user memory in the Lambda's DynamoD
 
 ---
 
-## Scheduled jobs
+## Jobs (the spine)
 
-`scheduler/jobs.py` declares cron-triggered jobs as plain Python functions in `scheduler/handlers.py`. Today there's exactly one shape: **heartbeats** — one per persona, default `PASS` unless something material changed. The earlier "rituals" (Friday curation, Monday subscriber report, Thursday member.json) were removed pending a deliberate redesign of how the team helps Jamie assemble each issue. Until then, heartbeats plus on-demand `/workshop` slash commands carry the load.
+Every workshop_bot action is a **job** — deterministic Python in `apps/workshop_bot/jobs/`, fired by the `/workshop job <name>` slash surface (host: Eddy; `job` is a subcommand group; `manage_guild`-gated) and/or by cron. `jobs/_base.py` is the runtime (`JobContext`, `JobResult`, single-asset `job_lock`, draft-block helpers). See [`CLAUDE.md`](CLAUDE.md) for the full job table and [`docs/workshop-content-loop-design-brief.md`](../../docs/workshop-content-loop-design-brief.md) for the design.
 
-| Job | When (Central) | Shape |
+Issue-assembly flow: `start-issue` → `update-draft` (pure projection of Pinboard/micro.blog/asset files into `draft.md`; Eddy reviews Tue–Fri) → `create-final` (Eddy reorder → `final.md`) → `compose-haiku` + `compose-meta` + `compose-cta` in parallel → `build-publish` (→ `publish.md`). Parallel: `pinboard-scan` (Linky), `promotion-prep` + `daily-metrics` + `add-campaign` / `campaign-report` (Marky).
+
+Scheduled (`scheduler/jobs.py`, Central time):
+
+| Job | When | Shape |
 |---|---|---|
-| `eddy-heartbeat` | daily 08:30 | LLM heartbeat → `#editorial` (or `PASS`) |
-| `linky-heartbeat` | every 6h, 06–22 | LLM heartbeat → `#research` (or `PASS`) |
-| `marky-heartbeat` | every 3h, 07–22 | LLM heartbeat → `#promotion` (or `PASS`) |
-| `patty-heartbeat` | daily 09:00 | LLM heartbeat → `#supporters` (or `PASS`) |
+| `update-draft-daily` | daily 17:00 | `content_job` → `jobs/update_draft.py`; PASSes if no issue in flight / locked |
+| `linky-pinboard-scan` | Mon–Fri 06:30 & 18:30 | `content_job` → `jobs/pinboard_scan.py`; PASSes outside the issue window |
+| `marky-rss-check` | Sat & Sun, every 4h 09–21 | `handlers.rss_check` — detects a new published issue, fires `promotion-prep` |
+| `marky-daily-metrics` | daily 19:00 | `content_job` → `jobs/daily_metrics.py`; PASSes silently when nothing moved |
 
-Heartbeats are dispatched by a shared `handlers.heartbeat(persona, ctx)` wired into each `JobSpec` via `functools.partial`. Each loads `prompts/<persona>/heartbeat.md`, runs the agent loop with `WORKSHOP_HEARTBEAT_MODEL` (default `haiku`), and posts only if the answer isn't `PASS`.
-
-CLI: `python -m apps.workshop_bot.scheduler.runner --list` to inspect. Disable the whole scheduler with `WORKSHOP_SCHEDULER_ENABLED=0`; silence heartbeats with `WORKSHOP_HEARTBEATS_ENABLED=0`. Rehearse one heartbeat offline with `python -m apps.workshop_bot.eval --heartbeat <persona>`.
+Per-persona heartbeats are retired; `handlers.heartbeat` is kept for eval / ad-hoc only. CLI: `python -m apps.workshop_bot.scheduler.runner --list`. Disable the scheduler with `WORKSHOP_SCHEDULER_ENABLED=0`.
 
 ---
 
@@ -75,19 +77,23 @@ CLI: `python -m apps.workshop_bot.scheduler.runner --list` to inspect. Disable t
 
 The published archive (corpus) holds issues already shipped — `#1` through `#N`. The issue Jamie is *currently writing* is `#N+1` and lives in the S3 workspace at `s3://files.thingelstad.com/weekly-thing/{N+1}/` — **not in the archive corpus.** This S3 prefix is shared with the published archive (every shipped issue's folder lives at `weekly-thing/{N}/` too — that's where Shortcuts puts cover images, journal photos, etc.); the in-flight issue is just the highest-numbered folder. Jamie sets the active issue window via the `/workshop job start-issue <number> <pub-date> <day-count>` slash command (host: Eddy). Every persona reads it via `issue__current_window`, which returns `{issue_number, pub_date, end_date, start_date, day_count}`; past windows are queryable via `issue__list_windows`. Date semantics: `pub_date` is the publishing Saturday; `end_date = pub_date - 1 day` is the content cutoff; `start_date = end_date - day_count days` is the previous issue's cutoff (so a normal `day_count=7` window covers the seven days strictly after `start_date` through `end_date`).
 
-S3 workspace conventions:
+S3 workspace conventions — every piece of issue content is a standalone file (the "unified asset pattern"):
 
 ```
 weekly-thing/{N}/
-├── draft.md            ← Jamie's draft (from Shortcuts)
-├── cover.jpg           ← issue cover image (Shortcuts-managed)
-├── cover-large.jpg     ← full-size cover
-├── journal/            ← per-entry photos for the issue's journal section
-├── body-{N}.mp3        ← audio of the body, written by `pipeline/audio/`
-├── weekly-thing-{N}.mp3← full audio episode, written by `pipeline/audio/`
-├── member.json         ← Patty writes Thursday 18:00 CT (CTA + progress update)
-├── marky-meta.json     ← (planned — Marky doesn't auto-write yet)
-└── eddy-edits.md       ← (when Eddy posts a substantial revision)
+├── intro.md            ← Jamie writes (Drafts → Shortcut)            [required]
+├── currently.md        ← Jamie writes (Drafts → Shortcut)            [optional]
+├── haiku.md            ← compose-haiku writes                        [required]
+├── metadata.json       ← compose-meta writes (subject + description) [required]
+├── cta-1.md / cta-2.md ← compose-cta writes (placement: frontmatter) [optional, 0–2]
+├── draft.md            ← update-draft writes (regenerable projection of all the above + upstream)
+├── final.md            ← create-final writes (post-Eddy ordering)    [required]
+├── publish.md          ← build-publish writes (everything inlined; the ship artifact)
+├── cover.jpg           ← issue cover image (iOS Shortcuts)            [required]
+├── cover-large.jpg     ← full-size cover (iOS Shortcuts)
+├── journal/            ← per-entry photos (iOS Shortcuts)
+├── body-{N}.mp3 / weekly-thing-{N}.mp3 ← audio, written by `pipeline/audio/`
+└── eddy-edits.md       ← (rare — when Eddy posts a substantial revision worth preserving)
 ```
 
 The S3 helper at `tools/s3.py` enforces a strict allow-list: only md/markdown/txt/json/yaml/yml/csv/html files; bare-component filenames (no slashes, no `..`); 256 KB cap per file. The text-only extension allowlist is what keeps agent writes from clobbering published archive assets (cover.jpg, journal photos) that share the prefix. Any path outside `weekly-thing/{N}/` is rejected before the request reaches AWS.
@@ -125,17 +131,30 @@ The bridge:
 apps/workshop_bot/
 ├── README.md
 ├── bot.py                    # entrypoint — composes ToolRegistry, starts clients + scheduler
-├── eval.py                   # offline persona testing (no Discord); --heartbeat to rehearse one heartbeat
+├── eval.py                   # offline persona testing (no Discord)
+├── jobs/                     # the content-loop spine (deterministic, schedulable, /workshop-triggerable)
+│   ├── _base.py              # JobContext, JobResult, single-asset job_lock, draft-block helpers
+│   ├── _compose.py           # shared helpers for the compose-* jobs + create-final
+│   ├── start_issue.py / update_draft.py / issue_status.py
+│   ├── create_final.py / compose_haiku.py / compose_meta.py / compose_cta.py / build_publish.py
+│   ├── pinboard_scan.py      # Linky's four-lane Pinboard pass
+│   └── promotion_prep.py / daily_metrics.py / add_campaign.py / campaign_report.py   # Marky
+├── templates/
+│   └── draft_starter.md      # the six-block issue template
 ├── personas/
 │   ├── base.py               # PersonaBot — routing, peer reactions, agent loop
 │   ├── team.py               # @Team round orchestration
+│   ├── commands.py           # the /workshop slash tree (hosted on Eddy)
 │   ├── eddy.py / linky.py / marky.py / patty.py
 │   └── thingy.py             # Lambda bridge (no agent loop)
 ├── prompts/
 │   ├── shared/team.md        # shared team-level prompt (cached system block)
 │   └── <persona>/
 │       ├── prompt.md         # the persona's identity / lane / voice
-│       └── heartbeat.md      # the scheduled wake-up prompt (default PASS)
+│       ├── heartbeat.md      # legacy heartbeat prompt (kept; no longer scheduled)
+│       └── <job>.md          # job prompts: eddy/update-review.md, eddy/create-final.md,
+│                             #   eddy/compose-{haiku,meta}.md, linky/pinboard-scan.md,
+│                             #   patty/compose-cta.md, marky/promotion-prep.md, marky/daily-metrics.md
 ├── systems/                  # external-system tool surfaces (one subpackage per system)
 │   ├── _base.py              # SystemServer Protocol + ToolDef dataclass
 │   ├── buttondown/{client,server}.py
@@ -145,29 +164,30 @@ apps/workshop_bot/
 ├── tools/
 │   ├── agent_loop.py         # tool-using turn (asyncio.to_thread wrapper)
 │   ├── agent_tools.py        # ToolRegistry, FUNCS/SPECS, register_local_helpers
-│   ├── anthropic_client.py   # client + prompt loader (resolves <persona>-heartbeat)
-│   ├── archive.py            # read archive issues from disk
-│   ├── corpus.py             # BM25 corpus from librarian-core
-│   ├── conversation.py       # Discord history → Anthropic messages
-│   ├── discord_io.py         # chunked send, attachment read
+│   ├── anthropic_client.py   # client + prompt loader (<persona>-<file> → prompts/<persona>/<file>.md)
+│   ├── archive.py / corpus.py / conversation.py / discord_io.py
 │   ├── db.py                 # SQLite helpers + idempotent column migrations
 │   ├── issue.py              # issue-window compute + tool handlers
+│   ├── draft.py              # parse draft.md for section/asset completeness (draft__section_status)
+│   ├── context.py            # build_{eddy,linky,patty,marky}_context — dynamic prompt blocks
+│   ├── interaction.py        # await_choice / await_approval — reaction primitive for jobs
+│   ├── microblog.py          # micro.blog JSON Feed client (journal source)
+│   ├── rss.py                # latest_published_issue() from weekly.thingelstad.com/feed.xml
 │   ├── support_state.py      # current nonprofit state for Patty
 │   ├── s3.py                 # per-issue S3 workspace — backs workspace__*
 │   ├── web.py                # web__fetch_url
 │   ├── startup.py            # boot self-check + announce
-│   ├── thingy_client.py      # Lambda bridge HTTP/SSE client
-│   └── thingy_render.py      # citation injection + history compaction
+│   └── thingy_client.py / thingy_render.py   # Lambda bridge
 ├── scheduler/
-│   ├── jobs.py               # JobSpec declarations (4 heartbeats)
-│   ├── handlers.py           # heartbeat dispatcher
+│   ├── jobs.py               # cron JobSpec declarations (update-draft, pinboard-scan, rss-check, daily-metrics)
+│   ├── handlers.py           # content_job bridge + rss_check + (legacy) heartbeat
 │   └── runner.py             # APScheduler + dispatch
 ├── db/
 │   └── schema.sql            # SQLite schema (Python ALTER migrations in db.py)
 ├── data/                     # gitignored
 │   └── workshop.db
 └── tests/
-    └── test_*.py             # ~200 unit tests; discord/anthropic/httpx stubbed
+    └── test_*.py             # ~300 unit tests; discord/anthropic/httpx + S3/Pinboard/etc. stubbed
 ```
 
 ---
@@ -293,11 +313,14 @@ python -m apps.workshop_bot.eval --persona eddy --model sonnet
 
 ## What's still missing
 
-The README above describes what's built. A few items are still on the cutting room floor:
+The README above describes what's built. Open items:
 
-- **Buttondown supporter-event webhook.** Today Marky polls. Real-time signups/churn → `#chatter` would need a small HTTP listener (Flask or aiohttp). The `subscriber_events_seen` table is ready for it.
-- **Auto-shipped `marky-meta.json`.** Patty's Thursday `member.json` job has the shape; Marky needs a parallel scheduled job that composes `{ "subject": "Three Words Title", "description": "..." }` and writes it to S3.
-- **Eddy auto-critique on new draft.** Today Eddy reads drafts on demand. Could poll S3 for a fresh `draft.md` per the in-flight issue and post a critique automatically.
-- **`agent_outputs.status` lifecycle.** Field exists with `pending` / `ready` / `used` / `archived` values, but nothing transitions outputs after Jamie pulls them.
-- **Stripe Payment Link `ref` metadata.** `stripe__donations_by_ref` returns mostly `(no-ref)` until the donate flow is configured to set `ref` on Checkout Session metadata. Documented in the tool description.
+- **`create-final` per-section approval.** It does one approval round (Eddy proposes the whole reordered body, Jamie ✅/❌/🔄); the design brief's per-section loop (approve Notable order, then Briefly, then Journal) is a refinement.
+- **Deeper tool-surface pass on buttondown/tinylytics/stripe.** Step 5 reshaped Pinboard; Step 8 added `buttondown__campaign_signups` / `tinylytics__campaign_traffic`, but the broader "drop verbs that don't serve a job, rename verbs that describe the API" pass is deferred.
+- **`popular_unseen` avoid-domains.** Dedups against `pinboard_popular_seen` only; the avoid-domains list the brief mentions isn't wired.
+- **`pipeline/content/content.py publish`** (create a Buttondown draft from `publish.md` + `metadata.json`) is implemented but untested against the live API.
+- **Retire the iOS Shortcuts pipeline** — kept as a recovery tool until 3–4 successful ships via the new flow (Step 9 of the design brief).
+- **Buttondown supporter-event webhook.** Today Marky polls. Real-time signups/churn → `#chatter` would need a small HTTP listener. The `subscriber_events_seen` table is ready for it.
+- **`agent_outputs.status` lifecycle.** Field exists (`pending` / `ready` / `used` / `archived`) but nothing transitions outputs after Jamie pulls them.
+- **Stripe Payment Link `ref` metadata.** `stripe__donations_by_ref` returns mostly `(no-ref)` until the donate flow sets `ref` on Checkout Session metadata.
 - **Decommission dead tables.** `analytics`, `supporter_events`, `channel_routes` are reserved but unused.
