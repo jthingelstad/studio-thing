@@ -26,37 +26,73 @@ logger = logging.getLogger("workshop.render")
 
 _BLOCK_MARKER_RE = re.compile(r"<!--\s*/?block:[a-z0-9_-]+\s*-->\n?", re.IGNORECASE)
 
+# Mirrors content/buttondown/newsletter/buttondown-email.css (the production
+# email stylesheet) so the preview reads like a delivered issue: sans body,
+# serif headings, mono meta, the brand blue, the section rhythm. Browsers
+# may load the Google fonts; if not, the system fallbacks read similarly
+# (same as the email).
 _CSS = """\
-:root { color-scheme: light dark; }
+:root {
+  color-scheme: light dark;
+  --wt-bg: #fcfcfa; --wt-ink: #14181f; --wt-ink-soft: #3d4654; --wt-muted: #7d8694;
+  --wt-line: #e6ebf2; --wt-line-soft: #f0f3f8;
+  --wt-accent: #1f6fd6; --wt-accent-deep: #134d99; --wt-accent-soft: #e1edff;
+  --wt-sans: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --wt-serif: "Source Serif 4", "Charter", "Iowan Old Style", "Sitka Text", Cambria, Georgia, serif;
+  --wt-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
 * { box-sizing: border-box; }
 body {
-  font: 1.05rem/1.65 "Iowan Old Style", "Source Serif 4", Georgia, "Times New Roman", serif;
-  max-width: 44rem; margin: 2.5rem auto; padding: 0 1.25rem;
-  color: #1f2328; background: #fcfcfa;
+  font-family: var(--wt-sans); font-size: 17px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  max-width: 680px; margin: 0 auto; padding: 32px 28px 64px;
+  color: var(--wt-ink); background: var(--wt-bg);
+}
+article > :first-child { margin-top: 0; }
+h1, h2, h3, h4 {
+  font-family: var(--wt-serif); font-weight: 500; letter-spacing: -0.015em;
+  color: var(--wt-ink); line-height: 1.25; text-wrap: pretty;
+}
+h1 { font-size: 32px; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 8px;
+     padding-bottom: 16px; border-bottom: 1px solid var(--wt-line); }
+h2 { font-size: 24px; margin: 40px 0 12px; padding-top: 24px; border-top: 1px solid var(--wt-line-soft); }
+h3 { font-size: 20px; line-height: 1.3; margin: 28px 0 8px; }
+h4 { font-size: 17px; margin: 24px 0 6px; }
+p { margin: 0 0 18px; color: var(--wt-ink); }
+em, i { font-style: italic; } strong, b { font-weight: 600; }
+a { color: var(--wt-accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { color: var(--wt-accent-deep); }
+ul, ol { padding-left: 24px; margin: 0 0 18px; }
+li { line-height: 1.55; margin-bottom: 6px; }
+li::marker { color: var(--wt-muted); }
+img { max-width: 100%; height: auto; border-radius: 2px; display: block; margin: 18px 0; }
+blockquote {
+  margin: 18px 0 24px; padding: 4px 0 4px 20px; border-left: 3px solid var(--wt-accent);
+  font-family: var(--wt-serif); font-style: italic; color: var(--wt-ink-soft);
+}
+blockquote p { color: var(--wt-ink-soft); margin-bottom: 6px; }
+blockquote p:last-child { margin-bottom: 0; }
+code { font-family: var(--wt-mono); font-size: 14px; background: var(--wt-line-soft); color: var(--wt-accent-deep); padding: 1px 6px; border-radius: 3px; }
+pre { background: var(--wt-line-soft); border-left: 3px solid var(--wt-accent); padding: 16px 20px; overflow-x: auto; margin: 18px 0; }
+pre code { background: transparent; color: var(--wt-ink); font-size: 13px; padding: 0; }
+hr { border: none; border-top: 1px solid var(--wt-line); margin: 32px 0; }
+.banner {
+  font-family: var(--wt-mono); font-size: 12px; line-height: 1.4;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  background: var(--wt-accent-soft); border-left: 4px solid var(--wt-accent);
+  color: var(--wt-accent-deep); padding: 10px 14px; border-radius: 3px; margin: 0 0 32px;
+}
+@media (max-width: 600px) {
+  body { padding: 20px 18px 48px; font-size: 16px; }
+  h1 { font-size: 26px; } h2 { font-size: 22px; } li { font-size: 16px; }
 }
 @media (prefers-color-scheme: dark) {
-  body { color: #d6d8da; background: #161719; }
-  a { color: #6ea8fe; }
-  blockquote { color: #a9adb2; border-left-color: #3a3d40; }
-  code, pre { background: #232528; }
-  hr, .banner { border-color: #3a3d40; }
-  .banner { background: #1d1f22; color: #a9adb2; }
-}
-h1, h2, h3, h4 { font-family: "Source Sans 3", "Helvetica Neue", Arial, sans-serif; line-height: 1.25; margin: 1.9em 0 .5em; }
-h1 { font-size: 1.9rem; } h2 { font-size: 1.5rem; } h3 { font-size: 1.2rem; } h4 { font-size: 1.05rem; }
-h2 { border-bottom: 1px solid currentColor; padding-bottom: .15em; opacity: .92; }
-a { color: #1f6fd6; }
-img { max-width: 100%; height: auto; border-radius: 6px; display: block; margin: 1em 0; }
-blockquote { margin: 1em 0; padding: .1em 1em; border-left: 3px solid #d8dade; color: #555; }
-code { font: .9em/1 "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; background: #f0f0ec; padding: .15em .35em; border-radius: 4px; }
-pre { background: #f0f0ec; padding: .9em 1.1em; border-radius: 6px; overflow-x: auto; }
-pre code { background: none; padding: 0; }
-hr { border: none; border-top: 1px solid #d8dade; margin: 2em 0; }
-.banner {
-  font: .8rem/1.4 "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  text-transform: uppercase; letter-spacing: .04em;
-  background: #fff7e6; border: 1px solid #e8d9b5; color: #6b5b2e;
-  padding: .55em .85em; border-radius: 6px; margin-bottom: 2em;
+  :root {
+    --wt-bg: #15171a; --wt-ink: #dfe2e6; --wt-ink-soft: #aab0b8; --wt-muted: #828a94;
+    --wt-line: #2c2f34; --wt-line-soft: #23262a;
+    --wt-accent: #6ea8fe; --wt-accent-deep: #9cc2ff; --wt-accent-soft: #1d2733;
+  }
+  code { color: #cdd9ff; }
 }
 """
 
@@ -88,7 +124,9 @@ def _markdown_to_html(md: str) -> str:
     except ImportError:
         logger.warning("render: python-markdown not installed — preview will show raw source")
         return f"<pre>{_html.escape(md)}</pre>"
-    return markdown.markdown(md, extensions=["extra", "sane_lists"], output_format="html5")
+    # `smarty` gives the curly quotes / em-dashes the published issue has;
+    # `extra` + `sane_lists` match the site's markdown handling closely enough.
+    return markdown.markdown(md, extensions=["extra", "sane_lists", "smarty"], output_format="html5")
 
 
 def markdown_to_html_page(md: str, *, title: str, subtitle: Optional[str] = None,

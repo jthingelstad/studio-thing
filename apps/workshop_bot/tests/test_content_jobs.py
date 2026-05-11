@@ -123,6 +123,16 @@ class BlockHelperTests(unittest.TestCase):
         self.assertIn("## Briefly", out)
         self.assertIn("## Journal", out)
 
+    def test_starter_template_section_order(self):
+        # Matches recently-published issues: Currently → Notable → Journal → Briefly,
+        # with the intro at the very top (no heading) and the haiku closing.
+        tpl = _base.starter_template()
+        order = [tpl.index(h) for h in ("## Currently", "## Notable", "## Journal", "## Briefly", "## Haiku")]
+        self.assertEqual(order, sorted(order), tpl)
+        # intro block precedes the first heading; haiku block follows the last.
+        self.assertLess(tpl.index("<!-- block:intro -->"), tpl.index("## Currently"))
+        self.assertGreater(tpl.index("<!-- block:haiku -->"), tpl.index("## Briefly"))
+
 
 # ---------- locking ----------
 
@@ -1002,20 +1012,22 @@ class BuildPublishTests(_DBTestCase):
         self.ws.write_issue_file(458, "currently.md", "Reading: a book.")
         self.ws.write_issue_file(458, "metadata.json", '{"subject":"x"}')
         self.ws.write_issue_file(458, "cover.jpg", "(binary)")  # presence only
-        self.ws.write_issue_file(458, "cta-1.md", "---\nplacement: after_brief\n---\n\nSupport the EFF.")
+        self.ws.write_issue_file(458, "cta-1.md", "---\nplacement: after_notable\n---\n\nSupport the EFF.")
         ctx, fc = self._ctx()
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
         pub = self.ws.files[(458, "publish.md")]
-        self.assertIn("Welcome to the issue.", pub)
+        self.assertTrue(pub.startswith("Welcome to the issue."))
         self.assertIn("line two", pub)
         self.assertIn("Reading: a book.", pub)
-        self.assertIn("Support the EFF.", pub)
         self.assertNotIn("<!-- block:", pub)            # markers stripped
-        self.assertIn("## Notable", pub)
-        # CTA placed after the Briefly section, before Journal.
+        # Section order matches recently-published issues:
+        # intro → Currently → Notable → Journal → Briefly → Haiku.
+        order = [pub.index(h) for h in ("## Currently", "## Notable", "## Journal", "## Briefly", "## Haiku")]
+        self.assertEqual(order, sorted(order), pub)
+        # CTA with placement after_notable lands between Notable and Journal.
+        self.assertGreater(pub.index("Support the EFF."), pub.index("## Notable"))
         self.assertLess(pub.index("Support the EFF."), pub.index("## Journal"))
-        self.assertGreater(pub.index("Support the EFF."), pub.index("## Briefly"))
         # publish.html written too (no draft banner — it's the ship body).
         html = self.ws.files[(458, "publish.html")]
         self.assertTrue(html.startswith("<!DOCTYPE html>"))
@@ -1023,6 +1035,22 @@ class BuildPublishTests(_DBTestCase):
         self.assertNotIn('class="banner"', html)
         self.assertIn("Support the EFF.", html)
         self.assertEqual(result.data["preview_url"], "https://files.thingelstad.com/weekly-thing/458/publish.html")
+
+    def test_cta_default_placement_is_after_notable(self):
+        self._window()
+        self.ws.write_issue_file(458, "final.md", _filled_final())
+        self.ws.write_issue_file(458, "intro.md", "Intro.")
+        self.ws.write_issue_file(458, "haiku.md", "a\nb\nc")
+        self.ws.write_issue_file(458, "metadata.json", '{"subject":"x"}')
+        self.ws.write_issue_file(458, "cover.jpg", "(binary)")
+        # No `placement:` frontmatter → defaults to after_notable.
+        self.ws.write_issue_file(458, "cta-1.md", "Become a member.")
+        ctx, fc = self._ctx()
+        result = asyncio.run(build_publish.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        pub = self.ws.files[(458, "publish.md")]
+        self.assertGreater(pub.index("Become a member."), pub.index("## Notable"))
+        self.assertLess(pub.index("Become a member."), pub.index("## Journal"))
 
     def test_no_currently_means_no_currently_heading(self):
         self._window()

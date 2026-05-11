@@ -1,10 +1,13 @@
 """``update-draft`` — project upstream state into ``draft.md``.
 
 A *pure projection*: re-run it and you get the same output (modulo
-upstream changes). Each section block is replaced wholesale by its fill —
-no additive merge. Real authoring lives upstream (Pinboard for links,
-micro.blog for the journal, Drafts → Shortcut for ``intro.md`` /
-``currently.md``); the haiku is a composed asset (``compose-haiku``).
+upstream changes). The draft is rebuilt from ``templates/draft_starter.md``
+every run — so the section order always tracks the template — and each
+block is filled wholesale from its source. No additive merge; nothing
+on the existing ``draft.md`` is preserved. Real authoring lives upstream
+(Pinboard for links, micro.blog for the journal, Drafts → Shortcut for
+``intro.md`` / ``currently.md``); the haiku is a composed asset
+(``compose-haiku``).
 
 After the fills the job writes ``draft.md`` back, records a ``draft_digests``
 row (so Eddy's review can compute the delta), and — on Tue–Fri — runs
@@ -29,7 +32,10 @@ logger = logging.getLogger("workshop.jobs.update_draft")
 
 NAME = "update-draft"
 
-SECTION_BLOCKS = ("intro", "notable", "brief", "journal", "currently", "haiku")
+# Block fill order is irrelevant (each replace_block is independent); the
+# *layout* order lives in templates/draft_starter.md. Listed here in the
+# published section order for readability.
+SECTION_BLOCKS = ("intro", "currently", "notable", "journal", "brief", "haiku")
 _ASSET_FILE = {"intro": "intro.md", "currently": "currently.md", "haiku": "haiku.md"}
 
 # Eddy posts a review only Tue–Fri (weekday 1..4, Mon=0). Sat/Sun/Mon the
@@ -125,13 +131,6 @@ def _gather_fills(window: dict) -> dict[str, str]:
     return fills
 
 
-def _load_draft(issue_number: int) -> str:
-    res = s3.read_issue_file(issue_number, "draft.md")
-    if res.get("found") and isinstance(res.get("text"), str):
-        return res["text"]
-    return _base.starter_template()
-
-
 def _final_exists(issue_number: int) -> bool:
     res = s3.read_issue_file(issue_number, "final.md")
     return bool(res.get("found"))
@@ -214,7 +213,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     asset = f"{n}/draft.md"
     try:
         with _base.job_lock([asset], NAME):
-            text = _load_draft(n)
+            # Rebuild from the template every run so the section layout
+            # always matches templates/draft_starter.md (the draft is a
+            # pure projection — nothing on the old draft.md is preserved).
+            text = _base.starter_template()
             # _gather_fills does blocking HTTP (Pinboard, micro.blog,
             # journal-image download/resize/upload) — off the event loop.
             fills = await asyncio.to_thread(_gather_fills, window)

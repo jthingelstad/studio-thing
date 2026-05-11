@@ -1,25 +1,25 @@
 <!-- block:intro -->
 <!-- /block:intro -->
 
+## Currently
+
+<!-- block:currently -->
+<!-- /block:currently -->
+
 ## Notable
 
 <!-- block:notable -->
 <!-- /block:notable -->
-
-## Briefly
-
-<!-- block:brief -->
-<!-- /block:brief -->
 
 ## Journal
 
 <!-- block:journal -->
 <!-- /block:journal -->
 
-## Currently
+## Briefly
 
-<!-- block:currently -->
-<!-- /block:currently -->
+<!-- block:brief -->
+<!-- /block:brief -->
 
 ## Haiku
 

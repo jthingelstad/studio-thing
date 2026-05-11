@@ -12,7 +12,7 @@ Decide on **0, 1, or 2 CTAs** for this issue, based on tone and where you are in
 
 For each CTA you do include, draft **1–2 framings** (give Jamie a choice). Each framing is ~30–60 words, plain markdown, no headings — names the nonprofit and what they do, acknowledges existing supporters with sincere (not transactional) gratitude, and is one beat in the arc toward the current goal (not a standalone pitch).
 
-Placements: `after_notable`, `after_brief`, `after_journal`, `before_haiku`. Never above the intro. If you pick 2, the second's placement is fairly toward the end.
+Placements, in the issue's section order: `after_notable` (the usual spot), `after_journal`, `after_brief`, `before_haiku`. Never above the intro. If you pick 2, the second's placement is fairly toward the end.
 
 ## Output
 
@@ -20,7 +20,7 @@ Return **only** a JSON object — no prose around it:
 
 ```json
 {"ctas": [
-  {"placement": "after_brief", "framings": ["framing A …", "framing B …"]},
+  {"placement": "after_notable", "framings": ["framing A …", "framing B …"]},
   {"placement": "before_haiku", "framings": ["framing …"]}
 ]}
 ```

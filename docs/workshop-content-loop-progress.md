@@ -62,6 +62,16 @@ Scan of the landed project surfaced a batch of small follow-ups; built them all:
 
 New `test_ops_and_status.py` (ops jobs, the status snapshot, `db.recent_agent_runs`, the avoid-domains filter, the new slash wiring); `test_workshop_commands.py` extended. Docs updated: `apps/workshop_bot/{CLAUDE.md,README.md}`, `apps/workshop_bot/tools/README.md` (also picked up the previously-missing `render.py` / `cdn.py` entries). **345 tests pass.**
 
+### Draft section order + preview styling (2026-05-11, cont'd)
+
+Jamie flagged that `draft.md` / `draft.html` had the sections out of order vs. recently-published issues. Looked at #326–#346: the canonical flow is **intro → Currently → Notable → Journal → Briefly → (closing haiku)** — Journal *before* Briefly, and Currently (when present) up top before Notable; the membership CTA floats after Notable or after Journal. Changes:
+
+- `templates/draft_starter.md` reordered to that flow.
+- `update-draft` now rebuilds `draft.md` from the template **every run** (it was preserving the on-disk draft's structure, so an old-order draft stayed old-order) — consistent with its "pure projection" contract; removed `_load_draft`.
+- `build_publish._ORDER` → `("currently", "notable", "journal", "brief")`; default CTA placement `after_brief` → `after_notable` (matches recent issues); `compose-cta` default placement + `prompts/patty/compose-cta.md` placement list/example aligned. `tools/draft.py`'s `SECTION_BLOCKS` reordered for readability (it's order-independent).
+- `tools/render.py` `_CSS` rewritten to mirror `content/buttondown/newsletter/buttondown-email.css`: brand token palette, Source Sans body / Source Serif headings / JetBrains Mono meta, the email's h1 masthead + h2 rhythm, accent links + blockquote, the WIP banner restyled in brand blue. Added the `smarty` markdown extension so the preview gets the published curly quotes / em-dashes.
+- Tests: `test_assembles_publish_md` rewritten to assert the new order + `after_notable` CTA placement; added `test_cta_default_placement_is_after_notable` and `test_starter_template_section_order`. **347 tests pass.** Bot restarted; the in-flight `draft.md` self-corrects on the next `update-draft` (scheduled 17:00 CT or `/workshop job update-draft`).
+
 ## Blockers
 (none — S3 versioning on `files.thingelstad.com` confirmed `Enabled`; the Step-4 pre-flight is satisfied)
 

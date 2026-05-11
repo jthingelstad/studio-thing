@@ -38,18 +38,21 @@ _FIX_HINT = {
     "final.md": "→ `/workshop job create-final`",
 }
 
-# (block name, published heading). intro/haiku are special-cased (no
+# (block name → published heading). intro/haiku are special-cased (no
 # header / closes the issue); the rest are emitted in this order, each
-# only if its content is non-empty.
+# only if its content is non-empty. The order mirrors recently-published
+# issues: Currently (when present) sits up top after the intro, then
+# Notable, then Journal, then Briefly, then the closing haiku.
 _SECTION_HEADINGS = {
-    "notable": "## Notable",
-    "brief": "## Briefly",
-    "journal": "## Journal",
     "currently": "## Currently",
+    "notable": "## Notable",
+    "journal": "## Journal",
+    "brief": "## Briefly",
 }
-_ORDER = ("notable", "brief", "journal", "currently")
+_ORDER = ("currently", "notable", "journal", "brief")
 
-_PLACEMENTS = ("after_notable", "after_brief", "after_journal", "before_haiku")
+_PLACEMENTS = ("after_notable", "after_journal", "after_brief", "before_haiku")
+_DEFAULT_PLACEMENT = "after_notable"
 
 
 def _read(issue_number: int, filename: str) -> str:
@@ -118,9 +121,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 if not raw.strip():
                     continue
                 meta, cta_body = _strip_frontmatter(raw)
-                placement = (meta.get("placement") or "after_brief").strip()
+                placement = (meta.get("placement") or _DEFAULT_PLACEMENT).strip()
                 if placement not in _PLACEMENTS:
-                    placement = "after_brief"
+                    placement = _DEFAULT_PLACEMENT
                 cta_by_placement.setdefault(placement, []).append(cta_body.strip())
 
             parts: list[str] = []

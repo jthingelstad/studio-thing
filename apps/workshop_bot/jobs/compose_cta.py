@@ -20,7 +20,10 @@ from . import _base, _compose
 logger = logging.getLogger("workshop.jobs.compose_cta")
 
 NAME = "compose-cta"
-_PLACEMENTS = ("after_notable", "after_brief", "after_journal", "before_haiku")
+# In published section order: after Notable, after Journal, after Briefly,
+# then just before the closing haiku.
+_PLACEMENTS = ("after_notable", "after_journal", "after_brief", "before_haiku")
+_DEFAULT_PLACEMENT = "after_notable"
 
 
 def _recent_publish_excerpts(issue_number: int, count: int = 4) -> str:
@@ -76,9 +79,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             for idx, cta in enumerate(ctas[:2]):
                 if not isinstance(cta, dict):
                     continue
-                placement = str(cta.get("placement") or "after_brief").strip()
+                placement = str(cta.get("placement") or _DEFAULT_PLACEMENT).strip()
                 if placement not in _PLACEMENTS:
-                    placement = "after_brief"
+                    placement = _DEFAULT_PLACEMENT
                 framings = [str(f).strip() for f in (cta.get("framings") or []) if str(f).strip()][:2]
                 if not framings:
                     continue
