@@ -176,6 +176,10 @@ def issue_window_candidates(start_date: str, end_date: str) -> dict[str, list[di
     - ``notable`` — items not tagged ``_brief``
     - ``brief``   — items tagged ``_brief``
 
+    Only *public, read* bookmarks are included: anything still flagged
+    ``toread`` (Jamie hasn't worked through it yet) or marked private
+    (``shared=no``) is skipped — those aren't ready to ship.
+
     Each item is a :func:`normalize_post` record plus ``added_date``;
     oldest first within each list. (Earlier issues used a separate
     ``_featured`` tag for a Featured section that's been retired — that
@@ -201,6 +205,8 @@ def issue_window_candidates(start_date: str, end_date: str) -> dict[str, list[di
         except ValueError:
             continue
         if not (sd < d <= ed):
+            continue
+        if post.get("toread") == "yes" or post.get("shared") == "no":
             continue
         norm = normalize_post(post)
         norm["added_date"] = d.isoformat()

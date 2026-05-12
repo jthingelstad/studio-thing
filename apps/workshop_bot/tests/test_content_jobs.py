@@ -883,6 +883,20 @@ class PinboardClientNewVerbsTests(unittest.TestCase):
         self.assertEqual([n["url"] for n in out["notable"]], ["https://n/1"])
         self.assertEqual([b["url"] for b in out["brief"]], ["https://b/1"])
 
+    def test_issue_window_candidates_skips_toread_and_private(self):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        feed = [
+            {"href": "https://ok/1", "description": "Ready", "extended": "x", "tags": "ai", "time": "2026-05-10T12:00:00Z", "toread": "no", "shared": "yes"},
+            {"href": "https://unread/1", "description": "Still toread", "extended": "x", "tags": "ai", "time": "2026-05-10T13:00:00Z", "toread": "yes", "shared": "yes"},
+            {"href": "https://private/1", "description": "Private", "extended": "x", "tags": "ai", "time": "2026-05-10T14:00:00Z", "toread": "no", "shared": "no"},
+            {"href": "https://unread/2", "description": "Brief but toread", "extended": "x", "tags": "ai _brief", "time": "2026-05-11T12:00:00Z", "toread": "yes", "shared": "yes"},
+            {"href": "https://ok/2", "description": "Brief ready", "extended": "x", "tags": "ai _brief", "time": "2026-05-11T13:00:00Z", "toread": "no", "shared": "yes"},
+        ]
+        with patch.object(pbc, "posts_all", lambda **kw: feed):
+            out = pbc.issue_window_candidates("2026-05-08", "2026-05-15")
+        self.assertEqual([n["url"] for n in out["notable"]], ["https://ok/1"])
+        self.assertEqual([b["url"] for b in out["brief"]], ["https://ok/2"])
+
 
 class PinboardServerNewToolsTests(unittest.TestCase):
     def _server(self):
