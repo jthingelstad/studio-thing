@@ -229,6 +229,49 @@ def _parse_sse_block(block: str) -> Optional[tuple[str, dict[str, Any]]]:
     return event_name, data
 
 
+# ---------- operator: conversation log ----------
+
+async def fetch_conversations(
+    *, since_iso: Optional[str] = None, limit: int = 150
+) -> list[dict[str, Any]]:
+    """Pull recent logged Thingy conversation turns from the Lambda.
+
+    Operator read — uses the bridge *secret* (not a per-user session
+    token), via the auth endpoint's ``list_conversations`` action. Returns
+    a list of turn dicts (oldest first): ``{request_id, created_at,
+    subscriber_hash, question, answer, history_count, citation_count,
+    source_issues, citations, feedback_reaction, feedback_at, user_agent}``.
+    ``since_iso`` defaults (Lambda-side) to the last 24h; pass an earlier
+    ISO timestamp to widen the window.
+    """
+    payload: dict[str, Any] = {
+        "action": "list_conversations",
+        "bridge_secret": _bridge_secret(),
+        "limit": int(limit),
+    }
+    if since_iso:
+        payload["since"] = since_iso
+    url = f"{_api_base()}/auth"
+    try:
+        async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
+            resp = await client.post(url, json=payload)
+    except httpx.RequestError as exc:
+        raise ThingyError(f"Could not reach Thingy conversation log: {exc}") from exc
+    if resp.status_code != 200:
+        try:
+            err = (resp.json() or {}).get("error") or f"HTTP {resp.status_code}"
+        except Exception:  # noqa: BLE001
+            err = f"HTTP {resp.status_code}"
+        raise ThingyError(f"Thingy conversation log rejected: {err}")
+    data = resp.json() or {}
+    convos = data.get("conversations")
+    if not isinstance(convos, list):
+        raise ThingyError("Thingy conversation log returned an unexpected shape")
+    if data.get("truncated"):
+        logger.warning("thingy: conversation log response truncated (since=%s)", data.get("since"))
+    return [c for c in convos if isinstance(c, dict)]
+
+
 # ---------- feedback ----------
 
 async def submit_feedback(

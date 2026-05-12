@@ -18,6 +18,9 @@ job=…)`` (or, for ``rss-check``, the bare ``handlers.rss_check``). Today:
 - ``daily-metrics`` — daily 19:00 CT. Polls active campaigns, checks
   subscriber growth + engagement; PASSes silently when nothing material
   moved, else posts a report.
+- ``thingy-watch`` — hourly. Pulls newly-logged Thingy conversations from
+  the Lambda, has Eddy assess each, mirrors it locally, and posts a card
+  to ``#chatter``; PASSes silently when nothing new.
 
 The per-persona heartbeats were all retired as these jobs took over (see
 the JOBS comment). ``handlers.heartbeat`` still exists for ad-hoc / eval
@@ -91,6 +94,15 @@ JOBS: tuple[JobSpec, ...] = (
                                                          # engagement; PASSes silently when nothing
                                                          # material moved.
         func=functools.partial(handlers.content_job, job="daily-metrics"),
+    ),
+    JobSpec(
+        id="thingy-watch",
+        cron="7 * * * *",                                # Hourly at :07. Pulls newly-logged Thingy
+                                                         # conversations from the Lambda, has Eddy
+                                                         # assess each one, mirrors it locally, and
+                                                         # posts a card to #chatter. PASSes silently
+                                                         # when nothing new.
+        func=functools.partial(handlers.content_job, job="thingy-watch"),
     ),
 )
 

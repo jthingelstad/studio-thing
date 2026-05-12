@@ -14,6 +14,7 @@ around the *thing* you're working on:
     /workshop promo prep | metrics
     /workshop campaign add | report | copy | sunset
     /workshop goal set | done
+    /workshop thingy recent | show | sync     ← window into the public archive agent's conversations
     /workshop status                          ← bot-health snapshot, not a content job
 
 Two dispatch shapes:
@@ -35,6 +36,7 @@ Jobs that post to a channel during the run do so via ``ctx.post(...)``.
 
 from __future__ import annotations
 
+import io
 import logging
 from typing import TYPE_CHECKING
 
@@ -43,6 +45,7 @@ from discord import app_commands
 
 from ..jobs import _base as jobs_base
 from ..jobs import status as status_job
+from ..jobs import thingy as thingy_job
 from ..jobs import (
     add_campaign,
     build_publish,
@@ -105,11 +108,17 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
     goal = app_commands.Group(
         name="goal", description="Membership / revenue milestones", parent=workshop
     )
+    thingy = app_commands.Group(
+        name="thingy", description="What readers ask the public archive agent", parent=workshop
+    )
 
-    async def _ack(interaction, text: str) -> None:
+    async def _ack(interaction, text: str, *, file: discord.File | None = None) -> None:
         """Send an ephemeral followup, swallowing an expired-token error."""
         try:
-            await interaction.followup.send(_clip(text), ephemeral=True)
+            if file is not None:
+                await interaction.followup.send(_clip(text), ephemeral=True, file=file)
+            else:
+                await interaction.followup.send(_clip(text), ephemeral=True)
         except discord.HTTPException:  # token gone (>15 min) or transient — the work still happened
             logger.warning("/workshop: couldn't ack invoker (interaction expired?)")
 
@@ -349,6 +358,48 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
             lambda: ops.goal_achieved(_ctx(bot), notes=(notes or None)),
             "goal done",
         )
+
+    # ── /workshop thingy ──────────────────────────────────────────────
+
+    @thingy.command(
+        name="recent",
+        description="Recent conversations readers have had with Thingy (the public archive agent).",
+    )
+    @app_commands.describe(count="How many to list (default 8, max 25)")
+    async def thingy_recent_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, count: int = 8
+    ) -> None:
+        await _run_and_ack(interaction, lambda: thingy_job.recent(_ctx(bot), count=int(count)), "thingy recent")
+
+    @thingy.command(
+        name="show",
+        description="One Thingy conversation — Eddy's assessment + the full transcript (attached).",
+    )
+    @app_commands.describe(id="The conversation id from `thingy recent` (the `#N`)")
+    async def thingy_show_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, id: int
+    ) -> None:
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        try:
+            result = await thingy_job.show(_ctx(bot), conv_id=int(id))
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("/workshop thingy show failed")
+            await _ack(interaction, f"❌ `thingy show` hit an error: `{type(exc).__name__}: {exc}`")
+            return
+        md = (result.data or {}).get("transcript_md")
+        if result.ok and md:
+            fname = (result.data or {}).get("filename") or f"thingy-conversation-{id}.md"
+            await _ack(interaction, result.message,
+                       file=discord.File(io.BytesIO(md.encode("utf-8")), filename=fname))
+        else:
+            await _ack(interaction, result.message)
+
+    @thingy.command(
+        name="sync",
+        description="Pull new Thingy conversations now (the hourly thingy-watch, on demand).",
+    )
+    async def thingy_sync_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: thingy_job.watch(_ctx(bot)), "thingy sync")
 
     # ── /workshop status ──────────────────────────────────────────────
 

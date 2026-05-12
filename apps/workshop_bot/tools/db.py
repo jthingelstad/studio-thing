@@ -481,6 +481,105 @@ def lookup_thingy_request_by_response(
     return dict(row) if row else None
 
 
+# ---------- Thingy conversations (operator's view into reader Q&A) ----------
+
+def insert_thingy_conversation(
+    *,
+    subscriber_hash: str,
+    started_at: str,
+    ended_at: str,
+    turn_count: int,
+    transcript: list[dict[str, Any]],
+    turn_request_ids: list[str],
+    source_issues: list[str],
+    feedback: Optional[str],
+    topic: Optional[str],
+    assessment_md: Optional[str],
+    posted_to_chatter_at: Optional[str] = None,
+) -> int:
+    """Insert one mirrored conversation; returns its local id."""
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO thingy_conversations "
+            "(subscriber_hash, started_at, ended_at, turn_count, transcript_json, "
+            " turn_request_ids_json, source_issues_json, feedback, topic, assessment_md, "
+            " posted_to_chatter_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                subscriber_hash, started_at, ended_at, int(turn_count),
+                json.dumps(transcript), json.dumps(list(turn_request_ids)),
+                json.dumps(list(source_issues)), feedback, topic, assessment_md,
+                posted_to_chatter_at,
+            ),
+        )
+        return int(cur.lastrowid)
+
+
+def mark_thingy_conversation_posted(conv_id: int) -> None:
+    with connect() as conn:
+        conn.execute(
+            "UPDATE thingy_conversations SET posted_to_chatter_at = datetime('now') "
+            "WHERE id = ? AND posted_to_chatter_at IS NULL",
+            (conv_id,),
+        )
+
+
+def _hydrate_thingy_conversation(row: sqlite3.Row) -> dict[str, Any]:
+    d = dict(row)
+    for col, key in (("transcript_json", "transcript"),
+                     ("turn_request_ids_json", "turn_request_ids"),
+                     ("source_issues_json", "source_issues")):
+        raw = d.pop(col, None)
+        try:
+            d[key] = json.loads(raw) if raw else []
+        except (ValueError, TypeError):
+            d[key] = []
+    return d
+
+
+def get_thingy_conversation(conv_id: int) -> Optional[dict[str, Any]]:
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM thingy_conversations WHERE id = ?", (conv_id,)
+        ).fetchone()
+    return _hydrate_thingy_conversation(row) if row else None
+
+
+def recent_thingy_conversations(limit: int = 8) -> list[dict[str, Any]]:
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT * FROM thingy_conversations ORDER BY ended_at DESC, id DESC LIMIT ?",
+            (int(limit),),
+        ).fetchall()
+    return [_hydrate_thingy_conversation(r) for r in rows]
+
+
+def latest_thingy_conversation_end() -> Optional[str]:
+    """ISO timestamp of the newest mirrored turn — the watch watermark."""
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT MAX(ended_at) AS m FROM thingy_conversations"
+        ).fetchone()
+    return row["m"] if row and row["m"] else None
+
+
+def seen_thingy_turn_request_ids() -> set[str]:
+    """Every turn request_id already folded into a mirrored conversation."""
+    seen: set[str] = set()
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT turn_request_ids_json FROM thingy_conversations"
+        ).fetchall()
+    for r in rows:
+        try:
+            for rid in json.loads(r["turn_request_ids_json"] or "[]"):
+                if rid:
+                    seen.add(str(rid))
+        except (ValueError, TypeError):
+            continue
+    return seen
+
+
 def recent_subscriber_events(
     *, limit: int = 30, event_type: Optional[str] = None
 ) -> list[dict[str, Any]]:

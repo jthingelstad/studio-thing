@@ -1,5 +1,5 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
-import { PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { PutItemCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { bedrock, dynamodb, agentModel } from '../shared/aws-clients.mjs';
 import { createSubscriber, ensureThingyTag, fetchSubscriber, sanitizeAttribution, sendSubscriberReminder, subscriberStatus } from '../shared/buttondown.mjs';
 import { eventSummary, jsonResponse, methodAndPath, parseBody, clientSourceIp, userAgent } from '../shared/http.mjs';
@@ -9,6 +9,7 @@ import { authProfile, getUserMemory } from '../shared/user-memory.mjs';
 import crypto from 'node:crypto';
 import { logEvent } from '../shared/logging.mjs';
 import { premiumThankYouSystemPrompt } from '../shared/prompts.mjs';
+import { CONVERSATIONS_MAX_SCAN_PAGES, conversationRow, normalizeListConversationsParams, sortAndTrim } from '../shared/conversations.mjs';
 
 const AUTH_RATE_LIMIT_MAX = 30;
 const DISCORD_BRIDGE_RATE_LIMIT_MAX = 60;
@@ -173,6 +174,76 @@ async function handleDiscordBridge(event, body, start) {
   }, event);
 }
 
+// --- operator-only: list recent Thingy conversation turns ---
+// Gated by the same DISCORD_BRIDGE_SECRET as the bridge mint (operator
+// secret, never a per-user token). Used by workshop_bot to surface what
+// readers are asking Thingy. The conversation rows are written by the
+// stream Lambda's recordConversation(); we Scan the shared table here
+// (TTL'd to ~60d, low volume — a Scan is fine; revisit with a GSI if it grows).
+// Pure shaping/unmarshalling lives in shared/conversations.mjs.
+
+function bridgeSecretOk(body) {
+  const expected = process.env.DISCORD_BRIDGE_SECRET || '';
+  if (!expected) return null; // bridge disabled
+  const expectedBuf = Buffer.from(expected, 'utf8');
+  const suppliedBuf = Buffer.from(String(body.bridge_secret || ''), 'utf8');
+  return expectedBuf.length === suppliedBuf.length && crypto.timingSafeEqual(expectedBuf, suppliedBuf);
+}
+
+async function handleListConversations(event, body, start) {
+  const secretState = bridgeSecretOk(body);
+  if (secretState === null) {
+    logEvent('warning', 'auth_conversations_bridge_disabled');
+    return jsonResponse(503, { error: 'Discord bridge is not enabled.' }, event);
+  }
+  if (!secretState) {
+    logEvent('warning', 'auth_conversations_bad_secret');
+    return jsonResponse(401, { error: 'Bridge secret rejected.' }, event);
+  }
+  const tableName = process.env.TABLE_NAME;
+  if (!tableName) return jsonResponse(500, { error: 'Conversation log is unavailable right now.' }, event);
+
+  const { since: sinceIso, limit } = normalizeListConversationsParams(body);
+
+  const rows = [];
+  let exclusiveStartKey;
+  let pages = 0;
+  try {
+    do {
+      const resp = await dynamodb.send(new ScanCommand({
+        TableName: tableName,
+        FilterExpression: '#sk = :chat AND #ca >= :since',
+        ExpressionAttributeNames: { '#sk': 'sk', '#ca': 'created_at' },
+        ExpressionAttributeValues: { ':chat': { S: 'chat' }, ':since': { S: sinceIso } },
+        ExclusiveStartKey: exclusiveStartKey
+      }));
+      for (const item of resp.Items || []) rows.push(conversationRow(item));
+      exclusiveStartKey = resp.LastEvaluatedKey;
+      pages += 1;
+    } while (exclusiveStartKey && pages < CONVERSATIONS_MAX_SCAN_PAGES);
+  } catch (error) {
+    logEvent('error', 'auth_conversations_scan_failed', { error_type: error.constructor?.name || 'Error' });
+    return jsonResponse(502, { error: 'Could not read the conversation log right now.' }, event);
+  }
+
+  const trimmed = sortAndTrim(rows, limit); // most recent `limit`, returned oldest-first
+  const truncated = Boolean(exclusiveStartKey) || trimmed.length < rows.length;
+
+  logEvent('info', 'auth_conversations_listed', {
+    since: sinceIso,
+    returned: trimmed.length,
+    scanned_pages: pages,
+    truncated,
+    duration_ms: Math.round(performance.now() - start)
+  });
+  return jsonResponse(200, {
+    since: sinceIso,
+    count: trimmed.length,
+    truncated,
+    conversations: trimmed
+  }, event);
+}
+
 async function authHandler(event) {
   const start = performance.now();
   const body = parseBody(event);
@@ -187,7 +258,7 @@ async function authHandler(event) {
     logEvent('warning', 'auth_rate_limited', { email_hash: hashedEmail });
     return jsonResponse(429, { error: 'Too many access attempts. Please try again later.' }, event);
   }
-  if (!['check', 'subscribe', 'resend_confirmation', 'discord_bridge'].includes(action)) {
+  if (!['check', 'subscribe', 'resend_confirmation', 'discord_bridge', 'list_conversations'].includes(action)) {
     logEvent('info', 'auth_rejected_invalid_action', { email_hash: hashedEmail, action });
     return jsonResponse(400, { error: 'Unsupported subscriber action.' }, event);
   }
@@ -199,6 +270,12 @@ async function authHandler(event) {
   // surfaces "not enabled" rather than silently passing.
   if (action === 'discord_bridge') {
     return await handleDiscordBridge(event, body, start);
+  }
+
+  // Operator-only conversation-log read (workshop_bot). Also email-less —
+  // gated by the bridge secret, not a subscriber session.
+  if (action === 'list_conversations') {
+    return await handleListConversations(event, body, start);
   }
 
   if (!EMAIL_RE.test(email)) {

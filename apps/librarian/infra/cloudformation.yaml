@@ -102,6 +102,7 @@ Resources:
                   - dynamodb:GetItem
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
+                  - dynamodb:Scan
                 Resource: !GetAtt LibrarianTable.Arn
               - Effect: Allow
                 Action: s3:GetObject

@@ -28,13 +28,14 @@ logger = logging.getLogger("workshop.scheduler.handlers")
 # Maps a job name to its async ``run(ctx, **kwargs)`` entrypoint. Imports
 # are lazy so loading scheduler.handlers doesn't pull the whole jobs graph.
 def _content_job_runner(name: str):
-    from ..jobs import daily_metrics, pinboard_scan, promotion_prep, update_draft
+    from ..jobs import daily_metrics, pinboard_scan, promotion_prep, thingy, update_draft
 
     return {
         "update-draft": update_draft.run,
         "pinboard-scan": pinboard_scan.run,
         "promotion-prep": promotion_prep.run,
         "daily-metrics": daily_metrics.run,
+        "thingy-watch": thingy.watch,
     }.get(name)
 
 

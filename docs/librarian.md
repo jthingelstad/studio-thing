@@ -102,6 +102,8 @@ The workshop-bot Discord bridge (`apps/workshop_bot/personas/thingy.py`) gets a 
 
 The bridge action is gated by `DISCORD_BRIDGE_SECRET` (CloudFormation parameter `DiscordBridgeSecret`). When that env var is empty the action returns 503 ("Discord bridge is not enabled"), so the bridge is off by default until the secret is configured. Token mints are rate-limited per Discord user (default 60/hour, override via `DISCORD_BRIDGE_RATE_LIMIT_MAX`).
 
+A fifth `/auth` action — `list_conversations` — is the operator read of the conversation log (workshop_bot's `/workshop thingy …` surface). It's also email-less and gated by the **same** `DISCORD_BRIDGE_SECRET` (operator secret, not a per-user session token). The request is `{action: "list_conversations", bridge_secret, since?: ISO8601, limit?: number}`; the response is `{since, count, truncated, conversations: [...]}` where each entry is one logged turn flattened (`request_id`, `created_at`, `subscriber_hash`, `question`, `answer`, `history_count`, `citation_count`, `source_issues`, `citations`, `feedback_reaction`, `feedback_at`, `user_agent`). It Scans the shared table filtered on `sk = 'chat'` and `created_at >= since` (the table is TTL'd to ~60 days and low-volume, so a Scan is fine — a GSI on `created_at` is the optimization if it ever grows; `dynamodb:Scan` was added to `LibrarianFunctionRole`). Pure param-shaping and item-unmarshalling live in `apps/librarian/lambda/shared/conversations.mjs`.
+
 ### Per-user memory
 
 Both auth flows return a `profile` field in the response, populated from a per-user memory row in the existing DynamoDB table (key `user#{sub}` / `memory`). The chat handler updates this row at the end of each turn and Bedrock-summarizes the previous session's questions when the session id rotates, rolling them into a per-user `synthesized_history` (one short paragraph per past session, capped at the most recent 8).
@@ -151,7 +153,7 @@ Successful beta conversations are stored in the existing DynamoDB table when `LI
 - optional thumb feedback (`up` or `down`) and feedback timestamp
 - TTL, defaulting to 60 days
 
-Records can be reviewed directly via the AWS console or `aws dynamodb` CLI against the `weekly-thing-librarian` stack's conversations table. The previous `npm run librarian:conversations` script was removed alongside the eval pipeline; a replacement review tool is planned.
+Records can be reviewed directly via the AWS console or `aws dynamodb` CLI against the `weekly-thing-librarian` stack's conversations table, or — the everyday path — via workshop_bot: the `/auth?action=list_conversations` endpoint (above) backs an hourly `thingy-watch` job that posts an LLM assessment of each new conversation to Discord `#chatter`, plus `/workshop thingy recent` / `/workshop thingy show <id>` for browsing and full transcripts. (The old `npm run librarian:conversations` script was removed alongside the eval pipeline.)
 
 The beta popup on `/thingy/` tells authenticated users that beta conversations may be logged and reviewed to improve Thingy.
 
