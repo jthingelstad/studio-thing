@@ -822,7 +822,7 @@ function collectToolCitations(toolResults) {
 }
 
 function prioritizeCitationsForAnswer(citations, answer) {
-  const mentioned = [...String(answer || '').matchAll(/#(\d+)/g)].map((match) => Number(match[1]));
+  const mentioned = [...String(answer || '').matchAll(/(?:WT|#)(\d+)/g)].map((match) => Number(match[1]));
   if (!mentioned.length) return citations;
   const firstSeen = new Map();
   mentioned.forEach((issueNumber, index) => {

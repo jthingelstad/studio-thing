@@ -4,8 +4,8 @@ The Lambda streams plain-prose answers with inline `#NNN` citations.
 This module:
 
   1. Reassembles the streamed `answer_delta` chunks into a single string.
-  2. Rewrites `#NNN` references that match the citations array into Discord
-     markdown links pointing at ``{site_url}/archive/NNN/``.
+  2. Rewrites `WTNNN` (or legacy `#NNN`) references that match the citations
+     array into Discord markdown links ``[WTNNN]({site_url}/archive/NNN/)``.
   3. Compacts conversation history the same way the JS frontend does
      (last 8 messages, 700 chars per message, 4000 chars total).
 
@@ -25,10 +25,11 @@ import re
 from typing import Any, Iterable, Optional
 
 # The frontend uses essentially the same regex (apps/site/librarian.njk).
-# Allow up to 5 digits — the archive will hit issue 10000 in many years
-# but the bound is arbitrary; #cybersecurity-style word tags are still
-# excluded by the `\b` after a `\d+` capture.
-CITATION_RE = re.compile(r"(^|[^\w&])#(\d{1,5})\b")
+# Matches both the canonical `WTNNN` form and the legacy bare `#NNN` form;
+# either way the rewrite normalizes to `WTNNN`. Allow up to 5 digits — the
+# archive will hit issue 10000 in many years but the bound is arbitrary;
+# #cybersecurity-style word tags are still excluded by requiring `\d`.
+CITATION_RE = re.compile(r"(^|[^\w&])(?:WT|#)(\d{1,5})\b")
 
 DEFAULT_SITE_URL = "https://weekly.thingelstad.com"
 
@@ -64,11 +65,13 @@ def inject_citations(
     *,
     site_url: str = DEFAULT_SITE_URL,
 ) -> str:
-    """Rewrite `#NNN` references that match a citation entry into Discord
-    markdown links: ``[#NNN](https://weekly.thingelstad.com/archive/NNN/)``.
+    """Rewrite `WTNNN` (or legacy `#NNN`) references that match a citation
+    entry into Discord markdown links, always normalized to the `WT` prefix:
+    ``[WTNNN](https://weekly.thingelstad.com/archive/NNN/)``.
 
-    Issue numbers without a matching citation are left as plain ``#NNN`` —
-    we don't fabricate links.
+    References without a matching citation are left exactly as written — we
+    don't fabricate links, and we don't touch a bare ``#5`` that might be a
+    non-issue reference.
     """
     if not answer:
         return answer
@@ -88,7 +91,7 @@ def inject_citations(
             href = path
         else:
             href = f"{base}{path if path.startswith('/') else '/' + path}"
-        return f"{prefix}[#{number}]({href})"
+        return f"{prefix}[WT{number}]({href})"
 
     return CITATION_RE.sub(_replace, answer)
 

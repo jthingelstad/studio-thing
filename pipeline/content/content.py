@@ -806,7 +806,7 @@ def publish_to_buttondown(args: argparse.Namespace) -> None:
             f"No metadata.json for #{number} — run `/workshop job compose-meta` first."
         )
     meta = json.loads(meta_raw)
-    subject = meta.get("subject") or f"Weekly Thing {number}"
+    subject = meta.get("subject") or f"WT{number}"
     description = meta.get("description") or ""
     image = meta.get("image") or ""
     slug = str(meta.get("slug") or number)
