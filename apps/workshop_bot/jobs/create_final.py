@@ -29,8 +29,8 @@ MAX_ROUNDS = 3
 _FENCE_RE = re.compile(r"```(?:markdown|md)?\s*\n(.*?)\n?```", re.DOTALL)
 
 _NEXT_STEPS = (
-    "Next, in any order: `/workshop job compose-haiku`, `/workshop job compose-meta`, "
-    "`/workshop job compose-cta` — then `/workshop job build-publish` (it'll list "
+    "Next, in any order: `/workshop issue haiku`, `/workshop issue subject`, "
+    "`/workshop issue cta` — then `/workshop issue publish` (it'll list "
     "anything still missing if you run it early)."
 )
 
@@ -54,7 +54,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         return _base.JobResult(False, f"❌ WT{n} already has `final.md` — delete it to re-run `create-final`.")
     draft = _draft_text(n)
     if not draft.strip():
-        return _base.JobResult(False, f"❌ no `draft.md` for WT{n} — run `/workshop job update-draft` first.")
+        return _base.JobResult(False, f"❌ no `draft.md` for WT{n} — run `/workshop issue update` first.")
     bot, channel, reason = _compose.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
     if bot is None:
         return _base.JobResult(False, f"(create-final skipped — {reason})")

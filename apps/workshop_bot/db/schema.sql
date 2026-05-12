@@ -167,7 +167,7 @@ DROP TABLE IF EXISTS channel_routes;
 -- Issue windows — operator-set publishing schedule. Replaces the prior
 -- auto-derived in-flight resolver (which combined S3 folder names with
 -- the latest published issue). Jamie sets the active window via the
--- ``/workshop job start-issue`` slash command; agents read it via
+-- ``/workshop issue start`` slash command; agents read it via
 -- ``issue__current_window`` and historical metadata via
 -- ``issue__list_windows``.
 --
@@ -249,7 +249,7 @@ SELECT 'members', 50, '2026-05-11'
 WHERE NOT EXISTS (SELECT 1 FROM goals);
 
 -- Campaigns — Marky's ad-placement ledger. One row per `?ref=<tag>`
--- campaign, created by /workshop job add-campaign. Status: 'live' while
+-- campaign, created by /workshop campaign add. Status: 'live' while
 -- it's running, 'sunset' once it's over. `copy` holds the actual promo
 -- text that ran in the placement, so performance can be read against the
 -- creative — set at add-campaign time or later via campaign-copy.

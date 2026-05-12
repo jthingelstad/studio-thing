@@ -95,7 +95,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 if pick == "refresh":
                     # Re-running the whole job is the clean way to refresh; ask Jamie to re-fire.
                     await channel.send(
-                        f"(For fresh CTA framings, re-fire `/workshop job compose-cta` — "
+                        f"(For fresh CTA framings, re-fire `/workshop issue cta` — "
                         f"slot {idx + 1} for WT{n} left unwritten.)",
                         suppress_embeds=True,
                     )

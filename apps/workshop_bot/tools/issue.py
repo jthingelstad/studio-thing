@@ -1,7 +1,7 @@
 """In-flight issue window — operator-set, persisted in SQLite.
 
 Replaces the old auto-derived resolver (S3 folder names + corpus
-latest). Jamie sets the active window via the ``/workshop job start-issue``
+latest). Jamie sets the active window via the ``/workshop issue start``
 slash command; agents read it via ``issue__current_window`` and look up
 historical windows via ``issue__list_windows``.
 
@@ -29,7 +29,7 @@ from . import db
 
 
 class IssueWindowError(ValueError):
-    """Raised when ``/workshop job start-issue`` arguments don't validate."""
+    """Raised when ``/workshop issue start`` arguments don't validate."""
 
 
 def compute_window(pub_date_iso: str, day_count: int) -> dict[str, Any]:
@@ -76,7 +76,7 @@ def t_current_issue_window(deps) -> dict[str, Any]:
         return {
             "error": (
                 "No active issue window. Jamie sets this via "
-                "/workshop job start-issue <number> <YYYY-MM-DD> <day_count>."
+                "/workshop issue start <number> <YYYY-MM-DD> <day_count>."
             ),
         }
     return row

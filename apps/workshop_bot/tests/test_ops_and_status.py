@@ -174,10 +174,10 @@ class WiringTests(unittest.TestCase):
         from apps.workshop_bot.personas import commands
         tree = commands.register_workshop_commands(MagicMock())
         workshop = tree.groups[0]
-        job = next(c for c in workshop.commands if getattr(c, "name", None) == "job")
-        job_names = {getattr(c, "_cmd_name", None) for c in job.commands}
-        for n in ("set-goal", "goal-achieved", "campaign-sunset"):
-            self.assertIn(n, job_names)
+        goal = next(c for c in workshop.commands if getattr(c, "name", None) == "goal")
+        self.assertEqual({getattr(c, "_cmd_name", None) for c in goal.commands}, {"set", "done"})
+        campaign = next(c for c in workshop.commands if getattr(c, "name", None) == "campaign")
+        self.assertIn("sunset", {getattr(c, "_cmd_name", None) for c in campaign.commands})
         # /workshop status is a direct subcommand of the workshop group.
         top_names = {getattr(c, "_cmd_name", None) for c in workshop.commands}
         self.assertIn("status", top_names)

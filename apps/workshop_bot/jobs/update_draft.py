@@ -278,7 +278,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     if window is None:
         return _base.JobResult(
             False,
-            "❌ no active issue window — run `/workshop job start-issue <n> <pub-date> <days>` first.",
+            "❌ no active issue window — run `/workshop issue start <n> <pub-date> <days>` first.",
         )
     n = int(window["issue_number"])
 

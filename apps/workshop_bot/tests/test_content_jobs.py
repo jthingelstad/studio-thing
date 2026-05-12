@@ -1373,7 +1373,7 @@ class CreateFinalTests(_DBTestCase):
         self.assertTrue(result.ok, result.message)
         self.assertIn("Z reordered", self.ws.files[(458, "final.md")])
         # No auto-chain: the result points Jamie at the compose jobs.
-        self.assertIn("compose-haiku", result.message)
+        self.assertIn("issue haiku", result.message)
         # ...and Eddy never touched any other job.
         self.assertFalse(hasattr(create_final, "compose_haiku"))
         # final.html preview written, banner says FINAL.

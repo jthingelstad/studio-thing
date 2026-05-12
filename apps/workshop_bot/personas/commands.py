@@ -1,17 +1,20 @@
-"""Discord slash-command surface — ``/workshop job <name>``.
+"""Discord slash-command surface — ``/workshop`` grouped by content artifact.
 
-The operator-facing slash command for workshop_bot, hosted on a single
+The operator-facing slash commands for workshop_bot, hosted on a single
 persona bot (Eddy) — slash commands are scoped per Discord application
 token, and one host is the cleanest cut.
 
-All workshop_bot user-facing actions are **jobs** — deterministic Python
-in ``apps/workshop_bot/jobs/``. The slash surface fires them. One command
-shape::
+Every user-facing action is a deterministic Python job in
+``apps/workshop_bot/jobs/`` (the "job" is the internal unit of scheduling
+and locking). The slash surface doesn't expose that word — it's organised
+around the *thing* you're working on:
 
-    /workshop job <name> [<args>]
-
-``job`` is a subcommand group under ``workshop``; job names are flat and
-hyphenated, no further nesting.
+    /workshop issue start | update | status | final | haiku | subject | cta | publish
+    /workshop links scan
+    /workshop promo prep | metrics
+    /workshop campaign add | report | copy | sunset
+    /workshop goal set | done
+    /workshop status                          ← bot-health snapshot, not a content job
 
 Two dispatch shapes:
 
@@ -20,22 +23,14 @@ Two dispatch shapes:
   send is wrapped in try/except — a Discord interaction token is only
   good for ~15 min, and although these jobs finish well inside that, a
   slow LLM hiccup shouldn't surface as a command error.)
-- **Interactive jobs** (``create-final``, ``compose-haiku`` / ``-meta`` /
-  ``-cta``): these post options to a channel and wait for Jamie's
-  reaction — possibly far longer than the 15-min token window. So the
-  command acks *immediately* ("started — react in #editorial / #supporters"),
-  then awaits the job, which posts its own outcome to the channel. We never
+- **Interactive jobs** (``issue final``, ``issue haiku`` / ``subject`` /
+  ``cta``): these post options to a channel and wait for Jamie's reaction
+  — possibly far longer than the 15-min token window. So the command acks
+  *immediately* ("started — react in #editorial / #supporters"), then
+  awaits the job, which posts its own outcome to the channel. We never
   send a second followup; the channel posts carry the result.
 
 Jobs that post to a channel during the run do so via ``ctx.post(...)``.
-
-Wired under ``/workshop job``: ``start-issue``, ``update-draft``,
-``issue-status``, ``pinboard-scan``, ``create-final``, ``compose-haiku`` /
-``-meta`` / ``-cta``, ``build-publish``, ``promotion-prep``,
-``daily-metrics``, ``add-campaign``, ``campaign-report``, ``campaign-copy``,
-``set-goal``, ``goal-achieved``, ``campaign-sunset``. Plus a top-level ``/workshop
-status`` — a read-only ops snapshot (issue window, goal/campaigns, held
-locks, recent runs).
 """
 
 from __future__ import annotations
@@ -92,13 +87,23 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
 
     workshop = app_commands.Group(
         name="workshop",
-        description="Workshop bot ops commands",
+        description="Workshop bot — assemble the issue, run promotion, track goals",
         default_permissions=discord.Permissions(manage_guild=True),
     )
-    job = app_commands.Group(
-        name="job",
-        description="Run a workshop job",
-        parent=workshop,
+    issue = app_commands.Group(
+        name="issue", description="Assemble the in-flight issue", parent=workshop
+    )
+    links = app_commands.Group(
+        name="links", description="Link curation (Pinboard)", parent=workshop
+    )
+    promo = app_commands.Group(
+        name="promo", description="Promotion drafts + metrics", parent=workshop
+    )
+    campaign = app_commands.Group(
+        name="campaign", description="Ad-campaign ledger", parent=workshop
+    )
+    goal = app_commands.Group(
+        name="goal", description="Membership / revenue milestones", parent=workshop
     )
 
     async def _ack(interaction, text: str) -> None:
@@ -114,7 +119,7 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
         try:
             result = await coro_factory()
         except Exception as exc:  # noqa: BLE001
-            logger.exception("/workshop job %s failed", label)
+            logger.exception("/workshop %s failed", label)
             await _ack(interaction, f"❌ `{label}` hit an error: `{type(exc).__name__}: {exc}`")
             return
         await _ack(interaction, result.message)
@@ -127,19 +132,21 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
         try:
             await coro_factory()
         except Exception as exc:  # noqa: BLE001
-            logger.exception("/workshop job %s failed", label)
+            logger.exception("/workshop %s failed", label)
             await _ack(interaction, f"❌ `{label}` hit an error: `{type(exc).__name__}: {exc}` — see logs / the channel.")
 
-    @job.command(
-        name="start-issue",
-        description="Start a new in-flight issue (number, Saturday pub date, day count).",
+    # ── /workshop issue ───────────────────────────────────────────────
+
+    @issue.command(
+        name="start",
+        description="Begin assembling a new issue (number, Saturday pub date, day count).",
     )
     @app_commands.describe(
         number="Issue number being assembled (e.g. 458)",
         pub_date="Publishing Saturday (YYYY-MM-DD)",
         day_count="Days to include before the cutoff — usually 7, sometimes 14",
     )
-    async def start_issue_cmd(  # type: ignore[misc]
+    async def issue_start_cmd(  # type: ignore[misc]
         interaction: discord.Interaction,
         number: int,
         pub_date: str,
@@ -154,93 +161,99 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
                 day_count=int(day_count),
                 set_by=str(interaction.user),
             ),
-            "start-issue",
+            "issue start",
         )
 
-    @job.command(
-        name="update-draft",
-        description="Re-project upstream content into the in-flight issue's draft.md.",
+    @issue.command(
+        name="update",
+        description="Re-project upstream content (Pinboard + micro.blog + assets) into draft.md.",
     )
-    async def update_draft_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: update_draft.run(_ctx(bot)), "update-draft")
+    async def issue_update_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: update_draft.run(_ctx(bot)), "issue update")
 
-    @job.command(
-        name="issue-status",
-        description="Read-only state report on the in-flight issue.",
+    @issue.command(
+        name="status",
+        description="Read-only state report on the in-flight issue (sections + assets).",
     )
     async def issue_status_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: issue_status.run(_ctx(bot)), "issue-status")
+        await _run_and_ack(interaction, lambda: issue_status.run(_ctx(bot)), "issue status")
 
-    @job.command(
-        name="pinboard-scan",
-        description="Run Linky's Pinboard scan now (popular + toread + Briefly-suggest).",
+    @issue.command(
+        name="final",
+        description="Eddy's reorder review → final.md (then run issue haiku/subject/cta and issue publish).",
     )
-    async def pinboard_scan_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: pinboard_scan.run(_ctx(bot)), "pinboard-scan")
-
-    @job.command(
-        name="create-final",
-        description="Eddy's reorder review → final.md (then run compose-haiku/meta/cta and build-publish).",
-    )
-    async def create_final_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+    async def issue_final_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_interactive(
-            interaction, lambda: create_final.run(_ctx(bot)), "create-final",
-            "Starting `create-final` — Eddy will post a reorder proposal in #editorial; react there.",
+            interaction, lambda: create_final.run(_ctx(bot)), "issue final",
+            "Starting `issue final` — Eddy will post a reorder proposal in #editorial; react there.",
         )
 
-    @job.command(
-        name="compose-haiku",
+    @issue.command(
+        name="haiku",
         description="Generate haiku options for the in-flight issue → haiku.md.",
     )
-    async def compose_haiku_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+    async def issue_haiku_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_interactive(
-            interaction, lambda: compose_haiku.run(_ctx(bot)), "compose-haiku",
-            "Starting `compose-haiku` — options will post in #editorial; react there to pick.",
+            interaction, lambda: compose_haiku.run(_ctx(bot)), "issue haiku",
+            "Starting `issue haiku` — options will post in #editorial; react there to pick.",
         )
 
-    @job.command(
-        name="compose-meta",
-        description="Pick the subject (5 options) then the description for the in-flight issue → metadata.json.",
+    @issue.command(
+        name="subject",
+        description="Pick the email subject (5 options) then generate the description → metadata.json.",
     )
-    async def compose_meta_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+    async def issue_subject_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_interactive(
-            interaction, lambda: compose_meta.run(_ctx(bot)), "compose-meta",
-            "Starting `compose-meta` — 5 subject options then description options will post in #editorial; react there to pick.",
+            interaction, lambda: compose_meta.run(_ctx(bot)), "issue subject",
+            "Starting `issue subject` — 5 subject options then a description will post in #editorial; react there to pick.",
         )
 
-    @job.command(
-        name="compose-cta",
+    @issue.command(
+        name="cta",
         description="Patty's membership-CTA proposal for the in-flight issue → cta-*.md.",
     )
-    async def compose_cta_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+    async def issue_cta_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_interactive(
-            interaction, lambda: compose_cta.run(_ctx(bot)), "compose-cta",
-            "Starting `compose-cta` — Patty will post CTA framings in #supporters; react there to pick.",
+            interaction, lambda: compose_cta.run(_ctx(bot)), "issue cta",
+            "Starting `issue cta` — Patty will post CTA framings in #supporters; react there to pick.",
         )
 
-    @job.command(
-        name="build-publish",
+    @issue.command(
+        name="publish",
         description="Assemble publish.md from final.md + assets (refuses if anything required is missing).",
     )
-    async def build_publish_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: build_publish.run(_ctx(bot)), "build-publish")
+    async def issue_publish_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: build_publish.run(_ctx(bot)), "issue publish")
 
-    @job.command(
-        name="promotion-prep",
+    # ── /workshop links ───────────────────────────────────────────────
+
+    @links.command(
+        name="scan",
+        description="Run Linky's Pinboard scan now (popular + toread + Briefly-suggest) → #research.",
+    )
+    async def links_scan_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: pinboard_scan.run(_ctx(bot)), "links scan")
+
+    # ── /workshop promo ───────────────────────────────────────────────
+
+    @promo.command(
+        name="prep",
         description="Draft syndication content (Reddit + LinkedIn) for the latest published issue → #promotion.",
     )
-    async def promotion_prep_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: promotion_prep.run(_ctx(bot)), "promotion-prep")
+    async def promo_prep_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: promotion_prep.run(_ctx(bot)), "promo prep")
 
-    @job.command(
-        name="daily-metrics",
+    @promo.command(
+        name="metrics",
         description="Run Marky's daily website + subscriber + campaign report now (default-PASS if quiet).",
     )
-    async def daily_metrics_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: daily_metrics.run(_ctx(bot)), "daily-metrics")
+    async def promo_metrics_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: daily_metrics.run(_ctx(bot)), "promo metrics")
 
-    @job.command(
-        name="add-campaign",
+    # ── /workshop campaign ────────────────────────────────────────────
+
+    @campaign.command(
+        name="add",
         description="Register an ad campaign for Marky to track (name, ?ref= tag, optional expected signups/traffic).",
     )
     @app_commands.describe(
@@ -248,9 +261,9 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
         ref="The ?ref= tag from the campaign URL, exact case (e.g. DenseDiscovery-388)",
         expected_signups="Optional — how many subscribers you expect from it",
         expected_traffic="Optional — how many visits you expect from it",
-        copy="Optional — the actual promo text that ran in the placement (set later with campaign-copy)",
+        copy="Optional — the actual promo text that ran in the placement (set later with campaign copy)",
     )
-    async def add_campaign_cmd(  # type: ignore[misc]
+    async def campaign_add_cmd(  # type: ignore[misc]
         interaction: discord.Interaction,
         name: str,
         ref: str,
@@ -266,74 +279,78 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
                 expected_traffic=(expected_traffic or None),
                 copy=(copy or None),
             ),
-            "add-campaign",
+            "campaign add",
         )
 
-    @job.command(
-        name="campaign-report",
+    @campaign.command(
+        name="report",
         description="List active campaigns + current performance vs expected.",
     )
     async def campaign_report_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: campaign_report.run(_ctx(bot)), "campaign-report")
+        await _run_and_ack(interaction, lambda: campaign_report.run(_ctx(bot)), "campaign report")
 
-    @job.command(
-        name="set-goal",
-        description="Open a new Patty milestone — refuses if one's already active (mark it hit first).",
-    )
-    @app_commands.describe(
-        kind="members (live Buttondown count) or dollars (live Stripe total)",
-        value="The target to hit (e.g. 75)",
-        notes="Optional context for the goal",
-    )
-    async def set_goal_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction, kind: str, value: int, notes: str = ""
-    ) -> None:
-        await _run_and_ack(
-            interaction,
-            lambda: ops.set_goal(_ctx(bot), kind=kind, value=int(value), notes=(notes or None)),
-            "set-goal",
-        )
-
-    @job.command(
-        name="goal-achieved",
-        description="Mark the active Patty milestone hit (today) — then set the next with set-goal.",
-    )
-    @app_commands.describe(notes="Optional note about hitting it")
-    async def goal_achieved_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction, notes: str = ""
-    ) -> None:
-        await _run_and_ack(
-            interaction,
-            lambda: ops.goal_achieved(_ctx(bot), notes=(notes or None)),
-            "goal-achieved",
-        )
-
-    @job.command(
-        name="campaign-sunset",
-        description="Mark an ad campaign over — daily-metrics stops polling it.",
-    )
-    @app_commands.describe(name="The campaign name (as registered with add-campaign)")
-    async def campaign_sunset_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction, name: str
-    ) -> None:
-        await _run_and_ack(
-            interaction, lambda: ops.campaign_sunset(_ctx(bot), name=name), "campaign-sunset"
-        )
-
-    @job.command(
-        name="campaign-copy",
+    @campaign.command(
+        name="copy",
         description="Record the promo text that ran in a campaign's placement (empty text clears it).",
     )
     @app_commands.describe(
-        name="The campaign name (as registered with add-campaign)",
+        name="The campaign name (as registered with campaign add)",
         copy="The actual ad copy that ran — leave empty to clear what's stored",
     )
     async def campaign_copy_cmd(  # type: ignore[misc]
         interaction: discord.Interaction, name: str, copy: str = ""
     ) -> None:
         await _run_and_ack(
-            interaction, lambda: ops.campaign_copy(_ctx(bot), name=name, copy=(copy or None)), "campaign-copy"
+            interaction, lambda: ops.campaign_copy(_ctx(bot), name=name, copy=(copy or None)), "campaign copy"
         )
+
+    @campaign.command(
+        name="sunset",
+        description="Mark an ad campaign over — promo metrics stops polling it.",
+    )
+    @app_commands.describe(name="The campaign name (as registered with campaign add)")
+    async def campaign_sunset_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, name: str
+    ) -> None:
+        await _run_and_ack(
+            interaction, lambda: ops.campaign_sunset(_ctx(bot), name=name), "campaign sunset"
+        )
+
+    # ── /workshop goal ────────────────────────────────────────────────
+
+    @goal.command(
+        name="set",
+        description="Open a new Patty milestone — refuses if one's already active (mark it done first).",
+    )
+    @app_commands.describe(
+        kind="members (live Buttondown count) or dollars (live Stripe total)",
+        value="The target to hit (e.g. 75)",
+        notes="Optional context for the goal",
+    )
+    async def goal_set_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, kind: str, value: int, notes: str = ""
+    ) -> None:
+        await _run_and_ack(
+            interaction,
+            lambda: ops.set_goal(_ctx(bot), kind=kind, value=int(value), notes=(notes or None)),
+            "goal set",
+        )
+
+    @goal.command(
+        name="done",
+        description="Mark the active Patty milestone hit (today) — then set the next with goal set.",
+    )
+    @app_commands.describe(notes="Optional note about hitting it")
+    async def goal_done_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, notes: str = ""
+    ) -> None:
+        await _run_and_ack(
+            interaction,
+            lambda: ops.goal_achieved(_ctx(bot), notes=(notes or None)),
+            "goal done",
+        )
+
+    # ── /workshop status ──────────────────────────────────────────────
 
     @workshop.command(
         name="status",

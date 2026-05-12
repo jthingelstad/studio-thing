@@ -66,7 +66,7 @@ async def run(
         return _base.JobResult(
             False,
             f"⚠️ window recorded for #{n}, but couldn't seed `draft.md`: "
-            f"`{type(exc).__name__}: {exc}` — try `/workshop job update-draft`.",
+            f"`{type(exc).__name__}: {exc}` — try `/workshop issue update`.",
         )
 
     # Fire update-draft so the first draft has real content. It owns the

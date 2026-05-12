@@ -14,11 +14,11 @@ Since last run: {the delta — +N Notable, +N Briefly, +N words, intro now prese
 
 Required for ship:
   ✅/❌ Notable / Briefly / Journal     (from draft__section_status)
-  ✅/❌ haiku.md       → /workshop job compose-haiku
-  ✅/❌ metadata.json  → /workshop job compose-meta
+  ✅/❌ haiku.md       → /workshop issue haiku
+  ✅/❌ metadata.json  → /workshop issue subject
   ✅/❌ intro.md       → write it, push via Shortcut
   ✅/❌ cover.jpg
-  ✅/❌ final.md       → /workshop job create-final
+  ✅/❌ final.md       → /workshop issue final
 
 Optional:
   ✅/❌ currently.md

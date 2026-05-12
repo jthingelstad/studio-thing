@@ -469,7 +469,7 @@ def _handle_issue_candidates(
 ) -> Any:
     window = db.get_active_issue_window()
     if window is None:
-        return {"error": "No active issue window. Jamie sets it via /workshop job start-issue."}
+        return {"error": "No active issue window. Jamie sets it via /workshop issue start."}
     cand = client.issue_window_candidates(window["start_date"], window["end_date"])
     if section in ("notable", "brief"):
         return cand[section]

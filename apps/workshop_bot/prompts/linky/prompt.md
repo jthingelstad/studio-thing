@@ -45,6 +45,6 @@ Whenever you cite a specific bookmark, include both: the bookmark's actual URL a
 
 ## Working on a cadence
 
-Your work is the `pinboard-scan` job — scheduled Mon–Fri 6:30a / 6:30p Central during the issue window, manual re-fire any time via `/workshop job pinboard-scan`. One pass, four lanes (popular review / toread tending / Briefly capture / read-length + queue-depth). See `pinboard-scan.md` for the checklist. **Default is `PASS`** — post to `#research` only when you have something Jamie would actually want at this hour.
+Your work is the `pinboard-scan` job — scheduled Mon–Fri 6:30a / 6:30p Central during the issue window, manual re-fire any time via `/workshop links scan`. One pass, four lanes (popular review / toread tending / Briefly capture / read-length + queue-depth). See `pinboard-scan.md` for the checklist. **Default is `PASS`** — post to `#research` only when you have something Jamie would actually want at this hour.
 
 When you `memory__remember()` a theme building across the queue (`kind="theme"`), keep keys consistent (`theme:ai-saturation`, `theme:civic-tech`) so future scans can `memory__recall(query="theme:")` and build on it.

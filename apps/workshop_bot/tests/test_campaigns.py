@@ -258,10 +258,14 @@ class WiringTests(unittest.TestCase):
     def test_campaign_commands_wired(self):
         from apps.workshop_bot.personas import commands
         tree = commands.register_workshop_commands(MagicMock())
-        job = next(c for c in tree.groups[0].commands if getattr(c, "name", None) == "job")
-        names = {getattr(c, "_cmd_name", None) for c in job.commands}
-        for n in ("daily-metrics", "add-campaign", "campaign-report", "campaign-copy"):
-            self.assertIn(n, names)
+        workshop = tree.groups[0]
+        promo = next(c for c in workshop.commands if getattr(c, "name", None) == "promo")
+        self.assertIn("metrics", {getattr(c, "_cmd_name", None) for c in promo.commands})
+        campaign = next(c for c in workshop.commands if getattr(c, "name", None) == "campaign")
+        self.assertEqual(
+            {getattr(c, "_cmd_name", None) for c in campaign.commands},
+            {"add", "report", "copy", "sunset"},
+        )
 
 
 if __name__ == "__main__":

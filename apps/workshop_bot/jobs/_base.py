@@ -1,7 +1,7 @@
 """Job runtime — context, single-asset locking, draft-block helpers.
 
 Every workshop_bot user-facing action is a *job*: deterministic Python in
-this package, fired by the ``/workshop job <name>`` slash surface and (for
+this package, fired by the ``/workshop …`` slash surface (commands grouped by content artifact) and (for
 some) by cron. A job reads from source systems and the per-issue S3
 workspace, may make small encapsulated LLM calls, and writes back into the
 workspace or workshop.db.

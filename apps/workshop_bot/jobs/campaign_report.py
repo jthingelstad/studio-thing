@@ -25,7 +25,7 @@ def _vs(actual, expected) -> str:
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     campaigns = db.active_campaigns()
     if not campaigns:
-        return _base.JobResult(True, "No active campaigns. Register one with `/workshop job add-campaign <name> <ref>`.",
+        return _base.JobResult(True, "No active campaigns. Register one with `/workshop campaign add <name> <ref>`.",
                                data={"campaigns": []})
     lines = ["📊 **Active campaigns**", ""]
     for c in campaigns:
@@ -43,5 +43,5 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             preview = copy if len(copy) <= 200 else copy[:197] + "…"
             lines.append(f"  ↳ copy: {preview.replace(chr(10), ' / ')}")
         else:
-            lines.append("  ↳ copy: _(none recorded — `/workshop job campaign-copy`)_")
+            lines.append("  ↳ copy: _(none recorded — `/workshop campaign copy`)_")
     return _base.JobResult(True, "\n".join(lines), data={"campaigns": [c["name"] for c in campaigns]})

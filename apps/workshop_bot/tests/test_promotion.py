@@ -206,9 +206,8 @@ class SchedulerWiringTests(unittest.TestCase):
     def test_promotion_prep_command_wired(self):
         from apps.workshop_bot.personas import commands
         tree = commands.register_workshop_commands(MagicMock())
-        job = next(c for c in tree.groups[0].commands if getattr(c, "name", None) == "job")
-        names = {getattr(c, "_cmd_name", None) for c in job.commands}
-        self.assertIn("promotion-prep", names)
+        promo = next(c for c in tree.groups[0].commands if getattr(c, "name", None) == "promo")
+        self.assertIn("prep", {getattr(c, "_cmd_name", None) for c in promo.commands})
 
 
 if __name__ == "__main__":

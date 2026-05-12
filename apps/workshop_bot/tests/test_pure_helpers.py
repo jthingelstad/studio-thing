@@ -269,7 +269,7 @@ class ExecuteToolRestrictedTests(unittest.TestCase):
 
 
 class ComputeIssueWindowTests(unittest.TestCase):
-    """``/workshop job start-issue`` validates inputs through ``compute_window``.
+    """``/workshop issue start`` validates inputs through ``compute_window``.
     These rules are load-bearing — once a window is committed the
     scheduler and the jobs read it, so bad data poisons the issue."""
 
