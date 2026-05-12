@@ -38,4 +38,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             f"signups: {_vs(signups, c.get('expected_signups'))} · "
             f"traffic: {_vs(traffic, c.get('expected_traffic'))} · last poll: {polled}"
         )
+        copy = (c.get("copy") or "").strip()
+        if copy:
+            preview = copy if len(copy) <= 200 else copy[:197] + "…"
+            lines.append(f"  ↳ copy: {preview.replace(chr(10), ' / ')}")
+        else:
+            lines.append("  ↳ copy: _(none recorded — `/workshop job campaign-copy`)_")
     return _base.JobResult(True, "\n".join(lines), data={"campaigns": [c["name"] for c in campaigns]})

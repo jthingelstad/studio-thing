@@ -76,6 +76,7 @@ def _poll_campaigns() -> list[dict]:
             "traffic": traffic, "signups": signups,
             "delta_traffic": d_t, "delta_signups": d_s,
             "expected_traffic": c.get("expected_traffic"), "expected_signups": c.get("expected_signups"),
+            "copy": (c.get("copy") or None),
             "is_first_poll": not prev,
         })
     return snapshots

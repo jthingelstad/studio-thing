@@ -13,6 +13,9 @@ set-goal`` / ``goal-achieved`` / ``campaign-sunset``.
   set.
 - ``campaign-sunset <name>`` — flip a campaign's status to ``sunset`` so
   ``daily-metrics`` stops polling it.
+- ``campaign-copy <name> <text>`` — set (or, with empty text, clear) the
+  promo copy that ran in a campaign's placement, so performance can be
+  read against the creative.
 """
 
 from __future__ import annotations
@@ -79,6 +82,27 @@ async def goal_achieved(ctx: "_base.JobContext", *, notes: str | None = None) ->
         + (f" — {notes}" if notes else "")
         + ". Set the next one with `/workshop job set-goal <kind> <value>`.",
         data={"goal_id": active["id"]},
+    )
+
+
+async def campaign_copy(ctx: "_base.JobContext", *, name: str, copy: str | None = None) -> "_base.JobResult":
+    name = (name or "").strip()
+    if not name:
+        return _base.JobResult(False, "❌ give the campaign name.")
+    c = db.get_campaign(name)
+    if c is None:
+        return _base.JobResult(
+            False, f"❌ no campaign named `{name}` — see `/workshop job campaign-report`."
+        )
+    text = (str(copy).strip() or None) if copy is not None else None
+    db.set_campaign_copy(name, text)
+    if text is None:
+        return _base.JobResult(True, f"🧹 cleared the copy for `{name}`.", data={"name": name, "has_copy": False})
+    preview = text if len(text) <= 280 else text[:277] + "…"
+    return _base.JobResult(
+        True,
+        f"📝 copy recorded for `{name}` ({len(text)} chars):\n\n{preview}",
+        data={"name": name, "has_copy": True},
     )
 
 

@@ -17,7 +17,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.jobs import _base, add_campaign, campaign_report, daily_metrics  # noqa: E402
+from apps.workshop_bot.jobs import _base, add_campaign, campaign_report, daily_metrics, ops  # noqa: E402
 from apps.workshop_bot.tools import context, db  # noqa: E402
 
 
@@ -67,6 +67,16 @@ class CampaignDbTests(_DBCase):
         rows = db.active_campaigns_with_age()
         self.assertEqual(rows[0]["days_running"], 10)
 
+    def test_campaign_copy_roundtrip(self):
+        db.insert_campaign(name="dd388", ref="DenseDiscovery-388", copy="Try The Weekly Thing.")
+        self.assertEqual(db.get_campaign("dd388")["copy"], "Try The Weekly Thing.")
+        self.assertTrue(db.set_campaign_copy("dd388", "New headline + blurb."))
+        self.assertEqual(db.get_campaign("dd388")["copy"], "New headline + blurb.")
+        self.assertEqual(db.active_campaigns()[0]["copy"], "New headline + blurb.")
+        self.assertTrue(db.set_campaign_copy("dd388", None))
+        self.assertIsNone(db.get_campaign("dd388")["copy"])
+        self.assertFalse(db.set_campaign_copy("nope", "x"))
+
 
 class AddCampaignJobTests(_DBCase):
     def test_register(self):
@@ -85,6 +95,29 @@ class AddCampaignJobTests(_DBCase):
         result = asyncio.run(add_campaign.run(_base.JobContext(), name="x", ref="Bad Ref!"))
         self.assertFalse(result.ok)
 
+    def test_ref_case_is_preserved(self):
+        result = asyncio.run(add_campaign.run(_base.JobContext(), name="dd388", ref="DenseDiscovery-388"))
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(db.get_campaign("dd388")["ref"], "DenseDiscovery-388")
+
+    def test_register_with_copy(self):
+        result = asyncio.run(add_campaign.run(_base.JobContext(), name="dd388", ref="DenseDiscovery-388",
+                                              copy="Headline\n\nBody blurb with a link."))
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(db.get_campaign("dd388")["copy"], "Headline\n\nBody blurb with a link.")
+        self.assertTrue(result.data["has_copy"])
+
+    def test_campaign_copy_job_sets_and_clears(self):
+        asyncio.run(add_campaign.run(_base.JobContext(), name="dd388", ref="DenseDiscovery-388"))
+        r = asyncio.run(ops.campaign_copy(_base.JobContext(), name="dd388", copy="The actual ad."))
+        self.assertTrue(r.ok, r.message)
+        self.assertEqual(db.get_campaign("dd388")["copy"], "The actual ad.")
+        r = asyncio.run(ops.campaign_copy(_base.JobContext(), name="dd388", copy=None))
+        self.assertTrue(r.ok)
+        self.assertIsNone(db.get_campaign("dd388")["copy"])
+        r = asyncio.run(ops.campaign_copy(_base.JobContext(), name="nope", copy="x"))
+        self.assertFalse(r.ok)
+
 
 class CampaignReportJobTests(_DBCase):
     def test_no_campaigns(self):
@@ -93,13 +126,20 @@ class CampaignReportJobTests(_DBCase):
         self.assertIn("No active campaigns", result.message)
 
     def test_report(self):
-        db.insert_campaign(name="dd-may", ref="dd-2026-05-15", expected_signups=50, expected_traffic=800)
+        db.insert_campaign(name="dd-may", ref="dd-2026-05-15", expected_signups=50, expected_traffic=800,
+                           copy="Discover something good every weekend.")
         db.insert_campaign_metric(campaign_name="dd-may", signups=10, traffic=200)
         result = asyncio.run(campaign_report.run(_base.JobContext()))
         self.assertTrue(result.ok, result.message)
         self.assertIn("dd-may", result.message)
         self.assertIn("10 / 50", result.message)
         self.assertIn("200 / 800", result.message)
+        self.assertIn("Discover something good every weekend.", result.message)
+
+    def test_report_flags_missing_copy(self):
+        db.insert_campaign(name="dd-may", ref="dd-2026-05-15")
+        result = asyncio.run(campaign_report.run(_base.JobContext()))
+        self.assertIn("none recorded", result.message)
 
 
 class DailyMetricsTests(_DBCase):
@@ -127,7 +167,8 @@ class DailyMetricsTests(_DBCase):
         self.assertIn("nothing material moved", result.message.lower())
 
     def test_first_campaign_poll_writes_metric_and_posts(self):
-        db.insert_campaign(name="dd-may", ref="dd-2026-05-15", expected_signups=50, expected_traffic=800)
+        db.insert_campaign(name="dd-may", ref="dd-2026-05-15", expected_signups=50, expected_traffic=800,
+                           copy="The placement copy that ran.")
         # Fake Marky bot.
         channel = MagicMock(); channel.send = AsyncMock()
         marky = MagicMock(); marky.user = object(); marky.get_channel = MagicMock(return_value=channel)
@@ -152,6 +193,8 @@ class DailyMetricsTests(_DBCase):
         m = db.latest_campaign_metric("dd-may")
         self.assertEqual(m["traffic"], 200)
         self.assertEqual(m["signups"], 5)
+        # The campaign snapshot carries the copy so Marky can read perf vs creative.
+        self.assertEqual(result.data["campaigns"][0]["copy"], "The placement copy that ran.")
 
     def test_subscriber_spike_triggers_report(self):
         channel = MagicMock(); channel.send = AsyncMock()
@@ -217,7 +260,7 @@ class WiringTests(unittest.TestCase):
         tree = commands.register_workshop_commands(MagicMock())
         job = next(c for c in tree.groups[0].commands if getattr(c, "name", None) == "job")
         names = {getattr(c, "_cmd_name", None) for c in job.commands}
-        for n in ("daily-metrics", "add-campaign", "campaign-report"):
+        for n in ("daily-metrics", "add-campaign", "campaign-report", "campaign-copy"):
             self.assertIn(n, names)
 
 

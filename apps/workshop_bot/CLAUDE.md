@@ -25,13 +25,14 @@ Every workshop_bot action — pulling content into the draft, reordering for the
 | `pinboard-scan` | Mon–Fri 06:30 & 18:30 CT during the issue window; manual | Linky's four-lane Pinboard pass (popular review / toread tending / Briefly capture / read-length + queue-depth) → `#research`. Active only when an issue window is set and today ∈ `[start_date, end_date]`. |
 | `promotion-prep` | auto on RSS detection; manual | Marky drafts syndication content (LinkedIn + r/WeeklyThing megathread + per-link threads, 2–3 framings each) for the latest *published* issue's `publish.md` → `#promotion`. Never auto-posts. |
 | `daily-metrics` | daily 19:00 CT; manual | Polls active campaigns (Tinylytics `?ref=` traffic + Buttondown ref signups → a `campaign_metrics` row each run), checks subscriber growth + engagement; PASSes silently when nothing material moved, else Marky composes a terse report → `#promotion`. |
-| `add-campaign <name> <ref> [signups] [traffic]` | manual | Inserts a row into the `campaigns` table. |
-| `campaign-report` | manual | Active campaigns + current performance vs expected. |
+| `add-campaign <name> <ref> [signups] [traffic] [copy]` | manual | Inserts a row into the `campaigns` table. `ref` is stored verbatim (case-sensitive — Tinylytics matches the `?ref=` value exactly). `copy` (optional) is the actual promo text that ran in the placement. |
+| `campaign-report` | manual | Active campaigns + current performance vs expected, each with its recorded copy. |
+| `campaign-copy <name> [text]` | manual | Sets (or, with empty text, clears) a campaign's `copy` — the placement creative, so perf can be read against it. In `jobs/ops.py`. |
 | `campaign-sunset <name>` | manual | Sets a campaign's status to `sunset` — `daily-metrics` stops polling it. |
 | `set-goal <kind> <value> [notes]` | manual | Opens a new active goal in the `goals` table (`kind` ∈ `members`/`dollars`). Refuses if one's already active (close it with `goal-achieved` first — the table allows one row with `achieved_at IS NULL`). |
 | `goal-achieved [notes]` | manual | Marks the active goal achieved (today); `notes` is appended to whatever was recorded at `set-goal` time. |
 
-Plus one non-`job` subcommand: **`/workshop status`** — a read-only DB-only ops snapshot (active issue window, active goal/campaigns, any held `job_locks`, the last few `agent_runs`). Distinct from `/workshop job issue-status` (the in-flight issue's *content* completeness) and `/workshop job campaign-report` (campaign perf vs expected). Source: `jobs/status.py`; `set-goal`/`goal-achieved`/`campaign-sunset` are in `jobs/ops.py` (tiny, no-LLM).
+Plus one non-`job` subcommand: **`/workshop status`** — a read-only DB-only ops snapshot (active issue window, active goal/campaigns, any held `job_locks`, the last few `agent_runs`). Distinct from `/workshop job issue-status` (the in-flight issue's *content* completeness) and `/workshop job campaign-report` (campaign perf vs expected). Source: `jobs/status.py`; `set-goal`/`goal-achieved`/`campaign-sunset`/`campaign-copy` are in `jobs/ops.py` (tiny, no-LLM).
 
 Scheduler: `scheduler/jobs.py` declares the cron `JobSpec`s; `scheduler/handlers.py` has `content_job` (the bridge cron→jobs, wired as `functools.partial(content_job, job="<name>")`) and `rss_check` (poll the feed, dedupe via `agent_notes`, auto-fire `promotion-prep`). There are **no per-persona heartbeats** — everything an agent does on a cadence is a job.
 

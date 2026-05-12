@@ -60,6 +60,7 @@ _COLUMN_MIGRATIONS: tuple[tuple[str, str, str], ...] = (
     ("thingy_tokens", "profile", "ALTER TABLE thingy_tokens ADD COLUMN profile TEXT"),
     ("thingy_tokens", "last_welcomed_at",
      "ALTER TABLE thingy_tokens ADD COLUMN last_welcomed_at TEXT"),
+    ("campaigns", "copy", "ALTER TABLE campaigns ADD COLUMN copy TEXT"),
 )
 
 
@@ -716,6 +717,7 @@ def insert_campaign(
     expected_traffic: Optional[int] = None,
     started_at: Optional[str] = None,
     ends_at: Optional[str] = None,
+    copy: Optional[str] = None,
     notes: Optional[str] = None,
 ) -> bool:
     """Insert a campaign. Returns False if a campaign with that name
@@ -723,12 +725,12 @@ def insert_campaign(
     with connect() as conn:
         cur = conn.execute(
             "INSERT INTO campaigns (name, ref, status, started_at, ends_at, "
-            " expected_signups, expected_traffic, notes) "
-            "VALUES (?, ?, 'live', COALESCE(?, date('now')), ?, ?, ?, ?) "
+            " expected_signups, expected_traffic, copy, notes) "
+            "VALUES (?, ?, 'live', COALESCE(?, date('now')), ?, ?, ?, ?, ?) "
             "ON CONFLICT(name) DO NOTHING",
             (name, ref, started_at, ends_at,
              int(expected_signups) if expected_signups is not None else None,
-             int(expected_traffic) if expected_traffic is not None else None, notes),
+             int(expected_traffic) if expected_traffic is not None else None, copy, notes),
         )
         return cur.rowcount > 0
 
@@ -737,7 +739,7 @@ def get_campaign(name: str) -> Optional[dict[str, Any]]:
     with connect() as conn:
         row = conn.execute(
             "SELECT name, ref, status, started_at, ends_at, expected_signups, "
-            "       expected_traffic, notes FROM campaigns WHERE name = ?",
+            "       expected_traffic, copy, notes FROM campaigns WHERE name = ?",
             (name,),
         ).fetchone()
     return dict(row) if row else None
@@ -747,7 +749,7 @@ def active_campaigns() -> list[dict[str, Any]]:
     with connect() as conn:
         rows = conn.execute(
             "SELECT name, ref, status, started_at, ends_at, expected_signups, "
-            "       expected_traffic, notes FROM campaigns WHERE status = 'live' "
+            "       expected_traffic, copy, notes FROM campaigns WHERE status = 'live' "
             "ORDER BY started_at DESC"
         ).fetchall()
     return [dict(r) for r in rows]
@@ -774,6 +776,14 @@ def active_campaigns_with_age() -> list[dict[str, Any]]:
 def set_campaign_status(name: str, status: str) -> bool:
     with connect() as conn:
         cur = conn.execute("UPDATE campaigns SET status = ? WHERE name = ?", (status, name))
+        return cur.rowcount > 0
+
+
+def set_campaign_copy(name: str, copy: Optional[str]) -> bool:
+    """Set (or clear, with ``None``) the promo copy for a campaign.
+    Returns False if no campaign with that name exists."""
+    with connect() as conn:
+        cur = conn.execute("UPDATE campaigns SET copy = ? WHERE name = ?", (copy, name))
         return cur.rowcount > 0
 
 

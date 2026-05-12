@@ -18,7 +18,10 @@ logger = logging.getLogger("workshop.jobs.add_campaign")
 
 NAME = "add-campaign"
 
-_REF_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
+# Case-preserving: Tinylytics records the ?ref= value verbatim and matches it
+# case-sensitively, so a ref set up as `DenseDiscovery-388` must be stored
+# exactly that way or daily-metrics polls the wrong key and sees 0 traffic.
+_REF_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._~-]{0,63}$")
 
 
 def _as_int(v) -> Optional[int]:
@@ -37,17 +40,21 @@ async def run(
     ref: str,
     expected_signups=None,
     expected_traffic=None,
+    copy=None,
 ) -> "_base.JobResult":
     name = (str(name) or "").strip()
-    ref = (str(ref) or "").strip().lower()
+    ref = (str(ref) or "").strip()
+    copy = (str(copy).strip() or None) if copy is not None else None
     if not name:
         return _base.JobResult(False, "❌ campaign name is required.")
     if not _REF_RE.match(ref):
         return _base.JobResult(
-            False, f"❌ ref tag {ref!r} must be lowercase, hyphenated/dotted, ≤64 chars (e.g. `dd-2026-05-15`)."
+            False,
+            f"❌ ref tag {ref!r} must match the ?ref= value exactly — letters/digits plus `.`/`_`/`-`/`~`, "
+            "≤64 chars (e.g. `DenseDiscovery-388`). Case is preserved.",
         )
     es, et = _as_int(expected_signups), _as_int(expected_traffic)
-    created = db.insert_campaign(name=name, ref=ref, expected_signups=es, expected_traffic=et)
+    created = db.insert_campaign(name=name, ref=ref, expected_signups=es, expected_traffic=et, copy=copy)
     if not created:
         existing = db.get_campaign(name) or {}
         return _base.JobResult(
@@ -60,5 +67,9 @@ async def run(
         bits.append(f"Expected signups: {es}.")
     if et is not None:
         bits.append(f"Expected traffic: {et}.")
+    if copy:
+        bits.append("Copy recorded.")
+    else:
+        bits.append("No copy yet — add it with `/workshop job campaign-copy`.")
     bits.append("`daily-metrics` will poll it each run; `/workshop job campaign-report` for a summary.")
-    return _base.JobResult(True, " ".join(bits), data={"name": name, "ref": ref})
+    return _base.JobResult(True, " ".join(bits), data={"name": name, "ref": ref, "has_copy": bool(copy)})

@@ -250,7 +250,9 @@ WHERE NOT EXISTS (SELECT 1 FROM goals);
 
 -- Campaigns — Marky's ad-placement ledger. One row per `?ref=<tag>`
 -- campaign, created by /workshop job add-campaign. Status: 'live' while
--- it's running, 'sunset' once it's over.
+-- it's running, 'sunset' once it's over. `copy` holds the actual promo
+-- text that ran in the placement, so performance can be read against the
+-- creative — set at add-campaign time or later via campaign-copy.
 CREATE TABLE IF NOT EXISTS campaigns (
   name TEXT PRIMARY KEY,
   ref TEXT NOT NULL,
@@ -259,6 +261,7 @@ CREATE TABLE IF NOT EXISTS campaigns (
   ends_at TEXT,
   expected_signups INTEGER,
   expected_traffic INTEGER,
+  copy TEXT,
   notes TEXT
 );
 

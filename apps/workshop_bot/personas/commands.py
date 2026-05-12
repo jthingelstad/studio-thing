@@ -32,8 +32,8 @@ Jobs that post to a channel during the run do so via ``ctx.post(...)``.
 Wired under ``/workshop job``: ``start-issue``, ``update-draft``,
 ``issue-status``, ``pinboard-scan``, ``create-final``, ``compose-haiku`` /
 ``-meta`` / ``-cta``, ``build-publish``, ``promotion-prep``,
-``daily-metrics``, ``add-campaign``, ``campaign-report``, ``set-goal``,
-``goal-achieved``, ``campaign-sunset``. Plus a top-level ``/workshop
+``daily-metrics``, ``add-campaign``, ``campaign-report``, ``campaign-copy``,
+``set-goal``, ``goal-achieved``, ``campaign-sunset``. Plus a top-level ``/workshop
 status`` — a read-only ops snapshot (issue window, goal/campaigns, held
 locks, recent runs).
 """
@@ -245,9 +245,10 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
     )
     @app_commands.describe(
         name="A short name for the campaign (e.g. dense-discovery-may-2026)",
-        ref="The ?ref= tag used in the campaign URL (e.g. dd-2026-05-15)",
+        ref="The ?ref= tag from the campaign URL, exact case (e.g. DenseDiscovery-388)",
         expected_signups="Optional — how many subscribers you expect from it",
         expected_traffic="Optional — how many visits you expect from it",
+        copy="Optional — the actual promo text that ran in the placement (set later with campaign-copy)",
     )
     async def add_campaign_cmd(  # type: ignore[misc]
         interaction: discord.Interaction,
@@ -255,6 +256,7 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
         ref: str,
         expected_signups: int = 0,
         expected_traffic: int = 0,
+        copy: str = "",
     ) -> None:
         await _run_and_ack(
             interaction,
@@ -262,6 +264,7 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
                 _ctx(bot), name=name, ref=ref,
                 expected_signups=(expected_signups or None),
                 expected_traffic=(expected_traffic or None),
+                copy=(copy or None),
             ),
             "add-campaign",
         )
@@ -315,6 +318,21 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
     ) -> None:
         await _run_and_ack(
             interaction, lambda: ops.campaign_sunset(_ctx(bot), name=name), "campaign-sunset"
+        )
+
+    @job.command(
+        name="campaign-copy",
+        description="Record the promo text that ran in a campaign's placement (empty text clears it).",
+    )
+    @app_commands.describe(
+        name="The campaign name (as registered with add-campaign)",
+        copy="The actual ad copy that ran — leave empty to clear what's stored",
+    )
+    async def campaign_copy_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, name: str, copy: str = ""
+    ) -> None:
+        await _run_and_ack(
+            interaction, lambda: ops.campaign_copy(_ctx(bot), name=name, copy=(copy or None)), "campaign-copy"
         )
 
     @workshop.command(
