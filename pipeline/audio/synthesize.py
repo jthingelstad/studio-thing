@@ -46,11 +46,75 @@ def ensure_audio_tools() -> None:
         raise RuntimeError(f"Missing required audio tool(s): {names}. Install ffmpeg before building audio.")
 
 
+# Lines that open a new semantic block in the generated audio script (section
+# intros, per-link/journal cues, quote blocks, the closing). Chunk boundaries
+# are only allowed between blocks — or, for a block too big for one TTS request,
+# between its paragraphs/sentences — so a "Link five." cue is never stranded at
+# the end of one request with its commentary read "cold" at the start of the
+# next, which is what produced the audible pacing/intonation jumps mid-card.
+_BLOCK_START_RE = re.compile(
+    r"""^(?:
+        Now,\ the\ .+?\ section\.
+      | Now,\ more\ links\.
+      | Now,\ for\ your\ information\.
+      | That's\ the\ end\ of\ .
+      | That\ brings\ us\ to\ the\ end\ of\ the\ Weekly\ Thing
+      | Link\ \S+\.
+      | Journal\ entry\ \S+\.
+      | Quote\.
+    )""",
+    re.VERBOSE,
+)
+
+
+def _paragraphs(text: str) -> list[str]:
+    return [paragraph.strip() for paragraph in re.split(r"\n{2,}", text) if paragraph.strip()]
+
+
+def split_into_blocks(text: str) -> list[str]:
+    """Group the script's paragraphs into semantic blocks.
+
+    A block runs from one block-start marker (inclusive) up to the next; any
+    leading paragraphs before the first marker (the preamble) form the first
+    block. Each block is the paragraphs rejoined with blank lines."""
+    blocks: list[str] = []
+    current: list[str] = []
+    for paragraph in _paragraphs(text):
+        first_line = paragraph.splitlines()[0].strip()
+        if current and _BLOCK_START_RE.match(first_line):
+            blocks.append("\n\n".join(current))
+            current = []
+        current.append(paragraph)
+    if current:
+        blocks.append("\n\n".join(current))
+    return blocks
+
+
 def chunk_text(text: str, max_chars: int = MAX_CHARS) -> list[str]:
-    paragraphs = [paragraph.strip() for paragraph in re.split(r"\n{2,}", text) if paragraph.strip()]
     chunks: list[str] = []
     current = ""
-    for paragraph in paragraphs:
+    for block in split_into_blocks(text):
+        candidate = f"{current}\n\n{block}".strip() if current else block
+        if len(candidate) <= max_chars:
+            current = candidate
+            continue
+        if current:
+            chunks.append(current)
+            current = ""
+        if len(block) <= max_chars:
+            current = block
+            continue
+        # A single block too large for one request: fall back to packing its
+        # paragraphs, then its sentences, into the size budget.
+        current = _pack_paragraphs(block, max_chars, chunks)
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def _pack_paragraphs(text: str, max_chars: int, chunks: list[str]) -> str:
+    current = ""
+    for paragraph in _paragraphs(text):
         candidate = f"{current}\n\n{paragraph}".strip() if current else paragraph
         if len(candidate) <= max_chars:
             current = candidate
@@ -61,8 +125,7 @@ def chunk_text(text: str, max_chars: int = MAX_CHARS) -> list[str]:
         if len(paragraph) <= max_chars:
             current = paragraph
             continue
-        sentences = split_sentences(paragraph)
-        for sentence in sentences:
+        for sentence in split_sentences(paragraph):
             candidate = f"{current} {sentence}".strip() if current else sentence
             if len(candidate) <= max_chars:
                 current = candidate
@@ -76,9 +139,7 @@ def chunk_text(text: str, max_chars: int = MAX_CHARS) -> list[str]:
                     "adjust the script transform before synthesizing."
                 )
             current = sentence
-    if current:
-        chunks.append(current)
-    return chunks
+    return current
 
 
 def split_sentences(text: str) -> list[str]:
