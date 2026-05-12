@@ -84,6 +84,9 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
         # Hidden by default: the drawer is off-screen until body.rv-open.
         self.assertIn("transform: translateX(100%)", page)
         self.assertIn("body.rv-open #rv-panel { transform: translateX(0); }", page)
+        # When open (and there's room) the draft shifts left so the panel
+        # doesn't cover it.
+        self.assertIn("body.rv-open {", page)
         # A toggle script wires the button to body.rv-open.
         self.assertIn("classList.toggle('rv-open')", page)
         # The actual draft content is untouched (not edited by the review).

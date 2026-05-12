@@ -52,6 +52,7 @@ body {
   -webkit-font-smoothing: antialiased;
   max-width: 680px; margin: 0 auto; padding: 32px 28px 64px;
   color: var(--wt-ink); background: var(--wt-bg);
+  transition: margin 0.22s ease;
 }
 article > :first-child { margin-top: 0; }
 h1, h2, h3, h4 {
@@ -103,6 +104,15 @@ hr { border: none; border-top: 1px solid var(--wt-line); margin: 32px 0; }
   transform: translateX(100%); transition: transform 0.22s ease;
 }
 body.rv-open #rv-panel { transform: translateX(0); }
+/* When the drawer is open and there's room, left-align the draft so the
+   review panel and the content are visible side by side instead of the
+   panel sitting on top of the text. On narrow windows the panel overlays. */
+@media (min-width: 880px) {
+  body.rv-open {
+    margin-left: 40px;
+    margin-right: calc(min(440px, 94vw) + 40px);
+  }
+}
 #rv-panel .rv-h {
   font-family: var(--wt-mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--wt-accent); border: none; padding: 0; margin: 0 0 2px;
