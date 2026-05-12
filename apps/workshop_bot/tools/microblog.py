@@ -61,6 +61,19 @@ def _parse_dt(raw: Any) -> datetime | None:
         return None
 
 
+def published_local(raw: Any) -> datetime | None:
+    """Parse a ``published`` timestamp and convert it to Jamie's local zone
+    (``America/Chicago``). micro.blog emits ``published`` in UTC; everything
+    reader-facing (the Journal date/time labels, windowing) wants it local.
+    A naive (tz-less) value is returned unchanged."""
+    dt = _parse_dt(raw)
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(_LOCAL_TZ)
+    return dt
+
+
 def _post_date(post: dict) -> date | None:
     """The post's "issue date" — Jamie's local date. micro.blog's URL slug
     (``/YYYY/MM/DD/…``) is that date verbatim; fall back to converting the
@@ -71,12 +84,8 @@ def _post_date(post: dict) -> date | None:
             return date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
         except ValueError:
             pass
-    dt = _parse_dt(post.get("published"))
-    if dt is None:
-        return None
-    if dt.tzinfo is not None:
-        dt = dt.astimezone(_LOCAL_TZ)
-    return dt.date()
+    dt = published_local(post.get("published"))
+    return dt.date() if dt else None
 
 
 def _first(props: dict, *keys: str):

@@ -106,9 +106,8 @@ def _render_brief(items: list[dict]) -> str:
 # ---- Journal ----
 
 def _journal_label(published_iso) -> str:
-    try:
-        dt = datetime.fromisoformat(str(published_iso).replace("Z", "+00:00"))
-    except (TypeError, ValueError):
+    dt = microblog.published_local(published_iso)
+    if dt is None:
         return str(published_iso or "").strip()
     hour12 = dt.hour % 12 or 12
     ampm = "AM" if dt.hour < 12 else "PM"

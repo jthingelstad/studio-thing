@@ -190,6 +190,16 @@ class SectionRendererTests(unittest.TestCase):
         # Two blank lines between entries.
         self.assertIn("/journal/x.jpg)\n\n\n### [Software Is Liquid]", out)
 
+    def test_render_journal_converts_utc_published_to_local(self):
+        # micro.blog emits `published` in UTC; the label must be Central.
+        # 2026-05-12T02:21Z → 2026-05-11 21:21 CDT.
+        out = update_draft._render_journal([
+            {"url": "https://www.thingelstad.com/2026/05/11/late.html",
+             "title": "", "published": "2026-05-12T02:21:00Z", "content_md": "Posted late."},
+        ])
+        self.assertIn("[May 11, 2026 at 9:21 PM](https://www.thingelstad.com/2026/05/11/late.html)", out)
+        self.assertNotIn("2:21 AM", out)
+
     def test_format_haiku(self):
         self.assertEqual(_base.format_haiku("line one\nline two\nline three"),
                          "**line one  \nline two  \nline three**")
