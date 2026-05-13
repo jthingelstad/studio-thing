@@ -23,7 +23,7 @@ import re
 
 from ..tools import draft as draft_mod
 from ..tools import render, s3
-from . import _base, _currently
+from . import _base, _cover, _currently
 
 logger = logging.getLogger("workshop.jobs.build_publish")
 
@@ -121,7 +121,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 "currently": _currently.render(n),  # currently.json (preferred) or legacy currently.md
             }
             intro_text = _read(n, "intro.md").strip()
-            cover_text = _read(n, "cover.md").strip()
+            cover_text = _cover.render(n)  # cover.json (preferred) or legacy cover.md
             cover_block = (
                 f"![](https://files.thingelstad.com/weekly-thing/{n}/cover.jpg)\n\n{cover_text}"
                 if cover_text else ""

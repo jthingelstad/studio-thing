@@ -514,6 +514,21 @@ class UpdateDraftRealFillsTests(_DBTestCase):
         self.assertTrue(result.ok, result.message)
         self.assertIn("**Reading:** a verbatim section.", self.ws.files[(458, "draft.md")])
 
+    def test_cover_json_renders_image_caption_date_location(self):
+        self._set_window()
+        self.ws.write_issue_file(
+            458, "cover.json",
+            '{"caption":"Minnehaha Creek after the Falls.","location":"Minneapolis, MN","timestamp":"May 10, 2026"}',
+        )
+        result = asyncio.run(update_draft.run(_base.JobContext()))
+        self.assertTrue(result.ok, result.message)
+        d = self.ws.files[(458, "draft.md")]
+        self.assertIn(
+            "![](https://files.thingelstad.com/weekly-thing/458/cover.jpg)\n\n"
+            "Minnehaha Creek after the Falls.\n\nMay 10, 2026  \nMinneapolis, MN",
+            d,
+        )
+
     def test_idempotent_with_stable_sources(self):
         self._set_window()
         asyncio.run(update_draft.run(_base.JobContext()))
