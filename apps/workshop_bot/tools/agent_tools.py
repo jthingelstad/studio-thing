@@ -183,6 +183,12 @@ def t_fetch_url(deps, url: str, max_chars: int = 12_000) -> dict[str, Any]:
     return web.fetch_text(url, max_chars=int(max_chars))
 
 
+def t_read_length(deps, url: str) -> dict[str, Any]:
+    """Fetch a URL and bucket how long it is to read — short / medium / long
+    / unknown — plus the word count."""
+    return web.read_length(str(url))
+
+
 # ---------- current issue window (operator-set) ----------
 
 # Canonical implementations live in `tools/issue.py`. Jamie sets the
@@ -500,6 +506,20 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["url"],
         },
     },
+    "web__read_length": {
+        "name": "web__read_length",
+        "description": (
+            "Fetch a URL and bucket how long it is to read: 'short' (<~800 words), 'medium', "
+            "'long' (>~2500 words), or 'unknown' if it can't be fetched (paywall, login, "
+            "binary). Returns {url, bucket, word_count}. Cheaper to reason over than fetching "
+            "the whole body when you only need the length (e.g. gauging a toread pile)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"url": {"type": "string"}},
+            "required": ["url"],
+        },
+    },
     "memory__remember": {
         "name": "memory__remember",
         "description": (
@@ -752,6 +772,7 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "archive__quote_search": t_quote_search,
     "site__support_state": t_get_support_state,
     "web__fetch_url": t_fetch_url,
+    "web__read_length": t_read_length,
     "issue__current_window": t_current_issue_window,
     "issue__list_windows": t_list_issue_windows,
     "memory__remember": t_remember,

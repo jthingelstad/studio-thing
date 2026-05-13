@@ -950,28 +950,29 @@ class PinboardServerNewToolsTests(unittest.TestCase):
     def test_new_verbs_registered(self):
         tools = self._server()
         for name in ("issue_candidates", "capture_blurb", "popular_unseen", "mark_seen",
-                     "estimate_read_length", "queue_depth_vs_deadline", "archive_recall"):
+                     "queue_depth_vs_deadline", "archive_recall"):
             self.assertIn(name, tools, f"missing pinboard verb {name}")
         # Thin mirrors still present.
-        for name in ("recent", "unread", "popular", "save", "lookup_url"):
+        for name in ("recent", "unread", "save", "lookup_url", "tags"):
             self.assertIn(name, tools)
+        # Trimmed away.
+        for name in ("popular", "stored_recent", "tag_summary", "archive_tags",
+                     "bookmark_dates", "update_check", "suggest_tags", "estimate_read_length"):
+            self.assertNotIn(name, tools)
 
     def test_issue_candidates_section_enum(self):
         tools = self._server()
         schema = tools["issue_candidates"].input_schema
         self.assertEqual(schema["properties"]["section"]["enum"], ["notable", "brief"])
 
-    def test_estimate_read_length_buckets(self):
-        from apps.workshop_bot.systems.pinboard import server as srv
-        with patch.object(srv.web, "fetch_text", lambda url, max_chars=0: {"text": "word " * 100}):
-            out = srv._estimate_read_length("http://x")
-        self.assertEqual(out["bucket"], "short")
-        with patch.object(srv.web, "fetch_text", lambda url, max_chars=0: {"text": "word " * 5000}):
-            out = srv._estimate_read_length("http://x")
-        self.assertEqual(out["bucket"], "long")
-        with patch.object(srv.web, "fetch_text", lambda url, max_chars=0: {"error": "paywall"}):
-            out = srv._estimate_read_length("http://x")
-        self.assertEqual(out["bucket"], "unknown")
+    def test_read_length_buckets(self):
+        from apps.workshop_bot.tools import web
+        with patch.object(web, "fetch_text", lambda url, max_chars=0: {"text": "word " * 100}):
+            self.assertEqual(web.read_length("http://x")["bucket"], "short")
+        with patch.object(web, "fetch_text", lambda url, max_chars=0: {"text": "word " * 5000}):
+            self.assertEqual(web.read_length("http://x")["bucket"], "long")
+        with patch.object(web, "fetch_text", lambda url, max_chars=0: {"error": "paywall"}):
+            self.assertEqual(web.read_length("http://x")["bucket"], "unknown")
 
 
 class LinkyContextTests(_DBTestCase):

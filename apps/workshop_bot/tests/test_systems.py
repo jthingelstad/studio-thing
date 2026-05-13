@@ -14,6 +14,7 @@ import sys
 import types
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
@@ -382,7 +383,7 @@ class PinboardServerTests(unittest.TestCase):
     def setUp(self):
         os.environ.setdefault("PINBOARD_API_TOKEN", "jthingelstad:STUB")
         # Use a fresh temp DB so the SQLite-side effects of pinboard__recent /
-        # pinboard__unread / pinboard__stored_recent don't accumulate across tests.
+        # pinboard__unread don't accumulate across tests.
         import tempfile
         self._tmpdir = tempfile.TemporaryDirectory()
         self._orig_db = os.environ.get("WORKSHOP_DB_PATH")
@@ -411,20 +412,13 @@ class PinboardServerTests(unittest.TestCase):
                 "capture_blurb",
                 "popular_unseen",
                 "mark_seen",
-                "estimate_read_length",
                 "queue_depth_vs_deadline",
                 "archive_recall",
                 # thin API mirrors
                 "recent",
                 "unread",
-                "popular",
-                "stored_recent",
-                "tag_summary",
-                "update_check",
                 "lookup_url",
-                "suggest_tags",
-                "archive_tags",
-                "bookmark_dates",
+                "tags",
                 "save",
             },
         )
@@ -458,10 +452,6 @@ class PinboardServerTests(unittest.TestCase):
         self.assertEqual(out[0]["url"], "https://example.com/a")
         self.assertEqual(out[0]["title"], "Title A")
         self.assertTrue(out[0]["pinboard_url"].startswith("https://pinboard.in/u:"))
-        # stored_recent should now find it without a live API call.
-        stored = self.tools["stored_recent"].handler(deps=None, limit=10)
-        self.assertEqual(len(stored), 1)
-        self.assertEqual(stored[0]["url"], "https://example.com/a")
 
     def test_unread_passes_toread_flag(self):
         captured: list[dict] = []
@@ -486,7 +476,7 @@ class PinboardServerTests(unittest.TestCase):
         self.assertEqual(captured[0]["params"]["tag"], "ai")
         self.assertEqual(captured[0]["params"]["results"], 50)
 
-    def test_tag_summary_aggregates(self):
+    def test_tags_unread_scope_aggregates(self):
         def fake_get(url, params=None, timeout=None, headers=None):
             return _FakeResp([
                 {"href": "u1", "description": "A", "tags": "ai writing"},
@@ -496,13 +486,34 @@ class PinboardServerTests(unittest.TestCase):
             ])
 
         with _patch_requests_get(pb_client, fake_get):
-            out = self.tools["tag_summary"].handler(deps=None, limit=200, top=5)
+            out = self.tools["tags"].handler(deps=None, scope="unread", limit=200, top=5)
+        self.assertEqual(out["scope"], "unread")
         self.assertEqual(out["total_items"], 4)
         # ai appears 2x, writing 2x, climate 1x; ordering is most_common.
         counts = {entry["tag"]: entry["count"] for entry in out["top_tags"]}
         self.assertEqual(counts["ai"], 2)
         self.assertEqual(counts["writing"], 2)
         self.assertEqual(counts["climate"], 1)
+
+    def test_tags_archive_scope(self):
+        def fake_get(url, params=None, timeout=None, headers=None):
+            return _FakeResp({"ai": 12, "writing": 7, "climate": 3})
+
+        with _patch_requests_get(pb_client, fake_get):
+            out = self.tools["tags"].handler(deps=None, scope="archive", top=2)
+        self.assertEqual(out["scope"], "archive")
+        self.assertEqual(len(out["top_tags"]), 2)
+
+    def test_estimate_read_length_moved_to_web(self):
+        # The pinboard tool is gone; web.read_length is the home now.
+        self.assertNotIn("estimate_read_length", self.tools)
+        from apps.workshop_bot.tools import web
+        with patch.object(web, "fetch_text", lambda url, max_chars=0: {"text": "word " * 100}):
+            self.assertEqual(web.read_length("http://x")["bucket"], "short")
+        with patch.object(web, "fetch_text", lambda url, max_chars=0: {"text": "word " * 5000}):
+            self.assertEqual(web.read_length("http://x")["bucket"], "long")
+        with patch.object(web, "fetch_text", lambda url, max_chars=0: {"error": "paywall"}):
+            self.assertEqual(web.read_length("http://x")["bucket"], "unknown")
 
 
 class StripeServerTests(unittest.TestCase):
@@ -792,9 +803,9 @@ class RegistryIntegrationTests(unittest.TestCase):
         for new in (
             "pinboard__recent",
             "pinboard__unread",
-            "pinboard__popular",
-            "pinboard__stored_recent",
-            "pinboard__tag_summary",
+            "pinboard__popular_unseen",
+            "pinboard__tags",
+            "pinboard__archive_recall",
         ):
             tool = self.registry.get(new)
             self.assertIsNotNone(tool, new)

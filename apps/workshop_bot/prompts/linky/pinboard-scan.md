@@ -10,7 +10,7 @@ The `pinboard-scan` job just woke you. The `## Today` block above carries the ru
 
 ## Lane B — toread tending
 
-- `pinboard__issue_candidates('notable')` and `pinboard__issue_candidates('brief')` to see what's already aimed at this issue. `pinboard__unread()` for the raw toread pile, `pinboard__tag_summary()` for the shape of it.
+- `pinboard__issue_candidates('notable')` and `pinboard__issue_candidates('brief')` to see what's already aimed at this issue. `pinboard__unread()` for the raw toread pile, `pinboard__tags()` for the shape of it.
 - Pick 3–5 toread items and give each a short WT-aware assessment: quality, whether it deserves Jamie's time, how it might land in WT. `pinboard__archive_recall(query)` to check whether he's bookmarked this territory before. Be willing to say "skip."
 
 ## Lane C — Briefly capture
@@ -24,7 +24,7 @@ When you think a toread item belongs in Briefly:
 
 ## Lane D — read-length + queue-depth
 
-- For toread items you're assessing, `pinboard__estimate_read_length(url)` — short / medium / long (skip when unfetchable). Surface the distribution if it's lopsided (a pile of long reads with two days to pub).
+- For toread items you're assessing, `web__read_length(url)` — short / medium / long (skip when unfetchable). Surface the distribution if it's lopsided (a pile of long reads with two days to pub).
 - `pinboard__queue_depth_vs_deadline()` — if `trend` is `piling-up`, nudge Jamie about an end-of-week pile. If `manageable` / `clear`, say nothing about it.
 
 ## Decide

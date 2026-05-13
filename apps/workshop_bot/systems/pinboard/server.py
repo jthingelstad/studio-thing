@@ -4,13 +4,17 @@ Two layers:
 
 - **Job-oriented verbs** — what Linky's prompt reaches for first:
   ``issue_candidates``, ``capture_blurb``, ``popular_unseen``,
-  ``mark_seen``, ``estimate_read_length``, ``queue_depth_vs_deadline``,
-  ``archive_recall``. They collapse "fetch, filter, merge, write" onto the
-  thin v1 calls.
-- **Thin API mirrors** — ``recent``, ``unread``, ``popular``,
-  ``stored_recent``, ``tag_summary``, ``update_check``, ``lookup_url``,
-  ``suggest_tags``, ``archive_tags``, ``bookmark_dates``, ``save``. Still
-  available for ad-hoc use.
+  ``mark_seen``, ``queue_depth_vs_deadline``, ``archive_recall``. They
+  collapse "fetch, filter, merge, write" onto the thin v1 calls.
+- **Thin API mirrors** — ``recent``, ``unread``, ``lookup_url``, ``tags``
+  (scope = unread | archive), ``save``. Still available for ad-hoc use.
+
+(The raw popular feed, the SQLite-cached recent list, the last-mutation
+timestamp, tag suggestions, and the per-day bookmark histogram all had thin
+mirror tools too; they were trimmed as redundant — ``popular_unseen``
+supersedes the raw feed, ``recent`` covers recents, and the rest were
+rarely the right tool. Read-length estimation moved to the universal
+``web__read_length``.)
 """
 
 from __future__ import annotations
@@ -18,15 +22,11 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
-from ...tools import avoid_domains, db, web
+from ...tools import avoid_domains, db
 from .._base import ToolDef
 from . import client
 
 logger = logging.getLogger("workshop.systems.pinboard.server")
-
-# Read-length buckets, by fetched word count.
-_SHORT_MAX = 800
-_LONG_MIN = 2500
 
 
 class PinboardServer:
@@ -126,21 +126,6 @@ class PinboardServer:
                 handler=_handle_mark_seen,
             ),
             ToolDef(
-                name="estimate_read_length",
-                description=(
-                    "Fetch a URL and bucket how long it is to read: 'short' "
-                    "(<~800 words), 'medium', 'long' (>~2500 words), or "
-                    "'unknown' if it can't be fetched (paywall, login, "
-                    "binary). Returns {url, bucket, word_count}."
-                ),
-                input_schema={
-                    "type": "object",
-                    "properties": {"url": {"type": "string"}},
-                    "required": ["url"],
-                },
-                handler=lambda deps, url, **_kw: _estimate_read_length(str(url)),
-            ),
-            ToolDef(
                 name="queue_depth_vs_deadline",
                 description=(
                     "How big is the toread pile vs. how long until publish. "
@@ -211,66 +196,6 @@ class PinboardServer:
                 handler=_handle_unread,
             ),
             ToolDef(
-                name="popular",
-                description=(
-                    "Pinboard's site-wide popular bookmarks feed. Returns "
-                    "title, url, description, posted_by."
-                ),
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "limit": {"type": "integer", "description": "default 30"},
-                    },
-                },
-                handler=lambda deps, limit=30, **_kw: client.popular(limit=int(limit)),
-            ),
-            ToolDef(
-                name="stored_recent",
-                description=(
-                    "Read the N most recent bookmarks already stored in "
-                    "SQLite (no live API call)."
-                ),
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "limit": {"type": "integer", "description": "default 30"},
-                    },
-                },
-                handler=_handle_stored_recent,
-            ),
-            ToolDef(
-                name="tag_summary",
-                description=(
-                    "Tag frequency across the unread pile. Returns "
-                    "{total_items, top_tags}."
-                ),
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "limit": {
-                            "type": "integer",
-                            "description": "max unread items to scan; default 200",
-                        },
-                        "top": {
-                            "type": "integer",
-                            "description": "how many tags to return; default 10",
-                        },
-                    },
-                },
-                handler=lambda deps, limit=200, top=10, **_kw: client.tag_summary(
-                    limit=int(limit), top=int(top)
-                ),
-            ),
-            ToolDef(
-                name="update_check",
-                description=(
-                    "ISO timestamp of the most recent Pinboard mutation. "
-                    "Cheap freshness gate."
-                ),
-                input_schema={"type": "object", "properties": {}},
-                handler=lambda deps, **_kw: {"update_time": client.posts_update()},
-            ),
-            ToolDef(
                 name="lookup_url",
                 description=(
                     "Look up a URL in Jamie's Pinboard. Returns the "
@@ -286,56 +211,23 @@ class PinboardServer:
                 handler=lambda deps, url, **_kw: client.posts_get(url=str(url)),
             ),
             ToolDef(
-                name="suggest_tags",
+                name="tags",
                 description=(
-                    "Pinboard's tag suggestions for a URL. Returns "
-                    "{popular, recommended}."
+                    "Tag frequency. `scope='unread'` (default) — across the "
+                    "toread pile, returns {scope, total_items, top_tags}. "
+                    "`scope='archive'` — across Jamie's whole Pinboard, "
+                    "returns {scope, top_tags}. `top` caps how many tags come "
+                    "back (default 10 for unread, 50 for archive)."
                 ),
                 input_schema={
                     "type": "object",
                     "properties": {
-                        "url": {"type": "string"},
-                    },
-                    "required": ["url"],
-                },
-                handler=lambda deps, url, **_kw: client.posts_suggest(url=str(url)),
-            ),
-            ToolDef(
-                name="archive_tags",
-                description=(
-                    "Top N tags across Jamie's whole Pinboard archive "
-                    "(not just unread — that's `tag_summary`)."
-                ),
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "top": {
-                            "type": "integer",
-                            "description": "how many tags to return; default 50",
-                        },
+                        "scope": {"type": "string", "enum": ["unread", "archive"], "description": "default 'unread'"},
+                        "top": {"type": "integer", "description": "how many tags to return"},
+                        "limit": {"type": "integer", "description": "scope='unread' only — max unread items to scan; default 200"},
                     },
                 },
-                handler=_handle_archive_tags,
-            ),
-            ToolDef(
-                name="bookmark_dates",
-                description=(
-                    "Bookmark counts per day across the whole archive. "
-                    "Returns {YYYY-MM-DD: count}. Optional `tag` scopes to "
-                    "one tag's history."
-                ),
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "tag": {
-                            "type": "string",
-                            "description": "optional Pinboard tag filter",
-                        },
-                    },
-                },
-                handler=lambda deps, tag=None, **_kw: client.posts_dates(
-                    tag=tag if tag else None,
-                ),
+                handler=_handle_tags,
             ),
             ToolDef(
                 name="save",
@@ -420,25 +312,19 @@ def _handle_unread(
     return posts
 
 
-def _handle_stored_recent(
+def _handle_tags(
     deps: Any,
-    limit: int = 30,
+    scope: str = "unread",
+    top: Optional[int] = None,
+    limit: int = 200,
     **_kw: Any,
-) -> list[dict[str, Any]]:
-    rows = db.recent_link_candidates(limit=int(limit))
-    for row in rows:
-        url = row.get("url") or ""
-        if url:
-            row["pinboard_url"] = client.bookmark_url(url)
-    return rows
-
-
-def _handle_archive_tags(
-    deps: Any,
-    top: int = 50,
-    **_kw: Any,
-) -> list[dict[str, Any]]:
-    return client.tags_get()[: int(top)]
+) -> dict[str, Any]:
+    if str(scope) == "archive":
+        n = int(top) if top is not None else 50
+        return {"scope": "archive", "top_tags": client.tags_get()[:n]}
+    n = int(top) if top is not None else 10
+    out = client.tag_summary(limit=int(limit), top=n)
+    return {"scope": "unread", **(out if isinstance(out, dict) else {"top_tags": out})}
 
 
 def _handle_save(
@@ -497,22 +383,6 @@ def _handle_mark_seen(
         judged = {url: (bool(interesting), note or "")}
     n = db.mark_popular_seen([{"url": url, "title": title}], judged=judged)
     return {"url": url, "recorded": n > 0 or True}
-
-
-def _estimate_read_length(url: str) -> dict[str, Any]:
-    res = web.fetch_text(url, max_chars=200_000)
-    text = (res or {}).get("text") or ""
-    if not text:
-        return {"url": url, "bucket": "unknown", "word_count": 0,
-                "error": (res or {}).get("error") or "no readable text"}
-    wc = len(text.split())
-    if wc < _SHORT_MAX:
-        bucket = "short"
-    elif wc > _LONG_MIN:
-        bucket = "long"
-    else:
-        bucket = "medium"
-    return {"url": url, "bucket": bucket, "word_count": wc}
 
 
 def _queue_depth_vs_deadline() -> dict[str, Any]:

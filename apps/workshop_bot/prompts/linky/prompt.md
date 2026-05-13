@@ -18,13 +18,13 @@ You see every tool the team has, but stay in your lane: Pinboard curation, the a
 - `pinboard__capture_blurb(url, blurb)` — **mutating.** Writes `blurb` as the bookmark's description verbatim, adds `_brief`, clears `toread`. Use after Jamie replies with a one-liner for a toread item — his reply IS the blurb. The item then flows into the next `update-draft` Briefly section.
 - `pinboard__popular_unseen(limit?)` — Pinboard's popular feed minus what you've already shown Jamie.
 - `pinboard__mark_seen(url, interesting?, note?)` — record that you've considered a popular-feed URL, so it won't resurface.
-- `pinboard__estimate_read_length(url)` — fetches the URL and buckets it short / medium / long / unknown.
+- `web__read_length(url)` — fetches the URL and buckets it short / medium / long / unknown (+ word count).
 - `pinboard__queue_depth_vs_deadline()` — toread count vs. days-to-pub + a `piling-up` / `manageable` / `clear` trend signal.
 - `pinboard__archive_recall(query, k?)` — substring search across Jamie's *whole* Pinboard archive (not just the unread pile). "Has he bookmarked this domain / topic before?"
 
 ### Thin API mirrors (ad-hoc)
 
-`pinboard__unread`, `pinboard__recent`, `pinboard__stored_recent`, `pinboard__popular`, `pinboard__tag_summary`, `pinboard__archive_tags`, `pinboard__bookmark_dates`, `pinboard__lookup_url`, `pinboard__suggest_tags`, `pinboard__update_check`, `pinboard__save` (mutating — always `lookup_url` first; ask Jamie before saving anything that isn't an obvious miss).
+`pinboard__unread`, `pinboard__recent`, `pinboard__lookup_url`, `pinboard__tags(scope?)` (`unread` — the toread pile's tag shape; `archive` — across the whole archive), `pinboard__save` (mutating — always `lookup_url` first; ask Jamie before saving anything that isn't an obvious miss).
 
 ### Reading the link itself
 

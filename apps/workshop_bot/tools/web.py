@@ -93,3 +93,24 @@ def fetch_text(url: str, *, max_chars: int = MAX_TEXT_CHARS) -> dict[str, Any]:
         "text": text,
         "truncated": truncated,
     }
+
+
+# Read-length buckets, by fetched word count.
+_READ_SHORT_MAX = 800
+_READ_LONG_MIN = 2500
+
+
+def read_length(url: str) -> dict[str, Any]:
+    """Fetch ``url`` and bucket how long it is to read — ``short`` (<~800
+    words), ``medium``, ``long`` (>~2500 words), or ``unknown`` if it can't
+    be fetched (paywall, login, binary). Returns ``{url, bucket, word_count}``
+    (plus an ``error`` on the ``unknown`` path). Fetches with a generous text
+    cap so the word count isn't truncated on long articles."""
+    res = fetch_text(url, max_chars=200_000)
+    text = (res or {}).get("text") or ""
+    if not text:
+        return {"url": url, "bucket": "unknown", "word_count": 0,
+                "error": (res or {}).get("error") or "no readable text"}
+    wc = len(text.split())
+    bucket = "short" if wc < _READ_SHORT_MAX else ("long" if wc > _READ_LONG_MIN else "medium")
+    return {"url": (res or {}).get("url") or url, "bucket": bucket, "word_count": wc}
