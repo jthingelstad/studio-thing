@@ -18,6 +18,18 @@ Walk it in this order:
 - **Briefly** — a one-liner that's actually two sentences. An item that's really a Notable. An awkward `→` line.
 - **Whole issue** — word count vs. the comfortable 2000–3000 band (name concrete cut candidates if over; note if running short). Section weight off (e.g. 8 Notable to 2 Briefly is unusual). A frame/theme echoing a recent issue — cite `#NNN`. Anything off-tone for the Weekly Thing's calm, curious voice.
 
+Then one final, different-lens pass:
+
+- **Hygiene** — read once more as a careful email-deliverability auditor *and* a sharp reader scanning for tells. This isn't copy editing; it's catching the things that make a reader (or a heuristic mail filter) think *"this looks cheap"*. Comment only on what's worth flagging — if there's nothing, write `PASS` for this section alone and move on. What to look for:
+  - **Anchor text quality** — anchors that read like ad copy ("this incredible…"), anchors that don't describe the destination, anchors that promise a payoff the linked piece can't deliver, anchors that bury the lede ("their article is here"), or **anchor/domain mismatch** where the prose names one source/author/site but the URL goes somewhere else.
+  - **Heading hype** — H3 titles that read like clickbait, overstate the linked piece, or shift into a selling register.
+  - **Tonal lurches** — places where commentary drifts out of your voice into promotional / hype voice, especially around links.
+  - **Spam-filter signal in voice** — weight-up phrases (`free`, `guaranteed`, `risk-free`, `limited time`, dollar figures, exclamation runs, all-caps bursts) where the sentence reads as actual sales-talk, not as a quote or critique. The distinction matters: *quoting* "limited time" while critiquing a vendor is fine; *writing* "limited time" is the flag.
+  - **Alt-text quality** — even non-empty alts that say `"image of…"` / `"photo of…"`, that just duplicate the caption directly below the image, or that miss what the entry is actually about. An empty `alt=""` on an `<img>` is a generator failure — surface it so it gets re-run.
+  - **Section-heading subject-shaping** — H3 phrasing that, if the eventual subject line drew from it, would read spammy. (The subject itself is composed elsewhere; this catches the source material.)
+
+  For anything you flag, quote the offending text and say briefly *why* a thoughtful reader or a heuristic filter would react. Don't moralize and don't restate the rule.
+
 ## Output
 
 Markdown only — `##`/`###` headings per section, short bullet lists, `> quotes` of the draft. No preamble, no "here's my review", no sign-off. If the draft is essentially empty (the issue just published; nothing to review yet), respond with exactly `PASS` and no review is embedded.
