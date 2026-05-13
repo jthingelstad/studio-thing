@@ -14,6 +14,7 @@ around the *thing* you're working on:
     /workshop promo prep | metrics
     /workshop campaign add | edit | report | copy | sunset
     /workshop goal set | done
+    /workshop followup list | add | cancel    ← agent follow-up commitments (the targeted heartbeat)
     /workshop thingy recent | show | sync     ← window into the public archive agent's conversations
     /workshop status                          ← bot-health snapshot, not a content job
 
@@ -44,6 +45,7 @@ import discord
 from discord import app_commands
 
 from ..jobs import _base as jobs_base
+from ..jobs import follow_up as followup_job
 from ..jobs import status as status_job
 from ..jobs import thingy as thingy_job
 from ..jobs import (
@@ -107,6 +109,9 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
     )
     goal = app_commands.Group(
         name="goal", description="Membership / revenue milestones", parent=workshop
+    )
+    followup = app_commands.Group(
+        name="followup", description="Agent follow-up commitments (the targeted heartbeat)", parent=workshop
     )
     thingy = app_commands.Group(
         name="thingy", description="What readers ask the public archive agent", parent=workshop
@@ -395,6 +400,56 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
             lambda: ops.goal_achieved(_ctx(bot), notes=(notes or None)),
             "goal done",
         )
+
+    # ── /workshop followup ────────────────────────────────────────────
+
+    @followup.command(
+        name="list",
+        description="Pending follow-up commitments — who follows up, when, on what.",
+    )
+    async def followup_list_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: followup_job.list_open(_ctx(bot)), "followup list")
+
+    @followup.command(
+        name="add",
+        description="Schedule a follow-up — an agent checks in at a time, in N days, or when an issue is reached.",
+    )
+    @app_commands.describe(
+        note="What the follow-up is about",
+        persona="Who follows up — eddy / linky / marky / patty (default eddy)",
+        when="ISO date YYYY-MM-DD (≈6pm that day) or datetime YYYY-MM-DDTHH:MM",
+        in_days="…or a relative offset in days (1 = tomorrow evening)",
+        at_issue="…or an issue number — fires once that issue is in flight",
+    )
+    async def followup_add_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction,
+        note: str,
+        persona: str = "eddy",
+        when: str = "",
+        in_days: int = -1,
+        at_issue: int = -1,
+    ) -> None:
+        await _run_and_ack(
+            interaction,
+            lambda: followup_job.add(
+                _ctx(bot), note=note, persona=persona,
+                when=(when or ""),
+                in_days=(None if int(in_days) < 0 else int(in_days)),
+                at_issue=(None if int(at_issue) < 0 else int(at_issue)),
+                created_by=str(interaction.user),
+            ),
+            "followup add",
+        )
+
+    @followup.command(
+        name="cancel",
+        description="Cancel a pending follow-up by id (from `followup list`).",
+    )
+    @app_commands.describe(id="The follow-up id")
+    async def followup_cancel_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, id: int
+    ) -> None:
+        await _run_and_ack(interaction, lambda: followup_job.cancel(_ctx(bot), followup_id=int(id)), "followup cancel")
 
     # ── /workshop thingy ──────────────────────────────────────────────
 

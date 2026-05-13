@@ -261,6 +261,47 @@ def t_forget_note(deps, note_id: int, status: str = "resolved") -> dict[str, Any
     return {"id": int(note_id), "status": status, "updated": ok}
 
 
+# ---------- follow-ups (universal — the targeted heartbeat) ----------
+
+def t_followup_schedule(
+    deps,
+    note: str,
+    when: Optional[str] = None,
+    in_days: Optional[int] = None,
+    at_issue: Optional[int] = None,
+) -> dict[str, Any]:
+    """Schedule a follow-up for yourself — the only thing that will actually
+    bring a commitment back. Exactly one trigger: ``when`` (ISO date/datetime),
+    ``in_days`` (relative offset, fires ~6pm that many days out), or
+    ``at_issue`` (fires once that issue is in flight)."""
+    from ..jobs.follow_up import FollowUpError, create, trigger_desc  # lazy: avoid an import cycle
+    try:
+        row = create(
+            persona=active_persona.get() or "eddy", note=note,
+            when=when, in_days=in_days, at_issue=at_issue, created_by=active_persona.get(),
+        )
+    except FollowUpError as exc:
+        return {"error": str(exc)}
+    return {"id": row.get("id"), "persona": row.get("persona"), "fires": trigger_desc(row), "note": row.get("note")}
+
+
+def t_followup_list(deps) -> list[dict[str, Any]]:
+    """Your pending follow-ups — id, when each fires, and the note."""
+    from ..jobs.follow_up import trigger_desc  # lazy: avoid an import cycle
+    return [
+        {"id": r["id"], "fires": trigger_desc(r), "note": r["note"]}
+        for r in db.open_follow_ups(persona=active_persona.get())
+    ]
+
+
+def t_followup_cancel(deps, followup_id: int) -> dict[str, Any]:
+    """Cancel one of your pending follow-ups by id (from ``followup__list``)."""
+    if db.get_follow_up(int(followup_id)) is None:
+        return {"error": f"no follow-up #{followup_id}"}
+    ok = db.cancel_follow_up(int(followup_id), persona=active_persona.get())
+    return {"id": int(followup_id), "cancelled": ok}
+
+
 # ---------- S3 issue workspace (universal) ----------
 
 def t_workspace_list_all(deps) -> dict[str, Any]:
@@ -518,6 +559,46 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["note_id"],
         },
     },
+    "followup__schedule": {
+        "name": "followup__schedule",
+        "description": (
+            "Schedule a follow-up for yourself — the ONLY thing that will actually bring a "
+            "commitment back; there is no other reminder or heartbeat. Use it whenever you tell "
+            "Jamie you'll revisit something at a specific time or once the issue reaches a "
+            "number. Give a clear `note` (what you're following up on, written so future-you "
+            "understands it without this conversation) and exactly one trigger: `when` — an ISO "
+            "date `YYYY-MM-DD` (taken as ~6pm that day) or datetime `YYYY-MM-DDTHH:MM` (compute "
+            "it from today's date in your context); `in_days` — a relative offset that fires "
+            "~6pm that many days out (`1` = tomorrow evening, `30` = roughly next month); or "
+            "`at_issue` — an issue number, fires once that issue is the in-flight one. When it "
+            "comes due, you're handed the note + current context and post a check-in in your "
+            "channel. `followup__list` / `followup__cancel` to manage them."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "note": {"type": "string", "description": "What you're following up on — self-contained."},
+                "when": {"type": "string", "description": "ISO date YYYY-MM-DD or datetime YYYY-MM-DDTHH:MM."},
+                "in_days": {"type": "integer", "description": "Relative offset in days (1 = tomorrow evening)."},
+                "at_issue": {"type": "integer", "description": "Fire once this issue number is in flight."},
+            },
+            "required": ["note"],
+        },
+    },
+    "followup__list": {
+        "name": "followup__list",
+        "description": "List your pending follow-ups — id, when each fires, and the note.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    "followup__cancel": {
+        "name": "followup__cancel",
+        "description": "Cancel one of your pending follow-ups by id (from followup__list).",
+        "input_schema": {
+            "type": "object",
+            "properties": {"followup_id": {"type": "integer"}},
+            "required": ["followup_id"],
+        },
+    },
     "issue__current_window": {
         "name": "issue__current_window",
         "description": (
@@ -676,6 +757,9 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "memory__remember": t_remember,
     "memory__recall": t_recall,
     "memory__forget": t_forget_note,
+    "followup__schedule": t_followup_schedule,
+    "followup__list": t_followup_list,
+    "followup__cancel": t_followup_cancel,
     "workspace__list_all": t_workspace_list_all,
     "workspace__list_files": t_workspace_list_files,
     "workspace__read": t_workspace_read,

@@ -21,6 +21,10 @@ job=…)`` (or, for ``rss-check``, the bare ``handlers.rss_check``). Today:
 - ``thingy-watch`` — hourly. Pulls newly-logged Thingy conversations from
   the Lambda, has Eddy assess each, mirrors it locally, and posts a card
   to ``#chatter``; PASSes silently when nothing new.
+- ``follow-up-sweep`` — hourly. Fires due follow-ups (agent commitments —
+  time-based or "when the issue hits N"): runs the persona's agent loop
+  with the note + context and posts a check-in; PASSes when nothing's due.
+  The deliberate, targeted replacement for per-persona heartbeats.
 
 The per-persona heartbeats were all retired as these jobs took over (see
 the JOBS comment). ``handlers.heartbeat`` still exists for ad-hoc / eval
@@ -103,6 +107,16 @@ JOBS: tuple[JobSpec, ...] = (
                                                          # posts a card to #chatter. PASSes silently
                                                          # when nothing new.
         func=functools.partial(handlers.content_job, job="thingy-watch"),
+    ),
+    JobSpec(
+        id="follow-up-sweep",
+        cron="23 * * * *",                               # Hourly at :23. Fires due follow-ups —
+                                                         # agent commitments ("I'll check in
+                                                         # tomorrow evening", "when we hit 387"):
+                                                         # runs the persona's agent loop with the
+                                                         # note + context, posts a check-in.
+                                                         # PASSes silently when nothing's due.
+        func=functools.partial(handlers.content_job, job="follow-up-sweep"),
     ),
 )
 

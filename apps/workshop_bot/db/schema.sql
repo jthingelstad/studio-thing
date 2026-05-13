@@ -312,3 +312,26 @@ CREATE TABLE IF NOT EXISTS thingy_conversations (
 
 CREATE INDEX IF NOT EXISTS idx_thingy_conversations_ended
   ON thingy_conversations(ended_at DESC, id DESC);
+
+-- Follow-ups — an agent (or Jamie) commits to revisiting something at a
+-- future time or when the in-flight issue reaches a number. The hourly
+-- `follow-up-sweep` job fires the due ones: runs the named persona's agent
+-- loop with the note + current context and posts a check-in. There are no
+-- per-persona heartbeats — this is the deliberate, targeted exception, and
+-- it only does anything when a real commitment comes due.
+CREATE TABLE IF NOT EXISTS follow_ups (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  persona TEXT NOT NULL,                          -- who follows up: 'eddy' / 'linky' / 'marky' / 'patty'
+  channel_env TEXT,                               -- env var of the channel to post to; NULL = persona's home channel
+  trigger_kind TEXT NOT NULL,                     -- 'time' | 'issue'
+  due_at TEXT,                                    -- ISO datetime (YYYY-MM-DDTHH:MM:SS) — set when trigger_kind='time'
+  trigger_issue INTEGER,                          -- issue number — fires once the active in-flight issue >= this; set when trigger_kind='issue'
+  note TEXT NOT NULL,                             -- what was committed to (fed back to the agent verbatim)
+  created_by TEXT,                                -- who set it: a Discord user, or the persona itself
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  fired_at TEXT,                                  -- when the sweep fired it; NULL = still open
+  cancelled_at TEXT                               -- NULL unless cancelled
+);
+
+CREATE INDEX IF NOT EXISTS idx_follow_ups_open
+  ON follow_ups(fired_at, cancelled_at, trigger_kind);

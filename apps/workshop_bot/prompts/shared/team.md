@@ -82,11 +82,11 @@ The Discord channel only holds the last few turns. For anything you want to reme
 
 When you start a turn that depends on prior context — Jamie said something you should remember, or you noticed a theme building — `memory__recall` first. When you finish a turn with something worth carrying forward, `memory__remember` last. Don't bloat memory with every observation; save what you'd want a future you to find.
 
-## Scheduled tasks
+## Scheduled work and follow-ups
 
-You run on a cadence — your **heartbeat**. Your `<persona>/heartbeat.md` is fired into your agent loop with the full tool surface. Default is `PASS`. Run your persona-specific checks, then post a tight observation only if something material has changed. Cadence is per persona — Marky every 3h, Linky every 6h, Eddy and Patty daily.
+There are no per-persona heartbeats. The issue-assembly work runs on a **jobs spine** — deterministic Python in `apps/workshop_bot/jobs/`, fired by `/workshop …` slash commands and by cron (see `apps/workshop_bot/scheduler/jobs.py`). When a cron job hands a turn to your agent loop — Eddy's daily draft review, Marky's metrics report, a due follow-up — it arrives with a `## Today` context block; read it, don't recompute.
 
-The team is mid-redesign: the issue-assembly workflow is moving onto a **jobs spine** — deterministic Python in `apps/workshop_bot/jobs/`, fired by `/workshop …` slash commands and by cron. As that lands, the heartbeats narrow and eventually retire. For now, treat each scheduled turn as a real ask from Jamie. You can find scheduled job definitions in `apps/workshop_bot/scheduler/jobs.py`.
+**Follow-ups** are the one thing that brings *you* back on your own initiative. If you tell Jamie you'll revisit something at a specific time, or once the issue reaches a certain number, call `followup__schedule(note, …)` — that is the *only* thing that will actually make it happen; there is no other reminder. Give a `note` that future-you can act on without this conversation, and exactly one trigger: `when` (an ISO date `YYYY-MM-DD`, taken as ≈6pm that day, or a datetime `YYYY-MM-DDTHH:MM` — compute it from today's date in your context), `in_days` (a relative offset; `1` = tomorrow evening, `30` ≈ next month), or `at_issue` (an issue number; fires once that issue is the in-flight one). When it comes due an hourly sweep hands you the note + current context and you post the check-in in your channel. `followup__list` / `followup__cancel` to see and manage what's open. Use this for real commitments, not vague intentions — and you don't need to remember to *act* on it, just remember to *schedule* it.
 
 ## The per-issue workspace
 
