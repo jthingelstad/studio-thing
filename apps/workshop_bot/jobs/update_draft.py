@@ -41,8 +41,8 @@ NAME = "update-draft"
 
 # Block fill order is irrelevant (each replace_block is independent); the
 # *layout* order lives in templates/draft_starter.md. Listed here in the
-# published section order for readability.
-SECTION_BLOCKS = ("intro", "cover", "currently", "notable", "journal", "brief", "haiku")
+# published section order for readability (intro → Currently → cover → …).
+SECTION_BLOCKS = ("intro", "currently", "cover", "notable", "journal", "brief", "haiku")
 # Blocks that are just a verbatim copy of an authored asset file. (``cover``
 # and ``currently`` are handled separately — see ``_cover.render`` /
 # ``_currently.render`` — since they prefer structured ``.json`` forms.)

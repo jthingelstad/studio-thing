@@ -3,15 +3,15 @@
 
 ---
 
-<!-- block:cover -->
-<!-- /block:cover -->
-
----
-
 ## Currently
 
 <!-- block:currently -->
 <!-- /block:currently -->
+
+---
+
+<!-- block:cover -->
+<!-- /block:cover -->
 
 ---
 

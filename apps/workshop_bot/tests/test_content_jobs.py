@@ -124,11 +124,11 @@ class BlockHelperTests(unittest.TestCase):
         self.assertIn("## Journal", out)
 
     def test_starter_template_section_order(self):
-        # Matches recently-published issues: intro → cover → Currently →
-        # Notable → Journal → Briefly → the "A haiku to leave you with…" close.
+        # Layout: intro → ## Currently → cover image → Notable → Journal →
+        # Briefly → the "A haiku to leave you with…" close.
         tpl = _base.starter_template()
         markers = (
-            "<!-- block:intro -->", "<!-- block:cover -->", "## Currently",
+            "<!-- block:intro -->", "## Currently", "<!-- block:cover -->",
             "## Notable", "## Journal", "## Briefly",
             "A haiku to leave you with", "<!-- block:haiku -->",
         )
@@ -1155,13 +1155,13 @@ class BuildPublishTests(_DBTestCase):
         self.assertIn("Docks on the lake.", pub)
         # `---`-fenced, the way a real issue is.
         self.assertIn("\n\n---\n\n", pub)
-        # Section order matches recently-published issues:
-        # intro → cover → Currently → Notable → Journal → Briefly → haiku.
+        # Section order: intro → Currently → cover → Notable → Journal → Briefly → haiku.
         order = [pub.index(h) for h in (
-            "/cover.jpg)", "## Currently", "## Notable", "## Journal", "## Briefly",
+            "## Currently", "/cover.jpg)", "## Notable", "## Journal", "## Briefly",
             "A haiku to leave you with",
         )]
         self.assertEqual(order, sorted(order), pub)
+        self.assertLess(pub.index("Reading: a book."), pub.index("/cover.jpg)"), pub)
         # CTA with placement after_notable lands between Notable and Journal.
         self.assertGreater(pub.index("Support the EFF."), pub.index("## Notable"))
         self.assertLess(pub.index("Support the EFF."), pub.index("## Journal"))

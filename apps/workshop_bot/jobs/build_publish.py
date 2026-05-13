@@ -1,14 +1,14 @@
 """``build-publish`` — assemble ``publish.md`` from ``final.md`` + assets.
 
-The ship artifact, shaped like a real Weekly Thing issue. Top-level parts —
-the intro (which carries its own ``---`` and cover block), each non-empty
-section as ``## Header\n\n{content}`` (an absent ``currently.json`` /
-``currently.md`` or any empty section just drops out — "a section that
-didn't run is a clean NULL"), the CTAs at their placements, and
-``A haiku to leave you with…`` +
-the bold/hard-break haiku + the closing "discuss on Reddit" line — are
-joined ``---``-fenced. The ``<!-- block:… -->`` markers from ``draft.md`` /
-``final.md`` never appear in ``publish.md``.
+The ship artifact, shaped like a real Weekly Thing issue. Top-level parts,
+in order: the intro → ``## Currently`` (if present) → the cover image
+block → each non-empty section as ``## Header\n\n{content}`` (Notable,
+Journal, Briefly — an absent ``currently.json`` / ``currently.md`` or any
+empty section just drops out, "a section that didn't run is a clean NULL")
+→ the CTAs at their placements → ``A haiku to leave you with…`` + the
+bold/hard-break haiku + the closing "discuss on Reddit" line. The parts
+are joined ``---``-fenced; the ``<!-- block:… -->`` markers from
+``draft.md`` / ``final.md`` never appear in ``publish.md``.
 
 Refuses (PASSes loudly) if any required asset is missing: ``final.md``,
 ``haiku.md``, ``metadata.json``, ``intro.md``, ``cover.jpg``. Posts the
@@ -39,18 +39,17 @@ _FIX_HINT = {
     "final.md": "→ `/workshop issue final`",
 }
 
-# (block name → published heading). intro/haiku are special-cased (no
-# header / closes the issue); the rest are emitted in this order, each
-# only if its content is non-empty. The order mirrors recently-published
-# issues: Currently (when present) sits up top after the intro, then
-# Notable, then Journal, then Briefly, then the closing haiku.
+# (block name → published heading). intro / the cover block / haiku are
+# special-cased in the assembly; the rest are emitted in `_ORDER`, each only
+# if its content is non-empty. Issue layout: intro → `## Currently` (when
+# present) → cover image → Notable → Journal → Briefly → the closing haiku.
 _SECTION_HEADINGS = {
     "currently": "## Currently",
     "notable": "## Notable",
     "journal": "## Journal",
     "brief": "## Briefly",
 }
-_ORDER = ("currently", "notable", "journal", "brief")
+_ORDER = ("notable", "journal", "brief")  # Currently is placed above the cover; see the assembly
 
 _PLACEMENTS = ("after_notable", "after_journal", "after_brief", "before_haiku")
 _DEFAULT_PLACEMENT = "after_notable"
@@ -143,6 +142,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             parts: list[str] = []
             if intro_text:
                 parts.append(intro_text)
+            # Currently sits between the intro and the cover image.
+            currently_content = section_content.get("currently", "")
+            if currently_content:
+                parts.append(f"{_SECTION_HEADINGS['currently']}\n\n{currently_content}")
             if cover_block:
                 parts.append(cover_block)
             for name in _ORDER:

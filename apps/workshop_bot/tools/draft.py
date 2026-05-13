@@ -14,9 +14,9 @@ from typing import Any, Optional
 
 from . import s3
 
-# Listed in the published section order (intro → cover → Currently →
+# Listed in the published section order (intro → Currently → cover →
 # Notable → Journal → Briefly → haiku); matches templates/draft_starter.md.
-SECTION_BLOCKS = ("intro", "cover", "currently", "notable", "journal", "brief", "haiku")
+SECTION_BLOCKS = ("intro", "currently", "cover", "notable", "journal", "brief", "haiku")
 
 # Assets build-publish refuses without (besides the Notable/Brief/Journal
 # *sections*, which are checked from the draft blocks, not from a file).
