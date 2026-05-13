@@ -32,7 +32,10 @@ import os
 from datetime import datetime
 
 from ..systems.pinboard import client as pinboard
-from ..tools import anthropic_client, context, db, draft as draft_mod, journal_images, microblog, render, s3
+from ..tools import (
+    alt_text, anthropic_client, context, db, draft as draft_mod, journal_images,
+    microblog, render, s3,
+)
 from . import _base, _cover, _currently
 
 logger = logging.getLogger("workshop.jobs.update_draft")
@@ -146,6 +149,9 @@ def _gather_fills(window: dict) -> dict[str, str]:
     micro.blog) that fail degrade to a placeholder line rather than
     breaking the run."""
     n = int(window["issue_number"])
+    # Reset the per-run vision-call cap so a single ``update-draft`` can't
+    # fan out to dozens of vision calls (cover + every journal image).
+    alt_text.begin_run()
     fills: dict[str, str] = {block: _read_asset(n, _ASSET_FILE[block]) for block in _ASSET_FILE}
     # Cover (caption/date/location) — structured cover.json (preferred) or
     # legacy cover.md; Currently — structured currently.json or legacy currently.md.
@@ -155,9 +161,17 @@ def _gather_fills(window: dict) -> dict[str, str]:
     # composed haiku.md holds.
     fills["haiku"] = _base.format_haiku(fills.get("haiku", ""))
     # The cover block leads with the issue's cover image (a derived URL),
-    # then the caption / date / location below it.
+    # then the caption / date / location below it. Use a native <img> tag
+    # so the alt attribute has an explicit home (cover.json.alt overrides;
+    # else vision-generated; else "").
     if fills.get("cover"):
-        fills["cover"] = f"![]({_COVER_IMAGE.format(n=n)})\n\n{fills['cover']}"
+        cover_alt = _cover.alt(n)
+        from html import escape as _esc
+        cover_img = (
+            f'<img src="{_COVER_IMAGE.format(n=n)}" '
+            f'alt="{_esc(cover_alt, quote=True)}" />'
+        )
+        fills["cover"] = f"{cover_img}\n\n{fills['cover']}"
 
     try:
         cand = pinboard.issue_window_candidates(window["start_date"], window["end_date"])

@@ -11,9 +11,18 @@ the website.
 post's markdown: it finds ``<img src=…>`` and ``![](…)`` references on the
 blog's upload host(s), rehosts each (skipping any already in the workspace
 — a cheap HEAD check, so the daily ``update-draft`` re-run is cheap),
-rewrites the reference to the local URL, and normalizes ``<img>`` tags to
-``![alt](url)``. Images on other hosts are left untouched (URL unchanged);
+rewrites the reference to the local URL, and emits **native** ``<img alt=…
+src=… />`` tags (not markdown ``![]()``) so each image has an explicit
+``alt`` attribute we can later fill via the vision LLM. Images on other
+hosts are left untouched (URL unchanged, but still emitted as ``<img>``);
 a per-image failure leaves that one alone rather than breaking the post.
+
+After the rehost/rewrite pass, any rehosted ``<img>`` that came out with
+an empty ``alt`` is filled via ``alt_text.get_or_generate_alt`` — one
+vision call per *content-addressed* image (so the same image used in two
+issues only costs one call, ever; and the daily ``update-draft`` re-run
+is free once an alt is cached). The per-run cap and failure semantics
+live in ``tools/alt_text.py``.
 
 Configurable via env:
   - ``MICROBLOG_IMAGE_HOSTS`` — csv of hosts whose images we rehost
@@ -26,6 +35,7 @@ Configurable via env:
 from __future__ import annotations
 
 import hashlib
+import html
 import io
 import logging
 import os
@@ -34,7 +44,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from . import s3
+from . import alt_text, s3
 
 logger = logging.getLogger("workshop.journal_images")
 
@@ -199,28 +209,81 @@ def _rewrite_url(url: str, issue_number: int) -> str:
     return new or url
 
 
+def _attr_escape(s: str) -> str:
+    return html.escape(s or "", quote=True)
+
+
+def _is_rehosted_url(url: str, issue_number: int) -> bool:
+    """True if ``url`` is in the issue's rehosted journal-image namespace."""
+    try:
+        p = urlparse(url)
+    except ValueError:
+        return False
+    host = (p.netloc or "").lower()
+    if host != s3._bucket().lower():
+        return False
+    path = p.path or ""
+    return path.startswith(f"/{s3.ROOT_PREFIX}/{int(issue_number)}/{s3.JOURNAL_PREFIX}/")
+
+
+def _image_key_from_rehosted(url: str) -> str:
+    """Cache key for a rehosted image: the filename basename
+    (content-addressed for micro.blog uploads — ``428e3db12e.jpg``)."""
+    try:
+        return os.path.basename(urlparse(url).path or "")
+    except ValueError:
+        return ""
+
+
+def _build_img_tag(*, src: str, alt: str = "", extra: str = "") -> str:
+    """Render a self-closing-style ``<img …/>`` with quoted attrs. ``extra``
+    is preserved attribute text from the source ``<img>`` (e.g. ``width``,
+    ``height``) — already pre-formatted as ``key="val" key="val"``."""
+    pieces = [f'src="{_attr_escape(src)}"']
+    if extra:
+        pieces.append(extra.strip())
+    pieces.append(f'alt="{_attr_escape(alt)}"')
+    return "<img " + " ".join(pieces) + " />"
+
+
+def _extract_non_src_alt_attrs(tag: str) -> str:
+    """Pull every attribute except ``src`` / ``alt`` from a raw ``<img …>``
+    tag and return them as a normalized ``key="val" …`` string. Lets us
+    preserve ``width``/``height``/``class`` on rehost."""
+    inner = tag[4:].rstrip(">").rstrip("/").strip()
+    out: list[str] = []
+    # very small attr parser: key=val with optional quotes
+    for m in re.finditer(r'([A-Za-z_:][A-Za-z0-9_.:\-]*)\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))', inner):
+        key = m.group(1).lower()
+        if key in ("src", "alt"):
+            continue
+        val = m.group(3) if m.group(3) is not None else (m.group(4) if m.group(4) is not None else m.group(5) or "")
+        out.append(f'{key}="{_attr_escape(val)}"')
+    return " ".join(out)
+
+
 def rehost_in_markdown(content_md: str, issue_number: int) -> str:
     """Rehost blog-hosted images in one journal post's markdown and rewrite
-    the references; normalize ``<img>`` tags to ``![alt](url)``, each on its
-    own paragraph (micro.blog emits photo-gallery posts as adjacent
-    ``<img><img>`` — left as ``![](a)![](b)`` they'd run together, so we
-    force a blank line between). Idempotent and robust — a per-image failure
-    leaves that image's reference as-is."""
+    the references; emit native ``<img alt="…" src="…" />`` tags, each on
+    its own paragraph (micro.blog emits photo-gallery posts as adjacent
+    ``<img><img>`` — left running together they'd render as one paragraph,
+    so we force a blank line between). Then run the alt-fill pass: any
+    rehosted image with an empty ``alt`` gets one generated via vision LLM
+    (cached forever per content-addressed key). Idempotent and robust — a
+    per-image failure leaves that image's reference as-is."""
     if not content_md:
         return content_md
     n = int(issue_number)
 
-    # 1. Markdown images already in the source: ![alt](url) — just rewrite
-    #    the url if it's a blog image (don't reflow; it might be inline).
+    # 1. Markdown images already in the source: ![alt](url) → <img …/>.
     def _md_sub(m: re.Match) -> str:
-        alt, url = m.group(1), m.group(2).strip()
-        return f"![{alt}]({_rewrite_url(url, n)})"
+        alt, url = (m.group(1) or "").strip(), m.group(2).strip()
+        return "\n\n" + _build_img_tag(src=_rewrite_url(url, n), alt=alt) + "\n\n"
 
     out = _MD_IMG_RE.sub(_md_sub, content_md)
 
-    # 2. <img ...> HTML tags (micro.blog photo uploads) → ![alt](url),
-    #    rehosting blog images. Wrap each in blank lines so adjacent images
-    #    end up as separate paragraphs.
+    # 2. <img …> HTML tags (micro.blog photo uploads) → <img …/>, rehosting
+    #    blog images and preserving non-src/non-alt attrs (width, height, …).
     def _img_sub(m: re.Match) -> str:
         tag = m.group(0)
         src_m = _SRC_RE.search(tag)
@@ -229,8 +292,40 @@ def rehost_in_markdown(content_md: str, issue_number: int) -> str:
         url = src_m.group(1).strip()
         alt_m = _ALT_RE.search(tag)
         alt = (alt_m.group(1) if alt_m else "").strip()
-        return f"\n\n![{alt}]({_rewrite_url(url, n)})\n\n"
+        extra = _extract_non_src_alt_attrs(tag)
+        return "\n\n" + _build_img_tag(src=_rewrite_url(url, n), alt=alt, extra=extra) + "\n\n"
 
     out = _IMG_TAG_RE.sub(_img_sub, out)
+
+    # 3. Alt-fill: for each <img …> with empty alt and a rehosted src, ask
+    #    the vision LLM (cached). Pass the surrounding post as context.
+    def _alt_fill_sub(m: re.Match) -> str:
+        tag = m.group(0)
+        src_m = _SRC_RE.search(tag)
+        if not src_m:
+            return tag
+        url = src_m.group(1).strip()
+        alt_m = _ALT_RE.search(tag)
+        current_alt = (alt_m.group(1) if alt_m else "").strip()
+        if current_alt:
+            return tag  # already has alt; leave it
+        if not _is_rehosted_url(url, n):
+            return tag  # only fill alts on rehosted (workspace-bytes-available) images
+        key = _image_key_from_rehosted(url)
+        if not key:
+            return tag
+        try:
+            generated = alt_text.get_or_generate_alt(
+                image_key=key, image_url=url, context=content_md,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("journal_images: alt generation failed for %s: %s", url, exc)
+            return tag
+        if not generated:
+            return tag  # leave empty alt; the hygiene review will flag it
+        extra = _extract_non_src_alt_attrs(tag)
+        return _build_img_tag(src=url, alt=generated, extra=extra)
+
+    out = _IMG_TAG_RE.sub(_alt_fill_sub, out)
     out = re.sub(r"\n{3,}", "\n\n", out)  # collapse the runaway blank lines we just made
     return out.strip()

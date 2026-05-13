@@ -206,10 +206,13 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             }
             intro_text = _read(n, "intro.md").strip()
             cover_text = _cover.render(n)  # cover.json (preferred) or legacy cover.md
-            cover_block = (
-                f"![](https://files.thingelstad.com/weekly-thing/{n}/cover.jpg)\n\n{cover_text}"
-                if cover_text else ""
+            cover_alt = _cover.alt(n)
+            from html import escape as _esc
+            cover_img = (
+                f'<img src="https://files.thingelstad.com/weekly-thing/{n}/cover.jpg" '
+                f'alt="{_esc(cover_alt, quote=True)}" />'
             )
+            cover_block = f"{cover_img}\n\n{cover_text}" if cover_text else ""
             haiku_text = _read(n, "haiku.md").strip()
 
             # CTAs by placement (cta-1.md / cta-2.md, ordered). Each composed

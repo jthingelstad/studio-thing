@@ -568,8 +568,12 @@ class UpdateDraftRealFillsTests(_DBTestCase):
         result = asyncio.run(update_draft.run(_base.JobContext()))
         self.assertTrue(result.ok, result.message)
         d = self.ws.files[(458, "draft.md")]
+        # Cover image is emitted as a native <img> tag (with an alt attribute
+        # slot the vision LLM fills on first sight). Test stubs leave alt
+        # empty; the hygiene review surfaces empty alts.
         self.assertIn(
-            "![](https://files.thingelstad.com/weekly-thing/458/cover.jpg)\n\n"
+            '<img src="https://files.thingelstad.com/weekly-thing/458/cover.jpg" '
+            'alt="" />\n\n'
             "Minnehaha Creek after the Falls.\n\nMay 10, 2026  \nMinneapolis, MN",
             d,
         )
@@ -1233,18 +1237,22 @@ class BuildPublishTests(_DBTestCase):
         self.assertIn("line two", pub)
         self.assertIn("Reading: a book.", pub)
         self.assertNotIn("<!-- block:", pub)            # markers stripped
-        # Cover block — image (derived URL) then the caption/date/location.
-        self.assertIn("![](https://files.thingelstad.com/weekly-thing/458/cover.jpg)", pub)
+        # Cover block — image (derived URL, native <img> tag) then the
+        # caption/date/location below.
+        self.assertIn(
+            '<img src="https://files.thingelstad.com/weekly-thing/458/cover.jpg"',
+            pub,
+        )
         self.assertIn("Docks on the lake.", pub)
         # `---`-fenced, the way a real issue is.
         self.assertIn("\n\n---\n\n", pub)
         # Section order: intro → Currently → cover → Notable → Journal → Briefly → haiku.
         order = [pub.index(h) for h in (
-            "## Currently", "/cover.jpg)", "## Notable", "## Journal", "## Briefly",
+            "## Currently", "/cover.jpg", "## Notable", "## Journal", "## Briefly",
             "A haiku to leave you with",
         )]
         self.assertEqual(order, sorted(order), pub)
-        self.assertLess(pub.index("Reading: a book."), pub.index("/cover.jpg)"), pub)
+        self.assertLess(pub.index("Reading: a book."), pub.index("/cover.jpg"), pub)
         # CTA with placement after_notable lands between Notable and Journal,
         # wrapped in the membership-block Liquid (premium/regular+Stripe/else+form).
         self.assertGreater(pub.index("Support the EFF."), pub.index("## Notable"))

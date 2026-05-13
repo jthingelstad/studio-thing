@@ -1074,6 +1074,39 @@ def latest_draft_digest(issue: int) -> Optional[dict[str, Any]]:
     return dict(row) if row else None
 
 
+# ---------- image alt-text cache (journal + cover, vision-generated) ----------
+
+
+def get_cached_alt(image_key: str) -> Optional[str]:
+    """Return the cached alt for ``image_key``, or ``None`` if not cached.
+    Empty string is a *miss* — we only cache successful generations."""
+    if not image_key:
+        return None
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT alt FROM image_alt_cache WHERE image_key = ?", (image_key,)
+        ).fetchone()
+    if row is None:
+        return None
+    alt = row["alt"]
+    return alt if alt else None
+
+
+def cache_alt(*, image_key: str, alt: str, source: str = "vision") -> None:
+    """Persist a generated/manual alt. A ``manual`` row wins over a prior
+    ``vision`` one (so an operator's ``cover.json.alt`` can override)."""
+    if not image_key or not isinstance(alt, str) or not alt.strip():
+        return
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO image_alt_cache (image_key, alt, source) VALUES (?, ?, ?) "
+            "ON CONFLICT(image_key) DO UPDATE SET "
+            "  alt = excluded.alt, source = excluded.source, "
+            "  generated_at = datetime('now')",
+            (image_key, alt.strip(), source),
+        )
+
+
 def recent_agent_runs(limit: int = 8) -> list[dict[str, Any]]:
     """Most recent agent_runs rows, newest first — for the ``/workshop
     status`` snapshot ("what's the bot done lately / did anything fail")."""

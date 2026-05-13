@@ -15,7 +15,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.tools import journal_images, s3  # noqa: E402
+from apps.workshop_bot.tools import alt_text, journal_images, s3  # noqa: E402
 
 
 def _tiny_png_bytes() -> bytes:
@@ -100,7 +100,18 @@ class ResizeTests(unittest.TestCase):
 
 
 class RehostInMarkdownTests(unittest.TestCase):
-    def test_img_tag_rehosted_and_converted_to_markdown(self):
+    def setUp(self):
+        # Stub the alt-fill pass so tests don't reach Anthropic. Tests that
+        # care about the alt-fill behaviour patch this themselves.
+        self._alt_patch = patch.object(alt_text, "get_or_generate_alt", return_value="")
+        self._alt_patch.start()
+        # Reset the per-run cap so each test starts fresh.
+        alt_text.begin_run()
+
+    def tearDown(self):
+        self._alt_patch.stop()
+
+    def test_img_tag_rehosted_emits_native_img(self):
         md = ('Got a card.\n\n'
               '<img src="https://www.thingelstad.com/uploads/2026/428e3db12e.jpg" width="363" height="600" alt="my card">')
         write_mock = MagicMock(side_effect=lambda issue, name, body, content_type=None: {
@@ -110,8 +121,15 @@ class RehostInMarkdownTests(unittest.TestCase):
              patch.object(journal_images.requests, "get", return_value=_fake_get(_tiny_jpeg_bytes())), \
              patch.object(s3, "write_journal_image", write_mock):
             out = journal_images.rehost_in_markdown(md, 458)
-        self.assertNotIn("<img", out)  # converted to markdown
-        self.assertIn("![my card](https://files.thingelstad.com/weekly-thing/458/journal/428e3db12e.jpg)", out)
+        # Native <img> form (NOT markdown ![]()) — explicit alt attribute slot.
+        self.assertNotIn("![my card](", out)
+        self.assertIn(
+            '<img src="https://files.thingelstad.com/weekly-thing/458/journal/428e3db12e.jpg"',
+            out,
+        )
+        self.assertIn('alt="my card"', out)
+        self.assertIn('width="363"', out)  # non-src/non-alt attrs preserved
+        self.assertIn('height="600"', out)
         self.assertIn("Got a card.", out)
         # Uploaded under the micro.blog hash basename.
         self.assertEqual(write_mock.call_args.args[1], "428e3db12e.jpg")
@@ -126,28 +144,39 @@ class RehostInMarkdownTests(unittest.TestCase):
             out = journal_images.rehost_in_markdown(md, 458)
         g.assert_not_called()
         w.assert_not_called()
-        self.assertIn("![](https://files.thingelstad.com/weekly-thing/458/journal/abc.jpg)", out)
+        self.assertIn(
+            '<img src="https://files.thingelstad.com/weekly-thing/458/journal/abc.jpg"',
+            out,
+        )
+        # alt-fill stubbed → empty alt remains.
+        self.assertIn('alt=""', out)
 
-    def test_markdown_image_url_rewritten(self):
+    def test_markdown_image_rewritten_to_img_tag(self):
         md = "Here: ![alt text](https://www.thingelstad.com/uploads/2026/q1.png)"
         with patch.object(s3, "journal_image_exists", lambda i, n: True), \
              patch.object(s3, "journal_image_url", lambda i, n: f"https://files.thingelstad.com/weekly-thing/{i}/journal/{n}"):
             out = journal_images.rehost_in_markdown(md, 458)
-        self.assertEqual(out, "Here: ![alt text](https://files.thingelstad.com/weekly-thing/458/journal/q1.png)")
+        # Markdown source → native <img> output with the alt preserved.
+        self.assertIn(
+            '<img src="https://files.thingelstad.com/weekly-thing/458/journal/q1.png"',
+            out,
+        )
+        self.assertIn('alt="alt text"', out)
+        self.assertNotIn("![alt text](", out)
 
-    def test_non_blog_image_left_alone(self):
+    def test_non_blog_image_url_left_alone(self):
         md = '![](https://m.media-amazon.com/images/x.jpg) and <img src="https://example.com/y.png">'
         out = journal_images.rehost_in_markdown(md, 458)
-        # markdown image untouched; <img> normalized to markdown but URL unchanged
-        self.assertIn("![](https://m.media-amazon.com/images/x.jpg)", out)
-        self.assertIn("![](https://example.com/y.png)", out)
+        # Both URLs preserved verbatim, normalized to <img> form.
+        self.assertIn('<img src="https://m.media-amazon.com/images/x.jpg"', out)
+        self.assertIn('<img src="https://example.com/y.png"', out)
 
     def test_rehost_failure_leaves_original_url(self):
         md = '<img src="https://www.thingelstad.com/uploads/2026/z.jpg" alt="">'
         with patch.object(s3, "journal_image_exists", lambda i, n: False), \
              patch.object(journal_images.requests, "get", side_effect=RuntimeError("network down")):
             out = journal_images.rehost_in_markdown(md, 458)
-        self.assertIn("![](https://www.thingelstad.com/uploads/2026/z.jpg)", out)
+        self.assertIn('<img src="https://www.thingelstad.com/uploads/2026/z.jpg"', out)
 
     def test_adjacent_imgs_separated_by_blank_line(self):
         md = ('Race day!\n\n'
@@ -156,19 +185,62 @@ class RehostInMarkdownTests(unittest.TestCase):
         with patch.object(s3, "journal_image_exists", lambda i, n: True), \
              patch.object(s3, "journal_image_url", lambda i, n: f"https://files.thingelstad.com/weekly-thing/{i}/journal/{n}"):
             out = journal_images.rehost_in_markdown(md, 458)
-        # Two separate paragraphs, not "![](a)![](b)".
-        self.assertNotIn(").jpg)![", out)
-        self.assertNotIn(")![", out)
+        # Two <img> tags on separate paragraphs, not run together.
+        self.assertNotIn("/><img", out)
         self.assertIn(
-            "![](https://files.thingelstad.com/weekly-thing/458/journal/a814739f8a.jpg)\n\n"
-            "![](https://files.thingelstad.com/weekly-thing/458/journal/08388e7462.jpg)",
+            '<img src="https://files.thingelstad.com/weekly-thing/458/journal/a814739f8a.jpg"',
             out,
+        )
+        self.assertIn(
+            '<img src="https://files.thingelstad.com/weekly-thing/458/journal/08388e7462.jpg"',
+            out,
+        )
+        # Verify they ended up in separate paragraphs.
+        self.assertIn(
+            '08388e7462.jpg"',
+            out.split('a814739f8a.jpg"', 1)[1].split("\n\n", 1)[1],
         )
         self.assertTrue(out.startswith("Race day!\n\n"))
 
     def test_no_images_passthrough(self):
         md = "Just text with a [link](http://x.example) and no images."
         self.assertEqual(journal_images.rehost_in_markdown(md, 458), md)
+
+    def test_alt_fill_runs_on_rehosted_empty_alt(self):
+        md = '<img src="https://www.thingelstad.com/uploads/2026/abc.jpg" alt="">'
+        seen = {}
+        def _fake_alt(*, image_key, image_url, context="", caption=None):
+            seen.update(image_key=image_key, image_url=image_url, context=context)
+            return "A photo of a creek running fast over rocks"
+        with patch.object(s3, "journal_image_exists", lambda i, n: True), \
+             patch.object(s3, "journal_image_url",
+                          lambda i, n: f"https://files.thingelstad.com/weekly-thing/{i}/journal/{n}"), \
+             patch.object(alt_text, "get_or_generate_alt", side_effect=_fake_alt):
+            out = journal_images.rehost_in_markdown(md, 458)
+        self.assertEqual(seen["image_key"], "abc.jpg")  # content-addressed
+        self.assertEqual(seen["image_url"],
+                         "https://files.thingelstad.com/weekly-thing/458/journal/abc.jpg")
+        self.assertIn('alt="A photo of a creek running fast over rocks"', out)
+
+    def test_alt_fill_skipped_when_alt_already_present(self):
+        md = '<img src="https://www.thingelstad.com/uploads/2026/abc.jpg" alt="already set">'
+        called = MagicMock()
+        with patch.object(s3, "journal_image_exists", lambda i, n: True), \
+             patch.object(s3, "journal_image_url",
+                          lambda i, n: f"https://files.thingelstad.com/weekly-thing/{i}/journal/{n}"), \
+             patch.object(alt_text, "get_or_generate_alt", called):
+            out = journal_images.rehost_in_markdown(md, 458)
+        called.assert_not_called()
+        self.assertIn('alt="already set"', out)
+
+    def test_alt_fill_skipped_for_non_rehosted_url(self):
+        md = '<img src="https://example.com/x.png">'
+        called = MagicMock()
+        with patch.object(alt_text, "get_or_generate_alt", called):
+            out = journal_images.rehost_in_markdown(md, 458)
+        # External URL → no alt-fill (we don't have the bytes locally).
+        called.assert_not_called()
+        self.assertIn('<img src="https://example.com/x.png"', out)
 
 
 if __name__ == "__main__":
