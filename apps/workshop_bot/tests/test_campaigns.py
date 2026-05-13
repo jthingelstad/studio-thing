@@ -77,6 +77,27 @@ class CampaignDbTests(_DBCase):
         self.assertIsNone(db.get_campaign("dd388")["copy"])
         self.assertFalse(db.set_campaign_copy("nope", "x"))
 
+    def test_update_campaign(self):
+        db.insert_campaign(name="dd", ref="OldRef-1", expected_signups=10, started_at="2026-05-01")
+        # No changes → returns the row unchanged.
+        same = db.update_campaign("dd")
+        self.assertEqual(same["ref"], "OldRef-1")
+        # Whitelisted fields update; ints coerced; non-editable keys ignored.
+        updated = db.update_campaign("dd", ref="NewRef-2", expected_signups="42",
+                                     ends_at="2026-06-01", notes="ran in the footer", status="hacked")
+        self.assertEqual(updated["ref"], "NewRef-2")
+        self.assertEqual(updated["expected_signups"], 42)
+        self.assertEqual(updated["ends_at"], "2026-06-01")
+        self.assertEqual(updated["notes"], "ran in the footer")
+        self.assertEqual(updated["name"], "dd")            # PK untouched
+        self.assertEqual(updated["status"], "live")         # status not editable here
+        self.assertEqual(updated["started_at"], "2026-05-01")  # not passed → kept
+        # None values mean "leave alone".
+        kept = db.update_campaign("dd", ref=None, notes=None)
+        self.assertEqual(kept["ref"], "NewRef-2")
+        # Unknown campaign → None.
+        self.assertIsNone(db.update_campaign("nope", ref="x"))
+
 
 class AddCampaignJobTests(_DBCase):
     def test_register(self):
@@ -117,6 +138,39 @@ class AddCampaignJobTests(_DBCase):
         self.assertIsNone(db.get_campaign("dd388")["copy"])
         r = asyncio.run(ops.campaign_copy(_base.JobContext(), name="nope", copy="x"))
         self.assertFalse(r.ok)
+
+
+class CampaignEditJobTests(_DBCase):
+    def test_edit_changes_only_passed_fields(self):
+        asyncio.run(add_campaign.run(_base.JobContext(), name="dd", ref="OldRef-1",
+                                     expected_signups=10, expected_traffic=200))
+        r = asyncio.run(ops.campaign_edit(
+            _base.JobContext(), name="dd", ref="NewRef-2", expected_signups=42,
+            ends_at="2026-06-30", notes="ran in the footer slot",
+        ))
+        self.assertTrue(r.ok, r.message)
+        c = db.get_campaign("dd")
+        self.assertEqual(c["ref"], "NewRef-2")
+        self.assertEqual(c["expected_signups"], 42)
+        self.assertEqual(c["expected_traffic"], 200)        # not passed → kept
+        self.assertEqual(c["ends_at"], "2026-06-30")
+        self.assertEqual(c["notes"], "ran in the footer slot")
+        self.assertEqual(c["status"], "live")
+        # Message echoes the change list + the new state.
+        self.assertIn("`ref`", r.message)
+        self.assertIn("NewRef-2", r.message)
+
+    def test_edit_with_no_fields_shows_current_state(self):
+        asyncio.run(add_campaign.run(_base.JobContext(), name="dd", ref="R-1"))
+        r = asyncio.run(ops.campaign_edit(_base.JobContext(), name="dd"))
+        self.assertTrue(r.ok)
+        self.assertIn("R-1", r.message)
+        self.assertIn("no changes given", r.message)
+
+    def test_edit_unknown_campaign(self):
+        r = asyncio.run(ops.campaign_edit(_base.JobContext(), name="ghost", ref="x"))
+        self.assertFalse(r.ok)
+        self.assertIn("no campaign named", r.message)
 
 
 class CampaignReportJobTests(_DBCase):
@@ -264,7 +318,7 @@ class WiringTests(unittest.TestCase):
         campaign = next(c for c in workshop.commands if getattr(c, "name", None) == "campaign")
         self.assertEqual(
             {getattr(c, "_cmd_name", None) for c in campaign.commands},
-            {"add", "report", "copy", "sunset"},
+            {"add", "edit", "report", "copy", "sunset"},
         )
 
 

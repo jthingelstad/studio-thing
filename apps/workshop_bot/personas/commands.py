@@ -12,7 +12,7 @@ around the *thing* you're working on:
     /workshop issue start | update | status | final | haiku | subject | cta | publish
     /workshop links scan
     /workshop promo prep | metrics
-    /workshop campaign add | report | copy | sunset
+    /workshop campaign add | edit | report | copy | sunset
     /workshop goal set | done
     /workshop thingy recent | show | sync     ← window into the public archive agent's conversations
     /workshop status                          ← bot-health snapshot, not a content job
@@ -289,6 +289,43 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
                 copy=(copy or None),
             ),
             "campaign add",
+        )
+
+    @campaign.command(
+        name="edit",
+        description="Change details on a running campaign — ref, dates, expected counts, notes, copy.",
+    )
+    @app_commands.describe(
+        name="The campaign name (as registered with campaign add)",
+        ref="New ?ref= tag, exact case (leave blank to keep the current one)",
+        started_at="When it started — YYYY-MM-DD (leave blank to keep)",
+        ends_at="When it ends/ended — YYYY-MM-DD (leave blank to keep)",
+        expected_signups="Revised expected subscribers (-1 to keep the current value)",
+        expected_traffic="Revised expected visits (-1 to keep the current value)",
+        notes="Notes to set (leave blank to keep; can't clear here)",
+        copy="The promo text that ran (leave blank to keep; use `campaign copy` to clear it)",
+    )
+    async def campaign_edit_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction,
+        name: str,
+        ref: str = "",
+        started_at: str = "",
+        ends_at: str = "",
+        expected_signups: int = -1,
+        expected_traffic: int = -1,
+        notes: str = "",
+        copy: str = "",
+    ) -> None:
+        await _run_and_ack(
+            interaction,
+            lambda: ops.campaign_edit(
+                _ctx(bot), name=name,
+                ref=(ref or None), started_at=(started_at or None), ends_at=(ends_at or None),
+                expected_signups=(None if int(expected_signups) < 0 else int(expected_signups)),
+                expected_traffic=(None if int(expected_traffic) < 0 else int(expected_traffic)),
+                notes=(notes or None), copy=(copy or None),
+            ),
+            "campaign edit",
         )
 
     @campaign.command(

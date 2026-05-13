@@ -3,8 +3,9 @@
 These don't touch S3, Discord, or the agent loop; they just record a
 decision Jamie made. Wired onto the slash surface as ``/workshop goal
 set`` / ``/workshop goal done`` / ``/workshop campaign sunset`` /
-``/workshop campaign copy`` (internal job names: ``set-goal`` /
-``goal-achieved`` / ``campaign-sunset`` / ``campaign-copy``).
+``/workshop campaign copy`` / ``/workshop campaign edit`` (internal job
+names: ``set-goal`` / ``goal-achieved`` / ``campaign-sunset`` /
+``campaign-copy`` / ``campaign-edit``).
 
 - ``set-goal <kind> <value> [notes]`` — open a new active milestone for
   Patty. Refuses if one's already active (the ``goals`` table allows only
@@ -18,6 +19,10 @@ set`` / ``/workshop goal done`` / ``/workshop campaign sunset`` /
 - ``campaign-copy <name> <text>`` — set (or, with empty text, clear) the
   promo copy that ran in a campaign's placement, so performance can be
   read against the creative.
+- ``campaign-edit <name> [ref] [started_at] [ends_at] [expected_signups]
+  [expected_traffic] [notes] [copy]`` — change details on an existing
+  campaign in place (the name is immutable; ``status`` flips via
+  ``campaign-sunset``). Only the fields you pass are touched.
 """
 
 from __future__ import annotations
@@ -105,6 +110,68 @@ async def campaign_copy(ctx: "_base.JobContext", *, name: str, copy: str | None 
         True,
         f"📝 copy recorded for `{name}` ({len(text)} chars):\n\n{preview}",
         data={"name": name, "has_copy": True},
+    )
+
+
+def _campaign_summary(c: dict) -> str:
+    es, et = c.get("expected_signups"), c.get("expected_traffic")
+    bits = [f"ref `{c.get('ref')}`", f"status `{c.get('status')}`", f"started {c.get('started_at') or '?'}"]
+    if c.get("ends_at"):
+        bits.append(f"ends {c['ends_at']}")
+    bits.append(f"expect {es if es is not None else '—'} signups / {et if et is not None else '—'} visits")
+    if c.get("copy"):
+        bits.append("has copy")
+    if c.get("notes"):
+        bits.append(f"notes: {c['notes']}")
+    return " · ".join(bits)
+
+
+async def campaign_edit(
+    ctx: "_base.JobContext",
+    *,
+    name: str,
+    ref: str | None = None,
+    started_at: str | None = None,
+    ends_at: str | None = None,
+    expected_signups: int | None = None,
+    expected_traffic: int | None = None,
+    notes: str | None = None,
+    copy: str | None = None,
+) -> "_base.JobResult":
+    name = (name or "").strip()
+    if not name:
+        return _base.JobResult(False, "❌ give the campaign name.")
+    not_found = f"❌ no campaign named `{name}` — see `/workshop campaign report` (or `campaign add` it first)."
+
+    def _txt(v):
+        return (str(v).strip() or None) if v is not None else None
+
+    changes = {
+        "ref": _txt(ref),
+        "started_at": _txt(started_at),
+        "ends_at": _txt(ends_at),
+        "expected_signups": expected_signups,
+        "expected_traffic": expected_traffic,
+        "notes": _txt(notes),
+        "copy": _txt(copy),
+    }
+    applied = {k: v for k, v in changes.items() if v is not None}
+    if not applied:
+        c = db.get_campaign(name)
+        if c is None:
+            return _base.JobResult(False, not_found)
+        return _base.JobResult(
+            True,
+            f"`{name}` — {_campaign_summary(c)}\n_(no changes given — pass at least one field to edit.)_",
+            data={"name": name},
+        )
+    updated = db.update_campaign(name, **applied)
+    if updated is None:
+        return _base.JobResult(False, not_found)
+    return _base.JobResult(
+        True,
+        f"✏️ updated {', '.join('`' + k + '`' for k in applied)} on `{name}`.\n`{name}` — {_campaign_summary(updated)}",
+        data={"name": name},
     )
 
 

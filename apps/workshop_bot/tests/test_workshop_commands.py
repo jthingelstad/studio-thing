@@ -80,7 +80,7 @@ class TreeRegistrationTests(unittest.TestCase):
         self.assertEqual(_cmd_names(_subgroup(workshop, "links")), {"scan"})
         self.assertEqual(_cmd_names(_subgroup(workshop, "promo")), {"prep", "metrics"})
         self.assertEqual(
-            _cmd_names(_subgroup(workshop, "campaign")), {"add", "report", "copy", "sunset"}
+            _cmd_names(_subgroup(workshop, "campaign")), {"add", "edit", "report", "copy", "sunset"}
         )
         self.assertEqual(_cmd_names(_subgroup(workshop, "goal")), {"set", "done"})
 

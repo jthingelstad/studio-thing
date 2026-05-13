@@ -886,6 +886,35 @@ def set_campaign_copy(name: str, copy: Optional[str]) -> bool:
         return cur.rowcount > 0
 
 
+# Fields a campaign's row may be edited in place (the name is the PK and
+# referenced by campaign_metrics, so it's immutable; status flips via
+# set_campaign_status / sunset).
+CAMPAIGN_EDITABLE = ("ref", "expected_signups", "expected_traffic", "started_at", "ends_at", "copy", "notes")
+
+
+def update_campaign(name: str, **changes: Any) -> Optional[dict[str, Any]]:
+    """Update an existing campaign's editable fields in place. Only keys in
+    :data:`CAMPAIGN_EDITABLE` with a non-``None`` value are written (a
+    ``None`` means "leave it alone"); ``expected_signups`` /
+    ``expected_traffic`` are coerced to int. Returns the updated row, or
+    ``None`` if no campaign with that name exists."""
+    fields: dict[str, Any] = {}
+    for k, v in changes.items():
+        if k not in CAMPAIGN_EDITABLE or v is None:
+            continue
+        if k in ("expected_signups", "expected_traffic"):
+            fields[k] = int(v)
+        else:
+            fields[k] = v
+    if get_campaign(name) is None:
+        return None
+    if fields:
+        sets = ", ".join(f"{k} = ?" for k in fields)
+        with connect() as conn:
+            conn.execute(f"UPDATE campaigns SET {sets} WHERE name = ?", [*fields.values(), name])
+    return get_campaign(name)
+
+
 def insert_campaign_metric(*, campaign_name: str, signups: Optional[int],
                            traffic: Optional[int]) -> int:
     with connect() as conn:
