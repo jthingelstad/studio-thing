@@ -189,12 +189,12 @@ class SectionRendererTests(unittest.TestCase):
              "title": "Software Is Liquid", "published": "2026-05-13T07:52:00-05:00",
              "content_md": "A talk turned post."},
         ])
-        # Standard entry: date as a link, then content (with the image in-content).
-        self.assertIn("[May 12, 2026 at 3:02 PM](https://www.thingelstad.com/2026/05/12/a.html)\n\n"
+        # Standard entry: weekday + time as a link, then content (with the image in-content).
+        self.assertIn("[Tuesday @ 3:02 PM](https://www.thingelstad.com/2026/05/12/a.html)\n\n"
                       "A status update.\n\n![](https://files.thingelstad.com/weekly-thing/9/journal/x.jpg)", out)
-        # Elevated (titled) entry: H3 link with a hard break, date plain on the next line.
+        # Elevated (titled) entry: H3 link with a hard break, label plain on the next line.
         self.assertIn("### [Software Is Liquid](https://www.thingelstad.com/2026/05/13/software-is-liquid.html)  \n"
-                      "May 13, 2026 at 7:52 AM\n\nA talk turned post.", out)
+                      "Wednesday @ 7:52 AM\n\nA talk turned post.", out)
         # Two blank lines between entries.
         self.assertIn("/journal/x.jpg)\n\n\n### [Software Is Liquid]", out)
 
@@ -205,7 +205,7 @@ class SectionRendererTests(unittest.TestCase):
             {"url": "https://www.thingelstad.com/2026/05/11/late.html",
              "title": "", "published": "2026-05-12T02:21:00Z", "content_md": "Posted late."},
         ])
-        self.assertIn("[May 11, 2026 at 9:21 PM](https://www.thingelstad.com/2026/05/11/late.html)", out)
+        self.assertIn("[Monday @ 9:21 PM](https://www.thingelstad.com/2026/05/11/late.html)", out)
         self.assertNotIn("2:21 AM", out)
 
     def test_format_haiku(self):
@@ -464,7 +464,7 @@ class DraftSectionStatusTests(unittest.TestCase):
                                 "### [A](http://a)\n\nblurb\n\n### [B](http://b)\n\nblurb")
         d = _base.replace_block(d, "brief", "**[C](http://c)** — x\n\n**[D](http://d)** — y")
         d = _base.replace_block(d, "journal",
-                                "[May 12, 2026 at 3:02 PM](https://www.thingelstad.com/x.html)\n\ntext")
+                                "[Tuesday @ 3:02 PM](https://www.thingelstad.com/x.html)\n\ntext")
         st = draft_mod.section_status(458, draft_text=d, list_objects=set())
         self.assertEqual(st["sections"]["notable"]["item_count"], 2)
         self.assertTrue(st["sections"]["notable"]["present"])
@@ -486,7 +486,7 @@ class DraftSectionStatusTests(unittest.TestCase):
     def test_ship_ready_when_everything_present(self):
         d = _base.replace_block(_base.starter_template(), "notable", "### [A](http://a)")
         d = _base.replace_block(d, "brief", "**[B](http://b)** — x")
-        d = _base.replace_block(d, "journal", "[May 12, 2026 at 3:02 PM](https://x.example/y)\n\nt")
+        d = _base.replace_block(d, "journal", "[Tuesday @ 3:02 PM](https://x.example/y)\n\nt")
         files = {"final.md", "haiku.md", "metadata.json", "intro.md", "cover.jpg", "draft.md"}
         st = draft_mod.section_status(458, draft_text=d, list_objects=files)
         self.assertTrue(st["ship_ready"], st["required_missing"])
@@ -525,7 +525,7 @@ class UpdateDraftRealFillsTests(_DBTestCase):
         self.assertIn("[Weekly Thing 458 tag in r/WeeklyThing]", d)
         # Briefly items are "<commentary> → **[Title](url)**".
         self.assertIn("A one-liner. → **[Thing Three](https://c.example/three)**", d)
-        self.assertIn("[May 12, 2026 at 3:02 PM](https://www.thingelstad.com/2026/05/12/post-a.html)", d)
+        self.assertIn("[Tuesday @ 3:02 PM](https://www.thingelstad.com/2026/05/12/post-a.html)", d)
         self.assertIn("First post in the window.", d)
         # A digest row was written.
         dig = db.latest_draft_digest(458)
@@ -1053,7 +1053,7 @@ from apps.workshop_bot.tools import interaction  # noqa: E402
 
 
 def _filled_final(*, notable="### [A](http://a)\n\nx", brief="A blurb. → **[B](http://b)**",
-                  journal="[May 12, 2026 at 3:02 PM](https://x.example/p)\n\nt") -> str:
+                  journal="[Tuesday @ 3:02 PM](https://x.example/p)\n\nt") -> str:
     d = _base.starter_template()
     d = _base.replace_block(d, "notable", notable)
     d = _base.replace_block(d, "brief", brief)

@@ -114,12 +114,18 @@ def _render_brief(items: list[dict]) -> str:
 # ---- Journal ----
 
 def _journal_label(published_iso) -> str:
+    """Render a journal entry's timestamp as ``Sunday @ 4:16 PM`` — the
+    shape used in the published newsletter. Day-of-week + 12-hour clock,
+    no calendar date: every journal entry in an issue is within the
+    seven-day window, so the weekday already identifies it. (Double-issue
+    windows do produce one duplicated weekday name; the body context
+    around the entry disambiguates.)"""
     dt = microblog.published_local(published_iso)
     if dt is None:
         return str(published_iso or "").strip()
     hour12 = dt.hour % 12 or 12
     ampm = "AM" if dt.hour < 12 else "PM"
-    return f"{dt.strftime('%b')} {dt.day}, {dt.year} at {hour12}:{dt.minute:02d} {ampm}"
+    return f"{dt.strftime('%A')} @ {hour12}:{dt.minute:02d} {ampm}"
 
 
 def _render_journal(posts: list[dict]) -> str:
