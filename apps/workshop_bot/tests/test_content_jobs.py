@@ -495,6 +495,25 @@ class UpdateDraftRealFillsTests(_DBTestCase):
         self.assertIn("DRAFT · WT458", html)                 # work-in-progress banner
         self.assertEqual(result.data["preview_url"], "https://files.thingelstad.com/weekly-thing/458/draft.html")
 
+    def test_currently_json_renders_into_the_draft(self):
+        self._set_window()
+        self.ws.write_issue_file(
+            458, "currently.json",
+            '{"Listening":" Noah Kahan.","Watching":" Shrinking on Apple TV."}',
+        )
+        result = asyncio.run(update_draft.run(_base.JobContext()))
+        self.assertTrue(result.ok, result.message)
+        d = self.ws.files[(458, "draft.md")]
+        self.assertIn("**Listening:** Noah Kahan.\n\n**Watching:** Shrinking on Apple TV.", d)
+        self.assertIn("## Currently", d)
+
+    def test_currently_md_fallback_when_no_json(self):
+        self._set_window()
+        self.ws.write_issue_file(458, "currently.md", "**Reading:** a verbatim section.")
+        result = asyncio.run(update_draft.run(_base.JobContext()))
+        self.assertTrue(result.ok, result.message)
+        self.assertIn("**Reading:** a verbatim section.", self.ws.files[(458, "draft.md")])
+
     def test_idempotent_with_stable_sources(self):
         self._set_window()
         asyncio.run(update_draft.run(_base.JobContext()))
@@ -1140,6 +1159,20 @@ class BuildPublishTests(_DBTestCase):
         self.assertNotIn('class="banner"', html)
         self.assertIn("Support the EFF.", html)
         self.assertEqual(result.data["preview_url"], "https://files.thingelstad.com/weekly-thing/458/publish.html")
+
+    def test_currently_json_renders_into_publish_md(self):
+        self._window()
+        self.ws.write_issue_file(458, "final.md", _filled_final())
+        self.ws.write_issue_file(458, "intro.md", "Intro.")
+        self.ws.write_issue_file(458, "haiku.md", "a\nb\nc")
+        self.ws.write_issue_file(458, "metadata.json", '{"subject":"x"}')
+        self.ws.write_issue_file(458, "cover.jpg", "(binary)")
+        self.ws.write_issue_file(458, "currently.json", '{"Listening":" Noah Kahan.","Watching":" Shrinking."}')
+        ctx, fc = self._ctx()
+        result = asyncio.run(build_publish.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        pub = self.ws.files[(458, "publish.md")]
+        self.assertIn("## Currently\n\n**Listening:** Noah Kahan.\n\n**Watching:** Shrinking.", pub)
 
     def test_cta_default_placement_is_after_notable(self):
         self._window()

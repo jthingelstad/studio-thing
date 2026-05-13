@@ -21,7 +21,9 @@ SECTION_BLOCKS = ("intro", "cover", "currently", "notable", "journal", "brief", 
 # Assets build-publish refuses without (besides the Notable/Brief/Journal
 # *sections*, which are checked from the draft blocks, not from a file).
 REQUIRED_ASSETS = ("final.md", "haiku.md", "metadata.json", "intro.md", "cover.jpg")
-OPTIONAL_ASSETS = ("currently.md",)
+# Currently is optional; it may be the structured currently.json (preferred)
+# or the legacy verbatim currently.md.
+OPTIONAL_ASSETS = ("currently.json", "currently.md")
 
 
 def _block(text: str, name: str) -> str:
@@ -121,7 +123,11 @@ def section_status(
     assets["publish.md"] = "publish.md" in list_objects
 
     intro_present = bool(blocks.get("intro")) or assets.get("intro.md", False)
-    currently_present = bool(blocks.get("currently")) or assets.get("currently.md", False)
+    currently_present = (
+        bool(blocks.get("currently"))
+        or assets.get("currently.json", False)
+        or assets.get("currently.md", False)
+    )
     haiku_present = bool(blocks.get("haiku")) or assets.get("haiku.md", False)
     cover_present = assets.get("cover.jpg", False)
 

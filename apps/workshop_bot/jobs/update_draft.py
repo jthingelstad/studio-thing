@@ -6,8 +6,10 @@ every run — so the layout / section order always tracks the template — and
 each block is filled wholesale from its source. No additive merge; nothing
 on the existing ``draft.md`` is preserved. Real authoring lives upstream
 (Pinboard for the Notable / Briefly links, micro.blog for the Journal,
-Drafts → Shortcut for ``intro.md`` / ``cover.md`` / ``currently.md``); the
-haiku is a composed asset (``compose-haiku``). The shape mirrors a
+Drafts → Shortcut for ``intro.md`` / ``cover.md`` / ``currently.json``);
+the haiku is a composed asset (``compose-haiku``). The ``Currently``
+section comes from a structured ``currently.json`` (preferred) or a legacy
+verbatim ``currently.md`` — see ``_currently.render``. The shape mirrors a
 delivered issue: ``---``-fenced blocks, the Notable "discuss on Reddit"
 line, ``### [Title](url)`` link headings, the ``→ **[Title](url)**``
 Briefly form, elevated (titled) Journal posts, the ``A haiku to leave you
@@ -30,7 +32,7 @@ from datetime import datetime
 
 from ..systems.pinboard import client as pinboard
 from ..tools import anthropic_client, context, db, draft as draft_mod, journal_images, microblog, render, s3
-from . import _base
+from . import _base, _currently
 
 logger = logging.getLogger("workshop.jobs.update_draft")
 
@@ -40,8 +42,10 @@ NAME = "update-draft"
 # *layout* order lives in templates/draft_starter.md. Listed here in the
 # published section order for readability.
 SECTION_BLOCKS = ("intro", "cover", "currently", "notable", "journal", "brief", "haiku")
-# Blocks that are just a verbatim copy of an authored asset file.
-_ASSET_FILE = {"intro": "intro.md", "cover": "cover.md", "currently": "currently.md", "haiku": "haiku.md"}
+# Blocks that are just a verbatim copy of an authored asset file. (``currently``
+# is handled separately — see ``_currently.render`` — since it prefers a
+# structured ``currently.json``.)
+_ASSET_FILE = {"intro": "intro.md", "cover": "cover.md", "haiku": "haiku.md"}
 _COVER_IMAGE = "https://files.thingelstad.com/weekly-thing/{n}/cover.jpg"
 
 # Eddy posts a review only Tue–Fri (weekday 1..4, Mon=0). Sat/Sun/Mon the
@@ -142,6 +146,8 @@ def _gather_fills(window: dict) -> dict[str, str]:
     breaking the run."""
     n = int(window["issue_number"])
     fills: dict[str, str] = {block: _read_asset(n, _ASSET_FILE[block]) for block in _ASSET_FILE}
+    # Currently — structured currently.json (preferred) or legacy currently.md.
+    fills["currently"] = _currently.render(n)
     # The haiku ships bold-wrapped with hard breaks; normalize whatever the
     # composed haiku.md holds.
     fills["haiku"] = _base.format_haiku(fills.get("haiku", ""))

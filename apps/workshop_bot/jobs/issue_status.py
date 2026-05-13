@@ -73,7 +73,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         f"  {m(st['assets'].get('final.md', False))} `final.md`" + ("" if st["assets"].get("final.md") else " → `/workshop issue final`"),
         "",
         "**Optional:**",
-        f"  {m(st['currently_present'])} `currently.md`",
+        f"  {m(st['currently_present'])} `currently.json` (or legacy `currently.md`)",
         "  " + (f"✅ CTAs: {', '.join('`' + c + '`' for c in st['cta_files'])}" if st["cta_files"] else "⚪ CTAs: none (compose-cta not run / 0 CTAs)"),
         "",
         ("✅ **ship-ready** — `build-publish` would proceed." if st["ship_ready"]

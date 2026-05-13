@@ -2,9 +2,10 @@
 
 The ship artifact, shaped like a real Weekly Thing issue. Top-level parts —
 the intro (which carries its own ``---`` and cover block), each non-empty
-section as ``## Header\n\n{content}`` (an absent ``currently.md`` or any
-empty section just drops out — "a section that didn't run is a clean
-NULL"), the CTAs at their placements, and ``A haiku to leave you with…`` +
+section as ``## Header\n\n{content}`` (an absent ``currently.json`` /
+``currently.md`` or any empty section just drops out — "a section that
+didn't run is a clean NULL"), the CTAs at their placements, and
+``A haiku to leave you with…`` +
 the bold/hard-break haiku + the closing "discuss on Reddit" line — are
 joined ``---``-fenced. The ``<!-- block:… -->`` markers from ``draft.md`` /
 ``final.md`` never appear in ``publish.md``.
@@ -22,7 +23,7 @@ import re
 
 from ..tools import draft as draft_mod
 from ..tools import render, s3
-from . import _base
+from . import _base, _currently
 
 logger = logging.getLogger("workshop.jobs.build_publish")
 
@@ -117,7 +118,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 "notable": (blocks.get("notable") or "").strip(),
                 "brief": (blocks.get("brief") or "").strip(),
                 "journal": (blocks.get("journal") or "").strip(),
-                "currently": _read(n, "currently.md").strip(),
+                "currently": _currently.render(n),  # currently.json (preferred) or legacy currently.md
             }
             intro_text = _read(n, "intro.md").strip()
             cover_text = _read(n, "cover.md").strip()
