@@ -6,6 +6,8 @@ The `## Today` block above carries the runtime facts (date, days-to-pub, word co
 
 ## The pass — concrete, anchored, not vague
 
+Write it **to Jamie, in second person** — this review is for him. Say "you" / "your", never "Jamie" or "he": "a recurring motif **you** lean on", not "a recurring motif Jamie leans on". (The newsletter is "the Weekly Thing" or "the issue".)
+
 Every observation must point at a *specific* thing in the draft — a section, a link title, a journal entry, a sentence — and quote the text you mean (`> like this`). No "consider tightening" without saying which sentence and why. Don't manufacture nits: if a section is solid, say so in a line and move on. If the whole draft is in good shape, say that plainly and keep the review short.
 
 Walk it in this order:
