@@ -289,7 +289,14 @@ def write_workshop_pointer(data: dict[str, Any]) -> dict[str, Any]:
     _client().put_object(
         Bucket=bucket, Key=WORKSHOP_POINTER_KEY, Body=body,
         ContentType="application/json; charset=utf-8",
-        CacheControl="no-cache, max-age=0",
+        # `no-store` — browsers must not cache. Stronger than `no-cache`
+        # (which allows caching with revalidation). We need this because
+        # CloudFront's Response Headers Policy doesn't apply to 304 Not
+        # Modified responses; a cached entry that goes through conditional
+        # revalidation would come back without the CORS header. `no-store`
+        # keeps the browser from ever caching it, so every fetch from
+        # weekly.thingelstad.com gets a fresh 200 with the CORS header.
+        CacheControl="no-store",
     )
     logger.info("s3.write_workshop_pointer -> %d bytes", len(body))
     try:
