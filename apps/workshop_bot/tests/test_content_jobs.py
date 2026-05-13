@@ -31,10 +31,11 @@ from apps.workshop_bot.tools import db, s3  # noqa: E402
 
 class FakeWorkspace:
     """Replaces tools.s3's read/write/list with a dict keyed by
-    (issue_number, filename)."""
+    (issue_number, filename), plus the standalone workshop.json pointer."""
 
     def __init__(self) -> None:
         self.files: dict[tuple[int, str], str] = {}
+        self.workshop_pointer: dict | None = None
 
     def read_issue_file(self, issue_number, filename, *, max_bytes=None):
         key = (int(issue_number), filename)
@@ -52,6 +53,12 @@ class FakeWorkspace:
         # No CloudFront invalidation in tests.
         return self.write_issue_file(issue_number, filename, html_text)
 
+    def write_workshop_pointer(self, data):
+        self.workshop_pointer = data
+        return {"key": "weekly-thing/workshop.json", "bucket": "files.thingelstad.com",
+                "url": "https://files.thingelstad.com/weekly-thing/workshop.json",
+                "size": len(str(data)), "written": True}
+
     def list_issue(self, issue_number):
         n = int(issue_number)
         objs = [{"filename": fn, "key": f"weekly-thing/{n}/{fn}", "size": len(txt)}
@@ -65,6 +72,7 @@ def _patch_s3(ws: FakeWorkspace):
         patch.object(s3, "read_issue_file", ws.read_issue_file),
         patch.object(s3, "write_issue_file", ws.write_issue_file),
         patch.object(s3, "write_issue_html", ws.write_issue_html),
+        patch.object(s3, "write_workshop_pointer", ws.write_workshop_pointer),
         patch.object(s3, "list_issue", ws.list_issue),
     ]
 
@@ -307,6 +315,43 @@ class StartIssueTests(_DBTestCase):
         asyncio.run(start_issue.run(ctx, number=459, pub_date="2026-05-23", day_count=7))
         win = db.get_active_issue_window()
         self.assertEqual(win["issue_number"], 459)
+
+    def test_start_issue_writes_workshop_pointer(self):
+        ctx = _base.JobContext(trigger="manual")
+        result = asyncio.run(start_issue.run(ctx, number=458, pub_date="2026-05-16", day_count=7, set_by="jamie"))
+        self.assertTrue(result.ok, result.message)
+        ptr = self.ws.workshop_pointer
+        self.assertIsNotNone(ptr)
+        self.assertEqual(ptr["issue_number"], 458)
+        self.assertEqual(ptr["pub_date"], "2026-05-16")
+        self.assertEqual(ptr["end_date"], "2026-05-15")
+        self.assertEqual(ptr["start_date"], "2026-05-08")
+        self.assertEqual(ptr["day_count"], 7)
+        self.assertEqual(ptr["workspace_url"], "https://files.thingelstad.com/weekly-thing/458/")
+        self.assertEqual(ptr["workspace_prefix"], "weekly-thing/458/")
+        self.assertEqual(ptr["archive_url"], "https://weekly.thingelstad.com/archive/458/")
+        self.assertIn("Weekly%20Thing%20458", ptr["reddit_tag_url"])
+        # Predictable file URLs for what Shortcuts uploads + what the bot writes.
+        for key in ("cover_jpg", "cover_json", "intro_md", "currently_json",
+                    "haiku_md", "metadata_json", "draft_md", "draft_html",
+                    "final_md", "publish_md", "publish_html"):
+            self.assertTrue(ptr["files"][key].startswith("https://files.thingelstad.com/weekly-thing/458/"), key)
+        self.assertEqual(ptr["set_by"], "jamie")
+        # And the success message points at the pointer URL.
+        self.assertIn("workshop.json", result.message)
+        self.assertEqual(result.data["workshop_pointer_url"], "https://files.thingelstad.com/weekly-thing/workshop.json")
+
+    def test_start_issue_pointer_failure_warns_but_succeeds(self):
+        # Force the pointer write to blow up; the job should still succeed.
+        from apps.workshop_bot.tools import s3 as s3_mod
+        with patch.object(s3_mod, "write_workshop_pointer", lambda data: (_ for _ in ()).throw(RuntimeError("s3 down"))):
+            result = asyncio.run(start_issue.run(_base.JobContext(), number=458, pub_date="2026-05-16"))
+        self.assertTrue(result.ok, result.message)
+        self.assertIn("couldn't refresh `workshop.json`", result.message)
+        self.assertIsNone(self.ws.workshop_pointer)
+        # Window still recorded, draft still seeded.
+        self.assertEqual(db.get_active_issue_window()["issue_number"], 458)
+        self.assertIn((458, "draft.md"), self.ws.files)
 
 
 # ---------- update-draft ----------

@@ -16,6 +16,7 @@ shared credentials file, instance role).
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
@@ -268,6 +269,38 @@ def write_issue_file(
         "size": len(body),
         "content_type": content_type,
         "written": True,
+    }
+
+
+# Pointer file at the top of the weekly-thing/ namespace (NOT inside an issue
+# folder) — iOS Shortcuts fetch this URL to know the current in-flight issue
+# (number, dates, predictable workspace URLs). Written by `jobs/start_issue.py`
+# every time the issue window is set.
+WORKSHOP_POINTER_KEY = f"{ROOT_PREFIX}/workshop.json"
+
+
+def write_workshop_pointer(data: dict[str, Any]) -> dict[str, Any]:
+    """Write the workshop pointer JSON to
+    ``s3://{bucket}/weekly-thing/workshop.json`` (no-cache + CloudFront
+    invalidation, so Shortcuts always see the latest). ``data`` is serialised
+    verbatim — callers shape the schema."""
+    bucket = _bucket()
+    body = (json.dumps(data, indent=2, sort_keys=False) + "\n").encode("utf-8")
+    _client().put_object(
+        Bucket=bucket, Key=WORKSHOP_POINTER_KEY, Body=body,
+        ContentType="application/json; charset=utf-8",
+        CacheControl="no-cache, max-age=0",
+    )
+    logger.info("s3.write_workshop_pointer -> %d bytes", len(body))
+    try:
+        from . import cdn
+        cdn.invalidate([f"/{WORKSHOP_POINTER_KEY}"])
+    except Exception as exc:  # noqa: BLE001 — invalidation is best-effort
+        logger.warning("s3.write_workshop_pointer: CDN invalidation skipped (%s)", exc)
+    return {
+        "key": WORKSHOP_POINTER_KEY, "bucket": bucket,
+        "url": f"https://{bucket}/{WORKSHOP_POINTER_KEY}",
+        "size": len(body), "written": True,
     }
 
 
