@@ -1105,6 +1105,42 @@ class InteractionPrimitiveTests(unittest.TestCase):
             os.environ.pop("DISCORD_OWNER_USER_ID", None)
 
 
+class BuildPublishHelperTests(unittest.TestCase):
+    def test_membership_block_slots_the_cta(self):
+        out = build_publish._membership_block("  Become a member of the EFF crew.  ")
+        self.assertIn("{% if subscriber.subscriber_type == 'premium' %}", out)
+        self.assertIn("{% elif subscriber.subscriber_type == 'regular' %}", out)
+        self.assertIn("{% else %}", out)
+        self.assertIn("{% endif %}", out)
+        # CTA copy appears in the premium + regular branches (trimmed).
+        self.assertEqual(out.count("Become a member of the EFF crew."), 2)
+        self.assertIn("buy.stripe.com/3cs7w5eX6aXBbhm144", out)
+        self.assertIn("{{ subscribe_form }}", out)
+
+    def test_pixel_block_is_liquid_gated_and_issue_scoped(self):
+        out = build_publish._pixel_block(347)
+        self.assertTrue(out.startswith("{% if medium == 'email' %}"))
+        self.assertIn("https://tinylytics.app/pixel/a2YQr3ZMqkySNYSwz4uF.gif?path=/email/347/", out)
+        self.assertTrue(out.endswith("{% endif %}"))
+
+    def test_for_preview_strips_liquid_and_keeps_regular_branch(self):
+        raw = (
+            "<!-- buttondown-editor-mode: plaintext -->Hi there.\n\n---\n\n"
+            + build_publish._membership_block("Support the cause.")
+            + "\n\n---\n\nA haiku to leave you with…\n\n**a  \nb  \nc**\n\n"
+            + build_publish._CLOSING + "\n\n" + build_publish._pixel_block(347)
+        )
+        p = build_publish._for_preview(raw)
+        self.assertNotIn("buttondown-editor-mode", p)
+        self.assertNotIn("{%", p)
+        self.assertNotIn("{{", p)
+        self.assertNotIn("tinylytics.app/pixel", p)   # email-only block removed wholesale
+        self.assertIn("Support the cause.", p)        # regular branch kept
+        self.assertIn("$4 monthly", p)                # the buttons' text survives
+        self.assertIn("Hi there.", p)
+        self.assertIn("A haiku to leave you with", p)
+
+
 class BuildPublishTests(_DBTestCase):
     def _window(self, n=458, pub="2026-05-16"):
         from apps.workshop_bot.tools import issue as issue_mod
@@ -1146,7 +1182,8 @@ class BuildPublishTests(_DBTestCase):
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
         pub = self.ws.files[(458, "publish.md")]
-        self.assertTrue(pub.startswith("Welcome to the issue."))
+        # Editor-mode comment glommed onto the intro, the way the raw bodies are.
+        self.assertTrue(pub.startswith("<!-- buttondown-editor-mode: plaintext -->Welcome to the issue."), pub[:80])
         self.assertIn("line two", pub)
         self.assertIn("Reading: a book.", pub)
         self.assertNotIn("<!-- block:", pub)            # markers stripped
@@ -1162,17 +1199,28 @@ class BuildPublishTests(_DBTestCase):
         )]
         self.assertEqual(order, sorted(order), pub)
         self.assertLess(pub.index("Reading: a book."), pub.index("/cover.jpg)"), pub)
-        # CTA with placement after_notable lands between Notable and Journal.
+        # CTA with placement after_notable lands between Notable and Journal,
+        # wrapped in the membership-block Liquid (premium/regular+Stripe/else+form).
         self.assertGreater(pub.index("Support the EFF."), pub.index("## Notable"))
         self.assertLess(pub.index("Support the EFF."), pub.index("## Journal"))
-        # Closing boilerplate after the haiku.
+        self.assertIn("{% if subscriber.subscriber_type == 'premium' %}", pub)
+        self.assertIn("https://buy.stripe.com/3cs7w5eX6aXBbhm144?prefilled_email={{ subscriber.email | urlencode }}", pub)
+        self.assertIn("{{ subscribe_form }}", pub)
+        # Closing boilerplate, then the email-only Tinylytics pixel.
         self.assertIn("Check out the [Weekly Thing on Reddit]", pub)
-        # publish.html written too (no draft banner — it's the ship body).
+        self.assertIn("{% if medium == 'email' %}", pub)
+        self.assertIn("https://tinylytics.app/pixel/a2YQr3ZMqkySNYSwz4uF.gif?path=/email/458/", pub)
+        # publish.html written too — no draft banner (it's the ship body), and
+        # Liquid-stripped (a regular-subscriber rendering of the email).
         html = self.ws.files[(458, "publish.html")]
         self.assertTrue(html.startswith("<!DOCTYPE html>"))
         self.assertIn("<title>Weekly Thing 458</title>", html)
         self.assertNotIn('class="banner"', html)
+        self.assertNotIn("{% if", html)
+        self.assertNotIn("{{ subscribe_form }}", html)
+        self.assertNotIn("tinylytics.app/pixel", html)
         self.assertIn("Support the EFF.", html)
+        self.assertIn("$4 monthly", html)
         self.assertEqual(result.data["preview_url"], "https://files.thingelstad.com/weekly-thing/458/publish.html")
 
     def test_currently_json_renders_into_publish_md(self):
@@ -1221,7 +1269,7 @@ class BuildPublishTests(_DBTestCase):
         self.assertNotIn("/cover.jpg)", pub)             # no cover.md → no cover block
         self.assertIn("## Notable", pub)
         self.assertIn("A haiku to leave you with", pub)
-        self.assertTrue(pub.startswith("Intro."))
+        self.assertTrue(pub.startswith("<!-- buttondown-editor-mode: plaintext -->Intro."), pub[:60])
 
 
 class ComposeHaikuTests(_DBTestCase):
