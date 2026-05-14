@@ -12,6 +12,7 @@ frontmatter. Optional for ship (Patty may choose 0 CTAs).
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from ..tools import anthropic_client, context, db, interaction, s3
@@ -56,11 +57,15 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     try:
         with _base.job_lock(assets, NAME):
             base_prompt = anthropic_client.load_prompt("patty-compose-cta")
-            patty_ctx = context.build_patty_context()
+            # Off-loop: build_patty_context hits Stripe / Buttondown, and
+            # _recent_publish_excerpts does up to four sequential S3 reads.
+            # Wrap both so a slow round-trip doesn't stall the gateway.
+            patty_ctx = await asyncio.to_thread(context.build_patty_context)
+            arc_excerpts = await asyncio.to_thread(_recent_publish_excerpts, n)
             user_msg = (
                 f"{context.render_block(patty_ctx)}\n\n{base_prompt}\n\n"
                 f"---\n\nRecent issues (for arc continuity — your previous CTAs are in these):\n\n"
-                f"{_recent_publish_excerpts(n)}\n\n"
+                f"{arc_excerpts}\n\n"
                 f"---\n\nThis issue (WT{n}):\n\n```markdown\n{body[:_compose.ISSUE_BODY_CAP]}\n```"
             )
             with db.AgentRun("patty", trigger="compose-cta") as agent_run:
