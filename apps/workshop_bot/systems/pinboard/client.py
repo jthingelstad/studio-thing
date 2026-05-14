@@ -17,8 +17,18 @@ import os
 import time
 from collections import Counter
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import requests
+
+# Pinboard's API serialises bookmark `time` in UTC, but the issue window
+# (`start_date` / `end_date`) is Jamie's *local* calendar — the day begins
+# at 00:00 America/Chicago. A bookmark added at 22:30 CDT lands at
+# 03:30 UTC the next day; if we filter by the UTC calendar date it ends
+# up in the wrong issue. So we convert every Pinboard timestamp to local
+# time before taking `.date()`, matching what `microblog.published_local`
+# does for journal posts.
+_LOCAL_TZ = ZoneInfo("America/Chicago")
 
 API_BASE = "https://api.pinboard.in/v1"
 POPULAR_FEED = "https://feeds.pinboard.in/rss/popular/"
@@ -169,9 +179,29 @@ def posts_all(
 BRIEF_TAG = "_brief"
 
 
+def _local_added_date(time_raw: str):
+    """Pinboard's UTC ``time`` string → America/Chicago calendar date, or
+    ``None`` if unparseable. The day-boundary fix: a bookmark added at
+    22:30 CDT is local-date ``today`` even though its UTC timestamp lands
+    at 03:30 UTC the next day, so the window filter has to read the
+    *local* date, not the UTC one."""
+    from datetime import datetime as _dt
+
+    if not time_raw:
+        return None
+    try:
+        dt = _dt.fromisoformat(str(time_raw).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(_LOCAL_TZ)
+    return dt.date()
+
+
 def issue_window_candidates(start_date: str, end_date: str) -> dict[str, list[dict[str, Any]]]:
     """Bookmarks added in the issue window ``(start_date, end_date]``
-    (calendar dates, ``YYYY-MM-DD``), partitioned into:
+    (calendar dates in **America/Chicago**, ``YYYY-MM-DD``), partitioned
+    into:
 
     - ``notable`` — items not tagged ``_brief``
     - ``brief``   — items tagged ``_brief``
@@ -180,14 +210,18 @@ def issue_window_candidates(start_date: str, end_date: str) -> dict[str, list[di
     ``toread`` (Jamie hasn't worked through it yet) or marked private
     (``shared=no``) is skipped — those aren't ready to ship.
 
-    Each item is a :func:`normalize_post` record plus ``added_date``;
-    oldest first within each list. (Earlier issues used a separate
-    ``_featured`` tag for a Featured section that's been retired — that
-    tag is no longer recognized.)
+    Each item is a :func:`normalize_post` record plus ``added_date``
+    (the local calendar date the bookmark was added); oldest first
+    within each list. (Earlier issues used a separate ``_featured`` tag
+    for a Featured section that's been retired — that tag is no longer
+    recognized.)
 
-    The Pinboard ``fromdt``/``todt`` filter is widened a day on each side
-    and the precise calendar-date filter is applied in Python, since
-    Pinboard's bounds are datetime-exclusive.
+    Pinboard serialises ``time`` in UTC; every timestamp is converted to
+    America/Chicago via :func:`_local_added_date` before the window
+    check so a bookmark saved at 22:30 CT (i.e. 03:30 UTC the next day)
+    lands in the right issue. The ``fromdt``/``todt`` fetch window is
+    widened a day on each side so the local-date filter never trims
+    something the API already returned.
     """
     from datetime import datetime as _dt, timedelta as _td
 
@@ -199,10 +233,8 @@ def issue_window_candidates(start_date: str, end_date: str) -> dict[str, list[di
     notable: list[dict[str, Any]] = []
     brief: list[dict[str, Any]] = []
     for post in raw:
-        time_raw = str(post.get("time") or "")
-        try:
-            d = _dt.fromisoformat(time_raw.replace("Z", "+00:00")).date()
-        except ValueError:
+        d = _local_added_date(str(post.get("time") or ""))
+        if d is None:
             continue
         if not (sd < d <= ed):
             continue

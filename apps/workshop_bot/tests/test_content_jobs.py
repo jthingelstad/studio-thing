@@ -990,6 +990,43 @@ class PinboardClientNewVerbsTests(unittest.TestCase):
         self.assertEqual([n["url"] for n in out["notable"]], ["https://ok/1"])
         self.assertEqual([b["url"] for b in out["brief"]], ["https://ok/2"])
 
+    def test_issue_window_candidates_uses_local_date_for_boundaries(self):
+        """Pinboard timestamps are UTC; the window is local (America/Chicago).
+        A bookmark saved at 22:30 CDT (= 03:30 UTC next day) belongs to the
+        local day, not the UTC one. This pins the day-boundary so a future
+        refactor can't silently regress."""
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        # Window: 2026-05-08 (exclusive) .. 2026-05-15 (inclusive), local CT.
+        feed = [
+            # 22:30 CDT on end_date (2026-05-15) → 03:30 UTC on 2026-05-16.
+            # Old UTC-date code would have excluded this. Local-date code
+            # includes it.
+            {"href": "https://late-end/1", "description": "Late on end day",
+             "extended": "x", "tags": "ai", "time": "2026-05-16T03:30:00Z",
+             "toread": "no", "shared": "yes"},
+            # 04:00 UTC on 2026-05-09 = 23:00 CDT on 2026-05-08 (start_date).
+            # Old UTC-date code would have included it as 2026-05-09; local-date
+            # code excludes it (it's still on the prior issue's last local day).
+            {"href": "https://early-start/1", "description": "Early past start",
+             "extended": "x", "tags": "ai", "time": "2026-05-09T04:00:00Z",
+             "toread": "no", "shared": "yes"},
+            # 05:30 UTC on 2026-05-09 = 00:30 CDT on 2026-05-09 — first local
+            # day strictly after start_date. Included.
+            {"href": "https://just-in/1", "description": "Just past midnight",
+             "extended": "x", "tags": "ai", "time": "2026-05-09T05:30:00Z",
+             "toread": "no", "shared": "yes"},
+        ]
+        with patch.object(pbc, "posts_all", lambda **kw: feed):
+            out = pbc.issue_window_candidates("2026-05-08", "2026-05-15")
+        urls = [n["url"] for n in out["notable"]]
+        self.assertIn("https://late-end/1", urls)
+        self.assertIn("https://just-in/1", urls)
+        self.assertNotIn("https://early-start/1", urls)
+        # added_date is also recorded as the local date, not the UTC one.
+        added = {n["url"]: n["added_date"] for n in out["notable"]}
+        self.assertEqual(added["https://late-end/1"], "2026-05-15")
+        self.assertEqual(added["https://just-in/1"], "2026-05-09")
+
 
 class PinboardServerNewToolsTests(unittest.TestCase):
     def _server(self):
