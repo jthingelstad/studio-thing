@@ -27,16 +27,37 @@ logger = logging.getLogger("workshop.jobs.daily_metrics")
 
 NAME = "daily-metrics"
 
+# Attribution-window tiers for `_campaign_window_days`. Fresh campaigns
+# want a tight 7d window so a launch spike isn't averaged away; aging
+# campaigns want a wider window so a slow trickle is still visible.
+_AGE_RECENT_MAX = 10   # ≤ this many days → recent window
+_AGE_MID_MAX = 45      # ≤ this many days → mid window; else long
+_WINDOW_DEFAULT_DAYS = 14
+_WINDOW_RECENT_DAYS = 7
+_WINDOW_MID_DAYS = 30
+_WINDOW_LONG_DAYS = 60
+
+# Materiality thresholds used by `_moved`. Tweak these to make the daily
+# report louder or quieter.
+_MIN_MATERIAL_NET = 3       # |subscriber net 7d| at or above → material
+_MIN_MATERIAL_CHURNED = 3   # 7d churn at or above → material
+_LOW_EXPECTED_RATIO = 0.4   # actual traffic < this × expected → trending low
+_HIGH_EXPECTED_RATIO = 1.5  # actual traffic > this × expected → trending high
+
 
 def _campaign_window_days(started_at: str | None) -> int:
     """Pick a sensible attribution window for a campaign's age."""
     if not started_at:
-        return 14
+        return _WINDOW_DEFAULT_DAYS
     try:
         age = (datetime.now().date() - datetime.strptime(str(started_at)[:10], "%Y-%m-%d").date()).days
     except (TypeError, ValueError):
-        return 14
-    return 7 if age <= 10 else (30 if age <= 45 else 60)
+        return _WINDOW_DEFAULT_DAYS
+    if age <= _AGE_RECENT_MAX:
+        return _WINDOW_RECENT_DAYS
+    if age <= _AGE_MID_MAX:
+        return _WINDOW_MID_DAYS
+    return _WINDOW_LONG_DAYS
 
 
 def _campaign_traffic(ref: str, days: int) -> int | None:
@@ -83,23 +104,34 @@ def _poll_campaigns() -> list[dict]:
     return snapshots
 
 
-def _moved(growth: dict, campaigns: list[dict]) -> bool:
-    """Did anything material move? — non-trivial subscriber net, any churn
-    spike, or a campaign delta / first poll."""
+def _growth_moved(growth: dict) -> bool:
+    """Did subscriber growth move materially this week? — a non-trivial
+    net change in either direction, or a churn spike."""
     net = int(growth.get("net") or 0)
     churned = int(growth.get("churned") or 0)
-    if abs(net) >= 3 or churned >= 3:
-        return True
+    return abs(net) >= _MIN_MATERIAL_NET or churned >= _MIN_MATERIAL_CHURNED
+
+
+def _campaigns_moved(campaigns: list[dict]) -> bool:
+    """Did any campaign show a material signal? — a first poll, any
+    delta vs the prior row, or current traffic trending way off
+    expectation."""
     for c in campaigns:
         if c["is_first_poll"]:
             return True
         if (c["delta_traffic"] or 0) != 0 or (c["delta_signups"] or 0) != 0:
             return True
-        # Trending way off expectation is worth a flag even if static.
         et, t = c.get("expected_traffic"), c.get("traffic")
-        if isinstance(et, int) and et > 0 and isinstance(t, int) and (t < 0.4 * et or t > 1.5 * et):
+        if isinstance(et, int) and et > 0 and isinstance(t, int) and (
+            t < _LOW_EXPECTED_RATIO * et or t > _HIGH_EXPECTED_RATIO * et
+        ):
             return True
     return False
+
+
+def _moved(growth: dict, campaigns: list[dict]) -> bool:
+    """Did anything material move? Composition of the two lenses above."""
+    return _growth_moved(growth) or _campaigns_moved(campaigns)
 
 
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":

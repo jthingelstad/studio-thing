@@ -54,6 +54,15 @@ async def run(
             "≤64 chars (e.g. `DenseDiscovery-388`). Case is preserved.",
         )
     es, et = _as_int(expected_signups), _as_int(expected_traffic)
+    # Soft-warn if another live campaign is already using this ref — two
+    # campaigns sharing a `?ref=` value will read the same Tinylytics /
+    # Buttondown numbers, so `daily-metrics` can't tell them apart. Not
+    # blocking (a fresh placement under a new name might legitimately
+    # reuse a ref), just surfaced in the ack.
+    ref_collision = next(
+        (c for c in db.active_campaigns() if c.get("ref") == ref and c.get("name") != name),
+        None,
+    )
     created = db.insert_campaign(name=name, ref=ref, expected_signups=es, expected_traffic=et, copy=copy)
     if not created:
         existing = db.get_campaign(name) or {}
@@ -63,6 +72,11 @@ async def run(
             f"status `{existing.get('status')}`). Pick a different name.",
         )
     bits = [f"✅ Campaign **{name}** registered (ref `{ref}`, status `live`)."]
+    if ref_collision is not None:
+        bits.append(
+            f"⚠️ ref `{ref}` is already live on `{ref_collision['name']}` — "
+            "they'll share metrics. Use a different ref unless that's intentional."
+        )
     if es is not None:
         bits.append(f"Expected signups: {es}.")
     if et is not None:

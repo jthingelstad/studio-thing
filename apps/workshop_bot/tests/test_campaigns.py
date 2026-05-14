@@ -128,6 +128,24 @@ class AddCampaignJobTests(_DBCase):
         self.assertEqual(db.get_campaign("dd388")["copy"], "Headline\n\nBody blurb with a link.")
         self.assertTrue(result.data["has_copy"])
 
+    def test_register_with_ref_already_in_use_warns_but_succeeds(self):
+        # Soft-warn — registration still goes through; the warning rides
+        # in the ack so Jamie can decide to keep or rename.
+        asyncio.run(add_campaign.run(_base.JobContext(), name="first", ref="DD-2026-05"))
+        result = asyncio.run(add_campaign.run(_base.JobContext(), name="second", ref="DD-2026-05"))
+        self.assertTrue(result.ok, result.message)
+        self.assertIn("already live on `first`", result.message)
+        self.assertEqual(db.get_campaign("second")["ref"], "DD-2026-05")
+
+    def test_register_with_sunset_ref_does_not_warn(self):
+        # Re-using a ref from a sunset campaign is fine — the old one's
+        # not being polled anymore, so no metric collision.
+        asyncio.run(add_campaign.run(_base.JobContext(), name="old", ref="DD-2026-04"))
+        db.set_campaign_status("old", "sunset")
+        result = asyncio.run(add_campaign.run(_base.JobContext(), name="new", ref="DD-2026-04"))
+        self.assertTrue(result.ok, result.message)
+        self.assertNotIn("already live on", result.message)
+
     def test_register_with_none_name_returns_required_error(self):
         # Regression: previously `(str(name) or "").strip()` turned None into
         # the literal string "None" because str(None) == "None" — the `or ""`
