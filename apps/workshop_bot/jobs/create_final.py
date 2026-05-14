@@ -18,7 +18,8 @@ import asyncio
 import logging
 import re
 
-from ..tools import anthropic_client, db, interaction, render, s3
+from ..tools import anthropic_client, db, render, s3
+from ..tools.discord import interaction
 from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.create_final")

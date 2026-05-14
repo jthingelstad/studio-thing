@@ -34,7 +34,7 @@ def _install_stubs() -> None:
 _install_stubs()
 
 
-from apps.workshop_bot.tools import conversation  # noqa: E402
+from apps.workshop_bot.tools.discord import conversation
 
 
 # ---------- minimal fakes for discord.py history iteration ----------

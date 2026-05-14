@@ -17,7 +17,8 @@ from typing import TYPE_CHECKING, Any, ClassVar, Optional
 
 import discord
 
-from ..tools import agent_loop, agent_tools, anthropic_client, conversation, db, discord_io
+from ..tools import agent_loop, agent_tools, anthropic_client, db
+from ..tools.discord import conversation, discord_io
 
 if TYPE_CHECKING:
     from ..tools.agent_tools import ToolRegistry
@@ -171,7 +172,7 @@ class PersonaBot(discord.Client):
         card to #chatter under this persona's avatar. Eddy prepends a
         deployment header (git hash + dirty flag) as the lead persona;
         the other three just post their own line."""
-        from ..tools import startup
+        from ..tools.discord import startup
 
         # Lead persona (Eddy by convention) carries the deployment header.
         is_lead = self.persona == startup.ANNOUNCER

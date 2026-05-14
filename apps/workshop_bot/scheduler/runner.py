@@ -28,7 +28,8 @@ from typing import TYPE_CHECKING, Optional
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from ..tools import db, discord_io
+from ..tools import db
+from ..tools.discord import discord_io
 from . import jobs as jobs_module
 
 if TYPE_CHECKING:

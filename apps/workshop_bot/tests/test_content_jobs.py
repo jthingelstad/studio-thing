@@ -25,7 +25,8 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base, update_draft  # noqa: E402
-from apps.workshop_bot.tools import context, db, interaction, microblog, s3  # noqa: E402
+from apps.workshop_bot.tools import context, db, microblog, s3 # noqa: E402
+from apps.workshop_bot.tools.discord import interaction
 
 # Shared fixtures used by this file and the split-out per-topic test
 # files (test_pinboard_scan.py, test_issue_flow.py, test_compose_jobs.py,

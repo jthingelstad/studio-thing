@@ -65,7 +65,8 @@ _install_stubs()
 
 from apps.workshop_bot.personas import base  # noqa: E402
 from apps.workshop_bot.personas import team as team_mod  # noqa: E402
-from apps.workshop_bot.tools import agent_loop, agent_tools, conversation, discord_io, issue  # noqa: E402
+from apps.workshop_bot.tools import agent_loop, agent_tools, issue # noqa: E402
+from apps.workshop_bot.tools.discord import conversation, discord_io
 
 
 class IsPassResponseTests(unittest.TestCase):

@@ -36,7 +36,8 @@ from .systems.buttondown.server import ButtondownServer
 from .systems.pinboard.server import PinboardServer
 from .systems.stripe.server import StripeServer
 from .systems.tinylytics.server import TinylyticsServer
-from .tools import agent_tools, corpus, db, startup
+from .tools import agent_tools, corpus, db
+from .tools.discord import startup
 
 logger = logging.getLogger("workshop.bot")
 

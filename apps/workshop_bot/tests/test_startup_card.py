@@ -20,7 +20,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.tools import startup  # noqa: E402
+from apps.workshop_bot.tools.discord import startup
 
 
 def _fake_bot(name="Eddy", persona="eddy"):

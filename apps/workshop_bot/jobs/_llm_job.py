@@ -19,7 +19,8 @@ import logging
 import re
 from typing import Any, Callable, NamedTuple, Optional
 
-from ..tools import db, interaction
+from ..tools import db
+from ..tools.discord import interaction
 from ..tools import s3
 from . import _base
 
