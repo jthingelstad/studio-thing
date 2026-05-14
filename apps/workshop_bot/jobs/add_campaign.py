@@ -42,8 +42,8 @@ async def run(
     expected_traffic=None,
     copy=None,
 ) -> "_base.JobResult":
-    name = (str(name) or "").strip()
-    ref = (str(ref) or "").strip()
+    name = (name or "").strip()
+    ref = (ref or "").strip()
     copy = (str(copy).strip() or None) if copy is not None else None
     if not name:
         return _base.JobResult(False, "❌ campaign name is required.")

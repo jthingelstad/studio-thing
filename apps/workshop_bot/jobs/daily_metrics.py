@@ -15,11 +15,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from datetime import datetime
 
+from ..personas.base import is_pass_response
 from ..systems.buttondown import client as buttondown
 from ..systems.tinylytics import client as tinylytics
 from ..tools import anthropic_client, context, db
-from . import _base
+from . import _base, _compose
 
 logger = logging.getLogger("workshop.jobs.daily_metrics")
 
@@ -31,8 +33,7 @@ def _campaign_window_days(started_at: str | None) -> int:
     if not started_at:
         return 14
     try:
-        from datetime import datetime as _dt
-        age = (_dt.now().date() - _dt.strptime(str(started_at)[:10], "%Y-%m-%d").date()).days
+        age = (datetime.now().date() - datetime.strptime(str(started_at)[:10], "%Y-%m-%d").date()).days
     except (TypeError, ValueError):
         return 14
     return 7 if age <= 10 else (30 if age <= 45 else 60)
@@ -102,54 +103,59 @@ def _moved(growth: dict, campaigns: list[dict]) -> bool:
 
 
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
-    # All of these hit external APIs — keep them off the event loop.
-    campaigns = await asyncio.to_thread(_poll_campaigns)
     try:
-        growth = await asyncio.to_thread(buttondown.subscriber_growth, days=7)
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("daily-metrics: subscriber_growth failed: %s", exc)
-        growth = {}
-    try:
-        engagement = await asyncio.to_thread(tinylytics.summary, days=2)
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("daily-metrics: tinylytics summary failed: %s", exc)
-        engagement = {}
+        with _base.job_lock([f"job:{NAME}"], NAME):
+            # All of these hit external APIs — keep them off the event loop.
+            campaigns = await asyncio.to_thread(_poll_campaigns)
+            try:
+                growth = await asyncio.to_thread(buttondown.subscriber_growth, days=7)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("daily-metrics: subscriber_growth failed: %s", exc)
+                growth = {}
+            try:
+                engagement = await asyncio.to_thread(tinylytics.summary, days=2)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("daily-metrics: tinylytics summary failed: %s", exc)
+                engagement = {}
 
-    if not _moved(growth, campaigns):
-        return _base.JobResult(True, "PASS — nothing material moved.", data={"posted": False, "campaigns": campaigns})
+            if not _moved(growth, campaigns):
+                return _base.JobResult(True, "PASS — nothing material moved.", data={"posted": False, "campaigns": campaigns})
 
-    bot = None
-    team = getattr(getattr(ctx, "deps", None), "team", None)
-    if team is not None:
-        bot = team.bots.get("marky")
-    if bot is None or getattr(bot, "user", None) is None:
-        return _base.JobResult(True, "(daily-metrics: something moved but no Discord — not posted)",
-                               data={"posted": False, "campaigns": campaigns})
+            bot, channel, reason = _compose.resolve_bot_and_channel(
+                ctx, "marky", "DISCORD_CHANNEL_PROMOTION"
+            )
+            if bot is None:
+                return _base.JobResult(
+                    True, f"(daily-metrics: something moved but {reason} — not posted)",
+                    data={"posted": False, "campaigns": campaigns},
+                )
 
-    marky_ctx = await asyncio.to_thread(context.build_marky_context)
-    payload = {
-        "subscriber_growth_7d": growth,
-        "engagement_48h": engagement,
-        "campaigns": campaigns,
-    }
-    try:
-        base_prompt = anthropic_client.load_prompt("marky-daily-metrics")
-    except OSError as exc:
-        logger.warning("daily-metrics: prompt missing: %s", exc)
-        return _base.JobResult(False, f"daily-metrics prompt missing: {exc}", data={"posted": False})
-    user_msg = (
-        f"{context.render_block(marky_ctx)}\n\n"
-        f"{context.render_block(payload, heading='Today’s numbers')}\n\n{base_prompt}"
-    )
-    with db.AgentRun("marky", trigger="daily-metrics") as agent_run:
-        answer, _meta = await bot.core(latest=user_msg, history=[], model=None)
-        agent_run.records_written = 1 if (answer and answer.strip()) else 0
-    from ..personas.base import is_pass_response
-    if not answer or is_pass_response(answer):
-        return _base.JobResult(True, "Marky: PASS (nothing worth a report).", data={"posted": False, "campaigns": campaigns})
-    posted = await ctx.post("DISCORD_CHANNEL_PROMOTION", answer, persona="marky")
-    return _base.JobResult(
-        True,
-        "Marky posted a daily-metrics report to #promotion." if posted else "(couldn't post Marky's report)",
-        data={"posted": bool(posted), "campaigns": campaigns},
-    )
+            marky_ctx = await asyncio.to_thread(context.build_marky_context)
+            payload = {
+                "subscriber_growth_7d": growth,
+                "engagement_48h": engagement,
+                "campaigns": campaigns,
+            }
+            try:
+                base_prompt = anthropic_client.load_prompt("marky-daily-metrics")
+            except OSError as exc:
+                logger.warning("daily-metrics: prompt missing: %s", exc)
+                return _base.JobResult(False, f"daily-metrics prompt missing: {exc}", data={"posted": False})
+            numbers_block = context.render_block(payload, heading="Today's numbers")
+            user_msg = (
+                f"{context.render_block(marky_ctx)}\n\n"
+                f"{numbers_block}\n\n{base_prompt}"
+            )
+            with db.AgentRun("marky", trigger="daily-metrics") as agent_run:
+                answer, _meta = await bot.core(latest=user_msg, history=[], model=None)
+                agent_run.records_written = 1 if (answer and answer.strip()) else 0
+            if not answer or is_pass_response(answer):
+                return _base.JobResult(True, "Marky: PASS (nothing worth a report).", data={"posted": False, "campaigns": campaigns})
+            posted = await ctx.post("DISCORD_CHANNEL_PROMOTION", answer, persona="marky")
+            return _base.JobResult(
+                True,
+                "Marky posted a daily-metrics report to #promotion." if posted else "(couldn't post Marky's report)",
+                data={"posted": bool(posted), "campaigns": campaigns},
+            )
+    except _base.JobLocked as exc:
+        return _base.JobResult(False, f"⏳ `daily-metrics` already running ({exc.holder_desc}).")
