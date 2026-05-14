@@ -28,32 +28,35 @@ import json
 import logging
 import re
 
-from ..tools import anthropic_client, db, interaction, s3
+from ..tools import anthropic_client, db, s3
 from . import _base, _compose
 
 logger = logging.getLogger("workshop.jobs.compose_meta")
 
 NAME = "compose-meta"
-MAX_ROUNDS = 3
+_SUBJECT_OPTION_CAP = 8  # parse at most this many subjects (prompt asks for 5)
 
 ASSETS_BASE = "https://files.thingelstad.com/weekly-thing"
 
 _NUM_LINE_RE = re.compile(r"(?m)^\s*\d+[.)]\s+(.+?)\s*$")
 
 
-def _parse_numbered_list(text: str, limit: int) -> list[str]:
-    """Pull the items out of a ``1. … / 2. …`` numbered list, tolerating a
-    stray preamble, code fences, or bold/quote wrappers around the items."""
-    out: list[str] = []
-    for m in _NUM_LINE_RE.finditer(text or ""):
-        item = m.group(1).strip().strip("`").strip()
-        item = re.sub(r"^\*\*(.*)\*\*$", r"\1", item).strip()
-        item = item.strip('"').strip("“”").strip()
-        if item:
-            out.append(item)
-        if len(out) >= limit:
-            break
-    return out
+def _parse_numbered_list_factory(limit: int):
+    """Build the parser passed to :func:`_compose.refresh_loop` — pulls
+    items out of a ``1. … / 2. …`` numbered list, tolerating a stray
+    preamble, code fences, or bold/quote wrappers."""
+    def _parse(text: str) -> list[str]:
+        out: list[str] = []
+        for m in _NUM_LINE_RE.finditer(text or ""):
+            item = m.group(1).strip().strip("`").strip()
+            item = re.sub(r"^\*\*(.*)\*\*$", r"\1", item).strip()
+            item = item.strip('"').strip("“”").strip()
+            if item:
+                out.append(item)
+            if len(out) >= limit:
+                break
+        return out
+    return _parse
 
 
 def _first_nonempty_line(text: str) -> str:
@@ -65,30 +68,6 @@ def _first_nonempty_line(text: str) -> str:
         if s:
             return s
     return ""
-
-
-async def _choose(
-    bot, channel, *, base_msg: str, prompt_label: str, limit: int, trigger: str,
-):
-    """Run an LLM call → parse a numbered list → ask Jamie to pick. Supports
-    a 🔄 refresh (up to ``MAX_ROUNDS``). Returns the chosen string, or
-    ``None`` on timeout / unparseable output."""
-    user_msg = base_msg
-    for _round in range(MAX_ROUNDS):
-        with db.AgentRun("eddy", trigger=trigger) as agent_run:
-            reply, _m = await bot.core(latest=user_msg, history=[], model=None)
-            agent_run.records_written = 1
-        options = _parse_numbered_list(reply, limit)
-        if not options:
-            return None
-        pick = await interaction.await_choice(bot, channel, options, prompt=prompt_label)
-        if pick == "refresh":
-            user_msg = base_msg + "\n\n(Jamie asked for fresh options — give different framings, please.)"
-            continue
-        if pick is None or pick >= len(options):
-            return None
-        return options[pick]
-    return None
 
 
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
@@ -114,10 +93,12 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             # ---- step 1: subject (the 5-option prompt, verbatim) ----
             subject_prompt = anthropic_client.load_prompt("eddy-compose-subject")
             subject_msg = subject_prompt.replace("<NUM>", str(n)).replace("<<<ISSUE_TEXT>>>", issue_text)
-            subject = await _choose(
-                bot, channel, base_msg=subject_msg,
+            subject = await _compose.refresh_loop(
+                bot, channel,
+                base_msg=subject_msg,
+                parser=_parse_numbered_list_factory(_SUBJECT_OPTION_CAP),
                 prompt_label=f"📰 5 subject options for WT{n} — react to pick:",
-                limit=8, trigger="compose-meta-subject",
+                trigger="compose-meta:subject",
             )
             if not subject:
                 # Subject options were posted to #editorial; Jamie didn't
@@ -137,7 +118,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             # in Buttondown or re-runs compose-meta.
             desc_prompt = anthropic_client.load_prompt("eddy-compose-description")
             desc_msg = desc_prompt.replace("<<<ISSUE_TEXT>>>", issue_text)
-            with db.AgentRun("eddy", trigger="compose-meta-description") as agent_run:
+            with db.AgentRun("eddy", trigger="compose-meta:description") as agent_run:
                 desc_reply, _m = await bot.core(latest=desc_msg, history=[], model=None)
                 agent_run.records_written = 1 if desc_reply else 0
             description = _first_nonempty_line(desc_reply)

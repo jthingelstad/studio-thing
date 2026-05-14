@@ -2451,10 +2451,21 @@ class ComposeMetaTests(_DBTestCase):
                 "2. `WT458 — Two`\n"
                 "3. WT458 — Three\n\n"
                 "Hope that helps.")
+        parser = compose_meta._parse_numbered_list_factory(8)
         self.assertEqual(
-            compose_meta._parse_numbered_list(text, 8),
+            parser(text),
             ["WT458 — One", "WT458 — Two", "WT458 — Three"],
         )
+
+    def test_parse_numbered_list_factory_respects_limit(self):
+        text = "\n".join(f"{i}. item-{i}" for i in range(1, 11))
+        self.assertEqual(len(compose_meta._parse_numbered_list_factory(3)(text)), 3)
+        self.assertEqual(len(compose_meta._parse_numbered_list_factory(8)(text)), 8)
+
+    def test_compose_max_refresh_rounds_is_shared(self):
+        # All three compose-flow jobs share a single constant.
+        from apps.workshop_bot.jobs import _compose
+        self.assertEqual(_compose.MAX_REFRESH_ROUNDS, 3)
 
 
 class ComposeCtaTests(_DBTestCase):

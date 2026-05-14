@@ -24,15 +24,13 @@ stable per person but not reversible.
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
-import re
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 from zoneinfo import ZoneInfo
 
 from ..tools import anthropic_client, db, thingy_client
-from . import _base
+from . import _base, _compose
 
 logger = logging.getLogger("workshop.jobs.thingy")
 
@@ -155,16 +153,12 @@ def _transcript_for_prompt(turns: list[dict]) -> str:
 
 
 def _parse_assessment(reply: str) -> Optional[dict[str, str]]:
-    if not reply:
-        return None
-    m = re.search(r"\{.*\}", reply, re.DOTALL)
-    if not m:
-        return None
-    try:
-        data = json.loads(m.group(0))
-    except (ValueError, TypeError):
-        return None
-    if not isinstance(data, dict):
+    """Project the model's JSON reply down to the four assessment fields.
+    Delegates the JSON-fishing to :func:`_compose.parse_json_payload`
+    (the same helper compose-haiku uses) and keeps only the field
+    projection that's specific to the assessment shape."""
+    data = _compose.parse_json_payload(reply)
+    if data is None:
         return None
     out = {}
     for k in ("topic", "reader", "thingy", "takeaway"):

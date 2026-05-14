@@ -11,13 +11,31 @@ from __future__ import annotations
 
 import logging
 
-from ..tools import anthropic_client, db, interaction, s3
+from ..tools import anthropic_client, db, s3
 from . import _base, _compose
 
 logger = logging.getLogger("workshop.jobs.compose_haiku")
 
 NAME = "compose-haiku"
-MAX_ROUNDS = 3  # initial + up to 2 refreshes
+
+
+def _parse_haiku_options(reply: str) -> list[str]:
+    """Extract up to 5 haiku option strings from the model's JSON reply.
+    Returns an empty list if the reply doesn't parse as
+    ``{"options": [...]}`` — :func:`_compose.refresh_loop` retries on
+    empty."""
+    data = _compose.parse_json_payload(reply)
+    options = (data or {}).get("options")
+    if not isinstance(options, list):
+        return []
+    cleaned = [str(o).strip() for o in options if str(o).strip()]
+    return cleaned[:5]
+
+
+def _pretty_haiku_options(options: list[str]) -> list[str]:
+    """Render each haiku as a Discord blockquote so the three lines hold
+    together visually in the picker."""
+    return ["\n".join("> " + ln for ln in o.splitlines()) for o in options]
 
 
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
@@ -39,55 +57,31 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     try:
         with _base.job_lock([asset], NAME):
             base_prompt = anthropic_client.load_prompt("eddy-compose-haiku")
-            user_msg = (
+            base_msg = (
                 f"{base_prompt}\n\n---\n\nThe issue (WT{n}):\n\n"
                 f"```markdown\n{body[:_compose.ISSUE_BODY_CAP]}\n```"
             )
-            for _round in range(MAX_ROUNDS):
-                with db.AgentRun("eddy", trigger="compose-haiku") as agent_run:
-                    reply, _meta = await bot.core(latest=user_msg, history=[], model=None)
-                    agent_run.records_written = 1
-                data = _compose.parse_json_payload(reply)
-                options = (data or {}).get("options")
-                if not isinstance(options, list) or not options:
-                    # Don't bail on the first parse failure — give the model
-                    # another round with a "JSON only, please" nudge. Same
-                    # pattern as compose-meta._choose. If we still can't
-                    # parse after MAX_ROUNDS attempts, fall through.
-                    user_msg += (
-                        "\n\n(That response didn't parse as the JSON object "
-                        "the prompt asked for — return *only* the JSON object, "
-                        "no surrounding prose, no markdown.)"
-                    )
-                    continue
-                options = [str(o).strip() for o in options if str(o).strip()][:5]
-                pretty = ["\n".join("> " + ln for ln in o.splitlines())  for o in options]
-                pick = await interaction.await_choice(
-                    bot, channel, pretty, prompt=f"📜 Haiku options for WT{n} — pick one:",
-                )
-                if pick == "refresh":
-                    user_msg += "\n\n(Jamie asked for fresh options — different angles, please.)"
-                    continue
-                if pick is None or pick >= len(options):
-                    # Options posted to the channel; Jamie didn't pick.
-                    # `haiku_written` distinguishes "options posted, no
-                    # pick" from "the haiku was actually written."
-                    return _base.JobResult(
-                        False,
-                        f"compose-haiku for WT{n}: no pick (timed out) — re-run when ready.",
-                        data={"options_posted": True, "haiku_written": False},
-                    )
-                chosen = options[pick].strip() + "\n"
-                s3.write_issue_file(n, "haiku.md", chosen)
-                await channel.send(f"✅ Haiku set for WT{n}.", suppress_embeds=True)
+            chosen = await _compose.refresh_loop(
+                bot, channel,
+                base_msg=base_msg,
+                parser=_parse_haiku_options,
+                pretty=_pretty_haiku_options,
+                prompt_label=f"📜 Haiku options for WT{n} — pick one:",
+                trigger="compose-haiku",
+            )
+            if not chosen:
                 return _base.JobResult(
-                    True, f"`haiku.md` written for WT{n}.",
-                    data={"issue_number": n, "haiku": chosen,
-                          "options_posted": True, "haiku_written": True},
+                    False,
+                    f"compose-haiku for WT{n}: no pick (timed out / unparseable) — re-run when ready.",
+                    data={"options_posted": True, "haiku_written": False},
                 )
+            chosen = chosen.strip() + "\n"
+            s3.write_issue_file(n, "haiku.md", chosen)
+            await channel.send(f"✅ Haiku set for WT{n}.", suppress_embeds=True)
             return _base.JobResult(
-                False, "compose-haiku: out of refreshes without a pick.",
-                data={"options_posted": True, "haiku_written": False},
+                True, f"`haiku.md` written for WT{n}.",
+                data={"issue_number": n, "haiku": chosen,
+                      "options_posted": True, "haiku_written": True},
             )
     except _base.JobLocked as exc:
         return _base.JobResult(False, f"⏳ `compose-haiku` already running ({exc.holder_desc}).")
