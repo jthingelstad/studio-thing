@@ -238,12 +238,11 @@ async def run() -> int:
     runner = SchedulerRunner(team, deps=deps) if scheduler_enabled else None
 
     async def _post_startup() -> None:
-        # Wait for each persona's on_ready, but with a per-persona timeout
-        # so a stubbornly rate-limited bot (40062 cooldowns can run minutes
-        # to hours) doesn't block the scheduler from starting for the
-        # personas that did come up. Missing personas will be reported in
-        # the audit summary; the scheduler skips jobs whose persona is
-        # absent (see scheduler/runner.py JobContext.channel).
+        # Each persona's on_ready posts its own startup card to #chatter
+        # (under its own avatar). This task just waits for ready, logs
+        # a consolidated audit, and — if any persona missed the window
+        # — has Eddy post a single "⚠️ not ready" follow-up so #chatter
+        # captures the gap.
         ready_bots: list = []
         missing: list[str] = []
         for name, client, _ in bots:
@@ -259,20 +258,30 @@ async def run() -> int:
                 )
                 missing.append(name)
         if not ready_bots:
-            logger.error("no personas reached ready in %ds; skipping audit + scheduler", READY_WAIT_SECONDS)
+            logger.error("no personas reached ready in %ds; skipping scheduler", READY_WAIT_SECONDS)
             return
+        # Log the consolidated audit for postmortem readability.
         results = startup.audit(ready_bots)
-        summary = startup.format_summary(
+        consolidated = startup.format_summary(
             results, hash_str=startup.git_hash(), dirty=startup.git_dirty(),
         )
         if missing:
-            summary += f"\n\n⚠️ not ready after {READY_WAIT_SECONDS}s: {', '.join(missing)}"
-        logger.info("startup audit:\n%s", summary)
-        announcer = next(
-            (b for n, b, _ in bots if n == startup.ANNOUNCER and b in ready_bots),
-            ready_bots[0],
-        )
-        await startup.announce(announcer, summary)
+            consolidated += f"\n\n⚠️ not ready after {READY_WAIT_SECONDS}s: {', '.join(missing)}"
+        logger.info("startup audit:\n%s", consolidated)
+        # If any persona missed the window, have Eddy (lead) post a
+        # single follow-up note so the gap shows up in #chatter.
+        if missing:
+            announcer = next(
+                (b for n, b, _ in bots if n == startup.ANNOUNCER and b in ready_bots),
+                ready_bots[0],
+            )
+            try:
+                await startup.announce(
+                    announcer,
+                    f"⚠️ not ready after {READY_WAIT_SECONDS}s: {', '.join(missing)}",
+                )
+            except Exception:  # noqa: BLE001
+                logger.exception("startup: couldn't post missing-personas note")
         # Start scheduled jobs once we have at least one ready persona —
         # individual jobs gracefully skip if their target persona is
         # missing, so we don't need to wait for everyone.

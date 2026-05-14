@@ -12,6 +12,10 @@ class MarkyBot(PersonaBot):
     home_channel_env = "DISCORD_CHANNEL_PROMOTION"
     empty_greeting = "Hey — what are you working on?"
     preferred_model = "sonnet"
+    slash_commands_summary = (
+        "/marky commands: prep · metrics · engagement · referrers · "
+        "campaign {add,edit,report,copy,sunset} · followup"
+    )
 
     def __init__(self, deps: Deps) -> None:
         super().__init__(deps)

@@ -131,6 +131,9 @@ class PersonaBot(discord.Client):
     home_channel_env: ClassVar[Optional[str]] = None
     empty_greeting: ClassVar[str] = "Hey — what are we looking at?"
     preferred_model: ClassVar[Optional[str]] = None
+    # One-line summary of this persona's slash commands, posted as the
+    # second line of the startup card. Each subclass sets it.
+    slash_commands_summary: ClassVar[str] = ""
 
     # Class-level lock so peer-reaction slot checks across the four persona
     # clients (all in this same asyncio event loop) serialize. Protects
@@ -158,6 +161,33 @@ class PersonaBot(discord.Client):
         self.ready_event.set()
         if self.command_tree is not None:
             await self._sync_command_tree()
+        try:
+            await self._post_startup_card()
+        except Exception:  # noqa: BLE001
+            logger.exception("%s: post_startup_card failed", self.persona)
+
+    async def _post_startup_card(self) -> None:
+        """Audit this persona's channels and post a one-line readiness
+        card to #chatter under this persona's avatar. Eddy prepends a
+        deployment header (git hash + dirty flag) as the lead persona;
+        the other three just post their own line."""
+        from ..tools import startup
+
+        # Lead persona (Eddy by convention) carries the deployment header.
+        is_lead = self.persona == startup.ANNOUNCER
+        header: Optional[str] = None
+        if is_lead:
+            mark = startup.git_hash()
+            dirty = " (dirty)" if startup.git_dirty() else ""
+            header = f"**workshop-bot online** — `{mark}`{dirty}"
+
+        rows = startup.audit_one(self)
+        message = startup.format_persona_line(
+            self, rows,
+            header=header,
+            commands_summary=self.slash_commands_summary or None,
+        )
+        await startup.announce(self, message)
 
     async def _sync_command_tree(self) -> None:
         """Sync the persona's slash tree to the configured guild (or globally

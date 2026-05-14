@@ -76,6 +76,7 @@ class LinkyBot(PersonaBot):
     home_channel_env = "DISCORD_CHANNEL_RESEARCH"
     empty_greeting = "Hey — want a curation pass, or asking about a specific link?"
     preferred_model = "sonnet"
+    slash_commands_summary = "/linky commands: scan · research · pile · stats · followup"
 
     def __init__(self, deps: Deps) -> None:
         super().__init__(deps)

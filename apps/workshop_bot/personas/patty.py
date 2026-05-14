@@ -12,6 +12,9 @@ class PattyBot(PersonaBot):
     home_channel_env = "DISCORD_CHANNEL_SUPPORTERS"
     empty_greeting = "Hey — want me to draft a CTA, or thinking about something else?"
     preferred_model = "sonnet"
+    slash_commands_summary = (
+        "/patty commands: cta · goal {set,done} · progress · nonprofit · supporters · followup"
+    )
 
     def __init__(self, deps: Deps) -> None:
         super().__init__(deps)

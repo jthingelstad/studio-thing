@@ -19,6 +19,10 @@ class EddyBot(PersonaBot):
     empty_greeting = "Hey — what are we looking at?"
     # Eddy gets the deepest editorial work; default to Opus per README intent.
     preferred_model = "opus"
+    slash_commands_summary = (
+        "/eddy commands: issue {start,update,status,final,haiku,subject,publish} · "
+        "status · review · archive · followup"
+    )
 
     def __init__(self, deps: Deps) -> None:
         super().__init__(deps)

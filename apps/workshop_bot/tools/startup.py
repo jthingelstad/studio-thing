@@ -1,8 +1,11 @@
-"""Startup self-check + announcement.
+"""Startup self-check + per-persona announcements.
 
-After all four persona bots fire on_ready, audit each bot's required channels
-and basic permissions, then post one summary message to #chatter via the
-designated announcer (Eddy by default).
+Each persona's ``on_ready`` audits its own channels and posts a single
+readiness line to ``#chatter`` under its own avatar. Eddy additionally
+posts a deployment header (git hash + dirty flag) at the top of the
+sequence, and — once the post-startup task in ``bot.py`` has waited
+for everyone — posts a follow-up "⚠️ X not ready" line if any persona
+missed the ready window.
 """
 
 from __future__ import annotations
@@ -11,7 +14,7 @@ import logging
 import os
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, Optional
 
 if TYPE_CHECKING:
     from ..personas.base import PersonaBot
@@ -96,16 +99,54 @@ def _check_one(bot: "PersonaBot", env_key: str) -> tuple[str, str | None, list[s
     return env_key, getattr(channel, "name", None), issues
 
 
+def audit_one(bot: "PersonaBot") -> list[tuple[str, str | None, list[str]]]:
+    """Audit a single bot's channels — list of (env_key, channel_name, issues)."""
+    env_keys = [k for k, _ in CHANNELS_BY_PERSONA.get(bot.persona, [])]
+    return [_check_one(bot, k) for k in env_keys]
+
+
 def audit(bots: Iterable["PersonaBot"]) -> dict[str, list[tuple[str, str | None, list[str]]]]:
-    """Per-bot list of (env_key, channel_name, issues)."""
-    out: dict[str, list[tuple[str, str | None, list[str]]]] = {}
-    for bot in bots:
-        env_keys = [k for k, _ in CHANNELS_BY_PERSONA.get(bot.persona, [])]
-        out[bot.persona] = [_check_one(bot, k) for k in env_keys]
-    return out
+    """Per-bot list of (env_key, channel_name, issues). Legacy helper —
+    each persona's ``on_ready`` calls :func:`audit_one` for its own bot."""
+    return {bot.persona: audit_one(bot) for bot in bots}
+
+
+def format_persona_line(
+    bot: "PersonaBot",
+    audit_rows: list[tuple[str, str | None, list[str]]],
+    *,
+    header: Optional[str] = None,
+    commands_summary: Optional[str] = None,
+) -> str:
+    """Build the one-line readiness card a single persona posts to #chatter.
+
+    Optional ``header`` prepends a deployment line (Eddy uses this for
+    the git hash). ``commands_summary`` is appended on a second line
+    listing that persona's slash verbs."""
+    bits: list[str] = []
+    any_issue = False
+    for env_key, name, issues in audit_rows:
+        label = f"#{name}" if name else env_key
+        if issues:
+            any_issue = True
+            bits.append(f"{label} ⚠️ ({'; '.join(issues)})")
+        else:
+            bits.append(label)
+    marker = "✓" if not any_issue else "⚠️"
+    line = f"{marker} **{bot.name}** online — " + " · ".join(bits)
+    out: list[str] = []
+    if header:
+        out.append(header)
+    out.append(line)
+    if commands_summary:
+        out.append(f"   ↳ {commands_summary}")
+    return "\n".join(out)
 
 
 def format_summary(audit_results: dict, *, hash_str: str, dirty: bool) -> str:
+    """Legacy multi-line summary (one card for the whole team). Kept for
+    tools that still want a single-card view; per-persona on_ready uses
+    :func:`format_persona_line` instead."""
     lines = [f"**workshop-bot online** — `{hash_str}`{' (dirty)' if dirty else ''}"]
     any_issue = False
     for persona, rows in audit_results.items():
@@ -126,6 +167,7 @@ def format_summary(audit_results: dict, *, hash_str: str, dirty: bool) -> str:
 
 
 async def announce(announcer: "PersonaBot", message: str) -> None:
+    """Post ``message`` to #chatter via ``announcer``'s bot client."""
     cid_raw = os.environ.get("DISCORD_CHANNEL_CHATTER", "").strip()
     if not cid_raw:
         logger.warning("DISCORD_CHANNEL_CHATTER not set; not posting startup announce")
