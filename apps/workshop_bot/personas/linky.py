@@ -35,6 +35,7 @@ import discord
 
 from ..systems.pinboard import client as pinboard_client
 from ..tools import db
+from ..tools.feed_registry import DISCOVERY_FEEDS
 from .base import PersonaBot
 
 logger = logging.getLogger("workshop.linky")
@@ -59,16 +60,13 @@ _BRIEF_REACTION = "⭐"
 _BRIEF_ACK = "🔖"
 
 
-def _discovery_sources() -> frozenset[str]:
-    """Sources whose URLs aren't yet in Jamie's Pinboard, so a save-gesture
-    (reaction or reply) creates a new bookmark. Derived from
-    :data:`DISCOVERY_FEEDS` so adding a feed is a single registry edit —
-    no parallel set to maintain. ``toread``-sourced URLs are already
-    bookmarked; for those the reply updates the description and the
-    save-reaction is a no-op."""
-    # Lazy import — keeps the persona module importable before jobs load.
-    from ..jobs.pinboard_scan import DISCOVERY_FEEDS
-    return frozenset(spec.name for spec in DISCOVERY_FEEDS)
+# Sources whose URLs aren't yet in Jamie's Pinboard, so a save-gesture
+# (reaction or reply) creates a new bookmark. Derived from the registry
+# so adding a feed is a single edit in ``tools/feed_registry.py`` —
+# no parallel set to maintain here. ``toread``-sourced URLs are already
+# bookmarked; for those the reply updates the description and the
+# save-reaction is a no-op.
+_DISCOVERY_SOURCES: frozenset[str] = frozenset(spec.name for spec in DISCOVERY_FEEDS)
 
 
 class LinkyBot(PersonaBot):
@@ -185,7 +183,7 @@ class LinkyBot(PersonaBot):
         blank description, or acknowledges an existing one. Symmetric
         with ``_handle_brief_reaction`` — both delegate to a single
         Pinboard-client helper that owns the fetch-merge-write."""
-        if row.get("source") not in _discovery_sources():
+        if row.get("source") not in _DISCOVERY_SOURCES:
             # Toread cards point at an already-bookmarked URL.
             return
         url = (row.get("url") or "").strip()

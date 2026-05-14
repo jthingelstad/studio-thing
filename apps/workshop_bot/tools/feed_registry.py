@@ -2,14 +2,13 @@
 
 Every discovery feed (Pinboard popular, Lobsters hottest, Hacker News
 front page, Tildes ~tech, IndieWeb News, …) is one ``FeedSpec`` entry
-in a tuple. The job iterates the tuple; nothing else in the job is
-feed-specific. To add a feed:
+in :data:`DISCOVERY_FEEDS`. The job iterates the tuple; nothing else
+in the job is feed-specific. To add a feed:
 
 1. Write a ``tools/<name>.py`` fetcher that returns
    ``list[{url, title, [discussion_url], [score], [comment_count], [submitter], [tags]}]``
    when called as ``fetch(limit=N)``.
-2. Add one ``FeedSpec(...)`` entry to ``DISCOVERY_FEEDS`` in
-   ``jobs/pinboard_scan.py`` (or wherever the canonical tuple lives).
+2. Add one ``FeedSpec(...)`` entry to :data:`DISCOVERY_FEEDS` below.
 3. Add the source name to ``db.RESEARCH_SOURCES`` (one-line update).
 
 There are no per-feed constants in the job, no per-feed branches in
@@ -21,12 +20,40 @@ signature (no `limit` semantics that match), a different dedup table
 (`pinboard_research_done`, not `pinboard_popular_seen`), and different
 card-action semantics (no SKIP path, no save-reaction-create path).
 Toread stays separately wired in the job.
+
+This module also defines :class:`CoSource` — the dict shape carried in
+``co_sources`` and ``new_sightings`` lists on candidate items, so
+downstream consumers (the user-message renderer, the sightings
+recorder) can rely on a typed contract instead of bare
+``dict[str, Any]``.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, TypedDict
+
+# Imports at module scope — the fetcher modules are all leaf nodes
+# (only depend on ``requests`` and stdlib), so importing them here
+# can't introduce a cycle through the workshop_bot package.
+from ..systems.pinboard import client as pinboard
+from . import hackernews, indieweb_news, lobsters, tildes
+
+
+class CoSource(TypedDict, total=False):
+    """One co-source entry attached to a candidate item.
+
+    Shape carried in ``item["co_sources"]`` (fresh items, in-scan
+    duplicates from lower-priority feeds) and ``item["new_sightings"]``
+    (uplift items, new feed sightings of a previously-seen URL). The
+    ``source`` field is required; the rest are optional and missing for
+    feeds that don't expose votes / threads (Pinboard popular,
+    Tildes ~tech atom feed when score=0)."""
+
+    source: str
+    discussion_url: str
+    score: int
+    comment_count: int
 
 
 @dataclass(frozen=True)
@@ -66,10 +93,49 @@ class FeedSpec:
 
 def by_name(feeds: tuple[FeedSpec, ...], name: str) -> FeedSpec | None:
     """Look up a spec by ``name`` in ``feeds`` (typically
-    ``DISCOVERY_FEEDS``). Returns ``None`` for ``name == "toread"`` or
+    :data:`DISCOVERY_FEEDS`). Returns ``None`` for ``name == "toread"`` or
     any other non-discovery source — callers branch on ``None`` to mean
     "not a discovery feed."""
     for spec in feeds:
         if spec.name == name:
             return spec
     return None
+
+
+# The discovery-feed registry. Each spec is one source. Lambdas in
+# ``fetch`` re-resolve the module attribute at call time, so tests can
+# patch ``pinboard.popular`` / ``lobsters.hottest`` / etc. directly and
+# the spec picks up the patch without rewriting.
+#
+# Priority order in the tuple matters for two things: it's the
+# iteration order in the job's loops (toread is handled separately,
+# but discovery feeds fire in this order), and the highest
+# ``primary_priority`` wins when cross-source merging picks a primary.
+# See the substance-gradient rationale in CLAUDE.md.
+DISCOVERY_FEEDS: tuple[FeedSpec, ...] = (
+    FeedSpec(
+        name="indieweb_news", label="IndieWeb News", pin_label="indieweb",
+        fetch=lambda limit: indieweb_news.top(limit=limit),
+        per_scan_cap=10, feed_limit=20, primary_priority=50,
+    ),
+    FeedSpec(
+        name="tildes", label="Tildes ~tech", pin_label="tildes",
+        fetch=lambda limit: tildes.top(limit=limit),
+        per_scan_cap=10, feed_limit=25, primary_priority=40,
+    ),
+    FeedSpec(
+        name="lobsters", label="Lobsters", pin_label="lobste.rs",
+        fetch=lambda limit: lobsters.hottest(limit=limit),
+        per_scan_cap=10, feed_limit=25, primary_priority=30,
+    ),
+    FeedSpec(
+        name="hackernews", label="Hacker News", pin_label="HN",
+        fetch=lambda limit: hackernews.top(limit=limit),
+        per_scan_cap=10, feed_limit=25, primary_priority=20,
+    ),
+    FeedSpec(
+        name="popular", label="Pinboard popular", pin_label="",
+        fetch=lambda limit: pinboard.popular(limit=limit),
+        per_scan_cap=10, feed_limit=30, primary_priority=10,
+    ),
+)

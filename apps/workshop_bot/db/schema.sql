@@ -101,6 +101,7 @@ CREATE TABLE IF NOT EXISTS pinboard_popular_seen (
   posted_by TEXT,
   judged_interesting INTEGER,                  -- 1 / 0 / NULL (not judged yet)
   judgment_note TEXT,
+  verdict_source TEXT,                         -- which feed produced the verdict (uplift-block label)
   first_seen_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

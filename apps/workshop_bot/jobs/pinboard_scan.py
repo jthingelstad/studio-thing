@@ -59,11 +59,8 @@ from typing import Any, Optional
 
 from ..systems.pinboard import client as pinboard
 from ..tools import alt_text  # noqa: F401 — keep imports light; reserve for future
-from ..tools import (
-    anthropic_client, avoid_domains, context, db, hackernews, indieweb_news,
-    lobsters, tildes,
-)
-from ..tools.feed_registry import FeedSpec, by_name
+from ..tools import anthropic_client, avoid_domains, context, db
+from ..tools.feed_registry import DISCOVERY_FEEDS, by_name
 from ..tools.url_normalize import dedup_key
 from . import _base
 
@@ -100,37 +97,9 @@ def _uplift_cap() -> int:
     except ValueError:
         return _UPLIFT_PER_SCAN_CAP_DEFAULT
 
-# The discovery-feed registry. Each spec is one source. Lambdas in
-# ``fetch`` re-resolve the module attribute at call time, so tests can
-# patch ``pinboard.popular`` / ``lobsters.hottest`` / ``hackernews.top``
-# directly without rewriting the spec.
-DISCOVERY_FEEDS: tuple[FeedSpec, ...] = (
-    FeedSpec(
-        name="indieweb_news", label="IndieWeb News", pin_label="indieweb",
-        fetch=lambda limit: indieweb_news.top(limit=limit),
-        per_scan_cap=10, feed_limit=20, primary_priority=50,
-    ),
-    FeedSpec(
-        name="tildes", label="Tildes ~tech", pin_label="tildes",
-        fetch=lambda limit: tildes.top(limit=limit),
-        per_scan_cap=10, feed_limit=25, primary_priority=40,
-    ),
-    FeedSpec(
-        name="lobsters", label="Lobsters", pin_label="lobste.rs",
-        fetch=lambda limit: lobsters.hottest(limit=limit),
-        per_scan_cap=10, feed_limit=25, primary_priority=30,
-    ),
-    FeedSpec(
-        name="hackernews", label="Hacker News", pin_label="HN",
-        fetch=lambda limit: hackernews.top(limit=limit),
-        per_scan_cap=10, feed_limit=25, primary_priority=20,
-    ),
-    FeedSpec(
-        name="popular", label="Pinboard popular", pin_label="",
-        fetch=lambda limit: pinboard.popular(limit=limit),
-        per_scan_cap=10, feed_limit=30, primary_priority=10,
-    ),
-)
+# DISCOVERY_FEEDS lives in tools/feed_registry.py — single source of
+# truth that the persona (for `_discovery_sources`) and the schema-
+# enum docs both reference. Imported above.
 
 _SKIP_RE = re.compile(r"^\s*SKIP:\s*(.+?)\s*$", re.IGNORECASE | re.DOTALL)
 _FAIL_RE = re.compile(r"^\s*FETCH_FAILED:\s*(.+?)\s*$", re.IGNORECASE | re.DOTALL)
@@ -245,6 +214,13 @@ def _render_uplift_block(item: dict[str, Any]) -> list[str]:
         src_label = _label_for(sighting["source"])
         lines.append(f"- TODAY ({src_label}) ← new sighting, this scan")
     verdict = item.get("uplift_verdict") or {}
+    # `verdict_source` is the feed that produced the recorded verdict.
+    # Legacy rows (written before the column existed) leave it NULL —
+    # fall back to the oldest sighting in history as a best-effort
+    # label so older URLs render reasonably.
+    verdict_source = verdict.get("verdict_source") or (
+        history[0].get("source") if history else ""
+    )
     if verdict.get("judged_interesting") == 1:
         lines.append("")
         lines.append("**Previous verdict:** card posted on first sighting; "
@@ -253,17 +229,11 @@ def _render_uplift_block(item: dict[str, Any]) -> list[str]:
         note = (verdict.get("judgment_note") or "").strip() or "(no reason recorded)"
         lines.append("")
         lines.append(f"**Previous verdict:** SKIP'd from "
-                     f"{_label_for(_first_source_in_history(history))}: \"{note}\"")
+                     f"{_label_for(verdict_source or '')}: \"{note}\"")
     else:
         lines.append("")
         lines.append("**Previous verdict:** sighting recorded with no verdict yet.")
     return lines
-
-
-def _first_source_in_history(history: list[dict[str, Any]]) -> str:
-    """Source name of the earliest sighting in ``history`` — used to
-    label whose feed the original verdict came from."""
-    return (history[0].get("source") if history else "") or ""
 
 
 def _render_link_block(*, source: str, item: dict[str, Any]) -> list[str]:
@@ -527,11 +497,14 @@ def _record_sightings_for_item(item: dict[str, Any], primary_source: str) -> Non
             )
 
 
-def _safe_mark_popular_seen(url: str, title: str, *, interesting: bool, note: str) -> None:
+def _safe_mark_popular_seen(
+    url: str, title: str, *, interesting: bool, note: str, source: str,
+) -> None:
     try:
         db.mark_popular_seen(
             [{"url": url, "title": title}],
             judged={url: (interesting, note)},
+            verdict_source=source,
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning(
@@ -598,7 +571,9 @@ async def _process_one(
             # (insert-or-ignore). Uplift SKIPs preserve the original
             # verdict — the sightings log captures the new sighting.
             if not is_uplift:
-                _safe_mark_popular_seen(url, title, interesting=False, note=payload)
+                _safe_mark_popular_seen(
+                    url, title, interesting=False, note=payload, source=source,
+                )
         counters["skip"] += 1
         logger.info("pinboard-scan: %s [%s] -> SKIP: %s%s",
                     source, url, "(uplift) " if is_uplift else "", payload[:100])
@@ -626,7 +601,9 @@ async def _process_one(
     else:
         _record_sightings_for_item(item, source)
         if not is_uplift:
-            _safe_mark_popular_seen(url, title, interesting=True, note="card posted")
+            _safe_mark_popular_seen(
+                url, title, interesting=True, note="card posted", source=source,
+            )
     counters["posted"] += 1
     if is_uplift:
         counters["uplift"] = counters.get("uplift", 0) + 1

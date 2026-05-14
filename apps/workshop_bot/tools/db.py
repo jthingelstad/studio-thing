@@ -61,6 +61,8 @@ _COLUMN_MIGRATIONS: tuple[tuple[str, str, str], ...] = (
     ("thingy_tokens", "last_welcomed_at",
      "ALTER TABLE thingy_tokens ADD COLUMN last_welcomed_at TEXT"),
     ("campaigns", "copy", "ALTER TABLE campaigns ADD COLUMN copy TEXT"),
+    ("pinboard_popular_seen", "verdict_source",
+     "ALTER TABLE pinboard_popular_seen ADD COLUMN verdict_source TEXT"),
 )
 
 
@@ -288,12 +290,19 @@ def mark_popular_seen(
     items: list[dict[str, Any]],
     *,
     judged: Optional[dict[str, tuple[bool, str]]] = None,
+    verdict_source: Optional[str] = None,
 ) -> int:
     """Insert ``items`` into pinboard_popular_seen (no-op on conflict).
 
     ``judged`` is an optional ``url -> (interesting?, note)`` mapping
     from the LLM filter, persisted alongside the row so future audits
     can see what Linky judged interesting vs not.
+
+    ``verdict_source`` is the feed name that produced the verdict
+    (e.g. ``"hackernews"``). Stored so the cross-source uplift block
+    can label "Previously SKIP'd from Hacker News" without inferring
+    from the sightings log. Optional for backwards-compat — callers
+    that don't pass it leave the column NULL.
     """
     n = 0
     judged = judged or {}
@@ -309,14 +318,16 @@ def mark_popular_seen(
                 interesting_flag = 1 if ok else 0
             cur = conn.execute(
                 "INSERT OR IGNORE INTO pinboard_popular_seen "
-                "(url, title, posted_by, judged_interesting, judgment_note) "
-                "VALUES (?, ?, ?, ?, ?)",
+                "(url, title, posted_by, judged_interesting, judgment_note, "
+                " verdict_source) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
                 (
                     url,
                     it.get("title"),
                     it.get("posted_by"),
                     interesting_flag,
                     note,
+                    verdict_source,
                 ),
             )
             if cur.rowcount:
@@ -368,16 +379,18 @@ def sightings_for(url: str) -> list[dict[str, Any]]:
 
 
 def popular_verdict(url: str) -> Optional[dict[str, Any]]:
-    """Return ``{judged_interesting, judgment_note, first_seen_at, title,
-    posted_by}`` for ``url`` if it has a row in ``pinboard_popular_seen``,
-    else ``None``. Used by the cross-source uplift path to render the
-    'previous verdict' line."""
+    """Return ``{judged_interesting, judgment_note, verdict_source,
+    first_seen_at, title, posted_by}`` for ``url`` if it has a row in
+    ``pinboard_popular_seen``, else ``None``. Used by the cross-source
+    uplift path to render the 'previous verdict' line. ``verdict_source``
+    is the feed name that produced the verdict (may be ``None`` on
+    legacy rows written before the column was added)."""
     if not url:
         return None
     with connect() as conn:
         row = conn.execute(
             "SELECT url, title, posted_by, judged_interesting, judgment_note, "
-            "       first_seen_at "
+            "       verdict_source, first_seen_at "
             "FROM pinboard_popular_seen WHERE url = ?",
             (url,),
         ).fetchone()

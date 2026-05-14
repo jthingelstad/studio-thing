@@ -1309,6 +1309,47 @@ class PinboardScanJobTests(_DBTestCase):
         # the same Tildes-already-seen URL.
         self.assertTrue(db.feed_has_seen(url=url, source="tildes"))
 
+    def test_cross_source_uplift_uses_verdict_source_column(self):
+        """The uplift block labels the original verdict's source via the
+        ``verdict_source`` column on ``pinboard_popular_seen`` — not by
+        inferring from the oldest sighting (which was the prior
+        approach and could mis-label if the data ever diverged)."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        url = "https://x.example/verdict-source"
+        # Verdict was produced from HN; the *oldest* sighting in
+        # `popular_seen_sightings` happens to be Lobsters (different
+        # from the verdict source). The uplift block should still
+        # label the SKIP source as "Hacker News", not "Lobsters".
+        db.mark_popular_seen(
+            [{"url": url, "title": "Verdict-Source Test"}],
+            judged={url: (False, "off-topic")},
+            verdict_source="hackernews",
+        )
+        # Sightings recorded out-of-order: Lobsters first, then HN.
+        db.record_sighting(url=url, source="lobsters")
+        db.record_sighting(url=url, source="hackernews")
+
+        ctx, team = self._ctx_and_team(replies=["SKIP: still off-topic"])
+        tildes_items = [{"url": url, "title": "Tildes title",
+                         "discussion_url": "https://tildes.net/~tech/v"}]
+        patches = self._stub_sources(tildes_items=tildes_items)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertEqual(result.data["skip"], 1)
+        sent = team.linky.core.call_args.kwargs["latest"]
+        # Label is HN (the recorded verdict_source), not Lobsters
+        # (the first sighting in history).
+        self.assertIn("SKIP'd from Hacker News", sent)
+        self.assertNotIn("SKIP'd from Lobsters", sent)
+
     def test_cross_source_uplift_carries_skip_history_when_previous_verdict_was_skip(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         url = "https://x.example/skipped"
