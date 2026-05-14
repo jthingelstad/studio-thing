@@ -24,8 +24,9 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from apps.workshop_bot.jobs import _base
 from apps.workshop_bot.tools import db, s3
 
 
@@ -104,3 +105,42 @@ class DBTestCase(unittest.TestCase):
         else:
             os.environ["WORKSHOP_DB_PATH"] = self._orig_db
         self._tmpdir.cleanup()
+
+
+def filled_final(
+    *,
+    notable: str = "### [A](http://a)\n\nx",
+    brief: str = "A blurb. → **[B](http://b)**",
+    journal: str = "[Tuesday @ 3:02 PM](https://x.example/p)\n\nt",
+) -> str:
+    """Build a starter-template draft with the three required blocks
+    filled. Used by the compose / build-publish tests to simulate a
+    draft ready for the final pass."""
+    d = _base.starter_template()
+    d = _base.replace_block(d, "notable", notable)
+    d = _base.replace_block(d, "brief", brief)
+    d = _base.replace_block(d, "journal", journal)
+    return d
+
+
+class FakeBotChannel:
+    """A persona bot + a channel, enough for the compose / build-publish
+    interactive jobs that need a ``bot.core`` mock + a ``channel.send``
+    mock. ``deps()`` returns a ``Deps``-ish stub with ``.team.bots[<persona>]``
+    pointing at this bot."""
+
+    def __init__(self, persona: str = "eddy", reply: str = '{"options": []}') -> None:
+        self.persona = persona
+        self.channel = MagicMock()
+        self.channel.send = AsyncMock()
+        self.bot = MagicMock()
+        self.bot.user = object()
+        self.bot.get_channel = MagicMock(return_value=self.channel)
+        self.bot.core = AsyncMock(return_value=(reply, {"iterations": 1}))
+
+    def deps(self):
+        team = MagicMock()
+        team.bots = {self.persona: self.bot}
+        d = MagicMock()
+        d.team = team
+        return d
