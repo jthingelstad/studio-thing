@@ -25,11 +25,13 @@ from ...jobs import _base as jobs_base
 from ...jobs import follow_up as followup_job
 from ...jobs import status as status_job
 from ...jobs import (
+    archive_lookup,
     build_publish,
     compose_haiku,
     compose_meta,
     create_final,
     issue_status,
+    review_text,
     start_issue,
     update_draft,
 )
@@ -213,6 +215,40 @@ def register_eddy_commands(
     )
     async def status_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: status_job.run(_ctx(bot)), "status")
+
+    # ── /eddy review ──────────────────────────────────────────────────
+
+    @eddy.command(
+        name="review",
+        description="Ad-hoc editorial review of pasted text — Eddy posts a critique to #editorial.",
+    )
+    @app_commands.describe(
+        text="The text Eddy should review (voice, structure, factual flags)",
+    )
+    async def review_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, text: str
+    ) -> None:
+        await _run_and_ack(
+            interaction,
+            lambda: review_text.run(_ctx(bot), text=text, invoker=str(interaction.user)),
+            "review",
+        )
+
+    # ── /eddy archive ─────────────────────────────────────────────────
+
+    @eddy.command(
+        name="archive",
+        description="Show a past issue overview — subject, publish date, sections, teaser.",
+    )
+    @app_commands.describe(issue="Issue number (e.g. 287)")
+    async def archive_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, issue: int
+    ) -> None:
+        await _run_and_ack(
+            interaction,
+            lambda: archive_lookup.run(_ctx(bot), issue_number=int(issue)),
+            "archive",
+        )
 
     tree.add_command(eddy)
     return tree
