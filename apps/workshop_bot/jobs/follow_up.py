@@ -33,7 +33,7 @@ from typing import Any, Optional
 
 from ..personas.base import is_pass_response
 from ..tools import anthropic_client, context, db
-from . import _base, _compose
+from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.follow_up")
 
@@ -261,7 +261,7 @@ async def _sweep_locked(ctx: "_base.JobContext") -> "_base.JobResult":
     for row in due[:_MAX_PER_SWEEP]:
         persona = row["persona"]
         channel_env = row.get("channel_env") or _PERSONA_HOME_CHANNEL.get(persona, "DISCORD_CHANNEL_EDITORIAL")
-        bot, channel, reason = _compose.resolve_bot_and_channel(ctx, persona, channel_env)
+        bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, persona, channel_env)
         if bot is None:
             logger.warning("follow-up-sweep: leaving #%s open — %s", row["id"], reason)
             skipped += 1

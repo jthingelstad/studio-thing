@@ -29,7 +29,7 @@ import logging
 import re
 
 from ..tools import anthropic_client, db, s3
-from . import _base, _compose
+from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.compose_meta")
 
@@ -42,7 +42,7 @@ _NUM_LINE_RE = re.compile(r"(?m)^\s*\d+[.)]\s+(.+?)\s*$")
 
 
 def _parse_numbered_list_factory(limit: int):
-    """Build the parser passed to :func:`_compose.refresh_loop` — pulls
+    """Build the parser passed to :func:`_llm_job.refresh_loop` — pulls
     items out of a ``1. … / 2. …`` numbered list, tolerating a stray
     preamble, code fences, or bold/quote wrappers."""
     def _parse(text: str) -> list[str]:
@@ -75,10 +75,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     if window is None:
         return _base.JobResult(False, "❌ no active issue window.")
     n = int(window["issue_number"])
-    body = _compose.final_or_draft(n)
+    body = _llm_job.final_or_draft(n)
     if not body.strip():
         return _base.JobResult(False, f"❌ no `final.md`/`draft.md` for WT{n} yet.")
-    bot, channel, reason = _compose.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
+    bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
     if bot is None:
         return _base.JobResult(
             True, f"(compose-meta skipped — {reason})",
@@ -88,12 +88,12 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     asset = f"{n}/metadata.json"
     try:
         with _base.job_lock([asset], NAME):
-            issue_text = body[: _compose.ISSUE_BODY_CAP]
+            issue_text = body[: _llm_job.ISSUE_BODY_CAP]
 
             # ---- step 1: subject (the 5-option prompt, verbatim) ----
             subject_prompt = anthropic_client.load_prompt("eddy-compose-subject")
             subject_msg = subject_prompt.replace("<NUM>", str(n)).replace("<<<ISSUE_TEXT>>>", issue_text)
-            subject = await _compose.refresh_loop(
+            subject = await _llm_job.refresh_loop(
                 bot, channel,
                 base_msg=subject_msg,
                 parser=_parse_numbered_list_factory(_SUBJECT_OPTION_CAP),

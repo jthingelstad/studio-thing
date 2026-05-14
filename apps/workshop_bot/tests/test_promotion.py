@@ -148,8 +148,8 @@ class PromotionPrepJobTests(_DBCase):
         # An oversized publish.md must be capped at PROMOTION_BODY_CAP before
         # being fed to Marky, otherwise a runaway issue body could blow up
         # the user-message size.
-        from apps.workshop_bot.jobs import _compose
-        cap = _compose.PROMOTION_BODY_CAP
+        from apps.workshop_bot.jobs import _llm_job
+        cap = _llm_job.PROMOTION_BODY_CAP
         huge = "## Notable\n\n" + ("x" * (cap + 5_000))
         self.ws.files[(458, "publish.md")] = huge
         deps, marky, channel = _marky_deps()
@@ -162,7 +162,7 @@ class PromotionPrepJobTests(_DBCase):
         body = sent.split("```markdown\n", 1)[1].rsplit("\n```", 1)[0]
         self.assertEqual(len(body), cap)
         # And the cap is the constant, not a magic number elsewhere.
-        self.assertEqual(_compose.PROMOTION_BODY_CAP, _compose.ISSUE_BODY_CAP + 8_000)
+        self.assertEqual(_llm_job.PROMOTION_BODY_CAP, _llm_job.ISSUE_BODY_CAP + 8_000)
 
     def test_concurrent_run_is_blocked_by_job_lock(self):
         # Pre-acquire the whole-job lock so the next run bails before doing

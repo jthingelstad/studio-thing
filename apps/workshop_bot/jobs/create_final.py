@@ -19,7 +19,7 @@ import logging
 import re
 
 from ..tools import anthropic_client, db, interaction, render, s3
-from . import _base, _compose
+from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.create_final")
 
@@ -55,7 +55,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     draft = _draft_text(n)
     if not draft.strip():
         return _base.JobResult(False, f"❌ no `draft.md` for WT{n} — run `/workshop issue update` first.")
-    bot, channel, reason = _compose.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
+    bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
     if bot is None:
         return _base.JobResult(False, f"(create-final skipped — {reason})")
 
@@ -65,7 +65,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             base_prompt = anthropic_client.load_prompt("eddy-create-final")
             user_msg = (
                 f"{base_prompt}\n\n---\n\nThe current draft (WT{n}):\n\n"
-                f"```markdown\n{draft[: _compose.CREATE_FINAL_BODY_CAP]}\n```"
+                f"```markdown\n{draft[: _llm_job.CREATE_FINAL_BODY_CAP]}\n```"
             )
             final_body = draft
             for _round in range(MAX_ROUNDS):

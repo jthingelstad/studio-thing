@@ -16,7 +16,7 @@ import asyncio
 import logging
 
 from ..tools import anthropic_client, context, db, interaction, s3
-from . import _base, _compose
+from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.compose_cta")
 
@@ -62,10 +62,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     if window is None:
         return _base.JobResult(False, "❌ no active issue window.")
     n = int(window["issue_number"])
-    body = _compose.final_or_draft(n)
+    body = _llm_job.final_or_draft(n)
     if not body.strip():
         return _base.JobResult(False, f"❌ no `final.md`/`draft.md` for WT{n} yet.")
-    bot, channel, reason = _compose.resolve_bot_and_channel(ctx, "patty", "DISCORD_CHANNEL_SUPPORTERS")
+    bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "patty", "DISCORD_CHANNEL_SUPPORTERS")
     if bot is None:
         return _base.JobResult(True, f"(compose-cta skipped — {reason})", data={"posted": False})
 
@@ -85,12 +85,12 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 f"{context.render_block(patty_ctx)}\n\n{base_prompt}\n\n"
                 f"---\n\nRecent issues (for arc continuity — your previous CTAs are in these):\n\n"
                 f"{arc_excerpts}\n\n"
-                f"---\n\nThis issue (WT{n}):\n\n```markdown\n{body[:_compose.ISSUE_BODY_CAP]}\n```"
+                f"---\n\nThis issue (WT{n}):\n\n```markdown\n{body[:_llm_job.ISSUE_BODY_CAP]}\n```"
             )
             with db.AgentRun("patty", trigger="compose-cta") as agent_run:
                 reply, _meta = await bot.core(latest=user_msg, history=[], model=None)
                 agent_run.records_written = 1
-            data = _compose.parse_json_payload(reply)
+            data = _llm_job.parse_json_payload(reply)
             ctas = (data or {}).get("ctas")
             if not isinstance(ctas, list):
                 return _base.JobResult(False, "compose-cta: model didn't return a parseable `ctas` list.")
@@ -103,9 +103,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             for idx, cta in enumerate(ctas[:2]):
                 if not isinstance(cta, dict):
                     continue
-                placement = str(cta.get("placement") or _compose.DEFAULT_PLACEMENT).strip()
-                if placement not in _compose.PLACEMENTS:
-                    placement = _compose.DEFAULT_PLACEMENT
+                placement = str(cta.get("placement") or _llm_job.DEFAULT_PLACEMENT).strip()
+                if placement not in _llm_job.PLACEMENTS:
+                    placement = _llm_job.DEFAULT_PLACEMENT
                 framings = [str(f).strip() for f in (cta.get("framings") or []) if str(f).strip()][:2]
                 if not framings:
                     continue
@@ -120,7 +120,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     # Re-running the whole job is the clean way to refresh; ask Jamie to re-fire.
                     await _try_send(
                         channel,
-                        f"(For fresh CTA framings, re-fire `/workshop issue cta` — "
+                        f"(For fresh CTA framings, re-fire `/patty cta` — "
                         f"slot {idx + 1} for WT{n} left unwritten.)",
                     )
                     continue

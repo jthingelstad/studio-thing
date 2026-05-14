@@ -2464,12 +2464,12 @@ class ComposeMetaTests(_DBTestCase):
 
     def test_compose_max_refresh_rounds_is_shared(self):
         # All three compose-flow jobs share a single constant.
-        from apps.workshop_bot.jobs import _compose
-        self.assertEqual(_compose.MAX_REFRESH_ROUNDS, 3)
+        from apps.workshop_bot.jobs import _llm_job
+        self.assertEqual(_llm_job.MAX_REFRESH_ROUNDS, 3)
 
     def test_resolved_bot_is_a_named_tuple(self):
         """Tuple unpack stays as before, AND callers can use field access."""
-        from apps.workshop_bot.jobs._compose import ResolvedBot
+        from apps.workshop_bot.jobs._llm_job import ResolvedBot
         r = ResolvedBot("BOT", "CHANNEL", None)
         # tuple-unpack — what existing callers do
         bot, channel, reason = r
@@ -2590,8 +2590,8 @@ class ComposeCtaTests(_DBTestCase):
             result = asyncio.run(compose_cta.run(ctx))
         self.assertTrue(result.ok, result.message)
         # Falls back to compose._DEFAULT_PLACEMENT (`after_notable`).
-        from apps.workshop_bot.jobs import _compose as _compose_mod
-        self.assertIn(f"placement: {_compose_mod.DEFAULT_PLACEMENT}", self.ws.files[(458, "cta-1.md")])
+        from apps.workshop_bot.jobs import _llm_job as _llm_job_mod
+        self.assertIn(f"placement: {_llm_job_mod.DEFAULT_PLACEMENT}", self.ws.files[(458, "cta-1.md")])
 
     def test_empty_framings_slot_skipped(self):
         # A CTA dict whose framings list is empty / all-whitespace doesn't
@@ -2644,11 +2644,11 @@ class ComposeCtaTests(_DBTestCase):
         self.assertNotIn((458, "cta-1.md"), self.ws.files)
 
     def test_body_truncated_to_issue_body_cap(self):
-        # An oversized final.md must be capped at _compose.ISSUE_BODY_CAP
+        # An oversized final.md must be capped at _llm_job.ISSUE_BODY_CAP
         # before being fed to Patty.
-        from apps.workshop_bot.jobs import _compose as _compose_mod
+        from apps.workshop_bot.jobs import _llm_job as _llm_job_mod
         self._window()
-        cap = _compose_mod.ISSUE_BODY_CAP
+        cap = _llm_job_mod.ISSUE_BODY_CAP
         oversized = "## Notable\n\n" + ("x" * (cap + 5_000))
         self.ws.write_issue_file(458, "final.md", oversized)
         fc = _FakeBotChannel(persona="patty", reply='{"ctas": []}')

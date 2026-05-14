@@ -29,7 +29,7 @@ import re
 
 from ..tools import draft as draft_mod
 from ..tools import render, s3
-from . import _base, _compose, _cover, _currently
+from . import _base, _llm_job, _cover, _currently
 
 logger = logging.getLogger("workshop.jobs.build_publish")
 
@@ -222,9 +222,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 meta, cta_body = _strip_frontmatter(raw)
                 if not cta_body.strip():
                     continue
-                placement = (meta.get("placement") or _compose.DEFAULT_PLACEMENT).strip()
-                if placement not in _compose.PLACEMENTS:
-                    placement = _compose.DEFAULT_PLACEMENT
+                placement = (meta.get("placement") or _llm_job.DEFAULT_PLACEMENT).strip()
+                if placement not in _llm_job.PLACEMENTS:
+                    placement = _llm_job.DEFAULT_PLACEMENT
                 cta_by_placement.setdefault(placement, []).append(_membership_block(cta_body))
 
             parts: list[str] = []

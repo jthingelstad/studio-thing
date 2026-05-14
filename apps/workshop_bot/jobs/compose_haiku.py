@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 
 from ..tools import anthropic_client, db, s3
-from . import _base, _compose
+from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.compose_haiku")
 
@@ -22,9 +22,9 @@ NAME = "compose-haiku"
 def _parse_haiku_options(reply: str) -> list[str]:
     """Extract up to 5 haiku option strings from the model's JSON reply.
     Returns an empty list if the reply doesn't parse as
-    ``{"options": [...]}`` — :func:`_compose.refresh_loop` retries on
+    ``{"options": [...]}`` — :func:`_llm_job.refresh_loop` retries on
     empty."""
-    data = _compose.parse_json_payload(reply)
+    data = _llm_job.parse_json_payload(reply)
     options = (data or {}).get("options")
     if not isinstance(options, list):
         return []
@@ -43,10 +43,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     if window is None:
         return _base.JobResult(False, "❌ no active issue window.")
     n = int(window["issue_number"])
-    body = _compose.final_or_draft(n)
+    body = _llm_job.final_or_draft(n)
     if not body.strip():
         return _base.JobResult(False, f"❌ no `final.md`/`draft.md` for WT{n} yet.")
-    bot, channel, reason = _compose.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
+    bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
     if bot is None:
         return _base.JobResult(
             True, f"(compose-haiku skipped — {reason})",
@@ -59,9 +59,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             base_prompt = anthropic_client.load_prompt("eddy-compose-haiku")
             base_msg = (
                 f"{base_prompt}\n\n---\n\nThe issue (WT{n}):\n\n"
-                f"```markdown\n{body[:_compose.ISSUE_BODY_CAP]}\n```"
+                f"```markdown\n{body[:_llm_job.ISSUE_BODY_CAP]}\n```"
             )
-            chosen = await _compose.refresh_loop(
+            chosen = await _llm_job.refresh_loop(
                 bot, channel,
                 base_msg=base_msg,
                 parser=_parse_haiku_options,

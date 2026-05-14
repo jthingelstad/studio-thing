@@ -21,7 +21,7 @@ from ..personas.base import is_pass_response
 from ..systems.buttondown import client as buttondown
 from ..systems.tinylytics import client as tinylytics
 from ..tools import anthropic_client, context, db
-from . import _base, _compose
+from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.daily_metrics")
 
@@ -153,7 +153,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             if not _moved(growth, campaigns):
                 return _base.JobResult(True, "PASS — nothing material moved.", data={"posted": False, "campaigns": campaigns})
 
-            bot, channel, reason = _compose.resolve_bot_and_channel(
+            bot, channel, reason = _llm_job.resolve_bot_and_channel(
                 ctx, "marky", "DISCORD_CHANNEL_PROMOTION"
             )
             if bot is None:

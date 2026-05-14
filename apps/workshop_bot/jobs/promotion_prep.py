@@ -17,7 +17,7 @@ import logging
 from typing import Optional
 
 from ..tools import anthropic_client, context, db, rss, s3
-from . import _base, _compose
+from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.promotion_prep")
 
@@ -50,7 +50,7 @@ async def run(ctx: "_base.JobContext", *, issue_number: Optional[int] = None) ->
         )
     publish_body = res["text"]
 
-    bot, channel, reason = _compose.resolve_bot_and_channel(ctx, "marky", "DISCORD_CHANNEL_PROMOTION")
+    bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "marky", "DISCORD_CHANNEL_PROMOTION")
     if bot is None:
         return _base.JobResult(True, f"(promotion-prep skipped — {reason})", data={"posted": False})
 
@@ -70,7 +70,7 @@ async def run(ctx: "_base.JobContext", *, issue_number: Optional[int] = None) ->
             user_msg = (
                 f"{context.render_block(marky_ctx)}\n\n{base_prompt}\n\n"
                 f"---\n\nThe published issue (WT{n}):\n\n"
-                f"```markdown\n{publish_body[: _compose.PROMOTION_BODY_CAP]}\n```"
+                f"```markdown\n{publish_body[: _llm_job.PROMOTION_BODY_CAP]}\n```"
             )
             with db.AgentRun("marky", trigger="promotion-prep") as agent_run:
                 answer, _meta = await bot.core(latest=user_msg, history=[], model=None)

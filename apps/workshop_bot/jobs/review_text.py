@@ -13,7 +13,7 @@ import logging
 from typing import Optional
 
 from ..tools import anthropic_client, db
-from . import _base, _compose
+from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.review_text")
 
@@ -35,7 +35,7 @@ async def run(
     if not text:
         return _base.JobResult(False, "❌ no text to review — pass the draft as the `text` arg.")
 
-    bot, channel, reason = _compose.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
+    bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
     if bot is None:
         return _base.JobResult(True, f"(review-text skipped — {reason})", data={"posted": False})
 

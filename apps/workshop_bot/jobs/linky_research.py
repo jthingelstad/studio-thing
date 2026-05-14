@@ -13,7 +13,7 @@ import logging
 from typing import Optional
 
 from ..tools import anthropic_client, db
-from . import _base, _compose
+from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.linky_research")
 
@@ -30,7 +30,7 @@ async def run(
     if not url or not (url.startswith("http://") or url.startswith("https://")):
         return _base.JobResult(False, "❌ pass a full http(s) URL.")
 
-    bot, channel, reason = _compose.resolve_bot_and_channel(ctx, "linky", "DISCORD_CHANNEL_RESEARCH")
+    bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "linky", "DISCORD_CHANNEL_RESEARCH")
     if bot is None:
         return _base.JobResult(True, f"(linky-research skipped — {reason})", data={"posted": False})
 
