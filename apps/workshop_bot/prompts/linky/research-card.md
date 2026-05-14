@@ -38,7 +38,7 @@ The `## Today` block above carries the runtime facts (date, days-to-pub, days in
 - `{pin_part}` — for `toread` items, ` · [pin]({pinboard_url})`. For `popular`, omit (the URL isn't in Pinboard yet, so there's no pin).
 - **`📖`** — exactly one of `short` / `medium` / `long`, then a middle dot, then the source label backticked.
 - **`💬` action line:**
-  - `popular`: `_Reply to bookmark it — your reply becomes the Pinboard description (toread + public)._`
+  - `popular`: `_React ✅ / 👍 to bookmark (toread + public, blank description), or reply to bookmark with your reply as the description._`
   - `toread`: `_Reply to save your text as this bookmark's Pinboard description._`
 
 ## Output rules

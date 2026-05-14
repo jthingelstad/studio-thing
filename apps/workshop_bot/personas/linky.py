@@ -1,14 +1,21 @@
 """Linky — Pinboard curation.
 
-Adds one Linky-specific override on top of the shared :class:`PersonaBot`
-loop: a Discord-reply listener that turns Jamie's reply to a research
-card into a Pinboard description-write. The reply text is saved verbatim
-to that bookmark's description; the URL's tags and ``toread`` flag are
-untouched (so Jamie can finish curation in Pinboard — add ``_brief`` if
-it's a Brief, clear ``toread`` when it's ready to ship). For
-popular-feed cards the URL isn't yet bookmarked; the reply is the
-"adopt this — start commentary" gesture, and a new bookmark is created
-``toread=yes shared=yes`` with the reply as its description.
+Adds two Linky-specific overrides on top of the shared :class:`PersonaBot`
+loop, both feeding off the ``linky_research_messages`` table:
+
+1. **Reply listener.** Jamie replies to one of Linky's per-link research
+   cards in ``#research``; the reply text is saved verbatim as that
+   bookmark's Pinboard description. Tags and the ``toread`` flag are
+   untouched (so Jamie finishes curation in Pinboard — add ``_brief`` if
+   it's a Brief, clear ``toread`` when ready to ship). For popular-feed
+   cards the URL isn't yet bookmarked; the reply auto-creates a
+   ``toread=yes shared=yes`` bookmark with the reply as its description.
+2. **Reaction listener.** Jamie reacts ✅ or 👍 to a popular-feed
+   research card; Linky saves the URL to Pinboard as ``toread=yes
+   shared=yes`` with a blank description (Jamie can finish in Pinboard
+   later or just leave it as a queued read). The card gets a 📌
+   reaction back so Jamie can see it landed. Toread-source cards
+   already point at a bookmarked URL; ✅/👍 on those is a no-op.
 """
 
 from __future__ import annotations
@@ -30,6 +37,12 @@ logger = logging.getLogger("workshop.linky")
 def _owner_id() -> Optional[str]:
     raw = (os.environ.get("DISCORD_OWNER_USER_ID") or "").strip()
     return raw or None
+
+
+# Reactions Jamie can drop on a popular-feed card to save it to Pinboard
+# without typing a reply. Each one means "yes, save this — blank
+# description, I'll finish it in Pinboard if at all."
+_SAVE_REACTIONS = {"✅", "👍"}
 
 
 class LinkyBot(PersonaBot):
@@ -114,3 +127,76 @@ class LinkyBot(PersonaBot):
             url, created, ok,
         )
         return True
+
+    async def on_raw_reaction_add(
+        self, payload: discord.RawReactionActionEvent,
+    ) -> None:  # type: ignore[override]
+        """When Jamie reacts ✅ / 👍 to one of Linky's popular-feed research
+        cards, save the URL to Pinboard as ``toread=yes shared=yes`` with
+        a blank description. Toread-source cards already point at a
+        bookmarked URL — those reactions are no-ops.
+        """
+        owner = _owner_id()
+        if owner is None or str(payload.user_id) != owner:
+            return
+        if str(payload.emoji) not in _SAVE_REACTIONS:
+            return
+        row = db.lookup_research_message(str(payload.message_id))
+        if row is None:
+            return
+        if row.get("source") != "popular":
+            # Toread cards point at an already-bookmarked URL.
+            return
+        url = (row.get("url") or "").strip()
+        if not url:
+            return
+        title = row.get("title") or url
+
+        # Acknowledge / save in one path to keep the order of side effects
+        # readable: lookup → maybe-save → react.
+        try:
+            existing = await asyncio.to_thread(pinboard_client.posts_get, url)
+        except Exception:  # noqa: BLE001
+            existing = None
+            logger.exception("linky: posts_get failed during save-reaction for %s", url)
+
+        ack_emoji = "📌"
+        if existing and (existing.get("posts") or []):
+            # Already bookmarked — nothing to write; just acknowledge.
+            await self._react_card(payload, ack_emoji)
+            logger.info("linky: save-reaction on %s (already bookmarked)", url)
+            return
+
+        try:
+            res = await asyncio.to_thread(
+                pinboard_client.posts_add,
+                url=url, title=title, description="",
+                tags="", toread=True, shared=True, replace=False,
+            )
+            ok = res.get("result_code") == "done"
+            await self._react_card(payload, ack_emoji if ok else "⚠️")
+            logger.info(
+                "linky: save-reaction on %s -> posts_add result=%s",
+                url, res.get("result_code"),
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception("linky: posts_add failed during save-reaction for %s", url)
+            await self._react_card(payload, "❌")
+
+    async def _react_card(
+        self, payload: discord.RawReactionActionEvent, emoji: str,
+    ) -> None:
+        """Add a reaction to the card the user just reacted to. Best-effort;
+        a missing channel / fetch error is logged but doesn't propagate."""
+        try:
+            channel = self.get_channel(payload.channel_id)
+            if channel is None:
+                channel = await self.fetch_channel(payload.channel_id)
+            msg = await channel.fetch_message(payload.message_id)
+            await msg.add_reaction(emoji)
+        except discord.DiscordException:
+            logger.exception("linky: couldn't react %s on message %s",
+                             emoji, payload.message_id)
+        except Exception:  # noqa: BLE001
+            logger.exception("linky: unexpected error reacting %s on message %s",
+                             emoji, payload.message_id)

@@ -2040,5 +2040,175 @@ class LinkyReplyHandlerTests(_DBTestCase):
         m.reply.assert_awaited()
 
 
+class LinkySaveReactionTests(_DBTestCase):
+    """Owner reactions ✅/👍 on a popular-feed research card → save the
+    URL to Pinboard as toread+public with a blank description."""
+
+    def setUp(self):
+        super().setUp()
+        import types
+        from apps.workshop_bot.personas.linky import LinkyBot
+        self.bot = LinkyBot.__new__(LinkyBot)
+        self.bot.user = MagicMock()
+        self.bot.user.id = 1000
+        self.bot.deps = types.SimpleNamespace(team=None, corpus=None)
+        # Patch _react_card to capture the emoji we'd render onto the card
+        # without going through discord fetch_channel / fetch_message.
+        self.reactions: list[str] = []
+        async def _fake_react(payload, emoji):
+            self.reactions.append(emoji)
+        self.bot._react_card = _fake_react
+        os.environ["DISCORD_OWNER_USER_ID"] = "777"
+
+    def tearDown(self):
+        os.environ.pop("DISCORD_OWNER_USER_ID", None)
+        super().tearDown()
+
+    def _payload(self, *, user_id, emoji, message_id, channel_id=999):
+        p = MagicMock()
+        p.user_id = user_id
+        p.message_id = message_id
+        p.channel_id = channel_id
+        p.emoji = MagicMock()
+        p.emoji.__str__ = lambda s: emoji
+        return p
+
+    def _patch_pinboard(
+        self, *, existing_posts=None, add_result=None, add_side_effect=None,
+        get_side_effect=None,
+    ):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        get_mock = MagicMock(return_value={"posts": existing_posts or []})
+        if get_side_effect is not None:
+            get_mock.side_effect = get_side_effect
+        add_mock = MagicMock(return_value=add_result or {"result_code": "done"})
+        if add_side_effect is not None:
+            add_mock.side_effect = add_side_effect
+        return (
+            patch.object(pbc, "posts_get", get_mock),
+            patch.object(pbc, "posts_add", add_mock),
+            add_mock,
+        )
+
+    def test_save_reaction_on_popular_creates_bookmark(self):
+        db.record_research_message(
+            discord_message_id="2001", url="http://p/1", source="popular",
+            title="Popular Title",
+        )
+        p = self._payload(user_id=777, emoji="✅", message_id=2001)
+        get_p, add_p, add_mock = self._patch_pinboard()
+        get_p.start(); add_p.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            add_p.stop(); get_p.stop()
+        add_mock.assert_called_once()
+        kwargs = add_mock.call_args.kwargs
+        self.assertEqual(kwargs["url"], "http://p/1")
+        self.assertEqual(kwargs["description"], "")
+        self.assertTrue(kwargs["toread"])
+        self.assertTrue(kwargs["shared"])
+        self.assertFalse(kwargs["replace"])
+        self.assertEqual(self.reactions, ["📌"])
+
+    def test_thumbs_up_works_too(self):
+        db.record_research_message(
+            discord_message_id="2002", url="http://p/2", source="popular",
+        )
+        p = self._payload(user_id=777, emoji="👍", message_id=2002)
+        get_p, add_p, add_mock = self._patch_pinboard()
+        get_p.start(); add_p.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            add_p.stop(); get_p.stop()
+        add_mock.assert_called_once()
+        self.assertEqual(self.reactions, ["📌"])
+
+    def test_other_emoji_ignored(self):
+        db.record_research_message(
+            discord_message_id="2003", url="http://p/3", source="popular",
+        )
+        p = self._payload(user_id=777, emoji="❤️", message_id=2003)
+        get_p, add_p, add_mock = self._patch_pinboard()
+        get_p.start(); add_p.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            add_p.stop(); get_p.stop()
+        add_mock.assert_not_called()
+        self.assertEqual(self.reactions, [])
+
+    def test_non_owner_reaction_ignored(self):
+        db.record_research_message(
+            discord_message_id="2004", url="http://p/4", source="popular",
+        )
+        p = self._payload(user_id=888, emoji="✅", message_id=2004)
+        get_p, add_p, add_mock = self._patch_pinboard()
+        get_p.start(); add_p.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            add_p.stop(); get_p.stop()
+        add_mock.assert_not_called()
+
+    def test_toread_card_save_reaction_is_noop(self):
+        # Toread URLs are already bookmarked — nothing to do.
+        db.record_research_message(
+            discord_message_id="2005", url="http://t/1", source="toread",
+        )
+        p = self._payload(user_id=777, emoji="✅", message_id=2005)
+        get_p, add_p, add_mock = self._patch_pinboard()
+        get_p.start(); add_p.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            add_p.stop(); get_p.stop()
+        add_mock.assert_not_called()
+        self.assertEqual(self.reactions, [])  # no acknowledgment either
+
+    def test_unknown_message_id_ignored(self):
+        p = self._payload(user_id=777, emoji="✅", message_id=999999)
+        get_p, add_p, add_mock = self._patch_pinboard()
+        get_p.start(); add_p.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            add_p.stop(); get_p.stop()
+        add_mock.assert_not_called()
+
+    def test_already_bookmarked_just_acknowledges(self):
+        db.record_research_message(
+            discord_message_id="2006", url="http://p/6", source="popular",
+        )
+        p = self._payload(user_id=777, emoji="✅", message_id=2006)
+        # posts_get returns an existing bookmark; posts_add should NOT be called.
+        get_p, add_p, add_mock = self._patch_pinboard(
+            existing_posts=[{"href": "http://p/6"}],
+        )
+        get_p.start(); add_p.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            add_p.stop(); get_p.stop()
+        add_mock.assert_not_called()
+        self.assertEqual(self.reactions, ["📌"])
+
+    def test_posts_add_failure_reacts_with_x(self):
+        db.record_research_message(
+            discord_message_id="2007", url="http://p/7", source="popular",
+        )
+        p = self._payload(user_id=777, emoji="✅", message_id=2007)
+        get_p, add_p, _ = self._patch_pinboard(
+            add_side_effect=RuntimeError("boom"),
+        )
+        get_p.start(); add_p.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            add_p.stop(); get_p.stop()
+        self.assertEqual(self.reactions, ["❌"])
+
+
 if __name__ == "__main__":
     unittest.main()
