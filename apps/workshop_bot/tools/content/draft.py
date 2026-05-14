@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 from typing import Any, Optional
 
-from . import s3
+from .. import s3
 
 # Listed in the published section order (intro → Currently → cover →
 # Notable → Journal → Briefly → haiku); matches templates/draft_starter.md.

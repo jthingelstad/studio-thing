@@ -116,7 +116,7 @@ class StartIssueTests(_DBTestCase):
 
 class UpdateDraftTests(_DBTestCase):
     def _set_window(self, n=458, pub="2026-05-16"):
-        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window(pub, 7)
         db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
@@ -169,7 +169,7 @@ class IssueStatusTests(_DBTestCase):
         self.assertIn("No active issue window", result.message)
 
     def test_reports_presence(self):
-        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
@@ -194,7 +194,7 @@ class IssueStatusTests(_DBTestCase):
 from datetime import date, datetime  # noqa: E402
 from unittest.mock import AsyncMock, MagicMock  # noqa: E402
 
-from apps.workshop_bot.tools import context, draft as draft_mod, microblog  # noqa: E402
+from apps.workshop_bot.tools.content import context, draft as draft_mod, microblog
 from apps.workshop_bot.systems.pinboard import client as pinboard_client  # noqa: E402
 
 
@@ -255,7 +255,7 @@ class DraftSectionStatusTests(unittest.TestCase):
 
 class UpdateDraftRealFillsTests(_DBTestCase):
     def _set_window(self, n=458, pub="2026-05-16"):
-        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window(pub, 7)
         db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
@@ -374,7 +374,7 @@ class UpdateDraftRealFillsTests(_DBTestCase):
 
 class EddyReviewTests(_DBTestCase):
     def _window(self, n=458, pub="2026-05-16"):
-        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window(pub, 7)
         db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
@@ -449,7 +449,7 @@ class EddyReviewTests(_DBTestCase):
 
 class DraftSectionStatusToolTests(_DBTestCase):
     def test_tool_returns_status_for_active_issue(self):
-        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.content import issue as issue_mod
         from apps.workshop_bot.tools.llm import agent_tools
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],

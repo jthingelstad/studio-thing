@@ -27,7 +27,7 @@ import logging
 import os
 import re
 
-from ..tools import draft as draft_mod
+from ..tools.content import draft as draft_mod
 from ..tools import render, s3
 from . import _base, _llm_job, _cover, _currently
 

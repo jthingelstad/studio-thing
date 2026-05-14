@@ -18,15 +18,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from .. import (
-    archive,
-    db,
-    draft,
-    issue,
-    s3,
-    support_state,
-    web,
-)
+from .. import db, s3, support_state, web
+from ..content import archive, draft, issue
 from ...systems._base import SystemServer
 
 logger = logging.getLogger("workshop.tools")

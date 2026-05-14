@@ -23,7 +23,7 @@ from ..tools.discord import conversation, discord_io
 
 if TYPE_CHECKING:
     from ..tools.llm.agent_tools import ToolRegistry
-    from ..tools.corpus import CorpusHandle
+    from ..tools.content.corpus import CorpusHandle
     from .team import TeamRegistry
 
 logger = logging.getLogger("workshop.persona")

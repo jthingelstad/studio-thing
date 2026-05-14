@@ -25,7 +25,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any
 
-from . import db
+from .. import db
 
 
 class IssueWindowError(ValueError):

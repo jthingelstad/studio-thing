@@ -20,7 +20,8 @@ from datetime import datetime
 from ..personas.base import is_pass_response
 from ..systems.buttondown import client as buttondown
 from ..systems.tinylytics import client as tinylytics
-from ..tools import context, db
+from ..tools import db
+from ..tools.content import context
 from ..tools.llm import anthropic_client
 from . import _base, _llm_job
 

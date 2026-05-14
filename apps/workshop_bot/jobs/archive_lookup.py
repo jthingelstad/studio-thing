@@ -12,7 +12,7 @@ import logging
 import re
 from typing import Optional
 
-from ..tools import archive
+from ..tools.content import archive
 from . import _base
 
 logger = logging.getLogger("workshop.jobs.archive_lookup")

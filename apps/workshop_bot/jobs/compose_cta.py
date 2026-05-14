@@ -15,7 +15,8 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from ..tools import context, db, s3
+from ..tools import db, s3
+from ..tools.content import context
 from ..tools.llm import anthropic_client
 from ..tools.discord import interaction
 from . import _base, _llm_job

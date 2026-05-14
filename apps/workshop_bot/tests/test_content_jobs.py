@@ -25,7 +25,8 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base, update_draft  # noqa: E402
-from apps.workshop_bot.tools import context, db, microblog, s3 # noqa: E402
+from apps.workshop_bot.tools import db, s3 # noqa: E402
+from apps.workshop_bot.tools.content import context, microblog
 from apps.workshop_bot.tools.discord import interaction
 
 # Shared fixtures used by this file and the split-out per-topic test
@@ -216,7 +217,7 @@ class JobLockTests(_DBTestCase):
 
 class EddyContextTests(_DBTestCase):
     def test_delta_against_prior_digest(self):
-        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
@@ -237,7 +238,7 @@ class EddyContextTests(_DBTestCase):
         self.assertTrue(delta["intro_now_present"])
 
     def test_no_digest_means_no_delta(self):
-        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
@@ -317,7 +318,7 @@ class MicroblogTests(unittest.TestCase):
 
 class LinkyContextTests(_DBTestCase):
     def test_build_linky_context(self):
-        from apps.workshop_bot.tools import issue as issue_mod, context
+        from apps.workshop_bot.tools.content import issue as issue_mod, context
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
@@ -422,7 +423,7 @@ class GoalsAndPattyContextTests(_DBTestCase):
         self.assertEqual(recent[0]["target_kind"], "members")
 
     def test_patty_context_anniversary_math(self):
-        from apps.workshop_bot.tools import context
+        from apps.workshop_bot.tools.content import context
         # 2026-05-11 (Mon) -> next May 13 is 2026-05-13, 2 days out, 0 issues before.
         ctx = context.build_patty_context(ref_date=date(2026, 5, 11))
         self.assertEqual(ctx["days_to_anniversary"], 2)
@@ -435,7 +436,7 @@ class GoalsAndPattyContextTests(_DBTestCase):
         self.assertGreater(ctx2["expected_issues_before_anniversary"], 30)  # ~52 weeks - ~13 no-publish
 
     def test_no_publish_saturday(self):
-        from apps.workshop_bot.tools import context
+        from apps.workshop_bot.tools.content import context
         self.assertTrue(context._is_no_publish_saturday(date(2026, 7, 4)))
         self.assertTrue(context._is_no_publish_saturday(date(2026, 8, 15)))
         self.assertTrue(context._is_no_publish_saturday(date(2026, 12, 20)))

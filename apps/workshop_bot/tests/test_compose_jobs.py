@@ -36,7 +36,7 @@ from apps.workshop_bot.tests._fixtures import (  # noqa: E402
 
 class ComposeHaikuTests(_DBTestCase):
     def _window(self, n=458):
-        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
@@ -86,7 +86,7 @@ class ComposeMetaTests(_DBTestCase):
         super().tearDown()
 
     def _window(self, n=458):
-        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
@@ -229,7 +229,7 @@ class ComposeCtaTests(_DBTestCase):
         super().tearDown()
 
     def _window(self):
-        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
@@ -424,7 +424,7 @@ class CreateFinalTests(_DBTestCase):
         super().tearDown()
 
     def _setup(self, reply):
-        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
@@ -434,7 +434,7 @@ class CreateFinalTests(_DBTestCase):
         return _base.JobContext(deps=fc.deps()), fc
 
     def test_refuses_if_final_exists(self):
-        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")

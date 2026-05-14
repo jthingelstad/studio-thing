@@ -27,7 +27,8 @@ from apps.workshop_bot.systems.buttondown import client as buttondown_client  # 
 from apps.workshop_bot.systems.pinboard import client as pinboard_client  # noqa: E402
 from apps.workshop_bot.systems.stripe import client as stripe_client  # noqa: E402
 from apps.workshop_bot.systems.tinylytics import client as tinylytics_client  # noqa: E402
-from apps.workshop_bot.tools import context, db, support_state  # noqa: E402
+from apps.workshop_bot.tools import db, support_state # noqa: E402
+from apps.workshop_bot.tools.content import context
 
 
 class _DBCase(unittest.TestCase):

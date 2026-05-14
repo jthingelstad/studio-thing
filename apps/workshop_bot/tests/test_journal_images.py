@@ -15,7 +15,8 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.tools import alt_text, journal_images, s3  # noqa: E402
+from apps.workshop_bot.tools import alt_text, s3 # noqa: E402
+from apps.workshop_bot.tools.content import journal_images
 
 
 def _tiny_png_bytes() -> bytes:

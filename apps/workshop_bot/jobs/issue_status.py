@@ -10,7 +10,8 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
-from ..tools import db, draft as draft_mod
+from ..tools import db
+from ..tools.content import draft as draft_mod
 from . import _base
 
 logger = logging.getLogger("workshop.jobs.issue_status")

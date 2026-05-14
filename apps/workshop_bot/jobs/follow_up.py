@@ -32,7 +32,8 @@ from datetime import date, datetime, time, timedelta
 from typing import Any, Optional
 
 from ..personas.base import is_pass_response
-from ..tools import context, db
+from ..tools import db
+from ..tools.content import context
 from ..tools.llm import anthropic_client
 from . import _base, _llm_job
 

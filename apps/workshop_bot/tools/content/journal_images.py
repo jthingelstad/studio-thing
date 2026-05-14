@@ -44,7 +44,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from . import alt_text, s3
+from .. import alt_text, s3
 
 logger = logging.getLogger("workshop.journal_images")
 

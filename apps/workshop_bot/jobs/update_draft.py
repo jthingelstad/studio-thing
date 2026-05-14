@@ -35,10 +35,8 @@ from html import escape as _html_escape
 
 from ..personas.base import is_pass_response
 from ..systems.pinboard import client as pinboard
-from ..tools import (
-    alt_text, context, db, draft as draft_mod, journal_images,
-    microblog, render, s3,
-)
+from ..tools import alt_text, db, render, s3
+from ..tools.content import context, draft as draft_mod, journal_images, microblog
 from ..tools.llm import anthropic_client
 from . import _base, _cover, _currently
 

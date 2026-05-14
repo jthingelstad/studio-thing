@@ -13,7 +13,8 @@ import logging
 from typing import Optional
 
 from ..systems.stripe import client as stripe_client
-from ..tools import context, support_state
+from ..tools import support_state
+from ..tools.content import context
 from . import _base
 
 logger = logging.getLogger("workshop.jobs.patty_quicklook")

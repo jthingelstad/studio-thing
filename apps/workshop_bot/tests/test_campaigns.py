@@ -18,7 +18,8 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base, add_campaign, campaign_report, daily_metrics, ops  # noqa: E402
-from apps.workshop_bot.tools import context, db  # noqa: E402
+from apps.workshop_bot.tools import db # noqa: E402
+from apps.workshop_bot.tools.content import context
 
 
 class _DBCase(unittest.TestCase):

@@ -19,7 +19,8 @@ _stubs.install()
 
 from apps.workshop_bot.jobs import _base, promotion_prep  # noqa: E402
 from apps.workshop_bot.scheduler import handlers  # noqa: E402
-from apps.workshop_bot.tools import context, db, rss, s3  # noqa: E402
+from apps.workshop_bot.tools import db, rss, s3 # noqa: E402
+from apps.workshop_bot.tools.content import context
 
 
 _ATOM_FEED = b"""<?xml version="1.0" encoding="utf-8"?>

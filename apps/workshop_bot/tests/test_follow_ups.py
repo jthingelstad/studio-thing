@@ -192,7 +192,7 @@ class SweepTests(_DBCase):
         self.assertIsNotNone(db.get_follow_up(a)["fired_at"])
 
     def test_issue_trigger_fires_when_window_reaches(self):
-        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window("2026-07-04", 7)
         # set an in-flight window for issue 390
         db.set_issue_window(issue_number=390, pub_date=w["pub_date"], end_date=w["end_date"],

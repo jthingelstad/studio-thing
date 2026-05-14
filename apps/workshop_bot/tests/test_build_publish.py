@@ -69,7 +69,7 @@ class BuildPublishHelperTests(unittest.TestCase):
 
 class BuildPublishTests(_DBTestCase):
     def _window(self, n=458, pub="2026-05-16"):
-        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window(pub, 7)
         db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")

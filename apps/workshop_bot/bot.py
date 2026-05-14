@@ -36,7 +36,8 @@ from .systems.buttondown.server import ButtondownServer
 from .systems.pinboard.server import PinboardServer
 from .systems.stripe.server import StripeServer
 from .systems.tinylytics.server import TinylyticsServer
-from .tools import corpus, db
+from .tools import db
+from .tools.content import corpus
 from .tools.llm import agent_tools
 from .tools.discord import startup
 

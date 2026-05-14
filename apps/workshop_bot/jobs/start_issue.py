@@ -16,7 +16,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 
-from ..tools import db, issue, s3
+from ..tools import db, s3
+from ..tools.content import issue
 from . import _base, update_draft
 
 logger = logging.getLogger("workshop.jobs.start_issue")
