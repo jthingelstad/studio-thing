@@ -67,6 +67,7 @@ The `URL` field is always the article URL — the one we'd bookmark. When a disc
 - One Discord message — keep the whole card under 1500 characters.
 - Don't repeat the URL in prose if the markdown link already has it.
 - Don't include any markdown above an `**` opener — the card starts with the title link.
-- Two failure signals (case-sensitive, must be the entire first line):
-  - `SKIP: <reason>` — applies to any discovery source; tells the job "not interesting enough, never surface again."
-  - `FETCH_FAILED: <reason>` — applies to any source; tells the job "I couldn't actually read this, retry next scan."
+- Two failure signals — when you choose one, your **entire response is that single line**. No reasoning paragraph, no "Here's why", no preamble. The line IS the response:
+  - `SKIP: <one-line reason>` — applies to any discovery source; tells the job "not interesting enough, never surface again." Put the reason on the same line as `SKIP:`. The reason itself should be terse (≤140 chars) — Jamie just needs to see the why, not the workings.
+  - `FETCH_FAILED: <one-line reason>` — applies to any source; tells the job "I couldn't actually read this, retry next scan."
+- If you find yourself writing "Low signal" or "Thin reaction post" or any other framing prose **before** the signal, stop and rewrite as a single-line `SKIP:` whose reason captures that judgment. Posting reasoning + signal as a chatty pair gets the prose pushed to ``#research`` as a card — wrong outcome.

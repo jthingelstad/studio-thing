@@ -103,8 +103,8 @@ def _uplift_cap() -> int:
 # truth that the persona (for `_discovery_sources`) and the schema-
 # enum docs both reference. Imported above.
 
-_SKIP_RE = re.compile(r"^\s*SKIP:\s*(.+?)\s*$", re.IGNORECASE | re.DOTALL)
-_FAIL_RE = re.compile(r"^\s*FETCH_FAILED:\s*(.+?)\s*$", re.IGNORECASE | re.DOTALL)
+_SKIP_RE = re.compile(r"^\s*SKIP:\s*(.+?)\s*$", re.IGNORECASE)
+_FAIL_RE = re.compile(r"^\s*FETCH_FAILED:\s*(.+?)\s*$", re.IGNORECASE)
 
 
 # ---------- per-link user-message rendering ----------
@@ -328,17 +328,30 @@ def _parse_signal(answer: str) -> tuple[str, str]:
     """Classify Linky's per-link response. Returns ``(kind, payload)``
     where ``kind`` ∈ ``{'skip', 'fail', 'card'}`` and ``payload`` is the
     reason (for skip/fail) or the card text. Empty / PASS responses are
-    treated as ``fail`` so we don't mark the URL seen prematurely."""
+    treated as ``fail`` so we don't mark the URL seen prematurely.
+
+    Signal detection scans **every line** for ``SKIP:`` / ``FETCH_FAILED:``
+    rather than just the first. The prompt asks for the signal to be the
+    entire response, but the LLM sometimes leads with a paragraph of
+    reasoning before the signal line. Treating that as a card and
+    posting the reasoning prose to ``#research`` is the worse failure
+    mode — better to honour the signal wherever it shows up. When both
+    SKIP and FETCH_FAILED appear (rare), FETCH_FAILED wins so the URL
+    can retry next scan."""
     text = (answer or "").strip()
     if not text:
         return "fail", "empty response"
-    first_line = text.splitlines()[0]
-    m = _FAIL_RE.match(first_line)
-    if m:
-        return "fail", m.group(1)
-    m = _SKIP_RE.match(first_line)
-    if m:
-        return "skip", m.group(1)
+    skip_match = None
+    for line in text.splitlines():
+        m = _FAIL_RE.match(line)
+        if m:
+            return "fail", m.group(1)
+        if skip_match is None:
+            m = _SKIP_RE.match(line)
+            if m:
+                skip_match = m
+    if skip_match is not None:
+        return "skip", skip_match.group(1)
     return "card", text
 
 

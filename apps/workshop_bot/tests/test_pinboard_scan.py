@@ -1293,6 +1293,62 @@ class PinboardScanJobTests(_DBTestCase):
         self.assertEqual(len(recorded), 5)
 
 
+class ParseSignalTests(unittest.TestCase):
+    """``_parse_signal`` classifies the per-link LLM response into
+    ``card`` / ``skip`` / ``fail``. The prompt asks for the signal to
+    be the entire response, but the model occasionally leads with a
+    reasoning paragraph before the ``SKIP:`` line — when that happens
+    we'd rather honour the signal than post the prose as a card."""
+
+    def test_first_line_skip(self):
+        self.assertEqual(
+            pinboard_scan._parse_signal("SKIP: not Jamie's lane"),
+            ("skip", "not Jamie's lane"),
+        )
+
+    def test_first_line_fetch_failed(self):
+        self.assertEqual(
+            pinboard_scan._parse_signal("FETCH_FAILED: 404"),
+            ("fail", "404"),
+        )
+
+    def test_skip_after_reasoning_prose(self):
+        """Regression: Linky led with a reasoning paragraph (`Low
+        signal. 48 points...`) then put the SKIP at the end. The old
+        parser only checked the first line and classified the response
+        as a card; the reasoning got posted to ``#research``."""
+        answer = (
+            "Low signal. 48 points, 13 comments, and the article itself is\n"
+            "just an OpenAI product announcement. Nothing here adds a new\n"
+            "angle — it's a feature drop, not a take.\n"
+            "\n"
+            "SKIP: Minor Codex feature release; Jamie covered Codex in #340."
+        )
+        kind, payload = pinboard_scan._parse_signal(answer)
+        self.assertEqual(kind, "skip")
+        self.assertIn("Minor Codex feature release", payload)
+
+    def test_fetch_failed_wins_over_skip_when_both_appear(self):
+        # FETCH_FAILED is the safer route (URL retries next scan).
+        # If the model writes both lines, prefer fail.
+        answer = "FETCH_FAILED: 403\nSKIP: paywalled"
+        self.assertEqual(pinboard_scan._parse_signal(answer)[0], "fail")
+
+    def test_card_when_no_signal_present(self):
+        answer = "**[Title](https://x)** · [HN](https://h)\n\nBody.\n\n📖 short · `hackernews`"
+        kind, payload = pinboard_scan._parse_signal(answer)
+        self.assertEqual(kind, "card")
+        self.assertEqual(payload, answer)
+
+    def test_empty_response_is_fail(self):
+        self.assertEqual(pinboard_scan._parse_signal("")[0], "fail")
+        self.assertEqual(pinboard_scan._parse_signal("   \n\n  ")[0], "fail")
+
+    def test_case_insensitive(self):
+        self.assertEqual(pinboard_scan._parse_signal("skip: lowercase")[0], "skip")
+        self.assertEqual(pinboard_scan._parse_signal("Fetch_Failed: mixed")[0], "fail")
+
+
 class PinboardClientNewVerbsTests(unittest.TestCase):
     def test_capture_blurb_merges_tags_and_clears_toread(self):
         from apps.workshop_bot.systems.pinboard import client as pbc
