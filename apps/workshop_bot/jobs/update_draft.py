@@ -31,6 +31,9 @@ import logging
 import os
 from datetime import datetime
 
+from html import escape as _html_escape
+
+from ..personas.base import is_pass_response
 from ..systems.pinboard import client as pinboard
 from ..tools import (
     alt_text, anthropic_client, context, db, draft as draft_mod, journal_images,
@@ -172,10 +175,9 @@ def _gather_fills(window: dict) -> dict[str, str]:
     # else vision-generated; else "").
     if fills.get("cover"):
         cover_alt = _cover.alt(n)
-        from html import escape as _esc
         cover_img = (
             f'<img src="{_COVER_IMAGE.format(n=n)}" '
-            f'alt="{_esc(cover_alt, quote=True)}" />'
+            f'alt="{_html_escape(cover_alt, quote=True)}" />'
         )
         fills["cover"] = f"{cover_img}\n\n{fills['cover']}"
 
@@ -218,19 +220,6 @@ def _review_model(weekday: int) -> str:
     return "sonnet" if weekday in (3, 4) else "haiku"
 
 
-def _is_pass(text: str) -> bool:
-    # Local copy of the PASS convention so this module doesn't pull in the
-    # full personas.base import graph.
-    if not text:
-        return True
-    import re as _re
-    strip = _re.compile(r"[\s*_`~\"'()<>\[\].!?,;:\\\-—–]+")
-    if strip.sub("", text).upper() == "PASS":
-        return True
-    lines = [ln for ln in text.splitlines() if ln.strip()]
-    return bool(lines) and strip.sub("", lines[-1]).upper() == "PASS"
-
-
 async def _draft_review(
     ctx: "_base.JobContext", window: dict, st: dict, prev_digest, today, draft_text: str,
 ) -> str:
@@ -259,8 +248,8 @@ async def _draft_review(
     )
     with db.AgentRun("eddy", trigger="update-draft-html-review") as run:
         answer, _m = await eddy.core(latest=user_msg, history=[], model="sonnet")
-        run.records_written = 0 if (not answer or _is_pass(answer)) else 1
-    if not answer or _is_pass(answer):
+        run.records_written = 0 if (not answer or is_pass_response(answer)) else 1
+    if not answer or is_pass_response(answer):
         return ""
     return answer.strip()
 
@@ -290,8 +279,8 @@ async def _maybe_eddy_review(
     model = _review_model(today.weekday())
     with db.AgentRun("eddy", trigger="update-draft-review") as run:
         answer, _meta = await eddy.core(latest=user_msg, history=[], model=model)
-        run.records_written = 0 if (not answer or _is_pass(answer)) else 1
-    if not answer or _is_pass(answer):
+        run.records_written = 0 if (not answer or is_pass_response(answer)) else 1
+    if not answer or is_pass_response(answer):
         return "Eddy: PASS (nothing to flag)."
     if view_url:
         answer = answer.rstrip() + f"\n\n📄 [view draft]({view_url})"

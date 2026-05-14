@@ -30,7 +30,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         return _base.JobResult(False, f"❌ no `final.md`/`draft.md` for WT{n} yet.")
     bot, channel, reason = _compose.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
     if bot is None:
-        return _base.JobResult(True, f"(compose-haiku skipped — {reason})", data={"posted": False})
+        return _base.JobResult(
+            True, f"(compose-haiku skipped — {reason})",
+            data={"options_posted": False, "haiku_written": False},
+        )
 
     asset = f"{n}/haiku.md"
     try:
@@ -47,7 +50,16 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 data = _compose.parse_json_payload(reply)
                 options = (data or {}).get("options")
                 if not isinstance(options, list) or not options:
-                    return _base.JobResult(False, "compose-haiku: model didn't return parseable options.")
+                    # Don't bail on the first parse failure — give the model
+                    # another round with a "JSON only, please" nudge. Same
+                    # pattern as compose-meta._choose. If we still can't
+                    # parse after MAX_ROUNDS attempts, fall through.
+                    user_msg += (
+                        "\n\n(That response didn't parse as the JSON object "
+                        "the prompt asked for — return *only* the JSON object, "
+                        "no surrounding prose, no markdown.)"
+                    )
+                    continue
                 options = [str(o).strip() for o in options if str(o).strip()][:5]
                 pretty = ["\n".join("> " + ln for ln in o.splitlines())  for o in options]
                 pick = await interaction.await_choice(
@@ -57,13 +69,25 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     user_msg += "\n\n(Jamie asked for fresh options — different angles, please.)"
                     continue
                 if pick is None or pick >= len(options):
-                    return _base.JobResult(False, f"compose-haiku for WT{n}: no pick (timed out) — re-run when ready.",
-                                           data={"posted": True})
+                    # Options posted to the channel; Jamie didn't pick.
+                    # `haiku_written` distinguishes "options posted, no
+                    # pick" from "the haiku was actually written."
+                    return _base.JobResult(
+                        False,
+                        f"compose-haiku for WT{n}: no pick (timed out) — re-run when ready.",
+                        data={"options_posted": True, "haiku_written": False},
+                    )
                 chosen = options[pick].strip() + "\n"
                 s3.write_issue_file(n, "haiku.md", chosen)
                 await channel.send(f"✅ Haiku set for WT{n}.", suppress_embeds=True)
-                return _base.JobResult(True, f"`haiku.md` written for WT{n}.",
-                                       data={"issue_number": n, "haiku": chosen, "posted": True})
-            return _base.JobResult(False, "compose-haiku: out of refreshes without a pick.", data={"posted": True})
+                return _base.JobResult(
+                    True, f"`haiku.md` written for WT{n}.",
+                    data={"issue_number": n, "haiku": chosen,
+                          "options_posted": True, "haiku_written": True},
+                )
+            return _base.JobResult(
+                False, "compose-haiku: out of refreshes without a pick.",
+                data={"options_posted": True, "haiku_written": False},
+            )
     except _base.JobLocked as exc:
         return _base.JobResult(False, f"⏳ `compose-haiku` already running ({exc.holder_desc}).")

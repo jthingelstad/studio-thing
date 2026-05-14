@@ -101,7 +101,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         return _base.JobResult(False, f"❌ no `final.md`/`draft.md` for WT{n} yet.")
     bot, channel, reason = _compose.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
     if bot is None:
-        return _base.JobResult(True, f"(compose-meta skipped — {reason})", data={"posted": False})
+        return _base.JobResult(
+            True, f"(compose-meta skipped — {reason})",
+            data={"metadata_written": False},
+        )
 
     asset = f"{n}/metadata.json"
     try:
@@ -117,10 +120,14 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 limit=8, trigger="compose-meta-subject",
             )
             if not subject:
+                # Subject options were posted to #editorial; Jamie didn't
+                # pick within the timeout (or the model wouldn't return a
+                # parseable list after MAX_ROUNDS). The metadata.json file
+                # is *not* written without a subject.
                 return _base.JobResult(
                     False,
                     f"compose-meta for WT{n}: no subject picked (timed out / unparseable) — re-run when ready.",
-                    data={"posted": True},
+                    data={"subject_options_posted": True, "metadata_written": False},
                 )
 
             # ---- step 2: description ----
@@ -154,7 +161,8 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             )
             return _base.JobResult(
                 True, f"`metadata.json` written for WT{n} — {subject}",
-                data={"issue_number": n, "metadata": metadata, "posted": True},
+                data={"issue_number": n, "metadata": metadata,
+                      "subject_options_posted": True, "metadata_written": True},
             )
     except _base.JobLocked as exc:
         return _base.JobResult(False, f"⏳ `compose-meta` already running ({exc.holder_desc}).")
