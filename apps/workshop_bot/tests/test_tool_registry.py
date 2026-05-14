@@ -94,14 +94,26 @@ class ToolRegistryCompositionTests(unittest.TestCase):
         names = set(self.registry.all_names())
         # The inbox tools (typed inter-agent handoffs) and the per-persona
         # S3 scratchpad tools were removed in the content-loop redesign;
-        # ``s3_issues__*`` was renamed to ``workspace__*``.
+        # ``s3_issues__*`` was renamed to ``workspace__*``. The Thingy
+        # bridge tools moved to ``apps/thingy_bridge/`` with the bridge
+        # extraction — they should never show up in workshop_bot's
+        # agent-tool registry.
         for gone in (
             "inbox__post", "inbox__list", "inbox__read", "inbox__mark_read",
             "s3_personas__list", "s3_personas__read_file", "s3_personas__write_file",
             "s3_issues__list", "s3_issues__list_workspaces",
             "s3_issues__read_file", "s3_issues__write_file",
+            "thingy__list_conversations", "thingy__get_conversation",
+            "thingy__sync", "thingy__chat", "thingy__feedback",
         ):
             self.assertNotIn(gone, names, msg=f"decommissioned tool {gone!r} should be gone")
+        # Defense-in-depth: no thingy_* name at all should appear in
+        # workshop_bot's registry (the bridge owns that surface).
+        for name in names:
+            self.assertFalse(
+                name.startswith("thingy__") or name.startswith("thingy_"),
+                msg=f"workshop_bot tool {name!r} starts with thingy — should be in apps/thingy_bridge/ instead",
+            )
 
     def test_legacy_flat_names_are_gone(self):
         names = set(self.registry.all_names())
