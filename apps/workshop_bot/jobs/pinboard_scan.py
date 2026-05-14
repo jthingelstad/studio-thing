@@ -496,15 +496,51 @@ async def _research_one(
 def _record_sightings_for_item(item: dict[str, Any], primary_source: str) -> None:
     """Record (url, source) sightings for every feed that surfaced this
     item this scan — the primary plus any in-scan co_sources (fresh
-    case) or new_sightings (uplift case). Idempotent at the DB level."""
+    case) or new_sightings (uplift case). Idempotent at the DB level;
+    swallows DB errors per-row so one bad row doesn't take down the
+    whole scan."""
     url = (item.get("_url") or item.get("url") or "").strip()
     if not url:
         return
-    db.record_sighting(url=url, source=primary_source)
+    sources = [primary_source]
     for blob in (item.get("co_sources") or []) + (item.get("new_sightings") or []):
         src = blob.get("source")
         if src and src != primary_source:
+            sources.append(src)
+    for src in sources:
+        try:
             db.record_sighting(url=url, source=src)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "pinboard-scan: record_sighting failed for (%s, %s): %s",
+                url, src, exc,
+            )
+
+
+def _safe_mark_popular_seen(url: str, title: str, *, interesting: bool, note: str) -> None:
+    try:
+        db.mark_popular_seen(
+            [{"url": url, "title": title}],
+            judged={url: (interesting, note)},
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "pinboard-scan: mark_popular_seen failed for %s: %s", url, exc,
+        )
+
+
+def _safe_mark_url_researched(
+    *, url: str, title: str, summary: str, confidence: str, fit_note: str,
+) -> None:
+    try:
+        db.mark_url_researched(
+            url=url, title=title, summary=summary,
+            confidence=confidence, fit_note=fit_note,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "pinboard-scan: mark_url_researched failed for %s: %s", url, exc,
+        )
 
 
 async def _process_one(
@@ -542,7 +578,7 @@ async def _process_one(
     if kind == "skip":
         if source == "toread":
             # Toread items shouldn't skip; treat as researched-no-card.
-            db.mark_url_researched(
+            _safe_mark_url_researched(
                 url=url, title=title, summary=f"SKIP: {payload}",
                 confidence="⊘", fit_note=payload[:200],
             )
@@ -552,10 +588,7 @@ async def _process_one(
             # (insert-or-ignore). Uplift SKIPs preserve the original
             # verdict — the sightings log captures the new sighting.
             if not is_uplift:
-                db.mark_popular_seen(
-                    [{"url": url, "title": title}],
-                    judged={url: (False, payload)},
-                )
+                _safe_mark_popular_seen(url, title, interesting=False, note=payload)
         counters["skip"] += 1
         logger.info("pinboard-scan: %s [%s] -> SKIP: %s%s",
                     source, url, "(uplift) " if is_uplift else "", payload[:100])
@@ -576,17 +609,14 @@ async def _process_one(
     except Exception as exc:  # noqa: BLE001
         logger.warning("pinboard-scan: record_research_message failed for %s: %s", url, exc)
     if source == "toread":
-        db.mark_url_researched(
+        _safe_mark_url_researched(
             url=url, title=title, summary=payload[:500],
             confidence="✦", fit_note="card posted",
         )
     else:
         _record_sightings_for_item(item, source)
         if not is_uplift:
-            db.mark_popular_seen(
-                [{"url": url, "title": title}],
-                judged={url: (True, "card posted")},
-            )
+            _safe_mark_popular_seen(url, title, interesting=True, note="card posted")
     counters["posted"] += 1
     if is_uplift:
         counters["uplift"] = counters.get("uplift", 0) + 1
@@ -605,6 +635,23 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     if linky is None or getattr(linky, "user", None) is None:
         return _base.JobResult(True, "(Linky unavailable — pinboard-scan skipped)", data={"posted": 0})
 
+    # Whole-job lock so a manual `/workshop links scan` can't overlap with
+    # the scheduled `:05` fire (or two manual fires in quick succession).
+    # The lock key isn't an asset path — pinboard-scan doesn't write a
+    # single file — so we use the sentinel ``job:<name>`` which is just a
+    # string the lock table accepts.
+    try:
+        with _base.job_lock([f"job:{NAME}"], NAME):
+            return await _run_locked(ctx, linky)
+    except _base.JobLocked as exc:
+        logger.info("pinboard-scan: skipping — already running (%s)", exc.holder_desc)
+        return _base.JobResult(
+            True, f"pinboard-scan already running ({exc.holder_desc}); skipped.",
+            data={"posted": 0},
+        )
+
+
+async def _run_locked(ctx: "_base.JobContext", linky) -> "_base.JobResult":
     # Load the per-link prompt + the dynamic context once per scan; both
     # apply identically to every candidate this scan considers.
     try:

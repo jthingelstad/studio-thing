@@ -1125,6 +1125,34 @@ class PinboardScanJobTests(_DBTestCase):
         self.assertTrue(result.ok)
         self.assertEqual(result.data["posted"], 0)
 
+    def test_concurrent_run_is_blocked_by_job_lock(self):
+        """A second `pinboard-scan` firing while the first is mid-run
+        must bail with a friendly "already running" message — protects
+        against manual `/workshop links scan` overlapping the cron
+        fire. We simulate the first scan by acquiring the same job-key
+        lock manually in the test."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        ctx, team = self._ctx_and_team()
+        patches = self._stub_sources()
+        # Pre-acquire the lock so run() sees it as "already running."
+        from apps.workshop_bot.jobs._base import job_lock
+        try:
+            for p in patches:
+                p.start()
+            try:
+                with job_lock([f"job:{pinboard_scan.NAME}"], pinboard_scan.NAME):
+                    result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertTrue(result.ok)
+        self.assertEqual(result.data["posted"], 0)
+        self.assertIn("already running", result.message)
+        # Lock-held path doesn't even reach the LLM.
+        team.linky.core.assert_not_awaited()
+
     def test_toread_public_unresearched_filters_three_ways(self):
         """The new ``toread_public_unresearched`` helper trims by toread-on,
         shared=yes, and the ``pinboard_research_done`` table. Lives in the
@@ -1347,6 +1375,65 @@ class PinboardScanJobTests(_DBTestCase):
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
         self.assertEqual(result.data["posted"], 0)
         team.linky.core.assert_not_awaited()
+
+    # ---------- _record_sightings_for_item ----------
+
+    def test_record_sightings_for_item_writes_primary_only_when_no_extras(self):
+        item = {"_url": "https://x.example/a", "_source": "lobsters",
+                "co_sources": [], "new_sightings": []}
+        pinboard_scan._record_sightings_for_item(item, "lobsters")
+        self.assertTrue(db.feed_has_seen(url="https://x.example/a", source="lobsters"))
+        self.assertFalse(db.feed_has_seen(url="https://x.example/a", source="hackernews"))
+
+    def test_record_sightings_for_item_writes_primary_plus_co_sources(self):
+        item = {
+            "_url": "https://x.example/b", "_source": "lobsters",
+            "co_sources": [
+                {"source": "hackernews", "discussion_url": "", "score": 0, "comment_count": 0},
+                {"source": "tildes", "discussion_url": "", "score": 0, "comment_count": 0},
+            ],
+            "new_sightings": [],
+        }
+        pinboard_scan._record_sightings_for_item(item, "lobsters")
+        for src in ("lobsters", "hackernews", "tildes"):
+            self.assertTrue(
+                db.feed_has_seen(url="https://x.example/b", source=src),
+                f"sighting missing for {src}",
+            )
+
+    def test_record_sightings_for_item_writes_primary_plus_new_sightings(self):
+        item = {
+            "_url": "https://x.example/c", "_source": "tildes",
+            "co_sources": [],
+            "new_sightings": [
+                {"source": "tildes", "discussion_url": "", "score": 0, "comment_count": 0},
+                {"source": "indieweb_news", "discussion_url": "", "score": 0, "comment_count": 0},
+            ],
+        }
+        pinboard_scan._record_sightings_for_item(item, "tildes")
+        # primary + new_sightings; the primary's own entry in
+        # new_sightings is deduplicated against the primary record.
+        for src in ("tildes", "indieweb_news"):
+            self.assertTrue(db.feed_has_seen(url="https://x.example/c", source=src))
+
+    def test_record_sightings_for_item_is_idempotent(self):
+        item = {"_url": "https://x.example/d", "_source": "popular",
+                "co_sources": [], "new_sightings": []}
+        pinboard_scan._record_sightings_for_item(item, "popular")
+        pinboard_scan._record_sightings_for_item(item, "popular")
+        # Two calls, one row.
+        with db.connect() as conn:
+            n = conn.execute(
+                "SELECT COUNT(*) FROM popular_seen_sightings WHERE url = ?",
+                ("https://x.example/d",),
+            ).fetchone()[0]
+        self.assertEqual(n, 1)
+
+    def test_record_sightings_for_item_no_url_is_noop(self):
+        # Defensive: missing _url field shouldn't raise.
+        pinboard_scan._record_sightings_for_item(
+            {"co_sources": [], "new_sightings": []}, "popular",
+        )
 
     # ---------- archive resonance pre-step ----------
 
@@ -2946,6 +3033,30 @@ class LinkySaveReactionTests(_DBTestCase):
         finally:
             patch_obj.stop()
         tag_mock.assert_not_called()
+
+    def test_brief_reaction_on_already_bookmarked_discovery_merges_tag(self):
+        """⭐ on a discovery URL that Jamie ALSO previously bookmarked
+        (e.g. he ✅'d it earlier) goes through the tag-merge path —
+        ``tag_as_brief`` does the fetch-merge-write, the helper returns
+        ``created=False`` and a tag-list with ``_brief`` appended."""
+        db.record_research_message(
+            discord_message_id="3005", url="https://x.example/d4",
+            source="popular", title="Previously bookmarked",
+        )
+        p = self._payload(user_id=777, emoji="⭐", message_id=3005)
+        patch_obj, tag_mock = self._patch_tag_as_brief(return_value={
+            "result_code": "done", "created": False, "tags": "ai _brief",
+            "pinboard_url": "",
+        })
+        patch_obj.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            patch_obj.stop()
+        tag_mock.assert_called_once()
+        # 🔖 ack still fires — Jamie sees that his Briefly intent landed,
+        # whether or not the URL was already bookmarked.
+        self.assertEqual(self.reactions, ["🔖"])
 
     def test_brief_reaction_failure_reacts_with_x(self):
         db.record_research_message(
