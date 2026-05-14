@@ -579,8 +579,13 @@ async def _process_one(
                     source, url, "(uplift) " if is_uplift else "", payload[:100])
         return
     # kind == "card"
+    # Allow Discord to auto-render link previews on the card so the
+    # article preview shows under each #research post. The reply /
+    # save / brief reactions all preserve the message id either way;
+    # embeds don't affect routing.
     msg = await ctx.send_one(
         "DISCORD_CHANNEL_RESEARCH", payload, persona="linky",
+        suppress_embeds=False,
     )
     if msg is None:
         # Channel not resolvable; don't mark anything — try again next scan.
