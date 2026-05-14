@@ -15,8 +15,11 @@ around the *thing* you're working on:
     /workshop campaign add | edit | report | copy | sunset
     /workshop goal set | done
     /workshop followup list | add | cancel    ← agent follow-up commitments (the targeted heartbeat)
-    /workshop thingy recent | show | sync     ← window into the public archive agent's conversations
     /workshop status                          ← bot-health snapshot, not a content job
+
+The reader-facing Thingy commands (`/thingy recent | show | sync`) now
+live in the separate `apps/thingy_bridge/` process — see that app's
+commands module for the operator window into reader conversations.
 
 Two dispatch shapes:
 
@@ -47,7 +50,6 @@ from discord import app_commands
 from ..jobs import _base as jobs_base
 from ..jobs import follow_up as followup_job
 from ..jobs import status as status_job
-from ..jobs import thingy as thingy_job
 from ..jobs import (
     add_campaign,
     build_publish,
@@ -112,9 +114,6 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
     )
     followup = app_commands.Group(
         name="followup", description="Agent follow-up commitments (the targeted heartbeat)", parent=workshop
-    )
-    thingy = app_commands.Group(
-        name="thingy", description="What readers ask the public archive agent", parent=workshop
     )
 
     async def _ack(interaction, text: str, *, file: discord.File | None = None) -> None:
@@ -460,48 +459,6 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
         interaction: discord.Interaction, id: int
     ) -> None:
         await _run_and_ack(interaction, lambda: followup_job.cancel(_ctx(bot), followup_id=int(id)), "followup cancel")
-
-    # ── /workshop thingy ──────────────────────────────────────────────
-
-    @thingy.command(
-        name="recent",
-        description="Recent conversations readers have had with Thingy (the public archive agent).",
-    )
-    @app_commands.describe(count="How many to list (default 8, max 25)")
-    async def thingy_recent_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction, count: int = 8
-    ) -> None:
-        await _run_and_ack(interaction, lambda: thingy_job.recent(_ctx(bot), count=int(count)), "thingy recent")
-
-    @thingy.command(
-        name="show",
-        description="One Thingy conversation — Eddy's assessment + the full transcript (attached).",
-    )
-    @app_commands.describe(id="The conversation id from `thingy recent` (the `#N`)")
-    async def thingy_show_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction, id: int
-    ) -> None:
-        await interaction.response.defer(ephemeral=True, thinking=True)
-        try:
-            result = await thingy_job.show(_ctx(bot), conv_id=int(id))
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("/workshop thingy show failed")
-            await _ack(interaction, f"❌ `thingy show` hit an error: `{type(exc).__name__}: {exc}`")
-            return
-        md = (result.data or {}).get("transcript_md")
-        if result.ok and md:
-            fname = (result.data or {}).get("filename") or f"thingy-conversation-{id}.md"
-            await _ack(interaction, result.message,
-                       file=discord.File(io.BytesIO(md.encode("utf-8")), filename=fname))
-        else:
-            await _ack(interaction, result.message)
-
-    @thingy.command(
-        name="sync",
-        description="Pull new Thingy conversations now (the hourly thingy-watch, on demand).",
-    )
-    async def thingy_sync_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: thingy_job.watch(_ctx(bot)), "thingy sync")
 
     # ── /workshop status ──────────────────────────────────────────────
 

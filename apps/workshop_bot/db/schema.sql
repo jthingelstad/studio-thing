@@ -134,42 +134,6 @@ CREATE TABLE IF NOT EXISTS pinboard_research_done (
   researched_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- Thingy bridge — cached Lambda session tokens, one per Discord user.
--- The bridge mints a token via /auth?action=discord_bridge, stores it
--- here, and reuses it until expires_at approaches.
-CREATE TABLE IF NOT EXISTS thingy_tokens (
-  discord_user_id TEXT PRIMARY KEY,
-  token TEXT NOT NULL,
-  expires_at INTEGER NOT NULL,                 -- epoch seconds (matches Lambda payload.exp)
-  issued_at TEXT NOT NULL DEFAULT (datetime('now')),
-  -- Profile snapshot returned by the Lambda's /auth response. JSON of
-  -- { returning, last_seen_at, turn_count, prior_session_summaries,
-  --   current_session_questions }. Updated whenever a new token is minted.
-  profile TEXT,
-  -- When we last greeted this user with a "welcome back" blurb. Lets
-  -- the bridge avoid re-greeting on every fresh-token mint.
-  last_welcomed_at TEXT
-);
-
--- Thingy bridge — one row per question forwarded to the Lambda. Lets
--- the reaction handler look up which Lambda request_id corresponds to
--- a given Discord bot reply when Jamie reacts 👍/👎 to it.
-CREATE TABLE IF NOT EXISTS thingy_requests (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  discord_user_id TEXT NOT NULL,
-  discord_message_id TEXT NOT NULL,
-  bot_response_message_id TEXT,
-  request_id TEXT,
-  question TEXT NOT NULL,
-  status TEXT NOT NULL,                        -- 'pending' / 'ok' / 'error'
-  error TEXT,
-  duration_ms INTEGER,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_thingy_requests_bot_msg
-  ON thingy_requests(bot_response_message_id);
-
 -- Decommissioned tables — dropped here so a long-lived DB converges with
 -- a fresh install. (Idempotent: no-op if they never existed.)
 --   agent_inbox    — typed inter-agent handoffs; the content-loop redesign
@@ -180,11 +144,19 @@ CREATE INDEX IF NOT EXISTS idx_thingy_requests_bot_msg
 --   supporter_events / channel_routes — reserved in the original sketch,
 --                    never wired; the goals table + env-var channel ids
 --                    cover the same ground.
+--   thingy_tokens / thingy_requests / thingy_conversations — Thingy moved
+--                    to its own process (apps/thingy_bridge/); these
+--                    tables now live in apps/thingy_bridge/db/schema.sql.
 DROP INDEX IF EXISTS idx_agent_inbox_recipient;
 DROP TABLE IF EXISTS agent_inbox;
 DROP TABLE IF EXISTS analytics;
 DROP TABLE IF EXISTS supporter_events;
 DROP TABLE IF EXISTS channel_routes;
+DROP INDEX IF EXISTS idx_thingy_requests_bot_msg;
+DROP INDEX IF EXISTS idx_thingy_conversations_ended;
+DROP TABLE IF EXISTS thingy_tokens;
+DROP TABLE IF EXISTS thingy_requests;
+DROP TABLE IF EXISTS thingy_conversations;
 
 -- Issue windows — operator-set publishing schedule. Replaces the prior
 -- auto-derived in-flight resolver (which combined S3 folder names with

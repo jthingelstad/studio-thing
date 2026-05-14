@@ -20,9 +20,6 @@ job=…)`` (or, for ``rss-check``, the bare ``handlers.rss_check``). Today:
 - ``daily-metrics`` — daily 19:00 CT. Polls active campaigns, checks
   subscriber growth + engagement; PASSes silently when nothing material
   moved, else posts a report.
-- ``thingy-watch`` — hourly. Pulls newly-logged Thingy conversations from
-  the Lambda, has Eddy assess each, mirrors it locally, and posts a card
-  to ``#chatter``; PASSes silently when nothing new.
 - ``follow-up-sweep`` — hourly. Fires due follow-ups (agent commitments —
   time-based or "when the issue hits N"): runs the persona's agent loop
   with the note + context and posts a check-in; PASSes when nothing's due.
@@ -101,15 +98,6 @@ JOBS: tuple[JobSpec, ...] = (
                                                          # engagement; PASSes silently when nothing
                                                          # material moved.
         func=functools.partial(handlers.content_job, job="daily-metrics"),
-    ),
-    JobSpec(
-        id="thingy-watch",
-        cron="7 * * * *",                                # Hourly at :07. Pulls newly-logged Thingy
-                                                         # conversations from the Lambda, has Eddy
-                                                         # assess each one, mirrors it locally, and
-                                                         # posts a card to #chatter. PASSes silently
-                                                         # when nothing new.
-        func=functools.partial(handlers.content_job, job="thingy-watch"),
     ),
     JobSpec(
         id="follow-up-sweep",

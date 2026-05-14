@@ -56,7 +56,7 @@ async def run(ctx: "_base.JobContext", *, issue_number: Optional[int] = None) ->
 
     # Whole-job lock — promotion-prep doesn't write a workspace file (only
     # posts to #promotion), so the lock is the job name itself, mirroring
-    # the `thingy-watch` / `follow-up-sweep` pattern.
+    # the `follow-up-sweep` pattern.
     try:
         with _base.job_lock([f"job:{NAME}"], NAME):
             marky_ctx = await asyncio.to_thread(
