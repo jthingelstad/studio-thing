@@ -849,12 +849,14 @@ class PinboardScanJobTests(_DBTestCase):
         team = _FakeLinkyTeam(replies=replies)
         return _base.JobContext(deps=_deps_with_linky_team(team)), team
 
-    def _stub_sources(self, *, popular=None, toread=None):
+    def _stub_sources(self, *, popular=None, toread=None, lobs=None):
         from apps.workshop_bot.systems.pinboard import client as pbc
+        from apps.workshop_bot.tools import lobsters as lob
         return [
             patch.object(pbc, "popular", lambda limit=30: list(popular or [])),
             patch.object(pbc, "toread_public_unresearched",
                          lambda limit=25: list(toread or [])),
+            patch.object(lob, "hottest", lambda limit=25: list(lobs or [])),
             # build_linky_context hits posts_all for queue depth — stub it cheap.
             patch.object(pbc, "posts_all", lambda **kw: []),
         ]
@@ -971,6 +973,71 @@ class PinboardScanJobTests(_DBTestCase):
                 ("https://example.com/stale",),
             ).fetchone()
         self.assertIsNone(row)
+
+    def test_posts_card_for_lobsters_item(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        ctx, team = self._ctx_and_team(replies=[
+            "**[KDE Funding](https://kde.org/news)** · [lobste.rs](https://lobste.rs/s/yyfjd1)\n\n"
+            "Sovereign Tech Fund invests in KDE.\n\nFresh territory, possible Notable.\n\n"
+            "📖 short · `lobsters`"
+        ])
+        lobs = [{
+            "url": "https://kde.org/news", "title": "KDE Funding",
+            "discussion_url": "https://lobste.rs/s/yyfjd1",
+            "tags": ["linux"], "score": 110, "comment_count": 15, "submitter": "zanlib",
+        }]
+        patches = self._stub_sources(lobs=lobs)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(result.data["posted"], 1)
+        # Recorded with source='lobsters' for the reply / reaction lookup.
+        row = db.lookup_research_message("1001")
+        self.assertIsNotNone(row)
+        self.assertEqual(row["source"], "lobsters")
+        self.assertEqual(row["url"], "https://kde.org/news")
+        self.assertEqual(row["title"], "KDE Funding")
+        # The LLM saw the lobsters-specific signal in its user message.
+        sent_user_msg = team.linky.core.call_args.kwargs["latest"]
+        self.assertIn("Lobsters discussion", sent_user_msg)
+        self.assertIn("110 points", sent_user_msg)
+
+    def test_lobsters_skip_marks_popular_seen(self):
+        # SKIP from a lobsters source lands in the same shared
+        # pinboard_popular_seen dedup as popular SKIPs.
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        ctx, team = self._ctx_and_team(replies=["SKIP: too niche"])
+        lobs = [{"url": "https://x/niche", "title": "Niche thing",
+                 "discussion_url": "https://lobste.rs/s/abc", "tags": [],
+                 "score": 5, "comment_count": 0, "submitter": "u"}]
+        patches = self._stub_sources(lobs=lobs)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertEqual(result.data["posted"], 0)
+        self.assertEqual(result.data["skip"], 1)
+        with db.connect() as conn:
+            row = conn.execute(
+                "SELECT judged_interesting FROM pinboard_popular_seen WHERE url = ?",
+                ("https://x/niche",),
+            ).fetchone()
+        self.assertIsNotNone(row)
+        self.assertEqual(row["judged_interesting"], 0)
 
     def test_toread_first_then_popular_ordering(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
@@ -2208,6 +2275,27 @@ class LinkySaveReactionTests(_DBTestCase):
         finally:
             add_p.stop(); get_p.stop()
         self.assertEqual(self.reactions, ["❌"])
+
+    def test_save_reaction_on_lobsters_card_creates_bookmark(self):
+        db.record_research_message(
+            discord_message_id="2008", url="https://kde.org/news",
+            source="lobsters", title="KDE Funding",
+        )
+        p = self._payload(user_id=777, emoji="✅", message_id=2008)
+        get_p, add_p, add_mock = self._patch_pinboard()
+        get_p.start(); add_p.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            add_p.stop(); get_p.stop()
+        # Lobsters items behave just like Pinboard popular for the save flow.
+        add_mock.assert_called_once()
+        kwargs = add_mock.call_args.kwargs
+        self.assertEqual(kwargs["url"], "https://kde.org/news")
+        self.assertEqual(kwargs["title"], "KDE Funding")
+        self.assertTrue(kwargs["toread"])
+        self.assertTrue(kwargs["shared"])
+        self.assertEqual(self.reactions, ["📌"])
 
 
 if __name__ == "__main__":

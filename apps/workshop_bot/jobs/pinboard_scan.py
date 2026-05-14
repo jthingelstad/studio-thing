@@ -1,6 +1,6 @@
 """``pinboard-scan`` — hourly per-link research for Linky.
 
-Two sources, one rhythm. Every hour 07:00–22:00 Central, year-round:
+Three sources, one rhythm. Every hour 07:00–22:00 Central, year-round:
 
 - **Toread** — Jamie's public toread bookmarks Linky hasn't researched yet
   (`shared=yes`, not in ``pinboard_research_done``). These are Jamie's own
@@ -9,14 +9,21 @@ Two sources, one rhythm. Every hour 07:00–22:00 Central, year-round:
   minus anything in ``pinboard_popular_seen``. Linky decides per-item
   whether it's "interesting to Jamie" — not "fits the Weekly Thing." A
   rejection still marks the URL seen; a fetch failure does not.
+- **Lobsters** — Lobste.rs hottest feed (`https://lobste.rs/hottest.json`),
+  with the same avoid-domains + ``pinboard_popular_seen`` filters as
+  Pinboard popular. Same "interesting to Jamie" bar, same SKIP /
+  FETCH_FAILED semantics. (The dedup table is shared with Pinboard
+  popular — URLs Jamie has been shown from any discovery feed stay out
+  of the queue, even if both feeds happen to surface the same URL.)
 
 For each candidate, Linky's ``research-card`` prompt runs once: fetch the
 URL, archive recall, read-length, then either a Discord card or one of
-two signals — ``SKIP: <reason>`` (popular only — not interesting) or
-``FETCH_FAILED: <reason>`` (either source — couldn't actually read it,
-retry next scan). Each card posts as its own ``#research`` message; the
-message id is recorded in ``linky_research_messages`` so a reply lands
-on the right Pinboard bookmark.
+two signals — ``SKIP: <reason>`` (discovery sources only — not
+interesting) or ``FETCH_FAILED: <reason>`` (any source — couldn't
+actually read it, retry next scan). Each card posts as its own
+``#research`` message; the message id is recorded in
+``linky_research_messages`` so a reply / save-reaction lands on the
+right Pinboard bookmark.
 
 The job is unconditional — no window gate, no weekday gate. Most off-hour
 scans will have an empty candidate list and PASS silently.
@@ -31,7 +38,7 @@ from typing import Any, Optional
 
 from ..systems.pinboard import client as pinboard
 from ..tools import alt_text  # noqa: F401 — keep imports light; reserve for future
-from ..tools import anthropic_client, avoid_domains, context, db
+from ..tools import anthropic_client, avoid_domains, context, db, lobsters
 from . import _base
 
 logger = logging.getLogger("workshop.jobs.pinboard_scan")
@@ -41,10 +48,12 @@ NAME = "pinboard-scan"
 # Soft caps per scan so a runaway popular hour or a backlog catch-up doesn't
 # flood ``#research``. Adjust via env if needed; defaults err on the side
 # of "let it through."
-_POPULAR_PER_SCAN_CAP = 10        # max popular cards posted per scan
+_POPULAR_PER_SCAN_CAP = 10        # max Pinboard-popular cards posted per scan
 _TOREAD_PER_SCAN_CAP = 10         # max toread cards posted per scan
+_LOBSTERS_PER_SCAN_CAP = 10       # max Lobste.rs cards posted per scan
 _POPULAR_FEED_LIMIT = 30          # how many popular items to consider per scan
 _TOREAD_FEED_LIMIT = 25           # how many unresearched toread items to consider
+_LOBSTERS_FEED_LIMIT = 25         # how many lobsters items to consider per scan
 
 _SKIP_RE = re.compile(r"^\s*SKIP:\s*(.+?)\s*$", re.IGNORECASE | re.DOTALL)
 _FAIL_RE = re.compile(r"^\s*FETCH_FAILED:\s*(.+?)\s*$", re.IGNORECASE | re.DOTALL)
@@ -53,17 +62,42 @@ _FAIL_RE = re.compile(r"^\s*FETCH_FAILED:\s*(.+?)\s*$", re.IGNORECASE | re.DOTAL
 # ---------- per-link LLM call ----------
 
 
-def _format_user_msg(
-    *, source: str, url: str, title: str, pinboard_url: str, description: str,
-) -> str:
-    return (
-        f"## The link\n\n"
-        f"- **Source:** `{source}`\n"
-        f"- **URL:** `{url}`\n"
-        f"- **Title:** {title or '(no title)'}\n"
-        f"- **Pinboard URL:** {pinboard_url or '(not bookmarked yet)'}\n"
-        f"- **Existing description:** {description or '(none)'}\n"
-    )
+def _format_user_msg(*, source: str, item: dict[str, Any]) -> str:
+    """Render the per-link prompt's `## The link` block from one candidate.
+    Source-specific fields are included only when relevant — the
+    `lobsters` row carries the discussion URL and tags / score the LLM
+    can lean on, the `toread` row carries the Pinboard URL + Jamie's
+    existing description, the `popular` row carries neither."""
+    url = (item.get("url") or "").strip()
+    title = (item.get("title") or "").strip()
+    lines = [
+        "## The link",
+        "",
+        f"- **Source:** `{source}`",
+        f"- **URL:** `{url}`",
+        f"- **Title:** {title or '(no title)'}",
+    ]
+    if source == "toread":
+        pin = (item.get("pinboard_url") or "").strip()
+        desc = (item.get("description") or "").strip()
+        lines.append(f"- **Pinboard URL:** {pin or '(missing)'}")
+        lines.append(f"- **Existing description:** {desc or '(none)'}")
+    elif source == "lobsters":
+        disc = (item.get("discussion_url") or "").strip()
+        tags = ", ".join(item.get("tags") or [])
+        score = item.get("score")
+        comments = item.get("comment_count")
+        submitter = (item.get("submitter") or "").strip()
+        lines.append(f"- **Lobsters discussion:** {disc}")
+        if tags:
+            lines.append(f"- **Lobsters tags:** {tags}")
+        if score is not None and comments is not None:
+            lines.append(f"- **Lobsters signal:** {score} points · {comments} comments")
+        if submitter:
+            lines.append(f"- **Submitter:** {submitter}")
+    # `popular` carries no extras — just URL + title.
+    lines.append("")
+    return "\n".join(lines)
 
 
 def _parse_signal(answer: str) -> tuple[str, str]:
@@ -89,10 +123,17 @@ def _parse_signal(answer: str) -> tuple[str, str]:
 # ---------- candidate gathering (blocking; off the event loop) ----------
 
 
-def _gather_candidates() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Pull both source lists in one blocking pass. Each side degrades to
-    an empty list on its own failure — one source flakey shouldn't kill
-    the other."""
+def _gather_candidates() -> tuple[
+    list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]],
+]:
+    """Pull all three source lists in one blocking pass. Each source
+    degrades to an empty list on its own failure — one flakey upstream
+    shouldn't block the others.
+
+    Returns ``(popular, toread, lobsters)``. The two discovery feeds
+    (popular + lobsters) both run through ``avoid_domains`` and the
+    shared ``pinboard_popular_seen`` dedup; the toread side has its own
+    filter chain via :func:`pinboard.toread_public_unresearched`."""
     try:
         raw_popular = pinboard.popular(limit=_POPULAR_FEED_LIMIT)
         popular = [
@@ -108,7 +149,17 @@ def _gather_candidates() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     except Exception as exc:  # noqa: BLE001
         logger.warning("pinboard-scan: toread pull failed: %s", exc)
         toread = []
-    return popular, toread
+    try:
+        raw_lobsters = lobsters.hottest(limit=_LOBSTERS_FEED_LIMIT)
+        lobs = [
+            it for it in raw_lobsters
+            if it.get("url") and not avoid_domains.is_excluded_url(it["url"])
+        ]
+        lobs = db.filter_unseen_popular(lobs)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("pinboard-scan: lobsters feed pull failed: %s", exc)
+        lobs = []
+    return popular, toread, lobs
 
 
 # ---------- per-link runtime ----------
@@ -120,13 +171,7 @@ async def _research_one(
     """Run one per-link LLM call. Returns ``(kind, payload)`` per
     :func:`_parse_signal`."""
     url = item.get("url") or ""
-    title = item.get("title") or ""
-    pin_url = item.get("pinboard_url") or ""
-    description = item.get("description") or ""
-    item_block = _format_user_msg(
-        source=source, url=url, title=title,
-        pinboard_url=pin_url, description=description,
-    )
+    item_block = _format_user_msg(source=source, item=item)
     user_msg = f"{linky_ctx_block}\n\n{prompt}\n\n{item_block}"
     try:
         answer, _meta = await linky.core(latest=user_msg, history=[], model="sonnet")
@@ -157,8 +202,8 @@ async def _process_one(
         logger.info("pinboard-scan: %s [%s] -> FETCH_FAILED: %s", source, url, payload[:100])
         return
     if kind == "skip":
-        # Popular-only signal — but be defensive if it shows up on toread too.
-        if source == "popular":
+        # Discovery feeds (popular / lobsters) share the same dedup table.
+        if source in ("popular", "lobsters"):
             db.mark_popular_seen(
                 [{"url": url, "title": title}],
                 judged={url: (False, payload)},
@@ -188,7 +233,7 @@ async def _process_one(
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("pinboard-scan: record_research_message failed for %s: %s", url, exc)
-    if source == "popular":
+    if source in ("popular", "lobsters"):
         db.mark_popular_seen(
             [{"url": url, "title": title}],
             judged={url: (True, "card posted")},
@@ -226,17 +271,17 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     linky_ctx = await asyncio.to_thread(context.build_linky_context, ref_date=today)
     linky_ctx_block = context.render_block(linky_ctx)
 
-    # Gather both source lists (blocking — off the event loop).
-    popular, toread = await asyncio.to_thread(_gather_candidates)
-    if not popular and not toread:
+    # Gather all three source lists (blocking — off the event loop).
+    popular, toread, lobs = await asyncio.to_thread(_gather_candidates)
+    if not popular and not toread and not lobs:
         return _base.JobResult(
-            True, "Linky: nothing new in either source — PASS.", data={"posted": 0},
+            True, "Linky: nothing new in any source — PASS.", data={"posted": 0},
         )
 
     counters = {"posted": 0, "skip": 0, "fail": 0}
 
     with db.AgentRun("linky", trigger="pinboard-scan") as run_:
-        # Toread first — Jamie's own picks before random popular finds.
+        # Toread first — Jamie's own picks before random discovery finds.
         for item in toread[:_TOREAD_PER_SCAN_CAP]:
             await _process_one(
                 ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
@@ -247,12 +292,20 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
                 source="popular", item=item, counters=counters,
             )
+        for item in lobs[:_LOBSTERS_PER_SCAN_CAP]:
+            await _process_one(
+                ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
+                source="lobsters", item=item, counters=counters,
+            )
         run_.records_written = counters["posted"]
 
+    considered = (
+        f"{len(popular)} popular + {len(toread)} toread + {len(lobs)} lobsters"
+    )
     if counters["posted"] == 0:
         return _base.JobResult(
             True,
-            f"Linky: considered {len(popular)} popular + {len(toread)} toread; "
+            f"Linky: considered {considered}; "
             f"no cards posted ({counters['skip']} skip, {counters['fail']} retry).",
             data={"posted": 0, **counters},
         )

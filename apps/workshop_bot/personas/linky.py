@@ -39,10 +39,16 @@ def _owner_id() -> Optional[str]:
     return raw or None
 
 
-# Reactions Jamie can drop on a popular-feed card to save it to Pinboard
-# without typing a reply. Each one means "yes, save this — blank
-# description, I'll finish it in Pinboard if at all."
+# Reactions Jamie can drop on a discovery-feed card (popular / lobsters)
+# to save it to Pinboard without typing a reply. Each one means "yes,
+# save this — blank description, I'll finish it in Pinboard if at all."
 _SAVE_REACTIONS = {"✅", "👍"}
+
+# Sources whose URLs aren't yet in Jamie's Pinboard, so a save-gesture
+# (reaction or reply) creates a new bookmark. `toread`-sourced URLs are
+# already bookmarked — for those, the reply updates the description and
+# the save-reaction is a no-op.
+_DISCOVERY_SOURCES = {"popular", "lobsters"}
 
 
 class LinkyBot(PersonaBot):
@@ -144,7 +150,7 @@ class LinkyBot(PersonaBot):
         row = db.lookup_research_message(str(payload.message_id))
         if row is None:
             return
-        if row.get("source") != "popular":
+        if row.get("source") not in _DISCOVERY_SOURCES:
             # Toread cards point at an already-bookmarked URL.
             return
         url = (row.get("url") or "").strip()
