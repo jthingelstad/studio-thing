@@ -30,6 +30,22 @@ _ARC_LOOKBACK_COUNT = 4
 _ARC_EXCERPT_CAP = 4_000
 
 
+async def _try_send(channel, message: str) -> bool:
+    """Best-effort `channel.send` — log on failure, never raise. compose-cta
+    writes CTA files to S3 *before* the success post; a Discord glitch on
+    that ack shouldn't bubble out as if the job failed (the artifact is on
+    S3 either way). Same protection for the other operator-confirmation
+    posts in the job — if we lose the message we want to know, but the
+    decision (0 CTAs / refresh asked / no pick) is recorded by the
+    JobResult and the agent_runs row regardless."""
+    try:
+        await channel.send(message, suppress_embeds=True)
+        return True
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("compose-cta: channel.send failed: %s", exc)
+        return False
+
+
 def _recent_publish_excerpts(issue_number: int, count: int = _ARC_LOOKBACK_COUNT) -> str:
     out: list[str] = []
     for prev in range(issue_number - 1, issue_number - 1 - count, -1):
@@ -79,7 +95,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             if not isinstance(ctas, list):
                 return _base.JobResult(False, "compose-cta: model didn't return a parseable `ctas` list.")
             if len(ctas) == 0:
-                await channel.send(f"💝 Patty's call for WT{n}: **no CTA this issue.**", suppress_embeds=True)
+                await _try_send(channel, f"💝 Patty's call for WT{n}: **no CTA this issue.**")
                 return _base.JobResult(True, f"compose-cta for WT{n}: 0 CTAs (Patty's call).",
                                        data={"issue_number": n, "ctas_written": 0, "posted": True})
 
@@ -102,20 +118,20 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 )
                 if pick == "refresh":
                     # Re-running the whole job is the clean way to refresh; ask Jamie to re-fire.
-                    await channel.send(
+                    await _try_send(
+                        channel,
                         f"(For fresh CTA framings, re-fire `/workshop issue cta` — "
                         f"slot {idx + 1} for WT{n} left unwritten.)",
-                        suppress_embeds=True,
                     )
                     continue
                 if pick is None or pick >= len(framings):
-                    await channel.send(f"(No pick for slot {idx + 1} of WT{n} — left unwritten.)", suppress_embeds=True)
+                    await _try_send(channel, f"(No pick for slot {idx + 1} of WT{n} — left unwritten.)")
                     continue
                 chosen = framings[pick]
                 content = f"---\nplacement: {placement}\n---\n\n{chosen}\n"
                 s3.write_issue_file(n, f"cta-{idx + 1}.md", content)
                 written += 1
-            await channel.send(f"✅ {written} CTA(s) written for WT{n}.", suppress_embeds=True)
+            await _try_send(channel, f"✅ {written} CTA(s) written for WT{n}.")
             return _base.JobResult(True, f"compose-cta for WT{n}: {written} CTA(s) written.",
                                    data={"issue_number": n, "ctas_written": written, "posted": True})
     except _base.JobLocked as exc:

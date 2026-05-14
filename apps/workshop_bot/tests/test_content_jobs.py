@@ -2661,6 +2661,23 @@ class ComposeCtaTests(_DBTestCase):
         body = sent.split("```markdown\n", 1)[1].rsplit("\n```", 1)[0]
         self.assertEqual(len(body), cap)
 
+    def test_channel_send_failure_does_not_lose_written_cta(self):
+        # If Discord glitches on the success post, the CTA file is already
+        # on S3 — the job must still complete successfully and report
+        # ctas_written=1, not bubble the discord error out.
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        reply = '{"ctas": [{"placement": "after_brief", "framings": ["x"]}]}'
+        fc = _FakeBotChannel(persona="patty", reply=reply)
+        fc.channel.send = AsyncMock(side_effect=RuntimeError("discord down"))
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
+            result = asyncio.run(compose_cta.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(result.data["ctas_written"], 1)
+        self.assertIn("x", self.ws.files[(458, "cta-1.md")])
+
     def test_concurrent_run_is_blocked_by_job_lock(self):
         self._window()
         self.ws.write_issue_file(458, "draft.md", _base.starter_template())
