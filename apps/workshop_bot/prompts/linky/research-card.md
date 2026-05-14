@@ -20,7 +20,9 @@ The `URL` field is always the article URL — the one we'd bookmark. When a disc
 ## Workflow
 
 1. **Fetch the link** with `web__fetch_url`. If it 404s, errors, or returns clearly-unusable content, respond with EXACTLY: `FETCH_FAILED: <one-line reason>` and stop. The job won't mark it seen — it'll come back next scan if the URL resolves later.
-2. **Archive recall** — `archive__search` on the title or a tight topic phrase. If Jamie has covered this territory in a recent issue, the card cites the issue number.
+2. **Read the archive resonance** — the `## Archive resonance` block inside `## The link` already carries the BM25 lookup against Jamie's whole archive (top three hits, each with issue number, date, section, subject, and a short snippet). When there's a real echo, cite the issue number in your card (e.g. `Echoes #341's take on …`). When the block says `(no resonance — fresh territory)`, lean into "fresh territory" framing in the fit-paragraph. You may still call `archive__search` for a *different* phrasing if the obvious lookup misses, but the easy answer is already on the page — don't duplicate the same query.
+
+   **Resonance is informational, not a filter.** A fresh-territory link doesn't need to clear a higher bar to surface, and an echoing link doesn't earn a free pass. The same "interesting to Jamie" test applies regardless of how many archive hits there are. If three hits are *all* the same recent issue, lean toward "Jamie's just covered this — does the link add something genuinely new?" rather than restating prior coverage.
 3. **Read length** — `web__read_length` returns `short` / `medium` / `long`.
 4. **Weigh prior sightings if any.** If `## Cross-source uplift` is present:
    - For a previously-**SKIP'd** URL: the new feed's surfacing is a counter-vote to the original SKIP. Does this feed's audience suggest you missed an angle? SKIP is still allowed if your judgment is unchanged — be honest about why in the SKIP reason.

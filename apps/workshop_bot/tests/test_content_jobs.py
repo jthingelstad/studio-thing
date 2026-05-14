@@ -1348,6 +1348,162 @@ class PinboardScanJobTests(_DBTestCase):
         self.assertEqual(result.data["posted"], 0)
         team.linky.core.assert_not_awaited()
 
+    # ---------- archive resonance pre-step ----------
+
+    def _ctx_with_corpus_search(self, *, hits, replies):
+        """Build a ctx whose `deps.corpus.search(query, k)` returns a
+        canned list of chunks. Captures the query string so tests can
+        assert the per-source query strategy."""
+        ctx, team = self._ctx_and_team(replies=replies)
+        # The default deps MagicMock auto-creates `corpus.search` —
+        # configure it to return our canned hits and remember the call.
+        ctx.deps.corpus.search.return_value = list(hits)
+        return ctx, team
+
+    def test_archive_resonance_block_renders_when_hits_present(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        ctx, team = self._ctx_with_corpus_search(
+            hits=[
+                {"issue_number": 341, "publish_date": "2025-09-13",
+                 "section": "Notable", "subject": "Vibe coding & AI",
+                 "text": "A solid argument about maintenance cost..."},
+                {"issue_number": 287, "publish_date": "2024-08-15",
+                 "section": "Briefly", "subject": "Old take", "text": "Earlier mention."},
+            ],
+            replies=[
+                "**[A](https://x/y)**\n\nB.\n\nFresh.\n\n📖 short · `lobsters`"
+            ],
+        )
+        lobs = [{"url": "https://x/y", "title": "Vibe coding article",
+                 "discussion_url": "https://lobste.rs/s/abc"}]
+        patches = self._stub_sources(lobs=lobs)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertTrue(result.ok, result.message)
+        sent = team.linky.core.call_args.kwargs["latest"]
+        self.assertIn("## Archive resonance", sent)
+        self.assertIn("#341 (2025-09-13) · Notable — \"Vibe coding & AI\"", sent)
+        self.assertIn("#287 (2024-08-15) · Briefly — \"Old take\"", sent)
+        # Snippets should appear under each hit (the `>` blockquote line).
+        self.assertIn("> A solid argument about maintenance cost...", sent)
+
+    def test_archive_resonance_block_no_resonance_when_empty(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        ctx, team = self._ctx_with_corpus_search(
+            hits=[],
+            replies=["**[A](https://x/y)**\n\nB.\n\nFresh.\n\n📖 short · `lobsters`"],
+        )
+        lobs = [{"url": "https://x/y", "title": "Title"}]
+        patches = self._stub_sources(lobs=lobs)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        sent = team.linky.core.call_args.kwargs["latest"]
+        self.assertIn("## Archive resonance", sent)
+        self.assertIn("_(no resonance — fresh territory)_", sent)
+
+    def test_archive_resonance_truncates_long_snippets(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        long_text = "word " * 500  # 2500 chars, will be aggressively truncated
+        ctx, team = self._ctx_with_corpus_search(
+            hits=[{"issue_number": 1, "publish_date": "2025-01-01",
+                   "section": "Notable", "subject": "Long", "text": long_text}],
+            replies=["**[A](https://x/y)**\n\nB.\n\nB.\n\n📖 short · `lobsters`"],
+        )
+        lobs = [{"url": "https://x/y", "title": "T"}]
+        patches = self._stub_sources(lobs=lobs)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        sent = team.linky.core.call_args.kwargs["latest"]
+        # Find the snippet line and check its length.
+        snippet_lines = [l for l in sent.splitlines() if l.startswith("  > ")]
+        self.assertEqual(len(snippet_lines), 1)
+        body = snippet_lines[0][4:]  # strip "  > "
+        # Cap is 180 chars + ellipsis (so up to ~181). Definitely much
+        # less than the 2500-char raw.
+        self.assertLess(len(body), 200)
+        self.assertTrue(body.endswith("…"))
+
+    def test_archive_resonance_uses_title_plus_description_for_toread(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        ctx, team = self._ctx_with_corpus_search(
+            hits=[],
+            replies=["**[A](https://x/y)** · [pin](https://pinboard.in/b/abc)\n\nA.\n\nB.\n\n📖 short · `toread`"],
+        )
+        toread = [{
+            "url": "https://x/y", "title": "Bare title",
+            "description": "Jamie's existing notes — meta-topic stuff",
+            "pinboard_url": "https://pinboard.in/b/abc",
+        }]
+        patches = self._stub_sources(toread=toread)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        # corpus.search was called with title + description (toread path).
+        call_args = ctx.deps.corpus.search.call_args
+        # Could be positional or keyword — pull the first positional arg.
+        query = call_args.args[0] if call_args.args else call_args.kwargs.get("query", "")
+        self.assertIn("Bare title", query)
+        self.assertIn("Jamie's existing notes", query)
+
+    def test_archive_resonance_uses_title_only_for_discovery_sources(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        ctx, team = self._ctx_with_corpus_search(
+            hits=[],
+            replies=["**[A](https://x/y)**\n\nA.\n\nB.\n\n📖 short · `hackernews`"],
+        )
+        hn = [{
+            "url": "https://x/y", "title": "Title only",
+            # Even if `description` shows up on an HN dict, it's not
+            # part of the query for discovery sources.
+            "description": "should not be in the query",
+        }]
+        patches = self._stub_sources(hn=hn)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        call_args = ctx.deps.corpus.search.call_args
+        query = call_args.args[0] if call_args.args else call_args.kwargs.get("query", "")
+        self.assertIn("Title only", query)
+        self.assertNotIn("should not be in the query", query)
+
     def test_cross_source_uplift_per_scan_cap_enforced(self):
         """Six uplift candidates in one scan: only the cap (5) are
         processed; the sixth's sighting is NOT recorded so it stays

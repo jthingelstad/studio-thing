@@ -125,6 +125,70 @@ _FAIL_RE = re.compile(r"^\s*FETCH_FAILED:\s*(.+?)\s*$", re.IGNORECASE | re.DOTAL
 # ---------- per-link user-message rendering ----------
 
 
+# Per-card resonance snippet length and how many archive hits to fetch.
+# Each hit's chunk text is hard-capped at 180 chars in the rendered
+# block (the corpus's underlying text is up to 1500 chars; this is just
+# a tighter cap for prompt-priming purposes).
+_ARCHIVE_RESONANCE_K = 3
+_ARCHIVE_SNIPPET_CHARS = 180
+_ARCHIVE_QUERY_CHARS = 150
+
+
+def _archive_query(*, source: str, item: dict[str, Any]) -> str:
+    """Build the BM25 query for the archive lookup. For toread items
+    Jamie's description (when present) often retrieves better than the
+    bare title — combine them. For discovery items, descriptions are
+    usually slug-noise, so title only."""
+    title = (item.get("title") or "").strip()
+    if source == "toread":
+        desc = (item.get("description") or "").strip()
+        query = f"{title} {desc}".strip()
+    else:
+        query = title
+    return query[:_ARCHIVE_QUERY_CHARS]
+
+
+def _truncate_snippet(text: str) -> str:
+    """Trim a chunk's text to the resonance-snippet limit. Single line."""
+    s = " ".join((text or "").split())
+    if len(s) <= _ARCHIVE_SNIPPET_CHARS:
+        return s
+    cut = s[:_ARCHIVE_SNIPPET_CHARS].rsplit(" ", 1)[0]
+    return f"{cut}…"
+
+
+def _render_archive_resonance(*, corpus, source: str, item: dict[str, Any]) -> list[str]:
+    """Synchronous BM25 lookup against the archive corpus, formatted as
+    a ``## Archive resonance`` block of bullet entries. Empty list if
+    the corpus handle is missing (test stubs); a single
+    ``(no resonance — fresh territory)`` bullet if the search returned
+    nothing positive."""
+    if corpus is None:
+        return []
+    query = _archive_query(source=source, item=item)
+    if not query:
+        return []
+    try:
+        hits = corpus.search(query, k=_ARCHIVE_RESONANCE_K)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("pinboard-scan: archive resonance lookup failed: %s", exc)
+        return []
+    lines = ["", "## Archive resonance", ""]
+    if not hits:
+        lines.append("_(no resonance — fresh territory)_")
+        return lines
+    for hit in hits:
+        issue = hit.get("issue_number") or hit.get("issue") or "?"
+        date = (hit.get("publish_date") or hit.get("date") or "")[:10]
+        section = hit.get("section") or "Issue"
+        subject = (hit.get("subject") or "").strip()
+        lines.append(f"- #{issue} ({date}) · {section} — \"{subject}\"")
+        snippet = _truncate_snippet(hit.get("text", ""))
+        if snippet:
+            lines.append(f"  > {snippet}")
+    return lines
+
+
 def _label_for(source: str) -> str:
     spec = by_name(DISCOVERY_FEEDS, source)
     return spec.label if spec is not None else source
@@ -191,7 +255,7 @@ def _first_source_in_history(history: list[dict[str, Any]]) -> str:
     return (history[0].get("source") if history else "") or ""
 
 
-def _format_user_msg(*, source: str, item: dict[str, Any]) -> str:
+def _format_user_msg(*, source: str, item: dict[str, Any], corpus=None) -> str:
     """Render the per-link prompt's ``## The link`` block from one
     candidate. Toread items get the Pinboard URL + Jamie's existing
     description. Discovery items get the optional discussion URL +
@@ -256,6 +320,12 @@ def _format_user_msg(*, source: str, item: dict[str, Any]) -> str:
                 if co_sig:
                     lines.append(co_sig)
     lines.append("")
+    # Append the archive resonance block (no-op when corpus is None,
+    # which is the test-stub case). Renders an "Archive resonance"
+    # subsection inside the same ## The link block so the LLM gets the
+    # obvious BM25 hits without having to call `archive__search` for
+    # them.
+    lines.extend(_render_archive_resonance(corpus=corpus, source=source, item=item))
     # Append the uplift block (no-op for non-uplift items).
     lines.extend(_render_uplift_block(item))
     return "\n".join(lines)
@@ -395,12 +465,14 @@ def _gather_candidates() -> tuple[
 
 
 async def _research_one(
-    *, linky, prompt: str, linky_ctx_block: str, source: str, item: dict[str, Any],
+    *, linky, prompt: str, linky_ctx_block: str, source: str,
+    item: dict[str, Any], corpus=None,
 ) -> tuple[str, str]:
     """Run one per-link LLM call. Returns ``(kind, payload)`` per
-    :func:`_parse_signal`."""
+    :func:`_parse_signal`. ``corpus`` is the archive ``CorpusHandle``
+    used to render the per-card resonance block (omitted in tests)."""
     url = item.get("url") or ""
-    item_block = _format_user_msg(source=source, item=item)
+    item_block = _format_user_msg(source=source, item=item, corpus=corpus)
     user_msg = f"{linky_ctx_block}\n\n{prompt}\n\n{item_block}"
     try:
         answer, _meta = await linky.core(latest=user_msg, history=[], model="sonnet")
@@ -446,9 +518,10 @@ async def _process_one(
         return
     title = item.get("title") or ""
     is_uplift = bool(item.get("_is_uplift"))
+    corpus = getattr(getattr(ctx, "deps", None), "corpus", None)
     kind, payload = await _research_one(
         linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
-        source=source, item=item,
+        source=source, item=item, corpus=corpus,
     )
     if kind == "fail":
         # Don't mark seen — retry next scan.
