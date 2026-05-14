@@ -58,7 +58,7 @@ The `URL` field is always the article URL — the one we'd bookmark. When a disc
 - **`📖`** — exactly one of `short` / `medium` / `long`, then a middle dot, then the source label backticked.
 - **`💬` action line:**
   - **Discovery source**: `_React ✅ / 👍 to save (toread + public, blank description); ⭐ to save and tag as Briefly; or reply to save with your reply as the description._`
-  - **`toread`**: `_⭐ to tag this as a Briefly candidate; reply to save your text as this bookmark's Pinboard description._`
+  - **`toread`**: `_⭐ to tag this as a Briefly candidate; reply to save your text as this bookmark's Pinboard description. (✅ / 👍 are no-ops here — the URL is already in your Pinboard.)_`
 
 ## Output rules
 

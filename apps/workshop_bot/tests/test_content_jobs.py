@@ -1476,6 +1476,39 @@ class PinboardScanJobTests(_DBTestCase):
         self.assertIn("Bare title", query)
         self.assertIn("Jamie's existing notes", query)
 
+    def test_archive_resonance_omitted_when_corpus_is_none(self):
+        """When the job's `ctx.deps.corpus` is None (a deployment with no
+        corpus loaded yet) the resonance block is omitted entirely from
+        the per-link `## The link` data section. (The prompt body itself
+        legitimately mentions `## Archive resonance` in its workflow
+        description, so we check only the link block — the bit appended
+        after the prompt — to verify the data block is absent.)"""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        ctx, team = self._ctx_and_team(replies=[
+            "**[A](https://x/y)**\n\nA.\n\nB.\n\n📖 short · `lobsters`"
+        ])
+        # Override the auto-MagicMock corpus that _ctx_and_team produces.
+        ctx.deps.corpus = None
+        lobs = [{"url": "https://x/y", "title": "T"}]
+        patches = self._stub_sources(lobs=lobs)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        sent = team.linky.core.call_args.kwargs["latest"]
+        link_block = sent.rsplit("## The link", 1)[-1]
+        self.assertNotIn("## Archive resonance", link_block)
+        self.assertNotIn("no resonance", link_block)
+        # And `corpus.search` was never called either — there's no corpus.
+        # (No assertion needed since `ctx.deps.corpus is None`; the
+        # `_render_archive_resonance` guard returns [] early.)
+
     def test_archive_resonance_uses_title_only_for_discovery_sources(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         ctx, team = self._ctx_with_corpus_search(

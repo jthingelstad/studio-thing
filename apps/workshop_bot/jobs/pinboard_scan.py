@@ -83,8 +83,22 @@ _TOREAD_FEED_LIMIT = 25
 # three uplift cards back-to-back. Five per scan is enough to surface
 # the genuine signal without flooding `#research`. Sightings are
 # *recorded* even when we cap — so we never lose the signal, the
-# excess just falls into a future scan.
-_UPLIFT_PER_SCAN_CAP = 5
+# excess just falls into a future scan. Tunable via the
+# ``WORKSHOP_UPLIFT_PER_SCAN_CAP`` env var; matches the pattern used by
+# ``WORKSHOP_ALT_VISION_CAP`` and friends.
+_UPLIFT_PER_SCAN_CAP_DEFAULT = 5
+
+
+def _uplift_cap() -> int:
+    import os
+    raw = (os.environ.get("WORKSHOP_UPLIFT_PER_SCAN_CAP") or "").strip()
+    if not raw:
+        return _UPLIFT_PER_SCAN_CAP_DEFAULT
+    try:
+        v = int(raw)
+        return v if v >= 0 else _UPLIFT_PER_SCAN_CAP_DEFAULT
+    except ValueError:
+        return _UPLIFT_PER_SCAN_CAP_DEFAULT
 
 # The discovery-feed registry. Each spec is one source. Lambdas in
 # ``fetch`` re-resolve the module attribute at call time, so tests can
@@ -221,7 +235,6 @@ def _render_uplift_block(item: dict[str, Any]) -> list[str]:
     lines = ["", "## Cross-source uplift", ""]
     history = item.get("uplift_history") or []
     new_sightings = item.get("new_sightings") or []
-    new_sources = {s["source"] for s in new_sightings}
     if history:
         lines.append("This URL has been seen before:")
         for h in history:
@@ -244,8 +257,6 @@ def _render_uplift_block(item: dict[str, Any]) -> list[str]:
     else:
         lines.append("")
         lines.append("**Previous verdict:** sighting recorded with no verdict yet.")
-    # Drop trailing source list — same info as the bullets above.
-    _ = new_sources  # reserved for future "diff vs history" logic
     return lines
 
 
@@ -457,7 +468,7 @@ def _gather_candidates() -> tuple[
     # Uplift candidates capped per scan — sightings get recorded only on
     # the items we actually process, so the excess naturally rolls into
     # the next scan.
-    uplift_items = list(uplift_by_key.values())[:_UPLIFT_PER_SCAN_CAP]
+    uplift_items = list(uplift_by_key.values())[:_uplift_cap()]
     return toread, fresh_items, uplift_items, raw_counts
 
 
