@@ -1,8 +1,11 @@
 """Eddy — editor.
 
-Eddy also hosts the ``/workshop`` slash-command surface. Slash commands
-are per Discord application token, so we register on exactly one bot
-rather than fanning out to all four. See ``personas/commands.py``.
+Eddy hosts the ``/eddy`` slash tree (issue assembly, status,
+follow-ups) and — during the migration in commits 1–3 — also hosts the
+legacy ``/workshop`` tree alongside. Both register on the same
+``CommandTree`` because slash commands are per Discord application
+token and Eddy's bot owns this one. The legacy tree is removed in
+commit 4.
 """
 
 from __future__ import annotations
@@ -13,7 +16,7 @@ import os
 import discord
 
 from .base import Deps, PersonaBot
-from .commands import register_workshop_commands
+from .commands import register_eddy_commands, register_workshop_commands
 
 logger = logging.getLogger("workshop.eddy")
 
@@ -28,7 +31,10 @@ class EddyBot(PersonaBot):
 
     def __init__(self, deps: Deps) -> None:
         super().__init__(deps)
+        # /workshop and /eddy on the same tree during the migration.
+        # Commit 4 removes register_workshop_commands.
         self.command_tree = register_workshop_commands(self)
+        register_eddy_commands(self, tree=self.command_tree)
 
     async def on_ready(self) -> None:  # type: ignore[override]
         await super().on_ready()
