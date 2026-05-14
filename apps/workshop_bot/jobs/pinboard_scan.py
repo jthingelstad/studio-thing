@@ -1,40 +1,34 @@
 """``pinboard-scan`` — hourly per-link research for Linky.
 
-Four sources, one rhythm. Every hour 07:00–22:00 Central, year-round:
+One toread lane plus N discovery feeds, one rhythm. Every hour 07:00–
+22:00 Central, year-round:
 
-- **Toread** — Jamie's public toread bookmarks Linky hasn't researched yet
-  (`shared=yes`, not in ``pinboard_research_done``). These are Jamie's own
+- **Toread** — Jamie's public toread bookmarks Linky hasn't researched
+  yet (`shared=yes`, not in ``pinboard_research_done``). Jamie's own
   picks; Linky always writes a card.
-- **Popular** — Pinboard's site-wide popular feed, minus avoid-domains and
-  minus anything in ``pinboard_popular_seen``. Linky decides per-item
-  whether it's "interesting to Jamie" — not "fits the Weekly Thing." A
-  rejection still marks the URL seen; a fetch failure does not.
-- **Lobsters** — Lobste.rs hottest feed (`https://lobste.rs/hottest.json`),
-  with the same avoid-domains + ``pinboard_popular_seen`` filters as
-  Pinboard popular. Same "interesting to Jamie" bar, same SKIP /
-  FETCH_FAILED semantics.
-- **Hacker News** — HN's current front page, fetched via Algolia's
-  search index (`tags=front_page`). Same filter chain and SKIP /
-  FETCH_FAILED semantics as the other two discovery feeds. Ask HN /
-  Show HN posts without an external URL are dropped upstream in
-  ``tools.hackernews``.
+- **Discovery feeds** — declared in :data:`DISCOVERY_FEEDS` (a tuple of
+  :class:`FeedSpec`). Each feed runs through the same avoid-domains +
+  ``pinboard_popular_seen`` filter chain; Linky decides per-item whether
+  it's "interesting to Jamie" — not "fits the Weekly Thing." A rejection
+  still marks the URL seen; a fetch failure does not.
 
-The dedup table ``pinboard_popular_seen`` is shared across all three
-discovery feeds — URLs Jamie has been shown from any popular surface
-stay out of the queue, even if multiple feeds trend the same URL on
-the same day.
+To add a feed: write a fetcher in ``tools/<name>.py``, add a line to
+``DISCOVERY_FEEDS``, append the source name to ``db.RESEARCH_SOURCES``.
+No other code changes are needed — the loops, the user-message
+rendering, and the persona's ``_DISCOVERY_SOURCES`` derivation all read
+the registry.
 
-For each candidate, Linky's ``research-card`` prompt runs once: fetch the
-URL, archive recall, read-length, then either a Discord card or one of
-two signals — ``SKIP: <reason>`` (discovery sources only — not
+For each candidate, Linky's ``research-card`` prompt runs once: fetch
+the URL, archive recall, read-length, then either a Discord card or one
+of two signals — ``SKIP: <reason>`` (discovery sources only — not
 interesting) or ``FETCH_FAILED: <reason>`` (any source — couldn't
 actually read it, retry next scan). Each card posts as its own
 ``#research`` message; the message id is recorded in
 ``linky_research_messages`` so a reply / save-reaction lands on the
 right Pinboard bookmark.
 
-The job is unconditional — no window gate, no weekday gate. Most off-hour
-scans will have an empty candidate list and PASS silently.
+The job is unconditional — no window gate, no weekday gate. Most off-
+hour scans will have an empty candidate set and PASS silently.
 """
 
 from __future__ import annotations
@@ -42,52 +36,59 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-from typing import Any, Optional
+from typing import Any
 
 from ..systems.pinboard import client as pinboard
 from ..tools import alt_text  # noqa: F401 — keep imports light; reserve for future
 from ..tools import anthropic_client, avoid_domains, context, db, hackernews, lobsters
+from ..tools.feed_registry import FeedSpec, by_name
 from . import _base
 
 logger = logging.getLogger("workshop.jobs.pinboard_scan")
 
 NAME = "pinboard-scan"
 
-# Soft caps per scan so a runaway popular hour or a backlog catch-up doesn't
-# flood ``#research``. Adjust via env if needed; defaults err on the side
-# of "let it through."
-_POPULAR_PER_SCAN_CAP = 10        # max Pinboard-popular cards posted per scan
-_TOREAD_PER_SCAN_CAP = 10         # max toread cards posted per scan
-_LOBSTERS_PER_SCAN_CAP = 10       # max Lobste.rs cards posted per scan
-_HACKERNEWS_PER_SCAN_CAP = 10     # max Hacker News cards posted per scan
-_POPULAR_FEED_LIMIT = 30          # how many popular items to consider per scan
-_TOREAD_FEED_LIMIT = 25           # how many unresearched toread items to consider
-_LOBSTERS_FEED_LIMIT = 25         # how many lobsters items to consider per scan
-_HACKERNEWS_FEED_LIMIT = 25       # how many HN front-page items to consider per scan
+# Toread is its own lane (different fetcher signature, different dedup
+# table, no SKIP path, different action lines). Keep its cap + feed
+# limit at module scope, separate from the discovery registry.
+_TOREAD_PER_SCAN_CAP = 10
+_TOREAD_FEED_LIMIT = 25
+
+# The discovery-feed registry. Each spec is one source. Lambdas in
+# ``fetch`` re-resolve the module attribute at call time, so tests can
+# patch ``pinboard.popular`` / ``lobsters.hottest`` / ``hackernews.top``
+# directly without rewriting the spec.
+DISCOVERY_FEEDS: tuple[FeedSpec, ...] = (
+    FeedSpec(
+        name="lobsters", label="Lobsters", pin_label="lobste.rs",
+        fetch=lambda limit: lobsters.hottest(limit=limit),
+        per_scan_cap=10, feed_limit=25, primary_priority=30,
+    ),
+    FeedSpec(
+        name="hackernews", label="Hacker News", pin_label="HN",
+        fetch=lambda limit: hackernews.top(limit=limit),
+        per_scan_cap=10, feed_limit=25, primary_priority=20,
+    ),
+    FeedSpec(
+        name="popular", label="Pinboard popular", pin_label="",
+        fetch=lambda limit: pinboard.popular(limit=limit),
+        per_scan_cap=10, feed_limit=30, primary_priority=10,
+    ),
+)
 
 _SKIP_RE = re.compile(r"^\s*SKIP:\s*(.+?)\s*$", re.IGNORECASE | re.DOTALL)
 _FAIL_RE = re.compile(r"^\s*FETCH_FAILED:\s*(.+?)\s*$", re.IGNORECASE | re.DOTALL)
 
 
-# ---------- per-link LLM call ----------
-
-
-# Display labels for the discussion-feed sources — same data shape
-# (discussion URL + score + comments + submitter), different community
-# names in the prompt so the LLM knows which thread it's looking at.
-_DISCUSSION_LABEL: dict[str, str] = {
-    "lobsters": "Lobsters",
-    "hackernews": "Hacker News",
-}
+# ---------- per-link user-message rendering ----------
 
 
 def _format_user_msg(*, source: str, item: dict[str, Any]) -> str:
-    """Render the per-link prompt's `## The link` block from one candidate.
-    Source-specific fields are included only when relevant — the
-    discussion-feed sources (`lobsters`, `hackernews`) carry a
-    discussion URL plus score / comments / submitter, the `toread` row
-    carries the Pinboard URL + Jamie's existing description, the
-    `popular` row carries neither."""
+    """Render the per-link prompt's ``## The link`` block from one
+    candidate. Toread items get the Pinboard URL + Jamie's existing
+    description. Discovery items get the optional discussion URL +
+    score / comments / submitter / tags fields the fetcher produced;
+    fields the fetcher omitted (or set to zero) are simply not rendered."""
     url = (item.get("url") or "").strip()
     title = (item.get("title") or "").strip()
     lines = [
@@ -102,35 +103,39 @@ def _format_user_msg(*, source: str, item: dict[str, Any]) -> str:
         desc = (item.get("description") or "").strip()
         lines.append(f"- **Pinboard URL:** {pin or '(missing)'}")
         lines.append(f"- **Existing description:** {desc or '(none)'}")
-    elif source in _DISCUSSION_LABEL:
-        label = _DISCUSSION_LABEL[source]
+    else:
+        spec = by_name(DISCOVERY_FEEDS, source)
+        label = spec.label if spec is not None else source
         disc = (item.get("discussion_url") or "").strip()
+        if disc:
+            lines.append(f"- **{label} discussion:** {disc}")
         tags = ", ".join(item.get("tags") or [])
-        score = item.get("score")
-        comments = item.get("comment_count")
-        submitter = (item.get("submitter") or "").strip()
-        lines.append(f"- **{label} discussion:** {disc}")
         if tags:
             lines.append(f"- **{label} tags:** {tags}")
-        if score is not None and comments is not None:
+        score = item.get("score")
+        comments = item.get("comment_count")
+        # Only render the signal line when there's actually a number worth
+        # surfacing — discovery feeds with no vote system (Tildes,
+        # IndieWeb News) leave these as 0 and we drop the row.
+        if score and comments is not None and comments:
             lines.append(f"- **{label} signal:** {score} points · {comments} comments")
+        elif score and (comments is None or comments == 0):
+            lines.append(f"- **{label} signal:** {score} points")
+        submitter = (item.get("submitter") or "").strip()
         if submitter:
             lines.append(f"- **Submitter:** {submitter}")
-    # `popular` carries no extras — just URL + title.
     lines.append("")
     return "\n".join(lines)
 
 
 def _parse_signal(answer: str) -> tuple[str, str]:
-    """Classify Linky's per-link response. Returns ``(kind, payload)`` where
-    ``kind`` ∈ ``{'skip', 'fail', 'card'}`` and ``payload`` is the reason
-    (for skip/fail) or the card text. Empty / PASS responses are treated
-    as ``fail`` so we don't mark the URL seen prematurely."""
+    """Classify Linky's per-link response. Returns ``(kind, payload)``
+    where ``kind`` ∈ ``{'skip', 'fail', 'card'}`` and ``payload`` is the
+    reason (for skip/fail) or the card text. Empty / PASS responses are
+    treated as ``fail`` so we don't mark the URL seen prematurely."""
     text = (answer or "").strip()
     if not text:
         return "fail", "empty response"
-    # Two failure signals: SKIP: ... or FETCH_FAILED: ...; both must be the
-    # entire first line (case-insensitive). Anything else is the card.
     first_line = text.splitlines()[0]
     m = _FAIL_RE.match(first_line)
     if m:
@@ -154,39 +159,28 @@ def _filter_discovery(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return db.filter_unseen_popular(pre)
 
 
-def _gather_candidates() -> tuple[
-    list[dict[str, Any]], list[dict[str, Any]],
-    list[dict[str, Any]], list[dict[str, Any]],
-]:
-    """Pull all four source lists in one blocking pass. Each source
-    degrades to an empty list on its own failure — one flakey upstream
-    shouldn't block the others.
+def _gather_candidates() -> tuple[list[dict[str, Any]], dict[str, list[dict[str, Any]]]]:
+    """Pull the toread lane and every discovery feed in :data:`DISCOVERY_FEEDS`
+    in one blocking pass. Each source degrades to an empty list on its own
+    failure — one flakey upstream shouldn't block the others.
 
-    Returns ``(popular, toread, lobsters, hackernews)``. The three
-    discovery feeds (popular + lobsters + hackernews) share the
-    avoid-domains + ``pinboard_popular_seen`` filter chain; the toread
-    side has its own via :func:`pinboard.toread_public_unresearched`."""
-    try:
-        popular = _filter_discovery(pinboard.popular(limit=_POPULAR_FEED_LIMIT))
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("pinboard-scan: popular feed pull failed: %s", exc)
-        popular = []
+    Returns ``(toread, discovery)`` where ``discovery`` is keyed by feed
+    name (matching ``spec.name``). The toread side has its own filter
+    chain via :func:`pinboard.toread_public_unresearched`; discovery feeds
+    share :func:`_filter_discovery`."""
     try:
         toread = pinboard.toread_public_unresearched(limit=_TOREAD_FEED_LIMIT)
     except Exception as exc:  # noqa: BLE001
         logger.warning("pinboard-scan: toread pull failed: %s", exc)
         toread = []
-    try:
-        lobs = _filter_discovery(lobsters.hottest(limit=_LOBSTERS_FEED_LIMIT))
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("pinboard-scan: lobsters feed pull failed: %s", exc)
-        lobs = []
-    try:
-        hn = _filter_discovery(hackernews.top(limit=_HACKERNEWS_FEED_LIMIT))
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("pinboard-scan: hackernews feed pull failed: %s", exc)
-        hn = []
-    return popular, toread, lobs, hn
+    discovery: dict[str, list[dict[str, Any]]] = {}
+    for spec in DISCOVERY_FEEDS:
+        try:
+            discovery[spec.name] = _filter_discovery(spec.fetch(spec.feed_limit))
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("pinboard-scan: %s feed pull failed: %s", spec.name, exc)
+            discovery[spec.name] = []
+    return toread, discovery
 
 
 # ---------- per-link runtime ----------
@@ -229,18 +223,18 @@ async def _process_one(
         logger.info("pinboard-scan: %s [%s] -> FETCH_FAILED: %s", source, url, payload[:100])
         return
     if kind == "skip":
-        # Discovery feeds share the same `pinboard_popular_seen` dedup.
-        if source in ("popular", "lobsters", "hackernews"):
-            db.mark_popular_seen(
-                [{"url": url, "title": title}],
-                judged={url: (False, payload)},
-            )
-        elif source == "toread":
-            # Toread items shouldn't skip; treat as a researched-no-card,
-            # mark researched so we don't keep re-asking.
+        # Toread items shouldn't skip; treat as a researched-no-card,
+        # mark researched so we don't keep re-asking. Discovery feeds
+        # share the same `pinboard_popular_seen` dedup.
+        if source == "toread":
             db.mark_url_researched(
                 url=url, title=title, summary=f"SKIP: {payload}",
                 confidence="⊘", fit_note=payload[:200],
+            )
+        else:
+            db.mark_popular_seen(
+                [{"url": url, "title": title}],
+                judged={url: (False, payload)},
             )
         counters["skip"] += 1
         logger.info("pinboard-scan: %s [%s] -> SKIP: %s", source, url, payload[:100])
@@ -260,15 +254,15 @@ async def _process_one(
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("pinboard-scan: record_research_message failed for %s: %s", url, exc)
-    if source in ("popular", "lobsters", "hackernews"):
-        db.mark_popular_seen(
-            [{"url": url, "title": title}],
-            judged={url: (True, "card posted")},
-        )
-    else:
+    if source == "toread":
         db.mark_url_researched(
             url=url, title=title, summary=payload[:500],
             confidence="✦", fit_note="card posted",
+        )
+    else:
+        db.mark_popular_seen(
+            [{"url": url, "title": title}],
+            judged={url: (True, "card posted")},
         )
     counters["posted"] += 1
     logger.info("pinboard-scan: %s [%s] -> posted card msg=%s", source, url, msg.id)
@@ -298,9 +292,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     linky_ctx = await asyncio.to_thread(context.build_linky_context, ref_date=today)
     linky_ctx_block = context.render_block(linky_ctx)
 
-    # Gather all four source lists (blocking — off the event loop).
-    popular, toread, lobs, hn = await asyncio.to_thread(_gather_candidates)
-    if not popular and not toread and not lobs and not hn:
+    # Gather toread + every discovery feed in one blocking pass.
+    toread, discovery = await asyncio.to_thread(_gather_candidates)
+    if not toread and not any(discovery.values()):
         return _base.JobResult(
             True, "Linky: nothing new in any source — PASS.", data={"posted": 0},
         )
@@ -314,27 +308,18 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
                 source="toread", item=item, counters=counters,
             )
-        for item in popular[:_POPULAR_PER_SCAN_CAP]:
-            await _process_one(
-                ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
-                source="popular", item=item, counters=counters,
-            )
-        for item in lobs[:_LOBSTERS_PER_SCAN_CAP]:
-            await _process_one(
-                ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
-                source="lobsters", item=item, counters=counters,
-            )
-        for item in hn[:_HACKERNEWS_PER_SCAN_CAP]:
-            await _process_one(
-                ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
-                source="hackernews", item=item, counters=counters,
-            )
+        for spec in DISCOVERY_FEEDS:
+            for item in discovery[spec.name][:spec.per_scan_cap]:
+                await _process_one(
+                    ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
+                    source=spec.name, item=item, counters=counters,
+                )
         run_.records_written = counters["posted"]
 
-    considered = (
-        f"{len(popular)} popular + {len(toread)} toread + "
-        f"{len(lobs)} lobsters + {len(hn)} hackernews"
-    )
+    considered_parts = [f"{len(toread)} toread"]
+    for spec in DISCOVERY_FEEDS:
+        considered_parts.append(f"{len(discovery[spec.name])} {spec.name}")
+    considered = " + ".join(considered_parts)
     if counters["posted"] == 0:
         return _base.JobResult(
             True,
