@@ -271,6 +271,7 @@ async def _draft_review(
     )
     with db.AgentRun("eddy", trigger="update-draft:html-review") as run:
         answer, _m = await eddy.core(latest=user_msg, history=[], model=_draft_review_model())
+        run.record_meta(_m)
         run.records_written = 0 if (not answer or is_pass_response(answer)) else 1
     if not answer or is_pass_response(answer):
         return ""
@@ -302,6 +303,7 @@ async def _maybe_eddy_review(
     model = _review_model(today.weekday())
     with db.AgentRun("eddy", trigger="update-draft:editorial-card") as run:
         answer, _meta = await eddy.core(latest=user_msg, history=[], model=model)
+        run.record_meta(_meta)
         run.records_written = 0 if (not answer or is_pass_response(answer)) else 1
     if not answer or is_pass_response(answer):
         return "Eddy: PASS (nothing to flag)."

@@ -75,6 +75,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             for _round in range(MAX_ROUNDS):
                 with db.AgentRun("eddy", trigger="create-final") as agent_run:
                     reply, _meta = await bot.core(latest=user_msg, history=[], model=None)
+                    agent_run.record_meta(_meta)
                     agent_run.records_written = 1
                 proposed = _extract_proposed_body(reply)
                 summary = (reply or "").split("```", 1)[0].strip() or "Eddy proposes a reordered final."

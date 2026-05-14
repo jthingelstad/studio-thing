@@ -277,6 +277,7 @@ async def _sweep_locked(ctx: "_base.JobContext") -> "_base.JobResult":
         try:
             with db.AgentRun(persona, trigger="follow-up") as agent_run:
                 reply, _meta = await bot.core(latest=user_msg, history=[], model=None)
+                agent_run.record_meta(_meta)
                 agent_run.records_written = 1 if (reply and reply.strip()) else 0
         except Exception as exc:  # noqa: BLE001
             logger.exception("follow-up-sweep: #%s (%s) agent run failed", row["id"], persona)

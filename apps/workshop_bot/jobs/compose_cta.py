@@ -77,6 +77,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             )
             with db.AgentRun("patty", trigger="compose-cta") as agent_run:
                 reply, _meta = await bot.core(latest=user_msg, history=[], model=None)
+                agent_run.record_meta(_meta)
                 agent_run.records_written = 1
             data = _llm_job.parse_json_payload(reply)
             ctas = (data or {}).get("ctas")

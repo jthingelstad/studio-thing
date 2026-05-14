@@ -160,6 +160,7 @@ async def refresh_loop(
     for _round in range(rounds):
         with db.AgentRun(persona, trigger=trigger) as agent_run:
             reply, _meta = await bot.core(latest=user_msg, history=[], model=None)
+            agent_run.record_meta(_meta)
             agent_run.records_written = 1 if (reply and reply.strip()) else 0
         options = parser(reply or "")
         if not options:

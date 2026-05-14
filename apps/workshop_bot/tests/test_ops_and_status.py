@@ -119,6 +119,74 @@ class RecentAgentRunsTests(_DBCase):
         self.assertEqual(rows[0]["status"], "success")
 
 
+class AgentRunRecordMetaTests(_DBCase):
+    """``AgentRun.record_meta(meta)`` captures the model + token usage
+    out of agent_loop's return so cost analysis can be reconstructed
+    from the agent_runs table."""
+
+    def test_single_meta_populates_columns(self):
+        meta = {
+            "model": "claude-sonnet-4-6",
+            "usage": {"input": 1500, "output": 700,
+                      "cache_read": 200, "cache_create": 50},
+            "iterations": 1,
+        }
+        with db.AgentRun("eddy", trigger="compose-meta:subject") as run:
+            run.record_meta(meta)
+        rows = db.recent_agent_runs(limit=1)
+        r = rows[0]
+        self.assertEqual(r["model"], "claude-sonnet-4-6")
+        self.assertEqual(r["input_tokens"], 1500)
+        self.assertEqual(r["output_tokens"], 700)
+        self.assertEqual(r["cache_read_tokens"], 200)
+        self.assertEqual(r["cache_create_tokens"], 50)
+
+    def test_multiple_metas_accumulate(self):
+        """Pinboard-scan's per-link loop calls record_meta many times
+        under one outer AgentRun. Tokens should sum, not overwrite."""
+        with db.AgentRun("linky", trigger="pinboard-scan") as run:
+            run.record_meta({"model": "claude-sonnet-4-6",
+                             "usage": {"input": 1000, "output": 200,
+                                       "cache_read": 0, "cache_create": 0}})
+            run.record_meta({"model": "claude-sonnet-4-6",
+                             "usage": {"input": 800, "output": 150,
+                                       "cache_read": 100, "cache_create": 0}})
+            run.record_meta({"model": "claude-sonnet-4-6",
+                             "usage": {"input": 1200, "output": 300,
+                                       "cache_read": 0, "cache_create": 25}})
+        r = db.recent_agent_runs(limit=1)[0]
+        self.assertEqual(r["input_tokens"], 3000)
+        self.assertEqual(r["output_tokens"], 650)
+        self.assertEqual(r["cache_read_tokens"], 100)
+        self.assertEqual(r["cache_create_tokens"], 25)
+
+    def test_no_record_meta_leaves_columns_null(self):
+        """Runs that didn't make an LLM call (e.g., the scheduler's
+        outer wrapper) leave token columns NULL so SUM() queries
+        ignore them."""
+        with db.AgentRun("scheduler", trigger="scheduled:thingy-watch"):
+            pass
+        r = db.recent_agent_runs(limit=1)[0]
+        self.assertIsNone(r["model"])
+        self.assertIsNone(r["input_tokens"])
+        self.assertIsNone(r["output_tokens"])
+        self.assertIsNone(r["cache_read_tokens"])
+        self.assertIsNone(r["cache_create_tokens"])
+
+    def test_record_meta_tolerates_empty_or_missing_keys(self):
+        with db.AgentRun("eddy", trigger="manual") as run:
+            run.record_meta(None)
+            run.record_meta({})
+            run.record_meta({"model": "claude-opus-4-7"})  # no usage
+            run.record_meta({"usage": {"input": 100}})    # partial usage
+        r = db.recent_agent_runs(limit=1)[0]
+        self.assertEqual(r["model"], "claude-opus-4-7")
+        self.assertEqual(r["input_tokens"], 100)
+        self.assertEqual(r["output_tokens"], 0)
+        self.assertEqual(r["cache_read_tokens"], 0)
+        self.assertEqual(r["cache_create_tokens"], 0)
+
+
 class StatusJobTests(_DBCase):
     def test_empty_ish_snapshot(self):
         res = _run(status_job.run(_base.JobContext()))

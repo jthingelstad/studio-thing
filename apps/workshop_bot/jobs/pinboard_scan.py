@@ -459,11 +459,15 @@ def _gather_candidates() -> tuple[
 
 async def _research_one(
     *, linky, prompt: str, linky_ctx_block: str, source: str,
-    item: dict[str, Any], corpus=None,
+    item: dict[str, Any], corpus=None, agent_run=None,
 ) -> tuple[str, str]:
     """Run one per-link LLM call. Returns ``(kind, payload)`` per
     :func:`_parse_signal`. ``corpus`` is the archive ``CorpusHandle``
-    used to render the per-card resonance block (omitted in tests)."""
+    used to render the per-card resonance block (omitted in tests).
+
+    When ``agent_run`` is given (the outer scan's :class:`db.AgentRun`),
+    the per-link LLM usage is accumulated into it so the outer row's
+    token columns sum across every link this scan processed."""
     url = item.get("url") or ""
     item_block = _format_user_msg(source=source, item=item, corpus=corpus)
     user_msg = f"{linky_ctx_block}\n\n{prompt}\n\n{item_block}"
@@ -472,6 +476,8 @@ async def _research_one(
     except Exception as exc:  # noqa: BLE001
         logger.warning("pinboard-scan: per-link LLM call failed for %s: %s", url, exc)
         return "fail", f"LLM error: {type(exc).__name__}"
+    if agent_run is not None:
+        agent_run.record_meta(_meta)
     return _parse_signal(answer)
 
 
@@ -581,6 +587,7 @@ def _suppress_non_article_embeds(payload: str, article_url: str) -> str:
 async def _process_one(
     *, ctx: "_base.JobContext", linky, prompt: str, linky_ctx_block: str,
     source: str, item: dict[str, Any], counters: dict[str, int],
+    agent_run=None,
 ) -> None:
     """Research one candidate end-to-end: LLM call, response classify, post
     if it's a card, record the message + mark seen/researched. Idempotent
@@ -603,7 +610,7 @@ async def _process_one(
     corpus = getattr(getattr(ctx, "deps", None), "corpus", None)
     kind, payload = await _research_one(
         linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
-        source=source, item=item, corpus=corpus,
+        source=source, item=item, corpus=corpus, agent_run=agent_run,
     )
     if kind == "fail":
         # Don't mark seen — retry next scan.
@@ -736,14 +743,14 @@ async def _run_locked(ctx: "_base.JobContext", linky) -> "_base.JobResult":
         for item in toread[:_TOREAD_PER_SCAN_CAP]:
             await _process_one(
                 ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
-                source="toread", item=item, counters=counters,
+                source="toread", item=item, counters=counters, agent_run=run_,
             )
         # Then fresh discovery items, walking feeds in priority order.
         for spec in DISCOVERY_FEEDS:
             for item in fresh_by_source[spec.name][:spec.per_scan_cap]:
                 await _process_one(
                     ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
-                    source=spec.name, item=item, counters=counters,
+                    source=spec.name, item=item, counters=counters, agent_run=run_,
                 )
         # Finally, uplift candidates — re-evaluations of URLs that
         # appeared on a new feed since their first sighting. Already
@@ -751,7 +758,7 @@ async def _run_locked(ctx: "_base.JobContext", linky) -> "_base.JobResult":
         for item in uplift_items:
             await _process_one(
                 ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
-                source=item["_source"], item=item, counters=counters,
+                source=item["_source"], item=item, counters=counters, agent_run=run_,
             )
         run_.records_written = counters["posted"]
 

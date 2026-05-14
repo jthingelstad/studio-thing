@@ -45,6 +45,7 @@ async def run(
     )
     with db.AgentRun("linky", trigger="linky-research") as agent_run:
         answer, _meta = await bot.core(latest=user_msg, history=[], model=None)
+        agent_run.record_meta(_meta)
         agent_run.records_written = 1 if (answer and answer.strip()) else 0
 
     if not answer or not answer.strip():

@@ -363,6 +363,7 @@ class PersonaBot(discord.Client):
                     answer, meta = await self.core(
                         latest=latest, history=history, model=model
                     )
+                    run.record_meta(meta)
                     output_id = db.insert_agent_output(
                         agent_name=self.persona,
                         output_type="reply",

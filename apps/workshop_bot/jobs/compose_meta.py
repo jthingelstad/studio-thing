@@ -123,6 +123,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             desc_msg = desc_prompt.replace("<<<ISSUE_TEXT>>>", issue_text)
             with db.AgentRun("eddy", trigger="compose-meta:description") as agent_run:
                 desc_reply, _m = await bot.core(latest=desc_msg, history=[], model=None)
+                agent_run.record_meta(_m)
                 agent_run.records_written = 1 if desc_reply else 0
             description = _first_nonempty_line(desc_reply)
 

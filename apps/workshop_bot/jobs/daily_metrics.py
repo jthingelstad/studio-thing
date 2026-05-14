@@ -182,6 +182,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             )
             with db.AgentRun("marky", trigger="daily-metrics") as agent_run:
                 answer, _meta = await bot.core(latest=user_msg, history=[], model=None)
+                agent_run.record_meta(_meta)
                 agent_run.records_written = 1 if (answer and answer.strip()) else 0
             if not answer or is_pass_response(answer):
                 return _base.JobResult(True, "Marky: PASS (nothing worth a report).", data={"posted": False, "campaigns": campaigns})

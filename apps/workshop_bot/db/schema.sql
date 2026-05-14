@@ -32,6 +32,11 @@ CREATE TABLE IF NOT EXISTS link_candidates (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_link_candidates_url
   ON link_candidates(url);
 
+-- One row per logical agent invocation (cron fire, slash command, @-mention).
+-- Token columns capture the Anthropic-side usage so cost can be reconstructed
+-- from the table; the model column gives the price tier. A single run may
+-- make multiple LLM calls (pinboard-scan's per-link loop, refresh-loop
+-- retries) — the token columns are accumulated totals across the run.
 CREATE TABLE IF NOT EXISTS agent_runs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   agent_name TEXT NOT NULL,
@@ -40,6 +45,13 @@ CREATE TABLE IF NOT EXISTS agent_runs (
   duration_ms INTEGER,
   error TEXT,
   records_written INTEGER,
+  -- LLM accounting (filled by AgentRun.record_meta from agent_loop's
+  -- response.usage on every iteration). NULL when no LLM call ran.
+  model TEXT,
+  input_tokens INTEGER,
+  output_tokens INTEGER,
+  cache_read_tokens INTEGER,
+  cache_create_tokens INTEGER,
   started_at TEXT DEFAULT (datetime('now')),
   ended_at TEXT
 );

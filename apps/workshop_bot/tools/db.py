@@ -60,6 +60,16 @@ _COLUMN_MIGRATIONS: tuple[tuple[str, str, str], ...] = (
     ("campaigns", "copy", "ALTER TABLE campaigns ADD COLUMN copy TEXT"),
     ("pinboard_popular_seen", "verdict_source",
      "ALTER TABLE pinboard_popular_seen ADD COLUMN verdict_source TEXT"),
+    # LLM accounting on agent_runs — captured per-run from agent_loop's
+    # `response.usage`. Long-lived DBs pre-this-migration carry NULLs;
+    # new rows after restart record real values.
+    ("agent_runs", "model", "ALTER TABLE agent_runs ADD COLUMN model TEXT"),
+    ("agent_runs", "input_tokens", "ALTER TABLE agent_runs ADD COLUMN input_tokens INTEGER"),
+    ("agent_runs", "output_tokens", "ALTER TABLE agent_runs ADD COLUMN output_tokens INTEGER"),
+    ("agent_runs", "cache_read_tokens",
+     "ALTER TABLE agent_runs ADD COLUMN cache_read_tokens INTEGER"),
+    ("agent_runs", "cache_create_tokens",
+     "ALTER TABLE agent_runs ADD COLUMN cache_create_tokens INTEGER"),
 )
 
 
@@ -996,12 +1006,14 @@ def cache_alt(*, image_key: str, alt: str, source: str = "vision") -> None:
 
 
 def recent_agent_runs(limit: int = 8) -> list[dict[str, Any]]:
-    """Most recent agent_runs rows, newest first — for the ``/workshop
+    """Most recent agent_runs rows, newest first — for the ``/eddy
     status`` snapshot ("what's the bot done lately / did anything fail")."""
     with connect() as conn:
         rows = conn.execute(
             "SELECT id, agent_name, trigger, status, duration_ms, error, "
-            "       records_written, started_at, ended_at "
+            "       records_written, model, input_tokens, output_tokens, "
+            "       cache_read_tokens, cache_create_tokens, "
+            "       started_at, ended_at "
             "FROM agent_runs ORDER BY id DESC LIMIT ?",
             (int(limit),),
         ).fetchall()
@@ -1051,6 +1063,46 @@ class AgentRun:
         self._t0 = 0.0
         self.records_written = 0
         self.error: Optional[str] = None
+        # LLM accounting — set via `record_meta(meta)` from agent_loop's
+        # return dict (or any equivalent {"model": …, "usage": {…}} shape).
+        # Stored on __exit__. Accumulates across multiple record_meta calls
+        # so a single AgentRun covering many internal LLM calls (e.g.,
+        # pinboard-scan's per-link loop) sums correctly.
+        self.model: Optional[str] = None
+        self.input_tokens = 0
+        self.output_tokens = 0
+        self.cache_read_tokens = 0
+        self.cache_create_tokens = 0
+        self._has_usage = False
+
+    def record_meta(self, meta: Optional[dict[str, Any]]) -> None:
+        """Capture model + accumulate token usage from agent_loop's response.
+
+        ``meta`` is the second element of the ``(reply, meta)`` tuple that
+        ``bot.core(...)`` / ``agent_loop.run_async(...)`` returns:
+
+            {"model": "claude-sonnet-4-6",
+             "usage": {"input": int, "output": int,
+                       "cache_read": int, "cache_create": int},
+             "iterations": int, "tool_calls": [...]}
+
+        Safe to call zero, one, or many times within a single AgentRun
+        block. Last non-None model wins; usage adds. Tolerates a
+        ``None`` meta or a meta without the usage / model keys (logs
+        but doesn't raise).
+        """
+        if not meta:
+            return
+        model = meta.get("model")
+        if model:
+            self.model = model
+        usage = meta.get("usage") or {}
+        self.input_tokens += int(usage.get("input", 0) or 0)
+        self.output_tokens += int(usage.get("output", 0) or 0)
+        self.cache_read_tokens += int(usage.get("cache_read", 0) or 0)
+        self.cache_create_tokens += int(usage.get("cache_create", 0) or 0)
+        if usage:
+            self._has_usage = True
 
     def __enter__(self) -> "AgentRun":
         self._t0 = time.monotonic()
@@ -1070,10 +1122,19 @@ class AgentRun:
             self.error = f"{exc_type.__name__}: {exc}" if self.error is None else self.error
         else:
             status = "success"
+        # NULL the token columns when no LLM call was recorded — keeps
+        # SUM() reports clean (untracked rows don't dilute the avg).
+        in_t = self.input_tokens if self._has_usage else None
+        out_t = self.output_tokens if self._has_usage else None
+        cr_t = self.cache_read_tokens if self._has_usage else None
+        cc_t = self.cache_create_tokens if self._has_usage else None
         with connect() as conn:
             conn.execute(
                 "UPDATE agent_runs SET status=?, duration_ms=?, error=?, "
-                "records_written=?, ended_at=datetime('now') WHERE id=?",
-                (status, duration_ms, self.error, self.records_written, self.run_id),
+                "records_written=?, model=?, input_tokens=?, output_tokens=?, "
+                "cache_read_tokens=?, cache_create_tokens=?, "
+                "ended_at=datetime('now') WHERE id=?",
+                (status, duration_ms, self.error, self.records_written,
+                 self.model, in_t, out_t, cr_t, cc_t, self.run_id),
             )
         # Don't suppress exceptions

@@ -76,6 +76,7 @@ async def run(ctx: "_base.JobContext", *, issue_number: Optional[int] = None) ->
             )
             with db.AgentRun("marky", trigger="promotion-prep") as agent_run:
                 answer, _meta = await bot.core(latest=user_msg, history=[], model=None)
+                agent_run.record_meta(_meta)
                 agent_run.records_written = 1 if answer else 0
             if not answer or not answer.strip():
                 return _base.JobResult(False, f"promotion-prep for WT{n}: model returned nothing.", data={"posted": False})
