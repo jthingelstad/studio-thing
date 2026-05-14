@@ -60,7 +60,7 @@ from typing import Any, Optional
 from ..systems.pinboard import client as pinboard
 from ..tools import alt_text  # noqa: F401 — keep imports light; reserve for future
 from ..tools import anthropic_client, avoid_domains, context, db
-from ..tools.feed_registry import DISCOVERY_FEEDS, by_name
+from ..tools.feeds.feed_registry import DISCOVERY_FEEDS, by_name
 from ..tools.url_normalize import dedup_key
 from . import _base
 

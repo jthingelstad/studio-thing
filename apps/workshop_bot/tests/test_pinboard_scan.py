@@ -71,10 +71,10 @@ class PinboardScanJobTests(_DBTestCase):
         tildes_items=None, indieweb_items=None,
     ):
         from apps.workshop_bot.systems.pinboard import client as pbc
-        from apps.workshop_bot.tools import hackernews as hn_mod
-        from apps.workshop_bot.tools import indieweb_news as iwn_mod
-        from apps.workshop_bot.tools import lobsters as lob
-        from apps.workshop_bot.tools import tildes as tldes_mod
+        from apps.workshop_bot.tools.feeds import hackernews as hn_mod
+        from apps.workshop_bot.tools.feeds import indieweb_news as iwn_mod
+        from apps.workshop_bot.tools.feeds import lobsters as lob
+        from apps.workshop_bot.tools.feeds import tildes as tldes_mod
         return [
             patch.object(pbc, "popular", lambda limit=30: list(popular or [])),
             patch.object(pbc, "toread_public_unresearched",

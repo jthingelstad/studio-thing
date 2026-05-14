@@ -14,7 +14,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.tools import tildes  # noqa: E402
+from apps.workshop_bot.tools.feeds import tildes  # noqa: E402
 
 
 def _atom_payload(entries: str) -> str:

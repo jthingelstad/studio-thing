@@ -35,7 +35,7 @@ import discord
 
 from ..systems.pinboard import client as pinboard_client
 from ..tools import db
-from ..tools.feed_registry import DISCOVERY_FEEDS
+from ..tools.feeds.feed_registry import DISCOVERY_FEEDS
 from .base import Deps, PersonaBot
 from .commands import register_linky_commands
 

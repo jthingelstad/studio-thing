@@ -36,7 +36,7 @@ from typing import Any, Callable, TypedDict
 # Imports at module scope — the fetcher modules are all leaf nodes
 # (only depend on ``requests`` and stdlib), so importing them here
 # can't introduce a cycle through the workshop_bot package.
-from ..systems.pinboard import client as pinboard
+from ...systems.pinboard import client as pinboard
 from . import hackernews, indieweb_news, lobsters, tildes
 
 

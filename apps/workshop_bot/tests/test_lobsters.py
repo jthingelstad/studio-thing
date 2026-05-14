@@ -14,7 +14,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.tools import lobsters  # noqa: E402
+from apps.workshop_bot.tools.feeds import lobsters  # noqa: E402
 
 
 def _fake_get(payload):

@@ -14,7 +14,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.tools import indieweb_news  # noqa: E402
+from apps.workshop_bot.tools.feeds import indieweb_news  # noqa: E402
 
 
 def _page(*entry_html: str) -> str:

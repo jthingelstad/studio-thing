@@ -18,7 +18,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs.pinboard_scan import DISCOVERY_FEEDS  # noqa: E402
-from apps.workshop_bot.tools.feed_registry import FeedSpec, by_name  # noqa: E402
+from apps.workshop_bot.tools.feeds.feed_registry import FeedSpec, by_name  # noqa: E402
 
 
 class RegistryInvariantsTests(unittest.TestCase):
