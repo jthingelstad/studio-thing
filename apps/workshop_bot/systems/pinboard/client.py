@@ -253,6 +253,42 @@ def issue_window_candidates(start_date: str, end_date: str) -> dict[str, list[di
     return {"notable": notable, "brief": brief}
 
 
+def bookmark_blank(url: str, *, fallback_title: str | None = None) -> dict[str, Any]:
+    """Save ``url`` as ``toread=yes shared=yes`` with a blank description
+    if it isn't bookmarked yet; if it is, leave the existing record
+    alone and report ``created=False``. The persona's ✅ / 👍 save
+    handler uses this — symmetric with :func:`set_description` (reply
+    path) and :func:`tag_as_brief` (⭐ path); all three live here so
+    the fetch-merge-write pattern is in one place.
+
+    Returns ``{result_code, pinboard_url, created}``. ``created`` is
+    True when ``posts_add`` actually wrote a new bookmark, False when
+    the URL was already in Jamie's Pinboard (in which case
+    ``result_code`` is ``"item already exists"`` and we leave the
+    existing description / tags / toread / shared untouched).
+    """
+    existing = posts_get(url)
+    posts = existing.get("posts") or []
+    if posts:
+        logger.info("pinboard: bookmark_blank url=%s (already bookmarked)", url)
+        return {
+            "result_code": "item already exists",
+            "pinboard_url": bookmark_url(url),
+            "created": False,
+        }
+    title = (fallback_title or url).strip() or url
+    res = posts_add(
+        url=url, title=title, description="", tags="",
+        toread=True, shared=True, replace=False,
+    )
+    logger.info("pinboard: bookmark_blank url=%s created=True", url)
+    return {
+        "result_code": res.get("result_code"),
+        "pinboard_url": res.get("pinboard_url") or bookmark_url(url),
+        "created": res.get("result_code") == "done",
+    }
+
+
 def tag_as_brief(url: str, *, fallback_title: str | None = None) -> dict[str, Any]:
     """Atomic 'add the `_brief` tag, keep everything else.' Used by
     Linky's reaction listener — Jamie reacts ⭐ to one of Linky's

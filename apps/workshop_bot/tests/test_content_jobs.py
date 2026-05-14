@@ -1750,6 +1750,44 @@ class PinboardClientNewVerbsTests(unittest.TestCase):
         self.assertTrue(captured["shared"])
         self.assertFalse(captured["replace"])
 
+    def test_bookmark_blank_creates_when_not_bookmarked(self):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        captured = {}
+
+        def fake_add(*, url, title, description, tags, toread, shared, replace):
+            captured.update(dict(url=url, title=title, description=description,
+                                 tags=tags, toread=toread, shared=shared, replace=replace))
+            return {"result_code": "done", "pinboard_url": ""}
+
+        with patch.object(pbc, "posts_get", lambda u: {"posts": []}), \
+             patch.object(pbc, "posts_add", fake_add):
+            out = pbc.bookmark_blank(
+                "https://example.com/x", fallback_title="The Title",
+            )
+        self.assertTrue(out["created"])
+        # Defaults: toread=yes, shared=yes, blank description, no tags.
+        self.assertEqual(captured["title"], "The Title")
+        self.assertEqual(captured["description"], "")
+        self.assertEqual(captured["tags"], "")
+        self.assertTrue(captured["toread"])
+        self.assertTrue(captured["shared"])
+        self.assertFalse(captured["replace"])
+
+    def test_bookmark_blank_noop_when_already_bookmarked(self):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        existing = {"posts": [{"href": "https://example.com/x",
+                                "description": "Existing Title",
+                                "extended": "Jamie's prior commentary",
+                                "tags": "ai", "shared": "yes", "toread": "yes"}]}
+        add_mock = MagicMock()
+        with patch.object(pbc, "posts_get", lambda u: existing), \
+             patch.object(pbc, "posts_add", add_mock):
+            out = pbc.bookmark_blank("https://example.com/x")
+        # No posts_add call — we leave existing record alone.
+        add_mock.assert_not_called()
+        self.assertFalse(out["created"])
+        self.assertEqual(out["result_code"], "item already exists")
+
     def test_tag_as_brief_merges_brief_into_existing_tags(self):
         from apps.workshop_bot.systems.pinboard import client as pbc
         captured = {}

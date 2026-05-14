@@ -266,20 +266,12 @@ def _first_source_in_history(history: list[dict[str, Any]]) -> str:
     return (history[0].get("source") if history else "") or ""
 
 
-def _format_user_msg(*, source: str, item: dict[str, Any], corpus=None) -> str:
-    """Render the per-link prompt's ``## The link`` block from one
-    candidate. Toread items get the Pinboard URL + Jamie's existing
-    description. Discovery items get the optional discussion URL +
-    score / comments / submitter / tags fields the fetcher produced;
-    fields the fetcher omitted (or set to zero) are simply not rendered.
-
-    Cross-source enrichment shows up here too:
-
-    - In-scan duplicates (``co_sources``): additional discussion URLs
-      and signal lines are surfaced for each co-source.
-    - Cross-day uplift (``_is_uplift``): a ``## Cross-source uplift``
-      block is appended with the prior sightings + verdict + new
-      sightings this scan."""
+def _render_link_block(*, source: str, item: dict[str, Any]) -> list[str]:
+    """The base ``## The link`` block with source / URL / title plus the
+    source-specific fields (Pinboard URL + existing description for
+    ``toread``; discussion URL / pin-label / tags / signal / submitter
+    for discovery sources). One responsibility; no archive resonance,
+    no cross-source extras, no uplift history."""
     url = (item.get("url") or "").strip()
     title = (item.get("title") or "").strip()
     lines = [
@@ -294,52 +286,70 @@ def _format_user_msg(*, source: str, item: dict[str, Any], corpus=None) -> str:
         desc = (item.get("description") or "").strip()
         lines.append(f"- **Pinboard URL:** {pin or '(missing)'}")
         lines.append(f"- **Existing description:** {desc or '(none)'}")
-    else:
-        label = _label_for(source)
-        pin_label = _pin_label_for(source)
-        disc = (item.get("discussion_url") or "").strip()
-        if disc:
-            lines.append(f"- **{label} discussion:** {disc}")
-            if pin_label:
-                lines.append(f"- **{label} pin label:** {pin_label}")
-        tags = ", ".join(item.get("tags") or [])
-        if tags:
-            lines.append(f"- **{label} tags:** {tags}")
-        sig = _signal_line_for(item, label)
-        if sig:
-            lines.append(sig)
-        submitter = (item.get("submitter") or "").strip()
-        if submitter:
-            lines.append(f"- **Submitter:** {submitter}")
+        return lines
+    label = _label_for(source)
+    pin_label = _pin_label_for(source)
+    disc = (item.get("discussion_url") or "").strip()
+    if disc:
+        lines.append(f"- **{label} discussion:** {disc}")
+        if pin_label:
+            lines.append(f"- **{label} pin label:** {pin_label}")
+    tags = ", ".join(item.get("tags") or [])
+    if tags:
+        lines.append(f"- **{label} tags:** {tags}")
+    sig = _signal_line_for(item, label)
+    if sig:
+        lines.append(sig)
+    submitter = (item.get("submitter") or "").strip()
+    if submitter:
+        lines.append(f"- **Submitter:** {submitter}")
+    return lines
 
-        # In-scan co-sources: render extra discussion URLs + signals so
-        # the prompt's `{pin_part}` template can include all threads in
-        # the card header.
-        co_sources = item.get("co_sources") or []
-        if co_sources:
-            also = ", ".join(_label_for(c["source"]) for c in co_sources)
-            lines.append(f"- **Also trending on (this scan):** {also}")
-            for co in co_sources:
-                co_label = _label_for(co["source"])
-                co_pin = _pin_label_for(co["source"])
-                co_disc = (co.get("discussion_url") or "").strip()
-                if co_disc:
-                    lines.append(f"- **{co_label} discussion:** {co_disc}")
-                    if co_pin:
-                        lines.append(f"- **{co_label} pin label:** {co_pin}")
-                co_sig = _signal_line_for(co, co_label)
-                if co_sig:
-                    lines.append(co_sig)
-    lines.append("")
-    # Append the archive resonance block (no-op when corpus is None,
-    # which is the test-stub case). Renders an "Archive resonance"
-    # subsection inside the same ## The link block so the LLM gets the
-    # obvious BM25 hits without having to call `archive__search` for
-    # them.
-    lines.extend(_render_archive_resonance(corpus=corpus, source=source, item=item))
-    # Append the uplift block (no-op for non-uplift items).
-    lines.extend(_render_uplift_block(item))
-    return "\n".join(lines)
+
+def _render_co_sources(item: dict[str, Any]) -> list[str]:
+    """In-scan cross-source rows: ``Also trending on …`` summary plus
+    per-co-source discussion URL / pin-label / signal lines. Empty list
+    when there are no co-sources (single-feed item)."""
+    co_sources = item.get("co_sources") or []
+    if not co_sources:
+        return []
+    lines = [
+        "- **Also trending on (this scan):** "
+        + ", ".join(_label_for(c["source"]) for c in co_sources),
+    ]
+    for co in co_sources:
+        co_label = _label_for(co["source"])
+        co_pin = _pin_label_for(co["source"])
+        co_disc = (co.get("discussion_url") or "").strip()
+        if co_disc:
+            lines.append(f"- **{co_label} discussion:** {co_disc}")
+            if co_pin:
+                lines.append(f"- **{co_label} pin label:** {co_pin}")
+        co_sig = _signal_line_for(co, co_label)
+        if co_sig:
+            lines.append(co_sig)
+    return lines
+
+
+def _format_user_msg(*, source: str, item: dict[str, Any], corpus=None) -> str:
+    """The per-link prompt's full input block. Composes four sub-blocks:
+
+    - :func:`_render_link_block` — base ``## The link`` fields
+    - :func:`_render_co_sources` — in-scan cross-source extras
+    - :func:`_render_archive_resonance` — BM25 hits against the archive
+    - :func:`_render_uplift_block` — cross-day uplift history
+
+    Each piece is independently testable; this composer just stitches
+    them with a blank-line terminator between the link block and
+    everything that follows."""
+    parts = (
+        _render_link_block(source=source, item=item)
+        + _render_co_sources(item)
+        + [""]
+        + _render_archive_resonance(corpus=corpus, source=source, item=item)
+        + _render_uplift_block(item)
+    )
+    return "\n".join(parts)
 
 
 def _parse_signal(answer: str) -> tuple[str, str]:

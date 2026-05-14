@@ -181,43 +181,32 @@ class LinkyBot(PersonaBot):
     async def _handle_save_reaction(
         self, payload: discord.RawReactionActionEvent, row: dict,
     ) -> None:
-        """Original ✅/👍 path: discovery-only; creates a fresh bookmark
-        with blank description, or acknowledges an existing one."""
+        """✅ / 👍 path: discovery-only; creates a fresh bookmark with
+        blank description, or acknowledges an existing one. Symmetric
+        with ``_handle_brief_reaction`` — both delegate to a single
+        Pinboard-client helper that owns the fetch-merge-write."""
         if row.get("source") not in _discovery_sources():
             # Toread cards point at an already-bookmarked URL.
             return
         url = (row.get("url") or "").strip()
         if not url:
             return
-        title = row.get("title") or url
-
-        try:
-            existing = await asyncio.to_thread(pinboard_client.posts_get, url)
-        except Exception:  # noqa: BLE001
-            existing = None
-            logger.exception("linky: posts_get failed during save-reaction for %s", url)
-
-        ack_emoji = "📌"
-        if existing and (existing.get("posts") or []):
-            await self._react_card(payload, ack_emoji)
-            logger.info("linky: save-reaction on %s (already bookmarked)", url)
-            return
+        fallback_title = row.get("title") or None
 
         try:
             res = await asyncio.to_thread(
-                pinboard_client.posts_add,
-                url=url, title=title, description="",
-                tags="", toread=True, shared=True, replace=False,
-            )
-            ok = res.get("result_code") == "done"
-            await self._react_card(payload, ack_emoji if ok else "⚠️")
-            logger.info(
-                "linky: save-reaction on %s -> posts_add result=%s",
-                url, res.get("result_code"),
+                pinboard_client.bookmark_blank, url, fallback_title=fallback_title,
             )
         except Exception:  # noqa: BLE001
-            logger.exception("linky: posts_add failed during save-reaction for %s", url)
+            logger.exception("linky: bookmark_blank failed for %s", url)
             await self._react_card(payload, "❌")
+            return
+        ok = res.get("result_code") in ("done", "item already exists")
+        await self._react_card(payload, "📌" if ok else "⚠️")
+        logger.info(
+            "linky: save-reaction on %s -> created=%s result=%s",
+            url, res.get("created"), res.get("result_code"),
+        )
 
     async def _handle_brief_reaction(
         self, payload: discord.RawReactionActionEvent, row: dict,
