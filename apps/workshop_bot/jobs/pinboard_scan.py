@@ -1,6 +1,6 @@
 """``pinboard-scan`` — hourly per-link research for Linky.
 
-Three sources, one rhythm. Every hour 07:00–22:00 Central, year-round:
+Four sources, one rhythm. Every hour 07:00–22:00 Central, year-round:
 
 - **Toread** — Jamie's public toread bookmarks Linky hasn't researched yet
   (`shared=yes`, not in ``pinboard_research_done``). These are Jamie's own
@@ -12,9 +12,17 @@ Three sources, one rhythm. Every hour 07:00–22:00 Central, year-round:
 - **Lobsters** — Lobste.rs hottest feed (`https://lobste.rs/hottest.json`),
   with the same avoid-domains + ``pinboard_popular_seen`` filters as
   Pinboard popular. Same "interesting to Jamie" bar, same SKIP /
-  FETCH_FAILED semantics. (The dedup table is shared with Pinboard
-  popular — URLs Jamie has been shown from any discovery feed stay out
-  of the queue, even if both feeds happen to surface the same URL.)
+  FETCH_FAILED semantics.
+- **Hacker News** — HN's current front page, fetched via Algolia's
+  search index (`tags=front_page`). Same filter chain and SKIP /
+  FETCH_FAILED semantics as the other two discovery feeds. Ask HN /
+  Show HN posts without an external URL are dropped upstream in
+  ``tools.hackernews``.
+
+The dedup table ``pinboard_popular_seen`` is shared across all three
+discovery feeds — URLs Jamie has been shown from any popular surface
+stay out of the queue, even if multiple feeds trend the same URL on
+the same day.
 
 For each candidate, Linky's ``research-card`` prompt runs once: fetch the
 URL, archive recall, read-length, then either a Discord card or one of
@@ -38,7 +46,7 @@ from typing import Any, Optional
 
 from ..systems.pinboard import client as pinboard
 from ..tools import alt_text  # noqa: F401 — keep imports light; reserve for future
-from ..tools import anthropic_client, avoid_domains, context, db, lobsters
+from ..tools import anthropic_client, avoid_domains, context, db, hackernews, lobsters
 from . import _base
 
 logger = logging.getLogger("workshop.jobs.pinboard_scan")
@@ -51,9 +59,11 @@ NAME = "pinboard-scan"
 _POPULAR_PER_SCAN_CAP = 10        # max Pinboard-popular cards posted per scan
 _TOREAD_PER_SCAN_CAP = 10         # max toread cards posted per scan
 _LOBSTERS_PER_SCAN_CAP = 10       # max Lobste.rs cards posted per scan
+_HACKERNEWS_PER_SCAN_CAP = 10     # max Hacker News cards posted per scan
 _POPULAR_FEED_LIMIT = 30          # how many popular items to consider per scan
 _TOREAD_FEED_LIMIT = 25           # how many unresearched toread items to consider
 _LOBSTERS_FEED_LIMIT = 25         # how many lobsters items to consider per scan
+_HACKERNEWS_FEED_LIMIT = 25       # how many HN front-page items to consider per scan
 
 _SKIP_RE = re.compile(r"^\s*SKIP:\s*(.+?)\s*$", re.IGNORECASE | re.DOTALL)
 _FAIL_RE = re.compile(r"^\s*FETCH_FAILED:\s*(.+?)\s*$", re.IGNORECASE | re.DOTALL)
@@ -62,12 +72,22 @@ _FAIL_RE = re.compile(r"^\s*FETCH_FAILED:\s*(.+?)\s*$", re.IGNORECASE | re.DOTAL
 # ---------- per-link LLM call ----------
 
 
+# Display labels for the discussion-feed sources — same data shape
+# (discussion URL + score + comments + submitter), different community
+# names in the prompt so the LLM knows which thread it's looking at.
+_DISCUSSION_LABEL: dict[str, str] = {
+    "lobsters": "Lobsters",
+    "hackernews": "Hacker News",
+}
+
+
 def _format_user_msg(*, source: str, item: dict[str, Any]) -> str:
     """Render the per-link prompt's `## The link` block from one candidate.
     Source-specific fields are included only when relevant — the
-    `lobsters` row carries the discussion URL and tags / score the LLM
-    can lean on, the `toread` row carries the Pinboard URL + Jamie's
-    existing description, the `popular` row carries neither."""
+    discussion-feed sources (`lobsters`, `hackernews`) carry a
+    discussion URL plus score / comments / submitter, the `toread` row
+    carries the Pinboard URL + Jamie's existing description, the
+    `popular` row carries neither."""
     url = (item.get("url") or "").strip()
     title = (item.get("title") or "").strip()
     lines = [
@@ -82,17 +102,18 @@ def _format_user_msg(*, source: str, item: dict[str, Any]) -> str:
         desc = (item.get("description") or "").strip()
         lines.append(f"- **Pinboard URL:** {pin or '(missing)'}")
         lines.append(f"- **Existing description:** {desc or '(none)'}")
-    elif source == "lobsters":
+    elif source in _DISCUSSION_LABEL:
+        label = _DISCUSSION_LABEL[source]
         disc = (item.get("discussion_url") or "").strip()
         tags = ", ".join(item.get("tags") or [])
         score = item.get("score")
         comments = item.get("comment_count")
         submitter = (item.get("submitter") or "").strip()
-        lines.append(f"- **Lobsters discussion:** {disc}")
+        lines.append(f"- **{label} discussion:** {disc}")
         if tags:
-            lines.append(f"- **Lobsters tags:** {tags}")
+            lines.append(f"- **{label} tags:** {tags}")
         if score is not None and comments is not None:
-            lines.append(f"- **Lobsters signal:** {score} points · {comments} comments")
+            lines.append(f"- **{label} signal:** {score} points · {comments} comments")
         if submitter:
             lines.append(f"- **Submitter:** {submitter}")
     # `popular` carries no extras — just URL + title.
@@ -123,24 +144,30 @@ def _parse_signal(answer: str) -> tuple[str, str]:
 # ---------- candidate gathering (blocking; off the event loop) ----------
 
 
+def _filter_discovery(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Common filter chain for any discovery feed: drop items without a
+    URL, drop avoid-domain hosts, dedup against ``pinboard_popular_seen``."""
+    pre = [
+        it for it in raw
+        if it.get("url") and not avoid_domains.is_excluded_url(it["url"])
+    ]
+    return db.filter_unseen_popular(pre)
+
+
 def _gather_candidates() -> tuple[
-    list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]],
+    list[dict[str, Any]], list[dict[str, Any]],
+    list[dict[str, Any]], list[dict[str, Any]],
 ]:
-    """Pull all three source lists in one blocking pass. Each source
+    """Pull all four source lists in one blocking pass. Each source
     degrades to an empty list on its own failure — one flakey upstream
     shouldn't block the others.
 
-    Returns ``(popular, toread, lobsters)``. The two discovery feeds
-    (popular + lobsters) both run through ``avoid_domains`` and the
-    shared ``pinboard_popular_seen`` dedup; the toread side has its own
-    filter chain via :func:`pinboard.toread_public_unresearched`."""
+    Returns ``(popular, toread, lobsters, hackernews)``. The three
+    discovery feeds (popular + lobsters + hackernews) share the
+    avoid-domains + ``pinboard_popular_seen`` filter chain; the toread
+    side has its own via :func:`pinboard.toread_public_unresearched`."""
     try:
-        raw_popular = pinboard.popular(limit=_POPULAR_FEED_LIMIT)
-        popular = [
-            it for it in raw_popular
-            if it.get("url") and not avoid_domains.is_excluded_url(it["url"])
-        ]
-        popular = db.filter_unseen_popular(popular)
+        popular = _filter_discovery(pinboard.popular(limit=_POPULAR_FEED_LIMIT))
     except Exception as exc:  # noqa: BLE001
         logger.warning("pinboard-scan: popular feed pull failed: %s", exc)
         popular = []
@@ -150,16 +177,16 @@ def _gather_candidates() -> tuple[
         logger.warning("pinboard-scan: toread pull failed: %s", exc)
         toread = []
     try:
-        raw_lobsters = lobsters.hottest(limit=_LOBSTERS_FEED_LIMIT)
-        lobs = [
-            it for it in raw_lobsters
-            if it.get("url") and not avoid_domains.is_excluded_url(it["url"])
-        ]
-        lobs = db.filter_unseen_popular(lobs)
+        lobs = _filter_discovery(lobsters.hottest(limit=_LOBSTERS_FEED_LIMIT))
     except Exception as exc:  # noqa: BLE001
         logger.warning("pinboard-scan: lobsters feed pull failed: %s", exc)
         lobs = []
-    return popular, toread, lobs
+    try:
+        hn = _filter_discovery(hackernews.top(limit=_HACKERNEWS_FEED_LIMIT))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("pinboard-scan: hackernews feed pull failed: %s", exc)
+        hn = []
+    return popular, toread, lobs, hn
 
 
 # ---------- per-link runtime ----------
@@ -202,8 +229,8 @@ async def _process_one(
         logger.info("pinboard-scan: %s [%s] -> FETCH_FAILED: %s", source, url, payload[:100])
         return
     if kind == "skip":
-        # Discovery feeds (popular / lobsters) share the same dedup table.
-        if source in ("popular", "lobsters"):
+        # Discovery feeds share the same `pinboard_popular_seen` dedup.
+        if source in ("popular", "lobsters", "hackernews"):
             db.mark_popular_seen(
                 [{"url": url, "title": title}],
                 judged={url: (False, payload)},
@@ -233,7 +260,7 @@ async def _process_one(
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("pinboard-scan: record_research_message failed for %s: %s", url, exc)
-    if source in ("popular", "lobsters"):
+    if source in ("popular", "lobsters", "hackernews"):
         db.mark_popular_seen(
             [{"url": url, "title": title}],
             judged={url: (True, "card posted")},
@@ -271,9 +298,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     linky_ctx = await asyncio.to_thread(context.build_linky_context, ref_date=today)
     linky_ctx_block = context.render_block(linky_ctx)
 
-    # Gather all three source lists (blocking — off the event loop).
-    popular, toread, lobs = await asyncio.to_thread(_gather_candidates)
-    if not popular and not toread and not lobs:
+    # Gather all four source lists (blocking — off the event loop).
+    popular, toread, lobs, hn = await asyncio.to_thread(_gather_candidates)
+    if not popular and not toread and not lobs and not hn:
         return _base.JobResult(
             True, "Linky: nothing new in any source — PASS.", data={"posted": 0},
         )
@@ -297,10 +324,16 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
                 source="lobsters", item=item, counters=counters,
             )
+        for item in hn[:_HACKERNEWS_PER_SCAN_CAP]:
+            await _process_one(
+                ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
+                source="hackernews", item=item, counters=counters,
+            )
         run_.records_written = counters["posted"]
 
     considered = (
-        f"{len(popular)} popular + {len(toread)} toread + {len(lobs)} lobsters"
+        f"{len(popular)} popular + {len(toread)} toread + "
+        f"{len(lobs)} lobsters + {len(hn)} hackernews"
     )
     if counters["posted"] == 0:
         return _base.JobResult(

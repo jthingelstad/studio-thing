@@ -849,14 +849,16 @@ class PinboardScanJobTests(_DBTestCase):
         team = _FakeLinkyTeam(replies=replies)
         return _base.JobContext(deps=_deps_with_linky_team(team)), team
 
-    def _stub_sources(self, *, popular=None, toread=None, lobs=None):
+    def _stub_sources(self, *, popular=None, toread=None, lobs=None, hn=None):
         from apps.workshop_bot.systems.pinboard import client as pbc
+        from apps.workshop_bot.tools import hackernews as hn_mod
         from apps.workshop_bot.tools import lobsters as lob
         return [
             patch.object(pbc, "popular", lambda limit=30: list(popular or [])),
             patch.object(pbc, "toread_public_unresearched",
                          lambda limit=25: list(toread or [])),
             patch.object(lob, "hottest", lambda limit=25: list(lobs or [])),
+            patch.object(hn_mod, "top", lambda limit=25: list(hn or [])),
             # build_linky_context hits posts_all for queue depth — stub it cheap.
             patch.object(pbc, "posts_all", lambda **kw: []),
         ]
@@ -1009,6 +1011,48 @@ class PinboardScanJobTests(_DBTestCase):
         sent_user_msg = team.linky.core.call_args.kwargs["latest"]
         self.assertIn("Lobsters discussion", sent_user_msg)
         self.assertIn("110 points", sent_user_msg)
+
+    def test_posts_card_for_hackernews_item(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        ctx, team = self._ctx_and_team(replies=[
+            "**[Linux gaming](https://www.xda-developers.com/linux-gaming/)** · "
+            "[HN](https://news.ycombinator.com/item?id=48087887)\n\n"
+            "Article on Windows-compat shims landing in the Linux kernel.\n\n"
+            "Echoes #341's coverage of compat layers. Possible Notable.\n\n"
+            "📖 medium · `hackernews`"
+        ])
+        hn = [{
+            "url": "https://www.xda-developers.com/linux-gaming/",
+            "title": "Linux gaming is faster",
+            "discussion_url": "https://news.ycombinator.com/item?id=48087887",
+            "score": 412, "comment_count": 187, "submitter": "haunter",
+        }]
+        patches = self._stub_sources(hn=hn)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(result.data["posted"], 1)
+        row = db.lookup_research_message("1001")
+        self.assertIsNotNone(row)
+        self.assertEqual(row["source"], "hackernews")
+        self.assertEqual(row["url"], "https://www.xda-developers.com/linux-gaming/")
+        # The per-link block (the last `## The link` section) used the
+        # HN-specific labels, not the lobsters ones. (The prompt body
+        # legitimately enumerates every source type, so we only check
+        # the per-link data that follows it.)
+        sent_user_msg = team.linky.core.call_args.kwargs["latest"]
+        link_block = sent_user_msg.rsplit("## The link", 1)[-1]
+        self.assertIn("Hacker News discussion", link_block)
+        self.assertIn("412 points", link_block)
+        self.assertNotIn("Lobsters discussion", link_block)
 
     def test_lobsters_skip_marks_popular_seen(self):
         # SKIP from a lobsters source lands in the same shared
@@ -2275,6 +2319,27 @@ class LinkySaveReactionTests(_DBTestCase):
         finally:
             add_p.stop(); get_p.stop()
         self.assertEqual(self.reactions, ["❌"])
+
+    def test_save_reaction_on_hackernews_card_creates_bookmark(self):
+        db.record_research_message(
+            discord_message_id="2009", url="https://x.example/hn-link",
+            source="hackernews", title="An HN Story",
+        )
+        p = self._payload(user_id=777, emoji="✅", message_id=2009)
+        get_p, add_p, add_mock = self._patch_pinboard()
+        get_p.start(); add_p.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            add_p.stop(); get_p.stop()
+        # HN items behave just like Pinboard popular and Lobsters for save.
+        add_mock.assert_called_once()
+        kwargs = add_mock.call_args.kwargs
+        self.assertEqual(kwargs["url"], "https://x.example/hn-link")
+        self.assertEqual(kwargs["title"], "An HN Story")
+        self.assertTrue(kwargs["toread"])
+        self.assertTrue(kwargs["shared"])
+        self.assertEqual(self.reactions, ["📌"])
 
     def test_save_reaction_on_lobsters_card_creates_bookmark(self):
         db.record_research_message(

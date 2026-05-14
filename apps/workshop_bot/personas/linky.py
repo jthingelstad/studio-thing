@@ -48,7 +48,7 @@ _SAVE_REACTIONS = {"✅", "👍"}
 # (reaction or reply) creates a new bookmark. `toread`-sourced URLs are
 # already bookmarked — for those, the reply updates the description and
 # the save-reaction is a no-op.
-_DISCOVERY_SOURCES = {"popular", "lobsters"}
+_DISCOVERY_SOURCES = {"popular", "lobsters", "hackernews"}
 
 
 class LinkyBot(PersonaBot):

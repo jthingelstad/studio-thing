@@ -1077,7 +1077,7 @@ def latest_draft_digest(issue: int) -> Optional[dict[str, Any]]:
 # ---------- Linky research cards (one row per posted #research message) ----------
 
 
-RESEARCH_SOURCES = ("popular", "toread", "lobsters")
+RESEARCH_SOURCES = ("popular", "toread", "lobsters", "hackernews")
 
 
 def record_research_message(

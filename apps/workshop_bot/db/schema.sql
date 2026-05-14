@@ -341,16 +341,17 @@ CREATE INDEX IF NOT EXISTS idx_follow_ups_open
 -- so Jamie's reply can be written straight to that Pinboard bookmark's
 -- description. One row per posted card; never updated (each card is its
 -- own immutable post). `source` is one of:
---   - 'popular'  — Pinboard's popular feed (URL may not yet be bookmarked)
---   - 'lobsters' — Lobste.rs hottest feed   (URL may not yet be bookmarked)
---   - 'toread'   — Jamie's own toread + public bookmarks
+--   - 'popular'    — Pinboard's popular feed (URL may not yet be bookmarked)
+--   - 'lobsters'   — Lobste.rs hottest feed   (URL may not yet be bookmarked)
+--   - 'hackernews' — HN front page via Algolia (URL may not yet be bookmarked)
+--   - 'toread'     — Jamie's own toread + public bookmarks
 -- `title` is the source-side title we captured at post time, used as
 -- the fallback title when a discovery-feed reply / reaction creates a
 -- new bookmark.
 CREATE TABLE IF NOT EXISTS linky_research_messages (
   discord_message_id TEXT PRIMARY KEY,
   url TEXT NOT NULL,
-  source TEXT NOT NULL,                           -- 'popular' | 'lobsters' | 'toread'
+  source TEXT NOT NULL,                           -- 'popular' | 'lobsters' | 'hackernews' | 'toread'
   title TEXT,
   posted_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
