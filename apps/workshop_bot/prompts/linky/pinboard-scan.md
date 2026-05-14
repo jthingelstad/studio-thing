@@ -5,8 +5,8 @@ The `pinboard-scan` job just woke you. The `## Today` block above carries the ru
 ## Lane A — popular review (closed loop, no Pinboard mutation)
 
 - `pinboard__popular_unseen()` — Pinboard's popular feed minus what you've already shown Jamie. For each candidate, `web__fetch_url` it to actually understand it. Bar is **interesting to Jamie**, not "fits the Weekly Thing" — he decides what to bookmark.
-- Surface **at most one** popular item per scan, with a 1–2 sentence "why this is interesting."
-- `pinboard__mark_seen(url, interesting=…, note=…)` for every candidate you considered (surfaced or not), so the dedup stays honest. **Never** auto-add anything to the toread queue.
+- Surface **every item you'd judge interesting to Jamie**, each with a 1–2 sentence "why this is interesting." Typical scans land 1–5 popular items; a hot day may run higher. The "interesting to Jamie" bar above is the rate-limiter — if nothing clears it, just say nothing about popular this scan (Lanes B–D may still have something worth posting).
+- `pinboard__mark_seen(url, interesting=…, note=…)` for every candidate you **successfully fetched and evaluated** — both surfaced ("yes") and rejected ("no") — so the dedup stays honest. **If `web__fetch_url` 404s or errors, don't mark it seen** — the popular RSS sometimes ships transiently-stale URLs that resolve later, and we don't want to permanently bury an item we never actually read. **Never** auto-add anything to the toread queue.
 
 ## Lane B — toread tending
 
