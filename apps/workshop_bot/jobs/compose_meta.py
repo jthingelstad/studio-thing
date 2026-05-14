@@ -136,11 +136,14 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             }
             s3.write_issue_file(n, "metadata.json", json.dumps(metadata, indent=2) + "\n")
             desc_line = description if description else "_(empty — set it in Buttondown or re-run compose-meta)_"
-            await channel.send(
+            # Best-effort: metadata.json is on S3 either way; a Discord
+            # glitch on the success card shouldn't fail the job.
+            await _llm_job.try_send(
+                channel,
                 f"✅ `metadata.json` set for WT{n}\n"
                 f"**Subject:** {subject}\n"
                 f"**Description:** {desc_line}",
-                suppress_embeds=True,
+                job_label="compose-meta",
             )
             return _base.JobResult(
                 True, f"`metadata.json` written for WT{n} — {subject}",

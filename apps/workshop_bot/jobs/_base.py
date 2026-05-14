@@ -104,7 +104,12 @@ class JobContext:
         suppress_embeds: bool = True,
     ) -> bool:
         """Post ``text`` (chunked) to a channel. ``channel_or_env`` may be a
-        channel object or an env-var name to resolve. Returns True if sent."""
+        channel object or an env-var name to resolve. Returns True if sent.
+
+        Best-effort: a Discord error during ``ch.send`` is logged but
+        swallowed (returns False). Most callers post artifacts that are
+        already durably written (S3, the DB); a Discord glitch on the
+        notification shouldn't surface as a job failure."""
         if not text or not text.strip():
             return False
         ch = channel_or_env
@@ -112,8 +117,12 @@ class JobContext:
             ch = self.channel(channel_or_env, persona=persona)
         if ch is None:
             return False
-        for chunk in discord_io.split_for_discord(text):
-            await ch.send(chunk, suppress_embeds=suppress_embeds)
+        try:
+            for chunk in discord_io.split_for_discord(text):
+                await ch.send(chunk, suppress_embeds=suppress_embeds)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("job: ctx.post failed: %s", exc)
+            return False
         return True
 
     async def send_one(

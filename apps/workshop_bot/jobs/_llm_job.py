@@ -38,6 +38,29 @@ class ResolvedBot(NamedTuple):
 
 logger = logging.getLogger("workshop.jobs.compose")
 
+
+async def try_send(
+    channel,
+    message: str,
+    *,
+    suppress_embeds: bool = True,
+    job_label: str = "job",
+) -> bool:
+    """Best-effort ``channel.send`` — log on failure, never raise.
+
+    Used by jobs that write an artifact to S3 / DB *before* posting the
+    success card to Discord: if the post fails, the artifact is still
+    durable and the JobResult records the outcome. The Discord glitch
+    shouldn't bubble out as if the job failed. ``job_label`` is logged
+    when send raises so the source is grep-able in workshop.log.
+    """
+    try:
+        await channel.send(message, suppress_embeds=suppress_embeds)
+        return True
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("%s: channel.send failed: %s", job_label, exc)
+        return False
+
 # How many times to re-prompt the model on a 🔄 refresh or an unparseable
 # response before giving up. Shared across compose_haiku, compose_meta,
 # and create_final.

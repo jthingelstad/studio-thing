@@ -79,7 +79,11 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 )
             chosen = chosen.strip() + "\n"
             s3.write_issue_file(n, "haiku.md", chosen)
-            await channel.send(f"✅ Haiku set for WT{n}.", suppress_embeds=True)
+            # Best-effort: haiku.md is on S3 either way; a Discord glitch
+            # on the success card shouldn't fail the job.
+            await _llm_job.try_send(
+                channel, f"✅ Haiku set for WT{n}.", job_label="compose-haiku",
+            )
             return _base.JobResult(
                 True, f"`haiku.md` written for WT{n}.",
                 data={"issue_number": n, "haiku": chosen,
