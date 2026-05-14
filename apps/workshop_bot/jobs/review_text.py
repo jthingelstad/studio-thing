@@ -12,7 +12,8 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from ..tools import anthropic_client, db
+from ..tools import db
+from ..tools.llm import anthropic_client
 from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.review_text")

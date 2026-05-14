@@ -449,7 +449,8 @@ class EddyReviewTests(_DBTestCase):
 
 class DraftSectionStatusToolTests(_DBTestCase):
     def test_tool_returns_status_for_active_issue(self):
-        from apps.workshop_bot.tools import agent_tools, issue as issue_mod
+        from apps.workshop_bot.tools import issue as issue_mod
+        from apps.workshop_bot.tools.llm import agent_tools
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
@@ -461,7 +462,7 @@ class DraftSectionStatusToolTests(_DBTestCase):
         self.assertEqual(out["sections"]["notable"]["item_count"], 1)
 
     def test_tool_errors_without_window(self):
-        from apps.workshop_bot.tools import agent_tools
+        from apps.workshop_bot.tools.llm import agent_tools
         registry = agent_tools.ToolRegistry()
         agent_tools.register_local_helpers(registry)
         out = registry.dispatch("draft__section_status", deps=None, args={}, persona="eddy")
@@ -501,7 +502,7 @@ class DraftReviewTests(_DBTestCase):
         # The hygiene walk lives in the prompt itself — one Sonnet call,
         # no separate scanner. Pin it so a future edit can't silently drop
         # the deliverability lens.
-        from apps.workshop_bot.tools import anthropic_client
+        from apps.workshop_bot.tools.llm import anthropic_client
         # Clear the in-process cache so a parallel test that already loaded
         # the prompt doesn't shadow what's on disk right now.
         anthropic_client._prompt_cache.pop("eddy-draft-review", None)

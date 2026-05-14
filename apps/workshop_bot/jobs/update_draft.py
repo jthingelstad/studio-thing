@@ -36,9 +36,10 @@ from html import escape as _html_escape
 from ..personas.base import is_pass_response
 from ..systems.pinboard import client as pinboard
 from ..tools import (
-    alt_text, anthropic_client, context, db, draft as draft_mod, journal_images,
+    alt_text, context, db, draft as draft_mod, journal_images,
     microblog, render, s3,
 )
+from ..tools.llm import anthropic_client
 from . import _base, _cover, _currently
 
 logger = logging.getLogger("workshop.jobs.update_draft")

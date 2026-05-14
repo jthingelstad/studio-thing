@@ -20,7 +20,7 @@ import logging
 from collections import OrderedDict
 from typing import TYPE_CHECKING
 
-from ..tools import agent_tools
+from ..tools.llm import agent_tools
 from ..tools.discord import conversation, discord_io
 
 if TYPE_CHECKING:

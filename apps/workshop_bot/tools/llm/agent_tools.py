@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from . import (
+from .. import (
     archive,
     db,
     draft,
@@ -27,7 +27,7 @@ from . import (
     support_state,
     web,
 )
-from ..systems._base import SystemServer
+from ...systems._base import SystemServer
 
 logger = logging.getLogger("workshop.tools")
 
@@ -280,7 +280,7 @@ def t_followup_schedule(
     bring a commitment back. Exactly one trigger: ``when`` (ISO date/datetime),
     ``in_days`` (relative offset, fires ~6pm that many days out), or
     ``at_issue`` (fires once that issue is in flight)."""
-    from ..jobs.follow_up import FollowUpError, create, trigger_desc  # lazy: avoid an import cycle
+    from ...jobs.follow_up import FollowUpError, create, trigger_desc  # lazy: avoid an import cycle
     try:
         row = create(
             persona=active_persona.get() or "eddy", note=note,
@@ -293,7 +293,7 @@ def t_followup_schedule(
 
 def t_followup_list(deps) -> list[dict[str, Any]]:
     """Your pending follow-ups — id, when each fires, and the note."""
-    from ..jobs.follow_up import trigger_desc  # lazy: avoid an import cycle
+    from ...jobs.follow_up import trigger_desc  # lazy: avoid an import cycle
     return [
         {"id": r["id"], "fires": trigger_desc(r), "note": r["note"]}
         for r in db.open_follow_ups(persona=active_persona.get())

@@ -18,7 +18,8 @@ import asyncio
 import logging
 import re
 
-from ..tools import anthropic_client, db, render, s3
+from ..tools import db, render, s3
+from ..tools.llm import anthropic_client
 from ..tools.discord import interaction
 from . import _base, _llm_job
 

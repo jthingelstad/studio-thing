@@ -68,7 +68,7 @@ from apps.workshop_bot.systems.stripe import client as st_client  # noqa: E402
 from apps.workshop_bot.systems.stripe.server import StripeServer  # noqa: E402
 from apps.workshop_bot.systems.tinylytics import client as tl_client  # noqa: E402
 from apps.workshop_bot.systems.tinylytics.server import TinylyticsServer  # noqa: E402
-from apps.workshop_bot.tools import agent_tools  # noqa: E402
+from apps.workshop_bot.tools.llm import agent_tools
 
 
 class _FakeResp:

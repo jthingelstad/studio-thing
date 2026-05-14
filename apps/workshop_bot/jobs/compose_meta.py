@@ -29,7 +29,8 @@ import json
 import logging
 import re
 
-from ..tools import anthropic_client, db, s3
+from ..tools import db, s3
+from ..tools.llm import anthropic_client
 from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.compose_meta")

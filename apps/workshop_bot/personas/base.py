@@ -17,11 +17,12 @@ from typing import TYPE_CHECKING, Any, ClassVar, Optional
 
 import discord
 
-from ..tools import agent_loop, agent_tools, anthropic_client, db
+from ..tools import db
+from ..tools.llm import agent_loop, agent_tools, anthropic_client
 from ..tools.discord import conversation, discord_io
 
 if TYPE_CHECKING:
-    from ..tools.agent_tools import ToolRegistry
+    from ..tools.llm.agent_tools import ToolRegistry
     from ..tools.corpus import CorpusHandle
     from .team import TeamRegistry
 

@@ -16,7 +16,8 @@ import asyncio
 import logging
 from typing import Optional
 
-from ..tools import anthropic_client, context, db, rss, s3
+from ..tools import context, db, rss, s3
+from ..tools.llm import anthropic_client
 from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.promotion_prep")

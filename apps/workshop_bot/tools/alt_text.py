@@ -38,7 +38,8 @@ from typing import Optional
 
 import requests
 
-from . import anthropic_client, db
+from . import db
+from .llm import anthropic_client
 
 logger = logging.getLogger("workshop.alt_text")
 

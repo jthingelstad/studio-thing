@@ -51,7 +51,7 @@ _install_stubs()
 
 
 from apps.workshop_bot.systems._base import SystemServer, ToolDef  # noqa: E402
-from apps.workshop_bot.tools import agent_tools  # noqa: E402
+from apps.workshop_bot.tools.llm import agent_tools
 
 
 class NamespaceFormatTests(unittest.TestCase):

@@ -65,7 +65,8 @@ _install_stubs()
 
 from apps.workshop_bot.personas import base  # noqa: E402
 from apps.workshop_bot.personas import team as team_mod  # noqa: E402
-from apps.workshop_bot.tools import agent_loop, agent_tools, issue # noqa: E402
+from apps.workshop_bot.tools import issue # noqa: E402
+from apps.workshop_bot.tools.llm import agent_loop, agent_tools
 from apps.workshop_bot.tools.discord import conversation, discord_io
 
 

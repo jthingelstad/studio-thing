@@ -14,7 +14,7 @@ from typing import Any, Optional
 
 import anthropic
 
-REPO = Path(__file__).resolve().parents[3]
+REPO = Path(__file__).resolve().parents[4]
 PROMPTS_DIR = REPO / "apps" / "workshop_bot" / "prompts"
 
 MODELS = {
