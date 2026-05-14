@@ -2535,6 +2535,145 @@ class ComposeCtaTests(_DBTestCase):
         self.assertIn("placement: after_brief", cta)
         self.assertIn("Thingy here.", cta)
 
+    def test_two_ctas_written_with_distinct_placements(self):
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        reply = (
+            '{"ctas": ['
+            ' {"placement": "after_notable", "framings": ["A1", "A2"]},'
+            ' {"placement": "before_haiku", "framings": ["B1"]}'
+            ']}'
+        )
+        fc = _FakeBotChannel(persona="patty", reply=reply)
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        # Jamie picks the first option for each slot.
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
+            result = asyncio.run(compose_cta.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(result.data["ctas_written"], 2)
+        c1 = self.ws.files[(458, "cta-1.md")]
+        c2 = self.ws.files[(458, "cta-2.md")]
+        self.assertIn("placement: after_notable", c1)
+        self.assertIn("A1", c1)
+        self.assertIn("placement: before_haiku", c2)
+        self.assertIn("B1", c2)
+
+    def test_third_cta_dropped_silently(self):
+        # The job caps at ctas[:2]; a third proposal must be ignored.
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        reply = (
+            '{"ctas": ['
+            ' {"placement": "after_notable", "framings": ["A"]},'
+            ' {"placement": "after_journal", "framings": ["B"]},'
+            ' {"placement": "before_haiku", "framings": ["C — should be dropped"]}'
+            ']}'
+        )
+        fc = _FakeBotChannel(persona="patty", reply=reply)
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
+            result = asyncio.run(compose_cta.run(ctx))
+        self.assertTrue(result.ok)
+        self.assertEqual(result.data["ctas_written"], 2)
+        self.assertNotIn((458, "cta-3.md"), self.ws.files)
+
+    def test_invalid_placement_falls_back_to_default(self):
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        reply = '{"ctas": [{"placement": "above_everything", "framings": ["x"]}]}'
+        fc = _FakeBotChannel(persona="patty", reply=reply)
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
+            result = asyncio.run(compose_cta.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        # Falls back to compose._DEFAULT_PLACEMENT (`after_notable`).
+        from apps.workshop_bot.jobs import _compose as _compose_mod
+        self.assertIn(f"placement: {_compose_mod.DEFAULT_PLACEMENT}", self.ws.files[(458, "cta-1.md")])
+
+    def test_empty_framings_slot_skipped(self):
+        # A CTA dict whose framings list is empty / all-whitespace doesn't
+        # get a slot — `written` reflects only real picks.
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        reply = (
+            '{"ctas": ['
+            ' {"placement": "after_notable", "framings": ["   ", ""]},'
+            ' {"placement": "before_haiku", "framings": ["real one"]}'
+            ']}'
+        )
+        fc = _FakeBotChannel(persona="patty", reply=reply)
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
+            result = asyncio.run(compose_cta.run(ctx))
+        self.assertTrue(result.ok)
+        # Only the second slot wrote — but it goes to cta-2.md, not cta-1.md
+        # (the loop index is the source-list index; an empty slot leaves
+        # its filename unwritten).
+        self.assertEqual(result.data["ctas_written"], 1)
+        self.assertNotIn((458, "cta-1.md"), self.ws.files)
+        self.assertIn("real one", self.ws.files[(458, "cta-2.md")])
+
+    def test_malformed_json_reply_returns_parse_error(self):
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        # parse_json_payload pulls the first {…} block — a reply with no
+        # JSON object should fail the `ctas` shape check.
+        fc = _FakeBotChannel(persona="patty", reply="sorry, can't draft right now")
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        result = asyncio.run(compose_cta.run(ctx))
+        self.assertFalse(result.ok)
+        self.assertIn("parseable", result.message)
+        self.assertNotIn((458, "cta-1.md"), self.ws.files)
+
+    def test_await_choice_timeout_leaves_slot_unwritten(self):
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        reply = '{"ctas": [{"placement": "after_brief", "framings": ["a", "b"]}]}'
+        fc = _FakeBotChannel(persona="patty", reply=reply)
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=None)):
+            result = asyncio.run(compose_cta.run(ctx))
+        self.assertTrue(result.ok)
+        self.assertEqual(result.data["ctas_written"], 0)
+        self.assertNotIn((458, "cta-1.md"), self.ws.files)
+
+    def test_body_truncated_to_issue_body_cap(self):
+        # An oversized final.md must be capped at _compose.ISSUE_BODY_CAP
+        # before being fed to Patty.
+        from apps.workshop_bot.jobs import _compose as _compose_mod
+        self._window()
+        cap = _compose_mod.ISSUE_BODY_CAP
+        oversized = "## Notable\n\n" + ("x" * (cap + 5_000))
+        self.ws.write_issue_file(458, "final.md", oversized)
+        fc = _FakeBotChannel(persona="patty", reply='{"ctas": []}')
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        result = asyncio.run(compose_cta.run(ctx))
+        self.assertTrue(result.ok)
+        sent = fc.bot.core.call_args.kwargs["latest"]
+        # The fenced markdown block carries at most `cap` body chars.
+        body = sent.split("```markdown\n", 1)[1].rsplit("\n```", 1)[0]
+        self.assertEqual(len(body), cap)
+
+    def test_concurrent_run_is_blocked_by_job_lock(self):
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        fc = _FakeBotChannel(persona="patty", reply='{"ctas": []}')
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        # Pre-acquire the same multi-asset lock the job opens.
+        with _base.job_lock([f"{458}/cta-1.md", f"{458}/cta-2.md"], compose_cta.NAME):
+            result = asyncio.run(compose_cta.run(ctx))
+        self.assertFalse(result.ok)
+        self.assertIn("already running", result.message)
+        fc.bot.core.assert_not_awaited()
+
 
 class CreateFinalTests(_DBTestCase):
     def tearDown(self):
