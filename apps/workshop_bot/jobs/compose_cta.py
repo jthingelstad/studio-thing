@@ -21,20 +21,23 @@ from . import _base, _compose
 logger = logging.getLogger("workshop.jobs.compose_cta")
 
 NAME = "compose-cta"
-# In published section order: after Notable, after Journal, after Briefly,
-# then just before the closing haiku.
-_PLACEMENTS = ("after_notable", "after_journal", "after_brief", "before_haiku")
-_DEFAULT_PLACEMENT = "after_notable"
+
+# How many prior issues' `publish.md` to include for arc continuity (so
+# the model can see Patty's recent framings) and how many chars to take
+# from each one. Each excerpt is glommed into the user message, so the
+# product (count × excerpt cap) is what bounds the arc-context size.
+_ARC_LOOKBACK_COUNT = 4
+_ARC_EXCERPT_CAP = 4_000
 
 
-def _recent_publish_excerpts(issue_number: int, count: int = 4) -> str:
+def _recent_publish_excerpts(issue_number: int, count: int = _ARC_LOOKBACK_COUNT) -> str:
     out: list[str] = []
     for prev in range(issue_number - 1, issue_number - 1 - count, -1):
         if prev < 1:
             break
         res = s3.read_issue_file(prev, "publish.md")
         if res.get("found") and isinstance(res.get("text"), str) and res["text"].strip():
-            out.append(f"--- WT{prev} publish.md ---\n{res['text'][:4000]}")
+            out.append(f"--- WT{prev} publish.md ---\n{res['text'][:_ARC_EXCERPT_CAP]}")
     return "\n\n".join(out) if out else "(no prior publish.md files available)"
 
 
@@ -84,9 +87,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             for idx, cta in enumerate(ctas[:2]):
                 if not isinstance(cta, dict):
                     continue
-                placement = str(cta.get("placement") or _DEFAULT_PLACEMENT).strip()
-                if placement not in _PLACEMENTS:
-                    placement = _DEFAULT_PLACEMENT
+                placement = str(cta.get("placement") or _compose.DEFAULT_PLACEMENT).strip()
+                if placement not in _compose.PLACEMENTS:
+                    placement = _compose.DEFAULT_PLACEMENT
                 framings = [str(f).strip() for f in (cta.get("framings") or []) if str(f).strip()][:2]
                 if not framings:
                     continue

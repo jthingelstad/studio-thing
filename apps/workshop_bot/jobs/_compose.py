@@ -62,6 +62,15 @@ CREATE_FINAL_BODY_CAP = ISSUE_BODY_CAP + 6_000
 # give Marky the whole thing when she's drafting syndication framings.
 PROMOTION_BODY_CAP = ISSUE_BODY_CAP + 8_000
 
+# Section-relative placement slots for the per-issue membership CTAs that
+# `compose-cta` writes and `build-publish` reads. In published section order:
+# after Notable, after Journal, after Briefly, then just before the closing
+# haiku. The writer (compose-cta) validates before saving the frontmatter
+# and the reader (build-publish) validates before placing in the body, so
+# both must agree on the vocabulary — keep them on the same constant.
+PLACEMENTS = ("after_notable", "after_journal", "after_brief", "before_haiku")
+DEFAULT_PLACEMENT = "after_notable"
+
 
 def final_or_draft(issue_number: int) -> str:
     """``final.md`` if it exists, else ``draft.md`` (so the compose jobs

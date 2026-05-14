@@ -29,7 +29,7 @@ import re
 
 from ..tools import draft as draft_mod
 from ..tools import render, s3
-from . import _base, _cover, _currently
+from . import _base, _compose, _cover, _currently
 
 logger = logging.getLogger("workshop.jobs.build_publish")
 
@@ -56,9 +56,6 @@ _SECTION_HEADINGS = {
     "brief": "## Briefly",
 }
 _ORDER = ("notable", "journal", "brief")  # Currently is placed above the cover; see the assembly
-
-_PLACEMENTS = ("after_notable", "after_journal", "after_brief", "before_haiku")
-_DEFAULT_PLACEMENT = "after_notable"
 
 # The closing boilerplate every issue ends with, after the haiku (no `---`
 # between the haiku and this — they're one chunk).
@@ -225,9 +222,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 meta, cta_body = _strip_frontmatter(raw)
                 if not cta_body.strip():
                     continue
-                placement = (meta.get("placement") or _DEFAULT_PLACEMENT).strip()
-                if placement not in _PLACEMENTS:
-                    placement = _DEFAULT_PLACEMENT
+                placement = (meta.get("placement") or _compose.DEFAULT_PLACEMENT).strip()
+                if placement not in _compose.PLACEMENTS:
+                    placement = _compose.DEFAULT_PLACEMENT
                 cta_by_placement.setdefault(placement, []).append(_membership_block(cta_body))
 
             parts: list[str] = []

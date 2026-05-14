@@ -15,7 +15,7 @@ import logging
 from datetime import date, datetime, timedelta
 from typing import Any, Optional
 
-from . import db, draft
+from . import db, draft, support_state
 
 logger = logging.getLogger("workshop.context")
 
@@ -236,7 +236,6 @@ def build_patty_context(*, ref_date: Optional[date] = None) -> dict[str, Any]:
 
     current_nonprofit: Optional[dict[str, Any]] = None
     try:
-        from . import support_state
         cur = (support_state.read().get("support") or {}).get("current") or {}
         if cur:
             current_nonprofit = {
