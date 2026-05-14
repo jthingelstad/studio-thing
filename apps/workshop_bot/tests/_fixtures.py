@@ -1,0 +1,106 @@
+"""Shared fixtures for content-jobs tests.
+
+Extracted from ``test_content_jobs.py`` so split-out test files (e.g.
+``test_pinboard_scan.py``) can import the same in-memory S3 workspace
+and the same temp-DB base class without each file duplicating the
+boilerplate.
+
+What's here:
+
+- :class:`FakeWorkspace` — an in-memory replacement for the per-issue
+  S3 surface (``s3.read_issue_file`` / ``write_issue_file`` /
+  ``write_issue_html`` / ``write_workshop_pointer`` / ``list_issue``).
+- :func:`patch_s3(ws)` — returns a list of ``unittest.mock.patch.object``
+  patchers to start; each test case starts them in ``setUp`` and stops
+  in ``tearDown``.
+- :class:`DBTestCase` — base class that opens a temp-dir SQLite, runs
+  migrations, sets up a fresh ``FakeWorkspace`` + patches, and tears
+  everything down.
+"""
+
+from __future__ import annotations
+
+import os
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+from apps.workshop_bot.tools import db, s3
+
+
+class FakeWorkspace:
+    """In-memory replacement for ``apps.workshop_bot.tools.s3``'s per-issue
+    surface. Each test case constructs a fresh one in ``setUp``; reads /
+    writes go through ``self.files`` (keyed by ``(issue_number, filename)``)
+    and ``self.workshop_pointer`` (a single dict)."""
+
+    def __init__(self) -> None:
+        self.files: dict[tuple[int, str], str] = {}
+        self.workshop_pointer: dict | None = None
+
+    def read_issue_file(self, issue_number, filename, *, max_bytes=None):
+        key = (int(issue_number), filename)
+        if key in self.files:
+            return {"key": f"weekly-thing/{issue_number}/{filename}", "found": True,
+                    "text": self.files[key], "size": len(self.files[key])}
+        return {"key": f"weekly-thing/{issue_number}/{filename}", "found": False}
+
+    def write_issue_file(self, issue_number, filename, content, *, content_type=None, cache_control=None):
+        self.files[(int(issue_number), filename)] = content
+        return {"key": f"weekly-thing/{issue_number}/{filename}", "written": True,
+                "size": len(content), "url": f"https://files.thingelstad.com/weekly-thing/{issue_number}/{filename}"}
+
+    def write_issue_html(self, issue_number, filename, html_text):
+        # No CloudFront invalidation in tests.
+        return self.write_issue_file(issue_number, filename, html_text)
+
+    def write_workshop_pointer(self, data):
+        self.workshop_pointer = data
+        return {"key": "weekly-thing/workshop.json", "bucket": "files.thingelstad.com",
+                "url": "https://files.thingelstad.com/weekly-thing/workshop.json",
+                "size": len(str(data)), "written": True}
+
+    def list_issue(self, issue_number):
+        n = int(issue_number)
+        objs = [{"filename": fn, "key": f"weekly-thing/{n}/{fn}", "size": len(txt)}
+                for (i, fn), txt in self.files.items() if i == n]
+        return {"bucket": "files.thingelstad.com", "issue_number": n,
+                "prefix": f"weekly-thing/{n}/", "objects": objs}
+
+
+def patch_s3(ws: FakeWorkspace):
+    """Build the list of patchers that redirect the per-issue ``s3``
+    surface to ``ws``. Caller starts/stops them in setUp/tearDown."""
+    return [
+        patch.object(s3, "read_issue_file", ws.read_issue_file),
+        patch.object(s3, "write_issue_file", ws.write_issue_file),
+        patch.object(s3, "write_issue_html", ws.write_issue_html),
+        patch.object(s3, "write_workshop_pointer", ws.write_workshop_pointer),
+        patch.object(s3, "list_issue", ws.list_issue),
+    ]
+
+
+class DBTestCase(unittest.TestCase):
+    """Temp-DB + FakeWorkspace test base. Opens a temp-dir SQLite,
+    points ``WORKSHOP_DB_PATH`` at it, runs migrations, installs the
+    in-memory S3 patches, and tears it all down."""
+
+    def setUp(self):
+        self._tmpdir = tempfile.TemporaryDirectory()
+        self._orig_db = os.environ.get("WORKSHOP_DB_PATH")
+        os.environ["WORKSHOP_DB_PATH"] = str(Path(self._tmpdir.name) / "test.db")
+        db.run_migrations()
+        self.ws = FakeWorkspace()
+        self._patches = patch_s3(self.ws)
+        for p in self._patches:
+            p.start()
+
+    def tearDown(self):
+        for p in self._patches:
+            p.stop()
+        if self._orig_db is None:
+            os.environ.pop("WORKSHOP_DB_PATH", None)
+        else:
+            os.environ["WORKSHOP_DB_PATH"] = self._orig_db
+        self._tmpdir.cleanup()
