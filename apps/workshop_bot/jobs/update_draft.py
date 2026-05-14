@@ -212,11 +212,28 @@ def _final_exists(issue_number: int) -> bool:
 
 # ---------- Eddy's post-update review ----------
 
+# Default model for the HTML drawer review (`_draft_review`) — the
+# substantive editorial pass that lands on `draft.html`. Tunable via
+# ``WORKSHOP_EDDY_DRAFT_REVIEW_MODEL`` so a deployment can swap to
+# Opus for a richer pass or Haiku to save tokens. Separate from the
+# weekday-scaled `_review_model` below (that one drives the lighter
+# `#editorial` Discord card).
+_DRAFT_REVIEW_DEFAULT_MODEL = "sonnet"
+
+
+def _draft_review_model() -> str:
+    override = (os.environ.get("WORKSHOP_EDDY_DRAFT_REVIEW_MODEL") or "").strip()
+    return override or _DRAFT_REVIEW_DEFAULT_MODEL
+
+
 def _review_model(weekday: int) -> str:
+    """Model for the Tue–Fri `#editorial` post-update card. Thu/Fri get
+    Sonnet (substantive end-of-week reviews); early-week gets Haiku (the
+    card is mostly the readiness checklist). Override the whole thing
+    via ``WORKSHOP_EDDY_REVIEW_MODEL`` (matches the existing convention)."""
     override = (os.environ.get("WORKSHOP_EDDY_REVIEW_MODEL") or "").strip()
     if override:
         return override
-    # Thu/Fri reviews are substantive; early-week is mostly the checklist.
     return "sonnet" if weekday in (3, 4) else "haiku"
 
 
@@ -247,7 +264,7 @@ async def _draft_review(
         f"---\n\nThe current draft (WT{n}):\n\n```markdown\n{draft_text}\n```"
     )
     with db.AgentRun("eddy", trigger="update-draft-html-review") as run:
-        answer, _m = await eddy.core(latest=user_msg, history=[], model="sonnet")
+        answer, _m = await eddy.core(latest=user_msg, history=[], model=_draft_review_model())
         run.records_written = 0 if (not answer or is_pass_response(answer)) else 1
     if not answer or is_pass_response(answer):
         return ""

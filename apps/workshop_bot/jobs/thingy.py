@@ -299,6 +299,23 @@ def _transcript_md(conv: dict) -> str:
 # ---------- the hourly job ----------
 
 async def watch(ctx: "_base.JobContext") -> "_base.JobResult":
+    # Whole-job lock so a slow cron run (one slow Lambda call + LLM
+    # assessment per conversation can push past the hour) can't overlap
+    # with the next scheduled fire or a manual `/workshop thingy sync`.
+    # Without it both instances would pay for LLM assessments on the
+    # same convos — DB inserts are idempotent on turn request ids, so
+    # only one card lands per convo, but the cost is real.
+    try:
+        with _base.job_lock([f"job:{NAME}"], NAME):
+            return await _watch_locked(ctx)
+    except _base.JobLocked as exc:
+        logger.info("thingy-watch: skipping — already running (%s)", exc.holder_desc)
+        return _base.JobResult(
+            True, f"thingy-watch already running ({exc.holder_desc}); skipped.",
+        )
+
+
+async def _watch_locked(ctx: "_base.JobContext") -> "_base.JobResult":
     watermark = db.latest_thingy_conversation_end()
     wm_dt = _parse_iso(watermark)
     if wm_dt is not None:

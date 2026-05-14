@@ -22,6 +22,15 @@ logger = logging.getLogger("workshop.jobs.compose")
 # Cap how much of the issue body we feed the model.
 ISSUE_BODY_CAP = 20_000
 
+# `create-final` reads ``draft.md`` rather than the post-final body, and
+# the draft includes the full Journal section (rehosted images, all
+# micro.blog posts in window) plus block markers — which is bulkier than
+# the post-curation final. Bump the cap so Eddy sees the whole draft
+# when reordering. The other compose jobs run on the trimmed
+# ``final.md`` (or ``draft.md`` as fallback) and don't need the extra
+# headroom.
+CREATE_FINAL_BODY_CAP = ISSUE_BODY_CAP + 6_000
+
 
 def final_or_draft(issue_number: int) -> str:
     """``final.md`` if it exists, else ``draft.md`` (so the compose jobs

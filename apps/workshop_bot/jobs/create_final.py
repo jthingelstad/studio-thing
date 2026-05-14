@@ -65,7 +65,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             base_prompt = anthropic_client.load_prompt("eddy-create-final")
             user_msg = (
                 f"{base_prompt}\n\n---\n\nThe current draft (WT{n}):\n\n"
-                f"```markdown\n{draft[: _compose.ISSUE_BODY_CAP + 6000]}\n```"
+                f"```markdown\n{draft[: _compose.CREATE_FINAL_BODY_CAP]}\n```"
             )
             final_body = draft
             for _round in range(MAX_ROUNDS):

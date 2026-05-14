@@ -240,5 +240,23 @@ class WiringTests(unittest.TestCase):
         self.assertEqual(spec.cron, "7 * * * *")
 
 
+class WatchLockTests(_DBCase):
+    """A slow `thingy-watch` run (network + LLM per convo) can push past
+    the hour; the whole-job lock prevents the next cron fire from
+    starting a parallel instance that'd pay for duplicate LLM calls."""
+
+    def test_concurrent_watch_is_blocked_by_job_lock(self):
+        from apps.workshop_bot.jobs._base import job_lock
+        ctx = _base.JobContext(deps=None, trigger="scheduled")
+        ctx.post = AsyncMock(return_value=True)
+        # Pre-acquire the lock; the watch call should see "already running."
+        with job_lock([f"job:{thingy_job.NAME}"], thingy_job.NAME):
+            with patch.object(thingy_job.thingy_client, "fetch_conversations",
+                              AsyncMock(return_value=[])):
+                res = asyncio.run(thingy_job.watch(ctx))
+        self.assertTrue(res.ok)
+        self.assertIn("already running", res.message)
+
+
 if __name__ == "__main__":
     unittest.main()

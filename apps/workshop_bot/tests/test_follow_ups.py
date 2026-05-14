@@ -303,5 +303,23 @@ class WiringTests(unittest.TestCase):
             self.assertIn(name, agent_tools.SPECS)
 
 
+class FollowUpSweepLockTests(_DBCase):
+    """The hourly sweep grabs a whole-job lock so a slow run can't
+    overlap the next cron fire or a manual invocation."""
+
+    def test_concurrent_sweep_is_blocked_by_job_lock(self):
+        # Pre-acquire the lock so the actual sweep sees "already running."
+        from apps.workshop_bot.jobs._base import job_lock
+        past = (datetime.now() - timedelta(hours=1)).isoformat(timespec="seconds")
+        db.insert_follow_up(persona="eddy", trigger_kind="time",
+                             note="x", due_at=past)
+        ft = _FakeTeam(persona="eddy")
+        with job_lock([f"job:{follow_up.NAME}"], follow_up.NAME):
+            res = asyncio.run(follow_up.sweep(ft.ctx()))
+        self.assertTrue(res.ok)
+        self.assertIn("already running", res.message)
+        ft.bot.core.assert_not_awaited()
+
+
 if __name__ == "__main__":
     unittest.main()

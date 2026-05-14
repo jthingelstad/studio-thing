@@ -132,6 +132,13 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
         await interaction.response.defer(ephemeral=True, thinking=True)
         try:
             result = await coro_factory()
+        except jobs_base.JobLocked as exc:
+            # The job's own try/except should normally turn this into a
+            # JobResult, but if a future job forgets, surface it nicely
+            # rather than dumping the raw exception at Jamie.
+            logger.info("/workshop %s: blocked — %s", label, exc.holder_desc)
+            await _ack(interaction, f"⏳ `{label}` is already running ({exc.holder_desc}) — try again shortly.")
+            return
         except Exception as exc:  # noqa: BLE001
             logger.exception("/workshop %s failed", label)
             await _ack(interaction, f"❌ `{label}` hit an error: `{type(exc).__name__}: {exc}`")
@@ -145,6 +152,9 @@ def register_workshop_commands(bot: "PersonaBot") -> app_commands.CommandTree:
         await interaction.response.send_message(started, ephemeral=True)
         try:
             await coro_factory()
+        except jobs_base.JobLocked as exc:
+            logger.info("/workshop %s: blocked — %s", label, exc.holder_desc)
+            await _ack(interaction, f"⏳ `{label}` is already running ({exc.holder_desc}) — try again shortly.")
         except Exception as exc:  # noqa: BLE001
             logger.exception("/workshop %s failed", label)
             await _ack(interaction, f"❌ `{label}` hit an error: `{type(exc).__name__}: {exc}` — see logs / the channel.")

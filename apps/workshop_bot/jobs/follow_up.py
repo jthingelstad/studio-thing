@@ -233,6 +233,21 @@ def _persona_context_block(persona: str) -> str:
 
 
 async def sweep(ctx: "_base.JobContext") -> "_base.JobResult":
+    # Whole-job lock so a slow run (8 follow-ups × LLM call each) can't
+    # overlap the next hourly cron fire. ``mark_follow_up_fired`` is the
+    # idempotency gate, but without the lock both runs pay for LLM
+    # work and may race to post check-ins before the marking lands.
+    try:
+        with _base.job_lock([f"job:{NAME}"], NAME):
+            return await _sweep_locked(ctx)
+    except _base.JobLocked as exc:
+        logger.info("follow-up-sweep: skipping — already running (%s)", exc.holder_desc)
+        return _base.JobResult(
+            True, f"follow-up-sweep already running ({exc.holder_desc}); skipped.",
+        )
+
+
+async def _sweep_locked(ctx: "_base.JobContext") -> "_base.JobResult":
     now_iso = datetime.now().isoformat(timespec="seconds")
     win = db.get_active_issue_window()
     active_issue = int(win["issue_number"]) if win else None
