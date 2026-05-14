@@ -128,6 +128,15 @@ class AddCampaignJobTests(_DBCase):
         self.assertEqual(db.get_campaign("dd388")["copy"], "Headline\n\nBody blurb with a link.")
         self.assertTrue(result.data["has_copy"])
 
+    def test_register_with_none_name_returns_required_error(self):
+        # Regression: previously `(str(name) or "").strip()` turned None into
+        # the literal string "None" because str(None) == "None" — the `or ""`
+        # fallback never fired. Should be rejected outright.
+        result = asyncio.run(add_campaign.run(_base.JobContext(), name=None, ref="x-2026"))
+        self.assertFalse(result.ok)
+        self.assertIn("name is required", result.message)
+        self.assertIsNone(db.get_campaign("None"))
+
     def test_campaign_copy_job_sets_and_clears(self):
         asyncio.run(add_campaign.run(_base.JobContext(), name="dd388", ref="DenseDiscovery-388"))
         r = asyncio.run(ops.campaign_copy(_base.JobContext(), name="dd388", copy="The actual ad."))
@@ -194,6 +203,35 @@ class CampaignReportJobTests(_DBCase):
         db.insert_campaign(name="dd-may", ref="dd-2026-05-15")
         result = asyncio.run(campaign_report.run(_base.JobContext()))
         self.assertIn("none recorded", result.message)
+
+
+class CampaignWindowDaysTests(unittest.TestCase):
+    """Marky's `_campaign_window_days` picks a sensible attribution window
+    for a campaign's age: ≤10 days → 7d, ≤45 days → 30d, else 60d. Falls
+    back to 14d on missing / malformed dates."""
+
+    def _at(self, days_ago: int) -> str:
+        from datetime import date, timedelta
+        return (date.today() - timedelta(days=days_ago)).isoformat()
+
+    def test_none_fallback(self):
+        self.assertEqual(daily_metrics._campaign_window_days(None), 14)
+        self.assertEqual(daily_metrics._campaign_window_days(""), 14)
+
+    def test_malformed_date_fallback(self):
+        self.assertEqual(daily_metrics._campaign_window_days("not-a-date"), 14)
+        self.assertEqual(daily_metrics._campaign_window_days("2026-13-99"), 14)
+
+    def test_boundaries(self):
+        # ≤10 days → 7d window
+        self.assertEqual(daily_metrics._campaign_window_days(self._at(0)), 7)
+        self.assertEqual(daily_metrics._campaign_window_days(self._at(10)), 7)
+        # 11..45 days → 30d window
+        self.assertEqual(daily_metrics._campaign_window_days(self._at(11)), 30)
+        self.assertEqual(daily_metrics._campaign_window_days(self._at(45)), 30)
+        # >45 days → 60d window
+        self.assertEqual(daily_metrics._campaign_window_days(self._at(46)), 60)
+        self.assertEqual(daily_metrics._campaign_window_days(self._at(180)), 60)
 
 
 class DailyMetricsTests(_DBCase):
@@ -267,6 +305,28 @@ class DailyMetricsTests(_DBCase):
             os.environ.pop("DISCORD_CHANNEL_PROMOTION", None)
         self.assertTrue(result.ok, result.message)
         self.assertTrue(result.data["posted"])
+
+    def test_concurrent_run_is_blocked_by_job_lock(self):
+        # Two concurrent fires (cron + manual) would otherwise double-write
+        # campaign_metrics rows. Pre-acquire the lock; run() should bail
+        # with the "already running" message and never touch the API stubs.
+        called = {"signups": 0, "traffic": 0}
+        def _src(**kw):
+            called["traffic"] += 1
+            return {"by_source": {}}
+        def _attr(**kw):
+            called["signups"] += 1
+            return {"by_ref": {}}
+        from apps.workshop_bot.systems.buttondown import client as bd
+        from apps.workshop_bot.systems.tinylytics import client as ty
+        with _base.job_lock([f"job:{daily_metrics.NAME}"], daily_metrics.NAME):
+            with patch.object(bd, "attribution_summary", _attr), \
+                 patch.object(ty, "sources", _src), \
+                 patch.object(bd, "subscriber_growth", lambda **kw: {"net": 99, "churned": 99}):
+                result = asyncio.run(daily_metrics.run(_base.JobContext()))
+        self.assertFalse(result.ok)
+        self.assertIn("already running", result.message)
+        self.assertEqual(called, {"signups": 0, "traffic": 0})
 
     def test_moved_when_marky_pass_not_posted(self):
         channel = MagicMock(); channel.send = AsyncMock()
