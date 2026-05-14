@@ -2467,6 +2467,36 @@ class ComposeMetaTests(_DBTestCase):
         from apps.workshop_bot.jobs import _compose
         self.assertEqual(_compose.MAX_REFRESH_ROUNDS, 3)
 
+    def test_resolved_bot_is_a_named_tuple(self):
+        """Tuple unpack stays as before, AND callers can use field access."""
+        from apps.workshop_bot.jobs._compose import ResolvedBot
+        r = ResolvedBot("BOT", "CHANNEL", None)
+        # tuple-unpack — what existing callers do
+        bot, channel, reason = r
+        self.assertEqual((bot, channel, reason), ("BOT", "CHANNEL", None))
+        # field access — what new callers can do
+        self.assertEqual(r.bot, "BOT")
+        self.assertEqual(r.channel, "CHANNEL")
+        self.assertIsNone(r.error_reason)
+
+    def test_review_model_by_weekday(self):
+        """The Tue–Fri model selection: Tue/Wed Haiku, Thu/Fri Sonnet,
+        env override wins for any weekday."""
+        from apps.workshop_bot.jobs import update_draft
+        # Weekday integers: Mon=0, Tue=1, …, Sun=6.
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("WORKSHOP_EDDY_REVIEW_MODEL", None)
+            self.assertEqual(update_draft._review_model(1), "haiku")
+            self.assertEqual(update_draft._review_model(2), "haiku")
+            self.assertEqual(update_draft._review_model(3), "sonnet")
+            self.assertEqual(update_draft._review_model(4), "sonnet")
+            # Sat/Sun fall back (never actually called — gated above —
+            # but the fallback should be safe).
+            self.assertEqual(update_draft._review_model(5), "haiku")
+        # Env override wins for any weekday.
+        with patch.dict(os.environ, {"WORKSHOP_EDDY_REVIEW_MODEL": "opus"}):
+            self.assertEqual(update_draft._review_model(3), "opus")
+
 
 class ComposeCtaTests(_DBTestCase):
     def tearDown(self):

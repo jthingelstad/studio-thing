@@ -17,11 +17,24 @@ from __future__ import annotations
 import json
 import logging
 import re
-from typing import Any, Callable, Optional
+from typing import Any, Callable, NamedTuple, Optional
 
 from ..tools import db, interaction
 from ..tools import s3
 from . import _base
+
+
+class ResolvedBot(NamedTuple):
+    """Result of :func:`resolve_bot_and_channel`. Backwards-compatible
+    with the old 3-tuple unpack (``bot, channel, reason = …``) AND
+    accessible by field name (``r.bot``, ``r.channel``,
+    ``r.error_reason``). When the persona / channel resolved cleanly,
+    ``error_reason`` is ``None``; otherwise ``bot`` and ``channel`` are
+    ``None`` and ``error_reason`` carries the user-safe explanation."""
+
+    bot: Any
+    channel: Any
+    error_reason: Optional[str]
 
 logger = logging.getLogger("workshop.jobs.compose")
 
@@ -126,19 +139,29 @@ async def refresh_loop(
     return None
 
 
-def resolve_bot_and_channel(ctx: "_base.JobContext", persona: str, channel_env: str):
-    """Return ``(bot, channel, None)`` for ``persona`` (its discord.Client
-    and the env-named channel bound to it), or ``(None, None, reason)`` if
-    either is unavailable. ``bot`` has ``wait_for`` (it's a discord.Client
-    subclass); ``channel`` has ``send`` and yields messages with
-    ``add_reaction``."""
+def resolve_bot_and_channel(
+    ctx: "_base.JobContext", persona: str, channel_env: str,
+) -> ResolvedBot:
+    """Return a :class:`ResolvedBot` for ``persona``: ``bot`` (the
+    persona's discord.Client subclass — has ``wait_for``), ``channel``
+    (has ``send`` and yields messages with ``add_reaction``), and
+    ``error_reason`` (``None`` on success, a user-safe string otherwise).
+
+    Backwards-compatible with the 3-tuple unpack callers were using —
+    ``bot, channel, reason = resolve_bot_and_channel(...)`` keeps
+    working, and new code can use field access for clarity:
+
+        r = resolve_bot_and_channel(...)
+        if r.bot is None:
+            return JobResult(False, f"skipped — {r.error_reason}")
+    """
     team = getattr(getattr(ctx, "deps", None), "team", None)
     if team is None:
-        return None, None, "no Discord (team registry unavailable)"
+        return ResolvedBot(None, None, "no Discord (team registry unavailable)")
     bot = team.bots.get(persona)
     if bot is None or getattr(bot, "user", None) is None:
-        return None, None, f"{persona} unavailable"
+        return ResolvedBot(None, None, f"{persona} unavailable")
     channel = ctx.channel(channel_env, persona=persona)
     if channel is None:
-        return None, None, f"can't resolve {channel_env}"
-    return bot, channel, None
+        return ResolvedBot(None, None, f"can't resolve {channel_env}")
+    return ResolvedBot(bot, channel, None)

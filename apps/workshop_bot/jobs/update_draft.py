@@ -226,15 +226,22 @@ def _draft_review_model() -> str:
     return override or _DRAFT_REVIEW_DEFAULT_MODEL
 
 
+# Model for the Tue–Fri `#editorial` post-update card, keyed by Python
+# ``date.weekday()`` (Mon=0, …, Sun=6). Tue/Wed (1/2) get Haiku because
+# the card is mostly the readiness checklist; Thu/Fri (3/4) get Sonnet
+# for the substantive end-of-week pass. Sat/Sun/Mon don't run (gated
+# above this function). Tweak by editing the dict; override the whole
+# selection via ``WORKSHOP_EDDY_REVIEW_MODEL`` (matches the existing
+# convention).
+_REVIEW_MODEL_BY_WEEKDAY: dict[int, str] = {1: "haiku", 2: "haiku", 3: "sonnet", 4: "sonnet"}
+_REVIEW_MODEL_FALLBACK = "haiku"
+
+
 def _review_model(weekday: int) -> str:
-    """Model for the Tue–Fri `#editorial` post-update card. Thu/Fri get
-    Sonnet (substantive end-of-week reviews); early-week gets Haiku (the
-    card is mostly the readiness checklist). Override the whole thing
-    via ``WORKSHOP_EDDY_REVIEW_MODEL`` (matches the existing convention)."""
     override = (os.environ.get("WORKSHOP_EDDY_REVIEW_MODEL") or "").strip()
     if override:
         return override
-    return "sonnet" if weekday in (3, 4) else "haiku"
+    return _REVIEW_MODEL_BY_WEEKDAY.get(weekday, _REVIEW_MODEL_FALLBACK)
 
 
 async def _draft_review(
@@ -263,7 +270,7 @@ async def _draft_review(
         f"{context.render_block(eddy_ctx)}\n\n{prompt}\n\n"
         f"---\n\nThe current draft (WT{n}):\n\n```markdown\n{draft_text}\n```"
     )
-    with db.AgentRun("eddy", trigger="update-draft-html-review") as run:
+    with db.AgentRun("eddy", trigger="update-draft:html-review") as run:
         answer, _m = await eddy.core(latest=user_msg, history=[], model=_draft_review_model())
         run.records_written = 0 if (not answer or is_pass_response(answer)) else 1
     if not answer or is_pass_response(answer):
@@ -294,7 +301,7 @@ async def _maybe_eddy_review(
         return "(Eddy review prompt missing)"
     user_msg = f"{context.render_block(eddy_ctx)}\n\n{review_prompt}"
     model = _review_model(today.weekday())
-    with db.AgentRun("eddy", trigger="update-draft-review") as run:
+    with db.AgentRun("eddy", trigger="update-draft:editorial-card") as run:
         answer, _meta = await eddy.core(latest=user_msg, history=[], model=model)
         run.records_written = 0 if (not answer or is_pass_response(answer)) else 1
     if not answer or is_pass_response(answer):
