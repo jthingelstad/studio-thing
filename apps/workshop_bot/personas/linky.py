@@ -70,6 +70,34 @@ _BRIEF_ACK = "🔖"
 _DISCOVERY_SOURCES: frozenset[str] = frozenset(spec.name for spec in DISCOVERY_FEEDS)
 
 
+def _mark_card_researched(
+    row: dict, *, summary: str, fit_note: str,
+) -> None:
+    """Cross-lane dedup. After Jamie saves a discovery-card URL via
+    reaction or reply (which creates a ``toread=yes`` Pinboard bookmark),
+    also mark the URL in ``pinboard_research_done`` so the next
+    ``pinboard-scan`` toread lane doesn't re-research a URL Linky has
+    already written a card for. No-op for toread-source cards — those
+    were marked researched at card-post time in
+    ``pinboard_scan._process_one``.
+
+    Best-effort: a DB error here is logged but doesn't propagate. The
+    save itself already succeeded from Jamie's perspective; a leaked
+    re-research is a milder regression than a noisy save failure."""
+    if row.get("source") == "toread":
+        return
+    url = (row.get("url") or "").strip()
+    if not url:
+        return
+    try:
+        db.mark_url_researched(
+            url=url, title=row.get("title"),
+            summary=summary, confidence="✦", fit_note=fit_note,
+        )
+    except Exception:  # noqa: BLE001
+        logger.exception("linky: mark_url_researched failed for %s", url)
+
+
 class LinkyBot(PersonaBot):
     persona = "linky"
     name = "Linky"
@@ -152,6 +180,11 @@ class LinkyBot(PersonaBot):
             await message.add_reaction("📌" if created and ok else ("✅" if ok else "⚠️"))
         except discord.DiscordException:
             pass
+        if ok:
+            _mark_card_researched(
+                row, summary=reply_text[:500],
+                fit_note="saved via reply",
+            )
         logger.info(
             "linky: research reply -> set_description url=%s created=%s ok=%s",
             url, created, ok,
@@ -207,6 +240,11 @@ class LinkyBot(PersonaBot):
             return
         ok = res.get("result_code") in ("done", "item already exists")
         await self._react_card(payload, "📌" if ok else "⚠️")
+        if ok:
+            _mark_card_researched(
+                row, summary="saved via reaction (blank description)",
+                fit_note="saved via reaction",
+            )
         logger.info(
             "linky: save-reaction on %s -> created=%s result=%s",
             url, res.get("created"), res.get("result_code"),
@@ -234,6 +272,11 @@ class LinkyBot(PersonaBot):
             return
         ok = res.get("result_code") == "done"
         await self._react_card(payload, _BRIEF_ACK if ok else "⚠️")
+        if ok:
+            _mark_card_researched(
+                row, summary="saved via ⭐ (tagged _brief)",
+                fit_note="saved via ⭐ Briefly reaction",
+            )
         logger.info(
             "linky: brief-reaction on %s -> created=%s tags=%r result=%s",
             url, res.get("created"), res.get("tags"), res.get("result_code"),

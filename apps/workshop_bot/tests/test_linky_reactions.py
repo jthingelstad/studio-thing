@@ -475,5 +475,168 @@ class LinkySaveReactionTests(_DBTestCase):
         self.assertEqual(self.reactions, ["❌"])
 
 
+class LinkyCrossLaneDedupTests(_DBTestCase):
+    """Regression coverage for the popular→toread re-research leak.
+
+    When a discovery-card URL is saved via Jamie's reaction or reply,
+    the URL goes onto Jamie's Pinboard toread queue. Before the fix the
+    toread lane would then re-research the same URL on its next scan
+    because the popular-side save paths didn't write to
+    ``pinboard_research_done`` — only ``pinboard_popular_seen``.
+
+    Three save vectors, three regression cases. Toread-source cards
+    have a separate test confirming the no-op path (those URLs are
+    already in ``pinboard_research_done`` from the original card-post)."""
+
+    URL_REACT = "https://x.example/save-rd"
+    URL_BRIEF = "https://x.example/brief-rd"
+    URL_REPLY = "https://x.example/reply-rd"
+    URL_TOREAD = "https://x.example/toread-rd"
+
+    def setUp(self):
+        super().setUp()
+        import types
+        from apps.workshop_bot.personas.linky import LinkyBot
+        self.bot = LinkyBot.__new__(LinkyBot)
+        self.bot.user = MagicMock()
+        self.bot.user.id = 1000
+        self.bot.deps = types.SimpleNamespace(team=None, corpus=None)
+        async def _fake_react(payload, emoji):
+            pass
+        self.bot._react_card = _fake_react
+        os.environ["DISCORD_OWNER_USER_ID"] = "777"
+
+    def tearDown(self):
+        os.environ.pop("DISCORD_OWNER_USER_ID", None)
+        super().tearDown()
+
+    def _payload(self, *, user_id, emoji, message_id, channel_id=999):
+        p = MagicMock()
+        p.user_id = user_id
+        p.message_id = message_id
+        p.channel_id = channel_id
+        p.emoji = MagicMock()
+        p.emoji.__str__ = lambda s: emoji
+        return p
+
+    def _msg(self, *, content, reference_id):
+        m = MagicMock()
+        m.guild = object()
+        m.author = MagicMock()
+        m.author.id = 777
+        m.author.bot = False
+        m.author.__eq__ = lambda s, other: False
+        m.content = content
+        m.reference = MagicMock()
+        m.reference.message_id = reference_id
+        m.add_reaction = AsyncMock()
+        m.reply = AsyncMock()
+        return m
+
+    def test_save_reaction_on_discovery_marks_research_done(self):
+        db.record_research_message(
+            discord_message_id="4001", url=self.URL_REACT,
+            source="popular", title="Save→RD",
+        )
+        # Before: URL is unresearched.
+        self.assertEqual(db.filter_unresearched_urls([self.URL_REACT]), [self.URL_REACT])
+
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        p = self._payload(user_id=777, emoji="✅", message_id=4001)
+        with patch.object(pbc, "posts_get", MagicMock(return_value={"posts": []})), \
+             patch.object(pbc, "posts_add", MagicMock(return_value={"result_code": "done"})):
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+
+        # After: URL is in pinboard_research_done so the next toread
+        # scan won't re-research it.
+        self.assertEqual(db.filter_unresearched_urls([self.URL_REACT]), [])
+
+    def test_save_reaction_failure_does_not_mark_research_done(self):
+        """Pinboard write failed → don't claim the URL is researched.
+        The next toread scan can still pick it up if Jamie saves it
+        through some other channel."""
+        db.record_research_message(
+            discord_message_id="4002", url=self.URL_REACT,
+            source="popular", title="x",
+        )
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        p = self._payload(user_id=777, emoji="✅", message_id=4002)
+        with patch.object(pbc, "posts_get", MagicMock(return_value={"posts": []})), \
+             patch.object(pbc, "posts_add", MagicMock(side_effect=RuntimeError("boom"))):
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        self.assertEqual(db.filter_unresearched_urls([self.URL_REACT]), [self.URL_REACT])
+
+    def test_brief_reaction_on_discovery_marks_research_done(self):
+        db.record_research_message(
+            discord_message_id="4003", url=self.URL_BRIEF,
+            source="lobsters", title="Brief→RD",
+        )
+        self.assertEqual(db.filter_unresearched_urls([self.URL_BRIEF]), [self.URL_BRIEF])
+
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        p = self._payload(user_id=777, emoji="⭐", message_id=4003)
+        with patch.object(pbc, "tag_as_brief",
+                          MagicMock(return_value={"result_code": "done",
+                                                   "created": True, "tags": "_brief"})):
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+
+        self.assertEqual(db.filter_unresearched_urls([self.URL_BRIEF]), [])
+
+    def test_brief_reaction_on_toread_is_a_noop_for_research_done(self):
+        """Toread-source cards already wrote ``pinboard_research_done``
+        when the card was originally posted (in
+        ``pinboard_scan._process_one``). ⭐ on a toread card just adds
+        the ``_brief`` tag — no second research_done write is needed,
+        and (more importantly) the helper shouldn't fail when the row
+        already exists."""
+        db.record_research_message(
+            discord_message_id="4004", url=self.URL_TOREAD,
+            source="toread", title="Toread→noop",
+        )
+        # Simulate: the toread scan already marked this URL researched.
+        db.mark_url_researched(url=self.URL_TOREAD, title="Toread→noop",
+                                summary="card posted", confidence="✦",
+                                fit_note="card posted")
+        self.assertEqual(db.filter_unresearched_urls([self.URL_TOREAD]), [])
+
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        p = self._payload(user_id=777, emoji="⭐", message_id=4004)
+        with patch.object(pbc, "tag_as_brief",
+                          MagicMock(return_value={"result_code": "done",
+                                                   "created": False, "tags": "_brief"})):
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+
+        # No change; URL still researched.
+        self.assertEqual(db.filter_unresearched_urls([self.URL_TOREAD]), [])
+
+    def test_reply_to_discovery_card_marks_research_done(self):
+        db.record_research_message(
+            discord_message_id="4005", url=self.URL_REPLY,
+            source="hackernews", title="Reply→RD",
+        )
+        self.assertEqual(db.filter_unresearched_urls([self.URL_REPLY]), [self.URL_REPLY])
+
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        m = self._msg(content="Useful framing.", reference_id=4005)
+        with patch.object(pbc, "set_description",
+                          MagicMock(return_value={"result_code": "done",
+                                                   "created": True, "replaced": False})):
+            asyncio.run(self.bot._maybe_handle_research_reply(m))
+
+        self.assertEqual(db.filter_unresearched_urls([self.URL_REPLY]), [])
+
+    def test_reply_failure_does_not_mark_research_done(self):
+        db.record_research_message(
+            discord_message_id="4006", url=self.URL_REPLY,
+            source="hackernews", title="x",
+        )
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        m = self._msg(content="text", reference_id=4006)
+        with patch.object(pbc, "set_description",
+                          MagicMock(side_effect=RuntimeError("boom"))):
+            asyncio.run(self.bot._maybe_handle_research_reply(m))
+        self.assertEqual(db.filter_unresearched_urls([self.URL_REPLY]), [self.URL_REPLY])
+
+
 if __name__ == "__main__":
     unittest.main()

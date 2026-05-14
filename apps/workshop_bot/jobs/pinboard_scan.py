@@ -431,6 +431,20 @@ def _gather_candidates() -> tuple[
                 # Silent drop — today's behavior.
                 continue
 
+            # Cross-day uplift requires positive evidence that *another*
+            # feed sighted this URL first. If ``popular_seen_sightings``
+            # is empty, the ``pinboard_popular_seen`` row is legacy data
+            # from before the sightings table existed (or from a feed
+            # restart that beat the sightings co-write) — no cross-source
+            # signal is supportable. Backfill one sighting for the current
+            # spec so the URL doesn't re-uplift next scan, and treat as
+            # silent drop. This is the same outcome the bug would have
+            # produced if the original first-sighting had recorded a
+            # sighting row.
+            if not db.sightings_for(url):
+                db.record_sighting(url=url, source=spec.name)
+                continue
+
             # Cross-day uplift — new feed sighting on a known URL.
             new_sighting = _signal_blob(raw_item, spec.name)
             if key in uplift_by_key:

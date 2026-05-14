@@ -609,6 +609,80 @@ class PinboardScanJobTests(_DBTestCase):
         # The new Lobsters sighting was recorded.
         self.assertTrue(db.feed_has_seen(url=url, source="lobsters"))
 
+    def test_legacy_popular_seen_with_no_sightings_does_not_uplift(self):
+        """Regression: a ``pinboard_popular_seen`` row written *before*
+        the ``popular_seen_sightings`` table existed (or before the
+        sightings co-write was deployed) used to falsely trigger an
+        uplift card the next time the same feed surfaced the URL —
+        because ``feed_has_seen`` returned False (no sighting), so the
+        classifier thought "this is a new feed's first sighting of a
+        URL another feed already knew about" → cross-source signal.
+
+        Real-world example: ``https://sinceyouarrived.world/taken``
+        produced THREE cards on 2026-05-14 (one of them via this path).
+        Guard: if no sighting exists at all, no cross-source signal is
+        supportable. Backfill a sighting for the current spec and
+        silent-drop, same as the normal same-feed-repeat case."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        url = "https://x.example/legacy-orphan"
+        # popular_seen row exists; sightings table is EMPTY for this URL.
+        db.mark_popular_seen([{"url": url, "title": "Orphan"}],
+                              judged={url: (True, "card posted")})
+        self.assertEqual(db.sightings_for(url), [])
+
+        ctx, team = self._ctx_and_team(replies=[])
+        popular = [{"url": url, "title": "Orphan"}]
+        patches = self._stub_sources(popular=popular)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        # No card, no uplift, no LLM call.
+        self.assertEqual(result.data["posted"], 0)
+        self.assertEqual(result.data.get("uplift", 0), 0)
+        team.linky.core.assert_not_awaited()
+        # Sighting backfilled so the next scan silent-drops via the
+        # normal feed_has_seen path, not via this guard.
+        self.assertTrue(db.feed_has_seen(url=url, source="popular"))
+
+    def test_legacy_popular_seen_with_different_feeds_sightings_still_uplifts(self):
+        """The legacy-row guard is narrow: it only short-circuits when
+        the sightings table is EMPTY. If at least one sighting exists
+        from a different feed, the cross-source signal is genuine and
+        the URL should still produce an uplift card."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        url = "https://x.example/legit-cross-source"
+        db.mark_popular_seen([{"url": url, "title": "Genuine"}],
+                              judged={url: (True, "card posted")})
+        # Sighting from a DIFFERENT feed.
+        db.record_sighting(url=url, source="hackernews")
+
+        ctx, team = self._ctx_and_team(replies=[
+            "**[Genuine](https://x.example/legit-cross-source)**\n\nFit.\n\n📖 short · `lobsters`",
+        ])
+        lobs = [{"url": url, "title": "Genuine",
+                  "discussion_url": "https://lobste.rs/s/yy"}]
+        patches = self._stub_sources(lobs=lobs)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        # Genuine cross-source uplift card.
+        self.assertEqual(result.data["uplift"], 1)
+        self.assertEqual(result.data["posted"], 1)
+
     def test_cross_source_same_feed_repeat_silently_dropped(self):
         """URL on HN today, already sighted from HN before. Today's
         silent-dedup applies: no LLM call, no card, no new sighting."""
