@@ -14,11 +14,11 @@ Since last run: {the delta — +N Notable, +N Briefly, +N words, intro now prese
 
 Required for ship:
   ✅/❌ Notable / Briefly / Journal     (from draft__section_status)
-  ✅/❌ haiku.md       → /workshop issue haiku
-  ✅/❌ metadata.json  → /workshop issue subject
+  ✅/❌ haiku.md       → /eddy issue haiku
+  ✅/❌ metadata.json  → /eddy issue subject
   ✅/❌ intro.md       → write it, push via Shortcut
   ✅/❌ cover.jpg
-  ✅/❌ final.md       → /workshop issue final
+  ✅/❌ final.md       → /eddy issue final
 
 Optional:
   ✅/❌ currently.md

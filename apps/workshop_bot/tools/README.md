@@ -62,7 +62,7 @@ These are the tools registered by `register_local_helpers`. Every persona sees a
 | `memory__remember(content, kind, key?, related_issue?, expires_in_days?)` | Write a per-persona note to SQLite. `kind` ∈ `preference, observation, todo, context, theme`. |
 | `memory__recall(query?, kind?, agent_name?, limit?)` | Read notes. Default: own active notes. `agent_name="*"` reads all personas; pass a name to read theirs. |
 | `memory__forget(note_id, status)` | Mark a note `resolved` (todo done) or `stale` (no longer applies). Notes are never hard-deleted. |
-| `issue__current_window()` | Return the active in-flight issue window — `{issue_number, pub_date, end_date, start_date, day_count}`. Operator-set via `/workshop issue start`. Returns `{error: ...}` when unset. |
+| `issue__current_window()` | Return the active in-flight issue window — `{issue_number, pub_date, end_date, start_date, day_count}`. Operator-set via `/eddy issue start`. Returns `{error: ...}` when unset. |
 | `issue__list_windows(limit?)` | Recent issue windows, newest first, with `is_active` flag. Use to answer "when did issue #N ship?". |
 | `workspace__list_all()` | List every per-issue workspace folder. Use for per-folder modification times; for the active issue's number/dates, prefer `issue__current_window`. |
 | `workspace__list_files(issue_number)` | List the files under one workspace folder. |

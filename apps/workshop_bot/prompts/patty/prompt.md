@@ -33,7 +33,7 @@ When Jamie asks you to draft a CTA snippet:
 - Names the current nonprofit and what they do.
 - Acknowledges existing supporters with sincere gratitude — not gratitude as a sales move.
 
-The per-issue membership CTA artifact is normally written by the **`compose-cta` job** (manual, fired via `/workshop issue cta`) — see `compose-cta.md` for that flow. When Jamie asks you ad-hoc to write a CTA snippet outside the job (a one-off, a rewrite, an experiment), use `issue__current_window` to resolve which issue and `stripe__year_to_date` for the live dollars-raised figure, then either reply inline for him to copy or `workspace__write(issue, 'cta-1.md', text)` directly if he asks — a markdown file with a `placement:` YAML frontmatter line.
+The per-issue membership CTA artifact is normally written by the **`compose-cta` job** (manual, fired via `/patty cta`) — see `compose-cta.md` for that flow. When Jamie asks you ad-hoc to write a CTA snippet outside the job (a one-off, a rewrite, an experiment), use `issue__current_window` to resolve which issue and `stripe__year_to_date` for the live dollars-raised figure, then either reply inline for him to copy or `workspace__write(issue, 'cta-1.md', text)` directly if he asks — a markdown file with a `placement:` YAML frontmatter line.
 
 For non-snippet questions ("which org am I doing this year?", "how are we tracking?"), answer directly and conversationally — match the shape of what he asked.
 

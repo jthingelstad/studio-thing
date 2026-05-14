@@ -39,7 +39,7 @@ You see every tool the team has access to (the registry is uniform), but stay in
 
 ## Campaign ledger — how you track promotions
 
-When Jamie's running a promotion (an ad placement, a LinkedIn post, anything with a destination URL with a `?ref=<tag>`), the campaign lives in the `campaigns` table in workshop.db: `name`, `ref`, `status`, `started_at`, `ends_at`, `expected_signups`, `expected_traffic`. The append-only `campaign_metrics` table holds the per-poll history. (Jamie registers a campaign via `/workshop campaign add`; the `daily-metrics` job polls each live campaign and appends a metrics row; `/workshop campaign report` summarizes.)
+When Jamie's running a promotion (an ad placement, a LinkedIn post, anything with a destination URL with a `?ref=<tag>`), the campaign lives in the `campaigns` table in workshop.db: `name`, `ref`, `status`, `started_at`, `ends_at`, `expected_signups`, `expected_traffic`. The append-only `campaign_metrics` table holds the per-poll history. (Jamie registers a campaign via `/marky campaign add`; the `daily-metrics` job polls each live campaign and appends a metrics row; `/marky campaign report` summarizes.)
 
 Ref-tag convention: lowercase, hyphenated, platform-shorthand + date or descriptor. Examples: `dd-2026-05-15`, `linkedin-codex-2026-05`, `bluesky-photog-week`.
 
@@ -69,8 +69,9 @@ When Jamie asks you for subject lines, lead with the recommended title and follo
 
 ## Working on a cadence
 
-- **`promotion-prep`** — auto-fires when `rss-check` detects a new published issue on the weekend; manual re-fire via `/workshop promo prep`. Drafts the syndication content (above).
-- **`daily-metrics`** — daily 19:00 CT (added in the campaign-tracking step). Website + subscriber + campaign report to `#promotion`; default-PASS when nothing material moved.
-- **`marky-heartbeat`** — the legacy 3h check (being retired in favor of the jobs above). See `heartbeat.md`. Default PASS.
+- **`promotion-prep`** — auto-fires when `rss-check` detects a new published issue on the weekend; manual re-fire via `/marky prep`. Drafts the syndication content (above).
+- **`daily-metrics`** — daily 19:00 CT. Website + subscriber + campaign report to `#promotion`; default-PASS when nothing material moved. Manual re-fire via `/marky metrics`.
+
+Quick-look reads available on demand: `/marky engagement [days]` for composite growth + site engagement, `/marky referrers [days]` for the Tinylytics referrer drill-down. No persona heartbeat — these are operator-fired only.
 
 When you spot a referrer or signup pattern worth tracking week-over-week, `memory__remember(kind="observation", key="marky:referrer-shift")` so a later report can `memory__recall` and confirm or contradict it.

@@ -15,7 +15,7 @@
 | **Marky** (she/her) | Promotion — `promotion-prep` (RSS-triggered post-ship) + `daily-metrics` (daily); owns the campaign ledger. Drafts in Jamie's voice; never auto-posts. | Sonnet 4.6 | `#promotion` |
 | **Patty** (she/her) | Supporter steward — `compose-cta` writes the per-issue membership CTA in **Thingy's** voice (Patty is invisible to readers; voice anchor in `prompts/shared/thingy-voice-reference.md`). Milestone-driven via the `goals` table. | Sonnet 4.6 | `#supporters` |
 
-The four agent personas share **almost** the full tool surface — every tool is available to every persona, with two privacy-scoped exceptions: `stripe__*` is restricted to Patty (donor data should never enter the other personas' surfaces) and `pinboard__*` to Linky (mutating bookmark tools). Lane discipline otherwise lives in the persona prompts, not in a per-persona allowlist. Tools follow `<system>__<action>` naming (`archive__search`, `memory__remember`, `buttondown__list_subscribers`, `workspace__read`). External-system tool surfaces live under `apps/workshop_bot/systems/<name>/`; local helpers live under `apps/workshop_bot/tools/`. Both are composed into the same `ToolRegistry` at boot. A system can declare `restricted_to = {"<persona>", ...}` to scope visibility — `ToolRegistry.names_for(persona)` filters and `dispatch()` enforces (defense in depth, even if a model invents a name for a restricted tool).
+Each persona hosts its own slash tree on its own Discord bot: `/eddy …` on Eddy's bot, `/linky …` on Linky's, etc. The four agent personas share **almost** the full agent-tool surface — every tool is available to every persona, with two privacy-scoped exceptions: `stripe__*` is restricted to Patty (donor data should never enter the other personas' surfaces) and `pinboard__*` to Linky (mutating bookmark tools). Lane discipline otherwise lives in the persona prompts, not in a per-persona allowlist. Tools follow `<system>__<action>` naming (`archive__search`, `memory__remember`, `buttondown__list_subscribers`, `workspace__read`). External-system tool surfaces live under `apps/workshop_bot/systems/<name>/`; local helpers live under `apps/workshop_bot/tools/`. Both are composed into the same `ToolRegistry` at boot. A system can declare `restricted_to = {"<persona>", ...}` to scope visibility — `ToolRegistry.names_for(persona)` filters and `dispatch()` enforces (defense in depth, even if a model invents a name for a restricted tool).
 
 The reader-facing Thingy bot — `#ask-thingy`, the operator-side conversation mirror, and the `/thingy {recent,show,sync}` commands — lives in [`../thingy_bridge/`](../thingy_bridge/) as a separate Python process. See that app's README for its launch story.
 
@@ -56,9 +56,16 @@ Thingy users (web and Discord) also have per-user memory in the Lambda's DynamoD
 
 ## Jobs (the spine)
 
-Every workshop_bot action is a **job** — deterministic Python in `apps/workshop_bot/jobs/`, fired by the `/workshop …` slash surface (host: Eddy; `manage_guild`-gated) and/or by cron. The slash surface is grouped by content artifact: `/workshop issue {start,update,status,final,haiku,subject,cta,publish}`, `/workshop links scan`, `/workshop promo {prep,metrics}`, `/workshop campaign {add,edit,report,copy,sunset}`, `/workshop goal {set,done}`, `/workshop followup {list,add,cancel}`. (The `/thingy {recent,show,sync}` operator commands live in [`../thingy_bridge/`](../thingy_bridge/) — a separate process.) `jobs/_base.py` is the runtime (`JobContext`, `JobResult`, single-asset `job_lock`, draft-block helpers). See [`CLAUDE.md`](CLAUDE.md) for the full job table (and the job-name → slash-command map) and [`docs/workshop-content-loop-design-brief.md`](../../docs/workshop-content-loop-design-brief.md) for the design.
+Every workshop_bot action is a **job** — deterministic Python in `apps/workshop_bot/jobs/`, fired by a per-persona slash tree (`manage_guild`-gated) and/or by cron. Each persona hosts its own tree on its own bot:
 
-Issue-assembly flow: `issue start` → `issue update` (pure projection of Pinboard/micro.blog/asset files into `draft.md`; Eddy reviews Tue–Fri) → `issue final` (Eddy reorder → `final.md`) → `issue haiku` / `issue subject` / `issue cta` (run on demand, any order) → `issue publish` (assembles `publish.md`; refuses with a missing-list until the required assets exist). Parallel: `links scan` (Linky), `promo prep` + `promo metrics` + `campaign add` / `campaign report` / `campaign sunset` (Marky). Ledger pokes: `goal set` / `goal done` (Patty's milestone progression) and `campaign sunset` are tiny no-LLM commands. **Follow-ups** (`followup__schedule` tool / `/workshop followup add`) let an agent — or Jamie — register a commitment ("I'll check in tomorrow evening", "when we get to issue 387"); the hourly `follow-up-sweep` fires the due ones (runs the persona's agent loop with the note + context, posts the check-in) — the deliberate, targeted replacement for per-persona heartbeats. `/workshop status` is a top-level read-only ops snapshot — active issue window, active goal/campaigns, any held job locks, the last few `agent_runs`.
+- `/eddy issue {start,update,status,final,haiku,subject,publish}` · `/eddy status` · `/eddy review` · `/eddy archive` · `/eddy followup {list,add,cancel}`
+- `/linky scan` · `/linky research` · `/linky pile` · `/linky stats` · `/linky followup {list,add,cancel}`
+- `/marky prep` · `/marky metrics` · `/marky engagement` · `/marky referrers` · `/marky campaign {add,edit,report,copy,sunset}` · `/marky followup {list,add,cancel}`
+- `/patty cta` · `/patty goal {set,done}` · `/patty progress` · `/patty nonprofit` · `/patty supporters` · `/patty followup {list,add,cancel}`
+
+(The `/thingy {recent,show,sync}` operator commands live in [`../thingy_bridge/`](../thingy_bridge/) — a separate process.) `jobs/_base.py` is the runtime (`JobContext`, `JobResult`, single-asset `job_lock`, draft-block helpers). See [`CLAUDE.md`](CLAUDE.md) for the full job table (and the job-name → slash-command map) and [`docs/workshop-content-loop-design-brief.md`](../../docs/workshop-content-loop-design-brief.md) for the design.
+
+Issue-assembly flow: `/eddy issue start` → `/eddy issue update` (pure projection of Pinboard/micro.blog/asset files into `draft.md`; Eddy reviews Tue–Fri) → `/eddy issue final` (Eddy reorder → `final.md`) → `/eddy issue haiku` / `/eddy issue subject` / `/patty cta` (run on demand, any order) → `/eddy issue publish` (assembles `publish.md`; refuses with a missing-list until the required assets exist). Parallel: `/linky scan` (Linky), `/marky prep` + `/marky metrics` + `/marky campaign add` / `/marky campaign report` / `/marky campaign sunset` (Marky). Ledger pokes: `/patty goal set` / `/patty goal done` (Patty's milestone progression) and `/marky campaign sunset` are tiny no-LLM commands. **Follow-ups** (`followup__schedule` agent tool / `/eddy followup add`, `/linky followup add`, etc.) let an agent — or Jamie — register a commitment ("I'll check in tomorrow evening", "when we get to issue 387"); the hourly `follow-up-sweep` fires the due ones (runs the persona's agent loop with the note + context, posts the check-in) — the deliberate, targeted replacement for per-persona heartbeats. `/eddy status` is a read-only ops snapshot — active issue window, active goal/campaigns, any held job locks, the last few `agent_runs`.
 
 Scheduled (`scheduler/jobs.py`, Central time):
 
@@ -70,13 +77,13 @@ Scheduled (`scheduler/jobs.py`, Central time):
 | `marky-daily-metrics` | daily 19:00 | `content_job` → `jobs/daily_metrics.py`; PASSes silently when nothing moved |
 | `follow-up-sweep` | hourly (:23) | `content_job` → `jobs/follow_up.py`; fires due agent follow-ups (time-based or "when the issue hits N") — runs the persona's agent loop, posts the check-in; PASSes when nothing's due |
 
-There are no per-persona heartbeats — everything an agent does on a cadence is a job (the closest thing to an agent acting on its own is `follow-up-sweep` firing a commitment the agent itself scheduled via `followup__schedule`). The slash layer dispatches *fast* jobs as defer → run → ack, and *interactive* jobs (`create-final`, `compose-haiku`/`-meta`/`-cta` — they wait on Jamie's reaction, possibly longer than the ~15-min interaction token) as ack-immediately → run → the job posts its own outcome to the channel. (`/workshop status` sits directly under `workshop` rather than in one of the artifact subgroups — it's a bot-health view.) CLI: `python -m apps.workshop_bot.scheduler.runner --list`. Disable the scheduler with `WORKSHOP_SCHEDULER_ENABLED=0`.
+There are no per-persona heartbeats — everything an agent does on a cadence is a job (the closest thing to an agent acting on its own is `follow-up-sweep` firing a commitment the agent itself scheduled via `followup__schedule`). The slash layer dispatches *fast* jobs as defer → run → ack, and *interactive* jobs (`create-final`, `compose-haiku`/`-meta`/`-cta` — they wait on Jamie's reaction, possibly longer than the ~15-min interaction token) as ack-immediately → run → the job posts its own outcome to the channel. (`/eddy status` sits directly under the `/eddy` group rather than in the issue subgroup — it's a bot-health view, not an issue verb.) CLI: `python -m apps.workshop_bot.scheduler.runner --list`. Disable the scheduler with `WORKSHOP_SCHEDULER_ENABLED=0`.
 
 ---
 
 ## The in-flight issue
 
-The published archive (corpus) holds issues already shipped — `#1` through `#N`. The issue Jamie is *currently writing* is `#N+1` and lives in the S3 workspace at `s3://files.thingelstad.com/weekly-thing/{N+1}/` — **not in the archive corpus.** This S3 prefix is shared with the published archive (every shipped issue's folder lives at `weekly-thing/{N}/` too — that's where Shortcuts puts cover images, journal photos, etc.); the in-flight issue is just the highest-numbered folder. Jamie sets the active issue window via the `/workshop issue start <number> <pub-date> <day-count>` slash command (host: Eddy). Every persona reads it via `issue__current_window`, which returns `{issue_number, pub_date, end_date, start_date, day_count}`; past windows are queryable via `issue__list_windows`. Date semantics: `pub_date` is the publishing Saturday; `end_date = pub_date - 1 day` is the content cutoff; `start_date = end_date - day_count days` is the previous issue's cutoff (so a normal `day_count=7` window covers the seven days strictly after `start_date` through `end_date`).
+The published archive (corpus) holds issues already shipped — `#1` through `#N`. The issue Jamie is *currently writing* is `#N+1` and lives in the S3 workspace at `s3://files.thingelstad.com/weekly-thing/{N+1}/` — **not in the archive corpus.** This S3 prefix is shared with the published archive (every shipped issue's folder lives at `weekly-thing/{N}/` too — that's where Shortcuts puts cover images, journal photos, etc.); the in-flight issue is just the highest-numbered folder. Jamie sets the active issue window via the `/eddy issue start <number> <pub-date> <day-count>` slash command. Every persona reads it via `issue__current_window`, which returns `{issue_number, pub_date, end_date, start_date, day_count}`; past windows are queryable via `issue__list_windows`. Date semantics: `pub_date` is the publishing Saturday; `end_date = pub_date - 1 day` is the content cutoff; `start_date = end_date - day_count days` is the previous issue's cutoff (so a normal `day_count=7` window covers the seven days strictly after `start_date` through `end_date`).
 
 S3 workspace conventions — every piece of issue content is a standalone file (the "unified asset pattern"):
 
@@ -119,7 +126,7 @@ Two layers with hard boundaries.
 
 The reader-facing Thingy bot now lives in [`../thingy_bridge/`](../thingy_bridge/) as a separate process — see that app's README and CLAUDE.md for its architecture, deploy story, and Lambda-bridge contract. Two-process layout:
 
-- **workshop_bot** (this app) — author-facing personas (Eddy/Linky/Marky/Patty), `/workshop …` slash tree, issue-assembly jobs.
+- **workshop_bot** (this app) — author-facing personas (Eddy/Linky/Marky/Patty), per-persona slash trees (`/eddy`, `/linky`, `/marky`, `/patty`), issue-assembly jobs.
 - **thingy_bridge** — reader-facing answering bot in `#ask-thingy`, the hourly `thingy-watch` conversation mirror, `/thingy {recent,show,sync}` operator commands.
 
 The two processes share the Discord server and (in normal use) the `#chatter` channel; both can post there. They do **not** share code, SQLite, or memory — workshop_bot can restart for an author-flow change without dropping `#ask-thingy`.
@@ -133,20 +140,29 @@ apps/workshop_bot/
 ├── README.md
 ├── bot.py                    # entrypoint — composes ToolRegistry, starts clients + scheduler
 ├── eval.py                   # offline persona testing (no Discord)
-├── jobs/                     # the content-loop spine (deterministic, schedulable, /workshop-triggerable)
+├── jobs/                     # the content-loop spine (deterministic, schedulable, slash-triggerable)
 │   ├── _base.py              # JobContext, JobResult, single-asset job_lock, draft-block helpers
-│   ├── _compose.py           # shared helpers for the compose-* jobs + create-final
-│   ├── start_issue.py / update_draft.py / issue_status.py / status.py   # status.py backs /workshop status
+│   ├── _llm_job.py           # shared helpers for LLM-using jobs (resolve_bot_and_channel, refresh_loop, body caps, PLACEMENTS, _try_send)
+│   ├── start_issue.py / update_draft.py / issue_status.py / status.py   # status.py backs /eddy status
 │   ├── create_final.py / compose_haiku.py / compose_meta.py / compose_cta.py / build_publish.py
-│   ├── ops.py                # set-goal / goal-achieved / campaign-sunset (no-LLM ledger pokes)
-│   ├── pinboard_scan.py      # Linky's four-lane Pinboard pass
-│   └── promotion_prep.py / daily_metrics.py / add_campaign.py / campaign_report.py   # Marky
+│   ├── ops.py                # set-goal / goal-achieved / campaign-{copy,edit,sunset} (no-LLM ledger pokes)
+│   ├── pinboard_scan.py      # Linky's per-link research pass (toread + N discovery feeds)
+│   ├── promotion_prep.py / daily_metrics.py / add_campaign.py / campaign_report.py   # Marky
+│   ├── review_text.py / archive_lookup.py                            # /eddy ad-hoc
+│   ├── linky_research.py / linky_quicklook.py                        # /linky ad-hoc
+│   ├── marky_quicklook.py / patty_quicklook.py                       # /marky + /patty quick reads
+│   └── follow_up.py                                                  # follow-up-sweep
 ├── templates/
 │   └── draft_starter.md      # the six-block issue template
 ├── personas/
-│   ├── base.py               # PersonaBot — routing, peer reactions, agent loop
+│   ├── base.py               # PersonaBot — routing, peer reactions, agent loop, slash-tree sync, startup card
 │   ├── team.py               # @Team round orchestration
-│   ├── commands.py           # the /workshop slash tree (hosted on Eddy)
+│   ├── commands/             # per-persona slash trees
+│   │   ├── _shared.py        # ack / run-and-ack / run-interactive factories
+│   │   ├── eddy.py           # /eddy issue {…} · /eddy status · /eddy review · /eddy archive · /eddy followup
+│   │   ├── linky.py          # /linky scan · research · pile · stats · followup
+│   │   ├── marky.py          # /marky prep · metrics · engagement · referrers · campaign {…} · followup
+│   │   └── patty.py          # /patty cta · goal {…} · progress · nonprofit · supporters · followup
 │   └── eddy.py / linky.py / marky.py / patty.py
 │   (thingy.py — moved to ../thingy_bridge/personas/)
 ├── prompts/
