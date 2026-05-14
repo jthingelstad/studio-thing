@@ -47,10 +47,10 @@ from typing import TYPE_CHECKING
 import discord
 from discord import app_commands
 
-from ..jobs import _base as jobs_base
-from ..jobs import follow_up as followup_job
-from ..jobs import status as status_job
-from ..jobs import (
+from ...jobs import _base as jobs_base
+from ...jobs import follow_up as followup_job
+from ...jobs import status as status_job
+from ...jobs import (
     add_campaign,
     build_publish,
     campaign_report,
@@ -68,7 +68,7 @@ from ..jobs import (
 )
 
 if TYPE_CHECKING:
-    from .base import PersonaBot
+    from ..base import PersonaBot
 
 logger = logging.getLogger("workshop.commands")
 
