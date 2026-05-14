@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Optional
 import discord
 from discord import app_commands
 
-from ...jobs import compose_cta, follow_up as followup_job, ops
+from ...jobs import compose_cta, follow_up as followup_job, ops, patty_quicklook
 from ._shared import _ctx, make_ack, make_run_and_ack, make_run_interactive
 
 if TYPE_CHECKING:
@@ -56,6 +56,36 @@ def register_patty_commands(
         await _run_interactive(
             interaction, lambda: compose_cta.run(_ctx(bot)), "cta",
             "Starting `cta` — Patty will post CTA framings in #supporters; react there to pick.",
+        )
+
+    # ── /patty quick-look reads ───────────────────────────────────────
+
+    @patty.command(
+        name="progress",
+        description="Current goal progress (active goal + live count + anniversary pacing).",
+    )
+    async def patty_progress_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: patty_quicklook.progress(_ctx(bot)), "progress")
+
+    @patty.command(
+        name="nonprofit",
+        description="Current nonprofit details + last few past beneficiaries.",
+    )
+    async def patty_nonprofit_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: patty_quicklook.nonprofit(_ctx(bot)), "nonprofit")
+
+    @patty.command(
+        name="supporters",
+        description="Recent Stripe activity — YTD total + recent donations.",
+    )
+    @app_commands.describe(days="Trailing window for donation list (default 14, max 365)")
+    async def patty_supporters_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, days: int = 14
+    ) -> None:
+        await _run_and_ack(
+            interaction,
+            lambda: patty_quicklook.supporters(_ctx(bot), days=int(days)),
+            "supporters",
         )
 
     # ── /patty goal ───────────────────────────────────────────────────

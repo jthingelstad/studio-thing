@@ -13,8 +13,12 @@ from typing import TYPE_CHECKING, Optional
 import discord
 from discord import app_commands
 
-from ...jobs import follow_up as followup_job
-from ...jobs import pinboard_scan
+from ...jobs import (
+    follow_up as followup_job,
+    linky_quicklook,
+    linky_research,
+    pinboard_scan,
+)
 from ._shared import _ctx, make_ack, make_run_and_ack
 
 if TYPE_CHECKING:
@@ -48,6 +52,44 @@ def register_linky_commands(
     )
     async def linky_scan_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: pinboard_scan.run(_ctx(bot)), "scan")
+
+    @linky.command(
+        name="research",
+        description="Ad-hoc per-URL research — Linky's read on a URL you paste, posted to #research.",
+    )
+    @app_commands.describe(url="The http(s) URL to research")
+    async def linky_research_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, url: str
+    ) -> None:
+        await _run_and_ack(
+            interaction,
+            lambda: linky_research.run(_ctx(bot), url=url, invoker=str(interaction.user)),
+            "research",
+        )
+
+    @linky.command(
+        name="pile",
+        description="Show the currently `_brief`-tagged Pinboard bookmarks (the Briefly pile).",
+    )
+    @app_commands.describe(limit="How many to list (default 25, max 40)")
+    async def linky_pile_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, limit: int = 25
+    ) -> None:
+        await _run_and_ack(
+            interaction, lambda: linky_quicklook.pile(_ctx(bot), limit=int(limit)), "pile",
+        )
+
+    @linky.command(
+        name="stats",
+        description="Summary of Linky's recent surfacing activity (cards per source, last N days).",
+    )
+    @app_commands.describe(days="Trailing window in days (default 7, max 90)")
+    async def linky_stats_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, days: int = 7
+    ) -> None:
+        await _run_and_ack(
+            interaction, lambda: linky_quicklook.stats(_ctx(bot), days=int(days)), "stats",
+        )
 
     @followup.command(
         name="list",

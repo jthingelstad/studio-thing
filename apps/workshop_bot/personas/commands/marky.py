@@ -20,6 +20,7 @@ from ...jobs import (
     campaign_report,
     daily_metrics,
     follow_up as followup_job,
+    marky_quicklook,
     ops,
     promotion_prep,
 )
@@ -68,6 +69,34 @@ def register_marky_commands(
     )
     async def marky_metrics_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: daily_metrics.run(_ctx(bot)), "metrics")
+
+    @marky.command(
+        name="engagement",
+        description="Quick read — subscriber growth + site engagement over a trailing window.",
+    )
+    @app_commands.describe(days="Trailing window in days (default 7, max 90)")
+    async def marky_engagement_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, days: int = 7
+    ) -> None:
+        await _run_and_ack(
+            interaction,
+            lambda: marky_quicklook.engagement(_ctx(bot), days=int(days)),
+            "engagement",
+        )
+
+    @marky.command(
+        name="referrers",
+        description="Tinylytics referrer drill-down over a trailing window (top 20).",
+    )
+    @app_commands.describe(days="Trailing window in days (default 30, max 365)")
+    async def marky_referrers_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, days: int = 30
+    ) -> None:
+        await _run_and_ack(
+            interaction,
+            lambda: marky_quicklook.referrers(_ctx(bot), days=int(days)),
+            "referrers",
+        )
 
     # ── /marky campaign ───────────────────────────────────────────────
 
