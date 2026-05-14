@@ -70,10 +70,19 @@ class DedupKeyTests(unittest.TestCase):
             "https://example.com/x?id=42&page=3",
         )
 
-    def test_preserves_fragment(self):
+    def test_strips_fragment(self):
+        # Same article, two URL forms — one with a footnote anchor.
+        # The fragment is a UI-only locator inside the same resource;
+        # cross-scan dedup must collapse them. Regression: the
+        # homewithinnowhere.com/posts/...one-line.html duplicate cards
+        # on 2026-05-14 hit this case.
         self.assertEqual(
             dedup_key("https://example.com/x#section-2"),
-            "https://example.com/x#section-2",
+            "https://example.com/x",
+        )
+        self.assertEqual(
+            dedup_key("https://homewithinnowhere.com/posts/x.html#fnref1"),
+            dedup_key("https://homewithinnowhere.com/posts/x.html"),
         )
 
     def test_collapses_cross_feed_duplicates(self):

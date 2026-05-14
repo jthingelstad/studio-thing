@@ -1,15 +1,28 @@
 """URL normalisation for cross-source dedup.
 
-The :func:`dedup_key` form is **in-memory only** — both the dedup table
-(``pinboard_popular_seen``) and the sightings log (``popular_seen_sightings``)
-store the *original* URL each feed handed us, so a future tighter or
-looser normalisation rule doesn't invalidate stored rows. The key is
-just a comparison form: lowercase the host, strip a trailing ``/``
-(except on bare-domain URLs), and drop tracking query params that
-different feeds add as referer fingerprints (utm_*, fbclid, etc.).
+The :func:`dedup_key` form is the canonical comparison key for every
+"have we seen this URL?" question in workshop_bot — both the in-scan
+classifier in ``jobs/pinboard_scan.py`` and the DB-layer helpers in
+``tools/db.py`` (``pinboard_popular_seen``, ``popular_seen_sightings``,
+``pinboard_research_done``) normalise URLs through this function on
+write and read, so cross-scan dedup tolerates the cosmetic URL drift
+upstream feeds throw at us.
+
+Normalisation rules:
+
+- Lowercase the host.
+- Strip a trailing ``/`` from the path (except on bare-domain URLs).
+- Drop tracking query params (``utm_*``, ``fbclid``, ``gclid``,
+  ``mc_cid``, ``mc_eid``, ``ref``, ``ref_src``).
+- **Drop the fragment.** A fragment like ``#fnref1`` or ``#section-2``
+  is a UI anchor inside the same resource — two URLs that differ only
+  by fragment are the same article. (Was previously preserved; the
+  ``homewithinnowhere.com/posts/.../one-line.html`` duplicate on
+  2026-05-14 was the regression that flipped this rule.)
 
 Two feeds that surface the same article shouldn't be treated as
-distinct because one ships ``?utm_source=hn``.
+distinct because one ships ``?utm_source=hn`` or because one
+hand-linked the URL with a footnote anchor.
 """
 
 from __future__ import annotations
@@ -56,4 +69,5 @@ def dedup_key(url: str) -> str:
     if len(path) > 1 and path.endswith("/"):
         path = path.rstrip("/")
     query = _strip_tracking(parts.query)
-    return urlunsplit((parts.scheme.lower(), host, path, query, parts.fragment))
+    # Fragment dropped — see module docstring.
+    return urlunsplit((parts.scheme.lower(), host, path, query, ""))

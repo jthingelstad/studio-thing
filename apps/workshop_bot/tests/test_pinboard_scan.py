@@ -269,7 +269,11 @@ class PinboardScanJobTests(_DBTestCase):
         row = db.lookup_research_message("1001")
         self.assertIsNotNone(row)
         self.assertEqual(row["source"], "hackernews")
-        self.assertEqual(row["url"], "https://www.xda-developers.com/linux-gaming/")
+        # The URL is stored in normalised dedup-key form (trailing slash
+        # stripped). The card content rendered in Discord still uses
+        # whatever URL the upstream item handed us; only the persisted
+        # row in linky_research_messages is canonical.
+        self.assertEqual(row["url"], "https://www.xda-developers.com/linux-gaming")
         # The per-link block (the last `## The link` section) used the
         # HN-specific labels, not the lobsters ones. (The prompt body
         # legitimately enumerates every source type, so we only check
@@ -608,6 +612,58 @@ class PinboardScanJobTests(_DBTestCase):
         self.assertEqual(row["judgment_note"], "thin reaction post")
         # The new Lobsters sighting was recorded.
         self.assertTrue(db.feed_has_seen(url=url, source="lobsters"))
+
+    def test_fragment_only_difference_dedups_across_scans(self):
+        """Regression: HN's feed handed back the same article in two
+        different URL forms on 2026-05-14 —
+        ``.../one-line.html#fnref1`` at 15:06 and ``.../one-line.html``
+        at 21:06. Two cards posted for the same piece. The dedup
+        tables now normalise URLs via ``url_normalize.dedup_key``
+        (which strips the fragment), so the second scan's lookup hits
+        the first scan's row and the URL is silent-dropped (or
+        classified as an uplift if a different feed surfaces it)."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        url_first = "https://homewithinnowhere.com/posts/x.html#fnref1"
+        url_second = "https://homewithinnowhere.com/posts/x.html"
+
+        # Scan #1 — HN surfaces the URL with the fragment.
+        ctx1, team1 = self._ctx_and_team(replies=[
+            f"**[Piece]({url_first})** · [HN](https://hn/1)\n\n"
+            "Body.\n\nNotable.\n\n📖 medium · `hackernews`"
+        ])
+        hn1 = [{"url": url_first, "title": "Piece",
+                 "discussion_url": "https://hn/1"}]
+        patches = self._stub_sources(hn=hn1)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                asyncio.run(pinboard_scan.run(ctx1))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            pass
+
+        # Scan #2 — same article, no fragment, same feed. Should NOT
+        # produce a fresh card (same-feed-repeat → silent drop).
+        ctx2, team2 = self._ctx_and_team(replies=[])
+        hn2 = [{"url": url_second, "title": "Piece",
+                 "discussion_url": "https://hn/1"}]
+        patches2 = self._stub_sources(hn=hn2)
+        try:
+            for p in patches2:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx2))
+            finally:
+                for p in patches2:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertEqual(result.data["posted"], 0)
+        self.assertEqual(result.data.get("uplift", 0), 0)
+        team2.linky.core.assert_not_awaited()
 
     def test_toread_card_writes_cross_lane_seen_tables(self):
         """Toread card-post should write both lanes' dedup tables. The

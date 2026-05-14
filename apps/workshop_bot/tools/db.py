@@ -293,6 +293,24 @@ def filter_unseen_popular(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [it for it in items if it.get("url") and it["url"] not in seen]
 
 
+def _norm_url(url: Optional[str]) -> str:
+    """Normalise ``url`` for dedup-table storage and lookup. Delegates to
+    :func:`url_normalize.dedup_key`; falls back to the trimmed raw URL
+    when normalisation returns ``""`` (e.g. for inputs ``dedup_key``
+    can't parse). Empty input returns ``""``.
+
+    Both write paths and read paths in this module funnel URLs through
+    here, so a fragment-or-utm-only difference between two URL forms
+    of the same article collapses to one row. See
+    :mod:`apps.workshop_bot.tools.url_normalize` for the rule set."""
+    if not url:
+        return ""
+    # Avoid an import cycle at module load — url_normalize is a leaf.
+    from .url_normalize import dedup_key
+    key = dedup_key(url)
+    return key or (url.strip() if isinstance(url, str) else "")
+
+
 def mark_popular_seen(
     items: list[dict[str, Any]],
     *,
@@ -310,18 +328,26 @@ def mark_popular_seen(
     can label "Previously SKIP'd from Hacker News" without inferring
     from the sightings log. Optional for backwards-compat — callers
     that don't pass it leave the column NULL.
+
+    The URL column stores the normalised dedup-key form so cross-scan
+    lookups by either the raw URL or its normalised form hit the same
+    row (callers should pass the form they have; the helper normalises
+    on the way in). The ``judged`` dict's keys can be in either form
+    too — they're normalised before lookup.
     """
     n = 0
-    judged = judged or {}
+    judged_raw = judged or {}
+    judged_norm = {_norm_url(k): v for k, v in judged_raw.items() if k}
     with connect() as conn:
         for it in items:
-            url = it.get("url")
+            raw_url = it.get("url")
+            url = _norm_url(raw_url)
             if not url:
                 continue
             interesting_flag: Optional[int] = None
             note: Optional[str] = None
-            if url in judged:
-                ok, note = judged[url]
+            if url in judged_norm:
+                ok, note = judged_norm[url]
                 interesting_flag = 1 if ok else 0
             cur = conn.execute(
                 "INSERT OR IGNORE INTO pinboard_popular_seen "
@@ -346,41 +372,48 @@ def mark_popular_seen(
 
 
 def record_sighting(*, url: str, source: str) -> bool:
-    """Insert one (url, source) sighting. Idempotent: returns False if
-    the row already existed, True if newly inserted."""
-    if not url or not source:
+    """Insert one (url, source) sighting. ``url`` is normalised via
+    :func:`_norm_url` before storage so fragment-only or tracking-param-
+    only variants collapse to one row. Idempotent: returns False if the
+    row already existed, True if newly inserted."""
+    nurl = _norm_url(url)
+    if not nurl or not source:
         return False
     with connect() as conn:
         cur = conn.execute(
             "INSERT OR IGNORE INTO popular_seen_sightings (url, source) "
             "VALUES (?, ?)",
-            (url, source),
+            (nurl, source),
         )
         return cur.rowcount > 0
 
 
 def feed_has_seen(*, url: str, source: str) -> bool:
-    """True if (url, source) is in popular_seen_sightings."""
-    if not url or not source:
+    """True if (url, source) is in popular_seen_sightings. ``url`` is
+    normalised before lookup."""
+    nurl = _norm_url(url)
+    if not nurl or not source:
         return False
     with connect() as conn:
         row = conn.execute(
             "SELECT 1 FROM popular_seen_sightings WHERE url = ? AND source = ?",
-            (url, source),
+            (nurl, source),
         ).fetchone()
     return row is not None
 
 
 def sightings_for(url: str) -> list[dict[str, Any]]:
     """Return ``[{source, seen_at}, ...]`` for every recorded sighting of
-    ``url``, oldest first. Empty list if the URL has never been seen."""
-    if not url:
+    ``url``, oldest first. Empty list if the URL has never been seen.
+    ``url`` is normalised before lookup."""
+    nurl = _norm_url(url)
+    if not nurl:
         return []
     with connect() as conn:
         rows = conn.execute(
             "SELECT source, seen_at FROM popular_seen_sightings "
             "WHERE url = ? ORDER BY seen_at",
-            (url,),
+            (nurl,),
         ).fetchall()
     return [{"source": r["source"], "seen_at": r["seen_at"]} for r in rows]
 
@@ -388,34 +421,41 @@ def sightings_for(url: str) -> list[dict[str, Any]]:
 def popular_verdict(url: str) -> Optional[dict[str, Any]]:
     """Return ``{judged_interesting, judgment_note, verdict_source,
     first_seen_at, title, posted_by}`` for ``url`` if it has a row in
-    ``pinboard_popular_seen``, else ``None``. Used by the cross-source
-    uplift path to render the 'previous verdict' line. ``verdict_source``
-    is the feed name that produced the verdict (may be ``None`` on
-    legacy rows written before the column was added)."""
-    if not url:
+    ``pinboard_popular_seen``, else ``None``. ``url`` is normalised
+    before lookup. ``verdict_source`` is the feed name that produced
+    the verdict (may be ``None`` on legacy rows written before the
+    column was added)."""
+    nurl = _norm_url(url)
+    if not nurl:
         return None
     with connect() as conn:
         row = conn.execute(
             "SELECT url, title, posted_by, judged_interesting, judgment_note, "
             "       verdict_source, first_seen_at "
             "FROM pinboard_popular_seen WHERE url = ?",
-            (url,),
+            (nurl,),
         ).fetchone()
     return dict(row) if row else None
 
 
 def filter_unresearched_urls(urls: list[str]) -> list[str]:
-    """Return only URLs not yet present in pinboard_research_done."""
+    """Return only URLs not yet present in pinboard_research_done. Each
+    input URL is normalised before lookup; the original strings are
+    returned for callers that need to preserve the raw form."""
     if not urls:
         return []
-    placeholders = ",".join("?" * len(urls))
+    norm_pairs = [(u, _norm_url(u)) for u in urls]
+    norm_keys = [n for _, n in norm_pairs if n]
+    if not norm_keys:
+        return list(urls)
+    placeholders = ",".join("?" * len(norm_keys))
     with connect() as conn:
         rows = conn.execute(
             f"SELECT url FROM pinboard_research_done WHERE url IN ({placeholders})",
-            urls,
+            norm_keys,
         ).fetchall()
     done = {r["url"] for r in rows}
-    return [u for u in urls if u not in done]
+    return [raw for raw, n in norm_pairs if not n or n not in done]
 
 
 def mark_url_researched(
@@ -426,13 +466,17 @@ def mark_url_researched(
     confidence: Optional[str] = None,
     fit_note: Optional[str] = None,
 ) -> bool:
-    """Insert a research record. Returns True if newly inserted."""
+    """Insert a research record. ``url`` is normalised before storage.
+    Returns True if newly inserted."""
+    nurl = _norm_url(url)
+    if not nurl:
+        return False
     with connect() as conn:
         cur = conn.execute(
             "INSERT OR IGNORE INTO pinboard_research_done "
             "(url, title, summary, confidence, fit_note) "
             "VALUES (?, ?, ?, ?, ?)",
-            (url, title, summary, confidence, fit_note),
+            (nurl, title, summary, confidence, fit_note),
         )
         return cur.rowcount > 0
 
@@ -947,31 +991,39 @@ def record_research_message(
     so a future reply to that message can be routed back to the URL.
     ``title`` is captured so a popular/lobsters reply that auto-creates
     a bookmark has something more useful than the URL as the title.
-    ``source`` is one of :data:`RESEARCH_SOURCES`."""
+    ``source`` is one of :data:`RESEARCH_SOURCES`.
+
+    ``url`` is normalised before storage to keep this table aligned with
+    the dedup tables — so ``first_research_message_for`` and the reply/
+    save-reaction routing both reach the same row regardless of which
+    URL form upstream handed us."""
     if not discord_message_id or not url or source not in RESEARCH_SOURCES:
         return
+    nurl = _norm_url(url)
     with connect() as conn:
         conn.execute(
             "INSERT OR REPLACE INTO linky_research_messages "
             "(discord_message_id, url, source, title) VALUES (?, ?, ?, ?)",
-            (str(discord_message_id), str(url), source, title),
+            (str(discord_message_id), nurl, source, title),
         )
 
 
 def first_research_message_for(url: str) -> Optional[str]:
     """Return the *earliest* ``discord_message_id`` Linky used to card
-    this URL, or ``None`` if no card exists yet. Used by cross-source
-    uplift posts to thread under the original card so the visual story
-    in ``#research`` is "[original] ↩ [uplift] ↩ [uplift] …" branching
-    off one root, rather than three loose cards days apart."""
-    if not url:
+    this URL, or ``None`` if no card exists yet. ``url`` is normalised
+    before lookup. Used by cross-source uplift posts to thread under
+    the original card so the visual story in ``#research`` is
+    "[original] ↩ [uplift] ↩ [uplift] …" branching off one root, rather
+    than three loose cards days apart."""
+    nurl = _norm_url(url)
+    if not nurl:
         return None
     with connect() as conn:
         row = conn.execute(
             "SELECT discord_message_id FROM linky_research_messages "
             "WHERE url = ? ORDER BY posted_at ASC, discord_message_id ASC "
             "LIMIT 1",
-            (str(url),),
+            (nurl,),
         ).fetchone()
     return row["discord_message_id"] if row else None
 
