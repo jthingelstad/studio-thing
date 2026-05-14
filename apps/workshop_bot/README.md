@@ -1,31 +1,31 @@
 # Workshop Bot — Discord Agent Runtime
 
-> Author-only Discord bot for *The Weekly Thing*. Five personas: four agents that help Jamie assemble each week's issue, plus a public-facing bridge to Thingy (the production Librarian Lambda).
+> Author-only Discord bot for *The Weekly Thing*. Four agents that help Jamie assemble each week's issue: Eddy (editor), Linky (curator), Marky (promotion), Patty (supporter steward). The reader-facing public Q&A bot (Thingy) lives in a separate process at [`../thingy_bridge/`](../thingy_bridge/).
 
 ---
 
 ## What lives here
 
-`apps/workshop_bot/` is one Python process running five `discord.py` clients in the same asyncio loop. Each persona is a separate Discord application (own bot token, own avatar) so messages appear under the right name.
+`apps/workshop_bot/` is one Python process running four `discord.py` clients in the same asyncio loop. Each persona is a separate Discord application (own bot token, own avatar) so messages appear under the right name.
 
 | Persona | Role | Default model | Home channel |
 |---|---|---|---|
 | **Eddy** (he/him) | Editor — `update-draft` reviews (Tue–Fri), `create-final` reorder, `compose-haiku`/`-meta`. No heartbeat; mention-driven asks still work. | Opus 4.7 | `#editorial` |
 | **Linky** (he/him) | Link curation — `pinboard-scan` (Mon–Fri 06:30/18:30 during the issue window). Pinboard ↔ `#research` ↔ Jamie; no agent-to-agent handoffs. | Sonnet 4.6 | `#research` |
 | **Marky** (she/her) | Promotion — `promotion-prep` (RSS-triggered post-ship) + `daily-metrics` (daily); owns the campaign ledger. Drafts in Jamie's voice; never auto-posts. | Sonnet 4.6 | `#promotion` |
-| **Patty** (she/her) | Supporter steward — `compose-cta` writes the per-issue membership CTA in **Thingy's** voice (Patty is invisible to readers). Milestone-driven via the `goals` table. | Sonnet 4.6 | `#supporters` |
-| **Thingy** (bridge) | Public archive Q&A — forwards to the Librarian Lambda | n/a (LLM lives in the Lambda) | `#ask-thingy` |
+| **Patty** (she/her) | Supporter steward — `compose-cta` writes the per-issue membership CTA in **Thingy's** voice (Patty is invisible to readers; voice anchor in `prompts/shared/thingy-voice-reference.md`). Milestone-driven via the `goals` table. | Sonnet 4.6 | `#supporters` |
 
 The four agent personas share **almost** the full tool surface — every tool is available to every persona, with two privacy-scoped exceptions: `stripe__*` is restricted to Patty (donor data should never enter the other personas' surfaces) and `pinboard__*` to Linky (mutating bookmark tools). Lane discipline otherwise lives in the persona prompts, not in a per-persona allowlist. Tools follow `<system>__<action>` naming (`archive__search`, `memory__remember`, `buttondown__list_subscribers`, `workspace__read`). External-system tool surfaces live under `apps/workshop_bot/systems/<name>/`; local helpers live under `apps/workshop_bot/tools/`. Both are composed into the same `ToolRegistry` at boot. A system can declare `restricted_to = {"<persona>", ...}` to scope visibility — `ToolRegistry.names_for(persona)` filters and `dispatch()` enforces (defense in depth, even if a model invents a name for a restricted tool).
 
-Thingy is intentionally isolated — same process, but doesn't run the local agent loop and doesn't peer-react.
+The reader-facing Thingy bot — `#ask-thingy`, the operator-side conversation mirror, and the `/thingy {recent,show,sync}` commands — lives in [`../thingy_bridge/`](../thingy_bridge/) as a separate Python process. See that app's README for its launch story.
 
 ---
 
 ## Project context
 
 Other components in the larger system:
-- **Thingy Lambda** at `apps/librarian/lambda/` — production agent for reader Q&A. The bridge forwards to it; the bot does not replicate it.
+- **thingy_bridge** at [`../thingy_bridge/`](../thingy_bridge/) — the Discord bridge to Thingy. Separate process; reader-facing surface.
+- **Librarian Lambda** at `apps/librarian/lambda/` — production agent for reader Q&A. The bridge process forwards to it; workshop_bot doesn't talk to it.
 - **Eleventy site** — `weekly.thingelstad.com` static site.
 - **Buttondown** — newsletter platform; content synced to `data/buttondown/`.
 - **Shortcuts pipeline** — Jamie's iOS Shortcuts assemble each issue Sunday morning, reading from `s3://files.thingelstad.com/weekly-thing/{N}/`.
@@ -40,7 +40,7 @@ Each agent persona (Eddy/Linky/Marky/Patty) responds when:
 - the `@Team` role is mentioned (one bot wins the lock and orchestrates a sequential round; later personas see earlier replies in their history),
 - another bot posts in `#workshop` (peer reactions; default response is the literal token `PASS`).
 
-Thingy listens only in `#ask-thingy` and answers direct in-channel questions. It never appears in the workshop or chatter.
+The reader-facing Thingy bot listens only in `#ask-thingy` and runs in [`../thingy_bridge/`](../thingy_bridge/) (separate process). It never appears in the workshop. It may post operator-side conversation cards to `#chatter` via its hourly `thingy-watch` job — those are informational, not part of any team round.
 
 ---
 
@@ -50,15 +50,15 @@ Each agent has long-term memory via `memory__remember` / `memory__recall` / `mem
 
 (The earlier `agent_inbox` typed-handoff surface was decommissioned in the content-loop redesign — the new architecture is closed-loop with no agent-to-agent messaging; Jamie is the integrator.)
 
-Thingy users (web and Discord) also have per-user memory in the Lambda's DynamoDB table. The Lambda Bedrock-summarizes each session when the token rotates and surfaces prior-session summaries in the `/auth` response so the bridge can offer "welcome back" UX. See [`docs/librarian.md`](../../docs/librarian.md) for the Thingy-side specifics.
+Thingy users (web and Discord) also have per-user memory in the Lambda's DynamoDB table — but that surface lives in [`../thingy_bridge/`](../thingy_bridge/) now, not here. See `docs/librarian.md` and the bridge's CLAUDE.md for the Thingy-side specifics.
 
 ---
 
 ## Jobs (the spine)
 
-Every workshop_bot action is a **job** — deterministic Python in `apps/workshop_bot/jobs/`, fired by the `/workshop …` slash surface (host: Eddy; `manage_guild`-gated) and/or by cron. The slash surface is grouped by content artifact: `/workshop issue {start,update,status,final,haiku,subject,cta,publish}`, `/workshop links scan`, `/workshop promo {prep,metrics}`, `/workshop campaign {add,edit,report,copy,sunset}`, `/workshop goal {set,done}`, `/workshop followup {list,add,cancel}`, `/workshop thingy {recent,show,sync}`. `jobs/_base.py` is the runtime (`JobContext`, `JobResult`, single-asset `job_lock`, draft-block helpers). See [`CLAUDE.md`](CLAUDE.md) for the full job table (and the job-name → slash-command map) and [`docs/workshop-content-loop-design-brief.md`](../../docs/workshop-content-loop-design-brief.md) for the design.
+Every workshop_bot action is a **job** — deterministic Python in `apps/workshop_bot/jobs/`, fired by the `/workshop …` slash surface (host: Eddy; `manage_guild`-gated) and/or by cron. The slash surface is grouped by content artifact: `/workshop issue {start,update,status,final,haiku,subject,cta,publish}`, `/workshop links scan`, `/workshop promo {prep,metrics}`, `/workshop campaign {add,edit,report,copy,sunset}`, `/workshop goal {set,done}`, `/workshop followup {list,add,cancel}`. (The `/thingy {recent,show,sync}` operator commands live in [`../thingy_bridge/`](../thingy_bridge/) — a separate process.) `jobs/_base.py` is the runtime (`JobContext`, `JobResult`, single-asset `job_lock`, draft-block helpers). See [`CLAUDE.md`](CLAUDE.md) for the full job table (and the job-name → slash-command map) and [`docs/workshop-content-loop-design-brief.md`](../../docs/workshop-content-loop-design-brief.md) for the design.
 
-Issue-assembly flow: `issue start` → `issue update` (pure projection of Pinboard/micro.blog/asset files into `draft.md`; Eddy reviews Tue–Fri) → `issue final` (Eddy reorder → `final.md`) → `issue haiku` / `issue subject` / `issue cta` (run on demand, any order) → `issue publish` (assembles `publish.md`; refuses with a missing-list until the required assets exist). Parallel: `links scan` (Linky), `promo prep` + `promo metrics` + `campaign add` / `campaign report` / `campaign sunset` (Marky). Ledger pokes: `goal set` / `goal done` (Patty's milestone progression) and `campaign sunset` are tiny no-LLM commands. `thingy recent` / `thingy show <id>` browse what readers ask the public archive agent (an hourly `thingy-watch` mirrors new conversations from the Lambda, has Eddy assess each, and posts a card to `#chatter`). **Follow-ups** (`followup__schedule` tool / `/workshop followup add`) let an agent — or Jamie — register a commitment ("I'll check in tomorrow evening", "when we get to issue 387"); the hourly `follow-up-sweep` fires the due ones (runs the persona's agent loop with the note + context, posts the check-in) — the deliberate, targeted replacement for per-persona heartbeats. `/workshop status` is a top-level read-only ops snapshot — active issue window, active goal/campaigns, any held job locks, the last few `agent_runs`.
+Issue-assembly flow: `issue start` → `issue update` (pure projection of Pinboard/micro.blog/asset files into `draft.md`; Eddy reviews Tue–Fri) → `issue final` (Eddy reorder → `final.md`) → `issue haiku` / `issue subject` / `issue cta` (run on demand, any order) → `issue publish` (assembles `publish.md`; refuses with a missing-list until the required assets exist). Parallel: `links scan` (Linky), `promo prep` + `promo metrics` + `campaign add` / `campaign report` / `campaign sunset` (Marky). Ledger pokes: `goal set` / `goal done` (Patty's milestone progression) and `campaign sunset` are tiny no-LLM commands. **Follow-ups** (`followup__schedule` tool / `/workshop followup add`) let an agent — or Jamie — register a commitment ("I'll check in tomorrow evening", "when we get to issue 387"); the hourly `follow-up-sweep` fires the due ones (runs the persona's agent loop with the note + context, posts the check-in) — the deliberate, targeted replacement for per-persona heartbeats. `/workshop status` is a top-level read-only ops snapshot — active issue window, active goal/campaigns, any held job locks, the last few `agent_runs`.
 
 Scheduled (`scheduler/jobs.py`, Central time):
 
@@ -68,7 +68,6 @@ Scheduled (`scheduler/jobs.py`, Central time):
 | `linky-pinboard-scan` | Mon–Fri 06:30 & 18:30 | `content_job` → `jobs/pinboard_scan.py`; PASSes outside the issue window |
 | `marky-rss-check` | Sat & Sun, every 4h 09–21 | `handlers.rss_check` — detects a new published issue, fires `promotion-prep` |
 | `marky-daily-metrics` | daily 19:00 | `content_job` → `jobs/daily_metrics.py`; PASSes silently when nothing moved |
-| `thingy-watch` | hourly (:07) | `content_job` → `jobs/thingy.py`; mirrors new Thingy conversations, Eddy assesses each, posts a card to `#chatter`; PASSes when nothing new |
 | `follow-up-sweep` | hourly (:23) | `content_job` → `jobs/follow_up.py`; fires due agent follow-ups (time-based or "when the issue hits N") — runs the persona's agent loop, posts the check-in; PASSes when nothing's due |
 
 There are no per-persona heartbeats — everything an agent does on a cadence is a job (the closest thing to an agent acting on its own is `follow-up-sweep` firing a commitment the agent itself scheduled via `followup__schedule`). The slash layer dispatches *fast* jobs as defer → run → ack, and *interactive* jobs (`create-final`, `compose-haiku`/`-meta`/`-cta` — they wait on Jamie's reaction, possibly longer than the ~15-min interaction token) as ack-immediately → run → the job posts its own outcome to the channel. (`/workshop status` sits directly under `workshop` rather than in one of the artifact subgroups — it's a bot-health view.) CLI: `python -m apps.workshop_bot.scheduler.runner --list`. Disable the scheduler with `WORKSHOP_SCHEDULER_ENABLED=0`.
@@ -110,7 +109,7 @@ The S3 helper at `tools/s3.py` enforces a strict allow-list: only md/markdown/tx
 
 Two layers with hard boundaries.
 
-**SQLite** at `apps/workshop_bot/data/workshop.db` (gitignored) — operational state. Anything not destined for the published newsletter lives here: agent outputs, run logs, memory notes, link candidates, subscriber events, Pinboard dedup state, Thingy bridge token cache.
+**SQLite** at `apps/workshop_bot/data/workshop.db` (gitignored) — operational state. Anything not destined for the published newsletter lives here: agent outputs, run logs, memory notes, link candidates, subscriber events, Pinboard dedup state. (The Thingy bridge has its own SQLite at `../thingy_bridge/data/thingy_bridge.db` for its token cache + conversation mirror — workshop_bot doesn't see it.)
 
 **S3** at `s3://files.thingelstad.com/weekly-thing/{N}/` — only files the iOS Shortcuts assemble pipeline reads on Sunday. Internal observations, research notes, draft versions never go to S3.
 
@@ -118,16 +117,12 @@ Two layers with hard boundaries.
 
 ## The Thingy bridge
 
-`#ask-thingy` is a public-facing surface (author-only for now; opens to supporters later). Each message is forwarded to the production Librarian Lambda's `/chat` endpoint via `personas/thingy.py`.
+The reader-facing Thingy bot now lives in [`../thingy_bridge/`](../thingy_bridge/) as a separate process — see that app's README and CLAUDE.md for its architecture, deploy story, and Lambda-bridge contract. Two-process layout:
 
-Auth uses a Lambda action `/auth?action=discord_bridge` gated by a shared secret (`DISCORD_BRIDGE_SECRET` on the Lambda; `LIBRARIAN_BRIDGE_SECRET` on the bot — same value). The Lambda mints session tokens whose `sub` is `discord:<sha256(user_id)[:32]>`, so per-Discord-user rate limits work transparently against the Lambda's existing `payload.sub` rate-limit bucket.
+- **workshop_bot** (this app) — author-facing personas (Eddy/Linky/Marky/Patty), `/workshop …` slash tree, issue-assembly jobs.
+- **thingy_bridge** — reader-facing answering bot in `#ask-thingy`, the hourly `thingy-watch` conversation mirror, `/thingy {recent,show,sync}` operator commands.
 
-The bridge:
-- Caches tokens in SQLite (`thingy_tokens`); refreshes ~10 min before expiry.
-- Streams the Lambda's SSE response (`event: meta` / `answer_delta` / `citations` / `done`) and reassembles the answer.
-- Rewrites `#NNN` citations into clickable Discord links: `[#287](https://weekly.thingelstad.com/archive/287/)`.
-- Adds 👍/👎 reactions; clicks fire the Lambda's `/feedback` endpoint as the original asker.
-- Greets returning users on fresh-token mints with their last session's Bedrock-synthesized summary (from the Lambda's user-memory).
+The two processes share the Discord server and (in normal use) the `#chatter` channel; both can post there. They do **not** share code, SQLite, or memory — workshop_bot can restart for an author-flow change without dropping `#ask-thingy`.
 
 ---
 
@@ -152,8 +147,8 @@ apps/workshop_bot/
 │   ├── base.py               # PersonaBot — routing, peer reactions, agent loop
 │   ├── team.py               # @Team round orchestration
 │   ├── commands.py           # the /workshop slash tree (hosted on Eddy)
-│   ├── eddy.py / linky.py / marky.py / patty.py
-│   └── thingy.py             # Lambda bridge (no agent loop)
+│   └── eddy.py / linky.py / marky.py / patty.py
+│   (thingy.py — moved to ../thingy_bridge/personas/)
 ├── prompts/
 │   ├── shared/team.md        # shared team-level prompt (cached system block)
 │   └── <persona>/
@@ -186,8 +181,8 @@ apps/workshop_bot/
 │   ├── support_state.py      # current nonprofit state for Patty
 │   ├── s3.py                 # per-issue S3 workspace — backs workspace__*
 │   ├── web.py                # web__fetch_url
-│   ├── startup.py            # boot self-check + announce
-│   └── thingy_client.py / thingy_render.py   # Lambda bridge
+│   └── startup.py            # boot self-check + announce
+│   (thingy_client.py / thingy_render.py — moved to ../thingy_bridge/tools/)
 ├── scheduler/
 │   ├── jobs.py               # cron JobSpec declarations (update-draft, pinboard-scan, rss-check, daily-metrics)
 │   ├── handlers.py           # content_job bridge (cron → jobs/) + rss_check
@@ -232,15 +227,13 @@ Tables in `db/schema.sql`. New columns added later go through idempotent `ALTER 
 | `pinboard_popular_seen` | URLs Linky has surfaced from the popular feed | active |
 | `pinboard_research_done` | URLs Linky has researched from the to-read pile | active |
 | `subscriber_events_seen` | Buttondown subscriber activity Marky has logged | active |
-| `thingy_tokens` | Cached Lambda tokens + profile per Discord user | active |
-| `thingy_requests` | Bridge request log (for `/feedback` lookup) | active |
 | `job_locks` | Single-asset serialization for the jobs pipeline (dead-pid steal) | active |
 | `draft_digests` | Per-`update-draft`-run snapshot — Eddy's "since yesterday" delta | active |
 | `goals` | Patty's milestone progression (one active row; `set-goal` / `goal-achieved`) | active |
 | `campaigns` | Marky's `?ref=` ad-placement ledger (`add-campaign` / `campaign-sunset`) | active |
 | `campaign_metrics` | Append-only per-poll campaign traffic + signups (`daily-metrics`) | active |
 
-(`agent_inbox`, `analytics`, `supporter_events`, `channel_routes` were dropped — `db/schema.sql` carries `DROP TABLE IF EXISTS` for each so long-lived DBs converge with fresh installs. `agent_inbox` went with the content-loop redesign's closed-loop architecture; the other three were reserved-but-never-wired.)
+(`agent_inbox`, `analytics`, `supporter_events`, `channel_routes`, `thingy_tokens`, `thingy_requests`, `thingy_conversations` were dropped — `db/schema.sql` carries `DROP TABLE IF EXISTS` for each so long-lived DBs converge with fresh installs. `agent_inbox` went with the content-loop redesign's closed-loop architecture; the three Thingy tables moved with the Thingy split to `../thingy_bridge/`; the other three were reserved-but-never-wired.)
 
 ---
 
@@ -248,24 +241,21 @@ Tables in `db/schema.sql`. New columns added later go through idempotent `ALTER 
 
 All configuration is via env vars in `.env` (see `.env.example` at the repo root).
 
-**Per-persona Discord apps** — each is its own bot token, so the bot can show all five avatars simultaneously:
-- `DISCORD_TOKEN_EDDY`, `DISCORD_TOKEN_LINKY`, `DISCORD_TOKEN_MARKY`, `DISCORD_TOKEN_PATTY`, `DISCORD_TOKEN_THINGY`
+**Per-persona Discord apps** — each is its own bot token, so the bot can show all four avatars simultaneously:
+- `DISCORD_TOKEN_EDDY`, `DISCORD_TOKEN_LINKY`, `DISCORD_TOKEN_MARKY`, `DISCORD_TOKEN_PATTY`
 
 A persona with a missing token is skipped at startup; the rest still run.
 
+(`DISCORD_TOKEN_THINGY` + `DISCORD_CHANNEL_ASK_THINGY` are read by the separate [`../thingy_bridge/`](../thingy_bridge/) process — not by workshop_bot.)
+
 **Server + channels:**
 - `DISCORD_SERVER_ID`, `DISCORD_WORKSHOP_CATEGORY_ID`, `DISCORD_TEAM_ROLE_ID`
-- `DISCORD_CHANNEL_EDITORIAL`, `_RESEARCH`, `_PROMOTION`, `_SUPPORTERS`, `_WORKSHOP`, `_CHATTER`, `_ASK_THINGY`
+- `DISCORD_CHANNEL_EDITORIAL`, `_RESEARCH`, `_PROMOTION`, `_SUPPORTERS`, `_WORKSHOP`, `_CHATTER`
 
 **Per-service API access:**
 - `ANTHROPIC_API_KEY`
 - `BUTTONDOWN_API_KEY`, `TINYLYTICS_API_KEY`, `TINYLYTICS_SITE_UID`, `PINBOARD_API_TOKEN`, `STRIPE_API_KEY`
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `WEEKLY_THING_ASSETS_BUCKET`
-
-**Thingy bridge:**
-- `LIBRARIAN_API_URL`, `LIBRARIAN_STREAM_URL` — defaults match `apps/site/_data/site.js`
-- `LIBRARIAN_BRIDGE_SECRET` — must match the Lambda's `DISCORD_BRIDGE_SECRET`
-- `WEEKLY_THING_SITE_URL` (default `https://weekly.thingelstad.com`)
 
 **Runtime:**
 - `WORKSHOP_DB_PATH` (default `apps/workshop_bot/data/workshop.db`)
@@ -285,7 +275,7 @@ A persona with a missing token is skipped at startup; the rest still run.
 5. **SQLite for operational state, S3 only for build artifacts.** Strict boundary; the S3 helper enforces it at the path level.
 6. **Scheduled jobs are first-class.** Most jobs are pure-code data shuffling; only compose-style work hits the LLM.
 7. **Cross-talk via shared visibility.** Agents see each other's messages in `#workshop`; the PASS rule keeps overhearing from becoming chatter. `#chatter` is a status firehose with no peer reactions.
-8. **Thingy is a bridge, not a teammate.** Same process; isolated surface. The four agent personas don't see Thingy's conversations and don't peer-react in `#ask-thingy`.
+8. **Reader-facing and author-facing surfaces run as separate processes.** The Thingy bridge (`../thingy_bridge/`) is its own Python process — workshop_bot restarts (Marky/Patty/Eddy code changes) don't drop `#ask-thingy`.
 
 ---
 
@@ -314,7 +304,7 @@ python -m apps.workshop_bot.eval --persona eddy --model sonnet
 
 ## Conventions
 
-- Citation format: `#NNN` consistent with Thingy.
+- Citation format: `#NNN` consistent with the public Q&A surface.
 - Prompts are markdown files cached in-process at first read; restart the bot to pick up edits.
 - Logging: structured `logger.info("event_name %s", arg)` style. The format is plain but the messages are CloudWatch-readable if this ever moves to Lambda.
 - `.env` for secrets — never commit. `.env.example` is the source of truth for required keys.
