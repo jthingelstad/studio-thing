@@ -324,6 +324,66 @@ def mark_popular_seen(
     return n
 
 
+# ---------- popular_seen_sightings (cross-source temporal signal) ----------
+
+
+def record_sighting(*, url: str, source: str) -> bool:
+    """Insert one (url, source) sighting. Idempotent: returns False if
+    the row already existed, True if newly inserted."""
+    if not url or not source:
+        return False
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT OR IGNORE INTO popular_seen_sightings (url, source) "
+            "VALUES (?, ?)",
+            (url, source),
+        )
+        return cur.rowcount > 0
+
+
+def feed_has_seen(*, url: str, source: str) -> bool:
+    """True if (url, source) is in popular_seen_sightings."""
+    if not url or not source:
+        return False
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT 1 FROM popular_seen_sightings WHERE url = ? AND source = ?",
+            (url, source),
+        ).fetchone()
+    return row is not None
+
+
+def sightings_for(url: str) -> list[dict[str, Any]]:
+    """Return ``[{source, seen_at}, ...]`` for every recorded sighting of
+    ``url``, oldest first. Empty list if the URL has never been seen."""
+    if not url:
+        return []
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT source, seen_at FROM popular_seen_sightings "
+            "WHERE url = ? ORDER BY seen_at",
+            (url,),
+        ).fetchall()
+    return [{"source": r["source"], "seen_at": r["seen_at"]} for r in rows]
+
+
+def popular_verdict(url: str) -> Optional[dict[str, Any]]:
+    """Return ``{judged_interesting, judgment_note, first_seen_at, title,
+    posted_by}`` for ``url`` if it has a row in ``pinboard_popular_seen``,
+    else ``None``. Used by the cross-source uplift path to render the
+    'previous verdict' line."""
+    if not url:
+        return None
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT url, title, posted_by, judged_interesting, judgment_note, "
+            "       first_seen_at "
+            "FROM pinboard_popular_seen WHERE url = ?",
+            (url,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
 def filter_unresearched_urls(urls: list[str]) -> list[str]:
     """Return only URLs not yet present in pinboard_research_done."""
     if not urls:

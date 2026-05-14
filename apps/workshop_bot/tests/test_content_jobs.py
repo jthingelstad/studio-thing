@@ -1149,6 +1149,244 @@ class PinboardScanJobTests(_DBTestCase):
         self.assertNotIn("https://private/1", urls)
         self.assertNotIn("https://ok/2", urls)
 
+    # ---------- cross-source signal ----------
+
+    def test_cross_source_in_scan_merge_collapses_duplicates(self):
+        """Same URL on lobsters AND hackernews in the same scan, both
+        fresh — one card posted, both discussion URLs in the input
+        block, primary chosen by registry priority (lobsters > hn)."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        ctx, team = self._ctx_and_team(replies=[
+            "**[Shared](https://x.example/y)** · [lobste.rs](https://lobste.rs/s/abc) "
+            "· [HN](https://news.ycombinator.com/item?id=1)\n\n"
+            "Cross-source story.\n\nFresh territory.\n\n📖 short · `lobsters`"
+        ])
+        same_url = "https://x.example/y"
+        lobs = [{
+            "url": same_url, "title": "Shared (Lobsters title)",
+            "discussion_url": "https://lobste.rs/s/abc",
+            "score": 50, "comment_count": 10, "submitter": "u_lob",
+        }]
+        hn = [{
+            "url": same_url, "title": "Shared (HN title)",
+            "discussion_url": "https://news.ycombinator.com/item?id=1",
+            "score": 200, "comment_count": 80, "submitter": "u_hn",
+        }]
+        patches = self._stub_sources(lobs=lobs, hn=hn)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(result.data["posted"], 1)
+        # Exactly one LLM call — the in-scan dupe was merged, not double-LLM'd.
+        self.assertEqual(team.linky.core.await_count, 1)
+        # Primary went to lobsters (higher priority_priority than hackernews).
+        row = db.lookup_research_message("1001")
+        self.assertEqual(row["source"], "lobsters")
+        # User_msg shows both discussion URLs + "Also trending on" line.
+        sent = team.linky.core.call_args.kwargs["latest"]
+        self.assertIn("https://lobste.rs/s/abc", sent)
+        self.assertIn("https://news.ycombinator.com/item?id=1", sent)
+        self.assertIn("Also trending on (this scan):", sent)
+        # Sightings recorded for BOTH feeds (the primary and the merged-in
+        # co-source) so a future scan won't re-uplift either.
+        self.assertTrue(db.feed_has_seen(url=same_url, source="lobsters"))
+        self.assertTrue(db.feed_has_seen(url=same_url, source="hackernews"))
+
+    def test_cross_source_normalises_utm_params(self):
+        """The dedup key strips utm_* params, so the same article on
+        two feeds with different tracking suffixes collapses."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        ctx, team = self._ctx_and_team(replies=[
+            "**[Shared](https://x.example/article)**\n\nA.\n\nB.\n\n📖 short · `lobsters`"
+        ])
+        lobs = [{
+            "url": "https://x.example/article?utm_source=lobsters",
+            "title": "Shared",
+        }]
+        hn = [{
+            "url": "https://x.example/article?utm_source=hn",
+            "title": "Shared",
+        }]
+        patches = self._stub_sources(lobs=lobs, hn=hn)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        # One card despite different surface URLs — same dedup key.
+        self.assertEqual(result.data["posted"], 1)
+        self.assertEqual(team.linky.core.await_count, 1)
+
+    def test_cross_source_uplift_when_url_seen_on_different_feed_previously(self):
+        """A URL first seen on HN three days ago, judged interesting,
+        appears today on Tildes. The Tildes appearance becomes an
+        uplift candidate: the user_msg includes ## Cross-source uplift
+        with the HN history + verdict, the card lands on #research with
+        source='tildes', and the sighting is recorded so the next scan
+        won't re-uplift the same Tildes appearance."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        # Seed: URL is in pinboard_popular_seen (card was posted) and
+        # popular_seen_sightings has one row from HN.
+        url = "https://x.example/article"
+        db.mark_popular_seen(
+            [{"url": url, "title": "Original Title"}],
+            judged={url: (True, "card posted")},
+        )
+        db.record_sighting(url=url, source="hackernews")
+
+        ctx, team = self._ctx_and_team(replies=[
+            "**[New angle](https://x.example/article)** · [tildes](https://tildes.net/~tech/x)\n\n"
+            "Picked up by Tildes.\n\nFresh angle.\n\n📖 short · `tildes`"
+        ])
+        tildes_items = [{
+            "url": url, "title": "Tildes title",
+            "discussion_url": "https://tildes.net/~tech/x",
+        }]
+        patches = self._stub_sources(tildes_items=tildes_items)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(result.data["posted"], 1)
+        self.assertEqual(result.data["uplift"], 1)
+        # Card recorded under the new feed's source.
+        row = db.lookup_research_message("1001")
+        self.assertEqual(row["source"], "tildes")
+        # User_msg includes the uplift block.
+        sent = team.linky.core.call_args.kwargs["latest"]
+        self.assertIn("## Cross-source uplift", sent)
+        self.assertIn("Hacker News", sent)
+        self.assertIn("Previous verdict:", sent)
+        # New sighting was recorded — so a future scan won't reuplift
+        # the same Tildes-already-seen URL.
+        self.assertTrue(db.feed_has_seen(url=url, source="tildes"))
+
+    def test_cross_source_uplift_carries_skip_history_when_previous_verdict_was_skip(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        url = "https://x.example/skipped"
+        db.mark_popular_seen(
+            [{"url": url, "title": "Skipped Earlier"}],
+            judged={url: (False, "thin reaction post")},
+        )
+        db.record_sighting(url=url, source="hackernews")
+
+        ctx, team = self._ctx_and_team(replies=["SKIP: still thin"])
+        lobs = [{
+            "url": url, "title": "lobsters title",
+            "discussion_url": "https://lobste.rs/s/qq",
+        }]
+        patches = self._stub_sources(lobs=lobs)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertEqual(result.data["posted"], 0)
+        self.assertEqual(result.data["skip"], 1)
+        sent = team.linky.core.call_args.kwargs["latest"]
+        self.assertIn("## Cross-source uplift", sent)
+        self.assertIn("SKIP'd from", sent)
+        self.assertIn("thin reaction post", sent)
+        # Original verdict in pinboard_popular_seen is preserved (still SKIP'd).
+        with db.connect() as conn:
+            row = conn.execute(
+                "SELECT judged_interesting, judgment_note FROM pinboard_popular_seen "
+                "WHERE url = ?", (url,),
+            ).fetchone()
+        self.assertEqual(row["judged_interesting"], 0)
+        self.assertEqual(row["judgment_note"], "thin reaction post")
+        # The new Lobsters sighting was recorded.
+        self.assertTrue(db.feed_has_seen(url=url, source="lobsters"))
+
+    def test_cross_source_same_feed_repeat_silently_dropped(self):
+        """URL on HN today, already sighted from HN before. Today's
+        silent-dedup applies: no LLM call, no card, no new sighting."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        url = "https://x.example/repeat"
+        db.mark_popular_seen([{"url": url, "title": "Repeat"}],
+                              judged={url: (True, "card posted")})
+        db.record_sighting(url=url, source="hackernews")
+
+        ctx, team = self._ctx_and_team(replies=[])
+        hn = [{"url": url, "title": "Repeat", "discussion_url": "https://news.ycombinator.com/item?id=2"}]
+        patches = self._stub_sources(hn=hn)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertEqual(result.data["posted"], 0)
+        team.linky.core.assert_not_awaited()
+
+    def test_cross_source_uplift_per_scan_cap_enforced(self):
+        """Six uplift candidates in one scan: only the cap (5) are
+        processed; the sixth's sighting is NOT recorded so it stays
+        uplift-eligible on the next scan."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        # Seed six distinct URLs, each first-seen on HN with a card-posted
+        # verdict, with one HN sighting each.
+        urls = [f"https://x.example/u{i}" for i in range(6)]
+        for u in urls:
+            db.mark_popular_seen([{"url": u, "title": u}],
+                                  judged={u: (True, "card posted")})
+            db.record_sighting(url=u, source="hackernews")
+        # Today's Tildes feed has all six.
+        tildes_items = [{"url": u, "title": f"t-{u}",
+                         "discussion_url": f"https://tildes.net/~tech/{i}"}
+                        for i, u in enumerate(urls)]
+        ctx, team = self._ctx_and_team(replies=[
+            f"**[T{i}](https://x.example/u{i})**\n\nA.\n\nB.\n\n📖 short · `tildes`"
+            for i in range(5)
+        ])
+        patches = self._stub_sources(tildes_items=tildes_items)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        # Only the cap (5) processed; the 6th left for next time.
+        self.assertEqual(result.data["uplift"], 5)
+        self.assertEqual(team.linky.core.await_count, 5)
+        # 5 URLs had a Tildes sighting recorded. The 6th — whichever
+        # was beyond the cap — does NOT have one yet.
+        recorded = [u for u in urls if db.feed_has_seen(url=u, source="tildes")]
+        self.assertEqual(len(recorded), 5)
+
 
 class PinboardClientNewVerbsTests(unittest.TestCase):
     def test_capture_blurb_merges_tags_and_clears_toread(self):

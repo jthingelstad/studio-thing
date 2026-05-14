@@ -88,9 +88,13 @@ CREATE TABLE IF NOT EXISTS subscriber_events_seen (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriber_events_external
   ON subscriber_events_seen(external_id, event_type);
 
--- URLs Linky has already shown to Jamie from Pinboard's popular feed.
--- The popular handler runs every 6 hours; we dedup against this table so
--- Jamie only sees each item once regardless of how long it stays popular.
+-- URLs Linky has already shown to Jamie from any discovery feed
+-- (Pinboard popular, Lobste.rs, Hacker News, Tildes ~tech, IndieWeb
+-- News, …). Records the *first* sighting + Linky's verdict on that
+-- sighting. The companion `popular_seen_sightings` table records
+-- *every* (url, source) sighting across all feeds and all scans, so
+-- cross-source signal (a URL bouncing between communities over time)
+-- can drive an "uplift" re-evaluation card.
 CREATE TABLE IF NOT EXISTS pinboard_popular_seen (
   url TEXT PRIMARY KEY,
   title TEXT,
@@ -99,6 +103,23 @@ CREATE TABLE IF NOT EXISTS pinboard_popular_seen (
   judgment_note TEXT,
   first_seen_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Per-(url, source) sighting log — every time a discovery feed shows
+-- Linky a URL, we record it here. `pinboard_popular_seen` carries the
+-- *first* sighting + verdict (insert-or-ignore); this table carries
+-- the full timeline. The job uses it to answer: "has THIS feed seen
+-- this URL before?" If no — and `pinboard_popular_seen` already has
+-- the URL — it's a cross-source uplift candidate: Linky writes a
+-- re-evaluation card with the prior sightings + verdict as context.
+CREATE TABLE IF NOT EXISTS popular_seen_sightings (
+  url TEXT NOT NULL,
+  source TEXT NOT NULL,                        -- 'popular' / 'lobsters' / ...
+  seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (url, source)
+);
+
+CREATE INDEX IF NOT EXISTS idx_popular_seen_sightings_url
+  ON popular_seen_sightings(url);
 
 -- Items from Jamie's Pinboard "to read" pile that Linky has already
 -- researched (URL fetched, summary written). Lets the research handler

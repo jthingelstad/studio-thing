@@ -7,16 +7,35 @@ One toread lane plus N discovery feeds, one rhythm. Every hour 07:00–
   yet (`shared=yes`, not in ``pinboard_research_done``). Jamie's own
   picks; Linky always writes a card.
 - **Discovery feeds** — declared in :data:`DISCOVERY_FEEDS` (a tuple of
-  :class:`FeedSpec`). Each feed runs through the same avoid-domains +
-  ``pinboard_popular_seen`` filter chain; Linky decides per-item whether
-  it's "interesting to Jamie" — not "fits the Weekly Thing." A rejection
-  still marks the URL seen; a fetch failure does not.
+  :class:`FeedSpec`). Each feed runs through the same avoid-domains
+  filter; a per-(url, source) sightings log
+  (``popular_seen_sightings``) decides whether each item is **fresh**
+  (never seen by anyone), **uplift** (URL was seen before from a
+  *different* feed — re-evaluate with that history), or **dropped**
+  (URL already sighted from *this* feed; today's silent-dedup).
+  Linky decides per-item whether it's "interesting to Jamie" — not
+  "fits the Weekly Thing." A rejection still marks the URL seen
+  (popular dedup table); a fetch failure does not.
 
 To add a feed: write a fetcher in ``tools/<name>.py``, add a line to
 ``DISCOVERY_FEEDS``, append the source name to ``db.RESEARCH_SOURCES``.
 No other code changes are needed — the loops, the user-message
 rendering, and the persona's ``_DISCOVERY_SOURCES`` derivation all read
 the registry.
+
+**Cross-source signal** lives in two parallel mechanisms, both
+fed by the sightings log:
+
+- **In-scan merge** — same URL on multiple feeds in this hour, none
+  seen before: pick the highest-priority feed as primary, attach the
+  others as ``co_sources``. One card, multiple discussion-thread
+  links in the header, "Also trending on …" line in the LLM's user
+  message.
+- **Cross-day uplift** — same URL appears on a *new* feed days after
+  it was first seen elsewhere: build an uplift candidate carrying
+  the prior sightings + original verdict. Linky writes a fresh card
+  with the cross-source uplift block as context, or SKIPs the
+  re-evaluation. Throttled at ``_UPLIFT_PER_SCAN_CAP`` per scan.
 
 For each candidate, Linky's ``research-card`` prompt runs once: fetch
 the URL, archive recall, read-length, then either a Discord card or one
@@ -36,7 +55,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-from typing import Any
+from typing import Any, Optional
 
 from ..systems.pinboard import client as pinboard
 from ..tools import alt_text  # noqa: F401 — keep imports light; reserve for future
@@ -45,6 +64,7 @@ from ..tools import (
     lobsters, tildes,
 )
 from ..tools.feed_registry import FeedSpec, by_name
+from ..tools.url_normalize import dedup_key
 from . import _base
 
 logger = logging.getLogger("workshop.jobs.pinboard_scan")
@@ -56,6 +76,15 @@ NAME = "pinboard-scan"
 # limit at module scope, separate from the discovery registry.
 _TOREAD_PER_SCAN_CAP = 10
 _TOREAD_FEED_LIMIT = 25
+
+# Cross-source uplift cap. A URL bouncing between feeds over days
+# can generate one "re-evaluate this" card per new sighting; without a
+# governor, a viral URL hitting three new feeds in a week could fire
+# three uplift cards back-to-back. Five per scan is enough to surface
+# the genuine signal without flooding `#research`. Sightings are
+# *recorded* even when we cap — so we never lose the signal, the
+# excess just falls into a future scan.
+_UPLIFT_PER_SCAN_CAP = 5
 
 # The discovery-feed registry. Each spec is one source. Lambdas in
 # ``fetch`` re-resolve the module attribute at call time, so tests can
@@ -96,12 +125,86 @@ _FAIL_RE = re.compile(r"^\s*FETCH_FAILED:\s*(.+?)\s*$", re.IGNORECASE | re.DOTAL
 # ---------- per-link user-message rendering ----------
 
 
+def _label_for(source: str) -> str:
+    spec = by_name(DISCOVERY_FEEDS, source)
+    return spec.label if spec is not None else source
+
+
+def _pin_label_for(source: str) -> str:
+    spec = by_name(DISCOVERY_FEEDS, source)
+    return spec.pin_label if spec is not None else ""
+
+
+def _signal_line_for(item: dict[str, Any], label: str) -> Optional[str]:
+    """Render the per-feed ``{label} signal:`` line if there's a non-zero
+    score worth surfacing. Discovery feeds with no vote system (Tildes,
+    IndieWeb News) leave score/comments at 0 — return None in that case."""
+    score = item.get("score")
+    comments = item.get("comment_count")
+    if not score:
+        return None
+    if comments:
+        return f"- **{label} signal:** {score} points · {comments} comments"
+    return f"- **{label} signal:** {score} points"
+
+
+def _render_uplift_block(item: dict[str, Any]) -> list[str]:
+    """The cross-day uplift context: prior sightings, original verdict,
+    and the new sightings discovered this scan. Empty list if the item
+    isn't an uplift candidate."""
+    if not item.get("_is_uplift"):
+        return []
+    lines = ["", "## Cross-source uplift", ""]
+    history = item.get("uplift_history") or []
+    new_sightings = item.get("new_sightings") or []
+    new_sources = {s["source"] for s in new_sightings}
+    if history:
+        lines.append("This URL has been seen before:")
+        for h in history:
+            seen_at = (h.get("seen_at") or "")[:10]
+            src_label = _label_for(h.get("source") or "")
+            lines.append(f"- {seen_at} ({src_label})")
+    for sighting in new_sightings:
+        src_label = _label_for(sighting["source"])
+        lines.append(f"- TODAY ({src_label}) ← new sighting, this scan")
+    verdict = item.get("uplift_verdict") or {}
+    if verdict.get("judged_interesting") == 1:
+        lines.append("")
+        lines.append("**Previous verdict:** card posted on first sighting; "
+                     "Jamie may not have bookmarked it the first time.")
+    elif verdict.get("judged_interesting") == 0:
+        note = (verdict.get("judgment_note") or "").strip() or "(no reason recorded)"
+        lines.append("")
+        lines.append(f"**Previous verdict:** SKIP'd from "
+                     f"{_label_for(_first_source_in_history(history))}: \"{note}\"")
+    else:
+        lines.append("")
+        lines.append("**Previous verdict:** sighting recorded with no verdict yet.")
+    # Drop trailing source list — same info as the bullets above.
+    _ = new_sources  # reserved for future "diff vs history" logic
+    return lines
+
+
+def _first_source_in_history(history: list[dict[str, Any]]) -> str:
+    """Source name of the earliest sighting in ``history`` — used to
+    label whose feed the original verdict came from."""
+    return (history[0].get("source") if history else "") or ""
+
+
 def _format_user_msg(*, source: str, item: dict[str, Any]) -> str:
     """Render the per-link prompt's ``## The link`` block from one
     candidate. Toread items get the Pinboard URL + Jamie's existing
     description. Discovery items get the optional discussion URL +
     score / comments / submitter / tags fields the fetcher produced;
-    fields the fetcher omitted (or set to zero) are simply not rendered."""
+    fields the fetcher omitted (or set to zero) are simply not rendered.
+
+    Cross-source enrichment shows up here too:
+
+    - In-scan duplicates (``co_sources``): additional discussion URLs
+      and signal lines are surfaced for each co-source.
+    - Cross-day uplift (``_is_uplift``): a ``## Cross-source uplift``
+      block is appended with the prior sightings + verdict + new
+      sightings this scan."""
     url = (item.get("url") or "").strip()
     title = (item.get("title") or "").strip()
     lines = [
@@ -117,27 +220,44 @@ def _format_user_msg(*, source: str, item: dict[str, Any]) -> str:
         lines.append(f"- **Pinboard URL:** {pin or '(missing)'}")
         lines.append(f"- **Existing description:** {desc or '(none)'}")
     else:
-        spec = by_name(DISCOVERY_FEEDS, source)
-        label = spec.label if spec is not None else source
+        label = _label_for(source)
+        pin_label = _pin_label_for(source)
         disc = (item.get("discussion_url") or "").strip()
         if disc:
             lines.append(f"- **{label} discussion:** {disc}")
+            if pin_label:
+                lines.append(f"- **{label} pin label:** {pin_label}")
         tags = ", ".join(item.get("tags") or [])
         if tags:
             lines.append(f"- **{label} tags:** {tags}")
-        score = item.get("score")
-        comments = item.get("comment_count")
-        # Only render the signal line when there's actually a number worth
-        # surfacing — discovery feeds with no vote system (Tildes,
-        # IndieWeb News) leave these as 0 and we drop the row.
-        if score and comments is not None and comments:
-            lines.append(f"- **{label} signal:** {score} points · {comments} comments")
-        elif score and (comments is None or comments == 0):
-            lines.append(f"- **{label} signal:** {score} points")
+        sig = _signal_line_for(item, label)
+        if sig:
+            lines.append(sig)
         submitter = (item.get("submitter") or "").strip()
         if submitter:
             lines.append(f"- **Submitter:** {submitter}")
+
+        # In-scan co-sources: render extra discussion URLs + signals so
+        # the prompt's `{pin_part}` template can include all threads in
+        # the card header.
+        co_sources = item.get("co_sources") or []
+        if co_sources:
+            also = ", ".join(_label_for(c["source"]) for c in co_sources)
+            lines.append(f"- **Also trending on (this scan):** {also}")
+            for co in co_sources:
+                co_label = _label_for(co["source"])
+                co_pin = _pin_label_for(co["source"])
+                co_disc = (co.get("discussion_url") or "").strip()
+                if co_disc:
+                    lines.append(f"- **{co_label} discussion:** {co_disc}")
+                    if co_pin:
+                        lines.append(f"- **{co_label} pin label:** {co_pin}")
+                co_sig = _signal_line_for(co, co_label)
+                if co_sig:
+                    lines.append(co_sig)
     lines.append("")
+    # Append the uplift block (no-op for non-uplift items).
+    lines.extend(_render_uplift_block(item))
     return "\n".join(lines)
 
 
@@ -162,38 +282,113 @@ def _parse_signal(answer: str) -> tuple[str, str]:
 # ---------- candidate gathering (blocking; off the event loop) ----------
 
 
-def _filter_discovery(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Common filter chain for any discovery feed: drop items without a
-    URL, drop avoid-domain hosts, dedup against ``pinboard_popular_seen``."""
-    pre = [
-        it for it in raw
-        if it.get("url") and not avoid_domains.is_excluded_url(it["url"])
-    ]
-    return db.filter_unseen_popular(pre)
+def _signal_blob(item: dict[str, Any], source: str) -> dict[str, Any]:
+    """Per-source signal carried in ``co_sources`` / ``new_sightings``.
+    Just the bits the prompt needs to render multiple discussion links
+    and the "Also trending on" line."""
+    return {
+        "source": source,
+        "discussion_url": (item.get("discussion_url") or "").strip(),
+        "score": item.get("score") or 0,
+        "comment_count": item.get("comment_count") or 0,
+    }
 
 
-def _gather_candidates() -> tuple[list[dict[str, Any]], dict[str, list[dict[str, Any]]]]:
-    """Pull the toread lane and every discovery feed in :data:`DISCOVERY_FEEDS`
-    in one blocking pass. Each source degrades to an empty list on its own
-    failure — one flakey upstream shouldn't block the others.
+def _gather_candidates() -> tuple[
+    list[dict[str, Any]],   # toread items
+    list[dict[str, Any]],   # fresh discovery items (priority-ordered, co_sources merged)
+    list[dict[str, Any]],   # uplift discovery items (already capped)
+    dict[str, int],         # raw counts per source (for the "considered" log line)
+]:
+    """Pull every discovery feed + the toread lane in one blocking pass,
+    then classify each discovery item into fresh / uplift / drop:
 
-    Returns ``(toread, discovery)`` where ``discovery`` is keyed by feed
-    name (matching ``spec.name``). The toread side has its own filter
-    chain via :func:`pinboard.toread_public_unresearched`; discovery feeds
-    share :func:`_filter_discovery`."""
+    - **fresh** — URL not in ``pinboard_popular_seen``. In-scan duplicates
+      across feeds collapse into the higher-priority feed's primary
+      with the lower-priority feeds' signal blobs in ``co_sources``.
+    - **uplift** — URL is in ``pinboard_popular_seen`` but this feed has
+      never sighted it. Carry the prior sightings + verdict + the new
+      sightings discovered this scan.
+    - **drop** — URL already sighted from this feed before. Today's
+      silent-dedup behavior; not returned.
+
+    Sightings are NOT recorded here — that's deferred to the per-link
+    runtime so a fetch failure can leave the URL unmarked and retried
+    next scan. This function is pure classification."""
     try:
         toread = pinboard.toread_public_unresearched(limit=_TOREAD_FEED_LIMIT)
     except Exception as exc:  # noqa: BLE001
         logger.warning("pinboard-scan: toread pull failed: %s", exc)
         toread = []
-    discovery: dict[str, list[dict[str, Any]]] = {}
+
+    raw_counts: dict[str, int] = {}
+    # Two scan-level maps keyed by dedup_key:
+    fresh_by_key: dict[str, dict[str, Any]] = {}
+    uplift_by_key: dict[str, dict[str, Any]] = {}
+
     for spec in DISCOVERY_FEEDS:
         try:
-            discovery[spec.name] = _filter_discovery(spec.fetch(spec.feed_limit))
+            raw = spec.fetch(spec.feed_limit)
         except Exception as exc:  # noqa: BLE001
             logger.warning("pinboard-scan: %s feed pull failed: %s", spec.name, exc)
-            discovery[spec.name] = []
-    return toread, discovery
+            raw_counts[spec.name] = 0
+            continue
+        raw_counts[spec.name] = len(raw)
+
+        for raw_item in raw:
+            url = (raw_item.get("url") or "").strip()
+            if not url or avoid_domains.is_excluded_url(url):
+                continue
+            key = dedup_key(url)
+            if not key:
+                continue
+
+            # Has the URL ever been seen by Linky from any feed?
+            prior_verdict = db.popular_verdict(url)
+
+            if prior_verdict is None:
+                # FRESH URL — never in pinboard_popular_seen.
+                if key in fresh_by_key:
+                    # In-scan duplicate from a lower-priority feed.
+                    fresh_by_key[key].setdefault("co_sources", []).append(
+                        _signal_blob(raw_item, spec.name),
+                    )
+                else:
+                    fresh_by_key[key] = {
+                        **raw_item,
+                        "_source": spec.name,
+                        "_url": url,
+                        "_is_uplift": False,
+                        "co_sources": [],
+                    }
+                continue
+
+            # URL has been seen before. Has THIS feed seen it before?
+            if db.feed_has_seen(url=url, source=spec.name):
+                # Silent drop — today's behavior.
+                continue
+
+            # Cross-day uplift — new feed sighting on a known URL.
+            new_sighting = _signal_blob(raw_item, spec.name)
+            if key in uplift_by_key:
+                uplift_by_key[key].setdefault("new_sightings", []).append(new_sighting)
+            else:
+                uplift_by_key[key] = {
+                    **raw_item,
+                    "_source": spec.name,          # first feed in priority order wins primary
+                    "_url": url,
+                    "_is_uplift": True,
+                    "uplift_history": db.sightings_for(url),
+                    "uplift_verdict": prior_verdict,
+                    "new_sightings": [new_sighting],
+                }
+
+    fresh_items = list(fresh_by_key.values())
+    # Uplift candidates capped per scan — sightings get recorded only on
+    # the items we actually process, so the excess naturally rolls into
+    # the next scan.
+    uplift_items = list(uplift_by_key.values())[:_UPLIFT_PER_SCAN_CAP]
+    return toread, fresh_items, uplift_items, raw_counts
 
 
 # ---------- per-link runtime ----------
@@ -215,17 +410,42 @@ async def _research_one(
     return _parse_signal(answer)
 
 
+def _record_sightings_for_item(item: dict[str, Any], primary_source: str) -> None:
+    """Record (url, source) sightings for every feed that surfaced this
+    item this scan — the primary plus any in-scan co_sources (fresh
+    case) or new_sightings (uplift case). Idempotent at the DB level."""
+    url = (item.get("_url") or item.get("url") or "").strip()
+    if not url:
+        return
+    db.record_sighting(url=url, source=primary_source)
+    for blob in (item.get("co_sources") or []) + (item.get("new_sightings") or []):
+        src = blob.get("source")
+        if src and src != primary_source:
+            db.record_sighting(url=url, source=src)
+
+
 async def _process_one(
     *, ctx: "_base.JobContext", linky, prompt: str, linky_ctx_block: str,
     source: str, item: dict[str, Any], counters: dict[str, int],
 ) -> None:
     """Research one candidate end-to-end: LLM call, response classify, post
     if it's a card, record the message + mark seen/researched. Idempotent
-    per scan — exceptions are caught and logged, never re-raised."""
+    per scan — exceptions are caught and logged, never re-raised.
+
+    Sighting policy:
+
+    - On FAIL (fetch error / empty response): nothing recorded; URL
+      retries next scan.
+    - On SKIP or CARD: record sightings (primary + co_sources +
+      new_sightings) and, for fresh discovery items, mark the verdict
+      in ``pinboard_popular_seen``. Uplift items leave the original
+      verdict alone — the sightings table tells the cross-source story
+      from here on."""
     url = (item.get("url") or "").strip()
     if not url:
         return
     title = item.get("title") or ""
+    is_uplift = bool(item.get("_is_uplift"))
     kind, payload = await _research_one(
         linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
         source=source, item=item,
@@ -236,21 +456,25 @@ async def _process_one(
         logger.info("pinboard-scan: %s [%s] -> FETCH_FAILED: %s", source, url, payload[:100])
         return
     if kind == "skip":
-        # Toread items shouldn't skip; treat as a researched-no-card,
-        # mark researched so we don't keep re-asking. Discovery feeds
-        # share the same `pinboard_popular_seen` dedup.
         if source == "toread":
+            # Toread items shouldn't skip; treat as researched-no-card.
             db.mark_url_researched(
                 url=url, title=title, summary=f"SKIP: {payload}",
                 confidence="⊘", fit_note=payload[:200],
             )
         else:
-            db.mark_popular_seen(
-                [{"url": url, "title": title}],
-                judged={url: (False, payload)},
-            )
+            _record_sightings_for_item(item, source)
+            # Only the FIRST verdict on a URL lands in pinboard_popular_seen
+            # (insert-or-ignore). Uplift SKIPs preserve the original
+            # verdict — the sightings log captures the new sighting.
+            if not is_uplift:
+                db.mark_popular_seen(
+                    [{"url": url, "title": title}],
+                    judged={url: (False, payload)},
+                )
         counters["skip"] += 1
-        logger.info("pinboard-scan: %s [%s] -> SKIP: %s", source, url, payload[:100])
+        logger.info("pinboard-scan: %s [%s] -> SKIP: %s%s",
+                    source, url, "(uplift) " if is_uplift else "", payload[:100])
         return
     # kind == "card"
     msg = await ctx.send_one(
@@ -273,12 +497,17 @@ async def _process_one(
             confidence="✦", fit_note="card posted",
         )
     else:
-        db.mark_popular_seen(
-            [{"url": url, "title": title}],
-            judged={url: (True, "card posted")},
-        )
+        _record_sightings_for_item(item, source)
+        if not is_uplift:
+            db.mark_popular_seen(
+                [{"url": url, "title": title}],
+                judged={url: (True, "card posted")},
+            )
     counters["posted"] += 1
-    logger.info("pinboard-scan: %s [%s] -> posted card msg=%s", source, url, msg.id)
+    if is_uplift:
+        counters["uplift"] = counters.get("uplift", 0) + 1
+    logger.info("pinboard-scan: %s [%s] -> posted card msg=%s%s",
+                source, url, msg.id, " (uplift)" if is_uplift else "")
 
 
 # ---------- the job ----------
@@ -306,13 +535,22 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     linky_ctx_block = context.render_block(linky_ctx)
 
     # Gather toread + every discovery feed in one blocking pass.
-    toread, discovery = await asyncio.to_thread(_gather_candidates)
-    if not toread and not any(discovery.values()):
+    toread, fresh_items, uplift_items, raw_counts = await asyncio.to_thread(
+        _gather_candidates,
+    )
+    if not toread and not fresh_items and not uplift_items:
         return _base.JobResult(
             True, "Linky: nothing new in any source — PASS.", data={"posted": 0},
         )
 
-    counters = {"posted": 0, "skip": 0, "fail": 0}
+    # Group fresh items by primary source so the per-spec cap applies.
+    fresh_by_source: dict[str, list[dict[str, Any]]] = {
+        spec.name: [] for spec in DISCOVERY_FEEDS
+    }
+    for item in fresh_items:
+        fresh_by_source[item["_source"]].append(item)
+
+    counters: dict[str, int] = {"posted": 0, "skip": 0, "fail": 0, "uplift": 0}
 
     with db.AgentRun("linky", trigger="pinboard-scan") as run_:
         # Toread first — Jamie's own picks before random discovery finds.
@@ -321,28 +559,44 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
                 source="toread", item=item, counters=counters,
             )
+        # Then fresh discovery items, walking feeds in priority order.
         for spec in DISCOVERY_FEEDS:
-            for item in discovery[spec.name][:spec.per_scan_cap]:
+            for item in fresh_by_source[spec.name][:spec.per_scan_cap]:
                 await _process_one(
                     ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
                     source=spec.name, item=item, counters=counters,
                 )
+        # Finally, uplift candidates — re-evaluations of URLs that
+        # appeared on a new feed since their first sighting. Already
+        # capped per scan.
+        for item in uplift_items:
+            await _process_one(
+                ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
+                source=item["_source"], item=item, counters=counters,
+            )
         run_.records_written = counters["posted"]
 
     considered_parts = [f"{len(toread)} toread"]
     for spec in DISCOVERY_FEEDS:
-        considered_parts.append(f"{len(discovery[spec.name])} {spec.name}")
+        considered_parts.append(f"{raw_counts.get(spec.name, 0)} {spec.name}")
+    if uplift_items:
+        considered_parts.append(f"{len(uplift_items)} uplift")
     considered = " + ".join(considered_parts)
+    summary_extras = []
+    if counters["uplift"]:
+        summary_extras.append(f"{counters['uplift']} uplift")
+    summary_tail = (
+        f"{counters['skip']} skip, {counters['fail']} retry"
+        + (f", {', '.join(summary_extras)}" if summary_extras else "")
+    )
     if counters["posted"] == 0:
         return _base.JobResult(
             True,
-            f"Linky: considered {considered}; "
-            f"no cards posted ({counters['skip']} skip, {counters['fail']} retry).",
+            f"Linky: considered {considered}; no cards posted ({summary_tail}).",
             data={"posted": 0, **counters},
         )
     return _base.JobResult(
         True,
-        f"Linky: posted {counters['posted']} card(s) "
-        f"({counters['skip']} skip, {counters['fail']} retry).",
+        f"Linky: posted {counters['posted']} card(s) ({summary_tail}).",
         data={"posted": counters["posted"], **counters},
     )
