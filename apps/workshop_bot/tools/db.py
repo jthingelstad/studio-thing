@@ -1009,7 +1009,40 @@ def recent_agent_runs(limit: int = 8) -> list[dict[str, Any]]:
 
 
 class AgentRun:
-    """Context manager that opens an agent_runs row and closes it with the result."""
+    """Context manager that opens an agent_runs row and closes it with the result.
+
+    Trigger label convention
+    ------------------------
+
+    ``trigger`` is the string written to the ``trigger`` column. A single
+    ``agent_runs`` row covers one logical unit of work (one cron fire,
+    one slash invocation), regardless of how many internal LLM calls it
+    makes — open one ``AgentRun`` per job, not per ``bot.core``.
+
+    The label shape is:
+
+      - **Bare job name** for jobs that make one LLM call (or one
+        logical batch under a single context manager):
+        ``compose-haiku``, ``compose-cta``, ``daily-metrics``,
+        ``promotion-prep``, ``pinboard-scan``, ``review-text``,
+        ``linky-research``, ``create-final``, ``follow-up``.
+      - **``<job>:<sub>``** when a *single job module* opens multiple
+        ``AgentRun`` blocks for distinguishable LLM passes that you
+        want to query independently in ``agent_runs``:
+        ``update-draft:html-review`` + ``update-draft:editorial-card``
+        (Eddy's two separate review passes inside ``update-draft``);
+        ``compose-meta:subject`` + ``compose-meta:description``
+        (the two passes inside ``compose-meta``).
+      - **``scheduled:<job-id>``** is added by the scheduler runner
+        for the outer cron context (not by job code itself).
+      - **``mention``** by ``PersonaBot.on_message`` for an
+        @-mention-driven turn outside the job pipeline.
+
+    Adding a new sub-label is the right move only when you'd actually
+    query ``agent_runs`` for the distinction (cost analysis,
+    latency-bucketing one pass vs another). Otherwise the bare job
+    name is enough and the JobResult / logs carry the rest.
+    """
 
     def __init__(self, agent_name: str, trigger: str) -> None:
         self.agent_name = agent_name
