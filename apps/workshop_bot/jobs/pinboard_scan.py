@@ -40,7 +40,10 @@ from typing import Any
 
 from ..systems.pinboard import client as pinboard
 from ..tools import alt_text  # noqa: F401 — keep imports light; reserve for future
-from ..tools import anthropic_client, avoid_domains, context, db, hackernews, lobsters
+from ..tools import (
+    anthropic_client, avoid_domains, context, db, hackernews, indieweb_news,
+    lobsters, tildes,
+)
 from ..tools.feed_registry import FeedSpec, by_name
 from . import _base
 
@@ -59,6 +62,16 @@ _TOREAD_FEED_LIMIT = 25
 # patch ``pinboard.popular`` / ``lobsters.hottest`` / ``hackernews.top``
 # directly without rewriting the spec.
 DISCOVERY_FEEDS: tuple[FeedSpec, ...] = (
+    FeedSpec(
+        name="indieweb_news", label="IndieWeb News", pin_label="indieweb",
+        fetch=lambda limit: indieweb_news.top(limit=limit),
+        per_scan_cap=10, feed_limit=20, primary_priority=50,
+    ),
+    FeedSpec(
+        name="tildes", label="Tildes ~tech", pin_label="tildes",
+        fetch=lambda limit: tildes.top(limit=limit),
+        per_scan_cap=10, feed_limit=25, primary_priority=40,
+    ),
     FeedSpec(
         name="lobsters", label="Lobsters", pin_label="lobste.rs",
         fetch=lambda limit: lobsters.hottest(limit=limit),

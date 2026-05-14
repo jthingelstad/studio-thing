@@ -849,16 +849,25 @@ class PinboardScanJobTests(_DBTestCase):
         team = _FakeLinkyTeam(replies=replies)
         return _base.JobContext(deps=_deps_with_linky_team(team)), team
 
-    def _stub_sources(self, *, popular=None, toread=None, lobs=None, hn=None):
+    def _stub_sources(
+        self, *, popular=None, toread=None, lobs=None, hn=None,
+        tildes_items=None, indieweb_items=None,
+    ):
         from apps.workshop_bot.systems.pinboard import client as pbc
         from apps.workshop_bot.tools import hackernews as hn_mod
+        from apps.workshop_bot.tools import indieweb_news as iwn_mod
         from apps.workshop_bot.tools import lobsters as lob
+        from apps.workshop_bot.tools import tildes as tldes_mod
         return [
             patch.object(pbc, "popular", lambda limit=30: list(popular or [])),
             patch.object(pbc, "toread_public_unresearched",
                          lambda limit=25: list(toread or [])),
             patch.object(lob, "hottest", lambda limit=25: list(lobs or [])),
             patch.object(hn_mod, "top", lambda limit=25: list(hn or [])),
+            patch.object(tldes_mod, "top",
+                         lambda limit=25: list(tildes_items or [])),
+            patch.object(iwn_mod, "top",
+                         lambda limit=20: list(indieweb_items or [])),
             # build_linky_context hits posts_all for queue depth — stub it cheap.
             patch.object(pbc, "posts_all", lambda **kw: []),
         ]
