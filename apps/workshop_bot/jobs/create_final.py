@@ -29,8 +29,8 @@ MAX_ROUNDS = 3
 _FENCE_RE = re.compile(r"```(?:markdown|md)?\s*\n(.*?)\n?```", re.DOTALL)
 
 _NEXT_STEPS = (
-    "Next, in any order: `/workshop issue haiku`, `/workshop issue subject`, "
-    "`/workshop issue cta` — then `/workshop issue publish` (it'll list "
+    "Next, in any order: `/eddy issue haiku`, `/eddy issue subject`, "
+    "`/patty cta` — then `/eddy issue publish` (it'll list "
     "anything still missing if you run it early)."
 )
 
@@ -50,11 +50,13 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     if window is None:
         return _base.JobResult(False, "❌ no active issue window.")
     n = int(window["issue_number"])
-    if s3.read_issue_file(n, "final.md").get("found"):
+    # Off-loop: both reads hit S3.
+    final_exists = (await asyncio.to_thread(s3.read_issue_file, n, "final.md")).get("found")
+    if final_exists:
         return _base.JobResult(False, f"❌ WT{n} already has `final.md` — delete it to re-run `create-final`.")
-    draft = _draft_text(n)
+    draft = await asyncio.to_thread(_draft_text, n)
     if not draft.strip():
-        return _base.JobResult(False, f"❌ no `draft.md` for WT{n} — run `/workshop issue update` first.")
+        return _base.JobResult(False, f"❌ no `draft.md` for WT{n} — run `/eddy issue update` first.")
     bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
     if bot is None:
         return _base.JobResult(False, f"(create-final skipped — {reason})")
