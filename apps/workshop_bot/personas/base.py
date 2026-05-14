@@ -148,11 +148,36 @@ class PersonaBot(discord.Client):
         self._home_channel_id: Optional[int] = (
             _read_env_int(self.home_channel_env) if self.home_channel_env else None
         )
+        # Each persona's __init__ may set self.command_tree (the
+        # /<persona> slash tree). on_ready below syncs it.
+        self.command_tree = None  # type: ignore[assignment]
 
     async def on_ready(self) -> None:  # type: ignore[override]
         user = self.user
         logger.info("%s online as %s (id=%s)", self.name, user, getattr(user, "id", "?"))
         self.ready_event.set()
+        if self.command_tree is not None:
+            await self._sync_command_tree()
+
+    async def _sync_command_tree(self) -> None:
+        """Sync the persona's slash tree to the configured guild (or globally
+        if no DISCORD_SERVER_ID is set). Guild-scoped sync is instant;
+        global sync takes ~1h to propagate to Discord clients."""
+        guild_id = (os.environ.get("DISCORD_SERVER_ID") or "").strip()
+        try:
+            if guild_id:
+                guild = discord.Object(id=int(guild_id))
+                self.command_tree.copy_global_to(guild=guild)
+                synced = await self.command_tree.sync(guild=guild)
+            else:
+                synced = await self.command_tree.sync()
+            logger.info(
+                "%s: command tree synced (%d command(s)%s)",
+                self.persona, len(synced),
+                f", guild={guild_id}" if guild_id else "",
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception("%s: command tree sync failed", self.persona)
 
     def _is_home_channel(self, channel_id: int) -> bool:
         return self._home_channel_id is not None and self._home_channel_id == channel_id

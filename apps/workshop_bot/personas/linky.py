@@ -36,7 +36,8 @@ import discord
 from ..systems.pinboard import client as pinboard_client
 from ..tools import db
 from ..tools.feed_registry import DISCOVERY_FEEDS
-from .base import PersonaBot
+from .base import Deps, PersonaBot
+from .commands import register_linky_commands
 
 logger = logging.getLogger("workshop.linky")
 
@@ -75,6 +76,10 @@ class LinkyBot(PersonaBot):
     home_channel_env = "DISCORD_CHANNEL_RESEARCH"
     empty_greeting = "Hey — want a curation pass, or asking about a specific link?"
     preferred_model = "sonnet"
+
+    def __init__(self, deps: Deps) -> None:
+        super().__init__(deps)
+        self.command_tree = register_linky_commands(self)
 
     async def on_message(self, message: discord.Message) -> None:  # type: ignore[override]
         # Pre-check: is Jamie replying to one of Linky's #research cards?
