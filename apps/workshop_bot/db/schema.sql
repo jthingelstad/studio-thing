@@ -336,6 +336,23 @@ CREATE TABLE IF NOT EXISTS follow_ups (
 CREATE INDEX IF NOT EXISTS idx_follow_ups_open
   ON follow_ups(fired_at, cancelled_at, trigger_kind);
 
+-- Per-link research cards Linky has posted to #research. Lets the reply
+-- listener resolve a Discord reply back to the URL it's commenting on,
+-- so Jamie's reply can be written straight to that Pinboard bookmark's
+-- description. One row per posted card; never updated (each card is its
+-- own immutable post). `source` is 'popular' (the URL came from the
+-- Pinboard popular feed and may not yet be bookmarked) or 'toread'
+-- (already in Jamie's Pinboard, currently toread+public).
+CREATE TABLE IF NOT EXISTS linky_research_messages (
+  discord_message_id TEXT PRIMARY KEY,
+  url TEXT NOT NULL,
+  source TEXT NOT NULL,                           -- 'popular' | 'toread'
+  posted_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_linky_research_messages_posted
+  ON linky_research_messages(posted_at DESC);
+
 -- Image alt-text cache — generated via vision LLM on first sight, then
 -- cached forever. `image_key` is a stable, content-addressed identifier:
 -- the rehosted filename's basename for journal images (e.g.

@@ -1074,6 +1074,36 @@ def latest_draft_digest(issue: int) -> Optional[dict[str, Any]]:
     return dict(row) if row else None
 
 
+# ---------- Linky research cards (one row per posted #research message) ----------
+
+
+def record_research_message(*, discord_message_id: str, url: str, source: str) -> None:
+    """Persist that Linky posted a per-link research card to #research,
+    so a future reply to that message can be routed back to the URL."""
+    if not discord_message_id or not url or source not in ("popular", "toread"):
+        return
+    with connect() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO linky_research_messages "
+            "(discord_message_id, url, source) VALUES (?, ?, ?)",
+            (str(discord_message_id), str(url), source),
+        )
+
+
+def lookup_research_message(discord_message_id: str) -> Optional[dict[str, Any]]:
+    """Return the row for ``discord_message_id`` (the message Jamie's reply
+    references), or ``None`` if it isn't one of Linky's cards."""
+    if not discord_message_id:
+        return None
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT discord_message_id, url, source, posted_at "
+            "FROM linky_research_messages WHERE discord_message_id = ?",
+            (str(discord_message_id),),
+        ).fetchone()
+    return dict(row) if row else None
+
+
 # ---------- image alt-text cache (journal + cover, vision-generated) ----------
 
 

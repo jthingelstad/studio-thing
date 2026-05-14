@@ -116,6 +116,32 @@ class JobContext:
             await ch.send(chunk, suppress_embeds=suppress_embeds)
         return True
 
+    async def send_one(
+        self,
+        channel_or_env,
+        text: str,
+        *,
+        persona: Optional[str] = None,
+        suppress_embeds: bool = True,
+    ):
+        """Post ``text`` as a single Discord message (no chunk-splitting)
+        and return the resulting :class:`discord.Message`, or ``None`` if
+        the channel couldn't be resolved or the text was empty. Callers
+        that need the message id (e.g. to record a reply target) use this
+        instead of :meth:`post`."""
+        if not text or not text.strip():
+            return None
+        ch = channel_or_env
+        if isinstance(channel_or_env, str):
+            ch = self.channel(channel_or_env, persona=persona)
+        if ch is None:
+            return None
+        # Discord caps a message at 2000 chars; clamp here rather than
+        # silently fragment, since recording the wrong message id would
+        # break the reply lookup.
+        body = text if len(text) <= 1990 else text[:1990].rstrip() + "…"
+        return await ch.send(body, suppress_embeds=suppress_embeds)
+
 
 # ---------- locking ----------
 

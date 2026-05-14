@@ -253,6 +253,92 @@ def issue_window_candidates(start_date: str, end_date: str) -> dict[str, list[di
     return {"notable": notable, "brief": brief}
 
 
+def set_description(url: str, description: str, *, fallback_title: str | None = None) -> dict[str, Any]:
+    """Atomic 'overwrite the description, keep everything else.' Used by
+    Linky's reply listener — Jamie replies to one of Linky's #research
+    cards in Discord and the reply text becomes the Pinboard bookmark's
+    description verbatim. Preserves the existing title, tags, ``toread``,
+    and ``shared`` flags.
+
+    If the URL isn't bookmarked yet (the popular-feed case), it gets
+    created as ``toread=yes shared=yes`` with this description and
+    ``fallback_title`` (or the URL, if no title was passed). That mirrors
+    the same "I want this — start the commentary" gesture Jamie makes for
+    toread items.
+
+    Returns ``{result_code, pinboard_url, created, replaced}``.
+    """
+    existing = posts_get(url)
+    posts = existing.get("posts") or []
+    if not posts:
+        # New bookmark — popular-feed reply case.
+        title = (fallback_title or url).strip() or url
+        res = posts_add(
+            url=url,
+            title=title,
+            description=str(description or ""),
+            tags="",
+            toread=True,
+            shared=True,
+            replace=False,
+        )
+        logger.info("pinboard: set_description url=%s created=True", url)
+        return {
+            "result_code": res.get("result_code"),
+            "pinboard_url": res.get("pinboard_url") or bookmark_url(url),
+            "created": True,
+            "replaced": False,
+        }
+    post = posts[0]
+    title = post.get("description", "") or url  # Pinboard's "description" is the title
+    tags = [t for t in (post.get("tags") or "").split() if t]  # preserve verbatim
+    shared = (post.get("shared", "yes") != "no")
+    toread = (post.get("toread", "no") == "yes")
+    res = posts_add(
+        url=url,
+        title=title,
+        description=str(description or ""),
+        tags=" ".join(tags),
+        toread=toread,
+        shared=shared,
+        replace=True,
+    )
+    logger.info("pinboard: set_description url=%s replaced=%s", url, res.get("result_code"))
+    return {
+        "result_code": res.get("result_code"),
+        "pinboard_url": res.get("pinboard_url") or bookmark_url(url),
+        "created": False,
+        "replaced": res.get("result_code") == "done",
+    }
+
+
+def toread_public_unresearched(*, limit: int = 25) -> list[dict[str, Any]]:
+    """Jamie's public toread bookmarks that Linky hasn't researched yet —
+    the input list for the hourly per-link scan's toread lane. Newest
+    first. Filters at three layers:
+
+    - ``toread=yes`` (Pinboard's flag — Jamie hasn't worked through it)
+    - ``shared=yes`` (public; private bookmarks aren't candidates)
+    - not in ``pinboard_research_done`` (Linky already posted a card)
+    """
+    from ...tools import db as _db
+
+    raw = all_unread(limit=int(limit) * 4)  # over-fetch to absorb the filter cuts
+    public = [
+        p for p in raw
+        if p.get("shared", "yes") != "no"
+        and (p.get("href") or p.get("url"))
+    ]
+    urls = [(p.get("href") or p.get("url")) for p in public]
+    unresearched = set(_db.filter_unresearched_urls(urls))
+    out = [
+        normalize_post(p)
+        for p in public
+        if (p.get("href") or p.get("url")) in unresearched
+    ]
+    return out[: int(limit)]
+
+
 def capture_blurb(url: str, blurb: str) -> dict[str, Any]:
     """Atomic 'capture this for Briefly': writes ``blurb`` as the bookmark's
     description, adds the ``_brief`` tag, and clears ``toread``. Preserves

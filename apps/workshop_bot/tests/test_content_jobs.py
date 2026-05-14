@@ -812,13 +812,29 @@ from apps.workshop_bot.jobs import pinboard_scan  # noqa: E402
 
 
 class _FakeLinkyTeam:
-    def __init__(self, reply="- [thing](http://x) — looks good — [pin](http://pin)"):
+    """Linky stub for the per-link scan runtime. ``replies`` is a list (or
+    AsyncMock side_effect) — each consecutive ``linky.core`` call returns
+    the next reply. ``channel.send`` returns a mock Discord message with
+    an incrementing ``id`` so the test can assert recording behaviour."""
+
+    def __init__(self, replies=None):
         self.channel = MagicMock()
-        self.channel.send = AsyncMock()
+        self._next_msg_id = 1000
+        async def _fake_send(text, **_kw):
+            self._next_msg_id += 1
+            m = MagicMock()
+            m.id = self._next_msg_id
+            m.content = text
+            return m
+        self.channel.send = AsyncMock(side_effect=_fake_send)
         self.linky = MagicMock()
         self.linky.user = object()
         self.linky.get_channel = MagicMock(return_value=self.channel)
-        self.linky.core = AsyncMock(return_value=(reply, {"iterations": 1}))
+        if replies is None:
+            replies = ["**[X](http://x)** — looks good"]
+        self.linky.core = AsyncMock(
+            side_effect=[(r, {"iterations": 1}) for r in replies]
+        )
         self.bots = {"linky": self.linky}
 
 
@@ -829,95 +845,189 @@ def _deps_with_linky_team(team):
 
 
 class PinboardScanJobTests(_DBTestCase):
-    def _window(self, n=458, pub="2026-05-16"):
-        from apps.workshop_bot.tools import issue as issue_mod
-        w = issue_mod.compute_window(pub, 7)
-        db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
-                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
-        return db.get_active_issue_window()
+    def _ctx_and_team(self, replies=None):
+        team = _FakeLinkyTeam(replies=replies)
+        return _base.JobContext(deps=_deps_with_linky_team(team)), team
 
-    def test_pass_no_window(self):
-        result = asyncio.run(pinboard_scan.run(_base.JobContext()))
+    def _stub_sources(self, *, popular=None, toread=None):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        return [
+            patch.object(pbc, "popular", lambda limit=30: list(popular or [])),
+            patch.object(pbc, "toread_public_unresearched",
+                         lambda limit=25: list(toread or [])),
+            # build_linky_context hits posts_all for queue depth — stub it cheap.
+            patch.object(pbc, "posts_all", lambda **kw: []),
+        ]
+
+    def test_pass_when_both_sources_empty(self):
+        ctx, team = self._ctx_and_team()
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        patches = self._stub_sources()
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
         self.assertTrue(result.ok)
-        self.assertFalse(result.data["posted"])
-        self.assertIn("no active issue window", result.message.lower())
+        self.assertEqual(result.data["posted"], 0)
+        team.linky.core.assert_not_awaited()
+        team.channel.send.assert_not_awaited()
 
-    def test_pass_outside_window(self):
-        # Window 2026-05-08..2026-05-15; pick a 'today' well outside it by
-        # patching the job module's datetime.
-        self._window(pub="2026-05-16")  # window: 2026-05-08 .. 2026-05-15
+    def test_posts_card_for_toread_item(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        ctx, team = self._ctx_and_team(replies=[
+            "**[The Piece](https://example.com/x)** · [pin](https://pinboard.in/b/abc)\n\n"
+            "A solid argument about X.\n\nFresh territory, likely Notable.\n\n📖 medium · `toread`"
+        ])
+        toread = [{
+            "url": "https://example.com/x", "title": "The Piece",
+            "description": "", "pinboard_url": "https://pinboard.in/b/abc",
+        }]
+        patches = self._stub_sources(toread=toread)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(result.data["posted"], 1)
+        team.channel.send.assert_awaited_once()
+        # Recorded the message id for reply lookup.
+        sent_msg_id = team.channel.send.return_value or team.channel.send.await_args
+        # The fake_send AsyncMock side_effect assigned msg ids starting at 1001.
+        row = db.lookup_research_message("1001")
+        self.assertIsNotNone(row, "linky_research_messages row missing")
+        self.assertEqual(row["url"], "https://example.com/x")
+        self.assertEqual(row["source"], "toread")
 
-        class _FakeDT(datetime):
-            @classmethod
-            def now(cls, tz=None):
-                return cls(2026, 6, 1, 12, 0, 0)
-
-        with patch.object(pinboard_scan, "datetime", _FakeDT):
-            result = asyncio.run(pinboard_scan.run(_base.JobContext()))
+    def test_skip_signal_marks_popular_seen_no_post(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        ctx, team = self._ctx_and_team(replies=["SKIP: not Jamie's lane"])
+        popular = [{
+            "url": "https://example.com/skip", "title": "Some Popular Item",
+            "description": "", "posted_by": "user1",
+        }]
+        patches = self._stub_sources(popular=popular)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
         self.assertTrue(result.ok)
-        self.assertFalse(result.data["posted"])
-        self.assertIn("outside the issue window", result.message.lower())
+        self.assertEqual(result.data["posted"], 0)
+        self.assertEqual(result.data["skip"], 1)
+        team.channel.send.assert_not_awaited()
+        # popular_seen has the row with judged_interesting = 0.
+        import sqlite3 as _sql
+        with db.connect() as conn:
+            row = conn.execute(
+                "SELECT judged_interesting, judgment_note FROM pinboard_popular_seen "
+                "WHERE url = ?", ("https://example.com/skip",),
+            ).fetchone()
+        self.assertIsNotNone(row)
+        self.assertEqual(row["judged_interesting"], 0)
+        self.assertIn("not Jamie's lane", row["judgment_note"] or "")
+
+    def test_fetch_failed_signal_does_not_mark_seen(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        ctx, team = self._ctx_and_team(replies=["FETCH_FAILED: 404"])
+        popular = [{
+            "url": "https://example.com/stale", "title": "Stale",
+            "description": "", "posted_by": "user1",
+        }]
+        patches = self._stub_sources(popular=popular)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertEqual(result.data["posted"], 0)
+        self.assertEqual(result.data["fail"], 1)
+        team.channel.send.assert_not_awaited()
+        # Not in pinboard_popular_seen — URL can come back next scan.
+        with db.connect() as conn:
+            row = conn.execute(
+                "SELECT 1 FROM pinboard_popular_seen WHERE url = ?",
+                ("https://example.com/stale",),
+            ).fetchone()
+        self.assertIsNone(row)
+
+    def test_toread_first_then_popular_ordering(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        # Replies fire in toread → popular order; reply ids will confirm order.
+        ctx, team = self._ctx_and_team(replies=[
+            "**[T](https://t/1)** · [pin](https://pinboard.in/b/t)\n\nT.\n\nT.\n\n📖 short · `toread`",
+            "**[P](https://p/1)**\n\nP.\n\nP.\n\n📖 short · `popular`",
+        ])
+        toread = [{"url": "https://t/1", "title": "T", "description": "",
+                   "pinboard_url": "https://pinboard.in/b/t"}]
+        popular = [{"url": "https://p/1", "title": "P", "description": "", "posted_by": "u"}]
+        patches = self._stub_sources(popular=popular, toread=toread)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertEqual(result.data["posted"], 2)
+        # The first recorded message id was the toread one.
+        row_t = db.lookup_research_message("1001")
+        row_p = db.lookup_research_message("1002")
+        self.assertEqual(row_t["source"], "toread")
+        self.assertEqual(row_p["source"], "popular")
 
     def test_skips_when_no_team(self):
-        self._window()
-
-        class _FakeDT(datetime):
-            @classmethod
-            def now(cls, tz=None):
-                return cls(2026, 5, 12, 9, 0, 0)  # in window
-
-        with patch.object(pinboard_scan, "datetime", _FakeDT):
-            result = asyncio.run(pinboard_scan.run(_base.JobContext()))
+        result = asyncio.run(pinboard_scan.run(_base.JobContext()))
         self.assertTrue(result.ok)
-        self.assertFalse(result.data["posted"])
+        self.assertEqual(result.data["posted"], 0)
 
-    def test_runs_linky_and_posts_when_active(self):
-        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
-        try:
-            self._window()
-            team = _FakeLinkyTeam()
-            ctx = _base.JobContext(deps=_deps_with_linky_team(team))
-
-            class _FakeDT(datetime):
-                @classmethod
-                def now(cls, tz=None):
-                    return cls(2026, 5, 12, 9, 0, 0)  # Tuesday, in window
-
-            # build_linky_context calls pinboard posts_all; stub it.
-            from apps.workshop_bot.systems.pinboard import client as pbc
-            with patch.object(pinboard_scan, "datetime", _FakeDT), \
-                 patch.object(pbc, "posts_all", lambda **kw: []):
-                result = asyncio.run(pinboard_scan.run(ctx))
-            self.assertTrue(result.ok, result.message)
-            self.assertTrue(result.data["posted"])
-            team.linky.core.assert_awaited()
-            team.channel.send.assert_awaited()
-            sent_user_msg = team.linky.core.call_args.kwargs["latest"]
-            self.assertIn("## Today", sent_user_msg)
-        finally:
-            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
-
-    def test_linky_pass_not_posted(self):
-        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
-        try:
-            self._window()
-            team = _FakeLinkyTeam(reply="PASS")
-            ctx = _base.JobContext(deps=_deps_with_linky_team(team))
-
-            class _FakeDT(datetime):
-                @classmethod
-                def now(cls, tz=None):
-                    return cls(2026, 5, 12, 9, 0, 0)
-
-            from apps.workshop_bot.systems.pinboard import client as pbc
-            with patch.object(pinboard_scan, "datetime", _FakeDT), \
-                 patch.object(pbc, "posts_all", lambda **kw: []):
-                result = asyncio.run(pinboard_scan.run(ctx))
-            self.assertTrue(result.ok)
-            self.assertFalse(result.data["posted"])
-            team.channel.send.assert_not_awaited()
-        finally:
-            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+    def test_toread_public_unresearched_filters_three_ways(self):
+        """The new ``toread_public_unresearched`` helper trims by toread-on,
+        shared=yes, and the ``pinboard_research_done`` table. Lives in the
+        DB-aware test class because the third filter is a DB read."""
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        feed = [
+            {"href": "https://ok/1", "description": "Public + new",
+             "extended": "", "tags": "ai", "time": "2026-05-12T12:00:00Z",
+             "toread": "yes", "shared": "yes"},
+            {"href": "https://private/1", "description": "Private",
+             "extended": "", "tags": "ai", "time": "2026-05-12T13:00:00Z",
+             "toread": "yes", "shared": "no"},
+            {"href": "https://ok/2", "description": "Already researched",
+             "extended": "", "tags": "ai", "time": "2026-05-12T14:00:00Z",
+             "toread": "yes", "shared": "yes"},
+        ]
+        db.mark_url_researched(url="https://ok/2", title="t", summary="s")
+        with patch.object(pbc, "all_unread", lambda **kw: feed):
+            out = pbc.toread_public_unresearched(limit=10)
+        urls = [r["url"] for r in out]
+        self.assertIn("https://ok/1", urls)
+        self.assertNotIn("https://private/1", urls)
+        self.assertNotIn("https://ok/2", urls)
 
 
 class PinboardClientNewVerbsTests(unittest.TestCase):
@@ -952,6 +1062,60 @@ class PinboardClientNewVerbsTests(unittest.TestCase):
         with patch.object(pbc, "posts_get", lambda url: {"posts": []}):
             out = pbc.capture_blurb("https://example.com/missing", "blurb")
         self.assertIn("error", out)
+
+    def test_set_description_replaces_in_place(self):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        captured = {}
+
+        def fake_get(url):
+            return {"posts": [{
+                "href": url, "description": "Existing Title",
+                "extended": "old commentary",
+                "tags": "ai web", "shared": "yes", "toread": "yes",
+            }]}
+
+        def fake_add(*, url, title, description, tags, toread, shared, replace):
+            captured.update(dict(url=url, title=title, description=description,
+                                 tags=tags, toread=toread, shared=shared, replace=replace))
+            return {"result_code": "done", "pinboard_url": f"https://pinboard.in/b/{url}"}
+
+        with patch.object(pbc, "posts_get", fake_get), patch.object(pbc, "posts_add", fake_add):
+            out = pbc.set_description("https://example.com/x", "Jamie's new commentary")
+        self.assertEqual(out["result_code"], "done")
+        self.assertFalse(out["created"])
+        self.assertTrue(out["replaced"])
+        # Description replaced; everything else preserved.
+        self.assertEqual(captured["description"], "Jamie's new commentary")
+        self.assertEqual(captured["title"], "Existing Title")
+        self.assertEqual(set(captured["tags"].split()), {"ai", "web"})  # no _brief added
+        self.assertTrue(captured["toread"])  # toread preserved
+        self.assertTrue(captured["shared"])
+        self.assertTrue(captured["replace"])
+
+    def test_set_description_creates_when_not_bookmarked(self):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        captured = {}
+
+        def fake_add(*, url, title, description, tags, toread, shared, replace):
+            captured.update(dict(url=url, title=title, description=description,
+                                 tags=tags, toread=toread, shared=shared, replace=replace))
+            return {"result_code": "done", "pinboard_url": f"https://pinboard.in/b/{url}"}
+
+        with patch.object(pbc, "posts_get", lambda u: {"posts": []}), \
+             patch.object(pbc, "posts_add", fake_add):
+            out = pbc.set_description(
+                "https://example.com/new", "first take",
+                fallback_title="Some Popular Title",
+            )
+        self.assertTrue(out["created"])
+        self.assertFalse(out["replaced"])
+        # New bookmark gets toread=yes shared=yes, no replace, fallback title used.
+        self.assertEqual(captured["title"], "Some Popular Title")
+        self.assertEqual(captured["description"], "first take")
+        self.assertTrue(captured["toread"])
+        self.assertTrue(captured["shared"])
+        self.assertFalse(captured["replace"])
+
 
     def test_archive_search_substring_match(self):
         from apps.workshop_bot.systems.pinboard import client as pbc
