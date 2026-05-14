@@ -61,6 +61,17 @@ def _install_discord() -> None:
     class _HTTPException(_DiscordException):
         pass
 
+    class _MessageReference:
+        """Minimal stand-in for ``discord.MessageReference``. The real
+        class takes ``message_id`` / ``channel_id`` / ``fail_if_not_
+        exists`` kwargs; the stub stores them so tests can assert on
+        the shape passed to ``channel.send(..., reference=ref)``."""
+
+        def __init__(self, *, message_id, channel_id, fail_if_not_exists=True):
+            self.message_id = message_id
+            self.channel_id = channel_id
+            self.fail_if_not_exists = fail_if_not_exists
+
     discord.Client = _Client  # type: ignore[attr-defined]
     discord.Intents = _Intents  # type: ignore[attr-defined]
     discord.Permissions = _Permissions  # type: ignore[attr-defined]
@@ -68,6 +79,7 @@ def _install_discord() -> None:
     discord.Message = object  # type: ignore[attr-defined]
     discord.Interaction = object  # type: ignore[attr-defined]
     discord.RawReactionActionEvent = object  # type: ignore[attr-defined]
+    discord.MessageReference = _MessageReference  # type: ignore[attr-defined]
     discord.DiscordException = _DiscordException  # type: ignore[attr-defined]
     discord.HTTPException = _HTTPException  # type: ignore[attr-defined]
     discord.NotFound = _HTTPException  # type: ignore[attr-defined]

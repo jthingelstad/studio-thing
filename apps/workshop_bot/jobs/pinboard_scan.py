@@ -660,9 +660,17 @@ async def _process_one(
     # fires. The reply / save / brief reactions all preserve the
     # message id either way; embeds don't affect routing.
     card_text = _suppress_non_article_embeds(payload, url)
+    # Uplift cards reply-thread under the original card so the cross-
+    # source story branches off one root rather than landing as loose
+    # cards spaced days apart. ``first_research_message_for`` returns
+    # ``None`` for fresh cards; ``send_one`` ignores the kwarg in that
+    # case.
+    reply_target: Optional[str] = None
+    if is_uplift:
+        reply_target = db.first_research_message_for(url)
     msg = await ctx.send_one(
         "DISCORD_CHANNEL_RESEARCH", card_text, persona="linky",
-        suppress_embeds=False,
+        suppress_embeds=False, reply_to_message_id=reply_target,
     )
     if msg is None:
         # Channel not resolvable; don't mark anything — try again next scan.

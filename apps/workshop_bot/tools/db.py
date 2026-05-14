@@ -958,6 +958,24 @@ def record_research_message(
         )
 
 
+def first_research_message_for(url: str) -> Optional[str]:
+    """Return the *earliest* ``discord_message_id`` Linky used to card
+    this URL, or ``None`` if no card exists yet. Used by cross-source
+    uplift posts to thread under the original card so the visual story
+    in ``#research`` is "[original] ↩ [uplift] ↩ [uplift] …" branching
+    off one root, rather than three loose cards days apart."""
+    if not url:
+        return None
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT discord_message_id FROM linky_research_messages "
+            "WHERE url = ? ORDER BY posted_at ASC, discord_message_id ASC "
+            "LIMIT 1",
+            (str(url),),
+        ).fetchone()
+    return row["discord_message_id"] if row else None
+
+
 def lookup_research_message(discord_message_id: str) -> Optional[dict[str, Any]]:
     """Return the row for ``discord_message_id`` (the message Jamie's reply
     references), or ``None`` if it isn't one of Linky's cards."""

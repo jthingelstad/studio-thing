@@ -133,12 +133,20 @@ class JobContext:
         *,
         persona: Optional[str] = None,
         suppress_embeds: bool = True,
+        reply_to_message_id: Optional[str] = None,
     ):
         """Post ``text`` as a single Discord message (no chunk-splitting)
         and return the resulting :class:`discord.Message`, or ``None`` if
         the channel couldn't be resolved or the text was empty. Callers
         that need the message id (e.g. to record a reply target) use this
-        instead of :meth:`post`."""
+        instead of :meth:`post`.
+
+        ``reply_to_message_id`` (optional): post as a reply to that
+        message in the same channel. Discord renders the new message
+        with an "↩ replying to" reference inlined. If the referenced
+        message was deleted, Discord shows "Original message was
+        deleted" on the reply rather than erroring — ``fail_if_not_
+        exists=False`` is set so a stale id never blocks the post."""
         if not text or not text.strip():
             return None
         ch = channel_or_env
@@ -150,6 +158,25 @@ class JobContext:
         # silently fragment, since recording the wrong message id would
         # break the reply lookup.
         body = text if len(text) <= 1990 else text[:1990].rstrip() + "…"
+        reference = None
+        if reply_to_message_id:
+            try:
+                # Imported lazily to keep this module light for tests
+                # that stub the Discord layer with ``_stubs``.
+                import discord  # type: ignore
+                reference = discord.MessageReference(
+                    message_id=int(reply_to_message_id),
+                    channel_id=getattr(ch, "id", 0) or 0,
+                    fail_if_not_exists=False,
+                )
+            except Exception:  # noqa: BLE001
+                # If the reference can't be built (bad id, stub
+                # environment), fall through to a plain send rather
+                # than dropping the message.
+                reference = None
+        if reference is not None:
+            return await ch.send(body, suppress_embeds=suppress_embeds,
+                                  reference=reference)
         return await ch.send(body, suppress_embeds=suppress_embeds)
 
 

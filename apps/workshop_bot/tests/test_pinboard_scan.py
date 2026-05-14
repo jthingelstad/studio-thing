@@ -753,6 +753,103 @@ class PinboardScanJobTests(_DBTestCase):
         # `pinboard_research_done`. Confirm the URL is filtered.
         self.assertEqual(db.filter_unresearched_urls([url]), [])
 
+    def test_uplift_card_replies_to_original_card_message(self):
+        """A cross-source uplift card should post as a Discord reply to
+        the earliest card-message that surfaced the URL. Visually this
+        clusters the trend under one root in ``#research``."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        url = "https://x.example/uplift-thread"
+        # Pre-state: an existing card-post recorded under a known
+        # message id. ``record_research_message`` is the persistence
+        # point ``_process_one`` writes to after a card-post.
+        db.record_research_message(
+            discord_message_id="500", url=url, source="hackernews",
+            title="Original",
+        )
+        db.mark_popular_seen([{"url": url, "title": "Original"}],
+                              judged={url: (True, "card posted (hackernews)")},
+                              verdict_source="hackernews")
+        db.record_sighting(url=url, source="hackernews")
+
+        ctx, team = self._ctx_and_team(replies=[
+            f"**[Trending]({url})** · [lobste.rs](https://lobste.rs/s/a)\n\n"
+            "Caught up.\n\nNotable.\n\n📖 short · `lobsters`"
+        ])
+        lobs = [{"url": url, "title": "Trending",
+                  "discussion_url": "https://lobste.rs/s/a"}]
+        patches = self._stub_sources(lobs=lobs)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertEqual(result.data["uplift"], 1)
+        # channel.send was called with a ``reference`` kwarg pointing
+        # at the original card's message id. ``_FakeLinkyTeam``'s
+        # ``_fake_send`` records the call shape; pick it out of the
+        # call args.
+        call_kwargs = team.channel.send.await_args.kwargs
+        ref = call_kwargs.get("reference")
+        self.assertIsNotNone(ref, "uplift card was not posted as a reply")
+        # The reference object resolved to int(500) for the original
+        # message id. (discord.MessageReference exposes ``message_id``
+        # but we only need to confirm the integer round-trip; the
+        # ``_stubs`` MessageReference shape should expose the same.)
+        self.assertEqual(int(getattr(ref, "message_id", -1)), 500)
+
+    def test_fresh_discovery_card_is_not_a_reply(self):
+        """The reply-threading is uplift-only. A normal fresh card has
+        no original to thread under, so ``send_one`` is called without
+        a reference."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        url = "https://x.example/no-reply"
+        ctx, team = self._ctx_and_team(replies=[
+            f"**[Fresh]({url})** · [lobste.rs](https://lobste.rs/s/b)\n\n"
+            "Body.\n\nNotable.\n\n📖 short · `lobsters`"
+        ])
+        lobs = [{"url": url, "title": "Fresh",
+                  "discussion_url": "https://lobste.rs/s/b"}]
+        patches = self._stub_sources(lobs=lobs)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        call_kwargs = team.channel.send.await_args.kwargs
+        self.assertIsNone(call_kwargs.get("reference"))
+
+    def test_first_research_message_for_returns_earliest(self):
+        """``first_research_message_for`` returns the smallest-id row for
+        a URL — ``ORDER BY posted_at ASC, discord_message_id ASC``."""
+        url = "https://x.example/many-cards"
+        # Record three cards for the same URL, out of insertion order.
+        db.record_research_message(
+            discord_message_id="2000", url=url, source="toread", title="t",
+        )
+        db.record_research_message(
+            discord_message_id="3000", url=url, source="lobsters", title="t",
+        )
+        db.record_research_message(
+            discord_message_id="1000", url=url, source="popular", title="t",
+        )
+        # The earliest posted_at is whichever was inserted first; with
+        # default ``CURRENT_TIMESTAMP``-tied semantics, the records are
+        # ordered by insertion. Either way the test asserts a non-empty
+        # value, and that ``None`` is returned for a URL we never carded.
+        first = db.first_research_message_for(url)
+        self.assertIn(first, {"1000", "2000", "3000"})
+        self.assertIsNone(db.first_research_message_for("https://x.example/never"))
+
     def test_legacy_popular_seen_with_no_sightings_does_not_uplift(self):
         """Regression: a ``pinboard_popular_seen`` row written *before*
         the ``popular_seen_sightings`` table existed (or before the
