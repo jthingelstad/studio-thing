@@ -184,7 +184,7 @@ async def _process_one(
         return
     try:
         db.record_research_message(
-            discord_message_id=str(msg.id), url=url, source=source,
+            discord_message_id=str(msg.id), url=url, source=source, title=title,
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("pinboard-scan: record_research_message failed for %s: %s", url, exc)

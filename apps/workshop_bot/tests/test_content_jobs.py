@@ -1922,5 +1922,123 @@ class DraftReviewTests(_DBTestCase):
         self.assertIn("## Hygiene", out)
 
 
+class LinkyReplyHandlerTests(_DBTestCase):
+    """LinkyBot's research-reply listener: Jamie's reply to a per-link
+    research card writes his text as the Pinboard bookmark's description.
+    """
+
+    def setUp(self):
+        super().setUp()
+        import types
+        from apps.workshop_bot.personas.linky import LinkyBot
+        self.bot = LinkyBot.__new__(LinkyBot)
+        self.bot.user = MagicMock()
+        self.bot.user.id = 1000
+        self.bot.deps = types.SimpleNamespace(team=None, corpus=None)
+        os.environ["DISCORD_OWNER_USER_ID"] = "777"
+
+    def tearDown(self):
+        os.environ.pop("DISCORD_OWNER_USER_ID", None)
+        super().tearDown()
+
+    def _msg(self, *, author_id, content, reference_id=None):
+        m = MagicMock()
+        m.guild = object()
+        m.author = MagicMock()
+        m.author.id = author_id
+        m.author.bot = False
+        m.author.__eq__ = lambda s, other: False  # not Linky
+        m.content = content
+        if reference_id is not None:
+            m.reference = MagicMock()
+            m.reference.message_id = reference_id
+        else:
+            m.reference = None
+        m.add_reaction = AsyncMock()
+        m.reply = AsyncMock()
+        return m
+
+    def _patch_set(self, *, side_effect=None, return_value=None):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        return patch.object(pbc, "set_description",
+                            side_effect=side_effect, return_value=return_value)
+
+    def test_non_reply_passes_through(self):
+        m = self._msg(author_id=777, content="hi")
+        out = asyncio.run(self.bot._maybe_handle_research_reply(m))
+        self.assertFalse(out)
+
+    def test_reply_to_unknown_message_passes_through(self):
+        m = self._msg(author_id=777, content="hi", reference_id=99999)
+        out = asyncio.run(self.bot._maybe_handle_research_reply(m))
+        self.assertFalse(out)
+
+    def test_reply_from_non_owner_passes_through(self):
+        db.record_research_message(
+            discord_message_id="1001", url="http://x", source="toread",
+        )
+        m = self._msg(author_id=888, content="hi", reference_id=1001)
+        out = asyncio.run(self.bot._maybe_handle_research_reply(m))
+        self.assertFalse(out)
+
+    def test_jamie_reply_to_toread_card_writes_description(self):
+        db.record_research_message(
+            discord_message_id="1001", url="http://x", source="toread",
+            title="Some Title",
+        )
+        m = self._msg(
+            author_id=777, content="Loved this take.", reference_id=1001,
+        )
+        with self._patch_set(return_value={
+            "result_code": "done", "created": False, "replaced": True,
+        }) as p:
+            out = asyncio.run(self.bot._maybe_handle_research_reply(m))
+        self.assertTrue(out)
+        # set_description was called with the URL + Jamie's reply verbatim.
+        args, kwargs = p.call_args
+        self.assertEqual(args[0], "http://x")
+        self.assertEqual(args[1], "Loved this take.")
+        self.assertEqual(kwargs["fallback_title"], "Some Title")
+        m.add_reaction.assert_awaited_with("✅")
+
+    def test_jamie_reply_to_popular_card_creates_bookmark_with_pin_emoji(self):
+        db.record_research_message(
+            discord_message_id="1002", url="http://y", source="popular",
+            title="Popular Title",
+        )
+        m = self._msg(author_id=777, content="Bookmark with this take.", reference_id=1002)
+        with self._patch_set(return_value={
+            "result_code": "done", "created": True, "replaced": False,
+        }):
+            out = asyncio.run(self.bot._maybe_handle_research_reply(m))
+        self.assertTrue(out)
+        # 📌 distinguishes "new bookmark created" from "existing one updated".
+        m.add_reaction.assert_awaited_with("📌")
+
+    def test_empty_reply_consumed_with_question_mark(self):
+        db.record_research_message(
+            discord_message_id="1003", url="http://x", source="toread",
+        )
+        m = self._msg(author_id=777, content="", reference_id=1003)
+        with self._patch_set(return_value={"result_code": "done"}) as p:
+            out = asyncio.run(self.bot._maybe_handle_research_reply(m))
+        # Consumed (so the LLM doesn't ALSO reply), reacted ❓, but
+        # set_description was NOT called.
+        self.assertTrue(out)
+        p.assert_not_called()
+        m.add_reaction.assert_awaited_with("❓")
+
+    def test_set_description_failure_reacts_with_x(self):
+        db.record_research_message(
+            discord_message_id="1004", url="http://x", source="toread",
+        )
+        m = self._msg(author_id=777, content="text", reference_id=1004)
+        with self._patch_set(side_effect=RuntimeError("boom")):
+            out = asyncio.run(self.bot._maybe_handle_research_reply(m))
+        self.assertTrue(out)
+        m.add_reaction.assert_awaited_with("❌")
+        m.reply.assert_awaited()
+
+
 if __name__ == "__main__":
     unittest.main()
