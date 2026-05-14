@@ -1226,3 +1226,80 @@ class PinboardServerNewToolsTests(unittest.TestCase):
             self.assertEqual(web.read_length("http://x")["bucket"], "unknown")
 
 
+class EmbedSuppressionTests(unittest.TestCase):
+    """The Discord card carries multiple URLs (article + 1+ discussion-
+    thread links). We want only the *article* embed to render; every
+    other URL gets wrapped in ``<…>`` so Discord skips its preview."""
+
+    def test_discussion_link_gets_wrapped_article_stays_bare(self):
+        card = (
+            "**[Three things about RSS](https://example.com/rss)** · "
+            "[lobste.rs](https://lobste.rs/s/abc)\n\n"
+            "Concrete take on RSS readers."
+        )
+        out = pinboard_scan._suppress_non_article_embeds(card, "https://example.com/rss")
+        # Article URL is unchanged (bare → embed fires).
+        self.assertIn("[Three things about RSS](https://example.com/rss)", out)
+        # Discussion link is wrapped.
+        self.assertIn("[lobste.rs](<https://lobste.rs/s/abc>)", out)
+        # No raw `[lobste.rs](https://...)` form remains.
+        self.assertNotIn("[lobste.rs](https://lobste.rs", out)
+
+    def test_multiple_discussion_links_all_wrapped(self):
+        card = (
+            "**[The Piece](https://example.com/x)** · "
+            "[HN](https://news.ycombinator.com/item?id=1) · "
+            "[tildes](https://tildes.net/~tech/abc)\n\n"
+            "Cross-source signal."
+        )
+        out = pinboard_scan._suppress_non_article_embeds(card, "https://example.com/x")
+        self.assertIn("[HN](<https://news.ycombinator.com/item?id=1>)", out)
+        self.assertIn("[tildes](<https://tildes.net/~tech/abc>)", out)
+        # Article stays bare.
+        self.assertIn("[The Piece](https://example.com/x)", out)
+
+    def test_bare_url_in_prose_gets_wrapped(self):
+        card = (
+            "**[Title](https://example.com/x)**\n\n"
+            "Reminds me of https://other.example/y and the earlier piece."
+        )
+        out = pinboard_scan._suppress_non_article_embeds(card, "https://example.com/x")
+        self.assertIn("<https://other.example/y>", out)
+        # Article URL preserved.
+        self.assertIn("[Title](https://example.com/x)", out)
+
+    def test_already_wrapped_url_left_alone(self):
+        card = (
+            "**[Title](https://example.com/x)** · "
+            "[lobste.rs](<https://lobste.rs/s/abc>)"
+        )
+        out = pinboard_scan._suppress_non_article_embeds(card, "https://example.com/x")
+        # Already wrapped — no double-wrap.
+        self.assertIn("[lobste.rs](<https://lobste.rs/s/abc>)", out)
+        self.assertNotIn("<<https", out)
+        self.assertNotIn(">>)", out)
+
+    def test_article_url_bare_in_prose_stays_bare(self):
+        # Edge case: model puts the article URL bare in prose. It should
+        # stay bare so its embed fires (matches the markdown link's URL).
+        card = (
+            "**[Title](https://example.com/x)**\n\n"
+            "See also https://example.com/x for the talk version."
+        )
+        out = pinboard_scan._suppress_non_article_embeds(card, "https://example.com/x")
+        # The prose URL is left bare (matches article).
+        self.assertIn("See also https://example.com/x ", out)
+        self.assertNotIn("<https://example.com/x>", out)
+
+    def test_no_article_url_returns_payload_unchanged(self):
+        card = "**[Title](https://example.com/x)** · [pin](https://lobste.rs/s/abc)"
+        self.assertEqual(
+            pinboard_scan._suppress_non_article_embeds(card, ""),
+            card,
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+

@@ -528,6 +528,56 @@ def _safe_mark_url_researched(
         )
 
 
+# Pattern: `[label](url)`. The URL group stops at the first `)`. We
+# don't try to be clever about nested parens — markdown links don't
+# allow them, and Linky's cards never produce them.
+_MD_LINK_RE = re.compile(r"\[([^\]]+)\]\(<?([^()<>\s]+)>?\)")
+
+# Bare URL in prose — not preceded by `(` (markdown link target) or `<`
+# (already-suppressed wrapper). The trailing class deliberately allows
+# common URL chars; a stray punctuation char at the end is the same
+# best-effort behavior Discord's own parser has.
+_BARE_URL_RE = re.compile(r"(?<![(<])(https?://[^\s<>)]+)")
+
+
+def _suppress_non_article_embeds(payload: str, article_url: str) -> str:
+    """Wrap every URL in ``payload`` other than ``article_url`` in
+    Discord's embed-suppression brackets.
+
+    Discord generates a link preview for every URL it finds in a
+    message unless the URL is wrapped in ``<…>``. Linky's cards
+    deliberately surface multiple URLs (article + 1–3 discussion-
+    thread links from Lobste.rs / HN / Tildes / etc.); we want only
+    the *article* preview to render. This rewrites the LLM's output:
+
+      ``[Title](https://article)``         ← kept bare (embed fires)
+      ``[pin](https://lobste.rs/s/x)``     → ``[pin](<https://lobste.rs/s/x>)``
+      bare ``https://other.com`` in prose  → ``<https://other.com>``
+
+    The clickable link still works in all three cases; only the
+    inline preview is suppressed.
+    """
+    if not article_url:
+        return payload
+    article = article_url.strip()
+
+    def _wrap_md(m: "re.Match[str]") -> str:
+        label, url = m.group(1), m.group(2).strip()
+        if url == article:
+            return f"[{label}]({url})"
+        return f"[{label}](<{url}>)"
+
+    payload = _MD_LINK_RE.sub(_wrap_md, payload)
+
+    def _wrap_bare(m: "re.Match[str]") -> str:
+        url = m.group(1)
+        if url == article:
+            return url
+        return f"<{url}>"
+
+    return _BARE_URL_RE.sub(_wrap_bare, payload)
+
+
 async def _process_one(
     *, ctx: "_base.JobContext", linky, prompt: str, linky_ctx_block: str,
     source: str, item: dict[str, Any], counters: dict[str, int],
@@ -581,12 +631,16 @@ async def _process_one(
                     source, url, "(uplift) " if is_uplift else "", payload[:100])
         return
     # kind == "card"
-    # Allow Discord to auto-render link previews on the card so the
-    # article preview shows under each #research post. The reply /
-    # save / brief reactions all preserve the message id either way;
-    # embeds don't affect routing.
+    # Allow Discord to auto-render the *article* preview, but suppress
+    # the embeds Discord would otherwise generate for the discussion-
+    # thread links (Lobste.rs / HN / Tildes / etc.) and any other
+    # URL in the card. The article URL is left bare; everything else
+    # is wrapped in <…> so the link stays clickable but no preview
+    # fires. The reply / save / brief reactions all preserve the
+    # message id either way; embeds don't affect routing.
+    card_text = _suppress_non_article_embeds(payload, url)
     msg = await ctx.send_one(
-        "DISCORD_CHANNEL_RESEARCH", payload, persona="linky",
+        "DISCORD_CHANNEL_RESEARCH", card_text, persona="linky",
         suppress_embeds=False,
     )
     if msg is None:
