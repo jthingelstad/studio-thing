@@ -609,6 +609,150 @@ class PinboardScanJobTests(_DBTestCase):
         # The new Lobsters sighting was recorded.
         self.assertTrue(db.feed_has_seen(url=url, source="lobsters"))
 
+    def test_toread_card_writes_cross_lane_seen_tables(self):
+        """Toread card-post should write both lanes' dedup tables. The
+        URL ends up in ``pinboard_popular_seen`` with ``verdict_source=
+        'toread'`` and in ``popular_seen_sightings`` as ``('url',
+        'toread')`` — so a later discovery-feed surfacing of the same
+        URL classifies as cross-source uplift, not as fresh."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        url = "https://example.com/jamies-pick"
+        ctx, team = self._ctx_and_team(replies=[
+            f"**[Pick]({url})** · [pin](https://pinboard.in/b/xx)\n\n"
+            "A solid argument.\n\nLikely Notable.\n\n📖 medium · `toread`"
+        ])
+        toread = [{
+            "url": url, "title": "Pick", "description": "",
+            "pinboard_url": "https://pinboard.in/b/xx",
+        }]
+        patches = self._stub_sources(toread=toread)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        # All three dedup writes happen:
+        # 1. pinboard_research_done (toread lane's original write)
+        self.assertEqual(db.filter_unresearched_urls([url]), [])
+        # 2. pinboard_popular_seen (the cross-lane addition)
+        verdict = db.popular_verdict(url)
+        self.assertIsNotNone(verdict, "popular_seen row missing for toread card")
+        self.assertEqual(verdict["judged_interesting"], 1)
+        self.assertEqual(verdict["verdict_source"], "toread")
+        # 3. popular_seen_sightings (the cross-lane sighting)
+        self.assertTrue(db.feed_has_seen(url=url, source="toread"))
+
+    def test_discovery_card_writes_pinboard_research_done(self):
+        """Discovery card-post should also write ``pinboard_research_done``
+        so a later toread-lane fetch silent-drops the URL — closing the
+        cross-lane gap where a Lobsters-cardified URL Jamie later adds
+        to his toread queue would otherwise be re-researched."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        url = "https://x.example/discovery-rd"
+        ctx, team = self._ctx_and_team(replies=[
+            f"**[Lobsters Pick]({url})** · [lobste.rs](https://lobste.rs/s/zz)\n\n"
+            "A piece.\n\nNotable.\n\n📖 short · `lobsters`"
+        ])
+        lobs = [{"url": url, "title": "Lobsters Pick",
+                  "discussion_url": "https://lobste.rs/s/zz"}]
+        patches = self._stub_sources(lobs=lobs)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertEqual(db.filter_unresearched_urls([url]), [])
+
+    def test_toread_then_discovery_surfaces_as_uplift(self):
+        """End-to-end: Jamie's toread pick gets cardified Monday; the
+        same URL trends on Lobsters Wednesday. The Wednesday scan should
+        classify as cross-source uplift (with ``verdict_source='toread'``
+        in the uplift block), not as a fresh second card."""
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        url = "https://x.example/early-pick"
+
+        # Day 1: toread card posted.
+        ctx1, team1 = self._ctx_and_team(replies=[
+            f"**[Early]({url})** · [pin](https://pinboard.in/b/yy)\n\n"
+            "Body.\n\nNotable.\n\n📖 medium · `toread`"
+        ])
+        toread = [{"url": url, "title": "Early", "description": "",
+                    "pinboard_url": "https://pinboard.in/b/yy"}]
+        patches = self._stub_sources(toread=toread)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                asyncio.run(pinboard_scan.run(ctx1))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            pass
+
+        # Day 2 scan: same URL on Lobsters (and no longer in Jamie's
+        # toread — researched). Expect uplift.
+        ctx2, team2 = self._ctx_and_team(replies=[
+            f"**[Caught up]({url})** · [lobste.rs](https://lobste.rs/s/y)\n\n"
+            "Community catching up.\n\nFresh angle.\n\n📖 short · `lobsters`"
+        ])
+        lobs = [{"url": url, "title": "Caught up",
+                  "discussion_url": "https://lobste.rs/s/y"}]
+        patches2 = self._stub_sources(lobs=lobs)
+        try:
+            for p in patches2:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx2))
+            finally:
+                for p in patches2:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        self.assertEqual(result.data["uplift"], 1)
+        self.assertEqual(result.data["posted"], 1)
+        # The uplift block in the Day 2 user message names "toread" as
+        # the prior verdict source — which the prompt special-cases as
+        # Jamie's own pick.
+        sent = team2.linky.core.call_args.kwargs["latest"]
+        self.assertIn("## Cross-source uplift", sent)
+        # The previous verdict block labels toread as the verdict source.
+        # (The prompt's label resolution for toread is whatever the
+        # render code produces — assert on the substring, not the exact
+        # display text, to keep the test resilient to label tweaks.)
+        self.assertIn("toread", sent.lower())
+
+    def test_discovery_then_toread_silently_drops(self):
+        """Mirror of the uplift case: a URL Linky cardified from a
+        discovery feed Monday, then Jamie added to his toread queue
+        Tuesday. The Tuesday toread fetch should silent-drop it —
+        ``pinboard_research_done`` was written by the discovery card-
+        post, so ``toread_public_unresearched`` filters it out."""
+        url = "https://x.example/already-cardified"
+
+        # Pre-state: discovery card already posted (researched in both
+        # tables thanks to the cross-lane write).
+        db.mark_popular_seen([{"url": url, "title": "Already"}],
+                              judged={url: (True, "card posted (lobsters)")},
+                              verdict_source="lobsters")
+        db.record_sighting(url=url, source="lobsters")
+        db.mark_url_researched(url=url, title="Already", summary="…",
+                                confidence="✦", fit_note="card posted (lobsters)")
+
+        # `toread_public_unresearched` filters against
+        # `pinboard_research_done`. Confirm the URL is filtered.
+        self.assertEqual(db.filter_unresearched_urls([url]), [])
+
     def test_legacy_popular_seen_with_no_sightings_does_not_uplift(self):
         """Regression: a ``pinboard_popular_seen`` row written *before*
         the ``popular_seen_sightings`` table existed (or before the

@@ -675,17 +675,24 @@ async def _process_one(
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("pinboard-scan: record_research_message failed for %s: %s", url, exc)
-    if source == "toread":
-        _safe_mark_url_researched(
-            url=url, title=title, summary=payload[:500],
-            confidence="✦", fit_note="card posted",
+    # Cross-lane dedup: every successful card-post writes BOTH tables,
+    # regardless of which lane originated it. The seen tables answer
+    # "has Linky considered this URL?" — the research_done table answers
+    # "did Linky post a card for it?" — and both need to be lane-blind
+    # so a popular URL Jamie later toreads, or a toread URL that later
+    # trends on lobsters, doesn't fire a duplicate card. Uplift items
+    # leave the original popular_seen verdict alone (insert-or-ignore
+    # would do this anyway, but skipping the call is clearer).
+    _safe_mark_url_researched(
+        url=url, title=title, summary=payload[:500],
+        confidence="✦", fit_note=f"card posted ({source})",
+    )
+    _record_sightings_for_item(item, source)
+    if not is_uplift:
+        _safe_mark_popular_seen(
+            url, title, interesting=True,
+            note=f"card posted ({source})", source=source,
         )
-    else:
-        _record_sightings_for_item(item, source)
-        if not is_uplift:
-            _safe_mark_popular_seen(
-                url, title, interesting=True, note="card posted", source=source,
-            )
     counters["posted"] += 1
     if is_uplift:
         counters["uplift"] = counters.get("uplift", 0) + 1
