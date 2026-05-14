@@ -55,6 +55,13 @@ ISSUE_BODY_CAP = 20_000
 # headroom.
 CREATE_FINAL_BODY_CAP = ISSUE_BODY_CAP + 6_000
 
+# `promotion-prep` reads ``publish.md`` — the byte-shaped email body, which
+# carries the intro + the optional Currently block + the cover block + every
+# non-empty section + the membership-CTA Liquid scaffold + the haiku close
+# + the email-only tracking pixel. It's the bulkiest of the three artifacts;
+# give Marky the whole thing when she's drafting syndication framings.
+PROMOTION_BODY_CAP = ISSUE_BODY_CAP + 8_000
+
 
 def final_or_draft(issue_number: int) -> str:
     """``final.md`` if it exists, else ``draft.md`` (so the compose jobs

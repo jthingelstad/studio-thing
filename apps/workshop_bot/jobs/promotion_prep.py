@@ -54,9 +54,11 @@ async def run(ctx: "_base.JobContext", *, issue_number: Optional[int] = None) ->
     if bot is None:
         return _base.JobResult(True, f"(promotion-prep skipped — {reason})", data={"posted": False})
 
-    asset = f"{n}/promotion-drafts"  # not a real file — just a lock key so a re-fire bounces
+    # Whole-job lock — promotion-prep doesn't write a workspace file (only
+    # posts to #promotion), so the lock is the job name itself, mirroring
+    # the `thingy-watch` / `follow-up-sweep` pattern.
     try:
-        with _base.job_lock([asset], NAME):
+        with _base.job_lock([f"job:{NAME}"], NAME):
             marky_ctx = await asyncio.to_thread(
                 context.build_marky_context, latest_issue=n, ship_date=ship_date
             )
@@ -68,7 +70,7 @@ async def run(ctx: "_base.JobContext", *, issue_number: Optional[int] = None) ->
             user_msg = (
                 f"{context.render_block(marky_ctx)}\n\n{base_prompt}\n\n"
                 f"---\n\nThe published issue (WT{n}):\n\n"
-                f"```markdown\n{publish_body[: _compose.ISSUE_BODY_CAP + 8000]}\n```"
+                f"```markdown\n{publish_body[: _compose.PROMOTION_BODY_CAP]}\n```"
             )
             with db.AgentRun("marky", trigger="promotion-prep") as agent_run:
                 answer, _meta = await bot.core(latest=user_msg, history=[], model=None)
