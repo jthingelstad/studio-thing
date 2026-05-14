@@ -389,11 +389,11 @@ class WiringTests(unittest.TestCase):
 
     def test_campaign_commands_wired(self):
         from apps.workshop_bot.personas import commands
-        tree = commands.register_workshop_commands(MagicMock())
-        workshop = tree.groups[0]
-        promo = next(c for c in workshop.commands if getattr(c, "name", None) == "promo")
-        self.assertIn("metrics", {getattr(c, "_cmd_name", None) for c in promo.commands})
-        campaign = next(c for c in workshop.commands if getattr(c, "name", None) == "campaign")
+        tree = commands.register_marky_commands(MagicMock())
+        marky = next(g for g in tree.groups if getattr(g, "name", None) == "marky")
+        # /marky metrics is now a top-level verb (no /promo subgroup).
+        self.assertIn("metrics", {getattr(c, "_cmd_name", None) for c in marky.commands})
+        campaign = next(c for c in marky.commands if getattr(c, "name", None) == "campaign")
         self.assertEqual(
             {getattr(c, "_cmd_name", None) for c in campaign.commands},
             {"add", "edit", "report", "copy", "sunset"},

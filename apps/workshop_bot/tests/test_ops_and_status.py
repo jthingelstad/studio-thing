@@ -172,14 +172,20 @@ class PopularUnseenAvoidDomainsTests(_DBCase):
 class WiringTests(unittest.TestCase):
     def test_ops_jobs_and_status_command_wired(self):
         from apps.workshop_bot.personas import commands
-        tree = commands.register_workshop_commands(MagicMock())
-        workshop = tree.groups[0]
-        goal = next(c for c in workshop.commands if getattr(c, "name", None) == "goal")
+        # /patty goal {set,done}
+        patty_tree = commands.register_patty_commands(MagicMock())
+        patty = next(g for g in patty_tree.groups if getattr(g, "name", None) == "patty")
+        goal = next(c for c in patty.commands if getattr(c, "name", None) == "goal")
         self.assertEqual({getattr(c, "_cmd_name", None) for c in goal.commands}, {"set", "done"})
-        campaign = next(c for c in workshop.commands if getattr(c, "name", None) == "campaign")
+        # /marky campaign sunset
+        marky_tree = commands.register_marky_commands(MagicMock())
+        marky = next(g for g in marky_tree.groups if getattr(g, "name", None) == "marky")
+        campaign = next(c for c in marky.commands if getattr(c, "name", None) == "campaign")
         self.assertIn("sunset", {getattr(c, "_cmd_name", None) for c in campaign.commands})
-        # /workshop status is a direct subcommand of the workshop group.
-        top_names = {getattr(c, "_cmd_name", None) for c in workshop.commands}
+        # /eddy status is a top-level subcommand on Eddy's tree.
+        eddy_tree = commands.register_eddy_commands(MagicMock())
+        eddy = next(g for g in eddy_tree.groups if getattr(g, "name", None) == "eddy")
+        top_names = {getattr(c, "_cmd_name", None) for c in eddy.commands}
         self.assertIn("status", top_names)
 
 

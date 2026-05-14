@@ -292,10 +292,21 @@ class WiringTests(unittest.TestCase):
 
     def test_followup_subgroup_wired(self):
         from apps.workshop_bot.personas import commands
-        tree = commands.register_workshop_commands(MagicMock())
-        workshop = tree.groups[0]
-        fu = next(c for c in workshop.commands if getattr(c, "name", None) == "followup")
-        self.assertEqual({getattr(c, "_cmd_name", None) for c in fu.commands}, {"list", "add", "cancel"})
+        # Each persona has its own /…/followup with the same three verbs.
+        for fn, persona in (
+            (commands.register_eddy_commands, "eddy"),
+            (commands.register_linky_commands, "linky"),
+            (commands.register_marky_commands, "marky"),
+            (commands.register_patty_commands, "patty"),
+        ):
+            tree = fn(MagicMock())
+            top = next(g for g in tree.groups if getattr(g, "name", None) == persona)
+            fu = next(c for c in top.commands if getattr(c, "name", None) == "followup")
+            self.assertEqual(
+                {getattr(c, "_cmd_name", None) for c in fu.commands},
+                {"list", "add", "cancel"},
+                msg=f"unexpected followup verbs under /{persona}",
+            )
 
     def test_followup_tools_registered(self):
         for name in ("followup__schedule", "followup__list", "followup__cancel"):

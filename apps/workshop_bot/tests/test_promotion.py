@@ -239,9 +239,10 @@ class SchedulerWiringTests(unittest.TestCase):
 
     def test_promotion_prep_command_wired(self):
         from apps.workshop_bot.personas import commands
-        tree = commands.register_workshop_commands(MagicMock())
-        promo = next(c for c in tree.groups[0].commands if getattr(c, "name", None) == "promo")
-        self.assertIn("prep", {getattr(c, "_cmd_name", None) for c in promo.commands})
+        # /marky prep is a top-level verb on Marky's tree.
+        tree = commands.register_marky_commands(MagicMock())
+        marky = next(g for g in tree.groups if getattr(g, "name", None) == "marky")
+        self.assertIn("prep", {getattr(c, "_cmd_name", None) for c in marky.commands})
 
 
 if __name__ == "__main__":
