@@ -1630,6 +1630,77 @@ class PinboardClientNewVerbsTests(unittest.TestCase):
         self.assertTrue(captured["shared"])
         self.assertFalse(captured["replace"])
 
+    def test_tag_as_brief_merges_brief_into_existing_tags(self):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        captured = {}
+
+        def fake_get(url):
+            return {"posts": [{
+                "href": url, "description": "Existing Title",
+                "extended": "old commentary",
+                "tags": "ai web", "shared": "yes", "toread": "yes",
+            }]}
+
+        def fake_add(*, url, title, description, tags, toread, shared, replace):
+            captured.update(dict(url=url, title=title, description=description,
+                                 tags=tags, toread=toread, shared=shared, replace=replace))
+            return {"result_code": "done", "pinboard_url": f"https://pinboard.in/b/{url}"}
+
+        with patch.object(pbc, "posts_get", fake_get), patch.object(pbc, "posts_add", fake_add):
+            out = pbc.tag_as_brief("https://example.com/x")
+        self.assertEqual(out["result_code"], "done")
+        self.assertFalse(out["created"])
+        # `_brief` appended, existing tags preserved, ordering intact.
+        self.assertEqual(set(captured["tags"].split()), {"ai", "web", "_brief"})
+        # Everything else preserved.
+        self.assertEqual(captured["title"], "Existing Title")
+        self.assertEqual(captured["description"], "old commentary")
+        self.assertTrue(captured["toread"])
+        self.assertTrue(captured["shared"])
+        self.assertTrue(captured["replace"])
+
+    def test_tag_as_brief_idempotent_when_brief_already_present(self):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        captured = {}
+
+        def fake_get(url):
+            return {"posts": [{
+                "href": url, "description": "X", "extended": "y",
+                "tags": "ai _brief web", "shared": "yes", "toread": "no",
+            }]}
+
+        def fake_add(*, url, title, description, tags, toread, shared, replace):
+            captured.update(tags=tags)
+            return {"result_code": "done", "pinboard_url": ""}
+
+        with patch.object(pbc, "posts_get", fake_get), patch.object(pbc, "posts_add", fake_add):
+            pbc.tag_as_brief("https://example.com/x")
+        # `_brief` already in tags — it's not duplicated.
+        tags = captured["tags"].split()
+        self.assertEqual(tags.count("_brief"), 1)
+
+    def test_tag_as_brief_creates_when_not_bookmarked(self):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        captured = {}
+
+        def fake_add(*, url, title, description, tags, toread, shared, replace):
+            captured.update(dict(url=url, title=title, description=description,
+                                 tags=tags, toread=toread, shared=shared, replace=replace))
+            return {"result_code": "done", "pinboard_url": ""}
+
+        with patch.object(pbc, "posts_get", lambda u: {"posts": []}), \
+             patch.object(pbc, "posts_add", fake_add):
+            out = pbc.tag_as_brief(
+                "https://example.com/new", fallback_title="Article Title",
+            )
+        self.assertTrue(out["created"])
+        # New bookmark gets toread=yes shared=yes, tags=_brief, empty description.
+        self.assertEqual(captured["title"], "Article Title")
+        self.assertEqual(captured["description"], "")
+        self.assertEqual(captured["tags"], "_brief")
+        self.assertTrue(captured["toread"])
+        self.assertTrue(captured["shared"])
+        self.assertFalse(captured["replace"])
 
     def test_archive_search_substring_match(self):
         from apps.workshop_bot.systems.pinboard import client as pbc
@@ -2764,6 +2835,98 @@ class LinkySaveReactionTests(_DBTestCase):
         self.assertTrue(kwargs["toread"])
         self.assertTrue(kwargs["shared"])
         self.assertEqual(self.reactions, ["📌"])
+
+    # ---------- ⭐ Briefly reaction ----------
+
+    def _patch_tag_as_brief(self, *, return_value=None, side_effect=None):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        m = MagicMock(return_value=return_value or {
+            "result_code": "done", "pinboard_url": "", "created": False,
+            "tags": "_brief",
+        })
+        if side_effect is not None:
+            m.side_effect = side_effect
+        return patch.object(pbc, "tag_as_brief", m), m
+
+    def test_brief_reaction_on_discovery_card_calls_tag_as_brief(self):
+        db.record_research_message(
+            discord_message_id="3001", url="https://x.example/d1",
+            source="popular", title="A Discovery Item",
+        )
+        p = self._payload(user_id=777, emoji="⭐", message_id=3001)
+        patch_obj, tag_mock = self._patch_tag_as_brief(return_value={
+            "result_code": "done", "created": True, "tags": "_brief", "pinboard_url": "",
+        })
+        patch_obj.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            patch_obj.stop()
+        tag_mock.assert_called_once()
+        # Positional URL + keyword fallback_title.
+        args, kwargs = tag_mock.call_args
+        self.assertEqual(args[0], "https://x.example/d1")
+        self.assertEqual(kwargs["fallback_title"], "A Discovery Item")
+        # 🔖 ack distinguishes Briefly-save from regular save (📌).
+        self.assertEqual(self.reactions, ["🔖"])
+
+    def test_brief_reaction_on_toread_card_calls_tag_as_brief(self):
+        # Unlike the ✅/👍 save which is discovery-only, ⭐ works on
+        # toread cards too — the helper merges `_brief` into the
+        # existing bookmark's tags.
+        db.record_research_message(
+            discord_message_id="3002", url="https://x.example/t1",
+            source="toread", title="A Toread Item",
+        )
+        p = self._payload(user_id=777, emoji="⭐", message_id=3002)
+        patch_obj, tag_mock = self._patch_tag_as_brief()
+        patch_obj.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            patch_obj.stop()
+        tag_mock.assert_called_once()
+        self.assertEqual(tag_mock.call_args.args[0], "https://x.example/t1")
+        self.assertEqual(self.reactions, ["🔖"])
+
+    def test_brief_reaction_ignored_when_no_card_row(self):
+        p = self._payload(user_id=777, emoji="⭐", message_id=999999)
+        patch_obj, tag_mock = self._patch_tag_as_brief()
+        patch_obj.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            patch_obj.stop()
+        tag_mock.assert_not_called()
+        self.assertEqual(self.reactions, [])
+
+    def test_brief_reaction_ignored_from_non_owner(self):
+        db.record_research_message(
+            discord_message_id="3003", url="https://x.example/d2",
+            source="popular", title="x",
+        )
+        p = self._payload(user_id=888, emoji="⭐", message_id=3003)  # not owner
+        patch_obj, tag_mock = self._patch_tag_as_brief()
+        patch_obj.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            patch_obj.stop()
+        tag_mock.assert_not_called()
+
+    def test_brief_reaction_failure_reacts_with_x(self):
+        db.record_research_message(
+            discord_message_id="3004", url="https://x.example/d3",
+            source="popular", title="x",
+        )
+        p = self._payload(user_id=777, emoji="⭐", message_id=3004)
+        patch_obj, _ = self._patch_tag_as_brief(side_effect=RuntimeError("boom"))
+        patch_obj.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            patch_obj.stop()
+        self.assertEqual(self.reactions, ["❌"])
 
 
 if __name__ == "__main__":

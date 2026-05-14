@@ -253,6 +253,60 @@ def issue_window_candidates(start_date: str, end_date: str) -> dict[str, list[di
     return {"notable": notable, "brief": brief}
 
 
+def tag_as_brief(url: str, *, fallback_title: str | None = None) -> dict[str, Any]:
+    """Atomic 'add the `_brief` tag, keep everything else.' Used by
+    Linky's reaction listener — Jamie reacts ⭐ to one of Linky's
+    `#research` cards and that URL gets flagged as a Briefly candidate
+    on Pinboard. Preserves the existing title, description, ``toread``,
+    and ``shared`` flags; the tag list is split, deduped, ``_brief``
+    appended (if absent), and rejoined.
+
+    If the URL isn't bookmarked yet (a discovery-source reaction), the
+    new bookmark gets created as ``toread=yes shared=yes`` with
+    ``tags="_brief"``, empty description, and ``fallback_title`` (or
+    the URL).
+
+    Returns ``{result_code, pinboard_url, created, tags}`` where ``tags``
+    is the final tag string written to Pinboard.
+    """
+    existing = posts_get(url)
+    posts = existing.get("posts") or []
+    if not posts:
+        title = (fallback_title or url).strip() or url
+        res = posts_add(
+            url=url, title=title, description="", tags=BRIEF_TAG,
+            toread=True, shared=True, replace=False,
+        )
+        logger.info("pinboard: tag_as_brief url=%s created=True", url)
+        return {
+            "result_code": res.get("result_code"),
+            "pinboard_url": res.get("pinboard_url") or bookmark_url(url),
+            "created": True,
+            "tags": BRIEF_TAG,
+        }
+    post = posts[0]
+    title = post.get("description", "") or url  # Pinboard's "description" is the title
+    existing_desc = post.get("extended", "")     # Pinboard's "extended" is the body
+    tags = [t for t in (post.get("tags") or "").split() if t]
+    if BRIEF_TAG not in tags:
+        tags.append(BRIEF_TAG)
+    tag_str = " ".join(tags)
+    shared = (post.get("shared", "yes") != "no")
+    toread = (post.get("toread", "no") == "yes")
+    res = posts_add(
+        url=url, title=title, description=str(existing_desc or ""),
+        tags=tag_str, toread=toread, shared=shared, replace=True,
+    )
+    logger.info("pinboard: tag_as_brief url=%s tags=%s result=%s",
+                url, tag_str, res.get("result_code"))
+    return {
+        "result_code": res.get("result_code"),
+        "pinboard_url": res.get("pinboard_url") or bookmark_url(url),
+        "created": False,
+        "tags": tag_str,
+    }
+
+
 def set_description(url: str, description: str, *, fallback_title: str | None = None) -> dict[str, Any]:
     """Atomic 'overwrite the description, keep everything else.' Used by
     Linky's reply listener — Jamie replies to one of Linky's #research

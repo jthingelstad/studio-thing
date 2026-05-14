@@ -1,21 +1,27 @@
 """Linky — Pinboard curation.
 
-Adds two Linky-specific overrides on top of the shared :class:`PersonaBot`
-loop, both feeding off the ``linky_research_messages`` table:
+Adds three Linky-specific overrides on top of the shared
+:class:`PersonaBot` loop, all feeding off the ``linky_research_messages``
+table:
 
 1. **Reply listener.** Jamie replies to one of Linky's per-link research
    cards in ``#research``; the reply text is saved verbatim as that
    bookmark's Pinboard description. Tags and the ``toread`` flag are
    untouched (so Jamie finishes curation in Pinboard — add ``_brief`` if
-   it's a Brief, clear ``toread`` when ready to ship). For popular-feed
-   cards the URL isn't yet bookmarked; the reply auto-creates a
+   it's a Brief, clear ``toread`` when ready to ship). For discovery-
+   source cards the URL isn't yet bookmarked; the reply auto-creates a
    ``toread=yes shared=yes`` bookmark with the reply as its description.
-2. **Reaction listener.** Jamie reacts ✅ or 👍 to a popular-feed
+2. **Save-reaction listener.** Jamie reacts ✅ or 👍 to a discovery-feed
    research card; Linky saves the URL to Pinboard as ``toread=yes
-   shared=yes`` with a blank description (Jamie can finish in Pinboard
-   later or just leave it as a queued read). The card gets a 📌
-   reaction back so Jamie can see it landed. Toread-source cards
-   already point at a bookmarked URL; ✅/👍 on those is a no-op.
+   shared=yes`` with a blank description. The card gets a 📌 reaction
+   back. Toread-source cards already point at a bookmarked URL; ✅/👍
+   on those is a no-op.
+3. **Briefly-reaction listener.** Jamie reacts ⭐ to *any* card; Linky
+   ensures the URL is bookmarked AND tagged ``_brief``. Discovery cards
+   create the bookmark fresh (``toread=yes shared=yes``, empty
+   description); toread cards merge ``_brief`` into the existing tag
+   list while preserving title / description / toread / shared. The
+   card gets 🔖 back so it's visually distinct from a regular save.
 """
 
 from __future__ import annotations
@@ -43,6 +49,14 @@ def _owner_id() -> Optional[str]:
 # Pinboard without typing a reply. Each one means "yes, save this —
 # blank description, I'll finish it in Pinboard if at all."
 _SAVE_REACTIONS = {"✅", "👍"}
+
+# A third gesture: save the URL AND tag it as `_brief`. Works on any
+# card (discovery or toread) — for discovery it creates the bookmark
+# with the `_brief` tag; for toread it merges `_brief` into the
+# existing tag list. The 🔖 ack distinguishes "Briefly save" from
+# the regular 📌 "saved" reaction.
+_BRIEF_REACTION = "⭐"
+_BRIEF_ACK = "🔖"
 
 
 def _discovery_sources() -> frozenset[str]:
@@ -143,19 +157,32 @@ class LinkyBot(PersonaBot):
     async def on_raw_reaction_add(
         self, payload: discord.RawReactionActionEvent,
     ) -> None:  # type: ignore[override]
-        """When Jamie reacts ✅ / 👍 to one of Linky's popular-feed research
-        cards, save the URL to Pinboard as ``toread=yes shared=yes`` with
-        a blank description. Toread-source cards already point at a
-        bookmarked URL — those reactions are no-ops.
-        """
+        """Dispatch reactions on Linky's research cards by emoji:
+        ``✅`` / ``👍`` → save (discovery-only); ``⭐`` → save-and-tag-
+        Briefly (works on any source). All other emojis and non-owner
+        reactions are ignored."""
         owner = _owner_id()
         if owner is None or str(payload.user_id) != owner:
             return
-        if str(payload.emoji) not in _SAVE_REACTIONS:
-            return
+        emoji = str(payload.emoji)
         row = db.lookup_research_message(str(payload.message_id))
         if row is None:
             return
+        if emoji in _SAVE_REACTIONS:
+            await self._handle_save_reaction(payload, row)
+            return
+        if emoji == _BRIEF_REACTION:
+            await self._handle_brief_reaction(payload, row)
+            return
+        # Any other emoji on a card — ignored. (Linky's own ack
+        # reactions land here too but get filtered by the owner check
+        # above, since ``self.user.id`` isn't ``DISCORD_OWNER_USER_ID``.)
+
+    async def _handle_save_reaction(
+        self, payload: discord.RawReactionActionEvent, row: dict,
+    ) -> None:
+        """Original ✅/👍 path: discovery-only; creates a fresh bookmark
+        with blank description, or acknowledges an existing one."""
         if row.get("source") not in _discovery_sources():
             # Toread cards point at an already-bookmarked URL.
             return
@@ -164,8 +191,6 @@ class LinkyBot(PersonaBot):
             return
         title = row.get("title") or url
 
-        # Acknowledge / save in one path to keep the order of side effects
-        # readable: lookup → maybe-save → react.
         try:
             existing = await asyncio.to_thread(pinboard_client.posts_get, url)
         except Exception:  # noqa: BLE001
@@ -174,7 +199,6 @@ class LinkyBot(PersonaBot):
 
         ack_emoji = "📌"
         if existing and (existing.get("posts") or []):
-            # Already bookmarked — nothing to write; just acknowledge.
             await self._react_card(payload, ack_emoji)
             logger.info("linky: save-reaction on %s (already bookmarked)", url)
             return
@@ -194,6 +218,33 @@ class LinkyBot(PersonaBot):
         except Exception:  # noqa: BLE001
             logger.exception("linky: posts_add failed during save-reaction for %s", url)
             await self._react_card(payload, "❌")
+
+    async def _handle_brief_reaction(
+        self, payload: discord.RawReactionActionEvent, row: dict,
+    ) -> None:
+        """⭐ path: bookmark (if needed) and tag the URL ``_brief``.
+        Works on every source — discovery cards create the bookmark
+        fresh, toread cards merge ``_brief`` into the existing tag
+        list while preserving title / description / toread / shared."""
+        url = (row.get("url") or "").strip()
+        if not url:
+            return
+        fallback_title = row.get("title") or None
+
+        try:
+            res = await asyncio.to_thread(
+                pinboard_client.tag_as_brief, url, fallback_title=fallback_title,
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception("linky: tag_as_brief failed for %s", url)
+            await self._react_card(payload, "❌")
+            return
+        ok = res.get("result_code") == "done"
+        await self._react_card(payload, _BRIEF_ACK if ok else "⚠️")
+        logger.info(
+            "linky: brief-reaction on %s -> created=%s tags=%r result=%s",
+            url, res.get("created"), res.get("tags"), res.get("result_code"),
+        )
 
     async def _react_card(
         self, payload: discord.RawReactionActionEvent, emoji: str,
