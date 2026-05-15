@@ -80,6 +80,13 @@ class FeedSpec:
     - ``feed_limit``    — how many items to ask the fetcher for.
     - ``primary_priority`` — higher wins cross-source merge; the card's
       ``📖 · source`` footer reflects the primary.
+    - ``enabled`` — when False, ``pinboard-scan`` skips this feed at
+      iteration time. The spec stays in :data:`DISCOVERY_FEEDS` so the
+      label / pin_label / priority history is preserved (legacy
+      ``pinboard_popular_seen`` rows still reference the source name);
+      flip back to True to re-enable. Keep this in sync with what's
+      actually wired — a disabled feed shouldn't have downstream code
+      expecting fresh data from it.
     """
 
     name: str
@@ -89,6 +96,7 @@ class FeedSpec:
     per_scan_cap: int = 10
     feed_limit: int = 25
     primary_priority: int = 0
+    enabled: bool = True
 
 
 def by_name(feeds: tuple[FeedSpec, ...], name: str) -> FeedSpec | None:
@@ -112,26 +120,35 @@ def by_name(feeds: tuple[FeedSpec, ...], name: str) -> FeedSpec | None:
 # but discovery feeds fire in this order), and the highest
 # ``primary_priority`` wins when cross-source merging picks a primary.
 # See the substance-gradient rationale in CLAUDE.md.
+# Most discovery feeds are currently DISABLED while we tune Linky's
+# signal-to-noise ratio. The active set is Pinboard popular + the
+# (separately-wired) toread lane; everything else stays defined so the
+# wiring is intact when we re-enable them gradually. Flip ``enabled``
+# to True on a feed when it's ready to come back online.
 DISCOVERY_FEEDS: tuple[FeedSpec, ...] = (
     FeedSpec(
         name="indieweb_news", label="IndieWeb News", pin_label="indieweb",
         fetch=lambda limit: indieweb_news.top(limit=limit),
         per_scan_cap=10, feed_limit=20, primary_priority=50,
+        enabled=False,
     ),
     FeedSpec(
         name="tildes", label="Tildes ~tech", pin_label="tildes",
         fetch=lambda limit: tildes.top(limit=limit),
         per_scan_cap=10, feed_limit=25, primary_priority=40,
+        enabled=False,
     ),
     FeedSpec(
         name="lobsters", label="Lobsters", pin_label="lobste.rs",
         fetch=lambda limit: lobsters.hottest(limit=limit),
         per_scan_cap=10, feed_limit=25, primary_priority=30,
+        enabled=False,
     ),
     FeedSpec(
         name="hackernews", label="Hacker News", pin_label="HN",
         fetch=lambda limit: hackernews.top(limit=limit),
         per_scan_cap=10, feed_limit=25, primary_priority=20,
+        enabled=False,
     ),
     FeedSpec(
         name="popular", label="Pinboard popular", pin_label="",
@@ -139,3 +156,12 @@ DISCOVERY_FEEDS: tuple[FeedSpec, ...] = (
         per_scan_cap=10, feed_limit=30, primary_priority=10,
     ),
 )
+
+
+def active_feeds(feeds: tuple[FeedSpec, ...] = DISCOVERY_FEEDS) -> list[FeedSpec]:
+    """Return the subset of ``feeds`` with ``enabled=True``. The job
+    iterates this rather than ``DISCOVERY_FEEDS`` directly so a disabled
+    feed never fires a fetcher / never produces cards / never has its
+    URLs marked seen — but the spec stays in the registry so a future
+    re-enable doesn't require resurrecting anything."""
+    return [f for f in feeds if f.enabled]

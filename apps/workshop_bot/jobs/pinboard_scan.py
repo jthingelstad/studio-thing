@@ -62,7 +62,7 @@ from ..tools import alt_text  # noqa: F401 — keep imports light; reserve for f
 from ..tools import avoid_domains, db
 from ..tools.content import context
 from ..tools.llm import anthropic_client
-from ..tools.feeds.feed_registry import DISCOVERY_FEEDS, by_name
+from ..tools.feeds.feed_registry import DISCOVERY_FEEDS, active_feeds, by_name
 from ..tools.url_normalize import dedup_key
 from . import _base
 
@@ -402,7 +402,12 @@ def _gather_candidates() -> tuple[
     fresh_by_key: dict[str, dict[str, Any]] = {}
     uplift_by_key: dict[str, dict[str, Any]] = {}
 
-    for spec in DISCOVERY_FEEDS:
+    # Only fetch enabled feeds. Disabled specs stay in DISCOVERY_FEEDS so
+    # legacy pinboard_popular_seen rows (which name the source they were
+    # first seen on) still resolve via ``by_name`` — but no fresh data
+    # comes from them.
+    active = active_feeds()
+    for spec in active:
         try:
             raw = spec.fetch(spec.feed_limit)
         except Exception as exc:  # noqa: BLE001
@@ -779,9 +784,17 @@ async def _run_locked(ctx: "_base.JobContext", linky) -> "_base.JobResult":
             True, "Linky: nothing new in any source — PASS.", data={"posted": 0},
         )
 
+    # The active feed set governs both per-spec capping and the summary
+    # line. Re-resolve it here (cheap filter over DISCOVERY_FEEDS) so
+    # this function's iteration matches what ``_gather_candidates``
+    # already fetched.
+    active = active_feeds()
+
     # Group fresh items by primary source so the per-spec cap applies.
+    # Only active feeds — disabled feeds contributed no fresh items so
+    # their bucket would always be empty.
     fresh_by_source: dict[str, list[dict[str, Any]]] = {
-        spec.name: [] for spec in DISCOVERY_FEEDS
+        spec.name: [] for spec in active
     }
     for item in fresh_items:
         fresh_by_source[item["_source"]].append(item)
@@ -795,8 +808,8 @@ async def _run_locked(ctx: "_base.JobContext", linky) -> "_base.JobResult":
                 ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
                 source="toread", item=item, counters=counters, agent_run=run_,
             )
-        # Then fresh discovery items, walking feeds in priority order.
-        for spec in DISCOVERY_FEEDS:
+        # Then fresh discovery items, walking active feeds in priority order.
+        for spec in active:
             for item in fresh_by_source[spec.name][:spec.per_scan_cap]:
                 await _process_one(
                     ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
@@ -813,7 +826,7 @@ async def _run_locked(ctx: "_base.JobContext", linky) -> "_base.JobResult":
         run_.records_written = counters["posted"]
 
     considered_parts = [f"{len(toread)} toread"]
-    for spec in DISCOVERY_FEEDS:
+    for spec in active:
         considered_parts.append(f"{raw_counts.get(spec.name, 0)} {spec.name}")
     if uplift_items:
         considered_parts.append(f"{len(uplift_items)} uplift")

@@ -75,6 +75,13 @@ class PinboardScanJobTests(_DBTestCase):
         from apps.workshop_bot.tools.feeds import indieweb_news as iwn_mod
         from apps.workshop_bot.tools.feeds import lobsters as lob
         from apps.workshop_bot.tools.feeds import tildes as tldes_mod
+        # In production most discovery feeds are currently disabled (see
+        # feed_registry.DISCOVERY_FEEDS). The tests still exercise the
+        # full registry — they verify the per-feed plumbing, the
+        # cross-source merge, the uplift path, etc. Patch ``active_feeds``
+        # so every feed runs during the test regardless of the runtime
+        # ``enabled`` flag; production behaviour is governed by the
+        # registry directly.
         return [
             patch.object(pbc, "popular", lambda limit=30: list(popular or [])),
             patch.object(pbc, "toread_public_unresearched",
@@ -87,6 +94,10 @@ class PinboardScanJobTests(_DBTestCase):
                          lambda limit=20: list(indieweb_items or [])),
             # build_linky_context hits posts_all for queue depth — stub it cheap.
             patch.object(pbc, "posts_all", lambda **kw: []),
+            # Run every feed in tests so the existing scenarios still
+            # exercise lobsters/HN/tildes/indieweb plumbing.
+            patch.object(pinboard_scan, "active_feeds",
+                         lambda *a, **kw: list(pinboard_scan.DISCOVERY_FEEDS)),
         ]
 
     def test_pass_when_both_sources_empty(self):
