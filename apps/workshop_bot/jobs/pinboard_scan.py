@@ -494,12 +494,20 @@ async def _research_one(
 
     When ``agent_run`` is given (the outer scan's :class:`db.AgentRun`),
     the per-link LLM usage is accumulated into it so the outer row's
-    token columns sum across every link this scan processed."""
+    token columns sum across every link this scan processed.
+
+    Model selection: **discovery sources use Haiku** (cheap; we're
+    deciding whether to write a card for a URL the community surfaced
+    — speed and throughput matter more than nuance). **Toread items
+    use Sonnet** (Jamie picked these himself; the cards deserve the
+    higher-fidelity write-up). This split is the second of three
+    levers bringing Linky's weekly cost from ~$65 to ~$5."""
     url = item.get("url") or ""
     item_block = _format_user_msg(source=source, item=item, corpus=corpus)
     user_msg = f"{linky_ctx_block}\n\n{prompt}\n\n{item_block}"
+    model = "sonnet" if source == "toread" else "haiku"
     try:
-        answer, _meta = await linky.core(latest=user_msg, history=[], model="sonnet")
+        answer, _meta = await linky.core(latest=user_msg, history=[], model=model)
     except Exception as exc:  # noqa: BLE001
         logger.warning("pinboard-scan: per-link LLM call failed for %s: %s", url, exc)
         return "fail", f"LLM error: {type(exc).__name__}"

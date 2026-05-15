@@ -1293,6 +1293,63 @@ class PinboardScanJobTests(_DBTestCase):
         self.assertEqual(len(recorded), 5)
 
 
+class PerLinkModelSelectionTests(_DBTestCase):
+    """Discovery sources use Haiku (cheap throughput); toread items use
+    Sonnet (Jamie's own picks, higher-fidelity write-ups warranted).
+    Together with the HN score filter and the `issue_index` removal,
+    this brings Linky's weekly cost from ~$65 toward ~$5."""
+
+    def _ctx_and_team(self, replies=None):
+        team = _FakeLinkyTeam(replies=replies)
+        return _base.JobContext(deps=_deps_with_linky_team(team)), team
+
+    def _stub_sources(self, **kw):
+        return PinboardScanJobTests._stub_sources(self, **kw)
+
+    def test_discovery_source_uses_haiku(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        url = "https://x.example/discovery-haiku"
+        ctx, team = self._ctx_and_team(replies=[
+            f"**[T]({url})** · [lobste.rs](https://l/1)\n\nbody.\n\n📖 short · `lobsters`"
+        ])
+        lobs = [{"url": url, "title": "T", "discussion_url": "https://l/1"}]
+        patches = self._stub_sources(lobs=lobs)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        # linky.core was called with model="haiku" for the discovery item.
+        self.assertEqual(team.linky.core.call_args.kwargs["model"], "haiku")
+
+    def test_toread_source_keeps_sonnet(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        url = "https://x.example/toread-sonnet"
+        ctx, team = self._ctx_and_team(replies=[
+            f"**[T]({url})** · [pin](https://p/1)\n\nbody.\n\n📖 short · `toread`"
+        ])
+        toread = [{"url": url, "title": "T", "description": "",
+                    "pinboard_url": "https://p/1"}]
+        patches = self._stub_sources(toread=toread)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+        # Jamie's own picks stay on Sonnet.
+        self.assertEqual(team.linky.core.call_args.kwargs["model"], "sonnet")
+
+
 class ParseSignalTests(unittest.TestCase):
     """``_parse_signal`` classifies the per-link LLM response into
     ``card`` / ``skip`` / ``fail``. The prompt asks for the signal to
