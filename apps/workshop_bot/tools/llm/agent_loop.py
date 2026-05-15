@@ -59,10 +59,18 @@ def _owner_mention_block() -> Optional[str]:
     )
 
 
-def _build_system_blocks(
-    persona: str, *, issue_index: Optional[str] = None
-) -> list[dict[str, Any]]:
-    """[team] [owner?] [persona] [issue_index?] — cache markers on team and issue_index."""
+def _build_system_blocks(persona: str) -> list[dict[str, Any]]:
+    """[team] [owner?] [persona] — cache marker on team.
+
+    Note: an earlier version of this function also accepted an
+    ``issue_index`` block — a pre-rendered one-line-per-issue cheat
+    sheet of every Weekly Thing ever published (~47.5k tokens for
+    348 issues) injected as a cached system block. It was Linky's
+    biggest single cost driver. Personas can answer the same
+    "what issues exist around X?" question via ``archive__search``
+    (with ``archive__get_issue`` / ``archive__quote_search`` for
+    deeper retrieval), so the cheat sheet was retired — the tool
+    surface replaces it on demand. See ``prompts/shared/team.md``."""
     blocks: list[dict[str, Any]] = [
         {
             "type": "text",
@@ -74,14 +82,6 @@ def _build_system_blocks(
     if owner:
         blocks.append({"type": "text", "text": owner})
     blocks.append({"type": "text", "text": anthropic_client.load_prompt(persona)})
-    if issue_index:
-        blocks.append(
-            {
-                "type": "text",
-                "text": issue_index,
-                "cache_control": {"type": "ephemeral"},
-            }
-        )
     return blocks
 
 
@@ -190,7 +190,6 @@ def run(
     tools: list[str],
     deps: Any,
     model: Optional[str] = None,
-    issue_index: Optional[str] = None,
     max_iterations: int = DEFAULT_MAX_ITERATIONS,
 ) -> tuple[str, dict[str, Any]]:
     """Run a tool-using turn. Returns (final_text, metadata)."""
@@ -198,7 +197,7 @@ def run(
     chosen_model = anthropic_client.MODELS[
         model or anthropic_client.default_model()
     ]
-    system_blocks = _build_system_blocks(persona, issue_index=issue_index)
+    system_blocks = _build_system_blocks(persona)
     tool_specs = _build_tool_specs(tools, deps=deps)
 
     # Coerce history `content` strings to the assistant message format Anthropic
@@ -300,7 +299,6 @@ async def run_async(
     tools: list[str],
     deps: Any,
     model: Optional[str] = None,
-    issue_index: Optional[str] = None,
     max_iterations: int = DEFAULT_MAX_ITERATIONS,
 ) -> tuple[str, dict[str, Any]]:
     """Async wrapper around ``run`` so the calling Discord client's event loop
@@ -313,6 +311,5 @@ async def run_async(
         tools=tools,
         deps=deps,
         model=model,
-        issue_index=issue_index,
         max_iterations=max_iterations,
     )

@@ -77,21 +77,11 @@ def load_prompt(name: str) -> str:
     return _prompt_cache[name]
 
 
-def format_issue_index(issues: list[dict[str, Any]]) -> str:
-    """Compact one-line-per-issue index, used as a cached system block."""
-    lines = ["# Archive issue index", ""]
-    for issue in issues:
-        number = issue.get("number", "?")
-        date = (issue.get("publish_date") or "")[:10]
-        subject = issue.get("subject", "")
-        topics = ", ".join(issue.get("topics", []) or [])
-        abstract = (issue.get("summary") or {}).get("abstract", "") or ""
-        bits = [f"#{number} ({date}) - {subject}"]
-        if topics:
-            bits.append(f"Topics: {topics}.")
-        if abstract:
-            bits.append(f"Abstract: {abstract}")
-        lines.append(" ".join(bits))
-    return "\n".join(lines)
+# ``format_issue_index`` was deleted in the cost-reduction pass — the
+# one-line-per-issue cheat sheet (~47.5k tokens for 348 issues) was
+# injected into every persona's system prompt and dominated Linky's
+# per-link cost. Personas now answer "what issues exist around X?"
+# via ``archive__search`` (BM25), with ``archive__get_issue`` /
+# ``archive__quote_search`` for deeper retrieval.
 
 

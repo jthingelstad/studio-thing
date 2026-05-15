@@ -228,10 +228,15 @@ class PersonaBot(discord.Client):
 
         Pulls the full tool surface from ``deps.registry``; every persona
         sees every tool. Lane discipline is enforced by the persona prompt.
+
+        Note: an earlier version of this method also rendered the full
+        348-issue archive into a system text block (``issue_index``) so
+        the model had a built-in "what issues exist?" cheat sheet. That
+        block was ~47.5k tokens on every call — half Linky's per-link
+        cost. Retired in favour of ``archive__search`` (BM25), with
+        ``archive__get_issue`` / ``archive__quote_search`` for deeper
+        retrieval. ``team.md`` directs the model at the tool surface.
         """
-        issue_index = anthropic_client.format_issue_index(
-            self.deps.corpus.corpus["issues"]
-        )
         return await agent_loop.run_async(
             persona=self.persona,
             user_message=latest or "(no new content; continue from history)",
@@ -239,7 +244,6 @@ class PersonaBot(discord.Client):
             tools=self.deps.registry.names_for(self.persona),
             deps=self.deps,
             model=self._resolve_model(model),
-            issue_index=issue_index,
         )
 
     async def on_message(self, message: discord.Message) -> None:  # type: ignore[override]
