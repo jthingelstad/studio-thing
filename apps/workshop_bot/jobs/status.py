@@ -1,10 +1,10 @@
-"""``/workshop status`` — a read-only operational snapshot of the bot.
+"""``/eddy status`` — a read-only operational snapshot of the bot.
 
 Not a content-loop job; it's the "what's the bot doing / is anything
 stuck" view. All DB-only (no S3, no external APIs), so it's snappy. For
-the in-flight issue's *content* completeness, use ``/workshop issue
+the in-flight issue's *content* completeness, use ``/eddy issue
 status``; for campaign performance vs. expectation, use
-``/workshop campaign report``.
+``/marky campaign report``.
 
 Shows: the active issue window, the active goal + live campaigns, any
 held job locks (a deadlock would show here), and the last several
@@ -49,18 +49,18 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
 
     w = db.get_active_issue_window()
     if w is None:
-        lines.append("• issue window: *(none — `/workshop issue start` to set one)*")
+        lines.append("• issue window: *(none — `/eddy issue start` to set one)*")
     else:
         n = int(w["issue_number"])
         lines.append(
             f"• issue window: **WT{n}** · pub {w['pub_date']} ({_rel(w['pub_date'])}) · "
             f"cutoff {w['end_date']} · {w.get('day_count', 7)}-day "
-            f"— `/workshop issue status` for content state"
+            f"— `/eddy issue status` for content state"
         )
 
     g = db.get_active_goal()
     if g is None:
-        lines.append("• goal: *(none — `/workshop goal set <kind> <value>`)*")
+        lines.append("• goal: *(none — `/patty goal set <kind> <value>`)*")
     else:
         lines.append(
             f"• goal: **{g['target_kind']} → {g['target_value']}** "

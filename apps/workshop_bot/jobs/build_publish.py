@@ -38,11 +38,11 @@ NAME = "build-publish"
 REQUIRED = ("final.md", "haiku.md", "metadata.json", "intro.md", "cover.jpg")
 
 _FIX_HINT = {
-    "haiku.md": "→ `/workshop issue haiku`",
-    "metadata.json": "→ `/workshop issue subject`",
+    "haiku.md": "→ `/eddy issue haiku`",
+    "metadata.json": "→ `/eddy issue subject`",
     "intro.md": "→ write it, push via Shortcut",
     "cover.jpg": "→ Shortcuts uploads this",
-    "final.md": "→ `/workshop issue final`",
+    "final.md": "→ `/eddy issue final`",
 }
 
 # (block name → published heading). intro / the cover block / haiku are
@@ -171,7 +171,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
 
     window = db.get_active_issue_window()
     if window is None:
-        return _base.JobResult(False, "❌ no active issue window — run `/workshop issue start` first.")
+        return _base.JobResult(False, "❌ no active issue window — run `/eddy issue start` first.")
     n = int(window["issue_number"])
 
     asset = f"{n}/publish.md"

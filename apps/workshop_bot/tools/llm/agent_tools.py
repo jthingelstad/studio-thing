@@ -185,7 +185,7 @@ def t_read_length(deps, url: str) -> dict[str, Any]:
 # ---------- current issue window (operator-set) ----------
 
 # Canonical implementations live in `tools/issue.py`. Jamie sets the
-# active window via the ``/workshop issue start`` slash command; agents
+# active window via the ``/eddy issue start`` slash command; agents
 # read it here via ``issue__current_window`` (active row) and
 # ``issue__list_windows`` (historical metadata).
 t_current_issue_window = issue.t_current_issue_window
@@ -354,7 +354,7 @@ def t_draft_section_status(deps) -> dict[str, Any]:
     window = db.get_active_issue_window()
     if window is None:
         return {
-            "error": "No active issue window. Jamie sets it via /workshop issue start."
+            "error": "No active issue window. Jamie sets it via /eddy issue start."
         }
     try:
         return draft.section_status(int(window["issue_number"]))

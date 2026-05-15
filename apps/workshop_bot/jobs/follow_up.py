@@ -1,4 +1,4 @@
-"""``follow-up-sweep`` + the ``/workshop followup …`` reads/writes.
+"""``follow-up-sweep`` + the per-persona ``/<persona> followup …`` reads/writes.
 
 The workshop has no per-persona heartbeats — that was a deliberate call in
 the jobs-spine redesign (a cadence tick with nothing real to say is just
@@ -10,11 +10,12 @@ fires the due ones — it runs the named persona's agent loop with the note
 plus current context and posts a short check-in to the persona's channel.
 PASSes silently when nothing's due.
 
-Public surface:
-- ``sweep(ctx)``        — the hourly job (also `/workshop followup run`-able? no — cron only; manual via the slash group isn't wired since it's just a sweep).
-- ``list_open(ctx)``    — `/workshop followup list` — the pending follow-ups.
-- ``add(ctx, …)``       — `/workshop followup add` — schedule one (Jamie).
-- ``cancel(ctx, …)``    — `/workshop followup cancel <id>``.
+Public surface (each persona hosts its own ``/<persona> followup`` subgroup —
+``/eddy followup``, ``/linky followup``, ``/marky followup``, ``/patty followup``):
+- ``sweep(ctx)``        — the hourly job (cron-only; not exposed as a slash).
+- ``list_open(ctx)``    — `/<persona> followup list` — the pending follow-ups.
+- ``add(ctx, …)``       — `/<persona> followup add` — schedule one (Jamie).
+- ``cancel(ctx, …)``    — `/<persona> followup cancel <id>``.
 
 Triggers — exactly one of:
 - ``when``     — an ISO date (``YYYY-MM-DD``, taken as 18:00 that day) or
@@ -195,12 +196,14 @@ async def add(
 
 async def list_open(ctx: "_base.JobContext", *, persona: Optional[str] = None) -> "_base.JobResult":
     rows = db.open_follow_ups(persona=(persona or None))
+    add_hint = f"`/{persona} followup add`" if persona else "`/<persona> followup add`"
+    cancel_hint = f"`/{persona} followup cancel <id>`" if persona else "`/<persona> followup cancel <id>`"
     if not rows:
-        return _base.JobResult(True, "No pending follow-ups." + ("" if persona else " (Agents schedule these with `followup__schedule`; you can too via `/workshop followup add`.)"))
+        return _base.JobResult(True, "No pending follow-ups." + ("" if persona else f" (Agents schedule these with `followup__schedule`; you can too via {add_hint}.)"))
     lines = [f"**Pending follow-ups** ({len(rows)}):"]
     for r in rows:
         lines.append(f"`#{r['id']}` · **{r['persona']}** · {trigger_desc(r)} · \"{(r['note'] or '').strip()}\"")
-    lines.append("`/workshop followup cancel <id>` to drop one.")
+    lines.append(f"{cancel_hint} to drop one.")
     return _base.JobResult(True, "\n".join(lines))
 
 

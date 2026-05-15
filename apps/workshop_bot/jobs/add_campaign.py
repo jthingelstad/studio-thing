@@ -84,6 +84,6 @@ async def run(
     if copy:
         bits.append("Copy recorded.")
     else:
-        bits.append("No copy yet — add it with `/workshop campaign copy`.")
-    bits.append("`daily-metrics` will poll it each run; `/workshop campaign report` for a summary.")
+        bits.append("No copy yet — add it with `/marky campaign copy`.")
+    bits.append("`daily-metrics` will poll it each run; `/marky campaign report` for a summary.")
     return _base.JobResult(True, " ".join(bits), data={"name": name, "ref": ref, "has_copy": bool(copy)})

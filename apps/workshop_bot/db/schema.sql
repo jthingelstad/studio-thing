@@ -287,37 +287,9 @@ CREATE TABLE IF NOT EXISTS campaign_metrics (
 CREATE INDEX IF NOT EXISTS idx_campaign_metrics_name
   ON campaign_metrics(campaign_name, ran_at DESC, id DESC);
 
--- Thingy conversations — workshop_bot's local mirror of what readers ask
--- the public archive agent. The hourly `thingy-watch` job fetches logged
--- turns from the Lambda (/auth?action=list_conversations), groups them
--- into conversations (same subscriber, turns within ~30 min / a fresh
--- browser history), has Eddy write a two-sided assessment, stores the
--- whole thing here (so it outlives the Lambda's ~60-day DynamoDB TTL and
--- gets a stable local id), and posts a card to #chatter. `/workshop thingy
--- recent` and `/workshop thingy show <id>` read straight from this table.
-CREATE TABLE IF NOT EXISTS thingy_conversations (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  subscriber_hash TEXT NOT NULL,               -- SHA256 of the reader's email; never the email itself
-  started_at TEXT NOT NULL,                    -- ISO; created_at of the first turn
-  ended_at TEXT NOT NULL,                      -- ISO; created_at of the last turn (also the watch watermark)
-  turn_count INTEGER NOT NULL,
-  -- the conversation as JSON: [{request_id, created_at, question, answer,
-  --   citations:[{issue_number,subject,publish_date,section,url}],
-  --   source_issues:[...], feedback_reaction, feedback_at}]
-  transcript_json TEXT NOT NULL,
-  -- JSON array of the turn request_ids in this conversation — the dedup key
-  -- (a turn already mirrored here is never re-formed into a new conversation)
-  turn_request_ids_json TEXT NOT NULL,
-  source_issues_json TEXT,                     -- JSON array of issue numbers cited across the conversation
-  feedback TEXT,                               -- 'up' / 'down' / 'mixed' / NULL — rolled up from the turns
-  topic TEXT,                                  -- one-line topic, from Eddy's assessment pass
-  assessment_md TEXT,                          -- Eddy's two-sided assessment (markdown)
-  posted_to_chatter_at TEXT,                   -- when thingy-watch posted the card; NULL until then
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_thingy_conversations_ended
-  ON thingy_conversations(ended_at DESC, id DESC);
+-- Thingy conversations moved to apps/thingy_bridge/db/schema.sql with the
+-- two-process split; the DROP above handles long-lived workshop.db files
+-- that still have the table from before the split.
 
 -- Follow-ups — an agent (or Jamie) commits to revisiting something at a
 -- future time or when the in-flight issue reaches a number. The hourly

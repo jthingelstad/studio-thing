@@ -1,6 +1,6 @@
 """``daily-metrics`` (Marky) — daily website + subscriber + campaign report.
 
-Scheduled daily 19:00 CT; manual re-fire via ``/workshop promo metrics``.
+Scheduled daily 19:00 CT; manual re-fire via ``/marky metrics``.
 
 Each run: (1) for every active campaign, fetch current traffic (Tinylytics
 `?ref=` source count) + signups (Buttondown ref attribution), append a

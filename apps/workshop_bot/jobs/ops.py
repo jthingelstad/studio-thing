@@ -1,9 +1,9 @@
 """Operator pokes at the goals + campaigns ledgers — small, no-LLM jobs.
 
 These don't touch S3, Discord, or the agent loop; they just record a
-decision Jamie made. Wired onto the slash surface as ``/workshop goal
-set`` / ``/workshop goal done`` / ``/workshop campaign sunset`` /
-``/workshop campaign copy`` / ``/workshop campaign edit`` (internal job
+decision Jamie made. Wired onto the per-persona slash surfaces as
+``/patty goal set`` / ``/patty goal done`` / ``/marky campaign sunset`` /
+``/marky campaign copy`` / ``/marky campaign edit`` (internal job
 names: ``set-goal`` / ``goal-achieved`` / ``campaign-sunset`` /
 ``campaign-copy`` / ``campaign-edit``).
 
@@ -57,7 +57,7 @@ async def set_goal(
             False,
             f"❌ there's already an active goal — **{active['target_kind']} → "
             f"{active['target_value']}** (since {active.get('started_at', '?')}). "
-            "Mark it hit with `/workshop goal done` first.",
+            "Mark it hit with `/patty goal done` first.",
         )
     notes = (notes or "").strip() or None
     db.insert_goal(target_kind=kind, target_value=value, notes=notes)
@@ -74,7 +74,7 @@ async def goal_achieved(ctx: "_base.JobContext", *, notes: str | None = None) ->
         return _base.JobResult(
             False,
             "❌ no active goal to mark achieved. Set one with "
-            "`/workshop goal set <kind> <value>`.",
+            "`/patty goal set <kind> <value>`.",
         )
     notes = (notes or "").strip() or None
     merged = active.get("notes") or None
@@ -87,7 +87,7 @@ async def goal_achieved(ctx: "_base.JobContext", *, notes: str | None = None) ->
         True,
         f"✅ goal hit: **{active['target_kind']} → {active['target_value']}**"
         + (f" — {notes}" if notes else "")
-        + ". Set the next one with `/workshop goal set <kind> <value>`.",
+        + ". Set the next one with `/patty goal set <kind> <value>`.",
         data={"goal_id": active["id"]},
     )
 
@@ -99,7 +99,7 @@ async def campaign_copy(ctx: "_base.JobContext", *, name: str, copy: str | None 
     c = db.get_campaign(name)
     if c is None:
         return _base.JobResult(
-            False, f"❌ no campaign named `{name}` — see `/workshop campaign report`."
+            False, f"❌ no campaign named `{name}` — see `/marky campaign report`."
         )
     text = (str(copy).strip() or None) if copy is not None else None
     db.set_campaign_copy(name, text)
@@ -141,7 +141,7 @@ async def campaign_edit(
     name = (name or "").strip()
     if not name:
         return _base.JobResult(False, "❌ give the campaign name.")
-    not_found = f"❌ no campaign named `{name}` — see `/workshop campaign report` (or `campaign add` it first)."
+    not_found = f"❌ no campaign named `{name}` — see `/marky campaign report` (or `campaign add` it first)."
 
     def _txt(v):
         return (str(v).strip() or None) if v is not None else None
@@ -182,7 +182,7 @@ async def campaign_sunset(ctx: "_base.JobContext", *, name: str) -> "_base.JobRe
     c = db.get_campaign(name)
     if c is None:
         return _base.JobResult(
-            False, f"❌ no campaign named `{name}` — see `/workshop campaign report`."
+            False, f"❌ no campaign named `{name}` — see `/marky campaign report`."
         )
     if c.get("status") == "sunset":
         return _base.JobResult(True, f"`{name}` is already sunset — nothing to do.")

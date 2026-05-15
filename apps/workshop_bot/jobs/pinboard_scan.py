@@ -740,7 +740,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     if linky is None or getattr(linky, "user", None) is None:
         return _base.JobResult(True, "(Linky unavailable — pinboard-scan skipped)", data={"posted": 0})
 
-    # Whole-job lock so a manual `/workshop links scan` can't overlap with
+    # Whole-job lock so a manual `/linky scan` can't overlap with
     # the scheduled `:05` fire (or two manual fires in quick succession).
     # The lock key isn't an asset path — pinboard-scan doesn't write a
     # single file — so we use the sentinel ``job:<name>`` which is just a

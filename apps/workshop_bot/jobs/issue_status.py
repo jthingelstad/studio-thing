@@ -35,7 +35,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     window = db.get_active_issue_window()
     if window is None:
         return _base.JobResult(
-            False, "No active issue window. Run `/workshop issue start <n> <pub-date> <days>`."
+            False, "No active issue window. Run `/eddy issue start <n> <pub-date> <days>`."
         )
     n = int(window["issue_number"])
     try:
@@ -67,11 +67,11 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         secline("notable", "Notable"),
         secline("brief", "Briefly"),
         secline("journal", "Journal"),
-        f"  {m(st['assets'].get('haiku.md', False))} `haiku.md`" + ("" if st["assets"].get("haiku.md") else " → `/workshop issue haiku`"),
-        f"  {m(st['assets'].get('metadata.json', False))} `metadata.json`" + ("" if st["assets"].get("metadata.json") else " → `/workshop issue subject`"),
+        f"  {m(st['assets'].get('haiku.md', False))} `haiku.md`" + ("" if st["assets"].get("haiku.md") else " → `/eddy issue haiku`"),
+        f"  {m(st['assets'].get('metadata.json', False))} `metadata.json`" + ("" if st["assets"].get("metadata.json") else " → `/eddy issue subject`"),
         f"  {m(st['intro_present'])} `intro.md`" + ("" if st["intro_present"] else " → write it, push via Shortcut"),
         f"  {m(st['cover_present'])} `cover.jpg`",
-        f"  {m(st['assets'].get('final.md', False))} `final.md`" + ("" if st["assets"].get("final.md") else " → `/workshop issue final`"),
+        f"  {m(st['assets'].get('final.md', False))} `final.md`" + ("" if st["assets"].get("final.md") else " → `/eddy issue final`"),
         "",
         "**Optional:**",
         f"  {m(st['currently_present'])} `currently.json` (or legacy `currently.md`)",

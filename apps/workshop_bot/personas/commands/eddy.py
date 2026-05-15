@@ -48,9 +48,10 @@ def register_eddy_commands(
 ) -> app_commands.CommandTree:
     """Attach the ``/eddy`` command tree to Eddy's bot.
 
-    If ``tree`` is provided, the ``/eddy`` group is added to it (used during
-    the migration when ``/workshop`` and ``/eddy`` coexist on the same
-    bot). Otherwise a new ``CommandTree`` is created.
+    If ``tree`` is provided, the ``/eddy`` group is added to it; otherwise a
+    new ``CommandTree`` is created. (Tree injection was used during the
+    transient ``/workshop`` ↔ ``/eddy`` overlap; kept since it's harmless
+    and the test harness exercises both paths.)
     """
     if tree is None:
         tree = app_commands.CommandTree(bot)
