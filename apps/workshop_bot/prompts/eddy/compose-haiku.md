@@ -14,3 +14,33 @@ Return **only** a JSON object — no prose around it:
 ```
 
 Each string is one haiku, lines joined by `\n`. 2–3 options. If Jamie asks for a refresh, come back with genuinely different angles.
+
+## What a good Weekly Thing haiku looks like
+
+Three real examples from the archive — the shape, the voice, and the kind of landing the third line earns:
+
+- **#347** (issue about agentic coding, Redis arrays, hand-drawn QR codes, dads parenting through AI):
+  ```
+  Hand-drawn QR dreams,
+  Redis arrays tell stories —
+  Dads learn to listen
+  ```
+  Pulls three concrete nouns from the issue, lets the third line do the human turn. No abstraction.
+
+- **#346** (issue about coffee gut research, AI sleep / dream research, life at the desk):
+  ```
+  Coffee stirs the gut
+  While AI dreams in the night
+  Both keep us awake
+  ```
+  Twin images on the first two lines, the third line names what they share without saying "both" is doing the work — quiet wit, not punchline.
+
+- **#345** (issue about personal wikis, agentic email, cloud-headed AI tooling):
+  ```
+  Wiki of my own,
+  Clouds of email drift in play —
+  Agents sip the sky.
+  ```
+  Three lines, three weather-like images for three different topics; the haiku reads as one weather front passing over the whole issue.
+
+Things to notice: concrete nouns from the actual issue body, no abstractions like "the future" or "technology", no greeting-card register, the third line either turns or lands. The dash (`—`) at end-of-line-two is a common Weekly Thing pattern but not required.
