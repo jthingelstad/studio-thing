@@ -16,7 +16,7 @@ table:
    shared=yes`` with a blank description. The card gets a 📌 reaction
    back. Toread-source cards already point at a bookmarked URL; ✅/👍
    on those is a no-op.
-3. **Briefly-reaction listener.** Jamie reacts ⭐ to *any* card; Linky
+3. **Briefly-reaction listener.** Jamie reacts ⏩ to *any* card; Linky
    ensures the URL is bookmarked AND tagged ``_brief``. Discovery cards
    create the bookmark fresh (``toread=yes shared=yes``, empty
    description); toread cards merge ``_brief`` into the existing tag
@@ -57,7 +57,7 @@ _SAVE_REACTIONS = {"✅", "👍"}
 # with the `_brief` tag; for toread it merges `_brief` into the
 # existing tag list. The 🔖 ack distinguishes "Briefly save" from
 # the regular 📌 "saved" reaction.
-_BRIEF_REACTION = "⭐"
+_BRIEF_REACTION = "⏩"
 _BRIEF_ACK = "🔖"
 
 
@@ -195,7 +195,7 @@ class LinkyBot(PersonaBot):
         self, payload: discord.RawReactionActionEvent,
     ) -> None:  # type: ignore[override]
         """Dispatch reactions on Linky's research cards by emoji:
-        ``✅`` / ``👍`` → save (discovery-only); ``⭐`` → save-and-tag-
+        ``✅`` / ``👍`` → save (discovery-only); ``⏩`` → save-and-tag-
         Briefly (works on any source). All other emojis and non-owner
         reactions are ignored."""
         owner = _owner_id()
@@ -253,7 +253,7 @@ class LinkyBot(PersonaBot):
     async def _handle_brief_reaction(
         self, payload: discord.RawReactionActionEvent, row: dict,
     ) -> None:
-        """⭐ path: bookmark (if needed) and tag the URL ``_brief``.
+        """⏩ path: bookmark (if needed) and tag the URL ``_brief``.
         Works on every source — discovery cards create the bookmark
         fresh, toread cards merge ``_brief`` into the existing tag
         list while preserving title / description / toread / shared."""
@@ -274,8 +274,8 @@ class LinkyBot(PersonaBot):
         await self._react_card(payload, _BRIEF_ACK if ok else "⚠️")
         if ok:
             _mark_card_researched(
-                row, summary="saved via ⭐ (tagged _brief)",
-                fit_note="saved via ⭐ Briefly reaction",
+                row, summary="saved via ⏩ (tagged _brief)",
+                fit_note="saved via ⏩ Briefly reaction",
             )
         logger.info(
             "linky: brief-reaction on %s -> created=%s tags=%r result=%s",

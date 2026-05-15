@@ -11,10 +11,11 @@ job=…)`` (or, for ``rss-check``, the bare ``handlers.rss_check``). Today:
 - ``update-draft`` — daily 17:00 CT. Projects upstream content into
   ``draft.md``; PASSes if no issue is in flight or it's locked
   (``final.md`` exists); Eddy posts a review Tue–Fri.
-- ``pinboard-scan`` — every hour 07:00–22:00 CT, year-round. Linky's per-link
-  research pass over Jamie's public toread bookmarks + Pinboard's popular
-  feed; each card posts as its own ``#research`` message. PASSes silently
-  on empty hours.
+- ``pinboard-scan`` — every 3h 07:00–22:00 CT, year-round (07/10/13/16/19/22).
+  Linky's per-link research pass over Jamie's public toread bookmarks +
+  the active discovery feeds (Pinboard popular + IndieWeb News); each
+  card posts as its own ``#research`` message. PASSes silently on empty
+  scans.
 - ``rss-check`` — Sat & Sun, every 4h 09:00–21:00 CT. Detects a
   newly-published issue and auto-fires ``promotion-prep``.
 - ``daily-metrics`` — daily 19:00 CT. Polls active campaigns, checks
@@ -74,11 +75,13 @@ JOBS: tuple[JobSpec, ...] = (
     ),
     JobSpec(
         id="linky-pinboard-scan",
-        cron="5 7-22 * * *",                             # Every hour at :05 from 07:00–22:00 Central,
-                                                         # year-round. Per-link research pass over the
-                                                         # toread + popular sources; each card posts as
-                                                         # its own #research message. PASSes silently
-                                                         # when both source lists come back empty.
+        cron="5 7-22/3 * * *",                           # Every 3h at :05 from 07:00–22:00 Central
+                                                         # (07/10/13/16/19/22), year-round. Per-link
+                                                         # research pass over the toread + active
+                                                         # discovery feeds (Pinboard popular +
+                                                         # IndieWeb News); each card posts as its
+                                                         # own #research message. PASSes silently
+                                                         # when all source lists come back empty.
         func=functools.partial(handlers.content_job, job="pinboard-scan"),
     ),
     JobSpec(

@@ -9,7 +9,7 @@ The `## Today` block above carries the runtime facts (date, days-to-pub, days in
 The job hands you a `## The link` block with these fields. The `Source` field tells you which lane this item came from:
 
 - **`toread`** — already in Jamie's Pinboard, marked `toread` + `shared=yes`. The block also carries a `Pinboard URL` and any `Existing description` Jamie has already typed.
-- **Any other value** (`popular`, `lobsters`, `hackernews`, `tildes`, `indieweb_news`, …) — a *discovery source*. Jamie has *not* yet bookmarked this URL. The block may also carry a `<Source label> discussion` URL, a `<Source label> pin label` (short tag like `HN`, `lobste.rs`, `tildes`), tags, score / comment count, and a submitter, depending on what the feed exposes.
+- **Any other value** (`popular`, `indieweb_news`, …) — a *discovery source*. Jamie has *not* yet bookmarked this URL. The block may also carry a `<Source label> discussion` URL, a `<Source label> pin label` (short tag like `indieweb`), tags, score / comment count, and a submitter, depending on what the feed exposes.
 
 The `URL` field is always the article URL — the one we'd bookmark. When a discovery source carries a discussion URL, that's a *secondary* link to the community thread.
 
@@ -50,14 +50,14 @@ _📖 {short|medium|long} · {source}_
 
 - **`toread`** → `🔖`
 - **`popular`** (Pinboard popular) → `📌`
-- **Any other discovery source** (lobsters, hackernews, tildes, indieweb_news, …) → `🔗`
+- **Any other discovery source** (indieweb_news, …) → `🔗`
 
 The lead emoji is the very first character of the card. No whitespace or text in front of it.
 
 `{pin_part}` — source-specific secondary link(s), immediately after the title:
 
 - **`toread`**: ` · [pin]({pinboard_url})`
-- **A discovery source with a discussion URL**: ` · [{Pin label}]({discussion_url})` where the pin label is the short tag Linky learned from the source itself (e.g. `lobste.rs`, `HN`, `tildes`, `indieweb`). When the discussion URL is present in the input block, render this part; when it isn't, omit it entirely.
+- **A discovery source with a discussion URL**: ` · [{Pin label}]({discussion_url})` where the pin label is the short tag Linky learned from the source itself (e.g. `indieweb`). When the discussion URL is present in the input block, render this part; when it isn't, omit it entirely.
 - **Cross-source extras**: when the inputs carry additional `<Other label> discussion` / `<Other label> pin label` rows, append ` · [{Other pin label}]({Other discussion URL})` for each.
 
 **Cross-source signal — single optional line above the footer**, only when the inputs carried in-scan or uplift co-source info:
@@ -72,7 +72,7 @@ Omit entirely when there's no cross-source signal. (No "Also trending on" senten
 
 ## Output rules
 
-- The card is the **whole** response. No preamble, no "Here's my research", no sign-off, no heading. **No per-card action line — Jamie knows the ✅/⭐/reply gestures and doesn't want them repeated on every message.**
+- The card is the **whole** response. No preamble, no "Here's my research", no sign-off, no heading. **No per-card action line — Jamie knows the ✅/⏩/reply gestures and doesn't want them repeated on every message.**
 - Keep the whole card under **600 characters**. Aim shorter; tight cards scan faster than long ones. If you need more than two lines of substance, you're over-explaining — cut.
 - Don't repeat the URL in prose if the markdown link already has it.
 - Don't include any markdown above the lead emoji — the card starts with `🔖` / `📌` / `🔗`.

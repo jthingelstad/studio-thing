@@ -2,7 +2,7 @@
 
 Neither hits the LLM. ``pile`` queries Pinboard for currently
 ``_brief``-tagged bookmarks (the Briefly candidates Jamie's marked via
-the ⭐ reaction). ``stats`` reports recent Linky surfacing activity from
+the ⏩ reaction). ``stats`` reports recent Linky surfacing activity from
 the local DB.
 """
 
@@ -39,7 +39,7 @@ async def pile(ctx: "_base.JobContext", *, limit: int = 25) -> "_base.JobResult"
             data={"count": 0},
         )
 
-    bits = [f"⭐ **Briefly pile** — {len(rows)} bookmarks tagged `_brief`"]
+    bits = [f"⏩ **Briefly pile** — {len(rows)} bookmarks tagged `_brief`"]
     for r in rows[:limit]:
         title = (r.get("description") or r.get("title") or "(untitled)").strip()
         href = r.get("href") or r.get("url") or ""

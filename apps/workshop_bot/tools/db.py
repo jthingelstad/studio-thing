@@ -324,8 +324,8 @@ def mark_popular_seen(
     can see what Linky judged interesting vs not.
 
     ``verdict_source`` is the feed name that produced the verdict
-    (e.g. ``"hackernews"``). Stored so the cross-source uplift block
-    can label "Previously SKIP'd from Hacker News" without inferring
+    (e.g. ``"indieweb_news"``). Stored so the cross-source uplift block
+    can label "Previously SKIP'd from IndieWeb News" without inferring
     from the sightings log. Optional for backwards-compat — callers
     that don't pass it leave the column NULL.
 
@@ -980,7 +980,7 @@ def latest_draft_digest(issue: int) -> Optional[dict[str, Any]]:
 
 
 RESEARCH_SOURCES = (
-    "popular", "toread", "lobsters", "hackernews", "tildes", "indieweb_news",
+    "popular", "toread", "indieweb_news",
 )
 
 
@@ -989,14 +989,13 @@ def record_research_message(
 ) -> None:
     """Persist that Linky posted a per-link research card to #research,
     so a future reply to that message can be routed back to the URL.
-    ``title`` is captured so a popular/lobsters reply that auto-creates
+    ``title`` is captured so a popular/indieweb reply that auto-creates
     a bookmark has something more useful than the URL as the title.
     ``source`` is one of :data:`RESEARCH_SOURCES`.
 
     ``url`` is normalised before storage to keep this table aligned with
-    the dedup tables — so ``first_research_message_for`` and the reply/
-    save-reaction routing both reach the same row regardless of which
-    URL form upstream handed us."""
+    the dedup tables — so the reply / save-reaction routing reaches the
+    same row regardless of which URL form upstream handed us."""
     if not discord_message_id or not url or source not in RESEARCH_SOURCES:
         return
     nurl = _norm_url(url)
@@ -1006,26 +1005,6 @@ def record_research_message(
             "(discord_message_id, url, source, title) VALUES (?, ?, ?, ?)",
             (str(discord_message_id), nurl, source, title),
         )
-
-
-def first_research_message_for(url: str) -> Optional[str]:
-    """Return the *earliest* ``discord_message_id`` Linky used to card
-    this URL, or ``None`` if no card exists yet. ``url`` is normalised
-    before lookup. Used by cross-source uplift posts to thread under
-    the original card so the visual story in ``#research`` is
-    "[original] ↩ [uplift] ↩ [uplift] …" branching off one root, rather
-    than three loose cards days apart."""
-    nurl = _norm_url(url)
-    if not nurl:
-        return None
-    with connect() as conn:
-        row = conn.execute(
-            "SELECT discord_message_id FROM linky_research_messages "
-            "WHERE url = ? ORDER BY posted_at ASC, discord_message_id ASC "
-            "LIMIT 1",
-            (nurl,),
-        ).fetchone()
-    return row["discord_message_id"] if row else None
 
 
 def lookup_research_message(discord_message_id: str) -> Optional[dict[str, Any]]:

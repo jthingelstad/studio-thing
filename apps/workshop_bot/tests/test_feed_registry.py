@@ -76,23 +76,12 @@ class RegistryInvariantsTests(unittest.TestCase):
         self.assertIsNone(by_name(DISCOVERY_FEEDS, "toread"))
         self.assertIsNone(by_name(DISCOVERY_FEEDS, "no-such-feed"))
 
-    def test_active_feeds_returns_only_enabled(self):
-        """``active_feeds()`` filters ``enabled=False`` specs. Pinboard
-        popular is the only feed currently wired live; the others stay
-        in the registry as decommissioned-but-recoverable. Update this
-        test when feeds come back online."""
-        names = [s.name for s in active_feeds()]
-        self.assertEqual(names, ["popular"],
-                         f"expected only Pinboard popular active; got {names}")
-
-    def test_disabled_feeds_still_resolvable_by_name(self):
-        """``by_name`` must keep resolving disabled feeds so legacy
-        ``pinboard_popular_seen`` rows (which carry the source name
-        from when a feed was active) still render correctly in cross-
-        source uplift cards."""
-        for name in ("lobsters", "hackernews", "tildes", "indieweb_news"):
-            self.assertIsNotNone(by_name(DISCOVERY_FEEDS, name),
-                                 f"disabled feed {name!r} should still be in the registry")
+    def test_active_feeds_matches_registry(self):
+        """All registry entries are currently enabled. Pinboard popular
+        + IndieWeb News are the two curation-register signals."""
+        names = sorted(s.name for s in active_feeds())
+        self.assertEqual(names, ["indieweb_news", "popular"],
+                         f"unexpected active feeds: {names}")
 
 
 if __name__ == "__main__":

@@ -258,7 +258,7 @@ def bookmark_blank(url: str, *, fallback_title: str | None = None) -> dict[str, 
     if it isn't bookmarked yet; if it is, leave the existing record
     alone and report ``created=False``. The persona's ✅ / 👍 save
     handler uses this — symmetric with :func:`set_description` (reply
-    path) and :func:`tag_as_brief` (⭐ path); all three live here so
+    path) and :func:`tag_as_brief` (⏩ path); all three live here so
     the fetch-merge-write pattern is in one place.
 
     Returns ``{result_code, pinboard_url, created}``. ``created`` is
@@ -291,7 +291,7 @@ def bookmark_blank(url: str, *, fallback_title: str | None = None) -> dict[str, 
 
 def tag_as_brief(url: str, *, fallback_title: str | None = None) -> dict[str, Any]:
     """Atomic 'add the `_brief` tag, keep everything else.' Used by
-    Linky's reaction listener — Jamie reacts ⭐ to one of Linky's
+    Linky's reaction listener — Jamie reacts ⏩ to one of Linky's
     `#research` cards and that URL gets flagged as a Briefly candidate
     on Pinboard. Preserves the existing title, description, ``toread``,
     and ``shared`` flags; the tag list is split, deduped, ``_brief``

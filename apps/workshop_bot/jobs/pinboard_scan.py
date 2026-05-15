@@ -1,7 +1,7 @@
-"""``pinboard-scan`` — hourly per-link research for Linky.
+"""``pinboard-scan`` — per-link research for Linky.
 
-One toread lane plus N discovery feeds, one rhythm. Every hour 07:00–
-22:00 Central, year-round:
+One toread lane plus N discovery feeds, one rhythm. Every 3 hours
+07:00–22:00 Central, year-round (07/10/13/16/19/22):
 
 - **Toread** — Jamie's public toread bookmarks Linky hasn't researched
   yet (`shared=yes`, not in ``pinboard_research_done``). Jamie's own
@@ -612,13 +612,13 @@ def _suppress_non_article_embeds(payload: str, article_url: str) -> str:
     Discord's embed-suppression brackets.
 
     Discord generates a link preview for every URL it finds in a
-    message unless the URL is wrapped in ``<…>``. Linky's cards
-    deliberately surface multiple URLs (article + 1–3 discussion-
-    thread links from Lobste.rs / HN / Tildes / etc.); we want only
-    the *article* preview to render. This rewrites the LLM's output:
+    message unless the URL is wrapped in ``<…>``. Linky's cards may
+    surface multiple URLs (article + an IndieWeb News permalink /
+    Pinboard popular link / etc.); we want only the *article* preview
+    to render. This rewrites the LLM's output:
 
       ``[Title](https://article)``         ← kept bare (embed fires)
-      ``[pin](https://lobste.rs/s/x)``     → ``[pin](<https://lobste.rs/s/x>)``
+      ``[pin](https://news.indieweb.org/x)`` → ``[pin](<https://news.indieweb.org/x>)``
       bare ``https://other.com`` in prose  → ``<https://other.com>``
 
     The clickable link still works in all three cases; only the
@@ -700,24 +700,16 @@ async def _process_one(
         return
     # kind == "card"
     # Allow Discord to auto-render the *article* preview, but suppress
-    # the embeds Discord would otherwise generate for the discussion-
-    # thread links (Lobste.rs / HN / Tildes / etc.) and any other
-    # URL in the card. The article URL is left bare; everything else
-    # is wrapped in <…> so the link stays clickable but no preview
-    # fires. The reply / save / brief reactions all preserve the
-    # message id either way; embeds don't affect routing.
+    # the embeds Discord would otherwise generate for any secondary
+    # URLs in the card (IndieWeb News permalinks, Pinboard popular
+    # links, etc.). The article URL is left bare; everything else is
+    # wrapped in <…> so the link stays clickable but no preview fires.
+    # The reply / save / brief reactions all preserve the message id
+    # either way; embeds don't affect routing.
     card_text = _suppress_non_article_embeds(payload, url)
-    # Uplift cards reply-thread under the original card so the cross-
-    # source story branches off one root rather than landing as loose
-    # cards spaced days apart. ``first_research_message_for`` returns
-    # ``None`` for fresh cards; ``send_one`` ignores the kwarg in that
-    # case.
-    reply_target: Optional[str] = None
-    if is_uplift:
-        reply_target = db.first_research_message_for(url)
     msg = await ctx.send_one(
         "DISCORD_CHANNEL_RESEARCH", card_text, persona="linky",
-        suppress_embeds=False, reply_to_message_id=reply_target,
+        suppress_embeds=False,
     )
     if msg is None:
         # Channel not resolvable; don't mark anything — try again next scan.
@@ -735,9 +727,9 @@ async def _process_one(
     # "has Linky considered this URL?" — the research_done table answers
     # "did Linky post a card for it?" — and both need to be lane-blind
     # so a popular URL Jamie later toreads, or a toread URL that later
-    # trends on lobsters, doesn't fire a duplicate card. Uplift items
-    # leave the original popular_seen verdict alone (insert-or-ignore
-    # would do this anyway, but skipping the call is clearer).
+    # surfaces on IndieWeb News, doesn't fire a duplicate card. Uplift
+    # items leave the original popular_seen verdict alone (insert-or-
+    # ignore would do this anyway, but skipping the call is clearer).
     _safe_mark_url_researched(
         url=url, title=title, summary=payload[:500],
         confidence="✦", fit_note=f"card posted ({source})",

@@ -738,7 +738,7 @@ SPECS: dict[str, dict[str, Any]] = {
             "but you wouldn't add anything in prose, drop a brief reaction "
             "and PASS instead of staying invisible. Use sparingly — one "
             "reaction per message, only when the emoji is your honest take. "
-            "Picks should match your persona: Eddy 📝👀🤔, Linky 🔗📚⭐, "
+            "Picks should match your persona: Eddy 📝👀🤔, Linky 🔗📚⏩, "
             "Marky 📈🔥, Patty 🤝💚 — but anything fitting works. Returns "
             "{ok, emoji} on success, {error: …} if there's no message in "
             "context (heartbeat path) or Discord rejects the emoji."

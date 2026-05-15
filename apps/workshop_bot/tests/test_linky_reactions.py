@@ -316,10 +316,10 @@ class LinkySaveReactionTests(_DBTestCase):
             add_p.stop(); get_p.stop()
         self.assertEqual(self.reactions, ["❌"])
 
-    def test_save_reaction_on_hackernews_card_creates_bookmark(self):
+    def test_save_reaction_on_indieweb_card_creates_bookmark(self):
         db.record_research_message(
-            discord_message_id="2009", url="https://x.example/hn-link",
-            source="hackernews", title="An HN Story",
+            discord_message_id="2009", url="https://example.com/post",
+            source="indieweb_news", title="An IndieWeb Post",
         )
         p = self._payload(user_id=777, emoji="✅", message_id=2009)
         get_p, add_p, add_mock = self._patch_pinboard()
@@ -328,37 +328,16 @@ class LinkySaveReactionTests(_DBTestCase):
             asyncio.run(self.bot.on_raw_reaction_add(p))
         finally:
             add_p.stop(); get_p.stop()
-        # HN items behave just like Pinboard popular and Lobsters for save.
+        # IndieWeb items behave just like Pinboard popular for the save flow.
         add_mock.assert_called_once()
         kwargs = add_mock.call_args.kwargs
-        self.assertEqual(kwargs["url"], "https://x.example/hn-link")
-        self.assertEqual(kwargs["title"], "An HN Story")
+        self.assertEqual(kwargs["url"], "https://example.com/post")
+        self.assertEqual(kwargs["title"], "An IndieWeb Post")
         self.assertTrue(kwargs["toread"])
         self.assertTrue(kwargs["shared"])
         self.assertEqual(self.reactions, ["📌"])
 
-    def test_save_reaction_on_lobsters_card_creates_bookmark(self):
-        db.record_research_message(
-            discord_message_id="2008", url="https://kde.org/news",
-            source="lobsters", title="KDE Funding",
-        )
-        p = self._payload(user_id=777, emoji="✅", message_id=2008)
-        get_p, add_p, add_mock = self._patch_pinboard()
-        get_p.start(); add_p.start()
-        try:
-            asyncio.run(self.bot.on_raw_reaction_add(p))
-        finally:
-            add_p.stop(); get_p.stop()
-        # Lobsters items behave just like Pinboard popular for the save flow.
-        add_mock.assert_called_once()
-        kwargs = add_mock.call_args.kwargs
-        self.assertEqual(kwargs["url"], "https://kde.org/news")
-        self.assertEqual(kwargs["title"], "KDE Funding")
-        self.assertTrue(kwargs["toread"])
-        self.assertTrue(kwargs["shared"])
-        self.assertEqual(self.reactions, ["📌"])
-
-    # ---------- ⭐ Briefly reaction ----------
+    # ---------- ⏩ Briefly reaction ----------
 
     def _patch_tag_as_brief(self, *, return_value=None, side_effect=None):
         from apps.workshop_bot.systems.pinboard import client as pbc
@@ -375,7 +354,7 @@ class LinkySaveReactionTests(_DBTestCase):
             discord_message_id="3001", url="https://x.example/d1",
             source="popular", title="A Discovery Item",
         )
-        p = self._payload(user_id=777, emoji="⭐", message_id=3001)
+        p = self._payload(user_id=777, emoji="⏩", message_id=3001)
         patch_obj, tag_mock = self._patch_tag_as_brief(return_value={
             "result_code": "done", "created": True, "tags": "_brief", "pinboard_url": "",
         })
@@ -393,14 +372,14 @@ class LinkySaveReactionTests(_DBTestCase):
         self.assertEqual(self.reactions, ["🔖"])
 
     def test_brief_reaction_on_toread_card_calls_tag_as_brief(self):
-        # Unlike the ✅/👍 save which is discovery-only, ⭐ works on
+        # Unlike the ✅/👍 save which is discovery-only, ⏩ works on
         # toread cards too — the helper merges `_brief` into the
         # existing bookmark's tags.
         db.record_research_message(
             discord_message_id="3002", url="https://x.example/t1",
             source="toread", title="A Toread Item",
         )
-        p = self._payload(user_id=777, emoji="⭐", message_id=3002)
+        p = self._payload(user_id=777, emoji="⏩", message_id=3002)
         patch_obj, tag_mock = self._patch_tag_as_brief()
         patch_obj.start()
         try:
@@ -412,7 +391,7 @@ class LinkySaveReactionTests(_DBTestCase):
         self.assertEqual(self.reactions, ["🔖"])
 
     def test_brief_reaction_ignored_when_no_card_row(self):
-        p = self._payload(user_id=777, emoji="⭐", message_id=999999)
+        p = self._payload(user_id=777, emoji="⏩", message_id=999999)
         patch_obj, tag_mock = self._patch_tag_as_brief()
         patch_obj.start()
         try:
@@ -427,7 +406,7 @@ class LinkySaveReactionTests(_DBTestCase):
             discord_message_id="3003", url="https://x.example/d2",
             source="popular", title="x",
         )
-        p = self._payload(user_id=888, emoji="⭐", message_id=3003)  # not owner
+        p = self._payload(user_id=888, emoji="⏩", message_id=3003)  # not owner
         patch_obj, tag_mock = self._patch_tag_as_brief()
         patch_obj.start()
         try:
@@ -437,7 +416,7 @@ class LinkySaveReactionTests(_DBTestCase):
         tag_mock.assert_not_called()
 
     def test_brief_reaction_on_already_bookmarked_discovery_merges_tag(self):
-        """⭐ on a discovery URL that Jamie ALSO previously bookmarked
+        """⏩ on a discovery URL that Jamie ALSO previously bookmarked
         (e.g. he ✅'d it earlier) goes through the tag-merge path —
         ``tag_as_brief`` does the fetch-merge-write, the helper returns
         ``created=False`` and a tag-list with ``_brief`` appended."""
@@ -445,7 +424,7 @@ class LinkySaveReactionTests(_DBTestCase):
             discord_message_id="3005", url="https://x.example/d4",
             source="popular", title="Previously bookmarked",
         )
-        p = self._payload(user_id=777, emoji="⭐", message_id=3005)
+        p = self._payload(user_id=777, emoji="⏩", message_id=3005)
         patch_obj, tag_mock = self._patch_tag_as_brief(return_value={
             "result_code": "done", "created": False, "tags": "ai _brief",
             "pinboard_url": "",
@@ -465,7 +444,7 @@ class LinkySaveReactionTests(_DBTestCase):
             discord_message_id="3004", url="https://x.example/d3",
             source="popular", title="x",
         )
-        p = self._payload(user_id=777, emoji="⭐", message_id=3004)
+        p = self._payload(user_id=777, emoji="⏩", message_id=3004)
         patch_obj, _ = self._patch_tag_as_brief(side_effect=RuntimeError("boom"))
         patch_obj.start()
         try:
@@ -569,12 +548,12 @@ class LinkyCrossLaneDedupTests(_DBTestCase):
     def test_brief_reaction_on_discovery_marks_research_done(self):
         db.record_research_message(
             discord_message_id="4003", url=self.URL_BRIEF,
-            source="lobsters", title="Brief→RD",
+            source="indieweb_news", title="Brief→RD",
         )
         self.assertEqual(db.filter_unresearched_urls([self.URL_BRIEF]), [self.URL_BRIEF])
 
         from apps.workshop_bot.systems.pinboard import client as pbc
-        p = self._payload(user_id=777, emoji="⭐", message_id=4003)
+        p = self._payload(user_id=777, emoji="⏩", message_id=4003)
         with patch.object(pbc, "tag_as_brief",
                           MagicMock(return_value={"result_code": "done",
                                                    "created": True, "tags": "_brief"})):
@@ -585,7 +564,7 @@ class LinkyCrossLaneDedupTests(_DBTestCase):
     def test_brief_reaction_on_toread_is_a_noop_for_research_done(self):
         """Toread-source cards already wrote ``pinboard_research_done``
         when the card was originally posted (in
-        ``pinboard_scan._process_one``). ⭐ on a toread card just adds
+        ``pinboard_scan._process_one``). ⏩ on a toread card just adds
         the ``_brief`` tag — no second research_done write is needed,
         and (more importantly) the helper shouldn't fail when the row
         already exists."""
@@ -600,7 +579,7 @@ class LinkyCrossLaneDedupTests(_DBTestCase):
         self.assertEqual(db.filter_unresearched_urls([self.URL_TOREAD]), [])
 
         from apps.workshop_bot.systems.pinboard import client as pbc
-        p = self._payload(user_id=777, emoji="⭐", message_id=4004)
+        p = self._payload(user_id=777, emoji="⏩", message_id=4004)
         with patch.object(pbc, "tag_as_brief",
                           MagicMock(return_value={"result_code": "done",
                                                    "created": False, "tags": "_brief"})):
@@ -612,7 +591,7 @@ class LinkyCrossLaneDedupTests(_DBTestCase):
     def test_reply_to_discovery_card_marks_research_done(self):
         db.record_research_message(
             discord_message_id="4005", url=self.URL_REPLY,
-            source="hackernews", title="Reply→RD",
+            source="indieweb_news", title="Reply→RD",
         )
         self.assertEqual(db.filter_unresearched_urls([self.URL_REPLY]), [self.URL_REPLY])
 
@@ -628,7 +607,7 @@ class LinkyCrossLaneDedupTests(_DBTestCase):
     def test_reply_failure_does_not_mark_research_done(self):
         db.record_research_message(
             discord_message_id="4006", url=self.URL_REPLY,
-            source="hackernews", title="x",
+            source="indieweb_news", title="x",
         )
         from apps.workshop_bot.systems.pinboard import client as pbc
         m = self._msg(content="text", reference_id=4006)
