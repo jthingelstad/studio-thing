@@ -35,39 +35,53 @@ The `URL` field is always the article URL — the one we'd bookmark. When a disc
 
 ## Card format
 
+The card is tight on purpose — Jamie scans many of these per day; the
+goal is **fast triage**, not a writeup. Two short lines of substance,
+one footer, no per-card instructions (Jamie knows the gestures).
+
 ```
-**[{Title — cleaned up}]({url})**{pin_part}
-
-{1–2 sentences: what the piece actually IS — the argument, the artifact, the angle. Concrete, not abstract; don't summarise the title.}
-
-{1–2 sentences of fit: how it might land in the Weekly Thing (Notable / Briefly / cut), what's the strongest hook, what to watch for. If Jamie has touched the territory cite the issue (e.g. `Echoes #341's take on …`). If not, "fresh territory" or similar.}
-
-📖 short | medium | long   ·   `{source}`
-
-💬 _{action line — see below}_
+{lead_emoji} **[{Title — cleaned up}]({url})**{pin_part}
+{1 sentence: what the piece IS, with **bold** on the key noun/concept. Concrete, ~20–25 words. Don't paraphrase the title.}
+{1 sentence: fit or hook — Notable / Briefly / cut, the strongest reason it's interesting. Cite an archive issue inline when there's a real echo, e.g. `(echoes #341)`. ~15–20 words.}
+_📖 {short|medium|long} · {source}_
 ```
 
-- `{pin_part}` — source-specific secondary link(s), immediately after the title:
-  - **`toread`**: ` · [pin]({pinboard_url})`
-  - **A discovery source with a discussion URL**: ` · [{Pin label}]({discussion_url})` where the pin label is the short tag Linky learned from the source itself (e.g. `lobste.rs`, `HN`, `tildes`, `indieweb`). When the discussion URL is present in the input block, render this part; when it isn't, omit it entirely.
-  - **Cross-source extras**: when the inputs carry additional `<Other label> discussion` / `<Other label> pin label` rows, append ` · [{Other pin label}]({Other discussion URL})` for each. So a URL trending on HN and Tildes would render as `**[Title](url)** · [HN](hn_thread) · [tildes](tildes_thread)`.
-- Add a final line at the bottom of the card, *just above the action line*, if the inputs carried any cross-source info (in-scan or uplift):
+**The lead emoji is required** and tells Jamie which lane the card came from at a glance:
 
-      🌐 _Also trending on: {comma-separated Source labels}_
+- **`toread`** → `🔖`
+- **`popular`** (Pinboard popular) → `📌`
+- **Any other discovery source** (lobsters, hackernews, tildes, indieweb_news, …) → `🔗`
 
-  This signals to Jamie that the URL has surfaced on multiple feeds.
-- **`📖`** — exactly one of `short` / `medium` / `long`, then a middle dot, then the source label backticked.
-- **`💬` action line:**
-  - **Discovery source**: `_React ✅ / 👍 to save (toread + public, blank description); ⭐ to save and tag as Briefly; or reply to save with your reply as the description._`
-  - **`toread`**: `_⭐ to tag this as a Briefly candidate; reply to save your text as this bookmark's Pinboard description. (✅ / 👍 are no-ops here — the URL is already in your Pinboard.)_`
+The lead emoji is the very first character of the card. No whitespace or text in front of it.
+
+`{pin_part}` — source-specific secondary link(s), immediately after the title:
+
+- **`toread`**: ` · [pin]({pinboard_url})`
+- **A discovery source with a discussion URL**: ` · [{Pin label}]({discussion_url})` where the pin label is the short tag Linky learned from the source itself (e.g. `lobste.rs`, `HN`, `tildes`, `indieweb`). When the discussion URL is present in the input block, render this part; when it isn't, omit it entirely.
+- **Cross-source extras**: when the inputs carry additional `<Other label> discussion` / `<Other label> pin label` rows, append ` · [{Other pin label}]({Other discussion URL})` for each.
+
+**Cross-source signal — single optional line above the footer**, only when the inputs carried in-scan or uplift co-source info:
+
+```
+_🌐 also on: {comma-separated Source labels}_
+```
+
+Omit entirely when there's no cross-source signal. (No "Also trending on" sentence in the body — the line carries it.)
+
+**Use bold sparingly.** The title is bolded. Inside the first line, bold the *one* key concept that lets Jamie identify the topic at a glance — never a sentence, never two phrases.
 
 ## Output rules
 
-- The card is the **whole** response. No preamble, no "Here's my research", no sign-off, no heading.
-- One Discord message — keep the whole card under 1500 characters.
+- The card is the **whole** response. No preamble, no "Here's my research", no sign-off, no heading. **No per-card action line — Jamie knows the ✅/⭐/reply gestures and doesn't want them repeated on every message.**
+- Keep the whole card under **600 characters**. Aim shorter; tight cards scan faster than long ones. If you need more than two lines of substance, you're over-explaining — cut.
 - Don't repeat the URL in prose if the markdown link already has it.
-- Don't include any markdown above an `**` opener — the card starts with the title link.
+- Don't include any markdown above the lead emoji — the card starts with `🔖` / `📌` / `🔗`.
 - Two failure signals — when you choose one, your **entire response is that single line**. No reasoning paragraph, no "Here's why", no preamble. The line IS the response:
-  - `SKIP: <one-line reason>` — applies to any discovery source; tells the job "not interesting enough, never surface again." Put the reason on the same line as `SKIP:`. The reason itself should be terse (≤140 chars) — Jamie just needs to see the why, not the workings.
+  - `SKIP: <one-line reason>` — applies to any discovery source; tells the job "not interesting enough, never surface again." Put the reason on the same line as `SKIP:`. The reason itself should be terse (≤140 chars).
   - `FETCH_FAILED: <one-line reason>` — applies to any source; tells the job "I couldn't actually read this, retry next scan."
-- If you find yourself writing "Low signal" or "Thin reaction post" or any other framing prose **before** the signal, stop and rewrite as a single-line `SKIP:` whose reason captures that judgment. Posting reasoning + signal as a chatty pair gets the prose pushed to ``#research`` as a card — wrong outcome.
+- **The lead emoji rule does NOT apply to SKIP or FETCH_FAILED.** Signal lines start with the bare word — `SKIP:` or `FETCH_FAILED:`. No `🔖` / `📌` / `🔗` in front, no `**SKIP**:` bolding, no markdown of any kind around the keyword. A decorated signal looks like a card to the job's parser and gets posted to `#research` as one — wrong outcome.
+  - ✅ `SKIP: too thin, no editorial hook`
+  - ❌ `🔗 SKIP: too thin, no editorial hook` (lead emoji breaks the signal)
+  - ❌ `**SKIP**: too thin` (bold breaks the signal)
+  - ❌ `🔗 **[Title](url)**\n…\nSKIP: actually no` (signal at the end of a card → the card-shaped prose above it still gets posted; either commit to a card or commit to a signal)
+- If you find yourself writing "Low signal" or "Thin reaction post" or any other framing prose **before** the signal, stop and rewrite as a single-line `SKIP:` whose reason captures that judgment.

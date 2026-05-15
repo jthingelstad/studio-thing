@@ -103,8 +103,26 @@ def _uplift_cap() -> int:
 # truth that the persona (for `_discovery_sources`) and the schema-
 # enum docs both reference. Imported above.
 
-_SKIP_RE = re.compile(r"^\s*SKIP:\s*(.+?)\s*$", re.IGNORECASE)
-_FAIL_RE = re.compile(r"^\s*FETCH_FAILED:\s*(.+?)\s*$", re.IGNORECASE)
+# SKIP / FETCH_FAILED signal regexes. The original tight form
+# (``^\s*SKIP:``) misses decorated variants the LLM drifts into —
+# ``**SKIP**: foo``, ``🔗 SKIP: foo``, ``**SKIP:** foo``. With the new
+# lead-emoji rule for cards, Linky reflexively prefixes the SKIP line
+# too. ``_strip_decoration`` peels the leading non-letter run off each
+# line before the match runs, so any combination of leading emoji /
+# bold markers / whitespace resolves to a clean ``SKIP: <reason>`` for
+# the regex. Trailing ``**`` (when the LLM bolded the whole token) is
+# cleaned off the captured reason at use-site.
+_SKIP_RE = re.compile(r"^\*{0,2}SKIP\*{0,2}\s*:\*{0,2}\s*(.+?)\s*$", re.IGNORECASE)
+_FAIL_RE = re.compile(r"^\*{0,2}FETCH_FAILED\*{0,2}\s*:\*{0,2}\s*(.+?)\s*$", re.IGNORECASE)
+
+
+def _strip_decoration(line: str) -> str:
+    """Strip leading non-letter decoration (emojis, asterisks, quotes,
+    whitespace) so the SKIP/FETCH_FAILED regexes catch the common
+    drift variants — ``🔗 SKIP: foo``, ``**SKIP**: foo``, ``> SKIP: ...``.
+    The regex itself handles trailing ``**`` after ``SKIP`` and the
+    captured reason is final-stripped at use-site."""
+    return re.sub(r"^[^A-Za-z]+", "", line.strip())
 
 
 # ---------- per-link user-message rendering ----------
@@ -343,15 +361,18 @@ def _parse_signal(answer: str) -> tuple[str, str]:
         return "fail", "empty response"
     skip_match = None
     for line in text.splitlines():
-        m = _FAIL_RE.match(line)
+        cleaned = _strip_decoration(line)
+        if not cleaned:
+            continue
+        m = _FAIL_RE.match(cleaned)
         if m:
-            return "fail", m.group(1)
+            return "fail", m.group(1).rstrip("*").strip()
         if skip_match is None:
-            m = _SKIP_RE.match(line)
+            m = _SKIP_RE.match(cleaned)
             if m:
                 skip_match = m
     if skip_match is not None:
-        return "skip", skip_match.group(1)
+        return "skip", skip_match.group(1).rstrip("*").strip()
     return "card", text
 
 

@@ -1412,6 +1412,48 @@ class ParseSignalTests(unittest.TestCase):
         self.assertEqual(pinboard_scan._parse_signal("")[0], "fail")
         self.assertEqual(pinboard_scan._parse_signal("   \n\n  ")[0], "fail")
 
+    def test_skip_with_leading_lead_emoji_is_still_skip(self):
+        """Linky drifts and prepends the new card lead-emoji to SKIP
+        signals (🔖/📌/🔗). The parser must strip the emoji and recognise
+        the signal — otherwise the SKIP reason gets posted to #research
+        as a card."""
+        for emoji in ("🔖", "📌", "🔗"):
+            for keyword in ("SKIP", "FETCH_FAILED"):
+                with self.subTest(emoji=emoji, keyword=keyword):
+                    answer = f"{emoji} {keyword}: too thin, no editorial hook"
+                    kind, payload = pinboard_scan._parse_signal(answer)
+                    expected_kind = "skip" if keyword == "SKIP" else "fail"
+                    self.assertEqual(kind, expected_kind,
+                                     f"{emoji} {keyword} should be {expected_kind}")
+                    self.assertEqual(payload, "too thin, no editorial hook")
+
+    def test_skip_with_bold_markup_is_still_skip(self):
+        """`**SKIP**: foo` and `**SKIP:** foo` both resolve to SKIP, not
+        a card. Same for FETCH_FAILED. The captured reason has any
+        trailing ``**`` stripped."""
+        for fmt in ("**SKIP**: too thin", "**SKIP:** too thin",
+                    "**FETCH_FAILED**: 404", "**FETCH_FAILED:** 404"):
+            with self.subTest(fmt=fmt):
+                kind, payload = pinboard_scan._parse_signal(fmt)
+                self.assertIn(kind, ("skip", "fail"))
+                self.assertNotIn("**", payload)
+                self.assertNotIn("SKIP", payload)
+                self.assertNotIn("FETCH_FAILED", payload)
+
+    def test_real_card_is_not_misclassified_when_signal_word_appears_mid_body(self):
+        """A legitimate card whose body happens to contain `SKIP` (or
+        `FETCH_FAILED`) inside prose — not at the start of a line —
+        must not be mistaken for a signal. Only lines that LOOK like
+        signals trigger the SKIP/fail path."""
+        answer = (
+            "🔖 **[Some article](https://example.com)** · [pin](https://pin.in)\n"
+            "Argues we should SKIP synchronous IO entirely.\n"
+            "Briefly candidate — concrete and short.\n"
+            "_📖 medium · toread_"
+        )
+        kind, _ = pinboard_scan._parse_signal(answer)
+        self.assertEqual(kind, "card")
+
     def test_case_insensitive(self):
         self.assertEqual(pinboard_scan._parse_signal("skip: lowercase")[0], "skip")
         self.assertEqual(pinboard_scan._parse_signal("Fetch_Failed: mixed")[0], "fail")
