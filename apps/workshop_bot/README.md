@@ -142,7 +142,7 @@ apps/workshop_bot/
 ├── eval.py                   # offline persona testing (no Discord)
 ├── jobs/                     # the content-loop spine (deterministic, schedulable, slash-triggerable)
 │   ├── _base.py              # JobContext, JobResult, single-asset job_lock, draft-block helpers
-│   ├── _llm_job.py           # shared helpers for LLM-using jobs (resolve_bot_and_channel, refresh_loop, body caps, PLACEMENTS, _try_send)
+│   ├── _llm_job.py           # shared helpers for LLM-using jobs (resolve_bot_and_channel, refresh_loop, body caps, thesis_block, _try_send)
 │   ├── start_issue.py / update_draft.py / issue_status.py / status.py   # status.py backs /eddy status
 │   ├── create_final.py / compose_haiku.py / compose_meta.py / compose_cta.py / build_publish.py
 │   ├── ops.py                # set-goal / goal-achieved / campaign-{copy,edit,sunset} (no-LLM ledger pokes)
@@ -334,7 +334,7 @@ The README above describes what's built. Open items:
 
 - **`create-final` per-section approval.** It does one approval round (Eddy proposes the whole reordered body, Jamie ✅/❌/🔄); the design brief's per-section loop (approve Notable order, then Briefly, then Journal) is a refinement.
 - **Deeper tool-surface pass on buttondown/tinylytics/stripe.** Step 5 reshaped Pinboard; Step 8 added `buttondown__campaign_signups` / `tinylytics__campaign_traffic`, but the broader "drop verbs that don't serve a job, rename verbs that describe the API" pass is deferred.
-- **`pipeline/content/content.py publish`** (create a Buttondown draft from `publish.md` + `metadata.json`) is implemented but untested against the live API.
+- **`send-to-buttondown`** (wired as `/eddy issue send`; CLI sibling `pipeline/content/content.py publish --issue N`) is implemented with idempotent create/update: POST on first run, PATCH on subsequent runs (the response `id` is stored in `metadata.json` as `buttondown_id`). Untested against the live Buttondown API; first-ship smoke test should `--dry-run` then real-run.
 - **Retire the iOS Shortcuts pipeline** — kept as a recovery tool until 3–4 successful ships via the new flow (Step 9 of the design brief).
 - **Buttondown supporter-event webhook.** Today Marky polls. Real-time signups/churn → `#chatter` would need a small HTTP listener. The `subscriber_events_seen` table is ready for it.
 - **`agent_outputs.status` lifecycle.** Field exists (`pending` / `ready` / `used` / `archived`) but nothing transitions outputs after Jamie pulls them.

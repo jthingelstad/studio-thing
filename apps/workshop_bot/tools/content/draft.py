@@ -15,8 +15,20 @@ from typing import Any, Optional
 from .. import s3
 
 # Listed in the published section order (intro → Currently → cover →
-# Notable → Journal → Briefly → haiku); matches templates/draft_starter.md.
-SECTION_BLOCKS = ("intro", "currently", "cover", "notable", "journal", "brief", "haiku")
+# Notable → Journal → Briefly → outro → haiku); matches
+# templates/draft_starter.md. ``outro`` is a Jamie-authored closing-prose
+# block (parallel to ``intro``) projected from ``outro.md`` upstream.
+#
+# ``feature1`` / ``feature2`` are the featured-section slots that
+# ``create-final`` fills when Eddy promotes a Notable/Journal item to its
+# own standalone section. They live at the bottom of the template (their
+# *file* position is irrelevant — ``build-publish`` places them in
+# ``publish.md`` based on the YAML ``position:`` frontmatter inside each
+# non-empty block). Listed here so the block parser knows their names.
+SECTION_BLOCKS = (
+    "intro", "currently", "cover", "notable", "journal", "brief",
+    "outro", "haiku", "feature1", "feature2",
+)
 
 # Assets build-publish refuses without (besides the Notable/Brief/Journal
 # *sections*, which are checked from the draft blocks, not from a file).

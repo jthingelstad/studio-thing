@@ -78,7 +78,7 @@ class EddyTreeTests(unittest.TestCase):
         issue = _subgroup(_top_group(tree, "eddy"), "issue")
         self.assertEqual(
             _cmd_names(issue),
-            {"start", "update", "status", "final", "haiku", "subject", "publish"},
+            {"start", "update", "status", "final", "haiku", "subject", "publish", "send"},
         )
 
     def test_eddy_top_level_status(self):

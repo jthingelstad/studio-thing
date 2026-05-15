@@ -86,14 +86,13 @@ CREATE_FINAL_BODY_CAP = ISSUE_BODY_CAP + 6_000
 # give Marky the whole thing when she's drafting syndication framings.
 PROMOTION_BODY_CAP = ISSUE_BODY_CAP + 8_000
 
-# Section-relative placement slots for the per-issue membership CTAs that
-# `compose-cta` writes and `build-publish` reads. In published section order:
-# after Notable, after Journal, after Briefly, then just before the closing
-# haiku. The writer (compose-cta) validates before saving the frontmatter
-# and the reader (build-publish) validates before placing in the body, so
-# both must agree on the vocabulary — keep them on the same constant.
-PLACEMENTS = ("after_notable", "after_journal", "after_brief", "before_haiku")
-DEFAULT_PLACEMENT = "after_notable"
+# Retired in the chunk-based editorial rework: membership-block placement is
+# now an inline marker (``<!-- cta:N -->`` / ``<!-- thanks:N -->``) that
+# ``create-final`` writes into ``final.md`` at the position Eddy chose. The
+# old per-file ``placement:`` frontmatter vocabulary
+# (``after_notable``/``after_journal``/``after_brief``/``before_haiku``) is
+# no longer needed at this layer — ``build-publish`` resolves markers
+# directly, and ``compose-cta`` discovers slots by scanning ``final.md``.
 
 
 def final_or_draft(issue_number: int) -> str:
@@ -104,6 +103,27 @@ def final_or_draft(issue_number: int) -> str:
         if res.get("found") and isinstance(res.get("text"), str) and res["text"].strip():
             return res["text"]
     return ""
+
+
+def thesis_block(issue_number: int) -> str:
+    """Return ``## Thesis\\n\\n{thesis}\\n`` if ``thesis.md`` exists for
+    the issue, else an empty string.
+
+    ``create-final`` writes ``thesis.md`` (one to three sentences naming
+    what the issue is about). The compose-* jobs read it via this helper
+    and inject the thesis as a ``## Thesis`` block at the top of their
+    user message — so subject, description, haiku, and CTA framings all
+    anchor on the same editorial intent. A missing thesis is fine
+    (compose jobs degrade gracefully to today's behaviour of reading
+    just the body).
+    """
+    res = s3.read_issue_file(issue_number, "thesis.md")
+    if not (res.get("found") and isinstance(res.get("text"), str)):
+        return ""
+    text = (res["text"] or "").strip()
+    if not text:
+        return ""
+    return f"## Thesis\n\n{text}\n"
 
 
 def parse_json_payload(reply: str) -> Optional[dict[str, Any]]:

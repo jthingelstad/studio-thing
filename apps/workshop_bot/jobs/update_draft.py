@@ -46,12 +46,23 @@ NAME = "update-draft"
 
 # Block fill order is irrelevant (each replace_block is independent); the
 # *layout* order lives in templates/draft_starter.md. Listed here in the
-# published section order for readability (intro → Currently → cover → …).
-SECTION_BLOCKS = ("intro", "currently", "cover", "notable", "journal", "brief", "haiku")
+# published section order for readability (intro → Currently → cover → …
+# → outro → haiku). ``feature1`` / ``feature2`` are the
+# featured-section slots that ``create-final`` fills when Eddy promotes
+# an item; ``update-draft`` does NOT touch them (so they stay empty here).
+SECTION_BLOCKS = (
+    "intro", "currently", "cover", "notable", "journal", "brief",
+    "outro", "haiku", "feature1", "feature2",
+)
 # Blocks that are just a verbatim copy of an authored asset file. (``cover``
 # and ``currently`` are handled separately — see ``_cover.render`` /
 # ``_currently.render`` — since they prefer structured ``.json`` forms.)
-_ASSET_FILE = {"intro": "intro.md", "haiku": "haiku.md"}
+# ``intro`` and ``outro`` are both Jamie-authored prose pushed via Shortcut;
+# ``haiku`` is written by ``compose-haiku``. Same projection shape for all
+# three: read verbatim from the asset file into the named block. Feature
+# blocks are NOT here — they're filled by ``create-final``, not by an
+# upstream asset projection.
+_ASSET_FILE = {"intro": "intro.md", "outro": "outro.md", "haiku": "haiku.md"}
 _COVER_IMAGE = "https://files.thingelstad.com/weekly-thing/{n}/cover.jpg"
 
 # Eddy posts a review only Tue–Fri (weekday 1..4, Mon=0). Sat/Sun/Mon the

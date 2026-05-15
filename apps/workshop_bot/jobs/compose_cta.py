@@ -1,36 +1,102 @@
-"""``compose-cta`` (Patty) — the per-issue membership CTA(s).
+"""``compose-cta`` (Patty) — fill the membership-block slots Eddy declared.
 
-Patty decides on 0, 1, or 2 CTAs for the issue and drafts 1–2 framings
-per slot, in **Thingy's** voice (the public-facing librarian persona —
-not Jamie's first person, not salesy). Reads ``final.md`` (or ``draft.md``),
-recent supporting-member activity, the current goal + progress (via the
-dynamic context block), and the last 3–4 issues' ``publish.md`` files for
-arc continuity. Posts proposals to ``#supporters``; on Jamie's pick per
-slot, writes ``cta-1.md`` / ``cta-2.md`` with ``placement:`` YAML
-frontmatter. Optional for ship (Patty may choose 0 CTAs).
+Reads ``final.md`` from the per-issue S3 workspace and **scans for inline
+markers** (``<!-- cta:N -->`` and ``<!-- thanks:N -->``) placed by
+``create-final``. Each marker is a slot. Patty fills the supporter-CTA
+slots and the thank-you slots, posting 1–2 framings per slot to
+``#supporters`` for Jamie to pick. The picked copy is written to
+``cta-N.md`` / ``thanks-N.md`` with ``kind:`` YAML frontmatter; the
+audience-aware Liquid wrapping happens later, in ``build-publish``.
+
+Slot discovery is the inversion of today's flow: Patty no longer decides
+*how many* CTAs there are or *where* they go — that's Eddy's editorial
+call now. Patty only writes copy for slots Eddy declared. The placement
+decision lives inline in ``final.md``; the file format here loses its
+``placement:`` frontmatter (slot position is encoded by the marker, not by
+the file).
+
+Per slot:
+
+- ``<!-- cta:N -->`` → ``prompts/patty/compose-cta.md`` (supporter ask, in
+  Thingy's voice). Reader sees this in the audience-resolved Liquid only
+  when they're *not* a premium member.
+- ``<!-- thanks:N -->`` → ``prompts/patty/compose-thanks.md`` (sincere
+  thank-you, Thingy's voice, gratitude register — never an ask). Reader
+  sees this only when they *are* a premium member.
+
+If ``thesis.md`` is present (written by ``create-final``), the thesis is
+injected into both prompts as a ``## Thesis`` block at the top, so the
+framings anchor on the issue's stated editorial intent. Missing
+``thesis.md`` is fine — the job falls back to today's behaviour of
+reading just the body.
+
+Slots that already have a non-empty copy file are skipped — re-running
+the job won't re-prompt for ones Jamie has already picked. To re-roll a
+specific slot, delete its ``cta-N.md`` / ``thanks-N.md`` first.
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import re
 
 from ..tools import db, s3
 from ..tools.content import context
-from ..tools.llm import anthropic_client
 from ..tools.discord import interaction
+from ..tools.llm import anthropic_client
 from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.compose_cta")
 
 NAME = "compose-cta"
 
-# How many prior issues' `publish.md` to include for arc continuity (so
-# the model can see Patty's recent framings) and how many chars to take
-# from each one. Each excerpt is glommed into the user message, so the
-# product (count × excerpt cap) is what bounds the arc-context size.
+# How many prior issues' ``publish.md`` to include for arc continuity (so
+# the model can see how prior CTAs / thanks read). The product
+# (count × excerpt cap) bounds the arc-context size in the user message.
 _ARC_LOOKBACK_COUNT = 4
 _ARC_EXCERPT_CAP = 4_000
+
+_MARKER_RE = re.compile(r"<!--\s*(cta|thanks):(\d+)\s*-->")
+
+# Map marker kind → (prompt name, output filename pattern, friendly slot label,
+# YAML ``kind:`` value written into the file's frontmatter).
+_KIND_CONFIG: dict[str, dict[str, str]] = {
+    "cta":    {"prompt": "patty-compose-cta",    "label": "supporter CTA", "frontmatter_kind": "supporter"},
+    "thanks": {"prompt": "patty-compose-thanks", "label": "thank-you",     "frontmatter_kind": "thanks"},
+}
+
+
+def _filename_for(kind: str, n: int) -> str:
+    return f"cta-{n}.md" if kind == "cta" else f"thanks-{n}.md"
+
+
+def _discover_slots(final_text: str) -> list[tuple[str, int]]:
+    """Walk ``final.md`` left-to-right and return the declared slots as a
+    list of ``(kind, number)``. Order is the visual order in the body so
+    the picker UX walks down the issue. Duplicates are deduped (a body
+    that — by accident — has two ``<!-- cta:1 -->`` markers is treated
+    as one slot)."""
+    out: list[tuple[str, int]] = []
+    seen: set[tuple[str, int]] = set()
+    for m in _MARKER_RE.finditer(final_text or ""):
+        slot = (m.group(1), int(m.group(2)))
+        if slot in seen:
+            continue
+        seen.add(slot)
+        out.append(slot)
+    return out
+
+
+def _slot_filled(issue_number: int, filename: str) -> bool:
+    """True if the per-slot file already exists with a non-empty body."""
+    res = s3.read_issue_file(issue_number, filename)
+    if not (res.get("found") and isinstance(res.get("text"), str)):
+        return False
+    text = res["text"]
+    # Strip frontmatter (``---\n…\n---``) before checking for body content.
+    body = re.sub(r"^---\s*\n.*?\n---\s*\n", "", text, count=1, flags=re.DOTALL)
+    return bool(body.strip())
 
 
 def _recent_publish_excerpts(issue_number: int, count: int = _ARC_LOOKBACK_COUNT) -> str:
@@ -44,84 +110,145 @@ def _recent_publish_excerpts(issue_number: int, count: int = _ARC_LOOKBACK_COUNT
     return "\n\n".join(out) if out else "(no prior publish.md files available)"
 
 
+def _parse_framings(reply: str) -> list[str]:
+    """Pull 1–2 framing strings out of the model's JSON reply.
+
+    Both ``compose-cta`` and ``compose-thanks`` return
+    ``{"framings": ["…", "…"]}``. Returns ``[]`` to signal
+    "unparseable; retry" — the same convention as the other compose jobs."""
+    data = _llm_job.parse_json_payload(reply)
+    if not isinstance(data, dict):
+        return []
+    framings = data.get("framings")
+    if not isinstance(framings, list):
+        return []
+    out: list[str] = []
+    for f in framings:
+        s = str(f).strip()
+        if s:
+            out.append(s)
+        if len(out) >= 2:
+            break
+    return out
+
+
+def _pretty(framings: list[str]) -> list[str]:
+    """Render framings as blockquotes for the Discord picker."""
+    return [f"> {f}" for f in framings]
+
+
+async def _fill_slot(
+    *, bot, channel, n: int, kind: str, slot_n: int,
+    arc_excerpts: str, patty_ctx_block: str, thesis_block: str,
+) -> bool:
+    """Generate framings for one slot, post the picker, write the picked
+    body to the slot's file. Returns True if a file was written."""
+    cfg = _KIND_CONFIG[kind]
+    base_prompt = anthropic_client.load_prompt(cfg["prompt"])
+    head = thesis_block + ("\n" if thesis_block else "") + patty_ctx_block
+    user_msg = (
+        f"{head}\n\n{base_prompt}\n\n"
+        f"---\n\nRecent issues (for arc continuity — prior CTAs/thanks are in these):\n\n"
+        f"{arc_excerpts}\n\n"
+        f"---\n\nThis is slot **{kind}:{slot_n}** for WT{n}. "
+        f"Draft 1–2 framings for *this slot only*."
+    )
+    pick = await _llm_job.refresh_loop(
+        bot, channel,
+        base_msg=user_msg,
+        parser=_parse_framings,
+        pretty=_pretty,
+        prompt_label=f"💝 WT{n} — {cfg['label']} slot {slot_n} (`{kind}:{slot_n}`):",
+        trigger=f"compose-cta:{kind}",
+        persona="patty",
+    )
+    if not pick:
+        await _llm_job.try_send(
+            channel,
+            f"(No pick for {cfg['label']} slot {slot_n} of WT{n} — left unwritten.)",
+            job_label="compose-cta",
+        )
+        return False
+    content = f"---\nkind: {cfg['frontmatter_kind']}\n---\n\n{pick}\n"
+    s3.write_issue_file(n, _filename_for(kind, slot_n), content)
+    return True
+
+
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     window = db.get_active_issue_window()
     if window is None:
         return _base.JobResult(False, "❌ no active issue window.")
     n = int(window["issue_number"])
-    # Off-loop: final_or_draft hits S3.
-    body = await asyncio.to_thread(_llm_job.final_or_draft, n)
-    if not body.strip():
-        return _base.JobResult(False, f"❌ no `final.md`/`draft.md` for WT{n} yet.")
+
+    # final.md is required — slots live in it.
+    res = await asyncio.to_thread(s3.read_issue_file, n, "final.md")
+    final_text = res["text"] if (res.get("found") and isinstance(res.get("text"), str)) else ""
+    if not final_text.strip():
+        return _base.JobResult(
+            False,
+            f"❌ no `final.md` for WT{n} — run `/eddy issue final` first so the membership-block "
+            f"slots are declared.",
+        )
+
+    slots = _discover_slots(final_text)
+    if not slots:
+        return _base.JobResult(
+            True,
+            f"(compose-cta for WT{n}: no membership-block slots declared in `final.md`.)",
+            data={"issue_number": n, "slots_total": 0, "slots_written": 0, "slots_skipped": 0},
+        )
+
     bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "patty", "DISCORD_CHANNEL_SUPPORTERS")
     if bot is None:
         return _base.JobResult(True, f"(compose-cta skipped — {reason})", data={"posted": False})
 
-    # Lock both slots up front so a concurrent re-fire bounces. (No
-    # refresh-in-loop here — Patty composes the full CTA set in one pass;
-    # for fresh framings Jamie re-fires the whole job.)
-    assets = [f"{n}/cta-1.md", f"{n}/cta-2.md"]
+    # Per-slot locks — same granularity as today, just with the thanks
+    # files included.
+    assets = [f"{n}/{_filename_for(k, num)}" for k, num in slots]
     try:
         with _base.job_lock(assets, NAME):
-            base_prompt = anthropic_client.load_prompt("patty-compose-cta")
-            # Off-loop: build_patty_context hits Stripe / Buttondown, and
-            # _recent_publish_excerpts does up to four sequential S3 reads.
-            # Wrap both so a slow round-trip doesn't stall the gateway.
+            # Off-loop: dynamic context + arc excerpts both hit external APIs
+            # / S3 (slow round-trip otherwise stalls the gateway).
             patty_ctx = await asyncio.to_thread(context.build_patty_context)
+            patty_ctx_block = context.render_block(patty_ctx)
             arc_excerpts = await asyncio.to_thread(_recent_publish_excerpts, n)
-            user_msg = (
-                f"{context.render_block(patty_ctx)}\n\n{base_prompt}\n\n"
-                f"---\n\nRecent issues (for arc continuity — your previous CTAs are in these):\n\n"
-                f"{arc_excerpts}\n\n"
-                f"---\n\nThis issue (WT{n}):\n\n```markdown\n{body[:_llm_job.ISSUE_BODY_CAP]}\n```"
-            )
-            with db.AgentRun("patty", trigger="compose-cta") as agent_run:
-                reply, _meta = await bot.core(latest=user_msg, history=[], model=None)
-                agent_run.record_meta(_meta)
-                agent_run.records_written = 1
-            data = _llm_job.parse_json_payload(reply)
-            ctas = (data or {}).get("ctas")
-            if not isinstance(ctas, list):
-                return _base.JobResult(False, "compose-cta: model didn't return a parseable `ctas` list.")
-            if len(ctas) == 0:
-                await _llm_job.try_send(channel, f"💝 Patty's call for WT{n}: **no CTA this issue.**")
-                return _base.JobResult(True, f"compose-cta for WT{n}: 0 CTAs (Patty's call).",
-                                       data={"issue_number": n, "ctas_written": 0, "posted": True})
+            thesis_block = await asyncio.to_thread(_llm_job.thesis_block, n)
 
             written = 0
-            for idx, cta in enumerate(ctas[:2]):
-                if not isinstance(cta, dict):
-                    continue
-                placement = str(cta.get("placement") or _llm_job.DEFAULT_PLACEMENT).strip()
-                if placement not in _llm_job.PLACEMENTS:
-                    placement = _llm_job.DEFAULT_PLACEMENT
-                framings = [str(f).strip() for f in (cta.get("framings") or []) if str(f).strip()][:2]
-                if not framings:
-                    continue
-                pretty = [f"> {f}" for f in framings]
-                slot_label = f"Slot {idx + 1} (placement: `{placement}`)"
-                pick = await interaction.await_choice(
-                    bot, channel, pretty,
-                    prompt=f"💝 Patty's CTA proposal for WT{n} — {slot_label}:",
-                    allow_refresh=True,
-                )
-                if pick == "refresh":
-                    # Re-running the whole job is the clean way to refresh; ask Jamie to re-fire.
+            skipped = 0
+            for kind, slot_n in slots:
+                filename = _filename_for(kind, slot_n)
+                if _slot_filled(n, filename):
+                    skipped += 1
                     await _llm_job.try_send(
                         channel,
-                        f"(For fresh CTA framings, re-fire `/patty cta` — "
-                        f"slot {idx + 1} for WT{n} left unwritten.)",
+                        f"⏭️ Skipping `{kind}:{slot_n}` for WT{n} — `{filename}` already has copy. "
+                        f"Delete it to re-roll.",
+                        job_label="compose-cta",
                     )
                     continue
-                if pick is None or pick >= len(framings):
-                    await _llm_job.try_send(channel, f"(No pick for slot {idx + 1} of WT{n} — left unwritten.)")
-                    continue
-                chosen = framings[pick]
-                content = f"---\nplacement: {placement}\n---\n\n{chosen}\n"
-                s3.write_issue_file(n, f"cta-{idx + 1}.md", content)
-                written += 1
-            await _llm_job.try_send(channel, f"✅ {written} CTA(s) written for WT{n}.")
-            return _base.JobResult(True, f"compose-cta for WT{n}: {written} CTA(s) written.",
-                                   data={"issue_number": n, "ctas_written": written, "posted": True})
+                if await _fill_slot(
+                    bot=bot, channel=channel, n=n, kind=kind, slot_n=slot_n,
+                    arc_excerpts=arc_excerpts,
+                    patty_ctx_block=patty_ctx_block,
+                    thesis_block=thesis_block,
+                ):
+                    written += 1
+
+            summary = (
+                f"✅ compose-cta for WT{n}: {written} slot(s) written"
+                + (f", {skipped} already filled" if skipped else "")
+                + f" (of {len(slots)} declared)."
+            )
+            await _llm_job.try_send(channel, summary, job_label="compose-cta")
+            return _base.JobResult(
+                True, summary,
+                data={
+                    "issue_number": n,
+                    "slots_total": len(slots),
+                    "slots_written": written,
+                    "slots_skipped": skipped,
+                },
+            )
     except _base.JobLocked as exc:
         return _base.JobResult(False, f"⏳ `compose-cta` already running ({exc.holder_desc}).")

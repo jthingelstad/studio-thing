@@ -60,8 +60,15 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     try:
         with _base.job_lock([asset], NAME):
             base_prompt = anthropic_client.load_prompt("eddy-compose-haiku")
+            # Thread Eddy's thesis (when present) into the user message so the
+            # haiku anchors on the same editorial intent as the reorder, subject,
+            # description, and CTA framings. Missing thesis.md → empty string,
+            # job degrades to today's body-only behaviour.
+            thesis_block = await asyncio.to_thread(_llm_job.thesis_block, n)
             base_msg = (
-                f"{base_prompt}\n\n---\n\nThe issue (WT{n}):\n\n"
+                f"{thesis_block}"
+                + ("\n" if thesis_block else "")
+                + f"{base_prompt}\n\n---\n\nThe issue (WT{n}):\n\n"
                 f"```markdown\n{body[:_llm_job.ISSUE_BODY_CAP]}\n```"
             )
             chosen = await _llm_job.refresh_loop(

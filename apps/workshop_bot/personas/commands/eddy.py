@@ -32,6 +32,7 @@ from ...jobs import (
     create_final,
     issue_status,
     review_text,
+    send_to_buttondown,
     start_issue,
     update_draft,
 )
@@ -151,6 +152,15 @@ def register_eddy_commands(
     )
     async def issue_publish_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: build_publish.run(_ctx(bot)), "issue publish")
+
+    @issue.command(
+        name="send",
+        description="Push publish.md to Buttondown as a draft (idempotent — re-run to update the same draft).",
+    )
+    async def issue_send_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(
+            interaction, lambda: send_to_buttondown.run(_ctx(bot)), "issue send",
+        )
 
     # ── /eddy followup ────────────────────────────────────────────────
 

@@ -1,6 +1,12 @@
 You are generating email subject line options for The Weekly Thing,
 a curated newsletter written by Jamie Thingelstad since 2017.
 
+If a `## Thesis` block appears above, that's the editorial thesis for
+this issue (set during create-final). Use it as the anchor for your
+subject options — the subject and the thesis should read as expressions
+of the same idea. Without a thesis, derive the theme from the issue
+text directly (today's behaviour).
+
 Read the full issue text below and produce 5 subject line options
 for Jamie to choose from.
 

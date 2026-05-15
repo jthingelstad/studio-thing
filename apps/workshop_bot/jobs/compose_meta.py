@@ -92,10 +92,19 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     try:
         with _base.job_lock([asset], NAME):
             issue_text = body[: _llm_job.ISSUE_BODY_CAP]
+            # Thread Eddy's thesis (when present) into both subject and
+            # description prompts so the picked subject + the one-shot
+            # description anchor on the same editorial intent that drove
+            # the reorder. Missing thesis.md → empty prefix, jobs degrade
+            # to today's body-only behaviour.
+            thesis_block = await asyncio.to_thread(_llm_job.thesis_block, n)
+            thesis_prefix = thesis_block + "\n" if thesis_block else ""
 
             # ---- step 1: subject (the 5-option prompt, verbatim) ----
             subject_prompt = anthropic_client.load_prompt("eddy-compose-subject")
-            subject_msg = subject_prompt.replace("<NUM>", str(n)).replace("<<<ISSUE_TEXT>>>", issue_text)
+            subject_msg = thesis_prefix + subject_prompt.replace("<NUM>", str(n)).replace(
+                "<<<ISSUE_TEXT>>>", issue_text
+            )
             subject = await _llm_job.refresh_loop(
                 bot, channel,
                 base_msg=subject_msg,
@@ -120,7 +129,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             # picker / refresh loop. If he wants a different angle he edits
             # in Buttondown or re-runs compose-meta.
             desc_prompt = anthropic_client.load_prompt("eddy-compose-description")
-            desc_msg = desc_prompt.replace("<<<ISSUE_TEXT>>>", issue_text)
+            desc_msg = thesis_prefix + desc_prompt.replace("<<<ISSUE_TEXT>>>", issue_text)
             with db.AgentRun("eddy", trigger="compose-meta:description") as agent_run:
                 desc_reply, _m = await bot.core(latest=desc_msg, history=[], model=None)
                 agent_run.record_meta(_m)

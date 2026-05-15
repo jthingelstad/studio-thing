@@ -783,33 +783,94 @@ def _workspace_get_text(issue_number: str, filename: str) -> str | None:
     return resp["Body"].read().decode("utf-8")
 
 
-def publish_to_buttondown(args: argparse.Namespace) -> None:
-    """Create a Buttondown draft from the issue's ``publish.md`` +
-    ``metadata.json`` in the S3 workspace.
+def _workspace_put_text(issue_number: str, filename: str, content: str) -> None:
+    """Write a text file to the per-issue S3 workspace. Used by the
+    Buttondown publisher to persist the freshly-minted ``buttondown_id``
+    back to ``metadata.json`` so subsequent runs PATCH the same draft."""
+    import boto3
 
-    workshop_bot's ``build-publish`` job writes those files; this is the
-    handoff into Buttondown. Refuses if ``publish.md`` isn't there yet —
-    the issue isn't ready, and Jamie should let workshop_bot finish.
-    Creates the email in ``draft`` status; Jamie reviews it in the
-    Buttondown UI and schedules the send.
+    client = boto3.client("s3")
+    key = f"weekly-thing/{issue_number}/{filename}"
+    if filename.endswith(".json"):
+        content_type = "application/json; charset=utf-8"
+    elif filename.endswith(".md"):
+        content_type = "text/markdown; charset=utf-8"
+    else:
+        content_type = "text/plain; charset=utf-8"
+    client.put_object(
+        Bucket=WEEKLY_THING_ASSETS_BUCKET,
+        Key=key,
+        Body=content.encode("utf-8"),
+        ContentType=content_type,
+        CacheControl="no-cache",
+    )
+
+
+class ButtondownPublishError(RuntimeError):
+    """Raised when the Buttondown publisher can't push the draft.
+
+    The message is operator-readable — the CLI surfaces it as a ``SystemExit``
+    and the workshop_bot job surfaces it directly in ``#editorial``."""
+
+
+def buttondown_publish_idempotent(
+    issue_number: str | int, *, dry_run: bool = False,
+) -> dict[str, Any]:
+    """Create or update a Buttondown draft for ``issue_number``.
+
+    Reads ``publish.md`` + ``metadata.json`` from the issue's S3 workspace.
+    If ``metadata.json`` already carries a ``buttondown_id`` (set on a
+    prior run), PATCHes that draft. Otherwise POSTs a new draft, then
+    writes the freshly-minted id back to ``metadata.json`` so the next
+    run updates the same draft.
+
+    **``publish_date`` is never sent.** The publisher only pushes
+    subject / body / slug / description / image / status=draft —
+    everything else (scheduling, final spot-check, send) is done by
+    hand in the Buttondown UI. This is by design: the bot creates a
+    durable, idempotent staging artifact; the human decides when it
+    ships.
+
+    On a 404 from PATCH (the draft was deleted in Buttondown UI between
+    runs), falls through to POST and updates ``buttondown_id``.
+
+    Returns a dict::
+
+        {
+            "action": "created" | "updated" | "would_create" | "would_update",
+            "id": "<buttondown-uuid>",
+            "subject": "...",
+            "slug": "...",
+            "body_chars": int,
+            "description_chars": int,
+        }
+
+    Raises :class:`ButtondownPublishError` on missing publish.md /
+    metadata.json, missing Buttondown response id, or any 4xx/5xx
+    (other than the handled PATCH 404 fallback).
     """
-    number = str(args.issue)
+    number = str(issue_number)
     body = _workspace_get_text(number, "publish.md")
     if body is None:
-        raise SystemExit(
+        raise ButtondownPublishError(
             f"No publish.md at s3://{WEEKLY_THING_ASSETS_BUCKET}/weekly-thing/{number}/publish.md — "
-            "the issue isn't ready. Let workshop_bot finish (`/workshop job build-publish`)."
+            "the issue isn't ready. Run `/eddy issue publish` first."
         )
     meta_raw = _workspace_get_text(number, "metadata.json")
     if meta_raw is None:
-        raise SystemExit(
-            f"No metadata.json for #{number} — run `/workshop job compose-meta` first."
+        raise ButtondownPublishError(
+            f"No metadata.json for #{number} — run `/eddy issue subject` first."
         )
     meta = json.loads(meta_raw)
     subject = meta.get("subject") or f"WT{number}"
     description = meta.get("description") or ""
     image = meta.get("image") or ""
     slug = str(meta.get("slug") or number)
+    existing_id = meta.get("buttondown_id")
+
+    # **No publish_date.** The payload carries only the fields Buttondown
+    # needs to render the draft; Jamie picks the schedule manually in the
+    # Buttondown UI when he's ready to ship.
     payload: dict[str, Any] = {
         "subject": subject,
         "body": body,
@@ -820,17 +881,81 @@ def publish_to_buttondown(args: argparse.Namespace) -> None:
     }
     if image:
         payload["image"] = image
-    if getattr(args, "dry_run", False):
+
+    base_result: dict[str, Any] = {
+        "subject": subject,
+        "slug": slug,
+        "body_chars": len(body),
+        "description_chars": len(description),
+    }
+
+    if dry_run:
+        return {
+            **base_result,
+            "action": "would_update" if existing_id else "would_create",
+            "id": existing_id or "(none)",
+        }
+
+    # 1) If we have a known id, try PATCH first.
+    if existing_id:
+        url = f"{API_BASE}/emails/{existing_id}"
+        resp = requests.patch(url, headers=headers(content_type=True), json=payload)
+        if resp.status_code == 404:
+            # The draft was deleted in Buttondown's UI between runs; fall
+            # through to POST. The buttondown_id in metadata.json will be
+            # overwritten with the new id below.
+            existing_id = None
+        elif resp.status_code >= 400:
+            raise ButtondownPublishError(
+                f"Buttondown PATCH /emails/{existing_id} failed "
+                f"({resp.status_code}): {resp.text[:500]}"
+            )
+        else:
+            data = resp.json() if resp.text else {}
+            return {**base_result, "action": "updated", "id": data.get("id") or existing_id}
+
+    # 2) POST to create a new draft.
+    resp = requests.post(f"{API_BASE}/emails", headers=headers(content_type=True), json=payload)
+    if resp.status_code >= 400:
+        raise ButtondownPublishError(
+            f"Buttondown POST /emails failed ({resp.status_code}): {resp.text[:500]}"
+        )
+    data = resp.json()
+    new_id = data.get("id")
+    if not new_id:
+        raise ButtondownPublishError("Buttondown POST succeeded but the response had no `id`.")
+
+    # Persist the new id back to metadata.json so subsequent runs PATCH
+    # this same draft instead of creating duplicates.
+    meta["buttondown_id"] = new_id
+    _workspace_put_text(number, "metadata.json", json.dumps(meta, indent=2) + "\n")
+
+    return {**base_result, "action": "created", "id": new_id}
+
+
+def publish_to_buttondown(args: argparse.Namespace) -> None:
+    """CLI shim around :func:`buttondown_publish_idempotent`. Prints a
+    human-readable result line; catches :class:`ButtondownPublishError`
+    and exits with the operator-readable reason."""
+    number = str(args.issue)
+    try:
+        result = buttondown_publish_idempotent(
+            number, dry_run=getattr(args, "dry_run", False),
+        )
+    except ButtondownPublishError as exc:
+        raise SystemExit(str(exc))
+    action = result["action"]
+    if action.startswith("would_"):
+        verb = "create" if action == "would_create" else "update"
         print(
-            f"[dry-run] would create a Buttondown draft for #{number}: "
-            f"subject={subject!r}, slug={slug!r}, body={len(body)} chars, description={len(description)} chars"
+            f"[dry-run] would {verb} Buttondown draft for #{number}: "
+            f"subject={result['subject']!r}, slug={result['slug']!r}, "
+            f"id={result['id']}, body={result['body_chars']} chars, "
+            f"description={result['description_chars']} chars"
         )
         return
-    response = requests.post(f"{API_BASE}/emails", headers=headers(content_type=True), json=payload)
-    if response.status_code >= 400:
-        raise SystemExit(f"Buttondown create failed ({response.status_code}): {response.text[:500]}")
-    data = response.json()
-    print(f"Created Buttondown draft for #{number}: id={data.get('id')} subject={subject!r}")
+    verb = "Created" if action == "created" else "Updated"
+    print(f"{verb} Buttondown draft for #{number}: id={result['id']} subject={result['subject']!r}")
     print("Review it in the Buttondown UI, then schedule the send.")
 
 

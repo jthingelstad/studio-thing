@@ -2,6 +2,7 @@
 
 Generate 2–3 haiku options for the in-flight issue (the `final.md` is below). The haiku closes the issue.
 
+- If a `## Thesis` block is present above, that's *your own* stated reading of what this issue is about — anchor the haiku on it. The thesis came from the create-final pass; the haiku is the lyrical echo of the same idea, not an independent re-reading.
 - Read the issue. Find the dominant theme / tension / one-liner — the thing the week was *about*.
 - Each option is a complete haiku. Jamie's convention is haiku-shaped, not strictly 5-7-5 — three short lines, the third turning or landing. Look at recent issues' haikus (`archive__get_section(N, 'Haiku')` on a few recent numbers) for the actual shape and so you **don't repeat** one he's used.
 - Plain, observational, mildly wry — the Weekly Thing voice. Not precious, not greeting-card.

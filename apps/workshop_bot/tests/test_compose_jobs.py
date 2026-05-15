@@ -224,6 +224,15 @@ class ComposeMetaTests(_DBTestCase):
 
 
 class ComposeCtaTests(_DBTestCase):
+    """Rewritten for the chunk-based editorial rework.
+
+    Slots are now discovered by scanning ``final.md`` for inline
+    ``<!-- cta:N -->`` / ``<!-- thanks:N -->`` markers placed by
+    ``create-final``. Patty no longer decides count or placement — only
+    copy for the slots Eddy declared. The per-slot LLM reply shape is
+    ``{"framings": [...]}``, and the picked body is written into
+    ``cta-N.md`` / ``thanks-N.md`` with ``kind:`` YAML frontmatter."""
+
     def tearDown(self):
         os.environ.pop("DISCORD_CHANNEL_SUPPORTERS", None)
         super().tearDown()
@@ -234,255 +243,512 @@ class ComposeCtaTests(_DBTestCase):
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
 
-    def test_zero_ctas(self):
+    def _seed_final(self, notable_marker_after_a: str = "") -> None:
+        """Write a final.md with the three required blocks. Optionally inject
+        a marker into the Notable block content."""
+        notable = "### [A](http://a)\n\nx" + (
+            f"\n\n{notable_marker_after_a}" if notable_marker_after_a else ""
+        )
+        self.ws.write_issue_file(458, "final.md", _filled_final(notable=notable))
+
+    def test_returns_ok_when_no_markers_in_final(self):
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
-        fc = _FakeBotChannel(persona="patty", reply='{"ctas": []}')
+        self._seed_final()  # no markers
+        fc = _FakeBotChannel(persona="patty", reply='{"framings": []}')
         os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
         result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok)
-        self.assertEqual(result.data["ctas_written"], 0)
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(result.data["slots_total"], 0)
+        self.assertEqual(result.data["slots_written"], 0)
+        # No LLM call when there are no slots.
+        fc.bot.core.assert_not_awaited()
+        # No cta files written.
         self.assertNotIn((458, "cta-1.md"), self.ws.files)
+        self.assertNotIn((458, "thanks-1.md"), self.ws.files)
 
-    def test_one_cta_written_with_frontmatter(self):
+    def test_refuses_when_final_md_missing(self):
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
-        reply = '{"ctas": [{"placement": "after_brief", "framings": ["Thingy here. Your support funds the EFF."]}]}'
-        fc = _FakeBotChannel(persona="patty", reply=reply)
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
-            result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        self.assertEqual(result.data["ctas_written"], 1)
-        cta = self.ws.files[(458, "cta-1.md")]
-        self.assertIn("placement: after_brief", cta)
-        self.assertIn("Thingy here.", cta)
-
-    def test_two_ctas_written_with_distinct_placements(self):
-        self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
-        reply = (
-            '{"ctas": ['
-            ' {"placement": "after_notable", "framings": ["A1", "A2"]},'
-            ' {"placement": "before_haiku", "framings": ["B1"]}'
-            ']}'
-        )
-        fc = _FakeBotChannel(persona="patty", reply=reply)
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        # Jamie picks the first option for each slot.
-        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
-            result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        self.assertEqual(result.data["ctas_written"], 2)
-        c1 = self.ws.files[(458, "cta-1.md")]
-        c2 = self.ws.files[(458, "cta-2.md")]
-        self.assertIn("placement: after_notable", c1)
-        self.assertIn("A1", c1)
-        self.assertIn("placement: before_haiku", c2)
-        self.assertIn("B1", c2)
-
-    def test_third_cta_dropped_silently(self):
-        # The job caps at ctas[:2]; a third proposal must be ignored.
-        self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
-        reply = (
-            '{"ctas": ['
-            ' {"placement": "after_notable", "framings": ["A"]},'
-            ' {"placement": "after_journal", "framings": ["B"]},'
-            ' {"placement": "before_haiku", "framings": ["C — should be dropped"]}'
-            ']}'
-        )
-        fc = _FakeBotChannel(persona="patty", reply=reply)
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
-            result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok)
-        self.assertEqual(result.data["ctas_written"], 2)
-        self.assertNotIn((458, "cta-3.md"), self.ws.files)
-
-    def test_invalid_placement_falls_back_to_default(self):
-        self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
-        reply = '{"ctas": [{"placement": "above_everything", "framings": ["x"]}]}'
-        fc = _FakeBotChannel(persona="patty", reply=reply)
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
-            result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        # Falls back to compose._DEFAULT_PLACEMENT (`after_notable`).
-        from apps.workshop_bot.jobs import _llm_job as _llm_job_mod
-        self.assertIn(f"placement: {_llm_job_mod.DEFAULT_PLACEMENT}", self.ws.files[(458, "cta-1.md")])
-
-    def test_empty_framings_slot_skipped(self):
-        # A CTA dict whose framings list is empty / all-whitespace doesn't
-        # get a slot — `written` reflects only real picks.
-        self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
-        reply = (
-            '{"ctas": ['
-            ' {"placement": "after_notable", "framings": ["   ", ""]},'
-            ' {"placement": "before_haiku", "framings": ["real one"]}'
-            ']}'
-        )
-        fc = _FakeBotChannel(persona="patty", reply=reply)
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
-            result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok)
-        # Only the second slot wrote — but it goes to cta-2.md, not cta-1.md
-        # (the loop index is the source-list index; an empty slot leaves
-        # its filename unwritten).
-        self.assertEqual(result.data["ctas_written"], 1)
-        self.assertNotIn((458, "cta-1.md"), self.ws.files)
-        self.assertIn("real one", self.ws.files[(458, "cta-2.md")])
-
-    def test_malformed_json_reply_returns_parse_error(self):
-        self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
-        # parse_json_payload pulls the first {…} block — a reply with no
-        # JSON object should fail the `ctas` shape check.
-        fc = _FakeBotChannel(persona="patty", reply="sorry, can't draft right now")
+        # No final.md written.
+        fc = _FakeBotChannel(persona="patty", reply='{"framings": []}')
         os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
         result = asyncio.run(compose_cta.run(ctx))
         self.assertFalse(result.ok)
-        self.assertIn("parseable", result.message)
+        self.assertIn("no `final.md`", result.message)
+        self.assertIn("/eddy issue final", result.message)
+
+    def test_one_cta_marker_writes_supporter_file(self):
+        self._window()
+        self._seed_final(notable_marker_after_a="<!-- cta:1 -->")
+        reply = '{"framings": ["Thingy here. Your support funds the EFF."]}'
+        fc = _FakeBotChannel(persona="patty", reply=reply)
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
+            result = asyncio.run(compose_cta.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(result.data["slots_written"], 1)
+        cta = self.ws.files[(458, "cta-1.md")]
+        self.assertIn("kind: supporter", cta)
+        self.assertIn("Thingy here.", cta)
+        # The new format drops `placement:` frontmatter.
+        self.assertNotIn("placement:", cta)
+
+    def test_thanks_marker_writes_thanks_file_with_kind(self):
+        self._window()
+        self._seed_final(notable_marker_after_a="<!-- thanks:1 -->")
+        reply = '{"framings": ["Thank you for keeping this free."]}'
+        fc = _FakeBotChannel(persona="patty", reply=reply)
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
+            result = asyncio.run(compose_cta.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(result.data["slots_written"], 1)
+        thanks = self.ws.files[(458, "thanks-1.md")]
+        self.assertIn("kind: thanks", thanks)
+        self.assertIn("Thank you for keeping this free.", thanks)
+        # cta-1.md NOT written (thanks marker → thanks file only).
         self.assertNotIn((458, "cta-1.md"), self.ws.files)
+
+    def test_multiple_markers_fill_each_slot(self):
+        """Two cta + one thanks. Each slot fired independently with its own
+        framings; per-slot picker UX."""
+        self._window()
+        marker_block = "<!-- cta:1 -->\n\n<!-- cta:2 -->\n\n<!-- thanks:1 -->"
+        self._seed_final(notable_marker_after_a=marker_block)
+        # Three calls; each returns one framing.
+        replies = iter([
+            ('{"framings": ["cta-1 copy"]}', {"iterations": 1}),
+            ('{"framings": ["cta-2 copy"]}', {"iterations": 1}),
+            ('{"framings": ["thanks-1 copy"]}', {"iterations": 1}),
+        ])
+        fc = _FakeBotChannel(persona="patty")
+        fc.bot.core = AsyncMock(side_effect=lambda **kw: next(replies))
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
+            result = asyncio.run(compose_cta.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(result.data["slots_written"], 3)
+        self.assertEqual(result.data["slots_total"], 3)
+        self.assertIn("cta-1 copy", self.ws.files[(458, "cta-1.md")])
+        self.assertIn("cta-2 copy", self.ws.files[(458, "cta-2.md")])
+        self.assertIn("thanks-1 copy", self.ws.files[(458, "thanks-1.md")])
+
+    def test_already_filled_slot_skipped(self):
+        """A slot whose copy file already has body content is skipped — the
+        job is idempotent for already-filled slots; Jamie deletes the file
+        to re-roll."""
+        self._window()
+        self._seed_final(notable_marker_after_a="<!-- cta:1 -->\n\n<!-- cta:2 -->")
+        # Pre-fill cta-1.md.
+        self.ws.write_issue_file(458, "cta-1.md", "---\nkind: supporter\n---\n\nalready filled.")
+        fc = _FakeBotChannel(persona="patty", reply='{"framings": ["new copy"]}')
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
+            result = asyncio.run(compose_cta.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(result.data["slots_skipped"], 1)
+        self.assertEqual(result.data["slots_written"], 1)
+        # cta-1.md unchanged.
+        self.assertIn("already filled.", self.ws.files[(458, "cta-1.md")])
+        # cta-2.md got the new copy.
+        self.assertIn("new copy", self.ws.files[(458, "cta-2.md")])
 
     def test_await_choice_timeout_leaves_slot_unwritten(self):
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
-        reply = '{"ctas": [{"placement": "after_brief", "framings": ["a", "b"]}]}'
-        fc = _FakeBotChannel(persona="patty", reply=reply)
+        self._seed_final(notable_marker_after_a="<!-- cta:1 -->")
+        fc = _FakeBotChannel(persona="patty", reply='{"framings": ["a", "b"]}')
         os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
         with patch.object(interaction, "await_choice", AsyncMock(return_value=None)):
             result = asyncio.run(compose_cta.run(ctx))
         self.assertTrue(result.ok)
-        self.assertEqual(result.data["ctas_written"], 0)
+        self.assertEqual(result.data["slots_written"], 0)
         self.assertNotIn((458, "cta-1.md"), self.ws.files)
 
-    def test_body_truncated_to_issue_body_cap(self):
-        # An oversized final.md must be capped at _llm_job.ISSUE_BODY_CAP
-        # before being fed to Patty.
-        from apps.workshop_bot.jobs import _llm_job as _llm_job_mod
+    def test_unparseable_reply_eventually_gives_up(self):
+        """refresh_loop retries up to MAX_REFRESH_ROUNDS on unparseable JSON.
+        After exhaustion, no file is written."""
         self._window()
-        cap = _llm_job_mod.ISSUE_BODY_CAP
-        oversized = "## Notable\n\n" + ("x" * (cap + 5_000))
-        self.ws.write_issue_file(458, "final.md", oversized)
-        fc = _FakeBotChannel(persona="patty", reply='{"ctas": []}')
+        self._seed_final(notable_marker_after_a="<!-- cta:1 -->")
+        fc = _FakeBotChannel(persona="patty", reply="sorry, can't draft right now")
         os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
         result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok)
-        sent = fc.bot.core.call_args.kwargs["latest"]
-        # The fenced markdown block carries at most `cap` body chars.
-        body = sent.split("```markdown\n", 1)[1].rsplit("\n```", 1)[0]
-        self.assertEqual(len(body), cap)
+        self.assertTrue(result.ok)  # not a job failure; just no copy written
+        self.assertEqual(result.data["slots_written"], 0)
+        self.assertNotIn((458, "cta-1.md"), self.ws.files)
 
-    def test_channel_send_failure_does_not_lose_written_cta(self):
-        # If Discord glitches on the success post, the CTA file is already
-        # on S3 — the job must still complete successfully and report
-        # ctas_written=1, not bubble the discord error out.
+    def test_channel_send_failure_does_not_lose_written_slot(self):
+        """If Discord glitches on the summary post, the file is already on
+        S3 — the job must still complete and report slots_written=1."""
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
-        reply = '{"ctas": [{"placement": "after_brief", "framings": ["x"]}]}'
-        fc = _FakeBotChannel(persona="patty", reply=reply)
+        self._seed_final(notable_marker_after_a="<!-- cta:1 -->")
+        fc = _FakeBotChannel(persona="patty", reply='{"framings": ["x"]}')
         fc.channel.send = AsyncMock(side_effect=RuntimeError("discord down"))
         os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
         with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
             result = asyncio.run(compose_cta.run(ctx))
         self.assertTrue(result.ok, result.message)
-        self.assertEqual(result.data["ctas_written"], 1)
+        self.assertEqual(result.data["slots_written"], 1)
         self.assertIn("x", self.ws.files[(458, "cta-1.md")])
 
     def test_concurrent_run_is_blocked_by_job_lock(self):
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
-        fc = _FakeBotChannel(persona="patty", reply='{"ctas": []}')
+        self._seed_final(notable_marker_after_a="<!-- cta:1 -->\n\n<!-- thanks:1 -->")
+        fc = _FakeBotChannel(persona="patty", reply='{"framings": []}')
         os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
-        # Pre-acquire the same multi-asset lock the job opens.
-        with _base.job_lock([f"{458}/cta-1.md", f"{458}/cta-2.md"], compose_cta.NAME):
+        # Pre-acquire one of the per-slot locks the job opens.
+        with _base.job_lock([f"{458}/cta-1.md", f"{458}/thanks-1.md"], compose_cta.NAME):
             result = asyncio.run(compose_cta.run(ctx))
         self.assertFalse(result.ok)
         self.assertIn("already running", result.message)
         fc.bot.core.assert_not_awaited()
 
+    def test_thesis_block_injected_when_present(self):
+        """If thesis.md exists, both CTA and thanks prompts get the thesis
+        injected as a `## Thesis` block at the top of the user message."""
+        self._window()
+        self._seed_final(notable_marker_after_a="<!-- cta:1 -->")
+        self.ws.write_issue_file(458, "thesis.md", "Capital and code.")
+        fc = _FakeBotChannel(persona="patty", reply='{"framings": ["x"]}')
+        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
+            asyncio.run(compose_cta.run(ctx))
+        sent = fc.bot.core.call_args.kwargs["latest"]
+        self.assertIn("## Thesis", sent)
+        self.assertIn("Capital and code.", sent)
+
 
 
 class CreateFinalTests(_DBTestCase):
+    """Rewritten for the chunk-based editorial pass. Eddy now returns a
+    JSON object (``thesis``, ``*_order``, ``promotions``,
+    ``membership_blocks``); the job validates strictly, reassembles
+    sections from the parsed ``raw_bytes`` slices, and inserts inline
+    membership-block markers + feature blocks. The LLM never touches
+    the bytes that ship — code does the moving."""
+
     def tearDown(self):
         os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
         super().tearDown()
 
-    def _setup(self, reply):
+    @staticmethod
+    def _multi_item_draft() -> str:
+        """A draft with 2+ items per section so reorder is meaningful.
+        Journal has 3 entries so promotion tests (which can only promote
+        Journal entries now) have room to remove items from the order."""
+        notable = (
+            "### [A](http://a)\n\nbody A\n\n\n"
+            "### [B](http://b)\n\nbody B"
+        )
+        brief = (
+            "First. → **[X](http://x)**\n\n"
+            "Second. → **[Y](http://y)**"
+        )
+        journal = (
+            "[Sunday @ 1:00 PM](https://j1)\n\nj-body1\n\n\n"
+            "[Monday @ 2:00 PM](https://j2)\n\nj-body2\n\n\n"
+            "[Tuesday @ 3:00 PM](https://j3)\n\nj-body3"
+        )
+        return _filled_final(notable=notable, brief=brief, journal=journal)
+
+    def _setup(self, reply: str, *, draft: str | None = None):
         from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
-        self.ws.write_issue_file(458, "draft.md", _filled_final())
+        self.ws.write_issue_file(458, "draft.md", draft or self._multi_item_draft())
         fc = _FakeBotChannel(persona="eddy", reply=reply)
         os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
         return _base.JobContext(deps=fc.deps()), fc
 
+    @staticmethod
+    def _basic_reply(
+        *,
+        thesis: str = "Test thesis for the issue.",
+        notable_order=("n1", "n2"),
+        brief_order=("b1", "b2"),
+        journal_order=("j1", "j2", "j3"),
+        promotions=(),
+        membership_blocks=(),
+    ) -> str:
+        payload = {
+            "thesis": thesis,
+            "notable_order": list(notable_order),
+            "brief_order": list(brief_order),
+            "journal_order": list(journal_order),
+            "promotions": list(promotions),
+            "membership_blocks": list(membership_blocks),
+        }
+        return json.dumps(payload)
+
+    # ---- baseline accept/reject/refuse flow ----
+
     def test_refuses_if_final_exists(self):
-        from apps.workshop_bot.tools.content import issue as issue_mod
-        w = issue_mod.compute_window("2026-05-16", 7)
-        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
-                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
-        self.ws.write_issue_file(458, "draft.md", _filled_final())
+        ctx, fc = self._setup(self._basic_reply())
         self.ws.write_issue_file(458, "final.md", "already there")
-        ctx, fc = self._setup("ignored")
-        self.ws.files[(458, "final.md")] = "already there"  # _setup overwrote draft only
         result = asyncio.run(create_final.run(ctx))
         self.assertFalse(result.ok)
         self.assertIn("already has", result.message)
 
-    def test_accept_uses_eddy_body(self):
-        proposed = _filled_final(notable="### [Z reordered](http://z)\n\nlead")
-        reply = f"Reordered Notable to lead with Z.\n\n```markdown\n{proposed}\n```"
+    def test_accept_writes_reorder_and_thesis(self):
+        # Reorder: notable [n2, n1], leave brief + journal identity.
+        ctx, fc = self._setup(self._basic_reply(notable_order=("n2", "n1")))
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
+            result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        # final.md exists and reflects the new order (B before A).
+        final = self.ws.files[(458, "final.md")]
+        b_pos = final.index("### [B](http://b)")
+        a_pos = final.index("### [A](http://a)")
+        self.assertLess(b_pos, a_pos)
+        # thesis.md written.
+        self.assertIn("Test thesis for the issue.", self.ws.files[(458, "thesis.md")])
+        # Brief / Journal blocks unchanged.
+        self.assertIn("**[X](http://x)**", final)
+        self.assertIn("[Sunday @ 1:00 PM]", final)
+        # Block markers preserved.
+        self.assertIn("<!-- block:notable -->", final)
+        self.assertIn("<!-- /block:notable -->", final)
+        # Pipeline hint preserved.
+        self.assertIn("issue haiku", result.message)
+        self.assertTrue(result.data["thesis_written"])
+
+    def test_reject_uses_draft_body(self):
+        ctx, fc = self._setup(self._basic_reply(notable_order=("n2", "n1")))
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=False)):
+            result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        # Draft body written; no reorder applied; no thesis.md.
+        final = self.ws.files[(458, "final.md")]
+        a_pos = final.index("### [A](http://a)")
+        b_pos = final.index("### [B](http://b)")
+        self.assertLess(a_pos, b_pos)  # original order
+        self.assertNotIn((458, "thesis.md"), self.ws.files)
+
+    def test_timeout_writes_draft_and_returns(self):
+        ctx, fc = self._setup(self._basic_reply())
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=None)):
+            result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        # Timeout → falls into the ❌ branch in the current job code; draft
+        # body written verbatim, no thesis. (None and False both leave the
+        # reorder untaken — same outcome here.)
+        final = self.ws.files[(458, "final.md")]
+        self.assertIn("### [A](http://a)", final)
+        self.assertNotIn((458, "thesis.md"), self.ws.files)
+
+    # ---- JSON validation ----
+
+    def test_unparseable_reply_eventually_falls_back_to_draft(self):
+        ctx, fc = self._setup("sorry can't draft right now")
+        # No valid JSON ever. Loop exhausts MAX_REFRESH_ROUNDS; the
+        # fallback writes the draft body as final.md and returns ok.
+        result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertIn("draft as-is", result.message)
+        self.assertIn("### [A](http://a)", self.ws.files[(458, "final.md")])
+        # No thesis written when the LLM never produced a valid response.
+        self.assertNotIn((458, "thesis.md"), self.ws.files)
+
+    def test_invalid_order_permutation_refuses(self):
+        # n1 omitted from notable_order — validation error.
+        bad = self._basic_reply(notable_order=("n2",))
+        ctx, fc = self._setup(bad)
+        # Each round refuses; the failure posts a 'didn't validate' note
+        # to channel.send. We're not patching await_approval — it's never
+        # reached because validation fails before the approval prompt.
+        result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertIn("draft as-is", result.message)
+        # A 'didn't validate' notice was sent to #editorial at least once.
+        sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
+        self.assertTrue(any("didn't validate" in m for m in sent_messages),
+                        f"sent_messages = {sent_messages!r}")
+
+    # ---- membership block markers ----
+
+    def test_membership_blocks_marker_inline(self):
+        reply = self._basic_reply(
+            membership_blocks=[
+                {"kind": "cta", "after": "n1", "rationale": "after first item"},
+                {"kind": "thanks", "before_haiku": True, "rationale": "end of issue"},
+            ],
+        )
         ctx, fc = self._setup(reply)
         with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
-        self.assertIn("Z reordered", self.ws.files[(458, "final.md")])
-        # No auto-chain: the result points Jamie at the compose jobs.
-        self.assertIn("issue haiku", result.message)
-        # ...and Eddy never touched any other job.
-        self.assertFalse(hasattr(create_final, "compose_haiku"))
-        # final.html preview written, banner says FINAL.
-        html = self.ws.files[(458, "final.html")]
-        self.assertTrue(html.startswith("<!DOCTYPE html>"))
-        self.assertIn("FINAL (post-Eddy ordering) · WT458", html)
-        self.assertIn("Z reordered", html)
-        self.assertEqual(result.data["preview_url"], "https://files.thingelstad.com/weekly-thing/458/final.html")
+        final = self.ws.files[(458, "final.md")]
+        # cta:1 marker appears in the Notable block, after item A.
+        self.assertIn("<!-- cta:1 -->", final)
+        a_pos = final.index("### [A](http://a)")
+        cta_pos = final.index("<!-- cta:1 -->")
+        b_pos = final.index("### [B](http://b)")
+        self.assertLess(a_pos, cta_pos)
+        self.assertLess(cta_pos, b_pos)
+        # thanks:1 marker appears in the last non-empty section (Brief).
+        self.assertIn("<!-- thanks:1 -->", final)
 
-    def test_reject_uses_draft_body(self):
-        proposed = _filled_final(notable="### [Z reordered](http://z)\n\nlead")
-        reply = f"here's a take\n\n```markdown\n{proposed}\n```"
+    def test_membership_block_after_promoted_id_refused(self):
+        reply = self._basic_reply(
+            journal_order=("j2", "j3"),
+            promotions=[{
+                "id": "j1",
+                "heading": "Featured Journal",
+                "position": "after_journal",
+                "rationale": "the central piece",
+            }],
+            membership_blocks=[
+                {"kind": "cta", "after": "j1", "rationale": "trying to anchor on promoted"},
+            ],
+        )
         ctx, fc = self._setup(reply)
-        with patch.object(interaction, "await_approval", AsyncMock(return_value=False)):
-            result = asyncio.run(create_final.run(ctx))
+        result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
-        # Draft body used, not the proposed reorder.
-        self.assertIn("### [A](http://a)", self.ws.files[(458, "final.md")])
-        self.assertNotIn("Z reordered", self.ws.files[(458, "final.md")])
+        sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
+        self.assertTrue(any("promoted" in m for m in sent_messages),
+                        f"sent_messages = {sent_messages!r}")
 
-    def test_timeout_writes_draft_and_returns(self):
-        ctx, fc = self._setup("here's a take\n\n```markdown\n" + _filled_final(notable="### [Z](http://z)") + "\n```")
-        with patch.object(interaction, "await_approval", AsyncMock(return_value=None)):
+    # ---- promotions ----
+
+    def test_single_journal_promotion_writes_feature_block(self):
+        # Promote j2 to its own featured section. Journal_order keeps the
+        # other two entries; the feature block carries j2's raw_bytes.
+        reply = self._basic_reply(
+            journal_order=("j1", "j3"),  # j2 promoted out
+            promotions=[{
+                "id": "j2",
+                "heading": "Featured: A Big Journal Read",
+                "position": "after_journal",
+                "rationale": "this post is the editorial heart of the week",
+            }],
+        )
+        ctx, fc = self._setup(reply)
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
-        # On timeout the draft body is written as-is (don't block forever).
-        self.assertIn("### [A](http://a)", self.ws.files[(458, "final.md")])
+        final = self.ws.files[(458, "final.md")]
+        # feature1 block has YAML frontmatter + the promoted entry's raw_bytes.
+        self.assertIn("<!-- block:feature1 -->", final)
+        self.assertIn("position: after_journal", final)
+        self.assertIn("heading: Featured: A Big Journal Read", final)
+        self.assertIn("source_id: j2", final)
+        # j2's content lives in feature1; the Journal block has only j1 + j3.
+        journal_block_start = final.index("<!-- block:journal -->")
+        journal_block_end = final.index("<!-- /block:journal -->")
+        journal_body = final[journal_block_start:journal_block_end]
+        self.assertNotIn("[Monday @ 2:00 PM](https://j2)", journal_body)
+        self.assertIn("[Sunday @ 1:00 PM](https://j1)", journal_body)
+        self.assertIn("[Tuesday @ 3:00 PM](https://j3)", journal_body)
+
+    def test_two_journal_promotions_write_both_features(self):
+        # Rare case: promote two Journal entries. journal_order shrinks
+        # to just the remaining one.
+        reply = self._basic_reply(
+            journal_order=("j2",),
+            promotions=[
+                {"id": "j1", "heading": "Featured One", "position": "after_journal",
+                 "rationale": "lead piece"},
+                {"id": "j3", "heading": "Featured Two", "position": "after_brief",
+                 "rationale": "second feature later in the issue"},
+            ],
+        )
+        ctx, fc = self._setup(reply)
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
+            result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        final = self.ws.files[(458, "final.md")]
+        self.assertIn("heading: Featured One", final)
+        self.assertIn("heading: Featured Two", final)
+        self.assertIn("source_id: j1", final)
+        self.assertIn("source_id: j3", final)
+
+    def test_notable_id_cannot_be_promoted(self):
+        # Notable links stay in their parent section — only Journal
+        # entries earn featured treatment.
+        reply = self._basic_reply(
+            notable_order=("n2",),
+            promotions=[{
+                "id": "n1",
+                "heading": "Featured Notable",
+                "position": "after_notable",
+                "rationale": "wishful thinking",
+            }],
+        )
+        ctx, fc = self._setup(reply)
+        result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
+        self.assertTrue(
+            any("Notable" in m and "n1" in m for m in sent_messages),
+            f"sent_messages = {sent_messages!r}",
+        )
+
+    def test_brief_id_cannot_be_promoted(self):
+        reply = self._basic_reply(
+            brief_order=("b2",),
+            promotions=[{
+                "id": "b1",
+                "heading": "Featured Brief",
+                "position": "after_notable",
+                "rationale": "...",
+            }],
+        )
+        ctx, fc = self._setup(reply)
+        result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
+        self.assertTrue(any("Brief" in m for m in sent_messages),
+                        f"sent_messages = {sent_messages!r}")
+
+    def test_promoted_id_also_in_order_refused(self):
+        # j1 in journal_order AND in promotions — must reject because the
+        # order validation expects (parsed - promoted), which means j1
+        # appears as an unknown id in the order.
+        reply = self._basic_reply(
+            journal_order=("j1", "j2", "j3"),
+            promotions=[{
+                "id": "j1",
+                "heading": "Featured One",
+                "position": "after_journal",
+                "rationale": "...",
+            }],
+        )
+        ctx, fc = self._setup(reply)
+        result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
+        self.assertTrue(
+            any("journal" in m and "j1" in m for m in sent_messages),
+            f"sent_messages = {sent_messages!r}",
+        )
+
+    def test_too_many_promotions_refused(self):
+        # 3 Journal promotions exceeds _MAX_PROMOTIONS=2 — and 3 is also
+        # everything in the Journal section, which would be an absurd shape.
+        reply = self._basic_reply(
+            journal_order=(),
+            promotions=[
+                {"id": "j1", "heading": "F1", "position": "after_journal", "rationale": "..."},
+                {"id": "j2", "heading": "F2", "position": "after_journal", "rationale": "..."},
+                {"id": "j3", "heading": "F3", "position": "after_journal", "rationale": "..."},
+            ],
+        )
+        ctx, fc = self._setup(reply)
+        result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
+        self.assertTrue(any("too many promotions" in m for m in sent_messages),
+                        f"sent_messages = {sent_messages!r}")
 
 
 

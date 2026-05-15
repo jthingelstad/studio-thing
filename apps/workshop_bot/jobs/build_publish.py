@@ -4,20 +4,40 @@ The ship artifact, byte-shaped like a real Weekly Thing issue body (the
 thing ``pipeline/content/content.py publish`` posts to Buttondown). In
 order: a leading ``<!-- buttondown-editor-mode: plaintext -->`` comment
 glommed onto the intro → ``## Currently`` (if present) → the cover image
-block → each non-empty section as ``## Header\n\n{content}`` (Notable,
-Journal, Briefly — an absent ``currently.json`` / ``currently.md`` or any
-empty section just drops out, "a section that didn't run is a clean NULL")
-→ the CTAs at their placements, each wrapped in the membership-block Liquid
-scaffold (premium / regular + Stripe buttons / else + ``{{ subscribe_form }}``)
-→ ``A haiku to leave you with…`` + the bold/hard-break haiku + the closing
-"discuss on Reddit" line + the email-only Tinylytics open-tracking pixel.
-The parts are joined ``---``-fenced; the ``<!-- block:… -->`` markers from
-``draft.md`` / ``final.md`` never appear in ``publish.md``. The ``.html``
-preview is a Liquid-stripped, regular-subscriber rendering — best-effort.
+block → each non-empty section as ``## Header\\n\\n{content}`` (Notable,
+Journal, Briefly — an absent section or any empty section just drops out)
+→ the optional ``outro.md`` prose → ``A haiku to leave you with…`` + the
+bold/hard-break haiku + the closing "discuss on Reddit" line + the
+email-only Tinylytics open-tracking pixel.
+
+**Membership-block resolution.** ``final.md`` carries inline
+``<!-- cta:N -->`` / ``<!-- thanks:N -->`` markers placed by
+``create-final``. ``build-publish`` resolves each marker by reading the
+corresponding ``cta-N.md`` / ``thanks-N.md`` file and substituting an
+**audience-aware Buttondown Liquid block**:
+
+- ``cta:N`` → non-members only. ``regular`` subscribers see the CTA copy
+  plus the two Stripe upgrade buttons; anyone else without a premium
+  membership sees the CTA copy plus the subscribe form. Premium members
+  fall through to nothing — they're not asked again.
+- ``thanks:N`` → premium members only. Everyone else falls through to
+  nothing.
+
+The wrapping is done here (not by ``create-final`` or ``compose-cta``)
+so the per-issue files (``cta-N.md`` / ``thanks-N.md``) stay clean —
+audience-aware Liquid is a publishing concern, not an authoring one.
+
+The parts are joined ``---``-fenced; the ``<!-- block:… -->`` markers
+from ``draft.md`` / ``final.md`` never appear in ``publish.md``. The
+``.html`` preview is a Liquid-stripped, regular-subscriber rendering —
+best-effort.
 
 Refuses (PASSes loudly) if any required asset is missing: ``final.md``,
-``haiku.md``, ``metadata.json``, ``intro.md``, ``cover.jpg``. Posts the
-missing list to ``#editorial`` with the slash command(s) to run.
+``haiku.md``, ``metadata.json``, ``intro.md``, ``cover.jpg``. Also
+refuses if a marker in ``final.md`` doesn't have its corresponding copy
+file written (so a ``<!-- cta:1 -->`` declared by Eddy but never filled
+by Patty fails loud rather than shipping with an empty membership
+block).
 """
 
 from __future__ import annotations
@@ -45,10 +65,11 @@ _FIX_HINT = {
     "final.md": "→ `/eddy issue final`",
 }
 
-# (block name → published heading). intro / the cover block / haiku are
-# special-cased in the assembly; the rest are emitted in `_ORDER`, each only
-# if its content is non-empty. Issue layout: intro → `## Currently` (when
-# present) → cover image → Notable → Journal → Briefly → the closing haiku.
+# (block name → published heading). intro / outro / the cover block / haiku
+# are special-cased in the assembly; the rest are emitted in `_ORDER`, each
+# only if its content is non-empty. Issue layout: intro → ``## Currently``
+# (when present) → cover image → Notable → Journal → Briefly → outro
+# (when present) → closing haiku.
 _SECTION_HEADINGS = {
     "currently": "## Currently",
     "notable": "## Notable",
@@ -73,6 +94,19 @@ _EDITOR_MODE_COMMENT = "<!-- buttondown-editor-mode: plaintext -->"
 # pixel uses it. Same id as the site's analytics; overridable for tests.
 _DEFAULT_TINYLYTICS_UID = "a2YQr3ZMqkySNYSwz4uF"
 
+# Marker pattern create-final places inline in final.md. ``\d+`` for the
+# 1-indexed slot number; the ``(cta|thanks)`` group routes to the right
+# copy file + Liquid wrapper. Markers are paragraph-isolated on their own
+# line in final.md, but the substitution doesn't require that — any
+# location works.
+_MARKER_RE = re.compile(r"<!--\s*(cta|thanks):(\d+)\s*-->")
+
+# Feature-block names create-final fills when Eddy promotes an item to its
+# own standalone section. Listed here so build-publish reads them from
+# final.md alongside the other named blocks.
+_FEATURE_BLOCK_NAMES = ("feature1", "feature2")
+_FEATURE_POSITIONS = ("after_notable", "after_journal", "after_brief")
+
 
 def _tinylytics_uid() -> str:
     return (os.environ.get("TINYLYTICS_SITE_UID") or _DEFAULT_TINYLYTICS_UID).strip()
@@ -89,61 +123,96 @@ def _pixel_block(issue_number: int) -> str:
     )
 
 
-# Membership-block scaffold each composed CTA is wrapped in (mirrors the
-# iOS-Shortcut template): premium and regular subscribers see the CTA copy;
-# regular subscribers additionally get the two Stripe Payment Link buttons;
-# everyone else gets the subscribe form. The Stripe links are the permanent
-# issue-email Payment Links (the same ones recent issues use — these live in
-# the Shortcut template, not a repo data file). ``__CTA__`` is the slot for
-# the composed copy.
-_MEMBERSHIP_BLOCK = """{% if subscriber.subscriber_type == 'premium' %}
+# ---------- audience-aware Liquid wrappers ----------
+#
+# Non-members see the supporter CTA (with Stripe upsell buttons for
+# ``regular`` subscribers, the subscribe form otherwise). Premium
+# subscribers see the thank-you only — they're never asked again, and they
+# never see the CTA copy.
 
-__CTA__
+def _supporter_block(cta_body: str) -> str:
+    """Wrap Patty's supporter-CTA body in the non-member Liquid conditional.
 
-{% elif subscriber.subscriber_type == 'regular' %}
+    ``regular`` subscribers (free) see the CTA + two Stripe payment-link
+    buttons (``$4 monthly`` / ``$40 yearly``). Anyone else without a
+    premium membership — including web previews and non-subscribers —
+    sees the CTA + the ``{{ subscribe_form }}``. Premium members fall
+    through to nothing.
 
-__CTA__
+    The Stripe URLs are the same permanent issue-email payment links
+    today's iOS-Shortcut template uses; they live here rather than in a
+    data file because they're rarely-changing and audit-trail-noisy.
+    """
+    body = cta_body.strip()
+    return (
+        "{% if subscriber.subscriber_type == 'regular' %}\n\n"
+        f"{body}\n\n"
+        '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td width="50%" valign="top" style="padding:10px; text-align:center; font-size: 16px; font-weight: bold;">\n'
+        '<buttondown-button href="https://buy.stripe.com/3cs7w5eX6aXBbhm144?prefilled_email={{ subscriber.email | urlencode }}">$4 monthly</buttondown-button>\n'
+        '</td><td width="50%" valign="top" style="padding:10px; text-align:center; font-size: 16px; font-weight: bold;">\n'
+        '<buttondown-button href="https://buy.stripe.com/eVa3fP2ak3v91GMdQR?prefilled_email={{ subscriber.email | urlencode }}">$40 yearly</buttondown-button>\n'
+        "</td></tr></table>\n\n"
+        "{% elsif subscriber.subscriber_type != 'premium' %}\n\n"
+        f"{body}\n\n"
+        "{{ subscribe_form }}\n\n"
+        "{% endif %}"
+    )
 
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td width="50%" valign="top" style="padding:10px; text-align:center; font-size: 16px; font-weight: bold;">
-<buttondown-button href="https://buy.stripe.com/3cs7w5eX6aXBbhm144?prefilled_email={{ subscriber.email | urlencode }}">$4 monthly</buttondown-button>
-</td><td width="50%" valign="top" style="padding:10px; text-align:center; font-size: 16px; font-weight: bold;">
-<buttondown-button href="https://buy.stripe.com/eVa3fP2ak3v91GMdQR?prefilled_email={{ subscriber.email | urlencode }}">$40 yearly</buttondown-button>
-</td></tr></table>
 
-{% else %}
+def _thanks_block(thanks_body: str) -> str:
+    """Wrap Patty's thank-you body in the premium-only Liquid conditional.
 
-Enjoying the Weekly Thing?
+    Premium subscribers see the thanks; everyone else falls through to
+    nothing — no ask, no acknowledgment they're not in the audience for."""
+    body = thanks_body.strip()
+    return (
+        "{% if subscriber.subscriber_type == 'premium' %}\n\n"
+        f"{body}\n\n"
+        "{% endif %}"
+    )
 
-{{ subscribe_form }}
 
-{% endif %}"""
-
-
-def _membership_block(cta_body: str) -> str:
-    return _MEMBERSHIP_BLOCK.replace("__CTA__", cta_body.strip())
-
+# ---------- preview rendering (Liquid strip) ----------
 
 def _for_preview(text: str) -> str:
-    """Best-effort Liquid strip for the ``publish.html`` preview: drop the
-    editor-mode comment and the email-only pixel block, keep just the
-    ``regular``-subscriber branch of each membership block, then remove any
-    leftover ``{% … %}`` / ``{{ … }}`` tags. The delivered email keeps the
-    full Liquid; this only shapes the preview."""
+    """Best-effort Liquid strip for the ``publish.html`` preview.
+
+    Renders as a *regular* (free-subscriber) view: keeps the supporter-CTA
+    text + the Stripe buttons, hides the premium-only thanks block, drops
+    the editor-mode comment and the email-only pixel block, then strips
+    any leftover ``{% … %}`` / ``{{ … }}`` tags. The delivered email keeps
+    the full Liquid; this only shapes the preview at
+    ``https://files.thingelstad.com/weekly-thing/{N}/publish.html``.
+    """
     t = re.sub(r"<!--\s*buttondown-editor-mode:[^>]*-->\s*", "", text, flags=re.IGNORECASE)
-    t = re.sub(r"\{%\s*if\s+medium\s*==\s*'email'\s*%\}.*?\{%\s*endif\s*%\}", "", t, flags=re.DOTALL | re.IGNORECASE)
+    # Strip the email-only tinylytics pixel.
     t = re.sub(
-        r"\{%\s*if\s+subscriber\.subscriber_type[^%]*%\}.*?"
-        r"\{%\s*elif\s+subscriber\.subscriber_type\s*==\s*'regular'\s*%\}(.*?)"
-        r"\{%\s*else\s*%\}.*?\{%\s*endif\s*%\}",
+        r"\{%\s*if\s+medium\s*==\s*'email'\s*%\}.*?\{%\s*endif\s*%\}",
+        "", t, flags=re.DOTALL | re.IGNORECASE,
+    )
+    # Supporter block: keep the regular-subscriber branch (CTA + Stripe).
+    t = re.sub(
+        r"\{%\s*if\s+subscriber\.subscriber_type\s*==\s*'regular'\s*%\}(.*?)"
+        r"\{%\s*elif\s+subscriber\.subscriber_type\s*!=\s*'premium'\s*%\}.*?"
+        r"\{%\s*endif\s*%\}",
         lambda m: m.group(1),
         t,
         flags=re.DOTALL,
     )
+    # Thanks block: hide entirely (regulars don't see thanks).
+    t = re.sub(
+        r"\{%\s*if\s+subscriber\.subscriber_type\s*==\s*'premium'\s*%\}.*?\{%\s*endif\s*%\}",
+        "", t, flags=re.DOTALL,
+    )
+    # Any leftover Liquid tags (e.g. {{ subscriber.email | urlencode }} in
+    # the Stripe URLs) — drop them; the preview doesn't need a real subscriber.
     t = re.sub(r"\{%[^%]*%\}", "", t)
     t = re.sub(r"\{\{[^}]*\}\}", "", t)
     t = re.sub(r"\n{3,}", "\n\n", t)
     return t.strip() + "\n"
 
+
+# ---------- I/O helpers ----------
 
 def _read(issue_number: int, filename: str) -> str:
     res = s3.read_issue_file(issue_number, filename)
@@ -166,6 +235,111 @@ def _strip_frontmatter(text: str) -> tuple[dict, str]:
     return meta, m.group(2).lstrip("\n")
 
 
+def _filename_for(kind: str, n: int) -> str:
+    return f"cta-{n}.md" if kind == "cta" else f"thanks-{n}.md"
+
+
+def _read_membership_copy(issue_number: int, kind: str, slot_n: int) -> str:
+    """Read the body (post-frontmatter) of ``cta-N.md`` or ``thanks-N.md``."""
+    raw = _read(issue_number, _filename_for(kind, slot_n))
+    if not raw.strip():
+        return ""
+    _meta, body = _strip_frontmatter(raw)
+    return body.strip()
+
+
+# ---------- marker discovery + missing-list ----------
+
+def _discover_marker_slots(final_text: str) -> list[tuple[str, int]]:
+    """Walk ``final.md`` and return declared slots as ``[(kind, num), ...]``
+    in visual order, deduped."""
+    out: list[tuple[str, int]] = []
+    seen: set[tuple[str, int]] = set()
+    for m in _MARKER_RE.finditer(final_text or ""):
+        slot = (m.group(1), int(m.group(2)))
+        if slot in seen:
+            continue
+        seen.add(slot)
+        out.append(slot)
+    return out
+
+
+def _unfilled_marker_missing_list(
+    issue_number: int, slots: list[tuple[str, int]],
+) -> list[str]:
+    """For each declared marker slot, ensure the copy file exists with a
+    non-empty body. Return the missing-list entries (formatted to slot in
+    next to the per-asset entries from REQUIRED)."""
+    missing: list[str] = []
+    for kind, slot_n in slots:
+        filename = _filename_for(kind, slot_n)
+        body = _read_membership_copy(issue_number, kind, slot_n)
+        if not body:
+            label = "supporter CTA" if kind == "cta" else "thank-you"
+            missing.append(
+                f"`{filename}` body empty ({label} slot `{kind}:{slot_n}`) → `/patty cta`"
+            )
+    return missing
+
+
+# ---------- feature blocks (promotions) ----------
+
+def _parse_feature_blocks(
+    blocks: dict[str, str],
+) -> tuple[dict[str, list[tuple[str, str]]], list[str]]:
+    """Parse the ``feature1`` / ``feature2`` blocks from a final.md block map.
+
+    Returns ``(features_by_position, malformed_names)`` where
+    ``features_by_position`` is ``{"after_notable": [(heading, body), ...], ...}``
+    and ``malformed_names`` lists any non-empty feature block missing a
+    valid ``position`` / ``heading`` frontmatter (a programming error in
+    ``create-final``; surfaced as a missing-list entry so the run refuses
+    loudly rather than emitting a broken section).
+    """
+    features_by_position: dict[str, list[tuple[str, str]]] = {}
+    malformed: list[str] = []
+    for fname in _FEATURE_BLOCK_NAMES:
+        raw = (blocks.get(fname) or "").strip()
+        if not raw:
+            continue
+        meta, body = _strip_frontmatter(raw)
+        position = (meta.get("position") or "").strip()
+        heading = (meta.get("heading") or "").strip()
+        if position not in _FEATURE_POSITIONS or not heading or not body.strip():
+            malformed.append(fname)
+            continue
+        features_by_position.setdefault(position, []).append((heading, body))
+    return features_by_position, malformed
+
+
+# ---------- marker substitution ----------
+
+def _substitute_markers(body: str, issue_number: int) -> str:
+    """Replace every ``<!-- cta:N -->`` / ``<!-- thanks:N -->`` in ``body``
+    with the audience-aware Liquid block for the corresponding copy file.
+
+    Callers should have already validated that every marker has its copy
+    file written; an empty-body slot here is a programming error.
+    """
+    def _replace(m: re.Match[str]) -> str:
+        kind = m.group(1)
+        slot_n = int(m.group(2))
+        copy = _read_membership_copy(issue_number, kind, slot_n)
+        if not copy:
+            # Defensive: validated upstream, but if it slips through, leave
+            # the marker in place rather than emitting a broken Liquid
+            # block. A visible marker in publish.md is easier to spot than
+            # silent omission.
+            return m.group(0)
+        if kind == "cta":
+            return _supporter_block(copy)
+        return _thanks_block(copy)
+
+    return _MARKER_RE.sub(_replace, body)
+
+
+# ---------- main ----------
+
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     from ..tools import db
 
@@ -183,26 +357,56 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             except Exception:  # noqa: BLE001
                 files = set()
             missing = [r for r in REQUIRED if r not in files]
-            if missing:
+
+            # Discover membership-block markers (only after final.md is
+            # present; if it's missing, the REQUIRED check above already
+            # catches it).
+            final_text = _read(n, "final.md") if "final.md" in files else ""
+            marker_slots = _discover_marker_slots(final_text)
+            marker_missing = _unfilled_marker_missing_list(n, marker_slots)
+
+            # Parse feature blocks (promotions) up front so we can flag
+            # malformed ones in the missing-list (a feature block with
+            # body but missing/invalid frontmatter is a programming bug
+            # in create-final; refuse-with-list rather than ship broken).
+            blocks = draft_mod.parse_blocks(final_text) if final_text else {}
+            features_by_position, feature_malformed = _parse_feature_blocks(blocks)
+            feature_malformed_missing = [
+                f"`{name}` has body but missing/invalid frontmatter "
+                f"(needs `position:` ∈ {{{', '.join(_FEATURE_POSITIONS)}}} and a non-empty `heading:`)"
+                for name in feature_malformed
+            ]
+
+            if missing or marker_missing or feature_malformed_missing:
                 lines = [f"⛔ `build-publish` for **WT{n}** can't run yet — missing:"]
                 for r in missing:
                     lines.append(f"  ❌ `{r}` {_FIX_HINT.get(r, '')}".rstrip())
+                for entry in marker_missing:
+                    lines.append(f"  ❌ {entry}")
+                for entry in feature_malformed_missing:
+                    lines.append(f"  ❌ {entry}")
                 msg = "\n".join(lines)
                 await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
-                return _base.JobResult(False, msg, data={"issue_number": n, "missing": missing})
-
-            final_text = _read(n, "final.md")
-            blocks = draft_mod.parse_blocks(final_text)
-            # intro / cover / currently / haiku are file-backed; their
-            # blocks in final.md are empty (they get filled here).
+                return _base.JobResult(
+                    False, msg,
+                    data={
+                        "issue_number": n,
+                        "missing": missing,
+                        "marker_missing": marker_missing,
+                        "feature_malformed": feature_malformed,
+                    },
+                )
+            # intro / outro / cover / currently / haiku are file-backed or
+            # special-cased; only the three list sections come from blocks.
             section_content = {
                 "notable": (blocks.get("notable") or "").strip(),
                 "brief": (blocks.get("brief") or "").strip(),
                 "journal": (blocks.get("journal") or "").strip(),
-                "currently": _currently.render(n),  # currently.json (preferred) or legacy currently.md
+                "currently": _currently.render(n),
             }
             intro_text = _read(n, "intro.md").strip()
-            cover_text = _cover.render(n)  # cover.json (preferred) or legacy cover.md
+            outro_text = _read(n, "outro.md").strip()
+            cover_text = _cover.render(n)
             cover_alt = _cover.alt(n)
             from html import escape as _esc
             cover_img = (
@@ -211,21 +415,6 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             )
             cover_block = f"{cover_img}\n\n{cover_text}" if cover_text else ""
             haiku_text = _read(n, "haiku.md").strip()
-
-            # CTAs by placement (cta-1.md / cta-2.md, ordered). Each composed
-            # CTA body is wrapped in the membership-block Liquid scaffold.
-            cta_by_placement: dict[str, list[str]] = {}
-            for cta_name in sorted(f for f in files if f.startswith("cta-") and f.endswith(".md")):
-                raw = _read(n, cta_name)
-                if not raw.strip():
-                    continue
-                meta, cta_body = _strip_frontmatter(raw)
-                if not cta_body.strip():
-                    continue
-                placement = (meta.get("placement") or _llm_job.DEFAULT_PLACEMENT).strip()
-                if placement not in _llm_job.PLACEMENTS:
-                    placement = _llm_job.DEFAULT_PLACEMENT
-                cta_by_placement.setdefault(placement, []).append(_membership_block(cta_body))
 
             parts: list[str] = []
             if intro_text:
@@ -241,18 +430,37 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 if not content:
                     continue
                 parts.append(f"{_SECTION_HEADINGS[name]}\n\n{content}")
-                for cta in cta_by_placement.get(f"after_{name}", []):
-                    parts.append(cta)
-            for cta in cta_by_placement.get("before_haiku", []):
-                parts.append(cta)
+                # Splice in any featured (promoted) sections declared
+                # ``after_<name>``. Each feature renders as
+                # ``## {heading}\n\n{body}`` where body is the promoted
+                # item's raw_bytes verbatim. Multiple features at the
+                # same position emit in declaration order.
+                for heading, body in features_by_position.get(f"after_{name}", []):
+                    parts.append(f"## {heading}\n\n{body}")
+            # Outro — Jamie-authored closing prose, projected from outro.md.
+            # Sits after the body sections (so any inline before_haiku
+            # markers Eddy placed at the tail of Brief/Journal/Notable have
+            # already been emitted) and before the haiku close.
+            if outro_text:
+                parts.append(outro_text)
             # Haiku close + the email-only Tinylytics pixel — one chunk, no
             # `---` between them and the closing line.
-            close = f"A haiku to leave you with…\n\n{_base.format_haiku(haiku_text)}\n\n{_CLOSING}" if haiku_text else _CLOSING
+            close = (
+                f"A haiku to leave you with…\n\n{_base.format_haiku(haiku_text)}\n\n{_CLOSING}"
+                if haiku_text
+                else _CLOSING
+            )
             parts.append(f"{close}\n\n{_pixel_block(n)}")
 
-            # Each top-level part is `---`-fenced; the editor-mode comment is
-            # glommed onto the very front (as the raw bodies have it).
+            # Each top-level part is `---`-fenced; the editor-mode comment
+            # is glommed onto the very front (as the raw bodies have it).
             body = "\n\n---\n\n".join(p.strip() for p in parts if p.strip()).strip() + "\n"
+
+            # Resolve membership-block markers — substitute each inline
+            # marker with its audience-aware Liquid wrapper around the
+            # corresponding cta-N.md / thanks-N.md copy.
+            body = _substitute_markers(body, n)
+
             published = f"{_EDITOR_MODE_COMMENT}{body}"
             preview = _for_preview(published)
             s3.write_issue_file(n, "publish.md", published)
@@ -260,11 +468,16 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 render.render_and_upload_html, n, "publish", preview,
                 title=f"Weekly Thing {n}", subtitle=None,
             )
-            view = f"\n📄 [view it]({html_url})" if html_url else ""
+            md_url = f"https://files.thingelstad.com/weekly-thing/{n}/publish.md"
+            view = (
+                f"\n📄 [HTML]({html_url}) · 📝 [markdown]({md_url})"
+                if html_url
+                else f"\n📝 [markdown]({md_url})"
+            )
             await ctx.post(
                 "DISCORD_CHANNEL_EDITORIAL",
                 f"✅ `publish.md` ready for **WT{n}** (~{len(preview.split())} words){view}\n"
-                f"Push via `pipeline/content/content.py publish --issue {n}` (creates a Buttondown draft) when you're ready.",
+                f"Push to Buttondown with `/eddy issue send` (creates or updates the draft idempotently).",
                 persona="eddy",
             )
     except _base.JobLocked as exc:
