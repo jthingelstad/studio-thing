@@ -116,30 +116,35 @@ def format_persona_line(
     audit_rows: list[tuple[str, str | None, list[str]]],
     *,
     header: Optional[str] = None,
-    commands_summary: Optional[str] = None,
+    commands_summary: Optional[str] = None,  # accepted, ignored — see below
 ) -> str:
     """Build the one-line readiness card a single persona posts to #chatter.
 
+    Clean case: ``✓ {Name} online`` — that's it. The channels-and-perms
+    audit only surfaces when something is broken; a healthy persona
+    doesn't list its channels (it's just operator noise in #chatter).
+
     Optional ``header`` prepends a deployment line (Eddy uses this for
-    the git hash). ``commands_summary`` is appended on a second line
-    listing that persona's slash verbs."""
-    bits: list[str] = []
-    any_issue = False
+    the git hash so a restart is operator-visible).
+
+    ``commands_summary`` is accepted for backward compatibility but
+    no longer rendered — repeating the slash verb list on every boot
+    is operator noise; the channel itself documents available commands."""
+    issues_only: list[str] = []
     for env_key, name, issues in audit_rows:
+        if not issues:
+            continue
         label = f"#{name}" if name else env_key
-        if issues:
-            any_issue = True
-            bits.append(f"{label} ⚠️ ({'; '.join(issues)})")
-        else:
-            bits.append(label)
-    marker = "✓" if not any_issue else "⚠️"
-    line = f"{marker} **{bot.name}** online — " + " · ".join(bits)
+        issues_only.append(f"{label} ({'; '.join(issues)})")
+    marker = "✓" if not issues_only else "⚠️"
+    if issues_only:
+        line = f"{marker} **{bot.name}** online — " + " · ".join(issues_only)
+    else:
+        line = f"{marker} **{bot.name}** online"
     out: list[str] = []
     if header:
         out.append(header)
     out.append(line)
-    if commands_summary:
-        out.append(f"   ↳ {commands_summary}")
     return "\n".join(out)
 
 

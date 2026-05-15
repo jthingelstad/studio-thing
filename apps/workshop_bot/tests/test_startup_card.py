@@ -31,7 +31,9 @@ def _fake_bot(name="Eddy", persona="eddy"):
 
 
 class FormatPersonaLineTests(unittest.TestCase):
-    def test_clean_persona_line(self):
+    def test_clean_persona_line_is_just_the_status_line(self):
+        """Clean boot: a single bare line ``✓ **Eddy** online``. No
+        channel list (operator noise), no command list."""
         bot = _fake_bot()
         rows = [
             ("DISCORD_CHANNEL_EDITORIAL", "editorial", []),
@@ -39,33 +41,49 @@ class FormatPersonaLineTests(unittest.TestCase):
             ("DISCORD_CHANNEL_CHATTER", "chatter", []),
         ]
         line = startup.format_persona_line(bot, rows)
-        self.assertTrue(line.startswith("✓ **Eddy** online"))
-        self.assertIn("#editorial", line)
-        self.assertIn("#workshop", line)
-        self.assertIn("#chatter", line)
+        self.assertEqual(line, "✓ **Eddy** online")
+        # Specifically — channels are NOT listed when everything is clean.
+        self.assertNotIn("#editorial", line)
+        self.assertNotIn("#workshop", line)
+        self.assertNotIn("#chatter", line)
 
-    def test_persona_line_with_issue(self):
+    def test_persona_line_with_issue_surfaces_only_the_broken_channel(self):
         bot = _fake_bot()
         rows = [
             ("DISCORD_CHANNEL_EDITORIAL", "editorial", []),
             ("DISCORD_CHANNEL_WORKSHOP", None, ["env var not set"]),
         ]
         line = startup.format_persona_line(bot, rows)
-        self.assertTrue(line.startswith("⚠️ **Eddy** online"))
+        self.assertTrue(line.startswith("⚠️ **Eddy** online — "))
         self.assertIn("env var not set", line)
+        # The clean #editorial is NOT echoed — only the broken row is.
+        self.assertNotIn("#editorial", line)
 
-    def test_persona_line_with_header_and_commands(self):
+    def test_header_prepended_when_lead_persona(self):
         bot = _fake_bot()
         rows = [("DISCORD_CHANNEL_EDITORIAL", "editorial", [])]
         line = startup.format_persona_line(
             bot, rows,
             header="**workshop-bot online** — `abc1234`",
-            commands_summary="/eddy commands: foo · bar",
         )
         lines = line.split("\n")
         self.assertEqual(lines[0], "**workshop-bot online** — `abc1234`")
-        self.assertTrue(lines[1].startswith("✓ **Eddy** online"))
-        self.assertTrue(lines[2].startswith("   ↳ /eddy commands"))
+        self.assertEqual(lines[1], "✓ **Eddy** online")
+        # No third line — no command summary rendered any more.
+        self.assertEqual(len(lines), 2)
+
+    def test_commands_summary_param_is_accepted_but_ignored(self):
+        """Back-compat: callers that still pass ``commands_summary``
+        (legacy code paths) shouldn't break — the kwarg is accepted but
+        the slash-verb list is no longer rendered."""
+        bot = _fake_bot()
+        rows = [("DISCORD_CHANNEL_EDITORIAL", "editorial", [])]
+        line = startup.format_persona_line(
+            bot, rows, commands_summary="/eddy commands: foo · bar",
+        )
+        self.assertEqual(line, "✓ **Eddy** online")
+        self.assertNotIn("/eddy commands", line)
+        self.assertNotIn("↳", line)
 
 
 class AuditOneTests(unittest.TestCase):

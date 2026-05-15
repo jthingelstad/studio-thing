@@ -184,11 +184,11 @@ class PersonaBot(discord.Client):
             header = f"**workshop-bot online** — `{mark}`{dirty}"
 
         rows = startup.audit_one(self)
-        message = startup.format_persona_line(
-            self, rows,
-            header=header,
-            commands_summary=self.slash_commands_summary or None,
-        )
+        # Slim startup card: just `✓ {Name} online` (lead persona also
+        # carries the deployment header). The audit's per-channel rows
+        # only render when there's an issue. The slash-verb list is no
+        # longer surfaced per boot — operator noise.
+        message = startup.format_persona_line(self, rows, header=header)
         await startup.announce(self, message)
 
     async def _sync_command_tree(self) -> None:
