@@ -1190,10 +1190,10 @@ class PinboardScanJobTests(_DBTestCase):
 
 
 class PerLinkModelSelectionTests(_DBTestCase):
-    """Discovery sources use Haiku (cheap throughput); toread items use
-    Sonnet (Jamie's own picks, higher-fidelity write-ups warranted).
-    Together with the HN score filter and the `issue_index` removal,
-    this brings Linky's weekly cost from ~$65 toward ~$5."""
+    """The per-link LLM call uses Linky's persona default
+    (``preferred_model = "sonnet"``) for every source — no per-call
+    override is passed. These tests pin that contract so a future
+    accidental ``model=`` re-introduction in pinboard_scan is caught."""
 
     def _ctx_and_team(self, replies=None):
         team = _FakeLinkyTeam(replies=replies)
@@ -1202,9 +1202,9 @@ class PerLinkModelSelectionTests(_DBTestCase):
     def _stub_sources(self, **kw):
         return PinboardScanJobTests._stub_sources(self, **kw)
 
-    def test_discovery_source_uses_haiku(self):
+    def test_discovery_source_uses_default_model(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
-        url = "https://x.example/discovery-haiku"
+        url = "https://x.example/discovery-default"
         ctx, team = self._ctx_and_team(replies=[
             f"**[T]({url})** · [indieweb](https://i/1)\n\nbody.\n\n📖 short · `indieweb_news`"
         ])
@@ -1220,12 +1220,12 @@ class PerLinkModelSelectionTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
-        # linky.core was called with model="haiku" for the discovery item.
-        self.assertEqual(team.linky.core.call_args.kwargs["model"], "haiku")
+        # No model kwarg passed — persona default (Sonnet) kicks in.
+        self.assertNotIn("model", team.linky.core.call_args.kwargs)
 
-    def test_toread_source_keeps_sonnet(self):
+    def test_toread_source_uses_default_model(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
-        url = "https://x.example/toread-sonnet"
+        url = "https://x.example/toread-default"
         ctx, team = self._ctx_and_team(replies=[
             f"**[T]({url})** · [pin](https://p/1)\n\nbody.\n\n📖 short · `toread`"
         ])
@@ -1242,8 +1242,8 @@ class PerLinkModelSelectionTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
-        # Jamie's own picks stay on Sonnet.
-        self.assertEqual(team.linky.core.call_args.kwargs["model"], "sonnet")
+        # Same default-model contract as discovery — no per-call override.
+        self.assertNotIn("model", team.linky.core.call_args.kwargs)
 
 
 class ParseSignalTests(unittest.TestCase):
