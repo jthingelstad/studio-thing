@@ -265,8 +265,8 @@ Array.prototype.forEach.call(document.querySelectorAll('#rv-panel .rv-target-ref
   item.classList.add('rv-review-item');
   item.setAttribute('data-review-target',id);
   item.setAttribute('tabindex','0');
-  item.addEventListener('mouseenter',function(){activate(item,false);});
-  item.addEventListener('focusin',function(){activate(item,false);});
+  item.addEventListener('mouseenter',function(){activate(item,true);});
+  item.addEventListener('focusin',function(){activate(item,true);});
   item.addEventListener('click',function(){activate(item,true);});
 });
 b.addEventListener('click',function(){

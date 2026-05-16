@@ -118,6 +118,8 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
         self.assertIn('<svg id="rv-connectors"', page)
         self.assertIn("rv-target-active", page)
         self.assertIn("data-review-target", page)
+        self.assertIn("mouseenter',function(){activate(item,true);}", page)
+        self.assertIn("focusin',function(){activate(item,true);}", page)
         self.assertNotIn("target:n2", page)
         self.assertNotIn("block:notable", page)
 
