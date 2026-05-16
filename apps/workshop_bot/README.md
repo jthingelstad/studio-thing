@@ -11,7 +11,7 @@
 | Persona | Role | Default model | Home channel |
 |---|---|---|---|
 | **Eddy** (he/him) | Editor — `update-draft` reviews (Tue–Fri), `create-final` reorder, `compose-haiku`/`-meta`. No heartbeat; mention-driven asks still work. | Opus 4.7 | `#editorial` |
-| **Linky** (he/him) | Link curation — `pinboard-scan` (Mon–Fri 06:30/18:30 during the issue window). Pinboard ↔ `#research` ↔ Jamie; no agent-to-agent handoffs. | Sonnet 4.6 | `#research` |
+| **Linky** (he/him) | Link curation — `pinboard-scan` every 3h from 07:05–22:05 CT, year-round. Pinboard ↔ `#research` ↔ Jamie; no agent-to-agent handoffs. | Sonnet 4.6 | `#research` |
 | **Marky** (she/her) | Promotion — `promotion-prep` (RSS-triggered post-ship) + `daily-metrics` (daily); owns the campaign ledger. Drafts in Jamie's voice; never auto-posts. | Sonnet 4.6 | `#promotion` |
 | **Patty** (she/her) | Supporter steward — `compose-cta` writes the per-issue membership CTA in **Thingy's** voice (Patty is invisible to readers; voice anchor in `prompts/shared/thingy-voice-reference.md`). Milestone-driven via the `goals` table. | Sonnet 4.6 | `#supporters` |
 
@@ -72,7 +72,7 @@ Scheduled (`scheduler/jobs.py`, Central time):
 | Job | When | Shape |
 |---|---|---|
 | `update-draft-daily` | daily 17:00 | `content_job` → `jobs/update_draft.py`; PASSes if no issue in flight / locked |
-| `linky-pinboard-scan` | Mon–Fri 06:30 & 18:30 | `content_job` → `jobs/pinboard_scan.py`; PASSes outside the issue window |
+| `linky-pinboard-scan` | every 3h, 07:05–22:05 | `content_job` → `jobs/pinboard_scan.py`; PASSes when source lists are empty |
 | `marky-rss-check` | Sat & Sun, every 4h 09–21 | `handlers.rss_check` — detects a new published issue, fires `promotion-prep` |
 | `marky-daily-metrics` | daily 19:00 | `content_job` → `jobs/daily_metrics.py`; PASSes silently when nothing moved |
 | `follow-up-sweep` | hourly (:23) | `content_job` → `jobs/follow_up.py`; fires due agent follow-ups (time-based or "when the issue hits N") — runs the persona's agent loop, posts the check-in; PASSes when nothing's due |
@@ -179,17 +179,17 @@ apps/workshop_bot/
 │   ├── stripe/{client,server}.py
 │   └── tinylytics/{client,server}.py
 ├── tools/
-│   ├── agent_loop.py         # tool-using turn (asyncio.to_thread wrapper)
-│   ├── agent_tools.py        # ToolRegistry, FUNCS/SPECS, register_local_helpers
-│   ├── anthropic_client.py   # client + prompt loader (<persona>-<file> → prompts/<persona>/<file>.md)
-│   ├── archive.py / corpus.py / conversation.py / discord_io.py
+│   ├── llm/
+│   │   ├── agent_loop.py     # tool-using turn (asyncio.to_thread wrapper)
+│   │   ├── agent_tools.py    # ToolRegistry, local helper specs/functions, register_local_helpers
+│   │   └── anthropic_client.py # client + prompt loader (<persona>-<file> → prompts/<persona>/<file>.md)
+│   ├── content/
+│   │   ├── archive.py / corpus.py / issue.py / draft.py / context.py
+│   │   ├── microblog.py      # micro.blog client — Micropub q=source → native markdown
+│   │   └── journal_images.py # rehost micro.blog photo uploads → weekly-thing/{N}/journal/
+│   ├── discord/
+│   │   ├── conversation.py / discord_io.py / interaction.py / startup.py
 │   ├── db.py                 # SQLite helpers + idempotent column migrations
-│   ├── issue.py              # issue-window compute + tool handlers
-│   ├── draft.py              # parse draft.md for section/asset completeness (draft__section_status)
-│   ├── context.py            # build_{eddy,linky,patty,marky}_context — dynamic prompt blocks
-│   ├── interaction.py        # await_choice / await_approval — reaction primitive for jobs
-│   ├── microblog.py          # micro.blog client — Micropub q=source → native markdown (no fallback; API key required)
-│   ├── journal_images.py     # rehost micro.blog photo uploads → resized copies in weekly-thing/{N}/journal/
 │   ├── render.py             # markdown → standalone HTML preview page (draft/final/publish .html twins) + the draft.html "Show review" toggle drawer
 │   ├── cdn.py                # CloudFront invalidation (best-effort) for the public assets bucket
 │   ├── avoid_domains.py      # popular-feed exclusion list (mirrors pipeline/content/domain_exclusions.py)
@@ -197,8 +197,6 @@ apps/workshop_bot/
 │   ├── support_state.py      # current nonprofit state for Patty
 │   ├── s3.py                 # per-issue S3 workspace — backs workspace__*
 │   ├── web.py                # web__fetch_url
-│   └── startup.py            # boot self-check + announce
-│   (thingy_client.py / thingy_render.py — moved to ../thingy_bridge/tools/)
 ├── scheduler/
 │   ├── jobs.py               # cron JobSpec declarations (update-draft, pinboard-scan, rss-check, daily-metrics)
 │   ├── handlers.py           # content_job bridge (cron → jobs/) + rss_check
@@ -208,7 +206,7 @@ apps/workshop_bot/
 ├── data/                     # gitignored
 │   └── workshop.db
 └── tests/
-    └── test_*.py             # ~300 unit tests; discord/anthropic/httpx + S3/Pinboard/etc. stubbed
+    └── test_*.py             # 650+ unit tests; discord/anthropic/httpx + S3/Pinboard/etc. stubbed
 ```
 
 ---
@@ -304,10 +302,10 @@ cp ../../.env.example ../../.env  # then fill in values
 python -m apps.workshop_bot.bot
 ```
 
-Tests (no SDK dependencies needed; discord/anthropic/httpx are stubbed):
+Tests (run from the repo root; use the local venv so dependencies match the bot):
 
 ```bash
-python -m unittest discover -s apps/workshop_bot/tests -t .
+venv/bin/python -m unittest discover -s apps/workshop_bot/tests -t .
 ```
 
 Offline persona eval (no Discord):

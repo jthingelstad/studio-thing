@@ -115,7 +115,7 @@ There is **no private workshop bucket** anymore. Decommissioned in the redesign:
 - **Job prompts get a `## Today` dynamic-context block.** Read it; don't recompute date math / counts / queue depth / goal progress.
 - Prompt name → file: `team` → `prompts/shared/team.md`; `<persona>` → `prompts/<persona>/prompt.md`; `<persona>-<file>` → `prompts/<persona>/<file>.md` (e.g. `eddy-update-review`, `linky-research-card`, `marky-promotion-prep`, `patty-compose-cta`). Edits need a bot restart (prompts are cached at first read).
 - New schema → `db/schema.sql` (idempotent — re-runs every boot; the `goals` seed uses `WHERE NOT EXISTS`); new *columns* on existing tables → `db._COLUMN_MIGRATIONS`.
-- Tests: `python -m unittest discover -s apps/workshop_bot/tests -t .` — discord/anthropic/httpx stubbed (`tests/_stubs.py`); S3/Pinboard/micro.blog/Anthropic stubbed per-test. ~555 tests. Don't hit the network in tests.
+- Tests: `venv/bin/python -m unittest discover -s apps/workshop_bot/tests -t .` — run from the repo root; discord/anthropic/httpx stubbed (`tests/_stubs.py`); S3/Pinboard/micro.blog/Anthropic stubbed per-test. 650+ tests. Don't load `.env` for routine unit tests unless you specifically need runtime-config coverage.
 
 ## Known follow-ups (as of this writing)
 

@@ -1,7 +1,7 @@
 """SystemServer protocol + ToolDef dataclass.
 
 A system module exposes a ``SystemServer`` whose ``list_tools()``
-returns ``ToolDef`` records. The registry in ``tools/agent_tools.py``
+returns ``ToolDef`` records. The registry in ``tools/llm/agent_tools.py``
 prefixes each tool's action name with the server's namespace
 (``buttondown__list_subscribers`` etc.) when registering.
 

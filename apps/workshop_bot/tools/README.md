@@ -2,7 +2,7 @@
 
 This directory holds the **local-helper** tool surface available to the workshop personas (Eddy, Linky, Marky, Patty) inside the agent loop. External-system tools live one directory up at `apps/workshop_bot/systems/<name>/` (`buttondown`, `pinboard`, `stripe`, `tinylytics`). Thingy is a bridge persona and does not run the agent loop, so it gets none of these.
 
-The intent of this README is to be a primer — a future reviewer (human or another agent) should be able to read this once and understand what's available, how to add to it, and what conventions to follow without re-deriving them from `agent_tools.py`.
+The intent of this README is to be a primer — a future reviewer (human or another agent) should be able to read this once and understand what's available, how to add to it, and what conventions to follow without re-deriving them from `tools/llm/agent_tools.py`.
 
 ## Naming convention
 
@@ -14,7 +14,7 @@ Each tool is a Python function plus an Anthropic JSON-schema spec. The agent loo
 
 Two paths into the registry, both composed at boot in `bot.py`:
 
-- `register_local_helpers(registry)` — registers every entry in `agent_tools.FUNCS` / `SPECS` (the local-helper tools defined in this directory).
+- `register_local_helpers(registry)` — registers every entry in `tools/llm/agent_tools.py`'s `FUNCS` / `SPECS` maps (the local-helper tools defined in this directory).
 - `registry.register_system(server)` — registers every tool exposed by a `SystemServer` under its `<server.name>__<tool.name>` prefix (e.g. `ButtondownServer.list_tools()` → `buttondown__<action>`).
 
 The registry rejects duplicate names at registration time. Each `Tool` carries a `source` tag (`"local"` or `"system:<name>"`) so the boot path can audit composition and tests can assert provenance.
@@ -108,25 +108,24 @@ Any new S3-touching tool should follow the same pattern: a private `_resolve_key
 ```
 tools/
 ├── README.md              ← this file
-├── agent_loop.py          ← multi-turn tool-using agent loop, tool dispatch
-├── agent_tools.py         ← ToolRegistry, FUNCS/SPECS, register_local_helpers
-├── anthropic_client.py    ← Claude SDK wrapper, prompt loader (<persona>-<file> → prompts/<persona>/<file>.md)
-├── archive.py / corpus.py / conversation.py / discord_io.py
+├── llm/
+│   ├── agent_loop.py       ← multi-turn tool-using agent loop, tool dispatch
+│   ├── agent_tools.py      ← ToolRegistry, FUNCS/SPECS, register_local_helpers
+│   └── anthropic_client.py ← Claude SDK wrapper, prompt loader (<persona>-<file> → prompts/<persona>/<file>.md)
+├── content/
+│   ├── archive.py / corpus.py / issue.py / draft.py / context.py
+│   ├── microblog.py        ← micro.blog Micropub q=source client (journal source)
+│   ├── journal_images.py   ← rehost micro.blog photo uploads
+│   └── chunks.py / reorder.py
+├── discord/
+│   ├── conversation.py / discord_io.py / interaction.py / startup.py
 ├── db.py                  ← SQLite — agent_notes, agent_runs, link_candidates, issue_windows, job_locks, draft_digests, goals, campaigns, …
-├── issue.py               ← issue-window compute + tool handlers
-├── draft.py               ← parse draft.md for section/asset completeness (draft__section_status)
-├── context.py             ← build_{eddy,linky,patty,marky}_context — dynamic prompt blocks
-├── interaction.py         ← await_choice / await_approval — reaction primitive for the interactive jobs
-├── microblog.py           ← micro.blog Micropub q=source client (journal source; native markdown)
-├── journal_images.py      ← rehost micro.blog photo uploads → resized copies in weekly-thing/{N}/journal/
 ├── render.py              ← markdown → standalone HTML preview page (draft/final/publish .html twins)
 ├── cdn.py                 ← CloudFront invalidation (best-effort) for the public assets bucket
 ├── avoid_domains.py       ← popular-feed exclusion set (copy of pipeline/content/domain_exclusions.py) — used by pinboard__popular_unseen
 ├── rss.py                 ← latest_published_issue() from weekly.thingelstad.com/feed.xml (Marky's trigger)
 ├── s3.py                  ← per-issue workspace S3 helper (path-locked) — backs workspace__*; + write_journal_image (binary, journal/ sub-prefix, not an agent tool)
-├── startup.py             ← Boot-time announce/coordinate across personas
 ├── support_state.py       ← Reads apps/site/_data/{stats,support}.json
-├── thingy_client.py / thingy_render.py  ← Thingy bridge (Lambda /chat) + output formatting
 └── web.py                 ← fetch_url helper (readable text only)
 ```
 
