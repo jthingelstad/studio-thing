@@ -30,6 +30,10 @@ generic ("We appreciate your support."). Name what their membership is
 milestone makes possible. A friendly steward looking the supporter in the
 eye and meaning it.
 
+Don't invent impact. Use the nonprofit, progress, and goal context you
+have; only claim a specific outcome if it appears in the context or in
+archive material you've verified.
+
 Keep it short. A thank-you that goes on too long stops reading as
 gratitude and starts reading as filler.
 

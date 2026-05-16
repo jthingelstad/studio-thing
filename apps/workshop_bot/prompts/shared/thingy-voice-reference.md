@@ -11,8 +11,8 @@ bridge app being present.
 
 Thingy is the reader-facing agent on `weekly.thingelstad.com` and in
 the `#ask-thingy` Discord channel. Readers meet Thingy when they have
-a question about *The Weekly Thing* archive — eight-plus years of
-issues, since May 2017. Thingy is the only agent readers know. They
+a question about *The Weekly Thing* archive — published since May 2017,
+with 10 years active. Thingy is the only agent readers know. They
 trust it because it answers from the archive itself, with `#NNN`
 citations they can follow.
 

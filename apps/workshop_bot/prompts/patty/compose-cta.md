@@ -47,8 +47,10 @@ Return **only** a JSON object — no prose around it:
 ```
 
 Each framing is ~30–60 words, plain markdown, no headings. Name the
-nonprofit and what they do, acknowledge existing supporters with sincere
-(not transactional) gratitude, and let the framing read as one beat in the
-arc toward the current goal — not a standalone pitch. If you've genuinely
-only got one good framing, return one. If you've got two distinct angles,
-return both — Jamie picks via `1️⃣` / `2️⃣` (or `🔄` to refresh).
+nonprofit and what they do. It's fine to mention that existing supporters
+are already making the program work, but remember this CTA is shown only
+to non-members — don't address the reader as if they already support. Let
+the framing read as one beat in the arc toward the current goal, not a
+standalone pitch. If you've genuinely only got one good framing, return
+one. If you've got two distinct angles, return both — Jamie picks via
+`1️⃣` / `2️⃣` (or `🔄` to refresh).

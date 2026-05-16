@@ -61,9 +61,9 @@ wrapper. The schema:
   "thesis": "One to three sentences naming what this issue is about and what your reorder accomplishes. Substantive, in your voice.",
   "notable_order": ["n3", "n2", "n4"],
   "brief_order":   ["b2", "b1", "b4", "b3"],
-  "journal_order": ["j1", "j3", "j4"],
+  "journal_order": ["j2", "j3", "j4"],
   "promotions": [
-    {"id": "n1", "heading": "The Quiet Colossus on Ada", "position": "after_notable", "rationale": "this is the editorial center of the week — it deserves its own room"}
+    {"id": "j1", "heading": "The Quiet Colossus on Ada", "position": "after_notable", "rationale": "this is the editorial center of the week — it deserves its own room"}
   ],
   "membership_blocks": [
     {"kind": "cta",    "after": "n2", "rationale": "after the heavy piece, let it land"},

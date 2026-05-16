@@ -27,6 +27,9 @@ What to include:
   Scrum").
 - Items lifted from Notable, Featured, and Briefly sections —
   these are the editorial core.
+- Prefer topics from dedicated editorial sections. Ignore incidental
+  inline links in commentary and microposts unless the issue is
+  travel/special and that material is the dominant content.
 
 What to exclude or de-prioritize:
 - Journal / micropost content (family updates, daily life,

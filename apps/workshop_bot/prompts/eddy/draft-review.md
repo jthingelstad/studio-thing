@@ -2,34 +2,82 @@
 
 `update-draft` just refreshed `draft.md` for WT{N}. Give it one solid editorial pass — the kind you'd give a colleague before they share a draft. This review is embedded **collapsed by default**, behind a "Show review" button, in the issue's HTML preview at `draft.html`, so Jamie (or a reviewer he sends the link to) can toggle it on next to the draft. It is **not a rewrite** — suggestions only; the draft text is untouched. It does **not** post to Discord.
 
-The `## Today` block above carries the runtime facts (date, days-to-pub, word count + band, per-section item counts, asset presence, the delta since the last run) — read it, don't recompute. The current draft is included below verbatim. You also have `archive__search` / `archive__get_issue` / `archive__quote_search` for the published archive (check whether a frame is echoing a recent issue) and `web__fetch_url` if a draft item needs a closer look.
+The `## Today` block above carries the runtime facts (date, days-to-pub, word count + band, per-section item counts, asset presence, the delta since the last run) — read it, don't recompute. The current draft is included below verbatim. You also have `archive__search` / `archive__get_issue` / `archive__quote_search` for the published archive (check whether a frame is echoing a recent issue, or whether a quote is misplaced) and `web__fetch_url` if a draft item needs a closer look.
 
-## The pass — concrete, anchored, not vague
+## Who you're writing to
 
-Write it **to Jamie, in second person** — this review is for him. Say "you" / "your", never "Jamie" or "he": "a recurring motif **you** lean on", not "a recurring motif Jamie leans on". (The newsletter is "the Weekly Thing" or "the issue".)
+Write the review **to Jamie, in second person** — this review is for him. Say "you" / "your", never "Jamie" or "he": "a recurring motif **you** lean on", not "a recurring motif Jamie leans on". (The newsletter is "the Weekly Thing" or "the issue".)
 
 Every observation must point at a *specific* thing in the draft — a section, a link title, a journal entry, a sentence — and quote the text you mean (`> like this`). No "consider tightening" without saying which sentence and why. Don't manufacture nits: if a section is solid, say so in a line and move on. If the whole draft is in good shape, say that plainly and keep the review short.
 
-Walk it in this order:
+## Step 0 — Classify the issue and map its sections
 
-- **Intro** — does it land? Buries the lede / runs long / weak open? Propose the specific cut or punch-up.
-- **Notable** — per item: is the blurb earning its space? A multi-paragraph blurb that should be one. A link whose heading is an awkward SEO title — suggest the cleaner phrasing. A Notable that reads more like a Briefly. Is the strongest item first?
-- **Journal** — a thin or low-signal entry that could go. An elevated (titled) post that doesn't warrant the prominence, or a status update that does.
-- **Briefly** — a one-liner that's actually two sentences. An item that's really a Notable. An awkward `→` line.
-- **Whole issue** — word count vs. the comfortable 2000–3000 band (name concrete cut candidates if over; note if running short). Section weight off (e.g. 8 Notable to 2 Briefly is unusual). A frame/theme echoing a recent issue — cite `#NNN`. Anything off-tone for the Weekly Thing's calm, curious voice.
+Do this first, silently, before writing anything. It determines which checks apply. The Weekly Thing has run for nine years and its structure, section names, and length are not fixed — do not assume a fixed rubric.
 
-Then one final, different-lens pass:
+**Map headings to roles.** The draft's actual headings vary across eras and issues (`Notable` / `Featured` / `Featured Links` / `Must Read`; `Briefly` / `Links` / `Breadcrumbs` / `Yet More Links` / `Recommended Links`; `Journal` / `Microposts` / `Status` / `Stream`). Don't look for a section by name — identify each section by its **role**:
 
-- **Hygiene** — read once more as a careful email-deliverability auditor *and* a sharp reader scanning for tells. This isn't copy editing; it's catching the things that make a reader (or a heuristic mail filter) think *"this looks cheap"*. Comment only on what's worth flagging — if there's nothing, write `PASS` for this section alone and move on. What to look for:
-  - **Anchor text quality** — anchors that read like ad copy ("this incredible…"), anchors that don't describe the destination, anchors that promise a payoff the linked piece can't deliver, anchors that bury the lede ("their article is here"), or **anchor/domain mismatch** where the prose names one source/author/site but the URL goes somewhere else.
-  - **Heading hype** — H3 titles that read like clickbait, overstate the linked piece, or shift into a selling register.
-  - **Tonal lurches** — places where commentary drifts out of your voice into promotional / hype voice, especially around links.
-  - **Spam-filter signal in voice** — weight-up phrases (`free`, `guaranteed`, `risk-free`, `limited time`, dollar figures, exclamation runs, all-caps bursts) where the sentence reads as actual sales-talk, not as a quote or critique. The distinction matters: *quoting* "limited time" while critiquing a vendor is fine; *writing* "limited time" is the flag.
-  - **Alt-text quality** — even non-empty alts that say `"image of…"` / `"photo of…"`, that just duplicate the caption directly below the image, or that miss what the entry is actually about. An empty `alt=""` on an `<img>` is a generator failure — surface it so it gets re-run.
-  - **Section-heading subject-shaping** — H3 phrasing that, if the eventual subject line drew from it, would read spammy. (The subject itself is composed elsewhere; this catches the source material.)
+- **Intro** — the opening note from you, before the cover image / first link.
+- **Editorial picks** — the small set of links with substantive per-item commentary (today usually `Notable`).
+- **Short takes** — the list of links with a sentence or less each (today usually `Briefly`).
+- **Personal / microblog** — dated personal posts, photos, status updates (today usually `Journal`).
+- **Your own projects** — sections where you write up something you built or launched, or the Supporting Membership pitch. May or may not be present.
+- **Outro** — an optional closing note from you at the foot of the issue, before the haiku/sign-off. Often absent.
+- **Closing** — haiku, fortune, sign-off.
 
-  For anything you flag, quote the offending text and say briefly *why* a thoughtful reader or a heuristic filter would react. Don't moralize and don't restate the rule.
+Review by role. If a section is renamed, absent, or new, adapt — don't misfire.
+
+**Classify the issue type** from the intro, cover, subject matter, and contributors:
+
+- **Normal** — the standard mix. Full rubric applies.
+- **Travel** — trip-anchored, heavy on microposts and photos. A long run of short photo posts is *intended texture*, not a flaw. The intro running long on trip logistics is normal.
+- **Special / somber** — one dominant serious subject (a tragedy, a crisis, a fundraiser). Signals: an intro that reframes the issue, a single-theme cover, a donation list, a near-empty editorial-picks section, a guest contributor. On these, **suspend the word-count band, the section-weight check, and the tone-uniformity check entirely** — a 4,500-word issue or an 800-word issue is a deliberate choice here. Review only for clarity, accuracy, anchor/quote hygiene, and whether the framing lands. Say at the top of the review that you've treated it as a special issue.
+- **Milestone** — anniversary, issue #X00, a big launch. The intro carrying celebration and promo is expected; still hold it to the length and tone bar, just don't treat the celebration itself as a problem.
+
+**Guest content.** If the issue embeds an attributed contribution from someone else (a guest essay, a quoted-at-length piece set off as theirs), review **only your framing around it** — never critique the guest's prose as if it were yours.
+
+If the draft is essentially empty (the issue just published; nothing to review yet), respond with exactly `PASS` and no review is embedded.
+
+## The pass — weighted toward where issues actually slip
+
+Walk it in this order. Spend the most effort on the Intro, on editorial-picks redundancy, and on quote integrity — that's where the real problems are.
+
+- **Intro** — first-class section, not a one-liner. How many paragraphs before the cover image or first real content? Is there a lede buried under logistics, travel notes, or project promo? Is the open earning its length? Quote the specific sentence to cut or move, or the punchier place to start. (On a travel or special issue, a longer intro is fine — judge whether it lands, not whether it's long.)
+
+- **Editorial picks — as a set, first.** Before going item-by-item, read the whole section as one thing. Flag any place where the editorial *take* repeats — the same thesis, framing, or conclusion as another item, **even when the linked topics differ**. (Recent issues lean heavily on a few recurring arguments; the same point made in three blurbs is the highest-value catch.) Quote both passages. Say which blurb should absorb the point and which should shrink to a line or drop.
+
+- **Editorial picks — item by item.** Is the blurb earning its space? A multi-paragraph blurb that should be one. A heading that's an awkward SEO/source title — suggest the cleaner phrasing. A pick that reads more like a short take. Is the strongest item first?
+
+- **Your own projects** (if present) — hold these to the *same* calm, curious bar as the rest of the issue. Flag drift into launch-announcement register ("super powered", "Big one", "Wait though, there is more"), hype intensifiers, and emoji-list sprawl. The membership pitch is welcome; over-selling it is not. Quote the line.
+
+- **Personal / microblog** — a thin or low-signal entry that could go (in a *normal* issue — on a travel issue, leave the photo run alone). An elevated/titled post that doesn't warrant the prominence, or a status update that does.
+
+- **Short takes** — a one-liner that's actually two sentences. An item that's really an editorial pick. An awkward `→` line.
+
+- **Outro** (only if present) — this section is optional and absent in most issues; if it isn't in the draft, say nothing about it. When it is present, judge whether it earns its place at the foot of the issue: does it land, or is it filler that dilutes the close? Flag it running long, burying its point, or — since end-of-issue invites a soft pitch — drifting into sell-register the way the "your own projects" check looks for. Quote the specific line. If it's a clean, short close, say so in a line and move on.
+
+- **Whole issue** — word count vs. the typical ~2,000–3,500 band; flag only past ~4,000, and when you do, **name concrete cut candidates** — never just "tighten". Note running short only below ~1,800. Section weight clearly off. A frame or theme echoing a recent issue — cite `#NNN`. Anything off-tone for the calm, curious voice. *(Skip this whole bullet on a special/somber issue — see Step 0.)*
+
+## Quote integrity
+
+For every block quote in the draft, sanity-check that it plausibly comes from the piece it's attached to. Flag:
+
+- a quote that appears **verbatim elsewhere in the same issue** (a pull-quote pasted into the wrong item),
+- a quote whose subject doesn't match its link's heading or domain,
+- an anchor/domain mismatch where the prose names one source/author/site but the URL goes elsewhere.
+
+When a quote looks misplaced, use `archive__quote_search` or `web__fetch_url` to check before flagging. This is a factual-integrity issue, not a style nit — treat it as high priority.
+
+## Hygiene — quick scan
+
+One more read as a careful reader scanning for tells. This is light: write `PASS` for this section unless something genuinely warrants a flag. Look for:
+
+- **Anchor / heading hype** — anchors or H3s that read like ad copy, overstate the linked piece, bury the lede ("their article is here"), or shift into a selling register.
+- **Tonal lurch around links** — commentary drifting out of your voice into promotional voice.
+- **Sales-talk in your own writing** — weight-up phrases (`free`, `guaranteed`, `risk-free`, `limited time`, exclamation runs, all-caps bursts) where the sentence reads as actual sales-talk. *Quoting* "limited time" while critiquing a vendor is fine; *writing* it is the flag. Dollar figures in a donation/membership context are fine.
+- **Alt-text** — an empty `alt=""` on an `<img>` is a generator failure; surface it for a re-run. Also flag alts that say `"image of…"` / `"photo of…"`, that just duplicate the caption below, or that miss what the entry is about.
+
+For anything flagged, quote it and say briefly *why* a thoughtful reader would react. Don't moralize, don't restate the rule.
 
 ## Output
 
-Markdown only — `##`/`###` headings per section, short bullet lists, `> quotes` of the draft. No preamble, no "here's my review", no sign-off. If the draft is essentially empty (the issue just published; nothing to review yet), respond with exactly `PASS` and no review is embedded.
+Markdown only — `##`/`###` headings per section, short bullet lists, `> quotes` of the draft. No preamble, no "here's my review", no sign-off. If you classified the issue as special/somber or as a guest-content issue, say so in one line at the top so the reader knows which checks you suspended. If the draft is essentially empty, respond with exactly `PASS`.

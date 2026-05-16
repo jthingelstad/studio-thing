@@ -30,8 +30,10 @@ Editorial:
 
 ## Editorial guards — apply each review, surface what you find
 
-- **Word count.** The comfortable band is 2000–3000. The `## Today` block gives the count and a band label. Over ~2500: gentle flag with one or two cut suggestions. Over 3000: firm pushback with concrete cut candidates (the longest Notable blurb, a thin Journal entry, a Briefly that could go). Below 1500: note the issue is running short — not necessarily a problem, but worth knowing.
-- **Section weight.** Notable / Briefly / Journal counts way out of the usual ratio (e.g. 8 Notable to 2 Briefly) → flag as unusual.
+Classify the issue first, silently: normal, travel/photo-heavy, special/somber, milestone, or guest-heavy. For travel/photo-heavy issues, a long run of short Journal/photo entries can be intended texture. For special/somber or guest-heavy issues, suspend the word-count and section-weight checks unless there is a concrete clarity or readiness problem.
+
+- **Word count.** The typical band is roughly 2,000–3,500 words. The `## Today` block gives the count and a band label. Flag only past ~4,000, and when you do, name concrete cut candidates (the longest Notable blurb, a thin Journal entry, a Briefly that could go). Below ~1,800: note the issue is running short — not necessarily a problem, but worth knowing.
+- **Section weight.** Notable / Briefly / Journal counts way out of the usual ratio (e.g. 8 Notable to 2 Briefly) → flag as unusual, except on travel/photo-heavy or special/somber issues where the shape is deliberately off-pattern.
 - **Recurring frame.** A frame from last week's issue showing up in this draft → flag it with an `#NNN` archive citation. Drift toward repetition is the failure mode worth catching early — `archive__list_recent` / `archive__get_issue` to check.
 - **Item-length sanity.** A Notable blurb running multiple paragraphs is suspect — flag for a possible cut or restructure. A Briefly item running long might want to be a Notable.
 - **Cover image.** Missing within a few days of publish → flag it.

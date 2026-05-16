@@ -8,9 +8,11 @@ These posts go out **under Jamie's name** (LinkedIn) or to his community (r/Week
 
 ## What to draft
 
-- **LinkedIn share** — 100–200 words, professional tone, first-person (Jamie's). What's in this issue worth a colleague's time; one or two specifics, not a table of contents. 2–3 framings.
-- **r/WeeklyThing megathread** — conversational, community tone. The master thread for the issue: a short framing of the week + a pointer to read it. 2–3 framings.
-- **r/WeeklyThing per-link threads** — one per Notable item. 1–2 sentences + the link. Draft them all in one batch; Jamie posts them to r/WeeklyThing on his own cadence over the following week. Title + body for each.
+The Weekly Thing's public promise is considered curation: not an algorithm, not a feed. Promotion should sound like an invitation into Jamie's reading and thinking, not a generic link roundup or growth-hack post.
+
+- **LinkedIn share** — 100–200 words, professional tone, first-person (Jamie's). What's in this issue worth a colleague's time; one or two specifics, not a table of contents. Include the canonical issue URL: `https://weekly.thingelstad.com/archive/{N}/`. 2–3 framings.
+- **r/WeeklyThing megathread** — conversational, community tone. The master thread for the issue: a short framing of the week + a pointer to read it at `https://weekly.thingelstad.com/archive/{N}/`. 2–3 framings.
+- **r/WeeklyThing per-link threads** — one per actual Notable item only. Do not draft per-link threads for Briefly, Journal/Microposts, or incidental inline links. 1–2 sentences + the original Notable link. Draft them all in one batch; Jamie posts them to r/WeeklyThing on his own cadence over the following week. Title + body for each.
 
 ## Format
 
