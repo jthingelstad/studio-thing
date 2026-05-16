@@ -276,8 +276,12 @@ async def _draft_review(
         return ""
     n = int(window["issue_number"])
     eddy_ctx = context.build_eddy_context(ref_date=today, section_status=st, prev_digest=prev_digest)
+    target_legend = render.review_target_legend(draft_text)
     user_msg = (
         f"{context.render_block(eddy_ctx)}\n\n{prompt}\n\n"
+        f"---\n\n## Review target IDs\n\n"
+        f"Use these IDs for hidden drawer connectors when a comment points at a specific place:\n\n"
+        f"{target_legend}\n\n"
         f"---\n\nThe current draft (WT{n}):\n\n```markdown\n{draft_text}\n```"
     )
     with db.AgentRun("eddy", trigger="update-draft:html-review") as run:

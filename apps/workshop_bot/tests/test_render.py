@@ -93,10 +93,57 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
         self.assertIn("<h2>Notable</h2>", page)
         self.assertIn('<a href="http://a">A</a>', page)
 
+    def test_review_target_markers_add_anchors_and_connector_chrome(self):
+        md = (
+            "<!-- block:intro -->\nOpening note.\n<!-- /block:intro -->\n\n"
+            "## Notable\n\n"
+            "<!-- block:notable -->\n"
+            "### [A](http://a)\n\nblurb.\n\n\n"
+            "### [B](http://b)\n\nsecond blurb.\n"
+            "<!-- /block:notable -->\n\n"
+            "## Briefly\n\n"
+            "<!-- block:brief -->\nBrief note → **[C](http://c)**\n<!-- /block:brief -->"
+        )
+        page = render.markdown_to_html_page(
+            md,
+            title="WT458 — draft",
+            strip_block_markers=True,
+            review_md="- <!-- target:n2 --> The second Notable item should move up.\n",
+        )
+        self.assertIn('id="rv-target-intro"', page)
+        self.assertIn('data-review-anchor="n1"', page)
+        self.assertIn('data-review-anchor="n2"', page)
+        self.assertIn('data-review-anchor="b1"', page)
+        self.assertIn('class="rv-target-ref" data-review-target="n2"', page)
+        self.assertIn('<svg id="rv-connectors"', page)
+        self.assertIn("rv-target-active", page)
+        self.assertIn("data-review-target", page)
+        self.assertNotIn("target:n2", page)
+        self.assertNotIn("block:notable", page)
+
+    def test_review_target_legend_lists_sections_and_items(self):
+        md = (
+            "<!-- block:intro -->\nOpening note.\n<!-- /block:intro -->\n\n"
+            "## Notable\n\n"
+            "<!-- block:notable -->\n"
+            "### [A](http://a)\n\nblurb.\n"
+            "<!-- /block:notable -->\n\n"
+            "## Journal\n\n"
+            "<!-- block:journal -->\n"
+            "[Tuesday @ 3:02 PM](https://example.com/post)\n\nstatus.\n"
+            "<!-- /block:journal -->"
+        )
+        legend = render.review_target_legend(md)
+        self.assertIn("`intro`", legend)
+        self.assertIn("`notable`", legend)
+        self.assertIn("`n1` — Notable: A", legend)
+        self.assertIn("`j1` — Journal: Tuesday @ 3:02 PM", legend)
+
     def test_no_review_md_no_chrome(self):
         page = render.markdown_to_html_page("# X\n\nbody.", title="t")
         self.assertNotIn('id="rv-toggle"', page)
         self.assertNotIn('id="rv-panel"', page)
+        self.assertNotIn('id="rv-connectors"', page)
         self.assertNotIn("<script>", page)
         # Empty / whitespace review_md is treated the same as none.
         page2 = render.markdown_to_html_page("# X\n\nbody.", title="t", review_md="   \n  ")

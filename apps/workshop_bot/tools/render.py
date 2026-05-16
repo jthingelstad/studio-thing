@@ -26,10 +26,28 @@ import re
 from typing import Optional
 
 from . import s3
+from .content import chunks, draft as draft_mod
 
 logger = logging.getLogger("workshop.render")
 
 _BLOCK_MARKER_RE = re.compile(r"<!--\s*/?block:[a-z0-9_-]+\s*-->\n?", re.IGNORECASE)
+_REVIEW_TARGET_RE = re.compile(
+    r"<!--\s*target:([a-z0-9_-]+)\s*-->" r"|\[target:([a-z0-9_-]+)\]",
+    re.IGNORECASE,
+)
+_VALID_TARGET_RE = re.compile(r"^[a-z0-9_-]+$", re.IGNORECASE)
+_SECTION_LABELS = {
+    "intro": "Intro",
+    "currently": "Currently",
+    "cover": "Cover",
+    "notable": "Notable section",
+    "journal": "Journal section",
+    "brief": "Briefly section",
+    "outro": "Outro",
+    "haiku": "Haiku / closing",
+    "feature1": "Featured slot 1",
+    "feature2": "Featured slot 2",
+}
 
 # Mirrors content/buttondown/newsletter/buttondown-email.css (the production
 # email stylesheet) so the preview reads like a delivered issue: sans body,
@@ -126,7 +144,34 @@ body.rv-open #rv-panel { transform: translateX(0); }
 #rv-panel p, #rv-panel li { font-size: 14.5px; line-height: 1.55; }
 #rv-panel ul, #rv-panel ol { padding-left: 20px; margin: 0 0 12px; }
 #rv-panel blockquote { font-size: 14px; margin: 8px 0 12px; padding: 2px 0 2px 14px; }
+.rv-anchor {
+  display: block; position: relative; height: 0; width: 0; overflow: visible;
+  scroll-margin-top: 24px;
+}
+.rv-target-active {
+  outline: 2px solid color-mix(in srgb, var(--wt-accent) 54%, transparent);
+  outline-offset: 5px; border-radius: 3px;
+  background: color-mix(in srgb, var(--wt-accent-soft) 52%, transparent);
+  transition: background 0.16s ease, outline-color 0.16s ease;
+}
+#rv-panel .rv-review-item {
+  cursor: pointer; border-radius: 3px; transition: background 0.16s ease;
+}
+#rv-panel .rv-review-active {
+  background: var(--wt-accent-soft);
+}
+#rv-panel .rv-target-ref { display: none; }
+#rv-connectors {
+  display: none; position: fixed; inset: 0; width: 100vw; height: 100vh;
+  pointer-events: none; z-index: 25; overflow: visible;
+}
+body.rv-open #rv-connectors { display: block; }
+#rv-connectors path {
+  fill: none; stroke: var(--wt-accent); stroke-width: 2;
+  stroke-linecap: round; opacity: 0.68;
+}
 @media (max-width: 600px) { #rv-panel { width: 94vw; } }
+@media (max-width: 879px) { #rv-connectors { display: none !important; } }
 @media print { #rv-toggle, #rv-panel { display: none !important; } }
 
 @media (max-width: 600px) {
@@ -154,7 +199,8 @@ _PAGE = """\
 <style>{css}</style>
 </head>
 <body>
-{review_chrome}{banner}<article>
+{review_chrome}{review_connectors}
+{banner}<article>
 {body}
 </article>
 {review_script}</body>
@@ -174,14 +220,169 @@ _REVIEW_CHROME = """\
 
 # Toggles ``body.rv-open`` and swaps the button label. Passed as a value
 # (not literal in ``_PAGE``) so the braces don't trip ``str.format``.
-_REVIEW_SCRIPT = (
-    "<script>(function(){var b=document.getElementById('rv-toggle');if(!b)return;"
-    "b.addEventListener('click',function(){"
-    "var on=document.body.classList.toggle('rv-open');"
-    "b.textContent=on?'Hide review':'Show review';"
-    "b.setAttribute('aria-expanded',on?'true':'false');"
-    "var p=document.getElementById('rv-panel');if(on&&p)p.scrollTop=0;});})();</script>\n"
-)
+_REVIEW_SCRIPT = """\
+<script>(function(){
+var b=document.getElementById('rv-toggle');if(!b)return;
+var panel=document.getElementById('rv-panel');
+var svg=document.getElementById('rv-connectors');
+var activeReview=null,activeTarget=null,activeId=null;
+function byTarget(id){return document.querySelector('[data-review-anchor="'+id+'"]');}
+function targetBox(anchor){
+  if(!anchor)return null;
+  var el=anchor.nextElementSibling||anchor.parentElement;
+  while(el&&el.classList&&el.classList.contains('rv-anchor'))el=el.nextElementSibling;
+  return el||anchor;
+}
+function clear(){
+  if(activeReview)activeReview.classList.remove('rv-review-active');
+  if(activeTarget)activeTarget.classList.remove('rv-target-active');
+  if(svg)svg.innerHTML='';
+  activeReview=activeTarget=null;activeId=null;
+}
+function draw(){
+  if(!activeReview||!activeTarget||!svg||!document.body.classList.contains('rv-open')||window.innerWidth<880){if(svg)svg.innerHTML='';return;}
+  var rr=activeReview.getBoundingClientRect();
+  var tr=activeTarget.getBoundingClientRect();
+  if(rr.bottom<0||rr.top>window.innerHeight||tr.bottom<0||tr.top>window.innerHeight){svg.innerHTML='';return;}
+  var x1=tr.right+8,y1=tr.top+(Math.min(tr.height,80)/2);
+  var x2=rr.left-10,y2=rr.top+(Math.min(rr.height,80)/2);
+  var mid=x1+Math.max(48,(x2-x1)/2);
+  svg.innerHTML='<path d="M '+x1+' '+y1+' C '+mid+' '+y1+', '+mid+' '+y2+', '+x2+' '+y2+'"></path>';
+}
+function activate(item,scroll){
+  var id=item&&item.getAttribute('data-review-target');if(!id)return;
+  var anchor=byTarget(id);if(!anchor)return;
+  clear();
+  activeReview=item;activeTarget=targetBox(anchor);activeId=id;
+  activeReview.classList.add('rv-review-active');
+  activeTarget.classList.add('rv-target-active');
+  if(scroll&&activeTarget.scrollIntoView)activeTarget.scrollIntoView({block:'center',behavior:'smooth'});
+  draw();
+}
+Array.prototype.forEach.call(document.querySelectorAll('#rv-panel .rv-target-ref'),function(ref){
+  var id=ref.getAttribute('data-review-target');if(!id||!byTarget(id))return;
+  var item=ref.closest('li,p,blockquote,h2,h3')||ref.parentElement;if(!item)return;
+  item.classList.add('rv-review-item');
+  item.setAttribute('data-review-target',id);
+  item.setAttribute('tabindex','0');
+  item.addEventListener('mouseenter',function(){activate(item,false);});
+  item.addEventListener('focusin',function(){activate(item,false);});
+  item.addEventListener('click',function(){activate(item,true);});
+});
+b.addEventListener('click',function(){
+  var on=document.body.classList.toggle('rv-open');
+  b.textContent=on?'Hide review':'Show review';
+  b.setAttribute('aria-expanded',on?'true':'false');
+  if(on&&panel)panel.scrollTop=0;
+  if(!on)clear();else if(activeId)draw();
+});
+window.addEventListener('scroll',draw,{passive:true});
+window.addEventListener('resize',draw);
+if(panel)panel.addEventListener('scroll',draw,{passive:true});
+})();</script>
+"""
+
+
+def _safe_target_id(value: str) -> str:
+    target = (value or "").strip().lower()
+    return target if _VALID_TARGET_RE.match(target) else ""
+
+
+def _anchor_html(target: str) -> str:
+    safe = _safe_target_id(target)
+    if not safe:
+        return ""
+    return (
+        f'<div class="rv-anchor" id="rv-target-{safe}" '
+        f'data-review-anchor="{safe}" aria-hidden="true"></div>'
+    )
+
+
+def _replace_block(text: str, name: str, body: str) -> str:
+    pattern = re.compile(
+        rf"(<!--\s*block:{re.escape(name)}\s*-->\n?)(.*?)(<!--\s*/block:{re.escape(name)}\s*-->)",
+        re.IGNORECASE | re.DOTALL,
+    )
+    return pattern.sub(lambda m: f"{m.group(1)}{body}{m.group(3)}", text, count=1)
+
+
+def _prefix_once(text: str, needle: str, prefix: str) -> str:
+    if not needle or not prefix:
+        return text
+    i = text.find(needle)
+    if i < 0:
+        return text
+    return f"{text[:i]}{prefix}\n{text[i:]}"
+
+
+def _annotate_chunk_targets(name: str, body: str) -> str:
+    out = body
+    if name == "notable":
+        _, items = chunks.parse_notable(body)
+    elif name == "brief":
+        items = chunks.parse_brief(body)
+    elif name == "journal":
+        items = chunks.parse_journal(body)
+    else:
+        return out
+    for item in items:
+        out = _prefix_once(out, item.raw_bytes, _anchor_html(item.id))
+    return out
+
+
+def _annotate_review_targets(md: str) -> str:
+    """Convert draft block markers and parsed item chunks into HTML anchors.
+
+    The anchors exist only in the preview HTML; the underlying draft markdown
+    and publish flow stay unchanged.
+    """
+    out = md or ""
+    for name in draft_mod.SECTION_BLOCKS:
+        pattern = re.compile(
+            rf"(<!--\s*block:{re.escape(name)}\s*-->\n?)(.*?)(<!--\s*/block:{re.escape(name)}\s*-->)",
+            re.IGNORECASE | re.DOTALL,
+        )
+        match = pattern.search(out)
+        if not match:
+            continue
+        body = _annotate_chunk_targets(name, match.group(2))
+        out = _replace_block(out, name, body)
+        out = re.sub(
+            rf"<!--\s*block:{re.escape(name)}\s*-->\n?",
+            _anchor_html(name) + "\n",
+            out,
+            count=1,
+            flags=re.IGNORECASE,
+        )
+    return out
+
+
+def _prepare_review_md(review_md: str) -> str:
+    def repl(match: re.Match) -> str:
+        safe = _safe_target_id(match.group(1) or match.group(2) or "")
+        if not safe:
+            return ""
+        return f'<span class="rv-target-ref" data-review-target="{safe}"></span>'
+
+    return _REVIEW_TARGET_RE.sub(repl, review_md or "")
+
+
+def review_target_legend(md: str) -> str:
+    """Return the target IDs Eddy can use in the draft-review drawer."""
+    blocks = draft_mod.parse_blocks(md or "")
+    lines: list[str] = []
+    for name in draft_mod.SECTION_BLOCKS:
+        if blocks.get(name):
+            lines.append(f"- `{name}` — {_SECTION_LABELS.get(name, name)}")
+    _, notable = chunks.parse_notable(blocks.get("notable") or "")
+    for item in notable:
+        lines.append(f"- `{item.id}` — Notable: {item.title}")
+    for item in chunks.parse_brief(blocks.get("brief") or ""):
+        lines.append(f"- `{item.id}` — Briefly: {item.title}")
+    for item in chunks.parse_journal(blocks.get("journal") or ""):
+        label = item.title or item.label
+        lines.append(f"- `{item.id}` — Journal: {label}")
+    return "\n".join(lines) if lines else "- No precise review targets are available."
 
 
 def _markdown_to_html(md: str) -> str:
@@ -208,19 +409,24 @@ def markdown_to_html_page(md: str, *, title: str, subtitle: Optional[str] = None
     if given, is rendered into a slide-in drawer that's hidden until the
     fixed "Show review" button is pressed."""
     src = md or ""
+    has_review = bool(review_md and review_md.strip())
+    if has_review:
+        src = _annotate_review_targets(src)
     if strip_block_markers:
         src = _BLOCK_MARKER_RE.sub("", src)
         src = re.sub(r"\n{3,}", "\n\n", src).strip() + "\n"
     body = _markdown_to_html(src)
     banner = f'<p class="banner">{_html.escape(subtitle)}</p>\n' if subtitle else ""
-    if review_md and review_md.strip():
-        review_chrome = _REVIEW_CHROME.format(review_html=_markdown_to_html(review_md))
+    if has_review:
+        review_chrome = _REVIEW_CHROME.format(review_html=_markdown_to_html(_prepare_review_md(review_md)))
+        review_connectors = '<svg id="rv-connectors" aria-hidden="true"></svg>\n'
         review_script = _REVIEW_SCRIPT
     else:
-        review_chrome = review_script = ""
+        review_chrome = review_connectors = review_script = ""
     return _PAGE.format(
         title=_html.escape(title), css=_CSS, banner=banner, body=body,
-        review_chrome=review_chrome, review_script=review_script,
+        review_chrome=review_chrome, review_connectors=review_connectors,
+        review_script=review_script,
     )
 
 

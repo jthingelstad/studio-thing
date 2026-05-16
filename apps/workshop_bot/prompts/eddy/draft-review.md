@@ -10,6 +10,16 @@ Write the review **to Jamie, in second person** — this review is for him. Say 
 
 Every observation must point at a *specific* thing in the draft — a section, a link title, a journal entry, a sentence — and quote the text you mean (`> like this`). No "consider tightening" without saying which sentence and why. Don't manufacture nits: if a section is solid, say so in a line and move on. If the whole draft is in good shape, say that plainly and keep the review short.
 
+## Drawer target markers
+
+The runtime message includes a `## Review target IDs` list. When a review bullet or short paragraph is about one specific place in the draft, start that bullet/paragraph with a hidden marker using the best ID from that list:
+
+`<!-- target:n2 -->`
+
+Use item IDs (`n1`, `n2`, `b1`, `j1`, etc.) when the comment is about a specific Notable, Briefly, or Journal item. Use section IDs (`intro`, `currently`, `cover`, `notable`, `journal`, `brief`, `outro`, `haiku`) when the comment is about a whole section. If a comment truly spans multiple places, pick the main place and quote the other passage in the bullet. If there is no honest target, omit the marker.
+
+These markers are invisible in the drawer and are only used to draw connector lines in the HTML preview. Do not put target markers in block quotes; put them at the start of the bullet or paragraph that contains your suggestion.
+
 ## Step 0 — Classify the issue and map its sections
 
 Do this first, silently, before writing anything. It determines which checks apply. The Weekly Thing has run for nine years and its structure, section names, and length are not fixed — do not assume a fixed rubric.
@@ -17,6 +27,7 @@ Do this first, silently, before writing anything. It determines which checks app
 **Map headings to roles.** The draft's actual headings vary across eras and issues (`Notable` / `Featured` / `Featured Links` / `Must Read`; `Briefly` / `Links` / `Breadcrumbs` / `Yet More Links` / `Recommended Links`; `Journal` / `Microposts` / `Status` / `Stream`). Don't look for a section by name — identify each section by its **role**:
 
 - **Intro** — the opening note from you, before the cover image / first link.
+- **Currently** — the small personal media/activity list near the top. It should feel current, specific, and lightly personal, not stale, vague, overlong, or out of tune with the issue's mood.
 - **Editorial picks** — the small set of links with substantive per-item commentary (today usually `Notable`).
 - **Short takes** — the list of links with a sentence or less each (today usually `Briefly`).
 - **Personal / microblog** — dated personal posts, photos, status updates (today usually `Journal`).
@@ -42,6 +53,8 @@ If the draft is essentially empty (the issue just published; nothing to review y
 Walk it in this order. Spend the most effort on the Intro, on editorial-picks redundancy, and on quote integrity — that's where the real problems are.
 
 - **Intro** — first-class section, not a one-liner. How many paragraphs before the cover image or first real content? Is there a lede buried under logistics, travel notes, or project promo? Is the open earning its length? Quote the specific sentence to cut or move, or the punchier place to start. (On a travel or special issue, a longer intro is fine — judge whether it lands, not whether it's long.)
+
+- **Currently** (only if present) — scan the `## Currently` entries as reader-facing copy, not as metadata. Flag entries that feel stale, generic, oddly mismatched with the issue, too many in number, too long for this light section, or phrased in a way that reads awkwardly after the label. This is a small section: if it is clean, say nothing. If something should change, quote the exact entry and target the `currently` section.
 
 - **Editorial picks — as a set, first.** Before going item-by-item, read the whole section as one thing. Flag any place where the editorial *take* repeats — the same thesis, framing, or conclusion as another item, **even when the linked topics differ**. (Recent issues lean heavily on a few recurring arguments; the same point made in three blurbs is the highest-value catch.) Quote both passages. Say which blurb should absorb the point and which should shrink to a line or drop.
 

@@ -508,18 +508,22 @@ class DraftReviewTests(_DBTestCase):
     def test_prompt_carries_hygiene_walk(self):
         # The hygiene walk lives in the prompt itself — one Sonnet call,
         # no separate scanner. Pin it so a future edit can't silently drop
-        # the deliverability lens.
+        # the late-pass hygiene lens or the drawer target markers.
         from apps.workshop_bot.tools.llm import anthropic_client
         # Clear the in-process cache so a parallel test that already loaded
         # the prompt doesn't shadow what's on disk right now.
         anthropic_client._prompt_cache.pop("eddy-draft-review", None)
         prompt = anthropic_client.load_prompt("eddy-draft-review")
-        # Section heading + the distinguishing-lens framing.
-        self.assertIn("**Hygiene**", prompt)
-        self.assertIn("deliverability", prompt.lower())
+        # Section headings + the distinguishing-lens framing.
+        self.assertIn("## Hygiene", prompt)
+        self.assertIn("## Drawer target markers", prompt)
+        self.assertIn("<!-- target:n2 -->", prompt)
+        self.assertIn("**Currently**", prompt)
+        self.assertIn("target the `currently` section", prompt)
         # The most-load-bearing checks.
-        for token in ("Anchor text quality", "Heading hype", "Spam-filter signal",
-                      "Alt-text quality", "anchor/domain mismatch"):
+        for token in ("Anchor / heading hype", "Tonal lurch around links",
+                      "Sales-talk in your own writing", "Alt-text",
+                      "anchor/domain mismatch"):
             self.assertIn(token, prompt)
 
     def test_hygiene_section_surfaces_in_returned_review(self):
@@ -539,5 +543,3 @@ class DraftReviewTests(_DBTestCase):
         out = asyncio.run(update_draft._draft_review(ctx, window, st, prev, today, draft_text))
         self.assertEqual(out, reply)
         self.assertIn("## Hygiene", out)
-
-
