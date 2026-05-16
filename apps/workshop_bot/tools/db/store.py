@@ -199,17 +199,18 @@ def filter_unseen_popular(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return only items whose URL isn't yet in pinboard_popular_seen."""
     if not items:
         return []
-    urls = [it.get("url", "") for it in items if it.get("url")]
-    if not urls:
+    norm_pairs = [(it, _norm_url(it.get("url"))) for it in items if it.get("url")]
+    norm_urls = [url for _, url in norm_pairs if url]
+    if not norm_urls:
         return []
-    placeholders = ",".join("?" * len(urls))
+    placeholders = ",".join("?" * len(norm_urls))
     with connect() as conn:
         rows = conn.execute(
             f"SELECT url FROM pinboard_popular_seen WHERE url IN ({placeholders})",
-            urls,
+            norm_urls,
         ).fetchall()
     seen = {r["url"] for r in rows}
-    return [it for it in items if it.get("url") and it["url"] not in seen]
+    return [it for it, url in norm_pairs if url and url not in seen]
 
 
 def _norm_url(url: Optional[str]) -> str:

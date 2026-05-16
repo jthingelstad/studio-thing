@@ -44,6 +44,16 @@ class IssueWindowDbTests(unittest.TestCase):
         self.assertIsNone(db.get_active_issue_window())
         self.assertEqual(db.list_issue_windows(), [])
 
+    def test_migrations_record_schema_ledger(self):
+        with db.connect() as conn:
+            rows = conn.execute(
+                "SELECT id FROM schema_migrations ORDER BY id"
+            ).fetchall()
+        ids = [r["id"] for r in rows]
+        self.assertIn("0001_schema_sql", ids)
+        self.assertIn("0002_campaigns_copy", ids)
+        self.assertIn("0008_agent_runs_cache_create_tokens", ids)
+
     def test_set_then_read_active(self):
         window = issue.compute_window("2026-05-09", 7)
         db.set_issue_window(

@@ -186,6 +186,16 @@ class PinboardDedupTests(unittest.TestCase):
         unseen = db.filter_unseen_popular(items)
         self.assertEqual(unseen, [])
 
+    def test_filter_unseen_popular_uses_normalized_urls(self):
+        original = "https://a.example/story?utm_source=newsletter#comments"
+        variant = "https://a.example/story"
+        self.assertEqual(db.mark_popular_seen([{"url": original, "title": "A"}]), 1)
+        unseen = db.filter_unseen_popular([
+            {"url": variant, "title": "A again"},
+            {"url": "https://b.example/2", "title": "B"},
+        ])
+        self.assertEqual([item["url"] for item in unseen], ["https://b.example/2"])
+
     def test_mark_popular_seen_idempotent(self):
         item = [{"url": "https://a.example/1", "title": "A"}]
         self.assertEqual(db.mark_popular_seen(item), 1)

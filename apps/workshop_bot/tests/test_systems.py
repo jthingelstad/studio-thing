@@ -476,6 +476,18 @@ class PinboardServerTests(unittest.TestCase):
         self.assertEqual(captured[0]["params"]["tag"], "ai")
         self.assertEqual(captured[0]["params"]["results"], 50)
 
+    def test_mark_seen_reports_insert_vs_existing(self):
+        first = self.tools["mark_seen"].handler(
+            deps=None, url="https://x.example/a", title="A",
+        )
+        second = self.tools["mark_seen"].handler(
+            deps=None, url="https://x.example/a", title="A",
+        )
+        self.assertEqual(first["recorded"], True)
+        self.assertEqual(first["already_seen"], False)
+        self.assertEqual(second["recorded"], False)
+        self.assertEqual(second["already_seen"], True)
+
     def test_tags_unread_scope_aggregates(self):
         def fake_get(url, params=None, timeout=None, headers=None):
             return _FakeResp([

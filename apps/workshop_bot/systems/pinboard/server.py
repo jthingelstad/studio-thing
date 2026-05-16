@@ -382,7 +382,7 @@ def _handle_mark_seen(
     if interesting is not None or note:
         judged = {url: (bool(interesting), note or "")}
     n = db.mark_popular_seen([{"url": url, "title": title}], judged=judged)
-    return {"url": url, "recorded": n > 0 or True}
+    return {"url": url, "recorded": n > 0, "already_seen": n == 0}
 
 
 def _queue_depth_vs_deadline() -> dict[str, Any]:

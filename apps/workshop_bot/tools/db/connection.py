@@ -41,6 +41,7 @@ def run_migrations() -> None:
     schema = SCHEMA_PATH.read_text(encoding="utf-8")
     with connect() as conn:
         conn.executescript(schema)
+        _record_migration(conn, "0001_schema_sql")
         _apply_column_migrations(conn)
     logger.info("workshop.db ready at %s", db_path())
 
@@ -48,10 +49,16 @@ def run_migrations() -> None:
 # SQLite has no "ADD COLUMN IF NOT EXISTS". For columns added after the
 # initial table creation, run ALTER TABLE and tolerate the "duplicate
 # column" error so a fresh DB and a long-lived DB both end up identical.
-_COLUMN_MIGRATIONS: tuple[tuple[str, str, str], ...] = (
-    # (table, column, full ADD COLUMN clause)
-    ("campaigns", "copy", "ALTER TABLE campaigns ADD COLUMN copy TEXT"),
+_COLUMN_MIGRATIONS: tuple[tuple[str, str, str, str], ...] = (
+    # (migration id, table, column, full ADD COLUMN clause)
     (
+        "0002_campaigns_copy",
+        "campaigns",
+        "copy",
+        "ALTER TABLE campaigns ADD COLUMN copy TEXT",
+    ),
+    (
+        "0003_pinboard_popular_seen_verdict_source",
         "pinboard_popular_seen",
         "verdict_source",
         "ALTER TABLE pinboard_popular_seen ADD COLUMN verdict_source TEXT",
@@ -59,23 +66,32 @@ _COLUMN_MIGRATIONS: tuple[tuple[str, str, str], ...] = (
     # LLM accounting on agent_runs — captured per-run from agent_loop's
     # `response.usage`. Long-lived DBs pre-this-migration carry NULLs;
     # new rows after restart record real values.
-    ("agent_runs", "model", "ALTER TABLE agent_runs ADD COLUMN model TEXT"),
     (
+        "0004_agent_runs_model",
+        "agent_runs",
+        "model",
+        "ALTER TABLE agent_runs ADD COLUMN model TEXT",
+    ),
+    (
+        "0005_agent_runs_input_tokens",
         "agent_runs",
         "input_tokens",
         "ALTER TABLE agent_runs ADD COLUMN input_tokens INTEGER",
     ),
     (
+        "0006_agent_runs_output_tokens",
         "agent_runs",
         "output_tokens",
         "ALTER TABLE agent_runs ADD COLUMN output_tokens INTEGER",
     ),
     (
+        "0007_agent_runs_cache_read_tokens",
         "agent_runs",
         "cache_read_tokens",
         "ALTER TABLE agent_runs ADD COLUMN cache_read_tokens INTEGER",
     ),
     (
+        "0008_agent_runs_cache_create_tokens",
         "agent_runs",
         "cache_create_tokens",
         "ALTER TABLE agent_runs ADD COLUMN cache_create_tokens INTEGER",
@@ -83,8 +99,15 @@ _COLUMN_MIGRATIONS: tuple[tuple[str, str, str], ...] = (
 )
 
 
+def _record_migration(conn: sqlite3.Connection, migration_id: str) -> None:
+    conn.execute(
+        "INSERT OR IGNORE INTO schema_migrations (id) VALUES (?)",
+        (migration_id,),
+    )
+
+
 def _apply_column_migrations(conn: sqlite3.Connection) -> None:
-    for table, column, sql in _COLUMN_MIGRATIONS:
+    for migration_id, table, column, sql in _COLUMN_MIGRATIONS:
         try:
             existing = {
                 row["name"]
@@ -93,9 +116,11 @@ def _apply_column_migrations(conn: sqlite3.Connection) -> None:
         except sqlite3.Error:
             continue
         if column in existing:
+            _record_migration(conn, migration_id)
             continue
         try:
             conn.execute(sql)
+            _record_migration(conn, migration_id)
         except sqlite3.OperationalError:
             # Column was added concurrently by another process; ignore.
-            pass
+            _record_migration(conn, migration_id)
