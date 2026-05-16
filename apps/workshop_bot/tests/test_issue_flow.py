@@ -409,7 +409,12 @@ class EddyReviewTests(_DBTestCase):
             window = self._window()
             deps, fake_eddy, fake_channel = self._fake_team_with_eddy()
             ctx = _base.JobContext(deps=deps)
-            st = draft_mod.section_status(458, draft_text=_base.starter_template(), list_objects=set())
+            draft_text = _base.replace_block(
+                _base.starter_template(),
+                "currently",
+                "**Reading:** A book about reliable systems.",
+            )
+            st = draft_mod.section_status(458, draft_text=draft_text, list_objects=set())
             out = asyncio.run(update_draft._maybe_eddy_review(ctx, window, st, None, date(2026, 5, 12)))  # Tuesday
             self.assertIn("posted a review", out.lower())
             fake_eddy.core.assert_awaited()
@@ -418,6 +423,8 @@ class EddyReviewTests(_DBTestCase):
             sent_user_msg = fake_eddy.core.call_args.kwargs["latest"]
             self.assertIn("## Today", sent_user_msg)
             self.assertIn("active_issue", sent_user_msg)
+            self.assertIn("currently_content", sent_user_msg)
+            self.assertIn("A book about reliable systems", sent_user_msg)
         finally:
             os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
 
@@ -532,6 +539,5 @@ class DraftReviewTests(_DBTestCase):
         out = asyncio.run(update_draft._draft_review(ctx, window, st, prev, today, draft_text))
         self.assertEqual(out, reply)
         self.assertIn("## Hygiene", out)
-
 
 

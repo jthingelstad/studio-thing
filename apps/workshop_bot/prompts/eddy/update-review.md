@@ -21,7 +21,7 @@ Required for ship:
   ✅/❌ final.md       → /eddy issue final
 
 Optional:
-  ✅/❌ currently.md
+  ✅/❌ currently.json / currently.md
   ⚪/✅ CTAs
 
 Editorial:
@@ -37,6 +37,7 @@ Classify the issue first, silently: normal, travel/photo-heavy, special/somber, 
 - **Recurring frame.** A frame from last week's issue showing up in this draft → flag it with an `#NNN` archive citation. Drift toward repetition is the failure mode worth catching early — `archive__list_recent` / `archive__get_issue` to check.
 - **Item-length sanity.** A Notable blurb running multiple paragraphs is suspect — flag for a possible cut or restructure. A Briefly item running long might want to be a Notable.
 - **Cover image.** Missing within a few days of publish → flag it.
+- **Currently.** If the `## Today` block includes `currently_content`, read it as part of the issue's opening texture. Usually it only needs a status line in Optional; flag it editorially only if it looks stale, malformed, empty-label weird, or tonally out of sync with the issue.
 
 ## Scaling effort
 

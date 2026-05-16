@@ -140,6 +140,7 @@ def section_status(
         or assets.get("currently.json", False)
         or assets.get("currently.md", False)
     )
+    currently_content = blocks.get("currently", "").strip()
     haiku_present = bool(blocks.get("haiku")) or assets.get("haiku.md", False)
     cover_present = assets.get("cover.jpg", False)
 
@@ -155,6 +156,7 @@ def section_status(
         "cta_files": cta_files,
         "intro_present": intro_present,
         "currently_present": currently_present,
+        "currently_content": currently_content,
         "haiku_present": haiku_present,
         "cover_present": cover_present,
         "required_missing": required_missing,

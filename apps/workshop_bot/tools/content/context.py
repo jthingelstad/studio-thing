@@ -107,6 +107,7 @@ def build_eddy_context(
         },
         "intro_present": st["intro_present"],
         "currently_present": st["currently_present"],
+        "currently_content": st.get("currently_content", ""),
         "haiku_present": st["haiku_present"],
         "cover_present": st["cover_present"],
         "cta_files": st["cta_files"],
