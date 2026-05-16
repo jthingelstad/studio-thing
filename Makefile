@@ -1,4 +1,4 @@
-.PHONY: build serve clean data librarian-corpus librarian-corpus-upload librarian-graph librarian-graph-upload librarian-deploy fresh content-pull content-pull-latest content-build content-diff content-push content-push-live sync-issue refresh-copy refresh-copy-dry audio audio-issue
+.PHONY: build serve clean data librarian-corpus librarian-corpus-upload librarian-graph librarian-graph-upload librarian-deploy fresh content-pull content-pull-latest content-build content-diff content-push content-push-live sync-issue refresh-copy refresh-copy-dry audio audio-issue test-workshop test-workshop-env
 
 data:
 	npm run data
@@ -67,3 +67,9 @@ audio:
 
 audio-issue:
 	python pipeline/audio/audio.py build --issue $(ISSUE)
+
+test-workshop:
+	venv/bin/python -m unittest discover -s apps/workshop_bot/tests -t .
+
+test-workshop-env:
+	set -a; source .env; set +a; venv/bin/python -m unittest discover -s apps/workshop_bot/tests -t .

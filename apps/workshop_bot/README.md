@@ -305,8 +305,14 @@ python -m apps.workshop_bot.bot
 Tests (run from the repo root; use the local venv so dependencies match the bot):
 
 ```bash
+make test-workshop
+# or:
 venv/bin/python -m unittest discover -s apps/workshop_bot/tests -t .
 ```
+
+`make test-workshop-env` loads the repo-root `.env` before running the same
+suite. Use that only for runtime-config smoke checks; the plain target keeps
+unit tests away from live-service branches and credential-bearing logs.
 
 Offline persona eval (no Discord):
 
