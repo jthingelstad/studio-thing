@@ -243,11 +243,11 @@ def mark_popular_seen(
     from the LLM filter, persisted alongside the row so future audits
     can see what Linky judged interesting vs not.
 
-    ``verdict_source`` is the feed name that produced the verdict
-    (e.g. ``"indieweb_news"``). Stored so the cross-source uplift block
-    can label "Previously SKIP'd from IndieWeb News" without inferring
-    from the sightings log. Optional for backwards-compat — callers
-    that don't pass it leave the column NULL.
+    ``verdict_source`` is the lane/feed name that produced the verdict
+    (for example ``"popular"`` or ``"toread"``). Stored so the
+    cross-source uplift block can label the previous verdict without
+    inferring from the sightings log. Optional for backwards-compat —
+    callers that don't pass it leave the column NULL.
 
     The URL column stores the normalised dedup-key form so cross-scan
     lookups by either the raw URL or its normalised form hit the same
@@ -900,7 +900,7 @@ def latest_draft_digest(issue: int) -> Optional[dict[str, Any]]:
 
 
 RESEARCH_SOURCES = (
-    "popular", "toread", "indieweb_news",
+    "popular", "toread",
 )
 
 
@@ -909,8 +909,8 @@ def record_research_message(
 ) -> None:
     """Persist that Linky posted a per-link research card to #research,
     so a future reply to that message can be routed back to the URL.
-    ``title`` is captured so a popular/indieweb reply that auto-creates
-    a bookmark has something more useful than the URL as the title.
+    ``title`` is captured so a popular-feed reply that auto-creates a
+    bookmark has something more useful than the URL as the title.
     ``source`` is one of :data:`RESEARCH_SOURCES`.
 
     ``url`` is normalised before storage to keep this table aligned with

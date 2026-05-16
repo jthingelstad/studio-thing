@@ -67,16 +67,13 @@ class PinboardScanJobTests(_DBTestCase):
         return _base.JobContext(deps=_deps_with_linky_team(team)), team
 
     def _stub_sources(
-        self, *, popular=None, toread=None, indieweb_items=None,
+        self, *, popular=None, toread=None,
     ):
         from apps.workshop_bot.systems.pinboard import client as pbc
-        from apps.workshop_bot.tools.feeds import indieweb_news as iwn_mod
         return [
             patch.object(pbc, "popular", lambda limit=30: list(popular or [])),
             patch.object(pbc, "toread_public_unresearched",
                          lambda limit=25: list(toread or [])),
-            patch.object(iwn_mod, "top",
-                         lambda limit=20: list(indieweb_items or [])),
             # build_linky_context hits posts_all for queue depth — stub it cheap.
             patch.object(pbc, "posts_all", lambda **kw: []),
         ]
@@ -104,7 +101,7 @@ class PinboardScanJobTests(_DBTestCase):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         ctx, team = self._ctx_and_team(replies=[
             "**[The Piece](https://example.com/x)** · [pin](https://pinboard.in/b/abc)\n\n"
-            "A solid argument about X.\n\nFresh territory, likely Notable.\n\n📖 medium · `toread`"
+            "A solid argument about X.\n\nFresh territory, likely Notable."
         ])
         toread = [{
             "url": "https://example.com/x", "title": "The Piece",
@@ -194,18 +191,17 @@ class PinboardScanJobTests(_DBTestCase):
             ).fetchone()
         self.assertIsNone(row)
 
-    def test_posts_card_for_indieweb_item(self):
+    def test_posts_card_for_popular_item(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         ctx, team = self._ctx_and_team(replies=[
-            "**[A blog post](https://example.com/post)** · [indieweb](https://news.indieweb.org/en/xyz)\n\n"
-            "An indieweb blogger writing on **autonomy**.\n\nFresh territory, possible Notable.\n\n"
-            "📖 short · `indieweb_news`"
+            "**[A popular post](https://example.com/post)**\n\n"
+            "A clear piece about **autonomy**.\n\nFresh territory, possible Notable."
         ])
-        indieweb = [{
+        popular = [{
             "url": "https://example.com/post", "title": "A blog post",
-            "discussion_url": "https://news.indieweb.org/en/xyz",
+            "description": "", "posted_by": "user1",
         }]
-        patches = self._stub_sources(indieweb_items=indieweb)
+        patches = self._stub_sources(popular=popular)
         try:
             for p in patches:
                 p.start()
@@ -218,25 +214,24 @@ class PinboardScanJobTests(_DBTestCase):
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
         self.assertTrue(result.ok, result.message)
         self.assertEqual(result.data["posted"], 1)
-        # Recorded with source='indieweb_news' for the reply / reaction lookup.
+        # Recorded with source='popular' for the reply / reaction lookup.
         row = db.lookup_research_message("1001")
         self.assertIsNotNone(row)
-        self.assertEqual(row["source"], "indieweb_news")
+        self.assertEqual(row["source"], "popular")
         self.assertEqual(row["url"], "https://example.com/post")
         self.assertEqual(row["title"], "A blog post")
-        # The LLM saw the IndieWeb-specific signal in its user message.
+        # The LLM saw the popular-feed source in its user message.
         sent_user_msg = team.linky.core.call_args.kwargs["latest"]
         link_block = sent_user_msg.rsplit("## The link", 1)[-1]
-        self.assertIn("IndieWeb News discussion", link_block)
+        self.assertIn("Source:** `popular`", link_block)
 
-    def test_indieweb_skip_marks_popular_seen(self):
+    def test_popular_skip_marks_popular_seen(self):
         # SKIP from a discovery source lands in the same shared
         # pinboard_popular_seen dedup as popular SKIPs.
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         ctx, team = self._ctx_and_team(replies=["SKIP: too niche"])
-        indieweb = [{"url": "https://x/niche", "title": "Niche thing",
-                     "discussion_url": "https://news.indieweb.org/en/abc"}]
-        patches = self._stub_sources(indieweb_items=indieweb)
+        popular = [{"url": "https://x/niche", "title": "Niche thing"}]
+        patches = self._stub_sources(popular=popular)
         try:
             for p in patches:
                 p.start()
@@ -261,8 +256,8 @@ class PinboardScanJobTests(_DBTestCase):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         # Replies fire in toread → popular order; reply ids will confirm order.
         ctx, team = self._ctx_and_team(replies=[
-            "**[T](https://t/1)** · [pin](https://pinboard.in/b/t)\n\nT.\n\nT.\n\n📖 short · `toread`",
-            "**[P](https://p/1)**\n\nP.\n\nP.\n\n📖 short · `popular`",
+            "**[T](https://t/1)** · [pin](https://pinboard.in/b/t)\n\nT.\n\nT.",
+            "**[P](https://p/1)**\n\nP.\n\nP.",
         ])
         toread = [{"url": "https://t/1", "title": "T", "description": "",
                    "pinboard_url": "https://pinboard.in/b/t"}]
@@ -342,223 +337,6 @@ class PinboardScanJobTests(_DBTestCase):
         self.assertNotIn("https://private/1", urls)
         self.assertNotIn("https://ok/2", urls)
 
-    # ---------- cross-source signal ----------
-
-    def test_cross_source_in_scan_merge_collapses_duplicates(self):
-        """Same URL on IndieWeb News AND Pinboard popular in the same scan,
-        both fresh — one card posted, both signal blocks in the input
-        block, primary chosen by registry priority (indieweb_news >
-        popular)."""
-        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
-        ctx, team = self._ctx_and_team(replies=[
-            "**[Shared](https://x.example/y)** · [indieweb](https://news.indieweb.org/en/abc)\n\n"
-            "Cross-source story.\n\nFresh territory.\n\n📖 short · `indieweb_news`"
-        ])
-        same_url = "https://x.example/y"
-        indieweb = [{
-            "url": same_url, "title": "Shared (IndieWeb title)",
-            "discussion_url": "https://news.indieweb.org/en/abc",
-        }]
-        popular = [{
-            "url": same_url, "title": "Shared (Pinboard title)",
-            "description": "", "posted_by": "someone",
-        }]
-        patches = self._stub_sources(indieweb_items=indieweb, popular=popular)
-        try:
-            for p in patches:
-                p.start()
-            try:
-                result = asyncio.run(pinboard_scan.run(ctx))
-            finally:
-                for p in patches:
-                    p.stop()
-        finally:
-            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
-        self.assertTrue(result.ok, result.message)
-        self.assertEqual(result.data["posted"], 1)
-        # Exactly one LLM call — the in-scan dupe was merged, not double-LLM'd.
-        self.assertEqual(team.linky.core.await_count, 1)
-        # Primary went to indieweb_news (higher primary_priority than popular).
-        row = db.lookup_research_message("1001")
-        self.assertEqual(row["source"], "indieweb_news")
-        # User_msg shows the IndieWeb discussion URL + "Also trending on" line
-        # naming Pinboard popular as the co-source.
-        sent = team.linky.core.call_args.kwargs["latest"]
-        self.assertIn("https://news.indieweb.org/en/abc", sent)
-        self.assertIn("Also trending on (this scan):", sent)
-        self.assertIn("Pinboard popular", sent)
-        # Sightings recorded for BOTH feeds (the primary and the merged-in
-        # co-source) so a future scan won't re-uplift either.
-        self.assertTrue(db.feed_has_seen(url=same_url, source="indieweb_news"))
-        self.assertTrue(db.feed_has_seen(url=same_url, source="popular"))
-
-    def test_cross_source_normalises_utm_params(self):
-        """The dedup key strips utm_* params, so the same article on
-        two feeds with different tracking suffixes collapses."""
-        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
-        ctx, team = self._ctx_and_team(replies=[
-            "**[Shared](https://x.example/article)**\n\nA.\n\nB.\n\n📖 short · `indieweb_news`"
-        ])
-        indieweb = [{
-            "url": "https://x.example/article?utm_source=indieweb",
-            "title": "Shared",
-        }]
-        popular = [{
-            "url": "https://x.example/article?utm_source=pinboard",
-            "title": "Shared", "posted_by": "u",
-        }]
-        patches = self._stub_sources(indieweb_items=indieweb, popular=popular)
-        try:
-            for p in patches:
-                p.start()
-            try:
-                result = asyncio.run(pinboard_scan.run(ctx))
-            finally:
-                for p in patches:
-                    p.stop()
-        finally:
-            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
-        # One card despite different surface URLs — same dedup key.
-        self.assertEqual(result.data["posted"], 1)
-        self.assertEqual(team.linky.core.await_count, 1)
-
-    def test_cross_source_uplift_when_url_seen_on_different_feed_previously(self):
-        """A URL first seen on Pinboard popular three days ago, judged
-        interesting, appears today on IndieWeb News. The IndieWeb
-        appearance becomes an uplift candidate: the user_msg includes
-        ## Cross-source uplift with the popular history + verdict, the
-        card lands on #research with source='indieweb_news', and the
-        sighting is recorded so the next scan won't re-uplift the same
-        IndieWeb appearance."""
-        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
-        # Seed: URL is in pinboard_popular_seen (card was posted) and
-        # popular_seen_sightings has one row from popular.
-        url = "https://x.example/article"
-        db.mark_popular_seen(
-            [{"url": url, "title": "Original Title"}],
-            judged={url: (True, "card posted")},
-        )
-        db.record_sighting(url=url, source="popular")
-
-        ctx, team = self._ctx_and_team(replies=[
-            "**[New angle](https://x.example/article)** · [indieweb](https://news.indieweb.org/en/x)\n\n"
-            "Picked up by IndieWeb.\n\nFresh angle.\n\n📖 short · `indieweb_news`"
-        ])
-        indieweb = [{
-            "url": url, "title": "IndieWeb title",
-            "discussion_url": "https://news.indieweb.org/en/x",
-        }]
-        patches = self._stub_sources(indieweb_items=indieweb)
-        try:
-            for p in patches:
-                p.start()
-            try:
-                result = asyncio.run(pinboard_scan.run(ctx))
-            finally:
-                for p in patches:
-                    p.stop()
-        finally:
-            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
-        self.assertTrue(result.ok, result.message)
-        self.assertEqual(result.data["posted"], 1)
-        self.assertEqual(result.data["uplift"], 1)
-        # Card recorded under the new feed's source.
-        row = db.lookup_research_message("1001")
-        self.assertEqual(row["source"], "indieweb_news")
-        # User_msg includes the uplift block.
-        sent = team.linky.core.call_args.kwargs["latest"]
-        self.assertIn("## Cross-source uplift", sent)
-        self.assertIn("Pinboard popular", sent)
-        self.assertIn("Previous verdict:", sent)
-        # New sighting was recorded — so a future scan won't reuplift
-        # the same IndieWeb-already-seen URL.
-        self.assertTrue(db.feed_has_seen(url=url, source="indieweb_news"))
-
-    def test_cross_source_uplift_uses_verdict_source_column(self):
-        """The uplift block labels the original verdict's source via the
-        ``verdict_source`` column on ``pinboard_popular_seen`` — not by
-        inferring from the oldest sighting (which was the prior
-        approach and could mis-label if the data ever diverged)."""
-        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
-        url = "https://x.example/verdict-source"
-        # Verdict was produced from popular; the *oldest* sighting in
-        # `popular_seen_sightings` happens to be a legacy 'lobsters'
-        # row from before HN/Lobsters/Tildes were removed (these old
-        # source strings still appear in long-lived DBs). The uplift
-        # block should still label the SKIP source as "Pinboard
-        # popular" — the recorded verdict_source — not "Lobsters".
-        db.mark_popular_seen(
-            [{"url": url, "title": "Verdict-Source Test"}],
-            judged={url: (False, "off-topic")},
-            verdict_source="popular",
-        )
-        # Sightings recorded out-of-order: legacy 'lobsters' first, then 'popular'.
-        db.record_sighting(url=url, source="lobsters")
-        db.record_sighting(url=url, source="popular")
-
-        ctx, team = self._ctx_and_team(replies=["SKIP: still off-topic"])
-        indieweb = [{"url": url, "title": "IndieWeb title",
-                     "discussion_url": "https://news.indieweb.org/en/v"}]
-        patches = self._stub_sources(indieweb_items=indieweb)
-        try:
-            for p in patches:
-                p.start()
-            try:
-                result = asyncio.run(pinboard_scan.run(ctx))
-            finally:
-                for p in patches:
-                    p.stop()
-        finally:
-            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
-        self.assertEqual(result.data["skip"], 1)
-        sent = team.linky.core.call_args.kwargs["latest"]
-        # Label is "Pinboard popular" (the recorded verdict_source), not
-        # "Lobsters" (the first sighting in history).
-        self.assertIn("SKIP'd from Pinboard popular", sent)
-        self.assertNotIn("SKIP'd from Lobsters", sent)
-
-    def test_cross_source_uplift_carries_skip_history_when_previous_verdict_was_skip(self):
-        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
-        url = "https://x.example/skipped"
-        db.mark_popular_seen(
-            [{"url": url, "title": "Skipped Earlier"}],
-            judged={url: (False, "thin reaction post")},
-        )
-        db.record_sighting(url=url, source="popular")
-
-        ctx, team = self._ctx_and_team(replies=["SKIP: still thin"])
-        indieweb = [{
-            "url": url, "title": "indieweb title",
-            "discussion_url": "https://news.indieweb.org/en/qq",
-        }]
-        patches = self._stub_sources(indieweb_items=indieweb)
-        try:
-            for p in patches:
-                p.start()
-            try:
-                result = asyncio.run(pinboard_scan.run(ctx))
-            finally:
-                for p in patches:
-                    p.stop()
-        finally:
-            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
-        self.assertEqual(result.data["posted"], 0)
-        self.assertEqual(result.data["skip"], 1)
-        sent = team.linky.core.call_args.kwargs["latest"]
-        self.assertIn("## Cross-source uplift", sent)
-        self.assertIn("SKIP'd from", sent)
-        self.assertIn("thin reaction post", sent)
-        # Original verdict in pinboard_popular_seen is preserved (still SKIP'd).
-        with db.connect() as conn:
-            row = conn.execute(
-                "SELECT judged_interesting, judgment_note FROM pinboard_popular_seen "
-                "WHERE url = ?", (url,),
-            ).fetchone()
-        self.assertEqual(row["judged_interesting"], 0)
-        self.assertEqual(row["judgment_note"], "thin reaction post")
-        # The new IndieWeb sighting was recorded.
-        self.assertTrue(db.feed_has_seen(url=url, source="indieweb_news"))
-
     def test_fragment_only_difference_dedups_across_scans(self):
         """Regression: a discovery feed handed back the same article in
         two different URL forms — ``.../one-line.html#fnref1`` first
@@ -571,14 +349,13 @@ class PinboardScanJobTests(_DBTestCase):
         url_first = "https://homewithinnowhere.com/posts/x.html#fnref1"
         url_second = "https://homewithinnowhere.com/posts/x.html"
 
-        # Scan #1 — IndieWeb surfaces the URL with the fragment.
+        # Scan #1 — Pinboard popular surfaces the URL with the fragment.
         ctx1, team1 = self._ctx_and_team(replies=[
-            f"**[Piece]({url_first})** · [indieweb](https://news.indieweb.org/en/1)\n\n"
-            "Body.\n\nNotable.\n\n📖 medium · `indieweb_news`"
+            f"**[Piece]({url_first})**\n\n"
+            "Body.\n\nNotable."
         ])
-        indieweb1 = [{"url": url_first, "title": "Piece",
-                      "discussion_url": "https://news.indieweb.org/en/1"}]
-        patches = self._stub_sources(indieweb_items=indieweb1)
+        popular1 = [{"url": url_first, "title": "Piece"}]
+        patches = self._stub_sources(popular=popular1)
         try:
             for p in patches:
                 p.start()
@@ -593,9 +370,8 @@ class PinboardScanJobTests(_DBTestCase):
         # Scan #2 — same article, no fragment, same feed. Should NOT
         # produce a fresh card (same-feed-repeat → silent drop).
         ctx2, team2 = self._ctx_and_team(replies=[])
-        indieweb2 = [{"url": url_second, "title": "Piece",
-                      "discussion_url": "https://news.indieweb.org/en/1"}]
-        patches2 = self._stub_sources(indieweb_items=indieweb2)
+        popular2 = [{"url": url_second, "title": "Piece"}]
+        patches2 = self._stub_sources(popular=popular2)
         try:
             for p in patches2:
                 p.start()
@@ -620,7 +396,7 @@ class PinboardScanJobTests(_DBTestCase):
         url = "https://example.com/jamies-pick"
         ctx, team = self._ctx_and_team(replies=[
             f"**[Pick]({url})** · [pin](https://pinboard.in/b/xx)\n\n"
-            "A solid argument.\n\nLikely Notable.\n\n📖 medium · `toread`"
+            "A solid argument.\n\nLikely Notable."
         ])
         toread = [{
             "url": url, "title": "Pick", "description": "",
@@ -651,17 +427,16 @@ class PinboardScanJobTests(_DBTestCase):
     def test_discovery_card_writes_pinboard_research_done(self):
         """Discovery card-post should also write ``pinboard_research_done``
         so a later toread-lane fetch silent-drops the URL — closing the
-        cross-lane gap where an IndieWeb-cardified URL Jamie later adds
+        cross-lane gap where a popular-feed-cardified URL Jamie later adds
         to his toread queue would otherwise be re-researched."""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         url = "https://x.example/discovery-rd"
         ctx, team = self._ctx_and_team(replies=[
-            f"**[IndieWeb Pick]({url})** · [indieweb](https://news.indieweb.org/en/zz)\n\n"
-            "A piece.\n\nNotable.\n\n📖 short · `indieweb_news`"
+            f"**[Popular Pick]({url})**\n\n"
+            "A piece.\n\nNotable."
         ])
-        indieweb = [{"url": url, "title": "IndieWeb Pick",
-                     "discussion_url": "https://news.indieweb.org/en/zz"}]
-        patches = self._stub_sources(indieweb_items=indieweb)
+        popular = [{"url": url, "title": "Popular Pick"}]
+        patches = self._stub_sources(popular=popular)
         try:
             for p in patches:
                 p.start()
@@ -676,7 +451,7 @@ class PinboardScanJobTests(_DBTestCase):
 
     def test_toread_then_discovery_surfaces_as_uplift(self):
         """End-to-end: Jamie's toread pick gets cardified Monday; the
-        same URL trends on IndieWeb News Wednesday. The Wednesday scan
+        same URL trends on Pinboard popular Wednesday. The Wednesday scan
         should classify as cross-source uplift (with
         ``verdict_source='toread'`` in the uplift block), not as a fresh
         second card."""
@@ -686,7 +461,7 @@ class PinboardScanJobTests(_DBTestCase):
         # Day 1: toread card posted.
         ctx1, team1 = self._ctx_and_team(replies=[
             f"**[Early]({url})** · [pin](https://pinboard.in/b/yy)\n\n"
-            "Body.\n\nNotable.\n\n📖 medium · `toread`"
+            "Body.\n\nNotable."
         ])
         toread = [{"url": url, "title": "Early", "description": "",
                     "pinboard_url": "https://pinboard.in/b/yy"}]
@@ -702,15 +477,14 @@ class PinboardScanJobTests(_DBTestCase):
         finally:
             pass
 
-        # Day 2 scan: same URL on IndieWeb (and no longer in Jamie's
+        # Day 2 scan: same URL on popular (and no longer in Jamie's
         # toread — researched). Expect uplift.
         ctx2, team2 = self._ctx_and_team(replies=[
-            f"**[Caught up]({url})** · [indieweb](https://news.indieweb.org/en/y)\n\n"
-            "Community catching up.\n\nFresh angle.\n\n📖 short · `indieweb_news`"
+            f"**[Caught up]({url})**\n\n"
+            "Community catching up.\n\nFresh angle."
         ])
-        indieweb = [{"url": url, "title": "Caught up",
-                     "discussion_url": "https://news.indieweb.org/en/y"}]
-        patches2 = self._stub_sources(indieweb_items=indieweb)
+        popular = [{"url": url, "title": "Caught up"}]
+        patches2 = self._stub_sources(popular=popular)
         try:
             for p in patches2:
                 p.start()
@@ -745,11 +519,11 @@ class PinboardScanJobTests(_DBTestCase):
         # Pre-state: discovery card already posted (researched in both
         # tables thanks to the cross-lane write).
         db.mark_popular_seen([{"url": url, "title": "Already"}],
-                              judged={url: (True, "card posted (indieweb_news)")},
-                              verdict_source="indieweb_news")
-        db.record_sighting(url=url, source="indieweb_news")
+                              judged={url: (True, "card posted (popular)")},
+                              verdict_source="popular")
+        db.record_sighting(url=url, source="popular")
         db.mark_url_researched(url=url, title="Already", summary="…",
-                                confidence="✦", fit_note="card posted (indieweb_news)")
+                                confidence="✦", fit_note="card posted (popular)")
 
         # `toread_public_unresearched` filters against
         # `pinboard_research_done`. Confirm the URL is filtered.
@@ -763,24 +537,23 @@ class PinboardScanJobTests(_DBTestCase):
         still carries the prior history."""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         url = "https://x.example/uplift-loose"
-        # Pre-state: an existing card-post on this URL from another feed,
+        # Pre-state: an existing card-post on this URL from Jamie's toread lane,
         # plus the popular_seen verdict + sighting.
         db.record_research_message(
-            discord_message_id="500", url=url, source="popular",
+            discord_message_id="500", url=url, source="toread",
             title="Original",
         )
         db.mark_popular_seen([{"url": url, "title": "Original"}],
-                              judged={url: (True, "card posted (popular)")},
-                              verdict_source="popular")
-        db.record_sighting(url=url, source="popular")
+                              judged={url: (True, "card posted (toread)")},
+                              verdict_source="toread")
+        db.record_sighting(url=url, source="toread")
 
         ctx, team = self._ctx_and_team(replies=[
-            f"**[Trending]({url})** · [indieweb](https://news.indieweb.org/en/a)\n\n"
-            "Caught up.\n\nNotable.\n\n📖 short · `indieweb_news`"
+            f"**[Trending]({url})**\n\n"
+            "Caught up.\n\nNotable."
         ])
-        indieweb = [{"url": url, "title": "Trending",
-                     "discussion_url": "https://news.indieweb.org/en/a"}]
-        patches = self._stub_sources(indieweb_items=indieweb)
+        popular = [{"url": url, "title": "Trending"}]
+        patches = self._stub_sources(popular=popular)
         try:
             for p in patches:
                 p.start()
@@ -853,14 +626,13 @@ class PinboardScanJobTests(_DBTestCase):
         db.mark_popular_seen([{"url": url, "title": "Genuine"}],
                               judged={url: (True, "card posted")})
         # Sighting from a DIFFERENT feed.
-        db.record_sighting(url=url, source="popular")
+        db.record_sighting(url=url, source="toread")
 
         ctx, team = self._ctx_and_team(replies=[
-            "**[Genuine](https://x.example/legit-cross-source)**\n\nFit.\n\n📖 short · `indieweb_news`",
+            "**[Genuine](https://x.example/legit-cross-source)**\n\nFit.",
         ])
-        indieweb = [{"url": url, "title": "Genuine",
-                     "discussion_url": "https://news.indieweb.org/en/yy"}]
-        patches = self._stub_sources(indieweb_items=indieweb)
+        popular = [{"url": url, "title": "Genuine"}]
+        patches = self._stub_sources(popular=popular)
         try:
             for p in patches:
                 p.start()
@@ -876,19 +648,18 @@ class PinboardScanJobTests(_DBTestCase):
         self.assertEqual(result.data["posted"], 1)
 
     def test_cross_source_same_feed_repeat_silently_dropped(self):
-        """URL on IndieWeb today, already sighted from IndieWeb before.
+        """URL on Pinboard popular today, already sighted from popular before.
         Today's silent-dedup applies: no LLM call, no card, no new
         sighting."""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         url = "https://x.example/repeat"
         db.mark_popular_seen([{"url": url, "title": "Repeat"}],
                               judged={url: (True, "card posted")})
-        db.record_sighting(url=url, source="indieweb_news")
+        db.record_sighting(url=url, source="popular")
 
         ctx, team = self._ctx_and_team(replies=[])
-        indieweb = [{"url": url, "title": "Repeat",
-                     "discussion_url": "https://news.indieweb.org/en/2"}]
-        patches = self._stub_sources(indieweb_items=indieweb)
+        popular = [{"url": url, "title": "Repeat"}]
+        patches = self._stub_sources(popular=popular)
         try:
             for p in patches:
                 p.start()
@@ -905,22 +676,22 @@ class PinboardScanJobTests(_DBTestCase):
     # ---------- _record_sightings_for_item ----------
 
     def test_record_sightings_for_item_writes_primary_only_when_no_extras(self):
-        item = {"_url": "https://x.example/a", "_source": "indieweb_news",
+        item = {"_url": "https://x.example/a", "_source": "popular",
                 "co_sources": [], "new_sightings": []}
-        pinboard_scan._record_sightings_for_item(item, "indieweb_news")
-        self.assertTrue(db.feed_has_seen(url="https://x.example/a", source="indieweb_news"))
-        self.assertFalse(db.feed_has_seen(url="https://x.example/a", source="popular"))
+        pinboard_scan._record_sightings_for_item(item, "popular")
+        self.assertTrue(db.feed_has_seen(url="https://x.example/a", source="popular"))
+        self.assertFalse(db.feed_has_seen(url="https://x.example/a", source="future_feed"))
 
     def test_record_sightings_for_item_writes_primary_plus_co_sources(self):
         item = {
-            "_url": "https://x.example/b", "_source": "indieweb_news",
+            "_url": "https://x.example/b", "_source": "popular",
             "co_sources": [
-                {"source": "popular", "discussion_url": "", "score": 0, "comment_count": 0},
+                {"source": "future_feed", "discussion_url": "", "score": 0, "comment_count": 0},
             ],
             "new_sightings": [],
         }
-        pinboard_scan._record_sightings_for_item(item, "indieweb_news")
-        for src in ("indieweb_news", "popular"):
+        pinboard_scan._record_sightings_for_item(item, "popular")
+        for src in ("popular", "future_feed"):
             self.assertTrue(
                 db.feed_has_seen(url="https://x.example/b", source=src),
                 f"sighting missing for {src}",
@@ -928,17 +699,17 @@ class PinboardScanJobTests(_DBTestCase):
 
     def test_record_sightings_for_item_writes_primary_plus_new_sightings(self):
         item = {
-            "_url": "https://x.example/c", "_source": "indieweb_news",
+            "_url": "https://x.example/c", "_source": "popular",
             "co_sources": [],
             "new_sightings": [
-                {"source": "indieweb_news", "discussion_url": "", "score": 0, "comment_count": 0},
                 {"source": "popular", "discussion_url": "", "score": 0, "comment_count": 0},
+                {"source": "future_feed", "discussion_url": "", "score": 0, "comment_count": 0},
             ],
         }
-        pinboard_scan._record_sightings_for_item(item, "indieweb_news")
+        pinboard_scan._record_sightings_for_item(item, "popular")
         # primary + new_sightings; the primary's own entry in
         # new_sightings is deduplicated against the primary record.
-        for src in ("indieweb_news", "popular"):
+        for src in ("popular", "future_feed"):
             self.assertTrue(db.feed_has_seen(url="https://x.example/c", source=src))
 
     def test_record_sightings_for_item_is_idempotent(self):
@@ -983,12 +754,11 @@ class PinboardScanJobTests(_DBTestCase):
                  "section": "Briefly", "subject": "Old take", "text": "Earlier mention."},
             ],
             replies=[
-                "**[A](https://x/y)**\n\nB.\n\nFresh.\n\n📖 short · `indieweb_news`"
+                "**[A](https://x/y)**\n\nB.\n\nFresh."
             ],
         )
-        indieweb = [{"url": "https://x/y", "title": "Vibe coding article",
-                     "discussion_url": "https://news.indieweb.org/en/abc"}]
-        patches = self._stub_sources(indieweb_items=indieweb)
+        popular = [{"url": "https://x/y", "title": "Vibe coding article"}]
+        patches = self._stub_sources(popular=popular)
         try:
             for p in patches:
                 p.start()
@@ -1011,10 +781,10 @@ class PinboardScanJobTests(_DBTestCase):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         ctx, team = self._ctx_with_corpus_search(
             hits=[],
-            replies=["**[A](https://x/y)**\n\nB.\n\nFresh.\n\n📖 short · `indieweb_news`"],
+            replies=["**[A](https://x/y)**\n\nB.\n\nFresh."],
         )
-        indieweb = [{"url": "https://x/y", "title": "Title"}]
-        patches = self._stub_sources(indieweb_items=indieweb)
+        popular = [{"url": "https://x/y", "title": "Title"}]
+        patches = self._stub_sources(popular=popular)
         try:
             for p in patches:
                 p.start()
@@ -1035,10 +805,10 @@ class PinboardScanJobTests(_DBTestCase):
         ctx, team = self._ctx_with_corpus_search(
             hits=[{"issue_number": 1, "publish_date": "2025-01-01",
                    "section": "Notable", "subject": "Long", "text": long_text}],
-            replies=["**[A](https://x/y)**\n\nB.\n\nB.\n\n📖 short · `indieweb_news`"],
+            replies=["**[A](https://x/y)**\n\nB.\n\nB."],
         )
-        indieweb = [{"url": "https://x/y", "title": "T"}]
-        patches = self._stub_sources(indieweb_items=indieweb)
+        popular = [{"url": "https://x/y", "title": "T"}]
+        patches = self._stub_sources(popular=popular)
         try:
             for p in patches:
                 p.start()
@@ -1063,7 +833,7 @@ class PinboardScanJobTests(_DBTestCase):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         ctx, team = self._ctx_with_corpus_search(
             hits=[],
-            replies=["**[A](https://x/y)** · [pin](https://pinboard.in/b/abc)\n\nA.\n\nB.\n\n📖 short · `toread`"],
+            replies=["**[A](https://x/y)** · [pin](https://pinboard.in/b/abc)\n\nA.\n\nB."],
         )
         toread = [{
             "url": "https://x/y", "title": "Bare title",
@@ -1097,12 +867,12 @@ class PinboardScanJobTests(_DBTestCase):
         after the prompt — to verify the data block is absent.)"""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         ctx, team = self._ctx_and_team(replies=[
-            "**[A](https://x/y)**\n\nA.\n\nB.\n\n📖 short · `indieweb_news`"
+            "**[A](https://x/y)**\n\nA.\n\nB."
         ])
         # Override the auto-MagicMock corpus that _ctx_and_team produces.
         ctx.deps.corpus = None
-        indieweb = [{"url": "https://x/y", "title": "T"}]
-        patches = self._stub_sources(indieweb_items=indieweb)
+        popular = [{"url": "https://x/y", "title": "T"}]
+        patches = self._stub_sources(popular=popular)
         try:
             for p in patches:
                 p.start()
@@ -1125,15 +895,15 @@ class PinboardScanJobTests(_DBTestCase):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         ctx, team = self._ctx_with_corpus_search(
             hits=[],
-            replies=["**[A](https://x/y)**\n\nA.\n\nB.\n\n📖 short · `indieweb_news`"],
+            replies=["**[A](https://x/y)**\n\nA.\n\nB."],
         )
-        indieweb = [{
+        popular = [{
             "url": "https://x/y", "title": "Title only",
             # Even if `description` shows up on a feed dict, it's not
             # part of the query for discovery sources.
             "description": "should not be in the query",
         }]
-        patches = self._stub_sources(indieweb_items=indieweb)
+        patches = self._stub_sources(popular=popular)
         try:
             for p in patches:
                 p.start()
@@ -1154,22 +924,21 @@ class PinboardScanJobTests(_DBTestCase):
         processed; the sixth's sighting is NOT recorded so it stays
         uplift-eligible on the next scan."""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
-        # Seed six distinct URLs, each first-seen on popular with a
-        # card-posted verdict, with one popular sighting each.
+        # Seed six distinct URLs, each first-seen from Jamie's toread lane
+        # with a card-posted verdict, with one toread sighting each.
         urls = [f"https://x.example/u{i}" for i in range(6)]
         for u in urls:
             db.mark_popular_seen([{"url": u, "title": u}],
-                                  judged={u: (True, "card posted")})
-            db.record_sighting(url=u, source="popular")
-        # Today's IndieWeb News feed has all six.
-        indieweb_items = [{"url": u, "title": f"i-{u}",
-                           "discussion_url": f"https://news.indieweb.org/en/{i}"}
-                          for i, u in enumerate(urls)]
+                                  judged={u: (True, "card posted")},
+                                  verdict_source="toread")
+            db.record_sighting(url=u, source="toread")
+        # Today's Pinboard popular feed has all six.
+        popular_items = [{"url": u, "title": f"p-{u}"} for u in urls]
         ctx, team = self._ctx_and_team(replies=[
-            f"**[T{i}](https://x.example/u{i})**\n\nA.\n\nB.\n\n📖 short · `indieweb_news`"
+            f"**[T{i}](https://x.example/u{i})**\n\nA.\n\nB."
             for i in range(5)
         ])
-        patches = self._stub_sources(indieweb_items=indieweb_items)
+        patches = self._stub_sources(popular=popular_items)
         try:
             for p in patches:
                 p.start()
@@ -1183,9 +952,9 @@ class PinboardScanJobTests(_DBTestCase):
         # Only the cap (5) processed; the 6th left for next time.
         self.assertEqual(result.data["uplift"], 5)
         self.assertEqual(team.linky.core.await_count, 5)
-        # 5 URLs had an IndieWeb sighting recorded. The 6th — whichever
+        # 5 URLs had a Pinboard popular sighting recorded. The 6th — whichever
         # was beyond the cap — does NOT have one yet.
-        recorded = [u for u in urls if db.feed_has_seen(url=u, source="indieweb_news")]
+        recorded = [u for u in urls if db.feed_has_seen(url=u, source="popular")]
         self.assertEqual(len(recorded), 5)
 
 
@@ -1206,10 +975,10 @@ class PerLinkModelSelectionTests(_DBTestCase):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         url = "https://x.example/discovery-default"
         ctx, team = self._ctx_and_team(replies=[
-            f"**[T]({url})** · [indieweb](https://i/1)\n\nbody.\n\n📖 short · `indieweb_news`"
+            f"**[T]({url})**\n\nbody."
         ])
-        indieweb = [{"url": url, "title": "T", "discussion_url": "https://i/1"}]
-        patches = self._stub_sources(indieweb_items=indieweb)
+        popular = [{"url": url, "title": "T"}]
+        patches = self._stub_sources(popular=popular)
         try:
             for p in patches:
                 p.start()
@@ -1227,7 +996,7 @@ class PerLinkModelSelectionTests(_DBTestCase):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         url = "https://x.example/toread-default"
         ctx, team = self._ctx_and_team(replies=[
-            f"**[T]({url})** · [pin](https://p/1)\n\nbody.\n\n📖 short · `toread`"
+            f"**[T]({url})** · [pin](https://p/1)\n\nbody."
         ])
         toread = [{"url": url, "title": "T", "description": "",
                     "pinboard_url": "https://p/1"}]
@@ -1288,7 +1057,7 @@ class ParseSignalTests(unittest.TestCase):
         self.assertEqual(pinboard_scan._parse_signal(answer)[0], "fail")
 
     def test_card_when_no_signal_present(self):
-        answer = "**[Title](https://x)** · [indieweb](https://i)\n\nBody.\n\n📖 short · `indieweb_news`"
+        answer = "**[Title](https://x)**\n\nBody."
         kind, payload = pinboard_scan._parse_signal(answer)
         self.assertEqual(kind, "card")
         self.assertEqual(payload, answer)
@@ -1333,8 +1102,7 @@ class ParseSignalTests(unittest.TestCase):
         answer = (
             "🔖 **[Some article](https://example.com)** · [pin](https://pin.in)\n"
             "Argues we should SKIP synchronous IO entirely.\n"
-            "Briefly candidate — concrete and short.\n"
-            "_📖 medium · toread_"
+            "Briefly candidate — concrete and short."
         )
         kind, _ = pinboard_scan._parse_signal(answer)
         self.assertEqual(kind, "card")
@@ -1656,26 +1424,26 @@ class EmbedSuppressionTests(unittest.TestCase):
     def test_discussion_link_gets_wrapped_article_stays_bare(self):
         card = (
             "**[Three things about RSS](https://example.com/rss)** · "
-            "[indieweb](https://news.indieweb.org/en/abc)\n\n"
+            "[pin](https://pinboard.in/b/abc)\n\n"
             "Concrete take on RSS readers."
         )
         out = pinboard_scan._suppress_non_article_embeds(card, "https://example.com/rss")
         # Article URL is unchanged (bare → embed fires).
         self.assertIn("[Three things about RSS](https://example.com/rss)", out)
         # Discussion link is wrapped.
-        self.assertIn("[indieweb](<https://news.indieweb.org/en/abc>)", out)
-        # No raw `[indieweb](https://...)` form remains.
-        self.assertNotIn("[indieweb](https://news.indieweb.org", out)
+        self.assertIn("[pin](<https://pinboard.in/b/abc>)", out)
+        # No raw `[pin](https://...)` form remains.
+        self.assertNotIn("[pin](https://pinboard.in", out)
 
     def test_multiple_discussion_links_all_wrapped(self):
         card = (
             "**[The Piece](https://example.com/x)** · "
-            "[indieweb](https://news.indieweb.org/en/1) · "
+            "[forum](https://discussion.example/thread/1) · "
             "[pin](https://pinboard.in/b/abc)\n\n"
             "Cross-source signal."
         )
         out = pinboard_scan._suppress_non_article_embeds(card, "https://example.com/x")
-        self.assertIn("[indieweb](<https://news.indieweb.org/en/1>)", out)
+        self.assertIn("[forum](<https://discussion.example/thread/1>)", out)
         self.assertIn("[pin](<https://pinboard.in/b/abc>)", out)
         # Article stays bare.
         self.assertIn("[The Piece](https://example.com/x)", out)
@@ -1693,11 +1461,11 @@ class EmbedSuppressionTests(unittest.TestCase):
     def test_already_wrapped_url_left_alone(self):
         card = (
             "**[Title](https://example.com/x)** · "
-            "[lobste.rs](<https://lobste.rs/s/abc>)"
+            "[forum](<https://discussion.example/s/abc>)"
         )
         out = pinboard_scan._suppress_non_article_embeds(card, "https://example.com/x")
         # Already wrapped — no double-wrap.
-        self.assertIn("[lobste.rs](<https://lobste.rs/s/abc>)", out)
+        self.assertIn("[forum](<https://discussion.example/s/abc>)", out)
         self.assertNotIn("<<https", out)
         self.assertNotIn(">>)", out)
 
@@ -1713,8 +1481,21 @@ class EmbedSuppressionTests(unittest.TestCase):
         self.assertIn("See also https://example.com/x ", out)
         self.assertNotIn("<https://example.com/x>", out)
 
+    def test_retired_footer_lines_are_removed_before_posting(self):
+        card = (
+            "📌 **[Title](https://example.com/x)**\n"
+            "A useful thing.\n"
+            "Good fit.\n"
+            "🌐 also on: lobsters, hackernews\n"
+            "_📖 medium · popular_"
+        )
+        out = pinboard_scan._remove_retired_card_lines(card)
+        self.assertIn("📌 **[Title](https://example.com/x)**", out)
+        self.assertNotIn("also on", out)
+        self.assertNotIn("📖", out)
+
     def test_no_article_url_returns_payload_unchanged(self):
-        card = "**[Title](https://example.com/x)** · [pin](https://lobste.rs/s/abc)"
+        card = "**[Title](https://example.com/x)** · [pin](https://discussion.example/s/abc)"
         self.assertEqual(
             pinboard_scan._suppress_non_article_embeds(card, ""),
             card,
@@ -1723,5 +1504,3 @@ class EmbedSuppressionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-

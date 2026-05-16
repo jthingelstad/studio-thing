@@ -316,10 +316,10 @@ class LinkySaveReactionTests(_DBTestCase):
             add_p.stop(); get_p.stop()
         self.assertEqual(self.reactions, ["❌"])
 
-    def test_save_reaction_on_indieweb_card_creates_bookmark(self):
+    def test_save_reaction_on_popular_card_creates_bookmark(self):
         db.record_research_message(
             discord_message_id="2009", url="https://example.com/post",
-            source="indieweb_news", title="An IndieWeb Post",
+            source="popular", title="A Popular Post",
         )
         p = self._payload(user_id=777, emoji="✅", message_id=2009)
         get_p, add_p, add_mock = self._patch_pinboard()
@@ -328,11 +328,10 @@ class LinkySaveReactionTests(_DBTestCase):
             asyncio.run(self.bot.on_raw_reaction_add(p))
         finally:
             add_p.stop(); get_p.stop()
-        # IndieWeb items behave just like Pinboard popular for the save flow.
         add_mock.assert_called_once()
         kwargs = add_mock.call_args.kwargs
         self.assertEqual(kwargs["url"], "https://example.com/post")
-        self.assertEqual(kwargs["title"], "An IndieWeb Post")
+        self.assertEqual(kwargs["title"], "A Popular Post")
         self.assertTrue(kwargs["toread"])
         self.assertTrue(kwargs["shared"])
         self.assertEqual(self.reactions, ["📌"])
@@ -548,7 +547,7 @@ class LinkyCrossLaneDedupTests(_DBTestCase):
     def test_brief_reaction_on_discovery_marks_research_done(self):
         db.record_research_message(
             discord_message_id="4003", url=self.URL_BRIEF,
-            source="indieweb_news", title="Brief→RD",
+            source="popular", title="Brief→RD",
         )
         self.assertEqual(db.filter_unresearched_urls([self.URL_BRIEF]), [self.URL_BRIEF])
 
@@ -591,7 +590,7 @@ class LinkyCrossLaneDedupTests(_DBTestCase):
     def test_reply_to_discovery_card_marks_research_done(self):
         db.record_research_message(
             discord_message_id="4005", url=self.URL_REPLY,
-            source="indieweb_news", title="Reply→RD",
+            source="popular", title="Reply→RD",
         )
         self.assertEqual(db.filter_unresearched_urls([self.URL_REPLY]), [self.URL_REPLY])
 
@@ -607,7 +606,7 @@ class LinkyCrossLaneDedupTests(_DBTestCase):
     def test_reply_failure_does_not_mark_research_done(self):
         db.record_research_message(
             discord_message_id="4006", url=self.URL_REPLY,
-            source="indieweb_news", title="x",
+            source="popular", title="x",
         )
         from apps.workshop_bot.systems.pinboard import client as pbc
         m = self._msg(content="text", reference_id=4006)

@@ -13,7 +13,7 @@ job=…)`` (or, for ``rss-check``, the bare ``handlers.rss_check``). Today:
   (``final.md`` exists); Eddy posts a review Tue–Fri.
 - ``pinboard-scan`` — every 3h 07:00–22:00 CT, year-round (07/10/13/16/19/22).
   Linky's per-link research pass over Jamie's public toread bookmarks +
-  the active discovery feeds (Pinboard popular + IndieWeb News); each
+  the active discovery feed set (currently Pinboard popular only); each
   card posts as its own ``#research`` message. PASSes silently on empty
   scans.
 - ``rss-check`` — Sat & Sun, every 4h 09:00–21:00 CT. Detects a
@@ -78,8 +78,8 @@ JOBS: tuple[JobSpec, ...] = (
         cron="5 7-22/3 * * *",                           # Every 3h at :05 from 07:00–22:00 Central
                                                          # (07/10/13/16/19/22), year-round. Per-link
                                                          # research pass over the toread + active
-                                                         # discovery feeds (Pinboard popular +
-                                                         # IndieWeb News); each card posts as its
+                                                         # discovery feed set (currently
+                                                         # Pinboard popular only); each card posts as its
                                                          # own #research message. PASSes silently
                                                          # when all source lists come back empty.
         func=functools.partial(handlers.content_job, job="pinboard-scan"),

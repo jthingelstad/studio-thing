@@ -43,6 +43,7 @@ def run_migrations() -> None:
         conn.executescript(schema)
         _record_migration(conn, "0001_schema_sql")
         _apply_column_migrations(conn)
+        _apply_data_migrations(conn)
     logger.info("workshop.db ready at %s", db_path())
 
 
@@ -104,6 +105,39 @@ def _record_migration(conn: sqlite3.Connection, migration_id: str) -> None:
         "INSERT OR IGNORE INTO schema_migrations (id) VALUES (?)",
         (migration_id,),
     )
+
+
+def _migration_recorded(conn: sqlite3.Connection, migration_id: str) -> bool:
+    row = conn.execute(
+        "SELECT 1 FROM schema_migrations WHERE id = ?",
+        (migration_id,),
+    ).fetchone()
+    return row is not None
+
+
+_DATA_MIGRATIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    (
+        "0009_retire_non_pinboard_discovery_feeds",
+        (
+            "DELETE FROM popular_seen_sightings "
+            "WHERE source NOT IN ('popular', 'toread')",
+            "DELETE FROM linky_research_messages "
+            "WHERE source NOT IN ('popular', 'toread')",
+            "UPDATE pinboard_popular_seen SET verdict_source = NULL "
+            "WHERE verdict_source IS NOT NULL "
+            "AND verdict_source NOT IN ('popular', 'toread')",
+        ),
+    ),
+)
+
+
+def _apply_data_migrations(conn: sqlite3.Connection) -> None:
+    for migration_id, statements in _DATA_MIGRATIONS:
+        if _migration_recorded(conn, migration_id):
+            continue
+        for sql in statements:
+            conn.execute(sql)
+        _record_migration(conn, migration_id)
 
 
 def _apply_column_migrations(conn: sqlite3.Connection) -> None:

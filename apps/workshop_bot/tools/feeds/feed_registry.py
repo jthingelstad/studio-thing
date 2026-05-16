@@ -1,8 +1,8 @@
 """Discovery-feed registry — the data definition for Linky's `pinboard-scan` job.
 
-Every discovery feed (Pinboard popular, IndieWeb News, …) is one
-``FeedSpec`` entry in :data:`DISCOVERY_FEEDS`. The job iterates the
-tuple; nothing else in the job is feed-specific. To add a feed:
+Every discovery feed is one ``FeedSpec`` entry in :data:`DISCOVERY_FEEDS`.
+The job iterates the tuple; nothing else in the job is feed-specific. To
+add a feed:
 
 1. Write a ``tools/<name>.py`` fetcher that returns
    ``list[{url, title, [discussion_url], [score], [comment_count], [submitter], [tags]}]``
@@ -36,7 +36,6 @@ from typing import Any, Callable, TypedDict
 # (only depend on ``requests`` and stdlib), so importing them here
 # can't introduce a cycle through the workshop_bot package.
 from ...systems.pinboard import client as pinboard
-from . import indieweb_news
 
 
 class CoSource(TypedDict, total=False):
@@ -44,9 +43,9 @@ class CoSource(TypedDict, total=False):
 
     Shape carried in ``item["co_sources"]`` (fresh items, in-scan
     duplicates from lower-priority feeds) and ``item["new_sightings"]``
-    (uplift items, new feed sightings of a previously-seen URL). The
-    ``source`` field is required; the rest are optional and missing for
-    feeds that don't expose votes / threads (Pinboard popular)."""
+    (uplift items, new feed sightings of a previously-seen URL). With
+    one active feed today this is dormant, but the typed shape remains
+    for future feeds."""
 
     source: str
     discussion_url: str
@@ -58,26 +57,24 @@ class CoSource(TypedDict, total=False):
 class FeedSpec:
     """One discovery feed. The ``fetch`` callable should be a thin lambda
     that delegates to the actual module function (e.g.
-    ``lambda limit: indieweb_news.top(limit=limit)``); the indirection
-    lets tests patch the module attribute and have the patch take
-    effect at call time without rewriting the spec.
+    ``lambda limit: pinboard.popular(limit=limit)``); the indirection
+    lets tests patch the module attribute and have the patch take effect
+    at call time without rewriting the spec.
 
     Fields:
 
     - ``name``     — stable identifier; used as the ``source`` string in
       ``linky_research_messages``, ``pinboard_popular_seen`` audits, and
       everywhere the prompt sees a source label.
-    - ``label``    — display string for the LLM's user message and
-      "Also trending on …" rendering (e.g. "IndieWeb News").
+    - ``label``    — display string for the LLM's user message.
     - ``pin_label``— the short tag rendered in the card header link
-      (e.g. "indieweb"). Empty when the feed has no meaningful
-      discussion thread to link to (e.g. Pinboard popular).
+      Empty when the feed has no meaningful discussion thread to link to.
     - ``fetch``    — ``(limit: int) -> list[dict]``; raises on upstream
       failure (the job catches and degrades to ``[]`` per spec).
     - ``per_scan_cap``  — max cards from this feed per scan.
     - ``feed_limit``    — how many items to ask the fetcher for.
-    - ``primary_priority`` — higher wins cross-source merge; the card's
-      ``📖 · source`` footer reflects the primary.
+    - ``primary_priority`` — higher wins cross-source merge if more feeds
+      are added later.
     - ``enabled`` — when False, ``pinboard-scan`` skips this feed at
       iteration time. The spec stays in :data:`DISCOVERY_FEEDS` so the
       label / pin_label / priority history is preserved (legacy
@@ -110,23 +107,18 @@ def by_name(feeds: tuple[FeedSpec, ...], name: str) -> FeedSpec | None:
 
 # The discovery-feed registry. Each spec is one source. Lambdas in
 # ``fetch`` re-resolve the module attribute at call time, so tests can
-# patch ``pinboard.popular`` / ``indieweb_news.top`` directly and the
-# spec picks up the patch without rewriting.
+# patch ``pinboard.popular`` directly and the spec picks up the patch
+# without rewriting.
 #
 # Priority order in the tuple matters for two things: it's the
 # iteration order in the job's loops (toread is handled separately,
 # but discovery feeds fire in this order), and the highest
 # ``primary_priority`` wins when cross-source merging picks a primary.
-# The active set is **Pinboard popular + IndieWeb News** — both
-# curation-register signals (save-for-later, indieweb-blogged), no
-# upvote/attention feeds. The toread lane (Jamie's own public-toread
-# pile) is separately wired in the job.
+# The active set is intentionally just **Pinboard popular**. The toread
+# lane (Jamie's own public-toread pile) is separately wired in the job.
+# Keep this registry generic so future feeds can be added by one new
+# ``FeedSpec`` instead of changing the scan loop.
 DISCOVERY_FEEDS: tuple[FeedSpec, ...] = (
-    FeedSpec(
-        name="indieweb_news", label="IndieWeb News", pin_label="indieweb",
-        fetch=lambda limit: indieweb_news.top(limit=limit),
-        per_scan_cap=10, feed_limit=20, primary_priority=50,
-    ),
     FeedSpec(
         name="popular", label="Pinboard popular", pin_label="",
         fetch=lambda limit: pinboard.popular(limit=limit),

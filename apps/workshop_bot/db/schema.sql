@@ -105,8 +105,8 @@ CREATE TABLE IF NOT EXISTS subscriber_events_seen (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriber_events_external
   ON subscriber_events_seen(external_id, event_type);
 
--- URLs Linky has already shown to Jamie from any discovery feed
--- (Pinboard popular, IndieWeb News, …). Records the *first* sighting
+-- URLs Linky has already shown to Jamie from the discovery feed set
+-- (currently Pinboard popular only). Records the *first* sighting
 -- + Linky's verdict on that sighting. The companion
 -- `popular_seen_sightings` table records *every* (url, source)
 -- sighting across all feeds and all scans, so cross-source signal
@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS pinboard_popular_seen (
 -- re-evaluation card with the prior sightings + verdict as context.
 CREATE TABLE IF NOT EXISTS popular_seen_sightings (
   url TEXT NOT NULL,
-  source TEXT NOT NULL,                        -- 'popular' / 'indieweb_news' / ...
+  source TEXT NOT NULL,                        -- 'popular' / future feed source names
   seen_at TEXT NOT NULL DEFAULT (datetime('now')),
   PRIMARY KEY (url, source)
 );
@@ -325,13 +325,11 @@ CREATE INDEX IF NOT EXISTS idx_follow_ups_open
 -- description. One row per posted card; never updated (each card is its
 -- own immutable post). `source` is one of:
 --   - 'popular'       — Pinboard's popular feed   (URL may not yet be bookmarked)
---   - 'indieweb_news' — IndieWeb News h-feed      (URL may not yet be bookmarked)
 --   - 'toread'        — Jamie's own toread + public Pinboard bookmarks
 -- Source names are declared in apps/workshop_bot/tools/feeds/feed_registry.py's
 -- `DISCOVERY_FEEDS` registry (one entry per discovery feed) plus the
--- separate `toread` lane. Long-lived DBs may also carry legacy rows
--- with source ∈ {'lobsters', 'hackernews', 'tildes'} from before those
--- feeds were retired in May 2026; they are read-only audit trail.
+-- separate `toread` lane. Retired discovery-source rows are removed by
+-- the 0009 cleanup migration.
 -- `title` is the source-side title we captured at post time, used as
 -- the fallback title when a discovery-feed reply / reaction creates a
 -- new bookmark.

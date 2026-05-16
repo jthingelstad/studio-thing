@@ -77,11 +77,17 @@ class RegistryInvariantsTests(unittest.TestCase):
         self.assertIsNone(by_name(DISCOVERY_FEEDS, "no-such-feed"))
 
     def test_active_feeds_matches_registry(self):
-        """All registry entries are currently enabled. Pinboard popular
-        + IndieWeb News are the two curation-register signals."""
+        """Pinboard popular is the only active discovery feed today."""
         names = sorted(s.name for s in active_feeds())
-        self.assertEqual(names, ["indieweb_news", "popular"],
+        self.assertEqual(names, ["popular"],
                          f"unexpected active feeds: {names}")
+
+    def test_active_feeds_filters_disabled_specs(self):
+        feeds = (
+            FeedSpec("future", "Future Feed", "", lambda _limit: [], enabled=False),
+            FeedSpec("popular", "Pinboard popular", "", lambda _limit: []),
+        )
+        self.assertEqual([f.name for f in active_feeds(feeds)], ["popular"])
 
 
 if __name__ == "__main__":

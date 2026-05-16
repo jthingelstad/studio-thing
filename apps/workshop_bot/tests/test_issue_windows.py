@@ -53,6 +53,59 @@ class IssueWindowDbTests(unittest.TestCase):
         self.assertIn("0001_schema_sql", ids)
         self.assertIn("0002_campaigns_copy", ids)
         self.assertIn("0008_agent_runs_cache_create_tokens", ids)
+        self.assertIn("0009_retire_non_pinboard_discovery_feeds", ids)
+
+    def test_retired_linky_feed_data_migration_prunes_stale_sources(self):
+        with db.connect() as conn:
+            conn.execute(
+                "DELETE FROM schema_migrations "
+                "WHERE id = '0009_retire_non_pinboard_discovery_feeds'"
+            )
+            conn.execute(
+                "INSERT INTO popular_seen_sightings (url, source) VALUES (?, ?)",
+                ("https://x.example/stale", "indieweb_news"),
+            )
+            conn.execute(
+                "INSERT INTO popular_seen_sightings (url, source) VALUES (?, ?)",
+                ("https://x.example/keep", "popular"),
+            )
+            conn.execute(
+                "INSERT INTO linky_research_messages "
+                "(discord_message_id, url, source, title) VALUES (?, ?, ?, ?)",
+                ("stale-msg", "https://x.example/stale", "lobsters", "Stale"),
+            )
+            conn.execute(
+                "INSERT INTO linky_research_messages "
+                "(discord_message_id, url, source, title) VALUES (?, ?, ?, ?)",
+                ("keep-msg", "https://x.example/keep", "toread", "Keep"),
+            )
+            conn.execute(
+                "INSERT INTO pinboard_popular_seen "
+                "(url, title, verdict_source) VALUES (?, ?, ?)",
+                ("https://x.example/seen", "Seen", "hackernews"),
+            )
+
+        db.run_migrations()
+
+        with db.connect() as conn:
+            sources = [
+                r["source"] for r in conn.execute(
+                    "SELECT source FROM popular_seen_sightings ORDER BY source"
+                ).fetchall()
+            ]
+            messages = [
+                r["discord_message_id"] for r in conn.execute(
+                    "SELECT discord_message_id FROM linky_research_messages "
+                    "ORDER BY discord_message_id"
+                ).fetchall()
+            ]
+            verdict_source = conn.execute(
+                "SELECT verdict_source FROM pinboard_popular_seen WHERE url = ?",
+                ("https://x.example/seen",),
+            ).fetchone()["verdict_source"]
+        self.assertEqual(sources, ["popular"])
+        self.assertEqual(messages, ["keep-msg"])
+        self.assertIsNone(verdict_source)
 
     def test_set_then_read_active(self):
         window = issue.compute_window("2026-05-09", 7)

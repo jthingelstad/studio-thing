@@ -28,9 +28,8 @@ fed by the sightings log:
 
 - **In-scan merge** — same URL on multiple feeds in this hour, none
   seen before: pick the highest-priority feed as primary, attach the
-  others as ``co_sources``. One card, multiple discussion-thread
-  links in the header, "Also trending on …" line in the LLM's user
-  message.
+  others as ``co_sources``. One card, with co-source context carried in
+  the LLM's user message if another feed is added later.
 - **Cross-day uplift** — same URL appears on a *new* feed days after
   it was first seen elsewhere: build an uplift candidate carrying
   the prior sightings + original verdict. Linky writes a fresh card
@@ -38,7 +37,7 @@ fed by the sightings log:
   re-evaluation. Throttled at ``_UPLIFT_PER_SCAN_CAP`` per scan.
 
 For each candidate, Linky's ``research-card`` prompt runs once: fetch
-the URL, archive recall, read-length, then either a Discord card or one
+the URL, archive recall, then either a Discord card or one
 of two signals — ``SKIP: <reason>`` (discovery sources only — not
 interesting) or ``FETCH_FAILED: <reason>`` (any source — couldn't
 actually read it, retry next scan). Each card posts as its own
@@ -204,8 +203,8 @@ def _pin_label_for(source: str) -> str:
 
 def _signal_line_for(item: dict[str, Any], label: str) -> Optional[str]:
     """Render the per-feed ``{label} signal:`` line if there's a non-zero
-    score worth surfacing. Discovery feeds with no vote system (Tildes,
-    IndieWeb News) leave score/comments at 0 — return None in that case."""
+    score worth surfacing. Discovery feeds with no vote system leave
+    score/comments at 0 — return None in that case."""
     score = item.get("score")
     comments = item.get("comment_count")
     if not score:
@@ -297,14 +296,14 @@ def _render_link_block(*, source: str, item: dict[str, Any]) -> list[str]:
 
 
 def _render_co_sources(item: dict[str, Any]) -> list[str]:
-    """In-scan cross-source rows: ``Also trending on …`` summary plus
+    """In-scan cross-source rows: a neutral co-source summary plus
     per-co-source discussion URL / pin-label / signal lines. Empty list
     when there are no co-sources (single-feed item)."""
     co_sources = item.get("co_sources") or []
     if not co_sources:
         return []
     lines = [
-        "- **Also trending on (this scan):** "
+        "- **Other discovery sources this scan:** "
         + ", ".join(_label_for(c["source"]) for c in co_sources),
     ]
     for co in co_sources:
@@ -382,7 +381,7 @@ def _parse_signal(answer: str) -> tuple[str, str]:
 def _signal_blob(item: dict[str, Any], source: str) -> dict[str, Any]:
     """Per-source signal carried in ``co_sources`` / ``new_sightings``.
     Just the bits the prompt needs to render multiple discussion links
-    and the "Also trending on" line."""
+    and neutral co-source context."""
     return {
         "source": source,
         "discussion_url": (item.get("discussion_url") or "").strip(),
@@ -600,6 +599,25 @@ _MD_LINK_RE = re.compile(r"\[([^\]]+)\]\(<?([^()<>\s]+)>?\)")
 # common URL chars; a stray punctuation char at the end is the same
 # best-effort behavior Discord's own parser has.
 _BARE_URL_RE = re.compile(r"(?<![(<])(https?://[^\s<>)]+)")
+_RETIRED_CARD_LINE_RE = re.compile(
+    r"^\s*_?\s*(?:(?:[-*]\s*)?(?:🌐\s*)?(?:also on|also trending on):.*|"
+    r"📖\s*(?:short|medium|long|unknown)\s*·.*)_?\s*$",
+    re.IGNORECASE,
+)
+
+
+def _remove_retired_card_lines(payload: str) -> str:
+    """Drop footer lines that Linky used to render but Jamie no longer wants.
+
+    The prompt no longer asks for read-length/source footers or "also on"
+    cross-source lines, but this scrub keeps old model habits from leaking
+    those lines into #research.
+    """
+    lines = [
+        line for line in (payload or "").splitlines()
+        if not _RETIRED_CARD_LINE_RE.match(line)
+    ]
+    return "\n".join(lines).strip()
 
 
 def _suppress_non_article_embeds(payload: str, article_url: str) -> str:
@@ -608,12 +626,12 @@ def _suppress_non_article_embeds(payload: str, article_url: str) -> str:
 
     Discord generates a link preview for every URL it finds in a
     message unless the URL is wrapped in ``<…>``. Linky's cards may
-    surface multiple URLs (article + an IndieWeb News permalink /
+    surface multiple URLs (article + a future feed permalink /
     Pinboard popular link / etc.); we want only the *article* preview
     to render. This rewrites the LLM's output:
 
       ``[Title](https://article)``         ← kept bare (embed fires)
-      ``[pin](https://news.indieweb.org/x)`` → ``[pin](<https://news.indieweb.org/x>)``
+      ``[pin](https://pinboard.in/b/x)`` → ``[pin](<https://pinboard.in/b/x>)``
       bare ``https://other.com`` in prose  → ``<https://other.com>``
 
     The clickable link still works in all three cases; only the
@@ -696,12 +714,12 @@ async def _process_one(
     # kind == "card"
     # Allow Discord to auto-render the *article* preview, but suppress
     # the embeds Discord would otherwise generate for any secondary
-    # URLs in the card (IndieWeb News permalinks, Pinboard popular
+    # URLs in the card (future feed permalinks, Pinboard popular
     # links, etc.). The article URL is left bare; everything else is
     # wrapped in <…> so the link stays clickable but no preview fires.
     # The reply / save / brief reactions all preserve the message id
     # either way; embeds don't affect routing.
-    card_text = _suppress_non_article_embeds(payload, url)
+    card_text = _suppress_non_article_embeds(_remove_retired_card_lines(payload), url)
     msg = await ctx.send_one(
         "DISCORD_CHANNEL_RESEARCH", card_text, persona="linky",
         suppress_embeds=False,
@@ -722,7 +740,7 @@ async def _process_one(
     # "has Linky considered this URL?" — the research_done table answers
     # "did Linky post a card for it?" — and both need to be lane-blind
     # so a popular URL Jamie later toreads, or a toread URL that later
-    # surfaces on IndieWeb News, doesn't fire a duplicate card. Uplift
+    # surfaces on another discovery feed, doesn't fire a duplicate card. Uplift
     # items leave the original popular_seen verdict alone (insert-or-
     # ignore would do this anyway, but skipping the call is clearer).
     _safe_mark_url_researched(

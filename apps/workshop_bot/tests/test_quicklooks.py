@@ -75,7 +75,7 @@ class LinkyPileTests(unittest.TestCase):
 class LinkyStatsTests(_DBCase):
     def test_stats_aggregates_by_source(self):
         with db.connect() as conn:
-            for i, src in enumerate(["indieweb_news", "popular", "indieweb_news", "toread"]):
+            for i, src in enumerate(["popular", "popular", "toread"]):
                 conn.execute(
                     "INSERT INTO linky_research_messages (discord_message_id, url, source, title) "
                     "VALUES (?, ?, ?, ?)",
@@ -83,9 +83,9 @@ class LinkyStatsTests(_DBCase):
                 )
         res = asyncio.run(linky_quicklook.stats(_base.JobContext(deps=None), days=7))
         self.assertTrue(res.ok)
-        self.assertEqual(res.data["count"], 4)
-        self.assertEqual(res.data["by_source"]["indieweb_news"], 2)
-        self.assertEqual(res.data["by_source"]["popular"], 1)
+        self.assertEqual(res.data["count"], 3)
+        self.assertEqual(res.data["by_source"]["popular"], 2)
+        self.assertEqual(res.data["by_source"]["toread"], 1)
 
     def test_stats_empty_window(self):
         res = asyncio.run(linky_quicklook.stats(_base.JobContext(deps=None), days=7))
