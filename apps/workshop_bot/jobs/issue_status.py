@@ -31,18 +31,13 @@ def _days_to(target_iso: str) -> str:
     return f"{-d}d ago"
 
 
-async def run(ctx: "_base.JobContext") -> "_base.JobResult":
-    window = db.get_active_issue_window()
-    if window is None:
-        return _base.JobResult(
-            False, "No active issue window. Run `/eddy issue start <n> <pub-date> <days>`."
-        )
+def render_status_card(window: dict, st: dict) -> str:
+    """Render the readiness checklist as a Discord-ready markdown card.
+
+    Shared with ``update-draft`` so the post-update snapshot to ``#editorial``
+    is byte-identical to what ``/eddy issue status`` prints.
+    """
     n = int(window["issue_number"])
-    try:
-        st = draft_mod.section_status(n)
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("issue-status: section_status failed for #%d", n)
-        return _base.JobResult(False, f"❌ couldn't read the workspace for #{n}: `{type(exc).__name__}: {exc}`")
 
     def m(flag: bool) -> str:
         return "✅" if flag else "❌"
@@ -80,4 +75,20 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         ("✅ **ship-ready** — `build-publish` would proceed." if st["ship_ready"]
          else f"❌ **not ship-ready** — missing: {', '.join(st['required_missing'])}"),
     ]
-    return _base.JobResult(True, "\n".join(lines), data={"issue_number": n, "section_status": st})
+    return "\n".join(lines)
+
+
+async def run(ctx: "_base.JobContext") -> "_base.JobResult":
+    window = db.get_active_issue_window()
+    if window is None:
+        return _base.JobResult(
+            False, "No active issue window. Run `/eddy issue start <n> <pub-date> <days>`."
+        )
+    n = int(window["issue_number"])
+    try:
+        st = draft_mod.section_status(n)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("issue-status: section_status failed for #%d", n)
+        return _base.JobResult(False, f"❌ couldn't read the workspace for #{n}: `{type(exc).__name__}: {exc}`")
+
+    return _base.JobResult(True, render_status_card(window, st), data={"issue_number": n, "section_status": st})

@@ -301,6 +301,49 @@ class UpdateDraftRealFillsTests(_DBTestCase):
         self.assertIn("DRAFT · WT458", html)                 # work-in-progress banner
         self.assertEqual(result.data["preview_url"], "https://files.thingelstad.com/weekly-thing/458/draft.html")
 
+    def test_draft_html_carries_full_generation_timestamp(self):
+        # The shareable preview's banner must include a full timestamp
+        # (date + time + timezone) so anyone opening the link can tell
+        # whether they're looking at a fresh projection or a stale one.
+        self._set_window()
+        result = asyncio.run(update_draft.run(_base.JobContext()))
+        self.assertTrue(result.ok, result.message)
+        html = self.ws.files[(458, "draft.html")]
+        import re
+        # Subtitle reads: "DRAFT · WT458 · generated 2026-MM-DD HH:MM TZ · …"
+        self.assertRegex(
+            html,
+            r"generated \d{4}-\d{2}-\d{2} \d{2}:\d{2} [A-Z]{2,5}",
+        )
+
+    def test_run_posts_deterministic_status_to_editorial(self):
+        # Every `update-draft` run posts the readiness checklist to
+        # #editorial — a guaranteed daily snapshot independent of Eddy's
+        # LLM availability or PASS behaviour.
+        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "12345"
+        try:
+            self._set_window()
+            fake_channel = MagicMock()
+            fake_channel.send = AsyncMock()
+            fake_eddy = MagicMock()
+            fake_eddy.user = object()
+            fake_eddy.get_channel = MagicMock(return_value=fake_channel)
+            fake_eddy.core = AsyncMock(return_value=("PASS", {"iterations": 1}))
+            team = MagicMock(); team.bots = {"eddy": fake_eddy}
+            deps = MagicMock(); deps.team = team
+            ctx = _base.JobContext(deps=deps)
+            result = asyncio.run(update_draft.run(ctx))
+            self.assertTrue(result.ok, result.message)
+            # Even with Eddy returning PASS, the deterministic status card
+            # landed in #editorial.
+            fake_channel.send.assert_awaited()
+            sent = fake_channel.send.call_args.args[0]
+            self.assertIn("WT458", sent)
+            self.assertIn("issue status", sent)
+            self.assertIn("Required for ship", sent)
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
+
     def test_currently_json_renders_into_the_draft(self):
         self._set_window()
         self.ws.write_issue_file(
@@ -393,15 +436,23 @@ class EddyReviewTests(_DBTestCase):
         deps.team = team
         return deps, fake_eddy, fake_channel
 
-    def test_review_silent_on_non_review_day(self):
-        window = self._window()
-        deps, fake_eddy, _ = self._fake_team_with_eddy()
-        ctx = _base.JobContext(deps=deps)
-        st = draft_mod.section_status(458, draft_text=_base.starter_template(), list_objects=set())
-        # Monday — Eddy stays silent.
-        out = asyncio.run(update_draft._maybe_eddy_review(ctx, window, st, None, date(2026, 5, 11)))
-        self.assertIn("silent", out.lower())
-        fake_eddy.core.assert_not_awaited()
+    def test_review_runs_every_weekday(self):
+        # Eddy no longer skips Sat/Sun/Mon — `update-draft` is the gate
+        # (it refuses once final.md exists), so on every day it fires
+        # Eddy should at least attempt a review. Pick Monday — the
+        # weekday that used to silence him — and confirm he runs.
+        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "12345"
+        try:
+            window = self._window()
+            deps, fake_eddy, fake_channel = self._fake_team_with_eddy()
+            ctx = _base.JobContext(deps=deps)
+            st = draft_mod.section_status(458, draft_text=_base.starter_template(), list_objects=set())
+            out = asyncio.run(update_draft._maybe_eddy_review(ctx, window, st, None, date(2026, 5, 11)))
+            self.assertIn("posted a review", out.lower())
+            fake_eddy.core.assert_awaited()
+            fake_channel.send.assert_awaited()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
 
     def test_review_posts_on_review_day(self):
         os.environ["DISCORD_CHANNEL_EDITORIAL"] = "12345"
@@ -442,10 +493,13 @@ class EddyReviewTests(_DBTestCase):
             os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
 
     def test_review_model_scales(self):
+        self.assertEqual(update_draft._review_model(6), "haiku")   # Sun
+        self.assertEqual(update_draft._review_model(0), "haiku")   # Mon
         self.assertEqual(update_draft._review_model(1), "haiku")   # Tue
         self.assertEqual(update_draft._review_model(2), "haiku")   # Wed
         self.assertEqual(update_draft._review_model(3), "sonnet")  # Thu
         self.assertEqual(update_draft._review_model(4), "sonnet")  # Fri
+        self.assertEqual(update_draft._review_model(5), "sonnet")  # Sat
         os.environ["WORKSHOP_EDDY_REVIEW_MODEL"] = "opus"
         try:
             self.assertEqual(update_draft._review_model(1), "opus")

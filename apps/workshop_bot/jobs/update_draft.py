@@ -30,6 +30,7 @@ import hashlib
 import logging
 import os
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from html import escape as _html_escape
 
@@ -38,7 +39,7 @@ from ..systems.pinboard import client as pinboard
 from ..tools import alt_text, db, render, s3
 from ..tools.content import context, draft as draft_mod, journal_images, microblog
 from ..tools.llm import anthropic_client
-from . import _base, _cover, _currently
+from . import _base, _cover, _currently, issue_status
 
 logger = logging.getLogger("workshop.jobs.update_draft")
 
@@ -65,10 +66,10 @@ SECTION_BLOCKS = (
 _ASSET_FILE = {"intro": "intro.md", "outro": "outro.md", "haiku": "haiku.md"}
 _COVER_IMAGE = "https://files.thingelstad.com/weekly-thing/{n}/cover.jpg"
 
-# Eddy posts a review only Tue–Fri (weekday 1..4, Mon=0). Sat/Sun/Mon the
-# job runs but Eddy stays silent — issues just shipped Saturday and the
-# early-week draft is too thin to comment on usefully.
-_EDDY_REVIEW_WEEKDAYS = (1, 2, 3, 4)
+# Local timezone for the draft.html "refreshed at" stamp. America/Chicago
+# matches the cron's 17:00 CT firing — so the timestamp in the preview banner
+# reads as the actual Central time the projection was generated.
+_LOCAL_TZ = ZoneInfo("America/Chicago")
 
 
 # ---------- fills ----------
@@ -236,14 +237,16 @@ def _draft_review_model() -> str:
     return override or _DRAFT_REVIEW_DEFAULT_MODEL
 
 
-# Model for the Tue–Fri `#editorial` post-update card, keyed by Python
-# ``date.weekday()`` (Mon=0, …, Sun=6). Tue/Wed (1/2) get Haiku because
-# the card is mostly the readiness checklist; Thu/Fri (3/4) get Sonnet
-# for the substantive end-of-week pass. Sat/Sun/Mon don't run (gated
-# above this function). Tweak by editing the dict; override the whole
-# selection via ``WORKSHOP_EDDY_REVIEW_MODEL`` (matches the existing
-# convention).
-_REVIEW_MODEL_BY_WEEKDAY: dict[int, str] = {1: "haiku", 2: "haiku", 3: "sonnet", 4: "sonnet"}
+# Model for the `#editorial` post-update card, keyed by Python
+# ``date.weekday()`` (Mon=0, …, Sun=6). Sun/Mon/Tue/Wed (6/0/1/2) get
+# Haiku — the card is mostly the readiness checklist while content is
+# thin; Thu/Fri/Sat (3/4/5) get Sonnet for the substantive end-of-week
+# pass that runs up to publish. Tweak by editing the dict; override the
+# whole selection via ``WORKSHOP_EDDY_REVIEW_MODEL``.
+_REVIEW_MODEL_BY_WEEKDAY: dict[int, str] = {
+    6: "haiku", 0: "haiku", 1: "haiku", 2: "haiku",
+    3: "sonnet", 4: "sonnet", 5: "sonnet",
+}
 _REVIEW_MODEL_FALLBACK = "haiku"
 
 
@@ -296,9 +299,10 @@ async def _draft_review(
 async def _maybe_eddy_review(
     ctx: "_base.JobContext", window: dict, st: dict, prev_digest, today, *, view_url=None
 ) -> str:
-    if today.weekday() not in _EDDY_REVIEW_WEEKDAYS:
-        logger.info("update-draft: %s — Eddy stays silent", today.strftime("%a"))
-        return "Eddy is silent Sat/Sun/Mon."
+    # No weekday gate — Eddy comments on every ``update-draft`` run until
+    # ``final.md`` is created (which makes ``update-draft`` itself refuse).
+    # That naturally walks Eddy from the issue's first projection up through
+    # the morning Jamie locks the issue with ``/eddy issue final``.
     team = getattr(getattr(ctx, "deps", None), "team", None)
     if team is None:
         logger.info("update-draft: no team registry; Eddy review skipped")
@@ -373,7 +377,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 files = set()
             st = draft_mod.section_status(n, draft_text=text, list_objects=files)
             prev_digest = db.latest_draft_digest(n)
-            today = datetime.now().date()
+            generated_at = datetime.now(_LOCAL_TZ)
+            today = generated_at.date()
+            stamp = generated_at.strftime("%Y-%m-%d %H:%M %Z")
 
             # Solid editorial pass for the shareable HTML preview — embedded
             # behind a "Show review" toggle, hidden by default. Best-effort.
@@ -384,12 +390,28 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 logger.exception("update-draft: HTML draft review failed for #%d", n)
 
             # Browser-viewable preview (no-cache + CDN invalidation); best-effort.
+            # Subtitle carries the full local timestamp so anyone opening the
+            # shareable link can tell at a glance whether they're looking at a
+            # fresh projection or a stale one.
             html_url = await asyncio.to_thread(
                 render.render_and_upload_html, n, "draft", text,
                 title=f"WT{n} — draft",
-                subtitle=f"DRAFT · WT{n} · refreshed {today} · ~{st['word_count']} words · not the final issue",
+                subtitle=f"DRAFT · WT{n} · generated {stamp} · ~{st['word_count']} words · not the final issue",
                 strip_block_markers=True, review_md=review_md,
             )
+
+            # Always post the deterministic readiness snapshot to #editorial,
+            # regardless of Eddy's LLM availability or whether the review card
+            # ends up with anything to say. Gives Jamie a guaranteed daily
+            # status check-in. Best-effort: a Discord hiccup doesn't fail the
+            # job. Posted as Eddy so it sits in his thread of update messages.
+            status_card = issue_status.render_status_card(window, st)
+            if html_url:
+                status_card = status_card.rstrip() + f"\n\n📄 [view draft]({html_url})"
+            try:
+                await ctx.post("DISCORD_CHANNEL_EDITORIAL", status_card, persona="eddy")
+            except Exception:  # noqa: BLE001
+                logger.exception("update-draft: status-card post failed for #%d", n)
 
             review_note = ""
             try:

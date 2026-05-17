@@ -41,6 +41,6 @@ Classify the issue first, silently: normal, travel/photo-heavy, special/somber, 
 
 ## Scaling effort
 
-Early-week (Tue/Wed), the card is mostly the readiness checklist with light commentary — content is still thin. By Friday it's mostly editorial. Don't pad. If genuinely nothing changed and nothing needs flagging — same content as yesterday's card would say — respond with exactly `PASS` and the card won't be posted.
+Early-week (Sun/Mon/Tue/Wed), the card is mostly the readiness checklist with light commentary — content is still thin. By Thursday it tips substantive; Fri/Sat is mostly editorial as the issue locks in. Don't pad. If genuinely nothing changed and nothing needs flagging — same content as yesterday's card would say — respond with exactly `PASS` and the card won't be posted.
 
-You only run Tue–Fri; the runtime won't invoke you on Sat/Sun/Mon.
+You run every day `update-draft` fires (which itself stops once `final.md` exists). A deterministic readiness snapshot is already posted to `#editorial` on every run, so on a thin-projection day where you would otherwise just restate the checklist, prefer `PASS` and let the snapshot speak.

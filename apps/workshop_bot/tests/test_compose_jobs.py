@@ -204,19 +204,20 @@ class ComposeMetaTests(_DBTestCase):
         self.assertIsNone(r.error_reason)
 
     def test_review_model_by_weekday(self):
-        """The Tue–Fri model selection: Tue/Wed Haiku, Thu/Fri Sonnet,
+        """Model selection across the week: Sun–Wed Haiku, Thu–Sat Sonnet,
         env override wins for any weekday."""
         from apps.workshop_bot.jobs import update_draft
         # Weekday integers: Mon=0, Tue=1, …, Sun=6.
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("WORKSHOP_EDDY_REVIEW_MODEL", None)
-            self.assertEqual(update_draft._review_model(1), "haiku")
-            self.assertEqual(update_draft._review_model(2), "haiku")
-            self.assertEqual(update_draft._review_model(3), "sonnet")
-            self.assertEqual(update_draft._review_model(4), "sonnet")
-            # Sat/Sun fall back (never actually called — gated above —
-            # but the fallback should be safe).
-            self.assertEqual(update_draft._review_model(5), "haiku")
+            self.assertEqual(update_draft._review_model(6), "haiku")   # Sun
+            self.assertEqual(update_draft._review_model(0), "haiku")   # Mon
+            self.assertEqual(update_draft._review_model(1), "haiku")   # Tue
+            self.assertEqual(update_draft._review_model(2), "haiku")   # Wed
+            self.assertEqual(update_draft._review_model(3), "sonnet")  # Thu
+            self.assertEqual(update_draft._review_model(4), "sonnet")  # Fri
+            # Sat: also Sonnet now — Eddy keeps commenting up to publish.
+            self.assertEqual(update_draft._review_model(5), "sonnet")
         # Env override wins for any weekday.
         with patch.dict(os.environ, {"WORKSHOP_EDDY_REVIEW_MODEL": "opus"}):
             self.assertEqual(update_draft._review_model(3), "opus")
