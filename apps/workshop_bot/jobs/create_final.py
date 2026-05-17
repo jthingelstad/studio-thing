@@ -66,7 +66,7 @@ from typing import Any, Optional
 from ..tools import db, issue_assembly, issue_items, issue_items_render, render, s3
 from ..tools.discord import discord_io, interaction
 from ..tools.llm import anthropic_client
-from . import _base, _cover, _currently, _llm_job
+from . import _base, _cover, _currently, _llm_job, compose_cta
 
 logger = logging.getLogger("workshop.jobs.create_final")
 
@@ -76,6 +76,19 @@ _NEXT_STEPS = (
     "Next, in any order: `/eddy issue haiku`, `/eddy issue subject`, "
     "`/patty cta` — then `/eddy issue publish` (it'll list "
     "anything still missing if you run it early)."
+)
+
+# When create-final lands with declared membership-block slots, the
+# next deterministic step is compose-cta (Patty filling each slot).
+# WT348 surfaced this as a forgetting-Patty failure mode: Jamie
+# skipped /patty cta entirely and the shipped issue went out without
+# the supporter CTA / premium thanks. Auto-firing it as a background
+# task removes the remember-to-run gap without taking the pick
+# decision away from Jamie (each slot still prompts him in
+# #supporters via the standard refresh-loop UX).
+_NEXT_STEPS_WITH_CTA_AUTOFIRE = (
+    "Next: `/eddy issue haiku`, `/eddy issue subject`, then `/eddy issue publish`. "
+    "Patty's `compose-cta` auto-fires now — react in `#supporters` per slot."
 )
 
 # Hard caps on Eddy's declarations (enforced after parse).
@@ -595,6 +608,36 @@ def _render_final_passthrough(issue_number: int, atoms: dict[str, str]) -> str:
 _ASSETS_BASE = "https://files.thingelstad.com/weekly-thing"
 
 
+def _schedule_compose_cta(
+    ctx: "_base.JobContext", *, issue_number: int, slots_declared: int,
+) -> None:
+    """Fire ``compose-cta`` as a background asyncio task so create-final
+    can return immediately. Any error inside compose-cta is logged
+    rather than re-raised — the JobResult for create-final has already
+    been built and the user's slash ack is in flight; an exception
+    here would land nowhere useful.
+    """
+    async def _run() -> None:
+        try:
+            result = await compose_cta.run(ctx)
+            logger.info(
+                "create-final → compose-cta autofire for WT%d (%d slot(s)): %s",
+                issue_number, slots_declared, getattr(result, "message", ""),
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception(
+                "create-final → compose-cta autofire failed for WT%d",
+                issue_number,
+            )
+
+    try:
+        asyncio.create_task(_run())
+    except RuntimeError:
+        # No running loop (test contexts without an event loop). Skip
+        # silently — the test harness drives compose-cta directly.
+        logger.debug("create-final: no event loop for compose-cta autofire")
+
+
 def _md_html_links(issue_number: int, name: str, html_url: Optional[str]) -> str:
     md_url = f"{_ASSETS_BASE}/{issue_number}/{name}.md"
     if html_url:
@@ -721,19 +764,30 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     strip_block_markers=True,
                 )
                 view = _md_html_links(n, "final", html_url)
+                cta_slots_n = len(data.get("membership_blocks") or []) if approved is True else 0
+                next_steps = _NEXT_STEPS_WITH_CTA_AUTOFIRE if cta_slots_n else _NEXT_STEPS
                 await channel.send(
-                    f"✅ `final.md` written for WT{n}.{view}\n\n{_NEXT_STEPS}",
+                    f"✅ `final.md` written for WT{n}.{view}\n\n{next_steps}",
                     suppress_embeds=True,
                 )
+                # Auto-fire compose-cta when Eddy declared slots and
+                # Jamie approved. Background task so create-final returns
+                # immediately (compose-cta is interactive — it'll prompt
+                # Jamie in #supporters per slot, independently of
+                # whatever else is in flight in #editorial).
+                if cta_slots_n:
+                    _schedule_compose_cta(ctx, issue_number=n, slots_declared=cta_slots_n)
                 return _base.JobResult(
                     True,
                     f"`final.md` written for WT{n}"
                     + (f" · 📄 {html_url}" if html_url else "")
-                    + f". {_NEXT_STEPS}",
+                    + f". {next_steps}",
                     data={
                         "issue_number": n,
                         "preview_url": html_url,
                         "thesis_written": approved is True,
+                        "cta_autofired": bool(cta_slots_n),
+                        "cta_slots_declared": cta_slots_n,
                     },
                 )
 

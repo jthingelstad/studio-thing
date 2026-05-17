@@ -587,6 +587,56 @@ class CreateFinalTests(_DBTestCase):
         self.assertTrue(any("didn't validate" in m for m in sent_messages),
                         f"sent_messages = {sent_messages!r}")
 
+    # ---- compose-cta autofire ----
+
+    def test_membership_blocks_autofires_compose_cta(self):
+        # When Jamie approves a proposal with cta/thanks markers,
+        # create-final should schedule compose-cta as a background task
+        # (no manual `/patty cta` required — addresses the WT348 skip-Patty
+        # failure mode).
+        reply = self._basic_reply(
+            membership_blocks=[
+                {"kind": "cta", "after": "n1", "rationale": "after first"},
+            ],
+        )
+        ctx, fc = self._setup(reply)
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)), \
+             patch.object(create_final, "_schedule_compose_cta") as mock_sched:
+            result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertTrue(result.data["cta_autofired"])
+        self.assertEqual(result.data["cta_slots_declared"], 1)
+        mock_sched.assert_called_once()
+        kwargs = mock_sched.call_args.kwargs
+        self.assertEqual(kwargs["issue_number"], 458)
+        self.assertEqual(kwargs["slots_declared"], 1)
+        # The success message references the autofire.
+        self.assertIn("compose-cta", result.message)
+        self.assertIn("auto-fires", result.message)
+
+    def test_no_markers_no_autofire(self):
+        reply = self._basic_reply()  # empty membership_blocks
+        ctx, fc = self._setup(reply)
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)), \
+             patch.object(create_final, "_schedule_compose_cta") as mock_sched:
+            result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertFalse(result.data["cta_autofired"])
+        self.assertEqual(result.data["cta_slots_declared"], 0)
+        mock_sched.assert_not_called()
+
+    def test_rejected_proposal_does_not_autofire(self):
+        reply = self._basic_reply(
+            membership_blocks=[{"kind": "cta", "after": "n1", "rationale": "x"}],
+        )
+        ctx, fc = self._setup(reply)
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=False)), \
+             patch.object(create_final, "_schedule_compose_cta") as mock_sched:
+            result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok)
+        self.assertFalse(result.data["cta_autofired"])
+        mock_sched.assert_not_called()
+
     # ---- membership block markers ----
 
     def test_membership_blocks_marker_inline(self):
