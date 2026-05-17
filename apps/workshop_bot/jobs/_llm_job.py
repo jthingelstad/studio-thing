@@ -14,12 +14,13 @@ that turns the LLM reply into a `list[str]` of options.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
 from typing import Any, Callable, NamedTuple, Optional
 
-from ..tools import db
+from ..tools import db, render
 from ..tools.discord import interaction
 from ..tools import s3
 from . import _base
@@ -152,6 +153,11 @@ async def refresh_loop(
     trigger: str,
     rounds: int = MAX_REFRESH_ROUNDS,
     persona: str = "eddy",
+    cards_issue: Optional[int] = None,
+    cards_filename: Optional[str] = None,
+    cards_title: Optional[str] = None,
+    cards_subtitle: Optional[str] = None,
+    cards_body_kind: str = "serif",
 ) -> Optional[str]:
     """The compose-pick loop: call the model, parse a list of options,
     show them in the channel, wait for Jamie's pick or 🔄 refresh, repeat
@@ -172,6 +178,16 @@ async def refresh_loop(
         trigger: the ``agent_runs.trigger`` label for the LLM call.
         rounds: max attempts before giving up.
         persona: persona name for ``db.AgentRun``.
+        cards_issue / cards_filename / cards_title: when all three are
+            supplied, each round also renders the options to an HTML
+            option-cards page at
+            ``s3://files.thingelstad.com/weekly-thing/{cards_issue}/{cards_filename}.html``
+            and appends "📄 {url}" to the Discord prompt so Jamie can
+            read the options in the browser (with copy buttons) before
+            reacting. Best-effort: a render failure just omits the
+            URL and the Discord pick still works.
+        cards_subtitle / cards_body_kind: optional formatting for the
+            cards page (see :func:`tools.render.option_cards_html`).
 
     A 🔄 refresh appends a "fresh framings" hint to ``base_msg``; an
     unparseable response appends a tighter "follow the prompt's output
@@ -190,7 +206,19 @@ async def refresh_loop(
             )
             continue
         shown = pretty(options) if pretty else options
-        pick = await interaction.await_choice(bot, channel, shown, prompt=prompt_label)
+        # Optional HTML option-cards page — uploaded on every round so
+        # the URL stays valid across 🔄 refreshes (the URL is stable;
+        # only the contents change).
+        round_label = prompt_label
+        if cards_issue is not None and cards_filename and cards_title:
+            url = await asyncio.to_thread(
+                render.render_and_upload_option_cards,
+                int(cards_issue), cards_filename, cards_title, options,
+                subtitle=cards_subtitle, body_kind=cards_body_kind,
+            )
+            if url:
+                round_label = f"{prompt_label}\n📄 {url}"
+        pick = await interaction.await_choice(bot, channel, shown, prompt=round_label)
         if pick == "refresh":
             user_msg = base_msg + "\n\n(Jamie asked for fresh options — give different framings, please.)"
             continue

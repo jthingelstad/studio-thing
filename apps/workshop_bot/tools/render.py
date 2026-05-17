@@ -551,6 +551,209 @@ def markdown_to_html_page(md: str, *, title: str, subtitle: Optional[str] = None
     )
 
 
+# ---------- option-cards page (subject picker, etc.) ----------
+#
+# The existing Discord reaction loop posts numbered options in a chat
+# message — fine for haiku (short lines) but cramped for subject lines
+# (long enough that Discord wraps mid-line) and impossible for the
+# create-final reorder (3 lists × 12 items). The option-cards page is
+# the HTML side of the same pick UI: each option lands in its own
+# card, with a stable card number that matches the 1️⃣–5️⃣ reactions
+# in Discord, and a "copy" button so Jamie can lift the text into
+# another window if he wants to compare or hand-edit.
+#
+# Same self-contained-HTML approach as the draft preview — one file,
+# CSS inline, no external dependencies. The page deliberately does
+# NOT have its own pick affordance: picks still flow through Discord
+# reactions so the existing await_choice + refresh-loop plumbing
+# stays in charge.
+
+_OPTION_CARDS_CSS = """\
+:root {
+  color-scheme: light dark;
+  --wt-bg: #fcfcfa; --wt-ink: #14181f; --wt-ink-soft: #3d4654; --wt-muted: #7d8694;
+  --wt-line: #e6ebf2; --wt-line-soft: #f0f3f8;
+  --wt-accent: #1f6fd6; --wt-accent-deep: #134d99; --wt-accent-soft: #e1edff;
+  --wt-sans: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --wt-serif: "Source Serif 4", "Charter", "Iowan Old Style", Cambria, Georgia, serif;
+  --wt-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: var(--wt-sans); font-size: 17px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  max-width: 760px; margin: 0 auto; padding: 32px 28px 64px;
+  color: var(--wt-ink); background: var(--wt-bg);
+}
+h1 {
+  font-family: var(--wt-serif); font-weight: 500; font-size: 28px;
+  letter-spacing: -0.015em; line-height: 1.2;
+  margin: 0 0 4px; padding: 0;
+}
+.subtitle {
+  font-family: var(--wt-mono); font-size: 12px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--wt-muted); margin: 0 0 28px;
+}
+.hint {
+  font-family: var(--wt-mono); font-size: 12px; letter-spacing: 0.04em;
+  background: var(--wt-accent-soft); border-left: 3px solid var(--wt-accent);
+  color: var(--wt-accent-deep); padding: 10px 14px; border-radius: 3px;
+  margin: 0 0 24px;
+}
+.card {
+  border: 1px solid var(--wt-line); border-radius: 6px;
+  padding: 18px 22px; margin: 0 0 16px;
+  background: var(--wt-bg); position: relative;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.card:hover { border-color: var(--wt-accent); box-shadow: 0 1px 6px rgba(31, 111, 214, 0.08); }
+.card-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin: 0 0 10px;
+}
+.card-num {
+  font-family: var(--wt-mono); font-size: 13px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--wt-accent-deep);
+  background: var(--wt-accent-soft); padding: 2px 10px; border-radius: 999px;
+}
+.card-copy {
+  cursor: pointer; border: 1px solid var(--wt-line);
+  font-family: var(--wt-mono); font-size: 11px; letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px;
+  background: transparent; color: var(--wt-accent-deep);
+}
+.card-copy:hover { background: var(--wt-accent-soft); border-color: var(--wt-accent); }
+.card.card-copied { border-color: #2da44e; box-shadow: 0 1px 6px rgba(45, 164, 78, 0.16); }
+.card.card-copied .card-copy { color: #1a7f37; border-color: #2da44e; }
+.card-body { font-family: var(--wt-serif); font-size: 19px; line-height: 1.4; white-space: pre-wrap; }
+.card-body.card-body-mono { font-family: var(--wt-mono); font-size: 14px; line-height: 1.5; }
+@media (max-width: 600px) {
+  body { padding: 22px 16px 48px; font-size: 16px; }
+  h1 { font-size: 24px; }
+  .card { padding: 14px 16px; }
+  .card-body { font-size: 17px; }
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wt-bg: #15171a; --wt-ink: #dfe2e6; --wt-ink-soft: #aab0b8; --wt-muted: #828a94;
+    --wt-line: #2c2f34; --wt-line-soft: #23262a;
+    --wt-accent: #6ea8fe; --wt-accent-deep: #9cc2ff; --wt-accent-soft: #1d2733;
+  }
+}
+"""
+
+_OPTION_CARDS_SCRIPT = """\
+<script>(function(){
+Array.prototype.forEach.call(document.querySelectorAll('.card-copy'),function(btn){
+  btn.addEventListener('click',function(e){
+    e.stopPropagation();
+    var card=btn.closest('.card');if(!card)return;
+    var body=card.querySelector('.card-body');if(!body)return;
+    var text=(body.textContent||'').trim();
+    function done(){
+      card.classList.add('card-copied');
+      var prev=btn.textContent;btn.textContent='copied';
+      setTimeout(function(){card.classList.remove('card-copied');btn.textContent=prev||'copy';},1300);
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done,function(){
+        var range=document.createRange();range.selectNodeContents(body);
+        var sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
+      });
+    }else{
+      var range=document.createRange();range.selectNodeContents(body);
+      var sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
+    }
+  });
+});
+})();</script>
+"""
+
+
+def option_cards_html(
+    title: str,
+    options: list[str],
+    *,
+    subtitle: Optional[str] = None,
+    hint: Optional[str] = None,
+    body_kind: str = "serif",  # 'serif' | 'mono'
+) -> str:
+    """Render an HTML page of clickable option cards (subject picker,
+    haiku picker, etc.). Each card carries the option's 1-based number
+    (matching the Discord 1️⃣–5️⃣ reactions) plus a copy-to-clipboard
+    button.
+
+    ``body_kind='mono'`` switches the card body to a monospace font —
+    useful for haiku and CTA copy where line breaks matter visually.
+    """
+    body_class = "card-body" + (" card-body-mono" if body_kind == "mono" else "")
+    cards: list[str] = []
+    for i, opt in enumerate(options, start=1):
+        text = _html.escape((opt or "").strip())
+        cards.append(
+            f'<article class="card" data-card-num="{i}">'
+            f'<div class="card-head">'
+            f'<span class="card-num">option {i}</span>'
+            f'<button type="button" class="card-copy" aria-label="Copy option {i}">copy</button>'
+            f'</div>'
+            f'<div class="{body_class}">{text}</div>'
+            f'</article>'
+        )
+    sub_html = (
+        f'<p class="subtitle">{_html.escape(subtitle)}</p>' if subtitle else ""
+    )
+    hint_html = (
+        f'<p class="hint">{_html.escape(hint)}</p>' if hint else ""
+    )
+    return (
+        "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n"
+        "<meta charset=\"utf-8\">\n"
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+        "<meta name=\"robots\" content=\"noindex, nofollow\">\n"
+        f"<title>{_html.escape(title)}</title>\n"
+        f"<style>{_OPTION_CARDS_CSS}</style>\n"
+        "</head>\n<body>\n"
+        f"<h1>{_html.escape(title)}</h1>\n"
+        f"{sub_html}\n"
+        f"{hint_html}\n"
+        + "\n".join(cards)
+        + "\n"
+        + _OPTION_CARDS_SCRIPT
+        + "</body>\n</html>\n"
+    )
+
+
+def render_and_upload_option_cards(
+    issue_number: int,
+    name: str,
+    title: str,
+    options: list[str],
+    *,
+    subtitle: Optional[str] = None,
+    hint: Optional[str] = None,
+    body_kind: str = "serif",
+) -> Optional[str]:
+    """Render the option-cards page and upload it to the issue's
+    workspace (no-cache + CDN invalidation). Returns the public URL,
+    or ``None`` on any failure — callers treat the HTML preview as a
+    nice-to-have on top of the Discord pick flow.
+    """
+    try:
+        page = option_cards_html(
+            title=title, options=options,
+            subtitle=subtitle, hint=hint, body_kind=body_kind,
+        )
+        res = s3.write_issue_html(int(issue_number), f"{name}.html", page)
+        return res.get("url")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "render: couldn't write %s.html for #%s: %s",
+            name, issue_number, exc,
+        )
+        return None
+
+
 def render_and_upload_html(
     issue_number: int,
     name: str,

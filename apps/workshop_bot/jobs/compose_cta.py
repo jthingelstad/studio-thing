@@ -161,6 +161,10 @@ async def _fill_slot(
         prompt_label=f"💝 WT{n} — {cfg['label']} slot {slot_n} (`{kind}:{slot_n}`):",
         trigger=f"compose-cta:{kind}",
         persona="patty",
+        cards_issue=n,
+        cards_filename=f"{kind}-{slot_n}-options",
+        cards_title=f"WT{n} — {cfg['label']} options ({kind}:{slot_n})",
+        cards_subtitle=f"1–2 framings · react in #supporters to pick",
     )
     if not pick:
         await _llm_job.try_send(

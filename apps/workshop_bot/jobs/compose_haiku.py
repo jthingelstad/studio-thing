@@ -78,6 +78,11 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 pretty=_pretty_haiku_options,
                 prompt_label=f"📜 Haiku options for WT{n} — pick one:",
                 trigger="compose-haiku",
+                cards_issue=n,
+                cards_filename="haiku-options",
+                cards_title=f"WT{n} — haiku options",
+                cards_subtitle="three lines each · react in #editorial to pick",
+                cards_body_kind="mono",
             )
             if not chosen:
                 return _base.JobResult(
