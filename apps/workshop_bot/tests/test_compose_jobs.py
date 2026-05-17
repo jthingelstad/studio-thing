@@ -122,6 +122,37 @@ class ComposeMetaTests(_DBTestCase):
         self.assertIn("**Subject:** WT458 — The Death of Scrum", sent)
         self.assertIn("**Description:** Claude personal guidance,", sent)
 
+    def test_preserves_buttondown_id_on_rerun(self):
+        # Once send-to-buttondown has written buttondown_id, a later
+        # compose-meta re-run must keep it so the next send PATCHes the
+        # same draft rather than POSTing a duplicate.
+        self._window()
+        import json as _j
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        self.ws.write_issue_file(458, "metadata.json", _j.dumps({
+            "number": 458,
+            "subject": "old subject",
+            "description": "old description",
+            "image": "https://files.thingelstad.com/weekly-thing/458/cover.jpg",
+            "slug": "458",
+            "publish_date": "2026-05-16T12:00:00Z",
+            "buttondown_id": "em_existing_id_123",
+        }))
+        fc = _FakeBotChannel(persona="eddy")
+        fc.bot.core = AsyncMock(side_effect=[
+            ("1. WT458 — Fresh Pick\n2. WT458 — B", {}),
+            ("Brand new description.", {}),
+        ])
+        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(side_effect=[0])):
+            result = asyncio.run(compose_meta.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        meta = _j.loads(self.ws.files[(458, "metadata.json")])
+        self.assertEqual(meta["subject"], "WT458 — Fresh Pick")
+        self.assertEqual(meta["description"], "Brand new description.")
+        self.assertEqual(meta["buttondown_id"], "em_existing_id_123")
+
     def test_empty_description_reply_writes_empty_description(self):
         self._window()
         self.ws.write_issue_file(458, "draft.md", _base.starter_template())

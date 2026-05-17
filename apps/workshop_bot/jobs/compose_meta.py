@@ -149,6 +149,22 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 "slug": str(n),
                 "publish_date": pub_iso,
             }
+            # Preserve buttondown_id (and anything else send-to-buttondown has
+            # written) so re-running compose-meta after the first Buttondown
+            # send doesn't orphan the existing draft on the next send. Only
+            # subject/description are generated here; everything else either
+            # is deterministic (number/slug/image/publish_date) or comes from
+            # downstream jobs we shouldn't clobber.
+            existing = s3.read_issue_file(n, "metadata.json")
+            if existing.get("found") and isinstance(existing.get("text"), str):
+                try:
+                    prior = json.loads(existing["text"])
+                except (ValueError, TypeError):
+                    prior = None
+                if isinstance(prior, dict):
+                    for key, value in prior.items():
+                        if key not in metadata:
+                            metadata[key] = value
             s3.write_issue_file(n, "metadata.json", json.dumps(metadata, indent=2) + "\n")
             desc_line = description if description else "_(empty — set it in Buttondown or re-run compose-meta)_"
             # Best-effort: metadata.json is on S3 either way; a Discord
