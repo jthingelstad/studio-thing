@@ -96,12 +96,6 @@ _DEFAULT_TINYLYTICS_UID = "a2YQr3ZMqkySNYSwz4uF"
 # location works.
 _MARKER_RE = re.compile(r"<!--\s*(cta|thanks):(\d+)\s*-->")
 
-# Feature-block names create-final fills when Eddy promotes an item to its
-# own standalone section. Listed here so build-publish reads them from
-# final.md alongside the other named blocks.
-_FEATURE_BLOCK_NAMES = ("feature1", "feature2")
-_FEATURE_POSITIONS = ("after_notable", "after_journal", "after_brief")
-
 
 def _tinylytics_uid() -> str:
     return (os.environ.get("TINYLYTICS_SITE_UID") or _DEFAULT_TINYLYTICS_UID).strip()
@@ -275,13 +269,6 @@ def _unfilled_marker_missing_list(
                 f"`{filename}` body empty ({label} slot `{kind}:{slot_n}`) → `/patty cta`"
             )
     return missing
-
-
-# Feature blocks are gone — promoted (featured) sections splice inline
-# into ``final.md`` at create-final time now, so build-publish just sees
-# them as ``## Heading`` sections in the file. The
-# ``_parse_feature_blocks`` / ``feature1`` / ``feature2`` machinery was
-# removed in the row-backed rework; nothing reads them anymore.
 
 
 # ---------- marker substitution ----------
