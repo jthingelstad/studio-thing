@@ -165,22 +165,25 @@ class BuildPublishTests(_DBTestCase):
 
     def test_assembles_publish_md_with_marker_substitution(self):
         self._window()
+        # In the row-backed model, final.md is already assembled with the
+        # atoms inlined — the assembler bakes intro / currently / cover /
+        # haiku into the file at create-final time. The build-publish
+        # transform just substitutes markers + adds editor-mode + pixel.
         final_with_marker = _filled_final(
             notable=(
                 "### [A](http://a)\n\nbody A\n\n\n"
                 "### [B](http://b)\n\nbody B\n\n<!-- cta:1 -->"
             ),
+            intro="Welcome to the issue.",
+            currently="**Reading:** a book.",
+            cover=(
+                '<img src="https://files.thingelstad.com/weekly-thing/458/cover.jpg" '
+                'alt="cover" />\n\nDocks on the lake.\n\nApril 26, 2026  \nExcelsior, MN'
+            ),
+            haiku="**line one  \nline two  \nline three**",
         )
         self.ws.write_issue_file(458, "final.md", final_with_marker)
-        self.ws.write_issue_file(458, "intro.md", "Welcome to the issue.")
-        self.ws.write_issue_file(
-            458, "cover.md",
-            "Docks on the lake.\n\nApril 26, 2026  \nExcelsior, MN",
-        )
-        self.ws.write_issue_file(458, "haiku.md", "line one\nline two\nline three")
-        self.ws.write_issue_file(458, "currently.md", "Reading: a book.")
-        self.ws.write_issue_file(458, "metadata.json", '{"subject":"x"}')
-        self.ws.write_issue_file(458, "cover.jpg", "(binary)")
+        self._seed_required_assets()
         self.ws.write_issue_file(
             458, "cta-1.md", "---\nkind: supporter\n---\n\nSupport the EFF.",
         )
@@ -191,7 +194,7 @@ class BuildPublishTests(_DBTestCase):
         # Editor-mode comment glommed onto the intro.
         self.assertTrue(pub.startswith("<!-- buttondown-editor-mode: plaintext -->Welcome to the issue."), pub[:80])
         self.assertIn("line two", pub)
-        self.assertIn("Reading: a book.", pub)
+        self.assertIn("Reading:", pub)
         self.assertNotIn("<!-- block:", pub)  # block markers stripped
         # Marker substituted — the raw `<!-- cta:1 -->` shouldn't appear,
         # the supporter Liquid block + the CTA copy should.
@@ -256,204 +259,87 @@ class BuildPublishTests(_DBTestCase):
         html = self.ws.files[(458, "publish.html")]
         self.assertNotIn("Thank you for keeping this free.", html)
 
-    def test_outro_slots_between_last_section_and_haiku(self):
+    def test_outro_appears_when_inlined_in_final(self):
+        # In the row-backed model, outro is baked into final.md at
+        # create-final time. build-publish passes it through.
         self._window()
-        self.ws.write_issue_file(458, "final.md", _filled_final())
+        self.ws.write_issue_file(
+            458, "final.md",
+            _filled_final(outro="Closing thought — see you next week."),
+        )
         self._seed_required_assets()
-        self.ws.write_issue_file(458, "outro.md", "Closing thought — see you next week.")
         ctx, fc = self._ctx()
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
         pub = self.ws.files[(458, "publish.md")]
         outro_pos = pub.index("Closing thought — see you next week.")
-        # Outro lands after the last body section (Briefly) and before the
-        # haiku close.
         self.assertGreater(outro_pos, pub.index("## Briefly"))
         self.assertLess(outro_pos, pub.index("A haiku to leave you with"))
 
     def test_missing_outro_drops_cleanly(self):
-        """outro.md is optional; no outro = the chain produces a valid
-        publish.md without the outro slot."""
+        """No outro in final.md → no orphan outro in publish.md."""
         self._window()
         self.ws.write_issue_file(458, "final.md", _filled_final())
         self._seed_required_assets()
-        # No outro.md written.
         ctx, fc = self._ctx()
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
         pub = self.ws.files[(458, "publish.md")]
         self.assertIn("## Briefly", pub)
         self.assertIn("A haiku to leave you with", pub)
-        # Briefly should be followed by the haiku close (no orphan outro).
 
-    def test_currently_json_renders_into_publish_md(self):
+    def test_currently_inlined_in_final_renders_into_publish(self):
         self._window()
-        self.ws.write_issue_file(458, "final.md", _filled_final())
-        self.ws.write_issue_file(458, "intro.md", "Intro.")
-        self.ws.write_issue_file(458, "haiku.md", "a\nb\nc")
-        self.ws.write_issue_file(458, "metadata.json", '{"subject":"x"}')
-        self.ws.write_issue_file(458, "cover.jpg", "(binary)")
-        self.ws.write_issue_file(458, "currently.json", '{"Listening":" Noah Kahan.","Watching":" Shrinking."}')
+        self.ws.write_issue_file(
+            458, "final.md",
+            _filled_final(
+                intro="Intro.",
+                currently="**Listening:** Noah Kahan.\n\n**Watching:** Shrinking.",
+            ),
+        )
+        self._seed_required_assets()
         ctx, fc = self._ctx()
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
         pub = self.ws.files[(458, "publish.md")]
         self.assertIn("## Currently\n\n**Listening:** Noah Kahan.\n\n**Watching:** Shrinking.", pub)
 
-    # ---------- feature blocks (promotions) ----------
+    # ---------- featured (promoted) sections ----------
+    # In the row-backed model, promoted sections splice inline into
+    # final.md at create-final time (covered by
+    # test_compose_jobs.CreateFinalTests.test_*_splices_inline). Here
+    # we only verify the publish path passes inline ``## Heading``
+    # sections through unchanged.
 
-    def _feature_final(
-        self,
-        *,
-        position: str = "after_notable",
-        heading: str = "Featured: A Big Read",
-        source_id: str = "n1",
-        body: str = "### [Original](http://orig)\n\nfeature body para.",
-        block: str = "feature1",
-    ) -> str:
-        """Build a final.md whose `feature1` (or `feature2`) block carries
-        valid YAML frontmatter + body. Notable/Journal/Brief blocks remain
-        as the default `_filled_final` fixture."""
-        block_content = (
-            f"---\n"
-            f"position: {position}\n"
-            f"heading: {heading}\n"
-            f"source_id: {source_id}\n"
-            f"---\n\n"
-            f"{body}"
-        )
+    def test_inline_featured_section_passes_through(self):
+        self._window()
+        # final.md with a manually-inlined featured section between
+        # Notable and Journal — mirrors what create-final emits.
         final = _filled_final()
-        return _base.replace_block(final, block, block_content)
-
-    def test_feature_block_lands_after_notable(self):
-        self._window()
-        self.ws.write_issue_file(
-            458, "final.md",
-            self._feature_final(position="after_notable", heading="Featured: The Big Read"),
+        final = final.replace(
+            "<!-- /block:notable -->",
+            "<!-- /block:notable -->\n\n---\n\n## Featured: The Big Read\n\n### [Original](http://orig)\n\nfeature body para.",
+            1,
         )
-        self._seed_required_assets()
-        ctx, fc = self._ctx()
-        result = asyncio.run(build_publish.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        pub = self.ws.files[(458, "publish.md")]
-        # H2 heading from frontmatter rendered as a section heading.
-        self.assertIn("## Featured: The Big Read", pub)
-        # Body bytes survived.
-        self.assertIn("### [Original](http://orig)", pub)
-        # Position: between Notable and Journal.
-        feat_pos = pub.index("## Featured: The Big Read")
-        notable_pos = pub.index("## Notable")
-        journal_pos = pub.index("## Journal")
-        self.assertLess(notable_pos, feat_pos)
-        self.assertLess(feat_pos, journal_pos)
-
-    def test_feature_block_lands_after_journal(self):
-        self._window()
-        self.ws.write_issue_file(
-            458, "final.md",
-            self._feature_final(position="after_journal", heading="Featured Journal Entry"),
-        )
-        self._seed_required_assets()
-        ctx, fc = self._ctx()
-        result = asyncio.run(build_publish.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        pub = self.ws.files[(458, "publish.md")]
-        feat_pos = pub.index("## Featured Journal Entry")
-        journal_pos = pub.index("## Journal")
-        brief_pos = pub.index("## Briefly")
-        self.assertLess(journal_pos, feat_pos)
-        self.assertLess(feat_pos, brief_pos)
-
-    def test_feature_block_lands_after_brief(self):
-        self._window()
-        self.ws.write_issue_file(
-            458, "final.md",
-            self._feature_final(position="after_brief", heading="Featured Tail Piece"),
-        )
-        self._seed_required_assets()
-        ctx, fc = self._ctx()
-        result = asyncio.run(build_publish.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        pub = self.ws.files[(458, "publish.md")]
-        feat_pos = pub.index("## Featured Tail Piece")
-        brief_pos = pub.index("## Briefly")
-        haiku_pos = pub.index("A haiku to leave you with")
-        self.assertLess(brief_pos, feat_pos)
-        self.assertLess(feat_pos, haiku_pos)
-
-    def test_two_feature_blocks_distinct_positions(self):
-        self._window()
-        final = _filled_final()
-        final = _base.replace_block(final, "feature1",
-            "---\nposition: after_notable\nheading: F1\nsource_id: n1\n---\n\nf1-body")
-        final = _base.replace_block(final, "feature2",
-            "---\nposition: after_journal\nheading: F2\nsource_id: j1\n---\n\nf2-body")
         self.ws.write_issue_file(458, "final.md", final)
         self._seed_required_assets()
         ctx, fc = self._ctx()
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
         pub = self.ws.files[(458, "publish.md")]
-        notable = pub.index("## Notable")
-        f1 = pub.index("## F1")
-        journal = pub.index("## Journal")
-        f2 = pub.index("## F2")
-        brief = pub.index("## Briefly")
-        self.assertLess(notable, f1)
-        self.assertLess(f1, journal)
-        self.assertLess(journal, f2)
-        self.assertLess(f2, brief)
-        # Both bodies survive.
-        self.assertIn("f1-body", pub)
-        self.assertIn("f2-body", pub)
-
-    def test_empty_feature_block_drops_silently(self):
-        self._window()
-        # No feature block content.
-        self.ws.write_issue_file(458, "final.md", _filled_final())
-        self._seed_required_assets()
-        ctx, fc = self._ctx()
-        result = asyncio.run(build_publish.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        pub = self.ws.files[(458, "publish.md")]
-        # No featured section in publish.md.
-        self.assertNotIn("## Featured", pub)
-
-    def test_feature_block_with_body_but_missing_frontmatter_refuses(self):
-        """A feature block with body but no/invalid frontmatter is a
-        programming bug in create-final; build-publish refuses loud so
-        Jamie sees it rather than silently shipping a broken section."""
-        self._window()
-        # No frontmatter — just raw body inside feature1.
-        broken = _base.replace_block(_filled_final(), "feature1", "raw body without frontmatter")
-        self.ws.write_issue_file(458, "final.md", broken)
-        self._seed_required_assets()
-        ctx, fc = self._ctx()
-        result = asyncio.run(build_publish.run(ctx))
-        self.assertFalse(result.ok)
-        self.assertIn("feature1", result.message)
-        self.assertIn("frontmatter", result.message)
-
-    def test_feature_block_invalid_position_refuses(self):
-        self._window()
-        bad = _base.replace_block(
-            _filled_final(), "feature1",
-            "---\nposition: above_intro\nheading: Bad\nsource_id: n1\n---\n\nbody",
-        )
-        self.ws.write_issue_file(458, "final.md", bad)
-        self._seed_required_assets()
-        ctx, fc = self._ctx()
-        result = asyncio.run(build_publish.run(ctx))
-        self.assertFalse(result.ok)
-        self.assertIn("feature1", result.message)
+        self.assertIn("## Featured: The Big Read", pub)
+        feat_pos = pub.index("## Featured: The Big Read")
+        notable_pos = pub.index("## Notable")
+        journal_pos = pub.index("## Journal")
+        self.assertLess(notable_pos, feat_pos)
+        self.assertLess(feat_pos, journal_pos)
 
     def test_no_currently_means_no_currently_heading(self):
         self._window()
-        self.ws.write_issue_file(458, "final.md", _filled_final())
-        self.ws.write_issue_file(458, "intro.md", "Intro.")
-        self.ws.write_issue_file(458, "haiku.md", "a\nb\nc")
-        self.ws.write_issue_file(458, "metadata.json", '{"subject":"x"}')
-        self.ws.write_issue_file(458, "cover.jpg", "(binary)")
+        # _filled_final without currently → empty currently block in
+        # final.md; the publish-strip cleanup drops the orphan heading.
+        self.ws.write_issue_file(458, "final.md", _filled_final(intro="Intro."))
+        self._seed_required_assets()
         ctx, fc = self._ctx()
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
@@ -462,6 +348,8 @@ class BuildPublishTests(_DBTestCase):
         self.assertNotIn("/cover.jpg)", pub)
         self.assertIn("## Notable", pub)
         self.assertIn("A haiku to leave you with", pub)
+        # Intro from final.md present.
+        self.assertTrue(pub.startswith("<!-- buttondown-editor-mode: plaintext -->Intro."), pub[:80])
         self.assertTrue(pub.startswith("<!-- buttondown-editor-mode: plaintext -->Intro."), pub[:60])
 
 

@@ -34,10 +34,11 @@ from zoneinfo import ZoneInfo
 
 from html import escape as _html_escape
 
+import re
+
 from ..personas.base import is_pass_response
-from ..systems.pinboard import client as pinboard
-from ..tools import alt_text, db, render, s3
-from ..tools.content import context, draft as draft_mod, journal_images, microblog
+from ..tools import alt_text, db, issue_items, issue_items_render, issue_items_sync, render, s3
+from ..tools.content import context, draft as draft_mod
 from ..tools.llm import anthropic_client
 from . import _base, _cover, _currently, issue_status
 
@@ -53,16 +54,17 @@ NAME = "update-draft"
 # an item; ``update-draft`` does NOT touch them (so they stay empty here).
 SECTION_BLOCKS = (
     "intro", "currently", "cover", "notable", "journal", "brief",
-    "outro", "haiku", "feature1", "feature2",
+    "outro", "haiku",
 )
 # Blocks that are just a verbatim copy of an authored asset file. (``cover``
 # and ``currently`` are handled separately — see ``_cover.render`` /
 # ``_currently.render`` — since they prefer structured ``.json`` forms.)
 # ``intro`` and ``outro`` are both Jamie-authored prose pushed via Shortcut;
 # ``haiku`` is written by ``compose-haiku``. Same projection shape for all
-# three: read verbatim from the asset file into the named block. Feature
-# blocks are NOT here — they're filled by ``create-final``, not by an
-# upstream asset projection.
+# three: read verbatim from the asset file into the named block. Promoted
+# (featured) items don't appear in the draft template — they only appear
+# in ``final.md`` and downstream, spliced inline at their declared position
+# by ``create-final``'s assembler.
 _ASSET_FILE = {"intro": "intro.md", "outro": "outro.md", "haiku": "haiku.md"}
 _COVER_IMAGE = "https://files.thingelstad.com/weekly-thing/{n}/cover.jpg"
 
@@ -81,93 +83,25 @@ def _read_asset(issue_number: int, filename: str) -> str:
     return ""
 
 
-# ---- Notable ----
-# H3-link headings, two blank lines apart, prefaced by the "discuss these
-# links on Reddit" line. That line carries the issue number, so it's
-# generated here rather than baked into the template.
-
-def _reddit_tag_line(issue_number: int) -> str:
-    return (
-        f"_You can discuss any of these links at the "
-        f"[Weekly Thing {issue_number} tag in r/WeeklyThing]"
-        f"(https://www.reddit.com/r/weeklything/?f=flair_name%3A%22Weekly%20Thing%20{issue_number}%22)._"
-    )
-
-
-def _render_notable(items: list[dict], issue_number: int) -> str:
-    blocks: list[str] = []
-    for it in items:
-        url = (it.get("url") or "").strip()
-        title = (it.get("title") or url or "(untitled)").strip()
-        commentary = (it.get("description") or "").strip()
-        block = f"### [{title}]({url})"
-        if commentary:
-            block += f"\n\n{commentary}"
-        blocks.append(block)
-    if not blocks:
-        return ""
-    # Reddit line · one blank line · items two blank lines apart.
-    return _reddit_tag_line(issue_number) + "\n\n" + "\n\n\n".join(blocks)
-
-
-# ---- Briefly ----
-# Each item is "<commentary> → **[Title](url)**" — commentary first, then
-# the arrow, then the bolded link. One blank line between items; no headings.
-
-def _render_brief(items: list[dict]) -> str:
-    out: list[str] = []
-    for it in items:
-        url = (it.get("url") or "").strip()
-        title = (it.get("title") or url or "(untitled)").strip()
-        commentary = (it.get("description") or "").strip()
-        link = f"**[{title}]({url})**"
-        out.append(f"{commentary} → {link}" if commentary else link)
-    return "\n\n".join(out)
-
-
-# ---- Journal ----
-
-def _journal_label(published_iso) -> str:
-    """Render a journal entry's timestamp as ``Sunday @ 4:16 PM`` — the
-    shape used in the published newsletter. Day-of-week + 12-hour clock,
-    no calendar date: every journal entry in an issue is within the
-    seven-day window, so the weekday already identifies it. (Double-issue
-    windows do produce one duplicated weekday name; the body context
-    around the entry disambiguates.)"""
-    dt = microblog.published_local(published_iso)
-    if dt is None:
-        return str(published_iso or "").strip()
-    hour12 = dt.hour % 12 or 12
-    ampm = "AM" if dt.hour < 12 else "PM"
-    return f"{dt.strftime('%A')} @ {hour12}:{dt.minute:02d} {ampm}"
-
-
-def _render_journal(posts: list[dict]) -> str:
-    """micro.blog posts in window, two blank lines apart. A status update
-    (no title) leads with the date as a link; a titled post is *elevated* —
-    an H3 link with a markdown hard break, the date plain on the next line.
-    Photos already live inside ``content_md`` (rehosted), each on its own
-    paragraph, so nothing extra is appended here."""
-    out: list[str] = []
-    for p in posts:
-        url = (p.get("url") or "").strip()
-        title = (p.get("title") or "").strip()
-        label = _journal_label(p.get("published"))
-        body = (p.get("content_md") or "").strip()
-        if title and url:
-            head = f"### [{title}]({url})  \n{label}"
-        elif url:
-            head = f"[{label}]({url})"
-        else:
-            head = label
-        out.append(f"{head}\n\n{body}" if body else head)
-    return "\n\n\n".join(out)
-
-
 def _gather_fills(window: dict) -> dict[str, str]:
-    """Pull every section's content once. Source pulls (Pinboard,
-    micro.blog) that fail degrade to a placeholder line rather than
-    breaking the run."""
+    """Pull every section's content once.
+
+    The three list sections (Notable / Briefly / Journal) come from
+    ``issue_items`` rows: ``sync_all`` first refreshes rows from
+    Pinboard + micro.blog (UPSERT on stable source ids, prune rows
+    whose upstream item disappeared), then the renderers in
+    :mod:`tools.issue_items_render` project rows to the same byte
+    shape the chunk parser recognises. Promoted (featured) rows are
+    skipped at the parent-section level so a Journal post Eddy
+    promoted to its own ``feature1`` section doesn't also appear
+    in Journal.
+
+    The atoms (intro / outro / cover / currently / haiku) are still
+    file-backed: ``intro.md`` / ``outro.md`` / ``haiku.md`` (verbatim
+    reads) and ``cover.json`` / ``currently.json`` (structured renders).
+    Failed source pulls degrade to a placeholder line per affected
+    section rather than failing the whole run.
+    """
     n = int(window["issue_number"])
     # Reset the per-run vision-call cap so a single ``update-draft`` can't
     # fan out to dozens of vision calls (cover + every journal image).
@@ -192,26 +126,32 @@ def _gather_fills(window: dict) -> dict[str, str]:
         )
         fills["cover"] = f"{cover_img}\n\n{fills['cover']}"
 
-    try:
-        cand = pinboard.issue_window_candidates(window["start_date"], window["end_date"])
-        fills["notable"] = _render_notable(cand.get("notable", []), n)
-        fills["brief"] = _render_brief(cand.get("brief", []))
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("update-draft: Pinboard pull failed for #%d: %s", n, exc)
-        fills["notable"] = f"_Notable — couldn't pull from Pinboard ({type(exc).__name__})._"
-        fills["brief"] = f"_Briefly — couldn't pull from Pinboard ({type(exc).__name__})._"
+    # Refresh rows from upstream, then render from the row state.
+    # sync_all wraps each source so a Pinboard outage doesn't kill the
+    # micro.blog sync (or vice-versa); per-source errors surface as
+    # placeholder lines via the per-section flags below.
+    sync_result = issue_items_sync.sync_all(n, window)
+    pin_failed = "error" in sync_result.get("pinboard", {})
+    mb_failed = "error" in sync_result.get("microblog", {})
 
-    try:
-        posts = microblog.posts_in_window(window["start_date"], window["end_date"])
-        for p in posts:
-            try:
-                p["content_md"] = journal_images.rehost_in_markdown(p.get("content_md") or "", n)
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("update-draft: journal image rehost failed for %s: %s", p.get("url"), exc)
-        fills["journal"] = _render_journal(posts)
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("update-draft: micro.blog pull failed for #%d: %s", n, exc)
-        fills["journal"] = f"_Journal — couldn't pull from micro.blog ({type(exc).__name__})._"
+    if pin_failed:
+        msg = sync_result["pinboard"].get("error", "unknown error")
+        logger.warning("update-draft: Pinboard sync failed for #%d: %s", n, msg)
+        fills["notable"] = f"_Notable — couldn't pull from Pinboard ({msg})._"
+        fills["brief"] = f"_Briefly — couldn't pull from Pinboard ({msg})._"
+    else:
+        notable_rows = issue_items.list_items(n, section="notable", include_promoted=False)
+        brief_rows = issue_items.list_items(n, section="brief", include_promoted=False)
+        fills["notable"] = issue_items_render.render_notable(notable_rows, n)
+        fills["brief"] = issue_items_render.render_brief(brief_rows)
+
+    if mb_failed:
+        msg = sync_result["microblog"].get("error", "unknown error")
+        logger.warning("update-draft: micro.blog sync failed for #%d: %s", n, msg)
+        fills["journal"] = f"_Journal — couldn't pull from micro.blog ({msg})._"
+    else:
+        journal_rows = issue_items.list_items(n, section="journal", include_promoted=False)
+        fills["journal"] = issue_items_render.render_journal(journal_rows)
 
     return fills
 
@@ -257,6 +197,174 @@ def _review_model(weekday: int) -> str:
     return _REVIEW_MODEL_BY_WEEKDAY.get(weekday, _REVIEW_MODEL_FALLBACK)
 
 
+# ---------- editorial_comments capture ----------
+#
+# After Eddy writes the review markdown, we parse the ``<!-- target:xxx -->``
+# markers and store each anchored bullet/paragraph as a row in
+# ``editorial_comments`` with a stable handle (``E349-N1``, ``E349-X3``).
+# The HTML drawer keeps using the existing in-page markers for connector
+# lines; the DB rows are what the future ``@eddy tell me about E349-N1``
+# Discord lookup queries. Re-runs supersede prior comments wholesale.
+
+_TARGET_MARKER_RE = re.compile(r"<!--\s*target:([a-z0-9_-]+)\s*-->")
+# Match the start of a markdown bullet or numbered item, optionally
+# indented; we treat each top-level bullet as a candidate comment.
+_BULLET_RE = re.compile(r"^(?:[-*+]|\d+\.)\s+", re.MULTILINE)
+
+
+def _split_review_into_segments(review_md: str) -> list[str]:
+    """Split the review markdown into top-level segments. Each segment
+    is either a contiguous paragraph or a bullet item; the segment
+    boundary is a blank line OR the start of a new bullet line. We
+    keep the bullet prefix on the segment so the body retains its
+    shape when rendered later."""
+    text = (review_md or "").strip()
+    if not text:
+        return []
+    # Split on blank lines first.
+    raw_blocks = re.split(r"\n\s*\n", text)
+    segments: list[str] = []
+    for block in raw_blocks:
+        block = block.rstrip()
+        if not block:
+            continue
+        # Within a block, split on the start of each new bullet line so
+        # that "intro paragraph + bulleted suggestions" produces one
+        # segment per bullet rather than one giant blob.
+        positions: list[int] = [0]
+        for m in _BULLET_RE.finditer(block):
+            if m.start() > 0:
+                positions.append(m.start())
+        positions.append(len(block))
+        for i in range(len(positions) - 1):
+            piece = block[positions[i]:positions[i + 1]].strip()
+            if piece:
+                segments.append(piece)
+    return segments
+
+
+def _section_for_target(target: str) -> tuple[str, str]:
+    """Resolve a target marker (``n1``, ``b2``, ``j3``, ``intro``,
+    ``hygiene``, etc.) to ``(scope, section_or_letter)``. ``scope`` is
+    ``'item'`` / ``'section'`` / ``'hygiene'`` / ``'issue'``."""
+    if target in ("hygiene", "x"):
+        return "hygiene", "hygiene"
+    if target in ("whole", "issue", "w"):
+        return "issue", "issue"
+    if target in issue_items.SECTION_HANDLE_LETTER:
+        return "section", target
+    # Item-scoped: n1 / b2 / j3 — first letter is the section, rest is the index.
+    if len(target) >= 2 and target[0] in ("n", "b", "j"):
+        return "item", {"n": "notable", "b": "brief", "j": "journal"}[target[0]]
+    return "issue", "issue"
+
+
+def _row_id_for_synth(issue_number: int, target: str) -> "int | None":
+    """Map ``n1`` / ``b2`` / ``j3`` to the row id at that position in
+    its section. Returns ``None`` if the position is out of range
+    (review references an item that no longer exists)."""
+    if len(target) < 2 or target[0] not in ("n", "b", "j"):
+        return None
+    section = {"n": "notable", "b": "brief", "j": "journal"}[target[0]]
+    try:
+        idx = int(target[1:])
+    except ValueError:
+        return None
+    rows = issue_items.list_items(issue_number, section=section, include_promoted=False)
+    if idx < 1 or idx > len(rows):
+        return None
+    return int(rows[idx - 1]["id"])
+
+
+def _store_review_comments(issue_number: int, review_md: str) -> int:
+    """Parse the review markdown and write one ``editorial_comments``
+    row per target-marker-prefixed segment. Returns the count of new
+    rows. Best-effort: a parsing hiccup logs and skips that segment
+    rather than failing the review write.
+
+    Prior-pass open comments get superseded *after* the new pass writes
+    so the new pass's comments stay visible. A re-run that produces no
+    anchored comments leaves the prior pass intact (better to keep
+    stale guidance than to silently clear the drawer)."""
+    if not (review_md or "").strip():
+        return 0
+    segments = _split_review_into_segments(review_md)
+    if not segments:
+        return 0
+    prior_open_ids = [int(c["id"]) for c in issue_items.list_open_comments(issue_number)]
+    written = 0
+    for seg in segments:
+        markers = _TARGET_MARKER_RE.findall(seg)
+        if not markers:
+            continue  # ungrounded prose — skip
+        target = markers[0]
+        try:
+            scope, section_or_letter = _section_for_target(target)
+        except Exception:  # noqa: BLE001
+            continue
+        body_md = _TARGET_MARKER_RE.sub("", seg).strip()
+        # Strip the leading bullet prefix so stored bodies read cleanly
+        # (the bullet shape is rendering-layer; storage is content).
+        body_md = re.sub(r"^(?:[-*+]|\d+\.)\s+", "", body_md).strip()
+        if not body_md:
+            continue
+        try:
+            if scope == "item":
+                rid = _row_id_for_synth(issue_number, target)
+                if rid is None:
+                    # Item is gone; record as section-scoped instead.
+                    row = issue_items.write_comment(
+                        issue_number=issue_number, scope="section",
+                        section=section_or_letter, body_md=body_md,
+                        verdict="suggestion",
+                    )
+                else:
+                    row = issue_items.write_comment(
+                        issue_number=issue_number, scope="item",
+                        item_id=rid, body_md=body_md, verdict="suggestion",
+                    )
+            elif scope == "section":
+                row = issue_items.write_comment(
+                    issue_number=issue_number, scope="section",
+                    section=section_or_letter, body_md=body_md,
+                    verdict="suggestion",
+                )
+            elif scope == "hygiene":
+                row = issue_items.write_comment(
+                    issue_number=issue_number, scope="hygiene",
+                    body_md=body_md, verdict="suggestion",
+                )
+            else:
+                row = issue_items.write_comment(
+                    issue_number=issue_number, scope="issue",
+                    body_md=body_md, verdict="suggestion",
+                )
+        except Exception:  # noqa: BLE001
+            logger.exception("update-draft: failed to store review comment")
+            continue
+        written += 1
+    if written and prior_open_ids:
+        # Mark each prior-pass comment superseded by *one* of the new
+        # rows — we pick the first new row whose handle still resolves
+        # via list_open_comments. The replaced_by pointer is a chain
+        # anchor; clients walk forward by handle, so any new row works.
+        new_open = issue_items.list_open_comments(issue_number)
+        new_ids = {int(c["id"]) for c in new_open}
+        anchor = next((c["id"] for c in new_open if int(c["id"]) not in prior_open_ids), None)
+        if anchor is not None:
+            try:
+                with db.connect() as conn:
+                    placeholders = ",".join("?" for _ in prior_open_ids)
+                    conn.execute(
+                        f"UPDATE editorial_comments SET replaced_by_id = ? "
+                        f"WHERE id IN ({placeholders})",
+                        [int(anchor), *[int(i) for i in prior_open_ids]],
+                    )
+            except Exception:  # noqa: BLE001
+                logger.exception("update-draft: prior-pass supersede failed")
+    return written
+
+
 async def _draft_review(
     ctx: "_base.JobContext", window: dict, st: dict, prev_digest, today, draft_text: str,
 ) -> str:
@@ -293,7 +401,15 @@ async def _draft_review(
         run.records_written = 0 if (not answer or is_pass_response(answer)) else 1
     if not answer or is_pass_response(answer):
         return ""
-    return answer.strip()
+    review_md = answer.strip()
+    # Capture each target-anchored bullet as an editorial_comments row
+    # (gives the future Discord lookup a stable handle to query).
+    # Best-effort — a parse failure shouldn't lose the review surface.
+    try:
+        _store_review_comments(int(window["issue_number"]), review_md)
+    except Exception:  # noqa: BLE001
+        logger.exception("update-draft: review-comments capture failed")
+    return review_md
 
 
 async def _maybe_eddy_review(

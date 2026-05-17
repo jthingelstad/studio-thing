@@ -91,60 +91,19 @@ class BlockHelperTests(unittest.TestCase):
 # ---------- section renderers (the repeated list loops) ----------
 
 class SectionRendererTests(unittest.TestCase):
-    def test_render_notable_reddit_line_headings_and_spacing(self):
-        out = update_draft._render_notable(
-            [
-                {"title": "Thing One", "url": "https://a.example/1", "description": "Why it's good.\n\nMore."},
-                {"title": "Thing Two", "url": "https://b.example/2", "description": ""},
-            ],
-            347,
-        )
-        # Reddit line first, with the issue number in the link text and URL.
-        self.assertTrue(out.startswith("_You can discuss any of these links at the "
-                                       "[Weekly Thing 347 tag in r/WeeklyThing]"))
-        self.assertIn("flair_name%3A%22Weekly%20Thing%20347%22", out)
-        # H3-link headings; the bare one (no commentary) is just the heading.
-        self.assertIn("### [Thing One](https://a.example/1)\n\nWhy it's good.\n\nMore.", out)
-        self.assertIn("### [Thing Two](https://b.example/2)", out)
-        # Two blank lines between items.
-        self.assertIn("More.\n\n\n### [Thing Two]", out)
-        # No items → empty block (no orphan Reddit line).
-        self.assertEqual(update_draft._render_notable([], 347), "")
-
-    def test_render_brief_commentary_arrow_link(self):
-        out = update_draft._render_brief([
-            {"title": "Skeleton Key", "url": "https://x.example/sk", "description": "Cool app."},
-            {"title": "Bare One", "url": "https://x.example/b", "description": ""},
-        ])
-        self.assertIn("Cool app. → **[Skeleton Key](https://x.example/sk)**", out)
-        self.assertIn("**[Bare One](https://x.example/b)**", out)
-        # One blank line between items.
-        self.assertIn("**\n\n**[Bare One]", out)
-
-    def test_render_journal_standard_and_elevated(self):
-        out = update_draft._render_journal([
-            {"url": "https://www.thingelstad.com/2026/05/12/a.html",
-             "title": "", "published": "2026-05-12T15:02:00-05:00",
-             "content_md": "A status update.\n\n![](https://files.thingelstad.com/weekly-thing/9/journal/x.jpg)"},
-            {"url": "https://www.thingelstad.com/2026/05/13/software-is-liquid.html",
-             "title": "Software Is Liquid", "published": "2026-05-13T07:52:00-05:00",
-             "content_md": "A talk turned post."},
-        ])
-        # Standard entry: weekday + time as a link, then content (with the image in-content).
-        self.assertIn("[Tuesday @ 3:02 PM](https://www.thingelstad.com/2026/05/12/a.html)\n\n"
-                      "A status update.\n\n![](https://files.thingelstad.com/weekly-thing/9/journal/x.jpg)", out)
-        # Elevated (titled) entry: H3 link with a hard break, label plain on the next line.
-        self.assertIn("### [Software Is Liquid](https://www.thingelstad.com/2026/05/13/software-is-liquid.html)  \n"
-                      "Wednesday @ 7:52 AM\n\nA talk turned post.", out)
-        # Two blank lines between entries.
-        self.assertIn("/journal/x.jpg)\n\n\n### [Software Is Liquid]", out)
+    """Section-shape coverage moved to test_issue_items_render.py; what
+    stays here is the cross-cutting UTC→local conversion test (which
+    asserts the renderer correctly localises micro.blog's UTC
+    timestamps) and the haiku formatter."""
 
     def test_render_journal_converts_utc_published_to_local(self):
         # micro.blog emits `published` in UTC; the label must be Central.
         # 2026-05-12T02:21Z → 2026-05-11 21:21 CDT.
-        out = update_draft._render_journal([
+        from apps.workshop_bot.tools import issue_items_render
+        out = issue_items_render.render_journal([
             {"url": "https://www.thingelstad.com/2026/05/11/late.html",
-             "title": "", "published": "2026-05-12T02:21:00Z", "content_md": "Posted late."},
+             "title": "", "body_md": "Posted late.",
+             "metadata": {"published": "2026-05-12T02:21:00Z"}},
         ])
         self.assertIn("[Monday @ 9:21 PM](https://www.thingelstad.com/2026/05/11/late.html)", out)
         self.assertNotIn("2:21 AM", out)

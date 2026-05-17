@@ -112,14 +112,36 @@ def filled_final(
     notable: str = "### [A](http://a)\n\nx",
     brief: str = "A blurb. → **[B](http://b)**",
     journal: str = "[Tuesday @ 3:02 PM](https://x.example/p)\n\nt",
+    intro: str = "",
+    currently: str = "",
+    cover: str = "",
+    outro: str = "",
+    haiku: str = "",
 ) -> str:
-    """Build a starter-template draft with the three required blocks
-    filled. Used by the compose / build-publish tests to simulate a
-    draft ready for the final pass."""
+    """Build a starter-template-shaped final.md with the three required
+    blocks filled. Atoms (intro / currently / cover / outro / haiku)
+    default to empty — pass them explicitly when a test needs them to
+    appear in the assembled output.
+
+    In the row-backed model, ``final.md`` carries the atoms inlined
+    (the assembler reads them from their files at create-final time
+    and bakes them in); this fixture mirrors that shape so tests can
+    feed a single ``final.md`` text and exercise the build-publish
+    transform without re-doing the create-final assembly path."""
     d = _base.starter_template()
     d = _base.replace_block(d, "notable", notable)
     d = _base.replace_block(d, "brief", brief)
     d = _base.replace_block(d, "journal", journal)
+    if intro:
+        d = _base.replace_block(d, "intro", intro)
+    if currently:
+        d = _base.replace_block(d, "currently", currently)
+    if cover:
+        d = _base.replace_block(d, "cover", cover)
+    if outro:
+        d = _base.replace_block(d, "outro", outro)
+    if haiku:
+        d = _base.replace_block(d, "haiku", haiku)
     return d
 
 

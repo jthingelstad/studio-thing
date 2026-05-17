@@ -47,9 +47,8 @@ import logging
 import os
 import re
 
-from ..tools.content import draft as draft_mod
 from ..tools import render, s3
-from . import _base, _llm_job, _cover, _currently
+from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.build_publish")
 
@@ -65,18 +64,14 @@ _FIX_HINT = {
     "final.md": "→ `/eddy issue final`",
 }
 
-# (block name → published heading). intro / outro / the cover block / haiku
-# are special-cased in the assembly; the rest are emitted in `_ORDER`, each
-# only if its content is non-empty. Issue layout: intro → ``## Currently``
-# (when present) → cover image → Notable → Journal → Briefly → outro
-# (when present) → closing haiku.
+# Section heading map kept for the test helpers; the assembler doesn't
+# need it any more (final.md already carries the headings).
 _SECTION_HEADINGS = {
     "currently": "## Currently",
     "notable": "## Notable",
     "journal": "## Journal",
     "brief": "## Briefly",
 }
-_ORDER = ("notable", "journal", "brief")  # Currently is placed above the cover; see the assembly
 
 # The closing boilerplate every issue ends with, after the haiku (no `---`
 # between the haiku and this — they're one chunk).
@@ -282,34 +277,13 @@ def _unfilled_marker_missing_list(
     return missing
 
 
-# ---------- feature blocks (promotions) ----------
-
-def _parse_feature_blocks(
-    blocks: dict[str, str],
-) -> tuple[dict[str, list[tuple[str, str]]], list[str]]:
-    """Parse the ``feature1`` / ``feature2`` blocks from a final.md block map.
-
-    Returns ``(features_by_position, malformed_names)`` where
-    ``features_by_position`` is ``{"after_notable": [(heading, body), ...], ...}``
-    and ``malformed_names`` lists any non-empty feature block missing a
-    valid ``position`` / ``heading`` frontmatter (a programming error in
-    ``create-final``; surfaced as a missing-list entry so the run refuses
-    loudly rather than emitting a broken section).
-    """
-    features_by_position: dict[str, list[tuple[str, str]]] = {}
-    malformed: list[str] = []
-    for fname in _FEATURE_BLOCK_NAMES:
-        raw = (blocks.get(fname) or "").strip()
-        if not raw:
-            continue
-        meta, body = _strip_frontmatter(raw)
-        position = (meta.get("position") or "").strip()
-        heading = (meta.get("heading") or "").strip()
-        if position not in _FEATURE_POSITIONS or not heading or not body.strip():
-            malformed.append(fname)
-            continue
-        features_by_position.setdefault(position, []).append((heading, body))
-    return features_by_position, malformed
+# Feature blocks are gone — promoted (featured) sections splice inline
+# into ``final.md`` at create-final time now, so build-publish just sees
+# them as ``## Heading`` sections in the file. The
+# ``_parse_feature_blocks`` / ``feature1`` / ``feature2`` machinery was
+# removed in the row-backed rework; nothing reads them anymore.
+_FEATURE_BLOCK_NAMES = ()  # kept-empty for any straggling import
+_FEATURE_POSITIONS = ("after_notable", "after_journal", "after_brief")
 
 
 # ---------- marker substitution ----------
@@ -341,6 +315,28 @@ def _substitute_markers(body: str, issue_number: int) -> str:
 # ---------- main ----------
 
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
+    """Transform ``final.md`` into ``publish.md``.
+
+    ``final.md`` is already body-shaped after the row-backed rework:
+    promoted (featured) sections splice inline at create-final time,
+    cta/thanks markers sit at their declared positions, atoms are
+    pulled from their files and embedded in block markers. The
+    transformation here is small:
+
+    1. Required-asset gate (``final.md`` / ``haiku.md`` /
+       ``metadata.json`` / ``intro.md`` / ``cover.jpg``).
+    2. Marker-copy gate (every ``<!-- cta:N -->`` declared in
+       ``final.md`` has a non-empty ``cta-N.md``, same for thanks).
+    3. Strip block markers (``<!-- block:* -->``).
+    4. Substitute cta/thanks markers with audience-aware Liquid blocks
+       sourced from ``cta-N.md`` / ``thanks-N.md``.
+    5. Prepend ``<!-- buttondown-editor-mode: plaintext -->``
+       (glommed onto the first paragraph, mirroring raw Buttondown
+       bodies).
+    6. Append the Tinylytics email-only tracking pixel.
+
+    Writes ``publish.md`` and a Liquid-stripped ``publish.html`` preview.
+    """
     from ..tools import db
 
     window = db.get_active_issue_window()
@@ -358,32 +354,15 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 files = set()
             missing = [r for r in REQUIRED if r not in files]
 
-            # Discover membership-block markers (only after final.md is
-            # present; if it's missing, the REQUIRED check above already
-            # catches it).
             final_text = _read(n, "final.md") if "final.md" in files else ""
             marker_slots = _discover_marker_slots(final_text)
             marker_missing = _unfilled_marker_missing_list(n, marker_slots)
 
-            # Parse feature blocks (promotions) up front so we can flag
-            # malformed ones in the missing-list (a feature block with
-            # body but missing/invalid frontmatter is a programming bug
-            # in create-final; refuse-with-list rather than ship broken).
-            blocks = draft_mod.parse_blocks(final_text) if final_text else {}
-            features_by_position, feature_malformed = _parse_feature_blocks(blocks)
-            feature_malformed_missing = [
-                f"`{name}` has body but missing/invalid frontmatter "
-                f"(needs `position:` ∈ {{{', '.join(_FEATURE_POSITIONS)}}} and a non-empty `heading:`)"
-                for name in feature_malformed
-            ]
-
-            if missing or marker_missing or feature_malformed_missing:
+            if missing or marker_missing:
                 lines = [f"⛔ `build-publish` for **WT{n}** can't run yet — missing:"]
                 for r in missing:
                     lines.append(f"  ❌ `{r}` {_FIX_HINT.get(r, '')}".rstrip())
                 for entry in marker_missing:
-                    lines.append(f"  ❌ {entry}")
-                for entry in feature_malformed_missing:
                     lines.append(f"  ❌ {entry}")
                 msg = "\n".join(lines)
                 await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
@@ -393,75 +372,23 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                         "issue_number": n,
                         "missing": missing,
                         "marker_missing": marker_missing,
-                        "feature_malformed": feature_malformed,
                     },
                 )
-            # intro / outro / cover / currently / haiku are file-backed or
-            # special-cased; only the three list sections come from blocks.
-            section_content = {
-                "notable": (blocks.get("notable") or "").strip(),
-                "brief": (blocks.get("brief") or "").strip(),
-                "journal": (blocks.get("journal") or "").strip(),
-                "currently": _currently.render(n),
-            }
-            intro_text = _read(n, "intro.md").strip()
-            outro_text = _read(n, "outro.md").strip()
-            cover_text = _cover.render(n)
-            cover_alt = _cover.alt(n)
-            from html import escape as _esc
-            cover_img = (
-                f'<img src="https://files.thingelstad.com/weekly-thing/{n}/cover.jpg" '
-                f'alt="{_esc(cover_alt, quote=True)}" />'
-            )
-            cover_block = f"{cover_img}\n\n{cover_text}" if cover_text else ""
-            haiku_text = _read(n, "haiku.md").strip()
 
-            parts: list[str] = []
-            if intro_text:
-                parts.append(intro_text)
-            # Currently sits between the intro and the cover image.
-            currently_content = section_content.get("currently", "")
-            if currently_content:
-                parts.append(f"{_SECTION_HEADINGS['currently']}\n\n{currently_content}")
-            if cover_block:
-                parts.append(cover_block)
-            for name in _ORDER:
-                content = section_content.get(name, "")
-                if not content:
-                    continue
-                parts.append(f"{_SECTION_HEADINGS[name]}\n\n{content}")
-                # Splice in any featured (promoted) sections declared
-                # ``after_<name>``. Each feature renders as
-                # ``## {heading}\n\n{body}`` where body is the promoted
-                # item's raw_bytes verbatim. Multiple features at the
-                # same position emit in declaration order.
-                for heading, body in features_by_position.get(f"after_{name}", []):
-                    parts.append(f"## {heading}\n\n{body}")
-            # Outro — Jamie-authored closing prose, projected from outro.md.
-            # Sits after the body sections (so any inline before_haiku
-            # markers Eddy placed at the tail of Brief/Journal/Notable have
-            # already been emitted) and before the haiku close.
-            if outro_text:
-                parts.append(outro_text)
-            # Haiku close + the email-only Tinylytics pixel — one chunk, no
-            # `---` between them and the closing line.
-            close = (
-                f"A haiku to leave you with…\n\n{_base.format_haiku(haiku_text)}\n\n{_CLOSING}"
-                if haiku_text
-                else _CLOSING
-            )
-            parts.append(f"{close}\n\n{_pixel_block(n)}")
+            # Transform final.md → publish.md. The body shape is already
+            # correct; we just strip block markers, substitute the
+            # membership-block markers, prepend the editor-mode comment,
+            # and append the tracking pixel.
+            from ..tools import issue_assembly
 
-            # Each top-level part is `---`-fenced; the editor-mode comment
-            # is glommed onto the very front (as the raw bodies have it).
-            body = "\n\n---\n\n".join(p.strip() for p in parts if p.strip()).strip() + "\n"
-
-            # Resolve membership-block markers — substitute each inline
-            # marker with its audience-aware Liquid wrapper around the
-            # corresponding cta-N.md / thanks-N.md copy.
+            body = issue_assembly._strip_block_markers(final_text)
             body = _substitute_markers(body, n)
+            # Append the tinylytics pixel before the closing line? No —
+            # the pixel sits after the closing emoji at the very end,
+            # matching the existing raw-body shape.
+            body = body.rstrip() + "\n\n" + _pixel_block(n) + "\n"
+            published = _EDITOR_MODE_COMMENT + body
 
-            published = f"{_EDITOR_MODE_COMMENT}{body}"
             preview = _for_preview(published)
             s3.write_issue_file(n, "publish.md", published)
             html_url = await asyncio.to_thread(

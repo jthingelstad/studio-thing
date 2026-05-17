@@ -430,43 +430,62 @@ class ComposeCtaTests(_DBTestCase):
 
 
 class CreateFinalTests(_DBTestCase):
-    """Rewritten for the chunk-based editorial pass. Eddy now returns a
+    """Rewritten for the row-backed editorial pass. Eddy still returns a
     JSON object (``thesis``, ``*_order``, ``promotions``,
-    ``membership_blocks``); the job validates strictly, reassembles
-    sections from the parsed ``raw_bytes`` slices, and inserts inline
-    membership-block markers + feature blocks. The LLM never touches
-    the bytes that ship — code does the moving."""
+    ``membership_blocks``) with synthetic ids (``n1``/``b2``/``j3``);
+    the job validates strictly, then mutates ``issue_items`` rows
+    (reorder + promote) and assembles ``final.md`` from rows + atoms.
+    Promoted items splice inline at their declared position — there
+    are no feature1/feature2 blocks anymore."""
 
     def tearDown(self):
         os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
         super().tearDown()
 
-    @staticmethod
-    def _multi_item_draft() -> str:
-        """A draft with 2+ items per section so reorder is meaningful.
-        Journal has 3 entries so promotion tests (which can only promote
-        Journal entries now) have room to remove items from the order."""
-        notable = (
-            "### [A](http://a)\n\nbody A\n\n\n"
-            "### [B](http://b)\n\nbody B"
+    def _seed_rows(self):
+        """Insert 2 Notable + 2 Brief + 3 Journal rows; the synthetic
+        ids the test replies use (``n1``/``n2``/``b1``/``b2``/``j1``/
+        ``j2``/``j3``) map to insertion order."""
+        from apps.workshop_bot.tools import issue_items
+        issue_items.upsert_item(
+            issue_number=458, section="notable", source="pinboard",
+            source_id="hash-A", url="http://a", title="A", body_md="body A",
         )
-        brief = (
-            "First. → **[X](http://x)**\n\n"
-            "Second. → **[Y](http://y)**"
+        issue_items.upsert_item(
+            issue_number=458, section="notable", source="pinboard",
+            source_id="hash-B", url="http://b", title="B", body_md="body B",
         )
-        journal = (
-            "[Sunday @ 1:00 PM](https://j1)\n\nj-body1\n\n\n"
-            "[Monday @ 2:00 PM](https://j2)\n\nj-body2\n\n\n"
-            "[Tuesday @ 3:00 PM](https://j3)\n\nj-body3"
+        issue_items.upsert_item(
+            issue_number=458, section="brief", source="pinboard",
+            source_id="hash-X", url="http://x", title="X", body_md="First.",
         )
-        return _filled_final(notable=notable, brief=brief, journal=journal)
+        issue_items.upsert_item(
+            issue_number=458, section="brief", source="pinboard",
+            source_id="hash-Y", url="http://y", title="Y", body_md="Second.",
+        )
+        issue_items.upsert_item(
+            issue_number=458, section="journal", source="microblog",
+            source_id="https://j1", url="https://j1", title="", body_md="j-body1",
+            metadata={"label": "Sunday @ 1:00 PM", "published": "2026-05-10T18:00:00Z"},
+        )
+        issue_items.upsert_item(
+            issue_number=458, section="journal", source="microblog",
+            source_id="https://j2", url="https://j2", title="", body_md="j-body2",
+            metadata={"label": "Monday @ 2:00 PM", "published": "2026-05-11T19:00:00Z"},
+        )
+        issue_items.upsert_item(
+            issue_number=458, section="journal", source="microblog",
+            source_id="https://j3", url="https://j3", title="", body_md="j-body3",
+            metadata={"label": "Tuesday @ 3:00 PM", "published": "2026-05-12T20:00:00Z"},
+        )
 
-    def _setup(self, reply: str, *, draft: str | None = None):
+    def _setup(self, reply: str, *, seed: bool = True):
         from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
-        self.ws.write_issue_file(458, "draft.md", draft or self._multi_item_draft())
+        if seed:
+            self._seed_rows()
         fc = _FakeBotChannel(persona="eddy", reply=reply)
         os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
         return _base.JobContext(deps=fc.deps()), fc
@@ -513,64 +532,57 @@ class CreateFinalTests(_DBTestCase):
         self.assertLess(b_pos, a_pos)
         # thesis.md written.
         self.assertIn("Test thesis for the issue.", self.ws.files[(458, "thesis.md")])
-        # Brief / Journal blocks unchanged.
+        # Brief / Journal sections rendered.
         self.assertIn("**[X](http://x)**", final)
         self.assertIn("[Sunday @ 1:00 PM]", final)
-        # Block markers preserved.
+        # Block markers preserved (the assembler still emits them).
         self.assertIn("<!-- block:notable -->", final)
         self.assertIn("<!-- /block:notable -->", final)
         # Pipeline hint preserved.
         self.assertIn("issue haiku", result.message)
         self.assertTrue(result.data["thesis_written"])
 
-    def test_reject_uses_draft_body(self):
+    def test_reject_uses_current_row_order(self):
         ctx, fc = self._setup(self._basic_reply(notable_order=("n2", "n1")))
         with patch.object(interaction, "await_approval", AsyncMock(return_value=False)):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
-        # Draft body written; no reorder applied; no thesis.md.
+        # Current row order survives (A before B); no thesis.md.
         final = self.ws.files[(458, "final.md")]
         a_pos = final.index("### [A](http://a)")
         b_pos = final.index("### [B](http://b)")
-        self.assertLess(a_pos, b_pos)  # original order
+        self.assertLess(a_pos, b_pos)
         self.assertNotIn((458, "thesis.md"), self.ws.files)
 
-    def test_timeout_writes_draft_and_returns(self):
+    def test_timeout_writes_current_row_order_and_returns(self):
         ctx, fc = self._setup(self._basic_reply())
         with patch.object(interaction, "await_approval", AsyncMock(return_value=None)):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
-        # Timeout → falls into the ❌ branch in the current job code; draft
-        # body written verbatim, no thesis. (None and False both leave the
-        # reorder untaken — same outcome here.)
+        # Timeout → falls into the ❌ branch; rows render in current order.
         final = self.ws.files[(458, "final.md")]
         self.assertIn("### [A](http://a)", final)
         self.assertNotIn((458, "thesis.md"), self.ws.files)
 
     # ---- JSON validation ----
 
-    def test_unparseable_reply_eventually_falls_back_to_draft(self):
+    def test_unparseable_reply_eventually_falls_back_to_rows(self):
         ctx, fc = self._setup("sorry can't draft right now")
         # No valid JSON ever. Loop exhausts MAX_REFRESH_ROUNDS; the
-        # fallback writes the draft body as final.md and returns ok.
+        # fallback writes the current row order as final.md and returns ok.
         result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
-        self.assertIn("draft as-is", result.message)
+        self.assertIn("rows as-is", result.message)
         self.assertIn("### [A](http://a)", self.ws.files[(458, "final.md")])
-        # No thesis written when the LLM never produced a valid response.
         self.assertNotIn((458, "thesis.md"), self.ws.files)
 
     def test_invalid_order_permutation_refuses(self):
         # n1 omitted from notable_order — validation error.
         bad = self._basic_reply(notable_order=("n2",))
         ctx, fc = self._setup(bad)
-        # Each round refuses; the failure posts a 'didn't validate' note
-        # to channel.send. We're not patching await_approval — it's never
-        # reached because validation fails before the approval prompt.
         result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
-        self.assertIn("draft as-is", result.message)
-        # A 'didn't validate' notice was sent to #editorial at least once.
+        self.assertIn("rows as-is", result.message)
         sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
         self.assertTrue(any("didn't validate" in m for m in sent_messages),
                         f"sent_messages = {sent_messages!r}")
@@ -621,9 +633,11 @@ class CreateFinalTests(_DBTestCase):
 
     # ---- promotions ----
 
-    def test_single_journal_promotion_writes_feature_block(self):
+    def test_single_journal_promotion_splices_inline(self):
         # Promote j2 to its own featured section. Journal_order keeps the
-        # other two entries; the feature block carries j2's raw_bytes.
+        # other two entries; the featured section splices inline AFTER
+        # the Journal block, BEFORE the Brief section — what Jamie sees
+        # in final.md is exactly where it'll land in publish.md.
         reply = self._basic_reply(
             journal_order=("j1", "j3"),  # j2 promoted out
             promotions=[{
@@ -638,22 +652,29 @@ class CreateFinalTests(_DBTestCase):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
         final = self.ws.files[(458, "final.md")]
-        # feature1 block has YAML frontmatter + the promoted entry's raw_bytes.
-        self.assertIn("<!-- block:feature1 -->", final)
-        self.assertIn("position: after_journal", final)
-        self.assertIn("heading: Featured: A Big Journal Read", final)
-        self.assertIn("source_id: j2", final)
-        # j2's content lives in feature1; the Journal block has only j1 + j3.
+        # The featured section renders as ``## Heading\n\n{body}``, inline.
+        self.assertIn("## Featured: A Big Journal Read", final)
+        # No feature1/feature2 blocks anywhere — the splice is inline.
+        self.assertNotIn("<!-- block:feature1 -->", final)
+        self.assertNotIn("<!-- block:feature2 -->", final)
+        # j2 lives in the featured section; the Journal block has only j1 + j3.
         journal_block_start = final.index("<!-- block:journal -->")
         journal_block_end = final.index("<!-- /block:journal -->")
         journal_body = final[journal_block_start:journal_block_end]
         self.assertNotIn("[Monday @ 2:00 PM](https://j2)", journal_body)
         self.assertIn("[Sunday @ 1:00 PM](https://j1)", journal_body)
         self.assertIn("[Tuesday @ 3:00 PM](https://j3)", journal_body)
+        # The featured section appears AFTER the Journal block close and
+        # BEFORE the Brief heading.
+        feature_pos = final.index("## Featured: A Big Journal Read")
+        journal_close = final.index("<!-- /block:journal -->")
+        brief_heading = final.index("## Briefly")
+        self.assertLess(journal_close, feature_pos)
+        self.assertLess(feature_pos, brief_heading)
 
-    def test_two_journal_promotions_write_both_features(self):
-        # Rare case: promote two Journal entries. journal_order shrinks
-        # to just the remaining one.
+    def test_two_journal_promotions_splice_at_distinct_positions(self):
+        # Rare case: promote two Journal entries at different positions.
+        # Both splice inline at their declared positions.
         reply = self._basic_reply(
             journal_order=("j2",),
             promotions=[
@@ -668,10 +689,17 @@ class CreateFinalTests(_DBTestCase):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
         final = self.ws.files[(458, "final.md")]
-        self.assertIn("heading: Featured One", final)
-        self.assertIn("heading: Featured Two", final)
-        self.assertIn("source_id: j1", final)
-        self.assertIn("source_id: j3", final)
+        self.assertIn("## Featured One", final)
+        self.assertIn("## Featured Two", final)
+        # No feature blocks.
+        self.assertNotIn("<!-- block:feature1 -->", final)
+        # Featured One splices after Journal; Featured Two splices after Briefly.
+        one_pos = final.index("## Featured One")
+        two_pos = final.index("## Featured Two")
+        journal_close = final.index("<!-- /block:journal -->")
+        brief_close = final.index("<!-- /block:brief -->")
+        self.assertLess(journal_close, one_pos)
+        self.assertLess(brief_close, two_pos)
 
     def test_notable_id_cannot_be_promoted(self):
         # Notable links stay in their parent section — only Journal
