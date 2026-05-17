@@ -2,10 +2,14 @@
 asset's current content, write the edited result back to S3.
 
 Editing the small per-issue atom files (``intro.md`` / ``outro.md`` /
-``haiku.md`` / ``currently.json`` / ``cover.json`` / ``cta-N.md`` /
-``thanks-N.md``) used to mean opening the AWS console or running a
-local script — friction enough that WT348 had several "edit intro
-and reflect in the preview" moments where the edit didn't happen.
+``haiku.md`` / ``cover.json`` / ``cta-N.md`` / ``thanks-N.md``) used to
+mean opening the AWS console or running a local script — friction
+enough that WT348 had several "edit intro and reflect in the preview"
+moments where the edit didn't happen.
+
+Currently is no longer in this picker — the conversational + per-type
+flow at ``/eddy currently …`` (and Eddy's #editorial dialogue) replaced
+the static JSON edit.
 
 Discord modals have a 4000-char per-input limit, which comfortably
 fits every atom file (intro is ~1200 chars max; haiku ~80; the
@@ -27,7 +31,6 @@ publish`` or post-final rebuild).
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Optional
 
@@ -53,7 +56,6 @@ _ASSETS: dict[str, tuple[str, str, bool]] = {
     "intro":       ("intro.md",      "intro",            True),
     "outro":       ("outro.md",      "outro",            True),
     "haiku":       ("haiku.md",      "haiku",            True),
-    "currently":   ("currently.json", "Currently",        True),
     "cover":       ("cover.json",    "cover caption",    True),
     "cta-1":       ("cta-1.md",      "CTA slot 1",       False),
     "cta-2":       ("cta-2.md",      "CTA slot 2",       False),
@@ -130,32 +132,7 @@ class _AssetEditModal(ui.Modal):
             # Update-draft refuses when final.md exists. That's fine —
             # the error surfaces via the agent_runs log; we don't want
             # to block the modal acknowledgement on it.
-            _schedule_update_draft(self.ctx, self.issue_number)
-
-
-def _schedule_update_draft(ctx: "_base.JobContext", issue_number: int) -> None:
-    """Fire ``update-draft`` as a background task. Same fire-and-forget
-    pattern as ``create-final``'s compose-cta autofire — errors are
-    logged, not surfaced; the modal ack has already shipped."""
-    from . import update_draft as _update_draft  # local import — circular at module-load
-
-    async def _run() -> None:
-        try:
-            result = await _update_draft.run(ctx)
-            logger.info(
-                "edit-asset → update-draft refire for WT%d: %s",
-                issue_number, getattr(result, "message", ""),
-            )
-        except Exception:  # noqa: BLE001
-            logger.exception(
-                "edit-asset → update-draft refire failed for WT%d",
-                issue_number,
-            )
-
-    try:
-        asyncio.create_task(_run())
-    except RuntimeError:
-        logger.debug("edit-asset: no event loop for update-draft refire")
+            _base.schedule_update_draft_refire(self.ctx, self.issue_number)
 
 
 def build_modal(

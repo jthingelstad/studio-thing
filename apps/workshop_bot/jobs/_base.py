@@ -245,6 +245,37 @@ def starter_template() -> str:
 
 # ---------- content-formatting helpers ----------
 
+def schedule_update_draft_refire(ctx: "JobContext", issue_number: int) -> None:
+    """Fire ``update-draft`` as a background task. Used by handlers that
+    mutate an atom file/row flowing into ``draft.md`` (edit-asset, the
+    currently slash + agent tools) so the preview refreshes without
+    blocking the modal/slash ack on the LLM-review pass.
+
+    Errors are logged, not surfaced — the caller's user-facing reply has
+    already been sent. ``update-draft`` refuses when ``final.md`` exists;
+    that's fine, the surface lives in ``agent_runs``."""
+    from . import update_draft as _update_draft  # local — circular at module-load
+
+    async def _run() -> None:
+        try:
+            result = await _update_draft.run(ctx)
+            logger.info(
+                "update-draft refire for WT%d (%s): %s",
+                issue_number, getattr(ctx, "trigger", "?"),
+                getattr(result, "message", ""),
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception(
+                "update-draft refire failed for WT%d", issue_number,
+            )
+
+    try:
+        import asyncio
+        asyncio.create_task(_run())
+    except RuntimeError:
+        logger.debug("update-draft refire: no event loop")
+
+
 def format_haiku(text: str) -> str:
     """Render a haiku the way the published issue does:
     ``**line one  \\nline two  \\nline three**`` — bold-wrapped, with a

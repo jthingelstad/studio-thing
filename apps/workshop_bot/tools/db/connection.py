@@ -44,7 +44,36 @@ def run_migrations() -> None:
         _record_migration(conn, "0001_schema_sql")
         _apply_column_migrations(conn)
         _apply_data_migrations(conn)
+    _bootstrap_currently_from_s3()
     logger.info("workshop.db ready at %s", db_path())
+
+
+def _bootstrap_currently_from_s3() -> None:
+    """One-time bridge: when the active in-flight issue has any legacy
+    ``currently.json`` in S3 but no ``currently_entries`` rows yet, seed
+    the rows so the new DB-backed renderer sees the existing values.
+    Idempotent — once entries exist, subsequent boots no-op. Failures
+    are swallowed (logged) so DB init never fails on an S3 hiccup."""
+    try:
+        from .store import currently_backfill_from_s3, get_active_issue_window
+    except Exception:  # noqa: BLE001
+        return
+    try:
+        window = get_active_issue_window()
+    except Exception:  # noqa: BLE001
+        return
+    if not window:
+        return
+    try:
+        inserted = currently_backfill_from_s3(int(window["issue_number"]))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("currently backfill from S3 failed: %s", exc)
+        return
+    if inserted:
+        logger.info(
+            "currently backfill: seeded %d entries for WT%d from currently.json",
+            inserted, int(window["issue_number"]),
+        )
 
 
 # SQLite has no "ADD COLUMN IF NOT EXISTS". For columns added after the

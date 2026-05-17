@@ -188,11 +188,24 @@ def _install_discord() -> None:
             return fn
         return deco
 
+    def _autocomplete(**kwargs):
+        """Stub for ``@app_commands.autocomplete`` — records the
+        per-parameter autocomplete callables on the decorated function so
+        tests can introspect them; runtime dispatch isn't exercised in
+        the test harness."""
+        def deco(fn):
+            existing = getattr(fn, "_autocomplete", {})
+            existing.update(kwargs)
+            fn._autocomplete = existing
+            return fn
+        return deco
+
     app_commands.Choice = _Choice  # type: ignore[attr-defined]
     app_commands.Group = _Group  # type: ignore[attr-defined]
     app_commands.CommandTree = _CommandTree  # type: ignore[attr-defined]
     app_commands.describe = _describe  # type: ignore[attr-defined]
     app_commands.choices = _choices  # type: ignore[attr-defined]
+    app_commands.autocomplete = _autocomplete  # type: ignore[attr-defined]
     discord.app_commands = app_commands  # type: ignore[attr-defined]
 
     sys.modules["discord"] = discord

@@ -89,10 +89,12 @@ class StartIssueTests(_DBTestCase):
         self.assertEqual(ptr["archive_url"], "https://weekly.thingelstad.com/archive/458/")
         self.assertIn("Weekly%20Thing%20458", ptr["reddit_tag_url"])
         # Predictable file URLs for what Shortcuts uploads + what the bot writes.
-        for key in ("cover_jpg", "cover_json", "intro_md", "currently_json",
+        # currently_json is intentionally absent — Currently moved to workshop.db.
+        for key in ("cover_jpg", "cover_json", "intro_md",
                     "haiku_md", "metadata_json", "draft_md", "draft_html",
                     "final_md", "publish_md", "publish_html"):
             self.assertTrue(ptr["files"][key].startswith("https://files.thingelstad.com/weekly-thing/458/"), key)
+        self.assertNotIn("currently_json", ptr["files"])
         self.assertEqual(ptr["set_by"], "jamie")
         # And the success message points at the pointer URL.
         self.assertIn("workshop.json", result.message)
@@ -109,6 +111,36 @@ class StartIssueTests(_DBTestCase):
         # Window still recorded, draft still seeded.
         self.assertEqual(db.get_active_issue_window()["issue_number"], 458)
         self.assertIn((458, "draft.md"), self.ws.files)
+
+    def test_start_issue_schedules_mon_and_wed_currently_nudges(self):
+        # Saturday far in the future so both Mon + Wed are future-due.
+        result = asyncio.run(start_issue.run(
+            _base.JobContext(), number=458, pub_date="2099-05-23",
+        ))
+        self.assertTrue(result.ok, result.message)
+        # Two follow-up rows: persona=eddy, time-based, due_at Mon 17:00 and Wed 17:00 in CT.
+        rows = db.open_follow_ups(persona="eddy")
+        self.assertEqual(len(rows), 2)
+        due_dates = sorted(r["due_at"] for r in rows)
+        self.assertEqual(due_dates, ["2099-05-18T17:00:00", "2099-05-20T17:00:00"])
+        for r in rows:
+            self.assertEqual(r["trigger_kind"], "time")
+            self.assertIn("WT458", r["note"])
+        # The success message surfaces the schedule.
+        self.assertIn("Currently nudges scheduled", result.message)
+        self.assertEqual(set(result.data["currently_nudges"]),
+                         {r["id"] for r in rows})
+
+    def test_start_issue_skips_past_currently_nudges(self):
+        # Pub date in the past — both Mon (pub-5) and Wed (pub-3) are past;
+        # the scheduler should insert nothing.
+        result = asyncio.run(start_issue.run(
+            _base.JobContext(), number=459, pub_date="2020-01-04",
+        ))
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(db.open_follow_ups(persona="eddy"), [])
+        self.assertEqual(result.data["currently_nudges"], [])
+        self.assertNotIn("Currently nudges scheduled", result.message)
 
 
 # ---------- update-draft ----------
@@ -344,24 +376,26 @@ class UpdateDraftRealFillsTests(_DBTestCase):
         finally:
             os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
 
-    def test_currently_json_renders_into_the_draft(self):
+    def test_currently_entries_render_into_the_draft(self):
         self._set_window()
-        self.ws.write_issue_file(
-            458, "currently.json",
-            '{"Listening":" Noah Kahan.","Watching":" Shrinking on Apple TV."}',
-        )
+        # DB-backed: seed two entries directly. The renderer reads from
+        # currently_entries (joined with currently_types), not S3.
+        db.currently_set_entry(458, "Listening", "Noah Kahan.")
+        db.currently_set_entry(458, "Watching", "Shrinking on Apple TV.")
         result = asyncio.run(update_draft.run(_base.JobContext()))
         self.assertTrue(result.ok, result.message)
         d = self.ws.files[(458, "draft.md")]
         self.assertIn("**Listening:** Noah Kahan.\n\n**Watching:** Shrinking on Apple TV.", d)
         self.assertIn("## Currently", d)
 
-    def test_currently_md_fallback_when_no_json(self):
+    def test_no_currently_entries_leaves_block_empty(self):
         self._set_window()
-        self.ws.write_issue_file(458, "currently.md", "**Reading:** a verbatim section.")
+        # No DB entries seeded; legacy currently.md in S3 is intentionally
+        # ignored after the DB-backed renderer migration.
+        self.ws.write_issue_file(458, "currently.md", "**Reading:** ignored legacy.")
         result = asyncio.run(update_draft.run(_base.JobContext()))
         self.assertTrue(result.ok, result.message)
-        self.assertIn("**Reading:** a verbatim section.", self.ws.files[(458, "draft.md")])
+        self.assertNotIn("Reading", self.ws.files[(458, "draft.md")])
 
     def test_cover_json_renders_image_caption_date_location(self):
         self._set_window()

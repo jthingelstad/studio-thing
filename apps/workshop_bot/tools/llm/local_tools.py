@@ -315,6 +315,171 @@ def t_workspace_write(
         return {"error": str(exc)}
 
 
+# ---------- currently (per-issue ## Currently section) ----------
+
+# The mutating tools (`set`, `clear`, `add_type`, `reorder`) refire
+# `update-draft` as a background task so the preview reflects the change
+# without blocking the agent's reply. Fire-and-forget is fine — the
+# refire's outcome lands in agent_runs; the user-facing message has
+# already gone out.
+
+
+def _currently_refire(issue_number: int) -> bool:
+    """Schedule ``update-draft`` for ``issue_number`` if an event loop is
+    running. Returns True when a task was scheduled (best-effort)."""
+    try:
+        from ...jobs import _base as _jobs_base
+    except Exception:  # noqa: BLE001
+        return False
+    try:
+        _jobs_base.schedule_update_draft_refire(
+            _jobs_base.JobContext(trigger="agent-tool"), int(issue_number),
+        )
+    except Exception:  # noqa: BLE001
+        return False
+    return True
+
+
+def _active_issue_number() -> Optional[int]:
+    win = db.get_active_issue_window()
+    return int(win["issue_number"]) if win else None
+
+
+def t_currently_list_types(deps, include_inactive: bool = False) -> list[dict[str, Any]]:
+    """The pool of canonical Currently labels — what types Currently entries
+    can hang off of (Listening, Watching, Installing, …). Use this before
+    ``currently__set`` to confirm a label exists; if it doesn't, call
+    ``currently__add_type`` first. Carries ``last_used_issue`` so you can
+    see which types have shown up recently vs gone cold."""
+    return db.currently_list_types(include_inactive=bool(include_inactive))
+
+
+def t_currently_list_entries(
+    deps, issue_number: Optional[int] = None,
+) -> dict[str, Any]:
+    """The active issue's filled Currently entries (or another issue's if
+    ``issue_number`` is given), ordered by ``position`` (render order in
+    the published issue). Empty list = nothing's set yet."""
+    n: Optional[int] = None
+    if issue_number is not None:
+        try:
+            n = int(issue_number)
+        except (TypeError, ValueError):
+            return {"error": f"issue_number must be an int (got {issue_number!r})"}
+    if n is None:
+        n = _active_issue_number()
+        if n is None:
+            return {"error": "no active issue window — Jamie starts one via /eddy issue start"}
+    entries = db.currently_get_entries(n)
+    return {
+        "issue_number": n,
+        "count": len(entries),
+        "entries": [
+            {
+                "label": r["type_label"],
+                "value": r["value"],
+                "position": r["position"],
+                "updated_at": r.get("updated_at"),
+            }
+            for r in entries
+        ],
+    }
+
+
+def t_currently_set(deps, label: str, value: str) -> dict[str, Any]:
+    """Set one Currently entry for the active in-flight issue. On INSERT
+    the new entry appends with the next ``position`` (insertion order);
+    on UPDATE the existing position is preserved. The value may include
+    markdown links — pass them through verbatim (Jamie's voice; don't
+    paraphrase). Refires ``update-draft`` so the preview refreshes.
+
+    If the ``label`` isn't a known canonical type, this errors — call
+    ``currently__add_type`` first when Jamie mentions a brand-new type
+    (e.g. "Printing")."""
+    n = _active_issue_number()
+    if n is None:
+        return {"error": "no active issue window — Jamie starts one via /eddy issue start"}
+    try:
+        res = db.currently_set_entry(n, label, value)
+    except db.CurrentlyError as exc:
+        return {"error": str(exc)}
+    refired = _currently_refire(n)
+    return {
+        "ok": True,
+        "issue_number": n,
+        "label": res["label"],
+        "position": res["position"],
+        "refired_update_draft": refired,
+    }
+
+
+def t_currently_clear(deps, label: str) -> dict[str, Any]:
+    """Delete one Currently entry for the active in-flight issue.
+    Renumbers remaining entries contiguously. Refires
+    ``update-draft``."""
+    n = _active_issue_number()
+    if n is None:
+        return {"error": "no active issue window — Jamie starts one via /eddy issue start"}
+    deleted = db.currently_clear_entry(n, label)
+    refired = _currently_refire(n) if deleted else False
+    return {
+        "ok": True,
+        "issue_number": n,
+        "label": (label or "").strip(),
+        "deleted": deleted,
+        "refired_update_draft": refired,
+    }
+
+
+def t_currently_add_type(deps, label: str) -> dict[str, Any]:
+    """Add a new canonical Currently type (e.g. "Printing"). Idempotent
+    once it exists. Use when Jamie mentions a type that isn't in
+    ``currently__list_types`` yet."""
+    try:
+        row = db.currently_add_type(label)
+    except db.CurrentlyError as exc:
+        return {"error": str(exc)}
+    return {"ok": True, "label": row["label"]}
+
+
+def t_currently_reorder(deps, labels: list[str]) -> dict[str, Any]:
+    """Reorder the active issue's Currently entries to the given
+    permutation of filled labels — positions 1..N. The list must be a
+    *strict permutation* of every currently-filled label for the issue
+    (a missing or extra label is refused). Use when an issue has 3+
+    entries and a particular sequence reads better — narrative
+    grouping, strongest first, or a deliberate shuffle. Refires
+    ``update-draft``."""
+    n = _active_issue_number()
+    if n is None:
+        return {"error": "no active issue window — Jamie starts one via /eddy issue start"}
+    if not isinstance(labels, list) or not labels:
+        return {"error": "`labels` must be a non-empty list of label strings"}
+    try:
+        applied = db.currently_reorder(n, labels)
+    except db.CurrentlyError as exc:
+        return {"error": str(exc)}
+    refired = _currently_refire(n)
+    return {
+        "ok": True,
+        "issue_number": n,
+        "applied_order": applied,
+        "refired_update_draft": refired,
+    }
+
+
+def t_currently_suggest_stale(deps, k: int = 3) -> list[dict[str, Any]]:
+    """Top-K active Currently types ordered by recency — never-used
+    first, then least-recent. Each entry carries ``gap_issues`` (issues
+    since last use; ``None`` for never-used). Use to pick a fresh type
+    to ask Jamie about when opening the week's Currently conversation."""
+    try:
+        kk = max(1, int(k))
+    except (TypeError, ValueError):
+        kk = 3
+    return db.currently_suggest_stale(_active_issue_number(), k=kk)
+
+
 # ---------- draft completeness (in-flight issue) ----------
 
 def t_draft_section_status(deps) -> dict[str, Any]:
@@ -792,6 +957,139 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["issue_number", "filename", "content"],
         },
     },
+    "currently__list_types": {
+        "name": "currently__list_types",
+        "description": (
+            "The pool of canonical Currently labels — what types a Currently "
+            "entry can hang off of (Listening, Watching, Installing, …). Use "
+            "before `currently__set` to confirm a label exists; if it doesn't, "
+            "call `currently__add_type` first. Each row carries "
+            "`last_used_issue` so you can see which types are fresh vs cold. "
+            "Active-only by default."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "include_inactive": {
+                    "type": "boolean",
+                    "description": "Include retired types. Default false.",
+                },
+            },
+        },
+    },
+    "currently__list_entries": {
+        "name": "currently__list_entries",
+        "description": (
+            "The filled Currently entries for an issue, in render order. "
+            "Defaults to the active in-flight issue. Returns {issue_number, "
+            "count, entries:[{label, value, position, updated_at}]}. Empty "
+            "list = nothing's set yet."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "issue_number": {
+                    "type": "integer",
+                    "description": "Optional. Defaults to the in-flight issue.",
+                },
+            },
+        },
+    },
+    "currently__set": {
+        "name": "currently__set",
+        "description": (
+            "Set one Currently entry for the active in-flight issue. On INSERT "
+            "the new entry appends with the next position (insertion order); "
+            "on UPDATE the existing position is preserved. The value may "
+            "contain markdown links — pass them through verbatim in Jamie's "
+            "voice (don't paraphrase or summarise). If the `label` isn't a "
+            "known canonical type, this errors — call `currently__add_type` "
+            "first when Jamie mentions a brand-new type (e.g. 'Printing'). "
+            "Refires `update-draft` so the preview reflects the change."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string",
+                    "description": "Canonical type, e.g. 'Listening'. Case-insensitive match against currently_types.",
+                },
+                "value": {
+                    "type": "string",
+                    "description": "The Currently entry text. Markdown OK; preserve Jamie's voice.",
+                },
+            },
+            "required": ["label", "value"],
+        },
+    },
+    "currently__clear": {
+        "name": "currently__clear",
+        "description": (
+            "Delete one Currently entry for the active in-flight issue. "
+            "Remaining entries renumber contiguously. Refires "
+            "`update-draft`. Idempotent — clearing a missing entry returns "
+            "{ok: true, deleted: false} without error."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"label": {"type": "string"}},
+            "required": ["label"],
+        },
+    },
+    "currently__add_type": {
+        "name": "currently__add_type",
+        "description": (
+            "Add a new canonical Currently type (e.g. 'Printing'). Idempotent "
+            "for an exact match — duplicates (case-insensitive) are refused "
+            "with a friendly error. Use when Jamie mentions a type not in "
+            "`currently__list_types` yet, then call `currently__set` to fill "
+            "the value."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"label": {"type": "string"}},
+            "required": ["label"],
+        },
+    },
+    "currently__reorder": {
+        "name": "currently__reorder",
+        "description": (
+            "Reorder the active issue's Currently entries to the given "
+            "permutation of filled labels — positions 1..N. Must be a STRICT "
+            "permutation of every currently-filled label for the issue (a "
+            "missing or extra label is refused). Use when an issue has 3+ "
+            "entries and a particular sequence reads better — narrative "
+            "grouping, strongest first, or a deliberate shuffle. Refires "
+            "`update-draft`."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "labels": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Strict permutation of currently-filled labels.",
+                },
+            },
+            "required": ["labels"],
+        },
+    },
+    "currently__suggest_stale": {
+        "name": "currently__suggest_stale",
+        "description": (
+            "Top-K active Currently types ordered by recency — never-used "
+            "first, then least-recent. Each entry carries `gap_issues` "
+            "(issues since last use; null for never-used). Use to pick a "
+            "fresh type to ask Jamie about when opening the week's Currently "
+            "conversation."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "k": {"type": "integer", "description": "max picks, default 3"},
+            },
+        },
+    },
     "draft__section_status": {
         "name": "draft__section_status",
         "description": (
@@ -896,6 +1194,13 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "workspace__list_files": t_workspace_list_files,
     "workspace__read": t_workspace_read,
     "workspace__write": t_workspace_write,
+    "currently__list_types": t_currently_list_types,
+    "currently__list_entries": t_currently_list_entries,
+    "currently__set": t_currently_set,
+    "currently__clear": t_currently_clear,
+    "currently__add_type": t_currently_add_type,
+    "currently__reorder": t_currently_reorder,
+    "currently__suggest_stale": t_currently_suggest_stale,
     "draft__section_status": t_draft_section_status,
     "react__add": t_react_add,
     "editorial__get_comment": t_editorial_get_comment,

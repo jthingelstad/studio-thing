@@ -359,6 +359,65 @@ CREATE TABLE IF NOT EXISTS image_alt_cache (
   generated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Currently types — the pool of "labels" a Currently entry can hang off
+-- of (Listening, Watching, Installing, …). Editable: Jamie adds a type
+-- via ``/eddy currently add-type`` or by asking Eddy in #editorial; new
+-- types need no code change.
+--
+-- Types deliberately have NO intrinsic render order. Ordering is a
+-- per-issue editorial choice (see ``currently_entries.position``). The
+-- set of types is a flat pool to draw from; how they sequence within a
+-- given issue is Eddy's call (insertion-order by default, reorderable
+-- via the ``currently__reorder`` agent tool / ``/eddy currently reorder``).
+--
+-- ``last_used_issue`` / ``last_used_at`` are a denormalised recency
+-- cache, updated by ``currently_set_entry`` on UPSERT (MAX with prior
+-- value) and by ``currently_clear_entry`` (recomputed from
+-- ``currently_entries`` since clearing a current entry doesn't erase
+-- historical usage). Lets ``currently__suggest_stale`` be a single
+-- ORDER BY query.
+CREATE TABLE IF NOT EXISTS currently_types (
+  label TEXT PRIMARY KEY,                          -- 'Listening', 'Printing', …
+  is_active INTEGER NOT NULL DEFAULT 1,            -- 0 = retired (kept for history)
+  last_used_issue INTEGER,                         -- max issue with a non-empty entry; NULL = never used
+  last_used_at TEXT,                               -- timestamp of the most recent set; NULL = never used
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Seed the canonical types if the table is empty (idempotent — same
+-- shape as the goals seed). No order — types are a pool, not a sequence.
+INSERT INTO currently_types (label)
+SELECT column1 FROM (VALUES
+  ('Listening'), ('Watching'), ('Reading'), ('Playing'),
+  ('Installing'), ('Dining'), ('Cooking'), ('Making'),
+  ('Drinking'), ('Printing')
+)
+WHERE NOT EXISTS (SELECT 1 FROM currently_types);
+
+-- Currently entries — per-issue values keyed by (issue_number, label).
+-- One value per type per issue (overwrite to change). ``value`` may
+-- contain markdown (links especially).
+--
+-- ``position`` drives render order *for that issue only*. Defaults to
+-- ``MAX(existing for issue) + 1`` on insert (insertion order). Eddy can
+-- override via the ``currently__reorder`` agent tool / ``/eddy currently
+-- reorder`` slash — useful when an issue has 3+ entries and a
+-- particular sequencing reads better narratively.
+CREATE TABLE IF NOT EXISTS currently_entries (
+  issue_number INTEGER NOT NULL,
+  type_label TEXT NOT NULL REFERENCES currently_types(label),
+  value TEXT NOT NULL,
+  position INTEGER NOT NULL,                       -- render order within this issue
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (issue_number, type_label)
+);
+
+CREATE INDEX IF NOT EXISTS idx_currently_entries_by_type
+  ON currently_entries(type_label, issue_number DESC);
+
+CREATE INDEX IF NOT EXISTS idx_currently_entries_render
+  ON currently_entries(issue_number, position);
+
 -- Issue items — one row per individually-addressable piece of content in
 -- an issue (Notable link, Brief link, Journal entry). Replaces the
 -- byte-chunk reorder model that lived in tools/content/chunks.py

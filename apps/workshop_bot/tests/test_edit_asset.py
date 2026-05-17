@@ -97,7 +97,7 @@ class ModalSubmitTests(_Case):
         modal, _ = edit_asset.build_modal(self._ctx(), asset_key="intro")
         modal.input.value = "new content (edited)"
         interaction = self._interaction()
-        with patch.object(edit_asset, "_schedule_update_draft") as mock_sched:
+        with patch.object(_base, "schedule_update_draft_refire") as mock_sched:
             asyncio.run(modal.on_submit(interaction))
         # New content written.
         self.assertEqual(self.ws.files[(349, "intro.md")], "new content (edited)")
@@ -116,7 +116,7 @@ class ModalSubmitTests(_Case):
         modal, _ = edit_asset.build_modal(self._ctx(), asset_key="cta-1")
         modal.input.value = "---\nkind: supporter\n---\n\nNew CTA copy."
         interaction = self._interaction()
-        with patch.object(edit_asset, "_schedule_update_draft") as mock_sched:
+        with patch.object(_base, "schedule_update_draft_refire") as mock_sched:
             asyncio.run(modal.on_submit(interaction))
         self.assertEqual(
             self.ws.files[(349, "cta-1.md")],
@@ -134,7 +134,7 @@ class ModalSubmitTests(_Case):
         modal, _ = edit_asset.build_modal(self._ctx(), asset_key="outro")
         modal.input.value = ""
         interaction = self._interaction()
-        with patch.object(edit_asset, "_schedule_update_draft"):
+        with patch.object(_base, "schedule_update_draft_refire"):
             asyncio.run(modal.on_submit(interaction))
         self.assertEqual(self.ws.files[(349, "outro.md")], "")
 
@@ -145,7 +145,7 @@ class ModalSubmitTests(_Case):
         interaction = self._interaction()
         with patch.object(
             s3, "write_issue_file", side_effect=RuntimeError("S3 boom"),
-        ), patch.object(edit_asset, "_schedule_update_draft") as mock_sched:
+        ), patch.object(_base, "schedule_update_draft_refire") as mock_sched:
             asyncio.run(modal.on_submit(interaction))
         msg = interaction.response.send_message.call_args.args[0]
         self.assertIn("Couldn't write", msg)

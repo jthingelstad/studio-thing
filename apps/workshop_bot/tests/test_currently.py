@@ -1,13 +1,11 @@
 """Tests for jobs/_currently.py — the ``## Currently`` section renderer
-(structured ``currently.json`` preferred, legacy verbatim ``currently.md``
-fallback)."""
+(DB-backed: reads ``currently_entries`` joined with ``currently_types``)."""
 
 from __future__ import annotations
 
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
@@ -17,67 +15,163 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _currently  # noqa: E402
+from apps.workshop_bot.tests._fixtures import DBTestCase  # noqa: E402
+from apps.workshop_bot.tools import db  # noqa: E402
 
 
-class _FakeFiles:
-    def __init__(self, files: dict[str, str]):
-        self.files = files
+class RenderCurrentlyTests(DBTestCase):
+    def test_empty_when_no_entries(self):
+        self.assertEqual(_currently.render(348), "")
 
-    def read_issue_file(self, issue_number, filename, **kw):
-        if filename in self.files:
-            return {"found": True, "text": self.files[filename], "size": len(self.files[filename])}
-        return {"found": False}
+    def test_single_entry(self):
+        db.currently_set_entry(348, "Reading", "A book.")
+        self.assertEqual(_currently.render(348), "**Reading:** A book.")
 
-
-def _files(**files):
-    return patch.object(_currently, "s3", _FakeFiles(files))
-
-
-class RenderCurrentlyTests(unittest.TestCase):
-    def test_json_object_renders_label_value_lines(self):
-        cj = ('{"Listening":" The new Noah Kahan album.",'
-              '"Watching":" Shrinking on Apple TV.",'
-              '"Printing":" Clash Royale crowns."}')
-        with patch.object(_currently, "s3", _FakeFiles({"currently.json": cj})):
-            out = _currently.render(348)
+    def test_multiple_entries_render_in_position_order(self):
+        db.currently_set_entry(348, "Listening", "The new Noah Kahan album.")
+        db.currently_set_entry(348, "Watching", "Shrinking on Apple TV.")
+        db.currently_set_entry(348, "Printing", "Clash Royale crowns.")
         self.assertEqual(
-            out,
+            _currently.render(348),
             "**Listening:** The new Noah Kahan album.\n\n"
             "**Watching:** Shrinking on Apple TV.\n\n"
             "**Printing:** Clash Royale crowns.",
         )
 
-    def test_json_strips_trailing_colon_and_skips_blanks(self):
-        cj = '{"Reading:": " A book.", "Eating": "  ", "": "ignored", "Playing": "Tetris"}'
-        with patch.object(_currently, "s3", _FakeFiles({"currently.json": cj})):
-            self.assertEqual(_currently.render(1), "**Reading:** A book.\n\n**Playing:** Tetris")
+    def test_reorder_changes_render_order(self):
+        db.currently_set_entry(348, "Listening", "L")
+        db.currently_set_entry(348, "Watching", "W")
+        db.currently_set_entry(348, "Reading", "R")
+        db.currently_reorder(348, ["Watching", "Reading", "Listening"])
+        self.assertEqual(
+            _currently.render(348),
+            "**Watching:** W\n\n**Reading:** R\n\n**Listening:** L",
+        )
 
-    def test_json_takes_precedence_over_md(self):
-        with patch.object(_currently, "s3", _FakeFiles({
-            "currently.json": '{"Reading":"the JSON one"}',
-            "currently.md": "**Reading:** the markdown one",
-        })):
-            self.assertEqual(_currently.render(1), "**Reading:** the JSON one")
+    def test_clear_drops_and_renumbers(self):
+        db.currently_set_entry(348, "Listening", "L")
+        db.currently_set_entry(348, "Watching", "W")
+        db.currently_set_entry(348, "Reading", "R")
+        deleted = db.currently_clear_entry(348, "Watching")
+        self.assertTrue(deleted)
+        # After clear, the two surviving entries renumber 1..2 by their
+        # prior relative order (insertion order minus the dropped one).
+        rows = db.currently_get_entries(348)
+        self.assertEqual([(r["type_label"], r["position"]) for r in rows],
+                         [("Listening", 1), ("Reading", 2)])
+        self.assertEqual(
+            _currently.render(348),
+            "**Listening:** L\n\n**Reading:** R",
+        )
 
-    def test_falls_back_to_md_when_no_json(self):
-        with patch.object(_currently, "s3", _FakeFiles({"currently.md": "**Watching:** a verbatim section"})):
-            self.assertEqual(_currently.render(1), "**Watching:** a verbatim section")
+    def test_value_strip_and_label_canonicalisation(self):
+        db.currently_set_entry(348, "  reading  ", "  The Lathe of Heaven  ")
+        rows = db.currently_get_entries(348)
+        # currently_set_entry canonicalises against the seed label casing.
+        self.assertEqual(rows[0]["type_label"], "Reading")
+        self.assertEqual(_currently.render(348), "**Reading:** The Lathe of Heaven")
 
-    def test_invalid_or_non_object_json_falls_back_to_md(self):
-        with patch.object(_currently, "s3", _FakeFiles({"currently.json": "not json {", "currently.md": "fallback md"})):
-            self.assertEqual(_currently.render(1), "fallback md")
-        with patch.object(_currently, "s3", _FakeFiles({"currently.json": '["a","list"]', "currently.md": "fallback md 2"})):
-            self.assertEqual(_currently.render(1), "fallback md 2")
+    def test_markdown_links_pass_through_verbatim(self):
+        value = ("The new [Noah Kahan](https://noahkahan.com) album, "
+                 "[The Great Divide](https://noahkahan.lnk.to/thegreatdivideTLOTB).")
+        db.currently_set_entry(348, "Listening", value)
+        self.assertEqual(_currently.render(348), f"**Listening:** {value}")
 
-    def test_empty_then_empty(self):
-        with patch.object(_currently, "s3", _FakeFiles({"currently.json": "{}"})):
-            self.assertEqual(_currently.render(1), "")
-        with patch.object(_currently, "s3", _FakeFiles({})):
-            self.assertEqual(_currently.render(1), "")
+    def test_set_requires_known_type(self):
+        with self.assertRaises(db.CurrentlyError):
+            db.currently_set_entry(348, "Surfing", "the waves")
+        # After add_type, the same set succeeds.
+        db.currently_add_type("Surfing")
+        db.currently_set_entry(348, "Surfing", "the waves")
+        self.assertEqual(_currently.render(348), "**Surfing:** the waves")
 
-    def test_md_is_stripped(self):
-        with patch.object(_currently, "s3", _FakeFiles({"currently.md": "\n\n  trimmed  \n"})):
-            self.assertEqual(_currently.render(1), "trimmed")
+    def test_add_type_duplicate_refused(self):
+        with self.assertRaises(db.CurrentlyError):
+            db.currently_add_type("Reading")  # already seeded
+        with self.assertRaises(db.CurrentlyError):
+            db.currently_add_type("reading")  # case-insensitive duplicate
+
+    def test_last_used_max_not_overwrite(self):
+        db.currently_set_entry(348, "Listening", "newer")
+        self.assertEqual(db.currently_get_type("Listening")["last_used_issue"], 348)
+        # Setting an older issue should not move last_used backwards.
+        db.currently_set_entry(347, "Listening", "older")
+        self.assertEqual(db.currently_get_type("Listening")["last_used_issue"], 348)
+
+    def test_clear_recomputes_last_used(self):
+        db.currently_set_entry(347, "Listening", "older")
+        db.currently_set_entry(348, "Listening", "newer")
+        self.assertEqual(db.currently_get_type("Listening")["last_used_issue"], 348)
+        db.currently_clear_entry(348, "Listening")
+        self.assertEqual(db.currently_get_type("Listening")["last_used_issue"], 347)
+        db.currently_clear_entry(347, "Listening")
+        self.assertIsNone(db.currently_get_type("Listening")["last_used_issue"])
+
+    def test_reorder_strict_permutation_required(self):
+        db.currently_set_entry(348, "Listening", "L")
+        db.currently_set_entry(348, "Watching", "W")
+        with self.assertRaises(db.CurrentlyError):
+            db.currently_reorder(348, ["Listening"])  # missing
+        with self.assertRaises(db.CurrentlyError):
+            db.currently_reorder(348, ["Listening", "Watching", "Reading"])  # extra
+
+    def test_suggest_stale_orders_never_used_first(self):
+        db.currently_set_entry(347, "Listening", "x")  # used
+        db.currently_set_entry(348, "Watching", "x")   # used
+        top = db.currently_suggest_stale(349, k=3)
+        # Never-used labels rank before used ones, alphabetically.
+        self.assertEqual(top[0]["last_used_issue"], None)
+        # Among the used ones at the bottom of the K window, the older
+        # (lower last_used_issue) ranks earlier.
+
+    def test_backfill_from_s3_seeds_in_flight_issue(self):
+        from unittest.mock import patch as _patch
+        from apps.workshop_bot.tools import s3
+        # Stub s3.read_issue_file to return a Shortcut-shaped currently.json
+        # the first time, then "not found" on the second call (post-backfill
+        # the DB has rows so backfill no-ops without re-reading).
+        payload = (
+            '{"Listening": "Noah Kahan", "Watching": "Shrinking", '
+            '"Reading": " [The Lathe of Heaven](https://example.com) "}'
+        )
+        def fake_read(n, filename, **_):
+            if filename == "currently.json":
+                return {"found": True, "text": payload, "size": len(payload)}
+            return {"found": False}
+
+        with _patch.object(s3, "read_issue_file", fake_read):
+            n = db.currently_backfill_from_s3(348)
+        self.assertEqual(n, 3)
+        rows = db.currently_get_entries(348)
+        self.assertEqual(
+            [(r["type_label"], r["position"]) for r in rows],
+            [("Listening", 1), ("Watching", 2), ("Reading", 3)],
+        )
+        # Markdown link survived round-trip with the trailing whitespace trimmed.
+        reading = next(r for r in rows if r["type_label"] == "Reading")
+        self.assertEqual(reading["value"], "[The Lathe of Heaven](https://example.com)")
+
+        # A second call is a no-op because currently_entries already has rows.
+        # The fake_read shouldn't get hit, but even if it did, no INSERT happens.
+        with _patch.object(s3, "read_issue_file", lambda *a, **kw: {"found": False}):
+            again = db.currently_backfill_from_s3(348)
+        self.assertEqual(again, 0)
+
+    def test_backfill_creates_missing_canonical_types(self):
+        from unittest.mock import patch as _patch
+        from apps.workshop_bot.tools import s3
+        # An ad-hoc legacy type that isn't in the seed pool.
+        payload = '{"Using": "POAP2RSS"}'
+
+        def fake_read(n, filename, **_):
+            if filename == "currently.json":
+                return {"found": True, "text": payload, "size": len(payload)}
+            return {"found": False}
+
+        with _patch.object(s3, "read_issue_file", fake_read):
+            n = db.currently_backfill_from_s3(326)
+        self.assertEqual(n, 1)
+        self.assertIsNotNone(db.currently_get_type("Using"))
 
 
 if __name__ == "__main__":
