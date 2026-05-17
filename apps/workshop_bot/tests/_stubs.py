@@ -87,6 +87,49 @@ def _install_discord() -> None:
     abc_mod = types.ModuleType("discord.abc")
     abc_mod.Messageable = object  # type: ignore[attr-defined]
 
+    # discord.ui — Modal + TextInput surface used by the /eddy edit
+    # asset-editor flow. Minimal: Modal stores its items and exposes
+    # an awaitable on_submit hook; TextInput stores its value.
+    ui_mod = types.ModuleType("discord.ui")
+
+    class _Modal:
+        def __init__(self, *, title=None, custom_id=None, timeout=None):
+            self.title = title
+            self.custom_id = custom_id
+            self.timeout = timeout
+            self.items: list = []
+
+        def add_item(self, item):
+            self.items.append(item)
+            return self
+
+        async def on_submit(self, interaction):  # pragma: no cover - subclass overrides
+            pass
+
+    class _TextInput:
+        def __init__(
+            self, *, label=None, style=None, default=None,
+            max_length=None, required=True, custom_id=None, placeholder=None,
+        ):
+            self.label = label
+            self.style = style
+            self.default = default
+            self.max_length = max_length
+            self.required = required
+            self.custom_id = custom_id
+            self.placeholder = placeholder
+            self.value = default or ""
+
+    ui_mod.Modal = _Modal  # type: ignore[attr-defined]
+    ui_mod.TextInput = _TextInput  # type: ignore[attr-defined]
+    discord.ui = ui_mod  # type: ignore[attr-defined]
+
+    class _TextStyle:
+        short = "short"
+        paragraph = "paragraph"
+
+    discord.TextStyle = _TextStyle  # type: ignore[attr-defined]
+
     # discord.app_commands surface — minimal shape that workshop_bot's
     # commands module actually touches (Group, CommandTree.add_command,
     # @group.command, @app_commands.describe, @app_commands.choices,
@@ -155,6 +198,7 @@ def _install_discord() -> None:
     sys.modules["discord"] = discord
     sys.modules["discord.abc"] = abc_mod
     sys.modules["discord.app_commands"] = app_commands
+    sys.modules["discord.ui"] = ui_mod
 
 
 def _install_anthropic() -> None:

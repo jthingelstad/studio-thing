@@ -30,6 +30,7 @@ from ...jobs import (
     compose_haiku,
     compose_meta,
     create_final,
+    edit_asset,
     issue_status,
     reset_issue,
     review_text,
@@ -238,6 +239,39 @@ def register_eddy_commands(
             lambda: followup_job.cancel(_ctx(bot), followup_id=int(id), persona="eddy"),
             "followup cancel",
         )
+
+    # ── /eddy edit ────────────────────────────────────────────────────
+
+    @eddy.command(
+        name="edit",
+        description="Edit a small per-issue asset (intro/outro/haiku/cover/currently/cta/thanks) in a modal.",
+    )
+    @app_commands.describe(
+        asset="Which asset to edit (modal pops with the current contents)",
+    )
+    @app_commands.choices(asset=[
+        app_commands.Choice(name=key, value=key) for key in edit_asset.ASSET_CHOICES
+    ])
+    async def edit_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, asset: str,
+    ) -> None:
+        modal, err = edit_asset.build_modal(_ctx(bot), asset_key=str(asset))
+        if modal is None:
+            try:
+                await interaction.response.send_message(err or "❌ couldn't build modal.", ephemeral=True)
+            except Exception:  # noqa: BLE001
+                pass
+            return
+        try:
+            await interaction.response.send_modal(modal)
+        except Exception as exc:  # noqa: BLE001
+            try:
+                await interaction.response.send_message(
+                    f"❌ couldn't open the editor: `{type(exc).__name__}: {exc}`",
+                    ephemeral=True,
+                )
+            except Exception:  # noqa: BLE001
+                pass
 
     # ── /eddy status ──────────────────────────────────────────────────
 
