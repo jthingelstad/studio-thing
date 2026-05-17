@@ -129,8 +129,12 @@ class RehostInMarkdownTests(unittest.TestCase):
             out,
         )
         self.assertIn('alt="my card"', out)
-        self.assertIn('width="363"', out)  # non-src/non-alt attrs preserved
-        self.assertIn('height="600"', out)
+        # Source-side width/height attrs are DROPPED — they carry the
+        # original upload dimensions and would lie post-resize, breaking
+        # aspect ratio in clients that honour HTML attrs over CSS.
+        # Responsive sizing is handled by the email CSS instead.
+        self.assertNotIn("width=", out)
+        self.assertNotIn("height=", out)
         self.assertIn("Got a card.", out)
         # Uploaded under the micro.blog hash basename.
         self.assertEqual(write_mock.call_args.args[1], "428e3db12e.jpg")

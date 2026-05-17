@@ -235,31 +235,24 @@ def _image_key_from_rehosted(url: str) -> str:
         return ""
 
 
-def _build_img_tag(*, src: str, alt: str = "", extra: str = "") -> str:
-    """Render a self-closing-style ``<img …/>`` with quoted attrs. ``extra``
-    is preserved attribute text from the source ``<img>`` (e.g. ``width``,
-    ``height``) — already pre-formatted as ``key="val" key="val"``."""
-    pieces = [f'src="{_attr_escape(src)}"']
-    if extra:
-        pieces.append(extra.strip())
-    pieces.append(f'alt="{_attr_escape(alt)}"')
-    return "<img " + " ".join(pieces) + " />"
+def _build_img_tag(*, src: str, alt: str = "") -> str:
+    """Render a self-closing-style ``<img …/>`` with quoted ``src`` /
+    ``alt`` attrs and nothing else.
 
-
-def _extract_non_src_alt_attrs(tag: str) -> str:
-    """Pull every attribute except ``src`` / ``alt`` from a raw ``<img …>``
-    tag and return them as a normalized ``key="val" …`` string. Lets us
-    preserve ``width``/``height``/``class`` on rehost."""
-    inner = tag[4:].rstrip(">").rstrip("/").strip()
-    out: list[str] = []
-    # very small attr parser: key=val with optional quotes
-    for m in re.finditer(r'([A-Za-z_:][A-Za-z0-9_.:\-]*)\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))', inner):
-        key = m.group(1).lower()
-        if key in ("src", "alt"):
-            continue
-        val = m.group(3) if m.group(3) is not None else (m.group(4) if m.group(4) is not None else m.group(5) or "")
-        out.append(f'{key}="{_attr_escape(val)}"')
-    return " ".join(out)
+    Deliberately drops the source-side ``width`` / ``height`` /
+    ``class`` attributes — micro.blog's ``<img>`` tags carry the
+    *original upload* dimensions (e.g. 2400×1600 from a phone), but
+    the rehost has already resized the file to ``MICROBLOG_IMAGE_MAX_DIM``
+    (default 600px long side). Carrying the old dimensions through
+    means the email's ``height="1600"`` attribute overrides
+    ``height: auto`` in some renderers (Outlook desktop, a few mobile
+    clients) and the image draws into a 1600-tall slot — the "aspect
+    ratio is all wrong" symptom WT348 surfaced. Email CSS already
+    handles responsive sizing via ``img { max-width: 100%; height:
+    auto; display: block; }``; the HTML attrs were a liability, not a
+    benefit.
+    """
+    return f'<img src="{_attr_escape(src)}" alt="{_attr_escape(alt)}" />'
 
 
 def rehost_in_markdown(content_md: str, issue_number: int) -> str:
@@ -283,7 +276,10 @@ def rehost_in_markdown(content_md: str, issue_number: int) -> str:
     out = _MD_IMG_RE.sub(_md_sub, content_md)
 
     # 2. <img …> HTML tags (micro.blog photo uploads) → <img …/>, rehosting
-    #    blog images and preserving non-src/non-alt attrs (width, height, …).
+    #    blog images. The source-side width/height/class attrs are
+    #    deliberately dropped (see _build_img_tag) — they carry the
+    #    original upload dimensions, which are wrong post-resize and
+    #    break aspect ratio in renderers that honour HTML attrs over CSS.
     def _img_sub(m: re.Match) -> str:
         tag = m.group(0)
         src_m = _SRC_RE.search(tag)
@@ -292,8 +288,7 @@ def rehost_in_markdown(content_md: str, issue_number: int) -> str:
         url = src_m.group(1).strip()
         alt_m = _ALT_RE.search(tag)
         alt = (alt_m.group(1) if alt_m else "").strip()
-        extra = _extract_non_src_alt_attrs(tag)
-        return "\n\n" + _build_img_tag(src=_rewrite_url(url, n), alt=alt, extra=extra) + "\n\n"
+        return "\n\n" + _build_img_tag(src=_rewrite_url(url, n), alt=alt) + "\n\n"
 
     out = _IMG_TAG_RE.sub(_img_sub, out)
 
@@ -323,8 +318,7 @@ def rehost_in_markdown(content_md: str, issue_number: int) -> str:
             return tag
         if not generated:
             return tag  # leave empty alt; the hygiene review will flag it
-        extra = _extract_non_src_alt_attrs(tag)
-        return _build_img_tag(src=url, alt=generated, extra=extra)
+        return _build_img_tag(src=url, alt=generated)
 
     out = _IMG_TAG_RE.sub(_alt_fill_sub, out)
     out = re.sub(r"\n{3,}", "\n\n", out)  # collapse the runaway blank lines we just made

@@ -208,6 +208,7 @@ hr {
 img {
   max-width: 100%;
   height: auto;
+  display: block;       /* drops the 4px inline-baseline gap some clients add */
   border-radius: 2px;
   margin: 18px 0;
 }
