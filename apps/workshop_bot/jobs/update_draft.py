@@ -49,9 +49,10 @@ NAME = "update-draft"
 # Block fill order is irrelevant (each replace_block is independent); the
 # *layout* order lives in templates/draft_starter.md. Listed here in the
 # published section order for readability (intro → Currently → cover → …
-# → outro → haiku). ``feature1`` / ``feature2`` are the
-# featured-section slots that ``create-final`` fills when Eddy promotes
-# an item; ``update-draft`` does NOT touch them (so they stay empty here).
+# → outro → haiku). Promoted (featured) items don't have their own block
+# slots — ``create-final`` splices them inline into ``final.md`` at their
+# declared ``promoted_position``, so they never need a place in the
+# draft template.
 SECTION_BLOCKS = (
     "intro", "currently", "cover", "notable", "journal", "brief",
     "outro", "haiku",
@@ -90,11 +91,11 @@ def _gather_fills(window: dict) -> dict[str, str]:
     ``issue_items`` rows: ``sync_all`` first refreshes rows from
     Pinboard + micro.blog (UPSERT on stable source ids, prune rows
     whose upstream item disappeared), then the renderers in
-    :mod:`tools.issue_items_render` project rows to the same byte
-    shape the chunk parser recognises. Promoted (featured) rows are
+    :mod:`tools.issue_items_render` project rows back to the same
+    shape the published email uses. Promoted (featured) rows are
     skipped at the parent-section level so a Journal post Eddy
-    promoted to its own ``feature1`` section doesn't also appear
-    in Journal.
+    promoted into its own standalone section doesn't double up in
+    Journal too.
 
     The atoms (intro / outro / cover / currently / haiku) are still
     file-backed: ``intro.md`` / ``outro.md`` / ``haiku.md`` (verbatim

@@ -71,6 +71,8 @@ These are the tools registered by `register_local_helpers`. Every persona sees a
 | `web__fetch_url(url, max_chars?)` | Fetch a URL and return readable text. ~12 KB cap by default. |
 | `site__support_state()` | Current nonprofit + supporter count + past nonprofits, read from `apps/site/_data/{stats,support}.json` (no live API). |
 | `react__add(emoji)` | Add one emoji reaction to the message being responded to (posts under the persona's avatar). No-op outside a Discord message turn. |
+| `editorial__get_comment(handle)` | Resolve one editorial review comment by its stable handle (`E349-N1`, `E349-X3`, …). Returns body + verdict + the anchored item (when item-scoped) + the replacement handle when superseded. Use when Jamie asks about a handle ("tell me about E349-N1"). |
+| `editorial__list_open(issue_number?)` | List open (not-yet-superseded) editorial comments for an issue with their handles + short snippets. Defaults to the in-flight issue. Useful for "what did you flag on this issue?" — follow up per-handle with `editorial__get_comment`. |
 
 ## Tool inventory — system modules
 
@@ -115,12 +117,15 @@ tools/
 ├── content/
 │   ├── archive.py / corpus.py / issue.py / draft.py / context.py
 │   ├── microblog.py        ← micro.blog Micropub q=source client (journal source)
-│   ├── journal_images.py   ← rehost micro.blog photo uploads
-│   └── chunks.py / reorder.py
+│   └── journal_images.py   ← rehost micro.blog photo uploads
 ├── discord/
 │   ├── conversation.py / discord_io.py / interaction.py / startup.py
-├── db.py                  ← SQLite — agent_notes, agent_runs, link_candidates, issue_windows, job_locks, draft_digests, goals, campaigns, …
-├── render.py              ← markdown → standalone HTML preview page (draft/final/publish .html twins)
+├── issue_items.py         ← row-backed in-flight content model (Notable/Brief/Journal as rows) + editorial_comments (handles like E349-N1)
+├── issue_items_sync.py    ← Pinboard + micro.blog → issue_items rows (UPSERT, prune-on-disappearance)
+├── issue_items_render.py  ← rows → section markdown bytes (preamble, items, featured sections, marker-interleaved variants)
+├── issue_assembly.py      ← atoms + section bodies + features → final.md / publish.md (the assembler create-final + build-publish share)
+├── db/                    ← SQLite — agent_notes, agent_runs, link_candidates, issue_windows, job_locks, draft_digests, goals, campaigns, issue_items, editorial_comments, …
+├── render.py              ← markdown → standalone HTML preview page (draft/final/publish .html twins) + option-cards page (subject/haiku/cta pickers) + side-by-side proposal page (create-final reorder view) + handle badges for the editorial drawer
 ├── cdn.py                 ← CloudFront invalidation (best-effort) for the public assets bucket
 ├── avoid_domains.py       ← popular-feed exclusion set (copy of pipeline/content/domain_exclusions.py) — used by pinboard__popular_unseen
 ├── rss.py                 ← latest_published_issue() from weekly.thingelstad.com/feed.xml (Marky's trigger)

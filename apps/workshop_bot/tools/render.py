@@ -55,8 +55,6 @@ _SECTION_LABELS = {
     "brief": "Briefly section",
     "outro": "Outro",
     "haiku": "Haiku / closing",
-    "feature1": "Featured slot 1",
-    "feature2": "Featured slot 2",
 }
 
 # Mirrors content/buttondown/newsletter/buttondown-email.css (the production

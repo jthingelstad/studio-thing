@@ -19,15 +19,14 @@ from .. import s3
 # templates/draft_starter.md. ``outro`` is a Jamie-authored closing-prose
 # block (parallel to ``intro``) projected from ``outro.md`` upstream.
 #
-# ``feature1`` / ``feature2`` are the featured-section slots that
-# ``create-final`` fills when Eddy promotes a Notable/Journal item to its
-# own standalone section. They live at the bottom of the template (their
-# *file* position is irrelevant — ``build-publish`` places them in
-# ``publish.md`` based on the YAML ``position:`` frontmatter inside each
-# non-empty block). Listed here so the block parser knows their names.
+# Promoted (featured) items used to live in dedicated ``feature1`` /
+# ``feature2`` blocks at the bottom of the file; the row-backed rework
+# retired those — promotions now splice inline at their declared
+# ``promoted_position`` in ``final.md`` / ``publish.md`` (see
+# ``tools/issue_assembly.assemble_final``).
 SECTION_BLOCKS = (
     "intro", "currently", "cover", "notable", "journal", "brief",
-    "outro", "haiku", "feature1", "feature2",
+    "outro", "haiku",
 )
 
 # Assets build-publish refuses without (besides the Notable/Brief/Journal

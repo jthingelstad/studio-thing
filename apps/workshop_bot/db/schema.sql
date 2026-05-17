@@ -360,9 +360,10 @@ CREATE TABLE IF NOT EXISTS image_alt_cache (
 );
 
 -- Issue items — one row per individually-addressable piece of content in
--- an issue (Notable link, Brief link, Journal entry). Replaces the byte-
--- chunk model in tools/content/chunks.py: reorders are ``UPDATE position``,
--- promotions are column flips, editorial comments anchor to ``item_id``.
+-- an issue (Notable link, Brief link, Journal entry). Replaces the
+-- byte-chunk reorder model that lived in tools/content/chunks.py
+-- (retired): reorders are ``UPDATE position``, promotions are column
+-- flips, editorial comments anchor to ``item_id``.
 --
 -- Sectioning:
 --   - section IN ('notable','brief','journal')

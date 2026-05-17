@@ -282,8 +282,6 @@ def _unfilled_marker_missing_list(
 # them as ``## Heading`` sections in the file. The
 # ``_parse_feature_blocks`` / ``feature1`` / ``feature2`` machinery was
 # removed in the row-backed rework; nothing reads them anymore.
-_FEATURE_BLOCK_NAMES = ()  # kept-empty for any straggling import
-_FEATURE_POSITIONS = ("after_notable", "after_journal", "after_brief")
 
 
 # ---------- marker substitution ----------
