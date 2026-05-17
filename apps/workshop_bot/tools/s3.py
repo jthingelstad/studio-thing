@@ -272,6 +272,23 @@ def write_issue_file(
     }
 
 
+def delete_issue_file(issue_number: int, filename: str) -> dict[str, Any]:
+    """Delete a text/JSON file from an issue's workspace. Idempotent on
+    the S3 side (``DeleteObject`` is a 204 whether the key existed or
+    not), but ``reset-issue`` wants to know what was actually there
+    before the call — so callers should ``list_issue`` first and only
+    call this for keys they saw. Returns ``{key, bucket, deleted: True}``.
+
+    Used by ``jobs/reset_issue.py``. The agent tool surface
+    deliberately does not expose this: agents can write, can't delete.
+    """
+    key = _resolve_key(int(issue_number), filename)
+    bucket = _bucket()
+    _client().delete_object(Bucket=bucket, Key=key)
+    logger.info("s3.delete_issue_file(%d, %s)", issue_number, filename)
+    return {"key": key, "bucket": bucket, "deleted": True}
+
+
 # Pointer file at the top of the weekly-thing/ namespace (NOT inside an issue
 # folder) — iOS Shortcuts fetch this URL to know the current in-flight issue
 # (number, dates, predictable workspace URLs). Written by `jobs/start_issue.py`

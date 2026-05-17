@@ -69,6 +69,11 @@ class FakeWorkspace:
         return {"bucket": "files.thingelstad.com", "issue_number": n,
                 "prefix": f"weekly-thing/{n}/", "objects": objs}
 
+    def delete_issue_file(self, issue_number, filename):
+        key = (int(issue_number), filename)
+        self.files.pop(key, None)
+        return {"key": f"weekly-thing/{issue_number}/{filename}", "deleted": True}
+
 
 def patch_s3(ws: FakeWorkspace):
     """Build the list of patchers that redirect the per-issue ``s3``
@@ -79,6 +84,7 @@ def patch_s3(ws: FakeWorkspace):
         patch.object(s3, "write_issue_html", ws.write_issue_html),
         patch.object(s3, "write_workshop_pointer", ws.write_workshop_pointer),
         patch.object(s3, "list_issue", ws.list_issue),
+        patch.object(s3, "delete_issue_file", ws.delete_issue_file),
     ]
 
 

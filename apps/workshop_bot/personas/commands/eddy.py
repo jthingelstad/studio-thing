@@ -31,6 +31,7 @@ from ...jobs import (
     compose_meta,
     create_final,
     issue_status,
+    reset_issue,
     review_text,
     send_to_buttondown,
     start_issue,
@@ -160,6 +161,26 @@ def register_eddy_commands(
     async def issue_send_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(
             interaction, lambda: send_to_buttondown.run(_ctx(bot)), "issue send",
+        )
+
+    @issue.command(
+        name="reset",
+        description="Force the in-flight issue back to an earlier step by deleting the gate artifacts.",
+    )
+    @app_commands.describe(
+        step="Which gate to drop: 'final' (re-do editorial pass) or 'publish' (rebuild publish.md).",
+    )
+    @app_commands.choices(step=[
+        app_commands.Choice(name="final", value="final"),
+        app_commands.Choice(name="publish", value="publish"),
+    ])
+    async def issue_reset_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, step: str,
+    ) -> None:
+        await _run_and_ack(
+            interaction,
+            lambda: reset_issue.run(_ctx(bot), step=str(step)),
+            f"issue reset {step}",
         )
 
     # ── /eddy followup ────────────────────────────────────────────────
