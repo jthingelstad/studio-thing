@@ -16,7 +16,7 @@ import re
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from .. import db, s3, support_state, web
+from .. import db, issue_items as issue_items_mod, s3, support_state, web
 from ..content import archive, draft, issue
 from .tool_registry import ToolRegistry, active_persona, active_react_target
 
@@ -332,6 +332,112 @@ def t_draft_section_status(deps) -> dict[str, Any]:
         return draft.section_status(int(window["issue_number"]))
     except Exception as exc:  # noqa: BLE001
         return {"error": f"{type(exc).__name__}: {exc}"}
+
+
+# ---------- editorial comments ----------
+
+def t_editorial_get_comment(deps, handle: str) -> dict[str, Any]:
+    """Fetch one editorial review comment by its stable handle
+    (``E349-N1``, ``E349-X3``, ``E349-W2``, etc.).
+
+    Returns the comment body + scope + verdict, the anchored item
+    (when the comment is item-scoped — title, url, body preview,
+    section, position), the row's age, and a ``replaced_by_handle``
+    pointer when this comment has been superseded by a later review.
+
+    Resolve a comment handle when Jamie asks about it ("tell me more
+    about E349-N1", "what was that about E349-X2", etc.). The handle
+    namespace is per-issue: a future ``@eddy tell me about E350-N1``
+    will resolve against issue 350's comments, not 349's, because
+    handles include the issue number.
+    """
+    raw = (handle or "").strip().upper()
+    if not raw:
+        return {"error": "handle is required (e.g. 'E349-N1')"}
+    row = issue_items_mod.get_comment_by_handle(raw)
+    if row is None:
+        return {"error": f"no editorial comment with handle {raw!r}"}
+    out: dict[str, Any] = {
+        "handle": row["handle"],
+        "issue_number": row["issue_number"],
+        "scope": row["scope"],
+        "verdict": row["verdict"],
+        "section": row.get("section"),
+        "anchor_text": row.get("anchor_text"),
+        "body_md": row.get("body_md"),
+        "reasoning_md": row.get("reasoning_md"),
+        "created_at": row.get("created_at"),
+        "superseded": bool(row.get("replaced_by_id")),
+    }
+    # If this row was superseded, surface the replacement's handle so
+    # the user can follow the chain ("E349-N1 was superseded by E349-N4").
+    if row.get("replaced_by_id"):
+        try:
+            with db.connect() as conn:
+                r = conn.execute(
+                    "SELECT handle FROM editorial_comments WHERE id = ?",
+                    (int(row["replaced_by_id"]),),
+                ).fetchone()
+                if r is not None:
+                    out["replaced_by_handle"] = r["handle"]
+        except Exception:  # noqa: BLE001
+            pass
+    # Item context — only fetched when the comment anchors to a specific
+    # row. Section/issue/hygiene-scoped comments have no item to attach.
+    if row.get("item_id"):
+        item = issue_items_mod.get_item(int(row["item_id"]))
+        if item is not None:
+            body = (item.get("body_md") or "")
+            out["item"] = {
+                "id": item["id"],
+                "section": item["section"],
+                "position": item["position"],
+                "is_promoted": bool(item.get("is_promoted")),
+                "url": item.get("url"),
+                "title": item.get("title"),
+                "body_preview": body[:600] + ("…" if len(body) > 600 else ""),
+            }
+    return out
+
+
+def t_editorial_list_open(deps, issue_number: Optional[int] = None) -> dict[str, Any]:
+    """List open (not-yet-superseded) editorial comments for an issue.
+
+    Defaults to the in-flight issue when ``issue_number`` is omitted.
+    Returns ``{issue_number, count, comments: [{handle, scope, verdict,
+    section, snippet}]}``. Snippet is the first ~140 chars of body.
+
+    Useful for ``"what did you flag on this issue?"`` style questions —
+    the LLM can use the result to either summarize or follow up with
+    ``editorial__get_comment(handle)`` for specific entries.
+    """
+    n: Optional[int] = None
+    if issue_number is not None:
+        try:
+            n = int(issue_number)
+        except (TypeError, ValueError):
+            return {"error": f"issue_number must be an int (got {issue_number!r})"}
+    if n is None:
+        window = db.get_active_issue_window()
+        if window is None:
+            return {"error": "no active issue window; pass issue_number explicitly"}
+        n = int(window["issue_number"])
+    rows = issue_items_mod.list_open_comments(n)
+    return {
+        "issue_number": n,
+        "count": len(rows),
+        "comments": [
+            {
+                "handle": r["handle"],
+                "scope": r["scope"],
+                "verdict": r["verdict"],
+                "section": r.get("section"),
+                "snippet": ((r.get("body_md") or "")[:140]
+                            + ("…" if len(r.get("body_md") or "") > 140 else "")),
+            }
+            for r in rows
+        ],
+    }
 
 
 # ---------- Discord reactions ----------
@@ -726,6 +832,46 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["emoji"],
         },
     },
+    "editorial__get_comment": {
+        "name": "editorial__get_comment",
+        "description": (
+            "Fetch one editorial review comment by its handle "
+            "(e.g. 'E349-N1', 'E349-X3'). Returns the comment body + "
+            "scope + verdict, the anchored item (when item-scoped), "
+            "and the replacement handle when this comment has been "
+            "superseded by a later review. Use when Jamie asks "
+            "about a specific handle ('tell me about E349-N1')."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "handle": {
+                    "type": "string",
+                    "description": "Editorial handle, e.g. 'E349-N1'. Case-insensitive.",
+                },
+            },
+            "required": ["handle"],
+        },
+    },
+    "editorial__list_open": {
+        "name": "editorial__list_open",
+        "description": (
+            "List open (not-yet-superseded) editorial comments for an "
+            "issue with their handles + short snippets. Defaults to "
+            "the in-flight issue. Useful for 'what did you flag on "
+            "this issue?' — follow up with editorial__get_comment(handle) "
+            "for any entry you want the full body for."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "issue_number": {
+                    "type": "integer",
+                    "description": "Optional. Defaults to in-flight issue.",
+                },
+            },
+        },
+    },
 }
 
 
@@ -752,6 +898,8 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "workspace__write": t_workspace_write,
     "draft__section_status": t_draft_section_status,
     "react__add": t_react_add,
+    "editorial__get_comment": t_editorial_get_comment,
+    "editorial__list_open": t_editorial_list_open,
 }
 
 
