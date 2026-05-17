@@ -111,6 +111,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 parser=_parse_numbered_list_factory(_SUBJECT_OPTION_CAP),
                 prompt_label=f"📰 5 subject options for WT{n} — react to pick:",
                 trigger="compose-meta:subject",
+                # Sonnet rather than Eddy's default Opus — 5 short subject
+                # lines are squarely in Sonnet's wheelhouse (saves ~$0.18/issue).
+                model="sonnet",
                 cards_issue=n,
                 cards_filename="subject-options",
                 cards_title=f"WT{n} — subject options",
@@ -135,7 +138,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             desc_prompt = anthropic_client.load_prompt("eddy-compose-description")
             desc_msg = thesis_prefix + desc_prompt.replace("<<<ISSUE_TEXT>>>", issue_text)
             with db.AgentRun("eddy", trigger="compose-meta:description") as agent_run:
-                desc_reply, _m = await bot.core(latest=desc_msg, history=[], model=None)
+                # Same reasoning as the subject path: a single deterministic
+                # comma-separated line of topics is well within Sonnet's
+                # capability and the saving compounds across re-rolls.
+                desc_reply, _m = await bot.core(latest=desc_msg, history=[], model="sonnet")
                 agent_run.record_meta(_m)
                 agent_run.records_written = 1 if desc_reply else 0
             description = _first_nonempty_line(desc_reply)

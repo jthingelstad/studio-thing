@@ -153,6 +153,7 @@ async def refresh_loop(
     trigger: str,
     rounds: int = MAX_REFRESH_ROUNDS,
     persona: str = "eddy",
+    model: Optional[str] = None,
     cards_issue: Optional[int] = None,
     cards_filename: Optional[str] = None,
     cards_title: Optional[str] = None,
@@ -178,6 +179,12 @@ async def refresh_loop(
         trigger: the ``agent_runs.trigger`` label for the LLM call.
         rounds: max attempts before giving up.
         persona: persona name for ``db.AgentRun``.
+        model: alias forwarded to ``bot.core(model=…)`` — ``None`` means
+            use the persona's ``preferred_model``. The picker jobs
+            (``compose-haiku`` / ``compose-meta``) pass ``"sonnet"`` to
+            force the cheaper model since the output is short and
+            picker-shaped; ``create-final`` leaves this ``None`` so
+            it inherits Eddy's Opus default for the JSON proposal.
         cards_issue / cards_filename / cards_title: when all three are
             supplied, each round also renders the options to an HTML
             option-cards page at
@@ -195,7 +202,7 @@ async def refresh_loop(
     user_msg = base_msg
     for _round in range(rounds):
         with db.AgentRun(persona, trigger=trigger) as agent_run:
-            reply, _meta = await bot.core(latest=user_msg, history=[], model=None)
+            reply, _meta = await bot.core(latest=user_msg, history=[], model=model)
             agent_run.record_meta(_meta)
             agent_run.records_written = 1 if (reply and reply.strip()) else 0
         options = parser(reply or "")

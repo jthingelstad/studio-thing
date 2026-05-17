@@ -78,6 +78,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 pretty=_pretty_haiku_options,
                 prompt_label=f"📜 Haiku options for WT{n} — pick one:",
                 trigger="compose-haiku",
+                # Sonnet rather than Eddy's default Opus: haiku output is
+                # short and picker-shaped, and Opus didn't visibly out-write
+                # Sonnet in side-by-side exercise runs (saves ~$0.18/issue).
+                model="sonnet",
                 cards_issue=n,
                 cards_filename="haiku-options",
                 cards_title=f"WT{n} — haiku options",

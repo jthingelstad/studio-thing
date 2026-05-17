@@ -78,6 +78,15 @@ class ComposeHaikuTests(_DBTestCase):
         self.assertFalse(result.ok)
         self.assertNotIn((458, "haiku.md"), self.ws.files)
 
+    def test_forces_sonnet_model(self):
+        # Picker output is short and well within Sonnet — overriding the
+        # persona's Opus default saves ~$0.18/issue.
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        ctx, fc = self._ctx()
+        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
+            asyncio.run(compose_haiku.run(ctx))
+        self.assertEqual(fc.bot.core.await_args.kwargs["model"], "sonnet")
 
 
 class ComposeMetaTests(_DBTestCase):
@@ -121,6 +130,24 @@ class ComposeMetaTests(_DBTestCase):
         sent = fc.channel.send.await_args_list[-1].args[0]
         self.assertIn("**Subject:** WT458 — The Death of Scrum", sent)
         self.assertIn("**Description:** Claude personal guidance,", sent)
+
+    def test_forces_sonnet_model_for_both_passes(self):
+        # Both the subject-picker round and the one-shot description round
+        # must override to Sonnet (Eddy's default is Opus). Saves ~$0.40/issue
+        # since this job makes two LLM calls.
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        fc = _FakeBotChannel(persona="eddy")
+        fc.bot.core = AsyncMock(side_effect=[
+            ("1. WT458 — Pick\n2. WT458 — B", {}),
+            ("Description line.", {}),
+        ])
+        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
+        ctx = _base.JobContext(deps=fc.deps())
+        with patch.object(interaction, "await_choice", AsyncMock(side_effect=[0])):
+            asyncio.run(compose_meta.run(ctx))
+        models = [c.kwargs["model"] for c in fc.bot.core.await_args_list]
+        self.assertEqual(models, ["sonnet", "sonnet"], f"expected both Sonnet; got {models}")
 
     def test_preserves_buttondown_id_on_rerun(self):
         # Once send-to-buttondown has written buttondown_id, a later
@@ -606,6 +633,20 @@ class CreateFinalTests(_DBTestCase):
         self.assertIn("rows as-is", result.message)
         self.assertIn("### [A](http://a)", self.ws.files[(458, "final.md")])
         self.assertNotIn((458, "thesis.md"), self.ws.files)
+
+    def test_keeps_eddy_default_model_for_proposal(self):
+        # create-final does the heaviest editorial work — JSON contract,
+        # thesis, promotions, marker placement. It must NOT force a
+        # cheaper model; the bot.core call passes model=None so Eddy's
+        # preferred (Opus per EddyBot.preferred_model) wins. This guards
+        # against a future "let's drop everything to Sonnet" refactor
+        # silently downgrading the proposal pass.
+        ctx, fc = self._setup(self._basic_reply())
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
+            asyncio.run(create_final.run(ctx))
+        # core() was called exactly once (one-shot accept); model arg is None.
+        self.assertEqual(fc.bot.core.await_count, 1)
+        self.assertIsNone(fc.bot.core.await_args.kwargs["model"])
 
     def test_missing_id_auto_fix_appends_omitted_ids(self):
         # WT348 regression on Opus: Eddy dropped j14/j15 from journal_order
