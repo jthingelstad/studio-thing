@@ -127,7 +127,13 @@ async def run() -> int:
         logger.error("ANTHROPIC_API_KEY is not set")
         return 2
 
-    db.run_migrations()
+    report = db.run_migrations()
+    applied_count = len(report.applied) + len(report.skipped)
+    latest = report.latest_id or "(none)"
+    logger.info(
+        "workshop.db ready (%d applied, latest: %s, schema_hash: %s)",
+        applied_count, latest, report.short_hash or "(unhashed)",
+    )
     corpus_handle = corpus.load()
     team = TeamRegistry()
     registry = agent_tools.ToolRegistry()

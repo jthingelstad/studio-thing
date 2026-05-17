@@ -1,4 +1,16 @@
-"""SQLite connection and migration helpers for the workshop bot."""
+"""SQLite connection + migration entry points for the workshop bot.
+
+The migration list itself — and the ``schema_migrations`` machinery —
+lives in :mod:`apps.workshop_bot.tools.db.migrations`. This module owns
+the connection lifecycle (``connect`` / ``_open_raw``), the schema-hash
+auto-migrate gate (``_ensure_migrated``), and the one-time
+``currently.json``→DB backfill hook.
+
+Anyone who needs a connection should use :func:`connect`; first-use in a
+process auto-applies pending migrations, schema-content edits trigger a
+re-run on the next connect, and steady-state cost is one cheap
+``SELECT id FROM schema_migrations`` plus a sha256 of schema.sql.
+"""
 
 from __future__ import annotations
 
@@ -24,11 +36,10 @@ def db_path() -> Path:
     return DEFAULT_DB_PATH
 
 
-# Migration state per db_path. The value is the schema.sql hash that was
-# applied — re-running is skipped only when the file content hasn't changed
-# since. A long-running bot picks up a schema.sql edit on the next connect
-# without needing a daemon restart; standalone CLI tools (exercise harness,
-# ad-hoc scripts) migrate on their first connect, period.
+# Per-process cache of "we've already migrated this db_path against this
+# schema.sql content". Re-runs only fire when the hash drifts (operator
+# edits schema.sql in a running bot) or when a different db_path is used
+# (tests with WORKSHOP_DB_PATH pointing at a temp file).
 _applied_schema_hash: dict[Path, str] = {}
 
 
@@ -59,7 +70,6 @@ def _schema_hash() -> Optional[str]:
     try:
         return hashlib.sha256(SCHEMA_PATH.read_bytes()).hexdigest()
     except OSError:
-        # SCHEMA_PATH missing in some test contexts; treat as "no auto-run".
         return None
 
 
@@ -82,17 +92,61 @@ def _ensure_migrated(path: Path) -> None:
         raise
 
 
-def run_migrations() -> None:
+def run_migrations() -> "_MigrationReport":
+    """Apply all pending schema/data migrations and the one-time S3
+    backfill. Returns a small :class:`_MigrationReport` summarising
+    what landed — callers usually ignore the return (e.g.
+    ``bot.py`` uses the values for its startup card)."""
+    # Local import — :mod:`migrations` imports things lazily from us in
+    # the CLI path, so top-level cycle is fine, but the lazy form keeps
+    # the dependency direction explicit.
+    from . import migrations as _migrations
+
     path = db_path()
-    schema = SCHEMA_PATH.read_text(encoding="utf-8")
-    with _open_raw(path) as conn:
-        conn.executescript(schema)
-        _record_migration(conn, "0001_schema_sql")
-        _apply_column_migrations(conn)
-        _apply_data_migrations(conn)
-    _applied_schema_hash[path] = hashlib.sha256(schema.encode("utf-8")).hexdigest()
+    schema_content = SCHEMA_PATH.read_bytes() if SCHEMA_PATH.exists() else b""
+    report = _migrations.run_migrations(
+        lambda: _open_raw(path),
+        schema_path=SCHEMA_PATH if SCHEMA_PATH.exists() else None,
+    )
+    _applied_schema_hash[path] = hashlib.sha256(schema_content).hexdigest()
     _bootstrap_currently_from_s3()
-    logger.info("workshop.db ready at %s", path)
+    logger.info(
+        "workshop.db ready at %s (%d applied this run, %d skipped)",
+        path, len(report.applied), len(report.skipped),
+    )
+    return _MigrationReport(
+        path=path,
+        applied=report.applied,
+        skipped=report.skipped,
+        schema_hash=report.schema_hash,
+        total=report.total,
+    )
+
+
+# Tiny wrapper carrying the path so callers (bot.py's startup card)
+# don't need to import the deeper migrations module.
+from dataclasses import dataclass  # noqa: E402
+
+
+@dataclass(frozen=True)
+class _MigrationReport:
+    path: Path
+    applied: tuple[str, ...]
+    skipped: tuple[str, ...]
+    schema_hash: str
+    total: int
+
+    @property
+    def latest_id(self) -> Optional[str]:
+        if self.applied:
+            return self.applied[-1]
+        if self.skipped:
+            return self.skipped[-1]
+        return None
+
+    @property
+    def short_hash(self) -> str:
+        return self.schema_hash[:8] if self.schema_hash else ""
 
 
 def _bootstrap_currently_from_s3() -> None:
@@ -121,148 +175,3 @@ def _bootstrap_currently_from_s3() -> None:
             "currently backfill: seeded %d entries for WT%d from currently.json",
             inserted, int(window["issue_number"]),
         )
-
-
-# SQLite has no "ADD COLUMN IF NOT EXISTS". For columns added after the
-# initial table creation, run ALTER TABLE and tolerate the "duplicate
-# column" error so a fresh DB and a long-lived DB both end up identical.
-_COLUMN_MIGRATIONS: tuple[tuple[str, str, str, str], ...] = (
-    # (migration id, table, column, full ADD COLUMN clause)
-    (
-        "0002_campaigns_copy",
-        "campaigns",
-        "copy",
-        "ALTER TABLE campaigns ADD COLUMN copy TEXT",
-    ),
-    (
-        "0003_pinboard_popular_seen_verdict_source",
-        "pinboard_popular_seen",
-        "verdict_source",
-        "ALTER TABLE pinboard_popular_seen ADD COLUMN verdict_source TEXT",
-    ),
-    # LLM accounting on agent_runs — captured per-run from agent_loop's
-    # `response.usage`. Long-lived DBs pre-this-migration carry NULLs;
-    # new rows after restart record real values.
-    (
-        "0004_agent_runs_model",
-        "agent_runs",
-        "model",
-        "ALTER TABLE agent_runs ADD COLUMN model TEXT",
-    ),
-    (
-        "0005_agent_runs_input_tokens",
-        "agent_runs",
-        "input_tokens",
-        "ALTER TABLE agent_runs ADD COLUMN input_tokens INTEGER",
-    ),
-    (
-        "0006_agent_runs_output_tokens",
-        "agent_runs",
-        "output_tokens",
-        "ALTER TABLE agent_runs ADD COLUMN output_tokens INTEGER",
-    ),
-    (
-        "0007_agent_runs_cache_read_tokens",
-        "agent_runs",
-        "cache_read_tokens",
-        "ALTER TABLE agent_runs ADD COLUMN cache_read_tokens INTEGER",
-    ),
-    (
-        "0008_agent_runs_cache_create_tokens",
-        "agent_runs",
-        "cache_create_tokens",
-        "ALTER TABLE agent_runs ADD COLUMN cache_create_tokens INTEGER",
-    ),
-)
-
-
-def _record_migration(conn: sqlite3.Connection, migration_id: str) -> None:
-    conn.execute(
-        "INSERT OR IGNORE INTO schema_migrations (id) VALUES (?)",
-        (migration_id,),
-    )
-
-
-def _migration_recorded(conn: sqlite3.Connection, migration_id: str) -> bool:
-    row = conn.execute(
-        "SELECT 1 FROM schema_migrations WHERE id = ?",
-        (migration_id,),
-    ).fetchone()
-    return row is not None
-
-
-_DATA_MIGRATIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    (
-        "0009_retire_non_pinboard_discovery_feeds",
-        (
-            "DELETE FROM popular_seen_sightings "
-            "WHERE source NOT IN ('popular', 'toread')",
-            "DELETE FROM linky_research_messages "
-            "WHERE source NOT IN ('popular', 'toread')",
-            "UPDATE pinboard_popular_seen SET verdict_source = NULL "
-            "WHERE verdict_source IS NOT NULL "
-            "AND verdict_source NOT IN ('popular', 'toread')",
-        ),
-    ),
-)
-
-
-def _strip_markers_from_issue_items_body_md(conn: sqlite3.Connection) -> None:
-    """One-shot cleanup: an older manual-seed path baked rendered
-    membership-block markers (``<!-- cta:N -->`` / ``<!-- thanks:N -->``)
-    into ``issue_items.body_md``. Marker placement is editorial state
-    (lives in ``final.md``), not row content — and the embedded markers
-    leak into every subsequent render. SQLite has no native regex, so
-    this runs Python-side to clean any pre-existing rows once."""
-    from ..issue_items_render import strip_membership_markers  # local: cycle
-    rows = conn.execute(
-        "SELECT id, body_md FROM issue_items "
-        "WHERE body_md LIKE '%<!-- cta:%' OR body_md LIKE '%<!-- thanks:%'"
-    ).fetchall()
-    for row in rows:
-        cleaned = strip_membership_markers(row["body_md"] or "")
-        conn.execute(
-            "UPDATE issue_items SET body_md = ?, updated_at = datetime('now') "
-            "WHERE id = ?",
-            (cleaned, int(row["id"])),
-        )
-
-
-_PYTHON_MIGRATIONS: tuple[tuple[str, "callable"], ...] = (
-    ("0010_strip_markers_from_issue_items_body_md",
-     _strip_markers_from_issue_items_body_md),
-)
-
-
-def _apply_data_migrations(conn: sqlite3.Connection) -> None:
-    for migration_id, statements in _DATA_MIGRATIONS:
-        if _migration_recorded(conn, migration_id):
-            continue
-        for sql in statements:
-            conn.execute(sql)
-        _record_migration(conn, migration_id)
-    for migration_id, fn in _PYTHON_MIGRATIONS:
-        if _migration_recorded(conn, migration_id):
-            continue
-        fn(conn)
-        _record_migration(conn, migration_id)
-
-
-def _apply_column_migrations(conn: sqlite3.Connection) -> None:
-    for migration_id, table, column, sql in _COLUMN_MIGRATIONS:
-        try:
-            existing = {
-                row["name"]
-                for row in conn.execute(f"PRAGMA table_info({table})")
-            }
-        except sqlite3.Error:
-            continue
-        if column in existing:
-            _record_migration(conn, migration_id)
-            continue
-        try:
-            conn.execute(sql)
-            _record_migration(conn, migration_id)
-        except sqlite3.OperationalError:
-            # Column was added concurrently by another process; ignore.
-            _record_migration(conn, migration_id)
