@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -15,7 +16,32 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.tools import cdn, render, s3  # noqa: E402
+from apps.workshop_bot.tools import cdn, db, issue_items, render, s3  # noqa: E402
+
+
+def _seed_348_items() -> None:
+    """Seed the rows the row-driven legend / anchor pass needs.
+
+    Mirrors the WT348-shaped fixtures used elsewhere — 2 Notable, 1
+    Briefly, 1 Journal — keyed to URLs the test markdown carries."""
+    issue_items.upsert_item(
+        issue_number=458, section="notable", source="manual",
+        source_id="n-a", url="http://a", title="A", body_md="blurb.",
+    )
+    issue_items.upsert_item(
+        issue_number=458, section="notable", source="manual",
+        source_id="n-b", url="http://b", title="B", body_md="second blurb.",
+    )
+    issue_items.upsert_item(
+        issue_number=458, section="brief", source="manual",
+        source_id="b-c", url="http://c", title="C", body_md="Brief note",
+    )
+    issue_items.upsert_item(
+        issue_number=458, section="journal", source="manual",
+        source_id="j-p", url="https://example.com/post",
+        title="", body_md="status.",
+        metadata={"label": "Tuesday @ 3:02 PM"},
+    )
 
 
 class MarkdownToHtmlPageTests(unittest.TestCase):
@@ -94,22 +120,30 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
         self.assertIn('<a href="http://a">A</a>', page)
 
     def test_review_target_markers_add_anchors_and_connector_chrome(self):
-        md = (
-            "<!-- block:intro -->\nOpening note.\n<!-- /block:intro -->\n\n"
-            "## Notable\n\n"
-            "<!-- block:notable -->\n"
-            "### [A](http://a)\n\nblurb.\n\n\n"
-            "### [B](http://b)\n\nsecond blurb.\n"
-            "<!-- /block:notable -->\n\n"
-            "## Briefly\n\n"
-            "<!-- block:brief -->\nBrief note → **[C](http://c)**\n<!-- /block:brief -->"
-        )
-        page = render.markdown_to_html_page(
-            md,
-            title="WT458 — draft",
-            strip_block_markers=True,
-            review_md="- <!-- target:n2 --> The second Notable item should move up.\n",
-        )
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["WORKSHOP_DB_PATH"] = str(Path(tmp) / "t.db")
+            try:
+                db.run_migrations()
+                _seed_348_items()
+                md = (
+                    "<!-- block:intro -->\nOpening note.\n<!-- /block:intro -->\n\n"
+                    "## Notable\n\n"
+                    "<!-- block:notable -->\n"
+                    "### [A](http://a)\n\nblurb.\n\n\n"
+                    "### [B](http://b)\n\nsecond blurb.\n"
+                    "<!-- /block:notable -->\n\n"
+                    "## Briefly\n\n"
+                    "<!-- block:brief -->\nBrief note → **[C](http://c)**\n<!-- /block:brief -->"
+                )
+                page = render.markdown_to_html_page(
+                    md,
+                    title="WT458 — draft",
+                    strip_block_markers=True,
+                    review_md="- <!-- target:n2 --> The second Notable item should move up.\n",
+                    issue_number=458,
+                )
+            finally:
+                os.environ.pop("WORKSHOP_DB_PATH", None)
         self.assertIn('id="rv-target-intro"', page)
         self.assertIn('data-review-anchor="n1"', page)
         self.assertIn('data-review-anchor="n2"', page)
@@ -135,7 +169,14 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
             "[Tuesday @ 3:02 PM](https://example.com/post)\n\nstatus.\n"
             "<!-- /block:journal -->"
         )
-        legend = render.review_target_legend(md)
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["WORKSHOP_DB_PATH"] = str(Path(tmp) / "t.db")
+            try:
+                db.run_migrations()
+                _seed_348_items()
+                legend = render.review_target_legend(md, issue_number=458)
+            finally:
+                os.environ.pop("WORKSHOP_DB_PATH", None)
         self.assertIn("`intro`", legend)
         self.assertIn("`notable`", legend)
         self.assertIn("`n1` — Notable: A", legend)

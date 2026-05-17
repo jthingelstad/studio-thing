@@ -25,8 +25,8 @@ import logging
 import re
 from typing import Optional
 
-from . import s3
-from .content import chunks, draft as draft_mod
+from . import issue_items, s3
+from .content import draft as draft_mod
 
 logger = logging.getLogger("workshop.render")
 
@@ -365,32 +365,41 @@ def _replace_block(text: str, name: str, body: str) -> str:
     return pattern.sub(lambda m: f"{m.group(1)}{body}{m.group(3)}", text, count=1)
 
 
-def _prefix_once(text: str, needle: str, prefix: str) -> str:
-    if not needle or not prefix:
-        return text
-    i = text.find(needle)
-    if i < 0:
-        return text
-    return f"{text[:i]}{prefix}\n{text[i:]}"
+_SECTION_PREFIX = {"notable": "n", "brief": "b", "journal": "j"}
 
 
-def _annotate_chunk_targets(name: str, body: str) -> str:
+def _annotate_chunk_targets(name: str, body: str, *, issue_number: int) -> str:
+    """Walk the section's rows (in current position order) and prepend
+    a hidden HTML anchor at the start of the line containing each
+    item's URL, so the drawer's connector lines can find the target.
+
+    Anchoring at line-start avoids breaking markdown link syntax —
+    inserting before the URL itself would land *inside* ``[Title](url)``
+    and confuse the renderer (the anchor would end up inside the
+    href).
+    """
+    if name not in _SECTION_PREFIX:
+        return body
+    rows = issue_items.list_items(int(issue_number), section=name, include_promoted=False)
     out = body
-    if name == "notable":
-        _, items = chunks.parse_notable(body)
-    elif name == "brief":
-        items = chunks.parse_brief(body)
-    elif name == "journal":
-        items = chunks.parse_journal(body)
-    else:
-        return out
-    for item in items:
-        out = _prefix_once(out, item.raw_bytes, _anchor_html(item.id))
+    prefix = _SECTION_PREFIX[name]
+    for i, row in enumerate(rows, start=1):
+        url = (row.get("url") or "").strip()
+        if not url:
+            continue
+        url_idx = out.find(url)
+        if url_idx < 0:
+            continue
+        line_start = out.rfind("\n", 0, url_idx) + 1
+        anchor = _anchor_html(f"{prefix}{i}")
+        if not anchor:
+            continue
+        out = out[:line_start] + anchor + "\n" + out[line_start:]
     return out
 
 
-def _annotate_review_targets(md: str) -> str:
-    """Convert draft block markers and parsed item chunks into HTML anchors.
+def _annotate_review_targets(md: str, *, issue_number: int) -> str:
+    """Convert draft block markers and per-item rows into HTML anchors.
 
     The anchors exist only in the preview HTML; the underlying draft markdown
     and publish flow stay unchanged.
@@ -404,7 +413,7 @@ def _annotate_review_targets(md: str) -> str:
         match = pattern.search(out)
         if not match:
             continue
-        body = _annotate_chunk_targets(name, match.group(2))
+        body = _annotate_chunk_targets(name, match.group(2), issue_number=issue_number)
         out = _replace_block(out, name, body)
         out = re.sub(
             rf"<!--\s*block:{re.escape(name)}\s*-->\n?",
@@ -448,21 +457,45 @@ def _prepare_review_md(review_md: str) -> str:
     return src
 
 
-def review_target_legend(md: str) -> str:
-    """Return the target IDs Eddy can use in the draft-review drawer."""
+def review_target_legend(md: str, *, issue_number: int) -> str:
+    """Return the target IDs Eddy can use in the draft-review drawer.
+
+    The list combines:
+
+    - Section-level ids (``intro``, ``currently``, ``cover``, ``notable``,
+      ``journal``, ``brief``, ``outro``, ``haiku``) — derived from the
+      draft text's block presence (atom sections only show up when
+      their block has content).
+    - Per-item ids (``n1``/``b2``/``j3``, etc.) — derived from
+      ``issue_items`` rows in current position order, with the
+      section's letter as the prefix.
+    """
     blocks = draft_mod.parse_blocks(md or "")
     lines: list[str] = []
     for name in draft_mod.SECTION_BLOCKS:
         if blocks.get(name):
             lines.append(f"- `{name}` — {_SECTION_LABELS.get(name, name)}")
-    _, notable = chunks.parse_notable(blocks.get("notable") or "")
-    for item in notable:
-        lines.append(f"- `{item.id}` — Notable: {item.title}")
-    for item in chunks.parse_brief(blocks.get("brief") or ""):
-        lines.append(f"- `{item.id}` — Briefly: {item.title}")
-    for item in chunks.parse_journal(blocks.get("journal") or ""):
-        label = item.title or item.label
-        lines.append(f"- `{item.id}` — Journal: {label}")
+    notable_rows = issue_items.list_items(
+        int(issue_number), section="notable", include_promoted=False,
+    )
+    for i, row in enumerate(notable_rows, start=1):
+        title = (row.get("title") or row.get("url") or "(untitled)").strip()
+        lines.append(f"- `n{i}` — Notable: {title}")
+    brief_rows = issue_items.list_items(
+        int(issue_number), section="brief", include_promoted=False,
+    )
+    for i, row in enumerate(brief_rows, start=1):
+        title = (row.get("title") or row.get("url") or "(untitled)").strip()
+        lines.append(f"- `b{i}` — Briefly: {title}")
+    journal_rows = issue_items.list_items(
+        int(issue_number), section="journal", include_promoted=False,
+    )
+    for i, row in enumerate(journal_rows, start=1):
+        title = (row.get("title") or "").strip()
+        meta = row.get("metadata") or {}
+        label = (meta.get("label") if isinstance(meta, dict) else "") or ""
+        display = title or label or (row.get("url") or "")
+        lines.append(f"- `j{i}` — Journal: {display}")
     return "\n".join(lines) if lines else "- No precise review targets are available."
 
 
@@ -482,17 +515,24 @@ def _markdown_to_html(md: str) -> str:
 
 def markdown_to_html_page(md: str, *, title: str, subtitle: Optional[str] = None,
                           strip_block_markers: bool = False,
-                          review_md: Optional[str] = None) -> str:
+                          review_md: Optional[str] = None,
+                          issue_number: Optional[int] = None) -> str:
     """Wrap ``md`` (rendered to HTML) in a standalone, self-contained page.
     If ``strip_block_markers``, the ``<!-- block:X -->`` comments are
     removed first. ``subtitle``, if given, renders as a small banner above
     the content (used to mark drafts as work-in-progress). ``review_md``,
     if given, is rendered into a slide-in drawer that's hidden until the
-    fixed "Show review" button is pressed."""
+    fixed "Show review" button is pressed.
+
+    ``issue_number`` is required when ``review_md`` is supplied — the
+    per-item drawer anchors (n1/b2/j3) are derived from ``issue_items``
+    rows for that issue. When omitted (preview-only paths with no
+    drawer), the row-based anchor pass is skipped.
+    """
     src = md or ""
     has_review = bool(review_md and review_md.strip())
-    if has_review:
-        src = _annotate_review_targets(src)
+    if has_review and issue_number is not None:
+        src = _annotate_review_targets(src, issue_number=int(issue_number))
     if strip_block_markers:
         src = _BLOCK_MARKER_RE.sub("", src)
         src = re.sub(r"\n{3,}", "\n\n", src).strip() + "\n"
@@ -529,6 +569,7 @@ def render_and_upload_html(
         page = markdown_to_html_page(
             md, title=title, subtitle=subtitle,
             strip_block_markers=strip_block_markers, review_md=review_md,
+            issue_number=int(issue_number),
         )
         res = s3.write_issue_html(int(issue_number), f"{name}.html", page)
         return res.get("url")

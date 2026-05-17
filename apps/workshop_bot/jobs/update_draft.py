@@ -437,7 +437,7 @@ async def _draft_review(
         return ""
     n = int(window["issue_number"])
     eddy_ctx = context.build_eddy_context(ref_date=today, section_status=st, prev_digest=prev_digest)
-    target_legend = render.review_target_legend(draft_text)
+    target_legend = render.review_target_legend(draft_text, issue_number=n)
     user_msg = (
         f"{context.render_block(eddy_ctx)}\n\n{prompt}\n\n"
         f"---\n\n## Review target IDs\n\n"
