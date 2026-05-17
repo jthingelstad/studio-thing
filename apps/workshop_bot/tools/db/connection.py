@@ -207,12 +207,44 @@ _DATA_MIGRATIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 
+def _strip_markers_from_issue_items_body_md(conn: sqlite3.Connection) -> None:
+    """One-shot cleanup: an older manual-seed path baked rendered
+    membership-block markers (``<!-- cta:N -->`` / ``<!-- thanks:N -->``)
+    into ``issue_items.body_md``. Marker placement is editorial state
+    (lives in ``final.md``), not row content — and the embedded markers
+    leak into every subsequent render. SQLite has no native regex, so
+    this runs Python-side to clean any pre-existing rows once."""
+    from ..issue_items_render import strip_membership_markers  # local: cycle
+    rows = conn.execute(
+        "SELECT id, body_md FROM issue_items "
+        "WHERE body_md LIKE '%<!-- cta:%' OR body_md LIKE '%<!-- thanks:%'"
+    ).fetchall()
+    for row in rows:
+        cleaned = strip_membership_markers(row["body_md"] or "")
+        conn.execute(
+            "UPDATE issue_items SET body_md = ?, updated_at = datetime('now') "
+            "WHERE id = ?",
+            (cleaned, int(row["id"])),
+        )
+
+
+_PYTHON_MIGRATIONS: tuple[tuple[str, "callable"], ...] = (
+    ("0010_strip_markers_from_issue_items_body_md",
+     _strip_markers_from_issue_items_body_md),
+)
+
+
 def _apply_data_migrations(conn: sqlite3.Connection) -> None:
     for migration_id, statements in _DATA_MIGRATIONS:
         if _migration_recorded(conn, migration_id):
             continue
         for sql in statements:
             conn.execute(sql)
+        _record_migration(conn, migration_id)
+    for migration_id, fn in _PYTHON_MIGRATIONS:
+        if _migration_recorded(conn, migration_id):
+            continue
+        fn(conn)
         _record_migration(conn, migration_id)
 
 

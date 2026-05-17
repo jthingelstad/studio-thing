@@ -31,9 +31,32 @@ otherwise it falls back to recomputing.
 
 from __future__ import annotations
 
+import re
 from typing import Any, Optional
 
 from .content import microblog
+
+
+# Membership-block markers live in ``final.md`` (placed there by
+# ``create-final`` at editorial time) — NEVER in a row's ``body_md``.
+# An older manual-seed path baked the rendered marker into a notable
+# item's body and the harness caught it leaking into every subsequent
+# render. Strip them defensively at the renderer boundary so a stray
+# marker in body_md can't slip into draft.md / passthrough final.md.
+_MEMBERSHIP_MARKER_RE = re.compile(r"<!--\s*(?:cta|thanks):\d+\s*-->")
+
+
+def strip_membership_markers(text: str) -> str:
+    """Remove any ``<!-- cta:N -->`` / ``<!-- thanks:N -->`` markers from
+    ``text``. Used to sanitize ``body_md`` reads — placement of these
+    markers is editorial state (``final.md``), not row content."""
+    if not text or "<!--" not in text:
+        return text
+    cleaned = _MEMBERSHIP_MARKER_RE.sub("", text)
+    # Collapse any blank-line clusters left behind so the output doesn't
+    # carry a "ghost paragraph" where the marker used to sit.
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned.strip("\n")
 
 
 # ---------- preamble helpers ----------
@@ -55,9 +78,16 @@ def reddit_tag_line(issue_number: int) -> str:
 # ---------- per-row renderers ----------
 
 def _row_str(row: dict[str, Any], key: str) -> str:
-    """Pull a string field from a row, treating None/empty as ''."""
+    """Pull a string field from a row, treating None/empty as ''. Strips
+    membership-block markers from ``body_md`` reads — see
+    :func:`strip_membership_markers`."""
     v = row.get(key)
-    return (v or "").strip() if isinstance(v, str) else ""
+    if not isinstance(v, str):
+        return ""
+    text = v.strip()
+    if key == "body_md":
+        text = strip_membership_markers(text)
+    return text
 
 
 def _journal_label(row: dict[str, Any]) -> str:

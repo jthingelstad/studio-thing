@@ -28,6 +28,47 @@ from apps.workshop_bot.tools import db  # noqa: E402
 from apps.workshop_bot.tools.db import connection as conn_mod  # noqa: E402
 
 
+class DataMigrations(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self._orig_db = os.environ.get("WORKSHOP_DB_PATH")
+        os.environ["WORKSHOP_DB_PATH"] = str(Path(self._tmp.name) / "t.db")
+        conn_mod._applied_schema_hash.clear()
+        db.run_migrations()
+
+    def tearDown(self) -> None:
+        if self._orig_db is None:
+            os.environ.pop("WORKSHOP_DB_PATH", None)
+        else:
+            os.environ["WORKSHOP_DB_PATH"] = self._orig_db
+        self._tmp.cleanup()
+        conn_mod._applied_schema_hash.clear()
+
+    def test_strip_markers_from_issue_items_body_md(self):
+        # Seed a row with the WT348 regression shape: a Notable item
+        # whose body_md carries a baked ``<!-- cta:1 -->`` marker.
+        from apps.workshop_bot.tools import issue_items
+        item_id = issue_items.upsert_item(
+            issue_number=348, section="notable", source="manual",
+            source_id="wt348-n2", url="https://example.com/m5",
+            title="M5 exploit", body_md="Real commentary.\n\n\n<!-- cta:1 -->",
+        )
+        # Manually un-record the migration so we re-run it (the upsert
+        # above happened post-migration, so the seed row didn't get
+        # cleaned).
+        with db.connect() as conn:
+            conn.execute(
+                "DELETE FROM schema_migrations WHERE id = ?",
+                ("0010_strip_markers_from_issue_items_body_md",),
+            )
+        # Force a re-run.
+        conn_mod._applied_schema_hash.clear()
+        db.run_migrations()
+        row = issue_items.get_item(item_id)
+        self.assertNotIn("<!-- cta:", row["body_md"])
+        self.assertIn("Real commentary.", row["body_md"])
+
+
 class AutoMigrateOnConnect(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()

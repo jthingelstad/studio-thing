@@ -74,6 +74,22 @@ class UpsertTests(_DBCase):
         self.assertEqual(item_a["title"], "A renamed")
         self.assertEqual(item_b["position"], 2)
 
+    def test_renderer_strips_membership_markers_from_body_md(self):
+        # A row with a stale ``<!-- cta:1 -->`` marker embedded in body_md
+        # (the WT348 manual-seed regression) must render without the
+        # marker — placement is editorial state, not row content.
+        a = issue_items.upsert_item(
+            issue_number=348, section="notable", source="manual",
+            source_id="wt348-n1", url="https://example.com/a",
+            title="A", body_md="Commentary here.\n\n\n<!-- cta:1 -->",
+        )
+        from apps.workshop_bot.tools import issue_items_render
+        rendered = issue_items_render._render_notable_item(
+            issue_items.get_item(a)
+        )
+        self.assertNotIn("<!-- cta:", rendered)
+        self.assertIn("Commentary here.", rendered)
+
     def test_upsert_dedups_by_url_when_source_identity_changes(self):
         # Regression: WT348 had manually-seeded rows with source='manual'
         # and source_id='wt348-n4'. The next sync_pinboard run upserted
