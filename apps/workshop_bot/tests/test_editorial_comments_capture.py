@@ -62,7 +62,7 @@ class StoreReviewCommentsTests(_DBCase):
             "- <!-- target:n1 --> Lead Notable item feels weak; consider swapping with n2.\n\n"
             "- <!-- target:j1 --> Journal post on Tuesday lands well.\n"
         )
-        count = update_draft._store_review_comments(349, review)
+        count, _ = update_draft._store_review_comments(349, review)
         self.assertEqual(count, 2)
         comments = issue_items.list_open_comments(349)
         self.assertEqual(len(comments), 2)
@@ -75,7 +75,7 @@ class StoreReviewCommentsTests(_DBCase):
             "- <!-- target:brief --> Brief is leaning too tech-heavy this week.\n\n"
             "- <!-- target:intro --> Intro buries the lede in trip logistics.\n"
         )
-        count = update_draft._store_review_comments(349, review)
+        count, _ = update_draft._store_review_comments(349, review)
         self.assertEqual(count, 2)
         handles = sorted(c["handle"] for c in issue_items.list_open_comments(349))
         self.assertEqual(handles, ["E349-B1", "E349-I1"])
@@ -85,14 +85,14 @@ class StoreReviewCommentsTests(_DBCase):
             "- <!-- target:hygiene --> Anchor text on N3 doesn't match its domain.\n\n"
             "- <!-- target:whole --> Word count is on the high end.\n"
         )
-        count = update_draft._store_review_comments(349, review)
+        count, _ = update_draft._store_review_comments(349, review)
         self.assertEqual(count, 2)
         handles = sorted(c["handle"] for c in issue_items.list_open_comments(349))
         self.assertEqual(handles, ["E349-W1", "E349-X1"])
 
     def test_unanchored_segments_skipped(self):
         review = "Just an observation about the issue as a whole, no target marker."
-        count = update_draft._store_review_comments(349, review)
+        count, _ = update_draft._store_review_comments(349, review)
         self.assertEqual(count, 0)
 
     def test_supersedes_prior_pass(self):
@@ -124,7 +124,7 @@ class StoreReviewCommentsTests(_DBCase):
     def test_out_of_range_item_falls_back_to_section_scope(self):
         self._seed()  # only 2 notable rows seeded
         review = "- <!-- target:n5 --> Item that no longer exists.\n"
-        count = update_draft._store_review_comments(349, review)
+        count, _ = update_draft._store_review_comments(349, review)
         self.assertEqual(count, 1)
         c = issue_items.list_open_comments(349)[0]
         # Fell back to section scope; handle uses N for notable.

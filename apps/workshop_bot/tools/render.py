@@ -35,7 +35,17 @@ _REVIEW_TARGET_RE = re.compile(
     r"<!--\s*target:([a-z0-9_-]+)\s*-->" r"|\[target:([a-z0-9_-]+)\]",
     re.IGNORECASE,
 )
+# Handle markers (``<!-- handle:E349-N1 -->``) are injected by
+# ``update_draft._inject_handle_markers`` next to each target marker
+# after the comment is stored. The renderer converts them into a
+# visible badge + a copy-to-clipboard button so Jamie can paste the
+# handle back into Discord to continue the conversation.
+_REVIEW_HANDLE_RE = re.compile(
+    r"<!--\s*handle:(E\d+-[A-Z]\d+)\s*-->",
+    re.IGNORECASE,
+)
 _VALID_TARGET_RE = re.compile(r"^[a-z0-9_-]+$", re.IGNORECASE)
+_VALID_HANDLE_RE = re.compile(r"^E\d+-[A-Z]\d+$", re.IGNORECASE)
 _SECTION_LABELS = {
     "intro": "Intro",
     "currently": "Currently",
@@ -161,6 +171,27 @@ body.rv-open #rv-panel { transform: translateX(0); }
   background: var(--wt-accent-soft);
 }
 #rv-panel .rv-target-ref { display: none; }
+/* Handle badge — sits at the start of a review bullet, gives Jamie a
+   stable ID (E349-N1) he can copy and paste into Discord to continue
+   the conversation about that specific comment. */
+#rv-panel .rv-handle {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin: 0 8px 0 0; padding: 1px 6px 1px 8px;
+  font-family: var(--wt-mono); font-size: 11.5px; letter-spacing: 0.02em;
+  background: var(--wt-accent-soft); color: var(--wt-accent-deep);
+  border-radius: 999px; vertical-align: baseline;
+}
+#rv-panel .rv-handle-text { font-weight: 600; }
+#rv-panel .rv-handle-copy {
+  cursor: pointer; border: 0; padding: 0 6px;
+  font-family: var(--wt-mono); font-size: 10.5px; letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: transparent; color: var(--wt-accent);
+  border-left: 1px solid color-mix(in srgb, var(--wt-accent) 30%, transparent);
+}
+#rv-panel .rv-handle-copy:hover { color: var(--wt-accent-deep); }
+#rv-panel .rv-handle.rv-handle-copied { background: color-mix(in srgb, #2da44e 18%, var(--wt-accent-soft)); }
+#rv-panel .rv-handle.rv-handle-copied .rv-handle-copy { color: #1a7f37; }
 #rv-connectors {
   display: none; position: fixed; inset: 0; width: 100vw; height: 100vh;
   pointer-events: none; z-index: 25; overflow: visible;
@@ -276,6 +307,34 @@ b.addEventListener('click',function(){
   if(on&&panel)panel.scrollTop=0;
   if(!on)clear();else if(activeId)draw();
 });
+/* Handle badge copy buttons. Clipboard API is async; on success we
+   briefly mark the badge with rv-handle-copied so the user gets
+   visible feedback. Clicking the badge anywhere also activates the
+   surrounding review item (via the activate() handler above), so
+   the copy button stops propagation to avoid double-firing. */
+Array.prototype.forEach.call(document.querySelectorAll('#rv-panel .rv-handle-copy'),function(btn){
+  btn.addEventListener('click',function(e){
+    e.stopPropagation();
+    var badge=btn.parentElement;if(!badge)return;
+    var handle=badge.getAttribute('data-handle')||(badge.textContent||'').trim();
+    if(!handle)return;
+    function done(){
+      badge.classList.add('rv-handle-copied');
+      var prev=btn.textContent;btn.textContent='copied';
+      setTimeout(function(){badge.classList.remove('rv-handle-copied');btn.textContent=prev||'copy';},1200);
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(handle).then(done,function(){
+        /* fallback: select the text so the user can ⌘C */
+        var range=document.createRange();range.selectNodeContents(badge.querySelector('.rv-handle-text'));
+        var sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
+      });
+    }else{
+      var range=document.createRange();range.selectNodeContents(badge.querySelector('.rv-handle-text'));
+      var sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
+    }
+  });
+});
 window.addEventListener('scroll',draw,{passive:true});
 window.addEventListener('resize',draw);
 if(panel)panel.addEventListener('scroll',draw,{passive:true});
@@ -358,13 +417,35 @@ def _annotate_review_targets(md: str) -> str:
 
 
 def _prepare_review_md(review_md: str) -> str:
-    def repl(match: re.Match) -> str:
+    src = review_md or ""
+
+    def _target_repl(match: re.Match) -> str:
         safe = _safe_target_id(match.group(1) or match.group(2) or "")
         if not safe:
             return ""
         return f'<span class="rv-target-ref" data-review-target="{safe}"></span>'
 
-    return _REVIEW_TARGET_RE.sub(repl, review_md or "")
+    src = _REVIEW_TARGET_RE.sub(_target_repl, src)
+
+    def _handle_repl(match: re.Match) -> str:
+        raw = (match.group(1) or "").strip().upper()
+        if not _VALID_HANDLE_RE.match(raw):
+            return ""
+        # The badge sits inline next to the bullet text. Aria-label
+        # explains the copy action for screen readers; data-handle is
+        # what the inline JS reads when the button is clicked. The
+        # ``<noscript>`` fallback keeps the handle text readable when
+        # JS is off (the badge just becomes static text).
+        return (
+            f'<span class="rv-handle" data-handle="{raw}">'
+            f'<span class="rv-handle-text">{raw}</span>'
+            f'<button type="button" class="rv-handle-copy" '
+            f'aria-label="Copy {raw} to clipboard">copy</button>'
+            f'</span>'
+        )
+
+    src = _REVIEW_HANDLE_RE.sub(_handle_repl, src)
+    return src
 
 
 def review_target_legend(md: str) -> str:

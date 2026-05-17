@@ -276,37 +276,45 @@ def _row_id_for_synth(issue_number: int, target: str) -> "int | None":
     return int(rows[idx - 1]["id"])
 
 
-def _store_review_comments(issue_number: int, review_md: str) -> int:
+def _store_review_comments(issue_number: int, review_md: str) -> tuple[int, list[str]]:
     """Parse the review markdown and write one ``editorial_comments``
-    row per target-marker-prefixed segment. Returns the count of new
-    rows. Best-effort: a parsing hiccup logs and skips that segment
-    rather than failing the review write.
+    row per target-marker-prefixed segment. Returns
+    ``(count, segment_handles)`` — ``segment_handles`` is a list of
+    handles parallel to ``_split_review_into_segments(review_md)``,
+    with ``""`` for segments that didn't get a row (ungrounded prose
+    or store failure). This parallel list is what
+    :func:`_inject_handle_markers` uses to embed handle badges in
+    the drawer markdown without re-doing the parse.
 
     Prior-pass open comments get superseded *after* the new pass writes
     so the new pass's comments stay visible. A re-run that produces no
     anchored comments leaves the prior pass intact (better to keep
     stale guidance than to silently clear the drawer)."""
     if not (review_md or "").strip():
-        return 0
+        return 0, []
     segments = _split_review_into_segments(review_md)
     if not segments:
-        return 0
+        return 0, []
     prior_open_ids = [int(c["id"]) for c in issue_items.list_open_comments(issue_number)]
     written = 0
+    segment_handles: list[str] = []
     for seg in segments:
         markers = _TARGET_MARKER_RE.findall(seg)
         if not markers:
+            segment_handles.append("")
             continue  # ungrounded prose — skip
         target = markers[0]
         try:
             scope, section_or_letter = _section_for_target(target)
         except Exception:  # noqa: BLE001
+            segment_handles.append("")
             continue
         body_md = _TARGET_MARKER_RE.sub("", seg).strip()
         # Strip the leading bullet prefix so stored bodies read cleanly
         # (the bullet shape is rendering-layer; storage is content).
         body_md = re.sub(r"^(?:[-*+]|\d+\.)\s+", "", body_md).strip()
         if not body_md:
+            segment_handles.append("")
             continue
         try:
             if scope == "item":
@@ -341,15 +349,16 @@ def _store_review_comments(issue_number: int, review_md: str) -> int:
                 )
         except Exception:  # noqa: BLE001
             logger.exception("update-draft: failed to store review comment")
+            segment_handles.append("")
             continue
         written += 1
+        segment_handles.append(str(row["handle"]))
     if written and prior_open_ids:
         # Mark each prior-pass comment superseded by *one* of the new
         # rows — we pick the first new row whose handle still resolves
         # via list_open_comments. The replaced_by pointer is a chain
         # anchor; clients walk forward by handle, so any new row works.
         new_open = issue_items.list_open_comments(issue_number)
-        new_ids = {int(c["id"]) for c in new_open}
         anchor = next((c["id"] for c in new_open if int(c["id"]) not in prior_open_ids), None)
         if anchor is not None:
             try:
@@ -362,7 +371,48 @@ def _store_review_comments(issue_number: int, review_md: str) -> int:
                     )
             except Exception:  # noqa: BLE001
                 logger.exception("update-draft: prior-pass supersede failed")
-    return written
+    return written, segment_handles
+
+
+def _inject_handle_markers(review_md: str, segment_handles: list[str]) -> str:
+    """Walk segments in the same order :func:`_store_review_comments`
+    did, and inject a ``<!-- handle:H -->`` marker next to the first
+    ``<!-- target:T -->`` marker of each segment that earned a
+    handle. The renderer turns the marker into a visible badge + copy
+    button.
+
+    Idempotent on segments without a handle. Preserves the original
+    text shape (we re-join with ``\\n\\n``-style separators the
+    splitter consumed).
+    """
+    if not (review_md or "").strip() or not segment_handles:
+        return review_md
+    segments = _split_review_into_segments(review_md)
+    if len(segments) != len(segment_handles):
+        # Defensive — shapes should match since the same splitter
+        # produced both. If they don't, return the original.
+        return review_md
+    # We need to insert handle markers without reordering or losing
+    # the original blank-line structure. Simpler than re-joining: do
+    # an in-place sub on the original text per (segment, handle).
+    out = review_md
+    for seg, handle in zip(segments, segment_handles):
+        if not handle or not seg:
+            continue
+        target_match = _TARGET_MARKER_RE.search(seg)
+        if not target_match:
+            continue
+        # Replace the segment's first target marker with itself + the
+        # handle marker. Only the first occurrence inside the segment
+        # gets the handle (handles are per-segment, not per-marker).
+        old_target = target_match.group(0)
+        replacement = f"{old_target}<!-- handle:{handle} -->"
+        # Replace inside the segment first, then put the segment back
+        # into the original review text. The segment substring is
+        # unique enough (it's a full paragraph) that .replace works.
+        new_seg = seg.replace(old_target, replacement, 1)
+        out = out.replace(seg, new_seg, 1)
+    return out
 
 
 async def _draft_review(
@@ -403,10 +453,15 @@ async def _draft_review(
         return ""
     review_md = answer.strip()
     # Capture each target-anchored bullet as an editorial_comments row
-    # (gives the future Discord lookup a stable handle to query).
+    # AND embed the assigned handle next to its target marker so the
+    # drawer can render a visible badge + copy button for each comment.
     # Best-effort — a parse failure shouldn't lose the review surface.
     try:
-        _store_review_comments(int(window["issue_number"]), review_md)
+        _written, segment_handles = _store_review_comments(
+            int(window["issue_number"]), review_md,
+        )
+        if any(segment_handles):
+            review_md = _inject_handle_markers(review_md, segment_handles)
     except Exception:  # noqa: BLE001
         logger.exception("update-draft: review-comments capture failed")
     return review_md
