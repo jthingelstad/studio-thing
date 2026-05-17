@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Optional
 
 REPO = Path(__file__).resolve().parents[4]
 DEFAULT_DB_PATH = REPO / "apps" / "workshop_bot" / "data" / "workshop.db"
@@ -23,10 +24,27 @@ def db_path() -> Path:
     return DEFAULT_DB_PATH
 
 
+# Migration state per db_path. The value is the schema.sql hash that was
+# applied — re-running is skipped only when the file content hasn't changed
+# since. A long-running bot picks up a schema.sql edit on the next connect
+# without needing a daemon restart; standalone CLI tools (exercise harness,
+# ad-hoc scripts) migrate on their first connect, period.
+_applied_schema_hash: dict[Path, str] = {}
+
+
 @contextmanager
 def connect() -> Iterator[sqlite3.Connection]:
     path = db_path()
     path.parent.mkdir(parents=True, exist_ok=True)
+    _ensure_migrated(path)
+    with _open_raw(path) as conn:
+        yield conn
+
+
+@contextmanager
+def _open_raw(path: Path) -> Iterator[sqlite3.Connection]:
+    """Raw connection — used by :func:`run_migrations` so the migration
+    pass itself doesn't re-trigger the auto-migration check."""
     conn = sqlite3.connect(path, isolation_level=None)  # autocommit
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
@@ -37,15 +55,44 @@ def connect() -> Iterator[sqlite3.Connection]:
         conn.close()
 
 
+def _schema_hash() -> Optional[str]:
+    try:
+        return hashlib.sha256(SCHEMA_PATH.read_bytes()).hexdigest()
+    except OSError:
+        # SCHEMA_PATH missing in some test contexts; treat as "no auto-run".
+        return None
+
+
+def _ensure_migrated(path: Path) -> None:
+    """Apply :func:`run_migrations` for ``path`` the first time we see it
+    *and* every time ``schema.sql`` content changes mid-process.
+
+    Schema DDL is idempotent (``CREATE TABLE IF NOT EXISTS`` throughout),
+    so re-applying after a content change is safe. The hash check keeps
+    the steady-state cost to one cheap file-stat-plus-sha per connect —
+    no DDL replay when nothing has changed.
+    """
+    current = _schema_hash()
+    if current is not None and _applied_schema_hash.get(path) == current:
+        return
+    try:
+        run_migrations()
+    except Exception:
+        _applied_schema_hash.pop(path, None)
+        raise
+
+
 def run_migrations() -> None:
+    path = db_path()
     schema = SCHEMA_PATH.read_text(encoding="utf-8")
-    with connect() as conn:
+    with _open_raw(path) as conn:
         conn.executescript(schema)
         _record_migration(conn, "0001_schema_sql")
         _apply_column_migrations(conn)
         _apply_data_migrations(conn)
+    _applied_schema_hash[path] = hashlib.sha256(schema.encode("utf-8")).hexdigest()
     _bootstrap_currently_from_s3()
-    logger.info("workshop.db ready at %s", db_path())
+    logger.info("workshop.db ready at %s", path)
 
 
 def _bootstrap_currently_from_s3() -> None:
