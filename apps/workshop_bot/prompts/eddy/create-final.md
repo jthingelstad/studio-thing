@@ -45,11 +45,26 @@ from the updated row state. The bytes that ship are the bytes Jamie wrote.
   item's content.** You cannot edit Jamie's prose. Code re-renders each
   item from its row; anything else you put in your output is ignored
   except the thesis and the order/placement spec.
-- **Do not cut items.** Every parsed item must appear in the corresponding
-  `*_order` list. If an issue is too long, that's handled upstream (Jamie
-  trims at the source — micro.blog, Pinboard) before `update-draft` runs.
-- **Do not invent or rename ids.** Use only the ids shown below. Every id
-  must appear exactly once across each section's order list.
+- **DO NOT CUT, OMIT, SKIP, OR PRUNE ITEMS.** This is the most common
+  failure mode and the validator will reject your proposal if you do it.
+  An item is **never** dropped from the issue at this stage. If a journal
+  entry feels too long, too tangential, or off-theme — **leave it in the
+  order anyway**, even if you'd personally cut it. Trimming the issue is
+  Jamie's upstream call (micro.blog deletes, Pinboard tag removals before
+  `update-draft` runs), not yours. The rule is mechanical: every parsed
+  id you see below must appear **exactly once** in either its section's
+  `*_order` list or the `promotions` list. No exceptions.
+- **Do not invent or rename ids.** Use only the ids shown below.
+
+### Self-check before you output
+
+Before returning your JSON, count: the parsed Notable items are `n1…nN`,
+Briefly are `b1…bM`, Journal are `j1…jK`. Your `notable_order` plus any
+promoted Notable ids must have exactly N entries; same for the other two
+sections. If your `journal_order` has fewer entries than the parsed
+Journal list, you have omitted items — go back and add them in whatever
+position you think fits. **Validation will fail, and the proposal will
+be rejected, if any id is missing.**
 
 ## Output format
 

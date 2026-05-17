@@ -618,6 +618,32 @@ class CreateFinalTests(_DBTestCase):
         self.assertTrue(any("didn't validate" in m for m in sent_messages),
                         f"sent_messages = {sent_messages!r}")
 
+    def test_missing_id_retry_hint_names_the_omitted_ids(self):
+        # WT348 regression on Opus: Eddy dropped j14/j15 from journal_order
+        # three rounds in a row and the generic "follow the schema" hint
+        # didn't recover. The hint now lists the omitted ids explicitly
+        # so the next prompt is a targeted fix-up, not a re-derivation.
+        # First reply: missing j3. Second reply: a clean fix that includes
+        # all three journal ids so the loop accepts and writes final.md.
+        bad = self._basic_reply(journal_order=("j1", "j2"))
+        good = self._basic_reply()  # includes j1/j2/j3
+        ctx, fc = self._setup(bad)
+        # Pump two replies through .core(); _llm_job.refresh_loop and
+        # create-final's own loop both call core() per round, so list two.
+        fc.bot.core = AsyncMock(side_effect=[(bad, {}), (good, {})])
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
+            result = asyncio.run(create_final.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        # The second call's user_message must carry the targeted hint.
+        second_call = fc.bot.core.await_args_list[1]
+        latest = second_call.kwargs["latest"]
+        # Must call out the omitted id by name AND the section it belongs in.
+        self.assertIn("j3", latest,
+                      f"retry hint should name omitted id 'j3'; got:\n{latest[-500:]}")
+        self.assertIn("journal_order", latest)
+        # Final accepted — thesis was written.
+        self.assertIn((458, "thesis.md"), self.ws.files)
+
     # ---- compose-cta autofire ----
 
     def test_membership_blocks_autofires_compose_cta(self):

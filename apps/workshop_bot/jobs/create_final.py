@@ -717,10 +717,28 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                         f"`{exc}` — retrying with a tighter hint.",
                         suppress_embeds=True,
                     )
+                    # If the validator flagged a missing-id error, list the
+                    # omitted ids explicitly so Eddy patches them in rather
+                    # than recomputing from scratch — the most common
+                    # failure (especially on Opus) is dropping the tail of
+                    # a long Journal list, and a generic "follow the schema"
+                    # hint isn't enough to recover.
+                    extra_hint = ""
+                    msg = str(exc)
+                    if ": missing id(s):" in msg:
+                        omitted = msg.split(": missing id(s):", 1)[1].strip()
+                        section = msg.split("_order", 1)[0].strip()
+                        extra_hint = (
+                            f"\n\nSpecifically: append {omitted} to "
+                            f"`{section}_order` (anywhere in the array — at "
+                            f"the end is fine if you have no opinion). Do "
+                            f"not change the rest of your proposal. Every "
+                            f"parsed id must appear exactly once."
+                        )
                     user_msg = (base_user_msg + (
                         f"\n\n(That response was rejected: `{exc}`. Follow the JSON schema "
                         f"exactly — every parsed id must appear exactly once across its "
-                        f"section's order + the promotions list.)"
+                        f"section's order + the promotions list.{extra_hint})"
                     ))[: _llm_job.CREATE_FINAL_BODY_CAP]
                     continue
 
