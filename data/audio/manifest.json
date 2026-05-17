@@ -1240,5 +1240,20 @@
     "loudnorm_version": "v3",
     "generated_at": "2026-05-10T13:16:41Z",
     "byte_size": 39796233
+  },
+  "348": {
+    "audio_url": "https://files.thingelstad.com/weekly-thing/348/weekly-thing-348.mp3",
+    "audio_duration_seconds": 1061,
+    "audio_byte_size": 25570837,
+    "audio_voice": "openai-tts-1-hd:echo",
+    "audio_script_hash": "sha256:eda604a174d2aedc2ee9027036cfcd32fcf48b05ea0058b6ebc676b9e46c8527",
+    "body_url": "https://files.thingelstad.com/weekly-thing/348/body-348.mp3",
+    "body_duration_seconds": 1036,
+    "body_byte_size": 20718765,
+    "intro_hash": "sha256:b8f6ddbc649c051bf87547c55aa2e916f4d048e21b845ebb36fca186d8512443",
+    "outro_hash": "sha256:fcc6096d97ac7a2cef370451819340c10ce9d06bbd68136d0dfd246cf7084cfa",
+    "loudnorm_version": "v3",
+    "generated_at": "2026-05-17T11:31:04Z",
+    "byte_size": 25570837
   }
 }
