@@ -358,3 +358,103 @@ CREATE TABLE IF NOT EXISTS image_alt_cache (
   source TEXT NOT NULL,                           -- 'vision' | 'manual'
   generated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Issue items — one row per individually-addressable piece of content in
+-- an issue (Notable link, Brief link, Journal entry). Replaces the byte-
+-- chunk model in tools/content/chunks.py: reorders are ``UPDATE position``,
+-- promotions are column flips, editorial comments anchor to ``item_id``.
+--
+-- Sectioning:
+--   - section IN ('notable','brief','journal')
+--   - position — 1-indexed ordinal within (issue_number, section). Kept
+--     contiguous by ``tools/issue_items.reorder``; not enforced by the
+--     schema (an in-progress sync may temporarily have gaps).
+--
+-- Promotion (Journal-only at the prompt layer; the schema allows any
+-- section so future designs aren't blocked):
+--   - is_promoted=1 lifts the item out of its parent section into a
+--     standalone featured section.
+--   - promoted_position ∈ ('after_notable','after_journal','after_brief')
+--   - promoted_heading carries the standalone section's H2 text.
+--
+-- Source identity:
+--   - source ∈ ('pinboard','microblog','manual')
+--   - source_id — upstream stable id (Pinboard URL hash, micro.blog post
+--     URL, etc.). Used as the UPSERT key alongside (issue_number, source).
+--
+-- Body shape:
+--   - title — H3 link text (Notable, elevated Journal) or "" (status posts)
+--   - url — primary link target
+--   - body_md — commentary (Notable), full post body (Journal — already
+--     image-rehosted), pre-arrow commentary (Brief; the bolded link is
+--     rendered from title+url, not stored in body_md)
+--   - metadata_json — per-source extras: weekday-time label (Journal),
+--     brief tag flag, image rehost manifest, etc.
+CREATE TABLE IF NOT EXISTS issue_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  issue_number INTEGER NOT NULL,
+  section TEXT NOT NULL,
+  position INTEGER NOT NULL,
+  is_promoted INTEGER NOT NULL DEFAULT 0,
+  promoted_position TEXT,
+  promoted_heading TEXT,
+  source TEXT NOT NULL,
+  source_id TEXT NOT NULL,
+  url TEXT,
+  title TEXT,
+  body_md TEXT,
+  metadata_json TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(issue_number, source, source_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_issue_items_issue_section_pos
+  ON issue_items(issue_number, section, position);
+
+-- Editorial comments — Eddy's draft-review items, anchored to issue_items
+-- rows (or to a whole section / the whole issue) and stamped with a
+-- stable human-readable handle for the HTML drawer + Discord lookup.
+-- Re-reviews supersede earlier comments via ``replaced_by_id`` rather
+-- than deleting them, so cross-iteration history is queryable.
+--
+-- Handle shape: ``E{issue}-{letter}{ordinal}`` e.g. ``E349-N1``,
+-- ``E349-J2``, ``E349-X1`` (hygiene), ``E349-W1`` (whole-issue). Letters:
+--   N notable · B brief · J journal · C currently · V cover (visual) ·
+--   I intro · O outro · H haiku · X hygiene · W whole-issue
+--
+-- Ordinals are 1-indexed within (issue, letter) across history — once a
+-- handle is assigned it never reuses, even after the comment is
+-- superseded. This gives Jamie a stable ID he can paste back into
+-- Discord days later without ambiguity.
+--
+-- Scope:
+--   - 'item'    — anchored to ``item_id``; ``section`` set for convenience
+--   - 'section' — anchored to ``section`` only
+--   - 'issue'   — whole-issue observation (letter='W')
+--   - 'hygiene' — deliverability/voice/anchor-text lens (letter='X')
+--
+-- Verdict:
+--   - 'positive'   — calling out something working
+--   - 'suggestion' — proposed change (default)
+--   - 'blocker'    — ship-critical (anchor mismatch, dead link, voice slip)
+CREATE TABLE IF NOT EXISTS editorial_comments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  handle TEXT NOT NULL,
+  issue_number INTEGER NOT NULL,
+  scope TEXT NOT NULL,
+  item_id INTEGER REFERENCES issue_items(id),
+  section TEXT,
+  verdict TEXT NOT NULL DEFAULT 'suggestion',
+  anchor_text TEXT,
+  body_md TEXT NOT NULL,
+  reasoning_md TEXT,
+  replaced_by_id INTEGER REFERENCES editorial_comments(id),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_editorial_comments_handle
+  ON editorial_comments(handle);
+
+CREATE INDEX IF NOT EXISTS idx_editorial_comments_issue_open
+  ON editorial_comments(issue_number, replaced_by_id, created_at DESC);
