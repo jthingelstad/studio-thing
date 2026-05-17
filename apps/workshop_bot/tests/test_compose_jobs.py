@@ -607,42 +607,30 @@ class CreateFinalTests(_DBTestCase):
         self.assertIn("### [A](http://a)", self.ws.files[(458, "final.md")])
         self.assertNotIn((458, "thesis.md"), self.ws.files)
 
-    def test_invalid_order_permutation_refuses(self):
-        # n1 omitted from notable_order — validation error.
-        bad = self._basic_reply(notable_order=("n2",))
-        ctx, fc = self._setup(bad)
-        result = asyncio.run(create_final.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        self.assertIn("rows as-is", result.message)
-        sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
-        self.assertTrue(any("didn't validate" in m for m in sent_messages),
-                        f"sent_messages = {sent_messages!r}")
-
-    def test_missing_id_retry_hint_names_the_omitted_ids(self):
+    def test_missing_id_auto_fix_appends_omitted_ids(self):
         # WT348 regression on Opus: Eddy dropped j14/j15 from journal_order
-        # three rounds in a row and the generic "follow the schema" hint
-        # didn't recover. The hint now lists the omitted ids explicitly
-        # so the next prompt is a targeted fix-up, not a re-derivation.
-        # First reply: missing j3. Second reply: a clean fix that includes
-        # all three journal ids so the loop accepts and writes final.md.
-        bad = self._basic_reply(journal_order=("j1", "j2"))
-        good = self._basic_reply()  # includes j1/j2/j3
+        # three rounds in a row, falling back to passthrough and losing
+        # thesis + promotions + membership-block placement. The auto-fix
+        # path now appends the missing ids in original order and accepts
+        # the rest of the proposal as-is.
+        bad = self._basic_reply(journal_order=("j1", "j2"))  # j3 dropped
         ctx, fc = self._setup(bad)
-        # Pump two replies through .core(); _llm_job.refresh_loop and
-        # create-final's own loop both call core() per round, so list two.
-        fc.bot.core = AsyncMock(side_effect=[(bad, {}), (good, {})])
         with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
-        # The second call's user_message must carry the targeted hint.
-        second_call = fc.bot.core.await_args_list[1]
-        latest = second_call.kwargs["latest"]
-        # Must call out the omitted id by name AND the section it belongs in.
-        self.assertIn("j3", latest,
-                      f"retry hint should name omitted id 'j3'; got:\n{latest[-500:]}")
-        self.assertIn("journal_order", latest)
-        # Final accepted — thesis was written.
+        # Auto-fix path — thesis written (real proposal accepted, not the
+        # passthrough fallback which writes no thesis).
         self.assertIn((458, "thesis.md"), self.ws.files)
+        # The user-visible auto-fix note hit #editorial.
+        sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
+        self.assertTrue(
+            any("omitted `j3`" in m and "appended in original order" in m
+                for m in sent_messages),
+            f"expected auto-fix note in sends; got: {sent_messages!r}",
+        )
+        # And only ONE LLM call happened — no retry round, no
+        # passthrough fall-through.
+        self.assertEqual(fc.bot.core.await_count, 1)
 
     # ---- compose-cta autofire ----
 

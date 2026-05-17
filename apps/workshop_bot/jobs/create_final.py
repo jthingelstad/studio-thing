@@ -143,6 +143,36 @@ def _format_section_chunks(
     return "\n\n---\n\n".join(parts)
 
 
+def _id_inventory_block(
+    rows_by_section: dict[str, list[dict[str, Any]]],
+    row_to_synth: dict[int, str],
+) -> str:
+    """Concrete count + id list per section, prefixed to the user message
+    so the model sees the exact set its ``*_order`` must permute (and the
+    exact count to self-check against). Opus on the live --model preferred
+    run was dropping the tail of a 16-item Journal list; this surfaces
+    the constraint upstream of the prose constraint in the system prompt."""
+    lines = ["## ID inventory — every id below must appear in your output", ""]
+    for section in ("notable", "brief", "journal"):
+        ids = [row_to_synth[int(r["id"])] for r in rows_by_section.get(section, [])]
+        section_title = "Briefly" if section == "brief" else section.capitalize()
+        lines.append(
+            f"- **{section_title}** ({len(ids)} item(s)): "
+            f"{', '.join('`' + i + '`' for i in ids) if ids else '_none_'}"
+        )
+    lines.extend([
+        "",
+        "Your `notable_order` + `brief_order` + `journal_order` + any promoted "
+        "ids together must cover every id above, exactly once. If your "
+        "`journal_order` has fewer entries than the Journal count, you are "
+        "wrong — go back and add the missing ones.",
+        "",
+        "---",
+        "",
+    ])
+    return "\n".join(lines)
+
+
 def _build_user_message(
     base_prompt: str,
     issue_number: int,
@@ -152,6 +182,7 @@ def _build_user_message(
     return (
         f"{base_prompt}\n\n"
         f"---\n\n"
+        f"{_id_inventory_block(rows_by_section, row_to_synth)}"
         f"## Parsed items for WT{issue_number}\n\n"
         f"### Notable items\n\n"
         f"{_format_section_chunks('notable', rows_by_section['notable'], row_to_synth)}\n\n"
@@ -224,6 +255,38 @@ def _validate_promotions(
                 f"promotions[{i}].position={position!r} must be one of "
                 f"{', '.join(_PROMOTION_POSITIONS)}"
             )
+
+
+def _patch_missing_ids_into_orders(
+    data: dict,
+    synth_section: dict[str, str],
+    promoted_synth: set[str],
+) -> list[str]:
+    """If the LLM dropped ids from any ``*_order`` array, append the
+    omitted ids to the end of that section in original (synth-id sort)
+    order. Returns the list of patched ids for surfacing in ``#editorial``.
+
+    This is the auto-fix safety net: even with the strengthened prompt
+    and ID-inventory header, Opus on long Journal lists still
+    occasionally drops the tail. Rather than fall through to passthrough
+    (which loses the entire editorial pass — thesis, promotions,
+    membership-block placement, every other section's reorder), keep
+    the reorder and silently include the missing items. The note in
+    ``#editorial`` lets Jamie spot the patch and override if needed.
+    """
+    patched: list[str] = []
+    for section in ("notable", "brief", "journal"):
+        order = list(data.get(f"{section}_order") or [])
+        want = sorted(
+            (sid for sid, sect in synth_section.items()
+             if sect == section and sid not in promoted_synth),
+            key=lambda s: int("".join(ch for ch in s if ch.isdigit()) or "0"),
+        )
+        missing = [sid for sid in want if sid not in set(order)]
+        if missing:
+            data[f"{section}_order"] = order + missing
+            patched.extend(missing)
+    return patched
 
 
 def _validate_per_section_orders(
@@ -712,35 +775,59 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                         data["membership_blocks"], synth_section, promoted_synth,
                     )
                 except _ProposalError as exc:
-                    await channel.send(
-                        f"⚠️ Eddy's `create-final` proposal for WT{n} didn't validate: "
-                        f"`{exc}` — retrying with a tighter hint.",
-                        suppress_embeds=True,
-                    )
-                    # If the validator flagged a missing-id error, list the
-                    # omitted ids explicitly so Eddy patches them in rather
-                    # than recomputing from scratch — the most common
-                    # failure (especially on Opus) is dropping the tail of
-                    # a long Journal list, and a generic "follow the schema"
-                    # hint isn't enough to recover.
-                    extra_hint = ""
-                    msg = str(exc)
-                    if ": missing id(s):" in msg:
-                        omitted = msg.split(": missing id(s):", 1)[1].strip()
-                        section = msg.split("_order", 1)[0].strip()
-                        extra_hint = (
-                            f"\n\nSpecifically: append {omitted} to "
-                            f"`{section}_order` (anywhere in the array — at "
-                            f"the end is fine if you have no opinion). Do "
-                            f"not change the rest of your proposal. Every "
-                            f"parsed id must appear exactly once."
+                    # Auto-fix path: if the only failure is "missing id(s)"
+                    # in one of the *_order arrays, append the omitted ids
+                    # in original order and re-validate. Preserves the
+                    # editorial reorder, thesis, promotions, and membership
+                    # blocks rather than dropping the whole proposal to
+                    # passthrough. Other shape/permutation/membership
+                    # errors fall through to the normal LLM retry.
+                    auto_fixed = False
+                    if data is not None and ": missing id(s):" in str(exc):
+                        patched = _patch_missing_ids_into_orders(
+                            data, synth_section, promoted_synth,
                         )
-                    user_msg = (base_user_msg + (
-                        f"\n\n(That response was rejected: `{exc}`. Follow the JSON schema "
-                        f"exactly — every parsed id must appear exactly once across its "
-                        f"section's order + the promotions list.{extra_hint})"
-                    ))[: _llm_job.CREATE_FINAL_BODY_CAP]
-                    continue
+                        if patched:
+                            try:
+                                _validate_per_section_orders(
+                                    data, synth_section, promoted_synth,
+                                )
+                                _validate_membership_blocks(
+                                    data["membership_blocks"], synth_section,
+                                    promoted_synth,
+                                )
+                            except _ProposalError:
+                                # Auto-patch didn't fully resolve; fall
+                                # through to the normal retry path.
+                                pass
+                            else:
+                                await channel.send(
+                                    f"🛠️ Eddy's proposal for WT{n} omitted "
+                                    f"{', '.join('`' + p + '`' for p in patched)} "
+                                    f"— appended in original order to keep the rest "
+                                    f"of the proposal intact. Override with "
+                                    f"`/eddy issue reset final` if the auto-fix is "
+                                    f"the wrong call.",
+                                    suppress_embeds=True,
+                                )
+                                auto_fixed = True
+
+                    if auto_fixed:
+                        # data is now valid; fall through to the approval
+                        # card below.
+                        pass
+                    else:
+                        await channel.send(
+                            f"⚠️ Eddy's `create-final` proposal for WT{n} didn't validate: "
+                            f"`{exc}` — retrying with a tighter hint.",
+                            suppress_embeds=True,
+                        )
+                        user_msg = (base_user_msg + (
+                            f"\n\n(That response was rejected: `{exc}`. Follow the JSON schema "
+                            f"exactly — every parsed id must appear exactly once across its "
+                            f"section's order + the promotions list.)"
+                        ))[: _llm_job.CREATE_FINAL_BODY_CAP]
+                        continue
 
                 thesis = data["thesis"].strip()
 
