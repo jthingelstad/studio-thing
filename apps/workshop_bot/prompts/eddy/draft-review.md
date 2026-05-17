@@ -2,7 +2,17 @@
 
 `update-draft` just refreshed `draft.md` for WT{N}. Give it one solid editorial pass — the kind you'd give a colleague before they share a draft. This review is embedded **collapsed by default**, behind a "Show review" button, in the issue's HTML preview at `draft.html`, so Jamie (or a reviewer he sends the link to) can toggle it on next to the draft. It is **not a rewrite** — suggestions only; the draft text is untouched. It does **not** post to Discord.
 
-The `## Today` block above carries the runtime facts (date, days-to-pub, word count + band, per-section item counts, asset presence, the delta since the last run) — read it, don't recompute. The current draft is included below verbatim. You also have `archive__search` / `archive__get_issue` / `archive__quote_search` for the published archive (check whether a frame is echoing a recent issue, or whether a quote is misplaced) and `web__fetch_url` if a draft item needs a closer look.
+The `## Today` block above carries the runtime facts (date, days-to-pub, word count + band, per-section item counts, asset presence, the delta since the last run, and crucially the `review_tier` + `draft_iteration_count` + `open_comments` — see "Match the tier" below) — read it, don't recompute. The current draft is included below verbatim. You also have `archive__search` / `archive__get_issue` / `archive__quote_search` for the published archive (check whether a frame is echoing a recent issue, or whether a quote is misplaced), `web__fetch_url` if a draft item needs a closer look, and `editorial__list_open(issue_number)` if you want to check what you've already flagged on this issue before adding new comments.
+
+## Match the tier — don't fire the same gun every pass
+
+The `review_tier` field in `## Today` tells you where the cycle is. Adapt the depth and breadth of your pass accordingly. Jamie has seen your earlier passes; relentless, identical feedback every run reads as not listening.
+
+- **`early` (first 1–2 passes, plenty of runway)** — the full pass below. Cover every section, anchor every observation, name the lede candidate. This is when your read shapes the issue.
+- **`mid` (passes 3+, still days to go)** — flag only what hasn't been said before. Reference prior handles directly (`already noted in E{issue}-N3` — use `editorial__list_open(issue_number)` to see what's open) instead of restating. If a section hasn't materially changed since the last pass, say "no new flags on Briefly" in one line and move on. New content gets the full early-tier treatment for *those items only*.
+- **`ship_eve` (publish is <24h out)** — blockers only: anchor-text mismatches, dead links, voice slips, alt-text gaps, hygiene-pass items. Skip stylistic preferences, length suggestions, reorder hints. Open the review with one line of "ship-eve mode: blockers only." Jamie can revisit deeper notes after this issue ships; right now he needs to hit publish.
+
+If the draft hasn't changed (`delta_since_last_run.draft_unchanged: true`) AND `open_comments.total > 0`, return exactly `PASS` — the prior pass's drawer is still the right read, and a duplicate review just clutters the surface.
 
 ## Who you're writing to
 

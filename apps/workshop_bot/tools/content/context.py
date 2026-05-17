@@ -68,6 +68,79 @@ def _digest_delta(st: dict[str, Any], prev: Optional[dict[str, Any]]) -> Optiona
     }
 
 
+def _draft_iteration_count(issue_number: int) -> int:
+    """How many ``update-draft`` runs have produced a digest for this
+    issue. Counts the rows in ``draft_digests`` — one per real run —
+    which is the right "how many times have we reviewed this?" signal
+    for tier selection. Includes the run that just wrote the latest
+    digest, so a 1 means "this is our first pass".
+    """
+    try:
+        with db.connect() as conn:
+            row = conn.execute(
+                "SELECT COUNT(*) AS n FROM draft_digests WHERE issue = ?",
+                (int(issue_number),),
+            ).fetchone()
+            return int(row["n"]) if row else 0
+    except Exception:  # noqa: BLE001
+        return 0
+
+
+def _open_comments_counts(issue_number: int) -> dict[str, Any]:
+    """Open editorial_comments for this issue, total + per scope.
+
+    Lets Eddy see at a glance that he's already flagged N3 three times
+    or that hygiene comments are piling up unaddressed."""
+    try:
+        with db.connect() as conn:
+            rows = conn.execute(
+                "SELECT scope, section, COUNT(*) AS n "
+                "FROM editorial_comments "
+                "WHERE issue_number = ? AND replaced_by_id IS NULL "
+                "GROUP BY scope, section",
+                (int(issue_number),),
+            ).fetchall()
+    except Exception:  # noqa: BLE001
+        return {"total": 0, "by_scope": {}, "by_section": {}}
+    total = 0
+    by_scope: dict[str, int] = {}
+    by_section: dict[str, int] = {}
+    for r in rows:
+        n = int(r["n"])
+        total += n
+        scope = str(r["scope"])
+        by_scope[scope] = by_scope.get(scope, 0) + n
+        section = r["section"]
+        if section:
+            by_section[str(section)] = by_section.get(str(section), 0) + n
+    return {"total": total, "by_scope": by_scope, "by_section": by_section}
+
+
+def _review_tier(days_to_pub: Optional[int], iteration_count: int) -> str:
+    """Map cycle position → tier. The draft-review prompt branches on
+    this so feedback adapts to where in the process we are:
+
+    - ``early`` — first 1-2 passes, plenty of runway. Substantive,
+      anchored, suggestions only.
+    - ``mid`` — passes 3+ with multiple days still to go. Flag only
+      what hasn't been noted before; reference prior handles instead
+      of re-flagging.
+    - ``ship_eve`` — <24h to publish. Blockers only — anchor
+      mismatches, dead links, voice slips, alt-text gaps. Skip
+      stylistic preferences.
+
+    A missing ``days_to_pub`` defaults to ``mid`` (safest assumption
+    when the cycle position is unknown).
+    """
+    if days_to_pub is None:
+        return "mid"
+    if days_to_pub <= 1:
+        return "ship_eve"
+    if iteration_count <= 2:
+        return "early"
+    return "mid"
+
+
 def build_eddy_context(
     *,
     ref_date: Optional[date] = None,
@@ -87,6 +160,9 @@ def build_eddy_context(
     n = int(window["issue_number"])
     st = section_status if section_status is not None else draft.section_status(n)
     prev = prev_digest if prev_digest is not None else db.latest_draft_digest(n)
+    days_to_pub = _days_until(window["pub_date"], today)
+    iteration_count = _draft_iteration_count(n)
+    open_comments = _open_comments_counts(n)
     return {
         "today": today.isoformat(),
         "weekday": today.strftime("%a"),
@@ -94,7 +170,10 @@ def build_eddy_context(
         "pub_date": window["pub_date"],
         "end_date": window["end_date"],
         "start_date": window["start_date"],
-        "days_to_pub": _days_until(window["pub_date"], today),
+        "days_to_pub": days_to_pub,
+        "draft_iteration_count": iteration_count,
+        "review_tier": _review_tier(days_to_pub, iteration_count),
+        "open_comments": open_comments,
         "word_count": st["word_count"],
         "word_count_band": _word_band(st["word_count"]),
         "sections": {
