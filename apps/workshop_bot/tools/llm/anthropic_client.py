@@ -23,6 +23,43 @@ MODELS = {
     "haiku": "claude-haiku-4-5-20251001",
 }
 
+# Anthropic API pricing — USD per million tokens. Kept here (rather than
+# only in the workshop-bot-llm-usage SKILL.md) so any in-process tool —
+# AgentRun, the exercise harness, ad-hoc scripts — can compute cost
+# without duplicating the table. Update both this and SKILL.md when
+# Anthropic changes rates.
+RATES_USD_PER_MTOK: dict[str, dict[str, float]] = {
+    "claude-sonnet-4-6":         {"input":  3.00, "output": 15.00, "cache_read": 0.30, "cache_create":  3.75},
+    "claude-opus-4-7":           {"input": 15.00, "output": 75.00, "cache_read": 1.50, "cache_create": 18.75},
+    "claude-haiku-4-5-20251001": {"input":  1.00, "output":  5.00, "cache_read": 0.10, "cache_create":  1.25},
+}
+
+
+def cost_usd(
+    model: Optional[str],
+    *,
+    input_tokens: int = 0,
+    output_tokens: int = 0,
+    cache_read_tokens: int = 0,
+    cache_create_tokens: int = 0,
+) -> Optional[float]:
+    """Cost of one LLM call (or sum of calls) in USD.
+
+    Returns ``None`` when ``model`` is missing from :data:`RATES_USD_PER_MTOK`
+    so callers can distinguish "untracked" from "free". Pass token counts
+    that already aggregate across an AgentRun if you're pricing a row;
+    pass per-call counts otherwise.
+    """
+    rates = RATES_USD_PER_MTOK.get(model or "")
+    if rates is None:
+        return None
+    return (
+        (input_tokens or 0)        * rates["input"]
+        + (output_tokens or 0)       * rates["output"]
+        + (cache_read_tokens or 0)   * rates["cache_read"]
+        + (cache_create_tokens or 0) * rates["cache_create"]
+    ) / 1_000_000
+
 
 FALLBACK_MODEL = "haiku"
 MAX_OUTPUT_TOKENS = 4096
