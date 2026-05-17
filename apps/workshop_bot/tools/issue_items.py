@@ -115,6 +115,16 @@ def upsert_item(
     section) get refreshed; section is allowed to change in case Jamie
     re-tags a Pinboard item ``_brief`` mid-cycle.
 
+    **URL-based dedup fallback.** When ``(issue, source, source_id)``
+    doesn't match but a row in this issue already has the same ``url``
+    (i.e. it was seeded under a different source identity — e.g. a manual
+    seed using ``source='manual'`` later refreshed by ``sync_pinboard``
+    with ``source='pinboard'`` and the bookmark's hash), treat it as
+    the same item: re-key it to the canonical ``(source, source_id)``
+    and update in place. Without this we'd insert a duplicate every
+    time ``update-draft`` ran, which is the WT348-doubling regression
+    the exercise harness caught.
+
     Returns the row id.
     """
     if section not in SECTIONS:
@@ -128,6 +138,24 @@ def upsert_item(
             "WHERE issue_number = ? AND source = ? AND source_id = ?",
             (issue_number, source, source_id),
         ).fetchone()
+        if row is None and url:
+            # URL-based fallback (see docstring). Match on the issue's
+            # other rows by URL; if found, re-key the row's source identity
+            # so subsequent syncs hit the canonical key directly. Older
+            # ``id`` wins on ties (deterministic / matches insertion order).
+            alt = conn.execute(
+                "SELECT id, section, position FROM issue_items "
+                "WHERE issue_number = ? AND url = ? "
+                "ORDER BY id ASC LIMIT 1",
+                (issue_number, url),
+            ).fetchone()
+            if alt is not None:
+                conn.execute(
+                    "UPDATE issue_items SET source = ?, source_id = ?, "
+                    "updated_at = datetime('now') WHERE id = ?",
+                    (source, source_id, alt["id"]),
+                )
+                row = alt
         if row is not None:
             # Re-tagging upstream can move an item between sections (e.g.
             # Jamie adds ``_brief`` to a Pinboard bookmark mid-cycle).

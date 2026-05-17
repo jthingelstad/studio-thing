@@ -74,6 +74,35 @@ class UpsertTests(_DBCase):
         self.assertEqual(item_a["title"], "A renamed")
         self.assertEqual(item_b["position"], 2)
 
+    def test_upsert_dedups_by_url_when_source_identity_changes(self):
+        # Regression: WT348 had manually-seeded rows with source='manual'
+        # and source_id='wt348-n4'. The next sync_pinboard run upserted
+        # using source='pinboard' / a bookmark hash for source_id —
+        # canonical key didn't match, and a duplicate row landed alongside
+        # the seed. The exercise harness caught the count doubling from
+        # 4/11/15 → 8/22/30.
+        seeded = issue_items.upsert_item(
+            issue_number=348, section="notable", source="manual",
+            source_id="wt348-n1", url="https://example.com/a",
+            title="A", body_md="seed body",
+        )
+        refreshed = issue_items.upsert_item(
+            issue_number=348, section="notable", source="pinboard",
+            source_id="hash-of-bookmark", url="https://example.com/a",
+            title="A (refreshed)", body_md="pinboard body",
+        )
+        # Must be the same row id — no duplicate.
+        self.assertEqual(seeded, refreshed)
+        rows = issue_items.list_items(348, section="notable")
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        # Identity was re-keyed to canonical source/source_id.
+        self.assertEqual(row["source"], "pinboard")
+        self.assertEqual(row["source_id"], "hash-of-bookmark")
+        # Upstream fields refreshed.
+        self.assertEqual(row["title"], "A (refreshed)")
+        self.assertEqual(row["body_md"], "pinboard body")
+
     def test_upsert_can_move_item_between_sections(self):
         a = issue_items.upsert_item(
             issue_number=349, section="notable", source="pinboard",
