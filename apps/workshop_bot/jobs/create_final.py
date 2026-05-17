@@ -727,10 +727,23 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 thesis = data["thesis"].strip()
 
                 # Editorial card → #editorial; Jamie ✅/❌/🔄.
+                # Render the side-by-side proposal page so Jamie can
+                # see current vs proposed with connector lines in the
+                # browser. Best-effort: a render hiccup just omits the
+                # URL from the Discord prompt — the card text alone
+                # has always been the canonical decision surface.
+                proposal_url = await asyncio.to_thread(
+                    render.render_and_upload_proposal,
+                    issue_number=n, thesis=thesis,
+                    rows_by_section=rows_by_section, proposal=data,
+                    synth_to_row=synth_to_row, row_to_synth=row_to_synth,
+                )
                 card = _render_editorial_card(
                     n, thesis, rows_by_section, data,
                     synth_to_row, row_to_synth, rows_by_id,
                 )
+                if proposal_url:
+                    card = card + f"\n\n📄 [side-by-side view]({proposal_url})"
                 for part in discord_io.split_for_discord(card):
                     await channel.send(part, suppress_embeds=True)
                 approved = await interaction.await_approval(

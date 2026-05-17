@@ -754,6 +754,437 @@ def render_and_upload_option_cards(
         return None
 
 
+# ---------- create-final proposal page ----------
+#
+# Side-by-side current vs proposed view of Eddy's create-final
+# editorial pass. Picks still flow through Discord ✅/❌/🔄 — this
+# page only shows what's being approved, with SVG connector lines
+# drawn between left-column and right-column items so the moves
+# read at a glance. Items that didn't move get no line. Promoted
+# items render in their declared featured position on the right
+# with a strikethrough on their left-column entry. Membership-block
+# markers appear inline on the right as small pills at the position
+# Eddy declared.
+
+_PROPOSAL_CSS = """\
+:root {
+  color-scheme: light dark;
+  --wt-bg: #fcfcfa; --wt-ink: #14181f; --wt-ink-soft: #3d4654; --wt-muted: #7d8694;
+  --wt-line: #e6ebf2; --wt-line-soft: #f0f3f8;
+  --wt-accent: #1f6fd6; --wt-accent-deep: #134d99; --wt-accent-soft: #e1edff;
+  --wt-warn: #b78a14; --wt-warn-soft: #fff4d6;
+  --wt-move: #16a34a; --wt-move-soft: #d6f4e0;
+  --wt-sans: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --wt-serif: "Source Serif 4", "Charter", "Iowan Old Style", Cambria, Georgia, serif;
+  --wt-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: var(--wt-sans); font-size: 16px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  margin: 0; padding: 28px 24px 64px;
+  color: var(--wt-ink); background: var(--wt-bg);
+}
+h1 {
+  font-family: var(--wt-serif); font-weight: 500; font-size: 26px;
+  letter-spacing: -0.015em; margin: 0 0 6px;
+}
+.subtitle {
+  font-family: var(--wt-mono); font-size: 11.5px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--wt-muted); margin: 0 0 18px;
+}
+.thesis {
+  font-family: var(--wt-serif); font-size: 18px; line-height: 1.45;
+  background: var(--wt-accent-soft); border-left: 3px solid var(--wt-accent);
+  padding: 14px 18px; border-radius: 3px; margin: 0 0 24px;
+  color: var(--wt-ink-soft); font-style: italic;
+}
+.legend {
+  display: flex; flex-wrap: wrap; gap: 14px;
+  font-family: var(--wt-mono); font-size: 11px; letter-spacing: 0.04em;
+  color: var(--wt-muted); margin: 0 0 20px;
+}
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
+.cols {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 36px;
+  position: relative; z-index: 1;
+}
+.col h2 {
+  font-family: var(--wt-mono); font-size: 12px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--wt-muted);
+  border-bottom: 1px solid var(--wt-line); padding-bottom: 8px; margin: 0 0 14px;
+}
+.col section { margin: 0 0 22px; }
+.col section > h3 {
+  font-family: var(--wt-serif); font-weight: 500; font-size: 16px;
+  margin: 0 0 8px; color: var(--wt-ink);
+}
+.col ul { list-style: none; padding: 0; margin: 0; }
+.item {
+  position: relative;
+  padding: 8px 12px; margin: 0 0 6px; border-radius: 5px;
+  border: 1px solid var(--wt-line);
+  display: flex; gap: 10px; align-items: baseline;
+  background: var(--wt-bg);
+  font-size: 14.5px; line-height: 1.35;
+}
+.item .syn {
+  font-family: var(--wt-mono); font-size: 11px; letter-spacing: 0.04em;
+  color: var(--wt-accent-deep); background: var(--wt-accent-soft);
+  padding: 1px 6px; border-radius: 999px; flex: 0 0 auto;
+}
+.item .title {
+  flex: 1 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.item.moved { border-color: var(--wt-move); background: var(--wt-move-soft); }
+.item.moved .syn { background: var(--wt-move); color: #fff; }
+.item.promoted {
+  text-decoration: line-through; color: var(--wt-muted);
+  background: var(--wt-warn-soft); border-color: var(--wt-warn);
+}
+.item.promoted .syn { background: var(--wt-warn); color: #fff; }
+.featured-section {
+  margin-top: -2px; padding: 10px 14px; border: 1px dashed var(--wt-warn);
+  background: var(--wt-warn-soft); border-radius: 5px;
+}
+.featured-section .featured-heading {
+  font-family: var(--wt-mono); font-size: 11px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--wt-warn); margin: 0 0 6px;
+}
+.marker {
+  font-family: var(--wt-mono); font-size: 11px; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--wt-accent-deep);
+  background: var(--wt-accent-soft); border: 1px dashed var(--wt-accent);
+  padding: 4px 10px; border-radius: 999px; margin: 0 0 6px;
+  display: inline-block;
+}
+#proposal-connectors {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 0; overflow: visible;
+}
+#proposal-connectors path {
+  fill: none; stroke: var(--wt-move); stroke-width: 1.5;
+  stroke-linecap: round; opacity: 0.45;
+}
+#proposal-connectors path.up { stroke: var(--wt-accent); opacity: 0.45; }
+.no-change-note {
+  font-family: var(--wt-mono); font-size: 12px; letter-spacing: 0.04em;
+  color: var(--wt-muted); padding: 6px 0; font-style: italic;
+}
+@media (max-width: 720px) {
+  .cols { grid-template-columns: 1fr; }
+  #proposal-connectors { display: none; }
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wt-bg: #15171a; --wt-ink: #dfe2e6; --wt-ink-soft: #aab0b8; --wt-muted: #828a94;
+    --wt-line: #2c2f34; --wt-line-soft: #23262a;
+    --wt-accent: #6ea8fe; --wt-accent-deep: #9cc2ff; --wt-accent-soft: #1d2733;
+    --wt-warn: #f1c065; --wt-warn-soft: #3b2e10;
+    --wt-move: #4ade80; --wt-move-soft: #112d1c;
+  }
+}
+"""
+
+_PROPOSAL_SCRIPT = """\
+<script>(function(){
+var svg=document.getElementById('proposal-connectors');
+if(!svg)return;
+function box(el){return el?el.getBoundingClientRect():null;}
+function relTo(rect,base){return {x:rect.left-base.left,y:rect.top-base.top,w:rect.width,h:rect.height};}
+function draw(){
+  if(!svg)return;
+  var cols=document.querySelector('.cols');if(!cols)return;
+  var base=cols.getBoundingClientRect();
+  svg.setAttribute('width',base.width);
+  svg.setAttribute('height',Math.max(base.height,cols.scrollHeight));
+  svg.innerHTML='';
+  Array.prototype.forEach.call(document.querySelectorAll('[data-side="current"]'),function(left){
+    var id=left.getAttribute('data-id');if(!id)return;
+    var right=document.querySelector('[data-side="proposed"][data-id="'+id+'"]')
+      ||document.querySelector('[data-side="featured"][data-id="'+id+'"]');
+    if(!right)return;
+    var lr=box(left),rr=box(right);if(!lr||!rr)return;
+    var l=relTo(lr,base),r=relTo(rr,base);
+    var x1=l.x+l.w,y1=l.y+l.h/2;
+    var x2=r.x,y2=r.y+r.h/2;
+    var direction=Math.abs(y2-y1)<6?'flat':(y2>y1?'down':'up');
+    if(direction==='flat')return;
+    var mid=x1+(x2-x1)/2;
+    var path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d','M '+x1+' '+y1+' C '+mid+' '+y1+', '+mid+' '+y2+', '+x2+' '+y2);
+    if(direction==='up')path.classList.add('up');
+    svg.appendChild(path);
+  });
+}
+window.addEventListener('load',draw);
+window.addEventListener('resize',draw);
+})();</script>
+"""
+
+
+def _proposal_item_html(
+    *, side: str, synth_id: str, title: str, moved: bool, promoted: bool,
+) -> str:
+    """One item row in the current-or-proposed column."""
+    classes = ["item"]
+    if promoted and side == "current":
+        classes.append("promoted")
+    if moved and side != "current":
+        classes.append("moved")
+    return (
+        f'<li class="{" ".join(classes)}" data-side="{side}" data-id="{synth_id}">'
+        f'<span class="syn">{synth_id}</span>'
+        f'<span class="title">{_html.escape(title)}</span>'
+        f'</li>'
+    )
+
+
+def _proposal_section_html(
+    *,
+    side: str,
+    section: str,
+    label: str,
+    items: list[dict],
+    item_synth: dict,
+    markers_after: Optional[dict[str, list[str]]] = None,
+    trailing_markers: Optional[list[str]] = None,
+    moved_ids: Optional[set[str]] = None,
+    promoted_ids: Optional[set[str]] = None,
+) -> str:
+    """Render one section's column (current or proposed).
+
+    ``markers_after`` / ``trailing_markers`` are only emitted on the
+    proposed side. ``moved_ids`` highlights items whose position
+    changed; ``promoted_ids`` shows the current-side entries with a
+    strikethrough.
+    """
+    moved_ids = moved_ids or set()
+    promoted_ids = promoted_ids or set()
+    markers_after = markers_after or {}
+    trailing_markers = trailing_markers or []
+    parts: list[str] = [f'<section><h3>{_html.escape(label)}</h3><ul>']
+    for row in items:
+        synth = item_synth[int(row["id"])]
+        title = (row.get("title") or row.get("url") or "(untitled)").strip()
+        promoted = synth in promoted_ids
+        moved = synth in moved_ids
+        parts.append(_proposal_item_html(
+            side=side, synth_id=synth, title=title,
+            moved=moved, promoted=promoted,
+        ))
+        if side == "proposed":
+            for m in markers_after.get(synth, []):
+                parts.append(f'<li class="marker">{_html.escape(m)}</li>')
+    if side == "proposed":
+        for m in trailing_markers:
+            parts.append(f'<li class="marker">{_html.escape(m)}</li>')
+    parts.append('</ul></section>')
+    return "".join(parts)
+
+
+def _proposal_featured_html(
+    *, position: str, heading: str, item: dict, synth_id: str,
+) -> str:
+    title = (item.get("title") or item.get("url") or "(untitled)").strip()
+    parts = [
+        f'<div class="featured-section" data-position="{position}">',
+        f'<p class="featured-heading">↑ Featured · {_html.escape(position.replace("_", " "))}</p>',
+        f'<p style="font-family:var(--wt-serif);font-weight:500;margin:0 0 6px;">{_html.escape(heading)}</p>',
+        '<ul>',
+        f'<li class="item promoted-target" data-side="featured" data-id="{synth_id}">'
+        f'<span class="syn">{synth_id}</span>'
+        f'<span class="title">{_html.escape(title)}</span>'
+        f'</li>',
+        '</ul></div>',
+    ]
+    return "".join(parts)
+
+
+def create_final_proposal_html(
+    *,
+    issue_number: int,
+    thesis: str,
+    rows_by_section: dict[str, list[dict]],
+    proposal: dict,
+    synth_to_row: dict[str, int],
+    row_to_synth: dict[int, str],
+) -> str:
+    """Build the side-by-side proposal page.
+
+    ``rows_by_section`` is the current (pre-apply) order;
+    ``proposal`` is Eddy's JSON (``*_order``, ``promotions``,
+    ``membership_blocks``). The page shows two columns — current on
+    the left, proposed on the right — with SVG connector lines
+    between matching items (per-item id-anchored). Items in the
+    same position get no line; promoted items are struck through on
+    the left and rendered as a standalone featured section on the
+    right at their declared position.
+    """
+    title = f"WT{int(issue_number)} — create-final proposal"
+    section_labels = {"notable": "Notable", "brief": "Briefly", "journal": "Journal"}
+
+    promotions = proposal.get("promotions") or []
+    promoted_synth = {p["id"] for p in promotions}
+
+    # Markers — assign in declaration order so the rendered slot
+    # numbers match what create-final emits in final.md.
+    markers_after: dict[str, list[str]] = {}
+    trailing: list[str] = []
+    kind_counts: dict[str, int] = {}
+    for b in (proposal.get("membership_blocks") or []):
+        kind = b.get("kind", "")
+        if kind not in ("cta", "thanks"):
+            continue
+        kind_counts[kind] = kind_counts.get(kind, 0) + 1
+        marker = f"{kind}:{kind_counts[kind]}"
+        if b.get("before_haiku"):
+            trailing.append(marker)
+        elif "after" in b:
+            markers_after.setdefault(b["after"], []).append(marker)
+
+    # Build a moved-ids set per section — synth ids whose position
+    # changed between current and proposed.
+    def _moved_for(section: str) -> set[str]:
+        current = [row_to_synth[int(r["id"])] for r in rows_by_section.get(section, [])]
+        order = proposal.get(f"{section}_order") or []
+        current_kept = [sid for sid in current if sid not in promoted_synth]
+        moved: set[str] = set()
+        for i, sid in enumerate(order):
+            try:
+                cur_idx = current_kept.index(sid)
+            except ValueError:
+                continue
+            if cur_idx != i:
+                moved.add(sid)
+        return moved
+
+    cur_html: list[str] = []
+    prop_html: list[str] = []
+    for section in ("notable", "journal", "brief"):
+        items = rows_by_section.get(section, [])
+        label = section_labels.get(section, section.capitalize())
+        cur_html.append(_proposal_section_html(
+            side="current", section=section, label=label,
+            items=items, item_synth=row_to_synth,
+            promoted_ids=promoted_synth,
+        ))
+        # Build the proposed column for this section: ordered by Eddy's
+        # *_order, with markers inline, then featured sections (if any)
+        # declared after_<section>.
+        order = proposal.get(f"{section}_order") or []
+        by_synth = {row_to_synth[int(r["id"])]: r for r in items}
+        ordered_rows = [by_synth[sid] for sid in order if sid in by_synth]
+        moved_ids = _moved_for(section)
+        section_trailing = trailing if section == "brief" else []
+        prop_html.append(_proposal_section_html(
+            side="proposed", section=section, label=label,
+            items=ordered_rows, item_synth=row_to_synth,
+            markers_after=markers_after,
+            trailing_markers=section_trailing,
+            moved_ids=moved_ids,
+            promoted_ids=promoted_synth,
+        ))
+        for p in promotions:
+            if p.get("position") != f"after_{section}":
+                continue
+            rid = synth_to_row.get(p["id"])
+            if rid is None:
+                continue
+            item = next(
+                (r for r in rows_by_section.get("notable", [])
+                 + rows_by_section.get("journal", [])
+                 + rows_by_section.get("brief", [])
+                 if int(r["id"]) == rid),
+                None,
+            )
+            if item is None:
+                continue
+            prop_html.append(_proposal_featured_html(
+                position=p.get("position", ""),
+                heading=p.get("heading", "") or "(no heading)",
+                item=item, synth_id=row_to_synth[rid],
+            ))
+
+    legend = (
+        '<div class="legend">'
+        '<span><span class="swatch" style="background:var(--wt-move);"></span>moved</span>'
+        '<span><span class="swatch" style="background:var(--wt-warn);"></span>promoted (struck on left, featured on right)</span>'
+        '<span><span class="swatch" style="background:var(--wt-accent);border:1px dashed var(--wt-accent);"></span>membership marker</span>'
+        '</div>'
+    )
+
+    no_change = ""
+    any_moved = any(_moved_for(s) for s in ("notable", "brief", "journal"))
+    if not any_moved and not promotions and not (markers_after or trailing):
+        no_change = '<p class="no-change-note">No changes proposed — current order stands; no promotions; no membership markers.</p>'
+
+    body = (
+        f'<h1>{_html.escape(title)}</h1>'
+        '<p class="subtitle">react ✅ / ❌ / 🔄 in #editorial · the page refreshes on each round</p>'
+        f'<p class="thesis">{_html.escape((thesis or "").strip())}</p>'
+        if thesis and thesis.strip()
+        else
+        f'<h1>{_html.escape(title)}</h1>'
+        '<p class="subtitle">react ✅ / ❌ / 🔄 in #editorial</p>'
+    )
+    body += legend + no_change
+    body += (
+        '<div class="cols">'
+        '<svg id="proposal-connectors" aria-hidden="true"></svg>'
+        '<div class="col col-current"><h2>Current order</h2>'
+        + "".join(cur_html)
+        + '</div>'
+        '<div class="col col-proposed"><h2>Proposed by Eddy</h2>'
+        + "".join(prop_html)
+        + '</div>'
+        '</div>'
+    )
+
+    return (
+        "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n"
+        "<meta charset=\"utf-8\">\n"
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+        "<meta name=\"robots\" content=\"noindex, nofollow\">\n"
+        f"<title>{_html.escape(title)}</title>\n"
+        f"<style>{_PROPOSAL_CSS}</style>\n"
+        "</head>\n<body>\n"
+        + body
+        + "\n" + _PROPOSAL_SCRIPT
+        + "</body>\n</html>\n"
+    )
+
+
+def render_and_upload_proposal(
+    *,
+    issue_number: int,
+    thesis: str,
+    rows_by_section: dict[str, list[dict]],
+    proposal: dict,
+    synth_to_row: dict[str, int],
+    row_to_synth: dict[int, str],
+) -> Optional[str]:
+    """Upload the proposal page to ``final-proposal.html`` in the issue
+    workspace. Returns the public URL; ``None`` on failure (caller
+    treats the page as a nice-to-have on top of the Discord pick)."""
+    try:
+        page = create_final_proposal_html(
+            issue_number=int(issue_number), thesis=thesis,
+            rows_by_section=rows_by_section, proposal=proposal,
+            synth_to_row=synth_to_row, row_to_synth=row_to_synth,
+        )
+        res = s3.write_issue_html(int(issue_number), "final-proposal.html", page)
+        return res.get("url")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "render: couldn't write final-proposal.html for #%s: %s",
+            issue_number, exc,
+        )
+        return None
+
+
 def render_and_upload_html(
     issue_number: int,
     name: str,
