@@ -99,6 +99,16 @@ def _collect_ship_files(issue_number: int) -> list[tuple[str, bytes]]:
     if links_path.exists():
         files.append((f"data/issues/{issue_number}/links.json", links_path.read_bytes()))
 
+    # closer.md (the "From the Archive" paragraph) is optional — present
+    # when compose-closer wrote one during create-final, absent when
+    # compose-closer returned SKIP or hasn't run yet. The closer text is
+    # already inline in archive.md / final.md / buttondown.md via the
+    # assembler's splice; this commits the raw asset so editors who pull
+    # the repo have the canonical paragraph as a standalone file too.
+    closer_path = issue_dir / "closer.md"
+    if closer_path.exists():
+        files.append((f"data/issues/{issue_number}/closer.md", closer_path.read_bytes()))
+
     transcript_dir = issue_dir / "transcript"
     if transcript_dir.is_dir():
         for path in sorted(transcript_dir.glob("*.txt")):

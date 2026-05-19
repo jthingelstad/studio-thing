@@ -105,10 +105,15 @@ def assemble_final(
     atoms: dict[str, str],
     section_bodies: dict[str, str],
     features: list[tuple[str, str]],
+    closer: str = "",
 ) -> str:
     """Build ``final.md`` text. ``features`` is a list of
     ``(promoted_position, '## Heading\\n\\nbody')`` tuples — see
     :func:`tools.issue_items_render.render_featured_section`.
+
+    ``closer``, if non-empty, is the "From the Archive" paragraph (no
+    heading — this function supplies ``## From the Archive``); it
+    splices between the haiku close and the Reddit-discuss sign-off.
 
     The output is block-markered, mirrors the draft template's structure
     minus the feature1/feature2 blocks (those are gone — promotions
@@ -124,6 +129,7 @@ def assemble_final(
     notable = (section_bodies.get("notable") or "").strip()
     journal = (section_bodies.get("journal") or "").strip()
     brief = (section_bodies.get("brief") or "").strip()
+    closer_text = (closer or "").strip()
 
     parts: list[str] = []
     parts.append(_block("intro", intro))
@@ -148,7 +154,14 @@ def assemble_final(
         parts.append("---")
     parts.append(_block("outro", outro))
     parts.append("---")
-    parts.append(f"A haiku to leave you with…\n\n{_block('haiku', haiku)}\n\n{_CLOSING}")
+    # Haiku closes the editorial body; "From the Archive" (when present)
+    # lands between the haiku and the Reddit-discuss sign-off — a slow
+    # fade: outro → haiku → archive reflection → discuss link → 👨‍💻.
+    haiku_block = f"A haiku to leave you with…\n\n{_block('haiku', haiku)}"
+    closer_block = (
+        f"\n\n## From the Archive\n\n{closer_text}" if closer_text else ""
+    )
+    parts.append(f"{haiku_block}{closer_block}\n\n{_CLOSING}")
 
     body = "\n\n".join(parts)
     if not body.endswith("\n"):
@@ -209,6 +222,7 @@ def assemble_publish(
     issue_number: int,
     pixel_block: Optional[str] = None,
     marker_substitution: Optional[Any] = None,
+    closer: str = "",
 ) -> str:
     """Build ``buttondown.md`` text. Same body shape as ``assemble_final``
     minus block markers, plus:
@@ -221,6 +235,9 @@ def assemble_publish(
       Liquid-wrapped CTA copy).
     - ``pixel_block`` (the Tinylytics open-tracking pixel) appended
       after the closing line, separated by a blank line.
+    - ``closer`` (the "From the Archive" paragraph) splices between the
+      haiku close and the Reddit-discuss sign-off (same placement as
+      assemble_final).
 
     Both ``pixel_block`` and ``marker_substitution`` are optional; when
     omitted the corresponding step is skipped. The defaults are
@@ -228,6 +245,7 @@ def assemble_publish(
     """
     body = assemble_final(
         atoms=atoms, section_bodies=section_bodies, features=features,
+        closer=closer,
     )
     body = _strip_block_markers(body)
     if marker_substitution is not None:

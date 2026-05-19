@@ -66,7 +66,7 @@ from typing import Any, Optional
 from ..tools import db, issue_assembly, issue_items, issue_items_render, render, s3
 from ..tools.discord import discord_io, interaction
 from ..tools.llm import anthropic_client
-from . import _base, _cover, _currently, _llm_job, compose_cta
+from . import _base, _cover, _currently, _llm_job, compose_closer, compose_cta
 
 logger = logging.getLogger("workshop.jobs.create_final")
 
@@ -579,8 +579,14 @@ def _render_final(
     data: dict,
     synth_to_row: dict[str, int],
     row_to_synth: dict[int, str],
+    *,
+    closer: str = "",
 ) -> str:
-    """Read the post-mutation row state and assemble final.md."""
+    """Read the post-mutation row state and assemble final.md.
+
+    ``closer``, if non-empty, is the "From the Archive" paragraph
+    (no heading — assembler supplies ``## From the Archive``).
+    """
     notable_rows = issue_items.list_items(issue_number, section="notable", include_promoted=False)
     journal_rows = issue_items.list_items(issue_number, section="journal", include_promoted=False)
     brief_rows = issue_items.list_items(issue_number, section="brief", include_promoted=False)
@@ -616,6 +622,7 @@ def _render_final(
 
     return issue_assembly.assemble_final(
         atoms=atoms, section_bodies=section_bodies, features=features,
+        closer=closer,
     )
 
 
@@ -847,13 +854,29 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 if approved is True:
                     # Apply: mutate rows then render.
                     await asyncio.to_thread(_apply_proposal, n, data, synth_to_row)
+                    # Render a baseline final body (without closer) so
+                    # compose-closer can read the just-assembled issue
+                    # to ground its archive pick on the actual content.
+                    baseline_body = _render_final(
+                        n, atoms, data, synth_to_row, row_to_synth,
+                    )
+                    closer_result = await compose_closer.run(
+                        ctx, baseline_body=baseline_body,
+                    )
+                    closer_text = ""
+                    if closer_result.ok and closer_result.data:
+                        if not closer_result.data.get("skipped"):
+                            closer_text = (closer_result.data.get("closer") or "").strip()
+                    # Final assembly: re-render with the closer spliced in
+                    # (or skip the section entirely on SKIP).
                     final_body = _render_final(
                         n, atoms, data, synth_to_row, row_to_synth,
+                        closer=closer_text,
                     )
                     s3.write_issue_file(n, "final.md", final_body)
                     s3.write_issue_file(n, "thesis.md", thesis + "\n")
                 else:
-                    # ❌ — render from current row order, no edits.
+                    # ❌ — render from current row order, no edits, no closer.
                     final_body = _render_final_passthrough(n, atoms)
                     s3.write_issue_file(n, "final.md", final_body)
 

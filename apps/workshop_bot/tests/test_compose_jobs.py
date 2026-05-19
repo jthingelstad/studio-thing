@@ -21,7 +21,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import (  # noqa: E402
-    _base, build_publish, compose_cta, compose_haiku, compose_meta, create_final,
+    _base, build_publish, compose_closer, compose_cta, compose_haiku, compose_meta, create_final,
 )
 from apps.workshop_bot.tools import db, s3 # noqa: E402
 from apps.workshop_bot.tools.discord import interaction
@@ -488,15 +488,30 @@ class ComposeCtaTests(_DBTestCase):
 
 
 class CreateFinalTests(_DBTestCase):
-    """Rewritten for the row-backed editorial pass. Eddy still returns a
-    JSON object (``thesis``, ``*_order``, ``promotions``,
-    ``membership_blocks``) with synthetic ids (``n1``/``b2``/``j3``);
-    the job validates strictly, then mutates ``issue_items`` rows
-    (reorder + promote) and assembles ``final.md`` from rows + atoms.
-    Promoted items splice inline at their declared position — there
-    are no feature1/feature2 blocks anymore."""
+    """Rewritten for the row-backed editorial pass. Eddy returns a JSON
+    object (``thesis``, ``*_order``, ``membership_blocks``) with
+    synthetic ids (``n1``/``b2``/``j3``); the job validates strictly,
+    then mutates ``issue_items`` rows (reorder Notable + Brief) and
+    assembles ``final.md`` from rows + atoms. Featured posts come from
+    sync (not Eddy); the "From the Archive" closer is a separate
+    compose_closer.run call that fires after Jamie's ✅."""
+
+    def setUp(self):
+        super().setUp()
+        # compose_closer.run fires inside create_final.run after ✅, would
+        # otherwise (a) make a real bot.core call that fails when the
+        # fixture reply isn't a closer-shaped paragraph, and (b) try to
+        # write to the real local data/issues/{N}/closer.md, polluting
+        # the repo. Patch it to a no-op for all CreateFinalTests; the
+        # closer's behavior is covered by test_compose_closer.py.
+        self._closer_patch = patch.object(
+            compose_closer, "run",
+            new=AsyncMock(return_value=_base.JobResult(True, "ok", data={"skipped": True})),
+        )
+        self._closer_patch.start()
 
     def tearDown(self):
+        self._closer_patch.stop()
         os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
         super().tearDown()
 
@@ -639,13 +654,17 @@ class CreateFinalTests(_DBTestCase):
 
     def test_keeps_eddy_default_model_for_proposal(self):
         # create-final does the heaviest editorial work — JSON contract,
-        # thesis, promotions, marker placement. It must NOT force a
-        # cheaper model; the bot.core call passes model=None so Eddy's
-        # preferred (Opus per EddyBot.preferred_model) wins. This guards
-        # against a future "let's drop everything to Sonnet" refactor
-        # silently downgrading the proposal pass.
+        # thesis, marker placement. It must NOT force a cheaper model;
+        # the bot.core call passes model=None so Eddy's preferred (Opus
+        # per EddyBot.preferred_model) wins. This guards against a
+        # future "let's drop everything to Sonnet" refactor silently
+        # downgrading the proposal pass.
         ctx, fc = self._setup(self._basic_reply())
-        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
+        # Mock compose_closer.run so its own bot.core call doesn't count
+        # toward the proposal-call assertion; this test is about the
+        # proposal LLM, not the closer.
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)), \
+             patch.object(compose_closer, "run", new=AsyncMock(return_value=_base.JobResult(True, "ok", data={"skipped": True}))):
             asyncio.run(create_final.run(ctx))
         # core() was called exactly once (one-shot accept); model arg is None.
         self.assertEqual(fc.bot.core.await_count, 1)
@@ -656,11 +675,14 @@ class CreateFinalTests(_DBTestCase):
         # journal_order; Journal is no longer reordered, so the auto-fix
         # path now only applies to Notable and Brief. Same shape: Eddy
         # drops an id, the auto-fix appends it in original order and
-        # accepts the rest of the proposal so thesis + promotions +
-        # membership-block placement aren't lost to a passthrough fallback.
+        # accepts the rest of the proposal so thesis + membership-block
+        # placement aren't lost to a passthrough fallback.
         bad = self._basic_reply(notable_order=("n1",))  # n2 dropped
         ctx, fc = self._setup(bad)
-        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
+        # Mock compose_closer.run for the same reason as the previous test —
+        # this test is about the proposal LLM call shape, not the closer.
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)), \
+             patch.object(compose_closer, "run", new=AsyncMock(return_value=_base.JobResult(True, "ok", data={"skipped": True}))):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
         # Auto-fix path — thesis written (real proposal accepted, not the
@@ -673,8 +695,8 @@ class CreateFinalTests(_DBTestCase):
                 for m in sent_messages),
             f"expected auto-fix note in sends; got: {sent_messages!r}",
         )
-        # And only ONE LLM call happened — no retry round, no
-        # passthrough fall-through.
+        # And only ONE LLM call happened for the proposal — no retry round,
+        # no passthrough fall-through (compose-closer is mocked, doesn't count).
         self.assertEqual(fc.bot.core.await_count, 1)
 
     # ---- compose-cta autofire ----
