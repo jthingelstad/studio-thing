@@ -11,7 +11,7 @@ the supporter-CTA copy elsewhere in the issue, or nothing at all.
 The `## Today` block above carries the runtime facts — current goal + live
 progress, days to the May 13 anniversary, expected issues remaining,
 recent achieved goals + durations, current nonprofit. **Read it; don't
-recompute.** The recent issues' `publish.md` files below show how prior
+recompute.** The recent issues' `buttondown.md` files below show how prior
 thank-yous have read.
 
 If `## Thesis` is present, the issue has an editorial thesis from Eddy.

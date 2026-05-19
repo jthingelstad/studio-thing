@@ -8,7 +8,7 @@ published issue uses. Empty / no entries → ``""``, and the section
 drops out of the published issue.
 
 Shared by ``update-draft`` (the draft's ``currently`` block) and
-``build-publish`` (the ``## Currently`` section in ``publish.md``) so
+``build-publish`` (the ``## Currently`` section in ``buttondown.md``) so
 the two never diverge.
 
 The legacy iOS-Shortcut path (``currently.json`` / ``currently.md`` in

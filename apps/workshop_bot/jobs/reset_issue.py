@@ -5,7 +5,7 @@ The publish flow has natural gates: ``update-draft`` refuses when
 exists. Those gates are correct (re-firing the upstream step would
 silently lose Eddy's editorial work). But when Jamie *wants* to back
 up — content has shifted enough that he needs to re-do the editorial
-pass, or he edited intro.md after publish.md was assembled — he needs
+pass, or he edited intro.md after buttondown.md was assembled — he needs
 a way to drop the gate file without reaching for the AWS console.
 
 This job is that. ``/eddy issue reset {final|publish}`` deletes the
@@ -50,7 +50,7 @@ NAME = "reset-issue"
 # without keeping the docstring in sync separately.
 _STEP_ARTIFACTS: dict[str, tuple[str, ...]] = {
     "final": ("final.md", "thesis.md", "final.html"),
-    "publish": ("publish.md", "publish.html"),
+    "publish": ("buttondown.md", "buttondown.html"),
 }
 
 

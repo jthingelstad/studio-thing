@@ -6,7 +6,7 @@ Currently is the conversational replacement for the retired
 ``Drafts → Shortcut → currently.json`` flow. The canonical type pool
 and per-issue values live in ``workshop.db`` (``currently_types`` /
 ``currently_entries``); ``jobs/_currently.render`` projects them into
-``draft.md`` and ``publish.md``. Authoring happens three ways:
+``draft.md`` and ``buttondown.md``. Authoring happens three ways:
 
 1. **Conversational with Eddy in #editorial** — the primary path.
    Eddy uses the ``currently__*`` agent tools (``set`` / ``clear`` /

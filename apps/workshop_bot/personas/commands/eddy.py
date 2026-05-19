@@ -157,14 +157,14 @@ def register_eddy_commands(
 
     @issue.command(
         name="publish",
-        description="Assemble publish.md from final.md + assets (refuses if anything required is missing).",
+        description="Assemble buttondown.md from final.md + assets (refuses if anything required is missing).",
     )
     async def issue_publish_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: build_publish.run(_ctx(bot)), "issue publish")
 
     @issue.command(
         name="send",
-        description="Push publish.md to Buttondown as a draft (idempotent — re-run to update the same draft).",
+        description="Push buttondown.md to Buttondown as a draft (idempotent — re-run to update the same draft).",
     )
     async def issue_send_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(
@@ -176,7 +176,7 @@ def register_eddy_commands(
         description="Force the in-flight issue back to an earlier step by deleting the gate artifacts.",
     )
     @app_commands.describe(
-        step="Which gate to drop: 'final' (re-do editorial pass) or 'publish' (rebuild publish.md).",
+        step="Which gate to drop: 'final' (re-do editorial pass) or 'publish' (rebuild buttondown.md).",
     )
     @app_commands.choices(step=[
         app_commands.Choice(name="final", value="final"),

@@ -12,7 +12,7 @@ members see nothing here — they get the thank-you elsewhere).
 The `## Today` block above carries the runtime facts — current goal + live
 progress, days to the May 13 anniversary, expected issues remaining, recent
 achieved goals + durations, current nonprofit. **Read it; don't recompute.**
-The recent issues' `publish.md` files below have prior CTAs verbatim —
+The recent issues' `buttondown.md` files below have prior CTAs verbatim —
 ground the arc in them.
 
 If `## Thesis` is present, the issue has a stated editorial thesis from

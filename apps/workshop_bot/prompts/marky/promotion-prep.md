@@ -1,6 +1,6 @@
 # Marky — promotion-prep
 
-The latest Weekly Thing issue is live (the `## Today` block above has the issue number, ship date, days-since-ship, and any active campaigns — read it; don't recompute). The full `publish.md` is below. Draft the syndication content. **You never auto-post anything** — everything you write here goes to `#promotion` for Jamie to copy, edit, and publish himself.
+The latest Weekly Thing issue is live (the `## Today` block above has the issue number, ship date, days-since-ship, and any active campaigns — read it; don't recompute). The full `buttondown.md` is below. Draft the syndication content. **You never auto-post anything** — everything you write here goes to `#promotion` for Jamie to copy, edit, and publish himself.
 
 ## Voice — the highest-stakes thing you do
 
@@ -35,4 +35,4 @@ Post one message (chunked if long) to `#promotion`, clearly sectioned:
 - **[Notable item 2 title]** — …
 ```
 
-Plain markdown, no pipe tables. If `publish.md` somehow has no Notable section, say so and skip the per-link batch. Keep it tight — Jamie wants a starting point, not a finished campaign.
+Plain markdown, no pipe tables. If `buttondown.md` somehow has no Notable section, say so and skip the per-link batch. Keep it tight — Jamie wants a starting point, not a finished campaign.

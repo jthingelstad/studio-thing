@@ -92,7 +92,7 @@ class StartIssueTests(_DBTestCase):
         # currently_json is intentionally absent — Currently moved to workshop.db.
         for key in ("cover_jpg", "cover_json", "intro_md",
                     "haiku_md", "metadata_json", "draft_md", "draft_html",
-                    "final_md", "publish_md", "publish_html"):
+                    "final_md", "buttondown_md", "buttondown_html"):
             self.assertTrue(ptr["files"][key].startswith("https://files.thingelstad.com/weekly-thing/458/"), key)
         self.assertNotIn("currently_json", ptr["files"])
         self.assertEqual(ptr["set_by"], "jamie")

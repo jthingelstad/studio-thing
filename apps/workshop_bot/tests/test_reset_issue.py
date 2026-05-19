@@ -86,35 +86,35 @@ class ResetFinalTests(_Case):
     def test_does_not_touch_publish_artifacts(self):
         self._window()
         self.ws.write_issue_file(349, "final.md", "f")
-        self.ws.write_issue_file(349, "publish.md", "p")
+        self.ws.write_issue_file(349, "buttondown.md", "p")
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="final"))
         self.assertTrue(result.ok)
         self.assertNotIn((349, "final.md"), self.ws.files)
-        self.assertIn((349, "publish.md"), self.ws.files)
+        self.assertIn((349, "buttondown.md"), self.ws.files)
 
 
 class ResetPublishTests(_Case):
 
     def test_deletes_publish_md_and_html(self):
         self._window()
-        self.ws.write_issue_file(349, "publish.md", "p")
-        self.ws.write_issue_file(349, "publish.html", "h")
+        self.ws.write_issue_file(349, "buttondown.md", "p")
+        self.ws.write_issue_file(349, "buttondown.html", "h")
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="publish"))
         self.assertTrue(result.ok)
-        self.assertNotIn((349, "publish.md"), self.ws.files)
-        self.assertNotIn((349, "publish.html"), self.ws.files)
+        self.assertNotIn((349, "buttondown.md"), self.ws.files)
+        self.assertNotIn((349, "buttondown.html"), self.ws.files)
 
     def test_does_not_touch_final_md(self):
         self._window()
         self.ws.write_issue_file(349, "final.md", "f")
-        self.ws.write_issue_file(349, "publish.md", "p")
+        self.ws.write_issue_file(349, "buttondown.md", "p")
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="publish"))
         self.assertTrue(result.ok)
         self.assertIn((349, "final.md"), self.ws.files)
-        self.assertNotIn((349, "publish.md"), self.ws.files)
+        self.assertNotIn((349, "buttondown.md"), self.ws.files)
 
     def test_does_not_touch_buttondown_id(self):
         # metadata.json must survive — re-publishing should PATCH the
@@ -125,7 +125,7 @@ class ResetPublishTests(_Case):
             349, "metadata.json",
             '{"subject":"x","buttondown_id":"em_abc123"}',
         )
-        self.ws.write_issue_file(349, "publish.md", "p")
+        self.ws.write_issue_file(349, "buttondown.md", "p")
         ctx, fc = self._ctx()
         asyncio.run(reset_issue.run(ctx, step="publish"))
         self.assertIn((349, "metadata.json"), self.ws.files)
@@ -139,7 +139,7 @@ class ResetPublishTests(_Case):
             source_id="p1", body_md="x",
         )
         issue_items.promote(rid, promoted_position="after_notable", promoted_heading="F")
-        self.ws.write_issue_file(349, "publish.md", "p")
+        self.ws.write_issue_file(349, "buttondown.md", "p")
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="publish"))
         self.assertTrue(result.ok)

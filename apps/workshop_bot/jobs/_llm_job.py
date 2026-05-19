@@ -80,7 +80,7 @@ ISSUE_BODY_CAP = 20_000
 # headroom.
 CREATE_FINAL_BODY_CAP = ISSUE_BODY_CAP + 6_000
 
-# `promotion-prep` reads ``publish.md`` — the byte-shaped email body, which
+# `promotion-prep` reads ``buttondown.md`` — the byte-shaped email body, which
 # carries the intro + the optional Currently block + the cover block + every
 # non-empty section + the membership-CTA Liquid scaffold + the haiku close
 # + the email-only tracking pixel. It's the bulkiest of the three artifacts;

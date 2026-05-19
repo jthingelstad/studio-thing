@@ -18,14 +18,14 @@ flow). Bodies that exceed the cap are refused with a "use the S3
 console" hint — better that than silent truncation.
 
 This module deliberately does NOT touch the assembled documents
-(``draft.md`` / ``final.md`` / ``publish.md``). Those are renders,
+(``draft.md`` / ``final.md`` / ``buttondown.md``). Those are renders,
 not authored text — they regenerate from the atoms.
 
 After a successful write, the job optionally re-fires
 ``update-draft`` so the preview refreshes for atoms that flow into
 ``draft.md`` (intro / outro / haiku / currently / cover). Edits to
 ``cta-N.md`` / ``thanks-N.md`` don't auto-fire anything — they only
-affect ``publish.md``, and that's a deliberate step (``/eddy issue
+affect ``buttondown.md``, and that's a deliberate step (``/eddy issue
 publish`` or post-final rebuild).
 """
 

@@ -7,7 +7,7 @@ Shared between the three jobs that emit assembled documents:
   last established, or the upstream-arrival order if no reorder has
   run yet).
 - ``create-final`` renders the body of ``final.md`` after reordering.
-- ``build-publish`` renders the body of ``publish.md``, splicing
+- ``build-publish`` renders the body of ``buttondown.md``, splicing
   promoted (featured) sections into their declared positions.
 
 The output bytes mirror the section shapes the chunk parser
@@ -244,7 +244,7 @@ def render_featured_section(row: dict[str, Any]) -> str:
     weekday-time label; a promoted Notable item still renders with its
     H3 link + commentary).
 
-    Used by ``build-publish`` (splice into ``publish.md`` at
+    Used by ``build-publish`` (splice into ``buttondown.md`` at
     ``promoted_position``) and by the updated ``final.md`` renderer (so
     ``final.md`` reads as the issue will actually publish — feature
     blocks inline at the right spot, not gathered at the bottom of the

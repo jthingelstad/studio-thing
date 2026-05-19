@@ -2,7 +2,7 @@
 
 ``update-draft`` / ``create-final`` / ``build-publish`` write a ``.md``;
 they also write a ``.html`` twin so Jamie can pull the issue up in a
-browser and see it "in progress" (or, for ``publish.html``, as it'll
+browser and see it "in progress" (or, for ``buttondown.html``, as it'll
 ship). The page is self-contained — a small bit of CSS + JS, no remote
 assets — and the ``.html`` is uploaded with ``Cache-Control: no-cache``
 plus a CloudFront invalidation so the browser always sees the latest.

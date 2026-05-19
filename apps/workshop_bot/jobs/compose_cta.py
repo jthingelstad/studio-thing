@@ -51,7 +51,7 @@ logger = logging.getLogger("workshop.jobs.compose_cta")
 
 NAME = "compose-cta"
 
-# How many prior issues' ``publish.md`` to include for arc continuity (so
+# How many prior issues' ``buttondown.md`` to include for arc continuity (so
 # the model can see how prior CTAs / thanks read). The product
 # (count × excerpt cap) bounds the arc-context size in the user message.
 _ARC_LOOKBACK_COUNT = 4
@@ -104,10 +104,10 @@ def _recent_publish_excerpts(issue_number: int, count: int = _ARC_LOOKBACK_COUNT
     for prev in range(issue_number - 1, issue_number - 1 - count, -1):
         if prev < 1:
             break
-        res = s3.read_issue_file(prev, "publish.md")
+        res = s3.read_issue_file(prev, "buttondown.md")
         if res.get("found") and isinstance(res.get("text"), str) and res["text"].strip():
-            out.append(f"--- WT{prev} publish.md ---\n{res['text'][:_ARC_EXCERPT_CAP]}")
-    return "\n\n".join(out) if out else "(no prior publish.md files available)"
+            out.append(f"--- WT{prev} buttondown.md ---\n{res['text'][:_ARC_EXCERPT_CAP]}")
+    return "\n\n".join(out) if out else "(no prior buttondown.md files available)"
 
 
 def _parse_framings(reply: str) -> list[str]:

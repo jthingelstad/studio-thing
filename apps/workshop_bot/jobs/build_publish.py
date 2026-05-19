@@ -1,4 +1,4 @@
-"""``build-publish`` — assemble ``publish.md`` from ``final.md`` + assets.
+"""``build-publish`` — assemble ``buttondown.md`` from ``final.md`` + assets.
 
 The ship artifact, byte-shaped like a real Weekly Thing issue body (the
 thing ``pipeline/content/content.py publish`` posts to Buttondown). In
@@ -28,7 +28,7 @@ so the per-issue files (``cta-N.md`` / ``thanks-N.md``) stay clean —
 audience-aware Liquid is a publishing concern, not an authoring one.
 
 The parts are joined ``---``-fenced; the ``<!-- block:… -->`` markers
-from ``draft.md`` / ``final.md`` never appear in ``publish.md``. The
+from ``draft.md`` / ``final.md`` never appear in ``buttondown.md``. The
 ``.html`` preview is a Liquid-stripped, regular-subscriber rendering —
 best-effort.
 
@@ -164,14 +164,14 @@ def _thanks_block(thanks_body: str) -> str:
 # ---------- preview rendering (Liquid strip) ----------
 
 def _for_preview(text: str) -> str:
-    """Best-effort Liquid strip for the ``publish.html`` preview.
+    """Best-effort Liquid strip for the ``buttondown.html`` preview.
 
     Renders as a *regular* (free-subscriber) view: keeps the supporter-CTA
     text + the Stripe buttons, hides the premium-only thanks block, drops
     the editor-mode comment and the email-only pixel block, then strips
     any leftover ``{% … %}`` / ``{{ … }}`` tags. The delivered email keeps
     the full Liquid; this only shapes the preview at
-    ``https://files.thingelstad.com/weekly-thing/{N}/publish.html``.
+    ``https://files.thingelstad.com/weekly-thing/{N}/buttondown.html``.
     """
     t = re.sub(r"<!--\s*buttondown-editor-mode:[^>]*-->\s*", "", text, flags=re.IGNORECASE)
     # Strip the email-only tinylytics pixel.
@@ -287,7 +287,7 @@ def _substitute_markers(body: str, issue_number: int) -> str:
         if not copy:
             # Defensive: validated upstream, but if it slips through, leave
             # the marker in place rather than emitting a broken Liquid
-            # block. A visible marker in publish.md is easier to spot than
+            # block. A visible marker in buttondown.md is easier to spot than
             # silent omission.
             return m.group(0)
         if kind == "cta":
@@ -300,7 +300,7 @@ def _substitute_markers(body: str, issue_number: int) -> str:
 # ---------- main ----------
 
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
-    """Transform ``final.md`` into ``publish.md``.
+    """Transform ``final.md`` into ``buttondown.md``.
 
     ``final.md`` is already body-shaped after the row-backed rework:
     promoted (featured) sections splice inline at create-final time,
@@ -320,7 +320,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
        bodies).
     6. Append the Tinylytics email-only tracking pixel.
 
-    Writes ``publish.md`` and a Liquid-stripped ``publish.html`` preview.
+    Writes ``buttondown.md`` and a Liquid-stripped ``buttondown.html`` preview.
     """
     from ..tools import db
 
@@ -329,7 +329,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         return _base.JobResult(False, "❌ no active issue window — run `/eddy issue start` first.")
     n = int(window["issue_number"])
 
-    asset = f"{n}/publish.md"
+    asset = f"{n}/buttondown.md"
     try:
         with _base.job_lock([asset], NAME):
             try:
@@ -360,7 +360,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     },
                 )
 
-            # Transform final.md → publish.md. The body shape is already
+            # Transform final.md → buttondown.md. The body shape is already
             # correct; we just strip block markers, substitute the
             # membership-block markers, prepend the editor-mode comment,
             # and append the tracking pixel.
@@ -375,12 +375,12 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             published = _EDITOR_MODE_COMMENT + body
 
             preview = _for_preview(published)
-            s3.write_issue_file(n, "publish.md", published)
+            s3.write_issue_file(n, "buttondown.md", published)
             html_url = await asyncio.to_thread(
-                render.render_and_upload_html, n, "publish", preview,
+                render.render_and_upload_html, n, "buttondown", preview,
                 title=f"Weekly Thing {n}", subtitle=None,
             )
-            md_url = f"https://files.thingelstad.com/weekly-thing/{n}/publish.md"
+            md_url = f"https://files.thingelstad.com/weekly-thing/{n}/buttondown.md"
             view = (
                 f"\n📄 [HTML]({html_url}) · 📝 [markdown]({md_url})"
                 if html_url
@@ -388,7 +388,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             )
             await ctx.post(
                 "DISCORD_CHANNEL_EDITORIAL",
-                f"✅ `publish.md` ready for **WT{n}** (~{len(preview.split())} words){view}\n"
+                f"✅ `buttondown.md` ready for **WT{n}** (~{len(preview.split())} words){view}\n"
                 f"Push to Buttondown with `/eddy issue send` (creates or updates the draft idempotently).",
                 persona="eddy",
             )
@@ -396,6 +396,6 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         return _base.JobResult(False, f"⏳ `build-publish` is already running ({exc.holder_desc}).")
     return _base.JobResult(
         True,
-        f"publish.md written for #{n} (~{len(preview.split())} words){f' · 📄 {html_url}' if html_url else ''}.",
+        f"buttondown.md written for #{n} (~{len(preview.split())} words){f' · 📄 {html_url}' if html_url else ''}.",
         data={"issue_number": n, "preview_url": html_url},
     )

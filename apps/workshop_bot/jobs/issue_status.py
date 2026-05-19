@@ -56,7 +56,7 @@ def render_status_card(window: dict, st: dict) -> str:
 
     lines = [
         f"📋 **WT{n}** — issue status · pub {window['pub_date']} ({_days_to(window['pub_date'])}) · cutoff {window['end_date']}",
-        f"draft.md: {m(st['assets'].get('draft.md', False))}  ·  final.md: {m(st['assets'].get('final.md', False))}  ·  publish.md: {m(st['assets'].get('publish.md', False))}  ·  ~{st['word_count']} words",
+        f"draft.md: {m(st['assets'].get('draft.md', False))}  ·  final.md: {m(st['assets'].get('final.md', False))}  ·  buttondown.md: {m(st['assets'].get('buttondown.md', False))}  ·  ~{st['word_count']} words",
         "",
         "**Required for ship:**",
         secline("notable", "Notable"),

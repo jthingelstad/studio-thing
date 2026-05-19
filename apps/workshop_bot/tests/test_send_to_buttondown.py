@@ -2,7 +2,7 @@
 
 The job is a thin async wrapper around
 ``pipeline.content.content.buttondown_publish_idempotent`` — its own logic
-is the publish.md presence check, the Discord card formatting, and the
+is the buttondown.md presence check, the Discord card formatting, and the
 typed-exception catch. Tests stub the pipeline module so no real HTTP
 hits Buttondown.
 """
@@ -78,25 +78,25 @@ class SendToButtondownTests(_DBTestCase):
 
     def test_refuses_if_publish_md_missing(self):
         self._window()
-        # No publish.md in the workspace.
+        # No buttondown.md in the workspace.
         ctx, fc = self._ctx()
         result = asyncio.run(send_to_buttondown.run(ctx))
         self.assertFalse(result.ok)
-        self.assertIn("no `publish.md`", result.message)
+        self.assertIn("no `buttondown.md`", result.message)
         self.assertIn("/eddy issue publish", result.message)
         fc.channel.send.assert_awaited()  # error surfaced to #editorial
 
     def test_refuses_if_publish_md_empty(self):
         self._window()
-        self.ws.write_issue_file(458, "publish.md", "   \n   ")
+        self.ws.write_issue_file(458, "buttondown.md", "   \n   ")
         ctx, fc = self._ctx()
         result = asyncio.run(send_to_buttondown.run(ctx))
         self.assertFalse(result.ok)
-        self.assertIn("no `publish.md`", result.message)
+        self.assertIn("no `buttondown.md`", result.message)
 
     def test_created_action_posts_success_card(self):
         self._window()
-        self.ws.write_issue_file(458, "publish.md", "## Notable\n\nbody")
+        self.ws.write_issue_file(458, "buttondown.md", "## Notable\n\nbody")
         ctx, fc = self._ctx()
         fake_pipeline = _fake_pipeline(result={
             "action": "created",
@@ -120,7 +120,7 @@ class SendToButtondownTests(_DBTestCase):
 
     def test_updated_action_says_updated(self):
         self._window()
-        self.ws.write_issue_file(458, "publish.md", "## Notable\n\nbody")
+        self.ws.write_issue_file(458, "buttondown.md", "## Notable\n\nbody")
         ctx, fc = self._ctx()
         fake_pipeline = _fake_pipeline(result={
             "action": "updated",
@@ -140,7 +140,7 @@ class SendToButtondownTests(_DBTestCase):
 
     def test_pipeline_error_surfaces_to_channel(self):
         self._window()
-        self.ws.write_issue_file(458, "publish.md", "## Notable\n\nbody")
+        self.ws.write_issue_file(458, "buttondown.md", "## Notable\n\nbody")
         ctx, fc = self._ctx()
         fake_pipeline = _fake_pipeline(raise_with="Buttondown POST failed (422): validation error")
         with patch.object(send_to_buttondown, "_import_pipeline_content", return_value=fake_pipeline):
@@ -152,7 +152,7 @@ class SendToButtondownTests(_DBTestCase):
 
     def test_concurrent_run_blocked_by_job_lock(self):
         self._window()
-        self.ws.write_issue_file(458, "publish.md", "## Notable\n\nbody")
+        self.ws.write_issue_file(458, "buttondown.md", "## Notable\n\nbody")
         ctx, fc = self._ctx()
         # Pre-acquire the same asset lock the job opens (metadata.json).
         with _base.job_lock([f"{458}/metadata.json"], send_to_buttondown.NAME):

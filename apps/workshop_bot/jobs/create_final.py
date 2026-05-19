@@ -878,7 +878,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 html_url = await asyncio.to_thread(
                     render.render_and_upload_html, n, "final", final_body,
                     title=f"WT{n} — final",
-                    subtitle=f"FINAL (post-Eddy ordering) · WT{n} · awaiting publish.md",
+                    subtitle=f"FINAL (post-Eddy ordering) · WT{n} · awaiting buttondown.md",
                     strip_block_markers=True,
                 )
                 view = _md_html_links(n, "final", html_url)
@@ -921,7 +921,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             html_url = await asyncio.to_thread(
                 render.render_and_upload_html, n, "final", final_body,
                 title=f"WT{n} — final",
-                subtitle=f"FINAL (rows as-is) · WT{n} · awaiting publish.md",
+                subtitle=f"FINAL (rows as-is) · WT{n} · awaiting buttondown.md",
                 strip_block_markers=True,
             )
             return _base.JobResult(

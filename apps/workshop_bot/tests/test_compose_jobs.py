@@ -773,7 +773,7 @@ class CreateFinalTests(_DBTestCase):
         # Promote j2 to its own featured section. Journal_order keeps the
         # other two entries; the featured section splices inline AFTER
         # the Journal block, BEFORE the Brief section — what Jamie sees
-        # in final.md is exactly where it'll land in publish.md.
+        # in final.md is exactly where it'll land in buttondown.md.
         reply = self._basic_reply(
             journal_order=("j1", "j3"),  # j2 promoted out
             promotions=[{

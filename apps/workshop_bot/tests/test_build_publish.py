@@ -190,7 +190,7 @@ class BuildPublishTests(_DBTestCase):
         ctx, fc = self._ctx()
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
-        pub = self.ws.files[(458, "publish.md")]
+        pub = self.ws.files[(458, "buttondown.md")]
         # Editor-mode comment glommed onto the intro.
         self.assertTrue(pub.startswith("<!-- buttondown-editor-mode: plaintext -->Welcome to the issue."), pub[:80])
         self.assertIn("line two", pub)
@@ -223,8 +223,8 @@ class BuildPublishTests(_DBTestCase):
         self.assertIn("Check out the [Weekly Thing on Reddit]", pub)
         self.assertIn("{% if medium == 'email' %}", pub)
         self.assertIn("https://tinylytics.app/pixel/a2YQr3ZMqkySNYSwz4uF.gif?path=/email/458/", pub)
-        # publish.html written too — Liquid-stripped, regular-subscriber view.
-        html = self.ws.files[(458, "publish.html")]
+        # buttondown.html written too — Liquid-stripped, regular-subscriber view.
+        html = self.ws.files[(458, "buttondown.html")]
         self.assertTrue(html.startswith("<!DOCTYPE html>"))
         self.assertIn("<title>Weekly Thing 458</title>", html)
         self.assertNotIn('class="banner"', html)
@@ -233,7 +233,7 @@ class BuildPublishTests(_DBTestCase):
         self.assertNotIn("tinylytics.app/pixel", html)
         self.assertIn("Support the EFF.", html)
         self.assertIn("$4 monthly", html)
-        self.assertEqual(result.data["preview_url"], "https://files.thingelstad.com/weekly-thing/458/publish.html")
+        self.assertEqual(result.data["preview_url"], "https://files.thingelstad.com/weekly-thing/458/buttondown.html")
 
     def test_thanks_marker_resolves_to_premium_only_block(self):
         """A `<!-- thanks:1 -->` marker in final.md is substituted with a
@@ -251,12 +251,12 @@ class BuildPublishTests(_DBTestCase):
         ctx, fc = self._ctx()
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
-        pub = self.ws.files[(458, "publish.md")]
+        pub = self.ws.files[(458, "buttondown.md")]
         self.assertNotIn("<!-- thanks:1 -->", pub)
         self.assertIn("Thank you for keeping this free.", pub)
         self.assertIn("{% if subscriber.subscriber_type == 'premium' %}", pub)
         # Preview hides the thanks (regular subscribers don't see it).
-        html = self.ws.files[(458, "publish.html")]
+        html = self.ws.files[(458, "buttondown.html")]
         self.assertNotIn("Thank you for keeping this free.", html)
 
     def test_outro_appears_when_inlined_in_final(self):
@@ -271,20 +271,20 @@ class BuildPublishTests(_DBTestCase):
         ctx, fc = self._ctx()
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
-        pub = self.ws.files[(458, "publish.md")]
+        pub = self.ws.files[(458, "buttondown.md")]
         outro_pos = pub.index("Closing thought — see you next week.")
         self.assertGreater(outro_pos, pub.index("## Briefly"))
         self.assertLess(outro_pos, pub.index("A haiku to leave you with"))
 
     def test_missing_outro_drops_cleanly(self):
-        """No outro in final.md → no orphan outro in publish.md."""
+        """No outro in final.md → no orphan outro in buttondown.md."""
         self._window()
         self.ws.write_issue_file(458, "final.md", _filled_final())
         self._seed_required_assets()
         ctx, fc = self._ctx()
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
-        pub = self.ws.files[(458, "publish.md")]
+        pub = self.ws.files[(458, "buttondown.md")]
         self.assertIn("## Briefly", pub)
         self.assertIn("A haiku to leave you with", pub)
 
@@ -301,7 +301,7 @@ class BuildPublishTests(_DBTestCase):
         ctx, fc = self._ctx()
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
-        pub = self.ws.files[(458, "publish.md")]
+        pub = self.ws.files[(458, "buttondown.md")]
         self.assertIn("## Currently\n\n**Listening:** Noah Kahan.\n\n**Watching:** Shrinking.", pub)
 
     # ---------- featured (promoted) sections ----------
@@ -326,7 +326,7 @@ class BuildPublishTests(_DBTestCase):
         ctx, fc = self._ctx()
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
-        pub = self.ws.files[(458, "publish.md")]
+        pub = self.ws.files[(458, "buttondown.md")]
         self.assertIn("## Featured: The Big Read", pub)
         feat_pos = pub.index("## Featured: The Big Read")
         notable_pos = pub.index("## Notable")
@@ -343,7 +343,7 @@ class BuildPublishTests(_DBTestCase):
         ctx, fc = self._ctx()
         result = asyncio.run(build_publish.run(ctx))
         self.assertTrue(result.ok, result.message)
-        pub = self.ws.files[(458, "publish.md")]
+        pub = self.ws.files[(458, "buttondown.md")]
         self.assertNotIn("## Currently", pub)
         self.assertNotIn("/cover.jpg)", pub)
         self.assertIn("## Notable", pub)
@@ -380,7 +380,7 @@ class PublishToButtondownTests(unittest.TestCase):
     @staticmethod
     def _fake_workspace_get(*, meta_overrides: dict | None = None):
         """Build a ``_workspace_get_text`` stub that returns a canonical
-        publish.md + metadata.json for tests. ``meta_overrides`` patches
+        buttondown.md + metadata.json for tests. ``meta_overrides`` patches
         the metadata.json before serialising — handy for toggling
         ``buttondown_id``."""
         meta = {
@@ -394,7 +394,7 @@ class PublishToButtondownTests(unittest.TestCase):
         meta_json = json.dumps(meta)
 
         def fake_get(_n: str, filename: str):
-            if filename == "publish.md":
+            if filename == "buttondown.md":
                 return "## Notable\n\nbody"
             if filename == "metadata.json":
                 return meta_json

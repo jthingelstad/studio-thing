@@ -10,7 +10,7 @@ Modes:
     full          reset gates + downstream; update→final→haiku→subject→cta→publish
     from-final    keep upstream; reset final + downstream; final→…→publish
     downstream    keep final.md + thesis.md; reset haiku/meta/cta/publish; haiku→…→publish
-    publish-only  delete publish.md/.html only; run build-publish
+    publish-only  delete buttondown.md/.html only; run build-publish
 
 Picker strategy (--pick):
     first         always select option 1 in every refresh-loop pick
@@ -387,7 +387,7 @@ DOWNSTREAM_FILES = (
     "metadata.json",
     "cta-1.md", "cta-2.md",
     "thanks-1.md", "thanks-2.md",
-    "publish.md", "publish.html",
+    "buttondown.md", "buttondown.html",
     # picker option-card pages — re-generated each pick round
     "haiku-options.html",
     "subject-options.html",
@@ -411,7 +411,7 @@ def do_reset(mode: str, issue_number: int) -> dict[str, list[str]]:
     elif mode == "downstream":
         targets = list(DOWNSTREAM_FILES)
     elif mode == "publish-only":
-        targets = ["publish.md", "publish.html"]
+        targets = ["buttondown.md", "buttondown.html"]
     else:
         raise ValueError(f"unknown mode: {mode}")
 

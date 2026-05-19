@@ -22,7 +22,7 @@ from .. import s3
 # Promoted (featured) items used to live in dedicated ``feature1`` /
 # ``feature2`` blocks at the bottom of the file; the row-backed rework
 # retired those — promotions now splice inline at their declared
-# ``promoted_position`` in ``final.md`` / ``publish.md`` (see
+# ``promoted_position`` in ``final.md`` / ``buttondown.md`` (see
 # ``tools/issue_assembly.assemble_final``).
 SECTION_BLOCKS = (
     "intro", "currently", "cover", "notable", "journal", "brief",
@@ -131,7 +131,7 @@ def section_status(
     )
     assets = {name: (name in list_objects) for name in REQUIRED_ASSETS + OPTIONAL_ASSETS}
     assets["draft.md"] = ("draft.md" in list_objects) or bool(draft_text)
-    assets["publish.md"] = "publish.md" in list_objects
+    assets["buttondown.md"] = "buttondown.md" in list_objects
 
     intro_present = bool(blocks.get("intro")) or assets.get("intro.md", False)
     currently_present = (

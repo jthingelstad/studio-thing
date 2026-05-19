@@ -17,12 +17,12 @@ It takes:
   feature blocks), used as the editorial-surface artifact and the input
   to ``build-publish``. Promoted sections splice between block-close
   and next ``---`` divider for their declared position.
-- ``publish.md`` — block markers stripped, editor-mode comment prefixed,
+- ``buttondown.md`` — block markers stripped, editor-mode comment prefixed,
   membership markers substituted with audience-aware Liquid wrappers,
   Tinylytics pixel appended. This shape is what gets pushed to
   Buttondown.
 
-Why share one assembler: keeping ``final.md`` and ``publish.md`` in
+Why share one assembler: keeping ``final.md`` and ``buttondown.md`` in
 lockstep about the body shape (and especially about where promoted
 sections splice in) is the unlock from Jamie's WT348 feedback — what
 you see in ``final.md`` IS where things will appear in the email.
@@ -113,7 +113,7 @@ def assemble_final(
     The output is block-markered, mirrors the draft template's structure
     minus the feature1/feature2 blocks (those are gone — promotions
     splice inline now), and is the input ``build-publish`` reads to
-    produce ``publish.md``.
+    produce ``buttondown.md``.
     """
     intro = (atoms.get("intro") or "").strip()
     currently = (atoms.get("currently") or "").strip()
@@ -149,7 +149,7 @@ def assemble_final(
     return body
 
 
-# ---------- assembly: publish.md (used by build-publish) ----------
+# ---------- assembly: buttondown.md (used by build-publish) ----------
 
 def _strip_block_markers(text: str) -> str:
     """Remove ``<!-- block:NAME -->`` / ``<!-- /block:NAME -->`` lines
@@ -203,7 +203,7 @@ def assemble_publish(
     pixel_block: Optional[str] = None,
     marker_substitution: Optional[Any] = None,
 ) -> str:
-    """Build ``publish.md`` text. Same body shape as ``assemble_final``
+    """Build ``buttondown.md`` text. Same body shape as ``assemble_final``
     minus block markers, plus:
 
     - Editor-mode comment glommed onto the first paragraph (matches the

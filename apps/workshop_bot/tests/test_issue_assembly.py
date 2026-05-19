@@ -1,4 +1,4 @@
-"""issue_assembly — atoms + section bodies → final.md / publish.md."""
+"""issue_assembly — atoms + section bodies → final.md / buttondown.md."""
 
 from __future__ import annotations
 

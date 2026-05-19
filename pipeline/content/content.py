@@ -885,7 +885,7 @@ def buttondown_publish_idempotent(
 ) -> dict[str, Any]:
     """Create or update a Buttondown draft for ``issue_number``.
 
-    Reads ``publish.md`` + ``metadata.json`` from the issue's S3 workspace.
+    Reads ``buttondown.md`` + ``metadata.json`` from the issue's S3 workspace.
     If ``metadata.json`` already carries a ``buttondown_id`` (set on a
     prior run), PATCHes that draft. Otherwise POSTs a new draft, then
     writes the freshly-minted id back to ``metadata.json`` so the next
@@ -912,15 +912,15 @@ def buttondown_publish_idempotent(
             "description_chars": int,
         }
 
-    Raises :class:`ButtondownPublishError` on missing publish.md /
+    Raises :class:`ButtondownPublishError` on missing buttondown.md /
     metadata.json, missing Buttondown response id, or any 4xx/5xx
     (other than the handled PATCH 404 fallback).
     """
     number = str(issue_number)
-    body = _workspace_get_text(number, "publish.md")
+    body = _workspace_get_text(number, "buttondown.md")
     if body is None:
         raise ButtondownPublishError(
-            f"No publish.md at s3://{WEEKLY_THING_ASSETS_BUCKET}/weekly-thing/{number}/publish.md — "
+            f"No buttondown.md at s3://{WEEKLY_THING_ASSETS_BUCKET}/weekly-thing/{number}/buttondown.md — "
             "the issue isn't ready. Run `/eddy issue publish` first."
         )
     meta_raw = _workspace_get_text(number, "metadata.json")
@@ -1060,9 +1060,9 @@ def main() -> None:
 
     publish_parser = subparsers.add_parser(
         "publish",
-        help="Create a Buttondown draft from the issue's publish.md + metadata.json in S3",
+        help="Create a Buttondown draft from the issue's buttondown.md + metadata.json in S3",
     )
-    publish_parser.add_argument("--issue", required=True, help="Issue number to publish (its S3 workspace must have publish.md)")
+    publish_parser.add_argument("--issue", required=True, help="Issue number to publish (its S3 workspace must have buttondown.md)")
     publish_parser.add_argument("--dry-run", action="store_true", help="Preview without creating the draft")
 
     args = parser.parse_args()

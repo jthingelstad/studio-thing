@@ -1,4 +1,4 @@
-"""``send-to-buttondown`` — push the issue's ``publish.md`` to Buttondown as a draft.
+"""``send-to-buttondown`` — push the issue's ``buttondown.md`` to Buttondown as a draft.
 
 The bot's job is to **create or update the Buttondown draft idempotently**.
 On the first run for an issue, it POSTs ``/emails`` to create the draft
@@ -64,15 +64,15 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         return _base.JobResult(False, "❌ no active issue window — run `/eddy issue start` first.")
     n = int(window["issue_number"])
 
-    # Sanity: publish.md must exist; if it doesn't, point Jamie at the
+    # Sanity: buttondown.md must exist; if it doesn't, point Jamie at the
     # step that creates it rather than punting the error through to
     # Buttondown's API.
-    pub_res = await asyncio.to_thread(s3.read_issue_file, n, "publish.md")
+    pub_res = await asyncio.to_thread(s3.read_issue_file, n, "buttondown.md")
     if not (pub_res.get("found") and isinstance(pub_res.get("text"), str) and pub_res["text"].strip()):
         msg = (
-            f"❌ `send-to-buttondown` for **WT{n}** can't run — no `publish.md` "
+            f"❌ `send-to-buttondown` for **WT{n}** can't run — no `buttondown.md` "
             "in the workspace. Run `/eddy issue publish` first (it assembles "
-            "`publish.md` from `final.md` + the compose-\\* assets)."
+            "`buttondown.md` from `final.md` + the compose-\\* assets)."
         )
         await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
         return _base.JobResult(False, msg)

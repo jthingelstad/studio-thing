@@ -4,7 +4,7 @@ Marky's jobs derive their context from the public RSS/Atom feed — the
 most recently *published* issue, independent of the in-flight one. The
 ``rss-check`` scheduled job uses this to detect a new ship and auto-fire
 ``promotion-prep``. The feed is the trigger only; the content Marky works
-on is the issue's ``publish.md`` in the S3 workspace.
+on is the issue's ``buttondown.md`` in the S3 workspace.
 """
 
 from __future__ import annotations

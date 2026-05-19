@@ -907,7 +907,7 @@ SPECS: dict[str, dict[str, Any]] = {
         "description": (
             "List the files in one per-issue workspace folder at "
             "s3://files.thingelstad.com/weekly-thing/{N}/. This is the issue's "
-            "working directory: draft.md, final.md, publish.md, intro.md, "
+            "working directory: draft.md, final.md, buttondown.md, intro.md, "
             "currently.md, haiku.md, metadata.json, cta-*.md (text assets the "
             "jobs write) alongside cover.jpg, cover-large.jpg, journal/ photos, "
             "and audio MP3s (binaries written by other pipelines)."

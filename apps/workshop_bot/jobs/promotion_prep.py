@@ -2,7 +2,7 @@
 
 Triggered when the ``rss-check`` job sees a new issue number in
 ``weekly.thingelstad.com/feed.xml`` (or manually). Operates on the most
-recently *published* issue's ``publish.md`` in the S3 workspace —
+recently *published* issue's ``buttondown.md`` in the S3 workspace —
 independent of the in-flight issue. Marky drafts, in Jamie's voice,
 **2–3 alternative framings per platform** (LinkedIn ~100–200 words; an
 r/WeeklyThing megathread; one per-link Reddit thread per Notable item),
@@ -40,15 +40,15 @@ def _resolve_latest_issue(explicit: Optional[int]) -> tuple[Optional[int], Optio
 
 
 async def run(ctx: "_base.JobContext", *, issue_number: Optional[int] = None) -> "_base.JobResult":
-    # Resolving the latest issue hits the RSS feed; reading publish.md hits S3.
+    # Resolving the latest issue hits the RSS feed; reading buttondown.md hits S3.
     n, ship_date = await asyncio.to_thread(_resolve_latest_issue, issue_number)
     if n is None:
         return _base.JobResult(False, "❌ couldn't determine the latest published issue from the RSS feed.")
-    res = await asyncio.to_thread(s3.read_issue_file, n, "publish.md")
+    res = await asyncio.to_thread(s3.read_issue_file, n, "buttondown.md")
     if not (res.get("found") and isinstance(res.get("text"), str) and res["text"].strip()):
         return _base.JobResult(
             False,
-            f"❌ no `publish.md` for WT{n} in the workspace — can't draft promotion until it's built.",
+            f"❌ no `buttondown.md` for WT{n} in the workspace — can't draft promotion until it's built.",
         )
     publish_body = res["text"]
 

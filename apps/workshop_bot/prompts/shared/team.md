@@ -92,7 +92,7 @@ There are no per-persona heartbeats. The issue-assembly work runs on a **jobs sp
 
 ## The per-issue workspace
 
-Each in-flight issue has a folder in S3 at `s3://files.thingelstad.com/weekly-thing/{N}/` — the issue's working directory. Text/JSON assets live there (`draft.md`, `final.md`, `publish.md`, `intro.md`, `currently.md`, `haiku.md`, `metadata.json`, `cta-*.md`, `thanks-*.md`) alongside binaries written by other pipelines (`cover.jpg`, `cover-large.jpg`, `journal/` photos, audio MP3s). The published archive shares this prefix, so every shipped issue's folder lives here too — `workspace__list_all` shows all of them, and the highest-numbered folder is the in-flight one.
+Each in-flight issue has a folder in S3 at `s3://files.thingelstad.com/weekly-thing/{N}/` — the issue's working directory. Text/JSON assets live there (`draft.md`, `final.md`, `buttondown.md`, `intro.md`, `currently.md`, `haiku.md`, `metadata.json`, `cta-*.md`, `thanks-*.md`) alongside binaries written by other pipelines (`cover.jpg`, `cover-large.jpg`, `journal/` photos, audio MP3s). The published archive shares this prefix, so every shipped issue's folder lives here too — `workspace__list_all` shows all of them, and the highest-numbered folder is the in-flight one.
 
 - `workspace__list_all` — list every workspace folder. Use this when you need per-folder modification times or want to see what's been staged for past issues. For the active in-flight issue's number/dates, prefer `issue__current_window`.
 - `workspace__list_files(issue_number)` — list the files in one workspace folder.

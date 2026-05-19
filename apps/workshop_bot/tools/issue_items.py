@@ -14,7 +14,7 @@ The three rendering jobs all read from here:
 - ``create-final`` proposes orderings + promotions in JSON; the apply
   step calls :func:`reorder` and :func:`promote`. The LLM never touches
   bytes; identity comes from row id.
-- ``build-publish`` renders ``publish.md`` from the same rows, splicing
+- ``build-publish`` renders ``buttondown.md`` from the same rows, splicing
   promoted items into their declared positions.
 
 Editorial comments are written by Eddy's review pass and read by both
