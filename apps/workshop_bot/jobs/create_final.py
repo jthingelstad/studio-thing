@@ -10,7 +10,6 @@ Journal), presents them to Eddy with stable synthetic ids (``n1``,
   "thesis": "…",
   "notable_order": ["n3", "n1", "n2", "n4"],
   "brief_order":   ["b2", "b1", "b4", "b3"],
-  "journal_order": ["j2", "j1", "j3", "j4"],
   "promotions": [
     {"id": "j5", "heading": "The Quiet Colossus on Ada",
      "position": "after_notable", "rationale": "…"}
@@ -162,10 +161,12 @@ def _id_inventory_block(
         )
     lines.extend([
         "",
-        "Your `notable_order` + `brief_order` + `journal_order` + any promoted "
-        "ids together must cover every id above, exactly once. If your "
-        "`journal_order` has fewer entries than the Journal count, you are "
-        "wrong — go back and add the missing ones.",
+        "Your `notable_order` must cover every Notable id above exactly once. "
+        "Your `brief_order` must cover every Brief id above exactly once. "
+        "Journal entries are not reordered — every non-promoted Journal id "
+        "stays in its natural publish-date position, so do not include a "
+        "`journal_order` in your output (it will be ignored if you do). "
+        "Promotions remain Journal-only.",
         "",
         "---",
         "",
@@ -202,13 +203,16 @@ class _ProposalError(Exception):
 
 
 def _validate_proposal_shape(data: dict) -> None:
-    required = ("thesis", "notable_order", "brief_order", "journal_order", "membership_blocks")
+    # Journal entries are no longer reordered — Eddy is told not to send a
+    # journal_order, and the field is tolerated-and-ignored if it shows up
+    # anyway (LLM habit). Only Notable + Brief are required.
+    required = ("thesis", "notable_order", "brief_order", "membership_blocks")
     missing = [k for k in required if k not in data]
     if missing:
         raise _ProposalError(f"missing field(s) in JSON: {', '.join(missing)}")
     if not isinstance(data.get("thesis"), str) or not data["thesis"].strip():
         raise _ProposalError("`thesis` must be a non-empty string")
-    for k in ("notable_order", "brief_order", "journal_order"):
+    for k in ("notable_order", "brief_order"):
         if not isinstance(data[k], list) or not all(isinstance(x, str) for x in data[k]):
             raise _ProposalError(f"`{k}` must be a list of id strings")
     if not isinstance(data["membership_blocks"], list):
@@ -275,7 +279,7 @@ def _patch_missing_ids_into_orders(
     ``#editorial`` lets Jamie spot the patch and override if needed.
     """
     patched: list[str] = []
-    for section in ("notable", "brief", "journal"):
+    for section in ("notable", "brief"):
         order = list(data.get(f"{section}_order") or [])
         want = sorted(
             (sid for sid, sect in synth_section.items()
@@ -295,8 +299,9 @@ def _validate_per_section_orders(
     promoted_synth: set[str],
 ) -> None:
     """Each *_order must be a permutation of (synth ids in that section
-    minus promoted ids)."""
-    for section in ("notable", "brief", "journal"):
+    minus promoted ids). Journal is no longer in the loop — entries always
+    preserve their natural publish-date order."""
+    for section in ("notable", "brief"):
         order = data[f"{section}_order"]
         want = [sid for sid, sect in synth_section.items() if sect == section and sid not in promoted_synth]
         want_set = set(want)
@@ -452,6 +457,29 @@ def _render_was_now(
     )
 
 
+def _render_journal_preserved(
+    rows: list[dict[str, Any]],
+    row_to_synth: dict[int, str],
+    *,
+    promoted_synth: set[str] = frozenset(),
+) -> str:
+    """Journal-section card for the editorial proposal. Journal is never
+    reordered (see _apply_proposal); this just shows the items as they'll
+    appear in the issue, in their natural publish-date order, with a count
+    of any promoted-out items so Jamie can confirm the section's intact."""
+    if not rows:
+        return "**Journal** — _(empty)_"
+    rows_in_section = [r for r in rows if row_to_synth[int(r["id"])] not in promoted_synth]
+    promoted_in_section = [r for r in rows if row_to_synth[int(r["id"])] in promoted_synth]
+    promoted_note = f" ({len(promoted_in_section)} promoted out)" if promoted_in_section else ""
+    if not rows_in_section:
+        return f"**Journal** — _(empty after promotion){promoted_note}_"
+    titles = " · ".join(
+        f"{i+1}. {_row_label(r)}" for i, r in enumerate(rows_in_section)
+    )
+    return f"**Journal** — preserved in publish order{promoted_note}\n  {titles}"
+
+
 def _render_promotions_plan(
     promotions: list[dict[str, Any]],
     synth_to_row: dict[str, int],
@@ -523,7 +551,7 @@ def _render_editorial_card(
         "",
         _render_was_now(rows_by_section["notable"], data["notable_order"], synth_to_row, row_to_synth, kind_label="Notable", promoted_synth=promoted_synth),
         _render_was_now(rows_by_section["brief"], data["brief_order"], synth_to_row, row_to_synth, kind_label="Briefly"),
-        _render_was_now(rows_by_section["journal"], data["journal_order"], synth_to_row, row_to_synth, kind_label="Journal", promoted_synth=promoted_synth),
+        _render_journal_preserved(rows_by_section["journal"], row_to_synth, promoted_synth=promoted_synth),
     ]
     promos_card = _render_promotions_plan(data.get("promotions") or [], synth_to_row, rows_by_id)
     if promos_card:
@@ -589,7 +617,12 @@ def _apply_proposal(
             promoted_position=p["position"],
             promoted_heading=p["heading"].strip(),
         )
-    for section in ("notable", "brief", "journal"):
+    # Notable + Brief get reordered per Eddy's proposal. Journal is never
+    # reordered — entries always keep the position update-draft set from
+    # their micro.blog publish_date, so the chronological flow stays intact.
+    # (Promoted Journal items are already lifted out by the promote() calls
+    # above; the remaining Journal rows just stay where they are.)
+    for section in ("notable", "brief"):
         order_synth = data[f"{section}_order"]
         ordered_row_ids = [synth_to_row[sid] for sid in order_synth]
         # Sanity: per-section orders should never include promoted rows

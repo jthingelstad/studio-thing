@@ -649,12 +649,13 @@ class CreateFinalTests(_DBTestCase):
         self.assertIsNone(fc.bot.core.await_args.kwargs["model"])
 
     def test_missing_id_auto_fix_appends_omitted_ids(self):
-        # WT348 regression on Opus: Eddy dropped j14/j15 from journal_order
-        # three rounds in a row, falling back to passthrough and losing
-        # thesis + promotions + membership-block placement. The auto-fix
-        # path now appends the missing ids in original order and accepts
-        # the rest of the proposal as-is.
-        bad = self._basic_reply(journal_order=("j1", "j2"))  # j3 dropped
+        # The original WT348 regression on Opus was a dropped j-id in
+        # journal_order; Journal is no longer reordered, so the auto-fix
+        # path now only applies to Notable and Brief. Same shape: Eddy
+        # drops an id, the auto-fix appends it in original order and
+        # accepts the rest of the proposal so thesis + promotions +
+        # membership-block placement aren't lost to a passthrough fallback.
+        bad = self._basic_reply(notable_order=("n1",))  # n2 dropped
         ctx, fc = self._setup(bad)
         with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
             result = asyncio.run(create_final.run(ctx))
@@ -665,7 +666,7 @@ class CreateFinalTests(_DBTestCase):
         # The user-visible auto-fix note hit #editorial.
         sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
         self.assertTrue(
-            any("omitted `j3`" in m and "appended in original order" in m
+            any("omitted `n2`" in m and "appended in original order" in m
                 for m in sent_messages),
             f"expected auto-fix note in sends; got: {sent_messages!r}",
         )
@@ -875,27 +876,11 @@ class CreateFinalTests(_DBTestCase):
         self.assertTrue(any("Brief" in m for m in sent_messages),
                         f"sent_messages = {sent_messages!r}")
 
-    def test_promoted_id_also_in_order_refused(self):
-        # j1 in journal_order AND in promotions — must reject because the
-        # order validation expects (parsed - promoted), which means j1
-        # appears as an unknown id in the order.
-        reply = self._basic_reply(
-            journal_order=("j1", "j2", "j3"),
-            promotions=[{
-                "id": "j1",
-                "heading": "Featured One",
-                "position": "after_journal",
-                "rationale": "...",
-            }],
-        )
-        ctx, fc = self._setup(reply)
-        result = asyncio.run(create_final.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
-        self.assertTrue(
-            any("journal" in m and "j1" in m for m in sent_messages),
-            f"sent_messages = {sent_messages!r}",
-        )
+    # Note: a "promoted id also in journal_order" rejection used to live here.
+    # journal_order isn't validated anymore (Journal is never reordered), so
+    # the only way an id could now be "promoted and in an order" would be a
+    # Notable or Brief promotion — and those fail earlier in promotions
+    # validation (only Journal can be promoted). Test removed.
 
     def test_too_many_promotions_refused(self):
         # 3 Journal promotions exceeds _MAX_PROMOTIONS=2 — and 3 is also

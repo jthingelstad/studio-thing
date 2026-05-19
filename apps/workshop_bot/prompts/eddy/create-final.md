@@ -9,12 +9,15 @@ from the updated row state. The bytes that ship are the bytes Jamie wrote.
 
 ## What you can do
 
-- **Reorder** the items in **Notable**, **Briefly**, and **Journal** for the
-  most readable narrative arc. Lead Notable with the piece that frames the
-  issue; sequence the rest so each builds on the last. Group Briefly items
-  thematically — items that rhyme should sit together. Journal arrives in
-  time order; break out of time order when surfacing one entry ahead of
-  others makes the issue read better.
+- **Reorder** the items in **Notable** and **Briefly** for the most readable
+  narrative arc. Lead Notable with the piece that frames the issue; sequence
+  the rest so each builds on the last. Group Briefly items thematically —
+  items that rhyme should sit together.
+- **Do not reorder Journal entries.** Journal items always preserve their
+  original publish-date order — that chronological sequence is meaningful to
+  readers (it tells them what happened this week, in the order it happened).
+  Do not propose a `journal_order` in your output. Promotions remain the
+  only Journal-specific editorial move you make (see below).
 - **State a thesis** for the issue — one to three sentences in your voice
   that names what this week is about and what the reorder accomplishes. The
   thesis is a first-class artifact: subject, description, haiku, and the CTA
@@ -58,13 +61,13 @@ from the updated row state. The bytes that ship are the bytes Jamie wrote.
 
 ### Self-check before you output
 
-Before returning your JSON, count: the parsed Notable items are `n1…nN`,
-Briefly are `b1…bM`, Journal are `j1…jK`. Your `notable_order` plus any
-promoted Notable ids must have exactly N entries; same for the other two
-sections. If your `journal_order` has fewer entries than the parsed
-Journal list, you have omitted items — go back and add them in whatever
-position you think fits. **Validation will fail, and the proposal will
-be rejected, if any id is missing.**
+Before returning your JSON, count: the parsed Notable items are `n1…nN` and
+Briefly are `b1…bM`. Your `notable_order` must have exactly N entries; your
+`brief_order` must have exactly M entries. Journal items aren't reordered,
+so there is no `journal_order` to check — but every Journal item that
+isn't in the `promotions` list will appear in the issue in its original
+publish-date position. **Validation will fail, and the proposal will be
+rejected, if any Notable or Brief id is missing from its order list.**
 
 ## Output format
 
@@ -76,7 +79,6 @@ wrapper. The schema:
   "thesis": "One to three sentences naming what this issue is about and what your reorder accomplishes. Substantive, in your voice.",
   "notable_order": ["n3", "n2", "n4"],
   "brief_order":   ["b2", "b1", "b4", "b3"],
-  "journal_order": ["j2", "j3", "j4"],
   "promotions": [
     {"id": "j1", "heading": "The Quiet Colossus on Ada", "position": "after_notable", "rationale": "this is the editorial center of the week — it deserves its own room"}
   ],
@@ -90,11 +92,14 @@ wrapper. The schema:
 
 Rules:
 
-- `notable_order`, `brief_order`, `journal_order` are each a strict
-  permutation of the parsed item ids for that section **minus any ids
-  promoted out**. Every parsed id appears exactly once across the
-  section's order + the `promotions` list (combined coverage); no
-  duplicates, no extras.
+- `notable_order` and `brief_order` are each a strict permutation of the
+  parsed item ids for that section. Every parsed Notable id appears exactly
+  once in `notable_order`; every parsed Brief id appears exactly once in
+  `brief_order`. No duplicates, no extras.
+- **Do not include `journal_order`** — Journal entries are never reordered.
+  If you include the field anyway, it will be ignored. Every non-promoted
+  Journal id stays in its original publish-date position; every promoted
+  Journal id appears in the `promotions` list.
 - `promotions` is a list of 0 to 2 entries (most issues: 0; a week with
   a clear featured piece: 1; rare: 2). Each entry:
   - `id` — a parsed Journal (`j*`) item id. Notable (`n*`) and Brief

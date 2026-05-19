@@ -1071,8 +1071,15 @@ def create_final_proposal_html(
         ))
         # Build the proposed column for this section: ordered by Eddy's
         # *_order, with markers inline, then featured sections (if any)
-        # declared after_<section>.
+        # declared after_<section>. Journal is never reordered — fall back
+        # to the current (non-promoted) row order so the proposed column
+        # renders the items in their natural publish-date sequence.
         order = proposal.get(f"{section}_order") or []
+        if section == "journal" or not order:
+            order = [
+                row_to_synth[int(r["id"])] for r in items
+                if row_to_synth[int(r["id"])] not in promoted_synth
+            ]
         by_synth = {row_to_synth[int(r["id"])]: r for r in items}
         ordered_rows = [by_synth[sid] for sid in order if sid in by_synth]
         moved_ids = _moved_for(section)
