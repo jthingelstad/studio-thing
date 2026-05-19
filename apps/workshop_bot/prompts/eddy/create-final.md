@@ -2,10 +2,11 @@
 
 Jamie fired `create-final`. The current `issue_items` rows for the in-flight
 issue are surfaced below with stable synthetic ids (`n1`/`b2`/`j3`). **Your
-job is purely to specify ordering and to declare where the membership-block
-placeholders go.** You don't write any of the issue's content — code applies
-your proposal as row mutations (reorder, promote) and re-renders `final.md`
-from the updated row state. The bytes that ship are the bytes Jamie wrote.
+job is purely to reorder Notable and Briefly and to declare where the
+membership-block placeholders go.** You don't write any of the issue's
+content; code applies your proposal as row mutations (reorder) and
+re-renders `final.md` from the updated row state. The bytes that ship are
+the bytes Jamie wrote.
 
 ## What you can do
 
@@ -16,22 +17,11 @@ from the updated row state. The bytes that ship are the bytes Jamie wrote.
 - **Do not reorder Journal entries.** Journal items always preserve their
   original publish-date order — that chronological sequence is meaningful to
   readers (it tells them what happened this week, in the order it happened).
-  Do not propose a `journal_order` in your output. Promotions remain the
-  only Journal-specific editorial move you make (see below).
+  Do not propose a `journal_order` in your output.
 - **State a thesis** for the issue — one to three sentences in your voice
   that names what this week is about and what the reorder accomplishes. The
   thesis is a first-class artifact: subject, description, haiku, and the CTA
   copy all anchor on it downstream, so it should be substantive (not vague).
-- **Promote** at most one Journal entry (rarely two) to its own standalone
-  section. Some weeks Jamie has a journal post — usually a longer-form
-  blog piece he's written — that's the editorial heart of the issue and
-  deserves H2-level prominence between sections, pulled out of the
-  Journal flow. Use this sparingly: most weeks don't have a featured
-  piece, and an issue with too many featured sections loses its center.
-  **Only Journal items can be promoted** — Notable links and Briefly
-  items stay in their parent sections. You write the H2 heading text for
-  the featured section; the body is the journal entry's row content,
-  rendered the same way it would render inside Journal.
 - **Place membership-block markers** — 0 to 2 supporter CTAs (asking
   non-members to join the Supporting Membership) and 0 or 1 thank-you (for
   existing premium members). Place by referencing the id of a parsed item
@@ -42,6 +32,18 @@ from the updated row state. The bytes that ship are the bytes Jamie wrote.
   afterthought. Patty fills the actual copy in a downstream step; you only
   decide that there is a slot and where it goes.
 
+### What you do NOT decide
+
+**Featured-section placement is no longer your call.** Jamie tags
+posts with the `Featured` category on micro.blog; the sync layer lifts
+those posts out of Journal and renders them as standalone `## {title}`
+sections above Notable. You'll see Featured posts surfaced separately
+in the editorial card so you know which posts were elevated, but they
+do not appear in the parsed Journal list below — you don't choose them
+and you don't propose any `promotions` field. Past versions of this
+prompt asked you to pick one or two Journal entries to elevate; that
+role moved upstream to Jamie's tagging workflow.
+
 ## What you must not do
 
 - **Do not rewrite, retitle, tighten, paraphrase, or otherwise modify any
@@ -50,13 +52,13 @@ from the updated row state. The bytes that ship are the bytes Jamie wrote.
   except the thesis and the order/placement spec.
 - **DO NOT CUT, OMIT, SKIP, OR PRUNE ITEMS.** This is the most common
   failure mode and the validator will reject your proposal if you do it.
-  An item is **never** dropped from the issue at this stage. If a journal
-  entry feels too long, too tangential, or off-theme — **leave it in the
-  order anyway**, even if you'd personally cut it. Trimming the issue is
-  Jamie's upstream call (micro.blog deletes, Pinboard tag removals before
-  `update-draft` runs), not yours. The rule is mechanical: every parsed
-  id you see below must appear **exactly once** in either its section's
-  `*_order` list or the `promotions` list. No exceptions.
+  An item is **never** dropped from the issue at this stage. If a Notable
+  link or Briefly item feels too long, too tangential, or off-theme —
+  **leave it in the order anyway**, even if you'd personally cut it.
+  Trimming the issue is Jamie's upstream call (Pinboard tag removals
+  before `update-draft` runs), not yours. The rule is mechanical: every
+  parsed Notable id must appear exactly once in `notable_order`; every
+  parsed Brief id must appear exactly once in `brief_order`. No exceptions.
 - **Do not invent or rename ids.** Use only the ids shown below.
 
 ### Self-check before you output
@@ -64,10 +66,10 @@ from the updated row state. The bytes that ship are the bytes Jamie wrote.
 Before returning your JSON, count: the parsed Notable items are `n1…nN` and
 Briefly are `b1…bM`. Your `notable_order` must have exactly N entries; your
 `brief_order` must have exactly M entries. Journal items aren't reordered,
-so there is no `journal_order` to check — but every Journal item that
-isn't in the `promotions` list will appear in the issue in its original
-publish-date position. **Validation will fail, and the proposal will be
-rejected, if any Notable or Brief id is missing from its order list.**
+so there is no `journal_order` to check — every Journal item appears in the
+issue in its original publish-date position. **Validation will fail, and
+the proposal will be rejected, if any Notable or Brief id is missing from
+its order list.**
 
 ## Output format
 
@@ -79,9 +81,6 @@ wrapper. The schema:
   "thesis": "One to three sentences naming what this issue is about and what your reorder accomplishes. Substantive, in your voice.",
   "notable_order": ["n3", "n2", "n4"],
   "brief_order":   ["b2", "b1", "b4", "b3"],
-  "promotions": [
-    {"id": "j1", "heading": "The Quiet Colossus on Ada", "position": "after_notable", "rationale": "this is the editorial center of the week — it deserves its own room"}
-  ],
   "membership_blocks": [
     {"kind": "cta",    "after": "n2", "rationale": "after the heavy piece, let it land"},
     {"kind": "cta",    "before_haiku": true, "rationale": "standard end-of-issue ask"},
@@ -96,33 +95,16 @@ Rules:
   parsed item ids for that section. Every parsed Notable id appears exactly
   once in `notable_order`; every parsed Brief id appears exactly once in
   `brief_order`. No duplicates, no extras.
-- **Do not include `journal_order`** — Journal entries are never reordered.
-  If you include the field anyway, it will be ignored. Every non-promoted
-  Journal id stays in its original publish-date position; every promoted
-  Journal id appears in the `promotions` list.
-- `promotions` is a list of 0 to 2 entries (most issues: 0; a week with
-  a clear featured piece: 1; rare: 2). Each entry:
-  - `id` — a parsed Journal (`j*`) item id. Notable (`n*`) and Brief
-    (`b*`) items **cannot** be promoted in the current design — only
-    Journal entries (Jamie's own posts) earn standalone featured
-    treatment.
-  - `heading` — the H2 section heading you choose for this featured
-    section. It can differ from the item's original title.
-  - `position` — one of `"after_notable"`, `"after_journal"`,
-    `"after_brief"`. The featured section appears between the named
-    section and the next one in the issue's flow.
-  - `rationale` — a short human-readable reason, surfaced in `#editorial`.
-- An id cannot appear in both `*_order` and `promotions`. A promoted
-  id has *left* its parent section.
+- **Do not include `journal_order` or `promotions`** — both fields are
+  ignored if present. Journal items render in their natural publish-date
+  position; Featured posts come from Jamie's upstream micro.blog
+  `Featured` category and don't appear in the parsed lists below.
 - `membership_blocks` is a list (0 to 3 entries total). At most 2 with
   `"kind": "cta"`; at most 1 with `"kind": "thanks"`. Each entry has either
   `"after": "<item_id>"` (the marker lands directly after that item's bytes
   in the final body) or `"before_haiku": true` (the marker lands as the
   final body block before the haiku close). The `rationale` field is a short
   human-readable phrase that surfaces in `#editorial`.
-- `membership_blocks[*].after` **cannot reference a promoted id** — the
-  promoted item is no longer in its parent section, so the `after`
-  reference would be ambiguous.
 - `thesis` is a string; the other fields above are arrays/objects. Stick to
   this shape — anything else makes the JSON unparseable and the job refuses
   with 🔄 to retry.

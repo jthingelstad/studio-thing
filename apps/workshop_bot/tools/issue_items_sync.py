@@ -129,16 +129,52 @@ def _microblog_source_id(post: dict[str, Any]) -> str:
 
 
 def _microblog_metadata(post: dict[str, Any]) -> dict[str, Any]:
-    """Capture published timestamp + weekday-time label. The label is
-    computed once here and stored verbatim so re-renders produce
-    identical bytes even if the renderer's clock interpretation drifts.
-    Rehosted ``<img>`` tags are already baked into ``body_md`` (alt /
-    width / height inline), so no separate image manifest is kept.
+    """Capture published timestamp + weekday-time label + category tags.
+    The label is computed once here and stored verbatim so re-renders
+    produce identical bytes even if the renderer's clock interpretation
+    drifts. Categories drive the Featured-section promotion at
+    sync time (``Featured`` lifts the post into a standalone H2 above
+    Notable). Rehosted ``<img>`` tags are already baked into ``body_md``.
     """
+    categories = post.get("categories")
+    if not isinstance(categories, list):
+        categories = []
     return {
         "published": post.get("published") or "",
         "label": _journal_label(post.get("published")),
+        "categories": list(categories),
     }
+
+
+FEATURED_CATEGORY = "Featured"
+FEATURED_POSITION = "before_notable"
+
+
+def _is_featured(post: dict[str, Any]) -> bool:
+    cats = post.get("categories")
+    if not isinstance(cats, list):
+        return False
+    return FEATURED_CATEGORY in {str(c).strip() for c in cats if isinstance(c, str)}
+
+
+def _featured_heading(post: dict[str, Any]) -> str:
+    """The H2 heading text for the standalone Featured section.
+
+    Uses the micro.blog post title if present; otherwise falls back to
+    the linked first line of the body so the section never renders with
+    an empty heading. micro.blog's titled posts always carry a name,
+    so the fallback is defensive."""
+    title = (post.get("title") or "").strip()
+    if title:
+        return title
+    body = (post.get("content_md") or "").strip()
+    if body:
+        first_line = body.splitlines()[0].strip()
+        # Strip leading markdown headings / formatting markers for a clean H2.
+        cleaned = first_line.lstrip("#").strip().strip("*_").strip()
+        if cleaned:
+            return cleaned[:120]
+    return "Featured"
 
 
 def sync_microblog(
@@ -157,6 +193,7 @@ def sync_microblog(
     n = int(issue_number)
     posts = microblog.posts_in_window(window["start_date"], window["end_date"])
     observed_ids: set[str] = set()
+    featured_count = 0
     for post in posts:
         sid = _microblog_source_id(post)
         if not sid:
@@ -170,7 +207,7 @@ def sync_microblog(
                 sid, exc,
             )
             rehosted = post.get("content_md") or ""
-        issue_items.upsert_item(
+        row_id = issue_items.upsert_item(
             issue_number=n,
             section="journal",
             source="microblog",
@@ -180,12 +217,25 @@ def sync_microblog(
             body_md=rehosted.strip() or None,
             metadata=_microblog_metadata(post),
         )
+        # Featured-category promotion: the post's ``Featured`` category
+        # lifts it into a standalone ``## {title}`` section above Notable
+        # (driven by Jamie's micro.blog tag, not Eddy). Idempotent across
+        # re-syncs: tagging adds the promotion, un-tagging clears it.
+        if _is_featured(post):
+            issue_items.promote(
+                row_id,
+                promoted_position=FEATURED_POSITION,
+                promoted_heading=_featured_heading(post),
+            )
+            featured_count += 1
+        else:
+            issue_items.unpromote(row_id)
     pruned = _prune_stale(n, source="microblog", observed=observed_ids) if prune else 0
     logger.info(
-        "sync_microblog: WT%d observed=%d pruned=%d",
-        n, len(observed_ids), pruned,
+        "sync_microblog: WT%d observed=%d pruned=%d featured=%d",
+        n, len(observed_ids), pruned, featured_count,
     )
-    return {"observed": len(observed_ids), "pruned": pruned}
+    return {"observed": len(observed_ids), "pruned": pruned, "featured": featured_count}
 
 
 # ---------- pruning ----------

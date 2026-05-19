@@ -165,9 +165,17 @@ class PinboardSyncTests(_DBCase):
 
 # ---------------- micro.blog ----------------
 
-def _mb_post(*, url: str, title: str = "", content_md: str = "", published: str = "2026-05-16T14:00:00Z") -> dict:
+def _mb_post(
+    *,
+    url: str,
+    title: str = "",
+    content_md: str = "",
+    published: str = "2026-05-16T14:00:00Z",
+    categories: list[str] | None = None,
+) -> dict:
     return {
         "url": url, "title": title, "published": published, "content_md": content_md,
+        "categories": list(categories or []),
     }
 
 
@@ -194,13 +202,19 @@ class MicroblogSyncTests(_DBCase):
             side_effect=lambda md, n: md,  # no-op (no images to rehost in fixtures)
         ):
             out = issue_items_sync.sync_microblog(349, WINDOW)
-        self.assertEqual(out, {"observed": 2, "pruned": 0})
+        self.assertEqual(out, {"observed": 2, "pruned": 0, "featured": 0})
         journal = issue_items.list_items(349, section="journal")
         self.assertEqual([r["title"] for r in journal], ["A titled post", None])
         self.assertEqual([r["body_md"] for r in journal], ["hello", "status only"])
         # Label format check (Saturday @ 4:00 PM / Sunday @ 10:30 AM)
         labels = [r["metadata"]["label"] for r in journal]
         self.assertEqual(labels, ["Saturday @ 4:00 PM", "Sunday @ 10:30 AM"])
+        # Categories empty in fixtures → metadata.categories === [].
+        for row in journal:
+            self.assertEqual(row["metadata"].get("categories"), [])
+        # Neither post was Featured, so no rows got promoted.
+        for row in journal:
+            self.assertFalse(row.get("is_promoted"))
 
     def test_rehost_failure_falls_back_to_raw(self):
         posts = [
@@ -223,6 +237,112 @@ class MicroblogSyncTests(_DBCase):
         row = issue_items.list_items(349, section="journal")[0]
         # Body falls back to raw — better a dead image than no entry.
         self.assertEqual(row["body_md"], "![](https://oops.example/img.jpg)")
+
+    # ---------- Featured-category promotion ----------
+
+    def test_featured_category_promotes_row_above_notable(self):
+        """A micro.blog post tagged with ``Featured`` should land in the
+        Journal section AS A PROMOTED ROW — is_promoted=1,
+        promoted_position='before_notable', promoted_heading=post title."""
+        posts = [
+            _mb_post(
+                url="https://www.thingelstad.com/2026/05/16/big",
+                title="The Big Featured Post",
+                content_md="A long-form piece.",
+                published="2026-05-16T15:00:00Z",
+                categories=["Featured", "Tech"],
+            ),
+            _mb_post(
+                url="https://www.thingelstad.com/2026/05/17/regular",
+                content_md="A normal note.",
+                published="2026-05-17T15:00:00Z",
+                categories=[],
+            ),
+        ]
+        with patch(
+            "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
+            return_value=posts,
+        ), patch(
+            "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
+            side_effect=lambda md, n: md,
+        ):
+            out = issue_items_sync.sync_microblog(349, WINDOW)
+        self.assertEqual(out, {"observed": 2, "pruned": 0, "featured": 1})
+        journal = issue_items.list_items(349, section="journal", include_promoted=True)
+        by_url = {r["url"]: r for r in journal}
+        featured = by_url["https://www.thingelstad.com/2026/05/16/big"]
+        regular = by_url["https://www.thingelstad.com/2026/05/17/regular"]
+        self.assertEqual(featured["is_promoted"], 1)
+        self.assertEqual(featured["promoted_position"], "before_notable")
+        self.assertEqual(featured["promoted_heading"], "The Big Featured Post")
+        self.assertEqual(regular["is_promoted"], 0)
+        self.assertIsNone(regular["promoted_position"])
+        # Categories captured in metadata for downstream tools (audit, debug).
+        self.assertEqual(featured["metadata"].get("categories"), ["Featured", "Tech"])
+        self.assertEqual(regular["metadata"].get("categories"), [])
+
+    def test_untagging_clears_prior_featured_promotion(self):
+        """If a row was Featured-tagged previously and Jamie removes the
+        tag, a fresh sync clears the promotion (idempotent re-sync)."""
+        # First sync: post is Featured.
+        posts = [
+            _mb_post(
+                url="https://www.thingelstad.com/2026/05/16/big",
+                title="The Big Post", content_md="x",
+                published="2026-05-16T15:00:00Z",
+                categories=["Featured"],
+            ),
+        ]
+        with patch(
+            "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
+            return_value=posts,
+        ), patch(
+            "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
+            side_effect=lambda md, n: md,
+        ):
+            issue_items_sync.sync_microblog(349, WINDOW)
+        row = issue_items.list_items(349, section="journal", include_promoted=True)[0]
+        self.assertEqual(row["is_promoted"], 1)
+
+        # Re-sync with the same post but no Featured category — promotion clears.
+        posts[0]["categories"] = []
+        with patch(
+            "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
+            return_value=posts,
+        ), patch(
+            "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
+            side_effect=lambda md, n: md,
+        ):
+            out = issue_items_sync.sync_microblog(349, WINDOW)
+        self.assertEqual(out["featured"], 0)
+        row = issue_items.list_items(349, section="journal", include_promoted=True)[0]
+        self.assertEqual(row["is_promoted"], 0)
+        self.assertIsNone(row["promoted_position"])
+        self.assertIsNone(row["promoted_heading"])
+
+    def test_featured_heading_falls_back_to_first_line_when_no_title(self):
+        """A note-style Featured post (no title) uses the first line of
+        the body for its H2 heading."""
+        posts = [
+            _mb_post(
+                url="https://www.thingelstad.com/2026/05/16/x",
+                title="",  # no title — note-style entry
+                content_md="A meaningful first line.\n\nMore body.",
+                published="2026-05-16T15:00:00Z",
+                categories=["Featured"],
+            ),
+        ]
+        with patch(
+            "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
+            return_value=posts,
+        ), patch(
+            "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
+            side_effect=lambda md, n: md,
+        ):
+            issue_items_sync.sync_microblog(349, WINDOW)
+        row = issue_items.list_items(349, section="journal", include_promoted=True)[0]
+        self.assertEqual(row["is_promoted"], 1)
+        self.assertEqual(row["promoted_heading"], "A meaningful first line.")
 
 
 # ---------------- sync_all ----------------

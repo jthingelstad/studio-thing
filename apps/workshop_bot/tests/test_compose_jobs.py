@@ -751,161 +751,18 @@ class CreateFinalTests(_DBTestCase):
         # thanks:1 marker appears in the last non-empty section (Brief).
         self.assertIn("<!-- thanks:1 -->", final)
 
-    def test_membership_block_after_promoted_id_refused(self):
-        reply = self._basic_reply(
-            journal_order=("j2", "j3"),
-            promotions=[{
-                "id": "j1",
-                "heading": "Featured Journal",
-                "position": "after_journal",
-                "rationale": "the central piece",
-            }],
-            membership_blocks=[
-                {"kind": "cta", "after": "j1", "rationale": "trying to anchor on promoted"},
-            ],
-        )
-        ctx, fc = self._setup(reply)
-        result = asyncio.run(create_final.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
-        self.assertTrue(any("promoted" in m for m in sent_messages),
-                        f"sent_messages = {sent_messages!r}")
-
-    # ---- promotions ----
-
-    def test_single_journal_promotion_splices_inline(self):
-        # Promote j2 to its own featured section. Journal_order keeps the
-        # other two entries; the featured section splices inline AFTER
-        # the Journal block, BEFORE the Brief section — what Jamie sees
-        # in final.md is exactly where it'll land in buttondown.md.
-        reply = self._basic_reply(
-            journal_order=("j1", "j3"),  # j2 promoted out
-            promotions=[{
-                "id": "j2",
-                "heading": "Featured: A Big Journal Read",
-                "position": "after_journal",
-                "rationale": "this post is the editorial heart of the week",
-            }],
-        )
-        ctx, fc = self._setup(reply)
-        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
-            result = asyncio.run(create_final.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        final = self.ws.files[(458, "final.md")]
-        # The featured section renders as ``## Heading\n\n{body}``, inline.
-        self.assertIn("## Featured: A Big Journal Read", final)
-        # No feature1/feature2 blocks anywhere — the splice is inline.
-        self.assertNotIn("<!-- block:feature1 -->", final)
-        self.assertNotIn("<!-- block:feature2 -->", final)
-        # j2 lives in the featured section; the Journal block has only j1 + j3.
-        journal_block_start = final.index("<!-- block:journal -->")
-        journal_block_end = final.index("<!-- /block:journal -->")
-        journal_body = final[journal_block_start:journal_block_end]
-        # j2 lives in the featured section; the Journal block has only j1 + j3,
-        # each grouped under their own day H3 sub-header with time-only labels.
-        self.assertNotIn("[2:00 PM](https://j2)", journal_body)
-        self.assertIn("### Sunday, May 10", journal_body)
-        self.assertIn("[1:00 PM](https://j1) — j-body1", journal_body)
-        self.assertIn("### Tuesday, May 12", journal_body)
-        self.assertIn("[3:00 PM](https://j3) — j-body3", journal_body)
-        # The featured section appears AFTER the Journal block close and
-        # BEFORE the Brief heading.
-        feature_pos = final.index("## Featured: A Big Journal Read")
-        journal_close = final.index("<!-- /block:journal -->")
-        brief_heading = final.index("## Briefly")
-        self.assertLess(journal_close, feature_pos)
-        self.assertLess(feature_pos, brief_heading)
-
-    def test_two_journal_promotions_splice_at_distinct_positions(self):
-        # Rare case: promote two Journal entries at different positions.
-        # Both splice inline at their declared positions.
-        reply = self._basic_reply(
-            journal_order=("j2",),
-            promotions=[
-                {"id": "j1", "heading": "Featured One", "position": "after_journal",
-                 "rationale": "lead piece"},
-                {"id": "j3", "heading": "Featured Two", "position": "after_brief",
-                 "rationale": "second feature later in the issue"},
-            ],
-        )
-        ctx, fc = self._setup(reply)
-        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
-            result = asyncio.run(create_final.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        final = self.ws.files[(458, "final.md")]
-        self.assertIn("## Featured One", final)
-        self.assertIn("## Featured Two", final)
-        # No feature blocks.
-        self.assertNotIn("<!-- block:feature1 -->", final)
-        # Featured One splices after Journal; Featured Two splices after Briefly.
-        one_pos = final.index("## Featured One")
-        two_pos = final.index("## Featured Two")
-        journal_close = final.index("<!-- /block:journal -->")
-        brief_close = final.index("<!-- /block:brief -->")
-        self.assertLess(journal_close, one_pos)
-        self.assertLess(brief_close, two_pos)
-
-    def test_notable_id_cannot_be_promoted(self):
-        # Notable links stay in their parent section — only Journal
-        # entries earn featured treatment.
-        reply = self._basic_reply(
-            notable_order=("n2",),
-            promotions=[{
-                "id": "n1",
-                "heading": "Featured Notable",
-                "position": "after_notable",
-                "rationale": "wishful thinking",
-            }],
-        )
-        ctx, fc = self._setup(reply)
-        result = asyncio.run(create_final.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
-        self.assertTrue(
-            any("Notable" in m and "n1" in m for m in sent_messages),
-            f"sent_messages = {sent_messages!r}",
-        )
-
-    def test_brief_id_cannot_be_promoted(self):
-        reply = self._basic_reply(
-            brief_order=("b2",),
-            promotions=[{
-                "id": "b1",
-                "heading": "Featured Brief",
-                "position": "after_notable",
-                "rationale": "...",
-            }],
-        )
-        ctx, fc = self._setup(reply)
-        result = asyncio.run(create_final.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
-        self.assertTrue(any("Brief" in m for m in sent_messages),
-                        f"sent_messages = {sent_messages!r}")
-
-    # Note: a "promoted id also in journal_order" rejection used to live here.
-    # journal_order isn't validated anymore (Journal is never reordered), so
-    # the only way an id could now be "promoted and in an order" would be a
-    # Notable or Brief promotion — and those fail earlier in promotions
-    # validation (only Journal can be promoted). Test removed.
-
-    def test_too_many_promotions_refused(self):
-        # 3 Journal promotions exceeds _MAX_PROMOTIONS=2 — and 3 is also
-        # everything in the Journal section, which would be an absurd shape.
-        reply = self._basic_reply(
-            journal_order=(),
-            promotions=[
-                {"id": "j1", "heading": "F1", "position": "after_journal", "rationale": "..."},
-                {"id": "j2", "heading": "F2", "position": "after_journal", "rationale": "..."},
-                {"id": "j3", "heading": "F3", "position": "after_journal", "rationale": "..."},
-            ],
-        )
-        ctx, fc = self._setup(reply)
-        result = asyncio.run(create_final.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
-        self.assertTrue(any("too many promotions" in m for m in sent_messages),
-                        f"sent_messages = {sent_messages!r}")
+    # ---- Featured-from-category (replaces Eddy's promotions) ----
+    #
+    # The whole family of "Eddy promotes Journal entries" tests retired with
+    # the move to upstream-driven Featured posts. Eddy doesn't propose
+    # promotions; the prompt schema doesn't mention them; the validator
+    # ignores any leftover ``promotions`` field; the apply step doesn't
+    # promote anything. Featured posts now come from the micro.blog
+    # ``Featured`` category and are exercised by the issue_items_sync tests
+    # below. (Single-journal-promotion, two-promotion, notable-cannot-be-
+    # promoted, brief-cannot-be-promoted, too-many-promotions,
+    # membership-block-after-promoted-id, promoted-id-also-in-order — all
+    # gone; the scenarios they tested aren't reachable any more.)
 
 
 

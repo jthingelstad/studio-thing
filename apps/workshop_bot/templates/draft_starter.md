@@ -15,6 +15,11 @@
 
 ---
 
+<!-- block:featured -->
+<!-- /block:featured -->
+
+---
+
 ## Notable
 
 <!-- block:notable -->

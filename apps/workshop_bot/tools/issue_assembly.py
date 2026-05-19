@@ -132,7 +132,14 @@ def assemble_final(
     parts.append("---")
     parts.append(_block("cover", cover))
     parts.append("---")
-    # Parent sections — each followed by its promotions splice.
+    # ``before_notable`` is the fixed slot for Featured-category posts
+    # (driven by Jamie's micro.blog "Featured" tag at sync time). Each
+    # featured section stands as its own H2 block between cover and
+    # Notable, with a ``---`` divider between them.
+    for body in [b.strip() for pos, b in features if pos == "before_notable"]:
+        parts.append(body)
+        parts.append("---")
+    # Parent sections — each followed by its (legacy ``after_*``) promotions splice.
     parent_block_map = {"notable": notable, "journal": journal, "brief": brief}
     for name in _PARENT_ORDER:
         body = parent_block_map[name]

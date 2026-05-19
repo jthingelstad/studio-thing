@@ -37,10 +37,11 @@ logger = logging.getLogger("workshop.issue_items")
 # (intro / outro / cover / currently / haiku) don't appear here.
 SECTIONS = ("notable", "brief", "journal")
 
-# Promoted (standalone-featured) sections splice into one of three slots
-# at build-publish time. Journal-only at the prompt layer today; the
-# schema allows any section so future designs aren't blocked.
-PROMOTION_POSITIONS = ("after_notable", "after_journal", "after_brief")
+# Promoted (standalone-featured) sections splice into one of four slots
+# at build-publish time. ``before_notable`` is the slot category-driven
+# Featured posts use (micro.blog category "Featured"); ``after_*`` slots
+# are the legacy Eddy-driven positions kept for schema compatibility.
+PROMOTION_POSITIONS = ("before_notable", "after_notable", "after_journal", "after_brief")
 
 # Source identifiers. ``manual`` is reserved for entries Jamie or a job
 # inserts directly (e.g. the WT348 migration script).

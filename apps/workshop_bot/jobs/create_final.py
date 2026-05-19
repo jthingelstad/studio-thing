@@ -1,19 +1,15 @@
 """``create-final`` — Eddy's editorial pass on the row-backed model.
 
-Reads ``issue_items`` rows for the in-flight issue (Notable / Briefly /
-Journal), presents them to Eddy with stable synthetic ids (``n1``,
-``b2``, ``j3``) — the LLM-facing shape is unchanged — and asks for an
-**ordering-only** JSON response:
+Reads ``issue_items`` rows for the in-flight issue (Notable / Briefly,
+plus the non-promoted Journal rows), presents them to Eddy with stable
+synthetic ids (``n1``, ``b2``, ``j3``), and asks for an **ordering-only**
+JSON response:
 
 ```json
 {
   "thesis": "…",
   "notable_order": ["n3", "n1", "n2", "n4"],
   "brief_order":   ["b2", "b1", "b4", "b3"],
-  "promotions": [
-    {"id": "j5", "heading": "The Quiet Colossus on Ada",
-     "position": "after_notable", "rationale": "…"}
-  ],
   "membership_blocks": [
     {"kind": "cta",    "after": "n1", "rationale": "…"},
     {"kind": "cta",    "before_haiku": true, "rationale": "…"},
@@ -24,22 +20,26 @@ Journal), presents them to Eddy with stable synthetic ids (``n1``,
 
 **Apply step is row mutations, not byte-chunk reassembly.** Code:
 
-1. Validates the proposal shape, promotions, membership_blocks, and
-   per-section permutations against the parsed synthetic ids.
+1. Validates the proposal shape, membership_blocks, and per-section
+   permutations against the parsed synthetic ids.
 2. Maps each synthetic id back to its ``issue_items.id``.
-3. Clears any prior promotions for the issue.
-4. Calls :func:`issue_items.promote` for each new promotion.
-5. Calls :func:`issue_items.reorder` per section with the
-   non-promoted row ids in the LLM's order.
-6. Renders ``final.md`` from rows using :mod:`tools.issue_assembly`:
+3. Calls :func:`issue_items.reorder` for Notable + Brief in the LLM's
+   order. Journal is never reordered.
+4. Renders ``final.md`` from rows using :mod:`tools.issue_assembly`:
    atoms (intro / currently / cover / outro / haiku) come verbatim
-   from their files; parent sections render in current position
-   order with cta/thanks markers spliced inline; promoted items
-   appear as ``## Heading`` sections at their declared
-   ``promoted_position`` — **inline in the file**, not gathered at
-   the bottom. What Jamie sees in ``final.md`` IS where things will
-   land in the published email.
-7. Writes ``final.md`` and ``thesis.md``.
+   from their files; parent sections render in current position order
+   with cta/thanks markers spliced inline; Featured-category posts
+   appear as ``## Heading`` sections at the fixed ``before_notable``
+   slot — what Jamie sees in ``final.md`` IS where things will land in
+   the published email.
+5. Writes ``final.md`` and ``thesis.md``.
+
+Featured posts come from Jamie's upstream micro.blog ``Featured``
+category (set by the sync layer in :mod:`tools.issue_items_sync`).
+Eddy used to choose promotions; that role moved upstream. Eddy still
+sees Featured posts surfaced separately in the editorial card so he
+knows which entries were elevated, but they don't appear in the
+parsed Journal list and Eddy doesn't propose them.
 
 The LLM never touches bytes — identity comes from row id. The old
 chunk parser + multiset lossless check are retired (the row model
@@ -47,13 +47,14 @@ guarantees losslessness by construction; an UPDATE on a position
 column can't drop, duplicate, or mutate a row).
 
 Eddy posts to ``#editorial``: thesis, per-section was/now reorder
-map, promotions plan, membership-block plan. Jamie reacts ✅ / ❌ /
-🔄. On ❌ the existing row order survives and the section bodies
-render in their pre-create-final order (no thesis, no markers, no
-promotions). On 🔄 we re-prompt up to :data:`_llm_job.MAX_REFRESH_ROUNDS`.
+map, Featured posts (from upstream), membership-block plan. Jamie
+reacts ✅ / ❌ / 🔄. On ❌ the existing row order survives and the
+section bodies render in their pre-create-final order (no thesis,
+no markers). On 🔄 we re-prompt up to
+:data:`_llm_job.MAX_REFRESH_ROUNDS`.
 
 Refuses if ``final.md`` already exists — delete it explicitly to
-re-run (or use ``/eddy issue reset final`` once that lands).
+re-run (or use ``/eddy issue reset final``).
 """
 
 from __future__ import annotations
@@ -93,8 +94,10 @@ _NEXT_STEPS_WITH_CTA_AUTOFIRE = (
 # Hard caps on Eddy's declarations (enforced after parse).
 _MAX_CTA = 2
 _MAX_THANKS = 1
-_MAX_PROMOTIONS = 2
-_PROMOTION_POSITIONS = issue_items.PROMOTION_POSITIONS
+# Promotions used to be Eddy's call (he picked up to 2 Journal entries to
+# elevate to standalone featured sections). That moved to the upstream
+# micro.blog ``Featured`` category — see ``tools/issue_items_sync.py``.
+# Eddy doesn't propose promotions any more.
 
 # Synthetic-id prefix per section (the LLM-facing ids).
 _SYNTH_PREFIX = {"notable": "n", "brief": "b", "journal": "j"}
@@ -204,8 +207,11 @@ class _ProposalError(Exception):
 
 def _validate_proposal_shape(data: dict) -> None:
     # Journal entries are no longer reordered — Eddy is told not to send a
-    # journal_order, and the field is tolerated-and-ignored if it shows up
-    # anyway (LLM habit). Only Notable + Brief are required.
+    # journal_order. Promotions also moved out of Eddy's hands (the
+    # micro.blog Featured category drives them at sync time now). Both
+    # fields are tolerated-and-ignored if they show up in the LLM output
+    # anyway (LLM habit). Only thesis + Notable + Brief + membership are
+    # required.
     required = ("thesis", "notable_order", "brief_order", "membership_blocks")
     missing = [k for k in required if k not in data]
     if missing:
@@ -217,48 +223,6 @@ def _validate_proposal_shape(data: dict) -> None:
             raise _ProposalError(f"`{k}` must be a list of id strings")
     if not isinstance(data["membership_blocks"], list):
         raise _ProposalError("`membership_blocks` must be a list")
-    promos = data.get("promotions", [])
-    if not isinstance(promos, list):
-        raise _ProposalError("`promotions` must be a list (or omitted)")
-
-
-def _validate_promotions(
-    promotions: list,
-    synth_section: dict[str, str],
-) -> None:
-    if len(promotions) > _MAX_PROMOTIONS:
-        raise _ProposalError(
-            f"too many promotions ({len(promotions)}); max {_MAX_PROMOTIONS}"
-        )
-    seen: set[str] = set()
-    for i, p in enumerate(promotions):
-        if not isinstance(p, dict):
-            raise _ProposalError(f"promotions[{i}] is not an object")
-        pid = p.get("id")
-        if not isinstance(pid, str):
-            raise _ProposalError(f"promotions[{i}].id must be a string")
-        sect = synth_section.get(pid)
-        if sect is None:
-            raise _ProposalError(
-                f"promotions[{i}].id={pid!r} doesn't match any parsed item"
-            )
-        if sect != "journal":
-            raise _ProposalError(
-                f"promotions[{i}].id={pid!r} is a {sect.capitalize()} item — "
-                f"only Journal items can be promoted"
-            )
-        if pid in seen:
-            raise _ProposalError(f"promotions[{i}].id={pid!r} appears more than once")
-        seen.add(pid)
-        heading = p.get("heading")
-        if not isinstance(heading, str) or not heading.strip():
-            raise _ProposalError(f"promotions[{i}].heading must be a non-empty string")
-        position = p.get("position")
-        if position not in _PROMOTION_POSITIONS:
-            raise _ProposalError(
-                f"promotions[{i}].position={position!r} must be one of "
-                f"{', '.join(_PROMOTION_POSITIONS)}"
-            )
 
 
 def _patch_missing_ids_into_orders(
@@ -480,29 +444,20 @@ def _render_journal_preserved(
     return f"**Journal** — preserved in publish order{promoted_note}\n  {titles}"
 
 
-def _render_promotions_plan(
-    promotions: list[dict[str, Any]],
-    synth_to_row: dict[str, int],
-    rows_by_id: dict[int, dict[str, Any]],
-) -> str:
-    if not promotions:
+def _render_featured_plan(featured_rows: list[dict[str, Any]]) -> str:
+    """Surface Featured-from-micro.blog posts in the editorial card —
+    these came from Jamie's upstream ``Featured`` category tag (not
+    Eddy's call) and render as standalone H2 sections above Notable."""
+    if not featured_rows:
         return ""
-    lines = [f"**Promotions:** {len(promotions)} item(s) elevated to standalone section(s)"]
-    for p in promotions:
-        pid = p["id"]
-        heading = p["heading"].strip()
-        position = p["position"].replace("_", " ")
-        row = rows_by_id.get(synth_to_row[pid], {})
-        source_label = (row.get("section") or "?").capitalize()
-        source_title = _row_label(row)
-        rationale = (p.get("rationale") or "").strip()
-        line = (
-            f"  · \"{heading}\" — was {source_label} `{pid}` "
-            f"({source_title!r}) → standalone section {position}"
-        )
-        if rationale:
-            line += f" — {rationale}"
-        lines.append(line)
+    lines = [
+        f"**Featured (from micro.blog \"Featured\" category):** "
+        f"{len(featured_rows)} post(s) elevated to standalone section(s) above Notable"
+    ]
+    for r in featured_rows:
+        heading = (r.get("promoted_heading") or "").strip() or _row_label(r)
+        url = (r.get("url") or "").strip()
+        lines.append(f"  · \"{heading}\" — {url}")
     return "\n".join(lines)
 
 
@@ -542,20 +497,20 @@ def _render_editorial_card(
     synth_to_row: dict[str, int],
     row_to_synth: dict[int, str],
     rows_by_id: dict[int, dict[str, Any]],
+    featured_rows: Optional[list[dict[str, Any]]] = None,
 ) -> str:
-    promoted_synth = {p["id"] for p in (data.get("promotions") or [])}
     parts = [
         f"📝 **create-final** for WT{issue_number}",
         "",
         f"**Thesis:** {thesis.strip()}",
         "",
-        _render_was_now(rows_by_section["notable"], data["notable_order"], synth_to_row, row_to_synth, kind_label="Notable", promoted_synth=promoted_synth),
+        _render_was_now(rows_by_section["notable"], data["notable_order"], synth_to_row, row_to_synth, kind_label="Notable"),
         _render_was_now(rows_by_section["brief"], data["brief_order"], synth_to_row, row_to_synth, kind_label="Briefly"),
-        _render_journal_preserved(rows_by_section["journal"], row_to_synth, promoted_synth=promoted_synth),
+        _render_journal_preserved(rows_by_section["journal"], row_to_synth),
     ]
-    promos_card = _render_promotions_plan(data.get("promotions") or [], synth_to_row, rows_by_id)
-    if promos_card:
-        parts.extend(["", promos_card])
+    featured_card = _render_featured_plan(featured_rows or [])
+    if featured_card:
+        parts.extend(["", featured_card])
     parts.extend(["", _render_membership_plan(data["membership_blocks"], synth_to_row, rows_by_id)])
     return "\n".join(parts)
 
@@ -604,30 +559,14 @@ def _apply_proposal(
     data: dict,
     synth_to_row: dict[str, int],
 ) -> None:
-    """Mutate ``issue_items`` to match the LLM's plan: clear stale
-    promotions, apply new promotions, reorder each section."""
-    promotions = data.get("promotions") or []
-    issue_items.clear_promotions(issue_number)
-    promoted_row_ids: set[int] = set()
-    for p in promotions:
-        rid = synth_to_row[p["id"]]
-        promoted_row_ids.add(rid)
-        issue_items.promote(
-            rid,
-            promoted_position=p["position"],
-            promoted_heading=p["heading"].strip(),
-        )
-    # Notable + Brief get reordered per Eddy's proposal. Journal is never
-    # reordered — entries always keep the position update-draft set from
-    # their micro.blog publish_date, so the chronological flow stays intact.
-    # (Promoted Journal items are already lifted out by the promote() calls
-    # above; the remaining Journal rows just stay where they are.)
+    """Mutate ``issue_items`` to match Eddy's plan: reorder Notable and
+    Brief. Journal is never reordered — entries always keep the position
+    update-draft set from their micro.blog publish_date. Featured
+    posts (is_promoted=1 from sync) are untouched here — they were set
+    upstream by Jamie's ``Featured`` micro.blog category, not by Eddy."""
     for section in ("notable", "brief"):
         order_synth = data[f"{section}_order"]
         ordered_row_ids = [synth_to_row[sid] for sid in order_synth]
-        # Sanity: per-section orders should never include promoted rows
-        # (the validator catches it), but skip defensively.
-        ordered_row_ids = [rid for rid in ordered_row_ids if rid not in promoted_row_ids]
         if ordered_row_ids:
             issue_items.reorder(issue_number, section, ordered_row_ids)
 
@@ -800,9 +739,11 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     if data is None:
                         raise _ProposalError("response wasn't a parseable JSON object")
                     _validate_proposal_shape(data)
-                    promotions = data.get("promotions") or []
-                    _validate_promotions(promotions, synth_section)
-                    promoted_synth = {p["id"] for p in promotions}
+                    # promoted_synth is empty: Featured-category rows are excluded
+                    # from the LLM's view of rows_by_section (include_promoted=False
+                    # in the run() snapshot), so Eddy can't reference them in any
+                    # ``*_order`` or ``membership_blocks.after``.
+                    promoted_synth: set[str] = set()
                     _validate_per_section_orders(data, synth_section, promoted_synth)
                     _validate_membership_blocks(
                         data["membership_blocks"], synth_section, promoted_synth,
@@ -876,9 +817,17 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     rows_by_section=rows_by_section, proposal=data,
                     synth_to_row=synth_to_row, row_to_synth=row_to_synth,
                 )
+                # Featured-category posts come from upstream micro.blog tags
+                # (not Eddy). Surface them on the editorial card so Jamie sees
+                # what got elevated above Notable.
+                featured_rows = [
+                    r for r in issue_items.list_items(n, section="journal", include_promoted=True)
+                    if r.get("is_promoted")
+                ]
                 card = _render_editorial_card(
                     n, thesis, rows_by_section, data,
                     synth_to_row, row_to_synth, rows_by_id,
+                    featured_rows=featured_rows,
                 )
                 if proposal_url:
                     card = card + f"\n\n📄 [side-by-side view]({proposal_url})"

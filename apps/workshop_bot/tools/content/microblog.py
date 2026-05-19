@@ -99,6 +99,16 @@ def _first(props: dict, *keys: str):
     return None
 
 
+def _categories(props: dict) -> list[str]:
+    """mf2 ``category`` is always a list (zero or more strings). micro.blog
+    surfaces each post's category tags here; ``Featured`` drives the
+    workshop's Featured-section promotion (above Notable, no Eddy choice)."""
+    raw = props.get("category")
+    if not isinstance(raw, list):
+        return []
+    return [str(c).strip() for c in raw if isinstance(c, str) and c.strip()]
+
+
 # --- HTML → markdown-ish, only for {html:…}-content posts (rare) ---
 
 _TAG_RE = re.compile(r"<[^>]+>")
@@ -194,6 +204,7 @@ def _source_posts() -> list[dict[str, Any]]:
             "title": str(_first(props, "name") or "").strip(),
             "published": str(_first(props, "published", "publish-date") or ""),
             "content_md": _content_to_markdown(props.get("content")),
+            "categories": _categories(props),
         })
     logger.info("microblog: q=source -> %d published posts", len(out))
     return out

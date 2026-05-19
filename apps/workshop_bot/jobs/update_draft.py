@@ -47,13 +47,16 @@ NAME = "update-draft"
 
 # Block fill order is irrelevant (each replace_block is independent); the
 # *layout* order lives in templates/draft_starter.md. Listed here in the
-# published section order for readability (intro → Currently → cover → …
-# → outro → haiku). Promoted (featured) items don't have their own block
-# slots — ``create-final`` splices them inline into ``final.md`` at their
-# declared ``promoted_position``, so they never need a place in the
-# draft template.
+# published section order for readability (intro → Currently → cover →
+# Featured → Notable → Journal → Brief → outro → haiku). Featured posts
+# are micro.blog entries Jamie tagged with the ``Featured`` category;
+# the sync layer marks the rows is_promoted=1 and the draft renders
+# them as standalone ``## {title}`` sections above Notable. (Eddy used
+# to choose promotions during create-final; that mechanism was retired
+# in favor of the upstream-category flow.)
 SECTION_BLOCKS = (
-    "intro", "currently", "cover", "notable", "journal", "brief",
+    "intro", "currently", "cover", "featured",
+    "notable", "journal", "brief",
     "outro", "haiku",
 )
 # Blocks that are just a verbatim copy of an authored asset file. (``cover``
@@ -149,9 +152,19 @@ def _gather_fills(window: dict) -> dict[str, str]:
         msg = sync_result["microblog"].get("error", "unknown error")
         logger.warning("update-draft: micro.blog sync failed for #%d: %s", n, msg)
         fills["journal"] = f"_Journal — couldn't pull from micro.blog ({msg})._"
+        fills["featured"] = ""
     else:
         journal_rows = issue_items.list_items(n, section="journal", include_promoted=False)
         fills["journal"] = issue_items_render.render_journal(journal_rows)
+        # Featured posts are micro.blog journal entries Jamie tagged with the
+        # ``Featured`` category. The sync layer flags them is_promoted=1 with
+        # promoted_position="before_notable"; they render here as standalone
+        # ``## {title}`` sections above Notable, in publish-date order.
+        featured_rows = [
+            r for r in issue_items.list_items(n, section="journal", include_promoted=True)
+            if r.get("is_promoted")
+        ]
+        fills["featured"] = issue_items_render.render_featured_sections(featured_rows)
 
     return fills
 

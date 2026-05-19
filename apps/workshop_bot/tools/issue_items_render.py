@@ -358,6 +358,17 @@ def render_journal_with_markers(
 
 # ---------- featured (promoted) sections ----------
 
+def render_featured_sections(rows: list[dict[str, Any]]) -> str:
+    """Render every promoted row as a sequence of ``## {heading}\\n\\n{body}``
+    sections, joined with two blank lines so they read as standalone
+    H2-level sections of the issue. Used by ``update-draft`` to populate
+    the new ``featured`` block above Notable; rows are passed in their
+    natural publish-date order (caller filters to ``is_promoted=1``)."""
+    if not rows:
+        return ""
+    return "\n\n\n".join(render_featured_section(r) for r in rows)
+
+
 def render_featured_section(row: dict[str, Any]) -> str:
     """Render one promoted item as its own standalone ``## {heading}``
     section body. The heading is the editorial heading Eddy chose; the
