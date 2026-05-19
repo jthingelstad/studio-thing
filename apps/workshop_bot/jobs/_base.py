@@ -152,6 +152,47 @@ class JobContext:
         body = text if len(text) <= 1990 else text[:1990].rstrip() + "…"
         return await ch.send(body, suppress_embeds=suppress_embeds)
 
+    async def progress(
+        self,
+        channel_or_env,
+        initial_text: str,
+        *,
+        persona: Optional[str] = None,
+    ) -> Optional["ProgressMessage"]:
+        """Post ``initial_text`` and return a :class:`ProgressMessage` whose
+        ``update(text)`` swaps the message contents in place. Returns ``None``
+        if the channel couldn't be resolved (callers should null-check and
+        proceed without progress display)."""
+        msg = await self.send_one(channel_or_env, initial_text, persona=persona)
+        return ProgressMessage(msg) if msg is not None else None
+
+
+# ---------- progress messages ----------
+
+class ProgressMessage:
+    """A Discord message that the job edits in place to show step-by-step
+    progress. Used by long-running jobs (the ship sequence) so Discord
+    shows specific status instead of the generic "thinking..." spinner.
+
+    Failure mode is silent — a Discord edit hiccup logs and continues; the
+    caller's job logic is never blocked by a progress-display issue."""
+
+    def __init__(self, message):
+        self._message = message
+
+    @property
+    def message_id(self) -> Optional[int]:
+        return getattr(self._message, "id", None) if self._message else None
+
+    async def update(self, text: str) -> None:
+        if self._message is None or not text:
+            return
+        body = text if len(text) <= 1990 else text[:1990].rstrip() + "…"
+        try:
+            await self._message.edit(content=body)
+        except Exception as exc:  # noqa: BLE001 — best-effort
+            logger.warning("job: progress.update failed: %s", exc)
+
 
 # ---------- locking ----------
 

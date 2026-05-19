@@ -28,7 +28,9 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.jobs import _base, compose_archive, compose_transcript, send_to_buttondown  # noqa: E402
+from apps.workshop_bot.jobs import (  # noqa: E402
+    _base, compose_archive, compose_transcript, render_audio, send_to_buttondown,
+)
 from apps.workshop_bot.tools import db, github_repo  # noqa: E402
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
@@ -58,18 +60,48 @@ def _ok_result(**kwargs):
 
 
 def _no_op_compose():
-    """Patcher tuple: (compose_archive.run, compose_transcript.run) both
-    succeed with an empty result. Tests that don't care about the compose
-    steps use this to avoid seeding their full prereq surface."""
+    """Patcher tuple: (compose_archive.run, compose_transcript.run,
+    render_audio.run) all succeed with an empty result. Tests that don't
+    care about these auto-fired steps use this to avoid seeding their full
+    prereq surface."""
     return (
         patch.object(compose_archive, "run", new=AsyncMock(return_value=_ok_result())),
         patch.object(compose_transcript, "run", new=AsyncMock(return_value=_ok_result())),
+        patch.object(
+            render_audio, "run",
+            new=AsyncMock(return_value=_base.JobResult(
+                True, "audio ok",
+                data={
+                    "audio_url": "https://files.thingelstad.com/weekly-thing/458/weekly-thing-458.mp3",
+                    "duration_seconds": 360,
+                    "byte_size": 4_500_000,
+                    "changed": True,
+                },
+            )),
+        ),
     )
 
 
 def _no_op_github(commit_sha="deadbeef" + "0" * 32):
     """Patcher for github_repo.put_tree that returns a fake commit sha."""
     return patch.object(github_repo, "put_tree", new=MagicMock(return_value=commit_sha))
+
+
+def _fake_collect_ship_files():
+    """Patcher for send_to_buttondown._collect_ship_files. _collect_ship_files
+    reads from the local data/issues/{N}/ tree; in unit tests the workshop
+    mocks compose-* so no local files exist. This stub returns a plausible
+    file list so the github_repo.put_tree call shape can be verified."""
+    return patch.object(
+        send_to_buttondown, "_collect_ship_files",
+        new=MagicMock(return_value=[
+            ("data/issues/458/archive.md", b"---\nnumber: 458\n---\n\nbody\n"),
+            ("data/issues/458/metadata.json", b'{"number": 458}\n'),
+            ("data/issues/458/links.json", b'{}\n'),
+            ("data/issues/458/transcript/000-preamble.txt", b"The Weekly Thing.\n"),
+            ("data/audio/manifest.json", b'{"458": {"audio_url": "https://x/y.mp3"}}\n'),
+        ]),
+    )
 
 
 class SendToButtondownTests(_DBTestCase):
@@ -115,9 +147,9 @@ class SendToButtondownTests(_DBTestCase):
         # archive.md + metadata.json present so compose-archive (mocked) doesn't
         # complain; buttondown.md deliberately absent.
         self.ws.write_issue_file(458, "archive.md", "---\nnumber: 458\n---\n\nbody\n")
-        ca, ct = _no_op_compose()
+        ca, ct, ra = _no_op_compose()
         ctx, fc = self._ctx()
-        with ca, ct:
+        with ca, ct, ra:
             result = asyncio.run(send_to_buttondown.run(ctx))
         self.assertFalse(result.ok)
         self.assertIn("no `buttondown.md`", result.message)
@@ -139,12 +171,12 @@ class SendToButtondownTests(_DBTestCase):
         self._seed_min_workspace()
         ctx, fc = self._ctx()
         fake_pipeline = _fake_pipeline(raise_with="Buttondown POST failed (422): validation error")
-        ca, ct = _no_op_compose()
-        with ca, ct, patch.object(send_to_buttondown, "_import_pipeline_content", return_value=fake_pipeline):
+        ca, ct, ra = _no_op_compose()
+        with ca, ct, ra, patch.object(send_to_buttondown, "_import_pipeline_content", return_value=fake_pipeline):
             result = asyncio.run(send_to_buttondown.run(ctx))
         self.assertFalse(result.ok)
         self.assertIn("422", result.message)
-        sent = fc.channel.send.await_args_list[0].args[0]
+        sent = fc.channel.send.await_args_list[-1].args[0]
         self.assertIn("422", sent)
 
     # ---------- success-path tests ----------
@@ -160,15 +192,15 @@ class SendToButtondownTests(_DBTestCase):
             "absolute_url": "https://buttondown.com/weekly-thing/archive/458/",
         })
         os.environ["GITHUB_PAT_TOKEN"] = "github_pat_test"
-        ca, ct = _no_op_compose()
-        with ca, ct, _no_op_github("abc123" + "0" * 34) as gh, \
+        ca, ct, ra = _no_op_compose()
+        with ca, ct, ra, _no_op_github("abc123" + "0" * 34) as gh, _fake_collect_ship_files(), \
              patch.object(send_to_buttondown, "_import_pipeline_content", return_value=fake_pipeline):
             result = asyncio.run(send_to_buttondown.run(ctx))
         self.assertTrue(result.ok, result.message)
         self.assertEqual(result.data["action"], "created")
         self.assertEqual(result.data["buttondown_id"], "new-uuid-001")
         self.assertTrue(result.data["commit_sha"].startswith("abc123"))
-        sent = fc.channel.send.await_args_list[0].args[0]
+        sent = fc.channel.send.await_args_list[-1].args[0]
         self.assertIn("Created Buttondown draft", sent)
         self.assertIn("https://buttondown.com/emails/new-uuid-001", sent)
         self.assertIn("Weekly Thing 458", sent)
@@ -191,13 +223,13 @@ class SendToButtondownTests(_DBTestCase):
             "absolute_url": "https://buttondown.com/weekly-thing/archive/458/",
         })
         os.environ["GITHUB_PAT_TOKEN"] = "github_pat_test"
-        ca, ct = _no_op_compose()
-        with ca, ct, _no_op_github(), \
+        ca, ct, ra = _no_op_compose()
+        with ca, ct, ra, _no_op_github(), _fake_collect_ship_files(), \
              patch.object(send_to_buttondown, "_import_pipeline_content", return_value=fake_pipeline):
             result = asyncio.run(send_to_buttondown.run(ctx))
         self.assertTrue(result.ok, result.message)
         self.assertEqual(result.data["action"], "updated")
-        sent = fc.channel.send.await_args_list[0].args[0]
+        sent = fc.channel.send.await_args_list[-1].args[0]
         self.assertIn("Updated Buttondown draft", sent)
         self.assertIn("https://buttondown.com/emails/existing-uuid", sent)
 
@@ -214,8 +246,8 @@ class SendToButtondownTests(_DBTestCase):
             "absolute_url": "https://buttondown.com/weekly-thing/archive/458/",
         })
         os.environ["GITHUB_PAT_TOKEN"] = "github_pat_test"
-        ca, ct = _no_op_compose()
-        with ca, ct, \
+        ca, ct, ra = _no_op_compose()
+        with ca, ct, ra, _fake_collect_ship_files(), \
              patch.object(github_repo, "put_tree", side_effect=RuntimeError("github 500")), \
              patch.object(send_to_buttondown, "_import_pipeline_content", return_value=fake_pipeline):
             result = asyncio.run(send_to_buttondown.run(ctx))
@@ -223,7 +255,7 @@ class SendToButtondownTests(_DBTestCase):
         self.assertEqual(result.data["commit_sha"], "")
         warnings = [
             c.args[0] for c in fc.channel.send.await_args_list
-            if "GitHub commit" in c.args[0]
+            if "GitHub commit failed" in c.args[0]
         ]
         self.assertEqual(len(warnings), 1)
         self.assertIn("github 500", warnings[0])
@@ -239,8 +271,8 @@ class SendToButtondownTests(_DBTestCase):
             "absolute_url": "https://buttondown.com/weekly-thing/archive/458/",
         })
         # Deliberately don't set GITHUB_PAT_TOKEN.
-        ca, ct = _no_op_compose()
-        with ca, ct, \
+        ca, ct, ra = _no_op_compose()
+        with ca, ct, ra, _fake_collect_ship_files(), \
              patch.object(github_repo, "put_tree", side_effect=github_repo.MissingTokenError("no token")), \
              patch.object(send_to_buttondown, "_import_pipeline_content", return_value=fake_pipeline):
             result = asyncio.run(send_to_buttondown.run(ctx))

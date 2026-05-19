@@ -28,6 +28,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+from pathlib import Path
 
 import yaml
 from librarian_core.links import count_words, extract_domains, extract_links
@@ -38,6 +39,12 @@ from . import _base
 logger = logging.getLogger("workshop.jobs.compose_archive")
 
 NAME = "compose-archive"
+
+# Local repo root — workshop ship writes archive.md / links.json / metadata.json
+# to data/issues/{N}/ here so the audio pipeline (which reads from local disk)
+# and the GitHub commit step both have a single staging surface.
+REPO = Path(__file__).resolve().parents[3]
+ISSUES_ROOT = REPO / "data" / "issues"
 
 REQUIRED = ("final.md", "haiku.md", "metadata.json", "intro.md", "cover.jpg")
 
@@ -182,8 +189,22 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             archive_md = _render_archive_md(front_matter, body)
             links_json = _build_links_json(front_matter, link_data)
 
+            links_text = json.dumps(links_json, indent=2) + "\n"
+            metadata_text = json.dumps(metadata, indent=2) + "\n"
+
+            # S3 workspace mirror — the workshop pattern stores all artifacts
+            # in s3://files.thingelstad.com/weekly-thing/{N}/ for browsing.
             s3.write_issue_file(n, "archive.md", archive_md)
-            s3.write_issue_file(n, "links.json", json.dumps(links_json, indent=2) + "\n")
+            s3.write_issue_file(n, "links.json", links_text)
+
+            # Local repo mirror — render-audio reads from data/issues/{N}/ and
+            # the ship's GitHub commit step reads the same files. Writing
+            # locally during compose keeps the staging surface single-source.
+            local_dir = ISSUES_ROOT / str(n)
+            local_dir.mkdir(parents=True, exist_ok=True)
+            (local_dir / "archive.md").write_text(archive_md, encoding="utf-8")
+            (local_dir / "links.json").write_text(links_text, encoding="utf-8")
+            (local_dir / "metadata.json").write_text(metadata_text, encoding="utf-8")
     except _base.JobLocked as exc:
         return _base.JobResult(
             False, f"⏳ `compose-archive` is already running ({exc.holder_desc})."

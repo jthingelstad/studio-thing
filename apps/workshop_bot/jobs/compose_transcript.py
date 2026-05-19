@@ -36,6 +36,7 @@ logger = logging.getLogger("workshop.jobs.compose_transcript")
 NAME = "compose-transcript"
 
 REPO = Path(__file__).resolve().parents[3]
+ISSUES_ROOT = REPO / "data" / "issues"
 
 # Per-block writes carry a slug derived from the block's first line, capped so
 # S3 keys stay sane. Pure-text fallback when the slug derivation can't extract
@@ -146,10 +147,11 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 )
 
             named = _block_filenames(blocks)
-
-            # Wipe stale transcript files so a re-run with fewer blocks doesn't
-            # leave orphans behind. Only delete from the transcript/ prefix.
             new_names = {name for name, _ in named}
+
+            # S3 mirror — wipe stale transcript files so a re-run with fewer
+            # blocks doesn't leave orphans behind. Only delete from the
+            # transcript/ prefix.
             for existing in _list_existing_transcript_basenames(n):
                 if existing not in new_names:
                     try:
@@ -157,8 +159,19 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     except Exception:  # noqa: BLE001
                         logger.warning("compose-transcript: couldn't delete stale %s", existing)
 
+            # Local repo mirror — render-audio reads from
+            # data/issues/{N}/transcript/ and the GitHub commit step reads
+            # from the same dir.
+            local_dir = ISSUES_ROOT / str(n) / "transcript"
+            local_dir.mkdir(parents=True, exist_ok=True)
+            for existing in local_dir.glob("*.txt"):
+                if existing.name not in new_names:
+                    existing.unlink()
+
             for name, block in named:
-                s3.write_transcript_file(n, name, block.rstrip() + "\n")
+                content_text = block.rstrip() + "\n"
+                s3.write_transcript_file(n, name, content_text)
+                (local_dir / name).write_text(content_text, encoding="utf-8")
 
     except _base.JobLocked as exc:
         return _base.JobResult(

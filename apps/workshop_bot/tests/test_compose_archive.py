@@ -7,8 +7,10 @@ import asyncio
 import json
 import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
@@ -53,6 +55,16 @@ class ComposeArchiveHelperTests(unittest.TestCase):
 
 
 class ComposeArchiveTests(_DBTestCase):
+    def setUp(self):
+        super().setUp()
+        # compose_archive mirrors writes to ISSUES_ROOT — point that at a
+        # tempdir so tests don't pollute the real repo's data/issues/.
+        self._issues_tmp = tempfile.TemporaryDirectory()
+        self._issues_patch = patch.object(
+            compose_archive, "ISSUES_ROOT", Path(self._issues_tmp.name),
+        )
+        self._issues_patch.start()
+
     def _window(self, n=458, pub="2026-05-16"):
         from apps.workshop_bot.tools.content import issue as issue_mod
 
@@ -68,6 +80,8 @@ class ComposeArchiveTests(_DBTestCase):
         return _base.JobContext(deps=fc.deps()), fc
 
     def tearDown(self):
+        self._issues_patch.stop()
+        self._issues_tmp.cleanup()
         os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
         super().tearDown()
 
