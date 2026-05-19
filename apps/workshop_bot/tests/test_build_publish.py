@@ -163,7 +163,7 @@ class BuildPublishTests(_DBTestCase):
         self.assertIn("cta-1.md", result.message)
         self.assertIn("/patty cta", result.message)
 
-    def test_assembles_publish_md_with_marker_substitution(self):
+    def test_assembles_buttondown_md_with_marker_substitution(self):
         self._window()
         # In the row-backed model, final.md is already assembled with the
         # atoms inlined — the assembler bakes intro / currently / cover /
@@ -401,7 +401,7 @@ class PublishToButtondownTests(unittest.TestCase):
             return None
         return fake_get
 
-    def test_refuses_without_publish_md(self):
+    def test_refuses_without_buttondown_md(self):
         content = self._content_module()
         import types
         with patch.object(content, "_workspace_get_text", lambda n, f: None):

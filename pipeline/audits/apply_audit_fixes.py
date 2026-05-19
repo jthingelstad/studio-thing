@@ -356,7 +356,7 @@ def main() -> None:
     report_path.write_text("\n".join(lines), encoding="utf-8")
     print(f"\nReport: {report_path.relative_to(REPO)}")
     if args.apply:
-        print("Body files updated. Run `git diff data/buttondown/bodies/` to review.")
+        print("Body files updated. Run `git diff data/issues/` to review.")
     else:
         print("Dry run — no body files were modified. Re-run with --apply to write.")
 

@@ -1,6 +1,6 @@
 """Editorial link extraction for The Weekly Thing archive bodies.
 
-Shared between the website build pipeline (``pipeline/content/process_emails.py``)
+Shared between the website build pipeline (``pipeline/content/content.py``)
 and workshop_bot's ``compose-archive`` job. Both need the same Notable / Briefly
 extraction rules — the era-specific section name variants (emoji-suffixed
 MailChimp-era headings like ``Notable Links 📌``), the H3-link-only rule for

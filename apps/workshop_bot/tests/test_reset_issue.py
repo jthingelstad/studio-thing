@@ -96,7 +96,7 @@ class ResetFinalTests(_Case):
 
 class ResetPublishTests(_Case):
 
-    def test_deletes_publish_md_and_html(self):
+    def test_deletes_buttondown_md_and_html(self):
         self._window()
         self.ws.write_issue_file(349, "buttondown.md", "p")
         self.ws.write_issue_file(349, "buttondown.html", "h")

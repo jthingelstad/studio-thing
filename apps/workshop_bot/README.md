@@ -27,7 +27,7 @@ Other components in the larger system:
 - **thingy_bridge** at [`../thingy_bridge/`](../thingy_bridge/) — the Discord bridge to Thingy. Separate process; reader-facing surface.
 - **Librarian Lambda** at `apps/librarian/lambda/` — production agent for reader Q&A. The bridge process forwards to it; workshop_bot doesn't talk to it.
 - **Eleventy site** — `weekly.thingelstad.com` static site.
-- **Buttondown** — newsletter platform; content synced to `data/buttondown/`.
+- **Buttondown** — email delivery platform. workshop_bot's `send-to-buttondown` job pushes `buttondown.md` as a draft (POST first time, PATCH on every re-run via a stored `buttondown_id`). Jamie schedules + sends from the Buttondown UI; no operator-side pull/sync.
 - **Shortcuts pipeline** — Jamie's iOS Shortcuts assemble each issue Sunday morning, reading from `s3://files.thingelstad.com/weekly-thing/{N}/`.
 
 ---
@@ -106,7 +106,7 @@ weekly-thing/{N}/
 └── eddy-edits.md       ← (rare — when Eddy posts a substantial revision worth preserving)
 ```
 
-The exact markdown shape (the `---`-fenced blocks, the Notable "discuss on Reddit" line, `### [Title](url)` headings, the `→ **[Title](url)**` Briefly form, elevated Journal posts, the `A haiku to leave you with…` close) mirrors the iOS-Shortcut bodies in `data/buttondown/bodies/` — see [`CLAUDE.md`](CLAUDE.md) ("Issue-markdown shape") for the per-loop formatting rules.
+The exact markdown shape (the `---`-fenced blocks, the Notable "discuss on Reddit" line, `### [Title](url)` headings, the `→ **[Title](url)**` Briefly form, elevated Journal posts, the `A haiku to leave you with…` close) is the same shape stored in `data/issues/{N}/archive.md` after a ship — see [`CLAUDE.md`](CLAUDE.md) ("Issue-markdown shape") for the per-loop formatting rules.
 
 The S3 helper at `tools/s3.py` enforces a strict allow-list: only md/markdown/txt/json/yaml/yml/csv/html files; bare-component filenames (no slashes, no `..`); 256 KB cap per file. The text-only extension allowlist is what keeps agent writes from clobbering published archive assets (cover.jpg, journal photos) that share the prefix. Any path outside `weekly-thing/{N}/` is rejected before the request reaches AWS.
 

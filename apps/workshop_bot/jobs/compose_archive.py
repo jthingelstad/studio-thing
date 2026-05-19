@@ -96,10 +96,10 @@ def _build_archive_body(final_text: str) -> str:
 
 
 def _build_front_matter(metadata: dict, body: str) -> dict:
-    """Match the front-matter field order data/issues/{N}/archive.md uses today
-    (see pipeline/one-shot/migrate_to_issues_canonical.py). Keeps the website
-    build's read path identical regardless of whether an issue was migrated
-    from data/buttondown/ or composed fresh by workshop_bot."""
+    """Match the front-matter field order data/issues/{N}/archive.md uses
+    everywhere (see content.py's build_from_issues_canonical read path). Keeps
+    a fresh-from-workshop archive.md byte-shape-compatible with the migrated
+    bodies that were backfilled when the inversion landed."""
     link_data = extract_links(body)
     all_curated = link_data["all_curated"]
     return {

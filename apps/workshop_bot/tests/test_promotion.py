@@ -114,7 +114,7 @@ class PromotionPrepJobTests(_DBCase):
         os.environ.pop("DISCORD_CHANNEL_PROMOTION", None)
         super().tearDown()
 
-    def test_no_publish_md_errors(self):
+    def test_no_buttondown_md_errors(self):
         deps, marky, channel = _marky_deps()
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         with patch.object(rss, "latest_published_issue", lambda: {"number": 458, "ship_date": "2026-05-16"}):
