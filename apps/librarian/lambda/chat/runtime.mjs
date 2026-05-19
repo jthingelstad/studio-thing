@@ -4,6 +4,7 @@ import { BedrockAgentRuntimeClient, RerankCommand } from '@aws-sdk/client-bedroc
 import { DynamoDBClient, PutItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { readConverseStream } from '../shared/bedrock-stream.mjs';
+import { prioritizeCitationsForAnswer } from '../shared/citations.mjs';
 import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
 import { searchFaq } from '../shared/faq.mjs';
 import { truthyEnv } from '../shared/logging.mjs';
@@ -834,23 +835,6 @@ function collectToolCitations(toolResults) {
     }
   }
   return citationsFor(sources);
-}
-
-function prioritizeCitationsForAnswer(citations, answer) {
-  const mentioned = [...String(answer || '').matchAll(/(?:WT|#)(\d+)/g)].map((match) => Number(match[1]));
-  if (!mentioned.length) return citations;
-  const firstSeen = new Map();
-  mentioned.forEach((issueNumber, index) => {
-    if (!firstSeen.has(issueNumber)) firstSeen.set(issueNumber, index);
-  });
-  return citations
-    .map((citation, index) => ({ citation, index }))
-    .sort((a, b) => {
-      const rankA = firstSeen.get(Number(a.citation.issue_number)) ?? 10000;
-      const rankB = firstSeen.get(Number(b.citation.issue_number)) ?? 10000;
-      return rankA - rankB || a.index - b.index;
-    })
-    .map(({ citation }) => citation);
 }
 
 async function streamBedrockAgentAnswer(question, history, responseStream, options = {}) {
