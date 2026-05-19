@@ -43,7 +43,7 @@ _PASS_STRIP_RE = re.compile(r"[\s*_`~\"'()<>\[\]\.\!\?,;:\\\-—–]+")
 
 
 def is_pass_response(text: str) -> bool:
-    """True if ``text`` is a no-reply signal.
+    r"""True if ``text`` is a no-reply signal.
 
     Matches three shapes:
 
