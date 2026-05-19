@@ -29,12 +29,11 @@ import asyncio
 import hashlib
 import logging
 import os
-from datetime import datetime
-from zoneinfo import ZoneInfo
-
-from html import escape as _html_escape
-
 import re
+from datetime import datetime
+from html import escape as _html_escape
+from typing import Optional
+from zoneinfo import ZoneInfo
 
 from ..personas.base import is_pass_response
 from ..tools import alt_text, db, issue_items, issue_items_render, issue_items_sync, render, s3
@@ -506,6 +505,61 @@ async def _maybe_eddy_review(
 
 # ---------- the job ----------
 
+def _initial_progress(n: int) -> str:
+    return (
+        f"🔄 Refreshing **WT{n}** draft…\n"
+        f"⏳ Pulling Pinboard + micro.blog + images _(slowest step)_\n"
+        f"⏳ Editorial review (Sonnet)\n"
+        f"⏳ HTML preview\n"
+        f"⏳ Editorial card to #editorial"
+    )
+
+
+def _progress(
+    n: int,
+    *,
+    header: Optional[str] = None,
+    sources: str = "⏳",
+    sources_detail: str = "_(slowest step)_",
+    review: str = "⏳",
+    review_detail: str = "",
+    html: str = "⏳",
+    html_detail: str = "",
+    card: str = "⏳",
+    card_detail: str = "",
+) -> str:
+    head = header or f"🔄 Refreshing **WT{n}** draft…"
+    return (
+        f"{head}\n"
+        f"{sources} Pulling Pinboard + micro.blog + images{(' — ' + sources_detail) if sources_detail else ''}\n"
+        f"{review} Editorial review (Sonnet){(' — ' + review_detail) if review_detail else ''}\n"
+        f"{html} HTML preview{(' — ' + html_detail) if html_detail else ''}\n"
+        f"{card} Editorial card to #editorial{(' — ' + card_detail) if card_detail else ''}"
+    )
+
+
+def _sources_summary(sync_result: dict, fills: dict) -> str:
+    """One-line summary of what _gather_fills pulled, for the progress card."""
+    bits: list[str] = []
+    pinboard = sync_result.get("pinboard", {})
+    if "error" in pinboard:
+        bits.append(f"Pinboard error: {pinboard['error']}")
+    else:
+        observed = pinboard.get("observed", 0)
+        if observed:
+            bits.append(f"{observed} Pinboard items")
+    microblog = sync_result.get("microblog", {})
+    if "error" in microblog:
+        bits.append(f"micro.blog error: {microblog['error']}")
+    else:
+        observed = microblog.get("observed", 0)
+        if observed:
+            bits.append(f"{observed} micro.blog entries")
+    if not bits:
+        return "no source updates"
+    return ", ".join(bits)
+
+
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     window = db.get_active_issue_window()
     if window is None:
@@ -521,15 +575,33 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             f"❌ issue #{n} is locked — `final.md` exists. Delete it to unlock `update-draft`.",
         )
 
+    progress = await ctx.progress(
+        "DISCORD_CHANNEL_EDITORIAL", _initial_progress(n), persona="eddy",
+    )
+
+    async def _refresh(**kwargs) -> None:
+        if progress is not None:
+            await progress.update(_progress(n, **kwargs))
+
+    sources_detail = ""
+    review_detail = ""
+    html_detail = ""
+
     asset = f"{n}/draft.md"
     try:
         with _base.job_lock([asset], NAME):
+            # ----- Step 1: pull from Pinboard + micro.blog + image rehost -----
+            await _refresh(sources="🔄", sources_detail="_(running…)_")
+
             # Rebuild from the template every run so the section layout
             # always matches templates/draft_starter.md (the draft is a
             # pure projection — nothing on the old draft.md is preserved).
             text = _base.starter_template()
             # _gather_fills does blocking HTTP (Pinboard, micro.blog,
             # journal-image download/resize/upload) — off the event loop.
+            # The actual sync result isn't returned by gather_fills today;
+            # we re-derive a coarse summary from issue_items counts after
+            # the fills are in.
             fills = await asyncio.to_thread(_gather_fills, window)
             for block in SECTION_BLOCKS:
                 text = _base.replace_block(text, block, fills.get(block, ""))
@@ -537,6 +609,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 s3.write_issue_file(n, "draft.md", text)
             except Exception as exc:  # noqa: BLE001
                 logger.exception("update-draft: write failed for #%d", n)
+                await _refresh(
+                    header=f"❌ Refresh failed for **WT{n}** — couldn't write draft.md",
+                    sources="❌", sources_detail=f"`{type(exc).__name__}: {exc}`",
+                )
                 return _base.JobResult(
                     False, f"❌ couldn't write `draft.md` for #{n}: `{type(exc).__name__}: {exc}`"
                 )
@@ -553,14 +629,37 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             today = generated_at.date()
             stamp = generated_at.strftime("%Y-%m-%d %H:%M %Z")
 
-            # Solid editorial pass for the shareable HTML preview — embedded
-            # behind a "Show review" toggle, hidden by default. Best-effort.
+            sources_detail = (
+                f"{st['sections']['notable']['item_count']} Notable / "
+                f"{st['sections']['brief']['item_count']} Briefly / "
+                f"{st['sections']['journal']['item_count']} Journal · "
+                f"~{st['word_count']}w"
+            )
+            await _refresh(
+                sources="✅", sources_detail=sources_detail,
+                review="🧠", review_detail="_(Sonnet running…)_",
+            )
+
+            # ----- Step 2: editorial review (Sonnet) -----
             review_md = ""
             try:
                 review_md = await _draft_review(ctx, window, st, prev_digest, today, text)
             except Exception:  # noqa: BLE001
                 logger.exception("update-draft: HTML draft review failed for #%d", n)
 
+            if review_md:
+                # Rough comment count = number of "- " bullets in the review markdown.
+                comment_count = sum(1 for line in review_md.splitlines() if line.lstrip().startswith("- "))
+                review_detail = f"{comment_count} comment(s) captured"
+            else:
+                review_detail = "no comments (PASS or Eddy unavailable)"
+            await _refresh(
+                sources="✅", sources_detail=sources_detail,
+                review="✅", review_detail=review_detail,
+                html="🔄", html_detail="_(rendering + S3 upload + CDN invalidate)_",
+            )
+
+            # ----- Step 3: HTML preview render + S3 upload + CDN invalidate -----
             # Browser-viewable preview (no-cache + CDN invalidation); best-effort.
             # Subtitle carries the full local timestamp so anyone opening the
             # shareable link can tell at a glance whether they're looking at a
@@ -570,6 +669,13 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 title=f"WT{n} — draft",
                 subtitle=f"DRAFT · WT{n} · generated {stamp} · ~{st['word_count']} words · not the final issue",
                 strip_block_markers=True, review_md=review_md,
+            )
+            html_detail = (f"[view]({html_url})" + (" (with review)" if review_md else "")) if html_url else "skipped"
+            await _refresh(
+                sources="✅", sources_detail=sources_detail,
+                review="✅", review_detail=review_detail,
+                html="✅", html_detail=html_detail,
+                card="🔄", card_detail="_(posting…)_",
             )
 
             # Always post the deterministic readiness snapshot to #editorial,
@@ -585,12 +691,21 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             except Exception:  # noqa: BLE001
                 logger.exception("update-draft: status-card post failed for #%d", n)
 
+            # ----- Step 4: editorial card (Eddy's #editorial post) -----
             review_note = ""
             try:
                 review_note = await _maybe_eddy_review(ctx, window, st, prev_digest, today, view_url=html_url)
             except Exception:  # noqa: BLE001
                 logger.exception("update-draft: Eddy review failed for #%d", n)
                 review_note = "(Eddy review errored — see logs)"
+
+            await _refresh(
+                header=f"✅ Refreshed **WT{n}** draft",
+                sources="✅", sources_detail=sources_detail,
+                review="✅", review_detail=review_detail,
+                html="✅", html_detail=html_detail,
+                card="✅", card_detail=review_note,
+            )
 
             try:
                 db.insert_draft_digest(
