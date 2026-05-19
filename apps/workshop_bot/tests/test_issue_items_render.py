@@ -30,11 +30,19 @@ def _brief_row(*, url: str, title: str, body_md: str = "") -> dict:
     }
 
 
-def _journal_row(*, url: str, title: str = "", body_md: str = "", label: str = "Saturday @ 4:00 PM") -> dict:
+def _journal_row(
+    *,
+    url: str,
+    title: str = "",
+    body_md: str = "",
+    label: str = "Saturday @ 4:00 PM",
+    published: str = "2026-05-16T21:00:00Z",
+    row_id: int = 1,
+) -> dict:
     return {
-        "id": 1, "section": "journal", "position": 1, "is_promoted": 0,
+        "id": row_id, "section": "journal", "position": 1, "is_promoted": 0,
         "url": url, "title": title, "body_md": body_md,
-        "metadata": {"label": label, "published": "2026-05-16T21:00:00Z"},
+        "metadata": {"label": label, "published": published},
     }
 
 
@@ -90,40 +98,86 @@ class BriefRenderTests(unittest.TestCase):
 
 class JournalRenderTests(unittest.TestCase):
 
-    def test_titled_post_elevated_form(self):
+    def test_day_header_emitted_above_entries(self):
+        """Every Journal section opens with a day H3 sub-header derived
+        from the local-time date of the first entry on that day."""
+        out = issue_items_render.render_journal([
+            _journal_row(url="https://x", title="A long-form post", body_md="body"),
+        ])
+        # 21:00 UTC on 2026-05-16 = 16:00 America/Chicago (CDT) = Saturday.
+        self.assertTrue(out.startswith("### Saturday, May 16\n\n"))
+
+    def test_titled_post_renders_with_time_paragraph_below_heading(self):
         out = issue_items_render.render_journal([
             _journal_row(url="https://x", title="A long-form post", body_md="body"),
         ])
         self.assertEqual(
             out,
-            "### [A long-form post](https://x)  \nSaturday @ 4:00 PM\n\nbody",
+            "### Saturday, May 16\n\n### [A long-form post](https://x)\n\n4:00 PM\n\nbody",
         )
 
-    def test_status_post_inline_link(self):
+    def test_note_renders_as_compact_em_dash_paragraph(self):
         out = issue_items_render.render_journal([
             _journal_row(url="https://x", body_md="quick note"),
         ])
         self.assertEqual(
             out,
-            "[Saturday @ 4:00 PM](https://x)\n\nquick note",
+            "### Saturday, May 16\n\n[4:00 PM](https://x) — quick note",
         )
 
-    def test_two_blank_lines_between_entries(self):
+    def test_note_without_body_renders_as_bare_linked_time(self):
         out = issue_items_render.render_journal([
-            _journal_row(url="https://a", body_md="x"),
-            _journal_row(url="https://b", body_md="y"),
+            _journal_row(url="https://x"),
         ])
-        self.assertIn("\n\n\n", out)
+        self.assertEqual(out, "### Saturday, May 16\n\n[4:00 PM](https://x)")
 
-    def test_label_falls_back_to_published_when_metadata_missing(self):
+    def test_multi_day_groups_under_separate_headers(self):
+        """Entries on different days bucket under their own day headers,
+        joined with a blank line between day blocks."""
+        rows = [
+            _journal_row(
+                row_id=1, url="https://a", body_md="sat note",
+                published="2026-05-16T19:00:00Z",  # 14:00 CT Saturday
+            ),
+            _journal_row(
+                row_id=2, url="https://b", title="Sunday post", body_md="sun body",
+                published="2026-05-17T18:00:00Z",  # 13:00 CT Sunday
+            ),
+        ]
+        out = issue_items_render.render_journal(rows)
+        self.assertIn("### Saturday, May 16", out)
+        self.assertIn("### Sunday, May 17", out)
+        # Day blocks are separated by two blank lines (\n\n\n joiner).
+        self.assertIn("\n\n\n### Sunday, May 17", out)
+        # Saturday's note sits inside the Saturday block.
+        self.assertIn("### Saturday, May 16\n\n[2:00 PM](https://a) — sat note", out)
+
+    def test_empty_days_are_skipped(self):
+        """Only days with ≥1 entry produce a header."""
+        out = issue_items_render.render_journal([
+            _journal_row(url="https://a", body_md="x", published="2026-05-16T19:00:00Z"),
+            _journal_row(url="https://b", body_md="y", published="2026-05-18T19:00:00Z"),
+        ])
+        self.assertIn("### Saturday, May 16", out)
+        self.assertIn("### Monday, May 18", out)
+        # Sunday (between) had no entries — no header for it.
+        self.assertNotIn("Sunday", out)
+
+    def test_empty_rows_returns_empty_string(self):
+        self.assertEqual(issue_items_render.render_journal([]), "")
+
+    def test_day_label_falls_back_when_published_missing(self):
+        """Rows without ``metadata.published`` use the legacy ``label``
+        field's weekday portion for the day header. Bucketing keys them
+        under a stable ``undated`` bucket."""
         row = {
             "id": 1, "section": "journal", "position": 1, "is_promoted": 0,
             "url": "https://a", "title": "", "body_md": "x",
-            "metadata": {"published": "2026-05-16T21:00:00Z"},
+            "metadata": {"label": "Friday @ 9:00 AM"},
         }
         out = issue_items_render.render_journal([row])
-        # 21:00 UTC = 16:00 CT in May (CDT) → Saturday @ 4:00 PM
-        self.assertIn("Saturday @ 4:00 PM", out)
+        self.assertIn("### Friday", out)
+        self.assertIn("9:00 AM", out)
 
 
 class FeaturedSectionTests(unittest.TestCase):
@@ -134,9 +188,11 @@ class FeaturedSectionTests(unittest.TestCase):
         row["promoted_heading"] = "Featured · The Weekly Thing Team"
         out = issue_items_render.render_featured_section(row)
         self.assertTrue(out.startswith("## Featured · The Weekly Thing Team\n\n"))
-        # The promoted body is rendered the same way it would render in
-        # its parent section.
-        self.assertIn("### [The Weekly Thing Team](https://x)  \nSaturday @ 4:00 PM\n\nbody", out)
+        # The promoted body is rendered the same way an entry would in
+        # the per-day Journal block — title heading, time paragraph,
+        # body. No day header (this is a standalone featured section,
+        # not part of the Journal-section day-grouping).
+        self.assertIn("### [The Weekly Thing Team](https://x)\n\n4:00 PM\n\nbody", out)
 
     def test_missing_heading_raises(self):
         row = _journal_row(url="https://x", title="X", body_md="body")

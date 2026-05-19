@@ -19,14 +19,21 @@ The output bytes mirror the section shapes the chunk parser
 - **Briefly** — one paragraph per item: ``{commentary} → **[Title](url)**``
   (or just the bolded link when commentary is empty). One blank line
   between items.
-- **Journal** — entries separated by two blank lines; titled posts
-  render as ``### [Title](url)  \\n{label}\\n\\n{body}``, status posts
-  render as ``[{label}]({url})\\n\\n{body}``.
+- **Journal** — grouped under per-day ``### {Weekday}, {Month} {D}``
+  sub-headers (chronological, only days with entries shown). Inside
+  each day:
+    * Titled posts: ``### [Title](url)\\n\\n{time}\\n\\n{body}`` (H3
+      link, time label on its own line below, then body). The day
+      header is also H3 (no link); CSS distinguishes the two via
+      ``h3:has(a)`` for titled posts vs plain H3 for day headers.
+    * Notes (no title): ``[{time}]({url}) — {body}`` (single paragraph
+      with the linked time + em-dash + body — compact for one-liners).
 
-The ``label`` for a Journal entry is taken from the row's
-``metadata.label`` if present (the sync layer pre-computes it from
-``published`` so re-renders are deterministic across clock drift);
-otherwise it falls back to recomputing.
+The local-time date used for day-bucketing and the time portion shown
+on each entry come from the row's ``metadata.published`` (sync layer
+records UTC ISO; ``microblog.published_local`` converts to
+``America/Chicago``). Falls back to the legacy ``metadata.label``
+(``Weekday @ time``) when ``published`` is absent.
 """
 
 from __future__ import annotations
@@ -91,9 +98,10 @@ def _row_str(row: dict[str, Any], key: str) -> str:
 
 
 def _journal_label(row: dict[str, Any]) -> str:
-    """Use the stored label when present (computed at sync time); else
-    recompute from ``metadata.published``. Falls back to the raw
-    ``published`` string when both are absent — defensive."""
+    """Legacy "Weekday @ H:MM AM/PM" label — kept for any caller that
+    still needs the full combined form. The new Journal renderer uses
+    :func:`_journal_time` (time-only) and :func:`_journal_day_label`
+    (day-only) instead, since the day moved into a sub-header."""
     meta = row.get("metadata") or {}
     label = (meta.get("label") or "").strip() if isinstance(meta, dict) else ""
     if label:
@@ -105,6 +113,55 @@ def _journal_label(row: dict[str, Any]) -> str:
     hour12 = dt.hour % 12 or 12
     ampm = "AM" if dt.hour < 12 else "PM"
     return f"{dt.strftime('%A')} @ {hour12}:{dt.minute:02d} {ampm}"
+
+
+def _journal_published(row: dict[str, Any]):
+    """Return the row's local-time published datetime (or None)."""
+    meta = row.get("metadata") or {}
+    if not isinstance(meta, dict):
+        return None
+    return microblog.published_local(meta.get("published"))
+
+
+def _journal_time(row: dict[str, Any]) -> str:
+    """Time-only portion of the entry's local timestamp, e.g. ``3:02 PM``.
+    Falls back to splitting a legacy ``Weekday @ time`` label when
+    ``metadata.published`` is missing; finally falls back to the raw
+    label itself."""
+    dt = _journal_published(row)
+    if dt is not None:
+        hour12 = dt.hour % 12 or 12
+        ampm = "AM" if dt.hour < 12 else "PM"
+        return f"{hour12}:{dt.minute:02d} {ampm}"
+    meta = row.get("metadata") or {}
+    legacy = (meta.get("label") or "").strip() if isinstance(meta, dict) else ""
+    if " @ " in legacy:
+        return legacy.split(" @ ", 1)[1].strip()
+    return legacy
+
+
+def _journal_day_label(row: dict[str, Any]) -> str:
+    """Per-day H3 sub-header text — ``Weekday, Month D`` (no year).
+    Falls back to the weekday portion of a legacy ``Weekday @ time``
+    label when ``metadata.published`` is missing."""
+    dt = _journal_published(row)
+    if dt is not None:
+        # %-d is non-portable across platforms; format the day separately.
+        return f"{dt.strftime('%A, %B')} {dt.day}"
+    meta = row.get("metadata") or {}
+    legacy = (meta.get("label") or "").strip() if isinstance(meta, dict) else ""
+    if " @ " in legacy:
+        return legacy.split(" @ ", 1)[0].strip()
+    return legacy or "Undated"
+
+
+def _journal_day_key(row: dict[str, Any]) -> str:
+    """Stable bucketing key for grouping rows by local-date. Rows that
+    can't be dated bucket under the literal ``undated`` key (last)."""
+    dt = _journal_published(row)
+    if dt is not None:
+        return dt.date().isoformat()
+    return "zzz-undated"
 
 
 def _render_notable_item(row: dict[str, Any]) -> str:
@@ -124,17 +181,35 @@ def _render_brief_item(row: dict[str, Any]) -> str:
 
 
 def _render_journal_entry(row: dict[str, Any]) -> str:
+    """Render a single Journal entry. Two tiers:
+
+    - **Titled post** (title + url): H3 link, then the time label as a
+      paragraph below, then the body.
+    - **Note** (no title, url-linked timestamp): single paragraph with
+      the linked time + em-dash + body, so one-liners stay compact.
+
+    The day no longer appears on the entry itself — it lives in the
+    per-day H3 sub-header :func:`render_journal` emits above the entry.
+    """
     url = _row_str(row, "url")
     title = _row_str(row, "title")
     body = _row_str(row, "body_md")
-    label = _journal_label(row)
+    time_label = _journal_time(row)
     if title and url:
-        head = f"### [{title}]({url})  \n{label}"
-    elif url:
-        head = f"[{label}]({url})"
-    else:
-        head = label
-    return f"{head}\n\n{body}" if body else head
+        head = f"### [{title}]({url})"
+        if time_label:
+            head += f"\n\n{time_label}"
+        return f"{head}\n\n{body}" if body else head
+    if url:
+        if time_label and body:
+            return f"[{time_label}]({url}) — {body}"
+        if time_label:
+            return f"[{time_label}]({url})"
+        return body or ""
+    # No URL — bare time + body (defensive; sync always gives us a URL).
+    if time_label and body:
+        return f"{time_label} — {body}"
+    return time_label or body or ""
 
 
 # ---------- section renderers ----------
@@ -156,11 +231,42 @@ def render_brief(rows: list[dict[str, Any]]) -> str:
     return "\n\n".join(_render_brief_item(r) for r in rows)
 
 
+def _bucket_journal_by_day(rows: list[dict[str, Any]]) -> list[tuple[str, list[dict[str, Any]]]]:
+    """Group ``rows`` by local-time date, preserving the iteration order
+    within and across days. Returns ``[(day_label, [rows…]), …]``.
+    Empty days are naturally absent (only days with ≥1 entry appear)."""
+    buckets: dict[str, tuple[str, list[dict[str, Any]]]] = {}
+    for r in rows:
+        key = _journal_day_key(r)
+        if key not in buckets:
+            buckets[key] = (_journal_day_label(r), [])
+        buckets[key][1].append(r)
+    # Iterate in insertion order — rows arrive in publish-date sequence
+    # from sync, so day buckets land chronologically too. The ``undated``
+    # bucket (if any) sorts last because its key starts with ``zzz-``.
+    return [(label, rs) for _key, (label, rs) in sorted(buckets.items())]
+
+
 def render_journal(rows: list[dict[str, Any]]) -> str:
-    """Render the Journal block body. Two blank lines between entries
-    (one paragraph break between the head and the body inside each
-    entry)."""
-    return "\n\n\n".join(_render_journal_entry(r) for r in rows)
+    """Render the Journal block body: per-day ``### {Weekday}, {Month} D``
+    sub-headers grouping their entries below them. Titled posts render
+    with H3-link heading + time line; notes render as bare-time
+    paragraphs (``[3:02 PM](url) — body``). Empty days are skipped.
+
+    Within a day, entries are separated by one blank line (paragraph
+    break). Days are separated by two blank lines for visual rhythm.
+    """
+    if not rows:
+        return ""
+    pieces: list[str] = []
+    for day_label, day_rows in _bucket_journal_by_day(rows):
+        block = [f"### {day_label}"]
+        for r in day_rows:
+            entry = _render_journal_entry(r)
+            if entry:
+                block.append(entry)
+        pieces.append("\n\n".join(block))
+    return "\n\n\n".join(pieces)
 
 
 # ---------- section bodies with inline markers ----------
@@ -225,10 +331,26 @@ def render_journal_with_markers(
     *,
     trailing_markers: Optional[list[str]] = None,
 ) -> str:
+    """Day-grouped Journal renderer with ``<!-- cta:N -->`` / ``<!-- thanks:N -->``
+    markers spliced inline after the items that declared them.
+
+    Markers anchored to a row appear inside that row's day-block (after
+    the row, separated by a blank line). ``trailing_markers``
+    (``before_haiku`` placements) append after the entire section, at
+    the same nesting level as the last day-block."""
+    if not rows:
+        if trailing_markers:
+            return "\n\n\n".join(trailing_markers)
+        return ""
     pieces: list[str] = []
-    for r in rows:
-        pieces.append(_render_journal_entry(r))
-        pieces.extend(_build_marker_seq(r, markers_after))
+    for day_label, day_rows in _bucket_journal_by_day(rows):
+        block: list[str] = [f"### {day_label}"]
+        for r in day_rows:
+            entry = _render_journal_entry(r)
+            if entry:
+                block.append(entry)
+            block.extend(_build_marker_seq(r, markers_after))
+        pieces.append("\n\n".join(block))
     if trailing_markers:
         pieces.extend(trailing_markers)
     return "\n\n\n".join(pieces)

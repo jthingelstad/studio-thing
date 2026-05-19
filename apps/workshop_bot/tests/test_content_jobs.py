@@ -97,16 +97,19 @@ class SectionRendererTests(unittest.TestCase):
     timestamps) and the haiku formatter."""
 
     def test_render_journal_converts_utc_published_to_local(self):
-        # micro.blog emits `published` in UTC; the label must be Central.
-        # 2026-05-12T02:21Z → 2026-05-11 21:21 CDT.
+        # micro.blog emits `published` in UTC; the local-time conversion
+        # must drive both the day H3 sub-header and the per-entry time.
+        # 2026-05-12T02:21Z → 2026-05-11 21:21 CDT → Monday May 11, 9:21 PM.
         from apps.workshop_bot.tools import issue_items_render
         out = issue_items_render.render_journal([
             {"url": "https://www.thingelstad.com/2026/05/11/late.html",
              "title": "", "body_md": "Posted late.",
              "metadata": {"published": "2026-05-12T02:21:00Z"}},
         ])
-        self.assertIn("[Monday @ 9:21 PM](https://www.thingelstad.com/2026/05/11/late.html)", out)
+        self.assertIn("### Monday, May 11", out)
+        self.assertIn("[9:21 PM](https://www.thingelstad.com/2026/05/11/late.html) — Posted late.", out)
         self.assertNotIn("2:21 AM", out)
+        self.assertNotIn("May 12", out)
 
     def test_format_haiku(self):
         self.assertEqual(_base.format_haiku("line one\nline two\nline three"),

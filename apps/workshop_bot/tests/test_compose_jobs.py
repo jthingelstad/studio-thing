@@ -590,9 +590,12 @@ class CreateFinalTests(_DBTestCase):
         self.assertLess(b_pos, a_pos)
         # thesis.md written.
         self.assertIn("Test thesis for the issue.", self.ws.files[(458, "thesis.md")])
-        # Brief / Journal sections rendered.
+        # Brief / Journal sections rendered. Journal now day-grouped:
+        # entries appear beneath a per-day H3 sub-header with time-only
+        # labels on each entry.
         self.assertIn("**[X](http://x)**", final)
-        self.assertIn("[Sunday @ 1:00 PM]", final)
+        self.assertIn("### Sunday, May 10", final)
+        self.assertIn("[1:00 PM](https://j1) — j-body1", final)
         # Block markers preserved (the assembler still emits them).
         self.assertIn("<!-- block:notable -->", final)
         self.assertIn("<!-- /block:notable -->", final)
@@ -798,9 +801,13 @@ class CreateFinalTests(_DBTestCase):
         journal_block_start = final.index("<!-- block:journal -->")
         journal_block_end = final.index("<!-- /block:journal -->")
         journal_body = final[journal_block_start:journal_block_end]
-        self.assertNotIn("[Monday @ 2:00 PM](https://j2)", journal_body)
-        self.assertIn("[Sunday @ 1:00 PM](https://j1)", journal_body)
-        self.assertIn("[Tuesday @ 3:00 PM](https://j3)", journal_body)
+        # j2 lives in the featured section; the Journal block has only j1 + j3,
+        # each grouped under their own day H3 sub-header with time-only labels.
+        self.assertNotIn("[2:00 PM](https://j2)", journal_body)
+        self.assertIn("### Sunday, May 10", journal_body)
+        self.assertIn("[1:00 PM](https://j1) — j-body1", journal_body)
+        self.assertIn("### Tuesday, May 12", journal_body)
+        self.assertIn("[3:00 PM](https://j3) — j-body3", journal_body)
         # The featured section appears AFTER the Journal block close and
         # BEFORE the Brief heading.
         feature_pos = final.index("## Featured: A Big Journal Read")

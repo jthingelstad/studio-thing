@@ -318,7 +318,10 @@ class UpdateDraftRealFillsTests(_DBTestCase):
         self.assertIn("[Weekly Thing 458 tag in r/WeeklyThing]", d)
         # Briefly items are "<commentary> → **[Title](url)**".
         self.assertIn("A one-liner. → **[Thing Three](https://c.example/three)**", d)
-        self.assertIn("[Tuesday @ 3:02 PM](https://www.thingelstad.com/2026/05/12/post-a.html)", d)
+        # Journal now day-grouped: entries appear beneath a per-day H3
+        # sub-header with time-only labels.
+        self.assertIn("### Tuesday, May 12", d)
+        self.assertIn("[3:02 PM](https://www.thingelstad.com/2026/05/12/post-a.html)", d)
         self.assertIn("First post in the window.", d)
         # A digest row was written.
         dig = db.latest_draft_digest(458)

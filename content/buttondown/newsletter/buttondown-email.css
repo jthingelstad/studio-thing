@@ -122,6 +122,23 @@ h3 {
   margin: 28px 0 8px !important;
 }
 
+/* Journal day sub-header — plain text H3 (no link inside). Most email
+   clients support :has(), but for the ones that don't, the standard H3
+   above still applies (acceptable graceful degradation). Buttondown's
+   delivery already runs the markdown through their pipeline; this rule
+   lands once a per-client style preview is reasonable. */
+h3:not(:has(a)) {
+  font-family: var(--wt-sans) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--wt-muted) !important;
+  border-bottom: 1px solid var(--wt-line) !important;
+  padding-bottom: 4px !important;
+  margin: 32px 0 12px !important;
+}
+
 p {
   font-family: var(--wt-sans) !important;
   font-size: 17px !important;
