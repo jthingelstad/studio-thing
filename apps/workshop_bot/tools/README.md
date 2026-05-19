@@ -54,7 +54,8 @@ These are the tools registered by `register_local_helpers`. Every persona sees a
 
 | Tool | Purpose |
 |---|---|
-| `archive__search(query, k)` | BM25 search over archive chunks. Default first stop for a topic. |
+| `archive__retrieve(query, k)` | **Semantic** retrieval via Thingy's `/retrieve` (Bedrock Cohere embed + rerank). Match by meaning, not vocabulary. ~1s round trip, ~$0.001/call. Use for themes/concepts. |
+| `archive__search(query, k)` | **Lexical** BM25 search over archive chunks. Cheap, fast. Use for specific phrases, person/product names. |
 | `archive__get_issue(number)` | Full body of one issue. |
 | `archive__get_section(number, section)` | One named section (`Notable`, `Briefly`, `Featured`, `Microposts`, `Journal`, etc.) of one issue. |
 | `archive__list_recent(limit)` | Last N issues, newest first, with subject + abstract. |

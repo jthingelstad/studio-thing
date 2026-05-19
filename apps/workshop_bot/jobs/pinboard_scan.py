@@ -58,7 +58,7 @@ from typing import Any, Optional
 
 from ..systems.pinboard import client as pinboard
 from ..tools import alt_text  # noqa: F401 — keep imports light; reserve for future
-from ..tools import avoid_domains, db
+from ..tools import avoid_domains, db, thingy_retrieve
 from ..tools.content import context
 from ..tools.llm import anthropic_client
 from ..tools.feeds.feed_registry import DISCOVERY_FEEDS, active_feeds, by_name
@@ -159,21 +159,23 @@ def _truncate_snippet(text: str) -> str:
     return f"{cut}…"
 
 
-def _render_archive_resonance(*, corpus, source: str, item: dict[str, Any]) -> list[str]:
-    """Synchronous BM25 lookup against the archive corpus, formatted as
-    a ``## Archive resonance`` block of bullet entries. Empty list if
-    the corpus handle is missing (test stubs); a single
-    ``(no resonance — fresh territory)`` bullet if the search returned
-    nothing positive."""
-    if corpus is None:
-        return []
+def _render_archive_resonance(*, source: str, item: dict[str, Any]) -> list[str]:
+    """Semantic archive lookup via Thingy's ``/retrieve`` (Bedrock embed
+    + Cohere rerank), formatted as a ``## Archive resonance`` block of
+    bullet entries. Empty list if the query is empty; a single
+    ``(no resonance — fresh territory)`` bullet if retrieval returned
+    nothing. Fail-soft on retrieval errors — log and return empty so a
+    Lambda hiccup never blocks Linky's hourly scan."""
     query = _archive_query(source=source, item=item)
     if not query:
         return []
     try:
-        hits = corpus.search(query, k=_ARCHIVE_RESONANCE_K)
-    except Exception as exc:  # noqa: BLE001
+        hits = thingy_retrieve.retrieve(query, k=_ARCHIVE_RESONANCE_K)
+    except thingy_retrieve.ThingyRetrieveError as exc:
         logger.warning("pinboard-scan: archive resonance lookup failed: %s", exc)
+        return []
+    except Exception as exc:  # noqa: BLE001 — defensive against any HTTP-layer surprise
+        logger.warning("pinboard-scan: archive resonance lookup raised %r", exc)
         return []
     lines = ["", "## Archive resonance", ""]
     if not hits:
@@ -325,17 +327,19 @@ def _format_user_msg(*, source: str, item: dict[str, Any], corpus=None) -> str:
 
     - :func:`_render_link_block` — base ``## The link`` fields
     - :func:`_render_co_sources` — in-scan cross-source extras
-    - :func:`_render_archive_resonance` — BM25 hits against the archive
+    - :func:`_render_archive_resonance` — semantic Thingy hits
     - :func:`_render_uplift_block` — cross-day uplift history
 
     Each piece is independently testable; this composer just stitches
     them with a blank-line terminator between the link block and
-    everything that follows."""
+    everything that follows. ``corpus`` is kept on the signature for
+    callsite compatibility but is no longer consulted — the resonance
+    block now goes through ``thingy_retrieve``."""
     parts = (
         _render_link_block(source=source, item=item)
         + _render_co_sources(item)
         + [""]
-        + _render_archive_resonance(corpus=corpus, source=source, item=item)
+        + _render_archive_resonance(source=source, item=item)
         + _render_uplift_block(item)
     )
     return "\n".join(parts)

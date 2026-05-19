@@ -111,9 +111,9 @@ def assemble_final(
     ``(promoted_position, '## Heading\\n\\nbody')`` tuples — see
     :func:`tools.issue_items_render.render_featured_section`.
 
-    ``closer``, if non-empty, is the "From the Archive" paragraph (no
-    heading — this function supplies ``## From the Archive``); it
-    splices between the haiku close and the Reddit-discuss sign-off.
+    ``closer``, if non-empty, is The Closer paragraph (no heading —
+    this function supplies ``## The Closer``); it splices between the
+    haiku close and the Reddit-discuss sign-off.
 
     The output is block-markered, mirrors the draft template's structure
     minus the feature1/feature2 blocks (those are gone — promotions
@@ -154,12 +154,12 @@ def assemble_final(
         parts.append("---")
     parts.append(_block("outro", outro))
     parts.append("---")
-    # Haiku closes the editorial body; "From the Archive" (when present)
-    # lands between the haiku and the Reddit-discuss sign-off — a slow
-    # fade: outro → haiku → archive reflection → discuss link → 👨‍💻.
+    # Haiku closes the editorial body; The Closer (when present) lands
+    # between the haiku and the Reddit-discuss sign-off — a slow fade:
+    # outro → haiku → archive reflection → discuss link → 👨‍💻.
     haiku_block = f"A haiku to leave you with…\n\n{_block('haiku', haiku)}"
     closer_block = (
-        f"\n\n## From the Archive\n\n{closer_text}" if closer_text else ""
+        f"\n\n## The Closer\n\n{closer_text}" if closer_text else ""
     )
     parts.append(f"{haiku_block}{closer_block}\n\n{_CLOSING}")
 
@@ -235,8 +235,8 @@ def assemble_publish(
       Liquid-wrapped CTA copy).
     - ``pixel_block`` (the Tinylytics open-tracking pixel) appended
       after the closing line, separated by a blank line.
-    - ``closer`` (the "From the Archive" paragraph) splices between the
-      haiku close and the Reddit-discuss sign-off (same placement as
+    - ``closer`` (The Closer paragraph) splices between the haiku
+      close and the Reddit-discuss sign-off (same placement as
       assemble_final).
 
     Both ``pixel_block`` and ``marker_substitution`` are optional; when

@@ -584,8 +584,8 @@ def _render_final(
 ) -> str:
     """Read the post-mutation row state and assemble final.md.
 
-    ``closer``, if non-empty, is the "From the Archive" paragraph
-    (no heading — assembler supplies ``## From the Archive``).
+    ``closer``, if non-empty, is The Closer paragraph (no heading —
+    assembler supplies ``## The Closer``).
     """
     notable_rows = issue_items.list_items(issue_number, section="notable", include_promoted=False)
     journal_rows = issue_items.list_items(issue_number, section="journal", include_promoted=False)

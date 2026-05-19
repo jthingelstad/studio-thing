@@ -110,6 +110,24 @@ def _marky_deps(reply="🪧 Promotion drafts — WT458\n\n## LinkedIn\n1. ..."):
 
 
 class PromotionPrepJobTests(_DBCase):
+    def setUp(self):
+        super().setUp()
+        # Patch the semantic retrieval at the archive_context boundary
+        # so tests are deterministic regardless of whether
+        # LIBRARIAN_BRIDGE_SECRET happens to be set in the dev env. The
+        # default canned response is empty (fresh territory); individual
+        # tests can override via self._retrieve_mock.return_value if
+        # they want to assert thread-context inclusion.
+        from apps.workshop_bot.tools import archive_context, thingy_retrieve
+        patcher = patch.object(
+            archive_context.thingy_retrieve, "retrieve",
+            return_value=[],
+        )
+        self._retrieve_mock = patcher.start()
+        self.addCleanup(patcher.stop)
+        # Surface the error class on the test for failure-path tests.
+        self._ThingyRetrieveError = thingy_retrieve.ThingyRetrieveError
+
     def tearDown(self):
         os.environ.pop("DISCORD_CHANNEL_PROMOTION", None)
         super().tearDown()
@@ -164,6 +182,48 @@ class PromotionPrepJobTests(_DBCase):
         self.assertEqual(len(body), cap)
         # And the cap is the constant, not a magic number elsewhere.
         self.assertEqual(_llm_job.PROMOTION_BODY_CAP, _llm_job.ISSUE_BODY_CAP + 8_000)
+
+    def test_thread_context_block_injected_when_retrieval_returns_data(self):
+        """When Thingy /retrieve returns hits, the Recurring thread
+        context block lands in the prompt so Marky can write multi-issue
+        arc framings."""
+        self.ws.files[(458, "buttondown.md")] = "## Notable\n\n### [Thing](http://x)\n\nblurb on agents and tooling\n"
+        deps, marky, channel = _marky_deps()
+        os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
+        self._retrieve_mock.return_value = [
+            {"issue_number": 309, "subject": "Programming, Silence, Drones",
+             "publish_date": "2025-02-16", "section": "Notable",
+             "text": "Earlier take on the same thread — O'Reilly's piece on the end of programming."},
+            {"issue_number": 341, "subject": "Minions, MAX, ReMemory",
+             "publish_date": "2026-02-15", "section": "Notable",
+             "text": "Adoption-phase framing for AI tooling."},
+        ]
+        with patch.object(rss, "latest_published_issue", lambda: {"number": 458, "ship_date": "2026-05-16"}):
+            result = asyncio.run(promotion_prep.run(_base.JobContext(deps=deps), issue_number=458))
+        self.assertTrue(result.ok, result.message)
+        sent = marky.core.call_args.kwargs["latest"]
+        self.assertIn("## Recurring thread context", sent)
+        self.assertIn("**WT309**", sent)
+        self.assertIn("**WT341**", sent)
+        # Retrieval was called with the issue body, capped to the query cap.
+        call_args = self._retrieve_mock.call_args
+        query = call_args.args[0] if call_args.args else call_args.kwargs.get("query", "")
+        self.assertIn("agents and tooling", query)
+        self.assertEqual(call_args.kwargs.get("k"), promotion_prep._THREAD_CONTEXT_K)
+
+    def test_thread_context_block_renders_outage_when_retrieval_fails(self):
+        """A Lambda outage doesn't block the job — the block surfaces
+        the error and Marky proceeds as a one-off."""
+        self.ws.files[(458, "buttondown.md")] = "## Notable\n\nbody"
+        deps, marky, channel = _marky_deps()
+        os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
+        self._retrieve_mock.side_effect = self._ThingyRetrieveError("timeout")
+        with patch.object(rss, "latest_published_issue", lambda: {"number": 458, "ship_date": "2026-05-16"}):
+            result = asyncio.run(promotion_prep.run(_base.JobContext(deps=deps), issue_number=458))
+        self.assertTrue(result.ok, result.message)
+        sent = marky.core.call_args.kwargs["latest"]
+        self.assertIn("## Recurring thread context", sent)
+        self.assertIn("retrieval unavailable", sent)
 
     def test_concurrent_run_is_blocked_by_job_lock(self):
         # Pre-acquire the whole-job lock so the next run bails before doing

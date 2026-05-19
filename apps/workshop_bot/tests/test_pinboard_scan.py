@@ -734,13 +734,21 @@ class PinboardScanJobTests(_DBTestCase):
     # ---------- archive resonance pre-step ----------
 
     def _ctx_with_corpus_search(self, *, hits, replies):
-        """Build a ctx whose `deps.corpus.search(query, k)` returns a
-        canned list of chunks. Captures the query string so tests can
-        assert the per-source query strategy."""
+        """Build a ctx and patch the semantic-retrieval call so it
+        returns ``hits``. Stores the mock on ``self._retrieve_mock`` so
+        the test can assert on the query string later.
+
+        Name kept for historical continuity — resonance used to go
+        through ``deps.corpus.search`` (BM25) but now routes through
+        ``thingy_retrieve.retrieve`` (Bedrock embed + Cohere rerank).
+        Test surface stays identical; only the wiring underneath moved."""
         ctx, team = self._ctx_and_team(replies=replies)
-        # The default deps MagicMock auto-creates `corpus.search` —
-        # configure it to return our canned hits and remember the call.
-        ctx.deps.corpus.search.return_value = list(hits)
+        patcher = patch.object(
+            pinboard_scan.thingy_retrieve, "retrieve",
+            return_value=list(hits),
+        )
+        self._retrieve_mock = patcher.start()
+        self.addCleanup(patcher.stop)
         return ctx, team
 
     def test_archive_resonance_block_renders_when_hits_present(self):
@@ -851,26 +859,34 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
-        # corpus.search was called with title + description (toread path).
-        call_args = ctx.deps.corpus.search.call_args
+        # thingy_retrieve.retrieve was called with title + description (toread path).
+        call_args = self._retrieve_mock.call_args
         # Could be positional or keyword — pull the first positional arg.
         query = call_args.args[0] if call_args.args else call_args.kwargs.get("query", "")
         self.assertIn("Bare title", query)
         self.assertIn("Jamie's existing notes", query)
 
-    def test_archive_resonance_omitted_when_corpus_is_none(self):
-        """When the job's `ctx.deps.corpus` is None (a deployment with no
-        corpus loaded yet) the resonance block is omitted entirely from
-        the per-link `## The link` data section. (The prompt body itself
-        legitimately mentions `## Archive resonance` in its workflow
-        description, so we check only the link block — the bit appended
-        after the prompt — to verify the data block is absent.)"""
+    def test_archive_resonance_omitted_when_retrieve_fails(self):
+        """If Thingy's /retrieve is unavailable mid-scan (Lambda down,
+        secret missing, network blip), the resonance block is omitted
+        entirely from the per-link data section and the scan keeps
+        going. Linky's hourly scan must not be blockable by a retrieval
+        outage. (The prompt body legitimately mentions ``## Archive
+        resonance`` in its workflow description, so we check only the
+        link block — the bit appended after the prompt — to verify the
+        data block is absent.)"""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
         ctx, team = self._ctx_and_team(replies=[
             "**[A](https://x/y)**\n\nA.\n\nB."
         ])
-        # Override the auto-MagicMock corpus that _ctx_and_team produces.
-        ctx.deps.corpus = None
+        retrieve_patcher = patch.object(
+            pinboard_scan.thingy_retrieve, "retrieve",
+            side_effect=pinboard_scan.thingy_retrieve.ThingyRetrieveError(
+                "Thingy /retrieve unreachable: timeout",
+            ),
+        )
+        retrieve_patcher.start()
+        self.addCleanup(retrieve_patcher.stop)
         popular = [{"url": "https://x/y", "title": "T"}]
         patches = self._stub_sources(popular=popular)
         try:
@@ -887,9 +903,6 @@ class PinboardScanJobTests(_DBTestCase):
         link_block = sent.rsplit("## The link", 1)[-1]
         self.assertNotIn("## Archive resonance", link_block)
         self.assertNotIn("no resonance", link_block)
-        # And `corpus.search` was never called either — there's no corpus.
-        # (No assertion needed since `ctx.deps.corpus is None`; the
-        # `_render_archive_resonance` guard returns [] early.)
 
     def test_archive_resonance_uses_title_only_for_discovery_sources(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
@@ -914,7 +927,7 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
-        call_args = ctx.deps.corpus.search.call_args
+        call_args = self._retrieve_mock.call_args
         query = call_args.args[0] if call_args.args else call_args.kwargs.get("query", "")
         self.assertIn("Title only", query)
         self.assertNotIn("should not be in the query", query)

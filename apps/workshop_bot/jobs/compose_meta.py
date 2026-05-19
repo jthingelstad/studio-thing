@@ -38,6 +38,13 @@ logger = logging.getLogger("workshop.jobs.compose_meta")
 NAME = "compose-meta"
 _SUBJECT_OPTION_CAP = 8  # parse at most this many subjects (prompt asks for 5)
 
+# How many archive passages to surface to the subject-options call.
+# Smaller than promotion-prep's window because the subject task is
+# focused (5 short lines) — Sonnet just needs enough context to
+# recognize a thread, not to draft prose around it.
+_SUBJECT_THREAD_K = 6
+_SUBJECT_THREAD_QUERY_CHARS = 2500
+
 ASSETS_BASE = "https://files.thingelstad.com/weekly-thing"
 
 _NUM_LINE_RE = re.compile(r"(?m)^\s*\d+[.)]\s+(.+?)\s*$")
@@ -100,10 +107,40 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             thesis_block = await asyncio.to_thread(_llm_job.thesis_block, n)
             thesis_prefix = thesis_block + "\n" if thesis_block else ""
 
+            # ---- thread context (semantic archive lookup) ----
+            # Single /retrieve call against the issue body — Sonnet sees
+            # whether this is the third issue on a thread or a one-off,
+            # and can name a continuation in one of the 5 options when
+            # the recurring pattern is real. Fail-soft.
+            from ..tools import archive_context
+
+            thread_passages, thread_error = await asyncio.to_thread(
+                archive_context.fetch_archive_context,
+                issue_text[:_SUBJECT_THREAD_QUERY_CHARS],
+                k=_SUBJECT_THREAD_K,
+                exclude_issue=n,
+            )
+            thread_block = archive_context.format_archive_context_block(
+                thread_passages,
+                heading="Thread context",
+                intro=(
+                    "Past archive passages most semantically related to "
+                    "this issue (top-K via Bedrock embed + Cohere rerank). "
+                    "Use them to decide whether one of your 5 subject "
+                    "options should explicitly frame this as a "
+                    "continuation of a recurring thread."
+                ),
+                error=thread_error,
+            )
+
             # ---- step 1: subject (the 5-option prompt, verbatim) ----
             subject_prompt = anthropic_client.load_prompt("eddy-compose-subject")
-            subject_msg = thesis_prefix + subject_prompt.replace("<NUM>", str(n)).replace(
-                "<<<ISSUE_TEXT>>>", issue_text
+            subject_msg = (
+                thesis_prefix
+                + subject_prompt
+                .replace("<NUM>", str(n))
+                .replace("<<<ISSUE_TEXT>>>", issue_text)
+                .replace("<<<THREAD_CONTEXT>>>", thread_block)
             )
             subject = await _llm_job.refresh_loop(
                 bot, channel,

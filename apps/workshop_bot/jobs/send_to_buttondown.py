@@ -99,7 +99,7 @@ def _collect_ship_files(issue_number: int) -> list[tuple[str, bytes]]:
     if links_path.exists():
         files.append((f"data/issues/{issue_number}/links.json", links_path.read_bytes()))
 
-    # closer.md (the "From the Archive" paragraph) is optional — present
+    # closer.md (The Closer paragraph) is optional — present
     # when compose-closer wrote one during create-final, absent when
     # compose-closer returned SKIP or hasn't run yet. The closer text is
     # already inline in archive.md / final.md / buttondown.md via the

@@ -36,7 +36,7 @@ from typing import Optional
 from zoneinfo import ZoneInfo
 
 from ..personas.base import is_pass_response
-from ..tools import alt_text, db, issue_items, issue_items_render, issue_items_sync, render, s3
+from ..tools import alt_text, archive_context, db, issue_items, issue_items_render, issue_items_sync, render, s3
 from ..tools.content import context, draft as draft_mod
 from ..tools.llm import anthropic_client
 from . import _base, _cover, _currently, issue_status
@@ -175,6 +175,15 @@ def _final_exists(issue_number: int) -> bool:
 
 
 # ---------- Eddy's post-update review ----------
+
+# How many archive passages to surface in the draft-review's "Recent
+# archive echoes" block. Ten is enough to span 3-5 distinct issues and
+# 2-3 distinct themes typically; bigger numbers crowd the prompt.
+_DRAFT_REVIEW_ECHO_K = 10
+# Query is the first chunk of the draft body — long enough to carry the
+# issue's center of gravity (intro + Notable section + start of Journal),
+# short enough to keep latency tight.
+_DRAFT_REVIEW_ECHO_QUERY_CHARS = 3000
 
 # Default model for the HTML drawer review (`_draft_review`) — the
 # substantive editorial pass that lands on `draft.html`. Tunable via
@@ -451,11 +460,37 @@ async def _draft_review(
     n = int(window["issue_number"])
     eddy_ctx = context.build_eddy_context(ref_date=today, section_status=st, prev_digest=prev_digest)
     target_legend = render.review_target_legend(draft_text, issue_number=n)
+    # Pre-inject semantic echoes from the archive — gives Eddy "you've
+    # been here before" awareness without him having to call the
+    # archive tools mid-reasoning. Single query against the draft body;
+    # ~$0.001/call, runs daily, fail-soft via archive_context.
+    echo_passages, echo_error = await asyncio.to_thread(
+        archive_context.fetch_archive_context,
+        draft_text[:_DRAFT_REVIEW_ECHO_QUERY_CHARS],
+        k=_DRAFT_REVIEW_ECHO_K,
+        exclude_issue=n,
+    )
+    echo_block = archive_context.format_archive_context_block(
+        echo_passages,
+        heading="Recent archive echoes",
+        intro=(
+            "These are the archive passages most semantically related to "
+            "the current draft (top-K via Bedrock embed + Cohere rerank). "
+            "Use them to flag when a Notable / Featured item in this draft "
+            "echoes recent coverage — call out the overlap and ask whether "
+            "the new piece adds something the prior one didn't. Don't "
+            "treat echoes as automatic problems (Jamie threads themes "
+            "deliberately) but DO surface them so the commentary can "
+            "acknowledge the prior take instead of restating it."
+        ),
+        error=echo_error,
+    )
     user_msg = (
         f"{context.render_block(eddy_ctx)}\n\n{prompt}\n\n"
         f"---\n\n## Review target IDs\n\n"
         f"Use these IDs for hidden drawer connectors when a comment points at a specific place:\n\n"
         f"{target_legend}\n\n"
+        f"---\n\n{echo_block}\n\n"
         f"---\n\nThe current draft (WT{n}):\n\n```markdown\n{draft_text}\n```"
     )
     with db.AgentRun("eddy", trigger="update-draft:html-review") as run:

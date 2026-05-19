@@ -46,7 +46,7 @@ HEADING_INTROS = {
     "Recommended Links": "Now, the Recommended Links section.",
     "FYI": "Now, for your information.",
     "Journal": "Now, the Journal section.",
-    "From the Archive": "And one more, from the archive.",
+    "The Closer": "And to close, a note from the archive.",
 }
 
 HEADING_LABELS = {
@@ -57,7 +57,7 @@ HEADING_LABELS = {
     "Recommended Links": "Recommended Links",
     "FYI": "the FYI section",
     "Journal": "the Journal",
-    "From the Archive": "From the Archive",
+    "The Closer": "The Closer",
 }
 
 LINK_SECTIONS = {"Featured", "Notable", "Must Read"}

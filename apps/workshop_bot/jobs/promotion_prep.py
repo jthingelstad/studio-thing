@@ -16,7 +16,7 @@ import asyncio
 import logging
 from typing import Optional
 
-from ..tools import db, rss, s3
+from ..tools import archive_context, db, rss, s3
 from ..tools.content import context
 from ..tools.llm import anthropic_client
 from . import _base, _llm_job
@@ -24,6 +24,16 @@ from . import _base, _llm_job
 logger = logging.getLogger("workshop.jobs.promotion_prep")
 
 NAME = "promotion-prep"
+
+# How many archive passages to surface as "this issue's thread context".
+# Eight gives Marky enough material to recognize a multi-issue thread
+# (3+ hits on the same theme over time) without dominating the prompt.
+_THREAD_CONTEXT_K = 8
+
+# Cap the query passed to /retrieve. The full buttondown body would
+# work but adds latency for no quality lift — the first ~2000 chars
+# (intro + first Notable section) carry the issue's center of gravity.
+_THREAD_QUERY_CHARS = 2000
 
 
 def _resolve_latest_issue(explicit: Optional[int]) -> tuple[Optional[int], Optional[str]]:
@@ -69,10 +79,38 @@ async def run(ctx: "_base.JobContext", *, issue_number: Optional[int] = None) ->
             except OSError as exc:
                 logger.warning("promotion-prep: prompt missing: %s", exc)
                 return _base.JobResult(False, f"promotion-prep prompt missing: {exc}")
+            # Pre-fetch archive thread context — gives Marky multi-issue
+            # arc awareness so she can write "Jamie's been pulling on
+            # this since WT309" framings instead of treating every issue
+            # as a one-off. Fail-soft via archive_context: a retrieval
+            # outage degrades the prompt but doesn't block the job.
+            thread_passages, thread_error = await asyncio.to_thread(
+                archive_context.fetch_archive_context,
+                publish_body[:_THREAD_QUERY_CHARS],
+                k=_THREAD_CONTEXT_K,
+                exclude_issue=n,
+            )
+            thread_block = archive_context.format_archive_context_block(
+                thread_passages,
+                heading="Recurring thread context",
+                intro=(
+                    "These are the past archive passages most semantically "
+                    "related to this issue's themes (top-K via Bedrock embed "
+                    "+ Cohere rerank). Use them to recognize when this issue "
+                    "continues a multi-issue thread — that recognition can "
+                    "anchor a sharper LinkedIn or Reddit framing (\"Jamie's "
+                    "been pulling on this since WTxxx\", \"this is the third "
+                    "issue this year on Apple privacy\"). If the hits look "
+                    "tangential, treat this as a one-off issue and don't "
+                    "force a thread framing."
+                ),
+                error=thread_error,
+            )
             user_msg = (
                 f"{context.render_block(marky_ctx)}\n\n{base_prompt}\n\n"
                 f"---\n\nThe published issue (WT{n}):\n\n"
-                f"```markdown\n{publish_body[: _llm_job.PROMOTION_BODY_CAP]}\n```"
+                f"```markdown\n{publish_body[: _llm_job.PROMOTION_BODY_CAP]}\n```\n\n"
+                f"---\n\n{thread_block}"
             )
             with db.AgentRun("marky", trigger="promotion-prep") as agent_run:
                 answer, _meta = await bot.core(latest=user_msg, history=[], model=None)

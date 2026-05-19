@@ -136,6 +136,21 @@ function verifyToken(token) {
   }
 }
 
+function bridgeSecretOk(body) {
+  // Constant-time equality against DISCORD_BRIDGE_SECRET. Returns `null`
+  // when the secret isn't configured (so callers can return 503 instead
+  // of 401 — telling operators "feature is off" vs "your secret is wrong").
+  // Mirrors auth/handler.mjs#bridgeSecretOk; kept duplicated here because
+  // shared/ doesn't carry crypto helpers and the chat Lambda is a separate
+  // bundle (re-exporting across bundles would add build complexity for a
+  // 5-line helper).
+  const expected = process.env.DISCORD_BRIDGE_SECRET || '';
+  if (!expected) return null;
+  const expectedBuf = Buffer.from(expected, 'utf8');
+  const suppliedBuf = Buffer.from(String(body.bridge_secret || ''), 'utf8');
+  return expectedBuf.length === suppliedBuf.length && crypto.timingSafeEqual(expectedBuf, suppliedBuf);
+}
+
 function extractBearer(event, body) {
   const auth = String(normalizeHeaders(event.headers || {}).authorization || '');
   if (auth.toLowerCase().startsWith('bearer ')) return auth.slice(7).trim();
@@ -981,6 +996,66 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     stream.write(JSON.stringify(result.payload));
     stream.end();
     logEvent('info', 'request_completed', { ...summary, status_code: result.statusCode, duration_ms: Math.round(performance.now() - start) });
+    return;
+  }
+
+  if (method === 'POST' && path.endsWith('/retrieve')) {
+    // Operator-only retrieval. Same Bedrock embed → vector search → Cohere
+    // rerank pipeline /chat uses, exposed as a passages-only JSON response
+    // (no Sonnet call). Auth via DISCORD_BRIDGE_SECRET, not per-user token —
+    // the caller is workshop_bot, not a reader. Used by compose-closer to
+    // ground "From the Archive" picks on actual archive content rather
+    // than vocabulary-only BM25 matches.
+    const body = parseBody(event);
+    const secretState = bridgeSecretOk(body);
+    if (secretState === null) {
+      const s503 = jsonResponseStream(responseStream, 503);
+      s503.write(JSON.stringify({ error: 'Bridge retrieval is not enabled.' }));
+      s503.end();
+      logEvent('warning', 'retrieve_bridge_disabled', { ...summary });
+      return;
+    }
+    if (!secretState) {
+      const s401 = jsonResponseStream(responseStream, 401);
+      s401.write(JSON.stringify({ error: 'Bridge secret rejected.' }));
+      s401.end();
+      logEvent('warning', 'retrieve_bad_secret', { ...summary });
+      return;
+    }
+    const query = String(body.query || '').trim();
+    if (!query) {
+      const s400 = jsonResponseStream(responseStream, 400);
+      s400.write(JSON.stringify({ error: 'query is required.' }));
+      s400.end();
+      return;
+    }
+    const requestedK = Number(body.k || 12);
+    const limit = Math.max(1, Math.min(Number.isFinite(requestedK) ? requestedK : 12, 40));
+    const filters = (body.filters && typeof body.filters === 'object') ? body.filters : {};
+    try {
+      const passages = await retrieve(query, limit, filters);
+      const compact = passages.map((p) => compactSource(p, 1200));
+      const s200 = jsonResponseStream(responseStream, 200);
+      s200.write(JSON.stringify({
+        passages: compact,
+        embedding_model: embeddingModel(),
+        rerank_model: rerankModel(),
+        request_id: requestId
+      }));
+      s200.end();
+      logEvent('info', 'retrieve_completed', {
+        ...summary,
+        query_chars: query.length,
+        k: limit,
+        passage_count: compact.length,
+        duration_ms: Math.round(performance.now() - start)
+      });
+    } catch (error) {
+      const s500 = jsonResponseStream(responseStream, 500);
+      s500.write(JSON.stringify({ error: 'Retrieval failed.', request_id: requestId }));
+      s500.end();
+      logEvent('error', 'retrieve_failed', { ...summary, error_type: error.constructor?.name || 'Error' });
+    }
     return;
   }
 

@@ -175,6 +175,7 @@ Resources:
           CORPUS_KEY: !Ref CorpusKey
           GRAPH_KEY: !Ref GraphKey
           SESSION_SECRET: !Ref SessionSecret
+          DISCORD_BRIDGE_SECRET: !Ref DiscordBridgeSecret
           LOG_LEVEL: !Ref LogLevel
           BEDROCK_AGENT_MODEL: us.anthropic.claude-sonnet-4-6
           BEDROCK_EMBEDDING_MODEL: cohere.embed-english-v3

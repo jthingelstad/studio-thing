@@ -42,7 +42,7 @@ Sometimes Jamie will paste a batch and ask for a triage read — "what do I have
 - Group bookmarks into 2–5 themes, each with a short title and one-sentence framing.
 - Per bookmark: one line on *why a Weekly Thing reader would care*, plus a confidence flag — ✦ Notable, · Briefly, ⊘ skip. **Be willing to use ⊘.** Not every bookmark is newsletter material; saying so is the work. Notable means a link can carry substantive commentary; Briefly means it needs only one sentence of context. Don't count micropost/incidental links as curated-link candidates unless Jamie asks.
 - Flag bookmarks that need context (paywalled, dependent on prior reading, narrow-audience).
-- When something feels familiar, `pinboard__archive_recall` and `archive__search` before claiming "this is fresh."
+- When something feels familiar, `pinboard__archive_recall` and `archive__retrieve` (semantic) before claiming "this is fresh." Use `archive__search` to verify a specific phrase or name when the semantic hits feel adjacent rather than direct.
 
 For casual asks ("anything good?"), match the casual register — don't dump a full pass on a question that wanted a sentence.
 

@@ -45,6 +45,39 @@ def t_search_archive(deps, query: str, k: int = 8) -> list[dict[str, Any]]:
     ]
 
 
+def t_retrieve_archive(deps, query: str, k: int = 8) -> list[dict[str, Any]] | dict[str, Any]:
+    """Semantic archive retrieval via Thingy's /retrieve (Bedrock Cohere
+    embed → vector search → Cohere rerank). Returns the same shape as
+    ``archive__search`` so callers can swap freely. Use this for THEME
+    / CONCEPT lookups ("end-to-end messaging"); use ``archive__search``
+    for VOCABULARY-PRESERVING lookups (a person's name, a product name,
+    a specific phrase). Falls back to an error dict on retrieval failure
+    so the model can recover (e.g. retry with ``archive__search``)
+    rather than crashing the turn."""
+    # Local import — keeps the heavyweight tool dependency tree out of
+    # the top-of-module surface and matches how compose_closer imports it.
+    from .. import thingy_retrieve
+
+    try:
+        passages = thingy_retrieve.retrieve(query, k=int(k))
+    except thingy_retrieve.ThingyRetrieveError as exc:
+        return {
+            "error": f"semantic retrieval unavailable: {exc}",
+            "hint": "fall back to archive__search for the same query",
+        }
+    return [
+        {
+            "issue": p.get("issue_number"),
+            "date": (p.get("publish_date") or "")[:10],
+            "subject": p.get("subject"),
+            "section": p.get("section") or "Issue",
+            "text": (p.get("text") or "")[:TEXT_PREVIEW_CHARS].strip(),
+            "score": p.get("score"),
+        }
+        for p in passages
+    ]
+
+
 def t_get_issue(deps, number: int | str) -> dict[str, Any] | str:
     """Full body of one issue."""
     try:
@@ -653,8 +686,30 @@ SPECS: dict[str, dict[str, Any]] = {
     "archive__search": {
         "name": "archive__search",
         "description": (
-            "BM25 lexical search over Weekly Thing archive chunks. Default first stop for broad topics, "
-            "themes, and evidence gathering. Iterate — refine the query based on what comes back."
+            "BM25 LEXICAL search over Weekly Thing archive chunks. Use when the query is a SPECIFIC "
+            "PHRASE, person, or product name — anything where the exact words matter. Cheap, fast, "
+            "always available. For thematic / conceptual lookups (where the words may differ from "
+            "the meaning) prefer archive__retrieve. Iterate — refine the query based on what comes back."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "k": {"type": "integer", "description": "max results, default 8"},
+            },
+            "required": ["query"],
+        },
+    },
+    "archive__retrieve": {
+        "name": "archive__retrieve",
+        "description": (
+            "SEMANTIC archive retrieval via Bedrock Cohere embed + Cohere rerank against the "
+            "pre-embedded corpus. Use for THEME / CONCEPT / IDEA queries — finds matches by meaning, "
+            "not by shared words. The right pick when the user asks 'what has Jamie written about X' "
+            "where X is a concept (privacy, agent collaboration, slow software) rather than a literal "
+            "string. Slower and more expensive than archive__search (~1s round trip, ~$0.001/call) — "
+            "use the lexical search first when an exact phrase will do. Returns the same shape as "
+            "archive__search; on retrieval failure returns an error dict so you can fall back."
         ),
         "input_schema": {
             "type": "object",
@@ -1175,6 +1230,7 @@ SPECS: dict[str, dict[str, Any]] = {
 
 FUNCS: dict[str, Callable[..., Any]] = {
     "archive__search": t_search_archive,
+    "archive__retrieve": t_retrieve_archive,
     "archive__get_issue": t_get_issue,
     "archive__get_section": t_get_section,
     "archive__list_recent": t_list_recent_issues,

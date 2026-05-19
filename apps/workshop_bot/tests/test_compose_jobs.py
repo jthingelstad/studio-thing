@@ -493,7 +493,7 @@ class CreateFinalTests(_DBTestCase):
     synthetic ids (``n1``/``b2``/``j3``); the job validates strictly,
     then mutates ``issue_items`` rows (reorder Notable + Brief) and
     assembles ``final.md`` from rows + atoms. Featured posts come from
-    sync (not Eddy); the "From the Archive" closer is a separate
+    sync (not Eddy); The Closer is a separate
     compose_closer.run call that fires after Jamie's ✅."""
 
     def setUp(self):

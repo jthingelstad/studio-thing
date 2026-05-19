@@ -10,6 +10,22 @@ subject options — the subject and the thesis should read as expressions
 of the same idea. Without a thesis, derive the theme from the issue
 text directly (today's behaviour).
 
+A `## Thread context` block appears between the issue text and this
+prompt's tail when retrieval is available. It carries the past archive
+passages most semantically related to this issue (Bedrock embed +
+Cohere rerank). Read it before generating options:
+
+- **If the hits show a real recurring thread (3+ tightly aligned past
+  issues on this theme)**, at least one of your 5 options should name
+  the thread explicitly — e.g. a "Part N" framing, or a phrase that
+  reads as a continuation rather than a fresh take. Don't burn all 5
+  on it; Jamie may want to differentiate. One option is enough to
+  give him the lever.
+- **If the hits are scattered or tangential**, treat this as
+  a one-off and stay with today's behaviour (pure issue-content
+  framing, varied angles).
+- **If the block reports an outage**, ignore it and proceed.
+
 Read the full issue text below and produce 5 subject line options
 for Jamie to choose from.
 
@@ -88,3 +104,5 @@ Output:
 
 Issue content:
 <<<ISSUE_TEXT>>>
+
+<<<THREAD_CONTEXT>>>
