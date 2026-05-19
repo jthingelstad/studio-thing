@@ -27,7 +27,6 @@ sys.path.insert(0, str(REPO / "pipeline" / "audio"))
 from manifest import hash_text  # noqa: E402
 from script import body_to_audio_script  # noqa: E402
 
-BUTTONDOWN_MANIFEST = REPO / "data" / "buttondown" / "manifest.json"
 ISSUES_ROOT = REPO / "data" / "issues"
 AUDIO_MANIFEST = REPO / "data" / "audio" / "manifest.json"
 ARCHIVE = REPO / "apps" / "site" / "archive"
@@ -122,37 +121,45 @@ def s3_object_metadata(bucket: str, key: str) -> dict | None:
 
 
 def collect_issues() -> list[dict]:
-    """Walk every issue and compute per-stage state."""
-    bd_manifest = json.loads(BUTTONDOWN_MANIFEST.read_text())
-    bd_emails = {str(e["number"]): e for e in bd_manifest.get("emails", []) if e.get("number") is not None}
+    """Walk every issue and compute per-stage state.
 
+    After the workshop-as-source inversion, the issue universe is the set of
+    numeric directories under data/issues/ — that's what the website builds
+    from. The Buttondown-source column was removed; the body-edit signal now
+    reflects edits to data/issues/{N}/archive.md, which is the editorial
+    source of truth.
+    """
     audio_manifest = {}
     if AUDIO_MANIFEST.exists():
         audio_manifest = json.loads(AUDIO_MANIFEST.read_text())
 
-    # Only count numeric issue slugs as first-class issues; bonus pages
+    # Numeric issue dirs in data/issues/ are first-class issues; bonus pages
     # like "140-special" aren't part of the per-issue pipeline contract.
+    issue_numbers = sorted(
+        {d.name for d in ISSUES_ROOT.iterdir() if d.is_dir() and d.name.isdigit()},
+        key=lambda s: int(s),
+    )
     archive_files = {p.stem: p for p in ARCHIVE.glob("*.md") if p.stem.isdigit()}
 
     rows: list[dict] = []
-    all_numbers = {n for n in (set(bd_emails.keys()) | set(archive_files.keys())) if n.isdigit()}
-    for n in sorted(all_numbers, key=lambda s: int(s)):
-        bd = bd_emails.get(n) or {}
-        archive_path = archive_files.get(n)
-
-        # Body state — the canonical editorial archive lives in data/issues/.
+    for n in issue_numbers:
         body_rel = f"data/issues/{n}/archive.md"
         body_exists = (REPO / body_rel).exists()
         body_local_edits = body_has_local_edits(body_rel) if body_exists else False
 
-        # Archive state
+        archive_path = archive_files.get(n)
         archive_exists = archive_path is not None
-        archive_fm = {}
+        archive_fm: dict = {}
         archive_body = ""
         if archive_exists:
             archive_fm, archive_body = load_archive_frontmatter(archive_path)
 
-        # Audio state — what would render now vs. what's in manifest
+        # Audio state — what would render now vs. what's in manifest. For
+        # Workshop-shipped issues with data/issues/{N}/transcript/, the
+        # script reflects the per-block concatenation; for legacy issues
+        # it's the modern.py / legacy.py transform output. body_to_audio_script
+        # handles the legacy single-string path; we still hash the
+        # apps/site/archive/{N}.md derivation as a quick freshness check.
         audio_entry = audio_manifest.get(n, {})
         current_script_hash = ""
         if archive_exists:
@@ -168,13 +175,8 @@ def collect_issues() -> list[dict]:
 
         rows.append({
             "number": int(n),
-            "subject": bd.get("subject") or archive_fm.get("subject", ""),
-            "publish_date": bd.get("publish_date") or archive_fm.get("publish_date", ""),
-            "buttondown": {
-                "tracked": bool(bd),
-                "source_hash": bd.get("source_hash"),
-                "fetched_at": bd.get("fetched_at"),
-            },
+            "subject": archive_fm.get("subject", ""),
+            "publish_date": archive_fm.get("publish_date", ""),
             "body": {
                 "tracked": body_exists,
                 "has_local_edits": body_local_edits,
@@ -228,7 +230,7 @@ def build_report() -> dict:
 
     summary = {
         "total_issues": len(issues),
-        "buttondown_local_edits": sum(1 for r in issues if r["body"]["has_local_edits"]),
+        "archive_local_edits": sum(1 for r in issues if r["body"]["has_local_edits"]),
         "archive_missing": sum(1 for r in issues if not r["archive"]["exists"]),
         "audio_rendered": sum(1 for r in issues if r["audio"]["in_manifest"]),
         "audio_out_of_date": sum(1 for r in issues if r["audio"]["out_of_date"]),
@@ -249,7 +251,7 @@ def print_table(report: dict) -> None:
     s = report["summary"]
     print(f"Pipeline status — generated {report['generated_at']}")
     thingy_state = "STALE" if s.get("librarian_likely_stale") else ("ok" if s.get("librarian_likely_stale") is False else "?")
-    print(f"  total: {s['total_issues']}  audio rendered: {s['audio_rendered']}  audio stale: {s['audio_out_of_date']}  audio missing: {s['audio_missing']}  body local edits: {s['buttondown_local_edits']}  thingy: {thingy_state}")
+    print(f"  total: {s['total_issues']}  audio rendered: {s['audio_rendered']}  audio stale: {s['audio_out_of_date']}  audio missing: {s['audio_missing']}  archive edits: {s['archive_local_edits']}  thingy: {thingy_state}")
     if s.get("deployed_corpus_uploaded_at"):
         print(f"  deployed corpus uploaded: {s['deployed_corpus_uploaded_at']}  latest archive change: {s.get('latest_archive_modified_at')}")
     print()

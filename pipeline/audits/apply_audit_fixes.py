@@ -34,7 +34,14 @@ from pydantic import BaseModel, Field
 
 REPO = Path(__file__).resolve().parents[2]
 AUDIT_PATH = REPO / "docs" / "audits" / "llm-audit.json"
-BODIES_DIR = REPO / "data" / "buttondown" / "bodies"
+# After the workshop-as-source inversion the canonical bodies live as
+# data/issues/{N}/archive.md (front matter + body). The audit tool still
+# works on a snapshot of the docs/audits/llm-audit.json findings; the
+# bodies dir got repointed but the per-file shape is different now
+# (front matter precedes the body), so a re-run will need a small
+# parser tweak before it can apply find/replace fixes against the new
+# canonical files. Left in place as a re-runnable starting point.
+BODIES_DIR = REPO / "data" / "issues"
 TMP = REPO / "tmp"
 
 HAIKU = "claude-haiku-4-5-20251001"

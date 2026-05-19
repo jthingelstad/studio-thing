@@ -1,12 +1,18 @@
-"""Fetch published emails and stats from the Buttondown API."""
+"""Fetch live subscriber/financial stats from Buttondown + Stripe.
 
-import json
+The body-fetch path (``fetch_all_emails`` / ``fetch_email_by_id`` /
+``fetch()``) was retired alongside the data/buttondown/ snapshot tree.
+Issues are now created and committed by workshop_bot's ship sequence;
+the website builds from data/issues/{N}/ directly. What's still useful
+on this side of the API is the stats refresh that powers stats.json
+(landing page subscriber counts, Stripe-backed "amount raised").
+"""
+
 import os
-import sys
-from pathlib import Path
 
 import requests
 import stripe
+import sys
 from dotenv import load_dotenv
 
 sys.stdout.reconfigure(line_buffering=True)
@@ -21,24 +27,6 @@ def get_headers():
     if not api_key:
         raise RuntimeError("BUTTONDOWN_API_KEY environment variable is required")
     return {"Authorization": f"Token {api_key}"}
-
-
-def fetch_all_emails(headers):
-    """Fetch all sent, public emails from Buttondown, handling pagination."""
-    emails = []
-    url = f"{API_BASE}/emails"
-    params = {"status": "sent", "email_type": "public", "page_size": 100}
-
-    while url:
-        print(f"  Fetching {url} ...")
-        resp = requests.get(url, headers=headers, params=params)
-        resp.raise_for_status()
-        data = resp.json()
-        emails.extend(data.get("results", []))
-        url = data.get("next")
-        params = {}  # next URL already contains params
-
-    return emails
 
 
 def fetch_subscriber_count(headers):
@@ -79,53 +67,4 @@ def fetch_stripe_balance():
         if entry["currency"] == "usd":
             total_cents += entry["amount"]
 
-    return total_cents / 100  # Convert cents to dollars
-
-
-def fetch(no_cache=False):
-    """Main fetch function. Returns list of email objects.
-
-    Also fetches subscriber stats and writes apps/site/_data/stats.json.
-    The no_cache argument is accepted for compatibility with older callers.
-    """
-    print("Fetching emails from Buttondown API...")
-    headers = get_headers()
-    emails = fetch_all_emails(headers)
-    print(f"Fetched {len(emails)} emails")
-
-    # Fetch live stats — preserve existing stats.json if API calls fail
-    stats_output = Path(__file__).resolve().parents[2] / "apps" / "site" / "_data" / "stats.json"
-    existing_stats = {}
-    if stats_output.exists():
-        with open(stats_output) as f:
-            existing_stats = json.load(f)
-
-    print("Fetching subscriber stats...")
-    try:
-        headers = get_headers()
-        subscriber_count = fetch_subscriber_count(headers)
-        premium_count = fetch_premium_subscriber_count(headers)
-    except Exception as e:
-        print(f"  Warning: Could not fetch subscriber stats: {e}")
-        subscriber_count = existing_stats.get("subscriber_count", 0)
-        premium_count = existing_stats.get("premium_subscriber_count", 0)
-
-    print("Fetching Stripe balance...")
-    try:
-        amount_raised = fetch_stripe_balance()
-    except Exception as e:
-        print(f"  Warning: Could not fetch Stripe balance: {e}")
-        amount_raised = existing_stats.get("amount_raised", 0)
-
-    stats = {
-        "subscriber_count": subscriber_count,
-        "premium_subscriber_count": premium_count,
-        "amount_raised": round(amount_raised, 2),
-    }
-
-    # Write stats
-    with open(stats_output, "w") as f:
-        json.dump(stats, f, indent=2)
-    print(f"Stats: {subscriber_count} subscribers, {premium_count} premium, ${amount_raised:.2f} raised")
-
-    return emails
+    return total_cents / 100
