@@ -28,7 +28,7 @@ from manifest import hash_text  # noqa: E402
 from script import body_to_audio_script  # noqa: E402
 
 BUTTONDOWN_MANIFEST = REPO / "data" / "buttondown" / "manifest.json"
-BUTTONDOWN_BODIES = REPO / "data" / "buttondown" / "bodies"
+ISSUES_ROOT = REPO / "data" / "issues"
 AUDIO_MANIFEST = REPO / "data" / "audio" / "manifest.json"
 ARCHIVE = REPO / "apps" / "site" / "archive"
 LIBRARIAN_BUCKET = os.environ.get("LIBRARIAN_BUCKET", "weekly-thing-librarian")
@@ -140,8 +140,8 @@ def collect_issues() -> list[dict]:
         bd = bd_emails.get(n) or {}
         archive_path = archive_files.get(n)
 
-        # Body state
-        body_rel = f"data/buttondown/bodies/{n}.md"
+        # Body state — the canonical editorial archive lives in data/issues/.
+        body_rel = f"data/issues/{n}/archive.md"
         body_exists = (REPO / body_rel).exists()
         body_local_edits = body_has_local_edits(body_rel) if body_exists else False
 

@@ -39,6 +39,7 @@ SNAPSHOT_ROOT = REPO / "data" / "buttondown"
 SNAPSHOT_DIR = SNAPSHOT_ROOT / "emails"
 BODY_DIR = SNAPSHOT_ROOT / "bodies"
 MANIFEST_PATH = SNAPSHOT_ROOT / "manifest.json"
+ISSUES_ROOT = REPO / "data" / "issues"
 AUDIO_MANIFEST_PATH = REPO / "data" / "audio" / "manifest.json"
 API_BASE = fetch_emails.API_BASE
 
@@ -506,10 +507,76 @@ def refresh_stats() -> None:
 
 
 def build_from_snapshots(prune: bool = False) -> list[dict[str, Any]]:
+    """Legacy build path from data/buttondown/ snapshots. Retained for the
+    pull subcommand. The cmd_build entry point uses build_from_issues_canonical
+    instead — data/issues/ is now the canonical source."""
     snapshots = load_snapshots()
     if not snapshots:
         raise RuntimeError("No Buttondown snapshots found. Run content pull --all first.")
     issues = [issue_from_snapshot(snapshot) for snapshot in snapshots]
+    write_emails_json(issues)
+    write_archive_md(issues, prune=prune)
+    return issues
+
+
+def issue_from_canonical(issue_dir: Path) -> dict[str, Any]:
+    """Read data/issues/{N}/{archive.md, links.json} and rebuild the issue
+    dict in the same shape issue_from_snapshot returns, so write_emails_json
+    and write_archive_md produce byte-identical output to the legacy path."""
+    archive_path = issue_dir / "archive.md"
+    links_path = issue_dir / "links.json"
+    if not archive_path.exists():
+        raise RuntimeError(f"{archive_path} is missing")
+
+    content = archive_path.read_text(encoding="utf-8")
+    fm_match = re.match(r"^---\n(.+?)\n---\n(.*)$", content, re.DOTALL)
+    if not fm_match:
+        raise RuntimeError(f"{archive_path} is missing YAML front matter")
+    front_matter = yaml.safe_load(fm_match.group(1)) or {}
+    body = fm_match.group(2).rstrip("\n")
+
+    links_data = (
+        json.loads(links_path.read_text(encoding="utf-8"))
+        if links_path.exists()
+        else {"notable_links": [], "briefly_links": []}
+    )
+
+    return {
+        "id": front_matter.get("buttondown_id", ""),
+        "number": front_matter["number"],
+        "subject": front_matter.get("subject", ""),
+        "publish_date": front_matter.get("publish_date", ""),
+        "slug": str(front_matter.get("slug", "")),
+        "description": front_matter.get("description", "") or "",
+        "image": front_matter.get("image") or "",
+        "absolute_url": front_matter.get("absolute_url", "") or "",
+        "body": body,
+        "domains": front_matter.get("domains", []) or [],
+        "links": front_matter.get("links", []) or [],
+        "notable_links": links_data.get("notable_links", []),
+        "briefly_links": links_data.get("briefly_links", []),
+        "word_count": front_matter.get("word_count", 0),
+    }
+
+
+def load_issues_canonical() -> list[dict[str, Any]]:
+    if not ISSUES_ROOT.exists():
+        return []
+    issues = []
+    for issue_dir in sorted(ISSUES_ROOT.iterdir()):
+        if not issue_dir.is_dir():
+            continue
+        issues.append(issue_from_canonical(issue_dir))
+    return sorted(issues, key=lambda item: issue_sort_key(item["number"]))
+
+
+def build_from_issues_canonical(prune: bool = False) -> list[dict[str, Any]]:
+    issues = load_issues_canonical()
+    if not issues:
+        raise RuntimeError(
+            "No canonical issues found under data/issues/. "
+            "Run pipeline/one-shot/migrate_to_issues_canonical.py to backfill from data/buttondown/."
+        )
     write_emails_json(issues)
     write_archive_md(issues, prune=prune)
     return issues
@@ -960,7 +1027,7 @@ def publish_to_buttondown(args: argparse.Namespace) -> None:
 
 
 def cmd_build(args: argparse.Namespace) -> None:
-    build_from_snapshots(prune=args.prune)
+    build_from_issues_canonical(prune=args.prune)
 
 
 def cmd_diff(args: argparse.Namespace) -> None:
