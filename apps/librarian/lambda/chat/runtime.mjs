@@ -1118,7 +1118,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       } catch {}
       try { stream.end(); } catch {}
       logEvent('warn', 'chat_deadline_exceeded', { request_id: requestId, subscriber_hash: subscriberHash });
-    }, 55000);
+    }, 75000);
     let result;
     try {
       result = await streamBedrockAgentAnswer(question, history, stream, { memoryContext });
