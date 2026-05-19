@@ -979,7 +979,17 @@ def buttondown_publish_idempotent(
             )
         else:
             data = resp.json() if resp.text else {}
-            return {**base_result, "action": "updated", "id": data.get("id") or existing_id}
+            resolved_id = data.get("id") or existing_id
+            resolved_url = data.get("absolute_url") or meta.get("absolute_url") or ""
+            # If we learned a new absolute_url on this PATCH (older metadata
+            # may pre-date the capture), persist it for downstream consumers.
+            if resolved_url and resolved_url != meta.get("absolute_url"):
+                meta["absolute_url"] = resolved_url
+                _workspace_put_text(number, "metadata.json", json.dumps(meta, indent=2) + "\n")
+            return {
+                **base_result, "action": "updated",
+                "id": resolved_id, "absolute_url": resolved_url,
+            }
 
     # 2) POST to create a new draft.
     resp = requests.post(f"{API_BASE}/emails", headers=headers(content_type=True), json=payload)
@@ -992,12 +1002,17 @@ def buttondown_publish_idempotent(
     if not new_id:
         raise ButtondownPublishError("Buttondown POST succeeded but the response had no `id`.")
 
-    # Persist the new id back to metadata.json so subsequent runs PATCH
-    # this same draft instead of creating duplicates.
+    new_url = data.get("absolute_url") or ""
+
+    # Persist the new id (and absolute_url, when present) back to metadata.json
+    # so subsequent runs PATCH this same draft and downstream consumers (the
+    # website's archive.md front matter) can pick up the canonical archive URL.
     meta["buttondown_id"] = new_id
+    if new_url:
+        meta["absolute_url"] = new_url
     _workspace_put_text(number, "metadata.json", json.dumps(meta, indent=2) + "\n")
 
-    return {**base_result, "action": "created", "id": new_id}
+    return {**base_result, "action": "created", "id": new_id, "absolute_url": new_url}
 
 
 def publish_to_buttondown(args: argparse.Namespace) -> None:
