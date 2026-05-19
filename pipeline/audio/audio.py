@@ -126,11 +126,41 @@ def selected_issues(args: argparse.Namespace) -> list[str]:
     return issues
 
 
+def per_block_transcript_dir(issue: str) -> Path:
+    """Path to the Workshop-produced per-block transcript directory. Existence
+    of this directory (with at least one .txt file) signals that audio should
+    TTS each file as its own utterance — natural breath placement aligns with
+    the editorial block boundaries instead of falling at MAX_CHARS packing
+    seams. Legacy issues without this directory fall through to the single-
+    script transform path (legacy.py / modern.py)."""
+    return REPO / "data" / "issues" / str(issue) / "transcript"
+
+
+def per_block_transcripts(issue: str) -> list[tuple[str, str]]:
+    """Sorted list of (filename, content) for the per-block transcript files.
+    Empty list if no transcript directory."""
+    d = per_block_transcript_dir(issue)
+    if not d.is_dir():
+        return []
+    out = []
+    for path in sorted(d.glob("*.txt")):
+        out.append((path.name, path.read_text(encoding="utf-8").strip()))
+    return [(name, text) for name, text in out if text]
+
+
 def render_script(issue: str) -> str:
     """Render the audio script from the archive markdown via script.py.
 
     Used by `scripts build` to (re)write the committed file. Audio build does
-    not call this — it reads the committed script from disk."""
+    not call this — it reads the committed script from disk.
+
+    For Workshop-shipped issues (data/issues/{N}/transcript/ exists), returns
+    the concatenation of the per-block files so script_hash stays meaningful
+    end-to-end. The actual TTS path uses the per-block files directly."""
+    blocks = per_block_transcripts(issue)
+    if blocks:
+        return "\n\n".join(text for _name, text in blocks) + "\n"
+
     from script import body_to_audio_script
 
     frontmatter, body = parse_archive_file(archive_path(issue))
@@ -138,7 +168,16 @@ def render_script(issue: str) -> str:
 
 
 def read_script(issue: str) -> str:
-    """Read the committed audio script from disk. Source of truth for audio build."""
+    """Read the committed audio script from disk. Source of truth for audio build.
+
+    Per-block path: concatenation of data/issues/{N}/transcript/*.txt — never
+    written to data/audio/scripts/, since the per-block files are themselves
+    the cache. Legacy path: data/audio/scripts/{N}.txt (the single rendered
+    transform output)."""
+    blocks = per_block_transcripts(issue)
+    if blocks:
+        return "\n\n".join(text for _name, text in blocks) + "\n"
+
     path = script_path(issue)
     if not path.exists():
         raise RuntimeError(
@@ -234,6 +273,10 @@ def build_issue(
     entry = dict(manifest.get(issue, {}))
     text = read_script(issue)
     script_hash = hash_text(text)
+    # Per-block path: one TTS call per file under data/issues/{N}/transcript/,
+    # so breath placement lands at editorial boundaries. Empty list → legacy
+    # single-string path (chunk_text packs MAX_CHARS units).
+    blocks = [text for _name, text in per_block_transcripts(issue)]
 
     if dry_run:
         write_dry_run(issue, text)
@@ -266,9 +309,10 @@ def build_issue(
         if reassemble_only:
             print(f"Issue #{issue}: skipping (body stale and --reassemble-only set)")
             return False
-        chunk_count = len(chunk_plan(text))
-        print(f"Issue #{issue}: synthesizing body ({chunk_count} chunk(s))")
-        body_path, body_duration = render_body(issue, text)
+        chunk_count = len(blocks) if blocks else len(chunk_plan(text))
+        mode = "per-block" if blocks else "legacy"
+        print(f"Issue #{issue}: synthesizing body ({chunk_count} {mode} chunk(s))")
+        body_path, body_duration = render_body(issue, text, blocks=blocks)
         body_url, body_size = upload_body(issue, body_path)
         print(f"Issue #{issue}: uploaded body {body_url}")
     else:
@@ -277,9 +321,10 @@ def build_issue(
             if reassemble_only:
                 print(f"Issue #{issue}: skipping (no body in S3 and --reassemble-only set)")
                 return False
-            chunk_count = len(chunk_plan(text))
-            print(f"Issue #{issue}: body missing in S3, synthesizing ({chunk_count} chunk(s))")
-            body_path, body_duration = render_body(issue, text)
+            chunk_count = len(blocks) if blocks else len(chunk_plan(text))
+            mode = "per-block" if blocks else "legacy"
+            print(f"Issue #{issue}: body missing in S3, synthesizing ({chunk_count} {mode} chunk(s))")
+            body_path, body_duration = render_body(issue, text, blocks=blocks)
             body_url, body_size = upload_body(issue, body_path)
             print(f"Issue #{issue}: uploaded body {body_url}")
         else:

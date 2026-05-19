@@ -198,11 +198,66 @@ def synthesize_text_to_mp3(text: str, output_path: Path, label: str = "audio") -
     return output_path
 
 
-def render_body(issue: str, text: str) -> tuple[Path, int]:
-    """Render an issue body to a single MP3 (no bumpers, no normalization)."""
+def synthesize_blocks_to_mp3(
+    blocks: list[str], output_path: Path, label: str = "audio"
+) -> Path:
+    """TTS each block as its own utterance, concat into a single MP3 at
+    output_path. No normalization.
+
+    Used by Workshop-shipped issues where each transcript file is a semantic
+    block (preamble, intro, Currently, each Notable link, etc.). Letting the
+    TTS engine treat each block as a separate utterance lands breath/pause
+    placement at the editorial boundaries — what the per-block transcript
+    model exists to deliver. Skips chunk_text packing entirely so a small
+    issue isn't collapsed into one chunk and read flat."""
+    ensure_audio_tools()
+    if not blocks:
+        raise RuntimeError(f"synthesize_blocks_to_mp3: no blocks for {label}")
+    workdir = TMP_DIR / "synthesize" / output_path.stem
+    workdir.mkdir(parents=True, exist_ok=True)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    client = _openai_client()
+    chunk_paths: list[Path] = []
+    for index, block in enumerate(blocks):
+        if len(block) > MAX_CHARS:
+            raise RuntimeError(
+                f"synthesize_blocks_to_mp3: block {index + 1} is {len(block)} chars, "
+                f"exceeds MAX_CHARS={MAX_CHARS}. Split the block at compose time."
+            )
+        print(f"{label}: synthesizing block {index + 1}/{len(blocks)} ({len(block)} chars)")
+        chunk_path = workdir / f"chunk-{index:03d}.mp3"
+        response = client.audio.speech.create(
+            model=TTS_MODEL,
+            voice=TTS_VOICE,
+            input=block,
+            response_format="mp3",
+        )
+        chunk_path.write_bytes(response.content)
+        chunk_paths.append(chunk_path)
+    list_path = workdir / "concat.txt"
+    list_path.write_text(
+        "".join(f"file '{path.resolve()}'\n" for path in chunk_paths),
+        encoding="utf-8",
+    )
+    _run(
+        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(list_path), "-c", "copy", str(output_path)],
+        cwd=REPO,
+    )
+    return output_path
+
+
+def render_body(issue: str, text: str, blocks: list[str] | None = None) -> tuple[Path, int]:
+    """Render an issue body to a single MP3 (no bumpers, no normalization).
+
+    If ``blocks`` is provided (Workshop per-block transcript path), TTSes each
+    block as its own utterance for natural breath placement. Otherwise falls
+    back to the legacy single-string path which chunks via chunk_text."""
     workdir = TMP_DIR / str(issue)
     body_path = workdir / "body.mp3"
-    synthesize_text_to_mp3(text, body_path, label=f"Issue #{issue}")
+    if blocks:
+        synthesize_blocks_to_mp3(blocks, body_path, label=f"Issue #{issue}")
+    else:
+        synthesize_text_to_mp3(text, body_path, label=f"Issue #{issue}")
     return body_path, probe_duration_seconds(body_path)
 
 

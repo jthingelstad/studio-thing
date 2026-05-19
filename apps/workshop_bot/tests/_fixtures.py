@@ -74,6 +74,36 @@ class FakeWorkspace:
         self.files.pop(key, None)
         return {"key": f"weekly-thing/{issue_number}/{filename}", "deleted": True}
 
+    # Per-block transcript files live under {N}/transcript/{basename} on S3.
+    # In the fake workspace we model them with the same self.files dict using
+    # the prefixed key, so list_issue() naturally surfaces them.
+
+    def write_transcript_file(self, issue_number, basename, content):
+        key = (int(issue_number), f"transcript/{basename}")
+        self.files[key] = content
+        return {
+            "key": f"weekly-thing/{issue_number}/transcript/{basename}",
+            "bucket": "files.thingelstad.com",
+            "url": f"https://files.thingelstad.com/weekly-thing/{issue_number}/transcript/{basename}",
+            "size": len(content), "written": True,
+        }
+
+    def delete_transcript_file(self, issue_number, basename):
+        self.files.pop((int(issue_number), f"transcript/{basename}"), None)
+        return {
+            "key": f"weekly-thing/{issue_number}/transcript/{basename}",
+            "deleted": True,
+        }
+
+    def list_transcript_files(self, issue_number):
+        n = int(issue_number)
+        prefix = "transcript/"
+        return [
+            fn[len(prefix):]
+            for (i, fn) in self.files
+            if i == n and fn.startswith(prefix)
+        ]
+
 
 def patch_s3(ws: FakeWorkspace):
     """Build the list of patchers that redirect the per-issue ``s3``
@@ -85,6 +115,9 @@ def patch_s3(ws: FakeWorkspace):
         patch.object(s3, "write_workshop_pointer", ws.write_workshop_pointer),
         patch.object(s3, "list_issue", ws.list_issue),
         patch.object(s3, "delete_issue_file", ws.delete_issue_file),
+        patch.object(s3, "write_transcript_file", ws.write_transcript_file),
+        patch.object(s3, "delete_transcript_file", ws.delete_transcript_file),
+        patch.object(s3, "list_transcript_files", ws.list_transcript_files),
     ]
 
 

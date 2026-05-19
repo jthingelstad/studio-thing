@@ -43,6 +43,12 @@ READ_MAX_BYTES = 512 * 1024
 JOURNAL_PREFIX = "journal"
 JOURNAL_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
 JOURNAL_IMAGE_MAX_BYTES = 4 * 1024 * 1024  # 4 MB — a resized image should be far under this
+
+# Per-block audio transcripts also live one level deeper
+# (weekly-thing/{N}/transcript/{NNN-slug}.txt) so they don't clash with the
+# flat asset namespace. Written by ``compose-transcript`` only.
+TRANSCRIPT_PREFIX = "transcript"
+TRANSCRIPT_EXTENSIONS = {".txt"}
 _JOURNAL_CONTENT_TYPES = {
     ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
     ".gif": "image/gif", ".webp": "image/webp",
@@ -406,3 +412,64 @@ def write_journal_image(
     _client().put_object(Bucket=bucket, Key=key, Body=bytes(body), ContentType=content_type)
     logger.info("s3.write_journal_image(%d, %s) -> %d bytes", issue_number, filename, len(body))
     return {"key": key, "url": f"https://{bucket}/{key}", "size": len(body), "content_type": content_type}
+
+
+# ---------- per-block transcript files (text; compose-transcript only) ----------
+
+
+def _resolve_transcript_key(issue_number: int, basename: str) -> str:
+    """``basename`` is the file name within ``transcript/`` — must be a single
+    safe path component with a ``.txt`` suffix."""
+    if not isinstance(issue_number, int) or issue_number <= 0:
+        raise S3PathError(f"issue_number must be a positive integer; got {issue_number!r}")
+    name = (basename or "").strip()
+    if not FILENAME_RE.match(name) or "/" in name or "\\" in name or ".." in name:
+        raise S3PathError("transcript filename must be a single safe path component")
+    suffix = "." + name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    if suffix not in TRANSCRIPT_EXTENSIONS:
+        raise S3PathError(
+            f"transcript extension {suffix or '(none)'!r} not allowed; "
+            f"allowed: {sorted(TRANSCRIPT_EXTENSIONS)}"
+        )
+    return f"{ROOT_PREFIX}/{issue_number}/{TRANSCRIPT_PREFIX}/{name}"
+
+
+def write_transcript_file(issue_number: int, basename: str, content: str) -> dict[str, Any]:
+    """Write a per-block transcript file to ``weekly-thing/{N}/transcript/{basename}``."""
+    key = _resolve_transcript_key(int(issue_number), basename)
+    if not isinstance(content, str):
+        raise S3PathError("transcript content must be a string")
+    body = content.encode("utf-8")
+    if len(body) > WRITE_MAX_BYTES:
+        raise S3PathError(f"transcript content is {len(body):,} bytes; max is {WRITE_MAX_BYTES:,}")
+    bucket = _bucket()
+    _client().put_object(
+        Bucket=bucket, Key=key, Body=body,
+        ContentType="text/plain; charset=utf-8",
+    )
+    logger.info("s3.write_transcript_file(%d, %s) -> %d bytes", issue_number, basename, len(body))
+    return {
+        "key": key, "bucket": bucket,
+        "url": f"https://{bucket}/{key}", "size": len(body), "written": True,
+    }
+
+
+def delete_transcript_file(issue_number: int, basename: str) -> dict[str, Any]:
+    """Delete a transcript block. ``compose-transcript`` uses this to clean up
+    stale files when a re-run produces fewer blocks than the previous run."""
+    key = _resolve_transcript_key(int(issue_number), basename)
+    bucket = _bucket()
+    _client().delete_object(Bucket=bucket, Key=key)
+    logger.info("s3.delete_transcript_file(%d, %s)", issue_number, basename)
+    return {"key": key, "bucket": bucket, "deleted": True}
+
+
+def list_transcript_files(issue_number: int) -> list[str]:
+    """List basenames of transcript files in the workspace."""
+    issue_data = list_issue(int(issue_number))
+    prefix = f"{TRANSCRIPT_PREFIX}/"
+    return [
+        o["filename"][len(prefix):]
+        for o in issue_data.get("objects", [])
+        if isinstance(o.get("filename"), str) and o["filename"].startswith(prefix)
+    ]
