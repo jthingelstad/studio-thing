@@ -285,6 +285,39 @@ class RenderTranscriptTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             renderers.render_transcript_blocks("body with no frontmatter")
 
+    def test_concat_transcript_for_review_marks_each_segment(self):
+        blocks = [
+            ("000-intro.txt", "Welcome to the issue."),
+            ("001-notable.txt", "Now, the Notable section.\n\nLink one. \"Title\"."),
+            ("002-haiku.txt", "Haiku close."),
+        ]
+        out = renderers.concat_transcript_for_review(blocks, issue_number=458)
+        # Header line names the issue + segment count.
+        self.assertIn("Weekly Thing 458 — full transcript (3 segments)", out)
+        # Each segment header appears in order.
+        for name in ("000-intro.txt", "001-notable.txt", "002-haiku.txt"):
+            self.assertIn(f"═══ {name} ═══", out)
+        intro_idx = out.index("═══ 000-intro.txt ═══")
+        notable_idx = out.index("═══ 001-notable.txt ═══")
+        haiku_idx = out.index("═══ 002-haiku.txt ═══")
+        self.assertLess(intro_idx, notable_idx)
+        self.assertLess(notable_idx, haiku_idx)
+        # Content appears between markers.
+        self.assertIn("Welcome to the issue.", out)
+        self.assertIn("Now, the Notable section.", out)
+        self.assertIn("Haiku close.", out)
+        # Trailing newline normalized.
+        self.assertTrue(out.endswith("\n"))
+
+    def test_concat_transcript_no_issue_number_omits_header(self):
+        out = renderers.concat_transcript_for_review(
+            [("000-x.txt", "body")],
+        )
+        # Without an issue number, no header line.
+        self.assertNotIn("full transcript", out)
+        self.assertIn("═══ 000-x.txt ═══", out)
+        self.assertIn("body", out)
+
 
 if __name__ == "__main__":
     unittest.main()

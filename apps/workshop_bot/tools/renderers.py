@@ -365,6 +365,33 @@ def render_transcript_blocks(archive_md: str) -> list[tuple[str, str]]:
     return out
 
 
+def concat_transcript_for_review(
+    blocks: list[tuple[str, str]],
+    *,
+    issue_number: Optional[int] = None,
+) -> str:
+    """Concatenate per-block transcript files into a single review
+    document with visible segment markers between blocks.
+
+    Each block is prefixed with a header line naming its source
+    filename so Jamie can see exactly where the audio pipeline's
+    utterance boundaries fall. The output is plain text — not consumed
+    by the audio pipeline, just for review.
+    """
+    parts: list[str] = []
+    if issue_number is not None:
+        parts.append(
+            f"Weekly Thing {issue_number} — full transcript ({len(blocks)} segments)"
+        )
+        parts.append("")
+    for filename, content in blocks:
+        parts.append(f"═══ {filename} ═══")
+        parts.append("")
+        parts.append(content.rstrip())
+        parts.append("")
+    return "\n".join(parts).rstrip() + "\n"
+
+
 # =====================================================================
 # Impure wrappers — read inputs from S3 + DB, call the pure renderers,
 # write outputs to S3 + the local repo mirror. Called daily by
@@ -667,6 +694,17 @@ def render_transcript_for_issue(
     for name, content in blocks:
         _s3.write_transcript_file(issue_number, name, content)
         (local_dir / name).write_text(content, encoding="utf-8")
+
+    # Concatenated review file — single document with segment markers
+    # so Jamie can scan the full transcript and see where the audio
+    # pipeline's utterance breaks fall. Lives at the issue root (not
+    # in the transcript/ subdir, which the audio pipeline scans). Not
+    # consumed by anything downstream — review-only.
+    review = concat_transcript_for_review(blocks, issue_number=issue_number)
+    _s3.write_issue_file(issue_number, "transcript-full.txt", review)
+    (ISSUES_LOCAL_DIR / str(issue_number) / "transcript-full.txt").write_text(
+        review, encoding="utf-8",
+    )
     return blocks
 
 
