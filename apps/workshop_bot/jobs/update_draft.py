@@ -666,6 +666,29 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 )
 
             source_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+
+            # ----- Step 1b: daily render of buttondown.md + archive.md + transcript -----
+            # The three pure renderers run alongside draft.md so the issue's
+            # email / website / transcript artifacts always reflect current
+            # state. Each renderer tolerates missing atoms (renders
+            # placeholders); failures are logged but don't block the daily
+            # projection — draft.md and the editorial review are what Jamie
+            # is actually looking at this run. Step 4 of the refactor folds
+            # send-to-buttondown / build-publish / compose-archive into
+            # consumers of these artifacts.
+            try:
+                from ..tools import renderers
+                render_result = await asyncio.to_thread(
+                    renderers.render_all_for_issue, n, window=window,
+                )
+                if render_result.get("errors"):
+                    logger.warning(
+                        "update-draft: daily renders had errors for #%d: %s",
+                        n, render_result["errors"],
+                    )
+            except Exception:  # noqa: BLE001 — daily renders are best-effort
+                logger.exception("update-draft: daily renders failed for #%d", n)
+
             try:
                 listing = s3.list_issue(n)
                 files = {o.get("filename") for o in listing.get("objects", []) if o.get("filename")}

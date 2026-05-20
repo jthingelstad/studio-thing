@@ -363,3 +363,341 @@ def render_transcript_blocks(archive_md: str) -> list[tuple[str, str]]:
         slug = _slugify(first_line)
         out.append((f"{index:03d}-{slug}.txt", block.rstrip() + "\n"))
     return out
+
+
+# =====================================================================
+# Impure wrappers — read inputs from S3 + DB, call the pure renderers,
+# write outputs to S3 + the local repo mirror. Called daily by
+# update-draft so the four artifacts always reflect the current
+# issue state.
+# =====================================================================
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+ISSUES_LOCAL_DIR = _REPO_ROOT / "data" / "issues"
+
+# CTA / Thanks slot positions in the email. Hardcoded so Eddy doesn't
+# need to declare placement editorially — Patty authors the copy
+# (cta-1.md / cta-2.md / thanks-1.md) and the renderer splices it in
+# at these fixed positions. Slots whose atom file is missing are
+# simply skipped (no marker, no Liquid block, nothing).
+CTA_SLOT_POSITIONS: dict[str, str] = {
+    # "cta:1" splices after the Notable section (between Notable and
+    # the next divider). "cta:2" splices after Journal. "thanks:1"
+    # splices after Briefly. These are deliberate editorial calls —
+    # change in coordination with the prompt-author flow.
+    "cta:1": "after_notable",
+    "cta:2": "after_journal",
+    "thanks:1": "after_brief",
+}
+
+
+def _read_atom(issue_number: int, filename: str) -> str:
+    """Read an atom file; return its stripped text (or empty)."""
+    from . import s3 as _s3
+
+    res = _s3.read_issue_file(issue_number, filename)
+    if res.get("found") and isinstance(res.get("text"), str):
+        return res["text"].strip()
+    return ""
+
+
+def _read_atom_body_after_frontmatter(issue_number: int, filename: str) -> str:
+    """Read an atom file and return its body, stripping any leading
+    YAML front matter block (used by ``cta-N.md`` / ``thanks-N.md``
+    which carry a ``kind: supporter`` front matter from compose-cta)."""
+    raw = _read_atom(issue_number, filename)
+    if not raw:
+        return ""
+    m = re.match(r"^---\s*\n(.*?)\n---\s*\n?(.*)$", raw, re.DOTALL)
+    if not m:
+        return raw
+    return m.group(2).lstrip("\n").strip()
+
+
+def _load_metadata(issue_number: int, window: Optional[dict] = None) -> dict:
+    """Load metadata.json with placeholder fallback fields so the
+    daily renderers can run on day 1 of an issue (before compose-meta).
+    Missing fields default to empty strings; ``number`` always present
+    (from the active window if no metadata.json yet)."""
+    raw = _read_atom(issue_number, "metadata.json")
+    metadata: dict = {}
+    if raw:
+        try:
+            metadata = json.loads(raw) or {}
+        except (ValueError, TypeError):
+            metadata = {}
+    metadata.setdefault("number", issue_number)
+    metadata.setdefault("subject", f"Weekly Thing {issue_number} — (pending)")
+    metadata.setdefault("slug", str(issue_number))
+    metadata.setdefault("description", "")
+    metadata.setdefault("image",
+                        f"https://files.thingelstad.com/weekly-thing/{issue_number}/cover.jpg")
+    metadata.setdefault("absolute_url", "")
+    metadata.setdefault("buttondown_id", "")
+    if window:
+        metadata.setdefault("publish_date", window.get("pub_date", "") + "T12:00:00Z" if window.get("pub_date") else "")
+    else:
+        metadata.setdefault("publish_date", "")
+    return metadata
+
+
+def _gather_inputs_for_issue(issue_number: int, *, window: Optional[dict] = None) -> dict:
+    """Read every input the renderers need: atoms, section bodies (from
+    DB rows), featured sections, metadata, cta atoms. Returns a dict
+    the per-format wrappers consume."""
+    from html import escape as _html_escape
+
+    from ..jobs import _base, _cover, _currently
+    from . import db, issue_items, issue_items_render
+
+    if window is None:
+        window = db.get_active_issue_window() or {"issue_number": issue_number}
+
+    # Atoms (file-backed authored content).
+    intro = _read_atom(issue_number, "intro.md")
+    outro = _read_atom(issue_number, "outro.md")
+    haiku_raw = _read_atom(issue_number, "haiku.md")
+    cover_text = _cover.render(issue_number)
+    if cover_text:
+        # Cover block leads with the issue's cover image as a native <img>
+        # tag (alt sourced from cover.json or vision-generated cache).
+        cover_alt = _cover.alt(issue_number) or ""
+        cover_img = (
+            f'<img src="https://files.thingelstad.com/weekly-thing/{issue_number}/cover.jpg" '
+            f'alt="{_html_escape(cover_alt, quote=True)}" />'
+        )
+        cover_text = f"{cover_img}\n\n{cover_text}"
+
+    atoms = {
+        "intro": intro,
+        "currently": _currently.render(issue_number),
+        "cover": cover_text,
+        "outro": outro,
+        "haiku": _base.format_haiku(haiku_raw) if haiku_raw else "",
+    }
+
+    # Sections from DB rows. Featured-promoted rows are excluded from
+    # the parent section bodies (the sync layer flags them) and
+    # rendered separately as standalone H2 sections.
+    notable_rows = issue_items.list_items(issue_number, section="notable", include_promoted=False)
+    brief_rows = issue_items.list_items(issue_number, section="brief", include_promoted=False)
+    journal_rows = issue_items.list_items(issue_number, section="journal", include_promoted=False)
+    sections = {
+        "notable": issue_items_render.render_notable(notable_rows, issue_number),
+        "journal": issue_items_render.render_journal(journal_rows),
+        "brief": issue_items_render.render_brief(brief_rows),
+    }
+
+    featured_rows = [
+        r for r in issue_items.list_items(issue_number, section="journal", include_promoted=True)
+        if r.get("is_promoted")
+    ]
+    features = [
+        (r.get("promoted_position") or "before_notable",
+         issue_items_render.render_featured_section(r))
+        for r in featured_rows
+    ]
+
+    # CTA / Thanks copy atoms (email-only; missing atoms = empty slot).
+    cta_atoms = {
+        "cta:1": _read_atom_body_after_frontmatter(issue_number, "cta-1.md"),
+        "cta:2": _read_atom_body_after_frontmatter(issue_number, "cta-2.md"),
+        "thanks:1": _read_atom_body_after_frontmatter(issue_number, "thanks-1.md"),
+    }
+
+    metadata = _load_metadata(issue_number, window)
+
+    # The Closer (Thingy's archive note) — optional atom.
+    closer = _read_atom(issue_number, "closer.md")
+
+    return {
+        "atoms": atoms,
+        "sections": sections,
+        "features": features,
+        "metadata": metadata,
+        "cta_atoms": cta_atoms,
+        "closer": closer,
+    }
+
+
+def _splice_cta_into_sections(
+    sections: dict[str, str], cta_atoms: dict[str, str],
+) -> dict[str, str]:
+    """Splice CTA / Thanks atom copy directly into the section bodies
+    at their hardcoded positions. Returns a new sections dict with the
+    CTA marker line appended to the parent section's body — the
+    assembler then substitutes those markers with audience-aware
+    Liquid blocks via the cta_atoms dict.
+
+    Slots whose atom copy is empty or missing produce no marker (the
+    splice is skipped entirely)."""
+    spliced = dict(sections)
+    for slot_label, position in CTA_SLOT_POSITIONS.items():
+        if not cta_atoms.get(slot_label):
+            continue
+        # position is "after_notable" / "after_journal" / "after_brief"
+        # — strip the "after_" prefix to get the parent section name.
+        if not position.startswith("after_"):
+            continue
+        parent = position[len("after_"):]
+        if parent not in spliced:
+            continue
+        marker = f"<!-- {slot_label.replace(':', ':')} -->"
+        # Marker syntax expected by the assembler: ``<!-- cta:1 -->``.
+        body = spliced[parent]
+        if marker in body:
+            continue
+        spliced[parent] = (body.rstrip() + f"\n\n{marker}").strip()
+    return spliced
+
+
+# ---------- per-issue artifact writers ----------
+
+
+def render_email_for_issue(issue_number: int, *, window: Optional[dict] = None) -> str:
+    """Render the issue's buttondown.md from current DB + atom state
+    and write it to S3 + the local repo mirror. Tolerates missing
+    atoms — empty intro becomes an empty block, missing haiku skips
+    the haiku close, missing cta atom skips that slot. Returns the
+    rendered text."""
+    from ..tools import s3 as _s3
+
+    inputs = _gather_inputs_for_issue(issue_number, window=window)
+    sections_with_markers = _splice_cta_into_sections(
+        inputs["sections"], inputs["cta_atoms"],
+    )
+    body = render_email_body(
+        atoms=inputs["atoms"],
+        sections=sections_with_markers,
+        features=inputs["features"],
+        issue_number=issue_number,
+        cta_atoms=inputs["cta_atoms"],
+        closer=inputs["closer"],
+    )
+    _s3.write_issue_file(issue_number, "buttondown.md", body)
+    # Local repo mirror for downstream consumers (ship sequence).
+    local_dir = ISSUES_LOCAL_DIR / str(issue_number)
+    local_dir.mkdir(parents=True, exist_ok=True)
+    (local_dir / "buttondown.md").write_text(body, encoding="utf-8")
+    return body
+
+
+def render_archive_for_issue(
+    issue_number: int, *, window: Optional[dict] = None,
+) -> tuple[str, dict]:
+    """Render the issue's archive.md + links.json from current DB +
+    atom state and write them to S3 + local repo mirror. Tolerates
+    missing atoms / metadata via the placeholder fallback in
+    ``_load_metadata``. Returns ``(archive_md, links_json)``."""
+    from ..tools import s3 as _s3
+
+    inputs = _gather_inputs_for_issue(issue_number, window=window)
+    archive_md, links_json = render_archive(
+        atoms=inputs["atoms"],
+        sections=inputs["sections"],
+        features=inputs["features"],
+        metadata=inputs["metadata"],
+        closer=inputs["closer"],
+    )
+    _s3.write_issue_file(issue_number, "archive.md", archive_md)
+    _s3.write_issue_file(issue_number, "links.json",
+                         json.dumps(links_json, indent=2) + "\n")
+    # Local mirror — the ship sequence + 11ty both consume from here.
+    local_dir = ISSUES_LOCAL_DIR / str(issue_number)
+    local_dir.mkdir(parents=True, exist_ok=True)
+    (local_dir / "archive.md").write_text(archive_md, encoding="utf-8")
+    (local_dir / "links.json").write_text(
+        json.dumps(links_json, indent=2) + "\n", encoding="utf-8",
+    )
+    # Mirror metadata.json locally too so the ship sequence's GitHub
+    # commit step has a single source.
+    (local_dir / "metadata.json").write_text(
+        json.dumps(inputs["metadata"], indent=2) + "\n", encoding="utf-8",
+    )
+    return archive_md, links_json
+
+
+def render_transcript_for_issue(
+    issue_number: int, *, window: Optional[dict] = None,
+) -> list[tuple[str, str]]:
+    """Render the issue's transcript/*.txt files from current DB +
+    atom state. Independent of render_archive_for_issue — builds the
+    archive in memory just for the transcript split. Writes per-block
+    files to S3 + local repo mirror and wipes any stale files from
+    prior runs. Returns the ``[(filename, content), ...]`` list."""
+    from ..tools import s3 as _s3
+
+    inputs = _gather_inputs_for_issue(issue_number, window=window)
+    archive_md, _links = render_archive(
+        atoms=inputs["atoms"],
+        sections=inputs["sections"],
+        features=inputs["features"],
+        metadata=inputs["metadata"],
+        closer=inputs["closer"],
+    )
+    try:
+        blocks = render_transcript_blocks(archive_md)
+    except ValueError:
+        # archive missing frontmatter — should not happen with the
+        # placeholder fallback but be defensive.
+        return []
+    if not blocks:
+        return []
+
+    # S3 mirror — wipe stale files from prior runs.
+    new_names = {name for name, _ in blocks}
+    try:
+        existing = _s3.list_transcript_files(issue_number)
+    except Exception:  # noqa: BLE001
+        existing = []
+    for name in existing:
+        if name not in new_names:
+            try:
+                _s3.delete_transcript_file(issue_number, name)
+            except Exception:  # noqa: BLE001
+                pass
+
+    # Local mirror.
+    local_dir = ISSUES_LOCAL_DIR / str(issue_number) / "transcript"
+    local_dir.mkdir(parents=True, exist_ok=True)
+    for stale in local_dir.glob("*.txt"):
+        if stale.name not in new_names:
+            stale.unlink()
+
+    for name, content in blocks:
+        _s3.write_transcript_file(issue_number, name, content)
+        (local_dir / name).write_text(content, encoding="utf-8")
+    return blocks
+
+
+def render_all_for_issue(
+    issue_number: int, *, window: Optional[dict] = None,
+) -> dict:
+    """Render archive + email + transcript in that order. Each writer
+    is wrapped in try/except so a single failure doesn't cascade —
+    callers (update-draft) want a partial success rather than a hard
+    fail on the daily projection. Returns a dict of which artifacts
+    succeeded for logging."""
+    out: dict = {"archive": False, "email": False, "transcript": False, "errors": {}}
+    import logging as _logging
+    _log = _logging.getLogger("workshop.renderers")
+    try:
+        render_archive_for_issue(issue_number, window=window)
+        out["archive"] = True
+    except Exception as exc:  # noqa: BLE001
+        _log.exception("render_archive_for_issue failed for #%d", issue_number)
+        out["errors"]["archive"] = f"{type(exc).__name__}: {exc}"
+    try:
+        render_email_for_issue(issue_number, window=window)
+        out["email"] = True
+    except Exception as exc:  # noqa: BLE001
+        _log.exception("render_email_for_issue failed for #%d", issue_number)
+        out["errors"]["email"] = f"{type(exc).__name__}: {exc}"
+    try:
+        blocks = render_transcript_for_issue(issue_number, window=window)
+        out["transcript"] = bool(blocks)
+        out["transcript_blocks"] = len(blocks)
+    except Exception as exc:  # noqa: BLE001
+        _log.exception("render_transcript_for_issue failed for #%d", issue_number)
+        out["errors"]["transcript"] = f"{type(exc).__name__}: {exc}"
+    return out
