@@ -78,8 +78,17 @@ class EddyTreeTests(unittest.TestCase):
         issue = _subgroup(_top_group(tree, "eddy"), "issue")
         self.assertEqual(
             _cmd_names(issue),
-            {"start", "update", "status", "final", "haiku", "subject",
-             "publish", "send", "reset"},
+            {"start", "update", "status", "reorder", "haiku", "subject",
+             "publish", "reset"},
+        )
+
+    def test_eddy_issue_publish_subcommands(self):
+        tree = commands_module.register_eddy_commands(_stub_bot())
+        issue = _subgroup(_top_group(tree, "eddy"), "issue")
+        publish = _subgroup(issue, "publish")
+        self.assertEqual(
+            _cmd_names(publish),
+            {"all", "audio", "buttondown", "website"},
         )
 
     def test_eddy_top_level_status(self):

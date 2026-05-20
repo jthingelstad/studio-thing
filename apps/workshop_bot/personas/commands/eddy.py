@@ -26,16 +26,15 @@ from ...jobs import follow_up as followup_job
 from ...jobs import status as status_job
 from ...jobs import (
     archive_lookup,
-    build_publish,
     compose_haiku,
     compose_meta,
     create_final,
     currently as currently_job,
     edit_asset,
     issue_status,
+    publish as publish_job,
     reset_issue,
     review_text,
-    send_to_buttondown,
     start_issue,
     update_draft,
 )
@@ -126,13 +125,13 @@ def register_eddy_commands(
         await _run_and_ack(interaction, lambda: issue_status.run(_ctx(bot)), "issue status")
 
     @issue.command(
-        name="final",
-        description="Eddy's reorder review → final.md (then run issue haiku/subject and issue publish).",
+        name="reorder",
+        description="Eddy proposes a Notable/Brief reorder; on ✅ the DB row positions update.",
     )
-    async def issue_final_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+    async def issue_reorder_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_interactive(
-            interaction, lambda: create_final.run(_ctx(bot)), "issue final",
-            "Starting `issue final` — Eddy will post a reorder proposal in #editorial; react there.",
+            interaction, lambda: create_final.run(_ctx(bot)), "issue reorder",
+            "Starting `issue reorder` — Eddy will post a reorder proposal in #editorial; react there.",
         )
 
     @issue.command(
@@ -155,31 +154,61 @@ def register_eddy_commands(
             "Starting `issue subject` — 5 subject options then a description will post in #editorial; react there to pick.",
         )
 
-    @issue.command(
-        name="publish",
-        description="Assemble buttondown.md from final.md + assets (refuses if anything required is missing).",
+    # /eddy issue publish — destination-aware ship. No-arg runs all
+    # three subcommands (audio → buttondown → website). Each subcommand
+    # is independently idempotent.
+    publish = app_commands.Group(
+        name="publish", description="Ship the issue to a destination", parent=issue
     )
-    async def issue_publish_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: build_publish.run(_ctx(bot)), "issue publish")
 
-    @issue.command(
-        name="send",
-        description="Push buttondown.md to Buttondown as a draft (idempotent — re-run to update the same draft).",
+    @publish.command(
+        name="all",
+        description="Ship to all destinations in order: audio → buttondown → website.",
     )
-    async def issue_send_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+    async def publish_all_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(
-            interaction, lambda: send_to_buttondown.run(_ctx(bot)), "issue send",
+            interaction, lambda: publish_job.publish_all(_ctx(bot)), "issue publish",
+        )
+
+    @publish.command(
+        name="audio",
+        description="TTS the transcript and upload the MP3 to S3.",
+    )
+    async def publish_audio_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(
+            interaction, lambda: publish_job.publish_audio(_ctx(bot)),
+            "issue publish audio",
+        )
+
+    @publish.command(
+        name="buttondown",
+        description="POST/PATCH the current buttondown.md to Buttondown (idempotent).",
+    )
+    async def publish_buttondown_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(
+            interaction, lambda: publish_job.publish_buttondown(_ctx(bot)),
+            "issue publish buttondown",
+        )
+
+    @publish.command(
+        name="website",
+        description="Commit archive.md + transcript + manifest to weekly.thingelstad.com.",
+    )
+    async def publish_website_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(
+            interaction, lambda: publish_job.publish_website(_ctx(bot)),
+            "issue publish website",
         )
 
     @issue.command(
         name="reset",
-        description="Force the in-flight issue back to an earlier step by deleting the gate artifacts.",
+        description="Drop the previous-step artifacts so the in-flight issue can be re-published.",
     )
     @app_commands.describe(
-        step="Which gate to drop: 'final' (re-do editorial pass) or 'publish' (rebuild buttondown.md).",
+        step="Which artifacts to clear: 'reorder' (clear promotions, drop thesis) or 'publish' (drop buttondown.md/.html).",
     )
     @app_commands.choices(step=[
-        app_commands.Choice(name="final", value="final"),
+        app_commands.Choice(name="reorder", value="final"),
         app_commands.Choice(name="publish", value="publish"),
     ])
     async def issue_reset_cmd(  # type: ignore[misc]

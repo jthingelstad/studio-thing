@@ -583,74 +583,66 @@ class CreateFinalTests(_DBTestCase):
         }
         return json.dumps(payload)
 
-    # ---- baseline accept/reject/refuse flow ----
+    # ---- baseline accept/reject flow ----
+    #
+    # /eddy issue reorder no longer writes final.md; it mutates
+    # issue_items.position in the DB. Tests verify row positions
+    # rather than file bytes.
 
-    def test_refuses_if_final_exists(self):
-        ctx, fc = self._setup(self._basic_reply())
-        self.ws.write_issue_file(458, "final.md", "already there")
-        result = asyncio.run(create_final.run(ctx))
-        self.assertFalse(result.ok)
-        self.assertIn("already has", result.message)
-
-    def test_accept_writes_reorder_and_thesis(self):
+    def test_accept_mutates_row_order_and_writes_thesis(self):
+        from apps.workshop_bot.tools import issue_items
         # Reorder: notable [n2, n1], leave brief + journal identity.
         ctx, fc = self._setup(self._basic_reply(notable_order=("n2", "n1")))
         with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
-        # final.md exists and reflects the new order (B before A).
-        final = self.ws.files[(458, "final.md")]
-        b_pos = final.index("### [B](http://b)")
-        a_pos = final.index("### [A](http://a)")
-        self.assertLess(b_pos, a_pos)
-        # thesis.md written.
+        # Row positions reflect the reorder (B before A in Notable).
+        notable_rows = issue_items.list_items(458, section="notable")
+        urls = [r["url"] for r in notable_rows]
+        self.assertEqual(urls, ["http://b", "http://a"])
+        # thesis.md still written (consumed by compose-meta/compose-haiku/closer).
         self.assertIn("Test thesis for the issue.", self.ws.files[(458, "thesis.md")])
-        # Brief / Journal sections rendered. Journal now day-grouped:
-        # entries appear beneath a per-day H3 sub-header with time-only
-        # labels on each entry.
-        self.assertIn("**[X](http://x)**", final)
-        self.assertIn("### Sunday, May 10", final)
-        self.assertIn("[1:00 PM](https://j1) — j-body1", final)
-        # Block markers preserved (the assembler still emits them).
-        self.assertIn("<!-- block:notable -->", final)
-        self.assertIn("<!-- /block:notable -->", final)
-        # Pipeline hint preserved.
-        self.assertIn("issue haiku", result.message)
+        # final.md is no longer written.
+        self.assertNotIn((458, "final.md"), self.ws.files)
         self.assertTrue(result.data["thesis_written"])
 
-    def test_reject_uses_current_row_order(self):
+    def test_reject_leaves_rows_unchanged(self):
+        from apps.workshop_bot.tools import issue_items
         ctx, fc = self._setup(self._basic_reply(notable_order=("n2", "n1")))
         with patch.object(interaction, "await_approval", AsyncMock(return_value=False)):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
-        # Current row order survives (A before B); no thesis.md.
-        final = self.ws.files[(458, "final.md")]
-        a_pos = final.index("### [A](http://a)")
-        b_pos = final.index("### [B](http://b)")
-        self.assertLess(a_pos, b_pos)
+        # Row positions unchanged (A before B, the original order).
+        notable_rows = issue_items.list_items(458, section="notable")
+        urls = [r["url"] for r in notable_rows]
+        self.assertEqual(urls, ["http://a", "http://b"])
         self.assertNotIn((458, "thesis.md"), self.ws.files)
+        self.assertNotIn((458, "final.md"), self.ws.files)
 
-    def test_timeout_writes_current_row_order_and_returns(self):
+    def test_timeout_leaves_rows_unchanged(self):
+        from apps.workshop_bot.tools import issue_items
         ctx, fc = self._setup(self._basic_reply())
         with patch.object(interaction, "await_approval", AsyncMock(return_value=None)):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
-        # Timeout → falls into the ❌ branch; rows render in current order.
-        final = self.ws.files[(458, "final.md")]
-        self.assertIn("### [A](http://a)", final)
+        # Timeout falls to the ❌ branch — rows unchanged.
+        notable_rows = issue_items.list_items(458, section="notable")
+        urls = [r["url"] for r in notable_rows]
+        self.assertEqual(urls, ["http://a", "http://b"])
         self.assertNotIn((458, "thesis.md"), self.ws.files)
+        self.assertNotIn((458, "final.md"), self.ws.files)
 
     # ---- JSON validation ----
 
-    def test_unparseable_reply_eventually_falls_back_to_rows(self):
+    def test_unparseable_reply_exhausts_retries(self):
         ctx, fc = self._setup("sorry can't draft right now")
-        # No valid JSON ever. Loop exhausts MAX_REFRESH_ROUNDS; the
-        # fallback writes the current row order as final.md and returns ok.
+        # No valid JSON ever. Loop exhausts MAX_REFRESH_ROUNDS; rows
+        # are left unchanged and the result message says so.
         result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
-        self.assertIn("rows as-is", result.message)
-        self.assertIn("### [A](http://a)", self.ws.files[(458, "final.md")])
+        self.assertIn("rows unchanged", result.message)
         self.assertNotIn((458, "thesis.md"), self.ws.files)
+        self.assertNotIn((458, "final.md"), self.ws.files)
 
     def test_keeps_eddy_default_model_for_proposal(self):
         # create-final does the heaviest editorial work — JSON contract,
@@ -699,79 +691,13 @@ class CreateFinalTests(_DBTestCase):
         # no passthrough fall-through (compose-closer is mocked, doesn't count).
         self.assertEqual(fc.bot.core.await_count, 1)
 
-    # ---- compose-cta autofire ----
-
-    def test_membership_blocks_autofires_compose_cta(self):
-        # When Jamie approves a proposal with cta/thanks markers,
-        # create-final should schedule compose-cta as a background task
-        # (no manual `/patty cta` required — addresses the WT348 skip-Patty
-        # failure mode).
-        reply = self._basic_reply(
-            membership_blocks=[
-                {"kind": "cta", "after": "n1", "rationale": "after first"},
-            ],
-        )
-        ctx, fc = self._setup(reply)
-        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)), \
-             patch.object(create_final, "_schedule_compose_cta") as mock_sched:
-            result = asyncio.run(create_final.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        self.assertTrue(result.data["cta_autofired"])
-        self.assertEqual(result.data["cta_slots_declared"], 1)
-        mock_sched.assert_called_once()
-        kwargs = mock_sched.call_args.kwargs
-        self.assertEqual(kwargs["issue_number"], 458)
-        self.assertEqual(kwargs["slots_declared"], 1)
-        # The success message references the autofire.
-        self.assertIn("compose-cta", result.message)
-        self.assertIn("auto-fires", result.message)
-
-    def test_no_markers_no_autofire(self):
-        reply = self._basic_reply()  # empty membership_blocks
-        ctx, fc = self._setup(reply)
-        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)), \
-             patch.object(create_final, "_schedule_compose_cta") as mock_sched:
-            result = asyncio.run(create_final.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        self.assertFalse(result.data["cta_autofired"])
-        self.assertEqual(result.data["cta_slots_declared"], 0)
-        mock_sched.assert_not_called()
-
-    def test_rejected_proposal_does_not_autofire(self):
-        reply = self._basic_reply(
-            membership_blocks=[{"kind": "cta", "after": "n1", "rationale": "x"}],
-        )
-        ctx, fc = self._setup(reply)
-        with patch.object(interaction, "await_approval", AsyncMock(return_value=False)), \
-             patch.object(create_final, "_schedule_compose_cta") as mock_sched:
-            result = asyncio.run(create_final.run(ctx))
-        self.assertTrue(result.ok)
-        self.assertFalse(result.data["cta_autofired"])
-        mock_sched.assert_not_called()
-
-    # ---- membership block markers ----
-
-    def test_membership_blocks_marker_inline(self):
-        reply = self._basic_reply(
-            membership_blocks=[
-                {"kind": "cta", "after": "n1", "rationale": "after first item"},
-                {"kind": "thanks", "before_haiku": True, "rationale": "end of issue"},
-            ],
-        )
-        ctx, fc = self._setup(reply)
-        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
-            result = asyncio.run(create_final.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        final = self.ws.files[(458, "final.md")]
-        # cta:1 marker appears in the Notable block, after item A.
-        self.assertIn("<!-- cta:1 -->", final)
-        a_pos = final.index("### [A](http://a)")
-        cta_pos = final.index("<!-- cta:1 -->")
-        b_pos = final.index("### [B](http://b)")
-        self.assertLess(a_pos, cta_pos)
-        self.assertLess(cta_pos, b_pos)
-        # thanks:1 marker appears in the last non-empty section (Brief).
-        self.assertIn("<!-- thanks:1 -->", final)
+    # ---- compose-cta autofire + inline markers retired ----
+    #
+    # CTA placement is no longer an Eddy decision — render_email
+    # splices supporter CTAs at hardcoded positions, and Patty composes
+    # the three known atom files (cta-1.md, cta-2.md, thanks-1.md)
+    # independently. The membership_blocks proposal field still parses
+    # for backward compat but the apply step ignores it.
 
     # ---- Featured-from-category (replaces Eddy's promotions) ----
     #

@@ -63,7 +63,7 @@ import asyncio
 import logging
 from typing import Any, Optional
 
-from ..tools import db, issue_assembly, issue_items, issue_items_render, render, s3
+from ..tools import db, issue_assembly, issue_items, issue_items_render, render, renderers, s3
 from ..tools.discord import discord_io, interaction
 from ..tools.llm import anthropic_client
 from . import _base, _cover, _currently, _llm_job, compose_closer, compose_cta
@@ -695,12 +695,6 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         return _base.JobResult(False, "❌ no active issue window.")
     n = int(window["issue_number"])
 
-    final_exists = (await asyncio.to_thread(s3.read_issue_file, n, "final.md")).get("found")
-    if final_exists:
-        return _base.JobResult(
-            False, f"❌ WT{n} already has `final.md` — delete it to re-run `create-final`.",
-        )
-
     # Row snapshot for the LLM. include_promoted=True so an item Eddy
     # already promoted (rare — we clear promotions on apply, but a manual
     # mid-run change could leave one) is still visible; the prompt's
@@ -727,7 +721,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     if bot is None:
         return _base.JobResult(False, f"(create-final skipped — {reason})")
 
-    asset = f"{n}/final.md"
+    # Lock on issue_items so a concurrent /eddy issue reorder doesn't
+    # race row mutations — the asset key is symbolic now that final.md
+    # is no longer written.
+    asset = f"{n}/issue_items"
     html_url: Optional[str] = None
     try:
         with _base.job_lock([asset], NAME):
@@ -852,87 +849,70 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     continue
 
                 if approved is True:
-                    # Apply: mutate rows then render.
+                    # Apply: mutate rows. No final.md write — the daily
+                    # renderers below pull from the mutated DB state.
                     await asyncio.to_thread(_apply_proposal, n, data, synth_to_row)
-                    # Render a baseline final body (without closer) so
-                    # compose-closer can read the just-assembled issue
-                    # to ground its archive pick on the actual content.
+                    # Closer still composed from the just-reordered body so
+                    # the archive note is grounded in the actual content
+                    # ordering. compose_closer.run wants a baseline body;
+                    # build one in memory without writing.
                     baseline_body = _render_final(
                         n, atoms, data, synth_to_row, row_to_synth,
                     )
                     closer_result = await compose_closer.run(
                         ctx, baseline_body=baseline_body,
                     )
-                    closer_text = ""
-                    if closer_result.ok and closer_result.data:
-                        if not closer_result.data.get("skipped"):
-                            closer_text = (closer_result.data.get("closer") or "").strip()
-                    # Final assembly: re-render with the closer spliced in
-                    # (or skip the section entirely on SKIP).
-                    final_body = _render_final(
-                        n, atoms, data, synth_to_row, row_to_synth,
-                        closer=closer_text,
-                    )
-                    s3.write_issue_file(n, "final.md", final_body)
+                    if closer_result.ok and closer_result.data and not closer_result.data.get("skipped"):
+                        # Closer.md persisted by compose_closer; the daily
+                        # renderers below will splice it into the body.
+                        pass
                     s3.write_issue_file(n, "thesis.md", thesis + "\n")
+                    # Render the three artifacts now so they reflect the
+                    # new ordering immediately (the next update-draft tick
+                    # would catch up, but Jamie's about to publish — give
+                    # him a current preview right away).
+                    try:
+                        await asyncio.to_thread(
+                            renderers.render_all_for_issue, n, window=window,
+                        )
+                    except Exception:  # noqa: BLE001
+                        logger.exception("create-final: post-apply render failed for #%d", n)
                 else:
-                    # ❌ — render from current row order, no edits, no closer.
-                    final_body = _render_final_passthrough(n, atoms)
-                    s3.write_issue_file(n, "final.md", final_body)
+                    # ❌ — leave rows as-is. Daily renderers next tick.
+                    pass
 
-                html_url = await asyncio.to_thread(
-                    render.render_and_upload_html, n, "final", final_body,
-                    title=f"WT{n} — final",
-                    subtitle=f"FINAL (post-Eddy ordering) · WT{n} · awaiting buttondown.md",
-                    strip_block_markers=True,
-                )
-                view = _md_html_links(n, "final", html_url)
-                cta_slots_n = len(data.get("membership_blocks") or []) if approved is True else 0
-                next_steps = _NEXT_STEPS_WITH_CTA_AUTOFIRE if cta_slots_n else _NEXT_STEPS
+                view_url = f"https://files.thingelstad.com/weekly-thing/{n}/buttondown.html"
+                next_steps = _NEXT_STEPS
                 await channel.send(
-                    f"✅ `final.md` written for WT{n}.{view}\n\n{next_steps}",
+                    f"✅ Reorder applied for WT{n}.\n"
+                    f"📄 [email preview]({view_url}) · 📄 [side-by-side]({proposal_url})\n\n{next_steps}"
+                    if approved is True
+                    else f"↩️ Reorder rejected for WT{n} — rows left as-is. {next_steps}",
                     suppress_embeds=True,
                 )
-                # Auto-fire compose-cta when Eddy declared slots and
-                # Jamie approved. Background task so create-final returns
-                # immediately (compose-cta is interactive — it'll prompt
-                # Jamie in #supporters per slot, independently of
-                # whatever else is in flight in #editorial).
-                if cta_slots_n:
-                    _schedule_compose_cta(ctx, issue_number=n, slots_declared=cta_slots_n)
                 return _base.JobResult(
                     True,
-                    f"`final.md` written for WT{n}"
-                    + (f" · 📄 {html_url}" if html_url else "")
-                    + f". {next_steps}",
+                    f"Reorder applied for WT{n}"
+                    if approved is True
+                    else f"Reorder rejected for WT{n} — rows unchanged",
                     data={
                         "issue_number": n,
-                        "preview_url": html_url,
+                        "preview_url": view_url,
                         "thesis_written": approved is True,
-                        "cta_autofired": bool(cta_slots_n),
-                        "cta_slots_declared": cta_slots_n,
                     },
                 )
 
-            # Refresh rounds exhausted — write current order as final.
+            # Refresh rounds exhausted — leave rows as-is.
             await channel.send(
-                f"⚠️ `create-final` for WT{n} couldn't get a valid proposal after "
-                f"{_llm_job.MAX_REFRESH_ROUNDS} attempts. Writing the current row order as `final.md`; "
-                "re-run create-final if you want another pass.",
+                f"⚠️ `/eddy issue reorder` for WT{n} couldn't get a valid proposal after "
+                f"{_llm_job.MAX_REFRESH_ROUNDS} attempts. Rows left as-is; "
+                "re-run `/eddy issue reorder` if you want another pass.",
                 suppress_embeds=True,
-            )
-            final_body = _render_final_passthrough(n, atoms)
-            s3.write_issue_file(n, "final.md", final_body)
-            html_url = await asyncio.to_thread(
-                render.render_and_upload_html, n, "final", final_body,
-                title=f"WT{n} — final",
-                subtitle=f"FINAL (rows as-is) · WT{n} · awaiting buttondown.md",
-                strip_block_markers=True,
             )
             return _base.JobResult(
                 True,
-                f"`final.md` written for WT{n} (rows as-is — LLM exhausted retries). {_NEXT_STEPS}",
-                data={"issue_number": n, "preview_url": html_url, "thesis_written": False},
+                f"`reorder` for WT{n} exhausted retries; rows unchanged. {_NEXT_STEPS}",
+                data={"issue_number": n, "thesis_written": False},
             )
     except _base.JobLocked as exc:
         return _base.JobResult(False, f"⏳ `create-final` already running ({exc.holder_desc}).")
