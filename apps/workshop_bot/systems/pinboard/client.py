@@ -645,9 +645,12 @@ def popular(limit: int = 30) -> list[dict[str, Any]]:
     No auth needed — public discovery surface, the same feed Jamie
     scans manually. Returns ``[{title, url, description, posted_by}]``.
     """
+    # 60s read timeout — feeds.pinboard.in is slow + intermittently
+    # 503s; a tighter cap was burning multiple scans per day at the
+    # upstream-fetch layer (no LLM call, no card).
     resp = requests.get(
         POPULAR_FEED,
-        timeout=20,
+        timeout=60,
         headers={"User-Agent": "WeeklyThing-WorkshopBot/1.0"},
     )
     resp.raise_for_status()
