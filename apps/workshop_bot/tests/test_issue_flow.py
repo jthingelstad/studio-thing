@@ -90,10 +90,17 @@ class StartIssueTests(_DBTestCase):
         self.assertIn("Weekly%20Thing%20458", ptr["reddit_tag_url"])
         # Predictable file URLs for what Shortcuts uploads + what the bot writes.
         # currently_json is intentionally absent — Currently moved to workshop.db.
-        for key in ("cover_jpg", "cover_json", "intro_md",
-                    "haiku_md", "metadata_json", "draft_md", "draft_html",
-                    "final_md", "buttondown_md", "buttondown_html"):
+        for key in ("cover_jpg", "cover_json", "intro_md", "outro_md",
+                    "haiku_md", "metadata_json", "thesis_md",
+                    "cta_1_md", "cta_2_md", "thanks_1_md", "closer_md",
+                    "draft_md", "draft_html",
+                    "archive_md", "links_json",
+                    "buttondown_md", "buttondown_html",
+                    "transcript_full_txt", "proposal_html"):
             self.assertTrue(ptr["files"][key].startswith("https://files.thingelstad.com/weekly-thing/458/"), key)
+        # final.md is gone in the new pipeline — section ordering /
+        # promotions live in workshop.db's issue_items table.
+        self.assertNotIn("final_md", ptr["files"])
         self.assertNotIn("currently_json", ptr["files"])
         self.assertEqual(ptr["set_by"], "jamie")
         # And the success message points at the pointer URL.

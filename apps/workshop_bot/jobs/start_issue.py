@@ -139,23 +139,35 @@ def build_workshop_pointer(*, issue_number: int, window: dict, set_by: Optional[
             f"flair_name%3A%22Weekly%20Thing%20{n}%22"
         ),
         "files": {
-            # Shortcut-authored (Jamie's iOS flow). Currently is no
-            # longer here — it moved to workshop.db, edited via
-            # conversation with Eddy in #editorial or `/eddy currently …`.
-            # Author-content atoms live under atoms/; cover.jpg stays
-            # at the issue root (referenced by URL in published issues).
+            # ----- Author-content atoms (live under atoms/) ---------
+            # Shortcut-authored (Jamie's iOS flow): cover, intro, outro.
+            # Currently is DB-backed (workshop.db); edited via Eddy or
+            # `/eddy currently …` — not surfaced here.
             "cover_jpg": f"{base}cover.jpg",
             "cover_json": f"{base}atoms/cover.json",
             "intro_md": f"{base}atoms/intro.md",
-            # Bot-written atoms live under atoms/; the generated
-            # artifacts (draft.md, buttondown.md, etc.) stay at root.
+            "outro_md": f"{base}atoms/outro.md",
+            # Bot-composed atoms (compose-haiku, compose-meta,
+            # compose-cta, compose-closer, create-final).
             "haiku_md": f"{base}atoms/haiku.md",
             "metadata_json": f"{base}atoms/metadata.json",
+            "thesis_md": f"{base}atoms/thesis.md",
+            "cta_1_md": f"{base}atoms/cta-1.md",
+            "cta_2_md": f"{base}atoms/cta-2.md",
+            "thanks_1_md": f"{base}atoms/thanks-1.md",
+            "closer_md": f"{base}atoms/closer.md",
+            # ----- Daily-rendered artifacts (live at issue root) ----
+            # Produced by tools/renderers on every /eddy issue update
+            # tick. final.md is gone — section ordering + promotions
+            # live in workshop.db's issue_items table now.
             "draft_md": f"{base}draft.md",
             "draft_html": f"{base}draft.html",
-            "final_md": f"{base}final.md",
+            "archive_md": f"{base}archive.md",
+            "links_json": f"{base}links.json",
             "buttondown_md": f"{base}buttondown.md",
             "buttondown_html": f"{base}buttondown.html",
+            "transcript_full_txt": f"{base}transcript-full.txt",
+            "proposal_html": f"{base}proposal.html",
         },
         "set_at": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "set_by": set_by or "start-issue",
