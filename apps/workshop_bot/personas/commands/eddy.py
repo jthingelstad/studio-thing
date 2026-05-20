@@ -154,50 +154,37 @@ def register_eddy_commands(
             "Starting `issue subject` — 5 subject options then a description will post in #editorial; react there to pick.",
         )
 
-    # /eddy issue publish — destination-aware ship. No-arg runs all
-    # three subcommands (audio → buttondown → website). Each subcommand
-    # is independently idempotent.
-    publish = app_commands.Group(
-        name="publish", description="Ship the issue to a destination", parent=issue
+    # /eddy issue publish — destination-aware ship. `destination` chooses
+    # one of (audio, buttondown, website) or "all" (audio → buttondown
+    # → website, the standard ship order). Each leg is independently
+    # idempotent. Discord limits group nesting to one level, so this is
+    # a single command with a choice arg rather than a publish subgroup.
+    @issue.command(
+        name="publish",
+        description="Ship the issue. Destination = all | audio | buttondown | website.",
     )
-
-    @publish.command(
-        name="all",
-        description="Ship to all destinations in order: audio → buttondown → website.",
+    @app_commands.describe(
+        destination="Which destination to ship to. 'all' runs audio → buttondown → website.",
     )
-    async def publish_all_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+    @app_commands.choices(destination=[
+        app_commands.Choice(name="all", value="all"),
+        app_commands.Choice(name="audio", value="audio"),
+        app_commands.Choice(name="buttondown", value="buttondown"),
+        app_commands.Choice(name="website", value="website"),
+    ])
+    async def issue_publish_cmd(  # type: ignore[misc]
+        interaction: discord.Interaction, destination: str = "all",
+    ) -> None:
+        dest = (destination or "all").strip().lower()
+        handler = {
+            "all": publish_job.publish_all,
+            "audio": publish_job.publish_audio,
+            "buttondown": publish_job.publish_buttondown,
+            "website": publish_job.publish_website,
+        }.get(dest, publish_job.publish_all)
         await _run_and_ack(
-            interaction, lambda: publish_job.publish_all(_ctx(bot)), "issue publish",
-        )
-
-    @publish.command(
-        name="audio",
-        description="TTS the transcript and upload the MP3 to S3.",
-    )
-    async def publish_audio_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(
-            interaction, lambda: publish_job.publish_audio(_ctx(bot)),
-            "issue publish audio",
-        )
-
-    @publish.command(
-        name="buttondown",
-        description="POST/PATCH the current buttondown.md to Buttondown (idempotent).",
-    )
-    async def publish_buttondown_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(
-            interaction, lambda: publish_job.publish_buttondown(_ctx(bot)),
-            "issue publish buttondown",
-        )
-
-    @publish.command(
-        name="website",
-        description="Commit archive.md + transcript + manifest to weekly.thingelstad.com.",
-    )
-    async def publish_website_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(
-            interaction, lambda: publish_job.publish_website(_ctx(bot)),
-            "issue publish website",
+            interaction, lambda: handler(_ctx(bot)),
+            f"issue publish {dest}",
         )
 
     @issue.command(

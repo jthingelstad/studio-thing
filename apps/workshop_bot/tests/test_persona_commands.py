@@ -82,14 +82,17 @@ class EddyTreeTests(unittest.TestCase):
              "publish", "reset"},
         )
 
-    def test_eddy_issue_publish_subcommands(self):
+    def test_eddy_issue_publish_destinations(self):
+        # Discord limits group nesting to one level — publish lives as
+        # a leaf with a destination choice arg, not a subgroup.
         tree = commands_module.register_eddy_commands(_stub_bot())
         issue = _subgroup(_top_group(tree, "eddy"), "issue")
-        publish = _subgroup(issue, "publish")
-        self.assertEqual(
-            _cmd_names(publish),
-            {"all", "audio", "buttondown", "website"},
+        publish_cmd = next(
+            c for c in issue.commands if getattr(c, "_cmd_name", None) == "publish"
         )
+        choices = getattr(publish_cmd, "_choices", {}).get("destination", [])
+        choice_values = {c.value for c in choices}
+        self.assertEqual(choice_values, {"all", "audio", "buttondown", "website"})
 
     def test_eddy_top_level_status(self):
         tree = commands_module.register_eddy_commands(_stub_bot())
