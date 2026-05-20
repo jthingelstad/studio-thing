@@ -212,8 +212,11 @@ class IssueStatusTests(_DBTestCase):
         self.assertTrue(result.ok, result.message)
         self.assertIn("WT458", result.message)
         self.assertIn("`intro.md`", result.message)
-        # final.md / haiku.md / metadata.json / cover.jpg missing → ❌ markers.
-        self.assertIn("❌ `final.md`", result.message)
+        # haiku.md / metadata.json / cover.jpg missing → ❌ markers.
+        # final.md is no longer a tracked asset; archive.md / buttondown.md
+        # are now in the daily-rendered triplet line.
+        self.assertIn("❌ `haiku.md`", result.message)
+        self.assertIn("❌ `metadata.json`", result.message)
         self.assertIn("cta-1.md", result.message)
         st = result.data["section_status"]
         self.assertEqual(st["issue_number"], 458)
@@ -279,7 +282,7 @@ class DraftSectionStatusTests(unittest.TestCase):
         d = _base.replace_block(_base.starter_template(), "notable", "### [A](http://a)")
         d = _base.replace_block(d, "brief", "**[B](http://b)** — x")
         d = _base.replace_block(d, "journal", "[Tuesday @ 3:02 PM](https://x.example/y)\n\nt")
-        files = {"final.md", "haiku.md", "metadata.json", "intro.md", "cover.jpg", "draft.md"}
+        files = {"haiku.md", "metadata.json", "intro.md", "cover.jpg", "draft.md"}
         st = draft_mod.section_status(458, draft_text=d, list_objects=files)
         self.assertTrue(st["ship_ready"], st["required_missing"])
 

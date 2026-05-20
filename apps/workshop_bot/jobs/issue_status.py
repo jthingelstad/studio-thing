@@ -56,7 +56,10 @@ def render_status_card(window: dict, st: dict) -> str:
 
     lines = [
         f"📋 **WT{n}** — issue status · pub {window['pub_date']} ({_days_to(window['pub_date'])}) · cutoff {window['end_date']}",
-        f"draft.md: {m(st['assets'].get('draft.md', False))}  ·  final.md: {m(st['assets'].get('final.md', False))}  ·  buttondown.md: {m(st['assets'].get('buttondown.md', False))}  ·  ~{st['word_count']} words",
+        # Daily-rendered artifacts — each ✅ means update-draft produced
+        # the file on its latest tick (no separate compose / publish
+        # step in the new pipeline).
+        f"draft.md: {m(st['assets'].get('draft.md', False))}  ·  archive.md: {m(st['assets'].get('archive.md', False))}  ·  buttondown.md: {m(st['assets'].get('buttondown.md', False))}  ·  ~{st['word_count']} words",
         "",
         "**Required for ship:**",
         secline("notable", "Notable"),
@@ -66,13 +69,12 @@ def render_status_card(window: dict, st: dict) -> str:
         f"  {m(st['assets'].get('metadata.json', False))} `metadata.json`" + ("" if st["assets"].get("metadata.json") else " → `/eddy issue subject`"),
         f"  {m(st['intro_present'])} `intro.md`" + ("" if st["intro_present"] else " → write it, push via Shortcut"),
         f"  {m(st['cover_present'])} `cover.jpg`",
-        f"  {m(st['assets'].get('final.md', False))} `final.md`" + ("" if st["assets"].get("final.md") else " → `/eddy issue final`"),
         "",
-        "**Optional:**",
-        f"  {m(st['currently_present'])} `currently.json` (or legacy `currently.md`)",
-        "  " + (f"✅ CTAs: {', '.join('`' + c + '`' for c in st['cta_files'])}" if st["cta_files"] else "⚪ CTAs: none (compose-cta not run / 0 CTAs)"),
+        "**Optional (CTAs splice into buttondown.md only):**",
+        f"  {m(st['currently_present'])} Currently (DB-backed)",
+        "  " + (f"✅ CTAs: {', '.join('`' + c + '`' for c in st['cta_files'])}" if st["cta_files"] else "⚪ CTAs: none (run `/patty cta` to compose)"),
         "",
-        ("✅ **ship-ready** — `build-publish` would proceed." if st["ship_ready"]
+        ("✅ **ship-ready** — `/eddy issue publish` would proceed." if st["ship_ready"]
          else f"❌ **not ship-ready** — missing: {', '.join(st['required_missing'])}"),
     ]
     return "\n".join(lines)

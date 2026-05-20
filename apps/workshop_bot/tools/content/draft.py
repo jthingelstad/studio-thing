@@ -19,21 +19,22 @@ from .. import s3
 # templates/draft_starter.md. ``outro`` is a Jamie-authored closing-prose
 # block (parallel to ``intro``) projected from ``outro.md`` upstream.
 #
-# Promoted (featured) items used to live in dedicated ``feature1`` /
-# ``feature2`` blocks at the bottom of the file; the row-backed rework
-# retired those — promotions now splice inline at their declared
-# ``promoted_position`` in ``final.md`` / ``buttondown.md`` (see
-# ``tools/issue_assembly.assemble_final``).
+# Promoted (featured) items splice inline at their declared
+# ``promoted_position`` (driven by micro.blog's ``Featured`` category,
+# applied at sync time, rendered by ``tools/renderers``).
 SECTION_BLOCKS = (
     "intro", "currently", "cover", "notable", "journal", "brief",
     "outro", "haiku",
 )
 
-# Assets build-publish refuses without (besides the Notable/Brief/Journal
-# *sections*, which are checked from the draft blocks, not from a file).
-REQUIRED_ASSETS = ("final.md", "haiku.md", "metadata.json", "intro.md", "cover.jpg")
-# Currently is optional; it may be the structured currently.json (preferred)
-# or the legacy verbatim currently.md.
+# Atoms that ``/eddy issue publish buttondown`` refuses without (the
+# Notable/Brief/Journal *sections* are checked from draft blocks, not
+# from a file). ``final.md`` is gone — section ordering and promotions
+# live in the DB now.
+REQUIRED_ASSETS = ("haiku.md", "metadata.json", "intro.md", "cover.jpg")
+# Currently is optional; it's DB-backed via ``currently_entries`` —
+# the legacy ``currently.json`` / ``currently.md`` paths are retired
+# but checked here for backwards-compatible status reporting.
 OPTIONAL_ASSETS = ("currently.json", "currently.md")
 
 
@@ -127,10 +128,17 @@ def section_status(
             "placeholder": placeholder,
         }
     cta_files = sorted(
-        f for f in list_objects if f and f.startswith("cta-") and f.endswith(".md")
+        f for f in list_objects
+        if f and (
+            (f.startswith("cta-") and f.endswith(".md"))
+            or (f.startswith("thanks-") and f.endswith(".md"))
+        )
     )
     assets = {name: (name in list_objects) for name in REQUIRED_ASSETS + OPTIONAL_ASSETS}
+    # Daily-rendered artifacts — produced by update-draft via the
+    # three pure renderers.
     assets["draft.md"] = ("draft.md" in list_objects) or bool(draft_text)
+    assets["archive.md"] = "archive.md" in list_objects
     assets["buttondown.md"] = "buttondown.md" in list_objects
 
     intro_present = bool(blocks.get("intro")) or assets.get("intro.md", False)
