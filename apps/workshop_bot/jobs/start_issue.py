@@ -142,12 +142,15 @@ def build_workshop_pointer(*, issue_number: int, window: dict, set_by: Optional[
             # Shortcut-authored (Jamie's iOS flow). Currently is no
             # longer here — it moved to workshop.db, edited via
             # conversation with Eddy in #editorial or `/eddy currently …`.
+            # Author-content atoms live under atoms/; cover.jpg stays
+            # at the issue root (referenced by URL in published issues).
             "cover_jpg": f"{base}cover.jpg",
-            "cover_json": f"{base}cover.json",
-            "intro_md": f"{base}intro.md",
-            # Bot-written, but their URLs are useful for previewing / sharing:
-            "haiku_md": f"{base}haiku.md",
-            "metadata_json": f"{base}metadata.json",
+            "cover_json": f"{base}atoms/cover.json",
+            "intro_md": f"{base}atoms/intro.md",
+            # Bot-written atoms live under atoms/; the generated
+            # artifacts (draft.md, buttondown.md, etc.) stay at root.
+            "haiku_md": f"{base}atoms/haiku.md",
+            "metadata_json": f"{base}atoms/metadata.json",
             "draft_md": f"{base}draft.md",
             "draft_html": f"{base}draft.html",
             "final_md": f"{base}final.md",

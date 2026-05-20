@@ -49,6 +49,19 @@ JOURNAL_IMAGE_MAX_BYTES = 4 * 1024 * 1024  # 4 MB — a resized image should be 
 # flat asset namespace. Written by ``compose-transcript`` only.
 TRANSCRIPT_PREFIX = "transcript"
 TRANSCRIPT_EXTENSIONS = {".txt"}
+
+# Author-content atom files live under ``weekly-thing/{N}/atoms/`` so the
+# issue root stays uncluttered (root keeps generated artifacts +
+# immovable images/audio). Reads dual-source (try atoms/ first, fall
+# back to root) during the migration; writes always go to atoms/. The
+# canonical-name → atoms/ routing is enforced inside ``_resolve_key``
+# so all callers (read, write, delete, url) stay consistent.
+ATOMS_PREFIX = "atoms"
+_ATOM_FILENAMES = frozenset({
+    "intro.md", "outro.md", "cover.json", "haiku.md",
+    "metadata.json", "thesis.md",
+})
+_ATOM_NUMBERED_RE = re.compile(r"^(cta|thanks)-\d+\.md$")
 _JOURNAL_CONTENT_TYPES = {
     ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
     ".gif": "image/gif", ".webp": "image/webp",
@@ -73,9 +86,18 @@ def _client():
     return boto3.client("s3")
 
 
-def _resolve_key(issue_number: int, filename: str) -> str:
-    if not isinstance(issue_number, int) or issue_number <= 0:
-        raise S3PathError(f"issue_number must be a positive integer; got {issue_number!r}")
+def _is_atom_name(name: str) -> bool:
+    """True if ``name`` is one of the author-content atom filenames
+    that lives under ``atoms/``. The set is small + closed: intro,
+    outro, cover.json, haiku, metadata, thesis, and the numbered
+    cta-N / thanks-N supporter copy files."""
+    return name in _ATOM_FILENAMES or bool(_ATOM_NUMBERED_RE.match(name))
+
+
+def _validate_filename(filename: str) -> str:
+    """Common filename validation (path-component shape + extension
+    allowlist). Returns the trimmed name. Raises ``S3PathError`` on
+    any rejection."""
     name = (filename or "").strip()
     if not FILENAME_RE.match(name):
         raise S3PathError(
@@ -89,6 +111,30 @@ def _resolve_key(issue_number: int, filename: str) -> str:
         raise S3PathError(
             f"extension {suffix!r} is not allowed; allowed: {sorted(ALLOWED_EXTENSIONS)}"
         )
+    return name
+
+
+def _resolve_key(issue_number: int, filename: str) -> str:
+    """Canonical S3 key for an issue file. Author-content atoms route
+    through the ``atoms/`` subdir; everything else (generated artifacts
+    like draft.md / archive.md / buttondown.md, plus immovable
+    images/audio) stays at the issue root."""
+    if not isinstance(issue_number, int) or issue_number <= 0:
+        raise S3PathError(f"issue_number must be a positive integer; got {issue_number!r}")
+    name = _validate_filename(filename)
+    if _is_atom_name(name):
+        return f"{ROOT_PREFIX}/{issue_number}/{ATOMS_PREFIX}/{name}"
+    return f"{ROOT_PREFIX}/{issue_number}/{name}"
+
+
+def _resolve_legacy_key(issue_number: int, filename: str) -> str:
+    """Pre-migration key for atom files (flat at the issue root). Used
+    by the dual-read fallback in ``read_issue_file`` so the in-flight
+    issue's atoms still resolve while we migrate. Non-atom names share
+    the same key as the canonical resolution — no fallback needed."""
+    if not isinstance(issue_number, int) or issue_number <= 0:
+        raise S3PathError(f"issue_number must be a positive integer; got {issue_number!r}")
+    name = _validate_filename(filename)
     return f"{ROOT_PREFIX}/{issue_number}/{name}"
 
 
@@ -160,9 +206,17 @@ def list_issue(issue_number: int) -> dict[str, Any]:
         resp = client.list_objects_v2(**kw)
         for obj in resp.get("Contents", []) or []:
             key = obj["Key"]
+            rel = key[len(prefix):] if key.startswith(prefix) else key
+            # Collapse the ``atoms/`` prefix so callers' "is intro.md
+            # present" checks keep working with their bare-name asserts
+            # during the layout migration. ``journal/`` and ``transcript/``
+            # subdirs are *not* collapsed — those names always carried
+            # their subdir prefix in the listing.
+            if rel.startswith(f"{ATOMS_PREFIX}/"):
+                rel = rel[len(ATOMS_PREFIX) + 1:]
             out.append(
                 {
-                    "filename": key[len(prefix):] if key.startswith(prefix) else key,
+                    "filename": rel,
                     "key": key,
                     "size": obj.get("Size"),
                     "last_modified": (
@@ -186,14 +240,35 @@ def list_issue(issue_number: int) -> dict[str, Any]:
 
 
 def read_issue_file(issue_number: int, filename: str, *, max_bytes: int = READ_MAX_BYTES) -> dict[str, Any]:
-    """Read a text-ish file for an issue. Binary content is reported but not returned."""
+    """Read a text-ish file for an issue. Binary content is reported but not returned.
+
+    For atom filenames (``intro.md``, ``cover.json``, ``haiku.md``, etc.) the
+    canonical key is ``atoms/{name}``; if that misses, fall back to the
+    pre-migration root key. This dual-read lets the in-flight issue read its
+    atoms during the layout migration without a forced backfill. Non-atom
+    names route through a single key and don't fall back.
+    """
     key = _resolve_key(issue_number, filename)
     bucket = _bucket()
     client = _client()
     try:
         resp = client.get_object(Bucket=bucket, Key=key)
     except client.exceptions.NoSuchKey:
-        return {"key": key, "found": False}
+        # Dual-read fallback for atoms — read from the legacy root path
+        # if the atoms/ key isn't there yet (issue migrated to the new
+        # layout but the file hasn't been re-pushed).
+        if _is_atom_name(filename):
+            legacy_key = _resolve_legacy_key(issue_number, filename)
+            if legacy_key != key:
+                try:
+                    resp = client.get_object(Bucket=bucket, Key=legacy_key)
+                    key = legacy_key
+                except client.exceptions.NoSuchKey:
+                    return {"key": key, "found": False}
+            else:
+                return {"key": key, "found": False}
+        else:
+            return {"key": key, "found": False}
     body = resp["Body"].read(max_bytes + 1)
     if len(body) > max_bytes:
         return {
@@ -285,12 +360,21 @@ def delete_issue_file(issue_number: int, filename: str) -> dict[str, Any]:
     before the call — so callers should ``list_issue`` first and only
     call this for keys they saw. Returns ``{key, bucket, deleted: True}``.
 
+    For atom filenames, also deletes the legacy root-level copy if it
+    exists. This keeps ``reset`` clean during the layout migration —
+    the in-flight issue may have copies in both ``atoms/`` and root.
+
     Used by ``jobs/reset_issue.py``. The agent tool surface
     deliberately does not expose this: agents can write, can't delete.
     """
     key = _resolve_key(int(issue_number), filename)
     bucket = _bucket()
-    _client().delete_object(Bucket=bucket, Key=key)
+    client = _client()
+    client.delete_object(Bucket=bucket, Key=key)
+    if _is_atom_name(filename):
+        legacy_key = _resolve_legacy_key(int(issue_number), filename)
+        if legacy_key != key:
+            client.delete_object(Bucket=bucket, Key=legacy_key)
     logger.info("s3.delete_issue_file(%d, %s)", issue_number, filename)
     return {"key": key, "bucket": bucket, "deleted": True}
 
