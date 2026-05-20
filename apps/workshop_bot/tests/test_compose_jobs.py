@@ -21,7 +21,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import (  # noqa: E402
-    _base, build_publish, compose_closer, compose_cta, compose_haiku, compose_meta, create_final,
+    _base, compose_closer, compose_cta, compose_haiku, compose_meta, create_final,
 )
 from apps.workshop_bot.tools import db, s3 # noqa: E402
 from apps.workshop_bot.tools.discord import interaction
