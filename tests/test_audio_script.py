@@ -56,6 +56,52 @@ class AudioScriptTests(unittest.TestCase):
         self.assertNotIn("https://www.macstories.net", rendered)
         self.assertNotIn("buttondown-editor-mode", rendered)
 
+    def test_cover_block_with_native_img_is_stripped(self):
+        """Modern issues emit the cover as a native <img> tag rather
+        than markdown ![alt](src). Neither the alt text, caption,
+        date, nor location should appear in the spoken audio."""
+        from script.common import strip_cover_blocks
+
+        body = (
+            "## Currently\n\nplaceholder\n\n"
+            "---\n\n"
+            '<img src="https://files.thingelstad.com/weekly-thing/349/cover.jpg" '
+            'alt="Golden sunset over a calm lake with tree silhouettes." />\n\n'
+            "Beautiful evening with the sun coming down.\n\n"
+            "May 16, 2026  \n"
+            "Cannon Lake, Warsaw, MN\n\n"
+            "---\n\n"
+            "## Journal\n\nJournal entry stays.\n"
+        )
+        stripped = strip_cover_blocks(body)
+        self.assertNotIn("Golden sunset", stripped)
+        self.assertNotIn("Beautiful evening", stripped)
+        self.assertNotIn("Cannon Lake", stripped)
+        self.assertNotIn("cover.jpg", stripped)
+        # Surrounding sections survive.
+        self.assertIn("## Currently", stripped)
+        self.assertIn("## Journal", stripped)
+        self.assertIn("Journal entry stays.", stripped)
+
+    def test_cover_block_with_markdown_image_still_stripped(self):
+        """Legacy issues used ![alt](src) for the cover. The regex
+        must still match that form."""
+        from script.common import strip_cover_blocks
+
+        body = (
+            "---\n\n"
+            "![Old caption](https://example.com/cover.jpg)\n\n"
+            "Caption line.\n\n"
+            "Apr 1, 2020  \nMinneapolis, MN\n\n"
+            "---\n\n"
+            "## Notable\n\nLink one.\n"
+        )
+        stripped = strip_cover_blocks(body)
+        self.assertNotIn("Old caption", stripped)
+        self.assertNotIn("Caption line", stripped)
+        self.assertNotIn("Minneapolis", stripped)
+        self.assertIn("## Notable", stripped)
+
     def test_blockquotes_code_and_normalization(self):
         frontmatter = {
             "number": 999,

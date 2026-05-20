@@ -26,15 +26,22 @@ BARE_URL_RE = re.compile(r"https?://\S+")
 
 # Cover/photo block: an `---`/`---` separator pair that opens with an
 # image. The block holds a caption + dateline + location and has no value
-# in audio. Required shape:
+# in audio (the alt text, caption, and location should never be spoken).
+# Required shape:
 #   ---
-#   ![alt](src)        <- image must be the first non-blank line
-#   <up to ~8 lines of caption/metadata>
+#   ![alt](src)              <- markdown image (legacy issues), OR
+#   <img ... src="..." />    <- native HTML image (modern issues, post-2026)
+#   <up to ~12 lines of caption/metadata>
 #   ---
+#
+# The image must be the first non-blank line inside the fences. Both
+# the markdown and native-HTML forms are matched so the cover block —
+# along with whatever alt-text / caption / dateline / location it
+# carries — gets dropped on its way to the audio script.
 COVER_BLOCK_RE = re.compile(
     r"^-{3,}[ \t]*\n"
     r"(?:[ \t]*\n)*"
-    r"[ \t]*!\[[^\]]*]\([^)]+\)[ \t]*\n"
+    r"[ \t]*(?:!\[[^\]]*]\([^)]+\)|<img\b[^>]*/?>)[ \t]*\n"
     r"(?:[^\n]*\n){0,12}"
     r"-{3,}[ \t]*$",
     re.MULTILINE,
