@@ -57,7 +57,10 @@ NAME = "compose-cta"
 _ARC_LOOKBACK_COUNT = 4
 _ARC_EXCERPT_CAP = 4_000
 
-_MARKER_RE = re.compile(r"<!--\s*(cta|thanks):(\d+)\s*-->")
+# Fixed slot list — every issue gets the same three atoms composed
+# (regardless of editorial state). render_email's hardcoded
+# CTA_SLOT_POSITIONS map decides where each lands in the email body.
+FIXED_SLOTS: list[tuple[str, int]] = [("cta", 1), ("cta", 2), ("thanks", 1)]
 
 # Map marker kind → (prompt name, output filename pattern, friendly slot label,
 # YAML ``kind:`` value written into the file's frontmatter).
@@ -69,23 +72,6 @@ _KIND_CONFIG: dict[str, dict[str, str]] = {
 
 def _filename_for(kind: str, n: int) -> str:
     return f"cta-{n}.md" if kind == "cta" else f"thanks-{n}.md"
-
-
-def _discover_slots(final_text: str) -> list[tuple[str, int]]:
-    """Walk ``final.md`` left-to-right and return the declared slots as a
-    list of ``(kind, number)``. Order is the visual order in the body so
-    the picker UX walks down the issue. Duplicates are deduped (a body
-    that — by accident — has two ``<!-- cta:1 -->`` markers is treated
-    as one slot)."""
-    out: list[tuple[str, int]] = []
-    seen: set[tuple[str, int]] = set()
-    for m in _MARKER_RE.finditer(final_text or ""):
-        slot = (m.group(1), int(m.group(2)))
-        if slot in seen:
-            continue
-        seen.add(slot)
-        out.append(slot)
-    return out
 
 
 def _slot_filled(issue_number: int, filename: str) -> bool:
@@ -184,23 +170,11 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         return _base.JobResult(False, "❌ no active issue window.")
     n = int(window["issue_number"])
 
-    # final.md is required — slots live in it.
-    res = await asyncio.to_thread(s3.read_issue_file, n, "final.md")
-    final_text = res["text"] if (res.get("found") and isinstance(res.get("text"), str)) else ""
-    if not final_text.strip():
-        return _base.JobResult(
-            False,
-            f"❌ no `final.md` for WT{n} — run `/eddy issue final` first so the membership-block "
-            f"slots are declared.",
-        )
-
-    slots = _discover_slots(final_text)
-    if not slots:
-        return _base.JobResult(
-            True,
-            f"(compose-cta for WT{n}: no membership-block slots declared in `final.md`.)",
-            data={"issue_number": n, "slots_total": 0, "slots_written": 0, "slots_skipped": 0},
-        )
+    # Slot count is fixed — Patty composes the three known atoms per
+    # issue regardless of editorial state. render_email's hardcoded
+    # CTA_SLOT_POSITIONS map decides where each lands; absent atoms
+    # produce no marker / no Liquid block on the email side.
+    slots: list[tuple[str, int]] = FIXED_SLOTS
 
     bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "patty", "DISCORD_CHANNEL_SUPPORTERS")
     if bot is None:

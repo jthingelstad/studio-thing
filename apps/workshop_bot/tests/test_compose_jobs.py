@@ -283,14 +283,10 @@ class ComposeMetaTests(_DBTestCase):
 
 
 class ComposeCtaTests(_DBTestCase):
-    """Rewritten for the chunk-based editorial rework.
-
-    Slots are now discovered by scanning ``final.md`` for inline
-    ``<!-- cta:N -->`` / ``<!-- thanks:N -->`` markers placed by
-    ``create-final``. Patty no longer decides count or placement — only
-    copy for the slots Eddy declared. The per-slot LLM reply shape is
-    ``{"framings": [...]}``, and the picked body is written into
-    ``cta-N.md`` / ``thanks-N.md`` with ``kind:`` YAML frontmatter."""
+    """Patty's compose-cta now writes a fixed slot set: cta-1.md,
+    cta-2.md, thanks-1.md. No final.md scan — render_email decides
+    placement via hardcoded CTA_SLOT_POSITIONS. Per-slot picker UX
+    unchanged."""
 
     def tearDown(self):
         os.environ.pop("DISCORD_CHANNEL_SUPPORTERS", None)
@@ -302,82 +298,10 @@ class ComposeCtaTests(_DBTestCase):
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
 
-    def _seed_final(self, notable_marker_after_a: str = "") -> None:
-        """Write a final.md with the three required blocks. Optionally inject
-        a marker into the Notable block content."""
-        notable = "### [A](http://a)\n\nx" + (
-            f"\n\n{notable_marker_after_a}" if notable_marker_after_a else ""
-        )
-        self.ws.write_issue_file(458, "final.md", _filled_final(notable=notable))
-
-    def test_returns_ok_when_no_markers_in_final(self):
+    def test_writes_all_three_atoms(self):
+        """Patty composes copy for cta-1, cta-2, thanks-1 every run —
+        no marker discovery, no opt-in via final.md."""
         self._window()
-        self._seed_final()  # no markers
-        fc = _FakeBotChannel(persona="patty", reply='{"framings": []}')
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        self.assertEqual(result.data["slots_total"], 0)
-        self.assertEqual(result.data["slots_written"], 0)
-        # No LLM call when there are no slots.
-        fc.bot.core.assert_not_awaited()
-        # No cta files written.
-        self.assertNotIn((458, "cta-1.md"), self.ws.files)
-        self.assertNotIn((458, "thanks-1.md"), self.ws.files)
-
-    def test_refuses_when_final_md_missing(self):
-        self._window()
-        # No final.md written.
-        fc = _FakeBotChannel(persona="patty", reply='{"framings": []}')
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        result = asyncio.run(compose_cta.run(ctx))
-        self.assertFalse(result.ok)
-        self.assertIn("no `final.md`", result.message)
-        self.assertIn("/eddy issue final", result.message)
-
-    def test_one_cta_marker_writes_supporter_file(self):
-        self._window()
-        self._seed_final(notable_marker_after_a="<!-- cta:1 -->")
-        reply = '{"framings": ["Thingy here. Your support funds the EFF."]}'
-        fc = _FakeBotChannel(persona="patty", reply=reply)
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
-            result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        self.assertEqual(result.data["slots_written"], 1)
-        cta = self.ws.files[(458, "cta-1.md")]
-        self.assertIn("kind: supporter", cta)
-        self.assertIn("Thingy here.", cta)
-        # The new format drops `placement:` frontmatter.
-        self.assertNotIn("placement:", cta)
-
-    def test_thanks_marker_writes_thanks_file_with_kind(self):
-        self._window()
-        self._seed_final(notable_marker_after_a="<!-- thanks:1 -->")
-        reply = '{"framings": ["Thank you for keeping this free."]}'
-        fc = _FakeBotChannel(persona="patty", reply=reply)
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
-            result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        self.assertEqual(result.data["slots_written"], 1)
-        thanks = self.ws.files[(458, "thanks-1.md")]
-        self.assertIn("kind: thanks", thanks)
-        self.assertIn("Thank you for keeping this free.", thanks)
-        # cta-1.md NOT written (thanks marker → thanks file only).
-        self.assertNotIn((458, "cta-1.md"), self.ws.files)
-
-    def test_multiple_markers_fill_each_slot(self):
-        """Two cta + one thanks. Each slot fired independently with its own
-        framings; per-slot picker UX."""
-        self._window()
-        marker_block = "<!-- cta:1 -->\n\n<!-- cta:2 -->\n\n<!-- thanks:1 -->"
-        self._seed_final(notable_marker_after_a=marker_block)
-        # Three calls; each returns one framing.
         replies = iter([
             ('{"framings": ["cta-1 copy"]}', {"iterations": 1}),
             ('{"framings": ["cta-2 copy"]}', {"iterations": 1}),
@@ -392,6 +316,16 @@ class ComposeCtaTests(_DBTestCase):
         self.assertTrue(result.ok, result.message)
         self.assertEqual(result.data["slots_written"], 3)
         self.assertEqual(result.data["slots_total"], 3)
+        # All three atom files written with the right frontmatter kind.
+        cta1 = self.ws.files[(458, "cta-1.md")]
+        cta2 = self.ws.files[(458, "cta-2.md")]
+        thanks1 = self.ws.files[(458, "thanks-1.md")]
+        self.assertIn("kind: supporter", cta1)
+        self.assertIn("cta-1 copy", cta1)
+        self.assertIn("kind: supporter", cta2)
+        self.assertIn("cta-2 copy", cta2)
+        self.assertIn("kind: thanks", thanks1)
+        self.assertIn("thanks-1 copy", thanks1)
         self.assertIn("cta-1 copy", self.ws.files[(458, "cta-1.md")])
         self.assertIn("cta-2 copy", self.ws.files[(458, "cta-2.md")])
         self.assertIn("thanks-1 copy", self.ws.files[(458, "thanks-1.md")])
@@ -401,7 +335,6 @@ class ComposeCtaTests(_DBTestCase):
         job is idempotent for already-filled slots; Jamie deletes the file
         to re-roll."""
         self._window()
-        self._seed_final(notable_marker_after_a="<!-- cta:1 -->\n\n<!-- cta:2 -->")
         # Pre-fill cta-1.md.
         self.ws.write_issue_file(458, "cta-1.md", "---\nkind: supporter\n---\n\nalready filled.")
         fc = _FakeBotChannel(persona="patty", reply='{"framings": ["new copy"]}')
@@ -410,43 +343,42 @@ class ComposeCtaTests(_DBTestCase):
         with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
             result = asyncio.run(compose_cta.run(ctx))
         self.assertTrue(result.ok, result.message)
+        # 1 skipped (cta-1.md already filled); 2 written (cta-2, thanks-1).
         self.assertEqual(result.data["slots_skipped"], 1)
-        self.assertEqual(result.data["slots_written"], 1)
+        self.assertEqual(result.data["slots_written"], 2)
         # cta-1.md unchanged.
         self.assertIn("already filled.", self.ws.files[(458, "cta-1.md")])
-        # cta-2.md got the new copy.
-        self.assertIn("new copy", self.ws.files[(458, "cta-2.md")])
 
     def test_await_choice_timeout_leaves_slot_unwritten(self):
         self._window()
-        self._seed_final(notable_marker_after_a="<!-- cta:1 -->")
         fc = _FakeBotChannel(persona="patty", reply='{"framings": ["a", "b"]}')
         os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
         with patch.object(interaction, "await_choice", AsyncMock(return_value=None)):
             result = asyncio.run(compose_cta.run(ctx))
         self.assertTrue(result.ok)
+        # All three slots time out → none written.
         self.assertEqual(result.data["slots_written"], 0)
         self.assertNotIn((458, "cta-1.md"), self.ws.files)
+        self.assertNotIn((458, "cta-2.md"), self.ws.files)
+        self.assertNotIn((458, "thanks-1.md"), self.ws.files)
 
     def test_unparseable_reply_eventually_gives_up(self):
         """refresh_loop retries up to MAX_REFRESH_ROUNDS on unparseable JSON.
         After exhaustion, no file is written."""
         self._window()
-        self._seed_final(notable_marker_after_a="<!-- cta:1 -->")
         fc = _FakeBotChannel(persona="patty", reply="sorry, can't draft right now")
         os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
         result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok)  # not a job failure; just no copy written
+        self.assertTrue(result.ok)
         self.assertEqual(result.data["slots_written"], 0)
         self.assertNotIn((458, "cta-1.md"), self.ws.files)
 
     def test_channel_send_failure_does_not_lose_written_slot(self):
         """If Discord glitches on the summary post, the file is already on
-        S3 — the job must still complete and report slots_written=1."""
+        S3 — the job must still complete and report the written slots."""
         self._window()
-        self._seed_final(notable_marker_after_a="<!-- cta:1 -->")
         fc = _FakeBotChannel(persona="patty", reply='{"framings": ["x"]}')
         fc.channel.send = AsyncMock(side_effect=RuntimeError("discord down"))
         os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
@@ -454,17 +386,16 @@ class ComposeCtaTests(_DBTestCase):
         with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
             result = asyncio.run(compose_cta.run(ctx))
         self.assertTrue(result.ok, result.message)
-        self.assertEqual(result.data["slots_written"], 1)
+        self.assertEqual(result.data["slots_written"], 3)
         self.assertIn("x", self.ws.files[(458, "cta-1.md")])
 
     def test_concurrent_run_is_blocked_by_job_lock(self):
         self._window()
-        self._seed_final(notable_marker_after_a="<!-- cta:1 -->\n\n<!-- thanks:1 -->")
         fc = _FakeBotChannel(persona="patty", reply='{"framings": []}')
         os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
         # Pre-acquire one of the per-slot locks the job opens.
-        with _base.job_lock([f"{458}/cta-1.md", f"{458}/thanks-1.md"], compose_cta.NAME):
+        with _base.job_lock([f"{458}/cta-1.md"], compose_cta.NAME):
             result = asyncio.run(compose_cta.run(ctx))
         self.assertFalse(result.ok)
         self.assertIn("already running", result.message)
@@ -474,7 +405,6 @@ class ComposeCtaTests(_DBTestCase):
         """If thesis.md exists, both CTA and thanks prompts get the thesis
         injected as a `## Thesis` block at the top of the user message."""
         self._window()
-        self._seed_final(notable_marker_after_a="<!-- cta:1 -->")
         self.ws.write_issue_file(458, "thesis.md", "Capital and code.")
         fc = _FakeBotChannel(persona="patty", reply='{"framings": ["x"]}')
         os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
