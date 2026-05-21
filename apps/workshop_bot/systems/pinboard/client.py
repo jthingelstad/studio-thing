@@ -402,6 +402,33 @@ def set_description(url: str, description: str, *, fallback_title: str | None = 
     }
 
 
+def delete_bookmark(url: str) -> dict[str, Any]:
+    """Remove ``url`` from Jamie's Pinboard entirely (mutating). Wraps
+    ``/posts/delete``. Used by Linky's 🛑 reaction on a #research card —
+    Jamie's "remove from consideration entirely" gesture.
+
+    Idempotent on missing URLs: Pinboard returns ``result_code="item
+    not found"`` rather than raising. We surface that verbatim so the
+    caller can ack ⚠️ vs 🚫 if it matters.
+
+    Returns ``{result_code, deleted}``. ``deleted`` is True when
+    Pinboard actually removed a row.
+    """
+    params: dict[str, Any] = {
+        "auth_token": _token(),
+        "format": "json",
+        "url": url,
+    }
+    resp = _get("/posts/delete", params)
+    data = resp.json() or {}
+    result_code = str(data.get("result_code", ""))
+    logger.info("pinboard: posts/delete url=%s result=%s", url, result_code)
+    return {
+        "result_code": result_code,
+        "deleted": result_code == "done",
+    }
+
+
 def clear_toread(url: str) -> dict[str, Any]:
     """Atomic 'clear the ``toread`` flag, keep everything else.' Used by
     Linky's ✅/👍 reaction listener on toread-source cards — Jamie's

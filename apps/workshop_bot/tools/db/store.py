@@ -288,6 +288,45 @@ def mark_popular_seen(
     return n
 
 
+def set_popular_seen_judgment(
+    *,
+    url: str,
+    interesting: bool,
+    note: str,
+    title: Optional[str] = None,
+    verdict_source: Optional[str] = None,
+) -> None:
+    """UPSERT a judgment into ``pinboard_popular_seen`` for a URL.
+
+    Unlike :func:`mark_popular_seen` (which is INSERT OR IGNORE — write
+    only on first sight), this helper always writes the judgment, used
+    when Jamie's reaction supplies the verdict for a URL Linky already
+    recorded. New rows get inserted with the judgment populated; existing
+    rows get ``judged_interesting`` + ``judgment_note`` updated.
+
+    ``note`` is the editorial differentiator (e.g. ``'reviewed-fine'``
+    vs ``'rejected'`` from the ✅ vs 🛑 reaction).
+    """
+    if not url:
+        return
+    nurl = _norm_url(url)
+    if not nurl:
+        return
+    flag = 1 if interesting else 0
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO pinboard_popular_seen "
+            "(url, title, judged_interesting, judgment_note, verdict_source) "
+            "VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT(url) DO UPDATE SET "
+            "  judged_interesting=excluded.judged_interesting, "
+            "  judgment_note=excluded.judgment_note, "
+            "  title=COALESCE(excluded.title, pinboard_popular_seen.title), "
+            "  verdict_source=COALESCE(excluded.verdict_source, pinboard_popular_seen.verdict_source)",
+            (nurl, title, flag, note, verdict_source),
+        )
+
+
 # ---------- popular_seen_sightings (cross-source temporal signal) ----------
 
 

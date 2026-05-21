@@ -1,30 +1,47 @@
-"""Linky — Pinboard curation.
+"""Linky — link curation. Two-channel surface:
 
-Adds three Linky-specific overrides on top of the shared
-:class:`PersonaBot` loop, all feeding off the ``linky_research_messages``
-table:
+- ``#research`` carries items with commitment from Jamie (Pinboard
+  ``toread`` bookmarks, including the Feedbin starred mirror). State:
+  CONSIDERING.
+- ``#discovery`` carries items Linky surfaces from discovery feeds
+  (today: Pinboard popular). State: PROPOSED — no Pinboard bookmark
+  yet.
 
-1. **Reply listener.** Jamie replies to one of Linky's per-link research
-   cards in ``#research``; the reply text is saved verbatim as that
-   bookmark's Pinboard description. Tags and the ``toread`` flag are
-   untouched (so Jamie finishes curation in Pinboard — add ``_brief`` if
-   it's a Brief, clear ``toread`` when ready to ship). For discovery-
-   source cards the URL isn't yet bookmarked; the reply auto-creates a
-   ``toread=yes shared=yes`` bookmark with the reply as its description.
-2. **Save-reaction listener.** Jamie reacts ✅ or 👍 to a research card.
-   On **discovery-feed** cards Linky saves the URL to Pinboard as
-   ``toread=yes shared=yes`` with a blank description (puts it INTO
-   the toread queue); the card gets a 📌 reaction back. On
-   **toread-source** cards Linky clears the ``toread`` flag (takes it
-   OUT of the queue) while preserving title / description / tags /
-   shared; the card gets a 👍 reaction back. The two paths mirror each
-   other — same gesture, opposite ends of the toread pipeline.
-3. **Briefly-reaction listener.** Jamie reacts ⏩ to *any* card; Linky
-   ensures the URL is bookmarked AND tagged ``_brief``. Discovery cards
-   create the bookmark fresh (``toread=yes shared=yes``, empty
-   description); toread cards merge ``_brief`` into the existing tag
-   list while preserving title / description / toread / shared. The
-   card gets 🔖 back so it's visually distinct from a regular save.
+Each Linky card represents a link in some lifecycle state. Jamie's
+gestures move the link through states; the same gesture means the same
+thing in both channels, the implementation just differs based on where
+the link starts.
+
+Five gestures, all routed through the ``linky_research_messages`` row:
+
+1. **Reply with commentary** → set/update the bookmark's description.
+   On a discovery card the bookmark is created with the text as the
+   description; on a research card the existing description is replaced.
+   Ack: 📌 (created) or ✅ (updated).
+2. **➕** — Save for consideration → CONSIDERING.
+   Discovery: create bookmark ``toread=yes shared=yes`` with blank
+   description; ack 📌. Research: already CONSIDERING; ack ⚠️.
+3. **⏩** — Earmark as Briefly → +BRIEF.
+   Discovery: create bookmark + tag ``_brief``. Research: merge
+   ``_brief`` into existing tags. Both ack 🔖.
+4. **✅** — Reviewed, fine link, nothing to do → REVIEWED.
+   Discovery: record ``judged_interesting=0`` with note ``reviewed-fine``
+   in ``pinboard_popular_seen`` so the URL doesn't re-surface.
+   Research: clear the ``toread`` flag, keep the bookmark as archive.
+   Both ack 👀.
+5. **🛑** — Remove from consideration → REJECTED.
+   Discovery: record ``judged_interesting=0`` with note ``rejected``
+   (stronger editorial signal than ✅).
+   Research: delete the Pinboard bookmark entirely.
+   Both ack 🚫.
+
+Reaction errors ack ❌; no-op edge cases (re-saving an already-saved
+link, deleting a bookmark that's already gone) ack ⚠️.
+
+The five gestures describe LINK lifecycle, not Pinboard mechanics —
+the bot syncs to Pinboard today, but a future non-Pinboard backend
+just swaps the implementations of ``bookmark_blank`` / ``tag_as_brief``
+/ ``set_description`` / ``clear_toread`` / ``delete_bookmark``.
 """
 
 from __future__ import annotations
@@ -50,18 +67,35 @@ def _owner_id() -> Optional[str]:
     return raw or None
 
 
-# Reactions Jamie can drop on a discovery-feed card to save it to
-# Pinboard without typing a reply. Each one means "yes, save this —
-# blank description, I'll finish it in Pinboard if at all."
-_SAVE_REACTIONS = {"✅", "👍"}
-
-# A third gesture: save the URL AND tag it as `_brief`. Works on any
-# card (discovery or toread) — for discovery it creates the bookmark
-# with the `_brief` tag; for toread it merges `_brief` into the
-# existing tag list. The 🔖 ack distinguishes "Briefly save" from
-# the regular 📌 "saved" reaction.
+# Link-lifecycle gestures. Each emoji has ONE meaning across both
+# channels — the implementation differs only because the starting
+# state does (no Pinboard bookmark for a PROPOSED #discovery item;
+# bookmark exists for a CONSIDERING #research item).
+#
+# ➕ — "Save for consideration." Move PROPOSED → CONSIDERING.
+#       Discovery: create bookmark `toread=yes shared=yes`, blank desc.
+#       Research:  no-op (already CONSIDERING). Acks ⚠️.
+# ⏩ — "Earmark as Briefly." Move (PROPOSED|CONSIDERING) → +BRIEF.
+#       Discovery: create bookmark + tag `_brief`.
+#       Research:  merge `_brief` into existing tags.
+# ✅ — "Reviewed, fine link, nothing to do." Move → REVIEWED.
+#       Discovery: record judged_interesting=0 with note 'reviewed-fine'.
+#       Research:  clear `toread` flag, keep the bookmark.
+# 🛑 — "Remove from consideration." Move → REJECTED.
+#       Discovery: record judged_interesting=0 with note 'rejected'.
+#       Research:  delete the Pinboard bookmark entirely.
+#
+# Linky's acks: 📌 saved · 🔖 briefed · 👀 reviewed · 🚫 removed ·
+#                ⚠️ no-op edge · ❌ error.
+_SAVE_REACTION = "➕"
 _BRIEF_REACTION = "⏩"
+_REVIEWED_REACTION = "✅"
+_REJECT_REACTION = "🛑"
+
+_SAVE_ACK = "📌"
 _BRIEF_ACK = "🔖"
+_REVIEWED_ACK = "👀"
+_REJECT_ACK = "🚫"
 
 
 # Sources whose URLs aren't yet in Jamie's Pinboard, so a save-gesture
@@ -197,10 +231,15 @@ class LinkyBot(PersonaBot):
     async def on_raw_reaction_add(
         self, payload: discord.RawReactionActionEvent,
     ) -> None:  # type: ignore[override]
-        """Dispatch reactions on Linky's research cards by emoji:
-        ``✅`` / ``👍`` → save (discovery-only); ``⏩`` → save-and-tag-
-        Briefly (works on any source). All other emojis and non-owner
-        reactions are ignored."""
+        """Dispatch reactions on Linky's research/discovery cards by emoji.
+
+        Each gesture has one meaning across both channels:
+        ``➕`` save · ``⏩`` brief · ``✅`` reviewed · ``🛑`` reject.
+        Implementation differs by the row's ``source`` (the starting
+        state — PROPOSED for discovery, CONSIDERING for toread).
+
+        All other emojis and non-owner reactions are ignored.
+        """
         owner = _owner_id()
         if owner is None or str(payload.user_id) != owner:
             return
@@ -208,12 +247,14 @@ class LinkyBot(PersonaBot):
         row = db.lookup_research_message(str(payload.message_id))
         if row is None:
             return
-        if emoji in _SAVE_REACTIONS:
+        if emoji == _SAVE_REACTION:
             await self._handle_save_reaction(payload, row)
-            return
-        if emoji == _BRIEF_REACTION:
+        elif emoji == _BRIEF_REACTION:
             await self._handle_brief_reaction(payload, row)
-            return
+        elif emoji == _REVIEWED_REACTION:
+            await self._handle_reviewed_reaction(payload, row)
+        elif emoji == _REJECT_REACTION:
+            await self._handle_reject_reaction(payload, row)
         # Any other emoji on a card — ignored. (Linky's own ack
         # reactions land here too but get filtered by the owner check
         # above, since ``self.user.id`` isn't ``DISCORD_OWNER_USER_ID``.)
@@ -221,32 +262,24 @@ class LinkyBot(PersonaBot):
     async def _handle_save_reaction(
         self, payload: discord.RawReactionActionEvent, row: dict,
     ) -> None:
-        """✅ / 👍 path: mirror gesture across the toread pipeline.
+        """➕ — Save for consideration. Move PROPOSED → CONSIDERING.
 
-        - **Discovery cards** → save the URL as ``toread=yes shared=yes``
-          with a blank description (puts it INTO the toread queue). Ack 📌.
-        - **Toread cards** → clear the ``toread`` flag while preserving
-          title / description / tags / shared (takes it OUT). Ack 👍.
-
-        Both paths delegate to a single Pinboard-client helper
-        (``bookmark_blank`` vs ``clear_toread``) that owns the
-        fetch-merge-write."""
+        Discovery: create the Pinboard bookmark `toread=yes shared=yes`
+        with blank description; ack 📌.
+        Research: no-op — the bookmark already exists; ack ⚠️.
+        """
         url = (row.get("url") or "").strip()
         if not url:
             return
         source = row.get("source") or ""
 
-        if source in _DISCOVERY_SOURCES:
-            await self._save_discovery_card(payload, row, url)
-            return
         if source == "toread":
-            await self._save_toread_card(payload, row, url)
+            # Already CONSIDERING — nothing to save again.
+            await self._react_card(payload, "⚠️")
             return
-        # Unknown source — silently ignore.
+        if source not in _DISCOVERY_SOURCES:
+            return
 
-    async def _save_discovery_card(
-        self, payload: discord.RawReactionActionEvent, row: dict, url: str,
-    ) -> None:
         fallback_title = row.get("title") or None
         try:
             res = await asyncio.to_thread(
@@ -257,47 +290,27 @@ class LinkyBot(PersonaBot):
             await self._react_card(payload, "❌")
             return
         ok = res.get("result_code") in ("done", "item already exists")
-        await self._react_card(payload, "📌" if ok else "⚠️")
+        await self._react_card(payload, _SAVE_ACK if ok else "⚠️")
         if ok:
             _mark_card_researched(
-                row, summary="saved via reaction (blank description)",
-                fit_note="saved via reaction",
+                row, summary="saved via ➕ (blank description)",
+                fit_note="saved via ➕ reaction",
             )
         logger.info(
-            "linky: save-reaction (discovery) on %s -> created=%s result=%s",
+            "linky: save-reaction on %s -> created=%s result=%s",
             url, res.get("created"), res.get("result_code"),
-        )
-
-    async def _save_toread_card(
-        self, payload: discord.RawReactionActionEvent, row: dict, url: str,
-    ) -> None:
-        try:
-            res = await asyncio.to_thread(pinboard_client.clear_toread, url)
-        except Exception:  # noqa: BLE001
-            logger.exception("linky: clear_toread failed for %s", url)
-            await self._react_card(payload, "❌")
-            return
-        if res.get("error"):
-            # Bookmark vanished between the card post and the reaction —
-            # nothing to clear. Quietly ack with ⚠️ so Jamie knows the
-            # gesture was seen but didn't change anything.
-            await self._react_card(payload, "⚠️")
-            logger.info("linky: save-reaction (toread) on %s -> no bookmark", url)
-            return
-        ok = res.get("result_code") == "done"
-        await self._react_card(payload, "👍" if ok else "⚠️")
-        logger.info(
-            "linky: save-reaction (toread) on %s -> cleared=%s result=%s",
-            url, ok, res.get("result_code"),
         )
 
     async def _handle_brief_reaction(
         self, payload: discord.RawReactionActionEvent, row: dict,
     ) -> None:
-        """⏩ path: bookmark (if needed) and tag the URL ``_brief``.
-        Works on every source — discovery cards create the bookmark
-        fresh, toread cards merge ``_brief`` into the existing tag
-        list while preserving title / description / toread / shared."""
+        """⏩ — Earmark as Briefly. Move (PROPOSED|CONSIDERING) → +BRIEF.
+
+        Discovery: create bookmark + tag `_brief`.
+        Research: merge `_brief` into existing tag list, preserving
+        title / description / toread / shared.
+        Both ack 🔖.
+        """
         url = (row.get("url") or "").strip()
         if not url:
             return
@@ -322,6 +335,118 @@ class LinkyBot(PersonaBot):
             "linky: brief-reaction on %s -> created=%s tags=%r result=%s",
             url, res.get("created"), res.get("tags"), res.get("result_code"),
         )
+
+    async def _handle_reviewed_reaction(
+        self, payload: discord.RawReactionActionEvent, row: dict,
+    ) -> None:
+        """✅ — Reviewed, fine link, nothing to do. Move → REVIEWED.
+
+        Discovery: write `judged_interesting=0` with note 'reviewed-fine'
+        to ``pinboard_popular_seen`` so the URL won't re-surface from
+        the same feed or via cross-source uplift.
+        Research: clear the Pinboard `toread` flag, keep the bookmark
+        as archive.
+        Both ack 👀.
+        """
+        url = (row.get("url") or "").strip()
+        if not url:
+            return
+        source = row.get("source") or ""
+
+        if source == "toread":
+            try:
+                res = await asyncio.to_thread(pinboard_client.clear_toread, url)
+            except Exception:  # noqa: BLE001
+                logger.exception("linky: clear_toread failed for %s", url)
+                await self._react_card(payload, "❌")
+                return
+            if res.get("error"):
+                await self._react_card(payload, "⚠️")
+                logger.info("linky: reviewed (toread) on %s -> no bookmark", url)
+                return
+            ok = res.get("result_code") == "done"
+            await self._react_card(payload, _REVIEWED_ACK if ok else "⚠️")
+            logger.info(
+                "linky: reviewed (toread) on %s -> cleared=%s result=%s",
+                url, ok, res.get("result_code"),
+            )
+            return
+
+        if source not in _DISCOVERY_SOURCES:
+            return
+
+        # Discovery: record the judgment so future scans / uplift skip it.
+        try:
+            await asyncio.to_thread(
+                db.set_popular_seen_judgment,
+                url=url,
+                interesting=False,
+                note="reviewed-fine",
+                title=row.get("title"),
+                verdict_source=source,
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception("linky: set_popular_seen_judgment failed for %s", url)
+            await self._react_card(payload, "❌")
+            return
+        await self._react_card(payload, _REVIEWED_ACK)
+        logger.info("linky: reviewed (discovery) on %s -> judgment=reviewed-fine", url)
+
+    async def _handle_reject_reaction(
+        self, payload: discord.RawReactionActionEvent, row: dict,
+    ) -> None:
+        """🛑 — Remove from consideration. Move → REJECTED.
+
+        Discovery: write `judged_interesting=0` with note 'rejected' to
+        ``pinboard_popular_seen``. (Same URL-doesn't-resurface effect as
+        ✅, but the editorial intent — and signal — is stronger.)
+        Research: delete the Pinboard bookmark entirely via
+        ``posts/delete``.
+        Both ack 🚫.
+        """
+        url = (row.get("url") or "").strip()
+        if not url:
+            return
+        source = row.get("source") or ""
+
+        if source == "toread":
+            try:
+                res = await asyncio.to_thread(pinboard_client.delete_bookmark, url)
+            except Exception:  # noqa: BLE001
+                logger.exception("linky: delete_bookmark failed for %s", url)
+                await self._react_card(payload, "❌")
+                return
+            ok = res.get("deleted")
+            if not ok and res.get("result_code") == "item not found":
+                # Bookmark already gone — treat as a soft success.
+                await self._react_card(payload, "⚠️")
+                logger.info("linky: reject (toread) on %s -> already gone", url)
+                return
+            await self._react_card(payload, _REJECT_ACK if ok else "⚠️")
+            logger.info(
+                "linky: reject (toread) on %s -> deleted=%s result=%s",
+                url, ok, res.get("result_code"),
+            )
+            return
+
+        if source not in _DISCOVERY_SOURCES:
+            return
+
+        try:
+            await asyncio.to_thread(
+                db.set_popular_seen_judgment,
+                url=url,
+                interesting=False,
+                note="rejected",
+                title=row.get("title"),
+                verdict_source=source,
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception("linky: set_popular_seen_judgment failed for %s", url)
+            await self._react_card(payload, "❌")
+            return
+        await self._react_card(payload, _REJECT_ACK)
+        logger.info("linky: reject (discovery) on %s -> judgment=rejected", url)
 
     async def _react_card(
         self, payload: discord.RawReactionActionEvent, emoji: str,

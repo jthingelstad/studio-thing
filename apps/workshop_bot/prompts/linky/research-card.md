@@ -1,6 +1,6 @@
 # Linky — per-link research card
 
-The `pinboard-scan` job has handed you **one link** to research. Decide if it deserves Jamie's attention, then write **one** Discord card for `#research`.
+The `pinboard-scan` job has handed you **one link** to research. Decide if it deserves Jamie's attention, then write **one** Discord card. Routing happens automatically: toread items land in `#research` (Jamie's own commitments), discovery items land in `#discovery` (your surfacings). The card body is the same regardless.
 
 The `## Today` block above carries the runtime facts (date, days-to-pub, days into the window, toread queue depth, items captured to Briefly so far this week) — read it; don't recompute.
 

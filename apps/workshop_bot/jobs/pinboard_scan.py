@@ -724,8 +724,14 @@ async def _process_one(
     # The reply / save / brief reactions all preserve the message id
     # either way; embeds don't affect routing.
     card_text = _suppress_non_article_embeds(_remove_retired_card_lines(payload), url)
+    # Per-source channel routing: toread items (Jamie's own Pinboard adds +
+    # Feedbin starred mirror) land in #research; discovery feeds (Pinboard
+    # popular + future feeds) land in #discovery. Uplift cards inherit
+    # their primary source's routing — a `popular`-source uplift card
+    # stays in #discovery.
+    dest_env = "DISCORD_CHANNEL_RESEARCH" if source == "toread" else "DISCORD_CHANNEL_DISCOVERY"
     msg = await ctx.send_one(
-        "DISCORD_CHANNEL_RESEARCH", card_text, persona="linky",
+        dest_env, card_text, persona="linky",
         suppress_embeds=False,
     )
     if msg is None:

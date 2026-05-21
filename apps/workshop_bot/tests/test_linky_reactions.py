@@ -148,8 +148,10 @@ class LinkyReplyHandlerTests(_DBTestCase):
 
 
 class LinkySaveReactionTests(_DBTestCase):
-    """Owner reactions ✅/👍 on a popular-feed research card → save the
-    URL to Pinboard as toread+public with a blank description."""
+    """Owner reaction ➕ → save the URL for consideration. On a
+    discovery-source card this creates the Pinboard bookmark
+    (toread=yes shared=yes, blank description). On a toread-source card
+    it's a no-op (the bookmark already exists; acks ⚠️)."""
 
     def setUp(self):
         super().setUp()
@@ -197,12 +199,14 @@ class LinkySaveReactionTests(_DBTestCase):
             add_mock,
         )
 
-    def test_save_reaction_on_popular_creates_bookmark(self):
+    def test_save_reaction_on_discovery_creates_bookmark(self):
+        # ➕ on a discovery card: bookmark `toread=yes shared=yes` with
+        # blank description. Ack 📌.
         db.record_research_message(
             discord_message_id="2001", url="http://p/1", source="popular",
             title="Popular Title",
         )
-        p = self._payload(user_id=777, emoji="✅", message_id=2001)
+        p = self._payload(user_id=777, emoji="➕", message_id=2001)
         get_p, add_p, add_mock = self._patch_pinboard()
         get_p.start(); add_p.start()
         try:
@@ -218,7 +222,9 @@ class LinkySaveReactionTests(_DBTestCase):
         self.assertFalse(kwargs["replace"])
         self.assertEqual(self.reactions, ["📌"])
 
-    def test_thumbs_up_works_too(self):
+    def test_retired_thumbs_up_is_ignored(self):
+        # 👍 retired in the gesture overhaul — it's now just another
+        # unrecognized emoji, no save fires.
         db.record_research_message(
             discord_message_id="2002", url="http://p/2", source="popular",
         )
@@ -229,8 +235,8 @@ class LinkySaveReactionTests(_DBTestCase):
             asyncio.run(self.bot.on_raw_reaction_add(p))
         finally:
             add_p.stop(); get_p.stop()
-        add_mock.assert_called_once()
-        self.assertEqual(self.reactions, ["📌"])
+        add_mock.assert_not_called()
+        self.assertEqual(self.reactions, [])
 
     def test_other_emoji_ignored(self):
         db.record_research_message(
@@ -250,7 +256,7 @@ class LinkySaveReactionTests(_DBTestCase):
         db.record_research_message(
             discord_message_id="2004", url="http://p/4", source="popular",
         )
-        p = self._payload(user_id=888, emoji="✅", message_id=2004)
+        p = self._payload(user_id=888, emoji="➕", message_id=2004)
         get_p, add_p, add_mock = self._patch_pinboard()
         get_p.start(); add_p.start()
         try:
@@ -259,48 +265,14 @@ class LinkySaveReactionTests(_DBTestCase):
             add_p.stop(); get_p.stop()
         add_mock.assert_not_called()
 
-    def test_toread_card_save_reaction_clears_toread(self):
-        # On toread cards, ✅/👍 mirrors discovery's "save" — clears the
-        # toread flag (takes the item OUT of the queue) while preserving
-        # everything else. Ack is 👍.
+    def test_save_reaction_on_toread_card_is_noop(self):
+        # ➕ on a toread card: already CONSIDERING — ack ⚠️ to signal
+        # the gesture was seen but didn't do anything.
         db.record_research_message(
             discord_message_id="2005", url="http://t/1", source="toread",
-            title="A toread item",
         )
-        p = self._payload(user_id=777, emoji="✅", message_id=2005)
-        existing = [{
-            "href": "http://t/1",
-            "description": "A toread item",  # Pinboard "description" = title
-            "extended": "some prior commentary",
-            "tags": "tag-a tag-b",
-            "toread": "yes",
-            "shared": "yes",
-        }]
-        get_p, add_p, add_mock = self._patch_pinboard(existing_posts=existing)
-        get_p.start(); add_p.start()
-        try:
-            asyncio.run(self.bot.on_raw_reaction_add(p))
-        finally:
-            add_p.stop(); get_p.stop()
-        add_mock.assert_called_once()
-        kwargs = add_mock.call_args.kwargs
-        self.assertEqual(kwargs["url"], "http://t/1")
-        self.assertEqual(kwargs["description"], "some prior commentary")  # preserved
-        self.assertEqual(kwargs["tags"], "tag-a tag-b")                   # preserved
-        self.assertFalse(kwargs["toread"])                                # CLEARED
-        self.assertTrue(kwargs["shared"])                                  # preserved
-        self.assertTrue(kwargs["replace"])
-        self.assertEqual(self.reactions, ["👍"])
-
-    def test_toread_save_with_no_existing_bookmark_acks_warning(self):
-        # Edge case: the toread card points at a URL that's since been
-        # deleted from Pinboard. clear_toread has nothing to clear; we
-        # ack ⚠️ so Jamie sees the gesture wasn't a silent no-op.
-        db.record_research_message(
-            discord_message_id="2055", url="http://t/gone", source="toread",
-        )
-        p = self._payload(user_id=777, emoji="👍", message_id=2055)
-        get_p, add_p, add_mock = self._patch_pinboard(existing_posts=[])
+        p = self._payload(user_id=777, emoji="➕", message_id=2005)
+        get_p, add_p, add_mock = self._patch_pinboard()
         get_p.start(); add_p.start()
         try:
             asyncio.run(self.bot.on_raw_reaction_add(p))
@@ -310,7 +282,7 @@ class LinkySaveReactionTests(_DBTestCase):
         self.assertEqual(self.reactions, ["⚠️"])
 
     def test_unknown_message_id_ignored(self):
-        p = self._payload(user_id=777, emoji="✅", message_id=999999)
+        p = self._payload(user_id=777, emoji="➕", message_id=999999)
         get_p, add_p, add_mock = self._patch_pinboard()
         get_p.start(); add_p.start()
         try:
@@ -319,12 +291,14 @@ class LinkySaveReactionTests(_DBTestCase):
             add_p.stop(); get_p.stop()
         add_mock.assert_not_called()
 
-    def test_already_bookmarked_just_acknowledges(self):
+    def test_save_on_already_bookmarked_discovery_still_acks(self):
+        # ➕ on a discovery card whose URL is already in Pinboard —
+        # bookmark_blank returns "item already exists" and skips
+        # posts_add. Linky still acks 📌 (the gesture's intent landed).
         db.record_research_message(
             discord_message_id="2006", url="http://p/6", source="popular",
         )
-        p = self._payload(user_id=777, emoji="✅", message_id=2006)
-        # posts_get returns an existing bookmark; posts_add should NOT be called.
+        p = self._payload(user_id=777, emoji="➕", message_id=2006)
         get_p, add_p, add_mock = self._patch_pinboard(
             existing_posts=[{"href": "http://p/6"}],
         )
@@ -336,11 +310,11 @@ class LinkySaveReactionTests(_DBTestCase):
         add_mock.assert_not_called()
         self.assertEqual(self.reactions, ["📌"])
 
-    def test_posts_add_failure_reacts_with_x(self):
+    def test_save_reaction_failure_reacts_with_x(self):
         db.record_research_message(
             discord_message_id="2007", url="http://p/7", source="popular",
         )
-        p = self._payload(user_id=777, emoji="✅", message_id=2007)
+        p = self._payload(user_id=777, emoji="➕", message_id=2007)
         get_p, add_p, _ = self._patch_pinboard(
             add_side_effect=RuntimeError("boom"),
         )
@@ -351,27 +325,222 @@ class LinkySaveReactionTests(_DBTestCase):
             add_p.stop(); get_p.stop()
         self.assertEqual(self.reactions, ["❌"])
 
-    def test_save_reaction_on_popular_card_creates_bookmark(self):
+
+class LinkyReviewedReactionTests(_DBTestCase):
+    """Owner reaction ✅ → "reviewed, fine link, nothing to do".
+    Discovery: write a 'reviewed-fine' judgment so it doesn't re-surface.
+    Research: clear the Pinboard `toread` flag, keep the bookmark.
+    Both ack 👀."""
+
+    def setUp(self):
+        super().setUp()
+        import types
+        from apps.workshop_bot.personas.linky import LinkyBot
+        self.bot = LinkyBot.__new__(LinkyBot)
+        self.bot.user = MagicMock()
+        self.bot.user.id = 1000
+        self.bot.deps = types.SimpleNamespace(team=None, corpus=None)
+        self.reactions: list[str] = []
+        async def _fake_react(payload, emoji):
+            self.reactions.append(emoji)
+        self.bot._react_card = _fake_react
+        os.environ["DISCORD_OWNER_USER_ID"] = "777"
+
+    def tearDown(self):
+        os.environ.pop("DISCORD_OWNER_USER_ID", None)
+        super().tearDown()
+
+    def _payload(self, *, user_id, emoji, message_id, channel_id=999):
+        p = MagicMock()
+        p.user_id = user_id
+        p.message_id = message_id
+        p.channel_id = channel_id
+        p.emoji = MagicMock()
+        p.emoji.__str__ = lambda s: emoji
+        return p
+
+    def test_reviewed_on_discovery_records_judgment(self):
         db.record_research_message(
-            discord_message_id="2009", url="https://example.com/post",
-            source="popular", title="A Popular Post",
+            discord_message_id="5001", url="https://disc.example/x",
+            source="popular", title="A discovery item",
         )
-        p = self._payload(user_id=777, emoji="✅", message_id=2009)
-        get_p, add_p, add_mock = self._patch_pinboard()
-        get_p.start(); add_p.start()
-        try:
+        p = self._payload(user_id=777, emoji="✅", message_id=5001)
+        asyncio.run(self.bot.on_raw_reaction_add(p))
+        with db.connect() as conn:
+            row = conn.execute(
+                "SELECT judged_interesting, judgment_note FROM pinboard_popular_seen "
+                "WHERE url = ?", ("https://disc.example/x",),
+            ).fetchone()
+        self.assertIsNotNone(row)
+        self.assertEqual(row["judged_interesting"], 0)
+        self.assertEqual(row["judgment_note"], "reviewed-fine")
+        self.assertEqual(self.reactions, ["👀"])
+
+    def test_reviewed_on_toread_clears_toread_flag(self):
+        db.record_research_message(
+            discord_message_id="5002", url="https://re.example/t",
+            source="toread", title="A toread item",
+        )
+        p = self._payload(user_id=777, emoji="✅", message_id=5002)
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        existing = [{
+            "href": "https://re.example/t",
+            "description": "A toread item",
+            "extended": "prior commentary",
+            "tags": "tag-a tag-b",
+            "toread": "yes",
+            "shared": "yes",
+        }]
+        add_mock = MagicMock(return_value={"result_code": "done"})
+        with patch.object(pbc, "posts_get",
+                          MagicMock(return_value={"posts": existing})), \
+             patch.object(pbc, "posts_add", add_mock):
             asyncio.run(self.bot.on_raw_reaction_add(p))
-        finally:
-            add_p.stop(); get_p.stop()
         add_mock.assert_called_once()
         kwargs = add_mock.call_args.kwargs
-        self.assertEqual(kwargs["url"], "https://example.com/post")
-        self.assertEqual(kwargs["title"], "A Popular Post")
-        self.assertTrue(kwargs["toread"])
+        self.assertEqual(kwargs["url"], "https://re.example/t")
+        self.assertEqual(kwargs["description"], "prior commentary")
+        self.assertEqual(kwargs["tags"], "tag-a tag-b")
+        self.assertFalse(kwargs["toread"])
         self.assertTrue(kwargs["shared"])
-        self.assertEqual(self.reactions, ["📌"])
+        self.assertTrue(kwargs["replace"])
+        self.assertEqual(self.reactions, ["👀"])
 
-    # ---------- ⏩ Briefly reaction ----------
+    def test_reviewed_on_toread_with_no_bookmark_acks_warning(self):
+        db.record_research_message(
+            discord_message_id="5003", url="https://re.example/gone",
+            source="toread",
+        )
+        p = self._payload(user_id=777, emoji="✅", message_id=5003)
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        with patch.object(pbc, "posts_get",
+                          MagicMock(return_value={"posts": []})), \
+             patch.object(pbc, "posts_add", MagicMock()):
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        self.assertEqual(self.reactions, ["⚠️"])
+
+
+class LinkyRejectReactionTests(_DBTestCase):
+    """Owner reaction 🛑 → "remove from consideration".
+    Discovery: write a 'rejected' judgment.
+    Research: delete the Pinboard bookmark via posts/delete.
+    Both ack 🚫."""
+
+    def setUp(self):
+        super().setUp()
+        import types
+        from apps.workshop_bot.personas.linky import LinkyBot
+        self.bot = LinkyBot.__new__(LinkyBot)
+        self.bot.user = MagicMock()
+        self.bot.user.id = 1000
+        self.bot.deps = types.SimpleNamespace(team=None, corpus=None)
+        self.reactions: list[str] = []
+        async def _fake_react(payload, emoji):
+            self.reactions.append(emoji)
+        self.bot._react_card = _fake_react
+        os.environ["DISCORD_OWNER_USER_ID"] = "777"
+
+    def tearDown(self):
+        os.environ.pop("DISCORD_OWNER_USER_ID", None)
+        super().tearDown()
+
+    def _payload(self, *, user_id, emoji, message_id, channel_id=999):
+        p = MagicMock()
+        p.user_id = user_id
+        p.message_id = message_id
+        p.channel_id = channel_id
+        p.emoji = MagicMock()
+        p.emoji.__str__ = lambda s: emoji
+        return p
+
+    def test_reject_on_discovery_records_judgment(self):
+        db.record_research_message(
+            discord_message_id="6001", url="https://disc.example/r",
+            source="popular", title="Rejected discovery item",
+        )
+        p = self._payload(user_id=777, emoji="🛑", message_id=6001)
+        asyncio.run(self.bot.on_raw_reaction_add(p))
+        with db.connect() as conn:
+            row = conn.execute(
+                "SELECT judged_interesting, judgment_note FROM pinboard_popular_seen "
+                "WHERE url = ?", ("https://disc.example/r",),
+            ).fetchone()
+        self.assertIsNotNone(row)
+        self.assertEqual(row["judged_interesting"], 0)
+        self.assertEqual(row["judgment_note"], "rejected")
+        self.assertEqual(self.reactions, ["🚫"])
+
+    def test_reject_on_toread_deletes_bookmark(self):
+        db.record_research_message(
+            discord_message_id="6002", url="https://re.example/del",
+            source="toread", title="A toread item",
+        )
+        p = self._payload(user_id=777, emoji="🛑", message_id=6002)
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        delete_mock = MagicMock(return_value={"result_code": "done", "deleted": True})
+        with patch.object(pbc, "delete_bookmark", delete_mock):
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        delete_mock.assert_called_once_with("https://re.example/del")
+        self.assertEqual(self.reactions, ["🚫"])
+
+    def test_reject_on_toread_already_gone_acks_warning(self):
+        db.record_research_message(
+            discord_message_id="6003", url="https://re.example/gone2",
+            source="toread",
+        )
+        p = self._payload(user_id=777, emoji="🛑", message_id=6003)
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        delete_mock = MagicMock(return_value={
+            "result_code": "item not found", "deleted": False,
+        })
+        with patch.object(pbc, "delete_bookmark", delete_mock):
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        self.assertEqual(self.reactions, ["⚠️"])
+
+    def test_reject_on_toread_delete_failure_acks_with_x(self):
+        db.record_research_message(
+            discord_message_id="6004", url="https://re.example/boom",
+            source="toread",
+        )
+        p = self._payload(user_id=777, emoji="🛑", message_id=6004)
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        with patch.object(pbc, "delete_bookmark",
+                          MagicMock(side_effect=RuntimeError("net"))):
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        self.assertEqual(self.reactions, ["❌"])
+
+
+class LinkyBriefReactionTests(_DBTestCase):
+    """⏩ — Earmark as Briefly. Works on both channels; merges the
+    `_brief` tag into the bookmark (creating one if needed). Ack 🔖.
+    Behavior unchanged in the gesture overhaul."""
+
+    def setUp(self):
+        super().setUp()
+        import types
+        from apps.workshop_bot.personas.linky import LinkyBot
+        self.bot = LinkyBot.__new__(LinkyBot)
+        self.bot.user = MagicMock()
+        self.bot.user.id = 1000
+        self.bot.deps = types.SimpleNamespace(team=None, corpus=None)
+        self.reactions: list[str] = []
+        async def _fake_react(payload, emoji):
+            self.reactions.append(emoji)
+        self.bot._react_card = _fake_react
+        os.environ["DISCORD_OWNER_USER_ID"] = "777"
+
+    def tearDown(self):
+        os.environ.pop("DISCORD_OWNER_USER_ID", None)
+        super().tearDown()
+
+    def _payload(self, *, user_id, emoji, message_id, channel_id=999):
+        p = MagicMock()
+        p.user_id = user_id
+        p.message_id = message_id
+        p.channel_id = channel_id
+        p.emoji = MagicMock()
+        p.emoji.__str__ = lambda s: emoji
+        return p
 
     def _patch_tag_as_brief(self, *, return_value=None, side_effect=None):
         from apps.workshop_bot.systems.pinboard import client as pbc
@@ -555,7 +724,7 @@ class LinkyCrossLaneDedupTests(_DBTestCase):
         self.assertEqual(db.filter_unresearched_urls([self.URL_REACT]), [self.URL_REACT])
 
         from apps.workshop_bot.systems.pinboard import client as pbc
-        p = self._payload(user_id=777, emoji="✅", message_id=4001)
+        p = self._payload(user_id=777, emoji="➕", message_id=4001)
         with patch.object(pbc, "posts_get", MagicMock(return_value={"posts": []})), \
              patch.object(pbc, "posts_add", MagicMock(return_value={"result_code": "done"})):
             asyncio.run(self.bot.on_raw_reaction_add(p))
@@ -573,7 +742,7 @@ class LinkyCrossLaneDedupTests(_DBTestCase):
             source="popular", title="x",
         )
         from apps.workshop_bot.systems.pinboard import client as pbc
-        p = self._payload(user_id=777, emoji="✅", message_id=4002)
+        p = self._payload(user_id=777, emoji="➕", message_id=4002)
         with patch.object(pbc, "posts_get", MagicMock(return_value={"posts": []})), \
              patch.object(pbc, "posts_add", MagicMock(side_effect=RuntimeError("boom"))):
             asyncio.run(self.bot.on_raw_reaction_add(p))

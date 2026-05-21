@@ -81,6 +81,8 @@ class PinboardScanJobTests(_DBTestCase):
     def test_pass_when_both_sources_empty(self):
         ctx, team = self._ctx_and_team()
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         patches = self._stub_sources()
         try:
             for p in patches:
@@ -92,6 +94,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertTrue(result.ok)
         self.assertEqual(result.data["posted"], 0)
         team.linky.core.assert_not_awaited()
@@ -99,6 +103,8 @@ class PinboardScanJobTests(_DBTestCase):
 
     def test_posts_card_for_toread_item(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         ctx, team = self._ctx_and_team(replies=[
             "**[The Piece](https://example.com/x)** · [pin](https://pinboard.in/b/abc)\n\n"
             "A solid argument about X.\n\nFresh territory, likely Notable."
@@ -118,6 +124,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertTrue(result.ok, result.message)
         self.assertEqual(result.data["posted"], 1)
         team.channel.send.assert_awaited_once()
@@ -131,6 +139,8 @@ class PinboardScanJobTests(_DBTestCase):
 
     def test_skip_signal_marks_popular_seen_no_post(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         ctx, team = self._ctx_and_team(replies=["SKIP: not Jamie's lane"])
         popular = [{
             "url": "https://example.com/skip", "title": "Some Popular Item",
@@ -147,6 +157,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertTrue(result.ok)
         self.assertEqual(result.data["posted"], 0)
         self.assertEqual(result.data["skip"], 1)
@@ -164,6 +176,8 @@ class PinboardScanJobTests(_DBTestCase):
 
     def test_fetch_failed_signal_does_not_mark_seen(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         ctx, team = self._ctx_and_team(replies=["FETCH_FAILED: 404"])
         popular = [{
             "url": "https://example.com/stale", "title": "Stale",
@@ -180,6 +194,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertEqual(result.data["posted"], 0)
         self.assertEqual(result.data["fail"], 1)
         team.channel.send.assert_not_awaited()
@@ -193,6 +209,8 @@ class PinboardScanJobTests(_DBTestCase):
 
     def test_posts_card_for_popular_item(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         ctx, team = self._ctx_and_team(replies=[
             "**[A popular post](https://example.com/post)**\n\n"
             "A clear piece about **autonomy**.\n\nFresh territory, possible Notable."
@@ -212,6 +230,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertTrue(result.ok, result.message)
         self.assertEqual(result.data["posted"], 1)
         # Recorded with source='popular' for the reply / reaction lookup.
@@ -229,6 +249,8 @@ class PinboardScanJobTests(_DBTestCase):
         # SKIP from a discovery source lands in the same shared
         # pinboard_popular_seen dedup as popular SKIPs.
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         ctx, team = self._ctx_and_team(replies=["SKIP: too niche"])
         popular = [{"url": "https://x/niche", "title": "Niche thing"}]
         patches = self._stub_sources(popular=popular)
@@ -242,6 +264,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertEqual(result.data["posted"], 0)
         self.assertEqual(result.data["skip"], 1)
         with db.connect() as conn:
@@ -254,6 +278,8 @@ class PinboardScanJobTests(_DBTestCase):
 
     def test_toread_first_then_popular_ordering(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         # Replies fire in toread → popular order; reply ids will confirm order.
         ctx, team = self._ctx_and_team(replies=[
             "**[T](https://t/1)** · [pin](https://pinboard.in/b/t)\n\nT.\n\nT.",
@@ -273,6 +299,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertEqual(result.data["posted"], 2)
         # The first recorded message id was the toread one.
         row_t = db.lookup_research_message("1001")
@@ -292,6 +320,8 @@ class PinboardScanJobTests(_DBTestCase):
         fire. We simulate the first scan by acquiring the same job-key
         lock manually in the test."""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         ctx, team = self._ctx_and_team()
         patches = self._stub_sources()
         # Pre-acquire the lock so run() sees it as "already running."
@@ -307,6 +337,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertTrue(result.ok)
         self.assertEqual(result.data["posted"], 0)
         self.assertIn("already running", result.message)
@@ -346,6 +378,8 @@ class PinboardScanJobTests(_DBTestCase):
         second scan's lookup hits the first scan's row and the URL is
         silent-dropped."""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         url_first = "https://homewithinnowhere.com/posts/x.html#fnref1"
         url_second = "https://homewithinnowhere.com/posts/x.html"
 
@@ -382,6 +416,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertEqual(result.data["posted"], 0)
         self.assertEqual(result.data.get("uplift", 0), 0)
         team2.linky.core.assert_not_awaited()
@@ -393,6 +429,8 @@ class PinboardScanJobTests(_DBTestCase):
         'toread')`` — so a later discovery-feed surfacing of the same
         URL classifies as cross-source uplift, not as fresh."""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         url = "https://example.com/jamies-pick"
         ctx, team = self._ctx_and_team(replies=[
             f"**[Pick]({url})** · [pin](https://pinboard.in/b/xx)\n\n"
@@ -413,6 +451,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         # All three dedup writes happen:
         # 1. pinboard_research_done (toread lane's original write)
         self.assertEqual(db.filter_unresearched_urls([url]), [])
@@ -430,6 +470,8 @@ class PinboardScanJobTests(_DBTestCase):
         cross-lane gap where a popular-feed-cardified URL Jamie later adds
         to his toread queue would otherwise be re-researched."""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         url = "https://x.example/discovery-rd"
         ctx, team = self._ctx_and_team(replies=[
             f"**[Popular Pick]({url})**\n\n"
@@ -447,6 +489,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertEqual(db.filter_unresearched_urls([url]), [])
 
     def test_toread_then_discovery_surfaces_as_uplift(self):
@@ -456,6 +500,8 @@ class PinboardScanJobTests(_DBTestCase):
         ``verdict_source='toread'`` in the uplift block), not as a fresh
         second card."""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         url = "https://x.example/early-pick"
 
         # Day 1: toread card posted.
@@ -495,6 +541,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertEqual(result.data["uplift"], 1)
         self.assertEqual(result.data["posted"], 1)
         # The uplift block in the Day 2 user message names "toread" as
@@ -536,6 +584,8 @@ class PinboardScanJobTests(_DBTestCase):
         ``## Cross-source uplift`` context block inside the card body
         still carries the prior history."""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         url = "https://x.example/uplift-loose"
         # Pre-state: an existing card-post on this URL from Jamie's toread lane,
         # plus the popular_seen verdict + sighting.
@@ -564,6 +614,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertEqual(result.data["uplift"], 1)
         # The uplift card was sent — no ``reference`` kwarg should be on
         # any call to ``channel.send`` (the reply-threading is gone).
@@ -589,6 +641,8 @@ class PinboardScanJobTests(_DBTestCase):
         supportable. Backfill a sighting for the current spec and
         silent-drop, same as the normal same-feed-repeat case."""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         url = "https://x.example/legacy-orphan"
         # popular_seen row exists; sightings table is EMPTY for this URL.
         db.mark_popular_seen([{"url": url, "title": "Orphan"}],
@@ -608,6 +662,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         # No card, no uplift, no LLM call.
         self.assertEqual(result.data["posted"], 0)
         self.assertEqual(result.data.get("uplift", 0), 0)
@@ -622,6 +678,8 @@ class PinboardScanJobTests(_DBTestCase):
         from a different feed, the cross-source signal is genuine and
         the URL should still produce an uplift card."""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         url = "https://x.example/legit-cross-source"
         db.mark_popular_seen([{"url": url, "title": "Genuine"}],
                               judged={url: (True, "card posted")})
@@ -643,6 +701,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         # Genuine cross-source uplift card.
         self.assertEqual(result.data["uplift"], 1)
         self.assertEqual(result.data["posted"], 1)
@@ -652,6 +712,8 @@ class PinboardScanJobTests(_DBTestCase):
         Today's silent-dedup applies: no LLM call, no card, no new
         sighting."""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         url = "https://x.example/repeat"
         db.mark_popular_seen([{"url": url, "title": "Repeat"}],
                               judged={url: (True, "card posted")})
@@ -670,6 +732,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertEqual(result.data["posted"], 0)
         team.linky.core.assert_not_awaited()
 
@@ -753,6 +817,8 @@ class PinboardScanJobTests(_DBTestCase):
 
     def test_archive_resonance_block_renders_when_hits_present(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         ctx, team = self._ctx_with_corpus_search(
             hits=[
                 {"issue_number": 341, "publish_date": "2025-09-13",
@@ -777,6 +843,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertTrue(result.ok, result.message)
         sent = team.linky.core.call_args.kwargs["latest"]
         self.assertIn("## Archive resonance", sent)
@@ -787,6 +855,8 @@ class PinboardScanJobTests(_DBTestCase):
 
     def test_archive_resonance_block_no_resonance_when_empty(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         ctx, team = self._ctx_with_corpus_search(
             hits=[],
             replies=["**[A](https://x/y)**\n\nB.\n\nFresh."],
@@ -803,12 +873,16 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         sent = team.linky.core.call_args.kwargs["latest"]
         self.assertIn("## Archive resonance", sent)
         self.assertIn("_(no resonance — fresh territory)_", sent)
 
     def test_archive_resonance_truncates_long_snippets(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         long_text = "word " * 500  # 2500 chars, will be aggressively truncated
         ctx, team = self._ctx_with_corpus_search(
             hits=[{"issue_number": 1, "publish_date": "2025-01-01",
@@ -827,6 +901,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         sent = team.linky.core.call_args.kwargs["latest"]
         # Find the snippet line and check its length.
         snippet_lines = [l for l in sent.splitlines() if l.startswith("  > ")]
@@ -839,6 +915,8 @@ class PinboardScanJobTests(_DBTestCase):
 
     def test_archive_resonance_uses_title_plus_description_for_toread(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         ctx, team = self._ctx_with_corpus_search(
             hits=[],
             replies=["**[A](https://x/y)** · [pin](https://pinboard.in/b/abc)\n\nA.\n\nB."],
@@ -859,6 +937,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         # thingy_retrieve.retrieve was called with title + description (toread path).
         call_args = self._retrieve_mock.call_args
         # Could be positional or keyword — pull the first positional arg.
@@ -876,6 +956,8 @@ class PinboardScanJobTests(_DBTestCase):
         link block — the bit appended after the prompt — to verify the
         data block is absent.)"""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         ctx, team = self._ctx_and_team(replies=[
             "**[A](https://x/y)**\n\nA.\n\nB."
         ])
@@ -899,6 +981,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         sent = team.linky.core.call_args.kwargs["latest"]
         link_block = sent.rsplit("## The link", 1)[-1]
         self.assertNotIn("## Archive resonance", link_block)
@@ -906,6 +990,8 @@ class PinboardScanJobTests(_DBTestCase):
 
     def test_archive_resonance_uses_title_only_for_discovery_sources(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         ctx, team = self._ctx_with_corpus_search(
             hits=[],
             replies=["**[A](https://x/y)**\n\nA.\n\nB."],
@@ -927,6 +1013,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         call_args = self._retrieve_mock.call_args
         query = call_args.args[0] if call_args.args else call_args.kwargs.get("query", "")
         self.assertIn("Title only", query)
@@ -937,6 +1025,8 @@ class PinboardScanJobTests(_DBTestCase):
         processed; the sixth's sighting is NOT recorded so it stays
         uplift-eligible on the next scan."""
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         # Seed six distinct URLs, each first-seen from Jamie's toread lane
         # with a card-posted verdict, with one toread sighting each.
         urls = [f"https://x.example/u{i}" for i in range(6)]
@@ -962,6 +1052,8 @@ class PinboardScanJobTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         # Only the cap (5) processed; the 6th left for next time.
         self.assertEqual(result.data["uplift"], 5)
         self.assertEqual(team.linky.core.await_count, 5)
@@ -986,6 +1078,8 @@ class PerLinkModelSelectionTests(_DBTestCase):
 
     def test_discovery_source_uses_default_model(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         url = "https://x.example/discovery-default"
         ctx, team = self._ctx_and_team(replies=[
             f"**[T]({url})**\n\nbody."
@@ -1002,11 +1096,15 @@ class PerLinkModelSelectionTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         # No model kwarg passed — persona default (Sonnet) kicks in.
         self.assertNotIn("model", team.linky.core.call_args.kwargs)
 
     def test_toread_source_uses_default_model(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
         url = "https://x.example/toread-default"
         ctx, team = self._ctx_and_team(replies=[
             f"**[T]({url})** · [pin](https://p/1)\n\nbody."
@@ -1024,6 +1122,8 @@ class PerLinkModelSelectionTests(_DBTestCase):
                     p.stop()
         finally:
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         # Same default-model contract as discovery — no per-call override.
         self.assertNotIn("model", team.linky.core.call_args.kwargs)
 
