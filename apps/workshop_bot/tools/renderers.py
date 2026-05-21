@@ -1,16 +1,21 @@
-"""Pure renderers for the three issue artifact formats.
+"""Pure renderers for the four issue artifact formats.
 
-The three formats — Buttondown email body, website archive, and audio
-transcript — each consume the same structured inputs (atoms + section
-bodies + features + metadata) and emit their own bytes directly. No
-shared intermediate text body that one format mutates and another
-strips. Each renderer can diverge freely without coupling to the other
-two.
+draft.md, archive.md, buttondown.md, and transcript/*.txt each have
+their own composition path. Every format takes the same structured
+inputs (atoms + section bodies + features + metadata + cta atoms +
+closer) and emits its own bytes directly. There is no shared
+intermediate text body that one format mutates while another strips.
+Each format embraces its medium's strengths: the website carries
+front matter + links extraction, the email carries audience-aware
+Liquid blocks + a tracking pixel, the audio path strips the cover
+atom at composition time and runs the body-to-script transform for
+TTS-shape work.
 
-This module is the public API the daily-render pipeline calls. The
-existing job wrappers (``build_publish``, ``compose_archive``,
-``compose_transcript``) delegate to it during the migration so byte
-parity is preserved while we shift consumers.
+The single shared piece is ``_compose_published_body`` — a structural
+helper that joins `---`-fenced parts. It takes optional per-section
+trailers (the email's Liquid splice hook) but doesn't insert markers
+or mutate text on the way out. Each renderer calls it once and adds
+its own format-specific touches.
 
 Conventions:
 
@@ -19,20 +24,13 @@ Conventions:
 - ``atoms`` keys: ``intro``, ``currently``, ``cover``, ``outro``,
   ``haiku``. Missing keys default to empty.
 - ``sections`` keys: ``notable``, ``journal``, ``brief``. Rendered
-  section bodies — may carry inline ``<!-- cta:N -->`` /
-  ``<!-- thanks:N -->`` markers in the email path.
+  section bodies, no CTA / thanks markers — supporter callouts only
+  enter the body via render_email_body's trailer hook.
 - ``features``: ``[(promoted_position, '## Heading\\n\\nbody'), ...]``
-  with positions like ``"after_notable"`` / ``"before_notable"`` /
-  ``"after_journal"`` / etc.
+  with positions ``"before_notable"`` / ``"after_notable"`` / etc.
 - ``cta_atoms``: ``{"cta:1": "supporter ask copy", "thanks:1": "..."}``
-  — already-loaded copy strings keyed by ``kind:slot_n``. Slots whose
-  copy is empty or missing leave the marker in place (build_publish's
-  current behavior; later steps may strip empty slots cleanly).
-
-Email-specific Liquid blocks stay inside ``render_email_body``;
-website-specific YAML front matter stays inside ``render_archive``;
-transcript-specific block-split logic stays inside
-``render_transcript_blocks``.
+  — already-loaded copy strings keyed by ``kind:slot_n``. Empty
+  slots are simply skipped (no Liquid block emitted).
 """
 
 from __future__ import annotations
@@ -44,8 +42,6 @@ from pathlib import Path
 from typing import Any, Iterable, Optional
 
 import yaml
-
-from . import issue_assembly
 
 
 # ---------- email (buttondown.md) ----------
@@ -115,24 +111,121 @@ def thanks_block(thanks_body: str) -> str:
     )
 
 
-def _build_marker_substitution(cta_atoms: dict[str, str]):
-    """Build the ``MARKER_RE.sub`` callback that replaces inline
-    ``<!-- cta:N -->`` / ``<!-- thanks:N -->`` markers with the
-    audience-aware Liquid block sourced from ``cta_atoms``.
+_SECTION_HEADINGS = {
+    "currently": "## Currently",
+    "notable": "## Notable",
+    "journal": "## Journal",
+    "brief": "## Briefly",
+}
 
-    Empty-copy slots leave the marker in place — caller is expected to
-    have validated copy presence pre-render."""
+_CLOSING = (
+    "Would you like to discuss the topics in the Weekly Thing further? "
+    "Check out the [Weekly Thing on Reddit](https://www.reddit.com/r/weeklything/). 👋\n\n"
+    "👨‍💻"
+)
 
-    def _replace(match):
-        kind = match.group(1)
-        slot_n = int(match.group(2))
-        key = f"{kind}:{slot_n}"
-        copy = (cta_atoms.get(key) or "").strip()
-        if not copy:
-            return match.group(0)
-        return supporter_block(copy) if kind == "cta" else thanks_block(copy)
 
-    return _replace
+def _format_haiku_block(haiku: str) -> str:
+    """The haiku close — the lead-in line, then the haiku itself
+    (already bold + hard-broken upstream by `_base.format_haiku`).
+    Returns "" if no haiku."""
+    haiku = (haiku or "").strip()
+    if not haiku:
+        return ""
+    return f"A haiku to leave you with…\n\n{haiku}"
+
+
+def _section_part(
+    section_name: str,
+    sections: dict[str, str],
+    features: list[tuple[str, str]],
+    *,
+    after_trailer: str = "",
+) -> str:
+    """Compose one parent section's part: heading + body + optional
+    trailer (e.g. an email Liquid CTA block) + any features declared at
+    the ``after_{section_name}`` position, all `---`-joined.
+
+    Returns "" if the parent section's body is empty — empty sections
+    drop out cleanly. Trailer + after-features are tied to the section
+    visually; if the section is gone, they go with it.
+    """
+    body = (sections.get(section_name) or "").strip()
+    if not body:
+        return ""
+    heading = _SECTION_HEADINGS[section_name]
+    chunks = [f"{heading}\n\n{body}"]
+    trailer = (after_trailer or "").strip()
+    if trailer:
+        chunks.append(trailer)
+    pos_label = f"after_{section_name}"
+    for pos, feat_body in features:
+        if pos == pos_label:
+            chunks.append(feat_body.strip())
+    return "\n\n---\n\n".join(chunks)
+
+
+def _join_body_parts(parts: list[str]) -> str:
+    """Drop empty parts; `---`-join the rest; ensure a trailing newline.
+    The single composition primitive shared by all three formats."""
+    parts = [p.rstrip() for p in parts if p and p.strip()]
+    return "\n\n---\n\n".join(parts) + "\n"
+
+
+def _compose_published_body(
+    *,
+    atoms: dict[str, str],
+    sections: dict[str, str],
+    features: list[tuple[str, str]],
+    closer: str,
+    section_trailers: Optional[dict[str, str]] = None,
+) -> str:
+    """The published body shape every format (archive, email, audio)
+    composes from. No block markers, no marker substitution — the
+    body is emitted directly with each part already in its final form.
+    Empty atoms / empty sections drop out naturally.
+
+    ``section_trailers`` is the email-only Liquid-splice hook keyed by
+    parent section name (``"notable"`` / ``"journal"`` / ``"brief"``).
+    Archive and audio pass nothing here.
+    """
+    trailers = section_trailers or {}
+    parts: list[str] = []
+
+    intro = (atoms.get("intro") or "").strip()
+    if intro:
+        parts.append(intro)
+
+    currently = (atoms.get("currently") or "").strip()
+    if currently:
+        parts.append(f"{_SECTION_HEADINGS['currently']}\n\n{currently}")
+
+    cover = (atoms.get("cover") or "").strip()
+    if cover:
+        parts.append(cover)
+
+    # Featured (Featured-category journal entries) before Notable.
+    for pos, body in features:
+        if pos == "before_notable":
+            parts.append(body.strip())
+
+    parts.append(_section_part("notable", sections, features, after_trailer=trailers.get("notable", "")))
+    parts.append(_section_part("journal", sections, features, after_trailer=trailers.get("journal", "")))
+    parts.append(_section_part("brief", sections, features, after_trailer=trailers.get("brief", "")))
+
+    outro = (atoms.get("outro") or "").strip()
+    if outro:
+        parts.append(outro)
+
+    # Haiku close + optional ## The Closer paragraph + Reddit-discuss + 👨‍💻
+    haiku_block = _format_haiku_block(atoms.get("haiku", ""))
+    closer_text = (closer or "").strip()
+    closer_block = f"## The Closer\n\n{closer_text}" if closer_text else ""
+    tail_pieces = [p for p in (haiku_block, closer_block, _CLOSING) if p]
+    if tail_pieces:
+        parts.append("\n\n".join(tail_pieces))
+
+    return _join_body_parts(parts)
 
 
 def render_email_body(
@@ -145,24 +238,40 @@ def render_email_body(
     closer: str = "",
     include_pixel: bool = True,
 ) -> str:
-    """Build the buttondown.md body from structured inputs.
+    """Build the buttondown.md body directly from structured inputs.
 
-    Returns the full body string: editor-mode comment + assembled body
-    (no block markers, with CTA / thanks markers substituted to Liquid)
-    + email-only tracking pixel.
+    CTA / thanks Liquid blocks are spliced in at hardcoded positions
+    (see ``CTA_SLOT_POSITIONS`` below) — no marker round-trip. Slots
+    whose atom is empty are simply omitted.
+
+    Returns the full body: editor-mode comment + composed body +
+    email-only tracking pixel.
     """
-    marker_substitution = (
-        _build_marker_substitution(cta_atoms) if cta_atoms else None
+    cta_atoms = cta_atoms or {}
+
+    # cta:1 → after Notable (free subscribers see CTA + Stripe buttons).
+    # cta:2 → after Journal.
+    # thanks:1 → after Briefly (premium subscribers see the thanks).
+    trailers: dict[str, str] = {}
+    cta_1 = (cta_atoms.get("cta:1") or "").strip()
+    cta_2 = (cta_atoms.get("cta:2") or "").strip()
+    thanks_1 = (cta_atoms.get("thanks:1") or "").strip()
+    if cta_1:
+        trailers["notable"] = supporter_block(cta_1)
+    if cta_2:
+        trailers["journal"] = supporter_block(cta_2)
+    if thanks_1:
+        trailers["brief"] = thanks_block(thanks_1)
+
+    body = _compose_published_body(
+        atoms=atoms, sections=sections, features=features,
+        closer=closer, section_trailers=trailers,
     )
-    return issue_assembly.assemble_publish(
-        atoms=atoms,
-        section_bodies=sections,
-        features=features,
-        issue_number=issue_number,
-        pixel_block=pixel_block(issue_number) if include_pixel else None,
-        marker_substitution=marker_substitution,
-        closer=closer,
-    )
+
+    body = _EDITOR_MODE_COMMENT + body
+    if include_pixel:
+        body = body.rstrip() + "\n\n" + pixel_block(issue_number) + "\n"
+    return body
 
 
 # ---------- email preview (buttondown.html input — Liquid stripped) ----------
@@ -203,16 +312,6 @@ def render_email_preview(email_body: str) -> str:
 
 # ---------- archive (archive.md + links.json) ----------
 
-# Strip the inline cta/thanks markers entirely on the way to archive
-# (the website doesn't host supporter callouts inline). Matches
-# compose_archive._strip_membership_markers.
-_ARCHIVE_MARKER_RE = re.compile(r"\n?<!--\s*(?:cta|thanks):\d+\s*-->\n?")
-
-
-def _strip_archive_markers(body: str) -> str:
-    cleaned = _ARCHIVE_MARKER_RE.sub("\n", body)
-    return re.sub(r"\n{3,}", "\n\n", cleaned)
-
 
 def render_archive_body(
     *,
@@ -221,17 +320,15 @@ def render_archive_body(
     features: list[tuple[str, str]],
     closer: str = "",
 ) -> str:
-    """Build the archive.md body (post-frontmatter) from structured
-    inputs. No block markers, no editor-mode comment, no CTA / thanks
-    markers — the website body is pure prose + headings + section
-    content."""
-    body = issue_assembly.assemble_final(
-        atoms=atoms, section_bodies=sections, features=features, closer=closer,
+    """Build the archive.md body (post-frontmatter) directly from
+    structured inputs. The website-shaped body: pure prose + headings
+    + section content. No editor-mode preamble, no Liquid blocks, no
+    CTA / thanks anything — supporter callouts are email-only.
+    """
+    return _compose_published_body(
+        atoms=atoms, sections=sections, features=features, closer=closer,
+        section_trailers=None,
     )
-    body = issue_assembly._strip_block_markers(body)
-    body = _strip_archive_markers(body)
-    body = re.sub(r"\n{3,}", "\n\n", body)
-    return body.strip() + "\n"
 
 
 def render_archive_frontmatter(
@@ -349,33 +446,25 @@ def render_audio_body(
     features: list[tuple[str, str]],
     closer: str = "",
 ) -> str:
-    """Build the audio-purpose body. Same structured inputs as the
-    archive renderer, with the cover atom dropped entirely (it carries
-    image + caption + date + location — all purely visual, none of
-    which belongs in TTS). The body-to-audio script transform handles
-    the remaining text-level shaping (number-to-word, URL stripping,
+    """Build the audio-purpose body directly from structured inputs.
+
+    Same compose path as archive, with the cover atom dropped (cover
+    image + caption + dateline + location are purely visual, never
+    belong in TTS). The body-to-audio script transform handles the
+    rest of the text-level shaping (number-to-word, URL stripping,
     section-heading cues, etc.).
 
-    This is the right seam in the new pipeline: audio never sees the
-    cover block, so there's no defensive regex strip needed for the
-    workshop path. The ``strip_cover_blocks`` regex in
-    ``pipeline/audio/script/common.py`` still matters for the legacy
-    backfill path that reads ``apps/site/archive/{N}.md`` directly.
+    The ``strip_cover_blocks`` regex in ``pipeline/audio/script/common.py``
+    still matters for the legacy backfill path that reads
+    ``apps/site/archive/{N}.md`` directly. The workshop pipeline never
+    needs it — the cover is gone before the body is composed.
     """
     audio_atoms = dict(atoms)
-    # Drop the cover atom — empty atom emits an empty block which
-    # _strip_block_markers then collapses (including its ## heading
-    # if any).
     audio_atoms["cover"] = ""
-    body = issue_assembly.assemble_final(
-        atoms=audio_atoms, section_bodies=sections, features=features,
-        closer=closer,
+    return _compose_published_body(
+        atoms=audio_atoms, sections=sections, features=features, closer=closer,
+        section_trailers=None,
     )
-    body = issue_assembly._strip_block_markers(body)
-    # Drop cta/thanks markers same as archive — they don't belong in audio.
-    body = _strip_archive_markers(body)
-    body = re.sub(r"\n{3,}", "\n\n", body)
-    return body.strip() + "\n"
 
 
 def render_transcript_blocks(

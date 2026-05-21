@@ -63,7 +63,7 @@ import asyncio
 import logging
 from typing import Any, Optional
 
-from ..tools import db, issue_assembly, issue_items, issue_items_render, render, renderers, s3
+from ..tools import db, issue_items, issue_items_render, render, renderers, s3
 from ..tools.discord import discord_io, interaction
 from ..tools.llm import anthropic_client
 from . import _base, _cover, _currently, _llm_job, compose_closer, compose_cta
@@ -582,66 +582,31 @@ def _render_final(
     *,
     closer: str = "",
 ) -> str:
-    """Read the post-mutation row state and assemble final.md.
+    """Build a baseline body for compose-closer to read.
 
-    ``closer``, if non-empty, is The Closer paragraph (no heading —
-    assembler supplies ``## The Closer``).
+    No marker plumbing — the closer just needs prose to ground its
+    archive-retrieval call. Composes via ``renderers.render_archive_body``
+    (the same path the archive renderer uses), then closer adds its
+    own paragraph downstream. Output is never written to disk; it's
+    only handed to compose_closer.
     """
     notable_rows = issue_items.list_items(issue_number, section="notable", include_promoted=False)
     journal_rows = issue_items.list_items(issue_number, section="journal", include_promoted=False)
     brief_rows = issue_items.list_items(issue_number, section="brief", include_promoted=False)
     promoted_rows = issue_items.promoted_items(issue_number)
 
-    # Membership-block markers → per-section trailing lists.
-    markers_after_synth, before_haiku, _plan = _assign_markers(data["membership_blocks"])
-    # Convert the synth-keyed markers map to row-id-keyed for the renderer.
-    markers_after_rid: dict[int, list[str]] = {
-        synth_to_row[sid]: ms for sid, ms in markers_after_synth.items()
-    }
-    trailing_target = _trailing_markers_target(notable_rows, journal_rows, brief_rows)
-
-    section_bodies: dict[str, str] = {}
-    section_bodies["notable"] = issue_items_render.render_notable_with_markers(
-        notable_rows, issue_number, markers_after_rid,
-        trailing_markers=before_haiku if trailing_target == "notable" else None,
-    )
-    section_bodies["journal"] = issue_items_render.render_journal_with_markers(
-        journal_rows, markers_after_rid,
-        trailing_markers=before_haiku if trailing_target == "journal" else None,
-    )
-    section_bodies["brief"] = issue_items_render.render_brief_with_markers(
-        brief_rows, markers_after_rid,
-        trailing_markers=before_haiku if trailing_target == "brief" else None,
-    )
-
-    # Promoted (featured) sections: render each row, group by position.
-    features: list[tuple[str, str]] = []
-    for row in promoted_rows:
-        body = issue_items_render.render_featured_section(row)
-        features.append((row["promoted_position"], body))
-
-    return issue_assembly.assemble_final(
-        atoms=atoms, section_bodies=section_bodies, features=features,
-        closer=closer,
-    )
-
-
-def _render_final_passthrough(issue_number: int, atoms: dict[str, str]) -> str:
-    """❌ path — render final.md from the existing row order (no thesis,
-    no promotions, no markers). Same shape; just the current state."""
-    notable_rows = issue_items.list_items(issue_number, section="notable", include_promoted=False)
-    journal_rows = issue_items.list_items(issue_number, section="journal", include_promoted=False)
-    brief_rows = issue_items.list_items(issue_number, section="brief", include_promoted=False)
-    promoted_rows = issue_items.promoted_items(issue_number)
     section_bodies = {
         "notable": issue_items_render.render_notable(notable_rows, issue_number),
         "journal": issue_items_render.render_journal(journal_rows),
         "brief": issue_items_render.render_brief(brief_rows),
     }
-    features = [(r["promoted_position"], issue_items_render.render_featured_section(r))
-                for r in promoted_rows if r.get("promoted_position")]
-    return issue_assembly.assemble_final(
-        atoms=atoms, section_bodies=section_bodies, features=features,
+    features = [
+        (r["promoted_position"], issue_items_render.render_featured_section(r))
+        for r in promoted_rows if r.get("promoted_position")
+    ]
+
+    return renderers.render_archive_body(
+        atoms=atoms, sections=section_bodies, features=features, closer=closer,
     )
 
 

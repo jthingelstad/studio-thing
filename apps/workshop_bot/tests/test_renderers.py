@@ -24,7 +24,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.tools import issue_assembly, renderers  # noqa: E402
+from apps.workshop_bot.tools import renderers  # noqa: E402
 
 
 SAMPLE_ATOMS = {
@@ -55,66 +55,85 @@ SAMPLE_METADATA = {
 }
 
 
-# ---------- email parity ----------
+# ---------- email composition ----------
 
 
-class RenderEmailParityTests(unittest.TestCase):
-    """render_email_body matches assemble_publish byte-for-byte for the
-    same inputs."""
+class RenderEmailTests(unittest.TestCase):
+    """render_email_body composes the buttondown.md body directly from
+    structured inputs — no marker round-trip. CTA / thanks atoms splice
+    in at hardcoded positions via the cta_atoms dict."""
 
-    def test_basic_email_matches_assemble_publish(self):
-        old = issue_assembly.assemble_publish(
-            atoms=SAMPLE_ATOMS,
-            section_bodies=SAMPLE_SECTIONS,
-            features=[],
-            issue_number=458,
-            pixel_block=renderers.pixel_block(458),
-            marker_substitution=None,
-        )
-        new = renderers.render_email_body(
+    def test_basic_email_with_no_cta_has_no_liquid(self):
+        out = renderers.render_email_body(
             atoms=SAMPLE_ATOMS,
             sections=SAMPLE_SECTIONS,
             features=[],
             issue_number=458,
         )
-        self.assertEqual(new, old)
+        # Editor-mode preamble + pixel always emitted.
+        self.assertTrue(out.startswith("<!-- buttondown-editor-mode: plaintext -->"))
+        self.assertIn("tinylytics.app/pixel", out)
+        # No Liquid for CTA / thanks since no atoms supplied.
+        self.assertNotIn("subscriber.subscriber_type", out)
+        # All sections present.
+        self.assertIn("## Notable", out)
+        self.assertIn("## Journal", out)
+        self.assertIn("## Briefly", out)
 
-    def test_email_with_cta_atoms_substitutes_to_liquid(self):
-        sections_with_marker = {
-            **SAMPLE_SECTIONS,
-            "notable": SAMPLE_SECTIONS["notable"] + "\n\n<!-- cta:1 -->",
-        }
+    def test_cta_1_splices_after_notable_as_liquid(self):
         cta_atoms = {"cta:1": "Support the Weekly Thing this year."}
         out = renderers.render_email_body(
             atoms=SAMPLE_ATOMS,
-            sections=sections_with_marker,
+            sections=SAMPLE_SECTIONS,
             features=[],
             issue_number=458,
             cta_atoms=cta_atoms,
         )
+        # No marker round-trip — no `<!-- cta:1 -->` anywhere.
         self.assertNotIn("<!-- cta:1 -->", out)
+        # Liquid block appears, with the CTA copy + Stripe buttons.
         self.assertIn("Support the Weekly Thing this year.", out)
         self.assertIn("{% if subscriber.subscriber_type == 'regular' %}", out)
-        # Stripe buttons + subscribe form both branches present.
         self.assertIn("$4 monthly", out)
         self.assertIn("$40 yearly", out)
         self.assertIn("{{ subscribe_form }}", out)
+        # Splice happens after Notable, before Journal.
+        notable_idx = out.find("## Notable")
+        liquid_idx = out.find("{% if subscriber.subscriber_type == 'regular' %}")
+        journal_idx = out.find("## Journal")
+        self.assertLess(notable_idx, liquid_idx)
+        self.assertLess(liquid_idx, journal_idx)
 
-    def test_email_with_thanks_atoms_substitutes_to_premium_only(self):
-        sections_with_marker = {
-            **SAMPLE_SECTIONS,
-            "brief": SAMPLE_SECTIONS["brief"] + "\n\n<!-- thanks:1 -->",
-        }
+    def test_thanks_1_splices_after_brief_as_premium_only(self):
         cta_atoms = {"thanks:1": "Thanks for supporting this work."}
         out = renderers.render_email_body(
             atoms=SAMPLE_ATOMS,
-            sections=sections_with_marker,
+            sections=SAMPLE_SECTIONS,
             features=[],
             issue_number=458,
             cta_atoms=cta_atoms,
         )
         self.assertNotIn("<!-- thanks:1 -->", out)
         self.assertIn("Thanks for supporting this work.", out)
+        self.assertIn("{% if subscriber.subscriber_type == 'premium' %}", out)
+        # Splice is after Briefly (the last parent section).
+        brief_idx = out.find("## Briefly")
+        thanks_idx = out.find("{% if subscriber.subscriber_type == 'premium' %}")
+        self.assertGreater(thanks_idx, brief_idx)
+
+    def test_empty_cta_atoms_skip_their_slots(self):
+        cta_atoms = {"cta:1": "", "cta:2": "   ", "thanks:1": "Premium thanks."}
+        out = renderers.render_email_body(
+            atoms=SAMPLE_ATOMS,
+            sections=SAMPLE_SECTIONS,
+            features=[],
+            issue_number=458,
+            cta_atoms=cta_atoms,
+        )
+        # cta:1 + cta:2 are empty/whitespace — no Liquid block for those slots.
+        self.assertNotIn("{% if subscriber.subscriber_type == 'regular' %}", out)
+        # thanks:1 still splices in.
+        self.assertIn("Premium thanks.", out)
         self.assertIn("{% if subscriber.subscriber_type == 'premium' %}", out)
 
     def test_email_carries_editor_mode_and_pixel(self):
@@ -150,16 +169,13 @@ class RenderEmailParityTests(unittest.TestCase):
 
 
 class RenderEmailPreviewTests(unittest.TestCase):
-    """render_email_preview matches build_publish._for_preview behavior."""
+    """render_email_preview produces the buttondown.html preview
+    body — Liquid stripped, editor-mode comment + pixel removed."""
 
     def test_preview_strips_editor_mode_and_pixel(self):
-        sections_with_marker = {
-            **SAMPLE_SECTIONS,
-            "notable": SAMPLE_SECTIONS["notable"] + "\n\n<!-- cta:1 -->",
-        }
         full = renderers.render_email_body(
             atoms=SAMPLE_ATOMS,
-            sections=sections_with_marker,
+            sections=SAMPLE_SECTIONS,
             features=[],
             issue_number=458,
             cta_atoms={"cta:1": "Supporter CTA copy."},
@@ -175,57 +191,43 @@ class RenderEmailPreviewTests(unittest.TestCase):
         self.assertNotIn("{{ ", preview)
 
 
-# ---------- archive parity ----------
+# ---------- archive composition ----------
 
 
-class RenderArchiveParityTests(unittest.TestCase):
-    """render_archive_body matches the body shape compose_archive
-    produces from the same final.md inputs."""
+class RenderArchiveTests(unittest.TestCase):
+    """render_archive_body composes the website body directly. No
+    Liquid, no editor-mode preamble, no CTA / thanks anything — those
+    are email-only."""
 
-    def test_archive_body_strips_block_and_cta_markers(self):
-        sections_with_marker = {
-            **SAMPLE_SECTIONS,
-            "notable": SAMPLE_SECTIONS["notable"] + "\n\n<!-- cta:1 -->",
-            "brief": SAMPLE_SECTIONS["brief"] + "\n\n<!-- thanks:1 -->",
-        }
+    def test_archive_body_is_clean_prose(self):
         body = renderers.render_archive_body(
-            atoms=SAMPLE_ATOMS, sections=sections_with_marker, features=[],
+            atoms=SAMPLE_ATOMS, sections=SAMPLE_SECTIONS, features=[],
         )
-        # No block markers.
+        # No block markers (workshop never emits them here).
         self.assertNotIn("<!-- block:", body)
-        # No cta/thanks markers.
+        # No CTA / thanks markers.
         self.assertNotIn("<!-- cta:", body)
         self.assertNotIn("<!-- thanks:", body)
-        # No editor-mode preamble.
+        # No email-only artifacts.
         self.assertNotIn("buttondown-editor-mode", body)
-        # No tinylytics pixel.
         self.assertNotIn("tinylytics.app/pixel", body)
+        self.assertNotIn("subscriber.subscriber_type", body)
         # Section headings + content survive.
         self.assertIn("## Notable", body)
         self.assertIn("Item A", body)
         self.assertIn("Item B", body)
         self.assertIn("Brief A", body)
 
-    def test_archive_body_byte_equality_with_legacy_pipeline(self):
-        """The legacy pipeline composes final.md via assemble_final,
-        then compose_archive's _build_archive_body strips block markers
-        + cta/thanks markers. The new render_archive_body shortcuts
-        that — both should produce the same body bytes."""
-        # Build final.md via the legacy assembler.
-        final_md = issue_assembly.assemble_final(
-            atoms=SAMPLE_ATOMS, section_bodies=SAMPLE_SECTIONS, features=[],
-        )
-        # Apply the legacy archive-body transform.
-        legacy_body = issue_assembly._strip_block_markers(final_md)
-        legacy_body = renderers._ARCHIVE_MARKER_RE.sub("\n", legacy_body)
-        legacy_body = re.sub(r"\n{3,}", "\n\n", legacy_body)
-        legacy_body = legacy_body.strip() + "\n"
-
-        # New direct path.
-        new_body = renderers.render_archive_body(
+    def test_archive_body_ignores_cta_atoms(self):
+        """Even if cta_atoms were threaded through (they aren't, by
+        signature — archive doesn't take them), the archive composer
+        never produces Liquid. Defensive: pass them via the email
+        path side, render archive separately, confirm no Liquid leaks."""
+        body = renderers.render_archive_body(
             atoms=SAMPLE_ATOMS, sections=SAMPLE_SECTIONS, features=[],
         )
-        self.assertEqual(new_body, legacy_body)
+        self.assertNotIn("{% if", body)
+        self.assertNotIn("Supporter", body)
 
     def test_render_archive_includes_frontmatter_and_links(self):
         archive_md, links_json = renderers.render_archive(
