@@ -121,12 +121,15 @@ class FeedbinIngestTests(DBTestCase):
         self.assertEqual(result.data["skipped"], 0)
         self.assertEqual(posts_add_mock.call_count, 2)
 
-        # Both calls used toread=True, shared=True, replace=False.
+        # Both calls used toread=True, shared=True, replace=False, and an
+        # empty description (Feedbin RSS <description> is intentionally
+        # NOT carried over — Jamie writes his own commentary later).
         for call in posts_add_mock.call_args_list:
             kwargs = call.kwargs
             self.assertTrue(kwargs["toread"])
             self.assertTrue(kwargs["shared"])
             self.assertFalse(kwargs["replace"])
+            self.assertEqual(kwargs["description"], "")
 
         # Both GUIDs filed locally.
         with patch("apps.workshop_bot.tools.db.feedbin_seen_guids", db.feedbin_seen_guids):

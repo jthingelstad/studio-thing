@@ -65,15 +65,16 @@ def _ingest_items(items: list[dict[str, Any]]) -> dict[str, int]:
             continue
         url = item["url"]
         title = item.get("title") or url
-        # Pinboard's `extended` field carries the description. Feedbin
-        # descriptions can be very long (article excerpts) — keep them
-        # but trim hard so we don't blow Pinboard's request limits.
-        desc = (item.get("description") or "").strip()[:2000]
+        # Deliberately don't carry Feedbin's RSS <description> across to
+        # Pinboard — the bookmark's `extended` field stays empty so Jamie
+        # can write his own commentary later (via a Discord reply on the
+        # toread research card). Feedbin descriptions are often article
+        # excerpts, not editorial intent, and we'd rather not import them.
         try:
             res = pinboard_client.posts_add(
                 url=url,
                 title=title,
-                description=desc,
+                description="",
                 tags="",
                 toread=True,
                 shared=True,
