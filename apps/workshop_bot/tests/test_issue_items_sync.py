@@ -135,6 +135,49 @@ class PinboardSyncTests(_DBCase):
         self.assertEqual(out["pruned"], 0)
         self.assertEqual(len(issue_items.promoted_items(349)), 1)
 
+    def test_prune_unanchors_editorial_comment_before_delete(self):
+        # editorial_comments.item_id is an FK to issue_items(id) with no
+        # ON DELETE action — pruning a stale item that has a draft-review
+        # comment anchored to it must NULL out the FK first, not let the
+        # DELETE blow up with "FOREIGN KEY constraint failed".
+        first = {
+            "notable": [
+                _pin_item(sid="h1", url="https://a", title="A"),
+                _pin_item(sid="h2", url="https://b", title="B"),
+            ],
+            "brief": [],
+        }
+        with patch(
+            "apps.workshop_bot.tools.issue_items_sync.pinboard.issue_window_candidates",
+            return_value=first,
+        ):
+            issue_items_sync.sync_pinboard(349, WINDOW)
+        # Anchor an editorial comment on h2.
+        h2 = [
+            r for r in issue_items.list_items(349, section="notable")
+            if r["title"] == "B"
+        ][0]["id"]
+        comment = issue_items.write_comment(
+            issue_number=349, scope="item", item_id=h2,
+            body_md="anchor text would go here",
+        )
+        # Upstream drops h2.
+        second = {
+            "notable": [_pin_item(sid="h1", url="https://a", title="A")],
+            "brief": [],
+        }
+        with patch(
+            "apps.workshop_bot.tools.issue_items_sync.pinboard.issue_window_candidates",
+            return_value=second,
+        ):
+            out = issue_items_sync.sync_pinboard(349, WINDOW)
+        self.assertEqual(out, {"observed": 1, "pruned": 1})
+        # Comment row survives, but item_id is nulled.
+        survivor = issue_items.get_comment_by_handle(comment["handle"])
+        self.assertIsNotNone(survivor)
+        self.assertIsNone(survivor["item_id"])
+        self.assertEqual(survivor["body_md"], "anchor text would go here")
+
     def test_retag_moves_item_between_sections(self):
         first = {
             "notable": [_pin_item(sid="h1", url="https://a", title="A")],

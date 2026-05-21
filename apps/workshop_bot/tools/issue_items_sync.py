@@ -248,6 +248,13 @@ def _prune_stale(
     no matter what — they're an editorial decision and the next review
     should flag a missing upstream rather than the sync silently dropping
     it. Returns the number of rows deleted.
+
+    ``editorial_comments.item_id`` is an FK to ``issue_items.id`` with no
+    ON DELETE action, so a stale item that has a draft-review comment
+    anchored to it would otherwise block the DELETE. We null out the
+    item_id for those comments first — the comment row, its handle, body,
+    section, and scope all survive, just unanchored from the now-gone
+    upstream item.
     """
     with connect() as conn:
         rows = conn.execute(
@@ -266,6 +273,11 @@ def _prune_stale(
         for i in range(0, len(stale_ids), 200):
             chunk = stale_ids[i:i + 200]
             placeholders = ",".join("?" for _ in chunk)
+            conn.execute(
+                f"UPDATE editorial_comments SET item_id = NULL "
+                f"WHERE item_id IN ({placeholders})",
+                chunk,
+            )
             cur = conn.execute(
                 f"DELETE FROM issue_items WHERE id IN ({placeholders})",
                 chunk,
