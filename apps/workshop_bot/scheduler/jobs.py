@@ -85,6 +85,17 @@ JOBS: tuple[JobSpec, ...] = (
         func=functools.partial(handlers.content_job, job="pinboard-scan"),
     ),
     JobSpec(
+        id="linky-feedbin-ingest",
+        cron="35 * * * *",                               # Hourly at :35 — offset from the pinboard-scan
+                                                         # :05 firings so new starred items have ~30 min
+                                                         # of lead time to land in Pinboard before the
+                                                         # next toread-lane scan picks them up.
+                                                         # Quiet by default (PASSes silently when no new
+                                                         # stars); posts a brief #research message only
+                                                         # when actually new bookmarks were filed.
+        func=functools.partial(handlers.content_job, job="feedbin-ingest"),
+    ),
+    JobSpec(
         id="marky-rss-check",
         cron="0 9-21/4 * * 6,0",                         # Sat & Sun, every 4h 09:00–21:00 Central.
                                                          # Detects a newly-published issue in the

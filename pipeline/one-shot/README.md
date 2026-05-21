@@ -9,6 +9,7 @@ Do not re-run these against the current archive unless you explicitly intend to 
 | Script | Commit | What it did |
 |---|---|---|
 | `audit_logo_refs.py` | `777aa70` | Scanned for orphan logo/image references as part of the MailChimp campaign HTML recovery investigation. |
+| `backfill_issues_data_layer.py` | (this session) | One-shot historical backfill: walked `data/issues/{N}/` + `data/audio/manifest.json` for every shipped issue, filled the new `issues` + `issue_links` tables in `workshop.db`. Idempotent; future shipped issues file via `/eddy issue put-to-bed`. |
 | `convert_legacy.py` | `247c892` | One-time: converted 129 legacy issues from HTML/MailChimp plaintext to clean markdown. The big bulk-migration script. |
 | `fetch_mailchimp.py` | `777aa70` | Fetched MailChimp campaign HTML to recover 225 orphan image filenames. |
 | `fix_archive_headings.py` | (this cleanup session) | Demoted H1 section titles to H2 (and link H2 → H3) in issues #132–#136. Applied + synced. |

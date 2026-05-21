@@ -79,7 +79,7 @@ class EddyTreeTests(unittest.TestCase):
         self.assertEqual(
             _cmd_names(issue),
             {"start", "update", "status", "reorder", "haiku", "subject",
-             "publish", "reset"},
+             "publish", "put-to-bed", "reset"},
         )
 
     def test_eddy_issue_publish_destinations(self):
@@ -125,6 +125,7 @@ class LinkyTreeTests(unittest.TestCase):
         tree = commands_module.register_linky_commands(_stub_bot())
         linky = _top_group(tree, "linky")
         self.assertIn("scan", _cmd_names(linky))
+        self.assertIn("feedbin", _cmd_names(linky))
         self.assertIn("followup", {getattr(c, "name", None) for c in linky.commands})
 
     def test_linky_followup_verbs(self):

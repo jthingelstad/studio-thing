@@ -402,6 +402,45 @@ def set_description(url: str, description: str, *, fallback_title: str | None = 
     }
 
 
+def clear_toread(url: str) -> dict[str, Any]:
+    """Atomic 'clear the ``toread`` flag, keep everything else.' Used by
+    Linky's ✅/👍 reaction listener on toread-source cards — Jamie's
+    "I've read it, take it out of the queue" gesture, the mirror of the
+    discovery-feed save ("I want this — put it INTO the queue").
+
+    Preserves the existing title, description, tags, and ``shared``
+    flag. If the URL isn't bookmarked yet, returns ``{error}`` — there's
+    nothing to clear; the caller should fall back to a creation path
+    (which doesn't make sense for toread cards anyway).
+
+    Returns ``{result_code, pinboard_url, replaced}``.
+    """
+    existing = posts_get(url)
+    posts = existing.get("posts") or []
+    if not posts:
+        return {"error": f"{url} isn't bookmarked on Pinboard yet — nothing to clear"}
+    post = posts[0]
+    title = post.get("description", "") or url  # Pinboard's "description" is the title
+    existing_desc = post.get("extended", "")
+    tags = [t for t in (post.get("tags") or "").split() if t]
+    shared = (post.get("shared", "yes") != "no")
+    res = posts_add(
+        url=url,
+        title=title,
+        description=str(existing_desc or ""),
+        tags=" ".join(tags),
+        toread=False,
+        shared=shared,
+        replace=True,
+    )
+    logger.info("pinboard: clear_toread url=%s result=%s", url, res.get("result_code"))
+    return {
+        "result_code": res.get("result_code"),
+        "pinboard_url": res.get("pinboard_url") or bookmark_url(url),
+        "replaced": res.get("result_code") == "done",
+    }
+
+
 def toread_public_unresearched(*, limit: int = 25) -> list[dict[str, Any]]:
     """Jamie's public toread bookmarks that Linky hasn't researched yet —
     the input list for the hourly per-link scan's toread lane. Newest

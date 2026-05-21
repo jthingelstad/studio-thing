@@ -33,6 +33,7 @@ from ...jobs import (
     edit_asset,
     issue_status,
     publish as publish_job,
+    put_to_bed as put_to_bed_job,
     reset_issue,
     review_text,
     start_issue,
@@ -185,6 +186,19 @@ def register_eddy_commands(
         await _run_and_ack(
             interaction, lambda: handler(_ctx(bot)),
             f"issue publish {dest}",
+        )
+
+    # /eddy issue put-to-bed — newsroom closing bookend to /eddy issue start.
+    # Takes no arguments; operates on the active issue window. Files the
+    # shipped issue into the `issues` + `issue_links` data layer and flips
+    # is_active=0 so workshop is between issues until the next start.
+    @issue.command(
+        name="put-to-bed",
+        description="File the just-shipped active issue into the data layer and close the window.",
+    )
+    async def issue_put_to_bed_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(
+            interaction, lambda: put_to_bed_job.run(_ctx(bot)), "issue put-to-bed",
         )
 
     @issue.command(

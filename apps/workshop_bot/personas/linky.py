@@ -11,11 +11,14 @@ table:
    it's a Brief, clear ``toread`` when ready to ship). For discovery-
    source cards the URL isn't yet bookmarked; the reply auto-creates a
    ``toread=yes shared=yes`` bookmark with the reply as its description.
-2. **Save-reaction listener.** Jamie reacts ✅ or 👍 to a discovery-feed
-   research card; Linky saves the URL to Pinboard as ``toread=yes
-   shared=yes`` with a blank description. The card gets a 📌 reaction
-   back. Toread-source cards already point at a bookmarked URL; ✅/👍
-   on those is a no-op.
+2. **Save-reaction listener.** Jamie reacts ✅ or 👍 to a research card.
+   On **discovery-feed** cards Linky saves the URL to Pinboard as
+   ``toread=yes shared=yes`` with a blank description (puts it INTO
+   the toread queue); the card gets a 📌 reaction back. On
+   **toread-source** cards Linky clears the ``toread`` flag (takes it
+   OUT of the queue) while preserving title / description / tags /
+   shared; the card gets a 👍 reaction back. The two paths mirror each
+   other — same gesture, opposite ends of the toread pipeline.
 3. **Briefly-reaction listener.** Jamie reacts ⏩ to *any* card; Linky
    ensures the URL is bookmarked AND tagged ``_brief``. Discovery cards
    create the bookmark fresh (``toread=yes shared=yes``, empty
@@ -218,18 +221,33 @@ class LinkyBot(PersonaBot):
     async def _handle_save_reaction(
         self, payload: discord.RawReactionActionEvent, row: dict,
     ) -> None:
-        """✅ / 👍 path: discovery-only; creates a fresh bookmark with
-        blank description, or acknowledges an existing one. Symmetric
-        with ``_handle_brief_reaction`` — both delegate to a single
-        Pinboard-client helper that owns the fetch-merge-write."""
-        if row.get("source") not in _DISCOVERY_SOURCES:
-            # Toread cards point at an already-bookmarked URL.
-            return
+        """✅ / 👍 path: mirror gesture across the toread pipeline.
+
+        - **Discovery cards** → save the URL as ``toread=yes shared=yes``
+          with a blank description (puts it INTO the toread queue). Ack 📌.
+        - **Toread cards** → clear the ``toread`` flag while preserving
+          title / description / tags / shared (takes it OUT). Ack 👍.
+
+        Both paths delegate to a single Pinboard-client helper
+        (``bookmark_blank`` vs ``clear_toread``) that owns the
+        fetch-merge-write."""
         url = (row.get("url") or "").strip()
         if not url:
             return
-        fallback_title = row.get("title") or None
+        source = row.get("source") or ""
 
+        if source in _DISCOVERY_SOURCES:
+            await self._save_discovery_card(payload, row, url)
+            return
+        if source == "toread":
+            await self._save_toread_card(payload, row, url)
+            return
+        # Unknown source — silently ignore.
+
+    async def _save_discovery_card(
+        self, payload: discord.RawReactionActionEvent, row: dict, url: str,
+    ) -> None:
+        fallback_title = row.get("title") or None
         try:
             res = await asyncio.to_thread(
                 pinboard_client.bookmark_blank, url, fallback_title=fallback_title,
@@ -246,8 +264,31 @@ class LinkyBot(PersonaBot):
                 fit_note="saved via reaction",
             )
         logger.info(
-            "linky: save-reaction on %s -> created=%s result=%s",
+            "linky: save-reaction (discovery) on %s -> created=%s result=%s",
             url, res.get("created"), res.get("result_code"),
+        )
+
+    async def _save_toread_card(
+        self, payload: discord.RawReactionActionEvent, row: dict, url: str,
+    ) -> None:
+        try:
+            res = await asyncio.to_thread(pinboard_client.clear_toread, url)
+        except Exception:  # noqa: BLE001
+            logger.exception("linky: clear_toread failed for %s", url)
+            await self._react_card(payload, "❌")
+            return
+        if res.get("error"):
+            # Bookmark vanished between the card post and the reaction —
+            # nothing to clear. Quietly ack with ⚠️ so Jamie knows the
+            # gesture was seen but didn't change anything.
+            await self._react_card(payload, "⚠️")
+            logger.info("linky: save-reaction (toread) on %s -> no bookmark", url)
+            return
+        ok = res.get("result_code") == "done"
+        await self._react_card(payload, "👍" if ok else "⚠️")
+        logger.info(
+            "linky: save-reaction (toread) on %s -> cleared=%s result=%s",
+            url, ok, res.get("result_code"),
         )
 
     async def _handle_brief_reaction(

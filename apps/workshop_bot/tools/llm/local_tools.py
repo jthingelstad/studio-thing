@@ -16,7 +16,7 @@ import re
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from .. import db, issue_items as issue_items_mod, s3, support_state, web
+from .. import archive_lookup, db, issue_items as issue_items_mod, s3, support_state, web
 from ..content import archive, draft, issue
 from .tool_registry import ToolRegistry, active_persona, active_react_target
 
@@ -164,6 +164,74 @@ def t_quote_search(deps, phrase: str, limit: int = 8) -> list[dict[str, Any]]:
         if len(hits) >= int(limit):
             break
     return hits
+
+
+# ---------- archive_lookup (DB-backed exact lookups over the historical
+#            issues + issue_links tables, seeded by the one-shot backfill
+#            and kept current by /eddy issue put-to-bed) ----------
+
+def t_archive_lookup_get_issue(deps, number: int) -> dict[str, Any] | str:
+    """Structured metadata for one shipped issue from the historical
+    record (workshop.db ``issues`` row). Sub-millisecond SQL lookup.
+    Returns None if the issue hasn't been filed (still in flight or not
+    backfilled). Distinct from ``archive__get_issue`` which reads the
+    markdown body; use this when you need numbers (word_count, link_count,
+    audio metadata, era) rather than prose."""
+    try:
+        n = int(number)
+    except (TypeError, ValueError):
+        return f"could not parse issue number from {number!r}"
+    row = archive_lookup.get_issue(n)
+    return row if row is not None else f"no record for WT{n} (not yet filed)"
+
+
+def t_archive_lookup_find_by_domain(
+    deps, domain: str, limit: int = 50,
+) -> list[dict[str, Any]]:
+    """Issues that cite ``domain`` in any link, newest first. Use when
+    Jamie asks 'has Jamie linked to this site before?' or 'how often
+    does Daring Fireball show up?'."""
+    return archive_lookup.find_issues_by_domain(domain, limit=int(limit))
+
+
+def t_archive_lookup_find_in_year(deps, year: int) -> list[dict[str, Any]]:
+    """All issues shipped in ``year``, newest first."""
+    return archive_lookup.find_issues_in_year(int(year))
+
+
+def t_archive_lookup_link_history(deps, url: str) -> list[dict[str, Any]]:
+    """Every shipping of an exact URL. Forward-looking — Pinboard
+    currently prevents re-pinning, so the answer is usually an empty list
+    today; this will matter when workshop hosts link commentary directly."""
+    return archive_lookup.link_history(url)
+
+
+def t_archive_lookup_domain_history(deps, domain: str) -> dict[str, Any]:
+    """Aggregate snapshot for ``domain``: link_count, issue_count,
+    first/last issue numbers + dates, plus the latest 5 issues that
+    cited it. Empty dict if the domain isn't in the corpus."""
+    return archive_lookup.domain_history(domain)
+
+
+def t_archive_lookup_recent(deps, n: int = 10) -> list[dict[str, Any]]:
+    """The ``n`` most recently shipped issues by number — sourced from the
+    DB record, so carries word_count + audio + era columns the corpus
+    version doesn't. Use when you need a quick 'what just shipped?'."""
+    return archive_lookup.recent_issues(int(n))
+
+
+def t_archive_lookup_stats(deps) -> dict[str, Any]:
+    """Corpus-wide totals: issue count, link count, domain count, total
+    words, audio coverage %. The numbers Marky and the home page report."""
+    return archive_lookup.aggregate_stats()
+
+
+def t_archive_lookup_list_links(
+    deps, issue_number: int, section: Optional[str] = None,
+) -> list[dict[str, Any]]:
+    """Every link row for one issue, ordered by (section, position).
+    Pass ``section`` to filter to 'notable' or 'briefly' only."""
+    return archive_lookup.list_issue_links(int(issue_number), section=section)
 
 
 # ---------- Patty ----------
@@ -773,6 +841,116 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["phrase"],
         },
     },
+    "archive_lookup__get_issue": {
+        "name": "archive_lookup__get_issue",
+        "description": (
+            "Structured metadata for one shipped issue from the historical DB record — "
+            "subject, slug, description, publish_date, word_count, notable/briefly/domain/link "
+            "counts, audio_url + duration + voice, era. Sub-millisecond SQL lookup. Distinct from "
+            "archive__get_issue (which reads the markdown body): use this when you need NUMBERS "
+            "(counts, durations, era buckets) instead of prose. Returns a not-filed message if "
+            "the issue hasn't been put to bed yet."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"number": {"type": "integer"}},
+            "required": ["number"],
+        },
+    },
+    "archive_lookup__find_by_domain": {
+        "name": "archive_lookup__find_by_domain",
+        "description": (
+            "All issues citing the given domain in any link, newest first. Each result carries "
+            "{number, publish_date, subject, absolute_url, hit_count}. Use for questions like "
+            "'has Jamie linked to this site before?' or 'how often does Daring Fireball show up?'."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "domain": {"type": "string", "description": "Lowercase domain, e.g. 'daringfireball.net'"},
+                "limit": {"type": "integer", "description": "default 50"},
+            },
+            "required": ["domain"],
+        },
+    },
+    "archive_lookup__find_in_year": {
+        "name": "archive_lookup__find_in_year",
+        "description": (
+            "All issues shipped in the given year, newest first. Use for yearly retrospectives or "
+            "filtering historical questions by a specific year."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"year": {"type": "integer", "description": "Four-digit year"}},
+            "required": ["year"],
+        },
+    },
+    "archive_lookup__link_history": {
+        "name": "archive_lookup__link_history",
+        "description": (
+            "Every shipping of an exact URL — issue number, section ('notable' or 'briefly'), "
+            "position within section, publish_date. Forward-looking: today Pinboard refuses to "
+            "re-pin a URL already bookmarked, so dupes can't reach workshop via the current "
+            "ingest path. This will matter when workshop hosts link commentary directly. "
+            "Returns an empty list if the URL has never been shipped (the common case)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"url": {"type": "string"}},
+            "required": ["url"],
+        },
+    },
+    "archive_lookup__domain_history": {
+        "name": "archive_lookup__domain_history",
+        "description": (
+            "Aggregate snapshot for a domain: total link_count, issue_count, first/last issue "
+            "numbers + dates, plus the latest 5 issues that cited it. Empty dict if the domain "
+            "isn't in the corpus. Cheaper and more decisive than scanning archive__search hits."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"domain": {"type": "string"}},
+            "required": ["domain"],
+        },
+    },
+    "archive_lookup__recent": {
+        "name": "archive_lookup__recent",
+        "description": (
+            "The N most recently shipped issues by number, sourced from the DB record — carries "
+            "word_count, audio_url, era columns the corpus-backed archive__list_recent doesn't. "
+            "Use for 'what just shipped?' questions."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"n": {"type": "integer", "description": "default 10"}},
+        },
+    },
+    "archive_lookup__stats": {
+        "name": "archive_lookup__stats",
+        "description": (
+            "Corpus-wide totals from the DB record: total_issues, total_links, total_notable, "
+            "total_briefly, total_words, unique_domains, issues_with_audio, audio_coverage_pct, "
+            "first_date, last_date. The numbers Marky reports in retros and the home-page hero "
+            "displays. No arguments."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    "archive_lookup__list_links": {
+        "name": "archive_lookup__list_links",
+        "description": (
+            "Every link row for one issue, ordered by (section, position). Pass `section` to "
+            "filter to 'notable' or 'briefly' only. Useful when you want the exact link list "
+            "without parsing markdown."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "issue_number": {"type": "integer"},
+                "section": {"type": "string", "description": "Optional: 'notable' or 'briefly'"},
+            },
+            "required": ["issue_number"],
+        },
+    },
     "site__support_state": {
         "name": "site__support_state",
         "description": (
@@ -1235,6 +1413,14 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "archive__get_section": t_get_section,
     "archive__list_recent": t_list_recent_issues,
     "archive__quote_search": t_quote_search,
+    "archive_lookup__get_issue": t_archive_lookup_get_issue,
+    "archive_lookup__find_by_domain": t_archive_lookup_find_by_domain,
+    "archive_lookup__find_in_year": t_archive_lookup_find_in_year,
+    "archive_lookup__link_history": t_archive_lookup_link_history,
+    "archive_lookup__domain_history": t_archive_lookup_domain_history,
+    "archive_lookup__recent": t_archive_lookup_recent,
+    "archive_lookup__stats": t_archive_lookup_stats,
+    "archive_lookup__list_links": t_archive_lookup_list_links,
     "site__support_state": t_get_support_state,
     "web__fetch_url": t_fetch_url,
     "web__read_length": t_read_length,

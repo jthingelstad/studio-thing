@@ -1296,6 +1296,43 @@ def lookup_research_message(discord_message_id: str) -> Optional[dict[str, Any]]
     return dict(row) if row else None
 
 
+# ---------- feedbin starred-items dedup (one row per ingested guid) ----------
+
+
+def feedbin_seen_guids(guids: list[str]) -> set[str]:
+    """Subset of ``guids`` already recorded in ``feedbin_starred_seen``.
+    Lets the ingest job batch-check before per-item Pinboard calls."""
+    if not guids:
+        return set()
+    placeholders = ",".join("?" * len(guids))
+    with connect() as conn:
+        rows = conn.execute(
+            f"SELECT guid FROM feedbin_starred_seen WHERE guid IN ({placeholders})",
+            guids,
+        ).fetchall()
+    return {r["guid"] for r in rows}
+
+
+def record_feedbin_seen(
+    *, guid: str, url: str, title: str = "", pinboard_result: Optional[str] = None,
+) -> None:
+    """Idempotent insert of a Feedbin ingest record. Re-stars of an item
+    are no-ops once the GUID is recorded — Pinboard already has the
+    bookmark."""
+    if not guid:
+        return
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO feedbin_starred_seen (guid, url, title, pinboard_result) "
+            "VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(guid) DO UPDATE SET "
+            "  url=excluded.url, "
+            "  title=excluded.title, "
+            "  pinboard_result=COALESCE(excluded.pinboard_result, feedbin_starred_seen.pinboard_result)",
+            (guid, url, title or "", pinboard_result),
+        )
+
+
 # ---------- image alt-text cache (journal + cover, vision-generated) ----------
 
 

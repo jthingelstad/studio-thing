@@ -259,20 +259,55 @@ class LinkySaveReactionTests(_DBTestCase):
             add_p.stop(); get_p.stop()
         add_mock.assert_not_called()
 
-    def test_toread_card_save_reaction_is_noop(self):
-        # Toread URLs are already bookmarked — nothing to do.
+    def test_toread_card_save_reaction_clears_toread(self):
+        # On toread cards, ✅/👍 mirrors discovery's "save" — clears the
+        # toread flag (takes the item OUT of the queue) while preserving
+        # everything else. Ack is 👍.
         db.record_research_message(
             discord_message_id="2005", url="http://t/1", source="toread",
+            title="A toread item",
         )
         p = self._payload(user_id=777, emoji="✅", message_id=2005)
-        get_p, add_p, add_mock = self._patch_pinboard()
+        existing = [{
+            "href": "http://t/1",
+            "description": "A toread item",  # Pinboard "description" = title
+            "extended": "some prior commentary",
+            "tags": "tag-a tag-b",
+            "toread": "yes",
+            "shared": "yes",
+        }]
+        get_p, add_p, add_mock = self._patch_pinboard(existing_posts=existing)
+        get_p.start(); add_p.start()
+        try:
+            asyncio.run(self.bot.on_raw_reaction_add(p))
+        finally:
+            add_p.stop(); get_p.stop()
+        add_mock.assert_called_once()
+        kwargs = add_mock.call_args.kwargs
+        self.assertEqual(kwargs["url"], "http://t/1")
+        self.assertEqual(kwargs["description"], "some prior commentary")  # preserved
+        self.assertEqual(kwargs["tags"], "tag-a tag-b")                   # preserved
+        self.assertFalse(kwargs["toread"])                                # CLEARED
+        self.assertTrue(kwargs["shared"])                                  # preserved
+        self.assertTrue(kwargs["replace"])
+        self.assertEqual(self.reactions, ["👍"])
+
+    def test_toread_save_with_no_existing_bookmark_acks_warning(self):
+        # Edge case: the toread card points at a URL that's since been
+        # deleted from Pinboard. clear_toread has nothing to clear; we
+        # ack ⚠️ so Jamie sees the gesture wasn't a silent no-op.
+        db.record_research_message(
+            discord_message_id="2055", url="http://t/gone", source="toread",
+        )
+        p = self._payload(user_id=777, emoji="👍", message_id=2055)
+        get_p, add_p, add_mock = self._patch_pinboard(existing_posts=[])
         get_p.start(); add_p.start()
         try:
             asyncio.run(self.bot.on_raw_reaction_add(p))
         finally:
             add_p.stop(); get_p.stop()
         add_mock.assert_not_called()
-        self.assertEqual(self.reactions, [])  # no acknowledgment either
+        self.assertEqual(self.reactions, ["⚠️"])
 
     def test_unknown_message_id_ignored(self):
         p = self._payload(user_id=777, emoji="✅", message_id=999999)

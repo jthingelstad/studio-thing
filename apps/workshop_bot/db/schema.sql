@@ -518,3 +518,101 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_editorial_comments_handle
 
 CREATE INDEX IF NOT EXISTS idx_editorial_comments_issue_open
   ON editorial_comments(issue_number, replaced_by_id, created_at DESC);
+
+-- Issues — the canonical per-issue historical record. One row per
+-- *published* issue. Distinct from ``issue_windows`` (which tracks the
+-- in-flight workshop window): ``issues`` is the archive Marky/Linky/Eddy
+-- query for exact lookups, the future authoritative source the site's
+-- generator can read from instead of static ``data/issues/{N}/`` files.
+--
+-- Populated two ways:
+--   1. One-shot historical backfill (``pipeline/one-shot/backfill_issues_data_layer.py``)
+--      walks the static repo for every shipped issue.
+--   2. ``/eddy issue put-to-bed`` files the just-shipped active issue
+--      and closes its ``issue_windows`` row.
+--
+-- ``era`` is derived from ``number`` — 1–41 tinyletter, 42–130 mailchimp,
+-- 131+ buttondown. Carried as a column for cheap GROUP BY.
+CREATE TABLE IF NOT EXISTS issues (
+  number             INTEGER PRIMARY KEY,
+  subject            TEXT NOT NULL,
+  slug               TEXT NOT NULL DEFAULT '',
+  description        TEXT NOT NULL DEFAULT '',
+  publish_date       TEXT NOT NULL,                  -- ISO date YYYY-MM-DD
+  image              TEXT NOT NULL DEFAULT '',
+  absolute_url       TEXT NOT NULL DEFAULT '',
+  buttondown_id      TEXT NOT NULL DEFAULT '',
+  word_count         INTEGER NOT NULL DEFAULT 0,
+  notable_count      INTEGER NOT NULL DEFAULT 0,
+  briefly_count      INTEGER NOT NULL DEFAULT 0,
+  domain_count       INTEGER NOT NULL DEFAULT 0,
+  link_count         INTEGER NOT NULL DEFAULT 0,
+  audio_url          TEXT NOT NULL DEFAULT '',
+  audio_duration_s   INTEGER,                        -- NULL = no audio
+  audio_byte_size    INTEGER,
+  audio_voice        TEXT NOT NULL DEFAULT '',       -- e.g. 'openai-tts-1-hd:echo'
+  era                TEXT NOT NULL,                  -- 'tinyletter' | 'mailchimp' | 'buttondown'
+  filed_at           TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_issues_publish_date
+  ON issues(publish_date DESC);
+
+CREATE INDEX IF NOT EXISTS idx_issues_era
+  ON issues(era);
+
+-- Every link ever shipped, sourced from ``data/issues/{N}/links.json``.
+-- One row per Notable or Briefly link; section carries which list it came
+-- from. ``position`` is 0-indexed within (issue_number, section).
+--
+-- ``heading_context`` is the inline H3 / bolded-link surrounding text
+-- captured by the librarian extraction — kept for resonance / display.
+CREATE TABLE IF NOT EXISTS issue_links (
+  id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+  issue_number       INTEGER NOT NULL REFERENCES issues(number) ON DELETE CASCADE,
+  section            TEXT NOT NULL,                  -- 'notable' | 'briefly'
+  position           INTEGER NOT NULL,
+  url                TEXT NOT NULL,
+  text               TEXT NOT NULL DEFAULT '',
+  domain             TEXT NOT NULL DEFAULT '',
+  heading_context    TEXT NOT NULL DEFAULT ''
+);
+
+CREATE INDEX IF NOT EXISTS idx_issue_links_domain
+  ON issue_links(domain, issue_number);
+
+CREATE INDEX IF NOT EXISTS idx_issue_links_url
+  ON issue_links(url);
+
+CREATE INDEX IF NOT EXISTS idx_issue_links_issue_section
+  ON issue_links(issue_number, section, position);
+
+-- Feedbin starred items — dedup record for the ingester. Jamie stars an
+-- article in Feedbin; the ``feedbin-ingest`` job creates a corresponding
+-- ``toread=yes shared=yes`` bookmark in Pinboard and records the item's
+-- stable GUID here so the next poll doesn't re-create it. (Pinboard's
+-- own ``posts/add replace=no`` is a backstop, but we still dedup
+-- locally to keep the per-poll workload empty most of the time.)
+CREATE TABLE IF NOT EXISTS feedbin_starred_seen (
+  guid          TEXT PRIMARY KEY,                       -- feedbin item guid
+  url           TEXT NOT NULL,
+  title         TEXT NOT NULL DEFAULT '',
+  pinboard_result TEXT,                                 -- 'done' | 'item already exists' | NULL on error
+  seen_at       TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_feedbin_starred_seen_url
+  ON feedbin_starred_seen(url);
+
+-- Read-only roll-up over issue_links. No backfill needed — always
+-- consistent with whatever issue_links currently contains.
+CREATE VIEW IF NOT EXISTS domain_stats AS
+SELECT
+  domain,
+  COUNT(*)                     AS link_count,
+  COUNT(DISTINCT issue_number) AS issue_count,
+  MIN(issue_number)            AS first_issue,
+  MAX(issue_number)            AS last_issue
+FROM issue_links
+WHERE domain != ''
+GROUP BY domain;

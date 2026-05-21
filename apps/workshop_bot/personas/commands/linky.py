@@ -14,6 +14,7 @@ import discord
 from discord import app_commands
 
 from ...jobs import (
+    feedbin_ingest,
     follow_up as followup_job,
     linky_quicklook,
     linky_research,
@@ -52,6 +53,15 @@ def register_linky_commands(
     )
     async def linky_scan_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: pinboard_scan.run(_ctx(bot)), "scan")
+
+    @linky.command(
+        name="feedbin",
+        description="Mirror Feedbin starred items to Pinboard as toread bookmarks (idempotent).",
+    )
+    async def linky_feedbin_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(
+            interaction, lambda: feedbin_ingest.run(_ctx(bot)), "feedbin",
+        )
 
     @linky.command(
         name="research",
