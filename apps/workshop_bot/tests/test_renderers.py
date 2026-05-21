@@ -257,12 +257,11 @@ class RenderArchiveParityTests(unittest.TestCase):
 
 class RenderTranscriptTests(unittest.TestCase):
 
-    def test_transcript_splits_into_blocks(self):
-        # Build a simple archive.md the audio pipeline can parse.
+    def _atoms_and_sections(self, *, cover: str = ""):
         atoms = {
             "intro": "An intro paragraph.",
             "currently": "",
-            "cover": "",
+            "cover": cover,
             "outro": "An outro paragraph.",
             "haiku": "**line one  \nline two  \nline three**",
         }
@@ -271,19 +270,63 @@ class RenderTranscriptTests(unittest.TestCase):
             "journal": "[Saturday @ 4:00 PM](https://j.example/s)\n\nA short journal entry.",
             "brief": "A blurb. → **[B](https://b.example/x)**",
         }
-        archive_md, _links = renderers.render_archive(
+        return atoms, sections
+
+    def test_transcript_splits_into_blocks(self):
+        atoms, sections = self._atoms_and_sections()
+        blocks = renderers.render_transcript_blocks(
             atoms=atoms, sections=sections, features=[], metadata=SAMPLE_METADATA,
         )
-        blocks = renderers.render_transcript_blocks(archive_md)
         self.assertGreater(len(blocks), 0)
         # Each block has a NNN-{slug}.txt filename.
         for name, content in blocks:
             self.assertRegex(name, r"^\d{3}-[a-z0-9-]+\.txt$")
             self.assertTrue(content.endswith("\n"))
 
-    def test_transcript_raises_on_missing_frontmatter(self):
-        with self.assertRaises(ValueError):
-            renderers.render_transcript_blocks("body with no frontmatter")
+    def test_audio_body_drops_cover_atom(self):
+        """The cover atom (image + caption + date + location) is
+        purely visual — render_audio_body must drop it from the body
+        passed to the script transform, so the audio script never
+        even has to defend against it."""
+        atoms, sections = self._atoms_and_sections(
+            cover=(
+                '<img src="https://files.thingelstad.com/weekly-thing/458/cover.jpg" '
+                'alt="Golden sunset over a calm lake." />\n\n'
+                "Beautiful evening with the sun coming down.\n\n"
+                "May 16, 2026  \nCannon Lake, Warsaw, MN"
+            ),
+        )
+        audio_body = renderers.render_audio_body(
+            atoms=atoms, sections=sections, features=[],
+        )
+        # Cover atom content gone — alt text, caption, date, location.
+        self.assertNotIn("Golden sunset", audio_body)
+        self.assertNotIn("Beautiful evening", audio_body)
+        self.assertNotIn("Cannon Lake", audio_body)
+        self.assertNotIn("cover.jpg", audio_body)
+        # Other sections survive.
+        self.assertIn("intro paragraph", audio_body)
+        self.assertIn("## Notable", audio_body)
+
+    def test_transcript_does_not_carry_cover_content(self):
+        """End-to-end: a cover atom with image + caption + location
+        produces zero transcript blocks containing any of that
+        content. Covers belong to the visual surface only."""
+        atoms, sections = self._atoms_and_sections(
+            cover=(
+                '<img src="https://files.thingelstad.com/weekly-thing/458/cover.jpg" '
+                'alt="Golden sunset over a calm lake." />\n\n'
+                "Beautiful evening with the sun coming down.\n\n"
+                "May 16, 2026  \nCannon Lake, Warsaw, MN"
+            ),
+        )
+        blocks = renderers.render_transcript_blocks(
+            atoms=atoms, sections=sections, features=[], metadata=SAMPLE_METADATA,
+        )
+        for name, content in blocks:
+            self.assertNotIn("Golden sunset", content, name)
+            self.assertNotIn("Cannon Lake", content, name)
+            self.assertNotIn("cover.jpg", content, name)
 
     def test_concat_transcript_for_review_marks_each_segment(self):
         blocks = [

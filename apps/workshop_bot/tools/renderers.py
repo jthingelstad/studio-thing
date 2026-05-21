@@ -342,18 +342,69 @@ def _import_audio_helpers():
     return body_to_audio_script, split_into_blocks
 
 
-def render_transcript_blocks(archive_md: str) -> list[tuple[str, str]]:
-    """Split the archive body into per-block transcript files, named
-    ``NNN-{slug}.txt`` in editorial order. The audio pipeline TTSes
-    each block as its own utterance so breath placement falls at
-    editorial boundaries.
+def render_audio_body(
+    *,
+    atoms: dict[str, str],
+    sections: dict[str, str],
+    features: list[tuple[str, str]],
+    closer: str = "",
+) -> str:
+    """Build the audio-purpose body. Same structured inputs as the
+    archive renderer, with the cover atom dropped entirely (it carries
+    image + caption + date + location — all purely visual, none of
+    which belongs in TTS). The body-to-audio script transform handles
+    the remaining text-level shaping (number-to-word, URL stripping,
+    section-heading cues, etc.).
 
-    Returns a list of ``(filename, content)`` tuples. Each ``content``
-    ends with a trailing newline (matches the on-disk shape).
+    This is the right seam in the new pipeline: audio never sees the
+    cover block, so there's no defensive regex strip needed for the
+    workshop path. The ``strip_cover_blocks`` regex in
+    ``pipeline/audio/script/common.py`` still matters for the legacy
+    backfill path that reads ``apps/site/archive/{N}.md`` directly.
+    """
+    audio_atoms = dict(atoms)
+    # Drop the cover atom — empty atom emits an empty block which
+    # _strip_block_markers then collapses (including its ## heading
+    # if any).
+    audio_atoms["cover"] = ""
+    body = issue_assembly.assemble_final(
+        atoms=audio_atoms, section_bodies=sections, features=features,
+        closer=closer,
+    )
+    body = issue_assembly._strip_block_markers(body)
+    # Drop cta/thanks markers same as archive — they don't belong in audio.
+    body = _strip_archive_markers(body)
+    body = re.sub(r"\n{3,}", "\n\n", body)
+    return body.strip() + "\n"
 
-    Raises ``ValueError`` if ``archive_md`` is missing front matter
-    (the body-to-audio transform needs the metadata)."""
-    fm, body = _parse_archive_frontmatter(archive_md)
+
+def render_transcript_blocks(
+    *,
+    atoms: dict[str, str],
+    sections: dict[str, str],
+    features: list[tuple[str, str]],
+    metadata: dict,
+    closer: str = "",
+) -> list[tuple[str, str]]:
+    """Build per-block transcript files from structured inputs.
+    Independent of the archive body — never composes the cover or any
+    other visual-only element. Returns ``[(filename, content), ...]``
+    in editorial order; each filename is ``NNN-{slug}.txt``.
+
+    Mirrors the inputs of ``render_archive`` and ``render_email`` so
+    all three formats are siblings, not a chain.
+    """
+    body = render_audio_body(
+        atoms=atoms, sections=sections, features=features, closer=closer,
+    )
+    # body_to_audio_script's frontmatter param wants the same keys
+    # ``apps/site/archive/{N}.md`` exposes (number, subject,
+    # publish_date) — synthesize one from metadata.
+    fm = {
+        "number": int(metadata.get("number", 0)),
+        "subject": metadata.get("subject", "") or "",
+        "publish_date": metadata.get("publish_date", "") or "",
+    }
     body_to_audio_script, split_into_blocks = _import_audio_helpers()
     script = body_to_audio_script(body, fm)
     blocks = split_into_blocks(script)
@@ -648,25 +699,25 @@ def render_transcript_for_issue(
     issue_number: int, *, window: Optional[dict] = None,
 ) -> list[tuple[str, str]]:
     """Render the issue's transcript/*.txt files from current DB +
-    atom state. Independent of render_archive_for_issue — builds the
-    archive in memory just for the transcript split. Writes per-block
-    files to S3 + local repo mirror and wipes any stale files from
-    prior runs. Returns the ``[(filename, content), ...]`` list."""
+    atom state. Independent of render_archive_for_issue: builds an
+    audio-purpose body directly via ``render_audio_body`` (cover atom
+    dropped — never composed for audio) and runs the body-to-script
+    transform on it. Writes per-block files to S3 + local repo
+    mirror, wipes stale files from prior runs, and writes a
+    concatenated ``transcript-full.txt`` review file. Returns the
+    ``[(filename, content), ...]`` list."""
     from ..tools import s3 as _s3
 
     inputs = _gather_inputs_for_issue(issue_number, window=window)
-    archive_md, _links = render_archive(
-        atoms=inputs["atoms"],
-        sections=inputs["sections"],
-        features=inputs["features"],
-        metadata=inputs["metadata"],
-        closer=inputs["closer"],
-    )
     try:
-        blocks = render_transcript_blocks(archive_md)
-    except ValueError:
-        # archive missing frontmatter — should not happen with the
-        # placeholder fallback but be defensive.
+        blocks = render_transcript_blocks(
+            atoms=inputs["atoms"],
+            sections=inputs["sections"],
+            features=inputs["features"],
+            metadata=inputs["metadata"],
+            closer=inputs["closer"],
+        )
+    except Exception:  # noqa: BLE001 — surface any transform failure as no-op
         return []
     if not blocks:
         return []
