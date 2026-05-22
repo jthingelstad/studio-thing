@@ -210,6 +210,74 @@ def _source_posts() -> list[dict[str, Any]]:
     return out
 
 
+def source_for_url(post_url: str) -> dict[str, Any]:
+    """Return one post's full mf2 ``properties`` dict via
+    ``GET ?q=source&url=…``. Raises on missing key or transport error.
+
+    Used by the Micropub update flow (`update_post_content`) to read the
+    full property set both before and after a write, so callers can diff
+    every field — not just ``content`` — and verify the server preserved
+    everything else.
+    """
+    token = _api_key()
+    if not token:
+        raise RuntimeError("MICROBLOG_API_KEY is required (no fallback)")
+    resp = requests.get(
+        micropub_url(),
+        params={"q": "source", "url": post_url},
+        headers={"Authorization": f"Bearer {token}", "User-Agent": _UA},
+        timeout=_TIMEOUT,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    if not isinstance(data, dict):
+        raise ValueError("micro.blog Micropub q=source(url) returned non-object")
+    props = data.get("properties")
+    if not isinstance(props, dict):
+        raise ValueError(
+            f"micro.blog Micropub q=source(url) returned no properties for {post_url!r}"
+        )
+    return props
+
+
+def update_post_content(post_url: str, new_content_md: str) -> None:
+    """Send a Micropub ``update`` action that replaces the ``content``
+    property of one post. Returns on success; raises on transport / HTTP
+    error.
+
+    Micropub ``replace: {content: [body]}`` semantics: the server is
+    expected to leave every other property (title, categories, published,
+    photo, etc.) alone. We verify this once during integration via
+    ``scripts/microblog_update_dryrun.py`` against a throwaway post before
+    relying on it for live posts.
+    """
+    token = _api_key()
+    if not token:
+        raise RuntimeError("MICROBLOG_API_KEY is required (no fallback)")
+    payload = {
+        "action": "update",
+        "url": post_url,
+        "replace": {"content": [new_content_md]},
+    }
+    resp = requests.post(
+        micropub_url(),
+        json=payload,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "User-Agent": _UA,
+        },
+        timeout=_TIMEOUT,
+    )
+    if resp.status_code >= 400:
+        body_snippet = (resp.text or "")[:300]
+        raise RuntimeError(
+            f"micro.blog Micropub update failed for {post_url!r}: "
+            f"HTTP {resp.status_code} — {body_snippet}"
+        )
+    logger.info("microblog: updated content for %s (HTTP %d)", post_url, resp.status_code)
+
+
 def posts_in_window(start_date: str, end_date: str) -> list[dict[str, Any]]:
     """micro.blog posts whose authored date falls in ``(start_date, end_date]``
     (calendar dates, ``YYYY-MM-DD``), oldest first. Each result:
