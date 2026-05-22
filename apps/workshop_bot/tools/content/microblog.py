@@ -278,6 +278,144 @@ def update_post_content(post_url: str, new_content_md: str) -> None:
     logger.info("microblog: updated content for %s (HTTP %d)", post_url, resp.status_code)
 
 
+# --- alt-text fill back to micro.blog (the source of truth) ---
+
+# Whole `src="…"` attribute (including the keyword) — used for splicing
+# an alt in right after the src when the tag has no alt attribute at all.
+_IMG_SRC_ATTR_RE = re.compile(r'(\bsrc\s*=\s*["\'][^"\']+["\'])', re.IGNORECASE)
+# A `![](url)` markdown image with an empty alt.
+_MD_IMG_EMPTY_RE = re.compile(r"!\[\]\(([^)]+)\)")
+
+
+def _splice_alt_into_img(tag: str, alt: str) -> str:
+    """Return ``tag`` with ``alt="<alt>"`` either replaced (if it had an
+    empty alt) or inserted right after the ``src`` attribute (if no alt
+    attribute was present at all). HTML-escapes the alt minimally — drops
+    any ``"`` so the attribute can't be broken out of."""
+    safe = alt.replace('"', "")
+    alt_m = _IMG_ALT_RE.search(tag)
+    if alt_m is not None:
+        return tag[: alt_m.start()] + f'alt="{safe}"' + tag[alt_m.end():]
+    return _IMG_SRC_ATTR_RE.sub(
+        lambda sm: f'{sm.group(1)} alt="{safe}"', tag, count=1,
+    )
+
+
+def _find_empty_alt_images(content_md: str) -> list[tuple[int, int, str, str]]:
+    """Return ``[(start, end, kind, src), …]`` for every image reference
+    in ``content_md`` whose alt is missing or empty.
+
+    ``kind`` is ``"html"`` for an ``<img>`` tag, ``"md"`` for a
+    markdown ``![](url)`` reference. The slice ``content_md[start:end]``
+    is the whole tag/reference the caller can splice over.
+    """
+    out: list[tuple[int, int, str, str]] = []
+    for m in _IMG_TAG_RE.finditer(content_md):
+        tag = m.group(0)
+        src_m = _IMG_SRC_RE.search(tag)
+        if not src_m:
+            continue
+        alt_m = _IMG_ALT_RE.search(tag)
+        if alt_m is None or alt_m.group(1).strip() == "":
+            out.append((m.start(), m.end(), "html", src_m.group(1).strip()))
+    for m in _MD_IMG_EMPTY_RE.finditer(content_md):
+        out.append((m.start(), m.end(), "md", m.group(1).strip()))
+    out.sort(key=lambda r: r[0])
+    return out
+
+
+def fill_missing_alts(
+    posts: list[dict[str, Any]],
+    *,
+    vision_call: Any = None,
+    write_back: bool = True,
+) -> list[dict[str, Any]]:
+    """For each post in ``posts``: find every ``<img>`` / ``![]()`` with
+    an empty alt, ask vision for one, splice it into the post's
+    ``content_md`` *in place*, and POST a Micropub update to the post's
+    URL so micro.blog itself carries the alt.
+
+    Returns ``[{post_url, post_title, image_src, alt}, …]`` — one entry
+    per alt that was both successfully generated *and* (when
+    ``write_back`` is True) successfully written back. Failures of either
+    kind are logged and the post is left as it was upstream; the next
+    sync will re-attempt.
+
+    ``vision_call`` defaults to :func:`alt_text.generate_alt`. Inject a
+    stub in tests. ``write_back=False`` is used by tests + a possible
+    future "preview only" mode.
+    """
+    from .. import alt_text  # local import to keep the module decoupled
+
+    if vision_call is None:
+        vision_call = alt_text.generate_alt
+
+    filled: list[dict[str, Any]] = []
+    for post in posts:
+        url = (post.get("url") or "").strip()
+        content_md = post.get("content_md") or ""
+        if not url or not content_md:
+            continue
+        targets = _find_empty_alt_images(content_md)
+        if not targets:
+            continue
+        # Splice from the end so earlier offsets stay valid.
+        new_md = content_md
+        post_filled: list[dict[str, Any]] = []
+        for start, end, kind, src in reversed(targets):
+            try:
+                alt = vision_call(
+                    image_url=src,
+                    context=content_md,
+                    caption=(post.get("title") or "").strip() or None,
+                ) or ""
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(
+                    "microblog: alt vision call failed for %s in %s: %s",
+                    src, url, exc,
+                )
+                alt = ""
+            if not alt:
+                continue
+            if kind == "html":
+                old_tag = new_md[start:end]
+                new_tag = _splice_alt_into_img(old_tag, alt)
+                new_md = new_md[:start] + new_tag + new_md[end:]
+            else:  # "md" — ![](url) → ![alt](url)
+                safe = alt.replace("]", "").replace("[", "")
+                new_md = new_md[:start] + f"![{safe}]({src})" + new_md[end:]
+            post_filled.append({
+                "post_url": url,
+                "post_title": (post.get("title") or "").strip(),
+                "image_src": src,
+                "alt": alt,
+            })
+        if not post_filled:
+            continue
+        if write_back:
+            try:
+                update_post_content(url, new_md)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(
+                    "microblog: write-back failed for %s — %d alt(s) "
+                    "generated but not persisted; will retry next sync: %s",
+                    url, len(post_filled), exc,
+                )
+                # In-memory copy stays as it was upstream so the current
+                # render doesn't carry alts that aren't actually on the
+                # post. (The user picked "re-vision next run" over a
+                # pending queue.)
+                continue
+        # Either we wrote back successfully (write_back=True) or the
+        # caller asked for in-memory only (write_back=False) — either
+        # way it's safe to publish the new content_md to the post dict.
+        post["content_md"] = new_md
+        # post_filled was accumulated in reverse-source-order; flip back
+        # so #chatter logs read top-to-bottom of the post.
+        filled.extend(reversed(post_filled))
+    return filled
+
+
 def posts_in_window(start_date: str, end_date: str) -> list[dict[str, Any]]:
     """micro.blog posts whose authored date falls in ``(start_date, end_date]``
     (calendar dates, ``YYYY-MM-DD``), oldest first. Each result:

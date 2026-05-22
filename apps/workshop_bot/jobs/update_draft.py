@@ -86,8 +86,13 @@ def _read_asset(issue_number: int, filename: str) -> str:
     return ""
 
 
-def _gather_fills(window: dict) -> dict[str, str]:
-    """Pull every section's content once.
+def _gather_fills(window: dict) -> tuple[dict[str, str], list[dict]]:
+    """Pull every section's content once. Returns ``(fills, alts_filled)``
+    where ``alts_filled`` is the per-image log surfaced by
+    :func:`tools.content.microblog.fill_missing_alts` — one entry per
+    image whose alt was generated and written back to micro.blog during
+    this run. ``run()`` posts those to ``#chatter`` so the activity is
+    visible.
 
     The three list sections (Notable / Briefly / Journal) come from
     ``issue_items`` rows: ``sync_all`` first refreshes rows from
@@ -166,7 +171,8 @@ def _gather_fills(window: dict) -> dict[str, str]:
         ]
         fills["featured"] = issue_items_render.render_featured_sections(featured_rows)
 
-    return fills
+    alts_filled = list(sync_result.get("microblog", {}).get("alts_filled") or [])
+    return fills, alts_filled
 
 
 def _final_exists(issue_number: int) -> bool:
@@ -650,9 +656,23 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             # The actual sync result isn't returned by gather_fills today;
             # we re-derive a coarse summary from issue_items counts after
             # the fills are in.
-            fills = await asyncio.to_thread(_gather_fills, window)
+            fills, alts_filled = await asyncio.to_thread(_gather_fills, window)
             for block in SECTION_BLOCKS:
                 text = _base.replace_block(text, block, fills.get(block, ""))
+            # Visibility: one line in #chatter per alt that was generated
+            # and written back to micro.blog during the upstream sync.
+            # Failures are best-effort — a missing channel id, lost Discord
+            # connection, or a permission slip shouldn't fail the run.
+            for filled in alts_filled:
+                title = (filled.get("post_title") or "").strip() or "(untitled)"
+                line = (
+                    f"🔤 filled alt on [{title}]({filled['post_url']}): "
+                    f'"{filled["alt"]}"'
+                )
+                try:
+                    await ctx.post("DISCORD_CHANNEL_CHATTER", line)
+                except Exception:  # noqa: BLE001
+                    logger.exception("update-draft: failed to post alt-fill log to #chatter")
             try:
                 s3.write_issue_file(n, "draft.md", text)
             except Exception as exc:  # noqa: BLE001

@@ -179,19 +179,34 @@ def _featured_heading(post: dict[str, Any]) -> str:
 
 def sync_microblog(
     issue_number: int, window: dict[str, Any], *, prune: bool = True,
-) -> dict[str, int]:
+) -> dict[str, Any]:
     """Pull micro.blog's in-window posts into ``issue_items`` (journal).
 
-    Images embedded in each post are rehosted via
-    :mod:`tools.content.journal_images` once per post (the same call
-    ``update-draft`` made in the file-based world); the rehosted body
-    is what ends up in ``body_md``.
+    Before consuming the posts: fill any missing image alts via
+    :func:`microblog.fill_missing_alts` so the alt lives on micro.blog
+    itself (Jamie's blog gets the same alt; we don't have to splice
+    one in at render time). The returned post bodies already reflect
+    the new alts, and the function bubbles a per-post log of what got
+    filled back to the caller so ``update-draft`` can announce the
+    activity in ``#chatter``.
+
+    Images embedded in each post are then rehosted via
+    :mod:`tools.content.journal_images` once per post; the rehosted
+    body is what ends up in ``body_md``.
 
     ``prune=True`` removes non-promoted micro.blog rows whose URL isn't
     in this sync's observed set (Jamie deleted the post upstream).
     """
     n = int(issue_number)
     posts = microblog.posts_in_window(window["start_date"], window["end_date"])
+    try:
+        alts_filled = microblog.fill_missing_alts(posts)
+    except Exception as exc:  # noqa: BLE001
+        # Don't let an alt-fill hiccup break the sync — the posts still
+        # have whatever alts they came in with (empty ones will land
+        # empty in the journal, hygiene review picks those up).
+        logger.warning("sync_microblog: alt-fill pass failed: %s", exc)
+        alts_filled = []
     observed_ids: set[str] = set()
     featured_count = 0
     for post in posts:
@@ -232,10 +247,15 @@ def sync_microblog(
             issue_items.unpromote(row_id)
     pruned = _prune_stale(n, source="microblog", observed=observed_ids) if prune else 0
     logger.info(
-        "sync_microblog: WT%d observed=%d pruned=%d featured=%d",
-        n, len(observed_ids), pruned, featured_count,
+        "sync_microblog: WT%d observed=%d pruned=%d featured=%d alts_filled=%d",
+        n, len(observed_ids), pruned, featured_count, len(alts_filled),
     )
-    return {"observed": len(observed_ids), "pruned": pruned, "featured": featured_count}
+    return {
+        "observed": len(observed_ids),
+        "pruned": pruned,
+        "featured": featured_count,
+        "alts_filled": alts_filled,
+    }
 
 
 # ---------- pruning ----------
@@ -290,13 +310,13 @@ def _prune_stale(
 
 def sync_all(
     issue_number: int, window: dict[str, Any], *, prune: bool = True,
-) -> dict[str, dict[str, int]]:
+) -> dict[str, dict[str, Any]]:
     """Run both syncs back-to-back. ``update-draft`` calls this once per
     refresh. Failures in one source don't block the other — each is
     wrapped, errors logged, and the row state from the previous sync
     survives the failure (no rows deleted on a failed sync).
     """
-    out: dict[str, dict[str, int]] = {}
+    out: dict[str, dict[str, Any]] = {}
     try:
         out["pinboard"] = sync_pinboard(issue_number, window, prune=prune)
     except Exception as exc:  # noqa: BLE001
@@ -304,7 +324,7 @@ def sync_all(
             "sync_all: Pinboard sync failed for WT%d: %s",
             issue_number, exc,
         )
-        out["pinboard"] = {"observed": 0, "pruned": 0, "error": str(exc)}  # type: ignore[dict-item]
+        out["pinboard"] = {"observed": 0, "pruned": 0, "error": str(exc)}
     try:
         out["microblog"] = sync_microblog(issue_number, window, prune=prune)
     except Exception as exc:  # noqa: BLE001
@@ -312,5 +332,5 @@ def sync_all(
             "sync_all: micro.blog sync failed for WT%d: %s",
             issue_number, exc,
         )
-        out["microblog"] = {"observed": 0, "pruned": 0, "error": str(exc)}  # type: ignore[dict-item]
+        out["microblog"] = {"observed": 0, "pruned": 0, "alts_filled": [], "error": str(exc)}
     return out

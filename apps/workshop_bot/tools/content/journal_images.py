@@ -12,17 +12,17 @@ post's markdown: it finds ``<img src=…>`` and ``![](…)`` references on the
 blog's upload host(s), rehosts each (skipping any already in the workspace
 — a cheap HEAD check, so the daily ``update-draft`` re-run is cheap),
 rewrites the reference to the local URL, and emits **native** ``<img alt=…
-src=… />`` tags (not markdown ``![]()``) so each image has an explicit
-``alt`` attribute we can later fill via the vision LLM. Images on other
-hosts are left untouched (URL unchanged, but still emitted as ``<img>``);
-a per-image failure leaves that one alone rather than breaking the post.
+src=… />`` tags (not markdown ``![]()``) preserving whatever ``alt`` the
+source carried. Images on other hosts are left untouched (URL unchanged,
+but still emitted as ``<img>``); a per-image failure leaves that one
+alone rather than breaking the post.
 
-After the rehost/rewrite pass, any rehosted ``<img>`` that came out with
-an empty ``alt`` is filled via ``alt_text.get_or_generate_alt`` — one
-vision call per *content-addressed* image (so the same image used in two
-issues only costs one call, ever; and the daily ``update-draft`` re-run
-is free once an alt is cached). The per-run cap and failure semantics
-live in ``tools/alt_text.py``.
+Alt-text generation happens earlier in the pipeline, at micro.blog read
+time: :func:`tools.content.microblog.fill_missing_alts` vision-fills
+empty alts and writes them back via Micropub so the source post (and
+Jamie's blog) own the alt. By the time markdown reaches this module, the
+``alt`` attribute either already has the right text or is intentionally
+empty (vision failed / cap exhausted — the hygiene review picks those up).
 
 Configurable via env:
   - ``MICROBLOG_IMAGE_HOSTS`` — csv of hosts whose images we rehost
@@ -44,7 +44,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from .. import alt_text, s3
+from .. import s3
 
 logger = logging.getLogger("workshop.journal_images")
 
@@ -213,28 +213,6 @@ def _attr_escape(s: str) -> str:
     return html.escape(s or "", quote=True)
 
 
-def _is_rehosted_url(url: str, issue_number: int) -> bool:
-    """True if ``url`` is in the issue's rehosted journal-image namespace."""
-    try:
-        p = urlparse(url)
-    except ValueError:
-        return False
-    host = (p.netloc or "").lower()
-    if host != s3._bucket().lower():
-        return False
-    path = p.path or ""
-    return path.startswith(f"/{s3.ROOT_PREFIX}/{int(issue_number)}/{s3.JOURNAL_PREFIX}/")
-
-
-def _image_key_from_rehosted(url: str) -> str:
-    """Cache key for a rehosted image: the filename basename
-    (content-addressed for micro.blog uploads — ``428e3db12e.jpg``)."""
-    try:
-        return os.path.basename(urlparse(url).path or "")
-    except ValueError:
-        return ""
-
-
 def _build_img_tag(*, src: str, alt: str = "") -> str:
     """Render a self-closing-style ``<img …/>`` with quoted ``src`` /
     ``alt`` attrs and nothing else.
@@ -260,10 +238,13 @@ def rehost_in_markdown(content_md: str, issue_number: int) -> str:
     the references; emit native ``<img alt="…" src="…" />`` tags, each on
     its own paragraph (micro.blog emits photo-gallery posts as adjacent
     ``<img><img>`` — left running together they'd render as one paragraph,
-    so we force a blank line between). Then run the alt-fill pass: any
-    rehosted image with an empty ``alt`` gets one generated via vision LLM
-    (cached forever per content-addressed key). Idempotent and robust — a
-    per-image failure leaves that image's reference as-is."""
+    so we force a blank line between).
+
+    Whatever ``alt`` the source carries (filled at micro.blog read time by
+    :func:`tools.content.microblog.fill_missing_alts`) passes through
+    verbatim. Idempotent and robust — a per-image failure leaves that
+    image's reference as-is.
+    """
     if not content_md:
         return content_md
     n = int(issue_number)
@@ -291,35 +272,5 @@ def rehost_in_markdown(content_md: str, issue_number: int) -> str:
         return "\n\n" + _build_img_tag(src=_rewrite_url(url, n), alt=alt) + "\n\n"
 
     out = _IMG_TAG_RE.sub(_img_sub, out)
-
-    # 3. Alt-fill: for each <img …> with empty alt and a rehosted src, ask
-    #    the vision LLM (cached). Pass the surrounding post as context.
-    def _alt_fill_sub(m: re.Match) -> str:
-        tag = m.group(0)
-        src_m = _SRC_RE.search(tag)
-        if not src_m:
-            return tag
-        url = src_m.group(1).strip()
-        alt_m = _ALT_RE.search(tag)
-        current_alt = (alt_m.group(1) if alt_m else "").strip()
-        if current_alt:
-            return tag  # already has alt; leave it
-        if not _is_rehosted_url(url, n):
-            return tag  # only fill alts on rehosted (workspace-bytes-available) images
-        key = _image_key_from_rehosted(url)
-        if not key:
-            return tag
-        try:
-            generated = alt_text.get_or_generate_alt(
-                image_key=key, image_url=url, context=content_md,
-            )
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("journal_images: alt generation failed for %s: %s", url, exc)
-            return tag
-        if not generated:
-            return tag  # leave empty alt; the hygiene review will flag it
-        return _build_img_tag(src=url, alt=generated)
-
-    out = _IMG_TAG_RE.sub(_alt_fill_sub, out)
     out = re.sub(r"\n{3,}", "\n\n", out)  # collapse the runaway blank lines we just made
     return out.strip()

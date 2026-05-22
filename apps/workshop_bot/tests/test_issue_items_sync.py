@@ -245,7 +245,7 @@ class MicroblogSyncTests(_DBCase):
             side_effect=lambda md, n: md,  # no-op (no images to rehost in fixtures)
         ):
             out = issue_items_sync.sync_microblog(349, WINDOW)
-        self.assertEqual(out, {"observed": 2, "pruned": 0, "featured": 0})
+        self.assertEqual(out, {"observed": 2, "pruned": 0, "featured": 0, "alts_filled": []})
         journal = issue_items.list_items(349, section="journal")
         self.assertEqual([r["title"] for r in journal], ["A titled post", None])
         self.assertEqual([r["body_md"] for r in journal], ["hello", "status only"])
@@ -310,7 +310,7 @@ class MicroblogSyncTests(_DBCase):
             side_effect=lambda md, n: md,
         ):
             out = issue_items_sync.sync_microblog(349, WINDOW)
-        self.assertEqual(out, {"observed": 2, "pruned": 0, "featured": 1})
+        self.assertEqual(out, {"observed": 2, "pruned": 0, "featured": 1, "alts_filled": []})
         journal = issue_items.list_items(349, section="journal", include_promoted=True)
         by_url = {r["url"]: r for r in journal}
         featured = by_url["https://www.thingelstad.com/2026/05/16/big"]

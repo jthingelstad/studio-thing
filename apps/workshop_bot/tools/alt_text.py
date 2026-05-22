@@ -226,6 +226,32 @@ def get_or_generate_alt(
     return alt
 
 
+def generate_alt(
+    *,
+    image_url: str,
+    context: str = "",
+    caption: Optional[str] = None,
+) -> str:
+    """Generate alt text via one vision call. **No cache, no DB I/O** —
+    used by the new ``microblog.fill_missing_alts`` flow where the alt
+    lives on micro.blog itself as the source of truth.
+
+    Returns the cleaned alt on success, or ``""`` on cap exhaustion /
+    image fetch failure / vision failure. Decrements the per-run vision
+    cap on a real call (the cap is shared with ``get_or_generate_alt``
+    so a single ``update-draft`` run can't fan out to dozens of vision
+    calls). ``begin_run()`` resets the counter at the top of the run.
+    """
+    global _calls_remaining
+    if not image_url:
+        return ""
+    if _calls_remaining <= 0:
+        logger.info("alt_text: vision cap reached; %s left empty for this run", image_url)
+        return ""
+    _calls_remaining -= 1
+    return _generate_via_vision(image_url=image_url, context=context, caption=caption)
+
+
 def set_manual_alt(*, image_key: str, alt: str) -> None:
     """Record an operator-supplied alt (e.g. from ``cover.json.alt``) in
     the cache. A subsequent ``get_or_generate_alt`` returns it without
