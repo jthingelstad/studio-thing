@@ -262,6 +262,28 @@ class FillMissingAltsTests(_ApiKeyCase):
         # In-memory still updated so a caller can preview the result.
         self.assertIn('alt="alt"', posts[0]["content_md"])
 
+    def test_apostrophe_in_existing_alt_treated_as_filled(self):
+        # Regression: the old `["\']([^"\']*)["\']` regex captured up to
+        # the first apostrophe, so alt="Hand holding a s'more …" looked
+        # to fill_missing_alts like alt="Hand holding a s" (non-empty, no
+        # action) but the broken truncation was real downstream. Verify
+        # the quote-aware regex sees the full value AND classifies it as
+        # filled (no vision, no write-back).
+        posts = [{
+            "url": "https://micro.example/p.html",
+            "title": "S'mores",
+            "content_md": (
+                '<img src="https://example.com/x.jpg" '
+                'alt="Hand holding a s\'more over a campfire">'
+            ),
+        }]
+        vision = MagicMock(return_value="should not be called")
+        with self._patched_update() as mock_update:
+            filled = microblog.fill_missing_alts(posts, vision_call=vision)
+        self.assertEqual(filled, [])
+        vision.assert_not_called()
+        mock_update.assert_not_called()
+
     def test_post_without_url_or_content_skipped(self):
         posts = [
             {"url": "", "title": "x", "content_md": '<img src="a" alt="">'},

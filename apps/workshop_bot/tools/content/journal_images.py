@@ -58,8 +58,12 @@ _FETCH_MAX_BYTES = 30 * 1024 * 1024  # 30 MB raw — sanity cap on the download
 _UA = "WeeklyThing-WorkshopBot/1.0"
 
 _IMG_TAG_RE = re.compile(r"<img\b[^>]*?>", re.IGNORECASE | re.DOTALL)
-_SRC_RE = re.compile(r'src\s*=\s*["\']([^"\']+)["\']', re.IGNORECASE)
-_ALT_RE = re.compile(r'alt\s*=\s*["\']([^"\']*)["\']', re.IGNORECASE)
+# Quote-aware: open with " or ', match anything up to the SAME closing
+# quote. Without the back-reference, an apostrophe inside a
+# double-quoted alt (alt="Hand holding a s'more …") gets read as a
+# closing quote and the value truncates at "s". Group 2 is the value.
+_SRC_RE = re.compile(r'\bsrc\s*=\s*(["\'])(.*?)\1', re.IGNORECASE | re.DOTALL)
+_ALT_RE = re.compile(r'\balt\s*=\s*(["\'])(.*?)\1', re.IGNORECASE | re.DOTALL)
 _MD_IMG_RE = re.compile(r'!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)')
 _IMG_EXT_RE = re.compile(r"\.(jpe?g|png|gif|webp)\b", re.IGNORECASE)
 _SAFE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,80}\.(jpe?g|png|gif|webp)$", re.IGNORECASE)
@@ -266,9 +270,9 @@ def rehost_in_markdown(content_md: str, issue_number: int) -> str:
         src_m = _SRC_RE.search(tag)
         if not src_m:
             return tag  # malformed; leave it
-        url = src_m.group(1).strip()
+        url = src_m.group(2).strip()
         alt_m = _ALT_RE.search(tag)
-        alt = (alt_m.group(1) if alt_m else "").strip()
+        alt = (alt_m.group(2) if alt_m else "").strip()
         return "\n\n" + _build_img_tag(src=_rewrite_url(url, n), alt=alt) + "\n\n"
 
     out = _IMG_TAG_RE.sub(_img_sub, out)

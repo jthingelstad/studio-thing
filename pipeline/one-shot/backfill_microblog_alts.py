@@ -59,9 +59,12 @@ logger = logging.getLogger("backfill_alts")
 
 # Match `<img …>` tags and pull out their src + alt.
 _IMG_TAG_RE = re.compile(r"<img\b[^>]*?>", re.IGNORECASE | re.DOTALL)
-_IMG_SRC_RE = re.compile(r'src\s*=\s*["\']([^"\']+)["\']', re.IGNORECASE)
-_IMG_ALT_RE = re.compile(r'\balt\s*=\s*["\']([^"\']*)["\']', re.IGNORECASE)
-_IMG_SRC_ATTR_RE = re.compile(r'(\bsrc\s*=\s*["\'][^"\']+["\'])', re.IGNORECASE)
+# Quote-aware: the back-reference \1 makes the closing quote match the
+# opener, so an apostrophe inside a double-quoted alt doesn't get read
+# as a closing quote. Group 2 is the value.
+_IMG_SRC_RE = re.compile(r'\bsrc\s*=\s*(["\'])(.*?)\1', re.IGNORECASE | re.DOTALL)
+_IMG_ALT_RE = re.compile(r'\balt\s*=\s*(["\'])(.*?)\1', re.IGNORECASE | re.DOTALL)
+_IMG_SRC_ATTR_RE = re.compile(r'(\bsrc\s*=\s*(["\']).*?\2)', re.IGNORECASE | re.DOTALL)
 
 
 def _splice_alt_into_img(tag: str, alt: str) -> str:
@@ -149,14 +152,14 @@ def main() -> int:
             src_m = _IMG_SRC_RE.search(tag)
             if not src_m:
                 continue
-            src = src_m.group(1).strip()
+            src = src_m.group(2).strip()
             basename = src.rsplit("/", 1)[-1].lower()
             if basename not in (k.lower() for k in cache):
                 continue
             # Resolve the exact cache key (case-sensitive in DB)
             cache_key = next(k for k in cache if k.lower() == basename)
             alt_m = _IMG_ALT_RE.search(tag)
-            current_alt = (alt_m.group(1) if alt_m else "").strip()
+            current_alt = (alt_m.group(2) if alt_m else "").strip()
             if current_alt:
                 # Live post already has an alt — don't overwrite (operator
                 # may have edited it). Still mark as found so we don't

@@ -120,8 +120,13 @@ _BR_RE = re.compile(r"<br\s*/?>", re.IGNORECASE)
 
 
 _IMG_TAG_RE = re.compile(r"<img\b[^>]*?>", re.IGNORECASE | re.DOTALL)
-_IMG_SRC_RE = re.compile(r'src\s*=\s*["\']([^"\']+)["\']', re.IGNORECASE)
-_IMG_ALT_RE = re.compile(r'alt\s*=\s*["\']([^"\']*)["\']', re.IGNORECASE)
+# Quote-aware: open with " or ', match anything up to the SAME closing
+# quote. Without the back-reference, an apostrophe inside a
+# double-quoted attribute (alt="Hand holding a s'more …") would be
+# read as a closing quote and the value would truncate at "s".
+# Group 1 is the quote char; group 2 is the value.
+_IMG_SRC_RE = re.compile(r'\bsrc\s*=\s*(["\'])(.*?)\1', re.IGNORECASE | re.DOTALL)
+_IMG_ALT_RE = re.compile(r'\balt\s*=\s*(["\'])(.*?)\1', re.IGNORECASE | re.DOTALL)
 
 
 def _img_to_md(tag: str) -> str:
@@ -129,7 +134,7 @@ def _img_to_md(tag: str) -> str:
     if not src_m:
         return ""
     alt_m = _IMG_ALT_RE.search(tag)
-    return f"![{(alt_m.group(1).strip() if alt_m else '')}]({src_m.group(1).strip()})"
+    return f"![{(alt_m.group(2).strip() if alt_m else '')}]({src_m.group(2).strip()})"
 
 
 def html_to_markdownish(content_html: str) -> str:
@@ -282,7 +287,9 @@ def update_post_content(post_url: str, new_content_md: str) -> None:
 
 # Whole `src="…"` attribute (including the keyword) — used for splicing
 # an alt in right after the src when the tag has no alt attribute at all.
-_IMG_SRC_ATTR_RE = re.compile(r'(\bsrc\s*=\s*["\'][^"\']+["\'])', re.IGNORECASE)
+# Same back-reference shape as _IMG_SRC_RE so it handles either quote
+# style and tolerates the other quote inside the value.
+_IMG_SRC_ATTR_RE = re.compile(r'(\bsrc\s*=\s*(["\']).*?\2)', re.IGNORECASE | re.DOTALL)
 # A `![](url)` markdown image with an empty alt.
 _MD_IMG_EMPTY_RE = re.compile(r"!\[\]\(([^)]+)\)")
 
@@ -316,8 +323,8 @@ def _find_empty_alt_images(content_md: str) -> list[tuple[int, int, str, str]]:
         if not src_m:
             continue
         alt_m = _IMG_ALT_RE.search(tag)
-        if alt_m is None or alt_m.group(1).strip() == "":
-            out.append((m.start(), m.end(), "html", src_m.group(1).strip()))
+        if alt_m is None or alt_m.group(2).strip() == "":
+            out.append((m.start(), m.end(), "html", src_m.group(2).strip()))
     for m in _MD_IMG_EMPTY_RE.finditer(content_md):
         out.append((m.start(), m.end(), "md", m.group(1).strip()))
     out.sort(key=lambda r: r[0])

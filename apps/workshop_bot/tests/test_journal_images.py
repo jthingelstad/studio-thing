@@ -220,6 +220,23 @@ class RehostInMarkdownTests(unittest.TestCase):
             out,
         )
 
+    def test_apostrophe_in_alt_survives_round_trip(self):
+        # Regression: the old `["\']([^"\']*)["\']` regex stopped at any
+        # `'` or `"` and would truncate `alt="Hand holding a s'more …"`
+        # at "s". The quote-aware back-reference fixes it.
+        md = (
+            '<img src="https://www.thingelstad.com/uploads/2026/x.jpg" '
+            'alt="Hand holding a s\'more over a campfire in a metal fire pit">'
+        )
+        with patch.object(s3, "journal_image_exists", lambda i, n: True), \
+             patch.object(s3, "journal_image_url",
+                          lambda i, n: f"https://files.thingelstad.com/weekly-thing/{i}/journal/{n}"):
+            out = journal_images.rehost_in_markdown(md, 458)
+        self.assertIn(
+            "alt=\"Hand holding a s&#x27;more over a campfire in a metal fire pit\"",
+            out,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
