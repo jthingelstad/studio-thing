@@ -1,25 +1,16 @@
 """Vision-generated alt text for journal and cover images.
 
-Owns the cache + the Claude vision call. Two surfaces:
+One surface: ``generate_alt(*, image_url, context, caption=None)`` makes
+one vision call (Sonnet) and returns a tight one-line description.
+Returns ``""`` on cap exhaustion / fetch failure / vision failure. No
+cache, no DB I/O — persistence is the *caller's* job (the journal alt
+ends up on micro.blog via ``tools.content.microblog.fill_missing_alts``;
+the cover alt lands in ``cover.json``).
 
-  ``get_or_generate_alt(*, image_key, image_url, context, caption=None)``
-      Returns the alt text for one image — cached forever once generated,
-      so a daily ``update-draft`` re-run is free for images we've already
-      seen. On a miss: fetches the (already-resized) image bytes from
-      ``image_url``, asks Sonnet for a tight one-line description, persists
-      on success. Failure / cap-exhaustion → returns ``""`` (the hygiene
-      review picks up empty alts as a flag).
-
-  ``begin_run()``
-      Resets the per-run vision-call cap. Call at the start of each
-      ``update-draft`` so a single run can't fan out to dozens of vision
-      calls — the cap is configurable via ``WORKSHOP_ALT_VISION_CAP``
-      (default 15). The remaining images fill on subsequent runs.
-
-``image_key`` is the cache key — content-addressed: the rehosted journal
-filename (``428e3db12e.jpg`` — micro.blog uploads are already content-hashed
-basenames) for journal images, ``cover-{N}`` for an issue's cover. Same
-image used in two issues → same key → one vision call total.
+``begin_run()`` resets the per-run vision-call cap; call at the top of
+each ``update-draft`` so a single run can't fan out to dozens of vision
+calls. The cap is configurable via ``WORKSHOP_ALT_VISION_CAP`` (default
+15). Images that don't get a budget this run fill on the next sync.
 
 Prompt guardrails: ≤120 chars, factual, no "photo of"/"image of"/"picture
 of" preamble, no emoji, no quotes / ampersands / angle brackets (so it's
@@ -38,7 +29,6 @@ from typing import Optional
 
 import requests
 
-from . import db
 from .llm import anthropic_client
 
 logger = logging.getLogger("workshop.alt_text")
@@ -199,33 +189,6 @@ def _generate_via_vision(*, image_url: str, context: str, caption: Optional[str]
     return cleaned
 
 
-def get_or_generate_alt(
-    *,
-    image_key: str,
-    image_url: str,
-    context: str = "",
-    caption: Optional[str] = None,
-) -> str:
-    """Cache-or-generate alt for one image. ``image_key`` is the stable
-    cache key (content-addressed for journal images, issue-scoped for the
-    cover). Returns ``""`` on cap exhaustion / fetch failure / vision
-    failure (a hygiene-review-flaggable signal)."""
-    global _calls_remaining
-    if not image_key or not image_url:
-        return ""
-    cached = db.get_cached_alt(image_key)
-    if cached:
-        return cached
-    if _calls_remaining <= 0:
-        logger.info("alt_text: vision cap reached; %s left empty for this run", image_key)
-        return ""
-    _calls_remaining -= 1
-    alt = _generate_via_vision(image_url=image_url, context=context, caption=caption)
-    if alt:
-        db.cache_alt(image_key=image_key, alt=alt, source="vision")
-    return alt
-
-
 def generate_alt(
     *,
     image_url: str,
@@ -233,14 +196,14 @@ def generate_alt(
     caption: Optional[str] = None,
 ) -> str:
     """Generate alt text via one vision call. **No cache, no DB I/O** —
-    used by the new ``microblog.fill_missing_alts`` flow where the alt
-    lives on micro.blog itself as the source of truth.
+    persistence is the caller's responsibility (journal alts ride on
+    micro.blog itself via ``microblog.fill_missing_alts``; cover alt
+    lands in ``cover.json`` via ``jobs/_cover.alt``).
 
     Returns the cleaned alt on success, or ``""`` on cap exhaustion /
     image fetch failure / vision failure. Decrements the per-run vision
-    cap on a real call (the cap is shared with ``get_or_generate_alt``
-    so a single ``update-draft`` run can't fan out to dozens of vision
-    calls). ``begin_run()`` resets the counter at the top of the run.
+    cap on a real call. ``begin_run()`` resets the counter at the top
+    of the run.
     """
     global _calls_remaining
     if not image_url:
@@ -250,12 +213,3 @@ def generate_alt(
         return ""
     _calls_remaining -= 1
     return _generate_via_vision(image_url=image_url, context=context, caption=caption)
-
-
-def set_manual_alt(*, image_key: str, alt: str) -> None:
-    """Record an operator-supplied alt (e.g. from ``cover.json.alt``) in
-    the cache. A subsequent ``get_or_generate_alt`` returns it without
-    touching the vision API."""
-    if not alt or not alt.strip():
-        return
-    db.cache_alt(image_key=image_key, alt=alt, source="manual")

@@ -6,11 +6,13 @@ Prefers a structured ``cover.json`` — ``{"caption": …, "location": …,
 the timestamp and the location). Falls back to a verbatim ``cover.md``
 (the legacy iOS-Shortcut form). Empty / missing either way → ``""``.
 
-``alt(issue_number)`` returns the cover's alt text: ``cover.json.alt`` if
-the operator set one (manual override wins), else a vision-generated alt
-(cached in ``image_alt_cache`` under key ``cover-{N}``), else ``""``. The
-caption is passed to the vision call so the generated alt doesn't
-duplicate the text printed directly below the image.
+``alt(issue_number)`` returns the cover's alt text. ``cover.json.alt``
+*is* the source of truth — if Jamie set one in the Shortcut or via
+``/eddy edit cover``, that wins. If the field is missing or empty,
+``alt`` makes one vision call, writes the result back into ``cover.json``
+on S3, and returns it. The next call reads ``cover.json.alt`` directly —
+no separate cache. The caption is passed to the vision call so the
+generated alt doesn't duplicate the text printed below the image.
 
 This is *only* the text/alt for the cover; both ``update-draft`` and
 ``build-publish`` prepend the cover image themselves, so the two stay in
@@ -50,28 +52,22 @@ def render(issue_number: int) -> str:
 
 
 def alt(issue_number: int) -> str:
-    """Return the cover's alt text — operator override (``cover.json.alt``)
-    wins, else vision-generated (cached), else ``""``. The caption is
-    passed to the vision call so a generated alt doesn't repeat it."""
+    """Return the cover's alt text. ``cover.json.alt`` (operator-set or
+    previously written by this function) wins; if missing/empty, makes
+    one vision call, writes it back into ``cover.json`` on S3, and
+    returns it. Returns ``""`` when ``cover.json`` is missing, when the
+    image isn't yet on S3, or when the vision call fails (the hygiene
+    review picks empty alts up)."""
     n = int(issue_number)
     data = _load_cover_json(n)
-    manual = ""
-    caption: Optional[str] = None
-    if data is not None:
-        manual = str(data.get("alt") or "").strip()
-        caption = str(data.get("caption") or "").strip() or None
-    key = f"cover-{n}"
+    if data is None:
+        return ""
+    manual = str(data.get("alt") or "").strip()
     if manual:
-        # Persist the manual override so subsequent runs / the hygiene
-        # review can read it from the same cache journal images use.
-        try:
-            alt_text.set_manual_alt(image_key=key, alt=manual)
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("cover: couldn't cache manual alt for #%d: %s", n, exc)
         return manual
+    caption = str(data.get("caption") or "").strip() or None
     try:
-        return alt_text.get_or_generate_alt(
-            image_key=key,
+        generated = alt_text.generate_alt(
             image_url=COVER_IMAGE_URL.format(n=n),
             context="",
             caption=caption,
@@ -79,6 +75,22 @@ def alt(issue_number: int) -> str:
     except Exception as exc:  # noqa: BLE001
         logger.warning("cover: alt generation failed for #%d: %s", n, exc)
         return ""
+    if not generated:
+        return ""
+    # Persist the generated alt into the same cover.json so this becomes
+    # a one-time vision call per issue — the next render reads it as the
+    # manual path above. Best-effort: if the write fails, we still return
+    # the alt for the current render and the next run will re-generate.
+    data["alt"] = generated
+    try:
+        s3.write_issue_file(n, JSON_FILE, json.dumps(data, indent=2))
+        logger.info("cover: persisted generated alt to cover.json for #%d", n)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "cover: couldn't persist generated alt to cover.json for #%d: %s",
+            n, exc,
+        )
+    return generated
 
 
 def _load_cover_json(issue_number: int) -> Optional[dict]:
