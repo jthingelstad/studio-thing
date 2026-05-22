@@ -174,6 +174,10 @@ DROP INDEX IF EXISTS idx_thingy_conversations_ended;
 DROP TABLE IF EXISTS thingy_tokens;
 DROP TABLE IF EXISTS thingy_requests;
 DROP TABLE IF EXISTS thingy_conversations;
+-- image_alt_cache — journal alts now live on micro.blog itself
+-- (filled + persisted by tools.content.microblog.fill_missing_alts);
+-- cover alt lives in cover.json. No remaining consumer of the cache.
+DROP TABLE IF EXISTS image_alt_cache;
 
 -- Issue windows — operator-set publishing schedule. Replaces the prior
 -- auto-derived in-flight resolver (which combined S3 folder names with
@@ -343,21 +347,6 @@ CREATE TABLE IF NOT EXISTS linky_research_messages (
 
 CREATE INDEX IF NOT EXISTS idx_linky_research_messages_posted
   ON linky_research_messages(posted_at DESC);
-
--- Image alt-text cache — generated via vision LLM on first sight, then
--- cached forever. `image_key` is a stable, content-addressed identifier:
--- the rehosted filename's basename for journal images (e.g.
--- ``428e3db12e.jpg`` — micro.blog uploads are already content-hashed), or
--- ``cover-<N>`` for an issue's cover. ``source`` is 'vision' (Claude
--- vision generated) or 'manual' (operator-supplied — e.g.
--- ``cover.json.alt``); cached vision rows can be overwritten by a manual
--- one without going back through the vision call.
-CREATE TABLE IF NOT EXISTS image_alt_cache (
-  image_key TEXT PRIMARY KEY,
-  alt TEXT NOT NULL,
-  source TEXT NOT NULL,                           -- 'vision' | 'manual'
-  generated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
 
 -- Currently types — the pool of "labels" a Currently entry can hang off
 -- of (Listening, Watching, Installing, …). Editable: Jamie adds a type
