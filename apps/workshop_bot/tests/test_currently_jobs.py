@@ -8,7 +8,6 @@ import asyncio
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
@@ -27,18 +26,15 @@ def _run(coro):
 
 
 class _NoopRefireMixin:
-    """Stub out the update-draft refire — these tests just check the
-    handler's return value, not the chained job."""
+    """Historically stubbed update-draft refires on mutating Currently
+    ops. Currently mutations no longer refire (changes land in the next
+    scheduled / manual update-draft instead), so this mixin is a no-op —
+    kept as a base class so subclasses keep their existing MRO."""
 
     def setUp(self):
         super().setUp()
-        self._refire_patch = patch.object(
-            _base, "schedule_update_draft_refire", lambda ctx, n: None,
-        )
-        self._refire_patch.start()
 
     def tearDown(self):
-        self._refire_patch.stop()
         super().tearDown()
 
 

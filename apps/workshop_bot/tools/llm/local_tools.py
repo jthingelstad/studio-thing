@@ -418,27 +418,10 @@ def t_workspace_write(
 
 # ---------- currently (per-issue ## Currently section) ----------
 
-# The mutating tools (`set`, `clear`, `add_type`, `reorder`) refire
-# `update-draft` as a background task so the preview reflects the change
-# without blocking the agent's reply. Fire-and-forget is fine — the
-# refire's outcome lands in agent_runs; the user-facing message has
-# already gone out.
-
-
-def _currently_refire(issue_number: int) -> bool:
-    """Schedule ``update-draft`` for ``issue_number`` if an event loop is
-    running. Returns True when a task was scheduled (best-effort)."""
-    try:
-        from ...jobs import _base as _jobs_base
-    except Exception:  # noqa: BLE001
-        return False
-    try:
-        _jobs_base.schedule_update_draft_refire(
-            _jobs_base.JobContext(trigger="agent-tool"), int(issue_number),
-        )
-    except Exception:  # noqa: BLE001
-        return False
-    return True
+# The mutating tools (`set`, `clear`, `add_type`, `reorder`) write the
+# DB change and return; they do NOT refire `update-draft`. The daily
+# 17:00 CT run (or a manual `/eddy issue update`) projects the new
+# state into the rendered draft.
 
 
 def _active_issue_number() -> Optional[int]:
@@ -492,7 +475,9 @@ def t_currently_set(deps, label: str, value: str) -> dict[str, Any]:
     the new entry appends with the next ``position`` (insertion order);
     on UPDATE the existing position is preserved. The value may include
     markdown links — pass them through verbatim (Jamie's voice; don't
-    paraphrase). Refires ``update-draft`` so the preview refreshes.
+    paraphrase). The new value lands in the next scheduled
+    ``update-draft`` (or a manual one); this tool writes the DB and
+    returns, it doesn't fire the rebuild itself.
 
     If the ``label`` isn't a known canonical type, this errors — call
     ``currently__add_type`` first when Jamie mentions a brand-new type
@@ -504,31 +489,27 @@ def t_currently_set(deps, label: str, value: str) -> dict[str, Any]:
         res = db.currently_set_entry(n, label, value)
     except db.CurrentlyError as exc:
         return {"error": str(exc)}
-    refired = _currently_refire(n)
     return {
         "ok": True,
         "issue_number": n,
         "label": res["label"],
         "position": res["position"],
-        "refired_update_draft": refired,
     }
 
 
 def t_currently_clear(deps, label: str) -> dict[str, Any]:
     """Delete one Currently entry for the active in-flight issue.
-    Renumbers remaining entries contiguously. Refires
-    ``update-draft``."""
+    Renumbers remaining entries contiguously. The change lands in the
+    next scheduled (or manual) ``update-draft``."""
     n = _active_issue_number()
     if n is None:
         return {"error": "no active issue window — Jamie starts one via /eddy issue start"}
     deleted = db.currently_clear_entry(n, label)
-    refired = _currently_refire(n) if deleted else False
     return {
         "ok": True,
         "issue_number": n,
         "label": (label or "").strip(),
         "deleted": deleted,
-        "refired_update_draft": refired,
     }
 
 
@@ -549,8 +530,8 @@ def t_currently_reorder(deps, labels: list[str]) -> dict[str, Any]:
     *strict permutation* of every currently-filled label for the issue
     (a missing or extra label is refused). Use when an issue has 3+
     entries and a particular sequence reads better — narrative
-    grouping, strongest first, or a deliberate shuffle. Refires
-    ``update-draft``."""
+    grouping, strongest first, or a deliberate shuffle. The new order
+    lands in the next scheduled (or manual) ``update-draft``."""
     n = _active_issue_number()
     if n is None:
         return {"error": "no active issue window — Jamie starts one via /eddy issue start"}
@@ -560,12 +541,10 @@ def t_currently_reorder(deps, labels: list[str]) -> dict[str, Any]:
         applied = db.currently_reorder(n, labels)
     except db.CurrentlyError as exc:
         return {"error": str(exc)}
-    refired = _currently_refire(n)
     return {
         "ok": True,
         "issue_number": n,
         "applied_order": applied,
-        "refired_update_draft": refired,
     }
 
 

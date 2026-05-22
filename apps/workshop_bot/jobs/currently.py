@@ -15,15 +15,14 @@ and per-issue values live in ``workshop.db`` (``currently_types`` /
 
 2. **``/eddy currently edit <type>``** — pops a single-field modal
    pre-filled with the current DB value. Best when the value carries
-   markdown links (no JSON escaping). UPSERTs ``currently_entries``,
-   refires ``update-draft`` so the preview refreshes.
+   markdown links (no JSON escaping). UPSERTs ``currently_entries``.
 
 3. **``/eddy currently set <type> <value>``** — non-modal quick path
-   for plain-text values. Same UPSERT + refire.
+   for plain-text values. Same UPSERT.
 
-Each mutating slash + tool path refires ``update-draft`` as a
-background task (fire-and-forget); the ack ships immediately, the
-refire's outcome lands in ``agent_runs``.
+Mutations write to the DB and stop there — they don't refire
+``update-draft``. The next scheduled (daily 17:00 CT) or manual
+``/eddy issue update`` projects the new state into ``draft.md``.
 
 Type ordering inside an issue is editorial — entries default to
 insertion order; Eddy (or Jamie via ``/eddy currently reorder``) can
@@ -138,11 +137,10 @@ async def set_value(
         res = db.currently_set_entry(n, canonical, val)
     except db.CurrentlyError as exc:
         return _base.JobResult(False, f"❌ {exc}")
-    _base.schedule_update_draft_refire(ctx, n)
     return _base.JobResult(
         True,
         f"✅ **{canonical}** set for WT{n} (position {res['position']}, "
-        f"{len(val)} chars). Re-firing `update-draft`…",
+        f"{len(val)} chars).",
         data={"issue_number": n, "label": canonical, "position": res["position"]},
     )
 
@@ -164,10 +162,9 @@ async def clear_value(
         return _base.JobResult(
             True, f"_(nothing to clear — **{canonical}** isn't set for WT{n})_",
         )
-    _base.schedule_update_draft_refire(ctx, n)
     return _base.JobResult(
         True,
-        f"🗑️ cleared **{canonical}** for WT{n}. Re-firing `update-draft`…",
+        f"🗑️ cleared **{canonical}** for WT{n}.",
         data={"issue_number": n, "label": canonical},
     )
 
@@ -189,11 +186,9 @@ async def reorder(
         applied = db.currently_reorder(n, raw)
     except db.CurrentlyError as exc:
         return _base.JobResult(False, f"❌ {exc}")
-    _base.schedule_update_draft_refire(ctx, n)
     return _base.JobResult(
         True,
-        f"🔀 Currently reordered for WT{n}: **{', '.join(applied)}**. "
-        f"Re-firing `update-draft`…",
+        f"🔀 Currently reordered for WT{n}: **{', '.join(applied)}**.",
         data={"issue_number": n, "order": applied},
     )
 
@@ -233,8 +228,9 @@ async def retire_type(ctx: "_base.JobContext", *, label: str) -> "_base.JobResul
 
 class _CurrentlyEditModal(ui.Modal):
     """Single-field modal pre-filled with the active issue's value for
-    one type. Submit UPSERTs ``currently_entries`` and refires
-    ``update-draft``."""
+    one type. Submit UPSERTs ``currently_entries``. The next scheduled
+    ``update-draft`` (or a manual one) projects the new value into the
+    rendered draft — this modal doesn't refire on its own."""
 
     def __init__(
         self,
@@ -296,10 +292,7 @@ class _CurrentlyEditModal(ui.Modal):
                 ephemeral=True,
             )
             return
-        await interaction.response.send_message(
-            f"{msg} Re-firing `update-draft`…", ephemeral=True,
-        )
-        _base.schedule_update_draft_refire(self.ctx, self.issue_number)
+        await interaction.response.send_message(msg, ephemeral=True)
 
 
 def build_modal(
