@@ -367,21 +367,20 @@ def build_marky_context(
     ship_date: Optional[str] = None,
 ) -> dict[str, Any]:
     """Marky's ``## Today`` block for promotion-prep / daily-metrics:
-    today's date, the latest *published* issue (from the RSS feed,
+    today's date, the latest *published* issue (the last one put to bed,
     independent of the in-flight one) + ship date + days since ship, and
     active ad campaigns with how long they've been running. ``latest_issue``
-    / ``ship_date`` may be supplied (rss-check already fetched them) to
-    skip a second feed fetch."""
+    / ``ship_date`` may be supplied by the caller to skip the lookup."""
     today = ref_date or _today()
     if latest_issue is None:
         try:
-            from .. import rss as _rss
-            li = _rss.latest_published_issue()
+            from .. import db as _db
+            li = _db.get_latest_issue()
             if li:
                 latest_issue = li.get("number")
-                ship_date = ship_date or li.get("ship_date")
+                ship_date = ship_date or (li.get("publish_date") or "")[:10] or None
         except Exception as exc:  # noqa: BLE001
-            logger.warning("build_marky_context: RSS lookup failed: %s", exc)
+            logger.warning("build_marky_context: latest-issue lookup failed: %s", exc)
     days_since_ship = None
     if ship_date:
         try:

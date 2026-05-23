@@ -7,8 +7,7 @@ function with a ``JobContext`` and lets it do the work.
 
 Handlers are thin: ``content_job`` bridges a cron ``JobSpec`` to a
 ``jobs/<name>.py`` module's ``run(ctx, …)`` (translating this
-``JobContext`` to the jobs package's own), and ``rss_check`` polls the
-feed and auto-fires ``promotion-prep``. The job decides everything —
+``JobContext`` to the jobs package's own). The job decides everything —
 including whether to invoke a persona's agent loop; the runner just
 fires it on schedule.
 

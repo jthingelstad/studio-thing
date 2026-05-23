@@ -6,7 +6,7 @@ format a report, post to a channel, write S3, save memory.
 
 The scheduled surface is the ``apps/workshop_bot/jobs/`` content-loop
 pipeline, fired from cron via ``functools.partial(handlers.content_job,
-job=…)`` (or, for ``rss-check``, the bare ``handlers.rss_check``). Today:
+job=…)``. Today:
 
 - ``update-draft`` — daily 17:00 CT. Projects upstream content into
   ``draft.md``; PASSes if no issue is in flight or it's locked
@@ -16,8 +16,6 @@ job=…)`` (or, for ``rss-check``, the bare ``handlers.rss_check``). Today:
   the active discovery feed set (currently Pinboard popular only); each
   card posts as its own ``#research`` message. PASSes silently on empty
   scans.
-- ``rss-check`` — Sat & Sun, every 4h 09:00–21:00 CT. Detects a
-  newly-published issue and auto-fires ``promotion-prep``.
 - ``daily-metrics`` — daily 19:00 CT. Polls active campaigns, checks
   subscriber growth + engagement; PASSes silently when nothing material
   moved, else posts a report.
@@ -95,15 +93,10 @@ JOBS: tuple[JobSpec, ...] = (
                                                          # when actually new bookmarks were filed.
         func=functools.partial(handlers.content_job, job="feedbin-ingest"),
     ),
-    JobSpec(
-        id="marky-rss-check",
-        cron="0 9-21/4 * * 6,0",                         # Sat & Sun, every 4h 09:00–21:00 Central.
-                                                         # Detects a newly-published issue in the
-                                                         # RSS feed; on a new number, fires
-                                                         # promotion-prep for it (deduped via
-                                                         # agent_notes).
-        func=handlers.rss_check,
-    ),
+    # Note: there's no RSS-poll job. Sharing is phase-driven — an issue
+    # enters the Share phase at put-to-bed, which posts the Share card and
+    # auto-fires promotion-prep. promotion-prep is otherwise manual
+    # (/marky prep or the Share-card button).
     JobSpec(
         id="marky-daily-metrics",
         cron="0 19 * * *",                               # Daily 19:00 Central. Polls active

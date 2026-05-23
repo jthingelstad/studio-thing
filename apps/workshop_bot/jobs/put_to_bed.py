@@ -225,14 +225,18 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
 
     # Close out the Build + Publish cards (the issue leaves the active window)
-    # and surface the Share card for it in #promotion. Best-effort.
+    # and hand off to the Share phase: surface the Share card in #promotion and
+    # auto-fire promotion-prep so Marky drafts the syndication copy (the
+    # phase-driven replacement for the old RSS-poll trigger — Marky still never
+    # auto-*posts*; the draft just lands in #promotion for Jamie). Best-effort.
     try:
-        from . import _cards, share_card
+        from . import _cards, promotion_prep, share_card
         for kind in ("build", "publish"):
             await _cards.clear_card(ctx, kind=kind, channel_env=_cards.EDITORIAL_ENV, persona="eddy", n=n)
         await share_card.post_or_update(ctx)
+        await promotion_prep.run(_base.JobContext(deps=ctx.deps, trigger="put-to-bed"))
     except Exception:  # noqa: BLE001
-        logger.exception("put-to-bed: card handoff failed for WT%d", n)
+        logger.exception("put-to-bed: Share handoff failed for WT%d", n)
 
     return _base.JobResult(
         True,

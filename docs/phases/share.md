@@ -11,7 +11,8 @@ in the overview).
 Per-issue syndication of the just-published issue:
 
 - A **LinkedIn** post and the **r/WeeklyThing** megathread + per-link discussion threads, drafted
-  by `promotion-prep` (Marky **never auto-posts** — drafts only; Jamie posts).
+  by `promotion-prep` — **auto-fired when the issue enters Share** (`put-to-bed`), re-runnable from
+  the Share card. (Marky **never auto-posts** — drafts only; Jamie posts.)
 - Current campaign performance + subscriber/engagement metrics shown as **context** (read-only).
 
 There is no hard "done" — metrics keep accruing. The **Share card** (`#promotion`) is the live

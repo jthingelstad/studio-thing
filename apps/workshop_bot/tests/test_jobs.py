@@ -79,9 +79,9 @@ class JobConfigTests(unittest.TestCase):
         for job in jobs_module.JOBS:
             with self.subTest(job=job.id):
                 self.assertTrue(callable(job.func), f"job {job.id} func is not callable")
-                # content_job is wired as ``functools.partial(content_job,
-                # job="<name>")``; rss_check is bare. Unwrap the partial so
-                # the underlying coroutine function and module land cleanly.
+                # Every job is wired as ``functools.partial(content_job,
+                # job="<name>")``. Unwrap the partial so the underlying
+                # coroutine function and module land cleanly.
                 underlying = (
                     job.func.func if isinstance(job.func, functools.partial)
                     else job.func
@@ -124,8 +124,10 @@ class JobConfigTests(unittest.TestCase):
         self.assertFalse([i for i in ids if i.endswith("-heartbeat")], f"unexpected heartbeat job(s): {ids}")
         self.assertFalse(hasattr(handlers, "heartbeat"), "handlers.heartbeat should be gone")
         # The content-loop jobs are present.
-        for jid in ("update-draft-daily", "linky-pinboard-scan", "marky-rss-check", "marky-daily-metrics"):
+        for jid in ("update-draft-daily", "linky-pinboard-scan", "marky-daily-metrics"):
             self.assertIn(jid, ids)
+        # Sharing is phase-driven now — no RSS-poll job.
+        self.assertNotIn("marky-rss-check", ids)
 
     def test_known_handlers_referenced(self):
         # Sanity: every async handler we ship is wired to a JobSpec.

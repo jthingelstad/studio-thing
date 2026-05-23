@@ -372,9 +372,9 @@ class MarkyContextWithCampaignsTests(_DBCase):
         from datetime import date, timedelta
         db.insert_campaign(name="dd-may", ref="dd-2026-05-15",
                            started_at=(date.today() - timedelta(days=3)).isoformat())
-        from apps.workshop_bot.tools import rss
-        with patch.object(rss, "latest_published_issue", lambda: None):
-            ctx = context.build_marky_context(ref_date=date.today())
+        # No issue filed in this temp DB → get_latest_issue() returns None,
+        # so build_marky_context focuses on the campaign rows.
+        ctx = context.build_marky_context(ref_date=date.today())
         self.assertEqual(len(ctx["active_campaigns"]), 1)
         self.assertEqual(ctx["active_campaigns"][0]["name"], "dd-may")
         self.assertEqual(ctx["active_campaigns"][0]["days_running"], 3)

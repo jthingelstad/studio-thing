@@ -16,7 +16,7 @@ import asyncio
 import logging
 from typing import Optional
 
-from ..tools import archive_context, db, rss, s3
+from ..tools import archive_context, db, s3
 from ..tools.content import context
 from ..tools.llm import anthropic_client
 from . import _base, _llm_job
@@ -37,23 +37,22 @@ _THREAD_QUERY_CHARS = 2000
 
 
 def _resolve_latest_issue(explicit: Optional[int]) -> tuple[Optional[int], Optional[str]]:
+    """The Share target = the last-published issue (the most recent row in the
+    `issues` table, filed by put-to-bed). The phase, not an RSS poll, is what
+    says an issue is ready to share."""
     if explicit is not None:
         return int(explicit), None
-    try:
-        li = rss.latest_published_issue()
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("promotion-prep: RSS lookup failed: %s", exc)
-        return None, None
+    li = db.get_latest_issue()
     if not li:
         return None, None
-    return li.get("number"), li.get("ship_date")
+    return int(li["number"]), (li.get("publish_date") or "")[:10] or None
 
 
 async def run(ctx: "_base.JobContext", *, issue_number: Optional[int] = None) -> "_base.JobResult":
-    # Resolving the latest issue hits the RSS feed; reading buttondown.md hits S3.
+    # Resolve the last-published issue from the DB (filled by put-to-bed); reading buttondown.md hits S3.
     n, ship_date = await asyncio.to_thread(_resolve_latest_issue, issue_number)
     if n is None:
-        return _base.JobResult(False, "❌ couldn't determine the latest published issue from the RSS feed.")
+        return _base.JobResult(False, "❌ no published issue yet — put an issue to bed first.")
     res = await asyncio.to_thread(s3.read_issue_file, n, "buttondown.md")
     if not (res.get("found") and isinstance(res.get("text"), str) and res["text"].strip()):
         return _base.JobResult(
