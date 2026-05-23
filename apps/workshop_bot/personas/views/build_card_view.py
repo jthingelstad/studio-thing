@@ -21,7 +21,10 @@ class BuildCardView(discord.ui.View):
 
     @discord.ui.button(label="Refresh", emoji="🔄", style=discord.ButtonStyle.secondary,
                        custom_id=build_card.BTN_REFRESH, row=0)
-    async def _refresh(self, interaction, button):  # type: ignore[no-untyped-def]
+    async def _on_refresh(self, interaction, button):  # type: ignore[no-untyped-def]
+        # Don't rename to `_refresh` — that shadows `discord.ui.View._refresh`,
+        # the method discord.py calls on MESSAGE_UPDATE; the resolved Button
+        # then isn't callable and the gateway poll loop crashes.
         await launch(interaction, update_draft.run, "refresh",
                      started="🔄 Refreshing the draft — the card updates in place.",
                      refresh=build_card.post_or_update)

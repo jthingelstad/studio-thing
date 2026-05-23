@@ -32,7 +32,9 @@ class ShareCardView(discord.ui.View):
 
     @discord.ui.button(label="Refresh", emoji="🔄", style=discord.ButtonStyle.secondary,
                        custom_id=share_card.BTN_REFRESH, row=0)
-    async def _refresh(self, interaction, button):  # type: ignore[no-untyped-def]
+    async def _on_refresh(self, interaction, button):  # type: ignore[no-untyped-def]
+        # See build_card_view._on_refresh — `_refresh` collides with
+        # `discord.ui.View._refresh` and crashes the gateway poll loop.
         await launch(interaction, lambda ctx: share_card.post_or_update(ctx), "share-refresh",
                      started="🔄 Refreshing the Share card…", refresh=None)
 
