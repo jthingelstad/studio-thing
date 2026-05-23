@@ -91,11 +91,20 @@ class RenderEmailTests(unittest.TestCase):
         )
         # No marker round-trip — no `<!-- cta:1 -->` anywhere.
         self.assertNotIn("<!-- cta:1 -->", out)
-        # Liquid block appears, with the CTA copy + Stripe buttons.
+        # Liquid block appears with the CTA copy and a single "Become a
+        # Supporting Member" button pointing at the website's members
+        # page (not directly at the Stripe payment links).
         self.assertIn("Support the Weekly Thing this year.", out)
         self.assertIn("{% if subscriber.subscriber_type == 'regular' %}", out)
-        self.assertIn("$4 monthly", out)
-        self.assertIn("$40 yearly", out)
+        self.assertIn("Become a Supporting Member", out)
+        self.assertIn("https://weekly.thingelstad.com/members/", out)
+        # ref=WT{N} carries the issue number so analytics by-issue is legible.
+        self.assertIn("ref=WT458", out)
+        # No direct Stripe links from the email anymore.
+        self.assertNotIn("buy.stripe.com", out)
+        self.assertNotIn("$4 monthly", out)
+        self.assertNotIn("$40 yearly", out)
+        # Anonymous-subscriber branch still gets the subscribe form.
         self.assertIn("{{ subscribe_form }}", out)
         # Splice happens after Notable, before Journal.
         notable_idx = out.find("## Notable")
@@ -183,9 +192,10 @@ class RenderEmailPreviewTests(unittest.TestCase):
         preview = renderers.render_email_preview(full)
         self.assertNotIn("buttondown-editor-mode", preview)
         self.assertNotIn("tinylytics.app/pixel", preview)
-        # Regular subscriber branch surfaces — CTA copy + Stripe + buttons.
+        # Regular subscriber branch surfaces — CTA copy + the single
+        # "Become a Supporting Member" button to the members page.
         self.assertIn("Supporter CTA copy.", preview)
-        self.assertIn("$4 monthly", preview)
+        self.assertIn("Become a Supporting Member", preview)
         # Leftover Liquid wrappers stripped.
         self.assertNotIn("{% if", preview)
         self.assertNotIn("{{ ", preview)

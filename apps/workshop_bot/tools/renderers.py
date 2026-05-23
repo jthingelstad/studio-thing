@@ -74,23 +74,31 @@ def pixel_block(issue_number: int) -> str:
     )
 
 
-def supporter_block(cta_body: str) -> str:
+def supporter_block(cta_body: str, *, issue_number: int) -> str:
     """Audience-aware Liquid wrapper for a non-member CTA.
 
-    ``regular`` subscribers see the CTA + two Stripe payment-link
-    buttons (``$4 monthly`` / ``$40 yearly``). Anyone else without a
-    premium membership sees the CTA + ``{{ subscribe_form }}``.
-    Premium members fall through to nothing.
+    ``regular`` subscribers see the CTA + a single "Become a Supporting
+    Member" button linking to the website's ``/members/`` page (which
+    explains the offer and routes onward — no direct Stripe links from
+    the email). The link carries the subscriber's email (so the members
+    page can prefill it) and ``?ref=WT{N}`` so traffic-by-issue is
+    legible to ``tinylytics`` analytics.
+
+    Anyone else without a premium membership sees the CTA +
+    ``{{ subscribe_form }}``. Premium members fall through to nothing.
     """
     body = cta_body.strip()
+    n = int(issue_number)
+    member_url = (
+        "https://weekly.thingelstad.com/members/"
+        f"?{{{{ subscriber.email | urlencode }}}}&ref=WT{n}"
+    )
     return (
         "{% if subscriber.subscriber_type == 'regular' %}\n\n"
         f"{body}\n\n"
-        '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td width="50%" valign="top" style="padding:10px; text-align:center; font-size: 16px; font-weight: bold;">\n'
-        '<buttondown-button href="https://buy.stripe.com/3cs7w5eX6aXBbhm144?prefilled_email={{ subscriber.email | urlencode }}">$4 monthly</buttondown-button>\n'
-        '</td><td width="50%" valign="top" style="padding:10px; text-align:center; font-size: 16px; font-weight: bold;">\n'
-        '<buttondown-button href="https://buy.stripe.com/eVa3fP2ak3v91GMdQR?prefilled_email={{ subscriber.email | urlencode }}">$40 yearly</buttondown-button>\n'
-        "</td></tr></table>\n\n"
+        '<p style="text-align:center; padding:10px 0; font-size: 16px; font-weight: bold;">\n'
+        f'<buttondown-button href="{member_url}">Become a Supporting Member</buttondown-button>\n'
+        "</p>\n\n"
         "{% elsif subscriber.subscriber_type != 'premium' %}\n\n"
         f"{body}\n\n"
         "{{ subscribe_form }}\n\n"
@@ -257,9 +265,9 @@ def render_email_body(
     cta_2 = (cta_atoms.get("cta:2") or "").strip()
     thanks_1 = (cta_atoms.get("thanks:1") or "").strip()
     if cta_1:
-        trailers["notable"] = supporter_block(cta_1)
+        trailers["notable"] = supporter_block(cta_1, issue_number=issue_number)
     if cta_2:
-        trailers["journal"] = supporter_block(cta_2)
+        trailers["journal"] = supporter_block(cta_2, issue_number=issue_number)
     if thanks_1:
         trailers["brief"] = thanks_block(thanks_1)
 
