@@ -142,6 +142,7 @@ The full convention list (Pinboard tag rules, micro.blog pull behavior, journal 
 ## Related reading
 
 - [`CLAUDE.md`](CLAUDE.md) — operational memory (jobs table, conventions, storage details, follow-ups)
-- [`../../docs/workshop-content-loop-design-brief.md`](../../docs/workshop-content-loop-design-brief.md) — the full design rationale that produced this runtime
+- [`../../notes/design/workshop-content-loop-design-brief.md`](../../notes/design/workshop-content-loop-design-brief.md) — the full design rationale that produced this runtime
+- [`../../docs/publishing-process.md`](../../docs/publishing-process.md) — the editorial north star: how an issue is built, published, shared
 - [`prompts/shared/team.md`](prompts/shared/team.md) — shared cross-persona system prompt
 - [`prompts/shared/thingy-voice-reference.md`](prompts/shared/thingy-voice-reference.md) — the voice anchor Patty uses for the supporter CTA

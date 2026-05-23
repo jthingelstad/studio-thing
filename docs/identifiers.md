@@ -1,8 +1,13 @@
-# Issue naming conventions
+# Identifiers & subject lines
 
 How a Weekly Thing issue is identified and titled, and where each form is allowed
 to appear. Two things are defined here: the **short identifier** (`WT<NUM>`) and the
 **email subject line** (`WT<NUM> — <Theme>`).
+
+Where this sits in the system: the identifier is what every surface — and
+[Thingy](agents/thingy.md) — uses to refer to an issue; the subject line is a **Publish-phase**
+input composed by [Eddy](agents/eddy.md) (see [`phases/publish.md`](phases/publish.md)). For the
+per-section body formatting and the platform eras, see [`sections.md`](sections.md).
 
 ## The short identifier: `WT<NUM>`
 
@@ -64,7 +69,7 @@ subject, `content.py` falls back to `WT<NUM>` alone.)
 
 ### History: three eras of subject lines
 
-The archive is not uniform — see `CLAUDE.md` for the platform-era table. Roughly:
+The archive is not uniform — see [`sections.md`](sections.md) for the platform-era table. Roughly:
 
 | Issues | Era | Subject shape |
 |---|---|---|
@@ -99,7 +104,7 @@ and `Weekly Thing 345 / Codex, Headless, Wikiwise` shows `Codex, Headless, Wikiw
 | Prose inside issues (Notable "discuss on Reddit" line excepted) | `WT<NUM>` | Jamie's own writing convention |
 | `/archive/<NUM>/` and other URLs | bare `<NUM>` | path scheme, not a display form |
 
-## Thingy (the Librarian archive agent)
+## Thingy (the reader-facing archive agent — [`agents/thingy.md`](agents/thingy.md))
 
 Thingy always refers to issues as `WT<NUM>` in its answers, for any issue, old or
 new. This is enforced at two layers:

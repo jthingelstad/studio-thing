@@ -10,7 +10,7 @@ Single-pass pipeline:
 
 Writes two files (unless --dry-run):
   - apps/site/_data/voiceSamples.json
-  - docs/creative/brief.md
+  - pipeline/content/marketing-brief.md  (this script's persistent context)
 
 Also writes a run log to tmp/copy-refresh-<ts>.json for auditability.
 
@@ -41,7 +41,7 @@ load_dotenv()
 REPO = Path(__file__).resolve().parents[2]
 ARCHIVE = REPO / "apps" / "site" / "archive"
 DATA = REPO / "apps" / "site" / "_data"
-BRIEF_PATH = REPO / "docs" / "creative" / "brief.md"
+BRIEF_PATH = REPO / "pipeline" / "content" / "marketing-brief.md"
 VOICE_PATH = DATA / "voiceSamples.json"
 EMAILS_PATH = DATA / "emails.json"
 SURVEY_PATH = DATA / "survey.json"
@@ -86,7 +86,7 @@ class SonnetFindings(BaseModel):
     selectedQuotes: list[VoiceSample] = Field(description="3–5 quotes from candidateQuotes, ordered by strength. These become the voice samples on the home page.")
     observations: str = Field(description="2–4 sentence running-notes paragraph for the brief's Open observations section.")
     recurringThemesNotes: str = Field(description="Markdown-bulleted list (3–6 bullets) for the brief's Recurring themes section. Each bullet ≤20 words.")
-    updatedBrief: str = Field(description="Full rewritten content of docs/creative/brief.md. Preserve the Voice / What makes it unique / What to avoid sections verbatim from the existing brief; only update Recurring themes and Open observations sections using your recurringThemesNotes and observations. Preserve all headings and markdown formatting.")
+    updatedBrief: str = Field(description="Full rewritten content of pipeline/content/marketing-brief.md. Preserve the Voice / What makes it unique / What to avoid sections verbatim from the existing brief; only update Recurring themes and Open observations sections using your recurringThemesNotes and observations. Preserve all headings and markdown formatting.")
 
 
 # ───────────────────────── loading / sampling ─────────────────────────
@@ -182,7 +182,7 @@ Real subscriber quotes. They may inform your understanding of voice but do not a
 - `selectedQuotes`: 3–5 of the candidateQuotes ordered by strength. These will appear on the home page. Prefer range (observational + opinionated + personal + curious). Keep text VERBATIM — they will be machine-verified against the issue body.
 - `observations`: 2–4 sentence running-notes paragraph for the brief's "Open observations" section.
 - `recurringThemesNotes`: Markdown-bulleted list (3–6 bullets) for the brief's "Recurring themes" section. Each bullet ≤20 words.
-- `updatedBrief`: Return the complete rewritten content of `docs/creative/brief.md`. Copy the Voice, What makes it unique, and What to avoid sections VERBATIM from the creative brief above. Update only the Recurring themes and Open observations sections using your `recurringThemesNotes` and `observations`. Preserve all headings and markdown formatting.
+- `updatedBrief`: Return the complete rewritten content of `pipeline/content/marketing-brief.md`. Copy the Voice, What makes it unique, and What to avoid sections VERBATIM from the creative brief above. Update only the Recurring themes and Open observations sections using your `recurringThemesNotes` and `observations`. Preserve all headings and markdown formatting.
 
 ## Hard rules
 

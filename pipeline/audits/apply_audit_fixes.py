@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Convert LLM audit findings into structured fixes and apply them to bodies.
 
-Reads docs/audits/llm-audit.json. For each high/medium-severity finding,
+Reads notes/audits/llm-audit.json. For each high/medium-severity finding,
 asks Haiku to convert the free-form `suggested_fix` text into a structured
 `{action, find, replace, confidence, reason}` payload. Only auto-applies a
 fix when:
@@ -33,10 +33,10 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 REPO = Path(__file__).resolve().parents[2]
-AUDIT_PATH = REPO / "docs" / "audits" / "llm-audit.json"
+AUDIT_PATH = REPO / "notes" / "audits" / "llm-audit.json"
 # After the workshop-as-source inversion the canonical bodies live as
 # data/issues/{N}/archive.md (front matter + body). The audit tool still
-# works on a snapshot of the docs/audits/llm-audit.json findings; the
+# works on a snapshot of the notes/audits/llm-audit.json findings; the
 # bodies dir got repointed but the per-file shape is different now
 # (front matter precedes the body), so a re-run will need a small
 # parser tweak before it can apply find/replace fixes against the new

@@ -1,6 +1,6 @@
 # pipeline/audits/ — project memory
 
-Repeatable archive audit + repair tooling. No README — this directory is operator-only. Output snapshots live in [`../../docs/audits/`](../../docs/audits/) with their own [`README.md`](../../docs/audits/README.md).
+Repeatable archive audit + repair tooling. No README — this directory is operator-only. Output snapshots live in [`../../notes/audits/`](../../notes/audits/) with their own [`README.md`](../../notes/audits/README.md).
 
 ## The four audit scripts
 
@@ -22,17 +22,17 @@ These take an audit's output and apply fixes back to `data/issues/{N}/archive.md
 
 ## Output convention
 
-All scripts write to `tmp/` (gitignored) by default. **Copy results into `docs/audits/` to snapshot them** so the next session has context:
+All scripts write to `tmp/` (gitignored) by default. **Copy results into `notes/audits/` to snapshot them** so the next session has context:
 
 ```bash
 cp tmp/archive-audit*.md tmp/archive-audit*.json \
    tmp/llm-audit.md tmp/llm-audit.json \
    tmp/missing-photos.md tmp/missing-photos.json \
    tmp/missing-microblog-posts.md tmp/missing-microblog-posts.json \
-   docs/audits/
+   notes/audits/
 ```
 
-The [`docs/audits/README.md`](../../docs/audits/README.md) documents what each snapshot is.
+The [`notes/audits/README.md`](../../notes/audits/README.md) documents what each snapshot is.
 
 ## Workflow when a new class of issue surfaces
 
@@ -42,7 +42,7 @@ The [`docs/audits/README.md`](../../docs/audits/README.md) documents what each s
 4. If a one-off: hand-edit `data/issues/{N}/archive.md` directly. Commit with a clear message.
 5. Re-run `make build` to regenerate `apps/site/archive/{N}.md`.
 6. Optionally re-run the audit to confirm the fix.
-7. Snapshot the new audit output into `docs/audits/`.
+7. Snapshot the new audit output into `notes/audits/`.
 
 ## GitHub issue tracking
 
@@ -64,4 +64,4 @@ Open cleanup work is tracked in GitHub issues with labels:
 - **Never auto-apply LLM fixes blindly.** `apply_audit_fixes.py` prompts per suggestion; respect that.
 - **Repair scripts are one-shot.** Once they've done their job, they retire to `pipeline/one-shot/` — see that directory's README for the retired list.
 - **Always commit before running a repair script.** Easier to revert.
-- **Audits write to `tmp/` by default.** Snapshot to `docs/audits/` when results are stable.
+- **Audits write to `tmp/` by default.** Snapshot to `notes/audits/` when results are stable.

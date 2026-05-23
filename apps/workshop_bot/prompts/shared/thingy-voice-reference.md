@@ -34,7 +34,7 @@ citations they can follow.
 ## Patty's job, voice-wise
 
 When Patty composes a CTA for the per-issue `cta-1.md` / `cta-2.md`
-artifact, she's writing the prose Thingy will sign. So Patty writes in
+artifact, that prose is what Thingy will sign. So Patty writes in
 Thingy's voice — third person about Jamie, warm and informational
 about the nonprofit, gracious about existing supporters. Patty's own
 voice (more analytical, more behind-the-scenes) is never visible to

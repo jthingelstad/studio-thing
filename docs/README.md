@@ -1,20 +1,33 @@
-# Project Documentation
+# How The Weekly Thing works
 
-This directory contains operational notes for the Weekly Thing archive site.
+This is the **editorial north star** — the canonical, plain-English description of how an issue of
+*The Weekly Thing* is made and shipped. It's what we design the implementation against and verify
+it against. (See [`CLAUDE.md`](CLAUDE.md) for the discipline around that.)
 
-- [Archive Librarian](librarian.md): Thingy architecture, AWS runtime, deployment, observability, beta logging, and review commands.
-- [External systems](systems/README.md): Auth quirks, endpoint catalogs, and gotchas for Buttondown / Pinboard / Stripe / Tinylytics.
-- [Audits](audits/README.md): Archive audit outputs and one-off cleanup references.
+**Start here:** [`publishing-process.md`](publishing-process.md) — the spine (Build → Publish →
+Share), concurrency, and who owns what. Everything else is detail behind it.
 
-The content pipeline architecture (workshop-as-source, the build path from `data/issues/`, the ship sequence) lives in the root [`CLAUDE.md`](../CLAUDE.md) and [`apps/workshop_bot/CLAUDE.md`](../apps/workshop_bot/CLAUDE.md). Historical design notes are in [`workshop-content-loop-design-brief.md`](workshop-content-loop-design-brief.md) and [`workshop-content-loop-progress.md`](workshop-content-loop-progress.md).
+## When to read each
 
-## Common Commands
+| If you want to understand… | Read |
+|---|---|
+| The overall process + phase machinery | [`publishing-process.md`](publishing-process.md) |
+| A single phase | [`phases/build.md`](phases/build.md) · [`phases/publish.md`](phases/publish.md) · [`phases/share.md`](phases/share.md) |
+| What's in an issue + how it's formatted | [`sections.md`](sections.md) |
+| The Journal (micro.blog → issue) | [`journal-handling.md`](journal-handling.md) |
+| How a post becomes a Featured section | [`featured-posts.md`](featured-posts.md) |
+| The Echoes section (Thingy's archive note) | [`echoes.md`](echoes.md) |
+| How it should sound | [`voice-and-style.md`](voice-and-style.md) |
+| The standing programs | [`programs/membership.md`](programs/membership.md) · [`programs/campaigns.md`](programs/campaigns.md) |
+| A persona's role | [`agents/`](agents/) — eddy · linky · marky · patty · thingy |
+| How issues are identified + titled | [`identifiers.md`](identifiers.md) |
 
-```sh
-make build              # regenerate apps/site/archive/ from data/issues/, then 11ty + Pagefind
-make stats              # refresh subscriber count + Stripe balance in stats.json
-npm run librarian:corpus
-npm run librarian:deploy
-```
+## What's *not* here
 
-The generated files in `apps/site/archive/` are not the editing surface. The canonical editorial source is `data/issues/{N}/archive.md` — written by workshop_bot's ship sequence, or hand-edited and committed. `pipeline/content/content.py build` (wrapped by `make build`) regenerates `apps/site/archive/{N}.md` from those bytes.
+- **Technical reference** (the Librarian/Thingy Lambda runtime, third-party API gotchas) →
+  [`../reference/`](../reference/README.md).
+- **Project history** (design briefs, audit snapshots, progress logs, planning sessions) →
+  [`../notes/`](../notes/README.md). *True when written, not canonical — this `docs/` wins.*
+- **How it's built** (jobs, schema, runtime conventions) → the per-app `CLAUDE.md` files
+  (`apps/workshop_bot/CLAUDE.md`, etc.). The canonical editorial source for a shipped issue is
+  `data/issues/{N}/archive.md`; `make build` regenerates the site from those bytes.

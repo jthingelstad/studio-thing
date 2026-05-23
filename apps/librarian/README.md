@@ -2,7 +2,7 @@
 
 The AWS Lambda agent that answers reader questions against the Weekly Thing archive. "Librarian" is the system name in code; **Thingy** is the product name shown to users.
 
-> Operational memory for editing this stack lives in [`CLAUDE.md`](CLAUDE.md). Full runtime guide — IAM cleanup plan, retrieval architecture, Tinylytics events, deployment checklist — is at [`../../docs/librarian.md`](../../docs/librarian.md).
+> Operational memory for editing this stack lives in [`CLAUDE.md`](CLAUDE.md). Full runtime guide — IAM cleanup plan, retrieval architecture, Tinylytics events, deployment checklist — is at [`../../reference/librarian.md`](../../reference/librarian.md).
 
 ## What it is
 
@@ -83,6 +83,6 @@ The `admin/` directory has its own [`README.md`](admin/README.md) for the (curre
 ## Related reading
 
 - [`CLAUDE.md`](CLAUDE.md) — operational memory (Bedrock model gotchas, retrieve internals, conventions)
-- [`../../docs/librarian.md`](../../docs/librarian.md) — full runtime guide
+- [`../../reference/librarian.md`](../../reference/librarian.md) — full runtime guide
 - [`../thingy_bridge/`](../thingy_bridge/) — the Discord bridge to this Lambda (reader-facing surface)
 - [`../workshop_bot/tools/thingy_retrieve.py`](../workshop_bot/tools/thingy_retrieve.py) — workshop_bot's client for the `/retrieve` endpoint

@@ -2,7 +2,7 @@
 
 Captured from the WT349 ship night (2026-05-22 / 23). This is the source material for the design session: what happened, what hurt, what we discussed as a remediation, and the decisions left open.
 
-Treat the actual `apps/workshop_bot/CLAUDE.md` + `docs/workshop-content-loop-design-brief.md` as the architectural ground truth; this doc is *operator experience* notes layered on top.
+Treat the actual `apps/workshop_bot/CLAUDE.md` + [`workshop-content-loop-design-brief.md`](workshop-content-loop-design-brief.md) as the architectural ground truth; this doc is *operator experience* notes layered on top. (The canonical "how it works" now lives in [`docs/publishing-process.md`](../../docs/publishing-process.md) + `docs/phases/`.)
 
 ---
 

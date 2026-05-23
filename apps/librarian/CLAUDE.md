@@ -1,6 +1,6 @@
 # librarian — project memory
 
-Operational notes for the Thingy Lambda stack. Human-facing overview lives in [`README.md`](README.md). The full runtime guide (env vars, IAM cleanup plan, retrieval architecture in depth, Tinylytics events, deployment checklist) is at [`../../docs/librarian.md`](../../docs/librarian.md). This file is the "what to keep in mind when editing here" memory.
+Operational notes for the Thingy Lambda stack. Human-facing overview lives in [`README.md`](README.md). The full runtime guide (env vars, IAM cleanup plan, retrieval architecture in depth, Tinylytics events, deployment checklist) is at [`../../reference/librarian.md`](../../reference/librarian.md). This file is the "what to keep in mind when editing here" memory.
 
 ## Architecture: two Lambdas, one CloudFormation stack
 

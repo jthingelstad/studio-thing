@@ -16,7 +16,7 @@ future sessions can pick up the thread without re-running everything.
 ## How to regenerate
 
 All scripts write to `tmp/` (gitignored) by default — copy results into
-`docs/audits/` to snapshot them.
+`notes/audits/` to snapshot them.
 
 ```bash
 # Static audit (requires fresh _site/; rebuild with `npx @11ty/eleventy` first)
@@ -31,12 +31,12 @@ python pipeline/audits/audit_missing_micropost_photos.py
 # Enriched missing-microblog report (with Wayback lookups)
 python pipeline/audits/build_missing_posts_report.py
 
-# Snapshot all outputs into docs/audits/
+# Snapshot all outputs into notes/audits/
 cp tmp/archive-audit*.md tmp/archive-audit*.json \
    tmp/llm-audit.md tmp/llm-audit.json \
    tmp/missing-photos.md tmp/missing-photos.json \
    tmp/missing-microblog-posts.md tmp/missing-microblog-posts.json \
-   docs/audits/
+   notes/audits/
 ```
 
 ## Fixes applied (as of this snapshot)
