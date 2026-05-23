@@ -89,6 +89,48 @@ def heading_label(raw: str) -> str:
     return HEADING_LABELS.get(text, text)
 
 
+# H3 link card under a link section: ``### [Title](url)``.
+_H3_LINK_RE = re.compile(r"^###\s+\[([^\]]+)]\([^)]+\)\s*$")
+
+
+def _count_links_per_section(body: str) -> dict[str, int]:
+    """Scan the body once and return ``{section_name: link_count}``
+    for every Notable/Briefly-style section we can announce up front.
+
+    Counting happens before the main transform pass so each link
+    section's heading intro can carry the total ("There are eight
+    links this week. Link one of eight."). Same line-by-line shape as
+    the main loop so the counts match what gets rendered.
+    """
+    counts: dict[str, int] = {}
+    current_section: str | None = None
+    for raw_line in body.splitlines():
+        line = raw_line.rstrip()
+        h2 = re.match(r"^##\s+(.+)$", line)
+        if h2:
+            current_section = heading_text(h2.group(1))
+            counts.setdefault(current_section, 0)
+            continue
+        if current_section is None:
+            continue
+        if current_section in LINK_SECTIONS:
+            if _H3_LINK_RE.match(line):
+                counts[current_section] = counts.get(current_section, 0) + 1
+        elif current_section in BRIEFLY_SECTIONS:
+            if BRIEFLY_LINK_RE.search(line):
+                counts[current_section] = counts.get(current_section, 0) + 1
+    return counts
+
+
+def _link_count_sentence(total: int) -> str:
+    """The "There are N links this week." anchor that lands between
+    the section intro and the first link. Singular form for 1; spelled-
+    out number elsewhere (matches the spelled-out per-link cue)."""
+    if total == 1:
+        return "There is one link this week."
+    return f"There are {number_word(total)} links this week."
+
+
 def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
     body = HTML_COMMENT_RE.sub("", body)
     body = STRIKETHROUGH_HTML_RE.sub("", body)
@@ -106,10 +148,15 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
     body = REDDIT_DISCUSS_RE.sub("", body)
     body = SIGNED_BY_RE.sub("", body)
 
+    # Count link/briefly links per section once up front so each section's
+    # intro can announce the total ("There are eight links this week.").
+    section_link_totals = _count_links_per_section(body)
+
     output: list[str] = [preamble(frontmatter), ""]
     quote_lines: list[str] = []
     current_section: str | None = None
     current_section_label: str | None = None
+    current_section_total: int = 0
     link_index: int = 0
     skip_next_date: bool = False
 
@@ -154,6 +201,13 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
                 output.extend(["", intro, ""])
             current_section = new_section
             current_section_label = new_label
+            current_section_total = section_link_totals.get(new_section, 0)
+            # Anchor the listener: "There are N links this week." sits
+            # between the section intro and the first link. Skipped for
+            # 0-link sections (the section opener is already enough cue).
+            if current_section in LINK_SECTIONS or current_section in BRIEFLY_SECTIONS:
+                if current_section_total > 0:
+                    output.extend([_link_count_sentence(current_section_total), ""])
             link_index = 0
             skip_next_date = False
             continue
@@ -174,7 +228,11 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
             if title:
                 if current_section in LINK_SECTIONS:
                     link_index += 1
-                    output.extend([f"Link {number_word(link_index)}. \"{title}\"", ""])
+                    output.extend([
+                        f"Link {number_word(link_index)} of "
+                        f"{number_word(current_section_total)}. \"{title}\"",
+                        "",
+                    ])
                 elif current_section in JOURNAL_SECTIONS:
                     link_index += 1
                     output.extend([f"Journal entry {number_word(link_index)}. {title}", ""])
@@ -191,7 +249,7 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
             continue
 
         # Briefly-style: `<commentary> → **[Title](url)**`. Announce
-        # `Link N. "Title"` then read the commentary.
+        # `Link N of TOTAL. "Title"` then read the commentary.
         if current_section in BRIEFLY_SECTIONS:
             briefly_match = BRIEFLY_LINK_RE.search(line)
             if briefly_match:
@@ -201,7 +259,11 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
                 commentary = clean_inline(commentary_raw)
                 if title:
                     link_index += 1
-                    output.extend([f"Link {number_word(link_index)}. \"{title}\"", ""])
+                    output.extend([
+                        f"Link {number_word(link_index)} of "
+                        f"{number_word(current_section_total)}. \"{title}\"",
+                        "",
+                    ])
                 if commentary:
                     output.extend([commentary, ""])
                 continue

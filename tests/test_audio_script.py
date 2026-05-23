@@ -102,6 +102,96 @@ class AudioScriptTests(unittest.TestCase):
         self.assertNotIn("Minneapolis", stripped)
         self.assertIn("## Notable", stripped)
 
+    def test_modern_link_sections_announce_total_and_index(self):
+        # Before the first link in Notable/Briefly, listeners now hear
+        # "There are N links this week." so they know how big the section
+        # is. Each per-link cue then carries "Link X of N. \"Title\"" so
+        # they always know where they are in the count.
+        frontmatter = {
+            "number": 349,  # > LEGACY_MAX_ISSUE → modern transform
+            "subject": "Weekly Thing 349",
+            "publish_date": "2026-05-23T12:00:00Z",
+        }
+        body = (
+            "## Notable\n\n"
+            "### [First link](https://example.com/1)\n\n"
+            "First blurb.\n\n"
+            "### [Second link](https://example.com/2)\n\n"
+            "Second blurb.\n\n"
+            "### [Third link](https://example.com/3)\n\n"
+            "Third blurb.\n\n"
+            "## Briefly\n\n"
+            "Briefly commentary → **[Quick read](https://example.com/q)**\n\n"
+            "More commentary → **[Another read](https://example.com/r)**\n"
+        )
+        rendered = audio_script.body_to_audio_script(body, frontmatter)
+        # Notable: three links → "There are three links this week." then
+        # "Link one of three.", "Link two of three.", "Link three of three."
+        self.assertIn("Now, the Notable section.", rendered)
+        self.assertIn("There are three links this week.", rendered)
+        self.assertIn('Link one of three. "First link"', rendered)
+        self.assertIn('Link two of three. "Second link"', rendered)
+        self.assertIn('Link three of three. "Third link"', rendered)
+        # Briefly: two links → "There are two links this week." then
+        # "Link one of two.", "Link two of two."
+        self.assertIn("Now, the Briefly section.", rendered)
+        self.assertIn("There are two links this week.", rendered)
+        self.assertIn('Link one of two. "Quick read"', rendered)
+        self.assertIn('Link two of two. "Another read"', rendered)
+        # No pre-change "Link N." (without "of TOTAL") should leak through.
+        self.assertNotIn('Link one. "', rendered)
+        self.assertNotIn('Link two. "', rendered)
+
+    def test_modern_single_link_section_uses_singular_count(self):
+        frontmatter = {
+            "number": 349,
+            "subject": "Weekly Thing 349",
+            "publish_date": "2026-05-23T12:00:00Z",
+        }
+        body = (
+            "## Notable\n\n"
+            "### [Only link](https://example.com/x)\n\n"
+            "Just the one.\n"
+        )
+        rendered = audio_script.body_to_audio_script(body, frontmatter)
+        self.assertIn("There is one link this week.", rendered)
+        self.assertIn('Link one of one. "Only link"', rendered)
+
+    def test_modern_empty_link_section_skips_count_sentence(self):
+        # An empty link section is dropped from the audio entirely by
+        # the shared finalize_script pass (it'd just be a heading intro
+        # with nothing after it). The count-sentence change must NOT
+        # leak a "There are zero links this week" line in its place.
+        frontmatter = {
+            "number": 349,
+            "subject": "Weekly Thing 349",
+            "publish_date": "2026-05-23T12:00:00Z",
+        }
+        body = (
+            "## Notable\n\n"
+            "## Briefly\n\n"
+            "Some commentary → **[A link](https://example.com/x)**\n"
+        )
+        rendered = audio_script.body_to_audio_script(body, frontmatter)
+        # Empty Notable section drops cleanly — no intro, no count line.
+        self.assertNotIn("Now, the Notable section.", rendered)
+        self.assertNotIn("zero links", rendered)
+        # Briefly still announces its single link with the singular form.
+        self.assertIn("There is one link this week.", rendered)
+        self.assertIn('Link one of one. "A link"', rendered)
+
+    def test_legacy_path_unchanged_by_count_addition(self):
+        # The count-anchor change lives in modern.py only — legacy issues
+        # (#1-130) route through legacy.py and should still announce
+        # "Link N. \"Title\"" without the "of TOTAL" suffix.
+        frontmatter, body = archive_fixture(107)
+        rendered = audio_script.body_to_audio_script(body, frontmatter)
+        # No "of TOTAL" cue anywhere in legacy output.
+        self.assertNotIn(" of one. ", rendered)
+        self.assertNotIn(" of two. ", rendered)
+        self.assertNotIn("links this week", rendered)
+        self.assertNotIn("link this week", rendered)
+
     def test_blockquotes_code_and_normalization(self):
         frontmatter = {
             "number": 999,
