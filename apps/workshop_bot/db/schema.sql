@@ -487,6 +487,12 @@ CREATE INDEX IF NOT EXISTS idx_issue_items_issue_section_pos
 --   - 'positive'   — calling out something working
 --   - 'suggestion' — proposed change (default)
 --   - 'blocker'    — ship-critical (anchor mismatch, dead link, voice slip)
+-- ``closed_at`` is set when a *new* review pass returned PASS — there's
+-- no replacement comment to chain via ``replaced_by_id``, but the prior
+-- pass's guidance is stale and shouldn't surface in the drawer. The
+-- ``list_open_comments`` filter checks both ``replaced_by_id IS NULL``
+-- and ``closed_at IS NULL`` so a closed row drops out of the open set
+-- the same way a superseded row does. History is preserved either way.
 CREATE TABLE IF NOT EXISTS editorial_comments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   handle TEXT NOT NULL,
@@ -499,6 +505,7 @@ CREATE TABLE IF NOT EXISTS editorial_comments (
   body_md TEXT NOT NULL,
   reasoning_md TEXT,
   replaced_by_id INTEGER REFERENCES editorial_comments(id),
+  closed_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

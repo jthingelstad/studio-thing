@@ -195,6 +195,15 @@ def _m_0009_retire_non_pinboard_discovery_feeds(conn: sqlite3.Connection) -> Non
     )
 
 
+def _m_0011_editorial_comments_closed_at(conn: sqlite3.Connection) -> None:
+    """Add ``editorial_comments.closed_at`` — set when a fresh review
+    pass returned PASS (no new comments to chain via ``replaced_by_id``,
+    but the prior pass's open comments are stale and shouldn't surface
+    in the drawer). ``list_open_comments`` filters on both
+    ``replaced_by_id IS NULL`` and ``closed_at IS NULL``."""
+    _add_column_if_missing(conn, "editorial_comments", "closed_at", "TEXT")
+
+
 def _m_0010_strip_markers_from_issue_items_body_md(conn: sqlite3.Connection) -> None:
     """An older manual-seed path baked rendered ``<!-- cta:N -->`` /
     ``<!-- thanks:N -->`` markers into ``issue_items.body_md``. Marker
@@ -274,6 +283,11 @@ MIGRATIONS: tuple[Migration, ...] = (
         id="0010_strip_markers_from_issue_items_body_md",
         description="Scrub cta/thanks markers baked into issue_items.body_md",
         apply=_m_0010_strip_markers_from_issue_items_body_md,
+    ),
+    Migration(
+        id="0011_editorial_comments_closed_at",
+        description="Add editorial_comments.closed_at for PASS-closed comments",
+        apply=_m_0011_editorial_comments_closed_at,
     ),
 )
 

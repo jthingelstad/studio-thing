@@ -613,6 +613,8 @@ def t_editorial_get_comment(deps, handle: str) -> dict[str, Any]:
         "reasoning_md": row.get("reasoning_md"),
         "created_at": row.get("created_at"),
         "superseded": bool(row.get("replaced_by_id")),
+        "closed": bool(row.get("closed_at")),
+        "closed_at": row.get("closed_at"),
     }
     # If this row was superseded, surface the replacement's handle so
     # the user can follow the chain ("E349-N1 was superseded by E349-N4").

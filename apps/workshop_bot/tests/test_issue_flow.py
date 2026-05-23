@@ -22,7 +22,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base, issue_status, start_issue, update_draft  # noqa: E402
-from apps.workshop_bot.tools import db, s3  # noqa: E402
+from apps.workshop_bot.tools import db, issue_items, s3  # noqa: E402
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
     FakeBotChannel as _FakeBotChannel,
@@ -600,6 +600,59 @@ class DraftReviewTests(_DBTestCase):
         ctx = _base.JobContext(deps=fc.deps())
         out = asyncio.run(update_draft._draft_review(ctx, window, st, prev, today, draft_text))
         self.assertEqual(out, "")
+
+    def test_pass_reply_closes_prior_open_comments(self):
+        # A real PASS verdict means the prior pass's comments are now
+        # stale guidance — close them so the drawer reads as the clean
+        # draft Eddy just verified. (Errors from the LLM call would
+        # raise, not return PASS — see the try/except in the caller.)
+        window, st, prev, today, draft_text = self._args()
+        item = issue_items.upsert_item(
+            issue_number=458, section="notable", source="pinboard",
+            source_id="h1", body_md="old blurb",
+        )
+        prior = issue_items.write_comment(
+            issue_number=458, scope="item", item_id=item,
+            body_md="trim the second sentence",
+        )
+        self.assertEqual(
+            [c["handle"] for c in issue_items.list_open_comments(458)],
+            [prior["handle"]],
+        )
+        fc = _FakeBotChannel(persona="eddy", reply="PASS")
+        ctx = _base.JobContext(deps=fc.deps())
+        out = asyncio.run(update_draft._draft_review(ctx, window, st, prev, today, draft_text))
+        self.assertEqual(out, "")
+        # Drawer reads empty now — the PASS pass closed the prior comment.
+        self.assertEqual(issue_items.list_open_comments(458), [])
+        # History still resolves; closed_at is set.
+        still = issue_items.get_comment_by_handle(prior["handle"])
+        self.assertIsNotNone(still)
+        self.assertIsNotNone(still.get("closed_at"))
+
+    def test_eddy_unavailable_does_not_close_prior_comments(self):
+        # When there's no team / LLM call to make, _draft_review returns
+        # "" without ever asking Eddy. That's a "review didn't run"
+        # signal — leave prior comments alone (they may still be valid).
+        window, st, prev, today, draft_text = self._args()
+        item = issue_items.upsert_item(
+            issue_number=458, section="notable", source="pinboard",
+            source_id="h1", body_md="x",
+        )
+        prior = issue_items.write_comment(
+            issue_number=458, scope="item", item_id=item, body_md="prior guidance",
+        )
+        out = asyncio.run(update_draft._draft_review(
+            _base.JobContext(), window, st, prev, today, draft_text,
+        ))
+        self.assertEqual(out, "")
+        # Prior comment still open — review never ran.
+        still = issue_items.get_comment_by_handle(prior["handle"])
+        self.assertIsNone(still.get("closed_at"))
+        self.assertEqual(
+            [c["handle"] for c in issue_items.list_open_comments(458)],
+            [prior["handle"]],
+        )
 
     def test_no_team_yields_empty_review(self):
         window, st, prev, today, draft_text = self._args()

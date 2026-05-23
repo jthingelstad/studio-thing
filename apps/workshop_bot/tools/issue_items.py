@@ -513,16 +513,35 @@ def get_comment_by_handle(handle: str) -> Optional[dict[str, Any]]:
 
 
 def list_open_comments(issue_number: int) -> list[dict[str, Any]]:
-    """Comments for an issue that haven't been superseded. Ordered by
-    creation, newest first."""
+    """Comments for an issue that are still considered open — neither
+    superseded by a follow-on comment nor closed by a PASS review pass.
+    Ordered by creation, newest first."""
     with connect() as conn:
         rows = conn.execute(
             "SELECT * FROM editorial_comments "
-            "WHERE issue_number = ? AND replaced_by_id IS NULL "
+            "WHERE issue_number = ? "
+            "  AND replaced_by_id IS NULL "
+            "  AND closed_at IS NULL "
             "ORDER BY created_at DESC, id DESC",
             (int(issue_number),),
         ).fetchall()
     return [dict(r) for r in rows]
+
+
+def close_all_open_comments(issue_number: int) -> int:
+    """Mark every still-open comment for ``issue_number`` as closed —
+    ``closed_at`` gets a UTC ISO timestamp. Used when a fresh review
+    pass returned PASS (no new comments to chain via ``replaced_by_id``,
+    but the prior pass's guidance is stale). Returns the row count."""
+    with connect() as conn:
+        cur = conn.execute(
+            "UPDATE editorial_comments SET closed_at = datetime('now') "
+            "WHERE issue_number = ? "
+            "  AND replaced_by_id IS NULL "
+            "  AND closed_at IS NULL",
+            (int(issue_number),),
+        )
+        return int(cur.rowcount or 0)
 
 
 def supersede(comment_id: int, by_id: int) -> None:

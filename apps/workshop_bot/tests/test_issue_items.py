@@ -429,6 +429,57 @@ class EditorialCommentTests(_DBCase):
         open_ones = issue_items.list_open_comments(349)
         self.assertEqual([c["id"] for c in open_ones], [c4["id"]])
 
+    def test_close_all_open_comments_drops_them_from_open_set(self):
+        a = issue_items.upsert_item(
+            issue_number=349, section="notable", source="pinboard",
+            source_id="a", body_md="x",
+        )
+        c1 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="v1")
+        c2 = issue_items.write_comment(issue_number=349, scope="hygiene", body_md="v2")
+        # Before close: both open.
+        self.assertEqual(
+            sorted(c["id"] for c in issue_items.list_open_comments(349)),
+            sorted([c1["id"], c2["id"]]),
+        )
+        closed_count = issue_items.close_all_open_comments(349)
+        self.assertEqual(closed_count, 2)
+        # After close: drawer is empty even though the rows still exist.
+        self.assertEqual(issue_items.list_open_comments(349), [])
+        # History still resolves by handle.
+        still = issue_items.get_comment_by_handle(c1["handle"])
+        self.assertIsNotNone(still)
+        self.assertEqual(still["body_md"], "v1")
+        self.assertIsNotNone(still.get("closed_at"))
+
+    def test_close_is_idempotent_when_nothing_open(self):
+        # Calling close twice in a row should be a clean no-op the
+        # second time (the PASS path runs every update-draft).
+        a = issue_items.upsert_item(
+            issue_number=349, section="notable", source="pinboard",
+            source_id="a", body_md="x",
+        )
+        issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="v")
+        self.assertEqual(issue_items.close_all_open_comments(349), 1)
+        self.assertEqual(issue_items.close_all_open_comments(349), 0)
+
+    def test_close_doesnt_touch_already_superseded(self):
+        # A row that was already superseded by a follow-on comment is
+        # already filtered out of list_open_comments — close shouldn't
+        # re-stamp its closed_at.
+        a = issue_items.upsert_item(
+            issue_number=349, section="notable", source="pinboard",
+            source_id="a", body_md="x",
+        )
+        c1 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="v1")
+        c2 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="v2")
+        issue_items.supersede(c1["id"], c2["id"])
+        issue_items.close_all_open_comments(349)
+        # c1 is superseded (not closed); c2 is now closed.
+        c1_now = issue_items.get_comment_by_handle(c1["handle"])
+        c2_now = issue_items.get_comment_by_handle(c2["handle"])
+        self.assertIsNone(c1_now.get("closed_at"))
+        self.assertIsNotNone(c2_now.get("closed_at"))
+
     def test_handles_never_collide_across_issues(self):
         a349 = issue_items.upsert_item(
             issue_number=349, section="notable", source="pinboard",

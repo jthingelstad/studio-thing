@@ -504,6 +504,23 @@ async def _draft_review(
         run.record_meta(_m)
         run.records_written = 0 if (not answer or is_pass_response(answer)) else 1
     if not answer or is_pass_response(answer):
+        # The LLM ran and explicitly said "nothing to flag" (or returned
+        # an empty response, treated as the same). That's a real review
+        # verdict — the prior pass's open comments are stale now and
+        # shouldn't surface in the drawer. Close them so the next render
+        # reads as the clean draft Eddy just verified.
+        # (Errors from the LLM call would have raised before this line —
+        # see the try/except in the caller — so this branch fires only
+        # when Eddy successfully reviewed and found nothing.)
+        try:
+            closed = issue_items.close_all_open_comments(int(window["issue_number"]))
+            if closed:
+                logger.info(
+                    "update-draft: PASS review closed %d open comment(s) for #%d",
+                    closed, int(window["issue_number"]),
+                )
+        except Exception:  # noqa: BLE001
+            logger.exception("update-draft: failed to close prior comments on PASS")
         return ""
     review_md = answer.strip()
     # Capture each target-anchored bullet as an editorial_comments row
