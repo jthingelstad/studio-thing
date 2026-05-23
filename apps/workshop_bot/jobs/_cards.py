@@ -44,27 +44,35 @@ def section_tag(s: dict) -> tuple[str, str]:
 
 def read_metadata_raw(n: int) -> dict:
     """Read metadata.json verbatim (no placeholder injection) so callers can
-    tell *authored* fields from *absent* ones. Empty dict on any miss."""
+    tell *authored* fields from *absent* ones. Empty dict on any miss —
+    transport failures are logged at WARNING so an operationally-blind
+    card state (subject/description missing because S3 hiccuped, not
+    because they're genuinely unset) is debuggable."""
     try:
         res = s3.read_issue_file(n, "metadata.json")
-    except Exception:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("cards: read_metadata_raw(%d) S3 read failed: %s", n, exc)
         return {}
     if not (res.get("found") and isinstance(res.get("text"), str)):
         return {}
     try:
         data = json.loads(res["text"])
-    except (ValueError, TypeError):
+    except (ValueError, TypeError) as exc:
+        logger.warning("cards: read_metadata_raw(%d) JSON parse failed: %s", n, exc)
         return {}
     return data if isinstance(data, dict) else {}
 
 
 def issue_files(n: int) -> set:
     """The set of filenames present in the issue's S3 workspace (atoms/
-    collapsed to bare names by `s3.list_issue`). Empty set on failure."""
+    collapsed to bare names by `s3.list_issue`). Empty set on failure
+    (logged at WARNING — an empty set silently makes every card row
+    look ☐, which is operationally misleading without a log trace)."""
     try:
         listing = s3.list_issue(n)
         return {o.get("filename") for o in listing.get("objects", []) if o.get("filename")}
-    except Exception:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("cards: issue_files(%d) S3 list failed: %s", n, exc)
         return set()
 
 

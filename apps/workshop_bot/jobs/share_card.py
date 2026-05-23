@@ -39,7 +39,8 @@ def gather_state() -> dict:
         return {"issue_number": None}
     try:
         campaigns = db.active_campaigns_with_age()
-    except Exception:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("share-card: active_campaigns_with_age failed: %s", exc)
         campaigns = []
     return {
         "issue_number": int(issue["number"]),

@@ -51,7 +51,8 @@ def gather_state(n: int, *, window: Optional[dict] = None) -> dict:
     currently = db.currently_get_entries(n)
     try:
         open_comments = len(issue_items.list_open_comments(n))
-    except Exception:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("build-card: list_open_comments(%d) failed: %s", n, exc)
         open_comments = 0
 
     sec = st["sections"]

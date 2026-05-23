@@ -1,13 +1,19 @@
 """``promotion-prep`` (Marky) — syndication drafts for the latest issue.
 
-Triggered when the ``rss-check`` job sees a new issue number in
-``weekly.thingelstad.com/feed.xml`` (or manually). Operates on the most
-recently *published* issue's ``buttondown.md`` in the S3 workspace —
-independent of the in-flight issue. Marky drafts, in Jamie's voice,
-**2–3 alternative framings per platform** (LinkedIn ~100–200 words; an
-r/WeeklyThing megathread; one per-link Reddit thread per Notable item),
-posts them all to ``#promotion``, and **never auto-posts** anywhere —
-Jamie copies / edits / publishes.
+Triggered when an issue enters the **Share** phase: ``put-to-bed``
+fires this automatically after closing the active window. Re-runnable
+on demand from the Share card's "Draft promo" button or via
+``/marky prep``. Operates on the most recently *published* issue's
+``buttondown.md`` in the S3 workspace — independent of any in-flight
+issue. (The legacy ``rss-check`` cron + ``tools/rss.py`` poll was
+retired alongside the Build → Publish → Share spine; the phase
+transition is the trigger now.)
+
+Marky drafts, in Jamie's voice, **2–3 alternative framings per
+platform** (LinkedIn ~100–200 words; an r/WeeklyThing megathread; one
+per-link Reddit thread per Notable item), posts them all to
+``#promotion``, and **never auto-posts** anywhere — Jamie copies /
+edits / publishes.
 """
 
 from __future__ import annotations
