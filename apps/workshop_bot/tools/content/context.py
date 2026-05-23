@@ -96,7 +96,9 @@ def _open_comments_counts(issue_number: int) -> dict[str, Any]:
             rows = conn.execute(
                 "SELECT scope, section, COUNT(*) AS n "
                 "FROM editorial_comments "
-                "WHERE issue_number = ? AND replaced_by_id IS NULL "
+                "WHERE issue_number = ? "
+                "  AND replaced_by_id IS NULL "
+                "  AND closed_at IS NULL "
                 "GROUP BY scope, section",
                 (int(issue_number),),
             ).fetchall()

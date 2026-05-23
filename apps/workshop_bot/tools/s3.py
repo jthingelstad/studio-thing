@@ -343,6 +343,18 @@ def write_issue_file(
         put_kwargs["CacheControl"] = cache_control
     _client().put_object(**put_kwargs)
     logger.info("s3.write_issue_file(%d, %s) -> %d bytes", issue_number, filename, len(body))
+    # CloudFront fronts ``files.thingelstad.com``. Without an
+    # invalidation, a cached previous version of an issue file (e.g.
+    # ``buttondown.md`` viewed in a browser at the public URL) keeps
+    # serving until the edge TTL expires — could be hours. The bot
+    # overwrites these files on every ``update-draft`` tick, so the
+    # canonical-on-S3 vs visible-on-CDN gap is a real, daily problem.
+    # Best-effort: a CloudFront hiccup logs and continues.
+    try:
+        from . import cdn
+        cdn.invalidate([f"/{key}"])
+    except Exception as exc:  # noqa: BLE001 — invalidation is best-effort
+        logger.warning("s3.write_issue_file: CDN invalidation skipped (%s)", exc)
     return {
         "key": key,
         "bucket": bucket,
@@ -420,21 +432,15 @@ def write_workshop_pointer(data: dict[str, Any]) -> dict[str, Any]:
 
 def write_issue_html(issue_number: int, filename: str, html_text: str) -> dict[str, Any]:
     """Write an ``.html`` preview to the issue workspace with
-    ``Cache-Control: no-cache`` and then invalidate the CloudFront path for
-    it (best-effort). Returns the same dict as :func:`write_issue_file`,
-    including ``url``."""
+    ``Cache-Control: no-cache``. CloudFront invalidation happens inside
+    ``write_issue_file`` now — every issue-scoped write busts the edge
+    cache, not just HTML."""
     if not filename.endswith(".html"):
         raise S3PathError("write_issue_html expects an .html filename")
-    res = write_issue_file(
+    return write_issue_file(
         int(issue_number), filename, html_text,
         content_type="text/html; charset=utf-8", cache_control="no-cache, max-age=0",
     )
-    try:
-        from . import cdn
-        cdn.invalidate([f"/{res['key']}"])
-    except Exception as exc:  # noqa: BLE001 — invalidation is best-effort
-        logger.warning("s3.write_issue_html: CDN invalidation skipped (%s)", exc)
-    return res
 
 
 # ---------- journal images (binary; update-draft rehosting only) ----------
