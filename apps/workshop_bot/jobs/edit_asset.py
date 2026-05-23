@@ -1,6 +1,12 @@
 """``/eddy edit <asset>`` — pop a Discord modal pre-filled with the
 asset's current content, write the edited result back to S3.
 
+Edit doubles as create: when the asset doesn't exist on S3 yet, the
+modal opens blank with an asset-specific placeholder hint and the
+first submit writes the file fresh. No separate ``/eddy add`` /
+``/eddy create`` verb — ``/eddy edit intro`` is the way to write the
+intro for the very first time.
+
 Editing the small per-issue atom files (``intro.md`` / ``outro.md`` /
 ``haiku.md`` / ``cover.json`` / ``cta-N.md`` / ``thanks-N.md``) used to
 mean opening the AWS console or running a local script — friction
@@ -48,18 +54,27 @@ NAME = "edit-asset"
 # small margin so future schema changes don't push us over silently.
 _MODAL_MAX = 4000
 
-# Asset → (filename, friendly_label, refire_update_draft).
+# Asset → (filename, friendly_label, refire_update_draft, placeholder).
 # Adding a new asset: append a row here and the slash-command choice
 # list at /eddy edit. Files that flow into draft.md should
 # refire_update_draft=True so the preview refreshes after the write.
-_ASSETS: dict[str, tuple[str, str, bool]] = {
-    "intro":       ("intro.md",      "intro",            True),
-    "outro":       ("outro.md",      "outro",            True),
-    "haiku":       ("haiku.md",      "haiku",            True),
-    "cover":       ("cover.json",    "cover caption",    True),
-    "cta-1":       ("cta-1.md",      "CTA slot 1",       False),
-    "cta-2":       ("cta-2.md",      "CTA slot 2",       False),
-    "thanks-1":    ("thanks-1.md",   "thanks slot 1",    False),
+# The placeholder is shown when the modal opens with an empty value
+# (asset doesn't exist yet) — a one-line hint of what belongs here.
+_ASSETS: dict[str, tuple[str, str, bool, str]] = {
+    "intro":    ("intro.md",    "intro",         True,
+                 "Opening prose for the issue. 1–4 short paragraphs in Jamie's voice."),
+    "outro":    ("outro.md",    "outro",         True,
+                 "Closing prose — sign-off paragraph(s) after the Briefly section."),
+    "haiku":    ("haiku.md",    "haiku",         True,
+                 "Three lines, 5-7-5 syllables. Bold + hard breaks added at render time."),
+    "cover":    ("cover.json",  "cover caption", True,
+                 '{"caption": "...", "location": "Minneapolis, MN", "timestamp": "May 23, 2026"}'),
+    "cta-1":    ("cta-1.md",    "CTA slot 1",    False,
+                 "---\nkind: supporter\n---\n\nCall-to-action copy (Thingy's voice)."),
+    "cta-2":    ("cta-2.md",    "CTA slot 2",    False,
+                 "---\nkind: supporter\n---\n\nSecond CTA slot copy."),
+    "thanks-1": ("thanks-1.md", "thanks slot 1", False,
+                 "---\nkind: thanks\n---\n\nThank-you copy shown only to premium members."),
 }
 
 ASSET_CHOICES = tuple(_ASSETS.keys())
@@ -67,8 +82,19 @@ ASSET_CHOICES = tuple(_ASSETS.keys())
 
 def _read_current(issue_number: int, filename: str) -> str:
     """Read the asset's current contents from S3. Returns ``""`` when
-    the file isn't there (treat as a blank-slate edit)."""
-    res = s3.read_issue_file(issue_number, filename)
+    the file isn't there (treat as a blank-slate edit — ``/eddy edit``
+    on a missing asset opens an empty modal so Jamie can author it on
+    the spot, no separate `create` command needed). Best-effort: an S3
+    transport error logs and falls through to ``""`` — better to let
+    Jamie type into an empty modal than to refuse the edit outright."""
+    try:
+        res = s3.read_issue_file(issue_number, filename)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "edit-asset: S3 read failed for WT%d/%s — opening empty modal: %s",
+            issue_number, filename, exc,
+        )
+        return ""
     if res.get("found") and isinstance(res.get("text"), str):
         return res["text"]
     return ""
@@ -90,6 +116,7 @@ class _AssetEditModal(ui.Modal):
         label: str,
         refire_update_draft: bool,
         current_text: str,
+        placeholder: str = "",
     ) -> None:
         title = f"Edit {label} · WT{issue_number}"
         super().__init__(title=title[:45], timeout=30 * 60.0)
@@ -98,10 +125,23 @@ class _AssetEditModal(ui.Modal):
         self.asset_key = asset_key
         self.filename = filename
         self.refire_update_draft = refire_update_draft
+        # Discord placeholders cap at 100 chars. An over-long hint
+        # silently drops the field, so trim before passing.
+        ph = (placeholder or "").strip()
+        if len(ph) > 100:
+            ph = ph[:97] + "…"
+        # Discord rejects modals where a TextInput has `default=""`
+        # alongside `required=False` — the modal opens blank in the
+        # client but the interaction comes back as "this interaction
+        # failed", which is what /eddy edit on a missing file used to
+        # hit. Pass `default=None` when the file is empty so Discord
+        # treats it as "no default" instead of "default = empty string".
+        default = current_text if current_text else None
         self.input = ui.TextInput(
             label=f"{filename}  (max {_MODAL_MAX} chars)",
             style=discord.TextStyle.paragraph,
-            default=current_text,
+            default=default,
+            placeholder=ph or None,
             max_length=_MODAL_MAX,
             required=False,
         )
@@ -146,7 +186,7 @@ def build_modal(
     """
     if asset_key not in _ASSETS:
         return None, f"❌ unknown asset `{asset_key}` — must be one of: {', '.join(ASSET_CHOICES)}."
-    filename, label, refire = _ASSETS[asset_key]
+    filename, label, refire, placeholder = _ASSETS[asset_key]
     window = db.get_active_issue_window()
     if window is None:
         return None, "❌ no active issue window — run `/eddy issue start` first."
@@ -160,6 +200,6 @@ def build_modal(
     modal = _AssetEditModal(
         ctx=ctx, issue_number=n, asset_key=asset_key,
         filename=filename, label=label, refire_update_draft=refire,
-        current_text=current,
+        current_text=current, placeholder=placeholder,
     )
     return modal, None

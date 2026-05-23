@@ -62,10 +62,23 @@ class BuildModalTests(_Case):
         self.assertTrue(modal.refire_update_draft)
 
     def test_modal_for_missing_file_pre_fills_empty(self):
+        # Edit doubles as create — opening a modal for a file that
+        # doesn't exist on S3 yet should succeed (blank default), so
+        # Jamie can author the asset on the spot.
+        #
+        # Discord rejects modals where a TextInput has `default=""`
+        # alongside `required=False`, so we pass `default=None` for
+        # the empty case. Placeholder still gives a hint.
         self._window()
         modal, err = edit_asset.build_modal(self._ctx(), asset_key="outro")
         self.assertIsNone(err)
-        self.assertEqual(modal.input.default, "")
+        self.assertIsNone(modal.input.default)
+        # Placeholder is set so the empty field has a hint of what to write.
+        self.assertTrue(modal.input.placeholder)
+        # Existing content path: default is set, not None.
+        self.ws.write_issue_file(349, "outro.md", "the existing outro")
+        modal2, _ = edit_asset.build_modal(self._ctx(), asset_key="outro")
+        self.assertEqual(modal2.input.default, "the existing outro")
 
     def test_cta_does_not_refire_update_draft(self):
         self._window()
@@ -137,6 +150,24 @@ class ModalSubmitTests(_Case):
         with patch.object(_base, "schedule_update_draft_refire"):
             asyncio.run(modal.on_submit(interaction))
         self.assertEqual(self.ws.files[(349, "outro.md")], "")
+
+    def test_submit_creates_file_that_didnt_exist(self):
+        # The /eddy edit-as-create path: no existing intro.md on S3,
+        # submit writes the file fresh.
+        self._window()
+        # Confirm baseline: intro.md is not in the workspace.
+        self.assertNotIn((349, "intro.md"), self.ws.files)
+        modal, _ = edit_asset.build_modal(self._ctx(), asset_key="intro")
+        modal.input.value = "Brand new intro paragraph for WT349."
+        interaction = self._interaction()
+        with patch.object(_base, "schedule_update_draft_refire") as mock_sched:
+            asyncio.run(modal.on_submit(interaction))
+        self.assertEqual(
+            self.ws.files[(349, "intro.md")],
+            "Brand new intro paragraph for WT349.",
+        )
+        # intro flows into draft.md, so the refire fires.
+        mock_sched.assert_called_once()
 
     def test_submit_propagates_write_failure_to_ack(self):
         self._window()
