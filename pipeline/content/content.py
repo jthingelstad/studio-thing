@@ -318,36 +318,72 @@ def headers(content_type: bool = False) -> dict[str, str]:
     return result
 
 
+# Author-content atoms live under ``weekly-thing/{N}/atoms/`` in the S3
+# layout workshop_bot writes; everything else (generated artifacts like
+# buttondown.md, archive.md) stays at the issue root. Keep this set in
+# sync with ``apps/workshop_bot/tools/s3._ATOM_FILENAMES`` — drift causes
+# silent "No metadata.json" / "No cover.json" failures here.
+_ATOM_FILENAMES: frozenset[str] = frozenset({
+    "intro.md", "outro.md", "cover.json", "haiku.md", "metadata.json",
+    "thesis.md", "closer.md",
+})
+
+
+def _is_atom_filename(filename: str) -> bool:
+    return filename in _ATOM_FILENAMES or filename.startswith(("cta-", "thanks-"))
+
+
+def _workspace_key(issue_number: str, filename: str) -> str:
+    """Canonical S3 key for a workspace file. Atoms live under
+    ``atoms/``; non-atoms at the issue root."""
+    if _is_atom_filename(filename):
+        return f"weekly-thing/{issue_number}/atoms/{filename}"
+    return f"weekly-thing/{issue_number}/{filename}"
+
+
 def _workspace_get_text(issue_number: str, filename: str) -> str | None:
     """Fetch a text asset (utf-8) from the per-issue S3 workspace. Returns
-    None if the object doesn't exist; raises on other S3 errors."""
+    None if the object doesn't exist; raises on other S3 errors.
+
+    Dual-read for atom filenames: tries ``atoms/{name}`` first, falls
+    back to legacy root-level ``{name}``. Old issues whose atoms were
+    never migrated stay readable through the fallback; new issues land
+    on the canonical atoms/ key from the start."""
     try:
         import boto3
         from botocore.exceptions import ClientError
     except ImportError as exc:
         raise RuntimeError("boto3 is required to read the S3 workspace") from exc
-    key = f"weekly-thing/{issue_number}/{filename}"
-    try:
-        resp = boto3.client("s3").get_object(
-            Bucket=WEEKLY_THING_ASSETS_BUCKET, Key=key,
-        )
-    except ClientError as exc:
-        code = exc.response.get("Error", {}).get("Code", "")
-        if code in ("NoSuchKey", "404"):
-            return None
-        raise
-    return resp["Body"].read().decode("utf-8")
+    keys = [_workspace_key(issue_number, filename)]
+    if _is_atom_filename(filename):
+        legacy = f"weekly-thing/{issue_number}/{filename}"
+        if legacy != keys[0]:
+            keys.append(legacy)
+    client = boto3.client("s3")
+    last_exc: Exception | None = None
+    for key in keys:
+        try:
+            resp = client.get_object(Bucket=WEEKLY_THING_ASSETS_BUCKET, Key=key)
+            return resp["Body"].read().decode("utf-8")
+        except ClientError as exc:
+            code = exc.response.get("Error", {}).get("Code", "")
+            if code in ("NoSuchKey", "404"):
+                last_exc = exc
+                continue
+            raise
+    return None
 
 
 def _workspace_put_text(issue_number: str, filename: str, content: str) -> None:
     """Write a text asset back to the per-issue S3 workspace. Used by
     buttondown_publish_idempotent to persist the freshly-minted buttondown_id
-    (and absolute_url) back to metadata.json."""
+    (and absolute_url) back to metadata.json. Writes always go to the
+    canonical key (``atoms/{name}`` for atoms, root for everything else)."""
     try:
         import boto3
     except ImportError as exc:
         raise RuntimeError("boto3 is required to write the S3 workspace") from exc
-    key = f"weekly-thing/{issue_number}/{filename}"
+    key = _workspace_key(issue_number, filename)
     ctype = {
         "metadata.json": "application/json; charset=utf-8",
         "buttondown.md": "text/markdown; charset=utf-8",
@@ -399,13 +435,14 @@ def buttondown_publish_idempotent(
     body = _workspace_get_text(number, "buttondown.md")
     if body is None:
         raise ButtondownPublishError(
-            f"No buttondown.md at s3://{WEEKLY_THING_ASSETS_BUCKET}/weekly-thing/{number}/buttondown.md — "
+            f"No buttondown.md at s3://{WEEKLY_THING_ASSETS_BUCKET}/{_workspace_key(number, 'buttondown.md')} — "
             "the issue isn't ready. Run `/eddy issue publish` first."
         )
     meta_raw = _workspace_get_text(number, "metadata.json")
     if meta_raw is None:
         raise ButtondownPublishError(
-            f"No metadata.json for #{number} — run `/eddy issue subject` first."
+            f"No metadata.json at s3://{WEEKLY_THING_ASSETS_BUCKET}/{_workspace_key(number, 'metadata.json')} — "
+            "run `/eddy issue subject` first."
         )
     meta = json.loads(meta_raw)
     subject = meta.get("subject") or f"WT{number}"
