@@ -36,7 +36,7 @@ from typing import Optional
 from zoneinfo import ZoneInfo
 
 from ..personas.base import is_pass_response
-from ..tools import alt_text, archive_context, db, issue_items, issue_items_render, issue_items_sync, render, s3
+from ..tools import alt_text, archive_context, db, issue_items, issue_items_render, issue_items_sync, render, renderers, s3
 from ..tools.content import context, draft as draft_mod
 from ..tools.llm import anthropic_client
 from . import _base, _cover, _currently, issue_status
@@ -754,11 +754,29 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             # Browser-viewable preview (no-cache + CDN invalidation); best-effort.
             # Subtitle carries the full local timestamp so anyone opening the
             # shareable link can tell at a glance whether they're looking at a
-            # fresh projection or a stale one.
+            # fresh projection or a stale one. Also surfaces the issue's
+            # subject + description (metadata.json) and a row of convenience
+            # links to the sibling artifacts the bot writes alongside the
+            # draft (buttondown.md, archive.md, transcript-full.txt) so Jamie
+            # can pull any of them from the same shareable page.
+            try:
+                # _load_metadata does an S3 read; keep it off the asyncio
+                # loop the same way the render call below is.
+                draft_meta = await asyncio.to_thread(renderers._load_metadata, n, window)
+            except Exception:  # noqa: BLE001
+                logger.exception("update-draft: couldn't load metadata.json for #%d", n)
+                draft_meta = None
+            draft_links = [
+                ("buttondown.md", s3.issue_file_url(n, "buttondown.md")),
+                ("archive.md", s3.issue_file_url(n, "archive.md")),
+                ("transcript-full.txt", s3.issue_file_url(n, "transcript-full.txt")),
+            ]
             html_url = await asyncio.to_thread(
                 render.render_and_upload_html, n, "draft", text,
                 title=f"WT{n} — draft",
                 subtitle=f"DRAFT · WT{n} · generated {stamp} · ~{st['word_count']} words · not the final issue",
+                convenience_links=draft_links,
+                meta=draft_meta,
                 strip_block_markers=True, review_md=review_md,
             )
             html_detail = (f"[view]({html_url})" + (" (with review)" if review_md else "")) if html_url else "skipped"

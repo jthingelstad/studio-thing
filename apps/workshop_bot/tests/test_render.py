@@ -66,6 +66,69 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
         # No subtitle → no banner.
         self.assertNotIn('class="banner"', render.markdown_to_html_page("x", title="t"))
 
+    def test_convenience_links_render_in_banner(self):
+        page = render.markdown_to_html_page(
+            "x", title="t",
+            subtitle="DRAFT · WT458",
+            convenience_links=[
+                ("buttondown.md", "https://files.example/458/buttondown.md"),
+                ("archive.md", "https://files.example/458/archive.md"),
+                ("transcript-full.txt", "https://files.example/458/transcript-full.txt"),
+            ],
+        )
+        # The links sit inside the same banner element so the status row
+        # reads as one block.
+        self.assertIn('<p class="banner">', page)
+        self.assertIn('<span class="banner-links">', page)
+        self.assertIn('href="https://files.example/458/buttondown.md"', page)
+        self.assertIn('href="https://files.example/458/archive.md"', page)
+        self.assertIn('href="https://files.example/458/transcript-full.txt"', page)
+        # The labels render with the ↗ glyph.
+        self.assertIn("↗ buttondown.md", page)
+        self.assertIn("↗ transcript-full.txt", page)
+
+    def test_convenience_links_alone_with_no_subtitle(self):
+        page = render.markdown_to_html_page(
+            "x", title="t",
+            convenience_links=[("archive.md", "https://files.example/458/archive.md")],
+        )
+        # Banner still appears (just with the links, no subtitle text).
+        self.assertIn('<p class="banner">', page)
+        self.assertIn("↗ archive.md", page)
+
+    def test_meta_block_renders_subject_and_description(self):
+        page = render.markdown_to_html_page(
+            "# Body content\n\nMore.",
+            title="t",
+            meta={"subject": "WT458 — A theme & a quote", "description": "topic one, topic two"},
+        )
+        self.assertIn('<dl class="meta">', page)
+        self.assertIn("<dt>Subject</dt>", page)
+        # `&` in the subject must be HTML-escaped.
+        self.assertIn("WT458 — A theme &amp; a quote", page)
+        self.assertIn("<dt>Description</dt>", page)
+        self.assertIn("topic one, topic two", page)
+        # Meta block lands ABOVE the article body, not inside it.
+        self.assertLess(page.index('<dl class="meta">'), page.index("<article>"))
+
+    def test_meta_omits_rows_with_empty_values(self):
+        # When description is empty / None, the description row doesn't
+        # render — keeps the chrome quiet during the early-issue window
+        # before compose-meta has filled the field.
+        page = render.markdown_to_html_page(
+            "x", title="t",
+            meta={"subject": "WT458 — pending", "description": ""},
+        )
+        self.assertIn("<dt>Subject</dt>", page)
+        self.assertNotIn("<dt>Description</dt>", page)
+
+    def test_no_meta_no_block(self):
+        # No meta dict → no dl element at all (don't draw an empty box).
+        page = render.markdown_to_html_page("x", title="t")
+        self.assertNotIn('<dl class="meta">', page)
+        page2 = render.markdown_to_html_page("x", title="t", meta={"subject": "", "description": ""})
+        self.assertNotIn('<dl class="meta">', page2)
+
     def test_strips_block_markers(self):
         md = ("<!-- block:intro -->\nHello.\n<!-- /block:intro -->\n\n## Notable\n\n"
               "<!-- block:notable -->\n### [A](http://a)\n<!-- /block:notable -->")

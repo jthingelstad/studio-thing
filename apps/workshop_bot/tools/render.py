@@ -112,8 +112,30 @@ hr { border: none; border-top: 1px solid var(--wt-line); margin: 32px 0; }
   font-family: var(--wt-mono); font-size: 12px; line-height: 1.4;
   text-transform: uppercase; letter-spacing: 0.08em;
   background: var(--wt-accent-soft); border-left: 4px solid var(--wt-accent);
-  color: var(--wt-accent-deep); padding: 10px 14px; border-radius: 3px; margin: 0 0 32px;
+  color: var(--wt-accent-deep); padding: 10px 14px; border-radius: 3px; margin: 0 0 24px;
 }
+.banner-links { display: block; margin-top: 6px; font-size: 11.5px; }
+.banner-links a { color: var(--wt-accent-deep); text-decoration: none; border-bottom: 1px dotted currentColor; }
+.banner-links a:hover { color: var(--wt-accent); border-bottom-style: solid; }
+.banner-links .sep { opacity: 0.5; padding: 0 6px; }
+dl.meta {
+  margin: 0 0 32px; padding: 0;
+  border-top: 1px solid var(--wt-line-soft);
+  border-bottom: 1px solid var(--wt-line-soft);
+  padding: 14px 0 16px;
+}
+dl.meta dt {
+  font-family: var(--wt-mono); font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--wt-muted);
+  margin: 0 0 4px; padding: 0;
+}
+dl.meta dt + dd { margin-top: 0; }
+dl.meta dd {
+  margin: 0 0 14px; padding: 0;
+  font-family: var(--wt-serif); font-size: 18px; line-height: 1.4;
+  color: var(--wt-ink);
+}
+dl.meta dd:last-child { margin-bottom: 0; }
 /* Editorial-review drawer — hidden until "Show review" is pressed. */
 #rv-toggle {
   position: fixed; top: 14px; right: 14px; z-index: 30; cursor: pointer;
@@ -229,7 +251,7 @@ _PAGE = """\
 </head>
 <body>
 {review_chrome}{review_connectors}
-{banner}<article>
+{banner}{meta}<article>
 {body}
 </article>
 {review_script}</body>
@@ -511,16 +533,63 @@ def _markdown_to_html(md: str) -> str:
     return markdown.markdown(md, extensions=["extra", "sane_lists", "smarty"], output_format="html5")
 
 
+def _render_banner(subtitle: Optional[str],
+                   convenience_links: Optional[list[tuple[str, str]]]) -> str:
+    """Build the small mono-uppercase status banner that sits above the
+    article. ``subtitle`` is the existing one-line "DRAFT · WT… · …"
+    summary; ``convenience_links`` is an optional list of ``(label, url)``
+    pairs surfaced as a second line of cross-links (e.g. "↗ buttondown.md
+    · ↗ archive.md · ↗ transcript-full.txt").
+    """
+    if not subtitle and not convenience_links:
+        return ""
+    parts = [_html.escape(subtitle)] if subtitle else []
+    if convenience_links:
+        link_html = '<span class="sep">·</span>'.join(
+            f' <a href="{_html.escape(url, quote=True)}">↗ {_html.escape(label)}</a> '
+            for label, url in convenience_links
+        )
+        parts.append(f'<span class="banner-links">{link_html}</span>')
+    return f'<p class="banner">{"".join(parts)}</p>\n'
+
+
+def _render_meta(meta: Optional[dict]) -> str:
+    """Build the Subject / Description definition list that renders above
+    the article body. ``meta`` is a dict — only the keys that are present
+    and non-empty get rendered (so a fresh issue without a subject yet
+    just doesn't show that row). Empty / None → no block at all."""
+    if not meta:
+        return ""
+    rows: list[tuple[str, str]] = []
+    for key, label in (("subject", "Subject"), ("description", "Description")):
+        value = (meta.get(key) or "").strip() if isinstance(meta, dict) else ""
+        if value:
+            rows.append((label, value))
+    if not rows:
+        return ""
+    items = "\n".join(
+        f"  <dt>{_html.escape(label)}</dt>\n  <dd>{_html.escape(value)}</dd>"
+        for label, value in rows
+    )
+    return f'<dl class="meta">\n{items}\n</dl>\n'
+
+
 def markdown_to_html_page(md: str, *, title: str, subtitle: Optional[str] = None,
+                          convenience_links: Optional[list[tuple[str, str]]] = None,
+                          meta: Optional[dict] = None,
                           strip_block_markers: bool = False,
                           review_md: Optional[str] = None,
                           issue_number: Optional[int] = None) -> str:
     """Wrap ``md`` (rendered to HTML) in a standalone, self-contained page.
     If ``strip_block_markers``, the ``<!-- block:X -->`` comments are
     removed first. ``subtitle``, if given, renders as a small banner above
-    the content (used to mark drafts as work-in-progress). ``review_md``,
-    if given, is rendered into a slide-in drawer that's hidden until the
-    fixed "Show review" button is pressed.
+    the content (used to mark drafts as work-in-progress).
+    ``convenience_links`` (an optional list of ``(label, url)`` pairs)
+    renders as a second line of cross-links in the same banner.
+    ``meta`` (an optional ``{"subject": …, "description": …}`` dict)
+    renders as a definition list between the banner and the article
+    body. ``review_md``, if given, is rendered into a slide-in drawer
+    that's hidden until the fixed "Show review" button is pressed.
 
     ``issue_number`` is required when ``review_md`` is supplied — the
     per-item drawer anchors (n1/b2/j3) are derived from ``issue_items``
@@ -535,7 +604,8 @@ def markdown_to_html_page(md: str, *, title: str, subtitle: Optional[str] = None
         src = _BLOCK_MARKER_RE.sub("", src)
         src = re.sub(r"\n{3,}", "\n\n", src).strip() + "\n"
     body = _markdown_to_html(src)
-    banner = f'<p class="banner">{_html.escape(subtitle)}</p>\n' if subtitle else ""
+    banner = _render_banner(subtitle, convenience_links)
+    meta_block = _render_meta(meta)
     if has_review:
         review_chrome = _REVIEW_CHROME.format(review_html=_markdown_to_html(_prepare_review_md(review_md)))
         review_connectors = '<svg id="rv-connectors" aria-hidden="true"></svg>\n'
@@ -543,7 +613,8 @@ def markdown_to_html_page(md: str, *, title: str, subtitle: Optional[str] = None
     else:
         review_chrome = review_connectors = review_script = ""
     return _PAGE.format(
-        title=_html.escape(title), css=_CSS, banner=banner, body=body,
+        title=_html.escape(title), css=_CSS, banner=banner, meta=meta_block,
+        body=body,
         review_chrome=review_chrome, review_connectors=review_connectors,
         review_script=review_script,
     )
@@ -1197,6 +1268,8 @@ def render_and_upload_html(
     *,
     title: str,
     subtitle: Optional[str] = None,
+    convenience_links: Optional[list[tuple[str, str]]] = None,
+    meta: Optional[dict] = None,
     strip_block_markers: bool = False,
     review_md: Optional[str] = None,
 ) -> Optional[str]:
@@ -1207,6 +1280,7 @@ def render_and_upload_html(
     try:
         page = markdown_to_html_page(
             md, title=title, subtitle=subtitle,
+            convenience_links=convenience_links, meta=meta,
             strip_block_markers=strip_block_markers, review_md=review_md,
             issue_number=int(issue_number),
         )
