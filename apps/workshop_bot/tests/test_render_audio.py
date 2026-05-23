@@ -174,8 +174,12 @@ class RenderAudioTests(_DBTestCase):
         self.assertEqual(result.data["duration_seconds"], 420)
         self.assertEqual(result.data["byte_size"], 5_200_000)
         self.assertTrue(result.data["changed"])
-        # Bumpers ensured before build_issue ran.
+        # Bumpers ensured before build_issue ran. ensure_bumpers takes
+        # the manifest as its first positional arg (mutates it in place
+        # to stamp the bumper hash + voice into _bumpers).
         bumpers_mod.ensure_bumpers.assert_called_once()
+        passed_manifest = bumpers_mod.ensure_bumpers.call_args.args[0]
+        self.assertIsInstance(passed_manifest, dict)
 
     def test_idempotent_skip_reports_up_to_date(self):
         self._window()

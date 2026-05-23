@@ -66,11 +66,16 @@ def _materialize_apps_site_archive(issue_number: int) -> None:
     )
 
 
-def _ensure_bumpers(bumpers_mod) -> None:
+def _ensure_bumpers(bumpers_mod, manifest: dict) -> bool:
     """build_issue refuses if intro/outro bumper MP3s are missing. Render
-    them on demand from data/audio/bumpers/{intro,outro}.txt — deterministic
-    text-keyed renders, so this is a no-op if they already exist."""
-    bumpers_mod.ensure_bumpers()
+    them on demand — deterministic text-keyed renders, so this is a no-op
+    if they already exist and the text + voice match the manifest's
+    ``_bumpers`` block.
+
+    ``manifest`` is the audio manifest (mutated in place when a bumper
+    actually re-renders so ``set_bumper_state`` can stamp the new hash).
+    Returns True if anything was rendered."""
+    return bool(bumpers_mod.ensure_bumpers(manifest))
 
 
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
@@ -98,9 +103,12 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             # Make sure apps/site/archive/{N}.md exists for the ID3 + cover lookup.
             _materialize_apps_site_archive(n)
 
-            _ensure_bumpers(bumpers_mod)
-
+            # Read the manifest first — ensure_bumpers needs it (it stamps
+            # the bumper hash + voice into manifest["_bumpers"]) and so
+            # does build_issue. One read, one write at the end picks up
+            # both mutations.
             manifest_data = manifest_mod.read_manifest()
+            _ensure_bumpers(bumpers_mod, manifest_data)
 
             # build_issue mutates manifest_data in place with the new entry;
             # we write it back so the workshop ship's GitHub commit picks up
