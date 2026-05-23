@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import os
 import sys
-import tempfile
 import unittest
 from pathlib import Path
 
@@ -16,24 +14,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.tools import db, issue_items  # noqa: E402
-
-
-class _DBCase(unittest.TestCase):
-    """Temp-dir SQLite with migrations applied — mirrors the pattern in
-    test_campaigns.py / test_follow_ups.py."""
-
-    def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self._orig = os.environ.get("WORKSHOP_DB_PATH")
-        os.environ["WORKSHOP_DB_PATH"] = str(Path(self._tmp.name) / "t.db")
-        db.run_migrations()
-
-    def tearDown(self):
-        if self._orig is None:
-            os.environ.pop("WORKSHOP_DB_PATH", None)
-        else:
-            os.environ["WORKSHOP_DB_PATH"] = self._orig
-        self._tmp.cleanup()
+from apps.workshop_bot.tests._fixtures import TempDBTestCase as _DBCase  # noqa: E402
 
 
 # ---------------- upsert + list ----------------

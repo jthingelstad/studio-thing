@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
-import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -20,21 +19,7 @@ _stubs.install()
 from apps.workshop_bot.jobs import _base, add_campaign, campaign_report, daily_metrics, ops  # noqa: E402
 from apps.workshop_bot.tools import db # noqa: E402
 from apps.workshop_bot.tools.content import context
-
-
-class _DBCase(unittest.TestCase):
-    def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self._orig = os.environ.get("WORKSHOP_DB_PATH")
-        os.environ["WORKSHOP_DB_PATH"] = str(Path(self._tmp.name) / "t.db")
-        db.run_migrations()
-
-    def tearDown(self):
-        if self._orig is None:
-            os.environ.pop("WORKSHOP_DB_PATH", None)
-        else:
-            os.environ["WORKSHOP_DB_PATH"] = self._orig
-        self._tmp.cleanup()
+from apps.workshop_bot.tests._fixtures import TempDBTestCase as _DBCase  # noqa: E402
 
 
 class CampaignDbTests(_DBCase):

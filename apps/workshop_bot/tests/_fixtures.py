@@ -121,12 +121,10 @@ def patch_s3(ws: FakeWorkspace):
     ]
 
 
-class DBTestCase(unittest.TestCase):
-    """Temp-DB + FakeWorkspace test base. Opens a temp-dir SQLite,
-    points ``WORKSHOP_DB_PATH`` at it, runs migrations, installs the
-    in-memory S3 patches, redirects ``renderers.ISSUES_LOCAL_DIR`` to
-    a tempdir so the impure for-issue renderers don't drop placeholder
-    files into the real ``data/issues/`` tree, and tears it all down.
+class TempDBTestCase(unittest.TestCase):
+    """Temp-dir SQLite with migrations applied — nothing else. Use this
+    when the unit under test only touches the DB; reach for
+    ``DBTestCase`` when you also need the per-issue S3 surface stubbed.
     """
 
     def setUp(self):
@@ -134,6 +132,25 @@ class DBTestCase(unittest.TestCase):
         self._orig_db = os.environ.get("WORKSHOP_DB_PATH")
         os.environ["WORKSHOP_DB_PATH"] = str(Path(self._tmpdir.name) / "test.db")
         db.run_migrations()
+
+    def tearDown(self):
+        if self._orig_db is None:
+            os.environ.pop("WORKSHOP_DB_PATH", None)
+        else:
+            os.environ["WORKSHOP_DB_PATH"] = self._orig_db
+        self._tmpdir.cleanup()
+
+
+class DBTestCase(TempDBTestCase):
+    """Temp-DB + FakeWorkspace test base. Inherits the temp-DB setup
+    from ``TempDBTestCase`` and adds the in-memory S3 patches plus a
+    sandboxed ``renderers.ISSUES_LOCAL_DIR`` so the impure for-issue
+    renderers don't drop placeholder files into the real
+    ``data/issues/`` tree.
+    """
+
+    def setUp(self):
+        super().setUp()
         self.ws = FakeWorkspace()
         self._patches = patch_s3(self.ws)
         # Sandbox ISSUES_LOCAL_DIR — the impure renderers
@@ -155,11 +172,7 @@ class DBTestCase(unittest.TestCase):
     def tearDown(self):
         for p in self._patches:
             p.stop()
-        if self._orig_db is None:
-            os.environ.pop("WORKSHOP_DB_PATH", None)
-        else:
-            os.environ["WORKSHOP_DB_PATH"] = self._orig_db
-        self._tmpdir.cleanup()
+        super().tearDown()
 
 
 def filled_final(

@@ -6,7 +6,6 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
-import tempfile
 import unittest
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -22,6 +21,7 @@ _stubs.install()
 from apps.workshop_bot.jobs import _base, follow_up  # noqa: E402
 from apps.workshop_bot.tools import db # noqa: E402
 from apps.workshop_bot.tools.llm import agent_tools
+from apps.workshop_bot.tests._fixtures import TempDBTestCase as _DBCase  # noqa: E402
 
 
 # ---------- pure trigger parsing ----------
@@ -67,20 +67,6 @@ class TriggerParsingTests(unittest.TestCase):
 
 
 # ---------- db helpers + create/list/cancel ----------
-
-class _DBCase(unittest.TestCase):
-    def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self._orig = os.environ.get("WORKSHOP_DB_PATH")
-        os.environ["WORKSHOP_DB_PATH"] = str(Path(self._tmp.name) / "t.db")
-        db.run_migrations()
-
-    def tearDown(self):
-        self._tmp.cleanup()
-        if self._orig is None:
-            os.environ.pop("WORKSHOP_DB_PATH", None)
-        else:
-            os.environ["WORKSHOP_DB_PATH"] = self._orig
 
 
 class DbHelperTests(_DBCase):
