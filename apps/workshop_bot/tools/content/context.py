@@ -214,26 +214,16 @@ def build_linky_context(*, ref_date: Optional[date] = None) -> dict[str, Any]:
     except (TypeError, ValueError):
         sd = ed = None
 
+    # toread_count / brief_captured_this_week stay None on purpose. Both used
+    # to be derived from a posts_all(results=1000) call here — but that hit
+    # /posts/all a second time within ~2.5s of the toread_public_unresearched
+    # fetch in the same pinboard-scan, tripping Pinboard's documented cadence
+    # (1 call / 5 min for /posts/all). The stats were informational only —
+    # Linky's prompt doesn't reference them by name; if the LLM needs an exact
+    # queue depth, the pinboard__unread tool fetches on demand at scan time
+    # rather than as eager context.
     toread_count: Optional[int] = None
     brief_captured: Optional[int] = None
-    try:
-        from ...systems.pinboard import client as _pb  # lazy — keeps tools import-light
-        all_posts = _pb.posts_all(results=1000)
-        toread_count = sum(1 for p in all_posts if (p.get("toread") == "yes"))
-        if sd and ed:
-            bc = 0
-            for p in all_posts:
-                if "_brief" not in set((p.get("tags") or "").split()):
-                    continue
-                try:
-                    d = datetime.fromisoformat(str(p.get("time") or "").replace("Z", "+00:00")).date()
-                except ValueError:
-                    continue
-                if sd < d <= ed:
-                    bc += 1
-            brief_captured = bc
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("build_linky_context: pinboard fetch failed: %s", exc)
 
     return {
         "today": today.isoformat(),

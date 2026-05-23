@@ -284,18 +284,14 @@ class LinkyContextTests(_DBTestCase):
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
-        from apps.workshop_bot.systems.pinboard import client as pbc
-        feed = [
-            {"href": "https://a/1", "tags": "ai", "toread": "yes", "time": "2026-05-10T00:00:00Z"},
-            {"href": "https://a/2", "tags": "ai _brief", "toread": "no", "time": "2026-05-11T00:00:00Z"},
-            {"href": "https://a/3", "tags": "rust", "toread": "no", "time": "2026-05-03T00:00:00Z"},
-        ]
-        with patch.object(pbc, "posts_all", lambda **kw: feed):
-            ctx = context.build_linky_context(ref_date=date(2026, 5, 12))
+        ctx = context.build_linky_context(ref_date=date(2026, 5, 12))
         self.assertEqual(ctx["active_issue"], 458)
-        self.assertEqual(ctx["toread_count"], 1)
-        self.assertEqual(ctx["brief_captured_this_week"], 1)
         self.assertEqual(ctx["days_into_window"], (date(2026, 5, 12) - date(2026, 5, 8)).days)
+        # toread_count / brief_captured_this_week stay None — they used to be
+        # derived from a redundant posts_all(1000) call here; that call was
+        # dropped to avoid clustering /posts/all hits in a single scan.
+        self.assertIsNone(ctx["toread_count"])
+        self.assertIsNone(ctx["brief_captured_this_week"])
 
 
 class InteractionPrimitiveTests(unittest.TestCase):

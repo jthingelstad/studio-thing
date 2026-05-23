@@ -74,8 +74,6 @@ class PinboardScanJobTests(_DBTestCase):
             patch.object(pbc, "popular", lambda limit=30: list(popular or [])),
             patch.object(pbc, "toread_public_unresearched",
                          lambda limit=25: list(toread or [])),
-            # build_linky_context hits posts_all for queue depth — stub it cheap.
-            patch.object(pbc, "posts_all", lambda **kw: []),
         ]
 
     def test_pass_when_both_sources_empty(self):
