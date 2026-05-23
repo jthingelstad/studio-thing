@@ -38,13 +38,26 @@ BTN_EDIT = "build:edit"
 BTN_MARK_BUILT = "build:mark-built"
 
 
-def gather_state(n: int, *, window: Optional[dict] = None) -> dict:
+def gather_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> dict:
     """Content state for the Build card. Synchronous (blocking S3); async
-    callers wrap in `asyncio.to_thread`."""
+    callers wrap in `asyncio.to_thread`.
+
+    Issue-number resolution: prefer ``window["issue_number"]`` when the
+    caller passed a DB-shaped window (carries the column), else fall back
+    to the explicit ``n`` arg — start-issue passes the ``compute_window``
+    dict which has the dates but not ``issue_number``, so the explicit
+    ``n`` is what we have. Both-missing is the "no active issue" case.
+    """
     window = window or db.get_active_issue_window()
     if window is None:
         return {"issue_number": None}
-    n = int(window["issue_number"])
+    derived = window.get("issue_number")
+    if derived is not None:
+        n = int(derived)
+    elif n is not None:
+        n = int(n)
+    else:
+        return {"issue_number": None}
     files = _cards.issue_files(n)
     st = draft_mod.section_status(n, list_objects=files)
 

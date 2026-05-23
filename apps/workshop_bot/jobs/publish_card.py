@@ -37,11 +37,21 @@ BTN_ALL = "publish:all"            # 🚀 all in order
 BTN_BED = "publish:bed"            # put to bed
 
 
-def gather_state(n: int, *, window: Optional[dict] = None) -> dict:
+def gather_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> dict:
+    """Same issue-number resolution as build_card.gather_state — prefer
+    the DB-shaped window's ``issue_number`` column; fall back to the
+    explicit ``n`` arg when the caller passed a ``compute_window``-shaped
+    dict (no issue_number)."""
     window = window or db.get_active_issue_window()
     if window is None:
         return {"issue_number": None}
-    n = int(window["issue_number"])
+    derived = window.get("issue_number")
+    if derived is not None:
+        n = int(derived)
+    elif n is not None:
+        n = int(n)
+    else:
+        return {"issue_number": None}
     files = _cards.issue_files(n)
     st = draft_mod.section_status(n, list_objects=files)
     meta = _cards.read_metadata_raw(n)
