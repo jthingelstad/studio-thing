@@ -124,7 +124,10 @@ def patch_s3(ws: FakeWorkspace):
 class DBTestCase(unittest.TestCase):
     """Temp-DB + FakeWorkspace test base. Opens a temp-dir SQLite,
     points ``WORKSHOP_DB_PATH`` at it, runs migrations, installs the
-    in-memory S3 patches, and tears it all down."""
+    in-memory S3 patches, redirects ``renderers.ISSUES_LOCAL_DIR`` to
+    a tempdir so the impure for-issue renderers don't drop placeholder
+    files into the real ``data/issues/`` tree, and tears it all down.
+    """
 
     def setUp(self):
         self._tmpdir = tempfile.TemporaryDirectory()
@@ -133,6 +136,19 @@ class DBTestCase(unittest.TestCase):
         db.run_migrations()
         self.ws = FakeWorkspace()
         self._patches = patch_s3(self.ws)
+        # Sandbox ISSUES_LOCAL_DIR — the impure renderers
+        # (``render_email_for_issue``, ``render_archive_for_issue``,
+        # ``render_transcript_for_issue``) mirror their output to
+        # ``data/issues/{N}/`` for the website-publish path. Without this
+        # patch, tests that exercise those paths against fake issue
+        # numbers (458, 459 are common fixtures) leak placeholder
+        # ``archive.md`` / ``buttondown.md`` / ``metadata.json`` etc.
+        # into the real repo tree and show up as untracked files on
+        # every subsequent ``git status``.
+        from apps.workshop_bot.tools import renderers as _renderers
+        local_dir = Path(self._tmpdir.name) / "data" / "issues"
+        self._patches.append(patch.object(_renderers, "ISSUES_LOCAL_DIR", local_dir))
+        self._issues_local_dir = local_dir
         for p in self._patches:
             p.start()
 
