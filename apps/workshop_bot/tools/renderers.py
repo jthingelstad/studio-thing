@@ -240,10 +240,10 @@ def _compose_published_body(
     if outro:
         parts.append(outro)
 
-    # Haiku close + optional ## The Closer paragraph + Reddit-discuss + 👨‍💻
+    # Haiku close + optional ## Echoes paragraph + Reddit-discuss + 👨‍💻
     haiku_block = _format_haiku_block(atoms.get("haiku", ""))
     closer_text = (closer or "").strip()
-    closer_block = f"## The Closer\n\n{closer_text}" if closer_text else ""
+    closer_block = f"## Echoes\n\n{closer_text}" if closer_text else ""
     tail_pieces = [p for p in (haiku_block, closer_block, _CLOSING) if p]
     if tail_pieces:
         parts.append("\n\n".join(tail_pieces))

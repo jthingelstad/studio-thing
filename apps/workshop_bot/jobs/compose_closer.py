@@ -1,6 +1,7 @@
-"""``compose-closer`` — write **The Closer**, Thingy's archive note.
+"""``compose-closer`` — write **Echoes**, Thingy's archive note.
 
-The Closer is the section that closes every issue: Thingy (the public
+(Internal name stays ``compose-closer`` / ``closer.md``; the reader-facing
+section heading is **Echoes**.) Echoes is the section that closes every issue: Thingy (the public
 librarian persona — see ``prompts/shared/thingy-voice-reference.md``)
 writes a 2–4 sentence note connecting the current issue to the
 nine-year archive. The note runs in Thingy's voice (third-person about
@@ -341,8 +342,8 @@ def _build_user_message(
     anniversaries: list[dict[str, Any]],
 ) -> str:
     return (
-        f"You're writing The Closer for **The Weekly Thing #{issue_number}**, "
-        f"publishing {publish_date}.\n\n"
+        f"You're writing **Echoes** (Thingy's archive note) for **The Weekly "
+        f"Thing #{issue_number}**, publishing {publish_date}.\n\n"
         f"---\n\n"
         f"## Current issue draft\n\n"
         f"```markdown\n{baseline_body.strip()}\n```\n\n"
@@ -364,7 +365,7 @@ def _build_user_message(
         f"preview.\n\n"
         f"{_format_anniversary_candidates(anniversaries)}\n\n"
         f"---\n\n"
-        f"Now write The Closer: 2-5 sentences (≈60-110 words) in Thingy's "
+        f"Now write the Echoes note: 2-5 sentences (≈60-110 words) in Thingy's "
         f"voice (third-person Jamie), OR the literal SKIP line. Every cited "
         f"issue must be a markdown link "
         f"`[WT###](https://weekly.thingelstad.com/archive/N/)`. Open with the "
@@ -573,7 +574,7 @@ async def run(
 
     word_count = len(text.split())
     msg = (
-        f"📚 compose-closer for **WT{n}**: {word_count}-word The Closer paragraph written.\n"
+        f"📚 compose-closer for **WT{n}**: {word_count}-word Echoes note written.\n"
         f"> {text}"
     )
     await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")

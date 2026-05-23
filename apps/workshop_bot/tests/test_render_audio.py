@@ -39,6 +39,50 @@ from apps.workshop_bot.tests._fixtures import (  # noqa: E402
 )
 
 
+class ProgressHookTests(unittest.TestCase):
+    """The §6 fix: the live progress card stuck on "starting…" because the
+    print-intercept missed the synthesize module. These cover the plumbing —
+    module resolution, line classification, and the print hook — without the
+    real TTS pipeline."""
+
+    def test_classify_per_block_line(self):
+        out = render_audio._classify_print("Issue #349: synthesizing block 3/12 (512 chars)")
+        self.assertEqual(out, "🎙️ block 3/12 (512 chars)")
+
+    def test_classify_ignores_unrelated_line(self):
+        self.assertIsNone(render_audio._classify_print("some unrelated log line"))
+
+    def test_synthesize_mod_resolves_via_function_module(self):
+        # Simulate `from synthesize import synthesize_blocks_to_mp3`: the fn's
+        # __module__ points at a module registered under a NON-"synthesize" key
+        # (the case that broke the old sys.modules['synthesize'] lookup).
+        import types
+        syn = types.ModuleType("pipeline.audio.synthesize")
+        def _blocks():  # noqa: ANN202
+            pass
+        _blocks.__module__ = "pipeline.audio.synthesize"
+        syn.synthesize_blocks_to_mp3 = _blocks
+        audio_mod = types.ModuleType("audio")
+        audio_mod.synthesize_blocks_to_mp3 = _blocks  # imported into audio's ns
+        sys.modules["pipeline.audio.synthesize"] = syn
+        try:
+            self.assertIs(render_audio._synthesize_mod(audio_mod), syn)
+        finally:
+            sys.modules.pop("pipeline.audio.synthesize", None)
+
+    def test_print_intercept_forwards_classified_lines(self):
+        import types
+        syn = types.ModuleType("synth_under_test")
+        events: list[str] = []
+        with render_audio._print_intercept(syn, progress_cb=events.append):
+            # A call resolved via the module's patched `print`.
+            syn.print("Issue #349: synthesizing block 1/4 (100 chars)")
+            syn.print("noise that should not classify")
+        self.assertEqual(events, ["🎙️ block 1/4 (100 chars)"])
+        # print restored on exit (module had no own `print` before).
+        self.assertNotIn("print", vars(syn))
+
+
 class RenderAudioTests(_DBTestCase):
     def setUp(self):
         super().setUp()

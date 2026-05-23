@@ -157,12 +157,36 @@ class PersonaBot(discord.Client):
         # /<persona> slash tree). on_ready below syncs it.
         self.command_tree = None  # type: ignore[assignment]
 
+    def persistent_views(self) -> list:
+        """Persistent (`timeout=None`) views to register on this bot at
+        startup so their button clicks route by ``custom_id`` even after a
+        restart. Default none; personas that own a long-lived control card
+        (e.g. Eddy's ship console) override this."""
+        return []
+
+    def _register_persistent_views(self) -> None:
+        """Register this persona's persistent views exactly once. ``on_ready``
+        can fire on every reconnect, so guard against a double add (discord.py
+        raises if the same custom_id is registered twice)."""
+        if getattr(self, "_views_registered", False):
+            return
+        for view in self.persistent_views():
+            try:
+                self.add_view(view)
+            except Exception:  # noqa: BLE001
+                logger.exception("%s: failed to register persistent view %r", self.persona, view)
+        self._views_registered = True
+
     async def on_ready(self) -> None:  # type: ignore[override]
         user = self.user
         logger.info("%s online as %s (id=%s)", self.name, user, getattr(user, "id", "?"))
         self.ready_event.set()
         if self.command_tree is not None:
             await self._sync_command_tree()
+        try:
+            self._register_persistent_views()
+        except Exception:  # noqa: BLE001
+            logger.exception("%s: register_persistent_views failed", self.persona)
         try:
             await self._post_startup_card()
         except Exception:  # noqa: BLE001

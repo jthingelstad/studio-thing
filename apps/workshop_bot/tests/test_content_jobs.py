@@ -299,69 +299,112 @@ class LinkyContextTests(_DBTestCase):
 
 
 class InteractionPrimitiveTests(unittest.TestCase):
-    def _bot_channel(self):
-        channel = MagicMock()
-        msg = MagicMock()
-        msg.id = 4242
-        msg.add_reaction = AsyncMock()
-        channel.send = AsyncMock(return_value=msg)
-        bot = MagicMock()
-        return bot, channel, msg
+    """The picker is button-based: post a view, the owner clicks a button, the
+    callback resolves the awaiting coroutine. These drive the real path —
+    capture the posted view, click a button, await the result."""
+
+    @staticmethod
+    def _click(view, custom_id, *, user_id="777"):
+        btn = next(c for c in view.children if getattr(c, "custom_id", None) == custom_id)
+        inter = MagicMock()
+        inter.user = MagicMock(); inter.user.id = user_id
+        inter.response = MagicMock()
+        inter.response.defer = AsyncMock()
+        inter.response.send_message = AsyncMock()
+        return btn.callback(inter)  # a coroutine
+
+    async def _run(self, call, click_custom_id, *, user_id="777"):
+        holder = {}
+
+        async def _send(content, **kw):
+            if kw.get("view") is not None:
+                holder["view"] = kw["view"]
+            m = MagicMock(); m.id = 4242
+            return m
+
+        channel = MagicMock(); channel.send = _send
+        task = asyncio.create_task(call(channel))
+        for _ in range(100):  # let it post + reach the wait
+            if "view" in holder:
+                break
+            await asyncio.sleep(0)
+        await self._click(holder["view"], click_custom_id, user_id=user_id)
+        return await asyncio.wait_for(task, timeout=2)
 
     def test_await_choice_returns_index(self):
         os.environ["DISCORD_OWNER_USER_ID"] = "777"
         try:
-            bot, channel, msg = self._bot_channel()
-            payload = MagicMock(); payload.message_id = 4242; payload.user_id = 777
-            payload.emoji = MagicMock(); payload.emoji.name = interaction.DIGIT_EMOJI[1]  # picks "2"
-            bot.wait_for = AsyncMock(return_value=payload)
-            out = asyncio.run(interaction.await_choice(bot, channel, ["a", "b", "c"], prompt="pick"))
+            out = asyncio.run(self._run(
+                lambda ch: interaction.await_choice(MagicMock(), ch, ["a", "b", "c"], prompt="pick"),
+                "pick:1",  # the "2" button → index 1
+            ))
             self.assertEqual(out, 1)
-            self.assertTrue(msg.add_reaction.await_count >= 3)
         finally:
             os.environ.pop("DISCORD_OWNER_USER_ID", None)
 
     def test_await_choice_refresh(self):
         os.environ["DISCORD_OWNER_USER_ID"] = "777"
         try:
-            bot, channel, msg = self._bot_channel()
-            payload = MagicMock(); payload.message_id = 4242; payload.user_id = 777
-            payload.emoji = MagicMock(); payload.emoji.name = interaction.REFRESH_EMOJI
-            bot.wait_for = AsyncMock(return_value=payload)
-            out = asyncio.run(interaction.await_choice(bot, channel, ["a", "b"], prompt="pick"))
+            out = asyncio.run(self._run(
+                lambda ch: interaction.await_choice(MagicMock(), ch, ["a", "b"], prompt="pick"),
+                "pick:refresh",
+            ))
             self.assertEqual(out, "refresh")
         finally:
             os.environ.pop("DISCORD_OWNER_USER_ID", None)
 
-    def test_await_choice_timeout(self):
+    def test_await_choice_non_owner_click_ignored(self):
         os.environ["DISCORD_OWNER_USER_ID"] = "777"
         try:
-            bot, channel, msg = self._bot_channel()
-            bot.wait_for = AsyncMock(side_effect=asyncio.TimeoutError())
-            out = asyncio.run(interaction.await_choice(bot, channel, ["a"], prompt="pick"))
-            self.assertIsNone(out)
+            # A non-owner click doesn't resolve; the await times out → None.
+            async def scenario():
+                holder = {}
+
+                async def _send(content, **kw):
+                    if kw.get("view") is not None:
+                        holder["view"] = kw["view"]
+                    m = MagicMock(); m.id = 1
+                    return m
+
+                channel = MagicMock(); channel.send = _send
+                task = asyncio.create_task(
+                    interaction.await_choice(MagicMock(), channel, ["a"], prompt="p", timeout=0.2)
+                )
+                for _ in range(100):
+                    if "view" in holder:
+                        break
+                    await asyncio.sleep(0)
+                await self._click(holder["view"], "pick:0", user_id="999")  # not the owner
+                return await asyncio.wait_for(task, timeout=2)
+
+            self.assertIsNone(asyncio.run(scenario()))
         finally:
             os.environ.pop("DISCORD_OWNER_USER_ID", None)
 
     def test_await_choice_no_owner(self):
-        # No DISCORD_OWNER_USER_ID → can't wait → None immediately.
         os.environ.pop("DISCORD_OWNER_USER_ID", None)
-        bot, channel, msg = self._bot_channel()
-        bot.wait_for = AsyncMock()
-        out = asyncio.run(interaction.await_choice(bot, channel, ["a"], prompt="pick"))
+        channel = MagicMock(); channel.send = AsyncMock()
+        out = asyncio.run(interaction.await_choice(MagicMock(), channel, ["a"], prompt="pick"))
         self.assertIsNone(out)
-        bot.wait_for.assert_not_awaited()
+        channel.send.assert_not_awaited()
+
+    def test_await_choice_zero_options(self):
+        os.environ["DISCORD_OWNER_USER_ID"] = "777"
+        try:
+            channel = MagicMock(); channel.send = AsyncMock()
+            self.assertIsNone(asyncio.run(interaction.await_choice(MagicMock(), channel, [], prompt="p")))
+        finally:
+            os.environ.pop("DISCORD_OWNER_USER_ID", None)
 
     def test_await_approval(self):
         os.environ["DISCORD_OWNER_USER_ID"] = "777"
         try:
-            bot, channel, msg = self._bot_channel()
-            payload = MagicMock(); payload.message_id = 4242; payload.user_id = 777
-            payload.emoji = MagicMock(); payload.emoji.name = interaction.YES_EMOJI
-            bot.wait_for = AsyncMock(return_value=payload)
-            self.assertIs(asyncio.run(interaction.await_approval(bot, channel, prompt="ok?")), True)
-            payload.emoji.name = interaction.NO_EMOJI
-            self.assertIs(asyncio.run(interaction.await_approval(bot, channel, prompt="ok?")), False)
+            yes = asyncio.run(self._run(
+                lambda ch: interaction.await_approval(MagicMock(), ch, prompt="ok?"), "pick:True"))
+            self.assertIs(yes, True)
+            no = asyncio.run(self._run(
+                lambda ch: interaction.await_approval(MagicMock(), ch, prompt="ok?"), "pick:False"))
+            self.assertIs(no, False)
         finally:
             os.environ.pop("DISCORD_OWNER_USER_ID", None)
 

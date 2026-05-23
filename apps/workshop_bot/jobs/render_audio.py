@@ -115,18 +115,28 @@ def _run_audio_pipeline(
 
 
 def _synthesize_mod(audio_mod):
-    """Find the synthesize module — where ``synthesize_blocks_to_mp3``
-    (and the per-block ``print``) lives. The audio pipeline does
-    ``from synthesize import …`` so synthesize lands in ``sys.modules``
-    once audio is imported. Returns ``None`` defensively if the lookup
-    misses; the print-intercept then just patches audio_mod (still
-    catches the body / upload / bumper progress lines)."""
+    """Find the synthesize module — where ``synthesize_blocks_to_mp3`` (and the
+    per-block ``print`` that drives the live progress card) lives. Returns
+    ``None`` defensively if the lookup misses; the print-intercept then just
+    patches audio_mod (still catches the body / upload / bumper lines).
+
+    **Authoritative path first:** ``audio.py`` does ``from synthesize import
+    synthesize_blocks_to_mp3``, so resolve the function's *defining* module via
+    ``__module__`` — that's the exact module object whose ``print`` emits the
+    per-block lines, regardless of what key it landed under in ``sys.modules``.
+    This is the §6 fix: keying off the literal name ``"synthesize"`` missed the
+    module when the pipeline was imported under a package-qualified name, so the
+    per-block events never reached the relay and the card stuck on "starting…".
+    """
     import sys
+    for fn_name in ("synthesize_blocks_to_mp3", "synthesize_text_to_mp3"):
+        fn = getattr(audio_mod, fn_name, None)
+        modname = getattr(fn, "__module__", None)
+        if modname and modname in sys.modules:
+            return sys.modules[modname]
     mod = sys.modules.get("synthesize")
     if mod is None:
-        # Fallback: walk audio_mod's attributes for an object that
-        # looks like the synthesize module (carries
-        # synthesize_blocks_to_mp3).
+        # Last resort: walk audio_mod's attributes for the synthesize module.
         for attr in vars(audio_mod).values():
             if (
                 getattr(attr, "__name__", None) == "synthesize"

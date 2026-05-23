@@ -27,3 +27,12 @@ class EddyBot(PersonaBot):
     def __init__(self, deps: Deps) -> None:
         super().__init__(deps)
         self.command_tree = register_eddy_commands(self)
+
+    def persistent_views(self) -> list:
+        # The Build + Publish phase cards live in #editorial and must keep
+        # routing clicks across restarts — register the canonical (all-enabled)
+        # views so custom_id dispatch survives a reboot.
+        from .views.build_card_view import BuildCardView
+        from .views.publish_card_view import PublishCardView
+
+        return [BuildCardView(), PublishCardView()]

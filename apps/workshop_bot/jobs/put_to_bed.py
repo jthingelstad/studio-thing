@@ -223,6 +223,17 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     ]
     msg = "\n".join(lines)
     await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
+
+    # Close out the Build + Publish cards (the issue leaves the active window)
+    # and surface the Share card for it in #promotion. Best-effort.
+    try:
+        from . import _cards, share_card
+        for kind in ("build", "publish"):
+            await _cards.clear_card(ctx, kind=kind, channel_env=_cards.EDITORIAL_ENV, persona="eddy", n=n)
+        await share_card.post_or_update(ctx)
+    except Exception:  # noqa: BLE001
+        logger.exception("put-to-bed: card handoff failed for WT%d", n)
+
     return _base.JobResult(
         True,
         f"WT{n} filed.",

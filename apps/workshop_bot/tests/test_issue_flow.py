@@ -361,15 +361,16 @@ class UpdateDraftRealFillsTests(_DBTestCase):
             r"generated \d{4}-\d{2}-\d{2} \d{2}:\d{2} [A-Z]{2,5}",
         )
 
-    def test_run_posts_deterministic_status_to_editorial(self):
-        # Every `update-draft` run posts the readiness checklist to
-        # #editorial — a guaranteed daily snapshot independent of Eddy's
-        # LLM availability or PASS behaviour.
+    def test_run_refreshes_build_card_in_editorial(self):
+        # update-draft no longer posts a fresh `📋` status + `✍️` review every
+        # tick. During the Build phase it refreshes the one pinned Build card
+        # (an embed with the content anatomy), independent of Eddy's PASS.
         os.environ["DISCORD_CHANNEL_EDITORIAL"] = "12345"
         try:
-            self._set_window()
+            self._set_window()  # start-issue defaults phase='build'
             fake_channel = MagicMock()
             fake_channel.send = AsyncMock()
+            fake_channel.id = 12345
             fake_eddy = MagicMock()
             fake_eddy.user = object()
             fake_eddy.get_channel = MagicMock(return_value=fake_channel)
@@ -379,13 +380,16 @@ class UpdateDraftRealFillsTests(_DBTestCase):
             ctx = _base.JobContext(deps=deps)
             result = asyncio.run(update_draft.run(ctx))
             self.assertTrue(result.ok, result.message)
-            # Even with Eddy returning PASS, the deterministic status card
-            # landed in #editorial.
-            fake_channel.send.assert_awaited()
-            sent = fake_channel.send.call_args.args[0]
-            self.assertIn("WT458", sent)
-            self.assertIn("issue status", sent)
-            self.assertIn("Required for ship", sent)
+            # A Build-card embed landed in #editorial (sent with embed=…).
+            embed_calls = [
+                c for c in fake_channel.send.call_args_list
+                if c.kwargs.get("embed") is not None
+            ]
+            self.assertTrue(embed_calls, "expected a Build-card embed to be sent")
+            embed = embed_calls[-1].kwargs["embed"]
+            self.assertIn("WT458", embed.title)
+            field_text = "\n".join(f"{f['name']}\n{f['value']}" for f in embed.fields)
+            self.assertIn("The issue (reading order)", field_text)
         finally:
             os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
 
@@ -433,13 +437,16 @@ class UpdateDraftRealFillsTests(_DBTestCase):
         self._set_window()
         asyncio.run(update_draft.run(_base.JobContext()))
         first = self.ws.files[(458, "draft.md")]
-        asyncio.run(update_draft.run(_base.JobContext()))
+        second_result = asyncio.run(update_draft.run(_base.JobContext()))
         second = self.ws.files[(458, "draft.md")]
         self.assertEqual(first, second)
-        # Two runs → two digest rows.
+        # The second run reprojects byte-identically → no-op short-circuit:
+        # the draft is still rewritten, but no second digest row is added
+        # (and the Opus review / #editorial re-post are skipped).
+        self.assertTrue(second_result.data.get("unchanged"))
         with db.connect() as conn:
             n = conn.execute("SELECT COUNT(*) c FROM draft_digests WHERE issue=458").fetchone()["c"]
-        self.assertEqual(n, 2)
+        self.assertEqual(n, 1)
 
     def test_refuses_when_final_exists(self):
         self._set_window()
@@ -462,96 +469,48 @@ class UpdateDraftRealFillsTests(_DBTestCase):
 
 
 
-class EddyReviewTests(_DBTestCase):
-    def _window(self, n=458, pub="2026-05-16"):
+class EditorialReviewTests(_DBTestCase):
+    """The two-review era is over: one stored editorial pass (`_draft_review`)
+    on Opus, surfaced in the draft.html drawer + as the console's open-comment
+    count. The freeform weekday-scaled `#editorial` card was retired because it
+    used a different prompt/model, wasn't stored, and contradicted the drawer."""
+
+    def test_draft_review_defaults_to_opus(self):
+        os.environ.pop("WORKSHOP_EDDY_DRAFT_REVIEW_MODEL", None)
+        self.assertEqual(update_draft._draft_review_model(), "opus")
+
+    def test_draft_review_model_env_override(self):
+        os.environ["WORKSHOP_EDDY_DRAFT_REVIEW_MODEL"] = "sonnet"
+        try:
+            self.assertEqual(update_draft._draft_review_model(), "sonnet")
+        finally:
+            os.environ.pop("WORKSHOP_EDDY_DRAFT_REVIEW_MODEL", None)
+
+    def test_retired_review_symbols_removed(self):
+        self.assertFalse(hasattr(update_draft, "_maybe_eddy_review"))
+        self.assertFalse(hasattr(update_draft, "_review_model"))
+        self.assertFalse(hasattr(update_draft, "_REVIEW_MODEL_BY_WEEKDAY"))
+
+
+class UpdateDraftNoOpTests(_DBTestCase):
+    def _set_window(self, n=458, pub="2026-05-16"):
         from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window(pub, 7)
         db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
-        return db.get_active_issue_window()
 
-    def _fake_team_with_eddy(self, reply="📋 WT458 — draft refreshed\n\nLooks good."):
-        fake_channel = MagicMock()
-        fake_channel.send = AsyncMock()
-        fake_eddy = MagicMock()
-        fake_eddy.user = object()
-        fake_eddy.get_channel = MagicMock(return_value=fake_channel)
-        fake_eddy.core = AsyncMock(return_value=(reply, {"iterations": 1}))
-        team = MagicMock()
-        team.bots = {"eddy": fake_eddy}
-        deps = MagicMock()
-        deps.team = team
-        return deps, fake_eddy, fake_channel
-
-    def test_review_runs_every_weekday(self):
-        # Eddy no longer skips Sat/Sun/Mon — `update-draft` is the gate
-        # (it refuses once final.md exists), so on every day it fires
-        # Eddy should at least attempt a review. Pick Monday — the
-        # weekday that used to silence him — and confirm he runs.
-        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "12345"
-        try:
-            window = self._window()
-            deps, fake_eddy, fake_channel = self._fake_team_with_eddy()
-            ctx = _base.JobContext(deps=deps)
-            st = draft_mod.section_status(458, draft_text=_base.starter_template(), list_objects=set())
-            out = asyncio.run(update_draft._maybe_eddy_review(ctx, window, st, None, date(2026, 5, 11)))
-            self.assertIn("posted a review", out.lower())
-            fake_eddy.core.assert_awaited()
-            fake_channel.send.assert_awaited()
-        finally:
-            os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
-
-    def test_review_posts_on_review_day(self):
-        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "12345"
-        try:
-            window = self._window()
-            deps, fake_eddy, fake_channel = self._fake_team_with_eddy()
-            ctx = _base.JobContext(deps=deps)
-            draft_text = _base.replace_block(
-                _base.starter_template(),
-                "currently",
-                "**Reading:** A book about reliable systems.",
-            )
-            st = draft_mod.section_status(458, draft_text=draft_text, list_objects=set())
-            out = asyncio.run(update_draft._maybe_eddy_review(ctx, window, st, None, date(2026, 5, 12)))  # Tuesday
-            self.assertIn("posted a review", out.lower())
-            fake_eddy.core.assert_awaited()
-            fake_channel.send.assert_awaited()
-            # The dynamic context block was prepended to the user message.
-            sent_user_msg = fake_eddy.core.call_args.kwargs["latest"]
-            self.assertIn("## Today", sent_user_msg)
-            self.assertIn("active_issue", sent_user_msg)
-            self.assertIn("currently_content", sent_user_msg)
-            self.assertIn("A book about reliable systems", sent_user_msg)
-        finally:
-            os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
-
-    def test_review_swallows_pass(self):
-        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "12345"
-        try:
-            window = self._window()
-            deps, fake_eddy, fake_channel = self._fake_team_with_eddy(reply="PASS")
-            ctx = _base.JobContext(deps=deps)
-            st = draft_mod.section_status(458, draft_text=_base.starter_template(), list_objects=set())
-            out = asyncio.run(update_draft._maybe_eddy_review(ctx, window, st, None, date(2026, 5, 12)))
-            self.assertIn("pass", out.lower())
-            fake_channel.send.assert_not_awaited()
-        finally:
-            os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
-
-    def test_review_model_scales(self):
-        self.assertEqual(update_draft._review_model(6), "haiku")   # Sun
-        self.assertEqual(update_draft._review_model(0), "haiku")   # Mon
-        self.assertEqual(update_draft._review_model(1), "haiku")   # Tue
-        self.assertEqual(update_draft._review_model(2), "haiku")   # Wed
-        self.assertEqual(update_draft._review_model(3), "sonnet")  # Thu
-        self.assertEqual(update_draft._review_model(4), "sonnet")  # Fri
-        self.assertEqual(update_draft._review_model(5), "sonnet")  # Sat
-        os.environ["WORKSHOP_EDDY_REVIEW_MODEL"] = "opus"
-        try:
-            self.assertEqual(update_draft._review_model(1), "opus")
-        finally:
-            os.environ.pop("WORKSHOP_EDDY_REVIEW_MODEL", None)
+    def test_second_identical_run_short_circuits(self):
+        # First run has no prior digest → full path (writes a digest).
+        # Second run reprojects byte-identically → no-op short-circuit:
+        # no Opus call, no #editorial re-post, just a "no changes" return.
+        self._set_window()
+        first = asyncio.run(update_draft.run(_base.JobContext()))
+        self.assertTrue(first.ok, first.message)
+        self.assertFalse(first.data.get("unchanged"))
+        second = asyncio.run(update_draft.run(_base.JobContext()))
+        self.assertTrue(second.ok, second.message)
+        self.assertTrue(second.data.get("unchanged"))
+        self.assertIn("no changes", second.message.lower())
 
 
 

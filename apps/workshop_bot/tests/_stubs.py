@@ -130,6 +130,123 @@ def _install_discord() -> None:
 
     discord.TextStyle = _TextStyle  # type: ignore[attr-defined]
 
+    # discord.Embed — used by the ship-console card. Stores title /
+    # description / color and an ordered field list so tests can assert
+    # on the rendered rows.
+    class _Embed:
+        def __init__(self, *, title=None, description=None, color=None, colour=None, url=None):
+            self.title = title
+            self.description = description
+            self.color = color if color is not None else colour
+            self.url = url
+            self.fields: list = []
+            self.footer = None
+
+        def add_field(self, *, name, value, inline=False):
+            self.fields.append({"name": name, "value": value, "inline": inline})
+            return self
+
+        def set_footer(self, *, text=None, icon_url=None):
+            self.footer = {"text": text, "icon_url": icon_url}
+            return self
+
+    discord.Embed = _Embed  # type: ignore[attr-defined]
+
+    class _Color:
+        def __init__(self, value=0):
+            self.value = value
+
+        @classmethod
+        def from_rgb(cls, r, g, b):
+            return cls((int(r) << 16) + (int(g) << 8) + int(b))
+
+        # The handful of named colours the console uses.
+        @classmethod
+        def blurple(cls):
+            return cls(0x5865F2)
+
+        @classmethod
+        def green(cls):
+            return cls(0x2ECC71)
+
+        @classmethod
+        def gold(cls):
+            return cls(0xF1C40F)
+
+        @classmethod
+        def greyple(cls):
+            return cls(0x99AAB5)
+
+    discord.Color = _Color  # type: ignore[attr-defined]
+    discord.Colour = _Color  # type: ignore[attr-defined]
+
+    class _ButtonStyle:
+        primary = 1
+        secondary = 2
+        success = 3
+        danger = 4
+        link = 5
+        blurple = 1
+        grey = 2
+        gray = 2
+        green = 3
+        red = 4
+
+    discord.ButtonStyle = _ButtonStyle  # type: ignore[attr-defined]
+
+    # ui.View / ui.Button / @ui.button — the persistent-view surface for
+    # the ship console. The real metaclass collects @ui.button-decorated
+    # methods into the view's children in declaration order; the stub
+    # approximates by scanning for the marker the decorator leaves.
+    class _Button:
+        def __init__(
+            self, *, label=None, style=None, custom_id=None, disabled=False,
+            emoji=None, row=None, url=None,
+        ):
+            self.label = label
+            self.style = style
+            self.custom_id = custom_id
+            self.disabled = disabled
+            self.emoji = emoji
+            self.row = row
+            self.url = url
+            self.callback = None
+
+    class _View:
+        def __init__(self, *, timeout=180):
+            self.timeout = timeout
+            self.children: list = []
+            seen: set = set()
+            for klass in type(self).__mro__:
+                for name, attr in vars(klass).items():
+                    spec = getattr(attr, "__discord_button__", None)
+                    if spec is None or name in seen:
+                        continue
+                    seen.add(name)
+                    btn = _Button(**spec)
+                    btn.callback = getattr(self, name)
+                    self.children.append(btn)
+
+        def add_item(self, item):
+            self.children.append(item)
+            return self
+
+        def stop(self):  # real discord.ui.View.stop() halts the timeout
+            self._stopped = True
+
+    def _button(*, label=None, style=None, custom_id=None, disabled=False, emoji=None, row=None):
+        def deco(fn):
+            fn.__discord_button__ = {
+                "label": label, "style": style, "custom_id": custom_id,
+                "disabled": disabled, "emoji": emoji, "row": row,
+            }
+            return fn
+        return deco
+
+    ui_mod.View = _View  # type: ignore[attr-defined]
+    ui_mod.Button = _Button  # type: ignore[attr-defined]
+    ui_mod.button = _button  # type: ignore[attr-defined]
+
     # discord.app_commands surface — minimal shape that workshop_bot's
     # commands module actually touches (Group, CommandTree.add_command,
     # @group.command, @app_commands.describe, @app_commands.choices,

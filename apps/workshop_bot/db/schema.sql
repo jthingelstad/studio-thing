@@ -204,12 +204,31 @@ CREATE TABLE IF NOT EXISTS issue_windows (
   day_count INTEGER NOT NULL,
   is_active INTEGER NOT NULL DEFAULT 0,
   set_at TEXT NOT NULL DEFAULT (datetime('now')),
-  set_by TEXT
+  set_by TEXT,
+  -- Publishing-spine phase of the active issue: 'build' (writing the
+  -- issue) → 'publish' (sending it per channel). See
+  -- docs/publishing-process.md. start-issue seeds 'build'; `mark built`
+  -- flips to 'publish'; put-to-bed closes the window and the issue moves
+  -- to Share (tracked as the last-published issue, not via this column).
+  phase TEXT NOT NULL DEFAULT 'build'
 );
 
 -- At most one active window at a time.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_issue_windows_active_unique
   ON issue_windows(is_active) WHERE is_active = 1;
+
+-- Per-phase persistent cards. Each phase surface (build / publish / share)
+-- is one Discord message the bot edits in place + re-finds across restarts.
+-- Keyed by (issue_number, kind) so an issue can carry a Build card and a
+-- Publish card in #editorial and hand to a Share card in #promotion.
+CREATE TABLE IF NOT EXISTS issue_cards (
+  issue_number INTEGER NOT NULL,
+  kind TEXT NOT NULL,                            -- 'build' | 'publish' | 'share'
+  message_id INTEGER NOT NULL,
+  channel_id INTEGER NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (issue_number, kind)
+);
 
 -- Job locks — single-asset serialization for the jobs pipeline. A job
 -- acquires a row per file it intends to write before starting; another

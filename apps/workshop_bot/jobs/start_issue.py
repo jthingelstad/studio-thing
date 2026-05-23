@@ -247,6 +247,15 @@ async def run(
     # draft.md lock; start-issue never holds it, so there's no collision.
     sub = await update_draft.run(_base.JobContext(deps=ctx.deps, trigger="chained"))
 
+    # Post + pin the Build card so the one live content surface exists from the
+    # start of the cycle (phase='build'). update-draft (just fired) also
+    # refreshes it; this guarantees it lands even if that hiccuped.
+    try:
+        from . import build_card
+        await build_card.post_or_update(ctx, n, window=window)
+    except Exception:  # noqa: BLE001
+        logger.exception("start-issue: Build card post failed for #%d", n)
+
     days_word = "day" if window["day_count"] == 1 else "days"
     pointer_line = (
         f"- Shortcuts pointer: 📄 {pointer_url}" if pointer_url

@@ -39,7 +39,7 @@ from ..personas.base import is_pass_response
 from ..tools import alt_text, archive_context, db, issue_items, issue_items_render, issue_items_sync, render, renderers, s3
 from ..tools.content import context, draft as draft_mod
 from ..tools.llm import anthropic_client
-from . import _base, _cover, _currently, issue_status
+from . import _base, _cover, _currently
 
 logger = logging.getLogger("workshop.jobs.update_draft")
 
@@ -191,38 +191,24 @@ _DRAFT_REVIEW_ECHO_K = 10
 # short enough to keep latency tight.
 _DRAFT_REVIEW_ECHO_QUERY_CHARS = 3000
 
-# Default model for the HTML drawer review (`_draft_review`) — the
-# substantive editorial pass that lands on `draft.html`. Tunable via
-# ``WORKSHOP_EDDY_DRAFT_REVIEW_MODEL`` so a deployment can swap to
-# Opus for a richer pass or Haiku to save tokens. Separate from the
-# weekday-scaled `_review_model` below (that one drives the lighter
-# `#editorial` Discord card).
-_DRAFT_REVIEW_DEFAULT_MODEL = "sonnet"
+# Model for the editorial review (`_draft_review`) — the single,
+# substantive editorial pass. Its prose lands behind the `draft.html`
+# "Show review" drawer; its anchored bullets persist as
+# ``editorial_comments`` rows that the ship console surfaces as a count.
+# This is the highest-value thing Eddy does, so it runs on Opus by
+# default. Tunable via ``WORKSHOP_EDDY_DRAFT_REVIEW_MODEL``.
+#
+# (Until 2026-05 there was a *second*, separate review — a freeform
+# `#editorial` card driven by a weekday-scaled model. It used a different
+# prompt and wasn't stored, so it routinely contradicted this one and
+# re-surfaced already-closed comments. It was retired in favour of this
+# single stored pass; the console shows the open-comment count instead.)
+_DRAFT_REVIEW_DEFAULT_MODEL = "opus"
 
 
 def _draft_review_model() -> str:
     override = (os.environ.get("WORKSHOP_EDDY_DRAFT_REVIEW_MODEL") or "").strip()
     return override or _DRAFT_REVIEW_DEFAULT_MODEL
-
-
-# Model for the `#editorial` post-update card, keyed by Python
-# ``date.weekday()`` (Mon=0, …, Sun=6). Sun/Mon/Tue/Wed (6/0/1/2) get
-# Haiku — the card is mostly the readiness checklist while content is
-# thin; Thu/Fri/Sat (3/4/5) get Sonnet for the substantive end-of-week
-# pass that runs up to publish. Tweak by editing the dict; override the
-# whole selection via ``WORKSHOP_EDDY_REVIEW_MODEL``.
-_REVIEW_MODEL_BY_WEEKDAY: dict[int, str] = {
-    6: "haiku", 0: "haiku", 1: "haiku", 2: "haiku",
-    3: "sonnet", 4: "sonnet", 5: "sonnet",
-}
-_REVIEW_MODEL_FALLBACK = "haiku"
-
-
-def _review_model(weekday: int) -> str:
-    override = (os.environ.get("WORKSHOP_EDDY_REVIEW_MODEL") or "").strip()
-    if override:
-        return override
-    return _REVIEW_MODEL_BY_WEEKDAY.get(weekday, _REVIEW_MODEL_FALLBACK)
 
 
 # ---------- editorial_comments capture ----------
@@ -538,51 +524,15 @@ async def _draft_review(
     return review_md
 
 
-async def _maybe_eddy_review(
-    ctx: "_base.JobContext", window: dict, st: dict, prev_digest, today, *, view_url=None
-) -> str:
-    # No weekday gate — Eddy comments on every ``update-draft`` run until
-    # ``final.md`` is created (which makes ``update-draft`` itself refuse).
-    # That naturally walks Eddy from the issue's first projection up through
-    # the morning Jamie locks the issue with ``/eddy issue final``.
-    team = getattr(getattr(ctx, "deps", None), "team", None)
-    if team is None:
-        logger.info("update-draft: no team registry; Eddy review skipped")
-        return "(no Discord — Eddy review skipped)"
-    eddy = team.bots.get("eddy")
-    if eddy is None or getattr(eddy, "user", None) is None:
-        logger.info("update-draft: Eddy unavailable; review skipped")
-        return "(Eddy unavailable — review skipped)"
-
-    eddy_ctx = context.build_eddy_context(ref_date=today, section_status=st, prev_digest=prev_digest)
-    try:
-        review_prompt = anthropic_client.load_prompt("eddy-update-review")
-    except OSError as exc:
-        logger.warning("update-draft: review prompt missing: %s", exc)
-        return "(Eddy review prompt missing)"
-    user_msg = f"{context.render_block(eddy_ctx)}\n\n{review_prompt}"
-    model = _review_model(today.weekday())
-    with db.AgentRun("eddy", trigger="update-draft:editorial-card") as run:
-        answer, _meta = await eddy.core(latest=user_msg, history=[], model=model)
-        run.record_meta(_meta)
-        run.records_written = 0 if (not answer or is_pass_response(answer)) else 1
-    if not answer or is_pass_response(answer):
-        return "Eddy: PASS (nothing to flag)."
-    if view_url:
-        answer = answer.rstrip() + f"\n\n📄 [view draft]({view_url})"
-    posted = await ctx.post("DISCORD_CHANNEL_EDITORIAL", answer, persona="eddy")
-    return "Eddy posted a review to #editorial." if posted else "(couldn't post Eddy's review)"
-
-
 # ---------- the job ----------
 
 def _initial_progress(n: int) -> str:
     return (
         f"🔄 Refreshing **WT{n}** draft…\n"
         f"⏳ Pulling Pinboard + micro.blog + images _(slowest step)_\n"
-        f"⏳ Editorial review (Sonnet)\n"
+        f"⏳ Editorial review (Opus)\n"
         f"⏳ HTML preview\n"
-        f"⏳ Editorial card to #editorial"
+        f"⏳ Status card to #editorial"
     )
 
 
@@ -603,9 +553,9 @@ def _progress(
     return (
         f"{head}\n"
         f"{sources} Pulling Pinboard + micro.blog + images{(' — ' + sources_detail) if sources_detail else ''}\n"
-        f"{review} Editorial review (Sonnet){(' — ' + review_detail) if review_detail else ''}\n"
+        f"{review} Editorial review (Opus){(' — ' + review_detail) if review_detail else ''}\n"
         f"{html} HTML preview{(' — ' + html_detail) if html_detail else ''}\n"
-        f"{card} Editorial card to #editorial{(' — ' + card_detail) if card_detail else ''}"
+        f"{card} Status card to #editorial{(' — ' + card_detail) if card_detail else ''}"
     )
 
 
@@ -629,6 +579,22 @@ def _sources_summary(sync_result: dict, fills: dict) -> str:
     if not bits:
         return "no source updates"
     return ", ".join(bits)
+
+
+async def _refresh_phase_card(ctx: "_base.JobContext", n: int, window: dict) -> None:
+    """Refresh the phase-appropriate card in place — Build during `build`,
+    Publish during `publish`. Best-effort; a Discord hiccup never fails the
+    daily projection."""
+    phase = (window or {}).get("phase", "build")
+    try:
+        if phase == "publish":
+            from . import publish_card
+            await publish_card.post_or_update(ctx, n, window=window)
+        else:
+            from . import build_card
+            await build_card.post_or_update(ctx, n, window=window)
+    except Exception:  # noqa: BLE001
+        logger.exception("update-draft: phase card refresh failed for #%d", n)
 
 
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
@@ -743,22 +709,62 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 f"{st['sections']['journal']['item_count']} Journal · "
                 f"~{st['word_count']}w"
             )
-            await _refresh(
-                sources="✅", sources_detail=sources_detail,
-                review="🧠", review_detail="_(Sonnet running…)_",
-            )
 
-            # ----- Step 2: editorial review (Sonnet) -----
+            # No-op short-circuit. If the projected draft is byte-identical to
+            # the last run's (same source_hash), nothing material changed:
+            # skip the Opus review, the HTML re-render, and the #editorial
+            # re-post. The existing draft.html (with its review drawer) is
+            # still valid, the prior open comments stay accurate, and a no-op
+            # cron tick no longer floods the channel or burns an LLM call.
+            # This is the common off-day case. (The ship console — wired
+            # separately — still reads live DB + metadata each time, so a
+            # metadata-only change surfaces there even when the body is flat.)
+            prev_hash = (prev_digest or {}).get("source_hash")
+            if prev_digest is not None and prev_hash == source_hash:
+                html_url = s3.issue_file_url(n, "draft.html")
+                # Still refresh the phase card — it reads live DB + metadata, so
+                # a metadata-only change (subject set, CTA added, comment closed)
+                # surfaces even when the draft body is byte-identical. No new
+                # #editorial message; the pinned card is edited in place.
+                await _refresh_phase_card(ctx, n, window)
+                await _refresh(
+                    header=f"✅ **WT{n}** — no changes since last refresh",
+                    sources="✅", sources_detail=sources_detail,
+                    review="✅", review_detail="skipped — draft unchanged",
+                    html="✅", html_detail=f"[view]({html_url})",
+                    card="✅", card_detail="console refreshed",
+                )
+                missing = ", ".join(st["required_missing"]) or "nothing"
+                return _base.JobResult(
+                    True,
+                    f"no changes to `draft.md` for #{n} since last refresh "
+                    f"(~{st['word_count']} words). Still missing for ship: {missing}.",
+                    data={"issue_number": n, "section_status": st,
+                          "preview_url": html_url, "unchanged": True},
+                )
+
+            # The editorial review is a *Build*-phase concern. During Publish
+            # the content is frozen, so skip the Opus pass entirely (it would
+            # only burn tokens and re-litigate a built issue).
+            phase = window.get("phase", "build")
             review_md = ""
-            try:
-                review_md = await _draft_review(ctx, window, st, prev_digest, today, text)
-            except Exception:  # noqa: BLE001
-                logger.exception("update-draft: HTML draft review failed for #%d", n)
+            if phase == "build":
+                await _refresh(
+                    sources="✅", sources_detail=sources_detail,
+                    review="🧠", review_detail="_(Opus running…)_",
+                )
+                # ----- Step 2: editorial review (Opus) -----
+                try:
+                    review_md = await _draft_review(ctx, window, st, prev_digest, today, text)
+                except Exception:  # noqa: BLE001
+                    logger.exception("update-draft: HTML draft review failed for #%d", n)
 
             if review_md:
                 # Rough comment count = number of "- " bullets in the review markdown.
                 comment_count = sum(1 for line in review_md.splitlines() if line.lstrip().startswith("- "))
                 review_detail = f"{comment_count} comment(s) captured"
+            elif phase != "build":
+                review_detail = "skipped (publish phase)"
             else:
                 review_detail = "no comments (PASS or Eddy unavailable)"
             await _refresh(
@@ -801,36 +807,21 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 sources="✅", sources_detail=sources_detail,
                 review="✅", review_detail=review_detail,
                 html="✅", html_detail=html_detail,
-                card="🔄", card_detail="_(posting…)_",
+                card="🔄", card_detail="_(refreshing console…)_",
             )
 
-            # Always post the deterministic readiness snapshot to #editorial,
-            # regardless of Eddy's LLM availability or whether the review card
-            # ends up with anything to say. Gives Jamie a guaranteed daily
-            # status check-in. Best-effort: a Discord hiccup doesn't fail the
-            # job. Posted as Eddy so it sits in his thread of update messages.
-            status_card = issue_status.render_status_card(window, st)
-            if html_url:
-                status_card = status_card.rstrip() + f"\n\n📄 [view draft]({html_url})"
-            try:
-                await ctx.post("DISCORD_CHANNEL_EDITORIAL", status_card, persona="eddy")
-            except Exception:  # noqa: BLE001
-                logger.exception("update-draft: status-card post failed for #%d", n)
-
-            # ----- Step 4: editorial card (Eddy's #editorial post) -----
-            review_note = ""
-            try:
-                review_note = await _maybe_eddy_review(ctx, window, st, prev_digest, today, view_url=html_url)
-            except Exception:  # noqa: BLE001
-                logger.exception("update-draft: Eddy review failed for #%d", n)
-                review_note = "(Eddy review errored — see logs)"
+            # Refresh the phase card in place — this REPLACED the old per-tick
+            # `📋` status + `✍️` review messages that flooded #editorial. The
+            # Build card (during build) / Publish card (during publish) reads
+            # live DB + S3 and carries the buttons. Best-effort.
+            await _refresh_phase_card(ctx, n, window)
 
             await _refresh(
                 header=f"✅ Refreshed **WT{n}** draft",
                 sources="✅", sources_detail=sources_detail,
                 review="✅", review_detail=review_detail,
                 html="✅", html_detail=html_detail,
-                card="✅", card_detail=review_note,
+                card="✅", card_detail="posted",
             )
 
             try:
@@ -861,7 +852,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         f"{st['sections']['notable']['item_count']} Notable / "
         f"{st['sections']['brief']['item_count']} Briefly / "
         f"{st['sections']['journal']['item_count']} Journal){view}. "
-        f"Still missing for ship: {missing}. {review_note}".strip(),
-        data={"issue_number": n, "section_status": st, "review": review_note,
+        f"Still missing for ship: {missing}.".strip(),
+        data={"issue_number": n, "section_status": st,
               "preview_url": html_url, "html_review": bool(review_md)},
     )

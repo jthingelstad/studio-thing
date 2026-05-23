@@ -204,6 +204,15 @@ def _m_0011_editorial_comments_closed_at(conn: sqlite3.Connection) -> None:
     _add_column_if_missing(conn, "editorial_comments", "closed_at", "TEXT")
 
 
+def _m_0012_issue_windows_phase(conn: sqlite3.Connection) -> None:
+    """Add ``issue_windows.phase`` — the publishing-spine phase of the active
+    issue ('build' → 'publish'; see docs/publishing-process.md). The
+    ``issue_cards`` table (per-phase persistent card handles) is created by the
+    schema.sql re-apply (``CREATE TABLE IF NOT EXISTS``), so it needs no
+    column-migration here."""
+    _add_column_if_missing(conn, "issue_windows", "phase", "TEXT NOT NULL DEFAULT 'build'")
+
+
 def _m_0010_strip_markers_from_issue_items_body_md(conn: sqlite3.Connection) -> None:
     """An older manual-seed path baked rendered ``<!-- cta:N -->`` /
     ``<!-- thanks:N -->`` markers into ``issue_items.body_md``. Marker
@@ -288,6 +297,11 @@ MIGRATIONS: tuple[Migration, ...] = (
         id="0011_editorial_comments_closed_at",
         description="Add editorial_comments.closed_at for PASS-closed comments",
         apply=_m_0011_editorial_comments_closed_at,
+    ),
+    Migration(
+        id="0012_issue_windows_phase",
+        description="Add issue_windows.phase (build|publish) for the publishing spine",
+        apply=_m_0012_issue_windows_phase,
     ),
 )
 

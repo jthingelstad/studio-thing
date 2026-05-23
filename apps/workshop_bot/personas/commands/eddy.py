@@ -26,6 +26,8 @@ from ...jobs import follow_up as followup_job
 from ...jobs import status as status_job
 from ...jobs import (
     archive_lookup,
+    build_card,
+    compose_closer,
     compose_haiku,
     compose_meta,
     create_final,
@@ -124,6 +126,34 @@ def register_eddy_commands(
     )
     async def issue_status_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: issue_status.run(_ctx(bot)), "issue status")
+
+    @issue.command(
+        name="build",
+        description="Post (or re-pin) the Build card — the content phase surface.",
+    )
+    async def issue_build_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: build_card.run(_ctx(bot)), "issue build")
+
+    @issue.command(
+        name="echoes",
+        description="Write the Echoes note (Thingy's archive callback) for the in-flight issue.",
+    )
+    async def issue_echoes_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: compose_closer.run(_ctx(bot)), "issue echoes")
+
+    @issue.command(
+        name="built",
+        description="Mark the issue built → moves it from Build to Publish (opens the send controls).",
+    )
+    async def issue_built_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: build_card.mark_built(_ctx(bot)), "issue built")
+
+    @issue.command(
+        name="reopen",
+        description="Reopen a published-phase issue for content edits → back to Build.",
+    )
+    async def issue_reopen_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: build_card.reopen(_ctx(bot)), "issue reopen")
 
     @issue.command(
         name="reorder",

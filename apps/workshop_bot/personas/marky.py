@@ -20,3 +20,10 @@ class MarkyBot(PersonaBot):
     def __init__(self, deps: Deps) -> None:
         super().__init__(deps)
         self.command_tree = register_marky_commands(self)
+
+    def persistent_views(self) -> list:
+        # The Share card lives in #promotion and must keep routing clicks
+        # across restarts.
+        from .views.share_card_view import ShareCardView
+
+        return [ShareCardView()]

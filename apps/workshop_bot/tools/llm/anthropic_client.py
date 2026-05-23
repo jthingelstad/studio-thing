@@ -97,7 +97,7 @@ def _resolve_prompt_path(name: str) -> Path:
     - ``"team"`` → ``prompts/shared/team.md``
     - ``"<persona>"`` → ``prompts/<persona>/prompt.md``
     - ``"<persona>-<file>"`` → ``prompts/<persona>/<file>.md`` (e.g.
-      ``"eddy-update-review"`` → ``prompts/eddy/update-review.md``,
+      ``"eddy-draft-review"`` → ``prompts/eddy/draft-review.md``,
       ``"linky-research-card"`` → ``prompts/linky/research-card.md``)
     """
     if name == "team":

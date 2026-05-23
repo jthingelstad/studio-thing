@@ -23,6 +23,7 @@ from ...jobs import (
     marky_quicklook,
     ops,
     promotion_prep,
+    share_card,
 )
 from ._shared import _ctx, make_ack, make_run_and_ack
 
@@ -69,6 +70,13 @@ def register_marky_commands(
     )
     async def marky_metrics_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: daily_metrics.run(_ctx(bot)), "metrics")
+
+    @marky.command(
+        name="share",
+        description="Post (or re-pin) the Share card — the last-published issue's syndication surface.",
+    )
+    async def marky_share_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
+        await _run_and_ack(interaction, lambda: share_card.run(_ctx(bot)), "share")
 
     @marky.command(
         name="engagement",
