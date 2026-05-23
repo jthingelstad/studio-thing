@@ -93,7 +93,13 @@ def _run_audio_pipeline(
     that marshals events back to the asyncio loop via
     ``loop.call_soon_threadsafe``.
     """
-    with _print_intercept(audio_mod, _synthesize_mod(audio_mod), progress_cb):
+    syn_mod = _synthesize_mod(audio_mod)
+    logger.info(
+        "render-audio: patching print on audio_mod=%r synthesize_mod=%r",
+        getattr(audio_mod, "__name__", "?"),
+        getattr(syn_mod, "__name__", "?") if syn_mod is not None else None,
+    )
+    with _print_intercept(audio_mod, syn_mod, bumpers_mod, progress_cb=progress_cb):
         _ensure_bumpers(bumpers_mod, manifest_data)
         changed = audio_mod.build_issue(
             str(issue_number),
@@ -109,13 +115,26 @@ def _run_audio_pipeline(
 
 
 def _synthesize_mod(audio_mod):
-    """Walk audio_mod's globals to find the synthesize module it imports
-    (where the per-block print lives). Tolerant of import shape — the
-    pipeline imports ``synthesize`` as a top-level module, not a package
-    attribute, so audio_mod doesn't directly expose it."""
+    """Find the synthesize module — where ``synthesize_blocks_to_mp3``
+    (and the per-block ``print``) lives. The audio pipeline does
+    ``from synthesize import …`` so synthesize lands in ``sys.modules``
+    once audio is imported. Returns ``None`` defensively if the lookup
+    misses; the print-intercept then just patches audio_mod (still
+    catches the body / upload / bumper progress lines)."""
     import sys
     mod = sys.modules.get("synthesize")
-    return mod  # may be None if the module hasn't been imported yet
+    if mod is None:
+        # Fallback: walk audio_mod's attributes for an object that
+        # looks like the synthesize module (carries
+        # synthesize_blocks_to_mp3).
+        for attr in vars(audio_mod).values():
+            if (
+                getattr(attr, "__name__", None) == "synthesize"
+                or hasattr(attr, "synthesize_blocks_to_mp3")
+            ):
+                mod = attr
+                break
+    return mod
 
 
 # Lines emitted by the audio pipeline that should surface in Discord.
@@ -190,9 +209,10 @@ class _print_intercept:
             text = " ".join(str(a) for a in args)
             label = _classify_print(text)
             if label is not None:
+                logger.info("render-audio: progress event → %s", label)
                 self._cb(label)
         except Exception:  # noqa: BLE001 — never let progress crash the pipeline
-            pass
+            logger.exception("render-audio: progress hook raised; swallowing")
 
     def __enter__(self):
         for mod in self._mods:
@@ -304,6 +324,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     # without bound (and stays under Discord's 2000-char
                     # message cap).
                     tail = "\n".join(history[-8:])
+                    logger.debug("render-audio: relay updating card with %d line(s)", len(history))
                     await progress.update(f"{head}\n{tail}")
 
             relay_task = asyncio.create_task(_relay())
