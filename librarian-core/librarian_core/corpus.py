@@ -19,7 +19,7 @@ import boto3
 import yaml
 from dotenv import load_dotenv
 
-from .paths import ARCHIVE_DIR
+from .paths import ARCHIVE_DIR, FAQ_PATH, SITE_DIR
 
 
 DEFAULT_EMBEDDING_MODEL = "cohere.embed-english-v3"
@@ -196,12 +196,284 @@ def chunk_section(text: str, max_words: int = 260, overlap_words: int = 40) -> l
     return chunks
 
 
+# --- non-archive sources -------------------------------------------------
+#
+# Thingy's questions aren't all "what did you say about X in issue N?".
+# Origin / cadence / "what's the supporting membership" / FAQ-shaped
+# questions land just as often. The archive corpus didn't carry any of
+# that, so Thingy would guess. We bring three structured site sources
+# into the same embedded corpus alongside issue chunks so semantic
+# retrieval surfaces them naturally:
+#
+#   - apps/site/about.njk           → site:about           page-prose chunks
+#   - apps/site/support.njk         → site:members         page-prose chunks
+#   - apps/site/_data/support.json  → site:nonprofit-history structured-fact chunk
+#   - apps/librarian/lambda/shared/faq.json → faq:<section>:<index> chunks
+#
+# **Privacy fence:** these chunks must never carry subscriber/member
+# counts. The site renders ``stats.premium_subscriber_count`` on
+# /members/, but we deliberately don't read ``_data/stats.json`` or
+# ``_data/supportTotals.js`` here, and a unit test scans the final
+# corpus to confirm no count field leaked in (would fail loud if a
+# future njk template change embedded a subscriber count directly
+# into about.njk / support.njk).
+
+# Banned strings that must not appear anywhere in the corpus chunks.
+# subscriber_count + premium_subscriber_count are stats.json field names;
+# matching them anywhere catches the obvious "we accidentally rendered
+# the stats block into the page" regression.
+CORPUS_PRIVACY_DENYLIST: tuple[str, ...] = (
+    "subscriber_count",
+    "premium_subscriber_count",
+    "stats.subscriber",
+    "stats.premium",
+)
+
+_FRONTMATTER_FENCE_RE = re.compile(r"\A---\s*\n.*?\n---\s*\n", re.S)
+_NJK_BLOCK_RE = re.compile(r"\{%.*?%\}", re.S)
+_NJK_EXPR_RE = re.compile(r"\{\{(.*?)\}\}", re.S)
+_HTML_TAG_RE = re.compile(r"<[^>]+>")
+_HTML_ENTITY_MAP = {
+    "&mdash;": "—", "&ndash;": "–", "&hellip;": "…",
+    "&lsquo;": "'", "&rsquo;": "'", "&ldquo;": '"', "&rdquo;": '"',
+    "&amp;": "&", "&nbsp;": " ", "&middot;": "·",
+    "&rarr;": "→",
+}
+
+
+def _resolve_njk_expr(raw: str, replacements: dict[str, str]) -> str:
+    """Best-effort resolution of a ``{{ var | filter }}`` expression.
+    Returns the matched replacement if the variable name is in
+    ``replacements``; otherwise returns ``""`` so the surrounding prose
+    reads cleanly without template debris.
+    """
+    bare = raw.split("|", 1)[0].strip()
+    return replacements.get(bare, "")
+
+
+def _strip_njk_page(text: str, *, replacements: dict[str, str] | None = None) -> str:
+    """Reduce a Nunjucks template (frontmatter + HTML + ``{% %}`` /
+    ``{{ }}`` syntax) to plain prose suitable for embedding.
+
+    Frontmatter is dropped wholesale. ``{% %}`` control-flow tags are
+    deleted (their bodies stay — control flow doesn't change the visible
+    text for these pages). ``{{ expr }}`` expressions are resolved via
+    ``replacements`` if known (e.g. ``yearlyPrice → "48"``) and dropped
+    otherwise. HTML tags get stripped; basic entities decoded; whitespace
+    normalized.
+    """
+    replacements = replacements or {}
+    s = _FRONTMATTER_FENCE_RE.sub("", text or "")
+    s = _NJK_BLOCK_RE.sub("", s)
+    s = _NJK_EXPR_RE.sub(lambda m: _resolve_njk_expr(m.group(1), replacements), s)
+    # Strip inline <script>…</script> + <style>…</style> blocks before
+    # tag-stripping so their bodies don't leak into the text.
+    s = re.sub(r"<(script|style)\b[^>]*>.*?</\1>", "", s, flags=re.I | re.S)
+    s = _HTML_TAG_RE.sub(" ", s)
+    for entity, decoded in _HTML_ENTITY_MAP.items():
+        s = s.replace(entity, decoded)
+    s = re.sub(r"&#x?\d+;", "", s)
+    # Collapse runs of whitespace to single spaces, then re-introduce
+    # paragraph breaks where the source had blank lines.
+    s = re.sub(r"[ \t]+", " ", s)
+    s = re.sub(r"\n\s*\n+", "\n\n", s)
+    s = re.sub(r"^[ \t]+|[ \t]+$", "", s, flags=re.M)
+    return s.strip()
+
+
+def _site_page_chunks(
+    *,
+    site_dir: Path,
+    issue_count: int,
+    years_active: int,
+    latest_issue_number: Any,
+) -> list[dict[str, Any]]:
+    """Build site_page chunks for /about/ + /members/ from the .njk
+    templates and the structured support.json data.
+
+    Each chunk lands with ``source_kind: "site_page"``, no
+    ``issue_number`` (these aren't issues), and a stable id like
+    ``site:about:0`` so the embedded corpus is reproducible across
+    builds (same input → same id → cache hit on the deploy reupload).
+    """
+    out: list[dict[str, Any]] = []
+    replacements = {
+        "archiveStats.yearsActive": str(years_active),
+        "collections.issuesByDate[0].data.number": str(latest_issue_number or ""),
+        "issueCount": str(issue_count),
+        "yearsActive": str(years_active),
+        "support.yearly_price": "",  # filled in members loader below
+    }
+
+    about_path = site_dir / "about.njk"
+    if about_path.exists():
+        prose = _strip_njk_page(about_path.read_text(encoding="utf-8"), replacements=replacements)
+        for index, chunk_text in enumerate(chunk_section(prose)):
+            out.append({
+                "id": f"site:about:{index}",
+                "issue_number": None,
+                "subject": "About the Weekly Thing",
+                "publish_date": None,
+                "issue_year": None,
+                "url": "/about/",
+                "section": "About",
+                "text": chunk_text,
+                "word_count": len(words(chunk_text)),
+                "content_kind": "site_page",
+                "topics": [],
+                "source_kind": "site_page",
+            })
+
+    support_data_path = site_dir / "_data" / "support.json"
+    support_data: dict[str, Any] = {}
+    if support_data_path.exists():
+        try:
+            support_data = json.loads(support_data_path.read_text(encoding="utf-8"))
+        except (ValueError, TypeError):
+            support_data = {}
+    yearly_price = support_data.get("yearly_price") or 48
+    replacements["support.yearly_price"] = str(yearly_price)
+
+    members_path = site_dir / "support.njk"
+    if members_path.exists():
+        prose = _strip_njk_page(members_path.read_text(encoding="utf-8"), replacements=replacements)
+        for index, chunk_text in enumerate(chunk_section(prose)):
+            out.append({
+                "id": f"site:members:{index}",
+                "issue_number": None,
+                "subject": "Supporting Membership",
+                "publish_date": None,
+                "issue_year": None,
+                "url": "/members/",
+                "section": "Supporting Membership",
+                "text": chunk_text,
+                "word_count": len(words(chunk_text)),
+                "content_kind": "site_page",
+                "topics": [],
+                "source_kind": "site_page",
+            })
+
+    # Render the structured nonprofit history into its own chunk —
+    # concrete, year-by-year, easy for Thingy to quote.
+    if support_data:
+        history_parts: list[str] = []
+        current = support_data.get("current") or {}
+        if current.get("nonprofit"):
+            history_parts.append(
+                f"The {current.get('year_label') or current.get('year') or 'current'} "
+                f"Supporting Member nonprofit is {current['nonprofit']}"
+                + (f" — {current['description']}" if current.get("description") else "")
+                + "."
+            )
+        past = support_data.get("past") or []
+        if past:
+            history_parts.append("Past nonprofits supported by Weekly Thing Supporting Members:")
+            for org in past:
+                if not isinstance(org, dict):
+                    continue
+                year_label = org.get("year_label") or org.get("year")
+                name = org.get("nonprofit") or org.get("short_name")
+                if not name:
+                    continue
+                amount = org.get("amount_raised")
+                amount_str = f" (~${amount:,.0f} raised)" if isinstance(amount, (int, float)) else ""
+                history_parts.append(f"- {year_label}: {name}{amount_str}")
+        if history_parts:
+            text = "\n".join(history_parts)
+            out.append({
+                "id": "site:nonprofit-history:0",
+                "issue_number": None,
+                "subject": "Supporting Member nonprofit history",
+                "publish_date": None,
+                "issue_year": None,
+                "url": "/members/",
+                "section": "Supporting Member nonprofit history",
+                "text": text,
+                "word_count": len(words(text)),
+                "content_kind": "site_page",
+                "topics": [],
+                "source_kind": "site_page",
+            })
+
+    return out
+
+
+def _faq_chunks(*, faq_path: Path, issue_count: int, years_active: int) -> list[dict[str, Any]]:
+    """Bring the FAQ into the embedded corpus so semantic retrieval can
+    surface entries without depending on Thingy picking the explicit
+    ``search_faq`` tool. Each FAQ entry becomes one chunk.
+    """
+    if not faq_path.exists():
+        return []
+    try:
+        data = json.loads(faq_path.read_text(encoding="utf-8"))
+    except (ValueError, TypeError):
+        return []
+    out: list[dict[str, Any]] = []
+    replacements = {
+        "issueCount": str(issue_count),
+        "yearsActive": str(years_active),
+    }
+    for section in data.get("sections", []) or []:
+        if not isinstance(section, dict):
+            continue
+        title = str(section.get("title") or "").strip()
+        if not title:
+            continue
+        section_slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-") or "section"
+        for index, entry in enumerate(section.get("entries", []) or []):
+            if not isinstance(entry, dict):
+                continue
+            q = str(entry.get("question") or "").strip()
+            a = str(entry.get("answer") or "").strip()
+            if not q or not a:
+                continue
+            # Resolve known interpolations from the JSON strings.
+            a = _NJK_EXPR_RE.sub(lambda m: _resolve_njk_expr(m.group(1), replacements), a)
+            text = f"Q. {q}\n\nA. {a}"
+            out.append({
+                "id": f"faq:{section_slug}:{index}",
+                "issue_number": None,
+                "subject": f"FAQ — {title}",
+                "publish_date": None,
+                "issue_year": None,
+                "url": "/faq/",
+                "section": title,
+                "text": text,
+                "word_count": len(words(text)),
+                "content_kind": "faq",
+                "topics": [],
+                "source_kind": "faq",
+            })
+    return out
+
+
+def _privacy_audit(chunks: list[dict[str, Any]]) -> None:
+    """Defensive: refuse to ship a corpus that carries subscriber-count
+    text. Catches a regression where a future njk template change might
+    embed ``stats.subscriber_count`` into about.njk / support.njk."""
+    for chunk in chunks:
+        text = str(chunk.get("text") or "")
+        lowered = text.lower()
+        for needle in CORPUS_PRIVACY_DENYLIST:
+            if needle.lower() in lowered:
+                raise RuntimeError(
+                    f"Privacy denylist hit in chunk {chunk.get('id')!r}: "
+                    f"{needle!r} appears in text. Refusing to build corpus."
+                )
+
+
 def chunk_id(issue_number: Any, section: str, index: int, text: str) -> str:
     digest = hashlib.sha256(f"{issue_number}\0{section}\0{index}\0{text}".encode("utf-8")).hexdigest()
     return digest[:16]
 
 
-def build_corpus(archive_dir: Path = ARCHIVE_DIR, include_issue_bodies: bool = False) -> dict[str, Any]:
+def build_corpus(
+    archive_dir: Path = ARCHIVE_DIR,
+    include_issue_bodies: bool = False,
+    site_dir: Path | None = None,
+    faq_path: Path | None = None,
+) -> dict[str, Any]:
     chunks: list[dict[str, Any]] = []
     issues = []
     links: list[dict[str, Any]] = []
@@ -310,6 +582,33 @@ def build_corpus(archive_dir: Path = ARCHIVE_DIR, include_issue_bodies: bool = F
             if entry["name"] in issue.get("topics", []):
                 related.update(topic for topic in issue.get("topics", []) if topic != entry["name"])
         entry["related_topics"] = sorted(related)[:8]
+
+    # Non-archive sources — origin / membership / FAQ. Embedded alongside
+    # issue chunks so semantic retrieval surfaces them naturally without
+    # needing dedicated tools. See ``_site_page_chunks`` / ``_faq_chunks``
+    # docstrings for the privacy boundary (no subscriber counts).
+    years_active = 0
+    issue_years = [parse_year(issue.get("publish_date")) for issue in issues if issue.get("publish_date")]
+    issue_years = [y for y in issue_years if y]
+    if issue_years:
+        years_active = max(issue_years) - min(issue_years) + 1
+    latest_issue_number = issues[-1]["number"] if issues else None
+    if site_dir is not None or SITE_DIR.exists():
+        site_chunks = _site_page_chunks(
+            site_dir=site_dir or SITE_DIR,
+            issue_count=len(issues),
+            years_active=years_active,
+            latest_issue_number=latest_issue_number,
+        )
+        chunks.extend(site_chunks)
+    if faq_path is not None or FAQ_PATH.exists():
+        faq_chunks = _faq_chunks(
+            faq_path=faq_path or FAQ_PATH,
+            issue_count=len(issues),
+            years_active=years_active,
+        )
+        chunks.extend(faq_chunks)
+    _privacy_audit(chunks)
 
     return {
         "version": 2,
