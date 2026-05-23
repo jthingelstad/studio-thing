@@ -91,7 +91,7 @@ def supporter_block(cta_body: str, *, issue_number: int) -> str:
     n = int(issue_number)
     member_url = (
         "https://weekly.thingelstad.com/members/"
-        f"?{{{{ subscriber.email | urlencode }}}}&ref=WT{n}"
+        f"?email={{{{ subscriber.email | urlencode }}}}&ref=WT{n}"
     )
     return (
         "{% if subscriber.subscriber_type == 'regular' %}\n\n"

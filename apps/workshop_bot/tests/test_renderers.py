@@ -98,7 +98,10 @@ class RenderEmailTests(unittest.TestCase):
         self.assertIn("{% if subscriber.subscriber_type == 'regular' %}", out)
         self.assertIn("Become a Supporting Member", out)
         self.assertIn("https://weekly.thingelstad.com/members/", out)
-        # ref=WT{N} carries the issue number so analytics by-issue is legible.
+        # email=... + ref=WT{N} carry the subscriber identity and the
+        # issue source so the members page can prefill + tinylytics can
+        # attribute traffic by issue.
+        self.assertIn("?email={{ subscriber.email | urlencode }}", out)
         self.assertIn("ref=WT458", out)
         # No direct Stripe links from the email anymore.
         self.assertNotIn("buy.stripe.com", out)
