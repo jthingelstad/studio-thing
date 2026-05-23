@@ -23,10 +23,12 @@ next time the build runs after this job updates the manifest).
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 from ..tools import db
 from . import _base
@@ -64,6 +66,37 @@ def _materialize_apps_site_archive(issue_number: int) -> None:
         cwd=REPO,
         capture_output=True,
     )
+
+
+def _run_audio_pipeline(
+    *,
+    bumpers_mod,
+    audio_mod,
+    manifest_mod,
+    manifest_data: dict,
+    issue_number: int,
+) -> dict[str, Any]:
+    """Run the full synchronous audio pipeline — bumper renders + TTS
+    body + reassembly + S3 upload + manifest write — in one call.
+
+    Wrapped in ``asyncio.to_thread`` from ``run`` so the asyncio loop
+    stays responsive during the 30–60s OpenAI TTS round-trips. Returns
+    the manifest entry for the issue with an extra ``_changed`` key
+    carrying ``audio_mod.build_issue``'s "did anything actually rebuild
+    today?" result.
+    """
+    _ensure_bumpers(bumpers_mod, manifest_data)
+    changed = audio_mod.build_issue(
+        str(issue_number),
+        manifest_data,
+        dry_run=False,
+        force=False,
+        reassemble_only=False,
+    )
+    manifest_mod.write_manifest(manifest_data)
+    entry = dict(manifest_data.get(str(issue_number), {}))
+    entry["_changed"] = bool(changed)
+    return entry
 
 
 def _ensure_bumpers(bumpers_mod, manifest: dict) -> bool:
@@ -108,21 +141,22 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             # does build_issue. One read, one write at the end picks up
             # both mutations.
             manifest_data = manifest_mod.read_manifest()
-            _ensure_bumpers(bumpers_mod, manifest_data)
-
-            # build_issue mutates manifest_data in place with the new entry;
-            # we write it back so the workshop ship's GitHub commit picks up
-            # the change.
-            changed = audio_mod.build_issue(
-                str(n),
-                manifest_data,
-                dry_run=False,
-                force=False,
-                reassemble_only=False,
+            # The whole pipeline (OpenAI TTS round-trips per block,
+            # ffmpeg passes for concat / loudnorm / re-encode, S3 upload,
+            # CloudFront invalidation) is synchronous and takes 30–60s
+            # for a full issue. Run it on a worker thread so the asyncio
+            # loop stays responsive; otherwise discord.py's heartbeat
+            # misses and Python's faulthandler dumps the blocked stack
+            # repeatedly into the log.
+            entry = await asyncio.to_thread(
+                _run_audio_pipeline,
+                bumpers_mod=bumpers_mod,
+                audio_mod=audio_mod,
+                manifest_mod=manifest_mod,
+                manifest_data=manifest_data,
+                issue_number=n,
             )
-            manifest_mod.write_manifest(manifest_data)
-
-            entry = manifest_data.get(str(n), {})
+            changed = entry.pop("_changed", False)
 
     except _base.JobLocked as exc:
         return _base.JobResult(
