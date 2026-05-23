@@ -387,7 +387,7 @@ DOWNSTREAM_FILES = (
     "metadata.json",
     "cta-1.md", "cta-2.md",
     "thanks-1.md", "thanks-2.md",
-    "buttondown.md", "buttondown.html",
+    "buttondown.md",
     # picker option-card pages — re-generated each pick round
     "haiku-options.html",
     "subject-options.html",
@@ -395,7 +395,7 @@ DOWNSTREAM_FILES = (
     "thanks-1-options.html", "thanks-2-options.html",
 )
 
-FINAL_FILES = ("final.md", "thesis.md", "final.html", "final-proposal.html")
+FINAL_FILES = ("final.md", "thesis.md", "final-proposal.html")
 DRAFT_FILES = ("draft.md", "draft.html")
 
 
@@ -411,7 +411,7 @@ def do_reset(mode: str, issue_number: int) -> dict[str, list[str]]:
     elif mode == "downstream":
         targets = list(DOWNSTREAM_FILES)
     elif mode == "publish-only":
-        targets = ["buttondown.md", "buttondown.html"]
+        targets = ["buttondown.md"]
     else:
         raise ValueError(f"unknown mode: {mode}")
 

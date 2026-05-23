@@ -165,7 +165,6 @@ def build_workshop_pointer(*, issue_number: int, window: dict, set_by: Optional[
             "archive_md": f"{base}archive.md",
             "links_json": f"{base}links.json",
             "buttondown_md": f"{base}buttondown.md",
-            "buttondown_html": f"{base}buttondown.html",
             "transcript_full_txt": f"{base}transcript-full.txt",
             "proposal_html": f"{base}proposal.html",
         },

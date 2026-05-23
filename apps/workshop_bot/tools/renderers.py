@@ -297,42 +297,6 @@ def render_email_body(
     return body
 
 
-# ---------- email preview (buttondown.html input — Liquid stripped) ----------
-
-
-def render_email_preview(email_body: str) -> str:
-    """Best-effort Liquid strip for the ``buttondown.html`` preview.
-
-    Renders as a *regular* (free-subscriber) view: keeps the
-    supporter-CTA text + Stripe buttons, hides the premium-only thanks,
-    drops the editor-mode comment and the email-only pixel, strips
-    leftover Liquid tags. The delivered email keeps the full Liquid;
-    this only shapes the preview render at
-    ``https://files.thingelstad.com/weekly-thing/{N}/buttondown.html``.
-    """
-    t = re.sub(r"<!--\s*buttondown-editor-mode:[^>]*-->\s*", "", email_body, flags=re.IGNORECASE)
-    t = re.sub(
-        r"\{%\s*if\s+medium\s*==\s*'email'\s*%\}.*?\{%\s*endif\s*%\}",
-        "", t, flags=re.DOTALL | re.IGNORECASE,
-    )
-    t = re.sub(
-        r"\{%\s*if\s+subscriber\.subscriber_type\s*==\s*'regular'\s*%\}(.*?)"
-        r"\{%\s*elif\s+subscriber\.subscriber_type\s*!=\s*'premium'\s*%\}.*?"
-        r"\{%\s*endif\s*%\}",
-        lambda m: m.group(1),
-        t,
-        flags=re.DOTALL,
-    )
-    t = re.sub(
-        r"\{%\s*if\s+subscriber\.subscriber_type\s*==\s*'premium'\s*%\}.*?\{%\s*endif\s*%\}",
-        "", t, flags=re.DOTALL,
-    )
-    t = re.sub(r"\{%[^%]*%\}", "", t)
-    t = re.sub(r"\{\{[^}]*\}\}", "", t)
-    t = re.sub(r"\n{3,}", "\n\n", t)
-    return t.strip() + "\n"
-
-
 # ---------- archive (archive.md + links.json) ----------
 
 

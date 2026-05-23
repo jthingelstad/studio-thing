@@ -846,11 +846,11 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     # ❌ — leave rows as-is. Daily renderers next tick.
                     pass
 
-                view_url = f"https://files.thingelstad.com/weekly-thing/{n}/buttondown.html"
+                draft_url = s3.issue_file_url(n, "draft.html")
                 next_steps = _NEXT_STEPS
                 await channel.send(
                     f"✅ Reorder applied for WT{n}.\n"
-                    f"📄 [email preview]({view_url}) · 📄 [side-by-side]({proposal_url})\n\n{next_steps}"
+                    f"📄 [draft]({draft_url}) · 📄 [side-by-side]({proposal_url})\n\n{next_steps}"
                     if approved is True
                     else f"↩️ Reorder rejected for WT{n} — rows left as-is. {next_steps}",
                     suppress_embeds=True,
@@ -862,7 +862,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     else f"Reorder rejected for WT{n} — rows unchanged",
                     data={
                         "issue_number": n,
-                        "preview_url": view_url,
+                        "preview_url": draft_url,
                         "thesis_written": approved is True,
                     },
                 )

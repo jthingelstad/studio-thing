@@ -1,11 +1,13 @@
 """Render an issue's markdown to a standalone HTML preview page.
 
-``update-draft`` / ``create-final`` / ``build-publish`` write a ``.md``;
-they also write a ``.html`` twin so Jamie can pull the issue up in a
-browser and see it "in progress" (or, for ``buttondown.html``, as it'll
-ship). The page is self-contained — a small bit of CSS + JS, no remote
-assets — and the ``.html`` is uploaded with ``Cache-Control: no-cache``
-plus a CloudFront invalidation so the browser always sees the latest.
+``update-draft`` writes ``draft.md`` and a ``draft.html`` twin so Jamie
+can pull the in-progress issue up in a browser. ``draft.html`` is the
+only review surface — ``archive.md`` / ``buttondown.md`` / ``transcript/``
+are ship-shaped artifacts for their destinations and have no rendered
+HTML view. The page is self-contained — a small bit of CSS + JS, no
+remote assets — and the ``.html`` is uploaded with ``Cache-Control:
+no-cache`` plus a CloudFront invalidation so the browser always sees the
+latest.
 
 If a ``review_md`` is supplied (the ``update-draft`` HTML pass), it's
 rendered into a slide-in drawer that's **hidden by default** and revealed

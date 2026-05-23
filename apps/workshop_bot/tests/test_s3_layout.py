@@ -34,9 +34,8 @@ class AtomNameDetectionTests(unittest.TestCase):
             self.assertTrue(s3._is_atom_name(name), name)
 
     def test_generated_artifacts_are_not_atoms(self):
-        for name in ("draft.md", "draft.html", "final.md", "archive.md",
-                     "links.json", "buttondown.md", "buttondown.html",
-                     "proposal.html"):
+        for name in ("draft.md", "draft.html", "archive.md",
+                     "links.json", "buttondown.md", "proposal.html"):
             self.assertFalse(s3._is_atom_name(name), name)
 
     def test_images_audio_are_not_atoms(self):

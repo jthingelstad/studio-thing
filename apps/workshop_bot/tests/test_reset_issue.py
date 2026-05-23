@@ -44,17 +44,15 @@ class _Case(_DBTestCase):
 
 class ResetFinalTests(_Case):
 
-    def test_deletes_final_thesis_and_html(self):
+    def test_deletes_final_and_thesis(self):
         self._window()
         self.ws.write_issue_file(349, "final.md", "final body")
         self.ws.write_issue_file(349, "thesis.md", "thesis line")
-        self.ws.write_issue_file(349, "final.html", "<html>...")
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="final"))
         self.assertTrue(result.ok, result.message)
         self.assertNotIn((349, "final.md"), self.ws.files)
         self.assertNotIn((349, "thesis.md"), self.ws.files)
-        self.assertNotIn((349, "final.html"), self.ws.files)
         # Confirmation posted to #editorial.
         fc.channel.send.assert_awaited()
         # Message reads naturally.
@@ -96,15 +94,13 @@ class ResetFinalTests(_Case):
 
 class ResetPublishTests(_Case):
 
-    def test_deletes_buttondown_md_and_html(self):
+    def test_deletes_buttondown_md(self):
         self._window()
         self.ws.write_issue_file(349, "buttondown.md", "p")
-        self.ws.write_issue_file(349, "buttondown.html", "h")
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="publish"))
         self.assertTrue(result.ok)
         self.assertNotIn((349, "buttondown.md"), self.ws.files)
-        self.assertNotIn((349, "buttondown.html"), self.ws.files)
 
     def test_does_not_touch_final_md(self):
         self._window()

@@ -95,12 +95,17 @@ class StartIssueTests(_DBTestCase):
                     "cta_1_md", "cta_2_md", "thanks_1_md", "closer_md",
                     "draft_md", "draft_html",
                     "archive_md", "links_json",
-                    "buttondown_md", "buttondown_html",
+                    "buttondown_md",
                     "transcript_full_txt", "proposal_html"):
             self.assertTrue(ptr["files"][key].startswith("https://files.thingelstad.com/weekly-thing/458/"), key)
         # final.md is gone in the new pipeline — section ordering /
-        # promotions live in workshop.db's issue_items table.
+        # promotions live in workshop.db's issue_items table. buttondown.html
+        # / archive.html are likewise not produced — only draft.html is a
+        # rendered review surface; the ship-shaped artifacts go straight to
+        # their destinations.
         self.assertNotIn("final_md", ptr["files"])
+        self.assertNotIn("buttondown_html", ptr["files"])
+        self.assertNotIn("archive_html", ptr["files"])
         self.assertNotIn("currently_json", ptr["files"])
         self.assertEqual(ptr["set_by"], "jamie")
         # And the success message points at the pointer URL.

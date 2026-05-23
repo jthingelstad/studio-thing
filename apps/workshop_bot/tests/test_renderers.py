@@ -210,30 +210,6 @@ class RenderEmailTests(unittest.TestCase):
         self.assertLess(feature_idx, journal_idx)
 
 
-class RenderEmailPreviewTests(unittest.TestCase):
-    """render_email_preview produces the buttondown.html preview
-    body — Liquid stripped, editor-mode comment + pixel removed."""
-
-    def test_preview_strips_editor_mode_and_pixel(self):
-        full = renderers.render_email_body(
-            atoms=SAMPLE_ATOMS,
-            sections=SAMPLE_SECTIONS,
-            features=[],
-            issue_number=458,
-            cta_atoms={"cta:1": "Supporter CTA copy."},
-        )
-        preview = renderers.render_email_preview(full)
-        self.assertNotIn("buttondown-editor-mode", preview)
-        self.assertNotIn("tinylytics.app/pixel", preview)
-        # Regular subscriber branch surfaces — CTA copy + the single
-        # "Become a Supporting Member" button to the members page.
-        self.assertIn("Supporter CTA copy.", preview)
-        self.assertIn("Become a Supporting Member", preview)
-        # Leftover Liquid wrappers stripped.
-        self.assertNotIn("{% if", preview)
-        self.assertNotIn("{{ ", preview)
-
-
 # ---------- archive composition ----------
 
 

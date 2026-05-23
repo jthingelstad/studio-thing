@@ -49,8 +49,8 @@ NAME = "reset-issue"
 # the job's behavior is data-driven and the help text reads accurately
 # without keeping the docstring in sync separately.
 _STEP_ARTIFACTS: dict[str, tuple[str, ...]] = {
-    "final": ("final.md", "thesis.md", "final.html"),
-    "publish": ("buttondown.md", "buttondown.html"),
+    "final": ("final.md", "thesis.md"),
+    "publish": ("buttondown.md",),
 }
 
 
