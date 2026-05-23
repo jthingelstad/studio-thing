@@ -84,8 +84,12 @@ def supporter_block(cta_body: str, *, issue_number: int) -> str:
     page can prefill it) and ``?ref=WT{N}`` so traffic-by-issue is
     legible to ``tinylytics`` analytics.
 
-    Anyone else without a premium membership sees the CTA +
-    ``{{ subscribe_form }}``. Premium members fall through to nothing.
+    Everyone else (premium members, anonymous web visitors viewing the
+    archive page) falls through to nothing — no CTA, no subscribe form.
+
+    The leading ``---`` divider lives *inside* the conditional, so the
+    audience that doesn't see the CTA doesn't see an empty divider
+    either — adjacent sections collapse to one ``<hr/>`` instead of two.
     """
     body = cta_body.strip()
     n = int(issue_number)
@@ -95,13 +99,11 @@ def supporter_block(cta_body: str, *, issue_number: int) -> str:
     )
     return (
         "{% if subscriber.subscriber_type == 'regular' %}\n\n"
+        "---\n\n"
         f"{body}\n\n"
         '<p style="text-align:center; padding:10px 0; font-size: 16px; font-weight: bold;">\n'
         f'<buttondown-button href="{member_url}">Become a Supporting Member</buttondown-button>\n'
         "</p>\n\n"
-        "{% elsif subscriber.subscriber_type != 'premium' %}\n\n"
-        f"{body}\n\n"
-        "{{ subscribe_form }}\n\n"
         "{% endif %}"
     )
 
@@ -110,10 +112,15 @@ def thanks_block(thanks_body: str) -> str:
     """Audience-aware Liquid wrapper for a premium-only thank-you.
 
     Premium subscribers see the thanks; everyone else falls through
-    to nothing."""
+    to nothing. The leading ``---`` divider lives inside the
+    conditional so non-premium audiences don't see two ``<hr/>`` in a
+    row where the empty thanks would otherwise sit between two
+    dividers.
+    """
     body = thanks_body.strip()
     return (
         "{% if subscriber.subscriber_type == 'premium' %}\n\n"
+        "---\n\n"
         f"{body}\n\n"
         "{% endif %}"
     )
@@ -152,7 +159,14 @@ def _section_part(
 ) -> str:
     """Compose one parent section's part: heading + body + optional
     trailer (e.g. an email Liquid CTA block) + any features declared at
-    the ``after_{section_name}`` position, all `---`-joined.
+    the ``after_{section_name}`` position.
+
+    Features get ``---``-joined to the section body (they're standalone
+    H2 sections that promoted out of Journal, so they need a real
+    divider). The trailer, by contrast, is glued on with just a blank
+    line — Liquid CTA / thanks blocks carry their own ``---`` inside
+    their conditional so an audience that doesn't match the conditional
+    doesn't see an orphan divider.
 
     Returns "" if the parent section's body is empty — empty sections
     drop out cleanly. Trailer + after-features are tied to the section
@@ -162,10 +176,11 @@ def _section_part(
     if not body:
         return ""
     heading = _SECTION_HEADINGS[section_name]
-    chunks = [f"{heading}\n\n{body}"]
+    text = f"{heading}\n\n{body}"
     trailer = (after_trailer or "").strip()
     if trailer:
-        chunks.append(trailer)
+        text = f"{text}\n\n{trailer}"
+    chunks = [text]
     pos_label = f"after_{section_name}"
     for pos, feat_body in features:
         if pos == pos_label:

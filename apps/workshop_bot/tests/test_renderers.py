@@ -107,14 +107,29 @@ class RenderEmailTests(unittest.TestCase):
         self.assertNotIn("buy.stripe.com", out)
         self.assertNotIn("$4 monthly", out)
         self.assertNotIn("$40 yearly", out)
-        # Anonymous-subscriber branch still gets the subscribe form.
-        self.assertIn("{{ subscribe_form }}", out)
+        # Anonymous + premium audiences fall through to nothing — no
+        # second branch with a subscribe form, no `elsif`. Only regular
+        # subscribers see the CTA.
+        self.assertNotIn("{{ subscribe_form }}", out)
+        self.assertNotIn("elsif", out)
         # Splice happens after Notable, before Journal.
         notable_idx = out.find("## Notable")
         liquid_idx = out.find("{% if subscriber.subscriber_type == 'regular' %}")
         journal_idx = out.find("## Journal")
         self.assertLess(notable_idx, liquid_idx)
         self.assertLess(liquid_idx, journal_idx)
+        # The leading `---` divider lives inside the `{% if %}` so when
+        # a non-regular audience sees nothing, they don't get an empty
+        # block sandwiched between two `<hr/>`s.
+        liquid_block_start = liquid_idx
+        liquid_block_end = out.find("{% endif %}", liquid_block_start)
+        liquid_inner = out[liquid_block_start:liquid_block_end]
+        self.assertIn("---", liquid_inner)
+        # No divider between the section body and the `{% if %}` —
+        # adjacent sections only get one `<hr/>` for non-regular
+        # audiences (the section join between Notable and Journal).
+        between = out[out.find("## Notable"):liquid_idx]
+        self.assertNotIn("\n---\n", between.rsplit("\n", 5)[-1])
 
     def test_thanks_1_splices_after_brief_as_premium_only(self):
         cta_atoms = {"thanks:1": "Thanks for supporting this work."}
@@ -132,6 +147,21 @@ class RenderEmailTests(unittest.TestCase):
         brief_idx = out.find("## Briefly")
         thanks_idx = out.find("{% if subscriber.subscriber_type == 'premium' %}")
         self.assertGreater(thanks_idx, brief_idx)
+        # The leading `---` divider lives INSIDE the if-block — otherwise
+        # non-premium subscribers would see two `<hr/>` in a row (one
+        # before the empty thanks, one after).
+        thanks_end = out.find("{% endif %}", thanks_idx)
+        thanks_inner = out[thanks_idx:thanks_end]
+        self.assertIn("---", thanks_inner)
+        # No "---" between Briefly's body and the `{% if %}` opener —
+        # only the inside-conditional divider is present, so non-premium
+        # audiences don't see an orphan `<hr/>` here.
+        between = out[brief_idx:thanks_idx]
+        # Strip the heading itself from the "between" slice so the
+        # closing `---` we're forbidding is the trailer-divider, not
+        # something internal to the briefly body.
+        last_chunk = between.rsplit("\n\n", 1)[-1]
+        self.assertNotEqual(last_chunk.strip(), "---")
 
     def test_empty_cta_atoms_skip_their_slots(self):
         cta_atoms = {"cta:1": "", "cta:2": "   ", "thanks:1": "Premium thanks."}
