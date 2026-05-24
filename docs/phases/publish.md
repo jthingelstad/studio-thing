@@ -19,19 +19,30 @@ channels; some are unique to one.
 
 ## The shared envelope
 
-*Subject* (one line, all channels) and *description* (comma-separated topic line; email preview +
-website front-matter) are set **here**, not in Build. They live in `metadata.json` alongside the
-deterministic `number`/`slug`/`image`/`publish_date` and the publish-stamped
-`buttondown_id`/`absolute_url`.
+Five pieces of shipping work that every channel draws on, all produced here (not in Build):
+
+| Piece | Source | Triggered |
+|---|---|---|
+| **Thesis** | `atoms/thesis.md` — Eddy's 1–3 sentence editorial framing | **Auto** on `mark built` (one-shot, no picker). Anchors subject/description/haiku/CTA prompts downstream so the four shipping jobs land on one read. `/eddy edit thesis` refines. |
+| **Subject** | `metadata.json` — one-line, all channels | `compose-meta:subject` — Eddy returns 5 options, Jamie picks. |
+| **Description** | `metadata.json` — comma-separated topic line; email preview + website front-matter | `compose-meta:description` — one-shot, no picker. |
+| **Haiku** | `haiku.md` — bold tercet at the foot of the issue, all channels | `compose-haiku` — Eddy writes (3 options, Jamie picks). Haiku is shipping work, not authored content — Eddy produces it, Jamie just picks. |
+| **CTA / thanks** | `cta-N.md` / `thanks-N.md` — audience-aware (email-only Liquid) | `compose-cta` (Patty) — **auto-fired on `mark built`** so a framing is waiting. Jamie picks. |
+
+`metadata.json` also carries the deterministic `number`/`slug`/`image`/`publish_date` plus the
+publish-stamped `buttondown_id`/`absolute_url`.
 
 ## Gates
 
-- **Entry:** `mark built`. On entry the ship flow **auto-requests the CTA from Patty** (see
-  [`../programs/membership.md`](../programs/membership.md)) so a framing is waiting — Jamie only
-  *picks* it, never triggers it.
+- **Entry:** `mark built`. On entry the ship flow runs **`compose-thesis`** (Eddy reads the
+  now-frozen content and writes the framing every other Publish job will anchor on) and
+  **auto-requests the CTA from Patty** (see [`../programs/membership.md`](../programs/membership.md))
+  so a framing is waiting — Jamie only *picks* the CTA, never triggers it. Subject, description,
+  and haiku come from the operator pressing buttons on the Publish card.
 - **Exit:** `put-to-bed` — files the issue into the `issues` table, closes the window
   (`is_active = 0`). The issue is now *published* and becomes the [Share](share.md) target.
 
-The **Publish card** (`#editorial`) is the live surface: the shared envelope + CTA pick, then the
-per-channel rows with gated 🚀 buttons (a destination's button stays disabled until its gate
-passes), and each leg's outcome reported back on the card.
+The **Publish card** (`#editorial`) is the live surface: **Eddy's thesis at the top** (the
+read that anchors everything below), then the shared-envelope rows (subject + description +
+haiku + CTA), then the per-channel rows with gated 🚀 buttons (a destination's button stays
+disabled until its gate passes), and each leg's outcome reported back on the card.

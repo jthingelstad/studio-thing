@@ -76,7 +76,7 @@ state, not a frozen artifact (the healthy successor to the retired `final.md` lo
 | Transition | Trigger | Effect |
 |---|---|---|
 | → **build** | `start-issue` | Window opens (`phase=build`); Build card posts; editorial review runs on refreshes |
-| **build → publish** | **`mark built`** (`/eddy issue built` or the Build-card button) | Build card finalizes; Publish card posts; CTA auto-requested from Patty; attention shifts from content-quality to send-readiness |
+| **build → publish** | **`mark built`** (`/eddy issue built` or the Build-card button) | Build card finalizes; Eddy writes the **thesis** (`compose-thesis` over the now-frozen content — anchors every downstream Publish job); Publish card posts; CTA auto-requested from Patty; attention shifts from content-quality to send-readiness |
 | **publish → build** | reopen (`/eddy issue reopen`) | Back to Build to fix content |
 | **publish → (published)** | `put-to-bed` | Files the issue; `is_active = 0`; becomes the Share target |
 
