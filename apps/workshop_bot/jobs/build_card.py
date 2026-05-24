@@ -3,7 +3,7 @@
 Phase 1 of the publishing spine (`docs/publishing-process.md`): "is the issue
 written and good?" One pinned card showing the issue's anatomy in **reading
 order** (Intro · Currently · Cover · Notable · Journal · Briefly · Outro ·
-Haiku · Echoes) plus the editorial review + reorder status. It carries the
+Outro) plus the editorial review + reorder status. It carries the
 content-author buttons and the **Mark built** transition that opens Publish.
 
 State is a pure function of DB + S3 (no wizard-state table). The persistent
@@ -32,7 +32,6 @@ KIND = "build"
 # Button custom_ids — static so the persistent View routes across restarts.
 BTN_REFRESH = "build:refresh"
 BTN_REORDER = "build:reorder"
-BTN_ECHOES = "build:echoes"
 BTN_EDIT = "build:edit"
 BTN_MARK_BUILT = "build:mark-built"
 
@@ -88,7 +87,6 @@ def gather_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> d
         "outro_present": "outro.md" in files,
         "cover_present": st["cover_present"],
         "currently_entries": [c.get("type_label") for c in currently],
-        "echoes_present": "closer.md" in files,
         "reorder_applied": "thesis.md" in files,
         "open_comments": open_comments,
         "review_url": s3.issue_file_url(n, "draft.html"),
@@ -114,10 +112,6 @@ def render_anatomy_lines(state: dict) -> list[str]:
         icon, tag = _cards.section_tag(sec[name])
         lines.append(f"{icon} {label} — {tag}")
     lines.append(f"{_cards.mark(state['outro_present'])} Outro" + ("" if state["outro_present"] else " — optional"))
-    if state["echoes_present"]:
-        lines.append("✅ Echoes")
-    else:
-        lines.append("☐ Echoes — not run (auto on reorder-accept, or the Echoes button)")
     return lines
 
 
@@ -218,16 +212,25 @@ async def mark_built(ctx: "_base.JobContext") -> "_base.JobResult":
     )
     await _cards.finalize_card(ctx, kind=KIND, channel_env=_cards.EDITORIAL_ENV, persona="eddy", n=n, embed=summary)
 
-    # Compose the thesis from the just-frozen content. Best-effort:
-    # downstream subject/description/haiku/CTA degrade gracefully on
-    # a missing thesis.md — don't wedge the transition on it.
-    from . import publish_card, compose_cta, compose_thesis
+    # Compose the thesis from the just-frozen content first — it's the
+    # editorial framing every subsequent Publish job anchors on.
+    # Best-effort: downstream prompts degrade gracefully on missing
+    # thesis.md so a failure here doesn't wedge the transition.
+    from . import publish_card, compose_cta, compose_echoes, compose_thesis
     try:
         await compose_thesis.run(_base.JobContext(deps=ctx.deps, trigger="mark-built"))
     except Exception:  # noqa: BLE001
         logger.exception("mark-built: compose-thesis failed for #%d", n)
 
-    # Post the Publish card (now reads the just-written thesis.md) and
+    # Compose Echoes (Thingy's archive note) — mandatory, runs over the
+    # frozen content with the just-written thesis as anchor. On failure
+    # we log and continue; mark-built doesn't unwind on a single job.
+    try:
+        await compose_echoes.run(_base.JobContext(deps=ctx.deps, trigger="mark-built"))
+    except Exception:  # noqa: BLE001
+        logger.exception("mark-built: compose-echoes failed for #%d", n)
+
+    # Post the Publish card (reads thesis + echoes + cta state) and
     # auto-request the CTA from Patty (its prompt also reads the thesis).
     await publish_card.post_or_update(ctx, n, window=window)
     try:

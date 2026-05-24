@@ -27,7 +27,7 @@ from ...jobs import status as status_job
 from ...jobs import (
     archive_lookup,
     build_card,
-    compose_closer,
+    compose_echoes,
     compose_haiku,
     compose_meta,
     create_final,
@@ -139,7 +139,7 @@ def register_eddy_commands(
         description="Write the Echoes note (Thingy's archive callback) for the in-flight issue.",
     )
     async def issue_echoes_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: compose_closer.run(_ctx(bot)), "issue echoes")
+        await _run_and_ack(interaction, lambda: compose_echoes.run(_ctx(bot)), "issue echoes")
 
     @issue.command(
         name="built",

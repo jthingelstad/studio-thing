@@ -63,6 +63,9 @@ def gather_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> d
     absolute_url = (meta.get("absolute_url") or "").strip()
     cta_files = sorted(f for f in files if (f.startswith("cta-") or f.startswith("thanks-")) and f.endswith(".md"))
     haiku_present = bool(st["assets"].get("haiku.md"))
+    # Echoes file lives on disk as closer.md (legacy on-disk name; the
+    # reader-facing section heading is ## Echoes).
+    echoes_present = "closer.md" in files
     # Thesis written by compose-thesis at mark-built; show the prose on
     # the card so Jamie sees the editorial framing alongside subject /
     # description / CTA. Missing thesis isn't an error — degrades to a
@@ -96,6 +99,7 @@ def gather_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> d
         "subject": subject,
         "description": description,
         "haiku_present": haiku_present,
+        "echoes_present": echoes_present,
         "cta_files": cta_files,
         "buttondown_id": buttondown_id,
         "buttondown_url": (publish._draft_url(buttondown_id) if buttondown_id else ""),
@@ -120,10 +124,12 @@ def render_shared_lines(state: dict) -> list[str]:
     desc = state["description"]
     cta = state["cta_files"]
     haiku = state["haiku_present"]
+    echoes = state["echoes_present"]
     return [
         f"{_cards.mark(bool(subj))} Subject — " + (f"\"{subj}\"" if subj else "pick one → button"),
         f"{_cards.mark(bool(desc))} Description — " + (desc if desc else "generated with the subject"),
         f"{_cards.mark(haiku)} Haiku — " + ("written" if haiku else "Eddy writes it → button"),
+        f"{_cards.mark(echoes)} Echoes — " + ("Thingy's archive note written" if echoes else "auto-fired at mark-built (Opus)"),
         (f"✅ CTA — {', '.join('`' + c + '`' for c in cta)}" if cta
          else "☐ CTA — pick a framing (auto-requested on entry)"),
     ]

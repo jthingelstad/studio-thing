@@ -71,6 +71,8 @@ _ASSETS: dict[str, tuple[str, str, bool, str]] = {
                  '{"caption": "...", "location": "Minneapolis, MN", "timestamp": "May 23, 2026"}'),
     "thesis":   ("thesis.md",   "thesis",        False,
                  "1–3 sentences naming what the issue is about — Eddy's editorial anchor."),
+    "echoes":   ("closer.md",   "echoes",        False,
+                 "Thingy's 2–4 sentence archive note that closes the issue — markdown prose."),
     "cta-1":    ("cta-1.md",    "CTA slot 1",    False,
                  "---\nkind: supporter\n---\n\nCall-to-action copy (Thingy's voice)."),
     "cta-2":    ("cta-2.md",    "CTA slot 2",    False,

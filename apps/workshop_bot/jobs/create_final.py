@@ -60,7 +60,7 @@ from typing import Any, Optional
 from ..tools import db, issue_items, issue_items_render, render, renderers, s3
 from ..tools.discord import discord_io, interaction
 from ..tools.llm import anthropic_client
-from . import _base, _cover, _currently, _llm_job, compose_closer, compose_cta
+from . import _base, _cover, _currently, _llm_job, compose_cta
 
 logger = logging.getLogger("workshop.jobs.create_final")
 
@@ -646,27 +646,13 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
 
                 if approved is True:
                     # Apply: mutate rows. The daily renderers pull from
-                    # the mutated DB state. Thesis is no longer written
-                    # here — compose-thesis writes it at mark-built.
+                    # the mutated DB state. Thesis + Echoes are no longer
+                    # written here — compose-thesis and compose-echoes
+                    # both fire at mark-built over the frozen content.
                     await asyncio.to_thread(_apply_proposal, n, data, synth_to_row)
-                    # Closer still composed from the just-reordered body so
-                    # the archive note is grounded in the actual content
-                    # ordering. compose_closer.run wants a baseline body;
-                    # build one in memory without writing.
-                    baseline_body = _render_final(
-                        n, atoms, data, synth_to_row, row_to_synth,
-                    )
-                    closer_result = await compose_closer.run(
-                        ctx, baseline_body=baseline_body,
-                    )
-                    if closer_result.ok and closer_result.data and not closer_result.data.get("skipped"):
-                        # Closer.md persisted by compose_closer; the daily
-                        # renderers below will splice it into the body.
-                        pass
                     # Render the three artifacts now so they reflect the
                     # new ordering immediately (the next update-draft tick
-                    # would catch up, but Jamie's about to publish — give
-                    # him a current preview right away).
+                    # would catch up, but give Jamie a current preview).
                     try:
                         await asyncio.to_thread(
                             renderers.render_all_for_issue, n, window=window,

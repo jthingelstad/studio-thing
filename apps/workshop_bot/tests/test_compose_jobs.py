@@ -21,7 +21,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import (  # noqa: E402
-    _base, compose_closer, compose_cta, compose_haiku, compose_meta, create_final,
+    _base, compose_cta, compose_haiku, compose_meta, create_final,
 )
 from apps.workshop_bot.tools import db, s3 # noqa: E402
 from apps.workshop_bot.tools.discord import interaction
@@ -411,28 +411,13 @@ class ComposeCtaTests(_DBTestCase):
 class CreateFinalTests(_DBTestCase):
     """Rewritten for the row-backed editorial pass. Eddy returns a JSON
     object (``thesis``, ``*_order``, ``membership_blocks``) with
-    synthetic ids (``n1``/``b2``/``j3``); the job validates strictly,
-    then mutates ``issue_items`` rows (reorder Notable + Brief) and
-    assembles ``final.md`` from rows + atoms. Featured posts come from
-    sync (not Eddy); The Closer is a separate
-    compose_closer.run call that fires after Jamie's ✅."""
-
-    def setUp(self):
-        super().setUp()
-        # compose_closer.run fires inside create_final.run after ✅, would
-        # otherwise (a) make a real bot.core call that fails when the
-        # fixture reply isn't a closer-shaped paragraph, and (b) try to
-        # write to the real local data/issues/{N}/closer.md, polluting
-        # the repo. Patch it to a no-op for all CreateFinalTests; the
-        # closer's behavior is covered by test_compose_closer.py.
-        self._closer_patch = patch.object(
-            compose_closer, "run",
-            new=AsyncMock(return_value=_base.JobResult(True, "ok", data={"skipped": True})),
-        )
-        self._closer_patch.start()
+    synthetic ids (``n1``/``b2``/``j3``); the job validates strictly
+    then mutates ``issue_items`` rows (reorder Notable + Brief). The
+    Echoes section is no longer fired here — `compose-echoes` runs at
+    mark-built (Build → Publish), so reorder's accept path is purely
+    the reorder + post-render."""
 
     def tearDown(self):
-        self._closer_patch.stop()
         os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
         super().tearDown()
 
@@ -573,11 +558,9 @@ class CreateFinalTests(_DBTestCase):
         # future "let's drop everything to Sonnet" refactor silently
         # downgrading the proposal pass.
         ctx, fc = self._setup(self._basic_reply())
-        # Mock compose_closer.run so its own bot.core call doesn't count
-        # toward the proposal-call assertion; this test is about the
-        # proposal LLM, not the closer.
-        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)), \
-             patch.object(compose_closer, "run", new=AsyncMock(return_value=_base.JobResult(True, "ok", data={"skipped": True}))):
+        # compose-echoes no longer fires inside create_final (moved to
+        # mark-built), so there's no second LLM call to isolate from.
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
             asyncio.run(create_final.run(ctx))
         # core() was called exactly once (one-shot accept); model arg is None.
         self.assertEqual(fc.bot.core.await_count, 1)
@@ -592,10 +575,9 @@ class CreateFinalTests(_DBTestCase):
         # rather than passing through.
         bad = self._basic_reply(notable_order=("n1",))  # n2 dropped
         ctx, fc = self._setup(bad)
-        # Mock compose_closer.run for the same reason as the previous test —
-        # this test is about the proposal LLM call shape, not the closer.
-        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)), \
-             patch.object(compose_closer, "run", new=AsyncMock(return_value=_base.JobResult(True, "ok", data={"skipped": True}))):
+        # compose-echoes no longer fires inside create_final (moved to
+        # mark-built); the LLM call counted here is just the proposal.
+        with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
         # The user-visible auto-fix note hit #editorial.

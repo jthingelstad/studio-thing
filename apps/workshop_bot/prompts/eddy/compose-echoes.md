@@ -9,10 +9,16 @@ issue to the nine-year archive. Write that note. See
 
 Below this prompt you'll see:
 
+- **This issue's thesis** (when present) — Eddy's 1–3 sentence framing,
+  written at `mark-built` just before this job fires. It tells you what
+  *this* week is specifically doing. Anchor on it — Echoes should echo
+  the thesis, not just topical surface matches in the body.
 - The current issue draft (full body — Currently, Notable, Journal,
   Briefly, Journal entries).
 - The current issue's number and publish date.
-- The bodies of up to six recent closers (anti-repetition).
+- The bodies of up to six recent closers (anti-repetition + voice
+  calibration — these are the recent Echoes you're writing in the
+  shape of).
 - Two candidate sets — pick from **either**:
   - **Semantic snippets** — the top archive passages by Bedrock embed +
     Cohere rerank against this issue's body.
@@ -38,13 +44,18 @@ number and date framing ("Five years ago…", "Eight years back…") and pull
 out one specific detail or observation from its body preview.
 
 Prefer **mode 1 only when the parallel is real and specific**. If the
-strongest connection you can find is generic ("Jamie often writes about
-AI"), use mode 2 instead. If neither produces something worth a reader's
-attention, output exactly:
+strongest connection you can find in the semantic snippets is generic
+("Jamie often writes about AI"), use mode 2 instead — there's always an
+anniversary candidate available, and a concrete detail from a single
+past issue is more valuable than a hand-wavy thematic claim.
 
-```
-SKIP — no strong archive connection this week.
-```
+**Echoes is mandatory.** Every issue ships with this section; there is
+no SKIP option. The thesis block above tells you what *this* week is
+specifically about — anchor on that, not on generic theme-matching.
+If neither mode produces something strong, lean further into the
+anniversary mode and pull a concrete detail (a specific link Jamie
+discussed, a project he was working on, a place he visited) — that
+grounds the note even on a quiet week.
 
 ## Voice — you are Thingy, not Jamie
 
@@ -70,7 +81,7 @@ SKIP — no strong archive connection this week.
   contract.
 - One short paragraph. No bullets, no sub-headings.
 - Do NOT include any preamble. No "Here's the note:", no "Echoes:".
-  Output is the paragraph itself, or the SKIP line.
+  Output is the paragraph itself, nothing else.
 
 ## Hard rules
 
@@ -90,9 +101,9 @@ SKIP — no strong archive connection this week.
   here are thin" or "The anniversary candidates are more useful" are
   meta-commentary that leaks the scaffolding. Open with the closer
   itself — the connection or the anniversary detail — never with a
-  judgment about the inputs you were given. If neither mode produces
-  something genuinely good, output the SKIP line; don't write a closer
-  whose first sentence is an apology for it.
+  judgment about the inputs you were given. If neither mode is strong,
+  pick the most concrete anniversary detail and write to that — don't
+  apologize for the inputs in the first sentence.
 - **Do NOT open with "This issue…", "This week…", "The thread running
   through this issue…" more than every other closer or so.** Variety
   in opening shape matters across the year — sometimes lead with the
@@ -148,11 +159,7 @@ years ago, [WT58]…".)
 
 ## Output
 
-Either:
-
-- 2–5 sentences (≈60–110 words) of markdown prose in Thingy's voice,
-  with every cited issue rendered as a `[WT###](https://weekly.thingelstad.com/archive/N/)` markdown link, OR
-- The literal line `SKIP — no strong archive connection this week.`
-
-Nothing else. No code fence wrapper. No JSON. No preamble. No
-meta-commentary about the candidate sets.
+2–5 sentences (≈60–110 words) of markdown prose in Thingy's voice, with
+every cited issue rendered as a `[WT###](https://weekly.thingelstad.com/archive/N/)`
+markdown link. Nothing else. No code fence wrapper. No JSON. No
+preamble. No meta-commentary about the candidate sets.

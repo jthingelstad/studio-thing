@@ -81,7 +81,7 @@ class BuildCardTests(_DBTestCase):
         # the content Jamie authors.
         self.assertEqual(
             labels,
-            ["Intro", "Currently", "Cover", "Notable", "Journal", "Briefly", "Outro", "Echoes"],
+            ["Intro", "Currently", "Cover", "Notable", "Journal", "Briefly", "Outro"],
         )
 
     def test_build_not_ready_without_content(self):
@@ -300,7 +300,9 @@ class PutToBedShareHandoffTests(_DBTestCase):
 class ViewTests(unittest.TestCase):
     def test_build_view_buttons_and_mark_built_gate(self):
         ids = {getattr(c, "custom_id", None) for c in build_card_view.BuildCardView().children}
-        self.assertIn(build_card.BTN_ECHOES, ids)
+        # Echoes button moved off the Build card — compose-echoes auto-fires
+        # at mark-built now (with /eddy edit echoes for manual refinement).
+        self.assertIn(build_card.BTN_REORDER, ids)
         self.assertIn(build_card.BTN_MARK_BUILT, ids)
         # Mark built disabled until build_ready.
         v = build_card_view.build_view({"build_ready": False})

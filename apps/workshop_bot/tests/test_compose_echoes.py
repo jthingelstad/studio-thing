@@ -1,6 +1,6 @@
-"""Tests for compose-closer — The Closer (Thingy's archive note) generator.
+"""Tests for compose-echoes — The Closer (Thingy's archive note) generator.
 
-compose-closer is fired by create-final (after Jamie's ✅ on the
+compose-echoes is fired by create-final (after Jamie's ✅ on the
 proposal). It reads the just-assembled baseline body, the last 6
 issues' closer bodies (for anti-repetition), and the top archive
 passages from Thingy's `/retrieve` endpoint (Bedrock embed + Cohere
@@ -33,7 +33,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.jobs import _base, compose_closer  # noqa: E402
+from apps.workshop_bot.jobs import _base, compose_echoes  # noqa: E402
 from apps.workshop_bot.tools import db, thingy_retrieve  # noqa: E402
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
@@ -61,41 +61,17 @@ _FAKE_PASSAGES = [
 ]
 
 
-class IsSkipTests(unittest.TestCase):
-    def test_plain_skip(self):
-        self.assertTrue(compose_closer._is_skip("SKIP"))
-
-    def test_skip_case_insensitive(self):
-        self.assertTrue(compose_closer._is_skip("skip"))
-        self.assertTrue(compose_closer._is_skip("Skip"))
-
-    def test_skip_with_surrounding_whitespace(self):
-        self.assertTrue(compose_closer._is_skip("  SKIP  \n"))
-
-    def test_skip_with_trailing_punctuation(self):
-        self.assertTrue(compose_closer._is_skip("SKIP."))
-        self.assertTrue(compose_closer._is_skip("`SKIP`"))
-
-    def test_real_closer_is_not_skip(self):
-        self.assertFalse(compose_closer._is_skip(
-            "Back in WT200, Jamie wrote about the same topic. It still rings true."
-        ))
-
-    def test_empty_string_is_not_skip(self):
-        self.assertFalse(compose_closer._is_skip(""))
-
-
 class CleanCloserTests(unittest.TestCase):
     def test_strips_outer_code_fence(self):
-        out = compose_closer._clean_closer("```\nA closer.\n```")
+        out = compose_echoes._clean_closer("```\nA closer.\n```")
         self.assertEqual(out, "A closer.")
 
     def test_strips_markdown_code_fence(self):
-        out = compose_closer._clean_closer("```markdown\nA closer.\n```")
+        out = compose_echoes._clean_closer("```markdown\nA closer.\n```")
         self.assertEqual(out, "A closer.")
 
     def test_preserves_inline_backticks(self):
-        out = compose_closer._clean_closer("A `code` reference.")
+        out = compose_echoes._clean_closer("A `code` reference.")
         self.assertEqual(out, "A `code` reference.")
 
 
@@ -103,7 +79,7 @@ class PriorClosersTests(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self._issues_root_patch = patch.object(
-            compose_closer, "ISSUES_ROOT", Path(self._tmp.name),
+            compose_echoes, "ISSUES_ROOT", Path(self._tmp.name),
         )
         self._issues_root_patch.start()
 
@@ -112,14 +88,14 @@ class PriorClosersTests(unittest.TestCase):
         self._tmp.cleanup()
 
     def _seed_closer(self, n: int, text: str) -> None:
-        d = compose_closer.ISSUES_ROOT / str(n)
+        d = compose_echoes.ISSUES_ROOT / str(n)
         d.mkdir(parents=True, exist_ok=True)
         (d / "closer.md").write_text(text, encoding="utf-8")
 
     def test_reads_up_to_six_prior_closers_newest_first(self):
         for n in range(450, 458):
             self._seed_closer(n, f"closer for WT{n}")
-        out = compose_closer._prior_closers(458)
+        out = compose_echoes._prior_closers(458)
         # Returns newest-first (457, 456, ..., 452); not 451 or 450 since cap=6.
         nums = [n for n, _ in out]
         self.assertEqual(nums, [457, 456, 455, 454, 453, 452])
@@ -128,18 +104,18 @@ class PriorClosersTests(unittest.TestCase):
         # Only 455 and 453 have closer.md; 457/456/454/452 don't.
         self._seed_closer(455, "wt455 closer")
         self._seed_closer(453, "wt453 closer")
-        out = compose_closer._prior_closers(458)
+        out = compose_echoes._prior_closers(458)
         nums = [n for n, _ in out]
         self.assertEqual(nums, [455, 453])
 
     def test_no_prior_closers_returns_empty(self):
-        out = compose_closer._prior_closers(458)
+        out = compose_echoes._prior_closers(458)
         self.assertEqual(out, [])
 
     def test_stops_at_issue_one(self):
         # For issue 3 we'd look at 2, 1, then stop (offsets > N-1 hit prev<1).
         self._seed_closer(1, "wt1 closer")
-        out = compose_closer._prior_closers(3)
+        out = compose_echoes._prior_closers(3)
         nums = [n for n, _ in out]
         self.assertEqual(nums, [1])
 
@@ -151,17 +127,17 @@ class ComposeCloserRunTests(_DBTestCase):
         # Distinct attribute name so we don't clobber _DBTestCase's
         # self._patches (which holds the s3 fake-workspace patchers and
         # gets stopped by the parent tearDown).
-        # Patch retrieval at the compose_closer call site so the tests
+        # Patch retrieval at the compose_echoes call site so the tests
         # don't reach the network. Default: return the fake passages;
         # individual tests override via .side_effect / .return_value if
         # they need a failure or empty-result path.
         retrieve_patcher = patch.object(
-            compose_closer.thingy_retrieve,
+            compose_echoes.thingy_retrieve,
             "retrieve",
             return_value=list(_FAKE_PASSAGES),
         )
         issues_root_patcher = patch.object(
-            compose_closer, "ISSUES_ROOT", Path(self._tmp.name),
+            compose_echoes, "ISSUES_ROOT", Path(self._tmp.name),
         )
         self._mock_retrieve = retrieve_patcher.start()
         issues_root_patcher.start()
@@ -190,7 +166,7 @@ class ComposeCloserRunTests(_DBTestCase):
 
     def test_refuses_without_window(self):
         ctx, _fc = self._ctx()
-        result = asyncio.run(compose_closer.run(ctx))
+        result = asyncio.run(compose_echoes.run(ctx))
         self.assertFalse(result.ok)
         self.assertIn("issue window", result.message)
 
@@ -199,7 +175,7 @@ class ComposeCloserRunTests(_DBTestCase):
         refuses with a clear pointer at what to run first."""
         self._window()
         ctx, _fc = self._ctx()
-        result = asyncio.run(compose_closer.run(ctx))
+        result = asyncio.run(compose_echoes.run(ctx))
         self.assertFalse(result.ok)
         self.assertIn("no body available", result.message)
 
@@ -208,64 +184,28 @@ class ComposeCloserRunTests(_DBTestCase):
         (FakeWorkspace) and local ISSUES_ROOT/458/closer.md."""
         self._window()
         ctx, fc = self._ctx(reply="In WT281, Jamie wrote about local food systems. The thread runs through this issue too.")
-        result = asyncio.run(compose_closer.run(
+        result = asyncio.run(compose_echoes.run(
             ctx, baseline_body="## Notable\n\n### [A](http://a)\n\nbody",
         ))
         self.assertTrue(result.ok, result.message)
-        self.assertFalse(result.data["skipped"])
-        self.assertTrue(result.data["closer_written"])
-        # S3 mirror
+        self.assertTrue(result.data["echoes_written"])
+        # S3 mirror — on-disk filename stays closer.md (legacy)
         self.assertIn((458, "closer.md"), self.ws.files)
         self.assertIn("WT281", self.ws.files[(458, "closer.md")])
         # Local mirror
-        local_path = compose_closer.ISSUES_ROOT / "458" / "closer.md"
+        local_path = compose_echoes.ISSUES_ROOT / "458" / "closer.md"
         self.assertTrue(local_path.exists())
         self.assertIn("WT281", local_path.read_text(encoding="utf-8"))
         # Status message posted to #editorial
         fc.channel.send.assert_awaited()
         sent = fc.channel.send.await_args_list[0].args[0]
-        self.assertIn("compose-closer", sent)
+        self.assertIn("compose-echoes", sent)
         self.assertIn("WT458", sent)
-
-    def test_skip_reply_writes_nothing(self):
-        """Literal SKIP → no closer.md written, status posted."""
-        self._window()
-        ctx, fc = self._ctx(reply="SKIP")
-        result = asyncio.run(compose_closer.run(
-            ctx, baseline_body="## Notable\n\nbody",
-        ))
-        self.assertTrue(result.ok, result.message)
-        self.assertTrue(result.data["skipped"])
-        self.assertFalse(result.data["closer_written"])
-        self.assertNotIn((458, "closer.md"), self.ws.files)
-        sent = fc.channel.send.await_args_list[0].args[0]
-        self.assertIn("SKIP", sent)
-
-    def test_skip_reply_clears_prior_closer(self):
-        """If a closer.md was written by a prior run and the new run is
-        SKIP, the prior local + S3 closer.md gets removed so the issue's
-        current state reflects the SKIP."""
-        self._window()
-        # Seed a prior closer in both S3 and local.
-        self.ws.files[(458, "closer.md")] = "old closer text\n"
-        local_path = compose_closer.ISSUES_ROOT / "458" / "closer.md"
-        local_path.parent.mkdir(parents=True, exist_ok=True)
-        local_path.write_text("old closer text\n", encoding="utf-8")
-
-        ctx, _fc = self._ctx(reply="SKIP")
-        result = asyncio.run(compose_closer.run(
-            ctx, baseline_body="## Notable\n\nbody",
-        ))
-        self.assertTrue(result.ok)
-        self.assertTrue(result.data["skipped"])
-        # Both mirrors cleared.
-        self.assertNotIn((458, "closer.md"), self.ws.files)
-        self.assertFalse(local_path.exists())
 
     def test_empty_reply_fails_cleanly(self):
         self._window()
         ctx, fc = self._ctx(reply="")
-        result = asyncio.run(compose_closer.run(
+        result = asyncio.run(compose_echoes.run(
             ctx, baseline_body="## Notable\n\nbody",
         ))
         self.assertFalse(result.ok)
@@ -278,13 +218,13 @@ class ComposeCloserRunTests(_DBTestCase):
         self._window()
         ctx, _fc = self._ctx(reply="A closer mentioning WT281.")
         body = "## Notable\n\n### [Signal](http://signal)\n\nA piece about messaging."
-        result = asyncio.run(compose_closer.run(ctx, baseline_body=body))
+        result = asyncio.run(compose_echoes.run(ctx, baseline_body=body))
         self.assertTrue(result.ok, result.message)
         self._mock_retrieve.assert_called_once()
         args, kwargs = self._mock_retrieve.call_args
         # First positional arg is the query; k is a kwarg.
         self.assertEqual(args[0], body)
-        self.assertEqual(kwargs.get("k"), compose_closer._ARCHIVE_SNIPPET_COUNT)
+        self.assertEqual(kwargs.get("k"), compose_echoes._ARCHIVE_SNIPPET_COUNT)
 
     def test_retrieval_failure_fails_loud(self):
         """If Thingy /retrieve is unreachable or refuses, the job fails
@@ -295,7 +235,7 @@ class ComposeCloserRunTests(_DBTestCase):
             "LIBRARIAN_BRIDGE_SECRET is not set",
         )
         ctx, fc = self._ctx(reply="should not be used")
-        result = asyncio.run(compose_closer.run(
+        result = asyncio.run(compose_echoes.run(
             ctx, baseline_body="## Notable\n\nbody",
         ))
         self.assertFalse(result.ok)
@@ -315,7 +255,7 @@ class ComposeCloserRunTests(_DBTestCase):
         ctx, _fc = self._ctx(
             reply="In WT281 Jamie wrote about local food systems. The thread carries through to this issue.",
         )
-        result = asyncio.run(compose_closer.run(
+        result = asyncio.run(compose_echoes.run(
             ctx, baseline_body="## Notable\n\nbody",
         ))
         self.assertTrue(result.ok, result.message)
@@ -333,7 +273,7 @@ class ComposeCloserRunTests(_DBTestCase):
         ctx, _fc = self._ctx(
             reply=f"In {link}, Jamie wrote about local food systems. The thread is alive again.",
         )
-        result = asyncio.run(compose_closer.run(
+        result = asyncio.run(compose_echoes.run(
             ctx, baseline_body="## Notable\n\nbody",
         ))
         self.assertTrue(result.ok, result.message)
@@ -355,7 +295,7 @@ class ComposeCloserRunTests(_DBTestCase):
             {"issue_number": 200, "subject": "other", "publish_date": "2022-01-01", "section": "y", "text": "other"},
         ]
         ctx, fc = self._ctx(reply="A reflection drawing on [Weekly Thing 200](https://weekly.thingelstad.com/archive/200/).")
-        result = asyncio.run(compose_closer.run(
+        result = asyncio.run(compose_echoes.run(
             ctx, baseline_body="## Notable\n\nbody",
         ))
         self.assertTrue(result.ok, result.message)
@@ -363,14 +303,14 @@ class ComposeCloserRunTests(_DBTestCase):
 
 class LinkifyArchiveRefsTests(unittest.TestCase):
     def test_wraps_bare_wt_reference(self):
-        out = compose_closer._linkify_archive_refs("Back in WT185 Jamie wrote about Signal.")
+        out = compose_echoes._linkify_archive_refs("Back in WT185 Jamie wrote about Signal.")
         self.assertEqual(
             out,
             "Back in [WT185](https://weekly.thingelstad.com/archive/185/) Jamie wrote about Signal.",
         )
 
     def test_wraps_bare_weekly_thing_reference(self):
-        out = compose_closer._linkify_archive_refs("In Weekly Thing 281 the theme was food systems.")
+        out = compose_echoes._linkify_archive_refs("In Weekly Thing 281 the theme was food systems.")
         self.assertEqual(
             out,
             "In [Weekly Thing 281](https://weekly.thingelstad.com/archive/281/) the theme was food systems.",
@@ -378,16 +318,16 @@ class LinkifyArchiveRefsTests(unittest.TestCase):
 
     def test_preserves_existing_markdown_link(self):
         text = "In [Weekly Thing 281](https://weekly.thingelstad.com/archive/281/) the theme was food."
-        self.assertEqual(compose_closer._linkify_archive_refs(text), text)
+        self.assertEqual(compose_echoes._linkify_archive_refs(text), text)
 
     def test_does_not_double_wrap_when_label_is_already_a_link(self):
         # The label inside an existing link contains "WT185" but should
         # not be processed.
         text = "See [the WT185 piece](https://example.com/page) for more."
-        self.assertEqual(compose_closer._linkify_archive_refs(text), text)
+        self.assertEqual(compose_echoes._linkify_archive_refs(text), text)
 
     def test_handles_multiple_references_in_one_paragraph(self):
-        out = compose_closer._linkify_archive_refs(
+        out = compose_echoes._linkify_archive_refs(
             "Both WT100 and Weekly Thing 281 explored this terrain.",
         )
         self.assertIn("[WT100](https://weekly.thingelstad.com/archive/100/)", out)
@@ -395,37 +335,11 @@ class LinkifyArchiveRefsTests(unittest.TestCase):
 
     def test_ignores_non_issue_numbers(self):
         # "WT" without a digit, or a year-like number not preceded by WT/Weekly Thing
-        out = compose_closer._linkify_archive_refs("In 2017 the WT began, and 100 years before that.")
+        out = compose_echoes._linkify_archive_refs("In 2017 the WT began, and 100 years before that.")
         self.assertNotIn("[", out)
 
     def test_empty_string_passes_through(self):
-        self.assertEqual(compose_closer._linkify_archive_refs(""), "")
-
-
-class IsSkipExtendedTests(unittest.TestCase):
-    """The new prompt asks for the explicit SKIP line; the legacy bare
-    SKIP must still be tolerated for hand-edited closers + retro runs."""
-
-    def test_explicit_skip_line_with_em_dash(self):
-        self.assertTrue(compose_closer._is_skip(
-            "SKIP — no strong archive connection this week.",
-        ))
-
-    def test_explicit_skip_line_with_hyphen(self):
-        self.assertTrue(compose_closer._is_skip(
-            "SKIP - no strong archive connection this week.",
-        ))
-
-    def test_skip_with_colon_variant(self):
-        self.assertTrue(compose_closer._is_skip(
-            "SKIP: no strong archive connection this week.",
-        ))
-
-    def test_skip_in_paragraph_does_not_match(self):
-        # A real closer mentioning the word "skip" must NOT be treated as a skip.
-        self.assertFalse(compose_closer._is_skip(
-            "Jamie chose to skip the conference that year, per WT188.",
-        ))
+        self.assertEqual(compose_echoes._linkify_archive_refs(""), "")
 
 
 class AnniversaryCandidatesTests(unittest.TestCase):
@@ -435,8 +349,8 @@ class AnniversaryCandidatesTests(unittest.TestCase):
         self._emails = self._tmp_path / "emails.json"
         self._issues_root = self._tmp_path / "issues"
         self._patches = [
-            patch.object(compose_closer, "EMAILS_JSON", self._emails),
-            patch.object(compose_closer, "ISSUES_ROOT", self._issues_root),
+            patch.object(compose_echoes, "EMAILS_JSON", self._emails),
+            patch.object(compose_echoes, "ISSUES_ROOT", self._issues_root),
         ]
         for p in self._patches:
             p.start()
@@ -469,7 +383,7 @@ class AnniversaryCandidatesTests(unittest.TestCase):
         self._seed_archive(200, "Body for WT200 about pandemic life.")
         self._seed_archive(60, "Body for WT60 about early WWDC keynotes.")
 
-        out = compose_closer._anniversary_candidates(
+        out = compose_echoes._anniversary_candidates(
             "2026-05-17T11:00:00Z", current_number=348,
         )
         self.assertEqual([c["issue_number"] for c in out], [296, 200, 60])
@@ -485,7 +399,7 @@ class AnniversaryCandidatesTests(unittest.TestCase):
             {"number": 100, "subject": "WT100", "publish_date": "2019-01-01T12:00:00Z"},
         ])
         self._seed_archive(100, "Only candidate.")
-        out = compose_closer._anniversary_candidates(
+        out = compose_echoes._anniversary_candidates(
             "2026-05-17T11:00:00Z", current_number=348,
         )
         self.assertEqual(len(out), 1)
@@ -498,13 +412,13 @@ class AnniversaryCandidatesTests(unittest.TestCase):
             {"number": 348, "subject": "WT348", "publish_date": "2026-05-17T11:00:00Z"},
             {"number": 349, "subject": "WT349", "publish_date": "2026-05-24T11:00:00Z"},
         ])
-        out = compose_closer._anniversary_candidates(
+        out = compose_echoes._anniversary_candidates(
             "2026-05-17T11:00:00Z", current_number=348,
         )
         self.assertEqual(out, [])
 
     def test_handles_missing_emails_json(self):
-        out = compose_closer._anniversary_candidates(
+        out = compose_echoes._anniversary_candidates(
             "2026-05-17T11:00:00Z", current_number=348,
         )
         self.assertEqual(out, [])
@@ -513,7 +427,7 @@ class AnniversaryCandidatesTests(unittest.TestCase):
         self._seed_emails([
             {"number": 100, "subject": "WT100", "publish_date": "2019-01-01T12:00:00Z"},
         ])
-        out = compose_closer._anniversary_candidates(
+        out = compose_echoes._anniversary_candidates(
             "not a real date", current_number=348,
         )
         self.assertEqual(out, [])
@@ -523,9 +437,9 @@ class AnniversaryCandidatesTests(unittest.TestCase):
             {"number": 348, "subject": "WT348", "publish_date": "2026-05-17T11:00:00Z"},
             {"number": 100, "subject": "WT100", "publish_date": "2025-05-18T12:00:00Z"},
         ])
-        long_body = "x " * (compose_closer._ANNIVERSARY_PREVIEW_CHARS)
+        long_body = "x " * (compose_echoes._ANNIVERSARY_PREVIEW_CHARS)
         self._seed_archive(100, long_body)
-        out = compose_closer._anniversary_candidates(
+        out = compose_echoes._anniversary_candidates(
             "2026-05-17T11:00:00Z", current_number=348,
         )
         self.assertEqual(len(out), 1)
@@ -534,7 +448,7 @@ class AnniversaryCandidatesTests(unittest.TestCase):
 
 class FormatArchiveSnippetsTests(unittest.TestCase):
     def test_renders_passages_as_blockquoted_blocks(self):
-        out = compose_closer._format_archive_snippets([
+        out = compose_echoes._format_archive_snippets([
             {"issue_number": 281, "subject": "S", "publish_date": "2024-06-08", "section": "Notable", "text": "T"},
         ])
         self.assertIn("**WT281**", out)
@@ -544,8 +458,8 @@ class FormatArchiveSnippetsTests(unittest.TestCase):
         self.assertIn("> T", out)
 
     def test_truncates_long_snippets(self):
-        long_text = "x" * (compose_closer._SNIPPET_PREVIEW_CHARS + 200)
-        out = compose_closer._format_archive_snippets([
+        long_text = "x" * (compose_echoes._SNIPPET_PREVIEW_CHARS + 200)
+        out = compose_echoes._format_archive_snippets([
             {"issue_number": 1, "subject": "S", "publish_date": "2017-05-13", "section": "Notable", "text": long_text},
         ])
         # Truncation marker present, full-length string not.
@@ -553,7 +467,7 @@ class FormatArchiveSnippetsTests(unittest.TestCase):
         self.assertNotIn(long_text, out)
 
     def test_empty_list_yields_placeholder(self):
-        out = compose_closer._format_archive_snippets([])
+        out = compose_echoes._format_archive_snippets([])
         self.assertIn("retrieval returned no passages", out)
 
 

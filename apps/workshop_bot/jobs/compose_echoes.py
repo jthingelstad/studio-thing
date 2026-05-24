@@ -1,66 +1,66 @@
-"""``compose-closer`` — write **Echoes**, Thingy's archive note.
+"""``compose-echoes`` — write **Echoes**, Thingy's archive note that
+closes every issue.
 
-(Internal name stays ``compose-closer`` / ``closer.md``; the reader-facing
-section heading is **Echoes**.) Echoes is the section that closes every issue: Thingy (the public
-librarian persona — see ``prompts/shared/thingy-voice-reference.md``)
-writes a 2–4 sentence note connecting the current issue to the
-nine-year archive. The note runs in Thingy's voice (third-person about
-Jamie), not Jamie's voice — that's the deliberate handoff at the bottom
-of every issue.
+Reader-facing section heading is ``## Echoes``. Internal S3/disk
+filename stays ``closer.md`` (the legacy on-disk shape — renaming the
+file across the back catalog isn't worth the migration; only the code
+and the section heading carry the user-visible name).
 
-Auto-fired by ``create-final`` after Jamie's ✅ on the proposal, before
-``final.md`` gets assembled (so the closer ends up inline in
-``final.md`` → flows through to ``buttondown.md`` / ``archive.md`` /
-``transcript/`` naturally).
+Echoes runs in **Thingy's voice** (the public librarian persona; voice
+anchor at ``prompts/shared/thingy-voice-reference.md``) — third-person
+about Jamie, not Jamie's first person. It's the deliberate handoff at
+the foot of every issue from Jamie's voice to the archive's.
 
-The job offers Thingy **two candidate sets** in the prompt — she picks
-one mode based on whichever has the stronger signal:
+**Trigger:** auto-fired inside ``mark-built`` (the Build → Publish
+phase transition), alongside ``compose-thesis`` and the CTA auto-
+request. Runs over the *frozen* content the same way thesis does. Was
+previously triggered by ``reorder`` on ✅; that ran over mid-edit
+state, which produced echoes that didn't reflect the shipped issue.
+
+**Mandatory.** No SKIP path — Echoes ships in every issue. If neither
+the thematic-resonance mode nor the anniversary mode produces
+something strong on a given week, the prompt still asks for the
+strongest available framing rather than silence. Quality bar is held
+by (1) running on Opus (the single highest-leverage voice surface),
+(2) failing loud on retrieval failure (no silent BM25 fallback), and
+(3) feeding the recent Echoes verbatim so the model can calibrate
+voice from real samples and avoid theme repetition.
+
+The job offers Thingy **two candidate sets** in the prompt; she picks
+the stronger one for this issue:
 
 - **Mode 1 — Thematic Resonance** (preferred when the connection is
   real). Top-K archive passages retrieved via Thingy's own ``/retrieve``
-  endpoint (Bedrock Cohere embed → vector search → Cohere rerank
-  against the pre-embedded corpus). Sourced through
-  ``tools/thingy_retrieve.py``. This is Thingy-grade semantic
-  retrieval, not the in-process BM25 corpus the other agents use, and
-  the quality bar for The Closer is built around it.
+  endpoint (Bedrock Cohere embed → vector search → Cohere rerank).
+  Sourced through ``tools/thingy_retrieve.py``. Thingy-grade semantic
+  retrieval, not the in-process BM25 corpus.
 - **Mode 2 — Anniversary Echo** (always-available fallback). For each
   offset in ``_ANNIVERSARY_OFFSETS`` (one, five, eight years back), the
-  job finds the issue published nearest to that date in
-  ``apps/site/_data/emails.json`` and pulls a ~1500-char body preview
-  from ``data/issues/{N}/archive.md``. The prompt asks Thingy to pull a
-  specific detail from one of these issues.
+  job finds the issue published nearest to that date and pulls a body
+  preview. The prompt asks Thingy to pull a specific detail.
 
-Inputs to the Sonnet call:
+Inputs to the Opus call:
 
-- The current issue draft (final.md → fallback draft.md).
+- The current issue draft (atoms + assembled body via
+  ``_llm_job.final_or_draft``).
+- The just-written thesis (``atoms/thesis.md``) — the editorial
+  framing every Publish-phase job anchors on. Feeds into the prompt
+  as ``## This issue's thesis`` so Echoes can specifically echo what
+  *this* week is doing, not surface-match.
 - The bodies of the last 6 closers (``data/issues/{N-k}/closer.md``,
-  newest-first; silently skipped if missing) — anti-repetition.
+  newest-first; silently skipped if missing) — calibrates voice +
+  prevents theme repetition.
 - Semantic snippets (Mode 1 candidates).
 - Anniversary candidates (Mode 2 candidates).
 
-Output is either:
+Output is a 2-to-4-sentence markdown paragraph (≈40–80 words) in
+**Thingy's voice**, with referenced issue(s) rendered as markdown
+links (``[WT###](https://weekly.thingelstad.com/archive/N/)``).
+Written to ``closer.md`` in S3 + local ``data/issues/{N}/``.
 
-- A 2-to-4-sentence markdown paragraph (≈40–80 words) in **Thingy's
-  voice** (third-person about Jamie), with the referenced issue(s)
-  rendered as markdown links (``[WT###](https://weekly.thingelstad.
-  com/archive/N/)``) → written to ``closer.md`` in S3 + local
-  ``data/issues/{N}/``. The prompt asks the model to include the
-  links; we also post-process to linkify any bare ``WT N`` / ``Weekly
-  Thing N`` references it slipped past the prompt.
-- A SKIP line (``SKIP — no strong archive connection this week.``)
-  → nothing written; create-final assembles ``final.md`` without a
-  The Closer section.
-
-Fails loud on retrieval failure (Lambda unreachable, secret missing,
-non-2xx) — degrading silently to inventory-only or BM25 would defeat
-the quality bar this job is built around. Anniversary candidates alone
-(without semantic snippets) is not considered an acceptable fallback —
-Mode 1 is the higher-quality mode and we don't want to silently force
-Mode 2 by hiding a retrieval failure.
-
-Idempotent: re-running on the same issue regenerates the closer (the
-model may produce different output). To preserve a specific closer,
-edit ``data/issues/{N}/closer.md`` directly after this job runs.
+Idempotent: re-running regenerates Echoes (output may differ). To
+preserve a specific Echoes, edit via ``/eddy edit echoes`` after the
+job runs.
 """
 
 from __future__ import annotations
@@ -77,9 +77,9 @@ from ..tools import db, s3, thingy_retrieve
 from ..tools.llm import anthropic_client
 from . import _base, _llm_job
 
-logger = logging.getLogger("workshop.jobs.compose_closer")
+logger = logging.getLogger("workshop.jobs.compose_echoes")
 
-NAME = "compose-closer"
+NAME = "compose-echoes"
 
 REPO = Path(__file__).resolve().parents[3]
 ISSUES_ROOT = REPO / "data" / "issues"
@@ -340,11 +340,18 @@ def _build_user_message(
     prior: list[tuple[int, str]],
     passages: list[dict[str, Any]],
     anniversaries: list[dict[str, Any]],
+    thesis: str = "",
 ) -> str:
+    thesis_block = (
+        f"## This issue's thesis (Eddy's framing, written at mark-built)\n\n"
+        f"{thesis.strip()}\n\n---\n\n"
+        if thesis.strip() else ""
+    )
     return (
         f"You're writing **Echoes** (Thingy's archive note) for **The Weekly "
         f"Thing #{issue_number}**, publishing {publish_date}.\n\n"
         f"---\n\n"
+        f"{thesis_block}"
         f"## Current issue draft\n\n"
         f"```markdown\n{baseline_body.strip()}\n```\n\n"
         f"---\n\n"
@@ -402,28 +409,6 @@ def _linkify_archive_refs(text: str) -> str:
     return linked
 
 
-def _is_skip(reply: str) -> bool:
-    """Tolerant SKIP detection — caps-insensitive, whitespace-stripped.
-    Accepts the bare ``SKIP`` legacy form **and** the new explicit form
-    the prompt asks for: ``SKIP — no strong archive connection this
-    week.``. Anything else (including empty) is treated as not-a-skip
-    so the caller can write whatever was returned and Jamie can spot a
-    bad reply in #editorial."""
-    if not reply:
-        return False
-    stripped = reply.strip().strip("`'\"").lower()
-    if stripped == "skip":
-        return True
-    # Strip trailing terminator first so "SKIP." reads as a bare SKIP too.
-    bare = stripped.rstrip(".!").strip()
-    if bare == "skip":
-        return True
-    # The explicit form: "SKIP — no strong archive connection this week."
-    # plus minor variants the model might emit (en dash vs hyphen, case,
-    # trailing period).
-    return bool(re.match(r"^skip\s*[—\-:]", stripped))
-
-
 def _clean_closer(reply: str) -> str:
     """Strip surrounding whitespace + accidental code-fence wrappers; return
     the closer paragraph as it should land in closer.md."""
@@ -444,10 +429,15 @@ async def run(
     *,
     baseline_body: Optional[str] = None,
 ) -> "_base.JobResult":
-    """Generate (or skip) the From-the-Archive closer for the in-flight
-    issue. ``baseline_body``, if supplied, is the just-assembled body
-    create-final uses internally before it adds the closer; otherwise
-    we fall back to reading final.md or draft.md from S3."""
+    """Write Thingy's Echoes archive note for the in-flight issue.
+
+    Mandatory + auto-fired inside ``mark-built``. Reads the frozen
+    content via ``_llm_job.final_or_draft`` unless an explicit
+    ``baseline_body`` is provided (the test harness uses this to inject
+    a known body). No SKIP path — Echoes ships in every issue. Fails
+    loud on retrieval failure or persistent empty reply rather than
+    degrading silently.
+    """
     window = db.get_active_issue_window()
     if window is None:
         return _base.JobResult(
@@ -460,7 +450,7 @@ async def run(
         baseline_body = await asyncio.to_thread(_llm_job.final_or_draft, n)
     if not baseline_body or not baseline_body.strip():
         return _base.JobResult(
-            False, f"❌ no body available for WT{n} — run `/eddy issue final` or `/eddy issue update` first.",
+            False, f"❌ no body available for WT{n} — run `/eddy issue update` first.",
         )
 
     bot, channel, reason = _llm_job.resolve_bot_and_channel(
@@ -468,19 +458,19 @@ async def run(
     )
     if bot is None:
         return _base.JobResult(
-            True, f"(compose-closer skipped — {reason})",
-            data={"skipped": False, "closer_written": False},
+            True, f"(compose-echoes skipped — {reason})",
+            data={"echoes_written": False},
         )
 
     asset = f"{n}/closer.md"
     try:
         with _base.job_lock([asset], NAME):
             try:
-                base_prompt = anthropic_client.load_prompt("eddy-compose-closer")
+                base_prompt = anthropic_client.load_prompt("eddy-compose-echoes")
             except OSError as exc:
-                logger.warning("compose-closer: prompt missing: %s", exc)
+                logger.warning("compose-echoes: prompt missing: %s", exc)
                 return _base.JobResult(
-                    False, f"❌ compose-closer prompt missing: `{exc}`",
+                    False, f"❌ compose-echoes prompt missing: `{exc}`",
                 )
 
             prior = await asyncio.to_thread(_prior_closers, n)
@@ -491,17 +481,18 @@ async def run(
                     n,
                 )
             except thingy_retrieve.ThingyRetrieveError as exc:
-                # Fail loud — quality bar requires real semantic
-                # retrieval. The closer is an optional section, so a
-                # retrieval outage just blocks this one job; the rest
-                # of create-final keeps moving (final.md without a
-                # The Closer section is a valid issue shape).
+                # Fail loud — Echoes is mandatory and its quality bar
+                # requires real semantic retrieval. Surface the failure
+                # so mark-built can log it; the rest of the Publish
+                # phase still proceeds (downstream prompts degrade
+                # gracefully on missing closer.md), but the operator
+                # should know Echoes is missing for this issue.
                 msg = (
-                    f"❌ compose-closer for WT{n}: Thingy retrieval unavailable "
-                    f"(`{exc}`). Closer skipped — final.md will assemble without "
-                    f"a The Closer section."
+                    f"❌ compose-echoes for WT{n}: Thingy retrieval unavailable "
+                    f"(`{exc}`). Echoes section will be missing from this issue "
+                    f"unless re-run via `/eddy issue echoes` once retrieval recovers."
                 )
-                logger.warning("compose-closer thingy_retrieve failed: %s", exc)
+                logger.warning("compose-echoes thingy_retrieve failed: %s", exc)
                 await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
                 return _base.JobResult(
                     False, msg,
@@ -510,6 +501,10 @@ async def run(
             anniversaries = await asyncio.to_thread(
                 _anniversary_candidates, publish_date, n,
             )
+            # The thesis is written first at mark-built (compose-thesis).
+            # Read it as the editorial anchor — Echoes echoes specifically
+            # what THIS issue is doing, not generic surface matches.
+            thesis_text = await asyncio.to_thread(_read_thesis, n)
             user_body = _build_user_message(
                 issue_number=n,
                 publish_date=publish_date,
@@ -517,43 +512,27 @@ async def run(
                 prior=prior,
                 passages=passages,
                 anniversaries=anniversaries,
+                thesis=thesis_text,
             )
             user_msg = f"{base_prompt}\n\n---\n\n{user_body}"[: _llm_job.CREATE_FINAL_BODY_CAP]
 
-            with db.AgentRun("eddy", trigger="compose-closer") as agent_run:
-                reply, meta = await bot.core(latest=user_msg, history=[], model="sonnet")
+            with db.AgentRun("eddy", trigger="compose-echoes") as agent_run:
+                # Opus override — Echoes is a once-per-issue voice surface
+                # in Thingy's distinct librarian voice, with archive
+                # citations that need to be earned. Cost is ~$5/yr more
+                # than Sonnet for the quality differential.
+                reply, meta = await bot.core(latest=user_msg, history=[], model="opus")
                 agent_run.record_meta(meta)
                 agent_run.records_written = 1 if reply else 0
 
             if not reply or not reply.strip():
-                msg = f"❌ compose-closer for WT{n}: empty reply from Eddy."
+                msg = f"❌ compose-echoes for WT{n}: empty reply from Eddy."
                 await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
                 return _base.JobResult(False, msg, data={"issue_number": n})
 
-            if _is_skip(reply):
-                # Don't write closer.md — create-final's assembler will
-                # render final.md without a The Closer section.
-                # Also clean up any prior closer.md so the issue's
-                # current state reflects the SKIP.
-                try:
-                    s3.delete_issue_file(n, "closer.md")
-                except Exception:  # noqa: BLE001 — closer.md may not exist
-                    pass
-                local_closer = ISSUES_ROOT / str(n) / "closer.md"
-                if local_closer.exists():
-                    try:
-                        local_closer.unlink()
-                    except OSError:
-                        pass
-                msg = f"📭 compose-closer for **WT{n}**: SKIP (no archive resonance this issue)."
-                await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
-                return _base.JobResult(
-                    True, msg, data={"issue_number": n, "skipped": True, "closer_written": False},
-                )
-
             text = _clean_closer(reply)
             if not text:
-                msg = f"❌ compose-closer for WT{n}: reply was empty after cleanup."
+                msg = f"❌ compose-echoes for WT{n}: reply was empty after cleanup."
                 await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
                 return _base.JobResult(False, msg, data={"issue_number": n})
 
@@ -561,28 +540,42 @@ async def run(
             # model didn't wrap in a markdown link itself.
             text = _linkify_archive_refs(text)
 
-            # Write to S3 workspace + mirror locally (the create-final +
-            # ship paths read from local).
+            # Write to S3 workspace + mirror locally (the ship paths read
+            # from local). On-disk filename stays closer.md.
             s3.write_issue_file(n, "closer.md", text + "\n")
             local_dir = ISSUES_ROOT / str(n)
             local_dir.mkdir(parents=True, exist_ok=True)
             (local_dir / "closer.md").write_text(text + "\n", encoding="utf-8")
     except _base.JobLocked as exc:
         return _base.JobResult(
-            False, f"⏳ `compose-closer` already running ({exc.holder_desc}).",
+            False, f"⏳ `compose-echoes` already running ({exc.holder_desc}).",
         )
 
     word_count = len(text.split())
     msg = (
-        f"📚 compose-closer for **WT{n}**: {word_count}-word Echoes note written.\n"
+        f"📚 compose-echoes for **WT{n}**: {word_count}-word Echoes note written.\n"
         f"> {text}"
     )
     await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
     return _base.JobResult(
         True,
-        f"compose-closer for WT{n}: written ({word_count} words).",
+        f"compose-echoes for WT{n}: written ({word_count} words).",
         data={
-            "issue_number": n, "skipped": False, "closer_written": True,
-            "closer": text, "word_count": word_count,
+            "issue_number": n, "echoes_written": True,
+            "echoes": text, "word_count": word_count,
         },
     )
+
+
+def _read_thesis(issue_number: int) -> str:
+    """Read ``atoms/thesis.md`` for the issue; return empty if missing.
+
+    Compose-echoes is informed by the thesis (the editorial framing
+    written at mark-built, just before this job fires). When the thesis
+    is missing — e.g. compose-thesis failed earlier in mark-built, or
+    Jamie re-fires compose-echoes on a legacy issue without a thesis
+    — degrade gracefully to body-only context."""
+    res = s3.read_issue_file(issue_number, "thesis.md")
+    if res.get("found") and isinstance(res.get("text"), str):
+        return res["text"].strip()
+    return ""
