@@ -1322,6 +1322,71 @@ class ParseSignalTests(unittest.TestCase):
         self.assertEqual(pinboard_scan._parse_signal("Fetch_Failed: mixed")[0], "fail")
 
 
+class CadenceThrottleTests(unittest.TestCase):
+    """``_throttle`` enforces Pinboard's documented per-family cadence.
+    Standard (3s) sleeps the gap; ``all`` (5min) warns only — sleeping 5
+    minutes papering over a clustering bug would block the event loop."""
+
+    def setUp(self):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        # Snapshot + clear so tests don't bleed into each other (or into
+        # the rest of the suite that might call client._get).
+        self._saved = dict(pbc._last_request_at)
+        pbc._last_request_at.clear()
+
+    def tearDown(self):
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        pbc._last_request_at.clear()
+        pbc._last_request_at.update(self._saved)
+
+    def test_standard_sleeps_to_satisfy_cadence(self):
+        import time as _time
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        # Pretend the previous standard call was 0.5s ago — needs ~2.5s sleep.
+        pbc._last_request_at["standard"] = _time.monotonic() - 0.5
+        with patch.object(pbc.time, "sleep") as sleep_mock:
+            pbc._throttle("standard")
+        sleep_mock.assert_called_once()
+        waited = sleep_mock.call_args.args[0]
+        self.assertGreater(waited, 2.0)
+        self.assertLessEqual(waited, 3.0)
+
+    def test_standard_no_sleep_when_outside_cadence(self):
+        import time as _time
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        pbc._last_request_at["standard"] = _time.monotonic() - 5.0  # 5s ago
+        with patch.object(pbc.time, "sleep") as sleep_mock:
+            pbc._throttle("standard")
+        sleep_mock.assert_not_called()
+
+    def test_all_family_warns_but_does_not_sleep(self):
+        """The 5-min cap on ``/posts/all`` is too long to paper over with
+        sleep — a structural fix is the right response. ``_throttle``
+        warns and proceeds."""
+        import time as _time
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        pbc._last_request_at["all"] = _time.monotonic() - 1.0  # 1s ago
+        with patch.object(pbc.time, "sleep") as sleep_mock, \
+             patch.object(pbc.logger, "warning") as warn_mock:
+            pbc._throttle("all")
+        sleep_mock.assert_not_called()
+        warn_mock.assert_called_once()
+        # logger.warning is called as logger.warning(fmt, *args); the family
+        # name lands as the first formatting argument, not in the template.
+        args = warn_mock.call_args.args
+        self.assertEqual(args[1], "all")
+
+    def test_first_call_no_throttle(self):
+        """A fresh process has no prior call to compare against — no sleep,
+        no warning."""
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        with patch.object(pbc.time, "sleep") as sleep_mock, \
+             patch.object(pbc.logger, "warning") as warn_mock:
+            pbc._throttle("standard")
+        sleep_mock.assert_not_called()
+        warn_mock.assert_not_called()
+
+
 class PinboardClientNewVerbsTests(unittest.TestCase):
     def test_capture_blurb_merges_tags_and_clears_toread(self):
         from apps.workshop_bot.systems.pinboard import client as pbc

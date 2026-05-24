@@ -136,5 +136,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         f"_({counts['skipped']} already filed; next `pinboard-scan` surfaces them as toread cards.)_"
     )
     summary = "\n".join(msg_lines)
-    await ctx.post("DISCORD_CHANNEL_RESEARCH", summary, persona="linky")
+    # Status, not actionable: the bookmarks are already in Pinboard; they
+    # surface as #research toread cards on the next pinboard-scan, which
+    # is where Jamie acts on them. The ingest summary is "I just did X" —
+    # belongs in #chatter, not #research.
+    await ctx.post("DISCORD_CHANNEL_CHATTER", summary, persona="linky")
     return _base.JobResult(True, summary, data=counts)

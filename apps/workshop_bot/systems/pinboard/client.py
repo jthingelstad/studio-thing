@@ -34,12 +34,22 @@ API_BASE = "https://api.pinboard.in/v1"
 POPULAR_FEED = "https://feeds.pinboard.in/rss/popular/"
 
 # Documented Pinboard cadence caps (seconds between calls per endpoint
-# family). Used for *logging* only — we don't block. See
-# https://www.pinboard.in/api/ "Rate Limits".
+# family). See https://www.pinboard.in/api/ "Rate Limits".
 _CADENCE_SECONDS: dict[str, float] = {
     "all": 5 * 60.0,       # /posts/all — 1 call / 5 min
     "recent": 60.0,        # /posts/recent — 1 call / min
     "standard": 3.0,       # everything else — 1 call / 3 sec
+}
+
+# How long ``_throttle`` is willing to ``time.sleep`` to satisfy the
+# documented cadence. When the required wait exceeds the cap we log a
+# warning and proceed — that's a signal the call pattern is wrong
+# (e.g. two ``/posts/all`` calls in a single job), not something
+# ``time.sleep`` should paper over by blocking a thread for minutes.
+_CADENCE_SLEEP_CAP: dict[str, float] = {
+    "all": 0.0,            # 5-min cap — never sleep; warn so the structural fix surfaces
+    "recent": 5.0,         # 60s cap — sleep up to 5s, else warn
+    "standard": 5.0,       # 3s cap — always sleep the gap (≤3s)
 }
 _last_request_at: dict[str, float] = {}
 
@@ -74,23 +84,38 @@ def bookmark_url(url: str) -> str:
     return f"https://pinboard.in/u:{user}/b:{h}/"
 
 
-def _note_cadence(family: str) -> None:
-    """Log if we're calling ``family`` faster than the documented cadence."""
+def _throttle(family: str) -> None:
+    """Enforce Pinboard's documented cadence for ``family`` — sleep when the
+    previous call to the same family was too recent, capped per-family by
+    ``_CADENCE_SLEEP_CAP``. When the required wait exceeds the cap, log a
+    warning and proceed (the call pattern is structurally wrong; we don't
+    want to block a thread for minutes papering over it).
+
+    Family policy today: ``standard`` (3s cap) always sleeps the gap
+    (≤3s); ``recent`` (60s cap) sleeps up to 5s, warns past that;
+    ``all`` (5min cap) never sleeps, warn only.
+    """
     cap = _CADENCE_SECONDS.get(family, _CADENCE_SECONDS["standard"])
+    sleep_cap = _CADENCE_SLEEP_CAP.get(family, _CADENCE_SLEEP_CAP["standard"])
     now = time.monotonic()
     last = _last_request_at.get(family)
-    if last is not None and (now - last) < cap:
-        logger.warning(
-            "pinboard: %s called %.1fs after previous call (documented cadence: %.0fs)",
-            family, now - last, cap,
-        )
-    _last_request_at[family] = now
+    if last is not None:
+        wait = cap - (now - last)
+        if wait > 0:
+            if wait <= sleep_cap:
+                time.sleep(wait)
+            else:
+                logger.warning(
+                    "pinboard: %s called %.1fs after previous call (documented cadence: %.0fs)",
+                    family, now - last, cap,
+                )
+    _last_request_at[family] = time.monotonic()
 
 
 def _get(path: str, params: dict[str, Any], *, family: str = "standard",
          timeout: float = 20.0) -> requests.Response:
-    """GET a v1 endpoint, log cadence violations, surface 429 Retry-After."""
-    _note_cadence(family)
+    """GET a v1 endpoint, throttle/log cadence, surface 429 Retry-After."""
+    _throttle(family)
     resp = requests.get(f"{API_BASE}{path}", params=params, timeout=timeout)
     if resp.status_code == 429:
         retry_after = resp.headers.get("Retry-After", "?")
