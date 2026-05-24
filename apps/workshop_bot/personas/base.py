@@ -244,11 +244,17 @@ class PersonaBot(discord.Client):
     async def core(
         self,
         *,
-        latest: str,
+        latest: "str | list[dict[str, Any]]",
         history: Optional[list[dict[str, str]]] = None,
         model: Optional[str] = None,
     ) -> tuple[str, dict[str, Any]]:
         """Single source of truth for a persona turn.
+
+        ``latest`` is the user-message payload — typically a plain string,
+        but callers can pass a list of Anthropic content blocks when they
+        want to mark a stable leading block with ``cache_control`` (e.g.
+        ``_draft_review`` parks its multi-KB review prompt in its own
+        cached block).
 
         Pulls the full tool surface from ``deps.registry``; every persona
         sees every tool. Lane discipline is enforced by the persona prompt.
@@ -261,9 +267,15 @@ class PersonaBot(discord.Client):
         ``archive__get_issue`` / ``archive__quote_search`` for deeper
         retrieval. ``team.md`` directs the model at the tool surface.
         """
+        if isinstance(latest, str):
+            payload: "str | list[dict[str, Any]]" = (
+                latest or "(no new content; continue from history)"
+            )
+        else:
+            payload = latest
         return await agent_loop.run_async(
             persona=self.persona,
-            user_message=latest or "(no new content; continue from history)",
+            user_message=payload,
             history=history or [],
             tools=self.deps.registry.names_for(self.persona),
             deps=self.deps,

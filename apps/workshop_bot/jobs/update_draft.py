@@ -477,14 +477,25 @@ async def _draft_review(
         ),
         error=echo_error,
     )
-    user_msg = (
-        f"{context.render_block(eddy_ctx)}\n\n{prompt}\n\n"
+    # Cache-friendly user message: parks the static review prompt
+    # (~3.3K tokens, byte-identical run-to-run) in its own content block
+    # with a ``cache_control`` marker, so daily refreshes pay cache_read
+    # rates on it (~$1.50/Mtok on Opus instead of $15/Mtok input). The
+    # dynamic context block (date, word counts, target IDs, archive
+    # echoes, draft body) follows the cached block and is never cached
+    # itself — but that's the part that legitimately changes each run.
+    dynamic_block = (
+        f"{context.render_block(eddy_ctx)}\n\n"
         f"---\n\n## Review target IDs\n\n"
         f"Use these IDs for hidden drawer connectors when a comment points at a specific place:\n\n"
         f"{target_legend}\n\n"
         f"---\n\n{echo_block}\n\n"
         f"---\n\nThe current draft (WT{n}):\n\n```markdown\n{draft_text}\n```"
     )
+    user_msg = [
+        {"type": "text", "text": prompt, "cache_control": {"type": "ephemeral"}},
+        {"type": "text", "text": dynamic_block},
+    ]
     with db.AgentRun("eddy", trigger="update-draft:html-review") as run:
         answer, _m = await eddy.core(latest=user_msg, history=[], model=_draft_review_model())
         run.record_meta(_m)

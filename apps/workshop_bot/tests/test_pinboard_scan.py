@@ -1161,10 +1161,10 @@ class ChatterSummaryTests(_DBTestCase):
 
 
 class PerLinkModelSelectionTests(_DBTestCase):
-    """The per-link LLM call uses Linky's persona default
-    (``preferred_model = "sonnet"``) for every source — no per-call
-    override is passed. These tests pin that contract so a future
-    accidental ``model=`` re-introduction in pinboard_scan is caught."""
+    """Per-link model selection is per-source: discovery items use
+    Linky's persona default (Haiku — high-volume, mostly-SKIP lane);
+    ``toread`` items override to Sonnet — Jamie's own picks where
+    research-card quality matters. These tests pin the split."""
 
     def _ctx_and_team(self, replies=None):
         team = _FakeLinkyTeam(replies=replies)
@@ -1195,10 +1195,10 @@ class PerLinkModelSelectionTests(_DBTestCase):
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
 
             os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
-        # No model kwarg passed — persona default (Sonnet) kicks in.
-        self.assertNotIn("model", team.linky.core.call_args.kwargs)
+        # Discovery items pass model=None — persona default (Haiku) kicks in.
+        self.assertIsNone(team.linky.core.call_args.kwargs.get("model"))
 
-    def test_toread_source_uses_default_model(self):
+    def test_toread_source_overrides_to_sonnet(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
 
         os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
@@ -1221,8 +1221,9 @@ class PerLinkModelSelectionTests(_DBTestCase):
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
 
             os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
-        # Same default-model contract as discovery — no per-call override.
-        self.assertNotIn("model", team.linky.core.call_args.kwargs)
+        # Toread items override to Sonnet — Jamie's own picks where
+        # research-card quality matters.
+        self.assertEqual(team.linky.core.call_args.kwargs.get("model"), "sonnet")
 
 
 class ParseSignalTests(unittest.TestCase):

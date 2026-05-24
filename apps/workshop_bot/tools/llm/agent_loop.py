@@ -32,7 +32,7 @@ import json
 import logging
 import os
 import time
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from . import agent_tools, anthropic_client
 
@@ -60,7 +60,19 @@ def _owner_mention_block() -> Optional[str]:
 
 
 def _build_system_blocks(persona: str) -> list[dict[str, Any]]:
-    """[team] [owner?] [persona] — cache marker on team.
+    """[team] [owner?] [persona] — cache marker on team AND persona.
+
+    Two cache markers cover two breakpoints: the team prompt alone (the
+    floor — shared across all personas) and team+owner+persona together
+    (the typical hit — re-use across consecutive calls from the same
+    persona). Anthropic returns a hit on the longest prefix it can match,
+    so when the persona's prompt is also stable, callers pay cache_read
+    rates on the whole system block instead of input rates on the
+    persona portion. The persona prompt is ~1.5-2.7K tokens; this is
+    a meaningful win for Eddy/Marky who run Opus/Sonnet. Linky on
+    Haiku may not benefit — Haiku's cache minimum is ~2K tokens and
+    Linky's prompt is just under, so the longer prefix may not cache.
+    The team prompt (~4K tokens) caches regardless.
 
     Note: an earlier version of this function also accepted an
     ``issue_index`` block — a pre-rendered one-line-per-issue cheat
@@ -81,7 +93,11 @@ def _build_system_blocks(persona: str) -> list[dict[str, Any]]:
     owner = _owner_mention_block()
     if owner:
         blocks.append({"type": "text", "text": owner})
-    blocks.append({"type": "text", "text": anthropic_client.load_prompt(persona)})
+    blocks.append({
+        "type": "text",
+        "text": anthropic_client.load_prompt(persona),
+        "cache_control": {"type": "ephemeral"},
+    })
     return blocks
 
 
@@ -185,14 +201,21 @@ def _accumulate_usage(total: dict[str, int], usage: Any) -> None:
 def run(
     *,
     persona: str,
-    user_message: str,
+    user_message: Union[str, list[dict[str, Any]]],
     history: Optional[list[dict[str, Any]]] = None,
     tools: list[str],
     deps: Any,
     model: Optional[str] = None,
     max_iterations: int = DEFAULT_MAX_ITERATIONS,
 ) -> tuple[str, dict[str, Any]]:
-    """Run a tool-using turn. Returns (final_text, metadata)."""
+    """Run a tool-using turn. Returns (final_text, metadata).
+
+    ``user_message`` accepts either a plain string (the common case) or a
+    list of Anthropic content blocks (``[{"type": "text", "text": "...",
+    "cache_control": {"type": "ephemeral"}}, ...]``) when a caller wants
+    to place a per-call cache breakpoint on a stable leading block (e.g.
+    ``_draft_review`` parks its multi-KB review prompt in a cached block
+    so the daily run benefits from prompt caching too)."""
     history = list(history or [])
     chosen_model = anthropic_client.MODELS[
         model or anthropic_client.default_model()
@@ -294,7 +317,7 @@ def run(
 async def run_async(
     *,
     persona: str,
-    user_message: str,
+    user_message: Union[str, list[dict[str, Any]]],
     history: Optional[list[dict[str, Any]]] = None,
     tools: list[str],
     deps: Any,

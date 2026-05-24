@@ -528,13 +528,18 @@ async def _research_one(
     the per-link LLM usage is accumulated into it so the outer row's
     token columns sum across every link this scan processed.
 
-    Model selection: Linky's persona default (``preferred_model``)
-    governs every call — no per-source override here."""
+    Model selection: ``toread`` items (Jamie's own Pinboard picks +
+    Feedbin starred mirror) override to Sonnet — these are picks he's
+    already committed to and the research-card quality matters. Every
+    other source (discovery feeds, e.g. Pinboard popular) uses Linky's
+    persona default (Haiku) — discovery items are mostly SKIPs and the
+    volume × per-link cost is the bigger spend, so we economize there."""
     url = item.get("url") or ""
     item_block = _format_user_msg(source=source, item=item, corpus=corpus)
     user_msg = f"{linky_ctx_block}\n\n{prompt}\n\n{item_block}"
+    model_override = "sonnet" if source == "toread" else None
     try:
-        answer, _meta = await linky.core(latest=user_msg, history=[])
+        answer, _meta = await linky.core(latest=user_msg, history=[], model=model_override)
     except Exception as exc:  # noqa: BLE001
         logger.warning("pinboard-scan: per-link LLM call failed for %s: %s", url, exc)
         return "fail", f"LLM error: {type(exc).__name__}"

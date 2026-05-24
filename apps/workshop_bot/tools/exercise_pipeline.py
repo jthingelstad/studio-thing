@@ -286,7 +286,7 @@ async def _noop_async(*args, **kwargs):
 # harness's --model preferred mode matches what production uses.
 PERSONA_PREFERRED_MODEL = {
     "eddy": "opus",
-    "linky": "sonnet",
+    "linky": "haiku",
     "marky": "sonnet",
     "patty": "sonnet",
 }
@@ -346,8 +346,8 @@ def make_ctx(channels_by_env: dict[str, CapturingChannel], *, model_mode: str) -
     channels keyed by the channel env var the job asks for.
 
     ``model_mode`` is one of ``"preferred"`` (each bot uses its
-    production preferred_model — opus for Eddy, sonnet for the others)
-    or any model alias from ``anthropic_client.MODELS`` (``"haiku"``,
+    production preferred_model — see ``PERSONA_PREFERRED_MODEL``) or
+    any model alias from ``anthropic_client.MODELS`` (``"haiku"``,
     ``"sonnet"``, ``"opus"``) which forces every bot onto that model."""
     eddy_channel = channels_by_env.get("DISCORD_CHANNEL_EDITORIAL")
     patty_channel = channels_by_env.get("DISCORD_CHANNEL_SUPPORTERS")
@@ -607,9 +607,9 @@ def main() -> int:
         default="haiku",
         choices=("haiku", "sonnet", "opus", "preferred"),
         help=("model alias for every bot.core call. 'preferred' mirrors "
-              "PersonaBot.preferred_model (opus for eddy, sonnet for the "
-              "others) — closest match to a real prod run; default haiku "
-              "is the cheap-fast option for plumbing-only tests."),
+              "PersonaBot.preferred_model — see PERSONA_PREFERRED_MODEL. "
+              "Closest match to a real prod run; default haiku is the "
+              "cheap-fast option for plumbing-only tests."),
     )
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
