@@ -399,6 +399,7 @@ def _gather_candidates() -> tuple[
     list[dict[str, Any]],   # fresh discovery items (priority-ordered, co_sources merged)
     list[dict[str, Any]],   # uplift discovery items (already capped)
     dict[str, int],         # raw counts per source (for the "considered" log line)
+    dict[str, Exception],   # per-source fetch errors (empty when all feeds healthy)
 ]:
     """Pull every discovery feed + the toread lane in one blocking pass,
     then classify each discovery item into fresh / uplift / drop:
@@ -422,6 +423,7 @@ def _gather_candidates() -> tuple[
         toread = []
 
     raw_counts: dict[str, int] = {}
+    fetch_errors: dict[str, Exception] = {}
     # Two scan-level maps keyed by dedup_key:
     fresh_by_key: dict[str, dict[str, Any]] = {}
     uplift_by_key: dict[str, dict[str, Any]] = {}
@@ -437,6 +439,7 @@ def _gather_candidates() -> tuple[
         except Exception as exc:  # noqa: BLE001
             logger.warning("pinboard-scan: %s feed pull failed: %s", spec.name, exc)
             raw_counts[spec.name] = 0
+            fetch_errors[spec.name] = exc
             continue
         raw_counts[spec.name] = len(raw)
 
@@ -507,7 +510,7 @@ def _gather_candidates() -> tuple[
     # the items we actually process, so the excess naturally rolls into
     # the next scan.
     uplift_items = list(uplift_by_key.values())[:_uplift_cap()]
-    return toread, fresh_items, uplift_items, raw_counts
+    return toread, fresh_items, uplift_items, raw_counts, fetch_errors
 
 
 # ---------- per-link runtime ----------
@@ -662,6 +665,16 @@ def _suppress_non_article_embeds(payload: str, article_url: str) -> str:
     return _BARE_URL_RE.sub(_wrap_bare, payload)
 
 
+def _bump(counters: dict, key: str, source: str) -> None:
+    """Increment the global counter and the per-source counter in one call.
+    ``counters`` carries the existing flat keys (``posted`` / ``skip`` /
+    ``fail`` / ``uplift``) plus a ``by_source`` nested map used by the
+    #chatter summary."""
+    counters[key] = counters.get(key, 0) + 1
+    by = counters.setdefault("by_source", {}).setdefault(source, {})
+    by[key] = by.get(key, 0) + 1
+
+
 async def _process_one(
     *, ctx: "_base.JobContext", linky, prompt: str, linky_ctx_block: str,
     source: str, item: dict[str, Any], counters: dict[str, int],
@@ -692,7 +705,7 @@ async def _process_one(
     )
     if kind == "fail":
         # Don't mark seen — retry next scan.
-        counters["fail"] += 1
+        _bump(counters, "fail", source)
         logger.info("pinboard-scan: %s [%s] -> FETCH_FAILED: %s", source, url, payload[:100])
         return
     if kind == "skip":
@@ -711,7 +724,7 @@ async def _process_one(
                 _safe_mark_popular_seen(
                     url, title, interesting=False, note=payload, source=source,
                 )
-        counters["skip"] += 1
+        _bump(counters, "skip", source)
         logger.info("pinboard-scan: %s [%s] -> SKIP: %s%s",
                     source, url, "(uplift) " if is_uplift else "", payload[:100])
         return
@@ -736,7 +749,7 @@ async def _process_one(
     )
     if msg is None:
         # Channel not resolvable; don't mark anything — try again next scan.
-        counters["fail"] += 1
+        _bump(counters, "fail", source)
         logger.warning("pinboard-scan: send_one returned None for %s [%s]", source, url)
         return
     try:
@@ -763,9 +776,9 @@ async def _process_one(
             url, title, interesting=True,
             note=f"card posted ({source})", source=source,
         )
-    counters["posted"] += 1
+    _bump(counters, "posted", source)
     if is_uplift:
-        counters["uplift"] = counters.get("uplift", 0) + 1
+        _bump(counters, "uplift", source)
     logger.info("pinboard-scan: %s [%s] -> posted card msg=%s%s",
                 source, url, msg.id, " (uplift)" if is_uplift else "")
 
@@ -797,6 +810,41 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         )
 
 
+async def _post_chatter_summary(
+    ctx: "_base.JobContext",
+    *,
+    raw_counts: dict[str, int],
+    fetch_errors: dict[str, Exception],
+    counters: dict[str, Any],
+) -> None:
+    """One-line scan summary to #chatter so Jamie has visibility into Linky's
+    activity even on quiet scans. Focused on the popular feed (today's only
+    active discovery source): feed health when down, review counts when up.
+    Best-effort — never raises."""
+    try:
+        if "popular" in fetch_errors:
+            err_name = type(fetch_errors["popular"]).__name__
+            msg = (
+                f"⚠️ Linky: popular feed unreachable ({err_name}) "
+                f"— Discovery skipped this scan."
+            )
+        else:
+            by_pop = counters.get("by_source", {}).get("popular", {})
+            reviewed = by_pop.get("posted", 0) + by_pop.get("skip", 0) + by_pop.get("fail", 0)
+            if reviewed == 0:
+                msg = "🪶 Linky: popular — nothing new to review."
+            else:
+                posted = by_pop.get("posted", 0)
+                skipped = by_pop.get("skip", 0)
+                msg = (
+                    f"🪶 Linky: popular — {reviewed} reviewed "
+                    f"({posted} posted, {skipped} skipped)."
+                )
+        await ctx.post("DISCORD_CHANNEL_CHATTER", msg, persona="linky")
+    except Exception:  # noqa: BLE001
+        logger.exception("pinboard-scan: chatter summary post failed")
+
+
 async def _run_locked(ctx: "_base.JobContext", linky) -> "_base.JobResult":
     # Load the per-link prompt + the dynamic context once per scan; both
     # apply identically to every candidate this scan considers.
@@ -812,10 +860,14 @@ async def _run_locked(ctx: "_base.JobContext", linky) -> "_base.JobResult":
     linky_ctx_block = context.render_block(linky_ctx)
 
     # Gather toread + every discovery feed in one blocking pass.
-    toread, fresh_items, uplift_items, raw_counts = await asyncio.to_thread(
+    toread, fresh_items, uplift_items, raw_counts, fetch_errors = await asyncio.to_thread(
         _gather_candidates,
     )
     if not toread and not fresh_items and not uplift_items:
+        await _post_chatter_summary(
+            ctx, raw_counts=raw_counts, fetch_errors=fetch_errors,
+            counters={"by_source": {}},
+        )
         return _base.JobResult(
             True, "Linky: nothing new in any source — PASS.", data={"posted": 0},
         )
@@ -873,6 +925,9 @@ async def _run_locked(ctx: "_base.JobContext", linky) -> "_base.JobResult":
     summary_tail = (
         f"{counters['skip']} skip, {counters['fail']} retry"
         + (f", {', '.join(summary_extras)}" if summary_extras else "")
+    )
+    await _post_chatter_summary(
+        ctx, raw_counts=raw_counts, fetch_errors=fetch_errors, counters=counters,
     )
     if counters["posted"] == 0:
         return _base.JobResult(

@@ -62,6 +62,19 @@ def _deps_with_linky_team(team):
 
 
 class PinboardScanJobTests(_DBTestCase):
+    def setUp(self):
+        super().setUp()
+        # The pinboard-scan chatter summary posts to #chatter when the env
+        # var resolves. Pop it for the default-path tests so prior tests
+        # that loaded the runtime env can't bleed through; individual tests
+        # that exercise the chatter post set it explicitly.
+        self._chatter_orig = os.environ.pop("DISCORD_CHANNEL_CHATTER", None)
+
+    def tearDown(self):
+        if self._chatter_orig is not None:
+            os.environ["DISCORD_CHANNEL_CHATTER"] = self._chatter_orig
+        super().tearDown()
+
     def _ctx_and_team(self, replies=None):
         team = _FakeLinkyTeam(replies=replies)
         return _base.JobContext(deps=_deps_with_linky_team(team)), team
@@ -1059,6 +1072,92 @@ class PinboardScanJobTests(_DBTestCase):
         # was beyond the cap — does NOT have one yet.
         recorded = [u for u in urls if db.feed_has_seen(url=u, source="popular")]
         self.assertEqual(len(recorded), 5)
+
+
+class ChatterSummaryTests(_DBTestCase):
+    """The pinboard-scan chatter summary posts one line to #chatter so
+    Jamie has visibility into Linky's activity even on quiet scans. Two
+    shapes worth covering: feed-down (operator alert) and feed-up with
+    review counts."""
+
+    def _ctx_and_team(self):
+        team = _FakeLinkyTeam()
+        return _base.JobContext(deps=_deps_with_linky_team(team)), team
+
+    def test_feed_down_posts_unreachable_to_chatter(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "1"
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "1"
+        os.environ["DISCORD_CHANNEL_CHATTER"] = "2"
+        ctx, team = self._ctx_and_team()
+        from apps.workshop_bot.systems.pinboard import client as pbc
+
+        def _boom(limit=30):
+            raise RuntimeError("Read timed out")
+
+        patches = [
+            patch.object(pbc, "popular", _boom),
+            patch.object(pbc, "toread_public_unresearched", lambda limit=25: []),
+        ]
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            for k in ("DISCORD_CHANNEL_RESEARCH", "DISCORD_CHANNEL_DISCOVERY",
+                      "DISCORD_CHANNEL_CHATTER"):
+                os.environ.pop(k, None)
+        self.assertTrue(result.ok)
+        # Exactly one channel.send awaited — the chatter post (no card sends).
+        team.channel.send.assert_awaited_once()
+        sent = team.channel.send.await_args_list[0].args[0]
+        self.assertIn("⚠️", sent)
+        self.assertIn("popular feed unreachable", sent)
+        self.assertIn("RuntimeError", sent)
+
+    def test_healthy_scan_posts_review_counts(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "1"
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "1"
+        os.environ["DISCORD_CHANNEL_CHATTER"] = "2"
+        ctx, team = self._ctx_and_team()
+        # Override the team's linky.core to drive a posted + a skip outcome.
+        team.linky.core.side_effect = [
+            ("**[Card](https://a.example/1)** — looks good", {"iterations": 1}),
+            ("SKIP: meh", {"iterations": 1}),
+        ]
+        from apps.workshop_bot.systems.pinboard import client as pbc
+        popular_items = [
+            {"url": "https://a.example/1", "title": "One"},
+            {"url": "https://b.example/2", "title": "Two"},
+        ]
+        patches = [
+            patch.object(pbc, "popular", lambda limit=30: list(popular_items)),
+            patch.object(pbc, "toread_public_unresearched", lambda limit=25: []),
+        ]
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            for k in ("DISCORD_CHANNEL_RESEARCH", "DISCORD_CHANNEL_DISCOVERY",
+                      "DISCORD_CHANNEL_CHATTER"):
+                os.environ.pop(k, None)
+        self.assertTrue(result.ok)
+        # 1 card-channel send (the SKIP'd item doesn't post) + 1 chatter send.
+        self.assertEqual(team.channel.send.await_count, 2)
+        # The chatter post is the last send.
+        chatter = team.channel.send.await_args_list[-1].args[0]
+        self.assertIn("🪶", chatter)
+        self.assertIn("popular", chatter)
+        self.assertIn("2 reviewed", chatter)
+        self.assertIn("1 posted, 1 skipped", chatter)
 
 
 class PerLinkModelSelectionTests(_DBTestCase):
