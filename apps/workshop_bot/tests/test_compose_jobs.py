@@ -510,7 +510,7 @@ class CreateFinalTests(_DBTestCase):
     # issue_items.position in the DB. Tests verify row positions
     # rather than file bytes.
 
-    def test_accept_mutates_row_order_and_writes_thesis(self):
+    def test_accept_mutates_row_order(self):
         from apps.workshop_bot.tools import issue_items
         # Reorder: notable [n2, n1], leave brief + journal identity.
         ctx, fc = self._setup(self._basic_reply(notable_order=("n2", "n1")))
@@ -521,11 +521,11 @@ class CreateFinalTests(_DBTestCase):
         notable_rows = issue_items.list_items(458, section="notable")
         urls = [r["url"] for r in notable_rows]
         self.assertEqual(urls, ["http://b", "http://a"])
-        # thesis.md still written (consumed by compose-meta/compose-haiku/closer).
-        self.assertIn("Test thesis for the issue.", self.ws.files[(458, "thesis.md")])
-        # final.md is no longer written.
+        # thesis.md is NOT written here — that moved to compose-thesis
+        # at mark-built (Build → Publish transition).
+        self.assertNotIn((458, "thesis.md"), self.ws.files)
+        # final.md is no longer written either.
         self.assertNotIn((458, "final.md"), self.ws.files)
-        self.assertTrue(result.data["thesis_written"])
 
     def test_reject_leaves_rows_unchanged(self):
         from apps.workshop_bot.tools import issue_items
@@ -588,8 +588,8 @@ class CreateFinalTests(_DBTestCase):
         # journal_order; Journal is no longer reordered, so the auto-fix
         # path now only applies to Notable and Brief. Same shape: Eddy
         # drops an id, the auto-fix appends it in original order and
-        # accepts the rest of the proposal so thesis + membership-block
-        # placement aren't lost to a passthrough fallback.
+        # accepts the rest of the proposal — preserving the reorder
+        # rather than passing through.
         bad = self._basic_reply(notable_order=("n1",))  # n2 dropped
         ctx, fc = self._setup(bad)
         # Mock compose_closer.run for the same reason as the previous test —
@@ -598,9 +598,6 @@ class CreateFinalTests(_DBTestCase):
              patch.object(compose_closer, "run", new=AsyncMock(return_value=_base.JobResult(True, "ok", data={"skipped": True}))):
             result = asyncio.run(create_final.run(ctx))
         self.assertTrue(result.ok, result.message)
-        # Auto-fix path — thesis written (real proposal accepted, not the
-        # passthrough fallback which writes no thesis).
-        self.assertIn((458, "thesis.md"), self.ws.files)
         # The user-visible auto-fix note hit #editorial.
         sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
         self.assertTrue(

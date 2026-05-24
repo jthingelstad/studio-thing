@@ -7,7 +7,6 @@ response:
 
 ```json
 {
-  "thesis": "…",
   "notable_order": ["n3", "n1", "n2", "n4"],
   "brief_order":   ["b2", "b1", "b4", "b3"]
 }
@@ -20,18 +19,23 @@ Apply step is row mutations:
 2. Map each synthetic id back to its ``issue_items.id``.
 3. Call :func:`issue_items.reorder` for Notable + Brief in the LLM's
    order. Journal is never reordered.
-4. Write ``thesis.md`` (a 1-3 sentence framing used as downstream
-   context by ``compose-meta`` / ``compose-haiku`` / ``compose-cta``).
-5. Re-render the three daily artifacts (``archive.md`` / ``buttondown.md`` /
+4. Re-render the three daily artifacts (``archive.md`` / ``buttondown.md`` /
    ``transcript/*.txt``) so the new ordering surfaces immediately.
 
-Eddy posts to ``#editorial``: thesis + per-section was/now reorder map
-+ a link to the side-by-side ``final-proposal.html`` preview. Jamie
-reacts ✅ / ❌ / 🔄. On ❌ the existing row order survives. On 🔄 we
-re-prompt up to :data:`_llm_job.MAX_REFRESH_ROUNDS`.
+Eddy posts to ``#editorial``: per-section was/now reorder map + a link
+to the side-by-side ``final-proposal.html`` preview. Jamie reacts
+✅ / ❌ / 🔄. On ❌ the existing row order survives. On 🔄 we re-prompt
+up to :data:`_llm_job.MAX_REFRESH_ROUNDS`.
 
-**What this job does NOT do.** The name is legacy from a retired era
-when this job assembled an explicit ``final.md`` artifact, chose
+**Thesis lives elsewhere now.** This job used to also ask Eddy for a
+1-3 sentence thesis and write ``thesis.md``. That moved to the
+``compose-thesis`` job, which fires at ``mark-built`` (the Build →
+Publish phase transition) — running over the *frozen* authored content,
+not the in-flight draft. The phase transition is the natural place for
+a framing that anchors every downstream Publish job.
+
+**Other legacy that's also gone.** The name is from a retired era when
+this job assembled an explicit ``final.md`` artifact, chose
 ``promotions`` (Journal entries to elevate), and proposed
 ``membership_blocks`` placements:
 
@@ -193,12 +197,10 @@ def _validate_proposal_shape(data: dict) -> None:
     # membership_blocks was retired — placement is hardcoded in
     # render_email via CTA_SLOT_POSITIONS. Any of those three fields are
     # tolerated-and-ignored if they show up in the LLM output anyway.
-    required = ("thesis", "notable_order", "brief_order")
+    required = ("notable_order", "brief_order")
     missing = [k for k in required if k not in data]
     if missing:
         raise _ProposalError(f"missing field(s) in JSON: {', '.join(missing)}")
-    if not isinstance(data.get("thesis"), str) or not data["thesis"].strip():
-        raise _ProposalError("`thesis` must be a non-empty string")
     for k in ("notable_order", "brief_order"):
         if not isinstance(data[k], list) or not all(isinstance(x, str) for x in data[k]):
             raise _ProposalError(f"`{k}` must be a list of id strings")
@@ -335,7 +337,6 @@ def _render_featured_plan(featured_rows: list[dict[str, Any]]) -> str:
 
 def _render_editorial_card(
     issue_number: int,
-    thesis: str,
     rows_by_section: dict[str, list[dict[str, Any]]],
     data: dict,
     synth_to_row: dict[str, int],
@@ -345,8 +346,6 @@ def _render_editorial_card(
 ) -> str:
     parts = [
         f"📝 **reorder** for WT{issue_number}",
-        "",
-        f"**Thesis:** {thesis.strip()}",
         "",
         _render_was_now(rows_by_section["notable"], data["notable_order"], synth_to_row, row_to_synth, kind_label="Notable"),
         _render_was_now(rows_by_section["brief"], data["brief_order"], synth_to_row, row_to_synth, kind_label="Briefly"),
@@ -606,17 +605,15 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                         ))[: _llm_job.CREATE_FINAL_BODY_CAP]
                         continue
 
-                thesis = data["thesis"].strip()
-
-                # Editorial card → #editorial; Jamie ✅/❌/🔄.
-                # Render the side-by-side proposal page so Jamie can
-                # see current vs proposed with connector lines in the
-                # browser. Best-effort: a render hiccup just omits the
-                # URL from the Discord prompt — the card text alone
-                # has always been the canonical decision surface.
+                # Editorial card → #editorial; Jamie ✅/❌/🔄. Render the
+                # side-by-side proposal page so Jamie can see current vs
+                # proposed with connector lines in the browser.
+                # Best-effort: a render hiccup just omits the URL from
+                # the Discord prompt — the card text is the canonical
+                # decision surface.
                 proposal_url = await asyncio.to_thread(
                     render.render_and_upload_proposal,
-                    issue_number=n, thesis=thesis,
+                    issue_number=n, thesis="",
                     rows_by_section=rows_by_section, proposal=data,
                     synth_to_row=synth_to_row, row_to_synth=row_to_synth,
                 )
@@ -628,7 +625,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     if r.get("is_promoted")
                 ]
                 card = _render_editorial_card(
-                    n, thesis, rows_by_section, data,
+                    n, rows_by_section, data,
                     synth_to_row, row_to_synth, rows_by_id,
                     featured_rows=featured_rows,
                 )
@@ -640,7 +637,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     bot, channel,
                     prompt=(
                         f"Accept Eddy's reorder for WT{n}? "
-                        f"(❌ leaves the existing row order alone — no thesis written.)"
+                        f"(❌ leaves the existing row order alone.)"
                     ),
                 )
                 if approved == "refresh":
@@ -648,8 +645,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     continue
 
                 if approved is True:
-                    # Apply: mutate rows. No final.md write — the daily
-                    # renderers below pull from the mutated DB state.
+                    # Apply: mutate rows. The daily renderers pull from
+                    # the mutated DB state. Thesis is no longer written
+                    # here — compose-thesis writes it at mark-built.
                     await asyncio.to_thread(_apply_proposal, n, data, synth_to_row)
                     # Closer still composed from the just-reordered body so
                     # the archive note is grounded in the actual content
@@ -665,7 +663,6 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                         # Closer.md persisted by compose_closer; the daily
                         # renderers below will splice it into the body.
                         pass
-                    s3.write_issue_file(n, "thesis.md", thesis + "\n")
                     # Render the three artifacts now so they reflect the
                     # new ordering immediately (the next update-draft tick
                     # would catch up, but Jamie's about to publish — give
@@ -675,7 +672,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                             renderers.render_all_for_issue, n, window=window,
                         )
                     except Exception:  # noqa: BLE001
-                        logger.exception("create-final: post-apply render failed for #%d", n)
+                        logger.exception("reorder: post-apply render failed for #%d", n)
                 else:
                     # ❌ — leave rows as-is. Daily renderers next tick.
                     pass
@@ -697,7 +694,6 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     data={
                         "issue_number": n,
                         "preview_url": draft_url,
-                        "thesis_written": approved is True,
                     },
                 )
 

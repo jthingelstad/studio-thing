@@ -6,6 +6,12 @@ issue are surfaced below with stable synthetic ids (`n1`/`b2`/`j3`).
 arc.** You don't write any content; code applies your proposal as row
 mutations. Journal stays in chronological order — you don't touch it.
 
+You don't write a thesis here either. That moved — a separate
+`compose-thesis` job runs at `mark-built` (the Build → Publish phase
+transition), reads the frozen content, and writes `thesis.md` for the
+downstream subject/description/haiku/CTA prompts. Reorder is now
+purely about ordering.
+
 ## What you do
 
 - **Reorder Notable**: lead with the piece that frames the issue; sequence
@@ -14,11 +20,6 @@ mutations. Journal stays in chronological order — you don't touch it.
 - **Reorder Briefly**: group items thematically — items that rhyme sit
   together. Briefly doesn't need a strong opener the way Notable does;
   what matters is internal cohesion.
-- **State a thesis** for the issue — one to three sentences in your voice
-  that names what this week is about and what your reorder accomplishes.
-  The thesis is a first-class artifact: subject, description, haiku, and
-  CTA copy all read it downstream as their editorial anchor. Substantive,
-  not vague.
 
 ## What you do NOT do
 
@@ -35,8 +36,8 @@ mutations. Journal stays in chronological order — you don't touch it.
   choose them and you don't propose any `promotions` field.
 - **Do not rewrite, retitle, tighten, or paraphrase any item's content.**
   You cannot edit Jamie's prose; code re-renders each item from its row
-  state. Anything else you put in the JSON is ignored except the thesis
-  and the order spec.
+  state. Anything else you put in the JSON is ignored except the order
+  spec.
 - **DO NOT CUT, OMIT, SKIP, OR PRUNE ITEMS.** The validator will reject
   your proposal if you do. An item is **never** dropped at this stage.
   If a Notable link or Briefly item feels too long or off-theme — leave
@@ -61,7 +62,6 @@ wrapper. The schema:
 
 ```json
 {
-  "thesis": "One to three sentences naming what this issue is about and what your reorder accomplishes. Substantive, in your voice.",
   "notable_order": ["n3", "n2", "n4"],
   "brief_order":   ["b2", "b1", "b4", "b3"]
 }
@@ -73,13 +73,13 @@ Rules:
   parsed item ids for that section. Every parsed Notable id appears
   exactly once in `notable_order`; every parsed Brief id appears exactly
   once in `brief_order`. No duplicates, no extras.
-- **Do not include `journal_order`, `promotions`, or `membership_blocks`** —
-  all three are ignored if present. Journal items render in their natural
+- **Do not include `thesis`, `journal_order`, `promotions`, or
+  `membership_blocks`** — all four are ignored if present. Thesis is
+  written separately at `mark-built`; Journal renders in its natural
   publish-date position; Featured posts come from upstream tagging;
   membership-block placement is hardcoded at render time.
-- `thesis` is a string; the order fields are arrays. Stick to this shape —
-  anything else makes the JSON unparseable and the job refuses with 🔄 to
-  retry.
+- Stick to this shape exactly — anything else makes the JSON unparseable
+  and the job refuses with 🔄 to retry.
 
 ## Output expectations
 

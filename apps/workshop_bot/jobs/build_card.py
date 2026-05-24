@@ -32,7 +32,6 @@ KIND = "build"
 # Button custom_ids — static so the persistent View routes across restarts.
 BTN_REFRESH = "build:refresh"
 BTN_REORDER = "build:reorder"
-BTN_HAIKU = "build:haiku"
 BTN_ECHOES = "build:echoes"
 BTN_EDIT = "build:edit"
 BTN_MARK_BUILT = "build:mark-built"
@@ -70,9 +69,12 @@ def gather_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> d
 
     sec = st["sections"]
     sections_ready = all(sec[k]["present"] for k in ("notable", "brief", "journal"))
+    # Build phase is content-only: the three sections + intro + cover.
+    # Haiku is a Publish concern (Eddy writes it, not Jamie) — moved off
+    # the Build card alongside subject/description/CTA. Thesis is also
+    # Publish (auto-generated at mark-built from the frozen content).
     build_ready = bool(
         sections_ready and st["intro_present"] and st["cover_present"]
-        and st["assets"].get("haiku.md")
     )
 
     return {
@@ -86,7 +88,6 @@ def gather_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> d
         "outro_present": "outro.md" in files,
         "cover_present": st["cover_present"],
         "currently_entries": [c.get("type_label") for c in currently],
-        "haiku_present": bool(st["assets"].get("haiku.md")),
         "echoes_present": "closer.md" in files,
         "reorder_applied": "thesis.md" in files,
         "open_comments": open_comments,
@@ -113,7 +114,6 @@ def render_anatomy_lines(state: dict) -> list[str]:
         icon, tag = _cards.section_tag(sec[name])
         lines.append(f"{icon} {label} — {tag}")
     lines.append(f"{_cards.mark(state['outro_present'])} Outro" + ("" if state["outro_present"] else " — optional"))
-    lines.append(f"{_cards.mark(state['haiku_present'])} Haiku")
     if state["echoes_present"]:
         lines.append("✅ Echoes")
     else:
@@ -183,10 +183,14 @@ async def post_or_update(ctx: "_base.JobContext", n: Optional[int] = None, *, wi
 # ---------- the build→publish transition ----------
 
 async def mark_built(ctx: "_base.JobContext") -> "_base.JobResult":
-    """Exit gate of Build. Flips `phase` to 'publish', finalizes the Build card
-    (compact summary, unpinned), posts + pins the Publish card, and auto-fires
-    `compose-cta` so a CTA framing is waiting in Publish. Refuses if content
-    isn't complete."""
+    """Exit gate of Build. Flips ``phase`` to ``publish``, finalizes the
+    Build card (compact summary, unpinned), runs ``compose-thesis`` to
+    write the editorial framing from the now-frozen content, posts +
+    pins the Publish card, and auto-fires ``compose-cta`` so a CTA
+    framing is waiting in Publish. Refuses if content isn't complete.
+
+    Order matters: compose-thesis lands BEFORE compose-cta so the
+    CTA prompt picks up the freshly-written thesis as its anchor."""
     window = db.get_active_issue_window()
     if window is None:
         return _base.JobResult(False, "No active issue window. Run `/eddy issue start`.")
@@ -198,7 +202,7 @@ async def mark_built(ctx: "_base.JobContext") -> "_base.JobResult":
     if not state.get("build_ready"):
         return _base.JobResult(
             False,
-            f"⚠️ WT{n} isn't built yet — needs the three sections + intro + cover + haiku. "
+            f"⚠️ WT{n} isn't built yet — needs the three sections + intro + cover. "
             f"Fill those, then mark it built.",
             data={"issue_number": n},
         )
@@ -214,8 +218,17 @@ async def mark_built(ctx: "_base.JobContext") -> "_base.JobResult":
     )
     await _cards.finalize_card(ctx, kind=KIND, channel_env=_cards.EDITORIAL_ENV, persona="eddy", n=n, embed=summary)
 
-    # Post the Publish card and auto-request the CTA from Patty.
-    from . import publish_card, compose_cta
+    # Compose the thesis from the just-frozen content. Best-effort:
+    # downstream subject/description/haiku/CTA degrade gracefully on
+    # a missing thesis.md — don't wedge the transition on it.
+    from . import publish_card, compose_cta, compose_thesis
+    try:
+        await compose_thesis.run(_base.JobContext(deps=ctx.deps, trigger="mark-built"))
+    except Exception:  # noqa: BLE001
+        logger.exception("mark-built: compose-thesis failed for #%d", n)
+
+    # Post the Publish card (now reads the just-written thesis.md) and
+    # auto-request the CTA from Patty (its prompt also reads the thesis).
     await publish_card.post_or_update(ctx, n, window=window)
     try:
         await compose_cta.run(_base.JobContext(deps=ctx.deps, trigger="mark-built"))
@@ -225,7 +238,7 @@ async def mark_built(ctx: "_base.JobContext") -> "_base.JobResult":
 
     return _base.JobResult(
         True,
-        f"✅ **WT{n}** marked built — now in **Publish**. CTA requested from Patty; pick a framing on the Publish card.",
+        f"✅ **WT{n}** marked built — now in **Publish**. Thesis written; CTA requested from Patty; pick a framing on the Publish card.",
         data={"issue_number": n, "phase": "publish"},
     )
 

@@ -76,14 +76,17 @@ class BuildCardTests(_DBTestCase):
         self.assertTrue(st["build_ready"])
         lines = build_card.render_anatomy_lines(st)
         labels = [l.split(" — ")[0].split(" ", 1)[1] for l in lines]  # strip the ✅/☐ icon
+        # Haiku moved to Publish phase (Eddy writes it via compose-haiku
+        # off the Publish card; not authored content). Build anatomy is
+        # the content Jamie authors.
         self.assertEqual(
             labels,
-            ["Intro", "Currently", "Cover", "Notable", "Journal", "Briefly", "Outro", "Haiku", "Echoes"],
+            ["Intro", "Currently", "Cover", "Notable", "Journal", "Briefly", "Outro", "Echoes"],
         )
 
     def test_build_not_ready_without_content(self):
         _window(459, pub="2026-05-30")
-        # Empty workspace → no sections/intro/cover/haiku.
+        # Empty workspace → no sections/intro/cover.
         st = build_card.gather_state(459)
         self.assertFalse(st["build_ready"])
 

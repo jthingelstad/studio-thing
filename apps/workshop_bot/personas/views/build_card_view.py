@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import discord
 
-from ...jobs import build_card, compose_closer, compose_haiku, create_final, update_draft
+from ...jobs import build_card, compose_closer, create_final, update_draft
 from ._card_base import EditPickerView, is_owner, launch
 
-# Atoms editable from the Build card (the content atoms; CTA atoms are Publish).
-_BUILD_EDIT_ASSETS = ("intro", "outro", "cover", "haiku")
+# Atoms editable from the Build card (the content atoms; haiku + thesis +
+# CTA atoms are Publish concerns).
+_BUILD_EDIT_ASSETS = ("intro", "outro", "cover")
 
 
 class BuildCardView(discord.ui.View):
@@ -34,13 +35,6 @@ class BuildCardView(discord.ui.View):
     async def _reorder(self, interaction, button):  # type: ignore[no-untyped-def]
         await launch(interaction, create_final.run, "reorder",
                      started="Reorder proposal posting in #editorial — react ✅/❌/🔄 there.",
-                     refresh=build_card.post_or_update)
-
-    @discord.ui.button(label="Haiku", style=discord.ButtonStyle.secondary,
-                       custom_id=build_card.BTN_HAIKU, row=0)
-    async def _haiku(self, interaction, button):  # type: ignore[no-untyped-def]
-        await launch(interaction, compose_haiku.run, "haiku",
-                     started="Haiku options posting in #editorial — pick there.",
                      refresh=build_card.post_or_update)
 
     @discord.ui.button(label="Echoes", style=discord.ButtonStyle.secondary,

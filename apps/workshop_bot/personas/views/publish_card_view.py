@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import discord
 
-from ...jobs import compose_cta, compose_meta, publish as publish_job, publish_card, put_to_bed, share_card
+from ...jobs import compose_cta, compose_haiku, compose_meta, publish as publish_job, publish_card, put_to_bed, share_card
 from ._card_base import launch
 
 _GATED = frozenset({
@@ -26,6 +26,13 @@ class PublishCardView(discord.ui.View):
     async def _meta(self, interaction, button):  # type: ignore[no-untyped-def]
         await launch(interaction, compose_meta.run, "subject",
                      started="Subject options posting in #editorial — pick there; description follows.",
+                     refresh=publish_card.post_or_update)
+
+    @discord.ui.button(label="Haiku", style=discord.ButtonStyle.secondary,
+                       custom_id=publish_card.BTN_HAIKU, row=0)
+    async def _haiku(self, interaction, button):  # type: ignore[no-untyped-def]
+        await launch(interaction, compose_haiku.run, "haiku",
+                     started="Haiku options posting in #editorial — pick there.",
                      refresh=publish_card.post_or_update)
 
     @discord.ui.button(label="CTA", style=discord.ButtonStyle.secondary,

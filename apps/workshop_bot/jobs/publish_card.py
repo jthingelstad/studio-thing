@@ -29,6 +29,7 @@ NAME = "publish-card"
 KIND = "publish"
 
 BTN_META = "publish:meta"          # subject + description (compose-meta)
+BTN_HAIKU = "publish:haiku"        # haiku (compose-haiku)
 BTN_CTA = "publish:cta"            # membership CTA (compose-cta)
 BTN_EMAIL = "publish:email"        # 🚀 Buttondown
 BTN_WEBSITE = "publish:website"    # 🚀 Website
@@ -61,17 +62,27 @@ def gather_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> d
     buttondown_id = (meta.get("buttondown_id") or "").strip()
     absolute_url = (meta.get("absolute_url") or "").strip()
     cta_files = sorted(f for f in files if (f.startswith("cta-") or f.startswith("thanks-")) and f.endswith(".md"))
+    haiku_present = bool(st["assets"].get("haiku.md"))
+    # Thesis written by compose-thesis at mark-built; show the prose on
+    # the card so Jamie sees the editorial framing alongside subject /
+    # description / CTA. Missing thesis isn't an error — degrades to a
+    # placeholder line (subject / description / haiku / CTA prompts also
+    # degrade gracefully).
+    thesis_res = s3.read_issue_file(n, "thesis.md")
+    thesis_text = (thesis_res.get("text") or "").strip() if thesis_res.get("found") else ""
 
     any_section = any(st["sections"][k]["present"] for k in ("notable", "brief", "journal"))
-    # Email needs the *content* of subject + description (not just the file).
-    email_ready = bool(subject and description and st["assets"].get("haiku.md")
+    # Email needs subject + description + haiku + intro + cover. (Haiku
+    # is now a Publish concern — Eddy writes it via compose-haiku;
+    # button lives on this card.)
+    email_ready = bool(subject and description and haiku_present
                        and st["intro_present"] and st["cover_present"])
     email_missing = []
     if not subject:
         email_missing.append("subject")
     if not description:
         email_missing.append("description")
-    for req, present in (("haiku", bool(st["assets"].get("haiku.md"))),
+    for req, present in (("haiku", haiku_present),
                          ("intro", st["intro_present"]), ("cover", st["cover_present"])):
         if not present:
             email_missing.append(req)
@@ -81,8 +92,10 @@ def gather_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> d
         "phase": window.get("phase", "publish"),
         "pub_date": window.get("pub_date", ""),
         "days_to_pub": issue_status._days_to(window.get("pub_date", "")),
+        "thesis": thesis_text,
         "subject": subject,
         "description": description,
+        "haiku_present": haiku_present,
         "cta_files": cta_files,
         "buttondown_id": buttondown_id,
         "buttondown_url": (publish._draft_url(buttondown_id) if buttondown_id else ""),
@@ -106,9 +119,11 @@ def render_shared_lines(state: dict) -> list[str]:
     subj = state["subject"]
     desc = state["description"]
     cta = state["cta_files"]
+    haiku = state["haiku_present"]
     return [
         f"{_cards.mark(bool(subj))} Subject — " + (f"\"{subj}\"" if subj else "pick one → button"),
         f"{_cards.mark(bool(desc))} Description — " + (desc if desc else "generated with the subject"),
+        f"{_cards.mark(haiku)} Haiku — " + ("written" if haiku else "Eddy writes it → button"),
         (f"✅ CTA — {', '.join('`' + c + '`' for c in cta)}" if cta
          else "☐ CTA — pick a framing (auto-requested on entry)"),
     ]
@@ -158,7 +173,15 @@ def render_embed(state: dict) -> "discord.Embed":
         color=color,
         url=state["review_url"],
     )
-    embed.add_field(name="Shared (envelope + CTA)", value="\n".join(render_shared_lines(state)), inline=False)
+    # Thesis at the top — Eddy's editorial framing, written at mark-built.
+    # Shown verbatim so Jamie sees the read that anchors every Publish job.
+    thesis = state.get("thesis") or ""
+    embed.add_field(
+        name="📐 Thesis",
+        value=(thesis if thesis else "_(pending — compose-thesis runs at mark-built)_"),
+        inline=False,
+    )
+    embed.add_field(name="Shared (envelope + haiku + CTA)", value="\n".join(render_shared_lines(state)), inline=False)
     embed.add_field(name="Channels", value="\n".join(render_channel_lines(state)), inline=False)
     embed.set_footer(text=f"refreshed {datetime.now().strftime('%a %H:%M')}")
     return embed
