@@ -81,14 +81,6 @@ _NEXT_STEPS_WITH_CTA_AUTOFIRE = (
     "Patty's `compose-cta` auto-fires now — react in `#supporters` per slot."
 )
 
-# Hard caps on Eddy's declarations (enforced after parse).
-_MAX_CTA = 2
-_MAX_THANKS = 1
-# Promotions used to be Eddy's call (he picked up to 2 Journal entries to
-# elevate to standalone featured sections). That moved to the upstream
-# micro.blog ``Featured`` category — see ``tools/issue_items_sync.py``.
-# Eddy doesn't propose promotions any more.
-
 # Synthetic-id prefix per section (the LLM-facing ids).
 _SYNTH_PREFIX = {"notable": "n", "brief": "b", "journal": "j"}
 
@@ -215,26 +207,22 @@ def _validate_proposal_shape(data: dict) -> None:
 def _patch_missing_ids_into_orders(
     data: dict,
     synth_section: dict[str, str],
-    promoted_synth: set[str],
 ) -> list[str]:
     """If the LLM dropped ids from any ``*_order`` array, append the
     omitted ids to the end of that section in original (synth-id sort)
     order. Returns the list of patched ids for surfacing in ``#editorial``.
 
-    This is the auto-fix safety net: even with the strengthened prompt
-    and ID-inventory header, Opus on long Journal lists still
-    occasionally drops the tail. Rather than fall through to passthrough
-    (which loses the entire editorial pass — thesis, promotions,
-    membership-block placement, every other section's reorder), keep
-    the reorder and silently include the missing items. The note in
+    Auto-fix safety net: even with the strengthened prompt and ID-inventory
+    header, the LLM occasionally drops a tail item. Rather than fall through
+    to passthrough (which loses the entire editorial pass), keep the
+    reorder and silently include the missing items. The note in
     ``#editorial`` lets Jamie spot the patch and override if needed.
     """
     patched: list[str] = []
     for section in ("notable", "brief"):
         order = list(data.get(f"{section}_order") or [])
         want = sorted(
-            (sid for sid, sect in synth_section.items()
-             if sect == section and sid not in promoted_synth),
+            (sid for sid, sect in synth_section.items() if sect == section),
             key=lambda s: int("".join(ch for ch in s if ch.isdigit()) or "0"),
         )
         missing = [sid for sid in want if sid not in set(order)]
@@ -247,14 +235,13 @@ def _patch_missing_ids_into_orders(
 def _validate_per_section_orders(
     data: dict,
     synth_section: dict[str, str],
-    promoted_synth: set[str],
 ) -> None:
-    """Each *_order must be a permutation of (synth ids in that section
-    minus promoted ids). Journal is no longer in the loop — entries always
-    preserve their natural publish-date order."""
+    """Each *_order must be a strict permutation of the synth ids in that
+    section. Journal is never in the loop — entries always preserve their
+    natural publish-date order."""
     for section in ("notable", "brief"):
         order = data[f"{section}_order"]
-        want = [sid for sid, sect in synth_section.items() if sect == section and sid not in promoted_synth]
+        want = [sid for sid, sect in synth_section.items() if sect == section]
         want_set = set(want)
         order_set: set[str] = set()
         dupes: list[str] = []
@@ -269,101 +256,13 @@ def _validate_per_section_orders(
         extra = sorted(order_set - want_set)
         if extra:
             raise _ProposalError(
-                f"{section}_order: id(s) not in this section (or promoted): {', '.join(extra)}"
+                f"{section}_order: id(s) not in this section: {', '.join(extra)}"
             )
         missing = sorted(want_set - order_set)
         if missing:
             raise _ProposalError(
                 f"{section}_order: missing id(s): {', '.join(missing)}"
             )
-
-
-def _validate_membership_blocks(
-    blocks: list, synth_section: dict[str, str], promoted_synth: set[str],
-) -> None:
-    cta_count = 0
-    thanks_count = 0
-    for i, b in enumerate(blocks):
-        if not isinstance(b, dict):
-            raise _ProposalError(f"membership_blocks[{i}] is not an object")
-        kind = b.get("kind")
-        if kind not in ("cta", "thanks"):
-            raise _ProposalError(
-                f"membership_blocks[{i}].kind must be 'cta' or 'thanks' (got {kind!r})"
-            )
-        has_after = "after" in b
-        has_before = bool(b.get("before_haiku"))
-        if has_after == has_before:
-            raise _ProposalError(
-                f"membership_blocks[{i}] must have exactly one of `after` (an item id) "
-                f"or `before_haiku: true`"
-            )
-        if has_after:
-            aid = b["after"]
-            if not isinstance(aid, str) or aid not in synth_section:
-                raise _ProposalError(
-                    f"membership_blocks[{i}].after={aid!r} doesn't match any parsed id"
-                )
-            if aid in promoted_synth:
-                raise _ProposalError(
-                    f"membership_blocks[{i}].after={aid!r} is a promoted id; "
-                    f"membership-block `after` cannot point at a promoted item"
-                )
-        if kind == "cta":
-            cta_count += 1
-        else:
-            thanks_count += 1
-    if cta_count > _MAX_CTA:
-        raise _ProposalError(f"too many cta blocks ({cta_count}); max {_MAX_CTA}")
-    if thanks_count > _MAX_THANKS:
-        raise _ProposalError(f"too many thanks blocks ({thanks_count}); max {_MAX_THANKS}")
-
-
-# ---------- marker assignment ----------
-
-def _assign_markers(
-    blocks: list[dict[str, Any]],
-) -> tuple[dict[str, list[str]], list[str], list[tuple[str, dict]]]:
-    """Walk membership_blocks in declaration order, assigning each one a
-    1-indexed marker. Returns ``(markers_after_synth, before_haiku,
-    plan)``:
-
-    - ``markers_after_synth`` — synth_id → list of marker strings
-    - ``before_haiku`` — markers slated for the last non-empty section
-    - ``plan`` — ordered ``[(marker, block_meta), …]`` for the
-      editorial-card rendering (so it can show "cta:1 after n2 — …")
-    """
-    markers_after: dict[str, list[str]] = {}
-    before_haiku: list[str] = []
-    kind_counts: dict[str, int] = {}
-    plan: list[tuple[str, dict]] = []
-    for b in blocks:
-        kind = b["kind"]
-        kind_counts[kind] = kind_counts.get(kind, 0) + 1
-        marker = f"<!-- {kind}:{kind_counts[kind]} -->"
-        plan.append((marker, b))
-        if b.get("before_haiku"):
-            before_haiku.append(marker)
-        else:
-            markers_after.setdefault(b["after"], []).append(marker)
-    return markers_after, before_haiku, plan
-
-
-def _trailing_markers_target(
-    notable_rows: list[dict[str, Any]],
-    journal_rows: list[dict[str, Any]],
-    brief_rows: list[dict[str, Any]],
-) -> str:
-    """Pick which section's trailing-markers slot the ``before_haiku``
-    markers land in. Order of preference matches the publish flow: end
-    of Briefly, else Journal, else Notable."""
-    if brief_rows:
-        return "brief"
-    if journal_rows:
-        return "journal"
-    if notable_rows:
-        return "notable"
-    return "brief"  # degenerate — empty issue
 
 
 # ---------- editorial-surface rendering ----------
@@ -385,24 +284,18 @@ def _render_was_now(
     row_to_synth: dict[int, str],
     *,
     kind_label: str,
-    promoted_synth: set[str] = frozenset(),
 ) -> str:
     if not rows:
         return f"**{kind_label}** — _(empty)_"
-    rows_in_section = [r for r in rows if row_to_synth[int(r["id"])] not in promoted_synth]
-    original_synth = [row_to_synth[int(r["id"])] for r in rows_in_section]
-    promoted_in_section = [r for r in rows if row_to_synth[int(r["id"])] in promoted_synth]
-    promoted_note = f" ({len(promoted_in_section)} promoted out)" if promoted_in_section else ""
+    original_synth = [row_to_synth[int(r["id"])] for r in rows]
     if original_synth == list(order_synth):
-        if not original_synth:
-            return f"**{kind_label}** — _(empty after promotion)_"
-        return f"**{kind_label}** — no change{promoted_note}"
+        return f"**{kind_label}** — no change"
     by_synth = {row_to_synth[int(r["id"])]: r for r in rows}
     titles_for = lambda ids: " · ".join(
         f"{i+1}. {_row_label(by_synth[sid])}" for i, sid in enumerate(ids)
     )
     return (
-        f"**{kind_label}** — reordered{promoted_note}\n"
+        f"**{kind_label}** — reordered\n"
         f"  was: {titles_for(original_synth)}\n"
         f"  now: {titles_for(order_synth)}"
     )
@@ -411,24 +304,16 @@ def _render_was_now(
 def _render_journal_preserved(
     rows: list[dict[str, Any]],
     row_to_synth: dict[int, str],
-    *,
-    promoted_synth: set[str] = frozenset(),
 ) -> str:
     """Journal-section card for the editorial proposal. Journal is never
-    reordered (see _apply_proposal); this just shows the items as they'll
-    appear in the issue, in their natural publish-date order, with a count
-    of any promoted-out items so Jamie can confirm the section's intact."""
+    reordered — this just shows the items as they'll appear in the issue,
+    in their natural publish-date order, so Jamie can confirm the section."""
     if not rows:
         return "**Journal** — _(empty)_"
-    rows_in_section = [r for r in rows if row_to_synth[int(r["id"])] not in promoted_synth]
-    promoted_in_section = [r for r in rows if row_to_synth[int(r["id"])] in promoted_synth]
-    promoted_note = f" ({len(promoted_in_section)} promoted out)" if promoted_in_section else ""
-    if not rows_in_section:
-        return f"**Journal** — _(empty after promotion){promoted_note}_"
     titles = " · ".join(
-        f"{i+1}. {_row_label(r)}" for i, r in enumerate(rows_in_section)
+        f"{i+1}. {_row_label(r)}" for i, r in enumerate(rows)
     )
-    return f"**Journal** — preserved in publish order{promoted_note}\n  {titles}"
+    return f"**Journal** — preserved in publish order\n  {titles}"
 
 
 def _render_featured_plan(featured_rows: list[dict[str, Any]]) -> str:
@@ -445,34 +330,6 @@ def _render_featured_plan(featured_rows: list[dict[str, Any]]) -> str:
         heading = (r.get("promoted_heading") or "").strip() or _row_label(r)
         url = (r.get("url") or "").strip()
         lines.append(f"  · \"{heading}\" — {url}")
-    return "\n".join(lines)
-
-
-def _render_membership_plan(
-    blocks: list[dict[str, Any]],
-    synth_to_row: dict[str, int],
-    rows_by_id: dict[int, dict[str, Any]],
-) -> str:
-    if not blocks:
-        return "**Membership blocks:** _(none — this issue runs clean)_"
-    lines = [f"**Membership blocks:** {len(blocks)} slot(s)"]
-    kind_counts: dict[str, int] = {}
-    for b in blocks:
-        kind = b["kind"]
-        kind_counts[kind] = kind_counts.get(kind, 0) + 1
-        n = kind_counts[kind]
-        marker = f"`{kind}:{n}`"
-        if b.get("before_haiku"):
-            position = "before haiku"
-        else:
-            aid = b["after"]
-            row = rows_by_id.get(synth_to_row[aid], {})
-            position = f"after \"{_row_label(row)}\" (`{aid}`)"
-        rationale = (b.get("rationale") or "").strip()
-        line = f"  · {marker} {position}"
-        if rationale:
-            line += f" — {rationale}"
-        lines.append(line)
     return "\n".join(lines)
 
 
@@ -698,12 +555,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     if data is None:
                         raise _ProposalError("response wasn't a parseable JSON object")
                     _validate_proposal_shape(data)
-                    # promoted_synth is empty: Featured-category rows are excluded
-                    # from the LLM's view of rows_by_section (include_promoted=False
-                    # in the run() snapshot), so Eddy can't reference them in any
-                    # ``*_order`` or ``membership_blocks.after``.
-                    promoted_synth: set[str] = set()
-                    _validate_per_section_orders(data, synth_section, promoted_synth)
+                    _validate_per_section_orders(data, synth_section)
                 except _ProposalError as exc:
                     # Auto-fix path: if the only failure is "missing id(s)"
                     # in one of the *_order arrays, append the omitted ids
@@ -714,12 +566,12 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     auto_fixed = False
                     if data is not None and ": missing id(s):" in str(exc):
                         patched = _patch_missing_ids_into_orders(
-                            data, synth_section, promoted_synth,
+                            data, synth_section,
                         )
                         if patched:
                             try:
                                 _validate_per_section_orders(
-                                    data, synth_section, promoted_synth,
+                                    data, synth_section,
                                 )
                             except _ProposalError:
                                 # Auto-patch didn't fully resolve; fall
@@ -743,14 +595,14 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                         pass
                     else:
                         await channel.send(
-                            f"⚠️ Eddy's `create-final` proposal for WT{n} didn't validate: "
+                            f"⚠️ Eddy's `reorder` proposal for WT{n} didn't validate: "
                             f"`{exc}` — retrying with a tighter hint.",
                             suppress_embeds=True,
                         )
                         user_msg = (base_user_msg + (
                             f"\n\n(That response was rejected: `{exc}`. Follow the JSON schema "
-                            f"exactly — every parsed id must appear exactly once across its "
-                            f"section's order + the promotions list.)"
+                            f"exactly — every parsed id must appear exactly once in its "
+                            f"section's order.)"
                         ))[: _llm_job.CREATE_FINAL_BODY_CAP]
                         continue
 
@@ -787,8 +639,8 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 approved = await interaction.await_approval(
                     bot, channel,
                     prompt=(
-                        f"Accept Eddy's editorial pass for WT{n}? "
-                        f"(❌ writes final.md in the current row order, no thesis/promotions/markers.)"
+                        f"Accept Eddy's reorder for WT{n}? "
+                        f"(❌ leaves the existing row order alone — no thesis written.)"
                     ),
                 )
                 if approved == "refresh":

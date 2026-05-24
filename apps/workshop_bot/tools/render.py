@@ -997,12 +997,10 @@ window.addEventListener('resize',draw);
 
 
 def _proposal_item_html(
-    *, side: str, synth_id: str, title: str, moved: bool, promoted: bool,
+    *, side: str, synth_id: str, title: str, moved: bool,
 ) -> str:
     """One item row in the current-or-proposed column."""
     classes = ["item"]
-    if promoted and side == "current":
-        classes.append("promoted")
     if moved and side != "current":
         classes.append("moved")
     return (
@@ -1020,57 +1018,20 @@ def _proposal_section_html(
     label: str,
     items: list[dict],
     item_synth: dict,
-    markers_after: Optional[dict[str, list[str]]] = None,
-    trailing_markers: Optional[list[str]] = None,
     moved_ids: Optional[set[str]] = None,
-    promoted_ids: Optional[set[str]] = None,
 ) -> str:
-    """Render one section's column (current or proposed).
-
-    ``markers_after`` / ``trailing_markers`` are only emitted on the
-    proposed side. ``moved_ids`` highlights items whose position
-    changed; ``promoted_ids`` shows the current-side entries with a
-    strikethrough.
-    """
+    """Render one section's column (current or proposed). ``moved_ids``
+    highlights items whose position changed between the two sides."""
     moved_ids = moved_ids or set()
-    promoted_ids = promoted_ids or set()
-    markers_after = markers_after or {}
-    trailing_markers = trailing_markers or []
     parts: list[str] = [f'<section><h3>{_html.escape(label)}</h3><ul>']
     for row in items:
         synth = item_synth[int(row["id"])]
         title = (row.get("title") or row.get("url") or "(untitled)").strip()
-        promoted = synth in promoted_ids
-        moved = synth in moved_ids
         parts.append(_proposal_item_html(
             side=side, synth_id=synth, title=title,
-            moved=moved, promoted=promoted,
+            moved=synth in moved_ids,
         ))
-        if side == "proposed":
-            for m in markers_after.get(synth, []):
-                parts.append(f'<li class="marker">{_html.escape(m)}</li>')
-    if side == "proposed":
-        for m in trailing_markers:
-            parts.append(f'<li class="marker">{_html.escape(m)}</li>')
     parts.append('</ul></section>')
-    return "".join(parts)
-
-
-def _proposal_featured_html(
-    *, position: str, heading: str, item: dict, synth_id: str,
-) -> str:
-    title = (item.get("title") or item.get("url") or "(untitled)").strip()
-    parts = [
-        f'<div class="featured-section" data-position="{position}">',
-        f'<p class="featured-heading">↑ Featured · {_html.escape(position.replace("_", " "))}</p>',
-        f'<p style="font-family:var(--wt-serif);font-weight:500;margin:0 0 6px;">{_html.escape(heading)}</p>',
-        '<ul>',
-        f'<li class="item promoted-target" data-side="featured" data-id="{synth_id}">'
-        f'<span class="syn">{synth_id}</span>'
-        f'<span class="title">{_html.escape(title)}</span>'
-        f'</li>',
-        '</ul></div>',
-    ]
     return "".join(parts)
 
 
@@ -1099,23 +1060,15 @@ def create_final_proposal_html(
     title = f"WT{int(issue_number)} — reorder proposal"
     section_labels = {"notable": "Notable", "brief": "Briefly", "journal": "Journal"}
 
-    # Promotions and membership_blocks are retired but the helpers below
-    # still take a `promoted_synth` set and per-section marker maps for
-    # historical reasons. Pass empty containers — nothing to highlight.
-    promoted_synth: set[str] = set()
-    markers_after: dict[str, list[str]] = {}
-    trailing: list[str] = []
-
-    # Build a moved-ids set per section — synth ids whose position
-    # changed between current and proposed.
+    # moved-ids set per section — synth ids whose position changed between
+    # current and proposed. Journal is never reordered.
     def _moved_for(section: str) -> set[str]:
         current = [row_to_synth[int(r["id"])] for r in rows_by_section.get(section, [])]
         order = proposal.get(f"{section}_order") or []
-        current_kept = [sid for sid in current if sid not in promoted_synth]
         moved: set[str] = set()
         for i, sid in enumerate(order):
             try:
-                cur_idx = current_kept.index(sid)
+                cur_idx = current.index(sid)
             except ValueError:
                 continue
             if cur_idx != i:
@@ -1130,30 +1083,19 @@ def create_final_proposal_html(
         cur_html.append(_proposal_section_html(
             side="current", section=section, label=label,
             items=items, item_synth=row_to_synth,
-            promoted_ids=promoted_synth,
         ))
-        # Build the proposed column for this section: ordered by Eddy's
-        # *_order, with markers inline, then featured sections (if any)
-        # declared after_<section>. Journal is never reordered — fall back
-        # to the current (non-promoted) row order so the proposed column
-        # renders the items in their natural publish-date sequence.
+        # Build the proposed column. Journal is never reordered — fall back
+        # to current row order so the proposed column shows items in their
+        # natural publish-date sequence.
         order = proposal.get(f"{section}_order") or []
         if section == "journal" or not order:
-            order = [
-                row_to_synth[int(r["id"])] for r in items
-                if row_to_synth[int(r["id"])] not in promoted_synth
-            ]
+            order = [row_to_synth[int(r["id"])] for r in items]
         by_synth = {row_to_synth[int(r["id"])]: r for r in items}
         ordered_rows = [by_synth[sid] for sid in order if sid in by_synth]
-        moved_ids = _moved_for(section)
-        section_trailing = trailing if section == "brief" else []
         prop_html.append(_proposal_section_html(
             side="proposed", section=section, label=label,
             items=ordered_rows, item_synth=row_to_synth,
-            markers_after=markers_after,
-            trailing_markers=section_trailing,
-            moved_ids=moved_ids,
-            promoted_ids=promoted_synth,
+            moved_ids=_moved_for(section),
         ))
 
     legend = (
