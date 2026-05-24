@@ -5,8 +5,6 @@ A **section** (the last one in every issue — see [`sections.md`](sections.md))
 Renders as `## Echoes`. *Internally the job/file is still `compose-closer` / `closer.md`; the
 reader-facing name is **Echoes**.*
 
-> Draft — refine in your voice.
-
 ## What it is
 
 2–5 sentences (~60–110 words), in **Thingy's voice** — third-person about Jamie, warm, librarian.

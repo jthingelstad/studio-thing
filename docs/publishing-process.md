@@ -24,7 +24,7 @@ are **standing programs** that span many issues and touch a phase only at define
    standing:        │      ┌──────┴───────┐    │
    programs ········│······│  MEMBERSHIP  │····│······· (Patty: fundraise)
                     │      └──────────────┘    │
-                    └───────────────────┌──────┴───────┐
+                    └───────────────────┌──────┴────────┐
                                         │  CAMPAIGNS    │  (Marky: grow + engage)
                                         └───────────────┘
 ```

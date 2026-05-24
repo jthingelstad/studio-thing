@@ -4,8 +4,6 @@ How the `## Journal` section is built from micro.blog. The Journal is the issue'
 texture — it often carries an issue on its own. Formatting basics are in
 [`sections.md`](sections.md); this is the detail.
 
-> Draft — refine in your voice.
-
 ## Source + ordering
 
 - Pulled from **micro.blog** for the issue's 7-day window (Micropub `q=source`; `MICROBLOG_API_KEY`

@@ -3,8 +3,6 @@
 How a journal post gets promoted to its own standalone section. The key idea is a clean split:
 **classify upstream, arrange at render.**
 
-> Draft — refine in your voice.
-
 ## Classify (upstream, editorial)
 
 A post becomes Featured by being in micro.blog's **`Featured` category** — Jamie's editorial call,
