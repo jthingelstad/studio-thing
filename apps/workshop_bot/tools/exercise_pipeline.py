@@ -437,7 +437,7 @@ def pipeline_for(mode: str) -> list[tuple[str, Callable]]:
     """Return ``[(job_name, run_callable), …]`` in execution order."""
     full = [
         ("update-draft", update_draft.run),
-        ("create-final", create_final.run),
+        ("reorder", create_final.run),
         ("compose-haiku", compose_haiku.run),
         ("compose-meta", compose_meta.run),
         ("compose-cta", compose_cta.run),

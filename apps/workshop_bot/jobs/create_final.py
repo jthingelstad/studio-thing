@@ -1,60 +1,50 @@
-"""``create-final`` — Eddy's editorial pass on the row-backed model.
+"""``reorder`` — Eddy's Notable/Briefly reorder pass.
 
-Reads ``issue_items`` rows for the in-flight issue (Notable / Briefly,
-plus the non-promoted Journal rows), presents them to Eddy with stable
-synthetic ids (``n1``, ``b2``, ``j3``), and asks for an **ordering-only**
-JSON response:
+Reads the current ``issue_items`` rows for the in-flight issue (Notable
++ Briefly + Journal), presents them to Eddy with stable synthetic ids
+(``n1`` / ``b2`` / ``j3``), and asks for an **ordering-only** JSON
+response:
 
 ```json
 {
   "thesis": "…",
   "notable_order": ["n3", "n1", "n2", "n4"],
-  "brief_order":   ["b2", "b1", "b4", "b3"],
-  "membership_blocks": [
-    {"kind": "cta",    "after": "n1", "rationale": "…"},
-    {"kind": "cta",    "before_haiku": true, "rationale": "…"},
-    {"kind": "thanks", "after": "n2", "rationale": "…"}
-  ]
+  "brief_order":   ["b2", "b1", "b4", "b3"]
 }
 ```
 
-**Apply step is row mutations, not byte-chunk reassembly.** Code:
+Apply step is row mutations:
 
-1. Validates the proposal shape, membership_blocks, and per-section
-   permutations against the parsed synthetic ids.
-2. Maps each synthetic id back to its ``issue_items.id``.
-3. Calls :func:`issue_items.reorder` for Notable + Brief in the LLM's
+1. Validate the proposal shape and per-section permutations against the
+   parsed synthetic ids.
+2. Map each synthetic id back to its ``issue_items.id``.
+3. Call :func:`issue_items.reorder` for Notable + Brief in the LLM's
    order. Journal is never reordered.
-4. Renders ``final.md`` from rows using :mod:`tools.issue_assembly`:
-   atoms (intro / currently / cover / outro / haiku) come verbatim
-   from their files; parent sections render in current position order
-   with cta/thanks markers spliced inline; Featured-category posts
-   appear as ``## Heading`` sections at the fixed ``before_notable``
-   slot — what Jamie sees in ``final.md`` IS where things will land in
-   the published email.
-5. Writes ``final.md`` and ``thesis.md``.
+4. Write ``thesis.md`` (a 1-3 sentence framing used as downstream
+   context by ``compose-meta`` / ``compose-haiku`` / ``compose-cta``).
+5. Re-render the three daily artifacts (``archive.md`` / ``buttondown.md`` /
+   ``transcript/*.txt``) so the new ordering surfaces immediately.
 
-Featured posts come from Jamie's upstream micro.blog ``Featured``
-category (set by the sync layer in :mod:`tools.issue_items_sync`).
-Eddy used to choose promotions; that role moved upstream. Eddy still
-sees Featured posts surfaced separately in the editorial card so he
-knows which entries were elevated, but they don't appear in the
-parsed Journal list and Eddy doesn't propose them.
+Eddy posts to ``#editorial``: thesis + per-section was/now reorder map
++ a link to the side-by-side ``final-proposal.html`` preview. Jamie
+reacts ✅ / ❌ / 🔄. On ❌ the existing row order survives. On 🔄 we
+re-prompt up to :data:`_llm_job.MAX_REFRESH_ROUNDS`.
 
-The LLM never touches bytes — identity comes from row id. The old
-chunk parser + multiset lossless check are retired (the row model
-guarantees losslessness by construction; an UPDATE on a position
-column can't drop, duplicate, or mutate a row).
+**What this job does NOT do.** The name is legacy from a retired era
+when this job assembled an explicit ``final.md`` artifact, chose
+``promotions`` (Journal entries to elevate), and proposed
+``membership_blocks`` placements:
 
-Eddy posts to ``#editorial``: thesis, per-section was/now reorder
-map, Featured posts (from upstream), membership-block plan. Jamie
-reacts ✅ / ❌ / 🔄. On ❌ the existing row order survives and the
-section bodies render in their pre-create-final order (no thesis,
-no markers). On 🔄 we re-prompt up to
-:data:`_llm_job.MAX_REFRESH_ROUNDS`.
+- ``final.md`` is gone — the three sibling renderers (archive / email /
+  transcript) compose directly from row state + atoms; there's no
+  intermediate assembled body.
+- Promotions moved upstream to Jamie's micro.blog ``Featured`` tag.
+- Membership-block placement is hardcoded in ``render_email`` via
+  ``CTA_SLOT_POSITIONS``.
 
-Refuses if ``final.md`` already exists — delete it explicitly to
-re-run (or use ``/eddy issue reset final``).
+The slash command at ``/eddy issue reorder`` matches today's scope.
+The internal trigger is ``reorder``; the on-disk file path is still
+``jobs/create_final.py`` (file rename deferred).
 """
 
 from __future__ import annotations
@@ -70,7 +60,7 @@ from . import _base, _cover, _currently, _llm_job, compose_closer, compose_cta
 
 logger = logging.getLogger("workshop.jobs.create_final")
 
-NAME = "create-final"
+NAME = "reorder"
 
 _NEXT_STEPS = (
     "Next, in any order: `/eddy issue haiku`, `/eddy issue subject`, "
@@ -207,12 +197,11 @@ class _ProposalError(Exception):
 
 def _validate_proposal_shape(data: dict) -> None:
     # Journal entries are no longer reordered — Eddy is told not to send a
-    # journal_order. Promotions also moved out of Eddy's hands (the
-    # micro.blog Featured category drives them at sync time now). Both
-    # fields are tolerated-and-ignored if they show up in the LLM output
-    # anyway (LLM habit). Only thesis + Notable + Brief + membership are
-    # required.
-    required = ("thesis", "notable_order", "brief_order", "membership_blocks")
+    # journal_order. Promotions moved upstream (micro.blog Featured tag).
+    # membership_blocks was retired — placement is hardcoded in
+    # render_email via CTA_SLOT_POSITIONS. Any of those three fields are
+    # tolerated-and-ignored if they show up in the LLM output anyway.
+    required = ("thesis", "notable_order", "brief_order")
     missing = [k for k in required if k not in data]
     if missing:
         raise _ProposalError(f"missing field(s) in JSON: {', '.join(missing)}")
@@ -221,8 +210,6 @@ def _validate_proposal_shape(data: dict) -> None:
     for k in ("notable_order", "brief_order"):
         if not isinstance(data[k], list) or not all(isinstance(x, str) for x in data[k]):
             raise _ProposalError(f"`{k}` must be a list of id strings")
-    if not isinstance(data["membership_blocks"], list):
-        raise _ProposalError("`membership_blocks` must be a list")
 
 
 def _patch_missing_ids_into_orders(
@@ -500,7 +487,7 @@ def _render_editorial_card(
     featured_rows: Optional[list[dict[str, Any]]] = None,
 ) -> str:
     parts = [
-        f"📝 **create-final** for WT{issue_number}",
+        f"📝 **reorder** for WT{issue_number}",
         "",
         f"**Thesis:** {thesis.strip()}",
         "",
@@ -511,7 +498,6 @@ def _render_editorial_card(
     featured_card = _render_featured_plan(featured_rows or [])
     if featured_card:
         parts.extend(["", featured_card])
-    parts.extend(["", _render_membership_plan(data["membership_blocks"], synth_to_row, rows_by_id)])
     return "\n".join(parts)
 
 
@@ -694,12 +680,12 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     try:
         with _base.job_lock([asset], NAME):
             atoms = _build_atoms(n)
-            base_prompt = anthropic_client.load_prompt("eddy-create-final")
+            base_prompt = anthropic_client.load_prompt("eddy-reorder")
             base_user_msg = _build_user_message(base_prompt, n, rows_by_section, row_to_synth)
             user_msg = base_user_msg[: _llm_job.CREATE_FINAL_BODY_CAP]
 
             for _round in range(_llm_job.MAX_REFRESH_ROUNDS):
-                with db.AgentRun("eddy", trigger="create-final") as agent_run:
+                with db.AgentRun("eddy", trigger="reorder") as agent_run:
                     # Sonnet default — reorder is a constrained editorial
                     # decision (ordering N items), well within Sonnet's
                     # range. The substantive editorial pass is
@@ -718,17 +704,13 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     # ``*_order`` or ``membership_blocks.after``.
                     promoted_synth: set[str] = set()
                     _validate_per_section_orders(data, synth_section, promoted_synth)
-                    _validate_membership_blocks(
-                        data["membership_blocks"], synth_section, promoted_synth,
-                    )
                 except _ProposalError as exc:
                     # Auto-fix path: if the only failure is "missing id(s)"
                     # in one of the *_order arrays, append the omitted ids
                     # in original order and re-validate. Preserves the
-                    # editorial reorder, thesis, promotions, and membership
-                    # blocks rather than dropping the whole proposal to
-                    # passthrough. Other shape/permutation/membership
-                    # errors fall through to the normal LLM retry.
+                    # editorial reorder + thesis rather than dropping the
+                    # whole proposal to passthrough. Other shape /
+                    # permutation errors fall through to the LLM retry.
                     auto_fixed = False
                     if data is not None and ": missing id(s):" in str(exc):
                         patched = _patch_missing_ids_into_orders(
@@ -738,10 +720,6 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                             try:
                                 _validate_per_section_orders(
                                     data, synth_section, promoted_synth,
-                                )
-                                _validate_membership_blocks(
-                                    data["membership_blocks"], synth_section,
-                                    promoted_synth,
                                 )
                             except _ProposalError:
                                 # Auto-patch didn't fully resolve; fall

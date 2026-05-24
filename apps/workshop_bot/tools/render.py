@@ -1085,36 +1085,26 @@ def create_final_proposal_html(
 ) -> str:
     """Build the side-by-side proposal page.
 
-    ``rows_by_section`` is the current (pre-apply) order;
-    ``proposal`` is Eddy's JSON (``*_order``, ``promotions``,
-    ``membership_blocks``). The page shows two columns — current on
-    the left, proposed on the right — with SVG connector lines
-    between matching items (per-item id-anchored). Items in the
-    same position get no line; promoted items are struck through on
-    the left and rendered as a standalone featured section on the
-    right at their declared position.
+    ``rows_by_section`` is the current (pre-apply) order; ``proposal``
+    is Eddy's JSON (``notable_order``, ``brief_order``). The page shows
+    two columns — current on the left, proposed on the right — with SVG
+    connector lines between matching items (per-item id-anchored).
+    Items in the same position get no line.
+
+    Legacy fields (``promotions``, ``membership_blocks``) are ignored
+    here even if the LLM still emits them — promotions moved upstream
+    to the micro.blog ``Featured`` tag, and membership-block placement
+    is hardcoded at email-render time.
     """
-    title = f"WT{int(issue_number)} — create-final proposal"
+    title = f"WT{int(issue_number)} — reorder proposal"
     section_labels = {"notable": "Notable", "brief": "Briefly", "journal": "Journal"}
 
-    promotions = proposal.get("promotions") or []
-    promoted_synth = {p["id"] for p in promotions}
-
-    # Markers — assign in declaration order so the rendered slot
-    # numbers match what create-final emits in final.md.
+    # Promotions and membership_blocks are retired but the helpers below
+    # still take a `promoted_synth` set and per-section marker maps for
+    # historical reasons. Pass empty containers — nothing to highlight.
+    promoted_synth: set[str] = set()
     markers_after: dict[str, list[str]] = {}
     trailing: list[str] = []
-    kind_counts: dict[str, int] = {}
-    for b in (proposal.get("membership_blocks") or []):
-        kind = b.get("kind", "")
-        if kind not in ("cta", "thanks"):
-            continue
-        kind_counts[kind] = kind_counts.get(kind, 0) + 1
-        marker = f"{kind}:{kind_counts[kind]}"
-        if b.get("before_haiku"):
-            trailing.append(marker)
-        elif "after" in b:
-            markers_after.setdefault(b["after"], []).append(marker)
 
     # Build a moved-ids set per section — synth ids whose position
     # changed between current and proposed.
@@ -1165,39 +1155,17 @@ def create_final_proposal_html(
             moved_ids=moved_ids,
             promoted_ids=promoted_synth,
         ))
-        for p in promotions:
-            if p.get("position") != f"after_{section}":
-                continue
-            rid = synth_to_row.get(p["id"])
-            if rid is None:
-                continue
-            item = next(
-                (r for r in rows_by_section.get("notable", [])
-                 + rows_by_section.get("journal", [])
-                 + rows_by_section.get("brief", [])
-                 if int(r["id"]) == rid),
-                None,
-            )
-            if item is None:
-                continue
-            prop_html.append(_proposal_featured_html(
-                position=p.get("position", ""),
-                heading=p.get("heading", "") or "(no heading)",
-                item=item, synth_id=row_to_synth[rid],
-            ))
 
     legend = (
         '<div class="legend">'
         '<span><span class="swatch" style="background:var(--wt-move);"></span>moved</span>'
-        '<span><span class="swatch" style="background:var(--wt-warn);"></span>promoted (struck on left, featured on right)</span>'
-        '<span><span class="swatch" style="background:var(--wt-accent);border:1px dashed var(--wt-accent);"></span>membership marker</span>'
         '</div>'
     )
 
     no_change = ""
     any_moved = any(_moved_for(s) for s in ("notable", "brief", "journal"))
-    if not any_moved and not promotions and not (markers_after or trailing):
-        no_change = '<p class="no-change-note">No changes proposed — current order stands; no promotions; no membership markers.</p>'
+    if not any_moved:
+        no_change = '<p class="no-change-note">No changes proposed — current order stands.</p>'
 
     body = (
         f'<h1>{_html.escape(title)}</h1>'

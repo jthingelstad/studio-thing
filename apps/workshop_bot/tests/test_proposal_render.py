@@ -74,62 +74,6 @@ class ProposalHtmlTests(unittest.TestCase):
         # Thesis renders.
         self.assertIn("Test thesis.", page)
 
-    def test_promoted_item_strikethrough_on_left_featured_on_right(self):
-        rows = {
-            "notable": [_row(1, "notable", "Lead piece", "http://a")],
-            "brief": [],
-            "journal": [_row(10, "journal", "The Big Read", "http://big")],
-        }
-        proposal = {
-            "thesis": "Featuring the journal piece.",
-            "notable_order": ["n1"],
-            "brief_order": [],
-            "journal_order": [],
-            "promotions": [{
-                "id": "j1", "heading": "Featured: The Big Read",
-                "position": "after_notable", "rationale": "central piece",
-            }],
-            "membership_blocks": [],
-        }
-        page = self._build(proposal=proposal, rows_by_section=rows)
-        # Left column shows j1 with promoted styling.
-        left = page.find('data-side="current" data-id="j1"')
-        self.assertGreater(left, 0)
-        self.assertIn("promoted", page[max(0, left - 80):left])
-        # Right column has a featured section near after_notable.
-        self.assertIn("Featured: The Big Read", page)
-        self.assertIn('data-position="after_notable"', page)
-        self.assertIn('data-side="featured" data-id="j1"', page)
-
-    def test_membership_markers_render_inline_pills(self):
-        rows = {
-            "notable": [_row(1, "notable", "A", "http://a")],
-            "brief": [_row(2, "brief", "B", "http://b")],
-            "journal": [],
-        }
-        proposal = {
-            "thesis": "x.",
-            "notable_order": ["n1"],
-            "brief_order": ["b1"],
-            "journal_order": [],
-            "promotions": [],
-            "membership_blocks": [
-                {"kind": "cta", "after": "n1", "rationale": "after lead"},
-                {"kind": "thanks", "before_haiku": True, "rationale": "end of issue"},
-            ],
-        }
-        page = self._build(proposal=proposal, rows_by_section=rows)
-        self.assertIn('class="marker"', page)
-        self.assertIn(">cta:1<", page)
-        self.assertIn(">thanks:1<", page)
-        # cta:1 (after n1) appears in the Notable section of the proposed
-        # column; thanks:1 (before_haiku) lands at the end of Briefly.
-        notable_block_start = page.find("Proposed by Eddy")
-        cta_pos = page.find(">cta:1<", notable_block_start)
-        thanks_pos = page.find(">thanks:1<", notable_block_start)
-        self.assertGreater(cta_pos, 0)
-        self.assertGreater(thanks_pos, cta_pos)
-
     def test_no_change_proposal_shows_note(self):
         rows = {
             "notable": [_row(1, "notable", "A", "http://a")],
@@ -151,13 +95,10 @@ class ProposalHtmlTests(unittest.TestCase):
         rows = {"notable": [_row(1, "notable", "A", "http://a")], "brief": [], "journal": []}
         proposal = {
             "thesis": "x.", "notable_order": ["n1"], "brief_order": [], "journal_order": [],
-            "promotions": [], "membership_blocks": [],
         }
         page = self._build(proposal=proposal, rows_by_section=rows)
         self.assertIn('class="legend"', page)
         self.assertIn("moved", page)
-        self.assertIn("promoted", page)
-        self.assertIn("membership marker", page)
 
     def test_connector_script_present(self):
         rows = {"notable": [_row(1, "notable", "A", "http://a")], "brief": [], "journal": []}
