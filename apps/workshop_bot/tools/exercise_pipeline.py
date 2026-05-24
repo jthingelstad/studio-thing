@@ -285,8 +285,8 @@ async def _noop_async(*args, **kwargs):
 # Mirrors PersonaBot subclasses' `preferred_model` attribute so the
 # harness's --model preferred mode matches what production uses.
 PERSONA_PREFERRED_MODEL = {
-    "eddy": "opus",
-    "linky": "haiku",
+    "eddy": "sonnet",
+    "linky": "sonnet",
     "marky": "sonnet",
     "patty": "sonnet",
 }

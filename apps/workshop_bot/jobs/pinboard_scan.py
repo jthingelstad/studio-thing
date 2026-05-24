@@ -528,16 +528,16 @@ async def _research_one(
     the per-link LLM usage is accumulated into it so the outer row's
     token columns sum across every link this scan processed.
 
-    Model selection: ``toread`` items (Jamie's own Pinboard picks +
-    Feedbin starred mirror) override to Sonnet — these are picks he's
-    already committed to and the research-card quality matters. Every
-    other source (discovery feeds, e.g. Pinboard popular) uses Linky's
-    persona default (Haiku) — discovery items are mostly SKIPs and the
-    volume × per-link cost is the bigger spend, so we economize there."""
+    Model selection: ``toread`` items (Jamie's own picks + Feedbin
+    starred mirror) use Linky's persona default (Sonnet) — research-card
+    quality matters on items he's already committed to. Discovery feeds
+    (Pinboard popular today, future feeds tomorrow) override DOWN to
+    Haiku — high-volume, mostly-SKIP lane where the volume × per-link
+    cost is the bigger spend, so we economize there."""
     url = item.get("url") or ""
     item_block = _format_user_msg(source=source, item=item, corpus=corpus)
     user_msg = f"{linky_ctx_block}\n\n{prompt}\n\n{item_block}"
-    model_override = "sonnet" if source == "toread" else None
+    model_override = None if source == "toread" else "haiku"
     try:
         answer, _meta = await linky.core(latest=user_msg, history=[], model=model_override)
     except Exception as exc:  # noqa: BLE001

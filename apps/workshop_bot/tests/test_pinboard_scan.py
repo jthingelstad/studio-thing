@@ -1161,10 +1161,11 @@ class ChatterSummaryTests(_DBTestCase):
 
 
 class PerLinkModelSelectionTests(_DBTestCase):
-    """Per-link model selection is per-source: discovery items use
-    Linky's persona default (Haiku — high-volume, mostly-SKIP lane);
-    ``toread`` items override to Sonnet — Jamie's own picks where
-    research-card quality matters. These tests pin the split."""
+    """Per-link model selection is per-source: ``toread`` items use
+    Linky's persona default (Sonnet — Jamie's own picks where research
+    quality matters); discovery items override DOWN to Haiku — the
+    high-volume, mostly-SKIP lane where we economize. These tests pin
+    the split."""
 
     def _ctx_and_team(self, replies=None):
         team = _FakeLinkyTeam(replies=replies)
@@ -1195,10 +1196,10 @@ class PerLinkModelSelectionTests(_DBTestCase):
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
 
             os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
-        # Discovery items pass model=None — persona default (Haiku) kicks in.
-        self.assertIsNone(team.linky.core.call_args.kwargs.get("model"))
+        # Discovery items override DOWN to Haiku — high-volume bulk lane.
+        self.assertEqual(team.linky.core.call_args.kwargs.get("model"), "haiku")
 
-    def test_toread_source_overrides_to_sonnet(self):
+    def test_toread_source_uses_default_model(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
 
         os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
@@ -1221,9 +1222,8 @@ class PerLinkModelSelectionTests(_DBTestCase):
             os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
 
             os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
-        # Toread items override to Sonnet — Jamie's own picks where
-        # research-card quality matters.
-        self.assertEqual(team.linky.core.call_args.kwargs.get("model"), "sonnet")
+        # Toread items pass model=None — persona default (Sonnet) kicks in.
+        self.assertIsNone(team.linky.core.call_args.kwargs.get("model"))
 
 
 class ParseSignalTests(unittest.TestCase):

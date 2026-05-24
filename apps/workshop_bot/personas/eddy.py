@@ -17,8 +17,13 @@ class EddyBot(PersonaBot):
     name = "Eddy"
     home_channel_env = "DISCORD_CHANNEL_EDITORIAL"
     empty_greeting = "Hey — what are we looking at?"
-    # Eddy gets the deepest editorial work; default to Opus per README intent.
-    preferred_model = "opus"
+    # Sonnet is the default for all of Eddy's general work — mentions,
+    # reorder, composition (subject/haiku/description/closer/thesis),
+    # follow-ups. Two editorial-review surfaces override up to Opus:
+    # ``update-draft:html-review`` (the canonical draft.html drawer
+    # pass) and ``review-text`` (``/eddy review <text>``). See each
+    # job's ``bot.core(..., model="opus")`` callsite.
+    preferred_model = "sonnet"
     slash_commands_summary = (
         "/eddy commands: issue {start,update,status,final,haiku,subject,publish} · "
         "status · review · archive · followup"

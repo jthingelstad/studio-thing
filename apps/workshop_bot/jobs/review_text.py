@@ -55,7 +55,9 @@ async def run(
         user_msg += f"\n\n_(Note: text was truncated at {_TEXT_CAP} chars.)_"
 
     with db.AgentRun("eddy", trigger="review-text") as agent_run:
-        answer, _meta = await bot.core(latest=user_msg, history=[], model=None)
+        # Override up to Opus: ad-hoc /eddy review is an editorial pass,
+        # same shape as the draft.html drawer review on Opus.
+        answer, _meta = await bot.core(latest=user_msg, history=[], model="opus")
         agent_run.record_meta(_meta)
         agent_run.records_written = 1 if (answer and answer.strip()) else 0
 

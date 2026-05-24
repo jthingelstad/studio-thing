@@ -140,7 +140,13 @@ class LinkyBot(PersonaBot):
     name = "Linky"
     home_channel_env = "DISCORD_CHANNEL_RESEARCH"
     empty_greeting = "Hey — want a curation pass, or asking about a specific link?"
-    preferred_model = "haiku"
+    # Sonnet is the default — for mentions, #team Q&A, /linky research,
+    # and the toread-lane per-link cards in pinboard-scan (Jamie's own
+    # picks, where research-card quality matters). The high-volume
+    # discovery lane (Pinboard popular + future feeds) overrides DOWN
+    # to Haiku in ``pinboard_scan._research_one`` — that's the
+    # mostly-SKIP firehose where volume × per-link cost is the spend.
+    preferred_model = "sonnet"
     slash_commands_summary = "/linky commands: scan · research · pile · stats · followup"
 
     def __init__(self, deps: Deps) -> None:

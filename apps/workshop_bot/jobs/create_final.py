@@ -700,6 +700,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
 
             for _round in range(_llm_job.MAX_REFRESH_ROUNDS):
                 with db.AgentRun("eddy", trigger="create-final") as agent_run:
+                    # Sonnet default — reorder is a constrained editorial
+                    # decision (ordering N items), well within Sonnet's
+                    # range. The substantive editorial pass is
+                    # update-draft:html-review (Opus).
                     reply, _meta = await bot.core(latest=user_msg, history=[], model=None)
                     agent_run.record_meta(_meta)
                     agent_run.records_written = 1
