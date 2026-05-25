@@ -964,6 +964,39 @@ def latest_campaign_metric(campaign_name: str) -> Optional[dict[str, Any]]:
     return dict(row) if row else None
 
 
+def list_campaigns(status: Optional[str] = None) -> list[dict[str, Any]]:
+    """All campaigns ordered newest first. Optional ``status`` filter
+    (``'live'`` / ``'sunset'`` / etc.); ``None`` returns every row.
+    ``active_campaigns`` is the live-only fast path used by the daily
+    poller; this is the read for ledgers + ad-hoc lookups."""
+    sql = (
+        "SELECT name, ref, status, started_at, ends_at, expected_signups, "
+        "       expected_traffic, copy, notes FROM campaigns"
+    )
+    params: tuple[Any, ...] = ()
+    if status is not None:
+        sql += " WHERE status = ?"
+        params = (status,)
+    sql += " ORDER BY started_at DESC, name DESC"
+    with connect() as conn:
+        rows = conn.execute(sql, params).fetchall()
+    return [dict(r) for r in rows]
+
+
+def recent_campaign_metrics(campaign_name: str, limit: int = 30) -> list[dict[str, Any]]:
+    """Recent metric rows for one campaign, newest first. ``limit`` caps
+    the trajectory length so a long-running campaign's poll history
+    doesn't blow the caller's context window."""
+    n = max(1, min(int(limit), 365))
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT id, campaign_name, ran_at, signups, traffic FROM campaign_metrics "
+            "WHERE campaign_name = ? ORDER BY ran_at DESC, id DESC LIMIT ?",
+            (campaign_name, n),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
 # ---------- currently (per-issue `## Currently` values + canonical types) ----------
 
 

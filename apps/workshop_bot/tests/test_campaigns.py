@@ -63,6 +63,29 @@ class CampaignDbTests(_DBCase):
         self.assertIsNone(db.get_campaign("dd388")["copy"])
         self.assertFalse(db.set_campaign_copy("nope", "x"))
 
+    def test_list_campaigns_returns_all_statuses_newest_first(self):
+        db.insert_campaign(name="old", ref="dd-2024-10-01", started_at="2024-10-01")
+        db.insert_campaign(name="mid", ref="dd-2025-05-13", started_at="2025-05-13")
+        db.insert_campaign(name="new", ref="dd-2026-05-11", started_at="2026-05-11")
+        db.set_campaign_status("old", "sunset")
+        db.set_campaign_status("mid", "sunset")
+        # No filter → every row, newest-first.
+        all_rows = db.list_campaigns()
+        self.assertEqual([r["name"] for r in all_rows], ["new", "mid", "old"])
+        self.assertEqual({r["status"] for r in all_rows}, {"live", "sunset"})
+        # Status filter narrows.
+        self.assertEqual([r["name"] for r in db.list_campaigns(status="live")], ["new"])
+        self.assertEqual([r["name"] for r in db.list_campaigns(status="sunset")], ["mid", "old"])
+
+    def test_recent_campaign_metrics_newest_first_and_capped(self):
+        db.insert_campaign(name="dd", ref="dd-2026-05-15")
+        for n in range(5):
+            db.insert_campaign_metric(campaign_name="dd", signups=n, traffic=n * 10)
+        rows = db.recent_campaign_metrics("dd", limit=3)
+        self.assertEqual([r["signups"] for r in rows], [4, 3, 2])
+        # No campaign → empty list, not an exception.
+        self.assertEqual(db.recent_campaign_metrics("nope"), [])
+
     def test_update_campaign(self):
         db.insert_campaign(name="dd", ref="OldRef-1", expected_signups=10, started_at="2026-05-01")
         # No changes → returns the row unchanged.
@@ -363,6 +386,63 @@ class MarkyContextWithCampaignsTests(_DBCase):
         self.assertEqual(len(ctx["active_campaigns"]), 1)
         self.assertEqual(ctx["active_campaigns"][0]["name"], "dd-may")
         self.assertEqual(ctx["active_campaigns"][0]["days_running"], 3)
+
+
+class CampaignAgentToolTests(_DBCase):
+    """The campaigns__list / _get / _history agent tools — the surface
+    Marky uses to read the full ledger (not just live rows)."""
+
+    def setUp(self):
+        super().setUp()
+        from apps.workshop_bot.tools.llm import agent_tools as _at
+        self.at = _at
+        db.insert_campaign(name="DD308", ref="DD-20241001",
+                           started_at="2024-10-01", copy="Curated insights.")
+        db.insert_campaign(name="DD388", ref="DenseDiscovery-388",
+                           started_at="2026-05-11", copy="Try the Weekly Thing.")
+        db.set_campaign_status("DD308", "sunset")
+        # DD388 stays live → has a latest metric.
+        db.insert_campaign_metric(campaign_name="DD388", signups=10, traffic=50)
+        db.insert_campaign_metric(campaign_name="DD388", signups=21, traffic=110)
+
+    def test_list_default_returns_all_statuses(self):
+        rows = self.at.t_campaigns_list(deps=None)
+        names = [r["name"] for r in rows]
+        # Newest first.
+        self.assertEqual(names, ["DD388", "DD308"])
+        # Status filter narrows.
+        live = self.at.t_campaigns_list(deps=None, status="live")
+        self.assertEqual([r["name"] for r in live], ["DD388"])
+        sunset = self.at.t_campaigns_list(deps=None, status="sunset")
+        self.assertEqual([r["name"] for r in sunset], ["DD308"])
+
+    def test_list_limit_caps(self):
+        rows = self.at.t_campaigns_list(deps=None, limit=1)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["name"], "DD388")
+
+    def test_get_returns_row_plus_latest_metric(self):
+        out = self.at.t_campaigns_get(deps=None, name="DD388")
+        self.assertEqual(out["ref"], "DenseDiscovery-388")
+        self.assertEqual(out["latest_metric"]["signups"], 21)
+        # Sunset row with no metrics → latest_metric is None.
+        old = self.at.t_campaigns_get(deps=None, name="DD308")
+        self.assertEqual(old["status"], "sunset")
+        self.assertIsNone(old["latest_metric"])
+        # Unknown campaign → error dict.
+        self.assertIn("error", self.at.t_campaigns_get(deps=None, name="nope"))
+
+    def test_history_trajectory(self):
+        out = self.at.t_campaigns_history(deps=None, name="DD388")
+        self.assertEqual(out["name"], "DD388")
+        self.assertEqual([m["signups"] for m in out["metrics"]], [21, 10])
+        # Unknown campaign → error.
+        self.assertIn("error", self.at.t_campaigns_history(deps=None, name="nope"))
+
+    def test_tools_registered_in_funcs_specs(self):
+        for name in ("campaigns__list", "campaigns__get", "campaigns__history"):
+            self.assertIn(name, self.at.FUNCS, name)
+            self.assertIn(name, self.at.SPECS, name)
 
 
 class WiringTests(unittest.TestCase):

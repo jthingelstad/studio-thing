@@ -38,7 +38,12 @@ You see every tool the team has access to (the registry is uniform), but stay in
 
 ## Campaign ledger — how you track promotions
 
-When Jamie's running a promotion (an ad placement, a LinkedIn post, anything with a destination URL with a `?ref=<tag>`), the campaign lives in the `campaigns` table in workshop.db: `name`, `ref`, `status`, `started_at`, `ends_at`, `expected_signups`, `expected_traffic`. The append-only `campaign_metrics` table holds the per-poll history. (Jamie registers a campaign via `/marky campaign add`; the `daily-metrics` job polls each live campaign and appends a metrics row; `/marky campaign report` summarizes.)
+When Jamie's running a promotion (an ad placement, a LinkedIn post, anything with a destination URL with a `?ref=<tag>`), the campaign lives in the `campaigns` table in workshop.db: `name`, `ref`, `status`, `started_at`, `ends_at`, `expected_signups`, `expected_traffic`, `copy`, `notes`. The append-only `campaign_metrics` table holds the per-poll history. (Jamie registers a campaign via `/marky campaign add`; the `daily-metrics` job polls each live campaign and appends a metrics row; `/marky campaign report` summarizes.)
+
+Three tools read the ledger directly — use these whenever you need to know what's run, what's running, or what a placement performed at:
+- `campaigns__list(status?, limit?)` — every campaign, newest first; filter by `status='live'` or `status='sunset'` when you want one slice. Default returns everything. This is your "what have I ever run" read.
+- `campaigns__get(name)` — one campaign + its latest metric snapshot.
+- `campaigns__history(name, limit?)` — recent poll rows for one campaign (trajectory: when traffic landed, how it tapered).
 
 Ref-tag convention: lowercase, hyphenated, platform-shorthand + date or descriptor. Examples: `dd-2026-05-15`, `linkedin-codex-2026-05`, `bluesky-photog-week`.
 

@@ -416,6 +416,44 @@ def t_workspace_write(
         return {"error": str(exc)}
 
 
+# ---------- campaigns (Marky's ad-placement ledger) ----------
+
+
+def t_campaigns_list(
+    deps, status: Optional[str] = None, limit: int = 50
+) -> list[dict[str, Any]]:
+    """Read the campaign ledger. Default returns every campaign — live
+    and sunset — newest first. Status filter accepts ``'live'`` or
+    ``'sunset'``."""
+    rows = db.list_campaigns(status=status)
+    n = max(1, min(int(limit), 200))
+    return rows[:n]
+
+
+def t_campaigns_get(deps, name: str) -> dict[str, Any]:
+    """Read one campaign by name. Returns the row plus its most recent
+    metric snapshot (``latest_metric``: signups, traffic, ran_at) or
+    ``{"error": …}`` if no such campaign."""
+    row = db.get_campaign(name)
+    if not row:
+        return {"error": f"unknown campaign {name!r}"}
+    return {**row, "latest_metric": db.latest_campaign_metric(name)}
+
+
+def t_campaigns_history(
+    deps, name: str, limit: int = 30
+) -> dict[str, Any]:
+    """Recent metric rows for one campaign, newest first. Use to read a
+    trajectory — when a placement landed, how it tapered, whether it
+    plateaued. Returns ``{"error": …}`` if no such campaign."""
+    if db.get_campaign(name) is None:
+        return {"error": f"unknown campaign {name!r}"}
+    return {
+        "name": name,
+        "metrics": db.recent_campaign_metrics(name, limit=int(limit)),
+    }
+
+
 # ---------- currently (per-issue ## Currently section) ----------
 
 # The mutating tools (`set`, `clear`, `add_type`, `reorder`) write the
@@ -1384,6 +1422,66 @@ SPECS: dict[str, dict[str, Any]] = {
             },
         },
     },
+    "campaigns__list": {
+        "name": "campaigns__list",
+        "description": (
+            "List campaigns from Marky's ad-placement ledger. Default "
+            "returns every campaign — live and sunset — newest first. "
+            "Each row carries name, ref, status, started_at, ends_at, "
+            "expected_signups, expected_traffic, copy, notes. Pair with "
+            "campaigns__get for a single campaign + its latest metric, "
+            "or campaigns__history for the trajectory."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "description": (
+                        "Optional filter: 'live' (currently polling), "
+                        "'sunset' (historical). Omit for all."
+                    ),
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max rows. Default 50, max 200.",
+                },
+            },
+        },
+    },
+    "campaigns__get": {
+        "name": "campaigns__get",
+        "description": (
+            "Read one campaign by name (e.g. 'DD388'). Returns the row "
+            "plus the most recent metric snapshot under 'latest_metric'. "
+            "For the full poll trajectory use campaigns__history."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"name": {"type": "string"}},
+            "required": ["name"],
+        },
+    },
+    "campaigns__history": {
+        "name": "campaigns__history",
+        "description": (
+            "Recent campaign_metrics rows for one campaign, newest "
+            "first. Use to read a placement's trajectory — when traffic "
+            "landed, how it tapered. Default limit 30 days of polls; "
+            "cap 365."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "limit": {
+                    "type": "integer",
+                    "description": "Max rows. Default 30, max 365.",
+                },
+            },
+            "required": ["name"],
+        },
+    },
 }
 
 
@@ -1428,6 +1526,9 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "react__add": t_react_add,
     "editorial__get_comment": t_editorial_get_comment,
     "editorial__list_open": t_editorial_list_open,
+    "campaigns__list": t_campaigns_list,
+    "campaigns__get": t_campaigns_get,
+    "campaigns__history": t_campaigns_history,
 }
 
 
