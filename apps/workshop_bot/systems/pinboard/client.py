@@ -14,6 +14,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+import random
 import time
 from collections import Counter
 from typing import Any
@@ -736,14 +737,19 @@ def popular(limit: int = 30) -> list[dict[str, Any]]:
     No auth needed — public discovery surface, the same feed Jamie
     scans manually. Returns ``[{title, url, description, posted_by}]``.
     """
-    # 120s read timeout — feeds.pinboard.in routinely hangs accepting
-    # the connection but not sending bytes during US business hours
-    # (~50% failure rate at 60s, clustered 10/13/16 CT). Bumped from 60s
-    # 2026-05-25; if the rate doesn't materially drop, the next move is
-    # to shift scan times off-peak rather than chasing a longer timeout.
+    # Pinboard's RSS server hangs ~50% of the time at 13:05 / 16:05 /
+    # 10:05 CT — US business hours when many feed readers + cron jobs
+    # likely hit it at the same exact-minute boundaries (we fire at
+    # :05). A short random jitter before the request puts us in a less
+    # contested window: the herd lands at :00/:05, we land somewhere
+    # in :05–:06:30. 60s timeout (back from a 120s experiment that
+    # didn't help — server was dropping requests, not slow).
+    jitter = random.uniform(0, 90)
+    logger.info("pinboard__popular: sleeping %.1fs before fetch (herd-avoidance jitter)", jitter)
+    time.sleep(jitter)
     resp = requests.get(
         POPULAR_FEED,
-        timeout=120,
+        timeout=60,
         headers={"User-Agent": "WeeklyThing-WorkshopBot/1.0"},
     )
     resp.raise_for_status()
