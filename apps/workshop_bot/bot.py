@@ -20,6 +20,7 @@ import os
 import random
 import signal
 import sys
+import time
 from pathlib import Path
 
 import discord
@@ -67,6 +68,19 @@ HTTP_RATELIMIT_TIMEOUT = 1.0
 # login + gateway + READY latency, fully healthy startups land in <60s.
 # 90s leaves slack without paying the full 5m+ rate-limit ladder.
 READY_WAIT_SECONDS = 90.0
+
+# Per-persona gateway-watchdog thresholds. discord.py's KeepAlive should
+# detect a dead gateway and reconnect, but we've seen it fall into a
+# silent-zombie state (lib thinks WS is open, Discord disagrees, no
+# events arrive) — the same failure mode that took thingy_bridge
+# unreachable for ~24h. launchd's KeepAlive watches the PID only, so a
+# stuck process looks healthy. The watchdog records each persona's
+# last dispatched event; on staleness it ``os._exit(1)`` so launchd's
+# KeepAlive respawns the process with fresh sessions for all four.
+# 10 min covers any plausibly quiet guild interval (PRESENCE_UPDATE /
+# TYPING_START / MESSAGE_CREATE fire constantly on a populated server).
+WATCHDOG_STALE_SECS = 600.0
+WATCHDOG_CHECK_SECS = 60.0
 
 PERSONAS: list[tuple[str, str, type]] = [
     ("eddy", "DISCORD_TOKEN_EDDY", EddyBot),
@@ -120,6 +134,71 @@ def collect_tokens() -> list[tuple[str, str, type]]:
     if missing:
         logger.error("missing Discord tokens: %s", ", ".join(missing))
     return resolved
+
+
+async def _gateway_watchdog(
+    name: str,
+    bot,
+    stop_event: asyncio.Event,
+    *,
+    stale_secs: float = WATCHDOG_STALE_SECS,
+    check_secs: float = WATCHDOG_CHECK_SECS,
+) -> None:
+    """One watchdog per persona — same shape as thingy_bridge's.
+
+    Hooks ``on_socket_event_type`` (fires on every dispatched gateway
+    event — READY, MESSAGE_CREATE, PRESENCE_UPDATE, TYPING_START, …)
+    and stamps a monotonic clock. Every ``check_secs`` we verify the
+    last event is within ``stale_secs``. On miss we ``os._exit(1)``
+    rather than ``sys.exit`` because the asyncio loop may itself be
+    wedged — we want the process gone immediately so launchd's
+    KeepAlive respawns it (4 fresh sessions, since one dead persona
+    typically means the whole process needs cycling).
+    """
+    last_event_at = time.monotonic()
+
+    # discord.Client has no ``add_listener`` — that's an
+    # ``ext.commands.Bot`` method. The documented Client API is
+    # ``bot.event(coro)``, which registers the coroutine under its
+    # ``__name__``.
+    async def on_socket_event_type(event_type: str) -> None:  # noqa: ARG001
+        nonlocal last_event_at
+        last_event_at = time.monotonic()
+
+    bot.event(on_socket_event_type)
+
+    try:
+        await asyncio.wait_for(bot.ready_event.wait(), timeout=READY_WAIT_SECONDS)
+    except asyncio.TimeoutError:
+        logger.warning(
+            "[%s] watchdog: not ready within %.0fs; arming anyway",
+            name, READY_WAIT_SECONDS,
+        )
+    last_event_at = time.monotonic()
+    logger.info("[%s] watchdog: armed (stale threshold %.0fs)", name, stale_secs)
+
+    while not stop_event.is_set():
+        try:
+            await asyncio.wait_for(stop_event.wait(), timeout=check_secs)
+            return
+        except asyncio.TimeoutError:
+            pass
+
+        if bot.is_closed():
+            logger.error(
+                "[%s] watchdog: bot.is_closed() is True; exiting so launchd restarts us",
+                name,
+            )
+            os._exit(1)
+
+        idle = time.monotonic() - last_event_at
+        if idle > stale_secs:
+            logger.error(
+                "[%s] watchdog: no gateway events for %.0fs (threshold %.0fs); "
+                "exiting so launchd restarts us",
+                name, idle, stale_secs,
+            )
+            os._exit(1)
 
 
 async def run() -> int:
@@ -240,6 +319,16 @@ async def run() -> int:
         # Space out the initial login burst so we don't trip 40062 from the herd.
         if await _sleep_or_stop(LOGIN_STAGGER_SECONDS):
             break
+
+    # One watchdog per persona. If any of them goes silent-zombie, the
+    # whole process exits so launchd respawns with fresh sessions for
+    # all four — restarting one Client mid-flight is messier than a
+    # full cycle.
+    for n, b, _ in bots:
+        tasks.append(asyncio.create_task(
+            _gateway_watchdog(n, b, stop_event),
+            name=f"watchdog:{n}",
+        ))
 
     scheduler_enabled = (
         os.environ.get("WORKSHOP_SCHEDULER_ENABLED", "1").strip() not in ("0", "false", "")
