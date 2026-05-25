@@ -36,6 +36,18 @@ logger = logging.getLogger("workshop.alt_text")
 _DEFAULT_CAP = 15
 _FETCH_TIMEOUT = 20.0
 _FETCH_MAX_BYTES = 6 * 1024 * 1024     # 6 MB — rehosted images are well under
+
+# Anthropic's vision API caps base64 image bodies at 5 MB. Resize any
+# image we send to the vision call so we stay well under that and
+# also pay fewer image tokens — pricing scales with megapixels, and
+# Anthropic's documented sweet spot for resolution is around 1568px
+# on the long edge (the model downscales bigger images server-side
+# anyway, so larger uploads waste bytes + tokens for nothing).
+_VISION_LONG_EDGE_MAX = 1568
+# Below this binary size + within the resolution cap, skip the PIL
+# round-trip entirely. Headroom below the API's 5 MB base64 cap: 3 MB
+# binary → ~4 MB base64 once encoded.
+_VISION_BINARY_PASSTHROUGH_MAX = 3 * 1024 * 1024
 _VISION_MAX_TOKENS = 200
 _VISION_MODEL_KEY = "sonnet"
 _UA = "WeeklyThing-WorkshopBot/1.0"
@@ -111,6 +123,64 @@ def _fetch_image_bytes(url: str) -> Optional[tuple[bytes, str]]:
         return None
 
 
+def _downscale_for_vision(body: bytes, media_type: str) -> tuple[bytes, str]:
+    """Resize the fetched image in memory before sending to the vision
+    API. Two reasons: (1) Anthropic's 5 MB base64 cap rejects oversized
+    uploads (we saw this on 7.6 MB journal photos that the upstream
+    micro.blog uploads carry at full resolution), and (2) Anthropic's
+    vision pricing scales with megapixels — images bigger than ~1568px
+    on the long edge get downscaled server-side anyway, so larger
+    uploads waste bytes and tokens.
+
+    Fast path: if the binary is already under the passthrough cap AND
+    the resolution is within the long-edge limit, return as-is. Slow
+    path: re-encode at ≤1568px long edge as JPEG q85 (plenty for the
+    alt-text task — we're describing the scene, not reading text).
+
+    PIL is imported lazily so the module loads in environments without
+    it; on any failure the original bytes are returned (the upstream
+    API will reject if the image is genuinely too big, which restores
+    the prior behaviour — no regression).
+    """
+    if len(body) <= _VISION_BINARY_PASSTHROUGH_MAX:
+        try:
+            from PIL import Image  # noqa: PLC0415
+            from io import BytesIO  # noqa: PLC0415
+
+            with Image.open(BytesIO(body)) as probe:
+                if max(probe.size) <= _VISION_LONG_EDGE_MAX:
+                    return body, media_type
+        except Exception:  # noqa: BLE001 — Pillow missing or bad image; fall through
+            return body, media_type
+
+    try:
+        from PIL import Image  # noqa: PLC0415
+        from io import BytesIO  # noqa: PLC0415
+
+        with Image.open(BytesIO(body)) as img:
+            img.thumbnail(
+                (_VISION_LONG_EDGE_MAX, _VISION_LONG_EDGE_MAX),
+                Image.LANCZOS,
+            )
+            # JPEG can't carry alpha; flatten transparent/paletted modes.
+            if img.mode in ("RGBA", "LA", "P"):
+                img = img.convert("RGB")
+            buf = BytesIO()
+            img.save(buf, format="JPEG", quality=85, optimize=True)
+            new_body = buf.getvalue()
+        logger.debug(
+            "alt_text: resized %d-byte %s -> %d-byte image/jpeg",
+            len(body), media_type, len(new_body),
+        )
+        return new_body, "image/jpeg"
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "alt_text: PIL resize failed (%s); sending original %d bytes",
+            exc, len(body),
+        )
+        return body, media_type
+
+
 def _build_messages(*, image_b64: str, media_type: str, context: str, caption: Optional[str]) -> list[dict]:
     """Compose the vision-call user content blocks."""
     text_parts = [_PROMPT_BASE]
@@ -169,6 +239,7 @@ def _generate_via_vision(*, image_url: str, context: str, caption: Optional[str]
     if fetched is None:
         return ""
     body, media_type = fetched
+    body, media_type = _downscale_for_vision(body, media_type)
     b64 = base64.b64encode(body).decode("ascii")
     try:
         client = anthropic_client.client()

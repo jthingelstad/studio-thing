@@ -42,6 +42,48 @@ class _AltTextCapResetCase(unittest.TestCase):
         alt_text.begin_run()
 
 
+class DownscaleForVisionTests(unittest.TestCase):
+    """Resize-before-vision guards Anthropic's 5 MB base64 cap and cuts
+    image tokens. Small images skip the PIL roundtrip; large ones get
+    re-encoded as ≤1568px JPEG q85."""
+
+    @staticmethod
+    def _png_bytes(size_px: int) -> bytes:
+        """Build a real PNG of size_px × size_px in memory (no fixture file)."""
+        from io import BytesIO
+        from PIL import Image
+        img = Image.new("RGB", (size_px, size_px), color="white")
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        return buf.getvalue()
+
+    def test_small_image_passes_through_unchanged(self):
+        body = self._png_bytes(400)  # well under 1568px and < 3 MB
+        out_body, out_media = alt_text._downscale_for_vision(body, "image/png")
+        self.assertEqual(out_body, body)
+        self.assertEqual(out_media, "image/png")
+
+    def test_large_image_resized_and_recoded_as_jpeg(self):
+        body = self._png_bytes(3000)  # exceeds 1568px long edge
+        out_body, out_media = alt_text._downscale_for_vision(body, "image/png")
+        self.assertLess(len(out_body), len(body))
+        self.assertEqual(out_media, "image/jpeg")
+        # Sanity: the resized image should fit comfortably under the API cap.
+        approx_base64_size = (len(out_body) * 4 + 2) // 3
+        self.assertLess(approx_base64_size, 5 * 1024 * 1024)
+        # And the long edge should be at or under the documented sweet spot.
+        from io import BytesIO
+        from PIL import Image
+        with Image.open(BytesIO(out_body)) as img:
+            self.assertLessEqual(max(img.size), alt_text._VISION_LONG_EDGE_MAX)
+
+    def test_bad_bytes_falls_back_to_original(self):
+        body = b"this is not an image"
+        out_body, out_media = alt_text._downscale_for_vision(body, "image/jpeg")
+        self.assertEqual(out_body, body)
+        self.assertEqual(out_media, "image/jpeg")
+
+
 class CleanAltTests(unittest.TestCase):
     def test_strip_wrapping_quotes(self):
         self.assertEqual(alt_text._clean_alt('"A creek over rocks"'), "A creek over rocks")
