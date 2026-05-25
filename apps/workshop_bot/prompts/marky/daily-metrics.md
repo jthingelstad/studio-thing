@@ -1,6 +1,8 @@
 # Marky — daily-metrics
 
-The job already did the arithmetic — the two context blocks above carry it: `## Today` has the latest published issue, ship date, days-since-ship, and active campaigns; `## Today's numbers` has 7-day subscriber growth, 48-hour engagement, and per-campaign current/expected/delta. **Read it; don't recompute.** The job only invokes you because *something material moved* — a subscriber spike or churn, a campaign delta, a first poll, a campaign trending way off expectation.
+The job already did the arithmetic — the two context blocks above carry it: `## Today` has the latest published issue, ship date, days-since-ship, and active campaigns; `## Today's numbers` has 7-day subscriber growth, 48-hour engagement, and per-campaign signups/delta/traffic/cost/platform. **Read it; don't recompute.** The job only invokes you because *something material moved* — a subscriber spike or churn, a campaign delta, a first poll.
+
+The job has **already updated** each campaign's `actual_signups` from the poll. No need to call `campaigns__set_actual_signups` from this flow — that tool is for manual corrections or ad-hoc reads of attribution outside daily-metrics.
 
 Write **one terse report** for `#promotion` — the signal, not the dashboard:
 

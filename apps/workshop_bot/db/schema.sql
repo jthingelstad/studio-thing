@@ -282,34 +282,45 @@ INSERT INTO goals (target_kind, target_value, started_at)
 SELECT 'members', 50, '2026-05-11'
 WHERE NOT EXISTS (SELECT 1 FROM goals);
 
--- Campaigns — Marky's ad-placement ledger. One row per `?ref=<tag>`
--- campaign, created by /workshop campaign add. Status: 'live' while
--- it's running, 'sunset' once it's over. `copy` holds the actual promo
--- text that ran in the placement, so performance can be read against the
--- creative — set at add-campaign time or later via campaign-copy.
+-- Campaigns — Marky's ad-placement ledger. One row per placement
+-- (an ad in a newsletter, a LinkedIn post, etc.), created by
+-- /marky campaign add. Status: 'live' while daily-metrics is polling
+-- it, 'sunset' once it's over (historical record only). `ref` is the
+-- attribution key Tinylytics + Buttondown look up. `url` is the raw
+-- destination URL people clicked (covers UTM-era placements that
+-- predate the `?ref=` scheme). `platform` groups placements by channel
+-- (DenseDiscovery / LinkedIn / Bluesky / …). `actual_signups` is the
+-- current attribution count, denormalised onto the campaign row by
+-- daily-metrics after each poll and by Marky via the agent tool for
+-- manual corrections — KPI lives at the top of the row, not behind a
+-- join. `cost` is dollars paid (nullable; organic placements leave it
+-- empty). `copy` holds the placement creative for perf-against-copy.
 CREATE TABLE IF NOT EXISTS campaigns (
-  name TEXT PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
   ref TEXT NOT NULL,
+  url TEXT,
+  platform TEXT,
   status TEXT NOT NULL DEFAULT 'live',
   started_at TEXT NOT NULL DEFAULT (date('now')),
-  ends_at TEXT,
-  expected_signups INTEGER,
-  expected_traffic INTEGER,
+  actual_signups INTEGER,
+  cost REAL,
   copy TEXT,
   notes TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_campaigns_ref ON campaigns(ref);
 
--- Campaign metrics — append-only per-poll history. daily-metrics inserts
--- one row per active campaign each run; a 90-day window is plenty, older
--- rows can age out.
+-- Campaign metrics — append-only per-poll trajectory. daily-metrics
+-- inserts one row per live campaign each run; a 90-day window is
+-- plenty, older rows can age out. Signups only (traffic was dropped
+-- in migration 0013 — signups is the KPI; site-traffic noise wasn't
+-- pulling its weight).
 CREATE TABLE IF NOT EXISTS campaign_metrics (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   campaign_name TEXT NOT NULL REFERENCES campaigns(name),
   ran_at TEXT NOT NULL DEFAULT (datetime('now')),
-  signups INTEGER,
-  traffic INTEGER
+  signups INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_campaign_metrics_name

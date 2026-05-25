@@ -2,13 +2,18 @@
 
 Scheduled daily 19:00 CT; manual re-fire via ``/marky metrics``.
 
-Each run: (1) for every active campaign, fetch current traffic (Tinylytics
-`?ref=` source count) + signups (Buttondown ref attribution), append a
-``campaign_metrics`` row, and compute the delta vs the prior row; (2)
-gather subscriber growth and recent site engagement; (3) if nothing
-material moved, **PASS** silently — no "nothing to report" ack; (4) if
-something moved, run Marky's agent loop to compose a terse report and post
-it to ``#promotion``.
+Each run: (1) for every active campaign, fetch current signups
+(Buttondown ref attribution) + traffic (Tinylytics ``?ref=`` source
+count), append a ``campaign_metrics`` row, update the campaign's
+denormalised ``actual_signups``, and compute the delta vs the prior
+row; (2) gather subscriber growth and recent site engagement; (3) if
+nothing material moved, **PASS** silently — no "nothing to report"
+ack; (4) if something moved, run Marky's agent loop to compose a
+terse report and post it to ``#promotion``.
+
+Traffic is read from Tinylytics for the same-day "is this campaign
+driving clicks?" lens but is no longer persisted (migration 0013 — the
+KPI is signups; traffic noise wasn't pulling its weight).
 """
 
 from __future__ import annotations
@@ -43,8 +48,6 @@ _WINDOW_LONG_DAYS = 60
 # report louder or quieter.
 _MIN_MATERIAL_NET = 3       # |subscriber net 7d| at or above → material
 _MIN_MATERIAL_CHURNED = 3   # 7d churn at or above → material
-_LOW_EXPECTED_RATIO = 0.4   # actual traffic < this × expected → trending low
-_HIGH_EXPECTED_RATIO = 1.5  # actual traffic > this × expected → trending high
 
 
 def _campaign_window_days(started_at: str | None) -> int:
@@ -83,23 +86,29 @@ def _campaign_signups(ref: str, days: int) -> int | None:
 
 
 def _poll_campaigns() -> list[dict]:
-    """Poll each active campaign, append a metrics row, return per-campaign
-    snapshots with deltas."""
+    """Poll each active campaign, append a metrics row, update the
+    denormalised ``actual_signups``, return per-campaign snapshots
+    with deltas. Traffic stays in the snapshot for the report's
+    same-day lens but isn't persisted (migration 0013)."""
     snapshots: list[dict] = []
     for c in db.active_campaigns():
         days = _campaign_window_days(c.get("started_at"))
         traffic = _campaign_traffic(c["ref"], days)
         signups = _campaign_signups(c["ref"], days)
         prev = db.latest_campaign_metric(c["name"]) or {}
-        prev_t, prev_s = prev.get("traffic"), prev.get("signups")
-        db.insert_campaign_metric(campaign_name=c["name"], signups=signups, traffic=traffic)
-        d_t = (traffic - prev_t) if (traffic is not None and isinstance(prev_t, int)) else None
+        prev_s = prev.get("signups")
+        db.insert_campaign_metric(campaign_name=c["name"], signups=signups)
+        if signups is not None:
+            # Denormalise onto the campaign row so the headline number
+            # is one read away — no join, no metric history walk.
+            db.set_actual_signups(c["name"], int(signups))
         d_s = (signups - prev_s) if (signups is not None and isinstance(prev_s, int)) else None
         snapshots.append({
             "name": c["name"], "ref": c["ref"], "window_days": days,
             "traffic": traffic, "signups": signups,
-            "delta_traffic": d_t, "delta_signups": d_s,
-            "expected_traffic": c.get("expected_traffic"), "expected_signups": c.get("expected_signups"),
+            "delta_signups": d_s,
+            "cost": c.get("cost"),
+            "platform": c.get("platform"),
             "copy": (c.get("copy") or None),
             "is_first_poll": not prev,
         })
@@ -115,18 +124,12 @@ def _growth_moved(growth: dict) -> bool:
 
 
 def _campaigns_moved(campaigns: list[dict]) -> bool:
-    """Did any campaign show a material signal? — a first poll, any
-    delta vs the prior row, or current traffic trending way off
-    expectation."""
+    """Did any campaign show a material signal? — a first poll or any
+    delta vs the prior row."""
     for c in campaigns:
         if c["is_first_poll"]:
             return True
-        if (c["delta_traffic"] or 0) != 0 or (c["delta_signups"] or 0) != 0:
-            return True
-        et, t = c.get("expected_traffic"), c.get("traffic")
-        if isinstance(et, int) and et > 0 and isinstance(t, int) and (
-            t < _LOW_EXPECTED_RATIO * et or t > _HIGH_EXPECTED_RATIO * et
-        ):
+        if (c["delta_signups"] or 0) != 0:
             return True
     return False
 

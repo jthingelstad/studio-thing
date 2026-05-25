@@ -1,7 +1,7 @@
-"""``campaign-report`` — active campaigns + current performance vs expected.
+"""``campaign-report`` — active campaigns + current performance.
 
-Joins ``campaigns`` against the latest ``campaign_metrics`` row per
-campaign and returns a summary. Read-only, deterministic, no LLM.
+Reads ``campaigns.actual_signups`` (denormalised KPI) and the latest
+``campaign_metrics`` poll timestamp. Read-only, deterministic, no LLM.
 """
 
 from __future__ import annotations
@@ -12,14 +12,14 @@ from . import _base
 NAME = "campaign-report"
 
 
-def _vs(actual, expected) -> str:
-    if expected is None or actual is None:
-        return f"{actual if actual is not None else '?'}"
-    if expected == 0:
-        return f"{actual} (no target)"
-    pct = round(100 * actual / expected)
-    arrow = "📈" if pct >= 100 else ("➡️" if pct >= 60 else "🐢")
-    return f"{actual} / {expected} ({pct}% {arrow})"
+def _cost_per_signup(cost, signups) -> str | None:
+    """Format $/signup when both fields are present and signups > 0."""
+    if cost is None or signups is None or not signups:
+        return None
+    try:
+        return f"${float(cost) / int(signups):.2f}/signup"
+    except (TypeError, ValueError, ZeroDivisionError):
+        return None
 
 
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
@@ -30,13 +30,19 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     lines = ["📊 **Active campaigns**", ""]
     for c in campaigns:
         latest = db.latest_campaign_metric(c["name"]) or {}
-        signups = latest.get("signups")
-        traffic = latest.get("traffic")
         polled = latest.get("ran_at") or "never polled"
+        actual = c.get("actual_signups")
+        cost = c.get("cost")
+        bits = [f"signups: {actual if actual is not None else '—'}"]
+        cps = _cost_per_signup(cost, actual)
+        if cost is not None:
+            bits.append(f"cost: ${float(cost):.2f}" + (f" ({cps})" if cps else ""))
+        if c.get("platform"):
+            bits.append(f"on {c['platform']}")
+        bits.append(f"last poll: {polled}")
         lines.append(
             f"- **{c['name']}** (ref `{c['ref']}`, since {c['started_at']}) — "
-            f"signups: {_vs(signups, c.get('expected_signups'))} · "
-            f"traffic: {_vs(traffic, c.get('expected_traffic'))} · last poll: {polled}"
+            + " · ".join(bits)
         )
         copy = (c.get("copy") or "").strip()
         if copy:

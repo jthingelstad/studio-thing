@@ -110,29 +110,32 @@ def register_marky_commands(
 
     @campaign.command(
         name="add",
-        description="Register an ad campaign for Marky to track (name, ?ref= tag, optional expected signups/traffic).",
+        description="Register an ad campaign for Marky to track (name, ?ref= tag, optional url/platform/cost/copy).",
     )
     @app_commands.describe(
         name="A short name for the campaign (e.g. dense-discovery-may-2026)",
         ref="The ?ref= tag from the campaign URL, exact case (e.g. DenseDiscovery-388)",
-        expected_signups="Optional — how many subscribers you expect from it",
-        expected_traffic="Optional — how many visits you expect from it",
+        url="Optional — the raw destination URL people clicked",
+        platform="Optional — channel (DenseDiscovery, LinkedIn, Bluesky, …)",
+        cost="Optional — actual dollars paid for the placement",
         copy="Optional — the actual promo text that ran in the placement (set later with campaign copy)",
     )
     async def campaign_add_cmd(  # type: ignore[misc]
         interaction: discord.Interaction,
         name: str,
         ref: str,
-        expected_signups: int = 0,
-        expected_traffic: int = 0,
+        url: str = "",
+        platform: str = "",
+        cost: float = 0.0,
         copy: str = "",
     ) -> None:
         await _run_and_ack(
             interaction,
             lambda: add_campaign.run(
                 _ctx(bot), name=name, ref=ref,
-                expected_signups=(expected_signups or None),
-                expected_traffic=(expected_traffic or None),
+                url=(url or None),
+                platform=(platform or None),
+                cost=(cost if cost > 0 else None),
                 copy=(copy or None),
             ),
             "campaign add",
@@ -140,15 +143,15 @@ def register_marky_commands(
 
     @campaign.command(
         name="edit",
-        description="Change details on a running campaign — ref, dates, expected counts, notes, copy.",
+        description="Change details on a running campaign — ref, url, platform, cost, notes, copy.",
     )
     @app_commands.describe(
         name="The campaign name (as registered with campaign add)",
         ref="New ?ref= tag, exact case (leave blank to keep the current one)",
+        url="New destination URL (leave blank to keep)",
+        platform="New platform/channel (leave blank to keep)",
         started_at="When it started — YYYY-MM-DD (leave blank to keep)",
-        ends_at="When it ends/ended — YYYY-MM-DD (leave blank to keep)",
-        expected_signups="Revised expected subscribers (-1 to keep the current value)",
-        expected_traffic="Revised expected visits (-1 to keep the current value)",
+        cost="Revised cost in dollars (-1 to keep the current value)",
         notes="Notes to set (leave blank to keep; can't clear here)",
         copy="The promo text that ran (leave blank to keep; use `campaign copy` to clear it)",
     )
@@ -156,10 +159,10 @@ def register_marky_commands(
         interaction: discord.Interaction,
         name: str,
         ref: str = "",
+        url: str = "",
+        platform: str = "",
         started_at: str = "",
-        ends_at: str = "",
-        expected_signups: int = -1,
-        expected_traffic: int = -1,
+        cost: float = -1.0,
         notes: str = "",
         copy: str = "",
     ) -> None:
@@ -167,9 +170,11 @@ def register_marky_commands(
             interaction,
             lambda: ops.campaign_edit(
                 _ctx(bot), name=name,
-                ref=(ref or None), started_at=(started_at or None), ends_at=(ends_at or None),
-                expected_signups=(None if int(expected_signups) < 0 else int(expected_signups)),
-                expected_traffic=(None if int(expected_traffic) < 0 else int(expected_traffic)),
+                ref=(ref or None),
+                url=(url or None),
+                platform=(platform or None),
+                started_at=(started_at or None),
+                cost=(None if cost < 0 else float(cost)),
                 notes=(notes or None), copy=(copy or None),
             ),
             "campaign edit",

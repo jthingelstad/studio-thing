@@ -21,14 +21,14 @@ NAME = "add-campaign"
 # Case-preserving: Tinylytics records the ?ref= value verbatim and matches it
 # case-sensitively, so a ref set up as `DenseDiscovery-388` must be stored
 # exactly that way or daily-metrics polls the wrong key and sees 0 traffic.
-_REF_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._~-]{0,63}$")
+_REF_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._~:-]{0,63}$")
 
 
-def _as_int(v) -> Optional[int]:
+def _as_float(v) -> Optional[float]:
     if v is None or v == "":
         return None
     try:
-        return int(v)
+        return float(v)
     except (TypeError, ValueError):
         return None
 
@@ -38,22 +38,25 @@ async def run(
     *,
     name: str,
     ref: str,
-    expected_signups=None,
-    expected_traffic=None,
+    url=None,
+    platform=None,
+    cost=None,
     copy=None,
 ) -> "_base.JobResult":
     name = (name or "").strip()
     ref = (ref or "").strip()
+    url = (str(url).strip() or None) if url is not None else None
+    platform = (str(platform).strip() or None) if platform is not None else None
     copy = (str(copy).strip() or None) if copy is not None else None
     if not name:
         return _base.JobResult(False, "❌ campaign name is required.")
     if not _REF_RE.match(ref):
         return _base.JobResult(
             False,
-            f"❌ ref tag {ref!r} must match the ?ref= value exactly — letters/digits plus `.`/`_`/`-`/`~`, "
+            f"❌ ref tag {ref!r} must match the ?ref= value exactly — letters/digits plus `.`/`_`/`-`/`~`/`:`, "
             "≤64 chars (e.g. `DenseDiscovery-388`). Case is preserved.",
         )
-    es, et = _as_int(expected_signups), _as_int(expected_traffic)
+    cost_f = _as_float(cost)
     # Soft-warn if another live campaign is already using this ref — two
     # campaigns sharing a `?ref=` value will read the same Tinylytics /
     # Buttondown numbers, so `daily-metrics` can't tell them apart. Not
@@ -63,7 +66,9 @@ async def run(
         (c for c in db.active_campaigns() if c.get("ref") == ref and c.get("name") != name),
         None,
     )
-    created = db.insert_campaign(name=name, ref=ref, expected_signups=es, expected_traffic=et, copy=copy)
+    created = db.insert_campaign(
+        name=name, ref=ref, url=url, platform=platform, cost=cost_f, copy=copy,
+    )
     if not created:
         existing = db.get_campaign(name) or {}
         return _base.JobResult(
@@ -77,10 +82,12 @@ async def run(
             f"⚠️ ref `{ref}` is already live on `{ref_collision['name']}` — "
             "they'll share metrics. Use a different ref unless that's intentional."
         )
-    if es is not None:
-        bits.append(f"Expected signups: {es}.")
-    if et is not None:
-        bits.append(f"Expected traffic: {et}.")
+    if platform:
+        bits.append(f"Platform: {platform}.")
+    if url:
+        bits.append("URL recorded.")
+    if cost_f is not None:
+        bits.append(f"Cost: ${cost_f:.2f}.")
     if copy:
         bits.append("Copy recorded.")
     else:

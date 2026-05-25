@@ -454,6 +454,25 @@ def t_campaigns_history(
     }
 
 
+def t_campaigns_set_actual_signups(
+    deps, name: str, signups: int
+) -> dict[str, Any]:
+    """Write the current attribution-realised signups count for a
+    campaign. ``daily-metrics`` updates this column after each poll, so
+    in the routine flow there's no need to call this tool. Use it for
+    manual corrections (you ran ``buttondown__attribution_summary``
+    yourself and noticed the stored value is stale) or for ad-hoc
+    placements outside the daily-metrics path. Returns the updated row,
+    or ``{"error": …}`` if no such campaign."""
+    n = int(signups)
+    if n < 0:
+        return {"error": "signups must be ≥ 0"}
+    if not db.set_actual_signups(name, n):
+        return {"error": f"unknown campaign {name!r}"}
+    row = db.get_campaign(name) or {}
+    return {"ok": True, "campaign": row}
+
+
 # ---------- currently (per-issue ## Currently section) ----------
 
 # The mutating tools (`set`, `clear`, `add_type`, `reorder`) write the
@@ -1427,10 +1446,11 @@ SPECS: dict[str, dict[str, Any]] = {
         "description": (
             "List campaigns from Marky's ad-placement ledger. Default "
             "returns every campaign — live and sunset — newest first. "
-            "Each row carries name, ref, status, started_at, ends_at, "
-            "expected_signups, expected_traffic, copy, notes. Pair with "
-            "campaigns__get for a single campaign + its latest metric, "
-            "or campaigns__history for the trajectory."
+            "Each row carries id, name, ref, url, platform, status, "
+            "started_at, actual_signups (the denormalised KPI), cost, "
+            "copy, notes. Pair with campaigns__get for a single "
+            "campaign + its latest metric, or campaigns__history for "
+            "the trajectory."
         ),
         "input_schema": {
             "type": "object",
@@ -1482,6 +1502,31 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["name"],
         },
     },
+    "campaigns__set_actual_signups": {
+        "name": "campaigns__set_actual_signups",
+        "description": (
+            "Write the campaign's current attribution-realised signups "
+            "count (the KPI denormalised on the campaign row). The "
+            "daily-metrics job updates this after each poll, so the "
+            "routine flow doesn't need this tool. Use it for manual "
+            "corrections — you read attribution yourself via "
+            "buttondown__attribution_summary and the stored value is "
+            "stale or missing — or for ad-hoc placements you're "
+            "tracking outside daily-metrics. Returns the updated "
+            "campaign row."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "signups": {
+                    "type": "integer",
+                    "description": "Current cumulative signups count (≥0).",
+                },
+            },
+            "required": ["name", "signups"],
+        },
+    },
 }
 
 
@@ -1529,6 +1574,7 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "campaigns__list": t_campaigns_list,
     "campaigns__get": t_campaigns_get,
     "campaigns__history": t_campaigns_history,
+    "campaigns__set_actual_signups": t_campaigns_set_actual_signups,
 }
 
 

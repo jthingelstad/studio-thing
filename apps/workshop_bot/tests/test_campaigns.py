@@ -24,27 +24,45 @@ from apps.workshop_bot.tests._fixtures import TempDBTestCase as _DBCase  # noqa:
 
 class CampaignDbTests(_DBCase):
     def test_insert_get_active(self):
-        self.assertTrue(db.insert_campaign(name="dd-may", ref="dd-2026-05-15",
-                                           expected_signups=50, expected_traffic=800,
-                                           started_at="2026-05-15"))
+        self.assertTrue(db.insert_campaign(
+            name="dd-may", ref="dd-2026-05-15", url="https://weekly.thingelstad.com/?ref=dd-2026-05-15",
+            platform="DenseDiscovery", cost=80.0, started_at="2026-05-15",
+        ))
         # Duplicate name → False.
         self.assertFalse(db.insert_campaign(name="dd-may", ref="dd-2026-05-15"))
         c = db.get_campaign("dd-may")
         self.assertEqual(c["ref"], "dd-2026-05-15")
         self.assertEqual(c["status"], "live")
-        self.assertEqual(c["expected_signups"], 50)
+        self.assertEqual(c["platform"], "DenseDiscovery")
+        self.assertEqual(c["cost"], 80.0)
+        self.assertEqual(c["url"], "https://weekly.thingelstad.com/?ref=dd-2026-05-15")
+        # Auto-incremented id is present.
+        self.assertIsInstance(c["id"], int)
+        self.assertIsNone(c["actual_signups"])  # starts NULL until first poll
         self.assertEqual([x["name"] for x in db.active_campaigns()], ["dd-may"])
         db.set_campaign_status("dd-may", "sunset")
         self.assertEqual(db.active_campaigns(), [])
 
     def test_metrics_and_latest(self):
         db.insert_campaign(name="dd-may", ref="dd-2026-05-15")
-        db.insert_campaign_metric(campaign_name="dd-may", signups=2, traffic=40)
-        db.insert_campaign_metric(campaign_name="dd-may", signups=5, traffic=120)
+        db.insert_campaign_metric(campaign_name="dd-may", signups=2)
+        db.insert_campaign_metric(campaign_name="dd-may", signups=5)
         m = db.latest_campaign_metric("dd-may")
         self.assertEqual(m["signups"], 5)
-        self.assertEqual(m["traffic"], 120)
+        # traffic was dropped in migration 0013.
+        self.assertNotIn("traffic", m)
         self.assertIsNone(db.latest_campaign_metric("nope"))
+
+    def test_set_actual_signups_roundtrip(self):
+        db.insert_campaign(name="dd", ref="dd-x")
+        self.assertIsNone(db.get_campaign("dd")["actual_signups"])
+        self.assertTrue(db.set_actual_signups("dd", 42))
+        self.assertEqual(db.get_campaign("dd")["actual_signups"], 42)
+        # Overwrites in place.
+        self.assertTrue(db.set_actual_signups("dd", 50))
+        self.assertEqual(db.get_campaign("dd")["actual_signups"], 50)
+        # Unknown campaign → False.
+        self.assertFalse(db.set_actual_signups("nope", 1))
 
     def test_active_campaigns_with_age(self):
         from datetime import date
@@ -80,25 +98,28 @@ class CampaignDbTests(_DBCase):
     def test_recent_campaign_metrics_newest_first_and_capped(self):
         db.insert_campaign(name="dd", ref="dd-2026-05-15")
         for n in range(5):
-            db.insert_campaign_metric(campaign_name="dd", signups=n, traffic=n * 10)
+            db.insert_campaign_metric(campaign_name="dd", signups=n)
         rows = db.recent_campaign_metrics("dd", limit=3)
         self.assertEqual([r["signups"] for r in rows], [4, 3, 2])
         # No campaign → empty list, not an exception.
         self.assertEqual(db.recent_campaign_metrics("nope"), [])
 
     def test_update_campaign(self):
-        db.insert_campaign(name="dd", ref="OldRef-1", expected_signups=10, started_at="2026-05-01")
+        db.insert_campaign(name="dd", ref="OldRef-1", started_at="2026-05-01")
         # No changes → returns the row unchanged.
         same = db.update_campaign("dd")
         self.assertEqual(same["ref"], "OldRef-1")
-        # Whitelisted fields update; ints coerced; non-editable keys ignored.
-        updated = db.update_campaign("dd", ref="NewRef-2", expected_signups="42",
-                                     ends_at="2026-06-01", notes="ran in the footer", status="hacked")
+        # Whitelisted fields update; cost coerced to float; non-editable keys ignored.
+        updated = db.update_campaign(
+            "dd", ref="NewRef-2", url="https://weekly.thingelstad.com/?ref=NewRef-2",
+            platform="LinkedIn", cost="42.50", notes="ran in the footer", status="hacked",
+        )
         self.assertEqual(updated["ref"], "NewRef-2")
-        self.assertEqual(updated["expected_signups"], 42)
-        self.assertEqual(updated["ends_at"], "2026-06-01")
+        self.assertEqual(updated["url"], "https://weekly.thingelstad.com/?ref=NewRef-2")
+        self.assertEqual(updated["platform"], "LinkedIn")
+        self.assertEqual(updated["cost"], 42.5)
         self.assertEqual(updated["notes"], "ran in the footer")
-        self.assertEqual(updated["name"], "dd")            # PK untouched
+        self.assertEqual(updated["name"], "dd")            # name immutable
         self.assertEqual(updated["status"], "live")         # status not editable here
         self.assertEqual(updated["started_at"], "2026-05-01")  # not passed → kept
         # None values mean "leave alone".
@@ -110,10 +131,17 @@ class CampaignDbTests(_DBCase):
 
 class AddCampaignJobTests(_DBCase):
     def test_register(self):
-        result = asyncio.run(add_campaign.run(_base.JobContext(), name="dd-may", ref="dd-2026-05-15",
-                                              expected_signups=50, expected_traffic=800))
+        result = asyncio.run(add_campaign.run(
+            _base.JobContext(), name="dd-may", ref="dd-2026-05-15",
+            url="https://weekly.thingelstad.com/?ref=dd-2026-05-15",
+            platform="DenseDiscovery", cost=80.0,
+        ))
         self.assertTrue(result.ok, result.message)
-        self.assertEqual(db.get_campaign("dd-may")["ref"], "dd-2026-05-15")
+        c = db.get_campaign("dd-may")
+        self.assertEqual(c["ref"], "dd-2026-05-15")
+        self.assertEqual(c["platform"], "DenseDiscovery")
+        self.assertEqual(c["cost"], 80.0)
+        self.assertEqual(c["url"], "https://weekly.thingelstad.com/?ref=dd-2026-05-15")
 
     def test_duplicate_name(self):
         asyncio.run(add_campaign.run(_base.JobContext(), name="dd-may", ref="dd-2026-05-15"))
@@ -178,18 +206,21 @@ class AddCampaignJobTests(_DBCase):
 
 class CampaignEditJobTests(_DBCase):
     def test_edit_changes_only_passed_fields(self):
-        asyncio.run(add_campaign.run(_base.JobContext(), name="dd", ref="OldRef-1",
-                                     expected_signups=10, expected_traffic=200))
+        asyncio.run(add_campaign.run(
+            _base.JobContext(), name="dd", ref="OldRef-1",
+            platform="DenseDiscovery", cost=50.0,
+        ))
         r = asyncio.run(ops.campaign_edit(
-            _base.JobContext(), name="dd", ref="NewRef-2", expected_signups=42,
-            ends_at="2026-06-30", notes="ran in the footer slot",
+            _base.JobContext(), name="dd", ref="NewRef-2",
+            url="https://weekly.thingelstad.com/?ref=NewRef-2",
+            notes="ran in the footer slot",
         ))
         self.assertTrue(r.ok, r.message)
         c = db.get_campaign("dd")
         self.assertEqual(c["ref"], "NewRef-2")
-        self.assertEqual(c["expected_signups"], 42)
-        self.assertEqual(c["expected_traffic"], 200)        # not passed → kept
-        self.assertEqual(c["ends_at"], "2026-06-30")
+        self.assertEqual(c["url"], "https://weekly.thingelstad.com/?ref=NewRef-2")
+        self.assertEqual(c["platform"], "DenseDiscovery")  # not passed → kept
+        self.assertEqual(c["cost"], 50.0)                    # not passed → kept
         self.assertEqual(c["notes"], "ran in the footer slot")
         self.assertEqual(c["status"], "live")
         # Message echoes the change list + the new state.
@@ -216,14 +247,22 @@ class CampaignReportJobTests(_DBCase):
         self.assertIn("No active campaigns", result.message)
 
     def test_report(self):
-        db.insert_campaign(name="dd-may", ref="dd-2026-05-15", expected_signups=50, expected_traffic=800,
-                           copy="Discover something good every weekend.")
-        db.insert_campaign_metric(campaign_name="dd-may", signups=10, traffic=200)
+        db.insert_campaign(
+            name="dd-may", ref="dd-2026-05-15",
+            platform="DenseDiscovery", cost=80.0,
+            copy="Discover something good every weekend.",
+        )
+        db.insert_campaign_metric(campaign_name="dd-may", signups=10)
+        db.set_actual_signups("dd-may", 10)
         result = asyncio.run(campaign_report.run(_base.JobContext()))
         self.assertTrue(result.ok, result.message)
         self.assertIn("dd-may", result.message)
-        self.assertIn("10 / 50", result.message)
-        self.assertIn("200 / 800", result.message)
+        # Headline KPI: actual_signups.
+        self.assertIn("signups: 10", result.message)
+        # Cost + cost-per-signup.
+        self.assertIn("cost: $80.00", result.message)
+        self.assertIn("$8.00/signup", result.message)
+        self.assertIn("on DenseDiscovery", result.message)
         self.assertIn("Discover something good every weekend.", result.message)
 
     def test_report_flags_missing_copy(self):
@@ -286,8 +325,11 @@ class DailyMetricsTests(_DBCase):
         self.assertIn("nothing material moved", result.message.lower())
 
     def test_first_campaign_poll_writes_metric_and_posts(self):
-        db.insert_campaign(name="dd-may", ref="dd-2026-05-15", expected_signups=50, expected_traffic=800,
-                           copy="The placement copy that ran.")
+        db.insert_campaign(
+            name="dd-may", ref="dd-2026-05-15",
+            platform="DenseDiscovery", cost=80.0,
+            copy="The placement copy that ran.",
+        )
         # Fake Marky bot.
         channel = MagicMock(); channel.send = AsyncMock()
         marky = MagicMock(); marky.user = object(); marky.get_channel = MagicMock(return_value=channel)
@@ -308,12 +350,17 @@ class DailyMetricsTests(_DBCase):
         self.assertTrue(result.data["posted"])
         marky.core.assert_awaited()
         channel.send.assert_awaited()
-        # A metrics row was written.
+        # A metrics row was written — signups only (traffic dropped in 0013).
         m = db.latest_campaign_metric("dd-may")
-        self.assertEqual(m["traffic"], 200)
         self.assertEqual(m["signups"], 5)
-        # The campaign snapshot carries the copy so Marky can read perf vs creative.
-        self.assertEqual(result.data["campaigns"][0]["copy"], "The placement copy that ran.")
+        # actual_signups denormalised onto the campaign row.
+        self.assertEqual(db.get_campaign("dd-may")["actual_signups"], 5)
+        # The campaign snapshot carries the copy + platform + cost so
+        # Marky can read perf vs creative.
+        snap = result.data["campaigns"][0]
+        self.assertEqual(snap["copy"], "The placement copy that ran.")
+        self.assertEqual(snap["platform"], "DenseDiscovery")
+        self.assertEqual(snap["cost"], 80.0)
 
     def test_subscriber_spike_triggers_report(self):
         channel = MagicMock(); channel.send = AsyncMock()
@@ -353,6 +400,7 @@ class DailyMetricsTests(_DBCase):
                 result = asyncio.run(daily_metrics.run(_base.JobContext()))
         self.assertFalse(result.ok)
         self.assertIn("already running", result.message)
+        # Neither traffic nor signups were polled — both API stubs untouched.
         self.assertEqual(called, {"signups": 0, "traffic": 0})
 
     def test_moved_when_marky_pass_not_posted(self):
@@ -402,8 +450,9 @@ class CampaignAgentToolTests(_DBCase):
                            started_at="2026-05-11", copy="Try the Weekly Thing.")
         db.set_campaign_status("DD308", "sunset")
         # DD388 stays live → has a latest metric.
-        db.insert_campaign_metric(campaign_name="DD388", signups=10, traffic=50)
-        db.insert_campaign_metric(campaign_name="DD388", signups=21, traffic=110)
+        db.insert_campaign_metric(campaign_name="DD388", signups=10)
+        db.insert_campaign_metric(campaign_name="DD388", signups=21)
+        db.set_actual_signups("DD388", 21)
 
     def test_list_default_returns_all_statuses(self):
         rows = self.at.t_campaigns_list(deps=None)
@@ -439,8 +488,25 @@ class CampaignAgentToolTests(_DBCase):
         # Unknown campaign → error.
         self.assertIn("error", self.at.t_campaigns_history(deps=None, name="nope"))
 
+    def test_set_actual_signups_roundtrip(self):
+        out = self.at.t_campaigns_set_actual_signups(deps=None, name="DD388", signups=42)
+        self.assertTrue(out.get("ok"))
+        self.assertEqual(out["campaign"]["actual_signups"], 42)
+        # Negative → error, no write.
+        out = self.at.t_campaigns_set_actual_signups(deps=None, name="DD388", signups=-1)
+        self.assertIn("error", out)
+        self.assertEqual(db.get_campaign("DD388")["actual_signups"], 42)
+        # Unknown campaign → error.
+        out = self.at.t_campaigns_set_actual_signups(deps=None, name="nope", signups=0)
+        self.assertIn("error", out)
+
     def test_tools_registered_in_funcs_specs(self):
-        for name in ("campaigns__list", "campaigns__get", "campaigns__history"):
+        for name in (
+            "campaigns__list",
+            "campaigns__get",
+            "campaigns__history",
+            "campaigns__set_actual_signups",
+        ):
             self.assertIn(name, self.at.FUNCS, name)
             self.assertIn(name, self.at.SPECS, name)
 

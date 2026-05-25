@@ -213,6 +213,137 @@ def _m_0012_issue_windows_phase(conn: sqlite3.Connection) -> None:
     _add_column_if_missing(conn, "issue_windows", "phase", "TEXT NOT NULL DEFAULT 'build'")
 
 
+def _m_0013_campaigns_schema_overhaul(conn: sqlite3.Connection) -> None:
+    """Reshape the campaigns ledger around Marky's actual workflow.
+
+    Changes (all in one atomic rebuild):
+
+    - Add ``id INTEGER PRIMARY KEY AUTOINCREMENT`` so rows have a short
+      integer handle in addition to ``name`` (which stays UNIQUE NOT NULL
+      and remains the FK target for ``campaign_metrics``).
+    - Add ``url TEXT`` — the raw destination URL people clicked. DD80's
+      placement uses UTM params (not ``?ref=``), so ``url`` is the
+      truthful record of what the ad linked to; ``ref`` stays as the
+      attribution lookup key.
+    - Add ``platform TEXT`` — explicit channel (DenseDiscovery, LinkedIn,
+      Bluesky, etc.) so Marky can group placements without parsing
+      ``name``/``ref``.
+    - Add ``actual_signups INTEGER`` — denormalised current count,
+      updated by ``daily-metrics`` after each poll (and by Marky via
+      ``campaigns__set_actual_signups`` for manual corrections). The
+      KPI now lives at the top level of the row, not behind a join.
+    - Add ``cost REAL`` — actual dollars paid for the placement.
+      Combined with ``actual_signups`` gives cost-per-signup.
+    - Drop ``ends_at`` — redundant with the ``status='sunset'`` flip.
+    - Drop ``expected_signups`` / ``expected_traffic`` — speculative
+      targets with no realised-actual partner column; not useful in
+      practice and never carried real data.
+    - Drop ``campaign_metrics.traffic`` — traffic is downstream of
+      signups for Jamie's purposes; KPI focus narrows to signups.
+
+    SQLite table-rebuild idiom (see https://www.sqlite.org/lang_altertable.html):
+    create new table, copy retained columns, drop old, rename. FK
+    constraints on the campaign_metrics side reference ``name``, which
+    survives the rebuild as a UNIQUE NOT NULL column. Backfills ``url``
+    + ``platform`` for the six known DD rows; backfills
+    ``actual_signups`` from the latest ``campaign_metrics.signups``
+    snapshot per campaign.
+    """
+    conn.execute("PRAGMA foreign_keys=OFF")
+    try:
+        # --- campaigns ---
+        conn.execute(
+            """
+            CREATE TABLE campaigns_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                ref TEXT NOT NULL,
+                url TEXT,
+                platform TEXT,
+                status TEXT NOT NULL DEFAULT 'live',
+                started_at TEXT NOT NULL DEFAULT (date('now')),
+                actual_signups INTEGER,
+                cost REAL,
+                copy TEXT,
+                notes TEXT
+            )
+            """
+        )
+        conn.execute(
+            "INSERT INTO campaigns_new "
+            "(name, ref, status, started_at, copy, notes) "
+            "SELECT name, ref, status, started_at, copy, notes FROM campaigns"
+        )
+        conn.execute("DROP TABLE campaigns")
+        conn.execute("ALTER TABLE campaigns_new RENAME TO campaigns")
+        conn.execute("CREATE INDEX idx_campaigns_ref ON campaigns(ref)")
+
+        # --- campaign_metrics: drop traffic ---
+        conn.execute(
+            """
+            CREATE TABLE campaign_metrics_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                campaign_name TEXT NOT NULL REFERENCES campaigns(name),
+                ran_at TEXT NOT NULL DEFAULT (datetime('now')),
+                signups INTEGER
+            )
+            """
+        )
+        conn.execute(
+            "INSERT INTO campaign_metrics_new (id, campaign_name, ran_at, signups) "
+            "SELECT id, campaign_name, ran_at, signups FROM campaign_metrics"
+        )
+        conn.execute("DROP TABLE campaign_metrics")
+        conn.execute("ALTER TABLE campaign_metrics_new RENAME TO campaign_metrics")
+        conn.execute(
+            "CREATE INDEX idx_campaign_metrics_name "
+            "ON campaign_metrics(campaign_name, ran_at DESC, id DESC)"
+        )
+
+        # --- backfill url + platform for the six known DD rows ---
+        dd_url_backfills = [
+            ("DD389", "https://weekly.thingelstad.com/?ref=DenseDiscovery-389"),
+            ("DD388", "https://weekly.thingelstad.com/?ref=DenseDiscovery-388"),
+            ("DD339", "https://weekly.thingelstad.com/?ref=DD-20250520"),
+            ("DD338", "https://weekly.thingelstad.com/?ref=DD-20250513"),
+            ("DD308", "https://weekly.thingelstad.com/?ref=DD-20241001"),
+            (
+                "DD80",
+                "https://weekly.thingelstad.com/"
+                "?utm_source=densediscovery&utm_medium=email"
+                "&utm_campaign=newsletter-issue-80",
+            ),
+        ]
+        for name, url in dd_url_backfills:
+            conn.execute(
+                "UPDATE campaigns SET url = ?, platform = 'DenseDiscovery' "
+                "WHERE name = ?",
+                (url, name),
+            )
+
+        # --- backfill actual_signups from the most recent metric per row ---
+        conn.execute(
+            "UPDATE campaigns SET actual_signups = ("
+            "  SELECT signups FROM campaign_metrics "
+            "  WHERE campaign_name = campaigns.name "
+            "  ORDER BY ran_at DESC, id DESC LIMIT 1"
+            ")"
+        )
+
+        # Scoped FK integrity check — only the two tables we touched.
+        # A whole-DB `PRAGMA foreign_key_check` would surface pre-existing
+        # orphans elsewhere that aren't this migration's concern.
+        for tbl in ("campaign_metrics", "campaigns"):
+            bad = conn.execute(f"PRAGMA foreign_key_check({tbl})").fetchall()
+            if bad:
+                raise RuntimeError(
+                    f"foreign key check failed on {tbl} after rebuild: "
+                    f"{[tuple(r) for r in bad]!r}"
+                )
+    finally:
+        conn.execute("PRAGMA foreign_keys=ON")
+
+
 def _m_0010_strip_markers_from_issue_items_body_md(conn: sqlite3.Connection) -> None:
     """An older manual-seed path baked rendered ``<!-- cta:N -->`` /
     ``<!-- thanks:N -->`` markers into ``issue_items.body_md``. Marker
@@ -302,6 +433,14 @@ MIGRATIONS: tuple[Migration, ...] = (
         id="0012_issue_windows_phase",
         description="Add issue_windows.phase (build|publish) for the publishing spine",
         apply=_m_0012_issue_windows_phase,
+    ),
+    Migration(
+        id="0013_campaigns_schema_overhaul",
+        description=(
+            "campaigns: add id/url/platform/actual_signups/cost, "
+            "drop ends_at/expected_*; drop campaign_metrics.traffic"
+        ),
+        apply=_m_0013_campaigns_schema_overhaul,
     ),
 )
 

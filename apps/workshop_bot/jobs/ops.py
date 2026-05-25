@@ -19,10 +19,10 @@ names: ``set-goal`` / ``goal-achieved`` / ``campaign-sunset`` /
 - ``campaign-copy <name> <text>`` — set (or, with empty text, clear) the
   promo copy that ran in a campaign's placement, so performance can be
   read against the creative.
-- ``campaign-edit <name> [ref] [started_at] [ends_at] [expected_signups]
-  [expected_traffic] [notes] [copy]`` — change details on an existing
-  campaign in place (the name is immutable; ``status`` flips via
-  ``campaign-sunset``). Only the fields you pass are touched.
+- ``campaign-edit <name> [ref] [url] [platform] [started_at] [cost]
+  [notes] [copy]`` — change details on an existing campaign in place
+  (the name is immutable; ``status`` flips via ``campaign-sunset``).
+  Only the fields you pass are touched.
 """
 
 from __future__ import annotations
@@ -114,11 +114,14 @@ async def campaign_copy(ctx: "_base.JobContext", *, name: str, copy: str | None 
 
 
 def _campaign_summary(c: dict) -> str:
-    es, et = c.get("expected_signups"), c.get("expected_traffic")
     bits = [f"ref `{c.get('ref')}`", f"status `{c.get('status')}`", f"started {c.get('started_at') or '?'}"]
-    if c.get("ends_at"):
-        bits.append(f"ends {c['ends_at']}")
-    bits.append(f"expect {es if es is not None else '—'} signups / {et if et is not None else '—'} visits")
+    if c.get("platform"):
+        bits.append(f"on {c['platform']}")
+    sig = c.get("actual_signups")
+    bits.append(f"signups {sig if sig is not None else '—'}")
+    cost = c.get("cost")
+    if cost is not None:
+        bits.append(f"cost ${float(cost):.2f}")
     if c.get("copy"):
         bits.append("has copy")
     if c.get("notes"):
@@ -131,10 +134,10 @@ async def campaign_edit(
     *,
     name: str,
     ref: str | None = None,
+    url: str | None = None,
+    platform: str | None = None,
     started_at: str | None = None,
-    ends_at: str | None = None,
-    expected_signups: int | None = None,
-    expected_traffic: int | None = None,
+    cost: float | None = None,
     notes: str | None = None,
     copy: str | None = None,
 ) -> "_base.JobResult":
@@ -148,10 +151,10 @@ async def campaign_edit(
 
     changes = {
         "ref": _txt(ref),
+        "url": _txt(url),
+        "platform": _txt(platform),
         "started_at": _txt(started_at),
-        "ends_at": _txt(ends_at),
-        "expected_signups": expected_signups,
-        "expected_traffic": expected_traffic,
+        "cost": cost,
         "notes": _txt(notes),
         "copy": _txt(copy),
     }

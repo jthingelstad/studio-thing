@@ -74,9 +74,10 @@ These are the tools registered by `register_local_helpers`. Every persona sees a
 | `react__add(emoji)` | Add one emoji reaction to the message being responded to (posts under the persona's avatar). No-op outside a Discord message turn. |
 | `editorial__get_comment(handle)` | Resolve one editorial review comment by its stable handle (`E349-N1`, `E349-X3`, …). Returns body + verdict + the anchored item (when item-scoped) + the replacement handle when superseded. Use when Jamie asks about a handle ("tell me about E349-N1"). |
 | `editorial__list_open(issue_number?)` | List open (not-yet-superseded) editorial comments for an issue with their handles + short snippets. Defaults to the in-flight issue. Useful for "what did you flag on this issue?" — follow up per-handle with `editorial__get_comment`. |
-| `campaigns__list(status?, limit?)` | All campaigns from Marky's ad-placement ledger, newest first. Default returns every row (live + sunset). Status filter accepts `'live'` or `'sunset'`. Each row carries name, ref, status, started_at, ends_at, expected_signups, expected_traffic, copy, notes. |
+| `campaigns__list(status?, limit?)` | All campaigns from Marky's ad-placement ledger, newest first. Default returns every row (live + sunset). Status filter accepts `'live'` or `'sunset'`. Each row carries id, name, ref, url, platform, status, started_at, actual_signups (the denormalised KPI), cost, copy, notes. |
 | `campaigns__get(name)` | One campaign by name + its most recent metric snapshot (`latest_metric`). Returns `{error}` for unknown names. |
 | `campaigns__history(name, limit?)` | Recent `campaign_metrics` rows for one campaign, newest first — the placement's trajectory. Default 30 rows, max 365. |
+| `campaigns__set_actual_signups(name, signups)` | Write the campaign's current attribution-realised signups. `daily-metrics` updates this column automatically after each poll; the tool is for manual corrections or ad-hoc placements outside the daily flow. |
 
 ## Tool inventory — system modules
 
