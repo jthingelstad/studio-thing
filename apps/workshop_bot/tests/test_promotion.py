@@ -84,17 +84,17 @@ class PromotionPrepJobTests(_DBCase):
         os.environ.pop("DISCORD_CHANNEL_PROMOTION", None)
         super().tearDown()
 
-    def test_no_buttondown_md_errors(self):
+    def test_no_draft_md_errors(self):
         deps, marky, channel = _marky_deps()
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         with patch.object(db, "get_latest_issue", lambda: {"number": 458, "publish_date": "2026-05-16"}):
             result = asyncio.run(promotion_prep.run(_base.JobContext(deps=deps)))
         self.assertFalse(result.ok)
-        self.assertIn("no `buttondown.md`", result.message)
+        self.assertIn("no `draft.md`", result.message)
         marky.core.assert_not_awaited()
 
     def test_drafts_and_posts(self):
-        self.ws.files[(458, "buttondown.md")] = "## Notable\n\n### [Thing](http://x)\n\nblurb\n"
+        self.ws.files[(458, "draft.md")] = "## Notable\n\n### [Thing](http://x)\n\nblurb\n"
         deps, marky, channel = _marky_deps()
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         result = asyncio.run(promotion_prep.run(_base.JobContext(deps=deps), issue_number=458))
@@ -108,19 +108,19 @@ class PromotionPrepJobTests(_DBCase):
         self.assertIn("## Today", sent)
 
     def test_skips_when_no_team(self):
-        self.ws.files[(458, "buttondown.md")] = "## Notable\n\nx"
+        self.ws.files[(458, "draft.md")] = "## Notable\n\nx"
         result = asyncio.run(promotion_prep.run(_base.JobContext(), issue_number=458))
         self.assertTrue(result.ok)
         self.assertFalse(result.data["posted"])
 
     def test_body_is_truncated_to_promotion_body_cap(self):
-        # An oversized buttondown.md must be capped at PROMOTION_BODY_CAP before
+        # An oversized draft.md must be capped at PROMOTION_BODY_CAP before
         # being fed to Marky, otherwise a runaway issue body could blow up
         # the user-message size.
         from apps.workshop_bot.jobs import _llm_job
         cap = _llm_job.PROMOTION_BODY_CAP
         huge = "## Notable\n\n" + ("x" * (cap + 5_000))
-        self.ws.files[(458, "buttondown.md")] = huge
+        self.ws.files[(458, "draft.md")] = huge
         deps, marky, channel = _marky_deps()
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         result = asyncio.run(promotion_prep.run(_base.JobContext(deps=deps), issue_number=458))
@@ -136,7 +136,7 @@ class PromotionPrepJobTests(_DBCase):
         """When Thingy /retrieve returns hits, the Recurring thread
         context block lands in the prompt so Marky can write multi-issue
         arc framings."""
-        self.ws.files[(458, "buttondown.md")] = "## Notable\n\n### [Thing](http://x)\n\nblurb on agents and tooling\n"
+        self.ws.files[(458, "draft.md")] = "## Notable\n\n### [Thing](http://x)\n\nblurb on agents and tooling\n"
         deps, marky, channel = _marky_deps()
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         self._retrieve_mock.return_value = [
@@ -162,7 +162,7 @@ class PromotionPrepJobTests(_DBCase):
     def test_thread_context_block_renders_outage_when_retrieval_fails(self):
         """A Lambda outage doesn't block the job — the block surfaces
         the error and Marky proceeds as a one-off."""
-        self.ws.files[(458, "buttondown.md")] = "## Notable\n\nbody"
+        self.ws.files[(458, "draft.md")] = "## Notable\n\nbody"
         deps, marky, channel = _marky_deps()
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         self._retrieve_mock.side_effect = self._ThingyRetrieveError("timeout")
@@ -176,7 +176,7 @@ class PromotionPrepJobTests(_DBCase):
         # Pre-acquire the whole-job lock so the next run bails before doing
         # any work — proves a re-fire (manual + the put-to-bed auto-fire, say)
         # doesn't produce duplicate #promotion posts.
-        self.ws.files[(458, "buttondown.md")] = "## Notable\n\nx"
+        self.ws.files[(458, "draft.md")] = "## Notable\n\nx"
         deps, marky, channel = _marky_deps()
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         with _base.job_lock([f"job:{promotion_prep.NAME}"], promotion_prep.NAME):

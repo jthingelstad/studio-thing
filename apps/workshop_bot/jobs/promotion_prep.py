@@ -4,10 +4,12 @@ Triggered when an issue enters the **Share** phase: ``put-to-bed``
 fires this automatically after closing the active window. Re-runnable
 on demand from the Share card's "Draft promo" button or via
 ``/marky prep``. Operates on the most recently *published* issue's
-``buttondown.md`` in the S3 workspace — independent of any in-flight
-issue. (The legacy ``rss-check`` cron + ``tools/rss.py`` poll was
-retired alongside the Build → Publish → Share spine; the phase
-transition is the trigger now.)
+``draft.md`` in the S3 workspace — the channel-neutral body. (We
+deliberately don't read buttondown.md / archive.md / transcript here:
+buttondown.md carries email-only Liquid blocks + the tracking pixel,
+archive.md has website front matter, and transcripts are audio-
+shaped — none of those are the right input for cross-channel promo
+drafting. draft.md is the canonical body.)
 
 Marky drafts, in Jamie's voice, **2–3 alternative framings per
 platform** (LinkedIn ~100–200 words; an r/WeeklyThing megathread; one
@@ -36,8 +38,8 @@ NAME = "promotion-prep"
 # (3+ hits on the same theme over time) without dominating the prompt.
 _THREAD_CONTEXT_K = 8
 
-# Cap the query passed to /retrieve. The full buttondown body would
-# work but adds latency for no quality lift — the first ~2000 chars
+# Cap the query passed to /retrieve. The full draft body would work
+# but adds latency for no quality lift — the first ~2000 chars
 # (intro + first Notable section) carry the issue's center of gravity.
 _THREAD_QUERY_CHARS = 2000
 
@@ -55,15 +57,16 @@ def _resolve_latest_issue(explicit: Optional[int]) -> tuple[Optional[int], Optio
 
 
 async def run(ctx: "_base.JobContext", *, issue_number: Optional[int] = None) -> "_base.JobResult":
-    # Resolve the last-published issue from the DB (filled by put-to-bed); reading buttondown.md hits S3.
+    # Resolve the last-published issue from the DB (filled by put-to-bed);
+    # the channel-neutral body lives at draft.md in S3.
     n, ship_date = await asyncio.to_thread(_resolve_latest_issue, issue_number)
     if n is None:
         return _base.JobResult(False, "❌ no published issue yet — put an issue to bed first.")
-    res = await asyncio.to_thread(s3.read_issue_file, n, "buttondown.md")
+    res = await asyncio.to_thread(s3.read_issue_file, n, "draft.md")
     if not (res.get("found") and isinstance(res.get("text"), str) and res["text"].strip()):
         return _base.JobResult(
             False,
-            f"❌ no `buttondown.md` for WT{n} in the workspace — can't draft promotion until it's built.",
+            f"❌ no `draft.md` for WT{n} in the workspace — can't draft promotion until it's built.",
         )
     publish_body = res["text"]
 
