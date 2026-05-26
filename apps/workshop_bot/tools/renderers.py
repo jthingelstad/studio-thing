@@ -39,7 +39,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional
 
 import yaml
 
@@ -708,6 +708,33 @@ def _splice_cta_into_sections(
 # ---------- per-issue artifact writers ----------
 
 
+def _write_pair_if_changed(
+    *,
+    local_path: Path,
+    body: str,
+    s3_write: "Callable[[], None]",
+) -> bool:
+    """Write ``body`` to ``local_path`` + S3 only when content actually
+    differs. Returns True if a write happened, False if it was a no-op.
+
+    The local mirror is treated as canonical for comparison: the
+    renderers keep it in lock-step with S3 (write S3 first; local
+    write only happens on S3 success), so if local matches body both
+    sides are already up-to-date. Saves S3 PUTs on no-op refreshes
+    where the underlying inputs (atoms / sections / metadata) haven't
+    moved enough to change the output."""
+    if local_path.exists():
+        try:
+            if local_path.read_text(encoding="utf-8") == body:
+                return False
+        except OSError:
+            pass
+    s3_write()
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+    local_path.write_text(body, encoding="utf-8")
+    return True
+
+
 def render_email_for_issue(issue_number: int, *, window: Optional[dict] = None) -> str:
     """Render the issue's buttondown.md from current DB + atom state
     and write it to S3 + the local repo mirror. Tolerates missing
@@ -728,11 +755,13 @@ def render_email_for_issue(issue_number: int, *, window: Optional[dict] = None) 
         cta_atoms=inputs["cta_atoms"],
         closer=inputs["closer"],
     )
-    _s3.write_issue_file(issue_number, "buttondown.md", body)
     # Local repo mirror for downstream consumers (ship sequence).
-    local_dir = ISSUES_LOCAL_DIR / str(issue_number)
-    local_dir.mkdir(parents=True, exist_ok=True)
-    (local_dir / "buttondown.md").write_text(body, encoding="utf-8")
+    local_path = ISSUES_LOCAL_DIR / str(issue_number) / "buttondown.md"
+    _write_pair_if_changed(
+        local_path=local_path,
+        body=body,
+        s3_write=lambda: _s3.write_issue_file(issue_number, "buttondown.md", body),
+    )
     return body
 
 
@@ -753,21 +782,27 @@ def render_archive_for_issue(
         metadata=inputs["metadata"],
         closer=inputs["closer"],
     )
-    _s3.write_issue_file(issue_number, "archive.md", archive_md)
-    _s3.write_issue_file(issue_number, "links.json",
-                         json.dumps(links_json, indent=2) + "\n")
-    # Local mirror — the ship sequence + 11ty both consume from here.
     local_dir = ISSUES_LOCAL_DIR / str(issue_number)
-    local_dir.mkdir(parents=True, exist_ok=True)
-    (local_dir / "archive.md").write_text(archive_md, encoding="utf-8")
-    (local_dir / "links.json").write_text(
-        json.dumps(links_json, indent=2) + "\n", encoding="utf-8",
+    # archive.md — local + S3 in lock-step.
+    _write_pair_if_changed(
+        local_path=local_dir / "archive.md",
+        body=archive_md,
+        s3_write=lambda: _s3.write_issue_file(issue_number, "archive.md", archive_md),
     )
-    # Mirror metadata.json locally too so the ship sequence's GitHub
-    # commit step has a single source.
-    (local_dir / "metadata.json").write_text(
-        json.dumps(inputs["metadata"], indent=2) + "\n", encoding="utf-8",
+    # links.json — same pattern.
+    links_body = json.dumps(links_json, indent=2) + "\n"
+    _write_pair_if_changed(
+        local_path=local_dir / "links.json",
+        body=links_body,
+        s3_write=lambda: _s3.write_issue_file(issue_number, "links.json", links_body),
     )
+    # metadata.json — local mirror only (S3 owns the canonical copy via
+    # the atoms/ writes; this is the ship-sequence's read source).
+    metadata_body = json.dumps(inputs["metadata"], indent=2) + "\n"
+    metadata_path = local_dir / "metadata.json"
+    if not (metadata_path.exists() and metadata_path.read_text(encoding="utf-8") == metadata_body):
+        local_dir.mkdir(parents=True, exist_ok=True)
+        metadata_path.write_text(metadata_body, encoding="utf-8")
     return archive_md, links_json
 
 
@@ -819,8 +854,11 @@ def render_transcript_for_issue(
             stale.unlink()
 
     for name, content in blocks:
-        _s3.write_transcript_file(issue_number, name, content)
-        (local_dir / name).write_text(content, encoding="utf-8")
+        _write_pair_if_changed(
+            local_path=local_dir / name,
+            body=content,
+            s3_write=lambda c=content, n=name: _s3.write_transcript_file(issue_number, n, c),
+        )
 
     # Concatenated review file — single document with segment markers
     # so Jamie can scan the full transcript and see where the audio
@@ -828,9 +866,10 @@ def render_transcript_for_issue(
     # in the transcript/ subdir, which the audio pipeline scans). Not
     # consumed by anything downstream — review-only.
     review = concat_transcript_for_review(blocks, issue_number=issue_number)
-    _s3.write_issue_file(issue_number, "transcript-full.txt", review)
-    (ISSUES_LOCAL_DIR / str(issue_number) / "transcript-full.txt").write_text(
-        review, encoding="utf-8",
+    _write_pair_if_changed(
+        local_path=ISSUES_LOCAL_DIR / str(issue_number) / "transcript-full.txt",
+        body=review,
+        s3_write=lambda: _s3.write_issue_file(issue_number, "transcript-full.txt", review),
     )
     return blocks
 

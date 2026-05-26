@@ -68,6 +68,43 @@ class DailyRenderToleranceTests(_DBTestCase):
         self.assertIn((458, "archive.md"), self.ws.files)
         self.assertIn((458, "links.json"), self.ws.files)
 
+    def test_idempotent_email_render_skips_writes_on_no_change(self):
+        """Re-rendering with identical inputs shouldn't trigger S3 writes
+        — the renderer compares the proposed body to the local mirror and
+        skips both the S3 PUT and the local write when content matches."""
+        self._window(n=458)
+        renderers.render_email_for_issue(458)
+        # Wrap write_issue_file to count calls during the second render.
+        calls = []
+        original = self.ws.write_issue_file
+        def counting_write(*args, **kwargs):
+            calls.append(args)
+            return original(*args, **kwargs)
+        self.ws.write_issue_file = counting_write
+        renderers.render_email_for_issue(458)
+        # No buttondown.md write the second time around.
+        self.assertEqual(
+            [c for c in calls if "buttondown.md" in c],
+            [],
+            "second render with identical inputs wrote buttondown.md anyway",
+        )
+
+    def test_idempotent_archive_render_skips_writes_on_no_change(self):
+        """Same for archive.md + links.json — second render with no input
+        changes shouldn't re-PUT either file."""
+        self._window(n=458)
+        renderers.render_archive_for_issue(458)
+        calls = []
+        original = self.ws.write_issue_file
+        def counting_write(*args, **kwargs):
+            calls.append(args)
+            return original(*args, **kwargs)
+        self.ws.write_issue_file = counting_write
+        renderers.render_archive_for_issue(458)
+        wrote = [c[1] for c in calls if len(c) > 1]
+        self.assertNotIn("archive.md", wrote)
+        self.assertNotIn("links.json", wrote)
+
     def test_render_all_for_issue_partial_success_on_failure(self):
         """If one of the three renderers raises, the others should still
         complete and the result dict reflects the partial state."""
