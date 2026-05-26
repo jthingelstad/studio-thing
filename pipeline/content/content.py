@@ -326,9 +326,6 @@ def headers(content_type: bool = False) -> dict[str, str]:
 _ATOM_FILENAMES: frozenset[str] = frozenset({
     "intro.md", "outro.md", "cover.json", "haiku.md", "metadata.json",
     "thesis.md", "echoes.md",
-    # Legacy atom name from before the closer→echoes rename — kept in
-    # the set so any pre-migration S3 layout still parses cleanly.
-    "closer.md",
 })
 
 

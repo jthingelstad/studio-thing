@@ -87,10 +87,10 @@ class PriorClosersTests(unittest.TestCase):
         self._issues_root_patch.stop()
         self._tmp.cleanup()
 
-    def _seed_echoes(self, n: int, text: str, *, name: str = "echoes.md") -> None:
+    def _seed_echoes(self, n: int, text: str) -> None:
         d = compose_echoes.ISSUES_ROOT / str(n)
         d.mkdir(parents=True, exist_ok=True)
-        (d / name).write_text(text, encoding="utf-8")
+        (d / "echoes.md").write_text(text, encoding="utf-8")
 
     def test_reads_up_to_six_prior_closers_newest_first(self):
         for n in range(450, 458):
@@ -107,17 +107,6 @@ class PriorClosersTests(unittest.TestCase):
         out = compose_echoes._prior_closers(458)
         nums = [n for n, _ in out]
         self.assertEqual(nums, [455, 453])
-
-    def test_falls_back_to_legacy_closer_filename(self):
-        # Some pre-rename issues still have closer.md; the prior-closers
-        # lookup should pick those up via the legacy-name fallback.
-        self._seed_echoes(456, "wt456 echoes (new name)")
-        self._seed_echoes(454, "wt454 echoes (old name)", name="closer.md")
-        out = compose_echoes._prior_closers(458)
-        nums = [n for n, _ in out]
-        self.assertEqual(nums, [456, 454])
-        bodies = {n: t for n, t in out}
-        self.assertIn("old name", bodies[454])
 
     def test_no_prior_closers_returns_empty(self):
         out = compose_echoes._prior_closers(458)
@@ -252,7 +241,7 @@ class ComposeCloserRunTests(_DBTestCase):
         self.assertFalse(result.ok)
         self.assertIn("Thingy retrieval unavailable", result.message)
         self.assertTrue(result.data.get("retrieval_failed"))
-        # No closer.md written
+        # No echoes.md written
         self.assertNotIn((458, "echoes.md"), self.ws.files)
         # No Sonnet call attempted (FakeBotChannel records calls)
         sent = fc.channel.send.await_args_list[0].args[0]

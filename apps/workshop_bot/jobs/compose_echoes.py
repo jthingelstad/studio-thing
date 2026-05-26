@@ -3,9 +3,7 @@ closes every issue.
 
 Reader-facing section heading is ``## Echoes``; the on-disk atom name
 matches (``echoes.md``, under ``atoms/`` like the other composed
-atoms). Pre-rename issues' ``closer.md`` files are read via the
-legacy-name fallback in the renderer + the prior-closers lookup
-below; a one-shot migration script renames the back catalog.
+atoms).
 
 Echoes runs in **Thingy's voice** (the public librarian persona; voice
 anchor at ``prompts/shared/thingy-voice-reference.md``) — third-person
@@ -49,9 +47,8 @@ Inputs to the Opus call:
   as ``## This issue's thesis`` so Echoes can specifically echo what
   *this* week is doing, not surface-match.
 - The bodies of the last 6 echoes (``data/issues/{N-k}/echoes.md``,
-  with ``closer.md`` fallback for pre-rename issues, newest-first;
-  silently skipped if missing) — calibrates voice + prevents theme
-  repetition.
+  newest-first; silently skipped if missing) — calibrates voice +
+  prevents theme repetition.
 - Semantic snippets (Mode 1 candidates).
 - Anniversary candidates (Mode 2 candidates).
 
@@ -140,27 +137,23 @@ _MD_LINK_RE = re.compile(r"\[[^\]]+\]\([^)]+\)")
 
 def _prior_closers(issue_number: int) -> list[tuple[int, str]]:
     """Read up to ``_PRIOR_CLOSER_COUNT`` previous issues' echoes bodies
-    from local ``data/issues/{N-k}/echoes.md`` (with closer.md fallback
-    for pre-rename issues). Returns ``[(issue_number, echoes_text), …]``
-    newest-first. Issues without an echoes file (most of the back
-    catalog — this is a new section) are silently skipped."""
+    from local ``data/issues/{N-k}/echoes.md``. Returns
+    ``[(issue_number, echoes_text), …]`` newest-first. Issues without
+    an echoes file (most of the back catalog — this is a new section)
+    are silently skipped."""
     out: list[tuple[int, str]] = []
     n = int(issue_number)
     for offset in range(1, _PRIOR_CLOSER_COUNT + 1):
         prev = n - offset
         if prev < 1:
             break
-        text = ""
-        for name in ("echoes.md", "closer.md"):
-            path = ISSUES_ROOT / str(prev) / name
-            if not path.exists():
-                continue
-            try:
-                text = path.read_text(encoding="utf-8").strip()
-            except OSError:
-                text = ""
-            if text:
-                break
+        path = ISSUES_ROOT / str(prev) / "echoes.md"
+        if not path.exists():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8").strip()
+        except OSError:
+            continue
         if text:
             out.append((prev, text))
     return out

@@ -64,10 +64,8 @@ def gather_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> d
     absolute_url = (meta.get("absolute_url") or "").strip()
     cta_files = sorted(f for f in files if (f.startswith("cta-") or f.startswith("thanks-")) and f.endswith(".md"))
     haiku_present = bool(st["assets"].get("haiku.md"))
-    # Echoes — written as echoes.md by compose-echoes. Pre-rename
-    # issues may have closer.md instead; accept either during the
-    # transition so the publish card reflects reality.
-    echoes_present = "echoes.md" in files or "closer.md" in files
+    # Echoes — written as echoes.md by compose-echoes.
+    echoes_present = "echoes.md" in files
     # Thesis written by compose-thesis at mark-built; show the prose on
     # the card so Jamie sees the editorial framing alongside subject /
     # description / CTA. Missing thesis isn't an error — degrades to a

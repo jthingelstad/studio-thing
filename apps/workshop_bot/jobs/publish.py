@@ -78,8 +78,7 @@ def _collect_ship_files(issue_number: int) -> list[tuple[str, bytes]]:
     mirror to ``data/issues/{N}/`` so this reads straight from disk.
 
     Includes: archive.md, metadata.json, links.json, transcript/*.txt,
-    optional echoes.md (closer.md for pre-rename issues), and the
-    updated data/audio/manifest.json.
+    optional echoes.md, and the updated data/audio/manifest.json.
     """
     files: list[tuple[str, bytes]] = []
     issue_dir = ISSUES_ROOT / str(issue_number)
@@ -101,14 +100,9 @@ def _collect_ship_files(issue_number: int) -> list[tuple[str, bytes]]:
     if links_path.exists():
         files.append((f"data/issues/{issue_number}/links.json", links_path.read_bytes()))
 
-    # Echoes file — current name is echoes.md (renamed from closer.md).
-    # Ship whichever exists; both names are accepted during the
-    # back-catalog migration window.
-    for name in ("echoes.md", "closer.md"):
-        echoes_path = issue_dir / name
-        if echoes_path.exists():
-            files.append((f"data/issues/{issue_number}/{name}", echoes_path.read_bytes()))
-            break
+    echoes_path = issue_dir / "echoes.md"
+    if echoes_path.exists():
+        files.append((f"data/issues/{issue_number}/echoes.md", echoes_path.read_bytes()))
 
     transcript_dir = issue_dir / "transcript"
     if transcript_dir.is_dir():
