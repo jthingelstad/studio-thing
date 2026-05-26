@@ -148,14 +148,14 @@ def build_workshop_pointer(*, issue_number: int, window: dict, set_by: Optional[
             "intro_md": f"{base}atoms/intro.md",
             "outro_md": f"{base}atoms/outro.md",
             # Bot-composed atoms (compose-haiku, compose-meta,
-            # compose-cta, compose-closer, create-final).
+            # compose-cta, compose-echoes, create-final).
             "haiku_md": f"{base}atoms/haiku.md",
             "metadata_json": f"{base}atoms/metadata.json",
             "thesis_md": f"{base}atoms/thesis.md",
             "cta_1_md": f"{base}atoms/cta-1.md",
             "cta_2_md": f"{base}atoms/cta-2.md",
             "thanks_1_md": f"{base}atoms/thanks-1.md",
-            "closer_md": f"{base}atoms/closer.md",
+            "echoes_md": f"{base}atoms/echoes.md",
             # ----- Daily-rendered artifacts (live at issue root) ----
             # Produced by tools/renderers on every /eddy issue update
             # tick. final.md is gone — section ordering + promotions

@@ -1,10 +1,11 @@
 """``compose-echoes`` — write **Echoes**, Thingy's archive note that
 closes every issue.
 
-Reader-facing section heading is ``## Echoes``. Internal S3/disk
-filename stays ``closer.md`` (the legacy on-disk shape — renaming the
-file across the back catalog isn't worth the migration; only the code
-and the section heading carry the user-visible name).
+Reader-facing section heading is ``## Echoes``; the on-disk atom name
+matches (``echoes.md``, under ``atoms/`` like the other composed
+atoms). Pre-rename issues' ``closer.md`` files are read via the
+legacy-name fallback in the renderer + the prior-closers lookup
+below; a one-shot migration script renames the back catalog.
 
 Echoes runs in **Thingy's voice** (the public librarian persona; voice
 anchor at ``prompts/shared/thingy-voice-reference.md``) — third-person
@@ -47,16 +48,18 @@ Inputs to the Opus call:
   framing every Publish-phase job anchors on. Feeds into the prompt
   as ``## This issue's thesis`` so Echoes can specifically echo what
   *this* week is doing, not surface-match.
-- The bodies of the last 6 closers (``data/issues/{N-k}/closer.md``,
-  newest-first; silently skipped if missing) — calibrates voice +
-  prevents theme repetition.
+- The bodies of the last 6 echoes (``data/issues/{N-k}/echoes.md``,
+  with ``closer.md`` fallback for pre-rename issues, newest-first;
+  silently skipped if missing) — calibrates voice + prevents theme
+  repetition.
 - Semantic snippets (Mode 1 candidates).
 - Anniversary candidates (Mode 2 candidates).
 
 Output is a 2-to-4-sentence markdown paragraph (≈40–80 words) in
 **Thingy's voice**, with referenced issue(s) rendered as markdown
 links (``[WT###](https://weekly.thingelstad.com/archive/N/)``).
-Written to ``closer.md`` in S3 + local ``data/issues/{N}/``.
+Written to ``echoes.md`` in S3 (under ``atoms/``) + local
+``data/issues/{N}/``.
 
 Idempotent: re-running regenerates Echoes (output may differ). To
 preserve a specific Echoes, edit via ``/eddy edit echoes`` after the
@@ -136,24 +139,28 @@ _MD_LINK_RE = re.compile(r"\[[^\]]+\]\([^)]+\)")
 
 
 def _prior_closers(issue_number: int) -> list[tuple[int, str]]:
-    """Read up to ``_PRIOR_CLOSER_COUNT`` previous issues' closer bodies
-    from the local ``data/issues/{N-k}/closer.md`` files. Returns
-    ``[(issue_number, closer_text), …]`` newest-first. Issues without a
-    closer.md (most of the back catalog — this is a new section) are
-    silently skipped."""
+    """Read up to ``_PRIOR_CLOSER_COUNT`` previous issues' echoes bodies
+    from local ``data/issues/{N-k}/echoes.md`` (with closer.md fallback
+    for pre-rename issues). Returns ``[(issue_number, echoes_text), …]``
+    newest-first. Issues without an echoes file (most of the back
+    catalog — this is a new section) are silently skipped."""
     out: list[tuple[int, str]] = []
     n = int(issue_number)
     for offset in range(1, _PRIOR_CLOSER_COUNT + 1):
         prev = n - offset
         if prev < 1:
             break
-        path = ISSUES_ROOT / str(prev) / "closer.md"
-        if not path.exists():
-            continue
-        try:
-            text = path.read_text(encoding="utf-8").strip()
-        except OSError:
-            continue
+        text = ""
+        for name in ("echoes.md", "closer.md"):
+            path = ISSUES_ROOT / str(prev) / name
+            if not path.exists():
+                continue
+            try:
+                text = path.read_text(encoding="utf-8").strip()
+            except OSError:
+                text = ""
+            if text:
+                break
         if text:
             out.append((prev, text))
     return out
@@ -423,7 +430,7 @@ def _linkify_archive_refs(text: str) -> str:
 
 def _clean_closer(reply: str) -> str:
     """Strip surrounding whitespace + accidental code-fence wrappers; return
-    the closer paragraph as it should land in closer.md."""
+    the echoes paragraph as it should land in echoes.md."""
     text = (reply or "").strip()
     if text.startswith("```"):
         # Strip the first/last code-fence lines if present.
@@ -474,7 +481,7 @@ async def run(
             data={"echoes_written": False},
         )
 
-    asset = f"{n}/closer.md"
+    asset = f"{n}/echoes.md"
     try:
         with _base.job_lock([asset], NAME):
             try:
@@ -497,7 +504,7 @@ async def run(
                 # requires real semantic retrieval. Surface the failure
                 # so mark-built can log it; the rest of the Publish
                 # phase still proceeds (downstream prompts degrade
-                # gracefully on missing closer.md), but the operator
+                # gracefully on missing echoes.md), but the operator
                 # should know Echoes is missing for this issue.
                 msg = (
                     f"❌ compose-echoes for WT{n}: Thingy retrieval unavailable "
@@ -550,12 +557,12 @@ async def run(
             # model didn't wrap in a markdown link itself.
             text = _linkify_archive_refs(text)
 
-            # Write to S3 workspace + mirror locally (the ship paths read
-            # from local). On-disk filename stays closer.md.
-            s3.write_issue_file(n, "closer.md", text + "\n")
+            # Write to S3 workspace (under atoms/) + mirror locally (the
+            # ship paths read from local).
+            s3.write_issue_file(n, "echoes.md", text + "\n")
             local_dir = ISSUES_ROOT / str(n)
             local_dir.mkdir(parents=True, exist_ok=True)
-            (local_dir / "closer.md").write_text(text + "\n", encoding="utf-8")
+            (local_dir / "echoes.md").write_text(text + "\n", encoding="utf-8")
     except _base.JobLocked as exc:
         return _base.JobResult(
             False, f"⏳ `compose-echoes` already running ({exc.holder_desc}).",

@@ -92,7 +92,7 @@ class StartIssueTests(_DBTestCase):
         # currently_json is intentionally absent — Currently moved to workshop.db.
         for key in ("cover_jpg", "cover_json", "intro_md", "outro_md",
                     "haiku_md", "metadata_json", "thesis_md",
-                    "cta_1_md", "cta_2_md", "thanks_1_md", "closer_md",
+                    "cta_1_md", "cta_2_md", "thanks_1_md", "echoes_md",
                     "draft_md", "draft_html",
                     "archive_md", "links_json",
                     "buttondown_md",

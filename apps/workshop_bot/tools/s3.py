@@ -59,7 +59,7 @@ TRANSCRIPT_EXTENSIONS = {".txt"}
 ATOMS_PREFIX = "atoms"
 _ATOM_FILENAMES = frozenset({
     "intro.md", "outro.md", "cover.json", "haiku.md",
-    "metadata.json", "thesis.md",
+    "metadata.json", "thesis.md", "echoes.md",
 })
 _ATOM_NUMBERED_RE = re.compile(r"^(cta|thanks)-\d+\.md$")
 _JOURNAL_CONTENT_TYPES = {

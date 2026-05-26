@@ -555,6 +555,18 @@ def _read_atom(issue_number: int, filename: str) -> str:
     return ""
 
 
+def _read_echoes_atom(issue_number: int) -> str:
+    """Read the issue's echoes atom, falling back to the legacy
+    ``closer.md`` filename for pre-migration issues. The rename moved
+    the on-disk name from closer.md → echoes.md to match the
+    reader-facing section heading; the fallback covers any issue whose
+    S3 prefix still has the old name."""
+    text = _read_atom(issue_number, "echoes.md")
+    if text:
+        return text
+    return _read_atom(issue_number, "closer.md")
+
+
 def _read_atom_body_after_frontmatter(issue_number: int, filename: str) -> str:
     """Read an atom file and return its body, stripping any leading
     YAML front matter block (used by ``cta-N.md`` / ``thanks-N.md``
@@ -661,8 +673,9 @@ def _gather_inputs_for_issue(issue_number: int, *, window: Optional[dict] = None
 
     metadata = _load_metadata(issue_number, window)
 
-    # The Closer (Thingy's archive note) — optional atom.
-    closer = _read_atom(issue_number, "closer.md")
+    # Echoes (Thingy's archive note) — optional atom. Falls back to the
+    # legacy ``closer.md`` filename for issues that predate the rename.
+    closer = _read_echoes_atom(issue_number)
 
     return {
         "atoms": atoms,

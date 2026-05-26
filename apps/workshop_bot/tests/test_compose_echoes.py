@@ -5,13 +5,13 @@ proposal). It reads the just-assembled baseline body, the last 6
 issues' closer bodies (for anti-repetition), and the top archive
 passages from Thingy's `/retrieve` endpoint (Bedrock embed + Cohere
 rerank), then asks Sonnet for a 2-4 sentence paragraph OR the literal
-"SKIP". The output lands in data/issues/{N}/closer.md on both S3 and
+"SKIP". The output lands in data/issues/{N}/echoes.md on both S3 and
 local; create-final then re-assembles final.md with the closer
 spliced in.
 
 Tests cover: refusal paths (no window, no body, no Eddy), SKIP
-handling (no closer.md written, prior closer.md cleared), happy path
-(closer.md written to local + S3), prior-closer lookup (reads up to 6,
+handling (no echoes.md written, prior echoes.md cleared), happy path
+(echoes.md written to local + S3), prior-closer lookup (reads up to 6,
 skips missing), SKIP detection edge cases, Thingy retrieval failure
 (fail-loud), and the bare-reference linkifier.
 """
@@ -87,26 +87,37 @@ class PriorClosersTests(unittest.TestCase):
         self._issues_root_patch.stop()
         self._tmp.cleanup()
 
-    def _seed_closer(self, n: int, text: str) -> None:
+    def _seed_echoes(self, n: int, text: str, *, name: str = "echoes.md") -> None:
         d = compose_echoes.ISSUES_ROOT / str(n)
         d.mkdir(parents=True, exist_ok=True)
-        (d / "closer.md").write_text(text, encoding="utf-8")
+        (d / name).write_text(text, encoding="utf-8")
 
     def test_reads_up_to_six_prior_closers_newest_first(self):
         for n in range(450, 458):
-            self._seed_closer(n, f"closer for WT{n}")
+            self._seed_echoes(n, f"echoes for WT{n}")
         out = compose_echoes._prior_closers(458)
         # Returns newest-first (457, 456, ..., 452); not 451 or 450 since cap=6.
         nums = [n for n, _ in out]
         self.assertEqual(nums, [457, 456, 455, 454, 453, 452])
 
-    def test_skips_missing_closer_files(self):
-        # Only 455 and 453 have closer.md; 457/456/454/452 don't.
-        self._seed_closer(455, "wt455 closer")
-        self._seed_closer(453, "wt453 closer")
+    def test_skips_missing_echoes_files(self):
+        # Only 455 and 453 have echoes.md; 457/456/454/452 don't.
+        self._seed_echoes(455, "wt455 echoes")
+        self._seed_echoes(453, "wt453 echoes")
         out = compose_echoes._prior_closers(458)
         nums = [n for n, _ in out]
         self.assertEqual(nums, [455, 453])
+
+    def test_falls_back_to_legacy_closer_filename(self):
+        # Some pre-rename issues still have closer.md; the prior-closers
+        # lookup should pick those up via the legacy-name fallback.
+        self._seed_echoes(456, "wt456 echoes (new name)")
+        self._seed_echoes(454, "wt454 echoes (old name)", name="closer.md")
+        out = compose_echoes._prior_closers(458)
+        nums = [n for n, _ in out]
+        self.assertEqual(nums, [456, 454])
+        bodies = {n: t for n, t in out}
+        self.assertIn("old name", bodies[454])
 
     def test_no_prior_closers_returns_empty(self):
         out = compose_echoes._prior_closers(458)
@@ -114,7 +125,7 @@ class PriorClosersTests(unittest.TestCase):
 
     def test_stops_at_issue_one(self):
         # For issue 3 we'd look at 2, 1, then stop (offsets > N-1 hit prev<1).
-        self._seed_closer(1, "wt1 closer")
+        self._seed_echoes(1, "wt1 echoes")
         out = compose_echoes._prior_closers(3)
         nums = [n for n, _ in out]
         self.assertEqual(nums, [1])
@@ -179,9 +190,9 @@ class ComposeCloserRunTests(_DBTestCase):
         self.assertFalse(result.ok)
         self.assertIn("no body available", result.message)
 
-    def test_happy_path_writes_closer(self):
-        """Reply is a real paragraph — closer.md gets written to both S3
-        (FakeWorkspace) and local ISSUES_ROOT/458/closer.md."""
+    def test_happy_path_writes_echoes(self):
+        """Reply is a real paragraph — echoes.md gets written to both S3
+        (FakeWorkspace) and local ISSUES_ROOT/458/echoes.md."""
         self._window()
         ctx, fc = self._ctx(reply="In WT281, Jamie wrote about local food systems. The thread runs through this issue too.")
         result = asyncio.run(compose_echoes.run(
@@ -189,11 +200,11 @@ class ComposeCloserRunTests(_DBTestCase):
         ))
         self.assertTrue(result.ok, result.message)
         self.assertTrue(result.data["echoes_written"])
-        # S3 mirror — on-disk filename stays closer.md (legacy)
-        self.assertIn((458, "closer.md"), self.ws.files)
-        self.assertIn("WT281", self.ws.files[(458, "closer.md")])
+        # S3 mirror — written under the atoms/ prefix as echoes.md now.
+        self.assertIn((458, "echoes.md"), self.ws.files)
+        self.assertIn("WT281", self.ws.files[(458, "echoes.md")])
         # Local mirror
-        local_path = compose_echoes.ISSUES_ROOT / "458" / "closer.md"
+        local_path = compose_echoes.ISSUES_ROOT / "458" / "echoes.md"
         self.assertTrue(local_path.exists())
         self.assertIn("WT281", local_path.read_text(encoding="utf-8"))
         # Status message posted to #editorial
@@ -242,7 +253,7 @@ class ComposeCloserRunTests(_DBTestCase):
         self.assertIn("Thingy retrieval unavailable", result.message)
         self.assertTrue(result.data.get("retrieval_failed"))
         # No closer.md written
-        self.assertNotIn((458, "closer.md"), self.ws.files)
+        self.assertNotIn((458, "echoes.md"), self.ws.files)
         # No Sonnet call attempted (FakeBotChannel records calls)
         sent = fc.channel.send.await_args_list[0].args[0]
         self.assertIn("Thingy retrieval unavailable", sent)
@@ -259,7 +270,7 @@ class ComposeCloserRunTests(_DBTestCase):
             ctx, baseline_body="## Notable\n\nbody",
         ))
         self.assertTrue(result.ok, result.message)
-        written = self.ws.files[(458, "closer.md")]
+        written = self.ws.files[(458, "echoes.md")]
         self.assertIn(
             "[WT281](https://weekly.thingelstad.com/archive/281/)",
             written,
@@ -277,7 +288,7 @@ class ComposeCloserRunTests(_DBTestCase):
             ctx, baseline_body="## Notable\n\nbody",
         ))
         self.assertTrue(result.ok, result.message)
-        written = self.ws.files[(458, "closer.md")]
+        written = self.ws.files[(458, "echoes.md")]
         # Exactly one occurrence of the link — no double-wrapping.
         self.assertEqual(written.count(link), 1)
         # And no nested `[[..]](..)` pathology.

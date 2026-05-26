@@ -200,7 +200,7 @@ class PublishCardTests(_DBTestCase):
         self._seed_built(subject="S", description="d")
         # Both atoms present → no recompose needed.
         self.ws.write_issue_file(458, "thesis.md", "An issue about X.")
-        self.ws.write_issue_file(458, "closer.md", "Echoes prose.")
+        self.ws.write_issue_file(458, "echoes.md", "Echoes prose.")
         st = publish_card.gather_state(458)
         self.assertFalse(st["thesis_failed"])
         self.assertFalse(st["echoes_failed"])
@@ -212,7 +212,7 @@ class PublishCardTests(_DBTestCase):
         db.set_issue_phase(458, "publish")
         self._seed_built(subject="S", description="d")
         # Echoes present, thesis missing → recompose needed.
-        self.ws.write_issue_file(458, "closer.md", "Echoes prose.")
+        self.ws.write_issue_file(458, "echoes.md", "Echoes prose.")
         st = publish_card.gather_state(458)
         self.assertTrue(st["thesis_failed"])
         self.assertFalse(st["echoes_failed"])
