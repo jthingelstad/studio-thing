@@ -126,16 +126,12 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             data=counts,
         )
 
-    # Loud-only when something actually changed or errored.
-    msg_lines = [
-        f"📥 Feedbin ingest: **{counts['new']}** new toread bookmark(s)",
-    ]
+    # Loud-only when something actually changed or errored. Single line —
+    # the running tally and next-step explanation are noise; the relevant
+    # signal is "this scan filed N bookmarks."
+    summary = f"📥 Feedbin ingest: **{counts['new']}** new toread bookmark(s)"
     if counts["errors"]:
-        msg_lines.append(f"⚠️ {counts['errors']} item(s) failed to file — see logs")
-    msg_lines.append(
-        f"_({counts['skipped']} already filed; next `pinboard-scan` surfaces them as toread cards.)_"
-    )
-    summary = "\n".join(msg_lines)
+        summary += f" · ⚠️ {counts['errors']} failed (see logs)"
     # Status, not actionable: the bookmarks are already in Pinboard; they
     # surface as #research toread cards on the next pinboard-scan, which
     # is where Jamie acts on them. The ingest summary is "I just did X" —
