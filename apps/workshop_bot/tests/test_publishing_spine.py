@@ -194,6 +194,55 @@ class PublishCardTests(_DBTestCase):
         self.assertIn("Publish · WT458", embed.title)
         self.assertIn("Channels", [f["name"] for f in embed.fields])
 
+    def test_recompose_gate_off_when_thesis_and_echoes_present(self):
+        _window(458)
+        db.set_issue_phase(458, "publish")
+        self._seed_built(subject="S", description="d")
+        # Both atoms present → no recompose needed.
+        self.ws.write_issue_file(458, "thesis.md", "An issue about X.")
+        self.ws.write_issue_file(458, "closer.md", "Echoes prose.")
+        st = publish_card.gather_state(458)
+        self.assertFalse(st["thesis_failed"])
+        self.assertFalse(st["echoes_failed"])
+        self.assertFalse(st["recompose_needed"])
+        self.assertFalse(st["gates"][publish_card.BTN_RECOMPOSE])
+
+    def test_recompose_gate_on_when_thesis_failed_in_publish(self):
+        _window(458)
+        db.set_issue_phase(458, "publish")
+        self._seed_built(subject="S", description="d")
+        # Echoes present, thesis missing → recompose needed.
+        self.ws.write_issue_file(458, "closer.md", "Echoes prose.")
+        st = publish_card.gather_state(458)
+        self.assertTrue(st["thesis_failed"])
+        self.assertFalse(st["echoes_failed"])
+        self.assertTrue(st["recompose_needed"])
+        self.assertTrue(st["gates"][publish_card.BTN_RECOMPOSE])
+
+    def test_recompose_gate_off_in_build_phase(self):
+        # In build phase, thesis + echoes haven't been auto-fired yet,
+        # so their absence isn't a failure — recompose stays disabled.
+        _window(458)
+        # phase defaults to 'build'
+        self._seed_built(subject="", description="")
+        st = publish_card.gather_state(458)
+        self.assertFalse(st["thesis_failed"])
+        self.assertFalse(st["echoes_failed"])
+        self.assertFalse(st["recompose_needed"])
+        self.assertFalse(st["gates"][publish_card.BTN_RECOMPOSE])
+
+    def test_render_shows_failure_marker_for_failed_echoes(self):
+        _window(458)
+        db.set_issue_phase(458, "publish")
+        self._seed_built(subject="S", description="d")
+        self.ws.write_issue_file(458, "thesis.md", "An issue about X.")
+        # Echoes missing in publish phase → failure line.
+        st = publish_card.gather_state(458)
+        lines = publish_card.render_shared_lines(st)
+        echoes_line = next(l for l in lines if "Echoes" in l)
+        self.assertIn("❌", echoes_line)
+        self.assertIn("compose-echoes failed", echoes_line)
+
 
 class ShareCardTests(_DBTestCase):
     def test_targets_last_published_issue(self):

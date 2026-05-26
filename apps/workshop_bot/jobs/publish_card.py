@@ -31,6 +31,7 @@ KIND = "publish"
 BTN_META = "publish:meta"          # subject + description (compose-meta)
 BTN_HAIKU = "publish:haiku"        # haiku (compose-haiku)
 BTN_CTA = "publish:cta"            # membership CTA (compose-cta)
+BTN_RECOMPOSE = "publish:recompose"  # retry thesis + echoes if either failed at mark-built
 BTN_EMAIL = "publish:email"        # 🚀 Buttondown
 BTN_WEBSITE = "publish:website"    # 🚀 Website
 BTN_PODCAST = "publish:podcast"    # 🚀 Audio
@@ -90,16 +91,28 @@ def gather_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> d
         if not present:
             email_missing.append(req)
 
+    phase = window.get("phase", "publish")
+    # In Publish phase, thesis + echoes should already exist (compose-thesis
+    # and compose-echoes auto-fire at mark-built, best-effort). If they're
+    # missing past the phase boundary, the auto-fire failed silently and
+    # the operator needs a way to retry.
+    thesis_failed = phase == "publish" and not thesis_text
+    echoes_failed = phase == "publish" and not echoes_present
+    recompose_needed = thesis_failed or echoes_failed
+
     return {
         "issue_number": n,
-        "phase": window.get("phase", "publish"),
+        "phase": phase,
         "pub_date": window.get("pub_date", ""),
         "days_to_pub": issue_status._days_to(window.get("pub_date", "")),
         "thesis": thesis_text,
+        "thesis_failed": thesis_failed,
         "subject": subject,
         "description": description,
         "haiku_present": haiku_present,
         "echoes_present": echoes_present,
+        "echoes_failed": echoes_failed,
+        "recompose_needed": recompose_needed,
         "cta_files": cta_files,
         "buttondown_id": buttondown_id,
         "buttondown_url": (publish._draft_url(buttondown_id) if buttondown_id else ""),
@@ -109,6 +122,7 @@ def gather_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> d
         "email_shipped": bool(buttondown_id),
         "review_url": s3.issue_file_url(n, "draft.html"),
         "gates": {
+            BTN_RECOMPOSE: recompose_needed,
             BTN_EMAIL: email_ready,
             BTN_WEBSITE: bool(buttondown_id),     # website needs the stamped absolute_url
             BTN_PODCAST: any_section,
@@ -125,11 +139,18 @@ def render_shared_lines(state: dict) -> list[str]:
     cta = state["cta_files"]
     haiku = state["haiku_present"]
     echoes = state["echoes_present"]
+    echoes_failed = state.get("echoes_failed", False)
+    if echoes:
+        echoes_line = "✅ Echoes — Thingy's archive note written"
+    elif echoes_failed:
+        echoes_line = "❌ Echoes — compose-echoes failed at mark-built → Retry button"
+    else:
+        echoes_line = "☐ Echoes — auto-fired at mark-built (Opus)"
     return [
         f"{_cards.mark(bool(subj))} Subject — " + (f"\"{subj}\"" if subj else "pick one → button"),
         f"{_cards.mark(bool(desc))} Description — " + (desc if desc else "generated with the subject"),
         f"{_cards.mark(haiku)} Haiku — " + ("written" if haiku else "Eddy writes it → button"),
-        f"{_cards.mark(echoes)} Echoes — " + ("Thingy's archive note written" if echoes else "auto-fired at mark-built (Opus)"),
+        echoes_line,
         (f"✅ CTA — {', '.join('`' + c + '`' for c in cta)}" if cta
          else "☐ CTA — pick a framing (auto-requested on entry)"),
     ]
@@ -182,11 +203,13 @@ def render_embed(state: dict) -> "discord.Embed":
     # Thesis at the top — Eddy's editorial framing, written at mark-built.
     # Shown verbatim so Jamie sees the read that anchors every Publish job.
     thesis = state.get("thesis") or ""
-    embed.add_field(
-        name="📐 Thesis",
-        value=(thesis if thesis else "_(pending — compose-thesis runs at mark-built)_"),
-        inline=False,
-    )
+    if thesis:
+        thesis_value = thesis
+    elif state.get("thesis_failed"):
+        thesis_value = "_❌ compose-thesis failed at mark-built — hit the Retry composes button._"
+    else:
+        thesis_value = "_(pending — compose-thesis runs at mark-built)_"
+    embed.add_field(name="📐 Thesis", value=thesis_value, inline=False)
     embed.add_field(name="Shared (envelope + haiku + CTA)", value="\n".join(render_shared_lines(state)), inline=False)
     embed.add_field(name="Channels", value="\n".join(render_channel_lines(state)), inline=False)
     embed.set_footer(text=f"refreshed {datetime.now().strftime('%a %H:%M')}")
@@ -212,4 +235,60 @@ async def post_or_update(ctx: "_base.JobContext", n: Optional[int] = None, *, wi
     view = _build_view(state)
     return await _cards.upsert_card(
         ctx, kind=KIND, channel_env=_cards.EDITORIAL_ENV, persona="eddy", n=n, embed=embed, view=view,
+    )
+
+
+# ---------- recompose (retry thesis + echoes after a mark-built failure) ----------
+
+
+async def recompose(ctx: "_base.JobContext") -> "_base.JobResult":
+    """Re-fire compose-thesis and/or compose-echoes for the active issue,
+    for whichever atom is missing in Publish phase. Used by the Publish
+    card's Retry button when the auto-fires at mark-built fail silently.
+    Idempotent: re-running with both atoms present is a no-op."""
+    window = db.get_active_issue_window()
+    if window is None:
+        return _base.JobResult(False, "No active issue window.")
+    state = await asyncio.to_thread(gather_state, window=window)
+    if not state.get("recompose_needed"):
+        return _base.JobResult(
+            True,
+            "✅ Nothing to recompose — thesis + echoes are both present.",
+            data={"thesis_failed": False, "echoes_failed": False},
+        )
+
+    from . import compose_thesis, compose_echoes
+    fired: list[str] = []
+    errors: list[str] = []
+
+    if state.get("thesis_failed"):
+        try:
+            res = await compose_thesis.run(_base.JobContext(deps=ctx.deps, trigger="recompose"))
+            fired.append("thesis")
+            if not res.ok:
+                errors.append(f"thesis: {res.message}")
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("recompose: compose-thesis raised")
+            errors.append(f"thesis: {exc!r}")
+
+    if state.get("echoes_failed"):
+        try:
+            res = await compose_echoes.run(_base.JobContext(deps=ctx.deps, trigger="recompose"))
+            fired.append("echoes")
+            if not res.ok:
+                errors.append(f"echoes: {res.message}")
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("recompose: compose-echoes raised")
+            errors.append(f"echoes: {exc!r}")
+
+    if errors:
+        return _base.JobResult(
+            False,
+            "⚠️ Recompose hit errors: " + " · ".join(errors),
+            data={"fired": fired, "errors": errors},
+        )
+    return _base.JobResult(
+        True,
+        f"✅ Recompose ran — refreshed {', '.join(fired)}.",
+        data={"fired": fired, "errors": []},
     )

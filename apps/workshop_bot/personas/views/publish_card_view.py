@@ -12,6 +12,7 @@ from ...jobs import compose_cta, compose_haiku, compose_meta, publish as publish
 from ._card_base import launch
 
 _GATED = frozenset({
+    publish_card.BTN_RECOMPOSE,
     publish_card.BTN_EMAIL, publish_card.BTN_WEBSITE, publish_card.BTN_PODCAST, publish_card.BTN_ALL,
 })
 
@@ -40,6 +41,15 @@ class PublishCardView(discord.ui.View):
     async def _cta(self, interaction, button):  # type: ignore[no-untyped-def]
         await launch(interaction, compose_cta.run, "cta",
                      started="CTA framings posting in #supporters — pick there.",
+                     refresh=publish_card.post_or_update)
+
+    @discord.ui.button(label="Retry composes", emoji="🔁", style=discord.ButtonStyle.secondary,
+                       custom_id=publish_card.BTN_RECOMPOSE, row=0)
+    async def _recompose(self, interaction, button):  # type: ignore[no-untyped-def]
+        # Re-fires whichever of compose-thesis / compose-echoes failed
+        # silently at mark-built. Disabled unless recompose_needed.
+        await launch(interaction, publish_card.recompose, "recompose",
+                     started="🔁 Re-running compose-thesis / compose-echoes…",
                      refresh=publish_card.post_or_update)
 
     # ── row 1: ship (gated) ─────────────────────────────────────────────
