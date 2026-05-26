@@ -1,10 +1,9 @@
 """``compose-haiku`` — generate haiku options from the issue, write ``haiku.md``.
 
-Reads ``final.md`` (or ``draft.md`` if final isn't written yet) and the
-published-archive corpus (for "haiku I've used before — don't repeat
-them"), asks Eddy for 2–3 options, posts them to ``#editorial``, and
-writes Jamie's pick to ``haiku.md``. Required for ship. Re-fire any time
-for fresh options.
+Reads ``draft.md`` and the published-archive corpus (for "haiku I've used
+before — don't repeat them"), asks Eddy for 2–3 options, posts them to
+``#editorial``, and writes Jamie's pick to ``haiku.md``. Required for
+ship. Re-fire any time for fresh options.
 """
 
 from __future__ import annotations
@@ -45,10 +44,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     if window is None:
         return _base.JobResult(False, "❌ no active issue window.")
     n = int(window["issue_number"])
-    # Off-loop: final_or_draft hits S3 (read of final.md, fallback to draft.md).
-    body = await asyncio.to_thread(_llm_job.final_or_draft, n)
+    # Off-loop: draft_body hits S3 for draft.md.
+    body = await asyncio.to_thread(_llm_job.draft_body, n)
     if not body.strip():
-        return _base.JobResult(False, f"❌ no `final.md`/`draft.md` for WT{n} yet.")
+        return _base.JobResult(False, f"❌ no `draft.md` for WT{n} yet.")
     bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
     if bot is None:
         return _base.JobResult(

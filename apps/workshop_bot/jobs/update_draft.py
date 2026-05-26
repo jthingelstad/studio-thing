@@ -175,11 +175,6 @@ def _gather_fills(window: dict) -> tuple[dict[str, str], list[dict]]:
     return fills, alts_filled
 
 
-def _final_exists(issue_number: int) -> bool:
-    res = s3.read_issue_file(issue_number, "final.md")
-    return bool(res.get("found"))
-
-
 # ---------- Eddy's post-update review ----------
 
 # How many archive passages to surface in the draft-review's "Recent
@@ -616,12 +611,6 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             "❌ no active issue window — run `/eddy issue start <n> <pub-date> <days>` first.",
         )
     n = int(window["issue_number"])
-
-    if _final_exists(n):
-        return _base.JobResult(
-            False,
-            f"❌ issue #{n} is locked — `final.md` exists. Delete it to unlock `update-draft`.",
-        )
 
     progress = await ctx.progress(
         "DISCORD_CHANNEL_EDITORIAL", _initial_progress(n), persona="eddy",

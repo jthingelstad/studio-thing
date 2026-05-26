@@ -96,13 +96,17 @@ PROMOTION_BODY_CAP = ISSUE_BODY_CAP + 8_000
 # directly, and ``compose-cta`` discovers slots by scanning ``final.md``.
 
 
-def final_or_draft(issue_number: int) -> str:
-    """``final.md`` if it exists, else ``draft.md`` (so the compose jobs
-    can be run manually before create-final). Empty string if neither."""
-    for name in ("final.md", "draft.md"):
-        res = s3.read_issue_file(issue_number, name)
-        if res.get("found") and isinstance(res.get("text"), str) and res["text"].strip():
-            return res["text"]
+def draft_body(issue_number: int) -> str:
+    """Read ``draft.md`` for the issue. Empty string if not present.
+
+    Compose-* jobs use this to anchor on the same body the operator is
+    seeing in the draft review drawer. (Previously named
+    ``final_or_draft``, which fell back from a since-retired ``final.md``
+    artifact; the create-final → reorder rework dropped final.md.)
+    """
+    res = s3.read_issue_file(issue_number, "draft.md")
+    if res.get("found") and isinstance(res.get("text"), str) and res["text"].strip():
+        return res["text"]
     return ""
 
 

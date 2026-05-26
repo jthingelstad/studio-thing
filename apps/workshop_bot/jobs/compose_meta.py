@@ -84,10 +84,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     if window is None:
         return _base.JobResult(False, "❌ no active issue window.")
     n = int(window["issue_number"])
-    # Off-loop: final_or_draft hits S3 (read of final.md, fallback to draft.md).
-    body = await asyncio.to_thread(_llm_job.final_or_draft, n)
+    # Off-loop: draft_body hits S3 for draft.md.
+    body = await asyncio.to_thread(_llm_job.draft_body, n)
     if not body.strip():
-        return _base.JobResult(False, f"❌ no `final.md`/`draft.md` for WT{n} yet.")
+        return _base.JobResult(False, f"❌ no `draft.md` for WT{n} yet.")
     bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
     if bot is None:
         return _base.JobResult(

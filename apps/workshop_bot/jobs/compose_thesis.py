@@ -55,7 +55,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
 
     # Read the assembled draft (intro + sections + outro). Reorder may
     # have just landed; this picks up whatever shape the issue is in now.
-    body = await asyncio.to_thread(_llm_job.final_or_draft, n)
+    body = await asyncio.to_thread(_llm_job.draft_body, n)
     if not body.strip():
         return _base.JobResult(False, f"❌ no draft body for WT{n}.")
 

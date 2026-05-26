@@ -42,7 +42,7 @@ the stronger one for this issue:
 Inputs to the Opus call:
 
 - The current issue draft (atoms + assembled body via
-  ``_llm_job.final_or_draft``).
+  ``_llm_job.draft_body``).
 - The just-written thesis (``atoms/thesis.md``) — the editorial
   framing every Publish-phase job anchors on. Feeds into the prompt
   as ``## This issue's thesis`` so Echoes can specifically echo what
@@ -432,7 +432,7 @@ async def run(
     """Write Thingy's Echoes archive note for the in-flight issue.
 
     Mandatory + auto-fired inside ``mark-built``. Reads the frozen
-    content via ``_llm_job.final_or_draft`` unless an explicit
+    content via ``_llm_job.draft_body`` unless an explicit
     ``baseline_body`` is provided (the test harness uses this to inject
     a known body). No SKIP path — Echoes ships in every issue. Fails
     loud on retrieval failure or persistent empty reply rather than
@@ -447,7 +447,7 @@ async def run(
     publish_date = (window.get("pub_date") or "")[:10] or "(unknown date)"
 
     if baseline_body is None:
-        baseline_body = await asyncio.to_thread(_llm_job.final_or_draft, n)
+        baseline_body = await asyncio.to_thread(_llm_job.draft_body, n)
     if not baseline_body or not baseline_body.strip():
         return _base.JobResult(
             False, f"❌ no body available for WT{n} — run `/eddy issue update` first.",

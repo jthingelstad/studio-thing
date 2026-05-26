@@ -453,13 +453,6 @@ class UpdateDraftRealFillsTests(_DBTestCase):
             n = conn.execute("SELECT COUNT(*) c FROM draft_digests WHERE issue=458").fetchone()["c"]
         self.assertEqual(n, 1)
 
-    def test_refuses_when_final_exists(self):
-        self._set_window()
-        self.ws.write_issue_file(458, "final.md", "locked")
-        result = asyncio.run(update_draft.run(_base.JobContext()))
-        self.assertFalse(result.ok)
-        self.assertIn("locked", result.message.lower())
-
     def test_source_failure_degrades_to_placeholder(self):
         self._set_window()
         def _boom(s, e):
