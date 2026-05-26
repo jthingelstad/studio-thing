@@ -740,11 +740,13 @@ def popular(limit: int = 30) -> list[dict[str, Any]]:
     # Pinboard's RSS server hangs ~50% of the time at 13:05 / 16:05 /
     # 10:05 CT — US business hours when many feed readers + cron jobs
     # likely hit it at the same exact-minute boundaries (we fire at
-    # :05). A short random jitter before the request puts us in a less
-    # contested window: the herd lands at :00/:05, we land somewhere
-    # in :05–:06:30. 60s timeout (back from a 120s experiment that
+    # :05). A random jitter before the request puts us in a less
+    # contested window: the herd clusters at :00/:05, we land
+    # somewhere in :05:30–:10:00 (30–300s offset). 5min still fits
+    # comfortably inside our 3-hour scan cadence and the worker-thread
+    # is decoupled from the asyncio loop. 60s timeout (a 120s experiment
     # didn't help — server was dropping requests, not slow).
-    jitter = random.uniform(0, 90)
+    jitter = random.uniform(30, 300)
     logger.info("pinboard__popular: sleeping %.1fs before fetch (herd-avoidance jitter)", jitter)
     time.sleep(jitter)
     resp = requests.get(
