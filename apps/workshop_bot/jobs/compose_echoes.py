@@ -68,6 +68,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -86,6 +87,17 @@ ISSUES_ROOT = REPO / "data" / "issues"
 
 # Used by _anniversary_candidates() to look up issue numbers + dates.
 EMAILS_JSON = REPO / "apps" / "site" / "_data" / "emails.json"
+
+# Echoes is a once-per-issue voice surface in Thingy's distinct librarian
+# voice, with archive citations that have to be earned — Opus pays off
+# at ~$5/yr more than Sonnet for the quality differential. Override down
+# to Sonnet for cost-test or quick fallback via ``WORKSHOP_ECHOES_MODEL``.
+_ECHOES_DEFAULT_MODEL = "opus"
+
+
+def _echoes_model() -> str:
+    override = (os.environ.get("WORKSHOP_ECHOES_MODEL") or "").strip()
+    return override or _ECHOES_DEFAULT_MODEL
 
 # Public archive URL — used to convert "Weekly Thing N" references in the
 # closer body into clickable markdown links.
@@ -517,11 +529,9 @@ async def run(
             user_msg = f"{base_prompt}\n\n---\n\n{user_body}"[: _llm_job.CREATE_FINAL_BODY_CAP]
 
             with db.AgentRun("eddy", trigger="compose-echoes") as agent_run:
-                # Opus override — Echoes is a once-per-issue voice surface
-                # in Thingy's distinct librarian voice, with archive
-                # citations that need to be earned. Cost is ~$5/yr more
-                # than Sonnet for the quality differential.
-                reply, meta = await bot.core(latest=user_msg, history=[], model="opus")
+                reply, meta = await bot.core(
+                    latest=user_msg, history=[], model=_echoes_model(),
+                )
                 agent_run.record_meta(meta)
                 agent_run.records_written = 1 if reply else 0
 
