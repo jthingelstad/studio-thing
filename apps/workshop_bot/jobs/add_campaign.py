@@ -42,12 +42,14 @@ async def run(
     platform=None,
     cost=None,
     copy=None,
+    started_at=None,
 ) -> "_base.JobResult":
     name = (name or "").strip()
     ref = (ref or "").strip()
     url = (str(url).strip() or None) if url is not None else None
     platform = (str(platform).strip() or None) if platform is not None else None
     copy = (str(copy).strip() or None) if copy is not None else None
+    started_at = (str(started_at).strip() or None) if started_at is not None else None
     if not name:
         return _base.JobResult(False, "❌ campaign name is required.")
     if not _REF_RE.match(ref):
@@ -68,6 +70,7 @@ async def run(
     )
     created = db.insert_campaign(
         name=name, ref=ref, url=url, platform=platform, cost=cost_f, copy=copy,
+        started_at=started_at,
     )
     if not created:
         existing = db.get_campaign(name) or {}
@@ -76,7 +79,10 @@ async def run(
             f"⚠️ a campaign named `{name}` already exists (ref `{existing.get('ref')}`, "
             f"status `{existing.get('status')}`). Pick a different name.",
         )
-    bits = [f"✅ Campaign **{name}** registered (ref `{ref}`, status `live`)."]
+    bits = [
+        f"✅ Campaign **{name}** registered "
+        f"(ref `{ref}`, status `live`, started {started_at or 'today'})."
+    ]
     if ref_collision is not None:
         bits.append(
             f"⚠️ ref `{ref}` is already live on `{ref_collision['name']}` — "

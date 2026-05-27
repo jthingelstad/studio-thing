@@ -110,7 +110,7 @@ def register_marky_commands(
 
     @campaign.command(
         name="add",
-        description="Register an ad campaign for Marky to track (name, ?ref= tag, optional url/platform/cost/copy).",
+        description="Register an ad campaign for Marky to track (name, ?ref= tag, optional url/platform/cost/copy/started_at).",
     )
     @app_commands.describe(
         name="A short name for the campaign (e.g. dense-discovery-may-2026)",
@@ -119,6 +119,7 @@ def register_marky_commands(
         platform="Optional — channel (DenseDiscovery, LinkedIn, Bluesky, …)",
         cost="Optional — actual dollars paid for the placement",
         copy="Optional — the actual promo text that ran in the placement (set later with campaign copy)",
+        started_at="Optional — YYYY-MM-DD start date (defaults to today; pass a future date for scheduled placements)",
     )
     async def campaign_add_cmd(  # type: ignore[misc]
         interaction: discord.Interaction,
@@ -128,6 +129,7 @@ def register_marky_commands(
         platform: str = "",
         cost: float = 0.0,
         copy: str = "",
+        started_at: str = "",
     ) -> None:
         await _run_and_ack(
             interaction,
@@ -137,6 +139,7 @@ def register_marky_commands(
                 platform=(platform or None),
                 cost=(cost if cost > 0 else None),
                 copy=(copy or None),
+                started_at=(started_at or None),
             ),
             "campaign add",
         )
