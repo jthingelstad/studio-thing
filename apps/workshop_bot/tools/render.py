@@ -627,7 +627,7 @@ def markdown_to_html_page(md: str, *, title: str, subtitle: Optional[str] = None
 # The existing Discord reaction loop posts numbered options in a chat
 # message — fine for haiku (short lines) but cramped for subject lines
 # (long enough that Discord wraps mid-line) and impossible for the
-# create-final reorder (3 lists × 12 items). The option-cards page is
+# reorder pass (3 lists × 12 items). The option-cards page is
 # the HTML side of the same pick UI: each option lands in its own
 # card, with a stable card number that matches the 1️⃣–5️⃣ reactions
 # in Discord, and a "copy" button so Jamie can lift the text into
@@ -825,9 +825,9 @@ def render_and_upload_option_cards(
         return None
 
 
-# ---------- create-final proposal page ----------
+# ---------- reorder proposal page ----------
 #
-# Side-by-side current vs proposed view of Eddy's create-final
+# Side-by-side current vs proposed view of Eddy's reorder
 # editorial pass. Picks still flow through Discord ✅/❌/🔄 — this
 # page only shows what's being approved, with SVG connector lines
 # drawn between left-column and right-column items so the moves
@@ -1035,7 +1035,7 @@ def _proposal_section_html(
     return "".join(parts)
 
 
-def create_final_proposal_html(
+def reorder_proposal_html(
     *,
     issue_number: int,
     thesis: str,
@@ -1158,7 +1158,7 @@ def render_and_upload_proposal(
     workspace. Returns the public URL; ``None`` on failure (caller
     treats the page as a nice-to-have on top of the Discord pick)."""
     try:
-        page = create_final_proposal_html(
+        page = reorder_proposal_html(
             issue_number=int(issue_number), thesis=thesis,
             rows_by_section=rows_by_section, proposal=proposal,
             synth_to_row=synth_to_row, row_to_synth=row_to_synth,

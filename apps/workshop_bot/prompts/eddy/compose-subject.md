@@ -5,7 +5,7 @@ prompt is the current subject-line generator — the canonical format is
 phrase (rules below).
 
 If a `## Thesis` block appears above, that's the editorial thesis for
-this issue (set during create-final). Use it as the anchor for your
+this issue (set during compose-thesis). Use it as the anchor for your
 subject options — the subject and the thesis should read as expressions
 of the same idea. Without a thesis, derive the theme from the issue
 text directly (today's behaviour).

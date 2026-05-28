@@ -46,9 +46,8 @@ this job assembled an explicit ``final.md`` artifact, chose
 - Membership-block placement is hardcoded in ``render_email`` via
   ``CTA_SLOT_POSITIONS``.
 
-The slash command at ``/eddy issue reorder`` matches today's scope.
-The internal trigger is ``reorder``; the on-disk file path is still
-``jobs/create_final.py`` (file rename deferred).
+The slash command at ``/eddy issue reorder`` matches today's scope;
+the internal trigger is ``reorder``.
 """
 
 from __future__ import annotations
@@ -62,7 +61,7 @@ from ..tools.discord import discord_io, interaction
 from ..tools.llm import anthropic_client
 from . import _base, _llm_job, compose_cta
 
-logger = logging.getLogger("workshop.jobs.create_final")
+logger = logging.getLogger("workshop.jobs.reorder")
 
 NAME = "reorder"
 
@@ -72,7 +71,7 @@ _NEXT_STEPS = (
     "anything still missing if you run it early)."
 )
 
-# When create-final lands with declared membership-block slots, the
+# When reorder lands with declared membership-block slots, the
 # next deterministic step is compose-cta (Patty filling each slot).
 # WT348 surfaced this as a forgetting-Patty failure mode: Jamie
 # skipped /patty cta entirely and the shipped issue went out without
@@ -384,9 +383,9 @@ _ASSETS_BASE = "https://files.thingelstad.com/weekly-thing"
 def _schedule_compose_cta(
     ctx: "_base.JobContext", *, issue_number: int, slots_declared: int,
 ) -> None:
-    """Fire ``compose-cta`` as a background asyncio task so create-final
+    """Fire ``compose-cta`` as a background asyncio task so reorder
     can return immediately. Any error inside compose-cta is logged
-    rather than re-raised — the JobResult for create-final has already
+    rather than re-raised — the JobResult for reorder has already
     been built and the user's slash ack is in flight; an exception
     here would land nowhere useful.
     """
@@ -394,12 +393,12 @@ def _schedule_compose_cta(
         try:
             result = await compose_cta.run(ctx)
             logger.info(
-                "create-final → compose-cta autofire for WT%d (%d slot(s)): %s",
+                "reorder → compose-cta autofire for WT%d (%d slot(s)): %s",
                 issue_number, slots_declared, getattr(result, "message", ""),
             )
         except Exception:  # noqa: BLE001
             logger.exception(
-                "create-final → compose-cta autofire failed for WT%d",
+                "reorder → compose-cta autofire failed for WT%d",
                 issue_number,
             )
 
@@ -408,7 +407,7 @@ def _schedule_compose_cta(
     except RuntimeError:
         # No running loop (test contexts without an event loop). Skip
         # silently — the test harness drives compose-cta directly.
-        logger.debug("create-final: no event loop for compose-cta autofire")
+        logger.debug("reorder: no event loop for compose-cta autofire")
 
 
 def _md_html_links(issue_number: int, name: str, html_url: Optional[str]) -> str:
@@ -450,7 +449,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
 
     bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
     if bot is None:
-        return _base.JobResult(False, f"(create-final skipped — {reason})")
+        return _base.JobResult(False, f"(reorder skipped — {reason})")
 
     # Lock on issue_items so a concurrent /eddy issue reorder doesn't
     # race row mutations — the asset key is symbolic now that final.md
@@ -619,4 +618,4 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 data={"issue_number": n, "thesis_written": False},
             )
     except _base.JobLocked as exc:
-        return _base.JobResult(False, f"⏳ `create-final` already running ({exc.holder_desc}).")
+        return _base.JobResult(False, f"⏳ `reorder` already running ({exc.holder_desc}).")

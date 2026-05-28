@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import discord
 
-from ...jobs import build_card, create_final, update_draft
+from ...jobs import build_card, reorder, update_draft
 from ._card_base import EditPickerView, is_owner, launch
 
 # Atoms editable from the Build card (the content atoms; haiku + thesis +
@@ -33,7 +33,7 @@ class BuildCardView(discord.ui.View):
     @discord.ui.button(label="Reorder", style=discord.ButtonStyle.secondary,
                        custom_id=build_card.BTN_REORDER, row=0)
     async def _reorder(self, interaction, button):  # type: ignore[no-untyped-def]
-        await launch(interaction, create_final.run, "reorder",
+        await launch(interaction, reorder.run, "reorder",
                      started="Reorder proposal posting in #editorial — react ✅/❌/🔄 there.",
                      refresh=build_card.post_or_update)
 

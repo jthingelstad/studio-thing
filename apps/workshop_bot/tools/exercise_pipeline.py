@@ -68,7 +68,7 @@ from apps.workshop_bot.jobs import (
     compose_cta,
     compose_haiku,
     compose_meta,
-    create_final,
+    reorder,
     reset_issue,
     update_draft,
 )
@@ -249,7 +249,7 @@ def patch_interactions(chooser: Chooser):
 
 
 def patch_autofire(mode: str):
-    """If --auto-fire suppress, replace create_final._schedule_compose_cta
+    """If --auto-fire suppress, replace reorder._schedule_compose_cta
     with a no-op so the harness can run compose-cta explicitly."""
     if mode == "keep":
         return contextlib.nullcontext()
@@ -257,7 +257,7 @@ def patch_autofire(mode: str):
     def _noop(ctx, *, issue_number, slots_declared):
         logger.info("autofire suppressed (slots=%d)", slots_declared)
 
-    return patch.object(create_final, "_schedule_compose_cta", _noop)
+    return patch.object(reorder, "_schedule_compose_cta", _noop)
 
 
 # ---------- fake bot / channel / deps ----------
@@ -419,7 +419,7 @@ def do_reset(mode: str, issue_number: int) -> dict[str, list[str]]:
         if _safe_delete(issue_number, fn):
             deleted.append(fn)
 
-    # Clear is_promoted flags when we're re-running create-final.
+    # Clear is_promoted flags when we're re-running reorder.
     promotions_cleared = 0
     if mode in ("full", "from-final"):
         from apps.workshop_bot.tools import issue_items
@@ -437,7 +437,7 @@ def pipeline_for(mode: str) -> list[tuple[str, Callable]]:
     """Return ``[(job_name, run_callable), …]`` in execution order."""
     full = [
         ("update-draft", update_draft.run),
-        ("reorder", create_final.run),
+        ("reorder", reorder.run),
         ("compose-haiku", compose_haiku.run),
         ("compose-meta", compose_meta.run),
         ("compose-cta", compose_cta.run),

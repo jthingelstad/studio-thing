@@ -128,9 +128,8 @@ tools/
 ├── issue_items.py         ← row-backed in-flight content model (Notable/Brief/Journal as rows) + editorial_comments (handles like E349-N1)
 ├── issue_items_sync.py    ← Pinboard + micro.blog → issue_items rows (UPSERT, prune-on-disappearance)
 ├── issue_items_render.py  ← rows → section markdown bytes (preamble, items, featured sections, marker-interleaved variants)
-├── issue_assembly.py      ← atoms + section bodies + features → final.md / buttondown.md (the assembler create-final + build-publish share)
 ├── db/                    ← SQLite — agent_notes, agent_runs, link_candidates, issue_windows, job_locks, draft_digests, goals, campaigns, issue_items, editorial_comments, …
-├── render.py              ← markdown → standalone HTML preview page (draft/final/publish .html twins) + option-cards page (subject/haiku/cta pickers) + side-by-side proposal page (create-final reorder view) + handle badges for the editorial drawer
+├── render.py              ← markdown → standalone HTML preview page (the `draft.html` twin) + option-cards page (subject/haiku/cta pickers) + side-by-side proposal page (reorder view) + handle badges for the editorial drawer
 ├── cdn.py                 ← CloudFront invalidation (best-effort) for the public assets bucket
 ├── avoid_domains.py       ← popular-feed exclusion set (copy of pipeline/content/domain_exclusions.py) — used by pinboard__popular_unseen
 ├── rss.py                 ← latest_published_issue() from weekly.thingelstad.com/feed.xml (Marky's trigger)

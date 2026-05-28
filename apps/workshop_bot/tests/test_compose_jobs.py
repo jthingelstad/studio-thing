@@ -1,5 +1,5 @@
 """Tests for the compose-* jobs: compose-haiku, compose-meta, compose-cta,
-and create-final. Extracted from ``test_content_jobs.py`` in Item 1.
+and reorder. Extracted from ``test_content_jobs.py`` in Item 1.
 Shared fixtures from ``tests/_fixtures.py``."""
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import (  # noqa: E402
-    _base, compose_cta, compose_haiku, compose_meta, create_final,
+    _base, compose_cta, compose_haiku, compose_meta, reorder,
 )
 from apps.workshop_bot.tools import db, s3 # noqa: E402
 from apps.workshop_bot.tools.discord import interaction
@@ -500,7 +500,7 @@ class CreateFinalTests(_DBTestCase):
         # Reorder: notable [n2, n1], leave brief + journal identity.
         ctx, fc = self._setup(self._basic_reply(notable_order=("n2", "n1")))
         with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
-            result = asyncio.run(create_final.run(ctx))
+            result = asyncio.run(reorder.run(ctx))
         self.assertTrue(result.ok, result.message)
         # Row positions reflect the reorder (B before A in Notable).
         notable_rows = issue_items.list_items(458, section="notable")
@@ -516,7 +516,7 @@ class CreateFinalTests(_DBTestCase):
         from apps.workshop_bot.tools import issue_items
         ctx, fc = self._setup(self._basic_reply(notable_order=("n2", "n1")))
         with patch.object(interaction, "await_approval", AsyncMock(return_value=False)):
-            result = asyncio.run(create_final.run(ctx))
+            result = asyncio.run(reorder.run(ctx))
         self.assertTrue(result.ok, result.message)
         # Row positions unchanged (A before B, the original order).
         notable_rows = issue_items.list_items(458, section="notable")
@@ -529,7 +529,7 @@ class CreateFinalTests(_DBTestCase):
         from apps.workshop_bot.tools import issue_items
         ctx, fc = self._setup(self._basic_reply())
         with patch.object(interaction, "await_approval", AsyncMock(return_value=None)):
-            result = asyncio.run(create_final.run(ctx))
+            result = asyncio.run(reorder.run(ctx))
         self.assertTrue(result.ok, result.message)
         # Timeout falls to the ❌ branch — rows unchanged.
         notable_rows = issue_items.list_items(458, section="notable")
@@ -544,24 +544,25 @@ class CreateFinalTests(_DBTestCase):
         ctx, fc = self._setup("sorry can't draft right now")
         # No valid JSON ever. Loop exhausts MAX_REFRESH_ROUNDS; rows
         # are left unchanged and the result message says so.
-        result = asyncio.run(create_final.run(ctx))
+        result = asyncio.run(reorder.run(ctx))
         self.assertTrue(result.ok, result.message)
         self.assertIn("rows unchanged", result.message)
         self.assertNotIn((458, "thesis.md"), self.ws.files)
         self.assertNotIn((458, "final.md"), self.ws.files)
 
     def test_keeps_eddy_default_model_for_proposal(self):
-        # create-final does the heaviest editorial work — JSON contract,
-        # thesis, marker placement. It must NOT force a cheaper model;
-        # the bot.core call passes model=None so Eddy's preferred (Opus
-        # per EddyBot.preferred_model) wins. This guards against a
-        # future "let's drop everything to Sonnet" refactor silently
-        # downgrading the proposal pass.
+        # reorder passes model=None so the persona default applies —
+        # today that's Sonnet (EddyBot.preferred_model). reorder is a
+        # constrained ordering decision, not editorial-grade judgment
+        # (the substantive pass is update-draft:html-review on Opus), so
+        # it deliberately does NOT override the model. This guards
+        # against a future refactor hardcoding a model on the proposal
+        # pass.
         ctx, fc = self._setup(self._basic_reply())
-        # compose-echoes no longer fires inside create_final (moved to
+        # compose-echoes no longer fires inside reorder (moved to
         # mark-built), so there's no second LLM call to isolate from.
         with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
-            asyncio.run(create_final.run(ctx))
+            asyncio.run(reorder.run(ctx))
         # core() was called exactly once (one-shot accept); model arg is None.
         self.assertEqual(fc.bot.core.await_count, 1)
         self.assertIsNone(fc.bot.core.await_args.kwargs["model"])
@@ -575,10 +576,10 @@ class CreateFinalTests(_DBTestCase):
         # rather than passing through.
         bad = self._basic_reply(notable_order=("n1",))  # n2 dropped
         ctx, fc = self._setup(bad)
-        # compose-echoes no longer fires inside create_final (moved to
+        # compose-echoes no longer fires inside reorder (moved to
         # mark-built); the LLM call counted here is just the proposal.
         with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
-            result = asyncio.run(create_final.run(ctx))
+            result = asyncio.run(reorder.run(ctx))
         self.assertTrue(result.ok, result.message)
         # The user-visible auto-fix note hit #editorial.
         sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]

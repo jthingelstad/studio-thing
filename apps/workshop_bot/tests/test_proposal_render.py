@@ -1,4 +1,4 @@
-"""Side-by-side create-final proposal HTML page."""
+"""Side-by-side reorder proposal HTML page."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ def _row(id_: int, section: str, title: str, url: str) -> dict:
 class ProposalHtmlTests(unittest.TestCase):
 
     def _build(self, *, proposal: dict, rows_by_section: dict):
-        # Build the synth maps the same way create-final does — by row
+        # Build the synth maps the same way reorder does — by row
         # position within each section.
         synth_to_row: dict[str, int] = {}
         row_to_synth: dict[int, str] = {}
@@ -32,7 +32,7 @@ class ProposalHtmlTests(unittest.TestCase):
                 synth = f"{prefix}{i}"
                 synth_to_row[synth] = int(row["id"])
                 row_to_synth[int(row["id"])] = synth
-        return render.create_final_proposal_html(
+        return render.reorder_proposal_html(
             issue_number=349, thesis="Test thesis.",
             rows_by_section=rows_by_section, proposal=proposal,
             synth_to_row=synth_to_row, row_to_synth=row_to_synth,

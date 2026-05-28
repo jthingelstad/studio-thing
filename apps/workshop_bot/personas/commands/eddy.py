@@ -30,12 +30,12 @@ from ...jobs import (
     compose_echoes,
     compose_haiku,
     compose_meta,
-    create_final,
     currently as currently_job,
     edit_asset,
     issue_status,
     publish as publish_job,
     put_to_bed as put_to_bed_job,
+    reorder,
     reset_issue,
     review_text,
     start_issue,
@@ -161,7 +161,7 @@ def register_eddy_commands(
     )
     async def issue_reorder_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_interactive(
-            interaction, lambda: create_final.run(_ctx(bot)), "issue reorder",
+            interaction, lambda: reorder.run(_ctx(bot)), "issue reorder",
             "Starting `issue reorder` — Eddy will post a reorder proposal in #editorial; react there.",
         )
 
