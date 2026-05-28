@@ -1,7 +1,7 @@
 """HTTP client for the Thingy Lambda's ``/retrieve`` endpoint.
 
 Workshop_bot's in-process archive corpus is BM25 (lexical), which is
-fine for most agent jobs but not for ``compose-closer`` — that job
+fine for most agent jobs but not for ``compose-echoes`` — that job
 needs to find an archive entry that *thematically* resonates with the
 current issue, and BM25 only matches on shared vocabulary. Thingy's
 Lambda already runs the high-quality pipeline (Bedrock Cohere embed →
@@ -14,7 +14,7 @@ so the bot's gateway loop stays responsive. Matches the rest of
 workshop_bot's HTTP tooling (uses ``requests``, not httpx).
 
 Failure is **loud** — a missing secret, a network failure, or a
-non-2xx response raises :class:`ThingyRetrieveError`. compose-closer
+non-2xx response raises :class:`ThingyRetrieveError`. compose-echoes
 depends on this for a quality floor, so silently degrading to BM25
 would defeat the point.
 """
@@ -36,8 +36,8 @@ DEFAULT_STREAM_URL = "https://jcvud66qqpq53frvno5stoqntm0zqntw.lambda-url.us-eas
 
 # Bedrock embed + rerank typically completes in 1–3s; the timeout is
 # generous so a cold corpus load on the Lambda doesn't trip a false
-# error. compose-closer is not on a tight latency budget — it runs
-# during /eddy issue final, between Eddy's ✅ and final.md assembly.
+# error. compose-echoes is not on a tight latency budget — it runs
+# inside ``mark-built`` (the Build → Publish phase transition).
 DEFAULT_TIMEOUT_SECS = 30
 
 
@@ -74,7 +74,7 @@ def retrieve(
 
     Raises ``ThingyRetrieveError`` on any failure: no secret, network
     timeout, non-2xx response, malformed JSON, missing ``passages``
-    field. compose-closer treats this as a fail-loud signal.
+    field. compose-echoes treats this as a fail-loud signal.
     """
     query = (query or "").strip()
     if not query:

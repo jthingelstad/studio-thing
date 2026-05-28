@@ -588,7 +588,7 @@ class CreateFinalTests(_DBTestCase):
             f"expected auto-fix note in sends; got: {sent_messages!r}",
         )
         # And only ONE LLM call happened for the proposal — no retry round,
-        # no passthrough fall-through (compose-closer is mocked, doesn't count).
+        # no passthrough fall-through (compose-echoes is mocked, doesn't count).
         self.assertEqual(fc.bot.core.await_count, 1)
 
     # ---- compose-cta autofire + inline markers retired ----

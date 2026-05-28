@@ -384,7 +384,7 @@ class EchoesRenameTests(unittest.TestCase):
             atoms={"intro": "Hi.", "haiku": "a\nb\nc"},
             sections={"notable": "### [A](http://a)\n\nx"},
             features=[],
-            closer="Thingy connects this to [WT287](https://weekly.thingelstad.com/archive/287/).",
+            echoes="Thingy connects this to [WT287](https://weekly.thingelstad.com/archive/287/).",
         )
         self.assertIn("## Echoes", body)
         self.assertNotIn("## The Closer", body)

@@ -60,7 +60,7 @@ from typing import Any, Optional
 from ..tools import db, issue_items, issue_items_render, render, renderers, s3
 from ..tools.discord import discord_io, interaction
 from ..tools.llm import anthropic_client
-from . import _base, _cover, _currently, _llm_job, compose_cta
+from . import _base, _llm_job, compose_cta
 
 logger = logging.getLogger("workshop.jobs.create_final")
 
@@ -357,43 +357,6 @@ def _render_editorial_card(
     return "\n".join(parts)
 
 
-# ---------- atoms (file-backed) ----------
-
-def _read_atom(n: int, filename: str) -> str:
-    res = s3.read_issue_file(n, filename)
-    if res.get("found") and isinstance(res.get("text"), str):
-        return res["text"].strip()
-    return ""
-
-
-def _build_atoms(n: int) -> dict[str, str]:
-    """Read intro / outro / haiku verbatim; render cover + currently via
-    their structured-JSON helpers. The cover block also leads with a
-    native ``<img>`` tag carrying the issue's cover URL + alt.
-
-    Identical to what ``update-draft._gather_fills`` does for these
-    blocks; centralized here so ``create-final`` reads from the same
-    source of truth.
-    """
-    from html import escape as _esc
-
-    atoms: dict[str, str] = {
-        "intro": _read_atom(n, "intro.md"),
-        "outro": _read_atom(n, "outro.md"),
-        "haiku": _base.format_haiku(_read_atom(n, "haiku.md")),
-        "cover": _cover.render(n),
-        "currently": _currently.render(n),
-    }
-    if atoms["cover"]:
-        cover_alt = _cover.alt(n)
-        cover_img = (
-            f'<img src="https://files.thingelstad.com/weekly-thing/{n}/cover.jpg" '
-            f'alt="{_esc(cover_alt, quote=True)}" />'
-        )
-        atoms["cover"] = f"{cover_img}\n\n{atoms['cover']}"
-    return atoms
-
-
 # ---------- apply ----------
 
 def _apply_proposal(
@@ -411,45 +374,6 @@ def _apply_proposal(
         ordered_row_ids = [synth_to_row[sid] for sid in order_synth]
         if ordered_row_ids:
             issue_items.reorder(issue_number, section, ordered_row_ids)
-
-
-# ---------- final.md render ----------
-
-def _render_final(
-    issue_number: int,
-    atoms: dict[str, str],
-    data: dict,
-    synth_to_row: dict[str, int],
-    row_to_synth: dict[int, str],
-    *,
-    closer: str = "",
-) -> str:
-    """Build a baseline body for compose-closer to read.
-
-    No marker plumbing — the closer just needs prose to ground its
-    archive-retrieval call. Composes via ``renderers.render_archive_body``
-    (the same path the archive renderer uses), then closer adds its
-    own paragraph downstream. Output is never written to disk; it's
-    only handed to compose_closer.
-    """
-    notable_rows = issue_items.list_items(issue_number, section="notable", include_promoted=False)
-    journal_rows = issue_items.list_items(issue_number, section="journal", include_promoted=False)
-    brief_rows = issue_items.list_items(issue_number, section="brief", include_promoted=False)
-    promoted_rows = issue_items.promoted_items(issue_number)
-
-    section_bodies = {
-        "notable": issue_items_render.render_notable(notable_rows, issue_number),
-        "journal": issue_items_render.render_journal(journal_rows),
-        "brief": issue_items_render.render_brief(brief_rows),
-    }
-    features = [
-        (r["promoted_position"], issue_items_render.render_featured_section(r))
-        for r in promoted_rows if r.get("promoted_position")
-    ]
-
-    return renderers.render_archive_body(
-        atoms=atoms, sections=section_bodies, features=features, closer=closer,
-    )
 
 
 # ---------- I/O ----------
@@ -535,7 +459,6 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     html_url: Optional[str] = None
     try:
         with _base.job_lock([asset], NAME):
-            atoms = _build_atoms(n)
             base_prompt = anthropic_client.load_prompt("eddy-reorder")
             base_user_msg = _build_user_message(base_prompt, n, rows_by_section, row_to_synth)
             user_msg = base_user_msg[: _llm_job.CREATE_FINAL_BODY_CAP]

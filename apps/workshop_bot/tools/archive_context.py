@@ -1,7 +1,7 @@
 """Shared helpers for jobs that want to pre-inject Thingy-grade
 archive context into their Sonnet prompts.
 
-The pattern is the same one ``compose-closer`` uses: call Thingy's
+The pattern is the same one ``compose-echoes`` uses: call Thingy's
 ``/retrieve`` for the top semantic matches against a query, then
 format them as a labelled prompt block. Several jobs need this:
 
@@ -14,7 +14,7 @@ The helpers fail soft: a retrieval outage returns an explicit
 have plenty to do without the archive context — losing it should
 degrade the prompt, not block the job.
 
-If a job's quality bar requires retrieval (like ``compose-closer``),
+If a job's quality bar requires retrieval (like ``compose-echoes``),
 it should call ``thingy_retrieve.retrieve`` directly and fail loud
 instead of using these helpers.
 """

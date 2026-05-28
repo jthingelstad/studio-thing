@@ -18,7 +18,7 @@ class EddyBot(PersonaBot):
     home_channel_env = "DISCORD_CHANNEL_EDITORIAL"
     empty_greeting = "Hey — what are we looking at?"
     # Sonnet is the default for all of Eddy's general work — mentions,
-    # reorder, composition (subject/haiku/description/closer/thesis),
+    # reorder, composition (subject/haiku/description/echoes/thesis),
     # follow-ups. Two editorial-review surfaces override up to Opus:
     # ``update-draft:html-review`` (the canonical draft.html drawer
     # pass) and ``review-text`` (``/eddy review <text>``). See each

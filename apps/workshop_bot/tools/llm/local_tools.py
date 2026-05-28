@@ -55,7 +55,7 @@ def t_retrieve_archive(deps, query: str, k: int = 8) -> list[dict[str, Any]] | d
     so the model can recover (e.g. retry with ``archive__search``)
     rather than crashing the turn."""
     # Local import — keeps the heavyweight tool dependency tree out of
-    # the top-of-module surface and matches how compose_closer imports it.
+    # the top-of-module surface and matches how compose_echoes imports it.
     from .. import thingy_retrieve
 
     try:
@@ -1178,7 +1178,7 @@ SPECS: dict[str, dict[str, Any]] = {
         "description": (
             "List the files in one per-issue workspace folder at "
             "s3://files.thingelstad.com/weekly-thing/{N}/. This is the issue's "
-            "working directory: draft.md, final.md, buttondown.md, intro.md, "
+            "working directory: draft.md, archive.md, buttondown.md, intro.md, "
             "currently.md, haiku.md, metadata.json, cta-*.md (text assets the "
             "jobs write) alongside cover.jpg, cover-large.jpg, journal/ photos, "
             "and audio MP3s (binaries written by other pipelines)."
@@ -1367,7 +1367,7 @@ SPECS: dict[str, dict[str, Any]] = {
             "Deterministic completeness report for the in-flight issue's "
             "draft.md: per-section item counts + 'present' flags for "
             "Notable / Briefly / Journal, presence of the standalone assets "
-            "(intro.md, currently.md, haiku.md, cover.jpg, final.md, "
+            "(intro.md, currently.md, haiku.md, cover.jpg, "
             "metadata.json, cta-*.md), word count, the list of what's still "
             "missing for ship, and a ship_ready flag. Read this rather than "
             "eyeballing the draft and counting headings yourself. Returns "

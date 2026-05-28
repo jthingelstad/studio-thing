@@ -1,19 +1,18 @@
-"""Tests for compose-echoes — The Closer (Thingy's archive note) generator.
+"""Tests for compose-echoes — Echoes (Thingy's archive note) generator.
 
-compose-echoes is fired by create-final (after Jamie's ✅ on the
-proposal). It reads the just-assembled baseline body, the last 6
-issues' closer bodies (for anti-repetition), and the top archive
-passages from Thingy's `/retrieve` endpoint (Bedrock embed + Cohere
-rerank), then asks Sonnet for a 2-4 sentence paragraph OR the literal
-"SKIP". The output lands in data/issues/{N}/echoes.md on both S3 and
-local; create-final then re-assembles final.md with the closer
-spliced in.
+compose-echoes auto-fires inside ``mark-built`` (the Build → Publish
+phase transition). It reads the frozen issue body, the last 6 issues'
+echoes bodies (for anti-repetition), and the top archive passages from
+Thingy's `/retrieve` endpoint (Bedrock embed + Cohere rerank), then
+asks Opus for a 2-4 sentence paragraph. The output lands in
+data/issues/{N}/echoes.md on both S3 (under atoms/) and local; the
+daily renderers splice the ``## Echoes`` section into archive/email/
+transcript from there — there is no final.md assembly.
 
-Tests cover: refusal paths (no window, no body, no Eddy), SKIP
-handling (no echoes.md written, prior echoes.md cleared), happy path
-(echoes.md written to local + S3), prior-closer lookup (reads up to 6,
-skips missing), SKIP detection edge cases, Thingy retrieval failure
-(fail-loud), and the bare-reference linkifier.
+Tests cover: refusal paths (no window, no body, no Eddy), happy path
+(echoes.md written to local + S3), prior-echoes lookup (reads up to 6,
+skips missing), Thingy retrieval failure (fail-loud), and the
+bare-reference linkifier.
 """
 
 from __future__ import annotations
@@ -61,21 +60,21 @@ _FAKE_PASSAGES = [
 ]
 
 
-class CleanCloserTests(unittest.TestCase):
+class CleanEchoesTests(unittest.TestCase):
     def test_strips_outer_code_fence(self):
-        out = compose_echoes._clean_closer("```\nA closer.\n```")
-        self.assertEqual(out, "A closer.")
+        out = compose_echoes._clean_echoes("```\nAn echoes note.\n```")
+        self.assertEqual(out, "An echoes note.")
 
     def test_strips_markdown_code_fence(self):
-        out = compose_echoes._clean_closer("```markdown\nA closer.\n```")
-        self.assertEqual(out, "A closer.")
+        out = compose_echoes._clean_echoes("```markdown\nAn echoes note.\n```")
+        self.assertEqual(out, "An echoes note.")
 
     def test_preserves_inline_backticks(self):
-        out = compose_echoes._clean_closer("A `code` reference.")
+        out = compose_echoes._clean_echoes("A `code` reference.")
         self.assertEqual(out, "A `code` reference.")
 
 
-class PriorClosersTests(unittest.TestCase):
+class PriorEchoesTests(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self._issues_root_patch = patch.object(
@@ -92,10 +91,10 @@ class PriorClosersTests(unittest.TestCase):
         d.mkdir(parents=True, exist_ok=True)
         (d / "echoes.md").write_text(text, encoding="utf-8")
 
-    def test_reads_up_to_six_prior_closers_newest_first(self):
+    def test_reads_up_to_six_prior_echoes_newest_first(self):
         for n in range(450, 458):
             self._seed_echoes(n, f"echoes for WT{n}")
-        out = compose_echoes._prior_closers(458)
+        out = compose_echoes._prior_echoes(458)
         # Returns newest-first (457, 456, ..., 452); not 451 or 450 since cap=6.
         nums = [n for n, _ in out]
         self.assertEqual(nums, [457, 456, 455, 454, 453, 452])
@@ -104,23 +103,23 @@ class PriorClosersTests(unittest.TestCase):
         # Only 455 and 453 have echoes.md; 457/456/454/452 don't.
         self._seed_echoes(455, "wt455 echoes")
         self._seed_echoes(453, "wt453 echoes")
-        out = compose_echoes._prior_closers(458)
+        out = compose_echoes._prior_echoes(458)
         nums = [n for n, _ in out]
         self.assertEqual(nums, [455, 453])
 
-    def test_no_prior_closers_returns_empty(self):
-        out = compose_echoes._prior_closers(458)
+    def test_no_prior_echoes_returns_empty(self):
+        out = compose_echoes._prior_echoes(458)
         self.assertEqual(out, [])
 
     def test_stops_at_issue_one(self):
         # For issue 3 we'd look at 2, 1, then stop (offsets > N-1 hit prev<1).
         self._seed_echoes(1, "wt1 echoes")
-        out = compose_echoes._prior_closers(3)
+        out = compose_echoes._prior_echoes(3)
         nums = [n for n, _ in out]
         self.assertEqual(nums, [1])
 
 
-class ComposeCloserRunTests(_DBTestCase):
+class ComposeEchoesRunTests(_DBTestCase):
     def setUp(self):
         super().setUp()
         self._tmp = tempfile.TemporaryDirectory()
@@ -141,10 +140,10 @@ class ComposeCloserRunTests(_DBTestCase):
         )
         self._mock_retrieve = retrieve_patcher.start()
         issues_root_patcher.start()
-        self._closer_patches = [retrieve_patcher, issues_root_patcher]
+        self._echoes_patches = [retrieve_patcher, issues_root_patcher]
 
     def tearDown(self):
-        for p in self._closer_patches:
+        for p in self._echoes_patches:
             p.stop()
         os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
         self._tmp.cleanup()
@@ -171,8 +170,8 @@ class ComposeCloserRunTests(_DBTestCase):
         self.assertIn("issue window", result.message)
 
     def test_refuses_without_body(self):
-        """With no baseline_body and no final.md/draft.md on S3, the job
-        refuses with a clear pointer at what to run first."""
+        """With no baseline_body and no draft.md on S3, the job refuses
+        with a clear pointer at what to run first."""
         self._window()
         ctx, _fc = self._ctx()
         result = asyncio.run(compose_echoes.run(ctx))
@@ -216,7 +215,7 @@ class ComposeCloserRunTests(_DBTestCase):
         Sonnet gets candidates that are semantically aligned with the
         current draft. Confirm the wiring."""
         self._window()
-        ctx, _fc = self._ctx(reply="A closer mentioning WT281.")
+        ctx, _fc = self._ctx(reply="An echoes note mentioning WT281.")
         body = "## Notable\n\n### [Signal](http://signal)\n\nA piece about messaging."
         result = asyncio.run(compose_echoes.run(ctx, baseline_body=body))
         self.assertTrue(result.ok, result.message)
@@ -229,7 +228,7 @@ class ComposeCloserRunTests(_DBTestCase):
     def test_retrieval_failure_fails_loud(self):
         """If Thingy /retrieve is unreachable or refuses, the job fails
         loud — no silent fallback to BM25 / inventory / nothing. The
-        quality bar for the closer requires real semantic retrieval."""
+        quality bar for echoes requires real semantic retrieval."""
         self._window()
         self._mock_retrieve.side_effect = thingy_retrieve.ThingyRetrieveError(
             "LIBRARIAN_BRIDGE_SECRET is not set",

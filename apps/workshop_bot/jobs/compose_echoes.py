@@ -100,12 +100,12 @@ def _echoes_model() -> str:
     return override or _ECHOES_DEFAULT_MODEL
 
 # Public archive URL — used to convert "Weekly Thing N" references in the
-# closer body into clickable markdown links.
+# echoes body into clickable markdown links.
 _ARCHIVE_URL_TPL = "https://weekly.thingelstad.com/archive/{n}/"
 
-# Max past closers to pull for anti-repetition. Six covers a comfortable
+# Max past echoes to pull for anti-repetition. Six covers a comfortable
 # "recent history" window without bloating the prompt.
-_PRIOR_CLOSER_COUNT = 6
+_PRIOR_ECHOES_COUNT = 6
 
 # How many passages to retrieve from Thingy. 20 gives Sonnet a thick
 # pool to pick from (≈ 6 distinct issues represented on average; the
@@ -119,7 +119,7 @@ _ARCHIVE_SNIPPET_COUNT = 20
 _SNIPPET_PREVIEW_CHARS = 800
 
 # Anniversary lookback offsets (years). Mirrors the "Mode 2" candidates
-# in the compose-closer prompt — one near year ago, five years back,
+# in the compose-echoes prompt — one near year ago, five years back,
 # eight years back. Eight is the deep cut for a nine-year archive.
 _ANNIVERSARY_OFFSETS = (1, 5, 8)
 # How many chars of body to include per anniversary candidate. Bigger
@@ -128,22 +128,22 @@ _ANNIVERSARY_OFFSETS = (1, 5, 8)
 _ANNIVERSARY_PREVIEW_CHARS = 1500
 
 # Matches bare "Weekly Thing N" or "WT N" / "WTN" references in the
-# closer body. ``\b`` anchors prevent matching inside longer tokens.
+# echoes body. ``\b`` anchors prevent matching inside longer tokens.
 # Used by _linkify_archive_refs after masking existing markdown links so
 # we never double-wrap text that's already inside [..](..).
 _ISSUE_REF_RE = re.compile(r"\b(Weekly Thing|WT)\s?(\d{1,4})\b")
 _MD_LINK_RE = re.compile(r"\[[^\]]+\]\([^)]+\)")
 
 
-def _prior_closers(issue_number: int) -> list[tuple[int, str]]:
-    """Read up to ``_PRIOR_CLOSER_COUNT`` previous issues' echoes bodies
+def _prior_echoes(issue_number: int) -> list[tuple[int, str]]:
+    """Read up to ``_PRIOR_ECHOES_COUNT`` previous issues' echoes bodies
     from local ``data/issues/{N-k}/echoes.md``. Returns
     ``[(issue_number, echoes_text), …]`` newest-first. Issues without
     an echoes file (most of the back catalog — this is a new section)
     are silently skipped."""
     out: list[tuple[int, str]] = []
     n = int(issue_number)
-    for offset in range(1, _PRIOR_CLOSER_COUNT + 1):
+    for offset in range(1, _PRIOR_ECHOES_COUNT + 1):
         prev = n - offset
         if prev < 1:
             break
@@ -276,9 +276,9 @@ def _retrieve_passages(query: str, current_number: int) -> list[dict[str, Any]]:
     ]
 
 
-def _format_prior_closers(prior: list[tuple[int, str]]) -> str:
+def _format_prior_echoes(prior: list[tuple[int, str]]) -> str:
     if not prior:
-        return "_(none — this is one of the first issues with a closer.)_"
+        return "_(none — this is one of the first issues with echoes.)_"
     parts: list[str] = []
     for num, text in prior:
         parts.append(f"**WT{num}:** {text}")
@@ -367,8 +367,8 @@ def _build_user_message(
         f"## Current issue draft\n\n"
         f"```markdown\n{baseline_body.strip()}\n```\n\n"
         f"---\n\n"
-        f"## Past {len(prior)} closer(s) (do not reuse themes or entries from these)\n\n"
-        f"{_format_prior_closers(prior)}\n\n"
+        f"## Past {len(prior)} echoes note(s) (do not reuse themes or entries from these)\n\n"
+        f"{_format_prior_echoes(prior)}\n\n"
         f"---\n\n"
         f"## Semantic snippets — Mode 1 candidates\n\n"
         f"Top-{len(passages)} archive passages for this issue's draft, ranked by "
@@ -388,7 +388,7 @@ def _build_user_message(
         f"voice (third-person Jamie), OR the literal SKIP line. Every cited "
         f"issue must be a markdown link "
         f"`[WT###](https://weekly.thingelstad.com/archive/N/)`. Open with the "
-        f"closer itself — no meta-commentary about which candidate set you "
+        f"echoes note itself — no meta-commentary about which candidate set you "
         f"chose or its quality. Nothing else."
     )
 
@@ -421,7 +421,7 @@ def _linkify_archive_refs(text: str) -> str:
     return linked
 
 
-def _clean_closer(reply: str) -> str:
+def _clean_echoes(reply: str) -> str:
     """Strip surrounding whitespace + accidental code-fence wrappers; return
     the echoes paragraph as it should land in echoes.md."""
     text = (reply or "").strip()
@@ -485,7 +485,7 @@ async def run(
                     False, f"❌ compose-echoes prompt missing: `{exc}`",
                 )
 
-            prior = await asyncio.to_thread(_prior_closers, n)
+            prior = await asyncio.to_thread(_prior_echoes, n)
             try:
                 passages = await asyncio.to_thread(
                     _retrieve_passages,
@@ -540,7 +540,7 @@ async def run(
                 await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
                 return _base.JobResult(False, msg, data={"issue_number": n})
 
-            text = _clean_closer(reply)
+            text = _clean_echoes(reply)
             if not text:
                 msg = f"❌ compose-echoes for WT{n}: reply was empty after cleanup."
                 await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")

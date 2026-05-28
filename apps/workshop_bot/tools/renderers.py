@@ -3,7 +3,7 @@
 draft.md, archive.md, buttondown.md, and transcript/*.txt each have
 their own composition path. Every format takes the same structured
 inputs (atoms + section bodies + features + metadata + cta atoms +
-closer) and emits its own bytes directly. There is no shared
+echoes) and emits its own bytes directly. There is no shared
 intermediate text body that one format mutates while another strips.
 Each format embraces its medium's strengths: the website carries
 front matter + links extraction, the email carries audience-aware
@@ -200,7 +200,7 @@ def _compose_published_body(
     atoms: dict[str, str],
     sections: dict[str, str],
     features: list[tuple[str, str]],
-    closer: str,
+    echoes: str,
     section_trailers: Optional[dict[str, str]] = None,
 ) -> str:
     """The published body shape every format (archive, email, audio)
@@ -242,9 +242,9 @@ def _compose_published_body(
 
     # Haiku close + optional ## Echoes paragraph + Reddit-discuss + 👨‍💻
     haiku_block = _format_haiku_block(atoms.get("haiku", ""))
-    closer_text = (closer or "").strip()
-    closer_block = f"## Echoes\n\n{closer_text}" if closer_text else ""
-    tail_pieces = [p for p in (haiku_block, closer_block, _CLOSING) if p]
+    echoes_text = (echoes or "").strip()
+    echoes_block = f"## Echoes\n\n{echoes_text}" if echoes_text else ""
+    tail_pieces = [p for p in (haiku_block, echoes_block, _CLOSING) if p]
     if tail_pieces:
         parts.append("\n\n".join(tail_pieces))
 
@@ -258,7 +258,7 @@ def render_email_body(
     features: list[tuple[str, str]],
     issue_number: int,
     cta_atoms: Optional[dict[str, str]] = None,
-    closer: str = "",
+    echoes: str = "",
     include_pixel: bool = True,
 ) -> str:
     """Build the buttondown.md body directly from structured inputs.
@@ -288,7 +288,7 @@ def render_email_body(
 
     body = _compose_published_body(
         atoms=atoms, sections=sections, features=features,
-        closer=closer, section_trailers=trailers,
+        echoes=echoes, section_trailers=trailers,
     )
 
     body = _EDITOR_MODE_COMMENT + body
@@ -305,7 +305,7 @@ def render_archive_body(
     atoms: dict[str, str],
     sections: dict[str, str],
     features: list[tuple[str, str]],
-    closer: str = "",
+    echoes: str = "",
 ) -> str:
     """Build the archive.md body (post-frontmatter) directly from
     structured inputs. The website-shaped body: pure prose + headings
@@ -313,7 +313,7 @@ def render_archive_body(
     CTA / thanks anything — supporter callouts are email-only.
     """
     return _compose_published_body(
-        atoms=atoms, sections=sections, features=features, closer=closer,
+        atoms=atoms, sections=sections, features=features, echoes=echoes,
         section_trailers=None,
     )
 
@@ -364,13 +364,13 @@ def render_archive(
     sections: dict[str, str],
     features: list[tuple[str, str]],
     metadata: dict,
-    closer: str = "",
+    echoes: str = "",
 ) -> tuple[str, dict]:
     """Render archive.md (full text including front matter) + links.json
     (as a dict). One-shot version of the three render_archive_* helpers
     for callers that want both outputs."""
     body = render_archive_body(
-        atoms=atoms, sections=sections, features=features, closer=closer,
+        atoms=atoms, sections=sections, features=features, echoes=echoes,
     )
     front_matter, link_data = render_archive_frontmatter(metadata=metadata, body=body)
     links_json = render_archive_links_json(front_matter, link_data)
@@ -431,7 +431,7 @@ def render_audio_body(
     atoms: dict[str, str],
     sections: dict[str, str],
     features: list[tuple[str, str]],
-    closer: str = "",
+    echoes: str = "",
 ) -> str:
     """Build the audio-purpose body directly from structured inputs.
 
@@ -449,7 +449,7 @@ def render_audio_body(
     audio_atoms = dict(atoms)
     audio_atoms["cover"] = ""
     return _compose_published_body(
-        atoms=audio_atoms, sections=sections, features=features, closer=closer,
+        atoms=audio_atoms, sections=sections, features=features, echoes=echoes,
         section_trailers=None,
     )
 
@@ -460,7 +460,7 @@ def render_transcript_blocks(
     sections: dict[str, str],
     features: list[tuple[str, str]],
     metadata: dict,
-    closer: str = "",
+    echoes: str = "",
 ) -> list[tuple[str, str]]:
     """Build per-block transcript files from structured inputs.
     Independent of the archive body — never composes the cover or any
@@ -471,7 +471,7 @@ def render_transcript_blocks(
     all three formats are siblings, not a chain.
     """
     body = render_audio_body(
-        atoms=atoms, sections=sections, features=features, closer=closer,
+        atoms=atoms, sections=sections, features=features, echoes=echoes,
     )
     # body_to_audio_script's frontmatter param wants the same keys
     # ``apps/site/archive/{N}.md`` exposes (number, subject,
@@ -664,7 +664,7 @@ def _gather_inputs_for_issue(issue_number: int, *, window: Optional[dict] = None
     metadata = _load_metadata(issue_number, window)
 
     # Echoes (Thingy's archive note) — optional atom.
-    closer = _read_atom(issue_number, "echoes.md")
+    echoes = _read_atom(issue_number, "echoes.md")
 
     return {
         "atoms": atoms,
@@ -672,7 +672,7 @@ def _gather_inputs_for_issue(issue_number: int, *, window: Optional[dict] = None
         "features": features,
         "metadata": metadata,
         "cta_atoms": cta_atoms,
-        "closer": closer,
+        "echoes": echoes,
     }
 
 
@@ -755,7 +755,7 @@ def render_email_for_issue(issue_number: int, *, window: Optional[dict] = None) 
         features=inputs["features"],
         issue_number=issue_number,
         cta_atoms=inputs["cta_atoms"],
-        closer=inputs["closer"],
+        echoes=inputs["echoes"],
     )
     # Local repo mirror for downstream consumers (ship sequence).
     local_path = ISSUES_LOCAL_DIR / str(issue_number) / "buttondown.md"
@@ -782,7 +782,7 @@ def render_archive_for_issue(
         sections=inputs["sections"],
         features=inputs["features"],
         metadata=inputs["metadata"],
-        closer=inputs["closer"],
+        echoes=inputs["echoes"],
     )
     local_dir = ISSUES_LOCAL_DIR / str(issue_number)
     # archive.md — local + S3 in lock-step.
@@ -828,7 +828,7 @@ def render_transcript_for_issue(
             sections=inputs["sections"],
             features=inputs["features"],
             metadata=inputs["metadata"],
-            closer=inputs["closer"],
+            echoes=inputs["echoes"],
         )
     except Exception:  # noqa: BLE001 — surface any transform failure as no-op
         return []
