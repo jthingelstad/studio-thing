@@ -36,12 +36,15 @@ Conventions:
 from __future__ import annotations
 
 import json
+import logging
 import re
 import sys
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional
 
 import yaml
+
+logger = logging.getLogger("workshop.renderers")
 
 
 # ---------- email (buttondown.md) ----------
@@ -830,7 +833,11 @@ def render_transcript_for_issue(
             metadata=inputs["metadata"],
             echoes=inputs["echoes"],
         )
-    except Exception:  # noqa: BLE001 — surface any transform failure as no-op
+    except Exception:  # noqa: BLE001 — degrade to no-op, but never silently
+        # A crash in the pure transform is a real bug, not an empty issue.
+        # Log it so render_all_for_issue's "transcript: False" is diagnosable
+        # rather than indistinguishable from a legitimately empty issue.
+        logger.exception("render_transcript_blocks failed for #%d", issue_number)
         return []
     if not blocks:
         return []
@@ -840,13 +847,20 @@ def render_transcript_for_issue(
     try:
         existing = _s3.list_transcript_files(issue_number)
     except Exception:  # noqa: BLE001
+        logger.warning(
+            "render_transcript_for_issue: couldn't list S3 transcript files "
+            "for #%d; skipping stale-file cleanup", issue_number,
+        )
         existing = []
     for name in existing:
         if name not in new_names:
             try:
                 _s3.delete_transcript_file(issue_number, name)
             except Exception:  # noqa: BLE001
-                pass
+                logger.warning(
+                    "render_transcript_for_issue: couldn't delete stale "
+                    "transcript %s for #%d", name, issue_number,
+                )
 
     # Local mirror.
     local_dir = ISSUES_LOCAL_DIR / str(issue_number) / "transcript"
@@ -885,25 +899,23 @@ def render_all_for_issue(
     fail on the daily projection. Returns a dict of which artifacts
     succeeded for logging."""
     out: dict = {"archive": False, "email": False, "transcript": False, "errors": {}}
-    import logging as _logging
-    _log = _logging.getLogger("workshop.renderers")
     try:
         render_archive_for_issue(issue_number, window=window)
         out["archive"] = True
     except Exception as exc:  # noqa: BLE001
-        _log.exception("render_archive_for_issue failed for #%d", issue_number)
+        logger.exception("render_archive_for_issue failed for #%d", issue_number)
         out["errors"]["archive"] = f"{type(exc).__name__}: {exc}"
     try:
         render_email_for_issue(issue_number, window=window)
         out["email"] = True
     except Exception as exc:  # noqa: BLE001
-        _log.exception("render_email_for_issue failed for #%d", issue_number)
+        logger.exception("render_email_for_issue failed for #%d", issue_number)
         out["errors"]["email"] = f"{type(exc).__name__}: {exc}"
     try:
         blocks = render_transcript_for_issue(issue_number, window=window)
         out["transcript"] = bool(blocks)
         out["transcript_blocks"] = len(blocks)
     except Exception as exc:  # noqa: BLE001
-        _log.exception("render_transcript_for_issue failed for #%d", issue_number)
+        logger.exception("render_transcript_for_issue failed for #%d", issue_number)
         out["errors"]["transcript"] = f"{type(exc).__name__}: {exc}"
     return out
