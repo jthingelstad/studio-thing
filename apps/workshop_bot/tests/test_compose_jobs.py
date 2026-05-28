@@ -21,7 +21,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import (  # noqa: E402
-    _base, compose_cta, compose_haiku, compose_meta, reorder,
+    _base, compose_cta, compose_haiku, compose_meta, compose_thesis, reorder,
 )
 from apps.workshop_bot.tools import db, s3 # noqa: E402
 from apps.workshop_bot.tools.discord import interaction
@@ -408,14 +408,15 @@ class ComposeCtaTests(_DBTestCase):
 
 
 
-class CreateFinalTests(_DBTestCase):
-    """Rewritten for the row-backed editorial pass. Eddy returns a JSON
-    object (``thesis``, ``*_order``, ``membership_blocks``) with
-    synthetic ids (``n1``/``b2``/``j3``); the job validates strictly
-    then mutates ``issue_items`` rows (reorder Notable + Brief). The
-    Echoes section is no longer fired here — `compose-echoes` runs at
-    mark-built (Build → Publish), so reorder's accept path is purely
-    the reorder + post-render."""
+class ReorderTests(_DBTestCase):
+    """Row-backed reorder pass. Eddy returns a JSON object
+    (``notable_order`` / ``brief_order``) with synthetic ids
+    (``n1``/``b2``/``j3``); the job validates strictly then mutates
+    ``issue_items`` rows (reorder Notable + Brief; Journal is never
+    reordered). Thesis and Echoes are no longer fired here —
+    `compose-thesis` and `compose-echoes` both run at mark-built
+    (Build → Publish), so reorder's accept path is purely the reorder
+    + post-render."""
 
     def tearDown(self):
         os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
@@ -612,6 +613,89 @@ class CreateFinalTests(_DBTestCase):
     # promoted, brief-cannot-be-promoted, too-many-promotions,
     # membership-block-after-promoted-id, promoted-id-also-in-order — all
     # gone; the scenarios they tested aren't reachable any more.)
+
+
+class ComposeThesisTests(_DBTestCase):
+    """``compose-thesis`` fires at mark-built (Build → Publish). It reads
+    the assembled ``draft.md``, asks Eddy for a 1–3 sentence editorial
+    framing, and writes ``thesis.md``. One-shot, no picker. Best-effort:
+    a missing window / empty draft / empty reply leaves the result
+    unsuccessful and writes nothing — mark-built isn't gated on it."""
+
+    def _window(self, n=458):
+        from apps.workshop_bot.tools.content import issue as issue_mod
+        w = issue_mod.compute_window("2026-05-16", 7)
+        db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
+                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+
+    def _ctx(self, reply="A crisp editorial thesis."):
+        fc = _FakeBotChannel(persona="eddy", reply=reply)
+        return _base.JobContext(deps=fc.deps()), fc
+
+    def test_writes_thesis_md(self):
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _filled_final())
+        # Surrounding whitespace exercises the strip before write.
+        ctx, fc = self._ctx(reply="  A crisp editorial thesis.  ")
+        result = asyncio.run(compose_thesis.run(ctx))
+        self.assertTrue(result.ok, result.message)
+        self.assertEqual(self.ws.files[(458, "thesis.md")], "A crisp editorial thesis.\n")
+        self.assertEqual(result.data["thesis"], "A crisp editorial thesis.")
+        self.assertEqual(result.data["issue_number"], 458)
+        self.assertEqual(fc.bot.core.await_count, 1)
+
+    def test_no_active_window_returns_unsuccessful(self):
+        # No window set — the job bails before touching Eddy.
+        ctx, fc = self._ctx()
+        result = asyncio.run(compose_thesis.run(ctx))
+        self.assertFalse(result.ok)
+        self.assertIn("no active issue window", result.message)
+        self.assertEqual(fc.bot.core.await_count, 0)
+
+    def test_no_draft_body_returns_unsuccessful(self):
+        # Window exists but no draft.md — nothing to frame, no LLM call,
+        # no write.
+        self._window()
+        ctx, fc = self._ctx()
+        result = asyncio.run(compose_thesis.run(ctx))
+        self.assertFalse(result.ok)
+        self.assertIn("no draft body", result.message)
+        self.assertNotIn((458, "thesis.md"), self.ws.files)
+        self.assertEqual(fc.bot.core.await_count, 0)
+
+    def test_empty_eddy_response_no_write(self):
+        # Eddy returns whitespace — the job treats it as empty, reports
+        # unsuccessful, and writes no thesis.md (the call still happened).
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _filled_final())
+        ctx, fc = self._ctx(reply="   ")
+        result = asyncio.run(compose_thesis.run(ctx))
+        self.assertFalse(result.ok)
+        self.assertIn("empty thesis", result.message)
+        self.assertNotIn((458, "thesis.md"), self.ws.files)
+        self.assertEqual(fc.bot.core.await_count, 1)
+
+    def test_skips_when_eddy_unavailable(self):
+        # Eddy not logged in (no .user) — skip cleanly without an LLM call.
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _filled_final())
+        ctx, fc = self._ctx()
+        fc.bot.user = None
+        result = asyncio.run(compose_thesis.run(ctx))
+        self.assertFalse(result.ok)
+        self.assertIn("Eddy unavailable", result.message)
+        self.assertEqual(fc.bot.core.await_count, 0)
+
+    def test_uses_persona_default_model(self):
+        # Thesis is composition work — the job passes model=None so the
+        # persona default (Sonnet) applies. It deliberately does NOT
+        # override the model; this guards against a future refactor
+        # hardcoding a tier on the thesis pass.
+        self._window()
+        self.ws.write_issue_file(458, "draft.md", _filled_final())
+        ctx, fc = self._ctx(reply="A thesis.")
+        asyncio.run(compose_thesis.run(ctx))
+        self.assertIsNone(fc.bot.core.await_args.kwargs["model"])
 
 
 
