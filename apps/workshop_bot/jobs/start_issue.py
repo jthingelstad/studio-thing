@@ -148,7 +148,7 @@ def build_workshop_pointer(*, issue_number: int, window: dict, set_by: Optional[
             "intro_md": f"{base}atoms/intro.md",
             "outro_md": f"{base}atoms/outro.md",
             # Bot-composed atoms (compose-haiku, compose-meta,
-            # compose-cta, compose-echoes, create-final).
+            # compose-thesis, compose-cta, compose-echoes).
             "haiku_md": f"{base}atoms/haiku.md",
             "metadata_json": f"{base}atoms/metadata.json",
             "thesis_md": f"{base}atoms/thesis.md",

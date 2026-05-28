@@ -44,14 +44,12 @@ class _Case(_DBTestCase):
 
 class ResetFinalTests(_Case):
 
-    def test_deletes_final_and_thesis(self):
+    def test_deletes_thesis(self):
         self._window()
-        self.ws.write_issue_file(349, "final.md", "final body")
         self.ws.write_issue_file(349, "thesis.md", "thesis line")
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="final"))
         self.assertTrue(result.ok, result.message)
-        self.assertNotIn((349, "final.md"), self.ws.files)
         self.assertNotIn((349, "thesis.md"), self.ws.files)
         # Confirmation posted to #editorial.
         fc.channel.send.assert_awaited()
@@ -66,7 +64,7 @@ class ResetFinalTests(_Case):
             source_id="p1", body_md="x",
         )
         issue_items.promote(rid, promoted_position="after_notable", promoted_heading="Feature")
-        self.ws.write_issue_file(349, "final.md", "final body")
+        self.ws.write_issue_file(349, "thesis.md", "thesis line")
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="final"))
         self.assertTrue(result.ok)
@@ -83,12 +81,12 @@ class ResetFinalTests(_Case):
 
     def test_does_not_touch_publish_artifacts(self):
         self._window()
-        self.ws.write_issue_file(349, "final.md", "f")
+        self.ws.write_issue_file(349, "thesis.md", "t")
         self.ws.write_issue_file(349, "buttondown.md", "p")
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="final"))
         self.assertTrue(result.ok)
-        self.assertNotIn((349, "final.md"), self.ws.files)
+        self.assertNotIn((349, "thesis.md"), self.ws.files)
         self.assertIn((349, "buttondown.md"), self.ws.files)
 
 
@@ -102,14 +100,14 @@ class ResetPublishTests(_Case):
         self.assertTrue(result.ok)
         self.assertNotIn((349, "buttondown.md"), self.ws.files)
 
-    def test_does_not_touch_final_md(self):
+    def test_does_not_touch_thesis(self):
         self._window()
-        self.ws.write_issue_file(349, "final.md", "f")
+        self.ws.write_issue_file(349, "thesis.md", "t")
         self.ws.write_issue_file(349, "buttondown.md", "p")
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="publish"))
         self.assertTrue(result.ok)
-        self.assertIn((349, "final.md"), self.ws.files)
+        self.assertIn((349, "thesis.md"), self.ws.files)
         self.assertNotIn((349, "buttondown.md"), self.ws.files)
 
     def test_does_not_touch_buttondown_id(self):

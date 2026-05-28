@@ -9,8 +9,8 @@ pipeline, fired from cron via ``functools.partial(handlers.content_job,
 job=…)``. Today:
 
 - ``update-draft`` — daily 17:00 CT. Projects upstream content into
-  ``draft.md``; PASSes if no issue is in flight or it's locked
-  (``final.md`` exists); Eddy posts a review Tue–Fri.
+  ``draft.md``; PASSes if no issue is in flight; runs Eddy's Opus review
+  into the draft.html drawer during the Build phase.
 - ``pinboard-scan`` — every 3h 07:00–22:00 CT, year-round (07/10/13/16/19/22).
   Linky's per-link research pass over Jamie's public toread bookmarks +
   the active discovery feed set (currently Pinboard popular only); each
@@ -57,7 +57,7 @@ class JobSpec:
 JOBS: tuple[JobSpec, ...] = (
     # All per-persona heartbeats have been retired in favor of the
     # content-loop jobs below: Linky → pinboard-scan (Step 5), Eddy
-    # job-triggered via update-draft / create-final / compose-* (Step 6),
+    # job-triggered via update-draft / reorder / compose-* (Step 6),
     # Patty's only job is compose-cta (Step 6), Marky → promotion-prep +
     # daily-metrics (Steps 7–8). handlers.heartbeat still exists for
     # ad-hoc / eval use but isn't scheduled.
@@ -66,9 +66,8 @@ JOBS: tuple[JobSpec, ...] = (
         id="update-draft-daily",
         cron="0 17 * * *",                               # Daily 17:00 Central — projects the day's
                                                          # upstream content into draft.md. PASSes
-                                                         # cleanly if no issue is in flight or the
-                                                         # issue is locked (final.md exists); Eddy
-                                                         # posts a review only Tue–Fri.
+                                                         # cleanly if no issue is in flight; Eddy's
+                                                         # Opus review runs during the Build phase.
         func=functools.partial(handlers.content_job, job="update-draft"),
     ),
     JobSpec(

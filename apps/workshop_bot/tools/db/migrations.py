@@ -347,8 +347,9 @@ def _m_0013_campaigns_schema_overhaul(conn: sqlite3.Connection) -> None:
 def _m_0010_strip_markers_from_issue_items_body_md(conn: sqlite3.Connection) -> None:
     """An older manual-seed path baked rendered ``<!-- cta:N -->`` /
     ``<!-- thanks:N -->`` markers into ``issue_items.body_md``. Marker
-    placement is editorial state (lives in ``final.md``, never in row
-    content); the embedded markers leak into every subsequent render.
+    placement is a retired vocabulary (placement now lives in
+    ``render_email``, never in row content); the embedded markers would
+    otherwise leak into every subsequent render.
     SQLite has no native regex, so this runs Python-side to clean any
     pre-existing rows once."""
     from ..issue_items_render import strip_membership_markers  # local — cycle

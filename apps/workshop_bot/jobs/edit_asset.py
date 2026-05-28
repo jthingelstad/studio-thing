@@ -24,15 +24,15 @@ flow). Bodies that exceed the cap are refused with a "use the S3
 console" hint — better that than silent truncation.
 
 This module deliberately does NOT touch the assembled documents
-(``draft.md`` / ``final.md`` / ``buttondown.md``). Those are renders,
+(``draft.md`` / ``archive.md`` / ``buttondown.md``). Those are renders,
 not authored text — they regenerate from the atoms.
 
 After a successful write, the job optionally re-fires
 ``update-draft`` so the preview refreshes for atoms that flow into
 ``draft.md`` (intro / outro / haiku / currently / cover). Edits to
 ``cta-N.md`` / ``thanks-N.md`` don't auto-fire anything — they only
-affect ``buttondown.md``, and that's a deliberate step (``/eddy issue
-publish`` or post-final rebuild).
+affect ``buttondown.md``, and that's a deliberate step (the next
+``update-draft`` tick re-renders, or ``/eddy issue publish``).
 """
 
 from __future__ import annotations
@@ -173,9 +173,8 @@ class _AssetEditModal(ui.Modal):
             ephemeral=True,
         )
         if self.refire_update_draft:
-            # Update-draft refuses when final.md exists. That's fine —
-            # the error surfaces via the agent_runs log; we don't want
-            # to block the modal acknowledgement on it.
+            # Best-effort: any error surfaces via the agent_runs log; we
+            # don't want to block the modal acknowledgement on it.
             _base.schedule_update_draft_refire(self.ctx, self.issue_number)
 
 

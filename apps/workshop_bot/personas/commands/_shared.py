@@ -84,7 +84,7 @@ def make_run_and_ack(ack_fn, logger_label: str):
 def make_run_interactive(logger_label: str):
     """Build the interactive-job dispatch for one persona's tree.
 
-    Interactive jobs (the compose-* pickers and create-final) post options
+    Interactive jobs (the compose-* pickers and reorder) post options
     to a channel and wait for Jamie's reaction — possibly far longer than
     the 15-min Discord interaction token. So the command acks
     *immediately* ("started — react in #editorial / …") and then runs the

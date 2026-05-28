@@ -6,16 +6,17 @@ link, Brief link, and Journal entry in an issue is a row in the
 become column flips; editorial comments anchor to ``item_id`` via the
 ``editorial_comments`` table.
 
-The three rendering jobs all read from here:
+The rendering surfaces read from here:
 
 - ``update-draft`` syncs upstream sources (Pinboard / micro.blog) into
   rows, then renders ``draft.md`` from rows + the file-backed atoms
   (intro / outro / cover / currently / haiku).
-- ``create-final`` proposes orderings + promotions in JSON; the apply
-  step calls :func:`reorder` and :func:`promote`. The LLM never touches
-  bytes; identity comes from row id.
-- ``build-publish`` renders ``buttondown.md`` from the same rows, splicing
-  promoted items into their declared positions.
+- ``reorder`` proposes orderings in JSON; the apply step calls
+  :func:`reorder`. The LLM never touches bytes; identity comes from row
+  id. (Promotions come from the micro.blog ``Featured`` category at sync
+  time, not from this pass.)
+- ``tools/renderers`` renders ``archive.md`` / ``buttondown.md`` from the
+  same rows, splicing promoted items into their declared positions.
 
 Editorial comments are written by Eddy's review pass and read by both
 the HTML drawer (handle badges + copy buttons) and the Discord lookup
@@ -110,8 +111,10 @@ def upsert_item(
 
     A new row gets ``position = MAX(position) + 1`` within its section
     (appended). An existing row preserves its position, ``is_promoted``,
-    ``promoted_position``, and ``promoted_heading`` — those are
-    editorial decisions made by ``create-final``, not by upstream syncs.
+    ``promoted_position``, and ``promoted_heading`` — those are editorial
+    state (``position`` from ``reorder``; the promotion fields from the
+    ``Featured``-category promotion path), not re-derived from the
+    upstream item on every sync.
     Only the upstream-derivable fields (url, title, body_md, metadata,
     section) get refreshed; section is allowed to change in case Jamie
     re-tags a Pinboard item ``_brief`` mid-cycle.
@@ -346,9 +349,9 @@ def unpromote(item_id: int) -> None:
 
 
 def clear_promotions(issue_number: int) -> None:
-    """Drop every promotion for an issue. Used by ``create-final`` when
-    rewriting the editorial plan from scratch (the new plan establishes
-    fresh promotions; old ones shouldn't linger)."""
+    """Drop every promotion for an issue. Used by ``reset-final`` to wipe
+    the editorial pass clean so a fresh reorder + Featured-category sync
+    re-establishes promotions (old ones shouldn't linger)."""
     with connect() as conn:
         conn.execute(
             "UPDATE issue_items SET "

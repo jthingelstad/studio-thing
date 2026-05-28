@@ -1,34 +1,31 @@
-"""``compose-cta`` (Patty) — fill the membership-block slots Eddy declared.
+"""``compose-cta`` (Patty) — compose the three membership-block atoms.
 
-Reads ``final.md`` from the per-issue S3 workspace and **scans for inline
-markers** (``<!-- cta:N -->`` and ``<!-- thanks:N -->``) placed by
-``create-final``. Each marker is a slot. Patty fills the supporter-CTA
-slots and the thank-you slots, posting 1–2 framings per slot to
-``#supporters`` for Jamie to pick. The picked copy is written to
-``cta-N.md`` / ``thanks-N.md`` with ``kind:`` YAML frontmatter; the
-audience-aware Liquid wrapping happens later, in ``build-publish``.
-
-Slot discovery is the inversion of today's flow: Patty no longer decides
-*how many* CTAs there are or *where* they go — that's Eddy's editorial
-call now. Patty only writes copy for slots Eddy declared. The placement
-decision lives inline in ``final.md``; the file format here loses its
-``placement:`` frontmatter (slot position is encoded by the marker, not by
-the file).
+Every issue gets the same three atoms, no marker scanning and no
+``final.md``: ``FIXED_SLOTS`` (``cta:1``, ``cta:2``, ``thanks:1``) is
+the slot list. Patty writes 1–2 framings per slot to ``#supporters``
+for Jamie to pick; the picked copy is written to ``cta-N.md`` /
+``thanks-N.md`` with ``kind:`` YAML frontmatter. The audience-aware
+Liquid wrapping and the *placement* both happen later at render time —
+``render_email``'s hardcoded ``CTA_SLOT_POSITIONS`` map decides where
+each atom lands (``cta:1`` after Notable, ``cta:2`` after Journal,
+``thanks:1`` after Briefly). Patty doesn't decide count or placement;
+Eddy doesn't either. A slot whose atom file is missing/empty simply
+produces no membership block in the rendered email.
 
 Per slot:
 
-- ``<!-- cta:N -->`` → ``prompts/patty/compose-cta.md`` (supporter ask, in
+- ``cta:N`` → ``prompts/patty/compose-cta.md`` (supporter ask, in
   Thingy's voice). Reader sees this in the audience-resolved Liquid only
   when they're *not* a premium member.
-- ``<!-- thanks:N -->`` → ``prompts/patty/compose-thanks.md`` (sincere
+- ``thanks:N`` → ``prompts/patty/compose-thanks.md`` (sincere
   thank-you, Thingy's voice, gratitude register — never an ask). Reader
   sees this only when they *are* a premium member.
 
-If ``thesis.md`` is present (written by ``create-final``), the thesis is
-injected into both prompts as a ``## Thesis`` block at the top, so the
-framings anchor on the issue's stated editorial intent. Missing
-``thesis.md`` is fine — the job falls back to today's behaviour of
-reading just the body.
+If ``thesis.md`` is present (written by ``compose-thesis`` at
+``mark-built``), the thesis is injected into both prompts as a
+``## Thesis`` block at the top, so the framings anchor on the issue's
+stated editorial intent. Missing ``thesis.md`` is fine — the job falls
+back to reading just the body.
 
 Slots that already have a non-empty copy file are skipped — re-running
 the job won't re-prompt for ones Jamie has already picked. To re-roll a

@@ -293,8 +293,7 @@ def schedule_update_draft_refire(ctx: "JobContext", issue_number: int) -> None:
     blocking the modal/slash ack on the LLM-review pass.
 
     Errors are logged, not surfaced — the caller's user-facing reply has
-    already been sent. ``update-draft`` refuses when ``final.md`` exists;
-    that's fine, the surface lives in ``agent_runs``."""
+    already been sent; the surface lives in ``agent_runs``."""
     from . import update_draft as _update_draft  # local — circular at module-load
 
     async def _run() -> None:

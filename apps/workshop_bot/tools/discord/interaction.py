@@ -1,6 +1,6 @@
 """Button-based interaction primitive for jobs that need Jamie's call.
 
-Several jobs (``create-final``, the compose-* jobs) post options and wait for
+Several jobs (``reorder``, the compose-* jobs) post options and wait for
 Jamie to choose. This wraps that pattern with **Discord buttons** (reactions
 were the original mechanism — buttons are the clearer UX):
 

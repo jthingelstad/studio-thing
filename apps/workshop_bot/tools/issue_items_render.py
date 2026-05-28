@@ -1,14 +1,13 @@
 """Row-to-markdown rendering for ``issue_items``.
 
-Shared between the three jobs that emit assembled documents:
+Shared by the surfaces that emit assembled section markdown:
 
 - ``update-draft`` renders ``draft.md`` from the current row state (in
-  per-section position order — i.e. whatever order ``create-final``
-  last established, or the upstream-arrival order if no reorder has
-  run yet).
-- ``create-final`` renders the body of ``final.md`` after reordering.
-- ``build-publish`` renders the body of ``buttondown.md``, splicing
-  promoted (featured) sections into their declared positions.
+  per-section position order — i.e. whatever order ``reorder`` last
+  established, or the upstream-arrival order if no reorder has run yet).
+- ``tools/renderers`` renders the section bodies of ``archive.md`` /
+  ``buttondown.md`` / the transcript, splicing promoted (featured)
+  sections into their declared positions.
 
 The output bytes mirror the section shapes the chunk parser
 (``tools.content.chunks``) recognises:
@@ -44,19 +43,19 @@ from typing import Any, Optional
 from .content import microblog
 
 
-# Membership-block markers live in ``final.md`` (placed there by
-# ``create-final`` at editorial time) — NEVER in a row's ``body_md``.
-# An older manual-seed path baked the rendered marker into a notable
-# item's body and the harness caught it leaking into every subsequent
-# render. Strip them defensively at the renderer boundary so a stray
-# marker in body_md can't slip into draft.md / passthrough final.md.
+# Membership-block markers (``<!-- cta:N -->`` / ``<!-- thanks:N -->``)
+# are a retired editorial vocabulary — they're NEVER in a row's
+# ``body_md``. An older manual-seed path baked a rendered marker into a
+# notable item's body and the harness caught it leaking into every
+# subsequent render. Strip them defensively at the renderer boundary so a
+# stray marker in body_md can't slip into draft.md / the shipped bodies.
 _MEMBERSHIP_MARKER_RE = re.compile(r"<!--\s*(?:cta|thanks):\d+\s*-->")
 
 
 def strip_membership_markers(text: str) -> str:
     """Remove any ``<!-- cta:N -->`` / ``<!-- thanks:N -->`` markers from
-    ``text``. Used to sanitize ``body_md`` reads — placement of these
-    markers is editorial state (``final.md``), not row content."""
+    ``text``. Used to sanitize ``body_md`` reads — these markers are a
+    retired vocabulary and must never appear in row content."""
     if not text or "<!--" not in text:
         return text
     cleaned = _MEMBERSHIP_MARKER_RE.sub("", text)
@@ -72,7 +71,7 @@ def reddit_tag_line(issue_number: int) -> str:
     """The pinned "discuss on Reddit" preamble at the top of Notable.
 
     Generated (not templated) because it carries the issue number, which
-    only ``update-draft`` / ``create-final`` know at fill time.
+    is only known at render time.
     """
     n = int(issue_number)
     return (
@@ -269,12 +268,12 @@ def render_journal(rows: list[dict[str, Any]]) -> str:
     return "\n\n\n".join(pieces)
 
 
-# ---------- section bodies with inline markers ----------
+# ---------- section bodies with inline markers (retired) ----------
 #
-# ``create-final`` needs to splice ``<!-- cta:N -->`` / ``<!-- thanks:N -->``
-# markers after specific items in a section. These helpers do the same
-# join-and-separate as the plain renderers above, with each marker
-# emitted as its own paragraph after the item that declared it.
+# These helpers spliced ``<!-- cta:N -->`` / ``<!-- thanks:N -->`` markers
+# after specific items in a section, back when membership-block placement
+# was an inline marker. Placement is now hardcoded in ``render_email``'s
+# ``CTA_SLOT_POSITIONS`` map; these are unused and kept only for reference.
 
 def _build_marker_seq(
     row: dict[str, Any],
@@ -377,11 +376,9 @@ def render_featured_section(row: dict[str, Any]) -> str:
     weekday-time label; a promoted Notable item still renders with its
     H3 link + commentary).
 
-    Used by ``build-publish`` (splice into ``buttondown.md`` at
-    ``promoted_position``) and by the updated ``final.md`` renderer (so
-    ``final.md`` reads as the issue will actually publish — feature
-    blocks inline at the right spot, not gathered at the bottom of the
-    file).
+    Used by the renderers (``tools/renderers``) to splice the feature
+    block into ``archive.md`` / ``buttondown.md`` at ``promoted_position``
+    — inline at the right spot, not gathered at the bottom of the file.
     """
     section = (row.get("section") or "").strip()
     heading = (row.get("promoted_heading") or "").strip()

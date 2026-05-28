@@ -1,10 +1,9 @@
-"""Shared helpers for the compose-* jobs and create-final.
+"""Shared helpers for the compose-* jobs and reorder.
 
-These jobs all: (1) read the issue's final.md (or draft.md as a fallback
-before create-final has run), (2) run a persona's agent loop with a job
-prompt, (3) parse a JSON payload out of the reply, (4) post options /
-proposals to a channel and wait for Jamie's reaction, (5) write the
-accepted artifact to the workspace.
+These jobs all: (1) read the issue's draft.md, (2) run a persona's agent
+loop with a job prompt, (3) parse a JSON payload out of the reply, (4)
+post options / proposals to a channel and wait for Jamie's reaction, (5)
+write the accepted artifact to the workspace.
 
 The pick-an-option pattern is shared by compose_haiku (JSON list of
 options) and compose_meta's subject path (numbered markdown list).
@@ -65,19 +64,18 @@ async def try_send(
 
 # How many times to re-prompt the model on a 🔄 refresh or an unparseable
 # response before giving up. Shared across compose_haiku, compose_meta,
-# and create_final.
+# and reorder.
 MAX_REFRESH_ROUNDS = 3
 
 # Cap how much of the issue body we feed the model.
 ISSUE_BODY_CAP = 20_000
 
-# `create-final` reads ``draft.md`` rather than the post-final body, and
-# the draft includes the full Journal section (rehosted images, all
-# micro.blog posts in window) plus block markers — which is bulkier than
-# the post-curation final. Bump the cap so Eddy sees the whole draft
-# when reordering. The other compose jobs run on the trimmed
-# ``final.md`` (or ``draft.md`` as fallback) and don't need the extra
-# headroom.
+# The reorder job reads ``draft.md`` for Eddy's ordering pass, and the
+# draft includes the full Journal section (rehosted images, all
+# micro.blog posts in window) plus block markers — bulkier than the
+# curated body. Bump the cap so Eddy sees the whole draft when
+# reordering. The other compose jobs run on ``draft.md`` directly and
+# don't need the extra headroom.
 CREATE_FINAL_BODY_CAP = ISSUE_BODY_CAP + 6_000
 
 # `promotion-prep` reads ``buttondown.md`` — the byte-shaped email body, which
@@ -87,13 +85,13 @@ CREATE_FINAL_BODY_CAP = ISSUE_BODY_CAP + 6_000
 # give Marky the whole thing when she's drafting syndication framings.
 PROMOTION_BODY_CAP = ISSUE_BODY_CAP + 8_000
 
-# Retired in the chunk-based editorial rework: membership-block placement is
-# now an inline marker (``<!-- cta:N -->`` / ``<!-- thanks:N -->``) that
-# ``create-final`` writes into ``final.md`` at the position Eddy chose. The
-# old per-file ``placement:`` frontmatter vocabulary
-# (``after_notable``/``after_journal``/``after_brief``/``before_haiku``) is
-# no longer needed at this layer — ``build-publish`` resolves markers
-# directly, and ``compose-cta`` discovers slots by scanning ``final.md``.
+# Retired vocabulary: membership-block placement no longer lives in any
+# artifact. ``compose-cta`` composes three fixed atoms (``cta-1``,
+# ``cta-2``, ``thanks-1``) and ``render_email``'s hardcoded
+# ``CTA_SLOT_POSITIONS`` map decides where each lands at render time. The
+# old per-file ``placement:`` frontmatter and the ``<!-- cta:N -->``
+# inline markers are both gone — nothing reads ``final.md`` (it isn't
+# written anymore).
 
 
 def draft_body(issue_number: int) -> str:
@@ -114,7 +112,7 @@ def thesis_block(issue_number: int) -> str:
     """Return ``## Thesis\\n\\n{thesis}\\n`` if ``thesis.md`` exists for
     the issue, else an empty string.
 
-    ``create-final`` writes ``thesis.md`` (one to three sentences naming
+    ``compose-thesis`` writes ``thesis.md`` (one to three sentences naming
     what the issue is about). The compose-* jobs read it via this helper
     and inject the thesis as a ``## Thesis`` block at the top of their
     user message — so subject, description, haiku, and CTA framings all
@@ -187,7 +185,7 @@ async def refresh_loop(
             use the persona's ``preferred_model``. The picker jobs
             (``compose-haiku`` / ``compose-meta``) pass ``"sonnet"`` to
             force the cheaper model since the output is short and
-            picker-shaped; ``create-final`` leaves this ``None`` so
+            picker-shaped; ``reorder`` leaves this ``None`` so
             it inherits Eddy's Opus default for the JSON proposal.
         cards_issue / cards_filename / cards_title: when all three are
             supplied, each round also renders the options to an HTML

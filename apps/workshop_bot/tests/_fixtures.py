@@ -186,16 +186,15 @@ def filled_final(
     outro: str = "",
     haiku: str = "",
 ) -> str:
-    """Build a starter-template-shaped final.md with the three required
+    """Build a starter-template-shaped body with the three required
     blocks filled. Atoms (intro / currently / cover / outro / haiku)
     default to empty — pass them explicitly when a test needs them to
     appear in the assembled output.
 
-    In the row-backed model, ``final.md`` carries the atoms inlined
-    (the assembler reads them from their files at create-final time
-    and bakes them in); this fixture mirrors that shape so tests can
-    feed a single ``final.md`` text and exercise the build-publish
-    transform without re-doing the create-final assembly path."""
+    The body is shaped like ``draft.md`` (a filled starter template);
+    tests write it as the issue's ``draft.md`` and exercise the
+    renderers / publish transform from there. (``final.md`` is retired;
+    the function name is kept for fixture continuity.)"""
     d = _base.starter_template()
     d = _base.replace_block(d, "notable", notable)
     d = _base.replace_block(d, "brief", brief)

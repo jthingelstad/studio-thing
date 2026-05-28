@@ -17,10 +17,12 @@ Briefly form, elevated (titled) Journal posts, the ``A haiku to leave you
 with…`` close.
 
 After the fills the job writes ``draft.md`` back, records a ``draft_digests``
-row (so Eddy's review can compute the delta), and — on Tue–Fri — runs
-Eddy's post-update review and posts it to ``#editorial``. Sat/Sun/Mon it
-stays silent. If ``final.md`` exists the issue is locked and the job
-refuses (re-firing would silently produce a stale ``draft.md``).
+row (so Eddy's review can compute the delta), and — during the Build
+phase — runs Eddy's Opus review, embedding it behind the "Show review"
+drawer in ``draft.html``. The review is skipped during Publish (content
+is frozen) and on no-op ticks (the reprojected draft is byte-identical
+to the last run). All subcommands are idempotent — there's no
+``final.md`` lock.
 """
 
 from __future__ import annotations
@@ -52,8 +54,8 @@ NAME = "update-draft"
 # are micro.blog entries Jamie tagged with the ``Featured`` category;
 # the sync layer marks the rows is_promoted=1 and the draft renders
 # them as standalone ``## {title}`` sections above Notable. (Eddy used
-# to choose promotions during create-final; that mechanism was retired
-# in favor of the upstream-category flow.)
+# to choose promotions during the reorder pass; that mechanism was
+# retired in favor of the upstream-category flow.)
 SECTION_BLOCKS = (
     "intro", "currently", "cover", "featured",
     "notable", "journal", "brief",
@@ -65,9 +67,9 @@ SECTION_BLOCKS = (
 # ``intro`` and ``outro`` are both Jamie-authored prose pushed via Shortcut;
 # ``haiku`` is written by ``compose-haiku``. Same projection shape for all
 # three: read verbatim from the asset file into the named block. Promoted
-# (featured) items don't appear in the draft template — they only appear
-# in ``final.md`` and downstream, spliced inline at their declared position
-# by ``create-final``'s assembler.
+# (featured) items don't appear in the draft template — they're spliced
+# inline at their declared position by the renderers (``tools/renderers``)
+# when producing the shipped artifacts.
 _ASSET_FILE = {"intro": "intro.md", "outro": "outro.md", "haiku": "haiku.md"}
 _COVER_IMAGE = "https://files.thingelstad.com/weekly-thing/{n}/cover.jpg"
 
