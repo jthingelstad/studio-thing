@@ -9,7 +9,7 @@ image: https://files.thingelstad.com/weekly-thing/350/cover.jpg
 absolute_url: ''
 domains: []
 links: []
-word_count: 184
+word_count: 213
 ---
 Note that this is issue 350, a milestone issue.
 
@@ -56,6 +56,15 @@ Cannon Lake, MN
 [6:46 PM](https://www.thingelstad.com/2026/05/24/look-up.html) — Look up. 
 
 <img src="https://files.thingelstad.com/weekly-thing/350/journal/a746b007f9.jpg" alt="Tall tree trunk seen from below, spreading into wide branches with bright green leaves against a clear blue sky." />
+
+
+### Monday, May 25
+
+[6:18 PM](https://www.thingelstad.com/2026/05/25/tyler-and-i-opened-our.html) — Tyler and I opened our first batch of Chaos Rising Pokémon packs and I pulled the chase card — Mega Greninja Gold!
+
+<img src="https://files.thingelstad.com/weekly-thing/350/journal/a0b63c1aef.jpg" alt="Chaos Rising Pokemon booster packs fanned out beside a card display tray holding holofoil cards including a gold Mega Greninja ex with 350 HP." />
+
+<img src="https://files.thingelstad.com/weekly-thing/350/journal/48bd92c6c7.jpg" alt="Gold holographic Mega Greninja EX Pokemon card numbered 122/086 from the Chaos Rising set, 350 HP, lying on a white surface." />
 
 ---
 
