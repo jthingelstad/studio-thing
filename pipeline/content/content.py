@@ -164,7 +164,14 @@ def load_issues_canonical() -> list[dict[str, Any]]:
     for issue_dir in sorted(ISSUES_ROOT.iterdir()):
         if not issue_dir.is_dir():
             continue
-        issues.append(issue_from_canonical(issue_dir))
+        issue = issue_from_canonical(issue_dir)
+        # Publish gate: an issue is live only once Buttondown has assigned it a
+        # public URL. A draft committed mid-workshop carries an empty
+        # absolute_url and must never reach the site, archive, or RSS feed.
+        if not issue["absolute_url"].strip():
+            print(f"  Skipping unpublished issue #{issue['number']} (no absolute_url)")
+            continue
+        issues.append(issue)
     return sorted(issues, key=lambda item: issue_sort_key(item["number"]))
 
 

@@ -17,10 +17,13 @@ content = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(content)
 
 
-def _write_canonical_issue(root: Path, number: int, *, body: str, links=None) -> None:
+def _write_canonical_issue(root: Path, number: int, *, body: str, links=None, absolute_url=None) -> None:
     """Write a complete data/issues/{N}/ trio (archive.md, metadata.json,
     links.json) under ``root``. Mirrors the shape workshop_bot's
-    compose-archive job produces in S3."""
+    compose-archive job produces in S3. Pass ``absolute_url=""`` to simulate an
+    unpublished draft (the publish gate should skip it)."""
+    if absolute_url is None:
+        absolute_url = f"https://buttondown.com/weekly-thing/archive/{number}/"
     issue_dir = root / str(number)
     issue_dir.mkdir(parents=True, exist_ok=True)
     front_matter = (
@@ -31,7 +34,7 @@ def _write_canonical_issue(root: Path, number: int, *, body: str, links=None) ->
         f"slug: '{number}'\n"
         "description: 'Test description.'\n"
         f"image: 'https://files.thingelstad.com/weekly-thing/{number}/cover.jpg'\n"
-        f"absolute_url: 'https://buttondown.com/weekly-thing/archive/{number}/'\n"
+        f"absolute_url: '{absolute_url}'\n"
         "domains: []\n"
         "links: []\n"
         "word_count: 10\n"
@@ -44,7 +47,7 @@ def _write_canonical_issue(root: Path, number: int, *, body: str, links=None) ->
             "description": "Test description.",
             "image": f"https://files.thingelstad.com/weekly-thing/{number}/cover.jpg",
             "publish_date": f"2026-05-{10 + number:02d}T12:00:00Z",
-            "absolute_url": f"https://buttondown.com/weekly-thing/archive/{number}/",
+            "absolute_url": absolute_url,
         }, indent=2) + "\n",
         encoding="utf-8",
     )
@@ -124,6 +127,21 @@ class CanonicalReadTests(unittest.TestCase):
             finally:
                 content.ISSUES_ROOT = orig
         self.assertEqual([i["number"] for i in issues], [1, 2])
+
+    def test_load_issues_canonical_skips_unpublished_drafts(self):
+        """An issue committed before it ships carries an empty absolute_url and
+        must never reach the site/RSS — guards the #350 '(pending)' leak."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_canonical_issue(root, 1, body="published")
+            _write_canonical_issue(root, 2, body="draft", absolute_url="")
+            orig = content.ISSUES_ROOT
+            try:
+                content.ISSUES_ROOT = root
+                issues = content.load_issues_canonical()
+            finally:
+                content.ISSUES_ROOT = orig
+        self.assertEqual([i["number"] for i in issues], [1])
 
 
 class WriteArchiveTests(unittest.TestCase):
