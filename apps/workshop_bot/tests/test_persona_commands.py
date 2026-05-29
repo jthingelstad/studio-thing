@@ -201,5 +201,45 @@ class RetiredSurfacesTests(unittest.TestCase):
                     self.assertNotIn(retired, names, msg=f"retired '{retired}' found in {g.name}")
 
 
+class DescriptionLengthTests(unittest.TestCase):
+    """Discord rejects any command/group/parameter description outside 1–100
+    chars (HTTP 400, error 50035), which silently fails that persona's *entire*
+    command-tree sync at startup. Guards the 'marky campaign add' (105) and
+    'eddy issue reset' (108) regressions."""
+
+    @staticmethod
+    def _collect(node, path):
+        """Walk a group/command node, yielding (label, description) for the
+        group/command description and every parameter description."""
+        out = []
+        commands = getattr(node, "commands", None)
+        if commands is not None:  # a group (top-level or nested subgroup)
+            out.append((f"{path} (group)", getattr(node, "description", None)))
+            for child in commands:
+                name = getattr(child, "name", None) or getattr(child, "_cmd_name", None)
+                out.extend(DescriptionLengthTests._collect(child, f"{path} {name}"))
+        else:  # a leaf command function
+            out.append((path, getattr(node, "_cmd_description", None)))
+            for pname, pdesc in (getattr(node, "_describe", {}) or {}).items():
+                out.append((f"{path} [{pname}]", pdesc))
+        return out
+
+    def test_all_descriptions_within_discord_limit(self):
+        for fn in (
+            commands_module.register_eddy_commands,
+            commands_module.register_linky_commands,
+            commands_module.register_marky_commands,
+            commands_module.register_patty_commands,
+        ):
+            tree = fn(_stub_bot())
+            for group in tree.groups:
+                for label, desc in self._collect(group, f"/{group.name}"):
+                    self.assertIsInstance(desc, str, msg=f"{label}: missing description")
+                    self.assertTrue(
+                        1 <= len(desc) <= 100,
+                        msg=f"{label}: description is {len(desc)} chars (Discord limit 1–100): {desc!r}",
+                    )
+
+
 if __name__ == "__main__":
     unittest.main()

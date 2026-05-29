@@ -110,7 +110,7 @@ def register_marky_commands(
 
     @campaign.command(
         name="add",
-        description="Register an ad campaign for Marky to track (name, ?ref= tag, optional url/platform/cost/copy/started_at).",
+        description="Register an ad campaign for Marky to track — name, ?ref tag, optional url/platform/cost/copy/date.",
     )
     @app_commands.describe(
         name="A short name for the campaign (e.g. dense-discovery-may-2026)",

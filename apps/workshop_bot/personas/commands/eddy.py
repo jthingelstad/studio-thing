@@ -236,7 +236,7 @@ def register_eddy_commands(
         description="Drop the previous-step artifacts so the in-flight issue can be re-published.",
     )
     @app_commands.describe(
-        step="Which artifacts to clear: 'reorder' (clear promotions, drop thesis) or 'publish' (drop buttondown.md/.html).",
+        step="Artifacts to clear: 'reorder' (promotions + thesis) or 'publish' (buttondown.md/.html).",
     )
     @app_commands.choices(step=[
         app_commands.Choice(name="reorder", value="final"),
