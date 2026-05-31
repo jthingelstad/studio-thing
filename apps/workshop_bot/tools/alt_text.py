@@ -99,24 +99,52 @@ def calls_remaining() -> int:
     return _calls_remaining
 
 
+def _sniff_image_type(head: bytes) -> Optional[str]:
+    """Identify an image format from its leading magic bytes. micro.blog's
+    upload CDN serves some files as ``binary/octet-stream`` (and occasionally
+    with no Content-Type at all), so the response header can't be trusted —
+    the bytes can. Returns an Anthropic-supported media type or ``None``."""
+    if head[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if head[:8] == b"\x89PNG\r\n\x1a\n":
+        return "image/png"
+    if head[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    if head[:4] == b"RIFF" and head[8:12] == b"WEBP":
+        return "image/webp"
+    return None
+
+
 def _fetch_image_bytes(url: str) -> Optional[tuple[bytes, str]]:
     """Download the image; return ``(bytes, media_type)`` or ``None`` on
-    failure. Treats non-image responses as failure."""
+    failure. The media type comes from the Content-Type header when it
+    declares an image, otherwise from the bytes' magic number — micro.blog's
+    upload CDN serves some real images (notably GIFs) as
+    ``binary/octet-stream``, so a header-only check wrongly rejects them."""
     try:
         resp = requests.get(url, timeout=_FETCH_TIMEOUT, headers={"User-Agent": _UA}, stream=True)
         resp.raise_for_status()
-        ctype = (resp.headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
-        if not ctype.startswith("image/"):
-            logger.warning("alt_text: %s is not an image (%s)", url, ctype)
-            return None
+        header_ctype = (resp.headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
+        header_is_image = header_ctype.startswith("image/")
+        ctype = header_ctype if header_is_image else ""
         chunks: list[bytes] = []
         total = 0
         for chunk in resp.iter_content(64 * 1024):
+            if not chunks and not header_is_image:
+                # Header didn't declare an image — trust the leading bytes.
+                sniffed = _sniff_image_type(chunk[:16])
+                if not sniffed:
+                    logger.warning("alt_text: %s is not an image (header=%s)", url, header_ctype or "?")
+                    return None
+                ctype = sniffed
             total += len(chunk)
             if total > _FETCH_MAX_BYTES:
                 logger.warning("alt_text: %s exceeds %d bytes; aborting", url, _FETCH_MAX_BYTES)
                 return None
             chunks.append(chunk)
+        if not ctype.startswith("image/"):
+            logger.warning("alt_text: %s is not an image (header=%s)", url, header_ctype or "?")
+            return None
         return b"".join(chunks), ctype
     except Exception as exc:  # noqa: BLE001
         logger.warning("alt_text: fetch %s failed: %s", url, exc)

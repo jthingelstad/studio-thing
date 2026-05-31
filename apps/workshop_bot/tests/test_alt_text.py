@@ -84,6 +84,39 @@ class DownscaleForVisionTests(unittest.TestCase):
         self.assertEqual(out_media, "image/jpeg")
 
 
+class FetchImageBytesTests(unittest.TestCase):
+    """micro.blog's upload CDN serves some real images as ``binary/octet-stream``
+    (or with no Content-Type at all). The fetch must trust the magic bytes, not
+    just the header — otherwise real GIFs/PNGs/JPEGs are wrongly rejected, and
+    each one still burns a vision-budget unit (the cap decrements before fetch)."""
+
+    _PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
+    _JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 32
+    _GIF = b"GIF89a" + b"\x00" * 32
+
+    def _fetch(self, body, content_type):
+        with patch.object(alt_text.requests, "get",
+                          return_value=_fake_image_response(body, content_type)):
+            return alt_text._fetch_image_bytes("https://www.thingelstad.com/uploads/x")
+
+    def test_octet_stream_png_accepted_via_sniff(self):
+        self.assertEqual(self._fetch(self._PNG, "binary/octet-stream"), (self._PNG, "image/png"))
+
+    def test_empty_content_type_jpeg_accepted_via_sniff(self):
+        self.assertEqual(self._fetch(self._JPEG, ""), (self._JPEG, "image/jpeg"))
+
+    def test_octet_stream_gif_accepted_via_sniff(self):
+        self.assertEqual(self._fetch(self._GIF, "binary/octet-stream"), (self._GIF, "image/gif"))
+
+    def test_proper_image_header_is_trusted(self):
+        # A valid image/* header short-circuits the sniff and is returned as-is.
+        self.assertEqual(self._fetch(b"anybytes", "image/webp"), (b"anybytes", "image/webp"))
+
+    def test_non_image_octet_stream_rejected(self):
+        # octet-stream whose bytes are NOT a known image → still rejected.
+        self.assertIsNone(self._fetch(b"<html>not an image</html>", "binary/octet-stream"))
+
+
 class CleanAltTests(unittest.TestCase):
     def test_strip_wrapping_quotes(self):
         self.assertEqual(alt_text._clean_alt('"A creek over rocks"'), "A creek over rocks")
