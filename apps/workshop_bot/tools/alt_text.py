@@ -55,6 +55,9 @@ _UA = "WeeklyThing-WorkshopBot/1.0"
 # Module-level counter — reset by begin_run(); workshop_bot is single-process
 # and update-draft's _gather_fills runs serially in one thread, so no lock.
 _calls_remaining = _DEFAULT_CAP
+# Which Anthropic key the vision calls bill to for the current run. Set by
+# begin_run(): "eddy" for update-draft, "general" for the blog backfill.
+_run_purpose = "general"
 
 _PROMPT_BASE = (
     "Generate alt text for the attached image, for a screen-reader user "
@@ -88,11 +91,14 @@ def _cap() -> int:
         return _DEFAULT_CAP
 
 
-def begin_run() -> None:
-    """Reset the per-run vision-call counter. Call once at the top of
-    ``update-draft``'s ``_gather_fills``."""
-    global _calls_remaining
+def begin_run(purpose: str = "general") -> None:
+    """Reset the per-run vision-call counter and set which Anthropic key the
+    run's vision calls bill to. Call once at the top of ``update-draft``'s
+    ``_gather_fills`` (``purpose="eddy"``) or the blog backfill
+    (``purpose="general"``)."""
+    global _calls_remaining, _run_purpose
     _calls_remaining = _cap()
+    _run_purpose = purpose
 
 
 def calls_remaining() -> int:
@@ -270,7 +276,7 @@ def _generate_via_vision(*, image_url: str, context: str, caption: Optional[str]
     body, media_type = _downscale_for_vision(body, media_type)
     b64 = base64.b64encode(body).decode("ascii")
     try:
-        client = anthropic_client.client()
+        client = anthropic_client.client(_run_purpose)
         resp = client.messages.create(
             model=anthropic_client.MODELS[_VISION_MODEL_KEY],
             max_tokens=_VISION_MAX_TOKENS,

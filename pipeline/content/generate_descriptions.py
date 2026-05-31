@@ -14,6 +14,7 @@ Does NOT push to Buttondown; that's the sync script's job.
 """
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -240,7 +241,7 @@ def main():
                     help="Prefer all-editorial titles over main-only when all has more entries (for re-running short outputs)")
     args = ap.parse_args()
 
-    client = Anthropic()
+    client = Anthropic(api_key=os.environ["ANTHROPIC_GENERAL_API_KEY"])
 
     if args.all_empty:
         files = sorted(ARCHIVE_DIR.glob("*.md"))

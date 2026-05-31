@@ -241,8 +241,8 @@ def main() -> None:
     parser.add_argument("--reuse-cache", action="store_true", help="Use cached extractions instead of re-calling Haiku")
     args = parser.parse_args()
 
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        print("ANTHROPIC_API_KEY missing", file=sys.stderr)
+    if not os.environ.get("ANTHROPIC_GENERAL_API_KEY"):
+        print("ANTHROPIC_GENERAL_API_KEY missing", file=sys.stderr)
         sys.exit(2)
 
     audit = json.loads(AUDIT_PATH.read_text())
@@ -269,7 +269,7 @@ def main() -> None:
 
     if needs_extraction:
         print(f"Extracting {len(needs_extraction)} fix(es) via Haiku ({args.workers} workers)...")
-        client = anthropic.Anthropic()
+        client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_GENERAL_API_KEY"])
         with ThreadPoolExecutor(max_workers=args.workers) as pool:
             futures = {pool.submit(extract_fix, client, issue, finding): (issue, finding, key) for (issue, finding, key) in needs_extraction}
             done = 0

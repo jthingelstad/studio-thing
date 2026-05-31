@@ -229,7 +229,7 @@ def run(
     messages: list[dict[str, Any]] = list(history)
     messages.append({"role": "user", "content": user_message})
 
-    client = anthropic_client.client()
+    client = anthropic_client.client(purpose=persona)
 
     usage_total = {"input": 0, "output": 0, "cache_read": 0, "cache_create": 0}
     tool_calls: list[dict[str, Any]] = []

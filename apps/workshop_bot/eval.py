@@ -130,7 +130,7 @@ def load_or_generate_questions(regen: bool) -> dict[str, list[str]]:
             logger.info("using cached questions from %s", QUESTIONS_PATH)
             return data
         logger.info("cached questions incomplete; regenerating")
-    client = anthropic.Anthropic()
+    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_GENERAL_API_KEY"])
     out: dict[str, list[str]] = {}
     for name in PERSONAS:
         out[name] = generate_questions(client, name)
@@ -230,8 +230,10 @@ def _build_registry() -> agent_tools.ToolRegistry:
 
 
 async def run(args: argparse.Namespace) -> int:
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        logger.error("ANTHROPIC_API_KEY is not set")
+    try:
+        anthropic_client.validate_keys()
+    except RuntimeError as exc:
+        logger.error("%s", exc)
         return 2
 
     db.run_migrations()

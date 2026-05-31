@@ -78,17 +78,54 @@ logger = logging.getLogger("workshop.anthropic")
 # Prompts are cached in-process at first read. Edits to prompts/*.md require a
 # bot restart to take effect.
 _prompt_cache: dict[str, str] = {}
-_client: Optional[anthropic.Anthropic] = None
-
-
-def client() -> anthropic.Anthropic:
-    global _client
-    if _client is None:
-        _client = anthropic.Anthropic(timeout=DEFAULT_API_TIMEOUT_SECS)
-    return _client
-
 
 _KNOWN_PERSONAS = ("eddy", "linky", "marky", "patty")
+
+# Each call purpose bills to its own Anthropic key so the console Usage view
+# attributes spend per agent (the four personas) vs. per one-off project work
+# ("general": the blog alt-text backfill and the pipeline scripts). Keys share
+# one workspace, so this is visibility — not spend-cap isolation.
+_KEY_ENV_BY_PURPOSE = {
+    "eddy":    "ANTHROPIC_EDDY_API_KEY",
+    "linky":   "ANTHROPIC_LINKY_API_KEY",
+    "marky":   "ANTHROPIC_MARKY_API_KEY",
+    "patty":   "ANTHROPIC_PATTY_API_KEY",
+    "general": "ANTHROPIC_GENERAL_API_KEY",
+}
+
+# One client per purpose, built lazily and cached (each holds its own api_key).
+_clients: dict[str, anthropic.Anthropic] = {}
+
+
+def client(purpose: str = "general") -> anthropic.Anthropic:
+    """Anthropic client whose key bills the given purpose.
+
+    ``purpose`` is one of the four persona names or ``"general"``. Fails fast
+    on an unknown purpose or a missing/empty key env var rather than silently
+    falling back to a shared key (which would mis-attribute spend).
+    """
+    env = _KEY_ENV_BY_PURPOSE.get(purpose)
+    if env is None:
+        raise RuntimeError(
+            f"unknown Anthropic client purpose {purpose!r}; "
+            f"expected one of {sorted(_KEY_ENV_BY_PURPOSE)}"
+        )
+    if purpose not in _clients:
+        key = os.environ.get(env)
+        if not key:
+            raise RuntimeError(f"{env} is not set (required for purpose {purpose!r})")
+        _clients[purpose] = anthropic.Anthropic(api_key=key, timeout=DEFAULT_API_TIMEOUT_SECS)
+    return _clients[purpose]
+
+
+def validate_keys() -> None:
+    """Raise if any required Anthropic key is missing. Called at bot startup so
+    a misconfigured key fails fast instead of mis-billing or crashing mid-run."""
+    missing = [env for env in _KEY_ENV_BY_PURPOSE.values() if not os.environ.get(env)]
+    if missing:
+        raise RuntimeError(
+            "missing required Anthropic API keys: " + ", ".join(sorted(missing))
+        )
 
 
 def _resolve_prompt_path(name: str) -> Path:

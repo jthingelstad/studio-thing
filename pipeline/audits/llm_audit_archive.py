@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import re
 import sys
 import time
@@ -289,7 +290,7 @@ async def audit_one(
 # ---------- orchestration ----------
 
 async def run(numbers: list[int], index: dict[int, dict]) -> list[dict]:
-    client = anthropic.AsyncAnthropic()
+    client = anthropic.AsyncAnthropic(api_key=os.environ["ANTHROPIC_GENERAL_API_KEY"])
     sem = asyncio.Semaphore(CONCURRENCY)
 
     async def task(num: int) -> dict:

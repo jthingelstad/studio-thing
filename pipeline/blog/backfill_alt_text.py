@@ -216,7 +216,7 @@ def run_audit(*, year: int | None, limit_posts: int | None) -> int:
 
 def run_fill(*, write: bool, year: int | None, limit_posts: int | None, max_vision: int) -> int:
     os.environ["WORKSHOP_ALT_VISION_CAP"] = str(max_vision)
-    alt_text.begin_run()
+    alt_text.begin_run(purpose="general")  # bills vision to ANTHROPIC_GENERAL_API_KEY
 
     mode = "write" if write else "dry-run"
     results: list[dict[str, Any]] = []

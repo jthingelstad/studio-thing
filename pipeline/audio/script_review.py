@@ -153,8 +153,8 @@ def _estimate_cost(usage: dict) -> float:
 
 
 def make_client() -> anthropic.Anthropic:
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    if not os.environ.get("ANTHROPIC_GENERAL_API_KEY"):
         raise RuntimeError(
-            "ANTHROPIC_API_KEY is required for `scripts review`. Add it to .env or the environment."
+            "ANTHROPIC_GENERAL_API_KEY is required for `scripts review`. Add it to .env or the environment."
         )
-    return anthropic.Anthropic()
+    return anthropic.Anthropic(api_key=os.environ["ANTHROPIC_GENERAL_API_KEY"])

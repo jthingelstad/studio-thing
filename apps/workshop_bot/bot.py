@@ -40,7 +40,7 @@ from .systems.stripe.server import StripeServer
 from .systems.tinylytics.server import TinylyticsServer
 from .tools import db
 from .tools.content import corpus
-from .tools.llm import agent_tools
+from .tools.llm import agent_tools, anthropic_client
 from .tools.discord import startup
 
 logger = logging.getLogger("workshop.bot")
@@ -226,8 +226,10 @@ async def _gateway_watchdog(
 
 
 async def run() -> int:
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        logger.error("ANTHROPIC_API_KEY is not set")
+    try:
+        anthropic_client.validate_keys()
+    except RuntimeError as exc:
+        logger.error("%s", exc)
         return 2
 
     report = db.run_migrations()

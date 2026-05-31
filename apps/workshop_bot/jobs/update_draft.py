@@ -115,7 +115,7 @@ def _gather_fills(window: dict) -> tuple[dict[str, str], list[dict]]:
     n = int(window["issue_number"])
     # Reset the per-run vision-call cap so a single ``update-draft`` can't
     # fan out to dozens of vision calls (cover + every journal image).
-    alt_text.begin_run()
+    alt_text.begin_run(purpose="eddy")  # update-draft alt + cover alt bill to Eddy
     fills: dict[str, str] = {block: _read_asset(n, _ASSET_FILE[block]) for block in _ASSET_FILE}
     # Cover (caption/date/location) — structured cover.json (preferred) or
     # legacy cover.md; Currently — structured currently.json or legacy currently.md.

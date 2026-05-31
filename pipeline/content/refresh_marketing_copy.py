@@ -323,8 +323,8 @@ def main() -> int:
     ap.add_argument("--print-sample", action="store_true", help="Print the sampled issue numbers and exit.")
     args = ap.parse_args()
 
-    if "ANTHROPIC_API_KEY" not in __import__("os").environ and not args.print_sample:
-        print("ERROR: ANTHROPIC_API_KEY not set in environment (or .env).", file=sys.stderr)
+    if "ANTHROPIC_GENERAL_API_KEY" not in __import__("os").environ and not args.print_sample:
+        print("ERROR: ANTHROPIC_GENERAL_API_KEY not set in environment (or .env).", file=sys.stderr)
         return 2
 
     print(f"[refresh] loading archive index from {EMAILS_PATH.relative_to(REPO)}", flush=True)
@@ -344,7 +344,7 @@ def main() -> int:
     corpus_tokens = len(corpus) // 4  # rough
     print(f"[refresh] corpus ~{corpus_tokens:,} tokens ({len(corpus):,} chars)", flush=True)
 
-    client = anthropic.Anthropic()
+    client = anthropic.Anthropic(api_key=__import__("os").environ["ANTHROPIC_GENERAL_API_KEY"])
 
     print(f"[refresh] calling Sonnet ({SONNET})...", flush=True)
     findings, sonnet_usage = call_sonnet(client, brief, corpus, survey, quotes)
