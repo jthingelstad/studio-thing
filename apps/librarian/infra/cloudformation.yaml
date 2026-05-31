@@ -23,6 +23,14 @@ Parameters:
   GraphKey:
     Type: String
     Default: artifacts/graph.json
+  BlogCorpusKey:
+    Type: String
+    Default: artifacts/blog_corpus.json
+    Description: >
+      S3 key for the thingelstad.com blog corpus (separate from the Weekly
+      Thing corpus). The stream Lambda lazy-loads it only when a request's
+      scope includes blog or both. Uploaded on its own cadence by
+      pipeline/deploy/upload_blog_corpus.py, not the WT deploy.
   ButtondownApiKey:
     Type: String
     NoEcho: true
@@ -109,6 +117,7 @@ Resources:
                 Resource:
                   - !Sub arn:aws:s3:::${CorpusBucket}/${CorpusKey}
                   - !Sub arn:aws:s3:::${CorpusBucket}/${GraphKey}
+                  - !Sub arn:aws:s3:::${CorpusBucket}/${BlogCorpusKey}
               - Effect: Allow
                 Action:
                   - bedrock:InvokeModel
@@ -174,6 +183,7 @@ Resources:
           CORPUS_BUCKET: !Ref CorpusBucket
           CORPUS_KEY: !Ref CorpusKey
           GRAPH_KEY: !Ref GraphKey
+          BLOG_CORPUS_KEY: !Ref BlogCorpusKey
           SESSION_SECRET: !Ref SessionSecret
           DISCORD_BRIDGE_SECRET: !Ref DiscordBridgeSecret
           LOG_LEVEL: !Ref LogLevel

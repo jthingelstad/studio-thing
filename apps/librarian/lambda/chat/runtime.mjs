@@ -5,6 +5,7 @@ import { DynamoDBClient, PutItemCommand, UpdateItemCommand } from '@aws-sdk/clie
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { readConverseStream } from '../shared/bedrock-stream.mjs';
 import { prioritizeCitationsForAnswer } from '../shared/citations.mjs';
+import { normalizeScope, scopeKinds, scopePromptLine } from '../shared/scope.mjs';
 import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
 import { searchFaq } from '../shared/faq.mjs';
 import { truthyEnv } from '../shared/logging.mjs';
@@ -36,8 +37,10 @@ const dynamodb = new DynamoDBClient({});
 const bedrock = new BedrockRuntimeClient({});
 const bedrockAgentRuntime = new BedrockAgentRuntimeClient({ region: process.env.BEDROCK_RERANK_REGION || 'us-west-2' });
 let corpusCache;
+let blogCorpusCache;
 let graphCache;
 let indexedCache;
+let blogIndexedCache;
 
 function logEvent(level, message, fields = {}) {
   console.log(JSON.stringify({
@@ -309,7 +312,10 @@ async function recordFeedback({ subscriberHash, requestId, reaction }) {
   }
 }
 
-async function loadCorpus() {
+const EMPTY_CORPUS = { version: 0, chunks: [], issues: [], topics: [], links: [] };
+
+async function loadCorpus(kind = 'weekly_thing') {
+  if (kind === 'blog') return loadBlogCorpus();
   if (corpusCache) return corpusCache;
   const bucket = process.env.CORPUS_BUCKET;
   const key = process.env.CORPUS_KEY || 'librarian/corpus.json';
@@ -319,6 +325,7 @@ async function loadCorpus() {
   corpusCache = JSON.parse(await response.Body.transformToString());
   logEvent('info', 'corpus_loaded', {
     source: 's3',
+    scope: 'weekly_thing',
     bucket,
     key,
     chunk_count: corpusCache.chunk_count || corpusCache.chunks?.length || 0,
@@ -326,6 +333,39 @@ async function loadCorpus() {
     duration_ms: Math.round(performance.now() - start)
   });
   return corpusCache;
+}
+
+// The blog corpus is large and only needed for blog/both scopes, so it
+// loads lazily and caches separately from the WT corpus. When
+// BLOG_CORPUS_KEY is unset (blog not yet deployed), return an empty corpus
+// so blog/both requests degrade to "no blog hits" rather than erroring.
+async function loadBlogCorpus() {
+  if (blogCorpusCache) return blogCorpusCache;
+  const bucket = process.env.CORPUS_BUCKET;
+  const key = process.env.BLOG_CORPUS_KEY;
+  if (!bucket || !key) {
+    logEvent('info', 'blog_corpus_disabled', { has_bucket: Boolean(bucket), has_key: Boolean(key) });
+    blogCorpusCache = { ...EMPTY_CORPUS };
+    return blogCorpusCache;
+  }
+  const start = performance.now();
+  try {
+    const response = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    blogCorpusCache = JSON.parse(await response.Body.transformToString());
+    logEvent('info', 'corpus_loaded', {
+      source: 's3',
+      scope: 'blog',
+      bucket,
+      key,
+      chunk_count: blogCorpusCache.chunk_count || blogCorpusCache.chunks?.length || 0,
+      embedding_dimensions: blogCorpusCache.embedding_dimensions,
+      duration_ms: Math.round(performance.now() - start)
+    });
+  } catch (error) {
+    blogCorpusCache = { ...EMPTY_CORPUS };
+    logEvent('warning', 'blog_corpus_load_failed', { key, error_type: error.constructor?.name || 'Error' });
+  }
+  return blogCorpusCache;
 }
 
 async function loadGraph() {
@@ -351,9 +391,7 @@ function tokenize(text) {
   return Array.from(String(text || '').matchAll(TOKEN_RE), (match) => match[0].toLowerCase());
 }
 
-async function indexedChunks() {
-  if (indexedCache) return indexedCache;
-  const corpus = await loadCorpus();
+function buildLexicalIndex(corpus) {
   const documentFrequency = new Map();
   const indexed = (corpus.chunks || []).map((chunk) => {
     const terms = tokenize([chunk.subject, chunk.section, chunk.text].join(' '));
@@ -374,7 +412,15 @@ async function indexedChunks() {
     chunk._vector = vector;
     chunk._norm = Math.sqrt(norm) || 1;
   }
-  indexedCache = indexed;
+  return indexed;
+}
+
+async function indexedChunks(kind = 'weekly_thing') {
+  if (kind === 'blog') {
+    if (!blogIndexedCache) blogIndexedCache = buildLexicalIndex(await loadCorpus('blog'));
+    return blogIndexedCache;
+  }
+  if (!indexedCache) indexedCache = buildLexicalIndex(await loadCorpus('weekly_thing'));
   return indexedCache;
 }
 
@@ -422,6 +468,7 @@ function sourceAgeLabel(source) {
 function compactSource(source, textLimit = 900) {
   return {
     issue_number: source.issue_number,
+    source_kind: source.source_kind,
     subject: source.subject,
     publish_date: source.publish_date,
     issue_year: source.issue_year,
@@ -431,6 +478,9 @@ function compactSource(source, textLimit = 900) {
     reason: source.retrieval_reason || (source.retrieval_modes || []).join(', '),
     url: source.url,
     topics: source.topics || [],
+    // Present only on blog chunks that a WT issue Journal linked back to —
+    // lets the agent cross-reference ("Jamie also featured this in WT###").
+    also_in_issues: source.also_in_issues,
     text: String(source.text || '').slice(0, textLimit)
   };
 }
@@ -439,21 +489,26 @@ async function rerankSources(query, sources, limit = 8) {
   if (!sources.length || !truthyEnv('LIBRARIAN_RERANK_ENABLED', '1')) return sources.slice(0, limit);
   const start = performance.now();
   const top = sources.slice(0, Math.max(limit * 5, 40));
-  const rerankInputs = top.map((source) => ({
-    type: 'INLINE',
-    inlineDocumentSource: {
-      type: 'TEXT',
-      textDocument: {
-        text: [
-          `Weekly Thing #${source.issue_number}: ${source.subject || ''}`,
-          `Date: ${source.publish_date || ''}`,
-          `Section: ${source.section || ''}`,
-          `Topics: ${(source.topics || []).join(', ')}`,
-          String(source.text || '').replace(/\s+/g, ' ').slice(0, 1800)
-        ].join('\n')
+  const rerankInputs = top.map((source) => {
+    const header = source.source_kind === 'blog' || (!source.issue_number && source.url)
+      ? `thingelstad.com blog: ${source.subject || ''}`
+      : `Weekly Thing #${source.issue_number}: ${source.subject || ''}`;
+    return {
+      type: 'INLINE',
+      inlineDocumentSource: {
+        type: 'TEXT',
+        textDocument: {
+          text: [
+            header,
+            `Date: ${source.publish_date || ''}`,
+            `Section: ${source.section || ''}`,
+            `Topics: ${(source.topics || []).join(', ')}`,
+            String(source.text || '').replace(/\s+/g, ' ').slice(0, 1800)
+          ].join('\n')
+        }
       }
-    }
-  }));
+    };
+  });
   try {
     const data = await bedrockAgentRuntime.send(new RerankCommand({
       queries: [{ type: 'TEXT', textQuery: { text: query } }],
@@ -483,37 +538,39 @@ async function rerankSources(query, sources, limit = 8) {
   return sources.slice(0, limit);
 }
 
-async function retrieveSemantic(query, limit = 8) {
-  const start = performance.now();
-  const corpus = await loadCorpus();
-  const chunks = (corpus.chunks || []).filter((chunk) => chunk.embedding);
-  if (!chunks.length) return [];
+async function embedForCorpus(query, corpus) {
   const model = corpus.embedding_model || embeddingModel();
   const dimensions = Number(corpus.embedding_dimensions || DEFAULT_EMBEDDING_DIMENSIONS);
-  const queryEmbedding = await embedQuery(query, model, dimensions);
-  const result = chunks
+  return embedQuery(query, model, dimensions);
+}
+
+// Pure cosine scoring over one corpus's embedded chunks. Attaches
+// _retrieval_score so callers can merge candidates from two corpora and
+// re-sort before a single rerank (the `both` scope).
+function semanticScore(corpus, queryEmbedding, limit) {
+  const chunks = (corpus.chunks || []).filter((chunk) => chunk.embedding);
+  if (!chunks.length) return [];
+  return chunks
     .map((chunk) => [cosine(queryEmbedding, chunk.embedding), chunk])
     .filter(([score]) => score > 0)
     .sort(([left], [right]) => right - left)
     .slice(0, limit)
-    .map(([, chunk]) => publicChunk(chunk));
-  logEvent('info', 'retrieval_completed', { mode: 'semantic', result_count: result.length, duration_ms: Math.round(performance.now() - start) });
-  return result;
+    .map(([score, chunk]) => ({ ...publicChunk(chunk), _retrieval_score: score }));
 }
 
-async function retrieveLexical(query, limit = 8) {
+async function retrieveLexical(query, limit = 8, kind = 'weekly_thing') {
   const start = performance.now();
   const queryTerms = new Map();
   for (const term of tokenize(query)) queryTerms.set(term, (queryTerms.get(term) || 0) + 1);
   if (!queryTerms.size) return [];
   const scored = [];
-  for (const chunk of await indexedChunks()) {
+  for (const chunk of await indexedChunks(kind)) {
     let score = 0;
     for (const [term, count] of queryTerms.entries()) score += (chunk._vector.get(term) || 0) * count;
     if (score > 0) scored.push([score / chunk._norm, chunk]);
   }
-  const result = scored.sort(([left], [right]) => right - left).slice(0, limit).map(([, chunk]) => publicChunk(chunk));
-  logEvent('info', 'retrieval_completed', { mode: 'lexical', result_count: result.length, duration_ms: Math.round(performance.now() - start) });
+  const result = scored.sort(([left], [right]) => right - left).slice(0, limit).map(([score, chunk]) => ({ ...publicChunk(chunk), _retrieval_score: score }));
+  logEvent('info', 'retrieval_completed', { mode: 'lexical', scope: kind, result_count: result.length, duration_ms: Math.round(performance.now() - start) });
   return result;
 }
 
@@ -536,15 +593,36 @@ function matchesFilters(source, { yearRange, section } = {}) {
   return true;
 }
 
+function withAgeLabel(sources) {
+  return sources.map((source) => ({ ...source, age_label: source.age_label || sourceAgeLabel(source) }));
+}
+
+// Scope is enforced HERE — by which corpus/corpora we scan, not by a
+// post-filter. weekly_thing scans the WT corpus (identical to today);
+// blog scans the blog corpus; both gathers candidates from each and
+// reranks the union once. matchesFilters only applies year/section.
 async function retrieve(query, limit = 8, filters = {}) {
+  const kinds = scopeKinds(filters.scope);
+  const candidateLimit = Math.max(limit * 5, 40);
+  const byScore = (a, b) => (b._retrieval_score || 0) - (a._retrieval_score || 0);
   try {
-    const semantic = (await retrieveSemantic(query, Math.max(limit * 5, 40))).filter((source) => matchesFilters(source, filters));
-    if (semantic.length) return (await rerankSources(query, semantic, limit)).slice(0, limit).map((source) => ({ ...source, age_label: source.age_label || sourceAgeLabel(source) }));
+    let queryEmbedding = null;
+    let semantic = [];
+    for (const kind of kinds) {
+      const corpus = await loadCorpus(kind);
+      if (!(corpus.chunks || []).some((chunk) => chunk.embedding)) continue;
+      if (!queryEmbedding) queryEmbedding = await embedForCorpus(query, corpus);
+      semantic.push(...semanticScore(corpus, queryEmbedding, candidateLimit));
+    }
+    semantic = semantic.filter((source) => matchesFilters(source, filters)).sort(byScore);
+    if (semantic.length) return withAgeLabel((await rerankSources(query, semantic, limit)).slice(0, limit));
   } catch (error) {
     logEvent('error', 'semantic_retrieval_failed', { error_type: error.constructor?.name || 'Error' });
   }
-  const lexical = (await retrieveLexical(query, Math.max(limit * 5, 40))).filter((source) => matchesFilters(source, filters));
-  return (await rerankSources(query, lexical, limit)).slice(0, limit).map((source) => ({ ...source, age_label: source.age_label || sourceAgeLabel(source) }));
+  let lexical = [];
+  for (const kind of kinds) lexical.push(...(await retrieveLexical(query, candidateLimit, kind)));
+  lexical = lexical.filter((source) => matchesFilters(source, filters)).sort(byScore);
+  return withAgeLabel((await rerankSources(query, lexical, limit)).slice(0, limit));
 }
 
 function sanitizeHistory(history) {
@@ -568,19 +646,28 @@ function conversationContext(history) {
   return history.map((item) => `${item.role === 'user' ? 'User' : 'Thingy'}: ${item.content}`).join('\n');
 }
 
+function isBlogSource(item) {
+  return item?.source_kind === 'blog' || (!item?.issue_number && Boolean(item?.url));
+}
+
 function citationsFor(chunks) {
   const seen = new Set();
   const citations = [];
   for (const chunk of chunks) {
-    const key = `${chunk.issue_number}\0${chunk.section || ''}`;
+    // WT chunks dedupe by issue+section; blog chunks have no issue number,
+    // so dedupe them by URL (the permalink is the stable identity).
+    const blog = isBlogSource(chunk);
+    const key = blog ? `blog\0${chunk.url || ''}` : `${chunk.issue_number}\0${chunk.section || ''}`;
     if (seen.has(key)) continue;
     seen.add(key);
     citations.push({
-      issue_number: chunk.issue_number,
+      issue_number: chunk.issue_number ?? null,
+      source_kind: chunk.source_kind || (blog ? 'blog' : 'chunk'),
       subject: chunk.subject,
       publish_date: chunk.publish_date,
       section: chunk.section,
-      url: chunk.url
+      url: chunk.url,
+      also_in_issues: chunk.also_in_issues
     });
   }
   return citations;
@@ -669,11 +756,11 @@ async function toolSearchFaq(input = {}) {
   };
 }
 
-async function toolSearchArchive(input = {}) {
+async function toolSearchArchive(input = {}, { scope } = {}) {
   const query = String(input.query || '').trim();
   if (!query) return { results: [] };
   const limit = Math.min(Math.max(Number(input.limit || 8), 1), 12);
-  const results = await retrieve(query, limit, { yearRange: input.year_range, section: input.section });
+  const results = await retrieve(query, limit, { yearRange: input.year_range, section: input.section, scope });
   return { query, results: results.map((source) => compactSource(source)) };
 }
 
@@ -746,17 +833,36 @@ function contextAround(text, phrase, radius = 240) {
   return text.slice(Math.max(0, index - radius), Math.min(text.length, index + String(phrase).length + radius)).trim();
 }
 
-async function toolQuoteSearch(input = {}) {
+async function toolQuoteSearch(input = {}, { scope } = {}) {
   const phrase = String(input.phrase || '').trim();
   if (phrase.length < 3) return { results: [] };
   const limit = Math.min(Math.max(Number(input.limit || 20), 1), 50);
-  const corpus = await loadCorpus();
+  const needle = phrase.toLowerCase();
+  const kinds = scopeKinds(scope);
   const results = [];
-  for (const issue of corpus.issues || []) {
-    let body = String(issue.body || '');
-    if (!body) body = (await issueSections(issue)).map((section) => section.text || '').join('\n\n');
-    if (body.toLowerCase().includes(phrase.toLowerCase())) {
-      results.push({ issue_number: issue.number, subject: issue.subject, publish_date: issue.publish_date, url: issue.url, context: contextAround(body, phrase) });
+  if (kinds.includes('weekly_thing')) {
+    const corpus = await loadCorpus('weekly_thing');
+    for (const issue of corpus.issues || []) {
+      let body = String(issue.body || '');
+      if (!body) body = (await issueSections(issue)).map((section) => section.text || '').join('\n\n');
+      if (body.toLowerCase().includes(needle)) {
+        results.push({ issue_number: issue.number, subject: issue.subject, publish_date: issue.publish_date, url: issue.url, context: contextAround(body, phrase) });
+        if (results.length >= limit) break;
+      }
+    }
+  }
+  // The blog corpus has no issue-shaped records, so exact-phrase search runs
+  // over its chunk text, deduped by permalink.
+  if (kinds.includes('blog') && results.length < limit) {
+    const corpus = await loadCorpus('blog');
+    const seen = new Set();
+    for (const chunk of corpus.chunks || []) {
+      const text = String(chunk.text || '');
+      if (!text.toLowerCase().includes(needle)) continue;
+      const url = chunk.url || '';
+      if (seen.has(url)) continue;
+      seen.add(url);
+      results.push({ issue_number: null, source_kind: 'blog', subject: chunk.subject, publish_date: chunk.publish_date, section: chunk.section, url, also_in_issues: chunk.also_in_issues, context: contextAround(text, phrase) });
       if (results.length >= limit) break;
     }
   }
@@ -795,12 +901,12 @@ async function toolListIssues(input = {}) {
   return { results, topic_counts: formatCounts(topicCounts, 'topic'), entity_counts: formatCounts(entityCounts, 'entity'), trope_counts: formatCounts(tropeCounts, 'trope') };
 }
 
-async function toolCompareEras(input = {}) {
+async function toolCompareEras(input = {}, { scope } = {}) {
   const topic = String(input.topic || '').trim();
   if (!topic) return { error: 'topic is required' };
   const limit = Math.min(Math.max(Number(input.limit || 6), 1), 10);
-  const first = await retrieve(topic, limit, { yearRange: input.year_a });
-  const second = await retrieve(topic, limit, { yearRange: input.year_b });
+  const first = await retrieve(topic, limit, { yearRange: input.year_a, scope });
+  const second = await retrieve(topic, limit, { yearRange: input.year_b, scope });
   return { topic, year_a: input.year_a, year_b: input.year_b, results_a: first.map((item) => compactSource(item, 700)), results_b: second.map((item) => compactSource(item, 700)) };
 }
 
@@ -831,7 +937,11 @@ function collectToolCitations(toolResults) {
     if (Array.isArray(result.results_b)) candidates.push(...result.results_b);
     if (result.issue) candidates.push({ issue_number: result.issue.number, ...result.issue });
     for (const item of candidates) {
-      if (item?.issue_number) sources.push({ issue_number: item.issue_number, subject: item.subject, publish_date: item.publish_date, section: item.section || 'Issue', url: item.url || `/archive/${item.issue_number}/` });
+      if (item?.issue_number) {
+        sources.push({ issue_number: item.issue_number, subject: item.subject, publish_date: item.publish_date, section: item.section || 'Issue', url: item.url || `/archive/${item.issue_number}/` });
+      } else if (isBlogSource(item)) {
+        sources.push({ issue_number: null, source_kind: 'blog', subject: item.subject, publish_date: item.publish_date, section: item.section, url: item.url, also_in_issues: item.also_in_issues });
+      }
     }
   }
   return citationsFor(sources);
@@ -839,6 +949,7 @@ function collectToolCitations(toolResults) {
 
 async function streamBedrockAgentAnswer(question, history, responseStream, options = {}) {
   const start = performance.now();
+  const scope = normalizeScope(options.scope);
   const memoryContext = String(options.memoryContext || '').trim();
   const messages = [{
     role: 'user',
@@ -858,6 +969,10 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   // the cachePoint as a separate block — uncached, since it varies per
   // request, but it doesn't bust the prefix cache for the static prompt.
   const systemBlocks = [{ text: AGENT_SYSTEM_PROMPT }, { cachePoint: { type: 'default' } }];
+  // Active scope varies per request, so it goes after the cachePoint as its
+  // own block — it tells the agent which corpus it may speak from without
+  // busting the static prompt's prefix cache.
+  systemBlocks.push({ text: scopePromptLine(scope) });
   if (memoryContext) {
     systemBlocks.push({ text: memoryContext });
   }
@@ -887,7 +1002,7 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
       const handler = ARCHIVE_TOOLS[toolUse.name];
       let result;
       try {
-        result = handler ? await handler(toolUse.input || {}) : { error: `Unknown tool: ${toolUse.name}` };
+        result = handler ? await handler(toolUse.input || {}, { scope }) : { error: `Unknown tool: ${toolUse.name}` };
       } catch (error) {
         logEvent('error', 'tool_call_failed', { tool_name: toolUse.name, error_type: error.constructor?.name || 'Error' });
         result = { error: `${toolUse.name} failed: ${error.constructor?.name || 'Error'}` };
@@ -907,6 +1022,7 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   const citations = prioritizeCitationsForAnswer(collectToolCitations(toolResults), answer);
   logEvent('info', 'agent_streamed', {
     model: agentModel(),
+    scope,
     tool_turns: toolResults.length,
     citation_count: citations.length,
     duration_ms: Math.round(performance.now() - start),
@@ -1016,6 +1132,9 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     const requestedK = Number(body.k || 12);
     const limit = Math.max(1, Math.min(Number.isFinite(requestedK) ? requestedK : 12, 40));
     const filters = (body.filters && typeof body.filters === 'object') ? body.filters : {};
+    // Optional scope (default weekly_thing). workshop_bot sends no scope, so
+    // it keeps getting WT-only passages — unaffected by the blog corpus.
+    filters.scope = normalizeScope(body.scope ?? filters.scope);
     try {
       const passages = await retrieve(query, limit, filters);
       const compact = passages.map((p) => compactSource(p, 1200));
@@ -1059,6 +1178,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     subscriberHash = String(payload.sub || '');
 
     const question = String(body.message || '').trim();
+    const scope = normalizeScope(body.scope);
     const history = sanitizeHistory(body.history);
     if (!question) {
       writeSse(stream, 'error', { error: 'Ask a question about the archive.', request_id: requestId });
@@ -1105,7 +1225,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     }, 75000);
     let result;
     try {
-      result = await streamBedrockAgentAnswer(question, history, stream, { memoryContext });
+      result = await streamBedrockAgentAnswer(question, history, stream, { memoryContext, scope });
     } finally {
       clearTimeout(deadlineTimer);
     }

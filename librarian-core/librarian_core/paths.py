@@ -14,3 +14,10 @@ SITE_DIR = REPO / "apps" / "site"
 FAQ_PATH = REPO / "apps" / "librarian" / "lambda" / "shared" / "faq.json"
 CORPUS_PATH = REPO / "data" / "librarian" / "corpus.json"
 GRAPH_PATH = REPO / "data" / "librarian" / "graph.json"
+
+# thingelstad.com blog — Jamie's 20-year personal blog, ingested by
+# pipeline/blog/ingest_blog.py. Its own corpus (separate from the Weekly
+# Thing corpus above) so blog scope loads lazily and never crowds out
+# Weekly-Thing retrieval. See build_blog_corpus in corpus.py.
+BLOG_DIR = REPO / "data" / "blog" / "posts"
+BLOG_CORPUS_PATH = REPO / "data" / "librarian" / "blog_corpus.json"

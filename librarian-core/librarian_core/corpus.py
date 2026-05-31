@@ -19,7 +19,7 @@ import boto3
 import yaml
 from dotenv import load_dotenv
 
-from .paths import ARCHIVE_DIR, FAQ_PATH, SITE_DIR
+from .paths import ARCHIVE_DIR, BLOG_DIR, FAQ_PATH, SITE_DIR
 
 
 DEFAULT_EMBEDDING_MODEL = "cohere.embed-english-v3"
@@ -625,6 +625,171 @@ def build_corpus(
     }
 
 
+# --- blog corpus ---------------------------------------------------------
+#
+# Jamie's 20-year thingelstad.com blog is a *separate* corpus from the
+# Weekly Thing issue archive above. Two corpus objects give hard scope
+# isolation: the WT corpus stays byte-identical to today, the blog corpus
+# lazy-loads only when a reader's scope asks for it, and "both" is the only
+# path that mixes them (a query-time rerank). The builder reuses the same
+# chunk primitives (``chunk_section`` / ``content_kind`` / ``words`` /
+# ``_privacy_audit``) so the embed + upload tooling is shared verbatim.
+
+# A thingelstad.com (or legacy micro.thingelstad.com) permalink, capturing
+# the ``YYYY/MM/DD/slug`` path that uniquely identifies a post. Used both to
+# scan issue Journal sections for blog back-references and to normalize a
+# blog post's own URL to the same key.
+_BLOG_PERMALINK_RE = re.compile(
+    r"https?://(?:www\.|micro\.)?thingelstad\.com/(\d{4}/\d{2}/\d{2}/[^\s)\"'<>]+)",
+    re.I,
+)
+# An ``<img …>`` tag's alt text — inlined into the embedding text so photo
+# descriptions are searchable (the canonical store keeps the full tag).
+_BLOG_IMG_ALT_RE = re.compile(
+    r'<img\b[^>]*?\balt\s*=\s*(["\'])(.*?)\1[^>]*?>', re.I | re.S
+)
+_BLOG_IMG_BARE_RE = re.compile(r"<img\b[^>]*?>", re.I | re.S)
+
+
+def _normalize_blog_path(path_part: str) -> str:
+    """``2026/05/23/slug.html`` → ``2026/05/23/slug`` — the cross-corpus key
+    shared by an issue's Journal back-reference and the blog post itself
+    (host/scheme/``.html`` dropped)."""
+    p = path_part.strip().rstrip("/")
+    return re.sub(r"\.html?$", "", p, flags=re.I)
+
+
+def journal_blog_xref(archive_dir: Path = ARCHIVE_DIR) -> dict[str, list[Any]]:
+    """Scan issue archive bodies for thingelstad.com blog back-references
+    (the Journal section links to ``thingelstad.com/YYYY/MM/DD/slug`` inline,
+    *not* via the curated ``links[]``), returning
+    ``{normalized_blog_path: [issue_number, …]}`` so the blog builder can
+    stamp ``also_in_issues`` on the matching blog chunks. One-directional
+    (blog→issue) for v1: the issue already links to the blog inline."""
+    xref: dict[str, set] = {}
+    for path in sorted(archive_dir.glob("*.md"), key=lambda p: issue_sort_key(p.stem)):
+        metadata, body = read_issue(path)
+        number = metadata.get("number") or path.stem
+        for match in _BLOG_PERMALINK_RE.finditer(body):
+            xref.setdefault(_normalize_blog_path(match.group(1)), set()).add(number)
+    return {key: sorted(nums, key=issue_sort_key) for key, nums in xref.items()}
+
+
+def _blog_embed_text(body: str) -> str:
+    """Reduce a native-markdown blog post to embedding-friendly text: inline
+    each ``<img>``'s alt text (good photo-search signal), drop any remaining
+    HTML tags, normalize whitespace. Markdown links are left intact, matching
+    how issue chunks are embedded."""
+    s = _BLOG_IMG_ALT_RE.sub(lambda m: f" {m.group(2).strip()} ", body or "")
+    s = _BLOG_IMG_BARE_RE.sub(" ", s)
+    s = _HTML_TAG_RE.sub(" ", s)
+    s = re.sub(r"[ \t]+", " ", s)
+    s = re.sub(r"\n\s*\n+", "\n\n", s)
+    return s.strip()
+
+
+def _short_label(text: str, max_words: int = 12) -> str:
+    """A readable citation label for an untitled micropost — the first few
+    words of its plain text."""
+    tokens = plain_text(text).split()
+    label = " ".join(tokens[:max_words])
+    return label + ("…" if len(tokens) > max_words else "")
+
+
+def build_blog_corpus(
+    blog_dir: Path = BLOG_DIR,
+    archive_dir: Path = ARCHIVE_DIR,
+    include_xref: bool = True,
+) -> dict[str, Any]:
+    """Build the blog corpus from ``data/blog/posts/**/*.md``. One chunk per
+    ``chunk_section`` piece, ``source_kind: "blog"``, stable id
+    ``blog:{microblog_id}:{index}``. Same dict shape as :func:`build_corpus`
+    (empty ``issues``/``topics``/``links`` — those power issue-only tools) so
+    the embed + upload tooling is reused verbatim. Posts that also appear in a
+    Weekly Thing Journal get an ``also_in_issues`` cross-reference."""
+    xref = journal_blog_xref(archive_dir) if include_xref else {}
+    chunks: list[dict[str, Any]] = []
+    post_count = 0
+    for path in sorted(blog_dir.rglob("*.md")):
+        metadata, body = read_issue(path)
+        microblog_id = metadata.get("microblog_id")
+        if microblog_id is None:
+            raise RuntimeError(f"{path} is missing microblog_id in front matter")
+        url = str(metadata.get("url") or "").strip()
+        title = str(metadata.get("title") or "").strip()
+        post_kind = str(metadata.get("post_kind") or "post").strip()
+        section = "Micropost" if post_kind == "micropost" else "Blog post"
+        match = _BLOG_PERMALINK_RE.search(url)
+        publish_date = None
+        if match:
+            publish_date = "-".join(match.group(1).split("/")[:3])
+        if not publish_date:
+            publish_date = str(metadata.get("published") or "")[:10] or None
+        also_in_issues = xref.get(_normalize_blog_path(url.split("//", 1)[-1].split("/", 1)[-1])) if url else None
+        if not also_in_issues and match:
+            also_in_issues = xref.get(_normalize_blog_path(match.group(1)))
+        embed_text = _blog_embed_text(body)
+        if not embed_text:
+            continue
+        post_count += 1
+        subject = title or _short_label(embed_text)
+        for index, chunk_text in enumerate(chunk_section(embed_text)):
+            chunk = {
+                "id": f"blog:{microblog_id}:{index}",
+                "issue_number": None,
+                "subject": subject,
+                "publish_date": publish_date,
+                "issue_year": parse_year(publish_date),
+                "url": url,
+                "section": section,
+                "text": chunk_text,
+                "word_count": len(words(chunk_text)),
+                "content_kind": "blog",
+                "topics": [],
+                "source_kind": "blog",
+            }
+            if also_in_issues:
+                chunk["also_in_issues"] = also_in_issues
+            chunks.append(chunk)
+
+    _privacy_audit(chunks)
+
+    return {
+        "version": 2,
+        "source": "data/blog/posts",
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "embedding_model": None,
+        "issue_count": 0,
+        "post_count": post_count,
+        "chunk_count": len(chunks),
+        "link_count": 0,
+        "issues": [],
+        "topics": [],
+        "links": [],
+        "chunks": chunks,
+    }
+
+
+def _embed_input(chunk: dict[str, Any]) -> str:
+    """The text handed to the embedding model for one chunk. Blog chunks get a
+    blog-shaped header; everything else keeps the original Weekly-Thing header
+    verbatim so existing corpus.json embed inputs stay byte-identical (cache
+    stays warm)."""
+    if chunk.get("source_kind") == "blog":
+        lines = [f"thingelstad.com blog — {chunk.get('publish_date') or ''}".rstrip(" —")]
+        if chunk.get("subject"):
+            lines.append(f"Post: {chunk['subject']}")
+        lines.append(f"Section: {chunk['section']}")
+        lines.append(chunk["text"])
+        return "\n".join(lines)
+    return "\n".join([
+        f"Weekly Thing #{chunk['issue_number']}: {chunk['subject']}",
+        f"Section: {chunk['section']}",
+        f"Topics: {', '.join(chunk.get('topics', []))}",
+        chunk["text"],
+    ])
+
+
 def fetch_bedrock_embeddings(inputs: list[str], model: str, input_type: str = "search_document") -> list[list[float]]:
     inputs = [text[:COHERE_EMBED_MAX_TEXT_CHARS] for text in inputs]
     response = boto3.client("bedrock-runtime").invoke_model(
@@ -660,17 +825,7 @@ def add_bedrock_embeddings(corpus: dict[str, Any], model: str, dimensions: int, 
         return
     for start in range(0, len(pending), batch_size):
         batch = pending[start : start + batch_size]
-        inputs = [
-            "\n".join(
-                [
-                    f"Weekly Thing #{chunk['issue_number']}: {chunk['subject']}",
-                    f"Section: {chunk['section']}",
-                    f"Topics: {', '.join(chunk.get('topics', []))}",
-                    chunk["text"],
-                ]
-                )
-            for chunk in batch
-        ]
+        inputs = [_embed_input(chunk) for chunk in batch]
         embeddings = fetch_bedrock_embeddings(inputs, model)
         for chunk, embedding in zip(batch, embeddings):
             chunk["embedding"] = embedding

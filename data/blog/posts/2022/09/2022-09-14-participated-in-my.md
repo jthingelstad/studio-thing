@@ -1,0 +1,20 @@
+---
+microblog_id: 1665983
+url: "https://www.thingelstad.com/2022/09/14/participated-in-my.html"
+title: ""
+published: "2022-09-15T04:42:14+00:00"
+post_kind: micropost
+categories: ["Crypto", "POAP"]
+---
+
+Participated in my first POAP Art canvas tonight as part of the merge call. Painted my "Thing" moniker in the lower right part of [the canvas](https://app.poap.art/mainnet-merge/). 🤩
+
+<img src="https://www.thingelstad.com/uploads/2022/be4c65ffb1.png" width="600" height="300" alt="" />
+
+<img src="https://www.thingelstad.com/uploads/2022/16cea84166.png" width="600" height="390" alt="" />
+
+**Final Version**
+
+Here is the final completed canvas. I had to defend my pixels many times when people tried to take them over. Thing FTW! 🤩
+
+<img src="https://www.thingelstad.com/uploads/2022/c0ce31ae70.png" width="600" height="300" alt="" />

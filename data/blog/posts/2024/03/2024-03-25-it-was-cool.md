@@ -1,0 +1,20 @@
+---
+microblog_id: 3947136
+url: "https://www.thingelstad.com/2024/03/25/it-was-cool.html"
+title: ""
+published: "2024-03-25T21:00:00+00:00"
+post_kind: micropost
+categories: []
+---
+
+It was cool and rainy so a trip to [Big Putts Mini Golf](https://www.bigputts.net) was perfect. We arrived and the place was packed, but after the first few holes things moved along well. We loved the course — declared it probably our favorite mini golf ever. And I crushed it with a 35 along with **four hole-in-ones**! ⛳️🔥
+
+<img src="https://www.thingelstad.com/uploads/2024/16c3ee5781.jpg" width="600" height="450" alt="">
+
+<img src="https://www.thingelstad.com/uploads/2024/9cf80944e5.jpg" width="450" height="600" alt="">
+
+<img src="https://www.thingelstad.com/uploads/2024/afaeb68e7e.jpg" width="600" height="450" alt="">
+
+<img src="https://www.thingelstad.com/uploads/2024/ab93ece596.jpg" width="600" height="600" alt="">
+
+_Part of the [Milwaukee Spring Break collection](https://www.thingelstad.com/collections/milwaukee-spring-break/)._

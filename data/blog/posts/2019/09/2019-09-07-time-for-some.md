@@ -1,0 +1,12 @@
+---
+microblog_id: 939158
+url: "https://micro.thingelstad.com/2019/09/07/time-for-some.html"
+title: ""
+published: "2019-09-07T16:04:00+00:00"
+post_kind: micropost
+categories: ["Sports", "Family"]
+---
+
+Time for some Saturday morning Dirty Pineapples soccer! ⚽️ Tyler’s practicing his penalty kick here. 
+
+<img src="https://www.thingelstad.com/uploads/2019/051c3ff380.jpg" width="600" height="337" alt="" />

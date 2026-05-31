@@ -1,0 +1,10 @@
+---
+microblog_id: 1078854
+url: "https://www.thingelstad.com/2018/08/04/target-field.html"
+title: "Target Field"
+published: "2018-08-04T06:00:00+00:00"
+post_kind: post
+categories: []
+---
+
+![](https://www.thingelstad.com/uploads/2020/2ddd18c285.jpg)
