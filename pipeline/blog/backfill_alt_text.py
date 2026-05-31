@@ -105,38 +105,19 @@ def _has_image_markers(raw: str) -> bool:
     return "<img" in raw or "![](" in raw
 
 
-# Formats the vision path can't use. micro.blog serves the old `.gif` uploads as
-# `binary/octet-stream`, so `alt_text._fetch_image_bytes` rejects them (and they
-# are typically animated/decorative anyway). Crucially they can NEVER be filled,
-# so if we let them through they would (1) burn a `--max-vision` budget unit each
-# — the cap is decremented *before* the fetch fails — and (2) reappear in every
-# future audit since the candidate finder only drops *filled* images. Exclude
-# them up front so the budget only ever spends on images that can actually fill.
-_UNSUPPORTED_EXT = {"gif"}
-
-
-def _src_ext(src: str) -> str:
-    tail = src.split("?", 1)[0].split("#", 1)[0].rsplit("/", 1)[-1]
-    return tail.rsplit(".", 1)[-1].lower() if "." in tail else ""
-
-
-def _is_fillable(src: str) -> bool:
-    return _src_ext(src) not in _UNSUPPORTED_EXT
-
-
 def _scan_post(path: Path) -> dict[str, Any] | None:
-    """Parse one post and partition its empty-alt images into fillable ``targets``
-    and a ``skipped`` count (unsupported formats). Returns ``None`` for posts with
-    no empty-alt image at all. ``targets`` may be empty (post has only unsupported
-    images) — callers decide whether that's actionable."""
+    """Parse one post and return its empty-alt images as ``targets`` (each a
+    ``(start, end, kind, src)`` tuple). Returns ``None`` for posts with no
+    empty-alt image. Every format micro.blog hosts (jpg/png/gif/webp) is
+    fillable — the vision fetch path sniffs magic bytes, so the CDN's
+    ``binary/octet-stream`` content-type no longer gates what we attempt."""
     raw = path.read_text(encoding="utf-8")
     if not _has_image_markers(raw):
         return None
     metadata, body, fm_block = _read_blog_post(path)
-    all_targets = microblog._find_empty_alt_images(body)
-    if not all_targets:
+    targets = microblog._find_empty_alt_images(body)
+    if not targets:
         return None
-    targets = [t for t in all_targets if _is_fillable(t[3])]
     return {
         "path": path,
         "microblog_id": metadata.get("microblog_id"),
@@ -146,17 +127,14 @@ def _scan_post(path: Path) -> dict[str, Any] | None:
         "body": body,
         "fm_block": fm_block,
         "targets": targets,
-        "skipped": len(all_targets) - len(targets),
     }
 
 
 def iter_candidate_posts(
     *, year: int | None, limit_posts: int | None
 ) -> Iterator[dict[str, Any]]:
-    """Yield posts with ≥1 *fillable* empty-alt image (``targets`` non-empty), in
-    path order. Posts whose only empty-alt images are unsupported formats are
-    skipped here (nothing to fill) — the audit still tallies them. ``--limit-posts``
-    counts only yielded (fillable) posts."""
+    """Yield posts with ≥1 empty-alt image (``targets`` non-empty), in path
+    order. ``--limit-posts`` counts only yielded posts."""
     yielded = 0
     for path in _iter_post_files(year):
         post = _scan_post(path)
@@ -205,15 +183,11 @@ def _splice(body: str, targets: list[tuple[int, int, str, str]], *,
 # ── modes ─────────────────────────────────────────────────────────────
 
 def run_audit(*, year: int | None, limit_posts: int | None) -> int:
-    """Full free scan: tally fillable empty-alt images (jpg/png/webp — what the
-    vision path can actually fill) separately from unsupported (gif) so the cost
-    estimate and budget reflect only images that will fill. Counts every post
-    with any empty-alt image (incl. unsupported-only posts), unlike the fill
-    iterator which skips the latter."""
+    """Full free scan: tally every empty-alt image (split html-tag vs markdown)
+    and print a vision-cost estimate. No vision calls, no writes."""
     posts = 0
     html_missing = 0
     md_missing = 0
-    skipped = 0
     scanned = 0
     for path in _iter_post_files(year):
         post = _scan_post(path)
@@ -222,9 +196,7 @@ def run_audit(*, year: int | None, limit_posts: int | None) -> int:
         scanned += 1
         if limit_posts is not None and scanned > limit_posts:
             break
-        skipped += post["skipped"]
-        if post["targets"]:
-            posts += 1
+        posts += 1
         for _s, _e, kind, _src in post["targets"]:
             if kind == "html":
                 html_missing += 1
@@ -233,10 +205,8 @@ def run_audit(*, year: int | None, limit_posts: int | None) -> int:
     total = html_missing + md_missing
     print("\n── alt-text audit ──", flush=True)
     print(f"  scope:                  {year or 'all years'}", flush=True)
-    print(f"  posts with fillable alt: {posts}", flush=True)
+    print(f"  posts missing alt:       {posts}", flush=True)
     print(f"  images missing alt:      {total}  ({html_missing} <img>, {md_missing} markdown)", flush=True)
-    if skipped:
-        print(f"  unsupported (gif) skipped: {skipped}  (can't fill — excluded from budget/cost)", flush=True)
     print(f"  est. vision cost:        ${total * _COST_PER_IMAGE_LOW:,.2f} – ${total * _COST_PER_IMAGE_HIGH:,.2f}", flush=True)
     if total:
         print(f"\n  next: dry-run a sample →  python {_self()} --limit-posts 10", flush=True)
@@ -291,14 +261,10 @@ def run_fill(*, write: bool, year: int | None, limit_posts: int | None, max_visi
             print(f"  ! [{mbid}] live re-fetch failed, skipping: {exc}", flush=True)
             continue
 
-        # Filter the *live* targets too — otherwise the unsupported GIFs burn a
-        # budget unit each on the write path (the local-scan filter doesn't cover
-        # the re-fetched body).
-        live_targets = [t for t in microblog._find_empty_alt_images(live_body) if _is_fillable(t[3])]
+        live_targets = microblog._find_empty_alt_images(live_body)
         if not live_targets:
-            # No fillable image left live (filled upstream since ingest, or only
-            # unsupported images remain) — sync the local file so the audit stops
-            # flagging it, then move on (no vision spent).
+            # No empty-alt image left live (filled upstream since ingest) — sync
+            # the local file so the audit stops flagging it, then move on.
             if live_body.strip() != post["body"].strip():
                 _rewrite_body(post["path"], post["fm_block"], live_body)
                 synced += 1
