@@ -56,6 +56,9 @@ from apps.workshop_bot.tools.content import microblog  # noqa: E402
 BLOG_POSTS_DIR = REPO / "data" / "blog" / "posts"
 RUN_DIR = REPO / "tmp" / "blog-alt"
 BACKUP_DIR = RUN_DIR / "backups"
+# Image URLs that 404/410'd on a prior run — skipped (no fetch, no budget) on
+# future runs so a block of deleted uploads can't re-block the cursor. Append-only.
+DEAD_URL_LOG = RUN_DIR / "dead-urls.txt"
 
 # Per-image vision cost ballpark (Sonnet: ~1.5–2k input image tokens + ~400
 # context + ≤200 output). Used only for the audit estimate.
@@ -216,7 +219,9 @@ def run_audit(*, year: int | None, limit_posts: int | None) -> int:
 
 def run_fill(*, write: bool, year: int | None, limit_posts: int | None, max_vision: int) -> int:
     os.environ["WORKSHOP_ALT_VISION_CAP"] = str(max_vision)
-    alt_text.begin_run(purpose="general")  # bills vision to ANTHROPIC_GENERAL_API_KEY
+    RUN_DIR.mkdir(parents=True, exist_ok=True)  # so the dead-url log is writable
+    # bills vision to ANTHROPIC_GENERAL_API_KEY; skips/logs deleted-upload 404s
+    alt_text.begin_run(purpose="general", dead_url_log=str(DEAD_URL_LOG))
 
     mode = "write" if write else "dry-run"
     results: list[dict[str, Any]] = []

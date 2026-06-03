@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -218,6 +219,77 @@ class GenerateAltTests(_AltTextCapResetCase):
         text_block = msg["content"][1]["text"]
         self.assertIn("Minnehaha Creek rushing toward the Mississippi.", text_block)
         self.assertIn("Do NOT repeat this caption", text_block)
+
+
+def _fake_404_response():
+    """A response whose raise_for_status() raises a 404 HTTPError, shaped like
+    requests' (carries .response.status_code)."""
+    resp = MagicMock()
+    err = alt_text.requests.HTTPError("404 Client Error: Not Found")
+    err.response = MagicMock(status_code=404)
+    resp.raise_for_status.side_effect = err
+    resp.headers = {"Content-Type": "image/jpeg"}
+    resp.iter_content = lambda n: iter([b"x"])
+    return resp
+
+
+class DeadUrlTests(unittest.TestCase):
+    """Deleted uploads (404/410) must be recorded and skipped for free so a
+    block of dead URLs can't re-block the backfill cursor or burn the budget."""
+
+    def setUp(self):
+        os.environ.pop("WORKSHOP_ALT_VISION_CAP", None)
+        alt_text._dead_urls.clear()
+        alt_text._dead_url_log = None
+        alt_text.begin_run()
+
+    def tearDown(self):
+        alt_text._dead_urls.clear()
+        alt_text._dead_url_log = None
+
+    def test_404_records_dead_and_refunds_budget(self):
+        client = MagicMock()
+        before = alt_text.calls_remaining()
+        with patch.object(alt_text.anthropic_client, "client", return_value=client), \
+             patch.object(alt_text.requests, "get", return_value=_fake_404_response()):
+            out = alt_text.generate_alt(image_url="https://x/gone.jpg")
+        self.assertEqual(out, "")
+        client.messages.create.assert_not_called()
+        # The dead URL was recorded and its reserved budget unit refunded.
+        self.assertIn("https://x/gone.jpg", alt_text._dead_urls)
+        self.assertEqual(alt_text.calls_remaining(), before)
+
+    def test_known_dead_url_skipped_for_free(self):
+        alt_text._dead_urls.add("https://x/gone.jpg")
+        client = MagicMock()
+        before = alt_text.calls_remaining()
+        with patch.object(alt_text.anthropic_client, "client", return_value=client), \
+             patch.object(alt_text.requests, "get") as g:
+            out = alt_text.generate_alt(image_url="https://x/gone.jpg")
+        self.assertEqual(out, "")
+        g.assert_not_called()                       # no fetch
+        client.messages.create.assert_not_called()  # no vision call
+        self.assertEqual(alt_text.calls_remaining(), before)  # no budget spent
+
+    def test_dead_url_appended_to_log_and_reloaded(self):
+        with tempfile.TemporaryDirectory() as d:
+            log = os.path.join(d, "dead-urls.txt")
+            alt_text.begin_run(dead_url_log=log)
+            client = MagicMock()
+            with patch.object(alt_text.anthropic_client, "client", return_value=client), \
+                 patch.object(alt_text.requests, "get", return_value=_fake_404_response()):
+                alt_text.generate_alt(image_url="https://x/gone.jpg")
+            self.assertIn("https://x/gone.jpg", Path(log).read_text().splitlines())
+
+            # A fresh run (cleared in-memory set) re-seeds from the log and skips.
+            alt_text._dead_urls.clear()
+            alt_text.begin_run(dead_url_log=log)
+            self.assertIn("https://x/gone.jpg", alt_text._dead_urls)
+            with patch.object(alt_text.anthropic_client, "client", return_value=client), \
+                 patch.object(alt_text.requests, "get") as g:
+                out = alt_text.generate_alt(image_url="https://x/gone.jpg")
+            self.assertEqual(out, "")
+            g.assert_not_called()
 
 
 if __name__ == "__main__":

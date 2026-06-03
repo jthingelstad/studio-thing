@@ -59,6 +59,14 @@ _calls_remaining = _DEFAULT_CAP
 # begin_run(): "eddy" for update-draft, "general" for the blog backfill.
 _run_purpose = "general"
 
+# Image URLs that returned 404/410 — recorded so future runs skip them instead
+# of spending a vision-budget unit re-fetching a deleted image (the blog
+# backfill re-scans thousands of old posts every run, and a deleted upload
+# would otherwise block the cursor forever). Populated by _fetch_image_bytes;
+# seeded from the on-disk log by begin_run(dead_url_log=...).
+_dead_urls: set[str] = set()
+_dead_url_log: Optional[str] = None
+
 _PROMPT_BASE = (
     "Generate alt text for the attached image, for a screen-reader user "
     "who cannot see it.\n\n"
@@ -91,14 +99,52 @@ def _cap() -> int:
         return _DEFAULT_CAP
 
 
-def begin_run(purpose: str = "general") -> None:
+def begin_run(purpose: str = "general", dead_url_log: Optional[str] = None) -> None:
     """Reset the per-run vision-call counter and set which Anthropic key the
     run's vision calls bill to. Call once at the top of ``update-draft``'s
     ``_gather_fills`` (``purpose="eddy"``) or the blog backfill
-    (``purpose="general"``)."""
-    global _calls_remaining, _run_purpose
+    (``purpose="general"``).
+
+    ``dead_url_log``: optional path to a newline-delimited file of image URLs
+    that previously returned 404/410. When given, those URLs are loaded and
+    skipped for free this run (no fetch, no budget), and newly-discovered dead
+    URLs are appended to the file. The blog backfill passes this so a block of
+    deleted uploads can't re-block the candidate cursor on every run."""
+    global _calls_remaining, _run_purpose, _dead_url_log
     _calls_remaining = _cap()
     _run_purpose = purpose
+    _dead_url_log = dead_url_log
+    if dead_url_log:
+        _load_dead_urls(dead_url_log)
+
+
+def _load_dead_urls(path: str) -> None:
+    """Seed the in-memory dead-URL set from the on-disk log (one URL per line).
+    Missing file is fine — it's created on the first recorded 404."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                u = line.strip()
+                if u:
+                    _dead_urls.add(u)
+    except FileNotFoundError:
+        pass
+    except OSError as exc:  # noqa: BLE001
+        logger.warning("alt_text: couldn't read dead-url log %s: %s", path, exc)
+
+
+def _record_dead_url(url: str) -> None:
+    """Mark a URL dead (404/410) so future runs skip it; append to the log file
+    if one was set by begin_run()."""
+    if url in _dead_urls:
+        return
+    _dead_urls.add(url)
+    if _dead_url_log:
+        try:
+            with open(_dead_url_log, "a", encoding="utf-8") as fh:
+                fh.write(url + "\n")
+        except OSError as exc:  # noqa: BLE001
+            logger.warning("alt_text: couldn't append dead url to %s: %s", _dead_url_log, exc)
 
 
 def calls_remaining() -> int:
@@ -152,6 +198,14 @@ def _fetch_image_bytes(url: str) -> Optional[tuple[bytes, str]]:
             logger.warning("alt_text: %s is not an image (header=%s)", url, header_ctype or "?")
             return None
         return b"".join(chunks), ctype
+    except requests.HTTPError as exc:
+        status = exc.response.status_code if exc.response is not None else None
+        if status in (404, 410):
+            # The upload is gone for good — record it so future runs skip it
+            # instead of re-spending budget on a fetch that can't succeed.
+            _record_dead_url(url)
+        logger.warning("alt_text: fetch %s failed: %s", url, exc)
+        return None
     except Exception as exc:  # noqa: BLE001
         logger.warning("alt_text: fetch %s failed: %s", url, exc)
         return None
@@ -306,15 +360,25 @@ def generate_alt(
     lands in ``cover.json`` via ``jobs/_cover.alt``).
 
     Returns the cleaned alt on success, or ``""`` on cap exhaustion /
-    image fetch failure / vision failure. Decrements the per-run vision
-    cap on a real call. ``begin_run()`` resets the counter at the top
-    of the run.
+    image fetch failure / vision failure / a URL already known dead.
+    Decrements the per-run vision cap on a real call; a known-dead URL
+    (see ``begin_run(dead_url_log=...)``) is skipped for free, and a URL
+    discovered dead mid-call (404/410) refunds its reserved budget unit.
+    ``begin_run()`` resets the counter at the top of the run.
     """
     global _calls_remaining
     if not image_url:
+        return ""
+    if image_url in _dead_urls:
+        logger.debug("alt_text: skipping known-dead image url %s", image_url)
         return ""
     if _calls_remaining <= 0:
         logger.info("alt_text: vision cap reached; %s left empty for this run", image_url)
         return ""
     _calls_remaining -= 1
-    return _generate_via_vision(image_url=image_url, context=context, caption=caption)
+    alt = _generate_via_vision(image_url=image_url, context=context, caption=caption)
+    if not alt and image_url in _dead_urls:
+        # _fetch_image_bytes just discovered this URL is dead (404/410); it made
+        # no vision call, so refund the budget unit we reserved above.
+        _calls_remaining += 1
+    return alt
