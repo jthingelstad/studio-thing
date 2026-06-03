@@ -7,10 +7,7 @@ post_kind: post
 categories: []
 ---
 
-I'm really enjoying watching [Casey
-Helbling](https://twitter.com/caseyhelbling) and the team at [Software
-for Good](http://softwareforgood.com) evolve their mission and business.
-They just transitioned to a B Corp structure.
+I'm really enjoying watching [Casey Helbling](https://twitter.com/caseyhelbling) and the team at [Software for Good](http://softwareforgood.com) evolve their mission and business. They just transitioned to a B Corp structure.
 
 > We're celebrating the new year in a big way: Today, the
 > much-anticipated Minnesota Public Benefit Corporation Act went into
@@ -18,9 +15,7 @@ They just transitioned to a B Corp structure.
 > benefit corporation in the state of
 > Minnesota.](http://softwareforgood.com/introducing-software-for-good-gbc/)
 
-If you are not familiar with a [Benefit
-corporation](https://en.wikipedia.org/wiki/Benefit_corporation),
-Wikipedia of course has a great overview.
+If you are not familiar with a [Benefit corporation](https://en.wikipedia.org/wiki/Benefit_corporation), Wikipedia of course has a great overview.
 
 > The purpose of a benefit corporation includes creating general public
 > benefit, which is defined as a material positive impact on society and
@@ -43,6 +38,4 @@ Wikipedia of course has a great overview.
 > business has failed to pursue or create general public benefit.
 > Disputes about the material positive impact are decided by the courts.
 
-Allowing a company to pursue things beyond pure profit and shareholder
-return, without having to be a non-profit, makes a lot of sense. It
-provides an opportunity for companies to be better citizens.
+Allowing a company to pursue things beyond pure profit and shareholder return, without having to be a non-profit, makes a lot of sense. It provides an opportunity for companies to be better citizens.

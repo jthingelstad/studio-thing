@@ -9,4 +9,4 @@ categories: []
 
 Trees embracing. 
 
-<img src="https://www.thingelstad.com/uploads/2023/4a966be1be.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/4a966be1be.jpg" width="450" height="600" alt="Two trees with intertwined trunks and branches growing together in a lush green garden with iris plants nearby.">

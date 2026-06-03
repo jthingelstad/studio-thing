@@ -9,4 +9,4 @@ categories: []
 
 My fire table got hooked up to the gas line today. I love it! 🔥🤩
 
-<img src="https://www.thingelstad.com/uploads/2020/da3add04ec.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/da3add04ec.jpg" width="600" height="450" alt="Girl playing acoustic guitar and an adult sitting beside a round gas fire table on a patio at night, house interior visible behind them." />

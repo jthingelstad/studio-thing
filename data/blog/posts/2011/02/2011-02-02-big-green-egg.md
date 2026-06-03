@@ -21,7 +21,7 @@ You need more than just the Big Green Egg. These items are things that I view as
 
 #### Large Big Green Egg
 
-<img src="https://www.thingelstad.com/uploads/2020/faf122220f.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/faf122220f.jpg" alt="Large green ceramic kamado-style charcoal grill with dome lid closed, shown on a metal stand against a white background" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 I strongly recommend that people get the [large Big Green Egg](http://biggreenegg.com/how-do-you-like-your-eggs/). I started with a large and have added a small Egg to my setup as well. I've never owned a medium or x-large but have talked with people who have them. The medium seems an odd choice to me, sort of "no man's land" between small and large. The x-large is really big and with that you need to factor in longer time to come up to temperature and more charcoal required.
 
@@ -31,7 +31,7 @@ I also have a small so that I can have two temperatures going. Mainly if I want 
 
 #### Plate Setter
 
-<img src="https://www.thingelstad.com/uploads/2020/1a8ccdf83b.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/1a8ccdf83b.jpg" alt="White ceramic half-moon shaped convEGGtor plate accessory for a Big Green Egg grill, viewed from above at an angle" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 Getting a Big Green Egg without getting a [plate setter](http://biggreenegg.com/product/conveggtor/) isn't really an option. I'm not even sure why it is sold separately. I guess if the only thing you plan on doing is typical grilling you could maybe skip it. But you really aren't taking full advantage of the wonderful capabilities of the Big Green Egg. The plate setter is how you make indirect heat on the Egg and is required for anything other than high heat grilling.
 
@@ -41,7 +41,7 @@ The plate setter is required for smoking, but it's also used for pizza. It's not
 
 #### Ash Tool
 
-<img src="https://www.thingelstad.com/uploads/2020/ea3385475d.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/ea3385475d.jpg" alt="Black angled grill lid hinge tool with carabiner clip on a white background" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 The design of the Egg leaves the ash in the bottom of the grill. The vent is there to control air flow and heat during cooking, as well as to reach the ash that has collected there. This is where the [ash tool](http://www.amazon.com/dp/B003E71Y06/) is used.
 
@@ -49,7 +49,7 @@ I don't think there is anything that you could use besides the ash tool to clean
 
 #### Paraffin Fire Starters
 
-<img src="https://www.thingelstad.com/uploads/2020/ed26e54731.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/ed26e54731.jpg" alt="Box of Rutland Safe Lite Fire Starter Squares, 24 count, with brown wax cubes shown in front of the packaging." style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 I'm a big fan of the [paraffin fire starters](http://www.amazon.com/dp/B002V3E8RK/) for the Egg. Feel free to start with the Big Green Egg brand, but I would quickly switch due to price. I get these in boxes by the hundreds at my local hardware store and I swear it is the same product inside.
 
@@ -65,7 +65,7 @@ I've used these all the time and I could count on one hand the number of times I
 
 #### Big Green Egg Charcoal
 
-<img src="https://www.thingelstad.com/uploads/2020/b82c70ad44.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/b82c70ad44.jpg" alt="Green bag of Big Green Egg 100 percent Natural Lump Charcoal, 20 lb bag" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 You're buying a charcoal grill, you need some charcoal. If you previously used charcoal briquettes throw those away. Use only natural lump charcoal in your Egg.
 
@@ -79,7 +79,7 @@ If you decide to play with other charcoal, make sure to consult the charcoal dat
 
 #### Serious Hand Protection
 
-<img src="https://www.thingelstad.com/uploads/2020/4abf9bdf95.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/4abf9bdf95.jpg" alt="Black neoprene oven mitt with a loop hanger at the top, shown flat against a white background" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 Working with the Egg you are going to need some very serious hand protection. I have two options that I use. I have a pair of very thick [welding gloves](http://www.amazon.com/dp/B000JFCEDM/). These work well for handling heavy and very hot pieces of ceramic, such as removing the plate setter from the grill when it is hot. However, if they get at all moist I'm in for big trouble. The heat will flash through in no time.
 
@@ -101,7 +101,7 @@ These items are not required, but they are highly recommended. You'll be able to
 
 #### Cast Iron Grid
 
-<img src="https://www.thingelstad.com/uploads/2020/00033a5e47.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/00033a5e47.jpg" alt="Round cast iron cooking grate with parallel ridges, viewed from above against a white background." style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 It took me a while to get a [cast iron grid](http://biggreenegg.com/product/cast-iron-cooking-grids/) for my Egg. I just used the porcelain one for everything. Mostly that is fine, but the cast iron grid is really needed if you want to get good char marks (and the flavor!) on steaks or even vegetables.
 
@@ -111,7 +111,7 @@ The cast iron grid is also very useful for veggies. The spaces between the grid 
 
 #### Thermapen Instant Read Digital Thermometer
 
-<img src="https://www.thingelstad.com/uploads/2020/e1971cf00d.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/e1971cf00d.jpg" alt="Red Thermoworks Thermapen instant-read meat thermometer with folding probe, displaying 140.5 degrees Fahrenheit on LCD screen." style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 My good friend and grilling mentor Mike introduced me to the [Thermapen](http://www.amazon.com/dp/B002GIZZWM/) and I can't imagine grilling without it, and certainly not smoking anything. The Thermapen is a must have for me, but I left it as recommended since you can cook without it. You can also drive a car with your feet if you like. Yes, it is $100 for a thermometer, but it's worth it.
 
@@ -119,7 +119,7 @@ I've written before about the miracles of the Thermapen. The speed that the inst
 
 #### Grill Gripper
 
-<img src="https://www.thingelstad.com/uploads/2020/bac2678e2e.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/bac2678e2e.jpg" alt="Metal spring-loaded tongs with long handles and serrated gripping tips, shown closed against a white background" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 The [grill gripper](http://www.amazon.com/dp/B001EEZR3G/) is more needed than you may think. I use it every time I grill. It is what I use to lift the porcelain grid out of the grill and get the fire started.
 
@@ -129,7 +129,7 @@ Unfortunately, you cannot grip the cast iron grid with this. The gripper doesn't
 
 #### Pizza Stone
 
-<img src="https://www.thingelstad.com/uploads/2020/ae50a62524.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/ae50a62524.jpg" alt="Two round ceramic convEGGtor plates (heat deflector stones) for a Big Green Egg grill, shown side by side on white background." style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 You may have a pizza stone already, but be careful. The Egg can get really hot, hotter than a lot of grills. I have read temperatures that exceed my infrared thermometer and just show +999 on the surface. When I do pizza I have a full firebox, and the top and bottom air vents are wide open. It's very hot.
 
@@ -139,7 +139,7 @@ If your stone doesn't indicate a rating, or is less than 3/4 inch thick I would 
 
 #### Ash pan
 
-<img src="https://www.thingelstad.com/uploads/2020/45a47f71d6.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/45a47f71d6.jpg" alt="Black dustpan with a long handle, viewed from the front against a white background" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 The [ash pan](http://www.amazon.com/dp/B001EF1S88/) isn't required but you will miss not having it. You use this with the ash tool to collect the ash out of the Egg. You could use anything else to catch it, but the key is that the Egg is round so there is a curve. The winning feature of the ash pan is that it is the same curvature as your Egg, and has a little lip that sits into the vent mechanism to make a tight seal.
 
@@ -147,7 +147,7 @@ It is worth noting that even with the ash pan you should plan that there will be
 
 #### Meat hook
 
-<img src="https://www.thingelstad.com/uploads/2020/574c7f46ce.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/574c7f46ce.jpg" alt="Long metal BBQ skewer with a black handle and a hooked end for handling food on the grill" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 There is nothing Big Green Egg specific about the [meat hook](http://www.amazon.com/dp/B000MLDC0W/), I just find it to be such a wonderful tool for dealing with meat on the grill. I find that I can deal with a tightly packed cooking surface better with it.
 
@@ -159,7 +159,7 @@ These optional items you can probably skip.
 
 #### Grill Extender
 
-<img src="https://www.thingelstad.com/uploads/2020/521c1c114d.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/521c1c114d.jpg" alt="Round stainless steel cooking grate with legs, designed for use with a Big Green Egg kamado grill" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 I have one of these riser racks and it is handy for times when you are doing a lot of food. If I do a full brisket I will often cut off the point and put it on the riser rack. It also is handy if you are doing a lot of corn and want to get another 8 or so ears on the grill.
 
@@ -167,7 +167,7 @@ Beware that it isn't very heavy-duty so I wouldn't put a dutch oven on it. It's 
 
 #### Cast iron Griddle
 
-<img src="https://www.thingelstad.com/uploads/2020/eae6bcd168.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/eae6bcd168.jpg" alt="Dark brown semicircular plastic convEGGtor plate accessory for a Big Green Egg ceramic grill, viewed from above" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 I have one of these for two reasons. I like to have it to sear meat or do a burger in a fried (versus grilled) style. I also like it for cooking vegetables on, or if you are doing up some potatoes to go with your meal. If you're doing breakfast on the Egg this is a great way to do some hash browns while your sausage cooks on the other side.
 
@@ -177,7 +177,7 @@ These are some things that you may think you should buy, and I really recommend 
 
 #### Electric Charcoal Starter
 
-<img src="https://www.thingelstad.com/uploads/2020/e891c1541a.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/e891c1541a.jpg" alt="Big Green Egg Electric Charcoal Starter device in green rectangular box packaging" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 I'm biased against the electric starters for a lot of reasons. I will say that a couple of friends of mine got them and they like it. I also know that my favorite Egg seller, Kitchen Window, regularly recommends these to customers. I don't have one and won't be buying one.
 
@@ -189,13 +189,13 @@ To elaborate, if I'm looking for a 220 degree Egg temperature for a brisket I to
 
 #### Chimney Starter
 
-<img src="https://www.thingelstad.com/uploads/2020/bad966cae2.jpg" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/bad966cae2.jpg" alt="Silver cylindrical chimney starter with ventilation holes and folding metal handle, used for lighting charcoal" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 If you are looking at one of these your probably coming from a kettle grill. You don't need these at all on an Egg. The lump charcoal starts easily, and the firebox of the egg is its own containment area. If you are used to using one of these on your existing grill, please don't try to use it on your Egg.
 
 #### Drip pan
 
-<img src="https://www.thingelstad.com/uploads/2020/e91c50769e.gif" style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
+<img src="https://www.thingelstad.com/uploads/2020/e91c50769e.gif" alt="Two dark bronze nonstick baking pans, one round and one rectangular, side by side on a white background." style="float: right; padding-left: 10px; padding-bottom: 10px; width: 170px; max-width: 170px" />
 
 I will admit that I was foolish enough to buy a drip pan. One of the great things about the Egg is that you really don't clean it. If it's dirty, just start the fire. At 800 degrees it will be clean. 😀 Don't worry about dripping from meat getting on anything, just let it burn down.
 

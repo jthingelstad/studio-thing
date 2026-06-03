@@ -9,4 +9,4 @@ categories: []
 
 Very pretty sunset colors on the lake tonight. 
 
-<img src="https://www.thingelstad.com/uploads/2021/7c5f88ff80.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/7c5f88ff80.jpg" width="600" height="450" alt="Rippling lake water at sunset with a silhouetted treeline and warm orange and peach sky on the horizon" />

@@ -9,4 +9,4 @@ categories: []
 
 Nice place to put your feet in the water and relax a bit. Littleton, NH. 
 
-<img src="https://www.thingelstad.com/uploads/2021/7fcdefc875.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/7fcdefc875.jpg" width="600" height="450" alt="Rocky shallow river flowing under a wooden covered bridge surrounded by lush green vegetation in Littleton NH" />

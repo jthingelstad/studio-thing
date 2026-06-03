@@ -9,16 +9,16 @@ categories: ["Minnestar"]
 
 My friend, and fellow Minnestar Catalyzer, [Adrienne Peirce](http://adriennepeirce.com) has this amazing house that sits on **eight acres** of land, and they host an annual event with bands playing all day, fun things for kids, yard games, food, and chill vibes to hang out in all day long. In all the years they have been hosting Farmhilly, we've never been able to attend, until this year. We finally got to attned Farmhilly 8 and had a nice chill afternoon with music, great weather, and the longest game of cornhole ever (the boys prevailed 21-20!).
 
-![](https://www.thingelstad.com/uploads/2023/524ae11b-2df3-4255-88e3-35fb53b3baa9.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/524ae11b-2df3-4255-88e3-35fb53b3baa9.jpg" alt="Two musicians perform on an outdoor wooden stage beneath a Farmhilly banner, surrounded by speakers, lights, and amplifiers, with trees behind them.">
 
-![](https://www.thingelstad.com/uploads/2023/351efae0-ec82-4e10-8ad5-c493e65e325f.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/351efae0-ec82-4e10-8ad5-c493e65e325f.jpg" alt="Fallen dead tree with gnarled branches in a grassy yard where people gather under canopy tents near a white farmhouse">
 
-![](https://www.thingelstad.com/uploads/2023/6be9677b-3b93-4627-8112-4ba5c7dc92f3.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/6be9677b-3b93-4627-8112-4ba5c7dc92f3.jpg" alt="Massive old oak tree with sprawling branches on a green lawn, a person sitting on a rope swing hanging from one branch">
 
-![](https://www.thingelstad.com/uploads/2023/947932dc-9a0a-4c5e-95c8-13db6869a4d6.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/947932dc-9a0a-4c5e-95c8-13db6869a4d6.jpg" alt="Two people toss bean bags in a cornhole game on a grassy lawn, with a painted ladybug board in the foreground and trees behind.">
 
-![](https://www.thingelstad.com/uploads/2023/57669838-fdbf-48f8-b008-11b6770ab838.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/57669838-fdbf-48f8-b008-11b6770ab838.jpg" alt="Small crowd seated on a log and standing on a grassy hillside watching a guitarist perform on a covered outdoor stage labeled farmhilly">
 
-![](https://www.thingelstad.com/uploads/2023/186e9dd2-4d86-434c-b9a0-697fddd1a5d0.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/186e9dd2-4d86-434c-b9a0-697fddd1a5d0.jpg" alt="Wood slice craft discs decorated with paint, beads, googly eyes, and pipe cleaners displayed on a white board at an outdoor event">
 
-![](https://www.thingelstad.com/uploads/2023/b5559fb1-643f-4c61-86c8-11c37494eeeb.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/b5559fb1-643f-4c61-86c8-11c37494eeeb.jpg" alt="Schedule stapled to a tree listing 10 bands performing from 1:30 to 9:00pm with a pizza break at 5:30">

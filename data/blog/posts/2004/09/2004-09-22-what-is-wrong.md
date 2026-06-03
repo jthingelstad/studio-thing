@@ -11,7 +11,7 @@ I've been having some "fun" (that's in the geekiest sense of the word in this ca
 
 Anyway, I was looking at spider activity and this just stunned me.
 
-![](https://www.thingelstad.com/uploads/2020/d62785d62b.png)
+<img src="https://www.thingelstad.com/uploads/2020/d62785d62b.png" alt="Bar chart of web spider hits showing MSN Robot far exceeding all others at over 20000 hits, with Googlebot second at around 5000.">
 
 What is wrong with MSN!? They have hit our site **four times** more than any other spider out there. That seems a bit excessive! Gotta wonder if that is the norm for them.
 

@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We really enjoyed [BlacKkKlansman](https://imdb.com/title/tt7349662/) from Spike Lee. Good story, powerful message. 🎬
 
-<img src="https://www.thingelstad.com/uploads/2018/64591b0efa.jpg" width="405" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/64591b0efa.jpg" alt="Movie poster for BlacKkKlansman, a Spike Lee film, showing a man in a leather coat and police badge against a black-and-white American flag." width="405" height="600" />

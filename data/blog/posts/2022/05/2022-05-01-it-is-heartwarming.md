@@ -9,4 +9,4 @@ categories: []
 
 It is heartwarming to see homes in the Twin Cities supporting Ukraine. 🇺🇦💙💛
 
-<img src="https://www.thingelstad.com/uploads/2022/26257cc868.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/26257cc868.jpg" width="600" height="600" alt="Ukrainian flag flying from the porch of a gray house with white columns, number 402, on an overcast day." />

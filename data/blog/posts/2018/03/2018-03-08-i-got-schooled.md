@@ -9,4 +9,4 @@ categories: []
 
 I got schooled today in ping pong 🏓 . Next time I need to practice up before I come to visit. 
 
-<img src="https://www.thingelstad.com/uploads/2018/dd7f36eee8.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/dd7f36eee8.jpg" alt="Two men playing ping pong in an office lobby, with coworkers watching near elevator doors in the background." width="600" height="450" />

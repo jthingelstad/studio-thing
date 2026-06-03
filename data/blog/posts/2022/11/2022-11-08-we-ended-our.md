@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 We ended our day in small groups with #TeamSPS building bikes for kids! A fun event and doing a good thing at the same time. Team “Another Double” had a great time! 🤩
 
-<img src="https://www.thingelstad.com/uploads/2022/0d3c49f55f.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/0d3c49f55f.jpg" width="600" height="600" alt="Group of seven coworkers posing with a completed kids bike they built at a charity team building event in a convention hall.">

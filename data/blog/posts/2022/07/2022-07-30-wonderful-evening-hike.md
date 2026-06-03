@@ -9,4 +9,4 @@ categories: []
 
 Wonderful evening hike to Svartifoss. 
 
-<img src="https://www.thingelstad.com/uploads/2022/4ac637cf4f.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/4ac637cf4f.jpg" width="600" height="450" alt="Family of four smiling together in front of Svartifoss waterfall framed by dark basalt columns in Iceland" />

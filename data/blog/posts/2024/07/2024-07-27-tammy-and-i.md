@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I toasting our 22nd Anniversary! 🥂💍🥰
 
-<img src="https://www.thingelstad.com/uploads/2024/e69dae8000.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/e69dae8000.jpg" width="600" height="450" alt="Two people holding champagne flutes on a wooded deck overlooking ferns and a lake, smiling at the camera.">

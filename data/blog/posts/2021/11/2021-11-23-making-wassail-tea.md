@@ -9,4 +9,4 @@ categories: []
 
 Making [Wassail Tea](https://www.thingelstad.com/2004/11/01/wassail-tea.html) means that it is officially the beginning of the holiday season for us!
 
-<img src="https://www.thingelstad.com/uploads/2021/6acbeb4efe.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/6acbeb4efe.jpg" width="600" height="599" alt="Hand pouring orange juice from a plastic jug into a large pot of golden liquid with whole peppercorns on a stovetop" />

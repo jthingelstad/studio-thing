@@ -9,4 +9,4 @@ categories: []
 
 Lunch at [The Naughty Greek](https://www.thenaughtygreek.com).
 
-![](https://www.thingelstad.com/uploads/2020/21a10914ab.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/21a10914ab.jpg" alt="Woman and two children posing on a sidewalk under The Naughty Greek Athenian Street Food sign on a brick building.">

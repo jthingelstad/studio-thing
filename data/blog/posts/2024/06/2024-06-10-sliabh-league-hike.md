@@ -12,4 +12,4 @@ In the morning we took a boat tour to see Sliabh League from the water. We also 
 These spots are incredible and are over three times higher than what we saw at the Cliffs of Moher. However, the Cliffs of Moher at least appear to be more sheer in their drops. Sliabh League looks more mountainous with plenty of vertical drops as well. 
 
 
-<img src="https://www.thingelstad.com/uploads/2024/a14490afdc.jpg" width="600" height="500" alt=""><img src="https://www.thingelstad.com/uploads/2024/6eba2dab44.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/a14490afdc.jpg" width="600" height="500" alt="Panoramic view of Slieve League cliffs rising steeply from dark blue Atlantic waters, with green grass and heather in the foreground under a blue sky with clouds."><img src="https://www.thingelstad.com/uploads/2024/6eba2dab44.jpg" width="600" height="450" alt="Four people posing for a selfie at the Sliabh League cliffs with dramatic rocky sea cliffs and blue ocean behind them">

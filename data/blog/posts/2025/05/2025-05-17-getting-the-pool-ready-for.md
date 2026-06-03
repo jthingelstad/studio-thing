@@ -9,4 +9,4 @@ categories: []
 
 Getting the pool ready for summer! 
 
-<img src="https://www.thingelstad.com/uploads/2025/b4c91cdaf3.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/b4c91cdaf3.jpg" width="600" height="450" alt="Rectangular backyard pool with a gray slide and robotic cleaner on the deck, beside a dark blue house and lake view.">

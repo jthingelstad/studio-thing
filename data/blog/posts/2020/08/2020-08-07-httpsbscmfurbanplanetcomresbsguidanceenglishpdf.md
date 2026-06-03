@@ -4,9 +4,9 @@ url: "https://www.thingelstad.com/2020/08/07/httpsbscmfurbanplanetcomresbsguidan
 title: ""
 published: "2020-08-07T13:24:12+00:00"
 post_kind: micropost
-categories: ["Scrapbook"]
+categories: []
 ---
 
 Minneapolis Public Schools phased approach to managing COVID-19. 
 
-<img src="https://www.thingelstad.com/uploads/2020/630b4306cd.jpg" width="479" height="619" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/630b4306cd.jpg" width="479" height="619" alt="Minneapolis Public Schools 5-phase COVID-19 learning plan from Distance Learning only through Return to Full In-Person Learning" />

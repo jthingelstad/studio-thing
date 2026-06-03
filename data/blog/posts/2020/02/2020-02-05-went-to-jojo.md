@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Went to [Jojo Rabbit](https://en.wikipedia.org/wiki/Jojo_Rabbit) tonight. Great movie, hard to explain. Go see it. 🎬
 
-<img src="https://www.thingelstad.com/uploads/2020/c9be552630.jpg" width="401" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/c9be552630.jpg" width="401" height="600" alt="Movie poster for Jojo Rabbit showing a boy in Nazi Youth uniform surrounded by cast members in WWII-era costumes, red background." />

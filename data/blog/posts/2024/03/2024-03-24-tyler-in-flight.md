@@ -19,6 +19,6 @@ While on Milwaukee Spring Break we took a short drive 40 miles south to Gurnee, 
 
 Here is a photo of him taking the pilot seat right before starting the simulation.
 
-<img src="https://www.thingelstad.com/uploads/2024/img-1062.jpeg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/img-1062.jpeg" width="600" height="450" alt="Young person in a red jacket seated in the captain seat of a Boeing 737-800 full-cockpit flight simulator, smiling at the camera, surrounded by instrument panels and displays.">
 
 _Part of the [Milwaukee Spring Break collection](https://www.thingelstad.com/collections/milwaukee-spring-break/)._

@@ -9,4 +9,4 @@ categories: []
 
 Chase and Izzy chilling out on their bed.
 
-![](https://www.thingelstad.com/uploads/2020/301cd76bac.png)
+<img src="https://www.thingelstad.com/uploads/2020/301cd76bac.png" alt="Two dogs resting together on a large red corduroy dog bed, one small white terrier and one larger black dog wearing an orange collar.">

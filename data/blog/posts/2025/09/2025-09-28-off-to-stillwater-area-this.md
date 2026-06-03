@@ -9,4 +9,4 @@ categories: []
 
 Off to Stillwater area this morning. Starting with breakfast at [Mon Petit Chéri](https://www.mpcstillwater.com). 
 
-<img src="https://www.thingelstad.com/uploads/2025/47af82027f.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/47af82027f.jpg" width="600" height="600" alt="Storefront of Lift Bridge Cowork and Mon Petit Cheri Bakery and Kitchen on a sunny small-town main street with fall pumpkins and mums outside.">

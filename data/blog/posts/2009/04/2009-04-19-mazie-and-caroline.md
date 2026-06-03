@@ -9,4 +9,4 @@ categories: []
 
 Mazie and Caroline at the [Minnesota Zoo](http://mnzoo.org/)!
 
-![](https://www.thingelstad.com/uploads/2020/91d0fecc05.png)
+<img src="https://www.thingelstad.com/uploads/2020/91d0fecc05.png" alt="Two young girls wearing handmade paper crown hats smile at the camera indoors, one waving at the camera">

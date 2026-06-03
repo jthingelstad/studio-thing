@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/08/04/iceland-log-day.html"
 title: "Iceland Log Day 13"
 published: "2022-08-04T21:47:15+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 Thursday, August 4th  
@@ -19,7 +19,7 @@ Morning was very cold and windy, and improved throughout day.
 - Return to Blue View Cabin for relaxing evening. 
 - Second session in hot tub. Great!
 
-<img src="https://www.thingelstad.com/uploads/2022/b19e4a02c1.png" width="600" height="325" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/b19e4a02c1.png" width="600" height="325" alt="Google Maps showing a driving route connecting Gullfoss Falls, Restaurant Mika, and Þingvellir National Park near Reykjavik, Iceland." />
 
 Jump to day 
 [0](https://www.thingelstad.com/2022/07/22/iceland-log-day.html), 

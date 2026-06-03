@@ -7,9 +7,7 @@ post_kind: post
 categories: []
 ---
 
-[I've been using Spillo](https://www.thingelstad.com/2016/02/20/spillo-a-powerful.html) for
-about a week now and am finding it really great. Here is a quick wish
-list though that I would love to see added.
+[I've been using Spillo](https://www.thingelstad.com/2016/02/20/spillo-a-powerful.html) for about a week now and am finding it really great. Here is a quick wish list though that I would love to see added.
 
 1.  **Help with URL redirects.** If you click on a bookmark in Spillo it
     shows the web page, great. However, if when Spillo requests the
@@ -55,8 +53,7 @@ list though that I would love to see added.
     "Bookmarks added on Saturday or Sunday", "Bookmarks added in 2010",
     "Bookmarks added after 6pm and before 6am".
 
-Tag management in general is an area where I continue to hope for an
-application like Spillo to help out even more.
+Tag management in general is an area where I continue to hope for an application like Spillo to help out even more.
 
 1.  Spillo already shows the number of times a tag has been used, would
     be nice to see the date it was last used as well.

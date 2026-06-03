@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/07/31/iceland-log-day.html"
 title: "Iceland Log Day 9"
 published: "2022-07-31T22:40:07+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 Sunday, July 31st  
@@ -18,7 +18,7 @@ Pleasant weather.
 - Get groceries at KR in Vik.
 - Drive to [The Garage](https://thegarage.is) to check-in. This place is amazing!
 
-<img src="https://www.thingelstad.com/uploads/2022/dc19771025.png" width="600" height="340" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/dc19771025.png" width="600" height="340" alt="Google Maps route from Fosshotel Glacier Lagoon to The Garage in Vik Iceland, 208 km, 2 hours 29 minutes via Route 1" />
 
 Jump to day 
 [0](https://www.thingelstad.com/2022/07/22/iceland-log-day.html), 

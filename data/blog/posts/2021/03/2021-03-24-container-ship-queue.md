@@ -11,8 +11,8 @@ Having the [Ever Given, a massive container ship, stuck in the Suez Canal](https
 
 They normally pass 50 ships a day through the canal. With so many backed up, it will be a few days before things get back to normal. 😬
 
-<img src="https://www.thingelstad.com/uploads/2021/7ea3150915.jpg" width="600" height="550" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/7ea3150915.jpg" width="600" height="550" alt="Map showing the Ever Given container ship stopped in the Suez Canal near Suez, Egypt, with dozens of vessels clustered and waiting at both ends of the canal." />
 
-<img src="https://www.thingelstad.com/uploads/2021/fcc0fff06e.jpg" width="600" height="553" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/fcc0fff06e.jpg" width="600" height="553" alt="Marine traffic map near Suez showing dozens of cargo vessels clustered in the Gulf of Suez with the Ever Given marked near the canal entrance." />
 
 [These pictures](https://www.bbc.com/news/world-middle-east-56516151) tell the story well.

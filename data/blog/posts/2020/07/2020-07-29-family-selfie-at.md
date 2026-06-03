@@ -9,4 +9,4 @@ categories: []
 
 Family selfie at Mt. Rushmore!
 
-<img src="https://www.thingelstad.com/uploads/2020/efc3391f53.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/efc3391f53.jpg" width="600" height="450" alt="Family of four wearing face masks posing for a selfie in front of Mount Rushmore in South Dakota" />

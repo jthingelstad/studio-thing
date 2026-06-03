@@ -9,4 +9,4 @@ categories: []
 
 Playing Lost Cities this way.
 
-<img src="https://www.thingelstad.com/uploads/2019/9b030d2bc8.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/9b030d2bc8.jpg" width="600" height="450" alt="Hand holding fan of numbered Lost Cities cards over a colorful game board with expedition path tiles and a card face-up in the center.">

@@ -9,4 +9,4 @@ categories: []
 
 Nice opportunity to network with other technology leaders, and try some delightful wines tonight! 🍷
 
-<img src="https://www.thingelstad.com/uploads/2018/d5f1c8a164.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2018/d5f1c8a164.jpg" alt="Rows of empty wine glasses arranged on a draped table alongside multiple bottles of red and white wine at a networking event." width="600" height="599" />

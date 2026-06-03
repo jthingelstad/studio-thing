@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/03/25/milwaukee-spring-break.html"
 title: "Milwaukee Spring Break: Day 3"
 published: "2024-03-26T03:46:38+00:00"
 post_kind: post
-categories: []
+categories: ["Coffee"]
 ---
 
 - Jamie has morning coffee at [Discourse Coffee](https://www.discourse.coffee).
@@ -15,7 +15,7 @@ categories: []
 - [Milwaukee Public Market](https://milwaukeepublicmarket.org) for choose your own dinner: [Freese's Candy Shoppe](https://www.freesescandy.com), [Foltz Family Market](https://foltzfamilymarket.com), [C. Adam's Bakery](http://www.cadamsbakery.com), and [West Allis Cheese & Sausage Shoppe](https://www.westallischeese.com). Olive Oil for home from [Oro Di Oliva](https://orodioliva.com). 
 - [Battle House Laser Combat](https://www.battlehouselasercombat.com). Tyler and Jamie were on Blue Team with more players and won most of the games. 
 
-<img src="https://www.thingelstad.com/uploads/2024/bac1b031dd.jpg" width="600" height="450" alt=""><br/>
+<img src="https://www.thingelstad.com/uploads/2024/bac1b031dd.jpg" width="600" height="450" alt="Four people posing with exaggerated sad expressions at the closed Oriental Theatre door showing a No Heat or Water sign."><br/>
 <em>All of us were very sad that the Oriental Theatre water and heat were out of order.</em>
 
 Jump to day 

@@ -14,7 +14,7 @@ We are trying something new thinking about our family and how we use our devices
 
 This first week I had spent **2h 43m** on average per day on my phone. My most frequently used apps were Safari, [Unread](https://www.goldenhillsoftware.com/unread/) and Mail. I averaged **55 pickups** a day. My insight or surprise was that I spent **2h 5m** on the New York Times website that week. That was more than I would want to spend. So, I created a rule to limit that website to 20m a day.
 
-<img src="https://www.thingelstad.com/uploads/2021/33e5ae4ff3.jpg" style="max-width: 400px; " />
+<img src="https://www.thingelstad.com/uploads/2021/33e5ae4ff3.jpg" alt="iOS Screen Time App Limits screen showing limits set for Unread, Twitter, and The New York Times apps on Megapad Pro and Megaphone XS devices." style="max-width: 400px; " />
 
 The review was pretty easy, took about 15 minutes and had plenty of laughs as well as everyone went through their data. There was some pride in high and low numbers. At worst, we gained awareness and had a discussion about the relationship with our devices. At best, we created some structure to help guide us in the future as well. 
 

@@ -9,4 +9,4 @@ categories: []
 
 Super good soft serve Maple Creamie at [Red Barn Ice Cream](https://www.redbarnicecreamshop.com). 🍦
 
-<img src="https://www.thingelstad.com/uploads/2025/cc8101f981.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/cc8101f981.jpg" width="450" height="600" alt="Hand holding a soft-serve vanilla maple ice cream cone in a Joy cone wrapper at Red Barn Ice Cream shop">

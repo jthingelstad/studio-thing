@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/07/26/iceland-log-day.html"
 title: "Iceland Log Day 4"
 published: "2022-07-26T23:24:02+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 Tuesday, July 26th  
@@ -20,7 +20,7 @@ Cool and Pleasant
 - Drive to Mývatn.
 - Arrive at [Fosshotel Mývatn](https://www.islandshotel.is/hotels-in-iceland/fosshotel-myvatn).
 
-<img src="https://www.thingelstad.com/uploads/2022/d85f3ea962.png" width="600" height="397" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/d85f3ea962.png" width="600" height="397" alt="Google Maps route from Akureyri through Godafoss Waterfall and Husavik to Fosshotel Myvatn, 133 km, 1 hr 47 min" />
 
 Jump to day 
 [0](https://www.thingelstad.com/2022/07/22/iceland-log-day.html), 

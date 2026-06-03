@@ -9,4 +9,4 @@ categories: []
 
 We all stopped at [Breakout ND](https://www.breakoutnd.com/) today in Bismarck to do the [Gemini Quantum Quest](https://www.breakoutnd.com/gemini-quantum-quest) game. The game is a split-start so Mazie and Tyler went to one place and Tammy and I to another. After getting through the initial puzzles we joined forces and saved the space station with 11m 15s still on the clock! [Room 82](https://www.thingelstad.com/lists/escape-rooms/)!
 
-<img src="https://www.thingelstad.com/uploads/2025/a192701644.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/a192701644.jpg" width="600" height="450" alt="Four people smiling together in a dimly lit room with green LED lighting and a wall-mounted TV behind them.">

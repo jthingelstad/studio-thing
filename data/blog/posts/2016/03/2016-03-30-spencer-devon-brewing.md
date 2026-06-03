@@ -9,4 +9,4 @@ categories: []
 
 [Spencer Devon Brewing](https://spencerdevonbrewing.com) [beer](https://spencerdevonbrewing.com/menus/#beer) flight: Sunkin' Road, Bittersweet IPA, Lauck's Island, Hush Hush. 🍺
 
-![](https://www.thingelstad.com/uploads/2020/173e0a6e9c.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/173e0a6e9c.jpg" alt="Four small glasses of craft beer on a wooden flight board at a brewery, with a printed menu slip listing the four beers beside it.">

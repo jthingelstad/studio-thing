@@ -8,4 +8,4 @@ categories: ["Kubb", "Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/5649610">5649610</a> at <strong><a href="https://poap.gallery/drops/66379">TeamSPS 2022 Kubb Tournament</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/teamsps-2022-kubb-tournament-2022-logo-1663722068515.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/teamsps-2022-kubb-tournament-2022-logo-1663722068515.png" alt="Circular badge reading Team SPS 2022 Kubb Tourney showing wooden kubb blocks and king piece with SPS logo on grass" width="500" height="500" />

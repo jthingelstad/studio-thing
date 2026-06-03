@@ -9,4 +9,4 @@ categories: []
 
 It is worth driving to Bayfield just to get the Wine Bread at the [Candy Shoppe](http://candyshoppe.four-food.com/). So delicious. 🤤
 
-<img src="https://www.thingelstad.com/uploads/2018/340bb11c16.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/340bb11c16.jpg" alt="Large sweet breads topped with cream cheese glaze displayed on a bakery counter, with blueberry and almond varieties visible, staff working at stove in background." width="600" height="600" />

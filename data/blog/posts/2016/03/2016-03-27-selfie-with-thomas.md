@@ -9,6 +9,6 @@ categories: []
 
 Selfie with Thomas Jefferson at [Monticello](https://www.monticello.org).
 
-<img src="https://www.thingelstad.com/uploads/2021/138c24c7bd.jpg" width="426" height="320" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/138c24c7bd.jpg" width="426" height="320" alt="Man in a pink plaid shirt taking a selfie beside a bronze statue of Thomas Jefferson at Monticello" />
 
-<img src="https://www.thingelstad.com/uploads/2021/13be0cef70.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/13be0cef70.jpg" width="450" height="600" alt="Man in red plaid shirt posing beside a life-size bronze statue of Thomas Jefferson on a brick plaza at Monticello." />

@@ -4,9 +4,9 @@ url: "https://www.thingelstad.com/2016/03/05/goosebumps.html"
 title: ""
 published: "2016-03-06T01:27:04+00:00"
 post_kind: micropost
-categories: ["Movies"]
+categories: []
 ---
 
 We watched Goosebumps tonight. 
 
-![](https://www.thingelstad.com/uploads/2020/466b9093d2.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/466b9093d2.jpg" alt="Goosebumps movie poster featuring three figures standing before a glowing book surrounded by monsters including a werewolf and gnomes.">

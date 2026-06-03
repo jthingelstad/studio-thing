@@ -7,4 +7,4 @@ post_kind: post
 categories: []
 ---
 
-![](https://www.thingelstad.com/uploads/2020/0e92cb61f4.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/0e92cb61f4.jpg" alt="Watercolor painting of a lone figure standing on a rocky cliff edge above misty water, with trees behind them.">

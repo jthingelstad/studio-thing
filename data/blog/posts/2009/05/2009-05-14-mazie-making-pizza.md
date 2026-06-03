@@ -9,4 +9,4 @@ categories: []
 
 Mazie making pizza!
 
-![](https://www.thingelstad.com/uploads/2020/b6b22fc040.png)
+<img src="https://www.thingelstad.com/uploads/2020/b6b22fc040.png" alt="Young girl wearing a red apron spreading tomato sauce on a homemade pepperoni pizza in a kitchen">

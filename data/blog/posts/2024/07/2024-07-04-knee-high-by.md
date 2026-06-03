@@ -9,4 +9,4 @@ categories: []
 
 Knee high by the 4th of July? ✅
 
-<img src="https://www.thingelstad.com/uploads/2024/b55911f771.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/b55911f771.jpg" width="600" height="337" alt="Lush green corn stalks filling a large midwestern farm field under a partly cloudy summer sky with trees in the distance.">

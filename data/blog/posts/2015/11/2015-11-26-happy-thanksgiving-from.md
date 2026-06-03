@@ -9,6 +9,6 @@ categories: []
 
 Happy Thanksgiving from me and my mom!
 
-<img src="https://www.thingelstad.com/uploads/2019/de27fb247a.jpg" width="600" height="900" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/de27fb247a.jpg" width="600" height="900" alt="Man in blazer and plaid shirt with arm around older woman wearing a black P.E.R.F.E.C.T. BBQ apron, smiling indoors">
 
 Also see [2025](https://www.thingelstad.com/2025/11/27/happy-thanksgiving-from-my-mom.html) and [2021](https://www.thingelstad.com/2021/11/25/happy-thanksgiving-from.html).

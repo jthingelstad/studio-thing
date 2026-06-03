@@ -15,6 +15,6 @@ Good session on “Bitcoin Core Maintainers & the Path Forward” with **Gloria 
 
 Really great! 🙌
 
-<img src="https://www.thingelstad.com/uploads/2023/35251056e1.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/35251056e1.jpg" width="600" height="337" alt="Panel discussion on Bitcoin Core Maintainers and the Path Forward at Bitcoin 2023 Open Source Stage, with four panelists seated on stage before an audience.">
 
-<img src="https://www.thingelstad.com/uploads/2023/b07b28f5b9.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/b07b28f5b9.jpg" width="600" height="337" alt="Four panelists seated in white chairs on stage at Bitcoin 2023 Open Source Stage, speaking to a seated audience.">

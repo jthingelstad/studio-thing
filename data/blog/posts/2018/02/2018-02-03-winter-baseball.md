@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Winter baseball! ❄️⚾️
 
-<img src="https://www.thingelstad.com/uploads/2018/a46df88936.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/a46df88936.jpg" alt="Two kids and an adult play baseball in the snow with a black dog nearby, evergreen trees and a basketball hoop in the background." width="600" height="450" />

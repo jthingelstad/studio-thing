@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Fabulous visit to Indmax #TeamSPS in Hyderabad. Thank you for the warm welcome and great questions! 🇮🇳 
 
-<img src="https://www.thingelstad.com/uploads/2018/d69139b812.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/d69139b812.jpg" alt="Large group of office employees posing together in the Indmax workspace in Hyderabad, smiling at the camera." width="600" height="337" />

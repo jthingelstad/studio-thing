@@ -11,7 +11,7 @@ It was about a year ago that I made [my first purchase with Bitcoin Lightning](h
 
 I've continued to use Bitcoin Lightning. Unfortunately not for payment of goods. But my son has a Lightning wallet and we exchange funds with Lightning regularly. I've also onboarded at least 20 different people to Bitcoin by having them install Wallet of Satoshi, and then I put 1,000 sats (Satoshis, or 1/100,000,000 of a Bitcoin) in their wallet. It is simple, fast, and an eye opening experience.
 
-<img src="https://www.thingelstad.com/uploads/2024/891768c539.png" width="600" height="71" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/891768c539.png" width="600" height="71" alt="Wallet of Satoshi logo with a lightning bolt icon in a rounded square, rendered in golden yellow on a black background">
 
 All of this is to say that I was sad to hear about a month ago that Wallet of Satoshi is not going to operate in the United States anymore.
 

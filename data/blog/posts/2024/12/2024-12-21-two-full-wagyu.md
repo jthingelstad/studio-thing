@@ -9,6 +9,6 @@ categories: ["Cooking"]
 
 Two full Wagyu Tenderloins came out incredibly delicious. 3 hours in Sous Vides with a finish on Big Green Egg at 450 °F. 
 
-<img src="https://www.thingelstad.com/uploads/2024/e974a04e96.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/e974a04e96.jpg" width="450" height="600" alt="Man in a Christmas shirt slicing a cooked Wagyu tenderloin on a cutting board while a woman holding a mug smiles beside him">
 
-<img src="https://www.thingelstad.com/uploads/2024/6428a2d940.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/6428a2d940.jpg" width="450" height="600" alt="Man in a Christmas shirt proudly holds a platter of sliced medium-rare Wagyu tenderloin in a decorated kitchen.">

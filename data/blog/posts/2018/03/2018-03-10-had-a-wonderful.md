@@ -9,4 +9,4 @@ categories: []
 
 Had a wonderful visit to the Taj Mahal this morning. Amazing palace. 
 
-<img src="https://www.thingelstad.com/uploads/2018/e637b9c510.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2018/e637b9c510.jpg" alt="Taj Mahal mausoleum in white marble with central dome and four minarets, green lawn and visitors in foreground, Agra India" width="600" height="599" />

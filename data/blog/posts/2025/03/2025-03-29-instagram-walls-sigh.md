@@ -9,4 +9,4 @@ categories: []
 
 Instagram walls. *sigh* 😔
 
-<img src="https://www.thingelstad.com/uploads/2025/5dc2abf909.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/5dc2abf909.jpg" width="600" height="449" alt="Corner bench with navy cushions and ocean-themed pillows below a SAY CHEESE sign and green fairy lights at Pizza Social AMI">

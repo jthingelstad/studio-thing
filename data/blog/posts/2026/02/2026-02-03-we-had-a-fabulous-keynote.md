@@ -9,4 +9,4 @@ categories: []
 
 We had a fabulous keynote from [JP Pawliw](https://ihhp.com) on the [Last Eight Percent](https://ihhp.com/culture-system/last-8-percent-culture-system/) today. 
 
-<img src="https://www.thingelstad.com/uploads/2026/621a9d3820.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/621a9d3820.jpg" width="600" height="450" alt="Bald speaker in grey blazer gesturing on stage beside a large slide reading The Last 8% Opportunity Building a High-Performance Culture">

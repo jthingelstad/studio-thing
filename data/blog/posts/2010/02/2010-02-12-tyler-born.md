@@ -11,4 +11,4 @@ Welcome Tyler Thingelstad to the world! Tammy rocked the delivery!
 
 8lb 3oz and 22 inches long! Everyone is doing well.
 
-![](https://www.thingelstad.com/uploads/2020/cf423b41a5.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/cf423b41a5.jpg" alt="Newborn baby boy wearing a blue hospital hat lying on a patterned hospital blanket with umbilical cord clamp visible">

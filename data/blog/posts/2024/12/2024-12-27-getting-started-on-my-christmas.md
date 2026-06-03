@@ -9,4 +9,4 @@ categories: []
 
 Getting started on my Christmas LEGO [Super Mario World: Mario & Yoshi](https://www.lego.com/en-us/product/super-mario-world-mario-yoshi-71438). Looks like a fun build!
 
-<img src="https://www.thingelstad.com/uploads/2024/a87c15ac1d.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/a87c15ac1d.jpg" width="600" height="450" alt="LEGO Super Mario World Mario and Yoshi set box with numbered parts bags and instruction booklet spread on a wooden table, snowman decoration in background.">

@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/e9e305babb.jpg" style="width: 96px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/e9e305babb.jpg" alt="Cyclist in blue and white jersey raising both arms in victory celebration at finish line" style="width: 96px; float: right; margin-left: 10px; " />
 
 Everyone, really, anybody knows [Lance](http://www.lancearmstrong.com/) [Armstrong](http://www.lancearmstrong.com/) and the [Tour de France](http://www.letour.com/indexus.html).Not everyone knows one of [Lance](http://www.lancearmstrong.com/)'s close friends and longtime teammate George Hincapie who took his first [Tour de France](http://www.letour.com/indexus.html) stage win today on the "Queen's Stage" (thus named for being the hardest day of the tour).
 

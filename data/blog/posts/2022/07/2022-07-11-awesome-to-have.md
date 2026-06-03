@@ -9,4 +9,4 @@ categories: []
 
 Awesome to have fiber directly into the house. Well done [US Internet](https://usinternet.com)! 👏
 
-<img src="https://www.thingelstad.com/uploads/2022/cde26d0489.png" width="600" height="568" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/cde26d0489.png" width="600" height="568" alt="Fast.com speed test showing 1.2 Gbps download, 880 Mbps upload, 17ms loaded latency, client and server both in Minneapolis US" />

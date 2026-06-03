@@ -9,4 +9,4 @@ categories: []
 
 Mazie is home for a short break and made some fresh **St. Olaf Cookies** tonight. These are so delicious! 🤤 
 
-<img src="https://www.thingelstad.com/uploads/2023/302ad12691.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/302ad12691.jpg" width="600" height="450" alt="Six freshly baked oatmeal cookies with M and Ms and chocolate chips on parchment paper on a baking sheet atop a gas stove.">

@@ -7,14 +7,7 @@ post_kind: post
 categories: []
 ---
 
-For Christmas the brother-in-laws on Tammy's side pick names. There are
-only four of us but we like the simplicity of just getting one name to
-pick better. For a couple of years now we've used a website called
-[DrawNames.com](http://www.drawnames.com/) to handle the name drawing,
-sending emails and even handling exclusions so you don't get the same
-person every year. They sent an email asking for feedback and I felt
-like sharing some thoughts with them and decided I should share them
-publicly too.
+For Christmas the brother-in-laws on Tammy's side pick names. There are only four of us but we like the simplicity of just getting one name to pick better. For a couple of years now we've used a website called [DrawNames.com](http://www.drawnames.com/) to handle the name drawing, sending emails and even handling exclusions so you don't get the same person every year. They sent an email asking for feedback and I felt like sharing some thoughts with them and decided I should share them publicly too.
 
 > I like your service a lot and if I had more name drawing groups at
 > Christmas I would use it for sure. I've suggested your service to
@@ -48,9 +41,4 @@ publicly too.
 > That's it. The service is nice and works really well. Just charge me
 > something. :-)
 
-My hope is that they have thought about charging before but assume that
-nobody would pay. It's the Internet right? Nobody pays. But they do.
-They pay in droves for the right thing. This website is worth as much to
-me as many iOS apps I've bought for $0.99. Maybe if they hear customers
-saying they would pay, they can see the path to something that pays the
-bills and is worth keeping around clarify a bit.
+My hope is that they have thought about charging before but assume that nobody would pay. It's the Internet right? Nobody pays. But they do. They pay in droves for the right thing. This website is worth as much to me as many iOS apps I've bought for $0.99. Maybe if they hear customers saying they would pay, they can see the path to something that pays the bills and is worth keeping around clarify a bit.

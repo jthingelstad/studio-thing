@@ -11,4 +11,4 @@ Fun #TeamSPS hockey game — Minnesota Wild v Colorado Avalanche! 🏒
 
 More than 60 years of SPS tenure between the four of us!
 
-<img src="https://www.thingelstad.com/uploads/2025/68dae4e96d.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2025/ea11da1e1e.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2025/c1d4599f2a.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/68dae4e96d.jpg" width="600" height="450" alt="NHL hockey game at Xcel Energy Center, Minnesota Wild in green versus Colorado Avalanche in white and burgundy during a faceoff, crowd filling the arena."><img src="https://www.thingelstad.com/uploads/2025/ea11da1e1e.jpg" width="600" height="450" alt="Four smiling fans in Minnesota Wild jerseys pose for a selfie in a packed NHL arena."><img src="https://www.thingelstad.com/uploads/2025/c1d4599f2a.jpg" width="600" height="450" alt="Minnesota Wild NHL game at Xcel Energy Center in St. Paul with a packed crowd in green jerseys watching play on the ice.">

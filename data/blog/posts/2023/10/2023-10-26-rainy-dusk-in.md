@@ -9,4 +9,4 @@ categories: []
 
 Rainy dusk in Downtown Minneapolis. 
 
-<img src="https://www.thingelstad.com/uploads/2023/7869466976.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/7869466976.jpg" width="450" height="600" alt="Wet downtown Minneapolis street at dusk flanked by skyscrapers disappearing into fog, with a skyway bridge and Minnesota Orchestra signage visible">

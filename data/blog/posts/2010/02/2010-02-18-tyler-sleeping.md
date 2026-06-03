@@ -9,4 +9,4 @@ categories: []
 
 Tyler Sleeping.
 
-![](https://www.thingelstad.com/uploads/2020/cde0b362f8.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/cde0b362f8.jpg" alt="Newborn baby sleeping peacefully, eyes closed, wearing a light green onesie, photographed in warm reddish light">

@@ -9,4 +9,4 @@ categories: []
 
 [Hot Bagels Abroad](https://bagelsabroad.com), so good. Nobody does bagels like New Jersey!
 
-![](https://www.thingelstad.com/uploads/2020/ed41f3cc1a.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/ed41f3cc1a.jpg" alt="Deli display case with trays of cream cheese scoops in flavors including vegetable, bacon, raisin, and strawberry, with Boars Head Muenster cheese below.">

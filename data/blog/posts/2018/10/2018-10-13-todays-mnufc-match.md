@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Today’s Minnesota United match wasn’t the one I would have picked to be the last of the season for me, but so be it. Looking forward to seeing everyone at the new stadium next year! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2018/f4a10f94a7.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/f4a10f94a7.jpg" alt="Large oval stadium under construction surrounded by dirt, pipes, and construction equipment on an overcast day." width="600" height="337" />

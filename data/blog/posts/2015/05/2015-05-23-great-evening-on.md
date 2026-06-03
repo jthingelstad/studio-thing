@@ -9,4 +9,4 @@ categories: []
 
 Great evening on the lake.
 
-<img src="https://www.thingelstad.com/uploads/2020/94ca1d1eef.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/94ca1d1eef.jpg" width="600" height="450" alt="Two Brothers Wobble IPA beer bottle in a deck railing cup holder overlooking a calm lake at dusk with lily pads and a dock in the background." />

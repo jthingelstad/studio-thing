@@ -9,4 +9,4 @@ categories: []
 
 **100 TON** mooring bollard in Duluth Harbor. 
 
-<img src="https://www.thingelstad.com/uploads/2025/f637d33649.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/f637d33649.jpg" width="600" height="600" alt="Yellow 700-ton mooring bollard on a concrete dock beside Lake Superior, with chain railing and far shoreline visible.">

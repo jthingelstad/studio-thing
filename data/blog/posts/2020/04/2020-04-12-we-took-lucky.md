@@ -9,4 +9,4 @@ categories: []
 
 We took Lucky on a walk that was just too long for her puppy stamina yesterday so I had to carry her for a while. 
 
-<img src="https://www.thingelstad.com/uploads/2020/fe1270e14d.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/fe1270e14d.jpg" width="450" height="600" alt="Man in blue plaid shirt carrying a fluffy white puppy on his shoulder along a paved path on a cloudy day." />

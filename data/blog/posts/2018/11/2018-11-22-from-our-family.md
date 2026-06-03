@@ -9,4 +9,4 @@ categories: []
 
 From our family to yours — **Happy Thanksgiving!**
 
-<img src="https://www.thingelstad.com/uploads/2018/5ab23d6a2c.jpg" width="450" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/5ab23d6a2c.jpg" alt="Family of four smiling together in a home kitchen, two adults and two children dressed in colorful plaid and patterned shirts" width="450" height="600" />

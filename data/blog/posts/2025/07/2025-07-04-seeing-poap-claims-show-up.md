@@ -9,4 +9,4 @@ categories: ["Crypto", "POAP2RSS"]
 
 Seeing [POAP](https://poap.xyz) claims show up on [Feedbin](https://feedbin.com) thanks to [POAP2RSS](https://www.poap2rss.com) is making me giddy! 🤩
 
-<img src="https://www.thingelstad.com/uploads/2025/bbf919fede.png" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/bbf919fede.png" width="600" height="400" alt="Feedbin RSS reader showing a POAP2RSS Created feed entry with a dark circular badge featuring fireworks and an RSS icon dated July 4 2025.">

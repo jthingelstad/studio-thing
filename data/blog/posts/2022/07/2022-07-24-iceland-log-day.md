@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/07/24/iceland-log-day.html"
 title: "Iceland Log Day 2"
 published: "2022-07-24T23:22:28+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: ["Coffee"]
 ---
 
 Sunday, July 24th  
@@ -22,7 +22,7 @@ Cool and Partly Sunny in the morning, and Cloudy and cold in Evening
 - Visit [Kirkjufell](https://en.wikipedia.org/wiki/Kirkjufell) Mountain and waterfall where Jamie took pictures for a long time and Tammy was tired and had a bad headache.
 - Arrive at Kirkjufell Guesthouse.
 
-<img src="https://www.thingelstad.com/uploads/2022/22d69bbe8d.png" width="600" height="348" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/22d69bbe8d.png" width="600" height="348" alt="Google Maps route from Silica Hotel near Reykjavik northwest to Kirkjufell Guesthouse on Snaefellsnes Peninsula, 307 km, 4 hr 3 min drive." />
 
 Jump to day 
 [0](https://www.thingelstad.com/2022/07/22/iceland-log-day.html), 

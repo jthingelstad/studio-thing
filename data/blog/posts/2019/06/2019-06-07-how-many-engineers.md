@@ -9,4 +9,4 @@ categories: []
 
 How many engineers does it take to get the screen to show up on the TV? 🤣
 
-<img src="https://www.thingelstad.com/uploads/2019/cdd908b3e0.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/cdd908b3e0.jpg" width="600" height="337" alt="Six men in a conference room trying to connect a laptop to an LG TV showing No Signal, two reaching behind the wall-mounted screen." />

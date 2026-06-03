@@ -9,7 +9,7 @@ categories: []
 
 Walking the [High Line](https://www.thehighline.org). Awesome.
 
-<img src="https://www.thingelstad.com/uploads/2024/20120421-100354-0001.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/20120421-100354-0001.jpg" width="600" height="400" alt="Visitors strolling the High Line elevated park in New York City, with lush greenery and old rail tracks in the foreground and buildings behind.">
 
 Other times on the [High Line](https://www.thehighline.org): 
 [2012](https://www.thingelstad.com/2012/04/21/walking-high-line.html),

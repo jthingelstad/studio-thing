@@ -9,4 +9,4 @@ categories: []
 
 X marks the spot?
 
-<img src="https://www.thingelstad.com/uploads/2021/56e2298b7f.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/56e2298b7f.jpg" width="600" height="450" alt="Blue sky with two airplane contrails crossing to form an X shape above suburban houses and bare winter trees" />

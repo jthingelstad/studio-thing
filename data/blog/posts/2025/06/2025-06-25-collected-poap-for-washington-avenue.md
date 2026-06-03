@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>Collected POAP <a href="https://collectors.poap.xyz/token/7376382">7376382</a> for <strong><a href="https://poap.gallery/drops/190529">Washington Avenue Bridge — 612 POAP Challenge</a></strong>.</p>
-        <p><img src="https://www.thingelstad.com/uploads/2025/84766e02-923b-4912-96bc-46441fe753ad.png" width="500" height="500" /></p>
+        <p><img src="https://www.thingelstad.com/uploads/2025/84766e02-923b-4912-96bc-46441fe753ad.png" alt="Pixel art badge for the 612 POAP Challenge showing a retro transit bus above the text Washington Avenue Bridge" width="500" height="500" /></p>

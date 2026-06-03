@@ -4,12 +4,12 @@ url: "https://www.thingelstad.com/2021/11/09/things-good-fall.html"
 title: "Things 4 Good Fall Fundraiser"
 published: "2021-11-10T03:28:49+00:00"
 post_kind: post
-categories: ["Candles", "Things 4 Good"]
+categories: ["Things 4 Good"]
 ---
 
 Our **[Things 4 Good](https://https://www.thingelstad.com/candles/) Fall Fundraiser** was a great success this weekend! We had more than 100 people stop in to buy **Things 4 Good Candles**, **Jiggy Thing Puzzle #001**, **Four Bees Honey**, and fresh baked cookies. We all had a lot of fun hosting people. The kids particularly enjoyed walking guests through the various options and checking people out. 
 
-![](https://www.thingelstad.com/uploads/2021/94d3b6a86f.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/94d3b6a86f.jpg" alt="Family of four in Things 4 Good shirts standing behind a table filled with candles, puzzle boxes, and honey bottles">
 
 All the proceeds are going to non-profits, and we raised… 
 
@@ -22,7 +22,7 @@ We gave everyone the opportunity to choose to direct their sale to any number of
 - **[Appetite for Change](https://appetiteforchangemn.org)** ([Donate](https://appetiteforchangemn.org/donate/)
 - **[Feed My Starving Children](https://www.fmsc.org)** ([Donate](https://give.fmsc.org/give/76206/#!/donation/checkout))
 
-<img src="https://www.thingelstad.com/uploads/2022/48ae442d31.png" width="600" height="209" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/48ae442d31.png" width="600" height="209" alt="Horizontal bar chart showing fundraiser proceeds by nonprofit: Feed My Starving Children 1497.96, Appetite for Change 1364.88, Free Bikes 4 Kidz 1235.46, Constellation Fund 658.71" />
 
 Seems that non-profits closest to kids and food got more engagement than the others.
 

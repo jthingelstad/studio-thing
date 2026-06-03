@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Family movie night! We watched [Jingle Jangle: A Christmas Journey](https://www.netflix.com/title/80232043) on Netflix. Great story and everyone enjoyed it! 🍿
 
-<img src="https://www.thingelstad.com/uploads/2020/5d19e2f34c.jpg" width="230" height="341" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/5d19e2f34c.jpg" width="230" height="341" alt="Movie poster for Jingle Jangle A Christmas Journey on Netflix showing three adults and a young girl holding a glowing orb with a flying robot above them." />

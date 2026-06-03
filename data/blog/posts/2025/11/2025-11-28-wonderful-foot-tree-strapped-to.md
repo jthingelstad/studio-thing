@@ -9,4 +9,4 @@ categories: []
 
 Wonderful 11 foot tree strapped to the top of the Model Y.
 
-<img src="https://www.thingelstad.com/uploads/2025/fcff90f00a.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/fcff90f00a.jpg" width="600" height="450" alt="Gray Tesla Model Y with a large Christmas tree strapped to its roof rack, parked at a tree lot with light snow on the ground.">

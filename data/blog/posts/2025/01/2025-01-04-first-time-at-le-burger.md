@@ -9,4 +9,4 @@ categories: []
 
 First time at [Le Burger 4304](https://www.leburger4304.com). We all agreed the fries were great. Burgers were very good with Jamie liking the most. We ordered doubles and should have gotten singles. Very busy. Will be back. 🍔
 
-<img src="https://www.thingelstad.com/uploads/2025/bc1e8bd5c5.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/bc1e8bd5c5.jpg" width="600" height="450" alt="Three burgers wrapped in Le Burger 4304 branded paper on a yellow tray with crinkle fries and a dipping sauce.">

@@ -9,4 +9,4 @@ categories: []
 
 It's raining, most everywhere. 
 
-<img src="https://www.thingelstad.com/uploads/2017/def327e0c3.jpg" width="599" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/def327e0c3.jpg" alt="Radar map of Minnesota showing heavy precipitation covering the Twin Cities metro area and surrounding regions" width="599" height="600" />

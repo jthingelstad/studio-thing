@@ -9,4 +9,4 @@ categories: []
 
 Holidays.
 
-<img src="https://www.thingelstad.com/uploads/2019/66d9aeb28e.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/66d9aeb28e.jpg" width="600" height="450" alt="Assorted holiday candy truffles shaped like Santa Claus faces and snowmen with pink cheeks and purple hats in paper cups">

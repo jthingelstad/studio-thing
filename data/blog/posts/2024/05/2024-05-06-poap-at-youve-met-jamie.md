@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7122301">7122301</a> at <strong><a href="https://poap.gallery/drops/173328">You've met Jamie Thingelstad at Tech Connect 2024</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/89bc3915-67d7-4365-8288-afae2197f7bb.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/89bc3915-67d7-4365-8288-afae2197f7bb.png" alt="Circular badge showing a smiling man in a navy polo shirt with mntech and Tech Connect 2024 logos and curved text around the edge" width="500" height="500" />

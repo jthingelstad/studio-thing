@@ -9,4 +9,4 @@ categories: []
 
 Chicago at night from the Hancock building. 
 
-<img src="https://www.thingelstad.com/uploads/2018/18a2faf3d5.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/18a2faf3d5.jpg" alt="Chicago skyline at night seen from high above, with city lights stretching to the horizon and Willis Tower visible in the distance." width="600" height="450" />

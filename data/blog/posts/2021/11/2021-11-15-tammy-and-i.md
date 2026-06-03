@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I enjoyed the 7 Course Tasting dinner at the pop-up [Guacaya Bistreaux](https://guacayabistreaux.com) in [Glass House](https://glasshousemn.com). Authentic Latin Caribbean Tapas & Libations. Chef Pedro Wolcott  opens up their permanent location in the North Loop in Spring.
 
-<img src="https://www.thingelstad.com/uploads/2021/9512ae5fb6.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/9512ae5fb6.jpg" width="600" height="600" alt="Tapas del dia menu from Guacaya Bistreaux Latin Caribbean Tapas and Bar listing seven dishes including ceviche, boudin, and arepa" />

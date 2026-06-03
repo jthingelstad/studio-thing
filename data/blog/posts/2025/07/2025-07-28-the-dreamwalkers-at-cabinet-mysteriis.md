@@ -15,4 +15,4 @@ With no screen to communicate with us the game master was a character in the roo
 
 The room was complicated and alas we did not solve it but we had a great time and if we would have had another ten minutes maybe we could have got there. 
 
-<img src="https://www.thingelstad.com/uploads/2025/237cf08e48.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/237cf08e48.jpg" width="600" height="400" alt="Four people smiling and holding oversized wooden spoons and forks plus stuffed dolls inside a quirky escape room with green walls.">

@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/06/10/ireland-log-day.html"
 title: "Ireland 2024 Log - Day 10"
 published: "2024-06-10T22:14:04+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 _Weather: Overall good. Some sun. Kind of windy. Chilly but not too bad._
@@ -22,7 +22,7 @@ _Weather: Overall good. Some sun. Kind of windy. Chilly but not too bad._
 - [Fed the Alpacas](https://www.thingelstad.com/2024/06/10/mazie-has-been.html) at the Airbnb. 
 - Evening hot tub at Airbnb. Tammy gets an evening walk in. 
 
-<img src="https://www.thingelstad.com/uploads/2024/9904caa2ad.png" width="600" height="321" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/9904caa2ad.png" width="600" height="321" alt="Google Maps route through County Donegal Ireland showing stops at Bakery Shack, Teelin Pier, Sliabh Liag, The Rusty Mackerel, Silver Strand, and Little Mammas, covering 178 km over 2 hours 59 minutes.">
 
 Jump to day 
 [1](https://www.thingelstad.com/2024/06/01/ireland-log-day.html), 

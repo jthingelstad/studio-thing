@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Cashed in a chip with the kids and got them to watch [Star Wars I: The Phantom Menace](https://www.starwars.com/films/star-wars-episode-i-the-phantom-menace). They have resisted Star Wars but this one was their favorite over episode IV. There is still hope. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2020/0d946e7d33.jpg" width="400" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/0d946e7d33.jpg" width="400" height="600" alt="Movie poster for Star Wars Episode I The Phantom Menace featuring characters and the tagline Every Saga Has A Beginning" />

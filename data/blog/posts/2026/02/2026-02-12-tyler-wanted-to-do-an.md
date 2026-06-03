@@ -9,4 +9,4 @@ categories: ["Escape Room"]
 
 Tyler wanted to do an escape room on his birthday so we went to [Lock & Key Escape](https://lockandkeyescape.com) and completed the [Quest for Excalibur](https://lockandkeyescape.com/quest-for-excalibur/)! It was a fun room, not too challenging, with some delightful surprises along the way! Room 87!
 
-<img src="https://www.thingelstad.com/uploads/2026/81097ec8d4.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/81097ec8d4.jpg" width="600" height="600" alt="Three people pose in a medieval-themed escape room; a teen sits on a throne wearing a crown and holding a sword, flanked by two adults.">

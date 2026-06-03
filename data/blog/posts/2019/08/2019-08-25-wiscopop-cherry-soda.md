@@ -9,4 +9,4 @@ categories: []
 
 [Wisco-Pop! Cherry Soda](https://www.wiscopopsoda.com/web-store/cherry-soda-organic) is one of the best sodas I’ve ever had! The cherry flavor is amazing. 🍒 
 
-<img src="https://www.thingelstad.com/uploads/2019/f443d34759.jpg" width="599" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/f443d34759.jpg" width="599" height="600" alt="Bottle of Wisco Pop Cherry Soda from Driftless Wisconsin sitting on a colorful painted surface" />

@@ -9,4 +9,4 @@ categories: []
 
 Sunset on the Gulf. 
 
-<img src="https://www.thingelstad.com/uploads/2025/bb714e9883.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/bb714e9883.jpg" width="600" height="450" alt="Sun setting at the horizon over calm Gulf waves rolling onto a sandy beach, sky glowing orange and peach.">

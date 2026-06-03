@@ -4,9 +4,9 @@ url: "https://www.thingelstad.com/2012/09/07/icelandic-interior.html"
 title: ""
 published: "2012-09-07T23:50:00+00:00"
 post_kind: micropost
-categories: ["Travel", "Photography"]
+categories: []
 ---
 
 Icelandic Interior.
 
-![](https://www.thingelstad.com/uploads/2020/7d5b4a2eb1.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/7d5b4a2eb1.jpg" alt="Snow-streaked mountain peak rising above rolling dark moorland hills in the Icelandic interior under a pale blue sky.">

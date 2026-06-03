@@ -9,4 +9,4 @@ categories: []
 
 Arrays of knobs and dials are mesmerizing. Even old ones. At [Rochester Museum & Science Center](https://rmsc.org). 
 
-<img src="https://www.thingelstad.com/uploads/2021/d0fc9d10e1.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/d0fc9d10e1.jpg" width="600" height="450" alt="Large vintage audio mixing console with rows of colorful knobs and VU meters at a museum exhibit." />

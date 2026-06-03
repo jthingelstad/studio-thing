@@ -11,4 +11,4 @@ This new "[Promotion of alternative social platforms policy](https://help.twitte
 
 
 
-<img src="https://www.thingelstad.com/uploads/2022/4bd1a1b99b.png" width="428" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/4bd1a1b99b.png" width="428" height="600" alt="Twitter December 2022 policy document prohibiting free promotion of Facebook Instagram Mastodon and other social platforms">

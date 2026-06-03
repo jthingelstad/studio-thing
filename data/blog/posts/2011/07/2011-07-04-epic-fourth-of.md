@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2011/07/04/epic-fourth-of.html"
 title: "Epic Fourth of July!"
 published: "2011-07-04T05:00:00+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
 Today was the best Independence Day in memory. The day started early.
@@ -20,7 +20,6 @@ Today was the best Independence Day in memory. The day started early.
 -   Mazie and I went the [Minneapolis
     fireworks](http://www.mplsredwhiteboom.com/). Awesome!
 
-To top that off we even had an impromptu visit from Grandma Rosalin that
-involved coloring.
+To top that off we even had an impromptu visit from Grandma Rosalin that involved coloring.
 
 Mazie said everything today was her favorite thing. 😀

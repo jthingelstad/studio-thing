@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2007/10/06/moneyball.html"
 title: "Moneyball"
 published: "2007-10-06T05:00:00+00:00"
 post_kind: post
-categories: ["Book"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/06fe0c4813.jpg" style="width: 180px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/06fe0c4813.jpg" alt="Book cover showing a close-up of a hand gripping a baseball, with author name Michael Lewis at top and subtitle The Art of Winning an Unfair Game at bottom." style="width: 180px; float: right; margin-left: 10px; " />
 
 I just finished reading [Moneyball](http://en.wikipedia.org/wiki/Moneyball). This book was recommended to me by a [friend](http://www.jimbernard.net/) who really likes baseball and feels that it's very odd that I don't like baseball. You see, I love numbers. I love patterns. I love graphs. And according to Moneyball, baseball is all about numbers.
 

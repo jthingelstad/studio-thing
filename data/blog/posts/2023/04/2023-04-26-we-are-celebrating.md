@@ -9,4 +9,4 @@ categories: []
 
 We are celebrating Tammy’s birthday today! She is the heart and center of our family. 🥰🥳
 
-<img src="https://www.thingelstad.com/uploads/2023/01949171b4.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/01949171b4.jpg" width="600" height="450" alt="Family of four smiling together in a kitchen, woman holding a lit birthday cupcake">

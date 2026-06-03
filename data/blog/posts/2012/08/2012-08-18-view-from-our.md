@@ -9,4 +9,4 @@ categories: []
 
 View from our rental in Port Clyde, ME. Tide is out.
 
-<img src="https://www.thingelstad.com/uploads/2020/a32550b462.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/a32550b462.jpg" width="600" height="450" alt="Terraced garden with colorful wildflowers overlooking a small Maine harbor village at low tide with docks and evergreen trees" />

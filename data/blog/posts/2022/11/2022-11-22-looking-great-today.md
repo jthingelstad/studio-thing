@@ -9,4 +9,4 @@ categories: []
 
 Looking great today Minneapolis! 🙌
 
-<img src="https://www.thingelstad.com/uploads/2022/278edcf667.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2022/4bc284468d.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/278edcf667.jpg" width="600" height="450" alt="Government Plaza light rail station in downtown Minneapolis with skyscrapers and clear blue winter sky behind it"><img src="https://www.thingelstad.com/uploads/2022/4bc284468d.jpg" width="600" height="450" alt="Downtown Minneapolis skyline on a clear blue day with IDS Center tower rising prominently above surrounding skyscrapers and bare trees.">

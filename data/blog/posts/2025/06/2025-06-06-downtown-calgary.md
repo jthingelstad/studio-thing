@@ -9,4 +9,4 @@ categories: []
 
 Downtown Calgary.
 
-<img src="https://www.thingelstad.com/uploads/2025/0124d54801.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/0124d54801.jpg" width="450" height="600" alt="Outdoor basketball court in downtown Calgary surrounded by glass skyscrapers, with several people playing and resting nearby.">

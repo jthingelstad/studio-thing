@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Every night is [Big Green Egg](https://biggreenegg.com) night.
 
-<img src="https://www.thingelstad.com/uploads/2020/8755a08b2c.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/8755a08b2c.jpg" width="600" height="800" alt="Big Green Egg ceramic kamado grill outdoors with thermometer reading on dome, trees in background." />

@@ -9,4 +9,4 @@ categories: ["Things 4 Good"]
 
 Had a [Things 4 Good](https://https://www.thingelstad.com/candles/) candle scent survey today. Figuring out new scents for next year’s event. 
 
-<img src="https://www.thingelstad.com/uploads/2024/7378e0e267.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/7378e0e267.jpg" width="600" height="450" alt="Four people smell numbered candle samples at a table displaying several unlit candles and a Things 4 Good scent survey QR code.">

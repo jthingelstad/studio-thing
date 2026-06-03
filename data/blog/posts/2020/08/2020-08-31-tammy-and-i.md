@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I had a perfect night for a gorgeous 15 mile ride around the the chain of lakes.
 
-<img src="https://www.thingelstad.com/uploads/2020/39fbb15215.jpg" width="375" height="527" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/39fbb15215.jpg" width="375" height="527" alt="GPS route map of a 15-mile bike ride around Bde Maka Ska and Lake Harriet in Minneapolis, color-coded yellow to orange." />

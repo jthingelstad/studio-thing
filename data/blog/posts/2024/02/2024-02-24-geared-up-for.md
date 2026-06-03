@@ -9,4 +9,4 @@ categories: []
 
 Geared up for sunrise winter photography. 
 
-<img src="https://www.thingelstad.com/uploads/2024/2e478df2d5.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/2e478df2d5.jpg" width="600" height="600" alt="Person bundled in balaclava, beanie with headlamp, and blue puffer jacket standing on rocky lakeshore at cloudy sunrise with tripod nearby.">

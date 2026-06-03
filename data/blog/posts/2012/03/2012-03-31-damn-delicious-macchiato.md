@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Delicious macchiato at [Bradbury's](http://www.bradburyscoffee.com/) in Madison. Definitely real deal.
 
-<img src="https://www.thingelstad.com/uploads/2024/4d7a465b-d510-41b1-8cb5-47b0affdc0be.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/4d7a465b-d510-41b1-8cb5-47b0affdc0be.jpg" width="600" height="450" alt="Macchiato in a brown ceramic cup with white foam, served on a matching saucer on a wooden table.">

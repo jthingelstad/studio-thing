@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I enjoyed seeing [Life of Pi](https://lifeofpibway.com) on Broadway at the Gerald Schoenfeld Theatre. The performance were powerful and it was amazing how they brought the animals to life. [Hiran Abeysekera](https://en.wikipedia.org/wiki/Hiran_Abeysekera) in the lead role of Pi was great. 🎭
 
-<img src="https://www.thingelstad.com/uploads/2023/476b317758.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/476b317758.jpg" width="600" height="450" alt="Couple taking a selfie outside the Gerald Schoenfeld Theatre in New York City with Life of Pi Broadway marquee behind them">

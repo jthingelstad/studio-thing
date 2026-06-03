@@ -9,4 +9,4 @@ categories: []
 
 Incredibly nice weather today. We got to do a November family bike ride! 
 
-<img src="https://www.thingelstad.com/uploads/2020/6f54b9b052.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/6f54b9b052.jpg" width="600" height="450" alt="Family of four riding bikes on a paved trail through open fields on a sunny autumn day, all wearing helmets." />

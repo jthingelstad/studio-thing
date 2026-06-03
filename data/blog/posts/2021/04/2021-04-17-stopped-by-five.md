@@ -9,4 +9,4 @@ categories: []
 
 Stopped by [Five Watt Coffee](http://fivewattcoffee.com) for the first time since the pandemic and got an Iced Kingfield, my favorite fancy coffee drink. So good. **Thank you Paul for the coffee!**
 
-<img src="https://www.thingelstad.com/uploads/2021/fef2099aa4.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/fef2099aa4.jpg" width="600" height="450" alt="Iced coffee drink in a clear plastic cup on a counter next to a vintage TV displaying the Five Watt Coffee logo" />

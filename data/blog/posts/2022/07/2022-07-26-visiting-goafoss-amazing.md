@@ -9,4 +9,4 @@ categories: []
 
 Visiting Goðafoss! Amazing. 
 
-<img src="https://www.thingelstad.com/uploads/2022/3fcd76c795.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/3fcd76c795.jpg" width="600" height="450" alt="Family of four smiling together in front of Goðafoss waterfall in Iceland on a cloudy day" />

@@ -9,4 +9,4 @@ categories: []
 
 Minnehaha Creek by our house. Love this spot.
 
-<img src="https://www.thingelstad.com/uploads/2021/7563630b07.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/7563630b07.jpg" width="600" height="450" alt="Shallow tree-lined creek flowing gently through a lush green forest in early spring" />

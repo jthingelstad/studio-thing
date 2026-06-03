@@ -11,4 +11,4 @@ We fired up some popcorn and watched Fighting With My Family this evening. It wa
 
 So it wasn't that it was a bad movie. It was a good enough movie told with the backdrop of professional wrestling. But given the people involved in the movie, and the billing of "comedy" we were expecting a very different thing than we got. 
 
-<img src="https://www.thingelstad.com/uploads/2025/0565371883.jpg" width="405" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/0565371883.jpg" width="405" height="600" alt="Movie poster for Fighting With My Family showing five people posed outside a grey building with bold yellow title text">

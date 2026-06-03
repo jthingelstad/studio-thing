@@ -9,4 +9,4 @@ categories: []
 
 Very impressed with [Decadent Saint Ultimate Mixer](https://decadentsaint.com/collections/all/products/decadent-saint-white-sangria)! Just add water and it’s a delicious refreshing drink for a summer afternoon! 
 
-<img src="https://www.thingelstad.com/uploads/2020/f53e8ea2be.jpg" width="599" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/f53e8ea2be.jpg" width="599" height="600" alt="Two bottles of Decadent Saint passionfruit mixer beside a large drink dispenser filled with orange beverage and a stemless glass, poolside with children swimming." />

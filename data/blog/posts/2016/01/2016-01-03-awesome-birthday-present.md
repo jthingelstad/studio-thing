@@ -9,4 +9,4 @@ categories: []
 
 Awesome birthday present - custom bag boards designed by my daughter! Love it! Threw some bags in the house. 😊👍🏻 
 
-<img src="https://www.thingelstad.com/uploads/2021/bdeda4cfed.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/bdeda4cfed.jpg" width="600" height="450" alt="Girl and man holding a hand-painted wooden cornhole board depicting a log cabin with pine trees and mountains, signed Mazie Thingelstad 2015 Magic Pines." />

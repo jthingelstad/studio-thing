@@ -9,4 +9,4 @@ categories: []
 
 Earned the botanist badge in [Forest](https://www.forestapp.cc)! 🌳🌳🌳
 
-<img src="https://www.thingelstad.com/uploads/2017/d32e570caa.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/d32e570caa.jpg" alt="Forest app achievement screen showing the Botanist badge, earned by unlocking at least 6 tree species." width="600" height="600" />

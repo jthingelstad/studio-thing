@@ -9,7 +9,7 @@ categories: []
 
 If you are a regular reader of my site you may be thinking I'm on a consumer electronics binge at the moment. In truth, I sort of am. I fully expect that in a couple of months everything is going to be [baby, baby and more baby](https://www.thingelstad.com/2004/12/31/baby-checkin-week.html)! I'm looking forward to that and in preparation am trying to get things like a new TV and HDTV programming out of the way. I figure some time with a [new video camera](https://www.thingelstad.com/2004/12/26/panasonic-pvgs.html) before baby arrives is a good thing.
 
-<img src="https://www.thingelstad.com/uploads/2020/833efc8144.gif" style="width: 120px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/833efc8144.gif" alt="Wide flat-panel LCD television displaying a calm ocean scene on its widescreen display, mounted on a silver stand." style="width: 120px; float: right; margin-left: 10px; " />
 
 On Friday I received our new television. We ordered a [Sharp Aquos LC-45GD4U](http://www.sharpusa.com/products/ModelLanding/0,1058,1427,00.html). The TV was easy to unpack, a little surprising given it's size. We are using it purely as a display so didn't need to bother with putting the detachable speakers on it. I had it up and running in a few minutes. The picture is absolutely stunning. The TV has a native resolution of 1920x1080 and the LCD panel gives crisp detail. I was able to plug my PC into the DVI port and had my home theater PC working quickly as well (however, I'm battling some problems with HDCP and the like so I'm still limited to 1280x1024).
 

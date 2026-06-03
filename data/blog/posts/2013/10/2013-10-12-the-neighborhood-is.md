@@ -9,4 +9,4 @@ categories: []
 
 The neighborhood is doing the Children’s World Marathon Challenge today. Love where we live.
 
-<img src="https://www.thingelstad.com/uploads/2020/a8948d7e3f.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/a8948d7e3f.jpg" width="600" height="450" alt="Young blonde child in a blue knit hat and denim jacket wearing race bib number 6747 for the World Marathon Challenge, standing on a brick path in a leafy neighborhood in autumn." />

@@ -9,4 +9,4 @@ categories: []
 
 Summer.
 
-<img src="https://www.thingelstad.com/uploads/2020/4bff1aa352.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/4bff1aa352.jpg" width="600" height="599" alt="Ears of yellow corn steaming in a large stainless steel pot with a perforated basket insert, set on a wooden deck near a propane tank." />

@@ -9,4 +9,4 @@ categories: []
 
 Drinks at [Lake & Irving](https://www.lakeandirving.com/) on the patio. **fig & rye** (fig infused templeton rye, orange bitters, sugar) and **bee’s knees** (gin, strega, honey, ginger, lemon). 🥃
 
-<img src="https://www.thingelstad.com/uploads/2021/8a2158eeec.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/8a2158eeec.jpg" width="600" height="600" alt="Two cocktails on a wooden patio table: a dark amber old fashioned with an orange peel garnish and a pale yellow gin cocktail with a lemon garnish behind it." />

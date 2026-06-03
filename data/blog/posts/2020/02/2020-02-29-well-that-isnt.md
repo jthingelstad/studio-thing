@@ -9,4 +9,4 @@ categories: []
 
 Well, that isn’t supposed to be there. 😤
 
-<img src="https://www.thingelstad.com/uploads/2020/43ae69a88a.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/43ae69a88a.jpg" width="600" height="600" alt="Continental tire tread with a screw embedded near the edge of the tread" />

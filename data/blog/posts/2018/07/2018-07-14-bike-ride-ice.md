@@ -9,4 +9,4 @@ categories: []
 
 Bike ride ice cream stop. 🍦
 
-<img src="https://www.thingelstad.com/uploads/2018/532455bb26.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/532455bb26.jpg" alt="Four people holding ice cream cones outdoors on grass, flavors include mint chip, chocolate, and strawberry in waffle cones." width="600" height="600" />

@@ -9,4 +9,4 @@ categories: []
 
 How about a few giant slices of pizza at nearly midnight? Sure!
 
-<img src="https://www.thingelstad.com/uploads/2023/206a5ae929.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/206a5ae929.jpg" width="600" height="450" alt="Crowd of people in winter coats lined up outside Joe's Pizza since 1975 at night, restaurant glowing warmly inside.">

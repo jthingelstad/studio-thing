@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 I never tire of watching smoke billow out of the [Big Green Egg](https://biggreenegg.com). 😊🔥
 
-<img src="https://www.thingelstad.com/uploads/2019/171adbe3d9.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/171adbe3d9.jpg" width="600" height="600" alt="Big Green Egg kamado grill billowing smoke from the top vent, with a temperature gauge on the dome and tiki torches nearby in a green backyard." />

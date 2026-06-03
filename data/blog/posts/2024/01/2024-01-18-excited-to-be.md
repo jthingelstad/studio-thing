@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Excited to be at Timberwolves v Grizzlies game! 🏀
 
-<img src="https://www.thingelstad.com/uploads/2024/b0517bc9b6.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/b0517bc9b6.jpg" width="600" height="450" alt="Target Center arena packed with fans as Minnesota Timberwolves players warm up on the court before tipoff against the Grizzlies.">

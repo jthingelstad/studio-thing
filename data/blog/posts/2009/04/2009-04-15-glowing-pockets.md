@@ -9,6 +9,6 @@ categories: []
 
 Glowing pockets.
 
-![](https://www.thingelstad.com/uploads/2020/0e1930f865.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/0e1930f865.jpg" alt="Hand holding an empty wine glass up to light, with a glowing reflection visible through the curved base of the glass.">
 
-![](https://www.thingelstad.com/uploads/2020/6ee94c6c7d.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/6ee94c6c7d.jpg" alt="Blurry close-up of a phone screen glowing through the pocket of brown pants, legs crossed, dim indoor setting.">

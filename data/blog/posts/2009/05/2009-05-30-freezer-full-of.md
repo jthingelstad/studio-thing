@@ -10,4 +10,4 @@ categories: []
 Freezer full of over 30 pounds of sausage from the sausage making class at the [North House Folk
 School](http://www.northhouse.org/).
 
-![](https://www.thingelstad.com/uploads/2020/9f17bcaaf5.png)
+<img src="https://www.thingelstad.com/uploads/2020/9f17bcaaf5.png" alt="Freezer packed with over 30 pounds of homemade sausage in plastic bags stacked across three wire shelves.">

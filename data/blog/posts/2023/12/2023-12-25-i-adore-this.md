@@ -10,4 +10,4 @@ categories: []
 I adore this new ornament that Santa left for me 
 🎅🎄
 
-<img src="https://www.thingelstad.com/uploads/2023/5803599471.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/5803599471.jpg" width="600" height="450" alt="Wooden Christmas ornament shaped like a cookie sheet with four laser-cut gingerbread figures labeled Jamie, Tammy, Mazie, and Tyler, dated 2023.">

@@ -9,4 +9,4 @@ categories: []
 
 Fun to see [Sam Pierson](https://www.linkedin.com/in/samuelpierson/), TeamSPS alumni, at [MnTech](https://mntech.org) **[Tech Connect 2025](https://mntech.org/tech-connect-2025/)**. Was cool to hear what their team at Qlik is creating. 
 
-<img src="https://www.thingelstad.com/uploads/2025/1580b628f6.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/1580b628f6.jpg" width="600" height="449" alt="Two men smiling together at a conference banquet hall, one in a blue blazer and one wearing a Qlik polo shirt with a name badge.">

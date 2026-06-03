@@ -9,4 +9,4 @@ categories: []
 
 Tammy creates a family yearbook each year. The 2020 one took a bit but arrived today and it is awesome. These are family treasures. She always keeps one for each kid shrink wrapped and stored away for them. 💜
 
-<img src="https://www.thingelstad.com/uploads/2021/e2f90d5f05.jpg" width="600" height="449" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/e2f90d5f05.jpg" width="600" height="449" alt="Photo book open to a 2020 year-in-review page showing a fluffy white puppy lying in grass, a girl holding a Covid-19 chalkboard sign, and a boarded-up storefront." />

@@ -11,4 +11,4 @@ Today we announced that [Data Masons is becoming part of SPS Commerce](https://i
 
 The news was also shared on the [NASDAQ MarketSite](https://www.nasdaq.com/marketsite) in Times Square! 
 
-<img src="https://www.thingelstad.com/uploads/2020/d8688175a9.jpg" width="600" height="400" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d8688175a9.jpg" width="600" height="400" alt="Nasdaq MarketSite billboard in Times Square congratulating SPS Commerce on the acquisition of Data Masons, SPSC Nasdaq Listed." />

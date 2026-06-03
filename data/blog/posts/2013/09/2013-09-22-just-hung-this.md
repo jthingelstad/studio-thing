@@ -9,4 +9,4 @@ categories: ["BigCharts"]
 
 Just hung this [BigCharts.com](http://www.bigcharts.com/) memory in my new office. 
 
-<img src="https://www.thingelstad.com/uploads/2020/22dd004efb.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/22dd004efb.jpg" width="600" height="450" alt="Framed illustration of a person scratching their head while standing at a cluttered desk with a computer showing a BigCharts.com screen." />

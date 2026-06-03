@@ -9,4 +9,4 @@ categories: []
 
 Lucky had her 6-month birthday today! She is 42 lbs now, and is still very much a puppy, but calming down some. She’s a great dog and learning more every day!
 
-<img src="https://www.thingelstad.com/uploads/2020/3d2822380a.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/3d2822380a.jpg" width="600" height="600" alt="Family of four posing indoors with a fluffy white Old English Sheepdog puppy on a hardwood floor" />

@@ -9,4 +9,4 @@ categories: []
 
 The recent [Tesla](https://www.tesla.com) updates allow you to look through the cars cameras when Sentry Mode is activated. I'm not sure if there is much utility in this, but it is a neat trick. You can look through any of the cameras, not just the front one.
 
-<img src="https://www.thingelstad.com/uploads/2021/74e1dfafb8.jpg" style="max-width: 300px; " />
+<img src="https://www.thingelstad.com/uploads/2021/74e1dfafb8.jpg" alt="Tesla app Live Camera view showing a Mazda CX-5 captured at night by the rear Sentry Mode camera, with camera selector UI below." style="max-width: 300px; " />

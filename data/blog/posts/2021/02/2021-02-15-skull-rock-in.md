@@ -9,4 +9,4 @@ categories: []
 
 Skull Rock in Joshua Tree National Park.
 
-<img src="https://www.thingelstad.com/uploads/2021/a3a29b8237.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/a3a29b8237.jpg" width="450" height="600" alt="Large granite boulder naturally eroded into the shape of a skull face, Joshua Tree National Park desert landscape behind it." />

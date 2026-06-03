@@ -11,4 +11,4 @@ Minneapolis/St. Paul Business Journal's [Largest Software Development Firms in t
 
 
 
-<img src="https://www.thingelstad.com/uploads/2023/9ce7286a24.png" width="600" height="470" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/9ce7286a24.png" width="600" height="470" alt="Table ranking top 5 Twin Cities software firms by developer count, showing SPS Commerce leading with 499 developers and 450.9M revenue.">

@@ -9,4 +9,4 @@ categories: []
 
 My daughter has a great way of framing my big birthday! 🤣
 
-<img src="https://www.thingelstad.com/uploads/2022/9da3f8fea4.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/9da3f8fea4.jpg" width="600" height="600" alt="Thomas the Tank Engine 80th Sodor Railway badge with a handwritten note reading See, 50 isn't so bad after all!!" />

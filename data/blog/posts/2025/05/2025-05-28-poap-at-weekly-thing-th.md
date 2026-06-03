@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7361698">7361698</a> at <strong><a href="https://poap.gallery/drops/190338">Weekly Thing 8th Anniversary Supporting Members</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/2e96ec6e-10fc-496f-9e55-c1e0ceddde34.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/2e96ec6e-10fc-496f-9e55-c1e0ceddde34.png" alt="Circular badge with CC logo, balloons, confetti, reading Weekly Thing Supporting Members 8th Anniversary Donation to Creative Commons" width="500" height="500" />

@@ -9,6 +9,6 @@ categories: []
 
 Great day for a family bike ride to Dairy Queen! 🍦
 
-<img src="https://www.thingelstad.com/uploads/2023/342224a91e.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/342224a91e.jpg" width="600" height="450" alt="Group of cyclists riding along the Sakatah State Trail past a mile 37 marker shaped like Minnesota, surrounded by green trees and grass.">
 
-<img src="https://www.thingelstad.com/uploads/2023/3811c79368.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/3811c79368.jpg" width="600" height="450" alt="Group of adults and children smiling and holding Dairy Queen Blizzards and ice cream cones outside a DQ location.">

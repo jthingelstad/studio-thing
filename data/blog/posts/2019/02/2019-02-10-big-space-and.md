@@ -9,4 +9,4 @@ categories: []
 
 Big space, and a great respite from the cold and snowy winter. 
 
-<img src="https://www.thingelstad.com/uploads/2019/83745e84e4.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/83745e84e4.jpg" width="600" height="450" alt="Indoor turf field at Life Time Sport facility with bright overhead lighting and purple field markings on green artificial grass." />

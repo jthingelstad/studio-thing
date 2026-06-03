@@ -9,4 +9,4 @@ categories: []
 
 We had a nice bike ride to Dairy Queen with my Uncle Tim and Aunt Holly and Cousin [Quinn](https://quinnchrest.com) today. We got caught in the rain on the way back. 
 
-<img src="https://www.thingelstad.com/uploads/2025/f227b8893d.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2025/8545b564a0.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/f227b8893d.jpg" width="600" height="450" alt="Group of six people in bike helmets riding bicycles together on a paved path lined with green trees, one smiling man taking a selfie in the foreground."><img src="https://www.thingelstad.com/uploads/2025/8545b564a0.jpg" width="600" height="450" alt="Group of seven people wearing bike helmets smiling in a selfie outside a Dairy Queen and Regency Inn and Suites sign">

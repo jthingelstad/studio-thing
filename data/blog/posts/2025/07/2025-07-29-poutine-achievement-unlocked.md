@@ -9,4 +9,4 @@ categories: []
 
 Poutine achievement unlocked! 🇨🇦😊
 
-<img src="https://www.thingelstad.com/uploads/2025/606b017332.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/606b017332.jpg" width="600" height="450" alt="Poutine in a paper boat on red checkered liner, topped with cheese curds and brown gravy, set on an outdoor tray with green grass behind.">

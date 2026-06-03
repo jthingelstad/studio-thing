@@ -9,4 +9,4 @@ categories: []
 
 Tried the [Pear Brandy](https://www.thedampfwerk.com/fruit-brandy) from [Dampfwerk Distilling](https://www.thedampfwerk.com) tonight. Very good. Thanks to [Lee Zukor](https://leezukor.com) for introducing me to this local distillery. 🥃
 
-<img src="https://www.thingelstad.com/uploads/2020/ee78f62c20.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/ee78f62c20.jpg" width="600" height="600" alt="Dampfwerk Pear Brandy bottle beside two full shot glasses on a white marble countertop" />

@@ -9,4 +9,4 @@ categories: []
 
 We had some fun hiking companions on the trail today. 🐏
 
-<img src="https://www.thingelstad.com/uploads/2022/6a779599f2.jpg" width="600" height="400" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/6a779599f2.jpg" width="600" height="400" alt="Several sheep in white and brown wool grazing on a steep green moss-covered hillside with rocky outcroppings under a clear blue sky." />

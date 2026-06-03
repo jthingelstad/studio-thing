@@ -9,4 +9,4 @@ categories: []
 
 Made Toffee Bars this morning. Grandma Rose used to make sure these were around every time I was at [the farm](https://www.thingelstad.com/2005/09/05/the-farm.html) because she knew they were my favorite. Don't suspect I'll ever make them as good as she did. Miss you Grandma! 🥰
 
-<img src="https://www.thingelstad.com/uploads/2022/16589f378d.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/16589f378d.jpg" width="600" height="450" alt="Large rectangular toffee bar with smooth chocolate topping on a cutting board, edges trimmed and crumbles scattered around it.">

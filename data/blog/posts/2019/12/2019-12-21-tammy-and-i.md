@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Tammy and I went to [Knives Out](https://en.wikipedia.org/wiki/Knives_Out_%28film%29) tonight. Great “[whodunit](https://en.wikipedia.org/wiki/Whodunit)”. 🎬
 
-<img src="https://www.thingelstad.com/uploads/2019/d2b6d3c58d.jpg" width="399" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/d2b6d3c58d.jpg" width="399" height="600" alt="Knives Out movie poster featuring a large cast standing behind a man seated in a red leather chair, set in a grand library" />

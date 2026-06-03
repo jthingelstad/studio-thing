@@ -9,4 +9,4 @@ categories: []
 
 Very happy with the new stone steps down to our dock! 🤩
 
-<img src="https://www.thingelstad.com/uploads/2018/e672000f25.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/e672000f25.jpg" alt="Stone steps flanked by boulders and gravel lead down a grassy hillside to a dock, with a wood-sided house behind." width="600" height="600" />

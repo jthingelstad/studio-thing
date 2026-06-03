@@ -9,4 +9,4 @@ categories: []
 
 Starting our summer vacation. Boarding flight to Zurich with a stop in Amsterdam. ✈️
 
-<img src="https://www.thingelstad.com/uploads/2023/51f7cfb338.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/51f7cfb338.jpg" width="600" height="450" alt="Family of four smiling for a selfie at a busy airport gate F12, wearing backpacks and ready to board.">

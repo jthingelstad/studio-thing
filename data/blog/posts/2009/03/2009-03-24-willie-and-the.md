@@ -9,4 +9,4 @@ categories: []
 
 I got this album about a week ago and have been really enjoying it. Willie Nelson. Texas Swing. You can't go wrong!
 
-<img src="https://www.thingelstad.com/uploads/2020/b3707fd6fa.jpg" style="width: 400px; " />
+<img src="https://www.thingelstad.com/uploads/2020/b3707fd6fa.jpg" alt="Album cover showing seven musicians in Western attire posed outdoors, one on horseback, with bold red retro lettering and desert landscape behind them." style="width: 400px; " />

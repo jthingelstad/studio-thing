@@ -9,4 +9,4 @@ categories: ["Music"]
 
 Time for [Hamilton](https://en.wikipedia.org/wiki/Hamilton_(musical))! 🎭🎶
 
-<img src="https://www.thingelstad.com/uploads/2018/ec61b64871.jpg" width="450" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/ec61b64871.jpg" alt="Family of four posing outside CIBC Theatre under the Hamilton musical marquee in Chicago" width="450" height="600" />

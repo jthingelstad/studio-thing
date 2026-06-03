@@ -9,4 +9,4 @@ categories: []
 
 This morning was 3:40am wakeup and shuttle ride up to Moraine Lake to shoot Blue Hour and Sunrise. First photo capture 4:35am.  _"f/8 and be there"_
 
-<img src="https://www.thingelstad.com/uploads/2025/564eefab7b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/564eefab7b.jpg" width="600" height="450" alt="Night drive on a dark forested road with a vehicle ahead showing red lights and a yellow warning sign visible in the headlights">

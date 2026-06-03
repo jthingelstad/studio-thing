@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Awesome tabletop Kubb set!
 
-<img src="https://www.thingelstad.com/uploads/2020/542bb8edbc.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/542bb8edbc.jpg" width="600" height="450" alt="Tabletop Kubb game set up on a white tablecloth with 12 small wooden block targets arranged around a small handmade wooden throwing stand with a red center joint." />

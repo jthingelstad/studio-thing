@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6200232">6200232</a> at <strong><a href="https://poap.gallery/drops/95608">Joe's BONKalicious Bday</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/joes-bonkalicious-bday-2023-logo-1672896791760.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/joes-bonkalicious-bday-2023-logo-1672896791760.png" alt="Circular event logo for Joes BONKalicious bday bash showing a Shiba Inu dog in a space helmet riding a rocket toward a birthday cake, January 5 2023 CryptoHouse MN" width="500" height="500" />

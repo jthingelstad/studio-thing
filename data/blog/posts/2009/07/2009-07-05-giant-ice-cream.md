@@ -12,4 +12,4 @@ Cream](http://www.facebook.com/pages/Nelsons-icecream-stillwater-MN/82505247090)
 for some giant ice cream cones in
 [Stillwater](http://www.ci.stillwater.mn.us/).
 
-![](https://www.thingelstad.com/uploads/2020/b8ea1531af.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/b8ea1531af.jpg" alt="Young girl in a pink top smiling and holding a cup of ice cream with a spoon at an ice cream shop.">

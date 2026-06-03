@@ -13,4 +13,4 @@ I also replaced the sump pump discharge line. Usually the sump pump there doesn'
 
 We drove along Cannon Lake Trail and the water had receded a few inches but still a lot of flooding and even more debris after a week. We also looped through Dodge Court and most of the really big houses there were still okay but there were a few that were badly flooded. In Warsaw I was surprised that bridge that crosses the Cannon River on Farwell Ave was still open. I thought it ould be flooded too. The Channel Inn was not flooded, but Doc's Dock was flooded and several of their permanent RV spots were as well.
 
-<img src="https://www.thingelstad.com/uploads/2024/6b89bcff6f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/6b89bcff6f.jpg" width="600" height="450" alt="Pontoon boat moored at a dock surrounded by bright green algae-covered floodwater with aquatic weeds, lake and tree line behind.">

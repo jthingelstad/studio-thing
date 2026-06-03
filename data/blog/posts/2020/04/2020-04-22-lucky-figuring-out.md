@@ -9,4 +9,4 @@ categories: []
 
 Lucky figuring out how to stand on her hind legs and look out the window. 
 
-<img src="https://www.thingelstad.com/uploads/2020/d05d361a9e.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d05d361a9e.jpg" width="600" height="600" alt="White fluffy dog standing on hind legs at a large window, looking outside, surrounded by small guitars and a ukulele." />

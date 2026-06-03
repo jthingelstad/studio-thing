@@ -9,4 +9,4 @@ categories: []
 
 Nice winter afternoon for the **Magic Pines Sit & Soak**. This is my new happy place. 🔥💧
 
-<img src="https://www.thingelstad.com/uploads/2024/259362bee7.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/259362bee7.jpg" width="600" height="450" alt="Bald man soaking in an outdoor hot tub in winter, facing a wood-fired barrel sauna with smoke rising, snow on the ground nearby.">

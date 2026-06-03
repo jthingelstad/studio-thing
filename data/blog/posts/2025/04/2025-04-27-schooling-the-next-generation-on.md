@@ -9,4 +9,4 @@ categories: []
 
 Schooling the next generation on Air Hockey. 
 
-<img src="https://www.thingelstad.com/uploads/2025/9fbf5516bd.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/9fbf5516bd.jpg" width="600" height="450" alt="Two people playing air hockey on a blue table in a dimly lit indoor space with industrial windows behind them.">

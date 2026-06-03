@@ -9,6 +9,6 @@ categories: []
 
 Celebrating [International Women’s Day](https://www.un.org/en/observances/womens-day) 2020! 👍 #IWD2020 #EachforEqual
 
-<img src="https://www.thingelstad.com/uploads/2020/cc294de7af.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/cc294de7af.jpg" width="600" height="600" alt="Four people outdoors making the EachforEqual arms-crossed gesture for International Womens Day 2020, bare winter trees behind them." />
 
 See IWD [2024](https://www.thingelstad.com/2024/03/08/in-recognition-of.html), [2021](https://www.thingelstad.com/2021/03/08/recognizing-international-womens.html), [2020](https://www.thingelstad.com/2020/03/08/celebrating-international-womens.html), [2020 @ SPS](https://www.thingelstad.com/2020/03/05/international-womens-day.html), and [2018](https://www.thingelstad.com/2018/03/08/173845.html).

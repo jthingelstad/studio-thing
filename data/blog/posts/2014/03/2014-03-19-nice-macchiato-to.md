@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Nice macchiato to start of the day.
 
-<img src="https://www.thingelstad.com/uploads/2024/19a311cf-ddc9-4e1e-8b8f-f18284a750a3.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/19a311cf-ddc9-4e1e-8b8f-f18284a750a3.jpg" width="600" height="450" alt="Small white espresso cup with heart-shaped latte art on a white saucer with a spoon, resting on a wooden surface.">

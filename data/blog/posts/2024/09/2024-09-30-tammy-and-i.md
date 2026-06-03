@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I went to see the [Cowboy Junkies](https://cowboyjunkies.com) at [The Dakota](https://www.dakotacooks.com) tonight. Both of us have enjoyed the Cowboy Junkies but hadn't seem them live. The show was good and featured a bunch of new music, but got a little long for us with two different sets. 
 
-<img src="https://www.thingelstad.com/uploads/2024/b7062725aa.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/b7062725aa.jpg" width="600" height="337" alt="Live band performing on a dimly lit stage at The Dakota jazz club, with audience seated at candlelit tables in the foreground.">

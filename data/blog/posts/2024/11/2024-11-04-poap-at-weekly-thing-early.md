@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7229262">7229262</a> at <strong><a href="https://poap.gallery/drops/179699">Weekly Thing Early Supporting Member</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/8aa2212c-7054-4e4b-82e6-c2bddd68cf4a.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/8aa2212c-7054-4e4b-82e6-c2bddd68cf4a.png" alt="Circular badge with a cartoon astronaut holding a Weekly Thing flag, surrounded by planets, stars, and rainbows, reading Weekly Thing Supporting Member" width="500" height="500" />

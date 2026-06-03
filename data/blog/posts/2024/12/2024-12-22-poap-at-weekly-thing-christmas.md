@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7281029">7281029</a> at <strong><a href="https://poap.gallery/drops/183156">Weekly Thing Christmas Blogs</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/1161419b-1f86-4e57-8f65-6011c0755f0e.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/1161419b-1f86-4e57-8f65-6011c0755f0e.png" alt="Open green and red Christmas gift box with a glowing orange star chat bubble inside, surrounded by candy canes, ornaments, and holly" width="500" height="500" />

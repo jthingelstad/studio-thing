@@ -9,4 +9,4 @@ categories: []
 
 **Happy Mother’s Day** to the “heart of our family” and most amazing of Mom’s. 
 
-<img src="https://www.thingelstad.com/uploads/2025/e8682c985a.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/e8682c985a.jpg" width="450" height="600" alt="Three people smiling together outdoors under a flowering tree, woman in floral shirt flanked by two teenagers in casual summer clothes.">

@@ -7,9 +7,7 @@ post_kind: post
 categories: []
 ---
 
-I really hope this happens. Having an MLS soccer team, but more
-importantly a team playing in downtown Minneapolis, would be great. I'd
-definitely look at season tickets!
+I really hope this happens. Having an MLS soccer team, but more importantly a team playing in downtown Minneapolis, would be great. I'd definitely look at season tickets!
 
 > United Properties says pro soccer is an option for a site it may
 > develop near the Minneapolis Farmers Market --- a sign that the

@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Celebrating the Minnesota United victory — with a photobomber! 🎉⚽️
 
-<img src="https://www.thingelstad.com/uploads/2022/9d96596fde.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/9d96596fde.jpg" width="600" height="450" alt="Family of four smiling in a selfie outside Allianz Field with a UNITED sign behind them as a man photobombs in the background.">

@@ -15,4 +15,4 @@ They put me on 24 hour fluids and antibiotics and I started to recover slowly. I
 
 Thank you for modern antibiotics. Without that, this would have been lights out for me.
 
-<img src="https://www.thingelstad.com/uploads/2026/a1bc928697.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/a1bc928697.jpg" width="450" height="600" alt="Man in light blue sweatshirt taking a selfie in a hospital room with purple marker lines drawn across his forehead and cheek marking an infection boundary.">

@@ -9,4 +9,4 @@ categories: []
 
 Moms are awesome — especially mine. Happy Mother’s Day! 💛
 
-<img src="https://www.thingelstad.com/uploads/2025/555d2825cd.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/555d2825cd.jpg" width="450" height="600" alt="Two people smiling and posing together under a flowering tree in a garden, the woman wearing glasses and a striped shirt, the man in an orange button-up shirt">

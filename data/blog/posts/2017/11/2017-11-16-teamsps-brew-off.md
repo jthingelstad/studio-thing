@@ -9,8 +9,8 @@ categories: ["TeamSPS"]
 
 Fun (and cold!) #TeamSPS Brew Off today. Tailgate style! 
 
-<img src="https://www.thingelstad.com/uploads/2017/14c4e1eeb6.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2017/14c4e1eeb6.jpg" alt="Crowd of people in winter coats socializing outdoors in a plaza courtyard with tall tables, patio heaters, and an SUV hatch open in the background." width="600" height="599" />
 
 Hanging with Pat Backen at #TeamSPS “Hop To It" Brew Off! 
 
-<img src="https://www.thingelstad.com/uploads/2017/d9ef3f3168.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/d9ef3f3168.jpg" alt="Two men in Columbia jackets and name badges smile and raise beer glasses outdoors on a cold winter day" width="600" height="600" />

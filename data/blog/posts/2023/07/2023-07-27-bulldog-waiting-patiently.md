@@ -9,4 +9,4 @@ categories: []
 
 Bulldog waiting patiently for its person to return in Campo Sant'Anzolo in Venice.
 
-<img src="https://www.thingelstad.com/uploads/2023/a3384d41bb.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/a3384d41bb.jpg" width="600" height="337" alt="White bulldog sitting on cobblestones in a Venetian square, harness on, while a person walks toward a building in the background.">

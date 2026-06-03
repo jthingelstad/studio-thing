@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2008/08/21/getting-to-london.html"
 title: "Getting to London"
 published: "2008-08-21T05:00:00+00:00"
 post_kind: post
-categories: ["Travel"]
+categories: []
 ---
 
 The trick with spending a month in London is that you have to get there, and that has to be done on a plane. Mazie had never been on a plane before and we bullishly pushed through with a trans-atlantic flight as her very first one. Tammy has been on many flights, but has a very real fear of flying causing much stress and anxiety. She was an absolute rock star though keeping all of that to herself and not causing any undue stress for Mazie.
@@ -19,10 +19,10 @@ After landing we collected all of our luggage, got through customs, and found a 
 
 Our first day here was spent mostly recovering from jet lag. We were all crazy tired.
 
-<img src="https://www.thingelstad.com/uploads/2023/20080817-183957-4712.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/20080817-183957-4712.jpg" width="600" height="400" alt="Woman in red shirt and khaki shorts holds hands with a young girl dragging a yellow rolling bag outside an airport luggage cart station.">
 
-<img src="https://www.thingelstad.com/uploads/2023/20080817-184001-4714.jpg" width="600" height="900" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/20080817-184001-4714.jpg" width="600" height="900" alt="Young blonde girl in a dark tank top and khaki shorts pulling a yellow and orange wheeled animal suitcase while holding an adults hand outdoors near luggage carts">
 
-<img src="https://www.thingelstad.com/uploads/2023/20080817-191203-4726.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/20080817-191203-4726.jpg" width="600" height="400" alt="Young blonde girl in a brown top smiling broadly at the camera while seated at an airport departure gate">
 
-<img src="https://www.thingelstad.com/uploads/2023/20080817-203311-4731.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/20080817-203311-4731.jpg" width="600" height="400" alt="Woman with a large backpack and tote bag holds hands with a small blonde girl rolling a yellow duck suitcase through an airport terminal.">

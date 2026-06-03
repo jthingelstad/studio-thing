@@ -20,4 +20,4 @@ The only way to get an Early Birb is to have a Noun Cat. Today I got my eight Bi
 
 
 
-<img src="https://www.thingelstad.com/uploads/2022/03754339bf.png" width="600" height="300" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/03754339bf.png" width="600" height="300" alt="Eight pixel-art bird characters wearing colorful hats and sunglasses, displayed on yellow and teal grid backgrounds" />

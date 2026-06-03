@@ -17,6 +17,6 @@ Grandpa and Grandma, your names will be spoken for several decades to come. We m
 
 This picture of Grandpa having lunch in the field over a pickup with my Uncle Tim has been showing up on my Aura Frame lately. It makes me smile. I remember Grandpa out in the fields. His overalls dirty. He was a John Deere man. His personality was as big as those fields he farmed.
 
-<img src="https://www.thingelstad.com/uploads/2024/grandpa-ardell.jpg" width="600" height="431" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/grandpa-ardell.jpg" width="600" height="431" alt="Older man in overalls, plaid shirt, and Amoco cap eating lunch leaning over a pickup tailgate in a harvested field with a John Deere 4440 tractor behind him">
 
 <p class="callout">Related: <a href="https://www.thingelstad.com/2001/07/03/ardell-rose-chrests.html">Ardell & Rose Chrest's 50th Anniversary</a>.</p>

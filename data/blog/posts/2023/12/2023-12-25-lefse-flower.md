@@ -9,4 +9,4 @@ categories: []
 
 Lefse flower with delicious lefse from [Freddy's Lefse](https://www.freddyslefse.com)! 🌺 🎄
 
-<img src="https://www.thingelstad.com/uploads/2023/455c62415d.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/455c62415d.jpg" width="600" height="600" alt="Rolled lefse arranged in a circular flower pattern on a glass plate, with tightly curled pieces standing upright in the center.">

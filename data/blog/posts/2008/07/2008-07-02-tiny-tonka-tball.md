@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2008/07/02/tiny-tonka-tball.html"
 title: "Tiny Tonka T-Ball"
 published: "2008-07-02T05:00:00+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/48867b3562.jpg" style="width: 70px; float: right; margin-left: 10px;" />
+<img src="https://www.thingelstad.com/uploads/2020/48867b3562.jpg" alt="Circular logo for Minnetonka Community Education featuring a sailboat and star in the center" style="width: 70px; float: right; margin-left: 10px;" />
 
 Mazie and I had our very first [Tiny Tonka T-Ball](http://www.minnetonkacommunityed.org/insight/registry/classinfo.asp?courseID=34900&catID=) game last night. Sorry, no pictures or video from it. Tammy had plans, and I'm one of the **coaches**! Next week we'll get some media coverage.
 

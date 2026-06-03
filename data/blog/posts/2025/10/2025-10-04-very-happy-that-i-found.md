@@ -9,4 +9,4 @@ categories: []
 
 Very happy that I found out you can get 12” firewood. This fits perfect in the sauna oven. Let it snow! 🥶🔥
 
-<img src="https://www.thingelstad.com/uploads/2025/fab637d471.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/fab637d471.jpg" width="600" height="450" alt="Outdoor barrel sauna with transparent polycarbonate panels and wood-burning chimney, beside a rack stacked with split firewood, next to a gray garage.">

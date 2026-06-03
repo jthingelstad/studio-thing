@@ -9,4 +9,4 @@ categories: []
 
 Making waffles with Mazie.
 
-![](https://www.thingelstad.com/uploads/2020/16eb5f8e8b.png)
+<img src="https://www.thingelstad.com/uploads/2020/16eb5f8e8b.png" alt="Young girl with long blond hair pouring milk into a mixing bowl on a stovetop next to a waffle iron, following a recipe book.">

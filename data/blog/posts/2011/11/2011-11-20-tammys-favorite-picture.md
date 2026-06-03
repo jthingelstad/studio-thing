@@ -7,11 +7,6 @@ post_kind: post
 categories: []
 ---
 
-Tammy went digging deep into our Lightroom library looking for photos
-for our new exercise room. She told me she had found her "favorite
-picture" of me. I was very curious what picture it was. I like it. This
-is from the finish of the 2004 [Chequamegon Fat
-40](http://cheqfattire.com/). The kid in the background is out of place
-though, a little Photoshop could deal with that.
+Tammy went digging deep into our Lightroom library looking for photos for our new exercise room. She told me she had found her "favorite picture" of me. I was very curious what picture it was. I like it. This is from the finish of the 2004 [Chequamegon Fat 40](http://cheqfattire.com/). The kid in the background is out of place though, a little Photoshop could deal with that.
 
-![](https://www.thingelstad.com/uploads/2020/d1a853b682.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/d1a853b682.jpg" alt="Mud-covered man sitting on the ground at a mountain bike race finish area, gloves in hand, bikes scattered around him, trees and a shed in the background.">

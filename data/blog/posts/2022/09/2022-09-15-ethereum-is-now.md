@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Ethereum is now Proof-of-Stake!
 
-<img src="https://www.thingelstad.com/uploads/2022/d8600cc000.png" width="600" height="559" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/d8600cc000.png" width="600" height="559" alt="YouTube livestream of the Ethereum Mainnet Merge Viewing Party showing terminal logs confirming the transition to Proof of Stake at slot 4700013" />

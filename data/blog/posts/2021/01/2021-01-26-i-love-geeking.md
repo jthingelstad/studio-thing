@@ -9,4 +9,4 @@ categories: []
 
 I love geeking out on all the AV gear when recording. This setup was great!
 
-<img src="https://www.thingelstad.com/uploads/2021/989e6cf931.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/989e6cf931.jpg" width="600" height="450" alt="TV production studio with black drape walls, stage lighting rigs, cameras on tripods, a countdown clock, and two crew members at workstations." />

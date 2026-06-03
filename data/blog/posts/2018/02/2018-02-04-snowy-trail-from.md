@@ -9,4 +9,4 @@ categories: []
 
 Snowy trail from today’s bike ride. Went down once. 
 
-<img src="https://www.thingelstad.com/uploads/2018/a90f581128.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/a90f581128.jpg" alt="Fat tire bike handlebar with GPS computer, pointed down a narrow snow-covered trail through bare winter trees." width="600" height="450" />

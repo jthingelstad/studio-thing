@@ -9,6 +9,6 @@ categories: ["Kubb"]
 
 "That regulation?"
 
-![](https://www.thingelstad.com/uploads/2020/087934dcbd.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/087934dcbd.jpg" alt="Two stick figures stand beside a giant Kubb piece wearing a crown, with trees behind them and the caption That regulation?">
 
 *A Kubb comic... and my first comic attempt ever.*

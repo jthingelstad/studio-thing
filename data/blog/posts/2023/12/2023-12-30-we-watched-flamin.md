@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We watched [Flamin' Hot](https://en.wikipedia.org/wiki/Flamin%27_Hot) tonight and it was great! Wonderful movie and even better story! 🔥🌶️🍿
 
-<img src="https://www.thingelstad.com/uploads/2023/28190369c2.jpg" width="405" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/28190369c2.jpg" width="405" height="600" alt="Flamin Hot movie poster showing a man in a blue work shirt lying on red Flamin Hot Cheetos reaching toward a glowing hand above him">

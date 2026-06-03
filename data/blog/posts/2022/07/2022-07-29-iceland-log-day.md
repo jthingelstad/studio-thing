@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/07/29/iceland-log-day.html"
 title: "Iceland Log Day 7"
 published: "2022-07-29T19:37:22+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 Friday, July 29th  
@@ -18,7 +18,7 @@ Cool and Rain starting in afternoon.
 - Early dinner at [Íshúsið Pizzeria](https://ishusidpizzeria.is) in Höfn. 
 - Check in at [Fosshotel Vatnajökull](https://www.islandshotel.is/hotels-in-iceland/fosshotel-vatnajokull/).
 
-<img src="https://www.thingelstad.com/uploads/2022/666b2e5b48.png" width="600" height="356" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/666b2e5b48.png" width="600" height="356" alt="Google Maps route from Skardas Country Cabins through Seydisfjordur, Stodvarfjordur, Djupivogur to Hofn, 334 km, 4 hr 42 min" />
 
 Jump to day 
 [0](https://www.thingelstad.com/2022/07/22/iceland-log-day.html), 

@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/02eee48db0.jpg" style="max-width: 600px; " />
+<img src="https://www.thingelstad.com/uploads/2020/02eee48db0.jpg" alt="Apple MacBook Air laptop open and facing forward showing Mac OS X desktop with colorful aurora wallpaper and app dock" style="max-width: 600px; " />
 
 I'm writing this blog post on my super light, super fast, and super tiny 11" MacBook Air. Thanks to Tammy, my Mom & Kurt, and my sister Alona I got a really nice surprise for my birthday.
 

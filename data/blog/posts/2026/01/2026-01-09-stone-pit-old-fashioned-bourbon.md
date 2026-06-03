@@ -9,4 +9,4 @@ categories: []
 
 Stone Pit Old Fashioned (bourbon, apricot, demerara, peach tincture) at Animale’s. Tasty. 🥃
 
-<img src="https://www.thingelstad.com/uploads/2026/63e5ae1cf7.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/63e5ae1cf7.jpg" width="600" height="450" alt="Rocks glass with an amber bourbon Old Fashioned on a bar coaster, with a red ABG coaster and menu nearby.">

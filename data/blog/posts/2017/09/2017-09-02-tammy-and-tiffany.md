@@ -9,4 +9,4 @@ categories: []
 
 Tammy and Tiffany out for a quick canoe 🛶 on Pokegama Lake. 
 
-<img src="https://www.thingelstad.com/uploads/2017/44f75f2cc8.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/44f75f2cc8.jpg" alt="Two women paddling an aluminum canoe on a calm lake surrounded by trees under a partly cloudy sky." width="600" height="600" />

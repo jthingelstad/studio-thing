@@ -7,32 +7,13 @@ post_kind: post
 categories: []
 ---
 
-We spent the daylight hours today looking around northern New Mexico. We
-went in a big triangle from Las Vegas, NM to Taos, then over to Santa Fe
-and back. The day was peppered with two complications. First was
-altitude. With Tammy being pregnant she is not supposed to exceed 7,000
-to 8,000 feet of elevation. If you are a low-lander as we are, going
-higher than this deprives you, and more importantly the baby, of much
-needed oxygen. We really don't know more than this and as we drove to
-Taos crossing the Monte Cristo mountains and definitely higher than
-8,000 feet we were worried. All is fine I'm sure, we only crossed the
-range for 20-30 minutes and then dropped back into normal levels. But,
-that doesn't keep first time parents from worrying, worrying and
-worrying.
+We spent the daylight hours today looking around northern New Mexico. We went in a big triangle from Las Vegas, NM to Taos, then over to Santa Fe and back. The day was peppered with two complications. First was altitude. With Tammy being pregnant she is not supposed to exceed 7,000 to 8,000 feet of elevation. If you are a low-lander as we are, going higher than this deprives you, and more importantly the baby, of much needed oxygen. We really don't know more than this and as we drove to Taos crossing the Monte Cristo mountains and definitely higher than 8,000 feet we were worried. All is fine I'm sure, we only crossed the range for 20-30 minutes and then dropped back into normal levels. But, that doesn't keep first time parents from worrying, worrying and worrying.
 
-The other issue that introduced fun was the caked on mud from yesterdays
-experience getting stuck. The wheels on the right hand side of the car
-were way out of balance due to caked on mud and required a power hose
-and chiseling with a screwdriver to stop vibrating like crazy.
+The other issue that introduced fun was the caked on mud from yesterdays experience getting stuck. The wheels on the right hand side of the car were way out of balance due to caked on mud and required a power hose and chiseling with a screwdriver to stop vibrating like crazy.
 
-Taos was a cool city. I had the best quesadilla I've EVER had for lunch.
-Wow. The town square in Taos was interesting and had a number of
-galleries including a piece that we would have loved but for the price.
-We returned through Santa Fe, avoiding another crossing of the
-mountains. We also got to preview where we are staying when we head to
-Santa Fe in a couple days, and it looks great.
+Taos was a cool city. I had the best quesadilla I've EVER had for lunch. Wow. The town square in Taos was interesting and had a number of galleries including a piece that we would have loved but for the price. We returned through Santa Fe, avoiding another crossing of the mountains. We also got to preview where we are staying when we head to Santa Fe in a couple days, and it looks great.
 
-<img src="https://www.thingelstad.com/uploads/2020/c93f093a06.jpg" style="width: 132px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/c93f093a06.jpg" alt="Night sky over silhouetted trees showing the Orion constellation and hundreds of stars above a warm orange horizon glow." style="width: 132px; float: right; margin-left: 10px; " />
 We returned to the Star Hill right at dusk. The sky looked really bad as
 we approached, very cloudy. But there was a break in the clouds as night
 came and we still got some good viewing, however it never got as good as
@@ -63,7 +44,7 @@ that cool? She didn't agree. 🙂
 > don't look as cool as they do in the pictures, but they look good
 > enough that it's worth looking through the telescope to see them.*
 
-<img src="https://www.thingelstad.com/uploads/2020/945e788526.jpg" style="width: 200px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/945e788526.jpg" alt="Night sky filled with countless faint stars and a few brighter blue-white stars against a dark brown-grey background." style="width: 200px; float: right; margin-left: 10px; " />
 Phil set up a sidereal camera mount and I took a number of shots with my
 camera, no telescope involved. I captured a few constellations with 4 to
 8 minute exposures. It's stunning what you can get just by pointing a
@@ -78,5 +59,4 @@ hooked up to a laptop. Much easier to just put my camera on the
 telescope. Of course all of that depends on me finding a T-adapter in
 Santa Fe which may be trickier than I would like.
 
-*The first image above is of Orion with the Milky Way band in the
-background. The second picture is of the bucket of the big dipper.*
+*The first image above is of Orion with the Milky Way band in the background. The second picture is of the bucket of the big dipper.*

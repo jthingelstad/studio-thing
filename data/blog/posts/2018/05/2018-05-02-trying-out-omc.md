@@ -9,4 +9,4 @@ categories: []
 
 Trying out [OMC Smokehouse](https://omcsmokehouse.com) in Duluth, and of course a [Bent Paddle Kanū](http://bentpaddlebrewing.com/beer/flagship-beers.php). 
 
-<img src="https://www.thingelstad.com/uploads/2018/6084a6baeb.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/6084a6baeb.jpg" alt="Open can of Bent Paddle Brewing Co Kanu Session Pale Ale on a wood table beside a plate of fried food." width="600" height="600" />

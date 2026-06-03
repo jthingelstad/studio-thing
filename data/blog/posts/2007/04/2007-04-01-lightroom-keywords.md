@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/8567c9748b.gif" style="width: 50px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/8567c9748b.gif" alt="Adobe Lightroom logo icon showing stylized dark blue square with white LR lettermark" style="width: 50px; float: right; margin-left: 10px; " />
 
 I've been digging into Lightroom and continue to be excited about the ability to use my digital photo library in many new ways. Lightroom has a lot of power, and so far I've mostly been working in the Library module. The Library module is all about [metadata](http://en.wikipedia.org/wiki/Metadata), data about data. Metadata is information about the photos themselves, like where it was taken or who is in the picture. There are four primary tools in Lightroom's Library module for Folders, Collections, Keywords and Metadata Browser.
 

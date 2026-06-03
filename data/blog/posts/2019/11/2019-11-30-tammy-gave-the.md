@@ -9,4 +9,4 @@ categories: []
 
 Tammy gave the kids a lesson on crushing it in Ms. Pac-Man. 🎮🏆
 
-<img src="https://www.thingelstad.com/uploads/2019/f63c585ded.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/f63c585ded.jpg" width="600" height="600" alt="Two children and an adult with long hair play Ms. Pac-Man on a classic Midway arcade cabinet in a game room." />

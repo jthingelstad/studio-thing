@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Family tradition to watch [Elf](https://en.wikipedia.org/wiki/Elf_(film)) the day after Thanksgiving! What a great movie! 🎬🎄
 
-<img src="https://www.thingelstad.com/uploads/2019/1fff672a10.jpg" width="420" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/1fff672a10.jpg" width="420" height="600" alt="Man in a green elf costume with yellow tights, curly elf hat, white fur trim, black belt, and curled black shoes, hands on hips" />

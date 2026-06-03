@@ -17,4 +17,4 @@ I mean really? What is hard about this?
 
 And then, just to highlight how uncoffee they are, the smallest ceramic mug is a 12 oz. coffee cup. Oh the humanity of it all. 🙂
 
-![](https://www.thingelstad.com/uploads/2020/8aa337e68d.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/8aa337e68d.jpg" alt="White ceramic mug on a wooden table containing a small amount of espresso at the bottom">

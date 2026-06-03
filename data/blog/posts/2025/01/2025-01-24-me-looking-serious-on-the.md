@@ -9,4 +9,4 @@ categories: []
 
 Me looking serious on the Ice Throne at [Ice Castles](https://icecastles.com/minnesota/).
 
-<img src="https://www.thingelstad.com/uploads/2025/be18392bb9.jpg" width="449" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/be18392bb9.jpg" width="449" height="600" alt="Man in a North Face puffer jacket and knit hat seated on a glowing green ice throne sculpture inside an ice castle.">

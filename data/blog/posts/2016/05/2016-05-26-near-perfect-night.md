@@ -9,4 +9,4 @@ categories: []
 
 Near perfect night to sit outside.
 
-<img src="https://www.thingelstad.com/uploads/2020/7d770863a0.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/7d770863a0.jpg" width="600" height="450" alt="Two people relaxing at an outdoor picnic table with an open can of Paddle Break Blonde ale and a small bowl of cherries, green park in background." />

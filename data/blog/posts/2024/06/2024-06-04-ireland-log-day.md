@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/06/04/ireland-log-day.html"
 title: "Ireland 2024 Log - Day 4"
 published: "2024-06-04T21:35:54+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 _Weather: Windy and rainy today and very cool. Highs around 55 °F._
@@ -30,7 +30,7 @@ _Weather: Windy and rainy today and very cool. Highs around 55 °F._
 - Tyler returns and Tammy went out to collect Mazie. 
 - Watch sunset from living room. 
 
-<img src="https://www.thingelstad.com/uploads/2024/killarney-to-ballybunion.png" width="600" height="368" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/killarney-to-ballybunion.png" width="600" height="368" alt="Google Maps showing 3 driving routes from Killarney to Ballybunion Ireland, all approximately 55 to 58 minutes and 62 to 67 km">
 
 Jump to day 
 [1](https://www.thingelstad.com/2024/06/01/ireland-log-day.html), 

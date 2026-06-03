@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Time for Fourth of July barbecue! Pork butt on the [Big Green Egg](https://biggreenegg.com)! 🔥
 
-<img src="https://www.thingelstad.com/uploads/2019/a8b8437b8d.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/a8b8437b8d.jpg" width="600" height="599" alt="Two pork butts coated in dry rub smoking on a Big Green Egg kamado grill in a backyard with a playset visible behind it." />

@@ -17,4 +17,4 @@ Thankfully Mujjo has rescued me. I got the [Leather Case for iPhone 16 Pro](http
 
 I'm happy to have found a good leather case again.
 
-<img src="https://www.thingelstad.com/uploads/2024/8a71dccf5a.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/8a71dccf5a.jpg" width="600" height="600" alt="Black Mujjo leather iPhone 16 Pro case lying face-down on a white surface, showing the triple camera cutout and embossed logo.">

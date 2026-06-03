@@ -9,4 +9,4 @@ categories: []
 
 [Ithaca Falls](https://en.wikipedia.org/wiki/Ithaca_Falls). 😊👍🏻
 
-<img src="https://www.thingelstad.com/uploads/2018/6a7bf32a6c.jpg" width="600" height="450" /><img src="https://www.thingelstad.com/uploads/2018/1ab3447191.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/6a7bf32a6c.jpg" alt="Ithaca Falls cascading down wide layered shale rock ledges into a pool below, surrounded by green trees" width="600" height="450" /><img src="https://www.thingelstad.com/uploads/2018/1ab3447191.jpg" alt="Ithaca Falls cascading down layered shale rock ledges into a calm pool below, surrounded by green trees" width="600" height="600" />

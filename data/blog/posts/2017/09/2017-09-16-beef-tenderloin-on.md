@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Beef tenderloin on [Big Green Egg](https://biggreenegg.com) tonight. 
 
-<img src="https://www.thingelstad.com/uploads/2017/7f8bdc15ac.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/7f8bdc15ac.jpg" alt="Beef tenderloin pieces grilling on a Big Green Egg kamado grill in a backyard near a lake with a playground set visible behind." width="600" height="600" />

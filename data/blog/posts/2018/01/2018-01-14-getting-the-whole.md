@@ -9,4 +9,4 @@ categories: []
 
 Getting the whole family shoveling the snow makes it very quick! 🌨🌨🌨
 
-<img src="https://www.thingelstad.com/uploads/2018/80c8f3e4e6.jpg" width="600" height="451" />
+<img src="https://www.thingelstad.com/uploads/2018/80c8f3e4e6.jpg" alt="Family of four in winter hats and jackets smiling together outdoors at night in snowy conditions." width="600" height="451" />

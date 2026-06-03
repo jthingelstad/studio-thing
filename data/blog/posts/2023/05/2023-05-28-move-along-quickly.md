@@ -9,4 +9,4 @@ categories: []
 
 Move along quickly under the broken tree hanging across the bike trail. 🤞
 
-<img src="https://www.thingelstad.com/uploads/2023/bff1484b85.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/bff1484b85.jpg" width="600" height="450" alt="Cyclists riding along a tree-lined paved trail, a large broken branch hanging overhead across the path.">

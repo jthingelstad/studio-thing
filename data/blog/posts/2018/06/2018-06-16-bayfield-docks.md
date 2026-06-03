@@ -9,4 +9,4 @@ categories: []
 
 Bayfield docks. 
 
-<img src="https://www.thingelstad.com/uploads/2018/a17badc0d1.jpg" width="600" height="450" /><img src="https://www.thingelstad.com/uploads/2018/da0f477ef9.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/a17badc0d1.jpg" alt="American flag on a lamp post along a rocky shoreline with sailboats moored at Bayfield docks under cloudy skies." width="600" height="450" /><img src="https://www.thingelstad.com/uploads/2018/da0f477ef9.jpg" alt="Dozens of sailboats and motorboats moored at Bayfield marina under a cloudy sky, with open water and distant shoreline beyond." width="600" height="450" />

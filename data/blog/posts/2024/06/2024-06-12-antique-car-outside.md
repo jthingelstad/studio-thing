@@ -9,4 +9,4 @@ categories: []
 
 Antique car outside of Titanic Museum in Belfast. 
 
-<img src="https://www.thingelstad.com/uploads/2024/0c054bd579.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/0c054bd579.jpg" width="600" height="450" alt="Vintage black Bentley racing car number 12 parked on cobblestones outside the Titanic Belfast museum">

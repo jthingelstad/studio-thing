@@ -9,4 +9,4 @@ categories: []
 
 Cows grazing by [Doonagore Castle](https://en.wikipedia.org/wiki/Doonagore_Castle) this morning. 
 
-<img src="https://www.thingelstad.com/uploads/2024/f21ec77934.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/f21ec77934.jpg" width="600" height="337" alt="Cattle grazing on a green hillside below Doonagore Castle, a round medieval stone tower with battlements, under a cloudy sky.">

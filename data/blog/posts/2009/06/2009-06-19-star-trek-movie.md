@@ -7,7 +7,6 @@ post_kind: post
 categories: []
 ---
 
-We finally went and saw the new Star Trek movie. I really enjoyed it. I
-hesitated seeing it for a long time. It was really good.
+We finally went and saw the new Star Trek movie. I really enjoyed it. I hesitated seeing it for a long time. It was really good.
 
-![](https://www.thingelstad.com/uploads/2020/8dff81cdac.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/8dff81cdac.jpg" alt="Black and white close-up movie poster of a young man with short dark hair staring intensely at the camera, dated 05.08.09">

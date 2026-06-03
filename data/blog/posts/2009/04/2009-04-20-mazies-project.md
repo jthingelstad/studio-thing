@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2009/04/20/mazies-project.html"
 title: ""
 published: "2009-04-20T05:00:00+00:00"
 post_kind: micropost
-categories: ["Family"]
+categories: []
 ---
 
 Mazie decided to do a little project with all of the dog toys the other
@@ -12,4 +12,4 @@ day. Pretty cool. *(Don't obsess about the door frame. This is a
 panorama off the iPhone that wasn't intended to be a panorama.)*
 
 
-![](https://www.thingelstad.com/uploads/2020/6081317682.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/6081317682.jpg" alt="A long line of colorful dog toys arranged in a curved row across a tiled floor, with a red dog bed visible in the background.">

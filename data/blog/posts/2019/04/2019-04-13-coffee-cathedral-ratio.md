@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 **Coffee Cathedral.** [Ratio](https://ratiocoffee.com) Eight making magic with beans from [Sump Coffee](https://www.sumpcoffee.com). ☕️
 
-<img src="https://www.thingelstad.com/uploads/2019/0704c70798.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/0704c70798.jpg" width="600" height="600" alt="Ratio Eight pour-over coffee maker brewing on a white marble countertop beside a Baratza Virtuoso grinder and Taylor kitchen scale." />

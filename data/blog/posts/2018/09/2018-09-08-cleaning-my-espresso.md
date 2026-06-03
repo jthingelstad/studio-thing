@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Cleaning my espresso machine’s portafilter always gives me a moment of pause when you clean the tar-like sludge and consider “Wait, I drink this?” 😯☕️
 
-<img src="https://www.thingelstad.com/uploads/2018/e632bfe3ba.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/e632bfe3ba.jpg" alt="Heavily soiled espresso machine portafilter basket viewed from above, coated in dark brown and black coffee residue buildup" width="600" height="600" />

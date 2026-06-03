@@ -9,4 +9,4 @@ categories: []
 
 Goodbye JPEG. Hello [HEIF](https://en.wikipedia.org/wiki/High_Efficiency_Image_File_Format)!
 
-<img src="https://www.thingelstad.com/uploads/2017/03bb97c5b2.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/03bb97c5b2.jpg" alt="iOS alert on iPhone home screen saying Camera Format Changed to High Efficiency after Mac upgrade, with OK button" width="600" height="600" />

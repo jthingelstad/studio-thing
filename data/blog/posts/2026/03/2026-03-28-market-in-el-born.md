@@ -9,4 +9,4 @@ categories: []
 
 Market in El Born. 
 
-<img src="https://www.thingelstad.com/uploads/2026/28689ee5c4.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/28689ee5c4.jpg" width="600" height="450" alt="Outdoor market stalls under white canopies along a cobblestone street in El Born, Barcelona, with parked scooters and pedestrians browsing">

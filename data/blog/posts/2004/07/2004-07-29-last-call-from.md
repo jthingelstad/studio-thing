@@ -11,17 +11,17 @@ In my last note I mentioned how confusing Paris was to get around. Amazingly eno
 
 ### City of Light
 
-![](https://www.thingelstad.com/uploads/2020/59d8b37c41.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/59d8b37c41.jpg" alt="Eiffel Tower illuminated in golden light at night reflected in foreground pools with city lights spread across the dark skyline">
 
-![](https://www.thingelstad.com/uploads/2020/fb18fcad6a.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/fb18fcad6a.jpg" alt="Eiffel Tower illuminated at night with golden lights, crowds of people sitting on grass in the foreground, dark sky behind">
 
-![](https://www.thingelstad.com/uploads/2020/a6d4507049.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/a6d4507049.jpg" alt="Arc de Triomphe illuminated at night with long-exposure light trails from traffic streaking across the foreground in Paris">
 
 Last night we hopped on the metro after dinner to do some night photography. I brought my little portable tripod (thanks REI!) and did some fun 'bulb' exposure shots. For those that are not aware, that means taking pictures where you leave your shutter open for a very long time. These shots were taken with 20 to 30 second exposures. I dig this stuff probably because it's really easy to create a shot that looks so cool. I've put three above that I liked particularly well. Paris get's to be both the *City of Light* and the *City of Love*! Pretty lucky, both light and love!
 
 ### Anniversary Art
 
-![](https://www.thingelstad.com/uploads/2020/5a47288d10.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/5a47288d10.jpg" alt="Framed painting of a colorful cityscape with red and yellow buildings, two striped-clothed figures, and red balloons floating above rooftops">
 
 Some of you may know that Tammy and I decided when we got married that our wedding presents were going to be art, and that after that we wouldn't get each other anniversary presents but instead together get a piece of art. As you'll know from reading our site this is only our 2nd anniversary, but the tradition continues. We went out today to find a piece that we really enjoyed and came out even better than expected. The beginning of the search was a bit disappointing as we got excited about €15,000 paintings that we obviously weren't bringing home. We then returned to a gallery we had visited shortly right by the Louvre called [Art Club](http://www.artclub.fr/). We found a a piece called *Allez Saute!* that we thought was great -- and now it's ours! It's by a young Parisienne artist named Corniere. She had a number of pieces but this one we particularly liked and it fit our budget.
 

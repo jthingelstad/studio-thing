@@ -9,4 +9,4 @@ categories: []
 
 On a movie roll this Christmas with **Family Switch** tonight. Fairly goofy movie but fun for the family. 
 
-<img src="https://www.thingelstad.com/uploads/2024/de87be53ab.jpg" width="405" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/de87be53ab.jpg" width="405" height="600" alt="Family Switch Netflix movie poster showing two adults a dog with a pacifier a teen a toddler and a young girl looking shocked">

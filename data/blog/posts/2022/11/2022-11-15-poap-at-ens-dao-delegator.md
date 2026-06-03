@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/5902680">5902680</a> at <strong><a href="https://poap.gallery/drops/83298">ENS DAO — Delegator 2022</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/ens-dao-e28094-year-in-review-2022-logo-1668423328150.gif" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/ens-dao-e28094-year-in-review-2022-logo-1668423328150.gif" alt="ENS DAO Delegator 2022 circular badge with blue-purple gradient, five constitutional articles around the border, dated 2022." width="500" height="500" />

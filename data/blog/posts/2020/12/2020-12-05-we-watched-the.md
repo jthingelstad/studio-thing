@@ -9,4 +9,4 @@ categories: []
 
 We watched the live stream of [Home Free](http://homefreemusic.com)’s Warmest Winter Holiday Special tonight. It was a fun time with good music, Wassail Tea, and the usual Home Free humor.
 
-<img src="https://www.thingelstad.com/uploads/2020/37b3589558.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/37b3589558.jpg" width="600" height="600" alt="Album cover for Home Free Warmest Winter showing five men in dark jackets posed against a red snowy background" />

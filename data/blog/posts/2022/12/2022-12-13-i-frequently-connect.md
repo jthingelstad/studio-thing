@@ -9,4 +9,4 @@ categories: []
 
 I frequently connect with a number of people in Ukraine. I was asking how the power situation was. I got a copy of their schedule. Weekday on the left. Empty box is normal, power on. Black is no power. Grey is maybe, we'll see. From **4 to 6 hours of power a day**.
 
-<img src="https://www.thingelstad.com/uploads/2022/9f26f78cf2.png" width="600" height="272" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/9f26f78cf2.png" width="600" height="272" alt="Weekly Ukrainian power outage schedule showing 4 to 6 hours of electricity per day, with most hours marked as no power or possible outage across all seven days.">

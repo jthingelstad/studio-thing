@@ -9,4 +9,4 @@ categories: []
 
 Minnesota? Wisconsin? Hard to say. 😊🧀🍔
 
-<img src="https://www.thingelstad.com/uploads/2020/8dd43904f6.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/8dd43904f6.jpg" width="600" height="600" alt="Slices of cheddar cheese arranged on an Epicurean cutting board shaped like the state of Minnesota." />

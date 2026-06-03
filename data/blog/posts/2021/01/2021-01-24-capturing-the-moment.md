@@ -9,4 +9,4 @@ categories: []
 
 Capturing the moment with the Bernie Sanders Mittens Meme and the Peanuts Tree. Image by the artist himself, [Adam Gale](https://rustngraincom.wordpress.com). 
 
-<img src="https://www.thingelstad.com/uploads/2021/48763f2ec0.jpg" width="600" height="773" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/48763f2ec0.jpg" width="600" height="773" alt="Tall carved wooden totem featuring Peanuts characters beside Snoopys doghouse in snow, with a masked seated man in mittens nearby." />

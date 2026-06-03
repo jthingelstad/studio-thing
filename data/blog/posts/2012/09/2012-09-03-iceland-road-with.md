@@ -9,4 +9,4 @@ categories: []
 
 Iceland Road with Sheep
 
-![](https://www.thingelstad.com/uploads/2020/ff3afe3a6e.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/ff3afe3a6e.jpg" alt="Three sheep standing on a winding gravel road cutting through a barren Icelandic hillside, black and white photo.">

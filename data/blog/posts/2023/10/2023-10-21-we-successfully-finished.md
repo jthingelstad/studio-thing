@@ -9,4 +9,4 @@ categories: ["Escape Room"]
 
 We successfully finished “[The Zeros](https://www.escapecode.tv/games/)” escape room at [Escape Code](https://www.escapecode.tv/) today with **1 second** on the clock! We missed one clue so had to make an informed guess at the time end, but it worked out! [Room 53](https://www.thingelstad.com/lists/escape-rooms/)!
 
-<img src="https://www.thingelstad.com/uploads/2023/97af444dc5.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/97af444dc5.jpg" width="600" height="450" alt="Three people smiling together in front of The Shoppes at the Courtyard sign, flanked by industrial barrels with biohazard labels.">

@@ -7,11 +7,8 @@ post_kind: post
 categories: []
 ---
 
-The hallways of the [8thBridge](http://www.8thBridge.com/) office just
-got classed up! The building added a number of [Michael
-Birawer](http://www.michaelbirawer.com/) prints. It makes the space feel
-a lot better.
+The hallways of the [8thBridge](http://www.8thBridge.com/) office just got classed up! The building added a number of [Michael Birawer](http://www.michaelbirawer.com/) prints. It makes the space feel a lot better.
 
-![](https://www.thingelstad.com/uploads/2020/01b2cd006b.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/01b2cd006b.jpg" alt="Panoramic hallway with orange walls displaying four large framed amusement park artwork prints under warm spotlights">
 
-![](https://www.thingelstad.com/uploads/2020/ca550fedc2.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/ca550fedc2.jpg" alt="Hallway with four large framed urban cityscape paintings hanging on a warm yellow wall under dim corridor lighting.">

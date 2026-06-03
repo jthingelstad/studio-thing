@@ -9,4 +9,4 @@ categories: []
 
 Sunrise draping through Paris Charles de Gaulle Airport this morning.
 
-<img src="https://www.thingelstad.com/uploads/2018/89c9b3c73f.jpg" width="600" height="449" />
+<img src="https://www.thingelstad.com/uploads/2018/89c9b3c73f.jpg" alt="Sunlit terminal hall at Paris Charles de Gaulle Airport with moving walkways, gate signs M25 through M27, and travelers seated and walking through the concourse." width="600" height="449" />

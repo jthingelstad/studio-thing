@@ -9,4 +9,4 @@ categories: []
 
 Tomatoes doing very well. 🍅🍅🍅
 
-<img src="https://www.thingelstad.com/uploads/2017/6fe48f346b.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/6fe48f346b.jpg" alt="Green unripe tomatoes growing on leafy vines supported by a wooden cage in a garden bed." width="600" height="600" style="height: auto" />

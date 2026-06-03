@@ -9,4 +9,4 @@ categories: []
 
 Happy Birthday to Microsoft [Windows 7]!
 
-![](https://www.thingelstad.com/uploads/2020/48df604c57.png)
+<img src="https://www.thingelstad.com/uploads/2020/48df604c57.png" alt="White rectangular birthday cake decorated with colorful foil gift box ornaments and a candle, sitting on a wooden table next to an open laptop displaying a blue Windows 7 desktop wallpaper.">

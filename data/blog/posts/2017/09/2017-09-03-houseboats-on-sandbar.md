@@ -9,4 +9,4 @@ categories: []
 
 Houseboats on sandbar. Pokegama Lake condos? 😊
 
-<img src="https://www.thingelstad.com/uploads/2017/25cc4ac477.jpg" width="599" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/25cc4ac477.jpg" alt="Two houseboats with decks beached on a sandy shore, a white speedboat in the foreground, people gathered near the water." width="599" height="600" />

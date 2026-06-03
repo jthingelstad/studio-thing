@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/8b1a3479f3.gif" style="width: 207px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/8b1a3479f3.gif" alt="Backpack logo featuring a stack of papers tied with a bow above the word Backpack in dark text" style="width: 207px; float: right; margin-left: 10px; " />
 
 I think amongst my cadre of hyper-geeky, super web savvy friends I was probably a little late to get to [Backpack](http://backpackit.com/). About a month ago however I was faced with a challenge. I had a bunch of information all over the place and I wanted to consolidate it. I'd always liked the idea of a "personal wiki" that I could have anywhere and had considered installing something on my machines for this. I had even installed OpenWiki at home but it's a dead open source project with no future. What to do? I'd heard about Backpack so I decided to give it a serious look. I've been using it for a little over a month and I can't imagine working without it now.
 

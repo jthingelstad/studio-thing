@@ -9,4 +9,4 @@ categories: ["TeamSPS", "Kubb"]
 
 SPS Brew-Off with Kubb! Go #TeamSPS! 👍
 
-<img src="https://www.thingelstad.com/uploads/2018/b2d00ebec7.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/b2d00ebec7.jpg" alt="Three people playing Kubb on a grass lawn outside an office building, with wooden game pieces scattered on the ground." width="600" height="450" />

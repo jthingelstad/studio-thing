@@ -9,6 +9,6 @@ categories: []
 
 We took the [Doolin Ferry](https://doolinferry.com) to [Inis Mór](https://en.wikipedia.org/wiki/Inishmore), part of the Aran Islands. The first 10-20 minutes were pretty bumpy. The ocean swells were sizable and there was a lot of water splashing around. Happily we were in the lower level protected with the windows. Toward the end of the ferry ride Tyler wasn't feeling (or looking!) very good but luckily he held it together.
 
-<img src="https://www.thingelstad.com/uploads/2024/3670e60e86.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/3670e60e86.jpg" width="600" height="450" alt="White Doolin Ferry catamaran named Aran Islands Express underway on choppy blue water near a rocky Irish coastline.">
 
-<img src="https://www.thingelstad.com/uploads/2024/8a68194ab6.jpg" width="600" height="587" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/8a68194ab6.jpg" width="600" height="587" alt="Map showing a ferry route across Galway Bay from Doolin on the Irish coast to Inishmore in the Aran Islands, passing south of Inisheer.">

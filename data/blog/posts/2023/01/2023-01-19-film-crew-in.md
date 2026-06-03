@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Film crew in the Cloud today shooting some video for #TeamSPS. 
 
-<img src="https://www.thingelstad.com/uploads/2023/de28e6d943.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/de28e6d943.jpg" width="600" height="450" alt="Film crew with lighting rigs and cameras set up in a modern cafeteria with red accents, bar seating, and pendant lights.">

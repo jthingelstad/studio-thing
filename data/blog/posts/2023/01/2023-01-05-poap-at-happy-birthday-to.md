@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6200655">6200655</a> at <strong><a href="https://poap.gallery/drops/95634">Happy Birthday to Patricio Worthalter (POAP colors version)</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/happy-birthday-to-patricio-worthalter-poap-colors-version-2023-logo-1672924.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/happy-birthday-to-patricio-worthalter-poap-colors-version-2023-logo-1672924.png" alt="Circular POAP badge reading Happy Birthday Patricio January 5 2023 36 Years Old with a smiling man in a red blazer and black tie" width="500" height="500" />

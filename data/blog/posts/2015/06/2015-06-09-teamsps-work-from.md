@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Working on the deck, #TeamSPS!
 
-<img src="https://www.thingelstad.com/uploads/2020/88061da0d1.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/88061da0d1.jpg" width="600" height="450" alt="People working on laptops and conversing at outdoor rooftop terrace tables with a downtown skyline backdrop on a sunny day." />

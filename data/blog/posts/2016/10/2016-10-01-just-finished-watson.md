@@ -9,4 +9,4 @@ categories: []
 
 Just finished [Watson Adventures](https://watsonadventures.com) scavenger hunt at [Art Institute of Chicago](https://www.artic.edu)! Fun time and we won! The “Mighty Minnesota Muggles” took first!
 
-<img src="https://www.thingelstad.com/uploads/2020/925a5fd4a1.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/925a5fd4a1.jpg" width="600" height="600" alt="Three people smile and hold up bronze medals on red ribbons after winning a scavenger hunt at the Art Institute of Chicago." />

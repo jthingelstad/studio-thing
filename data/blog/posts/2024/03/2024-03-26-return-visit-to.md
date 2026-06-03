@@ -9,6 +9,6 @@ categories: ["Coffee"]
 
 Return visit to [Discourse Coffee](https://www.discourse.coffee) this morning for a Moonwater (espresso, milk, honey, cinnamon, tellicherry black pepper, and applewood smoked sea salt). Yum. ☕️
 
-<img src="https://www.thingelstad.com/uploads/2024/093ebb449b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/093ebb449b.jpg" width="600" height="450" alt="Latte with leaf latte art in a dark grey ceramic cup and saucer on a speckled white counter, with jars and glasses in the background.">
 
 _Part of the [Milwaukee Spring Break collection](https://www.thingelstad.com/collections/milwaukee-spring-break/)._

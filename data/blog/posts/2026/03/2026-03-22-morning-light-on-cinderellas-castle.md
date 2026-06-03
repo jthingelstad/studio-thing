@@ -9,4 +9,4 @@ categories: []
 
 Morning light on Sleeping Beauty's Castle as Disneyland Paris opens. 
 
-<img src="https://www.thingelstad.com/uploads/2026/ee45b107e6.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/ee45b107e6.jpg" width="450" height="600" alt="Sleeping Beauty Castle at Disneyland Paris with pink towers and teal spires, visitors walking toward the arched entrance in morning light.">

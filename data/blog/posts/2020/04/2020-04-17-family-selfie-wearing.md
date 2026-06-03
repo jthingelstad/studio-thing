@@ -9,4 +9,4 @@ categories: []
 
 Family selfie wearing our custom masks with swappable HEPA filters made by my Mom! 😷🧵
 
-<img src="https://www.thingelstad.com/uploads/2020/1132d8be62.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/1132d8be62.jpg" width="600" height="450" alt="Four people posing for a selfie indoors wearing colorful handmade fabric face masks." />

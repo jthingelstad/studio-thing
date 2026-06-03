@@ -9,4 +9,4 @@ categories: []
 
 Dinner in Grand Marais at [Voyageur Brewing Company](http://www.voyageurbrewing.com). Drinking limited release **Devil’s Kettle Dry Hopped with Galaxy Hops**, in the room it was brewed. 🍺
 
-<img src="https://www.thingelstad.com/uploads/2020/618b47c5f6.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/618b47c5f6.jpg" width="600" height="450" alt="Hazy golden IPA in a pint glass on a wood table inside a brewery with large stainless steel fermentation tanks behind it." />

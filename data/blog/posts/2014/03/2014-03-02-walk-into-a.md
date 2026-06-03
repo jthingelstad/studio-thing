@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2014/03/02/walk-into-a.html"
 title: ""
 published: "2014-03-02T06:00:00+00:00"
 post_kind: micropost
-categories: []
+categories: ["Minnestar"]
 ---
 
 Over recent years I've been growing increasingly concerned about the
@@ -21,11 +21,11 @@ entrepreneurs. The headline of the email exclaimed in large type...
 In the email were three photos to highlight the people just like you.
 All set in the gorgeous CoCo Minneapolis space.
 
-![](https://www.thingelstad.com/uploads/2020/0d8251848c.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/0d8251848c.jpg" alt="Five men in casual and business-casual attire conversing in groups inside a modern open office or coworking space.">
 
-![](https://www.thingelstad.com/uploads/2020/bfc6adcf1d.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/bfc6adcf1d.jpg" alt="Group of men in business casual attire seated at a conference table during a tech networking event indoors.">
 
-![](https://www.thingelstad.com/uploads/2020/25b3751397.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/25b3751397.jpg" alt="Men in business casual attire seated at tables in conversation at a Project Skyway event inside a large hall.">
 
 Notably a room of people just like you, if you are a young, white man.
 

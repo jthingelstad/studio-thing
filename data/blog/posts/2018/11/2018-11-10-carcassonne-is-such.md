@@ -9,4 +9,4 @@ categories: []
 
 [Carcassonne](https://en.wikipedia.org/wiki/Carcassonne) is such a great game. Introduced the kids to it today.
 
-<img src="https://www.thingelstad.com/uploads/2018/9d89dcea4d.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/9d89dcea4d.jpg" alt="Carcassonne board game in progress on a wooden table with colorful meeple pieces on a large spread of landscape tiles" width="600" height="337" />

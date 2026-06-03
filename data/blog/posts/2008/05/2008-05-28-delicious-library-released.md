@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/4ec34533c9.png" style="width: 160px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/4ec34533c9.png" alt="App icon for Delicious Library 2 showing a blue book, barcode scanner, and CD disc on a white circular background." style="width: 160px; float: right; margin-left: 10px; " />
 
 Last night [Wil Shipley](http://www.wilshipley.com/blog/), and the Delicious Monster team, released [Delicious Library 2](http://www.delicious-monster.com/). Delicious Library is a cataloging application that I've put to very real use to manage my CD and DVD archive. Since I've moved all of my media onto my network, the physical assets are of no use other than as proof of ownership. I've moved them all into [Slappa](http://www.slappa.com/) cases and to track where things are I use Delicious Library. Yes, a spreadsheet could do it, but it would suck. Delicious Library is such a nice application for this.
 

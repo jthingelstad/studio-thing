@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/3327254">3327254</a> at <strong><a href="https://poap.gallery/drops/20140">POAPathon - Merry Christmas from the North Poll</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/poapathon-merry-christmas-from-the-north-poll-2021-logo-1640448360620.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/poapathon-merry-christmas-from-the-north-poll-2021-logo-1640448360620.png" alt="Cartoon figure wearing a red and green snapback cap and sneakers, holding a skateboard labeled There is POAP, with a POAPathon badge" width="500" height="500" />

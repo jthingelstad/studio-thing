@@ -17,11 +17,11 @@ I decided to take the plunge and do the upgrade. I had read about the procedure 
 
 First thing, you need some drives. I ordered three of the [Western Digital Scorpio Blue 250GB 2.5" PATA drives](http://www.amazon.com/gp/product/B000W3RPLC) from [NewEgg](http://www.newegg.com/).
 
-<img src="https://www.thingelstad.com/uploads/2020/771ba9a9c9.png" style="max-width: 500px; " />
+<img src="https://www.thingelstad.com/uploads/2020/771ba9a9c9.png" alt="Three laptop hard drives in anti-static plastic packaging laid side by side on a colorful painted surface" style="max-width: 500px; " />
 
 With the drives in hand, it was time to rip open one of the Apple TV's and give it some bigger storage. This is really the only tricky part of the upgrade, since the Apple TV is not meant to be opened by the end-user.
 
-<img src="https://www.thingelstad.com/uploads/2020/f5aa2d5157.png" style="max-width: 500px; " />
+<img src="https://www.thingelstad.com/uploads/2020/f5aa2d5157.png" alt="Disassembled Apple TV unit with its back cover removed, circuit board exposed, next to a replacement laptop hard drive, screwdrivers, and other components on a colorful painted desk." style="max-width: 500px; " />
 
 The process is pretty painless, but I will highlight a couple of things not found in all the How To articles.
 
@@ -34,11 +34,11 @@ Note, some of the write-ups suggest modifying the writing to not write the media
 
 I wimped out and used [iPartition](http://www.coriolis-systems.com/iPartition.php) to resize the Media partition. That turned a dozen commands into a click of the mouse and a few seconds of drive spinning. I figure I can use iPartition for other things too. After the repartition you just put it all back together and plug it in again.
 
-<img src="https://www.thingelstad.com/uploads/2020/c5a8801079.png" style="max-width: 488px; " />
+<img src="https://www.thingelstad.com/uploads/2020/c5a8801079.png" alt="First-generation Apple TV device shown in iTunes summary panel with name Living Room TV, capacity 228.46 GB, software version 2.3." style="max-width: 488px; " />
 
 Just like that I had a ton of available storage, and let iTunes spend another few hours filling it up with content.
 
-<img src="https://www.thingelstad.com/uploads/2020/dad6bdfcee.png" style="max-width: 502px; " />
+<img src="https://www.thingelstad.com/uploads/2020/dad6bdfcee.png" alt="Storage capacity bar for an Apple TV showing 228.46 GB total: 28.22 GB video, 11.1 MB audio, 259 MB photos, 4.41 GB other, 195.58 GB free" style="max-width: 502px; " />
 
 I have noticed that iTunes synchronizes things in a specific way when you have a big drive. All of my music is stored locally on each Apple TV, I like that. But priority seems to be given to **unwatched** TV Shows. There seems to be a rule in the sync that always wants those local if there is space. Probably makes sense, but it does mean that after TV and Music most movies are streaming. I wish there was a way to do something between automatic and custom sync. I'd like to do an automatic sync, but be able to pin a number of things to be local all the time. This would be really great for Mazie's stuff that she watches repeatedly.
 

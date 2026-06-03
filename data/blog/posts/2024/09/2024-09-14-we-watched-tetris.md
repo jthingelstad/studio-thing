@@ -9,4 +9,4 @@ categories: []
 
 We watched [Tetris](https://en.wikipedia.org/wiki/Tetris_(film)) and it was great. Tetris is my favorite game ever. I can still get completely lost playing Tetris. We even had a [Tetris shower](https://www.thingelstad.com/2009/05/03/tetris-shower.html)! The movie tells the story of getting the right to distribute the game and is filled with suspense and intrigue. 
 
-<img src="https://www.thingelstad.com/uploads/2024/3896943d3d.jpg" width="400" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/3896943d3d.jpg" width="400" height="600" alt="Movie poster for Tetris an Apple Original Film starring Taron Egerton with a mans face overlaid by colorful pixel blocks">

@@ -11,7 +11,7 @@ categories: ["Minnestar", "Crypto"]
 
 For this [POAP](https://poap.xyz) I reached out to Meg Steuer at Minnestar and she was kind enough to share the graphics that are being used for the t-shirts. It was a super cool shirt and after consider it for a bit it worked absolutely perfect for an animated image. I’m loving this loop!
 
-<img src="https://www.thingelstad.com/uploads/2025/minnebar-19-poap.gif" style="max-width: 500px;" >
+<img src="https://www.thingelstad.com/uploads/2025/minnebar-19-poap.gif" alt="Red circle logo with a black banner reading MINNEBAR in yellow bold letters and 19 in blue" style="max-width: 500px;" >
 
 I have several hundred tokens loaded on three different [POAP NFC discs](https://iyk.app/shop/disc) that will be placed around the event. Just bring your phone near the disc and tap the center — you'll get directed to a link to mint your token!
 

@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 **[Tom Wujec](https://www.tomwujec.com)** gave a great keynote at #TeamSPS **Growth Summit 2022**! Technology advancement, innovation acceleration, fast feedback loops with a handful of great mental models to help build the future! 🛠
 
-<img src="https://www.thingelstad.com/uploads/2021/acc5be5674.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/acc5be5674.jpg" width="600" height="337" alt="Speaker in a blazer gestures on stage beside a slide reading The Future of Work with the Wujec Group logo, audience silhouettes in foreground." />

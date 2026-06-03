@@ -9,4 +9,4 @@ categories: []
 
 [MN Nice Cream](https://www.mnnicecream.com). 🍦
 
-<img src="https://www.thingelstad.com/uploads/2021/7796e7b18e.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/7796e7b18e.jpg" width="600" height="600" alt="Neon sign of an ice cream cone with blue swirled soft serve on a yellow cone, mounted on a colorful painted brick wall." />

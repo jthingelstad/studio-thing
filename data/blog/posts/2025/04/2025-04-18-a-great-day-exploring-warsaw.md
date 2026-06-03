@@ -9,4 +9,4 @@ categories: []
 
 A great day exploring Warsaw with [Evgeniy Kostenko](https://www.linkedin.com/in/evgeniy-kostenko-95831953/), [Amy Patton](https://www.linkedin.com/in/amyjpatton/), [Yuri Zhydun](https://www.linkedin.com/in/yurizhidun/), and [Jen Bonk](https://www.linkedin.com/in/jennifer-samek-bonk/). Photo from the old city wall in Old Warsaw.
 
-<img src="https://www.thingelstad.com/uploads/2025/8634af1378.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/8634af1378.jpg" width="600" height="450" alt="Five people smiling for a selfie on the old city wall in Warsaw, with red-roofed buildings and church spires in the background.">

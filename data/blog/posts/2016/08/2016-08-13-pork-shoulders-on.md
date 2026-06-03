@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Pork shoulders on the [Big Green Egg](https://biggreenegg.com). Smoking!
 
-<img src="https://www.thingelstad.com/uploads/2020/b737e05f74.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/b737e05f74.jpg" width="600" height="450" alt="Three rubbed pork shoulders smoking on a Big Green Egg kamado grill outdoors near a lake on a sunny summer day." />

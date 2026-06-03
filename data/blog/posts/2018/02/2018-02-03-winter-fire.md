@@ -9,4 +9,4 @@ categories: []
 
 Winter fire. ❄️🔥
 
-<img src="https://www.thingelstad.com/uploads/2018/268336c1d0.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/268336c1d0.jpg" alt="Small campfire burning in a snow-covered fire ring beside a frozen lake, with a metal cooking grate overhead and bare trees behind." width="600" height="600" />

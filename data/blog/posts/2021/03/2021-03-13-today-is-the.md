@@ -9,11 +9,11 @@ categories: ["Music"]
 
 Today is the longest segment on our drive back home. 
 
-<img src="https://www.thingelstad.com/uploads/2021/c0cd228c2d.jpg" width="600" height="277" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/c0cd228c2d.jpg" width="600" height="277" alt="Apple Maps navigation showing 11 hr 45 min fastest route of 768 miles from Moriarty NM to Liberty MO with tolls required." />
 
 Over an hour driving through extremely dense fog. 
 
-<img src="https://www.thingelstad.com/uploads/2021/778d07fc36.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/778d07fc36.jpg" width="600" height="337" alt="Semi-truck barely visible ahead on a two-lane highway in extremely dense fog with near-zero visibility" />
 
 5:31a MT Left Moriarty, New Mexico as of on Central Time.  
 5:55a Wagon Wheel by Old Crow Medicine Show. 🎶  

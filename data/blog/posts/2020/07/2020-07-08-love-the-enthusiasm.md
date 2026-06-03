@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Love the enthusiasm and passion that [Dr. Venkat Subramaniam](http://www.agiledeveloper.com/aboutus.html) is sharing with #TeamSPS during TechJam! “Spearheading the Future of Programming” His love for the craft of programming is overflowing! 👩‍💻👨‍💻
 
-<img src="https://www.thingelstad.com/uploads/2020/75f9903d96.jpg" width="400" height="400" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/75f9903d96.jpg" width="400" height="400" alt="Middle-aged man with mustache and glasses seated outdoors with rocky mountain peaks and pine trees behind him" />

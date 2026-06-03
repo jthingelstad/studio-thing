@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Tofu joins the Jalapeños. [Big Green Egg](https://biggreenegg.com).
 
-<img src="https://www.thingelstad.com/uploads/2023/img-7266.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/img-7266.jpg" width="600" height="450" alt="Glazed tofu slabs and cream cheese stuffed jalapeno halves grilling on a charcoal Big Green Egg kamado grill.">

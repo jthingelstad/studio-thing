@@ -7,9 +7,6 @@ post_kind: post
 categories: []
 ---
 
-Another year of Men's Recreational E-League Softball has begun. The
-suspense is heavy this year. The [B-Squad is playing
-well](http://activenet18.active.com/minneapolisparks/servlet/showLeagueScheduleScores.sdi?league_id=656&leagueschedule_id=592&team_id=5424&sdireqauth=1337045195402).
-A win taunts us.
+Another year of Men's Recreational E-League Softball has begun. The suspense is heavy this year. The [B-Squad is playing well](http://activenet18.active.com/minneapolisparks/servlet/showLeagueScheduleScores.sdi?league_id=656&leagueschedule_id=592&team_id=5424&sdireqauth=1337045195402). A win taunts us.
 
-![](https://www.thingelstad.com/uploads/2020/e98c96dca4.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/e98c96dca4.jpg" alt="Dusty's Bar painted brick wall sign listing Homemade Dagos Burgers Soups and Cocktails with a martini glass illustration">

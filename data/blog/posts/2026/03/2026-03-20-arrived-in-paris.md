@@ -9,4 +9,4 @@ categories: []
 
 Arrived in Paris! 🇫🇷 
 
-<img src="https://www.thingelstad.com/uploads/2026/256fa40ee6.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/256fa40ee6.jpg" width="600" height="450" alt="Three people smiling for a selfie on a busy train platform inside a large historic station with a glass and iron roof.">

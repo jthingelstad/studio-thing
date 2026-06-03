@@ -9,4 +9,4 @@ categories: []
 
 A little early still for tulips but always a nice time to explore the Minnesota Landscape Arboretum.
 
-<img src="https://www.thingelstad.com/uploads/2026/d9d96c511f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/d9d96c511f.jpg" width="600" height="450" alt="Dense garden bed of bright yellow double tulips in foreground with rows of pink tulips extending into the background.">

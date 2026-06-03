@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Daily cyberweek standup as #TeamSPS prepares for another great day! 🙌
 
-<img src="https://www.thingelstad.com/uploads/2019/9468d66567.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/9468d66567.jpg" width="600" height="450" alt="Group of office workers gathered around workstations watching a video conference on a wall-mounted screen during a standup meeting." />

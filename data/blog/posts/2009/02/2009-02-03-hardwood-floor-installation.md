@@ -9,4 +9,4 @@ categories: []
 
 My home office is ready for the hardwood floor installation tomorrow!
 
-![](https://www.thingelstad.com/uploads/2020/af276c5c68.png)
+<img src="https://www.thingelstad.com/uploads/2020/af276c5c68.png" alt="Empty room with teal walls covered in framed photos and a decorative clock, beige carpet, and a white window">

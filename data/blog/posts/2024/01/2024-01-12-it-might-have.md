@@ -9,4 +9,4 @@ categories: []
 
 It might have been better if I never would have found out about these Bailey’s Irish Cream Minis. Delicious. 
 
-<img src="https://www.thingelstad.com/uploads/2024/9ff27362ac.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/9ff27362ac.jpg" width="600" height="450" alt="Crystal rocks glass with Bailey's Irish Cream on ice next to an empty Baileys Minis bottle on a wooden desk.">

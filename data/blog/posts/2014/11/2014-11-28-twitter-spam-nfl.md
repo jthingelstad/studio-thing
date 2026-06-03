@@ -7,11 +7,9 @@ post_kind: post
 categories: []
 ---
 
-![](https://www.thingelstad.com/uploads/2020/35c9d53ff4.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/35c9d53ff4.jpg" alt="Apple Mail app showing 13 Twitter promotional emails searched by hashtag NFL, with open email displaying a Thanksgiving NFL marketing campaign">
 
-If you have a Twitter account, or have many like I do I'm guessing you
-got this email from Twitter. I sure hope the NFL paid them a pretty
-penny to annoy all their users.
+If you have a Twitter account, or have many like I do I'm guessing you got this email from Twitter. I sure hope the NFL paid them a pretty penny to annoy all their users.
 
 1.  I really have 13 Twitter accounts? Well, not really. @VeloTweets,
     @thinglesBot, @SenateTweets and @Wikinosh are accounts I've

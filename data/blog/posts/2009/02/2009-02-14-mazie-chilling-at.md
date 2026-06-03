@@ -9,4 +9,4 @@ categories: []
 
 Mazie chilling at a restaurant.
 
-![](https://www.thingelstad.com/uploads/2020/c62a7b10f8.png)
+<img src="https://www.thingelstad.com/uploads/2020/c62a7b10f8.png" alt="Young girl with blonde hair wearing a red long-sleeve shirt, resting her arm near her face, shown in four repeated frames">

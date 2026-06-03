@@ -9,4 +9,4 @@ categories: []
 
 **Boat Day!** Beautiful morning to get the pontoon from storage. Heading up Cannon River to Wells Lake and finally to Cannon Lake! 🙌
 
-<img src="https://www.thingelstad.com/uploads/2020/19445e5a97.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/19445e5a97.jpg" width="600" height="450" alt="View from the helm of a pontoon boat on a calm river, with gray upholstered seating, gauges, and trees lining the far shore." />

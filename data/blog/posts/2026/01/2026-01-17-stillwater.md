@@ -9,4 +9,4 @@ categories: []
 
 Stillwater.
 
-<img src="https://www.thingelstad.com/uploads/2026/d8062730fd.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/d8062730fd.jpg" width="600" height="450" alt="Stillwater Olive Oil Co storefront in winter with snow on the ground and a red flag on a lamppost">

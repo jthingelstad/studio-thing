@@ -9,4 +9,4 @@ categories: []
 
 First Dairy Queen bike ride of the year! 🍦
 
-<img src="https://www.thingelstad.com/uploads/2024/af0044fa45.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/af0044fa45.jpg" width="600" height="450" alt="Family of four holding DQ Blizzards and ice cream cones outside a Dairy Queen on a sunny day">

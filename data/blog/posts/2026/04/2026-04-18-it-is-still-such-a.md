@@ -9,4 +9,4 @@ categories: []
 
 It is still such a "wow" when you hit print and go downstairs a few hours later to grab something useful. Tyler and I are having a great time with the Bambu Labs P2S.
 
-<img src="https://www.thingelstad.com/uploads/2026/842eccba9e.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/842eccba9e.jpg" width="600" height="450" alt="Gray hexagonal mesh storage basket 3D printed in plastic, sitting on a white surface, empty and square-shaped.">

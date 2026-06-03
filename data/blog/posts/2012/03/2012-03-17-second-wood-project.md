@@ -9,4 +9,4 @@ categories: []
 
 Second wood project started. Oooph. 😊
 
-<img src="https://www.thingelstad.com/uploads/2024/70f2a03b-b444-4f0a-ab37-e2387c19efdf.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/70f2a03b-b444-4f0a-ab37-e2387c19efdf.jpg" width="600" height="450" alt="Backyard concrete driveway scattered with wood chips, a stacked Woodhaven firewood rack along a wooden fence, and an open garage nearby.">

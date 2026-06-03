@@ -9,4 +9,4 @@ categories: []
 
 Rainy night on the SPS patio. 🌨
 
-<img src="https://www.thingelstad.com/uploads/2017/a19729e982.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/a19729e982.jpg" alt="Foggy nighttime skyline of tall illuminated office towers seen from a rainy outdoor patio with trees below" width="600" height="600" />

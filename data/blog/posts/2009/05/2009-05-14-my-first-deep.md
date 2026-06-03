@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 My first deep dish pizza on the Big Green Egg.
 
-![](https://www.thingelstad.com/uploads/2020/89cc87aaf4.png)
+<img src="https://www.thingelstad.com/uploads/2020/89cc87aaf4.png" alt="Deep dish cheese pizza cooking in a round pan on a Big Green Egg ceramic grill outdoors">

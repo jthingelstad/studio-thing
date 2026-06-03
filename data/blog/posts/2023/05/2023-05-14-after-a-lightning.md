@@ -9,4 +9,4 @@ categories: ["Music"]
 
 After a lightning delay with evacuation and an impromptu dinner at Mezcal (yum!) we returned to the festival to see an abbreviated performance from [Emmylou Harris](https://www.emmylouharris.com/) which was great. 🎶
 
-<img src="https://www.thingelstad.com/uploads/2023/0c2ce5e4b1.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/0c2ce5e4b1.jpg" width="600" height="450" alt="Outdoor concert stage at dusk with a band performing, large lighting rig overhead, tall hotel building visible behind the stage.">

@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/533314fb86.jpg" style="width: 300px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/533314fb86.jpg" alt="Small white E-Sky Lama 2 coaxial electric RC helicopter with clear rotor guards and green accents, on a white surface" style="width: 300px; float: right; margin-left: 10px; " />
 
 My friend Chris, who is constantly finding new things to get into and get everyone he knows excited in, recently decided to turn his OCD towards RC helicopters.
 

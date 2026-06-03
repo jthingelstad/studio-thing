@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Not my [Big Green Egg](https://biggreenegg.com). Still awesome.
 
-<img src="https://www.thingelstad.com/uploads/2020/d5f69f8e56.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d5f69f8e56.jpg" width="600" height="450" alt="Large green Big Green Egg ceramic charcoal grill on a wooden table outdoors, with a bottle of Southern Tier Unearthly IPA beside it." />

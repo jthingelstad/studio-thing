@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/60158692f2.png" style="width: 94px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/60158692f2.png" alt="App icon showing a computer monitor displaying a blue desktop with a coffee cup in the foreground" style="width: 94px; float: right; margin-left: 10px; " />
 
 Here is a little piece of free software that you don't realize you need for your Mac, particularly your MacBook laptop. [Caffeine](http://www.lightheadsw.com/caffeine/) is a free utility from [Lighthead Software](http://www.lightheadsw.com/) that just sits in your menu bar does one thing very well. If you click it's coffee cup it fills with coffee and your Mac will not go to sleep, the screen saver will not engage and the screen will not even dim to preserve power.
 

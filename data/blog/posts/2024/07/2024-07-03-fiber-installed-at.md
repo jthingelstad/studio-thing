@@ -15,4 +15,4 @@ I knew I wanted to switch everything to [UniFi](https://www.ui.com). I use UniFi
 
 Today the last part clicked in with the fiber getting turned on. I provisioned 500 Mbps service. I didn’t think full gigabit made sense. Speeds look great and response times are very snappy.
 
-<img src="https://www.thingelstad.com/uploads/2024/bevcomm-fiber-speed.png" style="max-width: 300px;" />
+<img src="https://www.thingelstad.com/uploads/2024/bevcomm-fiber-speed.png" alt="Speed test results showing 476 Mbps download and 524 Mbps upload on a 500 Mbps fiber connection." style="max-width: 300px;" />

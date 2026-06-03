@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Christmas Eve steaks on the [Big Green Egg](https://biggreenegg.com). Nice grilling weather! 
 
-<img src="https://www.thingelstad.com/uploads/2023/img-2432.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/img-2432.jpg" width="600" height="450" alt="Two steaks searing on a Big Green Egg kamado grill with glowing red charcoal beneath and grill marks visible on the meat.">

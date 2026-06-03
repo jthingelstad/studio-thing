@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/1068867">1068867</a> at <strong><a href="https://poap.gallery/drops/6938">Olson Family Vacation 18</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/olson-family-vacation-18-2021-logo-1630776899730.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/olson-family-vacation-18-2021-logo-1630776899730.png" alt="Colorful hand-drawn logo reading Olson Family Vacation 18 in orange, yellow, purple, and green block letters" width="500" height="500" />

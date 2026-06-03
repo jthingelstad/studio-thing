@@ -9,4 +9,4 @@ categories: []
 
 Through bag 4 of [Super Mario World: Mario & Yoshi](https://www.lego.com/en-us/product/super-mario-world-mario-yoshi-71438) LEGO. Movement is very smooth and base is stable. 
 
-<img src="https://www.thingelstad.com/uploads/2024/11d1d862ce.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/11d1d862ce.jpg" width="600" height="600" alt="Partially built LEGO Super Mario World Mario and Yoshi set on a wooden table, showing Yoshi torso with movement mechanism, next to the box.">

@@ -9,4 +9,4 @@ categories: []
 
 Nearly Halloween. 🎃 
 
-<img src="https://www.thingelstad.com/uploads/2024/91a82992f8.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/91a82992f8.jpg" width="450" height="600" alt="Hundreds of orange pumpkins spread across a lawn beneath fall trees with golden leaves at an outdoor pumpkin patch.">

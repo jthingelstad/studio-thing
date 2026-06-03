@@ -9,4 +9,4 @@ categories: []
 
 Scape Goat beer from [Big Sky Brewing](https://bigskybrew.com/). 
 
-![](https://www.thingelstad.com/uploads/2020/297c56a9b1.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/297c56a9b1.jpg" alt="Bottle of Big Sky Brewing Scape Goat Pale Ale on a wooden deck table beside a plate of grilled sausages.">

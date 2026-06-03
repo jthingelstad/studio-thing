@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Suddenly penalty kick and another in the back of the net goes Argentina 2 France 2!!! ⚽️ 1m 33s between goals. 
 
-<img src="https://www.thingelstad.com/uploads/2022/b3fcb0c88c.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/b3fcb0c88c.jpg" width="600" height="600" alt="Vizio TV showing FIFA World Cup 2022 Final with score ARG 2 FRA 2 at 81:16, players celebrating near the goal corner.">

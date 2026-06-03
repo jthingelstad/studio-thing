@@ -9,4 +9,4 @@ categories: []
 
 We found the [Illuminati](https://en.wikipedia.org/wiki/Illuminati). 😁
 
-<img src="https://www.thingelstad.com/uploads/2025/7acbf93a51.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/7acbf93a51.jpg" width="600" height="600" alt="Stone pyramid sculpture with rough-textured base and stacked rocks on top, set in a lush garden beside a residential sidewalk.">

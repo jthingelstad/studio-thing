@@ -11,4 +11,4 @@ Here is a shot of the scene while the [New Standards performed at the Lantern Fe
 
 This was taken with [You Gotta See This!](http://www.boinx.com/seethis/) on my iPhone 4.
 
-![](https://www.thingelstad.com/uploads/2020/c1a5f161bb.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/c1a5f161bb.jpg" alt="Panoramic collage of a crowded indoor gala with purple stage lighting, red lantern decorations, and a small ensemble performing on stage">

@@ -11,4 +11,4 @@ Gorgeous view from [Mt. Tamalpais](http://www.parks.ca.gov/?page_id=471). What a
 
 I grabbed this 8-frame panorama with [Pano](http://debaclesoftware.com/) on my iPhone.
 
-![](https://www.thingelstad.com/uploads/2020/4ade0bcc24.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/4ade0bcc24.jpg" alt="Panoramic view from Mt. Tamalpais looking out over green forested hills toward a hazy bay and distant flatlands below.">

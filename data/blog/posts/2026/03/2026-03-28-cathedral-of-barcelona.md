@@ -9,4 +9,4 @@ categories: []
 
 Cathedral of Barcelona. 
 
-<img src="https://www.thingelstad.com/uploads/2026/8596bb94ef.jpg" width="450" height="600" alt=""><img src="https://www.thingelstad.com/uploads/2026/71d8b85674.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/8596bb94ef.jpg" width="450" height="600" alt="Barcelona Cathedral Gothic facade with pointed spires rising against blue sky, crowds of tourists gathered on the steps below."><img src="https://www.thingelstad.com/uploads/2026/71d8b85674.jpg" width="600" height="450" alt="Gothic facade of Barcelona Cathedral with ornate spires and arched entrance, tourists gathered in the plaza below under a blue sky.">

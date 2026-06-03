@@ -9,4 +9,4 @@ categories: []
 
 Commute by plane to the lake! 🛩
 
-<img src="https://www.thingelstad.com/uploads/2017/d8fd85c0af.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/d8fd85c0af.jpg" alt="Floatplane flying low over a choppy lake with a tree-lined shore and puffy clouds behind it" width="600" height="600" />

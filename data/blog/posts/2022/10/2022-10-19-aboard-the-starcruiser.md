@@ -9,4 +9,4 @@ categories: []
 
 Aboard the Starcruiser Halcyon ready to help the Resistance. We visit Batuu tomorrow. 
 
-<img src="https://www.thingelstad.com/uploads/2022/ff5fe90241.jpg" width="448" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/ff5fe90241.jpg" width="448" height="600" alt="Four people posing with glowing blue lightsabers in a Star Wars themed circular doorway, two in costume.">

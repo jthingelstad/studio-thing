@@ -9,4 +9,4 @@ categories: []
 
 I loved this bit of public art in Indianapolis. The blue metal pushing the rusted metal to the side, juxtaposed with the grass and plants below, and the concrete above. 
 
-<img src="https://www.thingelstad.com/uploads/2021/f1e2f71ef6.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/f1e2f71ef6.jpg" width="600" height="450" alt="Bright blue steel beams burst through an opening in a weathered Corten steel wall above a garden bed and green lawn in Indianapolis." />

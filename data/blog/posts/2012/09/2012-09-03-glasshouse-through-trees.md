@@ -9,4 +9,4 @@ categories: []
 
 Glasshouse Through Trees at Night
 
-![](https://www.thingelstad.com/uploads/2020/ce9a697232.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/ce9a697232.jpg" alt="Row of tall trees at night lit from behind by warm yellow glasshouse lights with dark blue sky above">

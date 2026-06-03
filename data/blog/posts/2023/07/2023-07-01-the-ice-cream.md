@@ -9,4 +9,4 @@ categories: []
 
 The ice cream truck always brings a smile, no matter what your age. 🍦
 
-<img src="https://www.thingelstad.com/uploads/2023/5a57c3a5e8.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/5a57c3a5e8.jpg" width="600" height="450" alt="Group of people in swimwear lined up at a red converted school bus ice cream truck on a summer day.">

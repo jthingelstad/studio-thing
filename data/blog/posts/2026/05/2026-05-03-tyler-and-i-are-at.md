@@ -9,4 +9,4 @@ categories: []
 
 Tyler and I are at Fat Pants Brewing for the last-minute rescheduled Miami GP! Go Ferrari! Go Red Bull!
 
-<img src="https://www.thingelstad.com/uploads/2026/a814739f8a.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2026/08388e7462.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/a814739f8a.jpg" width="600" height="450" alt="Bar patrons watching a Formula 1 race on a large projection screen, with chips and drinks on the tables nearby."><img src="https://www.thingelstad.com/uploads/2026/08388e7462.jpg" width="600" height="450" alt="Two F1 fans smile at a brewery table, one in a Red Bull Racing shirt and one in a Ferrari shirt.">

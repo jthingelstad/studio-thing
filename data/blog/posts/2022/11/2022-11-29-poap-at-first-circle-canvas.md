@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/5972039">5972039</a> at <strong><a href="https://poap.gallery/drops/85218">First circle Canvas of POAP-art</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/first-circle-canvas-of-poap-art-2022-logo-1669411289880.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/first-circle-canvas-of-poap-art-2022-logo-1669411289880.png" alt="POAP Art logo on blue grid background with text First circle canvas above and Q4 2022 below" width="500" height="500" />

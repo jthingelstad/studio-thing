@@ -9,4 +9,4 @@ categories: []
 
 At cabin, kids in bed, Vodskey Moscow Mules, cribbage, tunes. 👍🏻
 
-<img src="https://www.thingelstad.com/uploads/2017/22e8d1844a.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/22e8d1844a.jpg" alt="Handmade cribbage board and checkerboard table with playing cards dealt out and two copper Moscow Mule mugs with ice, at a cabin" width="600" height="600" />

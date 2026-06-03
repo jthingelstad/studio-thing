@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 MNUFC v Houston Dynamo tonight. WE ARE UNITED! ⚽️🙌⚽️🙌⚽️
 
-<img src="https://www.thingelstad.com/uploads/2023/5d5b654589.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/5d5b654589.jpg" width="600" height="337" alt="Large UNITED sculpture on green lawn outside Allianz Field stadium in St. Paul, Minnesota on a hazy evening.">

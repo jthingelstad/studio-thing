@@ -9,4 +9,4 @@ categories: []
 
 Chase on the boat today. 
 
-<img src="https://www.thingelstad.com/uploads/2018/c4b8310971.jpg" width="600" height="437" />
+<img src="https://www.thingelstad.com/uploads/2018/c4b8310971.jpg" alt="Black Labrador with mouth open resting chin on boat railing over a lake with trees in the distance" width="600" height="437" />

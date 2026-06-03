@@ -12,4 +12,4 @@ Arts today to see the opening of the Sports exhibit. The weather was so
 gorgeous that a spontaneous game of tag broke out in the MIA courtyard
 afterward.
 
-![](https://www.thingelstad.com/uploads/2020/219d09306d.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/219d09306d.jpg" alt="A group of adults and children playing tag on a dry winter lawn outside a large stone building with bare trees.">

@@ -9,4 +9,4 @@ categories: []
 
 Secure erase = 1 day 8 hours? 500G disk. Wow.
 
-<img src="https://www.thingelstad.com/uploads/2019/a9d8f1a72d.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/a9d8f1a72d.jpg" width="600" height="450" alt="LaCie external hard drive with blue activity light glowing, connected via cables, sitting on a white desk.">

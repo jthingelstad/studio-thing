@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Will introduce these four racks of ribs to the [Big Green Egg](https://biggreenegg.com) in 2 hours.
 
-<img src="https://www.thingelstad.com/uploads/2023/img-0289.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/img-0289.jpg" width="600" height="450" alt="Four racks of pork ribs coated in dry rub seasoning on two baking sheet pans on a kitchen counter.">

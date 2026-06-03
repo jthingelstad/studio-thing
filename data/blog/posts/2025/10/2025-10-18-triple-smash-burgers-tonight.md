@@ -9,4 +9,4 @@ categories: []
 
 Triple smash burgers tonight! 🍔
 
-<img src="https://www.thingelstad.com/uploads/2025/8531354ee8.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/8531354ee8.jpg" width="600" height="450" alt="Triple smash cheeseburger on a brioche bun served on a red patterned plate next to a can of Athletic Brewing Co beer.">

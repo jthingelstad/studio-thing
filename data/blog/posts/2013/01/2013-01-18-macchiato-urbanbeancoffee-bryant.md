@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Macchiato [Urban Bean Coffee](http://urbanbeancoffee.com) “Bryant style”.
 
-![](https://www.thingelstad.com/uploads/2021/cefb4b564f.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/cefb4b564f.jpg" alt="Espresso macchiato in a small stemmed glass on a red saucer with a teaspoon, set on a dark bar counter">

@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Couldn't help but fire up the [Big Green Egg](https://biggreenegg.com) with such nice weather! Even for simple burger and steak.
 
-<img src="https://www.thingelstad.com/uploads/2024/a3652c94-2c1a-4ef6-8939-58dc69dd088f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/a3652c94-2c1a-4ef6-8939-58dc69dd088f.jpg" width="600" height="450" alt="Two pieces of meat with grill marks cooking on a Big Green Egg kamado grill over glowing charcoal flames.">

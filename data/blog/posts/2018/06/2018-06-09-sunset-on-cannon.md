@@ -9,4 +9,4 @@ categories: []
 
 Sunset on Cannon Lake.
 
-![](https://www.thingelstad.com/uploads/2020/8c6d64b9e8.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/8c6d64b9e8.jpg" alt="Sunset over Cannon Lake with rippling water reflecting orange and pink sky, a boat silhouetted near the tree-lined shore.">

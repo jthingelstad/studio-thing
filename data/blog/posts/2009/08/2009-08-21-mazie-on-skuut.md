@@ -9,4 +9,4 @@ categories: []
 
 Mazie on Skuut.
 
-![](https://www.thingelstad.com/uploads/2020/611cc6a80a.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/611cc6a80a.jpg" alt="Young girl with long blonde hair in a colorful floral dress and green leggings riding a Skuut balance bike on pavement.">

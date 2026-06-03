@@ -9,4 +9,4 @@ categories: []
 
 Vacation starting now.
 
-<img src="https://www.thingelstad.com/uploads/2021/20e70821e0.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/20e70821e0.jpg" width="450" height="600" alt="Hand holding a bottle of Fulton Sweet Child of Vine India Pale Ale with a green label indoors." />

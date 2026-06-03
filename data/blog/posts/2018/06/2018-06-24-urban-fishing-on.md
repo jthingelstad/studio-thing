@@ -9,4 +9,4 @@ categories: []
 
 Urban fishing on Lake Harriet tonight. 
 
-<img src="https://www.thingelstad.com/uploads/2018/6fe3d43409.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2018/6fe3d43409.jpg" alt="Three people fishing from a wooden dock on Lake Harriet with the Minneapolis skyline visible in the distance under cloudy skies." width="600" height="599" />

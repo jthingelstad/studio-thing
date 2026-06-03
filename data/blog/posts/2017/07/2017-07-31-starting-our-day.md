@@ -9,4 +9,4 @@ categories: []
 
 Starting our 3-day Inn to Inn bike trip in the bluffs!
 
-<img src="https://www.thingelstad.com/uploads/2017/a6f7278766.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/a6f7278766.jpg" alt="Two people smiling for a selfie outdoors, one wearing a white cycling helmet and bike jersey before a 3-day inn-to-inn bike trip." width="600" height="600" style="height: auto" />

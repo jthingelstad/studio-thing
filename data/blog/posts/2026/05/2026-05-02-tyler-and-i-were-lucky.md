@@ -9,4 +9,4 @@ categories: ["Minnestar"]
 
 Tyler and I were lucky enough to be interviewed for the Minnebar 20 special video today. 
 
-<img src="https://www.thingelstad.com/uploads/2026/1f7d857cab.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/1f7d857cab.jpg" width="600" height="450" alt="Teen with blond hair in black hoodie sits in a chair being interviewed in a small video studio with cameras, lights, and a reflector.">

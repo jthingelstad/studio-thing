@@ -9,4 +9,4 @@ categories: []
 
 A very Happy Mother’s Day to my Mom!
 
-<img src="https://www.thingelstad.com/uploads/2021/54966070ee.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/54966070ee.jpg" width="600" height="600" alt="Two people smiling outdoors with trees behind them, man in pine tree patterned shirt has arm around woman in blue top wearing glasses." />

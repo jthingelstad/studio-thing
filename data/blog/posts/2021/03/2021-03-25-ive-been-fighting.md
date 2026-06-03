@@ -9,10 +9,10 @@ categories: []
 
 I've been fighting a [Pileated Woodpecker](https://en.wikipedia.org/wiki/Pileated_woodpecker), and losing. This woodpecker has been visiting our house every morning. It usually shows up between 7-9am. It is the biggest woodpecker I've ever seen, and it's done a number.
 
-<img src="https://www.thingelstad.com/uploads/2021/ee7bbddda0.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/ee7bbddda0.jpg" width="600" height="600" alt="White painted wood gable siding with a large jagged hole and several gouges pecked into it near the roofline, with bare tree shadows cast across the wall." />
 
 We have someone coming tomorrow to put a metal plate up, and then we are going put in Hardie Board. The rest of the house has Hardie Board already, but its regular lumber in the gable. 
 
 I've been pounding on the wall, but it has gotten less scared of that. Now I've started running outside and yelling at it which sends it away. If the image of Bill Murray going after the Gopher in Caddyshack is coming to mind, that is about right. 
 
-<img src="https://www.thingelstad.com/uploads/2021/f2891db412.jpg" width="600" height="480" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/f2891db412.jpg" width="600" height="480" alt="Man in camouflage bucket hat lies on golf course grass pointing at a small groundhog emerging from a hole, holding a device in his other hand" />

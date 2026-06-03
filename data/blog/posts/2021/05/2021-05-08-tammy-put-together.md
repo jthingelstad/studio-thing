@@ -11,4 +11,4 @@ Tammy put together her [50 Puzzle](https://www.thingelstad.com/2021/04/26/fifty-
 
 
 
-<img src="https://www.thingelstad.com/uploads/2021/309f2f70fa.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/309f2f70fa.jpg" width="600" height="450" alt="Completed 500-piece jigsaw puzzle featuring a colorful rainbow 50 design on a wooden table, with the puzzle box and a Lego build nearby." />

@@ -13,4 +13,4 @@ When I pulled the pork off the grill the bone pulled out clean and the meat shre
 
 Next time I will add more dry rub before putting it on the grill. Otherwise it was one of the best pork butts I’ve ever made. 🐖
 
-<img src="https://www.thingelstad.com/uploads/2020/90c6739749.jpg" width="600" height="600" alt="" /><img src="https://www.thingelstad.com/uploads/2020/08a51eda98.jpg" width="600" height="600" alt="" /><img src="https://www.thingelstad.com/uploads/2020/1577aa1d39.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/90c6739749.jpg" width="600" height="600" alt="Smoked pork butt with dark bark resting on a wood cutting board, bone partially exposed, surrounded by rendered juices." /><img src="https://www.thingelstad.com/uploads/2020/08a51eda98.jpg" width="600" height="600" alt="Smoked pork butt sliced open on a wooden cutting board, showing tender shredded meat with a dark bark crust." /><img src="https://www.thingelstad.com/uploads/2020/1577aa1d39.jpg" width="600" height="600" alt="Shredded pulled pork in a large stainless steel mixing bowl with two pairs of tongs resting across it, on a kitchen counter." />

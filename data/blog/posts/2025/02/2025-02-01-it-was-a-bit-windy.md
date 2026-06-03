@@ -9,4 +9,4 @@ categories: []
 
 It was a bit windy today but otherwise good time on the Three Mile Walk at the [Minnesota Arboretum](https://arb.umn.edu). 
 
-<img src="https://www.thingelstad.com/uploads/2025/409f825743.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/409f825743.jpg" width="600" height="450" alt="Two people smiling in winter coats on an outdoor trail surrounded by dry tall grass and bare trees under a cloudy sky.">

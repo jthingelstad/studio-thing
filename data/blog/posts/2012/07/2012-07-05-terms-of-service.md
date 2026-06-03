@@ -9,10 +9,10 @@ categories: []
 
 Got this a while back on my iPhone.
 
-![](https://www.thingelstad.com/uploads/2020/cb4f2882c0.png)
+<img src="https://www.thingelstad.com/uploads/2020/cb4f2882c0.png" alt="PayPal mobile app on iPhone showing an End User License Agreement dialog with View Privacy / Terms and Agree buttons">
 
 That gave this.
 
-![](https://www.thingelstad.com/uploads/2020/d9771b6b12.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/d9771b6b12.jpg" alt="PayPal Mobile Application License Agreement displayed on an iPhone screen showing full EULA text">
 
 You got that right? Good.

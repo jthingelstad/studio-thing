@@ -23,4 +23,4 @@ This is a great way to insure that:
 
 Nicely done Eight Sleep!
 
-<img src="https://www.thingelstad.com/uploads/2023/d193126b60.jpg" width="452" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/d193126b60.jpg" width="452" height="600" alt="Eight Sleep app order confirmation screen showing Confirmed status with a checklist requiring 2 gal distilled water and 48 oz hydrogen peroxide per pod">

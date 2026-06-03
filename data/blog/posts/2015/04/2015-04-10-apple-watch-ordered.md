@@ -10,4 +10,4 @@ categories: []
 After some debate I placed my order at 3:56am CT for the Apple Watch. I'm eagerly looking forward to experiencing a new user experience and brand new category of device. I went with the [42mm Stainless Steel Case
 with Link Bracelet](http://store.apple.com/us/buy-watch/apple-watch?product=MJ472LL/A&step=detail).
 
-<img src="https://www.thingelstad.com/uploads/2020/686af62e89.jpg" style="width: 424px; max-width: 424px;" />
+<img src="https://www.thingelstad.com/uploads/2020/686af62e89.jpg" alt="42mm Apple Watch in stainless steel with silver link bracelet, angled view showing analog clock face displaying MON 9 at 15:00" style="width: 424px; max-width: 424px;" />

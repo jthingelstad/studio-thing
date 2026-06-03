@@ -4,16 +4,16 @@ url: "https://www.thingelstad.com/2021/12/17/quantum-mirror-at.html"
 title: "Quantum Mirror at REM5VR"
 published: "2021-12-18T02:04:00+00:00"
 post_kind: post
-categories: ["Videos", "Crypto", "POAP"]
+categories: ["Videos", "Crypto"]
 ---
 
 Tammy got us tickets to see the [Quantum Mirror](https://www.quantummirrormn.com) exhibit at [REM5VR](https://www.rem5vr.com). We've been to REM5VR many times for VR games, but this Quantum Mirror is a "transcendent immersive art experience". It was created by [Adrian Stein](https://www.quantummirrormn.com/about.html). We weren't real sure what to expect at all, and I was very curious. 
 
-<img src="https://www.thingelstad.com/uploads/2021/4f8f3a0375.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/4f8f3a0375.jpg" width="600" height="450" alt="Four chrome torso sculptures on white pedestals display screens showing digital content, with a large monitor behind reading do these platform" />
 
 The exhibit is limited to 6 visitors at a time, and is experienced in two settings. The first is a gallery space with digital art on the walls, and six chairs. After a moment you take a seat and take a VR experience to "upload yourself". The VR experience was pretty cool. You didn't walk around, more like you were on a train going through these experiences tied to the art.
 
-<img src="https://www.thingelstad.com/uploads/2021/5fa8fa61db.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/5fa8fa61db.jpg" width="600" height="450" alt="Mirrored room reflecting glowing neon blue and pink jellyfish-like shapes on angled display screens, creating infinite kaleidoscopic reflections" />
 
 Upon completion of the VR experience you then enter the Quantum Mirror. This is a room covered on all sides by mirrors, and at a variety of angles. In the center of the room are three portrait displays playing about a 10 minute loop with audio. There is no interactivity, but the reflections are very engaging. I captured a 30-second segment of the video which shows it best.
 

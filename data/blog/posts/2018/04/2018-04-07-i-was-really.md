@@ -9,4 +9,4 @@ categories: []
 
 I was really happy that [India Palace](https://www.indiapalace.org) made [Lachha Paratha](https://en.wikipedia.org/wiki/Paratha) for us tonight (not on the menu). I had this in India a few weeks ago and loved it. 👏🏻
 
-<img src="https://www.thingelstad.com/uploads/2018/d264432edc.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2018/d264432edc.jpg" alt="Basket of freshly made Lachha Paratha flatbreads with char marks from tandoor cooking, served with rice and water glasses on a restaurant table." width="600" height="599" />

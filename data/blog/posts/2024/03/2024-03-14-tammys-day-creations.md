@@ -9,6 +9,6 @@ categories: []
 
 Tammy’s π Day 2024 creations: Bumble Berry, Bailey’s Irish Cream Pie, Spinach Pie, Broccoli Cheddar Pie. 
 
-<img src="https://www.thingelstad.com/uploads/2024/b93b07b366.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/b93b07b366.jpg" width="600" height="600" alt="Four homemade pies in a collage: bumble berry pie, Baileys Irish Cream pie, broccoli cheddar quiche, and spinach puff pastry pie.">
 
 _See [Pi Day Collection](https://www.thingelstad.com/collections/pi-day/)._

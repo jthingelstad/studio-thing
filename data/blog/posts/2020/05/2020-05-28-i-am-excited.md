@@ -9,4 +9,4 @@ categories: []
 
 I am excited to try out [Omni Automation inside of OmniFocus](https://omni-automation.com/omnifocus/actions.html)! I’ve automated [OmniFocus](https://www.omnigroup.com/omnifocus/) for years with Shortcuts and x-callback-urls for.  But being able to execute JavaScript inside of OmniFocus could be super powerful!
 
-<img src="https://www.thingelstad.com/uploads/2020/cf689087f4.jpg" width="600" height="307" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/cf689087f4.jpg" width="600" height="307" alt="OmniFocus 3 app store update screen showing version 3.8 release notes introducing Omni Automation support with JavaScript plug-ins." />

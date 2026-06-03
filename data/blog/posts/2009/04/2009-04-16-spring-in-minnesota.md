@@ -7,15 +7,12 @@ post_kind: post
 categories: []
 ---
 
-Today, at 11:45 am the temperature at our house went over 70 °F for the
-first time in many, many months.
+Today, at 11:45 am the temperature at our house went over 70 °F for the first time in many, many months.
 
-This is the cause of much joy and elation in our wonderful part of the
-world. I love winter, but more than almost anything else I love the
-transition into summer.
+This is the cause of much joy and elation in our wonderful part of the world. I love winter, but more than almost anything else I love the transition into summer.
 
 My robot even caught this special event.
 
-![](https://www.thingelstad.com/uploads/2020/485240ad8a.png)
+<img src="https://www.thingelstad.com/uploads/2020/485240ad8a.png" alt="Tweet from thinglesbot reading The temperature outside the house is 70.025 degrees, posted about 10 hours ago from Twitter4R.">
 
 70.025 °F indeed.

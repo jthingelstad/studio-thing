@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 We are looking forward to our first [Minnesota Aurora](https://www.mnaurora.com) soccer game! ⚽️ — Thingelstad Family, Community Owners
 
-<img src="https://www.thingelstad.com/uploads/2022/faf55cb4d8.jpg" width="600" height="399" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/faf55cb4d8.jpg" width="600" height="399" alt="Minnesota Aurora FC crest logo featuring teal aurora borealis waves over dark mountains with a red star on a navy shield background" />

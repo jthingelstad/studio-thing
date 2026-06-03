@@ -9,4 +9,4 @@ categories: []
 
 Chicago skyline from [Shedd Aquarium](https://www.sheddaquarium.org). 
 
-<img src="https://www.thingelstad.com/uploads/2021/927ef06a13.jpg" width="600" height="258" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/927ef06a13.jpg" width="600" height="258" alt="Chicago skyline with Lake Michigan in the foreground, viewed from the Shedd Aquarium on a clear sunny day." />

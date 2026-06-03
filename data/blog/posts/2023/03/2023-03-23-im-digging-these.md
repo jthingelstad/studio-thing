@@ -13,4 +13,4 @@ I'm digging these [Women Cryptologists of World War II Stamps](https://store.usp
 
 
 
-<img src="https://www.thingelstad.com/uploads/2023/400186c39c.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/400186c39c.jpg" width="600" height="600" alt="Multiple sheets of USPS Women Cryptologists of World War II forever stamps spread on a wooden table, with encoded text printed on the stamp margins.">

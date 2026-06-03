@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/3234963">3234963</a> at <strong><a href="https://poap.gallery/drops/18955">POAPathon Holiday Spectacular - USA</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/poapathon-holiday-spectacular-usa-2021-logo-1639933986546.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/poapathon-holiday-spectacular-usa-2021-logo-1639933986546.png" alt="Circular badge with American flag-patterned Christmas trees, stars, snowflakes, and text reading Made in the USA and Merry Christmas" width="500" height="500" />

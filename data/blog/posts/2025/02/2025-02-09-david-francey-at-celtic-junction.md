@@ -13,13 +13,13 @@ It was a great show.
 
 Before we get to Francey there was a short set from [Terra Spencer](https://terraspencer.ca) to open the show. Spencer was a great opener with a novel-like background of being a funderal director in a small town. Her songs were captivating. "Coyote" stood out in her songs for me.
 
-<img src="https://www.thingelstad.com/uploads/2025/70f8fe0d96.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/70f8fe0d96.jpg" alt="Two performers on stage at Celtic Junction, a woman playing acoustic guitar at a mic and an older man at a Roland keyboard behind her.">
 
 For the final song of her set David Francey came on stage and joined her, and then [Chris Murphy](https://chrismurphy.ca) came on as well and Francey's set started, with Spencer staying for a couple of songs but the majority of the set was Francey and Murphy.
 
 I had listened to some of Francey's songs before coming so I was expecting a delightful evening of folk music and we got that and some more. He shared a story for every song he played.
 
-<img src="https://www.thingelstad.com/uploads/2025/6f1b19df2c.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/6f1b19df2c.jpg" alt="Two musicians perform on stage at Celtic Junction, one at a Roland keyboard and one playing acoustic guitar.">
 
 "This Morning" stood out for me. He wrote it on [John Prine](https://www.johnprine.com)'s passing and brought in components of Prine's music into it. I've listened to this song several times now. "The Breath Between", the title song off of his newest album had me rapt as well.
 

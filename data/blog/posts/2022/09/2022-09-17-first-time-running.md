@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 First time running the [Big Green Egg](https://biggreenegg.com) at our new house. Sous Vides beef tenderloin getting a finish on the fire. 🔥
 
-<img src="https://www.thingelstad.com/uploads/2022/52dca96cdb.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/52dca96cdb.jpg" width="600" height="450" alt="Two sous vide beef tenderloins finishing on the grill grates of a Big Green Egg kamado smoker on a backyard patio." />

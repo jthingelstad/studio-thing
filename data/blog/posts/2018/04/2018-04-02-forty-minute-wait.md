@@ -9,4 +9,4 @@ categories: []
 
 Forty minute wait for deep dish at [Lou Malnati's](https://www.loumalnatis.com)? Sure. 
 
-<img src="https://www.thingelstad.com/uploads/2018/5e1e9b09ca.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/5e1e9b09ca.jpg" alt="Lou Malnatis Pizzeria storefront on a downtown Chicago sidewalk with a red vertical sign and red awning." width="600" height="600" />

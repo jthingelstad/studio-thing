@@ -9,4 +9,4 @@ categories: []
 
 Chicago skyline. 
 
-<img src="https://www.thingelstad.com/uploads/2018/c3f8a9f17b.jpg" width="600" height="203" />
+<img src="https://www.thingelstad.com/uploads/2018/c3f8a9f17b.jpg" alt="Chicago skyline panorama viewed from Lake Michigan waterfront on an overcast day with skyscrapers and construction cranes visible" width="600" height="203" />

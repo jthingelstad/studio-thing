@@ -9,4 +9,4 @@ categories: []
 
 Can’t decide which shirt to get!
 
-<img src="https://www.thingelstad.com/uploads/2021/0ba0906dee.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/0ba0906dee.jpg" width="450" height="600" alt="Train-themed graphic t-shirts in green, blue, brown, and red hanging on display in a gift shop" />

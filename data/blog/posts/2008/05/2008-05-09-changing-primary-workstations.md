@@ -7,10 +7,7 @@ post_kind: post
 categories: []
 ---
 
-As I get ready to leave Dow Jones I've been working to get my home
-office setup more streamlined for work. I think I've succeeded, and am
-in store for a big upgrade actually! Here is my current workstation at
-the office, where I spend most of my computer time.
+As I get ready to leave Dow Jones I've been working to get my home office setup more streamlined for work. I think I've succeeded, and am in store for a big upgrade actually! Here is my current workstation at the office, where I spend most of my computer time.
 
 <p class="alert">Find and upload Office Workstation farm4.static.flickr.com/3053/2440404104_c8cc6fd4d2.jpg</p>
 

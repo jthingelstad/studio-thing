@@ -9,4 +9,4 @@ categories: ["Music"]
 
 [The Cactus Blossoms](http://thecactusblossoms.com) at the [Turf Club](https://first-avenue.com/venue/turf-club/). So good! 🎶
 
-<img src="https://www.thingelstad.com/uploads/2018/3f2b7ccce6.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/3f2b7ccce6.jpg" alt="Four-piece band performing on stage at the Turf Club, playing acoustic and electric guitars with a drummer, black and white photo." width="600" height="337" />

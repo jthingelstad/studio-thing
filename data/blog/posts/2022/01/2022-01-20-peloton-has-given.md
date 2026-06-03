@@ -9,4 +9,4 @@ categories: []
 
 [Peloton](https://www.onepeloton.com) has given back **all** of the pandemic gains experienced. Either $PTON was overvalued in Q1 2020, or it is oversold now. Still an exceptional product and service.
 
-<img src="https://www.thingelstad.com/uploads/2022/21f5c18e34.jpg" width="600" height="290" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/21f5c18e34.jpg" width="600" height="290" alt="PTON stock chart showing 2-year price history, peaking near 170 in early 2021 then falling to 24.22 by 2022." />

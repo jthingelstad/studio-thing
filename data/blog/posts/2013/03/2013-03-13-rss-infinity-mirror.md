@@ -7,8 +7,6 @@ post_kind: post
 categories: []
 ---
 
-Reading about Google shutting down Google Reader, from [the guy that
-made RSS](http://threads2.scripting.com/2013/march/goodbyeGoogleReader),
-using [Fever](http://feedafever.com)  on my own server.
+Reading about Google shutting down Google Reader, from [the guy that made RSS](http://threads2.scripting.com/2013/march/goodbyeGoogleReader), using [Fever](http://feedafever.com)  on my own server.
 
 ![rss-infinity-mirror](https://www.thingelstad.com/uploads/2020/79f1e0b5c0.png)

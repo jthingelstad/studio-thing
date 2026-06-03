@@ -9,4 +9,4 @@ categories: []
 
 First time visiting a [Tesla](https://www.tesla.com) Supercharger! ⚡️ Charging in Des Moines on our way to Kansas City.
 
-<img src="https://www.thingelstad.com/uploads/2019/179a6b2d1b.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/179a6b2d1b.jpg" width="600" height="450" alt="Silver Tesla Model 3 plugged into a Tesla Supercharger station in a sunny parking lot with multiple chargers visible." />

@@ -9,4 +9,4 @@ categories: []
 
 Good morning from the [Sundew](https://en.wikipedia.org/wiki/USCGC_Sundew) in Duluth, Minnesota.
 
-<img src="https://www.thingelstad.com/uploads/2024/5759095813.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/5759095813.jpg" width="600" height="450" alt="USCGC Sundew buoy tender ship docked at a snowy Duluth harbor in a heavy snowstorm with fog and dim light">

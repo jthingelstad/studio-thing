@@ -9,4 +9,4 @@ categories: []
 
 Fathers Day dinner at [Souris River Brewing](https://sourisriverbrewing.com) drinking a yet-to-be-named delicious session IPA.
 
-![](https://www.thingelstad.com/uploads/2020/b7836fc09a.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/b7836fc09a.jpg" alt="Pint glass of golden session IPA with a white foam head on a dark wood table inside a brewery restaurant.">

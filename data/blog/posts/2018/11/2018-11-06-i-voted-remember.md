@@ -9,4 +9,4 @@ categories: []
 
 I Voted! ✅😎 Remember to vote today!
 
-<img src="https://www.thingelstad.com/uploads/2018/012ce95b59.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/012ce95b59.jpg" alt="Orange I Voted sticker on a purple houndstooth jacket next to a gray fleece zipper" width="600" height="600" />

@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Excited to see **[Arthur Hayes](https://twitter.com/cryptohayes)** and **[Michael Lewis](https://www.michaellewiswrites.com/)** on stage at [Bitcoin 2023](https://b.tc/conference/).
 
-<img src="https://www.thingelstad.com/uploads/2023/84eb3a6a0b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/84eb3a6a0b.jpg" width="600" height="450" alt="Two men seated in white chairs on a conference stage with a large Bitcoin 2023 logo backdrop featuring red 3D blocks.">

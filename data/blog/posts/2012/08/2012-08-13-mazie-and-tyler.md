@@ -9,6 +9,6 @@ categories: []
 
 Love these two so much. Both pictures by my other love, Tammy.
 
-![](https://www.thingelstad.com/uploads/2020/a4df435e92.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/a4df435e92.jpg" alt="Young girl with reddish-brown hair wearing a pink Hello Kitty shirt, smiling outdoors near rocky terrain with trees in the background.">
 
-![](https://www.thingelstad.com/uploads/2020/ffce598ddc.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/ffce598ddc.jpg" alt="Young blond toddler in a blue shirt looking into the distance outdoors with blurred green trees behind them.">

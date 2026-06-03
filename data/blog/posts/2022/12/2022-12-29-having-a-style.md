@@ -41,7 +41,7 @@ Shopping was the thing I was most worried about. I'm a big guy and not a lot of 
 
 We ended up shopping for a total of six hours in two sessions and trying on a wild number of things. I'm still not a huge fan of trying on things, but part of my frustration was a belief that nothing would fit so it was a lot of trying things on for no benefit. When I was as a place where things would fit, it became more fun to try. 
 
-![](https://www.thingelstad.com/uploads/2022/b3f2216002.jpg)
+<img src="https://www.thingelstad.com/uploads/2022/b3f2216002.jpg" alt="Four photos of the same heavyset middle-aged man in different outfits ranging from casual to smart casual, indoors and outdoors">
 
 ### Learnings
 

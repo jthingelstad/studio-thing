@@ -12,4 +12,4 @@ absolutely need to go here Settings - General - Keyboard - Shortcuts
 
 Then create this shortcut to save your thumbs significant effort.
 
-<img src="https://www.thingelstad.com/uploads/2020/240e0e5e4d.jpg" style="max-width: 480px; " />
+<img src="https://www.thingelstad.com/uploads/2020/240e0e5e4d.jpg" alt="iPhone Shortcut settings screen showing Phrase field set to Big Green Egg and Shortcut field set to bge with keyboard visible" style="max-width: 480px; " />

@@ -9,4 +9,4 @@ categories: []
 
 My Grandma Rose always made Krumkake. My Mom makes the Krumkake now. I took my first attempt making it tonight. Holiday traditions. 
 
-<img src="https://www.thingelstad.com/uploads/2021/b6d6f8ba77.jpg" width="600" height="450" alt="" /><img src="https://www.thingelstad.com/uploads/2021/4300c86327.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/b6d6f8ba77.jpg" width="600" height="450" alt="Krumkake being made on a electric iron, with rolled cones cooling on a baking sheet, batter in a mixing bowl, and a rolling cone tool nearby." /><img src="https://www.thingelstad.com/uploads/2021/4300c86327.jpg" width="600" height="450" alt="Tray of freshly made krumkake cones stacked in rows on a baking sheet, with a mixing bowl and decorative dish in the background." />

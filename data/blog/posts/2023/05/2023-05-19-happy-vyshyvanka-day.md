@@ -13,4 +13,4 @@ TeamSPS in Ukraine celebrated [Vyshyvanka Day](https://en.wikipedia.org/wiki/Vys
 
 More [pictures on Instagram](https://www.instagram.com/p/CsZjD69rEAd/). I'm going to find a Vyshyvanka of my own for next year. 🇺🇦
 
-<img src="https://www.thingelstad.com/uploads/2023/c58c6dc22d.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/c58c6dc22d.jpg" width="600" height="450" alt="Group of coworkers wearing traditional Ukrainian embroidered vyshyvanka shirts gathered around a kitchen island with food and drinks">

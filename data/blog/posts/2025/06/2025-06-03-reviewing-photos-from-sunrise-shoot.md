@@ -9,4 +9,4 @@ categories: []
 
 Reviewing photos from sunrise shoot. 📷
 
-<img src="https://www.thingelstad.com/uploads/2025/b531d74dec.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/b531d74dec.jpg" width="600" height="450" alt="MacBook Pro running Adobe Lightroom Classic showing a mountain lake dock photo, beside a latte at Whitebark cafe">

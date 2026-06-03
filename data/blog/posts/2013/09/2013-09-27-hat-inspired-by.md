@@ -9,6 +9,6 @@ categories: []
 
 Hat inspired by [Paul](https://twitter.com/optimuspaul).
 
-<img src="https://www.thingelstad.com/uploads/2020/d31540a303.jpg" width="320" height="426" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d31540a303.jpg" width="320" height="426" alt="Man wearing a yellow leopard-print fedora and blue plaid shirt taking a selfie indoors near a wooden door." />
 
 See [Alona & Dylan's Wedding](https://www.thingelstad.com/2013/10/06/congratulations-alona-dylan.html) post.

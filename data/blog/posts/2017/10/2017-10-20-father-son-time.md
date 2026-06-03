@@ -9,4 +9,4 @@ categories: []
 
 Father son time.
 
-<img src="https://www.thingelstad.com/uploads/2017/da387a6da5.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2017/da387a6da5.jpg" alt="Man with sunglasses and a young blonde child smiling together on a boat with water and blue sky behind them." width="600" height="599" />

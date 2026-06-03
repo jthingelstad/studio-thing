@@ -13,4 +13,4 @@ Seventeen cheeseburgers? No problem on the flat top!
 🍔 🍔 🍔 🍔 🍔 🍔  
 🍔 🍔 🍔 🍔 🍔
 
-<img src="https://www.thingelstad.com/uploads/2021/0960877341.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/0960877341.jpg" width="450" height="600" alt="Smiling man in a blue shirt grilling seventeen cheeseburgers on a large flat top griddle on a rainy backyard deck" />

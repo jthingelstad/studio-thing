@@ -9,4 +9,4 @@ categories: []
 
 Lake Superior. 
 
-<img src="https://www.thingelstad.com/uploads/2018/7ad0f43776.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/7ad0f43776.jpg" alt="Rocky shoreline of Lake Superior with clear shallow water, dark basalt rocks, evergreen trees, and blue sky with clouds." width="600" height="450" />

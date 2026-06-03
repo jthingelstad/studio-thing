@@ -7,9 +7,6 @@ post_kind: post
 categories: []
 ---
 
-After days of beautiful scenery and amazing vistas our view today is all
-blacktop. We are on our way to Las Vegas for the next stop on the Summer
-of Love. We'll be driving through the scorching Mojave Desert on our
-way. We are just getting close, and it's already 103 °F out.
+After days of beautiful scenery and amazing vistas our view today is all blacktop. We are on our way to Las Vegas for the next stop on the Summer of Love. We'll be driving through the scorching Mojave Desert on our way. We are just getting close, and it's already 103 °F out.
 
-<img src="https://www.thingelstad.com/uploads/2020/ad453e0d16.jpg" width="533" height="400" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/ad453e0d16.jpg" width="533" height="400" alt="Dashboard view of a wide desert highway with a semi truck ahead, dry brown hills and hazy mountains in the distance under a clear blue sky." />

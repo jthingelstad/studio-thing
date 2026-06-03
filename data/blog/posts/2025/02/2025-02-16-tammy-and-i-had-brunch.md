@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I had brunch at [Diane's Place](https://dianesplacemn.com) today. We have been making our way to new restaurants that we haven't visited. We had the **Thai Tea French Toast** and the **Spam & Nori Croissant**. Yes it actually had [Spam](https://www.spam.com) on it! Both were good but the French Toast was terrific.
 
-<img src="https://www.thingelstad.com/uploads/2025/0103392e30.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/0103392e30.jpg" width="600" height="600" alt="Exterior of Dianes Place restaurant at 117 with navy blue arched double doors and winter greenery planters on a snowy sidewalk.">

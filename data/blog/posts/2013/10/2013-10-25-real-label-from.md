@@ -9,4 +9,4 @@ categories: []
 
 Real label from our utility room. Awesome.
 
-<img src="https://www.thingelstad.com/uploads/2019/a8f32c74e6.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/a8f32c74e6.jpg" width="600" height="450" alt="White plastic mesh basket labeled mystery box for small unclaimed items, sitting on a shelf in a utility room." />

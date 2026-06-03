@@ -9,4 +9,4 @@ categories: []
 
 Kids are all of a sudden into [Beanie Boos](http://world.ty.com/?cat=BOOS). 🤷🏼‍♂️
 
-<img src="https://www.thingelstad.com/uploads/2018/6747a80798.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/6747a80798.jpg" alt="Pyramid stack of about a dozen Ty Beanie Boo plush animals with glittery eyes on a wood coffee table in front of a gray sofa." width="600" height="600" />

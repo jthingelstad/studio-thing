@@ -11,4 +11,4 @@ This wasn't a record, but pretty close. That's one hour of cutting and tying int
 
 And, even though we had some warm days, my [snow shelf](https://www.thingelstad.com/2010/12/12/snow-shelf.html) is mostly intact still.
 
-![](https://www.thingelstad.com/uploads/2020/a3567896c5.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/a3567896c5.jpg" alt="Flattened cardboard boxes bundled with twine stacked against a house siding beside blue recycling bins, sitting on a snow shelf in winter">

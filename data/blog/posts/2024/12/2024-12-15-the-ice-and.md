@@ -9,4 +9,4 @@ categories: []
 
 The ice and fog on the lake blended into greyness. 
 
-<img src="https://www.thingelstad.com/uploads/2024/1d39d9a36c.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/1d39d9a36c.jpg" width="600" height="450" alt="Frozen lake partially covered in snow and ice under thick grey fog, with the far shore barely visible in the distance.">

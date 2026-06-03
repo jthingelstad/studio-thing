@@ -9,4 +9,4 @@ categories: []
 
 Tools.
 
-<img src="https://www.thingelstad.com/uploads/2019/1d3b577c6f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/1d3b577c6f.jpg" width="600" height="450" alt="Dozens of antique woodworking hand tools piled on a wooden workbench inside an old workshop with barrels in the background.">

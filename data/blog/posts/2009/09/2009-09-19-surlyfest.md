@@ -9,4 +9,4 @@ categories: []
 
 SurlyFest 2009!
 
-![](https://www.thingelstad.com/uploads/2020/c8d85a9523.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/c8d85a9523.jpg" alt="Nearly empty Surly Brewing Co Fest beer stein on a blue and white checkered tablecloth">

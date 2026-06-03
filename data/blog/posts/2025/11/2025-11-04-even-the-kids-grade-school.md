@@ -9,4 +9,4 @@ categories: []
 
 Even the kids elementary school has gotten into this "6 — 7" thing. 🤷‍♂️
 
-<img src="https://www.thingelstad.com/uploads/2025/967a63b4d7.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/967a63b4d7.jpg" alt="Burroughs Elementary School sign with LED marquee reading HOW MANY DAYS SHOULD YOU READ EACH WEEK? 6 7, Minneapolis, fall afternoon.">

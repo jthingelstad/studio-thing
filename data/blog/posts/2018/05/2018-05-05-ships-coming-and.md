@@ -9,4 +9,4 @@ categories: []
 
 Ships coming and going in Duluth. 
 
-<img src="https://www.thingelstad.com/uploads/2018/4b10feb6b8.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/4b10feb6b8.jpg" alt="Two large Great Lakes freighters on open water under a partly cloudy blue sky, one nearby and one distant on the horizon." width="600" height="337" />

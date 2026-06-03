@@ -9,4 +9,4 @@ categories: []
 
 Bison in Yellowstone. 
 
-<img src="https://www.thingelstad.com/uploads/2020/8b6e4ec5ad.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/8b6e4ec5ad.jpg" width="600" height="450" alt="Large bison walking through sagebrush meadow on a hillside with pine trees and fallen logs in the background." />

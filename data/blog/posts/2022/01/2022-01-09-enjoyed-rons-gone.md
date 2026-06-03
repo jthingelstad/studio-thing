@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Enjoyed [Ron's Gone Wrong](https://en.wikipedia.org/wiki/Ron%27s_Gone_Wrong) tonight. It was a super fun movie, with a good story, and a good criticism of social apps and kids. Plus Ron was an awesome character. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2022/a71e79c32d.jpg" width="404" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/a71e79c32d.jpg" width="404" height="600" alt="Movie poster for Ron's Gone Wrong featuring a glowing robot with pixel eyes wearing a knit beanie hat" />

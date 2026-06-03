@@ -9,4 +9,4 @@ categories: []
 
 The [Berlin](https://www.berlinmpls.com) has a very good Old Fashioned. 🥃
 
-<img src="https://www.thingelstad.com/uploads/2025/49d5b46899.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/49d5b46899.jpg" width="600" height="449" alt="Old Fashioned cocktail in a rocks glass with an orange peel garnish, glowing amber under dim bar lighting">

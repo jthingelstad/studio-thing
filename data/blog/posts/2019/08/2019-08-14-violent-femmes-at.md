@@ -9,4 +9,4 @@ categories: ["Music"]
 
 [Violent Femmes](https://vfemmes.com) at [Surly Brewing](https://surlybrewing.com)! 🤩🎶
 
-<img src="https://www.thingelstad.com/uploads/2019/c3e108e3c9.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/c3e108e3c9.jpg" width="600" height="450" alt="Outdoor concert at dusk with a band of five performing on a large lit stage before a packed crowd of hundreds" />

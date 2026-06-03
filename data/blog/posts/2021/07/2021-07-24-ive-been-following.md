@@ -9,4 +9,4 @@ categories: []
 
 I've been following the development of the [Playdate](https://play.date) for a while. I love all the innovation — including games by season and the crank! The games look like they will be fun to pick up and play. I'll be pre-ordering on Thursday!
 
-<img src="https://www.thingelstad.com/uploads/2021/f101d37e19.jpg" width="600" height="481" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/f101d37e19.jpg" width="600" height="481" alt="Playdate handheld game console in yellow with a purple flip cover open, showing the screen, D-pad, and side crank" />

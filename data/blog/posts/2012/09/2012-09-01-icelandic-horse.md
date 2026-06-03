@@ -9,4 +9,4 @@ categories: []
 
 Icelandic Horse.
 
-![](https://www.thingelstad.com/uploads/2020/1177f24ca7.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/1177f24ca7.jpg" alt="Brown Icelandic horse with a flowing blonde mane standing in a green field, close-up portrait view.">

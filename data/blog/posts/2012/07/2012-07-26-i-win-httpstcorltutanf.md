@@ -9,4 +9,4 @@ categories: []
 
 I win!
 
-<img src="https://www.thingelstad.com/uploads/2021/ee7a9c022e.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/ee7a9c022e.jpg" width="450" height="600" alt="Miniature golf scorecard from Egg Harbor Fun Park showing two players T and J with final totals of 67 and 61 over 18 holes par 50" />

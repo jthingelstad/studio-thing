@@ -11,4 +11,4 @@ Our driveway provides almost **no** opportunity for me to get snow out of the wa
 
 I've debated next fall creating a series of wood shelves to set next to the neighbors garage. I could then blow the snow vertically into the shelves and I could get it 10 or 12 feet in the air. It would work as a form of [snow fence](http://en.wikipedia.org/wiki/Snow_fence).
 
-![](https://www.thingelstad.com/uploads/2020/79e6390839.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/79e6390839.jpg" alt="Large collapsed snow pile against a neighbors garage wall beside a partially cleared driveway with tire tracks visible">

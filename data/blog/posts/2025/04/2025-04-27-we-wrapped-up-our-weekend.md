@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We wrapped up our weekend by watching [Dog](https://en.wikipedia.org/wiki/Dog_(2022_film)) with some delicious [Calico Popcorn](https://dusted.shop/products/petersen-farm-popcorn-kernels-calico-mix) made with ghee. Great movie and touching story. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2025/34363fee72.jpg" width="400" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/34363fee72.jpg" width="400" height="600" alt="Movie poster for Dog starring Channing Tatum showing a man in a torn black shirt leaning against a truck tailgate with a Belgian Malinois hanging out the window">

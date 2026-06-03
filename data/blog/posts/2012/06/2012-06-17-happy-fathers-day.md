@@ -9,4 +9,4 @@ categories: []
 
 Happy Fathers Day 2012!
 
-![](https://www.thingelstad.com/uploads/2020/83e72abf45.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/83e72abf45.jpg" alt="White frosted cake with blue accents and a cartoon image of a father holding hands with two children outdoors, reading Happy Fathers Day">

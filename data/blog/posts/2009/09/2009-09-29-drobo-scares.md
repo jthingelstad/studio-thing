@@ -7,6 +7,6 @@ post_kind: micropost
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/98aa86be2d.jpg" style="width: 115px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/98aa86be2d.jpg" alt="Drobo 4-bay external hard drive enclosure with blue status lights and yellow-green drive indicator lights on front panel." style="width: 115px; float: right; margin-left: 10px; " />
 
 Just sitting here working away with some reasonably heavy I/O operations on my Drobo and it spontaneously rebooted itself. Yikes.

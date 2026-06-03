@@ -11,4 +11,4 @@ What a wonderful evening of Irish music. It was just under a year ago that we [f
 
 The High Kings also announced that they would be returning this summer for the [Irish Fair of Minnesota](https://www.irishfair.com)!
 
-<img src="https://www.thingelstad.com/uploads/2025/62098b8ac1.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/62098b8ac1.jpg" width="600" height="450" alt="Four musicians performing on a colorfully lit stage with a large The High Kings banner behind them and a full seated audience in front.">

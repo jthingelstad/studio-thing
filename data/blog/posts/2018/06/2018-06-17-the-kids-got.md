@@ -9,4 +9,4 @@ categories: []
 
 The kids got me [The Legend of Zelda: Breath of the Wild](https://www.nintendo.com/games/detail/the-legend-of-zelda-breath-of-the-wild-switch) for Father’s day, so we are exploring tonight. 🤗
 
-<img src="https://www.thingelstad.com/uploads/2018/9ad7010a8d.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/9ad7010a8d.jpg" alt="The Legend of Zelda Breath of the Wild title logo over a lush green open-world landscape with mountains, rocks, and a figure on horseback." width="600" height="337" />

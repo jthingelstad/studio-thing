@@ -9,4 +9,4 @@ categories: []
 
 Icy branches from the spray off of [Johnston Canyon](https://www.johnstoncanyon.ca/) upper falls.
 
-<img src="https://www.thingelstad.com/uploads/2025/1cec29ebc1.jpg" width="405" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/1cec29ebc1.jpg" width="405" height="600" alt="Tall conifers coated in ice mist beside a viewing platform, dwarfed by the spray of Johnston Canyon upper falls">

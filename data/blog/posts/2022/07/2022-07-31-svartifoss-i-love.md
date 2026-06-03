@@ -9,4 +9,4 @@ categories: []
 
 Svartifoss. I love the columns in the rock. 
 
-<img src="https://www.thingelstad.com/uploads/2022/dda68f2dd2.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/dda68f2dd2.jpg" width="600" height="600" alt="Svartifoss waterfall cascading down dark hexagonal basalt columns into a rocky pool surrounded by green vegetation" />

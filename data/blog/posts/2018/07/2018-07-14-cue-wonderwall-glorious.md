@@ -9,4 +9,4 @@ categories: ["Sports", "Music"]
 
 Cue Wonderwall! 🎶 Glorious 3-2 win Minnesota United! ⚽️🙌🏻  
 
-<img src="https://www.thingelstad.com/uploads/2018/e1d3745328.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/e1d3745328.jpg" alt="Soccer match at dusk inside a packed stadium with players on the field near the penalty area and fans watching from the stands." width="600" height="337" />

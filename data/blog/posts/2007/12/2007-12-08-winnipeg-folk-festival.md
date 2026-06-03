@@ -13,7 +13,7 @@ Now, when I say sing along I mean sing along with *gusto*. Think of an Irish bar
 
 This post is the study guide for this assignment. I've compiled the lyrics for these songs and validated them against specific tracks from iTunes to make sure they are correct.
 
-<img src="https://www.thingelstad.com/uploads/2020/fb37f2b892.jpg" style="width: 173px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/fb37f2b892.jpg" alt="Album cover for Stan Rogers Between the Breaks Live showing five musicians performing on a dimly lit stage" style="width: 173px; float: right; margin-left: 10px; " />
 
 ### The Mary Ellen Carter by Stan Rogers
 
@@ -73,7 +73,7 @@ The Mary Ellen Carter ([iTunes](http://phobos.apple.com/WebObjects/MZStore.woa/w
 >
 > *2ND CHORUS*
 
-<img src="https://www.thingelstad.com/uploads/2020/0dbb888aa6.jpg" style="width: 174px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/0dbb888aa6.jpg" alt="Album cover for The Flowers of Scotland by Carl Peterson showing a young blond man framed by purple wildflowers and a thistle" style="width: 174px; float: right; margin-left: 10px; " />
 
 ### Wild Mountain Thyme
 
@@ -112,7 +112,7 @@ This is a traditional Irish song. As such, the lyrics are modified by various pe
 > 
 > *CHORUS*
 
-<img src="https://www.thingelstad.com/uploads/2020/3e75653d4a.jpg" style="width: 175px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/3e75653d4a.jpg" alt="Album cover for What a Wonderful World featuring 26 Inspirational Classics with a smiling short-haired blonde woman in a light blazer" style="width: 175px; float: right; margin-left: 10px; " />
 
 ### Amazing Grace
 

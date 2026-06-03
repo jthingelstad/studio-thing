@@ -7,11 +7,7 @@ post_kind: post
 categories: []
 ---
 
-I got to try out [my new Sony noise canceling
-headphones](https://www.thingelstad.com/2006/03/12/noise-canceling-headphones.html) on my recent trip to New
-York. My impression is mixed, but overall I'm pleased with them. I
-haven't tried other companies so I can't comment on how they differ.
-Here are my key comments:
+I got to try out [my new Sony noise canceling headphones](https://www.thingelstad.com/2006/03/12/noise-canceling-headphones.html) on my recent trip to New York. My impression is mixed, but overall I'm pleased with them. I haven't tried other companies so I can't comment on how they differ. Here are my key comments:
 
 -   Reviews will say that all noise cancelling headphones create a sense
     of "pressure" when activated. This is certainly true, and was more

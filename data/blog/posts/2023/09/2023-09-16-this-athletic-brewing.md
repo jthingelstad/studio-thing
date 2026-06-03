@@ -9,4 +9,4 @@ categories: []
 
 This Athletic Brewing [Waves of Sun](https://athleticbrewing.com/products/waves-of-sun) is delicious. 🍻
 
-<img src="https://www.thingelstad.com/uploads/2023/afe5234d41.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/afe5234d41.jpg" width="600" height="450" alt="Athletic Brewing Co Waves of Sun non-alcoholic beer can on a yellow Adirondack chair beside a Yeti cooler, poolside.">

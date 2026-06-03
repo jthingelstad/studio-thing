@@ -7,7 +7,6 @@ post_kind: post
 categories: []
 ---
 
-I don't intend to make a habit of quoting myself, but I really like
-this.
+I don't intend to make a habit of quoting myself, but I really like this.
 
 "Every time a blog is created an angel gets its wings."

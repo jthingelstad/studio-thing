@@ -9,4 +9,4 @@ categories: []
 
 Still totally digging my Mini.
 
-![](https://www.thingelstad.com/uploads/2020/7e30a765aa.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/7e30a765aa.jpg" alt="Yellow Mini Cooper S with black racing stripes parked in a sunny parking lot surrounded by other vehicles.">

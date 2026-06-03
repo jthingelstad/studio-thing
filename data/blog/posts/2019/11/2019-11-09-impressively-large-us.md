@@ -9,4 +9,4 @@ categories: []
 
 Impressively large US flag at [Minneapolis VA Health Care System](https://www.minneapolis.va.gov). 🇺🇸
 
-<img src="https://www.thingelstad.com/uploads/2019/cc817901ff.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/cc817901ff.jpg" width="600" height="600" alt="Large US flag hanging vertically in the atrium of the Minneapolis VA Health Care System, flanked by tall columns under a skylight." />

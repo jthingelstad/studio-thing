@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7565311">7565311</a> at <strong><a href="https://poap.gallery/drops/226139">POAP KINGS Sunday Scrimmage 1</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2026/c33d78a5-23cf-49f1-9766-e0c1730e1bad.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2026/c33d78a5-23cf-49f1-9766-e0c1730e1bad.png" alt="Circular badge reading POAP Kings Sunday Scrimmage 1 with a gold crown atop a purple treasure chest surrounded by gold coins and castle towers." width="500" height="500" />

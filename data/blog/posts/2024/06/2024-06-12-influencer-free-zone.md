@@ -9,4 +9,4 @@ categories: []
 
 "Influencer Free Zone". Tunnel entrance in Belfast.
 
-<img src="https://www.thingelstad.com/uploads/2024/6c75748743.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/6c75748743.jpg" width="600" height="450" alt="Underground tunnel entrance covered in graffiti with a blue railing sign reading Influencer Free Zone with a no-camera icon, Belfast city centre.">

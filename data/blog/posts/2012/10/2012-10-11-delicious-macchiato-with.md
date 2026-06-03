@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Delicious macchiato with [Jim Bernard](https://jimbernard.net) at [Urban Bean Coffee](http://urbanbeancoffee.com). 
 
-<img src="https://www.thingelstad.com/uploads/2020/b7c434dea1.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/b7c434dea1.jpg" width="600" height="450" alt="Two cappuccinos with latte art in a black cup and a white cup on matching saucers on a wooden table in a cafe." />

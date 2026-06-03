@@ -9,4 +9,4 @@ categories: []
 
 My Apple [AirTags](https://www.apple.com/airtag/) arrived today! Two are for special keys. Not sure what other two will be for. 
 
-<img src="https://www.thingelstad.com/uploads/2021/eeb4f00477.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/eeb4f00477.jpg" width="600" height="600" alt="Four Apple AirTags in their packaging on a white countertop, each engraved with a different emoji: rock-on hand, robot, fox, and thumbs-up." />

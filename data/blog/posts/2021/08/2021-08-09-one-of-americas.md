@@ -9,4 +9,4 @@ categories: []
 
 “One of America’s 10 best towns and main streets!” Way to wear it proud [Littleton](https://golittleton.com)! 🙌
 
-<img src="https://www.thingelstad.com/uploads/2021/3485626b2b.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/3485626b2b.jpg" width="600" height="337" alt="Jax Jr. Cinemas marquee on Main Street in Littleton NH welcoming visitors and noting the town is one of Americas 10 best towns and main streets" />

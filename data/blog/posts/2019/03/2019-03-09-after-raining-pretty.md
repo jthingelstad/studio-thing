@@ -9,4 +9,4 @@ categories: []
 
 After raining pretty good for a while it turned into pretty serious snow! ❄️
 
-<img src="https://www.thingelstad.com/uploads/2019/ec59986d2c.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/ec59986d2c.jpg" width="600" height="450" alt="Basketball hoop in a snowy backyard during a heavy snowstorm, surrounded by snow-covered evergreen and bare deciduous trees." />

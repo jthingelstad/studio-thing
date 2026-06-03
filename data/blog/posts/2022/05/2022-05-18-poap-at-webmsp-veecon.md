@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/4991281">4991281</a> at <strong><a href="https://poap.gallery/drops/44934">Web3MSP @ VeeCon 2022</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/web3msp-veecon-2022-2022-logo-1652838325166.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/web3msp-veecon-2022-2022-logo-1652838325166.png" alt="Circular badge for Web3MSP at VeeCon in Minneapolis, May 19-22, 2022, with colorful logo and holographic VeeCon emblem" width="500" height="500" />

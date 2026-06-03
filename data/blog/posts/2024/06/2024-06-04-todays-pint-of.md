@@ -9,4 +9,4 @@ categories: []
 
 Today’s pint of Guinness from [Kate Kearney's Cottage](https://katekearneyscottage.com) after completing hike over the Gap of Dunloe. 
 
-<img src="https://www.thingelstad.com/uploads/2024/247776ebcd.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/247776ebcd.jpg" width="600" height="600" alt="Pint of Guinness stout with creamy head on an outdoor wooden table, white bucket of daisies and red door behind it.">

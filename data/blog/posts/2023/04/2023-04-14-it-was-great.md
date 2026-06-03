@@ -9,4 +9,4 @@ categories: ["Music"]
 
 It was great to see [Aoife O'Donovan](https://www.aoifeodonovan.com) perform Bruce Springsteen's "Nebraska" at the [Turf Club](https://first-avenue.com/venue/turf-club/) tonight. 🎶
 
-<img src="https://www.thingelstad.com/uploads/2023/8e0cb0b86c.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/8e0cb0b86c.jpg" width="600" height="337" alt="Crowded music venue with a solo guitarist performing on a purple-lit stage at the Turf Club in Saint Paul">

@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Ready to put the steaks on the [Big Green Egg](https://biggreenegg.com)! 🔥🥩
 
-<img src="https://www.thingelstad.com/uploads/2021/a22b2bae28.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/a22b2bae28.jpg" width="600" height="600" alt="Big Green Egg kamado grill smoking outdoors with thermometer reading around 400 degrees F, lake and bare trees in background." />

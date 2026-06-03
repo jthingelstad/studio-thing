@@ -9,4 +9,4 @@ categories: ["Minnestar", "Crypto"]
 
 I made a [special POAP](https://poap.gallery/drops/189534) just for folks that attend my [How to Newsletter](https://sessions.minnestar.org/sessions/1811) session at Minnebar 19! If you join this session I'll have a NFC card in the room you can tap to add this fun one to your collection!
 
-<img src="https://www.thingelstad.com/uploads/2025/how-to-newsletter-poap.png"  style="max-width: 500px;" >
+<img src="https://www.thingelstad.com/uploads/2025/how-to-newsletter-poap.png" alt="Red circle badge with email envelope icon showing at-sign, surrounded by decorative shapes and symbols"  style="max-width: 500px;" >

@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Our tradition to have steaks on the [Big Green Egg](https://biggreenegg.com) on Christmas Eve. 
 
-<img src="https://www.thingelstad.com/uploads/2021/d7860cce2c.jpg" width="600" height="450" alt="" /><img src="https://www.thingelstad.com/uploads/2021/ab59e3ba7f.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/d7860cce2c.jpg" width="600" height="450" alt="Festive dining table set for Christmas Eve with Santa-themed plates, purple Advent candles, and a German Christmas pyramid centerpiece." /><img src="https://www.thingelstad.com/uploads/2021/ab59e3ba7f.jpg" width="600" height="450" alt="Big Green Egg kamado grill smoking at night, mounted in a metal outdoor kitchen cart with tongs resting on the side counter." />

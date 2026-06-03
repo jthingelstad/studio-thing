@@ -9,4 +9,4 @@ categories: []
 
 Battery life on Series 3 Apple Watch is impressive - 75% after full day. 
 
-<img src="https://www.thingelstad.com/uploads/2017/f6d87da45a.jpg" style="max-width: 312px; " />
+<img src="https://www.thingelstad.com/uploads/2017/f6d87da45a.jpg" alt="Apple Watch Control Center showing 75% battery, Wi-Fi active, airplane mode off, and haptic alerts icon." style="max-width: 312px; " />

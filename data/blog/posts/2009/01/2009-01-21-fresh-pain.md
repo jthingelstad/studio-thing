@@ -9,4 +9,4 @@ categories: []
 
 “Fresh pain”?
 
-![](https://www.thingelstad.com/uploads/2020/856defdb47.png)
+<img src="https://www.thingelstad.com/uploads/2020/856defdb47.png" alt="Rental flyer for a 725-dollar 2-bedroom apartment with a hand-drawn arrow pointing to a typo reading Fresh pain instead of Fresh paint">

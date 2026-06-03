@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/08/03/iceland-log-day.html"
 title: "Iceland Log Day 12"
 published: "2022-08-03T22:58:04+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 Wednesday, August 3rd  
@@ -27,7 +27,7 @@ Sunny & Windy
 
 **Team Update:** On [Day 9](https://www.thingelstad.com/2022/07/31/iceland-log-day.html) while descending the Vatnajökull Glacier I (Jamie) got tripped up a bit in my crampons. I placed my right foot down and caught the crampon on my left foot. I stumbled, and took a few big steps but didn’t fall. Everything seemed okay at the time, but my right knee has been hurting me since. I've been hoping it would get better but so far it isn't. Due to my knee issues we have changed our plans for tomorrow. We were planning to go to [Landmannalaugar](https://en.wikipedia.org/wiki/Landmannalaugar) and hike a bit. Since my knee isn't doing so well, we are going to instead do the [Golden Circle](https://www.iceland.org/golden-circle-iceland/) tomorrow. Landmannalaugar will have to wait for another time. I’m sure my knee will be fine with some rest.
 
-<img src="https://www.thingelstad.com/uploads/2022/60fc3ea2a5.png" width="600" height="366" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/60fc3ea2a5.png" width="600" height="366" alt="Google Maps route from The Garage near Landeyjahofn on Iceland south coast north to Blue View Cabins, passing through Selfoss and Hella." />
 
 Jump to day 
 [0](https://www.thingelstad.com/2022/07/22/iceland-log-day.html), 

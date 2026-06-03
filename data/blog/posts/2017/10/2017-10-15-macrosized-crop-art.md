@@ -9,4 +9,4 @@ categories: []
 
 Macro-sized crop art! [Sever’s Fall Festival](https://seversfallfestival.com)
 
-<img src="https://www.thingelstad.com/uploads/2017/7ed70d8c46.jpg" width="600" height="600" /><img src="https://www.thingelstad.com/uploads/2017/cb634c030f.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2017/7ed70d8c46.jpg" alt="Massive hillside display of thousands of orange, green, and white pumpkins arranged into crop art with blue and green wooden lettering at Severs Fall Festival." width="600" height="600" /><img src="https://www.thingelstad.com/uploads/2017/cb634c030f.jpg" alt="Massive tiered display of thousands of pumpkins in orange, white, green, and black varieties arranged in patterns at Severs Fall Festival" width="600" height="599" />

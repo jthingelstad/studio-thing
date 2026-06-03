@@ -32,9 +32,9 @@ The introduction to the room…
 > Magnifico's Circus is not just a show; it's an experience you won't want to miss. Step right up and join us for a day of fun, laughter, and unforgettable memories!
 
 
-<img src="https://www.thingelstad.com/uploads/2025/7545fc43a5.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/7545fc43a5.jpg" width="600" height="450" alt="Four people smiling and holding circus-themed wooden tickets in front of a black and white striped backdrop with red velvet curtains.">
 
-<img src="https://www.thingelstad.com/uploads/2025/e38770d09f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/e38770d09f.jpg" width="600" height="450" alt="Six people posing for a selfie in a circus-themed room with red velvet curtains, holding wooden Magnifico's Circus tickets, one person wearing a masquerade mask and top hat">
 
 You can also listen to the soundtrack.
 

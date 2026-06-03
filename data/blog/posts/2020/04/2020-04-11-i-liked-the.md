@@ -9,4 +9,4 @@ categories: []
 
 I liked the privacy and security benefits of having a [Pi-Hole](https://pi-hole.net) at home so much that I decided to put one in the cabin too. Next up cable management. 😁
 
-<img src="https://www.thingelstad.com/uploads/2020/89b22270d0.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/89b22270d0.jpg" width="600" height="450" alt="Raspberry Pi in black case atop a mini PC, connected to a UniFi network switch and eero router with green and black ethernet cables on a wooden desk." />

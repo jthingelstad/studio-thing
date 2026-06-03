@@ -9,4 +9,4 @@ categories: []
 
 Having Hulk Hogan’s new Real American Beer — can there be a better beer for 4th of July! 🍻
 
-<img src="https://www.thingelstad.com/uploads/2024/d02c431b02.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/d02c431b02.jpg" width="600" height="600" alt="Hand holding a can of Real American Beer light beer near a backyard pool on a sunny day.">

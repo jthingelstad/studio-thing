@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Excited to see the United play today — and even more excited to see Messi! GOAT! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2025/7d8d92faf0.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/7d8d92faf0.jpg" width="600" height="450" alt="Large white UNITED letters on a lawn outside a modern stadium on a sunny day, with crowds of fans walking nearby.">

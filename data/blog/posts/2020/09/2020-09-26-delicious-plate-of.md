@@ -9,4 +9,4 @@ categories: []
 
 Delicious plate of tomatoes grown by our old neighbor. 🍅 
 
-<img src="https://www.thingelstad.com/uploads/2020/06dbf342a6.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/06dbf342a6.jpg" width="600" height="600" alt="Sliced heirloom tomatoes in red and yellow varieties arranged on a round white plate with colorful illustrated figures" />

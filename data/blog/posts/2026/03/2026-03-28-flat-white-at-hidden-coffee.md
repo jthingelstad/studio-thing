@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Flat white at Hidden Coffee Roasters. 
 
-<img src="https://www.thingelstad.com/uploads/2026/35964b39c3.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/35964b39c3.jpg" width="600" height="450" alt="Flat white with latte art in a black cup beside a glass of water and a Hidden Coffee Roasters origin card on a wooden table outdoors.">

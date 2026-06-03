@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Dark Clouds. Go United! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2025/a2369a1369.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/a2369a1369.jpg" width="600" height="449" alt="Large white UNITED letters sculpture outside a stadium under dramatic dark storm clouds, with people sitting inside the letters">

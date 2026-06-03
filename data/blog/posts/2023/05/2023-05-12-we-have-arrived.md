@@ -9,4 +9,4 @@ categories: []
 
 We have arrived at **Brandi Carlile's Mothership Weekend**!
 
-<img src="https://www.thingelstad.com/uploads/2023/315d8ad580.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/315d8ad580.jpg" width="600" height="337" alt="Four people posing beside a colorful Brandi Carlile Mothership Weekend festival sign on a sandy path surrounded by trees.">

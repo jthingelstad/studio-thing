@@ -9,4 +9,4 @@ categories: []
 
 Double rainbow in Yellowstone National Park. 🌈🌈
 
-<img src="https://www.thingelstad.com/uploads/2020/4aab3d1173.jpg" width="600" height="400" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/4aab3d1173.jpg" width="600" height="400" alt="Double rainbow arching over a meadow with dead logs and an evergreen forest under a gray overcast sky in Yellowstone National Park." />

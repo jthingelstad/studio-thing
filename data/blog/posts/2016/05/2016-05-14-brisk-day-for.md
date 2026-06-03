@@ -9,4 +9,4 @@ categories: []
 
 Brisk day for kids soccer. Brrr!
 
-<img src="https://www.thingelstad.com/uploads/2020/61f66ffaf4.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/61f66ffaf4.jpg" width="600" height="450" alt="Young children in soccer uniforms chasing a ball on a dirt field on a cool sunny day with adults watching from the sideline." />

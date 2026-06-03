@@ -9,4 +9,4 @@ categories: ["Music"]
 
 [Michael Franti & Spearhead](https://www.michaelfranti.com) at MN Zoo! 🎶
 
-<img src="https://www.thingelstad.com/uploads/2018/b108f05dd7.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/b108f05dd7.jpg" alt="Band performs on an outdoor stage with green and purple lights, lead singer playing acoustic guitar at center." width="600" height="450" />

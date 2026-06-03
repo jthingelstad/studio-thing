@@ -9,6 +9,6 @@ categories: []
 
 Happy Pi Day!
 
-<img src="https://www.thingelstad.com/uploads/2020/b5928539d2.png" style="width: 300px; max-width: 300px;" />
+<img src="https://www.thingelstad.com/uploads/2020/b5928539d2.png" alt="Greek letter pi symbol in bold black on white background" style="width: 300px; max-width: 300px;" />
 
 _See [Pi Day Collection](https://www.thingelstad.com/collections/pi-day/)._

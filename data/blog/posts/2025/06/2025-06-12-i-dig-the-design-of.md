@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 I dig the design of this new [Coinbase One](https://www.coinbase.com/creditcard) card. On the waitlist! 4% rewards in Bitcoin — awesome!
 
-<img src="https://www.thingelstad.com/uploads/2025/3b41f91a09.png" width="600" height="309" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/3b41f91a09.png" width="600" height="309" alt="Black Coinbase One credit card covered in Bitcoin genesis block hex data and the embedded chip visible.">

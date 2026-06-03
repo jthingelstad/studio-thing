@@ -9,8 +9,8 @@ categories: ["Coffee"]
 
 [Swing's Coffee Roasters](https://swingscoffee.com).
 
-![](https://www.thingelstad.com/uploads/2020/8092e98c5b.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/8092e98c5b.jpg" alt="Busy coffee shop interior with baristas working an espresso machine at a long counter, customers seated nearby, tall windows in background.">
 
-![](https://www.thingelstad.com/uploads/2020/dc759f0bb3.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/dc759f0bb3.jpg" alt="Two white ceramic cups of coffee with latte art on a rustic wooden table, a large latte and a smaller cortado, each on a saucer with a spoon.">
 
-![](https://www.thingelstad.com/uploads/2020/1900e5c699.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/1900e5c699.jpg" alt="Interior of Swings Coffee Roasters showing a butcher block worktable on wheels, wooden seating area, and a coffee bar with grinders and brewing equipment along the back wall.">

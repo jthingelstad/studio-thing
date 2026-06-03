@@ -9,4 +9,4 @@ categories: []
 
 Giant wall of pizza boxes waiting to be filled at [Hello Pizza](https://www.hellopizza.com). 
 
-<img src="https://www.thingelstad.com/uploads/2022/16a1094d63.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/16a1094d63.jpg" width="600" height="450" alt="Hundreds of red pizza boxes stacked in a large wall on tables inside Hello Pizza restaurant." />

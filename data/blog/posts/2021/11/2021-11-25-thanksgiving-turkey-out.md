@@ -9,4 +9,4 @@ categories: []
 
 Thanksgiving Turkey out of the oven. Now for the rest. 
 
-<img src="https://www.thingelstad.com/uploads/2021/f1551cd368.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/f1551cd368.jpg" width="600" height="599" alt="Roasted Thanksgiving turkey on a rack over a baking pan, golden brown and glistening, resting on a kitchen counter." />

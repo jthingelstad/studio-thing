@@ -9,4 +9,4 @@ categories: []
 
 Went here before the Mumford & Sons show with Monique and Dave and was really wowed by the pizza. The crust is amazing, sauce was bright. Overall delicious pizza. Beer menu was a bit lacking. Will definitely go back.
 
-![](https://www.thingelstad.com/uploads/2020/13b0eea7ac.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/13b0eea7ac.jpg" alt="Open kitchen of a pizza restaurant with chalkboard mural above showing a food truck and Grateful Dead quote, staff working behind counter with stacked pizza boxes">

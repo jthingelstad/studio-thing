@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7433350">7433350</a> at <strong><a href="https://poap.gallery/drops/190536">Al’s Breakfast — 612 POAP Challenge</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/7ba67521-6cb2-4dda-a9a0-4271b42e6cad.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/7ba67521-6cb2-4dda-a9a0-4271b42e6cad.png" alt="Circular badge reading 612 POAP Challenge and Als Breakfast featuring a pixelated cartoon face on a blocky diner building" width="500" height="500" />

@@ -7,12 +7,7 @@ post_kind: post
 categories: []
 ---
 
-We just returned from the 2008 [Winnipeg Folk Festival](https://www.winnipegfolkfestival.ca). Every year we
-pick up around 20 albums from performers this year. We've gone entirely
-digital for our music now so this year I just did it all online after we
-got home. It's nice to not have to rip everything. We got 19 albums this
-year, and there are 3 more that I can't find digitally and have mailed
-the artists to see if I can get. Here are our picks for this year.
+We just returned from the 2008 [Winnipeg Folk Festival](https://www.winnipegfolkfestival.ca). Every year we pick up around 20 albums from performers this year. We've gone entirely digital for our music now so this year I just did it all online after we got home. It's nice to not have to rip everything. We got 19 albums this year, and there are 3 more that I can't find digitally and have mailed the artists to see if I can get. Here are our picks for this year.
 
 -   **[The Beautiful Girls](http://www.thebeautifulgirls.com/)** -
     Water, We're Already Gone and Ziggurats

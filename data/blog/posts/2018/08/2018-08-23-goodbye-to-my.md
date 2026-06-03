@@ -4,14 +4,14 @@ url: "https://www.thingelstad.com/2018/08/23/goodbye-to-my.html"
 title: "Goodbye to my friend, David Hussman"
 published: "2018-08-24T02:16:00+00:00"
 post_kind: post
-categories: []
+categories: ["Minnestar", "MarketWatch"]
 ---
 
 The last time I saw my friend David Hussman we met at [Red Wagon Pizza](https://www.redwagon-mpls.com) and enjoyed an extended evening of pepperoni pizza and several glasses of a delicious red wine. We initially sat inside to avoid some scattered rain, but then transitioned outside to enjoy a gorgeous evening, great wine and even better conversation. Like most times that David and I got together the conversation never had a gap and flowed all over the place.
 
 I commented to David that he seemed remarkably well. It had been well over a year since David called to let me know about his cancer diagnosis. When he called he was talking weeks and months. Here we were drinking glasses of wine and laughing well over a year later. He was sharing stories of his recent trip to Italy with his family. It sounded amazing and I could almost be fooled into thinking that David wasn't sick. But he definitely was.
 
-![](https://www.thingelstad.com/uploads/2020/8e0426d5db.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/8e0426d5db.jpg" alt="Person with long hair and glasses resting clasped hands against chin in a thoughtful pose, black and white portrait">
 
 I first met David when I was CTO for MarketWatch. One of the engineers on our team knew him and figured he could help us out with some of the things we were doing. I instantly liked David's insight, his directness and ability to see through the messy stuff and get right to the problem.
 

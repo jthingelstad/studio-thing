@@ -9,4 +9,4 @@ categories: []
 
 Our kids are doing REM5VR [Youth Innovation Lab PLUS](https://www.rem5vr.com/youth-innovation-lab-plus.html). I’m impressed with the content, and they are enjoying it. This is a great idea to augment the learning at home experience. 
 
-<img src="https://www.thingelstad.com/uploads/2020/5949b7b332.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/5949b7b332.jpg" width="600" height="600" alt="Child wearing an Oculus Go VR headset labeled REM5 VR LAB, sitting at a counter holding a controller, dressed in a raccoon sweater." />

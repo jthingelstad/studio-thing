@@ -9,7 +9,7 @@ categories: ["TeamSPS"]
 
 Excited to hear [Andy Jassy](https://en.wikipedia.org/wiki/Andy_Jassy) give the first [AWS re:Invent](https://reinvent.awsevents.com) keynote! 
 
-<img src="https://www.thingelstad.com/uploads/2020/b43ecb74f0.jpg" width="600" height="449" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/b43ecb74f0.jpg" width="600" height="449" alt="Large conference hall packed with hundreds of attendees seated facing a stage with multiple large screens displaying System Integrators sponsor logos" />
 
 Amazon Snowball very good idea. Make it easy.
 

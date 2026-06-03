@@ -9,4 +9,4 @@ categories: []
 
 October roses at [Minnesota Landscape Arboretum](https://arb.umn.edu). 
 
-<img src="https://www.thingelstad.com/uploads/2024/7e9af6248b.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/7e9af6248b.jpg" width="450" height="600" alt="Lavender-pink rose bush in full bloom with buds, a white gazebo draped in white roses visible in the background.">

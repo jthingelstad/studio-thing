@@ -9,4 +9,4 @@ categories: []
 
 Fountain in Barcelona. 
 
-<img src="https://www.thingelstad.com/uploads/2026/dc1a8e43db.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/dc1a8e43db.jpg" width="600" height="450" alt="Cascada monumental fountain with winged dragon statues and golden horses atop an arch, reflected in a turquoise pool, Parc de la Ciutadella, Barcelona">

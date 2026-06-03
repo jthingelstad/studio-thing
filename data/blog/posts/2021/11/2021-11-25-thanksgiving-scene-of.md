@@ -9,4 +9,4 @@ categories: []
 
 Thanksgiving 2021 scene of the crime. 🚨
 
-<img src="https://www.thingelstad.com/uploads/2021/ba4c87b7b8.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/ba4c87b7b8.jpg" width="600" height="450" alt="Busy kitchen island covered with Thanksgiving dishes including dinner rolls, cranberry sauce, a slow cooker, and a large coffee urn." />

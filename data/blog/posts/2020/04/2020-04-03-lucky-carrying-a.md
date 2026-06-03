@@ -9,4 +9,4 @@ categories: []
 
 Lucky carrying a big stick. 
 
-<img src="https://www.thingelstad.com/uploads/2020/171ccf5eab.jpg" width="600" height="508" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/171ccf5eab.jpg" width="600" height="508" alt="Fluffy white puppy trotting across a grass field carrying a large stick in its mouth, tail raised" />

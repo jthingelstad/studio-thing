@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7431210">7431210</a> at <strong><a href="https://poap.gallery/drops/190549">Witches Tower — 612 POAP Challenge</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/9ccc1351-e7ef-4687-b2e9-842bf6488b66.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/9ccc1351-e7ef-4687-b2e9-842bf6488b66.png" alt="Circular badge showing a pixelated lighthouse with a green roof, labeled 612 POAP Challenge above and Witches Tower below." width="500" height="500" />

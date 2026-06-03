@@ -9,4 +9,4 @@ categories: []
 
 When in Disney?!
 
-<img src="https://www.thingelstad.com/uploads/2022/233d5f5923.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/233d5f5923.jpg" width="600" height="600" alt="Two Apple Watches side by side showing Mickey Mouse and Minnie Mouse watch faces, both reading 6:53 PM with weather and calendar info.">

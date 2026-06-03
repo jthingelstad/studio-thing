@@ -9,4 +9,4 @@ categories: []
 
 My book club picked Doris Kearns Goodwin's Team of Rivals, a whopping 754 pages. Wish me luck!
 
-![](https://www.thingelstad.com/uploads/2020/bd2180e03d.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/bd2180e03d.jpg" alt="Hardcover book Team of Rivals by Doris Kearns Goodwin lying on a wooden table next to a colorful striped rug.">

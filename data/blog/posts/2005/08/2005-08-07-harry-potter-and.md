@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/3559e29cb1.jpg" style="width: 110px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/3559e29cb1.jpg" alt="Hardcover book with a dark cover showing two figures leaning over a glowing cauldron, authored by J.K. Rowling" style="width: 110px; float: right; margin-left: 10px; " />
 
 I just finished [Harry Potter and the Half-Blood Prince](http://search.barnesandnoble.com/booksearch/isbnInquiry.asp?ISBN=0439784549). I rifled my way through the sixth installment of the Harry Potter series much faster than the [Order of the Phoenix](https://www.thingelstad.com/2004/09/28/harry-potter-and.html). I found the Half-Blood Prince to be one of my favorite in the series in a very odd way. The story was different than the last five books. Each of them seemed to have a very finite start and finish. The books would start, there would be some very interesting story, and then after a climactic conclusion everyone would head home for the summer. This one had a different feel. It seemed like it was distinctly setting up something big to go down in what everyone expects to be the final, seventh book, in the series.
 

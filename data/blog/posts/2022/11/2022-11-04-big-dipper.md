@@ -9,4 +9,4 @@ categories: []
 
 **Big Dipper**. It is really wild to me that I could get this with my iPhone, handheld. Editing in [Darkroom](https://darkroom.co) was critical. 
 
-<img src="https://www.thingelstad.com/uploads/2022/227c072065.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/227c072065.jpg" width="600" height="450" alt="Night sky filled with stars including the Big Dipper constellation above a dark silhouette of trees along the horizon.">

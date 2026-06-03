@@ -21,4 +21,4 @@ I do want to take a moment to thank George W. though for one thing and that is w
 
 Occasionally people clap at the end of a movie. This film nearly got a standing ovation. I was smiling with a grin from ear-to-ear as I left the theater though and saw that the showing after ours had sold out, as did ours, and there was a line of people down to the lobby waiting to see **[Fahrenheit 9/11](http://www.fahrenheit911.com/)**. I hope you all see it. I hope everyone sees it.
 
-<img src="https://www.thingelstad.com/uploads/2020/c5c7e1b4e7.jpg" width="308" height="500" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/c5c7e1b4e7.jpg" width="308" height="500" alt="Movie poster showing two men holding hands on a lawn in front of the White House one in casual clothes and cap one in a dark suit and red tie" />

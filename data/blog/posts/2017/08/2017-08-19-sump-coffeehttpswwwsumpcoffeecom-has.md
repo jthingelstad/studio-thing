@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 [Sump Coffee](https://www.sumpcoffee.com) has amazing espresso. This is a cathedral to coffee. So good. 
 
-<img src="https://www.thingelstad.com/uploads/2017/9a88456569.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/9a88456569.jpg" alt="Espresso in a handmade white ceramic cup on a red saucer with a spoon, alongside a glass of water on a wood table" width="600" height="600" />

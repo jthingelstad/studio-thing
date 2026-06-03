@@ -9,4 +9,4 @@ categories: []
 
 We watched Family Plan 2 tonight. Not going to win any Academy Awards, but an enjoyable movie.
 
-<img src="https://www.thingelstad.com/uploads/2026/0f2a093bd4.jpg" width="400" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/0f2a093bd4.jpg" width="400" height="600" alt="Movie poster for The Family Plan 2 on Apple TV Plus starring Mark Wahlberg and Michelle Monaghan, set in London with Big Ben visible, new movie Nov 21">

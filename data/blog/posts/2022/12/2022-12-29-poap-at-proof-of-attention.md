@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6160261">6160261</a> at <strong><a href="https://poap.gallery/drops/93585">Proof of Attention Protocol - Test </a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/proof-of-attention-protocol-test-2022-logo-1672087619063.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/proof-of-attention-protocol-test-2022-logo-1672087619063.png" alt="Circular green neon text reading YOU TESTED AN AUTOMATION around a 3D gold coin on a pink background with a black ouroboros snake border" width="500" height="500" />

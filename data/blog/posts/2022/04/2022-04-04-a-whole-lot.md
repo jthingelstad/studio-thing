@@ -9,4 +9,4 @@ categories: []
 
 A whole lot of corks. 
 
-<img src="https://www.thingelstad.com/uploads/2022/40abe34104.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/40abe34104.jpg" width="600" height="450" alt="Hundreds of used wine corks piled together, printed with French winery names including Figuiere, Remoissenet, and Henry Marionnet." />

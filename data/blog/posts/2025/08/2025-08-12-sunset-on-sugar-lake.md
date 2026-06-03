@@ -9,4 +9,4 @@ categories: []
 
 Sunset on Sugar Lake.
 
-<img src="https://www.thingelstad.com/uploads/2025/bd3848e239.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/bd3848e239.jpg" width="600" height="449" alt="Brilliant orange sunset reflecting across the calm rippling surface of Sugar Lake with a treeline silhouetted on the horizon.">

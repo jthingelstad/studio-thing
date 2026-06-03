@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 One detail. Each desk in the new #TeamSPS space has these handy USB power ports. Mobile friendly.
 
-<img src="https://www.thingelstad.com/uploads/2019/fdb1bca2e0.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/fdb1bca2e0.jpg" width="600" height="450" alt="Workers in blue shirts installing green-paneled open-plan office workstations with white desktops and built-in USB power ports.">

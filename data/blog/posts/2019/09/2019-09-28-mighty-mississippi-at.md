@@ -9,4 +9,4 @@ categories: []
 
 Mighty Mississippi at Wabasha, MN. 
 
-<img src="https://www.thingelstad.com/uploads/2019/f8f6a615a9.jpg" width="600" height="290" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/f8f6a615a9.jpg" width="600" height="290" alt="Steel truss bridge spanning the Mississippi River at Wabasha MN with a floating dock marina along a rocky shoreline below" />

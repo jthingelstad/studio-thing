@@ -9,4 +9,4 @@ categories: []
 
 Sunset on Grace Bay, Turks & Caicos. 
 
-<img src="https://www.thingelstad.com/uploads/2022/0281d92b8b.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/0281d92b8b.jpg" width="600" height="450" alt="Sandy beach at sunset with a child crouching at the water's edge, a red bucket nearby, and resort buildings along the shoreline." />

@@ -9,4 +9,4 @@ categories: []
 
 Great annual Olson Family Weekend with Tammy’s side of the family. Lots of kids and family fun! 
 
-<img src="https://www.thingelstad.com/uploads/2020/40056058d6.jpg" width="600" height="400" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/40056058d6.jpg" width="600" height="400" alt="Large multigenerational family group of about 18 people posing together outdoors on a lawn surrounded by tall evergreen trees." />

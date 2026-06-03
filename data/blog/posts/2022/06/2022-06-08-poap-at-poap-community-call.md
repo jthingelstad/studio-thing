@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/5126670">5126670</a> at <strong><a href="https://poap.gallery/drops/48789">POAP Community Call #22</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/poap-community-call-22-2022-logo-1654714999790.gif" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/poap-community-call-22-2022-logo-1654714999790.gif" alt="Circular badge for POAP Community Call number 22 on 06.08.2022, featuring the POAP logo on a ribbon award medal with sound wave graphics." width="500" height="500" />

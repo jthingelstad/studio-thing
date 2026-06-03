@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 “Black gold.” ☕️🤩
 
-<img src="https://www.thingelstad.com/uploads/2020/ca98c02116.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/ca98c02116.jpg" width="600" height="600" alt="Espresso shot being pulled into a small white ceramic cup with bicycle artwork on a stainless steel espresso machine" />

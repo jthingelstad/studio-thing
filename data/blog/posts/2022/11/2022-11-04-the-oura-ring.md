@@ -9,4 +9,4 @@ categories: []
 
 The Oura Ring detected I was sick before I did. This is what my 2nd round of COVID looked like as it started. It also noted elevated sleeping heart rate.
 
-<img src="https://www.thingelstad.com/uploads/2022/e6164dc619.png" width="600" height="308" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/e6164dc619.png" width="600" height="308" alt="Bar chart showing body temperature deviation in Fahrenheit with a spike to roughly plus 2 degrees Fahrenheit during a COVID illness period.">

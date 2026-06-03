@@ -12,4 +12,4 @@ My blog turns 21 today! I'm so happy that I have stuck with this blogging hobby 
 Total Posts Published: **9,474** (7,200 without title)  
 Total Words Written: **610,188** (that's almost 15 novellas)
 
-<img src="https://www.thingelstad.com/uploads/2025/c43819bd9d.png" width="600" height="242" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/c43819bd9d.png" width="600" height="242" alt="Line chart showing blog posts published per year from 2000 to 2025, peaking at roughly 780 posts in 2008 and trending near 600 to 700 in recent years.">

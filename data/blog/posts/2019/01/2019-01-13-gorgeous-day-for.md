@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Gorgeous day for a smoking session on the [Big Green Egg](https://biggreenegg.com)! First smoke at the new house! 🔥
 
-<img src="https://www.thingelstad.com/uploads/2019/f88fd8b88a.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/f88fd8b88a.jpg" width="600" height="450" alt="Heavily spiced pork shoulder smoking on a Big Green Egg kamado grill in a backyard, lid open with billowing smoke rising." />

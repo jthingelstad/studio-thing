@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/05/25/first-coffee-in.html"
 title: "First Coffee in 54 Days"
 published: "2024-05-25T20:41:43+00:00"
 post_kind: post
-categories: ["Coffee", "Narrated"]
+categories: ["Coffee"]
 ---
 
 This morning I had my first cup of coffee since April 1st — 54 days without the Black Gold in my cup. I was curious to see what the experience would be like. I've not had any coffee during this period. I have had tea three or four times that did have caffeine in it and I noted that I felt the caffeine in that tea much more than I ever did before. But coffee? The real deal? Hadn't had any.
@@ -17,6 +17,6 @@ Eventually that blast off ebbed. I was shocked at how profound that felt. As I t
 
 All that in that little mug of Black Gold.
 
-<img src="https://www.thingelstad.com/uploads/2024/8fed2aaf20.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/8fed2aaf20.jpg" width="600" height="449" alt="White ceramic diner mug with a green leaf and red triangle logo sitting on a weathered wood deck, filled with black coffee, lush green lawn and trees in soft morning light behind it.">
 
 <audio src="https://www.thingelstad.com/uploads/2024/240528-201618.mp3" controls="controls" style="display: none">

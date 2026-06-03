@@ -9,7 +9,7 @@ categories: []
 
 I had read rumors over the last couple of days that [Lance Armstrong](http://lancearmstrong.com/) was going to be returning to racing, but there were rumors only and I figured they were very far fetched. Why would the 7-time Tour de France winner return? Well, it wasn't a rumor! [He is racing in 2009](http://www.livestrong.com/lance2009/)! Wow!
 
-![](https://www.thingelstad.com/uploads/2020/5bfab594c5.png)
+<img src="https://www.thingelstad.com/uploads/2020/5bfab594c5.png" alt="Cyclist in yellow jersey and blue helmet leaning forward on a Trek bike with Discovery Channel sponsorship logos">
 
 _I can't seem to make this video embed not play on load. Grr... Click more to watch the video._
 

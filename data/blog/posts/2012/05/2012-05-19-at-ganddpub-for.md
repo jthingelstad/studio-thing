@@ -9,4 +9,4 @@ categories: []
 
 At [George and the Dragon](https://www.ganddpub.com) for first time and I've got a major crush. Loving it!
 
-<img src="https://www.thingelstad.com/uploads/2020/cf082439d1.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/cf082439d1.jpg" width="600" height="800" alt="Tall pilsner glass of hazy golden beer with a thick white foam head, sitting on a napkin at a restaurant table with mac and cheese visible nearby." />

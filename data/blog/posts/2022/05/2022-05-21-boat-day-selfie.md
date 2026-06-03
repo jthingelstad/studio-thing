@@ -13,4 +13,4 @@ categories: []
 2. This may the most Minnesotan picture of me. 
 3. I think I look a bit like my Grandpa Ardell.
 
-<img src="https://www.thingelstad.com/uploads/2022/99111b9add.jpg" width="599" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/99111b9add.jpg" width="599" height="600" alt="Middle-aged man in a black knit beanie and blue plaid flannel over a gray hoodie takes a selfie on a pontoon boat on a cloudy lake." />

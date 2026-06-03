@@ -9,4 +9,4 @@ categories: []
 
 Time to relax and enjoy a fire. 🔥 
 
-<img src="https://www.thingelstad.com/uploads/2019/dc291c2468.jpg" width="600" height="449" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/dc291c2468.jpg" width="600" height="449" alt="Crackling fire in a round fire pit on a gravel shore at sunset, with an Adirondack chair, stacked firewood, and a calm river beyond." />

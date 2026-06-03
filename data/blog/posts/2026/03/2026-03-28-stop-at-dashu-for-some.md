@@ -9,4 +9,4 @@ categories: ["Pokémon"]
 
 Stop at Dashu for some Japanese Pokémon packs. 
 
-<img src="https://www.thingelstad.com/uploads/2026/12d14afca1.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/12d14afca1.jpg" width="600" height="450" alt="Two people holding Japanese Pokemon card packs in a shop, posing with a large Totoro mascot costume character.">

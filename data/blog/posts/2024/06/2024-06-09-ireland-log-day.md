@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/06/09/ireland-log-day.html"
 title: "Ireland 2024 Log - Day 9"
 published: "2024-06-09T22:21:51+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 _Weather: Cool with gentle but steady rain much of the day._
@@ -23,7 +23,7 @@ Today was a longer transit day starting in Doolin and making our way to Ballysha
 - Continue to [Cria Lodge](https://www.airbnb.ie/rooms/739161778099261165) to check-in. 
 - Try out hot tub for our first night.
 
-<img src="https://www.thingelstad.com/uploads/2024/doolin-ballyshannon.png" width="600" height="381" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/doolin-ballyshannon.png" width="600" height="381" alt="Google Maps route from Doolin through Galway City and Ashford Castle to Ballyshannon, Ireland, totaling 270 km and 4 hours 21 minutes by car.">
 
 Jump to day 
 [1](https://www.thingelstad.com/2024/06/01/ireland-log-day.html), 

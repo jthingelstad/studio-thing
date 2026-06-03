@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I had a fun time seeing [Twisters](https://www.universalpictures.com/movies/twisters) at the [Stardust Drive-In Theater](https://stardustdriveinmovie.com) in Chetek, WI!
 
-<img src="https://www.thingelstad.com/uploads/2024/f151dd5f06.jpg" width="404" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/f151dd5f06.jpg" width="404" height="600" alt="Movie poster for Twisters showing three people fleeing a massive flaming tornado on an open plain beside a truck.">

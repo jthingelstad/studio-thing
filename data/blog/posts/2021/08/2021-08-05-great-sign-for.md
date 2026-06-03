@@ -9,4 +9,4 @@ categories: []
 
 Great sign for a brewery.
 
-![](https://www.thingelstad.com/uploads/2021/4f46d2484c.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/4f46d2484c.jpg" alt="Yellow diamond caution-style sign reading Yeast At Work for Browns Brewing Co above a white taproom hours sign in a wooded setting.">

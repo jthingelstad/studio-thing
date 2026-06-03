@@ -31,4 +31,4 @@ Chicken Cooked Three Ways | chicken breast baked, seared, and deep fried in beet
 **Dessert**  
 House-Made S’mores | graham crackers, milk chocolate bar, vanilla bean marshmallows
 
-<img src="https://www.thingelstad.com/uploads/2023/26b1edc566.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2023/e422616d3b.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/26b1edc566.jpg" width="600" height="450" alt="Wooden cabin dining pods decorated with holiday wreaths and string lights on a rooftop terrace with downtown skyscrapers behind them"><img src="https://www.thingelstad.com/uploads/2023/e422616d3b.jpg" width="600" height="600" alt="Hand in a green sweater toasting a large marshmallow on a skewer over a small tabletop fire, with graham crackers and chocolate on a wooden tray">

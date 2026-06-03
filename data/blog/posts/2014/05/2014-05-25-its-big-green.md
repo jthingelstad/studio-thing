@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 It’s [Big Green Egg](https://biggreenegg.com) time! Waiting for [Mike Rock](https://mrock911.com) to arrive before opening the [Indeed Brewing](https://www.indeedbrewing.com).
 
-<img src="https://www.thingelstad.com/uploads/2020/da4dd53f89.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/da4dd53f89.jpg" width="600" height="450" alt="Two Big Green Egg ceramic grills on a wooden outdoor table with an induction burner and stainless pot between them." />

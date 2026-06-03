@@ -9,4 +9,4 @@ categories: []
 
 Enough Twitter already!
 
-![](https://www.thingelstad.com/uploads/2020/b6b4f6ee65.png)
+<img src="https://www.thingelstad.com/uploads/2020/b6b4f6ee65.png" alt="Printed sign for students announcing kiln class updates are available at twitter.com/NCCkilnupdates on Twitter.">

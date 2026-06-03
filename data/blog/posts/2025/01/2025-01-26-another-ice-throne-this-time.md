@@ -9,4 +9,4 @@ categories: []
 
 Another Ice Throne. This time at the [Ice Palace](https://theicepalaces.com/minnesota) in Delano. 
 
-<img src="https://www.thingelstad.com/uploads/2025/27d9154e9f.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/27d9154e9f.jpg" width="450" height="600" alt="Man in a North Face jacket sitting on a carved ice throne at an outdoor ice palace with massive icicle formations behind him.">

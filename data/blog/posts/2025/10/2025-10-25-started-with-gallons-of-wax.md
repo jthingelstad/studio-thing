@@ -9,4 +9,4 @@ categories: []
 
 Started with 8 gallons of wax and 60 candles later… 
 
-<img src="https://www.thingelstad.com/uploads/2025/0b4d48f853.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/0b4d48f853.jpg" width="600" height="600" alt="Large stainless steel brewing pot viewed from above with golden liquid wax pooled at the bottom">

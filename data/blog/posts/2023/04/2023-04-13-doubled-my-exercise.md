@@ -9,4 +9,4 @@ categories: []
 
 **Doubled** my exercise volume for the last 15 weeks. 💪
 
-<img src="https://www.thingelstad.com/uploads/2023/130643a337.png" width="429" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/130643a337.png" width="429" height="600" alt="Apple Health Exercise Minutes chart showing 6-month daily average of 42 min, trending higher for 15 weeks from 26 min to 54 min">

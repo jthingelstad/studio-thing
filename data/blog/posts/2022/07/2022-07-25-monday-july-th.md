@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/07/25/monday-july-th.html"
 title: "Iceland Log Day 3"
 published: "2022-07-25T23:39:54+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: ["Coffee"]
 ---
 
 Monday, July 25th  
@@ -17,7 +17,7 @@ Cool and misty with some sun
 - Nice dinnner at [Strikið Akureyri](https://strikid.is).
 - Mineral baths at [Forest Lagoon](https://www.forestlagoon.is/en).
 
-<img src="https://www.thingelstad.com/uploads/2022/f7245a9204.png" width="600" height="427" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/f7245a9204.png" width="600" height="427" alt="Google Maps route from Kirkjufell Guesthouse to Akureyri via Glaumbær Farm, 430 km, 5 hours 4 minutes" />
 
 Jump to day 
 [0](https://www.thingelstad.com/2022/07/22/iceland-log-day.html), 

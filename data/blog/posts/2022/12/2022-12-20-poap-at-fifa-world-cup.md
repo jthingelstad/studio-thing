@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6120873">6120873</a> at <strong><a href="https://poap.gallery/drops/92767">2022 FIFA World Cup Winner Supporter</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/2022-fifa-world-cup-winner-supporter-2022-logo-1672082130594.gif" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/2022-fifa-world-cup-winner-supporter-2022-logo-1672082130594.gif" alt="Gold commemorative coin reading 2022 FIFA World Cup Qatar with the trophy and Argentina engraved on it" width="500" height="500" />

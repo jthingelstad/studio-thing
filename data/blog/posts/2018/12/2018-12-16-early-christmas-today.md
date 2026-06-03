@@ -9,4 +9,4 @@ categories: []
 
 Early Christmas today – [Weekly Thing](https://weekly.thingelstad.com) pen! 👍🏻
 
-<img src="https://www.thingelstad.com/uploads/2018/c22c5850cf.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2018/c22c5850cf.jpg" width="600" height="600" alt="Black pen with Weekly Thing logo held up in front of a decorated Christmas tree surrounded by unwrapped gifts" />

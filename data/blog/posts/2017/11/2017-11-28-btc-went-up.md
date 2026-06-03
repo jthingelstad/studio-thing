@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Bitcoin went up 21% in the last **week**! 🤭
 
-<img src="https://www.thingelstad.com/uploads/2017/817658821f.jpg" width="511" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/817658821f.jpg" alt="Bitcoin price chart showing 21.75% weekly gain from $7,994.82 on Thursday to $10,071.84 on Tuesday" width="511" height="600" />

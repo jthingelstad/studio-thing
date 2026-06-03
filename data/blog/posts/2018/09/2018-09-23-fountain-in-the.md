@@ -9,4 +9,4 @@ categories: []
 
 Fountain in the [Lyndale Park Rose Garden](https://www.minneapolisparks.org/parks__destinations/gardens__bird_sanctuaries/lyndale_park_rose_garden/). The iPhone XS camera is very impressive.
 
-<img src="https://www.thingelstad.com/uploads/2018/909feb3739.jpg" width="449" height="600" /><img src="https://www.thingelstad.com/uploads/2018/fe5f6e8b7a.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/909feb3739.jpg" alt="Two-tiered stone fountain with bronze turtle sculptures at base, surrounded by lush green park lawn and trees under blue sky" width="449" height="600" /><img src="https://www.thingelstad.com/uploads/2018/fe5f6e8b7a.jpg" alt="Bronze turtle sculptures spouting water jets around the base of a stone fountain in a sunny park garden." width="600" height="450" />

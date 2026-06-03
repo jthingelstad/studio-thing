@@ -9,4 +9,4 @@ categories: []
 
 You’re never too old to go play in the rain. ☔️
 
-<img src="https://www.thingelstad.com/uploads/2021/fb08fd9b58.jpg" width="599" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/fb08fd9b58.jpg" width="599" height="600" alt="Man and two kids laughing in heavy rain on a driveway with a wet white dog and a ladder toss game nearby" />

@@ -7,7 +7,7 @@ post_kind: post
 categories: ["Videos"]
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/ed42dcfca2.jpg" style="float: right; width: 88px; max-width: 160px; padding-left: 10px; padding-bottom: 10px;" />
+<img src="https://www.thingelstad.com/uploads/2020/ed42dcfca2.jpg" alt="Gorillapod flexible tripod with a camera mounted on top, showing black and white segmented flexible legs" style="float: right; width: 88px; max-width: 160px; padding-left: 10px; padding-bottom: 10px;" />
 
 Time for "Take 2" of my drive to work time elapased video!
 

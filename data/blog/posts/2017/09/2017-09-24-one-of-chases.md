@@ -9,4 +9,4 @@ categories: []
 
 One of Chase’s favorite spots. 
 
-<img src="https://www.thingelstad.com/uploads/2017/ec0c36439c.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2017/ec0c36439c.jpg" alt="Black Labrador standing in shallow lake water, tail raised, trees visible on far shore under a partly cloudy sky." width="600" height="599" />

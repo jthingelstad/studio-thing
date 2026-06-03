@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/07/22/iceland-log-day.html"
 title: "Iceland Log Day 0"
 published: "2022-07-23T03:49:43+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 Friday, July 22nd  
@@ -20,7 +20,7 @@ Mostly Sunny, High 93 °F
 - 10:21p DL260 10:30a **tomorrow** departure delayed to 12:45p **tomorrow**. 
 - Take taxi back home to try again tomorrow. 😬
 
-<img src="https://www.thingelstad.com/uploads/2022/2f9b3ed0c9.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/2f9b3ed0c9.jpg" width="600" height="450" alt="Family of four making unhappy faces at an airport, two giving thumbs down, baggage claim sign visible behind them." />
 
 Jump to day 
 [0](https://www.thingelstad.com/2022/07/22/iceland-log-day.html), 

@@ -9,4 +9,4 @@ categories: []
 
 Magnolia trees are starting to bloom. Such beautiful trees. 
 
-<img src="https://www.thingelstad.com/uploads/2023/3a7200756a.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/3a7200756a.jpg" width="600" height="450" alt="Large white magnolia blossom opening among glossy dark green leaves on a sunny day">

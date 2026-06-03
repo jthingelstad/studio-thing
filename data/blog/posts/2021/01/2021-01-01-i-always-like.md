@@ -9,4 +9,4 @@ categories: []
 
 I always like the fireworks on the Apple Watch on the New Year. 🥳
 
-<img src="https://www.thingelstad.com/uploads/2021/8aa358dab0.jpg" style="max-width: 368px; " />
+<img src="https://www.thingelstad.com/uploads/2021/8aa358dab0.jpg" alt="Apple Watch face showing fireworks animation in teal and pink bursting across the clock display near midnight." style="max-width: 368px; " />

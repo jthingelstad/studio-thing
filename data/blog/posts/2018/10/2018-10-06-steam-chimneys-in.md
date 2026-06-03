@@ -9,4 +9,4 @@ categories: []
 
 Steam chimneys in NYC. 
 
-<img src="https://www.thingelstad.com/uploads/2018/8fc8d48af9.jpg" width="450" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/8fc8d48af9.jpg" alt="Bank of America Tower at night with steam rising from a street vent, construction barriers in the foreground, pedestrians nearby." width="450" height="600" />

@@ -9,4 +9,4 @@ categories: []
 
 [Flight Control](http://www.firemint.com/flightcontrol/index.html) for the iPhone is still fun. And addictive!
 
-![](https://www.thingelstad.com/uploads/2020/2bf245ddc8.png)
+<img src="https://www.thingelstad.com/uploads/2020/2bf245ddc8.png" alt="Flight Control mobile game screenshot showing Game Over screen with score of 59 aircraft landed, multiple planes and an airport runway visible on a green map.">

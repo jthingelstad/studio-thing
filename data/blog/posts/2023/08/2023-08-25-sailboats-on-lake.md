@@ -9,4 +9,4 @@ categories: []
 
 Sailboats on Lake Harriet. 
 
-<img src="https://www.thingelstad.com/uploads/2023/d178bb6804.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/d178bb6804.jpg" width="600" height="450" alt="Dozens of sailboats moored on calm glassy water, two red-hulled boats prominent in the foreground, tree-lined shore in the distance under a blue sky.">

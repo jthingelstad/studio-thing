@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/fcf1833bac.jpg" style="width: 200px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/fcf1833bac.jpg" alt="Canon EOS 20D DSLR camera with 18-55mm kit lens attached, shown against a white background" style="width: 200px; float: right; margin-left: 10px; " />
 
 I've been going on and on for a while now with all my friends about how I'm not going to get a new digital camera until I can get one that has no focal length multiplier. (Not familiar with focal link multiplication? [Read this](http://www.dpreview.com/learn/?/Glossary/Optical/Focal_Length_Multiplier_01.htm).) Unfortunately there is only one camera I would get that doesn't have a multiplier, the Canon 1Ds Mark II. This camera cost more than the first 3 or 4 cars I owned, substantially more now that I think of it, even if you add them all together!
 

@@ -11,4 +11,4 @@ Learned a lot at "Economic Update - Tariffs & General Economic Trends" with [Mat
 
 55% chance of recession — Economist speak for "very high". Predicted April will be the last month of positive job growth. Many false signals due to tariff "pull-ins".
 
-<img src="https://www.thingelstad.com/uploads/2025/bf95687ac1.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/bf95687ac1.jpg" width="600" height="337" alt="Presenter stands at front of conference room showing a slide titled Tariff-induced recession odds are rising to a seated audience of about 40 attendees.">

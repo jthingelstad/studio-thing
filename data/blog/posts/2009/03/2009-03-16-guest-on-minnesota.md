@@ -4,14 +4,14 @@ url: "https://www.thingelstad.com/2009/03/16/guest-on-minnesota.html"
 title: "Guest On Minnesota Public Radio's Midmorning Today"
 published: "2009-03-16T05:00:00+00:00"
 post_kind: post
-categories: []
+categories: ["MarketWatch"]
 ---
 
 This morning I got the opportunity to be a guest on [Midmorning](http://minnesota.publicradio.org/radio/programs/midmorning/) at [Minnesota Public Radio](http://minnesota.publicradio.org/). The topic was [Twitter](http://www.twitter.com/)! We were on the 2nd hour of the Midmorning program.
 
 We were hosted by [John Moe](https://www.johnmoe.website) and I was joined by [Julio Ojeda-Zapata](http://www.ojezap.com) and there was even a call-in from the awesome [John Hodgman](https://www.johnhodgman.com)!
 
-<img src="https://www.thingelstad.com/uploads/2020/0a85fc92ae.png" style="max-width: 501px; " /> 
+<img src="https://www.thingelstad.com/uploads/2020/0a85fc92ae.png" alt="MPR tweet announcing a Midmorning segment on Twitter featuring johnmoe hodgman jojeda and thingles posted 41 minutes ago from web" style="max-width: 501px; " /> 
 
 Listen here… 
 

@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Grilling breakfast on [Big Green Egg](https://biggreenegg.com). Yum.
 
-<img src="https://www.thingelstad.com/uploads/2020/6d9c85d0b3.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/6d9c85d0b3.jpg" width="600" height="800" alt="About 18 burger patties with grill marks cooking on a round ceramic kamado-style charcoal grill outdoors." />

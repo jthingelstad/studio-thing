@@ -9,4 +9,4 @@ categories: []
 
 OpenClaw just eats tokens like an animal.
 
-<img src="https://www.thingelstad.com/uploads/2026/anthropic-tokens-0310.png" width="600" height="233" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/anthropic-tokens-0310.png" width="600" height="233" alt="Stacked bar chart showing daily token costs March 1-10 with Claude Sonnet 4.6 and Claude Haiku 4.5, peaking near 32 dollars on March 1.">

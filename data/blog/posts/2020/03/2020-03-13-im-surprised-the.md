@@ -9,4 +9,4 @@ categories: []
 
 I'm surprised the NY Times isn't making an animated version of [their Coronavirus maps](https://www.nytimes.com/interactive/2020/world/coronavirus-maps.html) available that shows the progression.
 
-<img src="https://www.thingelstad.com/uploads/2020/57b3de212c.jpg" width="600" height="393" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/57b3de212c.jpg" width="600" height="393" alt="US map showing COVID-19 case counts by state with red circles sized by outbreak scale, largest in Washington, California, New York, and Florida." />

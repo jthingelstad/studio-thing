@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Family movie night with [Call of the Wild](https://www.rottentomatoes.com/m/the_call_of_the_wild_2020). We all enjoyed it. We also tend to love dog movies. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2020/8c926b5d6c.jpg" width="378" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/8c926b5d6c.jpg" width="378" height="600" alt="Movie poster for The Call of the Wild starring Harrison Ford releasing February 21 based on the legendary novel" />

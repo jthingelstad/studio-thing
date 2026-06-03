@@ -11,11 +11,11 @@ Our power service is horrible ([example](https://www.thingelstad.com/2004/06/20/
 
 I hadn't "right-sized" my UPS for my server for years. During that time I went from a simple tower with a couple of drives to my [terabyte server](https://www.thingelstad.com/2004/04/02/project-terabyte.html) with 10 platters spinning at all times. The Back-UPS Pro 650 I had on it was completely inadequate and to make it even better a couple months ago the battery had given up the ghost so there was NO battery power at all. I issued a self-test one day on accident which resulted in an immediate reboot!
 
-<img src="https://www.thingelstad.com/uploads/2020/24e2a5e83c.jpg" style="width: 200px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/24e2a5e83c.jpg" alt="APC Smart-UPS 1500VA rackmount UPS unit, black 2U enclosure with front panel indicators and controls" style="width: 200px; float: right; margin-left: 10px; " />
 
 I upgraded my server setup to a [Smart-UPS 1500VA RM](http://www.apc.com/resource/include/techspec_index.cfm?base_sku=SUA1500RM2U) model. I chose the rack-mount model because I plan in the coming weeks to buy a half-rack for my server gear in the laundry room to get it all organized and setup nice. Great UPS. Got a little nervous first time I plugged it in. This thing has much more robust circuitry than any other UPS I have so it makes a lot of "electrical noises".
 
-<img src="https://www.thingelstad.com/uploads/2020/070662b460.jpg" style="width: 86px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/070662b460.jpg" alt="APC Back-UPS Pro tower UPS unit, beige rectangular enclosure with ventilation slots on the side panel" style="width: 86px; float: right; margin-left: 10px; " />
 
 I also solved the problem for my home theatre PC and the two TiVos. Now we will not miss our favorite satellite content even if the power is down for a bit! 🙂 I got a [Back-UPS RS 1000VA](http://www.apc.com/resource/include/techspec_index.cfm?base_sku=BR1000) for this stuff. My only disappointment here is that it seems that the Back-UPS RS line only works with PowerChute Personal Edition so I cannot tie it into the main PowerChute Console and manage everything from one place. Maybe they will change that in a future release of the software.
 

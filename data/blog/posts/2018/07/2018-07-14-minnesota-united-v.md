@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Minnesota United v Real Salt Lake tonight! 👍🏻🙌🏻⚽️
 
-<img src="https://www.thingelstad.com/uploads/2018/ca63aec27d.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/ca63aec27d.jpg" alt="Fans waving black and light blue flags in a packed stadium during a Minnesota United soccer match, score 0-0 at 13:12." width="600" height="337" />

@@ -9,4 +9,4 @@ categories: []
 
 My daughter lost her iPhone while skiing today. Quick action with Find my iPhone and Lost Mode got it recovered from a couple feet down in the snow! ⛷❄️👀
 
-<img src="https://www.thingelstad.com/uploads/2019/c51c93080f.jpg" width="341" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/c51c93080f.jpg" width="341" height="600" alt="Find My iPhone map showing a lost iPhone located in Hyland-Bush Lakes Park near Bloomington Minnesota with low battery indicator" />

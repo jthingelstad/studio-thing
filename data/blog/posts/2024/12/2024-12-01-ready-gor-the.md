@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Ready for the Vikings v Cardinals today! 🏈
 
-<img src="https://www.thingelstad.com/uploads/2024/5c35ca773b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/5c35ca773b.jpg" width="600" height="450" alt="US Bank Stadium interior packed with fans in purple for a Minnesota Vikings NFL game, with the field and translucent roof visible.">

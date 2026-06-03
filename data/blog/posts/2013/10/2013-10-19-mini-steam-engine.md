@@ -9,4 +9,4 @@ categories: []
 
 The steam engines at [Riverside & Great Northern Railway](https://www.dellstrain.com) in Wisconsin Dells were awesome.
 
-![](https://www.thingelstad.com/uploads/2020/8e73524e07.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/8e73524e07.jpg" alt="Black-and-white photo of a small steam locomotive numbered 32 emitting steam on a narrow-gauge track surrounded by trees.">

@@ -9,4 +9,4 @@ categories: []
 
 Happy Birthday America! 🇺🇸 Hope everyone has a great 4th of July! 🎆
 
-<img src="https://www.thingelstad.com/uploads/2024/de690196f3.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/de690196f3.jpg" width="600" height="600" alt="Man in USA hat and American flag shirt holds a beer can poolside on a sunny summer day">

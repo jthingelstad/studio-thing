@@ -9,4 +9,4 @@ categories: []
 
 Spending the night in Cleveland, OH so we had to get some amazing [Graeter’s](https://www.graeters.com) French Pot Ice Cream.
 
-<img src="https://www.thingelstad.com/uploads/2021/840cf33e35.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/840cf33e35.jpg" width="600" height="600" alt="Four people holding ice cream cones and a cup of Graeter's ice cream in various flavors including purple berry and chocolate chip" />

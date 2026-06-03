@@ -9,4 +9,4 @@ categories: []
 
 Stillwater Lift Bridge at night. 
 
-<img src="https://www.thingelstad.com/uploads/2024/e24eb5bd07.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/e24eb5bd07.jpg" width="600" height="450" alt="Stillwater Lift Bridge illuminated at night over dark water with a 13ft 2in clearance sign visible on the steel truss span.">

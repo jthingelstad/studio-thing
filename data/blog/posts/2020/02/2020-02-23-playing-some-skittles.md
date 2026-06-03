@@ -9,4 +9,4 @@ categories: []
 
 Playing some [Skittles](https://carrom.com/product/skittles-spinning-top-board-game/) this morning. 
 
-<img src="https://www.thingelstad.com/uploads/2020/552653e07c.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/552653e07c.jpg" width="600" height="600" alt="Skittles by Carrom wooden tabletop game with small bowling pin pieces and a spinning top on a blue scored playing surface." />

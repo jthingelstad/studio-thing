@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We ended Fathers Day by watching [RV](https://www.rottentomatoes.com/m/rv). Loved it. Made me want to go on another long RV trip. 🛣🍿
 
-<img src="https://www.thingelstad.com/uploads/2021/762a945144.jpg" width="600" height="453" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/762a945144.jpg" width="600" height="453" alt="Movie poster for R.V. Runaway Vacation starring Robin Williams, showing a large RV tipping over above a family of three standing outdoors." />

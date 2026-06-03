@@ -13,7 +13,7 @@ required so go there and [get signed
 up](http://minnedemo.eventbrite.com/). There are about 260 open tickets
 left at this point.
 
-<img src="https://www.thingelstad.com/uploads/2020/45d8cb9872.png" style="max-width: 500px; " />
+<img src="https://www.thingelstad.com/uploads/2020/45d8cb9872.png" alt="Minnedemo logo with tagline democampminnesota, featuring a martini glass and flame graphic in dark purple" style="max-width: 500px; " />
 
 Even though it is free that doesn't mean you can leave your wallet at
 home. [Intermedia Arts](http://intermediaarts.org/) is the host for

@@ -9,4 +9,4 @@ categories: []
 
 [Lake & Irving](https://www.lakeandirving.com) is one of our favorite restaurants and they re-opened last week with a limited takeout menu. They have a great setup for getting it to your car and is completely contactless. The Cheeseburger is so delicious! 🍔
 
-<img src="https://www.thingelstad.com/uploads/2020/20bf9d85f1.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/20bf9d85f1.jpg" width="600" height="600" alt="Brown paper takeout bag with receipt attached sitting on a round table outside Lake and Irving restaurant" />

@@ -9,4 +9,4 @@ categories: []
 
 Bike tour stop at Portland Headlight!
 
-<img src="https://www.thingelstad.com/uploads/2021/e0b8ad1153.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/e0b8ad1153.jpg" width="450" height="600" alt="Two people posing near a railing with Portland Head Light lighthouse and rocky coastline behind them on a sunny day." />

@@ -13,7 +13,7 @@ I've minted **50 copies** of [Support Ukraine](https://nifty.ink/ink/QmdKmRAhBxn
 
 **Each copy is $10, and I will match that and contribute $20 to Ukraine. If we sell all 50 of these, we'll raise $1,000!**
 
-<a href="https://nifty.ink/ink/QmdKmRAhBxnpXKpKvTdskizGKouRTAi1JQJ6ugMbpbSahv"><img src="https://www.thingelstad.com/uploads/2022/dd23b6aba3.jpg" width="600" height="600" alt="" /></a>
+<a href="https://nifty.ink/ink/QmdKmRAhBxnpXKpKvTdskizGKouRTAi1JQJ6ugMbpbSahv"><img src="https://www.thingelstad.com/uploads/2022/dd23b6aba3.jpg" width="600" height="600" alt="Colorful hand-drawn block letters spelling UKRAINE on a blue and yellow Ukrainian flag background" /></a>
 
 You get a cool NFT to keep, and we can do a little bit more to support Ukraine in their fight to keep their freedom! 🇺🇦
 

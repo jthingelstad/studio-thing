@@ -9,13 +9,13 @@ categories: []
 
 I'm not a big gamer — and I'm really not a FPS (first person shooter) gamer. I'll pass on Quake and all of its descendants. But, I do like puzzle games a lot. Here are two must have high-brain-function games for the Mac. Go grab these games and make sure you've got a bit of time to spare.
 
-<img src="https://www.thingelstad.com/uploads/2020/73b18d5420.jpg" style="width: 125px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/73b18d5420.jpg" alt="Tetris-style tile-dropping puzzle game icon showing colorful stacked blocks on a dark board with cyan pieces falling from above." style="width: 125px; float: right; margin-left: 10px; " />
 
 ### [Quinn](http://www.simonhaertel.de/quinn)
 
 I've loved Tetris® ever since I first played it in junior high! The game is simplicity at it's finest, and presents the impossible challenge of infinitely fast tiles dropping down on you. [Quinn](http://www.simonhaertel.de/quinn) is a stellar game that is not Tetris, but is a game where tiles drop down. It's awesome. I find that I enter a near trance-like state while playing Quinn. Quinn is even free, and comes with a standalone server that you can start on your local network and play multi-player games with your friends and family! Or, hop onto some of the [public Quinn servers](http://www.simonhaertel.de/quinn/servers) and play people around the world. 
 
-<img src="https://www.thingelstad.com/uploads/2020/f492d647e8.png" style="width: 152px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/f492d647e8.png" alt="Dark circular game interface with colorful triangular pie-slice tokens in green, orange, and purple arranged around a central dial with glowing indicators." style="width: 152px; float: right; margin-left: 10px; " />
 
 ### [Frenzic](http://frenzic.com/)
 

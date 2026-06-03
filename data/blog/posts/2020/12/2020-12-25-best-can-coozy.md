@@ -9,4 +9,4 @@ categories: []
 
 Best can coozy ever.
 
-<img src="https://www.thingelstad.com/uploads/2020/9eae71c850.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/9eae71c850.jpg" width="600" height="600" alt="A soda can wearing a tiny navy blue puffer jacket with a yellow zipper and sleeves, sitting on a white kitchen counter." />

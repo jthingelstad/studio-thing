@@ -9,4 +9,4 @@ categories: []
 
 Tyler and Dad. 
 
-![](https://www.thingelstad.com/uploads/2020/6ab7de20dd.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/6ab7de20dd.jpg" alt="Smiling adult wearing a beanie hat cheek to cheek with a laughing toddler, black and white photo">

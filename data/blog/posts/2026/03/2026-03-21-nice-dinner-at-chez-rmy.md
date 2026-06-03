@@ -9,4 +9,4 @@ categories: []
 
 Nice dinner at Chez Rémy Bistro at Disneyland Paris. 
 
-<img src="https://www.thingelstad.com/uploads/2026/cb20a68c65.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/cb20a68c65.jpg" width="600" height="600" alt="Choux pastry dessert topped with whipped cream and a Gusteau figurine on a Bistrot Chez Remy branded plate with berry sauce dots.">

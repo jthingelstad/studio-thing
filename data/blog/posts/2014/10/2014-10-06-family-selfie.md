@@ -9,4 +9,4 @@ categories: []
 
 Family Selfie!
 
-![](https://www.thingelstad.com/uploads/2020/1c3b760d89.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/1c3b760d89.jpg" alt="Family of four smiling together outdoors near a waterfall surrounded by autumn trees">

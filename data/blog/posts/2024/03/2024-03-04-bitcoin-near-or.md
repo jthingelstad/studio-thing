@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Bitcoin near or at new all-time highs today. 
 
-<img src="https://www.thingelstad.com/uploads/2024/a7e70fe6d5.png" width="600" height="303" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/a7e70fe6d5.png" width="600" height="303" alt="BTC-USD 5-year price chart showing Bitcoin rising sharply to 67,669.80 USD in early 2024, near the 68,944 peak.">

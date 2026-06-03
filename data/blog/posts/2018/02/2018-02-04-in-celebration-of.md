@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 In celebration of Super Bowl LII here we are in front of the ice sculpture of the numerals downtown! 🏈
 
-<img src="https://www.thingelstad.com/uploads/2018/5bc2ffa5ff.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/5bc2ffa5ff.jpg" alt="Family of four posing in front of large ice sculpture of Roman numerals LII for Super Bowl, downtown Minneapolis, winter." width="600" height="450" />

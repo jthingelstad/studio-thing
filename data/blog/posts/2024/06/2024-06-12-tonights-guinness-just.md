@@ -9,4 +9,4 @@ categories: []
 
 Tonight's Guinness just a half-pint at the bar in the Titanic Hotel.
 
-<img src="https://www.thingelstad.com/uploads/2024/0786464269.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/0786464269.jpg" width="600" height="600" alt="Half-pint of Guinness in a branded glass on a marble bar counter, with beer taps and hanging glassware in the background.">

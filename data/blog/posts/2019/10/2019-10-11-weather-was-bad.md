@@ -9,4 +9,4 @@ categories: []
 
 Weather was bad tonight, so went to [Bad Weather Brewing](https://www.badweatherbrewery.com) for the first time. Great tap room! Very busy. 🍻
 
-<img src="https://www.thingelstad.com/uploads/2019/4ca1ff0232.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/4ca1ff0232.jpg" width="600" height="450" alt="Brewery taproom bar with large stainless steel fermentation tanks, beer taps, chalkboard menus, and two glasses of beer on the marble counter." />

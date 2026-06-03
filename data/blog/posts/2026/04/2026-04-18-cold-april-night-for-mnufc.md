@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Cold April night for MNUFC v Portland match. ⚽️🥶
 
-<img src="https://www.thingelstad.com/uploads/2026/d42242ee72.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/d42242ee72.jpg" width="600" height="450" alt="Packed soccer stadium at dusk with players on the pitch during an MLS match on a cold evening, crane visible in background.">

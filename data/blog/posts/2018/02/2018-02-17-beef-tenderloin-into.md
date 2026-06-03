@@ -9,4 +9,4 @@ categories: []
 
 Beef tenderloin into the Sous Vides bath. 🤤🥩
 
-<img src="https://www.thingelstad.com/uploads/2018/32b4d44ba0.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/32b4d44ba0.jpg" alt="Vacuum-sealed beef tenderloin cooking in a sous vide water bath in a large stainless steel pot with a white immersion circulator clipped to the side." width="600" height="600" />

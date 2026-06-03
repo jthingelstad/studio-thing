@@ -9,4 +9,4 @@ categories: []
 
 Family selfie on my big birthday! 5️⃣0️⃣
 
-<img src="https://www.thingelstad.com/uploads/2022/4cba690e1b.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/4cba690e1b.jpg" width="600" height="450" alt="Family of four smiling together at a birthday celebration indoors, holding a fluffy white dog, with colorful hanging decorations above." />

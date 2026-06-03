@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Good throw to start game of Kubb!
 
-<img src="https://www.thingelstad.com/uploads/2021/c65a4613ea.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/c65a4613ea.jpg" width="450" height="600" alt="Two wooden throwing batons and a wooden kubb block lying on green grass" />

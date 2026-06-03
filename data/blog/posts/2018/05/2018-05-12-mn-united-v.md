@@ -9,11 +9,11 @@ categories: ["Sports"]
 
 Ready for MN United game! ⚽️👏🏻
 
-<img src="https://www.thingelstad.com/uploads/2018/913cc3b6dc.jpg" width="600" height="451" />
+<img src="https://www.thingelstad.com/uploads/2018/913cc3b6dc.jpg" alt="Minnesota United FC hoodie with an Itasca Society pin, alongside a black and light blue striped scarf" width="600" height="451" />
 
 MN United game time! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2018/511a8a5123.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/511a8a5123.jpg" alt="Soccer match at TCF Bank Stadium with players near center circle, referee in yellow, and a large crowd in the maroon-and-gold stands." width="600" height="337" />
 
 Goal for the Yellow Team to give San Jose early lead! 😡⚽️ 
 

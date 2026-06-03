@@ -9,4 +9,4 @@ categories: []
 
 Zucchini have arrived!
 
-<img src="https://www.thingelstad.com/uploads/2022/05c1ae6e9d.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/05c1ae6e9d.jpg" width="600" height="450" alt="Two dark green zucchini growing on the soil among leafy zucchini plants with yellow blossoms in a garden bed." />

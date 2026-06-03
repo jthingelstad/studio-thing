@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I by the pool.
 
-<img src="https://www.thingelstad.com/uploads/2023/84ab10964d.jpg" width="449" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/84ab10964d.jpg" width="449" height="600" alt="Two people smiling outdoors at a yellow picnic table, man in orange shirt and tan hat resting hands on seated womans shoulders, green garden behind them">

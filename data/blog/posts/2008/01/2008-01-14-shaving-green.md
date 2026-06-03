@@ -13,7 +13,7 @@ Green products and the bathroom are a struggle. We've all gotten so used to the 
 
 Shaving however was filled with canned gels in nasty packaging with nasty ingredients made in nasty processes, not to mention huge marketing budgets. Tammy pushed me to get off of those things and switch and I eagerly jumped in. There are only two options at the co-op for shaving and luckily the 2nd one is great.
 
-<img src="https://www.thingelstad.com/uploads/2020/c2b081979b.jpg" style="width: 82px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/c2b081979b.jpg" alt="Alba Botanica moisturizing cream shave in coconut lime scent, green and white tube with green cap" style="width: 82px; float: right; margin-left: 10px; " />
 
 [Alba Botanical](http://www.albabotanica.com/) makes this [shave cream](http://www.albabotanica.com/?id=65&pid=113) that works like a charm. It is actually one of those great examples of a green product that you prefer over the previous product after you get used to it (like the [toothpaste](http://www.tomsofmaine.com/toms/product.asp?dept%255Fid=450&pf%255Fid=TP%252DFL)). It's not all foamy so you don't get to see big lines of white foam come off of your face as you shave (note photo for this post). You have to keep track on your own where you left off. It's incredibly smooth and I find much more refreshing than the other gels and foams I've used over the years. It also defies our American approach of some being good, so a lot must be better. You apply this stuff sparsely and it's great. If you slather it all over, it doesn't work as well.
 

@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2001/03/15/hellweek-day-the.html"
 title: "Hellweek, Day 6 - The Leakey Death Ride"
 published: "2001-03-15T06:00:00+00:00"
 post_kind: post
-categories: ["Fitness"]
+categories: []
 ---
 
 **I SURVIVED THE DEATH RIDE!**
@@ -27,19 +27,19 @@ The death ride took a little over 7 hours to finish and totaled 109 miles. It's 
 
 Here is the ride map.
 
-![](https://www.thingelstad.com/uploads/2020/bfe98f1b2c.gif)
+<img src="https://www.thingelstad.com/uploads/2020/bfe98f1b2c.gif" alt="Road map showing a 109-mile cycling loop near Leakey and Bandera Texas with the route marked in yellow dashed line.">
 
 There are 6 major climbs to the death ride. The first is the most arduous, it's dead straight and you can see the entire beast as you begin to climb it's nearly 1,000 feet without any break. The first three are all bundled together, then you get three more on the back. The worst is when your 100 miles into the ride and ready to collapse, and there is the last climb staring at you.
 
-![](https://www.thingelstad.com/uploads/2020/5b4d538377.gif)
+<img src="https://www.thingelstad.com/uploads/2020/5b4d538377.gif" alt="Altitude and total climbing chart for a 109-mile ride on 3/16/2001, showing elevation ranging from about 1100 to 2150 feet over roughly 7 hours.">
 
 Who care's about average speed on this ride, it's dead on those climbs. I can tell you that you can climb standing at under 6 mph for about 10 minutes straight with your heart pounding at over 90% max, it hurts, but it can be done. I also set a new personal record for speed, hitting 50 mph on the descents. After one 47 mph descent I pulled over and found my newly rebuilt wheel had 6 "wiggly" loose spokes! WHOA! I deserve that nickname they gave me, Lucky. A little roadside truing of the wheel and I was off again.
 
-![](https://www.thingelstad.com/uploads/2020/4bfb6d7652.gif)
+<img src="https://www.thingelstad.com/uploads/2020/4bfb6d7652.gif" alt="Line graph titled Speed showing MPH recorded every few minutes from 7:12am to 6pm on 3/15/2001, with speeds mostly between 5 and 20 MPH and occasional spikes near 40 MPH.">
 
 I decided to skip the heart rate chart today and instead show you an exertion chart. This chart shows you my "typical" training program on the left, and you can see the exertion factor that Hellweek demands. Yikes!
 
-![](https://www.thingelstad.com/uploads/2020/9a45c068db.gif)
+<img src="https://www.thingelstad.com/uploads/2020/9a45c068db.gif" alt="Bar chart showing daily cycling exertion levels from December 2000 through March 2001, with a dramatic spike on March 13 2001 reaching near 700.">
 
 I made it! The death ride is the hardest and longest ride of Hellweek, and I successfully pulled it off. Only two more days left.
 

@@ -9,4 +9,4 @@ categories: []
 
 Nice spot for lunch today. 🚴🏻
 
-<img src="https://www.thingelstad.com/uploads/2017/f55468e803.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/f55468e803.jpg" alt="Rocky shoreline with a small dock on a calm river, tree shade in foreground, green bluffs across the water under a hazy sky." width="600" height="600" style="height: auto" />

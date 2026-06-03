@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Fabulous day for lunch on the #TeamSPS deck.
 
-<img src="https://www.thingelstad.com/uploads/2020/f6c585a456.jpg" width="600" height="448" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/f6c585a456.jpg" width="600" height="448" alt="People eating and working on a rooftop terrace with red tables, overlooking a downtown skyline on a sunny day." />

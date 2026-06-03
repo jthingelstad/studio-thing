@@ -9,4 +9,4 @@ categories: []
 
 Severe weather coming through tonight. Unusual to have tornado watch in December! Hoping for the best. 🤞
 
-<img src="https://www.thingelstad.com/uploads/2021/caf1fcce7a.png" width="392" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/caf1fcce7a.png" width="392" height="600" alt="Radar map showing a line of severe storms with lightning icons and tornado watch boxes over Minnesota, Iowa, and surrounding states at 6:03 PM." />

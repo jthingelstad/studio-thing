@@ -9,4 +9,4 @@ categories: []
 
 Panorama inside the mirror maze at [Museum of Science and Industry](https://www.msichicago.org) in Chicago. Very cool. 
 
-<img src="https://www.thingelstad.com/uploads/2020/7a1afafed5.jpg" width="600" height="163" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/7a1afafed5.jpg" width="600" height="163" alt="Visitors walk through a mirror maze lit with blue neon lights on the floor and Gothic-style white columns extending to infinity" />

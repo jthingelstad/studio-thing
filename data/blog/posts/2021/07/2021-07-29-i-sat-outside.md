@@ -9,4 +9,4 @@ categories: []
 
 I sat outside for two hours tonight with my book club and now my eyes are burning. The air is very smoky. 
 
-<img src="https://www.thingelstad.com/uploads/2021/af1ab00c02.png" width="600" height="302" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/af1ab00c02.png" width="600" height="302" alt="IQAir Breathable app widget showing AQI 197, labeled Unhealthy for PM2.5, recorded at 9:00 PM today." />

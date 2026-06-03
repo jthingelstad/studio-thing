@@ -9,4 +9,4 @@ categories: []
 
 The lilypad is a huge hit with the kids!
 
-<img src="https://www.thingelstad.com/uploads/2018/c13652be80.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/c13652be80.jpg" alt="Kids in life jackets playing and wrestling on a large blue floating foam mat on a lake at dusk" width="600" height="450" />

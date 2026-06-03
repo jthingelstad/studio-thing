@@ -9,4 +9,4 @@ categories: []
 
 Pool is open for the summer! 💦
 
-<img src="https://www.thingelstad.com/uploads/2023/fb479424a8.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/fb479424a8.jpg" width="600" height="450" alt="Children playing on green floats in a sunny backyard inground pool with a gray water slide beside a dark blue two-story house near a lake.">

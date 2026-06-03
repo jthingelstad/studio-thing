@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/f9fe6cd28d.jpg" width="290" height="250" style="width: 250px; float: right; margin-left: 10px; " /> 
+<img src="https://www.thingelstad.com/uploads/2020/f9fe6cd28d.jpg" alt="Seven plastic water bottles of various brands including Dasani, Spa, Naya, Volvic, Evian, Quaker, and Poland Spring arranged on a white surface." width="290" height="250" style="width: 250px; float: right; margin-left: 10px; " /> 
 
 Tammy has been leading the way on a number of environmentally conscious improvements in our house. We've done a lot of big things like our solar heat project and [buying wind credits for all of our electricity](https://www.thingelstad.com/2006/06/12/xcel-energy-cheating.html). But these larger efforts are somewhat "mailing it in". You do them once, write a check to someone, and continue as you always have. They don't require you to change behavior at all. Recently we've been working harder on these types of change, including [starting to compost](https://www.thingelstad.com/2007/07/14/randys-sanitation-does.html) and using air conditioning more sparingly. Tammy however has been pushing even farther, looking at where she buys clothing, where items comes from and what we bring into the kitchen.
 

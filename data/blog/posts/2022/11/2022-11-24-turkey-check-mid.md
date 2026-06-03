@@ -9,4 +9,4 @@ categories: []
 
 Turkey check mid cook. So far so good. Going faster than expected. 
 
-<img src="https://www.thingelstad.com/uploads/2022/69645349f1.jpg" width="600" height="599" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/69645349f1.jpg" width="600" height="599" alt="Golden-brown roasted turkey seasoned with herbs resting on a rack in a blue roasting pan on a gas stovetop.">

@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We watched [Jumanji: The Next Level](https://www.imdb.com/title/tt7975244/) tonight — almost a year after [we watched Jumanji: Welcome to the Jungle](https://www.thingelstad.com/2023/03/25/we-watched-jumanji.html). It was a fun family movie night. Tyler likes [Dwayne Johnson](https://en.wikipedia.org/wiki/Dwayne_Johnson) movies. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2024/3d3c056e73.jpg" width="404" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/3d3c056e73.jpg" width="404" height="600" alt="Movie poster for Jumanji The Next Level showing four actors in adventure gear with a black horse, releasing December 13">

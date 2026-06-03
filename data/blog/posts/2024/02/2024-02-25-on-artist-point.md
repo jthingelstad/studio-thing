@@ -9,4 +9,4 @@ categories: []
 
 On Artist Point in Grand Marais in pre-dawn light to catch the sunrise. 
 
-<img src="https://www.thingelstad.com/uploads/2024/ff40737781.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/ff40737781.jpg" width="600" height="450" alt="Photographers with tripods on an icy rocky shoreline at pre-dawn, overlooking a vast lake under overcast blue skies.">

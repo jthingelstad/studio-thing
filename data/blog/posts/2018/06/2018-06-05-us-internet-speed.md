@@ -9,4 +9,4 @@ categories: []
 
 [US Internet](https://fiber.usinternet.com) speed test using [Fast](https://fast.com). Multiple tests ranged from 930-1000 Mbps.
 
-<img src="https://www.thingelstad.com/uploads/2018/fed62e5002.jpg" width="525" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/fed62e5002.jpg" alt="Fast.com speed test result showing 1.0 Gbps internet speed in a Safari browser window on macOS." width="525" height="600" />

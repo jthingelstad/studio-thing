@@ -9,4 +9,4 @@ categories: []
 
 Spotted the [Nashville Party Wagon](https://www.nashvillepartywagon.com)! 🚜
 
-<img src="https://www.thingelstad.com/uploads/2022/a601fc33aa.jpg" width="600" height="400" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/a601fc33aa.jpg" width="600" height="400" alt="Green John Deere tractor pulling a flatbed wagon of passengers through downtown Nashville with a Lawrence Record Shop ghost sign visible behind." />

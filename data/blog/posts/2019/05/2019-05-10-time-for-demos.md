@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Time for demos at the end of the #TeamSPS TechJam 2019 Hackathon! **13 teams** built creative, fast, and new projects to share! 🙌🤩🚀 
 
-<img src="https://www.thingelstad.com/uploads/2019/58a6eeb5ee.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/58a6eeb5ee.jpg" width="600" height="450" alt="Large group of professionals seated at tables with laptops watching a presenter speak at the front of a conference room." />

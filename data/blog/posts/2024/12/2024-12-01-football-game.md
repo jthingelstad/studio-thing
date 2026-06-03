@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/12/01/football-game.html"
 title: "Vikings v Cardinals"
 published: "2024-12-01T21:30:00+00:00"
 post_kind: post
-categories: ["Sports"]
+categories: []
 ---
 
 We went to the Vikings v Cardinals game today. Tammy decided that we should take in a football game and got us all set up. We had seats on club level right at the 50 yard line. 
@@ -15,10 +15,10 @@ Then the Cardinals scored a touchdown and made it 19 to 6. That seemed to wake t
 
 The first three boring quarters were all forgotten with that excitement!
 
-<img src="https://www.thingelstad.com/uploads/2024/4fdbae4869.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/4fdbae4869.jpg" width="600" height="450" alt="NFL players lined up near the Vikings end zone at U.S. Bank Stadium, viewed from club level seating filled with fans.">
 
-<img src="https://www.thingelstad.com/uploads/2024/36175c162c.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/36175c162c.jpg" width="600" height="450" alt="NFL game action near the Vikings end zone with 1:16 remaining, players in purple and white uniforms amid a packed U.S. Bank Stadium crowd.">
 
-<img src="https://www.thingelstad.com/uploads/2024/4fa9d7674d.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/4fa9d7674d.jpg" width="600" height="450" alt="Packed U.S. Bank Stadium with fans in purple Vikings jerseys watching play on the field from club-level seats at the 50 yard line.">
 
-<img src="https://www.thingelstad.com/uploads/2024/53125bce2e.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/53125bce2e.jpg" width="600" height="450" alt="Three people posing in club-level stadium seats, surrounded by fans in purple Vikings gear; the teenager wears an FC Bayern München scarf.">

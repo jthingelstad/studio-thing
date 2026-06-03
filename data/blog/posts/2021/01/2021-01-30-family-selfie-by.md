@@ -9,4 +9,4 @@ categories: []
 
 Family selfie by Clear Lake, IA on the road with the Honda Pilot stuffed full!  
 
-<img src="https://www.thingelstad.com/uploads/2021/1e7791342f.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/1e7791342f.jpg" width="600" height="450" alt="Family of two adults and two kids smiling in a packed SUV with a fluffy white dog in the back seat." />

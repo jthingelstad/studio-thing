@@ -11,6 +11,6 @@ Without a question this was the best concert that I've ever seen at the Minnesot
 
 Brandi recounted how 15 years ago they performed free shows at the Minnesota State Fair. She also shared her love of fairs and highlighted that her very first concert was seeing the Judds perform (Wynona Judd opened up for her!) at a fair in Washington. The set list went deep. Her wife Katherine came out for a song. Wynona came up for three different songs. It was an [epic night filled with love](https://www.startribune.com/brandi-carlile-wynonna-judd-cher-minnesota-state-fair-barbie-indigo-girls-queen-naomi-judd/600300733/).
 
-<img src="https://www.thingelstad.com/uploads/2023/7d2e8a9836.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/7d2e8a9836.jpg" width="600" height="337" alt="Brandi Carlile and her full band performing on a large outdoor stage at night, with a glowing neon logo sign behind them and a large crowd in the foreground">
 
 See [list of Brandi Carlile shows](https://www.thingelstad.com/lists/brandi-carlile-shows/).

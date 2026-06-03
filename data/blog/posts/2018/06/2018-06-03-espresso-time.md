@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Espresso time. ☕️
 
-<img src="https://www.thingelstad.com/uploads/2018/9e15a1880a.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/9e15a1880a.jpg" alt="Espresso pouring from a machine grouphead into a white ceramic cup with black nautical line art, sitting on a metal drip tray" width="600" height="600" />

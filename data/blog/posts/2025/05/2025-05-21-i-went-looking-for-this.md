@@ -9,4 +9,4 @@ categories: []
 
 I went looking for this photo that I knew I had of my by an SR-71 Blackbird. I found it and then selected map view. It is cool how you can see the plane in the aerial satellite view. Location is pretty accurate at [U.S. Space & Rocket Center](https://www.rocketcenter.com) in Huntsville, Alabama. 
 
-<img src="https://www.thingelstad.com/uploads/2025/983e0acb4c.jpg" width="600" height="437" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/983e0acb4c.jpg" width="600" height="437" alt="Satellite view of an SR-71 Blackbird on display at U.S. Space and Rocket Center, with an inset photo of a man standing beside the aircraft.">

@@ -9,4 +9,4 @@ categories: []
 
 Playing bartender at home. Strawberry Margaritas. 🍸
 
-<img src="https://www.thingelstad.com/uploads/2020/3d0e66903a.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/3d0e66903a.jpg" width="600" height="337" alt="Two salt-rimmed margarita glasses with pink strawberry cocktails and lime garnishes beside a bottle of DeKuyper Triple Sec and a mason jar of mix." />

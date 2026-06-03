@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Time to play some Kubb at [Birchwood Acres](https://birchwoodacresonlakepepin.com)! Lake Pepin in the background. 
 
-<img src="https://www.thingelstad.com/uploads/2021/1caf2be72d.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/1caf2be72d.jpg" width="600" height="450" alt="Wooden Kubb game setup on a green lawn with stake targets arranged in the grass and tall trees near a lake behind." />

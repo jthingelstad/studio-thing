@@ -9,4 +9,4 @@ categories: []
 
 99 Cheesecake is one of Mazie’s absolutely favorite spots in Barcelona. We have to agree! Her favorite is Lotus Crème, Kinder Bueno Blanc Crème, Kataifi. 
 
-<img src="https://www.thingelstad.com/uploads/2026/8890484c8f.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/8890484c8f.jpg" width="450" height="600" alt="Three people smiling outside 99 Cheesecake shop in Barcelona, holding cheesecake in branded packaging and spoons.">

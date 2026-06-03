@@ -9,4 +9,4 @@ categories: []
 
 Had dinner at [Terlingua](http://www.terlingua.me) in Portland, ME tonight. Amazing ribs. Cornbread great. Recommended!
 
-<img src="https://www.thingelstad.com/uploads/2021/c308943b4d.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/c308943b4d.jpg" width="600" height="450" alt="BBQ ribs platter on a dark wooden board with cornbread, watermelon, red cabbage slaw, pickles, and a dipping sauce, served at Terlingua in Portland ME" />

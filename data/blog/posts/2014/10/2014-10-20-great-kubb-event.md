@@ -9,4 +9,4 @@ categories: ["TeamSPS", "Kubb"]
 
 Great Kubb event with #TeamSPS today! Sporting [Planet Kubb](http://planetkubb.com) shirts and [US National Kubb Championship](http://www.usakubb.org) set!
 
-<img src="https://www.thingelstad.com/uploads/2020/bcfd9c14a4.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/bcfd9c14a4.jpg" width="600" height="450" alt="Group of people in red Planet Kubb shirts holding wooden throwing batons outdoors on a lawn, smiling for a group photo" />

@@ -9,4 +9,4 @@ categories: []
 
 Enjoyed a beautiful drive through the [Shoshone National Forest](https://www.fs.usda.gov/main/shoshone/) today on our way from Jackson, WY to Mt. Rushmore in SD.
 
-<img src="https://www.thingelstad.com/uploads/2020/c32a894ae8.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/c32a894ae8.jpg" width="600" height="337" alt="Rocky jagged cliffs rise above a conifer forest and green meadow under a cloudy sky in Shoshone National Forest Wyoming" />

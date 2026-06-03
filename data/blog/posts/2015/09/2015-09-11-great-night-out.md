@@ -9,4 +9,4 @@ categories: []
 
 Great night out.
 
-<img src="https://www.thingelstad.com/uploads/2020/b908c61abd.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/b908c61abd.jpg" width="600" height="600" alt="Campfire ringed with stones glowing at dusk in a backyard with white plastic chairs and a lit A-frame cabin behind it" />

@@ -9,4 +9,4 @@ categories: []
 
 We have arrived in Florence! 🇮🇹
 
-<img src="https://www.thingelstad.com/uploads/2023/269481db10.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/269481db10.jpg" width="450" height="600" alt="Family of four taking a selfie in front of the ornate marble facade of the Florence Cathedral">

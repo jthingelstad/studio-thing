@@ -9,4 +9,4 @@ categories: []
 
 Tyler and I just opened a Mega Evolutions ETB and he hit with the gold Mega Lucario ex! Best pull he’s ever gotten. 🤩
 
-<img src="https://www.thingelstad.com/uploads/2025/aab2cf2535.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/aab2cf2535.jpg" width="600" height="449" alt="Five Pokemon TCG cards in sleeves on a blue binder including gold Mega Lucario ex, Mega Gardevoir ex, Alakazam, Bulbasaur, and Wallys Compassion.">

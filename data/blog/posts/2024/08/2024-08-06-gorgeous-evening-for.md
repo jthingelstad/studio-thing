@@ -9,4 +9,4 @@ categories: []
 
 Gorgeous evening for National Night Out!
 
-<img src="https://www.thingelstad.com/uploads/2024/38a7658378.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/38a7658378.jpg" width="600" height="450" alt="Neighbors gathered in a closed residential street for an outdoor block party with folding chairs and a long table set up in the road">

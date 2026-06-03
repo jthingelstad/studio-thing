@@ -9,4 +9,4 @@ categories: []
 
 This building is going to very cool when completed. 
 
-<img src="https://www.thingelstad.com/uploads/2018/0f37edd12f.jpg" width="450" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/0f37edd12f.jpg" alt="Tall skyscraper under construction with curved facade, orange formwork, scaffolding, and a yellow tower crane beside it on an overcast day." width="450" height="600" />

@@ -9,4 +9,4 @@ categories: []
 
 Epcot [Harmonious](https://disneyworld.disney.go.com/entertainment/epcot/harmonious/) was an incredible show. Wow! 
 
-<img src="https://www.thingelstad.com/uploads/2022/0a107a428a.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/0a107a428a.jpg" width="600" height="337" alt="Epcot Harmonious nighttime show with colorful water fountains, light projections, and Spaceship Earth glowing over World Showcase Lagoon.">

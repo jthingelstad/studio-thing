@@ -9,4 +9,4 @@ categories: []
 
 Freedom Tower. 🇺🇸
 
-<img src="https://www.thingelstad.com/uploads/2018/4164dffe66.jpg" width="450" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/4164dffe66.jpg" alt="One World Trade Center rising into low clouds on an overcast day, surrounded by lower Manhattan skyscrapers" width="450" height="600" />

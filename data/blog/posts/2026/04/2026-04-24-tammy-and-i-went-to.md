@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I went to Michael tonight and I really enjoyed the movie — more than I was expecting. His music was such presence when I was a teenager. [Billie Jean](https://www.youtube.com/watch?v=Zi_XLOBDo_Y) is still amazing.
 
-<img src="https://www.thingelstad.com/uploads/2026/michael-movie-poster-tgj-600x887.png" width="405" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/michael-movie-poster-tgj-600x887.png" width="405" height="600" alt="Movie poster for Michael starring Jaafar Jackson in theaters and IMAX April 24 from the director of Training Day">

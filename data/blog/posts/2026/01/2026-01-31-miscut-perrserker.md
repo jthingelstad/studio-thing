@@ -15,4 +15,4 @@ I had Perrserker on the brain because of this mornings Pocket discovery, and Tyl
 
 I gave the card a close inspection. I've never bought a miscut and this one is really cool. These are all 1-of-1 cards so the price is hard to figure out, but I felt good with where they were now. So now in addition to my full collection of Perrserker I have this cool miscut one. I'm debating sending it in to PSA to get it graded — thinking I will.
 
-<img src="https://www.thingelstad.com/uploads/2026/0be8cfb7c9.jpg" width="600" height="411" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/0be8cfb7c9.jpg" width="600" height="411" alt="Galarian Perrserker V holographic Pokemon card 184/196 showing front and back, with miscut edges visible on the front face.">

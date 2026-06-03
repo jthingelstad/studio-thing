@@ -9,4 +9,4 @@ categories: []
 
 Tammy made a batch of these [Peppermint Bark Chocolate Chip Cookies](https://www.twopeasandtheirpod.com/peppermint-bark-chocolate-chip-cookies/) and they are so good. 🤤
 
-<img src="https://www.thingelstad.com/uploads/2025/69b63aa8db.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/69b63aa8db.jpg" width="600" height="450" alt="Freshly baked peppermint bark chocolate chip cookies topped with flaky salt on a gold baking sheet resting on a gas stove.">

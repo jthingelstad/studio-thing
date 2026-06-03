@@ -9,4 +9,4 @@ categories: ["Music"]
 
 Excited for opening night at the [Fillmore Minneapolis](https://www.fillmoreminneapolis.com) with acoustic set from Brandi Carlile! 🎶
 
-<img src="https://www.thingelstad.com/uploads/2020/dea2b3a832.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/dea2b3a832.jpg" width="600" height="337" alt="Crowded lobby at The Fillmore Minneapolis with staff in blue shirts checking in guests before a show." />

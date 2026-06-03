@@ -9,4 +9,4 @@ categories: []
 
 View from the door of our Airbnb on Anna Maria Island for the next four days. 🤩🏖️
 
-<img src="https://www.thingelstad.com/uploads/2025/fc3f360106.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/fc3f360106.jpg" width="600" height="449" alt="Two teal Adirondack chairs on a wood deck overlooking a white sand beach with palm trees and calm blue ocean beyond.">

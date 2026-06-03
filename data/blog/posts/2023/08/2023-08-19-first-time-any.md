@@ -9,4 +9,4 @@ categories: []
 
 First time any of us have been to the [FARGODOME](https://www.fargodome.com)! 
 
-<img src="https://www.thingelstad.com/uploads/2023/2c8ab642d0.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/2c8ab642d0.jpg" width="600" height="450" alt="Family of four smiling in front of the Fargodome arena, two adults and two teenagers with braces, sunny hazy sky.">

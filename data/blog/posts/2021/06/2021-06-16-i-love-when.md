@@ -9,4 +9,4 @@ categories: []
 
 I love when friends surprise you with the gift of a good book! I’m looking forward to reading [Tiny Habits](https://tinyhabits.com). Thanks [Nick](https://www.linkedin.com/in/nick-swenson-976b7337)! 📚
 
-<img src="https://www.thingelstad.com/uploads/2021/71a71fde23.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/71a71fde23.jpg" width="600" height="600" alt="Hand holding a hardcover copy of Tiny Habits: The Small Changes That Change Everything by BJ Fogg PhD" />

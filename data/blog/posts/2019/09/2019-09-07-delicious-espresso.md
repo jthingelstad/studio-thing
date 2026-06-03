@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Delicious espresso. ☕️
 
-<img src="https://www.thingelstad.com/uploads/2019/2c704f7f2b.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/2c704f7f2b.jpg" width="600" height="600" alt="Espresso pouring from a machine spout into a white ceramic cup with a bicycle illustration, sitting on a stainless steel drip tray." />

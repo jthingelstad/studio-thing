@@ -9,4 +9,4 @@ categories: []
 
 Modeling the dulcetones and pastels of the spring color lineup.
 
-<img src="https://www.thingelstad.com/uploads/2019/02a74b5ca4.jpg" width="600" height="400" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/02a74b5ca4.jpg" width="600" height="400" alt="Three middle-aged men in pastel button-down shirts pose with arms around each other holding beers at a brewery" />

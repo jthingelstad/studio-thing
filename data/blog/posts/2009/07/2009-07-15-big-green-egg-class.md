@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Big Green Egg class!
 
-![](https://www.thingelstad.com/uploads/2020/dcc36c800c.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/dcc36c800c.jpg" alt="Row of Big Green Egg ceramic grills on wooden carts in a parking garage with two men standing nearby.">

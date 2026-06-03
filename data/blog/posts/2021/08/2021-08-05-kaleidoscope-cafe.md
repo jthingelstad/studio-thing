@@ -9,7 +9,7 @@ categories: []
 
 On our drive to Saratoga we spotted [Kaleidoscope Cafe](https://kaleidoscopecafe.com) and decided the mix of BBQ and homemade Ice Cream was the perfect combination we wanted for lunch. We stopped in and Bruce, the gregarious owner, welcomed us and gave us a rundown of the menu. Everything here is made by him personally, except the hot dogs. He gave me a sample of all four of his BBQ sauces. I wanted to buy a couple of bottles to take home but he's not selling that, yet. We had brisket and pulled pork and all of it was great. The mac-n-cheese goes perfect with the brisket. 
 
-![](https://www.thingelstad.com/uploads/2021/bc3bf09bf1.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/bc3bf09bf1.jpg" alt="Man in plaid shirt taking a selfie with a young blond boy and a smiling bald man in a blue apron waving behind a diner counter with a chalkboard menu above listing BBQ and ice cream items.">
 
 We of course had ice cream as well. The Peanut Butter Infusion was amazing, but equally great was the Sweet Blue-Nilla which we tried in both scoop and shake options. Easily the best blueberry ice cream I have ever had.
 

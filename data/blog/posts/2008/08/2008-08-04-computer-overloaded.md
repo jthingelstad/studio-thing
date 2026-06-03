@@ -7,8 +7,6 @@ post_kind: post
 categories: []
 ---
 
-Rare change this afternoon with me feverishly working on my Mac Pro
-getting a bunch of stuff done. Running a ton of apps and everything
-working hard. It's clear I need more cores though. It's all just busy.
+Rare change this afternoon with me feverishly working on my Mac Pro getting a bunch of stuff done. Running a ton of apps and everything working hard. It's clear I need more cores though. It's all just busy.
 
-<img src="https://www.thingelstad.com/uploads/2020/3c0892d225.png" style="max-width: 147px; " />
+<img src="https://www.thingelstad.com/uploads/2020/3c0892d225.png" alt="CPU Monitor app window showing four processor graphs all filled nearly solid green indicating maximum CPU utilization across all cores." style="max-width: 147px; " />

@@ -13,4 +13,4 @@ The area is almost always in the shade, so we need plants that do well with low 
 
 Any suggestions from Minnesotan "green thumbs" reading? Here is a photo of the planting bed alongside the garage.
 
-![](https://www.thingelstad.com/uploads/2020/3d49356400.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/3d49356400.jpg" alt="Raised stone garden bed filled with wood chip mulch alongside a beige garage, with a metal figure sculpture and outdoor dining patio nearby.">

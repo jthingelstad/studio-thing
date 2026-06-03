@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2011/02/14/double-big-green.html"
 title: "Double Big Green Egg Table"
 published: "2011-02-14T06:00:00+00:00"
 post_kind: post
-categories: ["Cooking"]
+categories: ["Cooking", "Gallery"]
 ---
 
 When I got my [Big Green Egg](http://biggreenegg.com/) I got the large table to go with it. It seemed okay, not great. I knew I wanted to have a good work surface for my Egg and I didn't think the simple fold out "wing" tables would work at all. I know a lot of Eggheads make their own tables. There are some [wonderful plans online](http://www.nakedwhiz.com/cart.htm) that help out. But I don't have even the basic woodworking skills, or patience, to do that. So I just went with the table from the store.
@@ -13,7 +13,7 @@ It was okay but pretty quickly I was disappointed with it. The build quality was
 
 I'm glad I did because it allowed me to really figure out what I wanted in a custom table for my Egg. After a lot of searching I found a carpenter to work with and after a design session with some sketches I now have my dream Egg table.
 
-![](https://www.thingelstad.com/uploads/2020/8b25056bcf.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/8b25056bcf.jpg" alt="Two large and small Big Green Egg kamado grills set into custom cedar wood tables on a backyard deck, with a separate prep cart beside them.">
 
 It's a double Egg table to house both the Large Big Green Egg as well as the small. I also have a second prep table. There were a number of specific things that I wanted in the setup.
 
@@ -27,7 +27,7 @@ I thought for a long time about how I wanted to accommodate two Eggs. I consider
 
 One of the issues I have found when using my Egg is dealing with hot tools or grill parts, as well as dirty grids and such. I asked the carpenter if he could design something that slid out on the bottom of the table that could deal with this. He hit it out of the park!
 
-![](https://www.thingelstad.com/uploads/2020/b918973dc7.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/b918973dc7.jpg" alt="Cedar wood outdoor grill table with a lower wire shelf storing cast iron cookware and Big Green Egg accessories on a deck.">
 
 This shelf is just great. It's all metal, so I can put a hot plate setter on it and not worry. Since it slides underneath I can then store those things out-of-the-way and not worry about kids bumping into a 500 degree ceramic piece.
 
@@ -45,11 +45,11 @@ I can pop the granite out and pressure wash it easily enough. I have also found 
 
 The prep table was an indulgence. It serves a lot of purposes. First, I get a bunch of shelves to put my tools in. I now even have room to house a spice bin outside so there is less running around. I have another bin just with fire starting stuff. The room is nice.
 
-![](https://www.thingelstad.com/uploads/2020/22d2c5a508.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/22d2c5a508.jpg" alt="Wooden rolling prep cart with three shelves on casters sitting on a cedar deck beside a large green kamado grill table">
 
 I also like that the table is very mobile. If you need to shuck some corn, or prep food for the grill and have someone helping they can take the table wherever it is convenient for them. I also made the table "double-sided" so two people can work on either side easily. I also slapped some hooks on it so I can keep tools there, as well as hang a trash bag on the side if you have a lot of prep work to do.
 
-![](https://www.thingelstad.com/uploads/2020/1e2c26066b.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/1e2c26066b.jpg" alt="Wooden outdoor prep table with an inset polished black granite tile, set on a deck beside a sliding glass door.">
 
 ### Finish
 

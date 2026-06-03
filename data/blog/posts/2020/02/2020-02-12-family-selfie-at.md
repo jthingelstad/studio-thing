@@ -9,4 +9,4 @@ categories: []
 
 Family selfie at the [Fillmore Minneapolis](https://www.fillmoreminneapolis.com)!
 
-<img src="https://www.thingelstad.com/uploads/2020/6a32ae9326.jpg" width="600" height="449" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/6a32ae9326.jpg" width="600" height="449" alt="Family of four taking a selfie inside the Fillmore Minneapolis venue with a glowing neon sign behind them." />

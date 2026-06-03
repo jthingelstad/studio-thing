@@ -16,6 +16,6 @@ The [Things 4 Good](https://https://www.thingelstad.com/candles/) 2022 Fall Fund
 
 As in previous years we shared the non-profits with each in-person visitor and they could select any number of the four organizations to support.
 
-<img src="https://www.thingelstad.com/uploads/2022/0bfa97f3a0.png" width="600" height="233" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/0bfa97f3a0.png" width="600" height="233" alt="Bar chart showing 2022 Fall Fundraiser proceeds: United Help Ukraine $1,457, Agate Housing $1,290.50, Save the Snakes $1,246, Free Guitars 4 Kids $1,223.50">
 
 A huge thank you to everyone for being part of this fun event and help some organizations having a good impact in the world. 💛

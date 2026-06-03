@@ -9,4 +9,4 @@ categories: []
 
 So many books. [Wild Rumpus Books](https://www.wildrumpusbooks.com). 📚
 
-![](https://www.thingelstad.com/uploads/2020/c884c28fd2.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/c884c28fd2.jpg" alt="Four tall wooden bookshelves packed with hundreds of colorful children's books at Wild Rumpus bookstore in Minneapolis.">

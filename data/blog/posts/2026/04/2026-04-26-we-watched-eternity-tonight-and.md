@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We watched [Eternity](https://a24films.com/films/eternity) tonight and it was a great movie. A very interesting concept and a touching story. Recommended. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2026/769151e25c.jpg" width="384" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/769151e25c.jpg" width="384" height="600" alt="Movie poster for Eternity from A24 showing three actors seated on chairs against a blue sky with infinite mirror-effect repetition behind them.">

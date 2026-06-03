@@ -9,4 +9,4 @@ categories: []
 
 From our family to yours — Have a Very Happy Thanksgiving! 
 
-<img src="https://www.thingelstad.com/uploads/2019/5f770c54a7.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/5f770c54a7.jpg" width="450" height="600" alt="Family of four smiling together in front of a brick fireplace, dressed in warm autumn colors" />

@@ -13,4 +13,4 @@ Tammy saw he was coming to town and got us some great seats. To make it even coo
 
 Willman's performance was amazing and funny. The kind of show that you leave just feeling happy and good about things. The magic was impressive and I have no idea how he does any of it at all. Willman also has some family connections to Minnesota and the Twin Cities. He clearly knows the area well, which made it feel even more homey.
 
-<img src="https://www.thingelstad.com/uploads/2024/97eaa92fde.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/97eaa92fde.jpg" width="600" height="337" alt="Theater audience seated in red velvet chairs facing a stage with a screen showing a portrait and the name Justin Willman">

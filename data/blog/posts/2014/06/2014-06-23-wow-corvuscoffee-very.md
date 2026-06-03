@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Wow [Corvus Coffee](https://www.corvuscoffee.com)! Very impressed.
 
-<img src="https://www.thingelstad.com/uploads/2020/a3f9bfaab0.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/a3f9bfaab0.jpg" width="600" height="450" alt="Cortado in a clear glass with intricate rosette latte art on top, sitting on a napkin beside a plate of crumble cake" />

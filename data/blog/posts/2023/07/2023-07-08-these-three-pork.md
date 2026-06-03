@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 These three pork butts spent 18 hours in the Sous Vides at 165 °F and are finishing with 2 hours on the [Big Green Egg](https://biggreenegg.com) at 220 °F. 🐖🔥
 
-<img src="https://www.thingelstad.com/uploads/2023/0f23369eff.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/0f23369eff.jpg" width="600" height="450" alt="Three smoked pork butts with dark spice bark resting on the grill grate of an open Big Green Egg kamado smoker outdoors.">

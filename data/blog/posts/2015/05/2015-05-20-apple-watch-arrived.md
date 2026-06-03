@@ -20,4 +20,4 @@ The rest of this experience is about software and that will take time to have op
 
 Will be fun to explore this new ecosystem.
 
-![](https://www.thingelstad.com/uploads/2020/9de7da7fc0.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/9de7da7fc0.jpg" alt="Stainless steel Apple Watch on a hairy wrist showing WED 20 and roughly 11:58, with a small espresso cup on a red floral tablecloth in the background.">

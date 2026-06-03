@@ -13,4 +13,4 @@ My Mother and Kurt went to Uranus, Missouri and brought us back a nice treat fro
 
 😜
 
-<img src="https://www.thingelstad.com/uploads/2021/fc84206cc0.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/fc84206cc0.jpg" width="600" height="600" alt="White box of fudge from Uranus Fudge Factory and General Store in Uranus Missouri on Route 66" />

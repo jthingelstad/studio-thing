@@ -9,4 +9,4 @@ categories: []
 
 [Banff Gondola](https://gondolabanff.com). 
 
-<img src="https://www.thingelstad.com/uploads/2025/382962b9b5.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/382962b9b5.jpg" width="450" height="600" alt="Banff Gondola cable cars ascending a steep forested mountain slope, with a support tower visible on the right.">

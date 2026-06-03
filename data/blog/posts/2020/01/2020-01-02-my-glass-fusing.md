@@ -9,4 +9,4 @@ categories: []
 
 My glass fusing is ready to be fired. 
 
-<img src="https://www.thingelstad.com/uploads/2020/63f7d00c1a.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/63f7d00c1a.jpg" width="600" height="600" alt="Six unfired fused glass tiles on paper labeled sun trees fire water games and an unlabeled red bird design" />

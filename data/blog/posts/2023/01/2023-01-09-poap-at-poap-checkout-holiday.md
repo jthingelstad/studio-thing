@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6209436">6209436</a> at <strong><a href="https://poap.gallery/drops/92655">POAP Checkout - Holiday Beta Tester</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/poap-checkout-holiday-beta-tester-2022-logo-1671465509726.gif" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/poap-checkout-holiday-beta-tester-2022-logo-1671465509726.gif" alt="Circular red badge with a snow globe containing holiday trees, labeled POAP Checkout Holiday Beta Test" width="500" height="500" />

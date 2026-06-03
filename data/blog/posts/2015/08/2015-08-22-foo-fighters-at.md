@@ -9,11 +9,11 @@ categories: []
 
 Really impressed by [Royal Blood](https://www.royalbloodband.com/) opening for Foo’s. These guys rock.
 
-<img src="https://www.thingelstad.com/uploads/2021/82a9571654.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/82a9571654.jpg" width="600" height="450" alt="Arena concert viewed from upper level with dramatic white stage spotlights beaming over a packed floor crowd and extended runway stage" />
 
 Thousands of phones put out a lot of light.
 
-<img src="https://www.thingelstad.com/uploads/2021/d40a62d78f.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/d40a62d78f.jpg" width="600" height="450" alt="Packed arena crowd holding up phone flashlights in the dark during a concert, viewed from the upper level" />
 
 Awesome that the [Foo Fighters](https://foofighters.com) send respect to hometown legends Hüsker Dü.
 

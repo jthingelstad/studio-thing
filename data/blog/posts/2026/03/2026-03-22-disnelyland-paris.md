@@ -9,4 +9,4 @@ categories: []
 
 Disneyland Paris.
 
-<img src="https://www.thingelstad.com/uploads/2026/7cca504130.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/7cca504130.jpg" width="600" height="450" alt="Disneyland Paris Hotel entrance with fountains in the foreground, a Mickey Mouse topiary, and a pink Victorian-style building at sunset.">

@@ -9,4 +9,4 @@ categories: []
 
 Mazie Jewelry Shopping.
 
-![](https://www.thingelstad.com/uploads/2020/bf49d18c94.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/bf49d18c94.jpg" alt="Young girl with blonde hair smiling at a jewelry store display case filled with silver rings and pendants with yellow price tags.">

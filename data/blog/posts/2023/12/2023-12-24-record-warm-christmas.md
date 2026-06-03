@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Record warm Christmas Eve means traditional tenderloins on the [Big Green Egg](https://biggreenegg.com) in shirt sleeves!
 
-<img src="https://www.thingelstad.com/uploads/2023/5680e087fe.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/5680e087fe.jpg" width="600" height="450" alt="Four beef tenderloin filets on a cutting board beside a Big Green Egg kamado grill on a patio, with tongs, a meat thermometer, and salt nearby.">

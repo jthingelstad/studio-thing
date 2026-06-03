@@ -11,10 +11,10 @@ I did [my first Functional Threshold Power test](https://members.onepeloton.com/
 
 There is no good or bad for this. I did struggle with holding my power over the course of the 20 minute test. I felt pretty spent by the time it got to the last exertion level.  
 
-![](https://www.thingelstad.com/uploads/2020/b4923ca37e.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/b4923ca37e.jpg" alt="Peloton FTP test results showing 20 min ride with 454 cal, 282 kj output, 235 avg watts, 57 pct resistance, 77 rpm, and power zone breakdown chart.">
 
 The heart rate graph is a little off. I’m using mPaceline for this and it has my Max HR a little higher than it should be. The main thing I took away from HR was that I was giving it my full effort. I also think my HR was higher than it should have been for the Zone 4 and 5 sections.
 
-![](https://www.thingelstad.com/uploads/2020/626d1ed11e.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/626d1ed11e.jpg" alt="Peloton FTP test ride stats showing 20 minutes, 454 calories, 282 kJ output, 235W avg, 158 bpm avg HR, 83% time in Threshold zone.">
 
 I’m going to do one of these tests every 6-12 weeks to check-in on progress.

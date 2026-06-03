@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6586107">6586107</a> at <strong><a href="https://poap.gallery/drops/123903">My mom’s birthday and the trip we are taking</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/my-mome28099s-birthday-and-the-trip-we-are-taking-2023-logo-1682275743893.g.gif" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/my-mome28099s-birthday-and-the-trip-we-are-taking-2023-logo-1682275743893.g.gif" alt="Circular badge reading New York Trip and Mommys Birthday with U2 logo, NYC skyline, birthday cakes, and the number 52." width="500" height="500" />

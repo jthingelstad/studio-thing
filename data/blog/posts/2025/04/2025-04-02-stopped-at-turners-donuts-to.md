@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2025/04/02/stopped-at-turners-donuts-to.html"
 title: ""
 published: "2025-04-02T12:15:00+00:00"
 post_kind: micropost
-categories: []
+categories: ["Coffee"]
 ---
 
 Stopped at [Turner's Donuts](https://www.yelp.com/biz/turner-donut-shop-bradenton) to get a bite before hitting the road. 
@@ -16,4 +16,4 @@ Stopped at [Turner's Donuts](https://www.yelp.com/biz/turner-donut-shop-bradento
 
 All that, with a coffee, for $11.
 
-<img src="https://www.thingelstad.com/uploads/2025/f7a89fdbe6.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/f7a89fdbe6.jpg" width="600" height="450" alt="Donut shop display case with dozens of donuts on yellow trays, labeled by variety, with a price menu board above showing donuts from $1.20 each.">

@@ -7,7 +7,7 @@ post_kind: post
 categories: ["MarketWatch"]
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/ec11eb5533.png" style="width: 150px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/ec11eb5533.png" alt="Atlassian website screenshot showing a Confluence case study article with a headshot of a man in professional attire" style="width: 150px; float: right; margin-left: 10px; " />
 
 A [case study](http://www.atlassian.com/software/confluence/casestudies/dowjones.jsp) was just posted at the [Atlassian](http://www.atlassian.com/) website on the use of the [Confluence](http://www.atlassian.com/software/confluence/) [wiki](http://en.wikipedia.org/wiki/Wiki) solution at work. Some nice quotes from me in it, and the story on how we've been using Wiki's. It leaves out some of the longer history though. The Wiki use really started in [MarketWatch](http://www.marketwatch.com/) long before [Dow Jones](http://www.dowjones.com/) bought us, and then spread when people saw how effective the technology was.
 

@@ -13,7 +13,7 @@ OMG! The Nads show up at [Dusty's](http://dustysbaranddagos.com) to celebrate B-
 
 B-Squad and Nads sitting around a table at Dustys! And now the Bombers show up. Wow!
 
-<img src="https://www.thingelstad.com/uploads/2020/70d2f49ab4.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/70d2f49ab4.jpg" width="600" height="450" alt="Large group of people gathered around a table at an outdoor brick patio bar celebrating eating drinking and socializing at night" />
 
 For background on softball win.
 

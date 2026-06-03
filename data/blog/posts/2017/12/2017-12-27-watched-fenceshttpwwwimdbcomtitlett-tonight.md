@@ -9,4 +9,4 @@ categories: []
 
 Watched [Fences](http://www.imdb.com/title/tt2671706/) tonight. Amazing acting all around and great dialogue. Thoroughly enjoyed it.
 
-<img src="https://www.thingelstad.com/uploads/2017/f8ba2a5464.jpg" width="383" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/f8ba2a5464.jpg" alt="Movie poster for Fences starring Denzel Washington and Viola Davis in theatres Christmas Day" width="383" height="600" />

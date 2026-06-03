@@ -9,6 +9,6 @@ categories: []
 
 Happy Thanksgiving from my Mom and I! 🦃🍁🍽
 
-<img src="https://www.thingelstad.com/uploads/2021/72dc4411a5.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/72dc4411a5.jpg" width="600" height="599" alt="Two people smiling in a kitchen, man in orange plaid shirt and woman in green patterned top wearing glasses" />
 
 Also see [2025](https://www.thingelstad.com/2025/11/27/happy-thanksgiving-from-my-mom.html) and [2015](http://micro.thingelstad.com/2015/11/26/happy-thanksgiving-from.html).

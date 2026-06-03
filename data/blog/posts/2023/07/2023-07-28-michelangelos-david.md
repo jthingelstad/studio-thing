@@ -9,6 +9,6 @@ categories: []
 
 Michelangelo’s David. 
 
-<img src="https://www.thingelstad.com/uploads/2023/12e0f4aee1.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/12e0f4aee1.jpg" width="450" height="600" alt="Michelangelo's David marble statue in the Galleria dell'Accademia, Florence, surrounded by crowds of visitors taking photos.">
 
-<img src="https://www.thingelstad.com/uploads/2023/567628f32e.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/567628f32e.jpg" width="600" height="450" alt="Michelangelo's David marble statue towering over a crowd of tourists in the Galleria dell'Accademia in Florence Italy">

@@ -27,14 +27,14 @@ Overall observations:
 
 
 
-<img src="https://www.thingelstad.com/uploads/2024/9411678058.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/9411678058.jpg" width="600" height="450" alt="Bald speaker in a blazer holds a microphone on a conference stage beside a podium, with a large screen reading Tech Connect Tech Innovation in the North Star State May 8 2024">
 
-<img src="https://www.thingelstad.com/uploads/2024/2d0af5c22f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/2d0af5c22f.jpg" width="600" height="450" alt="Speaker at a podium presents a slide on quantum computing and cryptography to a small seated audience in a conference room">
 
-<img src="https://www.thingelstad.com/uploads/2024/4277e91074.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/4277e91074.jpg" width="600" height="450" alt="Large conference ballroom with hundreds of seated attendees watching a panel of four speakers on a blue-lit stage with two large projection screens showing YOUR NEIGHBORHOODS">
 
 <img src="https://www.thingelstad.com/uploads/2024/679a9d5da4.png" width="600" height="450" alt="">
 
-<img src="https://www.thingelstad.com/uploads/2024/b9e14f7be8.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/b9e14f7be8.jpg" width="600" height="450" alt="Large conference ballroom filled with hundreds of attendees seated at round tables facing a stage where five panelists sit for a CIO Leadership Panel, displayed on two large screens.">
 
-<img src="https://www.thingelstad.com/uploads/2024/463f3e02ed.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/463f3e02ed.jpg" width="600" height="450" alt="Group of nine conference attendees smiling around a round black-draped table in a large convention hall filled with other guests">

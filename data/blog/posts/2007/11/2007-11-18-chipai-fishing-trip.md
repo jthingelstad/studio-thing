@@ -7,7 +7,6 @@ post_kind: post
 categories: ["Videos"]
 ---
 
-It's been a long time since June when my father-in-law took all the
-brother-in-laws fishing in Canada.
+It's been a long time since June when my father-in-law took all the brother-in-laws fishing in Canada.
 
 <video controls="controls" playsinline="playsinline" src="https://files.thingelstad.com/posts/2007/2007-chipai-fishing-trip.mp4" width="100%" poster="https://files.thingelstad.com/posts/2007/2007-chipai-fishing-trip.jpg" preload="none"></video>

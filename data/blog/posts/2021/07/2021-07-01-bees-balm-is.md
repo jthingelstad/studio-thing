@@ -9,4 +9,4 @@ categories: []
 
 Bees Balm is fully in bloom. 
 
-<img src="https://www.thingelstad.com/uploads/2021/1f722fbc31.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/1f722fbc31.jpg" width="600" height="450" alt="Bright pink bee balm flowers in full bloom beside a carved wooden totem with painted storybook figures in a backyard garden." />

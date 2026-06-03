@@ -18,4 +18,4 @@ I thought it would be worth capturing my current supplements that are based on a
 
 I’m likely going to add [Curcumin](https://smartq.pureforyou.com/products/32944646193186/curcumin) to this program as well. In 2 to 3 months I'll be getting the comprehensive blood tests again. This will be the first time I’m getting a real before and after. I’m curious to see how things react.
 
-<img src="https://www.thingelstad.com/uploads/2025/5d553e8416.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/5d553e8416.jpg" width="600" height="450" alt="Four supplement bottles -- DHEA, Carlson Elite EPA, Hammer Nutrition Premium Insurance Caps, and Vitamin D3 -- with pill-filled plastic baggies on a white marble countertop.">

@@ -9,4 +9,4 @@ categories: []
 
 Mazie’s Gingerbread house is epic this year. 
 
-<img src="https://www.thingelstad.com/uploads/2023/06ac893efc.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/06ac893efc.jpg" width="600" height="450" alt="Elaborately decorated gingerbread house covered in white royal icing icicles, red and green candy dots, gumdrop trees, and a candy cane door arch.">

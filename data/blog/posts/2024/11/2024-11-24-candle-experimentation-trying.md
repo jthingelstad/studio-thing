@@ -9,4 +9,4 @@ categories: []
 
 Candle experimentation trying out nine new scents. Made two candles each at a relatively high 9% scent ratio using the 2oz samplers. Will see what we like! 
 
-<img src="https://www.thingelstad.com/uploads/2024/89c00e5c88.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/89c00e5c88.jpg" width="600" height="450" alt="18 unlit handmade candles in various colored containers with wooden wicks arranged on an apple-print tablecloth, alongside small scent bottles and a digital kitchen scale.">

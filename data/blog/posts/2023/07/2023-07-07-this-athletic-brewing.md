@@ -9,4 +9,4 @@ categories: []
 
 This [Athletic Brewing Mango Picante](https://athleticbrewing.com/products/mango-picante) has some serious kick on the back end. 
 
-<img src="https://www.thingelstad.com/uploads/2023/ba2db982ba.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/ba2db982ba.jpg" width="600" height="450" alt="Athletic Brewing Co Mango Picante non-alcoholic IPA can on a wood stump beside a backyard fire pit with blue chairs">

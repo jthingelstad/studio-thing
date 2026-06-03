@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/06/06/ireland-log-day.html"
 title: "Ireland 2024 Log - Day 6"
 published: "2024-06-06T22:08:04+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 _Weather: Good weather today — partially cloudy and less wind._
@@ -20,7 +20,7 @@ _Weather: Good weather today — partially cloudy and less wind._
 - Walk to [McGann's Pub](https://mcgannsdoolin.com) for [dinner, Guinness, and traditional Irish music](https://www.thingelstad.com/2024/06/06/we-walked-from.html) set. 
 - [Walk back to cottage](https://www.thingelstad.com/2024/06/06/sunset-over-a.html). 
 
-<img src="https://www.thingelstad.com/uploads/2024/2a6a152f94.png" width="600" height="452" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/2a6a152f94.png" width="600" height="452" alt="Map showing two driving routes in County Clare and Limerick Ireland, from Ballybunion to Adare Manor in 1 hr 5 min and onward to Doolin in 1 hr 18 min.">
 
 Jump to day 
 [1](https://www.thingelstad.com/2024/06/01/ireland-log-day.html), 

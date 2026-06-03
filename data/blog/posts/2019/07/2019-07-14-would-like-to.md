@@ -9,4 +9,4 @@ categories: []
 
 Would like to go to sleep, but my iPhone is my alarm clock. 🤔
 
-<img src="https://www.thingelstad.com/uploads/2019/2f9ca6768e.jpg" width="600" height="285" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/2f9ca6768e.jpg" width="600" height="285" alt="iPhone restore progress dialog showing Restoring iPhone from backup with time remaining about 2 hours" />

@@ -9,4 +9,4 @@ categories: []
 
 Today is our final stretch with a 593 mile drive back to Minneapolis! We’ve had an awesome Yellowstone RV trip! 🙌
 
-<img src="https://www.thingelstad.com/uploads/2020/282cfa7259.jpg" width="600" height="277" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/282cfa7259.jpg" width="600" height="277" alt="Apple Maps navigation showing a 593-mile route from Rapid City SD to Eagan MN via Sioux Falls, with 8:31 hrs remaining and 4:22 arrival." />

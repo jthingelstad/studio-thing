@@ -9,4 +9,4 @@ categories: []
 
 Solid boxing workout this morning at TITLE Boxing. 
 
-<img src="https://www.thingelstad.com/uploads/2018/6a1bd1bb66.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2018/6a1bd1bb66.jpg" width="600" height="600" alt="Workout summary showing Other activity: 60 minutes, 692 kcal, heart rate chart peaking near 85%, with zone breakdown of 10, 27, 20, and 3 minutes." />

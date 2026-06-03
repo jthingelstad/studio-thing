@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Fun time watching [The Lost City](https://www.rottentomatoes.com/m/the_lost_city) tonight. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2023/9050a708e6.jpg" width="404" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/9050a708e6.jpg" width="404" height="600" alt="Movie poster for The Lost City showing a woman in a torn sequined dress and a man with a backpack walking through a jungle with a volcano erupting behind them.">

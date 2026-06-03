@@ -9,4 +9,4 @@ categories: []
 
 Enjoying a Lift Bridge Mango Blonde from my brothers dock on Pokegama Lake. 👍🍻
 
-<img src="https://www.thingelstad.com/uploads/2020/86f8f54952.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/86f8f54952.jpg" width="600" height="450" alt="Lift Bridge Mango Blonde beer can on the back of a boat on a calm lake, with a sandal, towel, and phone nearby." />

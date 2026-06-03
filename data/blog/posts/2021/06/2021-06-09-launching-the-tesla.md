@@ -9,4 +9,4 @@ categories: []
 
 Launching the [Tesla](https://www.tesla.com) app gives this error. Force quit doesn’t help. Hmm… 
 
-<img src="https://www.thingelstad.com/uploads/2021/3a99b9c510.png" width="600" height="108" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/3a99b9c510.png" width="600" height="108" alt="Access Denied error from Tesla OAuth server saying permission is denied with a reference number shown" />

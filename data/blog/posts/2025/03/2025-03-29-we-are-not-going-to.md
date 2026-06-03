@@ -9,4 +9,4 @@ categories: []
 
 We are not going to get a sunset tonight. Will try again tomorrow night!
 
-<img src="https://www.thingelstad.com/uploads/2025/aab64d9e2f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/aab64d9e2f.jpg" width="600" height="450" alt="Cloudy beach sunset with palm trees and sea grapes in foreground, three silhouetted figures standing at the water's edge.">

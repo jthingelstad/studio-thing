@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Afternoon workshop and training on Essential SAFe for our Technology and Product leaders! 🙌🏆 #TeamSPS
 
-<img src="https://www.thingelstad.com/uploads/2019/41c58d837e.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/41c58d837e.jpg" width="600" height="450" alt="Dozens of professionals seated at white tables in a modern training room attend an Essential SAFe for SPS Tech Managers workshop, with multiple screens displaying the session title overhead." />

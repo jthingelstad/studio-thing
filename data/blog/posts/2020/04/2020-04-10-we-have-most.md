@@ -9,4 +9,4 @@ categories: []
 
 We have most of the Osmo games, and today we got [Osmo Hot Wheels™ MindRacers](https://www.playosmo.com/en/mindracers/). Kids and adults are having fun! 
 
-<img src="https://www.thingelstad.com/uploads/2020/163129a685.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/163129a685.jpg" width="600" height="600" alt="Osmo Hot Wheels MindRacers set on a kitchen counter with an iPad showing the Skyway game, a launch ramp with two toy cars, game tokens, and extra cars in an orange tray." />

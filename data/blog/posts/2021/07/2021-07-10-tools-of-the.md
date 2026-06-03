@@ -7,4 +7,4 @@ post_kind: micropost
 categories: ["Cooking"]
 ---
 
-Tools of the craft for [Big Green Egg](https://biggreenegg.com). Something to start fire. Strong and long tongues. Precise, high-quality thermometer. 🔥 <img src="https://www.thingelstad.com/uploads/2021/fd70300794.jpg" width="600" height="450" alt="" />
+Tools of the craft for [Big Green Egg](https://biggreenegg.com). Something to start fire. Strong and long tongues. Precise, high-quality thermometer. 🔥 <img src="https://www.thingelstad.com/uploads/2021/fd70300794.jpg" width="600" height="450" alt="Big Green Egg ceramic kamado grill on a patio table beside a blue tray holding tongs, a green lighter, and a red meat thermometer." />

@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Afternoon coffee flight – macchiato with cappuccino at Cafe Umbria. ☕️
 
-<img src="https://www.thingelstad.com/uploads/2018/8dadb1619a.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/8dadb1619a.jpg" alt="Cappuccino with cocoa dusting and macchiato on white saucers at a marble counter, with two glasses of water nearby" width="600" height="600" />

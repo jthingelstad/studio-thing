@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 [Rich Howard](https://twitter.com/scotchprophet) and [Chris Bidler](https://twitter.com/hlprmnky) jamming on some code. #TeamSPS
 
-<img src="https://www.thingelstad.com/uploads/2019/7691a6d918.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/7691a6d918.jpg" width="600" height="450" alt="Two men sitting side by side at an open-plan office desk, looking at a laptop screen together, surrounded by coworkers at computer workstations.">

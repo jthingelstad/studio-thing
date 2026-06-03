@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Happy [10 year anniversary](https://ethereum.org/en/10years/) to Ethereum! I just minted [my NFT](https://etherscan.io/nft/0x26d85a13212433fe6a8381969c2b0db390a0b0ae/374464) to celebrate the day!
 
-<img src="https://www.thingelstad.com/uploads/2025/tvrjmu16zzbnamsxtke9pv84.png">
+<img src="https://www.thingelstad.com/uploads/2025/tvrjmu16zzbnamsxtke9pv84.png" alt="Ethereum diamond logo above an open scroll reading 10 years of ethereum, set against a snow-capped mountain, rainbow sky, and coastal cityscape in soft pastel anime style">

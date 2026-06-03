@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7563511">7563511</a> at <strong><a href="https://poap.gallery/drops/226016">SPS MAX Introduction</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2026/2fcdeefe-1091-4244-b450-eb23abb7df0d.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2026/2fcdeefe-1091-4244-b450-eb23abb7df0d.png" alt="Circular badge for SPS MAX Introduction event on February 10 2026, featuring a blue star logo on a dark neural network background." width="500" height="500" />

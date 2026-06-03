@@ -9,4 +9,4 @@ categories: []
 
 My boat motor won’t run and its been a saga. The shop is coming to fix it, or tow it, later this week. In the meantime, snowy boat. 🤦‍♂️❄️🚤
 
-<img src="https://www.thingelstad.com/uploads/2020/f1bc76075a.jpg" width="600" height="332" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/f1bc76075a.jpg" width="600" height="332" alt="Snow-covered pontoon boat docked on a foggy lake in winter, surrounded by bare trees and a snow-covered yard." />

@@ -9,4 +9,4 @@ categories: []
 
 Boarding flight for the Kentucky Derby! 🏇
 
-<img src="https://www.thingelstad.com/uploads/2022/96343b49ec.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/96343b49ec.jpg" width="600" height="599" alt="Two people wearing festive hats pose at Delta gate D6, the woman in a large pink hat and yellow blouse, the man in a straw fedora and blue blazer." />

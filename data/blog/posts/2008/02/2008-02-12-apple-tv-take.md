@@ -9,7 +9,7 @@ categories: []
 
 Today brought the [Apple TV](http://www.apple.com/appletv) faithful a big win with the release of Apple TV Take 2, or more appropriately the Apple TV 2.0 Software. Being the [proud owner of three Apple TV's](https://www.thingelstad.com/2007/12/21/all-in-on.html) I was eager to get this update applied.
 
-<img src="https://www.thingelstad.com/uploads/2020/1a67dcc5e1.png" style="max-width: 397px;" />
+<img src="https://www.thingelstad.com/uploads/2020/1a67dcc5e1.png" alt="First-generation Apple TV device beside its settings panel showing Name: Living Room, Capacity: 32.96 GB, Software Version: 2.0, and a redacted Serial Number." style="max-width: 397px;" />
 
 I was a bit surprised at how quickly it installed. I guess I was expecting a good 30 to 45 minute install but it only took about 10 minutes even with all the reboots. The install was painless and simple with no issues.
 

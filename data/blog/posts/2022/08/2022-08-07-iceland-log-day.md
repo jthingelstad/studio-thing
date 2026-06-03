@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/08/07/iceland-log-day.html"
 title: "Iceland Log Day 16"
 published: "2022-08-07T17:01:39+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 Sunday, August 7th  
@@ -19,7 +19,7 @@ Cold morning in Reykjavik. Rainy day in Minneapolis.
 - 11:00a Land in MSP
 - 11:49a Arrive back home!
 
-<img src="https://www.thingelstad.com/uploads/2022/61ce60b420.png" width="600" height="293" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/61ce60b420.png" width="600" height="293" alt="Google Maps route from Baldursgata 22 in Kopavogur near Reykjavik to Keflavik Airport, about 50 km west along the coast." />
 
 Jump to day 
 [0](https://www.thingelstad.com/2022/07/22/iceland-log-day.html), 

@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2023/12/31/notes-on-complexity.html"
 title: "Notes on Complexity by Theise"
 published: "2023-12-31T19:11:21+00:00"
 post_kind: post
-categories: ["Book"]
+categories: []
 ---
 
 I finished reading [Notes on Complexity](https://www.neiltheiseofficial.com/books) by [Neil Theise](https://www.neiltheiseofficial.com) this morning. It is a quick read just under 200 pages, and I think would be best thought of as a quick overview of very deep topics on complexity theory and winding all the way to consciousness. 
@@ -22,4 +22,4 @@ This call out about artificial intelligence was interesting as well. Most people
 This isn't a field that I have the depth to explore in detail, but I find the connections interesting and enjoy the exploration. 
 
 
-<img src="https://www.thingelstad.com/uploads/2023/3de299983a.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/3de299983a.jpg" width="600" height="600" alt="Notes on Complexity by Neil Theise lying on a colorful painted board game table, with a stack of books behind it">

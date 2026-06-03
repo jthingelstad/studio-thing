@@ -9,4 +9,4 @@ categories: []
 
 Great cartoon on the bathroom wall at One on One bicycle studio.
 
-![](https://www.thingelstad.com/uploads/2020/6a752e9d15.png)
+<img src="https://www.thingelstad.com/uploads/2020/6a752e9d15.png" alt="No Exit comic strip by Andy Singer: text reads The average American walks just 300 yards per day above three panels showing a man at a computer, a man driving a car, and a man watching TV in a">

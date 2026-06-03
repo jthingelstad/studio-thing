@@ -9,4 +9,4 @@ categories: []
 
 [Bowbells Hotel](http://bowbellshotelandbunkhouse.com).
 
-<img src="https://www.thingelstad.com/uploads/2017/9aceb6331c.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/9aceb6331c.jpg" alt="Brick corner building with Hotel neon sign and Bistro storefront at the intersection of Main St and Railway St" width="600" height="600" style="height: auto" />

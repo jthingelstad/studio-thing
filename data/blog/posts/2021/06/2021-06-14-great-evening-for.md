@@ -9,4 +9,4 @@ categories: []
 
 Great evening for a bike ride around Lake Harriet. 
 
-<img src="https://www.thingelstad.com/uploads/2021/877b64e528.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/877b64e528.jpg" width="600" height="450" alt="Child wearing a helmet rides a bicycle along a tree-lined paved path in golden evening light." />

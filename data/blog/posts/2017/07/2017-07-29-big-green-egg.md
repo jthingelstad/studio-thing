@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 [Big Green Egg](https://biggreenegg.com) today -- tenderloins! 🔥
 
-<img src="https://www.thingelstad.com/uploads/2017/b3c98d7d40.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/b3c98d7d40.jpg" alt="Six beef tenderloin filets searing on a Big Green Egg kamado grill in a backyard, lid open, tongs and cutting board beside it." width="600" height="600" style="height: auto" />

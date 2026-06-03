@@ -7,9 +7,7 @@ post_kind: post
 categories: []
 ---
 
-I started down this rabbit hole tonight trying to make a bash script do
-more than I probably should make it do. But I didn't want to move to
-something else. This may be some of the ugliest stuff I've ever written.
+I started down this rabbit hole tonight trying to make a bash script do more than I probably should make it do. But I didn't want to move to something else. This may be some of the ugliest stuff I've ever written.
 
 ```bash
 for file in $files; do
@@ -34,10 +32,7 @@ for file in $files; do
 done
 ```
 
-The `tr -d '\n'` at the end of line 6 is my personal
-favorite. MySQL was dumping a newline in the STDOUT and screwing up my
-comparison. Fix it right? Nah. Just rip that newline out of there. All
-better!
+The `tr -d '\n'` at the end of line 6 is my personal favorite. MySQL was dumping a newline in the STDOUT and screwing up my comparison. Fix it right? Nah. Just rip that newline out of there. All better!
 
 I share this for others to know what not to do.
 

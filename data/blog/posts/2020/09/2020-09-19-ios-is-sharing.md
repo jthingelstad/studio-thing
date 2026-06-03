@@ -9,4 +9,4 @@ categories: []
 
 iOS 14 is sharing an insight with me that it is using more battery. Neat insight, how about a fix? 😬
 
-<img src="https://www.thingelstad.com/uploads/2020/a51d892ffe.jpg" width="600" height="265" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/a51d892ffe.jpg" width="600" height="265" alt="iPhone battery settings screen showing Insights and Suggestions section warning that recent iOS upgrade has caused higher than usual usage affecting battery life." />

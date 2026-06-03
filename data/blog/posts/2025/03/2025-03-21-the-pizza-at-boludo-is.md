@@ -9,4 +9,4 @@ categories: []
 
 The pizza at [Boludo](https://www.boludo.com) is so incredible. Delicious and unique!
 
-<img src="https://www.thingelstad.com/uploads/2025/c7b5b076f1.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/c7b5b076f1.jpg" width="600" height="600" alt="Square pepperoni pizza topped with shredded white cheese overflowing the crust, served on branded Boludo paper at a restaurant table.">

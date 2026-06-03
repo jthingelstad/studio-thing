@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Hanging out in LAX for a bit on the way to visit #TeamSPS in Melbourne! 🇦🇺🦘 
 
-<img src="https://www.thingelstad.com/uploads/2019/f43a515fa2.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/f43a515fa2.jpg" width="600" height="337" alt="Delta Air Lines aircraft being pushed back on the LAX tarmac, with an Air Canada plane taxiing and the Los Angeles skyline in the background." />

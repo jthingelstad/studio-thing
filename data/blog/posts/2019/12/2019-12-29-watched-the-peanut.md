@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Watched [The Peanut Butter Falcon](https://en.wikipedia.org/wiki/The_Peanut_Butter_Falcon). Very good movie. Great story. 🎬
 
-<img src="https://www.thingelstad.com/uploads/2019/20a116ba3e.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/20a116ba3e.jpg" width="600" height="337" alt="Movie poster for The Peanut Butter Falcon showing two men laughing together in shallow water near a wooden raft" />

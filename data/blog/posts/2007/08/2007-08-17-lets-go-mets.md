@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2007/08/17/lets-go-mets.html"
 title: ""
 published: "2007-08-17T05:00:00+00:00"
 post_kind: micropost
-categories: ["Sports"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/2378408331.jpg" style="width: 115px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/2378408331.jpg" alt="New York Mets circular logo featuring the team name and NYC skyline graphic on a baseball background" style="width: 115px; float: right; margin-left: 10px; " />
 
 Last Wednesday night [Jim](http://www.jimbernard.net/) and I decided to go see a [Mets](http://newyork.mets.mlb.com/) game while in NY for business. We took a long train ride on the 7 out to Shea Stadium and picked up some tickets. We got some absolutely great tickets off of the 3rd base side. This was my second time at Shea, and oddly both times they were playing Atlanta. It was a lot of fun to see the game with Jim who knows more about baseball than I could ever know. He filled me in on some great trivia about the Mets that made me enjoy the game even more.
 

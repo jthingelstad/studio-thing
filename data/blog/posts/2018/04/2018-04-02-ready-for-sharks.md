@@ -9,4 +9,4 @@ categories: []
 
 Ready for Sharks 4D movie at [Shedd Aquarium](https://www.sheddaquarium.org)! 
 
-<img src="https://www.thingelstad.com/uploads/2018/a6df517d65.jpg" width="600" height="451" />
+<img src="https://www.thingelstad.com/uploads/2018/a6df517d65.jpg" alt="Family of four wearing matching red 3D glasses at Shedd Aquarium, smiling and posing for a selfie before a 4D movie." width="600" height="451" />

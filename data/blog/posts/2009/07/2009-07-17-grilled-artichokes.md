@@ -9,4 +9,4 @@ categories: []
 
 Grilled artichokes!
 
-![](https://www.thingelstad.com/uploads/2020/62f7c580c3.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/62f7c580c3.jpg" alt="Six whole artichokes with stems grilling on a round charcoal grill with glowing coals beneath">

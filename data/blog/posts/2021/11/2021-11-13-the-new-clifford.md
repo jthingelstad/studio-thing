@@ -9,4 +9,4 @@ categories: []
 
 The new [Clifford: The Big Red Dog](https://www.cliffordmovie.com) is a nice rendition of a classic story. 
 
-<img src="https://www.thingelstad.com/uploads/2021/fbca64bf33.jpg" width="600" height="399" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/fbca64bf33.jpg" width="600" height="399" alt="Movie poster for Clifford The Big Red Dog showing a giant red CGI dog holding an NYC manhole cover with a city skyline behind it." />

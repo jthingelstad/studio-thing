@@ -9,4 +9,4 @@ categories: []
 
 Subway trains parked with Manhattan skyscrapers in the background.
 
-<img src="https://www.thingelstad.com/uploads/2023/5683f753ac.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/5683f753ac.jpg" width="450" height="600" alt="Long Island Rail Road cars parked in a rail yard with Hudson Yards skyscrapers and a tower under construction behind.">

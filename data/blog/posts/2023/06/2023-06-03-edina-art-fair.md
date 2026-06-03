@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2023/06/03/edina-art-fair.html"
 title: "Edina Art Fair 2023"
 published: "2023-06-04T03:48:59+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
 We endured the very hot afternoon and visited the Edina Art Fair. This is one of our favorite art fairs every year. Some of the artists that caught our eye while we were there:
@@ -25,8 +25,8 @@ We endured the very hot afternoon and visited the Edina Art Fair. This is one of
 - [Naomi Tiry Salgado](https://www.tirysalgado.com): The detail and scenes in these oil paintings were both modern and classic at the same time. 
 - [A. D. Hogan](https://adhoganart.com): His [National Parks Collection](https://adhoganart.com/collections/national-parks) really struck a chord with me. I loved the style and bold look. Plus I’m a big fan of the National Parks. 
 
-<img src="https://www.thingelstad.com/uploads/2023/3c6ab19abf.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/3c6ab19abf.jpg" width="600" height="450" alt="Outdoor art fair booth displaying colorful framed paintings of flowers and birds with text lyrics, plus unframed prints in bins">
 
-<img src="https://www.thingelstad.com/uploads/2023/48f360d81a.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/48f360d81a.jpg" width="600" height="450" alt="Tall kinetic sculpture covered in colorful blown glass petals and metal shapes displayed outdoors at an art fair under a blue sky">
 
 Past years: [2004](https://www.thingelstad.com/2004/06/06/edina-art-fair.html), [2014](https://www.thingelstad.com/2014/06/08/edina-art-fair.html), [2019](https://www.thingelstad.com/2019/06/02/edina-art-fair.html), and [2022](https://www.thingelstad.com/2022/06/05/edina-art-fair.html).

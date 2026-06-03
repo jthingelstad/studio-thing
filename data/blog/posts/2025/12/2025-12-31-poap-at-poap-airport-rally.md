@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7547377">7547377</a> at <strong><a href="https://poap.gallery/drops/217947">POAP Airport Rally 2026 Boarding Pass</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2026/77c11daf-d047-4205-a466-85db267a3be0.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2026/77c11daf-d047-4205-a466-85db267a3be0.png" alt="Boarding pass on a phone screen for Airport Rally, Admit One, valid January 1 to December 31 2026, labeled POAP Airport Rally 2026." width="500" height="500" />

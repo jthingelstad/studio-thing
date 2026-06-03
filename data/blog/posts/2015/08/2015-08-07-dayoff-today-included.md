@@ -9,4 +9,4 @@ categories: []
 
 Day off today included nap in the hammock. Now this.
 
-<img src="https://www.thingelstad.com/uploads/2020/45e48c9db7.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/45e48c9db7.jpg" width="600" height="450" alt="Full Sail IPA bottle on a wood deck with a black dog on a green lawn near a lake and a play structure in the background" />

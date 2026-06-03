@@ -9,4 +9,4 @@ categories: []
 
 [Madison Lake](https://www.dnr.state.mn.us/fisheries/slice/madison-lake.html), Minnesota. 
 
-<img src="https://www.thingelstad.com/uploads/2020/f2560b2447.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/f2560b2447.jpg" width="600" height="450" alt="Bare deciduous trees lining the marshy shore of Madison Lake in Minnesota under a clear blue sky in late autumn." />

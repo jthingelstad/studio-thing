@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Nice morning at [Getaway Motor Cafe](https://www.getawaymotorcafe.com) in Carver. Great coffee and food. Love the vibe. Surprise bonus that they have [Cardigan Donuts](https://cardigandonuts.com) on Saturday! ☕️🍩
 
-<img src="https://www.thingelstad.com/uploads/2025/4d3fea1d2b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/4d3fea1d2b.jpg" width="600" height="450" alt="Black Getaway Motor Cafe mug filled with black coffee on a wood table next to an open MacBook laptop in a cafe setting.">

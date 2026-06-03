@@ -9,7 +9,7 @@ categories: ["Minnestar", "Workouts"]
 
 When [Minnestar](https://minnestar.org) decided to launch these "Techies who …" communities I was really excited to get a [Peloton](https://www.onepeloton.com) group setup! As if by design, Peloton also just launched their [brand new scheduled session](https://blog.onepeloton.com/peloton-sessions/) feature that works perfect for this. So we are getting our very first ride scheduled, and I thought it would be fun to do it on St. Patrick's day!
 
-![](https://www.thingelstad.com/uploads/2021/89fc81fafb.png)
+<img src="https://www.thingelstad.com/uploads/2021/89fc81fafb.png" alt="Three illustrated cyclists riding together on colorful bikes against a purple background, promoting a Minnestar Techies Who Peloton event.">
 
 If you are a Peloton Cyclist join our first **Techies Who Peloton** ride! 🚴
 

@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7399817">7399817</a> at <strong><a href="https://poap.gallery/drops/193101">Olson Family Vacation 2025</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/a3a40a67-8653-4e19-9da6-6e8692aeb2d8.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/a3a40a67-8653-4e19-9da6-6e8692aeb2d8.png" alt="Round badge for Olson Family Vacation 2025 showing a cartoon airplane flying from Minneapolis to Montreal and Stowe VT over a globe." width="500" height="500" />

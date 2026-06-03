@@ -13,6 +13,6 @@ This is another one of those moments where I realize so much has changed in the 
 
 He got it in mostly on his own and got the drivers installed. Minutes later he was getting high 200 frames per second on some test games, even hitting over 300 fps at some times. The quality of the graphics is amazing. 🤩
 
-<img src="https://www.thingelstad.com/uploads/2024/fbcdb36225.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/fbcdb36225.jpg" width="600" height="450" alt="Sapphire Radeon RX 7800 XT white GPU installed in a white PC case alongside a large CPU air cooler and case fans">
 
-<img src="https://www.thingelstad.com/uploads/2024/d112522955.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/d112522955.jpg" width="600" height="450" alt="Sapphire Pure Radeon RX 7800 XT GPU installed in a white PC case surrounded by RGB rainbow-lit case fans">

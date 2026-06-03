@@ -13,4 +13,4 @@ Looking forward to connecting with the rest of #TeamSPS at #reinvent!
 
 Hotel is pretty full so got upgraded to a suite. Nice digs.
 
-<img src="https://www.thingelstad.com/uploads/2019/03640c8de2.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/03640c8de2.jpg" width="600" height="450" alt="Spacious luxury hotel suite at night with a king bed, red bench, gray suitcase, marble bar, and city lights through the window.">

@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 "The Future of the Creator Economy" session with **Layah Heilpern** and **Zuby** moderated by **Justin Rezvani** on Nakamato Stage at [Bitcoin 2023](https://b.tc/conference/). 
 
-<img src="https://www.thingelstad.com/uploads/2023/99b4e63756.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/99b4e63756.jpg" width="600" height="337" alt="Three people seated in white chairs on stage at Bitcoin 2023 conference with large orange Bitcoin logo backdrop behind them.">

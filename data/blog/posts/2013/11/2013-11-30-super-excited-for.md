@@ -9,4 +9,4 @@ categories: []
 
 Crazy good post-Thanksgiving dinner with [Mike Rock](https://mrock911.com) and family. Great to spend time with awesome friends.
 
-<img src="https://www.thingelstad.com/uploads/2020/d0b1875d50.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d0b1875d50.jpg" width="600" height="800" alt="Sliced roasted turkey on a white platter with a carving fork, surrounded by side dishes including mashed potatoes, a casserole, and roasted carrots on a kitchen counter." />

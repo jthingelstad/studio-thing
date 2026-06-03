@@ -13,4 +13,4 @@ I decided that I wanted to get a [complete collection of all 32 landmarks](https
 
 The rarest one of these is Al's Breakfast, which there are only 2 of, so it is unlikely there will be any other complete collections of this series.
 
-<img src="https://www.thingelstad.com/uploads/2023/fd442de528.png" width="600" height="296" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/fd442de528.png" width="600" height="296" alt="Grid of 32 pixel-art NFTs depicting Minneapolis landmarks, bridges, buildings, and local icons in a retro 8-bit style.">

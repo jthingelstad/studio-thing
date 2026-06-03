@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 In Kyiv this week with #TeamSPS! 
 
-<img src="https://www.thingelstad.com/uploads/2021/11718b36bd.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/11718b36bd.jpg" width="600" height="450" alt="Group of coworkers gathered in an office break room eating pizza, with a foosball table visible in the foreground." />

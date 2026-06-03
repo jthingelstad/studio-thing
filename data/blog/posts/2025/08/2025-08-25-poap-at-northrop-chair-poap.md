@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7432579">7432579</a> at <strong><a href="https://poap.gallery/drops/190547">Northrop Chair — 612 POAP Challenge</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/a3749234-ade1-4888-9949-d11379cdba5b.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/a3749234-ade1-4888-9949-d11379cdba5b.png" alt="Circular POAP badge with pixel art Santa figure, labeled 612 POAP Challenge at top and Northrop Chair at bottom." width="500" height="500" />

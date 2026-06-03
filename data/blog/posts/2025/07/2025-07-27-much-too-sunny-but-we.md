@@ -9,4 +9,4 @@ categories: []
 
 Much too sunny but we got to Quebec City and made our way into the Old City where we are staying.
 
-<img src="https://www.thingelstad.com/uploads/2025/a6bdcfffdc.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/a6bdcfffdc.jpg" width="600" height="450" alt="Four people posing for a selfie in front of a stone archway gate in Old Quebec City on a sunny day.">

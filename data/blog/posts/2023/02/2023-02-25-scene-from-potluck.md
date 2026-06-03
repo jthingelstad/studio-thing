@@ -9,4 +9,4 @@ categories: []
 
 Scene from [Potluck MN Food Hall](https://potluckmn.com).
 
-<img src="https://www.thingelstad.com/uploads/2023/88cbe4a60e.jpg" width="449" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/88cbe4a60e.jpg" width="449" height="600" alt="Spoon Me restaurant interior with hundreds of wooden spoons suspended from the ceiling above a small table and two chairs.">

@@ -9,4 +9,4 @@ categories: []
 
 Race 7, Churchill Downs. Win for Jack Christopher!
 
-<img src="https://www.thingelstad.com/uploads/2022/edd918f45a.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/edd918f45a.jpg" width="600" height="450" alt="Crowd watches horses race past at Churchill Downs with jockeys in colorful silks, a large video board showing the race overhead." />

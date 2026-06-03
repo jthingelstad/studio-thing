@@ -13,10 +13,10 @@ To celebrate collecting all of the unique landmarks Erik asked if I would like a
 
 Here is the NFT image.
 
-<img src="https://www.thingelstad.com/uploads/2023/612-series-134.png" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/612-series-134.png" width="600" height="600" alt="Pixel-art block painting of the Cherry and Spoon sculpture in Minneapolis, with green landscaping, a gray sky, and figures nearby.">
 
 And here is the amazing block painting!
 
-<img src="https://www.thingelstad.com/uploads/2023/24f08c0a-a60a-4de7-a8ac-7a3f955d003f.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/24f08c0a-a60a-4de7-a8ac-7a3f955d003f.jpg" width="600" height="600" alt="Pixel-style block painting of the Cherry and Spoon sculpture on watercolor paper, signed and titled in pencil below the artwork, resting on a wooden desk.">
 
 I’m going to get this framed and likely have a print of the NFT alongside it. So very fun.

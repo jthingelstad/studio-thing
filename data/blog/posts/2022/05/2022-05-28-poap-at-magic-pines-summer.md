@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/5068411">5068411</a> at <strong><a href="https://poap.gallery/drops/46950">Magic Pines Summer of 2022</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/magic-pines-summer-of-2022-2022-logo-1653753334397.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/magic-pines-summer-of-2022-2022-logo-1653753334397.png" alt="Illustrated aerial view of Magic Pines lakeside property with pine trees, house, pool, campfire, and dock, celebrating Summer 22" width="500" height="500" />

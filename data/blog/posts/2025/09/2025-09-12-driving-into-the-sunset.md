@@ -9,4 +9,4 @@ categories: []
 
 Driving into the sunset. 🌅 
 
-<img src="https://www.thingelstad.com/uploads/2025/23b67f46db.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/23b67f46db.jpg" width="600" height="337" alt="Highway stretching toward a vivid orange sunset with a semi-truck and car ahead, power lines along the right, wet road reflecting light.">

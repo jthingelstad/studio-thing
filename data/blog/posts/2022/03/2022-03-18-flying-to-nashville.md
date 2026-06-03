@@ -9,4 +9,4 @@ categories: []
 
 Flying to **Nashville, TN** tonight! 🛫 First time in an airport since [March 13 2020](https://www.thingelstad.com/2020/03/13/currently-noticing-every.html)!
 
-<img src="https://www.thingelstad.com/uploads/2022/f57fbd09c4.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/f57fbd09c4.jpg" width="600" height="450" alt="Four people wearing face masks taking a selfie at Delta gate C26 with a Nashville TN flight board visible behind them." />

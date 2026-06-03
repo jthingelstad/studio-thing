@@ -9,4 +9,4 @@ categories: []
 
 Santa brought me a lefse shirt! This is a serious Minnesota level up! 🎄🎁🎅
 
-<img src="https://www.thingelstad.com/uploads/2024/fa7707db1b.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/fa7707db1b.jpg" width="600" height="600" alt="Smiling man wearing a gray t-shirt with a lefse and butter graphic saying Lets Roll, standing near Christmas stockings and decorations">

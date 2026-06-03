@@ -9,4 +9,4 @@ categories: []
 
 I added a [Pellet Sensor](https://www.traeger.com/accessories/traeger-pellet-sensor) to the Traeger this morning. Good confidence thing to have for long smoke sessions. 
 
-<img src="https://www.thingelstad.com/uploads/2025/11c630aab1.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/11c630aab1.jpg" width="600" height="600" alt="Traeger app screenshot on iPhone showing Grill Is Ready status for MEGASMOKER with pellet level at 45 percent">

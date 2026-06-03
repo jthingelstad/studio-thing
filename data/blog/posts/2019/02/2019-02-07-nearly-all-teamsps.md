@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Nearly all #TeamSPS events have [Thad Brenny](https://www.linkedin.com/in/thad-brenny-a-c-e-cts-cte-6b2a869/) making it all look great and smooth at the console! You are awesome Thad! 🙌
 
-<img src="https://www.thingelstad.com/uploads/2019/23d27d5d79.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/23d27d5d79.jpg" width="600" height="600" alt="Man in black hoodie and headset giving two thumbs up while seated at a production console in front of a purple illuminated display." />

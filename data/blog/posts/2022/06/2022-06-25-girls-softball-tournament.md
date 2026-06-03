@@ -9,4 +9,4 @@ categories: []
 
 Girls softball tournament today! 🥎
 
-<img src="https://www.thingelstad.com/uploads/2022/4f1c8e29d8.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/4f1c8e29d8.jpg" width="600" height="337" alt="Softball game in progress with batter number 19 Larson at the plate, pitcher winding up, and fielders spread across a sunny dirt infield." />

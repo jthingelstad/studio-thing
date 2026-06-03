@@ -13,5 +13,5 @@ I've been a subscriber of the [Kyiv Independent](https://kyivindependent.com/) s
 
 Today is also good day to read "[Everything you didn't know about Ukraine's flag](https://kyivindependent.com/everything-you-didnt-know-about-ukraines-flag/)". 🇺🇦
 
-![](https://www.thingelstad.com/uploads/2023/646b2b22-a7cc-4cd4-b275-aa642099e8df.jpg)  
+<img src="https://www.thingelstad.com/uploads/2023/646b2b22-a7cc-4cd4-b275-aa642099e8df.jpg" alt="Man giving thumbs up wearing a black t-shirt printed with a stylized archangel in yellow and white, with a small Ukrainian flag heart pin on the shirt.">  
 _Wearing my [Kyiv Archangel shirt](https://www.saintjavelin.com/en-us/products/kyiv-archangel-adult-t-shirt) and Ukraine colored heart pin I received from our team in Kyiv._

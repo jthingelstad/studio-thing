@@ -53,5 +53,4 @@ I can look at [1Password with 392 unique
 passwords](https://www.thingelstad.com/2010/12/13/good-passwords-with.html) and read this message
 without a worry in the world.
 
-My favorite line in that note is the one that I've added bold emphasis
-to. I sincerely doubt even 1% of Internet users do that.
+My favorite line in that note is the one that I've added bold emphasis to. I sincerely doubt even 1% of Internet users do that.

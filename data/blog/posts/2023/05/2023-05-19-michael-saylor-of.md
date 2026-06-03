@@ -11,4 +11,4 @@ categories: ["Crypto"]
 
 “The universal frequent flyer mile is the Satoshi.” Interesting concept of using Sats to enable very different systems. 
 
-<img src="https://www.thingelstad.com/uploads/2023/cd68f862aa.jpg" width="600" height="337" alt=""><img src="https://www.thingelstad.com/uploads/2023/c3fca8f8b8.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/cd68f862aa.jpg" width="600" height="337" alt="Two men seated in white chairs on stage at Bitcoin 2023 conference with large Bitcoin logo and number 23 on screen behind them."><img src="https://www.thingelstad.com/uploads/2023/c3fca8f8b8.jpg" width="600" height="337" alt="Large conference hall filled with attendees watching two speakers seated on stage at Bitcoin 2023, giant Bitcoin logo displayed on backdrop screen.">

@@ -9,4 +9,4 @@ categories: []
 
 Just two numbers from the blackout Grand Prize on the bottom right sheet. Someone else won on the 54th number.
 
-<img src="https://www.thingelstad.com/uploads/2018/206f87ee57.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/206f87ee57.jpg" alt="Four bingo cards on a table, heavily daubed with pink marker, nearly blacked out with only a few unmarked numbers remaining." width="600" height="600" />

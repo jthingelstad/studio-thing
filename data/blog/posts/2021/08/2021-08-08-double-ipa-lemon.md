@@ -9,4 +9,4 @@ categories: []
 
 Double IPA [Lemon Cello](https://hillfarmstead.com/beer/lemon-cello/) from Hill Farmstead Brewery. Wow, unique and good. 🍋 
 
-<img src="https://www.thingelstad.com/uploads/2021/e14f9bd87a.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/e14f9bd87a.jpg" width="600" height="600" alt="Hazy golden double IPA in a tulip glass on a wooden restaurant table, with water glasses nearby." />

@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2007/03/29/first-day-as.html"
 title: "First Day as Mr. Mom"
 published: "2007-03-29T05:00:00+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/4be89cb4c9.jpg" style="width: 129px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/4be89cb4c9.jpg" alt="Two young children sitting together in a vehicle, one smiling broadly in a red top, the other wearing a pink knit hat." style="width: 129px; float: right; margin-left: 10px; " />
 
 I'm taking a moment to relax a bit and plugging this post up on the blog. The photos from the day are uploading right now as well. Today was the first day of Tammy's **5-day** trip with her Mom. They are going on a [Heifer Ranch's Women's Lambing Weekend](http://www.heifer.org/). Mainly they will be working on a ranch with the animals, and help deliver a number of newborn lambs. They are going to ride a water buffalo at some point. I can't wait to see the photos from the trip! 🙂 I've been looking forward to this weekend for a long time. I'm taking today, tomorrow and Monday off of work and Mazie and I have a lot of fun things scheduled. However, the addition of a brand new puppy has greatly complicated things and added a bunch of stress. On the plus side though it will give Izzy and I some good quality time together. Mazie also came down sick yesterday with a high temperature. She did okay today with some medicine, but we'll be skipping [ECFE](http://www.ecfe.info/) class tomorrow.
 

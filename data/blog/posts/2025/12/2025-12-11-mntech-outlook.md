@@ -9,7 +9,7 @@ categories: []
 
 Interesting comments on big goals for their organizations and the community this morning at MnTech Outlook 2026.
 
-<img src="https://www.thingelstad.com/uploads/2025/f7429f0971.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/f7429f0971.jpg" alt="Six panelists seated on stools across a stage, one holding a microphone and speaking, others listening attentively.">
 
 Some observations:
 

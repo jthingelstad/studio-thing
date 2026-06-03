@@ -13,4 +13,4 @@ I wonder, how many gigabytes of photos are taken of Starry Night each day?
 
 
 
-<img src="https://www.thingelstad.com/uploads/2023/cf3430e496.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/cf3430e496.jpg" width="600" height="337" alt="Dense crowd of museum visitors photographing Van Goghs Starry Night and two other paintings on a white gallery wall.">

@@ -9,4 +9,4 @@ categories: []
 
 Incredible final rhubarb desert course at [Wolf Atelier](https://www.wolfatelier.nl) tonight to finish a multi-course evening of great food. 
 
-<img src="https://www.thingelstad.com/uploads/2025/a86e5046f8.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/a86e5046f8.jpg" width="600" height="600" alt="Elegant dessert on a white scalloped plate with a domed panna cotta, quenelle of sorbet, caramel sauce, candied rhubarb, herb spirals, and edible flowers.">

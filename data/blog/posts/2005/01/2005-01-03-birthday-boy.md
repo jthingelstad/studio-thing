@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/dd6e7717ee.jpg" style="width: 98px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/dd6e7717ee.jpg" alt="Meade LX200GPS 8-inch computerized Schmidt-Cassegrain telescope mounted on a tripod, shown against a white background" style="width: 98px; float: right; margin-left: 10px; " />
 
 Today was my birthday. We went out of town to celebrate and spent a couple of days at the [Spider Lake Lodge](http://spiderlakelodge.com/) outside of [Hayward, WI](http://www.hayward-wi.com/). It's a really cool lodge. The rooms are just average but the lodge itself really looks like a "northwoods lodge". We hoped to XC ski and snowshoe but the lack of any good snow left us playing [Boggle](http://www.iwaynet.net/~ggwiz/boggle/) and seeing the [Lemony Snicket](http://www.imdb.com/title/tt0339291/) movie.
 

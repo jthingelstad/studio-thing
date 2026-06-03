@@ -9,4 +9,4 @@ categories: []
 
 [Tesla](https://www.tesla.com), your HTML encoding is showing.  `&` 😳
 
-<img src="https://www.thingelstad.com/uploads/2019/7d4f650ad7.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/7d4f650ad7.jpg" width="600" height="600" alt="Tesla touchscreen calendar showing Book Club Meeting at Lake and Irving with an HTML encoding bug displaying ampersand as and-amp instead of and symbol." />

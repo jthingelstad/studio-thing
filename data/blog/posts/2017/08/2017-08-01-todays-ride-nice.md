@@ -9,4 +9,4 @@ categories: []
 
 Today's ride - nice day! 🚴🏻
 
-<img src="https://www.thingelstad.com/uploads/2017/22367371b9.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/22367371b9.jpg" alt="Map showing a cycling route from Durand to Pepin Wisconsin along the Mississippi River, approximately 30 miles with varied traffic conditions." width="600" height="600" style="height: auto" />

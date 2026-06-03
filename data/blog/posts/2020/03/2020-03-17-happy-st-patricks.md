@@ -9,4 +9,4 @@ categories: []
 
 Happy St. Patrick’s Day everyone! 
 
-<img src="https://www.thingelstad.com/uploads/2020/f0b1c10fb8.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/f0b1c10fb8.jpg" width="600" height="600" alt="St. Patricks Day graphic with green leprechaun hat, pot of gold coins, and shamrocks on a green background" />

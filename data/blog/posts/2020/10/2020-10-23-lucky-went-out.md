@@ -9,4 +9,4 @@ categories: []
 
 Lucky went out during lunch and got herself into a good bunch of mud! 🤦‍♂️
 
-<img src="https://www.thingelstad.com/uploads/2020/4b47f7e61b.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/4b47f7e61b.jpg" width="450" height="600" alt="White fluffy dog with muddy paws and face being wiped clean with a green towel near a sliding glass door." />

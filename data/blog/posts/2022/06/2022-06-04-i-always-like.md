@@ -9,4 +9,4 @@ categories: []
 
 I always like to see all the American Flags flying on the north-western shore of Cannon Lake. 🇺🇸
 
-<img src="https://www.thingelstad.com/uploads/2022/ce5082f262.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/ce5082f262.jpg" width="600" height="337" alt="Boats docked at covered slips along the shore of Cannon Lake with several American flags flying from poles near lakeside cabins." />

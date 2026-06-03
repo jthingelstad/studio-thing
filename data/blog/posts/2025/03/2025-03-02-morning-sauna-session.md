@@ -9,4 +9,4 @@ categories: []
 
 Morning sauna session. 🔥
 
-<img src="https://www.thingelstad.com/uploads/2025/8895a55f51.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/8895a55f51.jpg" width="600" height="450" alt="Interior of a glass-walled geodesic sauna with a black wood-burning stove, wooden benches, and a bucket for water">

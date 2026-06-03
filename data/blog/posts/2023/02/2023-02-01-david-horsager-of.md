@@ -18,4 +18,4 @@ categories: ["TeamSPS"]
 7. **Contribution:** People immediately respond to results.
 8. **Consistency:** People love to see the little things done consistently.
 
-<img src="https://www.thingelstad.com/uploads/2023/7d887e808c.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/7d887e808c.jpg" width="600" height="337" alt="Speaker on stage at a conference presenting the Eight Pillars of Trust slide to a large seated audience in a ballroom.">

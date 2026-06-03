@@ -9,6 +9,6 @@ categories: []
 
 Chicago [My π Pizza](https://www.mypiepizza.com)!
 
-<img src="https://www.thingelstad.com/uploads/2024/5528a09f-4e53-429e-bf2c-7626c6c610a7.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/5528a09f-4e53-429e-bf2c-7626c6c610a7.jpg" width="600" height="450" alt="My Pi Pizza box held open showing a deep dish pizza inside, with Everybody Loves My Pi Unique Pizza in the Pan branding">
 
-<img src="https://www.thingelstad.com/uploads/2024/85b1268f-3237-4e63-959d-93ba40502be4.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/85b1268f-3237-4e63-959d-93ba40502be4.jpg" width="600" height="450" alt="Chicago deep dish pizza in an open white cardboard box, topped with chunky tomato sauce and dried herbs, cut into slices">

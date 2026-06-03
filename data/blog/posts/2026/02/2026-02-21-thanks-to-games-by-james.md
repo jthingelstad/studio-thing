@@ -9,4 +9,4 @@ categories: []
 
 Thanks to Games by James call ahead list we got an Ascended Heroes ETB!
 
-<img src="https://www.thingelstad.com/uploads/2026/6a9f6d7160.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/6a9f6d7160.jpg" width="600" height="450" alt="Pokemon Trading Card Game Mega Evolution Ascended Heroes Elite Trainer Box featuring Dragonite on a kitchen counter">

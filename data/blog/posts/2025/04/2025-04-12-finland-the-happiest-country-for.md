@@ -13,4 +13,4 @@ categories: []
 
 I enjoy sauna and it is notable that it is extremely meditative, which we know has benefits, and notably you phones and mobile devices don't even work in them. Coincidence or part of the benefit? 🤔
 
-<img src="https://www.thingelstad.com/uploads/2025/c3b313aa5c.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/c3b313aa5c.jpg" width="600" height="450" alt="Harvia wood-burning sauna stove with glowing fire and rocks on top, beside a wooden bench holding a black sauna bucket and ladle">

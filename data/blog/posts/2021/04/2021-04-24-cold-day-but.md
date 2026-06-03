@@ -9,4 +9,4 @@ categories: []
 
 Cold day, but still on a vacation-y trip, so afternoon ice cream from [Rave Creamworks](https://shopvictual.com/rave-creamworks)!
 
-<img src="https://www.thingelstad.com/uploads/2021/e1f22f86c5.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/e1f22f86c5.jpg" width="600" height="600" alt="Four hands holding cups of ice cream outdoors, flavors including green, pink, yellow, and tan scoops, with a small white spoon." />

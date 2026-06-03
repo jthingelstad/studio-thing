@@ -4,16 +4,10 @@ url: "https://www.thingelstad.com/2012/12/02/adding-email-mention.html"
 title: "Adding Email Mention Notification to WordPress P2"
 published: "2012-12-02T06:00:00+00:00"
 post_kind: post
-categories: []
+categories: ["Minnestar"]
 ---
 
-I'm using the P2 theme on a couple of websites, one of them is for the
-[team minnestar](http://team.minnestar.org/) to help coordination and
-collaboration. P2 supports the ability to use a @user notation to
-mention other users on the site, but it doesn't do anything other than
-highlight the user. This snippet of PHP added to the bottom of the P2
-functions.php will send email notifications on those mentions. This
-isn't heavily tested but it works well for me.
+I'm using the P2 theme on a couple of websites, one of them is for the [team minnestar](http://team.minnestar.org/) to help coordination and collaboration. P2 supports the ability to use a [@user](https://micro.blog/user) notation to mention other users on the site, but it doesn't do anything other than highlight the user. This snippet of PHP added to the bottom of the P2 functions.php will send email notifications on those mentions. This isn't heavily tested but it works well for me.
 
 ```php
 /**

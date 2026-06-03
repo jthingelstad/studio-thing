@@ -9,4 +9,4 @@ categories: []
 
 Driving at night.
 
-![](https://www.thingelstad.com/uploads/2020/1d9b6311d3.png)
+<img src="https://www.thingelstad.com/uploads/2020/1d9b6311d3.png" alt="Eight dashcam frames of nighttime highway driving showing headlights, street lamps, traffic, and green road signs in the dark">

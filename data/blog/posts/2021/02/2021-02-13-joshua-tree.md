@@ -9,4 +9,4 @@ categories: []
 
 Joshua Tree. 
 
-<img src="https://www.thingelstad.com/uploads/2021/0ff2eccaa8.jpg" />
+<img src="https://www.thingelstad.com/uploads/2021/0ff2eccaa8.jpg" alt="Lone Joshua tree silhouetted against a partly cloudy sky over a dry desert landscape with mountains in the distance." />

@@ -9,4 +9,4 @@ categories: []
 
 Little snippet of an in-process project. Fun watching this take shape. 
 
-<img src="https://www.thingelstad.com/uploads/2020/4c2b3ca7fb.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/4c2b3ca7fb.jpg" width="600" height="600" alt="Wood carving of Charlie Brown holding Snoopy emerging from a large tree stump, with scaffolding visible beside it." />

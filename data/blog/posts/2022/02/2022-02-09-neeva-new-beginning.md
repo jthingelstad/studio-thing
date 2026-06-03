@@ -13,6 +13,6 @@ Today I received [my New Beginning with Neeva NFT](https://opensea.io/assets/mat
 
 Thanks Neeva!
 
-<img src="https://www.thingelstad.com/uploads/2022/f2f0420401.jpg" width="600" height="400" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/f2f0420401.jpg" width="600" height="400" alt="Cartoon children and adults running joyfully through a finish-line ribbon stretched between two orange traffic cones, crowds cheering behind them" />
 
 Original [asset](https://ipfs.io/ipfs/QmeBt8trEi2SbVctGnDw4mCiX2RguzXLQXgtNgryu8Zwvd/0.jpg) and [metadata](https://ipfs.io/ipfs/QmTYJAJnerawnWHGWP2TWC1KA8DHRWitxyDm6sCC5FzUEC/0) are on IPFS.

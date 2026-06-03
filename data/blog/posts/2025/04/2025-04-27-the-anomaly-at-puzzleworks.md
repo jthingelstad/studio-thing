@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2025/04/27/the-anomaly-at-puzzleworks.html"
 title: "The Anomaly at Puzzleworks"
 published: "2025-04-27T18:30:00+00:00"
 post_kind: post
-categories: []
+categories: ["Escape Room"]
 ---
 
 We (just barely) completed "The Anomaly" at [Puzzleworks](https://www.puzzleworksmn.com) today. This is the newest room they have — just opening up about a month ago. Yes we were here just yesterday to [do The Dungeon](https://www.thingelstad.com/2025/04/26/we-had-a-great-time.html). 😊
@@ -18,6 +18,6 @@ This newest room had some new dynamics.
 
 It was a little odd to us that the game didn't have a final time since that is how all previous 67 rooms we've done have operated. We have done a couple of rooms with a point system, but it was always in addition to the clock. The puzzles were challenging and the experience worked extremely well. Definitely a great room and a fun, new experience. [Room 68](https://www.thingelstad.com/lists/escape-rooms/)!
 
-<img src="https://www.thingelstad.com/uploads/2025/9bbf96c039.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/9bbf96c039.jpg" width="600" height="450" alt="Five people pose together holding a score board showing 63550 for The Anomaly escape room with a high scores display behind them.">
 
-<img src="https://www.thingelstad.com/uploads/2025/78c41594de.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/78c41594de.jpg" width="600" height="450" alt="Leaderboard screen showing scores for multiple players with thing highlighted in yellow-green at 63550 marked as FINAL SCORE at bottom.">

@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We watched Inception tonight. Tammy and I are both sure we saw it when it was released but didn't remember much of anything. Tyler thought it was a really good movie. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2025/312e27ce5d.jpg" width="411" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/312e27ce5d.jpg" width="411" height="600" alt="Movie poster for Inception showing figures fighting in a gravity-defying hallway with debris flying, releasing July 16">

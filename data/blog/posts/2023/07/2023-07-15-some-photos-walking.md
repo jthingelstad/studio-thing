@@ -9,11 +9,11 @@ categories: []
 
 Some photos walking around Scuol, Switzerland. 
 
-![](https://www.thingelstad.com/uploads/2023/e1a66bb789.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/e1a66bb789.jpg" alt="Two kids standing together on a cobblestone street in Scuol Switzerland surrounded by white alpine buildings with wooden shutters">
 
-![](https://www.thingelstad.com/uploads/2023/441a4f0cc9.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/441a4f0cc9.jpg" alt="Three people walk past a stone fountain with flowers in a cobblestone square in Scuol Switzerland with a white building behind">
 
-![](https://www.thingelstad.com/uploads/2023/88edffe3b9.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/88edffe3b9.jpg" alt="Hotel Belvedere in Scuol Switzerland, a pink building with blue shutters and flower balconies, backed by alpine peaks">
 
-![](https://www.thingelstad.com/uploads/2023/e5ede6c7a8.jpg)
-![](https://www.thingelstad.com/uploads/2023/6a1db5a098.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/e5ede6c7a8.jpg" alt="Ornate historic building with carved wooden balconies and painted facade in Scuol Switzerland with forested mountain behind">
+<img src="https://www.thingelstad.com/uploads/2023/6a1db5a098.jpg" alt="White church steeple rising above trees in Scuol Switzerland with dense pine forest and rocky Alpine peaks behind it">

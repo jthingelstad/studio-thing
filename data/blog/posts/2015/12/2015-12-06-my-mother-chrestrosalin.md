@@ -9,4 +9,4 @@ categories: []
 
 My mother tells me that I used to build with my books instead of reading them too.
 
-<img src="https://www.thingelstad.com/uploads/2020/bc53aaef2d.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/bc53aaef2d.jpg" width="600" height="450" alt="Young blond boy in a yellow and navy striped sweater stacking children's books into a tower on a gray couch." />

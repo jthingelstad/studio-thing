@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Staying at the [Doc House Suites ](https://www.airbnb.com/rooms/49401152)in Grand Rapids and was impressed to see pour over setup was provided for coffee. ☕️
 
-<img src="https://www.thingelstad.com/uploads/2026/498ac2bcf5.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/498ac2bcf5.jpg" width="600" height="450" alt="Pour over coffee setup on marble counter with gooseneck kettle on scale, Duluth Coffee Company Cajamarca bag, and Rise and Shine mug">

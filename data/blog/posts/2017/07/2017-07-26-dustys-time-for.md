@@ -9,4 +9,4 @@ categories: []
 
 [Dusty's](http://dustysbaranddagos.com) — time for a dago!
 
-<img src="https://www.thingelstad.com/uploads/2017/8985990cbc.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/8985990cbc.jpg" alt="Brick corner bar building with large painted wall sign reading Dustys Bar Homemade Dagos Burgers Soups Cocktails" width="600" height="600" style="height: auto" />

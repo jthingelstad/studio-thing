@@ -9,4 +9,4 @@ categories: []
 
 S’mores time! 🔥
 
-<img src="https://www.thingelstad.com/uploads/2019/d13ff8b1fe.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/d13ff8b1fe.jpg" width="600" height="600" alt="Two marshmallows on metal skewers held over a wood fire in a circular steel fire pit, gravel patio and lake at dusk behind" />

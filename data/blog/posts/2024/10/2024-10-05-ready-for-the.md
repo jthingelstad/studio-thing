@@ -9,7 +9,7 @@ categories: []
 
 The Thingelstad and Fernandez families ready for the [TC 5K](https://www.tcmevents.org/alleventsandraces/medtronictwincitiesmarathonweekend/tc5k)!
 
-<img src="https://www.thingelstad.com/uploads/2024/677469fb40.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/677469fb40.jpg" width="600" height="450" alt="Group of adults and children wearing race bibs at the Twin Cities TC 5K start area with the Cathedral of Saint Paul visible in the background">
 
 ### Results
 

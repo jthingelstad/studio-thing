@@ -9,4 +9,4 @@ categories: []
 
 Taking the DART to Dalkey this morning. 
 
-<img src="https://www.thingelstad.com/uploads/2024/1276ba6641.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/1276ba6641.jpg" width="600" height="337" alt="Green DART train stopped at a platform, with a few passengers waiting on the wet brick platform beside it.">

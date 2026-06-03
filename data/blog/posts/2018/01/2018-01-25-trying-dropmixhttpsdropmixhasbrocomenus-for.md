@@ -9,4 +9,4 @@ categories: []
 
 Trying [Dropmix](https://dropmix.hasbro.com/en-us) for first time! Pretty cool — a musical trip! 
 
-<img src="https://www.thingelstad.com/uploads/2018/d769ca93b3.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/d769ca93b3.jpg" alt="Dropmix card game board on a wooden table with colorful illuminated song cards placed on it and a tablet showing Imagine Dragons Radioactive at 124 BPM" width="600" height="600" />

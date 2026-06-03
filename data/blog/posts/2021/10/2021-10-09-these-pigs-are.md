@@ -9,4 +9,4 @@ categories: []
 
 These Kunekune pigs are so friendly and filled with character. They like their tummies scratched just like a dog. At [Sunrise Farm](https://www.airbnb.com/rooms/44631664). 
 
-<img src="https://www.thingelstad.com/uploads/2021/cb94da7684.jpg" width="600" height="599" alt="" /><img src="https://www.thingelstad.com/uploads/2021/b1574d6878.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/cb94da7684.jpg" width="600" height="599" alt="Black potbellied pig outdoors on dirt and grass, facing the camera, with a small red barn labeled Pig Palace in the background." /><img src="https://www.thingelstad.com/uploads/2021/b1574d6878.jpg" width="600" height="599" alt="Two small Kunekune pigs, one brown and white and one black, standing close to the camera in a dirt enclosure with fallen leaves." />

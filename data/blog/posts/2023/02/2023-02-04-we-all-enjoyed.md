@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We all enjoyed [Mrs. Harris Goes to Paris](https://en.wikipedia.org/wiki/Mrs._Harris_Goes_to_Paris). If your looking for a delightful and fun story this will hit the spot. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2023/3b7d096885.jpg" width="400" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/3b7d096885.jpg" width="400" height="600" alt="Movie poster featuring a cheerful middle-aged woman in a tweed coat and floral hat striding joyfully in front of the Eiffel Tower on a pink background.">

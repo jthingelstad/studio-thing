@@ -15,6 +15,6 @@ We were completely immersed from the very beginning. We were challenged but ever
 
 We were very impressed with Copper Cat Escape Games. If you live in the Twin Cities it is a two hour drive and I think it would be worth it if you like escape rooms. You could book two or three of the rooms. Deep Woods Cabin is definitely one of the best, if not the best, that we've done in Minnesota. [Room 61](https://www.thingelstad.com/lists/escape-rooms/)!
 
-<img src="https://www.thingelstad.com/uploads/2025/ee1ee2decd.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/ee1ee2decd.jpg" width="600" height="450" alt="Three people smiling together in front of a rustic wood-plank and stone fireplace wall with stacked logs nearby.">
 
-<img src="https://www.thingelstad.com/uploads/2025/37a959fb83.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/37a959fb83.jpg" width="600" height="449" alt="Three people pose holding wooden signs reading Found the Treasure, Recovered the Map, and Deep Woods Survivor at an escape room venue.">

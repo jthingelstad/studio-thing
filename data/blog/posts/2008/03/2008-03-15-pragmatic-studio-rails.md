@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/9f0a0d4056.png" style="width: 169px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/9f0a0d4056.png" alt="Circular button badge for The Pragmatic Studio showing Alumni Ruby on Rails with the website pragmaticstudio.com" style="width: 169px; float: right; margin-left: 10px; " />
 
 **I graduated!** Or, well, at least I got the certificate!
 

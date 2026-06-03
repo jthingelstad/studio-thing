@@ -9,4 +9,4 @@ categories: []
 
 Great tree. 
 
-<img src="https://www.thingelstad.com/uploads/2024/5cb180abf7.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/5cb180abf7.jpg" width="600" height="450" alt="Ancient moss-covered beech tree with wide spreading branches and vivid green spring leaves in a woodland forest">

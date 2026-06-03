@@ -9,4 +9,4 @@ categories: []
 
 Great session on **Shipping a Customer-Facing Al Agent: Lessons from Moving Fast Without Breaking Trust** with Valentin Kornukh this morning. Shared learnings we have from creating SPS MAX!
 
-<img src="https://www.thingelstad.com/uploads/2026/6b84db0e4b.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/6b84db0e4b.jpg" width="600" height="337" alt="Conference session with a speaker at a podium presenting a MAX Chat software demo on a large screen to about 30 attendees seated at round tables.">

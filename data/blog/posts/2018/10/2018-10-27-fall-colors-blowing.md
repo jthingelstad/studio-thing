@@ -9,4 +9,4 @@ categories: []
 
 Fall Colors Blowing in the Wind.
 
-![](https://www.thingelstad.com/uploads/2020/9e87d33bce.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/9e87d33bce.jpg" alt="Blurry autumn trees with golden yellow leaves swaying in wind against a blue sky">

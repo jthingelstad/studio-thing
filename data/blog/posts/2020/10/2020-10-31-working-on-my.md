@@ -9,4 +9,4 @@ categories: []
 
 Working on my bartender skills. Old Fashioneds and Lemondrop Martinis. 🍸
 
-<img src="https://www.thingelstad.com/uploads/2020/7570ca0bb6.jpg" width="600" height="381" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/7570ca0bb6.jpg" width="600" height="381" alt="Cocktail prep setup with two Old Fashioneds, four lemon drop martinis, Old Forester bourbon, Skaalvenn vodka, Luxardo cherries, orange bitters, and fresh citrus on a cutting board." />

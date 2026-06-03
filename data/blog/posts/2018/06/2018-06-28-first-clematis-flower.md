@@ -9,4 +9,4 @@ categories: []
 
 First clematis flower of the year. 
 
-<img src="https://www.thingelstad.com/uploads/2018/2d93f587bd.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/2d93f587bd.jpg" alt="White clematis flower with yellow center blooming on a wooden trellis, with green leaves and a bud, above wood chip mulch." width="600" height="600" />

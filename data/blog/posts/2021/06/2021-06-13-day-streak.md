@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2021/06/13/day-streak.html"
 title: "848 Day Streak"
 published: "2021-06-13T20:32:18+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
 Yesterday ended my **848 day meditation streak**. 
@@ -17,4 +17,4 @@ The streak ended the best way possible. **I just forgot.** We had a great pool p
 
 And thus the streak ends, and with it no need to obsess. Perfect. 
 
-<img src="https://www.thingelstad.com/uploads/2021/43144447a4.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/43144447a4.jpg" width="600" height="600" alt="Streaks app screenshot showing a best streak of 848 days for a daily meditation habit at 3:00, with a wind icon on green background." />

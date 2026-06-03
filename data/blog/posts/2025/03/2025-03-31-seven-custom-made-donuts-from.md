@@ -9,4 +9,4 @@ categories: []
 
 Seven custom made donuts from the Donut Experiment this morning. 
 
-<img src="https://www.thingelstad.com/uploads/2025/774db029ec.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/774db029ec.jpg" width="600" height="450" alt="Seven assorted donuts in an open white box, with toppings including rainbow sprinkles, chocolate crumbles, shredded coconut, and caramel glaze.">

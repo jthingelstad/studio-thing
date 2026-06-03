@@ -9,4 +9,4 @@ categories: []
 
 Pie for breakfast at [Stockholm Pie Company](https://www.stockholmpieandgeneralstore.com). Delicious. 🥧
 
-<img src="https://www.thingelstad.com/uploads/2019/0bfefe7c4b.jpg" width="600" height="600" alt="" /><img src="https://www.thingelstad.com/uploads/2019/dfa80c0a07.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/0bfefe7c4b.jpg" width="600" height="600" alt="Four slices of pie on white plates atop a red gingham tablecloth, including chocolate cream, blueberry, and a nut-topped slice." /><img src="https://www.thingelstad.com/uploads/2019/dfa80c0a07.jpg" width="600" height="600" alt="Signs for Stockholm Pie and General Store, Wisconsin Made, and Espresso on a gray clapboard building on a sunny small-town street" />

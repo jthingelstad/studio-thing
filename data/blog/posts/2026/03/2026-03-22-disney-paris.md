@@ -9,4 +9,4 @@ categories: []
 
 Disney Paris!
 
-<img src="https://www.thingelstad.com/uploads/2026/2067a0441f.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/2067a0441f.jpg" width="450" height="600" alt="Family of four smiling together in front of Sleeping Beauty Castle at Disneyland Paris on a clear sunny day.">

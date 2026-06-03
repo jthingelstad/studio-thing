@@ -7,7 +7,7 @@ post_kind: post
 categories: ["MarketWatch"]
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/1ed343a3a3.gif" style="width: 100px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/1ed343a3a3.gif" alt="Book cover for a leadership fable by Patrick Lencioni showing bold red and black title text on a white background." style="width: 100px; float: right; margin-left: 10px; " />
 
 While I was on vacation I wanted to read a light-hearted business book. I like to have something to spin around in my head during the downtime. [Death by Meeting](http://www.amazon.com/dp/0787968056/) was recommended to me and it fit the bill just right.
 

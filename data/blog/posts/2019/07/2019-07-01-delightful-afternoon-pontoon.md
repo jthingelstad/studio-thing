@@ -9,4 +9,4 @@ categories: []
 
 Delightful afternoon pontoon ride with lunch stop, and a couple heavy rain showers to keep it interesting. 🌧
 
-<img src="https://www.thingelstad.com/uploads/2019/d10c3c4514.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/d10c3c4514.jpg" width="600" height="450" alt="Calm gray lake under overcast skies with a distant tree-lined shore, surface rippled by rain" />

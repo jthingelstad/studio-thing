@@ -9,4 +9,4 @@ categories: []
 
 Gorgeous Minnesota summer evening.
 
-![](https://www.thingelstad.com/uploads/2020/b4ae0a800a.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/b4ae0a800a.jpg" alt="Tall trees with lush green and yellow foliage photographed from below against a clear blue sky on a sunny day.">

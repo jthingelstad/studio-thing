@@ -9,4 +9,4 @@ categories: []
 
 Bit of snow out there. 
 
-<img src="https://www.thingelstad.com/uploads/2019/4bf5489225.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/4bf5489225.jpg" width="600" height="600" alt="Snow-covered backyard patio with grill, teal Adirondack chairs, and outdoor dining table buried under heavy snow." />

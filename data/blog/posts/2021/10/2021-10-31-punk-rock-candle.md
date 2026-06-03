@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2021/10/31/punk-rock-candle.html"
 title: "Punk Rock Candle"
 published: "2021-11-01T02:47:55+00:00"
 post_kind: post
-categories: ["Candles"]
+categories: []
 ---
 
 When we make candles we measure out all the wax and scent, and then measure again as you pour into the various vessels. There is usually a little bit of wax left in the melting pot on each batch and we usually pour that into a potpourri candle, little bits at a time. 
@@ -15,4 +15,4 @@ Vessel? I have tinfoil. Wicks? I have these trimmings from other candles. Scent?
 
 I kind of dig it. Burns well too! 🤩
 
-<img src="https://www.thingelstad.com/uploads/2021/5dcac48319.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/5dcac48319.jpg" width="600" height="450" alt="Lit candle made from melted wax poured into a crumpled aluminum foil bowl with three burning wood wicks, sitting on a stone countertop." />

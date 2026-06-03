@@ -17,7 +17,7 @@ Our first stop was at the [Seal Colony](https://www.aranislands.ie/inis-mor-inis
 
 After that there was this unofficial stop where there were a bunch of cairns that people had created — including one giant one.
 
-<img src="https://www.thingelstad.com/uploads/2024/1cd0736c45.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/1cd0736c45.jpg" width="600" height="450" alt="Tall cairn of stacked flat stones on a rocky pebble beach on Inis Mor, with a road, green hillside, and calm water visible behind it.">
 
 We took the bikes as far as we could and parked them at visitor center for [Dún Aonghasa](https://en.wikipedia.org/wiki/Dún_Aonghasa). After purchasing a family pass we hiked up to the ruins.
 
@@ -33,16 +33,16 @@ Got crêpes from food trailer. Delicious. We then decided to take off and retrie
 
 After resolving the chain issue we rode up the island to the [Seven Churches](https://www.aranislands.ie/inis-mor-inishmore-island/inis-mor-island-churches-celtic-sites/na-seacht-dteampaill-the-seven-churches). 
 
-<img src="https://www.thingelstad.com/uploads/2024/d00d91072f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/d00d91072f.jpg" width="600" height="450" alt="Roofless stone church ruins surrounded by old gravestones and wild grass in a historic Irish cemetery on Inis Mor.">
 
 Ride back down to the [Kilmurvey Beach](https://www.aranislands.ie/inis-mor-inishmore-island/inis-mor-island-natural-features/kilmurvey-blue-flag-beach) for a _very_ brief stop for Mazie to run in the sand.
 
 Somewhat quickly ride back to get to [Joe Watty's Bar & Restaurant](https://www.joewattys.ie) for Jamie to have a pub lunch. Beef stew and a half-pint of Guinness hit the spot!
 
-<img src="https://www.thingelstad.com/uploads/2024/4f00f1cf4c.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/4f00f1cf4c.jpg" width="600" height="600" alt="Bowl of Irish beef stew with carrots, potatoes, and herbs beside a pint of Guinness on a wooden pub table outdoors.">
 
 Return bikes to rental spot. Wait in line to get back on ferry, take ferry back.
 
 Map of our day with pins on the various stops we made.
 
-<img src="https://www.thingelstad.com/uploads/2024/786ee352c4.jpg" width="600" height="618" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/786ee352c4.jpg" width="600" height="618" alt="Map of Inishmore island showing a yellow-green bike route from Kilronan along the northern coast to the western end, with red pins marking stops.">

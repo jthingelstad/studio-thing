@@ -9,4 +9,4 @@ categories: ["Music"]
 
 Enjoying [Tina Schlieske](https://tinaschlieske.com/home) doing solo acoustic show at the 318 Cafe in Excelsior. 🎶
 
-<img src="https://www.thingelstad.com/uploads/2020/cdd307dc6e.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/cdd307dc6e.jpg" width="600" height="600" alt="Musician in white shirt playing acoustic guitar and singing into a microphone at a small indoor venue at night" />

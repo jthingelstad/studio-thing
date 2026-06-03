@@ -9,4 +9,4 @@ categories: []
 
 Reading the newest book from [Yuval Noah Harari](https://www.ynharari.com), **[Nexus](https://www.ynharari.com/book/nexus/)**. [Sam Harris](https://www.samharris.org) interviewed him on Making Sense, [Information & Social Order](https://samharris.org/episode/SE6AEA250F8), and I got the book right after. The approach to “information networks” is interesting. 
 
-<img src="https://www.thingelstad.com/uploads/2024/9acef29594.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/9acef29594.jpg" width="600" height="600" alt="Book cover of Nexus by Yuval Noah Harari resting on a table beside a pair of glasses, with a pigeon illustration on the white cover.">

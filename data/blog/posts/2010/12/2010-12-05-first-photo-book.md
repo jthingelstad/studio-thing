@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/4fcfdbd074.jpg" style="width: 130px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/4fcfdbd074.jpg" alt="City skyline at night with illuminated skyscrapers and street lights reflecting off glass and steel buildings" style="width: 130px; float: right; margin-left: 10px; " />
 
 A few weeks ago I took a workshop at the [Minneapolis Photo Center](http://www.mplsphotocenter.com/). The workshop was led by [Layne Kennedy](http://www.laynekennedy.com/). Layne led the [Dogsledding Photo Workshop](https://www.thingelstad.com/2009/02/12/photos-from-wintergreen.html) that I took a while back and I've had the pleasure of getting to know Layne as well. He's a great guy! I saw that he was doing this workshop in town and snapped up the opportunity to spend a weekend shooting.
 

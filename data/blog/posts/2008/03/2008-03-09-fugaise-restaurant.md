@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/f408113a87.png" style="width: 167px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/f408113a87.png" alt="Handwritten cursive signature or logo in dark ink on a white background" style="width: 167px; float: right; margin-left: 10px; " />
 
 Tammy and I just got back from a fabulous evening out. We were invited to join our friends across the street, and a number of other folks, at [Fugaise](http://www.fugaise.com/) to celebrate his 40th birthday. It was a wonderful evening and we met some cool new people. However, it was also my first trip to this great Minneapolis restaurant.
 

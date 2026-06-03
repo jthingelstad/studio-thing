@@ -13,6 +13,6 @@ Dear people of Dreamforce: for the love of God stop force quitting your iOS apps
 
 Seated for [Marc Benioff](https://www.salesforce.com/company/leadership/bios/bio-benioff/) keynote at Dreamforce. Huge room.
 
-<img src="https://www.thingelstad.com/uploads/2020/939bff4755.jpg" width="600" height="178" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/939bff4755.jpg" width="600" height="178" alt="Large convention hall packed with seated attendees facing wide display screens showing blue-lit presentation slides, taken as a panoramic shot." />
 
 Dreamforce 2½ hour keynote? Marathon session.

@@ -9,4 +9,4 @@ categories: []
 
 Incredible night for a fire on Cannon Lake. 
 
-<img src="https://www.thingelstad.com/uploads/2021/629789af5c.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/629789af5c.jpg" width="600" height="600" alt="Fire burning in a steel ring pit on a gravel patio at sunset beside a calm lake with bare trees silhouetted against an orange sky." />

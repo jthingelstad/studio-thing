@@ -17,11 +17,11 @@ Our first stop was [Viral Card Games](https://viralcardgames.com) in Fridley. We
 
 The big differentiator for Viral Card Games was their bulk management. Most card shops simply have dozens of boxes filled with thousands of cards grouped by their sets. The team at Viral has fully embraced the [TCG Player](https://www.tcgplayer.com) system with two very large screen kiosks in the store so you can search their entire bulk collection with ease, add the cards you are looking for, and then they will bring those out for you. With a couple searches I was able to grab the first 3 of a 9 card illustration set that I’m looking for. 
 
-<img src="https://www.thingelstad.com/uploads/2025/4ee2cf0b17.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/4ee2cf0b17.jpg" alt="Three holographic Pokemon cards laid flat: Riolu GG26, Swablu GG27, and Duskull GG28, all from the GG70 set.">
 
 I also grabbed the final card for a 3-card illustration set.
 
-<img src="https://www.thingelstad.com/uploads/2025/e9236539ef.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/e9236539ef.jpg" alt="Three holographic Pokemon cards in protective cases showing the Pidgey evolution line: Pidgey 60HP, Pidgeotto 90HP, and Pidgeot ex 280HP">
 
 This is also the only downside that Tyler and I had. The tradeoff of amazing bulk management is less fun flipping through binders and browsing different things. If Viral also had several binders to bridge the gap between the amazing bulk system they have and the singles under the counter it would be about perfect.
 
@@ -47,7 +47,7 @@ So a quick Whatnot detour if you, like me, have no idea what this is. The owner 
 
 To me this seems strange as I would want to open the box and packs together at home. Tyler and I have fun doing that. But if you are a big collector and you have opened 10,000 packs already it is different. Here you get to outsource the opening part as well as the raw management of all the bulk that you get. You just get the stuff that you really want. Meanwhile the Whatnot viewers all get to share in the fun of opening and the "hits" when opening the packs. 
 
-<img src="https://www.thingelstad.com/uploads/2025/65cee675ef.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/65cee675ef.jpg" alt="Stacks of Pokemon TCG booster boxes and collector sets filling a retail back room, with shelves of merchandise along the wall.">
 
 With that backdrop this store had **huge** volume of packs as that is what they need to run the Whatnot events. They had a few cases with singles and graded cards, but not a ton. They didn’t have prices on anything which Tyler and I both dislike. They also have a [giant messy pile of bulk cards](https://www.thingelstad.com/2025/11/22/oh-i-know-i-have.html) for $0.10 each if you want to do that.
 

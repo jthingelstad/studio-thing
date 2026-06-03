@@ -9,4 +9,4 @@ categories: []
 
 Wishing everyone a very Happy Thanksgiving! 🦃🍁🍽 
 
-<img src="https://www.thingelstad.com/uploads/2021/83f00da260.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/83f00da260.jpg" width="600" height="600" alt="Family of four smiling together in a home kitchen, two adults and two children wearing autumn-toned sweaters and tops." />

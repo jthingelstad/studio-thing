@@ -9,4 +9,4 @@ categories: []
 
 Nice, [Bent Paddle Brewing](http://www.bentpaddlebrewing.com) serving beer samples at REI Bloomington. Delicious break. Hop Forest is delicious. 
 
-<img src="https://www.thingelstad.com/uploads/2021/82131475e0.jpg" width="600" height="318" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/82131475e0.jpg" width="600" height="318" alt="Six Bent Paddle Brewing Co beer cans lined up on a striped table including Amber Ale, Golden IPA, Black Ale, Harness IPA, and Hop Forest Double IPA." />

@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/5705617">5705617</a> at <strong><a href="https://poap.gallery/drops/66832">You've met thingelstad.eth - October 2022</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/youve-met-thingelstadeth-october-2022-2022-logo-1663904767946.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/youve-met-thingelstadeth-october-2022-2022-logo-1663904767946.png" alt="Smiling man in orange jacket with sunglasses on head, standing before a rocky cliff and green field, circular POAP badge reading You've met thingelstad.eth" width="500" height="500" />

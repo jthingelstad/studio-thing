@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/6469714988.jpg" style="width: 200px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/6469714988.jpg" alt="Man in a suit gesturing energetically with one hand while holding papers in the other, black and white photo" style="width: 200px; float: right; margin-left: 10px; " />
 
 I was checking out [Edward Tufte's site](http://www.edwardtufte.com/) the other day and I noted that he is going to be returning to Minneapolis again for [his seminar](http://www.edwardtufte.com/tufte/courses). [I've been to his seminar](https://www.thingelstad.com/2005/04/26/edward-tufte.html) twice and would consider going a third time but I'll be out of town.
 

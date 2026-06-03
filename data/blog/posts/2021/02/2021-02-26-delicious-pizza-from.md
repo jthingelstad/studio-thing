@@ -9,4 +9,4 @@ categories: []
 
 Delicious pizza from [Pizzicletta](https://www.pizzicletta.com) in Flagstaff, Arizona. Great toppings, unique pies. Plus homemade Gelato. 🍕🍨
 
-<img src="https://www.thingelstad.com/uploads/2021/b8b94a71b0.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/b8b94a71b0.jpg" width="600" height="599" alt="Three Neapolitan pizzas in open white cardboard boxes, with charred crusts and toppings including mozzarella, tomato sauce, and sausage." />

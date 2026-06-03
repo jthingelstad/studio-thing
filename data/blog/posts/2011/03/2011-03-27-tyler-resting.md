@@ -4,9 +4,9 @@ url: "https://www.thingelstad.com/2011/03/27/tyler-resting.html"
 title: ""
 published: "2011-03-27T05:00:00+00:00"
 post_kind: micropost
-categories: ["Family"]
+categories: []
 ---
 
 Tyler taking a (very) brief rest on a blanket while playing.
 
-![](https://www.thingelstad.com/uploads/2020/d4fc949999.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/d4fc949999.jpg" alt="Baby in a blue top and jeans lying face-down on a light blue blanket draped over a wicker basket, looking sideways at the camera.">

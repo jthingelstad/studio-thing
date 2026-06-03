@@ -8,4 +8,4 @@ categories: []
 ---
 
 Our best to you and your family on this wonderful holiday season!
-![](https://www.thingelstad.com/uploads/2020/ecc9a7465b.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/ecc9a7465b.jpg" alt="2010 family holiday photo collage with six black-and-white and color snapshots, monogram T, and the text And I Think To Myself What A Wonderful World">

@@ -9,4 +9,4 @@ categories: []
 
 The Pumpkin Blasters at [Sever’s Fall Festival](https://seversfallfestival.com) are pretty impressive!
 
-<img src="https://www.thingelstad.com/uploads/2017/153ee7547a.jpg" width="599" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/153ee7547a.jpg" alt="Row of camouflage-painted air cannons on tripods at an outdoor fall festival, with families and children gathered nearby" width="599" height="600" />

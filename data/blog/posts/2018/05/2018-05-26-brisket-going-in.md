@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Brisket going in the [Big Green Egg](https://biggreenegg.com) for an overnight smoke. See ya in the morning! 🔥
 
-<img src="https://www.thingelstad.com/uploads/2018/23fa6b2d56.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/23fa6b2d56.jpg" alt="Whole beef brisket with dry rub on the grill grate of a Big Green Egg kamado smoker, lid open, smoke rising into the night sky." width="600" height="450" />

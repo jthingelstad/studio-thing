@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/06/05/edina-art-fair.html"
 title: "Edina Art Fair 2022"
 published: "2022-06-05T22:40:19+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
 The [Edina Art Fair](https://www.50thandfrance.com/art-fair/about/) has returned from the pandemic this year! Mazie and I made a quick visit and the art was great! 
@@ -20,4 +20,4 @@ Some artists that caught our attention:
 - [Beeper Bébé](https://www.etsy.com/shop/beeperbebe/)
 
 
-<img src="https://www.thingelstad.com/uploads/2022/91bb7626ab.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/91bb7626ab.jpg" width="600" height="450" alt="Crowd of people browsing white artist tents lining both sides of a busy street on a cloudy summer day" />

@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Macchiato report from Barriques in Madison. Okay, slightly above average.
 
-<img src="https://www.thingelstad.com/uploads/2024/img-6737.jpg" width="600" height="599" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/img-6737.jpg" width="600" height="599" alt="White ceramic cup and saucer holding a macchiato with a circle of steamed milk foam surrounded by espresso crema, on a blue table.">

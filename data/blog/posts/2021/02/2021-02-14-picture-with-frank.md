@@ -9,4 +9,4 @@ categories: []
 
 Picture with Frank Sinatra’s star in Palm Springs, CA. 
 
-<img src="https://www.thingelstad.com/uploads/2021/1cde37b718.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/1cde37b718.jpg" width="600" height="600" alt="Man in orange plaid shirt kneeling beside Frank Sinatra's star on the Palm Springs Walk of Stars" />

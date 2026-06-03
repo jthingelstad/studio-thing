@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Tyler and I watched [TRON: Legacy](https://en.wikipedia.org/wiki/Tron:_Legacy) [again](https://www.thingelstad.com/2011/01/03/tron-legacy.html) tonight. It is a great movie and made me think it would be fun to watch in the Vision Pro in 3D. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2024/ccaa3310bb.jpg" width="405" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/ccaa3310bb.jpg" width="405" height="600" alt="Movie poster for Tron Legacy showing two figures in glowing circuit-suit costumes reaching up toward a luminous disc against a dark digital landscape">

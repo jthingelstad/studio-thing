@@ -9,7 +9,7 @@ categories: []
 
 This last weekend I finally said "uncle" and took my T-Rex to Hobby Warehouse in Richfield to get some help from the experts there and get my helicopter flying. There was a guy there, Rudy, who was awesome. He's been flying RC helicopters for 12 years and has a T-Rex as well. He spent about 2 hours on my machine and got it working great!
 
-![](https://www.thingelstad.com/uploads/2020/369741675c.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/369741675c.jpg" alt="Align T-Rex RC helicopter with yellow main rotor blades, white and blue body, and skid landing gear, shown on white background.">
 
 The picture above is the helicopter I have. The picture doesn't have the electronics on it, just the base frame and mechanical parts. After two hours with the pros it was going and I headed home to try on my own. The first encounter was not very successful -- I never got off the ground but also didn't have any major crashes.
 

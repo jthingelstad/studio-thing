@@ -9,4 +9,4 @@ categories: []
 
 Such a pleasant evening on Cannon Lake tonight. 
 
-<img src="https://www.thingelstad.com/uploads/2020/e0b41e5bb7.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/e0b41e5bb7.jpg" width="600" height="450" alt="Wooden swing set with slide on a grassy lakeside lawn at golden sunset, trees silhouetted against calm water." />

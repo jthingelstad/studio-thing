@@ -9,4 +9,4 @@ categories: []
 
 Tammy led the way while we all helped and the shed is in better shape than it ever has been! I didn’t get a before picture — but you could not see any of the floor before. 
 
-<img src="https://www.thingelstad.com/uploads/2025/7790463d9d.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/7790463d9d.jpg" width="600" height="450" alt="Organized wooden storage shed with kayaks hanging from rafters, a giant Connect Four game, small soccer goals, shelving units, and a clear plywood floor.">

@@ -9,4 +9,4 @@ categories: []
 
 Yellow Biser typewriter.
 
-<img src="https://www.thingelstad.com/uploads/2021/08ad903c10.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/08ad903c10.jpg" width="600" height="600" alt="Yellow Biser portable typewriter with black keys on a desk, a typed page loaded in the carriage" />

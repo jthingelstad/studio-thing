@@ -9,4 +9,4 @@ categories: []
 
 My buddy [Jim](https://www.jimbernard.net) and I enjoying [Kramarczuk's](https://kramarczuks.com) sausages at Allianz Field during the Minnesota United v. Seattle Sounders game. The **BEST** sausages in the Twin Cities. 
 
-<img src="https://www.thingelstad.com/uploads/2025/e37b4adf8e.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/e37b4adf8e.jpg" width="600" height="450" alt="Two men smiling and holding Kramarczuk sausages in paper trays outside Allianz Field on a cold day.">

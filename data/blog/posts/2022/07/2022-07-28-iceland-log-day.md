@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/07/28/iceland-log-day.html"
 title: "Iceland Log Day 6"
 published: "2022-07-28T23:15:09+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 Thursday, July 28th  
@@ -19,7 +19,7 @@ Windy but Mostly Sunny
 - Visit the Puffins at [Hafnarhólmi](https://www.east.is/en/place/hafnarholmi).
 - Drive to [Skarðás Country Cabins](https://skardas.is) in Egilsstadir for the night.
 
-<img src="https://www.thingelstad.com/uploads/2022/dfa57baf28.png" width="600" height="315" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/dfa57baf28.png" width="600" height="315" alt="Google Maps route from Fosshotel Myvatn to Skardas Country Cabins via Borgarfjordur Eystri, 296 km, 4 hr 9 min" />
 
 Jump to day 
 [0](https://www.thingelstad.com/2022/07/22/iceland-log-day.html), 

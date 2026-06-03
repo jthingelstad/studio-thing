@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Had morning scrimmage for Fuller Soccer Earthquakes! My first time being a coach! ⚽️😊🤞🏻
 
-<img src="https://www.thingelstad.com/uploads/2017/a70ab44b3d.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2017/a70ab44b3d.jpg" alt="Children in yellow and green jerseys compete for a soccer ball during a youth scrimmage on an artificial turf field with bleachers in the background." width="600" height="599" />

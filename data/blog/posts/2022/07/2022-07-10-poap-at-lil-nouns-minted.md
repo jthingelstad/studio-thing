@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/5320743">5320743</a> at <strong><a href="https://poap.gallery/drops/53976">3000 Lil Nouns Minted</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/3000-lil-nouns-minted-2022-logo-1657238676049.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/3000-lil-nouns-minted-2022-logo-1657238676049.png" alt="Cartoon Lil Nouns character wearing pixel glasses holding a cake reading 3000 Lil Nouns, with Tetris-like logos above." width="500" height="500" />

@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2007/12/24/holiday-letter.html"
 title: "2007 Holiday Letter"
 published: "2007-12-24T06:00:00+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/288c49bfb4.jpg" style="width: 272px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/288c49bfb4.jpg" alt="Printed holiday newsletter titled peace featuring family photos and a young girl with a flower in her hair dated 2007" style="width: 272px; float: right; margin-left: 10px; " />
 
 Tammy and I are both pretty shocked that we got a holiday letter out this year. It just sort of happened. Tammy started writing something and it just appeared. After a night of tweaking, adding some photos and an online printing order to Kinkos we had ourselves a letter! A bunch of these went out in the mail, but I wouldn't dare deprive the dedicated blog reader of this great content as well. Read the [2007 Holiday Letter](https://www.thingelstad.com/uploads/2020/29b8282c5a.pdf) right here.
 

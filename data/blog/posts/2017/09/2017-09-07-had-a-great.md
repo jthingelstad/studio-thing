@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Had a great time serving #TeamSPS lunch outside today! 🍔🌭🍪
 
-<img src="https://www.thingelstad.com/uploads/2017/14c4968380.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/14c4968380.jpg" alt="Man in red apron and blue gloves places a grilled burger patty on a bun at an outdoor cookout event" width="600" height="600" />

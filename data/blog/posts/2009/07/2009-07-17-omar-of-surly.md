@@ -9,8 +9,8 @@ categories: []
 
 Omar of [Surly Brewing](https://surlybrewing.com) tapping the firkin at Grumpy's.
 
-![](https://www.thingelstad.com/uploads/2020/3290a3cce7.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/3290a3cce7.jpg" alt="Man in orange cap and Surly Brewing shirt tapping a metal beer keg on a bar counter inside a brewery taproom.">
 
 Surly Firkin Furious! 🍺
 
-![](https://www.thingelstad.com/uploads/2020/0af2594c68.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/0af2594c68.jpg" alt="Pint glass of dark amber beer with a thick white foam head sitting on a bar counter, bottles and taps visible in the background.">

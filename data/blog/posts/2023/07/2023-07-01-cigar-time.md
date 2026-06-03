@@ -9,4 +9,4 @@ categories: []
 
 Cigar time. 🔥
 
-<img src="https://www.thingelstad.com/uploads/2023/b6d1414ceb.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/b6d1414ceb.jpg" width="600" height="450" alt="Five men smoking cigars together outdoors in a backyard on a summer day">

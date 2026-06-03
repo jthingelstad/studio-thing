@@ -9,4 +9,4 @@ categories: []
 
 We had a great time meeting Mazie's home stay host in Barcelona!
 
-<img src="https://www.thingelstad.com/uploads/2026/d9cb6d7e89.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/d9cb6d7e89.jpg" width="600" height="450" alt="Five people smiling together indoors in front of landscape paintings, arms around each other.">

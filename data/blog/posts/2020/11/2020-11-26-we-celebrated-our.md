@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 We celebrated our first Pandemic Thanksgiving today. I cooked turkey breasts in the Sous Vides and finished on the [Big Green Egg](https://biggreenegg.com). Tammy put the rest of it together including the best sweet potato dish I’ve ever had and a delicious homemade pumpkin pie!
 
-<img src="https://www.thingelstad.com/uploads/2020/e8835562df.jpg" width="600" height="450" alt="" /><img src="https://www.thingelstad.com/uploads/2020/11ba3cce5d.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/e8835562df.jpg" width="600" height="450" alt="Sliced herb-crusted turkey breast on a wooden cutting board with a grilled onion ring and unsliced turkey loin alongside" /><img src="https://www.thingelstad.com/uploads/2020/11ba3cce5d.jpg" width="600" height="450" alt="Family of four smiling at a Thanksgiving dinner table with sliced grilled turkey breast on a cutting board and rolls on plates." />

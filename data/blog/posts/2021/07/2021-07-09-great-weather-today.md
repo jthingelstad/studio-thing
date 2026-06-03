@@ -9,4 +9,4 @@ categories: []
 
 Great weather today so worked on the porch all day. 
 
-<img src="https://www.thingelstad.com/uploads/2021/31d369a8f6.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/31d369a8f6.jpg" width="600" height="450" alt="Espresso in a decorative white cup and saucer on a wooden table beside glasses, AirPods case, keyboard, and laptop on a stand." />

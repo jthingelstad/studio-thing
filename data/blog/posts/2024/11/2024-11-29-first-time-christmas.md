@@ -9,4 +9,4 @@ categories: []
 
 First time Christmas tree shopping at the Minneapolis Farmers Market Annex. Was weird to go downtown to get a tree but we found a good one! 🎄
 
-<img src="https://www.thingelstad.com/uploads/2024/f7ced19f64.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/f7ced19f64.jpg" width="600" height="450" alt="Family of four smiling at an outdoor Christmas tree lot on a cold sunny day, wearing winter hats and jackets.">

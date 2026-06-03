@@ -9,4 +9,4 @@ categories: []
 
 At Fat Pants Brewing watching the Australian GP and the start of the 2026 F1 season! My cousin [Quinn](https://quinnchrest.com) and I cheering for Ferrari and [Tyler](https://tyler.thingelstad.com) for Verstappen and Red Bull. 
 
-<img src="https://www.thingelstad.com/uploads/2026/cc56637698.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2026/2795ef9e72.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/cc56637698.jpg" width="600" height="450" alt="Crowd of F1 fans at a bar watching the Australian GP start on a large projected screen, drinks on the tables nearby."><img src="https://www.thingelstad.com/uploads/2026/2795ef9e72.jpg" width="600" height="450" alt="Five people seated at a long wooden table in a dimly lit brew hall, smiling at the camera, several wearing F1 team gear including Ferrari and Red Bull Racing apparel.">

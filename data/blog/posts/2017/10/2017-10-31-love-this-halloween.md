@@ -9,4 +9,4 @@ categories: []
 
 Love this Halloween decoration hanging from a tree in the neighborhood! 🎃💀
 
-<img src="https://www.thingelstad.com/uploads/2017/b706a8c4f5.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/b706a8c4f5.jpg" alt="Plastic skeleton Halloween decoration perched on a tree branch at night, arms and legs dangling in the darkness" width="600" height="600" />

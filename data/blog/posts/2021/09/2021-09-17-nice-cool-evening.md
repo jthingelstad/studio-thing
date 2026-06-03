@@ -9,4 +9,4 @@ categories: []
 
 Nice cool evening for a campfire and sunset on Cannon Lake. 🔥
 
-<img src="https://www.thingelstad.com/uploads/2021/722b1b249f.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/722b1b249f.jpg" width="600" height="450" alt="Crackling fire pit on a gravel patio with metal chairs surrounding it, overlooking a calm lake at sunset through tall trees." />

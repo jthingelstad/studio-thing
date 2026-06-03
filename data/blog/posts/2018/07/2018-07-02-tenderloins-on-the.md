@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Tenderloins on the [Big Green Egg](https://biggreenegg.com). 🔥🥩
 
-<img src="https://www.thingelstad.com/uploads/2018/154898ed34.jpg" width="599" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/154898ed34.jpg" alt="Four pork tenderloins with grill marks cooking on a Big Green Egg kamado grill in a backyard with a playset." width="599" height="600" />

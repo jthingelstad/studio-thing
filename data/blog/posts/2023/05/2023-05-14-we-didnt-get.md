@@ -9,4 +9,4 @@ categories: ["Music"]
 
 We didn’t get to see much of [Fancy Hagood](https://www.fancyhagood.com/). We arrived after they started and then lightning came through and they had to stop and have everyone leave the festival for a bit. What we heard was great though! 🎶
 
-<img src="https://www.thingelstad.com/uploads/2023/7fe815cb60.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/7fe815cb60.jpg" width="600" height="450" alt="Outdoor stage at Brandi Carlile's Mothership Weekend festival with a band performing and a seated crowd in front">

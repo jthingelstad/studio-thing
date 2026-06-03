@@ -9,4 +9,4 @@ categories: []
 
 Ridiculously good [Myrcenary Double IPA](https://www.odellbrewing.com/beer/myrcenary/) from [Odell Brewing](https://www.odellbrewing.com)! Thanks [Andy](https://twitter.com/AndyJD_)! 🍺
 
-<img src="https://www.thingelstad.com/uploads/2020/e24e6239b5.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/e24e6239b5.jpg" width="600" height="800" alt="Hand holding a bottle of Myrcenary Double India Pale Ale by Odell Brewing Co with illustrated label showing a bearded man in a vintage car" />

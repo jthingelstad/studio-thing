@@ -9,4 +9,4 @@ categories: []
 
 First time using an [Ava Robotics](https://www.avarobotics.com) telepresence robot!
 
-<img src="https://www.thingelstad.com/uploads/2020/76cb825682.jpg" width="575" height="323" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/76cb825682.jpg" width="575" height="323" alt="Man in dark shirt stands beside an Ava Robotics telepresence robot displaying a video call with another person in an office hallway." />

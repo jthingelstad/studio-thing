@@ -9,4 +9,4 @@ categories: []
 
 Watched Hell or High Water tonight. 
 
-![](https://www.thingelstad.com/uploads/2020/194c3cf190.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/194c3cf190.jpg" alt="Movie poster showing two men carrying duffel bags and weapons walking through a Texas prairie under a stormy sky, with a large ghostly face of an older man in a cowboy hat looming above.">

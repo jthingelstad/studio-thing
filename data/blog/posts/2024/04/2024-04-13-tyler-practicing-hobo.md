@@ -9,4 +9,4 @@ categories: []
 
 Tyler practicing hobo packing. 
 
-<img src="https://www.thingelstad.com/uploads/2024/105414cd1c.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/105414cd1c.jpg" width="600" height="600" alt="Young person smiling in a garage holding a large gray blanket bundled over their shoulder like a hobo bindle, wearing a black soccer jersey.">

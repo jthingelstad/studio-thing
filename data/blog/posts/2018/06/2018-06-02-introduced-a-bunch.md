@@ -9,4 +9,4 @@ categories: []
 
 Introduced a bunch of new people to [Skittles](https://carrom.com/shop/skittles-spinning-top-board-game/) today. 👍🏻
 
-<img src="https://www.thingelstad.com/uploads/2018/4a4734cc33.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/4a4734cc33.jpg" alt="Skittles board game by Carrom with wooden pins scattered across a blue playing surface divided into scoring sections." width="600" height="450" />

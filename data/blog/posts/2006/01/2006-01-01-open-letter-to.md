@@ -7,10 +7,7 @@ post_kind: post
 categories: []
 ---
 
-We recently were notified by the Hopkins School Board that our school
-district finished the year in statutory operating debt. I'm not sure if
-it is as bad as the newsletter made it seem, but I felt compelled to
-send them a letter on the proposal.
+We recently were notified by the Hopkins School Board that our school district finished the year in statutory operating debt. I'm not sure if it is as bad as the newsletter made it seem, but I felt compelled to send them a letter on the proposal.
 
 > Hopkins School Board,
 >
@@ -42,6 +39,4 @@ send them a letter on the proposal.
 > everything in your power to make sure that our schools do not
 > sacrifice the quality of education provided.
 
-It stuns me that funding education properly, and fully, is a
-controversial topic. It is the single most important thing that we can
-do for our country, society and the well-being of our children.
+It stuns me that funding education properly, and fully, is a controversial topic. It is the single most important thing that we can do for our country, society and the well-being of our children.

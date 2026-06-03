@@ -9,4 +9,4 @@ categories: []
 
 [Boylan-Heights ](http://www.boylan-heights.com) has good burgers with a focus on sustainability and grass-fed happy burgers. The burgers tasted a little different though which I think was the result of them using dry aging with the meat. Tater tots were ridiculous good!
 
-![](https://www.thingelstad.com/uploads/2020/fa3f1d699c.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/fa3f1d699c.jpg" alt="Boylan Heights Burger Bar logo with winged heraldic shield in yellow and white with red ribbon banner">

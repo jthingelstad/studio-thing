@@ -9,4 +9,4 @@ categories: []
 
 “Have Dreams”. Message on [300 East Randolph](http://www.300eastrandolph.com/home.axis) in Chicago. 
 
-<img src="https://www.thingelstad.com/uploads/2021/5f3352a30e.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/5f3352a30e.jpg" width="450" height="600" alt="Skyscraper at 300 East Randolph in Chicago lit up at dusk with windows spelling out HAVE DREAMS, street sign for Michigan Ave visible below." />

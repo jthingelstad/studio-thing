@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>Collected POAP <a href="https://collectors.poap.xyz/token/7371432">7371432</a> for <strong><a href="https://poap.gallery/drops/190525">Hennepin Avenue Bridge — 612 POAP Challenge</a></strong>.</p>
-        <p><img src="https://www.thingelstad.com/uploads/2025/b2c989c9-531c-4d6c-aa4a-7e0dc0f2d4b5.png" width="500" height="500" /></p>
+        <p><img src="https://www.thingelstad.com/uploads/2025/b2c989c9-531c-4d6c-aa4a-7e0dc0f2d4b5.png" alt="Circular badge with pixel art of Hennepin Avenue Bridge in Minneapolis, labeled 612 POAP Challenge and Hennepin Avenue Bridge" width="500" height="500" /></p>

@@ -9,4 +9,4 @@ categories: []
 
 Snow isn’t a great way to start Halloween! 🎃 👻🥶
 
-<img src="https://www.thingelstad.com/uploads/2023/1ccd47390d.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/1ccd47390d.jpg" width="600" height="450" alt="Snow-covered backyard patio with chairs and table, tall evergreen trees, and wooden lattice trellises on an overcast winter day.">

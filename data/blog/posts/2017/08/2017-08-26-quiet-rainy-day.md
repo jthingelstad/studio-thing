@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Quiet, rainy day at the cabin. Burgers on the [Big Green Egg](https://biggreenegg.com). 🔥
 
-<img src="https://www.thingelstad.com/uploads/2017/96c86a21ac.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2017/96c86a21ac.jpg" alt="Big Green Egg kamado grill smoking on a deck, with a lush green backyard and wooden playground set near a lake in the background." width="600" height="599" />

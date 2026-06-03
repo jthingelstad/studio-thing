@@ -9,4 +9,4 @@ categories: []
 
 Sitting by the fire, lakeshore sounds in the air. Nice breeze. Great Olson Family Weekend day 1!
 
-<img src="https://www.thingelstad.com/uploads/2020/4e26577361.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/4e26577361.jpg" width="600" height="450" alt="Campfire burning brightly within a ring of large rocks at night, logs ablaze with tall flames" />

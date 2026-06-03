@@ -4,9 +4,9 @@ url: "http://micro.thingelstad.com/2018/02/12/we-got-tyler.html"
 title: ""
 published: "2018-02-13T03:38:49+00:00"
 post_kind: micropost
-categories: ["Family"]
+categories: []
 ---
 
 We got Tyler a [Loog Pro Electric Red](https://loogguitars.com/collections/2017/products/loog-pro-electric-red-1) guitar and little Fender Mini Amp for birthday. 🎸🎂 Huge hit! 👍🏻 Now I sort of want one of these Loog Pro Electric guitars. 😊
 
-<img src="https://www.thingelstad.com/uploads/2018/761539c3cd.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/761539c3cd.jpg" alt="Loog Pro Electric guitar in red with white pickguard, maple neck, 3 strings, and chrome hardware against white background" width="600" height="600" />

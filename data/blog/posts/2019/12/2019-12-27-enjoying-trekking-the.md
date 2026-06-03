@@ -9,4 +9,4 @@ categories: []
 
 Enjoying [Trekking The National Parks](https://www.underdoggames.com/products/trekking-the-national-parks), new board game! Great for family and very fun that it is about the National Parks! 🥾🌲 
 
-<img src="https://www.thingelstad.com/uploads/2019/322361dbb8.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/322361dbb8.jpg" width="600" height="599" alt="Board game Trekking the National Parks in progress on a wooden table, showing a US map with colored meeples and tokens placed at national park locations." />

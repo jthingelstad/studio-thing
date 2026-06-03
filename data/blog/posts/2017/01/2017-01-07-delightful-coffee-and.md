@@ -9,6 +9,6 @@ categories: ["Coffee"]
 
 Delightful coffee and hot chocolate at [Wesley Andrews](https://www.wesleyandrews.cc) today. Minneapolis coffee people, get yourselves there! ☕️
 
-<img src="https://www.thingelstad.com/uploads/2021/9e17242b68.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/9e17242b68.jpg" width="600" height="600" alt="Two kraft paper bags of Wesley Andrews coffee from Minneapolis alongside a latte with heart latte art in a glass tumbler on a wood table." />
 
-![](https://www.thingelstad.com/uploads/2020/b22e2c7941.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/b22e2c7941.jpg" alt="Two young kids holding marshmallows over a small cup of hot chocolate at a cafe table, both smiling at the camera.">

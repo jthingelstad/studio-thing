@@ -9,4 +9,4 @@ categories: []
 
 Another bumblebee busy collecting pollen. 
 
-<img src="https://www.thingelstad.com/uploads/2023/1d336227a9.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/1d336227a9.jpg" width="600" height="450" alt="Bumblebee foraging on a cluster of white spirea blossoms surrounded by green foliage">

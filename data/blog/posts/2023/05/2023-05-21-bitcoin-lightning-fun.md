@@ -59,7 +59,7 @@ Moving beyond passwords, and digital signatures to prove validity of content, ar
 
 During the 2 days of Bitcoin 2023 I relied almost exclusively on Bitcoin to pay for lunches, coffees, and anything else I wanted. I also took the opportunity to send Satoshis to some of the speakers and people that I met at the event. It was incredible. It gave me all the privacy and benefit of cash, along with all the benefit of digital money. 
 
-<img src="https://www.thingelstad.com/uploads/2023/0970d6fabf.png" width="213" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/0970d6fabf.png" width="213" height="600" alt="Bitcoin Lightning wallet transaction history showing multiple sent and received payments in satoshis dated May 20 2023">
 
 So my earlier assertion that Bitcoin is a store-of-value but not useful for day to day purchases? Wrong.
 

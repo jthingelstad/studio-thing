@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Pork butts done with their journey and time to shred. Thank you [Big Green Egg](https://biggreenegg.com) and Sous Vides for the journey! 🇺🇸🔥🐖
 
-<img src="https://www.thingelstad.com/uploads/2020/a6364ed829.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/a6364ed829.jpg" width="600" height="600" alt="Two smoked pork butts with dark bark resting on the grill grates of a Big Green Egg kamado smoker outdoors." />

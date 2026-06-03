@@ -15,4 +15,4 @@ Questions:
 - What does this mean for MicroStrategy (MSTR) as they are effectively a Bitcoin holding company (in part) now.
 - If this "legitimizes" Bitcoin, what is the follow-on to Ethereum? And other blockchains?
 
-<img src="https://www.thingelstad.com/uploads/2024/bitcoin-etf-wsj.png" style="max-width:400px; " />
+<img src="https://www.thingelstad.com/uploads/2024/bitcoin-etf-wsj.png" alt="WSJ illustration combining the SEC seal with the Bitcoin symbol on an orange background" style="max-width:400px; " />

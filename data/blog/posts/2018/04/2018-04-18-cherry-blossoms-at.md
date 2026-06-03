@@ -9,4 +9,4 @@ categories: []
 
 Cherry Blossoms at Botanical Garden in Kyiv, Ukraine. 
 
-<img src="https://www.thingelstad.com/uploads/2018/d1162461e9.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/d1162461e9.jpg" alt="Cherry and magnolia trees in full white bloom line a curved park path in Kyiv, Ukraine, on a sunny spring day." width="600" height="337" />

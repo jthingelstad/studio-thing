@@ -9,4 +9,4 @@ categories: ["Minnestar"]
 
 [Minnestar](https://minnestar.org) board strategy and future planning session! Great group and an amazing community! 👍 
 
-<img src="https://www.thingelstad.com/uploads/2019/f7ed40550a.jpg" width="600" height="364" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/f7ed40550a.jpg" width="600" height="364" alt="Group of about 13 smiling adults posing together indoors at a Minnestar board strategy and planning session." />

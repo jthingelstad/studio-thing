@@ -9,4 +9,4 @@ categories: []
 
 Tyler’s first time behind the wheel with basics in a parking lot. 
 
-<img src="https://www.thingelstad.com/uploads/2025/227148b340.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/227148b340.jpg" width="600" height="450" alt="Person with shoulder-length blonde hair driving a Tesla, smiling, with a large touchscreen navigation display visible on the dashboard.">

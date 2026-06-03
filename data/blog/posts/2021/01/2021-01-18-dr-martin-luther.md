@@ -9,6 +9,6 @@ categories: []
 
 I was able to attend the [2021 Dr. Martin Luther King Jr. Holiday Breakfast](https://www.mlkbreakfast.com/2021-event1) this morning. It was a great way to reflect on the messages of King as part of the holiday.
 
-<img src="https://www.thingelstad.com/uploads/2021/3b723edd9b.jpg" width="333" height="113" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/3b723edd9b.jpg" width="333" height="113" alt="Event banner for Our Rising Voices a Call for Bold Social Action virtual celebration on January 18 2021 featuring a silhouette of a man speaking and pointing" />
 
 I was impressed that this was the **31st year** of this event. [General Mills](https://www.generalmills.com) took some incredible leadership in making this event happen, and in bringing diversity and equity to their organization. It was also great to see the fabulous work of the [UNCF](https://uncf.org) highlighted.

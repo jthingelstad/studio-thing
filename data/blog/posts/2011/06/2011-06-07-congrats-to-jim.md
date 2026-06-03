@@ -7,9 +7,6 @@ post_kind: post
 categories: []
 ---
 
-![](https://www.thingelstad.com/uploads/2020/3ee8b76bcd.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/3ee8b76bcd.jpg" alt="Runners and spectators at the finish line of the Minneapolis Marathon and Half Marathon on a sunny day">
 
-This weekend my friend [Jim](http://www.jimbernard.net/) ran the
-[Minneapolis Marathon](http://www.teamortho.us/Minneapolis-Marathon/).
-This was [his first one](http://www.jimbernard.net/minneapolismarathon/)
-and he looked great, even at the end!
+This weekend my friend [Jim](http://www.jimbernard.net/) ran the [Minneapolis Marathon](http://www.teamortho.us/Minneapolis-Marathon/). This was [his first one](http://www.jimbernard.net/minneapolismarathon/) and he looked great, even at the end!

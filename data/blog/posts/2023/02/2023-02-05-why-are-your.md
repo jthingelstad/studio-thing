@@ -12,6 +12,6 @@ cast down? Look up
 and listen. The world  
 offers its own poetry.
 
-<img src="https://www.thingelstad.com/uploads/2023/c8b46fd6b4.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/c8b46fd6b4.jpg" width="600" height="450" alt="Poem etched into a concrete sidewalk reading Why are your eyes cast down Look up and listen The world offers its own poetry.">
 
 _Sidewalk poetry in Northfield, MN._

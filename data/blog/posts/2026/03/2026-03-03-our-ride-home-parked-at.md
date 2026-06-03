@@ -9,4 +9,4 @@ categories: []
 
 Our ride home parked at gate 83. 
 
-<img src="https://www.thingelstad.com/uploads/2026/ef04bfe8d3.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/ef04bfe8d3.jpg" width="600" height="337" alt="Delta Air Lines Airbus A321 N110DX parked at gate 83 on a rainy airport tarmac with several other Delta aircraft behind it.">

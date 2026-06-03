@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2021/08/09/vermont-road-trip.html"
 title: "Vermont Road Trip Log: Day 10, Monday"
 published: "2021-08-10T00:20:00+00:00"
 post_kind: post
-categories: ["Family", "Travel", "Travel Log"]
+categories: ["Coffee"]
 ---
 
 Weather: Nice, clear day. A bit hot in the afternoon with temps nearly 90 °F. 
@@ -22,7 +22,7 @@ Weather: Nice, clear day. A bit hot in the afternoon with temps nearly 90 °F.
 - At the end of our tranquil River cool down time the kids were getting out and Mazie fell into a bit of water. Nothing huge, but it happened to have a pocket of baby leeches! When she stood up we though she had algae on her legs, but they were actually baby leeches and she justifiably **FREAKED OUT!** We spent the next bunch of time clearing centimeter long baby leeches off her legs and calming her down. Whew!
 - Delightful dinner at Schilling Beer Co. 
 
-<img src="https://www.thingelstad.com/uploads/2021/e98b8a0e62.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/e98b8a0e62.jpg" width="600" height="450" alt="Rocky rapids flowing over flat ledges on the Ammonoosuc River through downtown Littleton NH with a church steeple and brick mill buildings behind" />
 
 Jump to day [1](https://www.thingelstad.com/2021/07/31/vermont-road-trip.html), 
 [2](https://www.thingelstad.com/2021/08/01/vermont-road-trip.html), 

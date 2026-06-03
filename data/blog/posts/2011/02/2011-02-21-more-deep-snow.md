@@ -11,4 +11,4 @@ We got [snowed in](https://www.thingelstad.com/2010/12/11/snowed-in.html) again.
 The weather says we got 14 inches of snow on Sunday. Happily it was a
 long weekend so we just stayed inside and let it come down.
 
-![](https://www.thingelstad.com/uploads/2020/116786d243.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/116786d243.jpg" alt="Heavy snow accumulation covering a backyard deck and grill nearly completely, with a partially shoveled path and wooden fence in background.">

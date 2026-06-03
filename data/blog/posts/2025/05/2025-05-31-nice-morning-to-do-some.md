@@ -9,4 +9,4 @@ categories: []
 
 Nice morning to do some fishing on Lake Harriet. 
 
-<img src="https://www.thingelstad.com/uploads/2025/eb462cceae.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/eb462cceae.jpg" width="600" height="337" alt="Kayak angler in a teal fishing kayak with multiple rod holders on calm Lake Harriet, with a pavilion and trees visible across the water.">

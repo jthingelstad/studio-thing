@@ -9,4 +9,4 @@ categories: []
 
 We are celebrating Christmas this weekend with the Olson family. It's afternoon break and puzzle time.
 
-![](https://www.thingelstad.com/uploads/2020/c07031e2cc.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/c07031e2cc.jpg" alt="Young girl in a blue shirt assembles a colorful jigsaw puzzle on a dark wood table, shown in four sequential photos.">

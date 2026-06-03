@@ -12,22 +12,22 @@ We decided to explore the Northern reaches of Iceland and drove to [Djúpavík](
 Photographically the entire scene struck me as a perfect opportunity for [HDR](http://en.wikipedia.org/wiki/High_dynamic_range_imaging) photography.
 
 
-![](https://www.thingelstad.com/uploads/2020/1b03f6610a.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/1b03f6610a.jpg" alt="Interior of an abandoned factory with concrete walls, rusted machinery, weathered wooden beams, and small windows letting in bright light">
 
-![](https://www.thingelstad.com/uploads/2020/1b62335c49.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/1b62335c49.jpg" alt="Black and white interior of an abandoned factory with concrete pillars, decaying walls, scattered equipment, and light shafting through windows">
 
-![](https://www.thingelstad.com/uploads/2020/4dfeae1e9d.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/4dfeae1e9d.jpg" alt="Interior of an abandoned factory with rusted heavy machinery, concrete columns, exposed steel beams, and light streaming through broken windows">
 
-![](https://www.thingelstad.com/uploads/2020/a5239a4b12.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/a5239a4b12.jpg" alt="Rusted industrial machinery covered with a tarp inside an abandoned concrete factory with deteriorating beams and sparse windows">
 
-![](https://www.thingelstad.com/uploads/2020/5e1bd5adb1.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/5e1bd5adb1.jpg" alt="Black and white fisheye HDR shot looking through a multi-pane factory window at a rocky Icelandic hillside and cliffs">
 
-![](https://www.thingelstad.com/uploads/2020/d022bd0795.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/d022bd0795.jpg" alt="Abandoned factory interior with scattered wooden planks, a lone chair, corrugated sheets, and crumbling concrete walls in black and white">
 
-![](https://www.thingelstad.com/uploads/2020/0bc0f448c2.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/0bc0f448c2.jpg" alt="Abandoned factory room with decayed stone walls, two wooden tables, rusted machinery, shelving, and sunlight streaming through multi-pane windows">
 
-![](https://www.thingelstad.com/uploads/2020/050e1cbb88.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/050e1cbb88.jpg" alt="Rusted engine and generator equipment on a concrete floor inside an abandoned factory with corroded electrical panels on the wall">
 
-![](https://www.thingelstad.com/uploads/2020/e33f17b519.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/e33f17b519.jpg" alt="Rusted industrial machinery and conveyor equipment inside an abandoned concrete factory with light streaming through upper windows">
 
-![](https://www.thingelstad.com/uploads/2020/438dfa5ded.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/438dfa5ded.jpg" alt="Rusted abandoned tractor sitting inside a long decaying concrete factory building with scattered machinery and debris on a dirt floor">

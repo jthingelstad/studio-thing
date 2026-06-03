@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 [Turning Red](https://en.wikipedia.org/wiki/Turning_Red) was a good afternoon movie on a cold and rainy Sunday afternoon. I liked the depth of the story, and that the plot is primarily driven through the women in the story. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2022/be516bfbdc.jpg" width="400" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/be516bfbdc.jpg" width="400" height="600" alt="Disney Pixar Turning Red movie poster featuring a giant red panda hugging three animated kids on a cork bulletin board" />

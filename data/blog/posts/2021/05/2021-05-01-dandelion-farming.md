@@ -9,4 +9,4 @@ categories: []
 
 Dandelion farming. 
 
-<img src="https://www.thingelstad.com/uploads/2021/4543b6f011.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/4543b6f011.jpg" width="600" height="599" alt="A vast field of bright yellow dandelions blooming in lush green grass under a sunny sky." />

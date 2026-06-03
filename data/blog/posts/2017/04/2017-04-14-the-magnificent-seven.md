@@ -4,9 +4,9 @@ url: "https://www.thingelstad.com/2017/04/14/the-magnificent-seven.html"
 title: ""
 published: "2017-04-14T17:09:00+00:00"
 post_kind: micropost
-categories: ["Movies"]
+categories: []
 ---
 
 Watched the The Magnificent Seven. 
 
-![](https://www.thingelstad.com/uploads/2020/1ff077c484.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/1ff077c484.jpg" alt="Movie poster for The Magnificent Seven showing seven armed men in western attire standing together under a stormy sky, release date 9.23.16">

@@ -9,6 +9,6 @@ categories: []
 
 I assumed this project wouldn’t get done until spring but with nicer weather and no snow Mazie and I assembled the new Blackstone Flattop Grill! 34 steps and about 2.5 hours. 
 
-<img src="https://www.thingelstad.com/uploads/2023/1cc17e7486.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/1cc17e7486.jpg" width="600" height="450" alt="Man and teen girl crouch on either side of a new Blackstone Patio Collection 4-burner flat top grill, both giving thumbs up">
 
-<img src="https://www.thingelstad.com/uploads/2023/68518671dc.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/68518671dc.jpg" width="600" height="450" alt="Blackstone Patio Collection flatop griddle with lid open sitting on a driveway in front of an open garage">

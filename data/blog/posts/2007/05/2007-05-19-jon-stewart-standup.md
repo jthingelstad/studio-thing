@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/af34893ecb.jpg" style="width: 198px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/af34893ecb.jpg" alt="Man in a dark suit resting his cheek on one hand with an exaggerated worried expression, black and white photo" style="width: 198px; float: right; margin-left: 10px; " />
 
 Last night we went to see [Jon Stewart](http://www.jonstewart.com/) do his stand-up show at the Orpheum downtown. I'm a very committed fan of [The Daily Show](http://www.comedycentral.com/shows/the_daily_show/index.jhtml), and some friends ([here](http://www.jimbernard.net/) and [here](http://www.thetangens.net/)) and I got the opportunity to actual see a taping of The Daily Show a few weeks ago. Stewart's delivery is a riot, and his writing team is top notch.
 
@@ -19,4 +19,4 @@ In addition to the expected political bits he did a great riff on dealing with t
 
 Also, by far the most popular t-shirt at the show...
 
-<img src="https://www.thingelstad.com/uploads/2020/1c1f7faa8a.gif" style="max-width: 300px; " />
+<img src="https://www.thingelstad.com/uploads/2020/1c1f7faa8a.gif" alt="Navy blue t-shirt printed with Jon Stewart For President 08 in white block letters" style="max-width: 300px; " />

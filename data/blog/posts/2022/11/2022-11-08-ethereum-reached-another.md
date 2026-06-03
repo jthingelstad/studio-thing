@@ -11,4 +11,4 @@ Ethereum reached another milestone tonight having **0% inflation since the Merge
 
 _An estimated 650,652 eth (3.6%) would have been created with proof-of-work._
 
-<img src="https://www.thingelstad.com/uploads/2022/8f93d8acc9.jpg" width="600" height="505" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/8f93d8acc9.jpg" width="600" height="505" alt="ETH supply chart showing -0.000% yearly inflation rate 54 days after the Ethereum Merge, with current supply at 15,537,393 ETH.">

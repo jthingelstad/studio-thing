@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7578037">7578037</a> at <strong><a href="https://poap.gallery/drops/214892">I passed through Barcelona-El Prat Airport (BCN) in 2026</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2026/8a91a8e3-1ed6-4230-85d4-6ba33c576f4e.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2026/8a91a8e3-1ed6-4230-85d4-6ba33c576f4e.png" alt="Yellow airport sign showing BCN code with plane icon, departures and arrivals labels, and 2026 displayed on a dark bar, set against a cloudy sunset sky." width="500" height="500" />

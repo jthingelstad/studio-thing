@@ -9,4 +9,4 @@ categories: []
 
 Delicious pint of Guinness at O’Connors Pub in Killarney while listening to some music.
 
-<img src="https://www.thingelstad.com/uploads/2024/241957a2e4.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/241957a2e4.jpg" width="600" height="600" alt="Pint of Guinness stout with a creamy white head on a beer mat atop a wooden pub table, patrons visible in the background.">

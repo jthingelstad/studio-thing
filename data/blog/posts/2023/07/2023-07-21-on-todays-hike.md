@@ -9,4 +9,4 @@ categories: []
 
 On todays hike to Soglio we hit a large thunderstorm. We were luckily able to all huddle under this old out building with a decent overhang on the roof and stay relatively dry and get a group photo!
 
-<img src="https://www.thingelstad.com/uploads/2023/890fb916fb.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/890fb916fb.jpg" width="600" height="450" alt="Group of eight hikers in rain gear sheltering from a storm under the stone overhang of an old building, smiling for a selfie.">

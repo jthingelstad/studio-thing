@@ -9,4 +9,4 @@ categories: []
 
 [Think Again: The Power of Knowing What You Don't Know](https://www.adamgrant.net/book/think-again/) by [Adam Grant](https://www.adamgrant.net/) arrived today. This book hit my radar via [Three Star Leadership](https://www.threestarleadership.com/books/book-review-think-again) and [Tools & Toys](http://toolsandtoys.net/think-again-by-adam-grant/). "It’s about the learning culture between your ears.” That put this in on my list right away! 📚
 
-<img src="https://www.thingelstad.com/uploads/2021/a91f81b594.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/a91f81b594.jpg" width="600" height="600" alt="Think Again by Adam Grant hardcover book on a table stacked with Atomic Habits and other books and mail." />

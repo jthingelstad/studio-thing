@@ -7,13 +7,9 @@ post_kind: post
 categories: []
 ---
 
-Our [Summer of Love](https://www.thingelstad.com/collections/summer-of-love) trip was never intended to be a camping or hiking
-trip. We booked all of our visits in hotels and motels and have stuck to
-restaurants.
+Our [Summer of Love](https://www.thingelstad.com/collections/summer-of-love) trip was never intended to be a camping or hiking trip. We booked all of our visits in hotels and motels and have stuck to restaurants.
 
-We have had three stops in national parks on the trip and they made a
-big impact on me. Each one of them represented another facet of nature,
-facets that we too often forget.
+We have had three stops in national parks on the trip and they made a big impact on me. Each one of them represented another facet of nature, facets that we too often forget.
 
 Glacier National Park: **Expansive**
 

@@ -4,9 +4,9 @@ url: "https://www.thingelstad.com/2010/05/09/tyler-giggling.html"
 title: ""
 published: "2010-05-09T05:00:00+00:00"
 post_kind: micropost
-categories: ["Family"]
+categories: []
 ---
 
 Tyler loves to giggle. Happy Baby!
 
-![](https://www.thingelstad.com/uploads/2020/f9de043054.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/f9de043054.jpg" alt="Smiling baby in a blue printed onesie laughing with fists raised, seated against a colorful woven fabric and red cushion.">

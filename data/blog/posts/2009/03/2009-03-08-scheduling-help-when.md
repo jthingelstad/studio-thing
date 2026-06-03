@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/0874f7a42c.gif" style="width: 200px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/0874f7a42c.gif" alt="Green gradient logo text reading When is Good on a white background" style="width: 200px; float: right; margin-left: 10px; " />
 
 Like all of you reading this, I have some things that I just hate to do. It's not that they are particularly difficult, I just find them irrationally frustrating. Probably at the top of my list is scheduling things. Here is how I typically end up scheduling something with some buddies.
 
@@ -21,7 +21,7 @@ The extension of this are all the emails about times that are open that swirl an
 
 ### When is Good?
 
-<img src="https://www.thingelstad.com/uploads/2020/b75b67aa35.png" style="width: 200px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/b75b67aa35.png" alt="Weekly calendar grid showing Thu Jun 5 through Sun Jun 8 with hourly slots from 7am to 12pm, some cells highlighted in green indicating available times." style="width: 200px; float: right; margin-left: 10px; " />
 
 [When is Good](http://whenisgood.net/) is just such a tool. It is painfully easy. It doesn't even require you to register to use it. You can zone out times that work to get a group together and then everyone else can filter those zones down using a 1-click web interface and at the end you've found the times that work for everyone. Brilliant!
 

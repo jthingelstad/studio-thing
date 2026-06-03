@@ -7,6 +7,4 @@ post_kind: post
 categories: []
 ---
 
-I ran across this [Tron suit
-page](http://www.ibiblio.org/jmaynard/TRONcostume/) and was stunned,
-confused and frightened. Just had to share it.
+I ran across this [Tron suit page](http://www.ibiblio.org/jmaynard/TRONcostume/) and was stunned, confused and frightened. Just had to share it.

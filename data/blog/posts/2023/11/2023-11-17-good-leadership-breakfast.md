@@ -17,6 +17,6 @@ The discussion with Archie is what brought me there which was fabulous. Good Lea
 2. **Stay focused:** don't do things that don't fit in the bullseye
 3. **Stay calm:** when did "hard" become "bad"?
 
-<img src="https://www.thingelstad.com/uploads/2023/e8f3019e55.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/e8f3019e55.jpg" width="600" height="450" alt="Welcome sign on an easel at the entrance to a ballroom where attendees mingle at a networking breakfast event">
 
-<img src="https://www.thingelstad.com/uploads/2023/2c39f484af.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/2c39f484af.jpg" width="600" height="450" alt="Two men in blazers sit on bar stools at a small round table on stage beneath a Good Leadership banner with books on the table">

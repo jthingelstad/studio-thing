@@ -9,4 +9,4 @@ categories: []
 
 I’m tired from this atypical stretch of personal and work travel. Over the last 28 days I've slept at home just 5 nights. I’m gonna be happy to put the suitcase away for a while. 
 
-<img src="https://www.thingelstad.com/uploads/2025/022697186c.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/022697186c.jpg" alt="Delta Air Lines Airbus A350 parked at a gate on an overcast day with ground crew and baggage carts nearby.">

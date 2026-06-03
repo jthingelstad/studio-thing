@@ -9,4 +9,4 @@ categories: []
 
 Officially summer now. 👏☀️
 
-<img src="https://www.thingelstad.com/uploads/2018/c6e25a6751.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/c6e25a6751.jpg" alt="Calm lake with a covered boat near the tree-lined shore under a partly cloudy sky on a sunny summer day." width="600" height="337" />

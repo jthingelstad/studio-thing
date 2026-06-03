@@ -9,4 +9,4 @@ categories: []
 
 Cyber Monday 2023! 🚀
 
-<img src="https://www.thingelstad.com/uploads/2023/b961ab4a8f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/b961ab4a8f.jpg" width="600" height="450" alt="Six people with laptops gathered in a modern lounge area facing a wall of large monitors displaying colorful data dashboards.">

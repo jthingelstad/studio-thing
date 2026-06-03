@@ -9,4 +9,4 @@ categories: []
 
 Having a fun day at Epcot with our family, my Mom, my Sister and her family! Photo in Italy after finishing some delicious pizza at [Via Napoli](https://disneyworld.disney.go.com/dining/epcot/via-napoli/). 
 
-<img src="https://www.thingelstad.com/uploads/2022/65a348d662.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/65a348d662.jpg" width="600" height="450" alt="Group of eight people smiling and waving for a selfie in Epcots Italy pavilion, brick buildings and columns visible behind them.">

@@ -9,4 +9,4 @@ categories: []
 
 Was a great evening for s’mores! 🔥
 
-<img src="https://www.thingelstad.com/uploads/2018/185f31006c.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/185f31006c.jpg" alt="Several people roasting marshmallows on metal skewers over a campfire in a circular fire ring outdoors." width="600" height="600" />

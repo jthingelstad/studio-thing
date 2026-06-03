@@ -9,4 +9,4 @@ categories: []
 
 Finished my Piranha Plant LEGO Super Mario build. Fun and unique build with many special pieces. I like how the mouth and leaves move. The hidden gold coin feature is a bonus. Will pair well with the [Question Mark Block](https://www.thingelstad.com/2022/12/29/i-finished-the.html)!
 
-<img src="https://www.thingelstad.com/uploads/2023/b826849369.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/b826849369.jpg" width="600" height="600" alt="Completed LEGO Super Mario Piranha Plant set 71426 on a table beside its box and instruction booklet.">

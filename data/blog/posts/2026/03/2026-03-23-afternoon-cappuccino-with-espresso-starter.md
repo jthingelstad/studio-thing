@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Afternoon cappuccino with espresso starter at Strada in Paris. 
 
-<img src="https://www.thingelstad.com/uploads/2026/936c33dff5.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/936c33dff5.jpg" width="600" height="450" alt="Cappuccino with rosetta latte art in a white ceramic cup on a speckled blue saucer, alongside a small espresso cup, water glasses, and a slice of cake on a light blue cafe table.">

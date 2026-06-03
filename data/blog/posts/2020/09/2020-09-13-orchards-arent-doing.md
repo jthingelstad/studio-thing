@@ -9,4 +9,4 @@ categories: []
 
 Orchards aren’t doing U-pick this year but Honeycrisp Apples are ready. We got some apples and delicious snacks at [Blossom Hill Orchard & Farm](https://www.blossomhillapples.com) in Preston, MN. 
 
-<img src="https://www.thingelstad.com/uploads/2020/83b8defcac.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/83b8defcac.jpg" width="600" height="450" alt="Blossom Hill Orchard and Farm sign on a grassy roadside with a parking lot and farm buildings behind it." />

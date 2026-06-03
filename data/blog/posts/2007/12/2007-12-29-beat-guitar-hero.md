@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/4d22831f35.jpg" style="width: 130px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/4d22831f35.jpg" alt="Hand giving a thumbs up gesture against a white background" style="width: 130px; float: right; margin-left: 10px; " />
 
 Big day today! I beat Guitar Hero III on medium. Wahoo!
 

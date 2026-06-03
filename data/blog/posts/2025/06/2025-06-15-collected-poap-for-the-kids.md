@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>Collected POAP <a href="https://collectors.poap.xyz/token/7371669">7371669</a> for <strong><a href="https://poap.gallery/drops/190537">The Kid’s House — 612 POAP Challenge</a></strong>.</p>
-        <p><img src="https://www.thingelstad.com/uploads/2025/6178292d-e3cb-4f70-91bd-2c547c919788.png" width="500" height="500" /></p>
+        <p><img src="https://www.thingelstad.com/uploads/2025/6178292d-e3cb-4f70-91bd-2c547c919788.png" alt="Circular badge showing a pixelated Minecraft-style building with pink windows, labeled 612 POAP Challenge and The Kid's House." width="500" height="500" /></p>

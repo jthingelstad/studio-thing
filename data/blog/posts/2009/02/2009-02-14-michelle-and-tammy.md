@@ -9,4 +9,4 @@ categories: []
 
 Michelle and Tammy expressing their emotions.
 
-<img src="https://www.thingelstad.com/uploads/2020/c65520bdf5.png" style="max-width: 161px; " />
+<img src="https://www.thingelstad.com/uploads/2020/c65520bdf5.png" alt="Four-panel photo strip of two women sitting together in a dim bar, showing changing expressions across the frames" style="max-width: 161px; " />

@@ -9,4 +9,4 @@ categories: []
 
 Happy Father’s Day to all! Love these two — I’m a lucky Dad! 🥰
 
-<img src="https://www.thingelstad.com/uploads/2025/d7b47d9f84.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/d7b47d9f84.jpg" width="450" height="600" alt="Man in blue plaid shirt with arms around two smiling teens outdoors near a garden trellis">

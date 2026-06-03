@@ -9,4 +9,4 @@ categories: []
 
 Our Airbnb for our stay in Killarney, Ireland. 
 
-<img src="https://www.thingelstad.com/uploads/2024/3f9924b58d.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/3f9924b58d.jpg" width="600" height="450" alt="Stone terraced cottage in Killarney Ireland with blue front door white gate and red brick trim">

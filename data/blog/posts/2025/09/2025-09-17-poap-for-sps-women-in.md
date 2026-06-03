@@ -4,12 +4,12 @@ url: "https://www.thingelstad.com/2025/09/17/poap-for-sps-women-in.html"
 title: ""
 published: "2025-09-17T14:33:00+00:00"
 post_kind: micropost
-categories: ["TeamSPS", "Crypto", "POAP Claims"]
+categories: ["Crypto", "POAP Claims"]
 ---
 
 POAP [7453396](https://collectors.poap.xyz/token/7453396) for **[SPS Women in Tech Q3 2025 Lunch & Learn](https://poap.gallery/drops/207135)**.
 
-<img src="https://www.thingelstad.com/uploads/2025/2659d888-02a4-4858-80ff-35bb98636327.png">
+<img src="https://www.thingelstad.com/uploads/2025/2659d888-02a4-4858-80ff-35bb98636327.png" alt="Circular POAP badge with teal-to-orange gradient, WiT logo over a laptop and charts, line-art portrait of a hatted figure with a bird, dated Sept 18 2025">
 
 The image for this POAP was created via GPT-5 with the prompt:
 

@@ -11,4 +11,4 @@ categories: ["Music"]
 
 [Rachel Ries](http://rachelries.com) did a very nice opening set. 🎶
 
-<img src="https://www.thingelstad.com/uploads/2021/26fe763ed0.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/26fe763ed0.jpg" width="600" height="337" alt="Musician playing grand piano solo on a purple-lit stage before a full audience, with guitars and a drum kit waiting nearby." />

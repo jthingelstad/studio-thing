@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Kubb set for sale at [Ingebretsen’s](https://www.ingebretsens.com) in Stockholm, WI.
 
-<img src="https://www.thingelstad.com/uploads/2020/5863d52a7d.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/5863d52a7d.jpg" width="600" height="450" alt="Micki brand Kubb game box on a wooden counter, surrounded by wooden toys and other games in a shop." />

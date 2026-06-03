@@ -9,4 +9,4 @@ categories: []
 
 Happy 4th of July everyone — in fruit pizza! 🇺🇸💥
 
-<img src="https://www.thingelstad.com/uploads/2020/9a6079d7ab.jpg" width="600" height="450" alt="" /><img src="https://www.thingelstad.com/uploads/2020/6bdf367bbd.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/9a6079d7ab.jpg" width="600" height="450" alt="Sheet cake with white frosting decorated as an American flag using blueberries for stars and sliced strawberries for stripes, cut into squares." /><img src="https://www.thingelstad.com/uploads/2020/6bdf367bbd.jpg" width="600" height="450" alt="Outdoor deck buffet table with buns, pulled pork, baked beans, watermelon, and a strawberry-blueberry fruit pizza shaped like the American flag." />

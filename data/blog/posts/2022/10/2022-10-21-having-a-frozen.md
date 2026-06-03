@@ -9,4 +9,4 @@ categories: []
 
 Having a Frozen Butterbeer at the foot of Hogwarts Castle. 🪄
 
-<img src="https://www.thingelstad.com/uploads/2022/e61a6c6729.jpg" width="599" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/e61a6c6729.jpg" width="599" height="600" alt="Hogwarts Castle towers rising above jagged rocky cliffs, shot from below in black and white, with arched bridge visible between towers">

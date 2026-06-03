@@ -9,4 +9,4 @@ categories: []
 
 Kids loving [Frisco Train Store](https://friscotrainstore.com). Biggest wooden train table I’ve ever seen!
 
-<img src="https://www.thingelstad.com/uploads/2021/197da6c74a.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/197da6c74a.jpg" width="600" height="450" alt="Large wooden train table with multilevel tracks and toy trains in a toy store, with a child and adult playing at the far end." />

@@ -9,7 +9,7 @@ categories: []
 
 This morning when I checked my email I found many more unread messages then typical. A bit concerned, I found many [PayPal](http://www.paypal.com/) messages.
 
-![](https://www.thingelstad.com/uploads/2020/187172baf8.png)
+<img src="https://www.thingelstad.com/uploads/2020/187172baf8.png" alt="Inbox showing 11 PayPal receipt emails from service@paypal.com all titled Receipt for Your Payment to NC Interactive Inc sent between 3:52 AM and 4:10 AM">
 
 That isn't a great way to start the day. You see, I have no idea who "NC Interactive, Inc." is. Additionally, I can tell you that at that time I was fast asleep getting a good nights rest. Ugh!
 

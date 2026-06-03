@@ -9,4 +9,4 @@ categories: []
 
 Apple update day.
 
-<img src="https://www.thingelstad.com/uploads/2020/831337c5d6.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/831337c5d6.jpg" width="600" height="600" alt="Three Apple devices charging on a counter, all showing iOS and iPadOS 13.4 software update screens in Settings." />

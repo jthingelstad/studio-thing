@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 We are kitted up and ready to cheer for the United in their first postseason game! Go Loons! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2019/52b7561473.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/52b7561473.jpg" width="600" height="599" alt="Three adults and four children wearing Minnesota United FC scarves posing together outside Allianz Field at night." />

@@ -9,4 +9,4 @@ categories: []
 
 It's surprising to me that this five computer limitation is still around in iTunes. iOS devices don't count against it, what's special about Macs?
 
-<img src="https://www.thingelstad.com/uploads/2018/c1cebfc79b.jpg" width="600" height="282" />
+<img src="https://www.thingelstad.com/uploads/2018/c1cebfc79b.jpg" alt="iTunes error dialog stating you cannot authorize more than 5 computers with your Apple ID and must deauthorize one first." width="600" height="282" />

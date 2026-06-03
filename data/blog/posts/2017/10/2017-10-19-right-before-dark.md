@@ -9,4 +9,4 @@ categories: []
 
 Right before dark. Nicaboyne Lake, WI. 
 
-<img src="https://www.thingelstad.com/uploads/2017/5cbe236f59.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/5cbe236f59.jpg" alt="Twilight over a calm lake with silhouetted trees and a boat dock on the left, distant treeline across the water under a cloudy sky." width="600" height="600" />

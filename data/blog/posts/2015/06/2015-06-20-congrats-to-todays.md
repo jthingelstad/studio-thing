@@ -9,4 +9,4 @@ categories: []
 
 Congrats to today’s winners!
 
-<img src="https://www.thingelstad.com/uploads/2020/cf22444937.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/cf22444937.jpg" width="600" height="800" alt="Two adults and two children standing on grass outdoors, smiling; one child holds a small wooden trophy" />

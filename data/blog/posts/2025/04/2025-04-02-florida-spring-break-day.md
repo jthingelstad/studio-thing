@@ -18,7 +18,7 @@ categories: []
 - Finish drive to St. Augustine
 - Check in to Airbnb in St. Augustine
 
-<img src="https://www.thingelstad.com/uploads/2025/screenshot-2025-04-05-at-1.13.43pm.png" width="600" height="386" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/screenshot-2025-04-05-at-1.13.43pm.png" width="600" height="386" alt="Google Maps route from Anna Maria Island north through Orlando and Kennedy Space Center to St. Augustine, 281 miles, 4 hours 43 minutes.">
 
 Jump to day
 [0](https://www.thingelstad.com/2025/03/29/florida-spring-break-day.html),

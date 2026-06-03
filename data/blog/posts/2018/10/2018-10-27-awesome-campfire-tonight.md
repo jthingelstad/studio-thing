@@ -9,4 +9,4 @@ categories: []
 
 Awesome campfire tonight. 🔥
 
-<img src="https://www.thingelstad.com/uploads/2018/eab7c98658.jpg" width="450" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/eab7c98658.jpg" alt="Blazing campfire in a metal fire pit at night with colorful blue and orange flames and sparks rising into dark sky" width="450" height="600" />

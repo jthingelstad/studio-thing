@@ -9,4 +9,4 @@ categories: []
 
 These Beanie Boos keep multiplying. 😳
 
-<img src="https://www.thingelstad.com/uploads/2018/ccbb3aa9d5.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/ccbb3aa9d5.jpg" alt="Pyramid of Ty Beanie Boo plush animals stacked on carpet in a child's bedroom." width="600" height="600" />

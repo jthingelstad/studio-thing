@@ -17,4 +17,4 @@ Some notes:
 
 All of that and the lowest membership fee is just $22 which is very accessible compared to nearly any other newsletter or podcast I subscribe to. Congratulations to Kai on the launch! 🎉
 
-<img src="https://www.thingelstad.com/uploads/2024/d52795d6c5.png" width="600" height="429" alt=""><img src="https://www.thingelstad.com/uploads/2024/33b66f344c.png" width="600" height="429" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/d52795d6c5.png" width="600" height="429" alt="Screenshot of the DD Lounge discuss page for issue 299, showing a comment editor, 33 comments, and a colorful illustrated cover featuring a stylized figure among flowers."><img src="https://www.thingelstad.com/uploads/2024/33b66f344c.png" width="600" height="429" alt="Screenshot of a user profile modal on the DD Lounge website showing name, bio, location, interests tags, and a photo of a smiling middle-aged man in a dark shirt.">

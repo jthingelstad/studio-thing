@@ -9,4 +9,4 @@ categories: []
 
 First time returning to [Hotel Monaco](https://www.monaco-denver.com) in Denver since our Honeymoon 20 years ago. 
 
-<img src="https://www.thingelstad.com/uploads/2022/a9beadaa1a.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/a9beadaa1a.jpg" width="600" height="450" alt="Couple taking a selfie in front of the Hotel Monaco entrance in Denver, smiling at the camera on a cloudy day." />

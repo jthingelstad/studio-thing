@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Gorgeous night for some Minnesota Twins baseball! ⚾️ 
 
-<img src="https://www.thingelstad.com/uploads/2022/cb18653819.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/cb18653819.jpg" width="600" height="450" alt="Baseball game in progress at Target Field with the Minneapolis skyline visible beyond the outfield wall under a clear blue sky." />

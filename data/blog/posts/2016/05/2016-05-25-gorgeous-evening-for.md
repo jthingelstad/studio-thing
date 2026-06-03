@@ -9,4 +9,4 @@ categories: []
 
 Gorgeous evening for some kids soccer.
 
-<img src="https://www.thingelstad.com/uploads/2020/6e22f7a18d.jpg" width="600" height="399" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/6e22f7a18d.jpg" width="600" height="399" alt="Two young boys in soccer uniforms competing for a ball on a grassy field at dusk with spectators in the background." />

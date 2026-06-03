@@ -9,4 +9,4 @@ categories: []
 
 We solved the Toy Room at [Escape Artists Kansas City](https://www.escapeartistkc.com) tonight! [Room 28](https://www.thingelstad.com/lists/escape-rooms/)!
 
-<img src="https://www.thingelstad.com/uploads/2019/cbab9f15dd.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/cbab9f15dd.jpg" width="600" height="600" alt="Family of four celebrating at Escape Artist Kansas City holding comic book sound effect and question mark photo props in front of the venue logo." />

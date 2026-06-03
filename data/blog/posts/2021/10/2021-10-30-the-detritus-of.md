@@ -9,4 +9,4 @@ categories: []
 
 The Detritus of Fall. 
 
-<img src="https://www.thingelstad.com/uploads/2021/46fb608a19.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/46fb608a19.jpg" width="600" height="450" alt="Aluminum boat lift frame on a misty lake dock surrounded by vibrant red and yellow autumn foliage" />

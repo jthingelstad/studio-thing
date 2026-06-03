@@ -9,4 +9,4 @@ categories: []
 
 Have a very Merry Christmas! 
 
-<img src="https://www.thingelstad.com/uploads/2019/0812170ece.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/0812170ece.jpg" width="600" height="600" alt="Personalized gingerbread house Christmas ornament with four named figures in Santa hats hanging on a decorated tree, dated 2019." />

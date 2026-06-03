@@ -9,4 +9,4 @@ categories: []
 
 On the express train 8803 this morning from Milan to Modena to visit Ferrari today! 
 
-<img src="https://www.thingelstad.com/uploads/2023/b29bb98df7.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/b29bb98df7.jpg" width="600" height="450" alt="Multiple railway tracks with overhead electric wires at a rail yard, construction vehicles and a large industrial building visible in the background.">

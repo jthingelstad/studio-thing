@@ -9,4 +9,4 @@ categories: []
 
 I would not do well on this elevator. 💀
 
-<img src="https://www.thingelstad.com/uploads/2023/5d3abf92da.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/5d3abf92da.jpg" width="450" height="600" alt="Worm's-eye view up a scaffolded skyscraper under construction flanked by other tall glass buildings against a blue sky.">

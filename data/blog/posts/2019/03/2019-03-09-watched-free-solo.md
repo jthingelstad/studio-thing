@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Watched [Free Solo](https://www.rottentomatoes.com/m/free_solo/) tonight. Wow! [Alex Honnold](https://en.wikipedia.org/wiki/Alex_Honnold) is an amazing climber. My palms were sweating while I sat comfortably on the couch. 🧗‍♂️😳🎬
 
-<img src="https://www.thingelstad.com/uploads/2019/149e30f1cd.jpg" width="424" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/149e30f1cd.jpg" width="424" height="600" alt="Movie poster for Free Solo showing a climber in an orange shirt gripping a rock face high above a forested valley" />

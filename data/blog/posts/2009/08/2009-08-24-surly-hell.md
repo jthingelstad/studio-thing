@@ -13,4 +13,4 @@ I got an email from [Four Firkins](http://www.thefourfirkins.com/) at 10:13 am t
 
 It tastes delicious.
 
-![](https://www.thingelstad.com/uploads/2020/7c70a85883.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/7c70a85883.jpg" alt="Four cans of Surly Hell Lager in green and white packaging sitting on a car dashboard in a parking lot.">

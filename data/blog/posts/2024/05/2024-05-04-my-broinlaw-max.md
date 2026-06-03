@@ -9,4 +9,4 @@ categories: []
 
 My bro-in-law Max and I getting ready for the 80’s Prom Murder Mystery Party. 🕵️‍♂️
 
-<img src="https://www.thingelstad.com/uploads/2024/5527de5ff1.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/5527de5ff1.jpg" width="600" height="600" alt="Two men wearing oversized blond mullet wigs and 80s-style blazers pose together indoors for a costume party">

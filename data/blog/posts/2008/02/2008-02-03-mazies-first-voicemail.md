@@ -7,8 +7,7 @@ post_kind: post
 categories: []
 ---
 
-Another "Proud Papa" post. This landed in my voicemail a day ago. Made
-me melt.
+Another "Proud Papa" post. This landed in my voicemail a day ago. Made me melt.
 
 <p><audio controls preload="none">
   <source src="https://files.thingelstad.com/posts/2008/mazie-first-message.mp3" type="audio/mpeg">

@@ -9,8 +9,8 @@ categories: []
 
 Took in [Tinsel Town](https://viralventuresusa.ticketspice.com/tinsel-town-minneapolis) at O’Donavon’s today with Tammy’s sisters and Olson bro-in-laws. 
 
-<img src="https://www.thingelstad.com/uploads/2023/5a37accd9b.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/5a37accd9b.jpg" width="600" height="600" alt="Two people smiling together in front of a lit Christmas wreath with a red bow on a red curtain backdrop.">
 
-<img src="https://www.thingelstad.com/uploads/2023/57acbbada6.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/57acbbada6.jpg" width="450" height="600" alt="Four men smiling together inside a bar decorated floor to ceiling with Christmas ornaments, tinsel, and holiday lights.">
 
-<img src="https://www.thingelstad.com/uploads/2023/046dc440e8.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/046dc440e8.jpg" width="450" height="600" alt="Couple holding Irish coffee glasses at a holiday-decorated bar, woman wearing a Merry Christmas sweater, man in plaid shirt and blazer">

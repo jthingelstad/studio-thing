@@ -9,4 +9,4 @@ categories: []
 
 Cranes & Concrete. Belfast. 
 
-<img src="https://www.thingelstad.com/uploads/2024/bbaedda806.jpg" width="600" height="379" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/bbaedda806.jpg" width="600" height="379" alt="Construction site in Belfast with four tower cranes and tall concrete columns rising from a partially built structure behind a hoarding wall.">

@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Gorgeous cortado at [Pure Bean Coffee](https://www.purebeanroasters.com) in Rapid City, SD.
 
-![](https://www.thingelstad.com/uploads/2020/ecb8682d28.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/ecb8682d28.jpg" alt="Cortado with latte art in a glass cup served on a wooden tray with sparkling water and a brown sugar cube on a spoon.">

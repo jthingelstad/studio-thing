@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/3985602">3985602</a> at <strong><a href="https://poap.gallery/drops/27164">NFT Innovation Digest - Sotuland Dreams</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/nft-innovation-digest-sotuland-dreams-2022-logo-1644488991765.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/nft-innovation-digest-sotuland-dreams-2022-logo-1644488991765.png" alt="Illustrated profile of a figure wearing a golden crown and purple outfit against a decorative dark purple background with swirling patterns" width="500" height="500" />

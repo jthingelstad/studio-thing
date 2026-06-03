@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7571531">7571531</a> at <strong><a href="https://poap.gallery/drops/226668">Elixir | POAP KINGS</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2026/b8c75506-2d80-435e-9d4f-5b57bc0cb9aa.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2026/b8c75506-2d80-435e-9d4f-5b57bc0cb9aa.png" alt="Purple glowing slime character with a gold crown, menacing grin, on dark starry background, labeled Elixir POAP Kings" width="500" height="500" />

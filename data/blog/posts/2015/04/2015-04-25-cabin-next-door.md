@@ -9,4 +9,4 @@ categories: []
 
 Cabin next door decided to have a fire. Wow. 🔥
 
-<img src="https://www.thingelstad.com/uploads/2021/c139feba82.jpg" width="569" height="427" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/c139feba82.jpg" width="569" height="427" alt="Large bonfire burning intensely at night near a small cabin with two people standing nearby holding hoses" />

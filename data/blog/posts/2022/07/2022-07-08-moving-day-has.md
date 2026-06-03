@@ -9,4 +9,4 @@ categories: []
 
 Moving day has begun… 
 
-<img src="https://www.thingelstad.com/uploads/2022/b08aca6bd9.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/b08aca6bd9.jpg" width="600" height="337" alt="Two Good Stuff Moving trucks parked in a brick driveway outside a suburban home with cardboard boxes nearby." />

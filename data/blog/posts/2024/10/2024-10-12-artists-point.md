@@ -9,4 +9,4 @@ categories: []
 
 Artists Point in [Grand Marais](https://www.ci.grand-marais.mn.us).
 
-<img src="https://www.thingelstad.com/uploads/2024/cbb32ebe85.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/cbb32ebe85.jpg" width="600" height="450" alt="Rocky shoreline curving along a calm bay at Artists Point, with a wooded island and overcast sky in the distance.">

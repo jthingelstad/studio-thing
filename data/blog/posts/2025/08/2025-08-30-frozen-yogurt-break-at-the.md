@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Frozen yogurt break at the Sculpture Garden while out playing [612 POAP Challenge](https://612.poapchallenge.com) with my brother [Isaiah](https://www.ikeating.com) and his family. 
 
-<img src="https://www.thingelstad.com/uploads/2025/75da707275.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/75da707275.jpg" width="600" height="450" alt="Seven people posing outdoors holding cups of frozen yogurt, smiling at the camera on a sunny day near food trucks.">

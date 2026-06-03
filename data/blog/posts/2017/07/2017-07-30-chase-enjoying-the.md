@@ -9,4 +9,4 @@ categories: []
 
 Chase enjoying the lake. 
 
-<img src="https://www.thingelstad.com/uploads/2017/7c8ce57112.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/7c8ce57112.jpg" alt="Black dog running through shallow lake water with mouth open and tail curled up, trees visible across the water behind" width="600" height="600" style="height: auto" />

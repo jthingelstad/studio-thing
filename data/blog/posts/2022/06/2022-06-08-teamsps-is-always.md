@@ -9,4 +9,4 @@ categories: []
 
 TeamSPS is always pushing forward, and earning. [Karin Lucas](https://www.linkedin.com/in/karin-h-lucas/) welcoming the team as we keep leading the way!
 
-<img src="https://www.thingelstad.com/uploads/2022/6a61c925b3.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/6a61c925b3.jpg" width="600" height="450" alt="Large conference room filled with hundreds of attendees seated at round tables listening to a woman speaking at a podium near a projection screen." />

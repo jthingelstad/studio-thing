@@ -9,4 +9,4 @@ categories: []
 
 Looking for dinner ideas.
 
-<img src="https://www.thingelstad.com/uploads/2020/2c20d388fc.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/2c20d388fc.jpg" width="600" height="800" alt="Disney's Mickey Mouse Cook Book held open showing Mickey Mouse dressed as a chef carrying a platter of food with Chip and Dale at his feet" />

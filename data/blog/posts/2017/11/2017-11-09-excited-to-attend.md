@@ -9,4 +9,4 @@ categories: []
 
 Excited to attend (and sponsor) Chaos Community Day tomorrow! Looking forward to learning how chaos engineering is driving improvement!
 
-<img src="https://www.thingelstad.com/uploads/2017/1b3adbe9af.jpg" width="401" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/1b3adbe9af.jpg" alt="Flyer for Twin Cities Chaos Community Day in Minneapolis on November 10th 2017, with retro propaganda-style artwork and sponsor logos including Netflix and SPS Commerce." width="401" height="600" />

@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/10d240985c.jpg" style="width: 103px; float: right; padding-left: 10px; padding-bottom: 10px;" />
+<img src="https://www.thingelstad.com/uploads/2020/10d240985c.jpg" alt="Black Sony MDR-NC50 over-ear headphones with silver accents and a 3.5mm audio cable, shown on a white background." style="width: 103px; float: right; padding-left: 10px; padding-bottom: 10px;" />
 
 I stepped off of my last flight, from Dallas to Minneapolis, and wanted to immediately go and get a pair of noise canceling headphones. I made a rookie mistake. Hoping for an empty middle seat back in coach I had moved from a row in the middle of the plane to the last row in the plane. I lost my bet when they shoved one last person onto the plane to sit in between me and the other guy in our row.
 

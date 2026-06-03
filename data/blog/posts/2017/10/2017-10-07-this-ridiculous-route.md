@@ -9,4 +9,4 @@ categories: []
 
 This ridiculous route home from MN UFC game courtesy of crazy MN road construction! 🚧🚧🚧
 
-<img src="https://www.thingelstad.com/uploads/2017/967fdc98c5.jpg" width="599" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/967fdc98c5.jpg" alt="Apple Maps showing 3 alternate routes from Minneapolis to a home near Edina ranging from 29 to 31 minutes due to road construction." width="599" height="600" />

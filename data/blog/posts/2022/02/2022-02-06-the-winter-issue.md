@@ -4,12 +4,12 @@ url: "https://www.thingelstad.com/2022/02/06/the-winter-issue.html"
 title: ""
 published: "2022-02-06T13:37:27+00:00"
 post_kind: micropost
-categories: ["Family"]
+categories: []
 ---
 
 The [Winter 2022 issue of Reading Things](https://reading.thingelstad.com/archive/reading-things-winter-2022/), our family newsletter on books and reading, is out now! 📚
 
-<img src="https://www.thingelstad.com/uploads/2022/a10f77bc18.jpg" width="600" height="617" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/a10f77bc18.jpg" width="600" height="617" alt="Six book covers including We Are Not From Here, Caste, Four Thousand Weeks, Minecraft The Mountain, My Brigadista Year, and To Shake the Sleeping Self" />
 
 **In this issue:** My Brigadista Year, We Are Not From Here, Minecraft: The Mountain, Caste, To Shake the Sleeping Self, and Four Thousand Weeks.
 

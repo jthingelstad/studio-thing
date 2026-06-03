@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Enjoyed watching [First Man](https://www.imdb.com/title/tt1213641/). Amazing story about an amazing time. 🚀🎬✈
 
-<img src="https://www.thingelstad.com/uploads/2019/e45cde228e.jpg" width="378" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/e45cde228e.jpg" width="378" height="600" alt="Movie poster for First Man starring Ryan Gosling and Claire Foy, directed by Damien Chazelle, showing an astronaut in a helmet surrounded by fiery motion blur" />

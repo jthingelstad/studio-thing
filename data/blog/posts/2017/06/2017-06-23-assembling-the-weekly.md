@@ -11,7 +11,7 @@ I had been interested in creating a newsletter like the [Weekly Thing](/weekly-t
 
 I knew the main item I wanted to build it around were links to other sites that I use [Pinboard](https://pinboard.in/) to collect. But how to make that easy?
 
-![](https://www.thingelstad.com/uploads/2020/2ceeb8a3a8.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/2ceeb8a3a8.jpg" alt="Six yellow gradient buttons in a grid showing Workflow app actions: Build Newsletter, Blog, Photo, App, Pins, and Microblog, each with a white icon.">
 
 ### Workflow to the Rescue
 

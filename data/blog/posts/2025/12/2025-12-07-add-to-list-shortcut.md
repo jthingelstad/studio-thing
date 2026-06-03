@@ -13,4 +13,4 @@ I want to make it as simple as possible to get things into these lists so I made
 
 You can [add the Add to List shortcut](https://www.icloud.com/shortcuts/7233e401e2dd435ca7211176de842d0b).
 
-<img src="https://www.thingelstad.com/uploads/2025/add-to-list-shortcut.png">
+<img src="https://www.thingelstad.com/uploads/2025/add-to-list-shortcut.png" alt="Apple Shortcuts editor showing the Add to List shortcut with five steps: receive input from Share Sheet, find active OmniFocus projects in Idea Lists folder, choose a project, ask for text twice,">

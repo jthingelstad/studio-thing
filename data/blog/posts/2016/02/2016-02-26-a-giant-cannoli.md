@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 A giant cannoli stuffed with baby cannoli inside? Oh my! #TeamSPS
 
-![](https://www.thingelstad.com/uploads/2021/76954fce36.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/76954fce36.jpg" alt="Large cannoli shell dusted with powdered sugar filled with mini cannoli on a silver tray surrounded by assorted petit fours and small cakes">

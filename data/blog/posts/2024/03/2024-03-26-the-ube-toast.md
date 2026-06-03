@@ -9,6 +9,6 @@ categories: []
 
 The [Ube](https://en.wikipedia.org/wiki/Dioscorea_alata) Toast Crunch Oatmeal at [Uncle Wolfie’s Breakfast Tavern](http://www.unclewolfies.com) is delicious and strikingly purple!
 
-<img src="https://www.thingelstad.com/uploads/2024/bb59648f11.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/bb59648f11.jpg" width="600" height="450" alt="Bowl of purple ube oatmeal topped with sliced bananas, Cinnamon Toast Crunch cereal, and cream drizzle on a marble table">
 
 _Part of the [Milwaukee Spring Break collection](https://www.thingelstad.com/collections/milwaukee-spring-break/)._

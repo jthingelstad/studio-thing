@@ -9,4 +9,4 @@ categories: []
 
 Our deck project is progressing — and big! 
 
-<img src="https://www.thingelstad.com/uploads/2018/12f9813c6a.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/12f9813c6a.jpg" alt="Girl in blue shirt and bike helmet standing on large unfinished deck frame behind a gray wood-sided lakeside house." width="600" height="450" />

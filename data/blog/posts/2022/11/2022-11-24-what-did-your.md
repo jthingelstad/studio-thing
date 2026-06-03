@@ -13,4 +13,4 @@ Mine included a review of Ethereum Layer 2 networks, side chains, how bridges wo
 
 We moved a [nnxyz](https://twitter.com/0000nnxyz) [NiftyInk](https://nifty.ink/) from [Gnosis](https://www.gnosis.io/) to Ethereum mainnet.
 
-<img src="https://www.thingelstad.com/uploads/2022/ab96c03c4d.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/ab96c03c4d.jpg" width="600" height="600" alt="Hand-drawn diagram showing BTC and Lightning Network on left, and the Ethereum ecosystem with Ethereum, Optimism, Arbitrum, Gnosis, and Polygon connected via L2 links and bridges, with a wallet and">

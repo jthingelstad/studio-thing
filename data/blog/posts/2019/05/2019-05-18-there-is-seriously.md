@@ -9,4 +9,4 @@ categories: []
 
 There is seriously no better Polish sausage than [Kramarczuk’s Deli](https://www.kramarczuks.com). Minneapolis institution! 🤤
 
-<img src="https://www.thingelstad.com/uploads/2019/b921ea590c.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/b921ea590c.jpg" width="600" height="450" alt="Kramarczuk Deli storefront in Minneapolis, open since 1954, with a painted mural sign, green striped awnings, and windows labeled Chocolates and Sausage." />

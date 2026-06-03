@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7554247">7554247</a> at <strong><a href="https://poap.gallery/drops/223594">Yearly Thing 2025</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2026/e355dd1f-b456-4ad2-984c-c7f290766b42.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2026/e355dd1f-b456-4ad2-984c-c7f290766b42.png" alt="Circular badge reading Yearly Thing 2025 Agents Attention Artifacts over a cloudy sky with wind turbines" width="500" height="500" />

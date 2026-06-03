@@ -9,4 +9,4 @@ categories: []
 
 Great position for today's eclipse! Now just keep the ☁️ away!
 
-<img src="https://www.thingelstad.com/uploads/2017/9791d51645.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/9791d51645.jpg" alt="Map showing 2017 total solar eclipse data near St Louis Missouri with 2m27.2s totality starting at 18:16 UT on August 21 2017" width="600" height="600" />

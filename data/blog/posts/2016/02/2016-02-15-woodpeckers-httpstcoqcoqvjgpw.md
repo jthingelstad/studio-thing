@@ -9,4 +9,4 @@ categories: []
 
 Woodpeckers! 😠
 
-<img src="https://www.thingelstad.com/uploads/2024/3b380b87-29cb-41ee-9d8f-a34fa0f23801.jpg" width="600" height="800" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/3b380b87-29cb-41ee-9d8f-a34fa0f23801.jpg" width="600" height="800" alt="Weathered wood siding on a building with a woodpecker hole exposing fresh wood, next to a white-framed window.">

@@ -9,4 +9,4 @@ categories: []
 
 Great beer flight at [Boomtown Brewery](https://boomtownwoodfire.com/hibbing/) in Hibbing tonight. Blueberry Wheat, Orehouse IPA, Nitro Milkshake IPA, and Enoremous Double IPA. 
 
-<img src="https://www.thingelstad.com/uploads/2021/809fa2475b.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/809fa2475b.jpg" width="600" height="450" alt="Four small glasses of craft beer on a slate flight board at Boomtown Brewery, labeled Enoremous DIPA, Orehouse IPA, Blueberry Wheat, and Nitro Milkshake IPA." />

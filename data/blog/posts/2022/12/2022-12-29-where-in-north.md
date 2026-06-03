@@ -13,11 +13,11 @@ That connection turned into an opportunity to work with him after school which I
 
 When I was volunteering Craig was deeply involved in a cool project with Brøderbund to create a new game in the [Carmen Sandiego](https://en.wikipedia.org/wiki/Carmen_Sandiego_(video_game_series)) franchise, **[Where in North Dakota is Carmen Sandiego?](https://en.wikipedia.org/wiki/Where_in_North_Dakota_Is_Carmen_Sandiego%3F)**.
 
-![](https://www.thingelstad.com/uploads/2022/7e8b6c7835.png)
+<img src="https://www.thingelstad.com/uploads/2022/7e8b6c7835.png" alt="Retro pixel-art wanted poster styled title screen with a portrait of a woman in a wide-brimmed purple hat and green coat">
 
 I knew of the Carmen Sandiego games and had played a couple of them myself. It was really cool to think that the storyline could extend to North Dakota. 
 
-![](https://www.thingelstad.com/uploads/2022/2d5b1dd0e3.png)
+<img src="https://www.thingelstad.com/uploads/2022/2d5b1dd0e3.png" alt="Two-page magazine spread advertising the 1988 Broderbund game set in North Dakota, with a badlands landscape photo and two people viewing the scenery from behind.">
 
 I didn’t know however how rare the game was. All of the other Carmen Sandiego titles were well known, but this specific title was even missing from the founder of Brøderbund's collection.
 
@@ -31,7 +31,7 @@ At 18:00 into the Screenland episode you get a great overview of the history of 
 
 Carmen North Dakota was a little unique because in addition to being a game for consumer sale, it was intended to be used in North Dakota classrooms to teach kids about the state. To go with it, there was this blue covered Carmen's North Dakota Almanac.
 
-![](https://www.thingelstad.com/uploads/2022/a6aa29b0d7.png)
+<img src="https://www.thingelstad.com/uploads/2022/a6aa29b0d7.png" alt="Person typing on a vintage Apple IIe computer displaying a Carmen Sandiego headquarters screen, beside Carmen's North Dakota Almanac booklet at a Video Game History Foundation exhibit.">
 
 The Carmen's North Dakota Almanac was my very small part in this project. Noted from the cover sheet of the almanac:
 

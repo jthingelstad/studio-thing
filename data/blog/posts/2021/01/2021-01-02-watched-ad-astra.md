@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Watched [Ad Astra](https://en.wikipedia.org/wiki/Ad_Astra_(film)) tonight. Enjoyed it. It was pretty much what I expected, which was just fine with me. 🍿🚀
 
-<img src="https://www.thingelstad.com/uploads/2021/0a67c7ca50.jpg" width="395" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/0a67c7ca50.jpg" width="395" height="600" alt="Movie poster for Ad Astra starring Brad Pitt, releasing September 20, featuring an astronaut helmet in front of a planet in space" />

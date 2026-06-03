@@ -7,7 +7,4 @@ post_kind: post
 categories: []
 ---
 
-This should exist. Background apps are still not an option, but it would
-be so great if AirFoil was available as an SDK option for the iPhone. It
-would be awesome to fire up Pandora on the iPhone and send the music to
-AirTunes speakers!
+This should exist. Background apps are still not an option, but it would be so great if AirFoil was available as an SDK option for the iPhone. It would be awesome to fire up Pandora on the iPhone and send the music to AirTunes speakers!

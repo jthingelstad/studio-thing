@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Delicious espresso at [Caffe Umbria](https://caffeumbria.com) this morning. 
 
-<img src="https://www.thingelstad.com/uploads/2018/e08f264940.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2018/e08f264940.jpg" alt="Yellow Strada espresso machine branded Caffe Umbria with colorful ceramic cups stacked on top, to-go cups and coffee bags on counter nearby." width="600" height="599" />

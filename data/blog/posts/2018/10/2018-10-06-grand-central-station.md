@@ -9,4 +9,4 @@ categories: []
 
 Grand Central Station in Manhattan. 
 
-<img src="https://www.thingelstad.com/uploads/2018/dc3dd7dafe.jpg" width="600" height="449" />
+<img src="https://www.thingelstad.com/uploads/2018/dc3dd7dafe.jpg" alt="Busy main concourse of Grand Central Terminal in New York City with crowds of people walking beneath tall arched windows and a central information booth with a gold clock." width="600" height="449" />

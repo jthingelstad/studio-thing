@@ -9,4 +9,4 @@ categories: []
 
 Stream in the woods. 
 
-<img src="https://www.thingelstad.com/uploads/2018/a105052c68.jpg" width="449" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/a105052c68.jpg" alt="Rocky forest stream flowing through lush green woodland with mossy stones and overhanging leafy branches" width="449" height="600" />

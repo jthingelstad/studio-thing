@@ -9,4 +9,4 @@ categories: []
 
 **Happy Fathers Day 2023!**
 
-<img src="https://www.thingelstad.com/uploads/2023/fbe49e6729.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/fbe49e6729.jpg" width="600" height="450" alt="Four people smiling outdoors in green summer setting, two adults and two blonde teens in braces hugging together">

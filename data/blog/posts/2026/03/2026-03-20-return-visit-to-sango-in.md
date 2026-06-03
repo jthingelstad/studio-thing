@@ -9,4 +9,4 @@ categories: []
 
 Return visit to [Sango](https://sangoamsterdam.com) in Amsterdam for a special espresso and capuccino. Train to Paris in a couple hours. 
 
-<img src="https://www.thingelstad.com/uploads/2026/ff01c0313c.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/ff01c0313c.jpg" width="450" height="600" alt="Two white ceramic cups on saucers on a round wooden table, one cappuccino with leaf latte art and one espresso, beside a small vase of dried purple flowers.">

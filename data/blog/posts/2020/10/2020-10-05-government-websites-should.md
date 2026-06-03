@@ -13,7 +13,7 @@ I run multiple layers of software to block surveillance software on the web. It 
 
 Back to the State of Minnesota though, unfortunately their site breaks entirely if you block this surveillance. I tested it and if I paused blocking it worked, enabled blocking and it was a blank white screen again.
 
-<img src="https://www.thingelstad.com/uploads/2020/a950dda69a.png" width="696" height="472" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/a950dda69a.png" width="696" height="472" alt="Safari browser on macOS showing a tracker-blocking extension popup listing 7 blocked requests on the Minnesota COVID-19 government website mn.gov/covid19" />
 
 This burns me up because this is _my_ government resource that I want to access, and I do not think that _my_ government should force me to be surveilled by private companies in order to access resources I want as a citizen of my state. I feel the same way when government services are only available via social networks. <mark>There should be no circumstance where I should have to submit to surveillance in order to get access to government information.</mark>
 

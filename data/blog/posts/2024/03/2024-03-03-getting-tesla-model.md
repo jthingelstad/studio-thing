@@ -19,4 +19,4 @@ I continue to be blown away by Tesla's purchasing process. It took 5 minutes at 
 
 The Model Y is on the way and I will pick it up next week! 🤩
 
-<img src="https://www.thingelstad.com/uploads/2024/818c2ec825.jpg" width="600" height="333" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/818c2ec825.jpg" width="600" height="333" alt="Dark grey 2024 Tesla Model Y compact SUV shown from a front three-quarter angle against a white background">

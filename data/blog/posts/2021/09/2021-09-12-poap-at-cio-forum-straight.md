@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/1221503">1221503</a> at <strong><a href="https://poap.gallery/drops/7371">CIO Forum: Straight talk on emerging technologies</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/cio-forum-straight-talk-on-emerging-technologies-2021-logo-1631308326451.pn.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/cio-forum-straight-talk-on-emerging-technologies-2021-logo-1631308326451.pn.png" alt="CIO Peer Forum logo on blue circle with hand-touching-network icon and date September 14 2021 7:30 AM" width="500" height="500" />

@@ -9,13 +9,13 @@ categories: []
 
 **1987…**
 
-<img src="https://www.thingelstad.com/uploads/2020/c7e1cfb446.png" style="width: 400px; max-width: 400px;" />
+<img src="https://www.thingelstad.com/uploads/2020/c7e1cfb446.png" alt="Cast of thirtysomething TV series posed together including adults and young children against a white background" style="width: 400px; max-width: 400px;" />
 
 [thirty something](http://en.wikipedia.org/wiki/Thirtysomething_(TV_series)).
 
 **2010…**
 
-<img src="https://www.thingelstad.com/uploads/2020/8785946c7c.jpg" style="width: 400px; max-width: 400px;" />
+<img src="https://www.thingelstad.com/uploads/2020/8785946c7c.jpg" alt="Large group of about thirteen people posed together outdoors on a patio, dressed casually, smiling at the camera, with the Parenthood NBC logo above them." style="width: 400px; max-width: 400px;" />
 
 [Parenthood](http://en.wikipedia.org/wiki/Parenthood_(2010_TV_series)) [on NBC](http://www.nbc.com/parenthood/).
 

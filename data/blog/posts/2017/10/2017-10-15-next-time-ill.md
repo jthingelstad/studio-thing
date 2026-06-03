@@ -9,4 +9,4 @@ categories: []
 
 Next time I’ll have this view I’ll be standing on ice. 🙂
 
-<img src="https://www.thingelstad.com/uploads/2017/1ffe441431.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2017/1ffe441431.jpg" alt="Wooden dock extending into a rippling lake toward a rustic house surrounded by autumn trees with red and orange foliage." width="600" height="599" />

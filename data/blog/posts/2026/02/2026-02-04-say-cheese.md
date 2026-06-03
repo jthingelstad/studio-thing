@@ -9,4 +9,4 @@ categories: []
 
 "Say cheese!"
 
-<img src="https://www.thingelstad.com/uploads/2026/e289173634.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/e289173634.jpg" width="600" height="337" alt="Hundreds of employees in matching blue sweatshirts pose for a group photo inside a large convention hall.">

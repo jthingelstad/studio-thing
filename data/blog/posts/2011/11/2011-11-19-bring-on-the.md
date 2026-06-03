@@ -9,4 +9,4 @@ categories: []
 
 Bring on the Snow.
 
-![](https://www.thingelstad.com/uploads/2020/50a86ec609.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/50a86ec609.jpg" alt="Two red wooden sleds leaning against a large tree in a snow-covered backyard with a fence, slide, and small playhouse nearby.">

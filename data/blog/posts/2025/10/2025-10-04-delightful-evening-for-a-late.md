@@ -9,4 +9,4 @@ categories: []
 
 Delightful evening for a late season soccer game! Go Loons!
 
-<img src="https://www.thingelstad.com/uploads/2025/79a73bb047.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/79a73bb047.jpg" width="600" height="450" alt="Minnesota United FC night match at Allianz Field with packed stands, bright floodlights, and play underway near the far goal.">

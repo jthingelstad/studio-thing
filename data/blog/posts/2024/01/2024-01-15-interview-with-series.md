@@ -4,12 +4,12 @@ url: "https://www.thingelstad.com/2024/01/15/interview-with-series.html"
 title: "Interview with 612 Series creator Erik Halaas"
 published: "2024-01-15T18:00:00+00:00"
 post_kind: post
-categories: ["Minnestar", "Crypto", "POAP"]
+categories: ["Minnestar", "Crypto"]
 ---
 
 In October 2022 I found the [612 Series](https://opensea.io/collection/612-series) by Erik Halaas. This NFT collection resonated with me as a Minneapolis resident. I knew nearly all the landmarks and had fond memories of many of them. I decided to [purchase five](https://etherscan.io/tx/0x7885592eb133fffb216f10ee0a56035c4903b216d9702794f64fcbdd08276561) of them, which turned out to just be the start. I also shared the collection with others and even sent [one as a gift](https://etherscan.io/tx/0x8a758ed86bc6c339023c1eeba2073b00cdd8d1011537031920837321496db2e6). Eventually I [acquired a complete set of the landmarks](https://www.thingelstad.com/2023/04/05/complete-collection-of.html) and got to know Erik, the creator of the [612 Series](https://www.staynftympls.xyz/612-series) and [StayNftyMpls](https://www.staynftympls.xyz). Erik even agreed to donate a collection for [Minnestar](https://minnestar.org) to [give away in a POAP drawing at Minnebar 17](https://www.thingelstad.com/2023/03/28/minnebar-staynftympls-series.html).
 
-![](https://www.thingelstad.com/uploads/2023/fd442de528.png)
+<img src="https://www.thingelstad.com/uploads/2023/fd442de528.png" alt="Grid of 32 pixel-art NFTs depicting Minneapolis landmarks, bridges, buildings, and city scenes in colorful 8-bit style">
 
 I had some questions about the 612 Series so I asked Erik if he would be up to do an interview to dive a little deeper. He was happy to, so here we go!
 
@@ -83,11 +83,11 @@ I decided to put the project on the Ethereum blockchain because it was something
 
 I worked with a group of folks a little over a year ago to explore the interplay between digital and physical work. We hosted a dozen local creatives, half of which had a presence on-chain and the other half with no experience with NFTs, crypto, web3, whatsoever. The end result was a curated experience weaving traditional 2D and 3D mediums in with a variety of tech forward, digitally inspired content at the [Hewing Hotel](https://hewinghotel.com/) gallery. You can [learn about the artists](https://www.staynftympls.xyz/nft-curious) and get a flashback via this collection of [Instagram Stories](https://www.instagram.com/stories/highlights/17942782637366388/). It was a blast! 
 
-<img src="https://www.thingelstad.com/uploads/2024/nft-curious-hewing.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2024/nft-curious-hewing.jpg" width="600" height="450" alt="Interior of NFT_curious phygital art exhibit showing mixed-media installations, hanging paintings, tablet displays on pallets, and a sculpture reading Seduce Attention" />
 
 To highlight the 612 Series, I shared the initial relief block print of the Witches Tower that inspired the imagery for the series alongside an [Infinite Object](https://infiniteobjects.com/) frame displaying a variety of the 612 Series Witches Tower NFTs. The show actually motivated me to revisit the original block printing method but reimagine the landmark in its pixelated form. I have gone on to create a few more of the landmarks in both the original and pixelated block print form (including one for you!) and would love to continue exploring how the pieces can be reimagined in the physical.
 
-<img src="https://www.thingelstad.com/uploads/2024/side-by-side.jpg" width="600" height="370" alt="" />
+<img src="https://www.thingelstad.com/uploads/2024/side-by-side.jpg" width="600" height="370" alt="Two framed artworks at NFT_curious phygital art exhibit showing pixelated and repeated printmaking versions of a Minneapolis water tower" />
 
 **Q: If you fast forward a decade how would you like the 612 Series to be thought of?**
 
@@ -99,7 +99,7 @@ Ultimately, these softer social interactions were the real impetus behind the pr
 
 My hope is that the project will continue to inspire local folks with a shared interest in the arts, technology, and community to connect, collaborate, and create locally!
 
-<img src="https://www.thingelstad.com/uploads/2024/cherry-spoon-134-side-by-side.jpg" width="600" height="362" alt="" />
+<img src="https://www.thingelstad.com/uploads/2024/cherry-spoon-134-side-by-side.jpg" width="600" height="362" alt="Pixel art digital rendering of the Cherry and Spoon sculpture beside a painted mosaic version of the same scene in greens, reds, and grays" />
 
 ---
 

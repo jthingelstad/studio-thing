@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Played a quick game of Kubb yesterday in Sister Bay, WI waiting for our boat ride. 
 
-<img src="https://www.thingelstad.com/uploads/2021/a3ede4ad20.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/a3ede4ad20.jpg" width="600" height="450" alt="Woman in a striped green shirt holding Kubb batons standing beside a grass Kubb field with wooden pins and boundary string." />

@@ -9,4 +9,4 @@ categories: []
 
 Tasty beer flight at [Cuyuna Brewing](http://www.cuyunabrewing.com). 
 
-<img src="https://www.thingelstad.com/uploads/2022/5d1f306276.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/5d1f306276.jpg" width="600" height="450" alt="Four-beer flight at Cuyuna Brewing on a wood paddle with a card listing Cherry, Cider, Crusher, and Stout">

@@ -9,7 +9,7 @@ categories: []
 
 I had my iPad stolen out of my hands tonight while waiting for the 8:50pm 4K bus at Lake and Lyndale.
 
-![](https://www.thingelstad.com/uploads/2020/5cc5c226fd.gif)
+<img src="https://www.thingelstad.com/uploads/2020/5cc5c226fd.gif" alt="Street map showing the Lyn-Lake neighborhood in Minneapolis with marker A near Lake Street and Lyndale Avenue South intersection.">
 
 We had a fun [8thBridge](http://www.8thBridge.com/) outing this afternoon at [Bryant Lake Bowl](http://www.bryantlakebowl.com/). After that a bunch of us went over to [moto-i](http://www.moto-i.com/) and had some dinner and then a final beer at [Muddy Waters](http://www.muddywatersmpls.com/new_home.html). Everyone else left by cab and I walked over to the bus stop to catch the [4K](http://www.metrotransit.org/Schedules/WebSchedules.aspx?route=4) home. I was about 15 minutes early so I got my iPad out and started reading [The Selfish Gene](https://www.indiebound.org/book/9780199291151), my book club book.
 

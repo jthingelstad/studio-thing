@@ -9,4 +9,4 @@ categories: []
 
 Today I learned that these cactus are incredibly sharp. The needles will go right through light hiking shoes. Ouch. They are very pretty though, particularly when the sun lights them up.  ☀️🌵🥾
 
-<img src="https://www.thingelstad.com/uploads/2021/d73eeddaf2.jpg" width="600" height="450" alt="" /><img src="https://www.thingelstad.com/uploads/2021/527db35443.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/d73eeddaf2.jpg" width="600" height="450" alt="Teddy bear cholla cacti with pale yellow spines cover a rocky Sonoran Desert hillside, with mountains and hazy valley in the background." /><img src="https://www.thingelstad.com/uploads/2021/527db35443.jpg" width="600" height="450" alt="Cholla cactus covered in dense pale spines glowing in sunlight, with desert landscape and blue sky in the background." />

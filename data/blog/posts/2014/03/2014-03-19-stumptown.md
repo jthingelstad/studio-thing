@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Stumptown!
 
-<img src="https://www.thingelstad.com/uploads/2024/ae813aa6-1353-44ce-8c6e-98a15e28c514.jpg" width="600" height="373" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/ae813aa6-1353-44ce-8c6e-98a15e28c514.jpg" width="600" height="373" alt="Stumptown Coffee Roasters logo painted on a window, with a rainy urban street and buildings reflected in the glass.">

@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/06/12/ireland-log-day.html"
 title: "Ireland 2024 Log - Day 12"
 published: "2024-06-12T21:48:31+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: ["Escape Room"]
 ---
 
 _Weather: Cool and nice. Not much wind. Warmer in Belfast._
@@ -29,7 +29,7 @@ _Weather: Cool and nice. Not much wind. Warmer in Belfast._
 - Walk back to hotel. 
 - Have today's Guinness in the hotel bar.
 
-<img src="https://www.thingelstad.com/uploads/2024/8182a7fac8.png" width="600" height="386" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/8182a7fac8.png" width="600" height="386" alt="Map showing two driving routes to Giants Causeway: 2hr 5min from Ballyshannon and 1hr 6min from Belfast, Northern Ireland.">
 
 Jump to day 
 [1](https://www.thingelstad.com/2024/06/01/ireland-log-day.html), 

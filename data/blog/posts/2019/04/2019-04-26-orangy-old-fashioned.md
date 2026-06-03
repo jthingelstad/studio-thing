@@ -9,4 +9,4 @@ categories: []
 
 Orangy Old Fashioned at [The Copper Hen](http://www.copperhenkitchen.com). 
 
-<img src="https://www.thingelstad.com/uploads/2019/aaafefeec9.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/aaafefeec9.jpg" width="600" height="600" alt="Old Fashioned cocktail with ice and a rosemary sprig in a rocks glass on a dark wood table" />

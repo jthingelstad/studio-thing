@@ -9,4 +9,4 @@ categories: []
 
 My brother Isaiah came to town to help me rebuild the kids playset. Mission accomplished! 👍🏻
 
-<img src="https://www.thingelstad.com/uploads/2017/8b9b91b4c2.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2017/8b9b91b4c2.jpg" alt="Two men giving thumbs up in a backyard next to a newly built cedar wood playset with monkey bars and a blue canopy." width="600" height="599" />

@@ -9,4 +9,4 @@ categories: []
 
 Lucky chewing on a stick.
 
-<img src="https://www.thingelstad.com/uploads/2020/acc82c8d5c.jpg" width="597" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/acc82c8d5c.jpg" width="597" height="600" alt="Fluffy white puppy chewing a stick on a sandy beach, lying down with paws stretched forward, wearing a black collar." />

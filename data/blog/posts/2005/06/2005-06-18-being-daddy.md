@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2005/06/18/being-daddy.html"
 title: "Being Daddy"
 published: "2005-06-18T05:00:00+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/753e2dca0e.jpg" style="width: 200px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/753e2dca0e.jpg" alt="Man with wedding ring lying down, cradling a sleeping newborn against his chest, both resting on white bedding" style="width: 200px; float: right; margin-left: 10px; " />
 
 Mazie turns 4 today, 4 days that is. It's been an incredible four days. I realize everyone all over the world goes through this process all the time. As a result, it should seem somewhat routine from a global perspective, but on an individual level everything seems profound and amazing and like you are the first person in the world to ever do any of this stuff.
 

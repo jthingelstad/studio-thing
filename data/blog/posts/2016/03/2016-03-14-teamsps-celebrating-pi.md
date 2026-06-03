@@ -9,6 +9,6 @@ categories: ["TeamSPS"]
 
 . #TeamSPS celebrating Pi Day!
 
-![](https://www.thingelstad.com/uploads/2022/9e1a472b48.jpg)
+<img src="https://www.thingelstad.com/uploads/2022/9e1a472b48.jpg" alt="People gathering around a long red table covered with dozens of homemade pies in a modern office breakroom with red pendant lights.">
 
 _See [Pi Day Collection](https://www.thingelstad.com/collections/pi-day/)._

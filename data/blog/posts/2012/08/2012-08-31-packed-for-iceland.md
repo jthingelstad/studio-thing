@@ -7,10 +7,9 @@ post_kind: post
 categories: []
 ---
 
-![](https://www.thingelstad.com/uploads/2020/ecc3908c52.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/ecc3908c52.jpg" alt="Open camera bag packed with Canon DSLR bodies, lenses, lens caps, memory cards, and accessories in padded divider compartments">
 
-I finished packing my kit to head to Iceland for a week of photography
-tonight. Here is what I decided to put in my camera backpack:
+I finished packing my kit to head to Iceland for a week of photography tonight. Here is what I decided to put in my camera backpack:
 
 -   Canon 5D Mark II
 -   Canon 24-70 f2.8/L

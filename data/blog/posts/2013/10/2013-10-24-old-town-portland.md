@@ -9,4 +9,4 @@ categories: []
 
 Old Town Portland.
 
-<img src="https://www.thingelstad.com/uploads/2019/943c4fdf78.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/943c4fdf78.jpg" width="600" height="600" alt="Illuminated Portland Oregon Old Town sign shaped like the state of Oregon with a leaping white stag, mounted on a dark wood wall." />

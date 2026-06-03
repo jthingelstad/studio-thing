@@ -9,4 +9,4 @@ categories: []
 
 Delicious smashburgers tonight. Everything else as dialed in and just right! 🍔🍔🍔
 
-<img src="https://www.thingelstad.com/uploads/2025/6bbd0c0348.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2025/83ad047771.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/6bbd0c0348.jpg" width="600" height="450" alt="Smashburgers cooking on a Blackstone griddle with melted cheese, beside raw burger balls topped with butter on a blue tray outdoors."><img src="https://www.thingelstad.com/uploads/2025/83ad047771.jpg" width="600" height="450" alt="Four smashburgers with melted American cheese on brioche buns arranged on a blue ceramic plate at a dinner table.">

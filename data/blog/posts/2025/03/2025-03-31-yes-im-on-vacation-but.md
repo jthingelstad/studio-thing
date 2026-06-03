@@ -9,4 +9,4 @@ categories: []
 
 Yes I’m on vacation — but I’m still updating my bits. 
 
-<img src="https://www.thingelstad.com/uploads/2025/0c84082d90.png" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/0c84082d90.png" width="600" height="600" alt="iPhone screen showing iOS 18.4 software update downloading with about 29 seconds remaining, listing new emojis and other features.">

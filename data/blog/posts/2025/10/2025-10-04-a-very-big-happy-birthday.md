@@ -9,4 +9,4 @@ categories: []
 
 A very big Happy Birthday to my Mom! Doubly special that many of her sisters and her brother could come and celebrate with us! 🎂
 
-<img src="https://www.thingelstad.com/uploads/2025/053275cd02.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/053275cd02.jpg" width="600" height="337" alt="Large multigenerational family group smiling outside a Taste of India restaurant on a birthday celebration outing.">

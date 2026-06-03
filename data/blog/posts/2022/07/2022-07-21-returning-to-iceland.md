@@ -13,4 +13,4 @@ In September 2012 I went to Iceland for a weeklong photography trip with three f
 
 I am eager for the adventure to begin!
 
-<img src="https://www.thingelstad.com/uploads/2022/769d6255c3.png" width="600" height="391" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/769d6255c3.png" width="600" height="391" alt="Map of Iceland showing labeled towns, airports, and landmarks including Reykjavik, Akureyri, the Blue Lagoon, and Skaftafellsjokull glacier." />

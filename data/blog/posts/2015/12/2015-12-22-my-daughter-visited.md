@@ -9,4 +9,4 @@ categories: []
 
 My daughter visited my office today and sketched out this microservice architecture.
 
-<img src="https://www.thingelstad.com/uploads/2020/e123ce3ad9.jpg" width="600" height="391" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/e123ce3ad9.jpg" width="600" height="391" alt="Hand-drawn whiteboard sketch showing a Database connected via a link chain to two Macroservices, each containing two Microservices boxes." />

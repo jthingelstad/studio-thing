@@ -15,4 +15,4 @@ Getting FIDA in my wallet was much harder than I expected. There was a utility o
 
 Today the auctions ended and my 3 FIDA bids were not challenged. So, I now have three SNS tokens. The specification is still very vague on what you can do with it. When you claim the auction you have to specify how much space you want for the token. I decided to buy 7 kb of data that can be stored with each. The minimum was 1 kb and maximum was 10 kb. No idea how much I will really want. Essentially, I'm assuming my "zone file" for Solana will be smaller than 7 kb. Seems like a safe assumption. [Solscan](https://solscan.io/) has a special tab to show [my domains](https://solscan.io/account/DDusCx5FpskRWjS7w8Zcnk1RzH4NeJHJvqqE4HwYF4qa#domains).
 
-<img src="https://www.thingelstad.com/uploads/2021/c46582400f.jpg" width="600" height="190" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/c46582400f.jpg" width="600" height="190" alt="Three Solana Name Service domain cards showing weeklything.sol, jamiethingelstad.sol, and thingelstad.sol each with a Manage domain button below" />

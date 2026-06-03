@@ -7,12 +7,7 @@ post_kind: post
 categories: []
 ---
 
-This past weekend Tammy and I drove to Chicago for a long-weekend
-getaway. We drove there late on Friday, arriving in the early morning of
-Saturday. We decided to take a trip on the AM side of the radio dial.
-It's amazing what you find on that side of the dial. In between the
-crackling of static there are some real gems. I thought I would share
-some of the great learnings with all of you!
+This past weekend Tammy and I drove to Chicago for a long-weekend getaway. We drove there late on Friday, arriving in the early morning of Saturday. We decided to take a trip on the AM side of the radio dial. It's amazing what you find on that side of the dial. In between the crackling of static there are some real gems. I thought I would share some of the great learnings with all of you!
 
 -   The push to raise minimum wages is all a big scheme by the unions to
     drive labor costs up.

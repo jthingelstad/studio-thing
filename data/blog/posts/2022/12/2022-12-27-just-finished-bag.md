@@ -9,4 +9,4 @@ categories: []
 
 Just finished bag 3 on the [Super Mario 64™ Question Mark Block](https://www.lego.com/en-us/product/super-mario-64-question-mark-block-71395) LEGO. This is a very fun build full of surprises already.
 
-<img src="https://www.thingelstad.com/uploads/2022/62175fb0bb.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/62175fb0bb.jpg" width="600" height="450" alt="Partially built LEGO Super Mario 64 Question Mark Block set in yellow with white question mark, sitting on a Lake Superior decorative table, box and roller coaster LEGO set visible behind it.">

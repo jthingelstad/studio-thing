@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Sometimes the espresso looks so much more delightful than others. ☕️
 
-<img src="https://www.thingelstad.com/uploads/2017/9749fb9a11.jpg" width="599" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/9749fb9a11.jpg" alt="Espresso pouring from a polished stainless steel machine into a white cup with a bicycle illustration, golden crema visible." width="599" height="600" />

@@ -9,4 +9,4 @@ categories: []
 
 Our neighbor raises tomatoes and it's a delight every year to have fresh heirlooms to enjoy. Yum! 🍅
 
-<img src="https://www.thingelstad.com/uploads/2017/b0a7a16eac.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/b0a7a16eac.jpg" alt="Sliced heirloom tomatoes arranged on a white plate with colorful orange and blue striped rim, on a wood surface." width="600" height="600" />

@@ -9,4 +9,4 @@ categories: []
 
 Arc de Triomf.
 
-<img src="https://www.thingelstad.com/uploads/2026/e2cd4f7928.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/e2cd4f7928.jpg" width="450" height="600" alt="Four people posing together in front of the Arc de Triomf in Barcelona on a clear sunny day.">

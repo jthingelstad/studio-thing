@@ -9,4 +9,4 @@ categories: []
 
 Chicago Bean.
 
-![](https://www.thingelstad.com/uploads/2020/8ebc99a42d.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/8ebc99a42d.jpg" alt="Cloud Gate sculpture in Millennium Park Chicago reflecting the skyline with tourists gathered around it on a cloudy day">

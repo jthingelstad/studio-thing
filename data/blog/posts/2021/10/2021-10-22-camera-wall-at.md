@@ -9,4 +9,4 @@ categories: []
 
 Camera wall at [Bottleworks Hotel](https://www.bottleworkshotel.com) in Indianapolis. 
 
-<img src="https://www.thingelstad.com/uploads/2021/4e286fee3d.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/4e286fee3d.jpg" width="600" height="450" alt="Dozens of vintage cameras of various styles and eras mounted on a gray wall as a decorative display at Bottleworks Hotel in Indianapolis." />

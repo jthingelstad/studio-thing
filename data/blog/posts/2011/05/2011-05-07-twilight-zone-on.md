@@ -9,4 +9,4 @@ categories: []
 
 How great! I was looking at [Netflix](http://www.netflix.com/) tonight via Apple TV and noticed that the original [Twilight Zone](http://en.wikipedia.org/wiki/The_Twilight_Zone_(1959_TV_series)) series is now available. Watching season 1, episode 1, "Where is Everybody?" now.
 
-![](https://www.thingelstad.com/uploads/2020/5c5fd6b860.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/5c5fd6b860.jpg" alt="Title card for The Twilight Zone television series with stylized white text on a dark starry background">

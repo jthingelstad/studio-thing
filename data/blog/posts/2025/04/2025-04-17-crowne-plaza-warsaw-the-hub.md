@@ -11,4 +11,4 @@ Crowne Plaza Warsaw - The HUB. [📍](http://maps.apple.com/?ll=52.229504,20.984
 
 Sunrise on the horizon. 
 
-![](https://www.thingelstad.com/uploads/2025/image-20250417-053515-87bc0924.jpg)
+<img src="https://www.thingelstad.com/uploads/2025/image-20250417-053515-87bc0924.jpg" alt="Warsaw skyline at sunrise with glowing orange horizon, illuminated skyscrapers, and a busy street stretching into the distance.">

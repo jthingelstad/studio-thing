@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Watched [Green Book](https://www.rottentomatoes.com/m/green_book) and thoroughly enjoyed it. Great movie and equally great acting. 🎬✈️
 
-<img src="https://www.thingelstad.com/uploads/2019/589d32b68f.jpg" width="419" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/589d32b68f.jpg" width="419" height="600" alt="Movie poster for Green Book showing two men in a vintage turquoise car driving through flat open countryside." />

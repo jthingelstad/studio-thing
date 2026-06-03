@@ -9,4 +9,4 @@ categories: []
 
 I upgraded the video conferencing setup in my home office. Setup a studio light that I’ve had for photography. Got an [Audio-Technica AT2005USB](https://www.audio-technica.com/en-us/at2005usb) microphone on a mini-boom. The audio is incredibly better. The light is a big help early in the morning. 
 
-<img src="https://www.thingelstad.com/uploads/2020/6083d267c4.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/6083d267c4.jpg" width="600" height="450" alt="Home office desk with two iPads, a MacBook Pro, external monitor, studio microphone on boom arm, headphones, and a studio light, with autumn trees visible through the window behind." />

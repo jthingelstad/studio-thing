@@ -9,4 +9,4 @@ categories: []
 
 Tracks in Fargo, ND. 
 
-<img src="https://www.thingelstad.com/uploads/2025/447514a056.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/447514a056.jpg" width="600" height="450" alt="Two parallel railroad tracks stretch into the distance through downtown Fargo ND with a historic depot visible on the right">

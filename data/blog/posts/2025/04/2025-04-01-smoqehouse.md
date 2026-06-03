@@ -13,41 +13,41 @@ We were without the delicious pulled pork from Smoqehouse. For years. In the mea
 
 Since we were heading to Anna Maria Island, there was no way we were going to miss an opportunity to visit! And we were super happy to be greeted by Andrew Kubes who we used to see in Northfield in those early 2016 visits. He shared that we now are members of a fairly small group of folks that have were diners at the Faribault and Anna Maria Island locations. 
 
-<img src="https://www.thingelstad.com/uploads/2025/86cc0c638f.jpg" width="600" height="450"><br/>
+<img src="https://www.thingelstad.com/uploads/2025/86cc0c638f.jpg" alt="Exterior of Smoqehouse restaurant on Anna Maria Island with black facade, striped umbrellas over wooden picnic tables, and palm trees overhead." width="600" height="450"><br/>
 _Great barbecue in here!_
 
-<img src="https://www.thingelstad.com/uploads/2025/2b2a3a911d.jpg" width="600" height="450"><br/>
+<img src="https://www.thingelstad.com/uploads/2025/2b2a3a911d.jpg" alt="Five people smile together inside a dark-walled barbecue restaurant with branded T-shirts hanging on the wall behind them." width="600" height="450"><br/>
 _We got a family photo with Andrew Kubes!_
 
-<img src="https://www.thingelstad.com/uploads/2025/e1fa070ec9.jpg" width="600" height="450"><br/>
+<img src="https://www.thingelstad.com/uploads/2025/e1fa070ec9.jpg" alt="Vintage Edison-style pendant bulbs with spiral filaments hang from the ceiling of a dark industrial-style restaurant dining room." width="600" height="450"><br/>
 _These lights are the exact same look that the Faribault location had in the big community table._
 
-<img src="https://www.thingelstad.com/uploads/2025/5a37a129ef.jpg" width="600" height="600"><br/>
+<img src="https://www.thingelstad.com/uploads/2025/5a37a129ef.jpg" alt="Chalkboard menu listing sandwiches, sides, and kids meals at a barbecue restaurant, with a paper roll salad menu mounted on the wall beside it." width="600" height="600"><br/>
 _Same chalk menu board!_
 
-<img src="https://www.thingelstad.com/uploads/2025/46780d29af.jpg" width="600" height="450"><br/>
+<img src="https://www.thingelstad.com/uploads/2025/46780d29af.jpg" alt="Interior of a barbecue restaurant with three black metal signs on the wall depicting a bull, pig, and chicken, above rustic wooden bench seating and black tables with paper towel rolls." width="600" height="450"><br/>
 _These cow, pig, and chicken images were also in the Faribault location._
 
-<img src="https://www.thingelstad.com/uploads/2025/af0fdc19d0.jpg" width="600" height="450"><br/>
+<img src="https://www.thingelstad.com/uploads/2025/af0fdc19d0.jpg" alt="Bradenton Herald newspaper clipping dated August 19 2017 featuring an article about Smoqehouse restaurant on Anna Maria Island" width="600" height="450"><br/>
 _Write-up in the [Bradenton Herald on Smoqehouse](https://www.bradenton.com/news/business/article168033592.html)._
 
-<img src="https://www.thingelstad.com/uploads/2025/a7c59c6311.jpg" width="600" height="450"><br/>
+<img src="https://www.thingelstad.com/uploads/2025/a7c59c6311.jpg" alt="Vintage blue Chevrolet 3100 pickup truck with white sidewall tires and a Smoqehouse logo on the door, parked on gravel." width="600" height="450"><br/>
 _Smoqehouse on wheels! Nice looking pickup._ 
 
 **And how about the barbecue?** Love the classic barbecue style dinner trays.
 
 Tammy got the classic pulled pork sandwich — good as ever!
 
-<img src="https://www.thingelstad.com/uploads/2025/986efd80d7.jpg" width="600" height="450">
+<img src="https://www.thingelstad.com/uploads/2025/986efd80d7.jpg" alt="Woman in a colorful cycling jersey holds a tray with a pulled pork sandwich on a brioche bun, seasoned fries, and a dipping sauce at an outdoor table." width="600" height="450">
 
 Tyler tucked in on the brisket burger. His only regret was not making it a double!
 
-<img src="https://www.thingelstad.com/uploads/2025/44190718f5.jpg" width="600" height="450">
+<img src="https://www.thingelstad.com/uploads/2025/44190718f5.jpg" alt="Teen with long blond hair and a backward gray cap biting into a pulled pork sandwich on a brioche bun at an outdoor picnic table." width="600" height="450">
 
 Mazie had the chicken and thought it was great.
 
-<img src="https://www.thingelstad.com/uploads/2025/f8765e23ec.jpg" width="600" height="450">
+<img src="https://www.thingelstad.com/uploads/2025/f8765e23ec.jpg" alt="Smiling young person with braces wearing a yellow long-sleeve shirt sitting at an outdoor picnic table with a pulled pork sandwich and curly fries on a metal tray" width="600" height="450">
 
 I got the Cubano and it was amongst the best. This was not a regular menu item in Faribault.
 
-<img src="https://www.thingelstad.com/uploads/2025/72d092f8c3.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/72d092f8c3.jpg" width="600" height="450" alt="Two halves of a toasted pressed sandwich filled with ham, pickles, and cheese, served on a metal tray with a side of pink dipping sauce.">

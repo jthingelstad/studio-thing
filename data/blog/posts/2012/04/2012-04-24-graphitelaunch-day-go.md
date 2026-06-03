@@ -9,4 +9,4 @@ categories: []
 
 Graphite launch day! Go team!
 
-<img src="https://www.thingelstad.com/uploads/2021/77eab23d5c.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/77eab23d5c.jpg" width="600" height="450" alt="Group of eleven men posing outside a venue marquee reading Today 8th Bridge Graphite Launch Viewing Party" />

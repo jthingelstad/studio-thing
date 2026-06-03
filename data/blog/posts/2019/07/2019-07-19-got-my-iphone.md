@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Got my iPhone background prepared for our Kansas City trip for the Bayern v AC Milan game. ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2019/311679883a.jpg" width="277" height="600" style="max-width: 350px;" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/311679883a.jpg" width="277" height="600" style="max-width: 350px;" alt="FC Bayern Munich phone wallpaper showing five players in red jerseys celebrating, with the club crest at the bottom." />

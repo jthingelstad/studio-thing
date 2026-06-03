@@ -9,4 +9,4 @@ categories: []
 
 Left a [cairn](https://en.wikipedia.org/wiki/Cairn). 🙏🏻
 
-<img src="https://www.thingelstad.com/uploads/2018/f7c781c58e.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/f7c781c58e.jpg" alt="Stacked stone cairn on a rocky Lake Superior shoreline under a clear blue sky." width="600" height="600" />

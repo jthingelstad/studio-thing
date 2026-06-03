@@ -13,4 +13,4 @@ I'm not that clear on what happened in 2015 that drove a big jump that stayed th
 
 Honestly I was truly surprised at the frequency and amounts. 
 
-<img src="https://www.thingelstad.com/uploads/2026/amzn-spending.png" width="600" height="358" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/amzn-spending.png" width="600" height="358" alt="Bar chart of personal Amazon spending from 1999 to 2025 showing a dramatic spike in 2015 with elevated spending continuing through the 2020s.">

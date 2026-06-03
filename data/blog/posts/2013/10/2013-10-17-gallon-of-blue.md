@@ -9,4 +9,4 @@ categories: []
 
 Gallon of blue stuff ordered by [Lori Keekley](https://twitter.com/LKeekley). [Tom Keekley](https://twitter.com/tkeekley) drinking. 
 
-<img src="https://www.thingelstad.com/uploads/2020/f8bf5b9281.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/f8bf5b9281.jpg" width="600" height="600" alt="Man in a tan baseball cap drinking a blue cocktail from a large margarita glass through a straw at a restaurant" />

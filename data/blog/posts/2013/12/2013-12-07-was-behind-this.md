@@ -9,4 +9,4 @@ categories: []
 
 Was behind this car the other day and was surprised it wasn’t [The Mad Adder](https://twitter.com/mad_adder). 
 
-<img src="https://www.thingelstad.com/uploads/2020/0def14c8c6.jpg" width="600" height="370" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/0def14c8c6.jpg" width="600" height="370" alt="White Honda sedan with Minnesota vanity plate reading MR PAUL stopped at a red light on S 3rd Ave in winter, snow piled on the trunk." />

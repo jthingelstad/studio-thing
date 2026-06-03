@@ -11,12 +11,12 @@ We have seen [Brandi Carlile](https://www.brandicarlile.com) play many times. Ta
 
 The [Indigo Girls](https://www.indigogirls.com) opened for Brandi which was amazing. Tammy is a big fan of the Indigo Girls, and Brandi shared with the audience that the Indigo Girls were a huge help to her early in her music journey. There was a lot of love on the stage and in the audience. [Allison Russell](https://allisonrussellmusic.com) was the first opener and what we saw of her was also incredible!
 
-![](https://www.thingelstad.com/uploads/2022/40e12b7b38.jpg)
+<img src="https://www.thingelstad.com/uploads/2022/40e12b7b38.jpg" alt="Packed outdoor amphitheater at night with red rock formations lit blue, a performer on a purple-lit stage in the distance, and a large video screen showing a guitarist">
 
-![](https://www.thingelstad.com/uploads/2022/10fe0a56db.jpg)
+<img src="https://www.thingelstad.com/uploads/2022/10fe0a56db.jpg" alt="Night concert at Red Rocks Amphitheatre with a performer in a white shirt playing guitar shown on two large LED screens flanking the stage">
 
-![](https://www.thingelstad.com/uploads/2022/cb90d0c062.jpg)
+<img src="https://www.thingelstad.com/uploads/2022/cb90d0c062.jpg" alt="Packed outdoor amphitheater at night with large LED screens showing performers on stage, red rock formations lit in blue behind the crowd">
 
-![](https://www.thingelstad.com/uploads/2022/ce7e291778.jpg)
+<img src="https://www.thingelstad.com/uploads/2022/ce7e291778.jpg" alt="Two concertgoers smile for a selfie high in the seating at Red Rocks Amphitheatre, colorful stage lighting and a packed crowd visible behind them.">
 
 See [list of Brandi Carlile shows](https://www.thingelstad.com/lists/brandi-carlile-shows/).

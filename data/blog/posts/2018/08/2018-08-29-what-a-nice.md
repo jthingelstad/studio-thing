@@ -9,4 +9,4 @@ categories: []
 
 What a nice evening! 👍🏻
 
-<img src="https://www.thingelstad.com/uploads/2018/03e60babb0.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/03e60babb0.jpg" alt="Tree-lined residential street at dusk with large oak trees, a brick sidewalk, a white house, and a lamp post on a green lawn." width="600" height="600" />

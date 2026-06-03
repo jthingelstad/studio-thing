@@ -9,4 +9,4 @@ categories: []
 
 Tammy got this cool bookshelf for the kids to keep their books in.
 
-![](https://www.thingelstad.com/uploads/2020/ccb1141897.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/ccb1141897.jpg" alt="Smiling toddler in a blue shirt flipping through a book beside a wooden tiered bookshelf filled with childrens board books">

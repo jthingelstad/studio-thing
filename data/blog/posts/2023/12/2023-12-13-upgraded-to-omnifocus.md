@@ -17,4 +17,4 @@ My initial impressions:
 2. The logical role of perspectives in the user experience is way better. 
 3. Love that the Apple Watch version is useful. I never used the previous version and it hadn't been updated in years. This one I will use. 
 
-<img src="https://www.thingelstad.com/uploads/2023/340409bcec.jpg" width="596" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/340409bcec.jpg" width="596" height="600" alt="OmniFocus 4 promotional graphic showing a checkmark logo over a glowing green moon above a dark forest with purple aurora lighting">

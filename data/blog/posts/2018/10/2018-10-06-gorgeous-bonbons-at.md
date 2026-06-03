@@ -9,4 +9,4 @@ categories: []
 
 Gorgeous Bonbons at [Stick With Me](https://swmsweets.com) chocolates. 
 
-<img src="https://www.thingelstad.com/uploads/2018/c6f4da1631.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/c6f4da1631.jpg" alt="Rows of colorful chocolate bonbons in wooden trays, in shades of blue, red, gold, purple, speckled white, and cream." width="600" height="450" />

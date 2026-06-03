@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Enjoyed [Darkest Hour](https://imdb.com/title/tt4555426/). 🎬
 
-<img src="https://www.thingelstad.com/uploads/2018/b5baf22124.jpg" width="405" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/b5baf22124.jpg" alt="Movie poster for Darkest Hour showing Gary Oldman as Winston Churchill smoking against a red background." width="405" height="600" />

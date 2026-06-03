@@ -9,4 +9,4 @@ categories: []
 
 I got a [reMarkable 2](https://remarkable.com). ✍️
 
-![](https://www.thingelstad.com/uploads/2023/a75ee07884.png)
+<img src="https://www.thingelstad.com/uploads/2023/a75ee07884.png" alt="Handwritten journal entry on lined paper about first impressions of the reMarkable paper tablet device">

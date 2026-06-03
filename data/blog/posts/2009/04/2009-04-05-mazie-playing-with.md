@@ -9,4 +9,4 @@ categories: []
 
 Mazie playing with shoes!
 
-![](https://www.thingelstad.com/uploads/2020/a78c715229.png)
+<img src="https://www.thingelstad.com/uploads/2020/a78c715229.png" alt="Young girl in brown shirt and jeans smiling in an entryway surrounded by scattered shoes and boots on a wood floor.">

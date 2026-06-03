@@ -9,4 +9,4 @@ categories: []
 
 We've had our pontoon for a few years and the hassle of taking the cover off and on each weekend was resulting in less trips on the water. This year we got a canopy! I'm so happy to put the boat cover away for the summer and we will definitely get more time on the water!
 
-<img src="https://www.thingelstad.com/uploads/2021/fb9480c967.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/fb9480c967.jpg" width="600" height="450" alt="Black pontoon boat docked at a floating pier under a gray Porta-Dock canopy cover on a calm lake" />

@@ -9,4 +9,4 @@ categories: []
 
 Spending the day walking around Niagara Falls, on both US and Canadian sides, adds up the steps! 👣👣👣 **23,861 steps** for **9.26 miles**. 
 
-<img src="https://www.thingelstad.com/uploads/2018/817c0ea7fe.jpg" width="600" height="521" />
+<img src="https://www.thingelstad.com/uploads/2018/817c0ea7fe.jpg" alt="Bar chart of daily steps Aug 5-12 2018, showing mostly 6000-10000 steps per day with Saturday spiking to nearly 24000 steps" width="600" height="521" />

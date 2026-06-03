@@ -9,4 +9,4 @@ categories: []
 
 Afternoon ice cream stop in Gardiner, MT at the Yellowstone North Entrance. 🍦
 
-<img src="https://www.thingelstad.com/uploads/2020/782442cc30.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/782442cc30.jpg" width="600" height="600" alt="Four people holding mint chocolate chip and strawberry ice cream cones and dishes outdoors on a gravel surface." />

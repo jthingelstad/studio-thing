@@ -9,4 +9,4 @@ categories: []
 
 Judging Novice Policy Debate today at [University of Minnesota UMBrooks](https://www.tabroom.com/index/tourn/index.mhtml?tourn_id=33564) tournament. [Tyler](https://tyler.thingelstad.com/) here competing too. 🏆
 
-<img src="https://www.thingelstad.com/uploads/2024/b24d883b9a.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/b24d883b9a.jpg" width="600" height="450" alt="Laptop showing Tabroom.com UMBrooks UMN 2024 tournament page on a desk covered in handwritten policy debate flow notes, in an empty classroom.">

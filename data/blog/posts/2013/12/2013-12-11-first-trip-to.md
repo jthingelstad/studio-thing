@@ -13,7 +13,7 @@ Boarded ✈️ in KBP to AMS. The exit door of this airplane is very cold. Weath
 
 ✈️ UIA plane headed to AMS.
 
-<img src="https://www.thingelstad.com/uploads/2020/1389cb5823.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/1389cb5823.jpg" width="600" height="450" alt="Ukraine International Airlines Boeing 737 at a snowy airport gate with jet bridge attached, winter conditions on tarmac" />
 
 2.5 + 3.5 + 4.5 + 3.75 = approximate hours of sleep for each day of this trip. (Crazy tired.)
 

@@ -9,4 +9,4 @@ categories: []
 
 What do you do when a hard rain comes **right as you** put the smash burgers on the flat top? Get the umbrellas! ☔️
 
-<img src="https://www.thingelstad.com/uploads/2021/5253484300.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/5253484300.jpg" width="600" height="599" alt="Man with glasses smiling at camera holds umbrella over a flat top grill with smash burgers cooking in the rain while two others stand nearby." />

@@ -9,4 +9,4 @@ categories: []
 
 Getting pizza at [Pleasant Grove Pizza Farm](https://pleasantgrovepizzafarm.com) and watching the sunset. 
 
-<img src="https://www.thingelstad.com/uploads/2022/58113e31b1.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/58113e31b1.jpg" width="600" height="337" alt="Groups of people sitting in lawn chairs on green grass outside a large barn with string lights, enjoying an outdoor evening gathering." />

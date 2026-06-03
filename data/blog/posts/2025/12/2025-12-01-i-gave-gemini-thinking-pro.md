@@ -18,4 +18,4 @@ I gave Gemini "Thinking 3 Pro" and Nano Banana Pro a more interesting question t
 The result is incredible. It has one error on the "Delete" step and how that connects to Pinboard.
 
 
-<img src="https://www.thingelstad.com/uploads/2025/2ac85ced43.png" width="600" height="327" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/2ac85ced43.png" width="600" height="327" alt="Flowchart showing 4-step Weekly Thing newsletter creation process: Collect and Filter, Create and Curate, Build and Automate, then Finalize and Send.">

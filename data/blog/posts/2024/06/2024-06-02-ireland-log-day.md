@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/06/02/ireland-log-day.html"
 title: "Ireland 2024 Log - Day 2"
 published: "2024-06-02T20:01:17+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: ["Coffee"]
 ---
 
 _Weather: Sunny. High of 67 °F. Pretty cool after sunset._
@@ -21,7 +21,7 @@ _Weather: Sunny. High of 67 °F. Pretty cool after sunset._
 - Dinner at [Hilliard's](https://hilliardskillarney.com).
 - Walk back to rental to rest and get some sleep.
 
-<img src="https://www.thingelstad.com/uploads/2024/e5607932f2.png" width="600" height="363" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/e5607932f2.png" width="600" height="363" alt="Google Maps route from Dublin Airport to Killarney Ireland showing two driving options of 317 km and 334 km taking 3 to 5 hours">
 
 Jump to day 
 [1](https://www.thingelstad.com/2024/06/01/ireland-log-day.html), 

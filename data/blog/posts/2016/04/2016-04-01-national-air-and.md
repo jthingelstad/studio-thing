@@ -9,4 +9,4 @@ categories: []
 
 [National Air and Space Museum](https://airandspace.si.edu).
 
-![](https://www.thingelstad.com/uploads/2020/e77862d5d9.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/e77862d5d9.jpg" alt="National Air and Space Museum exterior on the National Mall with a tall metal spire in front of its glass and stone facade on a sunny day.">

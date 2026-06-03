@@ -9,4 +9,4 @@ categories: []
 
 Noting that I may be the very last person on Cannon Lake to get my boat in for the winter, as an early snow falls. 😬❄️
 
-<img src="https://www.thingelstad.com/uploads/2019/88e308beb9.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/88e308beb9.jpg" width="600" height="450" alt="Pontoon boat with Suzuki outboard motor docked at a lake during an early snowfall, autumn trees visible on shore." />

@@ -9,4 +9,4 @@ categories: []
 
 Land of giant cakes!
 
-<img src="https://www.thingelstad.com/uploads/2020/d79bcb6ebc.jpg" width="600" height="415" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d79bcb6ebc.jpg" width="600" height="415" alt="Bakery display case with four large sliced layer cakes on top shelf and dozens of decorated cupcakes on bottom shelf." />

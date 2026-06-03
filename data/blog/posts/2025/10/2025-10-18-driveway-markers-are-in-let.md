@@ -9,4 +9,4 @@ categories: []
 
 Driveway markers are in. Let it snow! 😊
 
-<img src="https://www.thingelstad.com/uploads/2025/36acbd11cc.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/36acbd11cc.jpg" width="600" height="450" alt="Wide concrete driveway lined with orange marker stakes along both edges, surrounded by autumn trees with yellow and orange foliage.">

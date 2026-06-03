@@ -9,4 +9,4 @@ categories: ["Music"]
 
 I really dig the clear vinyl of [Brandi Carlile](https://www.brandicarlile.com)’s newest album. 🎶
 
-<img src="https://www.thingelstad.com/uploads/2021/fc61d197b5.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/fc61d197b5.jpg" width="600" height="600" alt="Clear vinyl record of Brandi Carlile In These Silent Days resting on its album cover and orange lyric sheet" />

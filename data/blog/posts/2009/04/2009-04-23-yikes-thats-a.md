@@ -9,4 +9,4 @@ categories: []
 
 Yikes - that’s a lot of stuff. 
 
-<img src="https://www.thingelstad.com/uploads/2020/5b6ac07985.png" style="width: 401px; " />
+<img src="https://www.thingelstad.com/uploads/2020/5b6ac07985.png" alt="iCal weekly calendar view showing a very busy week in April 2009 with numerous overlapping color-coded events across multiple days" style="width: 401px; " />

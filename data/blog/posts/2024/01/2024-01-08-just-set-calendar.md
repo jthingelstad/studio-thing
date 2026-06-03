@@ -9,4 +9,4 @@ categories: []
 
 Just set calendar event to [pre-order Apple Vision Pro](https://www.apple.com/newsroom/2024/01/apple-vision-pro-available-in-the-us-on-february-2/) on January 19th! 🎉
 
-![](https://www.thingelstad.com/uploads/2024/90c50614-b0ca-416a-a1f5-0b0535829263.jpg)
+<img src="https://www.thingelstad.com/uploads/2024/90c50614-b0ca-416a-a1f5-0b0535829263.jpg" alt="Apple Vision Pro mixed reality headset shown from the side, with fabric head strap and external battery pack visible">

@@ -13,8 +13,8 @@ I have a 30" cinema display that I mounted this on. I had to adjust the tension 
 
 I like it enough I may need to get one for home too! (For comparison, that is an 11" MacBook Air next to the display.)
 
-![](https://www.thingelstad.com/uploads/2020/9f98a99e6d.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/9f98a99e6d.jpg" alt="Curved office desk with a large monitor on an arm mount, an 11-inch MacBook Air on a stand, a split keyboard, trackball, and papers with an Atomic letterhead.">
 
 I'm not in love with the cable management, but it works well enough. I could do better with some extra zip ties in a cleanup session.
 
-![](https://www.thingelstad.com/uploads/2020/34846d5d8c.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/34846d5d8c.jpg" alt="Back of a 30-inch Apple Cinema Display mounted on an Ergotron LX monitor arm on a dark desk, with cables and a PC tower visible below.">

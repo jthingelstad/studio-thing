@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Little snow isn’t going to keep me from grilling! [Big Green Egg](https://biggreenegg.com) time! ❄️🔥
 
-<img src="https://www.thingelstad.com/uploads/2019/bf12b44291.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/bf12b44291.jpg" width="600" height="600" alt="Green snow shovel leaning against cleared patio path beside a Big Green Egg kamado grill in a snowy backyard with frozen lake beyond." />

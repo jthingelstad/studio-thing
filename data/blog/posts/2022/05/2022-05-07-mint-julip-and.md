@@ -9,4 +9,4 @@ categories: []
 
 Mint Julip and Lily. Derby Day! 🏇
 
-<img src="https://www.thingelstad.com/uploads/2022/2113dd3290.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/2113dd3290.jpg" width="600" height="450" alt="Two people holding Kentucky Derby souvenir cups in stadium seating at Churchill Downs, man in straw hat and blue blazer, woman in large pink hat" />

@@ -14,4 +14,4 @@ Jamie: 141 → **136**
 Mazie: 147 → **132**  
 Tyler: 130 → **120** 
 
-<img src="https://www.thingelstad.com/uploads/2024/30da66f6bf.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/30da66f6bf.jpg" width="600" height="600" alt="Upwords board game in progress with stacked letter tiles forming words including TRAPS, MEASURE, SURE, and DICKS on a gray grid board">

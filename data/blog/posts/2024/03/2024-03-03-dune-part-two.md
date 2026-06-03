@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/03/03/dune-part-two.html"
 title: "Dune: Part Two"
 published: "2024-03-03T15:27:23+00:00"
 post_kind: post
-categories: ["Movies"]
+categories: []
 ---
 
 After multiple delays [Dune: Part Two](https://www.imdb.com/title/tt15239678/) arrived in theaters! Tammy got us all tickets for last night's sold-out showing at [Edina 4](https://manntheatres.com/theatre/89/Edina-4). I'm the Dune fan in the family, but since we [saw the first one](https://www.thingelstad.com/2021/10/21/we-went-to.html) as a family we decided to all go again.
@@ -15,4 +15,4 @@ Now, the rest of the family? This will be their last Dune movie. Tammy just does
 
 [Dune: Part Three](https://www.imdb.com/title/tt31378509) is in development now. I can't wait to see it!
 
-<img src="https://www.thingelstad.com/uploads/2024/40b781aa4d.jpg" width="479" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/40b781aa4d.jpg" width="479" height="600" alt="Movie poster for Part Two featuring an ensemble cast in desert warrior costumes against a fiery red sky above a giant sandworm explosion, releasing 03.01.24">

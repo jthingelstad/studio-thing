@@ -9,4 +9,4 @@ categories: []
 
 Family bike ride to [Baker’s Wife](https://www.bakers-wife.com) / [Angry Catfish](https://www.angrycatfishbicycle.com) was great this morning. We have wonderful bike paths in Minneapolis.
 
-<img src="https://www.thingelstad.com/uploads/2017/3ffd8341cc.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/3ffd8341cc.jpg" alt="GPS route map of a family bike ride through south Minneapolis near Lake Harriet and Nokomis-Hiawatha Regional Park." width="600" height="600" />

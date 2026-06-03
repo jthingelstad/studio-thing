@@ -9,4 +9,4 @@ categories: []
 
 Today we have part two of the drive to get to our first real destination in Accord, NY. 475 miles. Should take around 8 hours. 🛣
 
-<img src="https://www.thingelstad.com/uploads/2021/9f95485408.png" width="600" height="277" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/9f95485408.png" width="600" height="277" alt="Apple Maps showing 3 routes from Cleveland to Accord NY, fastest route highlighted at 7 hours 11 minutes through Pennsylvania." />

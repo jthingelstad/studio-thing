@@ -9,4 +9,4 @@ categories: []
 
 Playing Skittles and letting it rip. Fun!
 
-<img src="https://www.thingelstad.com/uploads/2020/d259444d7e.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d259444d7e.jpg" width="600" height="450" alt="Three people gathered around a table playing a wooden Skittles board game, with Christmas stockings hanging in the background." />

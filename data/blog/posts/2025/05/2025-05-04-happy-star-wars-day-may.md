@@ -9,4 +9,4 @@ categories: []
 
 Happy [Star Wars Day](https://en.wikipedia.org/wiki/Star_Wars_Day) — May the 4th be with you!
 
-<img src="https://www.thingelstad.com/uploads/2025/0450d705e0.png" width="600" height="264" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/0450d705e0.png" width="600" height="264" alt="Star Wars Day logo with text reading May The 4th Be With You in bold white and yellow lettering on black background">

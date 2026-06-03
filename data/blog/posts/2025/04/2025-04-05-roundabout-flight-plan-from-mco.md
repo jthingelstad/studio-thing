@@ -9,4 +9,4 @@ categories: []
 
 Roundabout flight plan from MCO to MSP to avoid storms. 
 
-<img src="https://www.thingelstad.com/uploads/2025/3e131f54f1.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/3e131f54f1.jpg" width="600" height="450" alt="In-flight map showing a curved route from MCO Orlando northwest past New Orleans and Dallas up to MSP Minneapolis, with 9 minutes shown on screen.">

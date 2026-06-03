@@ -11,4 +11,4 @@ Got [my picks](https://rainbow.me/thingelstad.eth?family=ethsports-world-cup-202
 
 
 
-<img src="https://www.thingelstad.com/uploads/2022/0d99dbc5e7.jpg" width="600" height="211" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/0d99dbc5e7.jpg" width="600" height="211" alt="Four soccer balls on grass, each painted with a national flag: United States, Brazil, Germany, and Spain, labeled ETHsports World Cup 2022">

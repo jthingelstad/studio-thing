@@ -9,4 +9,4 @@ categories: []
 
 Learning how to play cribbage so I don't lose my Minnesota cabin license. 😊
 
-<img src="https://www.thingelstad.com/uploads/2017/6cb3714123.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/6cb3714123.jpg" alt="Hands holding playing cards over a decorative wooden game table with a checkerboard, scattered wildlife playing cards, and painted checker pieces" width="600" height="600" />

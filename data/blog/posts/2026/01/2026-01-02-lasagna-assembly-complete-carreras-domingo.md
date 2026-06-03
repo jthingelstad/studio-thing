@@ -9,4 +9,4 @@ categories: []
 
 Lasagna assembly complete! Carreras, Domingo, and Pavarotti are done singing. See this delicious pan in 45 minutes!
 
-<img src="https://www.thingelstad.com/uploads/2026/ca55da4aa8.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2026/196d08e8a5.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/ca55da4aa8.jpg" width="600" height="450" alt="Lasagna being assembled on a marble kitchen counter with meat sauce in a pan, cheese mixture in a bowl, noodles in a blue baking dish, and a bottle of Zinfandel nearby, Christmas tree in background."><img src="https://www.thingelstad.com/uploads/2026/196d08e8a5.jpg" width="600" height="450" alt="Man in a plaid flannel shirt holding a blue baking dish filled with uncooked lasagna topped with shredded cheese in a green kitchen.">

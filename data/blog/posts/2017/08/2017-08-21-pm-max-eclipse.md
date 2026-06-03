@@ -9,4 +9,4 @@ categories: []
 
 1:17:29 pm max eclipse for us!
 
-<img src="https://www.thingelstad.com/uploads/2017/ac3eac26ae.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/ac3eac26ae.jpg" alt="Solar eclipse app showing totality duration of 2 minutes 21 seconds with contact times from 11:49am to 2:43pm and max eclipse at 1:17pm" width="600" height="600" />

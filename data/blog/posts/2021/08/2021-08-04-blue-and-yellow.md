@@ -9,4 +9,4 @@ categories: []
 
 Blue and yellow sailboats on Rondout Creek connecting to the Hudson River in Kingston, NY. 
 
-<img src="https://www.thingelstad.com/uploads/2021/3058af7421.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/3058af7421.jpg" width="600" height="337" alt="Blue and yellow sailboats moored on calm Rondout Creek, surrounded by lush green trees under a cloudy sky in Kingston, NY." />

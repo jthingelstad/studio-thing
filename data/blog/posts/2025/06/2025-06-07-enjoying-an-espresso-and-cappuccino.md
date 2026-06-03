@@ -9,4 +9,4 @@ categories: ["Coffee", "Weekly Thing"]
 
 Enjoying an Espresso and Cappuccino at [Monogram Coffee](https://monogramcoffee.com/en-us) in downtown Calgary while sending [this morning’s Weekly Thing](https://weekly.thingelstad.com/archive/322/). 
 
-<img src="https://www.thingelstad.com/uploads/2025/fd98086866.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/fd98086866.jpg" width="600" height="600" alt="Espresso in a white bowl and a cappuccino with latte art in a dark blue mug on a wooden cafe table beside an open MacBook">

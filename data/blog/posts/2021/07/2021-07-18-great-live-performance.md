@@ -9,4 +9,4 @@ categories: []
 
 Great LIVE performance by [Tina Schleske](https://tinaschlieske.com), her sister Laura, and band at the Aster Cafe tonight. 
 
-<img src="https://www.thingelstad.com/uploads/2021/4b34e1c385.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/4b34e1c385.jpg" width="600" height="337" alt="Live band performing in a dimly lit bar, singer at a microphone with a guitarist and drummer behind her, audience watching nearby." />

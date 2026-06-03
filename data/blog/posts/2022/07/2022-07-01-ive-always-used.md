@@ -9,4 +9,4 @@ categories: []
 
 I've always used my WiFi SSID to broadcast my website thingelstad.com. I decided to add another SSID for my ENS name thingelstad.eth as well. 👋
 
-<img src="https://www.thingelstad.com/uploads/2022/3778ad2a7d.png" width="600" height="405" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/3778ad2a7d.png" width="600" height="405" alt="macOS Wi-Fi menu showing two preferred networks: thingelstad.com and thingelstad.eth, both password-protected, with thingelstad.eth currently connected." />

@@ -9,4 +9,4 @@ categories: ["Music"]
 
 [The Cactus Blossoms](http://www.thecactusblossoms.com) at the MN Zoo. So good! 🎶
 
-<img src="https://www.thingelstad.com/uploads/2017/2d26e1908c.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/2d26e1908c.jpg" alt="Band performing on outdoor stage at Music in the Zoo 25th anniversary concert, surrounded by trees and a seated crowd." width="600" height="600" style="height: auto" />

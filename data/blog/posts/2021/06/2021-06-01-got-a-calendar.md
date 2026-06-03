@@ -9,4 +9,4 @@ categories: []
 
 Got **[A Calendar of Wisdom](https://www.thepaintedporch.com/products/selfhelp5?_pos=1&_psq=calend&_ss=e&_v=1.0)** from [Painted Porch](https://www.thepaintedporch.com/). Discovered the book via [Ryan Holiday](https://ryanholiday.net/reading-newsletter/) so figured it should be my first purchase from his book store! Will be making this part of my daily reading habit. 📚
 
-<img src="https://www.thingelstad.com/uploads/2021/ae654b23bb.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/ae654b23bb.jpg" width="600" height="600" alt="A Calendar of Wisdom by Leo Tolstoy hardcover book with owl illustrations on its teal and white cover, resting on a table beside other books" />

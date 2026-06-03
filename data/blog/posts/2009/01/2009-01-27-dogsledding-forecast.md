@@ -9,4 +9,4 @@ categories: []
 
 All things considered, a pretty great forecast for dogsledding!
 
-<img src="https://www.thingelstad.com/uploads/2020/dd445acc74.png" style="max-width: 320px;" />
+<img src="https://www.thingelstad.com/uploads/2020/dd445acc74.png" alt="iPhone weather app showing Ely forecast with highs near 13-29 degrees and lows as cold as -8 degrees Fahrenheit through Sunday." style="max-width: 320px;" />

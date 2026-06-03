@@ -9,4 +9,4 @@ categories: []
 
 Tammy instantly loved these paintings by [Lissa Scotland](https://www.lissapaints.com) from Duluth. We decided that these two are coming home with us. Beautiful. 
 
-<img src="https://www.thingelstad.com/uploads/2025/c9b63fd5d5.jpg" width="600" height="600" alt=""><img src="https://www.thingelstad.com/uploads/2025/f82a1684c7.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/c9b63fd5d5.jpg" width="600" height="600" alt="Abstract acrylic painting titled Come Undone with pink organic shapes and green background in a light wood frame"><img src="https://www.thingelstad.com/uploads/2025/f82a1684c7.jpg" width="450" height="600" alt="Abstract acrylic painting of overlapping pink and rose floral forms on a deep red background, titled You're Still Very Lovable">

@@ -9,4 +9,4 @@ categories: []
 
 The Halloween fireworks over Magic Kingdom are amazing. View from Polynesian across the lake.
 
-<img src="https://www.thingelstad.com/uploads/2019/9ef338f7f0.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/9ef338f7f0.jpg" width="600" height="337" alt="Two silhouetted figures sit by Seven Seas Lagoon watching a large Halloween fireworks display burst over Magic Kingdom at night, with colorful reflections on the water." />

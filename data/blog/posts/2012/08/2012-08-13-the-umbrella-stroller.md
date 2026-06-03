@@ -9,4 +9,4 @@ categories: []
 
 The $18 umbrella stroller at Rite-Aid is nirvana for traveling parents.
 
-<img src="https://www.thingelstad.com/uploads/2020/1aa9cea046.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/1aa9cea046.jpg" width="600" height="800" alt="Toddler in blue shirt and Crocs sitting in a lightweight umbrella stroller inside a toy and book shop." />

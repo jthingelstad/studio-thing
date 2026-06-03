@@ -13,4 +13,4 @@ band](http://en.wikipedia.org/wiki/H%C3%BCsker_D%C3%BC)? What's with the
 game](http://en.wikipedia.org/wiki/H%C5%ABsker_D%C5%AB%3F)? I guess it's
 all in the ū versus the ü.
 
-![](https://www.thingelstad.com/uploads/2020/26f7d5262a.png)
+<img src="https://www.thingelstad.com/uploads/2020/26f7d5262a.png" alt="Husker Du board game box on a wooden table with orange ribbon and other items nearby, showing cartoon characters on the purple and yellow cover.">

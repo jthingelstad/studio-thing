@@ -11,8 +11,8 @@ The design of the Internet allows for an incredible amount of decentralization. 
 
 I got three notices recently that highlight one of many downsides of centralization. [Epsilon](http://www.epsilon.com/) had a data breach, and the dominoes fall all over the place.
 
-![](https://www.thingelstad.com/uploads/2020/5a002991a6.png)
+<img src="https://www.thingelstad.com/uploads/2020/5a002991a6.png" alt="Marriott International email dated April 4 2011 notifying customers of unauthorized access to Epsilon email list">
 
-![](https://www.thingelstad.com/uploads/2020/b3c49f817b.png)
+<img src="https://www.thingelstad.com/uploads/2020/b3c49f817b.png" alt="Hilton HHonors data breach notification letter signed by Jeffrey Diskin, Senior Vice President Customer Marketing">
 
-![](https://www.thingelstad.com/uploads/2020/8f13ecdf9e.png)
+<img src="https://www.thingelstad.com/uploads/2020/8f13ecdf9e.png" alt="TiVo Service Announcement email notifying customers of an email address data breach via their third-party email service provider Epsilon">

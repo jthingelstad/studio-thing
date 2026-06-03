@@ -9,4 +9,4 @@ categories: []
 
 Called up [Bevcomm](https://www.bevcomm.net) today and upgraded our DSL connection at the cabin to the fastest that we can provision. Hopefully this resolves the lag I've been experiencing in Zoom.
 
-<img src="https://www.thingelstad.com/uploads/2021/22e748676b.jpg" width="373" height="354" alt="" style="max-width: 373px;" />
+<img src="https://www.thingelstad.com/uploads/2021/22e748676b.jpg" width="373" height="354" alt="Internet speed test history showing download speeds of 16-25 Mbps and upload speeds ranging from 586 kbps to 7 Mbps across April 4-8 2021" style="max-width: 373px;" />

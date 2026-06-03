@@ -9,4 +9,4 @@ categories: []
 
 Getting wet on the [Maid of the Mist](https://www.maidofthemist.com) in the Horsehoe Falls at Niagara Falls! 🙌🏻
 
-<img src="https://www.thingelstad.com/uploads/2018/957d9af485.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/957d9af485.jpg" alt="Four people in blue Maid of the Mist rain ponchos smiling on a boat deck surrounded by mist from Niagara Falls" width="600" height="600" />

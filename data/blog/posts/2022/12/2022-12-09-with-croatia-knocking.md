@@ -9,4 +9,4 @@ categories: []
 
 With Croatia knocking out Brazil (what!?), my [EthSports World Cup 2022](https://www.ethsports.club) hopes are done for. 
 
-<img src="https://www.thingelstad.com/uploads/2022/b107fdf18d.png" width="554" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/b107fdf18d.png" width="554" height="600" alt="Four soccer balls marked ELIMINATED showing Spain, Brazil, Germany, and USA flags from the 2022 ETHsports World Cup">

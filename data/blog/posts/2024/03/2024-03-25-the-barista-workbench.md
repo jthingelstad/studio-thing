@@ -9,6 +9,6 @@ categories: ["Coffee"]
 
 The barista "workbench" at [Discourse Coffee](https://www.discourse.coffee) has an incredibly broad array of mixologist components. 🧑‍🔬☕️
 
-<img src="https://www.thingelstad.com/uploads/2024/ea5f44c4e0.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/ea5f44c4e0.jpg" width="600" height="337" alt="Bar workbench lined with spice jars, garnishes including lemon orange and cucumber, dried herbs, straws, and jiggers at a specialty coffee bar.">
 
 _Part of the [Milwaukee Spring Break collection](https://www.thingelstad.com/collections/milwaukee-spring-break/)._

@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 [Big Green Egg](https://biggreenegg.com) pork butts. 🔥 Extra smokey. 
 
-<img src="https://www.thingelstad.com/uploads/2017/a17bde77e1.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/a17bde77e1.jpg" alt="Two pork butts coated in dry rub smoking on a Big Green Egg kamado grill in a backyard with a playset visible behind." width="600" height="600" style="height: auto" />

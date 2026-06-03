@@ -9,4 +9,4 @@ categories: []
 
 Taking my (very dirty) boat in for the winter. 
 
-<img src="https://www.thingelstad.com/uploads/2025/6eb10b6a91.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/6eb10b6a91.jpg" width="600" height="450" alt="Pontoon boat approaching a white aluminum dock on a calm algae-covered pond with a lakehouse and trees in the background.">

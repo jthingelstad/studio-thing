@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/5715516">5715516</a> at <strong><a href="https://poap.gallery/drops/31749">UKRAINIAN FLAG NFT 🇺🇦 by @Ukraine_DAO Donor - 3.22</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/ukrainian-flag-nft-by-ukrainedao-donor-322-2022-logo-1646648770519.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/ukrainian-flag-nft-by-ukrainedao-donor-322-2022-logo-1646648770519.png" alt="Round sticker with Ukrainian flag colors showing a peace sign hand gesture and the text I Stand With Ukraine, 03.22, UkraineDAO Donor" width="500" height="500" />

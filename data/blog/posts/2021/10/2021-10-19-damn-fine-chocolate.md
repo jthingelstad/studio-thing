@@ -9,4 +9,4 @@ categories: []
 
 Damn fine Chocolate Chip Cookies from [Please & Thank You](https://pleaseandthankyoulouisville.com) in Louisville. 
 
-<img src="https://www.thingelstad.com/uploads/2021/b238845e9c.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/b238845e9c.jpg" width="600" height="600" alt="Four hands holding large chocolate chip cookies from Please and Thank You bakery, one broken open to show gooey chocolate chunks inside." />

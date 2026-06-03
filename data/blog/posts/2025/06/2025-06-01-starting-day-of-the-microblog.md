@@ -9,4 +9,4 @@ categories: []
 
 Starting day 1 of the [Micro.blog photo challenge](https://challenges.micro.blog/2025/05/31/june-photo-challenge.html) while we are on a [photo workshop in Banff](https://photoworkshopadventures.com/north-america/canada/banff-lake-louise). Day 1: **Tree**. 📷
 
-<img src="https://www.thingelstad.com/uploads/2025/d24c844d51.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/d24c844d51.jpg" width="600" height="400" alt="Tall evergreen trees reflected in the glassy surface of Two Jack Lake with Mount Rundle rising behind, Banff National Park">

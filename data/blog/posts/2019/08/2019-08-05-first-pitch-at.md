@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 First pitch at tonight’s Twins v Braves baseball game! ⚾️ Great night for a game.
 
-<img src="https://www.thingelstad.com/uploads/2019/eec051c63d.jpg" width="600" height="449" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/eec051c63d.jpg" width="600" height="449" alt="Packed Target Field stadium during a Minnesota Twins home game, with a pitcher mid-throw and batter at the plate under evening skies." />

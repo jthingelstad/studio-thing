@@ -7,7 +7,7 @@ post_kind: micropost
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/7264015a4f.jpg" style="width: 150px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/7264015a4f.jpg" alt="WordPress logo, a bold white letter W on a blue circular badge with a dark blue border" style="width: 150px; float: right; margin-left: 10px; " />
 
 I just upgraded [WordPress](http://www.wordpress.org/) to 2.3.2 on all
 of the sites I run. Of course this starts with the mandatory upgrade of

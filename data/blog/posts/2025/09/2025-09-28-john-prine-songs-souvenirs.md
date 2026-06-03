@@ -15,4 +15,4 @@ I don't remember how I found John Prine but I know it was on a CD run that I pic
 
 They also raise funds for Prine's [Hello in There Foundation](https://www.thehellointherefoundation.org) from each show. Wonderful stuff. 🎶
 
-<img src="https://www.thingelstad.com/uploads/2025/1866142830.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/1866142830.jpg" alt="Two musicians perform on stage at Dakota jazz club, one playing acoustic guitar at a microphone, one playing electric bass guitar.">

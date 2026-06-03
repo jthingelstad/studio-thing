@@ -9,7 +9,7 @@ categories: []
 
 I'm conducting a quick test to see how much interest there would be in hosting a Minneapolis WordCamp. [WordCamp](http://wordcamp.org/) is an [unconference](http://en.wikipedia.org/wiki/Unconference) focused on [WordPress](http://www.wordpress.org/) users and developers, including general topics on blogging as well.
 
-<img src="https://www.thingelstad.com/uploads/2020/3ebe474a4e.jpg" style="width: 400px; max-width: 400px;" />
+<img src="https://www.thingelstad.com/uploads/2020/3ebe474a4e.jpg" alt="WordCamp Minneapolis 2008 logo featuring the WordPress W icon inside a black circle with teal and black lettering" style="width: 400px; max-width: 400px;" />
 
 I've put a wiki page up at where you can read more and link to additional information about WordCamps. *If you would like to see an event like this happen, put your name on the sign up sheet!*
 

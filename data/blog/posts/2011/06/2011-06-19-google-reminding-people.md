@@ -7,8 +7,7 @@ post_kind: post
 categories: []
 ---
 
-I got this email yesterday for a blog that I help my brother-in-law out
-with. I haven't ever seen a notice like this:
+I got this email yesterday for a blog that I help my brother-in-law out with. I haven't ever seen a notice like this:
 
 > Dear site owner or webmaster of `domain-name-removed`. Your site
 > appears to be running an older version of WordPress. Google recommends
@@ -19,13 +18,8 @@ with. I haven't ever seen a notice like this:
 > provided more background information in a [blog post](http://googlewebmastercentral.blogspot.com/2009/11/new-software-version-notifications-for.html)
 > about this subject. Best wishes, Google Search Quality Team
 
-I didn't know that Google would send a notice like this. Seems like a
-good thing to do to keep the web a better place.
+I didn't know that Google would send a notice like this. Seems like a good thing to do to keep the web a better place.
 
 I logged in and upgraded his site for him.
 
-**Update July 6th:** This seems less cool than I hoped. Today I've
-gotten a number of emails on blogs that I upgraded on 7/4 to the newest
-WordPress saying I should upgrade them. Maybe Google is just seeing that
-the site is running WordPress and sending a note regardless of what
-version it is currently running?
+**Update July 6th:** This seems less cool than I hoped. Today I've gotten a number of emails on blogs that I upgraded on 7/4 to the newest WordPress saying I should upgrade them. Maybe Google is just seeing that the site is running WordPress and sending a note regardless of what version it is currently running?

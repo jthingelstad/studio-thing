@@ -9,4 +9,4 @@ categories: []
 
 Nice family bike ride around Lake Harriet tonight. 
 
-<img src="https://www.thingelstad.com/uploads/2018/48489d9771.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/48489d9771.jpg" alt="Child in white shirt and helmet riding a blue bike along a paved park trail lined with green trees and grass" width="600" height="337" />

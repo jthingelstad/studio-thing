@@ -21,7 +21,7 @@ Then Satya Nadella…
 
 All messages posted in a 6 minute period. Is [Humpty Dumpty together again](https://www.thingelstad.com/2023/11/21/prediction-microsoft-will.html)? 
 
-<img src="https://www.thingelstad.com/uploads/2023/openai-humpty-dumpty.jpeg" width="600" height="600" alt=""><br/>
+<img src="https://www.thingelstad.com/uploads/2023/openai-humpty-dumpty.jpeg" width="600" height="600" alt="Cartoon of two men in suits and a smiling egg character in a suit cheering with fists raised, speech bubble reads Regissed"><br/>
 _DALL-E rendition of Satya Nadella and Sam Altman celebrating after successfully putting Humpty Dumpty back together._
 
 ### Related Links

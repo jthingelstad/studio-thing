@@ -9,4 +9,4 @@ categories: []
 
 I've been wearing my Oura Ring for a few months and the sleep data is useful. They enable longer term analysis on the web. I've been feeling more tired the last few weeks, and the data clearly shows why.
 
-<img src="https://www.thingelstad.com/uploads/2022/010ee678e3.png" width="600" height="297" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/010ee678e3.png" width="600" height="297" alt="Line graph of total sleep from March to June 2022 showing a 6h23min average with a noticeable decline in sleep duration through May and June." />

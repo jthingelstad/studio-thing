@@ -9,4 +9,4 @@ categories: []
 
 From our family to yours, wishing you a very **Happy Thanksgiving!**
 
-<img src="https://www.thingelstad.com/uploads/2022/76b1559e11.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/76b1559e11.jpg" width="450" height="600" alt="Four people smiling together indoors for a Thanksgiving family photo, dressed casually and semi-formally">

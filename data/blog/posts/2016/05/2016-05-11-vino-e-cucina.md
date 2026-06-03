@@ -9,6 +9,6 @@ categories: []
 
 Delicious Italian food in Kyiv at [Vino e Cucina](http://famiglia.com.ua/vino-e-cucina/).
 
-![](https://www.thingelstad.com/uploads/2020/9719dcf6be.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/9719dcf6be.jpg" alt="Outdoor Italian restaurant patio at dusk with warm string lights strung across a wooden pergola roof and diners seated inside">
 
-![](https://www.thingelstad.com/uploads/2020/3f38f62884.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/3f38f62884.jpg" alt="Rows of Italian wine bottles stored on angled dark metal shelving in a wine cellar, with Barbaresco visible on one label.">

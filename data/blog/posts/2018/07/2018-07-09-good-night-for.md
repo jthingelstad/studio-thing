@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Good night for a Twins game! ⚾️ Twins v KC Royals! 
 
-<img src="https://www.thingelstad.com/uploads/2018/68fdd1d2f3.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/68fdd1d2f3.jpg" alt="Aerial view of Target Field during a Minnesota Twins vs Kansas City Royals baseball game with players on field and large crowd filling the stands." width="600" height="450" />

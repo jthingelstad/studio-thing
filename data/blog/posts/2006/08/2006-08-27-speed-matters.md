@@ -11,10 +11,10 @@ I've got a bunch of little USB flash drives hanging around. It is almost as if t
 
 Pathetic performance is documented below on one of my 1G flash cards.
 
-<img src="https://www.thingelstad.com/uploads/2020/9dc39357f7.png" style="width: 474px; " />
+<img src="https://www.thingelstad.com/uploads/2020/9dc39357f7.png" alt="ATTO Disk Benchmark results for a 1GB USB flash drive showing write speeds up to 2750 MB/s and read speeds up to 8579 MB/s across transfer sizes from 0.5 to 1024 KB." style="width: 474px; " />
 
 Of course this problem is easily solved with a credit card and a few clicks on [Newegg](http://www.newegg.com/). I ordered the [OCZ Rally2 2G accelerated](http://www.newegg.com/Product/Product.asp?Item=N82E16820227112) drive, and solved all of my problems.
 
-<img src="https://www.thingelstad.com/uploads/2020/4a3f019ea7.png" style="width: 474px; " />
+<img src="https://www.thingelstad.com/uploads/2020/4a3f019ea7.png" alt="ATTO Disk Benchmark results for OCZ Rally2 drive showing read speeds up to 19878 KB/s and write speeds up to 9532 KB/s across transfer sizes from 0.5 to 1024 KB." style="width: 474px; " />
 
 It is still no hard drive, but, the performance is very acceptable. And to boot, it's nicely packaged with a metal enclosure and no wasted room.

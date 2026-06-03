@@ -11,11 +11,11 @@ Shortcuts on OS 26 got a big new feature with the ability to use Apple Intellige
 
 To compare, this is how I did it with direct calls to the OpenAI API. 
 
-<img src="https://www.thingelstad.com/uploads/2025/shortcut-openai.png">
+<img src="https://www.thingelstad.com/uploads/2025/shortcut-openai.png" alt="Apple Shortcuts workflow with 8 steps including OpenAI API call, dictionary parsing, and text prompts for AI-powered automation.">
 
 There is a lot of fussy stuff to do to get keys, pass dictionaries around, get the specific values, etc. And actually this is hiding the hardest of it all. If you expand that Get Contents of URL action you'll see this.
 
-<img src="https://www.thingelstad.com/uploads/2025/shortcut-openai-api.png">
+<img src="https://www.thingelstad.com/uploads/2025/shortcut-openai-api.png" alt="Shortcuts Get Contents of URL action configured as a POST request to the OpenAI responses API, showing JSON body fields including model gpt-4.1, instructions, input array with role and content,">
 
 No way anyone without programming background is going to do this successfully. On top of it, my method for doing this is really brittle and prone to errors. I’m not catching all the possible API responses and if there is a problem it will just bail.
 
@@ -23,7 +23,7 @@ I’m also just kind of hoping that the response is JSON and I can marshal it in
 
 So, how about with Apple Intelligence and the built-in integration? Night and day difference. 
 
-<img src="https://www.thingelstad.com/uploads/2025/shortcut-apple-intelligence.png">
+<img src="https://www.thingelstad.com/uploads/2025/shortcut-apple-intelligence.png" alt="Apple Shortcuts workflow with three steps: Use Private Cloud Compute model with List output, Choose from Response, and Ask for Text with Final modifications.">
 
 Of course it is easier but it is so much easier. And one of the big wins is the output format. You can just tell it what you would like to get back. This avoids a ton of prompt engineering and parsing.
 

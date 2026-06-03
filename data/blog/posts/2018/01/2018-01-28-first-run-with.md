@@ -9,4 +9,4 @@ categories: []
 
 First run with the Sous Vide. Making beef tenderloin. 
 
-<img src="https://www.thingelstad.com/uploads/2018/41a6196a38.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/41a6196a38.jpg" alt="Vacuum-sealed beef tenderloin in a pot of water with an immersion circulator for sous vide cooking on a stovetop." width="600" height="600" />

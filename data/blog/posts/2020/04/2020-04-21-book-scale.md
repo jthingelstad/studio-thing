@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/eda53d49af.jpg" width="97" height="150" alt="" style="width: 97px; float: left; margin-right: 10px; "/>
+<img src="https://www.thingelstad.com/uploads/2020/eda53d49af.jpg" width="97" height="150" alt="Book cover with a glowing globe map of North America on a black background, by Geoffrey West, published by Penguin" style="width: 97px; float: left; margin-right: 10px; "/>
 
 My book club just finished reading [Scale: The Universal Laws of Growth, Innovation, Sustainability, and the Pace of Life in Organisms, Cities, Economies, and Companies](https://www.goodreads.com/book/show/31670196-scale)
 by [Geoffrey B. West](https://en.wikipedia.org/wiki/Geoffrey_West). This was a dense book focused on the concept of scaling, in the abstract. The author did a lot of research and shows some surprising scaling views to look at different animals, cities, and even companies. He identifies some amazing correlations that show how entities scale. 

@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Playoff soccer! We are UNITED! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2024/dac35463ca.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/dac35463ca.jpg" width="600" height="337" alt="Large white UNITED letters lit from below in front of a stadium glowing blue at night with people walking nearby.">

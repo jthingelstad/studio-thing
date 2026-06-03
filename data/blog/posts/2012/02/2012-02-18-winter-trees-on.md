@@ -9,4 +9,4 @@ categories: []
 
 Winter Trees on Minnehaha Creek.
 
-![](https://www.thingelstad.com/uploads/2020/eb59785974.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/eb59785974.jpg" alt="Black and white silhouette of bare winter trees against a pale sky above a snow-dusted path and creek">

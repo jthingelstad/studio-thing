@@ -9,4 +9,4 @@ categories: []
 
 Me and Gorilla. 
 
-<img src="https://www.thingelstad.com/uploads/2018/57eaa2db74.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/57eaa2db74.jpg" alt="Man in blue plaid shirt posing beside a large bronze gorilla sculpture indoors with tropical plants behind them" width="600" height="600" />

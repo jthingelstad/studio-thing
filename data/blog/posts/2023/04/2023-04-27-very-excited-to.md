@@ -9,4 +9,4 @@ categories: []
 
 Very excited to see **[Hamilton](https://en.wikipedia.org/wiki/Hamilton_(musical))** again tonight! 
 
-<img src="https://www.thingelstad.com/uploads/2023/71743c07eb.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/71743c07eb.jpg" width="600" height="450" alt="Family of four smiling in front of the Orpheum Theatre marquee showing Hamilton running April 4 to May 6">

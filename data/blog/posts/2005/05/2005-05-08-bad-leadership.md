@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/b61301fa05.gif" style="width: 100px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/b61301fa05.gif" alt="Book cover with bold red and white text on a black background, authored by Barbara Kellerman, published by Harvard Business School Press." style="width: 100px; float: right; margin-left: 10px; " />
 
 It's really hard for me to stop reading a book. Once I start I feel like I'm obligated to finish it. Usually this isn't a problem because overall most books are worthwhile. However, sometimes I get stuck on a book. I start it, but it doesn't catch me or it's just not that good. As a result I just let it sit there. However, now I've committed to that book so I don't get another one out. This results in a stall in my reading that can last months.
 

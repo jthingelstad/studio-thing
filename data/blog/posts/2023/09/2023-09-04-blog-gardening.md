@@ -13,7 +13,7 @@ As a long-term blogger though I've noticed that tending and curating my archive 
 
 Once you've gotten past the hurdle of regularly posting on your site, I highly recommending taking 5-10 minutes each day to do some small thing to curate and improve your blog. 
 
-![](https://www.thingelstad.com/uploads/2023/screenshot-2023-09-04-at-10.02.22-am.png)  
+<img src="https://www.thingelstad.com/uploads/2023/screenshot-2023-09-04-at-10.02.22-am.png" alt="Task item in OmniFocus titled Curate On This Day posts under Personal Routines project tagged Routines with a linked URL below it">  
 _My gardening routine in OmniFocus._
 
 Here is how I do it.

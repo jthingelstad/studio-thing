@@ -17,6 +17,6 @@ Wow! 😮
 
 Super strong kickoff to Minnebar — one of the best I can recall. Great energy, logistics well orchestrated, materials very well done. Amazing. 👏👏👏
 
-<img src="https://www.thingelstad.com/uploads/2025/e6273dcae2.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/e6273dcae2.jpg" alt="Large crowd seated at round tables in a bright convention center atrium listening to a speaker at a podium beside a projected slide.">
 
-<img src="https://www.thingelstad.com/uploads/2025/b88f0570a1.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/b88f0570a1.jpg" alt="Crowded conference hall with attendees seated at round tables during a lunch break, sponsor logos displayed on a large screen behind them.">

@@ -9,4 +9,4 @@ categories: []
 
 The Saturn V LEGO build might be my favorite LEGO yet. The way that it comes together is delightful. 
 
-<img src="https://www.thingelstad.com/uploads/2021/bff59e0f3b.jpg" width="599" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/bff59e0f3b.jpg" width="599" height="600" alt="Completed LEGO NASA Apollo Saturn V set standing upright on a wooden table beside its box and instruction booklet." />

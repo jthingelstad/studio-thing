@@ -9,4 +9,4 @@ categories: []
 
 Proud member of the EFF! [Donate now!](https://supporters.eff.org/donate/)
 
-<img src="https://www.thingelstad.com/uploads/2017/836d2855b5.jpg" style="max-width: 200px; " />
+<img src="https://www.thingelstad.com/uploads/2017/836d2855b5.jpg" alt="EFF Electronic Frontier Foundation 2017 Member badge, circular green and black design with circuit board pattern" style="max-width: 200px; " />

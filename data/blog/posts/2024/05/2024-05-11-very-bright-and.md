@@ -9,4 +9,4 @@ categories: []
 
 Very bright and showy Parrot Tulips at the [Minnesota Landscape Arboretum](https://arb.umn.edu).
 
-<img src="https://www.thingelstad.com/uploads/2024/e9d2a582f8.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/e9d2a582f8.jpg" width="600" height="400" alt="Yellow and red Parrot Tulips in full bloom filling a garden bed at the Minnesota Landscape Arboretum on a sunny day.">

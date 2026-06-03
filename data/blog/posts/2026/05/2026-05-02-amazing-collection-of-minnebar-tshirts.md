@@ -9,4 +9,4 @@ categories: ["Minnestar"]
 
 Amazing collection of Minnebar t-shirts over the years!
 
-<img src="https://www.thingelstad.com/uploads/2026/8d06beec41.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/8d06beec41.jpg" width="600" height="337" alt="Collection of colorful Minnebar event t-shirts displayed on a wire rack beside large number 20 cutouts with Minnestar branding.">

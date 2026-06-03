@@ -9,4 +9,4 @@ categories: []
 
 Graffitti in Kyiv.
 
-![](https://www.thingelstad.com/uploads/2020/41a201905a.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/41a201905a.jpg" alt="Underground pedestrian stairway in Kyiv with walls and railings covered in colorful graffiti tags and lettering">

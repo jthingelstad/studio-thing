@@ -9,4 +9,4 @@ categories: []
 
 Upper Falls at [Johnston Canyon](https://www.johnstoncanyon.ca/).
 
-<img src="https://www.thingelstad.com/uploads/2025/3e2f37f4c6.jpg" width="400" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/3e2f37f4c6.jpg" width="400" height="600" alt="Tall waterfall cascading down a narrow limestone canyon into a milky turquoise pool, with patches of snow on the rocks nearby.">

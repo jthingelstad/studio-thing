@@ -9,4 +9,4 @@ categories: []
 
 After months of little to no rain, it comes in buckets. 
 
-<img src="https://www.thingelstad.com/uploads/2021/6cea581147.png" width="441" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/6cea581147.png" width="441" height="600" alt="Radar map showing a large storm system stretching across Minnesota and the Dakotas with heavy precipitation in red, yellow, and green." />

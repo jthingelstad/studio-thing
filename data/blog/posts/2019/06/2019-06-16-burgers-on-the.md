@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Burgers on the [Big Green Egg](https://biggreenegg.com) for Father’s Day dinner! 🔥🍔🍺
 
-<img src="https://www.thingelstad.com/uploads/2019/01158aff3e.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/01158aff3e.jpg" width="600" height="600" alt="Big Green Egg kamado grill smoking on a backyard patio, with burger buns, cheese slices, and a beer can on a plate beside it." />

@@ -9,4 +9,4 @@ categories: []
 
 Not midnight yet, but Happy New Year's Eve from Tammy and I!
 
-<img src="https://www.thingelstad.com/uploads/2020/6fc6bc938d.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/6fc6bc938d.jpg" width="600" height="800" alt="Two champagne flutes filled with bubbly beside a bottle of Perrier-Jouet Belle Epoque champagne on a dark kitchen counter." />

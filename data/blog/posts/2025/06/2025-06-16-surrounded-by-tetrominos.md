@@ -9,4 +9,4 @@ categories: []
 
 Surrounded by [Tetrominos](https://en.wikipedia.org/wiki/Tetromino). 
 
-<img src="https://www.thingelstad.com/uploads/2025/c0513825ce.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/c0513825ce.jpg" width="600" height="600" alt="Large colorful plastic Tetris piece replicas in green, red, yellow, purple, blue, and teal arranged on a white table indoors.">

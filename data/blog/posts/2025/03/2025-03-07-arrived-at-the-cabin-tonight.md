@@ -9,4 +9,4 @@ categories: []
 
 Arrived at the cabin tonight and were greeted with a two-foot-high snow plow line to shovel through. Cleared enough to barrel through. 
 
-<img src="https://www.thingelstad.com/uploads/2025/fb14f2c846.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/fb14f2c846.jpg" width="600" height="600" alt="Night shot of a large snow plow berm blocking a driveway entrance near a mailbox marked 6025, with marker stakes visible along the edge.">

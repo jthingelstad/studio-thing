@@ -9,4 +9,4 @@ categories: []
 
 Excited to see [Aladdin](https://aladdinthemusical.com/) at the Orpheum!
 
-<img src="https://www.thingelstad.com/uploads/2023/2c034d4bc9.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/2c034d4bc9.jpg" width="600" height="450" alt="Group of six people smiling for a selfie outside the Orpheum Theatre under the Disney Aladdin Broadway musical marquee reading December 5-10.">

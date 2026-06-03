@@ -9,4 +9,4 @@ categories: []
 
 The Thingelstad's sporting our Dr. Seuss Things shirts at Universal Studios today!
 
-<img src="https://www.thingelstad.com/uploads/2022/490a2ea1cc.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/490a2ea1cc.jpg" width="450" height="600" alt="Family of four in matching Dr. Seuss Thing 1 and Thing 2 themed shirts posing in front of the Universal Studios globe.">

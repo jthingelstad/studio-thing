@@ -9,4 +9,4 @@ categories: []
 
 Happy 4th of July! 🇺🇸
 
-<img src="https://www.thingelstad.com/uploads/2025/6746db11b8.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/6746db11b8.jpg" width="450" height="600" alt="Two people smiling outdoors wearing patriotic red white and blue outfits and USA caps standing under a maple tree">

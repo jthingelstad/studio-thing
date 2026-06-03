@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 The picture doesn’t do justice to the smells coming off the [Big Green Egg](https://biggreenegg.com).
 
-<img src="https://www.thingelstad.com/uploads/2020/9ece8eed33.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/9ece8eed33.jpg" width="600" height="450" alt="Big Green Egg kamado grill smoking from the top vent, with a thermometer on the side, set in a green backyard." />

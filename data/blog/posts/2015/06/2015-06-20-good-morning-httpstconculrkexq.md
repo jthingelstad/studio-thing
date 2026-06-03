@@ -9,4 +9,4 @@ categories: []
 
 Good Morning! 
 
-<img src="https://www.thingelstad.com/uploads/2020/8b542adad5.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/8b542adad5.jpg" width="600" height="800" alt="Espresso pouring from a portafilter into a white illy collection cup on a chrome espresso machine drip tray with two pressure gauges visible." />

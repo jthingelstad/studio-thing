@@ -9,4 +9,4 @@ categories: []
 
 As great as yesterday’s weather 🌤 was, that is how not great today’s weather 💨🌧 is. Brrr! 🥶
 
-<img src="https://www.thingelstad.com/uploads/2020/5b2484e615.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/5b2484e615.jpg" width="600" height="450" alt="Lightly snow-dusted backyard sloping down to a choppy gray lake on a cold foggy winter day, bare trees in the distance." />

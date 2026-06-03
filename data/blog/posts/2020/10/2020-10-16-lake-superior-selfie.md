@@ -9,4 +9,4 @@ categories: []
 
 [Lake Superior](https://en.wikipedia.org/wiki/Lake_Superior) selfie. 😊
 
-<img src="https://www.thingelstad.com/uploads/2020/6d650b5c7b.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/6d650b5c7b.jpg" width="600" height="450" alt="Smiling man in a gray beanie and orange plaid shirt takes a selfie by calm Lake Superior with a rocky island in the background." />

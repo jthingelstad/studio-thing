@@ -9,4 +9,4 @@ categories: []
 
 Ice cream at [Sleeping Giant Ice Cream](https://sleepinggianticecream.com) in Kerhonkson. 🍦
 
-<img src="https://www.thingelstad.com/uploads/2021/535ea1b29b.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/535ea1b29b.jpg" width="600" height="600" alt="Four people holding large scoops of ice cream including mint chip and cookies and cream flavors, viewed from above on a gravel surface." />

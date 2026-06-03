@@ -7,10 +7,6 @@ post_kind: post
 categories: []
 ---
 
-I've been using only real maple syrup at home for a while. I kind of
-take it as a given that people know that most syrup in the store is just
-various corn syrups with maple flavoring. I ran into this syrup on a
-recent trip back home though. Doesn't that label just make you ask what
-the other 98% is?
+I've been using only real maple syrup at home for a while. I kind of take it as a given that people know that most syrup in the store is just various corn syrups with maple flavoring. I ran into this syrup on a recent trip back home though. Doesn't that label just make you ask what the other 98% is?
 
-![](https://www.thingelstad.com/uploads/2020/27bd5af396.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/27bd5af396.jpg" alt="Our Family brand syrup bottle on a wooden surface, label showing pancakes with syrup and Quality Since 1904 tagline">

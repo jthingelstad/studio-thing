@@ -9,4 +9,4 @@ categories: []
 
 Quebec Old City.
 
-<img src="https://www.thingelstad.com/uploads/2025/74e732be2f.jpg" width="600" height="395" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/74e732be2f.jpg" width="600" height="395" alt="Stone and brick row houses with flower boxes and green trim line a cobblestone street in Old Quebec City on a sunny day.">

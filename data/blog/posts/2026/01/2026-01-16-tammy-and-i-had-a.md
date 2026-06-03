@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I had a delicious evening at [Rio 1854](https://rio1854.com) — the Surf & Turf for two was amazing. Recommended!
 
-<img src="https://www.thingelstad.com/uploads/2026/885445deae.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2026/f5ad9a7a7e.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/885445deae.jpg" width="600" height="450" alt="Two people smiling at a restaurant table holding red cocktails in coupe glasses, with a menu and water glasses between them."><img src="https://www.thingelstad.com/uploads/2026/f5ad9a7a7e.jpg" width="600" height="449" alt="Cast iron platter with lobster tail, grilled shrimp, salmon, steak, corn, and vegetables, served with guacamole, rice, and butter">

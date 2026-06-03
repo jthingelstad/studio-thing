@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 What a great POAP for [SPS Tech Connect 2025](https://poap.gallery/drops/185457)!
 
-<img src="https://www.thingelstad.com/uploads/2025/tech-connect-2025.gif" width="512" height="500" alt="" style="max-width: 512px;" >
+<img src="https://www.thingelstad.com/uploads/2025/tech-connect-2025.gif" width="512" height="500" alt="Circular dark badge with colorful bubbles in blue teal orange and purple labeled SPS TechConnect 2025" style="max-width: 512px;" >

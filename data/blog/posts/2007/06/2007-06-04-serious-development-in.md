@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/fe8bfcd601.jpg" style="width: 178px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/fe8bfcd601.jpg" alt="Ajax brand cleaning product logo with bold red lettering on a swirling blue and white circular design" style="width: 178px; float: right; margin-left: 10px; " />
 
 JavaScript is a really powerful development environment. Really.
 

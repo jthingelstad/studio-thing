@@ -9,4 +9,4 @@ categories: []
 
 “My God, it’s full of phones.”
 
-<img src="https://www.thingelstad.com/uploads/2025/8be689dff0.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/8be689dff0.jpg" width="600" height="450" alt="Large indoor concert crowd holding up glowing phone screens toward a brightly lit stage with performers in the distance.">

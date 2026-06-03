@@ -73,15 +73,15 @@ I had some delicious drinks along with dinner.
 **Paloma**  
 Repasado Tequila, Spicy Grapefruit Cordial, Fresh Grapefruit & Lime Juice, Highball Soda Water
 
-![](https://www.thingelstad.com/uploads/2020/e03c196140.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/e03c196140.jpg" alt="Pale yellow cocktail garnished with a watermelon cube in a tall faceted glass on a white outdoor patio table, with a live band and diners in the background">
 
 **El Valiente (The Brave Man)**  
 Tommy's Margarita, the simple and famous blend of Tequila, Agave, Lime
 
-![](https://www.thingelstad.com/uploads/2020/41690e9f8c.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/41690e9f8c.jpg" alt="Pale yellow cocktail with crushed ice and a dried citrus slice garnish in a ribbed glass tumbler on a white table">
 
 ### Music
 
 To top off the beautiful evening on the rooftop patio we also had delightful music from [Riverside Unplugged](https://www.riversideentertainmentmn.com/riversideunplugged). They played a wide variety and were seemingly ready to play anything. We requested [Prince](https://prince.com) and [Brandi Carlile](https://www.brandicarlile.com) and they did both without hesitation. 🎶
 
-![](https://www.thingelstad.com/uploads/2020/62df55add0.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/62df55add0.jpg" alt="Three-piece band performs on a rooftop patio at golden hour, with a female singer, acoustic guitarist, and electric bassist playing for seated guests nearby.">

@@ -9,4 +9,4 @@ categories: []
 
 I finally got my first house in [SleepTown](https://sleeptown.seekrtech.com). Interesting app concept from the makers of Forest. Every house represents my persistence to achieve my sleeping goal!
 
-<img src="https://www.thingelstad.com/uploads/2017/94e2ca06b4.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/94e2ca06b4.jpg" alt="Promotional graphic for SleepTown app showing an isometric building on a green tile with roads, trees, and the tagline Build healthy sleep habits." width="600" height="600" />

@@ -9,4 +9,4 @@ categories: []
 
 Family selfie — potential album cover. 
 
-<img src="https://www.thingelstad.com/uploads/2025/aa52aef75a.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/aa52aef75a.jpg" width="600" height="600" alt="Four people standing in a long white corridor, looking upward with serious expressions">

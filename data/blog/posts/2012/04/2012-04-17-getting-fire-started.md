@@ -9,4 +9,4 @@ categories: []
 
 Getting fire started. Perfect night for it.
 
-<img src="https://www.thingelstad.com/uploads/2024/dafcae32-171b-4242-8a05-03282117d239.jpg" width="600" height="800" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/dafcae32-171b-4242-8a05-03282117d239.jpg" width="600" height="800" alt="Metal lattice fire pit basket burning wood logs on a backyard patio at dusk, flames glowing through the openings.">

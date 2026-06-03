@@ -9,4 +9,4 @@ categories: []
 
 Just upgraded my first machine to macOS Monterey. Very smooth. Took about an hour. I'm giddy to see Shortcuts on my Mac now! Going to be playing around for a while now.
 
-<img src="https://www.thingelstad.com/uploads/2021/5b04ab0fdb.jpg" width="600" height="365" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/5b04ab0fdb.jpg" width="600" height="365" alt="About This Mac screen showing macOS Monterey 12.0.1 on a MacBook Pro 13-inch M1 2020 with 8GB memory." />

@@ -9,4 +9,4 @@ categories: []
 
 [Team Red, White, and Blue](https://teamrwb.org/marathon-charity-bibs) out running the Twin Cities Marathon this morning!
 
-<img src="https://www.thingelstad.com/uploads/2025/39485d2364.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/39485d2364.jpg" width="600" height="449" alt="Group of runners in red Team RWB shirts carrying an American flag during the Twin Cities Marathon on a tree-lined course.">

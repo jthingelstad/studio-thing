@@ -9,4 +9,4 @@ categories: []
 
 Thinking about my grandparents legacy: 6 kids, 15 grandchildren and 21 great grandchildren (so far…)
 
-<img src="https://www.thingelstad.com/uploads/2017/e79669cf22.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/e79669cf22.jpg" alt="Vintage framed wedding photo of a smiling couple wearing corsages, with a pendant reading To Rose, The Love Of My Life, Ardell." width="600" height="600" style="height: auto" />

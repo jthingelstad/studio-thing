@@ -7,18 +7,7 @@ post_kind: post
 categories: []
 ---
 
-I recently received a flier from the [League of American
-Bicyclists](http://www.bikeleague.org/) regarding the [Bicycling
-Friendly Community](http://www.bicyclefriendlycommunity.org/) campaign
-they run. I've been a member of LAB for years and plan to continue. I'm
-a member of many bicycling organizations but LAB is unique and in many
-ways the most important. The other organizations focus on rides and
-trails mostly while LAB focuses on Washington DC and policy. They are
-our voice (I'll use the word lobbyist trying to forget the slimy
-implications) for cycling in America. In addition to getting some
-additional funding from me for this program, I decided to do a little
-grass-roots advocacy of my own. The letter below is to the Mayor of
-Minnetonka.
+I recently received a flier from the [League of American Bicyclists](http://www.bikeleague.org/) regarding the [Bicycling Friendly Community](http://www.bicyclefriendlycommunity.org/) campaign they run. I've been a member of LAB for years and plan to continue. I'm a member of many bicycling organizations but LAB is unique and in many ways the most important. The other organizations focus on rides and trails mostly while LAB focuses on Washington DC and policy. They are our voice (I'll use the word lobbyist trying to forget the slimy implications) for cycling in America. In addition to getting some additional funding from me for this program, I decided to do a little grass-roots advocacy of my own. The letter below is to the Mayor of Minnetonka.
 
 > Mayor Anderson,
 >

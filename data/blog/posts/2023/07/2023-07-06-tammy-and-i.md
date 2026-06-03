@@ -9,4 +9,4 @@ categories: ["Music"]
 
 Tammy and I checked out Dinner Jazz with **Jeremy Ylvisaker** and **Martin Dosh** at Icehouse Minneapolis tonight. 🎶
 
-<img src="https://www.thingelstad.com/uploads/2023/38aaa0a545.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/38aaa0a545.jpg" width="600" height="337" alt="Three musicians performing under red stage lighting outdoors, with drums on left, electric guitar center, and guitar on right.">

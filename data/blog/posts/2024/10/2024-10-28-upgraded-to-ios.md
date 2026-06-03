@@ -9,4 +9,4 @@ categories: []
 
 Upgraded to iOS 18.1 and took less than 10 minutes on the “waitlist” to get provisioned with Apple Intelligence. Looking forward to playing with this. 🧠
 
-<img src="https://www.thingelstad.com/uploads/2024/d756a15a14.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/d756a15a14.jpg" width="600" height="600" alt="iPhone screen showing Apple Intelligence Beta setup page with Writing and Summarization, new Siri era, and Built for Privacy features listed.">

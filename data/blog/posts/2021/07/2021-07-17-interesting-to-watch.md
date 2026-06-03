@@ -9,4 +9,4 @@ categories: []
 
 Interesting to watch this weed harvester working to clean up Cannon Lake a bit. 
 
-<img src="https://www.thingelstad.com/uploads/2021/36b4b673ee.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/36b4b673ee.jpg" width="600" height="450" alt="Aquatic weed harvester machine operating on a lake, with a person in a red shirt at the controls, cutting equipment churning water." />

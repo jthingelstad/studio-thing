@@ -9,4 +9,4 @@ categories: []
 
 Pretending I’m a rancher and burning brush. 
 
-<img src="https://www.thingelstad.com/uploads/2017/7fd170d5df.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/7fd170d5df.jpg" alt="Campfire burning in a metal fire ring with roasting forks, surrounded by blue Adirondack chairs on gravel, a black dog and lake visible beyond." width="600" height="600" />

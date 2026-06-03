@@ -9,4 +9,4 @@ categories: []
 
 I love updating things — but this is an entirely different level. 🎉👍
 
-<img src="https://www.thingelstad.com/uploads/2018/e6f6f9f46a.jpg" width="600" height="149" />
+<img src="https://www.thingelstad.com/uploads/2018/e6f6f9f46a.jpg" alt="Tesla app notification from 1 hour ago reading: Thing 3 - Software update is available." width="600" height="149" />

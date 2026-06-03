@@ -9,4 +9,4 @@ categories: []
 
 Cocktails at [The Block](https://www.theblockslp.com). The Basic Blueberry and Craft & Crew Old Fashioned.  🥃
 
-<img src="https://www.thingelstad.com/uploads/2019/ea0b3eba8c.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/ea0b3eba8c.jpg" width="600" height="600" alt="Two cocktails on a wooden bar top: a red fruity drink with ice in a plain rocks glass and an amber Old Fashioned in a cut crystal rocks glass." />

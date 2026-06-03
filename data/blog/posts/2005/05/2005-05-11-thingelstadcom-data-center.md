@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/e29ed4a408.jpg" style="width: 250px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/e29ed4a408.jpg" alt="Black server rack holding multiple 1U servers, a KVM switch, and a CRT monitor on top, installed in a basement utility room with pipes visible behind it." style="width: 250px; float: right; margin-left: 10px; " />
 
 Over the last few months I've been on a steady march to increase my server capacity at home. Why? I'm not entirely sure why. How about it's fun? 🙂
 

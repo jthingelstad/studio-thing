@@ -9,4 +9,4 @@ categories: []
 
 I'm sure that there are people that can look cool with a GoPro attached to their forehead. However, I am not one of them. 😬
 
-<img src="https://www.thingelstad.com/uploads/2020/d123569208.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d123569208.jpg" width="600" height="450" alt="Man in a plaid shirt and sunglasses relaxing on a raft with a GoPro camera strapped to his forehead, river and hillside behind him." />

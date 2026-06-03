@@ -21,6 +21,6 @@ We had a great Juneteenth celebration for TeamSPS today! It was a fun event, wit
 
 
 
-<img src="https://www.thingelstad.com/uploads/2023/7bd81533d7.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/7bd81533d7.jpg" width="600" height="450" alt="Crowd of coworkers eating, chatting, and browsing packaged snacks and products on long tables in a modern office cafeteria">
 
-<img src="https://www.thingelstad.com/uploads/2023/6edc8030e6.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/6edc8030e6.jpg" width="600" height="450" alt="Symphony Potato Chips bag and 3 Leche Kombucha matchbooks on a table beside candles labeled Juneteenth, with people seated in the background.">

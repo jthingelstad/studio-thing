@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Watching [Spirit of the Marathon](https://www.themoviedb.org/movie/27907). 🍿
 
-<img src="https://www.thingelstad.com/uploads/2025/spirit-of-the-marathon.jpg" width="600" height="844" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/spirit-of-the-marathon.jpg" width="600" height="844" alt="Movie poster for Spirit of the Marathon showing runners crossing a finish line with arms raised, city skyline in background.">

@@ -9,4 +9,4 @@ categories: []
 
 Taking the pontoon to storage for the winter. Biking back to lake. 
 
-<img src="https://www.thingelstad.com/uploads/2021/8fd52bc6e8.jpg" width="600" height="400" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/8fd52bc6e8.jpg" width="600" height="400" alt="Green road bike loaded on a Sunsat pontoon boat crossing a lake, viewed from the helm with steering wheel and gauges visible." />

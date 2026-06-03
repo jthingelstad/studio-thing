@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Smoked this chili on the Big Green Egg for four hours. Tasted delicious. Best chili ever!
 
-![](https://www.thingelstad.com/uploads/2021/8a917d6120.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/8a917d6120.jpg" alt="Dutch oven full of bubbling red chili smoking on a Big Green Egg ceramic grill outdoors.">

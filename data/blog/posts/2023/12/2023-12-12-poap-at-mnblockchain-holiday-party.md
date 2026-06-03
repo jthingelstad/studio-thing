@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6937660">6937660</a> at <strong><a href="https://poap.gallery/drops/165575">MNBlockchain - Holiday Party</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/7bca9851-db31-4422-b764-ee844da0b392.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/7bca9851-db31-4422-b764-ee844da0b392.png" alt="MNblockchain 2023 Happy Holidays circular badge with Minneapolis skyline, northern lights, snow-covered trees, and a reflective winter lake" width="500" height="500" />

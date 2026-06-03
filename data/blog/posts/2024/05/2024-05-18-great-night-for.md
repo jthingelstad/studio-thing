@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Great night for Minnesota United FC v Portland Timbers! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2024/5c69290e9e.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2024/4e13d37f2c.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/5c69290e9e.jpg" width="600" height="450" alt="Fan in a Pukki 22 jersey waves a large MNUFC flag over a packed Allianz Field during a Minnesota United FC match."><img src="https://www.thingelstad.com/uploads/2024/4e13d37f2c.jpg" width="600" height="450" alt="Minnesota United FC hosts Portland Timbers at Allianz Field, players mid-match on the pitch with a packed stadium crowd behind them.">

@@ -13,4 +13,4 @@ We had previously [done Istanbul Gambit](https://www.thingelstad.com/2025/02/15/
 
 Highly recommend giving this room a go — we had a great time! [Room 69](https://www.thingelstad.com/lists/escape-rooms/)!
 
-<img src="https://www.thingelstad.com/uploads/2025/ee099c038c.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/ee099c038c.jpg" width="600" height="450" alt="Four people smiling together inside a rustic log cabin room with stone fireplace and round porthole windows overhead.">

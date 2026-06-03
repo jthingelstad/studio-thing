@@ -9,4 +9,4 @@ categories: []
 
 Gorgeous warm day for a quick walk at [Desert Trail Park](https://www.mesaparks.com/parks-facilities/parks/desert-trails-park). 🌵
 
-<img src="https://www.thingelstad.com/uploads/2021/7fc527b952.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/7fc527b952.jpg" width="600" height="450" alt="Family of four smiling together on a desert trail surrounded by tall saguaro cacti under a partly cloudy sky." />

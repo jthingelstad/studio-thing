@@ -9,6 +9,6 @@ categories: []
 
 On Tuesday of this week I got to be part of the [SPS team ringing the market bell](http://www.nasdaqomx.com/newsroom/marketbellceremonies#4227) to start the trading day on NASDAQ! It was a ton of fun.
 
-![](https://www.thingelstad.com/uploads/2020/4965afec85.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/4965afec85.jpg" alt="Group of smiling people waving at the NASDAQ podium with SPS Commerce logo displayed on a large screen behind them">
 
 <p class="alert">Should add more photos and video to this post.</p>

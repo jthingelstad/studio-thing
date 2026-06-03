@@ -9,4 +9,4 @@ categories: []
 
 A giant frog is singing over an artificial waterfall. Only in Vegas. 
 
-<img src="https://www.thingelstad.com/uploads/2019/4989c33495.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/4989c33495.jpg" width="600" height="450" alt="Cartoon frog figure peering over a curved wall above a glowing blue pool, surrounded by trees lit in blue and green at night.">

@@ -9,4 +9,4 @@ categories: ["Minnestar"]
 
 Crowd queuing up for Minnedemo 33 at the Riverview Theater!
 
-<img src="https://www.thingelstad.com/uploads/2019/36a8f98e3f.jpg" width="600" height="338" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/36a8f98e3f.jpg" width="600" height="338" alt="Crowd lining up outside the Riverview Theater marquee showing Minnedemo at 7PM, with a food truck parked nearby at dusk." />

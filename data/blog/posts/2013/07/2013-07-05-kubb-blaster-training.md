@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Kubb blaster training. Small yard.
 
-<img src="https://www.thingelstad.com/uploads/2023/img-9399.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/img-9399.jpg" width="600" height="450" alt="Kubb game pieces standing upright in a small grassy front yard beside a herringbone brick driveway with a lawn mower in the background.">

@@ -9,4 +9,4 @@ categories: []
 
 Idyllic evening on Morgan Avenue. 
 
-<img src="https://www.thingelstad.com/uploads/2018/2374b16972.jpg" width="450" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/2374b16972.jpg" alt="Large oak tree with rope swing beside a quiet residential street at dusk, surrounded by lush green lawn and mature trees" width="450" height="600" />

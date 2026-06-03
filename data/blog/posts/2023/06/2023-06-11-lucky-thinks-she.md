@@ -9,4 +9,4 @@ categories: []
 
 Lucky thinks she is an 80 pound lap dog!? 😬
 
-<img src="https://www.thingelstad.com/uploads/2023/1f5347a896.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/1f5347a896.jpg" width="600" height="600" alt="Young girl smiling in car back seat with a large fluffy white goldendoodle sprawled across her lap">

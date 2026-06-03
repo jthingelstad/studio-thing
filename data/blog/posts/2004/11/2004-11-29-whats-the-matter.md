@@ -7,15 +7,9 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/bbc06d513e.jpg" style="width: 116px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/bbc06d513e.jpg" alt="Book cover showing a donkey and elephant illustration with subtitle How Conservatives Won the Heart of America by Thomas Frank" style="width: 116px; float: right; margin-left: 10px; " />
 
-I heard about Thomas Frank's book [What's the Matter With
-Kansas?](http://www.amazon.com/dp/0805073396/) on [The Daily
-Show](http://www.comedycentral.com/tv_shows/thedailyshowwithjonstewart/)
-shortly after the presidential election. The author caught my interest
-and I picked up a copy of the book. I found this book to be a great
-read. He does a good job of looking at historical precedent and taking
-apart what has changed.
+I heard about Thomas Frank's book [What's the Matter With Kansas?](http://www.amazon.com/dp/0805073396/) on [The Daily Show](http://www.comedycentral.com/tv_shows/thedailyshowwithjonstewart/) shortly after the presidential election. The author caught my interest and I picked up a copy of the book. I found this book to be a great read. He does a good job of looking at historical precedent and taking apart what has changed.
 
 From the book:
 
@@ -33,8 +27,4 @@ From the book:
 > conflict with Israel, but when I read it I thought immediately of my
 > dear old Kansas...
 
-Frank does not write from the center. He clearly is pro-liberal,
-pro-union and pro-choice. However, the text does not turn into
-self-righteous drivel. In fact, he takes issue with the lack of liberal
-attitudes in the democratic party -- pointing out the weakness that now
-dominates it.
+Frank does not write from the center. He clearly is pro-liberal, pro-union and pro-choice. However, the text does not turn into self-righteous drivel. In fact, he takes issue with the lack of liberal attitudes in the democratic party -- pointing out the weakness that now dominates it.

@@ -20,6 +20,6 @@ Notes:
 
 I'm sharing this as my own notes for any value they may have to others.
 
-<img src="https://www.thingelstad.com/uploads/2021/42cc3900e2.jpg" width="600" height="409" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/42cc3900e2.jpg" width="600" height="409" alt="Horizontal bar chart comparing crypto portfolio allocations in April vs March 2021 across 14 cryptocurrencies, with Bitcoin at 43.95% and Ether at 36.20% leading in April." />
 
 <p class="financial-disclaimer">The information provided on this website does not constitute investment advice, financial advice, trading advice, or any other sort of advice and you should not treat any of the content as such. This website does not recommend that any cryptocurrency should be bought, sold, or held by you. Conduct your own due diligence and consult your financial advisor before making any investment decisions.</p>

@@ -9,4 +9,4 @@ categories: []
 
 Most terrifying thing about renting the RV? Taking it to the truck wash before returning it and navigating this shockingly small entry! Should have brought a helper. Only a few inches on every side. 😬
 
-<img src="https://www.thingelstad.com/uploads/2020/b75a61609c.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/b75a61609c.jpg" width="600" height="600" alt="Jayco RV trailer backed into a tight brick car wash bay entrance with only inches of clearance on each side." />

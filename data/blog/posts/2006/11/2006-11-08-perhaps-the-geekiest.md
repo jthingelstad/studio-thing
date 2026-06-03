@@ -7,8 +7,7 @@ post_kind: post
 categories: []
 ---
 
-So when your wife is upstairs on her computer, and you are downstairs on
-your computer, how do you communicate? Why not video chat? 🙂
+So when your wife is upstairs on her computer, and you are downstairs on your computer, how do you communicate? Why not video chat? 🙂
 
 ![Local
 Videoconference](https://www.thingelstad.com/uploads/2020/926f486509.png)

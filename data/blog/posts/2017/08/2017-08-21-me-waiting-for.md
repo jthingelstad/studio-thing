@@ -9,4 +9,4 @@ categories: []
 
 Me waiting for totality!
 
-<img src="https://www.thingelstad.com/uploads/2017/a7cff5b9a3.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/a7cff5b9a3.jpg" alt="Man wearing paper solar eclipse viewing glasses smiling outdoors while waiting to watch a solar eclipse" width="600" height="600" />

@@ -9,4 +9,4 @@ categories: []
 
 Big crowd at [Dino’s Pizzeria](https://www.dinospizzeria.com) in Mankato tonight! Delicious pizza! 🍕
 
-<img src="https://www.thingelstad.com/uploads/2019/5bd003c505.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/5bd003c505.jpg" width="450" height="600" alt="Dino's Pizza neon sign glowing above a crowded sidewalk outside the restaurant at night in Mankato Minnesota" />

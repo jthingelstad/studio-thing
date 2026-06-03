@@ -9,6 +9,6 @@ categories: []
 
 Tyler completed the Great Wave LEGO kit today. This is his favorite artwork and a very cool LEGO.
 
-<img src="https://www.thingelstad.com/uploads/2024/888deffacf.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/888deffacf.jpg" width="600" height="450" alt="LEGO Art set of Hokusais The Great Wave displayed in a tan frame on a painted wooden table indoors">
 
-<img src="https://www.thingelstad.com/uploads/2024/9779ce15ba.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/9779ce15ba.jpg" width="600" height="450" alt="Completed LEGO Art set 31208 The Great Wave by Hokusai displayed beside its box on a painted table with Christmas lights in background.">

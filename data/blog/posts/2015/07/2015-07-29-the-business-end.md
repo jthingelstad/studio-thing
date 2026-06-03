@@ -9,4 +9,4 @@ categories: []
 
 The business end of my new toy. Get it next Friday! 
 
-<img src="https://www.thingelstad.com/uploads/2024/97d13b10-bb9b-479d-85bd-a5602a6da080.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/97d13b10-bb9b-479d-85bd-a5602a6da080.jpg" width="600" height="450" alt="Suzuki Four Stroke outboard motor mounted on the stern of a pontoon boat in a dealer lot">

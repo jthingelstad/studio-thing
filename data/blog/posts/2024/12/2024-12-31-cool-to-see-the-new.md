@@ -11,4 +11,4 @@ Cool to see the new [Mimi Uploader](https://samgrover.com/2024/12/31/a-new-versi
 
 I'm still wondering how to name collections. It seems if you have 100 or more collections it is going to get unruly, similar to Pages. 🤔
 
-<img src="https://www.thingelstad.com/uploads/2024/3c1032fadb.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/3c1032fadb.jpg" width="600" height="600" alt="iPhone screen showing Mimi Uploader app displaying 9 photo collections on thingelstad.com including Coffee, Iceland, Ireland, Italy, and kayaking albums.">

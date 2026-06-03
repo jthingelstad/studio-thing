@@ -9,4 +9,4 @@ categories: []
 
 Transferring data to the iPhone 13 Pro. Upgrading from the iPhone XS. Most excited to try out all the camera innovation over the last three years!
 
-<img src="https://www.thingelstad.com/uploads/2021/219c6b7418.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/219c6b7418.jpg" width="600" height="600" alt="Two iPhones side by side on a table transferring data, left showing Transferring Data to iPhone 13 Pro, right showing Transferring Data from Megaphone XS, both plugged in." />

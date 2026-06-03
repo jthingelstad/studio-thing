@@ -9,4 +9,4 @@ categories: []
 
 Focus for the rest of the week!
 
-<img src="https://www.thingelstad.com/uploads/2020/1146e91d03.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/1146e91d03.jpg" width="600" height="450" alt="Reception desk at the Johnson and Johnson Human Performance Institute with a living plant wall and a visitor sign-in sheet" />

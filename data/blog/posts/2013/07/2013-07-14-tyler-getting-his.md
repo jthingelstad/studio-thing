@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Tyler getting his Kubb on with new [US National Kubb Championship](http://www.usakubb.org) set. 
 
-<img src="https://www.thingelstad.com/uploads/2020/928ff3030b.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/928ff3030b.jpg" width="600" height="450" alt="Young blonde child in a blue shirt jumping between wooden Kubb game pieces arranged on a colorful mosaic rug indoors." />

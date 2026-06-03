@@ -11,8 +11,8 @@ categories: ["Workouts"]
 
 I made four votes for the person I wish to become in my [60-min zone spin class](https://members.onepeloton.com/profile/workouts/792e36453ba14f089a2458500e93887c?locale=en-US) this morning. See blue circles for digital version.
 
-<img src="https://www.thingelstad.com/uploads/2021/6f327d9757.jpg" width="600" height="300" alt="" /> 
+<img src="https://www.thingelstad.com/uploads/2021/6f327d9757.jpg" width="600" height="300" alt="Peloton power zone ride output chart showing four circled peaks reaching Zone 6 and 7 during a 60-minute cycling workout" /> 
 
 Analog version.
 
-<img src="https://www.thingelstad.com/uploads/2021/4e8ba562e5.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/4e8ba562e5.jpg" width="600" height="337" alt="Peloton stationary bike pedal close-up in a home gym with a rack of hex dumbbells in the background." />

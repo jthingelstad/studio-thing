@@ -9,4 +9,4 @@ categories: []
 
 A very **Happy Mother’s Day** to my Mom, and to all the Mom’s out there!
 
-<img src="https://www.thingelstad.com/uploads/2020/22d4ccb0d5.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/22d4ccb0d5.jpg" width="600" height="600" alt="Two smiling people outdoors, a man in a red plaid shirt and a woman in a purple puffer jacket with curly gray hair and glasses." />

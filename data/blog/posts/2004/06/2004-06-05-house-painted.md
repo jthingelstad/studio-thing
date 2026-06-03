@@ -7,5 +7,4 @@ post_kind: post
 categories: []
 ---
 
-Our house is finally done getting painted. Everything is back where it
-belongs. Yeah!
+Our house is finally done getting painted. Everything is back where it belongs. Yeah!

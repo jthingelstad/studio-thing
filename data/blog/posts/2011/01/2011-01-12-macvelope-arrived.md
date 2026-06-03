@@ -11,4 +11,4 @@ I got my [Grantwood MacVelope](http://www.grantwoodtechnology.com/macvelope/) to
 
 Plus, it is cool looking. 😊
 
-![](https://www.thingelstad.com/uploads/2020/92663d2243.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/92663d2243.jpg" alt="Silver MacBook Air resting on a yellow Grantwood MacVelope laptop sleeve on a wooden surface.">

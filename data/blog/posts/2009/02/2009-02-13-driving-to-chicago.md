@@ -9,4 +9,4 @@ categories: []
 
 Driving to Chicago — heading down the interstate in Wisconsin.
 
-![](https://www.thingelstad.com/uploads/2020/7dffb108ba.png)
+<img src="https://www.thingelstad.com/uploads/2020/7dffb108ba.png" alt="Four-panel dashcam sequence of a multi-lane interstate highway lined with bare winter trees under an overcast sky, with cars visible ahead">

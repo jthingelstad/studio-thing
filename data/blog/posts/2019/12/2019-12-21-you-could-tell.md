@@ -9,4 +9,4 @@ categories: []
 
 You could tell a thousand stories, probably more, from this graph in the Economist “[The strange revival of vinyl records](https://www.economist.com/graphic-detail/2019/10/18/the-strange-revival-of-vinyl-records)”. 
 
-<img src="https://www.thingelstad.com/uploads/2019/31b0b3dfd8.jpg" width="600" height="354" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/31b0b3dfd8.jpg" width="600" height="354" alt="Stacked bar chart showing US recorded-music revenues 1973-2018 peaking near 21bn dollars around 2000 then declining as streaming rises." />

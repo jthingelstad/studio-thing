@@ -9,4 +9,4 @@ categories: []
 
 The Langistígur, or [The Walk of Death](https://thegate.boardingarea.com/the-walk-of-death-langistigur-in-thingvellir-national-park-in-iceland/), in Þingvellir National Park. 
 
-<img src="https://www.thingelstad.com/uploads/2022/03a609cdb6.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/03a609cdb6.jpg" width="600" height="450" alt="Hikers walking through a narrow rocky canyon at Þingvellir National Park Iceland with a lake and mountains in the distance." />

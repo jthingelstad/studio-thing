@@ -7,7 +7,7 @@ post_kind: post
 categories: ["Videos", "Gallery"]
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/150974eb52.jpg" style="width: 200px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/150974eb52.jpg" alt="Boogie Wonderland live 70s disco band logo with marquee-style lettering and star decoration" style="width: 200px; float: right; margin-left: 10px; " />
 Oh my. Really. Wow. Absolutely fabulous!
 
 That is the only way to start any post on the 2007 Dow Jones Disco Party that we had this year. This years party was a complete blast. I had given a [preview of the Disco Theme](https://www.thingelstad.com/2007/11/27/upcoming-office-holiday.html) in another post and people did not hold back at all in going all out.

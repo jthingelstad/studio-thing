@@ -9,4 +9,4 @@ categories: []
 
 Looks like we are a new show at the Brave New Workshop! 🤩
 
-<img src="https://www.thingelstad.com/uploads/2019/ec3e67effd.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/ec3e67effd.jpg" width="600" height="450" alt="Brave New Workshop Comedy Theatre marquee welcoming SPS Commerce in Minneapolis with neon signage and red entrance doors." />

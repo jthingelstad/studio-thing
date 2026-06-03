@@ -9,4 +9,4 @@ categories: []
 
 Epcot Illuminations was awesome. 
 
-<img src="https://www.thingelstad.com/uploads/2019/16df825fb3.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/16df825fb3.jpg" width="600" height="599" alt="Fireworks and fountains explode over a lake at night during Epcot IllumiNations with bright reflections on the water below." />

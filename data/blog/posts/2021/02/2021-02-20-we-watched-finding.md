@@ -9,4 +9,4 @@ categories: []
 
 We watched [Finding 'Ohana](https://www.netflix.com/title/81023618) tonight. Good option for family movie night. 
 
-<img src="https://www.thingelstad.com/uploads/2021/fc294da53d.jpg" width="405" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/fc294da53d.jpg" width="405" height="600" alt="Netflix movie poster for Finding Ohana showing four young adventurers in a glowing cave with lava and waterfalls, releasing Jan 29" />

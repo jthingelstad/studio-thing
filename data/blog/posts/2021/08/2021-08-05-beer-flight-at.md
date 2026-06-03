@@ -9,4 +9,4 @@ categories: []
 
 Beer flight at Brown's Brewery.
 
-![](https://www.thingelstad.com/uploads/2021/030d0e6e36.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/030d0e6e36.jpg" alt="Four-beer flight on a rustic wooden paddle at Browns Brewery with a handwritten card listing Raz Sour, Nigel, Cherry Raz, and Joann">

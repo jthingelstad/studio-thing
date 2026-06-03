@@ -13,4 +13,4 @@ I worked with Richard Shallbetter and he got me measured every way possible for 
 
 And this will not be my last time to Heimie's. I loved the experience.
 
-<img src="https://www.thingelstad.com/uploads/2023/1932d2d7ba.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/1932d2d7ba.jpg" width="600" height="450" alt="Interior of Heimies Haberdashery in St. Paul showing mannequins in sport coats, an Allen Edmonds shoe display, and hats mounted on a wooden column.">

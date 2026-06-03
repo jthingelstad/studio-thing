@@ -9,10 +9,10 @@ categories: []
 
 Great hike to the top of [Black Elk Peak in SD](https://en.wikipedia.org/wiki/Black_Elk_Peak) today!
 
-<img src="https://www.thingelstad.com/uploads/2020/4812d2ce68.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/4812d2ce68.jpg" width="600" height="450" alt="Family of four posing on rocky summit of Black Elk Peak with vast forested Black Hills landscape stretching behind them under clear blue sky." />
 
-<img src="https://www.thingelstad.com/uploads/2020/0b41c96c35.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/0b41c96c35.jpg" width="600" height="450" alt="Woman and child in sun hats standing on granite rock near the summit of Black Elk Peak, South Dakota, with forested hills stretching to the horizon." />
 
-<img src="https://www.thingelstad.com/uploads/2020/269afb1fd7.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/269afb1fd7.jpg" width="600" height="450" alt="Two children in sun hats standing in front of the Harney Range Trails sign in the Black Hills, South Dakota." />
 
-<img src="https://www.thingelstad.com/uploads/2020/a88ca062de.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/a88ca062de.jpg" width="600" height="450" alt="Forested valley with fallen logs and green meadow below jagged granite spires of Black Elk Peak under a clear blue sky" />

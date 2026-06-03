@@ -9,4 +9,4 @@ categories: []
 
 Excited for Brandi Carlile to take the stage!
 
-<img src="https://www.thingelstad.com/uploads/2026/2f8b4c4fb4.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/2f8b4c4fb4.jpg" width="600" height="450" alt="Three people smile for a selfie inside a concert arena with a large stage backdrop reading The Human Tour">

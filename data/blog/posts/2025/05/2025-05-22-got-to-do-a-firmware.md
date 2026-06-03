@@ -9,4 +9,4 @@ categories: []
 
 Got to do a firmware update on the Traeger Grill. 🤓
 
-<img src="https://www.thingelstad.com/uploads/2025/65e89238ae.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/65e89238ae.jpg" width="600" height="450" alt="Traeger grill control panel displaying a SOFTWARE UPDATE screen reading Update In Progress Do NOT Power Off Grill Will Reset.">

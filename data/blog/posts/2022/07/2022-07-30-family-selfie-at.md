@@ -9,4 +9,4 @@ categories: []
 
 Family selfie at Jökulsárlón glacial lagoon! 💙🇮🇸
 
-<img src="https://www.thingelstad.com/uploads/2022/74fb987736.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/74fb987736.jpg" width="600" height="450" alt="Family of four in winter jackets smiling for a selfie at Jökulsárlón glacial lagoon with icebergs floating behind them." />

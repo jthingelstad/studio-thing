@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6617070">6617070</a> at <strong><a href="https://poap.gallery/drops/126003">Magic Pines Summer of 2023</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/f8578df3-d082-4db8-831f-e7b09596660d.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/f8578df3-d082-4db8-831f-e7b09596660d.png" alt="Circular badge for Magic Pines Summer of 2023 showing pine trees, a sunny sky with birds, a small house, and a pink banner." width="500" height="500" />

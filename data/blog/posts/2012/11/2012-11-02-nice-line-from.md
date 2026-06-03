@@ -13,7 +13,7 @@ Minneapolis Institute of Art is nice venue for Twin Cities Agile Day.
 
 Attending [Jeff Sussna](https://www.sussna-associates.com) session on continuous delivery.
 
-<img src="https://www.thingelstad.com/uploads/2019/59e521a5f8.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/59e521a5f8.jpg" width="600" height="450" alt="Attendees seated at round tables watch a presenter speak in front of a projected slide in a conference room.">
 
 [Andon on Wikipedia](https://en.wikipedia.org/wiki/Andon_(manufacturing)).
 

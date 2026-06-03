@@ -9,4 +9,4 @@ categories: []
 
 The weather was absolutely perfect for a day at the Edina Art Fair!
 
-![](https://www.thingelstad.com/uploads/2020/4c727ed03e.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/4c727ed03e.jpg" alt="Crowds of people walk through the outdoor Edina Art Fair on a sunny day, with a large welcome banner and information booth visible.">

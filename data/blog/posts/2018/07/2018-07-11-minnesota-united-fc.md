@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Minnesota United FC v Costa Rica’s Deportivo Saprissa! ⚽️ Light crowd tonight. 
 
-<img src="https://www.thingelstad.com/uploads/2018/1a7a996eb6.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/1a7a996eb6.jpg" alt="Soccer match at TCF Bank Stadium with players in dark and white kits on the field, sparse crowd in maroon seats." width="600" height="450" />

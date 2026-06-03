@@ -9,4 +9,4 @@ categories: []
 
 Homemade Caramel Rolls. 🤤
 
-![](https://www.thingelstad.com/uploads/2020/7f62e1535b.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/7f62e1535b.jpg" alt="Batch of homemade caramel rolls with glossy caramel glaze on a decorative floral ceramic platter.">

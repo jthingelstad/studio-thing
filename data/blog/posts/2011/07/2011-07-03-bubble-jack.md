@@ -7,11 +7,6 @@ post_kind: post
 categories: []
 ---
 
-I had a chance to try the [Rush River](http://www.rushriverbeer.com/)
-[Bubble Jack
-IPA](http://rushriverbeer.com/our-beers/bubble-jack-india-pale-ale/)
-tonight at [Cheeky Monkey Deli](http://www.cheekymonkeydeli.com/) in St.
-Paul. Actually had a 2nd pint on the patio. Highly recommended for a
-summer evening.
+I had a chance to try the [Rush River](http://www.rushriverbeer.com/) [Bubble Jack IPA](http://rushriverbeer.com/our-beers/bubble-jack-india-pale-ale/) tonight at [Cheeky Monkey Deli](http://www.cheekymonkeydeli.com/) in St. Paul. Actually had a 2nd pint on the patio. Highly recommended for a summer evening.
 
-![](https://www.thingelstad.com/uploads/2020/3aaa00267b.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/3aaa00267b.jpg" alt="Pint glass of hazy golden IPA with a thin white head, sitting on a cardboard coaster at an outdoor patio table">

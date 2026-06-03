@@ -9,4 +9,4 @@ categories: []
 
 It has been a long time since we’ve been to First Ave. 
 
-<img src="https://www.thingelstad.com/uploads/2023/0cf4563cd5.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/0cf4563cd5.jpg" width="600" height="600" alt="Crowd of people gathered outside First Avenue music venue at night in winter, snow on the ground, black and white">

@@ -9,4 +9,4 @@ categories: []
 
 Delft, Netherlands. 
 
-<img src="https://www.thingelstad.com/uploads/2026/41f466d80b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/41f466d80b.jpg" width="600" height="450" alt="Canal in Delft Netherlands lined with Dutch buildings and bare trees, a church tower visible in the distance, bicycle leaning on a white railing in foreground">

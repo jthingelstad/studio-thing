@@ -4,15 +4,15 @@ url: "https://www.thingelstad.com/2007/03/15/were-getting-a.html"
 title: "We're Getting a Dog!"
 published: "2007-03-15T05:00:00+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
 We've been thinking about getting a dog for awhile. We figured we would get one sometime after we had kids, since a dog does make travel a bit harder, and hey, so do kids so why not really make it hard! :-) *(She's the one on the left in the 2nd picture, and the right in the 3rd picture.)*
 
 
-<img src="https://www.thingelstad.com/uploads/2020/8a45167487.jpg" style="width: 144px; float: left; margin-right: 10px; " />
-<img src="https://www.thingelstad.com/uploads/2020/f59104d443.jpg" style="width: 144px; float: left; margin-right: 10px; " />
-<img src="https://www.thingelstad.com/uploads/2020/ce5f6a3241.jpg" style="width: 144px; float: left; margin-right: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/8a45167487.jpg" alt="Small fluffy tan terrier mix puppy standing on a concrete step in front of a door" style="width: 144px; float: left; margin-right: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/f59104d443.jpg" alt="Two scruffy tan and brown terrier mix puppies sitting together, one wearing a red collar, held by a person in a blue shirt." style="width: 144px; float: left; margin-right: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/ce5f6a3241.jpg" alt="Two small dogs touching noses and sniffing each other at a doorway, one darker and shaggier, one light tan and short-haired." style="width: 144px; float: left; margin-right: 10px; " />
 <br clear="all">
 
 Mazie loves dogs. She likes cats as well, and enjoys attempting to smother Logan on a regular basis. Gypsie is more of a flight risk, and rarely does Mazie get to have her way with her. However, Mazie is a big fan of Rusty, Grandpa and Grandma's dog, and Louie, Aunt Angie and Uncle Max's dog.

@@ -9,4 +9,4 @@ categories: []
 
 We decided to return to Switzerland tonight by watching the 2015 release of [Heidi](https://en.wikipedia.org/wiki/Heidi_(2015_film)). I hadn't seen the movie and wasn't familiar with the story and thought it was fun to watch, and I loved the role the Alps played in it.
 
-<img src="https://www.thingelstad.com/uploads/2023/7a1a0629b5.jpg" width="400" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/7a1a0629b5.jpg" width="400" height="600" alt="Movie poster for Heidi showing a barefoot girl leaping joyfully on an Alpine meadow with a boy and older man behind her">

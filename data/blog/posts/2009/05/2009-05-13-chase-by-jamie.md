@@ -9,4 +9,4 @@ categories: []
 
 I just submitted my very first photo to JPG Magazine in their "Shoot Your Pet!" theme. Crossing my fingers that they will publish it.
 
-<img src="https://www.thingelstad.com/uploads/2020/51ed0ac515.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/51ed0ac515.jpg" width="600" height="600" alt="Black Labrador mix with amber eyes and red collar sitting upright against a white background" />

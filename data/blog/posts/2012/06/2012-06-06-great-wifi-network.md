@@ -9,4 +9,4 @@ categories: []
 
 This made me laugh yesterday. What a great network name!
 
-![](https://www.thingelstad.com/uploads/2020/0d46692f2e.png)
+<img src="https://www.thingelstad.com/uploads/2020/0d46692f2e.png" alt="Wi-Fi network list showing a network humorously named FBI Surveillance Van GMC841 highlighted in blue">

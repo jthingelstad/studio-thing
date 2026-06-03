@@ -9,4 +9,4 @@ categories: []
 
 Visiting my brother and family at their place. Super nice day on Pokegama Lake. 
 
-<img src="https://www.thingelstad.com/uploads/2022/4864faae8b.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/4864faae8b.jpg" width="600" height="450" alt="Floating dock with chairs and a small table on Pokegama Lake under a blue sky with puffy white clouds." />

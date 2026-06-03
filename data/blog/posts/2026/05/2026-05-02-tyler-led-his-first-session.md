@@ -9,4 +9,4 @@ categories: ["Minnestar"]
 
 [Tyler](https://tyler.thingelstad.com) led his first session at Minnebar today! He did an amazing job talking about AI in Schools and what is good, bad, and how schools should adapt. 👏
 
-<img src="https://www.thingelstad.com/uploads/2026/bcee8dc4ab.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/bcee8dc4ab.jpg" width="600" height="450" alt="Young person in a black hoodie and Crocs stands at the front of a packed classroom presenting to a large seated audience.">

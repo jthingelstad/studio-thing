@@ -9,4 +9,4 @@ categories: []
 
 I dig [Tetris](https://tetris.com) and [Tetromino](https://en.wikipedia.org/wiki/Tetromino) things (proof? [Tetris Shower](https://www.thingelstad.com/2009/05/03/tetris-shower.html)), so this [Tetris Font](https://erikdemaine.org/fonts/tetris/) of course caught my attention. 🤩
 
-<img src="https://www.thingelstad.com/uploads/2024/b8af941b21.png" width="600" height="148" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/b8af941b21.png" width="600" height="148" alt="The word JAMIE spelled out in colorful Tetris-style block letter fonts made from interlocking tetromino pieces.">

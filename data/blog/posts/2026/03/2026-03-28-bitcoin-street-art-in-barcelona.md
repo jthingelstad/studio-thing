@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Bitcoin street art in Barcelona. 
 
-<img src="https://www.thingelstad.com/uploads/2026/620ba53fd9.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/620ba53fd9.jpg" width="450" height="600" alt="Colorful street mural on a wooden door showing a footballer in a red and blue jersey raising a fist amid large Bitcoin symbols.">

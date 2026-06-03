@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7180533">7180533</a> at <strong><a href="https://poap.gallery/drops/177056">First Computer Build</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/1b853ddd-c8da-4ffc-a47e-18ac9bf6bf14.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/1b853ddd-c8da-4ffc-a47e-18ac9bf6bf14.png" alt="White PC case with RGB fans glowing purple and blue, sitting on hardwood floor, labeled First Computer Build August 15 2024." width="500" height="500" />

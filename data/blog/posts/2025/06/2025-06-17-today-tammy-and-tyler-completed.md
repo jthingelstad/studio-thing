@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Today [Tammy](https://tammy.thingelstad.com) and [Tyler](https://tyler.thingelstad.com) completed a **26-mile walk** around [Lake Geneva](https://www.visitlakegeneva.com), Wisconsin. They started at 6:21 AM and completed at 2:58 PM. Epic. I thought it deserved a POAP — [Lake Geneva Loop Legends](https://poap.gallery/drops/191042)! So very impressive. 🥾
 
-<img src="https://www.thingelstad.com/uploads/2025/4a4022153b.png" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/4a4022153b.png" width="600" height="600" alt="Circular badge reading Lake Geneva Loop Legends celebrating Tammy and Tyler walking 26 miles around Lake Geneva on June 17 2025, starting at 6:21 AM and finishing at 2:58 PM.">

@@ -9,4 +9,4 @@ categories: []
 
 It seems we were at a stoplight behind a Dungeon Master. 😎 
 
-<img src="https://www.thingelstad.com/uploads/2024/4b5c0ed80a.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/4b5c0ed80a.jpg" width="600" height="450" alt="Rear of a silver Honda Civic with a Minnesota vanity plate reading ROLLD20, a reference to rolling a 20-sided die in Dungeons and Dragons.">

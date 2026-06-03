@@ -9,4 +9,4 @@ categories: []
 
 About 50% done with LEGO® Mini Cooper. 
 
-<img src="https://www.thingelstad.com/uploads/2020/e59e5311e0.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/e59e5311e0.jpg" width="600" height="800" alt="Partially built LEGO Mini Cooper in dark green showing interior seats and chassis on a wooden table with instruction booklet and loose pieces nearby." />

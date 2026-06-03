@@ -13,15 +13,15 @@ With that said, I don't like the Wall feature of Facebook at all. For whatever r
 
 Now, to be clear, we are not removing the wall per se. Facebook will not allow you to remove the Wall application. Instead, we are going to adjust privacy settings to hide the wall entirely. First, go to your privacy settings.
 
-<a href="http://www.facebook.com/privacy/"><img src="https://www.thingelstad.com/uploads/2020/d409e7eb82.png" style="max-width: 266px; " /></a>
+<a href="http://www.facebook.com/privacy/"><img src="https://www.thingelstad.com/uploads/2020/d409e7eb82.png" alt="Facebook Settings menu open showing Account Settings, Privacy Settings highlighted, and Application Settings options" style="max-width: 266px; " /></a>
 
 Now click on your profile.
 
-<a href="http://www.facebook.com/privacy/?view=profile"><img src="https://www.thingelstad.com/uploads/2020/2094f3094c.png" style="max-width: 421px; " /></a>
+<a href="http://www.facebook.com/privacy/?view=profile"><img src="https://www.thingelstad.com/uploads/2020/2094f3094c.png" alt="Facebook Privacy settings panel showing a Profile option with the description Control who can see your profile and personal information." style="max-width: 421px; " /></a>
 
 In this screen, scroll down a ways and you will find the "Wall Posts"section. Simply change your settings to look like this. Uncheck the "Friends may post to my Wall" box and change the privacy option.
 
-<img src="https://www.thingelstad.com/uploads/2020/32cfba8c9f.png" style="max-width: 369px; " />
+<img src="https://www.thingelstad.com/uploads/2020/32cfba8c9f.png" alt="Facebook privacy settings showing Wall Posts section with Friends may post to my Wall unchecked and visibility set to No one" style="max-width: 369px; " />
 
 You could set this so that only you can write on your wall if you want. There are a couple of different options. I have it set like above which effectively removes the wall.
 
@@ -31,16 +31,16 @@ _Jan. 8, 2009: I've gotten some questions from people saying this doesn't work. 
 
 Now that you have made this change you probably want to check to make sure it worked. This is a little hard on Facebook since it's not terribly easy for you to see your profile as someone else. Facebook does have a feature that allows you to test this out, in your Profile Privacy settings, where you changed your wall privacy options, you can type the name of a friend and see your profile *as they would see it*. This works great for testing, particularly if you are using Facebook groups to assign privacy levels differently for various people.
 
-<img src="https://www.thingelstad.com/uploads/2020/1082098055.png" style="max-width: 402px; " />
+<img src="https://www.thingelstad.com/uploads/2020/1082098055.png" alt="Facebook privacy feature showing a text field labeled See how a friend sees your profile with placeholder text Start typing a friends name" style="max-width: 402px; " />
 
 You may be confused that even after these changes your profile will still have a tab called "Wall". That is impossible to remove, per my earlier comment that we cannot really remove the Wall. It's integral to the functioning of Facebook. All we did was remove the ability for people to write stuff on it.
 
 Before these changes this is how a friend would see your wall.
 
-<img src="https://www.thingelstad.com/uploads/2020/1f965f8f91.png" style="max-width: 500px; " />
+<img src="https://www.thingelstad.com/uploads/2020/1f965f8f91.png" alt="Facebook profile Wall tab showing Write, Share Link, Post Photo, Record Video and Give Gift options, with Dec 17 activity feed below" style="max-width: 500px; " />
 
 Note the option to Write on the wall. After making these changes a friend sees your wall like this.
 
-<img src="https://www.thingelstad.com/uploads/2020/05051c09d7.png" style="max-width: 500px; " />
+<img src="https://www.thingelstad.com/uploads/2020/05051c09d7.png" alt="Facebook profile Wall tab showing Dec 17 activity: Josef joined Facebook at 9:38am, changed profile picture at 9:40am, and became friends with Jamie Thingelstad at 9:46am." style="max-width: 500px; " />
 
 The option of writing on your wall is gone now.

@@ -15,14 +15,14 @@ The tour also showed Studio 3, which is completely digital and setup for 5-chann
 
 This was a really cool experience.
 
-<img src="https://www.thingelstad.com/uploads/2024/33b47a7ec1.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/33b47a7ec1.jpg" width="600" height="450" alt="Windmill Lane Recording Studios Studio One sign painted on a white wall pillar, with a person walking toward an exit ahead.">
 
-<img src="https://www.thingelstad.com/uploads/2024/ce2c2d53cf.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/ce2c2d53cf.jpg" width="600" height="450" alt="Windmill Lane Recording Studios control room with a large analog mixing console, Genelec studio monitors, and a monitor screen displaying the studio logo.">
 
-<img src="https://www.thingelstad.com/uploads/2024/58dea09c61.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/58dea09c61.jpg" width="600" height="450" alt="Person with long hair leaning over a massive analog mixing console in a recording studio, with a teenager seated in the background.">
 
-<img src="https://www.thingelstad.com/uploads/2024/b1e95c6086.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/b1e95c6086.jpg" width="600" height="450" alt="Windmill Lane Recording Studios live room with grand piano, red ambient lighting, hardwood floors, and overhead microphone rigging">
 
-<img src="https://www.thingelstad.com/uploads/2024/e8eb21de48.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/e8eb21de48.jpg" width="600" height="450" alt="Windmill Lane Recording Studios control room with a large mixing desk, Genelec monitor speakers, laptop, and a screen displaying the studio logo">
 
-<img src="https://www.thingelstad.com/uploads/2024/269850b6ac.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/269850b6ac.jpg" width="600" height="450" alt="Six framed Grammy Award certificates for Windmill Lane Recording Studios displayed on a dark wall in two rows of three.">

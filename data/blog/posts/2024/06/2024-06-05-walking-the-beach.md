@@ -9,4 +9,4 @@ categories: []
 
 Walking the beach in Ballybunion. 
 
-<img src="https://www.thingelstad.com/uploads/2024/234129c0b6.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/234129c0b6.jpg" width="600" height="450" alt="Wide sandy beach at Ballybunion with breaking waves, scattered seaweed, and dark cliffs topped with green grass in the background.">

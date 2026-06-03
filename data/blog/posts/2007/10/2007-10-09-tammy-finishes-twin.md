@@ -9,7 +9,7 @@ categories: ["Gallery"]
 
 This past weekend Tammy finished the [Twin Cities Marathon](http://www.mtcmarathon.org/)! This was her first marathon attempt ever. She now has that 26.2 mile event under her belt. In [2004 she did the TC 10 mile run](https://www.thingelstad.com/2004/10/03/tc-mile-run.html).
 
-<img src="https://www.thingelstad.com/uploads/2020/b319278bc6.jpg" style="width: 364px; float: right; margin-left: 10px; ">
+<img src="https://www.thingelstad.com/uploads/2020/b319278bc6.jpg" alt="2007 Medtronic Twin Cities Marathon event logo with the year 2007 and a runner graphic in blue and orange" style="width: 364px; float: right; margin-left: 10px; ">
 
 She wasn't real sure about the marathon. She signed up for it months in advance, as required, and started her training right on track. She did a great job, but started to not enjoy the running once it got over 2 hours. She backed off a bit and took another go at it, but still just found that mentally after 2 hours she was sick of running. She started to really not like running, and rather than hate it entirely decided to remove the pressure of the marathon.
 

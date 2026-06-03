@@ -7,7 +7,6 @@ post_kind: post
 categories: []
 ---
 
-![](https://www.thingelstad.com/uploads/2020/7cb9ab1306.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/7cb9ab1306.jpg" alt="Runners in a road race pass through a tree-lined street in autumn while spectators watch from the sidewalk on a sunny morning.">
 
-It was a beautiful morning to walk over to Minnehaha Creek and watch the
-Twin Cities Marathon.
+It was a beautiful morning to walk over to Minnehaha Creek and watch the Twin Cities Marathon.

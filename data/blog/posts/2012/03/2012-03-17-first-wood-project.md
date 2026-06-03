@@ -9,4 +9,4 @@ categories: []
 
 First wood project of the day done.
 
-<img src="https://www.thingelstad.com/uploads/2024/a2c1105e-f46f-43d3-b31d-c526cc414766.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/a2c1105e-f46f-43d3-b31d-c526cc414766.jpg" width="600" height="450" alt="Stacked firewood on a metal rack with a black cover beside a wooden fence and a slatted bench in a backyard.">

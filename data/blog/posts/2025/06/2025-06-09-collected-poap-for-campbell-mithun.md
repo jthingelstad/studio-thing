@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>Collected POAP <a href="https://collectors.poap.xyz/token/7368637">7368637</a> for <strong><a href="https://poap.gallery/drops/190517">Campbell Mithun Tower — 612 POAP Challenge</a></strong>.</p>
-        <p><img src="https://www.thingelstad.com/uploads/2025/4a048b43-e30c-4cd2-af4f-740714fbd8d6.png" width="500" height="500" /></p>
+        <p><img src="https://www.thingelstad.com/uploads/2025/4a048b43-e30c-4cd2-af4f-740714fbd8d6.png" alt="Circular badge showing a pixelated illustration of Campbell Mithun Tower with text 612 POAP Challenge arched across the top." width="500" height="500" /></p>

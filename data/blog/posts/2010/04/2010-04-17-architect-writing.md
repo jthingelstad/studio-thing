@@ -9,4 +9,4 @@ categories: []
 
 Why do most architects write like this?
 
-![](https://www.thingelstad.com/uploads/2020/8fd207a1b9.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/8fd207a1b9.jpg" alt="Handwritten text in architectural block lettering reading partial phrases: ED TO NAME, AFTER TWO O, MPORTANT PE">

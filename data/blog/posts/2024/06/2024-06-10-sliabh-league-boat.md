@@ -9,7 +9,7 @@ categories: ["Gallery"]
 
 We met up with Paddy at the Teelin Pier this morning to take his [Sliabh League Boat Trip](https://sliabhleagueboattrips.com/) to see the Sliabh Liag cliffs from the water. 
 
-<img src="https://www.thingelstad.com/uploads/2024/7a1b4ae51a.jpg" width="600" height="594" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/7a1b4ae51a.jpg" width="600" height="594" alt="Map showing a boat trip route near Sliabh Liag cliffs in County Donegal Ireland with two marked points near Teelin and Carrick">
 
 These cliffs are the highest in Ireland, rising three times higher than the Cliffs of Moher. The rock formations were incredible and the scene was more like mountains.
 

@@ -9,4 +9,4 @@ categories: []
 
 Got Tammy driving the boat.
 
-<img src="https://www.thingelstad.com/uploads/2021/bffd3f0f3d.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/bffd3f0f3d.jpg" width="600" height="450" alt="Woman in purple shirt and denim shorts steering a pontoon boat on a lake, smiling back at the camera." />

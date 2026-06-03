@@ -9,4 +9,4 @@ categories: []
 
 Podcast trends for 2024. 75 fewer hours of listening [versus 2023](https://www.thingelstad.com/2024/01/07/my-top-podcast-listening-for.html). Pivot still my drive time podcast commuting to work. Subscribe to Making Sense and The Drive, but surprisingly low listen time with Attia. Mostly I listen to two, maybe three, podcasts.
 
-<img src="https://www.thingelstad.com/uploads/2025/bf315874a8.jpg" width="337" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/bf315874a8.jpg" width="337" height="600" alt="Overcast app recap showing My Top Podcasts 2024 with 9 podcast covers and listen times totaling 156 hours">

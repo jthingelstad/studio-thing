@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7567133">7567133</a> at <strong><a href="https://poap.gallery/drops/226213">TeamSPS 100 Quarters of Growth</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2026/33599bb0-81f5-43b4-a7fe-0b58fa20f62a.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2026/33599bb0-81f5-43b4-a7fe-0b58fa20f62a.png" alt="Circular badge celebrating 100 Quarters of Growth with Congrats Team SPS in blue text, surrounded by colorful confetti and icons." width="500" height="500" />

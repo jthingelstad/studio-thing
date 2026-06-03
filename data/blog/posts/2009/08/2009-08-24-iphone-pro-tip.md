@@ -13,11 +13,11 @@ I'm a bit of an "app-aholic". I've got more than a handful of applications insta
 
 With many applications installed I may have to swipe as many as 6 times to get to the application I want to launch.
 
-![](https://www.thingelstad.com/uploads/2020/096d1943e1.png)
+<img src="https://www.thingelstad.com/uploads/2020/096d1943e1.png" alt="iPhone home screen showing 6 pages of app icons with numbered arrows indicating the swipes needed to navigate between them.">
 
 But if I just do a single swipe, or a double-tap of the home button with the right settings, I can be at Spotlight and just start typing the name of the application I want. Say I wanted to launch a Twitter client like this.
 
-<img src="https://www.thingelstad.com/uploads/2020/c5fc63dee5.png" style="max-width: 320px; " />
+<img src="https://www.thingelstad.com/uploads/2020/c5fc63dee5.png" alt="iPhone Spotlight search screen showing results for the query Tw, listing Twitter apps TweetDeck, Tweetie, Tweetsville, and Twitterrific." style="max-width: 320px; " />
 
 One action to get to Spotlight, type two letters, and launch. Pretty much as good as using Quicksilver on my Mac. A lot faster than all that swiping, and it saves on [thumb](http://en.wikipedia.org/wiki/Thumb) fatigue.
 
@@ -27,18 +27,18 @@ Now, it won't work like this out of the box because by default Spotlight wants t
 
 First, launch Settings and tap on General.
 
-<img src="https://www.thingelstad.com/uploads/2020/3d702fdf22.png" style="max-width: 320px; " />
+<img src="https://www.thingelstad.com/uploads/2020/3d702fdf22.png" alt="iPhone Settings screen showing Airplane Mode off, Wi-Fi connected to Jamie, Notifications on, and a red dot highlighting the General option." style="max-width: 320px; " />
 
 Now tap on Home.
 
-<img src="https://www.thingelstad.com/uploads/2020/453edaa6b4.png" style="max-width: 320px; " />
+<img src="https://www.thingelstad.com/uploads/2020/453edaa6b4.png" alt="iPhone General Settings screen showing Home option highlighted with a red dot, with Passcode Lock on, Restrictions off, and other settings listed" style="max-width: 320px; " />
 
 We are now going to change search preferences. While you are on this screen you may also want to specify that double-tap of Home button launches search. With that, you are just two taps away from launching a new app anytime.
 
-<img src="https://www.thingelstad.com/uploads/2020/62b6e32912.png" style="max-width: 320px; " />
+<img src="https://www.thingelstad.com/uploads/2020/62b6e32912.png" alt="iPhone Home settings screen showing double-click Home Button options with Phone Favorites selected and iPod Controls toggled on" style="max-width: 320px; " />
 
 Okay, now we are just going to reorder the search results and put the Applications at the top of the list.
 
-<img src="https://www.thingelstad.com/uploads/2020/b0e0e37d0e.png" style="max-width: 320px; " />
+<img src="https://www.thingelstad.com/uploads/2020/b0e0e37d0e.png" alt="iPhone Search Results screen showing a checklist of searchable categories including Applications highlighted with a red arrow pointing to it" style="max-width: 320px; " />
 
 That's it. Done. You can now simply double-tap the home button and type a letter or two to launch any of the dozens and dozens of apps on your iPhone. Nice!

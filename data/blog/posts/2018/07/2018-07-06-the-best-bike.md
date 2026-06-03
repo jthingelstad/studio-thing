@@ -9,4 +9,4 @@ categories: []
 
 The best bike rides have a Dairy Queen in the middle! 🚴‍♂️ + 🍦 = 😊
 
-<img src="https://www.thingelstad.com/uploads/2018/16dc0126f7.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/16dc0126f7.jpg" alt="Family with bikes stopped at a Dairy Queen on a sunny day, enjoying ice cream outside the brick building." width="600" height="600" />

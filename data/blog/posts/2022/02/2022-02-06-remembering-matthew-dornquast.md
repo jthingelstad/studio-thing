@@ -19,7 +19,7 @@ Unfortunately it has been a few years since we connected. After Matthew moved on
 
 Thank you Matthew for all you did for the technology community, and for building so many things that continue to provide value today. You will be missed.
 
-<img src="https://www.thingelstad.com/uploads/2022/1e5e9b182d.jpg" width="580" height="386" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/1e5e9b182d.jpg" width="580" height="386" alt="Smiling man with short brown hair wearing a dark blazer seated near a window with venetian blinds and trees visible outside" />
 
 ### Related
 

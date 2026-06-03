@@ -9,4 +9,4 @@ categories: []
 
 100 Years of the [Opry](https://www.opry.com)!
 
-<img src="https://www.thingelstad.com/uploads/2026/eb84be56d5.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/eb84be56d5.jpg" width="600" height="450" alt="Four people posing in front of a colorful Grand Ole Opry wall mural celebrating 100 years of the Opry">

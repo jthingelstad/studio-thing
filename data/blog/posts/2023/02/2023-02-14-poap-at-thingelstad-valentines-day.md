@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6315996">6315996</a> at <strong><a href="https://poap.gallery/drops/101293">Thingelstad Valentines Day 2023</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/thingelstad-valentines-day-2023-2023-logo-1676396620193.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/thingelstad-valentines-day-2023-2023-logo-1676396620193.png" alt="Family of four in Dr. Seuss shirts posing in front of a red polka dot heart for Valentines Day 2023" width="500" height="500" />

@@ -13,7 +13,7 @@ This morning I woke up a little early and was thinking how someone would contact
 
 <mark>To my astonishment there was a comment from [Martin Lienhard](https://www.linkedin.com/in/martin-lienhard-48984665) saying he had **found my wallet**!</mark> 😲
 
-![](https://www.thingelstad.com/uploads/2023/ed2451ab-5f63-4177-8c5b-578a33aa12b4.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/ed2451ab-5f63-4177-8c5b-578a33aa12b4.jpg" alt="LinkedIn comment from Martin Lienhard stating he found a lost wallet in Guarda Switzerland and will leave it at the local Volg store.">
 
 **Incredible!** I found the Volg store he mentioned and they didn’t open for another 45 mins. Right at 7:30a I asked the hotel to please call the store and confirm they had it. **They did!** 🥳
 
@@ -21,7 +21,7 @@ I let our guides know and took a rest day from hiking (which I was considering a
 
 After a train ride back to Guarda, then the bus into the village, I ducked the rain and ran into the [Volg Guarda](https://www.volg.ch/standorte-oeffnungszeiten/detail/volg-guarda/) where the nice cashier reached under the counter and produced my wallet! Joy!
 
-![](https://www.thingelstad.com/uploads/2023/513056f7-c7f1-4c43-a946-763d71b386b0.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/513056f7-c7f1-4c43-a946-763d71b386b0.jpg" alt="Smiling man in a wet Columbia rain jacket holding up a black leather wallet outside a Volg store in a Swiss village">
 
 **So where was it?** The whole thought about the train station in Ardez was a dead end. Martin’s wife found it by one of the city water fountains — the one that we [dipped our feet in](https://www.thingelstad.com/2023/07/17/cold-therapy-for.html). That means when I realized I didn’t have it, as we were walking to dinner, it had only just fallen out of my pocket no more than a 100 feet away. 
 

@@ -12,4 +12,4 @@ morning for regular maintenance at [Richfield Honda](http://rbhonda.com/). I was
 
 That's a nice touch. Getting a call mid-day from the service department can be little annoying and a simple text message is a great alternative. Well done and a great example of going where you customers are.
 
-![](https://www.thingelstad.com/uploads/2020/ac121fafa1.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/ac121fafa1.jpg" alt="Sign on a glass door at Richfield Honda Parts Dept and Customer Lounge offering text message or email alerts when your vehicle or license plates are ready.">

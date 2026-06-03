@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2023/03/10/years-of-olson.html"
 title: "20 Years of Olson Family Vacation"
 published: "2023-03-11T03:37:43+00:00"
 post_kind: post
-categories: ["Crypto", "POAP"]
+categories: ["Crypto"]
 ---
 
 This weekend we are celebrating 20 years of Olson Family Vacations. In 2004 Tammy's side of the family decided to have everyone get together for a long weekend, and that started the tradition that has been going on two decades now.
@@ -15,7 +15,7 @@ Every year the family responsible for finding a location and planning the weeken
 
 To celebrate two decades of Olson Family Vacations we decided to make a special shirt for everyone.
 
-![](https://www.thingelstad.com/uploads/2023/e26e33e50a.png)
+<img src="https://www.thingelstad.com/uploads/2023/e26e33e50a.png" alt="Blue t-shirt front and back showing a cartoon bee logo with orange circles and Olson Family Vacation text, with 20 vacation locations listed on the back.">
 
 The back of the shirt records the location of every vacation.
 

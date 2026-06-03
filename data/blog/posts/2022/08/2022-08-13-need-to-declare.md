@@ -9,4 +9,4 @@ categories: []
 
 Need to declare war on these horrible Beatles going to town on our strawberries! 😲
 
-<img src="https://www.thingelstad.com/uploads/2022/ab8399402c.jpg" width="599" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/ab8399402c.jpg" width="599" height="600" alt="Three Japanese beetles feeding on strawberry plant leaves, with surrounding foliage heavily skeletonized by beetle damage." />

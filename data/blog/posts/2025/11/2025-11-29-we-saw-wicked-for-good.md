@@ -9,4 +9,4 @@ categories: []
 
 We saw [Wicked For Good](https://www.wickedmovie.com) at the [Edina 4](https://manntheatres.com/theatre/89/Edina-4) theatre tonight. Stellar movie, as good if not better than the first one. Definitely one to go to the theater for.
 
-<img src="https://www.thingelstad.com/uploads/2025/907595dc98.jpg" width="378" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/907595dc98.jpg" width="378" height="600" alt="Movie poster for Wicked For Good showing two witches on the yellow brick road before the Emerald City, opening November 20">

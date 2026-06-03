@@ -11,7 +11,7 @@ Yesterday [WikiApiary](http://wikiapiary.com/) had a very *meta* tweet when it w
 
 {{< x user="WikiApiary" id="414548099256684544" >}}
 
-<img src="https://www.thingelstad.com/uploads/2020/4095ae1735.png" width="600" height="601" alt="">
+<img src="https://www.thingelstad.com/uploads/2020/4095ae1735.png" width="600" height="601" alt="Eight cartoon bumblebees circling a yellow sunflower illustration on a white background">
 
 The
 first year of WikiApiary has been great! The comments people make about it and the great contributions that many people have made to the wiki reflect the utility and interest in the data. WikiApiary was a holiday break project for me in 2012 and it's continued to get additions and modifications from a number of people throughout the world. It is the first project I've started that I feel has gotten a true community around it and people that are moving it forward independent of what I'm doing. That is really great! This idea of a "*Wiki to track other wikis*" clearly caught on with some people.
@@ -57,23 +57,23 @@ Chrome dominates the browser choice for WikiApiary visitors.
 
 WikiApiary is largely about graphs, so that seems like a logical way to explore the first year of WikiApiary. The number of active users on WikiApiary has roughly been around 30 for most of the year, peaking over 50. This doesn't seem like a ton, but most wikis that are monitored actually have fewer than 5 active users. The total number of users is over 250 and grows steadily. Those are **all** real accounts too, no spam accounts. Registration is required to edit so this is a good reflection of engagement.
 
-<img src="https://www.thingelstad.com/uploads/2020/97bde96e53.png" width="600" height="192" alt="">
+<img src="https://www.thingelstad.com/uploads/2020/97bde96e53.png" width="600" height="192" alt="Line chart showing WikiApiary active users peaking near 50 in July-August 2013 then declining, with cumulative users rising steadily to about 262 by December 2013.">
 
 Edit activity on WikiApiary is mostly robotic. The bots are constantly tending to the data set and they do this with edits. You can see the edit rate jumped in October after I added tracking for MaxMind geo data as well as Whois records for wikis. **Over 5 million edits** in the first year.
 
-<img src="https://www.thingelstad.com/uploads/2020/4ad133b953.png" width="600" height="187" alt="">
+<img src="https://www.thingelstad.com/uploads/2020/4ad133b953.png" width="600" height="187" alt="Area chart showing WikiApiary edit count rising from near 0 in February 2013 to over 5 million by December 2013.">
 
 Total pages of content largely reflect the number of wikis being tracked, plus the number of extensions and skins that exist. Notably you can see the initial load of sites in February and March. There were additional farmer bots that added in some reasonably sized farms in June. In October the pages spike again with the addition of more datasets.
 
-<img src="https://www.thingelstad.com/uploads/2020/15acebd999.png" width="600" height="192" alt="">
+<img src="https://www.thingelstad.com/uploads/2020/15acebd999.png" width="600" height="192" alt="Line chart showing WikiApiary pages and articles growth from Jan 2013 to Dec 2013, both rising steeply to about 53K pages and 25.65K articles.">
 
 WikiApiary is itself the 11th largest Semantic MediaWiki installation that it tracks. The largest is [Gyvosios gamtos enciklopedija](http://wikiapiary.com/wiki/Gyvosios_gamtos_enciklopedija) with over 16 million properties (think of a property as a data value). WikiApiary has **over 3.3 million property values**.
 
-<img src="https://www.thingelstad.com/uploads/2020/4c4039761d.png" width="600" height="189" alt="">
+<img src="https://www.thingelstad.com/uploads/2020/4c4039761d.png" width="600" height="189" alt="Area chart showing WikiApiary property count growing from near 0 in January 2013 to roughly 3.5M by December 2013.">
 
 These 3.3 million properties are queried in MediaWiki templates so you can see the data. There are **nearly 140,000 queries** in WikiApiary.
 
-<img src="https://www.thingelstad.com/uploads/2020/83f23f488f.png" width="600" height="190" alt="">
+<img src="https://www.thingelstad.com/uploads/2020/83f23f488f.png" width="600" height="190" alt="Area chart showing WikiApiary query count rising from about 50K in April 2013 to 140K in December 2013.">
 
 ### Special Thanks
 

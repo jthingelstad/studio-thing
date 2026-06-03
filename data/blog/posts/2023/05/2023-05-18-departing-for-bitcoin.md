@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Departing for [Bitcoin 2023](https://b.tc/conference/) in Miami Beach! Meeting up with [Hector](https://twitter.com/hectorguatemala) there. 
 
-<img src="https://www.thingelstad.com/uploads/2023/cf5266f52a.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/cf5266f52a.jpg" width="600" height="600" alt="Man in a straw fedora and patterned shirt taking a selfie at a Delta Airlines gate showing a flight to Miami">

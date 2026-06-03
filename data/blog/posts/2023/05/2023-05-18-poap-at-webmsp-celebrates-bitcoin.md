@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6632832">6632832</a> at <strong><a href="https://poap.gallery/drops/126708">Web3MSP Celebrates Bitcoin 2023</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/1be1e689-97e6-4d30-9632-2a6e6f697326.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/1be1e689-97e6-4d30-9632-2a6e6f697326.png" alt="Circular teal badge reading Web3 MSP Bitcoin 23 Miami with a flamingo, palm trees, sunglasses, sun, rainbow, and dolphin illustrations." width="500" height="500" />

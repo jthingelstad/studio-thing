@@ -9,4 +9,4 @@ categories: []
 
 We went to the [Bakken Museum](http://thebakken.org) today which was very fun! They have a demonstration or "game" there where you play another person by quieting your mind and making the EEG reading go down,  moving a ball towards the other person. Tammy grabbed this great picture of me quieting my mind… 😊 “Mind like water…” 💧
 
-<img src="https://www.thingelstad.com/uploads/2018/e69edcfd20.jpg" width="450" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/e69edcfd20.jpg" alt="Man wearing EEG headband sits eyes closed at blue table playing a mind-controlled ball game at the Bakken Museum." width="450" height="600" />

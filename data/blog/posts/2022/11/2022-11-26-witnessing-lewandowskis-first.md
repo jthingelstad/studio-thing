@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Witnessing Lewandowski’s first World Cup goal in four appearances! POL v KSA 2-0 ⚽️🎉🤩
 
-<img src="https://www.thingelstad.com/uploads/2022/21f629264a.jpg" width="599" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/21f629264a.jpg" width="599" height="600" alt="TV showing FIFA World Cup 2022 Poland vs Saudi Arabia 2-0 at 82 minutes with Polish players celebrating on pitch">

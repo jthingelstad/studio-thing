@@ -9,4 +9,4 @@ categories: []
 
 From our family to yours — Happy Thanksgiving! Have a wonderful day. 
 
-<img src="https://www.thingelstad.com/uploads/2024/ca2559ff9b.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/ca2559ff9b.jpg" width="450" height="600" alt="Family of four smiling together indoors, dressed in casual holiday attire, standing close on carpeted living room floor.">

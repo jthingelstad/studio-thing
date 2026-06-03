@@ -9,4 +9,4 @@ categories: []
 
 Maple tree showing off its fall colors. 🍁 
 
-<img src="https://www.thingelstad.com/uploads/2019/19696b5221.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/19696b5221.jpg" width="600" height="450" alt="Large maple tree with brilliant orange and yellow autumn foliage against a clear blue sky, surrounded by green lawn and evergreen trees." />

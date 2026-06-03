@@ -11,4 +11,4 @@ My friend [Lee Zukor](https://leezukor.com) has been playing in [The Long Honeym
 
 We all listened to it twice on our drive this weekend up and down the North Shore. We thought it had a distinctly Minneapolis sound. It gave us [Jayhawks](https://jayhawksofficial.com), [Gear Daddies](http://www.geardaddies.com), [Honeydogs](https://www.twintonedigital.com/honeydogs) kind of notes at times. Jangly with good hooks. 🎶  Grab a copy and give it a listen!
 
-<img src="https://www.thingelstad.com/uploads/2025/c5702b3538.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/c5702b3538.jpg" width="600" height="600" alt="Monarch butterfly in flight above two orange flowers against a vivid blue sky, album art for The Long Honeymoon">

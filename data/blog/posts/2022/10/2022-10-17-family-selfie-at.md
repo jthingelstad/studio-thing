@@ -9,4 +9,4 @@ categories: []
 
 Family selfie at Epcot!
 
-<img src="https://www.thingelstad.com/uploads/2022/55f4ab7d02.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/55f4ab7d02.jpg" width="600" height="450" alt="Family of four smiling in a selfie in front of Spaceship Earth at Epcot on a sunny day">

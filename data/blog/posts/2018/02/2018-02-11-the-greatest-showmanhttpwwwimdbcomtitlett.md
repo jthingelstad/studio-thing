@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 🎬 [The Greatest Showman](http://www.imdb.com/title/tt1485796/) was a fabulous movie! Really enjoyed the story and the music. Very well done. ★★★★☆
 
-<img src="https://www.thingelstad.com/uploads/2018/73f46dbf97.jpg" width="402" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/73f46dbf97.jpg" alt="Movie poster for The Greatest Showman showing a figure with arms outstretched under a spotlight, reflected in water with circus performers below." width="402" height="600" />

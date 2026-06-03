@@ -9,4 +9,4 @@ categories: []
 
 Just ordered my tickets for [Surly Fest](http://www.surlybrewing.com/)!
 
-<img src="https://www.thingelstad.com/uploads/2020/e062d4064c.gif" style="max-width: 185px; " />
+<img src="https://www.thingelstad.com/uploads/2020/e062d4064c.gif" alt="Surly Brewing Co logo with a red and white figure holding a beer glass inside a black shield shape" style="max-width: 185px; " />

@@ -9,4 +9,4 @@ categories: []
 
 Happy 1st Birthday to my nephew Garrett!
 
-<img src="https://www.thingelstad.com/uploads/2017/77cbb06960.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2017/77cbb06960.jpg" alt="Number 1 shaped baseball-themed birthday cake with the name Garrett written on it, surrounded by chocolate cupcakes with Minnesota Twins pennant toppers" width="600" height="599" />

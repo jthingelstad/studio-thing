@@ -4,12 +4,12 @@ url: "https://www.thingelstad.com/2023/01/14/poap-wishlist.html"
 title: "POAP Wishlist"
 published: "2023-01-14T14:45:20+00:00"
 post_kind: post
-categories: ["Crypto", "POAP"]
+categories: ["Crypto"]
 ---
 
 [POAP](https://poap.xyz) (pronounced poe-app) is one of my favorite crypto application. There is a good [overview of what POAPs are for](https://poap.xyz/about-the-protocol). I think POAPs are a great way of capturing memories and events, and potential creating connection and community. I love that they are a crypto app that has no monetary component. I've created [many POAP events](https://www.thingelstad.com/lists/poap-events/) as well as [collecting many](https://app.poap.xyz/scan/thingelstad.eth). 
 
-![](https://www.thingelstad.com/uploads/2023/fbf00b0170.png)
+<img src="https://www.thingelstad.com/uploads/2023/fbf00b0170.png" alt="Illustrated promotional banner for POAP showing a purple-skinned cartoon character holding up a phone displaying a POAP badge, with a city skyline behind her and stats showing 6,238,726 POAPs minted,">
 
 I love how POAP has gown thus far! The growth has been amazing and the organization has continued to create meaning and value. There are three areas that I would like to see POAP extend and wanted to explore in more detail. 
 

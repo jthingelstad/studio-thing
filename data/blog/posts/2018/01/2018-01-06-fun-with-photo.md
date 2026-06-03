@@ -9,4 +9,4 @@ categories: []
 
 Fun with photo booth at [Pizzeria Lola](https://www.pizzerialola.com)! 📷
 
-<img src="https://www.thingelstad.com/uploads/2018/7e68067fa4.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/7e68067fa4.jpg" alt="Three photo booth strips from Pizzeria Lola on a table, showing two men, three children, and two women making silly faces across the strips." width="600" height="600" />

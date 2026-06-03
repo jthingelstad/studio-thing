@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/4105433">4105433</a> at <strong><a href="https://poap.gallery/drops/28696">NFT Innovation Digest - Victoria L</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/nft-innovation-digest-victoria-l-2022-logo-1645060521375.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/nft-innovation-digest-victoria-l-2022-logo-1645060521375.png" alt="Wire mesh sculpture of a human head and torso with yellow and black layered strands, set against a blurred green and blue outdoor background." width="500" height="500" />

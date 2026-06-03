@@ -9,4 +9,4 @@ categories: []
 
 Tammy likes Christmas Gnomes so I decided to get her one that is near life size. 
 
-<img src="https://www.thingelstad.com/uploads/2024/fb381f3810.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/fb381f3810.jpg" width="450" height="600" alt="Large Christmas gnome with red hat and white beard beside a smaller gnome and a LEGO Mario and Yoshi box, in a wood-paneled room with a Merry and Bright sign.">

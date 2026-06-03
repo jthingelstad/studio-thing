@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We watched [Fountain of Youth](https://tv.apple.com/us/movie/fountain-of-youth/umc.cmc.z5xrwbjg3gergiowhrzg61tq) tonight. Fun movie with plenty of wild action scenes. Tammy also made incredible popcorn to go with it. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2025/5d588fbb5b.jpg" width="399" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/5d588fbb5b.jpg" width="399" height="600" alt="Movie poster for Fountain of Youth on Apple TV Plus, starring John Krasinski, Natalie Portman, Eiza Gonzalez, and Domhnall Gleeson, releasing May 23">

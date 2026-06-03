@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 I’m going to be sharing my love of [POAPs](https://poap.xyz) at the [Minnesota Blockchain](https://www.mnblockchain.org) meetup on [June 30th — Creating Community with POAPs](https://www.eventbrite.com/e/mnblockchain-june-25-spotlight-meetup-tickets-1419999640149)! Will include [612 POAP Challenge](https://www.thingelstad.com/projects/612-poap-challenge/) as an example and will also be sharing a POAP for the evening of course!
 
-<img src="https://www.thingelstad.com/uploads/2025/7025085b41.jpg" width="600" height="300" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/7025085b41.jpg" width="600" height="300" alt="MNblockchain Spotlight Meetup flyer for June 30 featuring a talk on Creating Community with POAPs at Frankies in New Hope Minnesota">

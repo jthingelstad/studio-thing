@@ -9,4 +9,4 @@ categories: []
 
 Sunset from Monhegan Island. Gorgeous. Spending the night on an island really highlights how noisy the world usually is.
 
-<img src="https://www.thingelstad.com/uploads/2021/531bcffa55.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/531bcffa55.jpg" width="600" height="450" alt="Sunset over calm ocean waters from Monhegan Island, with silhouetted cliffs, a small harbor, and glowing orange horizon fading to deep blue sky." />

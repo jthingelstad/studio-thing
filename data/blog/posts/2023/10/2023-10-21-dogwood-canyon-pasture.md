@@ -9,4 +9,4 @@ categories: []
 
 Dogwood Canyon Pasture Raised Premier 32 oz Bison Tomahawk at Osage Restaurant. 🦬
 
-<img src="https://www.thingelstad.com/uploads/2023/img-8633.jpeg" width="600" height="449" alt="" />
+<img src="https://www.thingelstad.com/uploads/2023/img-8633.jpeg" width="600" height="449" alt="32 oz bison tomahawk steak on a cast iron sizzle plate with arugula salad and cherry tomatoes, served on a wood table" />

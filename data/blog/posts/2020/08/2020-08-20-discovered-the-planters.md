@@ -9,4 +9,4 @@ categories: []
 
 Discovered the Planters Nutmobile in our neighborhood on our evening walk tonight! Will be curious to see how this story evolves! 🥜 
 
-<img src="https://www.thingelstad.com/uploads/2020/126428746a.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/126428746a.jpg" width="600" height="450" alt="Planters Nutmobile, a large vehicle shaped like a peanut shell with a blue Planters logo, parked on a residential driveway." />

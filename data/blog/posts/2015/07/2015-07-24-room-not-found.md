@@ -9,4 +9,4 @@ categories: []
 
 Room Not Found? 😂
 
-<img src="https://www.thingelstad.com/uploads/2024/66519002-f483-4f29-a8ee-7ac437d26a5b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/66519002-f483-4f29-a8ee-7ac437d26a5b.jpg" width="600" height="450" alt="Hotel room door numbered 404 in a carpeted hallway with textured wallpaper">

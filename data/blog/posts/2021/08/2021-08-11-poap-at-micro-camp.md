@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/735405">735405</a> at <strong><a href="https://poap.gallery/drops/5478">Micro Camp 2021</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/micro-camp-2021-2021-logo-1628628347693.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/micro-camp-2021-2021-logo-1628628347693.png" alt="Micro Camp 2021 logo with a tent and pine tree on a dark circular badge rimmed with emoji icons." width="500" height="500" />

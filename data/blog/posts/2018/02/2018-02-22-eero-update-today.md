@@ -9,4 +9,4 @@ categories: []
 
 Eero update today to support [IPv6](https://en.wikipedia.org/wiki/IPv6) and I can now go full [IPv6](https://en.wikipedia.org/wiki/IPv6) all the way online. Very nice! 👏
 
-<img src="https://www.thingelstad.com/uploads/2018/136c93b615.jpg" width="600" height="221" />
+<img src="https://www.thingelstad.com/uploads/2018/136c93b615.jpg" alt="7 network connectivity tests all passing with ok status, showing IPv4 and IPv6 response times ranging from 0.122s to 0.306s" width="600" height="221" />

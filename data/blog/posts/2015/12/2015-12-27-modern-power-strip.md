@@ -9,4 +9,4 @@ categories: []
 
 Modern power strip?
 
-<img src="https://www.thingelstad.com/uploads/2020/d3830f2fac.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d3830f2fac.jpg" width="600" height="600" alt="Black multi-port USB charging hub on a white desk surface with several white USB cables and one black cable plugged in, beside a Kindle e-reader." />

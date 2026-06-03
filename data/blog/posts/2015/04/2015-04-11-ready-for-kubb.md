@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Ready for Kubb practice! 42 batons!
 
-<img src="https://www.thingelstad.com/uploads/2021/f41496bd20.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/f41496bd20.jpg" width="600" height="600" alt="Green plastic tub filled with 42 wooden Kubb batons of varying sizes and wear, sitting on a concrete floor." />

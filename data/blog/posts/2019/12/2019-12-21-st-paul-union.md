@@ -9,4 +9,4 @@ categories: []
 
 St. Paul Union Station looks great for Christmas! 🎄
 
-<img src="https://www.thingelstad.com/uploads/2019/347f61f865.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/347f61f865.jpg" width="450" height="600" alt="Tall Christmas tree covered in white lights stands in snow outside the columned facade of St. Paul Union Station at night." />

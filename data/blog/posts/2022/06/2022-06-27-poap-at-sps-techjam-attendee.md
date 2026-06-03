@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/5262024">5262024</a> at <strong><a href="https://poap.gallery/drops/51884">SPS TechJam 2022 Attendee</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/sps-techjam-2022-attendee-2022-logo-1656017005804.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/sps-techjam-2022-attendee-2022-logo-1656017005804.png" alt="Circular badge reading Back to the Jam with a cartoon purple character wearing a blue hat, styled after the Back to the Future logo, for SPS Tech Jam 2022" width="500" height="500" />

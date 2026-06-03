@@ -9,4 +9,4 @@ categories: []
 
 Mini Parking Only.
 
-![](https://www.thingelstad.com/uploads/2020/5848050d5a.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/5848050d5a.jpg" alt="Young girl in red shirt standing in front of an orange Mini Cooper with black racing stripes in a parking garage at night">

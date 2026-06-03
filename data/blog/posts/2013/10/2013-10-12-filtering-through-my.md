@@ -9,4 +9,4 @@ categories: []
 
 Filtering through my camera gear to see what should go on eBay.
 
-<img src="https://www.thingelstad.com/uploads/2020/69710f2d8d.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/69710f2d8d.jpg" width="600" height="450" alt="Camera gear spread across a colorful painted table including DSLR cameras, lenses, microphones, hard cases with foam inserts, and a camera bag." />

@@ -9,4 +9,4 @@ categories: []
 
 Robin decided that a nest would be great on top of our irrigation controller. Hmm… trying to leave this be until the eggs hatch. 😬
 
-<img src="https://www.thingelstad.com/uploads/2025/1ab175f7dd.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/1ab175f7dd.jpg" width="600" height="600" alt="Bird nest with four blue robin eggs built on top of an outdoor irrigation controller mounted on a gray house wall.">

@@ -9,4 +9,4 @@ categories: []
 
 Going to learn some Cyrillic for my next trip to Kyiv.
 
-<img src="https://www.thingelstad.com/uploads/2018/ee48ce03fe.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/ee48ce03fe.jpg" alt="Yellow book titled Russian Alphabet in 33 Moves by Olga Nather on a wooden table, featuring an illustration of a person and polar bear playing chess." width="600" height="600" />

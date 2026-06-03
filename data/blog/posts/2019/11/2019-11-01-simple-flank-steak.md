@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Simple flank steak on [Big Green Egg](https://biggreenegg.com) tonight with fire getting ready for later. 🔥
 
-<img src="https://www.thingelstad.com/uploads/2019/1fe968ed0c.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/1fe968ed0c.jpg" width="600" height="600" alt="Flank steak grilling on an open Big Green Egg kamado grill on a lakeside deck in autumn, with stainless cloche covers and a meat thermometer nearby." />

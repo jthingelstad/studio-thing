@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We all went to [Mufasa: The Lion King](https://movies.disney.com/mufasa-the-lion-king) tonight at [Edina 4](https://manntheatres.com/theatre/89/Edina-4). I've always enjoyed the Lion King movies and this was a great one as well. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2024/d13e94d27c.jpg" width="405" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/d13e94d27c.jpg" width="405" height="600" alt="Movie poster for Mufasa The Lion King by Disney, featuring a lion, baboon, meerkat, lioness cub and bird, in theaters December 20">

@@ -9,4 +9,4 @@ categories: []
 
 Berry picking! 🤤
 
-<img src="https://www.thingelstad.com/uploads/2018/11036dc49d.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/11036dc49d.jpg" alt="Two children holding flat cardboard boxes filled with freshly picked strawberries while standing in a sunny pick-your-own strawberry field." width="600" height="450" />

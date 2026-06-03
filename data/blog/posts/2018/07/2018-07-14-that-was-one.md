@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 That was one of the most beautiful goals of the whole season Minnesota United! Floated right over the keepers reach. 🙌🏻⚽️ 2-0 
 
-<img src="https://www.thingelstad.com/uploads/2018/2f51fbb1bd.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/2f51fbb1bd.jpg" alt="Fans cheering in the stands at a Minnesota United FC soccer match with Darwin Quintero number 25 shown on the scoreboard" width="600" height="337" />

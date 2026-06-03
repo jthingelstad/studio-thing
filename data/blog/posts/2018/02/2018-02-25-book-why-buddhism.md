@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2018/02/25/book-why-buddhism.html"
 title: "Book: Why Buddhism Is True"
 published: "2018-02-25T19:07:00+00:00"
 post_kind: post
-categories: ["Book"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/ac7c0b6201.jpg" width="186" height="282" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/ac7c0b6201.jpg" width="186" height="282" alt="Book cover with yellow background showing title Why Buddhism Is True and subtitle The Science and Philosophy of Meditation and Enlightenment by Robert Wright" />
 
 I recently finished reading [Why Buddhism is True: The Science and Philosophy of Meditation and Enlightenment](https://www.indiebound.org/book/9781439195451) by Robert Wright and enjoyed it very much.
 

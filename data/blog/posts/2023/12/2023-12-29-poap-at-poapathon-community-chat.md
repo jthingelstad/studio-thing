@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6952612">6952612</a> at <strong><a href="https://poap.gallery/drops/166395">POAPathon Community Chat December 29 2023</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/94eacf75-3892-4f03-a233-95d74998d1a8.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/94eacf75-3892-4f03-a233-95d74998d1a8.png" alt="Circular badge showing a black cat in a party hat beside a tall rocky pile with a To Do flag, under a purple starry sky, dated December 29 2023" width="500" height="500" />

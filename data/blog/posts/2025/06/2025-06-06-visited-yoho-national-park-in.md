@@ -9,4 +9,4 @@ categories: []
 
 Visited Yoho National Park in British Columbia this morning. 
 
-<img src="https://www.thingelstad.com/uploads/2025/220912d48d.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/220912d48d.jpg" width="450" height="600" alt="Camera on a Manfrotto tripod on a wooden bridge overlooking a rushing glacial river framed by evergreen trees and a rocky mountain peak.">

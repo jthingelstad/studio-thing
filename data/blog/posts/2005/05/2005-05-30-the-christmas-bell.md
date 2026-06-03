@@ -17,5 +17,5 @@ I received the bell in rough condition. It had become three separate pieces. Sti
 
 I have respectfully placed him aside in the hope that future technology will be able to cure what ails this great, red bell.
 
-![](https://www.thingelstad.com/uploads/2020/fc978f8e26.jpg)  
+<img src="https://www.thingelstad.com/uploads/2020/fc978f8e26.jpg" alt="Elderly man in plaid shirt sitting near a hanging red glass bell and a beige wall-mounted telephone indoors.">  
 *Grandpa with the Christmas Bell (2001)*

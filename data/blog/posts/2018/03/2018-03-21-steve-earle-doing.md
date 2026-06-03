@@ -9,4 +9,4 @@ categories: ["Music"]
 
 Steve Earle doing Copperhead Road at the Pantages! 👍🏻🎶
 
-<img src="https://www.thingelstad.com/uploads/2018/5d016cc55a.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2018/5d016cc55a.jpg" alt="Band performing on a theater stage with guitars, violin, drums, steel guitar, and upright bass on a patterned rug." width="600" height="599" />

@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/c1038a6268.jpg" style="width: 141px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/c1038a6268.jpg" alt="Anatomical illustration of a human hand and wrist showing muscles, tendons, and nerves beneath the skin" style="width: 141px; float: right; margin-left: 10px; " />
 
 I am a frequent "CrackBerry" user. That's the slang term for a BlackBerry for those that are not "in the know". In recent months though I've started to look angrily at my CrackBerry. I'm starting to get pain in my thumbs on a pretty regular basis.
 

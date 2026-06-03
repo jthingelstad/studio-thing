@@ -7,9 +7,7 @@ post_kind: post
 categories: []
 ---
 
-I had no idea that there were beaches like this in Michigan! We've been
-having a great time in the Saugatuck area, and nearly every day we've
-had some relaxing and fun time in the sand and water as well.
+I had no idea that there were beaches like this in Michigan! We've been having a great time in the Saugatuck area, and nearly every day we've had some relaxing and fun time in the sand and water as well.
 
 *These are all panorama shots, ignore the stretching of the shoreline.*
 

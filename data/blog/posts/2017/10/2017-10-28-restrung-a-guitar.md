@@ -9,4 +9,4 @@ categories: []
 
 Restrung a guitar 🎸 for first time. Now if I could do anything else with it. 😂
 
-<img src="https://www.thingelstad.com/uploads/2017/9326857aca.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/9326857aca.jpg" alt="Classical guitar lying on a coloring page surrounded by colored pencils and markers, with fresh strings on the headstock" width="600" height="600" />

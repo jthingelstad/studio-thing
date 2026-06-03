@@ -9,4 +9,4 @@ categories: []
 
 Great Georgian dinner at [Gogi](http://gogi.com.ua) with our Kyiv leadership team. 😊
 
-<img src="https://www.thingelstad.com/uploads/2018/bba98240ac.jpg" width="489" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/bba98240ac.jpg" alt="Large group of about 20 people seated around a long wooden table at a Georgian restaurant, smiling at the camera after a meal." width="489" height="600" />

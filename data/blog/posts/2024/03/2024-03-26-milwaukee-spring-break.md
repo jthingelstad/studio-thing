@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/03/26/milwaukee-spring-break.html"
 title: "Milwaukee Spring Break: Day 4"
 published: "2024-03-27T02:52:07+00:00"
 post_kind: post
-categories: []
+categories: ["Coffee"]
 ---
 
 - Jamie has morning coffee at [Discourse Coffee](https://www.discourse.coffee) and today [Mazie](https://mazie.thingelstad.com?ref=thingelstad.com) joined as well.
@@ -17,7 +17,7 @@ categories: []
 - Drop off car at hotel. 
 - Walk to [San Giorgio Pizzeria](https://sangiorgiopizza.com) for delicious pizza. 
 
-<img src="https://www.thingelstad.com/uploads/2024/26e43e2766.jpg" width="600" height="450" alt=""><br/>
+<img src="https://www.thingelstad.com/uploads/2024/26e43e2766.jpg" width="600" height="450" alt="Person in purple outfit standing arms outstretched before a massive geodesic glass dome greenhouse on a cloudy day"><br/>
 <em>This is as close as we were able to get to the domes — closed on Tuesdays.</em>
 
 Jump to day 

@@ -9,4 +9,4 @@ categories: []
 
 Much needed sauna time. 🔥
 
-<img src="https://www.thingelstad.com/uploads/2026/250d8605f4.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/250d8605f4.jpg" width="600" height="450" alt="Harvia wood-burning sauna stove with glowing fire inside a small cedar-benched sauna with translucent polycarbonate walls at night.">

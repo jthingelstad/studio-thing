@@ -9,4 +9,4 @@ categories: []
 
 Beautiful collection of roses. 🌹
 
-<img src="https://www.thingelstad.com/uploads/2018/d6895be4e8.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/d6895be4e8.jpg" alt="Bouquet of red and yellow roses with white baby's breath and green foliage wrapped in gold paper with a red ribbon." width="600" height="600" />

@@ -9,4 +9,4 @@ categories: []
 
 S’mores anyone? 🔥🍫
 
-<img src="https://www.thingelstad.com/uploads/2019/505fb2ceee.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/505fb2ceee.jpg" width="600" height="450" alt="Eight black Adirondack chairs arranged around a fire pit on gravel near a lake with a hammock strung between bare autumn trees">

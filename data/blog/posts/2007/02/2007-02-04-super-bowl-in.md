@@ -7,5 +7,4 @@ post_kind: post
 categories: []
 ---
 
-I'm watching the Super Bowl and I have to comment that the rain beading
-up on the helmets makes HDTV worth every penny. 🙂
+I'm watching the Super Bowl and I have to comment that the rain beading up on the helmets makes HDTV worth every penny. 🙂

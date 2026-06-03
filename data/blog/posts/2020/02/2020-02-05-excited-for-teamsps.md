@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Excited for #TeamSPS Sales Kick-Off 2020! 
 
-<img src="https://www.thingelstad.com/uploads/2020/971fe6dcac.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/971fe6dcac.jpg" width="600" height="450" alt="Large white SKO 2020 letters on the floor of a busy hotel convention hall with attendees mingling and networking" />

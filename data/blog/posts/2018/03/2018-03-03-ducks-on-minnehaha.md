@@ -9,4 +9,4 @@ categories: []
 
 Ducks on Minnehaha Creek.
 
-![](https://www.thingelstad.com/uploads/2020/5d36af4462.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/5d36af4462.jpg" alt="Hundreds of ducks gathered on a partially frozen creek at night in winter, surrounded by snow-covered trees and a glowing streetlight.">

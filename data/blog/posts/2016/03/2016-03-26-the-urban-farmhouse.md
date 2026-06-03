@@ -9,4 +9,4 @@ categories: []
 
 Tammy found [The Urban Farmhouse](http://theurbanfarmhouse.net) for breakfast in Richmond just down the street from the Residence Inn we spent the night at. They do a weekend brunch with a very, very tiny kitchen. More like a coffee shop that makes a run at making waffles and such on the weekend. They seem to do it all without a normal flat cooktop since everything was cooked in some sort of an iron or skillet. Food was tasty and the pastries were really good as well.
 
-![](https://www.thingelstad.com/uploads/2020/a192ba1f55.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/a192ba1f55.jpg" alt="Young blonde boy grinning widely at a wooden table inside a cafe with large windows overlooking a city street">

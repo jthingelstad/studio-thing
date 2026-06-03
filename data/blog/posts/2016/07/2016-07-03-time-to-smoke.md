@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Time to smoke! [Big Green Egg](https://biggreenegg.com).
 
-<img src="https://www.thingelstad.com/uploads/2023/img-0298.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/img-0298.jpg" width="600" height="450" alt="Spice-rubbed ribs smoking on a Big Green Egg kamado grill outdoors, with tongs and baking trays on the side table.">

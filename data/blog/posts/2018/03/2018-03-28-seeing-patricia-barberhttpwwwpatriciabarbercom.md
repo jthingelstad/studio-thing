@@ -9,4 +9,4 @@ categories: ["Music"]
 
 Seeing [Patricia Barber](http://www.patriciabarber.com) for the first time at [Dakota Jazz Club](http://www.dakotacooks.com). 🎶
 
-<img src="https://www.thingelstad.com/uploads/2018/e7d8e1c17b.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/e7d8e1c17b.jpg" alt="Jazz trio performing at Dakota Jazz Club with pianist, upright bassist, and drummer on a dimly lit stage before a seated audience." width="600" height="337" />

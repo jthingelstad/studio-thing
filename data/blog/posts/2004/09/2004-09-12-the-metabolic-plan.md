@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2004/09/12/the-metabolic-plan.html"
 title: "The Metabolic Plan"
 published: "2004-09-12T05:00:00+00:00"
 post_kind: post
-categories: ["Book"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/fb414867c5.gif" style="width: 100px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/fb414867c5.gif" alt="Book cover for Stay Younger Longer by Stephen Cherniske M.S. with green and white text on dark background." style="width: 100px; float: right; margin-left: 10px; " />
 
 My friend [Phil](http://www.philiphotchkiss.com/) recommended [The Metablic Plan](http://www.amazon.com/dp/0345441028/) by Stephen Cherniske to me recently and I just finished reading it. After reading the first 50 pages I had to give him some grief for recommending this "overzealous" book on anti-aging however I recommend you do as I did and continue reading on. This book has some very good insight into the process of aging, what happens in your body and how you can fight off the negative (catabolic) effects of aging not with the intent of living forever but instead with the intent of enjoying your later years to the maximum of benefit.
 

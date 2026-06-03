@@ -9,4 +9,4 @@ categories: []
 
 Minnesota Honeycrisp Apples are in at the orchards! 🍎🍎
 
-<img src="https://www.thingelstad.com/uploads/2017/8f22ca73f4.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/8f22ca73f4.jpg" alt="Bags of Minnesota apples from Fireside Orchard and Gardens in Northfield MN displaying variety names on the label" width="600" height="600" />

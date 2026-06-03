@@ -9,4 +9,4 @@ categories: []
 
 Firmware upgrades are the best. 🤓
 
-<img src="https://www.thingelstad.com/uploads/2022/ae196c41f9.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/ae196c41f9.jpg" width="600" height="599" alt="Leica Camera Wetzlar Germany body showing LCD screen with Updating firmware V4.0 progress indicator" />

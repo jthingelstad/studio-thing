@@ -9,4 +9,4 @@ categories: []
 
 Fun running into former colleagues Sam and Andy on our flight to AMS. 
 
-<img src="https://www.thingelstad.com/uploads/2026/b455bf18fb.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/b455bf18fb.jpg" width="600" height="450" alt="Three smiling men posing together in a busy airport terminal near gates F12 and F13, wearing casual travel clothes and backpacks.">

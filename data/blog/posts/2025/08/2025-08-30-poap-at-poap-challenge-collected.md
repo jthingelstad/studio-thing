@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7441195">7441195</a> at <strong><a href="https://poap.gallery/drops/190903">612 POAP Challenge - Collected Them All!</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/e0a0fcc4-2dca-4f4f-a9f3-024d749ef845.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/e0a0fcc4-2dca-4f4f-a9f3-024d749ef845.png" alt="Gold circular badge reading 612 POAP Challenge Collected Them All with Minneapolis skyline, Stone Arch Bridge, and five stars" width="500" height="500" />

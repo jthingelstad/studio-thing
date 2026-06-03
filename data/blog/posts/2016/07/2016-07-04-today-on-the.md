@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Today on the [Big Green Egg](https://biggreenegg.com): 10 lbs of pork shoulder. “Grill of July!” Happy Independence Day! 
 
-<img src="https://www.thingelstad.com/uploads/2020/b32ab893a7.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/b32ab893a7.jpg" width="600" height="450" alt="Two large pork shoulders coated in red dry rub smoking on a Big Green Egg kamado grill in a backyard with a playset visible in the background." />

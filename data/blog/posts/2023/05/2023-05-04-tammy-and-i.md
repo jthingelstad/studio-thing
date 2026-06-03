@@ -9,9 +9,9 @@ categories: []
 
 Tammy and I had a fun evening at **[Constellation Fund](https://constellationfund.org) Bright Night** event at the Fillmore. Constellations data driven approach to philanthropy and working to reduce poverty in the Twin Cities is a mission and method that resonates with me.
 
-<img src="https://www.thingelstad.com/uploads/2023/1c128ccdfb.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/1c128ccdfb.jpg" width="600" height="337" alt="Constellation Fund Bright Night event stage with large projection screen and speaker at a podium before a seated audience">
 
-<img src="https://www.thingelstad.com/uploads/2023/1a391c24e8.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/1a391c24e8.jpg" width="600" height="450" alt="Two people smile in a selfie outside The Fillmore venue, presented by Affinity Plus Federal Credit Union, Minneapolis.">
 
 See Bright Night from 
 [2021](https://www.thingelstad.com/2021/05/20/constellation-fund-is.html),

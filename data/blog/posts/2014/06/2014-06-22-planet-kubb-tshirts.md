@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Do yourself a favor and get one of these awesome [new Planet Kubb t-shirts](http://teespring.com/planetkubb)!
 
-<img src="https://www.thingelstad.com/uploads/2020/d7933d0d89.jpg" style="max-width: 405px; " />
+<img src="https://www.thingelstad.com/uploads/2020/d7933d0d89.jpg" alt="Red crew-neck t-shirt with white Planet Kubb logo printed across the chest featuring a crown icon between the words." style="max-width: 405px; " />

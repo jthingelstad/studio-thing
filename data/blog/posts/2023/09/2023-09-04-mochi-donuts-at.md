@@ -9,4 +9,4 @@ categories: []
 
 Mochi Donuts at [Mochi Dough](https://www.mochidoughusa.com) at [Asia Mall](https://www.asiamallmn.com). 
 
-<img src="https://www.thingelstad.com/uploads/2023/417ea6bd82.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/417ea6bd82.jpg" width="600" height="449" alt="Display case of mochi donuts in flavors including Orange, Brownie Brittle, Strawberry Shortcake, Coco, Chocolate, Black Sesame, Churro, and Funnel.">

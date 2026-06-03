@@ -9,4 +9,4 @@ categories: ["Crypto", "POAP2RSS"]
 
 Saw this item in my RSS feed tonight. I had forgot about this feature in [POAP2RSS](https://www.poap2rss.com). It worked as intended and I unsubscribed from the this event feed. 
 
-<img src="https://www.thingelstad.com/uploads/2025/b3ae8c8936.jpg" width="570" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/b3ae8c8936.jpg" width="570" height="600" alt="POAP2RSS notification showing no new POAP claims for Magic Pines Summer of 2024 event in 12 weeks, last claim June 29 2025.">

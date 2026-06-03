@@ -9,4 +9,4 @@ categories: []
 
 Fun performance of The Lion King at Justice Page Middle School tonight! 🎭
 
-<img src="https://www.thingelstad.com/uploads/2018/cdc164afe2.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/cdc164afe2.jpg" alt="Large cast of students performing The Lion King on a school stage with yellow backdrop, colorful costumes, and tiered scene arrangement." width="600" height="450" />

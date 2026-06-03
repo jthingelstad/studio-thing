@@ -9,4 +9,4 @@ categories: []
 
 Whoever came up with putting grid lines on the back of wrapping paper is a genius. 🤩
 
-<img src="https://www.thingelstad.com/uploads/2021/9d85a28575.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/9d85a28575.jpg" width="600" height="599" alt="Green-handled scissors resting on white wrapping paper with a printed dotted grid pattern on the back." />

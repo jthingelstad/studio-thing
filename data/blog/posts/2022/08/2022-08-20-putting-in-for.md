@@ -12,4 +12,4 @@ categories: []
 ///doctor.senior.windy  
 47.232576, -93.522939
 
-<img src="https://www.thingelstad.com/uploads/2022/7c0328d1fa.jpg" width="599" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/7c0328d1fa.jpg" width="599" height="600" alt="Adult and child in life vests holding kayak paddles beside colorful kayaks at a river launch with a footbridge in the background." />

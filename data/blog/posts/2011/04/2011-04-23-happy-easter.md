@@ -9,4 +9,4 @@ categories: []
 
 Happy Easter!
 
-![](https://www.thingelstad.com/uploads/2020/1cf81f9682.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/1cf81f9682.jpg" alt="Easter Bunny costume standing in a backyard beside a bare tree branch hung with three colorful decorated egg ornaments.">

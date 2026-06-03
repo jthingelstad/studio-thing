@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 It was cool to see people playing Kubb in Bryant Park in New York. 
 
-<img src="https://www.thingelstad.com/uploads/2023/f29237b076.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/f29237b076.jpg" width="600" height="450" alt="People playing Kubb on a grassy court in Bryant Park surrounded by tall trees and Manhattan skyscrapers on a sunny spring day.">

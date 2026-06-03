@@ -9,4 +9,4 @@ categories: []
 
 Starting our day on the North Shore with [my brother](https://www.ikeating.com) and his family with some [World’s Best Donuts](https://worldsbestdonutsmn.com). 
 
-<img src="https://www.thingelstad.com/uploads/2025/2d598975a1.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/2d598975a1.jpg" width="600" height="449" alt="Group of seven people posing in front of the World's Best Donuts open sign in Grand Marais MN, one holding a donut box.">

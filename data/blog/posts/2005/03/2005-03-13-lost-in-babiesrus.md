@@ -11,7 +11,7 @@ Today Tammy and I truly realized how completely and totally clueless we are in s
 
 Tammy had done some research on this to figure out what should be on our list, what the necessities were, etc. All-in-all this should have been a pretty simple process. Our first stop was at USA Baby. Tammy showed me the car seat and stroller combination that she liked and I thought it looked great too. If the rest of the day was going to be like this it would be a breeze! Evaluate the different products, give it a tug, see which one feels better and move on. The rest of the trip to USA Baby wasn't worthwhile and we decided not to register there, not enough registry worthy stuff.
 
-<img src="https://www.thingelstad.com/uploads/2020/033c633f2a.jpg" style="float: right; width: 180px; padding-left: 10px; padding-bottom: 10px; "/>
+<img src="https://www.thingelstad.com/uploads/2020/033c633f2a.jpg" alt="Babies R Us store sign with colorful lettering on the exterior facade of a retail building." style="float: right; width: 180px; padding-left: 10px; padding-bottom: 10px; "/>
 
 We then proceeded to the mega-mart of baby goodness that is Babies-R-Us. We stopped at the registry desk and got set-up. They had a scanner gun for me so I could have fun shooting things with the little red line. This is how shopping should be all the time. You get to carry a device and scan each item you want. Seriously, let's get rid of the shopping carts and just walk around with scanners. Wireless transmission of each item as we scan it and then pick up a box at the checkout! Anyway, that's another post. 🙂
 

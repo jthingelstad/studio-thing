@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6798458">6798458</a> at <strong><a href="https://poap.gallery/drops/150320">Gnosis Chain Validator Survey Participants</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/141cafaf-7177-4b91-b311-612d4587d28a.gif" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/141cafaf-7177-4b91-b311-612d4587d28a.gif" alt="Animated glitch art with colorful geometric shapes on black background featuring a white owl logo icon in the center" width="500" height="500" />

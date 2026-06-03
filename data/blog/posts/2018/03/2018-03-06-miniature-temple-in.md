@@ -9,4 +9,4 @@ categories: []
 
 Miniature temple in Hyderabad. 
 
-<img src="https://www.thingelstad.com/uploads/2018/c961e7f58a.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/c961e7f58a.jpg" alt="Small outdoor Hindu shrine with ornate carved stone roof, lit oil lamps, red kumkum powder, and flower offerings inside, surrounded by statues and potted plants in Hyderabad." width="600" height="600" />

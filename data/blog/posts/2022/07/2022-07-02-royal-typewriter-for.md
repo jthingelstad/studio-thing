@@ -9,4 +9,4 @@ categories: []
 
 Royal typewriter for disconnected writing at the cabin. 
 
-<img src="https://www.thingelstad.com/uploads/2022/d47714a1dc.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/d47714a1dc.jpg" width="600" height="450" alt="Vintage Royal typewriter in gray with white keys and red logo badge, sitting on a wood table." />

@@ -23,7 +23,7 @@ Last time I kept grams and every detail in Lifeform and now I needed to find a n
 
 I then stumbled into some diary programs. This intrigued me since a food log could easily be a food diary. Simple, few word entries. The key features include multiple entries per date, ability to enter things with a time stamp in the past and searching. I found **[My Diary](http://sites.google.com/site/idiary4iphone/)** ([iTunes](http://phobos.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=288709673&mt=8)) and it's great for this need!
 
-<img src="https://www.thingelstad.com/uploads/2020/a3e8dea67d.jpg" style="max-width: 320px; " />
+<img src="https://www.thingelstad.com/uploads/2020/a3e8dea67d.jpg" alt="iPhone screen showing a food diary app with entries for October 11 2008 listing turkey burgers beets peach juice sandwiches and espresso" style="max-width: 320px; " />
 
 That screen shows lunch, snack and dinner for Saturday, October 11th. I've been using My Diary now for nearly a month to track my food and I've found it great.
 

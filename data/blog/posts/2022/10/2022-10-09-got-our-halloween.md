@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Got our Halloween pumpkins at [Little Hill Berry Farm](https://littlehillberryfarm.com) by Northfield this morning. 🎃 They also had a delicious Blueberry Pancake breakfast. 🥞🫐☕️
 
-<img src="https://www.thingelstad.com/uploads/2022/3cdc4d81bb.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2022/1453e68fd3.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/3cdc4d81bb.jpg" width="600" height="450" alt="Pumpkins of various sizes and colors including orange, yellow, and white at a sunny farm patch with trees in the background."><img src="https://www.thingelstad.com/uploads/2022/1453e68fd3.jpg" width="600" height="449" alt="A large pumpkin patch filled with dozens of orange pumpkins on dry vines, with a few people browsing in the background and trees under a clear blue sky.">

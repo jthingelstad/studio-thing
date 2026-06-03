@@ -9,7 +9,7 @@ categories: ["TeamSPS", "Minnestar"]
 
 [Minnedemo](https://minnestar.org/minnedemo/) tonight! [Anna Klombies](https://www.linkedin.com/in/annaklombies/) and [Jim Bernard](https://jimbernard.net) are ready for the demos.
 
-<img src="https://www.thingelstad.com/uploads/2024/img-0645.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/img-0645.jpg" width="600" height="450" alt="Two people smiling at a crowded indoor event; man in red zip-up jacket with name badge, woman in black fur-collar top.">
 
 Cool to see [PCs for People](https://www.pcsforpeople.org) and the great work they do at Minnedemo!
 

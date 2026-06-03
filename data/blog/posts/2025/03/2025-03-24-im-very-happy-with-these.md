@@ -9,4 +9,4 @@ categories: []
 
 I'm very happy with these Ukrainian [Tryzub](https://en.wikipedia.org/wiki/Coat_of_arms_of_Ukraine) Trident pins that I ordered from [ShopUA 1000](https://www.etsy.com/shop/shopua1000/). Made in Ukraine. 🇺🇦
 
-<img src="https://www.thingelstad.com/uploads/2025/5859846437.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/5859846437.jpg" width="600" height="600" alt="Six Ukrainian Tryzub trident pins in blue and yellow packaging reading Slava Ukraini, with a braided ribbon and pendant on a wood table.">

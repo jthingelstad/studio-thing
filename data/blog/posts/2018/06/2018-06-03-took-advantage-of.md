@@ -9,4 +9,4 @@ categories: []
 
 Took advantage of cool weather this morning and spent 2 hours clearing brush from the lakeshore. Nice before/after from the Dropcam.
 
-<img src="https://www.thingelstad.com/uploads/2018/21bc0e7560.jpg" width="600" height="337" /><img src="https://www.thingelstad.com/uploads/2018/78b846c3d4.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/21bc0e7560.jpg" alt="Lakeside yard with mowed grass, large trees, and a pontoon boat docked at the shore, with open water and distant treeline beyond." width="600" height="337" /><img src="https://www.thingelstad.com/uploads/2018/78b846c3d4.jpg" alt="Pontoon boat docked at a small pier on a calm lake, green lawn in foreground, leafy trees on the left, overcast sky" width="600" height="337" />

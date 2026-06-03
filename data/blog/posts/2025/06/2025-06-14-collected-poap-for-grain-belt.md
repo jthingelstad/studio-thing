@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>Collected POAP <a href="https://collectors.poap.xyz/token/7371441">7371441</a> for <strong><a href="https://poap.gallery/drops/190546">Grain Belt Sign — 612 POAP Challenge</a></strong>.</p>
-        <p><img src="https://www.thingelstad.com/uploads/2025/4c959d4c-303b-4530-b332-f340cdb30626.png" width="500" height="500" /></p>
+        <p><img src="https://www.thingelstad.com/uploads/2025/4c959d4c-303b-4530-b332-f340cdb30626.png" alt="Circular badge with pixel art Grain Belt Sign logo in red, yellow and blue, labeled 612 POAP Challenge" width="500" height="500" /></p>

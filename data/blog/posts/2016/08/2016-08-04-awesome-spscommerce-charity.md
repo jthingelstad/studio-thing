@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Awesome [SPS Commerce](https://www.spscommerce.com) charity auction today! #TeamSPS doing good! Thank you [Charley Hackerson](https://www.linkedin.com/in/charley-hackerson-b8aa6/) & team! 
 
-<img src="https://www.thingelstad.com/uploads/2021/3aded333cf.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/3aded333cf.jpg" width="600" height="450" alt="Busy charity auction in an office space with tables covered in home-themed items and bid sheets, attended by dozens of people." />

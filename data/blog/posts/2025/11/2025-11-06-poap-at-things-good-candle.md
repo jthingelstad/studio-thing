@@ -8,4 +8,4 @@ categories: ["Crypto", "Things 4 Good", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7487921">7487921</a> at <strong><a href="https://poap.gallery/drops/213432">Things 4 Good 2025 Candle Fundraiser</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/23bed050-58b5-493c-9278-a1d6efaf76df.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/23bed050-58b5-493c-9278-a1d6efaf76df.png" alt="Circular watercolor badge reading Things 4 Good Candle Fundraiser 5th Anniversary 2025, showing candles and wax being poured, with autumn leaves and spices." width="500" height="500" />

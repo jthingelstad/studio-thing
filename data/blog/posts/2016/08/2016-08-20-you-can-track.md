@@ -9,4 +9,4 @@ categories: []
 
 You can track this rainbow all the way from end-to-end. Nice night on Lake Superior. 
 
-<img src="https://www.thingelstad.com/uploads/2020/dacb00af49.jpg" width="600" height="258" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/dacb00af49.jpg" width="600" height="258" alt="Faint rainbow arching over calm Lake Superior at dusk with rocky shoreline and evergreen trees at left edge" />

@@ -8,4 +8,4 @@ categories: ["Kubb", "Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6790247">6790247</a> at <strong><a href="https://poap.gallery/drops/150068">SPS Kubb Tourney 2023</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/58b28c36f0.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/58b28c36f0.png" alt="Circular logo for the 5th Annual SPS Kubb Tourney 2023 featuring illustrated wooden kubb blocks with Viking helmets, shields, axes, and spears on grass." width="500" height="500" />

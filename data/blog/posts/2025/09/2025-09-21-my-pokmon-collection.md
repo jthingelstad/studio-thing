@@ -15,4 +15,4 @@ With some help from [Tyler](https://tyler.thingelstad.com) I got [my Collectr pr
 
 I just have 31 cards so far but I like the collection and having specific goals like this makes it a lot more fun. If only Collectr published an RSS feed on these profiles.
 
-<img src="https://www.thingelstad.com/uploads/2025/collectr-profile.png">
+<img src="https://www.thingelstad.com/uploads/2025/collectr-profile.png" alt="Collectr profile page for Jamie Thingelstad showing 31 total cards valued at 1569.38 USD with four PSA-graded holofoil cards displayed">

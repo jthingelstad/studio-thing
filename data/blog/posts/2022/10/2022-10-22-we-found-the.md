@@ -9,4 +9,4 @@ categories: []
 
 We found the Mystery Machine! Scoooooby Doo!
 
-<img src="https://www.thingelstad.com/uploads/2022/6d1570e209.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/6d1570e209.jpg" width="600" height="450" alt="Family of four in Dr. Seuss shirts posing for a selfie in front of the Mystery Machine van from Scooby-Doo at a theme park">

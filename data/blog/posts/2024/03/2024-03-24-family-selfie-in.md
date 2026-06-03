@@ -9,6 +9,6 @@ categories: []
 
 Family selfie in the atrium of the [Milwaukee Art Museum](https://mam.org/) with Lake Michigan in the background.
 
-<img src="https://www.thingelstad.com/uploads/2024/b72ee5dcd5.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/b72ee5dcd5.jpg" width="600" height="450" alt="Four people smiling together in a curved glass atrium overlooking Lake Michigan, two adults and two teenage girls in casual tops.">
 
 _Part of the [Milwaukee Spring Break collection](https://www.thingelstad.com/collections/milwaukee-spring-break/)._

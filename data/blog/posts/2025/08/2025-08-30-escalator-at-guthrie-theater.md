@@ -9,4 +9,4 @@ categories: []
 
 Escalator at Guthrie Theater. 
 
-<img src="https://www.thingelstad.com/uploads/2025/a4497d61a3.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/a4497d61a3.jpg" width="450" height="600" alt="Empty escalator rising upward inside the Guthrie Theater, flanked by smooth gray walls converging toward a bright exit above.">

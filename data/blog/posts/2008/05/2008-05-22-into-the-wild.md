@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2008/05/22/into-the-wild.html"
 title: "Into the Wild by Jon Krakauer"
 published: "2008-05-22T05:00:00+00:00"
 post_kind: post
-categories: ["Book"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/4ab91c3351.png" style="width: 150px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/4ab91c3351.png" alt="National Bestseller book cover showing a bus in a wilderness setting with bold white title text on dark background" style="width: 150px; float: right; margin-left: 10px; " />
 
 I finished [Into the Wild](http://www.amazon.com/Into-Wild-Jon-Krakauer/dp/0385486804) by [Jon Krakauer](http://en.wikipedia.org/wiki/Jon_Krakauer) this evening. It was enjoyable to both start and finish this book during our stay at Glacier National Park. Reading that much is just one of the joys of not having any television or Internet access in our cabin. I was excited to read this book after having [watched the movie](https://www.thingelstad.com/2008/04/11/t787972102.html) version of *Into the Wild*. My friend [Kent](http://www.thetangens.net/) lent me his copy of the book and it's already been passed on to Tammy to read before returning to Kent.
 

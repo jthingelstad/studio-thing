@@ -7,12 +7,11 @@ post_kind: post
 categories: ["Minnestar"]
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/5e87cc09d1.gif" style="width: 107px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/5e87cc09d1.gif" alt="Orange vertical rectangle with a circular gray arrow forming the OpenID logo" style="width: 107px; float: right; margin-left: 10px; " />
 
 I've been using [OpenID](http://www.openid.net/) for a couple of weeks now, and I'm really **impressed**. I created an OpenID identity on [MyOpenID](http://www.myopenid.com/) a few months ago, but there was nothing to use it with so it just sat. In these few months though, there has been a lot of progress! Recently [David Hansson](http://www.loudthinking.com/) was blogging about OpenID which peaked my interest again (I asked him about it in the [interview with him at Minnebar](https://www.thingelstad.com/2007/05/09/minnebar.html) --fast forward to 44:13 minutes). There are now a decent number of web properties that are using OpenID to manage authentication. **What is OpenID?**
 
-I'm not going to write this when others have done it so well. [Excerpt from
-ReadWriteWeb](http://www.readwriteweb.com/archives/microsoft_openid_five_key_takeaways.php):
+I'm not going to write this when others have done it so well. [Excerpt from ReadWriteWeb](http://www.readwriteweb.com/archives/microsoft_openid_five_key_takeaways.php):
 
 > OpenID is an open, decentralized, free framework for user-centric digital identity. It is aimed at solving the problem of Web single sign-on. How does the problem of web single sign-on affect you? Well, if you struggle with keeping track of different usernames and passwords at different websites where you have an account, OpenID can help you. With OpenID you will be assigned a standard username (typically a URL or an i-name, similar to an email address) that you can use on all sites that support OpenID.
 

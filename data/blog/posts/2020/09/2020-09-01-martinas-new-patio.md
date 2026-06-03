@@ -15,4 +15,4 @@ The distancing precautions and changes to their processes were also very well do
 
 The Panqueque dessert is still amazing, and perfect to share for two. 🍌🤤
 
-<img src="https://www.thingelstad.com/uploads/2020/1d6d9ed37d.jpg" width="600" height="450" alt="" /><img src="https://www.thingelstad.com/uploads/2020/1851640a96.jpg" width="600" height="450" alt="" /><img src="https://www.thingelstad.com/uploads/2020/ecf785ed2e.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/1d6d9ed37d.jpg" width="600" height="450" alt="Two people wearing blue disposable face masks seated at an outdoor restaurant patio with other diners, trees, and string lights behind them." /><img src="https://www.thingelstad.com/uploads/2020/1851640a96.jpg" width="600" height="450" alt="Two cocktails on a wood table at an outdoor restaurant patio — a balloon glass with crushed ice and lemon, and a tall red drink with floral garnish." /><img src="https://www.thingelstad.com/uploads/2020/ecf785ed2e.jpg" width="600" height="450" alt="Crepe dessert with caramel sauce, whipped cream, and gold flakes on a rustic ceramic plate at an outdoor restaurant patio" />

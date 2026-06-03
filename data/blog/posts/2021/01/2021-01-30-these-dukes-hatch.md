@@ -9,4 +9,4 @@ categories: []
 
 These [Duke’s Hatch Green Chile](https://dukesmeats.com/smoked-shorty-sausages/green-chile) sausages are delicious. Great flavor and the [Hatch chiles](https://en.wikipedia.org/wiki/New_Mexico_chile#Hatch_chile) are great. 
 
-<img src="https://www.thingelstad.com/uploads/2021/5d65bbfb67.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/5d65bbfb67.jpg" width="600" height="600" alt="Hand holding a bag of Duke's Hatch Green Chile Smoked Shorty Sausages inside a car, highway visible through windshield." />

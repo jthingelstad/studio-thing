@@ -9,4 +9,4 @@ categories: []
 
 We played [Exploding Kittens](https://explodingkittens.com) for first time tonight. Silly game but quick and fun. 
 
-<img src="https://www.thingelstad.com/uploads/2021/043eacf48b.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/043eacf48b.jpg" width="600" height="600" alt="Exploding Kittens card game on a wooden table with a discard pile showing Beard Cat and Favor cards beside the face-down draw deck." />

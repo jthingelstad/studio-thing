@@ -9,4 +9,4 @@ categories: []
 
 So many family and friends around to celebrate with my Mom as she turns over another decade! Wish we could have kept going for a few more hours... 🥰
 
-<img src="https://www.thingelstad.com/uploads/2022/8354154c29.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/8354154c29.jpg" width="600" height="400" alt="Large group of about 20 adults and two children posing indoors beneath rose gold 70 birthday balloons and a fabulous banner.">

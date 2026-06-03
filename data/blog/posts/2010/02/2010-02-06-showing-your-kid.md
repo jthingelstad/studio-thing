@@ -25,13 +25,13 @@ Just being able to do simple conditionals, loops and control statements in the s
 
 For a kids 4 to 8 years old Basic can still be a lot of fun. Plus, they will learn the horrors of GOTO and realize that even though some modern languages accommodate `GOTO` it should never be used.
 
-<img src="https://www.thingelstad.com/uploads/2020/97975ae164.png" style="width: 64px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/97975ae164.png" alt="Pixel art of a small brown teddy bear with round ears, sitting upright against a white background." style="width: 64px; float: right; margin-left: 10px; " />
 
 Even though your modern machine will come with a ridiculous wealth of software it will not come with a BASIC interpreter. Open source software to the rescue with the [Chipmunk BASIC interpreter](http://www.nicholson.com/rhn/basic/). I downloaded the Mac version and spent a little while reliving memories just now.
 
 ### Logo
 
-<img src="https://www.thingelstad.com/uploads/2020/b1cc65a60e.jpg" style="width: 100px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/b1cc65a60e.jpg" alt="Small turtle robot on a triangular track, used to teach children programming concepts." style="width: 100px; float: right; margin-left: 10px; " />
 
 The complement to showing young minds BASIC and all the text-based fun is a Logo interpreter. Logo is a fun little language where you move a "turtle" around on a canvas and place a pen up and down to create graphics. It's a wonderful little language that you can make pictures in. How great for kids to see the result of their code!
 

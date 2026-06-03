@@ -9,4 +9,4 @@ categories: []
 
 [Jim Bernard](https://jimbernard.net) and Mike Black at [Dusty's](http://dustysbaranddagos.com) after B-Squad game.
 
-![](https://www.thingelstad.com/uploads/2020/fb3c30591b.png)
+<img src="https://www.thingelstad.com/uploads/2020/fb3c30591b.png" alt="Four-panel photo of two men at a bar, one in a white cap and B-Squad shirt, the other in a white shirt, talking and gesturing.">

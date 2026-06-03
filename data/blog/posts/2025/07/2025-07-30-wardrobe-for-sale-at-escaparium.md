@@ -11,4 +11,4 @@ After our morning defeating the Voodoo Queen we had a break for lunch and then r
 
 This was a two hour room and was an incredible story. 
 
-<img src="https://www.thingelstad.com/uploads/2025/7604e97aaa.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/7604e97aaa.jpg" width="600" height="450" alt="Four people smiling indoors holding a red VENDU sign and a stuffed monkey toy in front of a dark wooden wardrobe.">

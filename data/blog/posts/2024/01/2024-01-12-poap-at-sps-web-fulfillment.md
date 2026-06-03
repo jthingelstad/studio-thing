@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6968799">6968799</a> at <strong><a href="https://poap.gallery/drops/166823">SPS Web Fulfillment 2 Billion</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/ef2d34a8-fbe7-405c-9801-d1abf2774f87.gif" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/ef2d34a8-fbe7-405c-9801-d1abf2774f87.gif" alt="Circular badge reading SPS Web Fulfillment 2 Billion January 10 2024 with a glowing blue geometric logo on dark background." width="500" height="500" />

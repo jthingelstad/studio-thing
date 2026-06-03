@@ -9,4 +9,4 @@ categories: []
 
 Was fun to do this one.
 
-![](https://www.thingelstad.com/uploads/2020/598890e95d.png)
+<img src="https://www.thingelstad.com/uploads/2020/598890e95d.png" alt="Google Plus Help page confirming successful deletion of Google Plus profile and associated social content with optional exit survey">

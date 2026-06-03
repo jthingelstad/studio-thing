@@ -9,4 +9,4 @@ categories: []
 
 Discovering all sorts of unusual devices while getting new house ready. RCA jacks, mini plug, Ethernet?
 
-<img src="https://www.thingelstad.com/uploads/2022/a9f00dbdaa.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/a9f00dbdaa.jpg" width="600" height="599" alt="Circuit board mounted on a metal bracket with RCA jacks, an Ethernet port, and colorful wiring, sitting atop networking equipment." />

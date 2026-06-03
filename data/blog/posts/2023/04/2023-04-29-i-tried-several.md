@@ -11,4 +11,4 @@ I tried several times earlier to participate in the (historic?) Ethereum [KZG Ce
 
 
 
-<img src="https://www.thingelstad.com/uploads/2023/da569900a0.png" width="375" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/da569900a0.png" width="375" height="600" alt="Ethereum KZG Ceremony contribution details page showing participant ID cryptographic pubkeys BLS signatures and ECDSA signature for contributor 91614">

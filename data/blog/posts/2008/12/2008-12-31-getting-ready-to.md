@@ -9,7 +9,7 @@ categories: ["Cooking"]
 
 Getting ready to do some New Year's Eve grilling!
 
-![](https://www.thingelstad.com/uploads/2020/6921799b4a.png)
+<img src="https://www.thingelstad.com/uploads/2020/6921799b4a.png" alt="Snow-covered deck with a lit chiminea and a Big Green Egg kamado grill on a wooden cart, winter trees in background.">
 
 Preparing Big Green Egg for grilling. Music playing on the deck. Hello winter!!!
 
@@ -17,6 +17,6 @@ Researching methods to drop the [Big Green Egg](https://biggreenegg.com) temp ra
 
 Smoking away!
 
-<img src="https://www.thingelstad.com/uploads/2020/b6557ea5a0.jpg" width="150" height="200" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/b6557ea5a0.jpg" width="150" height="200" alt="Green Big Green Egg kamado smoker on a wooden table on a dark outdoor deck with smoke rising from the top." />
 
 Just had, what I truly believe, is the best beef I have ever eaten! O! M! G!

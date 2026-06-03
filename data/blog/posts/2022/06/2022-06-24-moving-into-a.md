@@ -14,4 +14,4 @@ Moving into a new home presents many puzzles. Currently working out this one:
 - B&O MasterLink network
 - Random one off cables
 
-<img src="https://www.thingelstad.com/uploads/2022/433e611989.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/433e611989.jpg" width="600" height="450" alt="Pegboard wall in a basement utility area with tangled coax, Cat5e ethernet, and other cables connected to patch panels, network switches, a Brinks alarm panel, and a white router." />

@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Great morning for Kubb & Koffee.
 
-<img src="https://www.thingelstad.com/uploads/2020/3646908f73.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/3646908f73.jpg" width="600" height="450" alt="Navy Kubb bag on grass beside two white branded mugs and a stainless steel thermos flask" />

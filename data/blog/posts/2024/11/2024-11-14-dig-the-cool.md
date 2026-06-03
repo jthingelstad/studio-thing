@@ -9,4 +9,4 @@ categories: []
 
 Dig the cool display design for the [Minnesota Tekne Awards](https://tekneawards.org) stage. Fun to see the displays in a non-traditional layout that is connected to the imagery. 
 
-<img src="https://www.thingelstad.com/uploads/2024/9dbc40a539.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/9dbc40a539.jpg" width="600" height="449" alt="Stage setup for Minnesota Tekne Awards with LED panels showing city skyline, a presenter at podium, and projected logos overhead.">

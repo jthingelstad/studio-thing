@@ -9,4 +9,4 @@ categories: []
 
 I thought North Dakota had the record for roads that go straight as far as the eye can see. It turns out Arizona gives it a very good run for the prize! This is I-40 heading West.
 
-<img src="https://www.thingelstad.com/uploads/2021/6ede0a23d9.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/6ede0a23d9.jpg" width="600" height="337" alt="Two-lane interstate highway stretching ruler-straight to the horizon across flat Arizona high desert under a clear blue sky, with semi-trucks visible ahead." />

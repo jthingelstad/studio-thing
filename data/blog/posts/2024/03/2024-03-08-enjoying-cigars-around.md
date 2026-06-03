@@ -9,4 +9,4 @@ categories: []
 
 Enjoying cigars around the fire with my cousins Josh and Quinn along with Kurt and Dylan.
 
-<img src="https://www.thingelstad.com/uploads/2024/521cbb4cb3.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/521cbb4cb3.jpg" width="600" height="449" alt="Five men sitting around a small outdoor fire pit at night smoking cigars and wearing winter jackets">

@@ -9,4 +9,4 @@ categories: []
 
 Campfire and S’mores! 🔥🍫
 
-<img src="https://www.thingelstad.com/uploads/2019/8c99367252.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/8c99367252.jpg" width="450" height="600" alt="Blazing fire pit with stacked logs burning brightly at night, set in gravel with a stone mushroom ornament in the background." />

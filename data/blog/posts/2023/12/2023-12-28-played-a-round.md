@@ -15,6 +15,6 @@ Played a round of [Skittles](https://carrom.com/product/skittles-spinning-top-bo
 4. Tyler 830
 
 
-<img src="https://www.thingelstad.com/uploads/2023/c69a14f5a8.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/c69a14f5a8.jpg" width="600" height="600" alt="Skittles by Carrom tabletop bowling game with wooden pins and spinning top arranged on a blue playing surface">
 
-<img src="https://www.thingelstad.com/uploads/2023/390e87db60.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/390e87db60.jpg" width="600" height="600" alt="Close-up of a Skittles board game showing wooden bowling-pin skittles, a spinning top, and a knocked-over pin on a blue playing surface.">

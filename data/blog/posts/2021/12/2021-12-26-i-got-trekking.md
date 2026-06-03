@@ -9,4 +9,4 @@ categories: []
 
 I got [Trekking the National Parks Trivia](https://www.trektheparks.com/trivia) for Christmas this year. It is a fun and fast game to play. You get to learn things too. I [got Trekking the National Parks in 2019](https://www.thingelstad.com/2019/12/27/enjoying-trekking-the.html) by the same company. Great gifts for fans of the National Parks.
 
-<img src="https://www.thingelstad.com/uploads/2021/2c81a989e9.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/2c81a989e9.jpg" width="600" height="600" alt="Trekking the National Parks Trivia board game box with question and answer cards spread on a table beside a gingerbread house decoration." />

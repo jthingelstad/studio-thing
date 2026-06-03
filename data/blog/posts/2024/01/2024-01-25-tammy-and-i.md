@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I saw [American Fiction](https://en.wikipedia.org/wiki/American_Fiction_(film)) tonight at the [Edina Theatre](https://manntheatres.com/edinatheatre/). I liked the movie and thought it was both funny and pointed in the message. There is a surprise in the end that keeps you wondering too.
 
-<img src="https://www.thingelstad.com/uploads/2024/8063510048.jpg" width="405" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/8063510048.jpg" width="405" height="600" alt="Movie poster for American Fiction featuring five people posed against a blue background, opening in theaters December">

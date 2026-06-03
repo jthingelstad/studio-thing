@@ -9,4 +9,4 @@ categories: []
 
 This graph of DNS requests by client at our cabin is a good example of how metadata and privacy interact. When did we get there? How many people were there? All reasonable things that you could derive from this metadata.
 
-<img src="https://www.thingelstad.com/uploads/2020/0972e70f30.jpg" width="600" height="236" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/0972e70f30.jpg" width="600" height="236" alt="Stacked bar chart showing DNS client activity over 24 hours, with a large spike near 20:00 reaching over 600, then elevated activity through 08:00." />

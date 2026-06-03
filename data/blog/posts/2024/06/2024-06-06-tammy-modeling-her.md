@@ -9,4 +9,4 @@ categories: []
 
 Tammy modeling her new Ireland made [Jack Murphy](https://jackmurphy.ie) coat found at Adare Manor.
 
-<img src="https://www.thingelstad.com/uploads/2024/f953a3d216.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/f953a3d216.jpg" width="600" height="600" alt="Woman in a navy quilted coat with denim trim leans against a stone building, hands in pockets, looking to the side.">

@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2018/09/26/goodbye-chase.html"
 title: "Goodbye Chase"
 published: "2018-09-27T00:00:00+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
 On Friday evening we had to say goodbye to our dog Chase. We [adopted
@@ -17,7 +17,7 @@ After a day of trying that out, we realized that he was Chase. It just
 fit. Chase was a Black Lab / Border Collie mix. Smart, loyal, and [full
 of energy](https://www.thingelstad.com/2010/12/12/chase-running-in.html).
 
-![](https://www.thingelstad.com/uploads/2020/81d06c2d44.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/81d06c2d44.jpg" alt="Black Lab and Border Collie mix running through shallow lake water, mouth open and tongue out, tail curled up, wet black fur glistening in sunlight">
 
 We don't know exactly when he was born, but he was in full puppy mode
 when he came to us. If Mazie left any wooden toy on the floor, he would
@@ -40,7 +40,7 @@ weekends I get up early, and he'd hang out with me while I did whatever.
 At the cabin we would go down to the dock in the morning with a cup of
 coffee and look at the water and the occasional bird or fish jumping.
 
-![](https://www.thingelstad.com/uploads/2020/d1f3ed89be.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/d1f3ed89be.jpg" alt="Black Labrador and Border Collie mix standing on a white dock overlooking a large lake with wooded shoreline in the background">
 
 Of course Chase wasn't just my dog. Mazie loved Chase and would play
 with him a lot. Tyler declared Chase his best friend in Kindergarten and
@@ -53,7 +53,7 @@ had more time. I knew Chase was getting older. He was slowing down and
 enjoyed long afternoon naps at the lake. He would find a spot in the
 grass and have a good day of it.
 
-![](https://www.thingelstad.com/uploads/2020/c1bd7d3ee1.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/c1bd7d3ee1.jpg" alt="Black Lab mix named Chase resting his chin on a boat railing with a lake and distant treeline behind him">
 
 Sadly he wasn't just getting old. We took him in because his teeth
 looked bad and his breath was beyond bad. We figured he just needed a
@@ -75,7 +75,7 @@ It was tough. I expected it to be difficult, but it was even harder. He
 was part of our family. Chase was everyone's dog and we all felt the
 loss. 😢
 
-![](https://www.thingelstad.com/uploads/2020/e73bd701ac.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/e73bd701ac.jpg" alt="Family of four with a black Labrador mix posing on a fallen log at a sandy wooded trail, man in blue plaid shirt and cap standing left">
 
 I didn't realize how much he was always there with us, and particularly
 with me. The mornings have been lonely without him there to do whatever
@@ -84,4 +84,4 @@ welcoming tail wagging at the door with eager eyes.
 
 I miss my buddy.
 
-![](https://www.thingelstad.com/uploads/2020/c94599cbaf.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/c94599cbaf.jpg" alt="Middle-aged man in an orange plaid shirt resting his cheek against the head of a black Labrador mix outdoors among green trees">

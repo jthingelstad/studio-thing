@@ -14,4 +14,4 @@ This felt more like we were on a movie set than an escape room. The ship was mov
 We did complete the experience and break the spell of the Voodoo Queen. It was amazing and made us all eager to see the other Escaparium rooms we were doing. 
 
 
-<img src="https://www.thingelstad.com/uploads/2025/2c134e42ca.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/2c134e42ca.jpg" width="600" height="450" alt="Four people smiling together inside a dimly lit wooden ship set decorated with skulls and rope, lit by green and red lights.">

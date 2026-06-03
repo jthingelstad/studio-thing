@@ -15,4 +15,4 @@ Sticker on window in hotel.
 
 I ❤️ Iceland. 😊
 
-<img src="https://www.thingelstad.com/uploads/2022/be51ae9fbb.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/be51ae9fbb.jpg" width="600" height="600" alt="Warning sticker on a window advising guests not to open the door in strong winds, with green fields and mountains visible behind." />

@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Great #TeamSPS outing to play epic [Whirleyball](https://www.whirlyballtwincities.com) matches!
 
-<img src="https://www.thingelstad.com/uploads/2019/f89c89713d.jpg" width="600" height="337" alt="" /><img src="https://www.thingelstad.com/uploads/2019/aacca309ac.jpg" width="600" height="338" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/f89c89713d.jpg" width="600" height="337" alt="Group of about a dozen coworkers smiling and posing together beside colorful red and yellow bumper cars on an indoor track." /><img src="https://www.thingelstad.com/uploads/2019/aacca309ac.jpg" width="600" height="338" alt="Adults riding yellow and red bumper cars on an indoor Whirlyball court, one player raising a lacrosse-style scoop overhead." />

@@ -9,4 +9,4 @@ categories: []
 
 Beautiful day to visit the apple orchard. Apparently not the only ones with this idea. 
 
-<img src="https://www.thingelstad.com/uploads/2020/4ea6b5b4fc.jpg" width="600" height="233" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/4ea6b5b4fc.jpg" width="600" height="233" alt="Panoramic view of a large apple orchard on a sunny fall day with benches along a grassy hillside where a few people sit resting." />

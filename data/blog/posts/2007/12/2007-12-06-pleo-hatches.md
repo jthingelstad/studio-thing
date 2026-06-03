@@ -9,7 +9,7 @@ categories: []
 
 After months of waiting [Pleo](http://www.pleoworld.com/) has finally arrived! Pleo is the first robot from [Ugobe](http://www.ugobe.com/).
 
-<img src="https://www.thingelstad.com/uploads/2020/2cfc9885fe.jpg" style="max-width: 400px; " />
+<img src="https://www.thingelstad.com/uploads/2020/2cfc9885fe.jpg" alt="Green robotic baby dinosaur toy Pleo standing on a shiny surface next to a small green charging stand indoors." style="max-width: 400px; " />
 
 It seems not many people had pre-ordered Pleo (according to [Jyte](http://jyte.com/)). Of course there were only 2,000 of the special "First Hatch" editions available.
 

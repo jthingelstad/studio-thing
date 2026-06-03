@@ -9,4 +9,4 @@ categories: ["Music"]
 
 At Camp Randall Stadium in Madison, Wisconsin for **Coldplay: Music of the Spheres**! 🎶
 
-<img src="https://www.thingelstad.com/uploads/2025/img-4101.jpeg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/img-4101.jpeg" width="600" height="450" alt="Four people posing together in the stands at Camp Randall Stadium during a Coldplay concert, with the crowded floor and stage visible behind them.">

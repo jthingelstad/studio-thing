@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7104649">7104649</a> at <strong><a href="https://poap.gallery/drops/171248">Cyber Week 2023</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/6c1c3904-e74d-4604-aea9-349822464e9f.gif" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/6c1c3904-e74d-4604-aea9-349822464e9f.gif" alt="Circular pixel-art illustration of a blue skyscraper displaying the number 25,504,306, with a jet, pixelated clouds, and an SRS logo on a lower building." width="500" height="500" />

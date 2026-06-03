@@ -9,4 +9,4 @@ categories: []
 
 Rays of Sunlight on Artists Point in Grand Marais.
 
-![](https://www.thingelstad.com/uploads/2020/1c7f2c9402.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/1c7f2c9402.jpg" alt="Crepuscular rays breaking through storm clouds over a forested rocky point on Lake Superior in black and white">

@@ -9,4 +9,4 @@ categories: []
 
 I didn't think this type of thing ever happened any more. On a ridiculously full flight and have two open seats next to me?
 
-![](https://www.thingelstad.com/uploads/2020/b1e5211435.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/b1e5211435.jpg" alt="Worn blue leather airplane seat with seatbelt unbuckled, two empty seats visible beside a passenger in a crowded cabin.">

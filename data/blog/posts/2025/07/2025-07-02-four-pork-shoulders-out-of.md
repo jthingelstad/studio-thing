@@ -9,4 +9,4 @@ categories: []
 
 Four pork shoulders [out of the Sous Vides](https://www.thingelstad.com/2025/07/01/four-pork-shoulders-into-the.html) and onto the Traeger for the finish smoke. 🔥🐖
 
-<img src="https://www.thingelstad.com/uploads/2025/f026dfde5a.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/f026dfde5a.jpg" width="600" height="450" alt="Four pork shoulders on a Traeger pellet grill set to 202 degrees, finishing in a backyard patio setting.">

@@ -9,4 +9,4 @@ categories: []
 
 I’ve never had an Apple TV require this Recovery Mode. It seems to be working fine to fix it. 
 
-<img src="https://www.thingelstad.com/uploads/2025/47f35a4045.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/47f35a4045.jpg" width="600" height="600" alt="iPhone showing a Restoring Apple TV dialog with a Preparing progress bar, instructing the user to keep the Apple TV in recovery mode connected to power.">

@@ -9,4 +9,4 @@ categories: []
 
 In the crowd boarding the ferry from Ellis Island to Manhattan with the Statue of Liberty in the background.
 
-<img src="https://www.thingelstad.com/uploads/2023/bd36c18e53.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/bd36c18e53.jpg" width="600" height="450" alt="Crowd of people boarding a New York ferry at a dock, with the Statue of Liberty visible in the distance under a cloudy sky.">

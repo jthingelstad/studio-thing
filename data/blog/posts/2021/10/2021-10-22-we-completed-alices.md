@@ -9,4 +9,4 @@ categories: []
 
 We completed [Alice’s White Rabbit Rescue](https://www.twistedroomescapes.com/index.php/escape-rooms/alice) at Twisted Room Escapes in Indianapolis tonight. 56m 40s.  [Room 37](https://www.thingelstad.com/lists/escape-rooms/)!
 
-<img src="https://www.thingelstad.com/uploads/2021/e30926ee82.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/e30926ee82.jpg" width="600" height="600" alt="Family of four posing at Twisted Room Escapes holding a sign reading We Saved The Rabbit 56:40 and a stuffed rabbit prop" />

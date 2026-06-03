@@ -9,4 +9,4 @@ categories: []
 
 The San Fernando Cathedral Light Show was really cool last night! There is a [full video you can watch](https://www.youtube.com/watch?v=JdazinSmRKo) online. 
 
-<img src="https://www.thingelstad.com/uploads/2019/c15bfe3da0.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/c15bfe3da0.jpg" width="600" height="600" alt="San Fernando Cathedral in San Antonio illuminated at night with a colorful projection mapping light show, crowd watching in foreground." />

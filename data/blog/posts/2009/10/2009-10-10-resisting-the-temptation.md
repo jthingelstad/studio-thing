@@ -9,4 +9,4 @@ categories: []
 
 Resisting the temptation to wear my Sorels this morning.
 
-<img src="https://www.thingelstad.com/uploads/2020/852328613b.jpg" width="175" height="233" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/852328613b.jpg" width="175" height="233" alt="Two tan Sorel winter boots with shearling lining on a shelf, name Thingelstad written on backs, next to floral rain boots." />

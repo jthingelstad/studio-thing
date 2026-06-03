@@ -9,4 +9,4 @@ categories: []
 
 First time playing [Tsuro](https://calliopegames.com/shop/tsuro-the-game-of-the-path/). Super interesting strategy requiring an indirect approach to attacking other players. 
 
-<img src="https://www.thingelstad.com/uploads/2023/4c2585f6f3.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/4c2585f6f3.jpg" width="600" height="450" alt="Tsuro board game in progress with three wooden player tokens on a tile path board featuring a phoenix illustration.">

@@ -11,4 +11,4 @@ The **4:15a alarm** this morning to go shoot sunrise is reminding me of a saying
 
 Big part of photography is f/8 and **be there**. 
 
-<img src="https://www.thingelstad.com/uploads/2025/46ed754235.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/46ed754235.jpg" alt="Camera on tripod aimed down a wooden dock toward snow-capped mountains across a calm lake at dusk">

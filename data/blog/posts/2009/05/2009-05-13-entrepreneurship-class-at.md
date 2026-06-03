@@ -7,7 +7,6 @@ post_kind: post
 categories: []
 ---
 
-About a month ago I spoke at an entrepreneurship class at the Carlson
-School of Management. Nice group with a lot of good questions.
+About a month ago I spoke at an entrepreneurship class at the Carlson School of Management. Nice group with a lot of good questions.
 
-![](https://www.thingelstad.com/uploads/2020/186b021ce2.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/186b021ce2.jpg" alt="Large group of roughly 35 students and an instructor posing together in a classroom with desks and a projector screen">

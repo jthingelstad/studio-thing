@@ -9,10 +9,10 @@ categories: ["Sports"]
 
 Gorgeous work MNUFC to take lead 1-0! ⚽️👏🏻
 
-<img src="https://www.thingelstad.com/uploads/2018/c133b4eb58.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/c133b4eb58.jpg" alt="Minnesota United FC players celebrate a goal near midfield as a packed Allianz Field crowd waves flags and scarves behind the net." width="600" height="337" />
 
 Stellar first half from MN United to take a 3-0 lead v Portland Timbers! ⚽️🙌⚽️🙌⚽️🙌
 
-<img src="https://www.thingelstad.com/uploads/2018/f9c017513e.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/f9c017513e.jpg" alt="Family of four in Minnesota United FC scarves and gear taking a selfie in a packed stadium at night" width="600" height="337" />
 
 “Hey Siri, Loons win!” Cue Wonderwall! 🎧⚽️🙌 Great game MNUFC! B🚫BBY for President!

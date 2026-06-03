@@ -11,10 +11,10 @@ After arriving in Saugatuck from Rochester this morning we went straight to [Ret
 
 We spent an hour a sand beach just before the Kalamazoo River enters Lake Michigan before returning the donut to the rental shop. If you ever get a chance to go out in a donut boat, do it. 🤩
 
-![](https://www.thingelstad.com/uploads/2021/20348dfa53.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/20348dfa53.jpg" alt="Four people riding a round pink and white electric boat on a calm lake surrounded by wooded shoreline and docked boats">
 
-![](https://www.thingelstad.com/uploads/2021/09e2c31864.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/09e2c31864.jpg" alt="Four people giving thumbs up seated around an orange table on a circular pink electric boat on the Kalamazoo River">
 
-![](https://www.thingelstad.com/uploads/2021/b340537cbc.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/b340537cbc.jpg" alt="Two circular electric rental boats docked at a wooden pier on a calm tree-lined lake, one orange and one pink, each with a canopy and center table.">
 
-![](https://www.thingelstad.com/uploads/2021/020bd78c32.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/020bd78c32.jpg" alt="Person in sunglasses relaxing inside a round pink electric boat with circular gray seating and an orange table, moored on a calm river.">

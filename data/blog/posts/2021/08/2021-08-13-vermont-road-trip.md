@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2021/08/13/vermont-road-trip.html"
 title: "Vermont Road Trip Log: Day 14, Friday"
 published: "2021-08-14T01:41:00+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 Weather: Perfect day!
@@ -19,7 +19,7 @@ Weather: Perfect day!
 - Hang out and have fun at [Oval Beach](https://www.saugatuckcity.com/oval-beach.html). The [waves were great](https://www.thingelstad.com/2021/08/13/one-minute-at.html).
 - Return to [Pennyroyal Cafe](https://www.pennyroyalprovisions.com) for a delicious dinner and incredible desserts.
 
-![](https://www.thingelstad.com/uploads/2021/ef48f18d7d.jpg)  
+<img src="https://www.thingelstad.com/uploads/2021/ef48f18d7d.jpg" alt="Charming ivy-covered brick boutique storefront with mannequins displaying dresses outside, a clothing rack, and an American flag">  
 *Urban Found storefront in Saugatuck, MI.*
 
 Jump to day [1](https://www.thingelstad.com/2021/07/31/vermont-road-trip.html), 

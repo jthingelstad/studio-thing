@@ -9,4 +9,4 @@ categories: []
 
 Aerogarden Progress: Everything is going except parsley, but that takes the longest.
 
-![](https://www.thingelstad.com/uploads/2020/24a2de28a7.png)
+<img src="https://www.thingelstad.com/uploads/2020/24a2de28a7.png" alt="Seven AeroGarden seed pod discs arranged on a white surface, most showing green plant growth, one still dormant">

@@ -9,4 +9,4 @@ categories: []
 
 [Kransekake](https://en.wikipedia.org/wiki/Kransekake). “One ring to rule them all!” Delicious.
 
-<img src="https://www.thingelstad.com/uploads/2021/0acfe9e059.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/0acfe9e059.jpg" width="600" height="600" alt="Hand holding a single glazed kransekake ring with white icing drizzle at an outdoor gathering" />

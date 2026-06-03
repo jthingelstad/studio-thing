@@ -9,4 +9,4 @@ categories: []
 
 My collection of travel cables is bonkers. 😬
 
-<img src="https://www.thingelstad.com/uploads/2018/e92f4ffe67.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/e92f4ffe67.jpg" alt="Red zip pouch overflowing with tangled white Apple Lightning cables and a USB power adapter, sitting on a wooden desk" width="600" height="600" />

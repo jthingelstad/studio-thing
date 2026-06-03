@@ -9,4 +9,4 @@ categories: []
 
 Absolutely perfect evening for a cruise down the St. Croix River on the [Lady Chateau](https://ladychateau.com).
 
-<img src="https://www.thingelstad.com/uploads/2024/c1154319e1.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/c1154319e1.jpg" width="600" height="450" alt="Large white motor yacht docked at a marina boardwalk on the St. Croix River on a sunny evening with a few people boarding.">

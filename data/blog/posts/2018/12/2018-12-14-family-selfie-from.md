@@ -9,4 +9,4 @@ categories: []
 
 Family selfie from our new house. We don’t move until January, but are exploring today!
 
-<img src="https://www.thingelstad.com/uploads/2018/f36bee14d8.jpg" width="600" height="449" alt="" />
+<img src="https://www.thingelstad.com/uploads/2018/f36bee14d8.jpg" width="600" height="449" alt="Family of four smiling together in a bright white kitchen, two adults and two girls, taking a selfie." />

@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2021/8b96df8f7e.jpg" width="600" height="900" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/8b96df8f7e.jpg" width="600" height="900" alt="Man in a red shirt sitting in a recliner holding a small black puppy against his chest near a brick fireplace with Christmas stockings hung above" />
 
 Tomorrow Chase will have been living with us for one month and a week. It seems like so much longer than that. He has a big day. Not a good day, but a big day. He's old enough now to get [neutered](http://en.wikipedia.org/wiki/Spayed).
 

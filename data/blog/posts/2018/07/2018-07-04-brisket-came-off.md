@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Brisket came off after 15 ½ hours on the [Big Green Egg](https://biggreenegg.com). Internal temperature between 205-210. Rested for 30 mins in tinfoil and was fall-apart delicious on the cutting board. 🤤🔥
 
-<img src="https://www.thingelstad.com/uploads/2018/9e40fe7f45.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/9e40fe7f45.jpg" alt="Smoked brisket with probe thermometers on a Big Green Egg kamado grill, backyard playground visible in background." width="600" height="600" />

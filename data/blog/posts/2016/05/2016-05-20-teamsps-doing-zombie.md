@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Zombie Microservice Workshop for #TeamSPS led by AWS team. Continuous learning!
 
-<img src="https://www.thingelstad.com/uploads/2021/3865be99bf.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/3865be99bf.jpg" width="600" height="450" alt="Roughly 50 people seated at rows of desks in a conference room, working on MacBook laptops during a technical workshop." />

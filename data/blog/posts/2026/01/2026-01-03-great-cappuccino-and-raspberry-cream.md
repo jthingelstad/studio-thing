@@ -9,4 +9,4 @@ categories: []
 
 Great cappuccino and Raspberry Cream Scone at Sunstreet Breads for birthday breakfast. 
 
-<img src="https://www.thingelstad.com/uploads/2026/769977823c.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/769977823c.jpg" width="600" height="450" alt="Cappuccino with leaf latte art in a white ceramic cup and saucer beside a raspberry cream scone on a small plate on a wood table.">

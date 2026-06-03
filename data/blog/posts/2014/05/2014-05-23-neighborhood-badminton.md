@@ -9,4 +9,4 @@ categories: []
 
 Neighborhood Badminton. 🏸
 
-![](https://www.thingelstad.com/uploads/2020/f762534e01.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/f762534e01.jpg" alt="Four people playing badminton on a front lawn in front of a two-story white house with dark shutters at dusk.">

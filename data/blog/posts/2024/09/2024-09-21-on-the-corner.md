@@ -9,4 +9,4 @@ categories: []
 
 On the corner of Get Outside Trail and Smore Fun Way at [Quarterdeck Resort](https://quarterdeckresort.com).
 
-<img src="https://www.thingelstad.com/uploads/2024/fbae473b0e.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/fbae473b0e.jpg" width="450" height="600" alt="Street signs reading Get Outside Trail and Smore Fun Way SW at a resort, with lodge-style buildings and a pool area visible behind a black metal fence.">

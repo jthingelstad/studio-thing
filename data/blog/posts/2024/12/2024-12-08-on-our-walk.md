@@ -9,4 +9,4 @@ categories: []
 
 On our walk around Lake Harriet this morning Tammy and I saw this rare Bald Eagle in the city. It was perched and analyzing the ice line for easy prey. 
 
-<img src="https://www.thingelstad.com/uploads/2024/ae8841e90f.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/ae8841e90f.jpg" width="600" height="600" alt="Bald eagle perched on a bare tree branch against a pale winter sky, scanning below.">

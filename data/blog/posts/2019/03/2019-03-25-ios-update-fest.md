@@ -9,4 +9,4 @@ categories: []
 
 iOS update fest. 
 
-<img src="https://www.thingelstad.com/uploads/2019/47b947eef9.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/47b947eef9.jpg" width="600" height="600" alt="Multiple Apple iPads and iPhones on a counter all open to iOS Settings showing a software update screen, with charging cables connected." />

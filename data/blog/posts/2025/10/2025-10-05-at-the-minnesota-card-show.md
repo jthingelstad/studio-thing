@@ -9,4 +9,4 @@ categories: ["Pokémon"]
 
 At the Minnesota Card Show Pokémon event today with Tyler and saw the most expensive thing we've ever seen at a card show — $100,000 for the sealed Pokémon Base Set Shadowless Booster Box.
 
-<img src="https://www.thingelstad.com/uploads/2025/f6002c96df.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/f6002c96df.jpg" width="600" height="450" alt="Sealed Pokemon Base Set Shadowless Booster Box in acrylic case priced at 100000 dollars at a card show display">

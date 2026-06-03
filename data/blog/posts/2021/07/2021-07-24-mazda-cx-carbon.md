@@ -15,6 +15,6 @@ She test drove the [Mazda CX-9](https://www.mazdausa.com/vehicles/2021-cx-9) Car
 
 We pick it up this week. One banner feature for me is cooled front seats. I've always wanted that. And oddly this is the first car we have owned that has Apple CarPlay.
 
-<img src="https://www.thingelstad.com/uploads/2021/b81aad5cb7.jpg" width="600" height="396" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/b81aad5cb7.jpg" width="600" height="396" alt="Dark gray Mazda CX-9 SUV with black wheels and a red leather interior, shown from a front three-quarter angle." />
 
 _Also see [list of vehicles](https://www.thingelstad.com/lists/vehicles/)._

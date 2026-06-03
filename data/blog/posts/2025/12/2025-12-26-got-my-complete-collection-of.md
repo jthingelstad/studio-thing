@@ -9,4 +9,4 @@ categories: []
 
 Got my complete collection of Perrserker cards in my binder. 
 
-<img src="https://www.thingelstad.com/uploads/2025/898df08779.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/898df08779.jpg" width="600" height="449" alt="Binder page holding 18 Galarian Perrserker Pokemon trading cards including standard holofoil and V variants across multiple sets.">

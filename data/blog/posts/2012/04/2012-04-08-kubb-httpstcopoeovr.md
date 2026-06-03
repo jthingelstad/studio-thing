@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Kubb.
 
-<img src="https://www.thingelstad.com/uploads/2024/581fc1ef-db1d-42e9-813d-bc68ab41f7c7.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/581fc1ef-db1d-42e9-813d-bc68ab41f7c7.jpg" width="600" height="450" alt="Navy duffel bag embroidered with KUBB The Viking Game and oldtimegames.com sitting on a wooden picnic table beside a wooden king piece.">

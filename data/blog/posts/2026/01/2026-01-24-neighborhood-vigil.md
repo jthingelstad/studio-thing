@@ -9,4 +9,4 @@ categories: []
 
 Candlelight vigil in our neighborhood. 🕯️
 
-<img src="https://www.thingelstad.com/uploads/2026/8bb7939ef1.jpg">
+<img src="https://www.thingelstad.com/uploads/2026/8bb7939ef1.jpg" alt="Outdoor candlelight vigil at night with people in winter coats and hats gathered on snowy ground near a blue-lit Christmas tree">

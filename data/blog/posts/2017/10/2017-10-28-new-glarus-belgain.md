@@ -9,4 +9,4 @@ categories: []
 
 [New Glarus' Wisconsin Belgain Red](https://newglarusbrewing.com/beers/ourbeers/beer/wisconsin-belgian-red) is one of my favorite beers! 🍺🍒
 
-<img src="https://www.thingelstad.com/uploads/2017/e52492427a.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/e52492427a.jpg" alt="Bottle of New Glarus Wisconsin Belgian Red ale beside a pint glass printed with I Like Beer From Here on a white table." width="600" height="600" />

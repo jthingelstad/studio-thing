@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Delicious macchiato at [Black Eye Coffee](https://www.blackeyeroasting.co). 
 
-<img src="https://www.thingelstad.com/uploads/2020/58fe3e7806.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/58fe3e7806.jpg" width="600" height="450" alt="Latte with heart-shaped latte art in a white ceramic cup on a saucer with a spoon, on a dark wooden table." />

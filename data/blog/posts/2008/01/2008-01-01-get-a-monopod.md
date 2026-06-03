@@ -4,12 +4,12 @@ url: "https://www.thingelstad.com/2008/01/01/get-a-monopod.html"
 title: "Get a Monopod and Improve Your Home Movies"
 published: "2008-01-01T06:00:00+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
 Do you have a video camera? You *need* a monopod!
 
-<img src="https://www.thingelstad.com/uploads/2020/8aa080d656.jpg" style="width: 110px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/8aa080d656.jpg" alt="Black Manfrotto monopod with swivel tilt head standing upright next to a small tan camera bag pouch" style="width: 110px; float: right; margin-left: 10px; " />
 
 This Christmas I got the [Bogen-Manfrotto Pro Black Monopod with Swivel Tilt Head](http://www.amazon.com/gp/product/B0002HMQV2). This item has been on my wish list for a long time and after having it for just a couple days I wish I would have pulled the trigger on it a long, long time ago.
 

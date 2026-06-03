@@ -9,4 +9,4 @@ categories: []
 
 What do you do when your new puppy figures out how to jump on the couch? 🤷🏼‍♂️
 
-<img src="https://www.thingelstad.com/uploads/2020/27661130c3.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/27661130c3.jpg" width="600" height="450" alt="Living room sectional sofa covered with baskets, bins, pillows, and boxes stacked to block a puppy from jumping up." />

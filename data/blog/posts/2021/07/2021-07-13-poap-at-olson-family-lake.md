@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/499157">499157</a> at <strong><a href="https://poap.gallery/drops/4038">Olson Family Lake Day 2021</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/olson-family-lake-day-2021-2021-logo-1626142680335.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/olson-family-lake-day-2021-2021-logo-1626142680335.png" alt="Outdoor garden with raised wooden planter boxes, a metal sculpture, a decorated birdhouse pole, and soap bubbles floating in the air" width="500" height="500" />

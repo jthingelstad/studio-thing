@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Nice treasure when I opened my chests from last week's missions on [Famous Fox Federation](https://famousfoxes.com). By far my favorite NFT project still thriving.
 
-<img src="https://www.thingelstad.com/uploads/2024/557b4fa9fa.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/557b4fa9fa.jpg" width="600" height="600" alt="Phone screenshot of famousfoxes.com Redeem Treasure page showing rewards of 0.25 SOL and three fox emoji NFTs numbered 202, 243, and 232.">

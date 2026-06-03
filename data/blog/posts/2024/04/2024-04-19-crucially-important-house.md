@@ -9,4 +9,4 @@ categories: []
 
 Crucially important House of Representatives vote coming up to provide critical aid to Ukraine! I just got off the phone with [Representative Omar](https://omar.house.gov)'s office expressing my support for these bills and asking for her vote in support. Thank you to [Stand With Ukraine MN](https://www.standwithukrainemn.com/take-action) for the steps! 🇺🇦
 
-<img src="https://www.thingelstad.com/uploads/2024/310758d69f.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/310758d69f.jpg" width="600" height="600" alt="Call4Ukraine infographic urging US residents to call Congress at 202-224-3121 to support aid to Ukraine">

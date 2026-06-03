@@ -9,4 +9,4 @@ categories: []
 
 Family photo on shore of Lake Superior. Outside of Two Harbors.
 
-<img src="https://www.thingelstad.com/uploads/2018/4275e3effc.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/4275e3effc.jpg" alt="Family of four posing around a large rock inscribed with Thingelstad on a rocky Lake Superior shoreline under clear blue sky" width="600" height="450" />

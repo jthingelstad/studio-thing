@@ -9,4 +9,4 @@ categories: []
 
 Delicious chocolate at [Chubby Chipmunk Chocolate Shop](https://www.chubbychipmunk.com/).
 
-![](https://www.thingelstad.com/uploads/2020/283e54e963.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/283e54e963.jpg" alt="Display case at Chubby Chipmunk Chocolate Shop showing rows of dark, milk, and white chocolate truffles labeled with flavors like Kahlua n Cream, Key Lime, and Salted Buttered Popcorn.">

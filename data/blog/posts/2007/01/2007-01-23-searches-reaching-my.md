@@ -7,13 +7,9 @@ post_kind: post
 categories: []
 ---
 
-I've had [Google Analytics](http://analytics.google.com/) on my website
-since it became free. It's amazing the amount of detail it gives you. I
-barely use 10% of the data that it provides.
+I've had [Google Analytics](http://analytics.google.com/) on my website since it became free. It's amazing the amount of detail it gives you. I barely use 10% of the data that it provides.
 
-Recently a friend of mine did some research on search terms that people
-used to get to his site. I was inspired to do some reflection on the
-search terms used to get to my site as well. Some observations.
+Recently a friend of mine did some research on search terms that people used to get to his site. I was inspired to do some reflection on the search terms used to get to my site as well. Some observations.
 
 -   While only one person visited with the search phrase "what is the distribution of coins in your change jar" that is a very special visit. No doubt hitting on the [Change Game](https://www.thingelstad.com/2004/11/25/change-game.html), but this curious person proceeded to click on 41 more pages of the site.
 -   A surprising number of people put my URL **"www.thingelstad.com"**

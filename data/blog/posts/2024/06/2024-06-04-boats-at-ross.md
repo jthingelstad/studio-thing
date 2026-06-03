@@ -9,4 +9,4 @@ categories: []
 
 Boats at Ross Castle readying to go out for the day. 
 
-<img src="https://www.thingelstad.com/uploads/2024/5f90d39404.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/5f90d39404.jpg" width="600" height="450" alt="Dozens of wooden and aluminum rowboats moored along a narrow tree-lined channel at Ross Castle, with one person rowing a blue boat through the middle.">

@@ -17,17 +17,17 @@ I went to Endaoment and connected to my wallet. Easy enough, just like any other
 
 Now I had my own contract associated with Things 4 Good, and it was time to provide an initial deposit to the fund. Endaoment requires a minimum $500 transfer so I [sent in 0.15 ETH](https://etherscan.io/tx/0xe5abff1989bb3ca13efb87afab1db7ea49f66d9b3683fd6e8acc8829eeebd618). When Endaoment receives the ETH they immediately transfer that to USD Coin (USDC). They sent me a receipt for tax purposes for the full value of the 0.15 ETH. Endaoment takes a 0.5% transaction fee, and there are some fees associated with the transactions to USDC, which are taken out after.
 
-<img src="https://www.thingelstad.com/uploads/2021/94cac0b21c.png" width="600" height="666" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/94cac0b21c.png" width="600" height="666" alt="Confirm Donation modal showing 0.15 ETH donation with estimated proceeds of 579.51 USDC to Things 4 Good, with a 0.5 percent endaoment fee of 2.90 dollars" />
 
 With that done, my DAF was fully established on the Ethereum mainnet, funded, and ready to use.
 
-<img src="https://www.thingelstad.com/uploads/2021/b5d7f8e30c.png" width="600" height="475" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/b5d7f8e30c.png" width="600" height="475" alt="Endaoment dashboard for Things 4 Good private fund showing 606.42 dollars total impact, 606.41 grantable, and a Nov 28 2021 donation of 0.15 ETH" />
 
 ### Granting Funds
 
 Now that Things 4 Good was setup I wanted to try issuing a grant. The [Internet Archive](https://archive.org) is an organization I have supported for a long time and I thought it would be a fitting organization to make a first donation to. I picked them off the list of organizations registered on Endaoment. This was fun to me, because this is also on-chain, so to send the grant you interact with the smart contract. 
 
-<img src="https://www.thingelstad.com/uploads/2021/f257a2eb25.png" width="600" height="720" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/f257a2eb25.png" width="600" height="720" alt="Confirm grant dialog showing a 100 dollar grant from Things 4 Good to Internet Archive, reducing balance from 606.41 to 506.41 dollars" />
 
 I appreciated this as it felt like a much different level of control than a typical DAF. We use Schwab Charitable and you make recommendations, they send checks, and you get emails saying it all happened but you can’t actually _see it_ yourself. With Endaoment I can see my transaction and know exactly what happened when.
 

@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 [Peter Zaballos](https://openambition.com) addressing #TeamSPS today. 
 
-<img src="https://www.thingelstad.com/uploads/2021/df879abb24.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/df879abb24.jpg" width="600" height="450" alt="A speaker at a podium on a stage addresses a large audience seated at round tables in a hotel ballroom with a projected presentation visible." />

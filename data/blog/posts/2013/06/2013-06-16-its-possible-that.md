@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 It’s possible that I may have more demitasse cups than [Urban Bean Coffee](http://urbanbeancoffee.com). 😊
 
-<img src="https://www.thingelstad.com/uploads/2020/fe47d299cb.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/fe47d299cb.jpg" width="600" height="450" alt="Decorated demitasse espresso cups turned upside down on top of a chrome espresso machine, each cup featuring colorful hand-drawn designs." />

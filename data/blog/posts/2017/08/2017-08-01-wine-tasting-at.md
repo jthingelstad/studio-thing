@@ -9,4 +9,4 @@ categories: []
 
 Wine tasting at [Villa Bellezza](http://villabellezza.com). Very cool place. Recommended. 
 
-<img src="https://www.thingelstad.com/uploads/2017/491302ebde.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/491302ebde.jpg" alt="Wine racks filled with bottles at Villa Bellezza winery, with display signs featuring 2014 Zitella and 2013 Pepin Blanc white wines on top." width="600" height="600" style="height: auto" />

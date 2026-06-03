@@ -9,4 +9,4 @@ categories: []
 
 Celebrating our **TWENTY THIRD** anniversary with the most delicious ice cream from [Chocolate Favoris](https://www.chocolatsfavoris.com/en) dipped in Hazelnut Praline. 🍦💍
 
-<img src="https://www.thingelstad.com/uploads/2025/77fbe73291.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/77fbe73291.jpg" alt="Couple holding chocolate-dipped soft serve ice cream cones on a busy street, smiling at the camera">

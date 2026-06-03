@@ -9,4 +9,4 @@ categories: []
 
 Time for the Great Minnesota Get Together — [Minnesota State Fair](https://www.mnstatefair.org)!
 
-<img src="https://www.thingelstad.com/uploads/2025/737f077534.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/737f077534.jpg" width="600" height="450" alt="Seven people smiling for a selfie under the blue State Fair arch entrance on a sunny day">

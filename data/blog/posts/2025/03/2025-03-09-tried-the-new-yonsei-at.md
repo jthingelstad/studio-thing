@@ -9,4 +9,4 @@ categories: []
 
 Tried the new Yonsei at [Lake & Irving](https://www.lakeandirving.com) for the first time. It was so pretty on the plate I decided to capture it. This is Japanese fried rice with Ginger Scalion Tofu and Ahi katsu. 
 
-<img src="https://www.thingelstad.com/uploads/2025/a67455b730.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/a67455b730.jpg" width="600" height="600" alt="Japanese fried rice topped with ginger scallion tofu, seared ahi katsu, microgreens, sesame seeds, and creamy sauce in a gray ceramic bowl.">

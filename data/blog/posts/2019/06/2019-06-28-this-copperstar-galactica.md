@@ -9,4 +9,4 @@ categories: []
 
 This Copperstar Galactica IPA from Beards Brewery that Tammy brought back from Michigan is amazing. 🍺
 
-<img src="https://www.thingelstad.com/uploads/2019/6783302bd6.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/6783302bd6.jpg" width="600" height="600" alt="Can of Beards Brewery Copperstar Galactica IPA next to a full pint glass from Angry Trout Cafe in Grand Marais MN" />

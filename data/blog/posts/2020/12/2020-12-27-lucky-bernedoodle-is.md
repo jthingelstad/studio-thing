@@ -9,4 +9,4 @@ categories: []
 
 Lucky (Bernedoodle) is right at home in the snow. ❄️
 
-<img src="https://www.thingelstad.com/uploads/2020/62c6ff5c76.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/62c6ff5c76.jpg" width="600" height="600" alt="White Bernedoodle dog sitting in snow in front of a house deck with a teal Adirondack chair and dry winter grasses." />

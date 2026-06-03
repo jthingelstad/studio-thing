@@ -9,4 +9,4 @@ categories: []
 
 Music at [Lake Harriet Bandshell](https://www.minneapolisparks.org/venue/lake-harriet-bandshell) tonight.
 
-<img src="https://www.thingelstad.com/uploads/2020/0b27355401.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/0b27355401.jpg" width="600" height="450" alt="Crowd sitting on grass and blankets at Lake Harriet Bandshell during an outdoor concert on a cloudy summer evening." />

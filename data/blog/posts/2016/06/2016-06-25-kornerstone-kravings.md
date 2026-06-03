@@ -9,4 +9,4 @@ categories: []
 
 Breakfast at [Kornerstone Kravings & Bakery](https://www.yelp.com/biz/kornerstone-kravings-and-bakery-canby) in Canby, MN visiting the Keatings.
 
-![](https://www.thingelstad.com/uploads/2020/e9914ffeda.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/e9914ffeda.jpg" alt="Glass bakery display case filled with chocolate-frosted donuts, glazed pastries, and other baked goods, with staff working behind the counter.">

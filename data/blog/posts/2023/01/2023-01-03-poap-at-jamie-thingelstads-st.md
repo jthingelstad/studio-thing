@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6177735">6177735</a> at <strong><a href="https://poap.gallery/drops/95194">Jamie Thingelstad's 51st Birthday</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/jamie-thingelstads-51st-birthday-2023-logo-1672589535974.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/jamie-thingelstads-51st-birthday-2023-logo-1672589535974.png" alt="Circular globe-style badge for Jamie Thingelstad's 51st birthday dated 01/03, showing US landmarks including Minneapolis, Denver, Kentucky Derby, Space Camp, Walt Disney World, plus Iceland and Turks" width="500" height="500" />

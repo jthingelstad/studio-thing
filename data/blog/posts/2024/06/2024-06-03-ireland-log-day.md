@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/06/03/ireland-log-day.html"
 title: "Ireland 2024 Log - Day 3"
 published: "2024-06-03T21:11:15+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 _Weather: Cool in the morning and evening. Very comfortable the rest of the day. High of 62 °F._
@@ -24,7 +24,7 @@ _Weather: Cool in the morning and evening. Very comfortable the rest of the day.
 - Mazie and Jamie went out so Jamie could have a Guinness at [O'Connors Pub](https://www.tripadvisor.com/Restaurant_Review-g186612-d6672073-Reviews-O_Connors_Traditional_Irish_Pub-Killarney_County_Kerry.html?m=19905) and listen to live music.
 - Mazie and Jamie explored Killarney a bit before returning to AIrbnb. 
 
-<img src="https://www.thingelstad.com/uploads/2024/a5dfcd16fe.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/a5dfcd16fe.jpg" width="600" height="450" alt="Four people seated at an outdoor restaurant table smiling at the camera with four plates of fish and chips in front of them">
 
 Jump to day 
 [1](https://www.thingelstad.com/2024/06/01/ireland-log-day.html), 

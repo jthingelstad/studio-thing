@@ -9,4 +9,4 @@ categories: []
 
 We tried [Grandpa’s Ice Cream](https://grandpasicecream.biz) in Fridley for the first time today. Great flavors. The people were super nice and everyone had masks and were well distanced. The ice cream was a great break from the heat! 🍦
 
-<img src="https://www.thingelstad.com/uploads/2020/fab22530a7.jpg" width="600" height="600" alt="" /><img src="https://www.thingelstad.com/uploads/2020/7484d474a5.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/fab22530a7.jpg" width="600" height="600" alt="Four people hold ice cream cones with large scoops toward the center of a tiled ice cream shop floor." /><img src="https://www.thingelstad.com/uploads/2020/7484d474a5.jpg" width="600" height="600" alt="Grandpas Ice Cream storefront at 1258 with red lettering, two white benches, and a large decorative ice cream cone cutout" />

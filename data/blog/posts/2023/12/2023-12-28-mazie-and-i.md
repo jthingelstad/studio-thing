@@ -9,4 +9,4 @@ categories: []
 
 Mazie and I got a barn selfie on our daily Lucky walk at the cabin. 
 
-<img src="https://www.thingelstad.com/uploads/2023/94598c6731.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/94598c6731.jpg" width="600" height="600" alt="Smiling man in black beanie and Columbia vest and teenage girl in colorful knit hat pose for a selfie in front of a large red barn on an overcast winter day.">

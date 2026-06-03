@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6443362">6443362</a> at <strong><a href="https://poap.gallery/drops/108920">I met poap.thingelstad.eth - March 2023</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/i-met-poapthingelstadeth-march-2023-2023-logo-1678163626970.gif" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/i-met-poapthingelstadeth-march-2023-2023-logo-1678163626970.gif" alt="Smiling man in a dark shirt wearing a lanyard badge, indoors under fluorescent lights, framed by a pink and purple We met IRL badge graphic" width="500" height="500" />

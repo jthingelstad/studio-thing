@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/c9dcc7d860.png" style="width: 220px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/c9dcc7d860.png" alt="Vintage-style bottle cap logo with red and blue design reading Minneapolis ALT.NET" style="width: 220px; float: right; margin-left: 10px; " />
 
 I received an email this morning from [Ira Mitchell](http://webloggist.com/) clueing me in on a group that [Freemind](http://freemind.net/) is helping get going called ALT.NET. The first thing I noticed was that they have a really cool [Minneapolis-inspired](http://en.wikipedia.org/wiki/Grain_Belt_(beer)) logo for the group and then I started trying to figure out what it was all about. From the [ALT.NET site](http://mplsalt.net/):
 

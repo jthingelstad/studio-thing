@@ -19,4 +19,4 @@ _Simultaneously, the Bitcoin section dissects the resilience of this digital cur
 
 _By drawing intriguing parallels between Bison and Bitcoin, the newsletter encourages readers to perceive resilience and strength in a new light, and apply these principles in their own lives for a sustainable future. Ultimately, "Bison & Bitcoin" is not just a newsletter; it’s a bi-weekly exploration of resilience in the natural and financial worlds, providing compelling content that provokes thought and inspires action._
 
-<img src="https://www.thingelstad.com/uploads/2023/ffcbff95bd.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/ffcbff95bd.jpg" width="600" height="600" alt="Painted bison standing in a prairie landscape with a stream and mesa, surrounded by stacked gold Bitcoin coins, labeled Summer 2023">

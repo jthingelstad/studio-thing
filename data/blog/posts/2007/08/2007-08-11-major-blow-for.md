@@ -11,7 +11,7 @@ It has long been wondered if US cycling would be able to survive the retirement 
 
 There are two reasons for this. The first is America's continuing lack of enthusiasm for cycling. The majority of America seems to lack the attention span for Grand Tours and don't care to dive into the strategy and poetic agony of cycling. The second reason is more insidious. I find it impossible to believe that doping allegations are not part of this. Europe is weathering this storm as well, but the strong history of cycling gives organizations like [T-Mobile continuing sponsorship even after significant doping issues](http://sportsillustrated.cnn.com/2007/more/08/09/bc.cyc.t.mobile.ap/). Mind you, Discovery has not had an issue in this arena. But combining the lack of a superstar like Lance that everyone can get behind, and the worry of a doping scandal is too much to overcome it seems.
 
-![](https://www.thingelstad.com/uploads/2020/a6713f116d.jpg)  
+<img src="https://www.thingelstad.com/uploads/2020/a6713f116d.jpg" alt="Cartoon map of a Tour de France stage as a chaotic obstacle course with cyclists navigating doping allegations, media scrutiny, and appeals.">  
 by [Kevin Kallaugher](http://www.kaltoons.com/),[Economist](http://www.economist.com/), [July 26, 2007](http://www.economist.com/daily/kallery/displaystory.cfm?story_id=9562350)
 
 This is an unfortunate turn of events. In an attempt to see the silver lining, perhaps riders like George Hincapie will be able to move to other teams with more support for his Classics goals. I would expect that Bruyneel will find a new home. Or perhaps something else will rise out of the ashes of the most winning tour organization in the last decade.

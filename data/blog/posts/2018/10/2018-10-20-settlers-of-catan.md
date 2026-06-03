@@ -9,4 +9,4 @@ categories: []
 
 Settlers of Catan!
 
-<img src="https://www.thingelstad.com/uploads/2018/b0ec483bc5.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/b0ec483bc5.jpg" alt="Settlers of Catan board game in progress showing hexagonal resource tiles numbered 2-12, wooden settlements and roads in blue, red, orange, and white, with the robber piece on the desert tile." width="600" height="450" />

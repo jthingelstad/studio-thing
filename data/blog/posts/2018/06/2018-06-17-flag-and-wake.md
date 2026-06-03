@@ -9,4 +9,4 @@ categories: []
 
 Flag and wake on Lake Superior. 
 
-<img src="https://www.thingelstad.com/uploads/2018/9987b49c2a.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/9987b49c2a.jpg" alt="American flag flying from the stern of a boat crossing Lake Superior, white wake trailing behind" width="600" height="450" />

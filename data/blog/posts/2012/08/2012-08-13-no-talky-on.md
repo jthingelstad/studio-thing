@@ -9,4 +9,4 @@ categories: []
 
 “No Talky on Phony”. 😊
 
-<img src="https://www.thingelstad.com/uploads/2020/ef94bfb1c4.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/ef94bfb1c4.jpg" width="600" height="450" alt="Colorful magnetic alphabet letters on a stainless steel espresso machine spelling NO TALKY ON PHONY with glasses stacked on top." />

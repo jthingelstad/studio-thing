@@ -9,4 +9,4 @@ categories: []
 
 Cloud and Light on Cannon Lake. 
 
-<img src="https://www.thingelstad.com/uploads/2020/1c71709dc4.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/1c71709dc4.jpg" width="600" height="450" alt="Dramatic cumulus clouds lit by late sun over calm lake water with distant tree line silhouette." />

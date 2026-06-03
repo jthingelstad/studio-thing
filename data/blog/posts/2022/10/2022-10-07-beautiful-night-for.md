@@ -9,4 +9,4 @@ categories: []
 
 Beautiful night for a campfire with a nearly full moon. 
 
-<img src="https://www.thingelstad.com/uploads/2022/8f02842ed1.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/8f02842ed1.jpg" width="450" height="600" alt="Woman in a puffer vest and boots standing beside a blazing campfire at night with a full moon visible through the trees.">

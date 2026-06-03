@@ -9,4 +9,4 @@ categories: []
 
 At [Minnesota Orchestra](https://minnesotaorchestra.org) with my mom! Looking forward to Sibelius and Mahler. The beauty of an orchestra is awe inspiring. Such precision and passion.
 
-<img src="https://www.thingelstad.com/uploads/2020/58956f1271.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/58956f1271.jpg" width="600" height="450" alt="Orchestra musicians in formal black attire taking a bow on stage at Minnesota Orchestra Hall with geometric acoustic panels lit in blue and white." />

@@ -7,6 +7,6 @@ post_kind: micropost
 categories: []
 ---
 
-![](https://www.thingelstad.com/uploads/2020/7995817957.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/7995817957.jpg" alt="Person in winter clothing using a snowblower to clear deep snow during a blizzard, black and white film photo">
 
 Spent a few hours this weekend blowing snow.

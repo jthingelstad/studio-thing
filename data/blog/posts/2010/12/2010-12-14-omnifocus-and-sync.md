@@ -9,7 +9,7 @@ categories: []
 
 I often like to dream that I get to wave a magic wand and influence the future product plans of software that I use. I've been a constant user of [OmniFocus](https://www.omnigroup.com/omnifocus/) since the very first release on the Mac. I jumped right in when the [iPhone version](https://www.omnigroup.com/omnifocus/#literally-everywhere) came out and eagerly grabbed the [iPad version](https://www.omnigroup.com/omnifocus/#literally-everywhere) when it was released.
 
-<img src="https://www.thingelstad.com/uploads/2020/f22ff9784a.png" style="width: 200px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/f22ff9784a.png" alt="Purple sync icon with circular arrows, a floppy disk above it, and two OmniFocus app icons with checkmarks below, on a light grid background." style="width: 200px; float: right; margin-left: 10px; " />
 
 A while back Omni started to host their own Omni Sync Server for OmniFocus. Before that, you had to use [MobileMe](http://www.me.com/), [WebDAV](http://en.wikipedia.org/wiki/WebDAV) or some other wonky stuff. I used MobileMe for a long time to sync multiple instances of OmniFocus on different Macs as well as my iPhone. I've had as many as five separate installs of OmniFocus running and synchronizing and OmniFocus has done a great job making it all seamlessly work.
 
@@ -19,7 +19,7 @@ When the [Omni Sync Server](https://www.omnigroup.com/sync/) was released it mad
 
 Since my OmniFocus data is on the Omni Sync Server, I would really like to have a HTML browser-based version of OmniFocus that I can get to from any web browser and manage tasks. Why? There are a few reasons.
 
-<img src="https://www.thingelstad.com/uploads/2020/c5099e0d8d.gif" style="width: 200px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/c5099e0d8d.gif" alt="Purple folder icon with a Safari compass rose emblem and stacked papers, representing an OmniFocus sync concept" style="width: 200px; float: right; margin-left: 10px; " />
 
 Even though I have OmniFocus on my Macs, my iPhone and my iPad there are still times that I'm at a computer that isn't mine and I would really like to get a full desktop-like experience to work on some stuff.
 

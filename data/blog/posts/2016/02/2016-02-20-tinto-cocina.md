@@ -9,4 +9,4 @@ categories: []
 
 We went to [Tinto Cocina](https://tintokitchen.com) tonight.
 
-![](https://www.thingelstad.com/uploads/2020/0de6fe0eb6.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/0de6fe0eb6.jpg" alt="Tinto Cocina + Cantina logo with colorful block letters on a blurred warm-toned background">

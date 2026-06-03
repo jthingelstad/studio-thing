@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2005/05/22/star-wars-iii.html"
 title: "Star Wars III"
 published: "2005-05-22T05:00:00+00:00"
 post_kind: post
-categories: ["Movies"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/e4c68f866e.jpg" style="width: 200px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/e4c68f866e.jpg" alt="Darth Vader in black armor and helmet reaching forward against a fiery orange sky with the text Rise Lord Vader above" style="width: 200px; float: right; margin-left: 10px; " />
 
 Tammy and I went to [Star Wars Episode III](http://www.starwars.com/) today. We made a point to go to the [DLP](http://www.dlp.com/dlp_cinema/default.asp) theater at the [Eden Prairie AMC](http://www.movietickets.com/house_detail.asp?afid=krtwinc&house_id=8163). The theater did a really great job with the entirely digital movie.
 

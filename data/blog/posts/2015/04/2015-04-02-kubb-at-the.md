@@ -11,4 +11,4 @@ Tammy and I played our inaugural game of Kubb at our cabin. Seemed
 appropriate to do so with an official [USA Kubb](http://www.usakubb.org)
 set!
 
-![](https://www.thingelstad.com/uploads/2020/d5c2915f52.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/d5c2915f52.jpg" alt="Woman in a light blue sweater throwing a wooden baton at wooden block targets arranged on a grassy lawn during a game of Kubb">

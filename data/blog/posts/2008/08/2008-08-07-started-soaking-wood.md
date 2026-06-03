@@ -9,4 +9,4 @@ categories: []
 
 Started soaking wood chips for tomorrows brisket. Half hickory and half black cherry wood. 
 
-<img src="https://www.thingelstad.com/uploads/2020/a98fa5f282.jpg" width="150" height="200" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/a98fa5f282.jpg" width="150" height="200" alt="Large pot of hickory and black cherry wood chips soaking in dark water on a kitchen counter near a sink." />

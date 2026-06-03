@@ -9,4 +9,4 @@ categories: []
 
 Out early shooting the sunrise. Good waves on Lake Superior. 
 
-<img src="https://www.thingelstad.com/uploads/2024/b6721bd9bb.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/b6721bd9bb.jpg" width="600" height="450" alt="Photographers on icy rocky shoreline of Lake Superior at sunrise with waves crashing nearby under cloudy sky">

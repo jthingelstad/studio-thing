@@ -9,4 +9,4 @@ categories: []
 
 Great dinner at Salut celebrating my friend Jim’s birthday and a final visit before Salut closes at the end of the year. 
 
-<img src="https://www.thingelstad.com/uploads/2025/895c8781bf.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/895c8781bf.jpg" width="600" height="450" alt="Four smiling people posing outside Salut Bar Americain at 5034, at night, bundled in winter jackets and scarves.">

@@ -9,4 +9,4 @@ categories: []
 
 Photographing the Three Sisters. 🏔️
 
-<img src="https://www.thingelstad.com/uploads/2025/8d8167d1e5.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/8d8167d1e5.jpg" width="450" height="600" alt="Manfrotto tripod with camera on a sandy riverbank facing the Three Sisters peaks in Canmore Alberta Canada">

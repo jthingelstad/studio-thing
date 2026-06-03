@@ -9,4 +9,4 @@ categories: []
 
 Cannon Lake. 
 
-<img src="https://www.thingelstad.com/uploads/2021/17d8229c66.jpg" width="600" height="458" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/17d8229c66.jpg" width="600" height="458" alt="Frozen snow-covered Cannon Lake in winter with bare trees and small buildings along the far shore under an overcast sky" />

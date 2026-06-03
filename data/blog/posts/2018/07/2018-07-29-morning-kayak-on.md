@@ -9,4 +9,4 @@ categories: []
 
 Morning kayak on Lake Nokomis. 
 
-<img src="https://www.thingelstad.com/uploads/2018/af2abf4b1d.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/af2abf4b1d.jpg" alt="Group of adults and children in life jackets paddling colorful tandem kayaks on a calm lake surrounded by trees" width="600" height="337" />

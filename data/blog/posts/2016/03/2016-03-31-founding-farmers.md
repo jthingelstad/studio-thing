@@ -9,4 +9,4 @@ categories: []
 
 [Founding Farmers](https://www.wearefoundingfarmers.com).
 
-![](https://www.thingelstad.com/uploads/2020/d6063808ea.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/d6063808ea.jpg" alt="Rustic restaurant interior with shelves of large mason jars filled with pickled vegetables, a wooden barrel, and bar seating">

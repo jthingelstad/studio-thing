@@ -7,13 +7,9 @@ post_kind: post
 categories: []
 ---
 
-![](https://www.thingelstad.com/uploads/2020/9c6ec215f7.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/9c6ec215f7.jpg" alt="Compact digital camera mounted atop a clear plastic bottle via a small rubber-sealed adapter, shown from two angles.">
 
-This is pretty cool. While I'm not going to support anyone using plastic
-water bottles, if you have something that this mounts to it could be
-really handy. Someone want to make a version of this that can screw into
-a SIGG bottle?
-[adaptinstyle](http://adaptinstyle.tumblr.com/post/69617689/bottle-cap-tripod-why-carry-around-a-cumbersome):
+This is pretty cool. While I'm not going to support anyone using plastic water bottles, if you have something that this mounts to it could be really handy. Someone want to make a version of this that can screw into a SIGG bottle? [adaptinstyle](http://adaptinstyle.tumblr.com/post/69617689/bottle-cap-tripod-why-carry-around-a-cumbersome):
 
 > why carry around a cumbersome tripod when all you want to do is
 > capture a group photo or mount a small video camera for stable

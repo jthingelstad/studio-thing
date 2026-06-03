@@ -9,4 +9,4 @@ categories: []
 
 Good morning Minnesota! 
 
-<img src="https://www.thingelstad.com/uploads/2019/45728fe0c8.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/45728fe0c8.jpg" width="600" height="450" alt="Six pancakes cooking on an outdoor flat top griddle on a backyard deck, with a Minnesota home mug and spatula nearby" />

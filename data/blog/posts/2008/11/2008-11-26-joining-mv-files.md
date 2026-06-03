@@ -11,7 +11,7 @@ I've been processing my entire DVD library in the background on my Mac Pro using
 
 One of the easiest ways to do it is with [QuickTime Pro](http://www.apple.com/quicktime/pro/), and since I've got the Pro version I figured I'd use that. A simple copy/paste of one video to the end of the other followed by an Export to Apple TV creates the combined M4V file. With one big problem.
 
-<img src="https://www.thingelstad.com/uploads/2020/e64ce5c75b.png" style="max-width: 383px;" width="383" height="82" />
+<img src="https://www.thingelstad.com/uploads/2020/e64ce5c75b.png" alt="Mac OS X Export dialog box showing a progress bar for exporting an M4V file with an estimated time of about 205 hours 44 minutes remaining." style="max-width: 383px;" width="383" height="82" />
 
 Huh? 205 hours and 44 minutes? Did someone forget to hit the ["turbo" button](http://en.wikipedia.org/wiki/Turbo_button) in QuickTime Pro? What's really crazy is the two source files are M4V H264 files *already*! Recoding is not necessary, but it seems determined to recode anyway. I guess I'll just see what happens, but I'm worried the joined file will be poor quality due to recoding.
 

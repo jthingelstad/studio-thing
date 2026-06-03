@@ -15,14 +15,14 @@ The second half of the museum reminded me a bit of the 9/11 Monument. It tells t
 
 It was a truly moving museum, worth the trip to Belfast just to see it. We only had about 2 hours, and could have easily used much more time. We'll all remember this place for a long time.
 
-<img src="https://www.thingelstad.com/uploads/2024/fa9872aa64.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/fa9872aa64.jpg" width="450" height="600" alt="Black commemorative plaque listing Titanic specifications: built by Harland and Wolff Ltd, yard no 401, slip no 3, keel laid 31 March 1909, maiden voyage 10 April 1912.">
 
-<img src="https://www.thingelstad.com/uploads/2024/2df7f2df0c.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/2df7f2df0c.jpg" width="600" height="450" alt="Scale model of the RMS Titanic displayed in a glass case, showing four funnels and black and red hull, in a dimly lit museum exhibit.">
 
-<img src="https://www.thingelstad.com/uploads/2024/929cef6c0e.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/929cef6c0e.jpg" width="600" height="450" alt="Silhouette of an ocean liner with four funnels backlit by a glowing light against a deep blue background">
 
-<img src="https://www.thingelstad.com/uploads/2024/8d3d54eb8f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/8d3d54eb8f.jpg" width="600" height="450" alt="Scale model of the RMS Titanic with lit portholes suspended above visitors browsing display cases in a darkened gallery with colorful projected backdrops">
 
-<img src="https://www.thingelstad.com/uploads/2024/c67e619a26.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/c67e619a26.jpg" width="450" height="600" alt="Aged violin displayed on a stand against a glowing blue backdrop with bokeh light effects in a museum exhibit">
 
-<img src="https://www.thingelstad.com/uploads/2024/2497be4cfb.jpg" width="599" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/2497be4cfb.jpg" width="599" height="600" alt="Family of four posing at a replica Titanic bow railing with a ship mural backdrop inside a museum exhibit.">

@@ -9,4 +9,4 @@ categories: []
 
 Snow on Branches.
 
-![](https://www.thingelstad.com/uploads/2020/1065bdc039.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/1065bdc039.jpg" alt="Bare tree branches heavily laden with thick white snow against an overcast winter sky.">

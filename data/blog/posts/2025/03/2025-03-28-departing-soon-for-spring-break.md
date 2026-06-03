@@ -9,4 +9,4 @@ categories: []
 
 Departing soon for Spring Break in Florida! 🛫
 
-<img src="https://www.thingelstad.com/uploads/2025/df9d71847f.png" width="600" height="234" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/df9d71847f.png" width="600" height="234" alt="MSP Departures board showing Delta flight DL 1119 to Orlando departing at 8:05 PM, status ON TIME">

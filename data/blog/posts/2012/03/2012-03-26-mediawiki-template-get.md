@@ -7,14 +7,7 @@ post_kind: post
 categories: []
 ---
 
-I was working on a template for one my personal wikis and needed to get
-the hostname for a given URL. Using the capabilities of the [Parser
-Functions
-extension](http://www.mediawiki.org/wiki/Extension:ParserFunctions) for
-[MediaWiki](http://www.mediawiki.org/wiki/MediaWiki) I whipped up this
-template. I figured others may find this useful so here it is. The first
-version has a bunch of spaces and newlines added to make it more
-readable.
+I was working on a template for one my personal wikis and needed to get the hostname for a given URL. Using the capabilities of the [Parser Functions extension](http://www.mediawiki.org/wiki/Extension:ParserFunctions) for [MediaWiki](http://www.mediawiki.org/wiki/MediaWiki) I whipped up this template. I figured others may find this useful so here it is. The first version has a bunch of spaces and newlines added to make it more readable.
 
 ```
 {{#vardefine: hoststart | {{#expr: {{#pos: {{{1|}}} | // }} + 2 }} }}
@@ -23,8 +16,7 @@ readable.
 {{#sub: {{{1|}}} | {{#var: hoststart}} | {{#var: hostlen}} }}
 ```
 
-To put it in your own MediaWiki, copy this version that removes the
-spaces and newlines.
+To put it in your own MediaWiki, copy this version that removes the spaces and newlines.
 
 To use this template put it on a page like
 `Template:Get hostname` and then call it in your

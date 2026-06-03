@@ -4,14 +4,14 @@ url: "https://www.thingelstad.com/2023/11/12/things-good-fall.html"
 title: "Things 4 Good 2023 Fall Fundraiser Results"
 published: "2023-11-12T19:55:48+00:00"
 post_kind: post
-categories: ["Candles"]
+categories: []
 ---
 
 We completed our annual candle sale and, in total, **raised $5,755** for the four organizations we picked! That is around a **10% increase** from [2022](https://www.thingelstad.com/2022/11/27/things-good-fall.html)! A huge thank you to the 52 folks who made this possible by purchasing a handmade wooden wick candle! 
 
 As in previous years, we asked people which organizations they would like to support. People could pick any number or all of them. This year, we even have some folks request specific allocations versus dividing it equally. 
 
-<img src="https://www.thingelstad.com/uploads/2023/fall-fundraiser-2023-donations.png" width="600" height="222" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/fall-fundraiser-2023-donations.png" width="600" height="222" alt="Horizontal bar chart showing 2023 fall fundraiser donations: Oceanites $1,675, Food Recovery Network $1,462.50, Heart to Care Tanzania $1,367.50, American Prairie $1,250.">
 
 Also see [2023 Fall Fundraiser Insights](https://www.thingelstad.com/2023/11/26/things-good-fall.html) for more information.
 

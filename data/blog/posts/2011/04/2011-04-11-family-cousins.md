@@ -11,4 +11,4 @@ A few weeks ago we went back to North Dakota for a long weekend to visit my Gran
 
 I've seen this many times. My mother is the one that did the needlework on it. But now, with my own family in mind, I stood there in recognition for what it represented, **family**.
 
-![](https://www.thingelstad.com/uploads/2020/199f7a9b46.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/199f7a9b46.jpg" alt="Framed cross-stitch sampler reading Grandchildren are the treasures of a long life with 15 grandchildren names and birthdates stitched around the border.">

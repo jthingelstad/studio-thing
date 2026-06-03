@@ -9,4 +9,4 @@ categories: []
 
 Quiet evening on Cannon Lake. 
 
-<img src="https://www.thingelstad.com/uploads/2025/d65a2a5993.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/d65a2a5993.jpg" width="600" height="450" alt="Calm rippling water on Cannon Lake at dusk with a tree-lined horizon and dramatic cloudy sky overhead.">

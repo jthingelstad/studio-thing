@@ -9,4 +9,4 @@ categories: []
 
 Merry Christmas! Hope you have a wonderful day. 🎄
 
-<img src="https://www.thingelstad.com/uploads/2025/17ecfb6def.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/17ecfb6def.jpg" width="600" height="450" alt="Decorated Christmas tree with ornaments beside a fireplace in a grand room with wood beams and a chandelier">

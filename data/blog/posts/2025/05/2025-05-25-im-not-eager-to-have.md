@@ -15,4 +15,4 @@ I’m not eager to have someone riding my bumper, but…
 
 😬
 
-<img src="https://www.thingelstad.com/uploads/2025/f4474b66ff.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/f4474b66ff.jpg" width="600" height="450" alt="Black lifted pickup truck at a stoplight with rear window text reading BACK OFF BUMPER HUMPER MY BREAKS ARE GOOD HOW ABOUT YOUR INSURANCE">

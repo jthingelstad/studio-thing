@@ -9,4 +9,4 @@ categories: []
 
 It wasn't a good day yesterday to do the [Pedal Pub](http://www.pedalpub.com/twincities/index.html). Cold, rainy.
 
-![](https://www.thingelstad.com/uploads/2020/cc4e400137.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/cc4e400137.jpg" alt="Group of people riding a Pedal Pub bicycle bar through snowy city streets, a beer keg mounted at the front.">

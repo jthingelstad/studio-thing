@@ -9,4 +9,4 @@ categories: []
 
 NASA and SpaceX are cleared for launch. We are all watching to see history being made! 🚀
 
-<img src="https://www.thingelstad.com/uploads/2020/2553bfff4d.jpg" width="600" height="239" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/2553bfff4d.jpg" width="600" height="239" alt="Two astronauts in white SpaceX spacesuits flank the NASA SpaceX DM-2 First Crewed Flight mission patch" />

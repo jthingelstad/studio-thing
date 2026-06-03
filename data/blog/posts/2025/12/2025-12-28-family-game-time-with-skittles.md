@@ -9,4 +9,4 @@ categories: []
 
 Family game time with Skittles. 
 
-<img src="https://www.thingelstad.com/uploads/2025/7b6f790975.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/7b6f790975.jpg" width="600" height="600" alt="Skittles board game by Carrom with wooden pins and a spinning top on a teal playing surface, several pins knocked over mid-game.">

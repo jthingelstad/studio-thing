@@ -9,4 +9,4 @@ categories: []
 
 Nice welcome from our partners at [Bristlecone](http://www.bcone.com)!
 
-<img src="https://www.thingelstad.com/uploads/2018/757b8c13b8.jpg" width="600" height="404" />
+<img src="https://www.thingelstad.com/uploads/2018/757b8c13b8.jpg" alt="Group of eight professionals posing in a modern office lobby with potted plants and a SPS Commerce branded floor mat." width="600" height="404" />

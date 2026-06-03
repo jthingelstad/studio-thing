@@ -9,4 +9,4 @@ categories: []
 
 First time trying this [Dashfire Old Fashioned](https://www.dashfire.us/rtdcocktails). I was a tad dismissive of an Old Fashioned in a can. But it is delicious. Nicely done! 🥃
 
-<img src="https://www.thingelstad.com/uploads/2025/08108ddac5.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/08108ddac5.jpg" width="600" height="450" alt="Dashfire Bourbon Old Fashioned canned cocktail beside a rocks glass with ice and a cocktail pick, on a white marble surface.">

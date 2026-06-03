@@ -9,7 +9,7 @@ categories: []
 
 Okay, these monthly text messages from AT&T; drive me crazy.
 
-![](https://www.thingelstad.com/uploads/2020/05149c6c49.gif)
+<img src="https://www.thingelstad.com/uploads/2020/05149c6c49.gif" alt="iPhone lock screen showing 10:46 Monday June 27 with an AT and T autopay confirmation text for 153.63 over a wallpaper of two small children sitting outdoors near a fence">
 
 Let me inventory all the ways these are annoying:
 

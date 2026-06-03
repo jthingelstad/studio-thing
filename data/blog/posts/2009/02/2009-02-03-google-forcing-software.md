@@ -9,7 +9,7 @@ categories: []
 
 I just upgraded to the new Google Earth 5.0 beta and was really surprised when I first launched it to get this dialog.
 
-<img src="https://www.thingelstad.com/uploads/2020/9af2055847.png" style="max-width: 428px;" />
+<img src="https://www.thingelstad.com/uploads/2020/9af2055847.png" alt="Dialog box from Google Earth 5.0 stating Google Software Update is about to be installed, with only Quit Google Earth or Accept and Install as options." style="max-width: 428px;" />
 
 The problem with this are the options. So, I get to either install Google Software Update, or Quit Google Earth. Where is the button saying "Decline" and allow me to just happily run my software and update it myself. Smells a lot like Microsoft. The last paragraph of the text is the worst (highlighting is my addition).
 

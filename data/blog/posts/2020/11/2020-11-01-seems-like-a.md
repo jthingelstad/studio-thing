@@ -9,4 +9,4 @@ categories: []
 
 Seems like a mixed message. 
 
-<img src="https://www.thingelstad.com/uploads/2020/885318dda2.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/885318dda2.jpg" width="600" height="600" alt="Bullet-riddled ADT security yard sign repurposed as a shooting target in a wooded outdoor setting" />

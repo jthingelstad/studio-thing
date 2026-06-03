@@ -7,8 +7,7 @@ post_kind: post
 categories: []
 ---
 
-I got an opportunity to appreciate the asymptotic behavior of packages
-that are shipped requiring a signature.
+I got an opportunity to appreciate the asymptotic behavior of packages that are shipped requiring a signature.
 
 ![Untitled.png](https://www.thingelstad.com/uploads/2020/3b954ffa6f.png)
 

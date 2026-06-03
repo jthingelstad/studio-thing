@@ -9,7 +9,7 @@ categories: []
 
 Good seat for [Werner Vogels](https://www.allthingsdistributed.com) [AWS re:Invent](https://reinvent.awsevents.com) tech keynote. Looking forward to announcements! 
 
-<img src="https://www.thingelstad.com/uploads/2020/147ab6c2a8.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/147ab6c2a8.jpg" width="600" height="450" alt="Large conference hall packed with attendees facing a stage displaying a large AWS re:Invent logo on a blue-lit screen" />
 
 X1 instance with 2TB of RAM and 100 cores? Wow.
 

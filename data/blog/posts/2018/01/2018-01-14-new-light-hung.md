@@ -9,4 +9,4 @@ categories: []
 
 New light hung! 💡 This is about the extent of my handyman skills. 👷🏻‍♂️ 
 
-<img src="https://www.thingelstad.com/uploads/2018/e5cc576d9c.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/e5cc576d9c.jpg" alt="Black spherical pendant light with star and circle cutouts casting decorative shadow patterns on the ceiling above white cabinets." width="600" height="600" />

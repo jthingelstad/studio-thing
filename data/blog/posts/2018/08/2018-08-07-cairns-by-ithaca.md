@@ -9,4 +9,4 @@ categories: []
 
 Cairns by Ithaca Falls. 
 
-<img src="https://www.thingelstad.com/uploads/2018/37cfbfdff0.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/37cfbfdff0.jpg" alt="Rocky riverbed covered with flat limestone rocks and several small stacked stone cairns near Ithaca Falls, with trees in the background." width="600" height="337" />

@@ -9,4 +9,4 @@ categories: []
 
 Congratulations to all the [2023 Minnesota CIO ORBIE Award](https://minnesotacio.org/awards/2023) winners and nominees! 👏
 
-<img src="https://www.thingelstad.com/uploads/2023/9b3910b3b2.jpg" width="600" height="474" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/9b3910b3b2.jpg" width="600" height="474" alt="Seven 2023 Minnesota CIO ORBIE Award winners shown with their names, award categories, and company logos.">

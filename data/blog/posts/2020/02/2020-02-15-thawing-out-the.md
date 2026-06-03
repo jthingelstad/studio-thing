@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Thawing out the [Big Green Egg](https://biggreenegg.com) so I can make dinner! Frozen shut! ❄️🔥
 
-<img src="https://www.thingelstad.com/uploads/2020/010cc3e7f6.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/010cc3e7f6.jpg" width="600" height="600" alt="Big Green Egg kamado grill covered in snow, sitting in a metal outdoor kitchen cabinet with fire visible through the open lower vent." />

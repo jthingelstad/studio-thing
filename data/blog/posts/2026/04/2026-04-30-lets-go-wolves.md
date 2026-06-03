@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Let’s go Wolves! 🏀
 
-<img src="https://www.thingelstad.com/uploads/2026/3c0472c704.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/3c0472c704.jpg" width="600" height="450" alt="Minnesota Timberwolves NBA playoff pregame warmups at Target Center with players on court and a packed crowd in green lighting.">

@@ -11,7 +11,7 @@ I find sleep data to be notoriously hard to correlate to reality. I've used a va
 
 This week we setup the [Eight Sleep](https://www.eightsleep.com) and just like the Oura Ring, it also tracks your sleep and gives you a view of the various stages of sleep. I was super intrigued to see if the Oura Ring and the Eight Sleep would agree at all. I was skeptical and was expecting that they would produce very different data. I looked at three nights of data and to my surprise it was more correlated than I expected.
 
-<img src="https://www.thingelstad.com/uploads/2023/sleep-stages-compared.png" width="600" height="198" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/sleep-stages-compared.png" width="600" height="198" alt="Side-by-side sleep stage charts from Eight Sleep and Oura Ring across three nights showing awake, REM, light, and deep sleep phases">
 
 Some observations:
 

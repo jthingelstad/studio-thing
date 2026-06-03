@@ -9,4 +9,4 @@ categories: []
 
 Sailboat on Lake Superior.
 
-<img src="https://www.thingelstad.com/uploads/2018/c3107728ff.jpg" width="600" height="401" />
+<img src="https://www.thingelstad.com/uploads/2018/c3107728ff.jpg" alt="Sailboat with sail number 57589 gliding across calm waters of Lake Superior under an overcast sky, distant shoreline visible" width="600" height="401" />

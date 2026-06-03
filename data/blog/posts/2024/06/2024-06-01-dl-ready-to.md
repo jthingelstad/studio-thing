@@ -9,4 +9,4 @@ categories: []
 
 DL114 ready to take us to Dublin!
 
-<img src="https://www.thingelstad.com/uploads/2024/6a03fe7445.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/6a03fe7445.jpg" width="600" height="450" alt="Delta Air Lines aircraft parked at gate F10 on the tarmac with jet bridge connected and ground support equipment nearby">

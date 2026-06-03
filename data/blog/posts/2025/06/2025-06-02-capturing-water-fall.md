@@ -9,4 +9,4 @@ categories: []
 
 Capturing waterfall. 
 
-<img src="https://www.thingelstad.com/uploads/2025/04e842610f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/04e842610f.jpg" width="600" height="450" alt="Camera on tripod set up on a fenced canyon walkway aimed at a tall waterfall cascading through rocky cliffs and evergreen trees.">

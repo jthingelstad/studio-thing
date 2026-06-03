@@ -9,4 +9,4 @@ categories: []
 
 Morning in Kyiv, Ukraine. 
 
-<img src="https://www.thingelstad.com/uploads/2018/9aec3a3e4f.jpg" width="598" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/9aec3a3e4f.jpg" alt="City skyline in Kyiv with a modern glass tower beside a yellow Soviet-era apartment building and a tall brutalist block behind under overcast skies." width="598" height="600" />

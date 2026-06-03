@@ -9,4 +9,4 @@ categories: ["Music"]
 
 [Music Box](https://tizian.itch.io/playdate-music-box) for [Playdate](https://play.date) is a great example of simple, fun innovation on this unique platform. I love that you can create your own songs as well. Delightful. 🎶
 
-<img src="https://www.thingelstad.com/uploads/2022/de6eb7ee63.gif" width="600" height="360" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/de6eb7ee63.gif" width="600" height="360" alt="Pixel art music box drum roll with circular hole punches arranged in a melody pattern, shown in a retro game UI style." />

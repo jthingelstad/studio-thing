@@ -9,4 +9,4 @@ categories: []
 
 Finished **2.78 mile walk** in **52 minutes** (18.71 min/mile). Nice walk catching up with friend. 🚶‍♂️
 
-<img src="https://www.thingelstad.com/uploads/2025/fc1e6e1734.jpg" width="526" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/fc1e6e1734.jpg" width="526" height="600" alt="Aerial map of a large oval lake surrounded by urban neighborhoods with a GPS walking route traced around the shoreline in yellow and green.">

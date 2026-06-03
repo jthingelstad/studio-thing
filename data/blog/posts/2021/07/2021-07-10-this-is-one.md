@@ -9,4 +9,4 @@ categories: []
 
 This is one of my favorite weekend hangouts before the family gets up. Very calm and peaceful. Serene. 
 
-<img src="https://www.thingelstad.com/uploads/2021/7eeb4eb4c4.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/7eeb4eb4c4.jpg" width="600" height="450" alt="Wooden deck with Acapulco chairs overlooking a lush green lawn, ornamental grasses, and a calm lake at dusk with sprinklers running." />

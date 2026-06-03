@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Macchiato at Gaslight in Chicago. 
 
-<img src="https://www.thingelstad.com/uploads/2021/04e9b89d41.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/04e9b89d41.jpg" width="600" height="450" alt="La Marzocco branded white espresso cup with a macchiato on a saucer with a spoon, resting on a dark wood bar counter in a busy cafe." />

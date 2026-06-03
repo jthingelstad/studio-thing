@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Also watched [Arctic](https://www.rottentomatoes.com/m/arctic_2019/) on flight. Liked it a lot. Almost no dialogue, but that doesn’t take anything away. 🥶🎬✈️
 
-<img src="https://www.thingelstad.com/uploads/2019/9bac146ade.jpg" width="404" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/9bac146ade.jpg" width="404" height="600" alt="Movie poster for Arctic starring Mads Mikkelsen showing aerial view of lone figure in red crossing vast snowy Arctic landscape" />

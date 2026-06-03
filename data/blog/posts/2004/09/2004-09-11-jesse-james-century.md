@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2004/09/11/jesse-james-century.html"
 title: "Jesse James Century Ride"
 published: "2004-09-11T05:00:00+00:00"
 post_kind: post
-categories: ["Fitness"]
+categories: []
 ---
 
 Today Tammy and I, along with [John Murphy](http://murphybytes.com/blog/) from my office rode the [Jesse James Century ride](http://www.northfieldrotary.org/bikeinfo.html). This is part of [Northfield](http://www.northfieldchamber.com/)'s [Defeat of Jesse James Days](http://www.defeatofjessejamesdays.org/) celebration. This is the 3rd year that I've done this ride, the 2nd year that John and I have ridden it together and the first time that Tammy has done a century *ever*!
@@ -17,4 +17,4 @@ For myself, this is my last big training event before the [Chequamegon Fat 40](h
 
 Here is the map of the route this year, it was modified from previous years. We rode clockwise around the map.
 
-![](https://www.thingelstad.com/uploads/2020/39a9729f30.gif)
+<img src="https://www.thingelstad.com/uploads/2020/39a9729f30.gif" alt="GPS map of the Jesse James Century bike route near Northfield Minnesota showing a clockwise yellow dashed loop with REST1 REST2 and START markers">

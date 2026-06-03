@@ -11,4 +11,4 @@ We met Charlie and Isaac, visiting from the UK, who were making the most of thei
 
 “I’m going to make so many bad decisions tonight.” — Charlie
 
-<img src="https://www.thingelstad.com/uploads/2026/0ed1474be9.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/0ed1474be9.jpg" width="600" height="450" alt="Five people laughing on an Amsterdam canal boat with Heineken cans nearby, brick buildings and canal visible behind them.">

@@ -9,4 +9,4 @@ categories: []
 
 Replacement hard drive for one of my Synology RAID units on the way. 
 
-<img src="https://www.thingelstad.com/uploads/2017/356e31377c.jpg" width="600" height="480" />
+<img src="https://www.thingelstad.com/uploads/2017/356e31377c.jpg" alt="Notifications panel showing three repeated I/O error alerts for hard disk 3 on magicpines, dated Nov 28, Nov 29, and Dec 3, 2017." width="600" height="480" />

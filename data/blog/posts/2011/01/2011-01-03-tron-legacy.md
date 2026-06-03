@@ -9,4 +9,4 @@ categories: []
 
 We saw the new [TRON](http://disney.go.com/tron/) movie tonight as part of my birthday fun. In short, it was great.
 
-![](https://www.thingelstad.com/uploads/2020/9d88dc7b9c.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/9d88dc7b9c.jpg" alt="IMAX promotional poster featuring a glowing cyan light cycle with a rider in a black suit on a dark reflective surface.">

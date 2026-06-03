@@ -9,4 +9,4 @@ categories: ["Music"]
 
 We are going to [Brandi Carlile’s Mothership Weekend](https://www.tixr.com/groups/brandivacations/events/brandicarlilesmothershipweekend-brandi-carlile-s-mothership-weekend-55696) — gonna be great! 🎶
 
-<img src="https://www.thingelstad.com/uploads/2023/85a4d63831.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/85a4d63831.jpg" width="600" height="600" alt="Brandi Carlile Mothership Weekend festival poster, May 12-14 2023, Miramar Beach FL, listing Friday, Saturday, Sunday performers.">

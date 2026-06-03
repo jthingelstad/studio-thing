@@ -9,4 +9,4 @@ categories: []
 
 Hello Fessenden, ND!
 
-<img src="https://www.thingelstad.com/uploads/2024/img-4395.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/img-4395.jpg" width="600" height="450" alt="Red flatbed truck parked beside a gas station canopy on a gravel lot in a small town on a clear sunny day.">

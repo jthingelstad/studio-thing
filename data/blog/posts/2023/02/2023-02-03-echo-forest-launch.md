@@ -11,6 +11,6 @@ Today is the launch of **[Echo Forest](https://echoforest.app/)**. This NFT proj
 
 I minted two **Wolf Healers**, [18](https://solscan.io/token/7hcfdVSzchFzNtikYKobjHXBneTx5ky4TcaEfYuRJFmF) and [19](https://solscan.io/token/FNviAR1dsELvGKSemp56bhacewdiozwEJ9CZTPwNi87n). I really dig the artwork and I'm excited to see how the utility evolves. Plus it is a great opportunity to be involved in a local project.
 
-<img src="https://www.thingelstad.com/uploads/2023/11387c17c6.jpg" width="600" height="407" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/11387c17c6.jpg" width="600" height="407" alt="Watercolor illustration of a white wolf wearing a wide-brimmed witch hat adorned with twigs, carrying a staff and a green spellbook, standing in a glowing yellow-green forest.">
 
-<img src="https://www.thingelstad.com/uploads/2023/61038c91e1.jpg" width="600" height="407" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/61038c91e1.jpg" width="600" height="407" alt="Watercolor wolf wearing a green wizard hat and carrying a wooden staff with a spell tome, standing in a misty bare forest">

@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>Collected POAP <a href="https://collectors.poap.xyz/token/7371688">7371688</a> for <strong><a href="https://poap.gallery/drops/190538">Bde Maka Ska — 612 POAP Challenge</a></strong>.</p>
-        <p><img src="https://www.thingelstad.com/uploads/2025/8dffe40c-0910-4a05-8315-cddf154cecd9.png" width="500" height="500" /></p>
+        <p><img src="https://www.thingelstad.com/uploads/2025/8dffe40c-0910-4a05-8315-cddf154cecd9.png" alt="Circular badge for the 612 POAP Challenge showing a pixel art Minneapolis skyline reflected in Bde Maka Ska lake" width="500" height="500" /></p>

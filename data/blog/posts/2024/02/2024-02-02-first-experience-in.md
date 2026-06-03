@@ -9,4 +9,4 @@ categories: []
 
 First experience in Spatial Computing. 🤩
 
-<img src="https://www.thingelstad.com/uploads/2024/e5869d05b3.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/e5869d05b3.jpg" width="600" height="600" alt="Man wearing Apple Vision Pro headset and orange Columbia vest, smiling inside an Apple Store">

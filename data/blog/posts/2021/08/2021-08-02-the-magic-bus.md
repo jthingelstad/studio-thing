@@ -9,4 +9,4 @@ categories: []
 
 **The Magic Bus** in the Woodstock & the 60's exhibit at [Bethel Woods Center for the Arts](https://www.bethelwoodscenter.org/museum/exhibits).
 
-<img src="https://www.thingelstad.com/uploads/2021/dd2c1f0a61.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/dd2c1f0a61.jpg" width="600" height="600" alt="Psychedelic-painted school bus with mushroom and flower motifs on display at the Woodstock museum exhibit" />

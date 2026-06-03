@@ -9,4 +9,4 @@ categories: []
 
 Finished the three Sous Vides pork butts with a nice smoke this morning. Time to pull!
 
-<img src="https://www.thingelstad.com/uploads/2021/60ea03616c.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/60ea03616c.jpg" width="600" height="599" alt="Three smoked pork butts resting on the grill grate of a ceramic kamado cooker outdoors." />

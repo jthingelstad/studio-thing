@@ -9,4 +9,4 @@ categories: []
 
 Finished my LEGO Yoda!
 
-<img src="https://www.thingelstad.com/uploads/2020/7edf89f03d.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/7edf89f03d.jpg" width="600" height="600" alt="LEGO Yoda set 75255 fully assembled on a colorful table, holding a green lightsaber, with a gingerbread house and holiday decorations nearby" />

@@ -9,6 +9,6 @@ categories: ["Cooking"]
 
 I always love watching smoke billowing out of the Big Green Egg. Three pork butts in for a finish smoke after 20 hours in the Sous Vides at 165 °F. 
 
-<img src="https://www.thingelstad.com/uploads/2024/ef0c40f64a.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/ef0c40f64a.jpg" width="600" height="450" alt="Big Green Egg ceramic kamado grill emitting thick white smoke from the top vent, sitting on a deck outdoors.">
 
-<img src="https://www.thingelstad.com/uploads/2024/e81293b3b7.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/e81293b3b7.jpg" width="600" height="450" alt="Three seasoned pork butts smoking on a Big Green Egg charcoal grill with thick white smoke billowing upward outdoors.">

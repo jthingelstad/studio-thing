@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/05/30/magic-pines-summer.html"
 title: "Magic Pines Summer of 2022 POAP"
 published: "2022-05-30T20:28:00+00:00"
 post_kind: post
-categories: ["Crypto", "POAP"]
+categories: ["Crypto"]
 ---
 
 I'm doing what I consider another fun Proof of Attendance Protocol, or POAP, token! We greatly enjoy our summers at the lake and we have a lot of people join us there. We call our lake place Magic Pines. I love finding ways to commemorate these fun times and I thought it would be fun to give people a POAP token each summer! From that, the [Magic Pines Summer of 2022](https://poap.gallery/event/46950) token was born!
@@ -15,4 +15,4 @@ I love the custom artwork via [Poapathon](https://www.poapathon.com). I'm going 
 
 I realized when doing this that Magic Pines itself should have one, so [magicpines.eth](https://magicpines.eth.xyz) is all setup now! Maybe it will become a DAO for the family at some point. 😊
 
-<img src="https://www.thingelstad.com/uploads/2022/410c6d467e.png" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/410c6d467e.png" width="600" height="600" alt="Circular illustrated aerial view of a lakeside property with a gray house, campfire with Adirondack chairs, swimming pool, dock, and pontoon boat, surrounded by pine trees and a sunny sky." />

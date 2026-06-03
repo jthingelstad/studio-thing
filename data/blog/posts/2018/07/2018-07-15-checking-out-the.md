@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Checking out the new [Fairgrounds Craft Coffee & Tea](https://www.fairgrounds.cafe/cafe-minneapolis-north-loop/) in North Loop. ☕️ Very good coffee. Fried egg sandwich is amazing. 
 
-<img src="https://www.thingelstad.com/uploads/2018/9f3e6541a5.jpg" width="600" height="600" /><img src="https://www.thingelstad.com/uploads/2018/80765c88da.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/9f3e6541a5.jpg" alt="Retail shelves displaying bags of Verve and Stumptown coffee, Melitta filters, Hario V60 drippers, and ceramic mugs in a cafe shop." width="600" height="600" /><img src="https://www.thingelstad.com/uploads/2018/80765c88da.jpg" alt="Gold tap handles at a coffee bar counter including Stumptown Cold Brew, Smith Teamaker, and GTS Synergy Kombucha, with customers seated in background." width="600" height="600" />

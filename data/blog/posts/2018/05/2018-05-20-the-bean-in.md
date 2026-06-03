@@ -9,4 +9,4 @@ categories: []
 
 “The Bean” in Millenium Park. 
 
-<img src="https://www.thingelstad.com/uploads/2018/d919cc20fd.jpg" width="600" height="450" /><img src="https://www.thingelstad.com/uploads/2018/e0de50bab2.jpg" width="450" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/d919cc20fd.jpg" alt="Cloud Gate sculpture in Millennium Park Chicago reflecting the skyline with crowds of tourists gathered around it" width="600" height="450" /><img src="https://www.thingelstad.com/uploads/2018/e0de50bab2.jpg" alt="Distorted reflections of crowds visible inside the concave underside of Cloud Gate, the mirrored steel sculpture in Millennium Park Chicago" width="450" height="600" />

@@ -7,11 +7,10 @@ post_kind: post
 categories: []
 ---
 
-We had a wonderful time at the Off-leash Dog Park this afternoon. Izzy
-particularly.
+We had a wonderful time at the Off-leash Dog Park this afternoon. Izzy particularly.
 
-![](https://www.thingelstad.com/uploads/2020/220c90df61.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/220c90df61.jpg" alt="Small white fluffy dog running full speed across a grassy open field toward the camera, mouth open and ears flying">
 
-![](https://www.thingelstad.com/uploads/2020/3ccbb11e0f.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/3ccbb11e0f.jpg" alt="Small white fluffy dog running full speed across a sunny green grassy field with mouth open wide and tongue out">
 
-![](https://www.thingelstad.com/uploads/2020/8ddf5e8c22.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/8ddf5e8c22.jpg" alt="Small white fluffy dog running across a sunny green grass field with a red ball in its mouth">

@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Flank steak off the Big Green Egg for lunch today.
 
-![](https://www.thingelstad.com/uploads/2020/23d8da8729.png)
+<img src="https://www.thingelstad.com/uploads/2020/23d8da8729.png" alt="Grilled flank steak with grill marks on a yellow cutting board next to a Big Green Egg ceramic grill">

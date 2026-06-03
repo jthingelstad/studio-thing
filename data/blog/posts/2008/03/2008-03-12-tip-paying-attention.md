@@ -9,6 +9,6 @@ categories: []
 
 I've spent the last two days in this all day Rails training class. Here is my \#1 tip for helping to stay focused. It's really simple, just a couple of mouse clicks.
 
-<img src="https://www.thingelstad.com/uploads/2020/1aa914fe75.png" style="max-width: 338px;" /> 
+<img src="https://www.thingelstad.com/uploads/2020/1aa914fe75.png" alt="macOS menu bar with an arrow pointing to the Wi-Fi icon, labeled This is the one that matters" style="max-width: 338px;" /> 
 
 Just go and "Turn Airport Off". No Internet, less distractions, more focus.

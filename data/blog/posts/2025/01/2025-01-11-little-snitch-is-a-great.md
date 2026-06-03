@@ -9,4 +9,4 @@ categories: []
 
 [Little Snitch](https://www.obdev.at/products/littlesnitch/index.html) is a great app to protect your privacy. It is also incredible to use your computer for average stuff and see that you are connecting with systems all around the world. I'm even running [1Blocker](https://1blocker.com) in my browser which stops some things before they even get to the network layer!
 
-<img src="https://www.thingelstad.com/uploads/2025/83bd0c74ed.png" width="600" height="321" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/83bd0c74ed.png" width="600" height="321" alt="Little Snitch network monitor showing a Mac connected to dozens of server locations worldwide, mapped on Apple Maps with arcing lines to North America, Europe, and beyond.">

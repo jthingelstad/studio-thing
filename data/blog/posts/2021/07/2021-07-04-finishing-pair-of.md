@@ -7,4 +7,4 @@ post_kind: micropost
 categories: ["Cooking"]
 ---
 
-Finishing pair of pork butts on the [Big Green Egg](https://biggreenegg.com)! 🔥 Gotta have barbecue on 4th of July! <img src="https://www.thingelstad.com/uploads/2021/8713a76b3e.jpg" width="600" height="450" alt="" />
+Finishing pair of pork butts on the [Big Green Egg](https://biggreenegg.com)! 🔥 Gotta have barbecue on 4th of July! <img src="https://www.thingelstad.com/uploads/2021/8713a76b3e.jpg" width="600" height="450" alt="Two smoked pork butts with dark bark resting on a Big Green Egg kamado grill outdoors, lid open, red tongs on a blue tray nearby." />

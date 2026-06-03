@@ -9,4 +9,4 @@ categories: []
 
 Christmas tree is up at the cabin. 🎄
 
-<img src="https://www.thingelstad.com/uploads/2024/3ed1718e0c.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/3ed1718e0c.jpg" width="450" height="600" alt="Decorated Christmas tree with Santa topper and Peanuts tree skirt in a wood-paneled cabin room beside a large window.">

@@ -9,4 +9,4 @@ categories: []
 
 The Fryderyk Chopin Monument in the [Modernist Garden](https://www.lazienki-krolewskie.pl/en/ogrody/ogrod-modernistyczny-xx-wieku) of Royal Łazienki. Cool sculpture.
 
-<img src="https://www.thingelstad.com/uploads/2025/ef803c2880.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/ef803c2880.jpg" width="600" height="400" alt="Bronze sculpture of a seated figure beneath a wind-swept willow tree, set on a stone pedestal with bare trees and cloudy sky behind.">

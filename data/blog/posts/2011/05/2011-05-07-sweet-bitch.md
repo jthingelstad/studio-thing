@@ -10,4 +10,4 @@ categories: []
 A couple of months ago we were at my Aunt Susie's house and she had this
 bottle of wine with a very memorable name. Made me chuckle. 😀
 
-![](https://www.thingelstad.com/uploads/2020/2840cefe65.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/2840cefe65.jpg" alt="Bottle of Sweet Bitch smooth and fruity Merlot wine with a womans face on the label, sitting on a dining table.">

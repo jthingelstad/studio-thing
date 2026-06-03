@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I had our first free court time at [Mega Pickleball](https://megapickleandpong.com) today. We practiced various drills getting ready to play others. 
 
-<img src="https://www.thingelstad.com/uploads/2025/ee3a4e4381.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/ee3a4e4381.jpg" width="600" height="450" alt="Two people smiling and holding Mega Pickleball paddles and a yellow ball inside an indoor pickleball facility.">

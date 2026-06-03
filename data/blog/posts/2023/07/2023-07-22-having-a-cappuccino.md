@@ -17,4 +17,4 @@ Having a cappuccino at [Albergo La Soglina](https://www.lasoglina.ch/en/home) wi
 
 With four heavy suitcases. 💪🧳
 
-<img src="https://www.thingelstad.com/uploads/2023/3b22f1643e.jpg" />
+<img src="https://www.thingelstad.com/uploads/2023/3b22f1643e.jpg" alt="Laptop and cappuccino on an outdoor terrace table with luggage nearby, overlooking an Alpine village and dramatic mountain peaks." />

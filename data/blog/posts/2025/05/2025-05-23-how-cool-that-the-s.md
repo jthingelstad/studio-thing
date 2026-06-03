@@ -9,4 +9,4 @@ categories: []
 
 How cool that the [S3 Files](https://s3files.app) app added a local MCP server so you can expose any S3 bucket of files to Claude or Cursor for local use. 
 
-<img src="https://www.thingelstad.com/uploads/2025/ef67d005cf.png" width="600" height="313" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/ef67d005cf.png" width="600" height="313" alt="S3 Files app MCP settings panel showing files.thingelstad.com S3 server available to enable, with JSON configuration for Claude and Cursor LLM clients.">

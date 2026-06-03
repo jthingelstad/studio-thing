@@ -9,4 +9,4 @@ categories: []
 
 Sunset over a field outside of Doolin. 
 
-<img src="https://www.thingelstad.com/uploads/2024/a2432a3f9f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/a2432a3f9f.jpg" width="600" height="450" alt="Sunset over a green meadow near Doolin with a low stone wall in the foreground and ocean visible on the horizon.">

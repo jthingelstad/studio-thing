@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 After our TeamSPS Kubb Tournament a small group of us had a pickup game that was awesome. We had all 10 kubbs in play!
 
-<img src="https://www.thingelstad.com/uploads/2024/f351c0a645.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/f351c0a645.jpg" width="600" height="450" alt="Four men playing Kubb on a city lawn, one mid-throw rolling a wooden baton toward a cluster of standing wooden blocks.">

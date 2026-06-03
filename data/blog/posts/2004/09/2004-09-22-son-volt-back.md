@@ -45,5 +45,4 @@ How awesome is this! This is the official release from
 > **Son Volt** is not currently affiliated with a label and plans to
 > return to the road in early 2005.
 
-I can't think of a more exciting or unexpected piece of music related
-news I could have gotten today. Can't wait for the album!
+I can't think of a more exciting or unexpected piece of music related news I could have gotten today. Can't wait for the album!

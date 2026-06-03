@@ -9,4 +9,4 @@ categories: []
 
 Mazie and I had dinner at [Pink Ivy](https://pinkivymn.com) in Hopkins for the first time tonight. The food was great: Roasted Carrots, Roasted Cauliflower, Grilled Salmon, Pineapple-Brown Butter Cake, and Chocolate Mochi Cake.
 
-<img src="https://www.thingelstad.com/uploads/2025/9b5bea109d.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/9b5bea109d.jpg" width="600" height="600" alt="Four restaurant dishes at Pink Ivy: grilled salmon on orange puree, roasted cauliflower on green puree, seared fish with corn and sauce, and chocolate mochi cake on custard with coconut flakes.">

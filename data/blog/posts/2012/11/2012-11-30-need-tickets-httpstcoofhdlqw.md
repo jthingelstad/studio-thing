@@ -9,4 +9,4 @@ categories: []
 
 Need tickets.
 
-<img src="https://www.thingelstad.com/uploads/2020/c5b4b06799.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/c5b4b06799.jpg" width="600" height="800" alt="Woman in a brown chevron coat holding a handwritten sign reading Need Tickets outside McNally Smith College of Music at night." />

@@ -9,4 +9,4 @@ categories: []
 
 Greetings from the Starship Halcyon!
 
-<img src="https://www.thingelstad.com/uploads/2022/b2d8e09f28.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/b2d8e09f28.jpg" width="600" height="337" alt="Family of four posing in the futuristic white and red atrium lobby of a Star Wars themed cruise ship">

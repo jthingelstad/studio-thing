@@ -9,4 +9,4 @@ categories: []
 
 Lunch at 7th Avenue and 17th Street. 
 
-<img src="https://www.thingelstad.com/uploads/2024/img-6793.jpg" width="600" height="800" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/img-6793.jpg" width="600" height="800" alt="Tall pilsner glass of amber beer on a restaurant table beside cutlery and a coloring book, with a child drawing in the background.">

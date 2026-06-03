@@ -13,4 +13,4 @@ The film itself was impressive and the action was phenomenal. Watching it at hom
 
 It would be a welcome change to be able to see movies right away on digital platforms. 
 
-<img src="https://www.thingelstad.com/uploads/2020/0bbc3eb6cb.jpg" width="405" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/0bbc3eb6cb.jpg" width="405" height="600" alt="Young woman in red traditional Chinese armor leaping mid-air with sword raised, mountains and battle in background, movie poster" />

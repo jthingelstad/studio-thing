@@ -9,4 +9,4 @@ categories: []
 
 Tyler and I went to [Micro Center](https://www.microcenter.com) just to browse and look around. Seeing the prices on DIMMs was crazy. All the memory production is going to AI. $500 and more for a DIMM means nobody is building their own machines.
 
-<img src="https://www.thingelstad.com/uploads/2026/0426bdb4fb.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/0426bdb4fb.jpg" width="450" height="600" alt="Glass display case at Micro Center holding T-Force DDR5 RAM kits priced from $299 to $814.">

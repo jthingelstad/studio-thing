@@ -9,4 +9,4 @@ categories: ["Things 4 Good"]
 
 Tammy and I made another four dozen [Things 4 Good](https://https://www.thingelstad.com/candles/) candles for next weekend’s fundraiser!
 
-<img src="https://www.thingelstad.com/uploads/2024/64c1e6dbe4.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/64c1e6dbe4.jpg" width="600" height="450" alt="Rows of handmade candles with wooden wicks in various containers on a red and white floral tablecloth, viewed from above.">

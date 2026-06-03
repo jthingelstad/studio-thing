@@ -11,4 +11,4 @@ Got a recursive selfie while collecting the [Grain Belt Sign](https://collectors
 
 Favorite quote from Mazie [@mthingelstad](https://micro.blog/mthingelstad) : "Why is this actually kind of fun?" Love it. 😍
 
-<img src="https://www.thingelstad.com/uploads/2025/dab52872d2.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/dab52872d2.jpg" width="600" height="600" alt="Man takes a selfie on a teal bridge railing while two others behind him photograph the iconic Grain Belt Beer sign overhead.">

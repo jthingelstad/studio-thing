@@ -9,6 +9,6 @@ categories: []
 
 If you like to feed birds you are completely aware of the ever-lasting battle with squirrels. They will go through amazing gymnastics to get at the wonderful food in your bird feeder. However, the other morning this scene caught me off guard!
 
-<img src="https://www.thingelstad.com/uploads/2024/20060308-070723-5451.jpg" width="600" height="399" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/20060308-070723-5451.jpg" width="600" height="399" alt="White-tailed deer standing at a backyard bird feeder station on a gray winter morning, eating spilled seed from the ground">
 
 Slightly larger than a squirrel, and I don't think there is anything I can do about this one. 🙂

@@ -9,4 +9,4 @@ categories: []
 
 I always make a stop at the [Lake Superior Trading Post](https://lakesuperiortradingpost.com). 
 
-<img src="https://www.thingelstad.com/uploads/2025/57169c1de3.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/57169c1de3.jpg" width="600" height="450" alt="Interior of Lake Superior Trading Post, a rustic two-story log gift shop with wooden shelves, hats, books, and shoppers browsing the main floor.">

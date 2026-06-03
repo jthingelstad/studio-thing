@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Pregame dinner at Yum! in St. Paul before the [US Men’s National Team](https://www.ussoccer.com/teams/usmnt) game at [Allianz Field](https://www.mnufc.com/stadium/)! 🇺🇸⚽️
 
-<img src="https://www.thingelstad.com/uploads/2023/0b3b5b9a91.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/0b3b5b9a91.jpg" width="600" height="450" alt="Six people in USA soccer jerseys smiling outside Yum restaurant in St. Paul before a USMNT match.">

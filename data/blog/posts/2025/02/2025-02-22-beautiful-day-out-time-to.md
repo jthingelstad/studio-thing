@@ -9,4 +9,4 @@ categories: []
 
 Beautiful day out. Time to heat up the sauna. 
 
-<img src="https://www.thingelstad.com/uploads/2025/99566852eb.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/99566852eb.jpg" width="450" height="600" alt="Outdoor barrel sauna with transparent polycarbonate walls emitting smoke from chimney, beside an ACE wheelbarrow loaded with firewood, in a snowy backyard.">

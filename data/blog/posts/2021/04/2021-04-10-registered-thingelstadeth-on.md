@@ -21,4 +21,4 @@ It was fun to do this and another opportunity to get familiar with dapps and Eth
 
 Lastly, the ENS service operates as a token. My address, thingelstad.eth, is a token that only I own. It is kind of neat that it now shows up in my wallet as well!
 
-<img src="https://www.thingelstad.com/uploads/2021/2bee890f39.png" width="375" height="274" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/2bee890f39.png" width="375" height="274" alt="ENS collectible card with an orange and gold gradient background displaying the domain name thingelstad.eth in white text" />

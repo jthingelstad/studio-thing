@@ -9,4 +9,4 @@ categories: []
 
 Sun setting on Cannon Lake. 
 
-<img src="https://www.thingelstad.com/uploads/2018/dcf43b7adb.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/dcf43b7adb.jpg" alt="Golden sunset over Cannon Lake with hundreds of waterfowl resting on calm water and a tree-lined horizon silhouetted against the orange sky." width="600" height="337" />

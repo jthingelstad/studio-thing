@@ -9,4 +9,4 @@ categories: []
 
 Lightning ⚡️ over the [Big Top Chautauqua](https://www.bigtop.org) resulted in an immediate stop to tonight’s show. Was great while it lasted!
 
-<img src="https://www.thingelstad.com/uploads/2018/c3bc05ecb4.jpg" width="600" height="449" />
+<img src="https://www.thingelstad.com/uploads/2018/c3bc05ecb4.jpg" alt="Dark storm clouds lit by lightning above a striped circus tent decorated with white string lights at night" width="600" height="449" />

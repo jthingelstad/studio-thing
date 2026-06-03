@@ -9,4 +9,4 @@ categories: []
 
 Somehow we hadn’t seen [National Lampoon’s Christmas Vacation](https://www.rottentomatoes.com/m/national_lampoons_christmas_vacation) so we watched it tonight. Some good laughs! 🎄
 
-<img src="https://www.thingelstad.com/uploads/2021/78f703ae03.jpg" width="400" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/78f703ae03.jpg" width="400" height="600" alt="Movie poster for National Lampoon's Christmas Vacation starring Chevy Chase, showing a smiling man in a Santa hat next to a decorated Christmas tree with a squirrel" />

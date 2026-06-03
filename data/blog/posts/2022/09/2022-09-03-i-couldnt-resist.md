@@ -9,4 +9,4 @@ categories: []
 
 I couldn't resist grabbing a nuNoun and picked up [nuNoun 88](https://nunoun.wtf/noun/88). Yet another noun project. ⌐◨-◨
 
-<img src="https://www.thingelstad.com/uploads/2022/7780cc1e74.png" width="500" height="500" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/7780cc1e74.png" width="500" height="500" alt="Pixel art avatar of a figure with black hair, red glasses, tan skin, and a blue shirt with LOL text." />

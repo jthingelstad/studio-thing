@@ -11,8 +11,8 @@ At today's [Minnesota Card Show](https://www.cardshowmn.com/) I built my [Alakaz
 
 When I played D&D I was always a Wizard hence the connection with Alakazam. 
 
-<img src="https://www.thingelstad.com/uploads/2025/c93c50bf60.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/c93c50bf60.jpg" width="600" height="450" alt="Six Alakazam Pokemon trading cards laid out on a wooden table, including classic Base Set, Dark, V, and EX versions.">
 
 My lineage is very Nordic, hence Perrserker, a Viking Pokémon. 
 
-<img src="https://www.thingelstad.com/uploads/2025/dbd264d3c4.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/dbd264d3c4.jpg" width="600" height="450" alt="Two holographic Galarian Perrserker V Pokemon cards 184/196 with 200 HP displayed side by side on a wooden surface.">

@@ -9,4 +9,4 @@ categories: []
 
 Family supply chain overload as demand has dropped precipitously. 
 
-<img src="https://www.thingelstad.com/uploads/2021/a8135b6ecd.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/a8135b6ecd.jpg" width="600" height="599" alt="Large collection of KN95 and disposable medical face masks in packaging piled on a white countertop" />

@@ -9,4 +9,4 @@ categories: ["Minnestar"]
 
 Was great to run into this amazing group of [Minnestar](https://minnestar.org) superstars at Minnedemo 40: [Adrienne Peirce](https://www.linkedin.com/in/adriennepeirce/), [Lindsi Gish](https://www.linkedin.com/in/lindsigish/), [Jenna Pederson](https://www.linkedin.com/in/jennapederson/), and [Justin Porter](https://www.linkedin.com/in/justinporter/)!
 
-<img src="https://www.thingelstad.com/uploads/2024/59d73532b5.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/59d73532b5.jpg" width="600" height="450" alt="Five people smiling together at a indoor networking event, all wearing name tags, posing for a group photo.">

@@ -9,4 +9,4 @@ categories: []
 
 We are enjoying [Making It](https://en.wikipedia.org/wiki/Making_It_(TV_series)) for family TV. 👍🏻🔨👨‍👩‍👧‍👦
 
-<img src="https://www.thingelstad.com/uploads/2018/0067532003.jpg" width="511" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/0067532003.jpg" alt="Promotional poster for Making It, a crafting competition series on NBC, featuring two hosts surrounded by craft tools and supplies" width="511" height="600" />

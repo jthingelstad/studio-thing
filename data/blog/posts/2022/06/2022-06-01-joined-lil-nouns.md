@@ -15,4 +15,4 @@ Many NFT projects the NFT is the thing that people really want, and there may be
 
 I continue to think DAO's are very interesting, and frame them broadly as a way to organize collective action. I wanted to be part of Lil Nouns because it looks like a great example of doing just that.
 
-<img src="https://www.thingelstad.com/uploads/2022/5b9b331dd9.png" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/5b9b331dd9.png" width="600" height="600" alt="Pixel art NFT of a round orange character with green rectangular glasses, small antennae, and an open mouth, on a light gray background." />

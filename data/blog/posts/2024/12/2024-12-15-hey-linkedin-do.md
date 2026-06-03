@@ -15,4 +15,4 @@ Do you remember in 2013 when you started [routing emails through your proxy serv
 
 Because of that you will never have an app on my device. You are only allowed in the web browser where it is safe.
 
-<img src="https://www.thingelstad.com/uploads/2024/ac462b8cf7.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/ac462b8cf7.jpg" width="600" height="600" alt="LinkedIn app prompt on an iPhone screen in dark mode saying Get the full app experience with a Continue button">

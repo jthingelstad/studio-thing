@@ -9,4 +9,4 @@ categories: []
 
 Ready for Halloween trick-or-treaters!
 
-<img src="https://www.thingelstad.com/uploads/2019/3372014bf8.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/3372014bf8.jpg" width="600" height="450" alt="Three bowls of Halloween candy including M and Ms Peanut Chews and Milky Way bars arranged on a wooden bench near a front door">

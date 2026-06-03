@@ -9,4 +9,4 @@ categories: []
 
 Crisp morning with light snow. Perfect time for a soak. ❄️🔥💦
 
-<img src="https://www.thingelstad.com/uploads/2026/c715023d2a.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/c715023d2a.jpg" width="600" height="450" alt="Outdoor hot tub with bubbling water in a snowy backyard, a sauna cabin and snow-covered evergreen trees nearby.">

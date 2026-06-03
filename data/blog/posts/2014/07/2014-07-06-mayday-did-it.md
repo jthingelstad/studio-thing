@@ -9,4 +9,4 @@ categories: []
 
 I'm very happy to be **one** of the over fifty-thousand backers of [Mayday PAC](https://mayday.us).
 
-![](https://www.thingelstad.com/uploads/2020/f275deade7.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/f275deade7.jpg" alt="Collage of dozens of selfie photos of supporters holding signs reading I am the MaydayPAC with bold celebratory text overlay announcing 50000 backers reached $5M on July 4th.">

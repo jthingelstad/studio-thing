@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Flying the [Planet Kubb](http://planetkubb.com) banner while the kids play some Kubb! 👍
 
-<img src="https://www.thingelstad.com/uploads/2019/d40090f8ee.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/d40090f8ee.jpg" width="600" height="600" alt="Planet Kubb feather banner on a sunny lawn where children play Kubb, surrounded by tall evergreen trees." />

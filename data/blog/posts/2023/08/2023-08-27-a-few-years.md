@@ -9,4 +9,4 @@ categories: []
 
 A few years ago we got a simple flat top grill at the lake and it has become one of our favorite ways to cook outside. I decided to upgrade and ordered this [Blackstone](https://blackstoneproducts.com/) 36" with a ton of accessories and air fryers which is a new thing for me to try. 🔥👨‍🍳
 
-<img src="https://www.thingelstad.com/uploads/2023/3f78b94987.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/3f78b94987.jpg" width="600" height="600" alt="Blackstone 36-inch flat top gas griddle with open lid showing vegetables and meat cooking on the surface">

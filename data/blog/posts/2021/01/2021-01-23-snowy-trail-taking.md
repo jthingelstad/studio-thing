@@ -9,4 +9,4 @@ categories: []
 
 Snowy trail taking Lucky for a walk. 
 
-<img src="https://www.thingelstad.com/uploads/2021/86afb8fa33.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/86afb8fa33.jpg" width="600" height="450" alt="Snow-covered trail lined with bare trees and an evergreen during a snowfall, stretching into the distance." />

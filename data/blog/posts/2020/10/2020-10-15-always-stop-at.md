@@ -9,4 +9,4 @@ categories: []
 
 Always stop at [Great! Lakes Candy Kitchen](https://www.greatlakescandy.com/#/) on the North Shore. Business still thriving and adapted to pandemic. Delicious chocolate. Yum. 
 
-<img src="https://www.thingelstad.com/uploads/2020/3db3d3da6c.jpg" width="600" height="450" alt="" /><img src="https://www.thingelstad.com/uploads/2020/21608dd287.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/3db3d3da6c.jpg" width="600" height="450" alt="Great Lakes Candy Kitchen storefront with red and white trim, Open sign, handmade chocolates and candies, parking signs, fall foliage" /><img src="https://www.thingelstad.com/uploads/2020/21608dd287.jpg" width="450" height="600" alt="Directional sign post outside Great Lakes Candy Kitchen in Knife River MN showing distances to towns along the North Shore" />

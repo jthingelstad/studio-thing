@@ -13,6 +13,6 @@ The [man of the match was Dayne St. Clair](https://www.mnufc.com/news/dayne-st-c
 
 Truly an incredible night of soccer enjoyed with my friends Jim and Tom! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2024/3c642303ea.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/3c642303ea.jpg" width="600" height="450" alt="Soccer match at Allianz Field at halftime, players in black and green kits on the pitch, packed stands glowing under stadium lights at dusk.">
  
- <img src="https://www.thingelstad.com/uploads/2024/e1dfbfd8a4.jpg" width="600" height="450" alt="">
+ <img src="https://www.thingelstad.com/uploads/2024/e1dfbfd8a4.jpg" width="600" height="450" alt="Soccer players in red-white-green Necaxa kits and black Minnesota United kits cluster near the touchline as a referee in orange intervenes.">

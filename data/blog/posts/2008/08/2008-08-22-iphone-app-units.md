@@ -7,23 +7,12 @@ post_kind: post
 categories: []
 ---
 
-I had seen this application in the AppStore before we left for London but
-for whatever reason I didn't think it would be needed or all that
-useful. I installed it a couple of days after getting here and have used
-it a lot.
+I had seen this application in the AppStore before we left for London but for whatever reason I didn't think it would be needed or all that useful. I installed it a couple of days after getting here and have used it a lot.
 
-<img src="https://www.thingelstad.com/uploads/2020/a20a559a24.jpg" style="max-width: 320px; " />
+<img src="https://www.thingelstad.com/uploads/2020/a20a559a24.jpg" alt="Currency converter app screen showing 7.95 GBP converted to 14.91273704 USD, with a calculator-style numeric keypad on a brushed metal interface." style="max-width: 320px; " />
 
-If you find yourself needing to convert from one thing to another a lot
-Units is the application for you. Currencies, lengths, speeds, etc. --
-it does them all.
+If you find yourself needing to convert from one thing to another a lot Units is the application for you. Currencies, lengths, speeds, etc. -- it does them all.
 
-That isn't enough magic to get me really excited about an application.
-What I like so much is how fast it is to use. It uses a calculator
-interface to make it super simple to get a conversion done. I had an
-initial complaint with how long it took to find the right mode, but they
-fixed this with a user-interface change in the newest release as well as
-some additional conversions.
+That isn't enough magic to get me really excited about an application. What I like so much is how fast it is to use. It uses a calculator interface to make it super simple to get a conversion done. I had an initial complaint with how long it took to find the right mode, but they fixed this with a user-interface change in the newest release as well as some additional conversions.
 
-Anyway, another great example of a very handy mobile application that
-adds significant value easily.
+Anyway, another great example of a very handy mobile application that adds significant value easily.

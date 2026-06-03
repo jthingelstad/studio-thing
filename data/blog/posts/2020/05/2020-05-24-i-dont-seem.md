@@ -9,6 +9,6 @@ categories: ["Cooking"]
 
 I don’t seem to ever get tired of looking at meat smoking on the [Big Green Egg](https://biggreenegg.com). [Surly Hell](https://surlybrewing.com/beer/hell/) is going perfect today too! 🔥🍺
 
-<img src="https://www.thingelstad.com/uploads/2020/7c5946ea46.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/7c5946ea46.jpg" width="600" height="450" alt="Seasoned meat smoking on a Big Green Egg kamado grill with heavy smoke rising, next to a can of Surly Hell beer on an outdoor kitchen counter." />
 
-![](https://www.thingelstad.com/uploads/2020/8a38acb4df.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/8a38acb4df.jpg" alt="Large pork shoulder with dark spice bark smoking on a Big Green Egg grill grate outdoors">

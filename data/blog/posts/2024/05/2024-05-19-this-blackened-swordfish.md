@@ -9,4 +9,4 @@ categories: []
 
 This Blackened Swordfish with Spanish Rice special at [6Smith](https://www.6smith.com) was so good I came back to have it a second time. 
 
-<img src="https://www.thingelstad.com/uploads/2024/68c6ca9194.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/68c6ca9194.jpg" width="600" height="600" alt="Blackened swordfish fillet over Spanish rice with cherry tomatoes, green onion garnish, and avocado cream sauce on a white and gold plate.">

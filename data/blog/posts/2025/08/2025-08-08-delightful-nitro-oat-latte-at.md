@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Delightful **Nitro Oat Latte** at [Youngblood Coffee Roasters](https://youngbloodcoffee.com) in Fargo, ND. This place has their coffee situation dialed in right. 👏☕️
 
-<img src="https://www.thingelstad.com/uploads/2025/221f9ed670.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/221f9ed670.jpg" width="600" height="450" alt="Professional espresso machine with chrome group heads and black portafilter handles, red microfiber towels on drip tray, coffee shop bar setting">

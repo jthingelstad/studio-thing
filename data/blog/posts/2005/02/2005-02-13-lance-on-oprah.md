@@ -7,14 +7,7 @@ post_kind: post
 categories: []
 ---
 
-On Friday I got an email through one of the cycling mailing lists that
-I'm on that [Lance](http://www.lancearmstrong.com/)
-[Armstrong](http://www.lancearmstrong.com/) was going to be on Oprah
-that afternoon. I'm not an avid Oprah follower (imagine that!) so I
-asked Tammy to TiVo it so I could watch it later.
-[Lance](http://www.lancearmstrong.com/) was on for the full hour along
-with Sheryl Crow. You do know that he and Sheryl have been an item ever
-since he split with his wife, right? Anyway, some thoughts...
+On Friday I got an email through one of the cycling mailing lists that I'm on that [Lance](http://www.lancearmstrong.com/) [Armstrong](http://www.lancearmstrong.com/) was going to be on Oprah that afternoon. I'm not an avid Oprah follower (imagine that!) so I asked Tammy to TiVo it so I could watch it later. [Lance](http://www.lancearmstrong.com/) was on for the full hour along with Sheryl Crow. You do know that he and Sheryl have been an item ever since he split with his wife, right? Anyway, some thoughts...
 
 -   **Enough with Sheryl Crow!** This is
     [Lance](http://www.lancearmstrong.com/)

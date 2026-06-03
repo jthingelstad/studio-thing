@@ -9,4 +9,4 @@ categories: []
 
 Wishing my wife an awesome mother's day. She's a great mom! Love you dear!
 
-![](https://www.thingelstad.com/uploads/2020/b175fc749d.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/b175fc749d.jpg" alt="Woman in a striped shirt holds a baby outdoors while a young girl in a pink cardigan leans in smiling beside them">

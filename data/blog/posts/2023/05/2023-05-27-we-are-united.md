@@ -9,4 +9,4 @@ categories: []
 
 **We are UNITED!**
 
-<img src="https://www.thingelstad.com/uploads/2023/4740ac4c5e.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/4740ac4c5e.jpg" width="600" height="337" alt="Large illuminated UNITED letters outside a blue-lit stadium at night with people walking around them.">

@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Double down. [Urban Bean Coffee](http://urbanbeancoffee.com) ☕️
 
-<img src="https://www.thingelstad.com/uploads/2021/ca2b96e138.jpg" width="600" height="451" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/ca2b96e138.jpg" width="600" height="451" alt="Two cups of coffee on a red wood table, one white cup with heart latte art, one dark red cup on a saucer, two small spoons nearby." />

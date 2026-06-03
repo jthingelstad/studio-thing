@@ -16,4 +16,4 @@ _noun_
 
 3. One who makes a tour, or performs a journey, especially for pleasure.
 
-<img src="https://www.thingelstad.com/uploads/2023/9cc216f210.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/9cc216f210.jpg" width="450" height="600" alt="Middle-aged man in a wide-brim hat, printed shirt, shorts, and sandals stands with a rolling suitcase and backpack in an airport terminal.">

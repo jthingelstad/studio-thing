@@ -9,4 +9,4 @@ categories: []
 
 We all watched [The Secret Life of Bee's](https://en.wikipedia.org/wiki/The_Secret_Life_of_Bees_(film)) tonight. 
 
-![](https://www.thingelstad.com/uploads/2020/abe0a5c261.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/abe0a5c261.jpg" alt="Movie poster for The Secret Life of Bees featuring six women against a golden honeycomb background with a Roger Ebert quote">

@@ -9,4 +9,4 @@ categories: []
 
 No Kowalski’s — there is **no such thing** as a **Watermelon Tenderloin**! 🤦‍♂️
 
-<img src="https://www.thingelstad.com/uploads/2022/fb1103c621.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/fb1103c621.jpg" width="600" height="599" alt="Four clear plastic containers labeled Watermelon Tenderloin by Kowalskis Markets each holding 2 lb of sliced red watermelon flesh" />

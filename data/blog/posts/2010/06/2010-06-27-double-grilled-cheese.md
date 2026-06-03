@@ -9,4 +9,4 @@ categories: []
 
 Double Grilled Cheese Dego
 
-![](https://www.thingelstad.com/uploads/2020/422c92c2ad.png)
+<img src="https://www.thingelstad.com/uploads/2020/422c92c2ad.png" alt="Person lifting the top bun off a large burger with melted cheese on a white plate beside a glass of Newcastle Brown Ale">

@@ -9,4 +9,4 @@ categories: []
 
 First time playing [Ticket to Ride: Nordic Countries](https://www.boardgamegeek.com/boardgame/31627/ticket-ride-nordic-countries) and liked it a lot. Limiting to only have 3 players, but fun routes and tunnels add challenges. Pairs well with snow and hot cocoa. 😊
 
-<img src="https://www.thingelstad.com/uploads/2017/f09f0bfdb3.jpg" width="599" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/f09f0bfdb3.jpg" alt="Ticket to Ride Nordic Countries board game in progress, showing a Scandinavian map covered with colorful train pieces claiming routes." width="599" height="600" />

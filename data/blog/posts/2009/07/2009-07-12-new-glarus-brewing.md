@@ -9,4 +9,4 @@ categories: []
 
 Another [New Glarus Brewing](https://newglarusbrewing.com) beer. This time **in New Glarus**! Drinking [Organic Revolution](https://newglarusbrewing.com/beers/ourbeers/beer/organic-revolution), very tasty.
 
-![](https://www.thingelstad.com/uploads/2020/1d91cf0f97.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/1d91cf0f97.jpg" alt="Pint glass of New Glarus Brewing Co. Spotted Cow beer, amber colored with a small head, sitting on a dark bar surface.">

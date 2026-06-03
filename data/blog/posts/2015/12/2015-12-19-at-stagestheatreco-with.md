@@ -9,4 +9,4 @@ categories: []
 
 At [Stages Theatre Company](https://www.stagestheatre.org) with family for A Charlie Brown Christmas play! 
 
-<img src="https://www.thingelstad.com/uploads/2020/d51bea5a33.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d51bea5a33.jpg" width="600" height="450" alt="Woman and two young children seated in a theater audience, smiling at the camera, holding a holiday show program." />

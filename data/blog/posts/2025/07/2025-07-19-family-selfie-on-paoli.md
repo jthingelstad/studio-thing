@@ -9,4 +9,4 @@ categories: []
 
 Family selfie on Paoli. 
 
-<img src="https://www.thingelstad.com/uploads/2025/32d75ae6fe.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/32d75ae6fe.jpg" width="600" height="450" alt="Four smiling people posing in front of a colorful Meet Me in Paoli mural on a sunny day.">

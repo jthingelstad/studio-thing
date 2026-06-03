@@ -4,12 +4,12 @@ url: "https://www.thingelstad.com/2012/02/12/the-shining.html"
 title: "The Shining"
 published: "2012-02-12T06:00:00+00:00"
 post_kind: post
-categories: ["Movies"]
+categories: []
 ---
 
 Friday night I had my friends Jim, Tom and Tim over for the first "movie night" in our new family room. I've been wanting to watch The Shining for a while, but Tammy wasn't interested[^1]. I'm not much for watching any movie by myself, much less one of the most disturbing horror movies of all time.
 
-<img src="https://www.thingelstad.com/uploads/2020/e3107ebf59.jpg" style="max-width: 326px; " />
+<img src="https://www.thingelstad.com/uploads/2020/e3107ebf59.jpg" alt="DVD cover for Stanley Kubrick Collection showing a wild-eyed grinning man peering through a broken door panel" style="max-width: 326px; " />
 
 The Shining has kept a firm place in my psyche for over two decades. I don't remember when I first saw it, but I do know that I was most likely far too young to see it. When I was a kid I had a ridiculously good imagination and if a room was dark, like when you go to sleep at night, I could see clearly whatever was in my head. The Grady twins were often in my head after seeing it.
 

@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Tammy and I watched [Brittany Runs a Marathon](https://m.imdb.com/title/tt7671064/) tonight. Fine movie with a happy ending. May make you want to run a marathon. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2020/df0cdba1f9.jpg" width="405" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/df0cdba1f9.jpg" width="405" height="600" alt="Movie poster for Brittany Runs a Marathon showing a woman in a purple star hoodie and yellow pants holding wine on a busy city street." />

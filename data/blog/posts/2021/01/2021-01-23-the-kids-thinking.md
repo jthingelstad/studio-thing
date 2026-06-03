@@ -9,4 +9,4 @@ categories: []
 
 The kids thinking about summer on the frozen pool. 🥶😊
 
-<img src="https://www.thingelstad.com/uploads/2021/eb88968583.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/eb88968583.jpg" width="600" height="450" alt="Two kids lying on their backs in the snow holding pool noodles with a fluffy white dog sitting nearby beside a backyard slide" />

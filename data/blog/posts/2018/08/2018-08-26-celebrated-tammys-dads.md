@@ -9,4 +9,4 @@ categories: []
 
 Celebrated Tammy’s Dad’s 80th Birthday today! Got a big Olson Family picture too!
 
-<img src="https://www.thingelstad.com/uploads/2018/0e5045579d.jpg" width="600" height="449" />
+<img src="https://www.thingelstad.com/uploads/2018/0e5045579d.jpg" alt="Large multigenerational family gathered outdoors on grass celebrating an 80th birthday with gold balloon numbers, two elderly people seated at center holding young children." width="600" height="449" />

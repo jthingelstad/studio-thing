@@ -9,4 +9,4 @@ categories: []
 
 Badlands are gorgeous.
 
-<img src="https://www.thingelstad.com/uploads/2020/df4cc8aada.jpg" width="600" height="196" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/df4cc8aada.jpg" width="600" height="196" alt="Panoramic view of Badlands National Park with eroded buttes, sparse green vegetation, and a clear blue sky stretching to the horizon." />

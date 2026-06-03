@@ -9,6 +9,6 @@ categories: []
 
 Happy Thanksgiving from my Mom and I! 
 
-<img src="https://www.thingelstad.com/uploads/2025/31d516f70b.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/31d516f70b.jpg" width="450" height="600" alt="Two people smiling and posing by a lit fireplace, the man in a plaid shirt with his arm around the woman in a rust turtleneck sweater.">
 
 Also see [2021](https://www.thingelstad.com/2021/11/25/happy-thanksgiving-from.html) and [2015](http://micro.thingelstad.com/2015/11/26/happy-thanksgiving-from.html).

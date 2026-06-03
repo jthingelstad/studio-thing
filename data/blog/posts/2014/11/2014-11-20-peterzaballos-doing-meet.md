@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 [Peter Zaballos](https://openambition.com) doing "Meet the Expert" session for #TeamSPS!
 
-![](https://www.thingelstad.com/uploads/2020/12ced39979.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/12ced39979.jpg" alt="Presenter at a podium delivering a talk to a small audience in a darkened conference room with green-themed slides on a projection screen">

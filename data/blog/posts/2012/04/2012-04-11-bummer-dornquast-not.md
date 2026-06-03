@@ -9,4 +9,4 @@ categories: []
 
 Bummer. [Matthew Dornquast](https://www.linkedin.com/in/dornquast/) not able to attend award ceremony. Congrats!
 
-<img src="https://www.thingelstad.com/uploads/2024/9a1d7a76-0b0c-4080-baca-15c56292a39f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/9a1d7a76-0b0c-4080-baca-15c56292a39f.jpg" width="600" height="450" alt="Two men in suits stand at a podium on a dimly lit conference stage while a projected slide shows a man named Matthew Dornquast at a desk.">

@@ -9,6 +9,6 @@ categories: ["Crypto"]
 
 [I collected](https://rainbow.me/profile/thingelstad.eth?nft=base_0x2bB7e461cbd49877fF2c922544bE3a75F66C093F_1) the [ENS 7th Anniversary](https://anniversary.ens.domains/7) NFT! I continue to be a big fan of ENS and think it is one of the most important crypto projects.
 
-<img src="https://www.thingelstad.com/uploads/2024/1af7a793bb.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/1af7a793bb.jpg" width="600" height="600" alt="Circular badge reading Guardians of the Namespace 7th Anniversary May 4th 2024 May the Address Be With You, with cartoon figures around a glowing ENS logo hologram in a spaceship interior.">
 
 _Also see [6th Anniversary](https://www.thingelstad.com/2023/05/09/i-claimed-my.html)._

@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Welcome to “The Cloud”! The #TeamSPS space rocks. 😊 
 
-![](https://www.thingelstad.com/uploads/2020/16ebe0a045.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/16ebe0a045.jpg" alt="Glass door etched with the words the CLOUD and cloud shapes, leading into a modern office lounge with red bar stools and pendant lights.">

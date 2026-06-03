@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Won 0.5 SOL in my Mission Chest from [Famous Fox Federation](https://famousfoxes.com) this week. I still have a lot of fun with this NFT project. I should try and get [a couple more foxes](https://magiceden.us/marketplace/famous_fox_federation).
 
-<img src="https://www.thingelstad.com/uploads/2025/86d34b8788.png" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/86d34b8788.png" width="600" height="600" alt="Mobile screenshot of famousfoxes.com Redeem Treasure page showing 5 reward items including 195, 298, 213, 234 tokens and a 0.5 SOL prize.">

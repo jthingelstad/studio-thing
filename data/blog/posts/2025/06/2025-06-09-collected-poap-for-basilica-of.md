@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>Collected POAP <a href="https://collectors.poap.xyz/token/7368652">7368652</a> for <strong><a href="https://poap.gallery/drops/190516">Basilica of Saint Mary — 612 POAP Challenge</a></strong>.</p>
-        <p><img src="https://www.thingelstad.com/uploads/2025/6e19548a-e1fa-4403-9845-e8e02a552389.png" width="500" height="500" /></p>
+        <p><img src="https://www.thingelstad.com/uploads/2025/6e19548a-e1fa-4403-9845-e8e02a552389.png" alt="Circular badge with pixel-art Basilica of Saint Mary on pink background, labeled 612 POAP Challenge" width="500" height="500" /></p>

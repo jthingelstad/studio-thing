@@ -9,4 +9,4 @@ categories: []
 
 Fudge making at Chrest family reunion. 
 
-<img src="https://www.thingelstad.com/uploads/2020/27468eb789.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/27468eb789.jpg" width="600" height="450" alt="Decorative sign reading Families are like fudge Mostly sweet with a few NUTS beside a red pot on a wooden table at a family reunion" />

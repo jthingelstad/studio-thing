@@ -9,4 +9,4 @@ categories: []
 
 [Visited Churchill Downs](https://www.thingelstad.com/2021/10/18/we-visited-churchill.html) yesterday. Hanging out in Kentucky. Seems appropriate to watch [Secretariat](https://movies.disney.com/secretariat).
 
-<img src="https://www.thingelstad.com/uploads/2021/ee619f8679.jpg" width="400" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/ee619f8679.jpg" width="400" height="600" alt="Disney movie poster for Secretariat showing a woman in a tan coat gently touching a large brown horse at a racetrack at dusk" />

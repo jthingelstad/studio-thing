@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 ☕️ 
 
-<img src="https://www.thingelstad.com/uploads/2020/c14865c74c.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/c14865c74c.jpg" width="600" height="800" alt="Espresso brewing from a chrome portafilter into a small white cup with red logo on a steel drip tray" />

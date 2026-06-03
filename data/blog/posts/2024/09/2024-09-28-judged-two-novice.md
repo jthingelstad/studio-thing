@@ -9,4 +9,4 @@ categories: []
 
 Judged two novice rounds at the **[Minnesota Debate Teachers Association (MDTA)](https://mdta.org) Jamboree** today at Wayzata High School. Was fun to remember how to flow a round and the debaters in general did a great job for their very first rounds in a tournament!
 
-<img src="https://www.thingelstad.com/uploads/2024/afcf281d2b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/afcf281d2b.jpg" width="600" height="450" alt="Debate judge flowsheet on a legal pad with a blue fountain pen resting on it beside an open laptop showing the Tabroom tournament management website in an empty classroom.">

@@ -7,15 +7,9 @@ post_kind: post
 categories: []
 ---
 
-We tried a new restaurant today. It was my mothers birthday a couple of
-days ago and we went out for lunch. We chose [Rix Bar &
-Grill](http://www.rixbargrill.com/) in north Minneapolis. Rix is fairly
-new, replacing what I hear was a fairly rundown bar that used to be
-there.
+We tried a new restaurant today. It was my mothers birthday a couple of days ago and we went out for lunch. We chose [Rix Bar & Grill](http://www.rixbargrill.com/) in north Minneapolis. Rix is fairly new, replacing what I hear was a fairly rundown bar that used to be there.
 
-The restaurant was non-assuming and relaxed. Open kitchen, nice bar area
-and a medium size dining room. We had a really nice experience and great
-food, I would recommend others to give it a try.
+The restaurant was non-assuming and relaxed. Open kitchen, nice bar area and a medium size dining room. We had a really nice experience and great food, I would recommend others to give it a try.
 
 -   The sweet potato french fries are a must. I love sweet potatoes, and
     these were just stunning. The chipotle dipping sauce is great as
@@ -30,5 +24,4 @@ food, I would recommend others to give it a try.
 
 ### Update
 
-We've been to Rix a couple of times since that initial visit
-and it continues to be a great, neighborhood stop. Give it a go!
+We've been to Rix a couple of times since that initial visit and it continues to be a great, neighborhood stop. Give it a go!

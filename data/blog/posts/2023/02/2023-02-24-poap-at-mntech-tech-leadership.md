@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6356207">6356207</a> at <strong><a href="https://poap.gallery/drops/102643">MnTech Tech Leadership Forum: Generative AI</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/mntech-tech-leadership-forum3a-generative-ai-2023-logo-1677014253272.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/mntech-tech-leadership-forum3a-generative-ai-2023-logo-1677014253272.png" alt="MnTech Minnesota Technology Association circular badge for Tech Leadership Forum February 23 2023 Generative AI Harnessing Disruption into Innovation" width="500" height="500" />

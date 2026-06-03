@@ -9,4 +9,4 @@ categories: []
 
 We are having the stucco redashed on our house and I decided it was a good time to say goodbye to the grape vine that the previous owners had planted. Now a blank slate for something different next year. And the new stucco will go on very easy. Before and after photo.
 
-<img src="https://www.thingelstad.com/uploads/2025/24f293bd46.jpg" width="600" height="300" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/24f293bd46.jpg" width="600" height="300" alt="Before and after side-by-side of a stucco house wall showing a large grape vine removed leaving bare wall with a decorative iron trellis">

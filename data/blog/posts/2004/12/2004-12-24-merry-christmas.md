@@ -7,15 +7,10 @@ post_kind: post
 categories: []
 ---
 
-![](https://www.thingelstad.com/uploads/2020/dad7d38b34.gif)
+<img src="https://www.thingelstad.com/uploads/2020/dad7d38b34.gif" alt="Vintage Victorian-style decorative typography spelling Merry Christmas with ornate flourishes and botanical illustrations.">
 
-Tammy and I begin our Christmas journey today. We alternate Christmas
-and this year is a trip to my family so we'll be driving a long ways to
-[Minot, ND](http://www.visitminot.org/) tonight and then continuing to
-my grandparents farm outside of [Lignite,
-ND](http://www.lignitend.com/).
+Tammy and I begin our Christmas journey today. We alternate Christmas and this year is a trip to my family so we'll be driving a long ways to [Minot, ND](http://www.visitminot.org/) tonight and then continuing to my grandparents farm outside of [Lignite, ND](http://www.lignitend.com/).
 
 **Merry Christmas and Happy Holidays!**
 
-*PS - I failed again to do a holiday letter and get Christmas cards out
-to friends and family. However, I feel really good about next year!*
+*PS - I failed again to do a holiday letter and get Christmas cards out to friends and family. However, I feel really good about next year!*

@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 We took turns hitting a couple hundred balls at [Batting Cages of Minnesota](http://www.battingcagesofmn.com). ⚾️
 
-<img src="https://www.thingelstad.com/uploads/2020/1c3dcf49a6.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/1c3dcf49a6.jpg" width="600" height="337" alt="Woman in a red batting helmet swinging a baseball bat at an indoor batting cage with balls scattered across the turf floor." />

@@ -9,4 +9,4 @@ categories: []
 
 It was awesome to hear [Zandi Holup](https://www.zandiholupmusic.com) open up for Steve Earle tonight. She played a good set of original songs but unfortunately none of them are published yet. 
 
-<img src="https://www.thingelstad.com/uploads/2023/4829acf46d.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/4829acf46d.jpg" width="600" height="337" alt="Blonde woman in a long floral dress playing acoustic guitar at a microphone on a dimly lit stage at Dakota jazz club.">

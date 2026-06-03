@@ -9,4 +9,4 @@ categories: []
 
 Gorgeous blue sky in downtown Minneapolis today. 
 
-<img src="https://www.thingelstad.com/uploads/2020/cbfd0a1336.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/cbfd0a1336.jpg" width="450" height="600" alt="Two glass skyscrapers in downtown Minneapolis under a bright blue sky with wispy clouds, the taller one with a circular crown." />

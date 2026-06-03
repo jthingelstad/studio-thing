@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/95bad4976a.png" style="width: 124px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/95bad4976a.png" alt="Promotional graphic for Local Burger featuring four icons of animals on colored squares: bison, cow, goat, and a plant sprout." style="width: 124px; float: right; margin-left: 10px; " />
 
 (Lawrence, Kansas) When doing her research for places to check out in Lawrence, Tammy ran across an interesting restaurant called [Local Burger](http://www.localburger.com/). Local Burger is attempting to create an "old school" fast food experience based entirely on local food sourcing and organic products. The menu is grass-fed locally raised free-range beef. The same in bison if you like. Prefer Elk, they have that too. Everything is raised by known ranches and done *right*.
 

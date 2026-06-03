@@ -9,4 +9,4 @@ categories: []
 
 Happy National Donut Day from the Canadian Rockies. 🍩🏔️
 
-<img src="https://www.thingelstad.com/uploads/2025/72ce977ea2.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/72ce977ea2.jpg" width="600" height="450" alt="Chocolate-frosted donut with rainbow sprinkles impaled on a pine branch beside a rushing mountain river with rocks and evergreen trees.">

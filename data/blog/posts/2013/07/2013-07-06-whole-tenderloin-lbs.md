@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Whole tenderloin (4 lbs) came off the [Big Green Egg](https://biggreenegg.com) great! 
 
-<img src="https://www.thingelstad.com/uploads/2021/9cd57f7eb6.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/9cd57f7eb6.jpg" width="600" height="450" alt="Sliced beef tenderloin with a dark crust and pink medium-rare center on a white plate with a fork, on a colorful table." />

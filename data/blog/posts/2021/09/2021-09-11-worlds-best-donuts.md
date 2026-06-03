@@ -9,4 +9,4 @@ categories: []
 
 [Worlds Best Donuts](https://www.worldsbestdonutsmn.com) in Grand Marais! 🍩🤤
 
-<img src="https://www.thingelstad.com/uploads/2021/ab92639948.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/ab92639948.jpg" width="600" height="450" alt="Worlds Best Donuts shop in Grand Marais MN with an open sign and customers at the counter, a memorial bench in the foreground" />

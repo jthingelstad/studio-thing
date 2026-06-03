@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Time to wrap pork butt and finish with Apple cider on [Big Green Egg](https://biggreenegg.com). 🔥
 
-<img src="https://www.thingelstad.com/uploads/2017/c98ff85c78.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/c98ff85c78.jpg" alt="Smoked pork butts on an open Big Green Egg kamado grill, with Reynolds Wrap and Martinellis cider nearby, backyard playground in background." width="600" height="600" style="height: auto" />

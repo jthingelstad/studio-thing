@@ -9,4 +9,4 @@ categories: []
 
 Hungry.
 
-<img src="https://www.thingelstad.com/uploads/2021/90e2f63789.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/90e2f63789.jpg" width="600" height="600" alt="Three bottles of Huy Fong Sriracha Hot Chili Sauce on a dark granite counter" />

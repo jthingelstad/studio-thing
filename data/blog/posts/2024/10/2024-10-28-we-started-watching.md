@@ -9,4 +9,4 @@ categories: []
 
 We started watching Jungle Cruise last night and finished it tonight. We [saw it in 2021 at a drive-in](https://www.thingelstad.com/2021/08/05/we-saw-the.html) and was fun to watch again. Tyler is a fan of Dwayne Johnson movies. 
 
-<img src="https://www.thingelstad.com/uploads/2024/dbf1836220.jpg" width="405" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/dbf1836220.jpg" width="405" height="600" alt="Movie poster for Disney Jungle Cruise showing two adventurers in a jungle holding lanterns, surrounded by snakes, fire, and a riverboat.">

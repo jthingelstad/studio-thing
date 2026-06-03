@@ -13,4 +13,4 @@ The room was very well done and we always felt like we were moving forward. Ther
 
 Recommended room! [Room 64](https://www.thingelstad.com/lists/escape-rooms/)!
 
-<img src="https://www.thingelstad.com/uploads/2025/06a55b7330.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/06a55b7330.jpg" width="600" height="450" alt="Three people smiling in an escape room, a timer on the wall reads 01:39 and displays You have saved Washington and made your escape.">

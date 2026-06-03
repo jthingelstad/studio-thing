@@ -15,4 +15,4 @@ Have the next round of books to read for my book club assembled. 📚
 - [Army of None: Autonomous Weapons and the Future of War](https://www.librarything.com/work/20586052/book/256062028) by Pual Scharre
 - [Through the Language Glass: Why the World Looks Different in Other Languages](https://www.librarything.com/work/10023646/book/256062049) by Guy Deutscher
 
-<img src="https://www.thingelstad.com/uploads/2024/ef769fbd9e.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/ef769fbd9e.jpg" width="600" height="337" alt="Five books standing on a wooden dresser in front of a full bookshelf: Medici Money, The Dictionary People, The Power Law, Army of None, and Through the Language Glass.">

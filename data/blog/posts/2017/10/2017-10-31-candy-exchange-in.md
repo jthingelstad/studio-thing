@@ -9,4 +9,4 @@ categories: []
 
 Candy exchange in progress! 🍫🎃
 
-<img src="https://www.thingelstad.com/uploads/2017/0e72e5c761.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2017/0e72e5c761.jpg" alt="Halloween candy spread across a floral rug with children sitting around it sorting Reese's Twix M and Ms Hershey's Crunch and other treats" width="600" height="599" />

@@ -7,4 +7,4 @@ post_kind: post
 categories: []
 ---
 
-![](https://www.thingelstad.com/uploads/2020/cfa8e83f4e.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/cfa8e83f4e.jpg" alt="Wide waterfall cascading over a sandstone ledge into a rocky pool surrounded by autumn forest">

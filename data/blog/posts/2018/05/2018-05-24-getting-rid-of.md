@@ -9,4 +9,4 @@ categories: []
 
 Getting rid of some old cables. 😳
 
-<img src="https://www.thingelstad.com/uploads/2018/e2c6daa3f3.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/e2c6daa3f3.jpg" alt="Large tangled pile of assorted cables and cords heaped on a dark brown leather ottoman in front of a gray sectional sofa." width="600" height="600" />

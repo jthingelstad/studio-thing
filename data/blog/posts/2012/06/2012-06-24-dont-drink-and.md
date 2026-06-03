@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Don’t drink and Kubb.
 
-<img src="https://www.thingelstad.com/uploads/2020/01dc4edc5d.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/01dc4edc5d.jpg" width="600" height="450" alt="Kubb game in progress on a grass lawn with wooden blocks standing and knocked over, and several empty beer bottles scattered across the field." />

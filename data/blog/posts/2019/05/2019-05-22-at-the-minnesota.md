@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 At the Minnesota United v Hertha Berlin friendly! ⚽️👏 
 
-<img src="https://www.thingelstad.com/uploads/2019/c39421c36b.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/c39421c36b.jpg" width="600" height="337" alt="Soccer match at Allianz Field with players in dark and white kits on the pitch, scoreboard reading 0-1 at 46 minutes." />

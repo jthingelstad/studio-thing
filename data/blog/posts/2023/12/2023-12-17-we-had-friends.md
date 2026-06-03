@@ -9,4 +9,4 @@ categories: []
 
 We had friends over and played [SHEEPLE: The Best Game in the Ewe-niverse](https://sheeplethegame.com) for the first time. It was a fun game to play in a group with a lot of laughs. Recommended.
 
-<img src="https://www.thingelstad.com/uploads/2023/17c99daace.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/17c99daace.jpg" width="600" height="450" alt="Colorful board game called Sheeple in progress on a table with several sheep-shaped player pieces on the winding path.">

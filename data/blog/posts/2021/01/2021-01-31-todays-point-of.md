@@ -9,4 +9,4 @@ categories: []
 
 Today’s point of view for the next several hours. Impressive volume of semi-trucks on I-40. 
 
-<img src="https://www.thingelstad.com/uploads/2021/7b18e03c22.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/7b18e03c22.jpg" width="600" height="337" alt="White semi-truck with Hyundai trailer on a flat desert highway flanked by dry grassland under a clear blue sky." />

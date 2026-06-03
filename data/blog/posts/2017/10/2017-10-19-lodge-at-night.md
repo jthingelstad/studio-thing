@@ -9,4 +9,4 @@ categories: []
 
 Lodge at night with campfire. 
 
-<img src="https://www.thingelstad.com/uploads/2017/d8b6f4bb64.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/d8b6f4bb64.jpg" alt="Single-story lodge glowing warmly from lit windows at dusk, surrounded by silhouetted trees with a small campfire burning nearby." width="600" height="600" />

@@ -9,4 +9,4 @@ categories: []
 
 Rainy day at the lake so playing [Rummikub](https://www.rummikub.com). I won on the next turn. 😁
 
-<img src="https://www.thingelstad.com/uploads/2019/566f7c24ec.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/566f7c24ec.jpg" width="600" height="600" alt="Rummikub game in progress on a wooden table with tiles arranged in runs and sets, tile racks holding players hands, and a pile of face-down tiles in the center." />

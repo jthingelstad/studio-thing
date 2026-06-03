@@ -11,4 +11,4 @@ It was a nice hot day to enjoy a float down [Minnehaha Creek](https://minnehahac
 
 {{< collection "Post Tubing Minnehaha Creek" >}}
 
-<img src="https://www.thingelstad.com/uploads/2024/7e24b104a6.jpg" width="600" height="526" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/7e24b104a6.jpg" width="600" height="526" alt="GPX route map showing a 3.73-mile path along Minnehaha Creek through south Minneapolis neighborhoods including South Harriet Park and Fulton.">

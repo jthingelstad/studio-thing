@@ -9,4 +9,4 @@ categories: []
 
 Duluth / Stairs. 
 
-<img src="https://www.thingelstad.com/uploads/2025/d2276956c8.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/d2276956c8.jpg" width="600" height="600" alt="Black metal fire escapes zigzagging across the facades of two brick apartment buildings in Duluth">

@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Birthday Kingfield and London Fog at Five Watt. ☕️
 
-<img src="https://www.thingelstad.com/uploads/2026/81c024c805.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/81c024c805.jpg" width="600" height="450" alt="Four people smiling and holding Five Watt coffee cups inside a cozy cafe decorated with holiday lights.">

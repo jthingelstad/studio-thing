@@ -9,4 +9,4 @@ categories: []
 
 [Bryan Hansel](https://www.bryanhansel.com) getting everyone started on our workshop. 
 
-<img src="https://www.thingelstad.com/uploads/2024/c99f894e49.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/c99f894e49.jpg" width="600" height="450" alt="Group of photographers with tripods on a rocky shoreline in winter clothing during a photography workshop">

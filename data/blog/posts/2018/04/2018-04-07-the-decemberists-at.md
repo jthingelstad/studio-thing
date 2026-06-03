@@ -9,4 +9,4 @@ categories: []
 
 [The Decemberists](https://www.decemberists.com) at the Palace Theater. 
 
-<img src="https://www.thingelstad.com/uploads/2018/dbe7f4f3e2.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/dbe7f4f3e2.jpg" alt="The Decemberists performing on a blue-lit stage at the Palace Theater, with a full band and ornate backdrop visible from the balcony." width="600" height="337" />

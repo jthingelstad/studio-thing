@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/4896612">4896612</a> at <strong><a href="https://poap.gallery/drops/42773">Web3MSP GM</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/web3msp-gm-2022-logo-1651705499299.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/web3msp-gm-2022-logo-1651705499299.png" alt="Circular logo with colorful diagonal stripes and bold text reading WEB3 MSP with gm! below in white" width="500" height="500" />

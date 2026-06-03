@@ -9,4 +9,4 @@ categories: ["Pokémon"]
 
 "Oh, I know I have that Pokémon card in here somewhere. Just let me look in this pile." 😳😆 at [MN Poke Pulls TCG](https://linktr.ee/OfficialPokePulls).
 
-<img src="https://www.thingelstad.com/uploads/2025/acdff865e2.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/acdff865e2.jpg" width="600" height="450" alt="Tables covered in thousands of loose and stacked trading cards including Pokemon cards at a card shop or convention vendor booth.">

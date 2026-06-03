@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2023/06/14/mazie-turns.html"
 title: "Mazie Turns 18"
 published: "2023-06-14T23:15:00+00:00"
 post_kind: post
-categories: ["Family", "Escape Room"]
+categories: ["Escape Room"]
 ---
 
 Today we celebrated Mazie's 18th Birthday! Both of the kids are out of school, and I took the day off, so we were able to make the day extra special for Mazie.
@@ -15,15 +15,15 @@ Highlights of the day included a morning visit to [Shady Oak Beach](https://www.
 
 It was an incredible day with incredible memories — old and new!
 
-<img src="https://www.thingelstad.com/uploads/2023/c903e89cc1.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/c903e89cc1.jpg" width="600" height="450" alt="Man in a red patterned shirt and tan hat smiling with a teenage girl in a yellow striped shirt seated by a lake">
 
-<img src="https://www.thingelstad.com/uploads/2023/2675bac8d7.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/2675bac8d7.jpg" width="600" height="600" alt="Teen smiling and holding a light blue Fujifilm Instax Mini 12 instant camera up to take a photo indoors">
 
-<img src="https://www.thingelstad.com/uploads/2023/0c66efdb71.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/0c66efdb71.jpg" width="600" height="400" alt="Two kids smile indoors at a birthday party, one holding a round Happy Birthday balloon, with a kitchen in the background.">
 
-<img src="https://www.thingelstad.com/uploads/2023/af52bd6cdb.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/af52bd6cdb.jpg" width="600" height="600" alt="Family of four holding humorous escape room signs in front of a Zero Hour Escape Rooms sign after successfully completing a room">
 
-<img src="https://www.thingelstad.com/uploads/2023/4e1d8702c8.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/4e1d8702c8.jpg" width="600" height="450" alt="Family of four smiling at an outdoor restaurant patio table with water glasses and a small potted plant centerpiece">
 
 <div class="callout">
 

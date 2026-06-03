@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We saw [Instant Family](https://www.rottentomatoes.com/m/instant_family) last night. Fun, family-focused movie. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2018/deaabc3d90.jpg" width="600" height="300" alt="" />
+<img src="https://www.thingelstad.com/uploads/2018/deaabc3d90.jpg" width="600" height="300" alt="Movie poster for Instant Family releasing November 16 with a couple on the right and three children on the left separated by a plus sign." />

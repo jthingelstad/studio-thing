@@ -9,4 +9,4 @@ categories: []
 
 Park Husband Here. (This scene required commentary.)
 
-![](https://www.thingelstad.com/uploads/2020/3c9d64a6bd.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/3c9d64a6bd.jpg" alt="Four older men sitting alone at small tables and chairs scattered across a quiet indoor shopping mall concourse.">

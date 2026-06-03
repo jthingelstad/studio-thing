@@ -9,4 +9,4 @@ categories: []
 
 At the Apple Store picking up my Apple Vision Pro!
 
-<img src="https://www.thingelstad.com/uploads/2024/8cff2f3837.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2024/d09a3ecf5a.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2024/02926607de.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/8cff2f3837.jpg" width="600" height="450" alt="Apple Vision Pro headset on a display stand with battery pack on a wood table inside an Apple Store"><img src="https://www.thingelstad.com/uploads/2024/d09a3ecf5a.jpg" width="600" height="450" alt="Apple Vision Pro headset on a display stand in an Apple Store, showing the inner lenses and Solo Knit Band from behind."><img src="https://www.thingelstad.com/uploads/2024/02926607de.jpg" width="600" height="450" alt="Apple Vision Pro headset on a display stand at an Apple Store, with its glossy visor reflecting blue light from the displays inside.">

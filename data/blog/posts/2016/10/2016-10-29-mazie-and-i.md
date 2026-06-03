@@ -4,12 +4,12 @@ url: "https://www.thingelstad.com/2016/10/29/mazie-and-i.html"
 title: ""
 published: "2016-10-30T03:23:00+00:00"
 post_kind: micropost
-categories: ["Sports", "Family"]
+categories: ["Sports"]
 ---
 
 Mazie and I taking in the last MN United game of the season, and last at NSC. Next year season tickets!
 
-<img src="https://www.thingelstad.com/uploads/2019/7407bc1b60.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/7407bc1b60.jpg" width="600" height="450" alt="A girl in a pink knit hat and a man in a black beanie and scarf smile at a Minnesota United FC night match.">
 
 Love sitting by the Dark Clouds at MN United games!
 

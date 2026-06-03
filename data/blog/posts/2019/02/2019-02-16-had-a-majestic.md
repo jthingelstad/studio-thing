@@ -9,4 +9,4 @@ categories: []
 
 Had a majestic bald eagle visit us this morning. Just 50 or so feet away. Surveying the frozen lake, I suspect looking for small animals seeking some open water. There is a natural spring not far from this spot that flows year round. 
 
-<img src="https://www.thingelstad.com/uploads/2019/a73764e3ff.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/a73764e3ff.jpg" width="600" height="600" alt="Bald eagle perched high in a bare winter tree overlooking a snow-covered frozen lake" />

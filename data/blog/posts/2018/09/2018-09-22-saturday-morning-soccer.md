@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Saturday morning soccer! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2018/21a46b8961.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/21a46b8961.jpg" alt="Youth soccer match in progress on a grass field with spectators seated on the sideline, brick school building in background." width="600" height="450" />

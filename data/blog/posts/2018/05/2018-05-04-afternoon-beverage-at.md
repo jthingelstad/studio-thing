@@ -9,4 +9,4 @@ categories: []
 
 Afternoon beverage at [Castle Danger Brewery](https://www.castledangerbrewery.com). 🍺
 
-<img src="https://www.thingelstad.com/uploads/2018/1d6962ddfe.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/1d6962ddfe.jpg" alt="Castle Danger Brewery tap bar with two dozen beer taps and a wood sign reading dangerously good ales." width="600" height="450" />

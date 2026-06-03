@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Minnesota United v Vancouver Whitecaps starting 2nd half. United leading 1-0, and playoff bound? ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2022/f432a7bc08.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/f432a7bc08.jpg" width="600" height="450" alt="Soccer match at Allianz Field in Minnesota with players on the pitch and a packed stadium under a cloudy evening sky.">

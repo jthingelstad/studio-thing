@@ -9,4 +9,4 @@ categories: []
 
 TeamSPS, Eastern Europe, with Warsaw team and many Kyiv team members visiting. 
 
-<img src="https://www.thingelstad.com/uploads/2025/6232ebeac9.jpg" width="600" height="298" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/6232ebeac9.jpg" width="600" height="298" alt="Group of about 30 people posing together in a modern office lounge around a large silver trophy cup.">

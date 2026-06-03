@@ -7,7 +7,6 @@ post_kind: post
 categories: []
 ---
 
-![](https://www.thingelstad.com/uploads/2020/bc55037a2d.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/bc55037a2d.jpg" alt="Group of young children in matching gray Cyclones team shirts pose with two adult coaches beside a large tree on a grassy lawn.">
 
-Team photo of the Spring 2011 Cyclones after the last game today. They
-played a great spring season and will be back strong in Fall.
+Team photo of the Spring 2011 Cyclones after the last game today. They played a great spring season and will be back strong in Fall.

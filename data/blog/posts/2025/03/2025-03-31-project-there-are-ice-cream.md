@@ -15,4 +15,4 @@ The organization is **Project 11:11** started by Erin Gallivan from Bradenton. T
 
 What a great thing to do to bring smiles to people on the beach and do good for veterans. Way to go! 🇺🇸
 
-<img src="https://www.thingelstad.com/uploads/2025/5f96a436f3.jpg" width="600" height="337" alt=""><img src="https://www.thingelstad.com/uploads/2025/b2510d1192.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/5f96a436f3.jpg" width="600" height="337" alt="Colorful red, white and blue Ice Cream boat reading Charity for Vets beached in shallow Gulf waves with beachgoers nearby under overcast skies."><img src="https://www.thingelstad.com/uploads/2025/b2510d1192.jpg" width="600" height="337" alt="Two people standing in shallow surf watching a red patriotic speedboat labeled Ice Cream and Charity for Vets approach the shore on a cloudy day.">

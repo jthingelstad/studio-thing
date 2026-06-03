@@ -9,4 +9,4 @@ categories: []
 
 It’s snowing!? 🌨😧
 
-<img src="https://www.thingelstad.com/uploads/2018/5d8cdac8df.jpg" width="450" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/5d8cdac8df.jpg" alt="Trees dusted with early season snow still holding autumn leaves behind a black iron fence" width="450" height="600" />

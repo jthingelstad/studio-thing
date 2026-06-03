@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/af3d2cb9ed.jpg" style="width: 119px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/af3d2cb9ed.jpg" alt="Linksys WTR-54GS compact travel router in gray and white with an Ethernet port and indicator light" style="width: 119px; float: right; margin-left: 10px; " />
 
 I recently picked up a [Linksys WTR-54GS](http://www.linksys.com/servlet/Satellite?c=L_Product_C2&childpagename=US%252FLayout&cid=1122062241008&pagename=Linksys%252FCommon%252FVisitorWrapper) travel router based on the positive recommendation of my friend [Chris](http://www.tersteeg.org/). He had gotten one before going on a big trip to make sure that he had [WiFi](http://en.wikipedia.org/wiki/Wi-Fi) in all the locations he wanted it and it worked really well.
 

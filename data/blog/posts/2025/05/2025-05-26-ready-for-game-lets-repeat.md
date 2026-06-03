@@ -11,4 +11,4 @@ Ready for Game 4! Let’s repeat Game 3 Wolves!
 
 <img src="https://www.thingelstad.com/uploads/2025/bab72260d7.jpg" alt="A packed basketball arena with fans fills the stands as players warm up on the court under a large central scoreboard.">
 
-<img src="https://www.thingelstad.com/uploads/2025/39fe79900a.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/39fe79900a.jpg" alt="NBA Playoffs tip-off between the Timberwolves and Thunder at a packed arena, players jumping for the opening ball.">

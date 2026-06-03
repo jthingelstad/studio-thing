@@ -10,4 +10,4 @@ categories: []
 After way too much deliberation I decided to head to [Podany’s](https://podanys.com) today and come home with a new chair and a sit-stand desk. I should have done this months ago. This is a great upgrade from my [previous setup](https://www.thingelstad.com/2020/10/06/i-upgraded-the.html).
 
 
-<img src="https://www.thingelstad.com/uploads/2021/22f458a8e7.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/22f458a8e7.jpg" width="600" height="600" alt="White sit-stand desk with external monitor and laptop on a stand, paired with a blue mesh office chair on a carpet mat in a home office corner." />

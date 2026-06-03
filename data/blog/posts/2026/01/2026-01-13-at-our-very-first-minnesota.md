@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 At our very first Minnesota Gophers basketball game in the Barn Lofts! 🏀
 
-<img src="https://www.thingelstad.com/uploads/2026/38bead933b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/38bead933b.jpg" width="600" height="450" alt="Williams Arena packed with fans in maroon and gold watching a Minnesota Gophers basketball game from upper level seats.">

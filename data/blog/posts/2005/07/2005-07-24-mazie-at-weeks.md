@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2005/07/24/mazie-at-weeks.html"
 title: "Mazie at 6 Weeks"
 published: "2005-07-24T05:00:00+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
 Mazie will be six weeks old in a couple of days. This seems to be a pretty big milestone, at least in her parents eyes, since supposedly after six weeks of breast milk she has now built up an immune system that will keep basic nasty germs and viruses away. This will give Mazie's Dad and Mazie's Mom confidence to take her out more, into more varied environments, without constantly worrying about the cleanliness of everything around us and giving sinister looks to strangers who emit a short cough while passing. Really, don't these people know better than to cough around a baby!
@@ -19,4 +19,4 @@ Tonight she's taken to "spitting up", but with a bit more volume than a spit, an
 
 I put up some new photos to share with everyone (including what her Mom has decided is the cutest photo of her and her Dad!). Also note the photo included here, where Mazie is modeling her great [Road Sign Math](https://www.roadsignmath.xyz) onesie!
 
-![](https://www.thingelstad.com/uploads/2020/fc3fb476ee.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/fc3fb476ee.jpg" alt="Newborn baby in a white onesie with text on it, lying back with one fist raised, looking alert and calm">

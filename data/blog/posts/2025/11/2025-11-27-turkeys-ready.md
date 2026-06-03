@@ -9,4 +9,4 @@ categories: []
 
 Turkey’s ready!
 
-<img src="https://www.thingelstad.com/uploads/2025/7ca4364241.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/7ca4364241.jpg" width="450" height="600" alt="Smiling man in a plaid shirt holds a platter of sliced turkey with roasted vegetables in a home kitchen">

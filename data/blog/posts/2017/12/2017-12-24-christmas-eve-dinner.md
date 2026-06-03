@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Christmas Eve dinner on [Big Green Egg](https://biggreenegg.com). 🔥❄️
 
-<img src="https://www.thingelstad.com/uploads/2017/67e050a08a.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/67e050a08a.jpg" alt="Big Green Egg kamado grill smoking at night in winter, set in an outdoor table with snow visible nearby." width="600" height="600" />

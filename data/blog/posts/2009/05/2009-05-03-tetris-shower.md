@@ -21,10 +21,10 @@ The completed bathroom tiles are logically correct. If you look closely you can 
 
 The tiling was done by Terry Owens of [Como Lake Carpentry](http://www.comolakecarpentry.com/), who also did our [new garage shelves](https://www.thingelstad.com/2008/11/18/garage-shelves-awesome.html) and a bunch of other projects for us. He's awesome. We really dig the look of it, and it's fun to have a colorful tile pattern that appears fairly random but is really a game.
 
-![](https://www.thingelstad.com/uploads/2020/b234de3f0d.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/b234de3f0d.jpg" alt="Colorful mosaic-tiled shower and bathtub with square tiles arranged in a Tetris game pattern in green orange blue yellow and gray">
 
-![](https://www.thingelstad.com/uploads/2020/e4e655eebd.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/e4e655eebd.jpg" alt="Wall of square ceramic tiles arranged in a Tetris-style pattern using teal, blue, green, yellow, orange, gray, and white colors.">
 
-![](https://www.thingelstad.com/uploads/2020/9bd22ec3d3.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/9bd22ec3d3.jpg" alt="Colorful bathroom shower tiled in a Tetris-inspired pattern using orange, yellow, green, teal, blue, gray, and white square tiles">
 
 _PS: See the dust speck on my DSLR sensor? 😬_

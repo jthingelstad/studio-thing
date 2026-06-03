@@ -9,4 +9,4 @@ categories: []
 
 The grapes in our backyard are coming along. 🍇 
 
-<img src="https://www.thingelstad.com/uploads/2024/5ad59883d6.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/5ad59883d6.jpg" width="600" height="600" alt="Clusters of small unripe green grapes hanging on a vine with broad green leaves in a backyard garden.">

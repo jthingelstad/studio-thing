@@ -9,4 +9,4 @@ categories: []
 
 Starting **[AI for Business](https://carlsonschool.umn.edu/conferences/misrc-digital-leadership)** conference at [Carlson School of Management](https://carlsonschool.umn.edu), Management Information Systems Research Center (MISRC). Looking forward to a focused day of learning on one of the most critical topics of the moment. 
 
-<img src="https://www.thingelstad.com/uploads/2023/2076ccbfc8.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/2076ccbfc8.jpg" width="600" height="449" alt="Packed lecture hall at Carlson School of Management for the MIS Research Center Digital Leadership Conference on AI in Business, September 2023.">

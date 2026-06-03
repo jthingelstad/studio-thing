@@ -9,4 +9,4 @@ categories: []
 
 Bakers Wife ridiculous today. Didn't expect mothers day donut rush!
 
-<img src="https://www.thingelstad.com/uploads/2020/8455cd1589.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/8455cd1589.jpg" width="600" height="800" alt="Crowd of people lined up outside A Baker's Wife's Pastry Shop on a sunny day, waiting to enter." />

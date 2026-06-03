@@ -9,4 +9,4 @@ categories: []
 
 I may have almost pulled off a coordinated look today?
 
-<img src="https://www.thingelstad.com/uploads/2025/276bb45c17.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/276bb45c17.jpg" width="450" height="600" alt="Middle-aged man in plaid flannel shirt jeans and cap standing on a sunny downtown sidewalk under a patio umbrella">

@@ -9,4 +9,4 @@ categories: []
 
 [Armadillo's Ice Cream Shoppe](http://www.armadillosicecreamshoppe.com) in Rapid City.
 
-![](https://www.thingelstad.com/uploads/2020/3c22ae3ea0.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/3c22ae3ea0.jpg" alt="Young girl in a wide-brimmed pink hat holding a soft-serve vanilla ice cream cone outside an ice cream shop.">

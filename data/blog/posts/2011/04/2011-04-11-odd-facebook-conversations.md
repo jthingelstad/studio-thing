@@ -9,4 +9,4 @@ categories: []
 
 On Facebook I follow a handful of people who are semi-famous, and I don't know but I know there work. One of those people is [Jim Brandenburg](http://www.jimbrandenburg.com/), the renowned photographer that calls Ely, Minnesota his home. Anyway, he posted today that he was selling some of his gear, and it really seems that "Ellen" isn't quiet getting it. Awkward. The ALL CAPS is just bonus.
 
-<img src="https://www.thingelstad.com/uploads/2020/cd78e98a43.png" style="width: 440px; max-width: 440px;" />
+<img src="https://www.thingelstad.com/uploads/2020/cd78e98a43.png" alt="Facebook comments thread where one user posts camera equipment for sale and another user replies repeatedly in all caps praising the photographers work instead." style="width: 440px; max-width: 440px;" />

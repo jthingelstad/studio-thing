@@ -9,4 +9,4 @@ categories: []
 
 Good morning from [Goshen](https://www.cityofgoshen.com), KY. Horse country. Beautiful. 
 
-<img src="https://www.thingelstad.com/uploads/2022/a2dcc0a021.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/a2dcc0a021.jpg" width="600" height="450" alt="Bay horse grazing along a black fence in a lush green Kentucky pasture under a clear blue sky, with more horses visible in the distance." />

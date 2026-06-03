@@ -9,4 +9,4 @@ categories: []
 
 Dinner out at [Bella Cucina](http://bellocucina.com) with Isaiah and Tiffany.
 
-![](https://www.thingelstad.com/uploads/2020/e5dccf5774.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/e5dccf5774.jpg" alt="Four people smiling at a restaurant table with dessert plates, wine glasses, and drinks, seated near a window.">

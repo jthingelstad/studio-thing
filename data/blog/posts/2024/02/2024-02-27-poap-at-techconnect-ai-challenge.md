@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7025662">7025662</a> at <strong><a href="https://poap.gallery/drops/168447">TechConnect 2024 - AI Challenge</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/a391b768-2cc5-4524-aa03-77c60443170f.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/a391b768-2cc5-4524-aa03-77c60443170f.png" alt="Cartoon robot reading a book in an armchair surrounded by bookshelves, inside a circular badge reading TechConnect 2024 AI Challenge." width="500" height="500" />

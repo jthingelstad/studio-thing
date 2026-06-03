@@ -9,4 +9,4 @@ categories: []
 
 We had a great TeamSPS presence at [MnTech Elevate](https://mntech.org/mntech-elevate-2025/) tonight celebrating the local technology community and recognizing [Tekne award winners](https://mntech.org/2025-tekne-award-winners/)! 🏆
 
-<img src="https://www.thingelstad.com/uploads/2025/0d9517ce23.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/0d9517ce23.jpg" width="600" height="450" alt="Group of about 13 colleagues posing together at MnTech Elevate event inside a stadium venue with Vikings field visible in background">

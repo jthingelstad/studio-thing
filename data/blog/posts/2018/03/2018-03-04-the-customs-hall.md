@@ -9,4 +9,4 @@ categories: []
 
 The customs hall at the Delhi airport has some cool artistic touches. 
 
-<img src="https://www.thingelstad.com/uploads/2018/eb1cadab7a.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/eb1cadab7a.jpg" alt="Busy customs hall at Indira Gandhi International Airport featuring a dramatic wall of copper discs and sculpted hands in classical Indian mudra gestures." width="600" height="337" />

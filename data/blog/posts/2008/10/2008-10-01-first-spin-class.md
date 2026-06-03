@@ -4,25 +4,16 @@ url: "https://www.thingelstad.com/2008/10/01/first-spin-class.html"
 title: "First Spin Class in 4+ Years"
 published: "2008-10-01T05:00:00+00:00"
 post_kind: post
-categories: ["Fitness"]
+categories: []
 ---
 
-Tonight I went to my first spin class in over four years. I was pretty
-nervous and joked with Tammy that we should check the status of my life
-insurance policy before I left. In the end though, I had a good time and
-got a great workout. I wasn't able to keep up with the class which I
-fully expected, but I did a bit better than I expected as well.
+Tonight I went to my first spin class in over four years. I was pretty nervous and joked with Tammy that we should check the status of my life insurance policy before I left. In the end though, I had a good time and got a great workout. I wasn't able to keep up with the class which I fully expected, but I did a bit better than I expected as well.
 
-The thing that I loved about the spin class though we're the bikes. I've
-ridden on a number of spin bikes and even have one at home. There has
-been a lot of improvement in them over the years, but the new LA Fitness
-has these [Keiser M3](http://www.amazon.com/dp/B0011E09QE/) spin bikes.
+The thing that I loved about the spin class though we're the bikes. I've ridden on a number of spin bikes and even have one at home. There has been a lot of improvement in them over the years, but the new LA Fitness has these [Keiser M3](http://www.amazon.com/dp/B0011E09QE/) spin bikes.
 
-<img src="https://www.thingelstad.com/uploads/2020/4c097dc2a3.jpg" style="max-width: 280px;" />
+<img src="https://www.thingelstad.com/uploads/2020/4c097dc2a3.jpg" alt="Keiser M3 indoor cycling spin bike with silver magnetic flywheel, black frame, adjustable seat, and handlebar mount, on white background." style="max-width: 280px;" />
 
-These bikes are hands down the best spin bike I've ever been on.
-Actually, they are the best indoor bike I've ever been on period. Here
-is why they rock:
+These bikes are hands down the best spin bike I've ever been on. Actually, they are the best indoor bike I've ever been on period. Here is why they rock:
 
 1.  The flywheel resistance system uses magnets. There are no brake pads
     causing uneven resistance and squealing noises. I can't emphasize
@@ -47,8 +38,4 @@ is why they rock:
     a few revolutions to stop. I was able to stop the flywheel on the
     Keiser M3 in one pedal rotation.
 
-I'm a huge fan. If you like to cycle, look for these in your gym or bug
-them to get some. I would expect that the magnetic resistance system
-probably results in a lower total cost of ownership too since most gym
-spin bikes need weekly maintenance. It would seem these would have lower
-maintenance.
+I'm a huge fan. If you like to cycle, look for these in your gym or bug them to get some. I would expect that the magnetic resistance system probably results in a lower total cost of ownership too since most gym spin bikes need weekly maintenance. It would seem these would have lower maintenance.

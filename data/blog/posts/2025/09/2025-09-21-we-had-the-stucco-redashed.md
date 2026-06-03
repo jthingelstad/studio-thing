@@ -9,4 +9,4 @@ categories: []
 
 We had the stucco redashed on our house which gave us an opportunity to put a new color on it. We wanted to lighten it up and I'm very happy with the result.
 
-<img src="https://www.thingelstad.com/uploads/2025/4ef1d35f8c.jpg" width="533" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/4ef1d35f8c.jpg" width="533" height="600" alt="Before and after of a Spanish-style stucco home repainted from tan to crisp white with a red clay tile roof.">

@@ -7,12 +7,6 @@ post_kind: post
 categories: []
 ---
 
-My friend [Kent](http://www.thetangens.net/) found this and [commented
-on Facebook](https://www.facebook.com/ktangen/posts/184587408282988)
-about it. I wanted to capture it for posterity. On [Apple's
-website](http://www.apple.com/) the tribute to [Steve
-Jobs](http://en.wikipedia.org/wiki/Steve_Jobs) has an appropriate file
-name, `t_hero.png`. (see the highlighted code in the
-inspector window under the page.)
+My friend [Kent](http://www.thetangens.net/) found this and [commented on Facebook](https://www.facebook.com/ktangen/posts/184587408282988) about it. I wanted to capture it for posterity. On [Apple's website](http://www.apple.com/) the tribute to [Steve Jobs](http://en.wikipedia.org/wiki/Steve_Jobs) has an appropriate file name, `t_hero.png`. (see the highlighted code in the inspector window under the page.)
 
-![](https://www.thingelstad.com/uploads/2020/9cfcf1be87.png)
+<img src="https://www.thingelstad.com/uploads/2020/9cfcf1be87.png" alt="Black-and-white portrait of a man in a black turtleneck, hand raised to chin, on Apple.com memorial page showing 1955-2011">

@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2007/08/17/son-volt-at.html"
 title: "Son Volt at the Zoo"
 published: "2007-08-17T05:00:00+00:00"
 post_kind: post
-categories: ["Music"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/891ed013e8.jpg" style="width: 281px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/891ed013e8.jpg" alt="Five men standing on an urban sidewalk, dressed casually in jackets and jeans, posing for a group photo" style="width: 281px; float: right; margin-left: 10px; " />
 
 I've been seeing [Jay Farrar](http://www.jayfarrar.net/) play music for around 15 years now. It started with [Uncle Tupelo](http://uncletupelo.com/), continued with [Son Volt](http://www.sonvolt.net/) through his solo work and now with the 2nd version of Son Volt. In those 15 years, I've never seen him jamming the way he did at the [Minnesota Zoo](http://www.mnzoo.com/) last week. Wow!
 

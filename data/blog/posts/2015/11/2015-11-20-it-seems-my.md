@@ -9,4 +9,4 @@ categories: []
 
 It seems my daughter has had enough of story problems in her math homework. 😊
 
-<img src="https://www.thingelstad.com/uploads/2021/9d461cc024.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/9d461cc024.jpg" width="600" height="800" alt="Whiteboard covered in a long handwritten math story problem about Mrs. Kellog with calculations scrawled at the bottom." />

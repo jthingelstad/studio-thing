@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2007/01/06/new-baby-monitor.html"
 title: "New Baby Monitor"
 published: "2007-01-06T06:00:00+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/1806e88db3.jpg" style="width: 90px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/1806e88db3.jpg" alt="Philips DECT digital baby monitor with white and orange parent unit handset and nursery base unit" style="width: 90px; float: right; margin-left: 10px; " />
 
 We have been perpetually frustrated with the baby monitor that we got when Mazie was born. We got the [Sony NTM-910](http://www.sonystyle.com/is-bin/+INTERSHOP.enfinity/eCS/Store/en/-/USD/SY_DisplayProductInformation-Print?ProductSKU=NTM910) because it had good reviews, brand reputation and specifically since it was 900MHz and wouldn't collide with our wireless network at 2.4GHz and our wireless phones at 5.8Ghz. However, they just don't work very well at all. The range was horrible and we started to go slowly insane with the random injection of it's "out of range" beeps at various times.
 

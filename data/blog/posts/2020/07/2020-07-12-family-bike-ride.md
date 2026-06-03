@@ -9,4 +9,4 @@ categories: []
 
 Family bike ride with Dairy Queen in the middle! 🍦🚴🏼‍♂️🚴‍♀️🚴🏼‍♂️🚴‍♀️
 
-<img src="https://www.thingelstad.com/uploads/2020/18af3365ee.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/18af3365ee.jpg" width="600" height="450" alt="Family of four in bike helmets taking a selfie outside a Dairy Queen and Regency Inn on a sunny day." />

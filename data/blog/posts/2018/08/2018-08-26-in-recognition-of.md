@@ -9,4 +9,4 @@ categories: []
 
 In recognition of [National Dog Day](https://www.nationaldogday.com), a picture of Chase from four months ago. 
 
-<img src="https://www.thingelstad.com/uploads/2018/0e8cdd4f36.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/0e8cdd4f36.jpg" alt="Black dog standing on a white dock over a choppy lake, tail raised, looking at the camera" width="600" height="450" />

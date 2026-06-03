@@ -9,4 +9,4 @@ categories: []
 
 Flight seems to be holding. Should be boarding in 35 minutes. MSP is much, much quieter than normal. Seems most the planes are the big ones. 
 
-<img src="https://www.thingelstad.com/uploads/2026/340a64335c.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/340a64335c.jpg" width="600" height="450" alt="Delta Air Lines Airbus A330-900 parked at gate F12 on a wet snowy tarmac at Minneapolis-Saint Paul Airport.">

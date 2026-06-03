@@ -9,4 +9,4 @@ categories: []
 
 [Thumbs Cookies](https://www.thumbscookies.com) were a perfect snack at the end of a long bike ride. Their KIRBY mobile unit was in Linden Hills.
 
-<img src="https://www.thingelstad.com/uploads/2020/5b650fa033.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/5b650fa033.jpg" width="600" height="600" alt="Hand holding a kraft paper box filled with chocolate chip cookie pieces from the Thumbs Cookies food truck in a parking lot behind" />

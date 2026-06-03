@@ -9,4 +9,4 @@ categories: []
 
 On Quay Street as we explore Galway. 
 
-<img src="https://www.thingelstad.com/uploads/2024/c54404b25c.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/c54404b25c.jpg" width="600" height="450" alt="Family of four posing for a selfie on a bustling Galway street lined with Irish flags and colorful bunting">

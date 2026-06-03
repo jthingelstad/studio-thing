@@ -9,4 +9,4 @@ categories: []
 
 The [SEAT Leon](https://www.seat.ie/new-cars/leon/overview) is at capacity with our luggage. 
 
-<img src="https://www.thingelstad.com/uploads/2024/9a5d5a9158.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/9a5d5a9158.jpg" width="600" height="450" alt="Boot of a black SEAT Leon hatchback packed full with colourful printed suitcases, licence plate 241-D-22755, parked on gravel.">

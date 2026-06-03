@@ -9,4 +9,4 @@ categories: []
 
 Ready to cook dinner!
 
-<img src="https://www.thingelstad.com/uploads/2020/2966516321.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/2966516321.jpg" width="600" height="450" alt="Wood-fired brick pizza oven with active flames burning in the back, ready for cooking." />

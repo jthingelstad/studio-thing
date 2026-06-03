@@ -9,7 +9,7 @@ categories: []
 
 Noticed this on my iPhone screen the other day.
 
-<img src="https://www.thingelstad.com/uploads/2020/1c38e3f964.jpg" style="width: 222px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/1c38e3f964.jpg" alt="Three iOS app icons side by side: Facebook blue f logo, Twitter blue bird logo, LinkedIn blue in logo, all with rounded corners" style="width: 222px; float: right; margin-left: 10px; " />
 
 What is it with the blue? These companies are supposed to be thought leaders but they can't help but fall all over each other to have the most boring, bland and **similar** logos?
 

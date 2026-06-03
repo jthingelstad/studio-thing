@@ -9,4 +9,4 @@ categories: []
 
 Dinner at [Moosejaw Pizza & Brewing](http://www.dellsmoosejaw.com). 🍽
 
-<img src="https://www.thingelstad.com/uploads/2018/20764cc298.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/20764cc298.jpg" alt="Rustic restaurant interior with antler chandeliers, log railings, mounted animal heads, and diners seated at wooden tables below." width="600" height="600" />

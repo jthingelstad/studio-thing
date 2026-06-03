@@ -13,7 +13,7 @@ The gap between where you are and where you want to be divided by the time you h
 
 Dissonance is elastic and can be increased or decreased as part of your culture. Faster growing companies tend to need more dissonance, and need to invest in culture to allow that dissonance to stay higher. Said another way, the more organizational dissonance that your organization can handle, the more potential you have to change faster.
 
-![](https://www.thingelstad.com/uploads/2020/58998ede63.png)
+<img src="https://www.thingelstad.com/uploads/2020/58998ede63.png" alt="Hand-drawn diagram showing Jaws of Death leading to Where We Are, then Where We Want To Be, then Market Opportunity, with Dissonance spanning the middle gap and Culture labeled below it.">
 
 ### Examples of Dissonance
 

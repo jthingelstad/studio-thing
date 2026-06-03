@@ -9,4 +9,4 @@ categories: []
 
 Happy Birthday to Tammy, my lovely co-pilot in this awesome journey of life! 🎂🎁
 
-<img src="https://www.thingelstad.com/uploads/2019/83a054ed1a.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/83a054ed1a.jpg" width="600" height="450" alt="Family of four smiling on a couch surrounded by birthday-wrapped gifts and cupcakes on a coffee table." />

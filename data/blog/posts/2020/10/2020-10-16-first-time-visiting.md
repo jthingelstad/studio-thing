@@ -9,4 +9,4 @@ categories: []
 
 First time visiting [Black Beach](https://superiorhiking.com/black-beach/) today, just outside of Silver Bay. 
 
-<img src="https://www.thingelstad.com/uploads/2020/dd3e8ff156.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/dd3e8ff156.jpg" width="600" height="450" alt="Dark sand beach curving toward a rocky island topped with bare trees on Lake Superior, with visitors walking the shoreline." />

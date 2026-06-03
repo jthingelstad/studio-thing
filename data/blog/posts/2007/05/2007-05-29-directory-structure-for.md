@@ -19,7 +19,7 @@ There are a couple of things you want to make sure to accomplish with the direct
 
 I've been using the following structure for over 5 years and I've found it to work very well. I've used it with a number of different photo management programs, including my current favorite, Adobe Lightroom. It is inherently driven off of the timestamp of the photos.
 
-<img src="https://www.thingelstad.com/uploads/2020/a662276a78.png" style="max-width: 437px;" />
+<img src="https://www.thingelstad.com/uploads/2020/a662276a78.png" alt="Diagram showing a folder hierarchy: Photos then 2007 then 05 then 17 - Around House then a sample CR2 filename, with 5 numbered callout markers and a Backups timeline arrow on the left." style="max-width: 437px;" />
 
 Let me highlight the five critical sections of this (cross-reference to numbers above, sorry Tufte).
 

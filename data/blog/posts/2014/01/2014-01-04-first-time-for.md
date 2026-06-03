@@ -9,4 +9,4 @@ categories: []
 
 First time for reading glasses.
 
-<img src="https://www.thingelstad.com/uploads/2021/66145e4f4e.jpg" width="426" height="320" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/66145e4f4e.jpg" width="426" height="320" alt="Middle-aged man wearing new rectangular-framed reading glasses, yellow t-shirt, taking a selfie indoors" />

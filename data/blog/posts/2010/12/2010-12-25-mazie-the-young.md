@@ -9,4 +9,4 @@ categories: []
 
 Mazie the Young Photographer.
 
-![](https://www.thingelstad.com/uploads/2020/a8a3bd2eb9.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/a8a3bd2eb9.jpg" alt="Young girl smiling and holding a pink Kodak EasyShare CD22 digital camera in its packaging, wearing frog-print pajamas indoors.">

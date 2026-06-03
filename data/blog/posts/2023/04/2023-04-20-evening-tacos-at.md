@@ -9,4 +9,4 @@ categories: []
 
 Evening tacos at [Los Tacos No. 1](https://www.lostacos1.com) after [seeing Life of Pi](https://www.thingelstad.com/2023/04/20/tammy-and-i.html). Tacos were amazing!
 
-<img src="https://www.thingelstad.com/uploads/2023/2f6bf96ca6.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/2f6bf96ca6.jpg" width="600" height="450" alt="Two people holding plates of tacos and smiling at Los Tacos No. 1 restaurant, a busy taqueria with a menu board behind them.">

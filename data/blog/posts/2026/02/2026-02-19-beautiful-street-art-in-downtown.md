@@ -9,4 +9,4 @@ categories: []
 
 Beautiful street art in downtown Toronto. 
 
-<img src="https://www.thingelstad.com/uploads/2026/ecec924b3e.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/ecec924b3e.jpg" width="600" height="600" alt="Large outdoor mural of a boxer in white Everlast shorts and red gloves mid-punch, painted on a building wall in downtown Toronto at night.">

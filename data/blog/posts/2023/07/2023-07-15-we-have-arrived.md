@@ -9,6 +9,6 @@ categories: []
 
 We have arrived at the Hotel Guardaval in Scuol! 🏔️
 
-<img src="https://www.thingelstad.com/uploads/2023/66e9e7733e.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/66e9e7733e.jpg" width="600" height="450" alt="Two people smiling on a hotel balcony overlooking the alpine village of Scuol, Switzerland, with forested mountains and blue sky behind them.">
 
 We were in this [exact same spot 19 years ago](https://www.thingelstad.com/2004/07/30/zurich-and-on.html).

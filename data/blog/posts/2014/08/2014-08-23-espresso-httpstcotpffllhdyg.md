@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 ☕️ 
 
-<img src="https://www.thingelstad.com/uploads/2020/a1c003b02b.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/a1c003b02b.jpg" width="600" height="600" alt="Espresso pouring from a double-spout portafilter into a white illy collection demitasse cup on a metal drip tray." />

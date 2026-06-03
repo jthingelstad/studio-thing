@@ -13,4 +13,4 @@ Luckily I had a yard stake and some scrap wood. Problem solved! Additionally I'm
 
 Wondering about all that green stuff on the water? That is floating algae that collects in the little alcove that our dock sits. 
 
-<img src="https://www.thingelstad.com/uploads/2024/c1f63c7fc9.jpg" width="450" height="600" alt=""><img src="https://www.thingelstad.com/uploads/2024/8bf344b79e.jpg" width="600" height="345" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/c1f63c7fc9.jpg" width="450" height="600" alt="UniFi G4 security camera mounted on a wood board attached to a green metal yard stake among grass and shrubs"><img src="https://www.thingelstad.com/uploads/2024/8bf344b79e.jpg" width="600" height="345" alt="Lake dock covered in floating green algae with a pontoon boat moored at the water's edge on a sunny summer day">

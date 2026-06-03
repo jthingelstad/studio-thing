@@ -14,4 +14,4 @@ Cabinet Mysteriis again showed their incredible focus on have an immersive exper
 Great time for all!
 
 
-<img src="https://www.thingelstad.com/uploads/2025/97734d1da4.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/97734d1da4.jpg" width="600" height="400" alt="Family of four in a cow-themed room wearing novelty sunglasses and holding plush cow and alien toys, smiling at camera">

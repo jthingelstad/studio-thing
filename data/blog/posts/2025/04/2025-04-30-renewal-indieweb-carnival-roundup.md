@@ -40,4 +40,4 @@ Here are this month's carnival submissions in approximately the order they were 
 
 I couldn't help myself but to make a special POAP for the people that participated. I’m going to send the [IndieWeb Carnival - Renewal](https://poap.gallery/drops/189625) POAP token to each person.
 
-<img src="https://www.thingelstad.com/uploads/2025/poap-renewal.png" style="max-width: 500px;" >
+<img src="https://www.thingelstad.com/uploads/2025/poap-renewal.png" alt="Circular badge with spring flowers including daffodils and purple crocuses, reading IndieWeb Carnival, RENEWAL, April 2025" style="max-width: 500px;" >

@@ -9,4 +9,4 @@ categories: []
 
 We got _most_ of the TeamSPS folks at MnTech Connect together for a group photo. 
 
-<img src="https://www.thingelstad.com/uploads/2026/6577a013e8.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/6577a013e8.jpg" width="600" height="450" alt="Group of eleven TeamSPS colleagues smiling in front of an mntech Minnesota Technology Association step-and-repeat banner at an event venue.">

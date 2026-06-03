@@ -9,4 +9,4 @@ categories: []
 
 The cure for sub-zero temperatures. 🥶🔥
 
-<img src="https://www.thingelstad.com/uploads/2025/30b3b4e0b6.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2025/f8b2464a71.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/30b3b4e0b6.jpg" width="600" height="450" alt="Curved outdoor sauna with polycarbonate walls and wood benches visible inside, smoke rising from chimney, surrounded by snow with a firewood stack alongside."><img src="https://www.thingelstad.com/uploads/2025/f8b2464a71.jpg" width="600" height="450" alt="Harvia wood-burning sauna stove with active fire, surrounded by pine benches and polycarbonate walls, with firewood nearby.">

@@ -9,4 +9,4 @@ categories: []
 
 Some bowling today at [Thunder Alley XL](https://thunderalleyxl.com) in Grand Rapids! I struggled more than I would like to admit to get over 100. 😬🎳
 
-<img src="https://www.thingelstad.com/uploads/2019/cad62f87ee.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/cad62f87ee.jpg" width="600" height="450" alt="Group of eight smiling people posing for a selfie at a bowling alley, one boy holding a black bowling ball." />

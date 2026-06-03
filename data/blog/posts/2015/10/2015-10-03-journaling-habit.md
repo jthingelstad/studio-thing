@@ -7,8 +7,6 @@ post_kind: post
 categories: []
 ---
 
-For years I've thought it would be great to keep a daily journal. I
-bought [Day One](https://dayoneapp.com) for iOS and my Mac. But I've never been consistent. About
-a month ago I changed tacts. Hit 13 days in a row so far.
+For years I've thought it would be great to keep a daily journal. I bought [Day One](https://dayoneapp.com) for iOS and my Mac. But I've never been consistent. About a month ago I changed tacts. Hit 13 days in a row so far.
 
-![](https://www.thingelstad.com/uploads/2020/220fb9a788.png)
+<img src="https://www.thingelstad.com/uploads/2020/220fb9a788.png" alt="Bar chart showing daily journal entries over 50 days, with a notable streak of consistent daily entries in the most recent 13 days.">

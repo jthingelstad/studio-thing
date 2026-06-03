@@ -9,4 +9,4 @@ categories: []
 
 I love majestic tall prairie grasses, particularly Big Bluestem. They are my favorite landscaping feature. 
 
-<img src="https://www.thingelstad.com/uploads/2022/2bd4986b4a.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/2bd4986b4a.jpg" width="600" height="599" alt="Tall prairie grasses in full seed head bloom alongside a backyard pool with a yellow umbrella and lake beyond." />

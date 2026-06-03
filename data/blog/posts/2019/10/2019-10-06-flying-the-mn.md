@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Flying the MN United flag but our cheering wasn’t enough to get the good guys the win over the Sounders. Looking forward to defeating LA Galaxy at Allianz Field! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2019/1e1dd784d2.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/1e1dd784d2.jpg" width="600" height="450" alt="Two people relaxing on a navy sofa watching an MLS soccer match on a wall-mounted TV, with an MNUFC flag hanging nearby." />

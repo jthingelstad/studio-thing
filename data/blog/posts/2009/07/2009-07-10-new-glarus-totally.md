@@ -10,4 +10,4 @@ categories: []
 Enjoying a pint of [New Glarus Brewing](https://newglarusbrewing.com)'s [Totally
 Naked](https://newglarusbrewing.com/beers/ourbeers/beer/totally-naked).
 
-![](https://www.thingelstad.com/uploads/2020/cf9cf05a33.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/cf9cf05a33.jpg" alt="Pint glass of golden lager beside a New Glarus Totally Naked beer box on a dark wood bar table.">

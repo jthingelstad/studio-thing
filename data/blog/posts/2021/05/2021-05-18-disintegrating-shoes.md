@@ -17,10 +17,10 @@ I got myself to the far side of the patio and decided to stake an area out. I ma
 
 The shoes went in the garbage as soon as I got home. At least I got a good story out of it.
 
-<img src="https://www.thingelstad.com/uploads/2021/8f00e8e461.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/8f00e8e461.jpg" width="450" height="600" alt="Laughing man in pink striped shirt and gray slacks seated at outdoor patio table, raising one leg to show the crumbling sole of his Ecco dress shoe, with black debris scattered on the tile floor" />
 
 By the time I got home this is what was left of the soles.
 
-<img src="https://www.thingelstad.com/uploads/2021/cd0d16e71b.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/cd0d16e71b.jpg" width="450" height="600" alt="Soles of two Ecco dress shoes photographed from below, showing severe rubber deterioration with large chunks missing, deep cracks, and crumbling material across both soles." />
 
 _Add this to other wardrobe fiascos like [Finding Pants in Manhattan](https://www.thingelstad.com/2005/05/09/finding-pants-in.html)._

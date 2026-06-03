@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Nice night for some youth soccer! Go Lancers! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2021/e8cdf5430d.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/e8cdf5430d.jpg" width="600" height="337" alt="Youth soccer game in progress on a green field at dusk, players in green and white jerseys near a goal, trees and cloudy blue sky behind." />

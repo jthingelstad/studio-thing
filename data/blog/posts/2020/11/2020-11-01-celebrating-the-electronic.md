@@ -9,4 +9,4 @@ categories: []
 
 Celebrating the **[Electronic Frontier Foundation's 30th Anniversary](https://www.eff.org/tags/eff30)** by converting from an annual to a monthly supporter. [Join me and donate today!](https://supporters.eff.org/donate/)
 
-<img src="https://www.thingelstad.com/uploads/2020/b6abf95080.jpg" width="600" height="300" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/b6abf95080.jpg" width="600" height="300" alt="EFF 30th anniversary logo with a lighthouse on rocky seas surrounded by sea monsters and storm clouds" />

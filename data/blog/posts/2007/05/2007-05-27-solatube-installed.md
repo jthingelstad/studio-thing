@@ -9,19 +9,19 @@ categories: []
 
 A few weeks ago I was flipping through a recent issue of [Home Power](http://www.homepower.com/) magazine and I stumbled upon an article abut solar tubes. (Sorry, I would provide a link to the article but they don't make it available online.) Solar tubes are not new technology, but there has been some pretty amazing improvements in recent years. The author of the article had installed a Solatube in his office and was very pleased with it.
 
-<img src="https://www.thingelstad.com/uploads/2020/d7970b36e3.jpg" style="width: 178px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/d7970b36e3.jpg" alt="Solar Midwest logo with bold orange and white text against a blue sky with clouds" style="width: 178px; float: right; margin-left: 10px; " />
 
 Shortly after this we ran into [Solar Midwest](http://www.solarmidwest.com/) while we were at the [Living Green Expo](http://www.livinggreenexpo.org/). They had the Solatube units on display and I got to ask a ton of questions. Shortly after that I got a quote and decided to get one installed.
 
 The basic principle of the [Solatube](http://www.solatube.com/) is exremely simple. You mount a light collector on your roof. You then run a 10" or 14" tube that is exceptionally reflective to a room in your house. There are three main areas of technical focus. Making the collector dome as efficient as possible, losing as little light as possible in the tube, and distributing in the room in an even way. This diagram from Solatube's website sums it up well.
 
-<img src="https://www.thingelstad.com/uploads/2020/3ad0bf38c2.jpg" style="width: 348px; " />
+<img src="https://www.thingelstad.com/uploads/2020/3ad0bf38c2.jpg" alt="Diagram showing a Solatube skylight system capturing sunlight from dusk to morning angles and channeling it through a reflective roof tube into a room below." style="width: 348px; " />
 
 The advancements in the collector dome and the efficiency of the pipe are incredible. It can collect light all day, picking up even dull light on a cloudy day. There is no need for direct sunlight. The tube itself is extremely efficient and loses very little light.
 
 Let me skip to the after shot. Here is the room with the Solatube.
 
-<img src="https://www.thingelstad.com/uploads/2020/1f3297e5be.jpg" style="width: 400px; " />
+<img src="https://www.thingelstad.com/uploads/2020/1f3297e5be.jpg" alt="Entryway with yellow walls, coat rack holding jackets and bags, white front door, potted plant, and a round skylight tube in the ceiling above" style="width: 400px; " />
 
 The effect is shocking. This room was one of the more poorly lit areas in our upstairs, and now it is as bright and enjoyable as the most windowed areas in the house. Note the relative sizing of the Solatube versus the cans next to it. This is the 14" unit and it delivers a whopping amount of light. Tammy and I are both very pleased with it and are thinking we will likely have two more installed at some point in the future.
 
@@ -39,7 +39,7 @@ I felt the dome, and it's impressively thick. I'm not sure exactly what would ta
 
 It's another thing on your roof, so you may not like that. We were able to install it in a location that is completely invisible.
 
-<img src="https://www.thingelstad.com/uploads/2020/8417c32f5e.jpg" style="width: 400px; " />
+<img src="https://www.thingelstad.com/uploads/2020/8417c32f5e.jpg" alt="Dark asphalt shingle roof with a Solatube dome collector and white pipe flashing installed at the ridge line, green trees in background." style="width: 400px; " />
 
 Due to this great placement you cannot even see the dome from the street. I don't think it would be an issue even if you could see it.
 

@@ -9,4 +9,4 @@ categories: ["Things 4 Good"]
 
 We poured the last batch of candles for this weekends [Things 4 Good](https://https://www.thingelstad.com/candles/) Candle Fundraiser! Pre-labeled, so trim wicks and ready to go. I’m very happy with how they all turned out. 
 
-<img src="https://www.thingelstad.com/uploads/2024/da4a0303cc.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/da4a0303cc.jpg" width="600" height="450" alt="Rows of colorful handmade soy candles with wooden wicks in iridescent and white glass jars labeled Things 4 Good Candles on an apple-print tablecloth">

@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2021/08/04/vermont-road-trip.html"
 title: "Vermont Road Trip Log: Day 5, Wednesday"
 published: "2021-08-05T02:22:00+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 Weather: Great weather. Cool morning. Clear for our entire drive. Couple drops of rain on the sail. Cool in evening.
@@ -24,7 +24,7 @@ Weather: Great weather. Cool morning. Clear for our entire drive. Couple drops o
 - 8:14p: Enter Vermont. 
 - 8:30p: Arrived at [Vermont Schoolhouse Farm Cottage](https://www.airbnb.com/rooms/19227471). 
 
-<img src="https://www.thingelstad.com/uploads/2021/3c07404cf8.jpg" width="600" height="489" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/3c07404cf8.jpg" width="600" height="489" alt="Google Maps route from Modern Accord Depot in New Paltz NY to Shaftsbury VT via Kingston and Albany, 157 miles, 3 hr 29 min" />
 
 Jump to day [1](https://www.thingelstad.com/2021/07/31/vermont-road-trip.html), 
 [2](https://www.thingelstad.com/2021/08/01/vermont-road-trip.html), 

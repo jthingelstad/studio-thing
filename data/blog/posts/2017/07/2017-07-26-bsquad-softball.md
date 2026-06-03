@@ -9,4 +9,4 @@ categories: []
 
 B-Squad softball. 
 
-<img src="https://www.thingelstad.com/uploads/2017/41a33a4f80.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/41a33a4f80.jpg" alt="Group of softball players in black and gold uniforms gathered at a wooden dugout bench on a red dirt infield" width="600" height="600" style="height: auto" />

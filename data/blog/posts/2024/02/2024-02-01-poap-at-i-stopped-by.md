@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6989234">6989234</a> at <strong><a href="https://poap.gallery/drops/167559">I stopped by the Tech Lab at SKO</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/f0504309-1702-4684-847f-b87a765df140.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/f0504309-1702-4684-847f-b87a765df140.png" alt="Circular badge with a friendly blue robot mascot on a dark background, orange border reading I stopped by the Tech Lab SKO 2024" width="500" height="500" />

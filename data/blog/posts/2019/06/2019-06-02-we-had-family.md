@@ -9,4 +9,4 @@ categories: []
 
 We had family pictures taken today at the Rose Garden with [Karen Feder](https://www.karenfederphotography.com). Looking forward to seeing the pictures! 📷
 
-<img src="https://www.thingelstad.com/uploads/2019/8e1be605f3.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/8e1be605f3.jpg" width="600" height="337" alt="Photographer taking pictures of two children on a grass lawn in a lush park with a wooden bridge and rock garden behind them." />

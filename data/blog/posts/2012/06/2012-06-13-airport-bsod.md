@@ -9,4 +9,4 @@ categories: []
 
 These just never get old. 🙂
 
-![](https://www.thingelstad.com/uploads/2020/447aab5884.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/447aab5884.jpg" alt="Airport departure and arrival flight boards flank a middle monitor showing a Windows Blue Screen of Death, Terminal A, June 8 2012">

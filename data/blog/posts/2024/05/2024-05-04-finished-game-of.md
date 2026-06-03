@@ -9,4 +9,4 @@ categories: []
 
 Finished game of Five Crowns — Mazie was the winner!
 
-<img src="https://www.thingelstad.com/uploads/2024/91be0ea3bb.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/91be0ea3bb.jpg" width="600" height="450" alt="Playing cards spread across a plaid tablecloth showing the final layout of a Five Crowns card game with grouped sets of clubs and diamonds.">

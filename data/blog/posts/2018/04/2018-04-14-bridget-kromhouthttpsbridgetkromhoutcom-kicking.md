@@ -9,4 +9,4 @@ categories: ["Minnestar"]
 
 [Bridget Kromhout](https://bridgetkromhout.com) kicking off [Minnebar](https://minnestar.org/minnebar/) 13 Session 0. 👏
 
-<img src="https://www.thingelstad.com/uploads/2018/243c28a717.jpg" width="600" height="228" />
+<img src="https://www.thingelstad.com/uploads/2018/243c28a717.jpg" alt="A woman with red hair speaks into a microphone on a low stage before a large seated crowd in a bright convention center atrium." width="600" height="228" />

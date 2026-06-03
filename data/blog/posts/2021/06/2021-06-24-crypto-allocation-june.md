@@ -13,7 +13,7 @@ Time for another Crypto Allocation update. The last two months have seen a huge 
 
 So needless to say all crypto assets are down substantially in that period. Here is how my allocation looks as of today, with notes below. I've added some footnotes. Tokens that have no notes are ones that I have made an active decision to hold some invested amount in. Others are either included in my basket, or are tokens I hold for some utility. 
 
-<img src="https://www.thingelstad.com/uploads/2021/ccdd0d431c.png" width="100%" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/ccdd0d431c.png" width="100%" alt="Horizontal bar chart comparing April vs June 2021 crypto portfolio allocations; Bitcoin leads at 44.41%, Ether at 38.07%, Cardano at 7.78%" />
 
 <small>\* Indicates tokens that Coinbase makes a market in with a $10B market cap.  
 \*\* Indicates a token that does not meet one of my criteria, meaning it is either less than $10B in market cap or is not traded on Coinbase, however I have purchased it for some other purpose.</small>

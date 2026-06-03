@@ -9,6 +9,6 @@ categories: ["Sports"]
 
 The Gang at the Saints Game! ⚾️
 
-![](https://www.thingelstad.com/uploads/2020/ca08d26739.png)
+<img src="https://www.thingelstad.com/uploads/2020/ca08d26739.png" alt="Man and woman in Saints baseball caps hold a young blonde girl at an outdoor ballpark stadium">
 
-![](https://www.thingelstad.com/uploads/2020/8afe23fa10.png)
+<img src="https://www.thingelstad.com/uploads/2020/8afe23fa10.png" alt="Adult wearing a backward cap hugs a young blonde girl at an outdoor baseball stadium">

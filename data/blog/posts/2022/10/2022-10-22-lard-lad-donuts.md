@@ -9,4 +9,4 @@ categories: []
 
 Lard Lad Donuts. 🍩 
 
-<img src="https://www.thingelstad.com/uploads/2022/53865d898e.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/53865d898e.jpg" width="600" height="600" alt="Large Lard Lad Donuts mascot statue holding a giant donut sign at Universal Studios, visitors in background.">

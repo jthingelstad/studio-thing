@@ -9,4 +9,4 @@ categories: []
 
 Lucky and I on the pontoon. 
 
-<img src="https://www.thingelstad.com/uploads/2020/4c61e88f2e.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/4c61e88f2e.jpg" width="600" height="600" alt="Smiling bald man in a plaid shirt sitting cheek-to-cheek with a fluffy white goldendoodle on a pontoon boat on a sunny lake." />

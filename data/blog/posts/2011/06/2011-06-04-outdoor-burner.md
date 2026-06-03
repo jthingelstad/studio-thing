@@ -11,7 +11,7 @@ Here is a scenario. You are doing a brisket on your Big Green Egg. It's a weeken
 
 When I got my [Double Big Green Egg table](https://www.thingelstad.com/2011/double-big-green-egg-table/) I knew I wanted to do a full meal outside, from prep all the way to eating. While I love my grills, there are some things that you need a burner for. Last year I picked up one of these [Max Burton Pro Chef 1800](http://www.amazon.com/dp/B0037Z7HPQ/) units from Kitchen Window and it's worked out great.
 
-![](https://www.thingelstad.com/uploads/2020/fe36c867f7.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/fe36c867f7.jpg" alt="Burton Pro Chef 1800 portable induction cooktop with digital display showing 464 and touch controls on stainless steel base">
 
 Why get this unit?
 

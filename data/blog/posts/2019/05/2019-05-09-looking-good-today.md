@@ -9,4 +9,4 @@ categories: []
 
 Looking good today Minneapolis! 
 
-<img src="https://www.thingelstad.com/uploads/2019/f7a2a7db1a.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/f7a2a7db1a.jpg" width="600" height="450" alt="Minneapolis skyline with IDS Center tower and surrounding glass and concrete skyscrapers under an overcast sky" />

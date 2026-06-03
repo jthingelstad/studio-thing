@@ -9,4 +9,4 @@ categories: []
 
 Cloud blanket. 
 
-<img src="https://www.thingelstad.com/uploads/2025/6ab43f271c.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/6ab43f271c.jpg" width="600" height="450" alt="Vast blanket of rippled altocumulus clouds viewed from above, forming a textured white and pale blue pattern across the entire frame.">

@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 🍺 #TeamSPS getting a tour of [Surly Brewing](https://surlybrewing.com)! 
 
-<img src="https://www.thingelstad.com/uploads/2019/d8e224f329.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/d8e224f329.jpg" width="600" height="450" alt="Large group of about 25 men posing together inside Surly Brewing Co surrounded by stainless steel brewing tanks and pipes.">

@@ -9,4 +9,4 @@ categories: []
 
 Having fun. 
 
-<img src="https://www.thingelstad.com/uploads/2025/18364b7088.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/18364b7088.jpg" width="450" height="600" alt="Man in a green flat cap taking a selfie with a camera on a tripod in front of a large waterfall cascading down rocky cliffs">

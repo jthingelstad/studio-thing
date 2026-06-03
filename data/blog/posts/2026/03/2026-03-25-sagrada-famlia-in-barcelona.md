@@ -9,4 +9,4 @@ categories: []
 
 Sagrada Família in Barcelona. 
 
-<img src="https://www.thingelstad.com/uploads/2026/7cf8c1e976.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/7cf8c1e976.jpg" width="450" height="600" alt="Sagrada Família basilica in Barcelona with towering ornate spires against a clear blue sky, construction cranes visible, crowds below.">

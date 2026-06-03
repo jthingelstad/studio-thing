@@ -9,4 +9,4 @@ categories: ["Crypto", "POAP Claims"]
 
 Out [collecting](https://collectors.poap.xyz/token/7408966) [612 POAP Challenge](https://612.poapchallenge.com) locations at Minnehaha Falls. 
 
-<img src="https://www.thingelstad.com/uploads/2025/35f2bbcaf4.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/35f2bbcaf4.jpg" width="450" height="600" alt="Minnehaha Falls cascades down a layered rock cliff into a misty pool surrounded by lush green vegetation with two people nearby.">

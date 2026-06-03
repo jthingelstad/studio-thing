@@ -9,4 +9,4 @@ categories: []
 
 Ready for Halloween Trick-or-Treaters but suspect the 32 °F and dusting of snow is going to keep counts low. 🎃👻🥶
 
-<img src="https://www.thingelstad.com/uploads/2023/17270220ea.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/17270220ea.jpg" width="600" height="337" alt="Two bowls of Halloween candy on a table including Reeses Milk Duds Haribo gummies Heath bars Butterfinger and MrBeast bars.">

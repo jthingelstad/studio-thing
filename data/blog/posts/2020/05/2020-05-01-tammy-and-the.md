@@ -9,4 +9,4 @@ categories: []
 
 Tammy and the kids are so awesome — May Day baskets queued up for delivery to friends and family! 💐
 
-<img src="https://www.thingelstad.com/uploads/2020/0ec97fa578.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/0ec97fa578.jpg" width="600" height="337" alt="Kitchen counter lined with colorful flower bouquets in mason jars and bags of cookies, each tagged with handwritten May Day notes." />

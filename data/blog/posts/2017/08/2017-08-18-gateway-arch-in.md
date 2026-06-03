@@ -9,4 +9,4 @@ categories: []
 
 Gateway Arch in St. Louis.
 
-<img src="https://www.thingelstad.com/uploads/2017/f05066e2fc.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/f05066e2fc.jpg" alt="Gateway Arch rising against a cloudy blue sky at dusk, with trees and a construction fence in the foreground" width="600" height="600" />

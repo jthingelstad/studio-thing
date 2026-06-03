@@ -9,4 +9,4 @@ categories: []
 
 Minneapolis looks nice tonight. 
 
-<img src="https://www.thingelstad.com/uploads/2019/97b5fd4903.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/97b5fd4903.jpg" width="600" height="450" alt="Downtown Minneapolis skyline at night with glowing office towers and a hazy orange sky">

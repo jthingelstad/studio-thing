@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2023/10/01/task-management-for.html"
 title: "Task Management for the Weekly Thing"
 published: "2023-10-01T15:18:19+00:00"
 post_kind: post
-categories: ["Crypto", "POAP", "Weekly Thing"]
+categories: ["Crypto", "Weekly Thing"]
 ---
 
 I’m often asked about how I create the [Weekly Thing](https://weekly.thingelstad.com/) and how I've been doing it for over **six years**. People are usually curious about how I find things to write about or [how I build the Weekly Thing](https://www.thingelstad.com/2023/09/24/how-i-build.html). However, there is a critical part that is invisible to others but key to the consistency of sending every week for 262 issues — project management!
@@ -17,7 +17,7 @@ A detail to share on dates and times for the publishing schedule. My target for 
 
 Here is what the project to send Weekly Thing 264 looks like in OmniFocus. The two dates on the right are the defer and due dates. Defer dates are critical for me since they keep things off my plate until they need to be. Note everything in gray is deferred. You can see that right now, there are only three tasks available. I've expanded select tasks so that you can see the helper links and text that make things a bit faster for me.
 
-<img src="https://www.thingelstad.com/uploads/2023/weekly-thing-project-template-expanded.png" width="600" height="539" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/weekly-thing-project-template-expanded.png" width="600" height="539" alt="OmniFocus task list for Send Weekly Thing 264 showing 22 items across four task groups: Create content, Curate links, Build, and Finalize, with due dates around October 5-7 2023.">
 
 There are four major steps to publishing each issue:
 
@@ -43,7 +43,7 @@ Before I hand OmniFocus the TaskPaper to create the project, I’m going to proc
 
 The Shortcut also puts a time block on my calendar for Thursday night to send the issue. This is a nice benefit of combining Taskpaper and Shortcuts together.
 
-<img src="https://www.thingelstad.com/uploads/2023/shortcut-send-weekly-thing.png" width="600" height="594" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/shortcut-send-weekly-thing.png" width="600" height="594" alt="Apple Shortcuts automation named Send Weekly Thing showing steps to get issue values, replace text, add to OmniFocus, and schedule calendar blocks.">
 
 ### Summary
 

@@ -9,4 +9,4 @@ categories: []
 
 This [Melin](https://melin.com/) hat may be one of my favorite new pieces of SPS swag. 🤩🧢
 
-<img src="https://www.thingelstad.com/uploads/2024/5ce811cbf1.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/5ce811cbf1.jpg" width="600" height="600" alt="Man wearing a navy blue Melin snapback hat with an SPS logo patch, seated in a large convention hall.">

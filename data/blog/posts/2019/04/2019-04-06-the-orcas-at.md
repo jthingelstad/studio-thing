@@ -9,5 +9,5 @@ categories: []
 
 The Orca’s at SeaWorld are amazing! 
 
-<img src="https://www.thingelstad.com/uploads/2019/bc56bdaaeb.jpg" width="600" height="599" alt="" />
-<img src="https://www.thingelstad.com/uploads/2019/8a016de766.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/bc56bdaaeb.jpg" width="600" height="599" alt="Orca breaching out of a pool at SeaWorld, lit with pink light, before a packed stadium audience." />
+<img src="https://www.thingelstad.com/uploads/2019/8a016de766.jpg" width="600" height="599" alt="Two orcas beached on a stage ledge during a SeaWorld show as trainers in wetsuits gesture to a packed audience." />

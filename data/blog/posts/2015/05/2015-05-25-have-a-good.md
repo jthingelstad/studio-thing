@@ -9,4 +9,4 @@ categories: []
 
 Have a good Memorial Day holiday!
 
-![](https://www.thingelstad.com/uploads/2020/ec6f67cf22.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/ec6f67cf22.jpg" alt="Two children fishing from a dock beside a black dog while a person rides a paddle boat on a calm lake">

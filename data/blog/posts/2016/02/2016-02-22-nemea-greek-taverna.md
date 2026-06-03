@@ -9,4 +9,4 @@ categories: []
 
 Great dinner at [Nemea Greek Taverna](https://nemeagreektaverna.com).
 
-<img src="https://www.thingelstad.com/uploads/2020/aaea70f99a.jpg" style="width: 300px; max-width: 300px;" />
+<img src="https://www.thingelstad.com/uploads/2020/aaea70f99a.jpg" alt="Etched glass sign reading Nemea Greek Taverna lit by warm golden light" style="width: 300px; max-width: 300px;" />

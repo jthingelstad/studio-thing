@@ -9,4 +9,4 @@ categories: []
 
 Excited to attend the [Minneapolis Women in Tech Breakfast with Jenn Tejada, CEO of PagerDuty](https://meet.pagerduty.com/mn-wit-breakfast) this morning! #MNWITBreakfast
 
-<img src="https://www.thingelstad.com/uploads/2019/eb3e94a003.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/eb3e94a003.jpg" width="600" height="337" alt="Packed conference room of attendees seated at rows of tables facing a presenter at the front, with MN WIT Breakfast slides on multiple screens." />

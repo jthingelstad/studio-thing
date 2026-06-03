@@ -9,4 +9,4 @@ categories: []
 
 Giant flower. 
 
-<img src="https://www.thingelstad.com/uploads/2025/65bd0c69b3.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/65bd0c69b3.jpg" width="600" height="450" alt="Pink oriental lily in full bloom with dark brown stamens, growing in a garden with evergreen trees behind it.">

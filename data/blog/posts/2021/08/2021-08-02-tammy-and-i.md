@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I at the official marker for [Woodstock](https://en.wikipedia.org/wiki/Woodstock) from the National Register of Historical Places! This was an incredible place to explore.
 
-<img src="https://www.thingelstad.com/uploads/2021/342dbb37af.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/342dbb37af.jpg" width="600" height="600" alt="Two people posing beside the Woodstock Music Festival Site historic marker, placed on the National Register of Historic Places in 2017." />

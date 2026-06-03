@@ -13,7 +13,7 @@ We recently ordered new drinking glasses for home. The ones we had before were f
 
 Here are the new glasses.
 
-<img src="https://www.thingelstad.com/uploads/2020/5c3b61ad4d.jpg" style="max-width: 290px; " />
+<img src="https://www.thingelstad.com/uploads/2020/5c3b61ad4d.jpg" alt="Four red handblown drinking glasses with bubble texture sitting on a wooden table" style="max-width: 290px; " />
 
 There is nothing all that notable about these either, except that they are red, and **the water tastes funny**.
 

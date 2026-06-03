@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 [Mark O'Leary](https://www.linkedin.com/in/mark-o-leary-b939a31/) and I shared context and excitement with one of our teams as we continue our adoption of Scaled Agile practices. #TeamSPS 
 
-<img src="https://www.thingelstad.com/uploads/2019/20abbeeabb.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/20abbeeabb.jpg" width="600" height="450" alt="Gray-haired man in glasses and sweater addresses a large seated audience in an open office space with a Business Context slide on screen behind him." />

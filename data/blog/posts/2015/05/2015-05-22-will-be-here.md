@@ -9,4 +9,4 @@ categories: []
 
 … will be here this weekend.
 
-<img src="https://www.thingelstad.com/uploads/2021/3f1099d730.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/3f1099d730.jpg" width="450" height="600" alt="Adult and young child sitting together at the end of an aluminum dock on a calm lake, trees visible across the water." />

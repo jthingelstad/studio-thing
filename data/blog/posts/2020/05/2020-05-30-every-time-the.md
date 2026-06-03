@@ -9,4 +9,4 @@ categories: []
 
 Every time the NASA and SpaceX commentators refer to [Bob and Doug](https://en.wikipedia.org/wiki/Crew_Dragon_Demo-2), the astronauts flying today, I can’t help but think of the other [Bob and Doug](https://en.wikipedia.org/wiki/Bob_and_Doug_McKenzie). 
 
-<img src="https://www.thingelstad.com/uploads/2020/76471d1a15.jpg" width="600" height="400" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/76471d1a15.jpg" width="600" height="400" alt="Two men in winter jackets and toques sit in front of a Great White North backdrop with a map of Canada" />

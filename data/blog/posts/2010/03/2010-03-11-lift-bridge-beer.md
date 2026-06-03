@@ -9,4 +9,4 @@ categories: []
 
 I've heard really good things about [Lift Bridge](http://www.liftbridgebrewery.com/) beers and I finally got to try a couple. The rumors were true. Definitely seek out this local brew.
 
-![](https://www.thingelstad.com/uploads/2020/bc48f293b3.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/bc48f293b3.jpg" alt="Lift Bridge Beer Co Crosscut Pale Ale bottle, 12 fl oz, brewed with grapefruit peel, established 2008, sitting on a dark surface">

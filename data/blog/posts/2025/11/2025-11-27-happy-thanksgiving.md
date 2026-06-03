@@ -9,4 +9,4 @@ categories: []
 
 Happy Thanksgiving!
 
-<img src="https://www.thingelstad.com/uploads/2025/419d909d65.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/419d909d65.jpg" width="600" height="450" alt="Four smiling people posing together indoors near a window, dressed casually for a holiday gathering.">

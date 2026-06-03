@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 The goalkeeping from Martinez was epic for Argentina! 🇦🇷 ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2022/438cbf140b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/438cbf140b.jpg" width="600" height="450" alt="TV screen showing Argentina goalkeeper in green kit celebrating with a child on his shoulders, captioned Argentina 3-time FIFA World Cup Champions 1978 1986 2022">

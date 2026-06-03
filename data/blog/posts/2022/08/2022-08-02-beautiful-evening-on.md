@@ -9,4 +9,4 @@ categories: []
 
 Beautiful evening on Reynisfjara Black Sand Beach by Vik. 
 
-<img src="https://www.thingelstad.com/uploads/2022/1b5357395b.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/1b5357395b.jpg" width="600" height="450" alt="Two people walking along Reynisfjara black sand beach at sunset with sea stacks visible in the distance" />

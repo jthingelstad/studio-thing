@@ -9,4 +9,4 @@ categories: []
 
 Enjoying a gorgeous morning on the deck with Lucky. Sun still low. Cool breeze. 
 
-<img src="https://www.thingelstad.com/uploads/2021/317c80df47.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/317c80df47.jpg" width="600" height="450" alt="White fluffy dog resting on a wooden deck at sunrise, with ornamental grasses, a lake, and yellow patio furniture behind him." />

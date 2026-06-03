@@ -9,4 +9,4 @@ categories: []
 
 I just installed the [WordPress](https://wordpress.org) application on my iPhone and am testing it out. It will be fun to be able to post and edit on the road!
 
-![](https://www.thingelstad.com/uploads/2020/279b285d3f.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/279b285d3f.jpg" alt="Silver Apple MacBook laptop closed on a floral-painted table with stickers including a WordPress logo, a letter A, and a pixel art grid design">

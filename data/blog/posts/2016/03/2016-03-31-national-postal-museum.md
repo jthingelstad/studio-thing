@@ -9,4 +9,4 @@ categories: []
 
 [National Postal Museum](https://postalmuseum.si.edu).
 
-![](https://www.thingelstad.com/uploads/2020/da6cc51a0a.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/da6cc51a0a.jpg" alt="National Postal Museum building exterior in Washington DC with neoclassical columns and green banners on a sunny day">

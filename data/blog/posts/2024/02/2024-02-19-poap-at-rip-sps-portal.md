@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7006451">7006451</a> at <strong><a href="https://poap.gallery/drops/168336">RIP SPS Portal</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/28a258da-a442-446c-9f63-c786a85e9d20.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/28a258da-a442-446c-9f63-c786a85e9d20.png" alt="Circular POAP badge showing a gravestone with SPS Portal logo, labeled Deprecated, June 2006 to February 2024, on gray background" width="500" height="500" />

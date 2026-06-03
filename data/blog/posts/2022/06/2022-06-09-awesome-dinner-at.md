@@ -9,4 +9,4 @@ categories: []
 
 Awesome dinner at [6Smith](https://www.6smith.com) on Lake Minnetonka with Hector, Max, and Denny. Perfect weather, delicious food, and awesome people. 
 
-<img src="https://www.thingelstad.com/uploads/2022/52b4e5a0e6.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/52b4e5a0e6.jpg" width="600" height="450" alt="Four men smiling at an outdoor waterfront restaurant table with drinks and menus, boats docked on a lake behind them." />

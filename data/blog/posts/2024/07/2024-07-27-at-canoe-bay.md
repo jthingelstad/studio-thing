@@ -9,4 +9,4 @@ categories: []
 
 At [Canoe Bay](https://www.canoebay.com), and a great view for breakfast. 
 
-<img src="https://www.thingelstad.com/uploads/2024/5ed8b463d4.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/5ed8b463d4.jpg" width="600" height="450" alt="Deck with Adirondack chairs and a small table holding a mug, thermos, and bowl of oatmeal, overlooking a lush fern-covered forest with a lake beyond.">

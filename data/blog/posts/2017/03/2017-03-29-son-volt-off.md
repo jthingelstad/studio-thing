@@ -9,4 +9,4 @@ categories: []
 
 [Son Volt](https://sonvolt.net) off to a great start at First Ave! 
 
-<img src="https://www.thingelstad.com/uploads/2021/4fe8e2170b.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/4fe8e2170b.jpg" width="600" height="450" alt="Rock band performing on a lit stage at First Avenue with four musicians playing guitars, viewed from behind a large standing crowd." />

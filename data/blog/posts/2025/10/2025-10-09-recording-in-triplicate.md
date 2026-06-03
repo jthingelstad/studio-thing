@@ -9,4 +9,4 @@ categories: []
 
 Recording in triplicate.
 
-<img src="https://www.thingelstad.com/uploads/2025/636fafd8b7.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/636fafd8b7.jpg" width="600" height="450" alt="Packed concert arena crowd filmed on smartphones as performers play on a blue-lit stage in the distance.">

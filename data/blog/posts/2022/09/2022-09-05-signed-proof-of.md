@@ -12,6 +12,6 @@ categories: ["Crypto"]
 Vitalik is doing a very interesting thing with the ebook though. You can make a donation of any amount and get a copy of the ebook. In return you get a _non-transferrable_ NFT and when the book is published you get a digitally signed copy with your NFT in it. [I'm in!](https://etherscan.io/tx/0xa31be60bdf0b3c6e463bd1e123c4f49d5da36993818cd607d58efdc209a1291f)
 
 
-<img src="https://www.thingelstad.com/uploads/2022/10746a8cf9.png" width="508" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/10746a8cf9.png" width="508" height="600" alt="Proof of Stake NFT certificate showing vitalik.eth as signer and thingelstad.eth as recipient with mint timestamp and contract address" />
 
 PS: The book itself is also published under a [Creative Commons](https://creativecommons.org/) license, another organization that I have been a longtime supporter of. I publish my website and newsletter under Creative Commons as well

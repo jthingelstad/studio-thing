@@ -9,4 +9,4 @@ categories: []
 
 Was great to take SPS colleagues to Boludo including Eduardo who grew up in Argentina and gave us the background from growing up there!
 
-<img src="https://www.thingelstad.com/uploads/2026/c49cd3aeba.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/c49cd3aeba.jpg" width="600" height="450" alt="Four people smiling at a restaurant table covered with empanadas and pizza at Boludo, an Argentine restaurant in Minneapolis.">

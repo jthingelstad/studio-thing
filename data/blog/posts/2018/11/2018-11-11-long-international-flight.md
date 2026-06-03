@@ -9,4 +9,4 @@ categories: []
 
 Long international flight tomorrow → of course you update the firmware on your headphones! 😁
 
-<img src="https://www.thingelstad.com/uploads/2018/d7d2d4d318.jpg" width="600" height="347" />
+<img src="https://www.thingelstad.com/uploads/2018/d7d2d4d318.jpg" alt="Bose QC35 headphones next to a software update screen showing 9% progress updating to version 2.5.3 with 5 minutes remaining." width="600" height="347" />

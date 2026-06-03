@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Super hot soccer ⚽️ MN United v NY Red Bulls. 
 
-<img src="https://www.thingelstad.com/uploads/2017/409081c240.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/409081c240.jpg" alt="Soccer match at TCF Bank Stadium University of Minnesota with players on field and large crowd in the stands on a sunny day." width="600" height="600" style="height: auto" />

@@ -9,4 +9,4 @@ categories: []
 
 Dilapidated grain elevator. 📷
 
-<img src="https://www.thingelstad.com/uploads/2019/6dda4da200.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/6dda4da200.jpg" width="450" height="600" alt="Abandoned concrete grain elevator with cylindrical silos and deteriorating metal cladding against an overcast sky" />

@@ -7,14 +7,8 @@ post_kind: post
 categories: []
 ---
 
-Four of my friends from the [B-Squad Softball
-team](http://www.bsquad.org/) are in a band called the [Good
-Commies](http://www.last.fm/music/Good+Commies). I was finally able to
-add some of these wonderful tracks to my iTunes collection. I insist on
-high resolution cover art so I fired up the scanner. Here are the files
-for anyone else who is looking for them. I couldn't find anything other
-than thumbnails online.
+Four of my friends from the [B-Squad Softball team](http://www.bsquad.org/) are in a band called the [Good Commies](http://www.last.fm/music/Good+Commies). I was finally able to add some of these wonderful tracks to my iTunes collection. I insist on high resolution cover art so I fired up the scanner. Here are the files for anyone else who is looking for them. I couldn't find anything other than thumbnails online.
 
-![](https://www.thingelstad.com/uploads/2020/56ed905db8.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/56ed905db8.jpg" alt="Album cover for Good Commies Three Houses featuring a red star overlaid on a grayscale photo of damaged buildings and debris.">
 
-![](https://www.thingelstad.com/uploads/2020/d9376d7abb.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/d9376d7abb.jpg" alt="Red Rug album cover by Good Commies featuring a bronze terracotta warrior figurine against a vivid red background">

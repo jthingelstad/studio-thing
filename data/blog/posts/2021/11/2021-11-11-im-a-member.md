@@ -9,7 +9,7 @@ categories: ["Crypto"]
 
 I just [claimed](https://etherscan.io/tx/0x547f475753f1573fe1cd10110ee2dbad6cb7b498a1112f4d84a18dfd06d5c717) my $ENS governance tokens and am now a voting member of the Ethereum Name Service DAO. I decided to not delegate my tokens at this time. My primary ENS name is **thingelstad.eth**.
 
-<img src="https://www.thingelstad.com/uploads/2021/0191f60653.png" width="600" height="319" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/0191f60653.png" width="600" height="319" alt="ENS airdrop claim screen for thingelstad.eth showing 329.235732 ENS tokens received from historical activity and future registration rewards." />
 
 This transition of ENS into a DAO has been incredible to watch. [NiftyTable has a great writeup on it](https://www.niftytable.com/archive/ens/). 
 

@@ -9,4 +9,4 @@ categories: []
 
 Little healthy snack while on the road.
 
-<img src="https://www.thingelstad.com/uploads/2020/7f60b7e2d8.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/7f60b7e2d8.jpg" width="600" height="450" alt="Large cardboard box of fresh blueberries open on a passenger lap inside a car" />

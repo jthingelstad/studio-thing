@@ -9,4 +9,4 @@ categories: []
 
 Winter fire.
 
-<img src="https://www.thingelstad.com/uploads/2021/c901146964.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/c901146964.jpg" width="600" height="450" alt="Outdoor fire pit burning wood logs in snow, surrounded by people in winter boots and Adirondack chairs" />

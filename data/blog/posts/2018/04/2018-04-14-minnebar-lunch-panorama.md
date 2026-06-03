@@ -9,4 +9,4 @@ categories: ["Minnestar"]
 
 Minnebar lunch panorama.
 
-<img src="https://www.thingelstad.com/uploads/2018/b63629e6b5.jpg" width="600" height="123" />
+<img src="https://www.thingelstad.com/uploads/2018/b63629e6b5.jpg" alt="Panoramic view of a large conference lunch gathering with hundreds of attendees seated at round tables in a bright open atrium" width="600" height="123" />

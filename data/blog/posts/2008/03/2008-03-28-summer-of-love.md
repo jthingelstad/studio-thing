@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/f6fd495a4f.gif" style="width: 198px; max-width: 198px;" />
+<img src="https://www.thingelstad.com/uploads/2020/f6fd495a4f.gif" alt="Stylized yellow script text reading Summer of Love on a white background" style="width: 198px; max-width: 198px;" />
 
 This summer is going to be filled with a lot of travel. I'm taking the summer off after leaving my current role, before I get going on a new thing. Tammy has given it a name, the **[Summer of Love](https://www.thingelstad.com/collections/summer-of-love)**. We've even got a wiki setup to build out our itinerary.
 

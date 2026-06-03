@@ -9,4 +9,4 @@ categories: []
 
 Summer can officially start now!
 
-<img src="https://www.thingelstad.com/uploads/2021/b643b3e69a.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/b643b3e69a.jpg" width="600" height="450" alt="Man and two children standing on a Premier pontoon boat docked on a calm lake on a sunny day." />

@@ -9,4 +9,4 @@ categories: []
 
 I just got my first [CharGPT Pulse](https://openai.com/index/introducing-chatgpt-pulse/). I was more impressed than I expected. It was truly interesting. Curious to see how it changes each day. 
 
-<img src="https://www.thingelstad.com/uploads/2025/3accb5363d.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/3accb5363d.jpg" width="600" height="600" alt="iPhone screen showing a ChatGPT Pulse daily briefing card dated September 25 about fresh storytelling for candle labels, on a rainbow gradient background.">

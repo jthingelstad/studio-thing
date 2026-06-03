@@ -7,4 +7,4 @@ post_kind: post
 categories: []
 ---
 
-![](https://www.thingelstad.com/uploads/2020/2ddd18c285.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/2ddd18c285.jpg" alt="Panoramic night view of a packed baseball stadium with a lit green field, dirt infield, and players in position during a game.">

@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/07/27/iceland-log-day.html"
 title: "Iceland Log Day 5"
 published: "2022-07-27T22:29:46+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 Iceland Log Day 5
@@ -22,7 +22,7 @@ Cool and Rainy throughout the day
 - Figured out how to buy gas at N1.
 - Anniversary dinner at [Vogafjos](https://www.vogafjosfarmresort.is) Farm-to-Table restaurant. 
 
-<img src="https://www.thingelstad.com/uploads/2022/3d15ff6abf.png" width="600" height="369" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/3d15ff6abf.png" width="600" height="369" alt="Google Maps route in northeast Iceland from Fosshotel Myvatn east through Hverir and north to Dettifoss waterfall via Road 862" />
 
 Jump to day 
 [0](https://www.thingelstad.com/2022/07/22/iceland-log-day.html), 

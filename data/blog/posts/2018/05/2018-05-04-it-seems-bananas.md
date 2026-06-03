@@ -9,4 +9,4 @@ categories: []
 
 It seems bananas that there is a Banana Saver product one can buy. 🍌🤦🏼‍♂️
 
-<img src="https://www.thingelstad.com/uploads/2018/82853e8769.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/82853e8769.jpg" alt="Two yellow plastic banana-shaped storage cases by Banana Saver Inc. hanging on a store display rack, labeled for bananas on the go." width="600" height="600" />

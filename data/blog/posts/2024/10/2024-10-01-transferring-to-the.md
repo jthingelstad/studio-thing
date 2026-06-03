@@ -9,4 +9,4 @@ categories: []
 
 Transferring to the new iPhone 16 Pro!
 
-<img src="https://www.thingelstad.com/uploads/2024/88d3a5fd90.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/88d3a5fd90.jpg" width="600" height="450" alt="Two iPhones side by side on a wooden desk transferring data between them, with a Magic Keyboard and trackpad in the background.">

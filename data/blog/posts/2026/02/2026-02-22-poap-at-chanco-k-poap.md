@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7568455">7568455</a> at <strong><a href="https://poap.gallery/drops/226255">Chanco 10k | POAP KINGS</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2026/4d3bc29e-4aef-49b6-a272-5ed0bd3d5e33.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2026/4d3bc29e-4aef-49b6-a272-5ed0bd3d5e33.png" alt="Circular badge celebrating Chanco 10k POAP Kings milestone featuring fantasy game characters including dragons, knights, and a sorceress" width="500" height="500" />

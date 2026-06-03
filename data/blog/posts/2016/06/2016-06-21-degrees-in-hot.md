@@ -9,4 +9,4 @@ categories: []
 
 102 °F in Hot Springs, SD today. Safari mode on.
 
-<img src="https://www.thingelstad.com/uploads/2020/613a11d3a7.jpg" width="426" height="320" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/613a11d3a7.jpg" width="426" height="320" alt="Man wearing a gray wide-brim hat and sunglasses takes a selfie outdoors on a sunny day with green hills behind him." />

@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2005/08/06/uptown-art-fair.html"
 title: "Uptown Art Fair Conclusion"
 published: "2005-08-06T05:00:00+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/ba7c8d0265.jpg" style="width: 154px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/ba7c8d0265.jpg" alt="Painting of a dalmatian dog sitting against a bright orange and yellow checkered background with abstract text elements" style="width: 154px; float: right; margin-left: 10px; " />
 
 Tammy and I returned to the [Uptown Art Fair](http://www.uptownminneapolis.com/art-fair/) after having [previewed yesterday](https://www.thingelstad.com/2005/08/05/uptown-art-fair.html). We brought Mazie with us this time, so we went early to avoid the heat. It was another great day and the crowd was immense even at 10am.
 

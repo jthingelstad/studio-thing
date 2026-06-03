@@ -9,4 +9,4 @@ categories: []
 
 These two make my life such an amazing and wonderful journey. I am one really lucky guy. My best to all Dads to have a great **Father’s Day**. ❤️
 
-<img src="https://www.thingelstad.com/uploads/2022/f788bf7e30.jpg" width="400" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/f788bf7e30.jpg" width="400" height="600" alt="Man and two kids smiling together outdoors on a sunny day, standing on green grass with trees behind them." />

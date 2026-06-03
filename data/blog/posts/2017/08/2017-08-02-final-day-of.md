@@ -9,4 +9,4 @@ categories: []
 
 Final day of riding with [Broken Paddle Guiding](http://brokenpaddleguiding.com). 
 
-<img src="https://www.thingelstad.com/uploads/2017/7a3e69dbd1.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/7a3e69dbd1.jpg" alt="Route map showing a cycling path from north of Pepin Wisconsin south along the Mississippi River to Nelson Wisconsin on Highway 35." width="600" height="600" style="height: auto" />

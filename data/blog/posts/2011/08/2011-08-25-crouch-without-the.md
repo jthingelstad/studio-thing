@@ -11,4 +11,4 @@ categories: []
 
 I had no idea this was a problem requiring a specific pair of pants.
 
-![](https://www.thingelstad.com/uploads/2020/9181c2a5e5.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/9181c2a5e5.jpg" alt="Duluth Trading Co store window ad for Ballroom Jeans featuring a hidden crotch gusset and the slogan Crouch Without the Ouch with a cartoon man squatting">

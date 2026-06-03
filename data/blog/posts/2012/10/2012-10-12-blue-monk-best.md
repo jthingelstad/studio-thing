@@ -9,4 +9,4 @@ categories: []
 
 Blue Monk, best drink at the [Dakota](https://www.dakotacooks.com).
 
-<img src="https://www.thingelstad.com/uploads/2020/7c4d3050e4.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/7c4d3050e4.jpg" width="600" height="800" alt="Blue Monk cocktail in a tall glass with blue liquid, garnished with a maraschino cherry and pineapple chunk on a skewer, sitting on napkins at a bar." />

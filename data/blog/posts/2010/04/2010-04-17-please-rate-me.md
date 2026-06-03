@@ -9,4 +9,4 @@ categories: []
 
 Annoying behavior to game the ratings in the AppStore.
 
-<img src="https://www.thingelstad.com/uploads/2020/97696221d9.png" style="max-width: 320px;" />
+<img src="https://www.thingelstad.com/uploads/2020/97696221d9.png" alt="Groupon iOS app showing a modal popup asking users to rate the app with three buttons Rate Groupon Remind me later and No Thanks" style="max-width: 320px;" />

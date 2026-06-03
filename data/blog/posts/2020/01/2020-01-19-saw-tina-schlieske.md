@@ -9,4 +9,4 @@ categories: ["Music"]
 
 We saw [Tina Schlieske](https://tinaschlieske.com/)  at the [Aster Cafe](https://astercafe.com) tonight. Intimate evening of new material. Unfortunately had the 2nd worst seat in the house. Otherwise was very good. 🎶
 
-<img src="https://www.thingelstad.com/uploads/2020/668504ceab.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/668504ceab.jpg" width="600" height="337" alt="Live band performing on a small dimly lit stage in a brick-walled venue at night, guitarist and vocalist in white shirt at a microphone with drummer behind" />

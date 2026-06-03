@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Mazie wearing her new [US National Kubb Championship](http://www.usakubb.org) shirt.
 
-<img src="https://www.thingelstad.com/uploads/2020/8ba220e12b.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/8ba220e12b.jpg" width="600" height="800" alt="Young girl smiling in a kitchen wearing a dark brown US National Kubb Championship shirt reading Uniting People and Destroying Lawns" />

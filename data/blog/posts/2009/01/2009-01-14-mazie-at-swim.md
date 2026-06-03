@@ -9,4 +9,4 @@ categories: []
 
 First swim class in several months.
 
-![](https://www.thingelstad.com/uploads/2020/190c2234b4.png)
+<img src="https://www.thingelstad.com/uploads/2020/190c2234b4.png" alt="Young girl wearing pink swim goggles and a striped swimsuit smiling beside an indoor pool">

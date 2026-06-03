@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6091264">6091264</a> at <strong><a href="https://poap.gallery/drops/92138"> Sam Bankman-Fried arrested in The Bahamas</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/sam-bankman-fried-arrested-in-the-bahamas-2022-logo-1671141260140.gif" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/sam-bankman-fried-arrested-in-the-bahamas-2022-logo-1671141260140.gif" alt="Cartoon badge showing two figures labeled POLICE arresting a curly-haired person on a beach with burning palm trees and a boat, captioned December 2022." width="500" height="500" />

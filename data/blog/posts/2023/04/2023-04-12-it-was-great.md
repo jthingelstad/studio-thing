@@ -9,7 +9,7 @@ categories: []
 
 It was great to join the Aspirations in Computing annual award ceremony and celebrate the impressive accomplishments of these young women. We are also excited to welcome **four** [award winners](https://mnstateitcoe.org/aspirations-awards-2022/) to internships with [TeamSPS](https://www.spscommerce.com) this summer! 👏
 
-<img src="https://www.thingelstad.com/uploads/2023/e3a3a3fa04.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/e3a3a3fa04.jpg" width="600" height="449" alt="Group of twelve people posing indoors at an awards ceremony, three kneeling in front wearing lanyards with medals">
 
 See Aspirations Awards events from 
 [2016](https://www.thingelstad.com/2016/04/19/proud-that-spscommerce.html), 

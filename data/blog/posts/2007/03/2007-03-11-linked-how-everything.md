@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/0044c46e11.jpg" style="width: 88px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/0044c46e11.jpg" alt="Book cover with a green leaf vein pattern forming a network design on a dark background, author name Albert-Laszlo Barabasi at top" style="width: 88px; float: right; margin-left: 10px; " />
 
 The subtitle of this book is enough to garner intrigue -- "How everything is connected to everything else, and what it means". Wow! That's a pretty big proclamation. I discovered [Linked](http://www.amazon.com/dp/0738206679/) via an email from a former colleague who said she had read it and found it very interesting. This is a woman who is not prone to hyperbole, and when I got an email that made references to "neobiological" and the emergence of a new form of life from the Internet, I just had to know more.
 

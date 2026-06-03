@@ -9,4 +9,4 @@ categories: []
 
 Hardwood floor installation has begun!
 
-![](https://www.thingelstad.com/uploads/2020/3dc9b8a80e.png)
+<img src="https://www.thingelstad.com/uploads/2020/3dc9b8a80e.png" alt="Room undergoing flooring renovation with subfloor exposed, tools and debris scattered, blue chaise lounge visible near windows">

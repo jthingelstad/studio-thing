@@ -9,4 +9,4 @@ categories: []
 
 I am greatly enjoying **How Iceland Changed the World** by [Egill Bjarnason](http://egillbjarnason.com). Interesting history and stories. It is also a great prelude to our trip there this summer! 📚✈️ 🇮🇸
 
-<img src="https://www.thingelstad.com/uploads/2022/d8fd63c079.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/d8fd63c079.jpg" width="450" height="600" alt="Hand holding How Iceland Changed the World by Egill Bjarnason, a paperback with folk art illustrations of a wolf, sword, Viking ship, and Icelandic flag" />

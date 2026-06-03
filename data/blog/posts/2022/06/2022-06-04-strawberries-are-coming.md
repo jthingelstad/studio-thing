@@ -9,4 +9,4 @@ categories: []
 
 Strawberries are coming in the garden! Fresh picked strawberries are a family favorite. 🍓
 
-<img src="https://www.thingelstad.com/uploads/2022/1b7d9c3ca9.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/1b7d9c3ca9.jpg" width="600" height="450" alt="Cluster of small unripe green strawberries growing on a plant with wet leaves and a white flower visible nearby." />

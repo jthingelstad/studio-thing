@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 SPS University! #TeamSPS growing.
 
-<img src="https://www.thingelstad.com/uploads/2020/d83fc708a9.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d83fc708a9.jpg" width="600" height="450" alt="Group of young professionals seated at rows of tables in a modern training room with name placards and notebooks" />

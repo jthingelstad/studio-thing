@@ -9,4 +9,4 @@ categories: []
 
 It turns out it was Mrs. Peacock with the Candlestick in the Conservatory! 
 
-<img src="https://www.thingelstad.com/uploads/2024/070d797e0e.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/070d797e0e.jpg" width="600" height="450" alt="Clue board game in progress with character figurines on the board, cards showing Mrs. Peacock and the Conservatory, and a candlestick weapon token nearby.">

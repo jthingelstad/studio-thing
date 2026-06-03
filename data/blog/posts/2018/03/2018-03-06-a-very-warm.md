@@ -9,4 +9,4 @@ categories: []
 
 A very warm and generous welcome to Hyderabad from our partners at Indmax. 🙏
 
-<img src="https://www.thingelstad.com/uploads/2018/4ce99944d0.jpg" width="600" height="425" />
+<img src="https://www.thingelstad.com/uploads/2018/4ce99944d0.jpg" alt="Five people standing in a hotel lobby holding bouquets of red and yellow roses gifted as a welcome gesture." width="600" height="425" />

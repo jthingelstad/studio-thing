@@ -9,4 +9,4 @@ categories: []
 
 I spent the night at the Rosewood this week for an overnight trip to Palo Alto. Beautiful grounds and great view from the room.
 
-![](https://www.thingelstad.com/uploads/2020/4ae1e50ba5.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/4ae1e50ba5.jpg" alt="Balcony railing overlooking manicured lawns, pool umbrellas, cypress trees, and a large stone resort building under a clear blue sky.">

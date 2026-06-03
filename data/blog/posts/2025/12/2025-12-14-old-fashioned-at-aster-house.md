@@ -9,4 +9,4 @@ categories: []
 
 Old Fashioned at [Aster House](https://asterhousempls.com). 
 
-<img src="https://www.thingelstad.com/uploads/2025/1e62cccbde.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/1e62cccbde.jpg" width="450" height="600" alt="Old Fashioned cocktail in a rocks glass garnished with an orange slice and cherry, beside a small gold table lamp in a dimly lit bar.">

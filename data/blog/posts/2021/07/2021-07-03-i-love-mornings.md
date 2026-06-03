@@ -9,4 +9,4 @@ categories: []
 
 I love mornings at the cabin with the Tour de France in July. 🚴‍♂️🇫🇷
 
-<img src="https://www.thingelstad.com/uploads/2021/f7b6fd0192.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/f7b6fd0192.jpg" width="600" height="450" alt="Samsung TV on a wooden desk showing a Tour de France broadcast with a group of cyclists racing on a tree-lined road, 32km remaining." />

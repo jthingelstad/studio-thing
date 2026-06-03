@@ -9,7 +9,7 @@ categories: ["Music"]
 
 Streaming [Brandi Carlile’s Campfire Singalong](https://brandicarlile.veeps.com/stream/events/42a074586577). Love the intimate feel, like joining them for a jam session around the fire. 🔥 It’s great to get some live music; warms the heart. 🎶
 
-<img src="https://www.thingelstad.com/uploads/2020/4e04280163.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/4e04280163.jpg" width="600" height="337" alt="Wall-mounted TV showing four musicians performing around an outdoor fire pit at night, beside a laptop on a shelf flanked by colorful glass vases and decorative objects." />
 
 “The Twins” playing Homeward Bound by Simon & Garfunkel is amazing. Sounds great. 
 

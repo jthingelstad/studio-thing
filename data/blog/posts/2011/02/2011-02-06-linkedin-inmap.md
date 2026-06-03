@@ -11,4 +11,4 @@ categories: []
 
 Useless really, but it sure looks nifty. 😀
 
-![](https://www.thingelstad.com/uploads/2020/04c5c585f9.png)
+<img src="https://www.thingelstad.com/uploads/2020/04c5c585f9.png" alt="Network graph showing Jamie Thingelstad at center connected to hundreds of contacts grouped in colored clusters across blue green orange red and purple nodes.">

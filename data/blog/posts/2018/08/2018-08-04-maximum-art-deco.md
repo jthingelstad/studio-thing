@@ -9,4 +9,4 @@ categories: []
 
 Maximum Art Deco in Syracuse, NY. 
 
-<img src="https://www.thingelstad.com/uploads/2018/6258ca8b97.jpg" width="450" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/6258ca8b97.jpg" alt="Niagara Mohawk Building facade in Syracuse NY, a striking Art Deco skyscraper with chrome metalwork and black granite trim" width="450" height="600" />

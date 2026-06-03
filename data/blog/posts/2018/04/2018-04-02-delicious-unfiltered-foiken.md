@@ -9,4 +9,4 @@ categories: []
 
 Delicious unfiltered Foiken Haze New England IPA at [ERIS Brewery and Cider House](http://www.erischicago.com). 🍻
 
-<img src="https://www.thingelstad.com/uploads/2018/9e765f8044.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/9e765f8044.jpg" alt="Pint glass of hazy unfiltered New England IPA with a thick white foam head on a branded brewery coaster at a restaurant table" width="600" height="600" />

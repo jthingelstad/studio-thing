@@ -9,4 +9,4 @@ categories: []
 
 [Minnesota State Fair](https://www.mnstatefair.org) selfie!
 
-<img src="https://www.thingelstad.com/uploads/2019/7bb6c37dcd.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/7bb6c37dcd.jpg" width="600" height="450" alt="Family of four smiling together in a selfie at the Minnesota State Fair entrance arch" />

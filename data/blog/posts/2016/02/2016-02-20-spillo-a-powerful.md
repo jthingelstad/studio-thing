@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/26fb0db12c.png" style="width: 128px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/26fb0db12c.png" alt="Pushpin icon on a blue gradient circular background, used as an app logo" style="width: 128px; float: right; margin-left: 10px; " />
 
 I've been using [Pinboard](https://pinboard.in/) to store bookmarks for years and have always been very happy with it. I've got over 8,000 bookmarks in Pinboard and routinely send links into it nearly every day.
 

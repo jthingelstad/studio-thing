@@ -9,4 +9,4 @@ categories: []
 
 Construction on I-65 down to a single lane south of Indianapolis causing a **45-minute backup** of traffic. 😳
 
-<img src="https://www.thingelstad.com/uploads/2021/eed6974d0c.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/eed6974d0c.jpg" width="600" height="600" alt="Nighttime highway construction zone on I-65 with orange traffic barrels, trucks, a portable light tower, and flashing amber warning lights." />

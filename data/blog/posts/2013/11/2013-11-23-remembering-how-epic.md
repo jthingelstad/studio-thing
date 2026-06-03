@@ -9,4 +9,4 @@ categories: []
 
 Remembering how epic the Green Machine was as a kid. 
 
-<img src="https://www.thingelstad.com/uploads/2020/1ed14902f8.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/1ed14902f8.jpg" width="600" height="450" alt="Huffy Green Machine box on a store shelf showing a kid in a helmet riding the low-riding tricycle, priced at $99.99, ages 8 plus." />

@@ -9,4 +9,4 @@ categories: []
 
 Family selfie at Skógafoss!
 
-<img src="https://www.thingelstad.com/uploads/2022/acf39c0394.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/acf39c0394.jpg" width="600" height="450" alt="Family of four smiling in front of Skógafoss waterfall in Iceland, wearing colorful hats and outdoor gear" />

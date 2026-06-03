@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I **cycled 8.28 miles** in **49.7 minutes** on the [Stowe Recreation Path](https://www.stowevt.gov/Departments/Parks-Recreation/Parks-Facilities/Stowe-Recreation-Path). Ran out of time to do the last bit but covered most of it. 🚴‍♂️
 
-<img src="https://www.thingelstad.com/uploads/2025/193d9da53d.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/193d9da53d.jpg" width="600" height="600" alt="Satellite map showing a color-coded GPS cycling route along the Stowe Recreation Path in Vermont">

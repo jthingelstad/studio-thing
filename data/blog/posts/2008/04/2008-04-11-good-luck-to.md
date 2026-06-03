@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/070b367a4b.gif" style="width: 150px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/070b367a4b.gif" alt="Ford Ironman Arizona Tempe triathlon event logo" style="width: 150px; float: right; margin-left: 10px; " />
 
 My brother-in-law [Hector](http://www.iwilltri.com/) is racing in [Ironman Arizona](http://www.ironmanarizona.com/) this weekend!
 

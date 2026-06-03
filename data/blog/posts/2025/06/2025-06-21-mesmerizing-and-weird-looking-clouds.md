@@ -9,4 +9,4 @@ categories: []
 
 Mesmerizing and weird looking clouds as storms approached. 
 
-<img src="https://www.thingelstad.com/uploads/2025/7af09ea4d7.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/7af09ea4d7.jpg" width="450" height="600" alt="Mammatus clouds covering the sky above a residential garage and homes as a storm approaches.">

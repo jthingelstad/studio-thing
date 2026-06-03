@@ -9,4 +9,4 @@ categories: []
 
 It seems that Lucky enjoys reading the classics. 😂
 
-<img src="https://www.thingelstad.com/uploads/2020/45ae94c4b3.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/45ae94c4b3.jpg" width="600" height="600" alt="Fluffy white dog sitting on a wood floor holding a copy of Romeo and Juliet in its mouth" />

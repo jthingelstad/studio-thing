@@ -9,4 +9,4 @@ categories: []
 
 Sailboats in Chicago going out to the lake. 
 
-<img src="https://www.thingelstad.com/uploads/2018/57f19d74bb.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/57f19d74bb.jpg" alt="Sailboats passing under raised drawbridges on the Chicago River with downtown skyscrapers in the background." width="600" height="600" />

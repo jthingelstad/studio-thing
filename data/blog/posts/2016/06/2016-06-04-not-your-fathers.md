@@ -9,4 +9,4 @@ categories: []
 
 Not Your Father's Root Beer. Not very good either. 😕
 
-![](https://www.thingelstad.com/uploads/2020/6bcb7a0212.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/6bcb7a0212.jpg" alt="Opened can of Not Your Fathers Root Beer ale 5.9% ABV sitting on a dark wood table in a restaurant">

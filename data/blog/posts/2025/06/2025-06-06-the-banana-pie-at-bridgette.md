@@ -9,4 +9,4 @@ categories: []
 
 The Banana Pie at [Bridgette Bar](https://www.bridgettebar.com) in Calgary. Tasty but also over-the-top sweet. Also over-the-top tall! ￼
 
-<img src="https://www.thingelstad.com/uploads/2025/ecbb9d72ca.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/ecbb9d72ca.jpg" width="600" height="450" alt="Slice of tall banana cream pie with toasted meringue and caramel drizzle on a white plate with a butter knife, restaurant kitchen visible behind.">

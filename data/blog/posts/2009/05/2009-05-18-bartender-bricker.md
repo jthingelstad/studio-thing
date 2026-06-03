@@ -9,4 +9,4 @@ categories: []
 
 Bartender Bricker.
 
-![](https://www.thingelstad.com/uploads/2020/f1a918d0cb.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/f1a918d0cb.jpg" alt="Bartender in a white Squad Rio t-shirt and cap stands behind a bar counter with beer taps and drink straws nearby.">

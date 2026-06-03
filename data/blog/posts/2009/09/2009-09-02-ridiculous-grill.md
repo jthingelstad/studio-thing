@@ -9,4 +9,4 @@ categories: []
 
 Ridiculous Grill.
 
-![](https://www.thingelstad.com/uploads/2020/94d7075d4a.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/94d7075d4a.jpg" alt="Giant revolver-shaped BBQ smoker grill on a wheeled trailer parked in a lot with trees behind it.">

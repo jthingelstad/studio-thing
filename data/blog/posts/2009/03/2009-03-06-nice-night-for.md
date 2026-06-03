@@ -9,4 +9,4 @@ categories: []
 
 Nice night for a fire.
 
-![](https://www.thingelstad.com/uploads/2020/c360ea329d.png)
+<img src="https://www.thingelstad.com/uploads/2020/c360ea329d.png" alt="Bright campfire burning with tall orange and yellow flames on snow-covered ground at night">

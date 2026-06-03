@@ -9,4 +9,4 @@ categories: []
 
 Mazie out on her bike. She's doing great on her Skoot!
 
-![](https://www.thingelstad.com/uploads/2020/07b55e1b62.png)
+<img src="https://www.thingelstad.com/uploads/2020/07b55e1b62.png" alt="Young girl in a colorful crocheted hat and round sunglasses riding a Skuut balance bike on a grass lawn outdoors.">

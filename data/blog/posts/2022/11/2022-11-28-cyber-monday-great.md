@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 **Cyber Monday 2022!** Great day to show all the work our teams do to deliver amazing performance! #TeamSPS
 
-<img src="https://www.thingelstad.com/uploads/2022/ac373b309e.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/ac373b309e.jpg" width="600" height="337" alt="Group of people working in a modern open office with colorful furniture, laptops, and large monitoring dashboards on the wall.">

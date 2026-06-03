@@ -9,4 +9,4 @@ categories: []
 
 Prepared for an evening of shark fishing. 
 
-<img src="https://www.thingelstad.com/uploads/2025/5337a74cf3.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/5337a74cf3.jpg" width="600" height="450" alt="Two anglers stand at the ocean's edge at sunset surrounded by multiple fishing rods stuck in the sand, beach chairs, a cooler cart, and gear bags.">

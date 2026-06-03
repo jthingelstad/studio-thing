@@ -7,10 +7,7 @@ post_kind: post
 categories: []
 ---
 
-Tammy and I went to our first baby class tonight. We are taking the
-6-week Introduction to Child Birth class at [North
-Memorial](http://www.northmemorial.com/). Highlights from the class
-include...
+Tammy and I went to our first baby class tonight. We are taking the 6-week Introduction to Child Birth class at [North Memorial](http://www.northmemorial.com/). Highlights from the class include...
 
 -   Obligatory wearing of the [Empathy
     Belly](http://www.empathybelly.org/home.html) by all the men in the
@@ -37,5 +34,4 @@ include...
     soon. Surprised that a handful of people didn't know what a doula
     was either.
 
-I feel like I should invite Tammy to my next annual physical just so we
-can level the field with all this information I'm getting lately.
+I feel like I should invite Tammy to my next annual physical just so we can level the field with all this information I'm getting lately.

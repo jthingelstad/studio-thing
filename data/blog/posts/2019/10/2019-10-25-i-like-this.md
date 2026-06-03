@@ -9,4 +9,4 @@ categories: []
 
 I like this new feature in the [Sanebox](https://www.sanebox.com) digest! Great to get “wisdom of the crowd” benefit. 👍
 
-<img src="https://www.thingelstad.com/uploads/2019/485889665f.jpg" width="600" height="242" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/485889665f.jpg" width="600" height="242" alt="Sanebox email digest showing a CIO 100 Awards invitation flagged with a many folks find this sender bothersome warning and options to train or dismiss" />

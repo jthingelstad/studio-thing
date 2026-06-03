@@ -9,4 +9,4 @@ categories: []
 
 Model train. Legos. Fun. 
 
-<img src="https://www.thingelstad.com/uploads/2021/ff7c13cb84.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/ff7c13cb84.jpg" width="600" height="450" alt="Young child in striped pajamas playing with Lego toys on a large colorfully painted table with a model train track layout." />

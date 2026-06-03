@@ -9,4 +9,4 @@ categories: []
 
 Quick stop at [Albanese Factory Outlet Store](https://www.albanesecandy.com/news-events/its-time-to-visit-albanese/) on the way to Louisville. Best Gummy Bears! 
 
-<img src="https://www.thingelstad.com/uploads/2021/5a96612c28.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/5a96612c28.jpg" width="600" height="450" alt="Family of four smiling in front of large red Albanese World's Best sign outside candy factory store" />

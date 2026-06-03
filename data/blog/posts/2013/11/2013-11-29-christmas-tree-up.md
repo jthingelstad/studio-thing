@@ -9,4 +9,4 @@ categories: []
 
 Christmas tree up! A lot of memories with various ornaments.
 
-<img src="https://www.thingelstad.com/uploads/2021/427239d0a1.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/427239d0a1.jpg" width="600" height="450" alt="Two penguin figurines in holiday scarves on a personalized wedding Christmas ornament hanging on a decorated tree." />

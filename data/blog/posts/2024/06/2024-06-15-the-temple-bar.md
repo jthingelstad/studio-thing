@@ -9,4 +9,4 @@ categories: []
 
 The Temple Bar, in the Temple Bar District, in Dublin.
 
-<img src="https://www.thingelstad.com/uploads/2024/99b7aa0a19.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/99b7aa0a19.jpg" width="600" height="450" alt="The Temple Bar pub exterior in Dublin with bright red facade, hanging flower baskets, and people gathered outside the entrance.">

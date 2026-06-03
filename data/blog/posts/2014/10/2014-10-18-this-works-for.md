@@ -9,4 +9,4 @@ categories: []
 
 This works for me.
 
-<img src="https://www.thingelstad.com/uploads/2023/img-2750.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/img-2750.jpg" width="600" height="450" alt="Crackling beach bonfire in a metal ring at sunset with white Adirondack chairs beside a calm lake and dock in background.">

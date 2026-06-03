@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/08/05/iceland-log-day.html"
 title: "Iceland Log Day 14"
 published: "2022-08-05T23:05:49+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 Friday, August 5th  
@@ -24,7 +24,7 @@ Nice, warm in sun. Sprinkles in afternoon.
 - More shopping and exploring on Laugavegur.
 - Go to the [Icelandic Sagas: The Greatest Hits](https://icelandicsagas.com) at Harpa. Very fun! 🎭
 
-<img src="https://www.thingelstad.com/uploads/2022/5c3a38135d.png" width="600" height="313" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/5c3a38135d.png" width="600" height="313" alt="Google Maps route from Blue View Cabins near Fludir to Baldursgata 22 in Reykjavik, 101 km taking 1 hour 29 minutes via Route 35 and Route 1 through Selfoss." />
 
 Jump to day 
 [0](https://www.thingelstad.com/2022/07/22/iceland-log-day.html), 

@@ -7,9 +7,8 @@ post_kind: post
 categories: []
 ---
 
-I just upgraded my Mac Pro to 7 GB of memory. It's really great to have
-the room to stretch your arms out and make yourself at home.
+I just upgraded my Mac Pro to 7 GB of memory. It's really great to have the room to stretch your arms out and make yourself at home.
 
-<img src="https://www.thingelstad.com/uploads/2020/6ddb9b3216.png" style="width: 334px; " />
+<img src="https://www.thingelstad.com/uploads/2020/6ddb9b3216.png" alt="About This Mac dialog showing Mac OS X version 10.4.9 with 2x2.66GHz Dual-Core Intel Xeon, 7GB 667MHz DDR2 FB-DIMM memory, Boot startup disk." style="width: 334px; " />
 
 Now Lightroom can eat up memory to its hearts content.

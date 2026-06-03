@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/5715513">5715513</a> at <strong><a href="https://poap.gallery/drops/56332">⌐◨-◨ FloriNouns July holders POAP - thanks for hodling! ⌐◨-◨</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/florinouns-july-holders-poap-thanks-for-hodling-2022-logo-1658678189959.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/florinouns-july-holders-poap-thanks-for-hodling-2022-logo-1658678189959.png" alt="Pixel art collage of pink flamingo characters wearing sunglasses, labeled FloriNounsh hodler July 2022" width="500" height="500" />

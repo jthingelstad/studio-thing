@@ -9,4 +9,4 @@ categories: []
 
 Super fun day on the beach today. 
 
-<img src="https://www.thingelstad.com/uploads/2021/a9b8121114.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/a9b8121114.jpg" width="600" height="450" alt="Two young children playing in the sand at a sunny beach with waves in the background and colorful beach toys and towels nearby." />

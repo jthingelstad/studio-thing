@@ -9,4 +9,4 @@ categories: []
 
 Tammy's has declared [Chocolate Shoppe Ice Cream](https://chocolateshoppeicecream.com) the best — specifically **[This $&@! Just Got Serious®](https://chocolateshoppeicecream.com/product/serious/)**! We visited the Monroe Street location in Madison to have some direct from the source.
 
-<img src="https://www.thingelstad.com/uploads/2025/372af3b2de.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/372af3b2de.jpg" width="600" height="450" alt="Four people smiling together outside Chocolate Shoppe Ice Cream on a sunny day, one wearing an FC Bayern jersey and one a Minnesota Lynx shirt.">

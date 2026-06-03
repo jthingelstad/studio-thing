@@ -9,4 +9,4 @@ categories: []
 
 Got my [Elgato Key Light](https://www.elgato.com/en/key-light) added to my setup. Having it attach to the desk is key for the standing position. It is also nice to be able to control color and brightness from the Stream Deck. It can get very bright too. 😎
 
-<img src="https://www.thingelstad.com/uploads/2021/3b977012d1.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/3b977012d1.jpg" width="600" height="450" alt="Home office desk setup with an Elgato Key Light, external monitor, MacBook Pro on a stand, Stream Deck, keyboards, and a bookshelf to the right." />

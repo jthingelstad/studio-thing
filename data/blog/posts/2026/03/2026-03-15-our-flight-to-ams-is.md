@@ -9,4 +9,4 @@ categories: []
 
 Our flight to AMS is still listed as on time, but the [Misery Map](https://www.flightaware.com/miserymap/) sure paints an ugly picture.
 
-<img src="https://www.thingelstad.com/uploads/2026/misery-map.png" width="600" height="408" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/misery-map.png" width="600" height="408" alt="FlightAware MiseryMap showing 789 delays and 358 cancellations across US airports, with MSP heavily affected by a large storm system.">

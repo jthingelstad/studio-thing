@@ -13,7 +13,7 @@ Distance: **9.6 miles**
 Ascent: **2,956'**  
 Max Elevation: **8,520'**
 
-![](https://www.thingelstad.com/uploads/2020/204b446000.png)
+<img src="https://www.thingelstad.com/uploads/2020/204b446000.png" alt="GPS map showing a yellow dotted hiking route looping from Zuoz through waypoints 007 and 008 to the ESCHA area and back, with roads and a scale of 0.7 mi.">
 
 When we were in France we spent at least €100 on water in one form or another. The water out of the tap tasted hideous and restaurants treated it like gold. Here in the Engadine region of Switzerland, Evian flows into your morning bath! All of these villages have these great public fountains flowing with cold, wonderful water that you can fill up your bottles to your hearts content with. These are all over the place and are a key enabler to the long distance hiking that is so common in this area.
 
@@ -25,7 +25,7 @@ Our destination was the Chamanna Des-Cha Hut where we had a great lunch. We brou
 
 Descending those 900 meters was in some ways harder than the ascent. It really kills your legs, knees and feet in such a different way. My toes were aching on the descents and I was pleasantly surprised when I finally got my boots off and found that I did **not** have any blisters. Tammy chose to wear her Keen hiking sandals and it worked great for her, although her feet felt tired I think due to the lack of support.
 
-![](https://www.thingelstad.com/uploads/2020/d606d79cdb.png)
+<img src="https://www.thingelstad.com/uploads/2020/d606d79cdb.png" alt="Line chart showing Day 2 elevation profile over 9.6 miles, peaking near 8,500 feet at mile 4, with cumulative ascent reaching roughly 3,000 feet and descent beginning after mile 4.">
 
 My legs are feeling pretty tired today. Tomorrow we are going to be in a town that will have spa facilities and I think I'll look for a massage to rub out some of the ache.
 

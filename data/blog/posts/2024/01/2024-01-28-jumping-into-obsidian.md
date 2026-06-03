@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2024/obsidian-icon.png" style="float: right; width: 100px; max-width: 100px; padding-left: 10px; padding-bottom: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2024/obsidian-icon.png" alt="Purple crystal or rock-shaped app icon for Obsidian on a dark rounded square background" style="float: right; width: 100px; max-width: 100px; padding-left: 10px; padding-bottom: 10px; " />
 
 I recently decided to give [Obsidian](https://obsidian.md) a serious investigation and voluntarily dive down the "rabbit hole." 🕳️🐇 
 

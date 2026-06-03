@@ -9,4 +9,4 @@ categories: []
 
 Good night for s’mores! 🔥
 
-<img src="https://www.thingelstad.com/uploads/2020/282cc7ce9d.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/282cc7ce9d.jpg" width="600" height="600" alt="Marshmallows on roasting sticks held over a wood fire burning in a round metal fire pit on a gravel patio, with a fluffy dog nearby." />

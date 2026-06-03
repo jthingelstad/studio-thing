@@ -9,4 +9,4 @@ categories: []
 
 Delicious Pancakes with Fresh Berries.
 
-![](https://www.thingelstad.com/uploads/2020/afbdb36ce9.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/afbdb36ce9.jpg" alt="Stack of pancakes topped with strawberries, blueberries, blackberries, banana slices, and whipped cream on a white plate">

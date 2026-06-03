@@ -9,4 +9,4 @@ categories: []
 
 Stop & go traffic is by far my favorite use case for [Tesla](https://www.tesla.com) Auto Pilot. Way less stress! 👍🏻
 
-<img src="https://www.thingelstad.com/uploads/2018/4da5a1ec4c.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2018/4da5a1ec4c.jpg" width="450" height="600" alt="Tesla touchscreen showing Autopilot engaged at 0 MPH in stop-and-go traffic at night, with red brake lights visible ahead through the windshield." />

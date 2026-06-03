@@ -9,4 +9,4 @@ categories: []
 
 Sure snow in April isn’t exactly welcome, but it is pretty. 📷
 
-<img src="https://www.thingelstad.com/uploads/2021/06475609d9.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/06475609d9.jpg" width="600" height="450" alt="Snow-covered creek winding through bare winter trees with white banks on a grey overcast day" />

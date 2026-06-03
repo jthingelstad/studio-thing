@@ -9,4 +9,4 @@ categories: []
 
 Ready for tomorrow! 
 
-<img src="https://www.thingelstad.com/uploads/2017/9ea41c4a25.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/9ea41c4a25.jpg" alt="Jack-o-lantern with triangular eyes, square nose, and jagged teeth carved into an orange pumpkin sitting on a colorful tablecloth indoors" width="600" height="600" />

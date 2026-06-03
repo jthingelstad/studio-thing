@@ -9,4 +9,4 @@ categories: []
 
 It was cloudy tonight but [Wyoming Stargazing](https://www.wyomingstargazing.org) still got us out to see some cool stuff. Here is the moon tonight from Jackson, WY. 
 
-<img src="https://www.thingelstad.com/uploads/2020/dbba637567.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/dbba637567.jpg" width="450" height="600" alt="Close-up black and white photo of a half moon showing detailed craters and maria against a dark night sky over Jackson WY" />

@@ -9,8 +9,8 @@ categories: []
 
 Sunrise on Duluth Harbor. I thought it was cool how the blue in the sky came out as the sun went up.
 
-<img src="https://www.thingelstad.com/uploads/2025/e92250a487.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/e92250a487.jpg" width="600" height="450" alt="Duluth Aerial Lift Bridge silhouetted against a vivid orange and purple sunrise over Lake Superior">
 
-<img src="https://www.thingelstad.com/uploads/2025/0234681913.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/0234681913.jpg" width="600" height="450" alt="Duluth Aerial Lift Bridge silhouetted against a vivid orange and blue sunrise over Lake Superior's choppy harbor waters.">
 
-<img src="https://www.thingelstad.com/uploads/2025/8124474b1c.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/8124474b1c.jpg" width="600" height="450" alt="Duluth Aerial Lift Bridge silhouetted against a vivid orange and blue sunrise over calm rippling harbor waters">

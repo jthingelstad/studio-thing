@@ -51,4 +51,4 @@ PART FIVE — Institutionalizing Leadership Influence
 18. The Culture of Influence
 19. Conclusions About Leading With Influence
 
-<img src="https://www.thingelstad.com/uploads/2024/img-0756.jpeg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/img-0756.jpeg" width="600" height="600" alt="Book titled Lead With Influence by Matt Norman published by Dale Carnegie, resting on a colorful painted surface beside a sticker-covered laptop and a pair of glasses.">

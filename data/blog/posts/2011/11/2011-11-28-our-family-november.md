@@ -9,4 +9,4 @@ categories: []
 
 Thanks to [Angie](http://www.lundeenscene.com/) for taking the photo!
 
-![](https://www.thingelstad.com/uploads/2020/411faf0570.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/411faf0570.jpg" alt="Family of four posing outdoors on a lawn with evergreen trees behind them, two adults and two young children smiling at the camera">

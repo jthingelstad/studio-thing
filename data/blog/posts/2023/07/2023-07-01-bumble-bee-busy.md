@@ -9,4 +9,4 @@ categories: []
 
 Bumble Bee busy harvesting pollen in the yard this morning. 🐝
 
-<img src="https://www.thingelstad.com/uploads/2023/ddeaae3654.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/ddeaae3654.jpg" width="600" height="449" alt="Bumble bee collecting pollen from yellow and pink honeysuckle flowers amid green leaves">

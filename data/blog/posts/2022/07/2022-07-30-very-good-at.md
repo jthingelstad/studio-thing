@@ -9,4 +9,4 @@ categories: []
 
 Very good at this 3D Tetris game of packing the rental car. 
 
-<img src="https://www.thingelstad.com/uploads/2022/c175c5e38f.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/c175c5e38f.jpg" width="600" height="450" alt="White SUV hatchback packed full with suitcases and backpacks in a scenic parking lot with green hills in the background." />

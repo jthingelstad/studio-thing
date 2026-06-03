@@ -9,4 +9,4 @@ categories: []
 
 Very cool spot. Food was good. Banana cream pie was great.
 
-![](https://www.thingelstad.com/uploads/2020/8ea453c561.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/8ea453c561.jpg" alt="Interior of a retro American diner with teal vinyl chairs along a chrome counter lined with liquor bottles and beer taps, patrons seated and eating.">

@@ -9,4 +9,4 @@ categories: []
 
 Santa brought me an ornament to go with the hot tub! 🎄🎅
 
-<img src="https://www.thingelstad.com/uploads/2024/9a870812bf.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/9a870812bf.jpg" width="600" height="450" alt="Personalized Christmas ornament of four cartoon faces in a hot tub labeled Magic Soak with names Jamie Tammy Mazie Tyler dated 2024">

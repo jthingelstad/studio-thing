@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Perfect night for soccer game. United v Sounders! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2025/6c67010c7a.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/6c67010c7a.jpg" width="600" height="450" alt="Four people posing for a selfie outdoors in front of a large UNITED sign and Allianz Field stadium on a sunny evening.">

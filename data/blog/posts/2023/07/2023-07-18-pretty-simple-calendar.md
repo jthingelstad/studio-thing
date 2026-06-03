@@ -9,4 +9,4 @@ categories: []
 
 Pretty simple calendar for this part of our trip. 
 
-<img src="https://www.thingelstad.com/uploads/2023/5d4c263691.png" width="600" height="276" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/5d4c263691.png" width="600" height="276" alt="Weekly calendar view for a Switzerland hiking trip July 16-20 showing daily hikes ranging from 8 to 11 miles each day.">

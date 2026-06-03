@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2020/09/08/first-day-of.html"
 title: "First Day of School"
 published: "2020-09-09T03:41:56+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
 Today was the first day of school. First day of school during a pandemic. First day of school via distance learning.
@@ -20,4 +20,4 @@ Tammy helped with anything that wasn’t working. Both kids had a good first day
 Overall I would say first day of school via distance learning was a success!
 
 
-<img src="https://www.thingelstad.com/uploads/2020/8879b54aa8.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/8879b54aa8.jpg" width="600" height="600" alt="Chocolate chip pancake cooking in a round nonstick skillet on a gas stove, with a knife block, spatula, mixing bowl, and toaster on the counter behind it." />

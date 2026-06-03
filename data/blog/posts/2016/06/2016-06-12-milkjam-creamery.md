@@ -9,4 +9,4 @@ categories: []
 
 Milkjam Creamery. 🍦
 
-![](https://www.thingelstad.com/uploads/2020/bda863e8ca.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/bda863e8ca.jpg" alt="Milkjam Creamery logo in red on a storefront window with reflections of people and trees outside on a sunny day.">

@@ -9,4 +9,4 @@ categories: []
 
 This fox is a pretty frequent visitor around the lake.
 
-<img src="https://www.thingelstad.com/uploads/2025/2c4a074cad.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/2c4a074cad.jpg" width="600" height="450" alt="Red fox trotting across a snow-covered backyard near blue patio chairs and stone mushroom sculptures.">

@@ -9,4 +9,4 @@ categories: []
 
 Must do South Dakota stop at [Wall Drug](https://en.wikipedia.org/wiki/Wall_Drug)!
 
-<img src="https://www.thingelstad.com/uploads/2020/981915ed4d.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/981915ed4d.jpg" width="600" height="450" alt="Woman and two children posing outside Wall Drug Store since 1931 in Wall South Dakota on a sunny day" />

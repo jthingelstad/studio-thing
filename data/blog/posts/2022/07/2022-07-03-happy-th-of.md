@@ -9,4 +9,4 @@ categories: []
 
 Happy (4-1)th of July! 🇺🇸
 
-<img src="https://www.thingelstad.com/uploads/2022/5667a51f17.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/5667a51f17.jpg" width="450" height="600" alt="Two people in patriotic red white and blue outfits pose with a fluffy white dog on a green lawn beside a carved wooden totem pole." />

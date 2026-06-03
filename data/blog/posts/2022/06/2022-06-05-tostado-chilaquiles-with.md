@@ -9,4 +9,4 @@ categories: []
 
 Tostado Chilaquiles with Slow-Roasted Pork at [Hola Arepa](https://www.holaarepa.com) is one of my favorite brunches in the Twin Cities. 
 
-<img src="https://www.thingelstad.com/uploads/2022/4c13e70adc.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/4c13e70adc.jpg" width="600" height="450" alt="Chilaquiles topped with slow-roasted pork, salsa verde, crumbled cotija, pickled onions, radishes, jalapeno, and cilantro on a speckled teal plate outdoors." />

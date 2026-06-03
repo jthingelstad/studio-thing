@@ -9,8 +9,8 @@ categories: ["Sports"]
 
 First half of MN United v Sporting KC was tough to watch. United need to come out and connect some plays!
 
-<img src="https://www.thingelstad.com/uploads/2019/41a6562b13.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/41a6562b13.jpg" width="600" height="450" alt="Night soccer match at Allianz Field with players spread across the pitch, a goalkeeper near the near-side goal, and a packed stadium crowd under floodlights." />
 
 Amazing come from behind win from MN United tonight to beat Sporting KC and **clinch entry into the 2019 playoffs**! 2-1 🙌 ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2019/89e9b57c91.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/89e9b57c91.jpg" width="600" height="450" alt="MN United players sprint toward celebrating fans at Allianz Field as smoke fills the air and the scoreboard reads LOONS WIN" />

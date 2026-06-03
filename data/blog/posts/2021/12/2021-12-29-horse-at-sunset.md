@@ -9,4 +9,4 @@ categories: []
 
 Horse at sunset. 
 
-<img src="https://www.thingelstad.com/uploads/2021/7d5a011a90.jpg" width="600" height="410" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/7d5a011a90.jpg" width="600" height="410" alt="Chestnut horse standing in a snow-covered field at sunset, bare trees silhouetted against an orange and pink sky" />

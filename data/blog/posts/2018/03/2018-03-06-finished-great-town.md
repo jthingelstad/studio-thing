@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Finished great town hall with our partner Indmax #TeamSPS in Hyderabad! Also video to our Coimbatore team! So great to meet everyone! 🤝
 
-<img src="https://www.thingelstad.com/uploads/2018/491e17c59a.jpg" width="600" height="230" />
+<img src="https://www.thingelstad.com/uploads/2018/491e17c59a.jpg" alt="Large group of roughly 50 professionals posing together indoors after a corporate town hall meeting in Hyderabad." width="600" height="230" />

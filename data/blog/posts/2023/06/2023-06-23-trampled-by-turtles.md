@@ -9,4 +9,4 @@ categories: ["Music"]
 
 [Trampled By Turtles](https://trampledbyturtles.com) on stage at the [Outlaw Music Festival 2023](https://blackbirdpresents.com/concert/outlaw-music-festival-tour-2023/) at [Somerset Amphitheater](https://www.somersetamp.net). 🎶
 
-<img src="https://www.thingelstad.com/uploads/2023/f5b3dd0688.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/f5b3dd0688.jpg" width="600" height="337" alt="Six musicians performing on an outdoor stage with a large Outlaw Music Festival 2023 banner backdrop, playing fiddle, guitars, and cello.">

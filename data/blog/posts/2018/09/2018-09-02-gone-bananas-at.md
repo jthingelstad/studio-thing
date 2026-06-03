@@ -9,4 +9,4 @@ categories: []
 
 “Gone Bananas” at [MN Nice Cream](https://www.mnnicecream.com). 🍦
 
-<img src="https://www.thingelstad.com/uploads/2018/b0dc78df05.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/b0dc78df05.jpg" alt="Soft serve ice cream cone topped with banana slices, caramel drizzle, cookie crumbles, and a dusting of cinnamon spice, held by hand indoors." width="600" height="600" />

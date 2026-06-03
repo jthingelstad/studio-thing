@@ -11,4 +11,4 @@ Exciting morning — warming up my fingers to get the [Apple Vision Pro](https:/
 
 ✅ Pre-order complete with pickup scheduled at Apple Store on Friday, February 2nd. Purchase process with face scanning via the iPhone was simple and easy. Ordered the 512 GB storage option along with the travel case. 
 
-<img src="https://www.thingelstad.com/uploads/2024/64b8e34c2d.jpg" width="598" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/64b8e34c2d.jpg" width="598" height="600" alt="Apple Vision Pro headset on black background with text: Back in a blink. Apple Store preparing for Vision Pro launch at 5am PT.">

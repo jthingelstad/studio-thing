@@ -9,4 +9,4 @@ categories: []
 
 Summer is starting to wind down — Tyler finished his summer project — upgraded to the Nintendo Switch 2! 🎮
 
-<img src="https://www.thingelstad.com/uploads/2025/0f318094cc.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/0f318094cc.jpg" width="600" height="450" alt="Nintendo Switch 2 console box with Mario Kart World bundle and Nintendo Switch 2 Pro Controller box on a kitchen counter.">

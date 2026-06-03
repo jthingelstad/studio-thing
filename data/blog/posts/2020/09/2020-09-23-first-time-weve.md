@@ -9,6 +9,6 @@ categories: []
 
 First time we’ve had a full unplanned Xfinity service outage during remote work and school. Switched everyone to use their phones as hotspots. Hopefully service is restored soon.  There is major construction a block away that I suspect is related. 
 
-<img src="https://www.thingelstad.com/uploads/2020/ba110d4206.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/ba110d4206.jpg" width="600" height="600" alt="Xfinity outage notification showing unplanned service interruption for ZIP 55424 affecting 51-500 subscribers from 09/17/2020 to 09/23/2020" />
 
 **Update:** Service came back after only about 15 min. Wonder what the issue was… 🤔

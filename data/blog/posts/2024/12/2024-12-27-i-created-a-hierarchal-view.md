@@ -9,4 +9,4 @@ categories: []
 
 I created a hierarchal view of my blog pages so that I could try to organize this better. This shows why I wish the Pages section of micro.blog was a bit more sophisticated. I took the outline and then gave it to ChatGPT and asked it to recommend a better way to structure it.
 
-<img src="https://www.thingelstad.com/uploads/2024/e577b9e47f.png" width="600" height="519" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/e577b9e47f.png" width="600" height="519" alt="Mind map diagram in a Mac app titled Blog Pages showing a large hierarchical tree of blog page categories and subcategories.">

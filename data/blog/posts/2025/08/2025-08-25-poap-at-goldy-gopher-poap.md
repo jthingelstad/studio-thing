@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7432143">7432143</a> at <strong><a href="https://poap.gallery/drops/190545">Goldy Gopher — 612 POAP Challenge</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/1e8c9f30-afb4-48b0-a983-b26b0552b03b.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/1e8c9f30-afb4-48b0-a983-b26b0552b03b.png" alt="Circular badge for 612 POAP Challenge featuring a pixel art Goldy Gopher mascot in red and gold colors." width="500" height="500" />

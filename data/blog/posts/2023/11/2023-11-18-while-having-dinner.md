@@ -9,4 +9,4 @@ categories: ["Music"]
 
 While having dinner at [Rapids Brewing](https://www.rapidsbrewingco.com) we got to hear the beginning of [Grant Glad](https://grantgladmusic.com/)'s set and I liked what he was playing a lot. 🎶
 
-<img src="https://www.thingelstad.com/uploads/2023/f42538b66b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/f42538b66b.jpg" width="600" height="450" alt="Man in white t-shirt and red cap sitting on stool playing acoustic guitar and singing into a microphone on a small blue-lit stage.">

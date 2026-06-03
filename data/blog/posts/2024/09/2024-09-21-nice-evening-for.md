@@ -9,4 +9,4 @@ categories: []
 
 Nice evening for a fire at [Quarterdeck Resort](https://quarterdeckresort.com). 
 
-<img src="https://www.thingelstad.com/uploads/2024/e80f4780f8.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/e80f4780f8.jpg" width="600" height="450" alt="Branded metal fire pit with Quarterdeck name and wave logo, flames burning brightly at night with Adirondack chairs in background.">

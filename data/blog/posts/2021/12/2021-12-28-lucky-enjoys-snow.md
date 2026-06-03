@@ -9,4 +9,4 @@ categories: []
 
 Lucky enjoys snow so much. When it is snowing she wants to be outside all the time. She eats mouthfuls of snow whenever she can. She seems completely at home in the snow. ❄️
 
-<img src="https://www.thingelstad.com/uploads/2021/da14c82ba2.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/da14c82ba2.jpg" width="600" height="450" alt="White fluffy dog lying in snow outside a house, looking at camera with snow-dusted fur and icy chin." />

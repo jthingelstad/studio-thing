@@ -9,4 +9,4 @@ categories: []
 
 Tried [Quordle](https://www.quordle.com/) for the first time today. This may be my favorite Wordle variant. 
 
-<img src="https://www.thingelstad.com/uploads/2022/690b95d19d.png" width="346" height="600" alt="" style="max-width: 346px; " />
+<img src="https://www.thingelstad.com/uploads/2022/690b95d19d.png" width="346" height="600" alt="Daily Quordle number 23 results grid showing four 5-letter word puzzles solved in 7, 4, 6, and 8 guesses" style="max-width: 346px; " />

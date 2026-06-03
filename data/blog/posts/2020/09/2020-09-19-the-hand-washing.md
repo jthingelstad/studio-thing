@@ -9,4 +9,4 @@ categories: []
 
 The hand washing feature in watchOS 7 seemed a bit silly but I turned it on and I’ve actually liked it. It is good at detecting washing, and it has already resulted in me washing for longer. I even get a graph! I also like the nudge to wash your hands when you get home. 
 
-<img src="https://www.thingelstad.com/uploads/2020/91432bc80d.jpg" width="484" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/91432bc80d.jpg" width="484" height="600" alt="iPhone Health app showing Handwashing data for Sep 13-19 2020 with 19 sec average and 11 total washes, bar chart showing Thu Fri Sat activity" />

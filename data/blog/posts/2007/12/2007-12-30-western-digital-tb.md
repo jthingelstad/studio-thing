@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/087bcbfc19.jpg" style="width: 129px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/087bcbfc19.jpg" alt="Silver external hard drive with rounded rectangular shape, standing upright on a flat surface, with a glowing indicator light on the front." style="width: 129px; float: right; margin-left: 10px; " />
 
 A long, long time ago I decided to do an experiment. I built a [server with 1 terabyte in storage](https://www.thingelstad.com/2004/04/02/project-terabyte.html). I wanted to see if the average person could deploy a terabyte of storage. The answer to my question was a solid *no*. That was April 2004. It cost a little over $3,000 and was painful. Oh times have changed.
 

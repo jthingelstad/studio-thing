@@ -9,4 +9,4 @@ categories: []
 
 Burned through a big pile of scrub today. A lot of pine tree branches! 🔥🔥🔥
 
-<img src="https://www.thingelstad.com/uploads/2019/1dc9fa2ef7.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/1dc9fa2ef7.jpg" width="600" height="599" alt="Large bonfire burning in a gravel fire pit beside a lake dock with a pontoon boat moored nearby, surrounded by trees" />

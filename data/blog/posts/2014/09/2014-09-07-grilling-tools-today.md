@@ -9,4 +9,4 @@ categories: []
 
 Grilling tools. Today is what Gin & Tonic's were made for.
 
-<img src="https://www.thingelstad.com/uploads/2020/d01b97ef0c.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d01b97ef0c.jpg" width="600" height="600" alt="Digital meat thermometer and a skewer with wooden handle on a wooden table beside a crystal glass of gin and tonic with ice and lime" />

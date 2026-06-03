@@ -9,4 +9,4 @@ categories: ["Music"]
 
 Steve Earle now on stage at MN Zoo. 🎶😊👍🏻
 
-<img src="https://www.thingelstad.com/uploads/2017/564231c4a9.jpg" width="600" height="600" style="height: auto" />
+<img src="https://www.thingelstad.com/uploads/2017/564231c4a9.jpg" alt="Band performing on an outdoor stage at Music in the Zoo 25th anniversary concert before a large seated crowd" width="600" height="600" style="height: auto" />

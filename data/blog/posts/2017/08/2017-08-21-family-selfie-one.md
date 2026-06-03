@@ -9,4 +9,4 @@ categories: []
 
 Family selfie one minute before totality!
 
-<img src="https://www.thingelstad.com/uploads/2017/f474af97b7.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2017/f474af97b7.jpg" alt="Family of four lying on grass wearing solar eclipse glasses looking up at the sky during a solar eclipse" width="600" height="599" />

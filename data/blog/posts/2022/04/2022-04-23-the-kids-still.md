@@ -9,4 +9,4 @@ categories: []
 
 The kids still like to argue about who got the biggest piece of stuff. So, sometimes I remove the debate. I took the 41g. 
 
-<img src="https://www.thingelstad.com/uploads/2022/74c2e95180.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/74c2e95180.jpg" width="600" height="600" alt="Three broken M and M cookie pieces on paper towels labeled 41g, 43g, and 44g, next to a red Escali kitchen scale reading 2g." />

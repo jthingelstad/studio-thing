@@ -9,4 +9,4 @@ categories: []
 
 We found [Mazie](https://mazie.thingelstad.com) in Paris!
 
-<img src="https://www.thingelstad.com/uploads/2026/25f08693a7.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/25f08693a7.jpg" width="600" height="450" alt="Family of four smiling together on a sunny Parisian street, with classic Haussmann buildings in the background.">

@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/d74ab1e380.jpg" style="width: 120px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/d74ab1e380.jpg" alt="Bald man in a casual blue shirt sitting at a desk with computer monitors in a dimly lit office" style="width: 120px; float: right; margin-left: 10px; " />
 
 Excuse me for a moment of self-promotion. 🙂 [I was featured in an article](http://twincities.bizjournals.com/twincities/stories/2007/01/01/story4.html?b=1167627600%5e1396237&surround=etf) published last Friday in the [Twin Cities Business Journal](http://twincities.bizjournals.com/twincities/) about what Dow Jones is doing here in Minneapolis, specifically some of the R&D; work that we've been focused on.
 

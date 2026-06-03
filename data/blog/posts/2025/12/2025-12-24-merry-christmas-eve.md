@@ -9,4 +9,4 @@ categories: []
 
 Merry Christmas Eve! 🎄🎅
 
-<img src="https://www.thingelstad.com/uploads/2025/6b7d646e65.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/6b7d646e65.jpg" width="450" height="600" alt="Four people smiling beside a decorated Christmas tree, two wearing matching Santa sweaters, two in red plaid shirts.">

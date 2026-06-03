@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Tammy and I went to [Ticket to Paradise](https://en.wikipedia.org/wiki/Ticket_to_Paradise_%282022_film%29) at the [newly renovated Edina Theatre](https://www.thingelstad.com/2022/12/03/tammy-and-i.html) today. It was a funny movie, enjoyable, and very predictable. Pretty much exactly what you would expect, which is great if that is what you are looking for. We enjoyed it. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2022/b52945e95f.jpg" width="378" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/b52945e95f.jpg" width="378" height="600" alt="Movie poster showing a man in a tuxedo and a woman in a floral embroidered dress smiling at each other against a tropical floral backdrop">

@@ -9,4 +9,4 @@ categories: []
 
 Tyler's Awesome Yoda Shirt — "Judge me by my size you do?"
 
-![](https://www.thingelstad.com/uploads/2020/3880848de4.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/3880848de4.jpg" alt="Toddler with blue eyes standing on a wood floor wearing a blue Star Wars Yoda shirt reading Judge me by my size do you">

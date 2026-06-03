@@ -9,4 +9,4 @@ categories: []
 
 Tuscan countryside. 
 
-<img src="https://www.thingelstad.com/uploads/2023/43c4de5c52.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/43c4de5c52.jpg" width="600" height="450" alt="Rolling Tuscan hills covered in olive groves and cypress trees with stone villas near Florence under a partly cloudy sky.">

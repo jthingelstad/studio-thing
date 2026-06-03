@@ -9,4 +9,4 @@ categories: []
 
 I *actually* scanned a QR code today. It was made out of seeds in the crop art at [MN State Fair](https://www.mnstatefair.org). Awesome!
 
-<img src="https://www.thingelstad.com/uploads/2020/e47273640f.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/e47273640f.jpg" width="600" height="800" alt="QR code made from millet and rape seeds displayed at Minnesota State Fair crop art exhibit with a Merit Award ribbon" />

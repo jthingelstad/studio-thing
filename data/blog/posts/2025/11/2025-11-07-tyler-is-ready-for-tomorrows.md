@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Tyler is ready for tomorrow's United game! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2025/fe783d98a2.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/fe783d98a2.jpg" width="600" height="450" alt="Minnesota United FC gear laid on a rug including a dark Adidas jersey, Inaugural Season 2017 scarf, cream Mitchell and Ness hoodie, and white cap">

@@ -9,4 +9,4 @@ categories: []
 
 Visited the [Michigan Avenue Apple Store](https://www.apple.com/retail/michiganavenue/) when we were in Chicago. Amazing architecture. The building feels invisible.
 
-<img src="https://www.thingelstad.com/uploads/2018/58c624c0db.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/58c624c0db.jpg" alt="Apple Michigan Avenue store on the Chicago Riverwalk, with the Chicago Tribune building and skyscrapers behind it." width="600" height="450" />

@@ -9,4 +9,4 @@ categories: []
 
 Family bike ride to DQ!
 
-<img src="https://www.thingelstad.com/uploads/2019/24c14c8968.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/24c14c8968.jpg" width="600" height="450" alt="Group of cyclists including adults and children riding bikes on a paved tree-lined trail on a sunny day" />

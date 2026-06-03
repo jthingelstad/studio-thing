@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Winnie the Pooh enjoys tiny coffees too. [Urban Bean Coffee](http://urbanbeancoffee.com)
 
-<img src="https://www.thingelstad.com/uploads/2023/img-9395.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/img-9395.jpg" width="600" height="450" alt="Winnie the Pooh stuffed toy in a red shirt sitting behind a small latte on a cafe counter.">

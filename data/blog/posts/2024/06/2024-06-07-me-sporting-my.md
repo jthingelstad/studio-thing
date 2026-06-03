@@ -9,4 +9,4 @@ categories: []
 
 Me sporting my Irish look with new Fisherman’s Sweater and Cap. ☘️
 
-<img src="https://www.thingelstad.com/uploads/2024/f5edc26a0e.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/f5edc26a0e.jpg" width="450" height="600" alt="Smiling middle-aged man wearing a gray herringbone flat cap and chunky zip-neck fisherman sweater inside a wood-beamed room.">

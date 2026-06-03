@@ -9,7 +9,7 @@ categories: []
 
 My brother Isaiah and his family visited this last weekend and on Saturday we noted the 5th year since [we first met](https://www.thingelstad.com/2016/02/01/meeting-my-brother.html). In those five years we have gotten to know each other really well. We even took a trip to Chicago together. Our families have also gotten close and our kids have great cousin time together. 
 
-![](https://www.thingelstad.com/uploads/2021/55a25ba2d0.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/55a25ba2d0.jpg" alt="Two men smiling outdoors in winter, one wearing a red knit hat and sunglasses, the other in glasses and a jacket labeled Striker Ice, snow-covered yard behind them.">
 
 It would have been easy for us to go through our whole lives having never met. I’m really glad that we did and that we have gotten to know each other so well.
 

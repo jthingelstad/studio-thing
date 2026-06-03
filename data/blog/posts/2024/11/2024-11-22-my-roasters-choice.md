@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 My [coffee subscription](https://paircupworks.com/products/copy-of-monthly-coffee-subscription-8oz) from [Pair Cupworks](https://paircupworks.com) consistently brings me compelling and unique beans. This [Peanut & Dark Chocolate](https://paircupworks.com/products/119-wash-processed-coffee-beans-from-laos) from [Laos](https://en.m.wikipedia.org/wiki/Laos) by the [Bolaven Plateau Coffee Producers Cooperative](https://www.cpc-laos.org) is great. It may be my first coffee from Asia. ☕️
 
-<img src="https://www.thingelstad.com/uploads/2024/b91c6fdf3f.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/b91c6fdf3f.jpg" width="600" height="600" alt="Chemex pour-over brewer on a Hario scale beside a white bag of Pair Cupworks Laos wash-processed coffee beans">

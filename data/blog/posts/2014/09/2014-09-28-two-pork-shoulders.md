@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Two pork shoulders on the [Big Green Egg](https://biggreenegg.com). Check back in a few hours.
 
-<img src="https://www.thingelstad.com/uploads/2020/60e63c6203.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/60e63c6203.jpg" width="600" height="450" alt="Two dry-rubbed pork shoulders smoking on the grill grates of a ceramic kamado-style smoker with the lid open." />

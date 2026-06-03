@@ -9,4 +9,4 @@ categories: []
 
 Selfie with [Joel Crandall](https://www.linkedin.com/in/joel-d-crandall/), CEO of [MnTech](https://mntech.org), moments before we kick off the very first MnTech Elevate event! 
 
-<img src="https://www.thingelstad.com/uploads/2025/314ac637b9.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/314ac637b9.jpg" width="600" height="450" alt="Two men smiling for a selfie inside US Bank Stadium at the MnTech Elevate event, one wearing a Vikings jersey and blazer">

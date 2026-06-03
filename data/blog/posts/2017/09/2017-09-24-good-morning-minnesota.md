@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Good morning Minnesota! ☕️
 
-<img src="https://www.thingelstad.com/uploads/2017/b646fc5f0b.jpg" width="599" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/b646fc5f0b.jpg" alt="White Minnesota Home mug of black coffee on a weathered picnic table outdoors, with a grassy lawn and lake at sunrise in the background." width="599" height="600" />

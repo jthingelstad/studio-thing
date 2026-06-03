@@ -21,4 +21,4 @@ Zooming out I now have a total of **9,111 posts** containing **574,102 words**! 
 
 On top of that I imported my Twitter archive and curated and improved that. Since April 2017 I've been publishing on micro.blog and you can see that it has enabled me to post even more. To me, this is one of the best ways to evaluate a blogging platform — does it enable you to "just write" on the web.
 
-<img src="https://www.thingelstad.com/uploads/2025/posts-published-2000-2024.png" width="600" height="242" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/posts-published-2000-2024.png" width="600" height="242" alt="Line graph of posts published per year from 2000 to 2024, peaking near 780 in 2008 and rising again to about 700 in 2024.">

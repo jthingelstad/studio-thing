@@ -11,4 +11,4 @@ First day that [my Gnosis Chain validators](https://beacon.gnosischain.com/dashb
 
 
 
-<img src="https://www.thingelstad.com/uploads/2022/f1599d97bd.png" width="600" height="330" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/f1599d97bd.png" width="600" height="330" alt="Bar chart showing daily income in mGNO for all Gnosis Chain validators from mid-September to mid-October 2022, rising from near zero to nearly 0.50 mGNO.">

@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We watched [Luca](https://movies.disney.com/luca) tonight for Family Movie night. It was a good story and endearing characters.  🍿
 
-<img src="https://www.thingelstad.com/uploads/2021/ccb8e5fd58.jpg" width="405" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/ccb8e5fd58.jpg" width="405" height="600" alt="Disney Pixar Luca movie poster showing three animated kids above water with sea creature forms visible below the surface." />

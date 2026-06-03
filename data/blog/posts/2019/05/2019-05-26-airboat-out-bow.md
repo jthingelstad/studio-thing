@@ -9,4 +9,4 @@ categories: []
 
 Airboat out bow fishing for carp at night. 
 
-<img src="https://www.thingelstad.com/uploads/2019/940afd5e77.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/940afd5e77.jpg" width="600" height="599" alt="Rope hammock strung between trees at night, lit by small glowing lights, surrounded by illuminated green foliage" />

@@ -9,4 +9,4 @@ categories: []
 
 Sous Vide tenderloin started! 🥩
 
-<img src="https://www.thingelstad.com/uploads/2019/51f75abafc.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/51f75abafc.jpg" width="600" height="600" alt="Beef tenderloin in vacuum-sealed bags submerged in a clear sous vide water bath container with immersion circulator on a kitchen counter" />

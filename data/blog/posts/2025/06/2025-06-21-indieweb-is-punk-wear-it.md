@@ -11,11 +11,11 @@ I published [IndieWeb is Punk](https://www.thingelstad.com/2025/06/19/indieweb-i
 
 [Jim Mitchell created the shirt](https://jimmitchell.org/2025/06/19/indieweb-is-punk-indeed/)! Go ahead and get one!
 
-<img src="https://www.thingelstad.com/uploads/2025/85c04490bf.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/85c04490bf.jpg" alt="Black heather t-shirt with a punk-style graphic reading IndieWeb is Punk in white distressed lettering above cut-out ransom-note style letters spelling PUNK in pink and blue">
 
 I wanted to make a POAP to go with it so Jim sent me the image files and here we are!
 
-<img src="https://www.thingelstad.com/uploads/2025/e13d37adb8.png">
+<img src="https://www.thingelstad.com/uploads/2025/e13d37adb8.png" alt="Circular black button badge with distressed white text reading IndieWeb is Punk in bold punk-style lettering on pink and blue blocks">
 
 For fun I asked ChatGPT to create the description for this POAP in the voice of Henry Rollins of Black Flag speaking to bloggers of today!
 

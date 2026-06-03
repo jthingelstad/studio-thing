@@ -9,4 +9,4 @@ categories: []
 
 Soak in the hot tub while the sauna heats up. ❄️🔥💦
 
-<img src="https://www.thingelstad.com/uploads/2025/a59bed53b2.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/a59bed53b2.jpg" width="600" height="450" alt="Hot tub filled with steaming water beside a wood-fired barrel sauna with smoke rising, snowy backyard and trampoline behind.">

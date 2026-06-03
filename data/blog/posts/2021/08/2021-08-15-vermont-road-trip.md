@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2021/08/15/vermont-road-trip.html"
 title: "Vermont Road Trip Log: Day 16, Sunday"
 published: "2021-08-15T23:54:00+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: ["Coffee"]
 ---
 
 Weather: Perfect. Warm and sunny.
@@ -22,7 +22,7 @@ Weather: Perfect. Warm and sunny.
 - 4:02p: Back home! 🏡 
 - Final odometer reading: 3,894. 
 
-![](https://www.thingelstad.com/uploads/2021/b130063f01.png)
+<img src="https://www.thingelstad.com/uploads/2021/b130063f01.png" alt="Google Maps showing 3 route options from Saugatuck MI to Edina MN, the fastest being 8 hr 10 min and 555 miles via I-94 through Wisconsin.">
 
 Jump to day [1](https://www.thingelstad.com/2021/07/31/vermont-road-trip.html), 
 [2](https://www.thingelstad.com/2021/08/01/vermont-road-trip.html), 

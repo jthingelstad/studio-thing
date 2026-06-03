@@ -9,4 +9,4 @@ categories: []
 
 Current news from [Ennis,MT](http://www.ennismontana.org). 🎣 
 
-<img src="https://www.thingelstad.com/uploads/2020/d800dec0d5.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d800dec0d5.jpg" width="600" height="450" alt="Whiteboard at MRFC fly shop listing top flies: streamers Black Bosser, Sparkle Minnow, Trevois Sculpin; nymphs and dries also listed." />

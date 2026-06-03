@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/12/15/weekly-thing-logo.html"
 title: "Weekly Thing Logo"
 published: "2024-12-15T14:21:32+00:00"
 post_kind: post
-categories: []
+categories: ["Weekly Thing"]
 ---
 
 I've been publishing the [Weekly Thing](https://weekly.thingelstad.com) for over seven years. Sometimes I need to have an image associated with it. Some of those times it is actually required. So, I've had a mild need for a logo to represent the Weekly Thing for a while.
@@ -45,6 +45,6 @@ Or how about one of my favorite animals.
 
 The last extension I thought about that seemed like a fun option was animation. The seven blocks don't have to be static. I could have them moving around.
 
-<img src="https://www.thingelstad.com/uploads/2024/wt-logo-bounce.gif" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/wt-logo-bounce.gif" width="600" height="600" alt="Three tall 3D rectangular blocks on the left and one on the right, rendered in black outlines, above bold text reading Weekly Thing.">
 
 I like it and I think it works well for my needs. I’m going to play around during my winter publishing break with how I may use this. I don't want to change the personal feel of the email with a logo. Perhaps some folks may want a Weekly Thing coffee mug to go with their weekend reading?

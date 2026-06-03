@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Really enjoyed [Hearts Beat Loud](https://www.imdb.com/title/tt7158430/). Nice story, good music. 🎬
 
-<img src="https://www.thingelstad.com/uploads/2018/41496335af.jpg" width="404" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/41496335af.jpg" alt="Movie poster for Hearts Beat Loud showing two people playing music together in front of a wall of colorful vinyl records." width="404" height="600" />

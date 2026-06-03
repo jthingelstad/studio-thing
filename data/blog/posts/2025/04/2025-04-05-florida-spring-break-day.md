@@ -16,7 +16,7 @@ categories: ["Escape Room"]
 - Lyft home. 
 - Finally get to sleep at 2:00 am.
 
-<img src="https://www.thingelstad.com/uploads/2025/screenshot-2025-04-05-at-1.12.58pm.png" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/screenshot-2025-04-05-at-1.12.58pm.png" width="600" height="400" alt="Google Maps route from 103 Palmer Street near St Augustine south to Orlando along I-95 and I-4, 124 miles, 2 hours 9 minutes">
 
 Jump to day
 [0](https://www.thingelstad.com/2025/03/29/florida-spring-break-day.html),

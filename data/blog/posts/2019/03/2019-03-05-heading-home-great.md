@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Heading home. Great time visiting #TeamSPS Toronto. CRJ-900 taking us back. 🛩
 
-<img src="https://www.thingelstad.com/uploads/2019/a7190a3ed2.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/a7190a3ed2.jpg" width="600" height="337" alt="Two people boarding a Delta Connection CRJ900 regional jet via airstairs on an airport tarmac at dusk." />

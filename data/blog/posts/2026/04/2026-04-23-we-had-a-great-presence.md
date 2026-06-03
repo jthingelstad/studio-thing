@@ -9,4 +9,4 @@ categories: []
 
 We had a great presence from TeamSPS at the Aspirations in Computing awards event tonight and welcomed three of the four high-school interns that will be working with us this summer!
 
-<img src="https://www.thingelstad.com/uploads/2026/1dfc52c8d7.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/1dfc52c8d7.jpg" width="600" height="450" alt="Group of about thirteen people posing in front of an Aspirations in Computing banner, two holding award certificates.">

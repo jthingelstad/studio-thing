@@ -7,10 +7,7 @@ post_kind: post
 categories: ["Crypto"]
 ---
 
-I was reading this very interesting [article on
-Bitcoin](http://launch.is/blog/l019-bitcoin-p2p-currency-the-most-dangerous-project-weve-ev.html)
-by [Jasan Calacanis](http://calacanis.com/) and used the term
-"technotarian" and then defined it in a footnote as:
+I was reading this very interesting [article on Bitcoin](http://launch.is/blog/l019-bitcoin-p2p-currency-the-most-dangerous-project-weve-ev.html) by [Jasan Calacanis](http://calacanis.com/) and used the term "technotarian" and then defined it in a footnote as:
 
 > We made this term up to describe the "good people" of the internet who
 > believe in the fundamental rights of individuals to be free, have free
@@ -24,6 +21,4 @@ by [Jasan Calacanis](http://calacanis.com/) and used the term
 > hacktivism, such as the takedown of the Sony Playstation Network after
 > Sony tried to prosecute a hacker for unlocking its console.
 
-Great term. A quick search also brought this [1995 definition of
-Technological
-Libertarianism](http://www.ontheissues.org/spectrum/tech_lib.htm).
+Great term. A quick search also brought this [1995 definition of Technological Libertarianism](http://www.ontheissues.org/spectrum/tech_lib.htm).

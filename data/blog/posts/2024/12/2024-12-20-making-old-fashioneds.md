@@ -9,4 +9,4 @@ categories: []
 
 Making Old Fashioned’s tonight for friends. 
 
-<img src="https://www.thingelstad.com/uploads/2024/9a33985309.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/9a33985309.jpg" width="600" height="450" alt="Three Old Fashioned cocktails in rocks glasses with ice, orange peel, and cherries on a kitchen counter with bar tools nearby.">

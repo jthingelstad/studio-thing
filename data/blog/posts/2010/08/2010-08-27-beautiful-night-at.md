@@ -9,4 +9,4 @@ categories: []
 
 Beautiful night at Lake Harriet.
 
-<img src="https://www.thingelstad.com/uploads/2020/3905d87e5d.jpg" width="600" height="448" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/3905d87e5d.jpg" width="600" height="448" alt="Large crowd gathered on lawn and benches at Lake Harriet bandshell during an outdoor evening concert in Minneapolis." />

@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Good morning! Espresso crema… ☕️
 
-<img src="https://www.thingelstad.com/uploads/2017/5ab7276ab4.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/5ab7276ab4.jpg" alt="Small white ceramic espresso cup with blue brushstroke design, filled with espresso and golden crema, resting on a metal mesh surface near an espresso machine." width="600" height="600" />

@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Great dinner last night with some our our #TeamSPS Ukraine leaders in Kyiv! Great food, conversation, and people. 🤝
 
-<img src="https://www.thingelstad.com/uploads/2019/b855675e42.jpg" width="600" height="449" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/b855675e42.jpg" width="600" height="449" alt="Group of about ten colleagues smiling around a white-tablecloth restaurant table with wine glasses and dinner plates in Kyiv." />

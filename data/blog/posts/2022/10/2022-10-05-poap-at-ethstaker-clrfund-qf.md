@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/5715512">5715512</a> at <strong><a href="https://poap.gallery/drops/55509">EthStaker / CLR.Fund QF Matching Round 2022</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/ethstaker-clrfund-qf-matching-round-2022-2022-logo-1658175090833.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/ethstaker-clrfund-qf-matching-round-2022-2022-logo-1658175090833.png" alt="Purple circular badge with Ethereum, CLR.Fund, and EthStaker logos reading Legend Donor 2022 I contributed to the EthStaker/CLR.Fund QF Round" width="500" height="500" />

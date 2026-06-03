@@ -9,4 +9,4 @@ categories: []
 
 My daughter gave me this great workout shirt for my birthday and my [Fit By Fifty](https://www.thingelstad.com/projects/fitbyfifty/) project. I absolutely love it. 🤩 One year to go!
 
-<img src="https://www.thingelstad.com/uploads/2021/c761a41293.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/c761a41293.jpg" width="450" height="600" alt="Middle-aged man smiling indoors wearing a red shirt printed with FIT BY 50 and a bodybuilder graphic" />

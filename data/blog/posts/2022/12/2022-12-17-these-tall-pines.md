@@ -9,4 +9,4 @@ categories: []
 
 These tall pines are carrying a lot of weight. Lake Pokegama, MN. 
 
-<img src="https://www.thingelstad.com/uploads/2022/4a2063b4d7.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/4a2063b4d7.jpg" width="600" height="450" alt="Snow-laden pine trees photographed from below, trunks and branches bending under heavy snow against a pale blue winter sky.">

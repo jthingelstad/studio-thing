@@ -9,4 +9,4 @@ categories: []
 
 Hitting the road in the RV! 
 
-<img src="https://www.thingelstad.com/uploads/2020/b0505974de.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/b0505974de.jpg" width="600" height="450" alt="Family of four giving thumbs up inside an RV kitchen, smiling and ready for a road trip." />

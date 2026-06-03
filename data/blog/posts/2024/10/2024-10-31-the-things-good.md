@@ -9,4 +9,4 @@ categories: ["Crypto", "Things 4 Good"]
 
 The [Things 4 Good 2024 Candle Fundraiser POAP](https://poap.gallery/drop/179573) is ready to share with folks at this weekends event! It is a good example of how I'm not a designer. 😬
 
-<img src="https://www.thingelstad.com/uploads/2024/23b46f9af0.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/23b46f9af0.jpg" width="600" height="600" alt="Circular badge logo for Things 4 Good Candle Fundraiser 2024 showing several colorful candles in glass containers with wooden wicks">

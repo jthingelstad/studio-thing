@@ -9,4 +9,4 @@ categories: []
 
 Very cool that [ModRetro](https://modretro.com) games can be [updated via MRUpdater](https://modretro.com/blogs/blog/cart-clinic-update-modretro-games). I just updated my Tetris cartridge to the newest bits.
 
-<img src="https://www.thingelstad.com/uploads/2025/89ff01cf67.png" width="600" height="427" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/89ff01cf67.png" width="600" height="427" alt="ModRetro Cart Clinic app dialog showing a green checkmark and the message The game was successfully updated with an Okay button.">

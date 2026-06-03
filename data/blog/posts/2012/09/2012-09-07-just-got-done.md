@@ -9,4 +9,4 @@ categories: []
 
 Just got done chasing Northern Lights around Selfoss, Iceland. 1:30a. Time to sleep.
 
-<img src="https://www.thingelstad.com/uploads/2020/efc6b3be02.jpg" width="400" height="266" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/efc6b3be02.jpg" width="400" height="266" alt="Green aurora borealis sweeping across a starry night sky above a dark Icelandic road with red and white light trails from passing cars." />

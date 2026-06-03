@@ -9,4 +9,4 @@ categories: []
 
 Cheers to 96 quarters of growth with the **Growth Cup** at the SPS Social. 
 
-<img src="https://www.thingelstad.com/uploads/2025/f06ed3a323.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/f06ed3a323.jpg" width="600" height="600" alt="Two people holding a large silver trophy cup on an SPS Commerce branded table in front of a silver foil backdrop, one giving a thumbs up.">

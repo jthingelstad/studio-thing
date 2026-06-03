@@ -13,4 +13,4 @@ This room also had actors with the "screaming" part courtesy of the first actor 
 
 We did escape! It was a complicated room but we worked through all the various steps and ultimately made it out. I really liked how authentic the ending was and how immersive the story got. Well done. 
 
-<img src="https://www.thingelstad.com/uploads/2025/514aa438fb.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/514aa438fb.jpg" width="600" height="400" alt="Four people pose in a rustic wooden room holding props including a red gas can, a wrench, and a flashlight.">

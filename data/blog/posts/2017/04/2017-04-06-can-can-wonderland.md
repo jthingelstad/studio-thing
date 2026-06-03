@@ -9,4 +9,4 @@ categories: []
 
 Fun afternoon playing mini golf at [Can Can Wonderland](https://cancanwonderland.com).
 
-<img src="https://www.thingelstad.com/uploads/2020/39097e51e4.jpg" style="width: 400px; max-width: 400px;" />
+<img src="https://www.thingelstad.com/uploads/2020/39097e51e4.jpg" alt="Can Can Wonderland Now Open announcement on yellow background with white stars, 755 Prior Ave N, St. Paul, MN" style="width: 400px; max-width: 400px;" />

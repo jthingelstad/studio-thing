@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6366384">6366384</a> at <strong><a href="https://poap.gallery/drops/102624">SPS TechConnect 2023</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/sps-techconnect-2023-2023-logo-1677009145690.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/sps-techconnect-2023-2023-logo-1677009145690.png" alt="Circular badge logo for SPS TechConnect event, Feb 28 to Mar 2 2023, with concentric colored rings on dark background" width="500" height="500" />

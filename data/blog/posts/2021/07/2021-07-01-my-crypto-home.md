@@ -9,4 +9,4 @@ categories: []
 
 My crypto home screen as of July 2021. 
 
-<img src="https://www.thingelstad.com/uploads/2021/dd0607d8c1.png" width="277" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/dd0607d8c1.png" width="277" height="600" alt="iPhone home screen with cryptocurrency apps including Coinbase, MetaMask, Exodus, and BlockFi, plus a widget showing BTC at 33450, ETH at 2099, LTC at 137." />

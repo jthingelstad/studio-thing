@@ -9,4 +9,4 @@ categories: []
 
 We picked delicious strawberries at [Lorences Berry Farm](http://www.lorencesberryfarm.com/) in Northfield today. 🍓
 
-<img src="https://www.thingelstad.com/uploads/2019/4a77d0861f.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/4a77d0861f.jpg" width="450" height="600" alt="Family of four holding strawberry picking baskets at a U-pick farm with rows of strawberry plants behind them." />

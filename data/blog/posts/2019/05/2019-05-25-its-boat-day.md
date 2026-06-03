@@ -9,4 +9,4 @@ categories: []
 
 **It’s boat day!** Taking the pontoon out of storage and heading up river to the lake! 😃
 
-<img src="https://www.thingelstad.com/uploads/2019/69cfa16615.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/69cfa16615.jpg" width="600" height="450" alt="Pontoon boat deck with gray upholstered seating and steering console on a calm blue river with tree-lined banks." />

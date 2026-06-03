@@ -11,4 +11,4 @@ Pod Jarzębiną. [📍](http://maps.apple.com/?ll=52.249998,21.012758)
 
 Afternoon break for a [Tyskie](https://www.kp.pl/en/our-beers/tyskie). 
 
-<img src="https://www.thingelstad.com/uploads/2025/image-20250418-174119-c75b837c.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/image-20250418-174119-c75b837c.jpg" alt="Leica camera with lens cap on lying beside a tall glass of lager on a red checked tablecloth at an outdoor cafe in a European town square.">

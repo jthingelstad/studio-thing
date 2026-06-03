@@ -9,4 +9,4 @@ categories: []
 
 Exploring Ellis Island with Manhattan in the background. 
 
-<img src="https://www.thingelstad.com/uploads/2018/02dee881d6.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/02dee881d6.jpg" alt="Man in a green plaid shirt smiling with the Manhattan skyline and Hudson River behind him on a cloudy day." width="600" height="337" />

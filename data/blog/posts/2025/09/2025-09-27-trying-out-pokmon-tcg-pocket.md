@@ -13,4 +13,4 @@ If you want to connect with me my friend code is `2059-0580-7070-6014`.
 
 An observation on TCG Pocket — if you owned Pokémon and had a huge market of collectible cards and believed there was a future for digital collectibles, like NFTs, this app is exactly what you would create. You have a brand new ecosystem of digital only cards to get people used to all the typical things you do with the current physical cards and create a whole additional digital ecosystem. It isn't blockchain based today, but the consumer behavior is the thing to focus on now how it is done.
 
-<img src="https://www.thingelstad.com/uploads/2025/4354095063.png">
+<img src="https://www.thingelstad.com/uploads/2025/4354095063.png" alt="Pokemon TCG Pocket app home screen on iPhone showing booster packs including Eevee Grove, Secluded Springs, and Wisdom of Sea and Sky with timers and Wonder Pick menu.">

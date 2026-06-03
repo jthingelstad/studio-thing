@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We watched [Trolls World Tour](https://www.dreamworks.com/movies/trolls-world-tour) tonight. It was fun and I liked all the music in it. Tiny Diamond cracked us up a lot. The story has very obvious messages about valuing differences told through music. Everyone liked it. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2021/c107db2bb5.jpg" width="426" height="675" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/c107db2bb5.jpg" width="426" height="675" alt="DreamWorks Trolls World Tour movie poster featuring colorful animated troll characters around a glowing skull guitar, in theaters April 17" />

@@ -9,4 +9,4 @@ categories: []
 
 Facial recognition doesn’t stand a chance with my pandemic vacation wear. 
 
-<img src="https://www.thingelstad.com/uploads/2020/80d806872f.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/80d806872f.jpg" width="600" height="600" alt="Man wearing a wide-brim hat, dark sunglasses, and a blue face mask standing in a sunny park with trees and grass behind him." />

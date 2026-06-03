@@ -9,4 +9,4 @@ categories: []
 
 Getting takeout from [Tap Society](https://www.tapsocietymn.com)! Delicious cheeseburgers and we need to support our local businesses! 🍔🍔🍔
 
-<img src="https://www.thingelstad.com/uploads/2020/9a68869544.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/9a68869544.jpg" width="600" height="450" alt="Two notices taped to a glass door at Tap Society restaurant announcing COVID-19 dine-in closure and takeout and delivery options." />

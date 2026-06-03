@@ -9,4 +9,4 @@ categories: []
 
 Hat and Glasses.
 
-![](https://www.thingelstad.com/uploads/2020/428d3c7d27.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/428d3c7d27.jpg" alt="Young child wearing a blue bucket hat and round glasses standing on a brick path, looking up">

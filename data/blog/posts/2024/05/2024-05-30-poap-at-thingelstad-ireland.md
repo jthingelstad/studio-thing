@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7136146">7136146</a> at <strong><a href="https://poap.gallery/drops/174324">Thingelstad Ireland 2024</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/8e783fd3-9ead-455d-993f-921a5952aaad.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/8e783fd3-9ead-455d-993f-921a5952aaad.png" alt="Circular Celtic knotwork badge showing the Cliffs of Moher with text Thingelstad Ireland 2024 and Irish town names around the border." width="500" height="500" />

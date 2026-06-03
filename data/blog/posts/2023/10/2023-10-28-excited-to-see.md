@@ -9,4 +9,4 @@ categories: []
 
 Excited to see the optical fiber connection installed to the outside of our cabin! Still won’t be setup until spring but this is a big milestone!
 
-<img src="https://www.thingelstad.com/uploads/2023/cbdcf06612.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/cbdcf06612.jpg" width="600" height="600" alt="Optical fiber cable running down exterior gray wood siding to electrical boxes and a gas meter, beside an AC unit">

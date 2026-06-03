@@ -9,4 +9,4 @@ categories: []
 
 Checking into Moon Dance B&B.
 
-<img src="https://www.thingelstad.com/uploads/2020/84e258f43b.jpg" width="150" height="200" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/84e258f43b.jpg" width="150" height="200" alt="Victorian parlor with dark wood furniture, floral upholstery, ornate rug, chandelier, and large windows with draped curtains" />

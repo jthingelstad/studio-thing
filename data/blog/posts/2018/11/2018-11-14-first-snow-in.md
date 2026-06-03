@@ -9,4 +9,4 @@ categories: []
 
 First snow in Kyiv! ❄️
 
-<img src="https://www.thingelstad.com/uploads/2018/ea220bb41d.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/ea220bb41d.jpg" alt="Snow-covered street in Kyiv during a heavy snowfall with parked cars, pedestrians in winter coats, and a red brick building with Cyrillic signage." width="600" height="450" />

@@ -9,4 +9,4 @@ categories: []
 
 Exploring the brand new [Bell Museum](https://www.bellmuseum.umn.edu)! 
 
-<img src="https://www.thingelstad.com/uploads/2018/fa70840f94.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/fa70840f94.jpg" alt="Life-size woolly mammoth exhibit with curved tusks at the Bell Museum, visitors visible in background" width="600" height="600" />

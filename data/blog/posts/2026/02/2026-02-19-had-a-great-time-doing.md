@@ -9,4 +9,4 @@ categories: []
 
 Had a great time doing a lunch AMA with TeamSPS in Brampton today. Also got to see some great demos. 
 
-<img src="https://www.thingelstad.com/uploads/2026/6e6e00bb37.jpg" width="600" height="248" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/6e6e00bb37.jpg" width="600" height="248" alt="Large group of roughly 60 people posing together in a bright office cafeteria with white chairs and tables.">

@@ -9,4 +9,4 @@ categories: ["Minnestar"]
 
 So great to connect with Minnebar OG’s this morning. Awesome to have Ben and Luke here to celebrate Minnebar 20!
 
-<img src="https://www.thingelstad.com/uploads/2026/99d6116d2c.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/99d6116d2c.jpg" width="600" height="450" alt="Seven smiling adults posing together indoors at a tech conference, some wearing name badges and branded hoodies.">

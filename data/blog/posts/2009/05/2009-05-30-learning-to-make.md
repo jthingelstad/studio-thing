@@ -10,4 +10,4 @@ categories: []
 Learning to make sausage with Craig from the [North House Folk
 School](http://www.northhouse.org/).
 
-![](https://www.thingelstad.com/uploads/2020/d3a5542e41.png)
+<img src="https://www.thingelstad.com/uploads/2020/d3a5542e41.png" alt="Man in apron gesturing over a tray of raw sausages on a wooden table indoors while teaching a class">

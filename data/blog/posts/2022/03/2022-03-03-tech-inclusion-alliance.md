@@ -14,7 +14,7 @@ My key points:
 1. Companies need to solve this problem or it will limit their growth as they are unable the available talent pool isn't growing fast enough.
 2. Companies can do more to lower the barriers to bringing talent into their organization. Technology choices are hiring choices!
 
-<img src="https://www.thingelstad.com/uploads/2022/56e2f3e927.jpg" width="600" height="336" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/56e2f3e927.jpg" width="600" height="336" alt="Promotional banner for the MnTech Tech Talent Virtual Forum on March 3 2022 featuring five speakers with their names and organizations" />
 
 The video for the session is up now.
 

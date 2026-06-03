@@ -9,4 +9,4 @@ categories: []
 
 Today’s Vacation Ice Cream stop was [Steel City Pops](https://steelcitypops.com). Made to order ice cream bars!
 
-<img src="https://www.thingelstad.com/uploads/2019/ff28b0bce1.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/ff28b0bce1.jpg" width="600" height="600" alt="Four gourmet ice cream bars on a wooden table, held by hands, topped with nuts and caramel drizzle or white chocolate coating." />

@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 A giant snow pile is a pretty good thing to play soccer with. ❄️⚽️
 
-<img src="https://www.thingelstad.com/uploads/2019/466c4e76e4.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/466c4e76e4.jpg" width="600" height="337" alt="Child in green pants kicking a soccer ball in deep snow in front of a gray shed with white trim" />

@@ -9,4 +9,4 @@ categories: []
 
 My Ukraine phone for easy messaging with team while here.
 
-<img src="https://www.thingelstad.com/uploads/2023/img-1986.jpg" width="600" height="800" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/img-1986.jpg" width="600" height="800" alt="White Samsung basic bar phone on a wooden surface displaying Tuesday August 12 at 9:13 AM with Cyrillic keypad labels">

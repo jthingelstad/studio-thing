@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7565227">7565227</a> at <strong><a href="https://poap.gallery/drops/226140">King Thing 10k | POAP KINGS</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2026/0f74c09a-075f-45a4-8cf9-7cfd8f7c417c.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2026/0f74c09a-075f-45a4-8cf9-7cfd8f7c417c.png" alt="Circular badge celebrating King Thing 10k POAP Kings milestone, featuring Clash Royale game characters on a purple and gold background." width="500" height="500" />

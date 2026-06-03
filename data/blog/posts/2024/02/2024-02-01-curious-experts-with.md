@@ -17,4 +17,4 @@ She emphasized focusing on big questions when looking at "things to do".
 4. How could we reimagine this?
 
 
-<img src="https://www.thingelstad.com/uploads/2024/a920d8d379.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/a920d8d379.jpg" width="600" height="337" alt="Large conference hall filled with hundreds of attendees seated at round tables facing a stage where a woman in a blazer speaks, shown on two large screens flanking the colorful backdrop.">

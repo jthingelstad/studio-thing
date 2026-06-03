@@ -9,4 +9,4 @@ categories: []
 
 Enjoying this [Athletic Brewing Apricot Farmhouse](https://athleticbrewing.com/products/apricot-farmhouse). Refreshing and crisp flavor. 🍻
 
-<img src="https://www.thingelstad.com/uploads/2023/7bee9dbe79.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/7bee9dbe79.jpg" width="600" height="600" alt="Athletic Brewing Co Apricot Farmhouse non-alcoholic beer can beside a full glass on a white counter with bananas in background">

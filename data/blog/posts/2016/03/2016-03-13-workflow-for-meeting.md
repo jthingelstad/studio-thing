@@ -23,10 +23,7 @@ The rules below will route mail into those three folders.
 
 ### Rules
 
-Note that my email rules are for Office 365 and Exchange Online. These
-would work directly in any Exchange environment, but I suspect that the
-spirit of these rules could be put in place in any email/calendar system
-with translation.
+Note that my email rules are for Office 365 and Exchange Online. These would work directly in any Exchange environment, but I suspect that the spirit of these rules could be put in place in any email/calendar system with translation.
 
 **Invitations**
 

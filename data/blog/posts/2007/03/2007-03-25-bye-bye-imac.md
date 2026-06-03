@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/adbbe524ca.jpg" style="width: 160px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/adbbe524ca.jpg" alt="Apple iMac G5 desktop computer with 20-inch white flat-panel display, white keyboard, and mouse on a white stand" style="width: 160px; float: right; margin-left: 10px; " />
 
 It's been just over two years since the Mac invasion of my house began with [my first Mac in over a half-decade](https://www.thingelstad.com/2004/11/26/imac-g.html), the sleek 20" iMac G5. I bought it as a toy really -- it went on the desk next to the kitchen. I knew I could run [Firefox](http://www.getfirefox.com/) on it and that I could remote desktop to my "real computer" in the office to do "real things". So it started.
 

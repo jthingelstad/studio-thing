@@ -9,4 +9,4 @@ categories: []
 
 At least it wasn't [a pillow](https://www.thingelstad.com/2008/12/14/dogs-suck.html).
 
-![](https://www.thingelstad.com/uploads/2020/0dc717b47e.png)
+<img src="https://www.thingelstad.com/uploads/2020/0dc717b47e.png" alt="Two dogs on a colorful patchwork rug indoors, one white fluffy dog and one large black dog, with a chewed plant nearby.">

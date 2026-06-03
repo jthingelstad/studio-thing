@@ -9,7 +9,7 @@ categories: ["TeamSPS"]
 
 Great night joining the [Minnesota Aspirations in Computing](https://www.aspirations.org/aspirations-community/minnesota) Award Ceremony tonight and recognizing so many young women that are making their mark in STEM. I also want to welcome our four #TeamSPS summer interns [Ezigbo](https://www.aspirations.org/user/160246), [Caroline](https://www.aspirations.org/user/134800), [Claire](https://www.aspirations.org/user/152453), and [Cecelia](https://www.aspirations.org/user/159338) to [SPS Commerce](https://www.spscommerce.com). I can’t wait to see what you create! Lastly, a huge thanks to [Jade Denson](https://www.linkedin.com/in/jadedenson/) of [MnTech](https://mntech.org) for emceeing and bringing so much fun and energy to the event!
 
-<img src="https://www.thingelstad.com/uploads/2021/f1df93b3df.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/f1df93b3df.jpg" width="600" height="450" alt="Zoom screen showing MNAiC Internship Program slide with four student interns at SPS Commerce alongside a smiling emcee wearing headphones" />
 
 See Aspirations Awards events from 
 [2016](https://www.thingelstad.com/2016/04/19/proud-that-spscommerce.html), 

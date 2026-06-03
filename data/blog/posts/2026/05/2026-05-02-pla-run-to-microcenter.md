@@ -9,4 +9,4 @@ categories: []
 
 PLA run to Microcenter. 
 
-<img src="https://www.thingelstad.com/uploads/2026/d81050bd61.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/d81050bd61.jpg" width="600" height="450" alt="Blue shopping basket filled with Inland brand PLA+ 3D printing filament boxes in various colors at a Microcenter store.">

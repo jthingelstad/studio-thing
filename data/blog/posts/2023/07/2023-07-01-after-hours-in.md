@@ -9,6 +9,6 @@ categories: ["Cooking"]
 
 After 22 hours in the Sous Vides the pork butts transition to the [Big Green Egg](https://biggreenegg.com) to get a bark and smoke em up. The liquid in the bags is in a sauce pan to reduce and add back to the final product. 🐖🔥💨
 
-<img src="https://www.thingelstad.com/uploads/2023/73d3e06d96.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/73d3e06d96.jpg" width="600" height="450" alt="Three vacuum-sealed FoodSaver bags of seasoned pork butt on a wooden cutting board, wet from sous vide cooking.">
 
-<img src="https://www.thingelstad.com/uploads/2023/3d3bf19a59.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/3d3bf19a59.jpg" width="600" height="450" alt="Two seasoned pork butts smoking on a Big Green Egg kamado grill outdoors, lid open, tongs and cutting board nearby.">

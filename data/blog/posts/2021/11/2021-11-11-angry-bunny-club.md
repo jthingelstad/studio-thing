@@ -11,7 +11,7 @@ I've been wanting to find an NFT project that I could be part of to learn and se
 
 The initial minting was over but Magic Eden is the official [marketplace for Angry Bunny Club](https://magiceden.io/marketplace/angry_bunny_club) and there were a number of bunnies listed for 0.25 to 0.3 SOL. I got a couple, then a couple more, and now I have six. I had to get a Santa one. 🎅
 
-![](https://www.thingelstad.com/uploads/2021/9a6f4bcf9c.png)
+<img src="https://www.thingelstad.com/uploads/2021/9a6f4bcf9c.png" alt="Six cartoon rabbit NFTs in a grid, each with an angry expression, wearing different outfits including flannel, overalls, a baseball cap, goggles, a Santa hat, and a tuxedo.">
 
 Left to right: [338](https://www.raritymon.com/Item-details?collection=angrybunnyclub&id=338), [3069](https://www.raritymon.com/Item-details?collection=angrybunnyclub&id=3069), [4801](https://www.raritymon.com/Item-details?collection=angrybunnyclub&id=4801), [1308](https://www.raritymon.com/Item-details?collection=angrybunnyclub&id=1308), [3680](https://www.raritymon.com/Item-details?collection=angrybunnyclub&id=3680), and [3678](https://www.raritymon.com/Item-details?collection=angrybunnyclub&id=3678). You can also see [all bunnies in my wallet](https://howrare.is/angrybunnyclub/?wallet=DDusCx5FpskRWjS7w8Zcnk1RzH4NeJHJvqqE4HwYF4qa).
 

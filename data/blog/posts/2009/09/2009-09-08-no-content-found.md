@@ -7,6 +7,6 @@ post_kind: micropost
 categories: ["Cooking"]
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/c606419f27.jpg" style="width: 116px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/c606419f27.jpg" alt="Roll of brown felt gasket tape coiled on a white surface, used for sealing a Big Green Egg grill lid." style="width: 116px; float: right; margin-left: 10px; " />
 
 Brand new gasket for the large [Big Green Egg](https://biggreenegg.com) tonight. It always feels like the grill is shiny and new with a brand new gasket. It closes with a soft thud, and the seal is perfect. Time for an extra low temperature smoke with a perfect gasket.

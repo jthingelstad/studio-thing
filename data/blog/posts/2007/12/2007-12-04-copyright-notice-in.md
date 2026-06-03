@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/a3b2f1bbff.gif" style="width: 50px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/a3b2f1bbff.gif" alt="Black fingerprint graphic on white background" style="width: 50px; float: right; margin-left: 10px; " />
 
 If you are reading thingelstad.com via the RSS feed you will notice that I have added a ~~copyright notice~~ [creative commons](http://creativecommons.org/) license to the feed, along with a digital fingerprint and for fun the IP address of the machine that pulled in your RSS feed. I'm doing this to fight back against website hijacking.
 

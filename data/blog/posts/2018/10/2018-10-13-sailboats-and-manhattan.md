@@ -7,4 +7,4 @@ post_kind: post
 categories: []
 ---
 
-![](https://www.thingelstad.com/uploads/2020/742bc488e8.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/742bc488e8.jpg" alt="Four sailboats on the Hudson River with the Lower Manhattan skyline and One World Trade Center in the background under overcast skies.">

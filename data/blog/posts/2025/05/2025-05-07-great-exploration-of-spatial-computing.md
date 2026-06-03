@@ -9,4 +9,4 @@ categories: []
 
 Great exploration of Spatial Computing at [MnTech](https://mntech.org) **[Tech Connect 2025](https://mntech.org/tech-connect-2025/)** with [Amir Berenjian](https://www.linkedin.com/in/amir-berenjian-90738220?trk=blended-typeahead) of [REM5 Studios](https://www.rem5studios.com). Pragmatic view highlighting where these solutions are solving big problems. 
 
-<img src="https://www.thingelstad.com/uploads/2025/f9bc093fda.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/f9bc093fda.jpg" width="600" height="337" alt="Two presenters on stage at MnTech Tech Connect 2025, one wearing a VR headset during a spatial computing demonstration, with a large screen behind them.">

@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Good macro session "Steady Lads" at [Bitcoin 2023](https://b.tc/conference/) with **Mark Moss**, **Lyn Alden**, and **Preston Posh**.
 
-<img src="https://www.thingelstad.com/uploads/2023/c4f53e5431.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/c4f53e5431.jpg" width="600" height="337" alt="Four panelists seated in white chairs on a stage at Bitcoin 2023 conference with large orange Bitcoin logo backdrop.">

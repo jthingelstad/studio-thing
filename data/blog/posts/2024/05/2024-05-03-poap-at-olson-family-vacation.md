@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7120292">7120292</a> at <strong><a href="https://poap.gallery/drops/173230">Olson Family Vacation 2024</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/8dce2047-0a0b-4be4-ab56-f1eaca5e33c5.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/8dce2047-0a0b-4be4-ab56-f1eaca5e33c5.png" alt="Circular collage of 80s icons including boomboxes, cassette tape, headphones, sneaker, leg warmers, Rubiks cube, and disco ball with OFV 2024 80s Murder Mystery text" width="500" height="500" />

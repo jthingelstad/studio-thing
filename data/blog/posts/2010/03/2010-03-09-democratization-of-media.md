@@ -9,4 +9,4 @@ categories: []
 
 Democratization of Media — [G. Love](http://www.philadelphonic.com/) and [Garrick](http://garrickvanburen.com/).
 
-![](https://www.thingelstad.com/uploads/2020/698d6ff691.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/698d6ff691.jpg" alt="MINI Cooper dashboard speedometer showing G. Love and Special Sauce and Garrick Van Buren on the audio display, car parked.">

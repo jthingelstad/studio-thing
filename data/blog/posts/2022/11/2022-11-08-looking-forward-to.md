@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Looking forward to an amazing **Growth Summit 2023** with #TeamSPS today! 🙌
 
-<img src="https://www.thingelstad.com/uploads/2022/433d4f85c0.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/433d4f85c0.jpg" width="600" height="450" alt="Large auditorium filled with hundreds of attendees seated in rows facing a stage with a large screen displaying Growth Summit 2023">

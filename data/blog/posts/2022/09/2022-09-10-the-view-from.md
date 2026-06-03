@@ -9,4 +9,4 @@ categories: []
 
 The view from our hotel room. 😕
 
-<img src="https://www.thingelstad.com/uploads/2022/515aec4f4a.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/515aec4f4a.jpg" width="600" height="450" alt="Multi-story parking garage exterior showing cars on four open levels, beside a gray brick building wall with windows." />

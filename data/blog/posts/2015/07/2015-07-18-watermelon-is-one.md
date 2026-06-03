@@ -9,4 +9,4 @@ categories: []
 
 Watermelon is one of my favorite things about summer!
 
-<img src="https://www.thingelstad.com/uploads/2021/57b3b68f07.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/57b3b68f07.jpg" width="600" height="450" alt="Sliced watermelon wedges piled on a white rectangular serving tray beside a bottle of No. 12 Cider House sparkling dry cider on a white countertop." />

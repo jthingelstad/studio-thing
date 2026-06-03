@@ -7,6 +7,4 @@ post_kind: post
 categories: []
 ---
 
-Haven't tasted Surly Darkness yet, but I was lucky enough to get a
-bottle into the house. ![Surly
-Darkness](https://www.thingelstad.com/uploads/2020/66c21779da.png)
+Haven't tasted Surly Darkness yet, but I was lucky enough to get a bottle into the house. ![Surly Darkness](https://www.thingelstad.com/uploads/2020/66c21779da.png)

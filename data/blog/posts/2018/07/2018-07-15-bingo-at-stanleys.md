@@ -9,4 +9,4 @@ categories: []
 
 Bingo at [Stanley’s](https://www.stanleysbarroom.com)!
 
-<img src="https://www.thingelstad.com/uploads/2018/3409787360.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/3409787360.jpg" alt="Multiple pink-daubed bingo cards spread across a restaurant table next to a Stanleys all-day breakfast menu." width="600" height="600" />

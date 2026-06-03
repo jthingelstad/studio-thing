@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We had a fun time seeing the matinee of [Paddington in Peru](https://paddingtonmovie.com) today. He is an incredibly cute bear. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2025/535dedf48f.jpg" width="405" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/535dedf48f.jpg" width="405" height="600" alt="Movie poster for Paddington in Peru showing the CGI bear in a blue coat and red hat on a boat navigating rapids with several actors behind him.">

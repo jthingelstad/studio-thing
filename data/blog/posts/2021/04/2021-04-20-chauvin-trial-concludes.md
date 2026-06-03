@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2021/04/20/chauvin-trial-concludes.html"
 title: "Chauvin Trial Concludes"
 published: "2021-04-21T00:11:36+00:00"
 post_kind: post
-categories: ["Scrapbook"]
+categories: []
 ---
 
 Just under a year ago [George Floyd](https://en.wikipedia.org/wiki/George_Floyd) was murdered in police custody under the knee of [Derek Chauvin](https://en.wikipedia.org/wiki/Derek_Chauvin). Today our whole family gathered around as news of a verdict announcement in the murder trial was made just a day after jury deliberation started. We all watched history as a guilty verdict was announced on each of the three charges.
@@ -15,4 +15,4 @@ I've went back to my [thoughts on Floyd's killing](https://www.thingelstad.com/2
 
 I think it is time that the city memorialize [George Floyd Square](https://en.wikipedia.org/wiki/George_Floyd_Square), as a tribute to what will be an inflection point toward a better community for all Minnesotans. 
 
-<img src="https://www.thingelstad.com/uploads/2021/169d844384.jpg" width="600" height="394" alt="" /><img src="https://www.thingelstad.com/uploads/2021/2015ec3304.jpg" width="600" height="394" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/169d844384.jpg" width="600" height="394" alt="Star Tribune homepage breaking news verdict showing Derek Chauvin guilty on all three counts in the death of George Floyd" /><img src="https://www.thingelstad.com/uploads/2021/2015ec3304.jpg" width="600" height="394" alt="New York Times homepage with breaking news headline Derek Chauvin Is Guilty of Murder in George Floyd Death dated April 20 2021" />

@@ -9,4 +9,4 @@ categories: []
 
 Fun and busy afternoon at [REM5VR](https://www.rem5vr.com). 
 
-<img src="https://www.thingelstad.com/uploads/2023/dc9c7247aa.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/dc9c7247aa.jpg" width="600" height="450" alt="Person in yellow hoodie wearing VR headset plays in Pod 4 at a VR arcade while two people watch from a couch nearby.">

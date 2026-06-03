@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/aadeaeed38.jpg" style="width: 201px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/aadeaeed38.jpg" alt="Code Freeze 08 conference logo with snowflake graphic and stylized text on a dark purple background" style="width: 201px; float: right; margin-left: 10px; " />
 
 I'm presenting at [Code Freeze 2008](http://www.umsec.umn.edu/code_freeze_08/) in January. The title of my presentation is _Innovation in Product Development_.
 

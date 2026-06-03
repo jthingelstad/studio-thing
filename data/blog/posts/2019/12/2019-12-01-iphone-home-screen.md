@@ -9,4 +9,4 @@ categories: []
 
 iPhone home screen, December 2019. I have a somewhat surprising number of text / writing / notes apps on there. 
 
-<img src="https://www.thingelstad.com/uploads/2019/0d8373175d.jpg" width="277" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/0d8373175d.jpg" width="277" height="600" alt="iPhone home screen showing apps including Mail, Phone, Safari, Maps, Photos, Camera, Music, Drafts, Ulysses, Agenda, Notes, and more." />

@@ -9,4 +9,4 @@ categories: []
 
 [Abrasive Ale](http://surlybrewing.com/beer/surly-beer-seasonal-beers.html) is so good. Megahops!
 
-![](https://www.thingelstad.com/uploads/2020/8e039a8131.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/8e039a8131.jpg" alt="Surly Abrasive Ale can next to a full pint glass of amber beer on a colorful painted table">

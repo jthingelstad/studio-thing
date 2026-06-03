@@ -9,4 +9,4 @@ categories: []
 
 Lunch! 
 
-<img src="https://www.thingelstad.com/uploads/2020/32d3fe2d0e.jpg" width="150" height="200" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/32d3fe2d0e.jpg" width="150" height="200" alt="Glass of Peroni Nastro Azzurro beer on a table with the bottle visible in the background" />

@@ -9,7 +9,7 @@ categories: []
 
 It is nearly Thanksgiving and the time I start to crave some [lefse](https://en.wikipedia.org/wiki/Lefse)! I come from family where lefse was made from scratch and I've taken part in making it myself. We even have a lefse iron and proper turning sticks. My friend [Patrick does it from scratch](https://www.patrickrhone.net/christmas-eve-lefse/). But it is a lot of effort and a big mess for something that you can get in other ways. So I tend to buy my lefse instead. I happened to have two different lefse packages at home so I thought a comparison would be fun.
 
-<img src="https://www.thingelstad.com/uploads/2024/516b4b99dc.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/516b4b99dc.jpg" width="600" height="600" alt="Two packaged lefse brands on a white marble counter: Laura's Lefse square sheets top left, Freddy's Homemade Potato Lefse top right, with one rectangular piece and one round piece laid out below.">
 
 ### Freddy's Lefse
 

@@ -9,4 +9,4 @@ categories: []
 
 My car was parked right here before the storm hit, right next to [@quinntchrest](https://micro.blog/quinntchrest). Luckily we both moved them to a clear area. These branches would have done significant damage. 
 
-<img src="https://www.thingelstad.com/uploads/2025/d6dec71d44.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/d6dec71d44.jpg" width="600" height="450" alt="Storm-downed tree branches covering a paved driveway beside a large cottonwood tree, with a wood fence and small outbuilding visible beyond.">

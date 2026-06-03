@@ -21,4 +21,4 @@ Went a little crazy and am registered in **EIGHT** of the [Nouns Name Service PR
 
 🤞
 
-<img src="https://www.thingelstad.com/uploads/2022/fd048559cd.png" width="600" height="454" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/fd048559cd.png" width="600" height="454" alt="Grid of 8 PREMINT registration cards for Nouns Name Service missions including Lil Nouns, NNS Mission, Peeper Toadz, Food Nouns, and World of Nouns communities, all joined in October 2022.">

@@ -9,4 +9,4 @@ categories: []
 
 I didn’t realize that [Athletic Brewing](https://athleticbrewing.com) had so many unique NA beers if you ordered direct. I got my first variety shipment today. The Tropical Sour was great. Will definitely be ordering direct more. 
 
-<img src="https://www.thingelstad.com/uploads/2023/4cd81ad118.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/4cd81ad118.jpg" width="600" height="337" alt="Six cans of Athletic Brewing Co non-alcoholic beer including Mango Picante, Good Heavens Helles, Suped Up, Athletic Lite, Tropical Sour, and Trailblazer on a wood table">

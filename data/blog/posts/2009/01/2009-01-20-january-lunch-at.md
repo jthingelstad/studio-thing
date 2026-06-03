@@ -9,4 +9,4 @@ categories: []
 
 January 20, 2009.
 
-<img src="https://www.thingelstad.com/uploads/2020/d6d8d35fe0.jpg" style="max-width: 217px; " />
+<img src="https://www.thingelstad.com/uploads/2020/d6d8d35fe0.jpg" alt="Circular logo with a blue and white arc at top and red and white stripes at bottom, resembling a sunrise" style="max-width: 217px; " />

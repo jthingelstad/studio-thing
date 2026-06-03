@@ -9,4 +9,4 @@ categories: []
 
 Chicago-style from [Lou Malnati's](https://www.loumalnatis.com) tonight.
 
-<img src="https://www.thingelstad.com/uploads/2021/fecf798000.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/fecf798000.jpg" width="600" height="450" alt="Chicago-style deep dish pizza in a well-seasoned pan with one slice removed, topped with chunky tomato sauce, a spatula resting in the pan." />

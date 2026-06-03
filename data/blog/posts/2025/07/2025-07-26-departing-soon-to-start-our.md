@@ -9,4 +9,4 @@ categories: []
 
 Departing soon to start our **QMSB** (Quebec, Montreal, Stowe, Bismarck) summer trip! 🛫
 
-<img src="https://www.thingelstad.com/uploads/2025/654d81fdf1.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/654d81fdf1.jpg" width="600" height="450" alt="Family of four smiling at airport gate A13 for Delta flight DL 4901 departing to Burlington Vermont at 9:05 am">

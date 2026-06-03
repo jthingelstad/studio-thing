@@ -9,4 +9,4 @@ categories: []
 
 Happy Halloween! 🎃 
 
-<img src="https://www.thingelstad.com/uploads/2017/5c98e18aee.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/5c98e18aee.jpg" alt="Two glowing jack-o-lanterns on a kitchen stovetop, one large and one small, both lit from inside with carved faces." width="600" height="600" />

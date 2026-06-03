@@ -9,4 +9,4 @@ categories: []
 
 Rainy drive from Cross Lake to Duluth. 🌧
 
-<img src="https://www.thingelstad.com/uploads/2020/d04614d97a.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d04614d97a.jpg" width="600" height="337" alt="Wet windshield view from inside a vehicle driving a two-lane rural highway lined with dry autumn grass and bare trees under a gray rainy sky." />

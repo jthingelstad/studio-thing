@@ -9,4 +9,4 @@ categories: []
 
 Family selfie at the [Vermont State House](https://statehouse.vermont.gov) in Montpelier. 
 
-<img src="https://www.thingelstad.com/uploads/2021/a552a20916.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/a552a20916.jpg" width="600" height="450" alt="Family of four smiling in front of the Vermont State House with its gold dome in Montpelier." />

@@ -9,4 +9,4 @@ categories: ["Music"]
 
 Mason Jennings show at The Dakota tonight. Lovely. 🎶
 
-<img src="https://www.thingelstad.com/uploads/2026/e6062f1f6d.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/e6062f1f6d.jpg" width="600" height="337" alt="Guitarist performing at The Dakota jazz club in Minneapolis before a packed seated audience under blue stage lighting.">

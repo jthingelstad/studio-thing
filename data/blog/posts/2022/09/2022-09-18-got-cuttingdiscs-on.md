@@ -9,4 +9,4 @@ categories: []
 
 Got cutting-discs on the Dremel and trimmed a dozen or so drawer pull bolts to proper lengths. Tammy filed them down after. 
 
-<img src="https://www.thingelstad.com/uploads/2022/3b3e8bffcc.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/3b3e8bffcc.jpg" width="600" height="600" alt="Dremel rotary tool with a metal cutting disc attached, resting in its gray plastic case, beside channel-lock pliers and several small brass bolts on a white surface." />

@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/aa34f4bb7d.gif" style="width: 152px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/aa34f4bb7d.gif" alt="Logo for MinneLR, a Lightroom user group, showing the name in dark text on a light gray background with a darker gray square accent." style="width: 152px; float: right; margin-left: 10px; " />
 
 I continue to really love Lightroom. I've been finding more and more value out of my 35,000 photos with additional metadata. I haven't even really gotten out of the Library module of Lightroom and I'm still supremely happy with it.
 

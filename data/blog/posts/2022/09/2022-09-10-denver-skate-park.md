@@ -9,4 +9,4 @@ categories: []
 
 Denver skate park. 
 
-<img src="https://www.thingelstad.com/uploads/2022/1b17647049.jpg" width="600" height="386" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/1b17647049.jpg" width="600" height="386" alt="Large concrete skatepark with bowls and ramps, a gazebo nearby, trees, and Denver city buildings under a cloudy sky." />

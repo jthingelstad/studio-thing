@@ -9,4 +9,4 @@ categories: []
 
 Lucky looking so very peaceful as she takes an afternoon nap.  💤
 
-<img src="https://www.thingelstad.com/uploads/2021/57d98e6b0a.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/57d98e6b0a.jpg" width="600" height="450" alt="White fluffy dog curled up asleep in a large red corduroy dog bed beside a glass door overlooking a wet deck and lake." />

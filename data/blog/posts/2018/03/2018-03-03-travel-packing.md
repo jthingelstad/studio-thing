@@ -9,4 +9,4 @@ categories: []
 
 Travel packing. ✈️
 
-<img src="https://www.thingelstad.com/uploads/2018/40f173c5e8.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/40f173c5e8.jpg" alt="Several labeled plastic bags of travel medications including malaria pills taken 1 per day and azithromycin taken for 3 days" width="600" height="600" />

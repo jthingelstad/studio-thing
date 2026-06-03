@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Tammy and I finally watched Oppenheimer tonight. Incredible movie. Everything about it pulled me in.🍿 
 
-<img src="https://www.thingelstad.com/uploads/2024/8bc8444e4f.jpg" width="400" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/8bc8444e4f.jpg" width="400" height="600" alt="Movie poster for Oppenheimer directed by Christopher Nolan, showing a man in a suit and fedora surrounded by fiery explosions and wires.">

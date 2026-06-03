@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7441075">7441075</a> at <strong><a href="https://poap.gallery/drops/190544">Gold Medal Building — 612 POAP Challenge</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/b6c8dec8-13d0-414d-8c80-9c2af8e23062.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/b6c8dec8-13d0-414d-8c80-9c2af8e23062.png" alt="Circular badge with pixel-art building, text reads 612 POAP Challenge at top and Gold Medal Building at bottom." width="500" height="500" />

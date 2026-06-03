@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Wrapped up another great trip in Kyiv with #TeamSPS Ukraine! 🇺🇦 Time to head home! ✈️
 
-<img src="https://www.thingelstad.com/uploads/2019/82b04aa8b7.jpg" width="600" height="319" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/82b04aa8b7.jpg" width="600" height="319" alt="Group of about eleven people gathered around a wooden table in a wine cellar with floor-to-ceiling bottle racks, some holding wine glasses" />

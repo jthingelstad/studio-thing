@@ -9,4 +9,4 @@ categories: []
 
 I was explaining TV dinners to my kids and the whole concept made no sense to them. I told them my favorite was [Hungry-Man Dinners](https://www.hungry-man.com) Turkey Dinner, the potatoes, and the cherry stuff. Related, I've figured out what I'm serving the next time it's my turn to cook dinner! 😁
 
-<img src="https://www.thingelstad.com/uploads/2020/cfd612e493.jpg" width="500" height="500" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/cfd612e493.jpg" width="500" height="500" alt="Hungry-Man Roasted Carved White Meat Turkey frozen dinner box showing turkey, mashed potatoes, stuffing, vegetables, and cranberry dessert." />

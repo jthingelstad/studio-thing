@@ -17,6 +17,4 @@ this work. There was no magic involved, the latest release of Parallels
 offers Vista as an "experimental" option in the drop downs. I mounted
 the ISO image in the virtual machine, booted and installed.
 
-It works just fine. You don't get Aero Glass, but you do get Aero.
-Haven't played with it much, don't expect I will until I return from
-vacation. However, I'm glad this configuration finally works.
+It works just fine. You don't get Aero Glass, but you do get Aero. Haven't played with it much, don't expect I will until I return from vacation. However, I'm glad this configuration finally works.

@@ -9,4 +9,4 @@ categories: ["Music"]
 
 Making my special homemade lasagna and "playing one of the most important ingredients" I use when making it: [Carreras Domingo Pavarotti in Concert](https://en.wikipedia.org/wiki/Carreras_Domingo_Pavarotti_in_Concert). 🎶
 
-<img src="https://www.thingelstad.com/uploads/2026/92f294aab2.jpg" width="600" height="595" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/92f294aab2.jpg" width="600" height="595" alt="Decca album cover for Carreras Domingo Pavarotti in Concert with Mehta showing four men in tuxedos waving on stage">

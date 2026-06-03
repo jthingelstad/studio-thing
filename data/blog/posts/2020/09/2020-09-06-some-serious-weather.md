@@ -9,4 +9,4 @@ categories: []
 
 Some serious weather rolling through Cannon Lake tonight. Constant lightning. Heavy rain and thunder. Multiple waves of hail. Wind is only thing missing. Also learned we have a window with a leak.  😬⛈💧
 
-![](https://www.thingelstad.com/uploads/2020/f5cefdc032.gif)
+<img src="https://www.thingelstad.com/uploads/2020/f5cefdc032.gif" alt="RadarScope Pro radar showing severe thunderstorm line across southern Minnesota near Cannon Lake at 11:03 PM CDT on September 5 2020.">

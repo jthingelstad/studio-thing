@@ -9,4 +9,4 @@ categories: []
 
 Santa 🎅 left me Dave Grohl's book [The Storyteller](https://www.davegrohlstoryteller.com) and a National Parks mug that you can [check off as you visit](https://www.thingelstad.com/lists/national-parks/). Santa knows me very well. 😊 Merry Christmas! 🎄 
 
-<img src="https://www.thingelstad.com/uploads/2021/4d6b3ebb64.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/4d6b3ebb64.jpg" width="600" height="600" alt="Dave Grohl The Storyteller hardcover book on a countertop beside a white ceramic mug printed with a US National Parks map." />

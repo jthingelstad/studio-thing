@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Sano absolutely destroyed this ball to take the game! Twins Win! ⚾️🙌
 
-<img src="https://www.thingelstad.com/uploads/2019/a4a2c4fbb0.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/a4a2c4fbb0.jpg" width="600" height="450" alt="Night game at Target Field with the Twins batting, packed crowd, Budweiser sign lit up in red above the outfield stands." />

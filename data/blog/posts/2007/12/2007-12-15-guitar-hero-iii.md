@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/2004cf163b.jpg" style="width: 126px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/2004cf163b.jpg" alt="Guitar Hero III Legends of Rock game cover showing three rock musicians wielding electric guitars against an orange fiery background" style="width: 126px; float: right; margin-left: 10px; " />
 
 I'm totally obsessed with my [Wii](http://wii.nintendo.com/) all over again and it's because of [Guitar Hero](http://www.guitarhero.com/) III - Legends of Rock. In between [attempts to update my Wii software](https://www.thingelstad.com/2007/12/15/nintendo-wii-servers.html), I've been rocking out with Guitar Hero III. I can't remember the last time I played a single game for over an hour -- until now.
 

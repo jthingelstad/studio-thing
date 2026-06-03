@@ -9,4 +9,4 @@ categories: ["Music"]
 
 [Courtney Marie Andrews](https://www.courtneymarieandrews.com) did an amazing opening set for Brandi Carlile. Check her out! 🎶
 
-<img src="https://www.thingelstad.com/uploads/2020/1e11d9719a.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/1e11d9719a.jpg" width="600" height="450" alt="Performer with long hair plays acoustic guitar and sings into a microphone on a dimly lit stage with pink and green lighting." />

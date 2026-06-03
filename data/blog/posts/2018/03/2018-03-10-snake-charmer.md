@@ -9,4 +9,4 @@ categories: []
 
 Snake charmer. 🐍
 
-<img src="https://www.thingelstad.com/uploads/2018/bbf08a071e.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/bbf08a071e.jpg" alt="Elderly man in a red turban sitting cross-legged on a stone path, playing a gourd flute while holding a cobra, with wicker baskets nearby." width="600" height="600" />

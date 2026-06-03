@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2008/08/22/harrods-worlds-largest.html"
 title: "Harrods — World's Largest Something"
 published: "2008-08-22T05:00:00+00:00"
 post_kind: post
-categories: ["Travel"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/149ec69fd0.gif" style="width: 137px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/149ec69fd0.gif" alt="Harrods logo in gold script lettering on a white background" style="width: 137px; float: right; margin-left: 10px; " />
 
 This morning we decided to head to [Harrods](http://en.wikipedia.org/wiki/Harrods) ([store](http://www.harrods.com/harrodsstore/)) and visit the *worlds largest department store*. My first piece of advise is to treat Harrods like an amusement park. Don't plan to actually shop there unless you want to burn through significant £'s. There is some nice stuff there, but the prices match it. I was thrown back by kids shirts marked at £79.95 ($149.97 as of today). But then again, I don't think I've even seen [Juicy Couture](http://www.juicycouture.com/) for 3 year olds.[^1] Tammy compared Harrods to a casino without the gambling, which is a good approximation. Cruise ship would also be close, but not nice enough.
 

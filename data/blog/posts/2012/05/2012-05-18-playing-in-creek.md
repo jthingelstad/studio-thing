@@ -9,4 +9,4 @@ categories: []
 
 We all had fun playing in the creek tonight after dinner.
 
-![](https://www.thingelstad.com/uploads/2020/f92e77ea64.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/f92e77ea64.jpg" alt="Toddler in a striped polo shirt and denim shorts standing in a shallow creek with a wooden bridge and trees behind him.">

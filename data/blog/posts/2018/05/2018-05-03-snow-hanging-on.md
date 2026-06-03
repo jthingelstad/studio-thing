@@ -9,4 +9,4 @@ categories: []
 
 Snow hanging on up north. 
 
-<img src="https://www.thingelstad.com/uploads/2018/f7a999ef59.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/f7a999ef59.jpg" alt="Muddy river winding through a wooded valley in early spring with melting snow on the banks and bare deciduous trees on hillsides" width="600" height="600" />

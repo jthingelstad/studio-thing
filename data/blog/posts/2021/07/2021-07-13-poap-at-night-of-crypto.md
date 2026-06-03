@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/499168">499168</a> at <strong><a href="https://poap.gallery/drops/4037">Night of Crypto 2021</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/night-of-crypto-2021-2021-logo-1626141585041.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/night-of-crypto-2021-2021-logo-1626141585041.png" alt="Night of Crypto Minneapolis logo with a hand holding a blue gem above bold black lettering" width="500" height="500" />

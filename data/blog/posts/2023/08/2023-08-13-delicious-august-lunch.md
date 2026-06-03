@@ -9,4 +9,4 @@ categories: []
 
 Delicious August lunch: Black Krim tomatoes, sliced mozzarella, Olive Oil we brought back from Italy, salt & pepper. 🍅
 
-<img src="https://www.thingelstad.com/uploads/2023/e4bb0a8117.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/e4bb0a8117.jpg" width="600" height="600" alt="Caprese salad on a white plate with sliced heirloom tomatoes, fresh mozzarella, cherry tomatoes, olive oil, salt and pepper.">

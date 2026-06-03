@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Macchiato at [Sip](https://www.sipcoffeebar.com).
 
-![](https://www.thingelstad.com/uploads/2020/c10e7b5e25.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/c10e7b5e25.jpg" alt="Small macchiato in a white ceramic cup on a saucer with a spoon, sitting on a stainless steel counter">

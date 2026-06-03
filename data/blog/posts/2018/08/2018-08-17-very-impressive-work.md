@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Very impressive work being shared by the #TeamSPS summer interns! They delivered significant capabilities in products and services core to SPS! We are lucky to have such talented interns! 🙌
 
-<img src="https://www.thingelstad.com/uploads/2018/c5deab44de.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/c5deab44de.jpg" alt="Group of people seated at tables in a training room watching a woman present at the front near two projected screens." width="600" height="450" />

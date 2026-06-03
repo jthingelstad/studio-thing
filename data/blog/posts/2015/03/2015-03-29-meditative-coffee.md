@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Making morning coffee with [using a Chemex](https://www.thingelstad.com/2011/02/19/first-run-with.html) can be a meditative process. Certain series of steps. Same each time. Moving hot water from one step to the next. And at the end you're treated to something delicious.
 
-![](https://www.thingelstad.com/uploads/2020/ff7746ae61.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/ff7746ae61.jpg" alt="Chemex pour-over coffee maker with filter on a white kitchen counter beside a small mug and a stainless steel Thermos">

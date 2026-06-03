@@ -9,4 +9,4 @@ categories: []
 
 Last stop in Kentucky we grabbed this family selfie with a gorgeous sunset at [Hermitage Farm](https://www.hermitagefarm.com). Off to Indianapolis!
 
-<img src="https://www.thingelstad.com/uploads/2021/2f4655ebde.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/2f4655ebde.jpg" width="600" height="450" alt="Family of four smiling together in a selfie at a farm, with a vivid golden sunset over green fields behind them." />

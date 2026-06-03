@@ -9,4 +9,4 @@ categories: []
 
 We just published the [Fall 2021 issue of Reading Things](https://reading.thingelstad.com/archive/reading-things-fall-2021/)! In this issue: **This Is Your Mind on Plants**, **Calvin and Hobbes**, **Locally Laid**, **Ghost**, **Evicted**, **The Honey Bus**, and **Nature & Walking**. 📚
 
-<img src="https://www.thingelstad.com/uploads/2021/e6a232d3e1.jpg" width="599" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/e6a232d3e1.jpg" width="599" height="600" alt="Six book covers arranged in a grid: This Is Your Mind on Plants, Locally Laid, Ghost, Evicted, The Honey Bus, and Nature Walking." />

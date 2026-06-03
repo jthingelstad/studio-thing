@@ -9,4 +9,4 @@ categories: []
 
 [Farmers Market in Amery, Wisconsin](https://www.amerywisconsin.org/318/Farmers-Market). 
 
-<img src="https://www.thingelstad.com/uploads/2019/760c8850fc.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/760c8850fc.jpg" width="600" height="600" alt="Outdoor farmers market under a wood and red-beam pavilion with vendors selling vegetables, jars of honey, and bottled goods to browsing shoppers." />

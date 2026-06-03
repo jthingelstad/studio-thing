@@ -9,4 +9,4 @@ categories: []
 
 Time for our traditional New Years Eve fondue dinner. 
 
-<img src="https://www.thingelstad.com/uploads/2022/97ba6d48df.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/97ba6d48df.jpg" width="600" height="600" alt="Cuisinart pot of melted cheese fondue on a burner stand beside a cutting board with cubed bread pieces" />

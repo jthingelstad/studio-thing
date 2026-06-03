@@ -9,4 +9,4 @@ categories: []
 
 Great view Seattle.
 
-<img src="https://www.thingelstad.com/uploads/2021/8f0bea161d.jpg" width="600" height="325" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/8f0bea161d.jpg" width="600" height="325" alt="Seattle skyline with Elliott Bay waterfront, a Ferris wheel, and Puget Sound stretching to distant mountains under partly cloudy skies" />

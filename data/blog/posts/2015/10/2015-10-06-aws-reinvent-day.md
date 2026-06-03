@@ -9,15 +9,15 @@ categories: ["TeamSPS"]
 
 My room? Very last one on the right. Won’t have to worry about getting steps in. 
 
-<img src="https://www.thingelstad.com/uploads/2020/8539ca3191.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/8539ca3191.jpg" width="600" height="450" alt="Long elegant hotel corridor with arched ceiling, patterned carpet runner, wall sconces, and marble floor in the foreground near elevator doors and exit signs." />
 
 [AWS re:Invent](https://reinvent.awsevents.com) busy tonight.
 
-<img src="https://www.thingelstad.com/uploads/2020/7c97306006.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/7c97306006.jpg" width="600" height="450" alt="Crowded Amazon Web Services booth at a trade show convention center, with attendees mingling on two levels under bright overhead lighting." />
 
 Go #TeamSPS! 
 
-<img src="https://www.thingelstad.com/uploads/2020/f960d5eefe.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/f960d5eefe.jpg" width="600" height="450" alt="Crowded convention hall expo floor packed with attendees in front of vendor booths including TIBCO and Datapipe banners." />
 
 Asking folks at [AWS re:Invent](https://reinvent.awsevents.com) about [Mesos](https://mesos.apache.org). #TeamSPS leading the charge with Mesos in production already.
 

@@ -9,4 +9,4 @@ categories: ["MarketWatch"]
 
 Traveling old school with [CBS MarketWatch](https://www.marketwatch.com) duffel this trip.
 
-<img src="https://www.thingelstad.com/uploads/2019/b53571d726.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/b53571d726.jpg" width="600" height="450" alt="Black CBS MarketWatch duffel bag resting on a car roof in a parking garage near a blue recycling sign." />

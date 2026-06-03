@@ -9,4 +9,4 @@ categories: []
 
 PLA storage organized and ready to go!
 
-<img src="https://www.thingelstad.com/uploads/2026/9035d3801d.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/9035d3801d.jpg" width="600" height="450" alt="Shelves holding clear airtight bins with spools of PLA 3D printing filament in various colors, with boxed filament and supplies above.">

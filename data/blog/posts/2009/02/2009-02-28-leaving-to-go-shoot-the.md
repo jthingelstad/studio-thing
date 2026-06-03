@@ -9,6 +9,6 @@ categories: []
 
 Leaving to go shoot the [Overnight Website Challenge](http://www.overnightwebsitechallenge.com/). Full kit-belt geared up.
 
-![](https://www.thingelstad.com/uploads/2020/5b244abd8d.png)
+<img src="https://www.thingelstad.com/uploads/2020/5b244abd8d.png" alt="Camera gear including a DSLR with telephoto lens on a tripod, camera bags, and a cup of coffee on a colorful painted table.">
 
 Related: See [Photos from Overnight Website Challenge](https://www.thingelstad.com/2009/03/06/photos-from-overnight.html).

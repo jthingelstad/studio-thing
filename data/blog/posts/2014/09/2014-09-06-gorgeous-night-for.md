@@ -9,7 +9,7 @@ categories: ["Sports"]
 
 Gorgeous night for a [Minnesota United FC](https://www.mnufc.com) game! Stands are full! Nice to see [Atomic Data](https://www.atomicdata.com) sponsoring [Minnesota United FC](https://www.mnufc.com)! Well done Jim Wolford and team!
 
-<img src="https://www.thingelstad.com/uploads/2020/bf149c915b.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/bf149c915b.jpg" width="600" height="450" alt="Outdoor soccer match at dusk with players in green and gray uniforms on a lit field surrounded by packed stands and sponsor banners." />
 
 GOAL!!! [Minnesota United FC](https://www.mnufc.com)
 

@@ -9,4 +9,4 @@ categories: []
 
 After much debating I finally decided to get a new laptop and ordered a MacBook Pro with M4 Pro and configured nicely. This thing is going to be fast! ￼￼Will be especially nice for photography. 😎
 
-<img src="https://www.thingelstad.com/uploads/2025/0aa434ae3e.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/0aa434ae3e.jpg" width="600" height="400" alt="MacBook Pro in Space Black shown open from above, displaying a dark abstract wallpaper with the Swiss keyboard layout visible.">

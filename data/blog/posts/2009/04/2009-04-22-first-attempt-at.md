@@ -9,7 +9,7 @@ categories: []
 
 I've been continuing to work on my photography skills and looking for projects to work on that are fun and help me learn more. I've worked out for a long time at a local personal training studio, [Select Fitness](http://www.myselectfitness.com/). I had looked at the photos of the studio on their website and thought I could get them some better shots. Here are my photos.
 
-![](https://www.thingelstad.com/uploads/2021/e65df1afc8.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/e65df1afc8.jpg" alt="Cybex dumbbell rack with black weight plates stacked on three tiers beside loose bumper plates on a gym floor">
 
 I learned a number of things on this first try at commercial photography.
 

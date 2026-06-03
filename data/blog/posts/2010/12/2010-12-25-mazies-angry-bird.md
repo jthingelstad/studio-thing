@@ -9,4 +9,4 @@ categories: []
 
 Mazie's Angry Bird.
 
-![](https://www.thingelstad.com/uploads/2020/7d910a36bd.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/7d910a36bd.jpg" alt="Young girl in frog pajamas smiling and hugging a large red Angry Birds plush toy in a kitchen.">

@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/1fadad8f46.jpg" style="width: 150px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/1fadad8f46.jpg" alt="Vimeo logo in red lowercase text on a white background" style="width: 150px; float: right; margin-left: 10px; " />
 
 I have been searching for a good video hosting service for a while. Something that solves my online video problems like [Flickr](http://www.flickr.com/) solves my online photo problems. At first blush you probably think this is silly, [YouTube](http://www.youtube.com/) is the obvious answer. Well, not really.
 

@@ -9,4 +9,4 @@ categories: []
 
 Only two episodes in, and I’m already hooked on [Succession](https://www.hbo.com/succession). 
 
-<img src="https://www.thingelstad.com/uploads/2018/714511fa1a.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/714511fa1a.jpg" alt="Five people in formal attire posed in an opulent room before a large dramatic oil painting of a battle scene with a tiger." width="600" height="337" />

@@ -7,15 +7,8 @@ post_kind: post
 categories: []
 ---
 
-One of the things that wowed Tammy about the
-[Vitamix](http://www.vitamix.com/) was that you can make soup in it.
-Real soup. Not some cold
-[Gazpacho](http://en.wikipedia.org/wiki/Gazpacho). Honest to goodness
-hot soup. If you run the Vitamix on high for several minutes the
-blending action will bring the water to a boil!
+One of the things that wowed Tammy about the [Vitamix](http://www.vitamix.com/) was that you can make soup in it. Real soup. Not some cold [Gazpacho](http://en.wikipedia.org/wiki/Gazpacho). Honest to goodness hot soup. If you run the Vitamix on high for several minutes the blending action will bring the water to a boil!
 
-She put all the ingredients in the blender, turned it on for several
-minutes and we had some nice, hot soup. Here is proof with my infrared
-thermometer.
+She put all the ingredients in the blender, turned it on for several minutes and we had some nice, hot soup. Here is proof with my infrared thermometer.
 
-![](https://www.thingelstad.com/uploads/2020/44951456f7.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/44951456f7.jpg" alt="ThermoWorks IR Gun infrared thermometer displaying 189.0 degrees Fahrenheit held in front of a Vitamix blender containing yellow soup.">

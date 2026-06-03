@@ -9,4 +9,4 @@ categories: []
 
 Went through all my photography gear and filtered out the stuff I no longer need or don’t use. [National Camera](https://www.natcam.com) took it all off my hands for a good price. 
 
-<img src="https://www.thingelstad.com/uploads/2022/eefd711025.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/eefd711025.jpg" width="600" height="450" alt="Used photography gear piled on a camera store counter including Canon lens boxes, camera bags, and accessories with display cases nearby." />

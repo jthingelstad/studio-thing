@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We saw [Inside Out 2](https://movies.disney.com/inside-out-2) today and thought it was just incredible. We all liked the first one and it was one of those rare movies that gets better in your memories, and I feel the same for the new one. I loved the addition of Anxiety, Envy, Embarrassment, and Ennui. Great movie! 🍿
 
-<img src="https://www.thingelstad.com/uploads/2024/c685602c6e.jpg" width="400" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/c685602c6e.jpg" width="400" height="600" alt="Movie poster for Inside Out 2 showing colorful animated emotion characters crowded together, opening in theaters June 14">

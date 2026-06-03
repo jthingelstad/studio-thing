@@ -7,11 +7,7 @@ post_kind: post
 categories: []
 ---
 
-While we were walking with the big Redwoods I stopped for a moment to do
-a quick field recording. This isn't pristine. You'll catch a moment of
-wind noise, and if you listen really, really close you may hear a truck
-in the distance very faintly. Mainly though, you hear the birds and
-majesty.
+While we were walking with the big Redwoods I stopped for a moment to do a quick field recording. This isn't pristine. You'll catch a moment of wind noise, and if you listen really, really close you may hear a truck in the distance very faintly. Mainly though, you hear the birds and majesty.
 
 <p><audio controls preload="none">
   <source src="https://files.thingelstad.com/posts/2008/sound-of-the-redwoods.mp3" type="audio/mpeg">

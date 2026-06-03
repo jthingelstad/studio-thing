@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Tammy and I finally watched [A Star is Born](https://www.imdb.com/title/tt1517451/). We both enjoyed it. Great acting. Music was of course great. 🍿 
 
-<img src="https://www.thingelstad.com/uploads/2020/0b48606ba1.jpg" width="473" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/0b48606ba1.jpg" width="473" height="600" alt="Movie poster for A Star Is Born starring Bradley Cooper and Lady Gaga in theaters October 5, two people lean foreheads together" />

@@ -7,9 +7,7 @@ post_kind: post
 categories: []
 ---
 
-I've had my Mini Cooper S for two years now and I still like it a lot.
-It's been a really good car and it's a blast to drive, still. There are
-however some issues.
+I've had my Mini Cooper S for two years now and I still like it a lot. It's been a really good car and it's a blast to drive, still. There are however some issues.
 
 1.  There is no way that all four of us can fit into the Cooper. We
     could maybe squeeze into it if we were attempting to imitate a troop
@@ -20,15 +18,10 @@ however some issues.
 3.  The front wheel drive results in a lot of torque steering and while
     it does okay on the snow, it's not great.
 
-Those are actually bigger problems than they would seem since it means
-if Tammy does stuff on her own she needs to take the van and then I'm
-stuck at home with no car to take the kids anywhere.
+Those are actually bigger problems than they would seem since it means if Tammy does stuff on her own she needs to take the van and then I'm stuck at home with no car to take the kids anywhere.
 
-I've eyed the new Countryman All4 and think we are going to take one for
-a test drive and see what we think. I'm hoping it maintains enough of
-the Mini spirit to still feel like a Mini while solving all the problems
-above.
+I've eyed the new Countryman All4 and think we are going to take one for a test drive and see what we think. I'm hoping it maintains enough of the Mini spirit to still feel like a Mini while solving all the problems above.
 
-![](https://www.thingelstad.com/uploads/2020/3e6d5832f9.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/3e6d5832f9.jpg" alt="White Mini Cooper Countryman All4 with black racing stripes and roof parked on a misty lakeside lot, three-quarter front view.">
 
 Anybody drove one of these?

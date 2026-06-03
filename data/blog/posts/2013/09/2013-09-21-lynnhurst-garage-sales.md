@@ -9,4 +9,4 @@ categories: []
 
 Lynnhurst garage sales today. Lots of activity in the neighborhood! Tammy has a table at a neighbors place.
 
-<img src="https://www.thingelstad.com/uploads/2020/e2f833c752.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/e2f833c752.jpg" width="600" height="450" alt="Garage sale with children's toys spread on a blanket, kids clothing and costumes hung on a fence, a small tent, and a woman browsing nearby." />

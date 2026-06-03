@@ -9,4 +9,4 @@ categories: []
 
 Voted!
 
-<img src="https://www.thingelstad.com/uploads/2020/05b1fa3a4b.gif" style="width: 212px; " />
+<img src="https://www.thingelstad.com/uploads/2020/05b1fa3a4b.gif" alt="Red circular I Voted sticker with white text" style="width: 212px; " />

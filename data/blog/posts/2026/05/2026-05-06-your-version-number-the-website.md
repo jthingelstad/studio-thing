@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2026/05/06/your-version-number-the-website.htm
 title: "Your Version Number: The Website"
 published: "2026-05-07T03:00:00+00:00"
 post_kind: post
-categories: ["Featured"]
+categories: []
 ---
 
 In 2018 I wrote about [Your Version Number](https://www.thingelstad.com/2018/02/24/your-version-number.html): 
@@ -17,7 +17,7 @@ Now available…
 
 ### [Your Version Number](https://yourversionnumber.com/)
 
-<a href="https://yourversionnumber.com/"><img src="https://www.thingelstad.com/uploads/2026/your-version-number.png"></a>
+<a href="https://yourversionnumber.com/"><img src="https://www.thingelstad.com/uploads/2026/your-version-number.png" alt="Screenshot of yourversionnumber.com showing a confetti birthday theme with the name Jamie and version number 5.4.126 displayed in large pink and purple text."></a>
 
 Super simple single-page app that allows you to add one or more birthdays and see the version number. The magic here is all the data is held in the URL so you can bookmark, set as your homepage, or share with others. And sure it is fun seeing you and your friends daily versions, but it is even more fun with all the custom themes!
 
@@ -51,7 +51,7 @@ Wait though, there is more.
 
 ### [Your Version Number: Work Edition](https://yourversionnumber.com/work/)
 
-<a href="https://yourversionnumber.com/work/"><img src="https://www.thingelstad.com/uploads/2026/your-version-number-work.png"></a>
+<a href="https://yourversionnumber.com/work/"><img src="https://www.thingelstad.com/uploads/2026/your-version-number-work.png" alt="Dark-themed browser screenshot of yourversionnumber.com showing a Work Edition board update for Jamie with version number 12.3.10, ARR 11.3M, burn multiple 0.8, and rule of 40 score 72."></a>
 
 I decided to bring the same version number semantics to your job! Here we have YEARS.QUARTERS.BUSINESS_DAYS! Add your whole team in and share the URL with everyone.
 

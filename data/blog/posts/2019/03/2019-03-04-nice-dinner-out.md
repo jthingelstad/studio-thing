@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Nice dinner out with #TeamSPS in Toronto!
 
-<img src="https://www.thingelstad.com/uploads/2019/8730f82f2f.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/8730f82f2f.jpg" width="600" height="337" alt="Six men seated around a dark restaurant table sharing a dinner with plates of food and glasses of beer, one raising a glass in a toast" />

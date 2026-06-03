@@ -9,4 +9,4 @@ categories: []
 
 Had a great time seeing [David Sedaris](http://www.davidsedarisbooks.com) with my mom tonight! 🤣
 
-<img src="https://www.thingelstad.com/uploads/2017/e1f67a4415.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/e1f67a4415.jpg" alt="Two people smiling closely together at what appears to be a crowded indoor evening event, woman wearing glasses and black top, man in gray shirt." width="600" height="600" />

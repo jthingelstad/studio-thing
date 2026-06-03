@@ -17,4 +17,4 @@ Another assertion is that LLMs are just statistical models of language and they 
 
 Which isn't to say that I believe an AI is a person. I do not. I think it is likely more accurate to say I lack the philosophical depth to explore the points in detail.
 
-<img src="https://www.thingelstad.com/uploads/2025/f14ef28edc.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/f14ef28edc.jpg" width="600" height="450" alt="Packed lecture hall with wood-paneled geometric ceiling as a speaker presents at a podium to a large seated audience">

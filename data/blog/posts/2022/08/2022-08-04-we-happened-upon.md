@@ -9,4 +9,4 @@ categories: []
 
 We happened upon this couple taking wedding pictures at Öxarárfoss in Þingvellir National Park today. Cute couple, amazing scene. 
 
-<img src="https://www.thingelstad.com/uploads/2022/873888893e.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/873888893e.jpg" width="450" height="600" alt="Couple in wedding attire raising joined hands on rocks before Oxararfoss waterfall in Thingvellir National Park Iceland" />

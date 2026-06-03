@@ -9,4 +9,4 @@ categories: []
 
 We stopped into [Microcenter](https://www.microcenter.com) today and they didn’t have a single Nvidia GPU in stock. Every case was empty. In fact they only had **five** individual GPUs of any brand!
 
-<img src="https://www.thingelstad.com/uploads/2025/8bb0c3c79c.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/8bb0c3c79c.jpg" width="600" height="337" alt="Row of empty locked display cases labeled GeForce RTX at a Microcenter store with no GPUs on the shelves">

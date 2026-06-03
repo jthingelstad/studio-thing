@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>Collected POAP <a href="https://collectors.poap.xyz/token/7368654">7368654</a> for <strong><a href="https://poap.gallery/drops/190522">Riverside Plaza — 612 POAP Challenge</a></strong>.</p>
-        <p><img src="https://www.thingelstad.com/uploads/2025/56d7d0ce-5aa6-4222-ac1c-047f5ac46ce5.png" width="500" height="500" /></p>
+        <p><img src="https://www.thingelstad.com/uploads/2025/56d7d0ce-5aa6-4222-ac1c-047f5ac46ce5.png" alt="Circular badge showing a pixelated illustration of Riverside Plaza towers with text 612 POAP Challenge and Riverside Plaza on dark blue background." width="500" height="500" /></p>

@@ -9,4 +9,4 @@ categories: []
 
 New York Bagels at Liberty Bagels in Midtown! 🥯 
 
-<img src="https://www.thingelstad.com/uploads/2023/45598f2b57.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/45598f2b57.jpg" width="600" height="600" alt="Four people each holding bagels wrapped in parchment paper inside Liberty Bagels in Midtown New York, smiling at the camera.">

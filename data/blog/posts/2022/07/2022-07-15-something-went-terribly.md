@@ -9,4 +9,4 @@ categories: []
 
 Something went terribly wrong with the carrots in the garden. Carrot Ball? Carrot Swarm? Eek. 🥕
 
-<img src="https://www.thingelstad.com/uploads/2022/f6b8de5767.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/f6b8de5767.jpg" width="600" height="600" alt="Freshly pulled carrot with roots tangled into a dense knotted ball, covered in dark soil, held up outdoors near a driveway." />

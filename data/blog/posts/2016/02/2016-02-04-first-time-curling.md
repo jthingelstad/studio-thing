@@ -10,34 +10,19 @@ categories: []
 ![St. Paul Curling Club
 sheets](https://www.thingelstad.com/uploads/2020/8b85bce14e.jpg)
 
-This year Tammy surprised me with a first-time curling session from the
-kids' school fundraiser. She and I decided to do it together, and we
-went to the [St. Paul Curling Club](https://stpaulcurlingclub.org)
-today. The club is right next to the [Happy
-Gnome](http://thehappygnome.com) on Selby just down from Dale. I had no
-idea it was there, but it is the oldest Curling Club in America founded
-in 1912.
+This year Tammy surprised me with a first-time curling session from the kids' school fundraiser. She and I decided to do it together, and we went to the [St. Paul Curling Club](https://stpaulcurlingclub.org) today. The club is right next to the [Happy Gnome](http://thehappygnome.com) on Selby just down from Dale. I had no idea it was there, but it is the oldest Curling Club in America founded in 1912.
 
 ![St. Paul Curling Club sheets from
 above](https://www.thingelstad.com/uploads/2020/c133f21792.jpg)
 
-The place is cool. There are eight sheets for curling and wonderfully
-manicured ice. There is also a nicely laid out place to eat and have a
-drink. The tables are setup for eight so that the two teams of 4 can go
-upstairs and have a pint with their opponents after the match.
+The place is cool. There are eight sheets for curling and wonderfully manicured ice. There is also a nicely laid out place to eat and have a drink. The tables are setup for eight so that the two teams of 4 can go upstairs and have a pint with their opponents after the match.
 
 ![St. Paul Curling Club
 bar](https://www.thingelstad.com/uploads/2020/a887886486.jpg)
 
-The event started with instruction on scoring, the terms of curling,
-throwing technique and other technical details. The club members that
-ran the class did a great job and were a lot of fun.
+The event started with instruction on scoring, the terms of curling, throwing technique and other technical details. The club members that ran the class did a great job and were a lot of fun.
 
-We went down to the ice after getting instruction along with an on-ice
-demonstration and started to try some throws. We wore regular tennis
-shoes, so it wasn't too hard to stay upright on the ice. People who know
-what they are doing wear one special show that slides on the ice super
-easy. Here I am throwing a championship stone down to the house.
+We went down to the ice after getting instruction along with an on-ice demonstration and started to try some throws. We wore regular tennis shoes, so it wasn't too hard to stay upright on the ice. People who know what they are doing wear one special show that slides on the ice super easy. Here I am throwing a championship stone down to the house.
 
 ![Me throwing a
 stone](https://www.thingelstad.com/uploads/2020/17eb57412c.jpg)
@@ -62,7 +47,4 @@ Here is my best shot for the day, nearly touching the button.
 ![My best stone of the
 day](https://www.thingelstad.com/uploads/2020/7f72a79c61.jpg)
 
-I definitely would love to give curling another go, and hopefully at the
-St. Paul Curling Club. I thought that was a perfect place. Also, I'm
-going to look at doing a team event here for work. It seems like a
-stellar option for a work event.
+I definitely would love to give curling another go, and hopefully at the St. Paul Curling Club. I thought that was a perfect place. Also, I'm going to look at doing a team event here for work. It seems like a stellar option for a work event.

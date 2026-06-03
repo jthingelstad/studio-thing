@@ -18,4 +18,4 @@ A week from today we depart on our summer vacation! We are heading out on a 2-we
 
 We'll be driving our [new Mazda CX-9](https://www.thingelstad.com/2021/07/24/mazda-cx-carbon.html).
 
-<img src="https://www.thingelstad.com/uploads/2021/03f40a1a57.jpg" width="600" height="319" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/03f40a1a57.jpg" width="600" height="319" alt="Google Maps route from Minneapolis to Saint Johnsbury via Cleveland, Accord, and Shaftsbury, totaling 2,940 miles and 46 hours of driving." />

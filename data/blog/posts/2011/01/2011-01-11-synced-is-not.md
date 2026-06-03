@@ -11,15 +11,15 @@ Let me nitpick for a moment. I'm a huge fan of [Omnifocus](http://www.omnigroup.
 
 However, when I synchronize my phone I'm always irked with the screen. The problem: **synced**.
 
-<img src="https://www.thingelstad.com/uploads/2020/852cfc8d0a.jpg" style="max-width: 400px;" />
+<img src="https://www.thingelstad.com/uploads/2020/852cfc8d0a.jpg" alt="OmniFocus app main screen on iPhone showing Inbox, Projects, Contexts, Due Soon, Overdue, Flagged, Search, and Perspectives, with a sync progress overlay reading Updating with synced data." style="max-width: 400px;" />
 
 We also "synced" on the iPad.
 
-<img src="https://www.thingelstad.com/uploads/2020/1749c198d8.jpg" />
+<img src="https://www.thingelstad.com/uploads/2020/1749c198d8.jpg" alt="OmniFocus iPad app showing a dark modal dialog with a progress bar and the message Updating with synced data displayed over the Errands task list." />
 
 Yes, I'm being picky. The problem is that "synced" is not a word. Don't believe me? Ask the [OED](http://www.oed.com/).
 
-<img src="https://www.thingelstad.com/uploads/2020/7d88919bad.jpg" style="max-width: 400px;" />
+<img src="https://www.thingelstad.com/uploads/2020/7d88919bad.jpg" alt="Oxford English Dictionary website showing a quick search results page with no dictionary entries found for synced" style="max-width: 400px;" />
 
 That's right. **It isn't a word.**
 

@@ -9,4 +9,4 @@ categories: []
 
 Mom grilling for sisters birthday!
 
-<img src="https://www.thingelstad.com/uploads/2021/e7f02d595f.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/e7f02d595f.jpg" width="600" height="450" alt="Colorful vegetable and meat kebabs on skewers cooking on a large gas grill outdoors" />

@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6493807">6493807</a> at <strong><a href="https://poap.gallery/drops/111397">OG Salsa User </a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/0a0b38c9-6bdb-421c-a127-95061c00d7a2.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/0a0b38c9-6bdb-421c-a127-95061c00d7a2.png" alt="Circular olive-green badge reading Salsa I'm an OG with pixel-art red chili peppers and decorative diamond dots at the bottom." width="500" height="500" />

@@ -9,4 +9,4 @@ categories: []
 
 Early morning frost on the cattail marsh by County Road 11. 
 
-<img src="https://www.thingelstad.com/uploads/2022/7b2a0eab8f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/7b2a0eab8f.jpg" width="600" height="450" alt="Frost-covered cattails and marsh grasses stretch toward a stand of bare winter trees under a pale gray sky.">

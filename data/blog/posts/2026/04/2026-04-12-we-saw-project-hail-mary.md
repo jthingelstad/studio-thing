@@ -9,4 +9,4 @@ categories: []
 
 We saw Project Hail Mary today and it was every bit as good as everyone that has seen it has told me. I read the Martian and loved that book but had no idea about this book until it hit the theater. Just a great movie with incredible characters. Definitely one to go to the theater for!
 
-<img src="https://www.thingelstad.com/uploads/2026/611a9883f5.jpg" width="405" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/611a9883f5.jpg" width="405" height="600" alt="Movie poster for Project Hail Mary showing a man floating upside down in a spacecraft hatch, releasing March 20 2026">

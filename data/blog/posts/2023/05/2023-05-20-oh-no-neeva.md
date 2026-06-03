@@ -9,4 +9,4 @@ categories: []
 
 Oh no! 😲 [Neeva is shutting down](https://neeva.com/blog/may-announcement). I'm saddened by this — I've enjoyed not having advertising alongside search results and seeing what an innovative search company would do. Sadly they didn't make it.
 
-<img src="https://www.thingelstad.com/uploads/2023/9023e65711.png" width="600" height="167" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/9023e65711.png" width="600" height="167" alt="Warning notice from Neeva stating Neeva.com is shutting down June 2, 2023, displayed in red text on a light pink background with red border.">

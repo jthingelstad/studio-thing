@@ -9,4 +9,4 @@ categories: []
 
 I liked the contrast of the trees and organic waiting to bloom now that the snow is gone with the concrete and graffiti.
 
-<img src="https://www.thingelstad.com/uploads/2023/b616f8adb7.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/b616f8adb7.jpg" width="600" height="337" alt="Bare winter trees and fallen branches in front of a concrete bridge pillar covered in blue and multicolor graffiti tags.">

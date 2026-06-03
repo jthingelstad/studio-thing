@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 High quality mid-day espresso is a nice upside of working from home. ☕️
 
-<img src="https://www.thingelstad.com/uploads/2020/e2955743a3.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/e2955743a3.jpg" width="600" height="600" alt="Espresso streaming from a portafilter into a small white cup with a bicycle design on a stainless steel drip tray." />

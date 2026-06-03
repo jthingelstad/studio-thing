@@ -9,4 +9,4 @@ categories: []
 
 Wait a second… Connections can use pictures? 🤯
 
-<img src="https://www.thingelstad.com/uploads/2024/f0a30062a8.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/f0a30062a8.jpg" width="600" height="600" alt="iPhone screen showing a Connections puzzle game with 16 illustrated icons including a bed, saw, rat, zipper, comb, and bank building.">

@@ -9,4 +9,4 @@ categories: []
 
 Wassail Tea, Lefse, Carrot Cake — these are some of the traditions of Christmas for us. 🎄
 
-<img src="https://www.thingelstad.com/uploads/2025/9c2c55a249.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/9c2c55a249.jpg" width="600" height="600" alt="Kitchen counter with a plate of rolled lefse flatbreads, a bundt carrot cake on a cooling stand, and a gallon jug of wassail apple cider">

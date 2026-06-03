@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Totally enjoyed [In The Heights](https://www.rottentomatoes.com/m/in_the_heights_2021) tonight. Great movie and incredible performances. Wow. My movie pick. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2021/7dfe352b01.jpg" width="404" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/7dfe352b01.jpg" width="404" height="600" alt="Movie poster for In The Heights showing four young people against a brick wall mural with a bridge and city sky behind them" />

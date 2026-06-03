@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Great dinner out with #TeamSPS in Kyiv!
 
-<img src="https://www.thingelstad.com/uploads/2020/66fbe33fb5.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/66fbe33fb5.jpg" width="600" height="450" alt="Group of about eleven people seated around a round table at a restaurant dinner in Kyiv, smiling at the camera under a circular chandelier" />

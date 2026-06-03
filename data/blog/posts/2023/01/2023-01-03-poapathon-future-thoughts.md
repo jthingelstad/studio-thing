@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2023/01/03/poapathon-future-thoughts.html"
 title: "POAPathon Future Thoughts"
 published: "2023-01-04T04:21:53+00:00"
 post_kind: post
-categories: ["Kubb", "Crypto", "POAP"]
+categories: ["Kubb", "Crypto"]
 ---
 
 On the December 30th POAPathon Community Call there was a request for feedback on where POAPathon should go in 2023. I thought about it and here are my thoughts.
@@ -13,15 +13,15 @@ First some background. [POAPathon](https://www.poapathon.com) is a community dri
 
 Some POAPathon designed events I've done include:
 
-<img src="https://www.thingelstad.com/uploads/2023/33352bcddc.png" width="150" height="150" alt="" style=" width: 150px !important;" /><br>
+<img src="https://www.thingelstad.com/uploads/2023/33352bcddc.png" width="150" height="150" alt="Circular illustrated badge of a lakeside property with pine trees, a house, pool, fire pit, and boat dock, labeled Magic Pines Celebrating Summer 22" style=" width: 150px !important;" /><br>
 [Magic Pines Summer of 2022](https://poap.gallery/event/46950)<br>
 by kavishsethi
 
-<img src="https://www.thingelstad.com/uploads/2023/93d4b9f028.png" width="150" height="150" alt="" style=" width: 150px !important;" /><br>
+<img src="https://www.thingelstad.com/uploads/2023/93d4b9f028.png" width="150" height="150" alt="Circular map-style illustration labeled Jamie Thingelstad showing North America and Iceland with location markers including Minneapolis, Denver, Kentucky Derby, Space Camp, and Walt Disney World," style=" width: 150px !important;" /><br>
 [Jamie Thingelstad's 51st Birthday](https://poap.gallery/event/95194)<br>
 by designatum.eth
 
-<img src="https://www.thingelstad.com/uploads/2023/71e563c0be.png" width="150" height="150" alt="" style=" width: 150px !important;" /><br>
+<img src="https://www.thingelstad.com/uploads/2023/71e563c0be.png" width="150" height="150" alt="Circular illustrated badge showing wooden kubb game pieces with a crown on top, an SPS logo, and text reading Team SPS 2022 Kubb Tourney" style=" width: 150px !important;" /><br>
 [TeamSPS 2022 Kubb Tournament](https://poap.gallery/event/66379)<br>
 by InsertGenericArtName
 

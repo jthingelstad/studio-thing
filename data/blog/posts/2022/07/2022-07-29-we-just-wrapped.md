@@ -9,4 +9,4 @@ categories: []
 
 We just wrapped up Day 7 of our [Iceland 2022: Ring Road](https://www.thingelstad.com/collections/iceland-2022/) adventure. We are going counter-clockwise and are through the Northern areas and are now transitioning to the South. Iceland is amazing!
 
-<img src="https://www.thingelstad.com/uploads/2022/e47c3c3125.png" width="600" height="386" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/e47c3c3125.png" width="600" height="386" alt="Map of Iceland showing a counter-clockwise road trip route with labeled stops along the northern and eastern coasts toward the south." />

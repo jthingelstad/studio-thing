@@ -11,6 +11,6 @@ George Floyd's memorial service was today and broadcast live. Tammy and I watche
 
 **"What we are doing is helping America be America for all Americans!"**
 
-<img src="https://www.thingelstad.com/uploads/2020/959d58bbec.jpg" width="600" height="400" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/959d58bbec.jpg" width="600" height="400" alt="Mural reading George Floyd with a portrait at center, surrounded by flowers, candles, and memorial signs on a sidewalk" />
 
 _[Photo by Lorie Shaull](https://www.flickr.com/photos/number7cloud/49959004213/)._

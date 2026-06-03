@@ -11,4 +11,4 @@ Lake Harriet. [📍](http://maps.apple.com/?ll=44.921702,-93.304614)
 
 Finished **3.97 mile walk** in **79.1 minutes** (19.92 min/mile). Such a great evening to be outside. 🚶‍♂️
 
-![](https://www.thingelstad.com/uploads/2025/image-20250409-195747-1398ee37.jpg)
+<img src="https://www.thingelstad.com/uploads/2025/image-20250409-195747-1398ee37.jpg" alt="Calm lake with a wooden floating dock in the foreground and the Minneapolis skyline visible in the distance under a clear blue sky.">

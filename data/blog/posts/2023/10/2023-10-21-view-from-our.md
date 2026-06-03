@@ -9,4 +9,4 @@ categories: []
 
 View from our table at Osage Restaurant at Top of the Rock, Big Cedar Lodge. 
 
-<img src="https://www.thingelstad.com/uploads/2023/397925d881.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/397925d881.jpg" width="600" height="337" alt="Stone terrace at Top of the Rock overlooking Ozark forest and lake, with a bison sculpture, golf green, and American and Missouri flags.">

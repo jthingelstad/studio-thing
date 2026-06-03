@@ -9,4 +9,4 @@ categories: []
 
 Happy Easter from the Thingelstad Family! 🐣
 
-<img src="https://www.thingelstad.com/uploads/2023/40357f92e4.jpg" width="599" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/40357f92e4.jpg" width="599" height="600" alt="Four people posing on a snowy deck holding Easter baskets, dressed in spring outfits and colorful socks.">

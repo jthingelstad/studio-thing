@@ -9,4 +9,4 @@ categories: []
 
 So much fun raking with the kids today.
 
-<img src="https://www.thingelstad.com/uploads/2019/70808f616a.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/70808f616a.jpg" width="600" height="450" alt="Two smiling children lying in a large pile of fall leaves on a lawn" />

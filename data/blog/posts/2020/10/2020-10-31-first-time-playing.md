@@ -9,4 +9,4 @@ categories: []
 
 First time playing [Trekking the World](https://www.underdoggames.com/products/trekking-the-world). Game setup took a bit to figure out but we got the hang of it fast enough. Was cool to learn about the world and enjoy a game at the same time. 
 
-<img src="https://www.thingelstad.com/uploads/2020/f0bc256084.jpg" width="600" height="449" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/f0bc256084.jpg" width="600" height="449" alt="Trekking the World board game in progress showing a colorful world map with player tokens and cards laid out on a wooden table." />

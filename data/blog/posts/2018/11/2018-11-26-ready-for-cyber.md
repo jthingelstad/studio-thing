@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Ready for Cyber Monday peak season! #TeamSPS
 
-<img src="https://www.thingelstad.com/uploads/2018/334a72fd22.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/334a72fd22.jpg" alt="Open office with rows of workstations, several people working at computers, and a wall of monitoring dashboards displaying graphs and metrics overhead." width="600" height="337" />

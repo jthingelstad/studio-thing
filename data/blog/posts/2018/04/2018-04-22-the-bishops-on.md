@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 The bishops on the “summer” side of our custom Chess set are Kubb players, of course. 
 
-<img src="https://www.thingelstad.com/uploads/2018/87035880ee.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/87035880ee.jpg" alt="Colorful hand-painted wooden chess pieces depicting human figures on a checkered board, each uniquely dressed and decorated." width="600" height="600" />

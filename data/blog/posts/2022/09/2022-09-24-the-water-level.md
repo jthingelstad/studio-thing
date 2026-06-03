@@ -9,4 +9,4 @@ categories: []
 
 The water level in Cannon Lake is down a lot. The first wheel on our dock is usually under water. The water level is so low that I cannot get the pontoon to float when I raise the SeaLegs. The boat rests on the lake bottom. Uh oh. Now what? 😳
 
-<img src="https://www.thingelstad.com/uploads/2022/20e1dc42b9.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/20e1dc42b9.jpg" width="600" height="450" alt="Pontoon boat on a Porta-Dock lift sitting on a green algae-covered lake bottom beside a low aluminum dock." />

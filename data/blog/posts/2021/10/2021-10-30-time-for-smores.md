@@ -9,4 +9,4 @@ categories: []
 
 Time for s’mores! 🔥
 
-<img src="https://www.thingelstad.com/uploads/2021/e0b16234fe.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/e0b16234fe.jpg" width="600" height="450" alt="Crackling fire pit on a gravel patio surrounded by blue metal benches, stone mushroom sculptures, and autumn foliage near a lake." />

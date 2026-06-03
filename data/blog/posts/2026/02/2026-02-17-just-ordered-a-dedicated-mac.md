@@ -9,4 +9,4 @@ categories: []
 
 Just ordered a dedicated Mac Mini so I can setup an [OpenClaw](https://openclaw.ai) instance. Can’t wait to experiment with this!
 
-<img src="https://www.thingelstad.com/uploads/2026/777ec3f442.png">
+<img src="https://www.thingelstad.com/uploads/2026/777ec3f442.png" alt="OpenClaw logo featuring a red cartoon lobster mascot and the word CLAW in bold red letters">

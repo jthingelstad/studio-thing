@@ -9,4 +9,4 @@ categories: []
 
 Today the heavy equipment came inside and made a bunch of noise while tearing out the basement floor.
 
-![](https://www.thingelstad.com/uploads/2020/e365deb879.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/e365deb879.jpg" alt="Demolished basement interior with concrete floor broken up into rubble piles exposing bare dirt, cinder block walls painted yellow and white.">

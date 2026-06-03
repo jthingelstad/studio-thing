@@ -13,4 +13,4 @@ I left with some [Guatemalan coffee](https://paircupworks.com/collections/micro-
 
 I spent an hour chatting with the owner Kimhak En who runs the business with his wife Eugenia Tai. He was very nice and had a ton to share on great coffee shops around the country, different techniques and equipment, and their journey [starting their own shop](https://dailycoffeenews.com/2019/12/04/now-roasting-in-mesa-arizona-pair-cupworks/).
 
-<img src="https://www.thingelstad.com/uploads/2021/dccfa02af0.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/dccfa02af0.jpg" width="600" height="600" alt="Latte with intricate tulip latte art in a white ceramic mug viewed from above on a dark wooden table" />

@@ -9,4 +9,4 @@ categories: []
 
 Lucky and I at [Victoria-Evergreen Park](https://www.minnetonkamn.gov/Home/Components/FacilityDirectory/FacilityDirectory/87/3379?npage=3) in Minnetonka. 
 
-<img src="https://www.thingelstad.com/uploads/2021/8e11735f05.jpg" width="449" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/8e11735f05.jpg" width="449" height="600" alt="Man in red winter hat and Columbia jacket kneeling in snow with a white goldendoodle on a leash, bare trees behind them." />

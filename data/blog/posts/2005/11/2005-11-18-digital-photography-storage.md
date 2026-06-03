@@ -39,19 +39,19 @@ Every photo I've taken since that day in 1999 has been digital.
 
 While much about this transition has been wonderful, and I certainly would not return to film, there are challenges. In the period from June 9, 1999 to October 27, 2005, a span of 2,332 days, I've taken over 20,000 pictures. That represents over 8 pictures a day for several years, a frequency that is unfathomable in film photography. This collection now represents nearly 50 gigabytes of storage that is more precious than any collection of spreadsheets or word processing documents I can imagine. Vacation memories, the birth of a child, weddings are just some examples of this immensely important data. Figure 1 shows the storage requirement of these photos over time.
 
-![](https://files.thingelstad.com/posts/2005/digital-photography/figure1.png)  
+<img src="https://files.thingelstad.com/posts/2005/digital-photography/figure1.png" alt="Line chart showing cumulative digital photo storage growing from near 0 GB in June 1999 to about 46 GB by October 2005.">  
 Figure 1
 
 The explosion of storage required to accommodate increasing numbers of photos at higher resolutions is a genuine challenge. This data management problem was, until recently, inconceivable to the average person and was only an issue that organizations with specialized technical staff had to deal with. The idea of backing up 50 GB of data on anything other than a spare hard drive is preposterous; optical media is too small (including DVD) and tape is cost prohibitive, hard to use and prone to failure. Even the hard drive option has only recently become an option with the advent of USB2 and Firewire, before that there really was no option.
 
 The amazing thing about this storage issue is the rate at which it is growing. It took 299 days for me to collect my first gigabyte of photos. I didn't reach the five gigabyte point until 1,144 days of photography. That is approximately half of the time I've had a digital camera. In the 1,188 days following that I've added another 41 gigabytes of photos, all while continuing to accelerate the storage needs. Figure 2 shows the storage size of photos taken by year (only showing years with complete data).
 
-![](https://files.thingelstad.com/posts/2005/digital-photography/figure2.png)  
+<img src="https://files.thingelstad.com/posts/2005/digital-photography/figure2.png" alt="Bar chart showing photo storage in GB per year from 2000 to 2004, rising sharply from about 1.5 GB in 2000 to nearly 20 GB in 2004.">  
 Figure 2
 
 This may sound huge, but luckily this technical problem has been helped by hard drive manufacturers. Figure 3 below compares the growth of my digital photos to Moore's Law<sup>[1](#footnote1)</sup> and Kryder's Law<sup>[2](#footnote2)</sup>. Both of these laws relate to the growth rates of technology. Moore's Law, reduced, states that computing power doubles every 18 months. Kryder's Law is a similar law for storage, but doubling even faster at 13 months.
 
-![](https://files.thingelstad.com/posts/2005/digital-photography/figure3.png)  
+<img src="https://files.thingelstad.com/posts/2005/digital-photography/figure3.png" alt="Line chart showing personal photo storage growth in GB from 1999 to 2005 tracking faster than Moores Law but close to Kryders Law.">  
 Figure 3 - Plotted on logarithmic scale.
 
 It is interesting to note that both Moore's and Kryder's growth rates were well ahead of me for nearly the entire first year of photography. Since then, I've steadily outpaced Moore's and am knocking aggressively on the top-end of Kryder's growth rate.
@@ -64,27 +64,27 @@ Digital photography introduces people to an entirely new way of using photos, wi
 
 Take a moment to look at Figure 4 below showing the number of photos taken each month with a 6-month moving average.
 
-![](https://files.thingelstad.com/posts/2005/digital-photography/figure4.png)  
+<img src="https://files.thingelstad.com/posts/2005/digital-photography/figure4.png" alt="Line chart showing monthly picture counts from Jun-99 to Sep-05, with a sharp spike near Jun-04 reaching about 1,600 and a rising average trend.">  
 Figure 4
 
 You can see a clear growth in the tendency to simply take more and more photos. I have been taking 36% more pictures every year since starting with digital photography. Compounding that problem is the growth of megapixels, and with it file-sizes, in digital cameras. The storage space required for the increasingly growing collection of photos is growing geometrically.
 
 Figure 5 is interesting for other reasons as it identifies how events like vacation (July 2002, July 2004) affect these trends, as well as major life events like the birth of a child (June 2005). Going to Europe in July 2004 now carries with it a permanent issue of keeping 4.5 gigabytes of data around forever. That is notably more challenging than putting some prints in a photo album and placing it on the shelf. One is an active process of sophisticated data management, the other a passive matter of organizing physical documents. As we continue to use digital technology to capture events in our life we may begin to look at the digital cost of those events. Going on vacation will cost $2,000 and have a data load of 3GB, my childs school play will have a data load of 1.5GB, etc. All the while being additive of course, we are never removing old content.
 
-![](https://files.thingelstad.com/posts/2005/digital-photography/figure5.png)  
+<img src="https://files.thingelstad.com/posts/2005/digital-photography/figure5.png" alt="Line chart showing monthly photo count and storage size in GB from June 1999 to late 2005, with sharp growth peaks around mid-2004 reaching nearly 4.5 GB.">  
 Figure 5
 
 Let's take a moment to look at our digital photography behavior. This is somewhat tangential to the issue at hand, but is interesting nonetheless and provides some depth to the trend of taking more photos over time. Figure 6 below shows the number of digital photos taken each month during the sample period.
 
-![](https://files.thingelstad.com/posts/2005/digital-photography/figure6.png)  
+<img src="https://files.thingelstad.com/posts/2005/digital-photography/figure6.png" alt="3D bar chart showing photo counts per month from 1999 to 2005, with a dramatic spike in September 2003 near 1700 photos.">  
 Figure 6
 
 It is clear that the summer months represent big picture taking times. December also reflects a high volume of pictures, no doubt due to the Christmas holiday. Figures 7 and 8 show photographic activity by day and hour.
 
-![](https://files.thingelstad.com/posts/2005/digital-photography/figure7.png)  
+<img src="https://files.thingelstad.com/posts/2005/digital-photography/figure7.png" alt="3D bar chart showing photo counts by day of week from 1999 to 2005, with Saturday 2005 reaching roughly 2,250 photos, the highest bar.">  
 Figure 7
 
-![](https://files.thingelstad.com/posts/2005/digital-photography/figure8.png)  
+<img src="https://files.thingelstad.com/posts/2005/digital-photography/figure8.png" alt="3D bar chart showing photo counts by hour of day from 1999 to 2005, with peaks around 2 to 4 PM reaching nearly 800 photos.">  
 Figure 8
 
 The results are not terribly surprising. The majority of photos are taken on the weekends and there are very few photos taken while sleeping. It is a little surprising that the afternoon is higher than the early evening hours.
@@ -117,7 +117,7 @@ I contacted Disney to find out how many visitors on average attend Disney World 
 
 Denied the true information, I did find some estimates of attendance on the web<sup>[4](#footnote4)</sup>. Using this estimate I concluded that Disney World averaged 38,462 visitors a day. According to at least one survey 54% of Americans are using digital cameras<sup>[5](#footnote5)</sup>. It seems straightforward to me that the average visitor to Disney World is also more likely to have a digital camera, but we'll use the average anyway.
 
-![](https://files.thingelstad.com/posts/2005/digital-photography/megapixels.png)
+<img src="https://files.thingelstad.com/posts/2005/digital-photography/megapixels.png" alt="Line chart showing camera megapixel distribution peaking at 30 percent for 4-megapixel cameras, dropping to 5 percent at 1 and 7 megapixels.">
 
 The next challenge is determining the distribution of camera types. I used a standard bell curve distribution from 2 megapixel to 8 megapixel (shown on the right), and also assumed that everyone is taking a JPEG file. The last bit of information needed is an estimate of how many pictures each one of these digitally equipped visitors would take at Disney World. I estimated 100 pictures, which I would suggest is high, but realistic given that you are on vacation, at a special place and have a high desire to capture "life's moments". For comparison, I took 241 pictures in two days at Disney World, averaging 120 pictures a day.
 
@@ -141,12 +141,12 @@ Almost all digital photography is done straight to a JPEG file. This is an easy 
 
 Raw files are compressed, but not as much as JPEG files. The resulting file is approximately 300% larger than a comparable JPEG file. Figure 9 shows the theoretical effect of using RAW photography as opposed to JPEG.
 
-![](https://files.thingelstad.com/posts/2005/digital-photography/figure9.png)
+<img src="https://files.thingelstad.com/posts/2005/digital-photography/figure9.png" alt="Line chart showing RAW photo storage growth from 1999 to 2005 outpacing Moore's Law and Kryder's Law projections, reaching near 100 GB.">
 Figure 9 - Plotted on logarithmic scale.
 
 You can see the problem right away! We break above Kryder's law immediately and stay well above it. At the end of our sample period our storage needs have tipled from 46 GB to 143 GB. Let's look at this growth on a linear scale in Figure 10, as opposed to the logarithmic scale in Figure 9. The huge disparity in storage needs versus growth are profound.
 
-![](https://files.thingelstad.com/posts/2005/digital-photography/figure10.png)
+<img src="https://files.thingelstad.com/posts/2005/digital-photography/figure10.png" alt="Line chart showing RAW photo storage growth from 1999 to 2005 outpacing Moore's Law but tracking close to Kryder's Law, reaching about 80 GB total size.">
 Figure 10
 
 While it is appealing to do photography only in RAW, the storage implications make it very challenging.

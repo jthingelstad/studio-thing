@@ -9,4 +9,4 @@ categories: []
 
 “Your EFI shell is showing…”
 
-<img src="https://www.thingelstad.com/uploads/2026/57268ae220.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/57268ae220.jpg" width="600" height="450" alt="Digital display board at Saint Paul RiverCentre showing an EFI Shell error screen with version and device mapping text instead of event information.">

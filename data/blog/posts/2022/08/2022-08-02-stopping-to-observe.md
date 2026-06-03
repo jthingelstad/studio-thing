@@ -9,4 +9,4 @@ categories: []
 
 Stopping to observe the power of Eyjafjallajökull with [Into the Wild](https://intothewild.is). Amazing. 
 
-<img src="https://www.thingelstad.com/uploads/2022/1822276426.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/1822276426.jpg" width="600" height="599" alt="White Nissan Patrol SUV parked on volcanic gravel below the Eyjafjallajokull glacier and dark rocky cliffs in Iceland." />

@@ -9,4 +9,4 @@ categories: []
 
 Paul Boswell, creator of the Turing Tumble, just launched [Spintronics](https://www.kickstarter.com/projects/upperstory/spintronics-build-mechanical-circuits) on Kickstarter. **I'm in!** Turing Tumble was brilliant, and this looks equally great! I love how he turns digital concepts and logic into something physical to interact with.
 
-![](https://www.thingelstad.com/uploads/2021/8d080a953e.gif)
+<img src="https://www.thingelstad.com/uploads/2021/8d080a953e.gif" alt="Colorful steampunk mechanical circuit board with gears, belts, spools, and brass components on interlocking hexagonal metal tiles">

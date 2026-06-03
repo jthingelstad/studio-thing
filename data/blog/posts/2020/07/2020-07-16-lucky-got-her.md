@@ -9,4 +9,4 @@ categories: []
 
 Lucky got her first grooming today. She looks a little strange but is very fluffy. This was a partial grooming. Part 1 of 2… 
 
-<img src="https://www.thingelstad.com/uploads/2020/f61443ca09.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/f61443ca09.jpg" width="600" height="600" alt="White fluffy dog standing on green lawn beside yellow daylilies with a rock-bordered garden bed behind her." />

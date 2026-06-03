@@ -16,4 +16,4 @@ Leaves him at $442 billion now. Just another 50% to hit that $700 billion. 🎯
 $277 million to get $200 billion? As [Lawrence Lessig](https://lessig.org) highlighted so well in [Rebublic Lost](https://lessig.org/product/republic-lost-v1/) — political grift has a very high ROI. 💸
 
 
-<img src="https://www.thingelstad.com/uploads/2024/a18590f197.jpg" width="600" height="302" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/a18590f197.jpg" width="600" height="302" alt="Cartoon dog sitting calmly in a room engulfed in flames with a coffee cup, saying This Is Fine.">

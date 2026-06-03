@@ -9,4 +9,4 @@ categories: []
 
 We volunteered at [Feed My Starving Children](https://www.fmsc.org) today for the first time since the pandemic. They have modified the process to make it a safe as possible. We set a new post-Covid record of 133 boxes packed. Enough to feed 79 kids for a year!
 
-<img src="https://www.thingelstad.com/uploads/2020/ea2b456294.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/ea2b456294.jpg" width="600" height="450" alt="Four volunteers wearing hairnets and face masks pose for a selfie inside the Feed My Starving Children facility." />

@@ -11,4 +11,4 @@ A Baker’s Wife’s Pastry Shop [📍](http://maps.apple.com/?ll=44.926785,-93.
 
 A nice Sunday morning for some donuts from Baker’s Wife. 
 
-![](https://www.thingelstad.com/uploads/2025/image-20250406-084752-9d025354.jpg)
+<img src="https://www.thingelstad.com/uploads/2025/image-20250406-084752-9d025354.jpg" alt="Exterior of A Baker's Wife's Pastry Shop with yellow awning sign, brick building, and small patio with metal chairs and table on a sunny day.">

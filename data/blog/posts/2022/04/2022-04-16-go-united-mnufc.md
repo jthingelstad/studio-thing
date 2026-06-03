@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Go United! M-N-UFC! ⚽️ 
 
-<img src="https://www.thingelstad.com/uploads/2022/3c7bd88515.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/3c7bd88515.jpg" width="600" height="337" alt="Large white UNITED letters outside Bell Bank Park stadium under a clear blue winter sky in Fargo North Dakota" />

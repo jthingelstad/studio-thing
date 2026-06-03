@@ -7,10 +7,6 @@ post_kind: post
 categories: []
 ---
 
-This was from a couple of weeks ago when iPhone OS 2.1 came out. It's so
-common on the web to research a product and find completely
-contradictory opinions. One person will say it's horrible, doesn't even
-work. Another says it's amazing. Rarely do you see those differences
-right next to each other in Twitter though.
+This was from a couple of weeks ago when iPhone OS 2.1 came out. It's so common on the web to research a product and find completely contradictory opinions. One person will say it's horrible, doesn't even work. Another says it's amazing. Rarely do you see those differences right next to each other in Twitter though.
 
-<img src="https://www.thingelstad.com/uploads/2020/771c870206.png" style="max-width: 360px; " />
+<img src="https://www.thingelstad.com/uploads/2020/771c870206.png" alt="Two Twitter posts side by side showing contradictory opinions on iPhone 2.1 battery life, one calling it worse, one calling it much improved." style="max-width: 360px; " />

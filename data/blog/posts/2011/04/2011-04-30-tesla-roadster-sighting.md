@@ -9,4 +9,4 @@ categories: []
 
 First spotting of a [Tesla](http://www.teslamotors.com/) [Roadster](http://www.teslamotors.com/roadster) in Minneapolis. Parked outside of [Café Lurcat](http://www.cafelurcat.com/). Given the plates I'm guessing it is someone from [Z.Vex Effects](http://en.wikipedia.org/wiki/Zvex) car.
 
-![](https://www.thingelstad.com/uploads/2020/963150e34b.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/963150e34b.jpg" alt="Black Tesla Roadster sports car parked on a city street at dusk, with a Jeep SUV and other vehicles behind it.">

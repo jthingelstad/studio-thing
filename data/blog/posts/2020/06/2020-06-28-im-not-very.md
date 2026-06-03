@@ -9,4 +9,4 @@ categories: []
 
 I’m not very handy, so I get disproportionately excited when I do complete little home projects. New drier vent with guard installed! Last winter the squirrels put over 20 pine cones in the vent!
 
-<img src="https://www.thingelstad.com/uploads/2020/b4e3583ade.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/b4e3583ade.jpg" width="600" height="600" alt="White plastic dryer vent guard mounted on dark gray exterior house siding, with HVAC equipment and garden plants visible in background." />

@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Fun #TeamSPS project for a Friday afternoon. Enlisting the kids to help with decorating. ☝️
 
-<img src="https://www.thingelstad.com/uploads/2020/a8b1600ce4.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/a8b1600ce4.jpg" width="600" height="600" alt="Cardboard number 1 cut from a shipping box, resting on a white kitchen counter beside scraps of cardboard." />

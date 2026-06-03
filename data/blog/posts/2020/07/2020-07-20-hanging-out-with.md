@@ -9,4 +9,4 @@ categories: []
 
 Hanging out with Llamas this morning with [Montana Llama Guides](https://www.montanallamaguides.com). 🦙 
 
-<img src="https://www.thingelstad.com/uploads/2020/e0435b345d.jpg" width="600" height="450" alt="" /><img src="https://www.thingelstad.com/uploads/2020/dd70d8218f.jpg" width="600" height="450" alt="" /><img src="https://www.thingelstad.com/uploads/2020/d510bddb16.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/e0435b345d.jpg" width="600" height="450" alt="Three llamas in a fenced pasture with mountains behind them, one facing the camera closely while a child in a black shirt feeds another" /><img src="https://www.thingelstad.com/uploads/2020/dd70d8218f.jpg" width="600" height="450" alt="Herd of black and white llamas grazing on a green hillside pasture with farm buildings, trees, and mountain valley in the background." /><img src="https://www.thingelstad.com/uploads/2020/d510bddb16.jpg" width="600" height="450" alt="Boy in a baseball cap feeds llamas at a petting area while a woman in a face mask watches, green hills in the background." />

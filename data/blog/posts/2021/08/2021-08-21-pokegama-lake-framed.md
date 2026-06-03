@@ -9,4 +9,4 @@ categories: []
 
 Pokegama Lake framed by trees. 
 
-<img src="https://www.thingelstad.com/uploads/2021/9b0a0aed4c.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/9b0a0aed4c.jpg" width="600" height="450" alt="Pokegama Lake viewed through pine and maple trees, with a dock, two chairs, and a moored boat in the foreground" />

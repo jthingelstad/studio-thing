@@ -19,7 +19,7 @@ Requirements to be aware of:
 
 I've updated my [original Collection Creator shortcut](https://www.thingelstad.com/2024/12/30/microblog-collection-creator-shortcut.html) through my own use. Most of my collections have been populated with this Shortcut. I've found it even more useful than I thought to be able to take a clipboard full of URLs and create a collection out of the linked images. I've used it for posts, for pages, and even some cases where I just grabbed a bunch of image links and create a collection.
 
-<img src="https://www.thingelstad.com/uploads/2025/collection-creator.png" width="600" height="315" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/collection-creator.png" width="600" height="315" alt="macOS dialog from Micro.blog Collection Creator app saying Found 4 images with Cancel and OK buttons.">
 
 Improvements since the [first release](https://www.thingelstad.com/2024/12/30/microblog-collection-creator-shortcut.html):
 
@@ -38,7 +38,7 @@ I’m not sure how common this will be, but at times I want to include all the p
 - Page about that [overall trip](https://www.thingelstad.com/collections/switzerland-italy-2023/) has a collection of photos for that trip.
 - A photo page that contains [all photos I've taken in Switzerland](https://www.thingelstad.com/photos/switzerland/).
 
-<img src="https://www.thingelstad.com/uploads/2025/collection-copier.png" width="600" height="336" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/collection-copier.png" width="600" height="336" alt="macOS confirmation dialog from Micro.blog Collection Copier asking to add 33 images from Post 2009 State Fair to Coffee collection">
 
 In this case these photos are in three collections. The easiest way to populate the aggregated collections would be to copy all photos from individual collections to them. It would be nice to "Add all photos from Collection X to Collection Y". That is what this Shortcut does.
 

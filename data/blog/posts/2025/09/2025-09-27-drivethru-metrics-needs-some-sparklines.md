@@ -9,4 +9,4 @@ categories: []
 
 Drive-thru metrics. Needs some [sparklines](https://www.edwardtufte.com/notebook/sparkline-theory-and-practice-edward-tufte/). Too many numbers, not enough easy to read lines.
 
-<img src="https://www.thingelstad.com/uploads/2025/da0ff44240.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/da0ff44240.jpg" width="600" height="449" alt="Acer monitor mounted on wall showing fast food drive-thru performance dashboard with timers, averages, and service metrics.">

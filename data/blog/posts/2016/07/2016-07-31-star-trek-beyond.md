@@ -4,9 +4,9 @@ url: "https://www.thingelstad.com/2016/07/31/star-trek-beyond.html"
 title: ""
 published: "2016-07-31T15:46:37+00:00"
 post_kind: micropost
-categories: ["Movies"]
+categories: []
 ---
 
 Star Trek Beyond.
 
-![](https://www.thingelstad.com/uploads/2020/393da3dceb.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/393da3dceb.jpg" alt="Movie poster for Star Trek Beyond featuring characters in sci-fi costumes against vivid orange and red streaks of light">

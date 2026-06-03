@@ -9,4 +9,4 @@ categories: []
 
 Chicago skyline.
 
-<img src="https://www.thingelstad.com/uploads/2024/d392e03701.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/d392e03701.jpg" width="600" height="337" alt="Chicago skyline at sunset viewed from the river with skyscrapers reflecting golden light on the water">

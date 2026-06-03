@@ -9,4 +9,4 @@ categories: ["Music"]
 
 Small and intimate concert with [Matt Wilson](https://www.minneapolismatt.com) and his Orchestra at the [318 Cafe](http://www.three-eighteen.com) in Excelsior. 🎶
 
-<img src="https://www.thingelstad.com/uploads/2020/37840c44e7.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/37840c44e7.jpg" width="600" height="450" alt="Man playing acoustic guitar and singing into a mic at a small restaurant concert, with a harpist and keyboard player behind him and seated diners in the foreground." />

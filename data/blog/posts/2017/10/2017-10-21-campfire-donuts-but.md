@@ -9,4 +9,4 @@ categories: []
 
 Campfire donuts, but on a grill. 
 
-<img src="https://www.thingelstad.com/uploads/2017/6f26ce1297.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/6f26ce1297.jpg" alt="Canned biscuit donuts frying in oil inside a disposable aluminum pan on a gas grill outdoors in autumn" width="600" height="600" />

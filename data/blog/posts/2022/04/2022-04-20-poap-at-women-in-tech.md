@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/4765283">4765283</a> at <strong><a href="https://poap.gallery/drops/40021">Women in Tech Night Out (April 2022)</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/women-in-tech-night-out-april-2022-2022-logo-1650395010697.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/women-in-tech-night-out-april-2022-2022-logo-1650395010697.png" alt="Black circular WITNO Women in Tech Night Out badge with city skyline graphic and green Crypto Curious text, April 2022" width="500" height="500" />

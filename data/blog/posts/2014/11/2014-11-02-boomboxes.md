@@ -9,4 +9,4 @@ categories: []
 
 Boomboxes at [Franconia Sculpture Park](https://www.franconia.org). [See also](https://www.thingelstad.com/2014/09/27/boomboxes-httpstcoigzztda.html).
 
-![](https://www.thingelstad.com/uploads/2020/01544a914e.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/01544a914e.jpg" alt="Black and white photo collage of dozens of vintage boomboxes and portable stereos stacked tightly together">

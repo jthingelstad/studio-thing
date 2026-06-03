@@ -11,4 +11,4 @@ We made a stop at [Escape Room Alexandria](https://www.escapealexandria.com) tod
 
 Afterward we were able to chat with Lindsay, one of the owners, and shared a ton of great rooms that we've done. She has done over two hundred rooms and she also knew the folks that run Copper Cat, which is where we got the recommendation for this stop. [Room 80](https://www.thingelstad.com/lists/escape-rooms/)!
 
-<img src="https://www.thingelstad.com/uploads/2025/f6f20da09b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/f6f20da09b.jpg" width="600" height="450" alt="Family of four holding celebratory signs inside Escape Room Alexandria after successfully completing The Experiment with 6m 46s remaining.">

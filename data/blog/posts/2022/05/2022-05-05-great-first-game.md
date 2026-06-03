@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Great first game of the [Twin Cities Soccer Leage](https://www.tcslsoccer.com) season for [Park Valley United FC](https://www.parkvalleyunitedfc.org) v [Eden Prairie SC](https://www.epsoccerclub.com). Tie match 1-1. ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2022/398b8ee830.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/398b8ee830.jpg" width="600" height="337" alt="Youth soccer match on a green field at golden hour with players in red and white uniforms near a goal, suburban trees in background." />

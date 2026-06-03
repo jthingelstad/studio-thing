@@ -9,4 +9,4 @@ categories: []
 
 Yeah, about time. 🍺
 
-<img src="https://www.thingelstad.com/uploads/2020/8f3f5110dc.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/8f3f5110dc.jpg" width="600" height="600" alt="Stella Artois bottle and a pint glass of lager on a colorful painted table indoors" />

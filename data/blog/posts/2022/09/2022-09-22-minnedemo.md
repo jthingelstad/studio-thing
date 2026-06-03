@@ -9,11 +9,11 @@ categories: ["Minnestar"]
 
 It was great to see the Twin Cities technology community back together for **Minnedemo** tonight at the [Reverview Theater](http://www.riverviewtheater.com). Minnedemo was also part of the [Twin Cities Startup Week](https://www.twincitiesstartupweek.com) lineup. 
 
-![](https://www.thingelstad.com/uploads/2022/230295ff3f.jpg)
+<img src="https://www.thingelstad.com/uploads/2022/230295ff3f.jpg" alt="Entrance to the Riverview Theater marquee reading Minnedemo 37 Sept 22 with a small crowd of people gathered outside on the sidewalk at night.">
 
 The [presenters](https://minnestar.org/announcing-the-presenters-of-minnedemo37/) for tonight were great. I also have a special affinity for the vibe of the Riverview Minnedemos. Theatre snacks, food trucks, and a gorgeous evening are a pretty awesome combination. 
 
-![](https://www.thingelstad.com/uploads/2022/85a2843364.jpg)
+<img src="https://www.thingelstad.com/uploads/2022/85a2843364.jpg" alt="Three people stand on a theater stage in front of a projected SPS Commerce logo labeled Terabyte Sponsor">
 
 The demos were really impressive!
 
@@ -35,5 +35,5 @@ I thought **IntelligentRx** had the most promise to be very impactful for people
 
 Even after 37 sessions, 259 demos, I’m still amazed at the creativity and ingenuity of the technology community here. 
 
-![](https://www.thingelstad.com/uploads/2022/90db8efafc.jpg)  
+<img src="https://www.thingelstad.com/uploads/2022/90db8efafc.jpg" alt="Three smiling adults posing together at an indoor networking event, each wearing name tags and holding drinks">  
 Former Minnestar Board members: Me, [Adrienne Peirce](http://adriennepeirce.com), and [Jim Bernard](https://www.jimbernard.net).

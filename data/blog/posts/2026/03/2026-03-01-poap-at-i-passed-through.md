@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7570327">7570327</a> at <strong><a href="https://poap.gallery/drops/221806">I passed through LaGuardia Airport (LGA) in 2026</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2026/051ea37c-9dc0-46ea-a04b-421d51770390.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2026/051ea37c-9dc0-46ea-a04b-421d51770390.png" alt="Circular POAP badge showing a yellow airport sign with LGA code, airplane icon, Departures and Arrivals labels, and 2026 in colorful circles." width="500" height="500" />

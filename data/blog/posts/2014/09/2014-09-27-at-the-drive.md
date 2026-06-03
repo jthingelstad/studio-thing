@@ -9,4 +9,4 @@ categories: []
 
 At the [Taylors Falls Drive-In](https://taylorsfallsdrivein.com)!
 
-<img src="https://www.thingelstad.com/uploads/2020/5aff8dd301.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/5aff8dd301.jpg" width="600" height="450" alt="Menu board at Taylors Falls Drive-In seen through a car windshield, with a white Lexus parked in front." />

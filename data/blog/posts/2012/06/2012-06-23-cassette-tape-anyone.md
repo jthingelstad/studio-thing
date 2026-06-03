@@ -9,4 +9,4 @@ categories: []
 
 Cassette tape anyone?
 
-<img src="https://www.thingelstad.com/uploads/2020/84d9da3851.jpg" width="600" height="255" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/84d9da3851.jpg" width="600" height="255" alt="Dozens of cassette tapes lined up on a windowsill beside a stereo unit with two chairs below and a red PT Cruiser visible outside." />

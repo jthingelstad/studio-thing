@@ -4,10 +4,10 @@ url: "https://www.thingelstad.com/2008/06/03/railsconf-recap.html"
 title: "RailsConf 2008 Recap"
 published: "2008-06-03T05:00:00+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/0bb39b44a1.gif" style="width: 126px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/0bb39b44a1.gif" alt="RailsConf logo in red and dark red with film strip detail and white text on a rectangular badge" style="width: 126px; float: right; margin-left: 10px; " />
 
 We just left Portland today on our continuing Summer of Love trip. You wont find much about Portland from me though. Our stop in Portland for me was a visit to [RailsConf 2008](http://en.oreilly.com/rails2008/). Tammy did post about her thoughts on Portland. It was totally awesome that our good friends, the Tangen's were able to come out and join us in Portland. Kent attended RailsConf with me, and Maril, Simon and Caroline hung out with Tammy and Mazie. Mazie just adored Caroline the whole time.
 

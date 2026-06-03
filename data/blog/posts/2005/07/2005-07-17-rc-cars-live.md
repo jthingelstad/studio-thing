@@ -19,7 +19,7 @@ We didn't get together to race them. One of the guys with a gas car got his work
 
 One of the things about me and hobbies (err, obsessions) is that I may give them a break, but I rarely just leave them forever. A few weeks ago we were driving out of a grocery store by our house and there was a race track setup where guys were racing their RC cars. I announced to Tammy "I should get my cars going!". A few shipments from [RCHobbies.org](http://www.rchobbies.org/) later and I got everything going -- including finishing and getting my gas car going -- 5 years after I bought it! (It is now a discontinued model!)
 
-![](https://www.thingelstad.com/uploads/2020/c9bde67f20.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/c9bde67f20.jpg" alt="Two RC monster trucks with large knobby tires parked on pavement, one gas-powered in the foreground and one electric in the background.">
 
 I finished the gas one this weekend and primed the motor up. I've ran a few tanks of gas through it to break in the engine and tuned it up a bit, it's working great. The electric car needed a new chassis plate so I replaced that and also took an opportunity to finish routing cables on it and re-tensioning the cable.
 

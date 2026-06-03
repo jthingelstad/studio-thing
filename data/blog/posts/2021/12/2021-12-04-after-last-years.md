@@ -9,13 +9,13 @@ categories: ["Music"]
 
 After last years hiatus it was fabulous to see [The New Standards Holiday Show](https://hennepintheatretrust.org/events/the-new-standards-holiday-show/) for 2021 today! This is one of our favorite traditions each holiday season. Great music and a great time! 🎶
 
-<img src="https://www.thingelstad.com/uploads/2021/1dccb972ca.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/1dccb972ca.jpg" width="600" height="450" alt="Six performers on a festive stage with blue and red spotlights, playing steel drums and a conga while one sings into a microphone." />
 
-<img src="https://www.thingelstad.com/uploads/2021/4da94f19e0.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/4da94f19e0.jpg" width="600" height="450" alt="Performer in a red devil costume holding a trident on a concert stage lit by colorful beams, with a band visible behind them" />
 
-<img src="https://www.thingelstad.com/uploads/2021/6a7e6e32b8.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/6a7e6e32b8.jpg" width="600" height="450" alt="Stage full of performers in holiday costumes including Christmas tree outfits and a red cape under pink and green stage lights with a disco ball overhead." />
 
-<img src="https://www.thingelstad.com/uploads/2021/01a4ec4cad.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/01a4ec4cad.jpg" width="600" height="450" alt="Band performing on an ornate theater stage with holiday decorations, performers in Santa and elf costumes, green spotlights, and a seated audience" />
 
 New Standards Holiday Shows: 
 [2023](https://www.thingelstad.com/2023/12/01/new-standards-holiday.html), 

@@ -9,4 +9,4 @@ categories: []
 
 Playing [Prime Climb](http://primeclimbgame.com) with the family. Interesting game. Sort of like Sorry. Lots of math!
 
-<img src="https://www.thingelstad.com/uploads/2017/41176107d1.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/41176107d1.jpg" alt="Prime Climb board game in progress, colorful spiral number board with green, orange, red, and blue pawns placed on various numbered spaces." width="600" height="600" />

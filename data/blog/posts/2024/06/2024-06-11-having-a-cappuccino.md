@@ -9,4 +9,4 @@ categories: []
 
 Having a cappuccino on the beach from Sunny Jim's while the [kids learn to surf](https://www.thingelstad.com/2024/06/11/tyler-and-mazie.html). 55 °F with 15 mph winds. 
 
-<img src="https://www.thingelstad.com/uploads/2024/618583ea6d.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/618583ea6d.jpg" width="600" height="449" alt="Man in a green cap and dark jacket sipping a drink outside Sunny Jims beach food trailer on a sandy beach under cloudy skies.">

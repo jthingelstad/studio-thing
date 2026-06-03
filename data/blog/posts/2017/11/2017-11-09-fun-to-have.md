@@ -9,4 +9,4 @@ categories: []
 
 Fun to have this [Erik Sletten](http://www.slettenstudios.com) painting back up after years! Just fits!
 
-<img src="https://www.thingelstad.com/uploads/2017/eac3da8bb4.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/eac3da8bb4.jpg" alt="Large colorful painting of a retro cityscape with zeppelins and a red biplane, hanging above a white credenza with speakers and a printer." width="600" height="600" />

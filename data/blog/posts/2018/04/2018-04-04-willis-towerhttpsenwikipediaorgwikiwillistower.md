@@ -9,4 +9,4 @@ categories: []
 
 [Willis Tower](https://en.wikipedia.org/wiki/Willis_Tower).
 
-<img src="https://www.thingelstad.com/uploads/2018/57024ca698.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/57024ca698.jpg" alt="Willis Tower skyscraper shot from below looking up, black and white, bundled tube facade rising into a cloudy sky" width="600" height="600" />

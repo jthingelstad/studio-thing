@@ -9,4 +9,4 @@ categories: []
 
 1,909 letter English word. From daughters dictionary.
 
-<img src="https://www.thingelstad.com/uploads/2019/ad4c14aa91.jpg" width="600" height="800" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/ad4c14aa91.jpg" width="600" height="800" alt="Printed page showing the longest word in English, a 1909-letter chemical name for Tryptophan synthetase A protein.">

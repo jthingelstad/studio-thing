@@ -34,4 +34,4 @@ Each Christmas Tammy surprises us each with a Holiday LEGO project. I got the [S
 - [Through bag 9](https://www.thingelstad.com/2022/12/28/through-bag-of.html)
 - [Finished](https://www.thingelstad.com/2022/12/29/i-finished-the.html)
 
-![](https://cdn.uploads.micro.blog/890/2022/06e6cd018f.jpg)
+<img src="https://cdn.uploads.micro.blog/890/2022/06e6cd018f.jpg" alt="LEGO Super Mario 64 Question Mark Block set fully built and opened on a wooden table, revealing four miniature world dioramas on top.">

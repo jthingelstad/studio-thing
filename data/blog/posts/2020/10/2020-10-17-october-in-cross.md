@@ -9,4 +9,4 @@ categories: []
 
 October in Cross Lake, MN. Bikes collecting snow. ❄️
 
-<img src="https://www.thingelstad.com/uploads/2020/56733db149.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/56733db149.jpg" width="600" height="599" alt="Snow-covered Honda Pilot SUV with Diamondback and Liv bikes on a hitch rack, parked near a Pine Ridge Plaza sign in a snowy Minnesota landscape." />

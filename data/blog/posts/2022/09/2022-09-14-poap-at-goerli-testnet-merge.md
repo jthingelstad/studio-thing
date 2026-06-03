@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/5622792">5622792</a> at <strong><a href="https://poap.gallery/drops/58062">Goerli Testnet Merge Protocol Supporter</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/goerli-testnet-merge-protocol-supporter-2022-logo-1659639206708.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/goerli-testnet-merge-protocol-supporter-2022-logo-1659639206708.png" alt="Circular badge for Ethereum Community Call Series featuring a panda with the Ethereum logo, text reading Bankless, Goerli, and The Merge 3 of 4." width="500" height="500" />

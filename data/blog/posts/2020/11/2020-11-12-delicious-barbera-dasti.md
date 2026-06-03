@@ -9,4 +9,4 @@ categories: []
 
 Delicious [Barbera d’Asti](http://www.renatoratti.com/pagine/eng/wines/barbera-d-asti-docg.php). 🍷
 
-<img src="https://www.thingelstad.com/uploads/2020/30d985b350.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/30d985b350.jpg" width="600" height="600" alt="Glass of red wine beside an open bottle of Ratti Battaglione Barbera d'Asti 2018, with a cork and corkscrew on a white marble surface." />

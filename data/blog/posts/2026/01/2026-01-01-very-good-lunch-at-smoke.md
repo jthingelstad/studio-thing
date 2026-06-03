@@ -11,4 +11,4 @@ Very good lunch at [Smoke on the Water](https://www.smokeonthewaterwinery.com) i
 
 <img src="https://www.thingelstad.com/uploads/2026/a3cdfca603.jpg" alt="">
 
-<img src="https://www.thingelstad.com/uploads/2026/8c1d4f5eca.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/8c1d4f5eca.jpg" width="600" height="450" alt="Panoramic dining room with floor-to-ceiling windows overlooking a snow-covered lake, several people seated at dark tables with teal chairs.">

@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Personally experienced the inside of a smoker while serving lunch for #TeamSPS today. Thanks for pic [Jay Wineinger](https://twitter.com/jwineinger)! 
 
-<img src="https://www.thingelstad.com/uploads/2020/f73454b9f8.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/f73454b9f8.jpg" width="600" height="800" alt="Man in apron grilling burgers and hot dogs on a large smoky outdoor grill in a downtown plaza with tables of buns nearby." />

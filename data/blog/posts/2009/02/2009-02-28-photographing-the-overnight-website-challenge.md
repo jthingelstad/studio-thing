@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/875b5a1455.png" style="width: 179px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/875b5a1455.png" alt="Logo for Sierra Bravo Overnight Website Challenge featuring a keyboard Help key icon and bold text" style="width: 179px; float: right; margin-left: 10px; " />
 
 I spent this morning shooting the first of three sessions at the [Sierra Bravo](http://www.sierra-bravo.com/) [Overnight Website Challenge](http://www.overnightwebsitechallenge.com/). The guys at Sierra Bravo were nice enough to let me do the event photography. So this morning I strapped on all my gear and shot for a couple of hours as things got underway. I'm going to return late tonight and again very early tomorrow morning to get more of the event.
 

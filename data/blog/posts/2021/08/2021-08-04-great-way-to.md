@@ -9,4 +9,4 @@ categories: []
 
 Great way to spend the afternoon. Sailing on the Hudson River. ⛵️
 
-<img src="https://www.thingelstad.com/uploads/2021/1a3c322b31.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/1a3c322b31.jpg" width="600" height="450" alt="Bare feet propped on the bow of a boat drifting on a calm river with wooded hills and cloudy sky in the distance." />

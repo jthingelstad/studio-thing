@@ -7,17 +7,11 @@ post_kind: post
 categories: []
 ---
 
-I don't have New Year resolutions every year, but this year I figured
-what the heck. Looking back, while I didn't call it a resolution, I did
-force a switch to [Camera RAW for photography on January 2nd,
-2006](https://www.thingelstad.com/2006/01/02/the-year-of.html) and that was
-great. I have a few technology and Internet related resolutions that I
-thought I would share this year. Hopefully I'm as happy with these
-changes in a couple of years.
+I don't have New Year resolutions every year, but this year I figured what the heck. Looking back, while I didn't call it a resolution, I did force a switch to [Camera RAW for photography on January 2nd, 2006](https://www.thingelstad.com/2006/01/02/the-year-of.html) and that was great. I have a few technology and Internet related resolutions that I thought I would share this year. Hopefully I'm as happy with these changes in a couple of years.
 
 ### Digitally Signed Email
 
-<img src="https://www.thingelstad.com/uploads/2020/7ac5cef077.png" style="width: 128px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/7ac5cef077.png" alt="Postage stamp icon featuring a hawk in flight, styled as the Apple Mail application logo" style="width: 128px; float: right; margin-left: 10px; " />
 The time has come for this to be standard. This feels a lot like the
 Camera RAW resolution above. Not many people use digital certificates
 with their email because it's generally a pain and complicated. But,
@@ -25,20 +19,13 @@ without it email is like writing on a bathroom wall, in a really big
 bathroom. It's so wide open it is somewhat shocking. Digital
 certificates solve this problem.
 
-I have now enabled my OS X Mail with a digital certificate from
-[Thawte](http://www.thawte.com/) and if you get email from me it will be
-signed. This isn't universal since the iPhone at this point doesn't sign
-messages, and I do occasionally have to resort to webmail. But if it's
-from Mail.app it will be signed.
+I have now enabled my OS X Mail with a digital certificate from [Thawte](http://www.thawte.com/) and if you get email from me it will be signed. This isn't universal since the iPhone at this point doesn't sign messages, and I do occasionally have to resort to webmail. But if it's from Mail.app it will be signed.
 
-Go get your own certificate as well and we can even encrypt the message.
-There is a somewhat dated, but good [explanation on doing this for OS
-X](http://joar.com/certificates/) at [Joar Wingfor's](http://joar.com/)
-website.
+Go get your own certificate as well and we can even encrypt the message. There is a somewhat dated, but good [explanation on doing this for OS X](http://joar.com/certificates/) at [Joar Wingfor's](http://joar.com/) website.
 
 ### Less Google
 
-<img src="https://www.thingelstad.com/uploads/2020/4eb1eb3386.png" style="width: 89px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/4eb1eb3386.png" alt="Google logo in multicolor letters red blue yellow green blue red on white background" style="width: 89px; float: right; margin-left: 10px; " />
 Yes, less Google. Google knows too much about
 me. I've decided this trend needs to reverse. I've stopped using GMail
 and am using Tuffmail for my mailbox. I've ditched Google Calendar. I'm
@@ -51,7 +38,7 @@ I was no longer being monitored. Real or not, I had that feeling.
 
 ### More Wikipedia
 
-<img src="https://www.thingelstad.com/uploads/2020/7e3bb8c6e4.png" style="width: 100px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/7e3bb8c6e4.png" alt="Wikipedia globe logo made of puzzle pieces featuring letters and symbols from various world alphabets" style="width: 100px; float: right; margin-left: 10px; " />
 This resolution was made by another guy at the office and I liked it so
 much I'm adopting it myself. It seems that many times when I search on
 Google I end up at [Wikipedia](http://www.wikipedia.org/). So I'm going

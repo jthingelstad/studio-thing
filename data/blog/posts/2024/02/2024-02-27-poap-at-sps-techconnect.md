@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7025255">7025255</a> at <strong><a href="https://poap.gallery/drops/168876">SPS TechConnect 2024</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/b522c3c6-de05-4780-8341-532e5eb619b9.gif" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/b522c3c6-de05-4780-8341-532e5eb619b9.gif" alt="Circular badge reading 2024 TechConnect with a colorful wifi signal icon and SPS logo on dark background" width="500" height="500" />

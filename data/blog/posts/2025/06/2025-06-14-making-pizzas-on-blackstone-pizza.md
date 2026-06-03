@@ -9,8 +9,8 @@ categories: []
 
 Making pizzas on Blackstone pizza oven for first time.
 
-<img src="https://www.thingelstad.com/uploads/2025/98eaa8911f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/98eaa8911f.jpg" width="600" height="450" alt="Pepperoni pizza on a stone inside a Blackstone outdoor gas pizza oven, sitting on a stone surface outdoors.">
 
 Finished pizza. 
 
-<img src="https://www.thingelstad.com/uploads/2025/c2bad052fe.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/c2bad052fe.jpg" width="600" height="450" alt="Pepperoni pizza fresh from a Blackstone outdoor pizza oven, resting on parchment paper on a metal surface outdoors.">

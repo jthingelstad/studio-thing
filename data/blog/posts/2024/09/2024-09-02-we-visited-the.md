@@ -9,4 +9,4 @@ categories: []
 
 We went to the Minnesota State Fair three times this year, a record for all of us. Are we becoming "fair people"? Maybe. People complain about the crowds, but that is just part of it. The sea of people every way you look is what makes it the fair. We'll be back again next year! 🎡
 
-<img src="https://www.thingelstad.com/uploads/2024/2b4068ae6b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/2b4068ae6b.jpg" width="600" height="450" alt="Dense crowd filling a wide tree-lined avenue at the Minnesota State Fair on a sunny day, with vendor booths visible on both sides.">

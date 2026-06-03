@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2022/07/30/iceland-log-day.html"
 title: "Iceland Log Day 8"
 published: "2022-07-30T22:34:00+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 Saturday, July 30th  
@@ -21,7 +21,7 @@ Freaking cold and windy until 2p then really nice after that.
 - Hike up to Svartifoss Waterfall.
 - Outdoor hot tub at hotel.
 
-<img src="https://www.thingelstad.com/uploads/2022/4b11aeab31.png" width="600" height="319" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/4b11aeab31.png" width="600" height="319" alt="Google Maps route from Fosshotel Vatnajokull near Hofn to Fosshotel Glacier Lagoon, 95.9 km via Route 1, 1 hour 8 minutes." />
 
 Jump to day 
 [0](https://www.thingelstad.com/2022/07/22/iceland-log-day.html), 

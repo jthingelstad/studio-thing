@@ -9,4 +9,4 @@ categories: ["Escape Room"]
 
 We solved the [Titanic: The Final Hour](https://timescapegames.com/room/titanic/) escape room at Timescape in Belfast tonight. We finished with 8:32 remaining! Fun and challenging room. [Room 57](https://www.thingelstad.com/lists/escape-rooms/)!
 
-<img src="https://www.thingelstad.com/uploads/2024/1f75269f10.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/1f75269f10.jpg" width="600" height="337" alt="Four people posing and smiling behind a large brass ship steering wheel in a nautical-themed escape room.">

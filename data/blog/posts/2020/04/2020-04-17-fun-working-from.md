@@ -9,4 +9,4 @@ categories: []
 
 Fun working from home upside — kids made waffles this morning and delivered a stack to me to enjoy! 🧇
 
-<img src="https://www.thingelstad.com/uploads/2020/753efe9645.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/753efe9645.jpg" width="600" height="600" alt="Stack of homemade waffles on a white plate beside a bottle of Skinny Sticks pure maple syrup on a wood desk with a laptop and fork nearby." />

@@ -11,7 +11,7 @@ I've been reading **[Four Thousand Weeks: Time Management for Mortals](https://w
 
 I’m still just in the beginning of the book but as I pondered his focus on the _finitude_ of our time, I couldn't help but think of how to visualize this! I knew [Shortcuts](https://support.apple.com/guide/shortcuts/welcome/ios) could do the math for me, and then I realized [Charty](https://chartyios.app) could do the visualization.
 
-<img src="https://www.thingelstad.com/uploads/2021/a3d44764bd.png" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/a3d44764bd.png" width="600" height="450" alt="Concentric rings chart showing three nested circles in green, yellow, and red with a black center dot, each ring partially filled to represent weeks of life" />
 
 - The innermost ring (red) is the current week. It will fill up each day and reset at the end of each week. This ring will fill **52 times** for each time the middle ring fills.
 - The middle ring (yellow) is the weeks until your next birthday. This ring will fill **80 times** until the outermost ring is filled.

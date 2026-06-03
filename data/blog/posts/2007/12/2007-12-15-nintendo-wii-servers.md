@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/6876f89738.gif" style="width: 86px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/6876f89738.gif" alt="Nintendo Wii logo in gray on a white background" style="width: 86px; float: right; margin-left: 10px; " />
 
 It seems that delivering Wii's to stores isn't the only supply problem [Nintendo](http://www.nintendo.com/) has. Every time they release new versions of the software for the [Wii](http://wii.nintendo.com/), and even some of the pay titles available in the Wii Store, their servers get overloaded for days.
 

@@ -9,4 +9,4 @@ categories: []
 
 Afternoon ice cream at [Sweet Peaks](https://www.sweetpeaksicecream.com) in Bozeman! Yeti Tracks, Mountain Mint, Bear Scat, 10 Year Birthday Cake. 🍦
 
-<img src="https://www.thingelstad.com/uploads/2020/7b0690615e.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/7b0690615e.jpg" width="600" height="600" alt="Four hands holding ice cream cones and cups with chocolate chip, mint chip, birthday cake, and cookies and cream scoops outdoors." />

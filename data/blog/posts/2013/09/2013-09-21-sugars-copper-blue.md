@@ -9,4 +9,4 @@ categories: []
 
 Sugar's "Copper Blue" is still an unbelievable album.
 
-<img src="https://www.thingelstad.com/uploads/2024/sugarcopperblue.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/sugarcopperblue.jpg" width="600" height="600" alt="Album cover for Sugar's Copper Blue featuring abstract metallic blue and golden orange brushstroke textures">

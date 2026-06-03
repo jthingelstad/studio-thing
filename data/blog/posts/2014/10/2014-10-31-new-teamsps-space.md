@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 New #TeamSPS space is ready to roll. Here is one of the many collaborative tables with great tech.
 
-<img src="https://www.thingelstad.com/uploads/2019/e01fc79a45.jpg" width="600" height="800" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/e01fc79a45.jpg" width="600" height="800" alt="Modern office collaborative table with Apple keyboard and wall-mounted Mac display on a teal accent wall, open workspace behind">

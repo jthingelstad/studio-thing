@@ -9,4 +9,4 @@ categories: []
 
 Lucky enjoying her 1st Birthday with one of her favorite bones! 🦴 🐶 
 
-<img src="https://www.thingelstad.com/uploads/2020/f4836b8fab.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/f4836b8fab.jpg" width="600" height="450" alt="White fluffy dog chewing a bone on a red corduroy dog bed with a stuffed animal toy beside her" />

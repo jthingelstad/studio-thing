@@ -9,4 +9,4 @@ categories: []
 
 Great family travel accessory, [Anker 10-port USB charger](http://www.amazon.com/dp/B00YRYS4T4/). 
 
-<img src="https://www.thingelstad.com/uploads/2018/a089573c07.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/a089573c07.jpg" alt="Anker 10-port USB charging hub on a granite countertop with five white Lightning cables plugged in and a blue power indicator lit." width="600" height="600" />

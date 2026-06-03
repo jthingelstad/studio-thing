@@ -9,4 +9,4 @@ categories: ["Things 4 Good"]
 
 Making [Things 4 Good](https://www.thingelstad.com/candles/) candles!
 
-<img src="https://www.thingelstad.com/uploads/2025/c4ba469b50.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/c4ba469b50.jpg" alt="Dozens of candles in dark matte and iridescent containers with wooden wicks, arranged on a table during the pouring process.">

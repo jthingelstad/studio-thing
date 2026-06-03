@@ -9,4 +9,4 @@ categories: []
 
 Picked up [Mason Jennings](https://masonjennings.com) records and a [songbook](https://crystalchariot.bigcartel.com/product/mason-jennings-songbook). 
 
-![](https://www.thingelstad.com/uploads/2023/288ae4d5-2f32-4582-8718-cb98121795e9.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/288ae4d5-2f32-4582-8718-cb98121795e9.jpg" alt="Three Mason Jennings vinyl records and a songbook spread on a marble surface, including Underneath The Roses and Real Heart albums.">

@@ -9,4 +9,4 @@ categories: []
 
 [Buckingham Fountain](https://www.chicagoparkdistrict.com/parks-facilities/clarence-f-buckingham-memorial-fountain) in the early part of the major display.
 
-<img src="https://www.thingelstad.com/uploads/2024/9a3f5b0170.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/9a3f5b0170.jpg" width="600" height="450" alt="Buckingham Fountain shooting a tall central jet of water with Chicago skyscrapers visible behind it under a clear blue sky.">

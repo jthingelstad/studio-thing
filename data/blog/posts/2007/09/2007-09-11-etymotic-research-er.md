@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/5f0d7be150.gif" style="width: 187px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/5f0d7be150.gif" alt="Two white in-ear canal earbuds with clear stems and soft silicone triple-flange tips, shown on a white background." style="width: 187px; float: right; margin-left: 10px; " />
 
 One of the unexpected byproducts of getting the iPhone is that I'm listening to a lot more music on the go. There are two primary reasons for this. The most important one is that my phone is almost always with me (unlike an iPod). Since the iPhone is much more than a phone, but is my phone, I now almost always have music with me. The second reason is that the experience is just so nice that I really enjoy using it. The integration of the phone and music player into the same device has some nice other benefits, like still being able to receive a call while walking around the city or working out and listening to music, or books, or podcasts.
 

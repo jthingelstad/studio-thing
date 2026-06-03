@@ -9,4 +9,4 @@ categories: []
 
 Great start to Season 5 of [Silicon Valley](https://www.hbo.com/silicon-valley). 🤣
 
-<img src="https://www.thingelstad.com/uploads/2018/6c8f9ecf76.jpg" width="600" height="375" />
+<img src="https://www.thingelstad.com/uploads/2018/6c8f9ecf76.jpg" alt="Silicon Valley HBO Season 5 promotional poster showing five men looking upward against a light gray background" width="600" height="375" />

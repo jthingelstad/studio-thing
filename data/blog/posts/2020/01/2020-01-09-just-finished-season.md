@@ -9,4 +9,4 @@ categories: []
 
 Just finished [Season 2 of Succession](https://www.imdb.com/title/tt7660850/episodes/?season=2)! Some awesome TV. Can’t wait for Season 3!
 
-<img src="https://www.thingelstad.com/uploads/2020/12551b1da3.jpg" width="405" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/12551b1da3.jpg" width="405" height="600" alt="Succession Season 2 HBO promotional poster showing seven people seated at a cracked marble dining table with an older man standing at the head." />

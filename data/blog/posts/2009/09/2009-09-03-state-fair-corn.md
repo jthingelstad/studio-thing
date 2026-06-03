@@ -9,4 +9,4 @@ categories: []
 
 Delicious corn at [Minnesota State Fair](https://www.mnstatefair.org).
 
-![](https://www.thingelstad.com/uploads/2020/02345c1899.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/02345c1899.jpg" alt="Woman with yellow headband and sunglasses holding up a grilled ear of corn at an outdoor fair">

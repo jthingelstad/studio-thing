@@ -9,4 +9,4 @@ categories: ["Pokémon"]
 
 It is time to officially celebrate Pokémon Day. Rip ‘em!
 
-<img src="https://www.thingelstad.com/uploads/2026/7b07dc9f96.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/7b07dc9f96.jpg" width="600" height="600" alt="Pokemon Day 2026 collection on a white table including two Phantasmal Flames collection boxes, a Mega Evolution Ascended Heroes Elite Trainer Box, and two Vault X binders.">

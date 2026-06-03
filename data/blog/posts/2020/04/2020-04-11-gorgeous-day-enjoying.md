@@ -9,4 +9,4 @@ categories: []
 
 Gorgeous day — enjoying some time outside with a fire! 🔥
 
-<img src="https://www.thingelstad.com/uploads/2020/d4bd16a4c1.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d4bd16a4c1.jpg" width="600" height="600" alt="Fire burning in a round metal fire pit on a gravel shore beside a calm lake with bare trees and stone mushroom sculptures nearby." />

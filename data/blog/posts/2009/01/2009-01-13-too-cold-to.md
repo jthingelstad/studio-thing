@@ -9,4 +9,4 @@ categories: []
 
 Too cold to walk the dogs this morning.
 
-<img src="https://www.thingelstad.com/uploads/2020/f2a3014d34.jpg" style="max-width: 106px; " />
+<img src="https://www.thingelstad.com/uploads/2020/f2a3014d34.jpg" alt="iPhone weather app showing Hopkins MN at -17 degrees with a forecast low of -3 and warming to 30 by Sunday" style="max-width: 106px; " />

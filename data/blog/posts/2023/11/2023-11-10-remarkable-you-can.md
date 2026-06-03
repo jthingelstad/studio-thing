@@ -9,4 +9,4 @@ categories: []
 
 [reMarkable](https://remarkable.com) — you can do better than this? 😬 No, I’m not going to install Rosetta. I guess I'll try to get along with using the web browser to import PDFs into my reMarkable.
 
-<img src="https://www.thingelstad.com/uploads/2023/22da9bd081.png" width="600" height="349" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/22da9bd081.png" width="600" height="349" alt="macOS dialog asking to install Rosetta to open reMarkable.app, with Not Now and Install buttons">

@@ -9,4 +9,4 @@ categories: []
 
 [Mavis Staples](https://mavisstaples.com/) bringing the power in a big way at Mothership Weekend. She ain’t messing around. 
 
-<img src="https://www.thingelstad.com/uploads/2023/fcf1e1e81a.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/fcf1e1e81a.jpg" width="600" height="450" alt="Outdoor concert stage with performers gathered under bright lights as a large crowd watches from a festival grounds at dusk.">

@@ -9,4 +9,4 @@ categories: ["Music"]
 
 Music in the Park in Amery, WI! 🎶😊
 
-<img src="https://www.thingelstad.com/uploads/2019/ca99a990ee.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/ca99a990ee.jpg" width="600" height="337" alt="Outdoor summer concert in a park with audience members seated in colorful lawn chairs facing a covered wooden stage with performers" />

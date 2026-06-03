@@ -4,9 +4,9 @@ url: "https://www.thingelstad.com/2012/08/31/next-stop-reykjavik.html"
 title: ""
 published: "2012-08-31T05:00:00+00:00"
 post_kind: micropost
-categories: ["Travel"]
+categories: []
 ---
 
 Next Stop: Reykjavik!
 
-![](https://www.thingelstad.com/uploads/2020/c5f8a192fe.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/c5f8a192fe.jpg" alt="Commercial airplane parked at gate H5 viewed through floor-to-ceiling terminal windows at golden hour">

@@ -9,4 +9,4 @@ categories: []
 
 Winter announcing its arrival with ice on the shoreline.
 
-<img src="https://www.thingelstad.com/uploads/2019/f23b8efbdf.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/f23b8efbdf.jpg" width="600" height="450" alt="Shallow creek partially frozen with thin ice, bare branches, and remnants of snow along the muddy shoreline in winter." />

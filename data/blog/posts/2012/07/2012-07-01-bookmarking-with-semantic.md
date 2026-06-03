@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/c8641ec8d5.png" style="width: 160px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/c8641ec8d5.png" alt="Black paperclip icon on a white background" style="width: 160px; float: right; margin-left: 10px; " />
 
 I have been doing a lot of exploration using [MediaWiki](http://www.mediawiki.org/wiki/MediaWiki) and the [Semantic MediaWiki](http://semantic-mediawiki.org/) suite of extensions. I've deployed a number of wikis doing a wide variety of things. For a few months I had been pondering the idea of hosting my own bookmarking site using Semantic MediaWiki. I decided to give it a try and put together links\_thing.
 

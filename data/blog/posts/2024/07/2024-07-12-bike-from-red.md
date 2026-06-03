@@ -9,4 +9,4 @@ categories: []
 
 Bike from Red Raven on Galloping Goose trail with Huntington Mine Lake in the background.
 
-<img src="https://www.thingelstad.com/uploads/2024/6a417b3874.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/6a417b3874.jpg" width="600" height="450" alt="Orange and blue mountain bike with Maxxis tires leaning against a birch tree on a dirt trail above a blue lake.">

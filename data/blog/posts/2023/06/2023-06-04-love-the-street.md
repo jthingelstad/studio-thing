@@ -9,4 +9,4 @@ categories: []
 
 Love the street chalk at Edina Art Fair!
 
-<img src="https://www.thingelstad.com/uploads/2023/6f28af28b7.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/6f28af28b7.jpg" width="600" height="450" alt="Colorful chalk messages on pavement at Edina Art Fair including WE ARE HERE and you belong here with hearts and a smiley face nearby vendor tents">

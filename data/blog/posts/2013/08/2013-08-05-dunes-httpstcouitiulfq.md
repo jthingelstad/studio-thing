@@ -9,4 +9,4 @@ categories: []
 
 Dunes.
 
-<img src="https://www.thingelstad.com/uploads/2023/img-9531.jpeg" width="600" height="132" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/img-9531.jpeg" width="600" height="132" alt="Panoramic view of sandy dunes with sparse trees and grass under cloudy skies, a lake visible in the distance">

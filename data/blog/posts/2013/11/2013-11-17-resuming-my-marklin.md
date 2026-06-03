@@ -9,4 +9,4 @@ categories: []
 
 Resuming my Marklin Z-Scale model train layout project with the kids.
 
-<img src="https://www.thingelstad.com/uploads/2020/825338c46d.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/825338c46d.jpg" width="600" height="450" alt="Marklin mini-club Z-scale model train layout on a white table with oval track, small locomotives, and a red-knob controller" />

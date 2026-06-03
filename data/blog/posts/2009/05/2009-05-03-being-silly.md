@@ -9,4 +9,4 @@ categories: []
 
 Mazie and Tammy being silly.
 
-![](https://www.thingelstad.com/uploads/2020/b984536ce0.png)
+<img src="https://www.thingelstad.com/uploads/2020/b984536ce0.png" alt="Woman and young girl both pressing fingers to their noses and making silly faces outdoors, girl wearing a handmade paper hat">

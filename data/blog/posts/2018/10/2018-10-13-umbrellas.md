@@ -9,4 +9,4 @@ categories: []
 
 Umbrellas. ☂️
 
-<img src="https://www.thingelstad.com/uploads/2018/53b192a9fc.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/53b192a9fc.jpg" alt="Dozens of colorful open umbrellas hanging upside down from the ceiling of a brick indoor market hall." width="600" height="337" />

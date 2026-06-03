@@ -11,7 +11,7 @@ categories: []
 holding off on replacing the iMac until Apple released the next model of iMac, which [they did
 today](http://www.tuaw.com/2007/08/07/apple-announces-new-imacs-with-aluminum-enclosure-glass-display/). A quick trip to the Apple Store this afternoon and I've got the brand new 24" iMac setup in the kitchen office.
 
-<img src="https://www.thingelstad.com/uploads/2020/aeb3937af0.jpg" style="max-width: 441px;" />
+<img src="https://www.thingelstad.com/uploads/2020/aeb3937af0.jpg" alt="Apple iMac with aluminum and glass enclosure, thin wireless keyboard, Apple Remote, and Magic Mouse on white background" style="max-width: 441px;" />
 
 The form factor of the new iMac is just great. The aluminum and glass are great. The new keyboard is a "double take" experience -- amazingly thin. I just had enough time to set the machine up and get it powered on tonight.
 

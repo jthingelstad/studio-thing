@@ -9,4 +9,4 @@ categories: []
 
 Lucky wanted to drive today. 
 
-<img src="https://www.thingelstad.com/uploads/2021/d1ea2957aa.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/d1ea2957aa.jpg" width="600" height="450" alt="White fluffy dog sitting in the driver seat of a Tesla with the door open" />

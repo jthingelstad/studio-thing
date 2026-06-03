@@ -9,4 +9,4 @@ categories: []
 
 Tammy and the kids took their new Christmas Ice Skates out for the first time. We went to a frozen pond in Pamela Park. Everyone had a great time! ⛸🤩 Me? I’m not so comfortable on ice skates. 😬
 
-<img src="https://www.thingelstad.com/uploads/2021/f818ff480b.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/f818ff480b.jpg" width="600" height="600" alt="Three people in winter gear pose on a frozen outdoor skating rink, all wearing ice skates, bare trees visible behind them." />

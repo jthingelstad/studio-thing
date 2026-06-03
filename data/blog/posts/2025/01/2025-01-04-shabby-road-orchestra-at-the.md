@@ -29,4 +29,4 @@ It was also the most people I've ever seen on the small stage at The Dakota. The
 We see [Ken Chastain](https://kenchastain.com) play frequently with [The New Standards](https://www.thenewstandards.com). We've seen [The Honeydogs](https://thehoneydogs.bandcamp.com) a few times and seen Adam Levy with them. We weren't sure of the show but know we've seen David Foley and Andy Nelson play before. They even had someone come out and play a [Sitar](https://en.wikipedia.org/wiki/Sitar) for three of the songs.
 
 
-<img src="https://www.thingelstad.com/uploads/2025/e29189479e.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/e29189479e.jpg" width="600" height="337" alt="Band performing on a dimly lit stage at The Dakota jazz club, with horn players and guitarists visible under purple and blue stage lights.">

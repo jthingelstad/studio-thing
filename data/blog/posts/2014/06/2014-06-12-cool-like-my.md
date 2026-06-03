@@ -9,4 +9,4 @@ categories: []
 
 I'm guessing this shirt isn't going to make the cut in a couple more years. 😀
 
-![](https://www.thingelstad.com/uploads/2020/7ca9420ed3.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/7ca9420ed3.jpg" alt="Young girl making peace signs with both hands, wearing a navy graphic tee and purple leggings, smiling indoors">

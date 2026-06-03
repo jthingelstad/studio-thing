@@ -9,4 +9,4 @@ categories: []
 
 Sweet delights in shop window in Venice.
 
-<img src="https://www.thingelstad.com/uploads/2023/9cb443336f.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/9cb443336f.jpg" width="600" height="400" alt="Glass display case in a Venetian pastry shop stacked with cannoli varieties and cookies, with liqueur bottles on top shelf.">

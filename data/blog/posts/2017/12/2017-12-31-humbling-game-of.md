@@ -9,4 +9,4 @@ categories: []
 
 Humbling game of Blokus! 😬
 
-<img src="https://www.thingelstad.com/uploads/2018/00570d78d7.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/00570d78d7.jpg" alt="Blokus board game in progress with colorful translucent red blue teal and yellow tiles arranged in interlocking pixel-art patterns on a white grid" width="600" height="600" />

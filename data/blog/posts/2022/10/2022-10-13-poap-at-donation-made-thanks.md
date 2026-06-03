@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/5768722">5768722</a> at <strong><a href="https://poap.gallery/drops/72261">Donation made! Thanks for helping it happen!</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/donation-made-thanks-for-helping-it-happen-undefined-logo-1664943650300.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/donation-made-thanks-for-helping-it-happen-undefined-logo-1664943650300.png" alt="Thank you receipt for an 869.06 USD donation to the SWFL Emergency Relief Fund dated October 4 2022" width="500" height="500" />

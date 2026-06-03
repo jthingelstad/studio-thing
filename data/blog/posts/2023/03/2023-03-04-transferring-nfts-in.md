@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2023/03/04/transferring-nfts-in.html"
 title: "Transferring NFTs in Bulk"
 published: "2023-03-04T20:49:29+00:00"
 post_kind: post
-categories: ["Crypto", "POAP"]
+categories: ["Crypto"]
 ---
 
 After I [created additional Ethereum addresses for specific applications](https://www.thingelstad.com/2023/03/04/isolating-crypto-assets.html), I wanted to move existing assets to align with that. 
@@ -25,4 +25,4 @@ It was less simple with Nifty Ink since I was moving over 730 NFTs. uNFT Wallet 
 
 There is no way I could have done this without a bulk tool like [uNFT Wallet](https://unftwallet.xyz). It was an easy choice to buy one of their Limited Edition supporter NFTs to help support the project.
 
-![](https://www.thingelstad.com/uploads/2023/1dc0908513.png)
+<img src="https://www.thingelstad.com/uploads/2023/1dc0908513.png" alt="Colorful hedgehog-shaped NFT logo with zigzag spines, labeled xDAI Limited Edition ERC721, on a white background.">

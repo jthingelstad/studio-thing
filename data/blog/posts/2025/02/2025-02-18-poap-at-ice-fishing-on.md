@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7308555">7308555</a> at <strong><a href="https://poap.gallery/drops/185737">Ice Fishing on Pierson Lake</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/4f507ffe-2fb8-4b15-8659-a486a5a82b3a.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/4f507ffe-2fb8-4b15-8659-a486a5a82b3a.png" alt="Frost-covered fish leaping from an ice fishing hole on a frozen lake, icicles hanging from its body, fishing rod visible at right" width="500" height="500" />

@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Flank steak on the Big Green Egg! 🔥 I need to grill more often. 
 
-<img src="https://www.thingelstad.com/uploads/2025/faf5fcc29b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/faf5fcc29b.jpg" width="600" height="450" alt="Seasoned flank steak with grill marks cooking over hot charcoal on a Big Green Egg kamado grill outdoors.">

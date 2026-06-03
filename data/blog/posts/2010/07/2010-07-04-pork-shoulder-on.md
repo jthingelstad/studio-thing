@@ -9,4 +9,4 @@ categories: []
 
 Happy 4th of July!
 
-![](https://www.thingelstad.com/uploads/2020/40b3ae0f13.png)
+<img src="https://www.thingelstad.com/uploads/2020/40b3ae0f13.png" alt="Large pork shoulder coated in dry rub seasoning sitting on the grill grates of a round ceramic smoker outdoors.">

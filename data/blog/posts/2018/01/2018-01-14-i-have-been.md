@@ -9,4 +9,4 @@ categories: []
 
 I have been impressed with the [Anki Cozmo](https://www.anki.com/en-us/cozmo) — it's amazing how much character this little robot has! 🤖
 
-<img src="https://www.thingelstad.com/uploads/2018/ae8ca77656.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/ae8ca77656.jpg" alt="Anki Cozmo robot toy on a wooden table surrounded by three white cube accessories with black symbols" width="600" height="600" />

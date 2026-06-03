@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/7284931">7284931</a> at <strong><a href="https://poap.gallery/drops/183305">Jamie Thingelstad's 53rd Birthday</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/09df7910-bd77-44f3-a610-84d87abeb4f9.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/09df7910-bd77-44f3-a610-84d87abeb4f9.png" alt="Round badge for Jamie Thingelstad 53rd Birthday January 3 2025 showing a barrel sauna and hot tub in a snowy winter forest at dusk" width="500" height="500" />

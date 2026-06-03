@@ -9,4 +9,4 @@ categories: []
 
 After six amazing days of hiking in the Engadine the Thingelstad family all stepped foot in Soglio at the same time and marked the moment. 
 
-![](https://www.thingelstad.com/uploads/2023/ffee2d95-016f-4425-9e94-db42c27ac156.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/ffee2d95-016f-4425-9e94-db42c27ac156.jpg" alt="Four hikers with trekking poles pose against a stone wall beside a yellow trail sign for Parlongh and Casaccia in Switzerland.">

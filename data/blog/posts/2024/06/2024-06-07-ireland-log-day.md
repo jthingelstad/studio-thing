@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/06/07/ireland-log-day.html"
 title: "Ireland 2024 Log - Day 7"
 published: "2024-06-07T21:38:17+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 _Weather: Mixed bag. Periods of cool and cloudy, sunny and warm. It rained at times. Quickly changing and variable._
@@ -21,9 +21,9 @@ We did everything on foot or bike today — walking between all of our destinati
 - Dinner at [The Ivy Cottage](https://www.theivycottage.ie) for what most think is the best fish & chips we've had on the trip.
 - Walk back to cottage.
 
-<img src="https://www.thingelstad.com/uploads/2024/c3b6a91da2.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/c3b6a91da2.jpg" width="600" height="450" alt="Fish and chips on a newspaper-lined plate with tartar sauce, a lemon wedge, and microgreens, served at The Ivy Cottage">
 
-<img src="https://www.thingelstad.com/uploads/2024/d9efa1b674.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/d9efa1b674.jpg" width="600" height="450" alt="Four people smile at a wooden restaurant table covered with plates of fish and chips, dipping sauces, and drinks.">
 
 Jump to day 
 [1](https://www.thingelstad.com/2024/06/01/ireland-log-day.html), 

@@ -9,4 +9,4 @@ categories: []
 
 We watched [King Richard](https://www.rottentomatoes.com/m/king_richard) tonight and I thought it was fabulous. Will Smith gives an amazing performance that completely pulls you in. The stories of Venus and Serena are incredible. A powerful story of reaching for the stars and getting there. "Fail to plan, plan to fail."
 
-<img src="https://www.thingelstad.com/uploads/2021/13cd487b9d.jpg" width="404" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/13cd487b9d.jpg" width="404" height="600" alt="Movie poster for King Richard with a man pushing two girls in a shopping cart full of tennis balls" />

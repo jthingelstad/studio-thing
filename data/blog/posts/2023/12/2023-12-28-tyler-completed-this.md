@@ -9,4 +9,4 @@ categories: []
 
 Tyler completed this fabulous [Starry Night LEGO kit](https://www.lego.com/en-us/product/vincent-van-gogh-the-starry-night-21333). It looks amazing. 🎨🤩
 
-<img src="https://www.thingelstad.com/uploads/2023/5ee1a95696.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/5ee1a95696.jpg" width="600" height="450" alt="LEGO set recreating Van Goghs Starry Night with swirling blue bricks, a framed scene, and a minifigure painter at an easel in front.">

@@ -9,4 +9,4 @@ categories: []
 
 Mazie and I had a nice walk around the cabin loop. I forgot my hat and she was nice enough to borrow me hers. 🌈🤩
 
-<img src="https://www.thingelstad.com/uploads/2024/82d0ccfaec.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/82d0ccfaec.jpg" width="600" height="450" alt="Man wearing a rainbow knit pompom hat and a young girl in a navy jacket smiling together outdoors in a snowy winter landscape.">

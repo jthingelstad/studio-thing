@@ -9,4 +9,4 @@ categories: []
 
 The knife ceiling at [Travail](https://www.travailkitchen.com) catches your attention. 🔪 
 
-<img src="https://www.thingelstad.com/uploads/2020/7b22e752cb.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/7b22e752cb.jpg" width="450" height="600" alt="Hundreds of chef knives arranged blade-down on a red ceiling with cylindrical tube lights in a restaurant entryway." />

@@ -9,4 +9,4 @@ categories: []
 
 Perfect beer to cruise down the Erie Canal on a hot day? [Ruby Red](https://www.geneseebeer.com/beer/genesee-kolsch/). 
 
-<img src="https://www.thingelstad.com/uploads/2021/444d819b32.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/444d819b32.jpg" width="600" height="600" alt="Genesee Specialty Ruby Red Kolsch 12 fl oz can on a wooden table next to a water bottle and an Erie Canal map." />

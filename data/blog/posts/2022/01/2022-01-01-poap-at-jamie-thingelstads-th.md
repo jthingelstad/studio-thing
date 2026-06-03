@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/3398636">3398636</a> at <strong><a href="https://poap.gallery/drops/20896">Jamie Thingelstad's 50th Birthday</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/jamie-thingelstads-50th-birthday-2021-logo-1640986214704.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/jamie-thingelstads-50th-birthday-2021-logo-1640986214704.png" alt="Vinyl record design for Jamie Thingelstad's 50th Half Century Birthday Jam January 3rd POAP 2022" width="500" height="500" />

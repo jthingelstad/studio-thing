@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 “[US National Kubb Championship](http://www.usakubb.org): Congrats to Jamie Thingelstad on winning the US National Kubb Championship set in the raffle.”  Awesome set! Thanks!
 
-<img src="https://www.thingelstad.com/uploads/2020/cc850748bd.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/cc850748bd.jpg" width="600" height="450" alt="Wooden kubb game set with blue and white painted kubbs arranged on a kitchen counter, with a red crown-topped king piece in the center." />

@@ -9,4 +9,4 @@ categories: []
 
 Fargo from the 13th floor of the amazing [Jasper Hotel](https://jasperfargo.com). 
 
-<img src="https://www.thingelstad.com/uploads/2023/d2ae8ddf0f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/d2ae8ddf0f.jpg" width="600" height="450" alt="Aerial view of downtown Fargo North Dakota showing rooftops brick buildings a blue water tower and tree-lined streets stretching to the horizon">

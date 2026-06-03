@@ -9,4 +9,4 @@ categories: []
 
 Doorbell or Robot Face? 🤖 In Campo Drio la Chiesa in Venice.
 
-<img src="https://www.thingelstad.com/uploads/2023/74e6976df7.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/74e6976df7.jpg" width="600" height="449" alt="Vintage intercom panel mounted on a stone wall beside a wooden door in Venice, its two round buttons and speaker grille resembling a robot face.">

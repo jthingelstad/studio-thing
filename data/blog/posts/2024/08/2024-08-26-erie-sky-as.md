@@ -9,4 +9,4 @@ categories: []
 
 Eerie sky as this storm came in. There was a literal calm before the storm and then the wind kicked up big time. 70 mph winds. We’ve all gone to the basement. 
 
-<img src="https://www.thingelstad.com/uploads/2024/572448eac4.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/572448eac4.jpg" width="600" height="450" alt="Large elm tree dominating a quiet residential street at dusk under a dark stormy sky, with a silver sedan parked nearby.">

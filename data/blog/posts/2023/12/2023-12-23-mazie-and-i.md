@@ -9,4 +9,4 @@ categories: []
 
 Mazie and I took Lucky for a walk today. Vests. Open water. No snow. Unusual for December 23rd. 
 
-<img src="https://www.thingelstad.com/uploads/2023/f6221e48fb.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/f6221e48fb.jpg" width="600" height="450" alt="Man in orange vest and black beanie takes selfie with smiling teen girl in red vest holding a white fluffy dog near an icy creek in winter.">

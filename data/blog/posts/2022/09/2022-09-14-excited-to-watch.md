@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Excited to watch the Ethereum merge happen live tonight! 
 
-<img src="https://www.thingelstad.com/uploads/2022/5c881ac5c6.png" width="600" height="318" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/5c881ac5c6.png" width="600" height="318" alt="Countdown screen showing 03:59 before livestream for The Official Ethereum Merge, with a panda mascot and logos for EthStaker, Bankless, The Daily Gwei" />

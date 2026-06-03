@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Family movie night with [Mr. Popper’s Penguins](https://www.rottentomatoes.com/m/mr_poppers_penguins_2010/). 🎬
 
-<img src="https://www.thingelstad.com/uploads/2020/1b0a253d6d.jpg" width="400" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/1b0a253d6d.jpg" width="400" height="600" alt="Movie poster for Mr. Poppers Penguins showing a man in a suit leaning over several playful penguins on ice with a city skyline behind him." />

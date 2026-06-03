@@ -9,4 +9,4 @@ categories: []
 
 At Minnesota Wild game. Goal!
 
-<img src="https://www.thingelstad.com/uploads/2019/09e31f6ed8.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/09e31f6ed8.jpg" width="600" height="450" alt="NHL hockey game at Xcel Energy Center, players on ice during 1st period, packed arena crowd watching">

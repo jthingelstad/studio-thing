@@ -9,4 +9,4 @@ categories: []
 
 [8-Bit Christmas](https://en.wikipedia.org/wiki/8-Bit_Christmas) was a fun holiday movie, especially if you loved your Nintendo when you were a kid! 🎄
 
-<img src="https://www.thingelstad.com/uploads/2021/7541fe70c2.jpg" width="400" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/7541fe70c2.jpg" width="400" height="600" alt="Movie poster for 8-Bit Christmas showing a crowd of kids and adults arranged as a Christmas tree topped with a Nintendo NES console" />

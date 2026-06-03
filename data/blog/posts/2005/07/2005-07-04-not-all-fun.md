@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2005/07/04/not-all-fun.html"
 title: "Not All Fun and Games"
 published: "2005-07-04T05:00:00+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
 Tomorrow Mazie celebrates becoming three weeks old. She is filled with anticipation of exciting "three-week-old" things like having some milk, making some dirty diapers, maybe even taking an extra nap in the afternoon.
@@ -13,4 +13,4 @@ In her first three weeks Mazie continues to be amazing and incredible and beauti
 
 Tammy is obsessed with her being too hot or too cold, still. She's also obsessed with cleanliness. We changed her diaper for the first time today *outside* the house, at Eden Prairie center. There was much care taken to make sure nothing was touched. Germs! Everybody had to wipe off with the baby wipes after leaving. I find it all very funny and cute, but it's really great too.
 
-![](https://www.thingelstad.com/uploads/2020/de83885ecb.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/de83885ecb.jpg" alt="Newborn baby crying while being held by an adult in a plaid shirt, indoors in a dimly lit living room">

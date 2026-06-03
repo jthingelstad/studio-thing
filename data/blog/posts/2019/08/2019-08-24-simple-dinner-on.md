@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Simple dinner on [Big Green Egg](https://biggreenegg.com) tonight. 🔥
 
-<img src="https://www.thingelstad.com/uploads/2019/818b4fb61f.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/818b4fb61f.jpg" width="600" height="450" alt="Big Green Egg kamado grill open with hot dogs and corn on the cob cooking, watermelon slices on a cutting board nearby" />

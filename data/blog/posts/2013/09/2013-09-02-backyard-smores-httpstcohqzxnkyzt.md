@@ -9,4 +9,4 @@ categories: []
 
 Backyard S’mores! 🔥🍫
 
-<img src="https://www.thingelstad.com/uploads/2020/d24ac69df5.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d24ac69df5.jpg" width="600" height="450" alt="Two children roasting marshmallows on skewers over a backyard fire pit on a brick patio with a red elephant sculpture nearby." />

@@ -27,7 +27,7 @@ I’m happy to report that my new automation does all of the above, and even pul
 
 Let's start with an overall view of the whole process. This diagram shows how the various parts are connected. Green boxes are Shortcuts, and grey boxes are Apps or Services. The people represent where I author and interact to create content. This isn't 100% of everything, but covers the important parts.
 
-<img src="https://www.thingelstad.com/uploads/2023/weekly-thing-automation-2023.png" width="600" height="804" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/weekly-thing-automation-2023.png" width="600" height="804" alt="Flowchart showing green process boxes labeled Build, Section 1 through N, Issue, Build Subject, and Blog and Pinboard feeding data via markdown, RSS, and API calls into gray storage boxes labeled">
 
 The easiest way to think of this is that the Build Issue shortcut has a list of other Shortcuts. It iterates through that list calling each shortcut. Those shortcuts in turn return a block of Markdown text. Once all shortcuts have been called, they are then combined into one Markdown block for final review and editing.
 
@@ -48,7 +48,7 @@ Core technologies that are used for this include.
 
 Shortcuts is where the majority of the work for this occurs and here is my current set.
 
-<img src="https://www.thingelstad.com/uploads/2023/screenshot-2023-09-23-at-5.07.32-pm.png" width="600" height="345" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/screenshot-2023-09-23-at-5.07.32-pm.png" width="600" height="345" alt="Apple Shortcuts app on macOS showing 28 yellow shortcuts in the Weekly Thing folder, including Build Issue, Set Issue, Send To Buttondown, and various Section shortcuts.">
 
 The "Build Issue" Shortcut is the one that collects markdown from all the sections and assembles it. You will see a lot of "Section:Name" shortcuts, those are the ones that are responsible for returning a section. Mostly the names make sense for a number of other utility shortcuts.
 
@@ -56,7 +56,7 @@ The "Build Issue" Shortcut is the one that collects markdown from all the sectio
 
 The other very important component is Data Jar, which you can think of like a database or cache for Shortcuts. Data Jar is a game changer for Shortcuts as it allows you to share and keep state between various Shortcuts. Here is what the Data Jar dictionary for issue 262 looks like.
 
-<img src="https://www.thingelstad.com/uploads/2023/screenshot-2023-09-23-at-5.07.54-pm.png" width="600" height="283" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/screenshot-2023-09-23-at-5.07.54-pm.png" width="600" height="283" alt="Craft app record view showing 12 fields for Weekly Thing issue 262, including Pub Date, Content Date, Photo, Byline, Draft, Subject, and Journal entries.">
 
 As much as possible the section Shortcuts use Data Jar to store anything they need. I'll use a simple example with Section:Fortune. Each issue of the Weekly Thing has a Fortune that I set. The basic flow is:
 

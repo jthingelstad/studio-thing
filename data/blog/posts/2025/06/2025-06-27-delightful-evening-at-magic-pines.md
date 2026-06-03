@@ -9,4 +9,4 @@ categories: []
 
 Delightful evening at Magic Pines. 
 
-<img src="https://www.thingelstad.com/uploads/2025/5ff50100d5.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/5ff50100d5.jpg" width="600" height="450" alt="White fluffy dog resting on a lawn beside a pool at dusk, with a lake and sunset visible beyond, and a woman standing near the water.">

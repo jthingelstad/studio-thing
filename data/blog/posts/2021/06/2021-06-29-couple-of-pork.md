@@ -7,4 +7,4 @@ post_kind: micropost
 categories: ["Cooking"]
 ---
 
-Couple of pork butts rubbed and ready for the sous vide! After 24 hours in the water each they will finish on the [Big Green Egg](https://biggreenegg.com) for the weekend. 🔥 <img src="https://www.thingelstad.com/uploads/2021/077a4f5946.jpg" width="600" height="600" alt="" />
+Couple of pork butts rubbed and ready for the sous vide! After 24 hours in the water each they will finish on the [Big Green Egg](https://biggreenegg.com) for the weekend. 🔥 <img src="https://www.thingelstad.com/uploads/2021/077a4f5946.jpg" width="600" height="600" alt="Two large pork butts coated in dry rub seasoning resting on a silicone mat on a kitchen counter" />

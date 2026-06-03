@@ -10,4 +10,4 @@ categories: ["Kubb"]
 This would be the perfect spot for a Kubb pitch at Adare Manor!
 
 
-<img src="https://www.thingelstad.com/uploads/2024/d97f8fd873.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/d97f8fd873.jpg" width="600" height="450" alt="Manicured rectangular lawn set in stone paving within a grand grey stone manor courtyard with Gothic-style windows and iron railings">

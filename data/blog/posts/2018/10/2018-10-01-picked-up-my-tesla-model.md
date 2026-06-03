@@ -9,4 +9,4 @@ categories: []
 
 Picked up my [Tesla](https://www.tesla.com) Model 3 today! Wow! 2 years and 7 months after [reserving it](https://www.thingelstad.com/2016/03/31/tesla-model-reservation.html).
 
-<img src="https://www.thingelstad.com/uploads/2018/414bb0d1e7.jpg">
+<img src="https://www.thingelstad.com/uploads/2018/414bb0d1e7.jpg" alt="Silver Tesla Model 3 parked inside a bright white garage showroom on a dark floor mat.">

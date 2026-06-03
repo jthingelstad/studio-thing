@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Watched [Isle of Dogs](http://www.isleofdogsmovie.com) tonight. Very fun, original movie. 🎬
 
-<img src="https://www.thingelstad.com/uploads/2018/9b2ba8b77a.jpg" width="384" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2018/9b2ba8b77a.jpg" width="384" height="600" alt="Movie poster for Isle of Dogs directed by Wes Anderson featuring stop-motion boy and dogs in a metal bin with Japanese text and cast names" />

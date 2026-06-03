@@ -9,4 +9,4 @@ categories: []
 
 Ran into the Incredible Hulk at the [LEGO Store on 5th Avenue](https://www.lego.com/en-us/stores/store/5th-avenue). This place was great. We wanted to do more stuff than we had time. 
 
-<img src="https://www.thingelstad.com/uploads/2023/84d50437ca.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/84d50437ca.jpg" width="600" height="450" alt="Man in a black jacket sitting on a bench next to a life-size LEGO Hulk sculpture inside a LEGO store">

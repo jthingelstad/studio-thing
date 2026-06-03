@@ -7,4 +7,4 @@ post_kind: post
 categories: []
 ---
 
-![](https://www.thingelstad.com/uploads/2020/f1941b98d3.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/f1941b98d3.jpg" alt="Horseshoe Falls at Niagara with a red tour boat navigating the churning turquoise water below the massive curved waterfall">

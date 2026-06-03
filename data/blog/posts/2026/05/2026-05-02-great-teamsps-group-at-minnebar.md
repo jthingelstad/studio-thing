@@ -9,4 +9,4 @@ categories: ["Minnestar"]
 
 Great TeamSPS group at Minnebar 20!
 
-<img src="https://www.thingelstad.com/uploads/2026/0cad4da399.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/0cad4da399.jpg" width="600" height="449" alt="Group of about a dozen people posing together on a stage in front of a large Minnebar 20 screen at a tech conference.">

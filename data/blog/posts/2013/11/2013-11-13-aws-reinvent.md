@@ -9,19 +9,19 @@ categories: ["TeamSPS"]
 
 Ready for [AWS re:Invent](https://reinvent.awsevents.com)!
 
-<img src="https://www.thingelstad.com/uploads/2019/6cec6bf6b9.jpg" width="600" height="900" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/6cec6bf6b9.jpg" width="600" height="900" alt="AWS re:Invent conference badge for Jamie Thingelstad from SPS Commerce, held by a hand against a dark background.">
 
 Perhaps the largest dining hall ever. [AWS re:Invent](https://reinvent.awsevents.com)
 
-<img src="https://www.thingelstad.com/uploads/2019/fe8f431e5c.jpg" width="1200" height="350" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/fe8f431e5c.jpg" width="1200" height="350" alt="Panoramic view of a vast convention center dining hall filled with hundreds of attendees seated at round tables with red chairs.">
 
 Great seat for [AWS re:Invent](https://reinvent.awsevents.com) keynote. 
 
-<img src="https://www.thingelstad.com/uploads/2019/b3a449b6e6.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/b3a449b6e6.jpg" width="600" height="450" alt="Large conference hall packed with hundreds of seated attendees facing two large screens showing the AWS re:Invent logo and a live tweet display">
 
 [Rob Krystyniak](https://www.linkedin.com/in/rob-krystyniak-b8927a9/), [@maas_8128](https://twitter.com/maas_8128),[@zwingocom](https://twitter.com/zwingocom), [@LukeSamaha](https://twitter.com/LukeSamaha), [@scottbjer](https://twitter.com/scottbjer), and [@pixelsnbits](https://twitter.com/pixelsnbits) 👍 #TeamSPS ready for AWS re:Invent keynote! 
 
-<img src="https://www.thingelstad.com/uploads/2019/c42ba61782.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/c42ba61782.jpg" width="600" height="450" alt="Group of six colleagues wearing conference lanyards seated in rows at an AWS re:Invent keynote hall, smiling at the camera">
 
 “we are finally data center free!” quote from [AWS re:Invent](https://reinvent.awsevents.com)
 
@@ -39,7 +39,7 @@ Terabyte of data added a day to S3.
 
 This graph shows the power of AWS.
 
-<img src="https://www.thingelstad.com/uploads/2019/7bdd1275f1.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/7bdd1275f1.jpg" width="600" height="450" alt="Conference presentation slide showing a graph of 1780000 AWS core hours with a 952000 peak, scaling more than 200 percent month-over-month, then archived to Glacier, with silhouetted audience in">
 
 Attending Big Data: State of the Union session by Paul Duffy at AWS re:Invent.
 
@@ -67,6 +67,6 @@ I think it might finally be time to move all my personal web stuff to AWS.
 
 Guys in suit coats playing ping pong at #awsreinvent Dev Lounge.
 
-<img src="https://www.thingelstad.com/uploads/2019/8108478484.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/8108478484.jpg" width="600" height="450" alt="Bald man in a suit playing ping-pong inside a large conference hall with a Developer Lounge glass enclosure and AWS Support signs visible behind him.">
 
 Fun running into [@jondahl](https://twitter.com/jondahl) at AWS re:Invent!

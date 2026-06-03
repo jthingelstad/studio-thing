@@ -9,4 +9,4 @@ categories: []
 
 Sunset from Anna Maria Island. 
 
-<img src="https://www.thingelstad.com/uploads/2025/764bdf762e.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/764bdf762e.jpg" width="600" height="450" alt="Brilliant orange sunset over calm ocean waves on a sandy beach with two seagulls silhouetted in the sky">

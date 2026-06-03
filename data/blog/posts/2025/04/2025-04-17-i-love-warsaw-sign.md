@@ -9,4 +9,4 @@ categories: []
 
 I Love Warsaw Sign. [📍](http://maps.apple.com/?ll=52.232921,20.984637)
 
-<img src="https://www.thingelstad.com/uploads/2025/image-20250417-212517-1d84c5f0.jpg">
+<img src="https://www.thingelstad.com/uploads/2025/image-20250417-212517-1d84c5f0.jpg" alt="Illuminated KOCHAM WARSZAWE sign with a red heart at night, modern glass skyscrapers lit up behind it in Warsaw">

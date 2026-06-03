@@ -9,4 +9,4 @@ categories: []
 
 [The Starving Rooster](http://thestarvingrooster.com).
 
-![](https://www.thingelstad.com/uploads/2020/5b6e7f47f3.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/5b6e7f47f3.jpg" alt="Family of four smiling for a selfie inside a busy sports bar restaurant with TVs and other diners in the background.">

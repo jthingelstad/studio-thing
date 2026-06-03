@@ -9,4 +9,4 @@ categories: []
 
 Heading into the [Warsaw Metro](https://metro.waw.pl).
 
-<img src="https://www.thingelstad.com/uploads/2025/7d73dfe97c.jpg" width="400" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/7d73dfe97c.jpg" width="400" height="600" alt="Warsaw Metro entrance with a glowing M logo on a purple glass canopy as commuters enter and exit the underground station.">

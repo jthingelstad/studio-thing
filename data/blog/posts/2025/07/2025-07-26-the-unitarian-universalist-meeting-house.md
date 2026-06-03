@@ -9,4 +9,4 @@ categories: []
 
 The [Unitarian Universalist Meeting House](https://en.wikipedia.org/wiki/Unitarian_Church_(Burlington,_Vermont)) at the top of Church Street in Burlington.
 
-<img src="https://www.thingelstad.com/uploads/2025/3d14052dee.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/3d14052dee.jpg" width="450" height="600" alt="Brick Unitarian Universalist Meeting House with white steeple and clock tower, framed by tall trees, Burlington Vermont">

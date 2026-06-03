@@ -9,4 +9,4 @@ categories: []
 
 Birds resting on rocks at Lake Harriet this morning. 
 
-<img src="https://www.thingelstad.com/uploads/2023/bdde9961f1.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/bdde9961f1.jpg" width="600" height="337" alt="Cormorants perched on rocks in the still water of Lake Harriet at dawn, one bird spreading its wings">

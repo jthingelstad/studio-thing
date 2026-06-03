@@ -9,4 +9,4 @@ categories: []
 
 [US Internet](https://fiber.usinternet.com) here for first step of rescuing us from Comcast! 🤞🏻👏🏻
 
-<img src="https://www.thingelstad.com/uploads/2017/5d709ff29d.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/5d709ff29d.jpg" alt="US Internet service van parked on a residential street, with ladders on the roof rack and Fastest Internet on Earth branding on the side." width="600" height="600" />

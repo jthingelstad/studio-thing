@@ -9,6 +9,6 @@ categories: []
 
 Tammy and I hanging out with [Ira Glass](https://en.wikipedia.org/wiki/Ira_Glass)! 😀
 
-<img src="https://www.thingelstad.com/uploads/2019/dde4ca38ed.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/dde4ca38ed.jpg" width="600" height="450" alt="Three people posing for a selfie indoors, smiling and laughing, one wearing glasses and a black blazer, one in a red plaid shirt, one in front making a surprised face.">
 
-<img src="https://www.thingelstad.com/uploads/2019/d1e400d124.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/d1e400d124.jpg" width="600" height="450" alt="Two men smiling and posing together, one wearing glasses and a dark blazer, the other in a red plaid shirt giving a thumbs up.">

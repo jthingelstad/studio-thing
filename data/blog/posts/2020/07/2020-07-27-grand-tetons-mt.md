@@ -9,4 +9,4 @@ categories: []
 
 Grand Tetons. Mt. Moran from Oxbow Bend.
 
-<img src="https://www.thingelstad.com/uploads/2020/8215ea87d6.jpg" width="600" height="400" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/8215ea87d6.jpg" width="600" height="400" alt="Mt. Moran and the Grand Tetons reflected in the calm waters of Oxbow Bend, surrounded by green trees and shrubs." />

@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Good morning Miami! Learned a lot and enjoyed Bitcoin 2023. Heading home this morning. 🛫
 
-<img src="https://www.thingelstad.com/uploads/2023/2a559abc32.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/2a559abc32.jpg" width="600" height="337" alt="Commercial airplane docked at gate H4 at Miami International Airport at dawn, connected to a jet bridge on the tarmac.">

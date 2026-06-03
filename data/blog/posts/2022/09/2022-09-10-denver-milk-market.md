@@ -9,4 +9,4 @@ categories: []
 
 Denver Milk Market. 
 
-<img src="https://www.thingelstad.com/uploads/2022/9907e904ec.jpg" width="600" height="449" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/9907e904ec.jpg" width="600" height="449" alt="Outdoor alley dining area at Denver Milk Market with string lights, green bistro chairs, white picnic tables, and potted plants between brick buildings." />

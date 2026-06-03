@@ -13,14 +13,14 @@ Saw this prompt and wanted to give it a try.
   <div class="author right">Me</div>
   <div class="message right">
 
-<img src="https://www.thingelstad.com/uploads/2025/20e587b076.jpg" style="max-width: 40%;">
+<img src="https://www.thingelstad.com/uploads/2025/20e587b076.jpg" alt="Middle-aged man with short hair wearing a black jacket looks directly at the camera in a home kitchen setting." style="max-width: 40%;">
 
 A black and white close-up portrait with visible water droplets and small bubbles on the face like the subject just emerged from water. The mood should feel intense and cinematic, with a dark, minimal background.
 
   </div>
   <div class="author left">GPT-4o</div>
   <div class="message left">
-<img src="https://www.thingelstad.com/uploads/2025/b36b22b8-8bb4-4483-9ea6-54b483599945.png">
+<img src="https://www.thingelstad.com/uploads/2025/b36b22b8-8bb4-4483-9ea6-54b483599945.png" alt="Bald middle-aged man staring intensely at camera his face covered in water droplets against a black background">
   </div>
 </div>
 

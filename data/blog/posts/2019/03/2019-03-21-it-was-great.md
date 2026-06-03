@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 It was great to spend the last couple of days with #TeamSPS Technology in Melbourne! Great team and exciting things to come! 🇦🇺 
 
-<img src="https://www.thingelstad.com/uploads/2019/99e6313111.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/99e6313111.jpg" width="600" height="337" alt="Group of about 22 coworkers posing together for a team photo in a modern open office space in Melbourne." />

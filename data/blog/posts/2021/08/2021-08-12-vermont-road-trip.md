@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2021/08/12/vermont-road-trip.html"
 title: "Vermont Road Trip Log: Day 13, Thursday"
 published: "2021-08-13T02:11:00+00:00"
 post_kind: post
-categories: ["Travel", "Travel Log"]
+categories: []
 ---
 
 Weather: Clear morning until Pennsylvania with moderate to heavy rain. Crazy heavy rainfall in Ohio. Weather cleared up in Michigan and rest of the day was very pleasant.
@@ -22,7 +22,7 @@ Weather: Clear morning until Pennsylvania with moderate to heavy rain. Crazy hea
 - [Charlie's Round the Corner](https://www.tripadvisor.com/Restaurant_Review-g42683-d1130794-Reviews-Charlie_s_Round_the_Corner_Ice_Dream-Saugatuck_Allegan_County_Michigan.html) [for Ice Cream](https://www.thingelstad.com/2021/08/12/this-is-our.html).
 - [Settled into](https://www.thingelstad.com/2021/08/12/floathaus-of-saugatuck.html) the [Floathaus of Saugatuck](http://floathausofsaugatuck.com). 
 
-![](https://www.thingelstad.com/uploads/2021/60aa6459ba.png)
+<img src="https://www.thingelstad.com/uploads/2021/60aa6459ba.png" alt="Google Maps route from Rochester NY through Cleveland OH and Oregon OH to Saugatuck MI, with the blue route line highlighted.">
 
 Jump to day [1](https://www.thingelstad.com/2021/07/31/vermont-road-trip.html), 
 [2](https://www.thingelstad.com/2021/08/01/vermont-road-trip.html), 

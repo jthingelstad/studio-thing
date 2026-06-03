@@ -9,4 +9,4 @@ categories: []
 
 We had an incredible brunch with friends at [Lynette](https://lynettemn.com). Tammy and I shared the **Blackened Avocado Toast** and **Stuffed French Toast**. The avocado toast was amazing! Tyler enjoyed the **Burger** and thought it was great. They also do custom lattes. I had the Potica Latte which was perfect! Will return!
 
-<img src="https://www.thingelstad.com/uploads/2025/d197bd652e.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/d197bd652e.jpg" width="600" height="600" alt="Potica latte in a speckled ceramic mug with leaf latte art on a light wood table at Lynette restaurant">

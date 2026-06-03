@@ -9,4 +9,4 @@ categories: []
 
 Catching train to Delft for the day! This was supposed to be day two so tiredness will be real. 
 
-<img src="https://www.thingelstad.com/uploads/2026/bfedd3f7df.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/bfedd3f7df.jpg" width="600" height="450" alt="Yellow and blue NS intercity train speeding through an underground station platform in the Netherlands.">

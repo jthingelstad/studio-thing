@@ -9,4 +9,4 @@ categories: []
 
 Driving a Ferrari in Manhattan? Seems like a crazy idea to me. 🤷‍♂️
 
-<img src="https://www.thingelstad.com/uploads/2018/1253d551e9.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/1253d551e9.jpg" alt="Red Ferrari 488 GTB stopped at a Manhattan intersection, flanked by an SUV and a sedan, with pedestrians on the sidewalk behind it." width="600" height="337" />

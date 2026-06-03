@@ -7,6 +7,4 @@ post_kind: post
 categories: []
 ---
 
-This is a great two part interview ([part 1](https://charlierose.com/videos/18663), [part 2](https://charlierose.com/videos/23415)) with Apple CEO Tim Cook with Charlie Rose.
-Wonderful insight into how Apple works and how they explore new
-products.
+This is a great two part interview ([part 1](https://charlierose.com/videos/18663), [part 2](https://charlierose.com/videos/23415)) with Apple CEO Tim Cook with Charlie Rose. Wonderful insight into how Apple works and how they explore new products.

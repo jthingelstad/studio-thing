@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/5715517">5715517</a> at <strong><a href="https://poap.gallery/drops/46440">1000 Lil Nouns Minted</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/1000-lil-nouns-minted-2022-logo-1653510124087.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/1000-lil-nouns-minted-2022-logo-1653510124087.png" alt="Circular badge celebrating 1000 Lil Nouns, May 2022, with two cartoon characters drawing pixel art using crayons on the floor." width="500" height="500" />

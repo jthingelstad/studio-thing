@@ -9,7 +9,7 @@ categories: ["Road Sign Math"]
 
 As you drive on I-94 East toward the Twin Cities there is a wonderful road sign that always made me smile. I saw it regularly when I would return from visiting family in North Dakota. The sign had this wonderful mathematical significance to it. **3 times 33 equals 99**. 
 
-<img src="https://www.thingelstad.com/uploads/2023/img-7222.jpeg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2023/img-7222.jpeg" width="600" height="450" alt="Green highway distance sign on I-94 East showing Melrose 3 miles, St Cloud 33 miles, Minneapolis 99 miles, beside a small rural creek and grassy fields." />
 
 After seeing this sign for a while I kept wondering how many other mathematically significant road signs are there? And just like that the idea for **[Road Sign Math](https://www.roadsignmath.xyz/)** was born. 
 

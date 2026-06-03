@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>Collected POAP <a href="https://collectors.poap.xyz/token/7379713">7379713</a> for <strong><a href="https://poap.gallery/drops/191378">Creating Community with POAP — MN Blockchain</a></strong>.</p>
-        <p><img src="https://www.thingelstad.com/uploads/2025/d8974309-3154-4a69-8d43-4cc4719cfe3f.png" width="500" height="500" /></p>
+        <p><img src="https://www.thingelstad.com/uploads/2025/d8974309-3154-4a69-8d43-4cc4719cfe3f.png" alt="Circular badge reading Creating Community with POAP and MN Blockchain Meetup featuring a city skyline pizza sign and location pin" width="500" height="500" /></p>

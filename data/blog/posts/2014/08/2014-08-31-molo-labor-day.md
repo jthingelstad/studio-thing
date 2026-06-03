@@ -9,4 +9,4 @@ categories: []
 
 Morgan-Logan Labor Day.
 
-![](https://www.thingelstad.com/uploads/2020/ea43de9749.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/ea43de9749.jpg" alt="Outdoor Labor Day party with snack table holding tortilla strips, chips, and drinks, while people play lawn games in front of a white house.">

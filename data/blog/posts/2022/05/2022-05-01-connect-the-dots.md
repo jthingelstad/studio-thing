@@ -9,4 +9,4 @@ categories: []
 
 Connect the dots. 
 
-<img src="https://www.thingelstad.com/uploads/2022/918b1f6235.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/918b1f6235.jpg" width="600" height="337" alt="Two incomplete concrete bridge sections extending toward each other with construction scaffolding, separated by a gap, behind a chain-link fence." />

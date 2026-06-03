@@ -9,4 +9,4 @@ categories: []
 
 The Avocado Toast at [Lynette](https://lynettemn.com) is the best I’ve ever had. Wow! 🥑 
 
-<img src="https://www.thingelstad.com/uploads/2025/de912f124e.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/de912f124e.jpg" width="600" height="450" alt="Open-faced avocado toast on dark bread topped with charred brussels sprouts, red peppers, arugula, and cilantro, served on a white plate at a restaurant">

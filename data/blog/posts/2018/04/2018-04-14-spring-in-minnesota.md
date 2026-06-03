@@ -9,4 +9,4 @@ categories: []
 
 Spring in Minnesota. ❄️
 
-<img src="https://www.thingelstad.com/uploads/2018/6af967807e.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/6af967807e.jpg" alt="Heavy snowstorm blanketing a suburban neighborhood with bare trees, young saplings, and a two-story house barely visible through falling snow." width="600" height="450" />

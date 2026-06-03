@@ -9,4 +9,4 @@ categories: []
 
 Loved this find in downtown Fargo — #FARGOMARIOWALL.
 
-<img src="https://www.thingelstad.com/uploads/2025/5aa5da21cb.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/5aa5da21cb.jpg" width="600" height="449" alt="Super Mario Bros pixel art mural on a brick building in downtown Fargo, showing question blocks, brick blocks, a Goomba, hills, and a warp pipe.">

@@ -11,4 +11,4 @@ This evening I was able to attend the first [UnGala](https://www.cristoreytc.org
 
 At the end of the event we got a team photo with [Alberto Vergara](https://www.linkedin.com/in/alberto-vergara-3a1b71166/) who was part of TeamSPS as a Cristy Rey student and is now a full-time Account Executive on our sales team! 👏
 
-<img src="https://www.thingelstad.com/uploads/2024/7cffbf61ae.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/7cffbf61ae.jpg" width="600" height="450" alt="Seven people smiling and posing together in front of a navy and gold balloon arch and branded backdrop at an indoor event venue.">

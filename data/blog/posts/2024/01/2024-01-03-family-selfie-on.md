@@ -9,4 +9,4 @@ categories: []
 
 Family selfie on my 52nd birthday! 🎉
 
-<img src="https://www.thingelstad.com/uploads/2024/ea87355970.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/ea87355970.jpg" width="600" height="449" alt="Family of four and a fluffy dog posing together indoors for a birthday selfie">

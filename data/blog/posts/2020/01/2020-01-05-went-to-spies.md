@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Went to [Spies in Disguise](https://www.imdb.com/title/tt5814534/) today. Pretty fun movie. 👍🎬
 
-<img src="https://www.thingelstad.com/uploads/2020/c957dbf72d.jpg" width="405" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/c957dbf72d.jpg" width="405" height="600" alt="Movie poster for Spies in Disguise, a Blue Sky animated film starring Will Smith and Tom Holland, releasing Christmas." />

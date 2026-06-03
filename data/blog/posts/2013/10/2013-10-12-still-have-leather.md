@@ -9,4 +9,4 @@ categories: []
 
 Still have 5 leather coin purses in reserve since nobody seems to make them anymore. Old Man Tech. 
 
-<img src="https://www.thingelstad.com/uploads/2020/c0206271a5.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/c0206271a5.jpg" width="600" height="450" alt="A hand holding three black leather flower-shaped rosettes with spiral pinwheel centers, crafted from folded leather pieces." />

@@ -9,4 +9,4 @@ categories: []
 
 Beautiful view on Westman Islands. 
 
-<img src="https://www.thingelstad.com/uploads/2022/7bc7867343.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/7bc7867343.jpg" width="600" height="450" alt="Volcanic coastline with black and red lava rock, a natural sea arch, and green islands rising from calm ocean waters beyond." />

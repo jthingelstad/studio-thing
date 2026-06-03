@@ -9,4 +9,4 @@ categories: []
 
 Glacier view from this morning. Stunning. Ridiculously windy.
 
-<img src="https://www.thingelstad.com/uploads/2020/89775feee1.jpg" width="600" height="132" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/89775feee1.jpg" width="600" height="132" alt="Icebergs floating in a glacial lagoon with a vast glacier descending from snow-capped mountains under a clear blue sky" />

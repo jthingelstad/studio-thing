@@ -9,4 +9,4 @@ categories: []
 
 Preparing [Wassail Tea](https://www.thingelstad.com/2004/11/01/wassail-tea.html). This is always the official beginning of the holiday season to me!
 
-<img src="https://www.thingelstad.com/uploads/2020/b7f4663f2b.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/b7f4663f2b.jpg" width="600" height="600" alt="Large black pot on a gas stove with cinnamon sticks and whole cloves simmering in dark liquid." />

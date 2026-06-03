@@ -9,4 +9,4 @@ categories: []
 
 A dozen bikes parked in the garage today. 🚲
 
-<img src="https://www.thingelstad.com/uploads/2024/91c219314b.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/91c219314b.jpg" width="600" height="337" alt="Cluttered garage with roughly a dozen bicycles of various sizes and colors lining both walls alongside hula hoops, fishing rods, and a ladder.">

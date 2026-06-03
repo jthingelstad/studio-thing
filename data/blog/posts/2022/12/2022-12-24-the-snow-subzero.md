@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 The snow, subzero temps, and frozen lid on the [Big Green Egg](https://biggreenegg.com) are too much to overcome. Need to find different way to cook tenderloin steaks. No grilling this Christmas Eve. 🥶
 
-<img src="https://www.thingelstad.com/uploads/2022/8a4ea78732.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/8a4ea78732.jpg" width="600" height="450" alt="Snow-covered outdoor kitchen with Big Green Egg and gas grill under a pergola with a glowing yellow Moravian star, winter night.">

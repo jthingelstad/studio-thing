@@ -9,4 +9,4 @@ categories: ["Music"]
 
 [Home Free](http://homefreemusic.com) stage photo. 🎶
 
-<img src="https://www.thingelstad.com/uploads/2018/5af008d83c.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/5af008d83c.jpg" alt="Five performers seated on stools facing a packed auditorium crowd during a live concert performance." width="600" height="337" />

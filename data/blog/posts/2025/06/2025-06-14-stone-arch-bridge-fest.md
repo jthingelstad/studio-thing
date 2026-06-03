@@ -4,12 +4,12 @@ url: "https://www.thingelstad.com/2025/06/14/stone-arch-bridge-fest.html"
 title: "Stone Arch Bridge Fest"
 published: "2025-06-14T23:00:00+00:00"
 post_kind: post
-categories: ["Crypto"]
+categories: ["Crypto", "612 POAP Challenge"]
 ---
 
 Today was Mazie's birthday and one of the things she decided we should do is the [Stone Arch Bridge Festival](https://stonearchbridgefestival.com). It had been a very long time since we had been to this and I was really impressed by the size of it. There were so many artists and vendors. It felt to me like it had a particular Minnesota flare to it, with a lot of art that was locally inspired. We spent about four hours but could have spent the entire day there.
 
-<img src="https://www.thingelstad.com/uploads/2025/b723b9f0df.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/b723b9f0df.jpg" width="600" height="450" alt="Crowds of festival visitors browse rows of white vendor tents along a tree-lined path with a stone bridge tower visible in the background.">
 
 Some artists that caught our eye:
 
@@ -24,7 +24,7 @@ Some artists that caught our eye:
 
 Mazie bought a piece of art with her own money — her very first art purchase from [H. Ward Miles](https://www.hwardmiles.com)[www.hwardmiles.com.](https://www.hwardmiles.com.)
 
-<img src="https://www.thingelstad.com/uploads/2025/2b6b2e3849.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/2b6b2e3849.jpg" width="600" height="450" alt="Young woman in a colorful striped sweater holding a small abstract painting at an outdoor art festival">
 
 I also really liked these very local artist creating location pieces. Maybe I could get one of them to participate in a future year of the [612 POAP Challenge](https://www.thingelstad.com/projects/612-poap-challenge/). 😊
 

@@ -13,4 +13,4 @@ The Nemesis Club was the most well done escape room experience we have ever done
 
 We solved the room with **31 seconds** to spare! This is a "must do" experience! 👏 [Room 34](https://www.thingelstad.com/lists/escape-rooms/)!
 
-![](https://www.thingelstad.com/uploads/2021/4772720ca9.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/4772720ca9.jpg" alt="Family of four posing in front of a large red robot with glowing eyes inside an escape room, countdown timer showing 00:31 remaining">

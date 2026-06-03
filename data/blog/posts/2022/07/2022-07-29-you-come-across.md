@@ -9,4 +9,4 @@ categories: []
 
 You come across some pretty wild vehicles in Iceland. 
 
-<img src="https://www.thingelstad.com/uploads/2022/5870db99a8.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/5870db99a8.jpg" width="600" height="450" alt="Silver Mercedes Sprinter van lifted on massive off-road tires with a snorkel and bull bar, parked on wet pavement in Iceland" />

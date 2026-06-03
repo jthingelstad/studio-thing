@@ -9,4 +9,4 @@ categories: []
 
 Every New Years Eve we play Clue and for the first time in memory I won! On my very first turn I guessed Mustard, Knife, Lounge and randomly hit both the weapon and room. I got it down to two people and then had to guess because I thought someone else would get it. 🏆
 
-<img src="https://www.thingelstad.com/uploads/2022/cca28520a6.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/cca28520a6.jpg" width="600" height="600" alt="Clue board game in progress with character tokens on the board, detective notesheet with crossed-off suspects, and Knife and Mrs. Peacock cards face up." />

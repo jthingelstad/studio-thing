@@ -9,4 +9,4 @@ categories: []
 
 Enjoying one of our New Year's Eve traditions, a delicious pot of fondue. So good.
 
-<img src="https://www.thingelstad.com/uploads/2025/8ca016ec38.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/8ca016ec38.jpg" width="600" height="450" alt="Cuisinart fondue pot with melted cheese on a stand, a fondue fork dipping bread, a bottle of Kirschwasser, and a colorful glass goblet on a white kitchen counter.">

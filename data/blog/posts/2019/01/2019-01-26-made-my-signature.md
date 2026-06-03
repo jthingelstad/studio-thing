@@ -9,4 +9,4 @@ categories: []
 
 Made my signature lasagna tonight. Delicious. 🤤🍽
 
-<img src="https://www.thingelstad.com/uploads/2019/14fcc69e5a.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/14fcc69e5a.jpg" width="600" height="600" alt="Person in black shirt holding a freshly baked lasagna in a blue ceramic baking dish with golden melted cheese on top" />

@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2004/07/31/scuol-to-guarda.html"
 title: "Scuol to Guarda"
 published: "2004-07-31T05:00:00+00:00"
 post_kind: post
-categories: ["Travel"]
+categories: []
 ---
 
 *First of all, let me wish my sister Alona a Happy Birthday! I was on the other side of the world and was unable to get in touch. Hope this is some small consolation for that.* 🙂 
@@ -15,7 +15,7 @@ Distance: **12.99 miles**
 Ascent: **2,250'**  
 Max Elevation: **7,365'**
 
-![](https://www.thingelstad.com/uploads/2020/fd251997a0.png)
+<img src="https://www.thingelstad.com/uploads/2020/fd251997a0.png" alt="GPS track map showing a yellow dotted hiking route from Scuol gondola through Alps Laret and Alp Laret to Guarda, with waypoints labeled Rapids, Lunch, Misc, Rest, Rest2, and Meisser marked along the">
 
 Today was the first day of our hiking trip! We just finished dinner with the group at the [Hotel Meisser](http://www.hotel-meisser.ch/) in Guarda. It was a buffet style dinner which suited me fine since I was starving after a long day on the trail. As I told Tammy, I was "deeply hungry". The sensation is similar to when I finish a century ride. I’m not completely sure how to explain it.
 
@@ -25,7 +25,7 @@ The scenery was simply amazing. Every bend in the trail made me think "wow". Tam
 
 We had a great picnic lunch mid-day and spent the entire day on the trail. We left at 8:50 am and arrived at 4:45 pm.
 
-![](https://www.thingelstad.com/uploads/2020/7409b336df.png)
+<img src="https://www.thingelstad.com/uploads/2020/7409b336df.png" alt="Line chart showing Day 1 elevation profile over 12 miles, peaking near 7,365 ft, with cumulative ascent reaching roughly 1,500 ft and descent near 3,000 ft.">
 
 We have also been lucky to be in Switzerland on one of their big national holidays. Today is [Dependence Day](http://switzerland.isyours.com/e/swiss-business-guide/swiss-national-day.html) in Switzerland (also called National Day). Not independence, but dependence. It is the celebration of when the major kingdoms of Switzerland came together and recognized their "dependence" on each other. One of the strong traditions of this holiday however is an amazingly independent tradition where people climb up in the mountains all over and light huge bonfires. On our hike today we saw some of these ready for the evening. After dinner tonight we looked at the ridge line and there were over 10 huge fires visible. How very cool. All of the cities shoot of fireworks as well. It's a big celebration.
 

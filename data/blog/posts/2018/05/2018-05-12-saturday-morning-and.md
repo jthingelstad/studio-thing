@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Saturday morning 8 and under baseball! ⚾️
 
-<img src="https://www.thingelstad.com/uploads/2018/ce15ba603b.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/ce15ba603b.jpg" alt="Young child in batting helmet and uniform swings at a tee-ball pitch on a sunny dirt infield with fielders and a coach spread across the outfield." width="600" height="337" />

@@ -9,4 +9,4 @@ categories: []
 
 Windmills in the clouds. 
 
-<img src="https://www.thingelstad.com/uploads/2025/ae3b0ce482.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/ae3b0ce482.jpg" width="600" height="450" alt="Multiple white wind turbines rising above a dramatic overcast sky filled with layered grey and white clouds">

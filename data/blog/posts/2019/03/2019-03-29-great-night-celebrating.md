@@ -9,5 +9,5 @@ categories: ["Music", "TeamSPS"]
 
 Great night celebrating with #TeamSPS Little Falls at their SPS Social! 🙌🎶🎉
 
-<img src="https://www.thingelstad.com/uploads/2019/b50e62c8ba.jpg" width="600" height="403" alt="" />
-<img src="https://www.thingelstad.com/uploads/2019/b94d634dfd.jpg" width="600" height="403" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/b50e62c8ba.jpg" width="600" height="403" alt="Group of men in suits posing for photo booth pictures at The Social SPS Commerce Gathering event at The Graycliff on March 29 2019" />
+<img src="https://www.thingelstad.com/uploads/2019/b94d634dfd.jpg" width="600" height="403" alt="Three men posing in a photo booth at The Social an SPS Commerce Gathering holding Beer Me and vinyl record props" />

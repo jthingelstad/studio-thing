@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Time to smoke another pork shoulder! [Big Green Egg](https://biggreenegg.com) charcoal with chunks of Hickory. 🔥
 
-<img src="https://www.thingelstad.com/uploads/2020/65cb2c94c1.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/65cb2c94c1.jpg" width="600" height="450" alt="Big Green Egg kamado grill open with burning charcoal and hickory wood chunks, set on an outdoor patio table" />

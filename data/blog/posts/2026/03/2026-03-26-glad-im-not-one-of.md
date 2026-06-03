@@ -9,4 +9,4 @@ categories: []
 
 Glad I’m not one of these two climbing and hanging off of the top cross of Sagrada Familia this morning. 
 
-<img src="https://www.thingelstad.com/uploads/2026/d04d97704d.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/d04d97704d.jpg" width="450" height="600" alt="Two workers on the illuminated cross atop Sagrada Familia tower, suspended by cables from a yellow Liebherr crane against a clear blue sky.">

@@ -9,4 +9,4 @@ categories: []
 
 My first meaningful print with the new Bambu P2S is a Gridfinity setup for my office desk. The grid is down and now I’m populating with various bins. There are so many options and the Bambu P2S prints things effortlessly. This may be showing up in more drawers soon. 
 
-<img src="https://www.thingelstad.com/uploads/2026/17cfcaa137.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/17cfcaa137.jpg" width="600" height="450" alt="Open desk drawer lined with a black Gridfinity grid insert holding several gray and yellow organizer bins filled with pushpins, paper clips, and keys.">

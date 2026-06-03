@@ -9,4 +9,4 @@ categories: []
 
 Times Square!
 
-<img src="https://www.thingelstad.com/uploads/2026/7f8c638d0f.jpg" width="600" height="289" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/7f8c638d0f.jpg" width="600" height="289" alt="Crowds of pedestrians fill Times Square at night surrounded by towering buildings covered in bright colorful LED billboards and advertisements.">

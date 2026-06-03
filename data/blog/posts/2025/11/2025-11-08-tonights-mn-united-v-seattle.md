@@ -20,4 +20,4 @@ Tonight's MN United v Seattle Sounders playoff match had everything! Without a d
 
 An amazing game for the ages!
 
-<img src="https://www.thingelstad.com/uploads/2025/5647e07e56.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/5647e07e56.jpg" width="600" height="450" alt="MN United vs Seattle Sounders MLS Cup playoff penalty shootout at Allianz Field with packed crowd and scoreboard showing goalkeeper Andrew Thomas">

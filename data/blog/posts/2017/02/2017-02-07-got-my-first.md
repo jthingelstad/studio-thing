@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Got my first shipment of [Nordskogen Coffee](https://nordskogencoffee.com) today! Looking forward to pulling some shots of espresso.
 
-<img src="https://www.thingelstad.com/uploads/2024/img-3351.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/img-3351.jpg" width="600" height="450" alt="Two 12-ounce bags of Nordskogen roasted coffee dated Feb 05 2017 on a granite counter beside a handwritten thank-you note.">

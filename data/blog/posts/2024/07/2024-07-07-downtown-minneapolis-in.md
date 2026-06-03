@@ -9,4 +9,4 @@ categories: []
 
 Downtown Minneapolis in golden light from the rooftop of the [Hewing](https://hewinghotel.com).
 
-<img src="https://www.thingelstad.com/uploads/2024/33ff215055.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/33ff215055.jpg" width="600" height="450" alt="Rooftop bar patio at the Hewing Hotel at sunset with guests dining and the Minneapolis skyline glowing golden behind them.">

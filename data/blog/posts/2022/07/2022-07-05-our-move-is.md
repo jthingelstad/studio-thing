@@ -9,4 +9,4 @@ categories: []
 
 Our move is in full swing now. 📦
 
-<img src="https://www.thingelstad.com/uploads/2022/32a2713033.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/32a2713033.jpg" width="600" height="450" alt="Moving boxes from Good Stuff Moving stacked in a living room beside a dining table and open crates during a home move." />

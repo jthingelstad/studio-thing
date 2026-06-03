@@ -9,4 +9,4 @@ categories: []
 
 Gondoliers awaiting their tourists.
 
-<img src="https://www.thingelstad.com/uploads/2023/3768099159.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/3768099159.jpg" width="600" height="400" alt="Gondoliers in straw hats tend to a row of ornate black gondolas along a Venice canal as crowds of tourists wait on the quay">

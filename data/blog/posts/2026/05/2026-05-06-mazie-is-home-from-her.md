@@ -9,4 +9,4 @@ categories: []
 
 [Mazie](https://mazie.thingelstad.com/) is home from her semester abroad! 🥳
 
-<img src="https://www.thingelstad.com/uploads/2026/b918f9f38f.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/b918f9f38f.jpg" width="600" height="450" alt="Three people smiling together in a kitchen, a man in a patterned shirt, a teenage girl with blonde hair, and a woman in a Mickey Mouse jacket.">

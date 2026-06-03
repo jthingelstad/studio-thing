@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 First night of [Edina Soccer](https://www.edinasoccer.org) for Summer 2023 season! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2023/c247980ef9.jpg" width="600" height="354" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/c247980ef9.jpg" width="600" height="354" alt="Youth soccer players in blue and green jerseys spread across a sunny grass field with a goal visible and trees lining the background.">

@@ -9,4 +9,4 @@ categories: []
 
 Closest I’ll come to a picture with [Vanilla Ice](http://thatgrapejuice.net/wp-content/uploads/2015/02/vanilla-ice-that-grape-juice-2015.png)!
 
-<img src="https://www.thingelstad.com/uploads/2017/e99ebf29be.jpg" width="599" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/e99ebf29be.jpg" alt="Man in green plaid shirt speaking at a podium with a microphone, a projection screen behind him shows a rapper pointing and the text Alright stop...." width="599" height="600" />

@@ -9,8 +9,8 @@ categories: []
 
 Removing clay from wheel.
 
-![](https://www.thingelstad.com/uploads/2020/adb9141240.png)
+<img src="https://www.thingelstad.com/uploads/2020/adb9141240.png" alt="Woman in white shirt shaping clay on a pottery wheel in four sequential photos">
 
 Throwing.
 
-![](https://www.thingelstad.com/uploads/2020/4954943d46.png)
+<img src="https://www.thingelstad.com/uploads/2020/4954943d46.png" alt="Four-panel sequence of hands working clay on a pottery wheel in a studio workshop.">

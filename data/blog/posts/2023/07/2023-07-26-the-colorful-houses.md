@@ -9,4 +9,4 @@ categories: []
 
 The colorful houses of Burano, Italy were amazing to see this morning.
 
-<img src="https://www.thingelstad.com/uploads/2023/dabea1b615.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/dabea1b615.jpg" width="600" height="400" alt="Colorful row of pink, green, orange, and yellow houses lining a calm canal in Burano Italy with moored boats.">

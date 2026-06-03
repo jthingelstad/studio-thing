@@ -9,4 +9,4 @@ categories: []
 
 Buildings in downtown Minneapolis lit up in Blue and Yellow for Ukraine. 🇺🇦
 
-<img src="https://www.thingelstad.com/uploads/2022/836aeb3ccb.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/836aeb3ccb.jpg" width="600" height="337" alt="Downtown Minneapolis skyline at night with skyscrapers lit in blue and yellow in solidarity with Ukraine" />

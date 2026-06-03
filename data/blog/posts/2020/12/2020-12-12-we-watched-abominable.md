@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 We watched [Abominable](https://www.imdb.com/title/tt6324278/) tonight for Family Movie night and it was great. Wonderful story and very touching. Even better than I expected. 🍿
 
-<img src="https://www.thingelstad.com/uploads/2020/c4bb1811ac.jpg" width="378" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/c4bb1811ac.jpg" width="378" height="600" alt="Movie poster for Abominable showing a large fluffy white yeti smiling with three animated children resting against its fur" />

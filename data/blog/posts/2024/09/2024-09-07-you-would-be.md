@@ -9,4 +9,4 @@ categories: []
 
 You would be hard set to find a better desert than [Pizzeria Lola](https://www.pizzerialola.com)’s warm Chocolate Chip Cookies and Fresh S’more Cookies with delicious soft serve ice cream drizzled with olive oil. 
 
-<img src="https://www.thingelstad.com/uploads/2024/7b7c0a08b2.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/7b7c0a08b2.jpg" width="600" height="600" alt="Warm chocolate s'more cookies topped with toasted marshmallows on a plate beside chocolate chip cookies with milk and soft serve ice cream drizzled with olive oil">

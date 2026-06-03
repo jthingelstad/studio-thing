@@ -9,4 +9,4 @@ categories: []
 
 We decided to have dinner at [Crisp & Green](https://crispandgreen.com) last night so that we could see [Mazie](https://mazie.thingelstad.com?ref=thingelstad.com) at work! She was surprised when we showed up. Delicious bowls! 🥗
 
-<img src="https://www.thingelstad.com/uploads/2024/6bf2812ea5.jpg" width="449" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/6bf2812ea5.jpg" width="449" height="600" alt="Young woman in a green shirt and black apron tossing salad bowls at a restaurant prep counter, smiling at the camera.">

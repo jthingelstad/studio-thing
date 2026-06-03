@@ -9,6 +9,6 @@ categories: []
 
 Lunch at Segantini Hütte. So amazing. 
 
-<img src="https://www.thingelstad.com/uploads/2023/b9a15d9d1b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/b9a15d9d1b.jpg" width="600" height="450" alt="Stone mountain hut at Segantini Hütte with Swiss and canton flags flying, hikers resting outside, rocky Alpine peaks behind.">
 
-<img src="https://www.thingelstad.com/uploads/2023/1ad6e6b600.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/1ad6e6b600.jpg" width="600" height="450" alt="Hikers eating and drinking at outdoor tables beside a stone mountain hut with rocky Alpine peaks under a clear blue sky.">

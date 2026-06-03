@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6653394">6653394</a> at <strong><a href="https://poap.gallery/drops/128023">MNblockchain - Crypto Spring 2023</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/bf51a112-0578-4375-868f-de3e860b5b92.gif" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/bf51a112-0578-4375-868f-de3e860b5b92.gif" alt="Circular badge with orange border reading MNblockchain at top and Crypto Spring 2023 at bottom in green and orange text." width="500" height="500" />

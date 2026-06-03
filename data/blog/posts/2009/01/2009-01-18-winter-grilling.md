@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 We've been enjoying the reprieve from -20 °F to 20 °F with some great winter grilling on the Big Green Egg. Tonight is a chicken on the vertical roaster.
 
-![](https://www.thingelstad.com/uploads/2020/3875beb137.png)
+<img src="https://www.thingelstad.com/uploads/2020/3875beb137.png" alt="Large Big Green Egg kamado grill on a wooden table outdoors in winter, lightly dusted with snow.">

@@ -9,4 +9,4 @@ categories: []
 
 Tammy and I wrapped up an awesome [Banff & Lake Louise](https://photoworkshopadventures.com/north-america/canada/banff-lake-louise) photo workshop led by the incredibly talented [Chase Guttman](https://chaseguttman.com) this afternoon. Great locations and photos — and learning photography skills at the same time. Has me thinking about the next workshop… 📷
 
-<img src="https://www.thingelstad.com/uploads/2025/a6f7d889b5.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/a6f7d889b5.jpg" width="600" height="450" alt="Three people smiling for a selfie beside a rushing glacial river with a railway bridge, dense pine forest, and snow-capped mountain behind them">

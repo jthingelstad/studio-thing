@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/04/07/semisonic-at-the.html"
 title: "Semisonic at the Palace Theatre"
 published: "2024-04-07T16:38:01+00:00"
 post_kind: post
-categories: ["Music"]
+categories: []
 ---
 
 Last night Tammy and I went over to St. Paul to see [Semisonic](https://semisonic.com) at the [Palace Theatre](https://first-avenue.com/venue/palace-theatre/). I have no idea how many times we've collectively seen Semisonic but we were excited to go again. Their newest album **Little Bit of Sun** released in 2023, just 22 years after their last album, is very good.
@@ -31,7 +31,7 @@ Semisonic took the stage and played a great set. They hit on many of the hits of
 
 They paid special homage to playing in St. Paul. Munson highlighted the environmental recovery of the Mississippi River and they auctioned off the Semisonic bass cover from that night in support of the [Mississippi Watershed Organization](https://www.mwmo.org). The show poster also included an image of Otters and they shared that once again Otters are in the Mississippi River.
 
-<img src="https://www.thingelstad.com/uploads/2024/gkkxafawiaatvre.jpeg" width="600" height="789" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/gkkxafawiaatvre.jpeg" width="600" height="789" alt="Concert poster for Semisonic at Palace Theatre Saint Paul Minnesota April 6th 2024 featuring two otters holding paws underwater amid swirling teal water and aquatic plants">
 
 Wilson is a prolific songwriter well beyond his own work and since [Chris Stapleton](https://www.chrisstapleton.com) was playing last night as well at US Bank Stadium they played White Horse which he cowrote with him in the encore. 
 

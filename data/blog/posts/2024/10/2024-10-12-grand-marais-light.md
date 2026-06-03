@@ -9,4 +9,4 @@ categories: []
 
 Grand Marais Light.
 
-<img src="https://www.thingelstad.com/uploads/2024/dc4864069d.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/dc4864069d.jpg" width="600" height="450" alt="Grand Marais lighthouse on a pier with a rock breakwater in the foreground and calm water under a cloudy sky.">

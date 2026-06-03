@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2005/10/07/mazie-mazie-mazie.html"
 title: "Mazie Mazie Mazie"
 published: "2005-10-07T05:00:00+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
 Little Maze is getting less little by the day it seems. Along with getting bigger she's really developing a lot more of a personality. She's got her "I want mom" cry, her "I'm hungry cry", and her "I want mom" cry. Did I mention that one already? We went through a few days a while back where she decided her dad simply would not do. If I tried to hold her she just threw a fit. She's gotten a lot better at that too, throwing fits that is. She can get her legs and arms shaking, and just wail. If this gets beyond a certain point there is nothing you can do but give her to mom.
@@ -17,4 +17,4 @@ Maze loves [her new mini-van](https://www.thingelstad.com/2005/09/24/honda-odyss
 
 Tammy and her sisters threw a surprise birthday party for their mom recently and she did a little photo shoot with Maze and the birthday stuff. Some great pictures, check them out. My friend [Dan and his wife Melanie](http://2s1g.com/) are about to have start this parenthood thing any day now! With these 4 months under my belt I get to give advice to someone like I actually have a clue what's going on. That's fun too.
 
-<img src="https://www.thingelstad.com/uploads/2023/20050928-173858-3197.jpg" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/20050928-173858-3197.jpg" width="600" height="400" alt="Baby wearing a yellow Happy Birthday party hat surrounded by colorful balloons, looking at the camera with wide eyes and a slight smile.">

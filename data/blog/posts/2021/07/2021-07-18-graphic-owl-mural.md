@@ -9,4 +9,4 @@ categories: []
 
 Graphic owl mural framed perfectly by window at [A-Mill Artists Lofts](https://www.a-millartistlofts.com). 
 
-<img src="https://www.thingelstad.com/uploads/2021/628d5ee8e8.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/628d5ee8e8.jpg" width="600" height="600" alt="Illuminated mural of a close-up owl face with vivid orange eyes and blue feathers filling a large window on a yellow brick building at night." />

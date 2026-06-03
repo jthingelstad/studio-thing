@@ -9,4 +9,4 @@ categories: []
 
 Tonights plan: Old Fashioned and Romeo y Julieta. 🥃 
 
-<img src="https://www.thingelstad.com/uploads/2021/8ec21d9e19.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/8ec21d9e19.jpg" width="600" height="600" alt="Romeo y Julieta Reserva Real cigar beside a rocks glass with an Old Fashioned cocktail, orange slice, and cherry." />

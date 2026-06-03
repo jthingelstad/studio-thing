@@ -9,4 +9,4 @@ categories: []
 
 Delicious “short pours” at [Schilling Beer Co.](https://schillingbeer.com) tonight. Combover, Hopfenweisse, and Moonship on Blackberry. 🍺
 
-<img src="https://www.thingelstad.com/uploads/2021/93b8cdc6e7.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/93b8cdc6e7.jpg" width="600" height="599" alt="Three short pour beer samples on a wood table with a printed order receipt showing Combover, Hopfenweisse, and Moonship on Blackberry at Schilling Beer Co." />

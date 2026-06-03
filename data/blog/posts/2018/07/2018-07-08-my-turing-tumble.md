@@ -9,4 +9,4 @@ categories: []
 
 My [Turing Tumble](https://www.turingtumble.com) games arrived! I’m looking forward to making some mechanical computers 👍🏻, maybe even with the kids! 😊
 
-<img src="https://www.thingelstad.com/uploads/2018/74d60043d9.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/74d60043d9.jpg" alt="Two Turing Tumble Kickstarter Edition board game boxes on a table beside a bag of extra gears and bits game pieces" width="600" height="600" />

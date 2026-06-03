@@ -9,4 +9,4 @@ categories: []
 
 Lemon Drop Martinis for Cinco de Mayo! 🇲🇽 🍋 🍸 
 
-<img src="https://www.thingelstad.com/uploads/2020/d2358dbee6.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/d2358dbee6.jpg" width="600" height="600" alt="Two bright yellow lemon drop martinis in clear stemmed glasses garnished with lemon peel, on a marble counter with a cocktail shaker behind them." />

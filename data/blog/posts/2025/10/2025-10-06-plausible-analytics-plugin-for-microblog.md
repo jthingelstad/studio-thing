@@ -12,4 +12,4 @@ I've been using [Plausible Analytics](https://plausible.io/) for over a year and
 It now uses the current code snippet and also sports a Plausible icon as well. Plus, I now have a plug-in in the directory. If you use Plausible Analytics on micro.blog I would definitely suggest switching.
 
 
-<img src="https://www.thingelstad.com/uploads/2025/a3a97c4d51.png" width="600" height="429" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/a3a97c4d51.png" width="600" height="429" alt="Micro.blog plug-in directory showing four available plug-ins including Plausible Analytics 2, Video streaming, Open Graph basics, and Chess.com Profile">

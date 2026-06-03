@@ -9,4 +9,4 @@ categories: []
 
 Break in the rain and everyone jumping in the pool! 💦
 
-<img src="https://www.thingelstad.com/uploads/2024/2134c6f36b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/2134c6f36b.jpg" width="600" height="450" alt="Backyard pool party with several kids swimming and adults relaxing poolside beside a gray two-story house with a water slide.">

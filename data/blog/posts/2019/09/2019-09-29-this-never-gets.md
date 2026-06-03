@@ -9,4 +9,4 @@ categories: []
 
 This never gets old. Tesla [Version 10](https://www.tesla.com/blog/introducing-software-version-10-0) on the way! 🤓
 
-<img src="https://www.thingelstad.com/uploads/2019/69b3dea8b1.jpg" width="454" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/69b3dea8b1.jpg" width="454" height="600" alt="Tesla app showing a white Model 3 with battery at 90 percent and a software update installing." />

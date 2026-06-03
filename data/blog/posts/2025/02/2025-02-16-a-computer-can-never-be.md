@@ -9,7 +9,7 @@ categories: []
 
 Simon Willison [shared this excerpt from an IBM training manual](https://simonwillison.net/2025/Feb/3/a-computer-can-never-be-held-accountable/) on his blog recently.
 
-<img src="https://www.thingelstad.com/uploads/2025/a-computer-can-never-be-held-accountable.jpg" width="600" height="555" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/a-computer-can-never-be-held-accountable.jpg" width="600" height="555" alt="Printed IBM training manual page ending with THEREFORE A COMPUTER MUST NEVER MAKE A MANAGEMENT DECISION with mirrored ghost text visible behind it">
 
 Willison did some research on this and tracked it down to a training manual from 1979.
 

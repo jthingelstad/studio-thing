@@ -11,4 +11,4 @@ Tammy unlocked a perfect pandemic evening for us last night. First, get a bottle
 
 5 stars! Would do again!
 
-<img src="https://www.thingelstad.com/uploads/2020/0d8f8afcec.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/0d8f8afcec.jpg" width="600" height="450" alt="Family of four having a pizza picnic on a colorful blanket in a sunny park, laughing and smiling at the camera." />

@@ -9,4 +9,4 @@ categories: []
 
 Family selfie with rainbow lights and finale fireworks in the background. The first ever Brandi Carlile's Mothership Weekend was great!
 
-<img src="https://www.thingelstad.com/uploads/2023/8f53aca4a1.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/8f53aca4a1.jpg" width="600" height="450" alt="Four people holding glowing fiber optic wands take a joyful nighttime selfie with fireworks exploding in the background.">

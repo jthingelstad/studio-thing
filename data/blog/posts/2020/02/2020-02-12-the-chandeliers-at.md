@@ -9,4 +9,4 @@ categories: []
 
 The chandeliers at the Fillmore Minneapolis are a classy touch. 
 
-<img src="https://www.thingelstad.com/uploads/2020/5c9bb5640e.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/5c9bb5640e.jpg" width="600" height="450" alt="Packed concert venue with purple-lit crystal chandeliers hanging from a dark ceiling above a large standing crowd and tiered balconies." />

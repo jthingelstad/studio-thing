@@ -9,4 +9,4 @@ categories: []
 
 Finished a much needed organizing and upgrading of my home office setup. This is working much better on every dimension. 
 
-<img src="https://www.thingelstad.com/uploads/2020/a88a93df6d.jpg" width="600" height="449" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/a88a93df6d.jpg" width="600" height="449" alt="Wood desk with MacBook Pro on a stand, large LG monitor, and iPad Pro with Smart Keyboard, all showing macOS Catalina wallpaper, in front of a window overlooking trees." />

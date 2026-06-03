@@ -7,7 +7,7 @@ post_kind: post
 categories: ["Coffee"]
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/877a6a7498.png" style="width: 180px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/877a6a7498.png" alt="Toddy Cold Brew System box and glass brewing vessel filled with dark coffee concentrate, shown together as a product set." style="width: 180px; float: right; margin-left: 10px; " />
 
 I wrote a little over a year ago about my [introduction to cold press coffee](https://www.thingelstad.com/2007/06/05/cold-press-coffee.html). Shortly after that post I got a [Toddy Cold Press Brewing System](http://www.amazon.com/dp/B0006H0JVW/) and I've enjoyed a decent amount of cold press since then as well as introducing a few people to it.
 

@@ -9,4 +9,4 @@ categories: []
 
 My neighbors dock is not in good shape. 
 
-<img src="https://www.thingelstad.com/uploads/2023/e2f72c7275.jpg" />
+<img src="https://www.thingelstad.com/uploads/2023/e2f72c7275.jpg" alt="Collapsed boat lift frame resting on a damaged wooden dock surrounded by algae-covered shallow water near a wooded shoreline." />

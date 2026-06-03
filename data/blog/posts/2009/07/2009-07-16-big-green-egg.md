@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Two pork shoulders to go on the Big Green Egg tomorrow at 7am!
 
-![](https://www.thingelstad.com/uploads/2020/e425911503.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/e425911503.jpg" alt="Two herb-rubbed pork shoulders tied with twine on a metal baking tray, ready to be smoked">

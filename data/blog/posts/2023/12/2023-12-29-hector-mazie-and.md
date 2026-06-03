@@ -9,4 +9,4 @@ categories: []
 
 Hector, Mazie, and I took Lucky on a walk for her 4th Birthday! Happy Birthday Lucky! 4️⃣
 
-<img src="https://www.thingelstad.com/uploads/2023/4bb9dd15b2.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/4bb9dd15b2.jpg" width="600" height="600" alt="Three people smiling for a selfie outdoors in winter with a fluffy white dog tongue out on a leash.">

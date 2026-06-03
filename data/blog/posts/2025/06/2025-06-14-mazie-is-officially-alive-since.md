@@ -11,4 +11,4 @@ Mazie is officially 20!
 
 “Alive since 2005!” — [Mazie](https://mazie.thingelstad.com) [@mthingelstad](https://micro.blog/mthingelstad) 
 
-<img src="https://www.thingelstad.com/uploads/2025/f345e7bea8.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/f345e7bea8.jpg" width="450" height="600" alt="Young woman smiling in a colorful zigzag knit sweater and jeans leaning on a railing by a river with a bridge behind her.">

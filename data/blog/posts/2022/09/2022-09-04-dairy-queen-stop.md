@@ -9,4 +9,4 @@ categories: []
 
 Dairy Queen stop at the halfway mark of today’s family bike ride. 
 
-<img src="https://www.thingelstad.com/uploads/2022/abe29811d2.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/abe29811d2.jpg" width="600" height="450" alt="Four people smiling outside a Dairy Queen holding ice cream treats, two wearing bike helmets on a sunny day." />

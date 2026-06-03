@@ -9,4 +9,4 @@ categories: []
 
 Gorgeous evening to sit outside and relax. 
 
-<img src="https://www.thingelstad.com/uploads/2018/2c35c82804.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/2c35c82804.jpg" alt="Bare tree branches silhouetted against a bright blue sky with scattered white clouds on a clear evening." width="600" height="600" />

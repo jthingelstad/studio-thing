@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Pork Butts out of the Sous Vides baths and now onto the [Big Green Egg](https://biggreenegg.com) for 3 hours of smoke! 🔥
 
-<img src="https://www.thingelstad.com/uploads/2020/5271a6380c.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/5271a6380c.jpg" width="600" height="600" alt="Two large pork butts smoking on a Big Green Egg ceramic grill outdoors, lid open, smoke rising, backyard visible behind." />

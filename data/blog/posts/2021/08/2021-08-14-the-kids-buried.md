@@ -9,4 +9,4 @@ categories: []
 
 The kids buried me in the sand today at [Oval Beach](https://www.saugatuckcity.com/oval-beach.html). 🥳
 
-<img src="https://www.thingelstad.com/uploads/2021/98d58b31be.jpg" width="600" height="449" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/98d58b31be.jpg" width="600" height="449" alt="Two kids smile on a sunny beach while an adult is buried up to their head in sand, ocean visible behind them." />

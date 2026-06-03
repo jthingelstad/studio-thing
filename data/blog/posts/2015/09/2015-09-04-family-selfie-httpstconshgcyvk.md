@@ -9,4 +9,4 @@ categories: []
 
 Family selfie!
 
-<img src="https://www.thingelstad.com/uploads/2020/8186ed22ee.jpg" width="426" height="320" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/8186ed22ee.jpg" width="426" height="320" alt="Family of four smiling together near a lake with sailboats in the background on a cloudy day" />

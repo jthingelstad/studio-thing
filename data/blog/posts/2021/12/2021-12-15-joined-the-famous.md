@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Joined the [Famous Fox Federation](https://famousfoxes.com) with [Fox #7164](https://howrare.is/famousfoxfederation/7164/). I [staked](https://famousfoxes.com/stake) it to collect $FOXY tokens. Having fun on [Solana](https://solana.com/). 
 
-<img src="https://www.thingelstad.com/uploads/2021/51db5e8241.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/51db5e8241.jpg" width="600" height="600" alt="Cartoon fox NFT wearing a pink snapback cap and purple hoodie with a diamond logo on a teal background" />

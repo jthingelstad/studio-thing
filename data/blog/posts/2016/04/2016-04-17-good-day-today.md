@@ -9,12 +9,12 @@ categories: []
 
 Good day today!
 
-![](https://www.thingelstad.com/uploads/2021/257795fa82.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/257795fa82.jpg" alt="Young boy in a green cap fishing from a dock while a girl paddles a yellow kayak on a calm lake behind him.">
 
-![](https://www.thingelstad.com/uploads/2021/5f7d152f8e.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/5f7d152f8e.jpg" alt="Person paddling a yellow kayak on a calm lake under a partly cloudy blue sky with trees lining the far shore">
 
-![](https://www.thingelstad.com/uploads/2021/6030b753e1.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/6030b753e1.jpg" alt="Two people kayaking in yellow kayaks on a calm lake with tree-lined shores under a partly cloudy sky.">
 
-![](https://www.thingelstad.com/uploads/2021/1be20a1c6c.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/1be20a1c6c.jpg" alt="Two people kayaking in yellow kayaks on a calm lake under a partly cloudy blue sky with trees lining the far shore.">
 
-![](https://www.thingelstad.com/uploads/2021/d5b38b5c74.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/d5b38b5c74.jpg" alt="Young child in a green cap and white shirt casting a green fishing rod from a dock on a calm lake while an adult holds a larger rod nearby.">

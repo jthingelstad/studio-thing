@@ -9,4 +9,4 @@ categories: []
 
 Sticker spotting. 
 
-<img src="https://www.thingelstad.com/uploads/2026/f79d49c6c2.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/f79d49c6c2.jpg" width="600" height="600" alt="Cylindrical pole covered in layered stickers against a red brick wall, featuring a prominent I love Bikkeltocht sticker in the center.">

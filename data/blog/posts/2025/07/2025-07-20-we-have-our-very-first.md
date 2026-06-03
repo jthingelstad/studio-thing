@@ -13,4 +13,4 @@ We have our very first winner of the **[612 POAP Challenge](https://612.poapchal
 
 He and a friend “[speed ran](https://quinnchrest.com/2025/07/20/poap-challenge.html)” the 612 POAP Challenge in [one go on bike](https://strava.app.link/HeEap2549Ub)!
 
-<img src="https://www.thingelstad.com/uploads/2025/6fc725eea1.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/6fc725eea1.jpg" width="600" height="450" alt="Two cyclists wearing helmets pose for a selfie in front of the Spoonbridge and Cherry sculpture at the Minneapolis Sculpture Garden.">

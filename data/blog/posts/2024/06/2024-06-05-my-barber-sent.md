@@ -17,8 +17,8 @@ So tonight we stopped in for a pint of Guinness and desert for the family. When 
 
 I grabbed a few McMunn's golf tees to bring back to Gene at Dick's Barbers. ⛳️
 
-<img src="https://www.thingelstad.com/uploads/2024/5180a40391.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/5180a40391.jpg" width="600" height="600" alt="Pint of Guinness stout with a creamy head on a wooden table beside a leather-bound McMunns of Ballybunion pub restaurant menu">
 
-<img src="https://www.thingelstad.com/uploads/2024/4b8acf1b53.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/4b8acf1b53.jpg" width="450" height="600" alt="Middle-aged bald man in a dark polo shirt leaning on a green barber chair inside a busy barbershop">
 
-<img src="https://www.thingelstad.com/uploads/2024/cc25b2e348.jpg">
+<img src="https://www.thingelstad.com/uploads/2024/cc25b2e348.jpg" alt="Man in a black jacket and plaid shirt smiling outside McMunns pub in Ballybunion Ireland">

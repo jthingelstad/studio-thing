@@ -9,4 +9,4 @@ categories: []
 
 Tyler and Mazie made Cake Pops for the first time today. They tasted great! 🤤
 
-<img src="https://www.thingelstad.com/uploads/2023/a92838b2c5.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/a92838b2c5.jpg" width="600" height="600" alt="Cake pops coated in white chocolate and colorful sprinkles displayed on a wooden cake pop stand on a kitchen table.">

@@ -9,4 +9,4 @@ categories: []
 
 Nice gentle snow for Christmas Eve this afternoon.  🌨
 
-<img src="https://www.thingelstad.com/uploads/2017/97e9b4e6e9.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2017/97e9b4e6e9.jpg" alt="Snowy backyard with bare trees, a blue two-story house, evergreens, and a red play structure during a light snowfall." width="600" height="337" />

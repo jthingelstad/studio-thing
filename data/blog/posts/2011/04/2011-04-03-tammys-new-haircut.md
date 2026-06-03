@@ -9,4 +9,4 @@ categories: []
 
 Tammy got a new haircut yesterday at [Lili](http://salonlili.com/). She looks amazing.
 
-![](https://www.thingelstad.com/uploads/2020/71d484bb0d.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/71d484bb0d.jpg" alt="Woman with short reddish hair smiling outdoors, wearing a navy patterned sweater, with a wooden fence behind her.">

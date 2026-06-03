@@ -9,4 +9,4 @@ categories: []
 
 So I'm not sure how far around the lake this guy was going, but walking around 3 miles around a lake dragging a large tire behind you is next level. Impressive stuff! 💪
 
-<img src="https://www.thingelstad.com/uploads/2025/02844ce874.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/02844ce874.jpg" width="600" height="450" alt="Man in running gear with an orange vest and blue compression sleeves walking a paved park path while dragging a large tire on a rope behind him.">

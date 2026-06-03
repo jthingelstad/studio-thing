@@ -9,4 +9,4 @@ categories: []
 
 We attended our first [St. Olaf Christmas Festival](https://christmas.stolaf.edu) at Orchestra Hall. This year was themed [Love and Joy](https://wp.stolaf.edu/news/st-olaf-celebrates-love-and-joy-with-christmas-festival-at-orchestra-hall). This concert has been held since 1912. The mass choral arrangements with all 500 students were wonderful. [Orchestra Hall](https://en.wikipedia.org/wiki/Orchestra_Hall_(Minneapolis)) was the perfect venue as well.
 
-<img src="https://www.thingelstad.com/uploads/2023/49eeb95eee.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/49eeb95eee.jpg" width="600" height="450" alt="Program for the 111th Annual St. Olaf Christmas Festival at Orchestra Hall in Minneapolis with the Love and Joy stage display lit behind a full audience.">

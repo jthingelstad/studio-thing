@@ -9,4 +9,4 @@ categories: []
 
 MapQuest winning the Internet today with this [name your own gulf](https://gulfof.mapquest.com) site. 🤣
 
-<img src="https://www.thingelstad.com/uploads/2025/440811e889.png" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/440811e889.png" width="600" height="450" alt="MapQuest map showing the Gulf of Mexico renamed Gulf of Thingelstad, surrounded by the US, Mexico, Cuba, and Central America.">

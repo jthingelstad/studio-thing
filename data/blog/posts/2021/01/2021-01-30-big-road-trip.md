@@ -9,7 +9,7 @@ categories: []
 
 Big road trip to Arizona this weekend. Today’s drive is to Elk City, Oklahoma from Minneapolis, Minnesota! **913 miles**, 13 hours, and 5 states. 
 
-<img src="https://www.thingelstad.com/uploads/2021/0c17f66c00.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/0c17f66c00.jpg" width="600" height="600" alt="Map showing driving route from Minneapolis Minnesota to Elk City Oklahoma passing through Iowa Kansas City and Kansas covering 913 miles" />
 
 ### Log
 

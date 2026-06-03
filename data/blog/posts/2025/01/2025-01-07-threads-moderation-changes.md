@@ -26,4 +26,4 @@ I actually temporarily disabled my blocker so I could access this. Text of Zucke
 > 
 > It'll take time to get this all right and these are complex systems so they'll never be perfect. But this is an important step forward and l'm looking forward to this next chapter!
 
-<img src="https://www.thingelstad.com/uploads/2025/threads-zuck.png">
+<img src="https://www.thingelstad.com/uploads/2025/threads-zuck.png" alt="Screenshot of a Threads post thread by user zuck outlining 6 moderation policy changes for Facebook Instagram and Threads">

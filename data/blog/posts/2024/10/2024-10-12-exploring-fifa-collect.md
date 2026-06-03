@@ -4,7 +4,7 @@ url: "https://www.thingelstad.com/2024/10/12/exploring-fifa-collect.html"
 title: "Exploring FIFA Collect"
 published: "2024-10-12T13:43:28+00:00"
 post_kind: post
-categories: ["Sports", "Crypto"]
+categories: ["Crypto"]
 ---
 
 I've been intrigued with [FIFA Collect](https://collect.fifa.com) for a bit. My interest was piqued when I saw that they are dropping collectibles with "Right to Buy" for the 2026 World Cup and I am very hopeful to go to at least a match. I’m guessing tickets will not be easy to get so getting a "Right to Buy" collectible for the city that I want to go to might be really nice.
@@ -13,6 +13,6 @@ This morning I sat down with FIFA Collect and really figured out how it works. I
 
 A few minutes later I purchased my first FIFA collectible on the marketplace, a [World Cup 1994 USA #611](https://collect.fifa.com/collectible/2188101232) poster.
 
-<img src="https://www.thingelstad.com/uploads/2024/world-cup-1994-usa.png" width="600" height="840" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/world-cup-1994-usa.png" width="600" height="840" alt="Commemorative poster for World Cup 1994 USA featuring soccer balls arranged as the digits 1994 floating above a map of the United States on a red and white striped background.">
 
 I can buy some drops and hope I get lucky to find a "right to buy" collectible. Alternatively, there are already collectibles on the marketplace that others are selling with those rights. Right now the cheapest "right to buy" collectibles are selling for around $300.

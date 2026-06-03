@@ -9,4 +9,4 @@ categories: []
 
 Starting my first iOS & iPadOS 15 upgrades! I skip the public betas in large part so I can have the fun of doing big OS upgrades like a present. 🎁
 
-![](https://www.thingelstad.com/uploads/2021/935d9b90e0.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/935d9b90e0.jpg" alt="Three iPhones plugged into cables on a marble surface, each displaying a blue Apple logo with a progress bar on a black screen during an iOS update.">

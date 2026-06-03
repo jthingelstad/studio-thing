@@ -9,4 +9,4 @@ categories: []
 
 9-point turn in ladder golf against [Jim Bernard](https://jimbernard.net) today. 🏆
 
-<img src="https://www.thingelstad.com/uploads/2020/4b6bbd9ecc.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/4b6bbd9ecc.jpg" width="600" height="800" alt="Ladder golf game set standing on green grass in a park, with yellow bolas hanging on the green rung." />

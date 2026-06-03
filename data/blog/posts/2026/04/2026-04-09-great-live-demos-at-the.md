@@ -10,4 +10,4 @@ categories: []
 Great live demos at The Agentic Workflow: A Live Demo of Autonomous Execution Across the
 SDLC from TeamSPS at MnTech Connect. 
 
-<img src="https://www.thingelstad.com/uploads/2026/70ca4f2269.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/70ca4f2269.jpg" width="600" height="337" alt="Audience seated at tables in a conference room watching two presenters at a podium with a projected slide showing headshots and bios.">

@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 This picture captures most of what I’ll remember from yesterday’s Minnesota United game. 🤬⚽️
 
-<img src="https://www.thingelstad.com/uploads/2018/2e6ffb2fe4.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/2e6ffb2fe4.jpg" alt="MLS soccer players in gray and yellow jerseys clustered near the sideline while a referee reviews a VAR monitor at TCF Bank Stadium." width="600" height="337" />

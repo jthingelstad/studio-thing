@@ -9,4 +9,4 @@ categories: []
 
 Going to be covering over 470 miles today. Leaving Jackson, WY and checking in at Mt. Rushmore KOA tonight. We loved our time in the Tetons! 🛣
 
-<img src="https://www.thingelstad.com/uploads/2020/b55c2e8439.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/b55c2e8439.jpg" width="600" height="600" alt="Apple Maps navigation route from Idaho Falls area to Mount Rushmore KOA across Wyoming, with an alternate route shown as 5 minutes slower." />

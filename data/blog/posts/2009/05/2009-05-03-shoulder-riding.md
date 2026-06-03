@@ -9,4 +9,4 @@ categories: []
 
 Shoulder riding.
 
-![](https://www.thingelstad.com/uploads/2020/b87f3c3d3b.png)
+<img src="https://www.thingelstad.com/uploads/2020/b87f3c3d3b.png" alt="Young girl riding on a mans shoulders at an outdoor event with trees and a crowd of people in the background">

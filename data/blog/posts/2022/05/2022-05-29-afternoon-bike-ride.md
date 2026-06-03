@@ -9,4 +9,4 @@ categories: []
 
 Afternoon bike ride to Dairy Queen! Perfect 10-mile round trip with an ice cream in the middle. 
 
-<img src="https://www.thingelstad.com/uploads/2022/40b8974ae2.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/40b8974ae2.jpg" width="600" height="450" alt="Adult in white helmet and sunglasses takes a selfie leading a group of kids on bikes down a tree-lined paved trail." />

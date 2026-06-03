@@ -9,6 +9,6 @@ categories: ["Music"]
 
 [Brandi Carlile](https://www.brandicarlile.com/) closed out Mothership Weekend tonight with an **epic** set. After covering many of the recent top songs on Friday night, tonight they went deep in the catalog with tons of great songs. She also brought tons of guest musicians on the stage with her. This was the kind of performance you cannot see anywhere other than a big multi-day festival like this. Wow! 🎶
 
-<img src="https://www.thingelstad.com/uploads/2023/bfdf6ec4d9.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/bfdf6ec4d9.jpg" width="600" height="337" alt="Large outdoor concert crowd at night waving glowing light sticks toward a brightly lit stage with festival rigging overhead">
 
 See [list of Brandi Carlile shows](https://www.thingelstad.com/lists/brandi-carlile-shows/).

@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Family movie night, [National Treasure 2: Book of Secrets](https://www.imdb.com/title/tt0465234/). Fun movie. Very similar to the [first one](https://www.thingelstad.com/2020/09/06/family-movie-tonight.html).  🍿
 
-<img src="https://www.thingelstad.com/uploads/2020/caf4bf5488.jpg" width="425" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/caf4bf5488.jpg" width="425" height="600" alt="Movie poster for National Treasure 2 Book of Secrets showing a man holding a flaming torch with Big Ben and Eiffel Tower behind him" />

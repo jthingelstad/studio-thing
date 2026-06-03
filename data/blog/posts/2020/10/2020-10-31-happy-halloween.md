@@ -9,4 +9,4 @@ categories: []
 
 Happy Halloween! 🎃
 
-<img src="https://www.thingelstad.com/uploads/2020/5e892c1701.jpg" width="400" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/5e892c1701.jpg" width="400" height="600" alt="Two people in Mario and Donkey Kong costumes pose as if fighting outdoors on a leaf-covered ground in autumn." />

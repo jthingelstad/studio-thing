@@ -9,4 +9,4 @@ categories: []
 
 Monday morning Blue Screen of Death. 
 
-<img src="https://www.thingelstad.com/uploads/2021/4fa3e8fbaa.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/4fa3e8fbaa.jpg" width="600" height="450" alt="LG flat screen TV mounted in a wall niche displaying a Windows Blue Screen of Death error message with stop code 0x000000F4." />

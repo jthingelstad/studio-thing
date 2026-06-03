@@ -9,4 +9,4 @@ categories: []
 
 On Artists Point in Grand Marais. Today’s meditation spot. 
 
-<img src="https://www.thingelstad.com/uploads/2025/b382d37715.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/b382d37715.jpg" width="600" height="450" alt="Rocky shoreline with a lone spruce tree overlooking the deep blue expanse of Lake Superior under a clear sky.">

@@ -9,4 +9,4 @@ categories: []
 
 [Chromatic](https://modretro.com/products/chromatic-tetris-bundle) firmware upgrade to 4.0! I love the retro vibe of the updater app. 🤩
 
-<img src="https://www.thingelstad.com/uploads/2025/9e20fddde5.png" width="600" height="427" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/9e20fddde5.png" width="600" height="427" alt="ModRetro Chromatic system update screen showing firmware v3.2 with v4.0 available, featuring a pixelated yellow Game Boy-style handheld graphic.">

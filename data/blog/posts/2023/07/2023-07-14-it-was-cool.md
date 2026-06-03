@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 It was cool to see UBS prominently marketing their Bitcoin offerings in Zurich airport. 
 
-<img src="https://www.thingelstad.com/uploads/2023/f7f936e036.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/f7f936e036.jpg" width="600" height="337" alt="Bitcoin Suisse branded display signs in Zurich airport terminal with travelers walking in the background.">

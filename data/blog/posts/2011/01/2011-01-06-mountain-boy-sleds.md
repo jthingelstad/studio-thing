@@ -9,6 +9,6 @@ categories: []
 
 The [Mountain Boy Sleds I ordered](https://www.thingelstad.com/2010/12/27/sorry-state-of.html) have arrived. The sled pads are attached and ready to rocket down the sledding hill this weekend.
 
-![](https://www.thingelstad.com/uploads/2020/e092e7a0d8.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/e092e7a0d8.jpg" alt="Long wooden dog sled with red foam pad and red rope handle resting on a snow-covered surface outdoors">
 
-![](https://www.thingelstad.com/uploads/2020/81cc9950cd.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/81cc9950cd.jpg" alt="Wooden Mountain Boy sled with red padded cushion strapped in place, resting on snow outdoors near bare trees.">

@@ -9,4 +9,4 @@ categories: []
 
 Apple Store preparing for Snow Leopard release.
 
-![](https://www.thingelstad.com/uploads/2020/f568894a20.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/f568894a20.jpg" alt="Apple Store interior with darkened windows, a red ladder leaning against the glass facade, and a worker crouching near a bucket on the mall floor.">

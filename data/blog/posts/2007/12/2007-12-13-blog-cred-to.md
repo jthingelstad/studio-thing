@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/00c71e40d8.jpg" style="width: 81px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/00c71e40d8.jpg" alt="Retro-style black and white illustration of a smiling woman with styled hair in a vintage comic art look" style="width: 81px; float: right; margin-left: 10px; " />
 
 My RSS reader is filled with a lot of technology stuff, a variety of Apple websites and a ton of friends that have blogs. I recently subscribed to a new blog that I had to create a new group for. The group is called *Interesting*, and the blog is [Dictionary Evangelist](http://www.dictionaryevangelist.com/).
 

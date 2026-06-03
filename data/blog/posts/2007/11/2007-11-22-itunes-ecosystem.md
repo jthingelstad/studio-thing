@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/2a3773db35.jpg" style="width: 207px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/2a3773db35.jpg" alt="iTunes sidebar showing Library, Store, Devices, Shared, and Playlists sections with multiple connected Apple devices listed" style="width: 207px; float: right; margin-left: 10px; " />
 
 I mentioned in another post how much [I've been enjoying iTunes](https://www.thingelstad.com/2007/11/06/itunes-social-edition.html). A few weeks ago I extended [my Apple TV](https://www.thingelstad.com/2007/03/23/apple-tv-in.html) coverage to the family room and it just hit me as I was looking at my iTunes window how fully evolved the iTunes ecosystem has become. From one application I have all of my music, podcasts, home videos and soon all my DVD's available on iPods, iPhones and couches. This convergence has been promised for so long, and it's great to see it finally delivered.
 

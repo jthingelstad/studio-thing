@@ -9,4 +9,4 @@ categories: []
 
 Outdoor fun at [Central Park Ice Skating Loop](https://www.maplegrovemn.gov/parks-and-recreation/central-park-maple-grove/central-park-ice-skating-loop-trail). ⛸
 
-<img src="https://www.thingelstad.com/uploads/2020/108c346932.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/108c346932.jpg" width="600" height="450" alt="Six people in winter coats and hats leaning on a railing at an outdoor ice skating rink on a sunny day" />

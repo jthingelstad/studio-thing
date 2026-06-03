@@ -9,4 +9,4 @@ categories: []
 
 After dinner at Namir’s we took the Cliff Walk for an evening stroll. 
 
-<img src="https://www.thingelstad.com/uploads/2024/5cc644feca.jpg" width="600" height="450" alt=""><img src="https://www.thingelstad.com/uploads/2024/c432c72992.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/5cc644feca.jpg" width="600" height="450" alt="Family of four smiling at a coastal cliff overlook with rocky sea inlet and green headlands behind them."><img src="https://www.thingelstad.com/uploads/2024/c432c72992.jpg" width="600" height="450" alt="Rocky sea arch rising from green-topped cliffs along an Irish coastline under a cloudy sky">

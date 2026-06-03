@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 MN Twins with #TeamSPS. Great to meet more people at tonight’s Twins event!
 
-<img src="https://www.thingelstad.com/uploads/2020/4fecbe9663.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/4fecbe9663.jpg" width="600" height="450" alt="Packed crowd at Target Field watching a Minnesota Twins baseball game from the upper third-base side seating area at dusk." />

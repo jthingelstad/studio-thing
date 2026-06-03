@@ -15,6 +15,6 @@ When she saw this piece she knew instantly what she wanted done. Here is Tammy's
 
 Here is the sketch that the mural was painted from. This sketch was scanned, blown-up and then projected onto the wall to provide a guide.
 
-![](https://www.thingelstad.com/uploads/2020/43430dff2a.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/43430dff2a.jpg" alt="Child's crayon drawing of a blue dog leaning out the window of a red car driving through a green hilly landscape.">
 
 We absolutely love this. We live with all of our art, but this is part of every day.

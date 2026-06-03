@@ -9,4 +9,4 @@ categories: []
 
 Sauna fired up for a morning sweat. 
 
-<img src="https://www.thingelstad.com/uploads/2025/08767f9c2a.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/08767f9c2a.jpg" width="600" height="450" alt="Harvia wood-burning sauna stove with glowing fire and stones on top, beside split firewood logs on a wooden floor grate.">

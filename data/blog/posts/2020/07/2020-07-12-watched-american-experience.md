@@ -9,4 +9,4 @@ categories: []
 
 Watched [American Experience: Fatal Flood](https://www.pbs.org/wgbh/americanexperience/films/flood/#transcript) this evening. I didn’t know the history of the [Great Mississippi Flood of 1927](https://en.wikipedia.org/wiki/Great_Mississippi_Flood_of_1927) and the terrible racist actions around it. Just 93 years ago…
 
-<img src="https://www.thingelstad.com/uploads/2020/7e1455ec59.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/7e1455ec59.jpg" width="600" height="337" alt="Black flood refugees waiting in a relief line holding plates and bowls at a tent camp, 1927 Mississippi flood" />

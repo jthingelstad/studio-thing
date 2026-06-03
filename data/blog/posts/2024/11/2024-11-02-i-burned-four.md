@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 I burned four of the runes I collected along with 75,000 FOXY to mint my Summoned Fox #9569! Famous Fox Federation is still a super fun NFT project. 
 
-<img src="https://www.thingelstad.com/uploads/2024/e799ba7266.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/e799ba7266.jpg" width="600" height="600" alt="Phone screen showing famousfoxes.com with Fox #9569 Summoned confirmation and a cartoon fox wearing a cap and face mask">

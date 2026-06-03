@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Great #TeamSPS dinner tonight at [Salut](https://salutbaramericain.com) St. Paul – what an awesome group! Good food, company and best of all great laughs! 🤣🙌
 
-<img src="https://www.thingelstad.com/uploads/2018/ae76951531.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2018/ae76951531.jpg" width="600" height="337" alt="Group of about 12 colleagues smiling and laughing around a white-clothed dining table at a restaurant during a holiday season dinner." />

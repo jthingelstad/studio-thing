@@ -11,4 +11,4 @@ Interesting box at [One on One](http://www.oneononebike.com/).
 
 > **GIRLS ONLY - BOYS KEEP OUT!**
 
-![](https://www.thingelstad.com/uploads/2020/b5b75cc5ad.png)
+<img src="https://www.thingelstad.com/uploads/2020/b5b75cc5ad.png" alt="Small gray metal box on a dark floor with stickers reading GIRLS ONLY on top and BOYS KEEP OUT on the front.">

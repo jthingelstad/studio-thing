@@ -9,4 +9,4 @@ categories: []
 
 The SPS Observation Station is ready for Cyber Monday 2024!
 
-<img src="https://www.thingelstad.com/uploads/2024/ff7ed9ad71.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/ff7ed9ad71.jpg" width="600" height="337" alt="Group of people working on laptops in the SPS Observation Station with data dashboards displayed on a large monitor wall.">

@@ -9,4 +9,4 @@ categories: []
 
 Firewood delivery moved and stacked. 🔥
 
-<img src="https://www.thingelstad.com/uploads/2021/a4067cd3f3.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/a4067cd3f3.jpg" width="600" height="337" alt="Two large stacks of split firewood beside bare trees on a gravel shore overlooking a calm river on a clear autumn day." />

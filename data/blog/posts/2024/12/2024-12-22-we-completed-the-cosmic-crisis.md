@@ -9,4 +9,4 @@ categories: []
 
 We completed the [Cosmic Crisis](https://theescapegame.com/escape-rooms/cosmic-crisis/) room at The Escape Game in the Mall of America. **15m 19s** remaining on the clock and **no clues**! [Room 59](https://www.thingelstad.com/lists/escape-rooms/)!
 
-<img src="https://www.thingelstad.com/uploads/2024/8f5471c357.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/8f5471c357.jpg" width="450" height="600" alt="Four people in Christmas sweaters and holiday shirts posing inside a sci-fi themed escape game room with neon lighting.">

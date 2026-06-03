@@ -9,4 +9,4 @@ categories: []
 
 Now that is a big tree! Gaylord Opryland Resort. 🎄
 
-<img src="https://www.thingelstad.com/uploads/2025/9ced9ec36c.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/9ced9ec36c.jpg" width="450" height="600" alt="Massive decorated Christmas tree inside a glass-roofed atrium surrounded by palm trees, adorned with red ornaments, snowflakes, and gifts.">

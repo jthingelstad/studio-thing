@@ -9,4 +9,4 @@ categories: []
 
 Checking out [iFly Indoor Skydiving](https://www.iflyworld.com). Wow! 
 
-<img src="https://www.thingelstad.com/uploads/2019/170a055b2a.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/170a055b2a.jpg" width="450" height="600" alt="Three people in helmets and flight suits float inside an iFly indoor skydiving wind tunnel as spectators watch." />

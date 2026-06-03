@@ -9,4 +9,4 @@ categories: []
 
 [St Volodymyr's Cathedral](https://en.wikipedia.org/wiki/St_Volodymyr%27s_Cathedral) in Kyiv, Ukraine. 
 
-<img src="https://www.thingelstad.com/uploads/2018/2d00c683ef.jpg" width="600" height="598" />
+<img src="https://www.thingelstad.com/uploads/2018/2d00c683ef.jpg" alt="St Volodymyrs Cathedral in Kyiv illuminated at dusk, its golden dome and yellow brick facade glowing behind bare trees and a iron fence." width="600" height="598" />

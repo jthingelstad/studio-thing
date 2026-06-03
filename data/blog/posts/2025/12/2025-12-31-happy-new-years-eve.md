@@ -9,4 +9,4 @@ categories: []
 
 Happy New Year’s Eve! 🥂
 
-<img src="https://www.thingelstad.com/uploads/2026/6a039324b4.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/6a039324b4.jpg" width="450" height="600" alt="Two people smiling in front of a decorated Christmas tree, wearing festive green and floral holiday attire.">

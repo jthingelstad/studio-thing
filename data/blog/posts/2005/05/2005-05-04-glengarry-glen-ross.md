@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/2ce7bcbc20.jpg" style="width: 130px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/2ce7bcbc20.jpg" alt="Movie poster for Glengarry Glen Ross showing two hands in a handshake and the tagline Lie. Cheat. Steal. All in a days work." style="width: 130px; float: right; margin-left: 10px; " />
 
 Last night I saw the new production of [Glengarry Glen Ross at the Royale Theatre on Broadway](http://www.broadway.com/gen/show.aspx?SI=503835). We went with a small group from the office and had a nice dinner at [Carmine's](http://www.carminesnyc.com/) before going to the play. Before I talk about the play let me make it clear that I *absolutely love Glengarry!* My first exposure to Glengarry, and [David Mamet](http://home.comcast.net/~jason-charnick/mamet.html) for that matter, was from the [1992 James Foley movie version of the play](http://www.imdb.com/title/tt0104348/). The first time I saw this movie was an amazing experience. It was similar to watching [The Godfather](http://www.imdb.com/title/tt0068646/), or [Apocalypse Now](http://www.imdb.com/title/tt0078788/). I was amazed by Mamet. I was amazed by the acting. The movie contains what I seriously believe is one of the most amazing casts *ever* put together for a movie. Jack Lemmon. Al Pacino. Ed Harris. Kevin Spacey. Alec Baldwin. Alan Arkin. The cast is explosive, committed to the movie. It's stunning to watch.
 

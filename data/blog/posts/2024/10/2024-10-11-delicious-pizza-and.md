@@ -9,4 +9,4 @@ categories: []
 
 Delicious pizza and beer at [Ursa Minor Brewing](https://www.ursaminorbrewing.com) tonight in Duluth. 
 
-<img src="https://www.thingelstad.com/uploads/2024/0bc008447a.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/0bc008447a.jpg" width="600" height="450" alt="Crowded outdoor patio of Ursa Minor Brewing at night with string lights and patrons seated at tables on gravel.">

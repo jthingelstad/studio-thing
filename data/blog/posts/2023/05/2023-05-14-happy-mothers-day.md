@@ -9,4 +9,4 @@ categories: []
 
 **Happy Mother’s Day** from Brandi Carlile’s Mothership Weekend in Miramar Beach, FL!
 
-<img src="https://www.thingelstad.com/uploads/2023/75b784109c.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/75b784109c.jpg" width="450" height="600" alt="Woman with two children standing on a wooden boardwalk surrounded by palm trees in Miramar Beach FL">

@@ -9,4 +9,4 @@ categories: []
 
 We have arrived in Venice! 🤩
 
-<img src="https://www.thingelstad.com/uploads/2023/83f5ee1e23.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/83f5ee1e23.jpg" width="600" height="450" alt="Two people smiling for a selfie on a bridge over a Venice canal with moored boats and brick buildings behind them.">

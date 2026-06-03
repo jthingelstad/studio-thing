@@ -8,4 +8,4 @@ categories: ["Crypto", "POAP Claims"]
 ---
 
 <p>POAP <a href="https://collectors.poap.xyz/token/6624958">6624958</a> at <strong><a href="https://poap.gallery/drops/115418">I've met Jesus during April 2023</a></strong>.</p>
-<img src="https://www.thingelstad.com/uploads/2025/92582d45-efd7-48f8-b01c-6464f92dc747.png" width="500" height="500" />
+<img src="https://www.thingelstad.com/uploads/2025/92582d45-efd7-48f8-b01c-6464f92dc747.png" alt="Man with blue mirrored aviator sunglasses and red Cuba shirt holding a glass of whiskey with citrus peel inside" width="500" height="500" />

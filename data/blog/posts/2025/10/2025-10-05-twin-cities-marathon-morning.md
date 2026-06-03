@@ -9,4 +9,4 @@ categories: []
 
 Twin Cities Marathon morning!
 
-<img src="https://www.thingelstad.com/uploads/2025/4b2b5084e5.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/4b2b5084e5.jpg" width="600" height="450" alt="Runners in a road race pass through a tree-lined park path as a spectator stands beside a portable Bluetooth speaker on the curb.">

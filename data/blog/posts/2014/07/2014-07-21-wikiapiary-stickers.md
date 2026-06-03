@@ -11,4 +11,4 @@ categories: []
 
 If you want one for your laptop or whatever send me a note and I'll put one in the mail.
 
-![](https://www.thingelstad.com/uploads/2020/354ee69013.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/354ee69013.jpg" alt="Dozens of small cartoon bumblebee stickers scattered across a sunflower-patterned background with yellow petals and brown centers.">

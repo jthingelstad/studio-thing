@@ -19,4 +19,4 @@ We are 38% above normal precipitation levels. We've had 5 days with more than 1"
 
 This is why our sump system has been working overtime all summer! [Data from Minnesota DNR](https://www.dnr.state.mn.us/climate/climate_monitor/precipcharts.html).
 
-<img src="https://www.thingelstad.com/uploads/2024/c7cc918c56.png" width="600" height="487" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/c7cc918c56.png" width="600" height="487" alt="Line chart showing 2024 Minneapolis precipitation at 28.26 inches through August 11, well above the 20.49 inch normal and near the 1892 record of 31.23 inches.">

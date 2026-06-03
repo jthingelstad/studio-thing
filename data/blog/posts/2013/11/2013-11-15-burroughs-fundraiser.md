@@ -9,12 +9,12 @@ categories: []
 
 Burroughs Fundraiser for Mazie’s school. Fun event!
 
-<img src="https://www.thingelstad.com/uploads/2019/3b28e6b1c9.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/3b28e6b1c9.jpg" width="600" height="450" alt="Crowded indoor fundraiser event with guests mingling under chandeliers and draped fabric, purple stage lights in background">
 
 Live auction time. Be careful about raising hand for photo. 😀
 
-<img src="https://www.thingelstad.com/uploads/2019/0984435cb9.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/0984435cb9.jpg" width="600" height="450" alt="Crowded indoor fundraiser event with a presenter on stage beside a projected slideshow screen, chandeliers overhead">
 
 Daft Punk “Get Lucky” good Burroughs fundraiser tonight.
 
-<img src="https://www.thingelstad.com/uploads/2019/1c19b75b69.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/1c19b75b69.jpg" width="600" height="450" alt="Crowded nightclub fundraiser event with blue stage lighting, chandeliers, and colorful projected artwork on the walls">

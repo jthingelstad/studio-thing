@@ -4,12 +4,12 @@ url: "https://www.thingelstad.com/2017/12/05/removed-google-analytics.html"
 title: "Removed Google Analytics"
 published: "2017-12-06T02:45:45+00:00"
 post_kind: post
-categories: ["Coffee"]
+categories: []
 ---
 
 I've never desired to put a lot of tracking code on my websites, but I had left Google Analytics. I've decided to remove that too. In fact, I've removed all third party resources. You can check for yourself by using Ghostery and going to my sites.
 
-<img src="https://www.thingelstad.com/uploads/2020/7fabbf0f01.png" width="335" height="409" style="max-width: 335px;" />
+<img src="https://www.thingelstad.com/uploads/2020/7fabbf0f01.png" alt="Ghostery browser extension popup showing 0 trackers found on thingelstad.com with Pause Blocking and Whitelist Site buttons" width="335" height="409" style="max-width: 335px;" />
 
 While I found the information on what you all read and look at interesting, there are three primary reasons I've done this.
 

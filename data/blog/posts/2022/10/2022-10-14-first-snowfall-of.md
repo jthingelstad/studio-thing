@@ -9,4 +9,4 @@ categories: []
 
 First snowfall of 2022 on October 14th. It will all melt, but it is still a fun sight. Minneapolis, MN. ❄️
 
-<img src="https://www.thingelstad.com/uploads/2022/7fe91504eb.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2022/7fe91504eb.jpg" width="600" height="450" alt="Snow-dusted evergreen shrubs and autumn-colored trees lining a residential street in Minneapolis with houses and parked cars visible.">

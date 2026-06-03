@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 Delicious pull of espresso to start the day.
 
-<img src="https://www.thingelstad.com/uploads/2023/img-1917.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/img-1917.jpg" width="600" height="600" alt="Espresso pulling from a portafilter into a small illy coffee cup on a stainless steel drip tray of an espresso machine.">

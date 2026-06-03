@@ -9,4 +9,4 @@ categories: []
 
 Sunset on Lake Champlain from the Burlington lakefront.
 
-<img src="https://www.thingelstad.com/uploads/2025/7e63d0076a.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/7e63d0076a.jpg" width="600" height="450" alt="Sailboats and motorboats docked at a marina under a pink and purple sunset sky reflected in calm water.">

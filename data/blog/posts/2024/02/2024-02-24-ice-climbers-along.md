@@ -9,4 +9,4 @@ categories: []
 
 Ice Climbers along the Cascade River. 
 
-<img src="https://www.thingelstad.com/uploads/2024/00342c40a4.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/00342c40a4.jpg" width="450" height="600" alt="Two climbers on a frozen waterfall along a rocky canyon wall in winter, one ascending with ice axes, one belaying below.">

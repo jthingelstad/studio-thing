@@ -9,4 +9,4 @@ categories: []
 
 This [Pomegranate Gimlet](https://www.startribune.com/5-small-batch-cocktails-to-toast-the-holidays-even-if-you-aren-t-gathering/573114581/) may be one of my favorite new drinks! Delicious! 🍸
 
-<img src="https://www.thingelstad.com/uploads/2020/a8aa2fc07b.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/a8aa2fc07b.jpg" width="600" height="600" alt="Two pomegranate gimlet cocktails in martini glasses beside a measuring pitcher on a white counter with a lit Christmas tree in the background." />

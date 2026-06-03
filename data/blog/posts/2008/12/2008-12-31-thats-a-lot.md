@@ -9,4 +9,4 @@ categories: []
 
 That’s a lot of AirTunes!
 
-<img src="https://www.thingelstad.com/uploads/2020/d0ce78391e.png" style="max-width: 320px; " />
+<img src="https://www.thingelstad.com/uploads/2020/d0ce78391e.png" alt="iPhone screenshot showing AirTunes speaker selection with Bedroom Speakers checked, plus Bedroom TV, Deck Speakers, Family Room TV, Living Room Speakers, and Living Room TV listed, playing Coldplay" style="max-width: 320px; " />

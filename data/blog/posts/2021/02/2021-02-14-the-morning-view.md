@@ -9,4 +9,4 @@ categories: []
 
 The morning view from the Art Loft Airbnb in Joshua Tree, California. Inspiring. 
 
-<img src="https://www.thingelstad.com/uploads/2021/c311420505.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/c311420505.jpg" width="600" height="337" alt="Interior of a mid-century modern home in Joshua Tree with floor-to-ceiling sliding glass doors opening to a desert patio with red and teal Acapulco chairs" />

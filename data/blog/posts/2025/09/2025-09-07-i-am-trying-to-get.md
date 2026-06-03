@@ -9,4 +9,4 @@ categories: []
 
 I am trying to get every possible Peach I can as the season winds down. The Colorado Mountain Gold peaches that Tammy’s Mom gets from [BoB’s Produce](https://bobsproduce.com) are heaven. 🍑
 
-<img src="https://www.thingelstad.com/uploads/2025/114c8f15ae.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/114c8f15ae.jpg" width="600" height="600" alt="Peeled and sliced yellow peach wedges on a patterned plate with a paring knife and discarded peach skin nearby.">

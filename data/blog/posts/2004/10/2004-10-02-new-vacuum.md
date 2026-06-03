@@ -11,7 +11,7 @@ Having your own website is pretty fun. You get to be your own editor and can dec
 
 You may think that getting a new vacuum cleaner would be the pinnacle example of such trivial nonsense that has no place being shared with others around the world. It's just a vacuum cleaner! Who cares!? Really. Get over it.
 
-<img src="https://www.thingelstad.com/uploads/2020/f534dabf40.jpg" style="width: 78px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/f534dabf40.jpg" alt="Purple Dyson DC07 Animal upright vacuum cleaner with clear canister and silver accents standing upright" style="width: 78px; float: right; margin-left: 10px; " />
 
 Well, I'm telling you, this is not just a vacuum cleaner. This is a miracle machine. It sucks dirt and cat hair with an efficiency that brings a tear to your eye. It leaves a visibly cleaner and more enticing carpet in it's trail. It is the [Dyson DC07 Animal](http://www.dyson.com/range/feature_frame.asp?model=DC07-ANIMAL).
 

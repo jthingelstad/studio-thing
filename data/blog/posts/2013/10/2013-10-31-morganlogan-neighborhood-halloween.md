@@ -9,7 +9,7 @@ categories: []
 
 Morgan-Logan neighborhood Halloween block party.
 
-<img src="https://www.thingelstad.com/uploads/2019/701438d7a9.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/701438d7a9.jpg" width="600" height="450" alt="Crowd of adults and children in Halloween costumes gathered on a residential street lined with fall foliage at dusk.">
 
 First time experimenting with leaving a bowl of candy out with “take 2” sign results on all candy gone after 1 hour.
 

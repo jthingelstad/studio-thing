@@ -15,4 +15,4 @@ The movie tells the story of Arj who is struggling to get by and living out of h
 
 We both gave it ★★★★ and enjoyed the quirky and funny takes while telling a meaningful story.
 
-<img src="https://www.thingelstad.com/uploads/2025/593364ba0e.jpg" width="405" height="600" alt=""><img src="https://www.thingelstad.com/uploads/2025/2cf4acb5af.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/593364ba0e.jpg" width="405" height="600" alt="Movie poster for Good Fortune showing five cast members with one man wearing angel wings, releasing October 17"><img src="https://www.thingelstad.com/uploads/2025/2cf4acb5af.jpg" width="600" height="450" alt="Hand holding a Twin Cities Film Fest 2025 Audience Award Ballot for the feature film Good Fortune directed by Aziz Ansari, with the festival screen visible behind it.">

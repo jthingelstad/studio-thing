@@ -9,6 +9,6 @@ categories: []
 
 I queued up with the newest [High Kings](https://www.thehighkings.com) vinyl and got it signed after the show. 
 
-<img src="https://www.thingelstad.com/uploads/2024/7167b7adf7.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/7167b7adf7.jpg" width="600" height="450" alt="Four members of The High Kings signing vinyl records and CDs at a table after a show.">
 
-<img src="https://www.thingelstad.com/uploads/2024/21f16ce229.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/21f16ce229.jpg" width="600" height="600" alt="Signed vinyl record cover for The High Kings album The Road Not Taken, with four band member autographs, resting on a wood floor.">

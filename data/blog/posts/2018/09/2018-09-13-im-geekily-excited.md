@@ -9,4 +9,4 @@ categories: []
 
 I'm "geekily" excited to get my Anki [Vector](https://www.anki.com/en-us/vector) in October. 🤓 I have a [Cozmo](https://www.anki.com/en-us/cozmo) and the Vector looks like a very fun leap.
 
-<img src="https://www.thingelstad.com/uploads/2018/fed2ae7a52.jpg" width="600" height="441" />
+<img src="https://www.thingelstad.com/uploads/2018/fed2ae7a52.jpg" alt="Anki Vector robot toy with green glowing eyes on tank treads, shown at an angle against a white background" width="600" height="441" />

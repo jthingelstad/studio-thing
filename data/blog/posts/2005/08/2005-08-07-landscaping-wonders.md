@@ -11,8 +11,8 @@ Last year we had the landscaping in front of our house redone completely. We use
 
 Before, our landscaping was boring and dull. When we sat down with our landscaper she said that with our native plantings we would get a lot of birds and butterflies visiting us. We certainly haven't been let down. We've got a constant array of visitors gracing us with their presence. I love it. See photos with bees harvesting pollen, a great yellow bird that visits us often and a huge monarch butterfly that stopped by.
 
-<img src="https://www.thingelstad.com/uploads/2023/d83a84a5c8.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/d83a84a5c8.jpg" width="600" height="600" alt="Two bumblebees collecting pollen from bright yellow daisy-like native flowers blooming in a sunny garden beside a house.">
 
-<img src="https://www.thingelstad.com/uploads/2023/289e897535.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/289e897535.jpg" width="600" height="600" alt="American Goldfinch perched on a green plant stem among buds and leaves in a garden">
 
-<img src="https://www.thingelstad.com/uploads/2023/598bd7f88b.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/598bd7f88b.jpg" width="600" height="600" alt="Eastern tiger swallowtail butterfly feeding on yellow native wildflowers growing near a house exterior">

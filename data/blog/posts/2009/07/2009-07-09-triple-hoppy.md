@@ -9,4 +9,4 @@ categories: []
 
 Triple Hoppy!
 
-![](https://www.thingelstad.com/uploads/2020/4cee6a5053.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/4cee6a5053.jpg" alt="Bottle of Moylans Hopsickle Imperial Triple Hoppy Ale resting in a bowl of ice on a granite countertop">

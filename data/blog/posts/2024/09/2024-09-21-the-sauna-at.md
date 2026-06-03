@@ -9,4 +9,4 @@ categories: []
 
 The sauna at [Quarterdeck Resort](https://quarterdeckresort.com) is incredible. Enjoyed a couple of cycles through here on our stay.
 
-<img src="https://www.thingelstad.com/uploads/2024/112359e995.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/112359e995.jpg" width="600" height="450" alt="Wooden sauna interior with tiered benches, a heated rock stove, and large windows overlooking a resort pool deck on a sunny day.">

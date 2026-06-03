@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 This [Mini Kubb](https://shop.minibeerpong.com/products/mini-kubb) set is a kick, although pretty impossible to play, but still fun!
 
-<img src="https://www.thingelstad.com/uploads/2018/ef46016af0.jpg" width="600" height="450" />
+<img src="https://www.thingelstad.com/uploads/2018/ef46016af0.jpg" alt="Mini Kubb tabletop game branded with Smartsheet logo, wooden field with green felt and small wooden block pieces on a gray table" width="600" height="450" />

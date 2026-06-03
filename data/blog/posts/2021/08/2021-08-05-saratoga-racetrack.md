@@ -4,12 +4,12 @@ url: "https://www.thingelstad.com/2021/08/05/saratoga-racetrack.html"
 title: "Saratoga Racetrack"
 published: "2021-08-05T22:49:59+00:00"
 post_kind: post
-categories: ["Family"]
+categories: []
 ---
 
 We went to the horse track today! 💸
 
-![](https://www.thingelstad.com/uploads/2021/02be34b50d.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/02be34b50d.jpg" alt="Stone entrance sign reading Historic Saratoga Race Course Established 1864 July 15 September 6 flanked by red and white flowers">
 
 We've been to [Canterbury Park](https://www.canterburypark.com) with the kids and have had fun. [Saratoga](https://www.saratogaracetrack.com/about/) however is much, much bigger. It took us a while to just figure out where to go and sit. Then it took us a while to figure out how to read everything and understand how it all worked. But, after a bit we mostly got the hang of it. By the end I felt confident to go up to the betting stands and say stuff like "$10 on 5 to place". Careful reading of the program was a big help. 
 
@@ -37,8 +37,8 @@ Tammy bet on Life on Top to win.
 Jamie bet on Landbiscuit 7 to place.
 
 
-![](https://www.thingelstad.com/uploads/2021/37b3d1bf0c.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/37b3d1bf0c.jpg" alt="Horse race in progress on the grass turf at Saratoga with a pack of jockeys mid-race, odds board and scoreboard visible, spectators lining the rail below.">
 
-![](https://www.thingelstad.com/uploads/2021/62b636c86a.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/62b636c86a.jpg" alt="horses racing on the grass turf at Saratoga with a large odds scoreboard and crowd of spectators watching in the foreground">
 
-![](https://www.thingelstad.com/uploads/2021/dbe196eef5.jpg)
+<img src="https://www.thingelstad.com/uploads/2021/dbe196eef5.jpg" alt="Horses and jockeys racing on the turf course at Saratoga during Race 7 as spectators watch from the rail, with the odds board showing BABE as unofficial winner.">

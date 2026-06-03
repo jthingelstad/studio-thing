@@ -9,4 +9,4 @@ categories: []
 
 I didn't do that much when I was in the hospital but I did watch Inside the Manosphere. Such a cynical and manipulative set of "influencers".
 
-<img src="https://www.thingelstad.com/uploads/2026/8dfcebcb46.jpg" width="480" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/8dfcebcb46.jpg" width="480" height="600" alt="Netflix documentary poster for Louis Theroux Inside the Manosphere showing a bespectacled man held in a headlock by muscular arms">

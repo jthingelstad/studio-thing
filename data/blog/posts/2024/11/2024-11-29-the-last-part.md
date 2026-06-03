@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 The last part of our day-after Thanksgiving tradition is watching [Elf](https://en.wikipedia.org/wiki/Elf_(film))! What a great movie! 🎬🎄
 
-<img src="https://www.thingelstad.com/uploads/2024/4f60c4c3d1.jpg" width="600" height="337" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/4f60c4c3d1.jpg" width="600" height="337" alt="Person in green elf costume and yellow tights facing an animated snowman character in a snowy North Pole scene with pine trees">

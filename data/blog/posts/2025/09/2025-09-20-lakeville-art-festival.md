@@ -31,4 +31,4 @@ Some artists that caught our eyes:
 - [Ed Lefto](https://eddiesartwork.com): We purchased one of his birdhouses. (the URL is there, but no website)
 
 
-<img src="https://www.thingelstad.com/uploads/2025/7c8bab1931.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/7c8bab1931.jpg" width="600" height="450" alt="Outdoor art festival with white vendor tents lining a grassy walkway, crowds of visitors browsing artwork beside a brick church building">

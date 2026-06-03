@@ -10,4 +10,4 @@ categories: []
 Stellar pulled pork sandwich with muenster cheese on Texas toast at The
 Old Fashioned in Madison.
 
-![](https://www.thingelstad.com/uploads/2020/9569a3a4bb.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/9569a3a4bb.jpg" alt="Pulled pork sandwich with muenster cheese on Texas toast served with tater tots on a white plate">

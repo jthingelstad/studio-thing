@@ -9,4 +9,4 @@ categories: []
 
 Ready for some campfires!
 
-<img src="https://www.thingelstad.com/uploads/2021/3d5ae6ed44.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/3d5ae6ed44.jpg" width="600" height="450" alt="Neatly stacked split firewood logs on a metal rack against a weathered wooden fence outdoors." />

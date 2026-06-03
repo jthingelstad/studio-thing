@@ -9,4 +9,4 @@ categories: []
 
 First round of Smashburgers on the flat top for 2023! 🍔🍔🍔
 
-<img src="https://www.thingelstad.com/uploads/2023/1ebf2858e5.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/1ebf2858e5.jpg" width="450" height="600" alt="Man in plaid shirt and black apron cooking cheeseburgers on a flat top grill on a backyard deck surrounded by trees.">

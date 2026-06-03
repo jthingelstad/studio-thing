@@ -9,4 +9,4 @@ categories: []
 
 [Burch](https://www.burchrestaurant.com) Old Fashioned. 🥃
 
-<img src="https://www.thingelstad.com/uploads/2019/e646b7e3b0.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/e646b7e3b0.jpg" width="600" height="600" alt="Old Fashioned cocktail with ice, a cherry, and an orange peel garnish on a dark wood bar, wine glass and water glass behind it." />

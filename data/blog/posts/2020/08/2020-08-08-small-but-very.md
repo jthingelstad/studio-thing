@@ -9,4 +9,4 @@ categories: []
 
 Small but very intense storm coming through. Major thunder cracks. ⚡️⛈
 
-<img src="https://www.thingelstad.com/uploads/2020/a554ce0add.jpg" width="599" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/a554ce0add.jpg" width="599" height="600" alt="Radar map showing intense storm cell over Faribault and Owatonna Minnesota with deep red and orange reflectivity and lightning strike indicators" />

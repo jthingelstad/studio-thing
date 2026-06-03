@@ -9,4 +9,4 @@ categories: []
 
 [World’s Best Donuts](https://worldsbestdonutsmn.com) in Grand Marais. Pro tip: you can order the night before and skip the line entirely!
 
-<img src="https://www.thingelstad.com/uploads/2024/f9ceb04614.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/f9ceb04614.jpg" width="600" height="450" alt="Three people smile outside World's Best Donuts in Grand Marais holding donuts and a donut box.">

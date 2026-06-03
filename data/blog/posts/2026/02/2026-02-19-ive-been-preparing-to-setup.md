@@ -9,4 +9,4 @@ categories: []
 
 I’ve been preparing to setup [OpenClaw](https://openclaw.ai). I decided my agents name will be Otto. **Otto Thing**. 
 
-<img src="https://www.thingelstad.com/uploads/2026/6e808572e2.jpg" width="518" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/6e808572e2.jpg" width="518" height="600" alt="iPhone contact card for Otto Thing showing message, call, video, and mail action buttons on a blue cosmic swirl background">

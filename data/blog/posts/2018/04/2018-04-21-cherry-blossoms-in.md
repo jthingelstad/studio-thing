@@ -9,4 +9,4 @@ categories: []
 
 Cherry Blossoms in Kyiv.
 
-![](https://www.thingelstad.com/uploads/2020/cf28f8c515.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/cf28f8c515.jpg" alt="Crowd of people strolling along a park path lined with blooming white and pink cherry blossom trees in spring">

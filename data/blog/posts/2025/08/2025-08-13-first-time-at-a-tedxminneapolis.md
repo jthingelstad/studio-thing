@@ -9,4 +9,4 @@ categories: []
 
 First time at a [TEDxMinneapolis](https://www.tedxminneapolis.com) event! Looking forward to tonight’s speakers at Orchesta Hall. 
 
-<img src="https://www.thingelstad.com/uploads/2025/8667e129e9.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/8667e129e9.jpg" width="600" height="450" alt="Audience seated in Orchestra Hall facing a TEDxMinneapolis stage with a large screen displaying the theme Life Rewritten.">

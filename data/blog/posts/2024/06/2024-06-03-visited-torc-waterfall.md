@@ -9,4 +9,4 @@ categories: []
 
 Visited [Torc Waterfall](https://en.wikipedia.org/wiki/Torc_Waterfall), fairly crowded. Then walked all the stairs to the top, less crowded. Nice hike. 
 
-<img src="https://www.thingelstad.com/uploads/2024/bf861ad46d.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/bf861ad46d.jpg" width="450" height="600" alt="Torc Waterfall cascading over mossy rocks through dense green forest into a rocky stream below">

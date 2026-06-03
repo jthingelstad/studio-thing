@@ -9,4 +9,4 @@ categories: []
 
 Sunset on Cannon Lake. 
 
-<img src="https://www.thingelstad.com/uploads/2021/6ac08c5f58.jpg" width="600" height="337" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/6ac08c5f58.jpg" width="600" height="337" alt="Sunset over Cannon Lake with glowing orange sky reflecting on gently rippling water and a dark tree-lined horizon." />

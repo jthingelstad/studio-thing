@@ -9,4 +9,4 @@ categories: ["Crypto"]
 
 Bitcoin crossed $100,000 USD for the first time ever on December 4, 2024!
 
-<img src="https://www.thingelstad.com/uploads/2024/60ba9d9741.png" width="600" height="400" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/60ba9d9741.png" width="600" height="400" alt="Bitcoin price chart from CoinMarketCap showing BTC rising from around 95,000 USD on Dec 4 to over 103,000 USD by Dec 5 2024">

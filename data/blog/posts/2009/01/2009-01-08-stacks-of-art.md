@@ -9,4 +9,4 @@ categories: []
 
 Stacks of art.
 
-![](https://www.thingelstad.com/uploads/2020/39b0acbc70.png)
+<img src="https://www.thingelstad.com/uploads/2020/39b0acbc70.png" alt="Multiple colorful paintings and canvases leaning against a red sofa in a room, with a small yellow toy house on a table nearby.">

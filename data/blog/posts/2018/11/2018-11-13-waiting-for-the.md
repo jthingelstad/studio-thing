@@ -9,4 +9,4 @@ categories: []
 
 Waiting for the sun to come up at Paris CDG. ✈️
 
-<img src="https://www.thingelstad.com/uploads/2018/63c947b7ef.jpg" width="600" height="337" />
+<img src="https://www.thingelstad.com/uploads/2018/63c947b7ef.jpg" alt="Air France jet docked at a gate at Paris CDG airport at dawn, ground crew and cargo vehicles active on the wet tarmac." width="600" height="337" />

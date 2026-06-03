@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 End of day #TeamSPS photo at [MnTech](https://mntech.org) **[Tech Connect 2025](https://mntech.org/tech-connect-2025/)**. Sitting in the chair was by popular demand. 😬😊
 
-<img src="https://www.thingelstad.com/uploads/2025/caa3dea17e.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/caa3dea17e.jpg" width="600" height="450" alt="Group of about 14 colleagues posing together indoors at a conference, some standing, some kneeling, one seated in a chair at center front.">

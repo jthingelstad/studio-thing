@@ -9,4 +9,4 @@ categories: ["Coffee"]
 
 First espresso gorgeous.
 
-<img src="https://www.thingelstad.com/uploads/2024/img-8548.jpeg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/img-8548.jpeg" width="600" height="450" alt="Espresso pouring from a double spout into a white illy cup on a stainless steel espresso machine drip tray.">

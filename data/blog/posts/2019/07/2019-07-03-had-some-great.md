@@ -9,4 +9,4 @@ categories: []
 
 Had some great pizza at [Red Barn Farm](http://www.redbarnfarmofnorthfield.com) in Northfield tonight! Great to sit in the shade, relax and have a couple slices. 
 
-<img src="https://www.thingelstad.com/uploads/2019/208e638646.jpg" width="600" height="599" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/208e638646.jpg" width="600" height="599" alt="Crowd of people gathered outside a red barn building with a covered porch, trees providing shade on a sunny summer evening." />

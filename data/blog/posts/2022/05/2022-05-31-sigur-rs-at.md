@@ -11,4 +11,4 @@ We saw [Sigur Rós](https://sigurros.com) at the [State Theatre](https://hennepi
 
 I enjoy their music but with every album it seems to get more "ethereal" or even ambient, and slow. Their newest work is a far leap from that 2008 album. It is good, but I wouldn't mind if they picked up the pace on some of the newer albums. 
 
-<img src="https://www.thingelstad.com/uploads/2022/852a85f03b.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/852a85f03b.jpg" width="600" height="450" alt="Band performing on a dramatically lit ornate theater stage with geometric light installations, audience seated in darkened hall below." />

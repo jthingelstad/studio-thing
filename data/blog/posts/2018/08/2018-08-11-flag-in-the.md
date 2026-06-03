@@ -9,4 +9,4 @@ categories: []
 
 Flag in the Wind. 🇺🇸
 
-![](https://www.thingelstad.com/uploads/2020/1f83af5fe1.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/1f83af5fe1.jpg" alt="American flag waving in the wind from a boat on a lake with a tree-lined shore in the background.">

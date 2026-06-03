@@ -9,4 +9,4 @@ categories: []
 
 Return visit to [Day Block Brewing](https://www.dayblockbrewing.com) for some more delicious pizza! Plus pint of Frühlingsfest!
 
-<img src="https://www.thingelstad.com/uploads/2020/9f4517167b.jpg" width="600" height="800" alt="" />
+<img src="https://www.thingelstad.com/uploads/2020/9f4517167b.jpg" width="600" height="800" alt="Pint glass of amber beer from Day Block Brewing Company sitting on a wooden table inside the brewery taproom." />

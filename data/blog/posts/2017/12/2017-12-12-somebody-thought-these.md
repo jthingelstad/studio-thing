@@ -9,4 +9,4 @@ categories: []
 
 Somebody thought these red sunglasses with flashing lights were a good idea? 😕
 
-<img src="https://www.thingelstad.com/uploads/2017/1e265c857e.jpg" width="600" height="600" />
+<img src="https://www.thingelstad.com/uploads/2017/1e265c857e.jpg" alt="Two men wearing novelty red LED light-up sunglasses, posing indoors with deadpan expressions." width="600" height="600" />

@@ -9,4 +9,4 @@ categories: []
 
 Serpent sculpture by Serpent Lake in Crosby. 
 
-<img src="https://www.thingelstad.com/uploads/2024/215f17b9cb.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/215f17b9cb.jpg" width="600" height="450" alt="Large green serpent sculpture on a blue pedestal beside Serpent Lake in Crosby Minnesota on a sunny day.">

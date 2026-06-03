@@ -9,4 +9,4 @@ categories: []
 
 In our chat room today TeamSPS decided I needed some Christmas cheer! 🎄 😎 
 
-<img src="https://www.thingelstad.com/uploads/2017/2a9503caf9.jpg" width="600" height="372" />
+<img src="https://www.thingelstad.com/uploads/2017/2a9503caf9.jpg" alt="Man wearing a red plaid shirt and a red Santa hat with the text Ho Ho Ho beside him" width="600" height="372" />

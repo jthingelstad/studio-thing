@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Let’s go United! Playing Houston Dynamo tonight. Storm has passed but “[Dark Clouds](https://www.dark-clouds.com)” still present. ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2025/6c80ef6e99.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/6c80ef6e99.jpg" width="600" height="450" alt="Four Minnesota United fans pose for a selfie outside Allianz Field before a match, wearing team jerseys, scarves, and caps.">

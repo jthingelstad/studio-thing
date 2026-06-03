@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/28b796b4ba.png" style="width: 75px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/28b796b4ba.png" alt="Isometric illustration of two tall glass skyscraper towers on a green city block against a light blue sky." style="width: 75px; float: right; margin-left: 10px; " />
 
 I realize that I'm probably on the verge (or well past the point) of being considered a [37 Signals](http://www.37signals.com/) "[fanboi](http://en.wikipedia.org/wiki/Fanboy)". I've written already about [how much I like Backpack](https://www.thingelstad.com/2007/01/23/fanatical-about-backpack.html). I still use it every single day, it's one of very few things I pay a monthly fee for and never regret it. It is my homepage on all my personal computers. A few weeks ago when I started seeing some of the early information on [Highrise](http://www.highrisehq.com/) I was rather dismissive of it. It seemed like a streamlined, "[kiss](http://en.wikipedia.org/wiki/KISS_principle)" version of [Salesforce.com](http://www.salesforce.com/). I figure I didn't have a need for this -- unlike [the knob](https://www.thingelstad.com/2007/03/31/the-knob.html). _(Note, CRM in the title here is [Customer Relationship Management](http://en.wikipedia.org/wiki/Customer_relationship_management).)_
 

@@ -9,4 +9,4 @@ categories: []
 
 City Hopper KL1317 heading to Warsaw, Poland. 🇵🇱 
 
-<img src="https://www.thingelstad.com/uploads/2025/44ae39ac0d.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/44ae39ac0d.jpg" width="600" height="450" alt="Passenger in a red hoodie carrying luggage up boarding stairs into a KLM Cityhopper aircraft on an overcast tarmac.">

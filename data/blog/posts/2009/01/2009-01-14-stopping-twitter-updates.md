@@ -9,7 +9,7 @@ categories: []
 
 If you are a friend of mine on Facebook you are going to see a lot fewer updates from me going forward. I've decided to no longer send [Twitter](http://twitter.com/) updates to [my Facebook profile](http://www.facebook.com/profile.php?id=605776057).
 
-<img src="https://www.thingelstad.com/uploads/2020/f0291c6e82.png" style="max-width: 392px;" />
+<img src="https://www.thingelstad.com/uploads/2020/f0291c6e82.png" alt="Twitter bird logo and Facebook logo with a red X blocking an arrow between them" style="max-width: 392px;" />
 
 I was having a [great lunch](http://www.cueatguthrie.com/) with my friend [Jim Bernard](http://www.jimbernard.net/) and he had mentioned that he had severed the Twitter-Facebook bridge and I was curious. He explained to me his reasoning and much of it rung true to me. I also reflected on feedback I got from people that I know on Facebook and they were commenting that I updated a lot, usually with a note of annoyance. The reality was I used Twitter a decent amount, and I never do Facebook updates.
 

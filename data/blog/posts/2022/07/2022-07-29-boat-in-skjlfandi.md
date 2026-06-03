@@ -9,4 +9,4 @@ categories: []
 
 Boat in Skjálfandi Bay on the Greenland Sea near Húsavík, Iceland.
 
-<img src="https://www.thingelstad.com/uploads/2022/ccaa7e899d.jpg" width="600" height="412" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/ccaa7e899d.jpg" width="600" height="412" alt="Small boat carrying passengers on choppy waters in Skjálfandi Bay, with snow-patched mountains rising behind under cloudy skies." />

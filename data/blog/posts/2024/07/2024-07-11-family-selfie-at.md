@@ -9,4 +9,4 @@ categories: []
 
 Family selfie at the [Adam Turman](https://www.adamturman.com) mural outside of [Victual](https://shopvictual.com) in [Crosby](https://www.cityofcrosby.com). We are visiting the [Cuyuna Lakes](https://www.cuyunalakesmtb.com) area this weekend!
 
-<img src="https://www.thingelstad.com/uploads/2024/1ac38292f1.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/1ac38292f1.jpg" width="450" height="600" alt="Family of four posing for a selfie in front of a large brick wall mural showing a woman paddleboarding and a scuba diver underwater in Crosby Minnesota">

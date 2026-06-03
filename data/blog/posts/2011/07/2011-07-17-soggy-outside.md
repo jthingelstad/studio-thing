@@ -11,4 +11,4 @@ Inside: 76 °F with air conditioning.
 
 Outside: 91 °F and 75% humidity with a dew point of 81 °F.
 
-![](https://www.thingelstad.com/uploads/2020/a82ee45d97.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/a82ee45d97.jpg" alt="Double-hung window with frosted condensation covering most panes, dark interior, bright hazy light outside, small object on sill">

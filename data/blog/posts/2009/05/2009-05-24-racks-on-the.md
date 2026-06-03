@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Racks on the Big Green Egg.
 
-![](https://www.thingelstad.com/uploads/2020/22a9d804b0.png)
+<img src="https://www.thingelstad.com/uploads/2020/22a9d804b0.png" alt="Multiple racks of seasoned pork ribs standing upright in a rib rack on a round ceramic charcoal grill outdoors.">

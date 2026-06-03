@@ -9,4 +9,4 @@ categories: []
 
 Gelato break. 
 
-<img src="https://www.thingelstad.com/uploads/2026/f486cbf6f0.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/f486cbf6f0.jpg" width="600" height="450" alt="Four people smiling and holding gelato cones and cups outside DelaCrem Gelats and Delicies shop">

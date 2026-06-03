@@ -9,4 +9,4 @@ categories: []
 
 Barcelona street scene. 
 
-<img src="https://www.thingelstad.com/uploads/2026/7638acefa1.jpg" width="450" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/7638acefa1.jpg" width="450" height="600" alt="Man in straw hat playing an upright piano outdoors in a Barcelona plaza beneath a bronze equestrian statue.">

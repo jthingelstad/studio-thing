@@ -9,15 +9,15 @@ categories: ["TeamSPS"]
 
 Super excited for DevOps@SPS today! #teamSPS #devops
 
-<img src="https://www.thingelstad.com/uploads/2019/6b434f0c56.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/6b434f0c56.jpg" width="600" height="450" alt="Packed conference room of attendees seated at tables and chairs, several using laptops, during a tech event presentation.">
 
 [Bill Gintz](https://twitter.com/wgintz1) sporting the #TeamSPS DevOps@SPS shirt with extra unicorns!
 
-<img src="https://www.thingelstad.com/uploads/2019/7ede3ee85c.jpg" width="600" height="900" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/7ede3ee85c.jpg" width="600" height="900" alt="Man wearing glasses and a black DevOps at SPS t-shirt featuring a unicorn graphic, smiling indoors at a tech event.">
 
 [Bridget Kromhout](https://bridgetkromhout.com) kicking off #TeamSPS #devops event! Thank you!
 
-<img src="https://www.thingelstad.com/uploads/2019/187889e751.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/187889e751.jpg" width="600" height="450" alt="Woman with blonde and pink hair wearing a black Pivotal t-shirt and skirt presenting in front of a projected slide showing the Pivotal logo.">
 
 Great — [#TeamSPS in Ukraine on the streaming feed for DevOps@SPS](https://twitter.com/optimuspaul/status/664460599359725568). <wave/>
 
@@ -33,11 +33,11 @@ My favorite [Twitterrific](https://twitter.com/Twitterrific) mute filter: "Plead
 
 Selfie-as-a-service with [Bridget Kromhout](https://bridgetkromhout.com)! #hugops ? 😀
 
-<img src="https://www.thingelstad.com/uploads/2019/acb84f4f9b.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/acb84f4f9b.jpg" width="600" height="450" alt="Two people smiling for a selfie at a tech event; the woman has blonde and pink hair and glasses, the man wears a blazer over a black unicorn shirt.">
 
 Starting afternoon of #teamsps #devops with [Jeff Sussna](https://www.sussna-associates.com) and Design Thinking.
 
-<img src="https://www.thingelstad.com/uploads/2019/5e08769257.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2019/5e08769257.jpg" width="600" height="450" alt="Two men at an SPS Commerce podium during a tech presentation, one speaking and one leaning against the wall smiling, with a projected slide visible behind them.">
 
 Great talk from [Jeff Sussna](https://www.sussna-associates.com) for #TeamSPS #DevOps event. Great connections to our world!
 

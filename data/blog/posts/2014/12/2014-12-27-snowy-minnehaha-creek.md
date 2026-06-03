@@ -9,4 +9,4 @@ categories: []
 
 Snowy Minnehaha Creek.
 
-![](https://www.thingelstad.com/uploads/2020/c24ea7096a.jpg)
+<img src="https://www.thingelstad.com/uploads/2020/c24ea7096a.jpg" alt="Black and white winter scene of a winding creek flanked by snow-covered banks and bare trees with houses visible in the background">

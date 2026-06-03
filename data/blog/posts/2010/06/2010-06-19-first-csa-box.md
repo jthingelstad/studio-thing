@@ -7,7 +7,7 @@ post_kind: post
 categories: []
 ---
 
-<img src="https://www.thingelstad.com/uploads/2020/5ec4fc0d51.gif" style="width: 156px; float: right; margin-left: 10px; " />
+<img src="https://www.thingelstad.com/uploads/2020/5ec4fc0d51.gif" alt="Logo for Tangletown Gardens featuring ornate Celtic-style lettering and decorative illuminated T on dark green background" style="width: 156px; float: right; margin-left: 10px; " />
 
 As many know we try to support local, sustainable food production as much as possible. We've tried to do Community Support Agriculture (CSA) shares in the past and have never been terribly proud of our ability to use everything. Additionally, you need to find the right CSA for you and
 what you are looking for.

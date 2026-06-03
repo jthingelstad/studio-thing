@@ -9,4 +9,4 @@ categories: []
 
 AeroGarden getting started.
 
-![](https://www.thingelstad.com/uploads/2020/f6af3d4541.png)
+<img src="https://www.thingelstad.com/uploads/2020/f6af3d4541.png" alt="AeroGarden hydroponic indoor garden with seven seed pod slots under a grow light, flanked by decorative fruit figurines">

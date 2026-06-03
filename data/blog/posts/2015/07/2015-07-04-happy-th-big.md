@@ -9,4 +9,4 @@ categories: ["Cooking"]
 
 Happy 4th Big Green Egg style!
 
-<img src="https://www.thingelstad.com/uploads/2024/img-4230.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/img-4230.jpg" width="600" height="450" alt="Four burger patties and several hot dogs grilling on a Big Green Egg kamado smoker in a backyard garden setting.">

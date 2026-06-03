@@ -9,4 +9,4 @@ categories: []
 
 Snowshoes. ❄️
 
-<img src="https://www.thingelstad.com/uploads/2018/cf09fd6099.jpg" width="600" height="599" />
+<img src="https://www.thingelstad.com/uploads/2018/cf09fd6099.jpg" alt="Four snowshoes standing upright in snow with a colorful wooden playground set and frozen lake in the background." width="600" height="599" />

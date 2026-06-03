@@ -9,7 +9,7 @@ categories: ["Music"]
 
 Very excited to be heading to **[Brandi Carlile's Mothership Weekend](https://www.tixr.com/groups/brandivacations/events/brandi-carlile-s-mothership-weekend-55696)** today! 🎶
 
-<img src="https://www.thingelstad.com/uploads/2023/fd727f258a.jpg" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/fd727f258a.jpg" width="600" height="600" alt="Festival poster for Brandi Carliles Mothership Weekend, May 12-14 2023, Miramar Beach FL, listing performers by day">
 
 Friday: [Brandi Carlile](https://www.brandicarlile.com), [Nathaniel Rateliff & The Night Sweats](https://www.nathanielrateliff.com), and [Danielle Ponder](https://danielleponder.com)
 

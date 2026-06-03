@@ -9,4 +9,4 @@ categories: ["Sports"]
 
 Beautiful day for MNUFC v LAFC! ⚽️
 
-<img src="https://www.thingelstad.com/uploads/2026/c5bc60c8f9.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/c5bc60c8f9.jpg" width="600" height="450" alt="Three fans smiling for a selfie outside Allianz Field stadium with a large UNITED sign on the grass behind them.">

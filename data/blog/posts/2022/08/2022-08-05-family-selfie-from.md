@@ -9,4 +9,4 @@ categories: []
 
 Family selfie from Reykjavik!
 
-<img src="https://www.thingelstad.com/uploads/2022/39208b0493.jpg" width="450" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2022/39208b0493.jpg" width="450" height="600" alt="Family of four smiling in a selfie in front of Hallgrimskirkja church and the Leif Erikson statue in Reykjavik Iceland" />

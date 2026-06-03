@@ -9,4 +9,4 @@ categories: ["TeamSPS"]
 
 Appreciate the warm welcome and hospitality from our #TeamSPS Australia leadership team! 🇦🇺 
 
-<img src="https://www.thingelstad.com/uploads/2019/abcb6a1778.jpg" width="600" height="450" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/abcb6a1778.jpg" width="600" height="450" alt="Group of nine SPS Commerce employees posing together in front of a red SPS logo wall in an Australian office." />

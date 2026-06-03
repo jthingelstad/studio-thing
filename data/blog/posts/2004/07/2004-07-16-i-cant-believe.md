@@ -9,9 +9,6 @@ categories: []
 
 I got a cold the day before we go to Europe! Argh!
 
-It's [Chris Tersteeg](http://www.tersteeg.org/)'s fault -- he gave it to
-me. I've got a *depth charge* of vitamins, medicine and other herbal
-things trying to get me better. Hopefully it'll pass soon.
+It's [Chris Tersteeg](http://www.tersteeg.org/)'s fault -- he gave it to me. I've got a *depth charge* of vitamins, medicine and other herbal things trying to get me better. Hopefully it'll pass soon.
 
-Bikes are boxed up, bags are 95% packed and carry-on is ready to go.
-Tomorrow we sleep by the Eiffel Tower.
+Bikes are boxed up, bags are 95% packed and carry-on is ready to go. Tomorrow we sleep by the Eiffel Tower.

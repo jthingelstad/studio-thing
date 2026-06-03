@@ -9,4 +9,4 @@ categories: []
 
 Amazing spot for lunch at [Chamonna Tuoi](https://www.tuoi.ch) looking up at [Piz Buin](https://en.wikipedia.org/wiki/Piz_Buin).
 
-![](https://www.thingelstad.com/uploads/2023/02a8d6be6a.jpg)
+<img src="https://www.thingelstad.com/uploads/2023/02a8d6be6a.jpg" alt="Wooden deck terrace of a mountain hut with picnic tables and hikers, overlooking a rocky alpine valley below Piz Buin peak.">

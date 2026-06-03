@@ -9,4 +9,4 @@ categories: []
 
 Amy, Kent and I got a warm welcome from our partners at Bristlecone after 20 hours of traveling and arriving in Delhi at 1am.
 
-<img src="https://www.thingelstad.com/uploads/2018/22d8204f50.jpg" width="599" height="600" />
+<img src="https://www.thingelstad.com/uploads/2018/22d8204f50.jpg" alt="Three travelers smiling and holding colorful flower bouquets inside an airport terminal late at night." width="599" height="600" />

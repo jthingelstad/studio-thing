@@ -9,4 +9,4 @@ categories: ["Movies"]
 
 Watched [Shazam](https://www.rottentomatoes.com/m/shazam/) last night. Pretty fun movie! 🎬👍
 
-<img src="https://www.thingelstad.com/uploads/2019/250affb5d7.jpg" width="404" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/250affb5d7.jpg" width="404" height="600" alt="Movie poster for Shazam showing a man in a red and gold superhero costume blowing a pink bubble gum bubble while holding a smartphone" />

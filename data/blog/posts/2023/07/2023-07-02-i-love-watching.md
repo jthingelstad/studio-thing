@@ -9,4 +9,4 @@ categories: []
 
 I love watching the [Damselflies](https://en.wikipedia.org/wiki/Damselfly) hover and cling to the Big Bluestem in the morning. 
 
-<img src="https://www.thingelstad.com/uploads/2023/3196d0c69f.jpg" width="600" height="449" alt="">
+<img src="https://www.thingelstad.com/uploads/2023/3196d0c69f.jpg" width="600" height="449" alt="Blue damselfly perched on a green reed stem, wings spread flat, surrounded by tall grasses with yellow seed heads.">

@@ -9,4 +9,4 @@ categories: ["Kubb"]
 
 Kubb pitch.
 
-<img src="https://www.thingelstad.com/uploads/2024/f91d48ab-262f-4605-8835-35630a6ee482.jpg" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/f91d48ab-262f-4605-8835-35630a6ee482.jpg" width="600" height="450" alt="Kubb game set up on a lawn with wooden blocks scattered across the playing field, string marking the boundaries, and a bird feeder nearby.">
