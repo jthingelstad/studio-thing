@@ -52,11 +52,14 @@ class BuildBlogCorpusTests(unittest.TestCase):
         self.assertEqual(corpus["post_count"], 2)
         self.assertGreaterEqual(corpus["chunk_count"], 2)
 
-        by_id = {c["id"]: c for c in corpus["chunks"]}
-        self.assertIn("blog:111:0", by_id)
-        self.assertIn("blog:222:0", by_id)
+        # Chunk ids are content-deterministic: `blog:{mbid}:{index}:{hash}`.
+        by_prefix = {c["id"].rsplit(":", 1)[0]: c for c in corpus["chunks"]}
+        self.assertIn("blog:111:0", by_prefix)
+        self.assertIn("blog:222:0", by_prefix)
+        # The content-hash suffix makes the id change when the body changes.
+        self.assertRegex(by_prefix["blog:111:0"]["id"], r"^blog:111:0:[0-9a-f]{16}$")
 
-        post = by_id["blog:111:0"]
+        post = by_prefix["blog:111:0"]
         self.assertEqual(post["source_kind"], "blog")
         self.assertEqual(post["content_kind"], "blog")
         self.assertEqual(post["section"], "Blog post")
@@ -66,7 +69,7 @@ class BuildBlogCorpusTests(unittest.TestCase):
         self.assertEqual(post["issue_year"], 2018)
         self.assertEqual(post["url"], "https://www.thingelstad.com/2018/04/02/on-systems-thinking.html")
 
-        micro = by_id["blog:222:0"]
+        micro = by_prefix["blog:222:0"]
         self.assertEqual(micro["section"], "Micropost")
         # Untitled micropost gets a derived label from its text.
         self.assertTrue(micro["subject"])
@@ -92,9 +95,9 @@ class BuildBlogCorpusTests(unittest.TestCase):
             )
             corpus = build_blog_corpus(blog_dir=blog, archive_dir=archive)
 
-        by_id = {c["id"]: c for c in corpus["chunks"]}
-        self.assertEqual(by_id["blog:111:0"].get("also_in_issues"), [350])
-        self.assertNotIn("also_in_issues", by_id["blog:999:0"])
+        by_prefix = {c["id"].rsplit(":", 1)[0]: c for c in corpus["chunks"]}
+        self.assertEqual(by_prefix["blog:111:0"].get("also_in_issues"), [350])
+        self.assertNotIn("also_in_issues", by_prefix["blog:999:0"])
 
     def test_journal_xref_normalizes_host_and_html_suffix(self):
         with tempfile.TemporaryDirectory() as tmp:

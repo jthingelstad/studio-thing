@@ -702,8 +702,8 @@ def build_blog_corpus(
     include_xref: bool = True,
 ) -> dict[str, Any]:
     """Build the blog corpus from ``data/blog/posts/**/*.md``. One chunk per
-    ``chunk_section`` piece, ``source_kind: "blog"``, stable id
-    ``blog:{microblog_id}:{index}``. Same dict shape as :func:`build_corpus`
+    ``chunk_section`` piece, ``source_kind: "blog"``, content-deterministic id
+    ``blog:{microblog_id}:{index}:{body_hash}``. Same dict shape as :func:`build_corpus`
     (empty ``issues``/``topics``/``links`` — those power issue-only tools) so
     the embed + upload tooling is reused verbatim. Posts that also appear in a
     Weekly Thing Journal get an ``also_in_issues`` cross-reference."""
@@ -734,8 +734,14 @@ def build_blog_corpus(
         post_count += 1
         subject = title or _short_label(embed_text)
         for index, chunk_text in enumerate(chunk_section(embed_text)):
+            # Content-deterministic id (text hash suffix): when a post's body is
+            # edited in place (alt-text inlined, de-wrap, typo fix) without
+            # changing its chunk count, the id still changes — so the
+            # incremental embed cache (keyed on id) re-embeds it instead of
+            # reusing the stale vector. Readable mbid:index prefix kept for
+            # debugging. Mirrors the issue corpus's content-hashed `chunk_id`.
             chunk = {
-                "id": f"blog:{microblog_id}:{index}",
+                "id": f"blog:{microblog_id}:{index}:{body_hash(chunk_text)}",
                 "issue_number": None,
                 "subject": subject,
                 "publish_date": publish_date,
