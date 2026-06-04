@@ -45,8 +45,8 @@ Historical detail: `STUDIO_MIGRATION_PLAN.md`, `PHASE_1.md`, and `PHASE_2.md`.
 
 | Workstream | Doc | Notes |
 |---|---|---|
-| Thingy standalone web (docent) | `thingy/STANDALONE_BUILD.md` | Additive surface completion |
-| Thingy roadmap (identity, intelligence, temporal, sparring) | `thingy/THINGY_ROADMAP.md` | Big vision, now unblocked by alignment |
+| Thingy standalone web (docent) | `thingy.thingelstad.com/STANDALONE_BUILD.md` (separate repo) | Shipped; doc retained as build brief |
+| Thingy roadmap (identity, intelligence, temporal, sparring) | `thingy.thingelstad.com/THINGY_ROADMAP.md` (separate repo) | Big vision, now unblocked by alignment |
 | Temporal layer (`data/timeline/{year}.md`) | THINGY_ROADMAP §temporal | Decoupled; startable anytime; unblocks the members broadcast |
 | Blog draft → Micropub pipeline | (to spec) | Needs blog drafts + a publisher in Studio |
 | Podcast handoff automation | (to spec) | Today Studio imports from the sibling Another repo manually before commit |
