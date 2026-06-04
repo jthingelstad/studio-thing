@@ -164,6 +164,7 @@ async def _gateway_watchdog(
     """
     last_latency: float | None = None
     last_change_at = time.monotonic()
+    non_finite_since: float | None = None
 
     try:
         await asyncio.wait_for(bot.ready_event.wait(), timeout=READY_WAIT_SECONDS)
@@ -197,17 +198,23 @@ async def _gateway_watchdog(
         now = time.monotonic()
         since_armed = now - armed_at
         if not math.isfinite(current):
-            # No heartbeat yet (or mid-reconnect). Tolerate during the
-            # grace window; treat as zombie afterward.
-            if since_armed > grace_secs + ack_stale_secs:
+            # No heartbeat yet, or mid-reconnect. Track *this* episode of
+            # non-finite so a brief reconnect blip after the grace window
+            # doesn't false-fire — only kill if non-finite has lasted past
+            # the threshold AND we're out of the initial grace window.
+            if non_finite_since is None:
+                non_finite_since = now
+            non_finite_for = now - non_finite_since
+            if since_armed > grace_secs and non_finite_for > ack_stale_secs:
                 logger.error(
                     "[%s] watchdog: bot.latency has been non-finite for "
-                    "%.0fs (grace %.0fs + threshold %.0fs); exiting so "
-                    "launchd restarts us",
-                    name, since_armed, grace_secs, ack_stale_secs,
+                    "%.0fs (threshold %.0fs); exiting so launchd restarts us",
+                    name, non_finite_for, ack_stale_secs,
                 )
                 os._exit(1)
             continue
+
+        non_finite_since = None
 
         if last_latency is None or current != last_latency:
             last_latency = current
