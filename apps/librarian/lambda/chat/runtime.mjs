@@ -38,9 +38,11 @@ const bedrock = new BedrockRuntimeClient({});
 const bedrockAgentRuntime = new BedrockAgentRuntimeClient({ region: process.env.BEDROCK_RERANK_REGION || 'us-west-2' });
 let corpusCache;
 let blogCorpusCache;
+let podcastCorpusCache;
 let graphCache;
 let indexedCache;
 let blogIndexedCache;
+let podcastIndexedCache;
 
 function logEvent(level, message, fields = {}) {
   console.log(JSON.stringify({
@@ -316,6 +318,7 @@ const EMPTY_CORPUS = { version: 0, chunks: [], issues: [], topics: [], links: []
 
 async function loadCorpus(kind = 'weekly_thing') {
   if (kind === 'blog') return loadBlogCorpus();
+  if (kind === 'podcast') return loadPodcastCorpus();
   if (corpusCache) return corpusCache;
   const bucket = process.env.CORPUS_BUCKET;
   const key = process.env.CORPUS_KEY || 'librarian/corpus.json';
@@ -335,37 +338,61 @@ async function loadCorpus(kind = 'weekly_thing') {
   return corpusCache;
 }
 
-// The blog corpus is large and only needed for blog/both scopes, so it
-// loads lazily and caches separately from the WT corpus. When
-// BLOG_CORPUS_KEY is unset (blog not yet deployed), return an empty corpus
-// so blog/both requests degrade to "no blog hits" rather than erroring.
-async function loadBlogCorpus() {
-  if (blogCorpusCache) return blogCorpusCache;
+async function loadOptionalCorpus({ kind, envKey, disabledEvent, failedEvent, cache, setCache }) {
+  if (cache) return cache;
   const bucket = process.env.CORPUS_BUCKET;
-  const key = process.env.BLOG_CORPUS_KEY;
+  const key = process.env[envKey];
   if (!bucket || !key) {
-    logEvent('info', 'blog_corpus_disabled', { has_bucket: Boolean(bucket), has_key: Boolean(key) });
-    blogCorpusCache = { ...EMPTY_CORPUS };
-    return blogCorpusCache;
+    logEvent('info', disabledEvent, { has_bucket: Boolean(bucket), has_key: Boolean(key) });
+    const empty = { ...EMPTY_CORPUS };
+    setCache(empty);
+    return empty;
   }
   const start = performance.now();
   try {
     const response = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
-    blogCorpusCache = JSON.parse(await response.Body.transformToString());
+    const loaded = JSON.parse(await response.Body.transformToString());
+    setCache(loaded);
     logEvent('info', 'corpus_loaded', {
       source: 's3',
-      scope: 'blog',
+      scope: kind,
       bucket,
       key,
-      chunk_count: blogCorpusCache.chunk_count || blogCorpusCache.chunks?.length || 0,
-      embedding_dimensions: blogCorpusCache.embedding_dimensions,
+      chunk_count: loaded.chunk_count || loaded.chunks?.length || 0,
+      embedding_dimensions: loaded.embedding_dimensions,
       duration_ms: Math.round(performance.now() - start)
     });
   } catch (error) {
-    blogCorpusCache = { ...EMPTY_CORPUS };
-    logEvent('warning', 'blog_corpus_load_failed', { key, error_type: error.constructor?.name || 'Error' });
+    const empty = { ...EMPTY_CORPUS };
+    setCache(empty);
+    logEvent('warning', failedEvent, { key, error_type: error.constructor?.name || 'Error' });
   }
-  return blogCorpusCache;
+  return cache || (kind === 'blog' ? blogCorpusCache : podcastCorpusCache);
+}
+
+// The blog corpus is large and only needed for blog/both/all scopes, so it
+// loads lazily and caches separately from the WT corpus. When the env key is
+// unset, return an empty corpus so source-specific requests degrade to no hits.
+async function loadBlogCorpus() {
+  return loadOptionalCorpus({
+    kind: 'blog',
+    envKey: 'BLOG_CORPUS_KEY',
+    disabledEvent: 'blog_corpus_disabled',
+    failedEvent: 'blog_corpus_load_failed',
+    cache: blogCorpusCache,
+    setCache: (value) => { blogCorpusCache = value; }
+  });
+}
+
+async function loadPodcastCorpus() {
+  return loadOptionalCorpus({
+    kind: 'podcast',
+    envKey: 'PODCAST_CORPUS_KEY',
+    disabledEvent: 'podcast_corpus_disabled',
+    failedEvent: 'podcast_corpus_load_failed',
+    cache: podcastCorpusCache,
+    setCache: (value) => { podcastCorpusCache = value; }
+  });
 }
 
 async function loadGraph() {
@@ -419,6 +446,10 @@ async function indexedChunks(kind = 'weekly_thing') {
   if (kind === 'blog') {
     if (!blogIndexedCache) blogIndexedCache = buildLexicalIndex(await loadCorpus('blog'));
     return blogIndexedCache;
+  }
+  if (kind === 'podcast') {
+    if (!podcastIndexedCache) podcastIndexedCache = buildLexicalIndex(await loadCorpus('podcast'));
+    return podcastIndexedCache;
   }
   if (!indexedCache) indexedCache = buildLexicalIndex(await loadCorpus('weekly_thing'));
   return indexedCache;
@@ -477,6 +508,10 @@ function compactSource(source, textLimit = 900) {
     score: source._rerank_score || source._retrieval_score,
     reason: source.retrieval_reason || (source.retrieval_modes || []).join(', '),
     url: source.url,
+    transcript_url: source.transcript_url,
+    audio_url: source.audio_url,
+    episode_number: source.episode_number,
+    show: source.show,
     topics: source.topics || [],
     // Present only on blog chunks that a WT issue Journal linked back to —
     // lets the agent cross-reference ("Jamie also featured this in WT###").
@@ -485,14 +520,28 @@ function compactSource(source, textLimit = 900) {
   };
 }
 
+function sourceKind(item) {
+  if (item?.source_kind) return item.source_kind;
+  if (!item?.issue_number && item?.url) return 'external';
+  return 'chunk';
+}
+
+function sourceHeader(source) {
+  const kind = sourceKind(source);
+  if (kind === 'blog') return `thingelstad.com blog: ${source.subject || ''}`;
+  if (kind === 'podcast') {
+    const episode = source.episode_number ? ` episode ${source.episode_number}` : '';
+    return `Another Thing podcast${episode}: ${source.subject || ''}`;
+  }
+  return `Weekly Thing #${source.issue_number}: ${source.subject || ''}`;
+}
+
 async function rerankSources(query, sources, limit = 8) {
   if (!sources.length || !truthyEnv('LIBRARIAN_RERANK_ENABLED', '1')) return sources.slice(0, limit);
   const start = performance.now();
   const top = sources.slice(0, Math.max(limit * 5, 40));
   const rerankInputs = top.map((source) => {
-    const header = source.source_kind === 'blog' || (!source.issue_number && source.url)
-      ? `thingelstad.com blog: ${source.subject || ''}`
-      : `Weekly Thing #${source.issue_number}: ${source.subject || ''}`;
+    const header = sourceHeader(source);
     return {
       type: 'INLINE',
       inlineDocumentSource: {
@@ -545,8 +594,8 @@ async function embedForCorpus(query, corpus) {
 }
 
 // Pure cosine scoring over one corpus's embedded chunks. Attaches
-// _retrieval_score so callers can merge candidates from two corpora and
-// re-sort before a single rerank (the `both` scope).
+// _retrieval_score so callers can merge candidates from multiple corpora and
+// re-sort before a single rerank (mixed scopes).
 function semanticScore(corpus, queryEmbedding, limit) {
   const chunks = (corpus.chunks || []).filter((chunk) => chunk.embedding);
   if (!chunks.length) return [];
@@ -599,8 +648,8 @@ function withAgeLabel(sources) {
 
 // Scope is enforced HERE — by which corpus/corpora we scan, not by a
 // post-filter. weekly_thing scans the WT corpus (identical to today);
-// blog scans the blog corpus; both gathers candidates from each and
-// reranks the union once. matchesFilters only applies year/section.
+// blog/podcast scan their own corpora; mixed scopes gather candidates from
+// each and rerank the union once. matchesFilters only applies year/section.
 async function retrieve(query, limit = 8, filters = {}) {
   const kinds = scopeKinds(filters.scope);
   const candidateLimit = Math.max(limit * 5, 40);
@@ -646,27 +695,31 @@ function conversationContext(history) {
   return history.map((item) => `${item.role === 'user' ? 'User' : 'Thingy'}: ${item.content}`).join('\n');
 }
 
-function isBlogSource(item) {
-  return item?.source_kind === 'blog' || (!item?.issue_number && Boolean(item?.url));
+function isExternalSource(item) {
+  return ['blog', 'podcast'].includes(item?.source_kind) || (!item?.issue_number && Boolean(item?.url));
 }
 
 function citationsFor(chunks) {
   const seen = new Set();
   const citations = [];
   for (const chunk of chunks) {
-    // WT chunks dedupe by issue+section; blog chunks have no issue number,
-    // so dedupe them by URL (the permalink is the stable identity).
-    const blog = isBlogSource(chunk);
-    const key = blog ? `blog\0${chunk.url || ''}` : `${chunk.issue_number}\0${chunk.section || ''}`;
+    // WT chunks dedupe by issue+section; external sources have no issue
+    // number, so dedupe them by source kind + URL.
+    const external = isExternalSource(chunk);
+    const key = external ? `${chunk.source_kind || 'external'}\0${chunk.url || ''}` : `${chunk.issue_number}\0${chunk.section || ''}`;
     if (seen.has(key)) continue;
     seen.add(key);
     citations.push({
       issue_number: chunk.issue_number ?? null,
-      source_kind: chunk.source_kind || (blog ? 'blog' : 'chunk'),
+      source_kind: chunk.source_kind || (external ? 'external' : 'chunk'),
       subject: chunk.subject,
       publish_date: chunk.publish_date,
       section: chunk.section,
       url: chunk.url,
+      transcript_url: chunk.transcript_url,
+      audio_url: chunk.audio_url,
+      episode_number: chunk.episode_number,
+      show: chunk.show,
       also_in_issues: chunk.also_in_issues
     });
   }
@@ -851,18 +904,33 @@ async function toolQuoteSearch(input = {}, { scope } = {}) {
       }
     }
   }
-  // The blog corpus has no issue-shaped records, so exact-phrase search runs
-  // over its chunk text, deduped by permalink.
-  if (kinds.includes('blog') && results.length < limit) {
-    const corpus = await loadCorpus('blog');
+  // Non-WT corpora have no issue-shaped records, so exact-phrase search runs
+  // over chunk text, deduped by source kind + permalink.
+  for (const kind of kinds.filter((item) => item !== 'weekly_thing')) {
+    if (results.length >= limit) break;
+    const corpus = await loadCorpus(kind);
     const seen = new Set();
     for (const chunk of corpus.chunks || []) {
       const text = String(chunk.text || '');
       if (!text.toLowerCase().includes(needle)) continue;
       const url = chunk.url || '';
-      if (seen.has(url)) continue;
-      seen.add(url);
-      results.push({ issue_number: null, source_kind: 'blog', subject: chunk.subject, publish_date: chunk.publish_date, section: chunk.section, url, also_in_issues: chunk.also_in_issues, context: contextAround(text, phrase) });
+      const key = `${kind}\0${url}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      results.push({
+        issue_number: null,
+        source_kind: chunk.source_kind || kind,
+        subject: chunk.subject,
+        publish_date: chunk.publish_date,
+        section: chunk.section,
+        url,
+        transcript_url: chunk.transcript_url,
+        audio_url: chunk.audio_url,
+        episode_number: chunk.episode_number,
+        show: chunk.show,
+        also_in_issues: chunk.also_in_issues,
+        context: contextAround(text, phrase)
+      });
       if (results.length >= limit) break;
     }
   }
@@ -939,8 +1007,20 @@ function collectToolCitations(toolResults) {
     for (const item of candidates) {
       if (item?.issue_number) {
         sources.push({ issue_number: item.issue_number, subject: item.subject, publish_date: item.publish_date, section: item.section || 'Issue', url: item.url || `/archive/${item.issue_number}/` });
-      } else if (isBlogSource(item)) {
-        sources.push({ issue_number: null, source_kind: 'blog', subject: item.subject, publish_date: item.publish_date, section: item.section, url: item.url, also_in_issues: item.also_in_issues });
+      } else if (isExternalSource(item)) {
+        sources.push({
+          issue_number: null,
+          source_kind: item.source_kind || 'external',
+          subject: item.subject,
+          publish_date: item.publish_date,
+          section: item.section,
+          url: item.url,
+          transcript_url: item.transcript_url,
+          audio_url: item.audio_url,
+          episode_number: item.episode_number,
+          show: item.show,
+          also_in_issues: item.also_in_issues
+        });
       }
     }
   }

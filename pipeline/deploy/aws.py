@@ -33,6 +33,8 @@ PRIVATE_CODE_PREFIX = "code/auth-lambda"
 PRIVATE_STREAM_CODE_PREFIX = "code/chat-lambda"
 PRIVATE_CORPUS_KEY = "artifacts/corpus.json"
 PRIVATE_GRAPH_KEY = "artifacts/graph.json"
+PRIVATE_BLOG_CORPUS_KEY = "artifacts/blog_corpus.json"
+PRIVATE_PODCAST_CORPUS_KEY = "artifacts/podcast_corpus.json"
 DEFAULT_ALLOWED_ORIGINS = "https://weekly.thingelstad.com,https://thingy.thingelstad.com,http://localhost:8080,http://127.0.0.1:8080"
 PROJECT_TAG_KEY = "project"
 PROJECT_TAG_VALUE = "Thingy"
@@ -218,6 +220,8 @@ def deploy_stack(
     stream_code_key: str,
     corpus_key: str,
     graph_key: str,
+    blog_corpus_key: str,
+    podcast_corpus_key: str,
     allowed_origin: str,
     buttondown_api_key: str,
     session_secret: str | None,
@@ -265,6 +269,8 @@ def deploy_stack(
         {"ParameterKey": "CorpusBucket", "ParameterValue": bucket},
         {"ParameterKey": "CorpusKey", "ParameterValue": corpus_key},
         {"ParameterKey": "GraphKey", "ParameterValue": graph_key},
+        {"ParameterKey": "BlogCorpusKey", "ParameterValue": blog_corpus_key},
+        {"ParameterKey": "PodcastCorpusKey", "ParameterValue": podcast_corpus_key},
         {"ParameterKey": "ButtondownApiKey", "ParameterValue": buttondown_api_key},
         session_parameter,
         bridge_parameter,
@@ -367,6 +373,8 @@ def main() -> int:
     parser.add_argument("--allowed-origin", default=os.environ.get("LIBRARIAN_ALLOWED_ORIGIN", DEFAULT_ALLOWED_ORIGINS))
     parser.add_argument("--corpus-key", default=os.environ.get("LIBRARIAN_CORPUS_KEY", PRIVATE_CORPUS_KEY))
     parser.add_argument("--graph-key", default=os.environ.get("LIBRARIAN_GRAPH_KEY", PRIVATE_GRAPH_KEY))
+    parser.add_argument("--blog-corpus-key", default=os.environ.get("LIBRARIAN_BLOG_CORPUS_KEY", PRIVATE_BLOG_CORPUS_KEY))
+    parser.add_argument("--podcast-corpus-key", default=os.environ.get("LIBRARIAN_PODCAST_CORPUS_KEY", PRIVATE_PODCAST_CORPUS_KEY))
     parser.add_argument("--cloudformation-role-arn", default=os.environ.get("LIBRARIAN_CLOUDFORMATION_ROLE_ARN"))
     parser.add_argument("--log-level", default=os.environ.get("LIBRARIAN_LOG_LEVEL", "INFO"))
     parser.add_argument("--auth-rate-limit-max", default=os.environ.get("LIBRARIAN_AUTH_RATE_LIMIT_MAX", "30"))
@@ -407,6 +415,8 @@ def main() -> int:
         stream_code_key=stream_code_key,
         corpus_key=args.corpus_key,
         graph_key=args.graph_key,
+        blog_corpus_key=args.blog_corpus_key,
+        podcast_corpus_key=args.podcast_corpus_key,
         allowed_origin=args.allowed_origin,
         buttondown_api_key=require_env("BUTTONDOWN_API_KEY"),
         session_secret=session_secret,

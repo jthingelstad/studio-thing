@@ -42,10 +42,11 @@ apps/workshop_bot/logs/
 # Local audit/working files
 tmp/
 
-# Generated librarian artifacts (rebuilt by `npm run librarian:corpus` and
-# `npm run librarian:graph`; the deploy script regenerates them before upload).
+# Generated librarian artifacts (rebuilt by `make librarian-corpus` and
+# `make librarian-graph`; the deploy script regenerates them before upload).
 data/librarian/corpus.json
 data/librarian/graph.json
+data/librarian/podcast_corpus.json
 data/librarian/*.embedded.json
 
 # Generated pipeline status report (rebuilt by `pipeline/status.py` at

@@ -48,6 +48,19 @@ test('returns everything when the answer mentions no issue numbers', () => {
   assert.equal(out.length, 2);
 });
 
+test('keeps podcast citations because they are cited by title/link', () => {
+  const podcast = {
+    issue_number: null,
+    source_kind: 'podcast',
+    subject: 'How do you start a podcast?',
+    publish_date: '2025-10-05',
+    section: 'Transcript',
+    url: 'https://another.thingelstad.com/2025/10/05/how-do-you-start-a.html'
+  };
+  const out = prioritizeCitationsForAnswer([c(228), podcast], 'WT228 is a newsletter citation.');
+  assert.deepEqual(out.map((x) => x.source_kind || 'chunk'), ['chunk', 'podcast']);
+});
+
 test('recognizes both WT and # prefixes', () => {
   const citations = [c(228), c(345)];
   const answer = 'Compare WT228 with #345.';

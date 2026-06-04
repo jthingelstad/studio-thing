@@ -83,7 +83,8 @@ These are set at deploy time from `.env`, written into the Lambda environment by
 |---|---|---|
 | `ALLOWED_ORIGIN` | both | Comma-separated CORS origins |
 | `TABLE_NAME` | both | DynamoDB conversation table |
-| `CORPUS_BUCKET`, `CORPUS_KEY`, `GRAPH_KEY` | stream | S3 corpus location |
+| `CORPUS_BUCKET`, `CORPUS_KEY`, `GRAPH_KEY` | stream | S3 corpus/graph location |
+| `BLOG_CORPUS_KEY`, `PODCAST_CORPUS_KEY` | stream | Optional source-specific corpora loaded lazily |
 | `BUTTONDOWN_API_KEY` | auth | Email subscriber verification |
 | `SESSION_SECRET` | both | HMAC secret for session JWTs |
 | `DISCORD_BRIDGE_SECRET` | both | Bridge-secret auth for `/list_conversations` + `/retrieve` |

@@ -19,38 +19,37 @@ One **brain** (Studio) + federated **surfaces**, sharing intelligence through th
 
 ## Two layers of work — don't confuse them
 
-1. **Alignment (the effort now).** Split the monorepo into Studio + surfaces and cut over. Structural.
-2. **Features (enabled by alignment — parked until it's done).** Thingy identity/intelligence/temporal/
-   sparring, the blog Micropub pipeline, the podcast `data/episodes` source.
+1. **Alignment (completed pivot).** Split the monorepo into Studio + surfaces and cut over. Structural.
+2. **Features (enabled by alignment).** Thingy identity/intelligence/temporal/sparring, the blog
+   Micropub pipeline, the podcast `data/episodes` source.
 
 ## Where we actually are
 
-- **Done:** parallel extraction — studio-thing holds the brain, thingy holds the Discord bridge. A lot of
-  design captured.
-- **Not done:** the cutover. Weekly still does 100% of the work; studio-thing is a dormant copy.
-  **Alignment isn't real until Phase 1–2 land.**
+- **Done:** Studio holds the brain and is the live producer. Weekly is the render surface, Thingy is the
+  query surface, and Another Thing remains its own podcast surface.
+- **Operational model:** Studio ships canonical content and pushes generated 11ty inputs to Weekly.
+  Weekly refreshes only its own landing-page stats, then renders and deploys.
 
-## The alignment critical path (the whole near-term effort)
+## Current production chain
 
-1. **Phase 1 — stand up Studio.** Studio CI runs the production half and pushes generated inputs to the
-   weekly repo (the handoff tool already exists). Verify the pushed artifacts match the old path.
-2. **Phase 2 — slim weekly.** Cut production steps + delete the duplicated brain + move secrets; weekly
-   becomes a pure render surface. Time it for the day after a send (no recovery flow).
+1. Authoring bot commits canonical issue data to `studio-thing`.
+2. Studio CI builds archive inputs, corpus, graph, status, and deploys Librarian changes as needed.
+3. Studio CI commits generated site inputs to `weekly.thingelstad.com`.
+4. Weekly CI refreshes site-owned stats, builds Eleventy + Pagefind, and deploys Pages.
 
-Detail: `weekly.thingelstad.com/STUDIO_MIGRATION_PLAN.md`.
+Historical detail: `STUDIO_MIGRATION_PLAN.md`, `PHASE_1.md`, and `PHASE_2.md`.
 
 ## Parked (designed, not now)
 
 | Workstream | Doc | Notes |
 |---|---|---|
-| Thingy standalone web (docent) | `thingy/STANDALONE_BUILD.md` | Additive surface completion; can run parallel to the migration |
-| Thingy roadmap (identity, intelligence, temporal, sparring) | `thingy/THINGY_ROADMAP.md` | Big vision; sequenced behind alignment |
+| Thingy standalone web (docent) | `thingy/STANDALONE_BUILD.md` | Additive surface completion |
+| Thingy roadmap (identity, intelligence, temporal, sparring) | `thingy/THINGY_ROADMAP.md` | Big vision, now unblocked by alignment |
 | Temporal layer (`data/timeline/{year}.md`) | THINGY_ROADMAP §temporal | Decoupled; startable anytime; unblocks the members broadcast |
 | Blog draft → Micropub pipeline | (to spec) | Needs blog drafts + a publisher in Studio |
 | Podcast `data/episodes` source + transcript ingestion | (to spec) | Audio-native source store |
 
 ## Next action
 
-Point Claude Code at **Phase 1**. Everything in the parked table waits until the structure is aligned —
-with the one exception that the Thingy standalone (A1) and the temporal layer are both additive and may
-run in parallel if there's appetite, since neither touches the live publishing path.
+Keep production boring: protect the Studio → Weekly handoff, keep the Librarian API stable, and move
+new work through the feature docs now that the structure is aligned.

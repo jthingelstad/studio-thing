@@ -19,7 +19,7 @@ import boto3
 import yaml
 from dotenv import load_dotenv
 
-from .paths import ARCHIVE_DIR, BLOG_DIR, FAQ_PATH, SITE_DIR
+from .paths import ARCHIVE_DIR, BLOG_DIR, FAQ_PATH, PODCAST_DIR, SITE_DIR
 
 
 DEFAULT_EMBEDDING_MODEL = "cohere.embed-english-v3"
@@ -776,6 +776,93 @@ def build_blog_corpus(
     }
 
 
+# --- podcast corpus ------------------------------------------------------
+#
+# Podcast transcripts are kept in their own corpus for the same reason the
+# blog is: source isolation and lazy loading. Another Thing is a small corpus
+# today, but keeping it separate means a podcast-only question never crowds
+# the Weekly Thing search space and old callers keep their WT defaults.
+
+
+def _episode_number_label(value: Any) -> str:
+    try:
+        return f"{int(value):03d}"
+    except (TypeError, ValueError):
+        return str(value or "").strip()
+
+
+def build_podcast_corpus(podcast_dir: Path = PODCAST_DIR) -> dict[str, Any]:
+    """Build the Another Thing podcast corpus from normalized episode JSON.
+
+    ``pipeline/podcast/import_another_thing.py`` writes one JSON record per
+    episode. Transcript chunks use ``source_kind: "podcast"`` and ids like
+    ``podcast:another-thing:001:0:{hash}``.
+    """
+    chunks: list[dict[str, Any]] = []
+    episode_count = 0
+    for path in sorted(podcast_dir.glob("*.json")):
+        episode = json.loads(path.read_text(encoding="utf-8"))
+        transcript = str(episode.get("transcript_text") or "").strip()
+        notes = str(episode.get("notes_markdown") or "").strip()
+        if not transcript and not notes:
+            continue
+        episode_count += 1
+        number = episode.get("number")
+        number_label = _episode_number_label(number)
+        subject = str(episode.get("title") or f"Episode {number_label}").strip()
+        publish_date = str(episode.get("publish_date") or "")[:10] or None
+        base = {
+            "issue_number": None,
+            "source_kind": "podcast",
+            "show": episode.get("show") or "Another Thing",
+            "podcast": "another-thing",
+            "episode_number": number,
+            "subject": subject,
+            "publish_date": publish_date,
+            "issue_year": parse_year(publish_date),
+            "url": episode.get("url"),
+            "transcript_url": episode.get("transcript_url"),
+            "audio_url": episode.get("audio_url"),
+            "summary": episode.get("summary") or "",
+            "topics": [],
+        }
+        sections = []
+        if transcript:
+            sections.append(("Transcript", "podcast_transcript", transcript))
+        if notes:
+            sections.append(("Show notes", "podcast_notes", notes))
+        for section, content_kind, text in sections:
+            for index, chunk_text in enumerate(chunk_section(text, max_words=320, overlap_words=55)):
+                chunks.append(
+                    {
+                        **base,
+                        "id": f"podcast:another-thing:{number_label}:{section.lower().replace(' ', '-')}:"
+                        f"{index}:{body_hash(chunk_text)}",
+                        "section": section,
+                        "content_kind": content_kind,
+                        "text": chunk_text,
+                        "word_count": len(words(chunk_text)),
+                    }
+                )
+
+    _privacy_audit(chunks)
+
+    return {
+        "version": 2,
+        "source": "data/podcast/another-thing/episodes",
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "embedding_model": None,
+        "issue_count": 0,
+        "episode_count": episode_count,
+        "chunk_count": len(chunks),
+        "link_count": 0,
+        "issues": [],
+        "topics": [],
+        "links": [],
+        "chunks": chunks,
+    }
+
+
 def _embed_input(chunk: dict[str, Any]) -> str:
     """The text handed to the embedding model for one chunk. Blog chunks get a
     blog-shaped header; everything else keeps the original Weekly-Thing header
@@ -786,6 +873,17 @@ def _embed_input(chunk: dict[str, Any]) -> str:
         if chunk.get("subject"):
             lines.append(f"Post: {chunk['subject']}")
         lines.append(f"Section: {chunk['section']}")
+        lines.append(chunk["text"])
+        return "\n".join(lines)
+    if chunk.get("source_kind") == "podcast":
+        episode = chunk.get("episode_number")
+        label = f"Episode {episode}" if episode is not None else "Episode"
+        lines = [f"Another Thing podcast — {chunk.get('publish_date') or ''}".rstrip(" —")]
+        if chunk.get("subject"):
+            lines.append(f"{label}: {chunk['subject']}")
+        lines.append(f"Section: {chunk['section']}")
+        if chunk.get("summary"):
+            lines.append(f"Summary: {chunk['summary']}")
         lines.append(chunk["text"])
         return "\n".join(lines)
     return "\n".join([

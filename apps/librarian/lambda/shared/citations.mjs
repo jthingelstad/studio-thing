@@ -24,27 +24,26 @@
  * returned unchanged — the reader may still appreciate a "we looked at
  * these" footer.
  *
- * Blog citations (source_kind === 'blog', or no issue_number but a url)
- * carry no WT/# token, so the mention filter can never match them. They
- * are always kept (the agent cites blog posts by title/link, not number)
- * and appended after the issue citations.
+ * Blog/podcast citations carry no WT/# token, so the mention filter can
+ * never match them. They are always kept (the agent cites these sources by
+ * title/link, not number) and appended after the issue citations.
  *
  * @param {Array<{issue_number?: string|number, source_kind?: string, url?: string}>} citations
  * @param {string} answer
  * @returns {Array}
  */
-function isBlogCitation(citation) {
-  return citation?.source_kind === 'blog' || (citation?.issue_number == null && Boolean(citation?.url));
+function isExternalCitation(citation) {
+  return ['blog', 'podcast'].includes(citation?.source_kind) || (citation?.issue_number == null && Boolean(citation?.url));
 }
 
 export function prioritizeCitationsForAnswer(citations, answer) {
-  const blog = [];
+  const external = [];
   const issueCitations = [];
   for (const citation of citations) {
-    (isBlogCitation(citation) ? blog : issueCitations).push(citation);
+    (isExternalCitation(citation) ? external : issueCitations).push(citation);
   }
   const mentioned = [...String(answer || '').matchAll(/(?:WT|#)(\d+)/g)].map((match) => Number(match[1]));
-  if (!mentioned.length) return [...issueCitations, ...blog];
+  if (!mentioned.length) return [...issueCitations, ...external];
   const firstSeen = new Map();
   mentioned.forEach((issueNumber, index) => {
     if (!firstSeen.has(issueNumber)) firstSeen.set(issueNumber, index);
@@ -60,5 +59,5 @@ export function prioritizeCitationsForAnswer(citations, answer) {
     const rankB = firstSeen.get(Number(b.issue_number));
     return rankA - rankB;
   });
-  return [...orderedIssues, ...blog];
+  return [...orderedIssues, ...external];
 }

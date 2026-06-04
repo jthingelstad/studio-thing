@@ -1,7 +1,7 @@
 # CLAUDE.md — Studio
 
 Orientation for Claude Code working in this repo. Read `README.md` for the human
-overview and `STUDIO_MIGRATION_PLAN.md` for the full migration plan.
+overview and `ALIGNMENT.md` for the current cross-repo map.
 
 ## What this repo is
 
@@ -30,17 +30,20 @@ The decision rule for where code belongs:
 - `docs/`, `notes/`, `reference/` — architecture, staff, editorial reference.
 - `tests/` — Python tests (librarian / corpus / content / audio).
 
-## Critical context — this is a parallel-run, not a finished cutover
+## Critical context — Studio is live
 
 This repo was extracted from `weekly.thingelstad.com` with `git filter-repo` (history
-preserved). The live monorepo **still publishes**. Several hard constraints follow:
+preserved) and is now the live producer. Several hard constraints follow:
 
-- **`weekly` is still authoritative for anything that ships.** Studio is not yet the
-  canonical production source. Do not assume code here is the one that runs in production.
-- **The publishing path has no recovery flow.** A botched change before send day = a
-  skipped week. Cutover is sequenced for *right after* a successful send, never before.
-- **Secrets: add-then-remove, never remove-then-add.** A window with no valid key is a
-  missed send.
+- **Studio is authoritative for anything that ships.** Canonical issue content,
+  authoring agents, production pipelines, corpus generation, and the Librarian API live
+  here. Weekly only renders generated inputs handed off from Studio.
+- **The publishing path has no recovery flow.** A botched ship-path change can still
+  skip a week. Treat workflow, bot, Buttondown, audio, and handoff changes as production
+  changes.
+- **Secrets live here by concern.** Studio holds production credentials for publishing,
+  corpus/Lambda deploys, and the cross-repo handoff. Weekly should only retain secrets
+  for its own landing-page stats fetch.
 - **The Librarian API `/retrieve` is a versioned contract.** Thingy is a live client across
   a repo boundary — casual changes to the API break it. Version before changing.
 - **Preserve history.** If more code moves in from `weekly`, use `git filter-repo` — never
@@ -48,7 +51,6 @@ preserved). The live monorepo **still publishes**. Several hard constraints foll
 
 ## When in doubt
 
-Check `STUDIO_MIGRATION_PLAN.md` for which phase a change belongs to and what gate it must
-clear first. The most important test in the whole migration is the Phase 1 artifact diff:
-inputs Studio pushes must match the old path **byte-for-byte** before cutover. If a task
-would alter the live publishing path or touch secrets, stop and confirm with Jamie first.
+Check `ALIGNMENT.md` for repo boundaries and the phase docs for migration history. If a
+task would alter the live publishing path, cross-repo handoff, API contract, or secrets,
+stop and confirm with Jamie first.

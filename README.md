@@ -11,7 +11,8 @@ Everything downstream of it — the blog, the newsletter, the podcast, Thingy �
 
 This repo was extracted from the `weekly.thingelstad.com` monorepo with
 `git filter-repo`, so **history and blame are preserved** for everything it contains.
-See `STUDIO_MIGRATION_PLAN.md` for the full migration architecture and phasing.
+See `ALIGNMENT.md` for the current architecture map. `STUDIO_MIGRATION_PLAN.md`
+and the phase runbooks remain as historical migration records.
 
 ## Architecture
 
@@ -48,12 +49,11 @@ One brain, several surfaces.
 | `tests/` | Python tests covering librarian / corpus / content / audio. |
 | `Makefile`, `requirements.txt` | Production command surface and Python deps. |
 
-## Status: parallel-run (Phase 0/1)
+## Status: live producer
 
-This repo exists **alongside** the live `weekly.thingelstad.com` monorepo, which still
-publishes. Studio is **not yet the canonical source** for production — that flips at
-cutover (Phase 2), sequenced for right after a successful send because the publishing
-path has **no recovery flow**. Until then, treat `weekly` as authoritative for anything
-that ships, and build/verify here in parallel.
-
-See `STUDIO_MIGRATION_PLAN.md` for the phase-by-phase plan and the verification gates.
+Studio is now the canonical production source. The authoring bot commits canonical
+issue content here; this repo's production workflow builds the archive, corpus, graph,
+audio/status artifacts, deploys the Librarian runtime when needed, and hands generated
+11ty inputs to `weekly.thingelstad.com`. Weekly is a render surface: it receives those
+inputs, refreshes its own landing-page stats, builds Eleventy + Pagefind, and deploys
+to GitHub Pages.

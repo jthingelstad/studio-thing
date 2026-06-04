@@ -29,8 +29,15 @@ Parameters:
     Description: >
       S3 key for the thingelstad.com blog corpus (separate from the Weekly
       Thing corpus). The stream Lambda lazy-loads it only when a request's
-      scope includes blog or both. Uploaded on its own cadence by
+      scope includes blog, both, or all. Uploaded on its own cadence by
       pipeline/deploy/upload_blog_corpus.py, not the WT deploy.
+  PodcastCorpusKey:
+    Type: String
+    Default: artifacts/podcast_corpus.json
+    Description: >
+      S3 key for the Another Thing podcast corpus. The stream Lambda
+      lazy-loads it only when a request's scope includes podcast or all.
+      Uploaded on its own cadence by pipeline/deploy/upload_podcast_corpus.py.
   ButtondownApiKey:
     Type: String
     NoEcho: true
@@ -118,6 +125,7 @@ Resources:
                   - !Sub arn:aws:s3:::${CorpusBucket}/${CorpusKey}
                   - !Sub arn:aws:s3:::${CorpusBucket}/${GraphKey}
                   - !Sub arn:aws:s3:::${CorpusBucket}/${BlogCorpusKey}
+                  - !Sub arn:aws:s3:::${CorpusBucket}/${PodcastCorpusKey}
               - Effect: Allow
                 Action:
                   - bedrock:InvokeModel
@@ -184,6 +192,7 @@ Resources:
           CORPUS_KEY: !Ref CorpusKey
           GRAPH_KEY: !Ref GraphKey
           BLOG_CORPUS_KEY: !Ref BlogCorpusKey
+          PODCAST_CORPUS_KEY: !Ref PodcastCorpusKey
           SESSION_SECRET: !Ref SessionSecret
           DISCORD_BRIDGE_SECRET: !Ref DiscordBridgeSecret
           LOG_LEVEL: !Ref LogLevel

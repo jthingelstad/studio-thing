@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
+PROJECTS_DIR = REPO.parent
 ARCHIVE_DIR = REPO / "apps" / "site" / "archive"
 SITE_DIR = REPO / "apps" / "site"
 FAQ_PATH = REPO / "apps" / "librarian" / "lambda" / "shared" / "faq.json"
@@ -21,3 +22,12 @@ GRAPH_PATH = REPO / "data" / "librarian" / "graph.json"
 # Weekly-Thing retrieval. See build_blog_corpus in corpus.py.
 BLOG_DIR = REPO / "data" / "blog" / "posts"
 BLOG_CORPUS_PATH = REPO / "data" / "librarian" / "blog_corpus.json"
+
+# Another Thing podcast episodes are authored/published by the sibling
+# another.thingelstad.com repo, then normalized into Studio-owned data so
+# Librarian can build a separate podcast corpus without scraping Thingy-time
+# pages.
+ANOTHER_THING_REPO = PROJECTS_DIR / "another.thingelstad.com"
+ANOTHER_THING_EPISODES_DIR = ANOTHER_THING_REPO / "content" / "episodes"
+PODCAST_DIR = REPO / "data" / "podcast" / "another-thing" / "episodes"
+PODCAST_CORPUS_PATH = REPO / "data" / "librarian" / "podcast_corpus.json"

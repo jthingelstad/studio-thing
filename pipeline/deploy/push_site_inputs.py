@@ -1,16 +1,16 @@
 """Push the generated 11ty site inputs from Studio to the website repo.
 
-Studio owns production: it builds ``apps/site/archive/{N}.md``, the
-``apps/site/_data/*.json`` index files, and ``data/librarian/graph.json``, then
+Studio owns production: it builds ``apps/site/archive/{N}.md``,
+``apps/site/_data/{emails,status}.json``, and ``data/librarian/graph.json``, then
 ships them to ``weekly.thingelstad.com``, which only renders. This is the
-Phase-1 content handoff (see ``STUDIO_MIGRATION_PLAN.md`` /
-``PHASE_1.md``). It reuses workshop_bot's ``github_repo.put_tree`` so the whole
+production content handoff (see ``ALIGNMENT.md``). It reuses workshop_bot's
+``github_repo.put_tree`` so the whole
 set lands as one atomic, idempotent commit.
 
-Default mode is a **dry run**: compare the generated files against the website
-repo's current ``main`` tree and report what *would* change, committing nothing.
-That is the Phase-1 verification gate — confirm the diff is empty/expected
-before the cutover flips the push on.
+Default mode is still a **dry run** for local/manual inspection: compare the generated
+files against the website repo's current ``main`` tree and report what *would* change,
+committing nothing. Studio's production workflow calls this script with ``--push`` on
+normal pushes.
 
 Usage:
   python pipeline/deploy/push_site_inputs.py           # dry-run diff (default, safe)

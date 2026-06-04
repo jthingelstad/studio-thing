@@ -1,12 +1,10 @@
 name: Studio — Production & Handoff
 
-# Studio owns production. This workflow runs the production half of the old
-# weekly.thingelstad.com pipeline (tests, stats, archive build, corpus, graph,
-# Lambda deploy, status) and hands the generated 11ty inputs to the website
-# repo, which only renders + deploys. See PHASE_1.md.
-#
-# The handoff defaults to a DRY-RUN diff — nothing is committed to the website
-# repo until you run this manually with push_to_weekly = true (the cutover).
+# Studio owns production. This workflow builds archive/site inputs from the
+# canonical sources, updates the Librarian runtime artifacts, and hands the
+# generated 11ty inputs to weekly.thingelstad.com, which only renders + deploys.
+# Pushes to main commit the handoff automatically. Manual runs default to a
+# dry-run diff unless push_to_weekly is checked.
 
 on:
   push:
@@ -21,7 +19,7 @@ on:
   workflow_dispatch:
     inputs:
       push_to_weekly:
-        description: 'Commit generated inputs to the website repo (otherwise dry-run diff only)'
+        description: 'Commit generated inputs to the website repo'
         type: boolean
         default: false
 
@@ -125,15 +123,15 @@ jobs:
           LIBRARIAN_BUCKET: weekly-thing-librarian
 
       # Handoff. Ships the generated 11ty inputs to the website repo as one
-      # atomic commit. Dry-run diff by default (Phase 1 verification); a manual
-      # run with push_to_weekly = true commits for real (the cutover).
+      # atomic commit on normal pushes. Manual runs are dry-run by default for
+      # inspection, unless push_to_weekly is checked.
       - name: Hand off site inputs to the website repo
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.push_to_weekly }}" == "true" ]]; then
+          if [[ "${{ github.event_name }}" == "push" || "${{ inputs.push_to_weekly }}" == "true" ]]; then
             echo "Committing site inputs to the website repo."
             python pipeline/deploy/push_site_inputs.py --push
           else
-            echo "Dry-run diff only (set push_to_weekly = true to commit)."
+            echo "Manual dry-run diff only (set push_to_weekly = true to commit)."
             python pipeline/deploy/push_site_inputs.py
           fi
         env:
