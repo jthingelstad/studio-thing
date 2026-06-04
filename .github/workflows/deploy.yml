@@ -47,6 +47,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
+          cache-dependency-path: apps/librarian/lambda/package-lock.json
 
       - run: pip install -r requirements.txt
 
