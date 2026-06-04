@@ -12,6 +12,7 @@ on:
     paths:
       - 'data/issues/**'
       - 'data/audio/**'
+      - 'data/podcast/**'
       - 'pipeline/**'
       - 'librarian-core/**'
       - 'apps/librarian/**'
@@ -72,6 +73,9 @@ jobs:
       - name: Build librarian corpus
         run: python pipeline/corpus/build.py
 
+      - name: Build podcast corpus
+        run: python pipeline/corpus/build_podcast.py
+
       # data/librarian/graph.json powers the site's topic pages.
       - name: Build graph for site topics
         run: python pipeline/graph/build.py
@@ -81,6 +85,17 @@ jobs:
       - name: Upload embedded corpus + graph to S3
         continue-on-error: true
         run: python pipeline/deploy/upload_corpus.py
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+          LIBRARIAN_BUCKET: weekly-thing-librarian
+
+      # Another Thing transcripts are a separate lazy-loaded corpus. Keep the
+      # S3 artifact current when data/podcast or corpus code changes.
+      - name: Upload embedded podcast corpus to S3
+        continue-on-error: true
+        run: python pipeline/deploy/upload_podcast_corpus.py
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

@@ -44,6 +44,7 @@ One brain, several surfaces.
 | `data/issues/` | Editorial source of truth — the canonical per-issue content. |
 | `data/audio/` | Audio production source: manifest, scripts, bumpers. |
 | `data/blog/` | Blog drafts and post archive; feeds the (future) Micropub publish pipeline. |
+| `data/podcast/` | Normalized Another Thing episode metadata and transcripts for the podcast corpus. |
 | `content/buttondown/` | Author-managed Buttondown newsletter config (automations, transactional, theme). |
 | `docs/`, `notes/`, `reference/` | Architecture, staff, and editorial reference. |
 | `tests/` | Python tests covering librarian / corpus / content / audio. |
@@ -57,3 +58,8 @@ audio/status artifacts, deploys the Librarian runtime when needed, and hands gen
 11ty inputs to `weekly.thingelstad.com`. Weekly is a render surface: it receives those
 inputs, refreshes its own landing-page stats, builds Eleventy + Pagefind, and deploys
 to GitHub Pages.
+
+Another Thing remains the podcast publishing surface. Studio imports its episode
+metadata/transcripts into `data/podcast/another-thing/episodes/`, builds a separate
+lazy-loaded podcast corpus, and uploads it for Thingy scopes that include `podcast`
+or `all`.

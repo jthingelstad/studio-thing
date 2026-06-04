@@ -1,4 +1,8 @@
-# Studio Migration — Plan & Claude Code Brief
+# Studio Migration — Historical Plan
+
+> Status: completed. This document is preserved as the original migration
+> brief. The current architecture record is `ALIGNMENT.md`; completed runbooks
+> are `PHASE_1.md` and `PHASE_2.md`.
 
 Splitting the overloaded `weekly.thingelstad.com` monorepo into a **brain** (Studio)
 and a set of **surfaces** (newsletter, blog, podcast, Thingy). This doc is both the
@@ -27,7 +31,7 @@ One brain, several surfaces. The rule that decides where anything goes:
 
 | Repo / host | Role | Class |
 |---|---|---|
-| **Studio** (new) | Brain: authoring staff (Eddy/Linky/Marky/Patty), production pipeline, `data/issues` + `data/episodes` source of truth, corpus, **Librarian API** | hub |
+| **Studio** (new) | Brain: authoring staff (Eddy/Linky/Marky/Patty), production pipeline, `data/issues` + podcast transcript imports, corpus, **Librarian API** | hub |
 | **thingelstad.com** | Blog on Micro.blog | publish surface (no repo) |
 | **another.thingelstad.com** | Podcast, custom site | publish surface (own repo, unchanged) |
 | **weekly.thingelstad.com** | Newsletter site (11ty) + audio links | publish surface (own repo, **secret-free**) |
@@ -90,7 +94,7 @@ One brain, several surfaces. The rule that decides where anything goes:
 
 ### Phase 4 — new features (independent, additive)
 - Blog draft → **Micropub** publish pipeline (`post-status: draft`, category tag for syndication).
-- `data/episodes/{N}/` audio-native source contract for Another Thing.
+- Podcast source contract for Another Thing.
 - Ingest podcast transcripts into the corpus → Thingy becomes universal over all content.
 
 > Phases 3 and 4 are purely additive and carry **no migration risk** — they can happen anytime,
@@ -136,7 +140,7 @@ Work in small steps and pause at each gate. Ask before anything destructive.
 | Thingy web front-end (`weekly/thingy`) | **Thingy** | New subdomain `thingy.thingelstad.com` |
 | `pipeline/` | **Studio** | Production: build, stats, status, audio |
 | `data/issues/` | **Studio** | Editorial source of truth |
-| `data/episodes/` (new) | **Studio** | Podcast audio-native source |
+| `data/podcast/` (new) | **Studio** | Normalized podcast transcript source |
 | Blog drafts | **Studio** | Feeds the Micropub publish pipeline |
 | `apps/site/` (11ty) | **stays in weekly** | Pure render surface |
 | Generated `archive/*.md`, `_data/*.json` | **stays in weekly** | Pushed in by Studio |
