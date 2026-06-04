@@ -54,6 +54,13 @@ jobs:
       - name: Install Lambda dependencies
         run: npm --prefix apps/librarian/lambda ci
 
+      # Materialize apps/site/archive/{N}.md + _data/emails.json from the
+      # canonical data/issues/{N}/ store. Runs before tests because
+      # test_audio_script reads archive files as fixtures, and apps/site/ is a
+      # transient build artifact in Studio (built here, not committed).
+      - name: Build archive from data/issues/
+        run: python pipeline/content/content.py build
+
       - name: Run Python tests
         run: python -m unittest discover -s tests -p 'test_*.py' -t .
 
@@ -68,11 +75,6 @@ jobs:
         env:
           BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}
           STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
-
-      # Materialize apps/site/archive/{N}.md + _data/emails.json from the
-      # canonical data/issues/{N}/ store.
-      - name: Build archive from data/issues/
-        run: python pipeline/content/content.py build
 
       - name: Build librarian corpus
         run: python pipeline/corpus/build.py
