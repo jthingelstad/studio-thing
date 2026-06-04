@@ -1,0 +1,143 @@
+name: Studio — Production & Handoff
+
+# Studio owns production. This workflow runs the production half of the old
+# weekly.thingelstad.com pipeline (tests, stats, archive build, corpus, graph,
+# Lambda deploy, status) and hands the generated 11ty inputs to the website
+# repo, which only renders + deploys. See PHASE_1.md.
+#
+# The handoff defaults to a DRY-RUN diff — nothing is committed to the website
+# repo until you run this manually with push_to_weekly = true (the cutover).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/issues/**'
+      - 'data/audio/**'
+      - 'pipeline/**'
+      - 'librarian-core/**'
+      - 'apps/librarian/**'
+      - 'requirements.txt'
+  workflow_dispatch:
+    inputs:
+      push_to_weekly:
+        description: 'Commit generated inputs to the website repo (otherwise dry-run diff only)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: studio-production
+  cancel-in-progress: false
+
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+          cache: 'pip'
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: pip install -r requirements.txt
+
+      - name: Install Lambda dependencies
+        run: npm --prefix apps/librarian/lambda ci
+
+      - name: Run Python tests
+        run: python -m unittest discover -s tests -p 'test_*.py' -t .
+
+      - name: Run Lambda tests
+        run: npm --prefix apps/librarian/lambda test
+
+      # Subscriber counts + Stripe balance for the landing page. Best-effort;
+      # a Buttondown/Stripe hiccup falls back to the committed stats.json.
+      - name: Refresh stats
+        continue-on-error: true
+        run: python pipeline/content/content.py stats
+        env:
+          BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}
+          STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
+
+      # Materialize apps/site/archive/{N}.md + _data/emails.json from the
+      # canonical data/issues/{N}/ store.
+      - name: Build archive from data/issues/
+        run: python pipeline/content/content.py build
+
+      - name: Build librarian corpus
+        run: python pipeline/corpus/build.py
+
+      # data/librarian/graph.json powers the site's topic pages.
+      - name: Build graph for site topics
+        run: python pipeline/graph/build.py
+
+      # Embed corpus + graph and push to S3 so Thingy answers cite the new
+      # issue. continue-on-error so a Bedrock hiccup doesn't block the handoff.
+      - name: Upload embedded corpus + graph to S3
+        continue-on-error: true
+        run: python pipeline/deploy/upload_corpus.py
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+          LIBRARIAN_BUCKET: weekly-thing-librarian
+
+      - name: Detect Lambda changes
+        id: lambda-changes
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --quiet HEAD~1 HEAD -- apps/librarian/ pipeline/deploy/aws.py; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy Thingy Lambda
+        if: steps.lambda-changes.outputs.changed == 'true'
+        continue-on-error: true
+        run: python pipeline/deploy/aws.py --skip-corpus-upload --skip-smoke-test
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+          BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}
+          LIBRARIAN_BUCKET: weekly-thing-librarian
+          LIBRARIAN_BRIDGE_SECRET: ${{ secrets.LIBRARIAN_BRIDGE_SECRET }}
+          LIBRARIAN_SESSION_SECRET: ${{ secrets.LIBRARIAN_SESSION_SECRET }}
+
+      # Powers /ops/ and /status.json on the site. Reads S3 for the deployed
+      # corpus timestamp; non-fatal if S3 fails.
+      - name: Generate pipeline status report
+        continue-on-error: true
+        run: python pipeline/status.py --json apps/site/_data/status.json
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+          LIBRARIAN_BUCKET: weekly-thing-librarian
+
+      # Handoff. Ships the generated 11ty inputs to the website repo as one
+      # atomic commit. Dry-run diff by default (Phase 1 verification); a manual
+      # run with push_to_weekly = true commits for real (the cutover).
+      - name: Hand off site inputs to the website repo
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.push_to_weekly }}" == "true" ]]; then
+            echo "Committing site inputs to the website repo."
+            python pipeline/deploy/push_site_inputs.py --push
+          else
+            echo "Dry-run diff only (set push_to_weekly = true to commit)."
+            python pipeline/deploy/push_site_inputs.py
+          fi
+        env:
+          GITHUB_PAT_TOKEN: ${{ secrets.WEBSITE_REPO_PAT }}
+          GITHUB_REPO_NWO: jthingelstad/weekly.thingelstad.com

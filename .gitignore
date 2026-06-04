@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+
+# Build output
+_site/
+
+# Local cache
+cache/
+
+# Environment variables
+.env
+.env-*
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# OS files
+.DS_Store
+
+# Playwright MCP
+.playwright-mcp/
+test-results/
+playwright-report/
+
+# Local Claude settings (project-level skills under .claude/skills/ are committed)
+.claude/*
+!.claude/skills/
+
+# Pagefind
+_site/pagefind/
+
+# Workshop bot runtime DB (recreated locally)
+apps/workshop_bot/data/
+apps/workshop_bot/logs/
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Local audit/working files
+tmp/
+
+# Generated librarian artifacts (rebuilt by `npm run librarian:corpus` and
+# `npm run librarian:graph`; the deploy script regenerates them before upload).
+data/librarian/corpus.json
+data/librarian/graph.json
+data/librarian/*.embedded.json
+
+# Generated pipeline status report (rebuilt by `pipeline/status.py` at
+# build time; powers /ops/ and /status.json).
+apps/site/_data/status.json
+
+# Generated site inputs — built transiently, handed off to the website repo, never committed here
+apps/site/
