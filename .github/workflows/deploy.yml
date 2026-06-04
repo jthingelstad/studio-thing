@@ -67,14 +67,9 @@ jobs:
       - name: Run Lambda tests
         run: npm --prefix apps/librarian/lambda test
 
-      # Subscriber counts + Stripe balance for the landing page. Best-effort;
-      # a Buttondown/Stripe hiccup falls back to the committed stats.json.
-      - name: Refresh stats
-        continue-on-error: true
-        run: python pipeline/content/content.py stats
-        env:
-          BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}
-          STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
+      # Note: landing-page stats (subscriber/supporter numbers) are NOT produced
+      # here — weekly fetches its own in its CI. Studio no longer refreshes or
+      # hands off stats.json.
 
       - name: Build librarian corpus
         run: python pipeline/corpus/build.py

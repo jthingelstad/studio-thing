@@ -42,7 +42,9 @@ LIBRARIAN = REPO_ROOT / "data" / "librarian"
 def collect_files() -> list[tuple[str, bytes]]:
     """Gather the generated site inputs as (repo-relative path, bytes)."""
     paths: list[Path] = sorted((SITE / "archive").glob("*.md"))
-    for rel in ("_data/emails.json", "_data/stats.json", "_data/status.json"):
+    # stats.json is intentionally NOT handed off — weekly fetches its own
+    # landing-page stats (subscriber/supporter numbers) in its CI.
+    for rel in ("_data/emails.json", "_data/status.json"):
         p = SITE / rel
         if p.exists():
             paths.append(p)
