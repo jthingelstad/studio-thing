@@ -26,9 +26,9 @@ GitHub → Settings → Secrets and variables → Actions. **Add these; leave th
 | `STRIPE_API_KEY` | stats |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | corpus→S3, Lambda deploy, status |
 | `LIBRARIAN_BRIDGE_SECRET` / `LIBRARIAN_SESSION_SECRET` | Lambda deploy |
-| `WEBSITE_REPO_PAT` | **NEW** — the cross-repo handoff |
+| `STUDIO_PAT_TOKEN` | **NEW** — the cross-repo handoff |
 
-`WEBSITE_REPO_PAT` is a fine-grained PAT with **Contents: write on `jthingelstad/weekly.thingelstad.com`**.
+`STUDIO_PAT_TOKEN` is a fine-grained PAT with **Contents: write on `jthingelstad/weekly.thingelstad.com`**.
 The default `GITHUB_TOKEN` only has rights on the current repo, so the handoff needs its own token.
 
 ## Verification gate (the most important step — do this before any cutover)

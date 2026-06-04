@@ -142,5 +142,5 @@ jobs:
             python pipeline/deploy/push_site_inputs.py
           fi
         env:
-          GITHUB_PAT_TOKEN: ${{ secrets.WEBSITE_REPO_PAT }}
+          GITHUB_PAT_TOKEN: ${{ secrets.STUDIO_PAT_TOKEN }}
           GITHUB_REPO_NWO: jthingelstad/weekly.thingelstad.com

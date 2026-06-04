@@ -16,8 +16,8 @@ means any surprise has time to be fixed before the next issue.
 
 - [x] Phase 1 dry-run clean (Studio reproduces weekly's archive exactly; only delta was the un-handed-off WT349).
 - [ ] Studio Actions secrets added: `BUTTONDOWN_API_KEY`, `STRIPE_API_KEY`, `AWS_ACCESS_KEY_ID`,
-      `AWS_SECRET_ACCESS_KEY`, `LIBRARIAN_BRIDGE_SECRET`, `LIBRARIAN_SESSION_SECRET`, `WEBSITE_REPO_PAT`.
-- [ ] `WEBSITE_REPO_PAT` has **Contents: write on `jthingelstad/weekly.thingelstad.com`** (Studio → weekly handoff).
+      `AWS_SECRET_ACCESS_KEY`, `LIBRARIAN_BRIDGE_SECRET`, `LIBRARIAN_SESSION_SECRET`, `STUDIO_PAT_TOKEN`.
+- [ ] `STUDIO_PAT_TOKEN` has **Contents: write on `jthingelstad/weekly.thingelstad.com`** (Studio → weekly handoff).
 - [ ] The bot's `GITHUB_PAT_TOKEN` has **Contents: write on `jthingelstad/studio-thing`** (the new ship target).
 - [ ] The live `workshop_bot` process runs from the `studio-thing` checkout with the Studio `.env` (not the old weekly copy).
 
