@@ -86,8 +86,8 @@ class BuildBlogCorpusTests(unittest.TestCase):
             _post(blog, mid=999, date="2026-05-24", slug="unreferenced",
                   title="Unreferenced", body="Nobody links to this one.")
             archive = Path(tmp) / "archive"
-            archive.mkdir()
-            (archive / "350.md").write_text(
+            (archive / "350").mkdir(parents=True)
+            (archive / "350" / "archive.md").write_text(
                 "---\nnumber: 350\nsubject: WT350\npublish_date: 2026-05-25T12:00:00Z\n---\n"
                 "## Journal\n\n"
                 "[8:50 AM](https://www.thingelstad.com/2026/05/23/a-pattern-ive-adopted.html) — a note.\n",
@@ -102,10 +102,10 @@ class BuildBlogCorpusTests(unittest.TestCase):
     def test_journal_xref_normalizes_host_and_html_suffix(self):
         with tempfile.TemporaryDirectory() as tmp:
             archive = Path(tmp) / "archive"
-            archive.mkdir()
+            (archive / "42").mkdir(parents=True)
             # legacy micro.thingelstad.com host + .html suffix should
             # normalize to the same key as a www.thingelstad.com permalink.
-            (archive / "42.md").write_text(
+            (archive / "42" / "archive.md").write_text(
                 "---\nnumber: 42\nsubject: WT42\npublish_date: 2019-01-01T12:00:00Z\n---\n"
                 "See [this](https://micro.thingelstad.com/2011/03/16/tilt-shift-lens.html).\n",
                 encoding="utf-8",

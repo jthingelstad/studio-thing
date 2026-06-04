@@ -10,7 +10,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 PROJECTS_DIR = REPO.parent
-ARCHIVE_DIR = REPO / "apps" / "site" / "archive"
+ARCHIVE_DIR = REPO / "data" / "issues"
 SITE_DIR = REPO / "apps" / "site"
 FAQ_PATH = REPO / "apps" / "librarian" / "lambda" / "shared" / "faq.json"
 CORPUS_PATH = REPO / "data" / "librarian" / "corpus.json"

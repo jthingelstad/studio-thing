@@ -478,9 +478,9 @@ def build_corpus(
     issues = []
     links: list[dict[str, Any]] = []
     topic_index: dict[str, dict[str, Any]] = {}
-    for path in sorted(archive_dir.glob("*.md"), key=lambda p: issue_sort_key(p.stem)):
+    for path in sorted(archive_dir.glob("*/archive.md"), key=lambda p: issue_sort_key(p.parent.name)):
         metadata, body = read_issue(path)
-        number = metadata.get("number") or path.stem
+        number = metadata.get("number") or path.parent.name
         subject = metadata.get("subject") or f"Weekly Thing {number}"
         publish_date = metadata.get("publish_date") or ""
         url = f"/archive/{number}/"
@@ -667,9 +667,9 @@ def journal_blog_xref(archive_dir: Path = ARCHIVE_DIR) -> dict[str, list[Any]]:
     stamp ``also_in_issues`` on the matching blog chunks. One-directional
     (blog→issue) for v1: the issue already links to the blog inline."""
     xref: dict[str, set] = {}
-    for path in sorted(archive_dir.glob("*.md"), key=lambda p: issue_sort_key(p.stem)):
+    for path in sorted(archive_dir.glob("*/archive.md"), key=lambda p: issue_sort_key(p.parent.name)):
         metadata, body = read_issue(path)
-        number = metadata.get("number") or path.stem
+        number = metadata.get("number") or path.parent.name
         for match in _BLOG_PERMALINK_RE.finditer(body):
             xref.setdefault(_normalize_blog_path(match.group(1)), set()).add(number)
     return {key: sorted(nums, key=issue_sort_key) for key, nums in xref.items()}

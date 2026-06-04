@@ -12,8 +12,8 @@ from typing import Any, Iterable, Optional
 
 import yaml
 
-REPO = Path(__file__).resolve().parents[3]
-ARCHIVE_DIR = REPO / "apps" / "site" / "archive"
+REPO = Path(__file__).resolve().parents[4]
+ARCHIVE_DIR = REPO / "data" / "issues"
 
 logger = logging.getLogger("workshop.archive")
 
@@ -40,11 +40,11 @@ def latest_issue_number(issues: Iterable[dict[str, Any]]) -> Optional[int]:
 
 
 def read_issue(number: int) -> Optional[dict[str, Any]]:
-    """Read `apps/site/archive/{n}.md`. Returns dict with `frontmatter`, `body`."""
-    path = ARCHIVE_DIR / f"{number}.md"
+    """Read `data/issues/{n}/archive.md`. Returns dict with `frontmatter`, `body`."""
+    path = ARCHIVE_DIR / str(number) / "archive.md"
     if not path.exists():
         # Some issues are suffixed (e.g. `140-special`); try a glob.
-        candidates = sorted(ARCHIVE_DIR.glob(f"{number}-*.md"))
+        candidates = sorted(ARCHIVE_DIR.glob(f"{number}-*/archive.md"))
         if not candidates:
             return None
         path = candidates[0]
