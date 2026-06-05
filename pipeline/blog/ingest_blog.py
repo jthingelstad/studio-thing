@@ -317,6 +317,9 @@ def main() -> int:
     if args.dry_run:
         print("\n(dry-run — no files written)", flush=True)
         return 0
+    if args.since_last and not posts:
+        print("\n(no new posts — local blog store unchanged)", flush=True)
+        return 0
 
     written = 0
     posts_index: dict[str, Any] = dict(index.get("posts", {}))

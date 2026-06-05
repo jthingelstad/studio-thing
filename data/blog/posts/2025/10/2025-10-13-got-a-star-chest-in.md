@@ -9,4 +9,4 @@ categories: []
 
 Got a 5-star chest in Clash Royale!
 
-<img src="https://www.thingelstad.com/uploads/2025/bfe937df1c.png" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/bfe937df1c.png" width="600" height="600" alt="Clash Royale game screen showing a Book of Cards Epic item x1 reward with five stars on a golden background">

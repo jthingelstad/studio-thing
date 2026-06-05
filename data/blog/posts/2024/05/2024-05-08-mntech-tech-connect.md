@@ -33,7 +33,7 @@ Overall observations:
 
 <img src="https://www.thingelstad.com/uploads/2024/4277e91074.jpg" width="600" height="450" alt="Large conference ballroom with hundreds of seated attendees watching a panel of four speakers on a blue-lit stage with two large projection screens showing YOUR NEIGHBORHOODS">
 
-<img src="https://www.thingelstad.com/uploads/2024/679a9d5da4.png" width="600" height="450" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/679a9d5da4.png" width="600" height="450" alt="Four men pose at the front of a conference room near a podium and a projected Tech Connect slide, two seated on stools and two standing.">
 
 <img src="https://www.thingelstad.com/uploads/2024/b9e14f7be8.jpg" width="600" height="450" alt="Large conference ballroom filled with hundreds of attendees seated at round tables facing a stage where five panelists sit for a CIO Leadership Panel, displayed on two large screens.">
 

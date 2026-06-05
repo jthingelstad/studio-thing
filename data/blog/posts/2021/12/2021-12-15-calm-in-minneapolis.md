@@ -9,4 +9,4 @@ categories: []
 
 Calm in Minneapolis but it is because we are in the middle of this huge rotational system. 😬
 
-<img src="https://www.thingelstad.com/uploads/2021/9ae6787522.gif" width="600" height="405" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/9ae6787522.gif" width="600" height="405" alt="KMPX dual-pane radar showing reflectivity and velocity at 9:19 PM with a large rotating storm system over Minnesota and Wisconsin" />

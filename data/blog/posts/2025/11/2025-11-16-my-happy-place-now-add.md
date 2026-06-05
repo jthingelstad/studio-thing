@@ -9,4 +9,4 @@ categories: []
 
 My happy place. Now add snow. ❄️🔥
 
-<img src="https://www.thingelstad.com/uploads/2025/50beb8d65e.jpg" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/50beb8d65e.jpg" alt="Outdoor hot tub filled with bubbling water beside a wood-fired barrel sauna with smoke rising from its chimney, surrounded by evergreen trees">

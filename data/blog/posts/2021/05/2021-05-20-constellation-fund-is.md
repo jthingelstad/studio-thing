@@ -9,7 +9,7 @@ categories: []
 
 Constellation Fund is hosting **Bright Night**, a free virtual fundraiser tonight at **6:30pm**! 💡 You can [join the stream with just an email address](https://global.qwikcast.tv/public/QwikCast/QwikCastEvent?eventKey=d28d0f00-01b3-4fd1-b86f-702f722a5056). They are spotlighting great causes and great artists! I'm going to be there. 🎟 You free tonight? Join online! 👋
 
-![](https://www.thingelstad.com/uploads/2021/4b52239bea.gif)
+<img src="https://www.thingelstad.com/uploads/2021/4b52239bea.gif" alt="Constellation Fund Bright Night event logo in gold and white text on a black background with a gold border">
 
 See Bright Night from 
 [2021](https://www.thingelstad.com/2021/05/20/constellation-fund-is.html),

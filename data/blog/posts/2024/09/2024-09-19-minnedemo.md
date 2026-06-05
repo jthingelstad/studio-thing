@@ -29,7 +29,7 @@ Focused on creating accessible technology specifically to allow VR usage for peo
 
 [Essie Schlotterbeck](https://www.linkedin.com/in/essie-schlotterbeck/)
 
-<img src="https://www.thingelstad.com/uploads/2024/img-5977.png" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/img-5977.png" width="600" height="600" alt="Smartphone showing the Tinkl app map view of downtown Minneapolis with red location pins scattered across a street grid.">
 
 Not a launched app but will be soon. The app uses an established database with user generated content layered on to help locate gender neutral bathrooms. The app was originally built as part of Prime Academy program. Great name!
 
@@ -57,7 +57,7 @@ Platform that connects DIY home repair people to others to help them solve probl
 
 [Heath Schubert](https://www.linkedin.com/in/hlrbo/) + Cookie Lithyouvong  
 
-<img src="https://www.thingelstad.com/uploads/2024/img-5971.png" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2024/img-5971.png" width="600" height="600" alt="Smartphone screen showing the HLRBO website with a Find Your Next Hunting Lease headline and search fields for country, state, and county">
 
 Interesting idea that has market traction and raised investment round. Like VRBO, but for Hunting Leases. Provides a market for landowners to put the hunting rights up for lease, and provides the legal lease documents as well as hosting assets to better explain the plot of land. Seems like a solid idea taking an existing proven model and applying to a different asset.
 

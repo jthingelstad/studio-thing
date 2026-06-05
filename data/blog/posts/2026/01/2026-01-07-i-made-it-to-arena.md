@@ -9,4 +9,4 @@ categories: []
 
 I made it to **Arena 23 Valkalla** in [Clash Royale](https://supercell.com/en/games/clashroyale/)! 🙌
 
-<img src="https://www.thingelstad.com/uploads/2026/img-0224.png" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/img-0224.png" width="600" height="600" alt="Clash Royale screenshot on an iPad showing Arena 23 Valkalla unlocked at 9000 trophies with a golden tree and angel statue tower skin.">

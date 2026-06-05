@@ -9,4 +9,4 @@ categories: []
 
 Nice day for a campfire.  🔥
 
-![](https://www.thingelstad.com/uploads/2020/085d2639e9.gif)
+<img src="https://www.thingelstad.com/uploads/2020/085d2639e9.gif" alt="Roaring fire in a metal fire pit on a gravel patio with blue chairs, large house with lit pergola in background at dusk.">

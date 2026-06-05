@@ -9,4 +9,4 @@ categories: []
 
 I don't know if it’s even helpful for me to have this much data. 😬
 
-<img src="https://www.thingelstad.com/uploads/2021/2797cee24a.gif" width="600" height="414" alt="" />
+<img src="https://www.thingelstad.com/uploads/2021/2797cee24a.gif" width="600" height="414" alt="KMPX radar dual-pane showing Super-Res Reflectivity and Velocity Tilt 1 over Minnesota and surrounding states at 6:33 PM" />

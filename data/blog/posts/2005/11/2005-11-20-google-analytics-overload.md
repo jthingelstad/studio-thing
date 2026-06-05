@@ -2,7 +2,7 @@
 microblog_id: 1076242
 url: "https://www.thingelstad.com/2005/11/20/google-analytics-overload.html"
 title: "Google Analytics - Overload?"
-published: "2005-11-20T06:00:00+00:00"
+published: "2005-11-20T07:00:00+00:00"
 post_kind: post
 categories: []
 ---
@@ -13,13 +13,7 @@ I was moments away from plunking down "real money" on Visistat to solve this pro
 
 I've been impressed with the data display and am really excited about it, but Google (for the first time I can recall) seems to be completely overwhelmed with traffic. It's Sunday morning and my reports are still showing Thursday morning data. They target a 24 hour turnaround in report data, but this is a bit crazy. This is what they are telling customers.
 
-> ![](https://www.google.com/analytics/home/images/waiting.gif)
-> **Waiting for Data**\
-> Analytics has been successfully installed and data is being gathered
-> now. The demand for Google Analytics surpassed even our highest
-> expectations and as a result some customers may temporarily experience
-> report-update delays. All data continues to be collected and no data
-> has been lost. We are currently adding resources to ensure
-> high-quality service. We apologize for any inconvenience.
+> **Waiting for Data**  
+> Analytics has been successfully installed and data is being gatherednow. The demand for Google Analytics surpassed even our highestexpectations and as a result some customers may temporarily experience report-update delays. All data continues to be collected and no datahas been lost. We are currently adding resources to ensurehigh-quality service. We apologize for any inconvenience.
 
 I'm eagerly waiting for them to deal with the load. Maybe they need to add a few thousand more servers . However, if they can't get this thing working soon I think they may end up with a real PR problem. Especially considering the target audience, web builders!

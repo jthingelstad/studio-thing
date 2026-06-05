@@ -9,4 +9,4 @@ categories: []
 
 Went axe throwing for the first time tonight and did this!
 
-<img src="https://www.thingelstad.com/uploads/2019/604313b996.jpg" width="600" height="600" alt="" />
+<img src="https://www.thingelstad.com/uploads/2019/604313b996.jpg" width="600" height="600" alt="Man in plaid shirt mid-throw at an indoor axe throwing lane with a target board reading Flannel Jax's on the wall." />

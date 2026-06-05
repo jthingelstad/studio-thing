@@ -9,6 +9,6 @@ categories: []
 
 Very good lunch at [Smoke on the Water](https://www.smokeonthewaterwinery.com) in Coleraine today. Great view inside of Trout Lake. 
 
-<img src="https://www.thingelstad.com/uploads/2026/a3cdfca603.jpg" alt="">
+<img src="https://www.thingelstad.com/uploads/2026/a3cdfca603.jpg" alt="Two people smiling in a snowy parking lot in front of the Smoke on the Water Winery and Wood Fire building in Coleraine MN.">
 
 <img src="https://www.thingelstad.com/uploads/2026/8c1d4f5eca.jpg" width="600" height="450" alt="Panoramic dining room with floor-to-ceiling windows overlooking a snow-covered lake, several people seated at dark tables with teal chairs.">

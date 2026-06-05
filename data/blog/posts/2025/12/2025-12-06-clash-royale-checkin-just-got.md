@@ -19,4 +19,4 @@ Coach: [Tyler](https://tyler.thingelstad.com)
 
 
 
-<img src="https://www.thingelstad.com/uploads/2025/aa9c3392cf.png" width="600" height="600" alt="">
+<img src="https://www.thingelstad.com/uploads/2025/aa9c3392cf.png" width="600" height="600" alt="Clash Royale deck 5 on iPhone showing 8 cards including a Level 15 Witch, Level 14 Cannon, and Hog Rider, with 3.9 elixir average">
