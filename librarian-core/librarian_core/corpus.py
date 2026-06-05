@@ -751,7 +751,8 @@ def _blog_link_category(
         return "collection_page"
     if _BLOG_HOSTLIKE_PATH_RE.search(path):
         return "malformed_internal"
-    if _is_thingelstad_domain((parsed.hostname or "").lower()):
+    host = (parsed.hostname or "").lower()
+    if _is_thingelstad_domain(host) and host not in _BLOG_INTERNAL_DOMAINS:
         return "internal_site"
     return "internal_unresolved"
 

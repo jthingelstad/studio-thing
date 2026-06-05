@@ -146,6 +146,7 @@ class BuildBlogCorpusTests(unittest.TestCase):
                       "[Weekly Thing](https://weekly.thingelstad.com/archive/350/) "
                       "[Another Thing](https://another.thingelstad.com/2025/10/05/how-do-you-start-a.html) "
                       "[Blog home](https://thingelstad.com/) "
+                      "[Micro home](https://micro.thingelstad.com/) "
                       "[Photos](https://photos.thingelstad.com/album/)"
                   ))
             archive = Path(tmp) / "archive"
@@ -161,6 +162,9 @@ class BuildBlogCorpusTests(unittest.TestCase):
         self.assertEqual(by_text["Another Thing"]["target_source_kind"], "podcast")
         self.assertEqual(by_text["Blog home"]["link_kind"], "internal")
         self.assertNotEqual(by_text["Blog home"]["link_category"], "cross_source")
+        self.assertEqual(by_text["Micro home"]["link_kind"], "internal")
+        self.assertEqual(by_text["Micro home"]["link_category"], "internal_unresolved")
+        self.assertNotIn("target_source_kind", by_text["Micro home"])
         self.assertEqual(by_text["Photos"]["link_kind"], "internal")
         self.assertEqual(by_text["Photos"]["link_category"], "internal_site")
         self.assertEqual(by_text["Photos"]["target_source_kind"], "site")
