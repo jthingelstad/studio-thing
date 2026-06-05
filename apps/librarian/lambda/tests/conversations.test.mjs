@@ -39,6 +39,15 @@ test('conversationRow flattens a logged DynamoDB conversation item', () => {
     citation_count: { N: '2' },
     source_issues: { L: [{ S: '200' }, { S: '247' }] },
     citations: { L: [{ M: { issue_number: { S: '200' }, url: { S: 'https://weekly.thingelstad.com/archive/200/' } } }] },
+    preflight: {
+      M: {
+        action: { S: 'rewrite' },
+        category: { S: 'archive_rewrite' },
+        original_question: { S: 'Tell me a story.' },
+        rewritten_question: { S: 'Tell a concise archive story with evidence.' },
+        rationale: { S: 'Vague but answerable.' }
+      }
+    },
     feedback_reaction: { S: 'up' },
     feedback_at: { S: '2026-05-12T02:25:00.000Z' },
     user_agent: { S: 'Mozilla/5.0' },
@@ -54,6 +63,9 @@ test('conversationRow flattens a logged DynamoDB conversation item', () => {
   assert.deepEqual(row.source_issues, ['200', '247']);
   assert.equal(row.citations.length, 1);
   assert.equal(row.citations[0].issue_number, '200');
+  assert.equal(row.preflight.action, 'rewrite');
+  assert.equal(row.preflight.category, 'archive_rewrite');
+  assert.match(row.preflight.rewritten_question, /archive story/);
   assert.equal(row.feedback_reaction, 'up');
   assert.equal(row.user_agent, 'Mozilla/5.0');
   assert.equal('ttl' in row, false);

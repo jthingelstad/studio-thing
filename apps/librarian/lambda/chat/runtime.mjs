@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { BedrockRuntimeClient, ConverseStreamCommand, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
+import { BedrockRuntimeClient, ConverseCommand, ConverseStreamCommand, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 import { BedrockAgentRuntimeClient, RerankCommand } from '@aws-sdk/client-bedrock-agent-runtime';
 import { DynamoDBClient, PutItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -8,7 +8,12 @@ import { sanitizeAnswerProse } from '../shared/answer-sanitizer.mjs';
 import { prioritizeCitationsForAnswer } from '../shared/citations.mjs';
 import { normalizeScope, scopeKinds, scopePromptLine } from '../shared/scope.mjs';
 import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
-import { openEndedCreativeGuardAnswer } from '../shared/prompt-guards.mjs';
+import {
+  PREFLIGHT_SYSTEM_PROMPT,
+  normalizePreflightDecision,
+  parsePreflightJson,
+  passThroughPreflight
+} from '../shared/prompt-preflight.mjs';
 import { searchFaq } from '../shared/faq.mjs';
 import { truthyEnv } from '../shared/logging.mjs';
 import {
@@ -87,6 +92,17 @@ function privacyGuardAnswer(question) {
   ];
   if (!blockedPatterns.some((pattern) => pattern.test(text))) return '';
   return "I cannot help find or share Jamie's private home address or phone number. For public contact, use the contact links Jamie publishes on thingelstad.com or reply through the newsletter's normal public channels.";
+}
+
+function privacyPreflight(question) {
+  const answer = privacyGuardAnswer(question);
+  if (!answer) return null;
+  return normalizePreflightDecision({
+    action: 'direct',
+    category: 'privacy_refusal',
+    direct_answer: answer,
+    rationale: 'Deterministic privacy guard matched an explicit private-address or phone-number request.'
+  }, question);
 }
 
 function normalizeHeaders(headers) {
@@ -212,6 +228,21 @@ function dynamoNumber(value) {
   return { N: String(Number(value || 0)) };
 }
 
+function preflightItem(preflight) {
+  const value = preflight && typeof preflight === 'object' ? preflight : {};
+  return {
+    M: {
+      action: dynamoString(value.action),
+      category: dynamoString(value.category),
+      original_question: dynamoString(String(value.original_question || '').slice(0, 1200)),
+      rewritten_question: dynamoString(String(value.rewritten_question || '').slice(0, 1200)),
+      direct_answer: dynamoString(String(value.direct_answer || '').slice(0, 2000)),
+      rationale: dynamoString(String(value.rationale || '').slice(0, 500)),
+      answer_guidance: dynamoString(String(value.answer_guidance || '').slice(0, 700))
+    }
+  };
+}
+
 function citationItem(citation) {
   return {
     M: {
@@ -231,6 +262,7 @@ async function recordConversation({
   answer,
   historyCount,
   citations,
+  preflight,
   route,
   requestId
 }) {
@@ -262,6 +294,7 @@ async function recordConversation({
         citation_count: dynamoNumber((citations || []).length),
         source_issues: { L: issues.map(dynamoString) },
         citations: { L: (citations || []).slice(0, 12).map(citationItem) },
+        preflight: preflightItem(preflight),
         user_agent: dynamoString(userAgent(event).slice(0, 300))
       }
     }));
@@ -270,6 +303,8 @@ async function recordConversation({
       request_id: conversationRequestId,
       question_chars: String(question || '').length,
       answer_chars: String(answer || '').length,
+      preflight_action: preflight?.action,
+      preflight_category: preflight?.category,
       citation_count: (citations || []).length,
       duration_ms: Math.round(performance.now() - start)
     });
@@ -745,6 +780,73 @@ function commandInferenceConfig() {
     maxTokens: Number(process.env.BEDROCK_MAX_OUTPUT_TOKENS || '2500'),
     temperature: Number(process.env.BEDROCK_TEMPERATURE || '0.45')
   };
+}
+
+function preflightInferenceConfig() {
+  return {
+    maxTokens: Number(process.env.BEDROCK_PREFLIGHT_MAX_TOKENS || '650'),
+    temperature: Number(process.env.BEDROCK_PREFLIGHT_TEMPERATURE || '0')
+  };
+}
+
+function preflightUserPrompt(question, scope, history) {
+  return [
+    `Active source scope: ${normalizeScope(scope)}`,
+    `Recent conversation turns available to the main agent: ${Array.isArray(history) ? history.length : 0}`,
+    '',
+    'Reader prompt:',
+    String(question || '').trim()
+  ].join('\n');
+}
+
+async function evaluatePromptPreflight(question, scope, history = []) {
+  const hardPrivacy = privacyPreflight(question);
+  if (hardPrivacy) return hardPrivacy;
+  if (!truthyEnv('LIBRARIAN_PREFLIGHT_ENABLED', '1')) {
+    return passThroughPreflight(question, 'Preflight evaluator disabled; passed through.');
+  }
+  const start = performance.now();
+  try {
+    const response = await bedrock.send(new ConverseCommand({
+      modelId: process.env.BEDROCK_PREFLIGHT_MODEL || agentModel(),
+      system: [{ text: PREFLIGHT_SYSTEM_PROMPT }],
+      messages: [{
+        role: 'user',
+        content: [{ text: preflightUserPrompt(question, scope, history) }]
+      }],
+      inferenceConfig: preflightInferenceConfig()
+    }));
+    const message = response.output?.message || {};
+    const text = bedrockMessageText(message);
+    const parsed = parsePreflightJson(text);
+    const preflight = normalizePreflightDecision(parsed || {}, question);
+    logEvent('info', 'prompt_preflight_completed', {
+      action: preflight.action,
+      category: preflight.category,
+      duration_ms: Math.round(performance.now() - start),
+      output_tokens: response.usage?.outputTokens
+    });
+    return preflight;
+  } catch (error) {
+    logEvent('warning', 'prompt_preflight_failed', { error_type: error.constructor?.name || 'Error' });
+    return passThroughPreflight(question);
+  }
+}
+
+function agentQuestionForPreflight(question, preflight) {
+  if (!preflight || preflight.action !== 'rewrite') return question;
+  const parts = [
+    'Original reader prompt:',
+    question,
+    '',
+    'Preflight evaluator rewrite:',
+    preflight.rewritten_question
+  ];
+  if (preflight.answer_guidance) {
+    parts.push('', 'Evaluator guidance:', preflight.answer_guidance);
+  }
+  parts.push('', 'Answer the reader by honoring the original prompt through the archive-shaped rewrite. Do not mention the preflight evaluator.');
+  return parts.join('\n');
 }
 
 function issueKey(value) {
@@ -1330,12 +1432,13 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   const start = performance.now();
   const scope = normalizeScope(options.scope);
   const memoryContext = String(options.memoryContext || '').trim();
+  const agentQuestion = agentQuestionForPreflight(question, options.preflight);
   const messages = [{
     role: 'user',
     content: [{
       text: agentUserPrompt({
         conversation_context: conversationContext(history),
-        question
+        question: agentQuestion
       })
     }]
   }];
@@ -1577,25 +1680,26 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       return;
     }
 
+    writeSse(stream, 'meta', { request_id: requestId });
+    writeSse(stream, 'status', { message: 'Understanding the request...' });
+    const preflight = await evaluatePromptPreflight(question, scope, history);
+    if (preflight.action === 'direct') {
+      const citations = [];
+      writeSse(stream, 'answer_delta', { delta: preflight.direct_answer });
+      writeSse(stream, 'citations', { citations });
+      writeSse(stream, 'done', { request_id: requestId });
+      await recordConversation({ event, subscriberHash, question, answer: preflight.direct_answer, historyCount: history.length, citations, preflight, route: 'stream', requestId });
+      // Guarded/direct turns still update memory — the question text was
+      // recorded above, so let the user-memory row reflect that turn too.
+      await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question });
+      return;
+    }
+
     // Fetch user memory once at turn start. Used to inject prior-session
     // context into Thingy's system prompt so the agent can respond more
     // personally; also recorded back at turn end.
     const userMemory = await getUserMemory(subscriberHash);
     const memoryContext = memoryContextBlock(userMemory);
-
-    writeSse(stream, 'meta', { request_id: requestId });
-    const guardedAnswer = privacyGuardAnswer(question) || openEndedCreativeGuardAnswer(question);
-    if (guardedAnswer) {
-      const citations = [];
-      writeSse(stream, 'answer_delta', { delta: guardedAnswer });
-      writeSse(stream, 'citations', { citations });
-      writeSse(stream, 'done', { request_id: requestId });
-      await recordConversation({ event, subscriberHash, question, answer: guardedAnswer, historyCount: history.length, citations, route: 'stream', requestId });
-      // Privacy-guarded turn still updates memory — the question text was
-      // recorded above, so let the user-memory row reflect that turn too.
-      await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question });
-      return;
-    }
 
     writeSse(stream, 'status', { message: 'Investigating the archive...' });
     let deadlineExceeded = false;
@@ -1609,7 +1713,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     }, 75000);
     let result;
     try {
-      result = await streamBedrockAgentAnswer(question, history, stream, { memoryContext, scope });
+      result = await streamBedrockAgentAnswer(question, history, stream, { memoryContext, scope, preflight });
     } finally {
       clearTimeout(deadlineTimer);
     }
@@ -1625,6 +1729,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       answer,
       historyCount: history.length,
       citations,
+      preflight,
       route: 'stream',
       requestId
     });

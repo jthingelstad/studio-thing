@@ -49,6 +49,7 @@ export function conversationRow(item) {
     citation_count: Number(o.citation_count || 0),
     source_issues: Array.isArray(o.source_issues) ? o.source_issues : [],
     citations: Array.isArray(o.citations) ? o.citations : [],
+    preflight: o.preflight && typeof o.preflight === 'object' ? o.preflight : null,
     feedback_reaction: o.feedback_reaction || null,
     feedback_at: o.feedback_at || null,
     user_agent: o.user_agent || ''

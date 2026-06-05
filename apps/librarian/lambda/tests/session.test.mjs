@@ -7,7 +7,11 @@ import { renderTemplate, agentUserPrompt } from '../shared/prompts.mjs';
 import { subscriberStatus } from '../shared/buttondown.mjs';
 import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
 import { readConverseStream } from '../shared/bedrock-stream.mjs';
-import { openEndedCreativeGuardAnswer } from '../shared/prompt-guards.mjs';
+import {
+  normalizePreflightDecision,
+  parsePreflightJson,
+  passThroughPreflight
+} from '../shared/prompt-preflight.mjs';
 
 test('session token round trips and rejects tampering', () => {
   process.env.SESSION_SECRET = 'test-secret';
@@ -131,11 +135,33 @@ test('agent user prompt renders dynamic conversation context', () => {
   assert.match(prompt, /Investigate with tools as needed/);
 });
 
-test('open-ended creative guard catches story prompts without blocking archive-shaped story prompts', () => {
-  assert.match(openEndedCreativeGuardAnswer('Tell me a story.'), /need one thread/i);
-  assert.match(openEndedCreativeGuardAnswer('write me a story please'), /need one thread/i);
-  assert.equal(openEndedCreativeGuardAnswer('Tell me the story of Jamie and RSS.'), '');
-  assert.equal(openEndedCreativeGuardAnswer('Tell me a story about Minneapolis in the archive.'), '');
+test('preflight JSON parser tolerates fenced strict JSON', () => {
+  const parsed = parsePreflightJson('```json\n{"action":"rewrite","category":"archive_rewrite"}\n```');
+  assert.deepEqual(parsed, { action: 'rewrite', category: 'archive_rewrite' });
+  assert.equal(parsePreflightJson('not json'), null);
+});
+
+test('preflight normalizer keeps rewrites/direct answers safe and structured', () => {
+  const rewrite = normalizePreflightDecision({
+    action: 'rewrite',
+    category: 'archive_rewrite',
+    rewritten_question: 'Pick one archive thread and tell it as a concise story.',
+    answer_guidance: 'Keep the playful intent.'
+  }, 'Tell me a story.');
+  assert.equal(rewrite.action, 'rewrite');
+  assert.equal(rewrite.category, 'archive_rewrite');
+  assert.equal(rewrite.original_question, 'Tell me a story.');
+  assert.match(rewrite.rewritten_question, /archive thread/);
+
+  const badRewrite = normalizePreflightDecision({ action: 'rewrite', category: 'archive_rewrite' }, 'Surprise me.');
+  assert.equal(badRewrite.action, 'pass');
+
+  const direct = normalizePreflightDecision({ action: 'direct', category: 'privacy_refusal' }, 'Where does Jamie live?');
+  assert.equal(direct.action, 'direct');
+  assert.equal(direct.category, 'privacy_refusal');
+  assert.match(direct.direct_answer, /public archive/i);
+
+  assert.equal(passThroughPreflight('What did Jamie write about RSS?').action, 'pass');
 });
 
 test('FAQ search returns authoritative shared FAQ entries', () => {
