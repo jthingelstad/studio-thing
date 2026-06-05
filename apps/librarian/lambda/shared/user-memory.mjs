@@ -238,7 +238,7 @@ export async function synthesizeSessionQuestions(questions) {
     .slice(0, 4000);
   if (!list) return '';
   const system = (
-    'You synthesize what one Weekly Thing reader was asking Thingy about ' +
+    'You synthesize what one Thingy user was asking about ' +
     "during a single chat session. Output one short paragraph (under 60 words) " +
     "that captures the topic arc, written in third person from Thingy's point " +
     'of view. Skip pleasantries and meta questions; focus on the substantive ' +

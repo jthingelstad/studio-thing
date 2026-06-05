@@ -6,12 +6,11 @@
  * Another Thing podcast transcripts (`podcast`). Scope is enforced by *which
  * corpus the retrieval scans*, not by a post-filter.
  *
- * `both` preserves the original WT+blog behavior. `all` retrieves candidates
- * from every corpus and reranks the union once.
+ * Two-source scopes preserve the selected corpus boundary. `all` retrieves
+ * candidates from every corpus and reranks the union once.
  *
- * Default is `weekly_thing`: it preserves Thingy's historical identity and
- * means the operator `/retrieve` path (workshop_bot) is unaffected when it
- * sends no scope.
+ * Default is `weekly_thing` so the operator `/retrieve` path (workshop_bot) is
+ * unaffected when it sends no scope.
  */
 
 export const SCOPES = ['weekly_thing', 'blog', 'podcast', 'both', 'weekly_thing_podcast', 'blog_podcast', 'all'];

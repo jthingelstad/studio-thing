@@ -4,6 +4,7 @@ import { BedrockAgentRuntimeClient, RerankCommand } from '@aws-sdk/client-bedroc
 import { DynamoDBClient, PutItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { readConverseStream } from '../shared/bedrock-stream.mjs';
+import { sanitizeAnswerProse } from '../shared/answer-sanitizer.mjs';
 import { prioritizeCitationsForAnswer } from '../shared/citations.mjs';
 import { normalizeScope, scopeKinds, scopePromptLine } from '../shared/scope.mjs';
 import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
@@ -369,9 +370,9 @@ async function loadOptionalCorpus({ kind, envKey, disabledEvent, failedEvent, ca
   return cache || (kind === 'blog' ? blogCorpusCache : podcastCorpusCache);
 }
 
-// The blog corpus is large and only needed for blog/both/all scopes, so it
-// loads lazily and caches separately from the WT corpus. When the env key is
-// unset, return an empty corpus so source-specific requests degrade to no hits.
+// Optional non-WT corpora load lazily and cache separately from the WT corpus.
+// When an env key is unset, return an empty corpus so source-specific requests
+// degrade to no hits.
 async function loadBlogCorpus() {
   return loadOptionalCorpus({
     kind: 'blog',
@@ -1396,6 +1397,11 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
     answer = 'I could not produce a reliable answer from the archive tools for that question.';
     writeSse(responseStream, 'answer_delta', { delta: answer });
   }
+  const sanitizedAnswer = sanitizeAnswerProse(answer);
+  if (sanitizedAnswer !== answer) {
+    writeSse(responseStream, 'answer', { answer: sanitizedAnswer });
+  }
+  answer = sanitizedAnswer;
   const citations = prioritizeCitationsForAnswer(collectToolCitations(toolResults), answer);
   logEvent('info', 'agent_streamed', {
     model: agentModel(),

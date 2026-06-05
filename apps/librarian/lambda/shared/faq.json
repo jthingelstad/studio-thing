@@ -71,7 +71,7 @@
         },
         {
           "question": "What's Thingy?",
-          "answer": "[Thingy](/thingy/) is an experimental, AI-assisted way to explore the archive — ask questions, find issues by theme, or rediscover links you half-remember. It's one of several experiments running on the Weekly Thing site."
+          "answer": "[Thingy](https://thingy.thingelstad.com/) is Jamie's AI-assisted archive agent. It can answer across The Weekly Thing newsletter, the thingelstad.com blog, and Another Thing podcast transcripts, using the source scope you choose. Ask it to find themes, rediscover links you half-remember, compare sources, or trace what Jamie has written and talked about over time."
         },
         {
           "question": "Do issues have numbers?",
