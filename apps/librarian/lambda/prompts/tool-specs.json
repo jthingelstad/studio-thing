@@ -67,13 +67,14 @@
   {
     "toolSpec": {
       "name": "find_links",
-      "description": "Query the editorial link graph by domain, topic/entity, and year range. Does not fetch linked pages. Call without filters to retrieve top-cited domains across the archive. year_range accepts a [start, end] array, a \"YYYY\" string, or {\"start\": YYYY, \"end\": YYYY}.",
+      "description": "Query link metadata in the active source scope by domain, topic/entity, link_kind, and year range. link_kind can be \"external\" or \"internal\". Does not fetch linked pages. Weekly Thing scope searches issue links; blog scope searches blog outbound/internal links; podcast scope searches show-note links; mixed scopes search all selected sources. Call without filters to retrieve top external domains. year_range accepts a [start, end] array, a \"YYYY\" string, or {\"start\": YYYY, \"end\": YYYY}.",
       "inputSchema": {
         "json": {
           "type": "object",
           "properties": {
             "domain": { "type": "string" },
             "topic": { "type": "string" },
+            "link_kind": { "type": "string" },
             "year_range": { "type": ["array", "string", "object"] },
             "limit": { "type": "integer" }
           }
@@ -84,12 +85,13 @@
   {
     "toolSpec": {
       "name": "domain_history",
-      "description": "List every issue that cited a domain with date and surrounding link context. Use for \"how often / when / in what context did Jamie link to X\" questions.",
+      "description": "List every source in the active scope that cited a domain with date and surrounding link context. Optional link_kind can be \"external\" or \"internal\". Weekly Thing results are issue citations; blog results are post citations; podcast results are episode citations. Use for \"how often / when / in what context did Jamie link to X\" questions.",
       "inputSchema": {
         "json": {
           "type": "object",
           "properties": {
             "domain": { "type": "string" },
+            "link_kind": { "type": "string" },
             "limit": { "type": "integer" }
           },
           "required": ["domain"]

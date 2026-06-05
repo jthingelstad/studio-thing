@@ -14,11 +14,13 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urljoin, urlparse
 
 import boto3
 import yaml
 from dotenv import load_dotenv
 
+from .links import extract_domains
 from .paths import ARCHIVE_DIR, BLOG_DIR, FAQ_PATH, PODCAST_DIR, SITE_DIR
 
 
@@ -649,6 +651,12 @@ _BLOG_IMG_ALT_RE = re.compile(
     r'<img\b[^>]*?\balt\s*=\s*(["\'])(.*?)\1[^>]*?>', re.I | re.S
 )
 _BLOG_IMG_BARE_RE = re.compile(r"<img\b[^>]*?>", re.I | re.S)
+_BLOG_MARKDOWN_LINK_RE = re.compile(r"(?<!!)\[([^\]]*)\]\(([^)\s]+)(?:\s+['\"][^)]*['\"])?\)")
+_BLOG_HTML_LINK_RE = re.compile(
+    r'<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>',
+    re.I | re.S,
+)
+_BLOG_INTERNAL_DOMAINS = {"thingelstad.com", "www.thingelstad.com", "micro.thingelstad.com"}
 
 
 def _normalize_blog_path(path_part: str) -> str:
@@ -696,6 +704,89 @@ def _short_label(text: str, max_words: int = 12) -> str:
     return label + ("…" if len(tokens) > max_words else "")
 
 
+def _markdown_html_links(body: str) -> list[tuple[str, str]]:
+    links: list[tuple[str, str]] = []
+    for match in _BLOG_MARKDOWN_LINK_RE.finditer(body or ""):
+        links.append((match.group(1), match.group(2).strip()))
+    for match in _BLOG_HTML_LINK_RE.finditer(body or ""):
+        links.append((match.group(2), match.group(1).strip()))
+    return links
+
+
+def _blog_target_path(url: str) -> str | None:
+    match = _BLOG_PERMALINK_RE.search(url or "")
+    if not match:
+        return None
+    return _normalize_blog_path(match.group(1))
+
+
+def _blog_outbound_links(
+    body: str,
+    *,
+    microblog_id: Any,
+    subject: str,
+    publish_date: str | None,
+    post_kind: str,
+    post_url: str,
+    post_lookup: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Extract post-level outbound links from native blog markdown/HTML.
+
+    Unlike Weekly Thing's curated-link extractor, every non-image markdown
+    link and HTML anchor in a blog post is editorial context. The resulting
+    records mirror the issue corpus's top-level ``links`` enough for the same
+    domain tools to query them, while keeping the source post URL separate
+    from the linked destination URL.
+    """
+    records: list[dict[str, Any]] = []
+    seen_urls: set[str] = set()
+
+    def add(text: str, link_url: str) -> None:
+        if not link_url or link_url.startswith("#") or link_url.startswith("mailto:"):
+            return
+        resolved_url = urljoin(post_url, link_url)
+        try:
+            parsed = urlparse(resolved_url)
+        except Exception:
+            return
+        domain = (parsed.hostname or "").lower()
+        if not domain or resolved_url in seen_urls:
+            return
+        seen_urls.add(resolved_url)
+        target_path = _blog_target_path(resolved_url)
+        target_post = post_lookup.get(target_path or "")
+        link_kind = "internal" if domain in _BLOG_INTERNAL_DOMAINS else "external"
+        record = {
+            "source_kind": "blog",
+            "microblog_id": microblog_id,
+            "post_url": post_url,
+            "post_subject": subject,
+            "subject": subject,
+            "publish_date": publish_date,
+            "post_year": parse_year(publish_date),
+            "issue_year": parse_year(publish_date),
+            "post_kind": post_kind,
+            "section": "Micropost" if post_kind == "micropost" else "Blog post",
+            "url": resolved_url,
+            "domain": domain,
+            "text": plain_text(text).strip(),
+            "context": plain_text(text).strip(),
+            "link_kind": link_kind,
+        }
+        if target_path:
+            record["target_blog_path"] = target_path
+        if target_post:
+            record["target_microblog_id"] = target_post.get("microblog_id")
+            record["target_post_url"] = target_post.get("url")
+            record["target_subject"] = target_post.get("subject")
+            record["target_publish_date"] = target_post.get("publish_date")
+        records.append(record)
+
+    for text, link_url in _markdown_html_links(body):
+        add(text, link_url)
+    return records
+
+
 def build_blog_corpus(
     blog_dir: Path = BLOG_DIR,
     archive_dir: Path = ARCHIVE_DIR,
@@ -703,12 +794,17 @@ def build_blog_corpus(
 ) -> dict[str, Any]:
     """Build the blog corpus from ``data/blog/posts/**/*.md``. One chunk per
     ``chunk_section`` piece, ``source_kind: "blog"``, content-deterministic id
-    ``blog:{microblog_id}:{index}:{body_hash}``. Same dict shape as :func:`build_corpus`
-    (empty ``issues``/``topics``/``links`` — those power issue-only tools) so
-    the embed + upload tooling is reused verbatim. Posts that also appear in a
-    Weekly Thing Journal get an ``also_in_issues`` cross-reference."""
+    ``blog:{microblog_id}:{index}:{body_hash}``. The corpus also carries a
+    post-level outbound-link graph (``links`` / ``link_count`` plus chunk
+    ``domains``) so Thingy can answer domain/link questions over the blog the
+    same way it can over Weekly Thing. Posts that also appear in a Weekly Thing
+    Journal get an ``also_in_issues`` cross-reference."""
     xref = journal_blog_xref(archive_dir) if include_xref else {}
     chunks: list[dict[str, Any]] = []
+    posts: list[dict[str, Any]] = []
+    links: list[dict[str, Any]] = []
+    post_inputs: list[dict[str, Any]] = []
+    post_lookup: dict[str, dict[str, Any]] = {}
     post_count = 0
     for path in sorted(blog_dir.rglob("*.md")):
         metadata, body = read_issue(path)
@@ -731,8 +827,64 @@ def build_blog_corpus(
         embed_text = _blog_embed_text(body)
         if not embed_text:
             continue
-        post_count += 1
         subject = title or _short_label(embed_text)
+        post_input = {
+            "body": body,
+            "microblog_id": microblog_id,
+            "url": url,
+            "subject": subject,
+            "publish_date": publish_date,
+            "post_kind": post_kind,
+            "section": section,
+            "also_in_issues": also_in_issues,
+            "embed_text": embed_text,
+        }
+        target_path = _blog_target_path(url)
+        if target_path:
+            post_lookup[target_path] = {
+                "microblog_id": microblog_id,
+                "url": url,
+                "subject": subject,
+                "publish_date": publish_date,
+            }
+        post_inputs.append(post_input)
+
+    for post_input in post_inputs:
+        post_count += 1
+        body = post_input["body"]
+        microblog_id = post_input["microblog_id"]
+        url = post_input["url"]
+        subject = post_input["subject"]
+        publish_date = post_input["publish_date"]
+        post_kind = post_input["post_kind"]
+        section = post_input["section"]
+        also_in_issues = post_input["also_in_issues"]
+        embed_text = post_input["embed_text"]
+        post_links = _blog_outbound_links(
+            body,
+            microblog_id=microblog_id,
+            subject=subject,
+            publish_date=publish_date,
+            post_kind=post_kind,
+            post_url=url,
+            post_lookup=post_lookup,
+        )
+        post_domains = extract_domains(post_links)
+        links.extend(post_links)
+        post_record = {
+            "microblog_id": microblog_id,
+            "subject": subject,
+            "publish_date": publish_date,
+            "post_year": parse_year(publish_date),
+            "url": url,
+            "post_kind": post_kind,
+            "body_hash": body_hash(body),
+            "domains": post_domains,
+            "links": post_links,
+        }
+        if also_in_issues:
+            post_record["also_in_issues"] = also_in_issues
+        posts.append(post_record)
         for index, chunk_text in enumerate(chunk_section(embed_text)):
             # Content-deterministic id (text hash suffix): when a post's body is
             # edited in place (alt-text inlined, de-wrap, typo fix) without
@@ -753,6 +905,7 @@ def build_blog_corpus(
                 "content_kind": "blog",
                 "topics": [],
                 "source_kind": "blog",
+                "domains": post_domains,
             }
             if also_in_issues:
                 chunk["also_in_issues"] = also_in_issues
@@ -768,10 +921,11 @@ def build_blog_corpus(
         "issue_count": 0,
         "post_count": post_count,
         "chunk_count": len(chunks),
-        "link_count": 0,
+        "link_count": len(links),
         "issues": [],
+        "posts": posts,
         "topics": [],
-        "links": [],
+        "links": links,
         "chunks": chunks,
     }
 
@@ -791,6 +945,49 @@ def _episode_number_label(value: Any) -> str:
         return str(value or "").strip()
 
 
+def _podcast_show_note_links(
+    episode: dict[str, Any],
+    notes: str,
+    *,
+    subject: str,
+    publish_date: str | None,
+) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    seen_urls: set[str] = set()
+    episode_url = str(episode.get("url") or "").strip()
+    for text, link_url in _markdown_html_links(notes):
+        if not link_url or link_url.startswith("#") or link_url.startswith("mailto:"):
+            continue
+        resolved_url = urljoin(episode_url, link_url)
+        try:
+            parsed = urlparse(resolved_url)
+        except Exception:
+            continue
+        domain = (parsed.hostname or "").lower()
+        if not domain or resolved_url in seen_urls:
+            continue
+        seen_urls.add(resolved_url)
+        records.append(
+            {
+                "source_kind": "podcast",
+                "show": episode.get("show") or "Another Thing",
+                "podcast": "another-thing",
+                "episode_number": episode.get("number"),
+                "episode_url": episode_url,
+                "subject": subject,
+                "publish_date": publish_date,
+                "issue_year": parse_year(publish_date),
+                "section": "Show notes",
+                "url": resolved_url,
+                "domain": domain,
+                "text": plain_text(text).strip(),
+                "context": plain_text(text).strip(),
+                "link_kind": "internal" if domain.endswith("thingelstad.com") else "external",
+            }
+        )
+    return records
+
+
 def build_podcast_corpus(podcast_dir: Path = PODCAST_DIR) -> dict[str, Any]:
     """Build the Another Thing podcast corpus from normalized episode JSON.
 
@@ -799,6 +996,8 @@ def build_podcast_corpus(podcast_dir: Path = PODCAST_DIR) -> dict[str, Any]:
     ``podcast:another-thing:001:0:{hash}``.
     """
     chunks: list[dict[str, Any]] = []
+    episodes: list[dict[str, Any]] = []
+    links: list[dict[str, Any]] = []
     episode_count = 0
     for path in sorted(podcast_dir.glob("*.json")):
         episode = json.loads(path.read_text(encoding="utf-8"))
@@ -811,6 +1010,32 @@ def build_podcast_corpus(podcast_dir: Path = PODCAST_DIR) -> dict[str, Any]:
         number_label = _episode_number_label(number)
         subject = str(episode.get("title") or f"Episode {number_label}").strip()
         publish_date = str(episode.get("publish_date") or "")[:10] or None
+        episode_links = _podcast_show_note_links(episode, notes, subject=subject, publish_date=publish_date)
+        episode_domains = extract_domains(episode_links)
+        links.extend(episode_links)
+        episode_sections = []
+        if transcript:
+            episode_sections.append({"name": "Transcript", "word_count": len(words(transcript)), "content_kind": "podcast_transcript"})
+        if notes:
+            episode_sections.append({"name": "Show notes", "word_count": len(words(notes)), "content_kind": "podcast_notes"})
+        episodes.append(
+            {
+                "number": number,
+                "show": episode.get("show") or "Another Thing",
+                "podcast": "another-thing",
+                "subject": subject,
+                "publish_date": publish_date,
+                "issue_year": parse_year(publish_date),
+                "url": episode.get("url"),
+                "transcript_url": episode.get("transcript_url"),
+                "audio_url": episode.get("audio_url"),
+                "summary": episode.get("summary") or "",
+                "body_hash": body_hash("\n\n".join(part for part in [transcript, notes] if part)),
+                "sections": episode_sections,
+                "domains": episode_domains,
+                "links": episode_links,
+            }
+        )
         base = {
             "issue_number": None,
             "source_kind": "podcast",
@@ -825,6 +1050,7 @@ def build_podcast_corpus(podcast_dir: Path = PODCAST_DIR) -> dict[str, Any]:
             "audio_url": episode.get("audio_url"),
             "summary": episode.get("summary") or "",
             "topics": [],
+            "domains": episode_domains,
         }
         sections = []
         if transcript:
@@ -855,10 +1081,11 @@ def build_podcast_corpus(podcast_dir: Path = PODCAST_DIR) -> dict[str, Any]:
         "issue_count": 0,
         "episode_count": episode_count,
         "chunk_count": len(chunks),
-        "link_count": 0,
+        "link_count": len(links),
         "issues": [],
+        "episodes": episodes,
         "topics": [],
-        "links": [],
+        "links": links,
         "chunks": chunks,
     }
 

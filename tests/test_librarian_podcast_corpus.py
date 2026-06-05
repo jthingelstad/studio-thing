@@ -53,7 +53,11 @@ class PodcastCorpusTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / "another" / "content" / "episodes"
             output = Path(tmp) / "studio" / "data" / "podcast"
-            _episode(source, body="These are show notes.", transcript="Podcast transcripts make Thingy aware.")
+            _episode(
+                source,
+                body="These are [show notes](https://example.com/show) with [the podcast site](/about/).",
+                transcript="Podcast transcripts make Thingy aware.",
+            )
             import_episodes(source_dir=source, output_dir=output)
 
             corpus = build_podcast_corpus(output)
@@ -61,9 +65,18 @@ class PodcastCorpusTests(unittest.TestCase):
         self.assertEqual(corpus["version"], 2)
         self.assertEqual(corpus["issues"], [])
         self.assertEqual(corpus["topics"], [])
-        self.assertEqual(corpus["links"], [])
         self.assertEqual(corpus["episode_count"], 1)
         self.assertGreaterEqual(corpus["chunk_count"], 2)
+        self.assertEqual(corpus["link_count"], 2)
+        self.assertEqual(len(corpus["episodes"]), 1)
+        episode = corpus["episodes"][0]
+        self.assertEqual(episode["publish_date"], "2025-10-05")
+        self.assertEqual(episode["issue_year"], 2025)
+        self.assertEqual(episode["domains"], ["example.com"])
+        self.assertEqual(episode["links"][0]["link_kind"], "external")
+        self.assertEqual(episode["links"][1]["link_kind"], "internal")
+        self.assertEqual(episode["links"][1]["url"], "https://another.thingelstad.com/about/")
+        self.assertIn("body_hash", episode)
 
         chunks = {chunk["section"]: chunk for chunk in corpus["chunks"]}
         transcript = chunks["Transcript"]
@@ -77,6 +90,7 @@ class PodcastCorpusTests(unittest.TestCase):
         self.assertIsNone(transcript["issue_number"])
         self.assertEqual(transcript["publish_date"], "2025-10-05")
         self.assertEqual(transcript["issue_year"], 2025)
+        self.assertEqual(transcript["domains"], ["example.com"])
         self.assertIn("Thingy aware", transcript["text"])
         self.assertEqual(chunks["Show notes"]["content_kind"], "podcast_notes")
 

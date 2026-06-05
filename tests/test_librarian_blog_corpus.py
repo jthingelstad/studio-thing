@@ -75,6 +75,44 @@ class BuildBlogCorpusTests(unittest.TestCase):
         self.assertTrue(micro["subject"])
         self.assertIn("RSS", micro["subject"])
 
+    def test_blog_links_and_domains_are_indexed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            blog = Path(tmp) / "posts"
+            _post(blog, mid=222, date="2026-05-24", slug="note", title="My Note",
+                  body="This is the target post.")
+            _post(blog, mid=111, date="2026-05-25", slug="links", title="Links",
+                  body=(
+                      "I liked [Example](https://example.com/story) and "
+                      "[my own note](https://micro.thingelstad.com/2026/05/24/note.html).\n\n"
+                      '<a href="https://sub.example.org/page">Sub Example</a>\n\n'
+                      "![Photo](https://images.example.net/photo.jpg)"
+                  ))
+            archive = Path(tmp) / "archive"
+            archive.mkdir()
+            result = build_blog_corpus(blog_dir=blog, archive_dir=archive)
+
+        self.assertEqual(result["link_count"], 3)
+        self.assertEqual([link["domain"] for link in result["links"]], [
+            "example.com",
+            "micro.thingelstad.com",
+            "sub.example.org",
+        ])
+        source_post = next(post for post in result["posts"] if post["microblog_id"] == 111)
+        source_chunk = next(chunk for chunk in result["chunks"] if chunk["id"].startswith("blog:111:"))
+        self.assertEqual(source_post["domains"], ["example.com", "sub.example.org"])
+        self.assertEqual(source_chunk["domains"], ["example.com", "sub.example.org"])
+        self.assertEqual(result["links"][0]["source_kind"], "blog")
+        self.assertEqual(result["links"][0]["microblog_id"], 111)
+        self.assertEqual(result["links"][0]["post_url"], "https://www.thingelstad.com/2026/05/25/links.html")
+        self.assertEqual(result["links"][0]["text"], "Example")
+        self.assertEqual(result["links"][0]["link_kind"], "external")
+        internal = result["links"][1]
+        self.assertEqual(internal["link_kind"], "internal")
+        self.assertEqual(internal["target_blog_path"], "2026/05/24/note")
+        self.assertEqual(internal["target_microblog_id"], 222)
+        self.assertEqual(internal["target_post_url"], "https://www.thingelstad.com/2026/05/24/note.html")
+        self.assertNotIn("images.example.net", {link["domain"] for link in result["links"]})
+
     def test_also_in_issues_cross_reference(self):
         # An issue Journal links the blog post inline (not via curated
         # links[]) — the matching blog chunk should carry also_in_issues.

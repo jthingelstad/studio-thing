@@ -772,12 +772,46 @@ function normalizedDomain(value) {
   return String(value || '').toLowerCase().replace(/^https?:\/\//, '').split('/')[0].replace(/^www\./, '');
 }
 
-async function linkRecords() {
-  const corpus = await loadCorpus();
-  if (Array.isArray(corpus.links)) return corpus.links;
+function inferredLinkKind(link) {
+  if (link.link_kind) return link.link_kind;
+  const domain = normalizedDomain(link.domain || link.url || '');
+  return domain.endsWith('thingelstad.com') ? 'internal' : 'external';
+}
+
+function normalizeLinkRecord(link, kind) {
+  const sourceKind = link.source_kind || (kind === 'blog' ? 'blog' : kind === 'podcast' ? 'podcast' : 'chunk');
+  return {
+    ...link,
+    source_kind: sourceKind,
+    subject: link.subject || link.post_subject,
+    publish_date: link.publish_date,
+    issue_year: link.issue_year || link.post_year,
+    source_url: link.issue_url || link.post_url || link.episode_url,
+    link_url: link.url,
+    link_kind: inferredLinkKind(link)
+  };
+}
+
+async function linkRecords(scope = 'weekly_thing') {
   const links = [];
-  for (const issue of corpus.issues || []) {
-    for (const link of issue.links || []) links.push({ ...link, issue_number: issue.number, subject: issue.subject, publish_date: issue.publish_date, issue_year: issue.issue_year, issue_url: issue.url });
+  for (const kind of scopeKinds(scope)) {
+    const corpus = await loadCorpus(kind);
+    if (Array.isArray(corpus.links) && corpus.links.length) {
+      links.push(...corpus.links.map((link) => normalizeLinkRecord(link, kind)));
+      continue;
+    }
+    for (const issue of corpus.issues || []) {
+      for (const link of issue.links || []) {
+        links.push(normalizeLinkRecord({
+          ...link,
+          issue_number: issue.number,
+          subject: issue.subject,
+          publish_date: issue.publish_date,
+          issue_year: issue.issue_year,
+          issue_url: issue.url
+        }, kind));
+      }
+    }
   }
   return links;
 }
@@ -844,30 +878,54 @@ async function toolGetSection(input = {}) {
   return { issue_number: issue.number, subject: issue.subject, publish_date: issue.publish_date, section: section.name, url: issue.url, text: String(section.text || '').slice(0, 12000) };
 }
 
-async function toolFindLinks(input = {}) {
+async function toolFindLinks(input = {}, { scope } = {}) {
   const domain = normalizedDomain(input.domain || '');
   const topic = String(input.topic || '').toLowerCase().trim();
+  const linkKind = String(input.link_kind || '').toLowerCase().trim();
   const [startYear, endYear] = parseYearRange(input.year_range);
   const limit = Math.min(Math.max(Number(input.limit || 20), 1), 50);
-  const graph = await loadGraph();
+  const kinds = scopeKinds(scope);
+  const graph = topic && kinds.includes('weekly_thing') ? await loadGraph() : {};
   const issueMatches = topic ? new Set(graph.entity_index?.[topic] || []) : new Set();
   const results = [];
   const filteredLinks = [];
-  for (const link of await linkRecords()) {
+  for (const link of await linkRecords(scope)) {
     const linkDomain = normalizedDomain(link.domain || link.url || '');
-    const year = Number(link.issue_year || 0);
+    const year = Number(link.issue_year || link.post_year || 0);
     if (domain && !linkDomain.includes(domain)) continue;
+    if (linkKind && link.link_kind !== linkKind) continue;
     if (startYear && (!year || year < startYear)) continue;
     if (endYear && (!year || year > endYear)) continue;
     const haystack = [link.text, link.title, link.section, link.heading_context, link.context, link.domain].join(' ').toLowerCase();
     if (topic && !haystack.includes(topic) && !issueMatches.has(issueKey(link.issue_number))) continue;
     filteredLinks.push(link);
     if (results.length < limit) {
-      results.push({ issue_number: link.issue_number, subject: link.subject, publish_date: link.publish_date, section: link.section, domain: link.domain, link_text: link.text || link.title || link.heading_context, context: link.context || link.heading_context, url: link.url });
+      const sourceUrl = link.source_url || (link.issue_number ? `/archive/${link.issue_number}/` : link.post_url || link.url);
+      results.push({
+        issue_number: link.issue_number ?? null,
+        source_kind: link.source_kind,
+        subject: link.subject,
+        publish_date: link.publish_date,
+        section: link.section,
+        domain: link.domain,
+        link_text: link.text || link.title || link.heading_context,
+        context: link.context || link.heading_context,
+        url: sourceUrl,
+        link_url: link.link_url || link.url,
+        destination_url: link.link_url || link.url,
+        link_kind: link.link_kind,
+        microblog_id: link.microblog_id,
+        target_blog_path: link.target_blog_path,
+        target_microblog_id: link.target_microblog_id,
+        target_post_url: link.target_post_url,
+        episode_number: link.episode_number,
+        show: link.show
+      });
     }
   }
   const counts = new Map();
   for (const link of filteredLinks) {
+    if (!domain && !linkKind && link.link_kind === 'internal') continue;
     const linkDomain = normalizedDomain(link.domain || link.url || '');
     if (linkDomain) counts.set(linkDomain, (counts.get(linkDomain) || 0) + 1);
   }
@@ -875,9 +933,9 @@ async function toolFindLinks(input = {}) {
   return { results, top_domains };
 }
 
-async function toolDomainHistory(input = {}) {
+async function toolDomainHistory(input = {}, context = {}) {
   if (!input.domain) return { error: 'domain is required', results: [] };
-  return toolFindLinks({ domain: input.domain, limit: input.limit || 80 });
+  return toolFindLinks({ domain: input.domain, link_kind: input.link_kind, limit: input.limit || 80 }, context);
 }
 
 function contextAround(text, phrase, radius = 240) {
