@@ -26,3 +26,11 @@ test('strips other raw urls without touching markdown links', () => {
 
   assert.equal(out, 'Read [Thingy](https://thingy.thingelstad.com/) but not');
 });
+
+test('removes leading tool-process narration from answers', () => {
+  const answer = 'The Switzerland hike is compelling, but let me pull up the full text first.\n\nI have everything I need. Let me tell it.\n\n---\n\nHere is the story from the archive.';
+
+  const out = sanitizeAnswerProse(answer);
+
+  assert.equal(out, 'Here is the story from the archive.');
+});
