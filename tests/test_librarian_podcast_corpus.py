@@ -55,7 +55,11 @@ class PodcastCorpusTests(unittest.TestCase):
             output = Path(tmp) / "studio" / "data" / "podcast"
             _episode(
                 source,
-                body="These are [show notes](https://example.com/show) with [the podcast site](/about/).",
+                body=(
+                    "These are [show notes](https://example.com/show) with [the podcast site](/about/), "
+                    "[a blog post](https://thingelstad.com/2026/05/25/note.html), and "
+                    "[a newsletter issue](https://weekly.thingelstad.com/archive/350/)."
+                ),
                 transcript="Podcast transcripts make Thingy aware.",
             )
             import_episodes(source_dir=source, output_dir=output)
@@ -67,7 +71,7 @@ class PodcastCorpusTests(unittest.TestCase):
         self.assertEqual(corpus["topics"], [])
         self.assertEqual(corpus["episode_count"], 1)
         self.assertGreaterEqual(corpus["chunk_count"], 2)
-        self.assertEqual(corpus["link_count"], 2)
+        self.assertEqual(corpus["link_count"], 4)
         self.assertEqual(len(corpus["episodes"]), 1)
         episode = corpus["episodes"][0]
         self.assertEqual(episode["publish_date"], "2025-10-05")
@@ -79,6 +83,12 @@ class PodcastCorpusTests(unittest.TestCase):
         self.assertEqual(episode["links"][1]["link_kind"], "internal")
         self.assertEqual(episode["links"][1]["link_category"], "internal_site")
         self.assertEqual(episode["links"][1]["url"], "https://another.thingelstad.com/about/")
+        self.assertEqual(episode["links"][2]["link_kind"], "internal")
+        self.assertEqual(episode["links"][2]["link_category"], "cross_source")
+        self.assertEqual(episode["links"][2]["target_source_kind"], "blog")
+        self.assertEqual(episode["links"][3]["link_kind"], "internal")
+        self.assertEqual(episode["links"][3]["link_category"], "cross_source")
+        self.assertEqual(episode["links"][3]["target_source_kind"], "weekly_thing")
         self.assertIn("body_hash", episode)
 
         chunks = {chunk["section"]: chunk for chunk in corpus["chunks"]}

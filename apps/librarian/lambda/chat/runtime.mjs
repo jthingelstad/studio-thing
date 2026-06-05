@@ -771,12 +771,20 @@ function normalizedDomain(value) {
   return String(value || '').toLowerCase().replace(/^https?:\/\//, '').split('/')[0].replace(/^www\./, '');
 }
 
+const CORPUS_BY_DOMAIN = {
+  'thingelstad.com': 'blog',
+  'micro.thingelstad.com': 'blog',
+  'weekly.thingelstad.com': 'weekly_thing',
+  'another.thingelstad.com': 'podcast'
+};
+
 function normalizeSourceKind(value) {
   const raw = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
   if (!raw) return '';
   if (['weekly_thing', 'weeklything', 'newsletter', 'issue', 'issues', 'archive', 'wt', 'chunk'].includes(raw)) return 'weekly_thing';
   if (['blog', 'thingelstad', 'thingelstad_com', 'post', 'posts', 'micropost'].includes(raw)) return 'blog';
   if (['podcast', 'podcasts', 'another', 'another_thing', 'episode', 'episodes'].includes(raw)) return 'podcast';
+  if (raw === 'site') return 'site';
   return '';
 }
 
@@ -799,23 +807,36 @@ function inferredLinkKind(link) {
   return domain.endsWith('thingelstad.com') ? 'internal' : 'external';
 }
 
+function inferredTargetSourceKind(link, sourceKind, targetResolved) {
+  const explicit = normalizeSourceKind(link.target_source_kind || '');
+  if (explicit) return explicit;
+  if (targetResolved) return 'blog';
+  const domain = normalizedDomain(link.domain || link.url || '');
+  const target = CORPUS_BY_DOMAIN[domain] || (domain.endsWith('.thingelstad.com') ? 'site' : '');
+  return target && target !== sourceKind ? target : undefined;
+}
+
 function normalizeLinkRecord(link, kind) {
-  const sourceKind = link.source_kind || (kind === 'blog' ? 'blog' : kind === 'podcast' ? 'podcast' : 'chunk');
-  const linkKind = inferredLinkKind(link);
+  const corpusKind = normalizeSourceKind(kind) || linkCorpusKind(link);
+  const sourceKind = link.source_kind || (corpusKind === 'blog' ? 'blog' : corpusKind === 'podcast' ? 'podcast' : 'weekly_thing');
   const targetResolved = Boolean(link.target_resolved || link.target_post_url || link.target_microblog_id);
+  const targetSourceKind = inferredTargetSourceKind(link, corpusKind, targetResolved);
+  const isCrossSource = Boolean(targetSourceKind && targetSourceKind !== corpusKind);
+  const linkKind = isCrossSource ? 'internal' : link.link_kind || inferredLinkKind(link);
+  const linkCategory = isCrossSource ? 'cross_source' : link.link_category || (linkKind === 'external' ? 'external' : targetResolved ? 'resolved_post' : 'internal_unresolved');
   return {
     ...link,
     source_kind: sourceKind,
-    corpus_kind: normalizeSourceKind(kind) || linkCorpusKind(link),
+    corpus_kind: corpusKind,
     subject: link.subject || link.post_subject,
     publish_date: link.publish_date,
     issue_year: link.issue_year || link.post_year,
     source_url: link.issue_url || link.post_url || link.episode_url,
     link_url: link.url,
     link_kind: linkKind,
-    link_category: link.link_category || (linkKind === 'external' ? 'external' : targetResolved ? 'resolved_post' : 'internal_unresolved'),
+    link_category: linkCategory,
     target_resolved: targetResolved,
-    target_source_kind: link.target_source_kind || (targetResolved ? 'blog' : undefined)
+    target_source_kind: targetSourceKind
   };
 }
 
@@ -1047,6 +1068,13 @@ function contentRecords(corpus, kind) {
   }));
 }
 
+function issueList(values) {
+  return (values || [])
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value))
+    .sort((a, b) => a - b);
+}
+
 function summarizeDomains(links, limit = 12) {
   const counts = new Map();
   for (const link of links || []) {
@@ -1079,7 +1107,7 @@ async function toolCorpusStats(input = {}, { scope } = {}) {
     const countList = (map, key) => Array.from(map.entries())
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .map(([name, count]) => ({ [key]: name, count }));
-    sources.push({
+    const stats = {
       source_kind: kind,
       generated_at: corpus.generated_at,
       item_count: kind === 'blog' ? corpus.post_count || records.length : kind === 'podcast' ? corpus.episode_count || records.length : corpus.issue_count || records.length,
@@ -1090,7 +1118,28 @@ async function toolCorpusStats(input = {}, { scope } = {}) {
       top_domains: summarizeDomains(links),
       counts_by_link_kind: countList(linkKindCounts, 'link_kind'),
       counts_by_link_category: countList(categoryCounts, 'link_category')
-    });
+    };
+    if (kind === 'weekly_thing') {
+      stats.issue_count = corpus.issue_count || records.length;
+      stats.content_item_count = records.length;
+    }
+    if (kind === 'blog') {
+      const withIssueRefs = records.filter((record) => issueList(record.also_in_issues).length);
+      const issueCounts = new Map();
+      for (const record of withIssueRefs) {
+        for (const issue of issueList(record.also_in_issues)) {
+          issueCounts.set(String(issue), (issueCounts.get(String(issue)) || 0) + 1);
+        }
+      }
+      stats.post_count = corpus.post_count || records.length;
+      stats.posts_with_also_in_issues_count = withIssueRefs.length;
+      stats.newest_also_in_issues = withIssueRefs[0] || null;
+      stats.also_in_issue_counts = countList(issueCounts, 'issue_number');
+    }
+    if (kind === 'podcast') {
+      stats.episode_count = corpus.episode_count || records.length;
+    }
+    sources.push(stats);
   }
   return { scope: normalizeScope(scope), sources };
 }
@@ -1098,16 +1147,29 @@ async function toolCorpusStats(input = {}, { scope } = {}) {
 async function toolLatestContent(input = {}, { scope } = {}) {
   const requestedSource = normalizeSourceKind(input.source_kind || input.source || '');
   const limit = Math.min(Math.max(Number(input.limit || 10), 1), 30);
+  const hasAlsoInIssues = boolFilter(input.has_also_in_issues);
+  const alsoInIssue = input.also_in_issue ?? input.issue_number;
   const items = [];
   for (const kind of scopeKinds(scope)) {
     if (requestedSource && kind !== requestedSource) continue;
     const corpus = await loadCorpus(kind);
     items.push(...contentRecords(corpus, kind));
   }
+  const filtered = items.filter((item) => {
+    const refs = issueList(item.also_in_issues);
+    if (hasAlsoInIssues !== null && Boolean(refs.length) !== hasAlsoInIssues) return false;
+    if (alsoInIssue !== undefined && alsoInIssue !== null && String(alsoInIssue).trim()) {
+      const wanted = Number(issueKey(alsoInIssue));
+      if (!Number.isFinite(wanted) || !refs.includes(wanted)) return false;
+    }
+    return true;
+  });
   return {
     scope: normalizeScope(scope),
     source_kind: requestedSource || null,
-    results: latestByDate(items).slice(0, limit)
+    has_also_in_issues: hasAlsoInIssues,
+    also_in_issue: alsoInIssue ?? null,
+    results: latestByDate(filtered).slice(0, limit)
   };
 }
 

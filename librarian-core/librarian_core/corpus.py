@@ -657,6 +657,10 @@ _BLOG_HTML_LINK_RE = re.compile(
     re.I | re.S,
 )
 _BLOG_INTERNAL_DOMAINS = {"thingelstad.com", "www.thingelstad.com", "micro.thingelstad.com"}
+_CROSS_SOURCE_BY_DOMAIN = {
+    "weekly.thingelstad.com": "weekly_thing",
+    "another.thingelstad.com": "podcast",
+}
 _BLOG_HOSTLIKE_PATH_RE = re.compile(r"/(?:www\.)?[a-z0-9-]+\.[a-z]{2,}(?:/|$)", re.I)
 
 
@@ -721,7 +725,15 @@ def _blog_target_path(url: str) -> str | None:
     return _normalize_blog_path(match.group(1))
 
 
-def _blog_link_category(parsed: Any, *, link_kind: str, target_post: dict[str, Any] | None) -> str:
+def _blog_link_category(
+    parsed: Any,
+    *,
+    link_kind: str,
+    target_post: dict[str, Any] | None,
+    target_source_kind: str | None = None,
+) -> str:
+    if target_source_kind:
+        return "cross_source"
     if link_kind == "external":
         return "external"
     path = parsed.path or ""
@@ -771,8 +783,14 @@ def _blog_outbound_links(
         seen_urls.add(resolved_url)
         target_path = _blog_target_path(resolved_url)
         target_post = post_lookup.get(target_path or "")
-        link_kind = "internal" if domain in _BLOG_INTERNAL_DOMAINS else "external"
-        link_category = _blog_link_category(parsed, link_kind=link_kind, target_post=target_post)
+        target_source_kind = _CROSS_SOURCE_BY_DOMAIN.get(domain)
+        link_kind = "internal" if domain in _BLOG_INTERNAL_DOMAINS or target_source_kind else "external"
+        link_category = _blog_link_category(
+            parsed,
+            link_kind=link_kind,
+            target_post=target_post,
+            target_source_kind=target_source_kind,
+        )
         record = {
             "source_kind": "blog",
             "microblog_id": microblog_id,
@@ -792,6 +810,8 @@ def _blog_outbound_links(
             "link_category": link_category,
             "target_resolved": bool(target_post),
         }
+        if target_source_kind:
+            record["target_source_kind"] = target_source_kind
         if target_path:
             record["target_blog_path"] = target_path
         if target_post:
@@ -987,6 +1007,14 @@ def _podcast_show_note_links(
         if not domain or resolved_url in seen_urls:
             continue
         seen_urls.add(resolved_url)
+        target_source_kind = None
+        if domain in {"thingelstad.com", "www.thingelstad.com", "micro.thingelstad.com"}:
+            target_source_kind = "blog"
+        elif domain == "weekly.thingelstad.com":
+            target_source_kind = "weekly_thing"
+        elif domain != "another.thingelstad.com" and domain.endswith("thingelstad.com"):
+            target_source_kind = "site"
+        link_kind = "internal" if domain == "another.thingelstad.com" or target_source_kind else "external"
         records.append(
             {
                 "source_kind": "podcast",
@@ -1002,9 +1030,10 @@ def _podcast_show_note_links(
                 "domain": domain,
                 "text": plain_text(text).strip(),
                 "context": plain_text(text).strip(),
-                "link_kind": "internal" if domain.endswith("thingelstad.com") else "external",
-                "link_category": "internal_site" if domain.endswith("thingelstad.com") else "external",
+                "link_kind": link_kind,
+                "link_category": "cross_source" if target_source_kind else "internal_site" if domain == "another.thingelstad.com" else "external",
                 "target_resolved": False,
+                **({"target_source_kind": target_source_kind} if target_source_kind else {}),
             }
         )
     return records

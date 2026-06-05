@@ -138,6 +138,31 @@ class BuildBlogCorpusTests(unittest.TestCase):
         self.assertEqual(by_text["Malformed"]["link_category"], "malformed_internal")
         self.assertFalse(by_text["Malformed"]["target_resolved"])
 
+    def test_blog_cross_source_links_are_not_external_domains(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            blog = Path(tmp) / "posts"
+            _post(blog, mid=111, date="2026-05-25", slug="cross-source", title="Cross Source",
+                  body=(
+                      "[Weekly Thing](https://weekly.thingelstad.com/archive/350/) "
+                      "[Another Thing](https://another.thingelstad.com/2025/10/05/how-do-you-start-a.html) "
+                      "[Blog home](https://thingelstad.com/)"
+                  ))
+            archive = Path(tmp) / "archive"
+            archive.mkdir()
+            result = build_blog_corpus(blog_dir=blog, archive_dir=archive)
+
+        by_text = {link["text"]: link for link in result["links"]}
+        self.assertEqual(by_text["Weekly Thing"]["link_kind"], "internal")
+        self.assertEqual(by_text["Weekly Thing"]["link_category"], "cross_source")
+        self.assertEqual(by_text["Weekly Thing"]["target_source_kind"], "weekly_thing")
+        self.assertEqual(by_text["Another Thing"]["link_kind"], "internal")
+        self.assertEqual(by_text["Another Thing"]["link_category"], "cross_source")
+        self.assertEqual(by_text["Another Thing"]["target_source_kind"], "podcast")
+        self.assertEqual(by_text["Blog home"]["link_kind"], "internal")
+        self.assertNotEqual(by_text["Blog home"]["link_category"], "cross_source")
+        source_post = next(post for post in result["posts"] if post["microblog_id"] == 111)
+        self.assertEqual(source_post["domains"], [])
+
     def test_also_in_issues_cross_reference(self):
         # An issue Journal links the blog post inline (not via curated
         # links[]) — the matching blog chunk should carry also_in_issues.
