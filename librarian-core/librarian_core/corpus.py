@@ -664,6 +664,10 @@ _CROSS_SOURCE_BY_DOMAIN = {
 _BLOG_HOSTLIKE_PATH_RE = re.compile(r"/(?:www\.)?[a-z0-9-]+\.[a-z]{2,}(?:/|$)", re.I)
 
 
+def _is_thingelstad_domain(domain: str) -> bool:
+    return domain == "thingelstad.com" or domain.endswith(".thingelstad.com")
+
+
 def _normalize_blog_path(path_part: str) -> str:
     """``2026/05/23/slug.html`` → ``2026/05/23/slug`` — the cross-corpus key
     shared by an issue's Journal back-reference and the blog post itself
@@ -732,8 +736,10 @@ def _blog_link_category(
     target_post: dict[str, Any] | None,
     target_source_kind: str | None = None,
 ) -> str:
-    if target_source_kind:
+    if target_source_kind in {"blog", "weekly_thing", "podcast"}:
         return "cross_source"
+    if target_source_kind == "site":
+        return "internal_site"
     if link_kind == "external":
         return "external"
     path = parsed.path or ""
@@ -745,6 +751,8 @@ def _blog_link_category(
         return "collection_page"
     if _BLOG_HOSTLIKE_PATH_RE.search(path):
         return "malformed_internal"
+    if _is_thingelstad_domain((parsed.hostname or "").lower()):
+        return "internal_site"
     return "internal_unresolved"
 
 
@@ -784,7 +792,9 @@ def _blog_outbound_links(
         target_path = _blog_target_path(resolved_url)
         target_post = post_lookup.get(target_path or "")
         target_source_kind = _CROSS_SOURCE_BY_DOMAIN.get(domain)
-        link_kind = "internal" if domain in _BLOG_INTERNAL_DOMAINS or target_source_kind else "external"
+        if not target_source_kind and domain not in _BLOG_INTERNAL_DOMAINS and _is_thingelstad_domain(domain):
+            target_source_kind = "site"
+        link_kind = "internal" if _is_thingelstad_domain(domain) else "external"
         link_category = _blog_link_category(
             parsed,
             link_kind=link_kind,
@@ -1031,7 +1041,7 @@ def _podcast_show_note_links(
                 "text": plain_text(text).strip(),
                 "context": plain_text(text).strip(),
                 "link_kind": link_kind,
-                "link_category": "cross_source" if target_source_kind else "internal_site" if domain == "another.thingelstad.com" else "external",
+                "link_category": "cross_source" if target_source_kind in {"blog", "weekly_thing", "podcast"} else "internal_site" if link_kind == "internal" else "external",
                 "target_resolved": False,
                 **({"target_source_kind": target_source_kind} if target_source_kind else {}),
             }

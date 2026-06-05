@@ -145,7 +145,8 @@ class BuildBlogCorpusTests(unittest.TestCase):
                   body=(
                       "[Weekly Thing](https://weekly.thingelstad.com/archive/350/) "
                       "[Another Thing](https://another.thingelstad.com/2025/10/05/how-do-you-start-a.html) "
-                      "[Blog home](https://thingelstad.com/)"
+                      "[Blog home](https://thingelstad.com/) "
+                      "[Photos](https://photos.thingelstad.com/album/)"
                   ))
             archive = Path(tmp) / "archive"
             archive.mkdir()
@@ -160,6 +161,9 @@ class BuildBlogCorpusTests(unittest.TestCase):
         self.assertEqual(by_text["Another Thing"]["target_source_kind"], "podcast")
         self.assertEqual(by_text["Blog home"]["link_kind"], "internal")
         self.assertNotEqual(by_text["Blog home"]["link_category"], "cross_source")
+        self.assertEqual(by_text["Photos"]["link_kind"], "internal")
+        self.assertEqual(by_text["Photos"]["link_category"], "internal_site")
+        self.assertEqual(by_text["Photos"]["target_source_kind"], "site")
         source_post = next(post for post in result["posts"] if post["microblog_id"] == 111)
         self.assertEqual(source_post["domains"], [])
 

@@ -58,7 +58,8 @@ class PodcastCorpusTests(unittest.TestCase):
                 body=(
                     "These are [show notes](https://example.com/show) with [the podcast site](/about/), "
                     "[a blog post](https://thingelstad.com/2026/05/25/note.html), and "
-                    "[a newsletter issue](https://weekly.thingelstad.com/archive/350/)."
+                    "[a newsletter issue](https://weekly.thingelstad.com/archive/350/), plus "
+                    "[photos](https://photos.thingelstad.com/album/)."
                 ),
                 transcript="Podcast transcripts make Thingy aware.",
             )
@@ -71,7 +72,7 @@ class PodcastCorpusTests(unittest.TestCase):
         self.assertEqual(corpus["topics"], [])
         self.assertEqual(corpus["episode_count"], 1)
         self.assertGreaterEqual(corpus["chunk_count"], 2)
-        self.assertEqual(corpus["link_count"], 4)
+        self.assertEqual(corpus["link_count"], 5)
         self.assertEqual(len(corpus["episodes"]), 1)
         episode = corpus["episodes"][0]
         self.assertEqual(episode["publish_date"], "2025-10-05")
@@ -89,6 +90,9 @@ class PodcastCorpusTests(unittest.TestCase):
         self.assertEqual(episode["links"][3]["link_kind"], "internal")
         self.assertEqual(episode["links"][3]["link_category"], "cross_source")
         self.assertEqual(episode["links"][3]["target_source_kind"], "weekly_thing")
+        self.assertEqual(episode["links"][4]["link_kind"], "internal")
+        self.assertEqual(episode["links"][4]["link_category"], "internal_site")
+        self.assertEqual(episode["links"][4]["target_source_kind"], "site")
         self.assertIn("body_hash", episode)
 
         chunks = {chunk["section"]: chunk for chunk in corpus["chunks"]}

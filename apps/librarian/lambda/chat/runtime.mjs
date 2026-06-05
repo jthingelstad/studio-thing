@@ -777,6 +777,7 @@ const CORPUS_BY_DOMAIN = {
   'weekly.thingelstad.com': 'weekly_thing',
   'another.thingelstad.com': 'podcast'
 };
+const CORPUS_SOURCE_KINDS = new Set(['blog', 'weekly_thing', 'podcast']);
 
 function normalizeSourceKind(value) {
   const raw = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
@@ -821,9 +822,10 @@ function normalizeLinkRecord(link, kind) {
   const sourceKind = link.source_kind || (corpusKind === 'blog' ? 'blog' : corpusKind === 'podcast' ? 'podcast' : 'weekly_thing');
   const targetResolved = Boolean(link.target_resolved || link.target_post_url || link.target_microblog_id);
   const targetSourceKind = inferredTargetSourceKind(link, corpusKind, targetResolved);
-  const isCrossSource = Boolean(targetSourceKind && targetSourceKind !== corpusKind);
-  const linkKind = isCrossSource ? 'internal' : link.link_kind || inferredLinkKind(link);
-  const linkCategory = isCrossSource ? 'cross_source' : link.link_category || (linkKind === 'external' ? 'external' : targetResolved ? 'resolved_post' : 'internal_unresolved');
+  const isCrossSource = Boolean(CORPUS_SOURCE_KINDS.has(targetSourceKind) && targetSourceKind !== corpusKind);
+  const isInternalSite = targetSourceKind === 'site';
+  const linkKind = isCrossSource || isInternalSite ? 'internal' : link.link_kind || inferredLinkKind(link);
+  const linkCategory = isCrossSource ? 'cross_source' : isInternalSite ? 'internal_site' : link.link_category || (linkKind === 'external' ? 'external' : targetResolved ? 'resolved_post' : 'internal_unresolved');
   return {
     ...link,
     source_kind: sourceKind,
