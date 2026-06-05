@@ -7,6 +7,7 @@ import { renderTemplate, agentUserPrompt } from '../shared/prompts.mjs';
 import { subscriberStatus } from '../shared/buttondown.mjs';
 import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
 import { readConverseStream } from '../shared/bedrock-stream.mjs';
+import { openEndedCreativeGuardAnswer } from '../shared/prompt-guards.mjs';
 
 test('session token round trips and rejects tampering', () => {
   process.env.SESSION_SECRET = 'test-secret';
@@ -128,6 +129,13 @@ test('agent user prompt renders dynamic conversation context', () => {
   assert.match(prompt, /User: Tell me more\./);
   assert.match(prompt, /What did the archive say about RSS\?/);
   assert.match(prompt, /Investigate with tools as needed/);
+});
+
+test('open-ended creative guard catches story prompts without blocking archive-shaped story prompts', () => {
+  assert.match(openEndedCreativeGuardAnswer('Tell me a story.'), /need one thread/i);
+  assert.match(openEndedCreativeGuardAnswer('write me a story please'), /need one thread/i);
+  assert.equal(openEndedCreativeGuardAnswer('Tell me the story of Jamie and RSS.'), '');
+  assert.equal(openEndedCreativeGuardAnswer('Tell me a story about Minneapolis in the archive.'), '');
 });
 
 test('FAQ search returns authoritative shared FAQ entries', () => {

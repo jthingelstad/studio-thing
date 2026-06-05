@@ -8,6 +8,7 @@ import { sanitizeAnswerProse } from '../shared/answer-sanitizer.mjs';
 import { prioritizeCitationsForAnswer } from '../shared/citations.mjs';
 import { normalizeScope, scopeKinds, scopePromptLine } from '../shared/scope.mjs';
 import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
+import { openEndedCreativeGuardAnswer } from '../shared/prompt-guards.mjs';
 import { searchFaq } from '../shared/faq.mjs';
 import { truthyEnv } from '../shared/logging.mjs';
 import {
@@ -1583,7 +1584,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     const memoryContext = memoryContextBlock(userMemory);
 
     writeSse(stream, 'meta', { request_id: requestId });
-    const guardedAnswer = privacyGuardAnswer(question);
+    const guardedAnswer = privacyGuardAnswer(question) || openEndedCreativeGuardAnswer(question);
     if (guardedAnswer) {
       const citations = [];
       writeSse(stream, 'answer_delta', { delta: guardedAnswer });
