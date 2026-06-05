@@ -1,4 +1,4 @@
-.PHONY: build clean content-build librarian-corpus librarian-corpus-upload librarian-podcast-import librarian-podcast-corpus librarian-podcast-corpus-upload librarian-graph librarian-graph-upload librarian-deploy audio audio-issue refresh-copy refresh-copy-dry test test-lambda test-workshop test-workshop-env
+.PHONY: build clean content-build librarian-corpus librarian-corpus-upload librarian-blog-corpus-upload librarian-podcast-import librarian-podcast-corpus librarian-podcast-corpus-upload librarian-corpora-upload librarian-graph librarian-graph-upload librarian-deploy audio audio-issue refresh-copy refresh-copy-dry test test-lambda test-workshop test-workshop-env
 
 PYTHON ?= python3
 
@@ -7,6 +7,9 @@ librarian-corpus:
 
 librarian-corpus-upload:
 	$(PYTHON) pipeline/deploy/upload_corpus.py
+
+librarian-blog-corpus-upload:
+	$(PYTHON) pipeline/deploy/upload_blog_corpus.py
 
 librarian-podcast-import:
 	$(PYTHON) pipeline/podcast/import_another_thing.py
@@ -17,6 +20,11 @@ librarian-podcast-corpus:
 librarian-podcast-corpus-upload:
 	$(PYTHON) pipeline/deploy/upload_podcast_corpus.py
 
+librarian-corpora-upload:
+	$(PYTHON) pipeline/deploy/upload_corpus.py
+	$(PYTHON) pipeline/deploy/upload_blog_corpus.py
+	$(PYTHON) pipeline/deploy/upload_podcast_corpus.py
+
 librarian-graph:
 	$(PYTHON) pipeline/graph/build.py
 
@@ -24,7 +32,7 @@ librarian-graph-upload:
 	$(PYTHON) pipeline/graph/build.py --upload
 
 librarian-deploy:
-	$(PYTHON) pipeline/deploy/aws.py
+	$(PYTHON) pipeline/deploy/aws.py $(ARGS)
 
 # Build the generated artifacts Studio hands to downstream surfaces.
 build:

@@ -38,18 +38,27 @@ Always via `pipeline/deploy/aws.py`. Two flavors:
 
 ```bash
 # Code + infra only (skip the slow + paid corpus reupload) — the default for code changes
-npm run librarian:deploy -- --skip-corpus-upload
+python pipeline/deploy/aws.py --skip-corpus-upload
 
-# Full deploy (rebuilds + embeds + uploads corpus)
-npm run librarian:deploy
+# Full deploy (rebuilds + embeds + uploads Weekly Thing, blog, and podcast corpora)
+python pipeline/deploy/aws.py
 
 # Run Node tests
-npm run librarian:test
+npm --prefix apps/librarian/lambda test
 ```
 
 CI auto-detects code/infra changes in `apps/librarian/` and runs the deploy step from `.github/workflows/deploy.yml`. Manual deploys are for local validation before commit.
 
-Corpus + graph build/upload: `pipeline/deploy/upload_corpus.py`.
+Corpus build/upload is source-specific but treated as one API concern:
+
+- Weekly Thing corpus + graph: `pipeline/deploy/upload_corpus.py`
+- thingelstad.com blog corpus: `pipeline/deploy/upload_blog_corpus.py`
+- Another Thing podcast corpus: `pipeline/deploy/upload_podcast_corpus.py`
+
+New external content enters Studio through the `Studio — Sync External Content`
+workflow first. It ingests Micro.blog posts into `data/blog/`, imports podcast
+episodes into `data/podcast/`, commits those changes, and the production workflow
+then uploads the updated corpus artifacts.
 
 ## Endpoints
 

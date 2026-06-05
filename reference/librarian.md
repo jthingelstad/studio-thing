@@ -217,16 +217,23 @@ Tinylytics is only used by the website/browser. The Librarian API does not emit 
 For a normal code-only Thingy deployment:
 
 ```sh
-npm run librarian:deploy -- --skip-corpus-upload
+python pipeline/deploy/aws.py --skip-corpus-upload
 ```
 
 For a full corpus refresh and deploy:
 
 ```sh
-npm run librarian:deploy
+python pipeline/deploy/aws.py
 ```
 
-`npm run librarian:deploy` packages both Lambdas, uploads their zip files, builds/uploads the embedded corpus, builds/uploads the graph artifact, and updates the CloudFormation stack. Use `npm run librarian:corpus:upload` by itself only when the deployed code is unchanged and only data artifacts need to be refreshed; it uploads both corpus and graph unless `--skip-graph` is passed.
+`python pipeline/deploy/aws.py` packages both Lambdas, uploads their zip files, builds/uploads all three embedded corpus artifacts, builds/uploads the Weekly Thing graph artifact, and updates the CloudFormation stack. Use `make librarian-corpora-upload` by itself only when the deployed code is unchanged and only API corpus artifacts need to be refreshed.
+
+New external publishing content has its own ingest step before corpus upload:
+
+- Blog posts: `.github/workflows/sync-external-content.yml` runs `pipeline/blog/ingest_blog.py --since-last` against Micro.blog and commits changes to `data/blog/**`.
+- Podcast episodes: the same workflow checks out `another.thingelstad.com`, runs `pipeline/podcast/import_another_thing.py`, and commits changes to `data/podcast/**`.
+
+Those commits trigger the production workflow, which rebuilds and uploads the updated corpus artifacts. A newly published blog post will not reach Thingy unless this sync workflow runs successfully with `MICROBLOG_API_KEY` configured.
 
 The deploy script packages both Lambda entrypoints from one Node source tree:
 

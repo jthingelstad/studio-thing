@@ -43,26 +43,26 @@ The `bridgeSecretOk` helper in `runtime.mjs` mirrors the same check in `auth/han
 Always via `pipeline/deploy/aws.py`:
 
 ```bash
-# Default: skip corpus reupload (~$1, ~3min) — code+infra only
-npm run librarian:deploy -- --skip-corpus-upload
+# Default: skip corpus reupload — code+infra only
+python pipeline/deploy/aws.py --skip-corpus-upload
 
-# Full deploy (rebuilds + embeds + uploads corpus)
-npm run librarian:deploy
+# Full deploy (rebuilds + embeds + uploads Weekly Thing, blog, and podcast corpora)
+python pipeline/deploy/aws.py
 ```
 
-The `--skip-corpus-upload` flag is the **default for any code-only change**. Full corpus reupload is slow and paid (Bedrock embed cost); only do it when the corpus itself is stale (new issues, schema change, embed model change).
+The `--skip-corpus-upload` flag is the **default for any code-only change**. Full corpus reupload is slow and paid (Bedrock embed cost); only do it when one or more corpus artifacts are stale (new source content, schema change, embed model change).
 
 Deploy steps:
 
 1. Smoke-test the Bedrock agent model (`smoke_test_agent_model`) — refuses to deploy if the model isn't invokable from this account.
 2. Package both Lambda bundles (`auth/` + `chat/` separately).
 3. Upload zip to `s3://weekly-thing-librarian/code/{auth,chat}-lambda/<ts>.zip`.
-4. If not `--skip-corpus-upload`: run `upload_corpus.py` (rebuild corpus + graph from `apps/site/archive/`, embed, upload to S3).
+4. If not `--skip-corpus-upload`: upload all three API corpora — Weekly Thing corpus + graph, blog corpus, and podcast corpus.
 5. CloudFormation `update-stack` with the new code keys + secrets from `.env` (`SESSION_SECRET`, `DISCORD_BRIDGE_SECRET`, `BUTTONDOWN_API_KEY`).
 6. Configure 30-day log retention on the auto-created log groups.
 7. Update `.env` with the latest stack outputs (`LIBRARIAN_API_URL`, `LIBRARIAN_STREAM_URL`).
 
-CI auto-detects code/infra changes in `apps/librarian/` and runs the deploy step (`.github/workflows/deploy.yml`). Manual deploys are for local validation before commit.
+CI auto-detects code/infra changes in `apps/librarian/` and runs the deploy step (`.github/workflows/deploy.yml`). New blog/podcast content enters through `.github/workflows/sync-external-content.yml`, which commits `data/blog/**` / `data/podcast/**` updates so the production workflow can rebuild and upload corpora. Manual deploys are for local validation before commit.
 
 ## Tests
 

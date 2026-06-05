@@ -365,6 +365,50 @@ def update_env_file(values: dict[str, str]) -> None:
     env_path.write_text("\n".join(updated).rstrip() + "\n", encoding="utf-8")
 
 
+def upload_librarian_corpora(args: argparse.Namespace, bucket: str) -> None:
+    """Build/embed/upload every corpus the Librarian API can load.
+
+    The stream Lambda now answers over three independent S3 artifacts:
+    Weekly Thing (plus graph), thingelstad.com blog, and Another Thing
+    podcast. A "full" deploy should refresh all three so code/schema changes
+    don't leave the optional corpora on an older shape.
+    """
+    tmp_dir = REPO / "tmp"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    run([
+        sys.executable,
+        "pipeline/deploy/upload_corpus.py",
+        "--bucket",
+        bucket,
+        "--key",
+        args.corpus_key,
+        "--graph-key",
+        args.graph_key,
+        "--keep-output",
+        str(tmp_dir / "librarian_embedded_corpus.json"),
+    ])
+    run([
+        sys.executable,
+        "pipeline/deploy/upload_blog_corpus.py",
+        "--bucket",
+        bucket,
+        "--key",
+        args.blog_corpus_key,
+        "--keep-output",
+        str(tmp_dir / "librarian_embedded_blog_corpus.json"),
+    ])
+    run([
+        sys.executable,
+        "pipeline/deploy/upload_podcast_corpus.py",
+        "--bucket",
+        bucket,
+        "--key",
+        args.podcast_corpus_key,
+        "--keep-output",
+        str(tmp_dir / "librarian_embedded_podcast_corpus.json"),
+    ])
+
+
 def main() -> int:
     load_dotenv()
     parser = argparse.ArgumentParser(description=__doc__)
@@ -403,8 +447,7 @@ def main() -> int:
     print(f"Uploaded streaming Lambda package to s3://{bucket}/{stream_code_key}")
 
     if not args.skip_corpus_upload:
-        embedded_corpus = REPO / "tmp" / "librarian_embedded_corpus.json"
-        run([sys.executable, "pipeline/deploy/upload_corpus.py", "--bucket", bucket, "--key", args.corpus_key, "--graph-key", args.graph_key, "--keep-output", str(embedded_corpus)])
+        upload_librarian_corpora(args, bucket)
 
     session_secret = os.environ.get("LIBRARIAN_SESSION_SECRET")
     discord_bridge_secret = os.environ.get("LIBRARIAN_BRIDGE_SECRET") or None

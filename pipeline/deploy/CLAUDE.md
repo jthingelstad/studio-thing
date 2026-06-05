@@ -6,29 +6,31 @@ AWS deploy tooling for the Thingy Lambda stack. No README — this directory is 
 
 | Script | What it does |
 |---|---|
-| `aws.py` | Packages the two Lambda bundles, uploads them to S3, runs CloudFormation update-stack with the new code keys + secrets from `.env`. **The canonical deploy entrypoint.** |
-| `upload_corpus.py` | Builds the corpus + graph from `apps/site/archive/`, embeds via Bedrock Cohere, uploads to S3. Called by `aws.py` unless `--skip-corpus-upload`. |
+| `aws.py` | Packages the two Lambda bundles, optionally uploads all Librarian corpora, uploads code to S3, then runs CloudFormation update-stack with the new code keys + secrets from `.env`. **The canonical deploy entrypoint.** |
+| `upload_corpus.py` | Builds the Weekly Thing corpus + graph from `apps/site/archive/`, embeds via Bedrock Cohere, uploads to S3. Called by `aws.py` during full corpus deploys. |
+| `upload_blog_corpus.py` | Builds the thingelstad.com blog corpus from `data/blog/posts`, embeds via Bedrock Cohere with S3 cache reuse, uploads to S3. Called by `aws.py` during full corpus deploys. |
+| `upload_podcast_corpus.py` | Builds the Another Thing podcast corpus from `data/podcast/another-thing/episodes`, embeds via Bedrock Cohere with S3 cache reuse, uploads to S3. Called by `aws.py` during full corpus deploys. |
 | `bedrock_logging.py` | Configures Bedrock model invocation logging (CloudWatch destination + S3 archive). One-time setup. |
 
 ## Invocation
 
-Always via `npm run librarian:deploy` (which calls `aws.py`). Two flavors:
+Always via `pipeline/deploy/aws.py` (or `make librarian-deploy`). Two flavors:
 
 ```bash
 # Default for code changes — skip the slow + paid corpus reupload
-npm run librarian:deploy -- --skip-corpus-upload
+python pipeline/deploy/aws.py --skip-corpus-upload
 
-# Full deploy (re-embeds + uploads the corpus)
-npm run librarian:deploy
+# Full deploy (re-embeds + uploads all three corpora)
+python pipeline/deploy/aws.py
 ```
 
-The `--skip-corpus-upload` flag is the default for any **code-only** change (Lambda code, CloudFormation tweaks, env-var changes). Full corpus reupload is **slow** (~3 minutes for embedding + S3 upload) and **paid** (Bedrock embed cost ~$1 per full run). Only do a full deploy when:
+The `--skip-corpus-upload` flag is the default for any **code-only** change (Lambda code, CloudFormation tweaks, env-var changes). Full corpus reupload refreshes **Weekly Thing + blog + podcast** and is **slow/paid**. Each source-specific uploader reuses embeddings from the previously deployed S3 artifact when chunk ids match. Only do a full deploy when:
 
 - The corpus itself is stale (new issues to embed)
 - The embed model has changed (Cohere v3 → v4, hypothetically)
 - The corpus schema has changed (e.g., new chunk metadata field)
 
-CI in `.github/workflows/deploy.yml` does the full corpus upload on every issue ship — `upload_corpus.py` is wired in directly there, not via `aws.py`. Manual deploys are for local validation before commit.
+CI in `.github/workflows/deploy.yml` uploads all three corpus artifacts when production runs. External content first enters Studio through `.github/workflows/sync-external-content.yml`, which commits changes under `data/blog/**` and `data/podcast/**`; those commits then trigger production. Manual deploys are for local validation before commit.
 
 ## `aws.py` flow
 
@@ -36,18 +38,19 @@ CI in `.github/workflows/deploy.yml` does the full corpus upload on every issue 
 2. **Ensure the private S3 bucket exists** (`ensure_private_bucket(bucket)`). Default bucket: `LIBRARIAN_BUCKET` env var or `weekly-thing-librarian`.
 3. **Package both Lambda bundles** (`auth/` + `chat/`) — separate npm install + zip per bundle. Bundles ship independently because the auth Lambda is REST and the chat Lambda is response-streamed Function URL.
 4. **Upload zips** to `s3://{bucket}/code/{auth,chat}-lambda/<unix-ts>.zip`. Timestamp keys so CloudFormation always sees a new version.
-5. **Optional**: `upload_corpus.py` runs — rebuilds corpus + graph, embeds, uploads.
+5. **Optional**: all corpus uploaders run — Weekly Thing corpus + graph, blog corpus, podcast corpus.
 6. **CloudFormation update-stack** with the new code keys + secrets from `.env`: `SESSION_SECRET`, `DISCORD_BRIDGE_SECRET`, `BUTTONDOWN_API_KEY`.
 7. **30-day log retention** on the auto-created log groups (`configure_log_retention`).
 8. **Update `.env`** with the latest stack outputs: `LIBRARIAN_API_URL`, `LIBRARIAN_STREAM_URL`.
 
-## `upload_corpus.py` flow
+## Corpus upload flow
 
-1. Build the corpus from `apps/site/archive/*.md` via `librarian_core.corpus.build_corpus(include_issue_bodies=True)`.
-2. Build the graph (link references, topic co-occurrence) via `librarian_core.graph`.
-3. Embed each chunk via Bedrock Cohere `embed-english-v3`. Dimension: 1024. Concurrency: 10. Retry-on-429 (Bedrock throttle).
-4. Upload `corpus.json` + `graph.json` to `s3://{bucket}/{CORPUS_KEY, GRAPH_KEY}`.
-5. The Lambda's `loadCorpus()` picks up the new file on the next cold start (or after `aws.py` triggers a new deployment).
+1. Weekly Thing: `upload_corpus.py` builds from `apps/site/archive/*.md`, embeds chunks, builds the graph, uploads `corpus.json` + `graph.json`.
+2. Blog: `upload_blog_corpus.py` builds from `data/blog/posts/**/*.md`, reuses cached embeddings by chunk id, uploads `blog_corpus.json`.
+3. Podcast: `upload_podcast_corpus.py` builds from `data/podcast/another-thing/episodes/*.json`, reuses cached embeddings by chunk id, uploads `podcast_corpus.json`.
+4. The Lambda's `loadCorpus()`, `loadBlogCorpus()`, and `loadPodcastCorpus()` pick up new files on the next cold start or after `aws.py` triggers a new deployment.
+
+Use `make librarian-corpora-upload` when code is unchanged and only the three S3 corpus artifacts need refresh.
 
 ## Secrets
 

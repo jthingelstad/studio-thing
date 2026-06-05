@@ -1,0 +1,82 @@
+name: Studio — Sync External Content
+
+# Pull publishing-surface content into Studio's canonical data store. This is
+# the ingest side of Thingy's corpus pipeline:
+#
+#   Micro.blog thingelstad.com posts -> data/blog/posts/
+#   another.thingelstad.com episodes -> data/podcast/another-thing/episodes/
+#
+# A commit from this workflow changes data/blog/** or data/podcast/**, which
+# triggers the production workflow to rebuild and upload the relevant Librarian
+# corpus artifacts.
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    types:
+      - blog-published
+      - podcast-published
+      - external-content-updated
+
+permissions:
+  contents: write
+
+concurrency:
+  group: studio-external-content-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Studio
+        uses: actions/checkout@v6
+        with:
+          # Use a PAT so the resulting push can trigger the production
+          # workflow. GITHUB_TOKEN pushes do not trigger downstream workflows.
+          token: ${{ secrets.STUDIO_PAT_TOKEN || github.token }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+          cache: 'pip'
+
+      - run: pip install -r requirements.txt
+
+      - name: Ingest thingelstad.com blog from Micro.blog
+        env:
+          MICROBLOG_API_KEY: ${{ secrets.MICROBLOG_API_KEY }}
+          MICROBLOG_MICROPUB_URL: ${{ secrets.MICROBLOG_MICROPUB_URL }}
+        run: |
+          if [[ -z "$MICROBLOG_API_KEY" ]]; then
+            echo "MICROBLOG_API_KEY is not configured; skipping blog ingest."
+            exit 0
+          fi
+          python pipeline/blog/ingest_blog.py --since-last
+
+      - name: Check out Another Thing
+        uses: actions/checkout@v6
+        with:
+          repository: jthingelstad/another.thingelstad.com
+          path: external/another.thingelstad.com
+          token: ${{ secrets.STUDIO_PAT_TOKEN || github.token }}
+
+      - name: Import Another Thing episodes
+        run: |
+          python pipeline/podcast/import_another_thing.py \
+            --source-dir external/another.thingelstad.com/content/episodes \
+            --output-dir data/podcast/another-thing/episodes
+
+      - name: Commit synced content
+        run: |
+          git config user.name "studio-bot"
+          git config user.email "studio-bot@users.noreply.github.com"
+          git add data/blog data/podcast
+          if git diff --cached --quiet; then
+            echo "No external content changes to commit."
+            exit 0
+          fi
+          git commit -m "Sync external publishing content"
+          git push

@@ -12,6 +12,7 @@ on:
     paths:
       - 'data/issues/**'
       - 'data/audio/**'
+      - 'data/blog/**'
       - 'data/podcast/**'
       - 'pipeline/**'
       - 'librarian-core/**'
@@ -70,7 +71,7 @@ jobs:
       # here — weekly fetches its own in its CI. Studio no longer refreshes or
       # hands off stats.json.
 
-      - name: Build librarian corpus
+      - name: Build Weekly Thing corpus
         run: python pipeline/corpus/build.py
 
       - name: Build podcast corpus
@@ -80,9 +81,10 @@ jobs:
       - name: Build graph for site topics
         run: python pipeline/graph/build.py
 
-      # Embed corpus + graph and push to S3 so Thingy answers cite the new
-      # issue. continue-on-error so a Bedrock hiccup doesn't block the handoff.
-      - name: Upload embedded corpus + graph to S3
+      # Embed every corpus the Librarian API can load. Each upload reuses
+      # cached embeddings from the previous S3 artifact when chunk ids match.
+      # continue-on-error so a Bedrock hiccup doesn't block the website handoff.
+      - name: Upload embedded Weekly Thing corpus + graph to S3
         continue-on-error: true
         run: python pipeline/deploy/upload_corpus.py
         env:
@@ -91,8 +93,15 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
           LIBRARIAN_BUCKET: weekly-thing-librarian
 
-      # Another Thing transcripts are a separate lazy-loaded corpus. Keep the
-      # S3 artifact current when data/podcast or corpus code changes.
+      - name: Upload embedded blog corpus to S3
+        continue-on-error: true
+        run: python pipeline/deploy/upload_blog_corpus.py
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+          LIBRARIAN_BUCKET: weekly-thing-librarian
+
       - name: Upload embedded podcast corpus to S3
         continue-on-error: true
         run: python pipeline/deploy/upload_podcast_corpus.py

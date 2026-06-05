@@ -59,7 +59,10 @@ audio/status artifacts, deploys the Librarian runtime when needed, and hands gen
 inputs, refreshes its own landing-page stats, builds Eleventy + Pagefind, and deploys
 to GitHub Pages.
 
-Another Thing remains the podcast publishing surface. Studio imports its episode
-metadata/transcripts into `data/podcast/another-thing/episodes/`, builds a separate
-lazy-loaded podcast corpus, and uploads it for Thingy scopes that include `podcast`
-or `all`.
+External publishing surfaces sync back into Studio before they become part of
+Thingy's API corpus. The `Studio — Sync External Content` workflow ingests new
+thingelstad.com posts from Micro.blog into `data/blog/posts/` and imports Another
+Thing episode metadata/transcripts from the podcast repo into
+`data/podcast/another-thing/episodes/`. Those commits trigger the production
+workflow, which rebuilds and uploads the Weekly Thing, blog, and podcast corpus
+artifacts for the Librarian API.
