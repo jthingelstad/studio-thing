@@ -771,6 +771,28 @@ function normalizedDomain(value) {
   return String(value || '').toLowerCase().replace(/^https?:\/\//, '').split('/')[0].replace(/^www\./, '');
 }
 
+function normalizeSourceKind(value) {
+  const raw = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  if (!raw) return '';
+  if (['weekly_thing', 'weeklything', 'newsletter', 'issue', 'issues', 'archive', 'wt', 'chunk'].includes(raw)) return 'weekly_thing';
+  if (['blog', 'thingelstad', 'thingelstad_com', 'post', 'posts', 'micropost'].includes(raw)) return 'blog';
+  if (['podcast', 'podcasts', 'another', 'another_thing', 'episode', 'episodes'].includes(raw)) return 'podcast';
+  return '';
+}
+
+function linkCorpusKind(link) {
+  return normalizeSourceKind(link.corpus_kind || link.source_kind || (link.issue_number ? 'weekly_thing' : ''));
+}
+
+function boolFilter(value) {
+  if (value === true || value === false) return value;
+  const raw = String(value ?? '').trim().toLowerCase();
+  if (!raw) return null;
+  if (['true', '1', 'yes', 'resolved'].includes(raw)) return true;
+  if (['false', '0', 'no', 'unresolved'].includes(raw)) return false;
+  return null;
+}
+
 function inferredLinkKind(link) {
   if (link.link_kind) return link.link_kind;
   const domain = normalizedDomain(link.domain || link.url || '');
@@ -779,15 +801,21 @@ function inferredLinkKind(link) {
 
 function normalizeLinkRecord(link, kind) {
   const sourceKind = link.source_kind || (kind === 'blog' ? 'blog' : kind === 'podcast' ? 'podcast' : 'chunk');
+  const linkKind = inferredLinkKind(link);
+  const targetResolved = Boolean(link.target_resolved || link.target_post_url || link.target_microblog_id);
   return {
     ...link,
     source_kind: sourceKind,
+    corpus_kind: normalizeSourceKind(kind) || linkCorpusKind(link),
     subject: link.subject || link.post_subject,
     publish_date: link.publish_date,
     issue_year: link.issue_year || link.post_year,
     source_url: link.issue_url || link.post_url || link.episode_url,
     link_url: link.url,
-    link_kind: inferredLinkKind(link)
+    link_kind: linkKind,
+    link_category: link.link_category || (linkKind === 'external' ? 'external' : targetResolved ? 'resolved_post' : 'internal_unresolved'),
+    target_resolved: targetResolved,
+    target_source_kind: link.target_source_kind || (targetResolved ? 'blog' : undefined)
   };
 }
 
@@ -881,6 +909,9 @@ async function toolFindLinks(input = {}, { scope } = {}) {
   const domain = normalizedDomain(input.domain || '');
   const topic = String(input.topic || '').toLowerCase().trim();
   const linkKind = String(input.link_kind || '').toLowerCase().trim();
+  const sourceKind = normalizeSourceKind(input.source_kind || input.source || '');
+  const linkCategory = String(input.link_category || '').toLowerCase().trim();
+  const targetResolved = boolFilter(input.target_resolved);
   const [startYear, endYear] = parseYearRange(input.year_range);
   const limit = Math.min(Math.max(Number(input.limit || 20), 1), 50);
   const kinds = scopeKinds(scope);
@@ -890,9 +921,13 @@ async function toolFindLinks(input = {}, { scope } = {}) {
   const filteredLinks = [];
   for (const link of await linkRecords(scope)) {
     const linkDomain = normalizedDomain(link.domain || link.url || '');
+    const linkSourceKind = linkCorpusKind(link);
     const year = Number(link.issue_year || link.post_year || 0);
+    if (sourceKind && linkSourceKind !== sourceKind) continue;
     if (domain && !linkDomain.includes(domain)) continue;
     if (linkKind && link.link_kind !== linkKind) continue;
+    if (linkCategory && String(link.link_category || '').toLowerCase() !== linkCategory) continue;
+    if (targetResolved !== null && Boolean(link.target_resolved) !== targetResolved) continue;
     if (startYear && (!year || year < startYear)) continue;
     if (endYear && (!year || year > endYear)) continue;
     const haystack = [link.text, link.title, link.section, link.heading_context, link.context, link.domain].join(' ').toLowerCase();
@@ -903,6 +938,7 @@ async function toolFindLinks(input = {}, { scope } = {}) {
       results.push({
         issue_number: link.issue_number ?? null,
         source_kind: link.source_kind,
+        corpus_kind: linkSourceKind,
         subject: link.subject,
         publish_date: link.publish_date,
         section: link.section,
@@ -913,28 +949,166 @@ async function toolFindLinks(input = {}, { scope } = {}) {
         link_url: link.link_url || link.url,
         destination_url: link.link_url || link.url,
         link_kind: link.link_kind,
+        link_category: link.link_category,
+        target_resolved: Boolean(link.target_resolved),
         microblog_id: link.microblog_id,
         target_blog_path: link.target_blog_path,
+        target_source_kind: link.target_source_kind,
         target_microblog_id: link.target_microblog_id,
         target_post_url: link.target_post_url,
+        target_subject: link.target_subject,
+        target_publish_date: link.target_publish_date,
         episode_number: link.episode_number,
         show: link.show
       });
     }
   }
   const counts = new Map();
+  const countsBySource = new Map();
+  const countsByKind = new Map();
+  const countsByCategory = new Map();
   for (const link of filteredLinks) {
+    const linkSourceKind = linkCorpusKind(link) || 'unknown';
+    countsBySource.set(linkSourceKind, (countsBySource.get(linkSourceKind) || 0) + 1);
+    countsByKind.set(link.link_kind || 'unknown', (countsByKind.get(link.link_kind || 'unknown') || 0) + 1);
+    countsByCategory.set(link.link_category || 'unknown', (countsByCategory.get(link.link_category || 'unknown') || 0) + 1);
     if (!domain && !linkKind && link.link_kind === 'internal') continue;
     const linkDomain = normalizedDomain(link.domain || link.url || '');
     if (linkDomain) counts.set(linkDomain, (counts.get(linkDomain) || 0) + 1);
   }
   const top_domains = Array.from(counts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 20).map(([domainName, count]) => ({ domain: domainName, count }));
-  return { results, top_domains };
+  const countList = (map, key) => Array.from(map.entries())
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([name, count]) => ({ [key]: name, count }));
+  return {
+    results,
+    total_count: filteredLinks.length,
+    top_domains,
+    counts_by_source: countList(countsBySource, 'source_kind'),
+    counts_by_link_kind: countList(countsByKind, 'link_kind'),
+    counts_by_link_category: countList(countsByCategory, 'link_category')
+  };
 }
 
 async function toolDomainHistory(input = {}, context = {}) {
   if (!input.domain) return { error: 'domain is required', results: [] };
-  return toolFindLinks({ domain: input.domain, link_kind: input.link_kind, limit: input.limit || 80 }, context);
+  return toolFindLinks({
+    domain: input.domain,
+    source_kind: input.source_kind || input.source,
+    link_kind: input.link_kind,
+    link_category: input.link_category,
+    target_resolved: input.target_resolved,
+    limit: input.limit || 80
+  }, context);
+}
+
+function latestByDate(items) {
+  return [...items]
+    .filter((item) => item.publish_date)
+    .sort((a, b) => String(b.publish_date || '').localeCompare(String(a.publish_date || '')));
+}
+
+function contentRecords(corpus, kind) {
+  if (kind === 'blog') {
+    return (corpus.posts || []).map((post) => ({
+      source_kind: 'blog',
+      microblog_id: post.microblog_id,
+      subject: post.subject,
+      publish_date: post.publish_date,
+      url: post.url,
+      section: post.post_kind === 'micropost' ? 'Micropost' : 'Blog post',
+      also_in_issues: post.also_in_issues,
+      domains: post.domains || []
+    }));
+  }
+  if (kind === 'podcast') {
+    return (corpus.episodes || []).map((episode) => ({
+      source_kind: 'podcast',
+      episode_number: episode.number,
+      show: episode.show,
+      subject: episode.subject,
+      publish_date: episode.publish_date,
+      url: episode.url,
+      transcript_url: episode.transcript_url,
+      audio_url: episode.audio_url,
+      section: 'Episode',
+      domains: episode.domains || []
+    }));
+  }
+  return (corpus.issues || []).map((issue) => ({
+    source_kind: 'weekly_thing',
+    issue_number: issue.number,
+    subject: issue.subject,
+    publish_date: issue.publish_date,
+    url: issue.url,
+    section: 'Issue',
+    topics: issue.topics || [],
+    domains: issue.domains || []
+  }));
+}
+
+function summarizeDomains(links, limit = 12) {
+  const counts = new Map();
+  for (const link of links || []) {
+    if ((link.link_kind || inferredLinkKind(link)) === 'internal') continue;
+    const domain = normalizedDomain(link.domain || link.url || '');
+    if (domain) counts.set(domain, (counts.get(domain) || 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, limit)
+    .map(([domain, count]) => ({ domain, count }));
+}
+
+async function toolCorpusStats(input = {}, { scope } = {}) {
+  const requestedSource = normalizeSourceKind(input.source_kind || input.source || '');
+  const kinds = scopeKinds(scope).filter((kind) => !requestedSource || kind === requestedSource);
+  const sources = [];
+  for (const kind of kinds) {
+    const corpus = await loadCorpus(kind);
+    const records = latestByDate(contentRecords(corpus, kind));
+    const links = await linkRecords(kind);
+    const linkKindCounts = new Map();
+    const categoryCounts = new Map();
+    for (const link of links) {
+      const linkKind = link.link_kind || inferredLinkKind(link);
+      linkKindCounts.set(linkKind, (linkKindCounts.get(linkKind) || 0) + 1);
+      const category = link.link_category || (linkKind === 'external' ? 'external' : 'internal_unresolved');
+      categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
+    }
+    const countList = (map, key) => Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([name, count]) => ({ [key]: name, count }));
+    sources.push({
+      source_kind: kind,
+      generated_at: corpus.generated_at,
+      item_count: kind === 'blog' ? corpus.post_count || records.length : kind === 'podcast' ? corpus.episode_count || records.length : corpus.issue_count || records.length,
+      chunk_count: corpus.chunk_count || (corpus.chunks || []).length,
+      link_count: corpus.link_count || links.length,
+      oldest: records[records.length - 1] || null,
+      newest: records[0] || null,
+      top_domains: summarizeDomains(links),
+      counts_by_link_kind: countList(linkKindCounts, 'link_kind'),
+      counts_by_link_category: countList(categoryCounts, 'link_category')
+    });
+  }
+  return { scope: normalizeScope(scope), sources };
+}
+
+async function toolLatestContent(input = {}, { scope } = {}) {
+  const requestedSource = normalizeSourceKind(input.source_kind || input.source || '');
+  const limit = Math.min(Math.max(Number(input.limit || 10), 1), 30);
+  const items = [];
+  for (const kind of scopeKinds(scope)) {
+    if (requestedSource && kind !== requestedSource) continue;
+    const corpus = await loadCorpus(kind);
+    items.push(...contentRecords(corpus, kind));
+  }
+  return {
+    scope: normalizeScope(scope),
+    source_kind: requestedSource || null,
+    results: latestByDate(items).slice(0, limit)
+  };
 }
 
 function contextAround(text, phrase, radius = 240) {
@@ -1042,6 +1216,8 @@ const ARCHIVE_TOOLS = {
   get_section: toolGetSection,
   find_links: toolFindLinks,
   domain_history: toolDomainHistory,
+  corpus_stats: toolCorpusStats,
+  latest_content: toolLatestContent,
   quote_search: toolQuoteSearch,
   list_issues: toolListIssues,
   compare_eras: toolCompareEras

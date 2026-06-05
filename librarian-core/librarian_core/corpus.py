@@ -657,6 +657,7 @@ _BLOG_HTML_LINK_RE = re.compile(
     re.I | re.S,
 )
 _BLOG_INTERNAL_DOMAINS = {"thingelstad.com", "www.thingelstad.com", "micro.thingelstad.com"}
+_BLOG_HOSTLIKE_PATH_RE = re.compile(r"/(?:www\.)?[a-z0-9-]+\.[a-z]{2,}(?:/|$)", re.I)
 
 
 def _normalize_blog_path(path_part: str) -> str:
@@ -720,6 +721,21 @@ def _blog_target_path(url: str) -> str | None:
     return _normalize_blog_path(match.group(1))
 
 
+def _blog_link_category(parsed: Any, *, link_kind: str, target_post: dict[str, Any] | None) -> str:
+    if link_kind == "external":
+        return "external"
+    path = parsed.path or ""
+    if target_post:
+        return "resolved_post"
+    if path.startswith("/uploads/"):
+        return "upload_asset"
+    if path.startswith("/collections/"):
+        return "collection_page"
+    if _BLOG_HOSTLIKE_PATH_RE.search(path):
+        return "malformed_internal"
+    return "internal_unresolved"
+
+
 def _blog_outbound_links(
     body: str,
     *,
@@ -756,6 +772,7 @@ def _blog_outbound_links(
         target_path = _blog_target_path(resolved_url)
         target_post = post_lookup.get(target_path or "")
         link_kind = "internal" if domain in _BLOG_INTERNAL_DOMAINS else "external"
+        link_category = _blog_link_category(parsed, link_kind=link_kind, target_post=target_post)
         record = {
             "source_kind": "blog",
             "microblog_id": microblog_id,
@@ -772,10 +789,13 @@ def _blog_outbound_links(
             "text": plain_text(text).strip(),
             "context": plain_text(text).strip(),
             "link_kind": link_kind,
+            "link_category": link_category,
+            "target_resolved": bool(target_post),
         }
         if target_path:
             record["target_blog_path"] = target_path
         if target_post:
+            record["target_source_kind"] = "blog"
             record["target_microblog_id"] = target_post.get("microblog_id")
             record["target_post_url"] = target_post.get("url")
             record["target_subject"] = target_post.get("subject")
@@ -983,6 +1003,8 @@ def _podcast_show_note_links(
                 "text": plain_text(text).strip(),
                 "context": plain_text(text).strip(),
                 "link_kind": "internal" if domain.endswith("thingelstad.com") else "external",
+                "link_category": "internal_site" if domain.endswith("thingelstad.com") else "external",
+                "target_resolved": False,
             }
         )
     return records

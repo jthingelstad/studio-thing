@@ -74,7 +74,10 @@ class PodcastCorpusTests(unittest.TestCase):
         self.assertEqual(episode["issue_year"], 2025)
         self.assertEqual(episode["domains"], ["example.com"])
         self.assertEqual(episode["links"][0]["link_kind"], "external")
+        self.assertEqual(episode["links"][0]["link_category"], "external")
+        self.assertFalse(episode["links"][0]["target_resolved"])
         self.assertEqual(episode["links"][1]["link_kind"], "internal")
+        self.assertEqual(episode["links"][1]["link_category"], "internal_site")
         self.assertEqual(episode["links"][1]["url"], "https://another.thingelstad.com/about/")
         self.assertIn("body_hash", episode)
 

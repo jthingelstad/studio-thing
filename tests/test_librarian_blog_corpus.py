@@ -106,12 +106,37 @@ class BuildBlogCorpusTests(unittest.TestCase):
         self.assertEqual(result["links"][0]["post_url"], "https://www.thingelstad.com/2026/05/25/links.html")
         self.assertEqual(result["links"][0]["text"], "Example")
         self.assertEqual(result["links"][0]["link_kind"], "external")
+        self.assertEqual(result["links"][0]["link_category"], "external")
+        self.assertFalse(result["links"][0]["target_resolved"])
         internal = result["links"][1]
         self.assertEqual(internal["link_kind"], "internal")
+        self.assertEqual(internal["link_category"], "resolved_post")
+        self.assertTrue(internal["target_resolved"])
+        self.assertEqual(internal["target_source_kind"], "blog")
         self.assertEqual(internal["target_blog_path"], "2026/05/24/note")
         self.assertEqual(internal["target_microblog_id"], 222)
         self.assertEqual(internal["target_post_url"], "https://www.thingelstad.com/2026/05/24/note.html")
         self.assertNotIn("images.example.net", {link["domain"] for link in result["links"]})
+
+    def test_blog_link_categories_flag_internal_edge_cases(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            blog = Path(tmp) / "posts"
+            _post(blog, mid=111, date="2011-04-12", slug="awesome-new-community",
+                  title="Old link shapes",
+                  body=(
+                      "[Collection](https://www.thingelstad.com/collections/texas-hellweek-2001/) "
+                      "[Upload](https://www.thingelstad.com/uploads/2026/photo.jpg) "
+                      "[Malformed](http://micro.thingelstad.com/2011/04/12/www.cornertablerestaurant.com/csk.php)"
+                  ))
+            archive = Path(tmp) / "archive"
+            archive.mkdir()
+            result = build_blog_corpus(blog_dir=blog, archive_dir=archive)
+
+        by_text = {link["text"]: link for link in result["links"]}
+        self.assertEqual(by_text["Collection"]["link_category"], "collection_page")
+        self.assertEqual(by_text["Upload"]["link_category"], "upload_asset")
+        self.assertEqual(by_text["Malformed"]["link_category"], "malformed_internal")
+        self.assertFalse(by_text["Malformed"]["target_resolved"])
 
     def test_also_in_issues_cross_reference(self):
         # An issue Journal links the blog post inline (not via curated

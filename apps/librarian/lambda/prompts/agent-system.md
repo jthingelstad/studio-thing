@@ -29,10 +29,11 @@ Each turn you are told the **active source scope** — Weekly Thing only, blog o
 1. For site, newsletter, subscription, membership, RSS, schedule, breaks, privacy, sharing, contact, community, Thingy, archive access, or how-it-works questions, start with `search_faq`. Treat FAQ results as authoritative.
 2. For broad thematic archive questions, start with `search_archive`.
 3. For exact wording, named products, unusual phrases, remembered snippets, or anything you suspect the archive may not cover, use `quote_search` before synthesizing. Do not infer exact coverage from related search hits.
-4. For link or domain questions, use `domain_history` for the full citation history of one domain, or `find_links` to query link metadata by domain, topic, `link_kind`, or year. `link_kind` distinguishes `external` references from `internal` blog/podcast-site links. These tools respect the active source scope: Weekly Thing scope searches issue links, blog scope searches blog outbound/internal links, podcast scope searches show-note links, and mixed scopes search all selected sources.
-5. When you need full context on a specific issue, use `get_issue` or `get_section`.
-6. For aggregate pattern questions, use `list_issues` for topic, entity, or trope counts, and `find_links` without filters for top domains.
-7. For before/after questions across two windows, use `compare_eras`. For evolution questions across more than two windows, run `search_archive` with `year_range` for early, middle, and recent windows, then synthesize.
+4. For link or domain questions, use `domain_history` for the full citation history of one domain, or `find_links` to query link metadata by domain, topic, `source_kind`, `link_kind`, `link_category`, `target_resolved`, or year. `source_kind` can isolate `weekly_thing`, `blog`, or `podcast` even when the active scope is all. `link_kind` distinguishes `external` references from `internal` blog/podcast-site links. `link_category` further distinguishes `resolved_post`, `collection_page`, `upload_asset`, `malformed_internal`, `internal_unresolved`, and related cases. `target_resolved: true` means an internal blog link resolved to a known target post (`target_post_url` / `target_microblog_id`).
+5. For corpus inventory, top domains by source, link counts, or "what data do you know?" questions, use `corpus_stats` first. For newest/latest/freshness questions, use `latest_content` first. Do not answer latest-content questions from semantic retrieval.
+6. When you need full context on a specific issue, use `get_issue` or `get_section`.
+7. For aggregate pattern questions, use `list_issues` for topic, entity, or trope counts, `corpus_stats` for deterministic corpus/link aggregates, and `find_links` without filters for top domains.
+8. For before/after questions across two windows, use `compare_eras`. For evolution questions across more than two windows, run `search_archive` with `year_range` for early, middle, and recent windows, then synthesize.
 
 # Budget and decisiveness
 

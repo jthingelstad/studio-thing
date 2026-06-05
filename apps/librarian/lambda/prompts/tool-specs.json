@@ -67,14 +67,17 @@
   {
     "toolSpec": {
       "name": "find_links",
-      "description": "Query link metadata in the active source scope by domain, topic/entity, link_kind, and year range. link_kind can be \"external\" or \"internal\". Does not fetch linked pages. Weekly Thing scope searches issue links; blog scope searches blog outbound/internal links; podcast scope searches show-note links; mixed scopes search all selected sources. Call without filters to retrieve top external domains. year_range accepts a [start, end] array, a \"YYYY\" string, or {\"start\": YYYY, \"end\": YYYY}.",
+      "description": "Query link metadata in the active source scope by domain, topic/entity, source_kind, link_kind, link_category, target_resolved, and year range. source_kind can be \"weekly_thing\", \"blog\", or \"podcast\" and lets you isolate one corpus even when the active scope is all. link_kind can be \"external\" or \"internal\". link_category includes values like \"external\", \"resolved_post\", \"collection_page\", \"upload_asset\", \"malformed_internal\", \"internal_unresolved\", and \"internal_site\". target_resolved true means an internal blog link resolved to a known target post. Does not fetch linked pages. Call without filters to retrieve top external domains. year_range accepts a [start, end] array, a \"YYYY\" string, or {\"start\": YYYY, \"end\": YYYY}.",
       "inputSchema": {
         "json": {
           "type": "object",
           "properties": {
             "domain": { "type": "string" },
             "topic": { "type": "string" },
+            "source_kind": { "type": "string" },
             "link_kind": { "type": "string" },
+            "link_category": { "type": "string" },
+            "target_resolved": { "type": ["boolean", "string"] },
             "year_range": { "type": ["array", "string", "object"] },
             "limit": { "type": "integer" }
           }
@@ -85,16 +88,48 @@
   {
     "toolSpec": {
       "name": "domain_history",
-      "description": "List every source in the active scope that cited a domain with date and surrounding link context. Optional link_kind can be \"external\" or \"internal\". Weekly Thing results are issue citations; blog results are post citations; podcast results are episode citations. Use for \"how often / when / in what context did Jamie link to X\" questions.",
+      "description": "List every source in the active scope that cited a domain with date and surrounding link context. Optional source_kind isolates \"weekly_thing\", \"blog\", or \"podcast\"; optional link_kind can be \"external\" or \"internal\"; optional link_category and target_resolved narrow internal blog-link cases. Use for \"how often / when / in what context did Jamie link to X\" questions.",
       "inputSchema": {
         "json": {
           "type": "object",
           "properties": {
             "domain": { "type": "string" },
+            "source_kind": { "type": "string" },
             "link_kind": { "type": "string" },
+            "link_category": { "type": "string" },
+            "target_resolved": { "type": ["boolean", "string"] },
             "limit": { "type": "integer" }
           },
           "required": ["domain"]
+        }
+      }
+    }
+  },
+  {
+    "toolSpec": {
+      "name": "corpus_stats",
+      "description": "Return deterministic inventory statistics for the active source scope: item counts, chunk counts, link counts, newest/oldest item, generated_at, top external domains, and link kind/category counts. Optional source_kind isolates \"weekly_thing\", \"blog\", or \"podcast\". Use for corpus inventory, freshness, latest indexed date, and aggregate-domain questions before searching semantically.",
+      "inputSchema": {
+        "json": {
+          "type": "object",
+          "properties": {
+            "source_kind": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  {
+    "toolSpec": {
+      "name": "latest_content",
+      "description": "Return the newest indexed issues/posts/episodes deterministically by publish_date. Optional source_kind isolates \"weekly_thing\", \"blog\", or \"podcast\". Use for newest/latest/freshness questions; do not use semantic search for those.",
+      "inputSchema": {
+        "json": {
+          "type": "object",
+          "properties": {
+            "source_kind": { "type": "string" },
+            "limit": { "type": "integer" }
+          }
         }
       }
     }
