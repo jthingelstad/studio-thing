@@ -201,11 +201,11 @@ Resources:
           BEDROCK_RERANK_MODEL: cohere.rerank-v3-5:0
           BEDROCK_RERANK_REGION: us-west-2
       Handler: chat/handler.handler
-      MemorySize: 1536
+      MemorySize: 3008
       ReservedConcurrentExecutions: 5
       Role: !GetAtt LibrarianFunctionRole.Arn
       Runtime: nodejs20.x
-      Timeout: 90
+      Timeout: 300
       Tags:
         - Key: project
           Value: Thingy

@@ -363,9 +363,8 @@ async function loadOptionalCorpus({ kind, envKey, disabledEvent, failedEvent, ca
       duration_ms: Math.round(performance.now() - start)
     });
   } catch (error) {
-    const empty = { ...EMPTY_CORPUS };
-    setCache(empty);
     logEvent('warning', failedEvent, { key, error_type: error.constructor?.name || 'Error' });
+    return { ...EMPTY_CORPUS };
   }
   return cache || (kind === 'blog' ? blogCorpusCache : podcastCorpusCache);
 }
