@@ -31,6 +31,7 @@ import {
   rememberUserFact
 } from '../shared/user-memory.mjs';
 import {
+  artifactDynamoString,
   citationDynamoItem,
   conversationPreview,
   conversationSk,
@@ -477,6 +478,85 @@ async function recordUserConversationTurn({
     return response.Attributes ? conversationSummaryFromItem(response.Attributes) : null;
   } catch (error) {
     logEvent('warning', 'user_conversation_turn_record_failed', {
+      subscriber_hash: subscriberHash,
+      conversation_id: validId,
+      request_id: requestId,
+      error_type: error.constructor?.name || 'Error'
+    });
+    return null;
+  }
+}
+
+async function recordCuriosityMapConversation({
+  subscriberHash,
+  conversationId,
+  map,
+  scope,
+  requestId
+}) {
+  const tableName = process.env.TABLE_NAME;
+  const validId = validConversationId(conversationId);
+  if (!tableName || !subscriberHash || !validId || !map) return null;
+  const now = new Date().toISOString();
+  const pk = userConversationPk(subscriberHash);
+  const title = conversationTitle(map.title || 'Curiosity Map');
+  const center = map.center?.label || String(map.title || '').replace(/^Curiosity Map:\s*/i, '') || 'archive';
+  const preview = conversationPreview(`Explore branches from ${center}.`);
+  try {
+    await dynamodb.send(new PutItemCommand({
+      TableName: tableName,
+      Item: {
+        pk: conversationDynamoString(pk),
+        sk: conversationDynamoString(conversationSk(validId)),
+        item_type: conversationDynamoString('conversation'),
+        conversation_id: conversationDynamoString(validId),
+        title: conversationDynamoString(title),
+        preview: conversationDynamoString(preview),
+        scope: conversationDynamoString(scope || 'all'),
+        created_at: conversationDynamoString(now),
+        updated_at: conversationDynamoString(now),
+        last_message_at: conversationDynamoString(now),
+        last_request_id: conversationDynamoString(requestId),
+        last_question: conversationDynamoString(''),
+        turn_count: conversationDynamoNumber(0)
+      },
+      ConditionExpression: 'attribute_not_exists(pk)'
+    }));
+    await dynamodb.send(new PutItemCommand({
+      TableName: tableName,
+      Item: {
+        pk: conversationDynamoString(pk),
+        sk: conversationDynamoString(turnSk(validId, now, requestId)),
+        item_type: conversationDynamoString('turn'),
+        conversation_id: conversationDynamoString(validId),
+        request_id: conversationDynamoString(requestId),
+        created_at: conversationDynamoString(now),
+        scope: conversationDynamoString(scope || 'all'),
+        question: conversationDynamoString(''),
+        answer: conversationDynamoString(''),
+        question_chars: conversationDynamoNumber(0),
+        answer_chars: conversationDynamoNumber(0),
+        citation_count: conversationDynamoNumber(0),
+        citations: conversationDynamoList([], (item) => item),
+        artifact_json: artifactDynamoString(map)
+      }
+    }));
+    return conversationSummaryFromItem({
+      pk: conversationDynamoString(pk),
+      sk: conversationDynamoString(conversationSk(validId)),
+      item_type: conversationDynamoString('conversation'),
+      conversation_id: conversationDynamoString(validId),
+      title: conversationDynamoString(title),
+      preview: conversationDynamoString(preview),
+      scope: conversationDynamoString(scope || 'all'),
+      created_at: conversationDynamoString(now),
+      updated_at: conversationDynamoString(now),
+      last_message_at: conversationDynamoString(now),
+      last_request_id: conversationDynamoString(requestId),
+      turn_count: conversationDynamoNumber(0)
+    });
+  } catch (error) {
+    logEvent('warning', 'curiosity_map_conversation_record_failed', {
       subscriber_hash: subscriberHash,
       conversation_id: validId,
       request_id: requestId,
@@ -1253,7 +1333,7 @@ const CURIOSITY_STOPWORDS = new Set([
   'jamie', 'librarian', 'little', 'looking', 'maybe', 'might', 'more', 'needs',
   'people', 'really', 'response', 'should', 'source', 'sources', 'thingelstad',
   'thingy', 'things', 'think', 'thinking', 'through', 'topic', 'trying', 'using',
-  'weekly', 'would', 'write', 'writing'
+  'weekly', 'would', 'write', 'writing', 'you', 'your'
 ]);
 
 function titleCaseTheme(value) {
@@ -1275,7 +1355,10 @@ function titleCaseTheme(value) {
 function cleanCuriosityLabel(value) {
   const base = cleanThemeCandidate(value) || String(value || '').trim();
   const cleaned = base
+    .replace(/^curiosity\s+map:\s*/i, ' ')
     .replace(/\b(?:please|can|could|would|tell|show|find|give|make|build|create|highlight|trace|take|use|ask)\b/gi, ' ')
+    .replace(/^(.{3,80}?)\s+\binto\b\s+([^.,;:!?]{3,80}?)\s+\bacross\b.*$/i, '$2')
+    .replace(/^(.{3,80}?)\s+\binto\b\s+([^.,;:!?]{3,80})$/i, '$2')
     .replace(/\b(?:from|into|with|without|near|about|around|across|versus|against|toward|towards|and|or|but)\s*$/i, ' ')
     .replace(/^\s*(?:and|or|but|to|for|on|in|of|the|a|an)\s+/i, ' ')
     .replace(/\s+/g, ' ')
@@ -2917,12 +3000,21 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
         scope,
         center: body.center || body.topic || body.query
       });
+      const conversationId = crypto.randomUUID();
+      const conversation = await recordCuriosityMapConversation({
+        subscriberHash,
+        conversationId,
+        map,
+        scope,
+        requestId
+      });
       const s200 = jsonResponseStream(responseStream, 200);
-      s200.write(JSON.stringify({ ...map, request_id: requestId }));
+      s200.write(JSON.stringify({ ...map, request_id: requestId, conversation_id: conversationId, conversation }));
       s200.end();
       logEvent('info', 'curiosity_map_completed', {
         ...summary,
         subscriber_hash: subscriberHash,
+        conversation_id: conversationId,
         node_count: map.nodes?.length || 0,
         source_count: map.sources?.length || 0,
         scope,

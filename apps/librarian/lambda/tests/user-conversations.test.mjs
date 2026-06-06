@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  artifactDynamoString,
   conversationSummaryFromItem,
   conversationTitle,
   conversationTurnFromItem,
@@ -67,4 +68,32 @@ test('turns expand into messages and compact history', () => {
     { role: 'user', content: 'Question?' },
     { role: 'assistant', content: 'Answer.' }
   ]);
+});
+
+test('artifact-only turns expand into assistant artifact messages', () => {
+  const artifact = {
+    kind: 'curiosity_map',
+    title: 'Curiosity Map: RSS',
+    nodes: [{ id: 'rss', label: 'RSS', kind: 'center' }],
+    edges: []
+  };
+  const turn = conversationTurnFromItem({
+    conversation_id: { S: 'c-map' },
+    request_id: { S: 'r-map' },
+    created_at: { S: '2026-06-06T02:00:00.000Z' },
+    scope: { S: 'all' },
+    question: { S: '' },
+    answer: { S: '' },
+    artifact_json: artifactDynamoString(artifact)
+  });
+  assert.equal(turn.artifact.title, 'Curiosity Map: RSS');
+  assert.deepEqual(messagesFromTurns([turn]), [{
+    role: 'assistant',
+    content: '',
+    citations: [],
+    created_at: '2026-06-06T02:00:00.000Z',
+    request_id: 'r-map',
+    artifact
+  }]);
+  assert.deepEqual(historyFromTurns([turn]), []);
 });

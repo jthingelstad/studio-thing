@@ -64,6 +64,11 @@ export function preflightDynamoItem(preflight) {
   };
 }
 
+export function artifactDynamoString(artifact) {
+  if (!artifact || typeof artifact !== 'object' || Array.isArray(artifact)) return dynamoString('');
+  return dynamoString(JSON.stringify(artifact).slice(0, 20000));
+}
+
 export function citationDynamoItem(citation) {
   return {
     M: {
@@ -100,6 +105,15 @@ export function conversationSummaryFromItem(item) {
 
 export function conversationTurnFromItem(item) {
   const o = itemObject(item);
+  let artifact = null;
+  if (typeof o.artifact_json === 'string' && o.artifact_json) {
+    try {
+      const parsed = JSON.parse(o.artifact_json);
+      artifact = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+    } catch (error) {
+      artifact = null;
+    }
+  }
   return {
     conversation_id: o.conversation_id || '',
     request_id: o.request_id || '',
@@ -111,7 +125,8 @@ export function conversationTurnFromItem(item) {
     answer_chars: Number(o.answer_chars || 0),
     citation_count: Number(o.citation_count || 0),
     citations: Array.isArray(o.citations) ? o.citations : [],
-    preflight: o.preflight && typeof o.preflight === 'object' ? o.preflight : null
+    preflight: o.preflight && typeof o.preflight === 'object' ? o.preflight : null,
+    artifact
   };
 }
 
@@ -133,7 +148,17 @@ export function messagesFromTurns(turns = []) {
         content: turn.answer,
         citations: turn.citations || [],
         created_at: turn.created_at,
-        request_id: turn.request_id
+        request_id: turn.request_id,
+        artifact: turn.artifact || null
+      });
+    } else if (turn.artifact) {
+      messages.push({
+        role: 'assistant',
+        content: '',
+        citations: [],
+        created_at: turn.created_at,
+        request_id: turn.request_id,
+        artifact: turn.artifact
       });
     }
   }
