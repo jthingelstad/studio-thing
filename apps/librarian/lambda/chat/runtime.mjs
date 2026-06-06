@@ -1247,6 +1247,192 @@ async function buildWelcomeSpark({ memory, conversations, scope }) {
   };
 }
 
+const CURIOSITY_STOPWORDS = new Set([
+  'able', 'across', 'again', 'also', 'another', 'around', 'because', 'before', 'between',
+  'conversation', 'could', 'curious', 'different', 'explore', 'exploring', 'getting',
+  'jamie', 'librarian', 'little', 'looking', 'maybe', 'might', 'more', 'needs',
+  'people', 'really', 'response', 'should', 'source', 'sources', 'thingelstad',
+  'thingy', 'things', 'think', 'thinking', 'through', 'topic', 'trying', 'using',
+  'weekly', 'would', 'write', 'writing'
+]);
+
+function titleCaseTheme(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 4)
+    .map((word) => {
+      const upper = word.toUpperCase();
+      if (['AI', 'API', 'AWS', 'CSS', 'HTML', 'RSS', 'UI', 'UX'].includes(upper)) return upper;
+      if (word.length <= 2) return word.toLowerCase();
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
+function cleanCuriosityLabel(value) {
+  const base = cleanThemeCandidate(value) || String(value || '').trim();
+  const cleaned = base
+    .replace(/\b(?:please|can|could|would|tell|show|find|give|make|build|create|highlight|trace|take|use|ask)\b/gi, ' ')
+    .replace(/\b(?:from|into|with|without|near|about|around|across|versus|against|toward|towards|and|or|but)\s*$/i, ' ')
+    .replace(/^\s*(?:and|or|but|to|for|on|in|of|the|a|an)\s+/i, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleaned || cleaned.length < 3) return '';
+  if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(cleaned)) return cleaned.toLowerCase();
+  return titleCaseTheme(cleaned);
+}
+
+function curiosityNodeId(value) {
+  const slug = tokenize(value).slice(0, 6).join('-');
+  return slug || crypto.randomUUID().slice(0, 8);
+}
+
+function curiosityPrompt(center, label, kind = 'adjacent') {
+  if (kind === 'center') return `Build me a Thingy Trail around ${center}.`;
+  return `Trace ${center} into ${label} across Jamie's archive.`;
+}
+
+function addCuriosityCandidate(candidates, label, { weight = 1, reason = '', source = null, kind = 'adjacent' } = {}) {
+  const cleaned = cleanCuriosityLabel(label);
+  if (!cleaned || cleaned.length < 3) return;
+  const tokens = tokenize(cleaned).filter((token) => token.length > 1).slice(0, 6);
+  if (!tokens.length || tokens.every((token) => CURIOSITY_STOPWORDS.has(token))) return;
+  const key = tokens.join(' ');
+  const existing = candidates.get(key) || {
+    label: cleaned,
+    weight: 0,
+    reasons: [],
+    sources: [],
+    kind
+  };
+  existing.weight += weight;
+  if (reason && !existing.reasons.includes(reason)) existing.reasons.push(reason);
+  if (source && existing.sources.length < 3) existing.sources.push(source);
+  existing.kind = existing.kind === 'recent' ? existing.kind : kind;
+  candidates.set(key, existing);
+}
+
+function curiosityThemeCandidates(memory, conversations = []) {
+  const candidates = new Map();
+  const add = (value, weight, reason, kind = 'recent') => {
+    const theme = cleanThemeCandidate(value);
+    if (theme) addCuriosityCandidate(candidates, theme, { weight, reason, kind });
+  };
+  for (const item of (memory?.current_session_questions || []).slice(-8)) add(item?.question || item, 4, 'recent conversation', 'recent');
+  for (const entry of (conversations || []).slice(0, 10)) add(entry?.title || '', 2.5, 'conversation history', 'recent');
+  for (const item of (memory?.synthesized_history || []).slice(-5)) add(item?.summary || item, 2, 'remembered conversation pattern', 'recent');
+  for (const interest of memory?.interests || []) add(interest, 2, 'remembered interest', 'memory');
+  for (const fact of memory?.remembered_facts || []) {
+    if (fact?.category === 'interest' || fact?.category === 'project') add(fact.value, 1.5, `remembered ${fact.category}`, 'memory');
+  }
+  return [...candidates.values()].sort((a, b) => b.weight - a.weight || a.label.localeCompare(b.label));
+}
+
+function addSourceCuriosityTerms(candidates, source, center) {
+  const centerTokens = new Set(themeTokens(center));
+  const sourceTitle = sourceDisplayTitle(source);
+  const sourceReason = source.reason || `appears near ${center} in the archive`;
+  for (const topic of (source.topics || []).slice(0, 8)) {
+    if (!themesSimilar(topic, center)) {
+      addCuriosityCandidate(candidates, topic, {
+        weight: 3,
+        reason: `appears near ${center} in ${sourceTitle}`,
+        source,
+        kind: 'archive'
+      });
+    }
+  }
+  for (const domain of (source.domains || []).slice(0, 3)) {
+    const label = String(domain || '').replace(/^www\./i, '');
+    if (label && !/thingelstad\.com$/i.test(label)) {
+      addCuriosityCandidate(candidates, label, {
+        weight: 1.2,
+        reason: `linked by ${sourceTitle}`,
+        source,
+        kind: 'domain'
+      });
+    }
+  }
+  for (const token of tokenize([source.subject, source.title, source.section].join(' '))) {
+    if (token.length < 5 || centerTokens.has(token) || CURIOSITY_STOPWORDS.has(token)) continue;
+    addCuriosityCandidate(candidates, token, {
+      weight: 0.45,
+      reason: sourceReason,
+      source,
+      kind: 'archive'
+    });
+  }
+}
+
+async function buildCuriosityMap({ memory, conversations, scope, center }) {
+  const requestedCenter = cleanCuriosityLabel(center);
+  const userCandidates = curiosityThemeCandidates(memory, conversations);
+  const fallbackTheme = cleanCuriosityLabel(sparkThemeFromMemory(memory, conversations));
+  const centerTheme = cleanCuriosityLabel(requestedCenter || userCandidates[0]?.label || fallbackTheme) || 'Archive';
+  const scopeValue = normalizeScope(scope);
+  const archiveResult = centerTheme && centerTheme !== 'Archive'
+    ? await toolArchiveGems({ theme: centerTheme, limit: 7 }, { scope: scopeValue })
+    : await toolArchiveGems({ mood: 'serendipity', limit: 7 }, { scope: scopeValue });
+  const archiveSources = welcomeSparkSources(archiveResult.results || [], centerTheme);
+  const candidates = new Map();
+  for (const candidate of userCandidates) {
+    if (!themesSimilar(candidate.label, centerTheme)) {
+      addCuriosityCandidate(candidates, candidate.label, {
+        weight: candidate.weight,
+        reason: candidate.reasons?.[0] || 'recent conversation pattern',
+        kind: candidate.kind || 'recent'
+      });
+    }
+  }
+  for (const source of archiveSources) addSourceCuriosityTerms(candidates, source, centerTheme);
+  if (candidates.size < 4 && centerTheme !== 'Archive') {
+    const broad = await toolArchiveGems({ mood: 'serendipity', limit: 5 }, { scope: scopeValue });
+    for (const source of broad.results || []) addSourceCuriosityTerms(candidates, source, centerTheme);
+  }
+  const sorted = [...candidates.values()]
+    .filter((candidate) => !themesSimilar(candidate.label, centerTheme))
+    .sort((a, b) => b.weight - a.weight || a.label.localeCompare(b.label))
+    .slice(0, 7);
+  const centerId = curiosityNodeId(centerTheme);
+  const nodes = [
+    {
+      id: centerId,
+      label: centerTheme,
+      kind: 'center',
+      weight: 1,
+      prompt: curiosityPrompt(centerTheme, centerTheme, 'center'),
+      why: 'Current center of gravity from your memory and recent conversations.'
+    },
+    ...sorted.map((candidate, index) => ({
+      id: curiosityNodeId(candidate.label),
+      label: candidate.label,
+      kind: candidate.kind || 'adjacent',
+      weight: Number(Math.max(0.2, Math.min(0.95, candidate.weight / Math.max(sorted[0]?.weight || 1, 1))).toFixed(2)),
+      prompt: curiosityPrompt(centerTheme, candidate.label),
+      why: candidate.reasons?.[0] || `A nearby thread Thingy found from ${centerTheme}.`,
+      source_refs: candidate.sources.slice(0, 2).map((source) => experienceSource(source, source.reason || candidate.reasons?.[0] || 'archive evidence'))
+    }))
+  ];
+  const edges = nodes.slice(1).map((node) => ({
+    from: centerId,
+    to: node.id,
+    why: node.why
+  }));
+  return {
+    kind: 'curiosity_map',
+    title: `Curiosity Map: ${centerTheme}`,
+    scope: scopeValue,
+    center: nodes[0],
+    nodes,
+    edges,
+    sources: archiveSources.slice(0, 5).map((source) => experienceSource(source, source.reason || `connected to ${centerTheme}`)),
+    prompt: `Find the most surprising Thingy Trail that branches out from ${centerTheme}.`
+  };
+}
+
 function experienceFromToolResults(toolResults = [], answer = '') {
   for (const result of toolResults) {
     const path = Array.isArray(result.reading_path) ? result.reading_path : [];
@@ -2700,6 +2886,53 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       s500.write(JSON.stringify({ error: 'Retrieval failed.', request_id: requestId }));
       s500.end();
       logEvent('error', 'retrieve_failed', { ...summary, error_type: error.constructor?.name || 'Error' });
+    }
+    return;
+  }
+
+  if (method === 'POST' && path.endsWith('/curiosity-map')) {
+    const body = parseBody(event);
+    const payload = verifyToken(extractBearer(event, body));
+    if (!payload) {
+      const s401 = jsonResponseStream(responseStream, 401);
+      s401.write(JSON.stringify({ error: 'Please validate your subscriber email to use the librarian.', request_id: requestId }));
+      s401.end();
+      logEvent('warning', 'curiosity_map_unauthorized', { ...summary });
+      return;
+    }
+    subscriberHash = String(payload.sub || '');
+    if (!(await checkRateLimit(`curiosity_map#${subscriberHash}`, Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)))) {
+      const s429 = jsonResponseStream(responseStream, 429);
+      s429.write(JSON.stringify({ error: 'Thingy is at the hourly limit for this session.', request_id: requestId }));
+      s429.end();
+      return;
+    }
+    try {
+      const scope = normalizeScope(body.scope);
+      const memory = await getUserMemory(subscriberHash);
+      const conversations = await loadUserConversationSummaries(subscriberHash, 12);
+      const map = await buildCuriosityMap({
+        memory,
+        conversations,
+        scope,
+        center: body.center || body.topic || body.query
+      });
+      const s200 = jsonResponseStream(responseStream, 200);
+      s200.write(JSON.stringify({ ...map, request_id: requestId }));
+      s200.end();
+      logEvent('info', 'curiosity_map_completed', {
+        ...summary,
+        subscriber_hash: subscriberHash,
+        node_count: map.nodes?.length || 0,
+        source_count: map.sources?.length || 0,
+        scope,
+        duration_ms: Math.round(performance.now() - start)
+      });
+    } catch (error) {
+      const s500 = jsonResponseStream(responseStream, 500);
+      s500.write(JSON.stringify({ error: 'Thingy could not draw a curiosity map right now.', request_id: requestId }));
+      s500.end();
+      logEvent('error', 'curiosity_map_failed', { ...summary, error_type: error.constructor?.name || 'Error' });
     }
     return;
   }
