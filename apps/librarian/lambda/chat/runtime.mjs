@@ -1065,7 +1065,197 @@ function welcomeInferenceConfig() {
   };
 }
 
-function welcomePrompt({ readerContext, memoryContext, conversations, scope }) {
+function sourceKindLabel(kind) {
+  const normalized = normalizeSourceKind(kind);
+  if (normalized === 'weekly_thing') return 'Weekly Thing';
+  if (normalized === 'blog') return 'Blog';
+  if (normalized === 'podcast') return 'Another Thing';
+  return 'Archive';
+}
+
+function sourceDisplayTitle(source = {}) {
+  const sourceKind = normalizeSourceKind(source.source_kind);
+  if (source.issue_number) return `WT${source.issue_number}: ${source.subject || 'Weekly Thing'}`;
+  if (sourceKind === 'podcast' && source.episode_number) return `Episode ${source.episode_number}: ${source.subject || 'Another Thing'}`;
+  return source.subject || source.title || source.url || 'Archive source';
+}
+
+function sourceHref(source = {}) {
+  if (source.url) return source.url;
+  if (source.issue_number) return `/archive/${source.issue_number}/`;
+  return '';
+}
+
+function experienceSource(source = {}, reason = '') {
+  const sourceKind = normalizeSourceKind(source.source_kind || (source.issue_number ? 'weekly_thing' : ''));
+  return {
+    source_kind: sourceKind || source.source_kind || '',
+    label: sourceKindLabel(sourceKind || source.source_kind || ''),
+    title: sourceDisplayTitle(source),
+    subject: source.subject || '',
+    publish_date: source.publish_date || '',
+    year: recordYear(source) || null,
+    url: sourceHref(source),
+    issue_number: source.issue_number ?? null,
+    microblog_id: source.microblog_id,
+    episode_number: source.episode_number,
+    show: source.show,
+    reason: reason || source.reason || '',
+    also_in_issues: source.also_in_issues,
+    audio_url: source.audio_url,
+    transcript_url: source.transcript_url
+  };
+}
+
+function cleanThemeCandidate(value) {
+  const text = String(value || '').trim();
+  if (!text || /\b(?:self-referential|identify itself|what it had just been asked|immediately preceding query|thingy'?s identity|no substantive content|substantive content to summarize|no specific details)\b/i.test(text)) return '';
+  const focused = text.match(/\b(?:about|exploring|explored|on|around|thread(?:s)? (?:of|around))\s+([^.,;:!?]+)/i)?.[1] || text;
+  const cleaned = focused
+    .replace(/[`*_#[\]()>]/g, ' ')
+    .replace(/\b(?:the|this|that|user|reader|thingy|trail|jamie|archive|weekly thing|blog|podcast|question|questions|asked|asking|about|explored|exploring|conversation|session|centered|wanted|understand|thinking|perspective|structured|walkthrough|framed|through|likely|specific|details|summarize|substantive|content)\b/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleaned || cleaned.length < 3) return '';
+  const words = cleaned.split(/\s+/).filter((word) => word.length > 2).slice(0, 5);
+  if (!words.length) return '';
+  return words.join(' ').trim();
+}
+
+function sparkThemeFromMemory(memory, conversations = []) {
+  for (const interest of memory?.interests || []) {
+    const theme = cleanThemeCandidate(interest);
+    if (theme) return theme;
+  }
+  for (const fact of memory?.remembered_facts || []) {
+    if (fact.category !== 'interest' && fact.category !== 'project') continue;
+    const theme = cleanThemeCandidate(fact.value);
+    if (theme) return theme;
+  }
+  for (const summary of [...(memory?.synthesized_history || [])].reverse()) {
+    const theme = cleanThemeCandidate(summary.summary);
+    if (theme) return theme;
+  }
+  for (const conversation of conversations || []) {
+    const theme = cleanThemeCandidate(conversation.title);
+    if (theme) return theme;
+  }
+  return '';
+}
+
+function formatExperienceForPrompt(experience) {
+  if (!experience?.items?.length) return 'No archive spark selected.';
+  return [
+    `${experience.title}: ${experience.intro}`,
+    ...experience.items.slice(0, 3).map((item, index) => `- ${index + 1}. ${item.title}${item.publish_date ? ` (${String(item.publish_date).slice(0, 10)})` : ''}${item.reason ? ` — ${item.reason}` : ''}`)
+  ].join('\n');
+}
+
+function welcomeThemeRelevance(source, theme) {
+  const tokens = tokenize(theme).filter((token) => token.length > 2);
+  if (!tokens.length) return 0;
+  const titleText = [source.subject, source.title].join(' ').toLowerCase();
+  const topicText = (source.topics || []).join(' ').toLowerCase();
+  const titleMatches = tokens.filter((token) => titleText.includes(token)).length;
+  const topicMatches = tokens.filter((token) => topicText.includes(token)).length;
+  return titleMatches * 3 + topicMatches * 2;
+}
+
+function experienceSourceKey(source = {}) {
+  const kind = normalizeSourceKind(source.source_kind || (source.issue_number ? 'weekly_thing' : ''));
+  if (kind === 'weekly_thing' && source.issue_number) return `weekly_thing\0${issueKey(source.issue_number)}`;
+  if (kind === 'podcast' && source.episode_number) return `podcast\0${source.episode_number}`;
+  if (source.url) return `${kind || 'source'}\0${urlKey(source.url)}`;
+  if (kind === 'blog' && source.microblog_id) return `blog\0${source.microblog_id}`;
+  return sourceRecordKey(source);
+}
+
+function welcomeSparkSources(results = [], theme = '') {
+  const seen = new Set();
+  const sources = [];
+  for (const source of results || []) {
+    const key = experienceSourceKey(source);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    sources.push(source);
+  }
+  const reasonRank = (source) => {
+    const reason = String(source.reason || '').toLowerCase();
+    if (reason.includes('densest') || reason.includes('representative')) return 0;
+    if (reason.includes('middle')) return 1;
+    if (reason.includes('latest') || reason.includes('recent')) return 2;
+    if (reason.includes('earliest')) return 4;
+    return 3;
+  };
+  const sorted = sources.sort((a, b) => reasonRank(a) - reasonRank(b)
+    || welcomeThemeRelevance(b, theme) - welcomeThemeRelevance(a, theme)
+    || (recordYear(b) || 0) - (recordYear(a) || 0));
+  const visiblyThemed = sorted.filter((source) => {
+    const reason = String(source.reason || '').toLowerCase();
+    return welcomeThemeRelevance(source, theme) > 0 || reason.includes('densest') || reason.includes('latest');
+  });
+  return (visiblyThemed.length >= 2 ? visiblyThemed : sorted).slice(0, 3);
+}
+
+async function buildWelcomeSpark({ memory, conversations, scope }) {
+  const theme = sparkThemeFromMemory(memory, conversations);
+  const result = await toolArchiveGems({
+    theme,
+    mood: theme ? '' : 'serendipity',
+    limit: theme ? 5 : 3
+  }, { scope });
+  const sources = theme ? welcomeSparkSources(result.results || [], theme) : (result.results || []).slice(0, 3);
+  const items = sources.map((source) => experienceSource(source, source.reason || (theme ? `connects to ${theme}` : 'worth resurfacing')));
+  if (!items.length) return null;
+  return {
+    kind: 'spark',
+    title: theme ? `A thread to pick up: ${theme}` : 'Archive Spark',
+    intro: theme
+      ? `A small path from the archive connected to ${theme}.`
+      : 'A small source Thingy found while getting oriented.',
+    theme: theme || null,
+    items,
+    prompt: theme ? `Take me through ${theme} as a Thingy Trail.` : 'Surprise me with a Thingy Trail.'
+  };
+}
+
+function experienceFromToolResults(toolResults = [], answer = '') {
+  for (const result of toolResults) {
+    const path = Array.isArray(result.reading_path) ? result.reading_path : [];
+    if (path.length >= 2) {
+      const topic = result.topic || '';
+      const sources = topic ? welcomeSparkSources(path, topic) : path.slice(0, 5);
+      return {
+        kind: 'trail',
+        title: topic ? `Thingy Trail: ${topic}` : 'Thingy Trail',
+        intro: 'A guided path through the archive sources Thingy found.',
+        theme: topic || null,
+        items: sources.map((source) => experienceSource(source, source.reason || 'part of the trail')),
+        prompt: topic ? `What is the most surprising turn in Jamie's ${topic} trail?` : 'Show me the most surprising turn in this trail.'
+      };
+    }
+    if (Array.isArray(result.results) && result.mode) {
+      const items = result.results.slice(0, 5).map((source) => experienceSource(source, source.reason || 'archive gem'));
+      if (items.length) {
+        const themed = Boolean(result.theme);
+        return {
+          kind: themed && items.length >= 2 ? 'trail' : 'spark',
+          title: themed ? `Thingy Trail: ${result.theme}` : 'Archive Spark',
+          intro: themed ? `A path through ${result.theme}.` : 'A few sources worth opening next.',
+          theme: result.theme || null,
+          items,
+          prompt: themed ? `Go deeper on ${result.theme}.` : 'Give me another archive spark.'
+        };
+      }
+    }
+  }
+  if (/thingy trail|reading path|archive spark/i.test(answer)) {
+    return { kind: 'trail', title: 'Thingy Trail', intro: 'A guided path through the archive.', items: [], prompt: 'Continue this trail.' };
+  }
+  return null;
+}
+
+function welcomePrompt({ readerContext, memoryContext, conversations, scope, spark }) {
   const recent = (conversations || []).slice(0, 6);
   const conversationLines = recent.length
     ? recent.map((entry) => `- ${entry.title || 'Untitled chat'} (${entry.turn_count || 0} turns, updated ${String(entry.updated_at || '').slice(0, 10) || 'unknown'})`).join('\n')
@@ -1084,27 +1274,31 @@ function welcomePrompt({ readerContext, memoryContext, conversations, scope }) {
     'Recent Thingy conversations:',
     conversationLines,
     '',
+    'Archive spark selected for this visit:',
+    formatExperienceForPrompt(spark),
+    '',
     `Active source scope: ${normalizeScope(scope)}`,
     '',
     'Requirements:',
     '- Start with a natural greeting that can use the reader local time if supplied.',
     '- If a preferred name is known, use it. If no preferred name is known, ask what Thingy should call the reader, but keep it conversational.',
     '- If this looks like their first time, give a little more orientation. If returning, welcome them back and lightly reference the kind of things they have explored before when memory exists.',
+    '- If an archive spark is supplied, mention it as a small invitation, not a citation-heavy answer. The UI may show it as a card.',
     '- If they are a Weekly Thing Supporting Member, acknowledge that gracefully without making the whole message about it.',
     '- Do not frame Thingy as just search. Prefer agentic verbs like connect, trace, compare, explore, and pick up threads.',
     '- Do not recite the active source list or say all sources are open; the UI already shows source selection.',
-    '- Keep it under 95 words, no heading, no table, no citations.'
+    '- Keep it under 115 words, no heading, no table, no citations.'
   ].join('\n');
 }
 
-async function generateWelcome({ readerContext, memoryContext, conversations, scope }) {
+async function generateWelcome({ readerContext, memoryContext, conversations, scope, spark }) {
   const start = performance.now();
   const response = await bedrock.send(new ConverseCommand({
     modelId: agentModel(),
     system: [{ text: AGENT_SYSTEM_PROMPT }, { cachePoint: { type: 'default' } }],
     messages: [{
       role: 'user',
-      content: [{ text: welcomePrompt({ readerContext, memoryContext, conversations, scope }) }]
+      content: [{ text: welcomePrompt({ readerContext, memoryContext, conversations, scope, spark }) }]
     }],
     inferenceConfig: welcomeInferenceConfig()
   }));
@@ -2335,17 +2529,22 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   }
   answer = sanitizedAnswer;
   const citations = prioritizeCitationsForAnswer(collectToolCitations(toolResults), answer);
+  const experience = experienceFromToolResults(toolResults, answer);
+  if (experience) {
+    writeSse(responseStream, 'experience', { experience });
+  }
   logEvent('info', 'agent_streamed', {
     model: agentModel(),
     scope,
     tool_turns: toolResults.length,
     citation_count: citations.length,
+    experience_kind: experience?.kind,
     duration_ms: Math.round(performance.now() - start),
     answer_chars: answer.length,
     output_tokens: usage?.outputTokens,
     stop_reason: stopReason
   });
-  return { answer, citations };
+  return { answer, citations, experience };
 }
 
 function streamFromResponse(responseStream, event, statusCode) {
@@ -2512,7 +2711,14 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       }
       writeSse(stream, 'meta', { request_id: requestId });
       writeSse(stream, 'status', { message: 'Thingy is getting oriented...' });
-      const answer = await generateWelcome({ readerContext, memoryContext, conversations, scope });
+      let spark = null;
+      try {
+        spark = await buildWelcomeSpark({ memory, conversations, scope });
+      } catch (error) {
+        logEvent('warning', 'welcome_spark_failed', { error_type: error.constructor?.name || 'Error' });
+      }
+      if (spark) writeSse(stream, 'experience', { experience: spark });
+      const answer = await generateWelcome({ readerContext, memoryContext, conversations, scope, spark });
       writeSse(stream, 'answer_delta', { delta: answer });
       writeSse(stream, 'done', { request_id: requestId });
       logEvent('info', 'welcome_completed', {
@@ -2520,6 +2726,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
         conversation_count: conversations.length,
         has_memory: Boolean(memory),
         has_preferred_name: Boolean(effectiveProfile.preferred_name),
+        has_spark: Boolean(spark),
         duration_ms: Math.round(performance.now() - start)
       });
       return;

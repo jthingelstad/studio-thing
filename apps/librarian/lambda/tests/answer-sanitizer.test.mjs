@@ -50,3 +50,11 @@ test('removes got-what-i-need process narration', () => {
 
   assert.equal(out, "Here's a useful answer from an old post.");
 });
+
+test('removes let-me-dig process narration', () => {
+  const answer = "Let me dig into the archive to map that out.\n\n## Thingy Trail\n\n1. A real answer.";
+
+  const out = sanitizeAnswerProse(answer);
+
+  assert.equal(out, '## Thingy Trail\n\n1. A real answer.');
+});

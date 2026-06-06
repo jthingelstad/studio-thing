@@ -1,7 +1,7 @@
 const WT_ARCHIVE_URL_RE = /https?:\/\/weekly\.thingelstad\.com\/archive\/(\d+)\/?/gi;
 const WT_ARCHIVE_PATH_RE = /`?\/archive\/(\d+)\/`?/gi;
 const RAW_URL_RE = /(?<!\]\()https?:\/\/[^\s<>)]+/gi;
-const PROCESS_NARRATION_RE = /\b(?:let me\s+(?:pull|look|search|check|find|tell)|i(?: have|(?:'|’)ve got) (?:everything|what) i need|i found enough|i can now answer|i(?:'|’)ll\s+(?:pull|look|search|check|find))\b/i;
+const PROCESS_NARRATION_RE = /\b(?:let me\s+(?:pull|look|search|check|find|tell|dig)|i(?: have|(?:'|’)ve got) (?:everything|what) i need|i found enough|i can now answer|i(?:'|’)ll\s+(?:pull|look|search|check|find|dig))\b/i;
 
 function cleanSpacing(value) {
   return String(value || '')
