@@ -172,6 +172,25 @@
   },
   {
     "toolSpec": {
+      "name": "archive_lens",
+      "description": "Build a deterministic Archive Lens over the active source scope for one topic. Use for genuinely analytical questions: timelines, first/latest mentions, year-by-year topic/theme slices, source comparisons across Weekly Thing/blog/podcast, and reading paths through a theme. It scans corpus metadata and matching chunks, then returns counts_by_year, first/latest sources, year buckets, source buckets, timeline entries, representative evidence snippets, and a suggested reading_path. operation can be \"timeline\", \"first_last\", \"by_year\", \"source_compare\", or \"reading_path\". Optional source_kind isolates \"weekly_thing\", \"blog\", or \"podcast\". Optional year_range accepts a [start, end] array, a \"YYYY\" string, or {\"start\": YYYY, \"end\": YYYY}. Use this before semantic search when the user asks how a topic evolved or how attention changed over time.",
+      "inputSchema": {
+        "json": {
+          "type": "object",
+          "properties": {
+            "topic": { "type": "string" },
+            "operation": { "type": "string" },
+            "source_kind": { "type": "string" },
+            "year_range": { "type": ["array", "string", "object"] },
+            "limit": { "type": "integer" }
+          },
+          "required": ["topic"]
+        }
+      }
+    }
+  },
+  {
+    "toolSpec": {
       "name": "compare_eras",
       "description": "Search the same topic in two year windows and return both result sets. Use for two-window before/after contrasts. For three or more windows (early/middle/recent), call search_archive separately with year_range for each. year_a and year_b accept a [start, end] array, a \"YYYY\" string, or {\"start\": YYYY, \"end\": YYYY}.",
       "inputSchema": {
@@ -184,6 +203,23 @@
             "limit": { "type": "integer" }
           },
           "required": ["topic", "year_a", "year_b"]
+        }
+      }
+    }
+  },
+  {
+    "toolSpec": {
+      "name": "remember_user",
+      "description": "Persist a durable reader memory when the reader explicitly tells Thingy something useful to remember, such as their preferred name, archive interests, answer-style preferences, current project, or relationship to the archive. Do not use for inferred facts, sensitive/private personal details, family details, addresses, phone numbers, schedules, finances, health, or anything the reader did not clearly offer. category must be one of: preferred_name, interest, preference, project, relationship_to_archive, note. Use sparingly and naturally; after using it, continue the conversation without making the memory write feel like a form.",
+      "inputSchema": {
+        "json": {
+          "type": "object",
+          "properties": {
+            "category": { "type": "string" },
+            "value": { "type": "string" },
+            "source": { "type": "string" }
+          },
+          "required": ["category", "value"]
         }
       }
     }

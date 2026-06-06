@@ -2,7 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderFaqAnswer, searchFaq } from '../shared/faq.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, verifyToken } from '../shared/session.mjs';
-import { authProfile, memoryContextBlock } from '../shared/user-memory.mjs';
+import {
+  authProfile,
+  memoryContextBlock,
+  mergeRememberedFacts,
+  normalizeMemoryFact
+} from '../shared/user-memory.mjs';
 import { renderTemplate, agentUserPrompt } from '../shared/prompts.mjs';
 import { subscriberStatus } from '../shared/buttondown.mjs';
 import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
@@ -106,6 +111,41 @@ test('memoryContextBlock formats prior summaries and current questions', () => {
   assert.match(block, /\(2026-03-01\)/);
   assert.match(block, /Earlier in this same session/);
   assert.match(block, /Atom\?/);
+});
+
+test('memory helpers normalize and dedupe explicit reader facts', () => {
+  assert.deepEqual(
+    normalizeMemoryFact({ category: 'name', value: ' Jamie  Thingelstad ' }),
+    { category: 'preferred_name', value: 'Jamie Thingelstad', source: '' }
+  );
+  assert.equal(normalizeMemoryFact({ category: 'private', value: 'secret' }), null);
+
+  const facts = mergeRememberedFacts([
+    { category: 'interest', value: 'RSS', remembered_at: '2026-01-01T00:00:00Z' }
+  ], { category: 'interest', value: 'rss', source: 'reader said so' }, '2026-02-01T00:00:00Z');
+  assert.equal(facts.length, 1);
+  assert.equal(facts[0].value, 'rss');
+  assert.equal(facts[0].source, 'reader said so');
+  assert.equal(facts[0].remembered_at, '2026-02-01T00:00:00Z');
+});
+
+test('authProfile and memoryContextBlock surface durable reader memory', () => {
+  const memory = {
+    turn_count: 4,
+    remembered_facts: [
+      { category: 'interest', value: 'IndieWeb', remembered_at: '2026-01-01T00:00:00Z' },
+      { category: 'preference', value: 'prefers concise answers', remembered_at: '2026-01-02T00:00:00Z' }
+    ],
+    interests: ['IndieWeb']
+  };
+  const profile = authProfile(memory);
+  assert.equal(profile.remembered_facts.length, 2);
+  assert.deepEqual(profile.interests, ['IndieWeb']);
+
+  const block = memoryContextBlock(memory);
+  assert.match(block, /Remembered reader details/);
+  assert.match(block, /interest: IndieWeb/);
+  assert.match(block, /Reader interests/);
 });
 
 test('email normalization is stable', () => {

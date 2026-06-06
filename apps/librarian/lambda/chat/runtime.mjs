@@ -5,6 +5,7 @@ import { DynamoDBClient, PutItemCommand, QueryCommand, UpdateItemCommand } from 
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { readConverseStream } from '../shared/bedrock-stream.mjs';
 import { sanitizeAnswerProse } from '../shared/answer-sanitizer.mjs';
+import { buildArchiveLens } from '../shared/archive-lens.mjs';
 import { prioritizeCitationsForAnswer } from '../shared/citations.mjs';
 import { normalizeScope, scopeKinds, scopePromptLine } from '../shared/scope.mjs';
 import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
@@ -26,7 +27,8 @@ import {
   getUserMemory,
   memoryContextBlock,
   recordUserPreferredName,
-  recordUserTurn
+  recordUserTurn,
+  rememberUserFact
 } from '../shared/user-memory.mjs';
 import {
   citationDynamoItem,
@@ -945,6 +947,28 @@ function normalizeUserProfile(value) {
   };
 }
 
+function titleCasePreferredName(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 4)
+    .map((word) => (/^[A-Z]{2,}$/.test(word) ? word : word.charAt(0).toUpperCase() + word.slice(1)))
+    .join(' ')
+    .slice(0, 80);
+}
+
+function extractPreferredNameFromMessage(message) {
+  const text = String(message || '').trim();
+  if (!text || text.length > 160 || /[?]/.test(text)) return '';
+  const match = text.match(/^(?:my (?:preferred )?name is|i am|i'm|call me|please call me)\s+([a-z][a-z .'’-]{0,60})[.!]?$/i);
+  if (!match) return '';
+  const candidate = match[1].trim().replace(/[.!]+$/, '');
+  if (!/^[a-z][a-z .'’-]{0,60}$/i.test(candidate)) return '';
+  return titleCasePreferredName(candidate);
+}
+
 function readerContextPrompt(clientContext, userProfile) {
   const context = normalizeClientContext(clientContext);
   const profile = normalizeUserProfile(userProfile);
@@ -1095,7 +1119,7 @@ async function generateWelcome({ readerContext, memoryContext, conversations, sc
   return answer || "Hi. I'm Thingy. Tell me what you're curious about and I'll help you explore Jamie's archive.";
 }
 
-function preflightUserPrompt(question, scope, history) {
+function preflightUserPrompt(question, scope, history, context = {}) {
   return [
     `Active source scope: ${normalizeScope(scope)}`,
     `Recent conversation turns available to the main agent: ${Array.isArray(history) ? history.length : 0}`,
@@ -1103,12 +1127,18 @@ function preflightUserPrompt(question, scope, history) {
     'Conversation so far:',
     conversationContext(Array.isArray(history) ? history : []),
     '',
+    'Reader context available to the main agent:',
+    context.readerContext || 'No reader-local context supplied.',
+    '',
+    'Durable reader memory available to the main agent:',
+    context.memoryContext || 'No durable reader memory supplied.',
+    '',
     'Reader prompt:',
     String(question || '').trim()
   ].join('\n');
 }
 
-async function evaluatePromptPreflight(question, scope, history = []) {
+async function evaluatePromptPreflight(question, scope, history = [], context = {}) {
   const hardPrivacy = privacyPreflight(question);
   if (hardPrivacy) return hardPrivacy;
   if (!truthyEnv('LIBRARIAN_PREFLIGHT_ENABLED', '1')) {
@@ -1121,7 +1151,7 @@ async function evaluatePromptPreflight(question, scope, history = []) {
       system: [{ text: PREFLIGHT_SYSTEM_PROMPT }],
       messages: [{
         role: 'user',
-        content: [{ text: preflightUserPrompt(question, scope, history) }]
+        content: [{ text: preflightUserPrompt(question, scope, history, context) }]
       }],
       inferenceConfig: preflightInferenceConfig()
     }));
@@ -1690,6 +1720,40 @@ async function toolCompareEras(input = {}, { scope } = {}) {
   return { topic, year_a: input.year_a, year_b: input.year_b, results_a: first.map((item) => compactSource(item, 700)), results_b: second.map((item) => compactSource(item, 700)) };
 }
 
+async function toolArchiveLens(input = {}, { scope } = {}) {
+  const topic = String(input.topic || input.query || '').trim();
+  if (!topic) return { error: 'topic is required' };
+  const requestedSource = normalizeSourceKind(input.source_kind || input.source || '');
+  const records = [];
+  const chunks = [];
+  for (const kind of scopeKinds(scope)) {
+    if (requestedSource && kind !== requestedSource) continue;
+    const corpus = await loadCorpus(kind);
+    records.push(...contentRecords(corpus, kind));
+    chunks.push(...(corpus.chunks || []).map((chunk) => ({
+      ...chunk,
+      source_kind: chunk.source_kind || kind
+    })));
+  }
+  return {
+    scope: normalizeScope(scope),
+    source_kind: requestedSource || null,
+    ...buildArchiveLens({
+      topic,
+      operation: input.operation,
+      records,
+      chunks,
+      yearRange: input.year_range,
+      limit: input.limit
+    })
+  };
+}
+
+async function toolRememberUser(input = {}, { subscriberHash } = {}) {
+  if (!subscriberHash) return { ok: false, error: 'No authenticated user memory is available.' };
+  return rememberUserFact(subscriberHash, input);
+}
+
 const ARCHIVE_TOOLS = {
   search_faq: toolSearchFaq,
   search_archive: toolSearchArchive,
@@ -1701,7 +1765,9 @@ const ARCHIVE_TOOLS = {
   latest_content: toolLatestContent,
   quote_search: toolQuoteSearch,
   list_issues: toolListIssues,
-  compare_eras: toolCompareEras
+  compare_eras: toolCompareEras,
+  archive_lens: toolArchiveLens,
+  remember_user: toolRememberUser
 };
 
 function toolSpecs() {
@@ -1799,7 +1865,7 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
       const handler = ARCHIVE_TOOLS[toolUse.name];
       let result;
       try {
-        result = handler ? await handler(toolUse.input || {}, { scope }) : { error: `Unknown tool: ${toolUse.name}` };
+        result = handler ? await handler(toolUse.input || {}, { scope, subscriberHash: options.subscriberHash }) : { error: `Unknown tool: ${toolUse.name}` };
       } catch (error) {
         logEvent('error', 'tool_call_failed', { tool_name: toolUse.name, error_type: error.constructor?.name || 'Error' });
         result = { error: `${toolUse.name} failed: ${error.constructor?.name || 'Error'}` };
@@ -2015,7 +2081,12 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     const question = String(body.message || '').trim();
     const scope = normalizeScope(body.scope);
     const userProfile = normalizeUserProfile(body.user_profile);
-    let readerContext = readerContextPrompt(body.client_context, userProfile);
+    const suppliedPreferredName = userProfile.preferred_name || extractPreferredNameFromMessage(question);
+    let effectiveUserProfile = {
+      ...userProfile,
+      preferred_name: suppliedPreferredName || userProfile.preferred_name
+    };
+    let readerContext = readerContextPrompt(body.client_context, effectiveUserProfile);
     const requestedConversationId = validConversationId(body.conversation_id || body.conversationId);
     const conversationId = requestedConversationId || crypto.randomUUID();
     const history = await loadUserConversationHistory(subscriberHash, conversationId);
@@ -2031,13 +2102,25 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       writeSse(stream, 'error', { error: 'The librarian is at the hourly limit for this session.', request_id: requestId });
       return;
     }
-    if (userProfile.preferred_name) {
-      await recordUserPreferredName(subscriberHash, userProfile.preferred_name);
+    if (effectiveUserProfile.preferred_name) {
+      await recordUserPreferredName(subscriberHash, effectiveUserProfile.preferred_name);
+    }
+
+    // Fetch user memory before preflight so memory/conversation-meta prompts
+    // are not answered by the evaluator from an empty context.
+    const userMemory = await getUserMemory(subscriberHash);
+    const memoryContext = memoryContextBlock(userMemory);
+    if (!effectiveUserProfile.preferred_name && userMemory?.preferred_name) {
+      effectiveUserProfile = {
+        ...effectiveUserProfile,
+        preferred_name: userMemory.preferred_name
+      };
+      readerContext = readerContextPrompt(body.client_context, effectiveUserProfile);
     }
 
     writeSse(stream, 'meta', { request_id: requestId, conversation_id: conversationId });
     writeSse(stream, 'status', { message: 'Understanding the request...' });
-    const preflight = await evaluatePromptPreflight(question, scope, history);
+    const preflight = await evaluatePromptPreflight(question, scope, history, { readerContext, memoryContext });
     if (preflight.action === 'direct') {
       const citations = [];
       writeSse(stream, 'answer_delta', { delta: preflight.direct_answer });
@@ -2056,20 +2139,8 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       await recordConversation({ event, subscriberHash, conversationId, question, answer: preflight.direct_answer, historyCount: history.length, citations, preflight, route: 'stream', requestId });
       // Guarded/direct turns still update memory — the question text was
       // recorded above, so let the user-memory row reflect that turn too.
-      await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName: userProfile.preferred_name });
+      await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName: effectiveUserProfile.preferred_name });
       return;
-    }
-
-    // Fetch user memory once at turn start. Used to inject prior-session
-    // context into Thingy's system prompt so the agent can respond more
-    // personally; also recorded back at turn end.
-    const userMemory = await getUserMemory(subscriberHash);
-    const memoryContext = memoryContextBlock(userMemory);
-    if (!userProfile.preferred_name && userMemory?.preferred_name) {
-      readerContext = readerContextPrompt(body.client_context, {
-        ...userProfile,
-        preferred_name: userMemory.preferred_name
-      });
     }
 
     writeSse(stream, 'status', { message: 'Investigating the archive...' });
@@ -2084,7 +2155,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     }, 75000);
     let result;
     try {
-      result = await streamBedrockAgentAnswer(question, history, stream, { memoryContext, readerContext, scope, preflight });
+      result = await streamBedrockAgentAnswer(question, history, stream, { memoryContext, readerContext, scope, preflight, subscriberHash });
     } finally {
       clearTimeout(deadlineTimer);
     }
@@ -2118,7 +2189,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     // Update per-user memory after the answer ships. If the sid has
     // rotated since the prior turn, this also triggers a Bedrock-
     // synthesized summary of the previous session.
-    await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName: userProfile.preferred_name });
+    await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName: effectiveUserProfile.preferred_name });
     logEvent('info', 'chat_completed', {
       subscriber_hash: subscriberHash,
       question_chars: question.length,

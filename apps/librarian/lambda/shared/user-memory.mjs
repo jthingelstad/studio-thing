@@ -7,6 +7,7 @@
 //   - current_session_id            — sid of the in-flight session
 //   - current_session_questions     — rolling questions for that session
 //   - synthesized_history           — Bedrock-summarized past sessions
+//   - remembered_facts              — explicit reader-offered preferences/interests
 //
 // On each chat turn the runtime calls ``recordUserTurn(sub, {sid,
 // question})``. When ``sid`` differs from ``current_session_id``, the
@@ -28,6 +29,8 @@ import { logEvent } from './logging.mjs';
 const CURRENT_SESSION_QUESTIONS_MAX = 12;
 const SYNTHESIZED_HISTORY_MAX = 8;
 const QUESTION_TRIM_CHARS = 400;
+const REMEMBERED_FACTS_MAX = 24;
+const INTERESTS_MAX = 16;
 const TTL_DAYS_DEFAULT = 365;
 const SYNTHESIS_MAX_TOKENS = 160;
 
@@ -81,9 +84,88 @@ function writeSynthItem({ started_at, ended_at, summary, turn_count }) {
   };
 }
 
+function readFact(item) {
+  if (!item || !item.M) return null;
+  const category = item.M.category?.S || '';
+  const value = item.M.value?.S || '';
+  if (!category || !value) return null;
+  return {
+    category,
+    value,
+    source: item.M.source?.S || '',
+    remembered_at: item.M.remembered_at?.S || ''
+  };
+}
+
+function writeFactItem({ category, value, source, remembered_at }) {
+  return {
+    M: {
+      category: dynamoString(category),
+      value: dynamoString(String(value || '').slice(0, 240)),
+      source: dynamoString(String(source || '').slice(0, 120)),
+      remembered_at: dynamoString(remembered_at || '')
+    }
+  };
+}
+
+function readStringList(value) {
+  return (value?.L || [])
+    .map((item) => item.S || '')
+    .filter(Boolean);
+}
+
+function writeStringList(values) {
+  return { L: (values || []).map((value) => dynamoString(value)) };
+}
+
 function ttlFromNow() {
   const days = Number(process.env.LIBRARIAN_USER_MEMORY_TTL_DAYS || TTL_DAYS_DEFAULT);
   return Math.floor(Date.now() / 1000) + days * 86400;
+}
+
+export function normalizeMemoryCategory(value) {
+  const raw = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  if (['name', 'preferred_name', 'call_me'].includes(raw)) return 'preferred_name';
+  if (['interest', 'topic', 'likes', 'curious_about'].includes(raw)) return 'interest';
+  if (['preference', 'answer_preference', 'style', 'format'].includes(raw)) return 'preference';
+  if (['project', 'work', 'current_project'].includes(raw)) return 'project';
+  if (['relationship', 'relationship_to_archive', 'reader_context'].includes(raw)) return 'relationship_to_archive';
+  if (['note', 'memory', 'remember'].includes(raw)) return 'note';
+  return '';
+}
+
+export function normalizeMemoryFact(input = {}) {
+  const category = normalizeMemoryCategory(input.category || input.type);
+  const value = String(input.value || input.name || input.interest || '').trim().replace(/\s+/g, ' ').slice(0, 240);
+  const source = String(input.source || input.reason || '').trim().replace(/\s+/g, ' ').slice(0, 120);
+  if (!category || !value) return null;
+  return { category, value, source };
+}
+
+function mergeUniqueStrings(existing = [], next = [], limit = INTERESTS_MAX) {
+  const seen = new Set();
+  const merged = [];
+  for (const value of [...existing, ...next]) {
+    const clean = String(value || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    const key = clean.toLowerCase();
+    if (!clean || seen.has(key)) continue;
+    seen.add(key);
+    merged.push(clean);
+  }
+  return merged.slice(-limit);
+}
+
+export function mergeRememberedFacts(existing = [], incoming, nowIso = new Date().toISOString()) {
+  const fact = normalizeMemoryFact(incoming);
+  if (!fact) return existing.slice(-REMEMBERED_FACTS_MAX);
+  const withoutDuplicate = (existing || []).filter((item) => (
+    String(item.category || '').toLowerCase() !== fact.category ||
+    String(item.value || '').trim().toLowerCase() !== fact.value.toLowerCase()
+  ));
+  return [
+    ...withoutDuplicate,
+    { ...fact, remembered_at: nowIso }
+  ].slice(-REMEMBERED_FACTS_MAX);
 }
 
 // ---------- public API ----------
@@ -115,7 +197,11 @@ export async function getUserMemory(sub) {
         .filter(Boolean),
       synthesized_history: (item.synthesized_history?.L || [])
         .map(readSynth)
-        .filter(Boolean)
+        .filter(Boolean),
+      remembered_facts: (item.remembered_facts?.L || [])
+        .map(readFact)
+        .filter(Boolean),
+      interests: readStringList(item.interests)
     };
   } catch (error) {
     logEvent('warning', 'user_memory_read_failed', {
@@ -145,6 +231,8 @@ export async function recordUserTurn(sub, { sid, question, preferredName }) {
     let currentSessionId = existing?.current_session_id || '';
     let currentSessionStartedAt = existing?.current_session_started_at || '';
     let currentSessionQuestions = existing?.current_session_questions || [];
+    const rememberedFacts = existing?.remembered_facts || [];
+    const interests = existing?.interests || [];
 
     const sessionRotated = incomingSid && currentSessionId && currentSessionId !== incomingSid;
     if (sessionRotated && currentSessionQuestions.length > 0) {
@@ -189,6 +277,8 @@ export async function recordUserTurn(sub, { sid, question, preferredName }) {
       current_session_started_at: dynamoString(currentSessionStartedAt),
       current_session_questions: { L: currentSessionQuestions.map(writeQuestionItem) },
       synthesized_history: { L: synthesizedHistory.map(writeSynthItem) },
+      remembered_facts: { L: rememberedFacts.map(writeFactItem) },
+      interests: writeStringList(interests),
       ttl: dynamoNumber(ttlFromNow())
     };
     const { PutItemCommand } = await import('@aws-sdk/client-dynamodb');
@@ -228,6 +318,69 @@ export async function recordUserTurn(sub, { sid, question, preferredName }) {
     logEvent('warning', 'user_memory_write_failed', {
       error_type: error?.constructor?.name || 'Error'
     });
+  }
+}
+
+export async function rememberUserFact(sub, input = {}) {
+  const tableName = process.env.TABLE_NAME;
+  const fact = normalizeMemoryFact(input);
+  if (!tableName || !sub || !fact) return { ok: false, error: 'Nothing memorable supplied.' };
+  const nowIso = new Date().toISOString();
+  try {
+    if (fact.category === 'preferred_name') {
+      await recordUserPreferredName(sub, fact.value);
+    }
+    const existing = await getUserMemory(sub);
+    const rememberedFacts = mergeRememberedFacts(existing?.remembered_facts || [], fact, nowIso);
+    const interests = fact.category === 'interest'
+      ? mergeUniqueStrings(existing?.interests || [], [fact.value])
+      : existing?.interests || [];
+    const { UpdateItemCommand } = await import('@aws-sdk/client-dynamodb');
+    const { dynamodb } = await import('./aws-clients.mjs');
+    await dynamodb.send(new UpdateItemCommand({
+      TableName: tableName,
+      Key: memoryKey(sub),
+      UpdateExpression: [
+        'SET #first_seen_at = if_not_exists(#first_seen_at, :now)',
+        '#last_seen_at = :now',
+        '#remembered_facts = :remembered_facts',
+        '#interests = :interests',
+        '#ttl = :ttl',
+        '#version = if_not_exists(#version, :zero) + :one'
+      ].join(', '),
+      ExpressionAttributeNames: {
+        '#first_seen_at': 'first_seen_at',
+        '#last_seen_at': 'last_seen_at',
+        '#remembered_facts': 'remembered_facts',
+        '#interests': 'interests',
+        '#ttl': 'ttl',
+        '#version': 'version'
+      },
+      ExpressionAttributeValues: {
+        ':now': dynamoString(nowIso),
+        ':remembered_facts': { L: rememberedFacts.map(writeFactItem) },
+        ':interests': writeStringList(interests),
+        ':ttl': dynamoNumber(ttlFromNow()),
+        ':zero': dynamoNumber(0),
+        ':one': dynamoNumber(1)
+      }
+    }));
+    logEvent('info', 'user_fact_remembered', {
+      category: fact.category,
+      remembered_facts_len: rememberedFacts.length,
+      interests_len: interests.length
+    });
+    return {
+      ok: true,
+      fact: { ...fact, remembered_at: nowIso },
+      interests
+    };
+  } catch (error) {
+    logEvent('warning', 'user_fact_remember_failed', {
+      category: fact.category,
+      error_type: error?.constructor?.name || 'Error'
+    });
+    return { ok: false, error: 'Memory write failed.' };
   }
 }
 
@@ -326,7 +479,9 @@ export function authProfile(memory) {
     preferred_name: memory.preferred_name || '',
     turn_count: turnCount,
     current_session_questions: (memory.current_session_questions || []).slice(-5),
-    prior_session_summaries: (memory.synthesized_history || []).slice(-3)
+    prior_session_summaries: (memory.synthesized_history || []).slice(-3),
+    remembered_facts: (memory.remembered_facts || []).slice(-8),
+    interests: (memory.interests || []).slice(-8)
   };
 }
 
@@ -353,6 +508,19 @@ export function memoryContextBlock(memory) {
     current.forEach((q) => {
       lines.push(`- ${q.question}`);
     });
+  }
+  const facts = (memory.remembered_facts || []).slice(-8);
+  if (facts.length > 0) {
+    if (lines.length > 0) lines.push('');
+    lines.push('Remembered reader details explicitly offered by the reader:');
+    facts.forEach((fact) => {
+      lines.push(`- ${fact.category}: ${fact.value}`);
+    });
+  }
+  const interests = (memory.interests || []).slice(-8);
+  if (interests.length > 0) {
+    if (lines.length > 0) lines.push('');
+    lines.push(`Reader interests to consider when useful: ${interests.join(', ')}`);
   }
   return lines.length > 0 ? lines.join('\n') : '';
 }
