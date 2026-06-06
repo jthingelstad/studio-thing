@@ -15,6 +15,23 @@ export function countsByPublishYear(records = []) {
     .map(([year, count]) => ({ year, count }));
 }
 
+export function yearCountSummary(countsByYear = []) {
+  const rows = (countsByYear || [])
+    .filter((row) => Number.isFinite(Number(row?.year)) && Number.isFinite(Number(row?.count)))
+    .map((row) => ({ year: Number(row.year), count: Number(row.count) }));
+  if (!rows.length) return { highest_years: [], lowest_years: [] };
+  const highestCount = Math.max(...rows.map((row) => row.count));
+  const lowestCount = Math.min(...rows.map((row) => row.count));
+  return {
+    highest_years: rows
+      .filter((row) => row.count === highestCount)
+      .sort((a, b) => b.year - a.year),
+    lowest_years: rows
+      .filter((row) => row.count === lowestCount)
+      .sort((a, b) => b.year - a.year)
+  };
+}
+
 const STOPWORDS = new Set([
   'about', 'after', 'again', 'also', 'and', 'another', 'because', 'before', 'being',
   'been', 'blog', 'but', 'can', 'could', 'did', 'does', 'doing', 'don', 'from',

@@ -14,7 +14,7 @@ import {
   parsePreflightJson,
   passThroughPreflight
 } from '../shared/prompt-preflight.mjs';
-import { countsByPublishYear, yearlyContentSignals } from '../shared/corpus-stats.mjs';
+import { countsByPublishYear, yearCountSummary, yearlyContentSignals } from '../shared/corpus-stats.mjs';
 import { searchFaq } from '../shared/faq.mjs';
 import { truthyEnv } from '../shared/logging.mjs';
 import {
@@ -1214,6 +1214,7 @@ async function toolCorpusStats(input = {}, { scope } = {}) {
     const countList = (map, key) => Array.from(map.entries())
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .map(([name, count]) => ({ [key]: name, count }));
+    const countsByYear = countsByPublishYear(records);
     const stats = {
       source_kind: kind,
       generated_at: corpus.generated_at,
@@ -1222,7 +1223,8 @@ async function toolCorpusStats(input = {}, { scope } = {}) {
       link_count: corpus.link_count || links.length,
       oldest: records[records.length - 1] || null,
       newest: records[0] || null,
-      counts_by_year: countsByPublishYear(records),
+      counts_by_year: countsByYear,
+      year_count_summary: yearCountSummary(countsByYear),
       yearly_signals: yearlyContentSignals(records, { chunks: corpus.chunks || [] }),
       top_domains: summarizeDomains(links),
       counts_by_link_kind: countList(linkKindCounts, 'link_kind'),

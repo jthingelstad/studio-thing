@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { countsByPublishYear, yearFromPublishDate, yearlyContentSignals } from '../shared/corpus-stats.mjs';
+import { countsByPublishYear, yearCountSummary, yearFromPublishDate, yearlyContentSignals } from '../shared/corpus-stats.mjs';
 
 test('yearFromPublishDate extracts a publication year', () => {
   assert.equal(yearFromPublishDate('2026-06-05T12:00:00Z'), 2026);
@@ -20,6 +20,18 @@ test('countsByPublishYear counts records newest year first', () => {
     { year: 2026, count: 1 },
     { year: 2024, count: 2 }
   ]);
+});
+
+test('yearCountSummary identifies highest and lowest count years', () => {
+  assert.deepEqual(yearCountSummary([
+    { year: 2025, count: 822 },
+    { year: 2008, count: 783 },
+    { year: 2000, count: 2 },
+    { year: 2001, count: 2 }
+  ]), {
+    highest_years: [{ year: 2025, count: 822 }],
+    lowest_years: [{ year: 2001, count: 2 }, { year: 2000, count: 2 }]
+  });
 });
 
 test('yearlyContentSignals summarizes terms domains sections and samples', () => {
