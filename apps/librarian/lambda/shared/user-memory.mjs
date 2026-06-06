@@ -106,6 +106,7 @@ export async function getUserMemory(sub) {
       version: Number(item.version?.N || 0),
       first_seen_at: item.first_seen_at?.S || '',
       last_seen_at: item.last_seen_at?.S || '',
+      preferred_name: item.preferred_name?.S || '',
       turn_count: Number(item.turn_count?.N || 0),
       current_session_id: item.current_session_id?.S || '',
       current_session_started_at: item.current_session_started_at?.S || '',
@@ -129,7 +130,7 @@ export async function getUserMemory(sub) {
 // When the incoming sid differs from current_session_id, the previous
 // session's questions get synthesized into a one-paragraph summary and
 // rolled into synthesized_history before the new session is opened.
-export async function recordUserTurn(sub, { sid, question }) {
+export async function recordUserTurn(sub, { sid, question, preferredName }) {
   const tableName = process.env.TABLE_NAME;
   if (!tableName || !sub) return;
   const start = Date.now();
@@ -138,6 +139,7 @@ export async function recordUserTurn(sub, { sid, question }) {
     const nowIso = new Date().toISOString();
     const incomingSid = String(sid || '');
     const trimmedQuestion = String(question || '').trim().slice(0, QUESTION_TRIM_CHARS);
+    const cleanPreferredName = String(preferredName || '').trim().replace(/\s+/g, ' ').slice(0, 80);
 
     let synthesizedHistory = existing?.synthesized_history || [];
     let currentSessionId = existing?.current_session_id || '';
@@ -181,6 +183,7 @@ export async function recordUserTurn(sub, { sid, question }) {
       version: dynamoNumber(nextVersion),
       first_seen_at: dynamoString(existing?.first_seen_at || nowIso),
       last_seen_at: dynamoString(nowIso),
+      preferred_name: dynamoString(cleanPreferredName || existing?.preferred_name || ''),
       turn_count: dynamoNumber((existing?.turn_count || 0) + 1),
       current_session_id: dynamoString(currentSessionId),
       current_session_started_at: dynamoString(currentSessionStartedAt),
@@ -223,6 +226,50 @@ export async function recordUserTurn(sub, { sid, question }) {
     });
   } catch (error) {
     logEvent('warning', 'user_memory_write_failed', {
+      error_type: error?.constructor?.name || 'Error'
+    });
+  }
+}
+
+export async function recordUserPreferredName(sub, name) {
+  const tableName = process.env.TABLE_NAME;
+  const cleanName = String(name || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+  if (!tableName || !sub || !cleanName) return;
+  const nowIso = new Date().toISOString();
+  try {
+    const { UpdateItemCommand } = await import('@aws-sdk/client-dynamodb');
+    const { dynamodb } = await import('./aws-clients.mjs');
+    await dynamodb.send(new UpdateItemCommand({
+      TableName: tableName,
+      Key: {
+        pk: dynamoString(`user#${sub}`),
+        sk: dynamoString('memory')
+      },
+      UpdateExpression: [
+        'SET #preferred_name = :preferred_name',
+        '#first_seen_at = if_not_exists(#first_seen_at, :now)',
+        '#last_seen_at = :now',
+        '#ttl = :ttl',
+        '#version = if_not_exists(#version, :zero) + :one'
+      ].join(', '),
+      ExpressionAttributeNames: {
+        '#preferred_name': 'preferred_name',
+        '#first_seen_at': 'first_seen_at',
+        '#last_seen_at': 'last_seen_at',
+        '#ttl': 'ttl',
+        '#version': 'version'
+      },
+      ExpressionAttributeValues: {
+        ':preferred_name': dynamoString(cleanName),
+        ':now': dynamoString(nowIso),
+        ':ttl': dynamoNumber(ttlFromNow()),
+        ':zero': dynamoNumber(0),
+        ':one': dynamoNumber(1)
+      }
+    }));
+    logEvent('info', 'user_preferred_name_recorded');
+  } catch (error) {
+    logEvent('warning', 'user_preferred_name_write_failed', {
       error_type: error?.constructor?.name || 'Error'
     });
   }
@@ -276,6 +323,7 @@ export function authProfile(memory) {
     returning: turnCount > 0,
     first_seen_at: memory.first_seen_at,
     last_seen_at: memory.last_seen_at,
+    preferred_name: memory.preferred_name || '',
     turn_count: turnCount,
     current_session_questions: (memory.current_session_questions || []).slice(-5),
     prior_session_summaries: (memory.synthesized_history || []).slice(-3)

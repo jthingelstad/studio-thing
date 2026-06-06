@@ -25,6 +25,7 @@ import {
 import {
   getUserMemory,
   memoryContextBlock,
+  recordUserPreferredName,
   recordUserTurn
 } from '../shared/user-memory.mjs';
 import {
@@ -355,6 +356,32 @@ async function loadUserConversationHistory(subscriberHash, conversationId) {
     logEvent('warning', 'user_conversation_history_load_failed', {
       subscriber_hash: subscriberHash,
       conversation_id: validId,
+      error_type: error.constructor?.name || 'Error'
+    });
+    return [];
+  }
+}
+
+async function loadUserConversationSummaries(subscriberHash, limit = 8) {
+  const tableName = process.env.TABLE_NAME;
+  if (!tableName || !subscriberHash) return [];
+  try {
+    const response = await dynamodb.send(new QueryCommand({
+      TableName: tableName,
+      KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
+      ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
+      ExpressionAttributeValues: {
+        ':pk': conversationDynamoString(userConversationPk(subscriberHash)),
+        ':prefix': conversationDynamoString('conversation#')
+      }
+    }));
+    return (response.Items || [])
+      .map(conversationSummaryFromItem)
+      .sort((a, b) => String(b.updated_at || '').localeCompare(String(a.updated_at || '')))
+      .slice(0, Math.max(1, Math.min(Number(limit) || 8, 20)));
+  } catch (error) {
+    logEvent('warning', 'user_conversation_summaries_load_failed', {
+      subscriber_hash: subscriberHash,
       error_type: error.constructor?.name || 'Error'
     });
     return [];
@@ -875,6 +902,80 @@ function conversationContext(history) {
   return history.map((item) => `${item.role === 'user' ? 'User' : 'Thingy'}: ${item.content}`).join('\n');
 }
 
+function cleanContextString(value, maxLength = 120) {
+  return String(value || '').trim().replace(/\s+/g, ' ').slice(0, maxLength);
+}
+
+function normalizeClientContext(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const dayPeriod = cleanContextString(value.day_period, 20).toLowerCase();
+  const offsetMinutes = Number(value.utc_offset_minutes);
+  return {
+    locale: cleanContextString(value.locale, 40),
+    time_zone: cleanContextString(value.time_zone, 80),
+    utc_offset_minutes: Number.isFinite(offsetMinutes) && Math.abs(offsetMinutes) <= 14 * 60 ? Math.trunc(offsetMinutes) : null,
+    local_iso: cleanContextString(value.local_iso, 40),
+    local_date: cleanContextString(value.local_date, 80),
+    local_time: cleanContextString(value.local_time, 60),
+    day_period: ['morning', 'afternoon', 'evening', 'night'].includes(dayPeriod) ? dayPeriod : ''
+  };
+}
+
+function normalizeUserProfile(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const status = cleanContextString(value.status, 30).toLowerCase();
+  const turnCount = Number(value.turn_count);
+  const currentSessionQuestions = Array.isArray(value.current_session_questions)
+    ? value.current_session_questions.map((item) => cleanContextString(item?.question || item, 180)).filter(Boolean).slice(-5)
+    : [];
+  const priorSessionSummaries = Array.isArray(value.prior_session_summaries)
+    ? value.prior_session_summaries.map((item) => cleanContextString(item?.summary || item, 240)).filter(Boolean).slice(-3)
+    : [];
+  return {
+    status: cleanContextString(status, 30),
+    supporting_member: value.supporting_member === true || status === 'premium',
+    returning: value.returning === true,
+    preferred_name: cleanContextString(value.preferred_name, 80),
+    awaiting_name: value.awaiting_name === true,
+    first_seen_at: cleanContextString(value.first_seen_at, 40),
+    last_seen_at: cleanContextString(value.last_seen_at, 40),
+    turn_count: Number.isFinite(turnCount) && turnCount >= 0 ? Math.trunc(turnCount) : null,
+    current_session_questions: currentSessionQuestions,
+    prior_session_summaries: priorSessionSummaries
+  };
+}
+
+function readerContextPrompt(clientContext, userProfile) {
+  const context = normalizeClientContext(clientContext);
+  const profile = normalizeUserProfile(userProfile);
+  const lines = [];
+  if (context.local_date || context.local_time) {
+    lines.push(`Reader local time: ${[context.local_date, context.local_time].filter(Boolean).join(' at ')}`);
+  }
+  if (context.time_zone) lines.push(`Reader time zone: ${context.time_zone}`);
+  if (context.utc_offset_minutes !== null) lines.push(`Reader UTC offset minutes: ${context.utc_offset_minutes}`);
+  if (context.locale) lines.push(`Reader locale: ${context.locale}`);
+  if (context.day_period) lines.push(`Reader day period: ${context.day_period}`);
+  if (context.local_iso) lines.push(`Reader local timestamp: ${context.local_iso}`);
+  if (profile.status) lines.push(`Subscriber status: ${profile.status}`);
+  if (profile.supporting_member) lines.push('Subscriber is a Weekly Thing Supporting Member.');
+  if (profile.preferred_name) lines.push(`Reader preferred name: ${profile.preferred_name}`);
+  if (profile.awaiting_name && !profile.preferred_name) lines.push('Thingy recently asked what to call the reader; their next short response may be a name.');
+  if (profile.turn_count !== null) lines.push(`Prior Thingy turns known to client: ${profile.turn_count}`);
+  if (profile.returning) lines.push('Client profile says this is a returning Thingy reader.');
+  if (profile.first_seen_at) lines.push(`First seen by Thingy: ${profile.first_seen_at}`);
+  if (profile.last_seen_at) lines.push(`Last seen by Thingy: ${profile.last_seen_at}`);
+  if (profile.prior_session_summaries.length) {
+    lines.push('Client-known prior session summaries:');
+    profile.prior_session_summaries.forEach((summary) => lines.push(`- ${summary}`));
+  }
+  if (profile.current_session_questions.length) {
+    lines.push('Client-known current session questions:');
+    profile.current_session_questions.forEach((question) => lines.push(`- ${question}`));
+  }
+  return lines.length ? lines.join('\n') : 'No reader-local context supplied.';
+}
+
 function isExternalSource(item) {
   return ['blog', 'podcast'].includes(item?.source_kind) || (!item?.issue_number && Boolean(item?.url));
 }
@@ -931,6 +1032,66 @@ function preflightInferenceConfig() {
     maxTokens: Number(process.env.BEDROCK_PREFLIGHT_MAX_TOKENS || '650'),
     temperature: Number(process.env.BEDROCK_PREFLIGHT_TEMPERATURE || '0')
   };
+}
+
+function welcomeInferenceConfig() {
+  return {
+    maxTokens: Number(process.env.BEDROCK_WELCOME_MAX_TOKENS || '320'),
+    temperature: Number(process.env.BEDROCK_WELCOME_TEMPERATURE || '0.7')
+  };
+}
+
+function welcomePrompt({ readerContext, memoryContext, conversations, scope }) {
+  const recent = (conversations || []).slice(0, 6);
+  const conversationLines = recent.length
+    ? recent.map((entry) => `- ${entry.title || 'Untitled chat'} (${entry.turn_count || 0} turns, updated ${String(entry.updated_at || '').slice(0, 10) || 'unknown'})`).join('\n')
+    : 'No prior conversations found.';
+  return [
+    'Write Thingy\'s opening message for a newly loaded chat.',
+    '',
+    'Thingy is Jamie Thingelstad\'s archive agent. It can help the reader connect ideas, compare eras, recall prior threads, and explore The Weekly Thing newsletter, the thingelstad.com blog, and Another Thing podcast.',
+    '',
+    'Reader and session context:',
+    readerContext || 'No reader-local context supplied.',
+    '',
+    'Prior user memory:',
+    memoryContext || 'No prior user memory found.',
+    '',
+    'Recent Thingy conversations:',
+    conversationLines,
+    '',
+    `Active source scope: ${normalizeScope(scope)}`,
+    '',
+    'Requirements:',
+    '- Start with a natural greeting that can use the reader local time if supplied.',
+    '- If a preferred name is known, use it. If no preferred name is known, ask what Thingy should call the reader, but keep it conversational.',
+    '- If this looks like their first time, give a little more orientation. If returning, welcome them back and lightly reference the kind of things they have explored before when memory exists.',
+    '- If they are a Weekly Thing Supporting Member, acknowledge that gracefully without making the whole message about it.',
+    '- Do not frame Thingy as just search. Prefer agentic verbs like connect, trace, compare, explore, and pick up threads.',
+    '- Keep it under 95 words, no heading, no table, no citations, no source list.'
+  ].join('\n');
+}
+
+async function generateWelcome({ readerContext, memoryContext, conversations, scope }) {
+  const start = performance.now();
+  const response = await bedrock.send(new ConverseCommand({
+    modelId: agentModel(),
+    system: [{ text: AGENT_SYSTEM_PROMPT }, { cachePoint: { type: 'default' } }],
+    messages: [{
+      role: 'user',
+      content: [{ text: welcomePrompt({ readerContext, memoryContext, conversations, scope }) }]
+    }],
+    inferenceConfig: welcomeInferenceConfig()
+  }));
+  const answer = sanitizeAnswerProse(bedrockMessageText(response.output?.message || {})).trim();
+  logEvent('info', 'welcome_generated', {
+    model: agentModel(),
+    conversation_count: (conversations || []).length,
+    duration_ms: Math.round(performance.now() - start),
+    output_tokens: response.usage?.outputTokens,
+    answer_chars: answer.length
+  });
+  return answer || "Hi. I'm Thingy. Tell me what you're curious about and I'll help you explore Jamie's archive.";
 }
 
 function preflightUserPrompt(question, scope, history) {
@@ -1583,12 +1744,14 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   const start = performance.now();
   const scope = normalizeScope(options.scope);
   const memoryContext = String(options.memoryContext || '').trim();
+  const readerContext = String(options.readerContext || '').trim();
   const agentQuestion = agentQuestionForPreflight(question, options.preflight);
   const messages = [{
     role: 'user',
     content: [{
       text: agentUserPrompt({
         conversation_context: conversationContext(history),
+        reader_context: readerContext || 'No reader-local context supplied.',
         question: agentQuestion
       })
     }]
@@ -1800,9 +1963,10 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     return;
   }
 
-  const stream = streamFromResponse(responseStream, event, method === 'POST' && path.endsWith('/chat') ? 200 : 404);
+  const isStreamRoute = method === 'POST' && (path.endsWith('/chat') || path.endsWith('/welcome'));
+  const stream = streamFromResponse(responseStream, event, isStreamRoute ? 200 : 404);
   try {
-    if (method !== 'POST' || !path.endsWith('/chat')) {
+    if (!isStreamRoute) {
       writeSse(stream, 'error', { error: 'Not found.', request_id: requestId });
       return;
     }
@@ -1815,8 +1979,42 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     }
     subscriberHash = String(payload.sub || '');
 
+    if (path.endsWith('/welcome')) {
+      const scope = normalizeScope(body.scope);
+      const userProfile = normalizeUserProfile(body.user_profile);
+      const memory = await getUserMemory(subscriberHash);
+      const effectiveProfile = {
+        ...userProfile,
+        preferred_name: userProfile.preferred_name || memory?.preferred_name || '',
+        returning: userProfile.returning || Number(memory?.turn_count || 0) > 0,
+        turn_count: userProfile.turn_count ?? Number(memory?.turn_count || 0)
+      };
+      const readerContext = readerContextPrompt(body.client_context, effectiveProfile);
+      const memoryContext = memoryContextBlock(memory);
+      const conversations = await loadUserConversationSummaries(subscriberHash, 8);
+      if (!(await checkRateLimit(`welcome#${String(payload.sub)}`, Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)))) {
+        writeSse(stream, 'error', { error: 'Thingy is at the hourly limit for this session.', request_id: requestId });
+        return;
+      }
+      writeSse(stream, 'meta', { request_id: requestId });
+      writeSse(stream, 'status', { message: 'Thingy is getting oriented...' });
+      const answer = await generateWelcome({ readerContext, memoryContext, conversations, scope });
+      writeSse(stream, 'answer_delta', { delta: answer });
+      writeSse(stream, 'done', { request_id: requestId });
+      logEvent('info', 'welcome_completed', {
+        subscriber_hash: subscriberHash,
+        conversation_count: conversations.length,
+        has_memory: Boolean(memory),
+        has_preferred_name: Boolean(effectiveProfile.preferred_name),
+        duration_ms: Math.round(performance.now() - start)
+      });
+      return;
+    }
+
     const question = String(body.message || '').trim();
     const scope = normalizeScope(body.scope);
+    const userProfile = normalizeUserProfile(body.user_profile);
+    let readerContext = readerContextPrompt(body.client_context, userProfile);
     const requestedConversationId = validConversationId(body.conversation_id || body.conversationId);
     const conversationId = requestedConversationId || crypto.randomUUID();
     const history = await loadUserConversationHistory(subscriberHash, conversationId);
@@ -1831,6 +2029,9 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     if (!(await checkRateLimit(String(payload.sub)))) {
       writeSse(stream, 'error', { error: 'The librarian is at the hourly limit for this session.', request_id: requestId });
       return;
+    }
+    if (userProfile.preferred_name) {
+      await recordUserPreferredName(subscriberHash, userProfile.preferred_name);
     }
 
     writeSse(stream, 'meta', { request_id: requestId, conversation_id: conversationId });
@@ -1854,7 +2055,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       await recordConversation({ event, subscriberHash, conversationId, question, answer: preflight.direct_answer, historyCount: history.length, citations, preflight, route: 'stream', requestId });
       // Guarded/direct turns still update memory — the question text was
       // recorded above, so let the user-memory row reflect that turn too.
-      await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question });
+      await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName: userProfile.preferred_name });
       return;
     }
 
@@ -1863,6 +2064,12 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     // personally; also recorded back at turn end.
     const userMemory = await getUserMemory(subscriberHash);
     const memoryContext = memoryContextBlock(userMemory);
+    if (!userProfile.preferred_name && userMemory?.preferred_name) {
+      readerContext = readerContextPrompt(body.client_context, {
+        ...userProfile,
+        preferred_name: userMemory.preferred_name
+      });
+    }
 
     writeSse(stream, 'status', { message: 'Investigating the archive...' });
     let deadlineExceeded = false;
@@ -1876,7 +2083,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     }, 75000);
     let result;
     try {
-      result = await streamBedrockAgentAnswer(question, history, stream, { memoryContext, scope, preflight });
+      result = await streamBedrockAgentAnswer(question, history, stream, { memoryContext, readerContext, scope, preflight });
     } finally {
       clearTimeout(deadlineTimer);
     }
@@ -1910,7 +2117,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     // Update per-user memory after the answer ships. If the sid has
     // rotated since the prior turn, this also triggers a Bedrock-
     // synthesized summary of the previous session.
-    await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question });
+    await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName: userProfile.preferred_name });
     logEvent('info', 'chat_completed', {
       subscriber_hash: subscriberHash,
       question_chars: question.length,

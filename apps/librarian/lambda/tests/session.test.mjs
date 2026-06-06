@@ -50,6 +50,7 @@ test('authProfile reflects turn_count and surfaces recent topics', () => {
   const memory = {
     first_seen_at: '2026-01-01T00:00:00Z',
     last_seen_at: '2026-04-01T00:00:00Z',
+    preferred_name: 'Jamie',
     turn_count: 7,
     current_session_questions: [
       { ts: '2026-04-01T00:00:00Z', question: 'What about RSS?' },
@@ -63,6 +64,7 @@ test('authProfile reflects turn_count and surfaces recent topics', () => {
   const profile = authProfile(memory);
   assert.equal(profile.returning, true);
   assert.equal(profile.turn_count, 7);
+  assert.equal(profile.preferred_name, 'Jamie');
   assert.equal(profile.current_session_questions.length, 2);
   assert.equal(profile.prior_session_summaries.length, 2);
   assert.equal(profile.prior_session_summaries[1].summary, 'Indie web week.');
@@ -127,10 +129,12 @@ test('prompt template renderer substitutes named placeholders', () => {
 test('agent user prompt renders dynamic conversation context', () => {
   const prompt = agentUserPrompt({
     conversation_context: 'User: Tell me more.',
+    reader_context: 'Reader preferred name: Jamie',
     question: 'What did the archive say about RSS?'
   });
 
   assert.match(prompt, /User: Tell me more\./);
+  assert.match(prompt, /Reader preferred name: Jamie/);
   assert.match(prompt, /What did the archive say about RSS\?/);
   assert.match(prompt, /Investigate with tools as needed/);
 });
