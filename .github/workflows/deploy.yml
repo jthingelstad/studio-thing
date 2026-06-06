@@ -17,6 +17,7 @@ on:
       - 'pipeline/**'
       - 'librarian-core/**'
       - 'apps/librarian/**'
+      - '.github/workflows/deploy.yml'
       - 'requirements.txt'
   workflow_dispatch:
     inputs:
@@ -37,6 +38,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v6
         with:
@@ -53,6 +56,99 @@ jobs:
 
       - name: Install Lambda dependencies
         run: npm --prefix apps/librarian/lambda ci
+
+      - name: Detect changed production surfaces
+        id: changes
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            # Manual production runs are intentionally full refreshes.
+            echo "weekly_corpus=true" >> "$GITHUB_OUTPUT"
+            echo "blog_corpus=true" >> "$GITHUB_OUTPUT"
+            echo "podcast_corpus=true" >> "$GITHUB_OUTPUT"
+            echo "site_handoff=true" >> "$GITHUB_OUTPUT"
+            echo "lambda=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          base="${{ github.event.before }}"
+          if [[ -z "$base" || "$base" =~ ^0+$ ]]; then
+            base="HEAD~1"
+          fi
+          if ! changed="$(git diff --name-only "$base" HEAD)"; then
+            echo "Could not diff against $base; falling back to HEAD commit files."
+            changed="$(git diff-tree --no-commit-id --name-only -r HEAD)"
+          fi
+          printf '%s\n' "$changed"
+
+          has_change() {
+            local pattern
+            for pattern in "$@"; do
+              if grep -Eq "$pattern" <<< "$changed"; then
+                return 0
+              fi
+            done
+            return 1
+          }
+
+          shared_corpus=false
+          if has_change \
+            '^requirements\.txt$' \
+            '^librarian-core/' \
+            '^pipeline/deploy/upload_corpus\.py$'; then
+            shared_corpus=true
+          fi
+
+          weekly_corpus=false
+          if [[ "$shared_corpus" == "true" ]] || has_change \
+            '^data/issues/' \
+            '^data/audio/' \
+            '^pipeline/content/' \
+            '^pipeline/corpus/build\.py$' \
+            '^pipeline/graph/' \
+            '^pipeline/deploy/upload_corpus\.py$'; then
+            weekly_corpus=true
+          fi
+
+          blog_corpus=false
+          if [[ "$shared_corpus" == "true" ]] || has_change \
+            '^data/blog/' \
+            '^pipeline/blog/' \
+            '^pipeline/deploy/upload_blog_corpus\.py$'; then
+            blog_corpus=true
+          fi
+
+          podcast_corpus=false
+          if [[ "$shared_corpus" == "true" ]] || has_change \
+            '^data/podcast/' \
+            '^pipeline/podcast/' \
+            '^pipeline/corpus/build_podcast\.py$' \
+            '^pipeline/deploy/upload_podcast_corpus\.py$'; then
+            podcast_corpus=true
+          fi
+
+          site_handoff=false
+          if has_change \
+            '^data/issues/' \
+            '^data/audio/' \
+            '^pipeline/content/' \
+            '^pipeline/graph/' \
+            '^pipeline/deploy/push_site_inputs\.py$'; then
+            site_handoff=true
+          fi
+
+          lambda=false
+          if has_change \
+            '^apps/librarian/' \
+            '^pipeline/deploy/aws\.py$'; then
+            lambda=true
+          fi
+
+          echo "weekly_corpus=$weekly_corpus" >> "$GITHUB_OUTPUT"
+          echo "blog_corpus=$blog_corpus" >> "$GITHUB_OUTPUT"
+          echo "podcast_corpus=$podcast_corpus" >> "$GITHUB_OUTPUT"
+          echo "site_handoff=$site_handoff" >> "$GITHUB_OUTPUT"
+          echo "lambda=$lambda" >> "$GITHUB_OUTPUT"
 
       # Materialize apps/site/archive/{N}.md + _data/emails.json from the
       # canonical data/issues/{N}/ store. Runs before tests because
@@ -72,19 +168,23 @@ jobs:
       # hands off stats.json.
 
       - name: Build Weekly Thing corpus
+        if: steps.changes.outputs.weekly_corpus == 'true'
         run: python pipeline/corpus/build.py
 
       - name: Build podcast corpus
+        if: steps.changes.outputs.podcast_corpus == 'true'
         run: python pipeline/corpus/build_podcast.py
 
       # data/librarian/graph.json powers the site's topic pages.
       - name: Build graph for site topics
+        if: steps.changes.outputs.weekly_corpus == 'true' || steps.changes.outputs.site_handoff == 'true'
         run: python pipeline/graph/build.py
 
       # Embed every corpus the Librarian API can load. Each upload reuses
       # cached embeddings from the previous S3 artifact when chunk ids match.
       # continue-on-error so a Bedrock hiccup doesn't block the website handoff.
       - name: Upload embedded Weekly Thing corpus + graph to S3
+        if: steps.changes.outputs.weekly_corpus == 'true'
         continue-on-error: true
         run: python pipeline/deploy/upload_corpus.py
         env:
@@ -94,6 +194,7 @@ jobs:
           LIBRARIAN_BUCKET: weekly-thing-librarian
 
       - name: Upload embedded blog corpus to S3
+        if: steps.changes.outputs.blog_corpus == 'true'
         continue-on-error: true
         run: python pipeline/deploy/upload_blog_corpus.py
         env:
@@ -103,6 +204,7 @@ jobs:
           LIBRARIAN_BUCKET: weekly-thing-librarian
 
       - name: Upload embedded podcast corpus to S3
+        if: steps.changes.outputs.podcast_corpus == 'true'
         continue-on-error: true
         run: python pipeline/deploy/upload_podcast_corpus.py
         env:
@@ -114,13 +216,7 @@ jobs:
       - name: Detect Lambda changes
         id: lambda-changes
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          elif git diff --quiet HEAD~1 HEAD -- apps/librarian/ pipeline/deploy/aws.py; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
+          echo "changed=${{ steps.changes.outputs.lambda }}" >> "$GITHUB_OUTPUT"
 
       - name: Deploy Thingy Lambda
         if: steps.lambda-changes.outputs.changed == 'true'
@@ -150,6 +246,7 @@ jobs:
       # atomic commit on normal pushes. Manual runs are dry-run by default for
       # inspection, unless push_to_weekly is checked.
       - name: Hand off site inputs to the website repo
+        if: steps.changes.outputs.site_handoff == 'true'
         run: |
           if [[ "${{ github.event_name }}" == "push" || "${{ inputs.push_to_weekly }}" == "true" ]]; then
             echo "Committing site inputs to the website repo."
