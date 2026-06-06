@@ -1122,23 +1122,51 @@ function cleanThemeCandidate(value) {
   return words.join(' ').trim();
 }
 
+function themeTokens(value) {
+  return [...new Set(tokenize(value).filter((token) => token.length > 2))].slice(0, 6);
+}
+
+function themesSimilar(first, second) {
+  const a = themeTokens(first);
+  const b = themeTokens(second);
+  if (!a.length || !b.length) return false;
+  if (a.join(' ') === b.join(' ')) return true;
+  const overlap = a.filter((token) => b.includes(token)).length;
+  return overlap >= Math.min(2, a.length, b.length);
+}
+
+function recentSparkThemes(memory, conversations = []) {
+  const values = [
+    ...((memory?.current_session_questions || []).slice(-5).map((item) => item?.question || item)),
+    ...((memory?.synthesized_history || []).slice(-3).map((item) => item?.summary || item)),
+    ...((conversations || []).slice(0, 6).map((item) => item?.title || item))
+  ];
+  return values.map(cleanThemeCandidate).filter(Boolean);
+}
+
+function isRecentThemeRut(theme, recentThemes = []) {
+  if (!theme) return false;
+  return recentThemes.filter((recent) => themesSimilar(theme, recent)).length >= 2;
+}
+
 function sparkThemeFromMemory(memory, conversations = []) {
+  const recentThemes = recentSparkThemes(memory, conversations);
   for (const interest of memory?.interests || []) {
     const theme = cleanThemeCandidate(interest);
-    if (theme) return theme;
+    if (theme && !isRecentThemeRut(theme, recentThemes)) return theme;
   }
   for (const fact of memory?.remembered_facts || []) {
     if (fact.category !== 'interest' && fact.category !== 'project') continue;
     const theme = cleanThemeCandidate(fact.value);
-    if (theme) return theme;
+    if (theme && !isRecentThemeRut(theme, recentThemes)) return theme;
   }
   for (const summary of [...(memory?.synthesized_history || [])].reverse()) {
     const theme = cleanThemeCandidate(summary.summary);
-    if (theme) return theme;
+    if (theme && !isRecentThemeRut(theme, recentThemes)) return theme;
   }
   for (const conversation of conversations || []) {
     const theme = cleanThemeCandidate(conversation.title);
-    if (theme) return theme;
+    if (theme && !isRecentThemeRut(theme, recentThemes)) return theme;
   }
   return '';
 }
@@ -1215,7 +1243,7 @@ async function buildWelcomeSpark({ memory, conversations, scope }) {
       : 'A small source Thingy found while getting oriented.',
     theme: theme || null,
     items,
-    prompt: theme ? `Take me through ${theme} as a Thingy Trail.` : 'Surprise me with a Thingy Trail.'
+    prompt: theme ? `Find an adjacent Thingy Trail that starts near ${theme} but branches somewhere new.` : 'Surprise me with a Thingy Trail.'
   };
 }
 
@@ -1231,7 +1259,7 @@ function experienceFromToolResults(toolResults = [], answer = '') {
         intro: 'A guided path through the archive sources Thingy found.',
         theme: topic || null,
         items: sources.map((source) => experienceSource(source, source.reason || 'part of the trail')),
-        prompt: topic ? `What is the most surprising turn in Jamie's ${topic} trail?` : 'Show me the most surprising turn in this trail.'
+        prompt: topic ? `What adjacent thread branches out from Jamie's ${topic} trail?` : 'Show me the most surprising turn in this trail.'
       };
     }
     if (Array.isArray(result.results) && result.mode) {
@@ -1244,7 +1272,7 @@ function experienceFromToolResults(toolResults = [], answer = '') {
           intro: themed ? `A path through ${result.theme}.` : 'A few sources worth opening next.',
           theme: result.theme || null,
           items,
-          prompt: themed ? `Go deeper on ${result.theme}.` : 'Give me another archive spark.'
+          prompt: themed ? `Find an adjacent thread that branches out from ${result.theme}.` : 'Give me another archive spark.'
         };
       }
     }
