@@ -4,6 +4,7 @@ export const USER_CONVERSATION_LIMIT = 50;
 export const USER_CONVERSATION_TURN_LIMIT = 80;
 export const MAX_HISTORY_MESSAGES = 8;
 export const MAX_HISTORY_CHARS = 4000;
+export const MAX_ARTIFACT_JSON_CHARS = 20000;
 
 const CONVERSATION_ID_RE = /^[A-Za-z0-9_.:-]{1,96}$/;
 
@@ -64,9 +65,88 @@ export function preflightDynamoItem(preflight) {
   };
 }
 
+function boundedText(value, max = 500) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+function compactSourceRef(source) {
+  if (!source || typeof source !== 'object') return null;
+  return {
+    title: boundedText(source.title || source.subject, 160),
+    url: boundedText(source.url, 500),
+    source_kind: boundedText(source.source_kind || source.kind, 40),
+    publish_date: boundedText(source.publish_date, 40),
+    reason: boundedText(source.reason, 240)
+  };
+}
+
+function compactCuriosityMapArtifact(artifact) {
+  return {
+    kind: 'curiosity_map',
+    artifact_version: 1,
+    compacted: true,
+    title: boundedText(artifact.title, 120),
+    scope: boundedText(artifact.scope, 40),
+    center: artifact.center && typeof artifact.center === 'object' ? {
+      id: boundedText(artifact.center.id, 80),
+      label: boundedText(artifact.center.label, 120),
+      kind: boundedText(artifact.center.kind, 40),
+      prompt: boundedText(artifact.center.prompt, 300),
+      why: boundedText(artifact.center.why, 240)
+    } : null,
+    nodes: Array.isArray(artifact.nodes) ? artifact.nodes.slice(0, 8).map((node) => ({
+      id: boundedText(node?.id, 80),
+      label: boundedText(node?.label, 120),
+      kind: boundedText(node?.kind, 40),
+      weight: Number(node?.weight || 0),
+      prompt: boundedText(node?.prompt, 300),
+      why: boundedText(node?.why, 240),
+      source_refs: Array.isArray(node?.source_refs)
+        ? node.source_refs.slice(0, 2).map(compactSourceRef).filter(Boolean)
+        : []
+    })) : [],
+    edges: Array.isArray(artifact.edges) ? artifact.edges.slice(0, 12).map((edge) => ({
+      from: boundedText(edge?.from, 80),
+      to: boundedText(edge?.to, 80),
+      why: boundedText(edge?.why, 240)
+    })) : [],
+    sources: Array.isArray(artifact.sources)
+      ? artifact.sources.slice(0, 5).map(compactSourceRef).filter(Boolean)
+      : [],
+    prompt: boundedText(artifact.prompt, 300)
+  };
+}
+
+export function compactArtifactForStorage(artifact) {
+  if (!artifact || typeof artifact !== 'object' || Array.isArray(artifact)) return null;
+  if (artifact.kind === 'curiosity_map') return compactCuriosityMapArtifact(artifact);
+  return {
+    kind: boundedText(artifact.kind || 'artifact', 80),
+    artifact_version: Number(artifact.artifact_version || artifact.version || 1),
+    compacted: true,
+    title: boundedText(artifact.title, 160),
+    summary: boundedText(artifact.summary || artifact.description, 1000)
+  };
+}
+
+export function artifactJsonForStorage(artifact) {
+  if (!artifact || typeof artifact !== 'object' || Array.isArray(artifact)) return '';
+  const full = JSON.stringify(artifact);
+  if (full.length <= MAX_ARTIFACT_JSON_CHARS) return full;
+  const compact = compactArtifactForStorage(artifact);
+  const compactJson = JSON.stringify(compact || {});
+  if (compactJson.length <= MAX_ARTIFACT_JSON_CHARS) return compactJson;
+  return JSON.stringify({
+    kind: boundedText(artifact.kind || 'artifact', 80),
+    artifact_version: Number(artifact.artifact_version || artifact.version || 1),
+    compacted: true,
+    title: boundedText(artifact.title, 160),
+    omitted: true
+  });
+}
+
 export function artifactDynamoString(artifact) {
-  if (!artifact || typeof artifact !== 'object' || Array.isArray(artifact)) return dynamoString('');
-  return dynamoString(JSON.stringify(artifact).slice(0, 20000));
+  return dynamoString(artifactJsonForStorage(artifact));
 }
 
 export function citationDynamoItem(citation) {

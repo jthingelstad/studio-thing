@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { BedrockRuntimeClient, ConverseCommand, ConverseStreamCommand, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 import { BedrockAgentRuntimeClient, RerankCommand } from '@aws-sdk/client-bedrock-agent-runtime';
-import { DynamoDBClient, PutItemCommand, QueryCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, PutItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { readConverseStream } from '../shared/bedrock-stream.mjs';
 import { sanitizeAnswerProse } from '../shared/answer-sanitizer.mjs';
@@ -31,23 +31,14 @@ import {
   rememberUserFact
 } from '../shared/user-memory.mjs';
 import {
-  artifactDynamoString,
-  citationDynamoItem,
-  conversationPreview,
-  conversationSk,
-  conversationSummaryFromItem,
-  conversationTitle,
-  dynamoList as conversationDynamoList,
-  dynamoNumber as conversationDynamoNumber,
-  dynamoString as conversationDynamoString,
-  historyFromTurns,
-  preflightDynamoItem,
-  turnSk,
-  turnSkPrefix,
-  userConversationPk,
-  validConversationId,
-  conversationTurnFromItem
+  validConversationId
 } from '../shared/user-conversations.mjs';
+import {
+  loadUserConversationHistory,
+  loadUserConversationSummaries,
+  recordUserArtifactConversation,
+  recordUserConversationTurn
+} from '../shared/conversation-store.mjs';
 
 const DEFAULT_AGENT_MODEL = 'us.anthropic.claude-sonnet-4-6';
 const DEFAULT_EMBEDDING_MODEL = 'cohere.embed-english-v3';
@@ -335,234 +326,6 @@ async function recordConversation({
     });
   } catch (error) {
     logEvent('warning', 'conversation_record_failed', { request_id: requestId, error_type: error.constructor?.name || 'Error' });
-  }
-}
-
-async function loadUserConversationHistory(subscriberHash, conversationId) {
-  const tableName = process.env.TABLE_NAME;
-  const validId = validConversationId(conversationId);
-  if (!tableName || !validId) return [];
-  try {
-    const response = await dynamodb.send(new QueryCommand({
-      TableName: tableName,
-      KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
-      ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
-      ExpressionAttributeValues: {
-        ':pk': conversationDynamoString(userConversationPk(subscriberHash)),
-        ':prefix': conversationDynamoString(turnSkPrefix(validId))
-      },
-      ScanIndexForward: false,
-      Limit: 8
-    }));
-    return historyFromTurns((response.Items || []).map(conversationTurnFromItem));
-  } catch (error) {
-    logEvent('warning', 'user_conversation_history_load_failed', {
-      subscriber_hash: subscriberHash,
-      conversation_id: validId,
-      error_type: error.constructor?.name || 'Error'
-    });
-    return [];
-  }
-}
-
-async function loadUserConversationSummaries(subscriberHash, limit = 8) {
-  const tableName = process.env.TABLE_NAME;
-  if (!tableName || !subscriberHash) return [];
-  try {
-    const response = await dynamodb.send(new QueryCommand({
-      TableName: tableName,
-      KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
-      ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
-      ExpressionAttributeValues: {
-        ':pk': conversationDynamoString(userConversationPk(subscriberHash)),
-        ':prefix': conversationDynamoString('conversation#')
-      }
-    }));
-    return (response.Items || [])
-      .map(conversationSummaryFromItem)
-      .sort((a, b) => String(b.updated_at || '').localeCompare(String(a.updated_at || '')))
-      .slice(0, Math.max(1, Math.min(Number(limit) || 8, 20)));
-  } catch (error) {
-    logEvent('warning', 'user_conversation_summaries_load_failed', {
-      subscriber_hash: subscriberHash,
-      error_type: error.constructor?.name || 'Error'
-    });
-    return [];
-  }
-}
-
-async function recordUserConversationTurn({
-  subscriberHash,
-  conversationId,
-  question,
-  answer,
-  scope,
-  requestId,
-  citations,
-  preflight
-}) {
-  const tableName = process.env.TABLE_NAME;
-  const validId = validConversationId(conversationId);
-  if (!tableName || !validId) return null;
-  const now = new Date().toISOString();
-  const pk = userConversationPk(subscriberHash);
-  const title = conversationTitle(question);
-  const preview = conversationPreview(question);
-  const citationItems = (citations || []).slice(0, 24).map(citationDynamoItem);
-  try {
-    await dynamodb.send(new PutItemCommand({
-      TableName: tableName,
-      Item: {
-        pk: conversationDynamoString(pk),
-        sk: conversationDynamoString(turnSk(validId, now, requestId)),
-        item_type: conversationDynamoString('turn'),
-        conversation_id: conversationDynamoString(validId),
-        request_id: conversationDynamoString(requestId),
-        created_at: conversationDynamoString(now),
-        scope: conversationDynamoString(scope || 'all'),
-        question: conversationDynamoString(String(question || '').slice(0, 4000)),
-        answer: conversationDynamoString(String(answer || '').slice(0, 12000)),
-        question_chars: conversationDynamoNumber(String(question || '').length),
-        answer_chars: conversationDynamoNumber(String(answer || '').length),
-        citation_count: conversationDynamoNumber((citations || []).length),
-        citations: conversationDynamoList(citationItems, (item) => item),
-        preflight: preflightDynamoItem(preflight)
-      }
-    }));
-    const response = await dynamodb.send(new UpdateItemCommand({
-      TableName: tableName,
-      Key: {
-        pk: conversationDynamoString(pk),
-        sk: conversationDynamoString(conversationSk(validId))
-      },
-      UpdateExpression: [
-        'SET #item_type = :item_type',
-        '#conversation_id = :conversation_id',
-        '#title = if_not_exists(#title, :title)',
-        '#preview = :preview',
-        '#scope = :scope',
-        '#created_at = if_not_exists(#created_at, :now)',
-        '#updated_at = :now',
-        '#last_message_at = :now',
-        '#last_request_id = :request_id',
-        '#last_question = :question',
-        '#turn_count = if_not_exists(#turn_count, :zero) + :one'
-      ].join(', '),
-      ExpressionAttributeNames: {
-        '#item_type': 'item_type',
-        '#conversation_id': 'conversation_id',
-        '#title': 'title',
-        '#preview': 'preview',
-        '#scope': 'scope',
-        '#created_at': 'created_at',
-        '#updated_at': 'updated_at',
-        '#last_message_at': 'last_message_at',
-        '#last_request_id': 'last_request_id',
-        '#last_question': 'last_question',
-        '#turn_count': 'turn_count'
-      },
-      ExpressionAttributeValues: {
-        ':item_type': conversationDynamoString('conversation'),
-        ':conversation_id': conversationDynamoString(validId),
-        ':title': conversationDynamoString(title),
-        ':preview': conversationDynamoString(preview),
-        ':scope': conversationDynamoString(scope || 'all'),
-        ':now': conversationDynamoString(now),
-        ':request_id': conversationDynamoString(requestId),
-        ':question': conversationDynamoString(String(question || '').slice(0, 500)),
-        ':zero': conversationDynamoNumber(0),
-        ':one': conversationDynamoNumber(1)
-      },
-      ReturnValues: 'ALL_NEW'
-    }));
-    return response.Attributes ? conversationSummaryFromItem(response.Attributes) : null;
-  } catch (error) {
-    logEvent('warning', 'user_conversation_turn_record_failed', {
-      subscriber_hash: subscriberHash,
-      conversation_id: validId,
-      request_id: requestId,
-      error_type: error.constructor?.name || 'Error'
-    });
-    return null;
-  }
-}
-
-async function recordCuriosityMapConversation({
-  subscriberHash,
-  conversationId,
-  map,
-  scope,
-  requestId
-}) {
-  const tableName = process.env.TABLE_NAME;
-  const validId = validConversationId(conversationId);
-  if (!tableName || !subscriberHash || !validId || !map) return null;
-  const now = new Date().toISOString();
-  const pk = userConversationPk(subscriberHash);
-  const title = conversationTitle(map.title || 'Curiosity Map');
-  const center = map.center?.label || String(map.title || '').replace(/^Curiosity Map:\s*/i, '') || 'archive';
-  const preview = conversationPreview(`Explore branches from ${center}.`);
-  try {
-    await dynamodb.send(new PutItemCommand({
-      TableName: tableName,
-      Item: {
-        pk: conversationDynamoString(pk),
-        sk: conversationDynamoString(conversationSk(validId)),
-        item_type: conversationDynamoString('conversation'),
-        conversation_id: conversationDynamoString(validId),
-        title: conversationDynamoString(title),
-        preview: conversationDynamoString(preview),
-        scope: conversationDynamoString(scope || 'all'),
-        created_at: conversationDynamoString(now),
-        updated_at: conversationDynamoString(now),
-        last_message_at: conversationDynamoString(now),
-        last_request_id: conversationDynamoString(requestId),
-        last_question: conversationDynamoString(''),
-        turn_count: conversationDynamoNumber(0)
-      },
-      ConditionExpression: 'attribute_not_exists(pk)'
-    }));
-    await dynamodb.send(new PutItemCommand({
-      TableName: tableName,
-      Item: {
-        pk: conversationDynamoString(pk),
-        sk: conversationDynamoString(turnSk(validId, now, requestId)),
-        item_type: conversationDynamoString('turn'),
-        conversation_id: conversationDynamoString(validId),
-        request_id: conversationDynamoString(requestId),
-        created_at: conversationDynamoString(now),
-        scope: conversationDynamoString(scope || 'all'),
-        question: conversationDynamoString(''),
-        answer: conversationDynamoString(''),
-        question_chars: conversationDynamoNumber(0),
-        answer_chars: conversationDynamoNumber(0),
-        citation_count: conversationDynamoNumber(0),
-        citations: conversationDynamoList([], (item) => item),
-        artifact_json: artifactDynamoString(map)
-      }
-    }));
-    return conversationSummaryFromItem({
-      pk: conversationDynamoString(pk),
-      sk: conversationDynamoString(conversationSk(validId)),
-      item_type: conversationDynamoString('conversation'),
-      conversation_id: conversationDynamoString(validId),
-      title: conversationDynamoString(title),
-      preview: conversationDynamoString(preview),
-      scope: conversationDynamoString(scope || 'all'),
-      created_at: conversationDynamoString(now),
-      updated_at: conversationDynamoString(now),
-      last_message_at: conversationDynamoString(now),
-      last_request_id: conversationDynamoString(requestId),
-      turn_count: conversationDynamoNumber(0)
-    });
-  } catch (error) {
-    logEvent('warning', 'curiosity_map_conversation_record_failed', {
-      subscriber_hash: subscriberHash,
-      conversation_id: validId,
-      request_id: requestId,
-      error_type: error.constructor?.name || 'Error'
-    });
-    return null;
   }
 }
 
@@ -2865,6 +2628,76 @@ function jsonResponseStream(responseStream, statusCode) {
   });
 }
 
+async function handleCuriosityMapRoute({ event, responseStream, requestId, summary, start }) {
+  const body = parseBody(event);
+  const payload = verifyToken(extractBearer(event, body));
+  if (!payload) {
+    const s401 = jsonResponseStream(responseStream, 401);
+    s401.write(JSON.stringify({ error: 'Please validate your subscriber email to use the librarian.', request_id: requestId }));
+    s401.end();
+    logEvent('warning', 'curiosity_map_unauthorized', { ...summary });
+    return;
+  }
+  const subscriberHash = String(payload.sub || '');
+  if (!(await checkRateLimit(`curiosity_map#${subscriberHash}`, Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)))) {
+    const s429 = jsonResponseStream(responseStream, 429);
+    s429.write(JSON.stringify({ error: 'Thingy is at the hourly limit for this session.', request_id: requestId }));
+    s429.end();
+    return;
+  }
+  try {
+    const scope = normalizeScope(body.scope);
+    const memory = await getUserMemory(subscriberHash);
+    const conversations = await loadUserConversationSummaries({
+      dynamodb,
+      tableName: process.env.TABLE_NAME,
+      subscriberHash,
+      limit: 12,
+      logEvent
+    });
+    const map = await buildCuriosityMap({
+      memory,
+      conversations,
+      scope,
+      center: body.center || body.topic || body.query
+    });
+    const requestedConversationId = validConversationId(body.conversation_id || body.conversationId);
+    const conversationId = requestedConversationId || crypto.randomUUID();
+    const center = map.center?.label || String(map.title || '').replace(/^Curiosity Map:\s*/i, '') || 'archive';
+    const conversation = await recordUserArtifactConversation({
+      dynamodb,
+      tableName: process.env.TABLE_NAME,
+      subscriberHash,
+      conversationId,
+      artifact: map,
+      scope,
+      requestId,
+      title: map.title || 'Curiosity Map',
+      preview: `Explore branches from ${center}.`,
+      logEvent,
+      preserveConversationSummary: Boolean(requestedConversationId)
+    });
+    const s200 = jsonResponseStream(responseStream, 200);
+    s200.write(JSON.stringify({ ...map, request_id: requestId, conversation_id: conversationId, conversation }));
+    s200.end();
+    logEvent('info', 'curiosity_map_completed', {
+      ...summary,
+      subscriber_hash: subscriberHash,
+      conversation_id: conversationId,
+      attached_to_existing_conversation: Boolean(requestedConversationId),
+      node_count: map.nodes?.length || 0,
+      source_count: map.sources?.length || 0,
+      scope,
+      duration_ms: Math.round(performance.now() - start)
+    });
+  } catch (error) {
+    const s500 = jsonResponseStream(responseStream, 500);
+    s500.write(JSON.stringify({ error: 'Thingy could not draw a curiosity map right now.', request_id: requestId }));
+    s500.end();
+    logEvent('error', 'curiosity_map_failed', { ...summary, error_type: error.constructor?.name || 'Error' });
+  }
+}
+
 export const handler = awslambda.streamifyResponse(async (event, responseStream, context) => {
   const start = performance.now();
   const requestId = context?.awsRequestId || event.requestContext?.requestId || crypto.randomUUID();
@@ -2974,58 +2807,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
   }
 
   if (method === 'POST' && path.endsWith('/curiosity-map')) {
-    const body = parseBody(event);
-    const payload = verifyToken(extractBearer(event, body));
-    if (!payload) {
-      const s401 = jsonResponseStream(responseStream, 401);
-      s401.write(JSON.stringify({ error: 'Please validate your subscriber email to use the librarian.', request_id: requestId }));
-      s401.end();
-      logEvent('warning', 'curiosity_map_unauthorized', { ...summary });
-      return;
-    }
-    subscriberHash = String(payload.sub || '');
-    if (!(await checkRateLimit(`curiosity_map#${subscriberHash}`, Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)))) {
-      const s429 = jsonResponseStream(responseStream, 429);
-      s429.write(JSON.stringify({ error: 'Thingy is at the hourly limit for this session.', request_id: requestId }));
-      s429.end();
-      return;
-    }
-    try {
-      const scope = normalizeScope(body.scope);
-      const memory = await getUserMemory(subscriberHash);
-      const conversations = await loadUserConversationSummaries(subscriberHash, 12);
-      const map = await buildCuriosityMap({
-        memory,
-        conversations,
-        scope,
-        center: body.center || body.topic || body.query
-      });
-      const conversationId = crypto.randomUUID();
-      const conversation = await recordCuriosityMapConversation({
-        subscriberHash,
-        conversationId,
-        map,
-        scope,
-        requestId
-      });
-      const s200 = jsonResponseStream(responseStream, 200);
-      s200.write(JSON.stringify({ ...map, request_id: requestId, conversation_id: conversationId, conversation }));
-      s200.end();
-      logEvent('info', 'curiosity_map_completed', {
-        ...summary,
-        subscriber_hash: subscriberHash,
-        conversation_id: conversationId,
-        node_count: map.nodes?.length || 0,
-        source_count: map.sources?.length || 0,
-        scope,
-        duration_ms: Math.round(performance.now() - start)
-      });
-    } catch (error) {
-      const s500 = jsonResponseStream(responseStream, 500);
-      s500.write(JSON.stringify({ error: 'Thingy could not draw a curiosity map right now.', request_id: requestId }));
-      s500.end();
-      logEvent('error', 'curiosity_map_failed', { ...summary, error_type: error.constructor?.name || 'Error' });
-    }
+    await handleCuriosityMapRoute({ event, responseStream, requestId, summary, start });
     return;
   }
 
@@ -3057,7 +2839,13 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       };
       const readerContext = readerContextPrompt(body.client_context, effectiveProfile);
       const memoryContext = memoryContextBlock(memory);
-      const conversations = await loadUserConversationSummaries(subscriberHash, 8);
+      const conversations = await loadUserConversationSummaries({
+        dynamodb,
+        tableName: process.env.TABLE_NAME,
+        subscriberHash,
+        limit: 8,
+        logEvent
+      });
       if (!(await checkRateLimit(`welcome#${String(payload.sub)}`, Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)))) {
         writeSse(stream, 'error', { error: 'Thingy is at the hourly limit for this session.', request_id: requestId });
         return;
@@ -3096,7 +2884,13 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     let readerContext = readerContextPrompt(body.client_context, effectiveUserProfile);
     const requestedConversationId = validConversationId(body.conversation_id || body.conversationId);
     const conversationId = requestedConversationId || crypto.randomUUID();
-    const history = await loadUserConversationHistory(subscriberHash, conversationId);
+    const history = await loadUserConversationHistory({
+      dynamodb,
+      tableName: process.env.TABLE_NAME,
+      subscriberHash,
+      conversationId,
+      logEvent
+    });
     if (!question) {
       writeSse(stream, 'error', { error: 'Ask a question about the archive.', request_id: requestId });
       return;
@@ -3133,6 +2927,8 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       writeSse(stream, 'answer_delta', { delta: preflight.direct_answer });
       writeSse(stream, 'citations', { citations });
       const conversation = await recordUserConversationTurn({
+        dynamodb,
+        tableName: process.env.TABLE_NAME,
         subscriberHash,
         conversationId,
         question,
@@ -3140,7 +2936,8 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
         scope,
         requestId,
         citations,
-        preflight
+        preflight,
+        logEvent
       });
       writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation });
       await recordConversation({ event, subscriberHash, conversationId, question, answer: preflight.direct_answer, historyCount: history.length, citations, preflight, route: 'stream', requestId });
@@ -3170,6 +2967,8 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     const answer = result.answer;
     const citations = result.citations;
     const conversation = await recordUserConversationTurn({
+      dynamodb,
+      tableName: process.env.TABLE_NAME,
       subscriberHash,
       conversationId,
       question,
@@ -3177,7 +2976,8 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       scope,
       requestId,
       citations,
-      preflight
+      preflight,
+      logEvent
     });
     writeSse(stream, 'citations', { citations });
     writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation });

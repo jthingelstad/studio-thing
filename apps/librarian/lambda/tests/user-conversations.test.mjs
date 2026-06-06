@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   artifactDynamoString,
+  artifactJsonForStorage,
   conversationSummaryFromItem,
   conversationTitle,
   conversationTurnFromItem,
@@ -96,4 +97,37 @@ test('artifact-only turns expand into assistant artifact messages', () => {
     artifact
   }]);
   assert.deepEqual(historyFromTurns([turn]), []);
+});
+
+test('oversized artifacts are compacted without corrupting JSON', () => {
+  const artifact = {
+    kind: 'curiosity_map',
+    title: 'Curiosity Map: Long',
+    center: { id: 'long', label: 'Long', kind: 'center', prompt: 'Build a long map.', why: 'Large fixture.' },
+    nodes: Array.from({ length: 40 }, (_, index) => ({
+      id: `node-${index}`,
+      label: `Node ${index}`,
+      kind: 'archive',
+      prompt: `Trace a very long prompt ${index} ${'x'.repeat(800)}`,
+      why: `A very long reason ${index} ${'y'.repeat(800)}`,
+      source_refs: [{ title: `Source ${index}`, url: `https://example.com/${index}`, reason: 'Fixture' }]
+    })),
+    edges: Array.from({ length: 40 }, (_, index) => ({ from: 'long', to: `node-${index}`, why: 'Fixture edge' })),
+    sources: Array.from({ length: 20 }, (_, index) => ({ title: `Source ${index}`, url: `https://example.com/${index}` })),
+    prompt: 'Follow this huge map.'
+  };
+  const json = artifactJsonForStorage(artifact);
+  assert.ok(json.length <= 20000);
+  const parsed = JSON.parse(json);
+  assert.equal(parsed.kind, 'curiosity_map');
+  assert.equal(parsed.compacted, true);
+
+  const turn = conversationTurnFromItem({
+    conversation_id: { S: 'c-map' },
+    request_id: { S: 'r-map' },
+    created_at: { S: '2026-06-06T02:00:00.000Z' },
+    artifact_json: artifactDynamoString(artifact)
+  });
+  assert.equal(turn.artifact.kind, 'curiosity_map');
+  assert.ok(turn.artifact.nodes.length > 0);
 });

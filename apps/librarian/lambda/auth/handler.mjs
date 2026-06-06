@@ -1,5 +1,5 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
-import { BatchWriteItemCommand, GetItemCommand, PutItemCommand, QueryCommand, ScanCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import { BatchWriteItemCommand, PutItemCommand, QueryCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { bedrock, dynamodb, agentModel } from '../shared/aws-clients.mjs';
 import { createSubscriber, ensureThingyTag, fetchSubscriber, sanitizeAttribution, sendSubscriberReminder, subscriberStatus } from '../shared/buttondown.mjs';
 import { eventSummary, jsonResponse, methodAndPath, parseBody, clientSourceIp, userAgent } from '../shared/http.mjs';
@@ -12,19 +12,19 @@ import { premiumThankYouSystemPrompt } from '../shared/prompts.mjs';
 import { CONVERSATIONS_MAX_SCAN_PAGES, conversationRow, normalizeListConversationsParams, sortAndTrim } from '../shared/conversations.mjs';
 import {
   USER_CONVERSATION_LIMIT,
-  USER_CONVERSATION_TURN_LIMIT,
-  conversationPreview,
   conversationSk,
-  conversationSummaryFromItem,
-  conversationTitle,
-  conversationTurnFromItem,
-  dynamoNumber as conversationDynamoNumber,
   dynamoString as conversationDynamoString,
-  messagesFromTurns,
   turnSkPrefix,
   userConversationPk,
   validConversationId
 } from '../shared/user-conversations.mjs';
+import {
+  createUserConversation,
+  getUserConversation,
+  getUserConversationMetadata,
+  loadUserConversationSummaries,
+  renameUserConversation
+} from '../shared/conversation-store.mjs';
 
 const AUTH_RATE_LIMIT_MAX = 30;
 const DISCORD_BRIDGE_RATE_LIMIT_MAX = 60;
@@ -268,48 +268,6 @@ function conversationTableUnavailable(event) {
   return jsonResponse(500, { error: 'Thingy conversation history is unavailable right now.' }, event);
 }
 
-async function queryUserConversationSummaries(tableName, subscriberHash, limit = USER_CONVERSATION_LIMIT) {
-  const response = await dynamodb.send(new QueryCommand({
-    TableName: tableName,
-    KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
-    ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
-    ExpressionAttributeValues: {
-      ':pk': conversationDynamoString(userConversationPk(subscriberHash)),
-      ':prefix': conversationDynamoString('conversation#')
-    }
-  }));
-  return (response.Items || [])
-    .map(conversationSummaryFromItem)
-    .sort((a, b) => String(b.updated_at || '').localeCompare(String(a.updated_at || '')))
-    .slice(0, Math.max(1, Math.min(Number(limit) || USER_CONVERSATION_LIMIT, USER_CONVERSATION_LIMIT)));
-}
-
-async function getConversationMetadata(tableName, subscriberHash, conversationId) {
-  const response = await dynamodb.send(new GetItemCommand({
-    TableName: tableName,
-    Key: {
-      pk: conversationDynamoString(userConversationPk(subscriberHash)),
-      sk: conversationDynamoString(conversationSk(conversationId))
-    }
-  }));
-  return response.Item ? conversationSummaryFromItem(response.Item) : null;
-}
-
-async function queryConversationTurns(tableName, subscriberHash, conversationId, limit = USER_CONVERSATION_TURN_LIMIT) {
-  const response = await dynamodb.send(new QueryCommand({
-    TableName: tableName,
-    KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
-    ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
-    ExpressionAttributeValues: {
-      ':pk': conversationDynamoString(userConversationPk(subscriberHash)),
-      ':prefix': conversationDynamoString(turnSkPrefix(conversationId))
-    },
-    ScanIndexForward: false,
-    Limit: Math.max(1, Math.min(Number(limit) || USER_CONVERSATION_TURN_LIMIT, USER_CONVERSATION_TURN_LIMIT))
-  }));
-  return (response.Items || []).map(conversationTurnFromItem).sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
-}
-
 async function handleUserConversations(event, body, start) {
   const subscriberHash = conversationAuth(event, body);
   if (!subscriberHash) {
@@ -321,7 +279,13 @@ async function handleUserConversations(event, body, start) {
   const action = String(body.action || 'list').trim().toLowerCase();
   try {
     if (action === 'list') {
-      const conversations = await queryUserConversationSummaries(tableName, subscriberHash, body.limit);
+      const conversations = await loadUserConversationSummaries({
+        dynamodb,
+        tableName,
+        subscriberHash,
+        limit: body.limit || USER_CONVERSATION_LIMIT,
+        logEvent
+      });
       logEvent('info', 'user_conversations_listed', {
         subscriber_hash: subscriberHash,
         count: conversations.length,
@@ -333,63 +297,35 @@ async function handleUserConversations(event, body, start) {
     if (action === 'get') {
       const conversationId = validConversationId(body.conversation_id || body.id);
       if (!conversationId) return jsonResponse(400, { error: 'conversation_id is required.' }, event);
-      const conversation = await getConversationMetadata(tableName, subscriberHash, conversationId);
-      if (!conversation) return jsonResponse(404, { error: 'Conversation not found.' }, event);
-      const turns = await queryConversationTurns(tableName, subscriberHash, conversationId, body.limit);
-      return jsonResponse(200, {
-        conversation,
-        messages: messagesFromTurns(turns)
-      }, event);
+      const result = await getUserConversation({ dynamodb, tableName, subscriberHash, conversationId, limit: body.limit });
+      if (!result) return jsonResponse(404, { error: 'Conversation not found.' }, event);
+      return jsonResponse(200, result, event);
     }
 
     if (action === 'create') {
       const conversationId = crypto.randomUUID();
-      const now = new Date().toISOString();
-      const title = conversationTitle(body.title || body.message || '');
-      await dynamodb.send(new PutItemCommand({
-        TableName: tableName,
-        Item: {
-          pk: conversationDynamoString(userConversationPk(subscriberHash)),
-          sk: conversationDynamoString(conversationSk(conversationId)),
-          item_type: conversationDynamoString('conversation'),
-          conversation_id: conversationDynamoString(conversationId),
-          title: conversationDynamoString(title),
-          preview: conversationDynamoString(conversationPreview(body.message || body.title || '')),
-          scope: conversationDynamoString(body.scope || 'all'),
-          created_at: conversationDynamoString(now),
-          updated_at: conversationDynamoString(now),
-          last_message_at: conversationDynamoString(''),
-          turn_count: conversationDynamoNumber(0)
-        },
-        ConditionExpression: 'attribute_not_exists(pk)'
-      }));
-      const conversation = await getConversationMetadata(tableName, subscriberHash, conversationId);
+      const conversation = await createUserConversation({
+        dynamodb,
+        tableName,
+        subscriberHash,
+        conversationId,
+        title: body.title || body.message || '',
+        preview: body.message || body.title || '',
+        scope: body.scope || 'all'
+      });
       return jsonResponse(200, { conversation }, event);
     }
 
     if (action === 'rename') {
       const conversationId = validConversationId(body.conversation_id || body.id);
-      const title = conversationTitle(body.title);
       if (!conversationId) return jsonResponse(400, { error: 'conversation_id is required.' }, event);
-      const now = new Date().toISOString();
-      await dynamodb.send(new UpdateItemCommand({
-        TableName: tableName,
-        Key: {
-          pk: conversationDynamoString(userConversationPk(subscriberHash)),
-          sk: conversationDynamoString(conversationSk(conversationId))
-        },
-        UpdateExpression: 'SET #title = :title, #updated_at = :updated_at',
-        ConditionExpression: 'attribute_exists(pk)',
-        ExpressionAttributeNames: {
-          '#title': 'title',
-          '#updated_at': 'updated_at'
-        },
-        ExpressionAttributeValues: {
-          ':title': conversationDynamoString(title),
-          ':updated_at': conversationDynamoString(now)
-        }
-      }));
-      const conversation = await getConversationMetadata(tableName, subscriberHash, conversationId);
+      const conversation = await renameUserConversation({
+        dynamodb,
+        tableName,
+        subscriberHash,
+        conversationId,
+        title: body.title
+      });
       return jsonResponse(200, { conversation }, event);
     }
 
