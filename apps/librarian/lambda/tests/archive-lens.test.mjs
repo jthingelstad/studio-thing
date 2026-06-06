@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildArchiveLens, matchesLensTopic, normalizeLensOperation } from '../shared/archive-lens.mjs';
+import { buildArchiveLens, lensMatchReasons, matchesLensTopic, normalizeLensOperation } from '../shared/archive-lens.mjs';
 
 const records = [
   {
@@ -78,6 +78,7 @@ test('matchesLensTopic accepts phrases and token overlap', () => {
   assert.equal(matchesLensTopic(chunks[0], 'open web'), true);
   assert.equal(matchesLensTopic(chunks[0], 'RSS durability'), true);
   assert.equal(matchesLensTopic(chunks[0], 'Big Green Egg'), false);
+  assert.deepEqual(lensMatchReasons(chunks[0], 'open web').map((reason) => reason.field), ['text']);
 });
 
 test('buildArchiveLens returns first latest year and source structure', () => {
@@ -90,6 +91,7 @@ test('buildArchiveLens returns first latest year and source structure', () => {
   assert.equal(lens.years.find((row) => row.year === 2020).source_count, 1);
   assert.equal(lens.sources.find((row) => row.source_kind === 'blog').source_count, 1);
   assert.match(lens.timeline[0].evidence[0].text, /open web/);
+  assert.ok(lens.timeline[0].match_reasons.some((reason) => reason.startsWith('topics:') || reason.startsWith('text:')));
 });
 
 test('buildArchiveLens filters by year and shapes reading paths', () => {

@@ -64,6 +64,35 @@ export function matchesLensTopic(item, topic) {
   return tokens.length <= 2 ? matchCount === tokens.length : matchCount >= Math.ceil(tokens.length * 0.7);
 }
 
+export function lensMatchReasons(item, topic) {
+  const rawTopic = compactWhitespace(topic).toLowerCase();
+  const tokens = topicTokens(topic);
+  const fields = [
+    ['subject', item.subject],
+    ['title', item.title],
+    ['section', item.section],
+    ['summary', item.summary],
+    ['text', item.text],
+    ['topics', (item.topics || []).join(' ')],
+    ['domains', (item.domains || []).join(' ')]
+  ];
+  const reasons = [];
+  for (const [field, value] of fields) {
+    const text = compactWhitespace(value).toLowerCase();
+    if (!text) continue;
+    if (rawTopic && text.includes(rawTopic)) {
+      reasons.push({ field, match: rawTopic });
+      continue;
+    }
+    const matched = tokens.filter((token) => (
+      text.includes(token) ||
+      (token.length >= 6 && text.includes(token.slice(0, 5)))
+    ));
+    if (matched.length) reasons.push({ field, match: matched.slice(0, 4).join(', ') });
+  }
+  return reasons;
+}
+
 function sourceKey(item) {
   return [
     item.source_kind || '',
@@ -112,6 +141,7 @@ function mergeSource(existing, chunk, topic) {
   existing.sections.add(chunk.section || '');
   for (const domain of chunk.domains || []) existing.domains.add(domain);
   for (const sourceTopic of chunk.topics || []) existing.topics.add(sourceTopic);
+  for (const reason of lensMatchReasons(chunk, topic)) existing.match_reasons.add(`${reason.field}: ${reason.match}`);
   const snippet = snippetFor(chunk.text || '', topic);
   if (snippet && existing.evidence.length < 3) {
     existing.evidence.push({
@@ -140,6 +170,7 @@ function compactLensSource(item) {
     match_count: item.match_count || 0,
     topics: Array.from(item.topics || []).filter(Boolean).slice(0, 12),
     domains: Array.from(item.domains || []).filter(Boolean).slice(0, 12),
+    match_reasons: Array.from(item.match_reasons || []).slice(0, 8),
     evidence: item.evidence || []
   };
 }
@@ -254,6 +285,7 @@ export function buildArchiveLens({ topic = '', operation = 'timeline', records =
       sections: new Set([record.section || '']),
       topics: new Set(record.topics || []),
       domains: new Set(record.domains || []),
+      match_reasons: new Set(lensMatchReasons(record, topic).map((reason) => `${reason.field}: ${reason.match}`)),
       evidence: []
     };
     sources.set(sourceKey(source), source);
@@ -270,6 +302,7 @@ export function buildArchiveLens({ topic = '', operation = 'timeline', records =
         sections: new Set([source.section || '']),
         topics: new Set(source.topics || []),
         domains: new Set(source.domains || []),
+        match_reasons: new Set(lensMatchReasons(chunk, topic).map((reason) => `${reason.field}: ${reason.match}`)),
         evidence: []
       });
     }

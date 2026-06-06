@@ -1371,6 +1371,42 @@ async function toolGetSection(input = {}) {
   return { issue_number: issue.number, subject: issue.subject, publish_date: issue.publish_date, section: section.name, url: issue.url, text: String(section.text || '').slice(0, 12000) };
 }
 
+async function toolGetSource(input = {}, context = {}) {
+  const bundle = await findSourceBundle(input, context);
+  if (!bundle) return { error: 'Source not found in the active source scope.' };
+  const { kind, record, chunks, links } = bundle;
+  const wantedSection = String(input.section || '').trim();
+  let sections = [];
+  let body = '';
+  if (kind === 'weekly_thing') {
+    const issue = await issueByNumber(record.issue_number);
+    const issueSectionRows = await issueSections(issue || record);
+    const wanted = wantedSection.toLowerCase();
+    sections = issueSectionRows
+      .filter((section) => !wanted || String(section.name || '').toLowerCase().includes(wanted))
+      .map((section) => ({
+        name: section.name,
+        word_count: section.word_count || tokenize(section.text || '').length,
+        text: String(section.text || '').slice(0, 14000)
+      }));
+    body = String(issue?.body || sections.map((section) => `## ${section.name}\n${section.text || ''}`).join('\n\n')).slice(0, 22000);
+  } else {
+    sections = sectionsFromChunks(chunks, wantedSection);
+    body = sourceTextFromChunks(chunks, wantedSection).slice(0, 22000);
+  }
+  return {
+    source: {
+      ...compactContentRecord(record),
+      word_count: tokenize(body).length,
+      section_filter: wantedSection || null,
+      sections: sections.map((section) => ({ name: section.name, word_count: section.word_count })),
+      links: links.slice(0, 40).map(compactLink),
+      body,
+      section_texts: sections
+    }
+  };
+}
+
 async function toolFindLinks(input = {}, { scope } = {}) {
   const domain = normalizedDomain(input.domain || '');
   const topic = String(input.topic || '').toLowerCase().trim();
@@ -1464,6 +1500,7 @@ async function toolDomainHistory(input = {}, context = {}) {
     link_kind: input.link_kind,
     link_category: input.link_category,
     target_resolved: input.target_resolved,
+    year_range: input.year_range,
     limit: input.limit || 80
   }, context);
 }
@@ -1511,6 +1548,166 @@ function contentRecords(corpus, kind) {
     topics: issue.topics || [],
     domains: issue.domains || []
   }));
+}
+
+function sourceRecordKey(record) {
+  const kind = normalizeSourceKind(record?.source_kind || '') || (record?.episode_number ? 'podcast' : record?.microblog_id ? 'blog' : record?.issue_number ? 'weekly_thing' : '');
+  if (kind === 'weekly_thing') return `weekly_thing\0${issueKey(record.issue_number || record.number)}`;
+  if (kind === 'blog') return `blog\0${record.microblog_id || urlKey(record.url)}`;
+  if (kind === 'podcast') return `podcast\0${record.episode_number || record.number || urlKey(record.url)}`;
+  return `${kind || 'unknown'}\0${urlKey(record?.url)}`;
+}
+
+function urlKey(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  try {
+    const url = new URL(raw, 'https://thingelstad.com');
+    let host = url.hostname.toLowerCase().replace(/^www\./, '');
+    if (host === 'micro.thingelstad.com') host = 'thingelstad.com';
+    return `${host}${url.pathname.replace(/\/$/, '')}`.toLowerCase();
+  } catch {
+    return raw.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
+  }
+}
+
+function sourceKeyFromChunk(chunk, fallbackKind = '') {
+  const kind = normalizeSourceKind(chunk?.source_kind || fallbackKind) || fallbackKind;
+  if (kind === 'weekly_thing' || chunk?.issue_number) return `weekly_thing\0${issueKey(chunk.issue_number)}`;
+  if (kind === 'blog') return `blog\0${chunk.microblog_id || urlKey(chunk.url)}`;
+  if (kind === 'podcast') return `podcast\0${chunk.episode_number || urlKey(chunk.url)}`;
+  return `${kind || 'unknown'}\0${urlKey(chunk?.url)}`;
+}
+
+function sourceKeyFromLink(link) {
+  const kind = linkCorpusKind(link);
+  if (kind === 'weekly_thing' || link.issue_number) return `weekly_thing\0${issueKey(link.issue_number)}`;
+  if (kind === 'blog') return `blog\0${link.microblog_id || urlKey(link.post_url || link.source_url || link.url)}`;
+  if (kind === 'podcast') return `podcast\0${link.episode_number || urlKey(link.episode_url || link.source_url || link.url)}`;
+  return `${kind || 'unknown'}\0${urlKey(link.source_url)}`;
+}
+
+function groupBySourceKey(items, keyFn) {
+  const map = new Map();
+  for (const item of items || []) {
+    const key = keyFn(item);
+    if (!key) continue;
+    map.set(key, [...(map.get(key) || []), item]);
+  }
+  return map;
+}
+
+function recordYear(record) {
+  return Number(record.issue_year || record.post_year || String(record.publish_date || '').match(/\b(?:19|20)\d{2}\b/)?.[0] || 0);
+}
+
+function compactContentRecord(record) {
+  return {
+    source_kind: record.source_kind,
+    issue_number: record.issue_number ?? null,
+    microblog_id: record.microblog_id,
+    episode_number: record.episode_number,
+    show: record.show,
+    subject: record.subject,
+    publish_date: record.publish_date,
+    year: recordYear(record) || null,
+    section: record.section,
+    url: record.url,
+    transcript_url: record.transcript_url,
+    audio_url: record.audio_url,
+    topics: record.topics || [],
+    domains: record.domains || [],
+    also_in_issues: record.also_in_issues
+  };
+}
+
+function compactLink(link) {
+  return {
+    source_kind: link.source_kind,
+    corpus_kind: linkCorpusKind(link),
+    issue_number: link.issue_number ?? null,
+    microblog_id: link.microblog_id,
+    episode_number: link.episode_number,
+    show: link.show,
+    subject: link.subject,
+    publish_date: link.publish_date,
+    section: link.section,
+    domain: link.domain,
+    link_text: link.text || link.title || link.heading_context,
+    context: link.context || link.heading_context,
+    url: link.source_url || (link.issue_number ? `/archive/${link.issue_number}/` : link.post_url || link.episode_url || link.url),
+    destination_url: link.link_url || link.url,
+    link_kind: link.link_kind,
+    link_category: link.link_category,
+    target_resolved: Boolean(link.target_resolved),
+    target_source_kind: link.target_source_kind,
+    target_microblog_id: link.target_microblog_id,
+    target_post_url: link.target_post_url,
+    target_subject: link.target_subject,
+    target_publish_date: link.target_publish_date
+  };
+}
+
+function sourceTextFromChunks(chunks, section = '') {
+  const wanted = String(section || '').toLowerCase().trim();
+  return (chunks || [])
+    .filter((chunk) => !wanted || String(chunk.section || '').toLowerCase().includes(wanted))
+    .map((chunk) => String(chunk.text || '').trim())
+    .filter(Boolean)
+    .join('\n\n');
+}
+
+function sectionsFromChunks(chunks, section = '') {
+  const wanted = String(section || '').toLowerCase().trim();
+  const grouped = new Map();
+  for (const chunk of chunks || []) {
+    if (wanted && !String(chunk.section || '').toLowerCase().includes(wanted)) continue;
+    const name = chunk.section || 'Source';
+    grouped.set(name, [...(grouped.get(name) || []), String(chunk.text || '').trim()].filter(Boolean));
+  }
+  return Array.from(grouped.entries(), ([name, parts]) => ({
+    name,
+    word_count: tokenize(parts.join(' ')).length,
+    text: parts.join('\n\n').slice(0, 14000)
+  }));
+}
+
+function inferSourceKindFromInput(input = {}) {
+  const explicit = normalizeSourceKind(input.source_kind || input.source || '');
+  if (explicit) return explicit;
+  if (input.issue_number || input.number || input.issue) return 'weekly_thing';
+  if (input.microblog_id || input.post_id) return 'blog';
+  if (input.episode_number || input.episode) return 'podcast';
+  const domain = normalizedDomain(input.url || input.permalink || '');
+  return CORPUS_BY_DOMAIN[domain] || '';
+}
+
+function recordMatchesIdentifier(record, input = {}) {
+  const issue = input.issue_number ?? input.issue ?? input.number;
+  const microblogId = input.microblog_id ?? input.post_id;
+  const episode = input.episode_number ?? input.episode ?? input.number;
+  const url = input.url || input.permalink;
+  if (record.source_kind === 'weekly_thing' && issue !== undefined && issueKey(record.issue_number) === issueKey(issue)) return true;
+  if (record.source_kind === 'blog' && microblogId !== undefined && String(record.microblog_id) === String(microblogId)) return true;
+  if (record.source_kind === 'podcast' && episode !== undefined && String(record.episode_number) === String(episode)) return true;
+  if (url && urlKey(record.url) === urlKey(url)) return true;
+  return false;
+}
+
+async function findSourceBundle(input = {}, { scope } = {}) {
+  const requestedKind = inferSourceKindFromInput(input);
+  const kinds = scopeKinds(scope).filter((kind) => !requestedKind || kind === requestedKind);
+  for (const kind of kinds) {
+    const corpus = await loadCorpus(kind);
+    const records = contentRecords(corpus, kind);
+    const record = records.find((item) => recordMatchesIdentifier(item, input));
+    if (!record) continue;
+    const key = sourceRecordKey(record);
+    const chunks = groupBySourceKey(corpus.chunks || [], (chunk) => sourceKeyFromChunk(chunk, kind)).get(key) || [];
+    const links = (await linkRecords(kind)).filter((link) => sourceKeyFromLink(link) === key);
+    return { kind, corpus, record, key, chunks, links };
+  }
+  return null;
 }
 
 function issueList(values) {
@@ -1622,6 +1819,97 @@ async function toolLatestContent(input = {}, { scope } = {}) {
   };
 }
 
+function sourceMatchesTopic(record, chunks, topic) {
+  const raw = String(topic || '').toLowerCase().trim();
+  if (!raw) return true;
+  const haystack = [
+    record.subject,
+    record.section,
+    (record.topics || []).join(' '),
+    (record.domains || []).join(' '),
+    ...((chunks || []).slice(0, 12).map((chunk) => chunk.text || ''))
+  ].join(' ').toLowerCase();
+  if (haystack.includes(raw)) return true;
+  const tokens = tokenize(raw).filter((token) => token.length > 2);
+  if (!tokens.length) return false;
+  const matches = tokens.filter((token) => haystack.includes(token)).length;
+  return tokens.length <= 2 ? matches === tokens.length : matches >= Math.ceil(tokens.length * 0.7);
+}
+
+function countList(values, key) {
+  const map = new Map();
+  for (const value of values || []) {
+    if (!value) continue;
+    map.set(value, (map.get(value) || 0) + 1);
+  }
+  return Array.from(map.entries())
+    .sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])))
+    .map(([name, count]) => ({ [key]: name, count }));
+}
+
+async function toolListContent(input = {}, { scope } = {}) {
+  const requestedSource = normalizeSourceKind(input.source_kind || input.source || '');
+  const [startYear, endYear] = parseYearRange(input.year_range || input.year);
+  const topic = String(input.topic || input.entity || input.query || '').trim();
+  const domain = normalizedDomain(input.domain || '');
+  const linkKind = String(input.link_kind || '').toLowerCase().trim();
+  const linkCategory = String(input.link_category || '').toLowerCase().trim();
+  const targetResolved = boolFilter(input.target_resolved);
+  const hasAlsoInIssues = boolFilter(input.has_also_in_issues);
+  const alsoInIssue = input.also_in_issue ?? input.issue_number;
+  const limit = Math.min(Math.max(Number(input.limit || 40), 1), 120);
+  const results = [];
+  const years = [];
+  const sources = [];
+  for (const kind of scopeKinds(scope)) {
+    if (requestedSource && kind !== requestedSource) continue;
+    const corpus = await loadCorpus(kind);
+    const records = latestByDate(contentRecords(corpus, kind));
+    const chunksBySource = groupBySourceKey(corpus.chunks || [], (chunk) => sourceKeyFromChunk(chunk, kind));
+    const linksBySource = groupBySourceKey(await linkRecords(kind), sourceKeyFromLink);
+    for (const record of records) {
+      const year = recordYear(record);
+      if (startYear && (!year || year < startYear)) continue;
+      if (endYear && (!year || year > endYear)) continue;
+      const key = sourceRecordKey(record);
+      const chunks = chunksBySource.get(key) || [];
+      const links = linksBySource.get(key) || [];
+      if (topic && !sourceMatchesTopic(record, chunks, topic)) continue;
+      if (domain && ![...(record.domains || []), ...links.map((link) => link.domain || link.url)].some((value) => normalizedDomain(value).includes(domain))) continue;
+      if (linkKind && !links.some((link) => link.link_kind === linkKind)) continue;
+      if (linkCategory && !links.some((link) => String(link.link_category || '').toLowerCase() === linkCategory)) continue;
+      if (targetResolved !== null && !links.some((link) => Boolean(link.target_resolved) === targetResolved)) continue;
+      const refs = issueList(record.also_in_issues);
+      if (hasAlsoInIssues !== null && Boolean(refs.length) !== hasAlsoInIssues) continue;
+      if (alsoInIssue !== undefined && alsoInIssue !== null && String(alsoInIssue).trim()) {
+        const wanted = Number(issueKey(alsoInIssue));
+        if (!Number.isFinite(wanted) || !refs.includes(wanted)) continue;
+      }
+      years.push(year);
+      sources.push(kind);
+      if (results.length < limit) {
+        results.push({
+          ...compactContentRecord(record),
+          link_count: links.length,
+          matching_sections: chunks
+            .filter((chunk) => !topic || sourceMatchesTopic(record, [chunk], topic))
+            .map((chunk) => chunk.section)
+            .filter(Boolean)
+            .slice(0, 6)
+        });
+      }
+    }
+  }
+  return {
+    scope: normalizeScope(scope),
+    source_kind: requestedSource || null,
+    total_count: years.length,
+    counts_by_year: countList(years, 'year'),
+    counts_by_source: countList(sources, 'source_kind'),
+    results
+  };
+}
+
 function contextAround(text, phrase, radius = 240) {
   const index = text.toLowerCase().indexOf(String(phrase).toLowerCase());
   if (index < 0) return '';
@@ -1647,30 +1935,19 @@ async function toolQuoteSearch(input = {}, { scope } = {}) {
     }
   }
   // Non-WT corpora have no issue-shaped records, so exact-phrase search runs
-  // over chunk text, deduped by source kind + permalink.
+  // over reconstructed source text grouped from chunks.
   for (const kind of kinds.filter((item) => item !== 'weekly_thing')) {
     if (results.length >= limit) break;
     const corpus = await loadCorpus(kind);
-    const seen = new Set();
-    for (const chunk of corpus.chunks || []) {
-      const text = String(chunk.text || '');
+    const records = contentRecords(corpus, kind);
+    const chunksBySource = groupBySourceKey(corpus.chunks || [], (chunk) => sourceKeyFromChunk(chunk, kind));
+    for (const record of records) {
+      const chunks = chunksBySource.get(sourceRecordKey(record)) || [];
+      const text = sourceTextFromChunks(chunks);
       if (!text.toLowerCase().includes(needle)) continue;
-      const url = chunk.url || '';
-      const key = `${kind}\0${url}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
       results.push({
         issue_number: null,
-        source_kind: chunk.source_kind || kind,
-        subject: chunk.subject,
-        publish_date: chunk.publish_date,
-        section: chunk.section,
-        url,
-        transcript_url: chunk.transcript_url,
-        audio_url: chunk.audio_url,
-        episode_number: chunk.episode_number,
-        show: chunk.show,
-        also_in_issues: chunk.also_in_issues,
+        ...compactContentRecord(record),
         context: contextAround(text, phrase)
       });
       if (results.length >= limit) break;
@@ -1749,6 +2026,165 @@ async function toolArchiveLens(input = {}, { scope } = {}) {
   };
 }
 
+function targetMatchesSource(link, record) {
+  if (!link || !record) return false;
+  if (record.source_kind === 'blog') {
+    if (link.target_microblog_id && String(link.target_microblog_id) === String(record.microblog_id)) return true;
+    if (link.target_post_url && urlKey(link.target_post_url) === urlKey(record.url)) return true;
+  }
+  if (record.source_kind === 'weekly_thing') {
+    const targetUrl = link.target_url || link.url || link.link_url || '';
+    if (urlKey(targetUrl).endsWith(`/archive/${issueKey(record.issue_number)}`)) return true;
+  }
+  if (record.source_kind === 'podcast') {
+    const targetUrl = link.target_url || link.url || link.link_url || '';
+    if (urlKey(targetUrl) === urlKey(record.url)) return true;
+  }
+  return false;
+}
+
+function scoreRelatedSource(base, candidate, candidateChunks, candidateLinks) {
+  if (sourceRecordKey(base.record) === sourceRecordKey(candidate)) return 0;
+  const baseDomains = new Set([...(base.record.domains || []), ...(base.links || []).map((link) => normalizedDomain(link.domain || link.url))].filter(Boolean));
+  const candidateDomains = new Set([...(candidate.domains || []), ...(candidateLinks || []).map((link) => normalizedDomain(link.domain || link.url))].filter(Boolean));
+  let score = 0;
+  for (const domain of candidateDomains) if (baseDomains.has(domain)) score += 4;
+  const baseTokens = new Set(tokenize([base.record.subject, sourceTextFromChunks(base.chunks).slice(0, 3000)].join(' ')).filter((token) => token.length > 4));
+  const candidateTokens = new Set(tokenize([candidate.subject, sourceTextFromChunks(candidateChunks).slice(0, 3000)].join(' ')).filter((token) => token.length > 4));
+  for (const token of candidateTokens) if (baseTokens.has(token)) score += 1;
+  if (candidate.source_kind !== base.record.source_kind) score += 2;
+  return score;
+}
+
+async function toolSourceNeighborhood(input = {}, { scope } = {}) {
+  const bundle = await findSourceBundle(input, { scope });
+  if (!bundle) return { error: 'Source not found in the active source scope.' };
+  const allLinks = await linkRecords(scope);
+  const incoming = allLinks.filter((link) => sourceKeyFromLink(link) !== bundle.key && targetMatchesSource(link, bundle.record));
+  const related = [];
+  for (const kind of scopeKinds(scope)) {
+    const corpus = await loadCorpus(kind);
+    const chunksBySource = groupBySourceKey(corpus.chunks || [], (chunk) => sourceKeyFromChunk(chunk, kind));
+    const linksBySource = groupBySourceKey(await linkRecords(kind), sourceKeyFromLink);
+    for (const record of contentRecords(corpus, kind)) {
+      const key = sourceRecordKey(record);
+      if (key === bundle.key) continue;
+      const score = scoreRelatedSource(bundle, record, chunksBySource.get(key) || [], linksBySource.get(key) || []);
+      if (score > 0) related.push({ score, record, link_count: (linksBySource.get(key) || []).length });
+    }
+  }
+  related.sort((a, b) => b.score - a.score || String(b.record.publish_date || '').localeCompare(String(a.record.publish_date || '')));
+  return {
+    source: compactContentRecord(bundle.record),
+    outgoing_links: bundle.links.slice(0, 30).map(compactLink),
+    incoming_links: incoming.slice(0, 30).map(compactLink),
+    cross_source_links: [...bundle.links, ...incoming]
+      .filter((link) => link.link_category === 'cross_source')
+      .slice(0, 30)
+      .map(compactLink),
+    related_sources: related.slice(0, Math.min(Math.max(Number(input.limit || 8), 1), 20)).map((item) => ({
+      ...compactContentRecord(item.record),
+      score: item.score,
+      link_count: item.link_count
+    }))
+  };
+}
+
+async function toolEntityLens(input = {}, context = {}) {
+  const entity = String(input.entity || input.topic || input.query || '').trim();
+  if (!entity) return { error: 'entity is required' };
+  const operation = input.operation || 'timeline';
+  const lens = await toolArchiveLens({
+    topic: entity,
+    operation,
+    source_kind: input.source_kind,
+    year_range: input.year_range,
+    limit: input.limit || 18
+  }, context);
+  return {
+    entity,
+    aliases_checked: [entity],
+    ...lens
+  };
+}
+
+async function toolArchiveGems(input = {}, { scope } = {}) {
+  const theme = String(input.theme || input.topic || input.query || '').trim();
+  const requestedSource = normalizeSourceKind(input.source_kind || input.source || '');
+  const mood = String(input.mood || input.mode || '').toLowerCase().trim();
+  const limit = Math.min(Math.max(Number(input.limit || 6), 1), 12);
+  if (theme) {
+    const lens = await toolArchiveLens({
+      topic: theme,
+      operation: 'reading_path',
+      source_kind: requestedSource,
+      year_range: input.year_range,
+      limit
+    }, { scope });
+    return {
+      theme,
+      mode: 'theme_reading_path',
+      results: (lens.reading_path || []).slice(0, limit).map((source) => ({
+        ...source,
+        reason: source.reason || `representative source for ${theme}`
+      }))
+    };
+  }
+  const candidates = [];
+  const [startYear, endYear] = parseYearRange(input.year_range || input.era);
+  for (const kind of scopeKinds(scope)) {
+    if (requestedSource && kind !== requestedSource) continue;
+    const corpus = await loadCorpus(kind);
+    const linksBySource = groupBySourceKey(await linkRecords(kind), sourceKeyFromLink);
+    for (const record of contentRecords(corpus, kind)) {
+      const year = recordYear(record);
+      if (startYear && (!year || year < startYear)) continue;
+      if (endYear && (!year || year > endYear)) continue;
+      const links = linksBySource.get(sourceRecordKey(record)) || [];
+      const cross = links.filter((link) => link.link_category === 'cross_source').length;
+      const domains = new Set([...(record.domains || []), ...links.map((link) => normalizedDomain(link.domain || link.url))].filter(Boolean));
+      const age = year ? Math.max(0, new Date().getUTCFullYear() - year) : 0;
+      let score = domains.size + cross * 5 + links.length * 0.2;
+      let reason = cross ? 'connects multiple Jamie-owned sources' : domains.size ? 'link-rich archive trail' : 'quiet representative source';
+      if (mood.includes('forgotten') || mood.includes('old')) {
+        score += age * 0.5;
+        reason = 'older archive source worth resurfacing';
+      } else if (mood.includes('recent') || mood.includes('new')) {
+        score += Math.max(0, 20 - age);
+        reason = 'recent source with archive signals';
+      }
+      candidates.push({ score, reason, record, link_count: links.length, cross_source_link_count: cross });
+    }
+  }
+  candidates.sort((a, b) => b.score - a.score || String(b.record.publish_date || '').localeCompare(String(a.record.publish_date || '')));
+  return {
+    theme: null,
+    mode: mood || 'serendipity',
+    results: candidates.slice(0, limit).map((item) => ({
+      ...compactContentRecord(item.record),
+      reason: item.reason,
+      score: Number(item.score.toFixed(2)),
+      link_count: item.link_count,
+      cross_source_link_count: item.cross_source_link_count
+    }))
+  };
+}
+
+async function toolClaimCheck(input = {}, { scope } = {}) {
+  const rawClaims = Array.isArray(input.claims) ? input.claims : [input.claim || input.query || input.text];
+  const claims = rawClaims.map((claim) => String(claim || '').trim()).filter(Boolean).slice(0, 4);
+  const results = [];
+  for (const claim of claims) {
+    const hits = await retrieve(claim, 3, { scope });
+    results.push({
+      claim,
+      status: hits.length ? 'evidence_found' : 'needs_caution',
+      evidence: hits.map((source) => compactSource(source, 450))
+    });
+  }
+  return { results };
+}
+
 async function toolRememberUser(input = {}, { subscriberHash } = {}) {
   if (!subscriberHash) return { ok: false, error: 'No authenticated user memory is available.' };
   return rememberUserFact(subscriberHash, input);
@@ -1757,6 +2193,7 @@ async function toolRememberUser(input = {}, { subscriberHash } = {}) {
 const ARCHIVE_TOOLS = {
   search_faq: toolSearchFaq,
   search_archive: toolSearchArchive,
+  get_source: toolGetSource,
   get_issue: toolGetIssue,
   get_section: toolGetSection,
   find_links: toolFindLinks,
@@ -1764,9 +2201,14 @@ const ARCHIVE_TOOLS = {
   corpus_stats: toolCorpusStats,
   latest_content: toolLatestContent,
   quote_search: toolQuoteSearch,
+  list_content: toolListContent,
   list_issues: toolListIssues,
   compare_eras: toolCompareEras,
   archive_lens: toolArchiveLens,
+  source_neighborhood: toolSourceNeighborhood,
+  entity_lens: toolEntityLens,
+  archive_gems: toolArchiveGems,
+  claim_check: toolClaimCheck,
   remember_user: toolRememberUser
 };
 
@@ -1783,7 +2225,12 @@ function collectToolCitations(toolResults) {
     if (Array.isArray(result.results)) candidates.push(...result.results);
     if (Array.isArray(result.results_a)) candidates.push(...result.results_a);
     if (Array.isArray(result.results_b)) candidates.push(...result.results_b);
+    if (Array.isArray(result.related_sources)) candidates.push(...result.related_sources);
+    if (Array.isArray(result.incoming_links)) candidates.push(...result.incoming_links);
+    if (Array.isArray(result.outgoing_links)) candidates.push(...result.outgoing_links);
+    if (Array.isArray(result.cross_source_links)) candidates.push(...result.cross_source_links);
     if (result.issue) candidates.push({ issue_number: result.issue.number, ...result.issue });
+    if (result.source) candidates.push(result.source);
     for (const item of candidates) {
       if (item?.issue_number) {
         sources.push({ issue_number: item.issue_number, subject: item.subject, publish_date: item.publish_date, section: item.section || 'Issue', url: item.url || `/archive/${item.issue_number}/` });
