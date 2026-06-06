@@ -14,6 +14,7 @@ import {
   parsePreflightJson,
   passThroughPreflight
 } from '../shared/prompt-preflight.mjs';
+import { countsByPublishYear, yearlyContentSignals } from '../shared/corpus-stats.mjs';
 import { searchFaq } from '../shared/faq.mjs';
 import { truthyEnv } from '../shared/logging.mjs';
 import {
@@ -1221,6 +1222,8 @@ async function toolCorpusStats(input = {}, { scope } = {}) {
       link_count: corpus.link_count || links.length,
       oldest: records[records.length - 1] || null,
       newest: records[0] || null,
+      counts_by_year: countsByPublishYear(records),
+      yearly_signals: yearlyContentSignals(records, { chunks: corpus.chunks || [] }),
       top_domains: summarizeDomains(links),
       counts_by_link_kind: countList(linkKindCounts, 'link_kind'),
       counts_by_link_category: countList(categoryCounts, 'link_category')

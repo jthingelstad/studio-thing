@@ -108,7 +108,7 @@
   {
     "toolSpec": {
       "name": "corpus_stats",
-      "description": "Return deterministic inventory statistics for the active source scope: item counts, chunk counts, link counts, newest/oldest item, generated_at, top external domains, link kind/category counts, and blog also_in_issues cross-reference counts. Optional source_kind isolates \"weekly_thing\", \"blog\", or \"podcast\". Use for corpus inventory, freshness, latest indexed date, cross-source coverage, and aggregate-domain questions before searching semantically.",
+      "description": "Return deterministic inventory statistics for the active source scope: item counts, chunk counts, link counts, newest/oldest item, generated_at, counts_by_year, yearly_signals with top subject/title terms, top chunk-text terms, domains, section counts, and sample items, top external domains, link kind/category counts, and blog also_in_issues cross-reference counts. Optional source_kind isolates \"weekly_thing\", \"blog\", or \"podcast\". Use for corpus inventory, freshness, latest indexed date, per-year content breakdowns, year-by-year theme signals, cross-source coverage, and aggregate-domain questions before searching semantically.",
       "inputSchema": {
         "json": {
           "type": "object",
