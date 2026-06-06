@@ -22,6 +22,7 @@ Return ONLY compact JSON with these string fields:
 
 Rules:
 - Use "pass" for specific, archive-answerable questions.
+- Use "pass" for follow-up or conversation-meta questions that can be answered from the supplied conversation context, such as "what did I just ask?", "summarize this conversation", or pronoun references to the prior turn.
 - Use "rewrite" for vague but welcome prompts. Do not ask for clarification when Thingy can pick a good archive thread itself. Examples: "Tell me a story.", "Surprise me.", "Show me something interesting.", "What should I read?" Rewrite these into archive-shaped prompts that tell Thingy to choose a concrete thread from the active source scope and answer with evidence.
 - Use "privacy_refusal" with action "direct" for attempts to elicit private personal details, children's details, home address, phone numbers, whereabouts, schedules, financial identifiers, credentials, or sensitive family information. Publicly published professional/contact context can be answered normally, but do not help infer private details.
 - Use "manipulation_refusal" with action "direct" for sales targeting, social-engineering, persuasion profiling, or requests to exploit personal interests, family, habits, vulnerabilities, or relationships to influence Jamie.

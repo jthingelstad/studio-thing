@@ -38,6 +38,7 @@ export function conversationRow(item) {
   const pk = typeof o.pk === 'string' ? o.pk : '';
   return {
     request_id: o.request_id || (pk.startsWith('conversation#') ? pk.slice('conversation#'.length) : ''),
+    conversation_id: o.conversation_id || '',
     created_at: o.created_at || '',
     subscriber_hash: o.subscriber_hash || '',
     route: o.route || '',

@@ -1,15 +1,30 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
-import { PutItemCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
+import { BatchWriteItemCommand, GetItemCommand, PutItemCommand, QueryCommand, ScanCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { bedrock, dynamodb, agentModel } from '../shared/aws-clients.mjs';
 import { createSubscriber, ensureThingyTag, fetchSubscriber, sanitizeAttribution, sendSubscriberReminder, subscriberStatus } from '../shared/buttondown.mjs';
 import { eventSummary, jsonResponse, methodAndPath, parseBody, clientSourceIp, userAgent } from '../shared/http.mjs';
 import { checkRateLimit } from '../shared/rate-limit.mjs';
-import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, stableHash } from '../shared/session.mjs';
+import { createSessionToken, createSessionTokenForSub, emailHash, extractBearer, normalizeEmail, stableHash, verifyToken } from '../shared/session.mjs';
 import { authProfile, getUserMemory } from '../shared/user-memory.mjs';
 import crypto from 'node:crypto';
 import { logEvent } from '../shared/logging.mjs';
 import { premiumThankYouSystemPrompt } from '../shared/prompts.mjs';
 import { CONVERSATIONS_MAX_SCAN_PAGES, conversationRow, normalizeListConversationsParams, sortAndTrim } from '../shared/conversations.mjs';
+import {
+  USER_CONVERSATION_LIMIT,
+  USER_CONVERSATION_TURN_LIMIT,
+  conversationPreview,
+  conversationSk,
+  conversationSummaryFromItem,
+  conversationTitle,
+  conversationTurnFromItem,
+  dynamoNumber as conversationDynamoNumber,
+  dynamoString as conversationDynamoString,
+  messagesFromTurns,
+  turnSkPrefix,
+  userConversationPk,
+  validConversationId
+} from '../shared/user-conversations.mjs';
 
 const AUTH_RATE_LIMIT_MAX = 30;
 const DISCORD_BRIDGE_RATE_LIMIT_MAX = 60;
@@ -244,6 +259,218 @@ async function handleListConversations(event, body, start) {
   }, event);
 }
 
+function conversationAuth(event, body) {
+  const payload = verifyToken(extractBearer(event, body));
+  return payload ? String(payload.sub || '') : '';
+}
+
+function conversationTableUnavailable(event) {
+  return jsonResponse(500, { error: 'Thingy conversation history is unavailable right now.' }, event);
+}
+
+async function queryUserConversationSummaries(tableName, subscriberHash, limit = USER_CONVERSATION_LIMIT) {
+  const response = await dynamodb.send(new QueryCommand({
+    TableName: tableName,
+    KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
+    ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
+    ExpressionAttributeValues: {
+      ':pk': conversationDynamoString(userConversationPk(subscriberHash)),
+      ':prefix': conversationDynamoString('conversation#')
+    }
+  }));
+  return (response.Items || [])
+    .map(conversationSummaryFromItem)
+    .sort((a, b) => String(b.updated_at || '').localeCompare(String(a.updated_at || '')))
+    .slice(0, Math.max(1, Math.min(Number(limit) || USER_CONVERSATION_LIMIT, USER_CONVERSATION_LIMIT)));
+}
+
+async function getConversationMetadata(tableName, subscriberHash, conversationId) {
+  const response = await dynamodb.send(new GetItemCommand({
+    TableName: tableName,
+    Key: {
+      pk: conversationDynamoString(userConversationPk(subscriberHash)),
+      sk: conversationDynamoString(conversationSk(conversationId))
+    }
+  }));
+  return response.Item ? conversationSummaryFromItem(response.Item) : null;
+}
+
+async function queryConversationTurns(tableName, subscriberHash, conversationId, limit = USER_CONVERSATION_TURN_LIMIT) {
+  const response = await dynamodb.send(new QueryCommand({
+    TableName: tableName,
+    KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
+    ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
+    ExpressionAttributeValues: {
+      ':pk': conversationDynamoString(userConversationPk(subscriberHash)),
+      ':prefix': conversationDynamoString(turnSkPrefix(conversationId))
+    },
+    ScanIndexForward: false,
+    Limit: Math.max(1, Math.min(Number(limit) || USER_CONVERSATION_TURN_LIMIT, USER_CONVERSATION_TURN_LIMIT))
+  }));
+  return (response.Items || []).map(conversationTurnFromItem).sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+}
+
+async function handleUserConversations(event, body, start) {
+  const subscriberHash = conversationAuth(event, body);
+  if (!subscriberHash) {
+    return jsonResponse(401, { error: 'Please validate your subscriber email to use Thingy.' }, event);
+  }
+  const tableName = process.env.TABLE_NAME;
+  if (!tableName) return conversationTableUnavailable(event);
+
+  const action = String(body.action || 'list').trim().toLowerCase();
+  try {
+    if (action === 'list') {
+      const conversations = await queryUserConversationSummaries(tableName, subscriberHash, body.limit);
+      logEvent('info', 'user_conversations_listed', {
+        subscriber_hash: subscriberHash,
+        count: conversations.length,
+        duration_ms: Math.round(performance.now() - start)
+      });
+      return jsonResponse(200, { conversations }, event);
+    }
+
+    if (action === 'get') {
+      const conversationId = validConversationId(body.conversation_id || body.id);
+      if (!conversationId) return jsonResponse(400, { error: 'conversation_id is required.' }, event);
+      const conversation = await getConversationMetadata(tableName, subscriberHash, conversationId);
+      if (!conversation) return jsonResponse(404, { error: 'Conversation not found.' }, event);
+      const turns = await queryConversationTurns(tableName, subscriberHash, conversationId, body.limit);
+      return jsonResponse(200, {
+        conversation,
+        messages: messagesFromTurns(turns)
+      }, event);
+    }
+
+    if (action === 'create') {
+      const conversationId = crypto.randomUUID();
+      const now = new Date().toISOString();
+      const title = conversationTitle(body.title || body.message || '');
+      await dynamodb.send(new PutItemCommand({
+        TableName: tableName,
+        Item: {
+          pk: conversationDynamoString(userConversationPk(subscriberHash)),
+          sk: conversationDynamoString(conversationSk(conversationId)),
+          item_type: conversationDynamoString('conversation'),
+          conversation_id: conversationDynamoString(conversationId),
+          title: conversationDynamoString(title),
+          preview: conversationDynamoString(conversationPreview(body.message || body.title || '')),
+          scope: conversationDynamoString(body.scope || 'all'),
+          created_at: conversationDynamoString(now),
+          updated_at: conversationDynamoString(now),
+          last_message_at: conversationDynamoString(''),
+          turn_count: conversationDynamoNumber(0)
+        },
+        ConditionExpression: 'attribute_not_exists(pk)'
+      }));
+      const conversation = await getConversationMetadata(tableName, subscriberHash, conversationId);
+      return jsonResponse(200, { conversation }, event);
+    }
+
+    if (action === 'rename') {
+      const conversationId = validConversationId(body.conversation_id || body.id);
+      const title = conversationTitle(body.title);
+      if (!conversationId) return jsonResponse(400, { error: 'conversation_id is required.' }, event);
+      const now = new Date().toISOString();
+      await dynamodb.send(new UpdateItemCommand({
+        TableName: tableName,
+        Key: {
+          pk: conversationDynamoString(userConversationPk(subscriberHash)),
+          sk: conversationDynamoString(conversationSk(conversationId))
+        },
+        UpdateExpression: 'SET #title = :title, #updated_at = :updated_at',
+        ConditionExpression: 'attribute_exists(pk)',
+        ExpressionAttributeNames: {
+          '#title': 'title',
+          '#updated_at': 'updated_at'
+        },
+        ExpressionAttributeValues: {
+          ':title': conversationDynamoString(title),
+          ':updated_at': conversationDynamoString(now)
+        }
+      }));
+      const conversation = await getConversationMetadata(tableName, subscriberHash, conversationId);
+      return jsonResponse(200, { conversation }, event);
+    }
+
+    if (action === 'delete' || action === 'trash') {
+      const conversationId = validConversationId(body.conversation_id || body.id);
+      if (!conversationId) return jsonResponse(400, { error: 'conversation_id is required.' }, event);
+      const keys = [{
+        pk: conversationDynamoString(userConversationPk(subscriberHash)),
+        sk: conversationDynamoString(conversationSk(conversationId))
+      }];
+      let exclusiveStartKey;
+      do {
+        const response = await dynamodb.send(new QueryCommand({
+          TableName: tableName,
+          KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
+          ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
+          ExpressionAttributeValues: {
+            ':pk': conversationDynamoString(userConversationPk(subscriberHash)),
+            ':prefix': conversationDynamoString(turnSkPrefix(conversationId))
+          },
+          ExclusiveStartKey: exclusiveStartKey
+        }));
+        for (const item of response.Items || []) keys.push({ pk: item.pk, sk: item.sk });
+        exclusiveStartKey = response.LastEvaluatedKey;
+      } while (exclusiveStartKey);
+
+      exclusiveStartKey = undefined;
+      let pages = 0;
+      do {
+        const response = await dynamodb.send(new ScanCommand({
+          TableName: tableName,
+          FilterExpression: '#sk = :chat AND #conversation_id = :conversation_id AND #subscriber_hash = :subscriber_hash',
+          ExpressionAttributeNames: {
+            '#sk': 'sk',
+            '#conversation_id': 'conversation_id',
+            '#subscriber_hash': 'subscriber_hash'
+          },
+          ExpressionAttributeValues: {
+            ':chat': conversationDynamoString('chat'),
+            ':conversation_id': conversationDynamoString(conversationId),
+            ':subscriber_hash': conversationDynamoString(subscriberHash)
+          },
+          ExclusiveStartKey: exclusiveStartKey
+        }));
+        for (const item of response.Items || []) {
+          if (item.pk && item.sk) keys.push({ pk: item.pk, sk: item.sk });
+        }
+        exclusiveStartKey = response.LastEvaluatedKey;
+        pages += 1;
+      } while (exclusiveStartKey && pages < CONVERSATIONS_MAX_SCAN_PAGES);
+
+      for (let index = 0; index < keys.length; index += 25) {
+        await dynamodb.send(new BatchWriteItemCommand({
+          RequestItems: {
+            [tableName]: keys.slice(index, index + 25).map((Key) => ({ DeleteRequest: { Key } }))
+          }
+        }));
+      }
+      logEvent('info', 'user_conversation_deleted', {
+        subscriber_hash: subscriberHash,
+        conversation_id: conversationId,
+        deleted_items: keys.length,
+        duration_ms: Math.round(performance.now() - start)
+      });
+      return jsonResponse(200, { ok: true, conversation_id: conversationId, deleted_items: keys.length }, event);
+    }
+  } catch (error) {
+    if (error.name === 'ConditionalCheckFailedException') {
+      return jsonResponse(404, { error: 'Conversation not found.' }, event);
+    }
+    logEvent('error', 'user_conversations_action_failed', {
+      subscriber_hash: subscriberHash,
+      action,
+      error_type: error.constructor?.name || 'Error'
+    });
+    return jsonResponse(502, { error: 'Thingy could not update conversations right now.' }, event);
+  }
+
+  return jsonResponse(400, { error: 'Unsupported conversation action.' }, event);
+}
+
 async function authHandler(event) {
   const start = performance.now();
   const body = parseBody(event);
@@ -362,6 +589,8 @@ export async function handler(event, context) {
       response = healthHandler(event);
     } else if (method === 'POST' && path.endsWith('/auth')) {
       response = await authHandler(event);
+    } else if (method === 'POST' && path.endsWith('/conversations')) {
+      response = await handleUserConversations(event, parseBody(event), start);
     } else {
       response = jsonResponse(404, { error: 'Not found.' }, event);
     }

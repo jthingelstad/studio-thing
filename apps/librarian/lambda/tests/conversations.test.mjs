@@ -29,6 +29,7 @@ test('conversationRow flattens a logged DynamoDB conversation item', () => {
     sk: { S: 'chat' },
     created_at: { S: '2026-05-12T02:21:00.000Z' },
     request_id: { S: 'abc-123' },
+    conversation_id: { S: 'conv-456' },
     subscriber_hash: { S: 'a1b2c3d4e5f6' },
     route: { S: 'stream' },
     question: { S: 'Did Jamie write about RSS?' },
@@ -55,6 +56,7 @@ test('conversationRow flattens a logged DynamoDB conversation item', () => {
   };
   const row = conversationRow(item);
   assert.equal(row.request_id, 'abc-123');
+  assert.equal(row.conversation_id, 'conv-456');
   assert.equal(row.created_at, '2026-05-12T02:21:00.000Z');
   assert.equal(row.subscriber_hash, 'a1b2c3d4e5f6');
   assert.equal(row.question, 'Did Jamie write about RSS?');

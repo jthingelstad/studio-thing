@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { BedrockRuntimeClient, ConverseCommand, ConverseStreamCommand, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 import { BedrockAgentRuntimeClient, RerankCommand } from '@aws-sdk/client-bedrock-agent-runtime';
-import { DynamoDBClient, PutItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, PutItemCommand, QueryCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { readConverseStream } from '../shared/bedrock-stream.mjs';
 import { sanitizeAnswerProse } from '../shared/answer-sanitizer.mjs';
@@ -27,6 +27,23 @@ import {
   memoryContextBlock,
   recordUserTurn
 } from '../shared/user-memory.mjs';
+import {
+  citationDynamoItem,
+  conversationPreview,
+  conversationSk,
+  conversationSummaryFromItem,
+  conversationTitle,
+  dynamoList as conversationDynamoList,
+  dynamoNumber as conversationDynamoNumber,
+  dynamoString as conversationDynamoString,
+  historyFromTurns,
+  preflightDynamoItem,
+  turnSk,
+  turnSkPrefix,
+  userConversationPk,
+  validConversationId,
+  conversationTurnFromItem
+} from '../shared/user-conversations.mjs';
 
 const DEFAULT_AGENT_MODEL = 'us.anthropic.claude-sonnet-4-6';
 const DEFAULT_EMBEDDING_MODEL = 'cohere.embed-english-v3';
@@ -259,6 +276,7 @@ function citationItem(citation) {
 async function recordConversation({
   event,
   subscriberHash,
+  conversationId,
   question,
   answer,
   historyCount,
@@ -285,6 +303,7 @@ async function recordConversation({
         created_at: dynamoString(createdAt),
         ttl: dynamoNumber(ttl),
         request_id: dynamoString(conversationRequestId),
+        conversation_id: dynamoString(conversationId),
         subscriber_hash: dynamoString(subscriberHash),
         route: dynamoString(route),
         question: dynamoString(String(question || '').slice(0, 4000)),
@@ -302,6 +321,7 @@ async function recordConversation({
     logEvent('info', 'conversation_recorded', {
       subscriber_hash: subscriberHash,
       request_id: conversationRequestId,
+      conversation_id: conversationId,
       question_chars: String(question || '').length,
       answer_chars: String(answer || '').length,
       preflight_action: preflight?.action,
@@ -311,6 +331,129 @@ async function recordConversation({
     });
   } catch (error) {
     logEvent('warning', 'conversation_record_failed', { request_id: requestId, error_type: error.constructor?.name || 'Error' });
+  }
+}
+
+async function loadUserConversationHistory(subscriberHash, conversationId) {
+  const tableName = process.env.TABLE_NAME;
+  const validId = validConversationId(conversationId);
+  if (!tableName || !validId) return [];
+  try {
+    const response = await dynamodb.send(new QueryCommand({
+      TableName: tableName,
+      KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
+      ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
+      ExpressionAttributeValues: {
+        ':pk': conversationDynamoString(userConversationPk(subscriberHash)),
+        ':prefix': conversationDynamoString(turnSkPrefix(validId))
+      },
+      ScanIndexForward: false,
+      Limit: 8
+    }));
+    return historyFromTurns((response.Items || []).map(conversationTurnFromItem));
+  } catch (error) {
+    logEvent('warning', 'user_conversation_history_load_failed', {
+      subscriber_hash: subscriberHash,
+      conversation_id: validId,
+      error_type: error.constructor?.name || 'Error'
+    });
+    return [];
+  }
+}
+
+async function recordUserConversationTurn({
+  subscriberHash,
+  conversationId,
+  question,
+  answer,
+  scope,
+  requestId,
+  citations,
+  preflight
+}) {
+  const tableName = process.env.TABLE_NAME;
+  const validId = validConversationId(conversationId);
+  if (!tableName || !validId) return null;
+  const now = new Date().toISOString();
+  const pk = userConversationPk(subscriberHash);
+  const title = conversationTitle(question);
+  const preview = conversationPreview(question);
+  const citationItems = (citations || []).slice(0, 24).map(citationDynamoItem);
+  try {
+    await dynamodb.send(new PutItemCommand({
+      TableName: tableName,
+      Item: {
+        pk: conversationDynamoString(pk),
+        sk: conversationDynamoString(turnSk(validId, now, requestId)),
+        item_type: conversationDynamoString('turn'),
+        conversation_id: conversationDynamoString(validId),
+        request_id: conversationDynamoString(requestId),
+        created_at: conversationDynamoString(now),
+        scope: conversationDynamoString(scope || 'all'),
+        question: conversationDynamoString(String(question || '').slice(0, 4000)),
+        answer: conversationDynamoString(String(answer || '').slice(0, 12000)),
+        question_chars: conversationDynamoNumber(String(question || '').length),
+        answer_chars: conversationDynamoNumber(String(answer || '').length),
+        citation_count: conversationDynamoNumber((citations || []).length),
+        citations: conversationDynamoList(citationItems, (item) => item),
+        preflight: preflightDynamoItem(preflight)
+      }
+    }));
+    const response = await dynamodb.send(new UpdateItemCommand({
+      TableName: tableName,
+      Key: {
+        pk: conversationDynamoString(pk),
+        sk: conversationDynamoString(conversationSk(validId))
+      },
+      UpdateExpression: [
+        'SET #item_type = :item_type',
+        '#conversation_id = :conversation_id',
+        '#title = if_not_exists(#title, :title)',
+        '#preview = :preview',
+        '#scope = :scope',
+        '#created_at = if_not_exists(#created_at, :now)',
+        '#updated_at = :now',
+        '#last_message_at = :now',
+        '#last_request_id = :request_id',
+        '#last_question = :question',
+        '#turn_count = if_not_exists(#turn_count, :zero) + :one'
+      ].join(', '),
+      ExpressionAttributeNames: {
+        '#item_type': 'item_type',
+        '#conversation_id': 'conversation_id',
+        '#title': 'title',
+        '#preview': 'preview',
+        '#scope': 'scope',
+        '#created_at': 'created_at',
+        '#updated_at': 'updated_at',
+        '#last_message_at': 'last_message_at',
+        '#last_request_id': 'last_request_id',
+        '#last_question': 'last_question',
+        '#turn_count': 'turn_count'
+      },
+      ExpressionAttributeValues: {
+        ':item_type': conversationDynamoString('conversation'),
+        ':conversation_id': conversationDynamoString(validId),
+        ':title': conversationDynamoString(title),
+        ':preview': conversationDynamoString(preview),
+        ':scope': conversationDynamoString(scope || 'all'),
+        ':now': conversationDynamoString(now),
+        ':request_id': conversationDynamoString(requestId),
+        ':question': conversationDynamoString(String(question || '').slice(0, 500)),
+        ':zero': conversationDynamoNumber(0),
+        ':one': conversationDynamoNumber(1)
+      },
+      ReturnValues: 'ALL_NEW'
+    }));
+    return response.Attributes ? conversationSummaryFromItem(response.Attributes) : null;
+  } catch (error) {
+    logEvent('warning', 'user_conversation_turn_record_failed', {
+      subscriber_hash: subscriberHash,
+      conversation_id: validId,
+      request_id: requestId,
+      error_type: error.constructor?.name || 'Error'
+    });
+    return null;
   }
 }
 
@@ -794,6 +937,9 @@ function preflightUserPrompt(question, scope, history) {
   return [
     `Active source scope: ${normalizeScope(scope)}`,
     `Recent conversation turns available to the main agent: ${Array.isArray(history) ? history.length : 0}`,
+    '',
+    'Conversation so far:',
+    conversationContext(Array.isArray(history) ? history : []),
     '',
     'Reader prompt:',
     String(question || '').trim()
@@ -1671,7 +1817,9 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
 
     const question = String(body.message || '').trim();
     const scope = normalizeScope(body.scope);
-    const history = sanitizeHistory(body.history);
+    const requestedConversationId = validConversationId(body.conversation_id || body.conversationId);
+    const conversationId = requestedConversationId || crypto.randomUUID();
+    const history = await loadUserConversationHistory(subscriberHash, conversationId);
     if (!question) {
       writeSse(stream, 'error', { error: 'Ask a question about the archive.', request_id: requestId });
       return;
@@ -1685,15 +1833,25 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       return;
     }
 
-    writeSse(stream, 'meta', { request_id: requestId });
+    writeSse(stream, 'meta', { request_id: requestId, conversation_id: conversationId });
     writeSse(stream, 'status', { message: 'Understanding the request...' });
     const preflight = await evaluatePromptPreflight(question, scope, history);
     if (preflight.action === 'direct') {
       const citations = [];
       writeSse(stream, 'answer_delta', { delta: preflight.direct_answer });
       writeSse(stream, 'citations', { citations });
-      writeSse(stream, 'done', { request_id: requestId });
-      await recordConversation({ event, subscriberHash, question, answer: preflight.direct_answer, historyCount: history.length, citations, preflight, route: 'stream', requestId });
+      const conversation = await recordUserConversationTurn({
+        subscriberHash,
+        conversationId,
+        question,
+        answer: preflight.direct_answer,
+        scope,
+        requestId,
+        citations,
+        preflight
+      });
+      writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation });
+      await recordConversation({ event, subscriberHash, conversationId, question, answer: preflight.direct_answer, historyCount: history.length, citations, preflight, route: 'stream', requestId });
       // Guarded/direct turns still update memory — the question text was
       // recorded above, so let the user-memory row reflect that turn too.
       await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question });
@@ -1725,11 +1883,22 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     if (deadlineExceeded) return;
     const answer = result.answer;
     const citations = result.citations;
+    const conversation = await recordUserConversationTurn({
+      subscriberHash,
+      conversationId,
+      question,
+      answer,
+      scope,
+      requestId,
+      citations,
+      preflight
+    });
     writeSse(stream, 'citations', { citations });
-    writeSse(stream, 'done', { request_id: requestId });
+    writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation });
     await recordConversation({
       event,
       subscriberHash,
+      conversationId,
       question,
       answer,
       historyCount: history.length,

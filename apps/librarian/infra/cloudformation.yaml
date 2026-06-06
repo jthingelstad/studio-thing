@@ -117,6 +117,9 @@ Resources:
                   - dynamodb:GetItem
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
                   - dynamodb:Scan
                 Resource: !GetAtt LibrarianTable.Arn
               - Effect: Allow
@@ -271,6 +274,13 @@ Resources:
     Properties:
       ApiId: !Ref LibrarianApi
       RouteKey: POST /auth
+      Target: !Sub integrations/${LibrarianIntegration}
+
+  ConversationsRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref LibrarianApi
+      RouteKey: POST /conversations
       Target: !Sub integrations/${LibrarianIntegration}
 
   HealthRoute:

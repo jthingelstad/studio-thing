@@ -42,3 +42,11 @@ test('removes leading process narration without paragraph breaks', () => {
 
   assert.equal(out, "Here's a story from the archive.");
 });
+
+test('removes got-what-i-need process narration', () => {
+  const answer = "I've got what I need. Here's a useful answer from an old post.";
+
+  const out = sanitizeAnswerProse(answer);
+
+  assert.equal(out, "Here's a useful answer from an old post.");
+});
