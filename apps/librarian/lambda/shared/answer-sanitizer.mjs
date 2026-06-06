@@ -13,7 +13,12 @@ function cleanSpacing(value) {
 }
 
 function stripLeadingProcessNarration(value) {
-  const blocks = String(value || '').split(/\n{2,}/);
+  let text = String(value || '');
+  const answerMarker = text.search(/\b(?:here(?:'|’)s|here is)\b|^#{1,3}\s+/im);
+  if (answerMarker > 0 && PROCESS_NARRATION_RE.test(text.slice(0, answerMarker))) {
+    text = text.slice(answerMarker);
+  }
+  const blocks = text.split(/\n{2,}/);
   while (blocks.length && PROCESS_NARRATION_RE.test(blocks[0])) {
     blocks.shift();
   }

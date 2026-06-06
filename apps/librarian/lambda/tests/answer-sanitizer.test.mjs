@@ -34,3 +34,11 @@ test('removes leading tool-process narration from answers', () => {
 
   assert.equal(out, 'Here is the story from the archive.');
 });
+
+test('removes leading process narration without paragraph breaks', () => {
+  const answer = "I've found it — a perfect post. Let me pull the full context.Here's a story from the archive.";
+
+  const out = sanitizeAnswerProse(answer);
+
+  assert.equal(out, "Here's a story from the archive.");
+});
