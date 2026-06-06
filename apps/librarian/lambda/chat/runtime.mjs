@@ -1068,7 +1068,8 @@ function welcomePrompt({ readerContext, memoryContext, conversations, scope }) {
     '- If this looks like their first time, give a little more orientation. If returning, welcome them back and lightly reference the kind of things they have explored before when memory exists.',
     '- If they are a Weekly Thing Supporting Member, acknowledge that gracefully without making the whole message about it.',
     '- Do not frame Thingy as just search. Prefer agentic verbs like connect, trace, compare, explore, and pick up threads.',
-    '- Keep it under 95 words, no heading, no table, no citations, no source list.'
+    '- Do not recite the active source list or say all sources are open; the UI already shows source selection.',
+    '- Keep it under 95 words, no heading, no table, no citations.'
   ].join('\n');
 }
 
