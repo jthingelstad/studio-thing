@@ -385,6 +385,11 @@ def render_turn(turn: Turn, index: int) -> str:
         metadata.append(f"Sources: {h(sources)}")
     if tools:
         metadata.append(f"Tools: {h(tools)}")
+    if turn.stop_reason:
+        runtime = f"Runtime: {h(turn.stop_reason)}"
+        if turn.duration_ms:
+            runtime += f" · {h(round(turn.duration_ms / 1000, 1))}s"
+        metadata.append(runtime)
     if turn.preflight and (turn.preflight.get("category") or turn.preflight.get("action")):
         metadata.append(f"Preflight: {h(turn.preflight.get('category'))}/{h(turn.preflight.get('action'))}")
     meta = f'<p class="meta">{" · ".join(metadata)}</p>' if metadata else ""

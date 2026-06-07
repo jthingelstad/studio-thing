@@ -153,11 +153,16 @@ function turnForPrompt(turn, index) {
   const feedback = turn.feedback_reaction
     ? `${turn.feedback_reaction}${turn.feedback_comment ? ` — ${turn.feedback_comment}` : ''}`
     : '';
+  const runtime = [
+    turn.stop_reason ? `stop_reason=${turn.stop_reason}` : '',
+    turn.duration_ms ? `duration_ms=${turn.duration_ms}` : ''
+  ].filter(Boolean).join(', ');
   return [
     `### Turn ${index + 1}`,
     `Reader: ${boundedText(turn.question, 1400)}`,
     '',
     `Thingy: ${boundedText(turn.answer, 2800)}`,
+    runtime ? `Runtime: ${runtime}` : '',
     citations ? `Citations: ${citations}` : '',
     preflight ? `Preflight: ${preflight}` : '',
     tools ? `Tools: ${tools}` : '',
@@ -185,12 +190,12 @@ Read the transcript and return ONLY compact JSON:
     "thingy": "how Thingy did: grounding, citations, tone, misses",
     "takeaway": "one actionable thing Jamie should notice, or 'nothing to act on — clean exchange'",
     "quality": "clean|watch|problem",
-    "flags": ["citation_mismatch|unsupported_claim|source_gap|refusal_issue|privacy_boundary|prompt_leak|tool_gap|ux_confusion|answer_too_long|answer_too_thin|reader_delight"],
+    "flags": ["citation_mismatch|unsupported_claim|source_gap|refusal_issue|privacy_boundary|prompt_leak|tool_gap|ux_confusion|runtime_timeout|answer_too_long|answer_too_thin|reader_delight"],
     "improvements": ["concrete implementation idea"]
   }
 }
 
-Be specific, do not manufacture criticism, and treat lines labeled Preflight/Tools/Reader feedback as operator metadata. Use prompt_leak only when internal metadata appeared in Thingy's actual answer text.`;
+Be specific, do not manufacture criticism, and treat lines labeled Runtime/Preflight/Tools/Reader feedback as operator metadata. If Runtime stop_reason is app_deadline_exceeded or tool_use_exhausted, identify it as runtime exhaustion; prefer runtime_timeout and/or tool_gap over criticizing tone, citations, or answer depth as though Thingy chose to give a normal final answer. Use prompt_leak only when internal metadata appeared in Thingy's actual answer text.`;
 }
 
 async function evaluateConversation({ conversation, turns }) {

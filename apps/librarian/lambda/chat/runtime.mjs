@@ -45,7 +45,9 @@ const DEFAULT_AGENT_MODEL = 'us.anthropic.claude-sonnet-4-6';
 const DEFAULT_EMBEDDING_MODEL = 'cohere.embed-english-v3';
 const DEFAULT_RERANK_MODEL = 'cohere.rerank-v3-5:0';
 const DEFAULT_EMBEDDING_DIMENSIONS = 1024;
-const DEFAULT_MAX_TOOL_TURNS = 5;
+const DEFAULT_MAX_TOOL_TURNS = 7;
+const DEFAULT_CHAT_SLOW_NOTICE_MS = 75000;
+const DEFAULT_CHAT_DEADLINE_MS = 180000;
 const RATE_LIMIT_WINDOW_SECONDS = 60 * 60;
 const RATE_LIMIT_MAX = 20;
 const TOKEN_RE = /[a-z0-9][a-z0-9'-]{1,}/gi;
@@ -837,6 +839,16 @@ function commandInferenceConfig() {
     maxTokens: Number(process.env.BEDROCK_MAX_OUTPUT_TOKENS || '2500'),
     temperature: Number(process.env.BEDROCK_TEMPERATURE || '0.45')
   };
+}
+
+function chatSlowNoticeMs() {
+  const value = Number(process.env.CHAT_SLOW_NOTICE_MS || DEFAULT_CHAT_SLOW_NOTICE_MS);
+  return Number.isFinite(value) && value > 0 ? value : DEFAULT_CHAT_SLOW_NOTICE_MS;
+}
+
+function chatDeadlineMs() {
+  const value = Number(process.env.CHAT_DEADLINE_MS || DEFAULT_CHAT_DEADLINE_MS);
+  return Number.isFinite(value) && value > 0 ? value : DEFAULT_CHAT_DEADLINE_MS;
 }
 
 function preflightInferenceConfig() {
@@ -2508,6 +2520,7 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   const memoryContext = String(options.memoryContext || '').trim();
   const readerContext = String(options.readerContext || '').trim();
   const agentQuestion = agentQuestionForPreflight(question, options.preflight);
+  const shouldStopWriting = () => Boolean(options.deadlineExceeded?.());
   const messages = [{
     role: 'user',
     content: [{
@@ -2558,12 +2571,14 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
     for (const [index, toolUse] of toolUses.entries()) {
       const toolNote = toolActivityCommentary(toolUse.name, toolUse.input || {});
       const visibleNote = [index === 0 ? commentary : '', toolNote].filter(Boolean).join(' ');
-      writeSse(responseStream, 'status', {
-        kind: 'tool',
-        tool_name: toolUse.name,
-        message: `Checking ${toolUse.name.replaceAll('_', ' ')}...`,
-        commentary: visibleNote
-      });
+      if (!shouldStopWriting()) {
+        writeSse(responseStream, 'status', {
+          kind: 'tool',
+          tool_name: toolUse.name,
+          message: `Checking ${toolUse.name.replaceAll('_', ' ')}...`,
+          commentary: visibleNote
+        });
+      }
       const handler = ARCHIVE_TOOLS[toolUse.name];
       let result;
       const toolStart = performance.now();
@@ -2591,14 +2606,22 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
     });
   }
   if (!answer) {
-    answer = 'I could not produce a reliable answer from the archive tools for that question.';
+    if (stopReason === 'tool_use') {
+      stopReason = 'tool_use_exhausted';
+      answer = [
+        'I found archive material for this, but I ran out of my research loop before I could turn it into a reliable answer.',
+        'Try asking again with a narrower angle, or ask me to pick one specific source or time period.'
+      ].join(' ');
+    } else {
+      answer = 'I could not produce a reliable answer from the archive tools for that question.';
+    }
   }
   const sanitizedAnswer = sanitizeAnswerProse(answer);
   answer = sanitizedAnswer;
-  writeSse(responseStream, 'answer', { answer });
+  if (!shouldStopWriting()) writeSse(responseStream, 'answer', { answer });
   const citations = prioritizeCitationsForAnswer(collectToolCitations(toolResults), answer, await weeklyIssueCatalog());
   const experience = experienceFromToolResults(toolResults, answer);
-  if (experience) {
+  if (experience && !shouldStopWriting()) {
     writeSse(responseStream, 'experience', { experience });
   }
   logEvent('info', 'agent_streamed', {
@@ -2610,7 +2633,8 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
     duration_ms: Math.round(performance.now() - start),
     answer_chars: answer.length,
     output_tokens: usage?.outputTokens,
-    stop_reason: stopReason
+    stop_reason: stopReason,
+    deadline_exceeded: shouldStopWriting()
   });
   return {
     answer,
@@ -2974,21 +2998,74 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
 
     writeSse(stream, 'status', { message: 'Investigating the archive...' });
     let deadlineExceeded = false;
+    const deadlineMs = chatDeadlineMs();
+    const slowNoticeMs = Math.min(chatSlowNoticeMs(), Math.max(1000, deadlineMs - 1000));
+    const slowNoticeTimer = setTimeout(() => {
+      if (deadlineExceeded) return;
+      try {
+        writeSse(stream, 'status', {
+          message: 'This is a deeper archive pass. Thingy is still working...'
+        });
+      } catch {}
+      logEvent('info', 'chat_slow_notice_sent', {
+        request_id: requestId,
+        subscriber_hash: subscriberHash,
+        slow_notice_ms: slowNoticeMs,
+        deadline_ms: deadlineMs
+      });
+    }, slowNoticeMs);
     const deadlineTimer = setTimeout(() => {
       deadlineExceeded = true;
       try {
-        writeSse(stream, 'error', { error: 'The archive is taking longer than usual. Please try again.', request_id: requestId });
+        writeSse(stream, 'error', {
+          error: 'Thingy spent too long in the archive. Please try again with a narrower angle.',
+          request_id: requestId
+        });
       } catch {}
       try { stream.end(); } catch {}
-      logEvent('warn', 'chat_deadline_exceeded', { request_id: requestId, subscriber_hash: subscriberHash });
-    }, 75000);
+      logEvent('warn', 'chat_deadline_exceeded', {
+        request_id: requestId,
+        subscriber_hash: subscriberHash,
+        deadline_ms: deadlineMs
+      });
+    }, deadlineMs);
     let result;
     try {
-      result = await streamBedrockAgentAnswer(question, history, stream, { memoryContext, readerContext, scope, preflight, subscriberHash });
+      result = await streamBedrockAgentAnswer(question, history, stream, {
+        memoryContext,
+        readerContext,
+        scope,
+        preflight,
+        subscriberHash,
+        deadlineExceeded: () => deadlineExceeded
+      });
     } finally {
+      clearTimeout(slowNoticeTimer);
       clearTimeout(deadlineTimer);
     }
-    if (deadlineExceeded) return;
+    if (deadlineExceeded) {
+      await recordUserConversationTurn({
+        dynamodb,
+        tableName: process.env.TABLE_NAME,
+        subscriberHash,
+        conversationId,
+        question,
+        answer: 'Thingy spent too long in the archive before it could return a reliable answer.',
+        scope,
+        requestId,
+        citations: [],
+        preflight,
+        toolTrace: result?.toolTrace || { calls: [] },
+        metrics: {
+          model: result?.metrics?.model || agentModel(),
+          duration_ms: Math.round(performance.now() - start),
+          output_tokens: result?.metrics?.output_tokens,
+          stop_reason: 'app_deadline_exceeded'
+        },
+        logEvent
+      });
+      return;
+    }
     const answer = result.answer;
     const citations = result.citations;
     const conversation = await recordUserConversationTurn({
