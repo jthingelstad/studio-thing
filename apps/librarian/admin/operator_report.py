@@ -143,6 +143,7 @@ class Conversation:
     topic: str
     summary: str
     scope: str
+    mode: str
     created_at: str
     updated_at: str
     turn_count: int
@@ -169,6 +170,7 @@ class Conversation:
             topic=str(row.get("eval_topic") or row.get("topic") or ""),
             summary=str(row.get("summary") or ""),
             scope=str(row.get("scope") or "all"),
+            mode=str(row.get("mode") or "thingy"),
             created_at=str(row.get("created_at") or ""),
             updated_at=str(row.get("updated_at") or row.get("last_message_at") or row.get("created_at") or ""),
             turn_count=int(row.get("turn_count") or 0),
@@ -257,6 +259,8 @@ class Conversation:
             tokens.append("tools")
         if self.is_owner:
             tokens.append("owner")
+        if self.mode:
+            tokens.append(f"mode:{self.mode}")
         return tokens
 
     @property
@@ -268,6 +272,7 @@ class Conversation:
             self.topic,
             self.summary,
             self.scope,
+            self.mode,
             self.eval_quality,
             " ".join(self.eval_flags),
             " ".join(self.eval_improvements),
@@ -360,6 +365,7 @@ def sort_for_review(conversations: list[Conversation]) -> list[Conversation]:
 
 def metric_cards(conversations: list[Conversation]) -> dict[str, Any]:
     quality = Counter(c.eval_quality or "unreviewed" for c in conversations)
+    modes = Counter(c.mode or "thingy" for c in conversations)
     flags = Counter(flag for c in conversations for flag in c.eval_flags)
     feedback = Counter(t.feedback_reaction for c in conversations for t in c.turns if t.feedback_reaction)
     return {
@@ -367,6 +373,7 @@ def metric_cards(conversations: list[Conversation]) -> dict[str, Any]:
         "turns": sum(c.turn_count for c in conversations),
         "readers": len({c.subscriber_hash for c in conversations}),
         "quality": quality,
+        "modes": modes,
         "flags": flags,
         "feedback": feedback,
     }
@@ -434,6 +441,7 @@ def render_conversation_card(c: Conversation, *, open_by_default: bool = False) 
     title = c.topic or c.title or "Untitled conversation"
     flags = render_chips(c.eval_flags, limit=10)
     owner = '<span class="chip owner-chip">Jamie</span>' if c.is_owner else ""
+    mode_chip = f'<span class="chip mode-chip">{h(c.mode or "thingy")}</span>'
     attention = render_chips(c.attention_reasons, limit=6, css_class="chip attention-chip")
     improvements = "".join(f"<li>{h(item)}</li>" for item in c.eval_improvements)
     sources = render_chips(c.source_labels, limit=16)
@@ -445,18 +453,19 @@ def render_conversation_card(c: Conversation, *, open_by_default: bool = False) 
     posted = f" · eval posted {h(local_time(c.eval_posted_to_chatter_at))}" if c.eval_posted_to_chatter_at else ""
     return (
         f'<details class="conversation-card" data-quality="{h(c.eval_quality)}" data-status="{h(status_tokens)}" '
-        f'data-scope="{h(c.scope)}" data-reader="{h(c.reader_kind)}" data-flags="{h(" ".join(c.eval_flags))}" data-search="{h(search_text)}"{open_attr}>'
+        f'data-scope="{h(c.scope)}" data-mode="{h(c.mode or "thingy")}" data-reader="{h(c.reader_kind)}" data-flags="{h(" ".join(c.eval_flags))}" data-search="{h(search_text)}"{open_attr}>'
         '<summary class="conversation-summary">'
         '<div class="conversation-topline">'
         f'<span class="quality q-{h(c.eval_quality)}">{h(c.eval_quality)}</span>'
         f'<span>{h(local_time(c.updated_at))}</span>'
         f'<span>{h(c.turn_count)} turn{"s" if c.turn_count != 1 else ""}</span>'
         f'<span class="reader-badge reader-{h(c.reader_kind)}">{h(c.reader_label)}</span>'
+        f'<span>mode {h(c.mode or "thingy")}</span>'
         f'<span>scope {h(c.scope)}</span>'
         "</div>"
         f'<h2>{h(title)}</h2>'
         f'<p class="conversation-preview">{h(c.summary or "No eval summary yet.")}</p>'
-        f'<div class="chipline">{owner}{attention}{flags}</div>'
+        f'<div class="chipline">{owner}{mode_chip}{attention}{flags}</div>'
         "</summary>"
         '<div class="conversation-body">'
         f'<p class="meta"><code>{h(c.conversation_id)}</code>{posted}</p>'
@@ -479,6 +488,7 @@ def render_conversation_card(c: Conversation, *, open_by_default: bool = False) 
 def render_html(conversations: list[Conversation], *, since_iso: str, generated_at: str, stack_name: str, table_name: str) -> str:
     metrics = metric_cards(conversations)
     quality = metrics["quality"]
+    modes = metrics["modes"]
     flags = metrics["flags"]
     feedback = metrics["feedback"]
     by_day: dict[str, int] = defaultdict(int)
@@ -492,8 +502,10 @@ def render_html(conversations: list[Conversation], *, since_iso: str, generated_
     )
     timeline = Counter(dict(sorted(by_day.items())))
     scopes = sorted({c.scope or "all" for c in conversations})
+    modes_values = sorted({c.mode or "thingy" for c in conversations})
     flag_values = sorted({flag for c in conversations for flag in c.eval_flags})
     scope_options = "".join(f'<option value="{h(scope)}">{h(scope)}</option>' for scope in scopes)
+    mode_options = "".join(f'<option value="{h(mode)}">{h(mode)}</option>' for mode in modes_values)
     flag_options = "".join(f'<option value="{h(flag)}">{h(flag)}</option>' for flag in flag_values)
     attention_count = sum(1 for c in conversations if c.attention_reasons)
     feedback_count = sum(1 for c in conversations if c.has_feedback)
@@ -541,7 +553,7 @@ th {{ color:var(--muted); font-size:12px; text-transform:uppercase; letter-spaci
 .attention-chip {{ background:#fff8e8; color:var(--warn); border-color:#ead59e; }}
 .owner-chip, .reader-owner {{ background:#edf2ff; color:#334f9a; border-color:#c9d6ff; }}
 .reader-badge {{ font-weight:700; }}
-.filters {{ position:sticky; top:0; z-index:2; display:grid; grid-template-columns:1.4fr repeat(5, minmax(110px, .5fr)) auto; gap:10px; align-items:end; padding:12px; margin:0 0 12px; background:rgba(251,252,251,.92); border:1px solid var(--line); border-radius:8px; backdrop-filter:blur(10px); }}
+  .filters {{ position:sticky; top:0; z-index:2; display:grid; grid-template-columns:1.4fr repeat(6, minmax(105px, .5fr)) auto; gap:10px; align-items:end; padding:12px; margin:0 0 12px; background:rgba(251,252,251,.92); border:1px solid var(--line); border-radius:8px; backdrop-filter:blur(10px); }}
 .filter-field {{ display:grid; gap:4px; }}
 .filter-field label {{ color:var(--muted); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }}
 .filters input, .filters select {{ width:100%; min-height:36px; border:1px solid var(--line-strong); border-radius:7px; background:white; color:var(--ink); padding:0 10px; font:inherit; font-size:14px; }}
@@ -587,8 +599,9 @@ code {{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-s
 </section>
 
 <section class="two">
-<div class="panel"><h3>Quality</h3>{render_counter(quality)}</div>
-<div class="panel"><h3>Eval Flags</h3>{render_counter(flags, empty="No flags in this window")}</div>
+  <div class="panel"><h3>Quality</h3>{render_counter(quality)}</div>
+  <div class="panel"><h3>Modes</h3>{render_counter(modes, empty="No modes in this window")}</div>
+  <div class="panel"><h3>Eval Flags</h3>{render_counter(flags, empty="No flags in this window")}</div>
 <div class="panel"><h3>Feedback</h3>{render_counter(feedback, empty="No explicit feedback in this window")}</div>
 <div class="panel"><h3>Daily Volume</h3>{render_counter(timeline, empty="No conversations in this window", limit=30)}</div>
 </section>
@@ -604,8 +617,9 @@ code {{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-s
 <div class="filter-field"><label for="filter-search">Search</label><input id="filter-search" type="search" placeholder="Prompt, topic, flag, source, reader…"></div>
 <div class="filter-field"><label for="filter-quality">Quality</label><select id="filter-quality"><option value="all">All</option><option value="problem">Problem</option><option value="watch">Watch</option><option value="unreviewed">Unreviewed</option><option value="clean">Clean</option></select></div>
 <div class="filter-field"><label for="filter-status">Status</label><select id="filter-status"><option value="all">All</option><option value="attention">Needs attention</option><option value="feedback">Has feedback</option><option value="downvote">Downvoted</option><option value="flags">Has flags</option><option value="preflight">Preflight</option><option value="tools">Tool use</option></select></div>
-<div class="filter-field"><label for="filter-reader">Reader</label><select id="filter-reader"><option value="all">All readers</option><option value="reader">Real users</option><option value="owner">Jamie</option></select></div>
-<div class="filter-field"><label for="filter-flag">Flag</label><select id="filter-flag"><option value="all">All flags</option>{flag_options}</select></div>
+  <div class="filter-field"><label for="filter-reader">Reader</label><select id="filter-reader"><option value="all">All readers</option><option value="reader">Real users</option><option value="owner">Jamie</option></select></div>
+  <div class="filter-field"><label for="filter-mode">Mode</label><select id="filter-mode"><option value="all">All modes</option>{mode_options}</select></div>
+  <div class="filter-field"><label for="filter-flag">Flag</label><select id="filter-flag"><option value="all">All flags</option>{flag_options}</select></div>
 <div class="filter-field"><label for="filter-scope">Scope</label><select id="filter-scope"><option value="__all">All scopes</option>{scope_options}</select></div>
 <button id="filter-clear" type="button">Clear</button>
 </section>
@@ -621,8 +635,9 @@ code {{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-s
   const search = document.getElementById('filter-search');
   const quality = document.getElementById('filter-quality');
   const status = document.getElementById('filter-status');
-  const reader = document.getElementById('filter-reader');
-  const flag = document.getElementById('filter-flag');
+    const reader = document.getElementById('filter-reader');
+    const mode = document.getElementById('filter-mode');
+    const flag = document.getElementById('filter-flag');
   const scope = document.getElementById('filter-scope');
   const clear = document.getElementById('filter-clear');
   const count = document.getElementById('filter-count');
@@ -635,15 +650,17 @@ code {{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-s
   function matches(card) {{
     const q = quality.value;
     const s = status.value;
-    const r = reader.value;
-    const f = flag.value;
+      const r = reader.value;
+      const m = mode.value;
+      const f = flag.value;
     const sc = scope.value;
     const haystack = card.dataset.search || '';
     const terms = words(search.value);
     if (q !== 'all' && card.dataset.quality !== q) return false;
     if (s !== 'all' && !words(card.dataset.status).includes(s)) return false;
-    if (r !== 'all' && card.dataset.reader !== r) return false;
-    if (f !== 'all' && !words(card.dataset.flags).includes(f.toLowerCase())) return false;
+      if (r !== 'all' && card.dataset.reader !== r) return false;
+      if (m !== 'all' && card.dataset.mode !== m) return false;
+      if (f !== 'all' && !words(card.dataset.flags).includes(f.toLowerCase())) return false;
     if (sc !== '__all' && card.dataset.scope !== sc) return false;
     return terms.every((term) => haystack.includes(term));
   }}
@@ -659,13 +676,14 @@ code {{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-s
     empty.hidden = visible !== 0 || cards.length === 0;
   }}
 
-  [search, quality, status, reader, flag, scope].forEach((control) => control && control.addEventListener(control === search ? 'input' : 'change', update));
+    [search, quality, status, reader, mode, flag, scope].forEach((control) => control && control.addEventListener(control === search ? 'input' : 'change', update));
   clear?.addEventListener('click', () => {{
     search.value = '';
     quality.value = 'all';
     status.value = 'all';
-    reader.value = 'all';
-    flag.value = 'all';
+      reader.value = 'all';
+      mode.value = 'all';
+      flag.value = 'all';
     scope.value = '__all';
     update();
     search.focus();

@@ -8,6 +8,12 @@ import { sendMagicLinkEmail } from '../shared/jmap-mail.mjs';
 import { checkRateLimit } from '../shared/rate-limit.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, extractBearer, normalizeEmail, stableHash, verifyToken } from '../shared/session.mjs';
 import { authProfile, getUserMemory } from '../shared/user-memory.mjs';
+import {
+  availableConversationModes,
+  canUseConversationMode,
+  entitlementsForSubscriber,
+  normalizeConversationMode
+} from '../shared/conversation-modes.mjs';
 import crypto from 'node:crypto';
 import { errorFields, logEvent } from '../shared/logging.mjs';
 import { premiumThankYouSystemPrompt } from '../shared/prompts.mjs';
@@ -117,12 +123,15 @@ async function generatePremiumThankYou() {
 }
 
 async function authSuccessResponse(email, subscriber, source, event, start) {
-  const { sessionId, expiresAt, token } = createSessionToken(email);
-  await recordSession(sessionId, email, expiresAt);
   const status = subscriberStatus(subscriber);
+  const entitlements = entitlementsForSubscriber({ email, subscriber, status });
+  const modes = availableConversationModes(entitlements);
+  const { sessionId, expiresAt, token } = createSessionToken(email, undefined, { entitlements });
+  await recordSession(sessionId, email, expiresAt);
   logEvent('info', 'auth_succeeded', {
     email_hash: emailHash(email),
     subscriber_status: status,
+    entitlements,
     duration_ms: Math.round(performance.now() - start)
   });
   if (source === 'thingy') {
@@ -136,7 +145,13 @@ async function authSuccessResponse(email, subscriber, source, event, start) {
     email: normalizeEmail(email),
     token,
     expires_at: expiresAt,
-    profile: authProfile(memory)
+    entitlements,
+    modes,
+    profile: {
+      ...authProfile(memory),
+      entitlements,
+      modes
+    }
   };
   if (status === 'premium') {
     try {
@@ -520,7 +535,7 @@ async function handleGetOperatorConversation(event, body, start) {
 
 function conversationAuth(event, body) {
   const payload = verifyToken(extractBearer(event, body));
-  return payload ? String(payload.sub || '') : '';
+  return payload || null;
 }
 
 function conversationTableUnavailable(event) {
@@ -528,10 +543,12 @@ function conversationTableUnavailable(event) {
 }
 
 async function handleUserConversations(event, body, start) {
-  const subscriberHash = conversationAuth(event, body);
+  const payload = conversationAuth(event, body);
+  const subscriberHash = payload ? String(payload.sub || '') : '';
   if (!subscriberHash) {
     return jsonResponse(401, { error: 'Please validate your subscriber email to use Thingy.' }, event);
   }
+  const entitlements = Array.isArray(payload.entitlements) ? payload.entitlements : ['reader'];
   const tableName = process.env.TABLE_NAME;
   if (!tableName) return conversationTableUnavailable(event);
 
@@ -562,6 +579,10 @@ async function handleUserConversations(event, body, start) {
     }
 
     if (action === 'create') {
+      const mode = normalizeConversationMode(body.mode);
+      if (!canUseConversationMode(mode, entitlements)) {
+        return jsonResponse(403, { error: 'That Thingy mode is not available for this account.' }, event);
+      }
       const conversationId = crypto.randomUUID();
       const conversation = await createUserConversation({
         dynamodb,
@@ -570,7 +591,8 @@ async function handleUserConversations(event, body, start) {
         conversationId,
         title: body.title || body.message || '',
         preview: body.message || body.title || '',
-        scope: body.scope || 'all'
+        scope: body.scope || 'all',
+        mode
       });
       return jsonResponse(200, { conversation }, event);
     }

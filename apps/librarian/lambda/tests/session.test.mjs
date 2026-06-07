@@ -12,6 +12,13 @@ import {
 } from '../shared/user-memory.mjs';
 import { renderTemplate, agentUserPrompt } from '../shared/prompts.mjs';
 import { subscriberStatus } from '../shared/buttondown.mjs';
+import {
+  availableConversationModes,
+  canUseConversationMode,
+  entitlementsForSubscriber,
+  isOwnerEmail,
+  normalizeConversationMode
+} from '../shared/conversation-modes.mjs';
 import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
 import { readConverseStream } from '../shared/bedrock-stream.mjs';
 import {
@@ -31,6 +38,17 @@ test('session token round trips and rejects tampering', () => {
   assert.equal(verifyToken(`${token}x`), null);
 });
 
+test('session token can carry safe entitlement claims', () => {
+  process.env.SESSION_SECRET = 'test-secret';
+  const { token } = createSessionToken('Reader@Example.com', 'session-2', {
+    entitlements: ['reader', 'owner']
+  });
+  const payload = verifyToken(token);
+
+  assert.equal(payload.sid, 'session-2');
+  assert.deepEqual(payload.entitlements, ['reader', 'owner']);
+});
+
 test('discord bridge token round trips with non-email sub', () => {
   process.env.SESSION_SECRET = 'test-secret';
   const sub = 'discord:0123456789abcdef0123456789abcdef';
@@ -48,6 +66,61 @@ test('createSessionTokenForSub rejects empty sub', () => {
   process.env.SESSION_SECRET = 'test-secret';
   assert.throws(() => createSessionTokenForSub(''), /non-empty string/);
   assert.throws(() => createSessionTokenForSub(null), /non-empty string/);
+});
+
+test('conversation mode entitlements unlock the expected modes', () => {
+  const priorOwnerEmails = process.env.THINGY_OWNER_EMAILS;
+  const priorOwnerHashes = process.env.THINGY_OWNER_EMAIL_HASHES;
+  process.env.THINGY_OWNER_EMAILS = 'jamie@thingelstad.com';
+  delete process.env.THINGY_OWNER_EMAIL_HASHES;
+
+  try {
+    assert.equal(normalizeConversationMode('Thought Partner'), 'thought_partner');
+    assert.equal(isOwnerEmail('jamie@thingelstad.com'), true);
+
+    const readerEntitlements = entitlementsForSubscriber({
+      email: 'reader@example.com',
+      subscriber: { type: 'regular', tags: [] },
+      status: 'regular'
+    });
+    assert.deepEqual(readerEntitlements, ['reader']);
+    assert.equal(canUseConversationMode('thought_partner', readerEntitlements), false);
+
+    const supportingEntitlements = entitlementsForSubscriber({
+      email: 'supporter@example.com',
+      subscriber: { type: 'premium', tags: [] },
+      status: 'premium'
+    });
+    assert.ok(supportingEntitlements.includes('supporting_member'));
+    assert.equal(canUseConversationMode('research_guide', supportingEntitlements), true);
+    assert.equal(canUseConversationMode('thought_partner', supportingEntitlements), false);
+
+    const trustedEntitlements = entitlementsForSubscriber({
+      email: 'family@example.com',
+      subscriber: { type: 'regular', tags: [{ name: 'thingy-family' }] },
+      status: 'regular'
+    });
+    assert.ok(trustedEntitlements.includes('trusted_circle'));
+
+    const ownerEntitlements = entitlementsForSubscriber({
+      email: 'jamie@thingelstad.com',
+      subscriber: { type: 'regular', tags: [] },
+      status: 'regular'
+    });
+    assert.ok(ownerEntitlements.includes('owner'));
+    assert.ok(ownerEntitlements.includes('supporting_member'));
+    assert.ok(ownerEntitlements.includes('trusted_circle'));
+    assert.equal(canUseConversationMode('thought_partner', ownerEntitlements), true);
+    assert.deepEqual(
+      availableConversationModes(ownerEntitlements).map((mode) => mode.id),
+      ['thingy', 'research_guide', 'thought_partner', 'trusted_circle']
+    );
+  } finally {
+    if (priorOwnerEmails === undefined) delete process.env.THINGY_OWNER_EMAILS;
+    else process.env.THINGY_OWNER_EMAILS = priorOwnerEmails;
+    if (priorOwnerHashes === undefined) delete process.env.THINGY_OWNER_EMAIL_HASHES;
+    else process.env.THINGY_OWNER_EMAIL_HASHES = priorOwnerHashes;
+  }
 });
 
 test('authProfile returns returning=false for first-time users', () => {

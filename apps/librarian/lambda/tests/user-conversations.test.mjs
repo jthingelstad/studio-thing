@@ -74,6 +74,7 @@ test('conversationSummaryFromItem unmarshals metadata rows', () => {
     topic: 'RSS',
     tags: ['rss', 'indieweb'],
     scope: 'blog',
+    mode: 'thingy',
     created_at: '2026-06-06T01:00:00.000Z',
     updated_at: '2026-06-06T01:03:00.000Z',
     last_message_at: '2026-06-06T01:03:00.000Z',

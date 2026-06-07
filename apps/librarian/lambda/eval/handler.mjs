@@ -112,8 +112,9 @@ function discordConversationCard({ conversation, turns }) {
   const flags = Array.isArray(conversation.eval_flags) ? conversation.eval_flags : [];
   const improvements = Array.isArray(conversation.eval_improvements) ? conversation.eval_improvements : [];
   const sources = sourceLabels(turns);
+  const mode = conversation.mode || 'thingy';
   const lines = [
-    `**Thingy · \`${conversation.id}\`** · ${conversation.turn_count} turn${conversation.turn_count === 1 ? '' : 's'} · ${conversation.eval_quality || 'watch'}`,
+    `**Thingy · \`${conversation.id}\`** · ${conversation.turn_count} turn${conversation.turn_count === 1 ? '' : 's'} · ${mode} · ${conversation.eval_quality || 'watch'}`,
     conversation.eval_topic ? `**Topic:** ${conversation.eval_topic}` : '',
     conversation.eval_reader ? `**Reader:** ${conversation.eval_reader}` : '',
     conversation.eval_thingy ? `**Thingy:** ${conversation.eval_thingy}` : '',
@@ -149,6 +150,7 @@ function evalSystemPrompt() {
   return `You are Thingy's background evaluator for Jamie Thingelstad's public archive agent.
 
 Thingy answers questions only from Jamie's public archive: The Weekly Thing, thingelstad.com, and Another Thing.
+Some conversations may run in a named mode. In "thought_partner" mode, Thingy should be more candid, reflective, and challenging for Jamie while still staying grounded in the published archive. Do not penalize thoughtful pushback in that mode; do flag unsupported speculation, private-corpus claims, or overreach.
 
 Read the transcript and return ONLY compact JSON:
 {
@@ -182,10 +184,11 @@ async function evaluateConversation({ conversation, turns }) {
       role: 'user',
       content: [{
         text: [
-          `Conversation id: ${conversation.id}`,
-          `Current title: ${conversation.title}`,
-          `Scope: ${conversation.scope}`,
-          `Turn count: ${turns.length}`,
+            `Conversation id: ${conversation.id}`,
+            `Current title: ${conversation.title}`,
+            `Scope: ${conversation.scope}`,
+            `Mode: ${conversation.mode || 'thingy'}`,
+            `Turn count: ${turns.length}`,
           '',
           transcript
         ].join('\n')

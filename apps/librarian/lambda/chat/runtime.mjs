@@ -35,12 +35,20 @@ import {
   validConversationId
 } from '../shared/user-conversations.mjs';
 import {
+  getUserConversationMetadata,
   loadUserConversationHistory,
   loadUserConversationSummaries,
   recordUserArtifactConversation,
   recordUserConversationFeedback,
   recordUserConversationTurn
 } from '../shared/conversation-store.mjs';
+import {
+  canUseConversationMode,
+  conversationModeDefinition,
+  conversationModePrompt,
+  entitlementContext,
+  normalizeConversationMode
+} from '../shared/conversation-modes.mjs';
 
 const DEFAULT_AGENT_MODEL = 'us.anthropic.claude-sonnet-4-6';
 const DEFAULT_EMBEDDING_MODEL = 'cohere.embed-english-v3';
@@ -733,6 +741,27 @@ function readerContextPrompt(clientContext, userProfile) {
   return lines.length ? lines.join('\n') : 'No reader-local context supplied.';
 }
 
+function tokenEntitlements(payload) {
+  return entitlementContext(Array.isArray(payload?.entitlements) ? payload.entitlements : ['reader']);
+}
+
+async function resolveRequestedConversationMode({ body, payload, subscriberHash, conversationId }) {
+  const entitlements = tokenEntitlements(payload);
+  const existing = conversationId
+    ? await getUserConversationMetadata({
+      dynamodb,
+      tableName: process.env.TABLE_NAME,
+      subscriberHash,
+      conversationId
+    })
+    : null;
+  const mode = existing?.mode || normalizeConversationMode(body.mode);
+  if (!canUseConversationMode(mode, entitlements)) {
+    return { ok: false, mode, entitlements, error: 'That Thingy mode is not available for this account.' };
+  }
+  return { ok: true, mode, entitlements, conversation: existing };
+}
+
 function isExternalSource(item) {
   return ['blog', 'podcast'].includes(item?.source_kind) || (!item?.issue_number && Boolean(item?.url));
 }
@@ -1278,8 +1307,9 @@ function experienceFromToolResults(toolResults = [], answer = '', question = '')
   return null;
 }
 
-function welcomePrompt({ readerContext, memoryContext, conversations, scope, spark }) {
+function welcomePrompt({ readerContext, memoryContext, conversations, scope, mode, spark }) {
   const recent = (conversations || []).slice(0, 6);
+  const modeDefinition = conversationModeDefinition(mode);
   const conversationLines = recent.length
     ? recent.map((entry) => `- ${entry.title || 'Untitled chat'} (${entry.turn_count || 0} turns, updated ${String(entry.updated_at || '').slice(0, 10) || 'unknown'})`).join('\n')
     : 'No prior conversations found.';
@@ -1301,12 +1331,17 @@ function welcomePrompt({ readerContext, memoryContext, conversations, scope, spa
     formatExperienceForPrompt(spark),
     '',
     `Active source scope: ${normalizeScope(scope)}`,
+    `Conversation mode: ${modeDefinition.label}`,
+    '',
+    'Mode guidance:',
+    conversationModePrompt(mode),
     '',
     'Requirements:',
     '- Start with a natural greeting that can use the reader local time if supplied.',
     '- If a preferred name is known, use it. If no preferred name is known, ask what Thingy should call the reader, but keep it conversational.',
     '- If this looks like their first time, give a little more orientation. If returning, welcome them back and lightly reference the kind of things they have explored before when memory exists.',
     '- If an archive spark is supplied, mention it as a small invitation, not a citation-heavy answer. The UI may show it as a card.',
+    '- In Thought Partner mode, welcome Jamie as the author and invite a reflective thread rather than explaining Thingy to a general reader.',
     '- If they are a Weekly Thing Supporting Member, acknowledge that gracefully without making the whole message about it.',
     '- Do not frame Thingy as just search. Prefer agentic verbs like connect, trace, compare, explore, and pick up threads.',
     '- Do not recite the active source list or say all sources are open; the UI already shows source selection.',
@@ -1314,20 +1349,21 @@ function welcomePrompt({ readerContext, memoryContext, conversations, scope, spa
   ].join('\n');
 }
 
-async function generateWelcome({ readerContext, memoryContext, conversations, scope, spark }) {
+async function generateWelcome({ readerContext, memoryContext, conversations, scope, mode, spark }) {
   const start = performance.now();
   const response = await bedrock.send(new ConverseCommand({
     modelId: agentModel(),
     system: [{ text: AGENT_SYSTEM_PROMPT }, { cachePoint: { type: 'default' } }],
     messages: [{
       role: 'user',
-      content: [{ text: welcomePrompt({ readerContext, memoryContext, conversations, scope, spark }) }]
+      content: [{ text: welcomePrompt({ readerContext, memoryContext, conversations, scope, mode, spark }) }]
     }],
     inferenceConfig: welcomeInferenceConfig()
   }));
   const answer = sanitizeAnswerProse(bedrockMessageText(response.output?.message || {})).trim();
   logEvent('info', 'welcome_generated', {
     model: agentModel(),
+    mode: normalizeConversationMode(mode),
     conversation_count: (conversations || []).length,
     duration_ms: Math.round(performance.now() - start),
     output_tokens: response.usage?.outputTokens,
@@ -1339,6 +1375,7 @@ async function generateWelcome({ readerContext, memoryContext, conversations, sc
 function preflightUserPrompt(question, scope, history, context = {}) {
   return [
     `Active source scope: ${normalizeScope(scope)}`,
+    `Conversation mode: ${conversationModeDefinition(context.mode).label}`,
     `Recent conversation turns available to the main agent: ${Array.isArray(history) ? history.length : 0}`,
     '',
     'Conversation so far:',
@@ -1376,10 +1413,11 @@ async function evaluatePromptPreflight(question, scope, history = [], context = 
     const text = bedrockMessageText(message);
     const parsed = parsePreflightJson(text);
     const preflight = normalizePreflightDecision(parsed || {}, question);
-    logEvent('info', 'prompt_preflight_completed', {
-      action: preflight.action,
-      category: preflight.category,
-      duration_ms: Math.round(performance.now() - start),
+      logEvent('info', 'prompt_preflight_completed', {
+        action: preflight.action,
+        category: preflight.category,
+        mode: normalizeConversationMode(context.mode),
+        duration_ms: Math.round(performance.now() - start),
       output_tokens: response.usage?.outputTokens
     });
     return preflight;
@@ -2522,8 +2560,9 @@ function traceToolResult(result) {
 
 async function streamBedrockAgentAnswer(question, history, responseStream, options = {}) {
   const start = performance.now();
-  const scope = normalizeScope(options.scope);
-  const memoryContext = String(options.memoryContext || '').trim();
+    const scope = normalizeScope(options.scope);
+    const mode = normalizeConversationMode(options.mode);
+    const memoryContext = String(options.memoryContext || '').trim();
   const readerContext = String(options.readerContext || '').trim();
   const agentQuestion = agentQuestionForPreflight(question, options.preflight);
   const shouldStopWriting = () => Boolean(options.deadlineExceeded?.());
@@ -2550,8 +2589,9 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   // Active scope varies per request, so it goes after the cachePoint as its
   // own block — it tells the agent which corpus it may speak from without
   // busting the static prompt's prefix cache.
-  systemBlocks.push({ text: scopePromptLine(scope) });
-  if (memoryContext) {
+    systemBlocks.push({ text: scopePromptLine(scope) });
+    systemBlocks.push({ text: conversationModePrompt(mode) });
+    if (memoryContext) {
     systemBlocks.push({ text: memoryContext });
   }
   for (let turn = 0; turn <= maxTurns; turn += 1) {
@@ -2634,13 +2674,14 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   if (experience && !shouldStopWriting()) {
     writeSse(responseStream, 'experience', { experience });
   }
-  logEvent('info', 'agent_streamed', {
-    request_id: options.requestId,
-    conversation_id: options.conversationId,
-    model: agentModel(),
-    scope,
-    tool_turns: toolResults.length,
-    citation_count: citations.length,
+    logEvent('info', 'agent_streamed', {
+      request_id: options.requestId,
+      conversation_id: options.conversationId,
+      model: agentModel(),
+      scope,
+      mode,
+      tool_turns: toolResults.length,
+      citation_count: citations.length,
     experience_kind: experience?.kind,
     duration_ms: Math.round(performance.now() - start),
     answer_chars: answer.length,
@@ -2692,9 +2733,22 @@ async function handleCuriosityMapRoute({ event, responseStream, requestId, summa
     s401.end();
     logEvent('warning', 'curiosity_map_unauthorized', { ...summary });
     return;
-  }
-  const subscriberHash = String(payload.sub || '');
-  if (!(await checkRateLimit(`curiosity_map#${subscriberHash}`, Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)))) {
+    }
+    const subscriberHash = String(payload.sub || '');
+    const requestedConversationId = validConversationId(body.conversation_id || body.conversationId);
+    const modeAccess = await resolveRequestedConversationMode({
+      body,
+      payload,
+      subscriberHash,
+      conversationId: requestedConversationId
+    });
+    if (!modeAccess.ok) {
+      const s403 = jsonResponseStream(responseStream, 403);
+      s403.write(JSON.stringify({ error: modeAccess.error, request_id: requestId }));
+      s403.end();
+      return;
+    }
+    if (!(await checkRateLimit(`curiosity_map#${subscriberHash}`, Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)))) {
     const s429 = jsonResponseStream(responseStream, 429);
     s429.write(JSON.stringify({ error: 'Thingy is at the hourly limit for this session.', request_id: requestId }));
     s429.end();
@@ -2716,17 +2770,17 @@ async function handleCuriosityMapRoute({ event, responseStream, requestId, summa
       scope,
       center: body.center || body.topic || body.query
     });
-    const requestedConversationId = validConversationId(body.conversation_id || body.conversationId);
-    const conversationId = requestedConversationId || crypto.randomUUID();
+      const conversationId = requestedConversationId || crypto.randomUUID();
     const center = map.center?.label || String(map.title || '').replace(/^Curiosity Map:\s*/i, '') || 'archive';
     const conversation = await recordUserArtifactConversation({
       dynamodb,
       tableName: process.env.TABLE_NAME,
       subscriberHash,
-      conversationId,
-      artifact: map,
-      scope,
-      requestId,
+        conversationId,
+        artifact: map,
+        scope,
+        mode: modeAccess.mode,
+        requestId,
       title: map.title || 'Curiosity Map',
       preview: `Explore branches from ${center}.`,
       logEvent,
@@ -2736,10 +2790,11 @@ async function handleCuriosityMapRoute({ event, responseStream, requestId, summa
     s200.write(JSON.stringify({ ...map, request_id: requestId, conversation_id: conversationId, conversation }));
     s200.end();
     logEvent('info', 'curiosity_map_completed', {
-      ...summary,
-      subscriber_hash: subscriberHash,
-      conversation_id: conversationId,
-      attached_to_existing_conversation: Boolean(requestedConversationId),
+        ...summary,
+        subscriber_hash: subscriberHash,
+        conversation_id: conversationId,
+        mode: modeAccess.mode,
+        attached_to_existing_conversation: Boolean(requestedConversationId),
       node_count: map.nodes?.length || 0,
       source_count: map.sources?.length || 0,
       scope,
@@ -2883,9 +2938,19 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     }
     subscriberHash = String(payload.sub || '');
 
-    if (path.endsWith('/welcome')) {
-      const scope = normalizeScope(body.scope);
-      const userProfile = normalizeUserProfile(body.user_profile);
+      if (path.endsWith('/welcome')) {
+        const scope = normalizeScope(body.scope);
+        const modeAccess = await resolveRequestedConversationMode({
+          body,
+          payload,
+          subscriberHash,
+          conversationId: ''
+        });
+        if (!modeAccess.ok) {
+          writeSse(stream, 'error', { error: modeAccess.error, request_id: requestId });
+          return;
+        }
+        const userProfile = normalizeUserProfile(body.user_profile);
       const memory = await getUserMemory(subscriberHash);
       const effectiveProfile = {
         ...userProfile,
@@ -2915,12 +2980,13 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
         logEvent('warning', 'welcome_spark_failed', { error_type: error.constructor?.name || 'Error' });
       }
       if (spark) writeSse(stream, 'experience', { experience: spark });
-      const answer = await generateWelcome({ readerContext, memoryContext, conversations, scope, spark });
-      writeSse(stream, 'answer_delta', { delta: answer });
-      writeSse(stream, 'done', { request_id: requestId });
-      logEvent('info', 'welcome_completed', {
-        subscriber_hash: subscriberHash,
-        conversation_count: conversations.length,
+        const answer = await generateWelcome({ readerContext, memoryContext, conversations, scope, mode: modeAccess.mode, spark });
+        writeSse(stream, 'answer_delta', { delta: answer });
+        writeSse(stream, 'done', { request_id: requestId, mode: modeAccess.mode });
+        logEvent('info', 'welcome_completed', {
+          subscriber_hash: subscriberHash,
+          mode: modeAccess.mode,
+          conversation_count: conversations.length,
         has_memory: Boolean(memory),
         has_preferred_name: Boolean(effectiveProfile.preferred_name),
         has_spark: Boolean(spark),
@@ -2929,191 +2995,208 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       return;
     }
 
-    const question = String(body.message || '').trim();
-    const scope = normalizeScope(body.scope);
-    const userProfile = normalizeUserProfile(body.user_profile);
-    const suppliedPreferredName = userProfile.preferred_name || extractPreferredNameFromMessage(question);
-    let effectiveUserProfile = {
-      ...userProfile,
-      preferred_name: suppliedPreferredName || userProfile.preferred_name
-    };
-    let readerContext = readerContextPrompt(body.client_context, effectiveUserProfile);
-    const requestedConversationId = validConversationId(body.conversation_id || body.conversationId);
-    const conversationId = requestedConversationId || crypto.randomUUID();
-    const history = await loadUserConversationHistory({
-      dynamodb,
-      tableName: process.env.TABLE_NAME,
-      subscriberHash,
-      conversationId,
-      logEvent
-    });
-    if (!question) {
-      writeSse(stream, 'error', { error: 'Ask a question about the archive.', request_id: requestId });
-      return;
-    }
-    if (question.length > Number(process.env.MAX_QUESTION_CHARS || '1200')) {
-      writeSse(stream, 'error', { error: 'Please ask a shorter question.', request_id: requestId });
-      return;
-    }
-    if (!(await checkRateLimit(String(payload.sub)))) {
-      writeSse(stream, 'error', { error: 'The librarian is at the hourly limit for this session.', request_id: requestId });
-      return;
-    }
-    if (effectiveUserProfile.preferred_name) {
-      await recordUserPreferredName(subscriberHash, effectiveUserProfile.preferred_name);
-    }
-
-    // Fetch user memory before preflight so memory/conversation-meta prompts
-    // are not answered by the evaluator from an empty context.
-    const userMemory = await getUserMemory(subscriberHash);
-    const memoryContext = memoryContextBlock(userMemory);
-    if (!effectiveUserProfile.preferred_name && userMemory?.preferred_name) {
-      effectiveUserProfile = {
-        ...effectiveUserProfile,
-        preferred_name: userMemory.preferred_name
+      const question = String(body.message || '').trim();
+      const scope = normalizeScope(body.scope);
+      const userProfile = normalizeUserProfile(body.user_profile);
+      const suppliedPreferredName = userProfile.preferred_name || extractPreferredNameFromMessage(question);
+      let effectiveUserProfile = {
+        ...userProfile,
+        preferred_name: suppliedPreferredName || userProfile.preferred_name
       };
-      readerContext = readerContextPrompt(body.client_context, effectiveUserProfile);
-    }
+      let readerContext = readerContextPrompt(body.client_context, effectiveUserProfile);
+      const requestedConversationId = validConversationId(body.conversation_id || body.conversationId);
+      const conversationId = requestedConversationId || crypto.randomUUID();
+      const modeAccess = await resolveRequestedConversationMode({
+        body,
+        payload,
+        subscriberHash,
+        conversationId: requestedConversationId
+      });
+      if (!modeAccess.ok) {
+        writeSse(stream, 'error', { error: modeAccess.error, request_id: requestId });
+        return;
+      }
+      const history = await loadUserConversationHistory({
+        dynamodb,
+        tableName: process.env.TABLE_NAME,
+        subscriberHash,
+        conversationId,
+        logEvent
+      });
+      if (!question) {
+        writeSse(stream, 'error', { error: 'Ask a question about the archive.', request_id: requestId });
+        return;
+      }
+      if (question.length > Number(process.env.MAX_QUESTION_CHARS || '1200')) {
+        writeSse(stream, 'error', { error: 'Please ask a shorter question.', request_id: requestId });
+        return;
+      }
+      if (!(await checkRateLimit(String(payload.sub)))) {
+        writeSse(stream, 'error', { error: 'The librarian is at the hourly limit for this session.', request_id: requestId });
+        return;
+      }
+      if (effectiveUserProfile.preferred_name) {
+        await recordUserPreferredName(subscriberHash, effectiveUserProfile.preferred_name);
+      }
 
-    writeSse(stream, 'meta', { request_id: requestId, conversation_id: conversationId });
-    writeSse(stream, 'status', { message: 'Understanding the request...' });
-    const preflight = await evaluatePromptPreflight(question, scope, history, { readerContext, memoryContext });
-    if (preflight.action === 'direct') {
-      preflight.direct_answer = sanitizeAnswerProse(preflight.direct_answer);
-      const citations = [];
-      writeSse(stream, 'answer_delta', { delta: preflight.direct_answer });
-      writeSse(stream, 'citations', { citations });
+      // Fetch user memory before preflight so memory/conversation-meta prompts
+      // are not answered by the evaluator from an empty context.
+      const userMemory = await getUserMemory(subscriberHash);
+      const memoryContext = memoryContextBlock(userMemory);
+      if (!effectiveUserProfile.preferred_name && userMemory?.preferred_name) {
+        effectiveUserProfile = {
+          ...effectiveUserProfile,
+          preferred_name: userMemory.preferred_name
+        };
+        readerContext = readerContextPrompt(body.client_context, effectiveUserProfile);
+      }
+
+      writeSse(stream, 'meta', { request_id: requestId, conversation_id: conversationId, mode: modeAccess.mode });
+      writeSse(stream, 'status', { message: 'Understanding the request...' });
+      const preflight = await evaluatePromptPreflight(question, scope, history, { readerContext, memoryContext, mode: modeAccess.mode });
+      if (preflight.action === 'direct') {
+        preflight.direct_answer = sanitizeAnswerProse(preflight.direct_answer);
+        const citations = [];
+        writeSse(stream, 'answer_delta', { delta: preflight.direct_answer });
+        writeSse(stream, 'citations', { citations });
+        const conversation = await recordUserConversationTurn({
+          dynamodb,
+          tableName: process.env.TABLE_NAME,
+          subscriberHash,
+          conversationId,
+          question,
+          answer: preflight.direct_answer,
+          scope,
+          mode: modeAccess.mode,
+          requestId,
+          citations,
+          preflight,
+          toolTrace: { calls: [] },
+          metrics: {
+            model: process.env.BEDROCK_PREFLIGHT_MODEL || agentModel(),
+            stop_reason: 'preflight_direct'
+          },
+          logEvent
+        });
+        writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation, mode: modeAccess.mode });
+        // Guarded/direct turns still update memory — the question text was
+        // recorded above, so let the user-memory row reflect that turn too.
+        await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName: effectiveUserProfile.preferred_name });
+        return;
+      }
+
+      writeSse(stream, 'status', { message: 'Investigating the archive...' });
+      let deadlineExceeded = false;
+      const deadlineMs = chatDeadlineMs();
+      const slowNoticeMs = Math.min(chatSlowNoticeMs(), Math.max(1000, deadlineMs - 1000));
+      const slowNoticeTimer = setTimeout(() => {
+        if (deadlineExceeded) return;
+        try {
+          writeSse(stream, 'status', {
+            message: 'This is a deeper archive pass. Thingy is still working...'
+          });
+        } catch {}
+        logEvent('info', 'chat_slow_notice_sent', {
+          request_id: requestId,
+          conversation_id: conversationId,
+          subscriber_hash: subscriberHash,
+          mode: modeAccess.mode,
+          slow_notice_ms: slowNoticeMs,
+          deadline_ms: deadlineMs
+        });
+      }, slowNoticeMs);
+      const deadlineTimer = setTimeout(() => {
+        deadlineExceeded = true;
+        try {
+          writeSse(stream, 'error', {
+            error: 'Thingy spent too long in the archive. Please try again with a narrower angle.',
+            request_id: requestId
+          });
+        } catch {}
+        try { stream.end(); } catch {}
+        logEvent('warning', 'chat_deadline_exceeded', {
+          request_id: requestId,
+          conversation_id: conversationId,
+          subscriber_hash: subscriberHash,
+          mode: modeAccess.mode,
+          deadline_ms: deadlineMs
+        });
+      }, deadlineMs);
+      let result;
+      try {
+        result = await streamBedrockAgentAnswer(question, history, stream, {
+          memoryContext,
+          readerContext,
+          scope,
+          mode: modeAccess.mode,
+          preflight,
+          subscriberHash,
+          requestId,
+          conversationId,
+          deadlineExceeded: () => deadlineExceeded
+        });
+      } finally {
+        clearTimeout(slowNoticeTimer);
+        clearTimeout(deadlineTimer);
+      }
+      if (deadlineExceeded) {
+        await recordUserConversationTurn({
+          dynamodb,
+          tableName: process.env.TABLE_NAME,
+          subscriberHash,
+          conversationId,
+          question,
+          answer: 'Thingy spent too long in the archive before it could return a reliable answer.',
+          scope,
+          mode: modeAccess.mode,
+          requestId,
+          citations: [],
+          preflight,
+          toolTrace: result?.toolTrace || { calls: [] },
+          metrics: {
+            model: result?.metrics?.model || agentModel(),
+            duration_ms: Math.round(performance.now() - start),
+            output_tokens: result?.metrics?.output_tokens,
+            stop_reason: 'app_deadline_exceeded'
+          },
+          logEvent
+        });
+        return;
+      }
+      const answer = result.answer;
+      const citations = result.citations;
       const conversation = await recordUserConversationTurn({
         dynamodb,
         tableName: process.env.TABLE_NAME,
         subscriberHash,
         conversationId,
         question,
-        answer: preflight.direct_answer,
+        answer,
         scope,
+        mode: modeAccess.mode,
         requestId,
         citations,
         preflight,
-        toolTrace: { calls: [] },
-        metrics: {
-          model: process.env.BEDROCK_PREFLIGHT_MODEL || agentModel(),
-          stop_reason: 'preflight_direct'
-        },
+        toolTrace: result.toolTrace,
+        metrics: result.metrics,
         logEvent
       });
-      writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation });
-      // Guarded/direct turns still update memory — the question text was
-      // recorded above, so let the user-memory row reflect that turn too.
+      writeSse(stream, 'citations', { citations });
+      writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation, mode: modeAccess.mode });
+      // Update per-user memory after the answer ships. If the sid has
+      // rotated since the prior turn, this also triggers a Bedrock-
+      // synthesized summary of the previous session.
       await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName: effectiveUserProfile.preferred_name });
-      return;
-    }
-
-    writeSse(stream, 'status', { message: 'Investigating the archive...' });
-    let deadlineExceeded = false;
-    const deadlineMs = chatDeadlineMs();
-    const slowNoticeMs = Math.min(chatSlowNoticeMs(), Math.max(1000, deadlineMs - 1000));
-    const slowNoticeTimer = setTimeout(() => {
-      if (deadlineExceeded) return;
-      try {
-        writeSse(stream, 'status', {
-          message: 'This is a deeper archive pass. Thingy is still working...'
-        });
-      } catch {}
-      logEvent('info', 'chat_slow_notice_sent', {
+      logEvent('info', 'chat_completed', {
+        subscriber_hash: subscriberHash,
         request_id: requestId,
         conversation_id: conversationId,
-        subscriber_hash: subscriberHash,
-        slow_notice_ms: slowNoticeMs,
-        deadline_ms: deadlineMs
+        mode: modeAccess.mode,
+        question_chars: question.length,
+        history_count: history.length,
+        citation_count: citations.length,
+        duration_ms: Math.round(performance.now() - start)
       });
-    }, slowNoticeMs);
-    const deadlineTimer = setTimeout(() => {
-      deadlineExceeded = true;
-      try {
-        writeSse(stream, 'error', {
-          error: 'Thingy spent too long in the archive. Please try again with a narrower angle.',
-          request_id: requestId
-        });
-      } catch {}
-      try { stream.end(); } catch {}
-      logEvent('warning', 'chat_deadline_exceeded', {
-        request_id: requestId,
-        conversation_id: conversationId,
-        subscriber_hash: subscriberHash,
-        deadline_ms: deadlineMs
-      });
-    }, deadlineMs);
-    let result;
-    try {
-      result = await streamBedrockAgentAnswer(question, history, stream, {
-        memoryContext,
-        readerContext,
-        scope,
-        preflight,
-        subscriberHash,
-        requestId,
-        conversationId,
-        deadlineExceeded: () => deadlineExceeded
-      });
-    } finally {
-      clearTimeout(slowNoticeTimer);
-      clearTimeout(deadlineTimer);
-    }
-    if (deadlineExceeded) {
-      await recordUserConversationTurn({
-        dynamodb,
-        tableName: process.env.TABLE_NAME,
-        subscriberHash,
-        conversationId,
-        question,
-        answer: 'Thingy spent too long in the archive before it could return a reliable answer.',
-        scope,
-        requestId,
-        citations: [],
-        preflight,
-        toolTrace: result?.toolTrace || { calls: [] },
-        metrics: {
-          model: result?.metrics?.model || agentModel(),
-          duration_ms: Math.round(performance.now() - start),
-          output_tokens: result?.metrics?.output_tokens,
-          stop_reason: 'app_deadline_exceeded'
-        },
-        logEvent
-      });
-      return;
-    }
-    const answer = result.answer;
-    const citations = result.citations;
-    const conversation = await recordUserConversationTurn({
-      dynamodb,
-      tableName: process.env.TABLE_NAME,
-      subscriberHash,
-      conversationId,
-      question,
-      answer,
-      scope,
-      requestId,
-      citations,
-      preflight,
-      toolTrace: result.toolTrace,
-      metrics: result.metrics,
-      logEvent
-    });
-    writeSse(stream, 'citations', { citations });
-    writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation });
-    // Update per-user memory after the answer ships. If the sid has
-    // rotated since the prior turn, this also triggers a Bedrock-
-    // synthesized summary of the previous session.
-    await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName: effectiveUserProfile.preferred_name });
-    logEvent('info', 'chat_completed', {
-      subscriber_hash: subscriberHash,
-      request_id: requestId,
-      conversation_id: conversationId,
-      question_chars: question.length,
-      history_count: history.length,
-      citation_count: citations.length,
-      duration_ms: Math.round(performance.now() - start)
-    });
   } catch (error) {
     logEvent('error', 'request_failed', errorFields(error, {
       ...summary,

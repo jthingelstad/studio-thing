@@ -36,12 +36,13 @@ export function signPayload(payload) {
   return `${encoded}.${signature}`;
 }
 
-export function createSessionToken(email, sessionId = crypto.randomBytes(18).toString('base64url')) {
+export function createSessionToken(email, sessionId = crypto.randomBytes(18).toString('base64url'), claims = {}) {
   const expiresAt = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
+  const safeClaims = claims && typeof claims === 'object' && !Array.isArray(claims) ? claims : {};
   return {
     sessionId,
     expiresAt,
-    token: signPayload({ sid: sessionId, sub: emailHash(email), exp: expiresAt })
+    token: signPayload({ ...safeClaims, sid: sessionId, sub: emailHash(email), exp: expiresAt })
   };
 }
 
