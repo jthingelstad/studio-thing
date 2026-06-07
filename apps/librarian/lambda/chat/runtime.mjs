@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { BedrockRuntimeClient, ConverseCommand, ConverseStreamCommand, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 import { BedrockAgentRuntimeClient, RerankCommand } from '@aws-sdk/client-bedrock-agent-runtime';
-import { DynamoDBClient, PutItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { readConverseStream } from '../shared/bedrock-stream.mjs';
 import { sanitizeAnswerProse } from '../shared/answer-sanitizer.mjs';
@@ -37,6 +37,7 @@ import {
   loadUserConversationHistory,
   loadUserConversationSummaries,
   recordUserArtifactConversation,
+  recordUserConversationFeedback,
   recordUserConversationTurn
 } from '../shared/conversation-store.mjs';
 
@@ -47,7 +48,6 @@ const DEFAULT_EMBEDDING_DIMENSIONS = 1024;
 const DEFAULT_MAX_TOOL_TURNS = 5;
 const RATE_LIMIT_WINDOW_SECONDS = 60 * 60;
 const RATE_LIMIT_MAX = 20;
-const CONVERSATION_LOG_TTL_DAYS = 60;
 const TOKEN_RE = /[a-z0-9][a-z0-9'-]{1,}/gi;
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_HISTORY_CHARS = 4000;
@@ -124,10 +124,6 @@ function normalizeHeaders(headers) {
 
 function clientSourceIp(event) {
   return event.requestContext?.http?.sourceIp || event.requestContext?.identity?.sourceIp || '';
-}
-
-function userAgent(event) {
-  return normalizeHeaders(event.headers || {})['user-agent'] || '';
 }
 
 function methodAndPath(event) {
@@ -216,123 +212,11 @@ async function checkRateLimit(identity, maxRequests = Number(process.env.RATE_LI
   return count <= maxRequests;
 }
 
-function conversationLoggingEnabled() {
-  return !['0', 'false', 'no'].includes(String(process.env.LIBRARIAN_CONVERSATION_LOGGING || '1').toLowerCase());
-}
-
-function citationIssues(citations) {
-  const seen = new Set();
-  const issues = [];
-  for (const citation of citations || []) {
-    const issue = String(citation.issue_number || '').trim();
-    if (issue && !seen.has(issue)) {
-      seen.add(issue);
-      issues.push(issue);
-    }
-  }
-  return issues;
-}
-
-function dynamoString(value) {
-  return { S: String(value || '') };
-}
-
-function dynamoNumber(value) {
-  return { N: String(Number(value || 0)) };
-}
-
-function preflightItem(preflight) {
-  const value = preflight && typeof preflight === 'object' ? preflight : {};
-  return {
-    M: {
-      action: dynamoString(value.action),
-      category: dynamoString(value.category),
-      original_question: dynamoString(String(value.original_question || '').slice(0, 1200)),
-      rewritten_question: dynamoString(String(value.rewritten_question || '').slice(0, 1200)),
-      direct_answer: dynamoString(String(value.direct_answer || '').slice(0, 2000)),
-      rationale: dynamoString(String(value.rationale || '').slice(0, 500)),
-      answer_guidance: dynamoString(String(value.answer_guidance || '').slice(0, 700))
-    }
-  };
-}
-
-function citationItem(citation) {
-  return {
-    M: {
-      issue_number: dynamoString(citation.issue_number),
-      subject: dynamoString(citation.subject),
-      publish_date: dynamoString(citation.publish_date),
-      section: dynamoString(citation.section),
-      url: dynamoString(citation.url)
-    }
-  };
-}
-
-async function recordConversation({
-  event,
-  subscriberHash,
-  conversationId,
-  question,
-  answer,
-  historyCount,
-  citations,
-  preflight,
-  route,
-  requestId
-}) {
-  const tableName = process.env.TABLE_NAME;
-  if (!tableName || !conversationLoggingEnabled()) return;
-  const start = performance.now();
-  const now = new Date();
-  const createdAt = now.toISOString();
-  const ttlDays = Number(process.env.LIBRARIAN_CONVERSATION_LOG_TTL_DAYS || CONVERSATION_LOG_TTL_DAYS);
-  const ttl = Math.floor(Date.now() / 1000) + ttlDays * 86400;
-  const issues = citationIssues(citations);
-  const conversationRequestId = requestId || crypto.randomUUID();
-  try {
-    await dynamodb.send(new PutItemCommand({
-      TableName: tableName,
-      Item: {
-        pk: dynamoString(`conversation#${conversationRequestId}`),
-        sk: dynamoString('chat'),
-        created_at: dynamoString(createdAt),
-        ttl: dynamoNumber(ttl),
-        request_id: dynamoString(conversationRequestId),
-        conversation_id: dynamoString(conversationId),
-        subscriber_hash: dynamoString(subscriberHash),
-        route: dynamoString(route),
-        question: dynamoString(String(question || '').slice(0, 4000)),
-        answer: dynamoString(String(answer || '').slice(0, 12000)),
-        question_chars: dynamoNumber(String(question || '').length),
-        answer_chars: dynamoNumber(String(answer || '').length),
-        history_count: dynamoNumber(historyCount),
-        citation_count: dynamoNumber((citations || []).length),
-        source_issues: { L: issues.map(dynamoString) },
-        citations: { L: (citations || []).slice(0, 12).map(citationItem) },
-        preflight: preflightItem(preflight),
-        user_agent: dynamoString(userAgent(event).slice(0, 300))
-      }
-    }));
-    logEvent('info', 'conversation_recorded', {
-      subscriber_hash: subscriberHash,
-      request_id: conversationRequestId,
-      conversation_id: conversationId,
-      question_chars: String(question || '').length,
-      answer_chars: String(answer || '').length,
-      preflight_action: preflight?.action,
-      preflight_category: preflight?.category,
-      citation_count: (citations || []).length,
-      duration_ms: Math.round(performance.now() - start)
-    });
-  } catch (error) {
-    logEvent('warning', 'conversation_record_failed', { request_id: requestId, error_type: error.constructor?.name || 'Error' });
-  }
-}
-
-async function recordFeedback({ subscriberHash, requestId, reaction }) {
+async function recordFeedback({ subscriberHash, requestId, reaction, comment }) {
   const tableName = process.env.TABLE_NAME;
   const validRequestId = validFeedbackRequestId(requestId);
   const validReaction = normalizeFeedbackReaction(reaction);
+  const feedbackComment = String(comment || '').trim().replace(/\s+/g, ' ').slice(0, 1000);
   if (!tableName) return { statusCode: 500, payload: { error: 'Thingy feedback is unavailable right now.' } };
   if (!validRequestId || !validReaction) {
     return { statusCode: 400, payload: { error: 'Feedback requires a valid request_id and reaction.' } };
@@ -340,28 +224,27 @@ async function recordFeedback({ subscriberHash, requestId, reaction }) {
 
   const feedbackAt = new Date().toISOString();
   try {
-    await dynamodb.send(new UpdateItemCommand({
-      TableName: tableName,
-      Key: { pk: dynamoString(`conversation#${validRequestId}`), sk: dynamoString('chat') },
-      UpdateExpression: 'SET feedback_reaction = :reaction, feedback_at = :feedback_at ADD feedback_revision :one',
-      ConditionExpression: 'attribute_exists(pk) AND subscriber_hash = :subscriber_hash',
-      ExpressionAttributeValues: {
-        ':reaction': dynamoString(validReaction),
-        ':feedback_at': dynamoString(feedbackAt),
-        ':one': dynamoNumber(1),
-        ':subscriber_hash': dynamoString(subscriberHash)
-      }
-    }));
+    const result = await recordUserConversationFeedback({
+      dynamodb,
+      tableName,
+      subscriberHash,
+      requestId: validRequestId,
+      reaction: validReaction,
+      comment: feedbackComment,
+      feedbackAt,
+      logEvent
+    });
+    if (!result.found) {
+      return { statusCode: 404, payload: { error: 'Conversation not found for feedback.', request_id: validRequestId } };
+    }
     logEvent('info', 'feedback_recorded', {
       subscriber_hash: subscriberHash,
       request_id: validRequestId,
-      reaction: validReaction
+      reaction: validReaction,
+      has_comment: Boolean(feedbackComment)
     });
-    return { statusCode: 200, payload: { ok: true, request_id: validRequestId, reaction: validReaction } };
+    return { statusCode: 200, payload: { ok: true, request_id: validRequestId, reaction: validReaction, has_comment: Boolean(feedbackComment) } };
   } catch (error) {
-    if (error.name === 'ConditionalCheckFailedException') {
-      return { statusCode: 404, payload: { error: 'Conversation not found for feedback.', request_id: validRequestId } };
-    }
     logEvent('warning', 'feedback_record_failed', { request_id: validRequestId, error_type: error.constructor?.name || 'Error' });
     return { statusCode: 500, payload: { error: 'Thingy could not save feedback right now.', request_id: validRequestId } };
   }
@@ -2518,6 +2401,45 @@ function collectToolCitations(toolResults) {
   return citationsFor(sources);
 }
 
+function compactTraceValue(value, maxChars = 1200) {
+  if (value == null) return value;
+  if (typeof value === 'string') return value.slice(0, maxChars);
+  try {
+    const json = JSON.stringify(value);
+    if (json.length <= maxChars) return value;
+    return { compacted: true, chars: json.length, preview: json.slice(0, maxChars) };
+  } catch {
+    return { compacted: true };
+  }
+}
+
+function countResultItems(result) {
+  if (!result || typeof result !== 'object') return 0;
+  return [
+    result.results,
+    result.results_a,
+    result.results_b,
+    result.reading_path,
+    result.related_sources,
+    result.incoming_links,
+    result.outgoing_links,
+    result.cross_source_links
+  ].reduce((total, value) => total + (Array.isArray(value) ? value.length : 0), 0);
+}
+
+function traceToolResult(result) {
+  if (!result || typeof result !== 'object') return {};
+  return {
+    error: result.error ? String(result.error).slice(0, 300) : '',
+    result_count: countResultItems(result),
+    total_count: Number(result.total_count || 0),
+    scope: result.scope,
+    source_kind: result.source_kind,
+    mode: result.mode,
+    topic: result.topic || result.theme || result.entity || ''
+  };
+}
+
 async function streamBedrockAgentAnswer(question, history, responseStream, options = {}) {
   const start = performance.now();
   const scope = normalizeScope(options.scope);
@@ -2535,6 +2457,7 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
     }]
   }];
   const toolResults = [];
+  const toolTrace = { calls: [] };
   let answer = '';
   let usage = {};
   let stopReason = '';
@@ -2575,12 +2498,22 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
       writeSse(responseStream, 'status', { message: `Checking ${toolUse.name.replaceAll('_', ' ')}...` });
       const handler = ARCHIVE_TOOLS[toolUse.name];
       let result;
+      const toolStart = performance.now();
+      let ok = true;
       try {
         result = handler ? await handler(toolUse.input || {}, { scope, subscriberHash: options.subscriberHash }) : { error: `Unknown tool: ${toolUse.name}` };
       } catch (error) {
+        ok = false;
         logEvent('error', 'tool_call_failed', { tool_name: toolUse.name, error_type: error.constructor?.name || 'Error' });
         result = { error: `${toolUse.name} failed: ${error.constructor?.name || 'Error'}` };
       }
+      toolTrace.calls.push({
+        name: toolUse.name,
+        input: compactTraceValue(toolUse.input || {}, 1000),
+        ok: ok && !result?.error,
+        duration_ms: Math.round(performance.now() - toolStart),
+        result: traceToolResult(result)
+      });
       toolResults.push(result);
       resultBlocks.push({ toolResult: { toolUseId: toolUse.toolUseId, content: [{ json: result }] } });
     }
@@ -2614,7 +2547,18 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
     output_tokens: usage?.outputTokens,
     stop_reason: stopReason
   });
-  return { answer, citations, experience };
+  return {
+    answer,
+    citations,
+    experience,
+    toolTrace,
+    metrics: {
+      model: agentModel(),
+      duration_ms: Math.round(performance.now() - start),
+      output_tokens: usage?.outputTokens,
+      stop_reason: stopReason
+    }
+  };
 }
 
 function streamFromResponse(responseStream, event, statusCode) {
@@ -2743,7 +2687,8 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       ? await recordFeedback({
         subscriberHash: String(payload.sub || ''),
         requestId: body.request_id,
-        reaction: body.reaction
+        reaction: body.reaction,
+        comment: body.comment
       })
       : { statusCode: 401, payload: { error: 'Please validate your subscriber email to use the librarian.', request_id: requestId } };
     const stream = jsonResponseStream(responseStream, result.statusCode);
@@ -2948,10 +2893,14 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
         requestId,
         citations,
         preflight,
+        toolTrace: { calls: [] },
+        metrics: {
+          model: process.env.BEDROCK_PREFLIGHT_MODEL || agentModel(),
+          stop_reason: 'preflight_direct'
+        },
         logEvent
       });
       writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation });
-      await recordConversation({ event, subscriberHash, conversationId, question, answer: preflight.direct_answer, historyCount: history.length, citations, preflight, route: 'stream', requestId });
       // Guarded/direct turns still update memory — the question text was
       // recorded above, so let the user-memory row reflect that turn too.
       await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName: effectiveUserProfile.preferred_name });
@@ -2988,22 +2937,12 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       requestId,
       citations,
       preflight,
+      toolTrace: result.toolTrace,
+      metrics: result.metrics,
       logEvent
     });
     writeSse(stream, 'citations', { citations });
     writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation });
-    await recordConversation({
-      event,
-      subscriberHash,
-      conversationId,
-      question,
-      answer,
-      historyCount: history.length,
-      citations,
-      preflight,
-      route: 'stream',
-      requestId
-    });
     // Update per-user memory after the answer ships. If the sid has
     // rotated since the prior turn, this also triggers a Bedrock-
     // synthesized summary of the previous session.

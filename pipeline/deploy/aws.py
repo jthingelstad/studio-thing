@@ -96,7 +96,7 @@ def copy_lambda_source(build_dir: Path) -> None:
         shutil.copy2(LAMBDA_DIR / name, build_dir / name)
     run(["npm", "ci", "--omit=dev", "--no-audit", "--no-fund"], cwd=build_dir)
 
-    for name in ("auth", "chat", "shared", "prompts"):
+    for name in ("auth", "chat", "eval", "shared", "prompts"):
         shutil.copytree(LAMBDA_DIR / name, build_dir / name, dirs_exist_ok=True)
 
 
@@ -226,6 +226,7 @@ def deploy_stack(
     buttondown_api_key: str,
     session_secret: str | None,
     discord_bridge_secret: str | None,
+    discord_conversation_webhook_url: str | None,
     log_level: str,
     auth_rate_limit_max: str,
     cloudformation_role_arn: str | None,
@@ -234,8 +235,14 @@ def deploy_stack(
     body = TEMPLATE.read_text(encoding="utf-8")
 
     exists = True
+    existing_parameter_keys: set[str] = set()
     try:
-        cloudformation.describe_stacks(StackName=stack_name)
+        stack = cloudformation.describe_stacks(StackName=stack_name)["Stacks"][0]
+        existing_parameter_keys = {
+            str(param.get("ParameterKey"))
+            for param in stack.get("Parameters", [])
+            if param.get("ParameterKey")
+        }
     except cloudformation.exceptions.ClientError:
         exists = False
 
@@ -261,6 +268,17 @@ def deploy_stack(
         # No env value and no existing stack — leave empty (bridge disabled).
         bridge_parameter = {"ParameterKey": "DiscordBridgeSecret", "ParameterValue": ""}
 
+    webhook_parameter: dict[str, str | bool]
+    if discord_conversation_webhook_url:
+        webhook_parameter = {
+            "ParameterKey": "DiscordConversationWebhookUrl",
+            "ParameterValue": discord_conversation_webhook_url,
+        }
+    elif exists and "DiscordConversationWebhookUrl" in existing_parameter_keys:
+        webhook_parameter = {"ParameterKey": "DiscordConversationWebhookUrl", "UsePreviousValue": True}
+    else:
+        webhook_parameter = {"ParameterKey": "DiscordConversationWebhookUrl", "ParameterValue": ""}
+
     parameters = [
         {"ParameterKey": "AllowedOrigin", "ParameterValue": allowed_origin},
         {"ParameterKey": "CodeBucket", "ParameterValue": bucket},
@@ -274,6 +292,7 @@ def deploy_stack(
         {"ParameterKey": "ButtondownApiKey", "ParameterValue": buttondown_api_key},
         session_parameter,
         bridge_parameter,
+        webhook_parameter,
         {"ParameterKey": "LogLevel", "ParameterValue": log_level},
         {"ParameterKey": "AuthRateLimitMax", "ParameterValue": auth_rate_limit_max},
     ]
@@ -451,6 +470,7 @@ def main() -> int:
 
     session_secret = os.environ.get("LIBRARIAN_SESSION_SECRET")
     discord_bridge_secret = os.environ.get("LIBRARIAN_BRIDGE_SECRET") or None
+    discord_conversation_webhook_url = os.environ.get("DISCORD_CONVERSATION_WEBHOOK_URL") or None
     outputs, generated_session_secret = deploy_stack(
         stack_name=args.stack_name,
         bucket=bucket,
@@ -464,6 +484,7 @@ def main() -> int:
         buttondown_api_key=require_env("BUTTONDOWN_API_KEY"),
         session_secret=session_secret,
         discord_bridge_secret=discord_bridge_secret,
+        discord_conversation_webhook_url=discord_conversation_webhook_url,
         log_level=args.log_level.upper(),
         auth_rate_limit_max=str(args.auth_rate_limit_max),
         cloudformation_role_arn=args.cloudformation_role_arn,

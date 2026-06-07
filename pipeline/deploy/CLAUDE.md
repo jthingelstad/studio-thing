@@ -60,7 +60,8 @@ Pulled from the repo-root `.env`. Required:
 |---|---|---|
 | `BUTTONDOWN_API_KEY` | account secrets | Auth Lambda's subscriber verification |
 | `LIBRARIAN_SESSION_SECRET` | (auto-generated if missing) | HMAC signing for session JWTs |
-| `LIBRARIAN_BRIDGE_SECRET` | shared secret | `/list_conversations` + `/retrieve` auth |
+| `LIBRARIAN_BRIDGE_SECRET` | shared secret | operator conversation reads + `/retrieve` auth |
+| `DISCORD_CONVERSATION_WEBHOOK_URL` | Discord incoming webhook | Eval Lambda posts reviewed conversation cards to `#chatter`; no Discord bot runtime required |
 | `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` | the `wt-archive` IAM user | Deploys + corpus upload |
 
 The CloudFormation stack uses an IAM service role for execution; the local AWS credentials are just for `cloudformation:UpdateStack` + `s3:PutObject`.
@@ -75,7 +76,7 @@ Don't move the rerank region. Don't change the agent model without smoke-testing
 
 ## CloudFormation template
 
-Lives at `apps/librarian/infra/cloudformation.yaml`. Two Lambdas (auth + stream), API Gateway (REST), Lambda Function URL (Stream, RESPONSE_STREAM mode), DynamoDB (conversations + rate limits + user memory), IAM role + policies, CloudWatch log groups, Bedrock IAM policies for embed/rerank/invoke. See [`../../apps/librarian/CLAUDE.md`](../../apps/librarian/CLAUDE.md) for the runtime side of what's deployed.
+Lives at `apps/librarian/infra/cloudformation.yaml`. Three Lambdas (auth + stream + eval), API Gateway (REST), Lambda Function URL (Stream, RESPONSE_STREAM mode), DynamoDB (canonical conversations + rate limits + user memory, with Streams enabled for eval), IAM role + policies, CloudWatch log groups, Bedrock IAM policies for embed/rerank/invoke, and a DynamoDB Stream event source mapping for the eval Lambda. See [`../../apps/librarian/CLAUDE.md`](../../apps/librarian/CLAUDE.md) for the runtime side of what's deployed.
 
 ## Conventions
 

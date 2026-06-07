@@ -1,10 +1,9 @@
-import { fromDynamoAttr } from './conversations.mjs';
-
 export const USER_CONVERSATION_LIMIT = 50;
 export const USER_CONVERSATION_TURN_LIMIT = 80;
 export const MAX_HISTORY_MESSAGES = 8;
 export const MAX_HISTORY_CHARS = 4000;
 export const MAX_ARTIFACT_JSON_CHARS = 20000;
+export const MAX_TOOL_TRACE_JSON_CHARS = 16000;
 
 const CONVERSATION_ID_RE = /^[A-Za-z0-9_.:-]{1,96}$/;
 
@@ -48,6 +47,17 @@ export function dynamoNumber(value) {
 
 export function dynamoList(values, mapper = dynamoString) {
   return { L: (values || []).map(mapper) };
+}
+
+export function fromDynamoAttr(av) {
+  if (av == null || typeof av !== 'object') return null;
+  if ('S' in av) return av.S;
+  if ('N' in av) return Number(av.N);
+  if ('BOOL' in av) return Boolean(av.BOOL);
+  if ('NULL' in av) return null;
+  if ('L' in av) return (av.L || []).map(fromDynamoAttr);
+  if ('M' in av) return Object.fromEntries(Object.entries(av.M || {}).map(([k, v]) => [k, fromDynamoAttr(v)]));
+  return null;
 }
 
 export function preflightDynamoItem(preflight) {
@@ -149,6 +159,25 @@ export function artifactDynamoString(artifact) {
   return dynamoString(artifactJsonForStorage(artifact));
 }
 
+export function boundedJsonForStorage(value, maxChars = MAX_TOOL_TRACE_JSON_CHARS) {
+  if (value == null) return '';
+  try {
+    const json = JSON.stringify(value);
+    if (json.length <= maxChars) return json;
+    return JSON.stringify({
+      compacted: true,
+      omitted: true,
+      original_chars: json.length
+    });
+  } catch {
+    return '';
+  }
+}
+
+export function toolTraceDynamoString(trace) {
+  return dynamoString(boundedJsonForStorage(trace, MAX_TOOL_TRACE_JSON_CHARS));
+}
+
 export function citationDynamoItem(citation) {
   return {
     M: {
@@ -169,17 +198,36 @@ function itemObject(item) {
 export function conversationSummaryFromItem(item) {
   const o = itemObject(item);
   const id = o.conversation_id || String(o.sk || '').replace(/^conversation#/, '');
+  const tags = Array.isArray(o.tags) ? o.tags : [];
+  const evalFlags = Array.isArray(o.eval_flags) ? o.eval_flags : [];
+  const evalImprovements = Array.isArray(o.eval_improvements) ? o.eval_improvements : [];
   return {
     id,
     conversation_id: id,
     title: o.title || 'Untitled chat',
+    title_source: o.title_source || '',
     preview: o.preview || '',
+    summary: o.summary || '',
+    topic: o.topic || '',
+    tags,
     scope: o.scope || 'all',
     created_at: o.created_at || '',
     updated_at: o.updated_at || o.created_at || '',
     last_message_at: o.last_message_at || o.updated_at || '',
     last_request_id: o.last_request_id || '',
-    turn_count: Number(o.turn_count || 0)
+    turn_count: Number(o.turn_count || 0),
+    eval_status: o.eval_status || '',
+    eval_quality: o.eval_quality || '',
+    eval_flags: evalFlags,
+    eval_improvements: evalImprovements,
+    eval_assessed_at: o.eval_assessed_at || '',
+    eval_model: o.eval_model || '',
+    eval_last_request_id: o.eval_last_request_id || '',
+    eval_topic: o.eval_topic || '',
+    eval_reader: o.eval_reader || '',
+    eval_thingy: o.eval_thingy || '',
+    eval_takeaway: o.eval_takeaway || '',
+    eval_posted_to_chatter_at: o.eval_posted_to_chatter_at || ''
   };
 }
 
@@ -206,6 +254,25 @@ export function conversationTurnFromItem(item) {
     citation_count: Number(o.citation_count || 0),
     citations: Array.isArray(o.citations) ? o.citations : [],
     preflight: o.preflight && typeof o.preflight === 'object' ? o.preflight : null,
+    feedback_reaction: o.feedback_reaction || '',
+    feedback_at: o.feedback_at || '',
+    feedback_comment: o.feedback_comment || '',
+    model: o.model || '',
+    duration_ms: Number(o.duration_ms || 0),
+    output_tokens: Number(o.output_tokens || 0),
+    stop_reason: o.stop_reason || '',
+    tool_count: Number(o.tool_count || 0),
+    tool_names: Array.isArray(o.tool_names) ? o.tool_names : [],
+    tool_trace: typeof o.tool_trace_json === 'string' && o.tool_trace_json
+      ? (() => {
+        try {
+          const parsed = JSON.parse(o.tool_trace_json);
+          return parsed && typeof parsed === 'object' ? parsed : null;
+        } catch {
+          return null;
+        }
+      })()
+      : null,
     artifact
   };
 }

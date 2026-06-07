@@ -53,6 +53,14 @@ Parameters:
       /auth endpoint accepts action=discord_bridge requests carrying this
       secret + a discord_user_id and mints a session token for that user.
       Leave empty to disable the bridge action (returns 503).
+  DiscordConversationWebhookUrl:
+    Type: String
+    NoEcho: true
+    Default: ""
+    Description: >
+      Optional Discord incoming webhook URL for Thingy conversation eval
+      cards. When set, the background eval Lambda posts reviewed
+      conversations directly to Discord and marks them posted.
   LogLevel:
     Type: String
     Default: INFO
@@ -86,6 +94,8 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: ttl
         Enabled: true
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       Tags:
@@ -122,6 +132,13 @@ Resources:
                   - dynamodb:Query
                   - dynamodb:Scan
                 Resource: !GetAtt LibrarianTable.Arn
+              - Effect: Allow
+                Action:
+                  - dynamodb:DescribeStream
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                  - dynamodb:ListStreams
+                Resource: !GetAtt LibrarianTable.StreamArn
               - Effect: Allow
                 Action: s3:GetObject
                 Resource:
@@ -212,6 +229,40 @@ Resources:
       Tags:
         - Key: project
           Value: Thingy
+
+  LibrarianEvalFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - arm64
+      Code:
+        S3Bucket: !Ref CodeBucket
+        S3Key: !Ref CodeKey
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref LibrarianTable
+          LOG_LEVEL: !Ref LogLevel
+          BEDROCK_AGENT_MODEL: us.anthropic.claude-sonnet-4-6
+          DISCORD_CONVERSATION_WEBHOOK_URL: !Ref DiscordConversationWebhookUrl
+      Handler: eval/handler.handler
+      MemorySize: 1024
+      ReservedConcurrentExecutions: 1
+      Role: !GetAtt LibrarianFunctionRole.Arn
+      Runtime: nodejs20.x
+      Timeout: 180
+      Tags:
+        - Key: project
+          Value: Thingy
+
+  LibrarianEvalEventSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt LibrarianTable.StreamArn
+      FunctionName: !Ref LibrarianEvalFunction
+      StartingPosition: LATEST
+      BatchSize: 25
+      MaximumBatchingWindowInSeconds: 30
+      Enabled: true
 
   LibrarianStreamFunctionUrl:
     Type: AWS::Lambda::Url

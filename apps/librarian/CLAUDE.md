@@ -2,16 +2,17 @@
 
 Operational notes for the Thingy Lambda stack. Human-facing overview lives in [`README.md`](README.md). The full runtime guide (env vars, IAM cleanup plan, retrieval architecture in depth, Tinylytics events, deployment checklist) is at [`../../reference/librarian.md`](../../reference/librarian.md). This file is the "what to keep in mind when editing here" memory.
 
-## Architecture: two Lambdas, one CloudFormation stack
+## Architecture: three Lambdas, one CloudFormation stack
 
 The Lambda code is **Node.js** (Node 20 runtime, arm64). Everything else in this monorepo is Python — that's intentional: the Lambda needs the AWS SDK v3 + response-streaming primitives, both of which are smoother in Node.
 
-Two Lambdas in `infra/cloudformation.yaml`:
+Three Lambdas in `infra/cloudformation.yaml`:
 
-- **`LibrarianFunction`** (`lambda/auth/handler.mjs`) — REST API behind API Gateway. Handles `/auth` (subscriber email confirmation via Buttondown + JWT-style session token + Discord bridge mint), `/feedback` (per-answer reactions), `/list_conversations` (operator-only mirror feed for thingy_bridge). Memory 1024 MB, timeout 35s.
+- **`LibrarianFunction`** (`lambda/auth/handler.mjs`) — REST API behind API Gateway. Handles `/auth` (subscriber email confirmation via Buttondown + JWT-style session token + Discord bridge mint), `/feedback` (per-answer reactions + optional comments), and operator-only canonical conversation reads for `thingy_bridge`. Memory 1024 MB, timeout 35s.
 - **`LibrarianStreamFunction`** (`lambda/chat/handler.mjs` → `runtime.mjs`) — Function URL with `RESPONSE_STREAM`. Handles `/chat` (SSE-streamed agent loop) and `/retrieve` (semantic JSON-only retrieval for workshop_bot). Memory 1536 MB, timeout 90s, ReservedConcurrentExecutions = 5.
+- **`LibrarianEvalFunction`** (`lambda/eval/handler.mjs`) — DynamoDB Stream consumer. Reviews server-side conversations out of band, writes summary/quality/flags back to canonical conversation rows, and posts operator cards directly to Discord through `DISCORD_CONVERSATION_WEBHOOK_URL`. Memory 1024 MB, timeout 180s, ReservedConcurrentExecutions = 1.
 
-Both Lambdas share the same IAM role (`LibrarianFunctionRole`), the same prompts directory (`prompts/` packaged into both bundles), and the same `shared/` helpers.
+All Lambdas share the same IAM role (`LibrarianFunctionRole`) and `shared/` helpers. The auth + stream bundles also include the `prompts/` directory.
 
 ### The `/chat` agent loop
 
@@ -58,7 +59,7 @@ Deploy steps:
 2. Package both Lambda bundles (`auth/` + `chat/` separately).
 3. Upload zip to `s3://weekly-thing-librarian/code/{auth,chat}-lambda/<ts>.zip`.
 4. If not `--skip-corpus-upload`: upload all three API corpora — Weekly Thing corpus + graph, blog corpus, and podcast corpus.
-5. CloudFormation `update-stack` with the new code keys + secrets from `.env` (`SESSION_SECRET`, `DISCORD_BRIDGE_SECRET`, `BUTTONDOWN_API_KEY`).
+5. CloudFormation `update-stack` with the new code keys + secrets from `.env` (`SESSION_SECRET`, `DISCORD_BRIDGE_SECRET`, `DISCORD_CONVERSATION_WEBHOOK_URL`, `BUTTONDOWN_API_KEY`).
 6. Configure 30-day log retention on the auto-created log groups.
 7. Update `.env` with the latest stack outputs (`LIBRARIAN_API_URL`, `LIBRARIAN_STREAM_URL`).
 
@@ -87,7 +88,8 @@ These are set at deploy time from `.env`, written into the Lambda environment by
 | `BLOG_CORPUS_KEY`, `PODCAST_CORPUS_KEY` | stream | Optional source-specific corpora loaded lazily |
 | `BUTTONDOWN_API_KEY` | auth | Email subscriber verification |
 | `SESSION_SECRET` | both | HMAC secret for session JWTs |
-| `DISCORD_BRIDGE_SECRET` | both | Bridge-secret auth for `/list_conversations` + `/retrieve` |
+| `DISCORD_BRIDGE_SECRET` | auth + stream | Bridge-secret auth for operator conversation reads + `/retrieve` |
+| `DISCORD_CONVERSATION_WEBHOOK_URL` | eval | Discord incoming webhook for posting reviewed conversation cards to `#chatter` |
 | `LOG_LEVEL` | both | `INFO` default |
 | `AUTH_RATE_LIMIT_MAX` | auth | Hourly cap per IP |
 | `BEDROCK_AGENT_MODEL` | both | `us.anthropic.claude-sonnet-4-6` |

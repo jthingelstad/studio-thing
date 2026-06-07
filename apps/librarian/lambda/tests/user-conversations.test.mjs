@@ -6,13 +6,29 @@ import {
   conversationSummaryFromItem,
   conversationTitle,
   conversationTurnFromItem,
+  fromDynamoAttr,
   historyFromTurns,
   messagesFromTurns,
+  toolTraceDynamoString,
   turnSk,
   turnSkPrefix,
   userConversationPk,
   validConversationId
 } from '../shared/user-conversations.mjs';
+
+test('fromDynamoAttr unmarshals the attribute types canonical conversation rows use', () => {
+  assert.equal(fromDynamoAttr({ S: 'hello' }), 'hello');
+  assert.equal(fromDynamoAttr({ N: '42' }), 42);
+  assert.equal(fromDynamoAttr({ BOOL: true }), true);
+  assert.equal(fromDynamoAttr({ NULL: true }), null);
+  assert.deepEqual(fromDynamoAttr({ L: [{ S: '12' }, { S: '13' }] }), ['12', '13']);
+  assert.deepEqual(
+    fromDynamoAttr({ M: { issue_number: { S: '247' }, subject: { S: 'A subject' } } }),
+    { issue_number: '247', subject: 'A subject' }
+  );
+  assert.equal(fromDynamoAttr(null), null);
+  assert.equal(fromDynamoAttr('raw'), null);
+});
 
 test('conversation key helpers namespace records by user and conversation', () => {
   assert.equal(userConversationPk('abc'), 'user#abc');
@@ -32,23 +48,49 @@ test('conversationSummaryFromItem unmarshals metadata rows', () => {
   const row = conversationSummaryFromItem({
     sk: { S: 'conversation#c1' },
     title: { S: 'A topic' },
+    title_source: { S: 'auto' },
     preview: { S: 'Question preview' },
+    summary: { S: 'Summary text' },
+    topic: { S: 'RSS' },
+    tags: { L: [{ S: 'rss' }, { S: 'indieweb' }] },
     scope: { S: 'blog' },
     created_at: { S: '2026-06-06T01:00:00.000Z' },
     updated_at: { S: '2026-06-06T01:03:00.000Z' },
-    turn_count: { N: '2' }
+    turn_count: { N: '2' },
+    eval_status: { S: 'reviewed' },
+    eval_quality: { S: 'clean' },
+    eval_flags: { L: [{ S: 'reader_delight' }] },
+    eval_improvements: { L: [{ S: 'Keep doing this.' }] },
+    eval_last_request_id: { S: 'r2' },
+    eval_reader: { S: 'Reader explored RSS.' }
   });
   assert.deepEqual(row, {
     id: 'c1',
     conversation_id: 'c1',
     title: 'A topic',
+    title_source: 'auto',
     preview: 'Question preview',
+    summary: 'Summary text',
+    topic: 'RSS',
+    tags: ['rss', 'indieweb'],
     scope: 'blog',
     created_at: '2026-06-06T01:00:00.000Z',
     updated_at: '2026-06-06T01:03:00.000Z',
     last_message_at: '2026-06-06T01:03:00.000Z',
     last_request_id: '',
-    turn_count: 2
+    turn_count: 2,
+    eval_status: 'reviewed',
+    eval_quality: 'clean',
+    eval_flags: ['reader_delight'],
+    eval_improvements: ['Keep doing this.'],
+    eval_assessed_at: '',
+    eval_model: '',
+    eval_last_request_id: 'r2',
+    eval_topic: '',
+    eval_reader: 'Reader explored RSS.',
+    eval_thingy: '',
+    eval_takeaway: '',
+    eval_posted_to_chatter_at: ''
   });
 });
 
@@ -60,10 +102,18 @@ test('turns expand into messages and compact history', () => {
     scope: { S: 'all' },
     question: { S: 'Question?' },
     answer: { S: 'Answer.' },
-    citations: { L: [{ M: { subject: { S: 'Source' } } }] }
+    citations: { L: [{ M: { subject: { S: 'Source' } } }] },
+    feedback_reaction: { S: 'down' },
+    feedback_comment: { S: 'Missed the obvious source.' },
+    tool_names: { L: [{ S: 'archive_lens' }] },
+    tool_trace_json: toolTraceDynamoString({ calls: [{ name: 'archive_lens', ok: true }] })
   });
   assert.equal(turn.request_id, 'r1');
   assert.equal(turn.citations[0].subject, 'Source');
+  assert.equal(turn.feedback_reaction, 'down');
+  assert.equal(turn.feedback_comment, 'Missed the obvious source.');
+  assert.deepEqual(turn.tool_names, ['archive_lens']);
+  assert.equal(turn.tool_trace.calls[0].name, 'archive_lens');
   assert.deepEqual(messagesFromTurns([turn]).map((item) => item.role), ['user', 'assistant']);
   assert.deepEqual(historyFromTurns([turn]), [
     { role: 'user', content: 'Question?' },

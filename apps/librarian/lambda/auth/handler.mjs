@@ -9,7 +9,6 @@ import { authProfile, getUserMemory } from '../shared/user-memory.mjs';
 import crypto from 'node:crypto';
 import { logEvent } from '../shared/logging.mjs';
 import { premiumThankYouSystemPrompt } from '../shared/prompts.mjs';
-import { CONVERSATIONS_MAX_SCAN_PAGES, conversationRow, normalizeListConversationsParams, sortAndTrim } from '../shared/conversations.mjs';
 import {
   USER_CONVERSATION_LIMIT,
   conversationSk,
@@ -30,6 +29,10 @@ import {
 
 const AUTH_RATE_LIMIT_MAX = 30;
 const DISCORD_BRIDGE_RATE_LIMIT_MAX = 60;
+const CONVERSATIONS_DEFAULT_LIMIT = 100;
+const CONVERSATIONS_MAX_LIMIT = 300;
+const CONVERSATIONS_DEFAULT_LOOKBACK_HOURS = 24;
+const CONVERSATIONS_MAX_SCAN_PAGES = 25;
 const DISCORD_USER_ID_RE = /^[A-Za-z0-9_:.-]{1,64}$/;
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const ALLOWED_SOURCES = new Set([
@@ -191,13 +194,11 @@ async function handleDiscordBridge(event, body, start) {
   }, event);
 }
 
-// --- operator-only: list recent Thingy conversation turns ---
+// --- operator-only: canonical Thingy conversation reads ---
 // Gated by the same DISCORD_BRIDGE_SECRET as the bridge mint (operator
 // secret, never a per-user token). Used by workshop_bot to surface what
-// readers are asking Thingy. The conversation rows are written by the
-// stream Lambda's recordConversation(); we Scan the shared table here
-// (TTL'd to ~60d, low volume — a Scan is fine; revisit with a GSI if it grows).
-// Pure shaping/unmarshalling lives in shared/conversations.mjs.
+// readers are asking Thingy. Conversation metadata and turns are the
+// canonical server-side records under user#<subscriberHash>.
 
 function bridgeSecretOk(body) {
   const expected = process.env.DISCORD_BRIDGE_SECRET || '';
@@ -207,58 +208,15 @@ function bridgeSecretOk(body) {
   return expectedBuf.length === suppliedBuf.length && crypto.timingSafeEqual(expectedBuf, suppliedBuf);
 }
 
-async function handleListConversations(event, body, start) {
-  const secretState = bridgeSecretOk(body);
-  if (secretState === null) {
-    logEvent('warning', 'auth_conversations_bridge_disabled');
-    return jsonResponse(503, { error: 'Discord bridge is not enabled.' }, event);
+function normalizeListConversationsParams(body = {}, now = Date.now()) {
+  let since = String(body.since || '').trim();
+  if (!since || Number.isNaN(Date.parse(since))) {
+    since = new Date(now - CONVERSATIONS_DEFAULT_LOOKBACK_HOURS * 3600 * 1000).toISOString();
   }
-  if (!secretState) {
-    logEvent('warning', 'auth_conversations_bad_secret');
-    return jsonResponse(401, { error: 'Bridge secret rejected.' }, event);
-  }
-  const tableName = process.env.TABLE_NAME;
-  if (!tableName) return jsonResponse(500, { error: 'Conversation log is unavailable right now.' }, event);
-
-  const { since: sinceIso, limit } = normalizeListConversationsParams(body);
-
-  const rows = [];
-  let exclusiveStartKey;
-  let pages = 0;
-  try {
-    do {
-      const resp = await dynamodb.send(new ScanCommand({
-        TableName: tableName,
-        FilterExpression: '#sk = :chat AND #ca >= :since',
-        ExpressionAttributeNames: { '#sk': 'sk', '#ca': 'created_at' },
-        ExpressionAttributeValues: { ':chat': { S: 'chat' }, ':since': { S: sinceIso } },
-        ExclusiveStartKey: exclusiveStartKey
-      }));
-      for (const item of resp.Items || []) rows.push(conversationRow(item));
-      exclusiveStartKey = resp.LastEvaluatedKey;
-      pages += 1;
-    } while (exclusiveStartKey && pages < CONVERSATIONS_MAX_SCAN_PAGES);
-  } catch (error) {
-    logEvent('error', 'auth_conversations_scan_failed', { error_type: error.constructor?.name || 'Error' });
-    return jsonResponse(502, { error: 'Could not read the conversation log right now.' }, event);
-  }
-
-  const trimmed = sortAndTrim(rows, limit); // most recent `limit`, returned oldest-first
-  const truncated = Boolean(exclusiveStartKey) || trimmed.length < rows.length;
-
-  logEvent('info', 'auth_conversations_listed', {
-    since: sinceIso,
-    returned: trimmed.length,
-    scanned_pages: pages,
-    truncated,
-    duration_ms: Math.round(performance.now() - start)
-  });
-  return jsonResponse(200, {
-    since: sinceIso,
-    count: trimmed.length,
-    truncated,
-    conversations: trimmed
-  }, event);
+  let limit = Number(body.limit || CONVERSATIONS_DEFAULT_LIMIT);
+  if (!Number.isFinite(limit) || limit <= 0) limit = CONVERSATIONS_DEFAULT_LIMIT;
+  limit = Math.min(Math.floor(limit), CONVERSATIONS_MAX_LIMIT);
+  return { since, limit };
 }
 
 function subscriberHashFromUserPk(pk) {
@@ -280,6 +238,7 @@ async function handleListOperatorConversations(event, body, start) {
   if (!tableName) return jsonResponse(500, { error: 'Conversation history is unavailable right now.' }, event);
 
   const { since: sinceIso, limit } = normalizeListConversationsParams(body);
+  const evalStatus = String(body.eval_status || '').trim();
   const rows = [];
   let exclusiveStartKey;
   let pages = 0;
@@ -298,6 +257,7 @@ async function handleListOperatorConversations(event, body, start) {
       }));
       for (const item of resp.Items || []) {
         const conversation = conversationSummaryFromItem(item);
+        if (evalStatus && conversation.eval_status !== evalStatus) continue;
         rows.push({
           ...conversation,
           subscriber_hash: subscriberHashFromUserPk(item.pk?.S)
@@ -326,6 +286,7 @@ async function handleListOperatorConversations(event, body, start) {
     since: sinceIso,
     count: sorted.length,
     truncated,
+    eval_status: evalStatus || null,
     conversations: sorted
   }, event);
 }
@@ -505,31 +466,6 @@ async function handleUserConversations(event, body, start) {
         exclusiveStartKey = response.LastEvaluatedKey;
       } while (exclusiveStartKey);
 
-      exclusiveStartKey = undefined;
-      let pages = 0;
-      do {
-        const response = await dynamodb.send(new ScanCommand({
-          TableName: tableName,
-          FilterExpression: '#sk = :chat AND #conversation_id = :conversation_id AND #subscriber_hash = :subscriber_hash',
-          ExpressionAttributeNames: {
-            '#sk': 'sk',
-            '#conversation_id': 'conversation_id',
-            '#subscriber_hash': 'subscriber_hash'
-          },
-          ExpressionAttributeValues: {
-            ':chat': conversationDynamoString('chat'),
-            ':conversation_id': conversationDynamoString(conversationId),
-            ':subscriber_hash': conversationDynamoString(subscriberHash)
-          },
-          ExclusiveStartKey: exclusiveStartKey
-        }));
-        for (const item of response.Items || []) {
-          if (item.pk && item.sk) keys.push({ pk: item.pk, sk: item.sk });
-        }
-        exclusiveStartKey = response.LastEvaluatedKey;
-        pages += 1;
-      } while (exclusiveStartKey && pages < CONVERSATIONS_MAX_SCAN_PAGES);
-
       for (let index = 0; index < keys.length; index += 25) {
         await dynamodb.send(new BatchWriteItemCommand({
           RequestItems: {
@@ -579,7 +515,6 @@ async function authHandler(event) {
     'subscribe',
     'resend_confirmation',
     'discord_bridge',
-    'list_conversations',
     'list_operator_conversations',
     'get_operator_conversation'
   ].includes(action)) {
@@ -596,12 +531,8 @@ async function authHandler(event) {
     return await handleDiscordBridge(event, body, start);
   }
 
-  // Operator-only conversation-log read (workshop_bot). Also email-less —
+  // Operator-only canonical conversation reads (thingy_bridge). Also email-less —
   // gated by the bridge secret, not a subscriber session.
-  if (action === 'list_conversations') {
-    return await handleListConversations(event, body, start);
-  }
-
   if (action === 'list_operator_conversations') {
     return await handleListOperatorConversations(event, body, start);
   }

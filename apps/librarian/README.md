@@ -6,10 +6,11 @@ The AWS Lambda agent that answers reader questions against the Weekly Thing arch
 
 ## What it is
 
-Two Lambdas behind one CloudFormation stack:
+Three Lambdas behind one CloudFormation stack:
 
-- **Auth Lambda** (REST via API Gateway) — handles subscriber email confirmation through Buttondown, mints HMAC-signed session tokens for the chat UI, the operator-only conversation-mirror feed for `thingy_bridge`, and per-answer feedback reactions.
+- **Auth Lambda** (REST via API Gateway) — handles subscriber email confirmation through Buttondown, mints HMAC-signed session tokens for the chat UI, exposes operator-only canonical conversation reads for `thingy_bridge`, and records per-answer feedback reactions.
 - **Stream Lambda** (Function URL, response streaming) — handles `/chat` (SSE-streamed agent loop with tool use against the archive) and `/retrieve` (semantic JSON retrieval used by `workshop_bot` for its `archive__retrieve` tool + several pre-injection helpers).
+- **Eval Lambda** (DynamoDB Stream trigger) — reviews updated server-side conversations out of band, writes summary/quality metadata back to DynamoDB, and posts operator cards directly to Discord via incoming webhook when configured.
 
 The Q&A intelligence lives entirely here. Retrieval is **Bedrock Cohere embed → vector search → Cohere rerank** against a pre-embedded corpus in S3, with BM25 lexical fallback. Generation is Claude Sonnet via Bedrock Converse (cross-region inference profile, tool use enabled).
 
@@ -23,7 +24,8 @@ apps/librarian/
 │   ├── chat/         ← Stream Lambda — /chat + /retrieve
 │   │   ├── handler.mjs    (thin re-export)
 │   │   └── runtime.mjs    (~1100 lines; agent loop, retrieval, routes)
-│   ├── auth/         ← Auth Lambda — /auth, /feedback, /list_conversations
+│   ├── auth/         ← Auth Lambda — /auth, /feedback, operator conversation reads
+│   ├── eval/         ← Eval Lambda — conversation reviews + Discord webhook cards
 │   ├── shared/       ← AWS clients, Bedrock streaming parser, FAQ search, session crypto, rate limiting
 │   ├── prompts/      ← editable system prompts (packaged into both Lambdas)
 │   └── tests/        ← Node tests
@@ -68,7 +70,7 @@ then uploads the updated corpus artifacts.
 | POST | `/chat` | session token (bearer) | SSE-streamed agent answer with tool use against the archive |
 | POST | `/retrieve` | bridge secret (body) | JSON semantic retrieval — top-K archive passages, used by `workshop_bot` |
 | POST | `/feedback` | session token (bearer) | Per-answer reactions (`👍` / `👎`) |
-| POST | `/auth` | none / bridge secret | Email confirmation flow + Discord bridge mint + `list_conversations` |
+| POST | `/auth` | none / bridge secret | Email confirmation flow, Discord bridge mint, conversation management, and operator conversation reads |
 
 ## Tech stack
 
@@ -77,14 +79,15 @@ then uploads the updated corpus artifacts.
 - **Bedrock** — Cohere `embed-english-v3` (us-east-1), Cohere `rerank-v3-5:0` (us-west-2), Claude Sonnet 4.6 (cross-region inference)
 - **DynamoDB** — conversation log, rate limits, per-user memory
 - **S3** — pre-embedded corpus, graph artifacts
-- **API Gateway** + **Lambda Function URL** (response streaming) — two distinct front doors for the two Lambdas
+- **API Gateway** + **Lambda Function URL** (response streaming) — two HTTP front doors; the Eval Lambda is event-driven by DynamoDB Streams
 
 ## Environment
 
 Env vars are set in CloudFormation at deploy time from the repo-root `.env`. The full list (with deploy-side handling) is in [`CLAUDE.md`](CLAUDE.md). The headline secrets:
 
 - `SESSION_SECRET` — HMAC signing key for session tokens
-- `DISCORD_BRIDGE_SECRET` — operator-only secret for `/list_conversations` and `/retrieve`
+- `DISCORD_BRIDGE_SECRET` — operator-only secret for conversation reads and `/retrieve`
+- `DISCORD_CONVERSATION_WEBHOOK_URL` — optional incoming webhook used by the eval Lambda to post reviewed conversation cards to Discord
 - `BUTTONDOWN_API_KEY` — subscriber email verification
 
 The `admin/` directory has its own [`README.md`](admin/README.md) for the (currently empty) operator-tooling scaffolding.
