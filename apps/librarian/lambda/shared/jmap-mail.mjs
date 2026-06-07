@@ -90,15 +90,18 @@ async function loadSendContext(session, fromEmail) {
   const identities = requireMethodResponse(response.methodResponses, 'Identity/get', 'identity').list || [];
   const mailboxes = requireMethodResponse(response.methodResponses, 'Mailbox/get', 'mailboxes').list || [];
   const drafts = mailboxes.find((mailbox) => mailbox.role === 'drafts');
+  const sent = mailboxes.find((mailbox) => mailbox.role === 'sent');
   const identity = pickIdentity(identities, fromEmail);
   if (!identity?.id) throw new Error(`No JMAP identity available for ${fromEmail}`);
   if (!drafts?.id) throw new Error('No JMAP drafts mailbox available');
+  if (!sent?.id) throw new Error('No JMAP sent mailbox available');
   return {
     apiUrl: session.apiUrl,
     mailAccountId,
     submissionAccountId,
     identityId: identity.id,
-    draftMailboxId: drafts.id
+    draftMailboxId: drafts.id,
+    sentMailboxId: sent.id
   };
 }
 
@@ -118,24 +121,18 @@ export function magicLinkEmailSubject() {
   return 'Sign in to Thingy';
 }
 
-export async function sendMagicLinkEmail({ to, magicLink, expiresMinutes }) {
-  const token = jmapToken();
-  if (!token) throw new Error('FASTMAIL_JMAP_TOKEN is not configured');
-  const fromEmail = jmapFromEmail();
-  const session = await jmapSession();
-  const context = await loadSendContext(session, fromEmail);
-  const text = magicLinkEmailText({ magicLink, expiresMinutes });
-  const response = await jmapCall(context.apiUrl, [
+export function buildMagicLinkJmapCalls({ context, fromEmail, fromName, to, text }) {
+  return [
     ['Email/set', {
       accountId: context.mailAccountId,
       create: {
         draft: {
           mailboxIds: { [context.draftMailboxId]: true },
           keywords: { '$draft': true },
-          from: [{ name: jmapFromName(), email: fromEmail }],
+          from: [{ name: fromName, email: fromEmail }],
           to: [{ email: to }],
           subject: magicLinkEmailSubject(),
-          textBody: [{ partId: 'text' }],
+          bodyStructure: { partId: 'text', type: 'text/plain' },
           bodyValues: {
             text: { value: text, charset: 'utf-8' }
           }
@@ -144,15 +141,41 @@ export async function sendMagicLinkEmail({ to, magicLink, expiresMinutes }) {
     }, 'email'],
     ['EmailSubmission/set', {
       accountId: context.submissionAccountId,
-      onSuccessDestroyEmail: ['#send'],
+      onSuccessUpdateEmail: {
+        '#send': {
+          [`mailboxIds/${context.sentMailboxId}`]: true,
+          [`mailboxIds/${context.draftMailboxId}`]: null,
+          'keywords/$draft': null
+        }
+      },
       create: {
         send: {
           emailId: '#draft',
-          identityId: context.identityId
+          identityId: context.identityId,
+          envelope: {
+            mailFrom: { email: fromEmail },
+            rcptTo: [{ email: to }]
+          }
         }
       }
     }, 'submit']
-  ]);
+  ];
+}
+
+export async function sendMagicLinkEmail({ to, magicLink, expiresMinutes }) {
+  const token = jmapToken();
+  if (!token) throw new Error('FASTMAIL_JMAP_TOKEN is not configured');
+  const fromEmail = jmapFromEmail();
+  const session = await jmapSession();
+  const context = await loadSendContext(session, fromEmail);
+  const text = magicLinkEmailText({ magicLink, expiresMinutes });
+  const response = await jmapCall(context.apiUrl, buildMagicLinkJmapCalls({
+    context,
+    fromEmail,
+    fromName: jmapFromName(),
+    to,
+    text
+  }));
   const emailSet = requireMethodResponse(response.methodResponses, 'Email/set', 'email');
   const submit = requireMethodResponse(response.methodResponses, 'EmailSubmission/set', 'submit');
   if (emailSet.notCreated?.draft) {

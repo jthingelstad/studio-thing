@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderFaqAnswer, searchFaq } from '../shared/faq.mjs';
 import { buildMagicLink, createMagicToken, magicTokenHash, validMagicToken } from '../shared/magic-link.mjs';
-import { magicLinkEmailText, requireMethodResponse } from '../shared/jmap-mail.mjs';
+import { buildMagicLinkJmapCalls, magicLinkEmailText, requireMethodResponse } from '../shared/jmap-mail.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, verifyToken } from '../shared/session.mjs';
 import {
   authProfile,
@@ -187,6 +187,42 @@ test('JMAP method errors are treated as hard send failures', () => {
     requireMethodResponse([['Email/set', { created: { draft: { id: 'm1' } } }, 'email']], 'Email/set', 'email'),
     { created: { draft: { id: 'm1' } } }
   );
+});
+
+test('JMAP magic link payload creates a draft and submits it through Sent', () => {
+  const calls = buildMagicLinkJmapCalls({
+    context: {
+      mailAccountId: 'mail-account',
+      submissionAccountId: 'submission-account',
+      identityId: 'identity-1',
+      draftMailboxId: 'drafts-1',
+      sentMailboxId: 'sent-1'
+    },
+    fromEmail: 'thingy@example.com',
+    fromName: 'Thingy',
+    to: 'reader@example.com',
+    text: 'hello'
+  });
+
+  const emailSet = calls[0][1];
+  assert.equal(calls[0][0], 'Email/set');
+  assert.deepEqual(emailSet.create.draft.mailboxIds, { 'drafts-1': true });
+  assert.deepEqual(emailSet.create.draft.bodyStructure, { partId: 'text', type: 'text/plain' });
+  assert.equal(emailSet.create.draft.bodyValues.text.value, 'hello');
+
+  const submissionSet = calls[1][1];
+  assert.equal(calls[1][0], 'EmailSubmission/set');
+  assert.equal(submissionSet.create.send.emailId, '#draft');
+  assert.equal(submissionSet.create.send.identityId, 'identity-1');
+  assert.deepEqual(submissionSet.create.send.envelope, {
+    mailFrom: { email: 'thingy@example.com' },
+    rcptTo: [{ email: 'reader@example.com' }]
+  });
+  assert.deepEqual(submissionSet.onSuccessUpdateEmail['#send'], {
+    'mailboxIds/sent-1': true,
+    'mailboxIds/drafts-1': null,
+    'keywords/$draft': null
+  });
 });
 
 test('buttondown subscriber status maps active and inactive states', () => {
