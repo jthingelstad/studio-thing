@@ -12,6 +12,7 @@ import {
   availableConversationModes,
   canUseConversationMode,
   entitlementsForSubscriber,
+  isOwnerSubscriberHash,
   normalizeConversationMode
 } from '../shared/conversation-modes.mjs';
 import crypto from 'node:crypto';
@@ -165,6 +166,17 @@ async function authSuccessResponse(email, subscriber, source, event, start) {
     }
   }
   return jsonResponse(200, payload, event);
+}
+
+function entitlementsForSessionPayload(payload) {
+  const entitlements = new Set(Array.isArray(payload?.entitlements) ? payload.entitlements : ['reader']);
+  if (isOwnerSubscriberHash(payload?.sub)) {
+    entitlements.add('owner');
+    entitlements.add('supporting_member');
+    entitlements.add('trusted_circle');
+  }
+  if (!entitlements.size) entitlements.add('reader');
+  return Array.from(entitlements);
 }
 
 async function storeMagicLink({ token, email, source, event, subscriberStatusValue, nowSeconds, expiresAt }) {
@@ -548,7 +560,8 @@ async function handleUserConversations(event, body, start) {
   if (!subscriberHash) {
     return jsonResponse(401, { error: 'Please validate your subscriber email to use Thingy.' }, event);
   }
-  const entitlements = Array.isArray(payload.entitlements) ? payload.entitlements : ['reader'];
+  const entitlements = entitlementsForSessionPayload(payload);
+  const modes = availableConversationModes(entitlements);
   const tableName = process.env.TABLE_NAME;
   if (!tableName) return conversationTableUnavailable(event);
 
@@ -567,7 +580,7 @@ async function handleUserConversations(event, body, start) {
         count: conversations.length,
         duration_ms: Math.round(performance.now() - start)
       });
-      return jsonResponse(200, { conversations }, event);
+      return jsonResponse(200, { conversations, entitlements, modes }, event);
     }
 
     if (action === 'get') {

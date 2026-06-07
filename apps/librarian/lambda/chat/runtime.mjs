@@ -47,6 +47,7 @@ import {
   conversationModeDefinition,
   conversationModePrompt,
   entitlementContext,
+  isOwnerSubscriberHash,
   normalizeConversationMode
 } from '../shared/conversation-modes.mjs';
 
@@ -742,7 +743,13 @@ function readerContextPrompt(clientContext, userProfile) {
 }
 
 function tokenEntitlements(payload) {
-  return entitlementContext(Array.isArray(payload?.entitlements) ? payload.entitlements : ['reader']);
+  const entitlements = new Set(Array.isArray(payload?.entitlements) ? payload.entitlements : ['reader']);
+  if (isOwnerSubscriberHash(payload?.sub)) {
+    entitlements.add('owner');
+    entitlements.add('supporting_member');
+    entitlements.add('trusted_circle');
+  }
+  return entitlementContext([...entitlements]);
 }
 
 async function resolveRequestedConversationMode({ body, payload, subscriberHash, conversationId }) {
