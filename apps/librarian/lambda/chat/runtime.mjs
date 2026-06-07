@@ -777,6 +777,61 @@ function activityCommentaryText(value) {
     .trim();
 }
 
+function shortToolValue(value, max = 80) {
+  const text = String(value || '').trim().replace(/\s+/g, ' ');
+  return text.length <= max ? text : `${text.slice(0, max - 1).trim()}…`;
+}
+
+function quotedToolValue(value) {
+  const text = shortToolValue(value);
+  return text ? `“${text}”` : '';
+}
+
+function toolActivityCommentary(name, input = {}) {
+  const value = input && typeof input === 'object' ? input : {};
+  const query = quotedToolValue(value.query || value.topic || value.theme || value.entity || value.domain || value.claim);
+  switch (name) {
+    case 'search_faq':
+      return query ? `Checking the FAQ for ${query}.` : 'Checking the public FAQ first.';
+    case 'search_archive':
+      return query ? `Searching archive text for ${query}.` : 'Searching the active archive sources.';
+    case 'quote_search':
+      return query ? `Looking for the exact phrase ${query}.` : 'Looking for exact wording in the archive.';
+    case 'get_source':
+      return value.url || value.source_id || value.issue_number
+        ? 'Opening a promising source for fuller context.'
+        : 'Opening source detail for context.';
+    case 'get_issue':
+      return value.issue_number ? `Opening WT${shortToolValue(value.issue_number, 12)} for issue-level context.` : 'Opening a Weekly Thing issue.';
+    case 'get_section':
+      return value.issue_number ? `Opening a specific section from WT${shortToolValue(value.issue_number, 12)}.` : 'Opening a specific archive section.';
+    case 'find_links':
+    case 'domain_history':
+      return query ? `Tracing link metadata around ${query}.` : 'Tracing link and domain metadata.';
+    case 'corpus_stats':
+      return 'Checking aggregate corpus metadata and counts.';
+    case 'latest_content':
+      return 'Checking the freshest indexed sources.';
+    case 'list_content':
+      return 'Listing matching sources deterministically.';
+    case 'archive_lens':
+    case 'compare_eras':
+      return query ? `Mapping ${query} across time and source types.` : 'Mapping the theme across the archive.';
+    case 'source_neighborhood':
+      return 'Inspecting the links and nearby sources around this item.';
+    case 'entity_lens':
+      return query ? `Checking where ${query} appears across the archive.` : 'Checking where the named entity appears.';
+    case 'archive_gems':
+      return query ? `Looking for a surprising archive spark around ${query}.` : 'Looking for a surprising archive spark.';
+    case 'claim_check':
+      return query ? `Verifying ${query} against archive evidence.` : 'Verifying the claim against archive evidence.';
+    case 'remember_user':
+      return 'Saving the reader preference for future turns.';
+    default:
+      return 'Using an archive tool to narrow the answer.';
+  }
+}
+
 function commandInferenceConfig() {
   return {
     maxTokens: Number(process.env.BEDROCK_MAX_OUTPUT_TOKENS || '2500'),
@@ -2499,15 +2554,15 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
       break;
     }
     const commentary = activityCommentaryText(result.text);
-    if (commentary) {
-      writeSse(responseStream, 'commentary', { message: commentary });
-    }
     const resultBlocks = [];
-    for (const toolUse of toolUses) {
+    for (const [index, toolUse] of toolUses.entries()) {
+      const toolNote = toolActivityCommentary(toolUse.name, toolUse.input || {});
+      const visibleNote = [index === 0 ? commentary : '', toolNote].filter(Boolean).join(' ');
       writeSse(responseStream, 'status', {
         kind: 'tool',
         tool_name: toolUse.name,
-        message: `Checking ${toolUse.name.replaceAll('_', ' ')}...`
+        message: `Checking ${toolUse.name.replaceAll('_', ' ')}...`,
+        commentary: visibleNote
       });
       const handler = ARCHIVE_TOOLS[toolUse.name];
       let result;
