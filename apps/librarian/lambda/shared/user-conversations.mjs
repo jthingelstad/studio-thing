@@ -201,11 +201,15 @@ export function conversationSummaryFromItem(item) {
   const tags = Array.isArray(o.tags) ? o.tags : [];
   const evalFlags = Array.isArray(o.eval_flags) ? o.eval_flags : [];
   const evalImprovements = Array.isArray(o.eval_improvements) ? o.eval_improvements : [];
+  const titleSource = o.title_source || '';
+  const title = titleSource === 'user'
+    ? o.title
+    : (titleSource === 'eval' ? o.title : (o.eval_topic || o.title));
   return {
     id,
     conversation_id: id,
-    title: o.title || 'Untitled chat',
-    title_source: o.title_source || '',
+    title: title || 'Untitled chat',
+    title_source: titleSource,
     preview: o.preview || '',
     summary: o.summary || '',
     topic: o.topic || '',

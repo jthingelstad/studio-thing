@@ -94,6 +94,22 @@ test('conversationSummaryFromItem unmarshals metadata rows', () => {
   });
 });
 
+test('conversationSummaryFromItem prefers eval topic for generated titles', () => {
+  assert.equal(conversationSummaryFromItem({
+    sk: { S: 'conversation#c1' },
+    title: { S: 'Tell me about Hector Fernandez.' },
+    title_source: { S: 'auto' },
+    eval_topic: { S: 'Who is Hector Fernandez' }
+  }).title, 'Who is Hector Fernandez');
+
+  assert.equal(conversationSummaryFromItem({
+    sk: { S: 'conversation#c2' },
+    title: { S: 'My custom title' },
+    title_source: { S: 'user' },
+    eval_topic: { S: 'Evaluator topic' }
+  }).title, 'My custom title');
+});
+
 test('turns expand into messages and compact history', () => {
   const turn = conversationTurnFromItem({
     conversation_id: { S: 'c1' },

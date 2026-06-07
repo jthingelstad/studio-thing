@@ -494,6 +494,7 @@ export async function updateUserConversationEvaluation({
   if (!tableReady({ tableName, subscriberHash }) || !validId) return null;
   const quality = String(assessment.quality || '').trim().toLowerCase();
   const safeQuality = ['clean', 'watch', 'problem'].includes(quality) ? quality : 'watch';
+  const evaluatedTitle = conversationTitle(summary.title || summary.topic || assessment.topic || '');
   try {
     const response = await dynamodb.send(new UpdateItemCommand({
       TableName: tableName,
@@ -506,8 +507,6 @@ export async function updateUserConversationEvaluation({
         '#topic = :topic',
         '#tags = :tags',
         '#preview = :preview',
-        '#title = if_not_exists(#title, :title)',
-        '#title_source = if_not_exists(#title_source, :title_source)',
         '#eval_status = :eval_status',
         '#eval_quality = :eval_quality',
         '#eval_flags = :eval_flags',
@@ -528,8 +527,6 @@ export async function updateUserConversationEvaluation({
         '#topic': 'topic',
         '#tags': 'tags',
         '#preview': 'preview',
-        '#title': 'title',
-        '#title_source': 'title_source',
         '#eval_status': 'eval_status',
         '#eval_quality': 'eval_quality',
         '#eval_flags': 'eval_flags',
@@ -549,8 +546,6 @@ export async function updateUserConversationEvaluation({
         ':topic': dynamoString(String(summary.topic || assessment.topic || '').slice(0, 120)),
         ':tags': dynamoStringList(summary.tags, 8, 40),
         ':preview': dynamoString(conversationPreview(summary.preview || summary.summary || assessment.takeaway || '')),
-        ':title': dynamoString(conversationTitle(summary.title || summary.topic || assessment.topic || '')),
-        ':title_source': dynamoString('auto'),
         ':eval_status': dynamoString('reviewed'),
         ':eval_quality': dynamoString(safeQuality),
         ':eval_flags': dynamoStringList(assessment.flags, 10, 80),
@@ -567,7 +562,42 @@ export async function updateUserConversationEvaluation({
       },
       ReturnValues: 'ALL_NEW'
     }));
-    return response.Attributes ? conversationSummaryFromItem(response.Attributes) : null;
+    let conversation = response.Attributes ? conversationSummaryFromItem(response.Attributes) : null;
+    if (conversation && conversation.title_source !== 'user' && evaluatedTitle !== 'Untitled chat') {
+      try {
+        const titleResponse = await dynamodb.send(new UpdateItemCommand({
+          TableName: tableName,
+          Key: {
+            pk: dynamoString(userConversationPk(subscriberHash)),
+            sk: dynamoString(conversationSk(validId))
+          },
+          UpdateExpression: 'SET #title = :title, #title_source = :title_source, #updated_at = :updated_at',
+          ConditionExpression: 'attribute_exists(pk) AND (attribute_not_exists(#title_source) OR #title_source <> :user_title_source)',
+          ExpressionAttributeNames: {
+            '#title': 'title',
+            '#title_source': 'title_source',
+            '#updated_at': 'updated_at'
+          },
+          ExpressionAttributeValues: {
+            ':title': dynamoString(evaluatedTitle),
+            ':title_source': dynamoString('eval'),
+            ':user_title_source': dynamoString('user'),
+            ':updated_at': dynamoString(now)
+          },
+          ReturnValues: 'ALL_NEW'
+        }));
+        conversation = titleResponse.Attributes ? conversationSummaryFromItem(titleResponse.Attributes) : conversation;
+      } catch (error) {
+        if (error?.name !== 'ConditionalCheckFailedException') {
+          log('warning', 'user_conversation_eval_title_update_failed', {
+            subscriber_hash: subscriberHash,
+            conversation_id: validId,
+            error_type: error.constructor?.name || 'Error'
+          });
+        }
+      }
+    }
+    return conversation;
   } catch (error) {
     log('warning', 'user_conversation_evaluation_update_failed', {
       subscriber_hash: subscriberHash,
