@@ -9,6 +9,7 @@ operator web surface, no browser-side secrets, no extra database.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import html
 import json
 import os
@@ -26,6 +27,7 @@ from dotenv import load_dotenv
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_STACK = "weekly-thing-librarian"
 DEFAULT_OUTPUT = Path.home() / "Desktop" / "Thingy Operator Report.html"
+DEFAULT_OWNER_EMAIL = "jamie@thingelstad.com"
 
 deserializer = TypeDeserializer()
 
@@ -51,6 +53,14 @@ def iso_days_ago(days: int) -> str:
 
 def h(value: Any) -> str:
     return html.escape("" if value is None else str(value), quote=True)
+
+
+def normalize_email(value: str) -> str:
+    return str(value or "").strip().lower()
+
+
+def email_hash(value: str) -> str:
+    return hashlib.sha256(normalize_email(value).encode("utf-8")).hexdigest()
 
 
 def compact(value: Any, limit: int = 240) -> str:
@@ -96,6 +106,8 @@ class Turn:
     citations: list[dict[str, Any]] = field(default_factory=list)
     tool_names: list[str] = field(default_factory=list)
     preflight: dict[str, Any] | None = None
+    stop_reason: str = ""
+    duration_ms: float = 0
 
     @classmethod
     def from_row(cls, row: dict[str, Any]) -> "Turn":
@@ -109,6 +121,8 @@ class Turn:
             citations=[c for c in row.get("citations") or [] if isinstance(c, dict)],
             tool_names=[str(t) for t in row.get("tool_names") or [] if t],
             preflight=row.get("preflight") if isinstance(row.get("preflight"), dict) else None,
+            stop_reason=str(row.get("stop_reason") or ""),
+            duration_ms=float(row.get("duration_ms") or 0),
         )
 
     @property
@@ -139,6 +153,7 @@ class Conversation:
     eval_thingy: str
     eval_takeaway: str
     eval_posted_to_chatter_at: str
+    is_owner: bool = False
     turns: list[Turn] = field(default_factory=list)
 
     @classmethod
@@ -169,6 +184,14 @@ class Conversation:
     @property
     def has_feedback(self) -> bool:
         return any(t.feedback_reaction for t in self.turns)
+
+    @property
+    def reader_kind(self) -> str:
+        return "owner" if self.is_owner else "reader"
+
+    @property
+    def reader_label(self) -> str:
+        return "Jamie" if self.is_owner else f"reader·{self.subscriber_hash[:8]}"
 
     @property
     def has_downvote(self) -> bool:
@@ -232,6 +255,8 @@ class Conversation:
             tokens.append("preflight")
         if self.has_tool_use:
             tokens.append("tools")
+        if self.is_owner:
+            tokens.append("owner")
         return tokens
 
     @property
@@ -249,6 +274,8 @@ class Conversation:
             self.eval_reader,
             self.eval_thingy,
             self.eval_takeaway,
+            self.reader_kind,
+            self.reader_label,
         ]
         for turn in self.turns:
             parts.extend(
@@ -406,6 +433,7 @@ def render_turn(turn: Turn, index: int) -> str:
 def render_conversation_card(c: Conversation, *, open_by_default: bool = False) -> str:
     title = c.topic or c.title or "Untitled conversation"
     flags = render_chips(c.eval_flags, limit=10)
+    owner = '<span class="chip owner-chip">Jamie</span>' if c.is_owner else ""
     attention = render_chips(c.attention_reasons, limit=6, css_class="chip attention-chip")
     improvements = "".join(f"<li>{h(item)}</li>" for item in c.eval_improvements)
     sources = render_chips(c.source_labels, limit=16)
@@ -417,18 +445,18 @@ def render_conversation_card(c: Conversation, *, open_by_default: bool = False) 
     posted = f" · eval posted {h(local_time(c.eval_posted_to_chatter_at))}" if c.eval_posted_to_chatter_at else ""
     return (
         f'<details class="conversation-card" data-quality="{h(c.eval_quality)}" data-status="{h(status_tokens)}" '
-        f'data-scope="{h(c.scope)}" data-flags="{h(" ".join(c.eval_flags))}" data-search="{h(search_text)}"{open_attr}>'
+        f'data-scope="{h(c.scope)}" data-reader="{h(c.reader_kind)}" data-flags="{h(" ".join(c.eval_flags))}" data-search="{h(search_text)}"{open_attr}>'
         '<summary class="conversation-summary">'
         '<div class="conversation-topline">'
         f'<span class="quality q-{h(c.eval_quality)}">{h(c.eval_quality)}</span>'
         f'<span>{h(local_time(c.updated_at))}</span>'
         f'<span>{h(c.turn_count)} turn{"s" if c.turn_count != 1 else ""}</span>'
-        f'<span>reader·{h(c.subscriber_hash[:8])}</span>'
+        f'<span class="reader-badge reader-{h(c.reader_kind)}">{h(c.reader_label)}</span>'
         f'<span>scope {h(c.scope)}</span>'
         "</div>"
         f'<h2>{h(title)}</h2>'
         f'<p class="conversation-preview">{h(c.summary or "No eval summary yet.")}</p>'
-        f'<div class="chipline">{attention}{flags}</div>'
+        f'<div class="chipline">{owner}{attention}{flags}</div>'
         "</summary>"
         '<div class="conversation-body">'
         f'<p class="meta"><code>{h(c.conversation_id)}</code>{posted}</p>'
@@ -469,6 +497,8 @@ def render_html(conversations: list[Conversation], *, since_iso: str, generated_
     flag_options = "".join(f'<option value="{h(flag)}">{h(flag)}</option>' for flag in flag_values)
     attention_count = sum(1 for c in conversations if c.attention_reasons)
     feedback_count = sum(1 for c in conversations if c.has_feedback)
+    owner_count = sum(1 for c in conversations if c.is_owner)
+    real_reader_count = len({c.subscriber_hash for c in conversations if not c.is_owner})
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -509,7 +539,9 @@ th {{ color:var(--muted); font-size:12px; text-transform:uppercase; letter-spaci
 .q-unreviewed {{ background:#f2f3f2; color:#5d6862; }}
 .chip {{ margin:1px 2px 1px 0; color:#3f4d47; background:#f7f9f8; }}
 .attention-chip {{ background:#fff8e8; color:var(--warn); border-color:#ead59e; }}
-.filters {{ position:sticky; top:0; z-index:2; display:grid; grid-template-columns:1.4fr repeat(4, minmax(120px, .5fr)) auto; gap:10px; align-items:end; padding:12px; margin:0 0 12px; background:rgba(251,252,251,.92); border:1px solid var(--line); border-radius:8px; backdrop-filter:blur(10px); }}
+.owner-chip, .reader-owner {{ background:#edf2ff; color:#334f9a; border-color:#c9d6ff; }}
+.reader-badge {{ font-weight:700; }}
+.filters {{ position:sticky; top:0; z-index:2; display:grid; grid-template-columns:1.4fr repeat(5, minmax(110px, .5fr)) auto; gap:10px; align-items:end; padding:12px; margin:0 0 12px; background:rgba(251,252,251,.92); border:1px solid var(--line); border-radius:8px; backdrop-filter:blur(10px); }}
 .filter-field {{ display:grid; gap:4px; }}
 .filter-field label {{ color:var(--muted); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }}
 .filters input, .filters select {{ width:100%; min-height:36px; border:1px solid var(--line-strong); border-radius:7px; background:white; color:var(--ink); padding:0 10px; font:inherit; font-size:14px; }}
@@ -550,7 +582,7 @@ code {{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-s
 <section class="grid">
 {render_metric("Conversations", metrics["total"])}
 {render_metric("Turns", metrics["turns"])}
-{render_metric("Readers", metrics["readers"])}
+{render_metric("Real Readers", real_reader_count, f"{owner_count} Jamie conversation{'s' if owner_count != 1 else ''} included")}
 {render_metric("Needs Attention", attention_count, f"{feedback_count} with explicit feedback")}
 </section>
 
@@ -572,6 +604,7 @@ code {{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-s
 <div class="filter-field"><label for="filter-search">Search</label><input id="filter-search" type="search" placeholder="Prompt, topic, flag, source, reader…"></div>
 <div class="filter-field"><label for="filter-quality">Quality</label><select id="filter-quality"><option value="all">All</option><option value="problem">Problem</option><option value="watch">Watch</option><option value="unreviewed">Unreviewed</option><option value="clean">Clean</option></select></div>
 <div class="filter-field"><label for="filter-status">Status</label><select id="filter-status"><option value="all">All</option><option value="attention">Needs attention</option><option value="feedback">Has feedback</option><option value="downvote">Downvoted</option><option value="flags">Has flags</option><option value="preflight">Preflight</option><option value="tools">Tool use</option></select></div>
+<div class="filter-field"><label for="filter-reader">Reader</label><select id="filter-reader"><option value="all">All readers</option><option value="reader">Real users</option><option value="owner">Jamie</option></select></div>
 <div class="filter-field"><label for="filter-flag">Flag</label><select id="filter-flag"><option value="all">All flags</option>{flag_options}</select></div>
 <div class="filter-field"><label for="filter-scope">Scope</label><select id="filter-scope"><option value="__all">All scopes</option>{scope_options}</select></div>
 <button id="filter-clear" type="button">Clear</button>
@@ -588,6 +621,7 @@ code {{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-s
   const search = document.getElementById('filter-search');
   const quality = document.getElementById('filter-quality');
   const status = document.getElementById('filter-status');
+  const reader = document.getElementById('filter-reader');
   const flag = document.getElementById('filter-flag');
   const scope = document.getElementById('filter-scope');
   const clear = document.getElementById('filter-clear');
@@ -601,12 +635,14 @@ code {{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-s
   function matches(card) {{
     const q = quality.value;
     const s = status.value;
+    const r = reader.value;
     const f = flag.value;
     const sc = scope.value;
     const haystack = card.dataset.search || '';
     const terms = words(search.value);
     if (q !== 'all' && card.dataset.quality !== q) return false;
     if (s !== 'all' && !words(card.dataset.status).includes(s)) return false;
+    if (r !== 'all' && card.dataset.reader !== r) return false;
     if (f !== 'all' && !words(card.dataset.flags).includes(f.toLowerCase())) return false;
     if (sc !== '__all' && card.dataset.scope !== sc) return false;
     return terms.every((term) => haystack.includes(term));
@@ -623,11 +659,12 @@ code {{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-s
     empty.hidden = visible !== 0 || cards.length === 0;
   }}
 
-  [search, quality, status, flag, scope].forEach((control) => control && control.addEventListener(control === search ? 'input' : 'change', update));
+  [search, quality, status, reader, flag, scope].forEach((control) => control && control.addEventListener(control === search ? 'input' : 'change', update));
   clear?.addEventListener('click', () => {{
     search.value = '';
     quality.value = 'all';
     status.value = 'all';
+    reader.value = 'all';
     flag.value = 'all';
     scope.value = '__all';
     update();
@@ -646,9 +683,11 @@ def build_report(args: argparse.Namespace) -> tuple[Path, int]:
     stack_name = args.stack_name
     table_name = args.table_name or stack_resource("LibrarianTable", stack_name=stack_name)
     since_iso = args.since or iso_days_ago(args.days)
+    owner_hash = email_hash(args.owner_email)
     conversations = scan_conversations(table_name, since_iso=since_iso, max_pages=args.max_scan_pages)
 
     for conversation in conversations:
+        conversation.is_owner = conversation.subscriber_hash == owner_hash
         conversation.turns = load_turns(table_name, conversation)
 
     output = Path(args.output)
@@ -674,6 +713,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--since", default="", help="ISO timestamp lower bound for updated_at.")
     parser.add_argument("--max-scan-pages", type=int, default=30)
     parser.add_argument("--detail-limit", type=int, default=30, help="Number of prioritized conversations to expand.")
+    parser.add_argument("--owner-email", default=os.environ.get("THINGY_OPERATOR_OWNER_EMAIL", DEFAULT_OWNER_EMAIL), help="Email address to label as Jamie/owner in the report.")
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
     return parser.parse_args()
 

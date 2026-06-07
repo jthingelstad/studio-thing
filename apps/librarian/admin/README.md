@@ -26,13 +26,18 @@ venv/bin/python apps/librarian/admin/operator_report.py --days 30
 
 # Custom output
 venv/bin/python apps/librarian/admin/operator_report.py --output tmp/thingy-report.html
+
+# Override the owner/Jamie label if needed
+venv/bin/python apps/librarian/admin/operator_report.py --owner-email jamie@thingelstad.com
 ```
 
 The report includes quality counts, eval flags, explicit feedback, daily
 volume, and a client-side filtered conversation review queue. Conversation
 cards are the central object: eval notes, feedback, sources, tools, and the
 transcript stay together so operator review stays grounded in what the reader
-and Thingy actually said.
+and Thingy actually said. Conversations from the configured owner email
+defaulting to `jamie@thingelstad.com` are labeled as Jamie and can be filtered
+separately from real reader traffic.
 
 ## Planned
 
