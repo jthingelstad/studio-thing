@@ -2495,7 +2495,11 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
     }
     const resultBlocks = [];
     for (const toolUse of toolUses) {
-      writeSse(responseStream, 'status', { message: `Checking ${toolUse.name.replaceAll('_', ' ')}...` });
+      writeSse(responseStream, 'status', {
+        kind: 'tool',
+        tool_name: toolUse.name,
+        message: `Checking ${toolUse.name.replaceAll('_', ' ')}...`
+      });
       const handler = ARCHIVE_TOOLS[toolUse.name];
       let result;
       const toolStart = performance.now();

@@ -115,6 +115,7 @@ test('turns expand into messages and compact history', () => {
   assert.deepEqual(turn.tool_names, ['archive_lens']);
   assert.equal(turn.tool_trace.calls[0].name, 'archive_lens');
   assert.deepEqual(messagesFromTurns([turn]).map((item) => item.role), ['user', 'assistant']);
+  assert.deepEqual(messagesFromTurns([turn])[1].tool_names, ['archive_lens']);
   assert.deepEqual(historyFromTurns([turn]), [
     { role: 'user', content: 'Question?' },
     { role: 'assistant', content: 'Answer.' }
@@ -144,7 +145,8 @@ test('artifact-only turns expand into assistant artifact messages', () => {
     citations: [],
     created_at: '2026-06-06T02:00:00.000Z',
     request_id: 'r-map',
-    artifact
+    artifact,
+    tool_names: []
   }]);
   assert.deepEqual(historyFromTurns([turn]), []);
 });

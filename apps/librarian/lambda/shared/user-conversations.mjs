@@ -296,7 +296,8 @@ export function messagesFromTurns(turns = []) {
         citations: turn.citations || [],
         created_at: turn.created_at,
         request_id: turn.request_id,
-        artifact: turn.artifact || null
+        artifact: turn.artifact || null,
+        tool_names: turn.tool_names || []
       });
     } else if (turn.artifact) {
       messages.push({
@@ -305,7 +306,8 @@ export function messagesFromTurns(turns = []) {
         citations: [],
         created_at: turn.created_at,
         request_id: turn.request_id,
-        artifact: turn.artifact
+        artifact: turn.artifact,
+        tool_names: turn.tool_names || []
       });
     }
   }
