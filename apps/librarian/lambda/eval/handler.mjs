@@ -195,7 +195,7 @@ Read the transcript and return ONLY compact JSON:
   }
 }
 
-Be specific, do not manufacture criticism, and treat lines labeled Runtime/Preflight/Tools/Reader feedback as operator metadata. If Runtime stop_reason is app_deadline_exceeded or tool_use_exhausted, identify it as runtime exhaustion; prefer runtime_timeout and/or tool_gap over criticizing tone, citations, or answer depth as though Thingy chose to give a normal final answer. Use prompt_leak only when internal metadata appeared in Thingy's actual answer text.`;
+Be specific, do not manufacture criticism, and treat lines labeled Runtime/Preflight/Tools/Reader feedback as operator metadata. If Runtime stop_reason is app_deadline_exceeded or tool_use_exhausted, identify it as runtime exhaustion; prefer runtime_timeout and/or tool_gap over criticizing tone, citations, or answer depth as though Thingy chose to give a normal final answer. Do not call an answer truncated merely because it ends with a suggested follow-up question or "next thread worth pulling" prompt; only flag truncation when the prose visibly cuts off mid-word, mid-sentence, or mid-structure. Use prompt_leak only when internal metadata appeared in Thingy's actual answer text.`;
 }
 
 async function evaluateConversation({ conversation, turns }) {
