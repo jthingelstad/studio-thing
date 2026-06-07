@@ -58,3 +58,12 @@ test('removes let-me-dig process narration', () => {
 
   assert.equal(out, '## Thingy Trail\n\n1. A real answer.');
 });
+
+test('removes leaked preflight annotations from reader-facing prose', () => {
+  const answer = "I can't help infer that private detail.\n\n(Preflight: privacy_refusal/direct · reason: sensitive personal characteristic)";
+
+  const out = sanitizeAnswerProse(answer);
+
+  assert.equal(out, "I can't help infer that private detail.");
+  assert.doesNotMatch(out, /Preflight/i);
+});

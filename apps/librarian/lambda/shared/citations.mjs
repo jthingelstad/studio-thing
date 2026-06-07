@@ -30,13 +30,35 @@
  *
  * @param {Array<{issue_number?: string|number, source_kind?: string, url?: string}>} citations
  * @param {string} answer
+ * @param {Map<string, object>|object} issueCatalog optional WT issue metadata keyed by number
  * @returns {Array}
  */
 function isExternalCitation(citation) {
   return ['blog', 'podcast'].includes(citation?.source_kind) || (citation?.issue_number == null && Boolean(citation?.url));
 }
 
-export function prioritizeCitationsForAnswer(citations, answer) {
+function catalogIssue(issueCatalog, issueNumber) {
+  const key = String(issueNumber || '').trim();
+  if (!key || !issueCatalog) return null;
+  if (issueCatalog instanceof Map) return issueCatalog.get(key) || issueCatalog.get(Number(key)) || null;
+  return issueCatalog[key] || null;
+}
+
+function citationFromIssue(issueNumber, issueCatalog) {
+  const issue = catalogIssue(issueCatalog, issueNumber);
+  if (!issue) return null;
+  const number = String(issue.number ?? issue.issue_number ?? issueNumber);
+  return {
+    issue_number: number,
+    source_kind: 'chunk',
+    subject: issue.subject || `Weekly Thing ${number}`,
+    publish_date: issue.publish_date,
+    section: 'Issue',
+    url: issue.url || `/archive/${number}/`
+  };
+}
+
+export function prioritizeCitationsForAnswer(citations, answer, issueCatalog = null) {
   const external = [];
   const issueCitations = [];
   for (const citation of citations) {
@@ -53,6 +75,11 @@ export function prioritizeCitationsForAnswer(citations, answer) {
     const num = Number(citation.issue_number);
     if (!firstSeen.has(num)) continue;
     if (!byIssue.has(num)) byIssue.set(num, citation);
+  }
+  for (const issueNumber of firstSeen.keys()) {
+    if (byIssue.has(issueNumber)) continue;
+    const citation = citationFromIssue(issueNumber, issueCatalog);
+    if (citation) byIssue.set(issueNumber, citation);
   }
   const orderedIssues = [...byIssue.values()].sort((a, b) => {
     const rankA = firstSeen.get(Number(a.issue_number));

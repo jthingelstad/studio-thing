@@ -13,6 +13,8 @@ import { CONVERSATIONS_MAX_SCAN_PAGES, conversationRow, normalizeListConversatio
 import {
   USER_CONVERSATION_LIMIT,
   conversationSk,
+  conversationSummaryFromItem,
+  conversationTurnFromItem,
   dynamoString as conversationDynamoString,
   turnSkPrefix,
   userConversationPk,
@@ -259,6 +261,157 @@ async function handleListConversations(event, body, start) {
   }, event);
 }
 
+function subscriberHashFromUserPk(pk) {
+  const text = String(pk || '');
+  return text.startsWith('user#') ? text.slice('user#'.length) : '';
+}
+
+async function handleListOperatorConversations(event, body, start) {
+  const secretState = bridgeSecretOk(body);
+  if (secretState === null) {
+    logEvent('warning', 'auth_operator_conversations_bridge_disabled');
+    return jsonResponse(503, { error: 'Discord bridge is not enabled.' }, event);
+  }
+  if (!secretState) {
+    logEvent('warning', 'auth_operator_conversations_bad_secret');
+    return jsonResponse(401, { error: 'Bridge secret rejected.' }, event);
+  }
+  const tableName = process.env.TABLE_NAME;
+  if (!tableName) return jsonResponse(500, { error: 'Conversation history is unavailable right now.' }, event);
+
+  const { since: sinceIso, limit } = normalizeListConversationsParams(body);
+  const rows = [];
+  let exclusiveStartKey;
+  let pages = 0;
+  try {
+    do {
+      const resp = await dynamodb.send(new ScanCommand({
+        TableName: tableName,
+        FilterExpression: 'begins_with(#pk, :user_prefix) AND begins_with(#sk, :conversation_prefix) AND #updated_at >= :since',
+        ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk', '#updated_at': 'updated_at' },
+        ExpressionAttributeValues: {
+          ':user_prefix': { S: 'user#' },
+          ':conversation_prefix': { S: 'conversation#' },
+          ':since': { S: sinceIso }
+        },
+        ExclusiveStartKey: exclusiveStartKey
+      }));
+      for (const item of resp.Items || []) {
+        const conversation = conversationSummaryFromItem(item);
+        rows.push({
+          ...conversation,
+          subscriber_hash: subscriberHashFromUserPk(item.pk?.S)
+        });
+      }
+      exclusiveStartKey = resp.LastEvaluatedKey;
+      pages += 1;
+    } while (exclusiveStartKey && pages < CONVERSATIONS_MAX_SCAN_PAGES);
+  } catch (error) {
+    logEvent('error', 'auth_operator_conversations_scan_failed', { error_type: error.constructor?.name || 'Error' });
+    return jsonResponse(502, { error: 'Could not read canonical conversations right now.' }, event);
+  }
+
+  const sorted = rows
+    .sort((a, b) => String(a.updated_at || '').localeCompare(String(b.updated_at || '')))
+    .slice(-limit);
+  const truncated = Boolean(exclusiveStartKey) || sorted.length < rows.length;
+  logEvent('info', 'auth_operator_conversations_listed', {
+    since: sinceIso,
+    returned: sorted.length,
+    scanned_pages: pages,
+    truncated,
+    duration_ms: Math.round(performance.now() - start)
+  });
+  return jsonResponse(200, {
+    since: sinceIso,
+    count: sorted.length,
+    truncated,
+    conversations: sorted
+  }, event);
+}
+
+async function findOperatorConversationMetadata(tableName, conversationId, subscriberHash = '') {
+  if (subscriberHash) {
+    const conversation = await getUserConversationMetadata({ dynamodb, tableName, subscriberHash, conversationId });
+    return conversation ? { conversation: { ...conversation, subscriber_hash: subscriberHash }, subscriberHash } : null;
+  }
+  let exclusiveStartKey;
+  let pages = 0;
+  do {
+    const response = await dynamodb.send(new ScanCommand({
+      TableName: tableName,
+      FilterExpression: 'begins_with(#pk, :user_prefix) AND #sk = :conversation_sk',
+      ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
+      ExpressionAttributeValues: {
+        ':user_prefix': { S: 'user#' },
+        ':conversation_sk': conversationDynamoString(conversationSk(conversationId))
+      },
+      ExclusiveStartKey: exclusiveStartKey
+    }));
+    const item = (response.Items || [])[0];
+    if (item) {
+      const foundSubscriberHash = subscriberHashFromUserPk(item.pk?.S);
+      return {
+        conversation: { ...conversationSummaryFromItem(item), subscriber_hash: foundSubscriberHash },
+        subscriberHash: foundSubscriberHash
+      };
+    }
+    exclusiveStartKey = response.LastEvaluatedKey;
+    pages += 1;
+  } while (exclusiveStartKey && pages < CONVERSATIONS_MAX_SCAN_PAGES);
+  return null;
+}
+
+async function handleGetOperatorConversation(event, body, start) {
+  const secretState = bridgeSecretOk(body);
+  if (secretState === null) {
+    logEvent('warning', 'auth_operator_conversation_bridge_disabled');
+    return jsonResponse(503, { error: 'Discord bridge is not enabled.' }, event);
+  }
+  if (!secretState) {
+    logEvent('warning', 'auth_operator_conversation_bad_secret');
+    return jsonResponse(401, { error: 'Bridge secret rejected.' }, event);
+  }
+  const tableName = process.env.TABLE_NAME;
+  if (!tableName) return jsonResponse(500, { error: 'Conversation history is unavailable right now.' }, event);
+
+  const conversationId = validConversationId(body.conversation_id || body.id);
+  if (!conversationId) return jsonResponse(400, { error: 'conversation_id is required.' }, event);
+  const subscriberHash = String(body.subscriber_hash || '').trim();
+  try {
+    const found = await findOperatorConversationMetadata(tableName, conversationId, subscriberHash);
+    if (!found) return jsonResponse(404, { error: 'Conversation not found.' }, event);
+    const limit = Math.max(1, Math.min(Number(body.limit || 80) || 80, 120));
+    const response = await dynamodb.send(new QueryCommand({
+      TableName: tableName,
+      KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
+      ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
+      ExpressionAttributeValues: {
+        ':pk': conversationDynamoString(userConversationPk(found.subscriberHash)),
+        ':prefix': conversationDynamoString(turnSkPrefix(conversationId))
+      },
+      ScanIndexForward: false,
+      Limit: limit
+    }));
+    const turns = (response.Items || [])
+      .map(conversationTurnFromItem)
+      .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+    logEvent('info', 'auth_operator_conversation_loaded', {
+      subscriber_hash: found.subscriberHash,
+      conversation_id: conversationId,
+      turn_count: turns.length,
+      duration_ms: Math.round(performance.now() - start)
+    });
+    return jsonResponse(200, { conversation: found.conversation, turns }, event);
+  } catch (error) {
+    logEvent('error', 'auth_operator_conversation_load_failed', {
+      conversation_id: conversationId,
+      error_type: error.constructor?.name || 'Error'
+    });
+    return jsonResponse(502, { error: 'Could not read the conversation right now.' }, event);
+  }
+}
+
 function conversationAuth(event, body) {
   const payload = verifyToken(extractBearer(event, body));
   return payload ? String(payload.sub || '') : '';
@@ -421,7 +574,15 @@ async function authHandler(event) {
     logEvent('warning', 'auth_rate_limited', { email_hash: hashedEmail });
     return jsonResponse(429, { error: 'Too many access attempts. Please try again later.' }, event);
   }
-  if (!['check', 'subscribe', 'resend_confirmation', 'discord_bridge', 'list_conversations'].includes(action)) {
+  if (![
+    'check',
+    'subscribe',
+    'resend_confirmation',
+    'discord_bridge',
+    'list_conversations',
+    'list_operator_conversations',
+    'get_operator_conversation'
+  ].includes(action)) {
     logEvent('info', 'auth_rejected_invalid_action', { email_hash: hashedEmail, action });
     return jsonResponse(400, { error: 'Unsupported subscriber action.' }, event);
   }
@@ -439,6 +600,14 @@ async function authHandler(event) {
   // gated by the bridge secret, not a subscriber session.
   if (action === 'list_conversations') {
     return await handleListConversations(event, body, start);
+  }
+
+  if (action === 'list_operator_conversations') {
+    return await handleListOperatorConversations(event, body, start);
+  }
+
+  if (action === 'get_operator_conversation') {
+    return await handleGetOperatorConversation(event, body, start);
   }
 
   if (!EMAIL_RE.test(email)) {

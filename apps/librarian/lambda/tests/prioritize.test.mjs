@@ -68,6 +68,20 @@ test('recognizes both WT and # prefixes', () => {
   assert.deepEqual(out.map((x) => x.issue_number), ['228', '345']);
 });
 
+test('adds missing inline WT issue citations from the issue catalog', () => {
+  const citations = [c(148), c(175)];
+  const catalog = new Map([
+    ['190', { number: 190, subject: 'Weekly Thing 190 / DeAll', publish_date: '2021-06-12T12:00:00Z', url: '/archive/190/' }],
+    ['237', { number: 237, subject: 'Weekly Thing 237 / Erratic Narratives', publish_date: '2022-12-11T13:00:00Z', url: '/archive/237/' }]
+  ]);
+  const answer = 'Start with WT148, then WT190 and WT237, with WT175 as context.';
+  const out = prioritizeCitationsForAnswer(citations, answer, catalog);
+
+  assert.deepEqual(out.map((x) => x.issue_number), ['148', '190', '237', '175']);
+  assert.equal(out[1].subject, 'Weekly Thing 190 / DeAll');
+  assert.equal(out[2].url, '/archive/237/');
+});
+
 test('empty citations stays empty', () => {
   assert.deepEqual(prioritizeCitationsForAnswer([], 'WT100'), []);
 });

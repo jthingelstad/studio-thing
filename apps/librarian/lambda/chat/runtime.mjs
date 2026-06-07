@@ -1452,6 +1452,16 @@ async function issueByNumber(number) {
   return (corpus.issues || []).find((issue) => issueKey(issue.number) === wanted);
 }
 
+async function weeklyIssueCatalog() {
+  const corpus = await loadCorpus('weekly_thing');
+  const catalog = new Map();
+  for (const issue of corpus.issues || []) {
+    const number = issueKey(issue.number || issue.issue_number);
+    if (number) catalog.set(number, issue);
+  }
+  return catalog;
+}
+
 async function issueSections(issue) {
   if (Array.isArray(issue.sections) && issue.sections.length) return issue.sections;
   const corpus = await loadCorpus();
@@ -2588,7 +2598,7 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
     writeSse(responseStream, 'answer', { answer: sanitizedAnswer });
   }
   answer = sanitizedAnswer;
-  const citations = prioritizeCitationsForAnswer(collectToolCitations(toolResults), answer);
+  const citations = prioritizeCitationsForAnswer(collectToolCitations(toolResults), answer, await weeklyIssueCatalog());
   const experience = experienceFromToolResults(toolResults, answer);
   if (experience) {
     writeSse(responseStream, 'experience', { experience });
@@ -2923,6 +2933,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     writeSse(stream, 'status', { message: 'Understanding the request...' });
     const preflight = await evaluatePromptPreflight(question, scope, history, { readerContext, memoryContext });
     if (preflight.action === 'direct') {
+      preflight.direct_answer = sanitizeAnswerProse(preflight.direct_answer);
       const citations = [];
       writeSse(stream, 'answer_delta', { delta: preflight.direct_answer });
       writeSse(stream, 'citations', { citations });
