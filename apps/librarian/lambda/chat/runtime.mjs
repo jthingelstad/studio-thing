@@ -16,6 +16,7 @@ import {
   passThroughPreflight
 } from '../shared/prompt-preflight.mjs';
 import { countsByPublishYear, yearCountSummary, yearlyContentSignals } from '../shared/corpus-stats.mjs';
+import { shouldEmitExperienceForTurn } from '../shared/experience.mjs';
 import { searchFaq } from '../shared/faq.mjs';
 import { truthyEnv } from '../shared/logging.mjs';
 import {
@@ -1236,7 +1237,8 @@ async function buildCuriosityMap({ memory, conversations, scope, center }) {
   };
 }
 
-function experienceFromToolResults(toolResults = [], answer = '') {
+function experienceFromToolResults(toolResults = [], answer = '', question = '') {
+  if (!shouldEmitExperienceForTurn({ question, answer })) return null;
   for (const result of toolResults) {
     const path = Array.isArray(result.reading_path) ? result.reading_path : [];
     if (path.length >= 2) {
@@ -2620,7 +2622,7 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   answer = sanitizedAnswer;
   if (!shouldStopWriting()) writeSse(responseStream, 'answer', { answer });
   const citations = prioritizeCitationsForAnswer(collectToolCitations(toolResults), answer, await weeklyIssueCatalog());
-  const experience = experienceFromToolResults(toolResults, answer);
+  const experience = experienceFromToolResults(toolResults, answer, question);
   if (experience && !shouldStopWriting()) {
     writeSse(responseStream, 'experience', { experience });
   }
