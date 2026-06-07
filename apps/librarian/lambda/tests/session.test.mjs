@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderFaqAnswer, searchFaq } from '../shared/faq.mjs';
 import { buildMagicLink, createMagicToken, magicTokenHash, validMagicToken } from '../shared/magic-link.mjs';
-import { magicLinkEmailText } from '../shared/jmap-mail.mjs';
+import { magicLinkEmailText, requireMethodResponse } from '../shared/jmap-mail.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, verifyToken } from '../shared/session.mjs';
 import {
   authProfile,
@@ -176,6 +176,17 @@ test('magic link email text includes expiration and fallback URL', () => {
   assert.match(text, /Use this link to sign in to Thingy/);
   assert.match(text, /https:\/\/thingy\.example\/login\?token=abc/);
   assert.match(text, /expires in 15 minutes/);
+});
+
+test('JMAP method errors are treated as hard send failures', () => {
+  assert.throws(
+    () => requireMethodResponse([['error', { type: 'accountReadOnly' }, 'email']], 'Email/set', 'email'),
+    /accountReadOnly/
+  );
+  assert.deepEqual(
+    requireMethodResponse([['Email/set', { created: { draft: { id: 'm1' } } }, 'email']], 'Email/set', 'email'),
+    { created: { draft: { id: 'm1' } } }
+  );
 });
 
 test('buttondown subscriber status maps active and inactive states', () => {

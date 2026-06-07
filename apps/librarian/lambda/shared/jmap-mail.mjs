@@ -59,6 +59,15 @@ function methodResponse(responses = [], name, id) {
   return (responses || []).find((item) => item[0] === name && item[2] === id)?.[1] || {};
 }
 
+export function requireMethodResponse(responses = [], name, id) {
+  const found = (responses || []).find((item) => item[2] === id && (item[0] === name || item[0] === 'error'));
+  if (!found) throw new Error(`JMAP ${name} response missing`);
+  if (found[0] === 'error') {
+    throw new Error(`JMAP ${name} failed: ${found[1]?.type || found[1]?.description || 'error'}`);
+  }
+  return found[1] || {};
+}
+
 function primaryAccount(session, capability) {
   return session?.primaryAccounts?.[capability] || session?.primaryAccounts?.[CAP_MAIL] || '';
 }
@@ -78,8 +87,8 @@ async function loadSendContext(session, fromEmail) {
     ['Identity/get', { accountId: submissionAccountId, ids: null }, 'identity'],
     ['Mailbox/get', { accountId: mailAccountId, ids: null }, 'mailboxes']
   ]);
-  const identities = methodResponse(response.methodResponses, 'Identity/get', 'identity').list || [];
-  const mailboxes = methodResponse(response.methodResponses, 'Mailbox/get', 'mailboxes').list || [];
+  const identities = requireMethodResponse(response.methodResponses, 'Identity/get', 'identity').list || [];
+  const mailboxes = requireMethodResponse(response.methodResponses, 'Mailbox/get', 'mailboxes').list || [];
   const drafts = mailboxes.find((mailbox) => mailbox.role === 'drafts');
   const identity = pickIdentity(identities, fromEmail);
   if (!identity?.id) throw new Error(`No JMAP identity available for ${fromEmail}`);
@@ -144,12 +153,17 @@ export async function sendMagicLinkEmail({ to, magicLink, expiresMinutes }) {
       }
     }, 'submit']
   ]);
-  const submit = methodResponse(response.methodResponses, 'EmailSubmission/set', 'submit');
+  const emailSet = requireMethodResponse(response.methodResponses, 'Email/set', 'email');
+  const submit = requireMethodResponse(response.methodResponses, 'EmailSubmission/set', 'submit');
+  if (emailSet.notCreated?.draft) {
+    throw new Error(`JMAP email create failed: ${emailSet.notCreated.draft.type || 'notCreated'}`);
+  }
   if (submit.notCreated?.send) {
     throw new Error(`JMAP submission failed: ${submit.notCreated.send.type || 'notCreated'}`);
   }
+  if (!submit.created?.send?.id) throw new Error('JMAP submission did not create a send record');
   return {
-    ok: Boolean(submit.created?.send?.id),
-    submission_id: submit.created?.send?.id || ''
+    ok: true,
+    submission_id: submit.created.send.id
   };
 }
