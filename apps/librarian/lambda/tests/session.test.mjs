@@ -13,6 +13,7 @@ import { subscriberStatus } from '../shared/buttondown.mjs';
 import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
 import { readConverseStream } from '../shared/bedrock-stream.mjs';
 import {
+  PREFLIGHT_SYSTEM_PROMPT,
   normalizePreflightDecision,
   parsePreflightJson,
   passThroughPreflight
@@ -206,6 +207,12 @@ test('preflight normalizer keeps rewrites/direct answers safe and structured', (
   assert.match(direct.direct_answer, /public archive/i);
 
   assert.equal(passThroughPreflight('What did Jamie write about RSS?').action, 'pass');
+});
+
+test('preflight prompt allows named-person archive lookups without weakening privacy refusals', () => {
+  assert.match(PREFLIGHT_SYSTEM_PROMPT, /Named-person archive lookups are allowed/);
+  assert.match(PREFLIGHT_SYSTEM_PROMPT, /Do not refuse merely because the prompt names a private individual/);
+  assert.match(PREFLIGHT_SYSTEM_PROMPT, /home address, phone numbers, whereabouts/);
 });
 
 test('FAQ search returns authoritative shared FAQ entries', () => {
