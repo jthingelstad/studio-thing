@@ -50,7 +50,7 @@ def iso_days_ago(days: int) -> str:
 
 
 def h(value: Any) -> str:
-    return html.escape(str(value or ""), quote=True)
+    return html.escape("" if value is None else str(value), quote=True)
 
 
 def compact(value: Any, limit: int = 240) -> str:
@@ -175,6 +175,18 @@ class Conversation:
         return any(t.feedback_reaction == "down" for t in self.turns)
 
     @property
+    def has_preflight(self) -> bool:
+        return any(t.preflight for t in self.turns)
+
+    @property
+    def has_tool_use(self) -> bool:
+        return any(t.tool_names for t in self.turns)
+
+    @property
+    def feedback_count(self) -> int:
+        return sum(1 for t in self.turns if t.feedback_reaction)
+
+    @property
     def source_labels(self) -> list[str]:
         out: list[str] = []
         for turn in self.turns:
@@ -182,6 +194,73 @@ class Conversation:
                 if label not in out:
                     out.append(label)
         return out
+
+    @property
+    def tool_names(self) -> list[str]:
+        out: list[str] = []
+        for turn in self.turns:
+            for tool_name in turn.tool_names:
+                if tool_name not in out:
+                    out.append(tool_name)
+        return out
+
+    @property
+    def attention_reasons(self) -> list[str]:
+        reasons: list[str] = []
+        if self.eval_quality in {"watch", "problem"}:
+            reasons.append(self.eval_quality)
+        if self.has_downvote:
+            reasons.append("downvote")
+        if self.eval_flags:
+            reasons.append("flags")
+        if self.feedback_count and "downvote" not in reasons:
+            reasons.append("feedback")
+        return reasons
+
+    @property
+    def filter_tokens(self) -> list[str]:
+        tokens = ["all"]
+        if self.attention_reasons:
+            tokens.append("attention")
+        if self.has_feedback:
+            tokens.append("feedback")
+        if self.has_downvote:
+            tokens.append("downvote")
+        if self.eval_flags:
+            tokens.append("flags")
+        if self.has_preflight:
+            tokens.append("preflight")
+        if self.has_tool_use:
+            tokens.append("tools")
+        return tokens
+
+    @property
+    def search_text(self) -> str:
+        parts = [
+            self.conversation_id,
+            self.subscriber_hash,
+            self.title,
+            self.topic,
+            self.summary,
+            self.scope,
+            self.eval_quality,
+            " ".join(self.eval_flags),
+            " ".join(self.eval_improvements),
+            self.eval_reader,
+            self.eval_thingy,
+            self.eval_takeaway,
+        ]
+        for turn in self.turns:
+            parts.extend(
+                [
+                    turn.question,
+                    turn.feedback_reaction,
+                    turn.feedback_comment,
+                    " ".join(turn.tool_names),
+                    " ".join(turn.source_labels),
+                ]
+            )
+        return " ".join(str(part or "") for part in parts).lower()
 
 
 def scan_conversations(table_name: str, *, since_iso: str, max_pages: int) -> list[Conversation]:
@@ -234,7 +313,7 @@ def load_turns(table_name: str, conversation: Conversation, *, limit: int = 80) 
     return [Turn.from_row(dynamo_item(item)) for item in response.get("Items", [])]
 
 
-def select_detail_conversations(conversations: list[Conversation], limit: int) -> list[Conversation]:
+def sort_for_review(conversations: list[Conversation]) -> list[Conversation]:
     priority = {
         "problem": 0,
         "watch": 1,
@@ -247,9 +326,9 @@ def select_detail_conversations(conversations: list[Conversation], limit: int) -
             priority.get(c.eval_quality, 2),
             0 if c.has_downvote else 1,
             0 if c.eval_flags else 1,
-            c.updated_at,
+            -(parse_iso(c.updated_at) or datetime.min.replace(tzinfo=UTC)).timestamp(),
         ),
-    )[:limit]
+    )
 
 
 def metric_cards(conversations: list[Conversation]) -> dict[str, Any]:
@@ -287,18 +366,12 @@ def render_counter(counter: Counter, *, empty: str = "None", limit: int = 12) ->
     return '<table class="compact"><tbody>' + "".join(rows) + "</tbody></table>"
 
 
-def render_conversation_row(c: Conversation) -> str:
-    flags = " ".join(f'<span class="chip">{h(flag)}</span>' for flag in c.eval_flags[:4])
-    return (
-        "<tr>"
-        f"<td><code>{h(c.conversation_id[:8])}</code></td>"
-        f"<td><span class=\"quality q-{h(c.eval_quality)}\">{h(c.eval_quality)}</span></td>"
-        f"<td>{h(local_time(c.updated_at))}</td>"
-        f"<td>{h(c.topic or c.title)}</td>"
-        f"<td>{h(c.turn_count)}</td>"
-        f"<td>{flags}</td>"
-        "</tr>"
-    )
+def render_chips(values: list[str], *, limit: int = 8, css_class: str = "chip") -> str:
+    chips = [f'<span class="{css_class}">{h(value)}</span>' for value in values[:limit] if value]
+    remaining = len(values) - limit
+    if remaining > 0:
+        chips.append(f'<span class="{css_class}">+{remaining}</span>')
+    return " ".join(chips)
 
 
 def render_turn(turn: Turn, index: int) -> str:
@@ -325,25 +398,47 @@ def render_turn(turn: Turn, index: int) -> str:
     )
 
 
-def render_detail(c: Conversation) -> str:
-    flags = " ".join(f'<span class="chip">{h(flag)}</span>' for flag in c.eval_flags)
+def render_conversation_card(c: Conversation, *, open_by_default: bool = False) -> str:
+    title = c.topic or c.title or "Untitled conversation"
+    flags = render_chips(c.eval_flags, limit=10)
+    attention = render_chips(c.attention_reasons, limit=6, css_class="chip attention-chip")
     improvements = "".join(f"<li>{h(item)}</li>" for item in c.eval_improvements)
-    sources = ", ".join(c.source_labels[:16])
+    sources = render_chips(c.source_labels, limit=16)
+    tools = render_chips(c.tool_names, limit=10)
     turns = "".join(render_turn(turn, i + 1) for i, turn in enumerate(c.turns))
+    search_text = compact(c.search_text, 4000)
+    status_tokens = " ".join(c.filter_tokens)
+    open_attr = " open" if open_by_default else ""
+    posted = f" · eval posted {h(local_time(c.eval_posted_to_chatter_at))}" if c.eval_posted_to_chatter_at else ""
     return (
-        '<details class="conversation">'
-        f'<summary><span class="quality q-{h(c.eval_quality)}">{h(c.eval_quality)}</span> '
-        f'<strong>{h(c.topic or c.title)}</strong> <code>{h(c.conversation_id)}</code></summary>'
+        f'<details class="conversation-card" data-quality="{h(c.eval_quality)}" data-status="{h(status_tokens)}" '
+        f'data-scope="{h(c.scope)}" data-flags="{h(" ".join(c.eval_flags))}" data-search="{h(search_text)}"{open_attr}>'
+        '<summary class="conversation-summary">'
+        '<div class="conversation-topline">'
+        f'<span class="quality q-{h(c.eval_quality)}">{h(c.eval_quality)}</span>'
+        f'<span>{h(local_time(c.updated_at))}</span>'
+        f'<span>{h(c.turn_count)} turn{"s" if c.turn_count != 1 else ""}</span>'
+        f'<span>reader·{h(c.subscriber_hash[:8])}</span>'
+        f'<span>scope {h(c.scope)}</span>'
+        "</div>"
+        f'<h2>{h(title)}</h2>'
+        f'<p class="conversation-preview">{h(c.summary or "No eval summary yet.")}</p>'
+        f'<div class="chipline">{attention}{flags}</div>'
+        "</summary>"
         '<div class="conversation-body">'
-        f'<p class="meta">Updated {h(local_time(c.updated_at))} · {h(c.turn_count)} turns · reader·{h(c.subscriber_hash[:8])} · scope {h(c.scope)}</p>'
-        f'<p>{h(c.summary)}</p>'
-        f'<p><strong>Reader:</strong> {h(c.eval_reader)}</p>'
-        f'<p><strong>Thingy:</strong> {h(c.eval_thingy)}</p>'
-        f'<p><strong>Takeaway:</strong> {h(c.eval_takeaway)}</p>'
-        f'<p>{flags}</p>'
-        f'{"<h4>Improvements</h4><ul>" + improvements + "</ul>" if improvements else ""}'
-        f'<p class="meta">Sources: {h(sources or "None")}</p>'
+        f'<p class="meta"><code>{h(c.conversation_id)}</code>{posted}</p>'
+        '<section class="eval-grid">'
+        f'<div><h3>Reader</h3><p>{h(c.eval_reader or "No reader assessment yet.")}</p></div>'
+        f'<div><h3>Thingy</h3><p>{h(c.eval_thingy or "No Thingy assessment yet.")}</p></div>'
+        f'<div><h3>Takeaway</h3><p>{h(c.eval_takeaway or "No takeaway yet.")}</p></div>'
+        "</section>"
+        f'{"<section><h3>Improvements</h3><ul>" + improvements + "</ul></section>" if improvements else ""}'
+        f'<section class="meta-block"><strong>Sources</strong><div>{sources or "<span class=\"muted\">None recorded</span>"}</div></section>'
+        f'<section class="meta-block"><strong>Tools</strong><div>{tools or "<span class=\"muted\">None recorded</span>"}</div></section>'
+        '<section class="transcript">'
+        "<h3>Transcript</h3>"
         f"{turns}"
+        "</section>"
         "</div></details>"
     )
 
@@ -357,14 +452,18 @@ def render_html(conversations: list[Conversation], *, since_iso: str, generated_
     for c in conversations:
         dt = parse_iso(c.updated_at)
         by_day[(dt or utc_now()).date().isoformat()] += 1
-    recent_rows = "".join(render_conversation_row(c) for c in conversations[:80])
-    watch_rows = "".join(
-        render_conversation_row(c)
-        for c in conversations
-        if c.eval_quality in {"watch", "problem"} or c.has_downvote
+    review_conversations = sort_for_review(conversations)
+    conversation_cards = "".join(
+        render_conversation_card(c)
+        for c in review_conversations
     )
-    details = "".join(render_detail(c) for c in select_detail_conversations(conversations, 30))
     timeline = Counter(dict(sorted(by_day.items())))
+    scopes = sorted({c.scope or "all" for c in conversations})
+    flag_values = sorted({flag for c in conversations for flag in c.eval_flags})
+    scope_options = "".join(f'<option value="{h(scope)}">{h(scope)}</option>' for scope in scopes)
+    flag_options = "".join(f'<option value="{h(flag)}">{h(flag)}</option>' for flag in flag_values)
+    attention_count = sum(1 for c in conversations if c.attention_reasons)
+    feedback_count = sum(1 for c in conversations if c.has_feedback)
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -372,19 +471,21 @@ def render_html(conversations: list[Conversation], *, since_iso: str, generated_
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Thingy Operator Report</title>
 <style>
-:root {{ color-scheme: light; --ink:#17211d; --muted:#66736d; --line:#dfe6e2; --soft:#f6f8f7; --accent:#176b5b; --warn:#9f5c00; --bad:#9d2c2c; }}
+:root {{ color-scheme: light; --ink:#17211d; --muted:#66736d; --line:#dfe6e2; --line-strong:#c8d4ce; --soft:#f6f8f7; --accent:#176b5b; --accent-soft:#e8f4f1; --warn:#9f5c00; --bad:#9d2c2c; }}
 * {{ box-sizing: border-box; }}
 body {{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--ink); background:#fbfcfb; }}
 main {{ max-width:1180px; margin:0 auto; padding:32px 20px 56px; }}
 h1 {{ margin:0 0 4px; font-size:32px; letter-spacing:0; }}
-h2 {{ margin:34px 0 12px; font-size:20px; }}
-h3 {{ margin:0 0 12px; font-size:16px; }}
+h2 {{ margin:0 0 6px; font-size:20px; }}
+h3 {{ margin:0 0 10px; font-size:14px; }}
 h4 {{ margin:18px 0 8px; font-size:14px; }}
 h4 span, .muted, .meta, .metric-sub {{ color:var(--muted); font-weight:400; }}
 .lede {{ color:var(--muted); margin:0 0 22px; }}
+.section-title {{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:34px 0 12px; }}
+.section-title p {{ margin:0; color:var(--muted); font-size:13px; }}
 .grid {{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; }}
 .two {{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; }}
-.panel, .metric, details.conversation {{ background:white; border:1px solid var(--line); border-radius:8px; box-shadow:0 1px 2px rgba(0,0,0,.03); }}
+.panel, .metric, details.conversation-card {{ background:white; border:1px solid var(--line); border-radius:8px; box-shadow:0 1px 2px rgba(0,0,0,.03); }}
 .panel {{ padding:16px; }}
 .metric {{ padding:18px; }}
 .metric-value {{ font-size:30px; font-weight:700; }}
@@ -402,17 +503,38 @@ th {{ color:var(--muted); font-size:12px; text-transform:uppercase; letter-spaci
 .q-problem {{ background:#fff0f0; color:var(--bad); border-color:#edb9b9; }}
 .q-unreviewed {{ background:#f2f3f2; color:#5d6862; }}
 .chip {{ margin:1px 2px 1px 0; color:#3f4d47; background:#f7f9f8; }}
-details.conversation {{ margin:10px 0; }}
-summary {{ cursor:pointer; padding:14px 16px; }}
-.conversation-body {{ border-top:1px solid var(--line); padding:14px 16px 18px; }}
+.attention-chip {{ background:#fff8e8; color:var(--warn); border-color:#ead59e; }}
+.filters {{ position:sticky; top:0; z-index:2; display:grid; grid-template-columns:1.4fr repeat(4, minmax(120px, .5fr)) auto; gap:10px; align-items:end; padding:12px; margin:0 0 12px; background:rgba(251,252,251,.92); border:1px solid var(--line); border-radius:8px; backdrop-filter:blur(10px); }}
+.filter-field {{ display:grid; gap:4px; }}
+.filter-field label {{ color:var(--muted); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }}
+.filters input, .filters select {{ width:100%; min-height:36px; border:1px solid var(--line-strong); border-radius:7px; background:white; color:var(--ink); padding:0 10px; font:inherit; font-size:14px; }}
+.filters button {{ min-height:36px; border:1px solid var(--line-strong); border-radius:7px; background:white; color:var(--ink); padding:0 12px; font:inherit; cursor:pointer; }}
+.filter-count {{ margin:0 0 10px; color:var(--muted); font-size:13px; }}
+.conversation-list {{ display:grid; gap:12px; }}
+details.conversation-card {{ overflow:hidden; }}
+details.conversation-card[hidden] {{ display:none; }}
+.conversation-summary {{ cursor:pointer; padding:16px; list-style:none; }}
+.conversation-summary::-webkit-details-marker {{ display:none; }}
+.conversation-topline {{ display:flex; flex-wrap:wrap; align-items:center; gap:7px 10px; color:var(--muted); font-size:12px; }}
+.conversation-summary h2 {{ margin:9px 0 6px; line-height:1.2; }}
+.conversation-preview {{ margin:0; color:#33423c; line-height:1.45; }}
+.chipline {{ margin-top:10px; min-height:20px; }}
+.conversation-body {{ border-top:1px solid var(--line); padding:16px 16px 18px; }}
+.eval-grid {{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }}
+.eval-grid div, .meta-block {{ border:1px solid var(--line); border-radius:8px; padding:12px; background:#fcfdfc; }}
+.eval-grid p {{ margin:0; color:#33423c; line-height:1.45; }}
+.meta-block {{ display:grid; grid-template-columns:90px 1fr; gap:10px; align-items:start; margin-top:12px; }}
+.transcript {{ margin-top:18px; }}
 .turn {{ border-top:1px solid var(--line); margin-top:14px; padding-top:10px; }}
 .bubble {{ border-radius:8px; padding:10px 12px; margin:8px 0; }}
 .bubble p {{ white-space:pre-wrap; margin:5px 0 0; line-height:1.5; }}
 .reader {{ background:#f2f4f3; }}
 .thingy {{ background:#eef6f4; }}
 .feedback {{ color:var(--bad); }}
+.empty-state {{ padding:28px; text-align:center; color:var(--muted); border:1px dashed var(--line-strong); border-radius:8px; background:white; }}
 code {{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.92em; }}
-@media (max-width: 820px) {{ .grid, .two {{ grid-template-columns:1fr; }} main {{ padding:22px 14px 42px; }} table {{ font-size:13px; }} }}
+@media (max-width: 980px) {{ .filters {{ grid-template-columns:1fr 1fr; }} .eval-grid {{ grid-template-columns:1fr; }} }}
+@media (max-width: 820px) {{ .grid, .two {{ grid-template-columns:1fr; }} main {{ padding:22px 14px 42px; }} table {{ font-size:13px; }} .filters {{ position:static; grid-template-columns:1fr; }} .section-title {{ display:block; }} .meta-block {{ grid-template-columns:1fr; }} }}
 </style>
 </head>
 <body>
@@ -424,7 +546,7 @@ code {{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-s
 {render_metric("Conversations", metrics["total"])}
 {render_metric("Turns", metrics["turns"])}
 {render_metric("Readers", metrics["readers"])}
-{render_metric("Downvotes", feedback.get("down", 0), "comments included in details")}
+{render_metric("Needs Attention", attention_count, f"{feedback_count} with explicit feedback")}
 </section>
 
 <section class="two">
@@ -434,23 +556,81 @@ code {{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-s
 <div class="panel"><h3>Daily Volume</h3>{render_counter(timeline, empty="No conversations in this window", limit=30)}</div>
 </section>
 
-<h2>Watchlist</h2>
-<div class="panel">
-<table><thead><tr><th>ID</th><th>Quality</th><th>Updated</th><th>Topic</th><th>Turns</th><th>Flags</th></tr></thead><tbody>
-{watch_rows or '<tr><td colspan="6" class="muted">No watch/problem/downvoted conversations in this window.</td></tr>'}
-</tbody></table>
+<section class="section-title">
+<div>
+<h2>Conversation Review</h2>
+<p>Conversation cards are the organizing unit: eval, metadata, feedback, sources, tools, and transcript stay together.</p>
 </div>
+</section>
 
-<h2>Recent Conversations</h2>
-<div class="panel">
-<table><thead><tr><th>ID</th><th>Quality</th><th>Updated</th><th>Topic</th><th>Turns</th><th>Flags</th></tr></thead><tbody>
-{recent_rows or '<tr><td colspan="6" class="muted">No conversations in this window.</td></tr>'}
-</tbody></table>
-</div>
-
-<h2>Conversation Detail</h2>
-{details or '<p class="muted">No conversations selected for detail.</p>'}
+<section class="filters" aria-label="Conversation filters">
+<div class="filter-field"><label for="filter-search">Search</label><input id="filter-search" type="search" placeholder="Prompt, topic, flag, source, reader…"></div>
+<div class="filter-field"><label for="filter-quality">Quality</label><select id="filter-quality"><option value="all">All</option><option value="problem">Problem</option><option value="watch">Watch</option><option value="unreviewed">Unreviewed</option><option value="clean">Clean</option></select></div>
+<div class="filter-field"><label for="filter-status">Status</label><select id="filter-status"><option value="all">All</option><option value="attention">Needs attention</option><option value="feedback">Has feedback</option><option value="downvote">Downvoted</option><option value="flags">Has flags</option><option value="preflight">Preflight</option><option value="tools">Tool use</option></select></div>
+<div class="filter-field"><label for="filter-flag">Flag</label><select id="filter-flag"><option value="all">All flags</option>{flag_options}</select></div>
+<div class="filter-field"><label for="filter-scope">Scope</label><select id="filter-scope"><option value="__all">All scopes</option>{scope_options}</select></div>
+<button id="filter-clear" type="button">Clear</button>
+</section>
+<p class="filter-count" id="filter-count">{len(review_conversations)} conversations shown.</p>
+<section class="conversation-list" id="conversation-list">
+{conversation_cards or '<p class="empty-state">No conversations in this window.</p>'}
+</section>
+<p class="empty-state" id="filter-empty" hidden>No conversations match those filters.</p>
 </main>
+<script>
+(() => {{
+  const cards = Array.from(document.querySelectorAll('.conversation-card'));
+  const search = document.getElementById('filter-search');
+  const quality = document.getElementById('filter-quality');
+  const status = document.getElementById('filter-status');
+  const flag = document.getElementById('filter-flag');
+  const scope = document.getElementById('filter-scope');
+  const clear = document.getElementById('filter-clear');
+  const count = document.getElementById('filter-count');
+  const empty = document.getElementById('filter-empty');
+
+  function words(value) {{
+    return String(value || '').toLowerCase().trim().split(/\\s+/).filter(Boolean);
+  }}
+
+  function matches(card) {{
+    const q = quality.value;
+    const s = status.value;
+    const f = flag.value;
+    const sc = scope.value;
+    const haystack = card.dataset.search || '';
+    const terms = words(search.value);
+    if (q !== 'all' && card.dataset.quality !== q) return false;
+    if (s !== 'all' && !words(card.dataset.status).includes(s)) return false;
+    if (f !== 'all' && !words(card.dataset.flags).includes(f.toLowerCase())) return false;
+    if (sc !== '__all' && card.dataset.scope !== sc) return false;
+    return terms.every((term) => haystack.includes(term));
+  }}
+
+  function update() {{
+    let visible = 0;
+    cards.forEach((card) => {{
+      const show = matches(card);
+      card.hidden = !show;
+      if (show) visible += 1;
+    }});
+    count.textContent = `${{visible}} of ${{cards.length}} conversation${{cards.length === 1 ? '' : 's'}} shown.`;
+    empty.hidden = visible !== 0 || cards.length === 0;
+  }}
+
+  [search, quality, status, flag, scope].forEach((control) => control && control.addEventListener(control === search ? 'input' : 'change', update));
+  clear?.addEventListener('click', () => {{
+    search.value = '';
+    quality.value = 'all';
+    status.value = 'all';
+    flag.value = 'all';
+    scope.value = '__all';
+    update();
+    search.focus();
+  }});
+  update();
+}})();
+</script>
 </body>
 </html>
 """

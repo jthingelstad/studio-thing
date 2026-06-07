@@ -29,8 +29,10 @@ venv/bin/python apps/librarian/admin/operator_report.py --output tmp/thingy-repo
 ```
 
 The report includes quality counts, eval flags, explicit feedback, daily
-volume, a watchlist, recent conversations, and expandable transcript detail
-for prioritized conversations.
+volume, and a client-side filtered conversation review queue. Conversation
+cards are the central object: eval notes, feedback, sources, tools, and the
+transcript stay together so operator review stays grounded in what the reader
+and Thingy actually said.
 
 ## Planned
 
