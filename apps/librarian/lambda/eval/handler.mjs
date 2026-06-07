@@ -2,6 +2,7 @@ import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { GetItemCommand, QueryCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { bedrock, dynamodb, agentModel } from '../shared/aws-clients.mjs';
 import { errorFields, logEvent } from '../shared/logging.mjs';
+import { turnForPrompt } from '../shared/eval-transcript.mjs';
 import {
   conversationSummaryFromItem,
   conversationTurnFromItem,
@@ -144,32 +145,6 @@ async function postDiscordWebhook({ conversation, turns }) {
   return { posted: true };
 }
 
-function turnForPrompt(turn, index) {
-  const citations = (turn.citations || []).map(citationLabel).filter(Boolean).join(', ');
-  const preflight = turn.preflight?.category || turn.preflight?.action
-    ? `${turn.preflight.category || ''}/${turn.preflight.action || ''}`
-    : '';
-  const tools = (turn.tool_names || []).join(', ');
-  const feedback = turn.feedback_reaction
-    ? `${turn.feedback_reaction}${turn.feedback_comment ? ` — ${turn.feedback_comment}` : ''}`
-    : '';
-  const runtime = [
-    turn.stop_reason ? `stop_reason=${turn.stop_reason}` : '',
-    turn.duration_ms ? `duration_ms=${turn.duration_ms}` : ''
-  ].filter(Boolean).join(', ');
-  return [
-    `### Turn ${index + 1}`,
-    `Reader: ${boundedText(turn.question, 1400)}`,
-    '',
-    `Thingy: ${boundedText(turn.answer, 2800)}`,
-    runtime ? `Runtime: ${runtime}` : '',
-    citations ? `Citations: ${citations}` : '',
-    preflight ? `Preflight: ${preflight}` : '',
-    tools ? `Tools: ${tools}` : '',
-    feedback ? `Reader feedback: ${feedback}` : ''
-  ].filter(Boolean).join('\n');
-}
-
 function evalSystemPrompt() {
   return `You are Thingy's background evaluator for Jamie Thingelstad's public archive agent.
 
@@ -195,7 +170,7 @@ Read the transcript and return ONLY compact JSON:
   }
 }
 
-Be specific, do not manufacture criticism, and treat lines labeled Runtime/Preflight/Tools/Reader feedback as operator metadata. If Runtime stop_reason is app_deadline_exceeded or tool_use_exhausted, identify it as runtime exhaustion; prefer runtime_timeout and/or tool_gap over criticizing tone, citations, or answer depth as though Thingy chose to give a normal final answer. Do not call an answer truncated merely because it ends with a suggested follow-up question or "next thread worth pulling" prompt; only flag truncation when the prose visibly cuts off mid-word, mid-sentence, or mid-structure. Use prompt_leak only when internal metadata appeared in Thingy's actual answer text.`;
+Be specific, do not manufacture criticism, and treat lines labeled Runtime/Preflight/Tools/Reader feedback as operator metadata. If Runtime stop_reason is app_deadline_exceeded or tool_use_exhausted, identify it as runtime exhaustion; prefer runtime_timeout and/or tool_gap over criticizing tone, citations, or answer depth as though Thingy chose to give a normal final answer. Do not call an answer truncated merely because it ends with a suggested follow-up question or "next thread worth pulling" prompt; only flag truncation when the prose visibly cuts off mid-word, mid-sentence, or mid-structure. If the transcript contains "[Evaluator transcript note: ... omitted]", that is evaluator-only compaction, not reader-visible truncation. Use prompt_leak only when internal metadata appeared in Thingy's actual answer text.`;
 }
 
 async function evaluateConversation({ conversation, turns }) {
