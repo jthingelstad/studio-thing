@@ -186,15 +186,29 @@ async function sendLoginMagicLink({ email, subscriber, source, event, start }) {
   const token = createMagicToken();
   const link = buildMagicLink(token);
   const status = subscriberStatus(subscriber);
+  let memory = null;
+  try {
+    memory = await getUserMemory(hashedEmail);
+  } catch (error) {
+    logEvent('warning', 'auth_magic_link_memory_lookup_failed', errorFields(error, { email_hash: hashedEmail }));
+  }
+  const emailContext = {
+    ...authProfile(memory),
+    subscriber_status: status,
+    source
+  };
   await storeMagicLink({ token, email, source, event, subscriberStatusValue: status, nowSeconds, expiresAt });
   await sendMagicLinkEmail({
     to: normalizeEmail(email),
     magicLink: link,
-    expiresMinutes: Math.max(1, Math.round(ttlSeconds / 60))
+    expiresMinutes: Math.max(1, Math.round(ttlSeconds / 60)),
+    context: emailContext
   });
   logEvent('info', 'auth_magic_link_sent', {
     email_hash: hashedEmail,
     subscriber_status: status,
+    returning: Boolean(emailContext.returning),
+    has_preferred_name: Boolean(emailContext.preferred_name),
     expires_at: expiresAt,
     duration_ms: Math.round(performance.now() - start)
   });

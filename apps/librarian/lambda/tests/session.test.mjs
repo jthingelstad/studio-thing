@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderFaqAnswer, searchFaq } from '../shared/faq.mjs';
 import { buildMagicLink, createMagicToken, magicTokenHash, validMagicToken } from '../shared/magic-link.mjs';
-import { buildMagicLinkJmapCalls, magicLinkEmailText, requireMethodResponse } from '../shared/jmap-mail.mjs';
+import { buildMagicLinkJmapCalls, magicLinkEmailHtml, magicLinkEmailText, requireMethodResponse } from '../shared/jmap-mail.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, verifyToken } from '../shared/session.mjs';
 import {
   authProfile,
@@ -173,9 +173,31 @@ test('magic link builder adds login_token without leaking extra state', () => {
 
 test('magic link email text includes expiration and fallback URL', () => {
   const text = magicLinkEmailText({ magicLink: 'https://thingy.example/login?token=abc', expiresMinutes: 15 });
-  assert.match(text, /Use this link to sign in to Thingy/);
+  assert.match(text, /Thingy is ready/);
   assert.match(text, /https:\/\/thingy\.example\/login\?token=abc/);
   assert.match(text, /expires in 15 minutes/);
+});
+
+test('magic link email copy reflects reader context', () => {
+  const text = magicLinkEmailText({
+    magicLink: 'https://thingy.example/login?token=abc',
+    expiresMinutes: 15,
+    context: { preferred_name: 'Jamie', returning: true, turn_count: 4, subscriber_status: 'premium' }
+  });
+  assert.match(text, /Hi Jamie/);
+  assert.match(text, /archive thread is waiting/);
+  assert.match(text, /Supporting Member/);
+
+  const html = magicLinkEmailHtml({
+    magicLink: 'https://thingy.example/login?token=abc&x=<bad>',
+    expiresMinutes: 15,
+    context: { preferred_name: 'Jamie', returning: true, turn_count: 4 },
+    imageUrl: 'https://thingy.example/img/thingy.png'
+  });
+  assert.match(html, /Hi Jamie/);
+  assert.match(html, /Open Thingy/);
+  assert.match(html, /thingy\.png/);
+  assert.doesNotMatch(html, /<bad>/);
 });
 
 test('JMAP method errors are treated as hard send failures', () => {
@@ -201,14 +223,22 @@ test('JMAP magic link payload creates a draft and submits it through Sent', () =
     fromEmail: 'thingy@example.com',
     fromName: 'Thingy',
     to: 'reader@example.com',
-    text: 'hello'
+    text: 'hello',
+    html: '<p>hello</p>'
   });
 
   const emailSet = calls[0][1];
   assert.equal(calls[0][0], 'Email/set');
   assert.deepEqual(emailSet.create.draft.mailboxIds, { 'drafts-1': true });
-  assert.deepEqual(emailSet.create.draft.bodyStructure, { partId: 'text', type: 'text/plain' });
+  assert.deepEqual(emailSet.create.draft.bodyStructure, {
+    type: 'multipart/alternative',
+    subParts: [
+      { partId: 'text', type: 'text/plain' },
+      { partId: 'html', type: 'text/html' }
+    ]
+  });
   assert.equal(emailSet.create.draft.bodyValues.text.value, 'hello');
+  assert.equal(emailSet.create.draft.bodyValues.html.value, '<p>hello</p>');
 
   const submissionSet = calls[1][1];
   assert.equal(calls[1][0], 'EmailSubmission/set');

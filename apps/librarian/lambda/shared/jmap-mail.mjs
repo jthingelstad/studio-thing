@@ -23,6 +23,10 @@ export function jmapFromName() {
   return envValue('THINGY_MAGIC_LINK_FROM_NAME', 'THINGY_EMAIL_FROM_NAME') || 'Thingy';
 }
 
+export function jmapImageUrl() {
+  return envValue('THINGY_MAGIC_LINK_IMAGE_URL') || 'https://thingy.thingelstad.com/img/thingy.png';
+}
+
 export function jmapConfigured() {
   return Boolean(jmapToken());
 }
@@ -105,23 +109,103 @@ async function loadSendContext(session, fromEmail) {
   };
 }
 
-export function magicLinkEmailText({ magicLink, expiresMinutes }) {
+function emailGreeting(context = {}) {
+  const name = String(context.preferred_name || '').trim();
+  if (name) return `Hi ${name}. Thingy is ready.`;
+  if (context.returning) return 'Welcome back. Thingy is ready.';
+  return 'Thingy is ready.';
+}
+
+function emailIntro(context = {}) {
+  if (context.returning && Number(context.turn_count || 0) > 0) {
+    return 'Your archive thread is waiting. Use this private link to step back into Thingy.';
+  }
+  return "Use this private link to meet Thingy, Jamie Thingelstad's archive agent.";
+}
+
+function emailMemberLine(context = {}) {
+  return context.subscriber_status === 'premium'
+    ? 'Thanks for being a Weekly Thing Supporting Member.'
+    : 'Thingy will open the archive in your browser.';
+}
+
+export function magicLinkEmailText({ magicLink, expiresMinutes, context = {} }) {
   return [
-    'Use this link to sign in to Thingy:',
+    emailGreeting(context),
+    '',
+    emailIntro(context),
     '',
     magicLink,
     '',
-    `This link expires in ${expiresMinutes} minutes and can only be used once.`,
+    `This link expires in ${expiresMinutes} minutes and can only be used once. It opens the archive agent in your browser.`,
+    emailMemberLine(context),
     '',
     'If you did not request this, you can ignore this email.'
   ].join('\n');
 }
 
-export function magicLinkEmailSubject() {
-  return 'Sign in to Thingy';
+function escapeHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
 }
 
-export function buildMagicLinkJmapCalls({ context, fromEmail, fromName, to, text }) {
+export function magicLinkEmailHtml({ magicLink, expiresMinutes, context = {}, imageUrl = jmapImageUrl() }) {
+  const safeLink = escapeHtml(magicLink);
+  const safeImageUrl = escapeHtml(imageUrl);
+  const safeMinutes = escapeHtml(String(expiresMinutes));
+  const greeting = escapeHtml(emailGreeting(context));
+  const intro = escapeHtml(emailIntro(context));
+  const memberLine = escapeHtml(emailMemberLine(context));
+  return `<!doctype html>
+<html>
+  <body style="margin:0;background:#f5f7f4;color:#18221f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f7f4;margin:0;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:#ffffff;border:1px solid #dfe8e2;border-radius:22px;overflow:hidden;box-shadow:0 18px 50px rgba(31,47,42,0.10);">
+            <tr>
+              <td align="center" style="padding:34px 28px 10px;">
+                <img src="${safeImageUrl}" width="132" height="132" alt="Thingy" style="display:block;width:132px;height:132px;border:0;margin:0 auto 14px;">
+                <div style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#658178;font-weight:700;">Thingy</div>
+                <h1 style="font-size:28px;line-height:1.15;margin:10px 0 0;color:#14211d;font-weight:750;">${greeting}</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 34px 8px;text-align:center;">
+                <p style="font-size:16px;line-height:1.55;margin:0;color:#394943;">${intro}</p>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding:24px 34px 14px;">
+                <a href="${safeLink}" style="display:inline-block;background:#223c35;color:#ffffff;text-decoration:none;border-radius:999px;padding:14px 22px;font-size:16px;line-height:1;font-weight:700;">Open Thingy</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:4px 34px 30px;text-align:center;">
+                <p style="font-size:13px;line-height:1.5;margin:0;color:#70827b;">This link expires in ${safeMinutes} minutes and can only be used once.<br>${memberLine}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="background:#eef4f0;padding:18px 24px;text-align:center;">
+                <p style="font-size:12px;line-height:1.5;margin:0;color:#66766f;">If the button does not work, paste this link into your browser:<br><a href="${safeLink}" style="color:#315f54;word-break:break-all;">${safeLink}</a></p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+}
+
+export function magicLinkEmailSubject() {
+  return 'Thingy is ready for you';
+}
+
+export function buildMagicLinkJmapCalls({ context, fromEmail, fromName, to, text, html }) {
   return [
     ['Email/set', {
       accountId: context.mailAccountId,
@@ -132,9 +216,16 @@ export function buildMagicLinkJmapCalls({ context, fromEmail, fromName, to, text
           from: [{ name: fromName, email: fromEmail }],
           to: [{ email: to }],
           subject: magicLinkEmailSubject(),
-          bodyStructure: { partId: 'text', type: 'text/plain' },
+          bodyStructure: {
+            type: 'multipart/alternative',
+            subParts: [
+              { partId: 'text', type: 'text/plain' },
+              { partId: 'html', type: 'text/html' }
+            ]
+          },
           bodyValues: {
-            text: { value: text, charset: 'utf-8' }
+            text: { value: text, charset: 'utf-8' },
+            html: { value: html, charset: 'utf-8' }
           }
         }
       }
@@ -162,19 +253,21 @@ export function buildMagicLinkJmapCalls({ context, fromEmail, fromName, to, text
   ];
 }
 
-export async function sendMagicLinkEmail({ to, magicLink, expiresMinutes }) {
+export async function sendMagicLinkEmail({ to, magicLink, expiresMinutes, context = {} }) {
   const token = jmapToken();
   if (!token) throw new Error('FASTMAIL_JMAP_TOKEN is not configured');
   const fromEmail = jmapFromEmail();
   const session = await jmapSession();
-  const context = await loadSendContext(session, fromEmail);
-  const text = magicLinkEmailText({ magicLink, expiresMinutes });
-  const response = await jmapCall(context.apiUrl, buildMagicLinkJmapCalls({
-    context,
+  const sendContext = await loadSendContext(session, fromEmail);
+  const text = magicLinkEmailText({ magicLink, expiresMinutes, context });
+  const html = magicLinkEmailHtml({ magicLink, expiresMinutes, context });
+  const response = await jmapCall(sendContext.apiUrl, buildMagicLinkJmapCalls({
+    context: sendContext,
     fromEmail,
     fromName: jmapFromName(),
     to,
-    text
+    text,
+    html
   }));
   const emailSet = requireMethodResponse(response.methodResponses, 'Email/set', 'email');
   const submit = requireMethodResponse(response.methodResponses, 'EmailSubmission/set', 'submit');
