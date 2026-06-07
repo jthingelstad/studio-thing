@@ -770,6 +770,13 @@ function writeSse(stream, event, data) {
   stream.write(`data: ${JSON.stringify(data)}\n\n`);
 }
 
+function activityCommentaryText(value) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .replace(/([.!?])(?=\S)/g, '$1 ')
+    .trim();
+}
+
 function commandInferenceConfig() {
   return {
     maxTokens: Number(process.env.BEDROCK_MAX_OUTPUT_TOKENS || '2500'),
@@ -2481,9 +2488,7 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
       toolConfig: { tools: toolSpecs() },
       inferenceConfig: commandInferenceConfig()
     }));
-    const result = await readConverseStream(response, {
-      onTextDelta: (delta) => writeSse(responseStream, 'answer_delta', { delta })
-    });
+    const result = await readConverseStream(response);
     const message = result.message;
     usage = result.usage || usage;
     stopReason = result.stopReason || stopReason;
@@ -2492,6 +2497,10 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
     if (!toolUses.length) {
       answer = bedrockMessageText(message) || result.text;
       break;
+    }
+    const commentary = activityCommentaryText(result.text);
+    if (commentary) {
+      writeSse(responseStream, 'commentary', { message: commentary });
     }
     const resultBlocks = [];
     for (const toolUse of toolUses) {
@@ -2528,13 +2537,10 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   }
   if (!answer) {
     answer = 'I could not produce a reliable answer from the archive tools for that question.';
-    writeSse(responseStream, 'answer_delta', { delta: answer });
   }
   const sanitizedAnswer = sanitizeAnswerProse(answer);
-  if (sanitizedAnswer !== answer) {
-    writeSse(responseStream, 'answer', { answer: sanitizedAnswer });
-  }
   answer = sanitizedAnswer;
+  writeSse(responseStream, 'answer', { answer });
   const citations = prioritizeCitationsForAnswer(collectToolCitations(toolResults), answer, await weeklyIssueCatalog());
   const experience = experienceFromToolResults(toolResults, answer);
   if (experience) {
