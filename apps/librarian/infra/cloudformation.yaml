@@ -74,6 +74,26 @@ Parameters:
     Default: 30
     MinValue: 1
     Description: Maximum auth attempts per client identity per hour.
+  ThingyMagicLinkAuthEnabled:
+    Type: String
+    Default: "false"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Enable email magic-link login for Thingy.
+  FastmailJmapToken:
+    Type: String
+    NoEcho: true
+    Default: ""
+    Description: Fastmail JMAP API token used to send Thingy magic-link emails.
+  ThingyMagicLinkFromEmail:
+    Type: String
+    Default: thingy@thingelstad.com
+    Description: From address configured in Fastmail for Thingy magic-link emails.
+  ThingyMagicLinkBaseUrl:
+    Type: String
+    Default: https://thingy.thingelstad.com/
+    Description: Public Thingy URL used when building sign-in magic links.
 Resources:
   LibrarianTable:
     Type: AWS::DynamoDB::Table
@@ -186,6 +206,10 @@ Resources:
           DISCORD_BRIDGE_SECRET: !Ref DiscordBridgeSecret
           LOG_LEVEL: !Ref LogLevel
           AUTH_RATE_LIMIT_MAX: !Ref AuthRateLimitMax
+          THINGY_MAGIC_LINK_AUTH_ENABLED: !Ref ThingyMagicLinkAuthEnabled
+          FASTMAIL_JMAP_TOKEN: !Ref FastmailJmapToken
+          THINGY_MAGIC_LINK_FROM_EMAIL: !Ref ThingyMagicLinkFromEmail
+          THINGY_MAGIC_LINK_BASE_URL: !Ref ThingyMagicLinkBaseUrl
           BEDROCK_AGENT_MODEL: us.anthropic.claude-sonnet-4-6
       Handler: auth/handler.handler
       MemorySize: 1024

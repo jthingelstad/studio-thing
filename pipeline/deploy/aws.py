@@ -83,6 +83,10 @@ def require_env(name: str) -> str:
     return value
 
 
+def bool_parameter(value: str) -> str:
+    return "true" if str(value or "").strip().lower() in {"1", "true", "yes", "on"} else "false"
+
+
 def run(args: list[str], cwd: Path = REPO) -> None:
     subprocess.run(args, cwd=cwd, check=True)
 
@@ -227,6 +231,10 @@ def deploy_stack(
     session_secret: str | None,
     discord_bridge_secret: str | None,
     discord_conversation_webhook_url: str | None,
+    fastmail_jmap_token: str | None,
+    thingy_magic_link_auth_enabled: str,
+    thingy_magic_link_from_email: str,
+    thingy_magic_link_base_url: str,
     log_level: str,
     auth_rate_limit_max: str,
     cloudformation_role_arn: str | None,
@@ -279,6 +287,16 @@ def deploy_stack(
     else:
         webhook_parameter = {"ParameterKey": "DiscordConversationWebhookUrl", "ParameterValue": ""}
 
+    if fastmail_jmap_token:
+        fastmail_parameter = {
+            "ParameterKey": "FastmailJmapToken",
+            "ParameterValue": fastmail_jmap_token,
+        }
+    elif exists and "FastmailJmapToken" in existing_parameter_keys:
+        fastmail_parameter = {"ParameterKey": "FastmailJmapToken", "UsePreviousValue": True}
+    else:
+        fastmail_parameter = {"ParameterKey": "FastmailJmapToken", "ParameterValue": ""}
+
     parameters = [
         {"ParameterKey": "AllowedOrigin", "ParameterValue": allowed_origin},
         {"ParameterKey": "CodeBucket", "ParameterValue": bucket},
@@ -293,8 +311,12 @@ def deploy_stack(
         session_parameter,
         bridge_parameter,
         webhook_parameter,
+        fastmail_parameter,
         {"ParameterKey": "LogLevel", "ParameterValue": log_level},
         {"ParameterKey": "AuthRateLimitMax", "ParameterValue": auth_rate_limit_max},
+        {"ParameterKey": "ThingyMagicLinkAuthEnabled", "ParameterValue": thingy_magic_link_auth_enabled},
+        {"ParameterKey": "ThingyMagicLinkFromEmail", "ParameterValue": thingy_magic_link_from_email},
+        {"ParameterKey": "ThingyMagicLinkBaseUrl", "ParameterValue": thingy_magic_link_base_url},
     ]
     stack_options = {
         "TemplateBody": body,
@@ -441,6 +463,9 @@ def main() -> int:
     parser.add_argument("--cloudformation-role-arn", default=os.environ.get("LIBRARIAN_CLOUDFORMATION_ROLE_ARN"))
     parser.add_argument("--log-level", default=os.environ.get("LIBRARIAN_LOG_LEVEL", "INFO"))
     parser.add_argument("--auth-rate-limit-max", default=os.environ.get("LIBRARIAN_AUTH_RATE_LIMIT_MAX", "30"))
+    parser.add_argument("--thingy-magic-link-auth-enabled", default=os.environ.get("THINGY_MAGIC_LINK_AUTH_ENABLED", "false"))
+    parser.add_argument("--thingy-magic-link-from-email", default=os.environ.get("THINGY_MAGIC_LINK_FROM_EMAIL", "thingy@thingelstad.com"))
+    parser.add_argument("--thingy-magic-link-base-url", default=os.environ.get("THINGY_MAGIC_LINK_BASE_URL", "https://thingy.thingelstad.com/"))
     parser.add_argument("--skip-corpus-upload", action="store_true")
     parser.add_argument("--skip-bucket-bootstrap", action="store_true")
     parser.add_argument("--skip-smoke-test", action="store_true")
@@ -471,6 +496,12 @@ def main() -> int:
     session_secret = os.environ.get("LIBRARIAN_SESSION_SECRET")
     discord_bridge_secret = os.environ.get("LIBRARIAN_BRIDGE_SECRET") or None
     discord_conversation_webhook_url = os.environ.get("DISCORD_CONVERSATION_WEBHOOK_URL") or None
+    fastmail_jmap_token = (
+        os.environ.get("FASTMAIL_JMAP_TOKEN")
+        or os.environ.get("THINGY_FASTMAIL_JMAP_TOKEN")
+        or os.environ.get("THINGY_JMAP_TOKEN")
+        or None
+    )
     outputs, generated_session_secret = deploy_stack(
         stack_name=args.stack_name,
         bucket=bucket,
@@ -485,6 +516,10 @@ def main() -> int:
         session_secret=session_secret,
         discord_bridge_secret=discord_bridge_secret,
         discord_conversation_webhook_url=discord_conversation_webhook_url,
+        fastmail_jmap_token=fastmail_jmap_token,
+        thingy_magic_link_auth_enabled=bool_parameter(args.thingy_magic_link_auth_enabled),
+        thingy_magic_link_from_email=args.thingy_magic_link_from_email,
+        thingy_magic_link_base_url=args.thingy_magic_link_base_url,
         log_level=args.log_level.upper(),
         auth_rate_limit_max=str(args.auth_rate_limit_max),
         cloudformation_role_arn=args.cloudformation_role_arn,

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderFaqAnswer, searchFaq } from '../shared/faq.mjs';
+import { buildMagicLink, createMagicToken, magicTokenHash, validMagicToken } from '../shared/magic-link.mjs';
+import { magicLinkEmailText } from '../shared/jmap-mail.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, verifyToken } from '../shared/session.mjs';
 import {
   authProfile,
@@ -152,6 +154,28 @@ test('authProfile and memoryContextBlock surface durable reader memory', () => {
 test('email normalization is stable', () => {
   assert.equal(normalizeEmail(' Reader@Example.com '), 'reader@example.com');
   assert.equal(emailHash('Reader@Example.com'), emailHash('reader@example.com'));
+});
+
+test('magic link tokens are URL-safe and hashed for storage', () => {
+  const token = createMagicToken();
+  assert.equal(validMagicToken(token), token);
+  assert.match(magicTokenHash(token), /^[a-f0-9]{64}$/);
+  assert.equal(validMagicToken('not a token!'), '');
+});
+
+test('magic link builder adds login_token without leaking extra state', () => {
+  const token = createMagicToken();
+  const url = new URL(buildMagicLink(token, 'https://thingy.thingelstad.com/?prompt=hello'));
+  assert.equal(url.origin, 'https://thingy.thingelstad.com');
+  assert.equal(url.searchParams.get('prompt'), 'hello');
+  assert.equal(url.searchParams.get('login_token'), token);
+});
+
+test('magic link email text includes expiration and fallback URL', () => {
+  const text = magicLinkEmailText({ magicLink: 'https://thingy.example/login?token=abc', expiresMinutes: 15 });
+  assert.match(text, /Use this link to sign in to Thingy/);
+  assert.match(text, /https:\/\/thingy\.example\/login\?token=abc/);
+  assert.match(text, /expires in 15 minutes/);
 });
 
 test('buttondown subscriber status maps active and inactive states', () => {

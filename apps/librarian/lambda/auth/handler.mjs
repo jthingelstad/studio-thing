@@ -1,8 +1,10 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
-import { BatchWriteItemCommand, PutItemCommand, QueryCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
+import { BatchWriteItemCommand, GetItemCommand, PutItemCommand, QueryCommand, ScanCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { bedrock, dynamodb, agentModel } from '../shared/aws-clients.mjs';
 import { createSubscriber, ensureThingyTag, fetchSubscriber, sanitizeAttribution, sendSubscriberReminder, subscriberStatus } from '../shared/buttondown.mjs';
 import { eventSummary, jsonResponse, methodAndPath, parseBody, clientSourceIp, userAgent } from '../shared/http.mjs';
+import { buildMagicLink, createMagicToken, magicLinkTtlSeconds, magicTokenHash, validMagicToken } from '../shared/magic-link.mjs';
+import { sendMagicLinkEmail } from '../shared/jmap-mail.mjs';
 import { checkRateLimit } from '../shared/rate-limit.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, extractBearer, normalizeEmail, stableHash, verifyToken } from '../shared/session.mjs';
 import { authProfile, getUserMemory } from '../shared/user-memory.mjs';
@@ -28,6 +30,7 @@ import {
 } from '../shared/conversation-store.mjs';
 
 const AUTH_RATE_LIMIT_MAX = 30;
+const MAGIC_LINK_RATE_LIMIT_MAX = 6;
 const DISCORD_BRIDGE_RATE_LIMIT_MAX = 60;
 const CONVERSATIONS_DEFAULT_LIMIT = 100;
 const CONVERSATIONS_MAX_LIMIT = 300;
@@ -61,6 +64,14 @@ function dynamoString(value) {
 
 function dynamoNumber(value) {
   return { N: String(Number(value || 0)) };
+}
+
+function truthy(value) {
+  return ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
+}
+
+function magicLinkAuthEnabled() {
+  return truthy(process.env.THINGY_MAGIC_LINK_AUTH_ENABLED);
 }
 
 async function recordSession(sessionId, email, expiresAt) {
@@ -122,6 +133,7 @@ async function authSuccessResponse(email, subscriber, source, event, start) {
   const memory = await getUserMemory(emailHash(email));
   const payload = {
     status,
+    email: normalizeEmail(email),
     token,
     expires_at: expiresAt,
     profile: authProfile(memory)
@@ -138,6 +150,125 @@ async function authSuccessResponse(email, subscriber, source, event, start) {
     }
   }
   return jsonResponse(200, payload, event);
+}
+
+async function storeMagicLink({ token, email, source, event, subscriberStatusValue, nowSeconds, expiresAt }) {
+  const tableName = process.env.TABLE_NAME;
+  if (!tableName) throw new Error('TABLE_NAME is required');
+  const tokenHash = magicTokenHash(token);
+  await dynamodb.send(new PutItemCommand({
+    TableName: tableName,
+    Item: {
+      pk: dynamoString(`magic#${tokenHash}`),
+      sk: dynamoString('magic'),
+      email: dynamoString(normalizeEmail(email)),
+      email_hash: dynamoString(emailHash(email)),
+      source: dynamoString(source),
+      subscriber_status: dynamoString(subscriberStatusValue),
+      client_hash: dynamoString(clientIdentityHash(event)),
+      created_at: dynamoNumber(nowSeconds),
+      expires_at: dynamoNumber(expiresAt),
+      ttl: dynamoNumber(expiresAt)
+    }
+  }));
+}
+
+async function sendLoginMagicLink({ email, subscriber, source, event, start }) {
+  const hashedEmail = emailHash(email);
+  const magicLimit = Number(process.env.THINGY_MAGIC_LINK_RATE_LIMIT_MAX || MAGIC_LINK_RATE_LIMIT_MAX);
+  if (!(await checkRateLimit(`auth#magic:${hashedEmail}`, magicLimit))) {
+    logEvent('warning', 'auth_magic_link_rate_limited', { email_hash: hashedEmail });
+    return jsonResponse(429, { error: 'Too many sign-in emails. Please wait a bit and try again.' }, event);
+  }
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const ttlSeconds = magicLinkTtlSeconds();
+  const expiresAt = nowSeconds + ttlSeconds;
+  const token = createMagicToken();
+  const link = buildMagicLink(token);
+  const status = subscriberStatus(subscriber);
+  await storeMagicLink({ token, email, source, event, subscriberStatusValue: status, nowSeconds, expiresAt });
+  await sendMagicLinkEmail({
+    to: normalizeEmail(email),
+    magicLink: link,
+    expiresMinutes: Math.max(1, Math.round(ttlSeconds / 60))
+  });
+  logEvent('info', 'auth_magic_link_sent', {
+    email_hash: hashedEmail,
+    subscriber_status: status,
+    expires_at: expiresAt,
+    duration_ms: Math.round(performance.now() - start)
+  });
+  return jsonResponse(200, {
+    status: 'magic_link_sent',
+    email: normalizeEmail(email),
+    expires_at: expiresAt,
+    message: 'Check your email for a sign-in link to Thingy.'
+  }, event);
+}
+
+async function completeMagicLink(event, body, start) {
+  const tableName = process.env.TABLE_NAME;
+  if (!tableName) return jsonResponse(500, { error: 'Thingy sign-in is unavailable right now.' }, event);
+  const token = validMagicToken(body.login_token || body.magic_token || body.token);
+  if (!token) {
+    logEvent('info', 'auth_magic_link_invalid_token');
+    return jsonResponse(400, { status: 'magic_link_invalid', error: 'That sign-in link is invalid or expired.' }, event);
+  }
+  const tokenHash = magicTokenHash(token);
+  const key = {
+    pk: dynamoString(`magic#${tokenHash}`),
+    sk: dynamoString('magic')
+  };
+  const loaded = await dynamodb.send(new GetItemCommand({ TableName: tableName, Key: key }));
+  const item = loaded.Item || null;
+  const email = normalizeEmail(item?.email?.S || '');
+  const expiresAt = Number(item?.expires_at?.N || 0);
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  if (!item || !email || expiresAt < nowSeconds || item.used_at) {
+    logEvent('info', 'auth_magic_link_rejected', {
+      token_hash_prefix: tokenHash.slice(0, 10),
+      reason: !item ? 'not_found' : expiresAt < nowSeconds ? 'expired' : 'used'
+    });
+    return jsonResponse(400, { status: 'magic_link_invalid', error: 'That sign-in link is invalid or expired.' }, event);
+  }
+  try {
+    await dynamodb.send(new UpdateItemCommand({
+      TableName: tableName,
+      Key: key,
+      UpdateExpression: 'SET #used_at = :used_at, #used_client_hash = :client_hash',
+      ConditionExpression: 'attribute_exists(pk) AND attribute_not_exists(#used_at) AND #expires_at >= :now',
+      ExpressionAttributeNames: {
+        '#used_at': 'used_at',
+        '#used_client_hash': 'used_client_hash',
+        '#expires_at': 'expires_at'
+      },
+      ExpressionAttributeValues: {
+        ':used_at': dynamoNumber(nowSeconds),
+        ':client_hash': dynamoString(clientIdentityHash(event)),
+        ':now': dynamoNumber(nowSeconds)
+      }
+    }));
+  } catch (error) {
+    logEvent('info', 'auth_magic_link_redeem_race', {
+      token_hash_prefix: tokenHash.slice(0, 10),
+      error_type: error.constructor?.name || 'Error'
+    });
+    return jsonResponse(400, { status: 'magic_link_invalid', error: 'That sign-in link is invalid or expired.' }, event);
+  }
+
+  let subscriber;
+  try {
+    subscriber = await fetchSubscriber(email);
+  } catch (error) {
+    logEvent('error', 'auth_magic_link_buttondown_lookup_failed', { email_hash: emailHash(email), error_type: error.constructor?.name || 'Error' });
+    return jsonResponse(502, { error: 'Could not validate subscriber status right now.' }, event);
+  }
+  const status = subscriberStatus(subscriber);
+  if (status !== 'active' && status !== 'premium') {
+    logEvent('info', 'auth_magic_link_subscriber_not_active', { email_hash: emailHash(email), subscriber_status: status });
+    return jsonResponse(403, { status, error: 'That subscription is not active.' }, event);
+  }
+  return authSuccessResponse(email, subscriber, 'thingy', event, start);
 }
 
 function bridgeUserSub(discordUserId) {
@@ -514,6 +645,7 @@ async function authHandler(event) {
     'check',
     'subscribe',
     'resend_confirmation',
+    'complete_magic_link',
     'discord_bridge',
     'list_operator_conversations',
     'get_operator_conversation'
@@ -539,6 +671,10 @@ async function authHandler(event) {
 
   if (action === 'get_operator_conversation') {
     return await handleGetOperatorConversation(event, body, start);
+  }
+
+  if (action === 'complete_magic_link') {
+    return await completeMagicLink(event, body, start);
   }
 
   if (!EMAIL_RE.test(email)) {
@@ -600,6 +736,14 @@ async function authHandler(event) {
   if (status === 'inactive') {
     logEvent('info', 'auth_subscriber_inactive', { email_hash: hashedEmail });
     return jsonResponse(403, { status, error: 'That subscription is not active.' }, event);
+  }
+  if (magicLinkAuthEnabled()) {
+    try {
+      return await sendLoginMagicLink({ email, subscriber, source, event, start });
+    } catch (error) {
+      logEvent('error', 'auth_magic_link_send_failed', { email_hash: hashedEmail, error_type: error.constructor?.name || 'Error' });
+      return jsonResponse(502, { error: 'Could not send a sign-in email right now.' }, event);
+    }
   }
   return authSuccessResponse(email, subscriber, source, event, start);
 }
