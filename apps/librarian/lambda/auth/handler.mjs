@@ -9,7 +9,7 @@ import { checkRateLimit } from '../shared/rate-limit.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, extractBearer, normalizeEmail, stableHash, verifyToken } from '../shared/session.mjs';
 import { authProfile, getUserMemory } from '../shared/user-memory.mjs';
 import crypto from 'node:crypto';
-import { logEvent } from '../shared/logging.mjs';
+import { errorFields, logEvent } from '../shared/logging.mjs';
 import { premiumThankYouSystemPrompt } from '../shared/prompts.mjs';
 import {
   USER_CONVERSATION_LIMIT,
@@ -741,7 +741,7 @@ async function authHandler(event) {
     try {
       return await sendLoginMagicLink({ email, subscriber, source, event, start });
     } catch (error) {
-      logEvent('error', 'auth_magic_link_send_failed', { email_hash: hashedEmail, error_type: error.constructor?.name || 'Error' });
+      logEvent('error', 'auth_magic_link_send_failed', errorFields(error, { email_hash: hashedEmail }));
       return jsonResponse(502, { error: 'Could not send a sign-in email right now.' }, event);
     }
   }
@@ -775,7 +775,7 @@ export async function handler(event, context) {
       response = jsonResponse(404, { error: 'Not found.' }, event);
     }
   } catch (error) {
-    logEvent('error', 'request_failed', { ...summary, error_type: error.constructor?.name || 'Error' }, 'weekly-thing-librarian-auth');
+    logEvent('error', 'request_failed', errorFields(error, summary), 'weekly-thing-librarian-auth');
     response = jsonResponse(500, { error: 'Thingy is unavailable right now.' }, event);
   }
   response.headers = { ...(response.headers || {}), 'x-request-id': summary.request_id || '' };

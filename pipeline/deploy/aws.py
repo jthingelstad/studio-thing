@@ -373,7 +373,7 @@ def configure_log_retention(stack_name: str, days: int = 30) -> None:
     session = boto3.session.Session()
     region = session.region_name or os.environ.get("AWS_DEFAULT_REGION") or "us-east-1"
     account_id = boto3.client("sts").get_caller_identity()["Account"]
-    for logical_id in ("LibrarianFunction", "LibrarianStreamFunction"):
+    for logical_id in ("LibrarianFunction", "LibrarianStreamFunction", "LibrarianEvalFunction"):
         function_name = stack_resource_physical_id(cloudformation, stack_name, logical_id)
         if not function_name:
             continue

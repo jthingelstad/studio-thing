@@ -18,7 +18,7 @@ import {
 import { countsByPublishYear, yearCountSummary, yearlyContentSignals } from '../shared/corpus-stats.mjs';
 import { shouldEmitExperienceForTurn } from '../shared/experience.mjs';
 import { searchFaq } from '../shared/faq.mjs';
-import { truthyEnv } from '../shared/logging.mjs';
+import { errorFields, truthyEnv } from '../shared/logging.mjs';
 import {
   agentSystemPrompt,
   agentUserPrompt,
@@ -604,7 +604,11 @@ async function retrieve(query, limit = 8, filters = {}) {
     semantic = semantic.filter((source) => matchesFilters(source, filters)).sort(byScore);
     if (semantic.length) return withAgeLabel((await rerankSources(query, semantic, limit)).slice(0, limit));
   } catch (error) {
-    logEvent('error', 'semantic_retrieval_failed', { error_type: error.constructor?.name || 'Error' });
+    logEvent('error', 'semantic_retrieval_failed', errorFields(error, {
+      scope: normalizeScope(filters.scope),
+      source_kinds: kinds,
+      query_chars: String(query || '').length
+    }));
   }
   let lexical = [];
   for (const kind of kinds) lexical.push(...(await retrieveLexical(query, candidateLimit, kind)));
@@ -2589,7 +2593,11 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
         result = handler ? await handler(toolUse.input || {}, { scope, subscriberHash: options.subscriberHash }) : { error: `Unknown tool: ${toolUse.name}` };
       } catch (error) {
         ok = false;
-        logEvent('error', 'tool_call_failed', { tool_name: toolUse.name, error_type: error.constructor?.name || 'Error' });
+        logEvent('error', 'tool_call_failed', errorFields(error, {
+          request_id: options.requestId,
+          conversation_id: options.conversationId,
+          tool_name: toolUse.name
+        }));
         result = { error: `${toolUse.name} failed: ${error.constructor?.name || 'Error'}` };
       }
       toolTrace.calls.push({
@@ -2627,6 +2635,8 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
     writeSse(responseStream, 'experience', { experience });
   }
   logEvent('info', 'agent_streamed', {
+    request_id: options.requestId,
+    conversation_id: options.conversationId,
     model: agentModel(),
     scope,
     tool_turns: toolResults.length,
@@ -3011,6 +3021,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       } catch {}
       logEvent('info', 'chat_slow_notice_sent', {
         request_id: requestId,
+        conversation_id: conversationId,
         subscriber_hash: subscriberHash,
         slow_notice_ms: slowNoticeMs,
         deadline_ms: deadlineMs
@@ -3025,8 +3036,9 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
         });
       } catch {}
       try { stream.end(); } catch {}
-      logEvent('warn', 'chat_deadline_exceeded', {
+      logEvent('warning', 'chat_deadline_exceeded', {
         request_id: requestId,
+        conversation_id: conversationId,
         subscriber_hash: subscriberHash,
         deadline_ms: deadlineMs
       });
@@ -3039,6 +3051,8 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
         scope,
         preflight,
         subscriberHash,
+        requestId,
+        conversationId,
         deadlineExceeded: () => deadlineExceeded
       });
     } finally {
@@ -3093,13 +3107,18 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName: effectiveUserProfile.preferred_name });
     logEvent('info', 'chat_completed', {
       subscriber_hash: subscriberHash,
+      request_id: requestId,
+      conversation_id: conversationId,
       question_chars: question.length,
       history_count: history.length,
       citation_count: citations.length,
       duration_ms: Math.round(performance.now() - start)
     });
   } catch (error) {
-    logEvent('error', 'request_failed', { ...summary, error_type: error.constructor?.name || 'Error' });
+    logEvent('error', 'request_failed', errorFields(error, {
+      ...summary,
+      subscriber_hash: subscriberHash
+    }));
     writeSse(stream, 'error', { error: 'The librarian could not generate an answer right now.', request_id: requestId });
   } finally {
     logEvent('info', 'request_completed', { ...summary, duration_ms: Math.round(performance.now() - start) });

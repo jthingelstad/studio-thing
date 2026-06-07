@@ -1,7 +1,7 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { GetItemCommand, QueryCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { bedrock, dynamodb, agentModel } from '../shared/aws-clients.mjs';
-import { logEvent } from '../shared/logging.mjs';
+import { errorFields, logEvent } from '../shared/logging.mjs';
 import {
   conversationSummaryFromItem,
   conversationTurnFromItem,
@@ -400,11 +400,10 @@ export async function handler(event = {}) {
       }
     } catch (error) {
       failed += 1;
-      logEvent('warning', 'conversation_evaluation_failed', {
+      logEvent('warning', 'conversation_evaluation_failed', errorFields(error, {
         conversation_id: conversation.id,
-        subscriber_hash: subscriberHash,
-        error_type: error.constructor?.name || 'Error'
-      });
+        subscriber_hash: subscriberHash
+      }));
     }
   }
   const payload = {
@@ -414,6 +413,7 @@ export async function handler(event = {}) {
     skipped,
     failed,
     candidate_count: candidates.length,
+    stream_record_count: Array.isArray(event.Records) ? event.Records.length : 0,
     duration_ms: Math.round(performance.now() - start)
   };
   logEvent('info', 'conversation_eval_completed', payload);
