@@ -7,7 +7,7 @@ import { buildMagicLink, createMagicToken, magicLinkTtlSeconds, magicTokenHash, 
 import { sendMagicLinkEmail } from '../shared/jmap-mail.mjs';
 import { checkRateLimit } from '../shared/rate-limit.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, extractBearer, normalizeEmail, stableHash, verifyToken } from '../shared/session.mjs';
-import { authProfile, getUserMemory } from '../shared/user-memory.mjs';
+import { authProfile, getUserMemory, recordUserPreferredName } from '../shared/user-memory.mjs';
 import {
   availableConversationModes,
   canUseConversationMode,
@@ -230,6 +230,7 @@ async function refreshSession(event, body, start) {
   const modes = availableConversationModes(entitlements);
   const { sessionId, expiresAt, token } = createSessionTokenForSub(payload.sub, undefined, { entitlements });
   await recordSessionForSub(sessionId, payload.sub, expiresAt);
+  const memory = await getUserMemory(payload.sub);
   logEvent('info', 'auth_refreshed', {
     subscriber_hash: payload.sub,
     entitlements,
@@ -242,6 +243,46 @@ async function refreshSession(event, body, start) {
     entitlements,
     modes,
     profile: {
+      ...authProfile(memory),
+      entitlements,
+      modes
+    }
+  }, event);
+}
+
+async function updateProfile(event, body, start) {
+  const payload = verifyToken(extractBearer(event, body));
+  if (!payload?.sub) {
+    logEvent('info', 'auth_update_profile_rejected');
+    return jsonResponse(401, { error: 'Sign in again to continue.' }, event);
+  }
+  const preferredName = String(body.preferred_name || body.name || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .slice(0, 80);
+  if (!/^[a-z][a-z .'’-]{0,78}$/i.test(preferredName)) {
+    return jsonResponse(400, { error: 'Enter a name Thingy should use.' }, event);
+  }
+  const blocked = new Set(['hello', 'hi', 'hey', 'there', 'thingy', 'thanks', 'thank', 'yes', 'no', 'ok', 'okay']);
+  if (preferredName.split(/\s+/).some((word) => blocked.has(word.toLowerCase()))) {
+    return jsonResponse(400, { error: 'Enter a name Thingy should use.' }, event);
+  }
+  await recordUserPreferredName(payload.sub, preferredName);
+  const memory = await getUserMemory(payload.sub);
+  const entitlements = entitlementsForSessionPayload(payload);
+  const modes = availableConversationModes(entitlements);
+  logEvent('info', 'auth_profile_updated', {
+    subscriber_hash: payload.sub,
+    has_preferred_name: Boolean(preferredName),
+    duration_ms: Math.round(performance.now() - start)
+  });
+  return jsonResponse(200, {
+    status: 'updated',
+    entitlements,
+    modes,
+    profile: {
+      ...authProfile(memory),
+      preferred_name: memory?.preferred_name || preferredName,
       entitlements,
       modes
     }
@@ -1078,6 +1119,7 @@ async function authHandler(event) {
     'resend_confirmation',
     'complete_magic_link',
     'refresh_session',
+    'update_profile',
     'discord_bridge',
     'list_operator_conversations',
     'get_operator_conversation'
@@ -1111,6 +1153,10 @@ async function authHandler(event) {
 
   if (action === 'refresh_session') {
     return await refreshSession(event, body, start);
+  }
+
+  if (action === 'update_profile') {
+    return await updateProfile(event, body, start);
   }
 
   if (!EMAIL_RE.test(email)) {
