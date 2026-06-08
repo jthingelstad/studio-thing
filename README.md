@@ -38,7 +38,7 @@ One brain, several surfaces.
 | Path | What it is |
 |---|---|
 | `apps/workshop_bot/` | The authoring staff (Eddy / Linky / Marky / Patty) — Discord-based agents that help produce each issue. The Studio core. |
-| `apps/librarian/` | The Librarian API: Lambda, infra, and admin. Deployed from Studio; queried live by Thingy. |
+| `apps/librarian/` | The Librarian API: Lambda, infra, conversations, eval, and admin. Deployed from Studio; queried live by Thingy. |
 | `librarian-core/` | The shared `librarian_core` Python package — corpus, graph, retrieval, links. The library behind the API and the pipeline. |
 | `pipeline/` | Production: build, stats, status, audio, corpus, graph, deploy. |
 | `data/issues/` | Editorial source of truth — the canonical per-issue content. |
@@ -46,6 +46,7 @@ One brain, several surfaces.
 | `data/blog/` | Blog drafts and post archive; feeds the (future) Micropub publish pipeline. |
 | `data/podcast/` | Normalized Another Thing episode metadata and transcripts for the podcast corpus. |
 | `content/buttondown/` | Author-managed Buttondown newsletter config (automations, transactional, theme). |
+| `ROADMAP.md`, `TASKS.md` | Product direction and concrete follow-ups for Thingy / Studio. |
 | `docs/`, `notes/`, `reference/` | Architecture, staff, and editorial reference. |
 | `tests/` | Python tests covering librarian / corpus / content / audio. |
 | `Makefile`, `requirements.txt` | Production command surface and Python deps. |

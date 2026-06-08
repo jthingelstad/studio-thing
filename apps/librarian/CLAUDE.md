@@ -8,8 +8,8 @@ The Lambda code is **Node.js** (Node 20 runtime, arm64). Everything else in this
 
 Three Lambdas in `infra/cloudformation.yaml`:
 
-- **`LibrarianFunction`** (`lambda/auth/handler.mjs`) — REST API behind API Gateway. Handles `/auth` (subscriber email confirmation via Buttondown + JWT-style session token + Discord bridge mint), `/feedback` (per-answer reactions + optional comments), and operator-only canonical conversation reads for `thingy_bridge`. Memory 1024 MB, timeout 35s.
-- **`LibrarianStreamFunction`** (`lambda/chat/handler.mjs` → `runtime.mjs`) — Function URL with `RESPONSE_STREAM`. Handles `/chat` (SSE-streamed agent loop) and `/retrieve` (semantic JSON-only retrieval for workshop_bot). Memory 1536 MB, timeout 90s, ReservedConcurrentExecutions = 5.
+- **`LibrarianFunction`** (`lambda/auth/handler.mjs`) — REST API behind API Gateway. Handles Buttondown subscriber lookup, Fastmail/JMAP magic-link login, HMAC session mint/redeem, user conversation list/get/create/rename/delete, Discord bridge mint, and operator-only canonical conversation reads. Memory 1024 MB, timeout 35s.
+- **`LibrarianStreamFunction`** (`lambda/chat/handler.mjs` → `runtime.mjs`) — Function URL with `RESPONSE_STREAM`. Handles `/chat` (SSE-streamed agent loop with server-side history), `/welcome`, `/curiosity-map`, `/feedback`, and `/retrieve` (semantic JSON-only retrieval for workshop_bot). Memory 1536 MB, timeout 90s, ReservedConcurrentExecutions = 5.
 - **`LibrarianEvalFunction`** (`lambda/eval/handler.mjs`) — DynamoDB Stream consumer. Reviews server-side conversations out of band, writes summary/quality/flags back to canonical conversation rows, and posts operator cards directly to Discord through `DISCORD_CONVERSATION_WEBHOOK_URL`. Memory 1024 MB, timeout 180s, ReservedConcurrentExecutions = 1.
 
 All Lambdas share the same IAM role (`LibrarianFunctionRole`) and `shared/` helpers. The auth + stream bundles also include the `prompts/` directory.
@@ -20,10 +20,12 @@ All Lambdas share the same IAM role (`LibrarianFunctionRole`) and `shared/` help
 
 1. Verify bearer token (HMAC-signed session JWT — `verifyToken`, `SESSION_SECRET`).
 2. Rate-limit per subscriber hash (DynamoDB, hourly).
-3. Load corpus from S3 (cached on warm starts — `loadCorpus`).
-4. Privacy-guard the question (`privacyGuardAnswer` — short-circuits PII / "what's my email" probes).
-5. Run the Bedrock Converse agent loop with tool use (`streamBedrockAgentAnswer`). Tools available: `search_archive`, `retrieve_archive`, `get_issue`, `get_section`, `quote_search`, `list_recent`, `search_faq`. Each tool call dispatches to the corresponding shared/ helper.
-6. Stream answer deltas + final citations via SSE; record the conversation to DynamoDB; update per-user memory.
+3. Resolve requested conversation mode from token entitlements and existing conversation metadata.
+4. Load the relevant server-side conversation turns and user memory.
+5. Load scoped corpus artifacts from S3 (cached on warm starts).
+6. Run prompt preflight for privacy/scope handling.
+7. Run the Bedrock Converse agent loop with tool use. Tools include `search_faq`, `search_archive`, `get_source`, `find_links`, `corpus_stats`, `latest_content`, `list_content`, `archive_lens`, `entity_lens`, `source_neighborhood`, `archive_gems`, `claim_check`, and `remember_user`.
+8. Stream answer deltas, archive-work status, final citations, and experience artifacts via SSE; record the turn to DynamoDB; update per-user memory.
 
 The retrieval pipeline (functions live in `runtime.mjs`):
 
@@ -113,11 +115,12 @@ These are set at deploy time from `.env`, written into the Lambda environment by
 - **All structured logging via `logEvent(level, message, fields)`** — JSON output, CloudWatch-Insights-readable.
 - **Session tokens are HMAC-signed** (not encrypted). The `sub` claim is the SHA256 hash of the subscriber email (`emailHash()`). Discord bridge subs are prefixed `discord:` so they're trivially distinguishable.
 - **Privacy guarding** lives in `runtime.mjs#privacyGuardAnswer`. Don't bypass; readers ask questions that leak their own PII and we don't echo it.
-- **Citations use `#NNN`** (Discord-bridge readers see them rewritten to clickable archive links in `thingy_bridge`).
+- **Conversation modes are entitlement-gated.** `thingy` is for all readers, `research_guide` requires `supporting_member`, `thought_partner` requires `owner`, and `trusted_circle` requires `trusted_circle`.
+- **Citations use `#NNN` for Weekly Thing sources.** Blog and podcast sources should be cited by title/permalink because they do not have issue numbers.
 - **Bridge-secret check is `crypto.timingSafeEqual`** — duplicated in two files (`runtime.mjs` + `auth/handler.mjs`) because the two bundles ship separately. Don't refactor to a shared helper without re-checking the bundle topology.
 
 ## Known follow-ups
 
 - **No end-to-end handler tests.** Mocking Bedrock + DynamoDB + S3 in Node test is non-trivial; the agent-loop path is exercised in production via real reader Q&A.
-- **`admin/` is scaffolding.** Conversation review, eval harness, log inspection — all planned, none built. See `admin/README.md`.
-- **The pre-embedded corpus reupload** doesn't have a "what changed" pre-check — it always re-embeds the whole archive. A delta-aware uploader would cut deploy cost on issue ships.
+- **No automated live QA harness.** Mode/auth/conversation/eval checks are still run manually against the live API when needed.
+- **Operator report is local/static.** A public or remote operator dashboard needs stronger owner/admin auth first.

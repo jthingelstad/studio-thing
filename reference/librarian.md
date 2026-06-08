@@ -1,6 +1,6 @@
 # Archive Librarian
 
-Thingy is a subscriber-gated chat interface for the Weekly Thing archive.
+Thingy is an authenticated chat interface for Jamie Thingelstad's public archive: The Weekly Thing, thingelstad.com, and Another Thing. The code name in this repo is "Librarian"; the reader-facing product is Thingy.
 
 ## Local Artifacts
 
@@ -10,7 +10,7 @@ Thingy is a subscriber-gated chat interface for the Weekly Thing archive.
 - `npm run librarian:graph` builds `data/librarian/graph.json`, the offline entity/trope/similarity artifact used by the archive tools.
 - `pipeline/deploy/bedrock_logging.py` inspects or enables account-level Bedrock invocation logging to the private Librarian bucket.
 
-The previous Python eval pipeline under `pipeline/eval/` (retrieval diagnostics, answer-quality scoring, Bedrock Model Evaluation, DynamoDB conversation review) was removed. A new eval approach for Thingy is planned.
+The previous Python eval pipeline under `pipeline/eval/` was removed. Conversation quality review now happens through the event-driven Eval Lambda described below.
 
 ## AWS Runtime
 
@@ -20,11 +20,11 @@ The backend is defined in `apps/librarian/infra/cloudformation.yaml`. Auth and a
 - Amazon Bedrock Claude Sonnet 4.6 for premium messages and the agent loop.
 - Amazon Bedrock Cohere Embed v3 for query-to-archive retrieval.
 - Amazon Bedrock Cohere Rerank 3.5 after archive searches.
-- DynamoDB for session and rate-limit state.
-- S3 for the embedded archive corpus and the offline graph artifact.
+- DynamoDB for magic-link tokens, sessions, rate limits, canonical conversations, turns, artifacts, feedback, eval metadata, and per-user memory.
+- S3 for embedded Weekly Thing, blog, and podcast corpora plus the offline graph artifact.
 - CloudWatch Logs for structured JSON request, retrieval, upstream, and error logs.
 
-The browser samples three static starter questions locally after subscriber validation. Chat streams from `site.librarianStreamUrl + /chat`; there is no buffered API Gateway chat fallback.
+Chat streams from `site.librarianStreamUrl + /chat`; there is no buffered API Gateway chat fallback. Welcome messages are generated agentically by `/welcome`, using authenticated profile, local-time context, previous conversations, and active entitlements. Conversations are server-side and canonical; the browser no longer sends the full history as the source of truth.
 
 The FAQ content lives in `apps/librarian/lambda/shared/faq.json`. Eleventy renders `/faq/` from that file, and the streaming Lambda packages the same file so Thingy can answer site, subscription, membership, RSS, privacy, and logistics questions through the `search_faq` tool.
 
@@ -59,6 +59,8 @@ Local `.env` values used by upload/build scripts:
 - `LIBRARIAN_BUCKET` for private Thingy code, corpus, and log artifacts. Defaults to `weekly-thing-librarian`.
 - `LIBRARIAN_CORPUS_KEY` (optional; defaults to `artifacts/corpus.json`)
 - `LIBRARIAN_GRAPH_KEY` (optional; defaults to `artifacts/graph.json`)
+- `LIBRARIAN_BLOG_CORPUS_KEY` (optional; defaults to `artifacts/blog_corpus.json`)
+- `LIBRARIAN_PODCAST_CORPUS_KEY` (optional; defaults to `artifacts/podcast_corpus.json`)
 - `AWS_DEFAULT_REGION`
 - `LIBRARIAN_API_URL` (written by deploy; used by static site build)
 - `LIBRARIAN_STREAM_URL` (written by deploy; used by static site build)
@@ -68,8 +70,12 @@ Local `.env` values used by upload/build scripts:
 - `BEDROCK_RERANK_REGION` (optional; defaults to `us-west-2`, where the Bedrock Rerank API exposes Cohere Rerank 3.5)
 - `LIBRARIAN_LOG_LEVEL` (optional; defaults to `INFO`)
 - `LIBRARIAN_AUTH_RATE_LIMIT_MAX` (optional; defaults to 30 auth attempts per client identity per hour)
-- `LIBRARIAN_CONVERSATION_LOGGING` (optional; defaults to enabled. Set to `0` to disable beta transcript logging.)
-- `LIBRARIAN_CONVERSATION_LOG_TTL_DAYS` (optional; defaults to 60 days.)
+- `DISCORD_BRIDGE_SECRET` for operator conversation reads and bridge-secret retrieval.
+- `DISCORD_CONVERSATION_WEBHOOK_URL` for event-driven eval cards posted directly to Discord.
+- `FASTMAIL_JMAP_TOKEN` / `THINGY_FASTMAIL_JMAP_TOKEN` / `THINGY_JMAP_TOKEN` for magic-link email.
+- `THINGY_MAGIC_LINK_AUTH_ENABLED` to require inbox possession before minting a session.
+- `THINGY_MAGIC_LINK_FROM_EMAIL` and `THINGY_MAGIC_LINK_BASE_URL` for login email construction.
+- `LIBRARIAN_USER_MEMORY_TTL_DAYS` (optional; defaults to 365 days.)
 
 Deploy and corpus upload scripts load AWS credentials from `.env` through `python-dotenv` before creating `boto3` clients. They do not intentionally fall back to AWS CLI profile authentication.
 
@@ -92,9 +98,22 @@ The deploy script passes `LIBRARIAN_CLOUDFORMATION_ROLE_ARN` to CloudFormation w
 
 ## Access Model
 
-Thingy uses a soft subscriber gate. A visitor enters an email address, Lambda validates that email against Buttondown, and then returns a short-lived signed session token for active `regular` and `premium` subscribers. This does not prove inbox ownership; it is a pragmatic gate for a low-risk, rate-limited archive feature.
+Thingy uses email magic-link authentication. A visitor enters an email address, Lambda checks Buttondown for an active subscriber, stores a one-time token hash in DynamoDB, and sends a sign-in link from `thingy@thingelstad.com` through Fastmail JMAP. Redeeming that link proves inbox possession and returns a short-lived HMAC-signed session token. Tokens expire after 12 hours.
 
-Premium subscribers get a small Bedrock-generated Supporting Member thank-you before entering chat, with a fixed fallback if Bedrock is unavailable. Unknown email addresses can opt in from the librarian page; those signups are created in Buttondown with the `sub_tag_3ts444xst99y08j8bqfnwt1g4h` source tag and must confirm their email before using Thingy. Unconfirmed subscribers can request Buttondown's confirmation reminder email from the same page. The logout control is local-only: it clears the browser's stored session token and returns to the email gate.
+Premium subscribers get a small Bedrock-generated Supporting Member thank-you before entering chat, with a fixed fallback if Bedrock is unavailable. Unknown email addresses can opt in from the sign-in page; those signups are created in Buttondown and must confirm before using Thingy. The logout control clears the browser's stored session token and returns to the sign-in page.
+
+### Conversation modes
+
+Mode availability is encoded in the signed session token as entitlements and enforced on both conversation creation and chat.
+
+| Mode | Entitlement | Grant source |
+|---|---|---|
+| `thingy` | `reader` | Any active subscriber |
+| `research_guide` | `supporting_member` | Premium subscriber or `thingy-supporting-member` tag |
+| `thought_partner` | `owner` | Jamie's owner email/hash or `thingy-owner` tag |
+| `trusted_circle` | `trusted_circle` | `thingy-trusted-circle`, `thingy-family`, or `thingy-close-friends` tag |
+
+Modes change Thingy's posture, not corpus access. Thought Partner is more candid and challenging for Jamie; Research Guide leans into timelines and reading paths; Trusted Circle is warmer and closer; default Thingy is concise, useful, and reader-facing.
 
 ### Discord bridge auth
 
@@ -102,11 +121,11 @@ The workshop-bot Discord bridge (`apps/workshop_bot/personas/thingy.py`) gets a 
 
 The bridge action is gated by `DISCORD_BRIDGE_SECRET` (CloudFormation parameter `DiscordBridgeSecret`). When that env var is empty the action returns 503 ("Discord bridge is not enabled"), so the bridge is off by default until the secret is configured. Token mints are rate-limited per Discord user (default 60/hour, override via `DISCORD_BRIDGE_RATE_LIMIT_MAX`).
 
-A fifth `/auth` action — `list_conversations` — is the operator read of the conversation log (workshop_bot's `/workshop thingy …` surface). It's also email-less and gated by the **same** `DISCORD_BRIDGE_SECRET` (operator secret, not a per-user session token). The request is `{action: "list_conversations", bridge_secret, since?: ISO8601, limit?: number}`; the response is `{since, count, truncated, conversations: [...]}` where each entry is one logged turn flattened (`request_id`, `created_at`, `subscriber_hash`, `question`, `answer`, `history_count`, `citation_count`, `source_issues`, `citations`, `feedback_reaction`, `feedback_at`, `user_agent`). It Scans the shared table filtered on `sk = 'chat'` and `created_at >= since` (the table is TTL'd to ~60 days and low-volume, so a Scan is fine — a GSI on `created_at` is the optimization if it ever grows; `dynamodb:Scan` was added to `LibrarianFunctionRole`). Pure param-shaping and item-unmarshalling live in `apps/librarian/lambda/shared/conversations.mjs`.
+Operator conversation reads are email-less and gated by the **same** `DISCORD_BRIDGE_SECRET` (operator secret, not a per-user session token). `list_conversations` returns conversation summaries from canonical server-side rows; `get_conversation` returns the full transcript/turns for a conversation. The Discord bot uses those endpoints for follow-up actions, while the Eval Lambda posts review summaries directly to Discord through `DISCORD_CONVERSATION_WEBHOOK_URL`. Discord is notification/review tooling only and is not in the reader request path.
 
 ### Per-user memory
 
-Both auth flows return a `profile` field in the response, populated from a per-user memory row in the existing DynamoDB table (key `user#{sub}` / `memory`). The chat handler updates this row at the end of each turn and Bedrock-summarizes the previous session's questions when the session id rotates, rolling them into a per-user `synthesized_history` (one short paragraph per past session, capped at the most recent 8).
+Auth returns a `profile` field populated from a per-user memory row in the existing DynamoDB table (key `user#{sub}` / `memory`). The chat handler updates this row at the end of each turn and Bedrock-summarizes previous conversations, rolling them into a compact per-user history. The agent can also store explicit reader-provided facts through `remember_user`, such as preferred name, archive interests, or answer-style preferences.
 
 The `profile` shape is:
 
@@ -116,6 +135,8 @@ The `profile` shape is:
   "first_seen_at": "...",
   "last_seen_at": "...",
   "turn_count": 7,
+  "entitlements": ["reader", "supporting_member"],
+  "modes": [{"id": "thingy", "label": "Thingy"}],
   "current_session_questions": [{"ts": "...", "question": "..."}],
   "prior_session_summaries": [{"summary": "...", "started_at": "...", "ended_at": "...", "turn_count": 3}]
 }
@@ -130,7 +151,7 @@ Memory rows carry a one-year TTL (`LIBRARIAN_USER_MEMORY_TTL_DAYS`, default 365)
 `/thingy/` accepts optional query parameters for subscriber-friendly deep links:
 
 - `email`: pre-fills the subscriber email field. The visitor still has to submit the gate, and the backend still validates the address against Buttondown.
-- `prompt`: queues a first question. Once the visitor has a valid session, Thingy submits that question automatically and starts answering it. If the beta notice is visible, the prompt waits until the notice is dismissed.
+- `prompt`: queues a first question. Once the visitor has a valid session, Thingy submits that question automatically and suppresses the generated welcome so the prompt is the first conversation event.
 
 Both parameters are independent. `/thingy/?prompt=What%20has%20Jamie%20written%20about%20RSS%3F` lets the visitor enter their own email, then auto-starts the prompt after validation. `/thingy/?email=reader%40example.com` only pre-fills the email. `/thingy/?email=reader%40example.com&prompt=What%20has%20Jamie%20written%20about%20RSS%3F` does both.
 
@@ -140,26 +161,19 @@ Lambda writes structured JSON logs to CloudWatch. Logs include request ID, route
 
 Every API response includes an `x-request-id` header. Browser-visible errors include that reference so the matching CloudWatch request can be found quickly.
 
-Successful beta conversations are stored in the existing DynamoDB table when `LIBRARIAN_CONVERSATION_LOGGING` is enabled. These records are intended for answer-quality review and include:
+Successful conversations are stored as canonical server-side rows in DynamoDB:
 
-- timestamp and request ID
-- subscriber hash, not raw email address
-- route (`chat` or `stream`)
-- question and answer text
-- history count
-- citation count
-- source issue numbers
-- citation metadata
-- optional thumb feedback (`up` or `down`) and feedback timestamp
-- TTL, defaulting to 60 days
+- `conversation#<id>` metadata rows with title, preview, source scope, mode, timestamps, eval fields, and latest request ID
+- `turn#<conversation>#<timestamp>#<request>` rows with prompt, answer, citations, source scope, tool trace, feedback reaction/comment, runtime metadata, and artifacts
+- `memory` rows with per-user continuity data
 
-Records can be reviewed directly via the AWS console or `aws dynamodb` CLI against the `weekly-thing-librarian` stack's conversations table, or — the everyday path — via workshop_bot: the `/auth?action=list_conversations` endpoint (above) backs an hourly `thingy-watch` job that posts an LLM assessment of each new conversation to Discord `#chatter`, plus `/workshop thingy recent` / `/workshop thingy show <id>` for browsing and full transcripts. (The old `npm run librarian:conversations` script was removed alongside the eval pipeline.)
+The Eval Lambda is triggered by DynamoDB Streams. It reviews updated conversations out of band, writes `eval_*` fields back to the conversation row, updates generated titles when appropriate, and posts compact cards to Discord through a webhook. The local operator report (`apps/librarian/admin/operator_report.py`) reads these same canonical rows and generates a static HTML report on Jamie's Desktop.
 
-The beta popup on `/thingy/` tells authenticated users that beta conversations may be logged and reviewed to improve Thingy.
+The reader UI lets users upvote/downvote responses and optionally explain downvotes. Feedback is stored on the matching turn and appears in operator review.
 
 `GET /health` is available as a cheap smoke-test endpoint. It verifies API Gateway and Lambda routing without calling Buttondown, Bedrock, DynamoDB, or S3.
 
-`POST /feedback` is served by the streaming Lambda Function URL and requires a valid session token. It accepts `request_id` plus `reaction` (`up` or `down`) and updates the matching DynamoDB conversation record when it belongs to the same subscriber hash.
+`POST /feedback` is served by the streaming Lambda Function URL and requires a valid session token. It accepts `request_id`, `reaction` (`up` or `down`), and optional `comment`, then updates the matching turn when it belongs to the same subscriber hash.
 
 Thingy uses hybrid retrieval. It merges semantic embedding matches, lexical matches, and issue-summary/topic graph matches, reranks the top candidates with Cohere Rerank 3.5 through the Bedrock Agent Runtime rerank API, then applies context-aware recency and issue diversity. Current/recommendation questions prefer newer material when relevance is close. History/evolution questions intentionally preserve sources across eras.
 
@@ -167,23 +181,33 @@ Chat requests run through a tool-using Claude Sonnet 4.6 loop capped by `MAX_TOO
 
 - `search_faq(query, limit?)`
 - `search_archive(query, year_range?, section?, limit?)`
+- `get_source(source_kind?, url?, issue_number?)`
 - `get_issue(number)`
 - `get_section(number, section)`
-- `find_links(domain?, topic?, year_range?)`
+- `find_links(domain?, topic?, source_kind?, link_kind?, link_category?, target_resolved?, year_range?)`
 - `domain_history(domain)`
+- `corpus_stats(...)`
+- `latest_content(...)`
 - `quote_search(phrase)`
+- `list_content(...)`
 - `list_issues(year?, topic?, entity?)`
 - `compare_eras(topic, year_a, year_b)`
+- `archive_lens(topic, operation?, source_kind?, year_range?)`
+- `entity_lens(entity, operation?, source_kind?)`
+- `source_neighborhood(source_kind?, url?, issue_number?)`
+- `archive_gems(theme?, mood?, source_kind?)`
+- `claim_check(claim)`
+- `remember_user(...)`
 
-Thingy uses the subscriber gate, rate limits, browser-supplied history, and DynamoDB logging. Tool status is emitted over the existing streaming Function URL as `status` events.
+Thingy uses magic-link auth, rate limits, server-side history, and DynamoDB logging. Tool status is emitted over the streaming Function URL as `status` events, and the UI keeps the archive work visible/collapsible after completion.
 
 The graph artifact is built offline from the corpus and archive front matter. It stores per-issue entities, recurring tropes/stances, and top-K similar issues from issue-level embedding averages. `pipeline/graph/build.py --use-bedrock-extraction` can use Sonnet for entity/trope extraction; the default heuristic mode is available for cheap local refreshes.
 
 Typical cost is controlled by prompt caching on the stable system prompt and tool definitions, reranking only the top search candidates, limiting tool turns, and clipping tool result text. The target remains under $0.20 for typical questions and under $0.50 for worst-case multi-hop questions.
 
-Thingy answers cite issue numbers inline, and the browser turns matching `#123` references into archive links with native tooltips containing the source details. The API still returns citation metadata for rendering, but the page does not show a separate Sources block.
+Thingy answers cite Weekly Thing issue numbers inline when using newsletter sources, and cite blog/podcast sources by title/permalink because they do not have issue numbers. The API returns citation metadata and the web client renders rich markdown, tables, horizontal rules, citations, copy/share/play actions, and tool-work traces.
 
-The browser sends a compact recent conversation history with each chat request so follow-up questions can refer to earlier turns. The history is kept in browser memory only, clipped before sending, and is not written as a separate session transcript. Successful individual turns are written to DynamoDB for beta review as described above.
+Follow-up questions use server-side conversation history. The browser sends the active `conversation_id`; the stream Lambda loads the relevant turns, compacts them when needed, and injects recent context into the model.
 
 ## Tinylytics Events
 
@@ -199,16 +223,13 @@ The site loads Tinylytics with `events` and `beacon` enabled. Thingy emits these
 - `librarian.auth_inactive`
 - `librarian.logout`
 - `librarian.session_resume`
-- `librarian.prompts_loaded` with value `static`
-- `librarian.prompt_select` with the prompt position
 - `librarian.question_submit`
 - `librarian.answer_success` with value `{question-size}.{citation-count}`
 - `librarian.answer_error` with value `client` or `server`
 - `librarian.feedback_submit` with value `up` or `down`
 - `librarian.feedback_error` with value `client` or `server`
 - `librarian.source_click` with the cited issue number
-- `librarian.beta_notice_shown`
-- `librarian.beta_notice_dismissed`
+- mode, source picker, curiosity map, voice input, and conversation events may also be emitted by the web client; keep this list aligned with the Thingy web repo when changing the UI.
 
 Tinylytics is only used by the website/browser. The Librarian API does not emit server-side Tinylytics events.
 
@@ -239,6 +260,7 @@ The deploy script packages both Lambda entrypoints from one Node source tree:
 
 - `apps/librarian/lambda/auth/`: API Gateway Lambda for Buttondown auth and auth health checks.
 - `apps/librarian/lambda/chat/`: Lambda Function URL for streaming chat and stream health checks.
+- `apps/librarian/lambda/eval/`: DynamoDB Stream evaluator packaged with the auth bundle.
 - `apps/librarian/lambda/shared/` and `apps/librarian/lambda/prompts/`: shared code and editable prompt files included in both packages.
 
 After deploy:

@@ -41,8 +41,8 @@ separately from real reader traffic.
 
 ## Planned
 
-- **Eval harness** — replacement for the removed `pipeline/eval/` pipeline. Approach TBD; the previous Bedrock Model Evaluation flow was over-engineered for the question volume.
-- **Log inspection** — convenience wrappers over CloudWatch Insights queries for the streaming and auth Lambdas.
+- **Log inspection** — convenience wrappers over CloudWatch Insights queries for the streaming, auth, and eval Lambdas.
+- **Improvement queue** — extract repeated evaluator takeaways and downvote comments into a concise follow-up list.
 
 ## Conventions
 

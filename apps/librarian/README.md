@@ -1,6 +1,6 @@
 # apps/librarian/ — Thingy
 
-The AWS Lambda agent that answers reader questions against the Weekly Thing archive. "Librarian" is the system name in code; **Thingy** is the product name shown to users.
+The AWS Lambda agent that answers reader questions against Jamie Thingelstad's published archive: The Weekly Thing, thingelstad.com, and Another Thing. "Librarian" is the system name in code; **Thingy** is the product name shown to users.
 
 > Operational memory for editing this stack lives in [`CLAUDE.md`](CLAUDE.md). Full runtime guide — IAM cleanup plan, retrieval architecture, Tinylytics events, deployment checklist — is at [`../../reference/librarian.md`](../../reference/librarian.md).
 
@@ -8,8 +8,8 @@ The AWS Lambda agent that answers reader questions against the Weekly Thing arch
 
 Three Lambdas behind one CloudFormation stack:
 
-- **Auth Lambda** (REST via API Gateway) — handles subscriber email confirmation through Buttondown, mints HMAC-signed session tokens for the chat UI, exposes operator-only canonical conversation reads for `thingy_bridge`, and records per-answer feedback reactions.
-- **Stream Lambda** (Function URL, response streaming) — handles `/chat` (SSE-streamed agent loop with tool use against the archive) and `/retrieve` (semantic JSON retrieval used by `workshop_bot` for its `archive__retrieve` tool + several pre-injection helpers).
+- **Auth Lambda** (REST via API Gateway) — handles Buttondown subscriber lookup, Fastmail/JMAP magic-link login, HMAC-signed session tokens, conversation list/get/create/rename/delete, operator-only canonical conversation reads, and per-answer feedback reactions.
+- **Stream Lambda** (Function URL, response streaming) — handles `/chat` (SSE-streamed agent loop with server-side conversation history), `/welcome`, `/curiosity-map`, `/feedback`, and `/retrieve` (semantic JSON retrieval used by `workshop_bot` for its `archive__retrieve` tool + several pre-injection helpers).
 - **Eval Lambda** (DynamoDB Stream trigger) — reviews updated server-side conversations out of band, writes summary/quality metadata back to DynamoDB, and posts operator cards directly to Discord via incoming webhook when configured.
 
 The Q&A intelligence lives entirely here. Retrieval is **Bedrock Cohere embed → vector search → Cohere rerank** against a pre-embedded corpus in S3, with BM25 lexical fallback. Generation is Claude Sonnet via Bedrock Converse (cross-region inference profile, tool use enabled).
@@ -21,7 +21,7 @@ apps/librarian/
 ├── README.md         ← this file
 ├── CLAUDE.md         ← operational memory
 ├── lambda/           ← Node.js Lambda code (runtime: Node 20, arm64)
-│   ├── chat/         ← Stream Lambda — /chat + /retrieve
+│   ├── chat/         ← Stream Lambda — /chat, /welcome, /curiosity-map, /retrieve
 │   │   ├── handler.mjs    (thin re-export)
 │   │   └── runtime.mjs    (~1100 lines; agent loop, retrieval, routes)
 │   ├── auth/         ← Auth Lambda — /auth, /feedback, operator conversation reads
@@ -31,7 +31,7 @@ apps/librarian/
 │   └── tests/        ← Node tests
 ├── infra/
 │   └── cloudformation.yaml   ← full stack: Lambdas, API Gateway, DynamoDB, IAM, CloudWatch
-└── admin/            ← operator scripts for the live stack (scaffolding)
+└── admin/            ← operator scripts for the live stack
 ```
 
 ## Deploy
@@ -67,10 +67,12 @@ then uploads the updated corpus artifacts.
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | GET | `/health` | none | Health check (returns model versions) |
-| POST | `/chat` | session token (bearer) | SSE-streamed agent answer with tool use against the archive |
+| POST | `/chat` | session token (bearer) | SSE-streamed agent answer with tool use and server-side history |
+| POST | `/welcome` | session token (bearer) | Agentic contextual welcome for authenticated users |
+| POST | `/curiosity-map` | session token (bearer) | Generate and optionally store a curiosity-map artifact |
 | POST | `/retrieve` | bridge secret (body) | JSON semantic retrieval — top-K archive passages, used by `workshop_bot` |
-| POST | `/feedback` | session token (bearer) | Per-answer reactions (`👍` / `👎`) |
-| POST | `/auth` | none / bridge secret | Email confirmation flow, Discord bridge mint, conversation management, and operator conversation reads |
+| POST | `/feedback` | session token (bearer) | Per-answer reactions plus optional comments |
+| POST | `/auth` | none / bridge secret / session token | Magic-link auth, Discord bridge mint, user conversation management, and operator conversation reads |
 
 ## Tech stack
 
@@ -92,11 +94,21 @@ Env vars are set in CloudFormation at deploy time from the repo-root `.env`. The
 - `FASTMAIL_JMAP_TOKEN` — optional Fastmail JMAP token used to send Thingy magic-link login emails from `thingy@thingelstad.com`
 - `THINGY_MAGIC_LINK_AUTH_ENABLED=true` — switches `/auth` from direct subscriber validation to possession-based email magic links
 
-The `admin/` directory has its own [`README.md`](admin/README.md) for the (currently empty) operator-tooling scaffolding.
+## Conversation modes
+
+Mode availability is encoded in the signed session token as entitlements and enforced by both conversation creation and chat:
+
+| Mode | Entitlement | Who gets it |
+|---|---|---|
+| `thingy` | `reader` | Any active subscriber |
+| `research_guide` | `supporting_member` | Premium/supporting subscribers or `thingy-supporting-member` tag |
+| `thought_partner` | `owner` | Jamie's owner email/hash or `thingy-owner` tag |
+| `trusted_circle` | `trusted_circle` | `thingy-trusted-circle`, `thingy-family`, or `thingy-close-friends` tag |
+
+The `admin/` directory has its own [`README.md`](admin/README.md) for operator reporting and live-stack tooling.
 
 ## Related reading
 
 - [`CLAUDE.md`](CLAUDE.md) — operational memory (Bedrock model gotchas, retrieve internals, conventions)
 - [`../../reference/librarian.md`](../../reference/librarian.md) — full runtime guide
-- [`../thingy_bridge/`](../thingy_bridge/) — the Discord bridge to this Lambda (reader-facing surface)
 - [`../workshop_bot/tools/thingy_retrieve.py`](../workshop_bot/tools/thingy_retrieve.py) — workshop_bot's client for the `/retrieve` endpoint
