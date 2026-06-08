@@ -10,6 +10,58 @@ import {
 } from './dispatch-store.mjs';
 import { fromDynamoAttr } from './user-conversations.mjs';
 
+function compactLine(value, max = 240) {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  return text.length <= max ? text : `${text.slice(0, max - 1).trim()}…`;
+}
+
+function sourceLabels(sources = [], limit = 10) {
+  const labels = [];
+  for (const source of sources || []) {
+    const label = [source.label, source.title].filter(Boolean).join(' · ');
+    if (label && !labels.includes(label)) labels.push(label);
+    if (labels.length >= limit) break;
+  }
+  return labels;
+}
+
+export function discordDispatchCard({ dispatch = {}, result = {} }) {
+  const sources = sourceLabels(result.sources || []);
+  const subject = compactLine(result.subject || dispatch.subject || result.title || dispatch.title || 'Thingy Dispatch', 180);
+  const request = compactLine(dispatch.direction || dispatch.prompt || dispatch.topic || '', 360);
+  const lines = [
+    `**Thingy Dispatch · \`${dispatch.id || dispatch.dispatch_id || 'unknown'}\`** · sent${dispatch.template_test ? ' · template test' : ''}`,
+    `**Subject:** ${subject}`,
+    dispatch.to_email ? `**Reader:** ${compactLine(dispatch.to_email, 180)}` : '',
+    request ? `**Request:** ${request}` : '',
+    result.preview ? `**Preview:** ${compactLine(result.preview, 260)}` : '',
+    result.model ? `**Model:** ${result.model}` : '',
+    `**Tokens:** in ${result.usage?.inputTokens || result.usage?.input_tokens || 0} / out ${result.usage?.outputTokens || result.usage?.output_tokens || 0}`,
+    `**Sources:** ${sources.length ? sources.join(', ') : '—'}`,
+    'Use the Thingy Dispatch operator report for full content and source review.'
+  ].filter(Boolean);
+  const content = lines.join('\n');
+  return content.length <= 1900 ? content : `${content.slice(0, 1890).trim()}…`;
+}
+
+async function postDiscordDispatchWebhook({ dispatch, result }) {
+  const url = String(process.env.DISCORD_CONVERSATION_WEBHOOK_URL || '').trim();
+  if (!url) return { skipped: true };
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      content: discordDispatchCard({ dispatch, result }),
+      allowed_mentions: { parse: [] }
+    })
+  });
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`Discord webhook HTTP ${response.status}: ${text.slice(0, 200)}`);
+  }
+  return { posted: true };
+}
+
 function subscriberHashFromUserPk(pk) {
   const text = String(pk || '');
   return text.startsWith('user#') ? text.slice('user#'.length) : '';
@@ -71,6 +123,20 @@ export async function processDispatchStream({ event = {}, tableName }) {
         dispatch: claimed,
         result
       });
+      try {
+        const webhookResult = await postDiscordDispatchWebhook({ dispatch: claimed, result });
+        if (webhookResult.posted) {
+          logEvent('info', 'dispatch_posted_to_discord', {
+            subscriber_hash: ref.subscriberHash,
+            dispatch_id: claimed.id
+          });
+        }
+      } catch (webhookError) {
+        logEvent('warning', 'dispatch_discord_post_failed', errorFields(webhookError, {
+          subscriber_hash: ref.subscriberHash,
+          dispatch_id: claimed.id
+        }));
+      }
       generated += 1;
       logEvent('info', 'dispatch_sent', {
         subscriber_hash: ref.subscriberHash,
@@ -105,4 +171,3 @@ export async function processDispatchStream({ event = {}, tableName }) {
     failed
   };
 }
-

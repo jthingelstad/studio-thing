@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { dispatchAvailabilityFromRows, dispatchForClient } from '../shared/dispatch-store.mjs';
+import { discordDispatchCard } from '../shared/dispatch-worker.mjs';
 import {
   dispatchHtmlEmail,
   dispatchSubject,
@@ -226,4 +227,35 @@ test('dispatch renderer turns source refs and followups into normal links', () =
   assert.match(html, /href="https:\/\/thingy\.thingelstad\.com\/chat\/\?prompt=How\+does\+this\+connect\+to\+OmniFocus%3F"/);
   assert.doesNotMatch(html, /<strong>S1<\/strong> WT336/);
   assert.doesNotMatch(html, /\(2024-09-02\)/);
+});
+
+test('dispatch Discord card summarizes sent dispatch without body content', () => {
+  const card = discordDispatchCard({
+    dispatch: {
+      id: 'dispatch-1',
+      to_email: 'reader@example.com',
+      direction: 'Explore home automation as coordination infrastructure.',
+      template_test: true
+    },
+    result: {
+      subject: 'Thingy Dispatch — Home Automation as Coordination Infrastructure',
+      preview: 'How systems thinking reduces friction in family routines.',
+      model: 'template-test',
+      usage: { inputTokens: 12, outputTokens: 34 },
+      sources: [
+        { label: 'WT336', title: 'Weekly Thing 336 / Culture, Retention, Transmission' },
+        { label: 'Blog', title: 'My GTD Structure' }
+      ],
+      text: 'full dispatch body should not appear'
+    }
+  });
+
+  assert.match(card, /Thingy Dispatch · `dispatch-1`/);
+  assert.match(card, /template test/);
+  assert.match(card, /reader@example\.com/);
+  assert.match(card, /Thingy Dispatch — Home Automation/);
+  assert.match(card, /WT336 · Weekly Thing 336/);
+  assert.match(card, /Tokens:\*\* in 12 \/ out 34/);
+  assert.doesNotMatch(card, /full dispatch body/);
+  assert.ok(card.length <= 1900);
 });

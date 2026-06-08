@@ -61,7 +61,7 @@ Pulled from the repo-root `.env`. Required:
 | `BUTTONDOWN_API_KEY` | account secrets | Auth Lambda's subscriber verification |
 | `LIBRARIAN_SESSION_SECRET` | (auto-generated if missing) | HMAC signing for session JWTs |
 | `LIBRARIAN_BRIDGE_SECRET` | shared secret | operator conversation reads + `/retrieve` auth |
-| `DISCORD_CONVERSATION_WEBHOOK_URL` | Discord incoming webhook | Eval Lambda posts reviewed conversation cards to `#chatter`; no Discord bot runtime required |
+| `DISCORD_CONVERSATION_WEBHOOK_URL` | Discord incoming webhook | Eval and Dispatch Lambdas post operator cards to `#chatter`; no Discord bot runtime required |
 | `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` | the `wt-archive` IAM user | Deploys + corpus upload |
 
 The CloudFormation stack uses an IAM service role for execution; the local AWS credentials are just for `cloudformation:UpdateStack` + `s3:PutObject`.

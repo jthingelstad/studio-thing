@@ -305,6 +305,7 @@ Resources:
           THINGY_ADVANCED_MODEL: "us.anthropic.claude-opus-4-6-v1"
           FASTMAIL_JMAP_TOKEN: !Ref FastmailJmapToken
           THINGY_MAGIC_LINK_FROM_EMAIL: !Ref ThingyMagicLinkFromEmail
+          DISCORD_CONVERSATION_WEBHOOK_URL: !Ref DiscordConversationWebhookUrl
       Handler: dispatch/handler.handler
       MemorySize: 2048
       ReservedConcurrentExecutions: 1

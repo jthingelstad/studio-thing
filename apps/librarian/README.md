@@ -89,7 +89,7 @@ Env vars are set in CloudFormation at deploy time from the repo-root `.env`. The
 
 - `SESSION_SECRET` — HMAC signing key for session tokens
 - `DISCORD_BRIDGE_SECRET` — operator-only secret for conversation reads and `/retrieve`
-- `DISCORD_CONVERSATION_WEBHOOK_URL` — optional incoming webhook used by the eval Lambda to post reviewed conversation cards to Discord
+- `DISCORD_CONVERSATION_WEBHOOK_URL` — optional incoming webhook used by eval and Dispatch Lambdas to post operator cards to Discord
 - `BUTTONDOWN_API_KEY` — subscriber email verification
 - `FASTMAIL_JMAP_TOKEN` — optional Fastmail JMAP token used to send Thingy magic-link login emails from `thingy@thingelstad.com`
 
