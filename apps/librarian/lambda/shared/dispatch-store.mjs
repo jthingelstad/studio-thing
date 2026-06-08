@@ -4,6 +4,7 @@ import { dynamoList, dynamoNumber, dynamoString, fromDynamoAttr, userConversatio
 
 const DISPATCH_ID_RE = /^[A-Za-z0-9_.:-]{1,96}$/;
 const ACTIVE_STATUSES = new Set(['queued', 'generating']);
+const DRAFT_STATUSES = new Set(['draft', 'shaping', 'needs_clarification', 'ready']);
 const DEFAULT_COOLDOWN_SECONDS = 24 * 60 * 60;
 
 export function dispatchSk(createdAt, dispatchId) {
@@ -45,6 +46,7 @@ export function dispatchFromItem(item = {}) {
     output_tokens: Number(row.output_tokens || 0),
     source_count: Number(row.source_count || 0),
     sources: Array.isArray(row.sources) ? row.sources : [],
+    messages: Array.isArray(row.messages) ? row.messages : [],
     content_text: String(row.content_text || ''),
     content_html: String(row.content_html || '')
   };
@@ -61,6 +63,10 @@ function publicDispatch(row) {
     title: row.title,
     preview: row.preview,
     error: row.error,
+    prompt: row.prompt,
+    clarification_question: row.clarification_question,
+    clarification_answer: row.clarification_answer,
+    messages: row.messages,
     created_at: row.created_at,
     updated_at: row.updated_at,
     queued_at: row.queued_at,
@@ -72,7 +78,8 @@ function publicDispatch(row) {
 }
 
 export function dispatchForClient(row) {
-  return publicDispatch(dispatchFromItem(row));
+  const normalized = typeof row?.id === 'string' || typeof row?.dispatch_id === 'string';
+  return publicDispatch(normalized ? row : dispatchFromItem(row));
 }
 
 export async function listUserDispatches({ dynamodb, tableName, subscriberHash, limit = 12 }) {
@@ -135,6 +142,122 @@ export async function dispatchAvailability({ dynamodb, tableName, subscriberHash
   return dispatchAvailabilityFromRows(rows, { owner });
 }
 
+function draftStatus(value) {
+  const status = String(value || 'draft').trim().toLowerCase();
+  if (status === 'upgrade') return 'ready';
+  return DRAFT_STATUSES.has(status) ? status : 'draft';
+}
+
+function dispatchMessageDynamoItem(message = {}) {
+  const role = String(message.role || 'assistant').trim().toLowerCase();
+  return {
+    M: {
+      role: dynamoString(['user', 'assistant', 'system'].includes(role) ? role : 'assistant'),
+      text: dynamoString(String(message.text || '').slice(0, 2400)),
+      time: dynamoString(String(message.time || '').slice(0, 60)),
+      kind: dynamoString(String(message.kind || '').slice(0, 80))
+    }
+  };
+}
+
+function compactMessages(messages = []) {
+  return Array.isArray(messages)
+    ? messages.slice(-24).map(dispatchMessageDynamoItem)
+    : [];
+}
+
+export async function upsertDispatchDraft({
+  dynamodb,
+  tableName,
+  subscriberHash,
+  dispatchId = '',
+  status = 'draft',
+  topic = '',
+  prompt = '',
+  direction = '',
+  clarificationQuestion = '',
+  clarificationAnswer = '',
+  title = '',
+  messages = [],
+  now = new Date().toISOString()
+}) {
+  const id = validDispatchId(dispatchId) || crypto.randomUUID();
+  const existing = dispatchId ? await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: id }) : null;
+  const normalizedStatus = draftStatus(status);
+  const item = {
+    pk: dynamoString(userConversationPk(subscriberHash)),
+    sk: dynamoString(dispatchSk(now, id)),
+    item_type: dynamoString('dispatch'),
+    dispatch_id: dynamoString(id),
+    status: dynamoString(normalizedStatus),
+    email_hash: dynamoString(subscriberHash),
+    topic: dynamoString(String(topic || prompt || title || '').slice(0, 300)),
+    prompt: dynamoString(String(prompt || '').slice(0, 1400)),
+    direction: dynamoString(String(direction || prompt || topic || '').slice(0, 1800)),
+    clarification_question: dynamoString(String(clarificationQuestion || '').slice(0, 800)),
+    clarification_answer: dynamoString(String(clarificationAnswer || '').slice(0, 1200)),
+    title: dynamoString(String(title || topic || prompt || 'Dispatch').replace(/\s+/g, ' ').trim().slice(0, 120)),
+    messages: dynamoList(messages, dispatchMessageDynamoItem),
+    created_at: dynamoString(now),
+    updated_at: dynamoString(now)
+  };
+  if (!existing) {
+    await dynamodb.send(new PutItemCommand({
+      TableName: tableName,
+      Item: item,
+      ConditionExpression: 'attribute_not_exists(pk)'
+    }));
+    return await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: id });
+  }
+
+  await dynamodb.send(new UpdateItemCommand({
+    TableName: tableName,
+    Key: {
+      pk: dynamoString(userConversationPk(subscriberHash)),
+      sk: dynamoString(dispatchSk(existing.created_at, existing.id))
+    },
+    UpdateExpression: [
+      'SET #status = :status',
+      '#topic = :topic',
+      '#prompt = :prompt',
+      '#direction = :direction',
+      '#clarification_question = :clarification_question',
+      '#clarification_answer = :clarification_answer',
+      '#title = :title',
+      '#messages = :messages',
+      '#updated_at = :now'
+    ].join(', '),
+    ConditionExpression: '#status IN (:draft, :shaping, :needs_clarification, :ready)',
+    ExpressionAttributeNames: {
+      '#status': 'status',
+      '#topic': 'topic',
+      '#prompt': 'prompt',
+      '#direction': 'direction',
+      '#clarification_question': 'clarification_question',
+      '#clarification_answer': 'clarification_answer',
+      '#title': 'title',
+      '#messages': 'messages',
+      '#updated_at': 'updated_at'
+    },
+    ExpressionAttributeValues: {
+      ':status': dynamoString(normalizedStatus),
+      ':topic': dynamoString(String(topic || prompt || title || existing.topic || '').slice(0, 300)),
+      ':prompt': dynamoString(String(prompt || existing.prompt || '').slice(0, 1400)),
+      ':direction': dynamoString(String(direction || prompt || topic || existing.direction || '').slice(0, 1800)),
+      ':clarification_question': dynamoString(String(clarificationQuestion || '').slice(0, 800)),
+      ':clarification_answer': dynamoString(String(clarificationAnswer || existing.clarification_answer || '').slice(0, 1200)),
+      ':title': dynamoString(String(title || topic || prompt || existing.title || 'Dispatch').replace(/\s+/g, ' ').trim().slice(0, 120)),
+      ':messages': { L: compactMessages(messages) },
+      ':now': dynamoString(now),
+      ':draft': dynamoString('draft'),
+      ':shaping': dynamoString('shaping'),
+      ':needs_clarification': dynamoString('needs_clarification'),
+      ':ready': dynamoString('ready')
+    }
+  }));
+  return await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: id });
+}
+
 export async function createQueuedDispatch({
   dynamodb,
   tableName,
@@ -171,6 +294,74 @@ export async function createQueuedDispatch({
       queued_at: dynamoString(now)
     },
     ConditionExpression: 'attribute_not_exists(pk)'
+  }));
+  return await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: id });
+}
+
+export async function queueDraftDispatch({
+  dynamodb,
+  tableName,
+  subscriberHash,
+  dispatchId,
+  emailHash,
+  toEmail,
+  topic,
+  prompt,
+  direction,
+  clarificationQuestion = '',
+  clarificationAnswer = ''
+}) {
+  const id = validDispatchId(dispatchId);
+  if (!id) throw new Error('dispatchId is invalid');
+  const existing = await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: id });
+  if (!existing) throw new Error('dispatch draft not found');
+  const now = new Date().toISOString();
+  await dynamodb.send(new UpdateItemCommand({
+    TableName: tableName,
+    Key: {
+      pk: dynamoString(userConversationPk(subscriberHash)),
+      sk: dynamoString(dispatchSk(existing.created_at, existing.id))
+    },
+    UpdateExpression: [
+      'SET #status = :queued',
+      '#email_hash = :email_hash',
+      '#to_email = :to_email',
+      '#topic = :topic',
+      '#prompt = :prompt',
+      '#direction = :direction',
+      '#clarification_question = :clarification_question',
+      '#clarification_answer = :clarification_answer',
+      '#updated_at = :now',
+      '#queued_at = :now'
+    ].join(', '),
+    ConditionExpression: '#status IN (:draft, :shaping, :needs_clarification, :ready)',
+    ExpressionAttributeNames: {
+      '#status': 'status',
+      '#email_hash': 'email_hash',
+      '#to_email': 'to_email',
+      '#topic': 'topic',
+      '#prompt': 'prompt',
+      '#direction': 'direction',
+      '#clarification_question': 'clarification_question',
+      '#clarification_answer': 'clarification_answer',
+      '#updated_at': 'updated_at',
+      '#queued_at': 'queued_at'
+    },
+    ExpressionAttributeValues: {
+      ':queued': dynamoString('queued'),
+      ':email_hash': dynamoString(emailHash || subscriberHash),
+      ':to_email': dynamoString(toEmail),
+      ':topic': dynamoString(String(topic || prompt || existing.topic || '').slice(0, 300)),
+      ':prompt': dynamoString(String(prompt || existing.prompt || '').slice(0, 1400)),
+      ':direction': dynamoString(String(direction || prompt || topic || existing.direction || '').slice(0, 1800)),
+      ':clarification_question': dynamoString(String(clarificationQuestion || existing.clarification_question || '').slice(0, 800)),
+      ':clarification_answer': dynamoString(String(clarificationAnswer || existing.clarification_answer || '').slice(0, 1200)),
+      ':now': dynamoString(now),
+      ':draft': dynamoString('draft'),
+      ':shaping': dynamoString('shaping'),
+      ':needs_clarification': dynamoString('needs_clarification'),
+      ':ready': dynamoString('ready')
+    }
   }));
   return await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: id });
 }

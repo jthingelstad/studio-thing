@@ -37,9 +37,12 @@ import {
 } from '../shared/conversation-store.mjs';
 import {
   createQueuedDispatch,
+  dispatchForClient,
   dispatchAvailability,
   getUserDispatch,
-  listUserDispatches
+  listUserDispatches,
+  queueDraftDispatch,
+  upsertDispatchDraft
 } from '../shared/dispatch-store.mjs';
 
 const AUTH_RATE_LIMIT_MAX = 30;
@@ -833,6 +836,38 @@ async function handleDispatch(event, body, start) {
       }, event);
     }
 
+    if (action === 'save_draft') {
+      const prompt = normalizeDispatchText(body.prompt || body.topic, 1200);
+      const direction = normalizeDispatchText(body.direction || prompt, 1600);
+      const title = normalizeDispatchText(body.title || body.topic || prompt || 'Dispatch', 120);
+      const dispatch = await upsertDispatchDraft({
+        dynamodb,
+        tableName,
+        subscriberHash: profile.subscriberHash,
+        dispatchId: body.dispatch_id || body.id,
+        status: body.status || body.stage || 'draft',
+        topic: body.topic || prompt || title,
+        prompt,
+        direction,
+        clarificationQuestion: body.clarification_question,
+        clarificationAnswer: body.clarification_answer,
+        title,
+        messages: Array.isArray(body.messages) ? body.messages : []
+      });
+      logEvent('info', 'dispatch_draft_saved', {
+        subscriber_hash: profile.subscriberHash,
+        dispatch_id: dispatch.id,
+        status: dispatch.status,
+        duration_ms: Math.round(performance.now() - start)
+      });
+      return jsonResponse(200, {
+        dispatch: dispatchForClient(dispatch),
+        entitlements: profile.entitlements,
+        supporting_member: profile.supportingMember,
+        owner: profile.owner
+      }, event);
+    }
+
     if (action === 'list') {
       const dispatches = await listUserDispatches({
         dynamodb,
@@ -847,24 +882,7 @@ async function handleDispatch(event, body, start) {
         owner: profile.owner
       });
       return jsonResponse(200, {
-        dispatches: dispatches.map((row) => ({
-          id: row.id,
-          dispatch_id: row.dispatch_id,
-          status: row.status,
-          topic: row.topic,
-          direction: row.direction,
-          subject: row.subject,
-          title: row.title,
-          preview: row.preview,
-          error: row.error,
-          created_at: row.created_at,
-          updated_at: row.updated_at,
-          queued_at: row.queued_at,
-          started_at: row.started_at,
-          sent_at: row.sent_at,
-          failed_at: row.failed_at,
-          source_count: row.source_count
-        })),
+        dispatches: dispatches.map(dispatchForClient),
         availability,
         entitlements: profile.entitlements,
         supporting_member: profile.supportingMember,
@@ -881,24 +899,7 @@ async function handleDispatch(event, body, start) {
       });
       if (!dispatch) return jsonResponse(404, { error: 'Dispatch not found.' }, event);
       return jsonResponse(200, {
-        dispatch: {
-          id: dispatch.id,
-          dispatch_id: dispatch.dispatch_id,
-          status: dispatch.status,
-          topic: dispatch.topic,
-          direction: dispatch.direction,
-          subject: dispatch.subject,
-          title: dispatch.title,
-          preview: dispatch.preview,
-          error: dispatch.error,
-          created_at: dispatch.created_at,
-          updated_at: dispatch.updated_at,
-          queued_at: dispatch.queued_at,
-          started_at: dispatch.started_at,
-          sent_at: dispatch.sent_at,
-          failed_at: dispatch.failed_at,
-          source_count: dispatch.source_count
-        }
+        dispatch: dispatchForClient(dispatch)
       }, event);
     }
 
@@ -926,18 +927,33 @@ async function handleDispatch(event, body, start) {
       if (!availability.allowed) {
         return jsonResponse(429, { error: availability.message || 'Dispatch is rate limited.', availability }, event);
       }
-      const dispatch = await createQueuedDispatch({
-        dynamodb,
-        tableName,
-        subscriberHash: profile.subscriberHash,
-        emailHash: profile.subscriberHash,
-        toEmail,
-        topic: body.topic || prompt,
-        prompt,
-        direction,
-        clarificationQuestion: body.clarification_question,
-        clarificationAnswer: body.clarification_answer
-      });
+      const existingDispatchId = body.dispatch_id || body.id;
+      const dispatch = existingDispatchId
+        ? await queueDraftDispatch({
+          dynamodb,
+          tableName,
+          subscriberHash: profile.subscriberHash,
+          dispatchId: existingDispatchId,
+          emailHash: profile.subscriberHash,
+          toEmail,
+          topic: body.topic || prompt,
+          prompt,
+          direction,
+          clarificationQuestion: body.clarification_question,
+          clarificationAnswer: body.clarification_answer
+        })
+        : await createQueuedDispatch({
+          dynamodb,
+          tableName,
+          subscriberHash: profile.subscriberHash,
+          emailHash: profile.subscriberHash,
+          toEmail,
+          topic: body.topic || prompt,
+          prompt,
+          direction,
+          clarificationQuestion: body.clarification_question,
+          clarificationAnswer: body.clarification_answer
+        });
       logEvent('info', 'dispatch_queued', {
         subscriber_hash: profile.subscriberHash,
         dispatch_id: dispatch.id,
@@ -945,15 +961,7 @@ async function handleDispatch(event, body, start) {
         duration_ms: Math.round(performance.now() - start)
       });
       return jsonResponse(202, {
-        dispatch: {
-          id: dispatch.id,
-          dispatch_id: dispatch.dispatch_id,
-          status: dispatch.status,
-          topic: dispatch.topic,
-          direction: dispatch.direction,
-          created_at: dispatch.created_at,
-          queued_at: dispatch.queued_at
-        }
+        dispatch: dispatchForClient(dispatch)
       }, event);
     }
   } catch (error) {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { dispatchAvailabilityFromRows } from '../shared/dispatch-store.mjs';
+import { dispatchAvailabilityFromRows, dispatchForClient } from '../shared/dispatch-store.mjs';
 import {
   dispatchHtmlEmail,
   parseDispatchJson,
@@ -29,6 +29,41 @@ test('dispatch availability enforces active and rolling 24-hour limits', () => {
   assert.equal(dispatchAvailabilityFromRows([
     { id: 'd2', status: 'sent', sent_at: '2026-06-08T00:00:00Z' }
   ], { nowSeconds, owner: true }).allowed, true);
+
+  assert.equal(dispatchAvailabilityFromRows([
+    { id: 'd3', status: 'ready' }
+  ], { nowSeconds }).allowed, true);
+});
+
+test('dispatchForClient includes draft state but omits generated content', () => {
+  const client = dispatchForClient({
+    pk: { S: 'user#abc' },
+    sk: { S: 'dispatch#2026-06-08T12:00:00.000Z#d1' },
+    dispatch_id: { S: 'd1' },
+    status: { S: 'ready' },
+    prompt: { S: 'Explore the open web' },
+    direction: { S: 'Write about ownership and RSS.' },
+    clarification_question: { S: 'What angle?' },
+    clarification_answer: { S: 'The personal web.' },
+    title: { S: 'Open web Dispatch' },
+    messages: {
+      L: [{
+        M: {
+          role: { S: 'user' },
+          text: { S: 'Open web please' },
+          time: { S: '2026-06-08T12:00:00.000Z' }
+        }
+      }]
+    },
+    content_html: { S: '<p>private</p>' },
+    content_text: { S: 'private' }
+  });
+  assert.equal(client.id, 'd1');
+  assert.equal(client.status, 'ready');
+  assert.equal(client.prompt, 'Explore the open web');
+  assert.equal(client.messages.length, 1);
+  assert.equal(client.content_html, undefined);
+  assert.equal(client.content_text, undefined);
 });
 
 test('selectDispatchSources scores archive chunks and dedupes by url', () => {
@@ -84,4 +119,3 @@ test('dispatchHtmlEmail renders Thingy authorship boundary and linked sources', 
   assert.match(html, /Written by Thingy, not Jamie/);
   assert.match(html, /https:\/\/weekly\.example\/10/);
 });
-
