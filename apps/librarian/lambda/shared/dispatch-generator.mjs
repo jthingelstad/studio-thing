@@ -228,6 +228,7 @@ Rules:
 - Target about 1,200 words.
 - Include source references like [S1] where claims depend on a source, but attach them directly after the source title, issue name, or linked phrase rather than at the end of a sentence. Example: Weekly Thing 336 [S1] says... not ...says something. [S1]
 - Write follow-up prompts as questions a reader can click to continue in Thingy.
+- Use simple Markdown only inside text fields: paragraphs, ordered lists, unordered lists, **bold**, *italic*, and Markdown links. Do not return raw HTML.
 - Return only JSON.`;
 }
 
@@ -247,7 +248,7 @@ function dispatchUserPrompt({ dispatch, sources }) {
     '  "preview": "one sentence preview",',
     '  "title": "Dispatch title",',
     '  "intro": "2-3 paragraph Thingy-authored opening",',
-    '  "sections": [{"heading":"section heading","body":"2-4 paragraphs with [S#] references"}],',
+    '  "sections": [{"heading":"section heading","body":"2-4 paragraphs with optional simple Markdown lists and [S#] references"}],',
     '  "closing": "short closing from Thingy",',
     '  "followups": ["question to continue in Thingy"]',
     '}'
@@ -334,6 +335,17 @@ function linkHtml(href, label) {
   return `<a href="${escapeHtml(href)}" style="${linkStyle()}">${label}</a>`;
 }
 
+function sourceFootnoteNumber(id = '') {
+  const match = String(id || '').match(/^S(\d+)$/i);
+  return match ? match[1] : String(id || '');
+}
+
+function sourceFootnoteHtml(source = {}, id = '') {
+  const label = escapeHtml(sourceFootnoteNumber(source.id || id));
+  if (!source?.id) return `<strong>${escapeHtml(id)}</strong>`;
+  return `<sup style="font-size:11px;line-height:0;vertical-align:super;"><a href="#source-${escapeHtml(source.id)}" style="${linkStyle()}">${label}</a></sup>`;
+}
+
 function sourceMentionPatterns(source = {}) {
   const patterns = [];
   const title = cleanText(source.title || '', 180);
@@ -369,9 +381,8 @@ function replaceRemainingSourceRefs(html, sources = []) {
   const map = sourceLinkMap(sources);
   return html.replace(/\s*\[(S\d+)\]/g, (match, id) => {
     const source = map[id];
-    const href = sourceHref(source);
-    if (!source || !href) return ` <strong>${id}</strong>`;
-    return ` ${linkHtml(href, escapeHtml(source.label || source.title || id))}`;
+    if (!source) return ` <strong>${id}</strong>`;
+    return sourceFootnoteHtml(source, id);
   });
 }
 
@@ -392,6 +403,40 @@ function inlineDispatchMarkup(text, sources = []) {
   return replaceRemainingSourceRefs(html, sources)
     .replace(/\*\*([^*\n][\s\S]*?[^*\n])\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^*])\*([^*\n][^*\n]*?[^*\n])\*(?!\*)/g, '$1<em>$2</em>');
+}
+
+function orderedListItem(line = '') {
+  const match = String(line || '').match(/^\s*\d+[\.)]\s+(.+)$/);
+  return match ? match[1].trim() : '';
+}
+
+function unorderedListItem(line = '') {
+  const match = String(line || '').match(/^\s*[-*]\s+(.+)$/);
+  return match ? match[1].trim() : '';
+}
+
+function renderDispatchBlocks(text, sources = []) {
+  const blocks = String(text || '')
+    .replace(/\r\n?/g, '\n')
+    .split(/\n{2,}/)
+    .map((block) => cleanBlockText(block, 4000))
+    .filter(Boolean);
+  const html = [];
+  for (const block of blocks) {
+    const lines = block.split('\n').map((line) => line.trim()).filter(Boolean);
+    const ordered = lines.map(orderedListItem);
+    if (ordered.length && ordered.every(Boolean)) {
+      html.push(`<ol style="padding-left:24px;margin:0 0 18px;color:#14181f;font-size:17px;line-height:1.6;">${ordered.map((item) => `<li style="margin:0 0 8px;">${inlineDispatchMarkup(item, sources)}</li>`).join('')}</ol>`);
+      continue;
+    }
+    const unordered = lines.map(unorderedListItem);
+    if (unordered.length && unordered.every(Boolean)) {
+      html.push(`<ul style="padding-left:24px;margin:0 0 18px;color:#14181f;font-size:17px;line-height:1.6;">${unordered.map((item) => `<li style="margin:0 0 8px;">${inlineDispatchMarkup(item, sources)}</li>`).join('')}</ul>`);
+      continue;
+    }
+    html.push(...paragraphs(block).map((p) => `<p style="font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;">${inlineDispatchMarkup(p, sources)}</p>`));
+  }
+  return html.join('');
 }
 
 function normalizeDispatchPayload(payload = {}, fallbackTopic = '') {
@@ -483,7 +528,7 @@ export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
   const sectionHtml = dispatchPayload.sections.map((section) => `
     <tr><td style="padding:24px 28px 4px;">
       <h2 style="font-family:Charter,'Iowan Old Style','Source Serif 4',Georgia,serif;font-size:24px;line-height:1.25;margin:0 0 12px;color:#14181f;font-weight:500;border-top:1px solid #f0f3f8;padding-top:24px;">${escapeHtml(section.heading)}</h2>
-      ${paragraphs(section.body).map((p) => `<p style="font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;">${inlineDispatchMarkup(p, sources)}</p>`).join('')}
+      ${renderDispatchBlocks(section.body, sources)}
     </td></tr>`).join('');
 
   const followupHtml = dispatchPayload.followups.length ? `
@@ -495,7 +540,7 @@ export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
     </td></tr>` : '';
 
   const sourcesHtml = sources.map((source) => `
-    <li style="margin:0 0 8px;">
+    <li id="source-${escapeHtml(source.id)}" style="margin:0 0 8px;">
       ${escapeHtml(source.label)} ·
       ${sourceHref(source) ? `<a href="${escapeHtml(sourceHref(source))}" style="${linkStyle()}">${escapeHtml(source.title)}</a>` : escapeHtml(source.title)}
     </li>`).join('');
@@ -517,10 +562,10 @@ export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
             ${dispatchPayload.preview ? `<p style="font-size:17px;line-height:1.45;margin:0;color:#3d4654;">${escapeHtml(dispatchPayload.preview)}</p>` : ''}
           </td></tr>
           <tr><td style="padding:26px 28px 4px;">
-            ${paragraphs(dispatchPayload.intro).map((p) => `<p style="font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;">${inlineDispatchMarkup(p, sources)}</p>`).join('')}
+            ${renderDispatchBlocks(dispatchPayload.intro, sources)}
           </td></tr>
           ${sectionHtml}
-          ${dispatchPayload.closing ? `<tr><td style="padding:18px 28px 28px;">${paragraphs(dispatchPayload.closing).map((p) => `<p style="font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;">${inlineDispatchMarkup(p, sources)}</p>`).join('')}</td></tr>` : ''}
+          ${dispatchPayload.closing ? `<tr><td style="padding:18px 28px 28px;">${renderDispatchBlocks(dispatchPayload.closing, sources)}</td></tr>` : ''}
           ${followupHtml}
           <tr><td style="padding:24px 28px;border-top:1px solid #e6ebf2;">
             <h2 style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;line-height:1.2;letter-spacing:.12em;text-transform:uppercase;margin:0 0 12px;color:#1f6fd6;font-weight:600;">Sources</h2>

@@ -158,6 +158,8 @@ test('dispatchHtmlEmail renders request provenance authorship boundary and linke
   assert.match(html, /href="https:\/\/thingy\.thingelstad\.com\/"/);
   assert.match(html, /Written by Thingy, not Jamie/);
   assert.match(html, /https:\/\/weekly\.example\/10/);
+  assert.match(html, /href="#source-S1"[^>]*>1<\/a>/);
+  assert.match(html, /id="source-S1"/);
   assert.doesNotMatch(html, /<strong>S1<\/strong>/);
   assert.doesNotMatch(html, /\(2026-01-01\)/);
 });
@@ -227,6 +229,46 @@ test('dispatch renderer turns source refs and followups into normal links', () =
   assert.match(html, /href="https:\/\/thingy\.thingelstad\.com\/chat\/\?prompt=How\+does\+this\+connect\+to\+OmniFocus%3F"/);
   assert.doesNotMatch(html, /<strong>S1<\/strong> WT336/);
   assert.doesNotMatch(html, /\(2024-09-02\)/);
+});
+
+test('dispatch renderer formats markdown lists and source-only refs as footnotes', () => {
+  const html = dispatchHtmlEmail({
+    title: 'Crypto Dispatch',
+    preview: 'A dispatch about crypto.',
+    intro: '',
+    sections: [{
+      heading: 'So What',
+      body: [
+        'Synthesizing across the archive, Jamie sees crypto as:',
+        '',
+        '1. A technology that asks important questions about autonomy. [S1]',
+        '2. A space plagued by bad actors. [S2]',
+        '3. An energy-intensive system whose costs are real.'
+      ].join('\n')
+    }],
+    closing: '',
+    followups: []
+  }, [{
+    id: 'S1',
+    label: 'Blog',
+    title: 'Polarizing Technology: Encryption and Crypto',
+    url: 'https://www.thingelstad.com/2022/12/27/polarizing-technology-encryption.html',
+    source_kind: 'blog'
+  }, {
+    id: 'S2',
+    label: 'WT229',
+    title: 'Weekly Thing #229 / Time, Zolatron, Maigret',
+    url: '/archive/229/',
+    source_kind: 'weekly_thing'
+  }]);
+
+  assert.match(html, /<ol style="padding-left:24px/);
+  assert.match(html, /<li style="margin:0 0 8px;">A technology that asks important questions about autonomy\.<sup/);
+  assert.match(html, /href="#source-S1"[^>]*>1<\/a>/);
+  assert.match(html, /href="#source-S2"[^>]*>2<\/a>/);
+  assert.match(html, /id="source-S1"/);
+  assert.match(html, /id="source-S2"/);
+  assert.doesNotMatch(html, /<p[^>]*>1\. A technology/);
 });
 
 test('dispatch Discord card summarizes sent dispatch without body content', () => {
