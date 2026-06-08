@@ -96,7 +96,7 @@ def copy_lambda_source(build_dir: Path) -> None:
         shutil.copy2(LAMBDA_DIR / name, build_dir / name)
     run(["npm", "ci", "--omit=dev", "--no-audit", "--no-fund"], cwd=build_dir)
 
-    for name in ("auth", "chat", "eval", "shared", "prompts"):
+    for name in ("auth", "chat", "dispatch", "eval", "shared", "prompts"):
         shutil.copytree(LAMBDA_DIR / name, build_dir / name, dirs_exist_ok=True)
 
 
