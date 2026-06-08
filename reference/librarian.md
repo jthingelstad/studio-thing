@@ -73,7 +73,6 @@ Local `.env` values used by upload/build scripts:
 - `DISCORD_BRIDGE_SECRET` for operator conversation reads and bridge-secret retrieval.
 - `DISCORD_CONVERSATION_WEBHOOK_URL` for event-driven eval cards posted directly to Discord.
 - `FASTMAIL_JMAP_TOKEN` / `THINGY_FASTMAIL_JMAP_TOKEN` / `THINGY_JMAP_TOKEN` for magic-link email.
-- `THINGY_MAGIC_LINK_AUTH_ENABLED` to require inbox possession before minting a session.
 - `THINGY_MAGIC_LINK_FROM_EMAIL` and `THINGY_MAGIC_LINK_BASE_URL` for login email construction.
 - `LIBRARIAN_USER_MEMORY_TTL_DAYS` (optional; defaults to 365 days.)
 
@@ -98,7 +97,7 @@ The deploy script passes `LIBRARIAN_CLOUDFORMATION_ROLE_ARN` to CloudFormation w
 
 ## Access Model
 
-Thingy uses email magic-link authentication. A visitor enters an email address, Lambda checks Buttondown for an active subscriber, stores a one-time token hash in DynamoDB, and sends a sign-in link from `thingy@thingelstad.com` through Fastmail JMAP. Redeeming that link proves inbox possession and returns a short-lived HMAC-signed session token. Tokens expire after 12 hours.
+Thingy uses mandatory email magic-link authentication. A visitor enters an email address, Lambda checks Buttondown for an active subscriber, stores a one-time token hash in DynamoDB, and sends a sign-in link from `thingy@thingelstad.com` through Fastmail JMAP. Redeeming that link proves inbox possession and returns an HMAC-signed session token. Tokens expire after ten days, and a still-valid token can be refreshed by `/auth` `action=refresh_session` so weekly use keeps a reader signed in. Once the token expires, the only public email auth path is a new magic link.
 
 Premium subscribers get a small Bedrock-generated Supporting Member thank-you before entering chat, with a fixed fallback if Bedrock is unavailable. Unknown email addresses can opt in from the sign-in page; those signups are created in Buttondown and must confirm before using Thingy. The logout control clears the browser's stored session token and returns to the sign-in page.
 

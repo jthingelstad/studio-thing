@@ -1,0 +1,87 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { dispatchAvailabilityFromRows } from '../shared/dispatch-store.mjs';
+import {
+  dispatchHtmlEmail,
+  parseDispatchJson,
+  selectDispatchSources
+} from '../shared/dispatch-generator.mjs';
+
+test('dispatch availability enforces active and rolling 24-hour limits', () => {
+  const nowSeconds = Math.floor(Date.parse('2026-06-08T12:00:00Z') / 1000);
+  assert.deepEqual(
+    dispatchAvailabilityFromRows([{ id: 'd1', status: 'queued' }], { nowSeconds }),
+    {
+      allowed: false,
+      reason: 'active',
+      message: 'A Dispatch is already being prepared. Wait for that one to finish before starting another.',
+      active_dispatch_id: 'd1'
+    }
+  );
+
+  const limited = dispatchAvailabilityFromRows([
+    { id: 'd2', status: 'sent', sent_at: '2026-06-08T00:00:00Z' }
+  ], { nowSeconds });
+  assert.equal(limited.allowed, false);
+  assert.equal(limited.reason, 'cooldown');
+  assert.equal(limited.retry_after_seconds, 43200);
+
+  assert.equal(dispatchAvailabilityFromRows([
+    { id: 'd2', status: 'sent', sent_at: '2026-06-08T00:00:00Z' }
+  ], { nowSeconds, owner: true }).allowed, true);
+});
+
+test('selectDispatchSources scores archive chunks and dedupes by url', () => {
+  const chunks = [
+    {
+      source_kind: 'weekly_thing',
+      issue_number: 10,
+      title: 'Open web',
+      url: 'https://weekly.example/10',
+      text: 'RSS and open web ownership matter.'
+    },
+    {
+      source_kind: 'blog',
+      title: 'Owning your notes',
+      url: 'https://blog.example/notes',
+      text: 'Personal ownership and automation with notes.'
+    },
+    {
+      source_kind: 'blog',
+      title: 'Duplicate',
+      url: 'https://blog.example/notes',
+      text: 'ownership ownership ownership'
+    }
+  ];
+  const selected = selectDispatchSources(chunks, 'open web ownership automation', 3);
+  assert.equal(selected.length, 2);
+  assert.equal(selected[0].id, 'S1');
+  assert.equal(selected[0].label, 'WT10');
+  assert.ok(selected.some((source) => source.source_kind === 'blog'));
+});
+
+test('parseDispatchJson handles fenced JSON', () => {
+  assert.deepEqual(parseDispatchJson('```json\n{"title":"Dispatch"}\n```'), { title: 'Dispatch' });
+});
+
+test('dispatchHtmlEmail renders Thingy authorship boundary and linked sources', () => {
+  const html = dispatchHtmlEmail({
+    title: 'Ownership Dispatch',
+    preview: 'A short preview.',
+    intro: 'Thingy found a thread [S1].',
+    sections: [{ heading: 'The thread', body: 'This depends on [S1].' }],
+    closing: 'Keep exploring.',
+    followups: ['What changed over time?']
+  }, [{
+    id: 'S1',
+    label: 'WT10',
+    title: 'Open web',
+    url: 'https://weekly.example/10',
+    source_kind: 'weekly_thing',
+    publish_date: '2026-01-01'
+  }]);
+  assert.match(html, /Thingy Dispatch/);
+  assert.match(html, /Written by Thingy, not Jamie/);
+  assert.match(html, /https:\/\/weekly\.example\/10/);
+});
+

@@ -30,11 +30,14 @@ import {
 
 test('session token round trips and rejects tampering', () => {
   process.env.SESSION_SECRET = 'test-secret';
-  const { token } = createSessionToken('Reader@Example.com', 'session-1');
+  const now = Math.floor(Date.now() / 1000);
+  const { token, expiresAt } = createSessionToken('Reader@Example.com', 'session-1');
   const payload = verifyToken(token);
 
   assert.equal(payload.sid, 'session-1');
   assert.equal(payload.sub, emailHash('reader@example.com'));
+  assert.ok(expiresAt >= now + 60 * 60 * 24 * 10 - 2);
+  assert.ok(expiresAt <= now + 60 * 60 * 24 * 10 + 2);
   assert.equal(verifyToken(`${token}x`), null);
 });
 
@@ -52,13 +55,16 @@ test('session token can carry safe entitlement claims', () => {
 test('discord bridge token round trips with non-email sub', () => {
   process.env.SESSION_SECRET = 'test-secret';
   const sub = 'discord:0123456789abcdef0123456789abcdef';
-  const { token, sessionId, expiresAt } = createSessionTokenForSub(sub, 'session-d1');
+  const { token, sessionId, expiresAt } = createSessionTokenForSub(sub, 'session-d1', {
+    entitlements: ['reader']
+  });
   assert.equal(sessionId, 'session-d1');
   assert.ok(expiresAt > Math.floor(Date.now() / 1000));
 
   const payload = verifyToken(token);
   assert.equal(payload.sid, 'session-d1');
   assert.equal(payload.sub, sub);
+  assert.deepEqual(payload.entitlements, ['reader']);
   assert.equal(verifyToken(`${token}x`), null);
 });
 

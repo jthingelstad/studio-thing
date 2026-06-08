@@ -74,13 +74,6 @@ Parameters:
     Default: 30
     MinValue: 1
     Description: Maximum auth attempts per client identity per hour.
-  ThingyMagicLinkAuthEnabled:
-    Type: String
-    Default: "false"
-    AllowedValues:
-      - "true"
-      - "false"
-    Description: Enable email magic-link login for Thingy.
   FastmailJmapToken:
     Type: String
     NoEcho: true
@@ -206,7 +199,6 @@ Resources:
           DISCORD_BRIDGE_SECRET: !Ref DiscordBridgeSecret
           LOG_LEVEL: !Ref LogLevel
           AUTH_RATE_LIMIT_MAX: !Ref AuthRateLimitMax
-          THINGY_MAGIC_LINK_AUTH_ENABLED: !Ref ThingyMagicLinkAuthEnabled
           FASTMAIL_JMAP_TOKEN: !Ref FastmailJmapToken
           THINGY_MAGIC_LINK_FROM_EMAIL: !Ref ThingyMagicLinkFromEmail
           THINGY_MAGIC_LINK_BASE_URL: !Ref ThingyMagicLinkBaseUrl
@@ -278,6 +270,35 @@ Resources:
         - Key: project
           Value: Thingy
 
+  LibrarianDispatchFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - arm64
+      Code:
+        S3Bucket: !Ref CodeBucket
+        S3Key: !Ref CodeKey
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref LibrarianTable
+          CORPUS_BUCKET: !Ref CorpusBucket
+          CORPUS_KEY: !Ref CorpusKey
+          BLOG_CORPUS_KEY: !Ref BlogCorpusKey
+          PODCAST_CORPUS_KEY: !Ref PodcastCorpusKey
+          LOG_LEVEL: !Ref LogLevel
+          BEDROCK_AGENT_MODEL: us.anthropic.claude-sonnet-4-6
+          FASTMAIL_JMAP_TOKEN: !Ref FastmailJmapToken
+          THINGY_MAGIC_LINK_FROM_EMAIL: !Ref ThingyMagicLinkFromEmail
+      Handler: dispatch/handler.handler
+      MemorySize: 2048
+      ReservedConcurrentExecutions: 1
+      Role: !GetAtt LibrarianFunctionRole.Arn
+      Runtime: nodejs20.x
+      Timeout: 300
+      Tags:
+        - Key: project
+          Value: Thingy
+
   LibrarianEvalEventSource:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
@@ -287,6 +308,19 @@ Resources:
       BatchSize: 25
       MaximumBatchingWindowInSeconds: 30
       Enabled: true
+
+  LibrarianDispatchEventSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt LibrarianTable.StreamArn
+      FunctionName: !Ref LibrarianDispatchFunction
+      StartingPosition: LATEST
+      BatchSize: 5
+      MaximumBatchingWindowInSeconds: 10
+      Enabled: true
+      FilterCriteria:
+        Filters:
+          - Pattern: '{"dynamodb":{"NewImage":{"item_type":{"S":["dispatch"]},"status":{"S":["queued"]}}}}'
 
   LibrarianStreamFunctionUrl:
     Type: AWS::Lambda::Url
@@ -356,6 +390,13 @@ Resources:
     Properties:
       ApiId: !Ref LibrarianApi
       RouteKey: POST /conversations
+      Target: !Sub integrations/${LibrarianIntegration}
+
+  DispatchRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref LibrarianApi
+      RouteKey: POST /dispatch
       Target: !Sub integrations/${LibrarianIntegration}
 
   HealthRoute:

@@ -92,7 +92,6 @@ These are set at deploy time from `.env`, written into the Lambda environment by
 | `SESSION_SECRET` | both | HMAC secret for session JWTs |
 | `DISCORD_BRIDGE_SECRET` | auth + stream | Bridge-secret auth for operator conversation reads + `/retrieve` |
 | `DISCORD_CONVERSATION_WEBHOOK_URL` | eval | Discord incoming webhook for posting reviewed conversation cards to `#chatter` |
-| `THINGY_MAGIC_LINK_AUTH_ENABLED` | auth | `true` makes `/auth` send email magic links instead of directly minting a session on subscriber validation |
 | `FASTMAIL_JMAP_TOKEN` | auth | Fastmail JMAP bearer token for sending magic links; aliases `THINGY_FASTMAIL_JMAP_TOKEN` / `THINGY_JMAP_TOKEN` also work locally |
 | `THINGY_MAGIC_LINK_FROM_EMAIL` | auth | Magic-link From address, default `thingy@thingelstad.com` |
 | `THINGY_MAGIC_LINK_BASE_URL` | auth | Public URL used when building `?login_token=` links, default `https://thingy.thingelstad.com/` |
@@ -113,7 +112,8 @@ These are set at deploy time from `.env`, written into the Lambda environment by
 
 - **Prompts live in `prompts/`** as `.md` files. `loadToolSpecs()` reads them. Edits need a redeploy.
 - **All structured logging via `logEvent(level, message, fields)`** — JSON output, CloudWatch-Insights-readable.
-- **Session tokens are HMAC-signed** (not encrypted). The `sub` claim is the SHA256 hash of the subscriber email (`emailHash()`). Discord bridge subs are prefixed `discord:` so they're trivially distinguishable.
+- **Magic-link auth is mandatory.** Public `/auth` always sends a Fastmail/JMAP magic link before minting an email session; there is no direct session fallback after subscriber validation.
+- **Session tokens are HMAC-signed** (not encrypted). The `sub` claim is the SHA256 hash of the subscriber email (`emailHash()`). Discord bridge subs are prefixed `discord:` so they're trivially distinguishable. Reader sessions last ten days, and a still-valid session can be refreshed by `/auth` `action=refresh_session`.
 - **Privacy guarding** lives in `runtime.mjs#privacyGuardAnswer`. Don't bypass; readers ask questions that leak their own PII and we don't echo it.
 - **Conversation modes are entitlement-gated.** `thingy` is for all readers, `research_guide` requires `supporting_member`, `thought_partner` requires `owner`, and `trusted_circle` requires `trusted_circle`.
 - **Citations use `#NNN` for Weekly Thing sources.** Blog and podcast sources should be cited by title/permalink because they do not have issue numbers.

@@ -83,10 +83,6 @@ def require_env(name: str) -> str:
     return value
 
 
-def bool_parameter(value: str) -> str:
-    return "true" if str(value or "").strip().lower() in {"1", "true", "yes", "on"} else "false"
-
-
 def run(args: list[str], cwd: Path = REPO) -> None:
     subprocess.run(args, cwd=cwd, check=True)
 
@@ -232,7 +228,6 @@ def deploy_stack(
     discord_bridge_secret: str | None,
     discord_conversation_webhook_url: str | None,
     fastmail_jmap_token: str | None,
-    thingy_magic_link_auth_enabled: str,
     thingy_magic_link_from_email: str,
     thingy_magic_link_base_url: str,
     log_level: str,
@@ -314,7 +309,6 @@ def deploy_stack(
         fastmail_parameter,
         {"ParameterKey": "LogLevel", "ParameterValue": log_level},
         {"ParameterKey": "AuthRateLimitMax", "ParameterValue": auth_rate_limit_max},
-        {"ParameterKey": "ThingyMagicLinkAuthEnabled", "ParameterValue": thingy_magic_link_auth_enabled},
         {"ParameterKey": "ThingyMagicLinkFromEmail", "ParameterValue": thingy_magic_link_from_email},
         {"ParameterKey": "ThingyMagicLinkBaseUrl", "ParameterValue": thingy_magic_link_base_url},
     ]
@@ -463,7 +457,6 @@ def main() -> int:
     parser.add_argument("--cloudformation-role-arn", default=os.environ.get("LIBRARIAN_CLOUDFORMATION_ROLE_ARN"))
     parser.add_argument("--log-level", default=os.environ.get("LIBRARIAN_LOG_LEVEL", "INFO"))
     parser.add_argument("--auth-rate-limit-max", default=os.environ.get("LIBRARIAN_AUTH_RATE_LIMIT_MAX", "30"))
-    parser.add_argument("--thingy-magic-link-auth-enabled", default=os.environ.get("THINGY_MAGIC_LINK_AUTH_ENABLED", "false"))
     parser.add_argument("--thingy-magic-link-from-email", default=os.environ.get("THINGY_MAGIC_LINK_FROM_EMAIL", "thingy@thingelstad.com"))
     parser.add_argument("--thingy-magic-link-base-url", default=os.environ.get("THINGY_MAGIC_LINK_BASE_URL", "https://thingy.thingelstad.com/"))
     parser.add_argument("--skip-corpus-upload", action="store_true")
@@ -517,7 +510,6 @@ def main() -> int:
         discord_bridge_secret=discord_bridge_secret,
         discord_conversation_webhook_url=discord_conversation_webhook_url,
         fastmail_jmap_token=fastmail_jmap_token,
-        thingy_magic_link_auth_enabled=bool_parameter(args.thingy_magic_link_auth_enabled),
         thingy_magic_link_from_email=args.thingy_magic_link_from_email,
         thingy_magic_link_base_url=args.thingy_magic_link_base_url,
         log_level=args.log_level.upper(),

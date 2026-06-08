@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { normalizeHeaders } from './http.mjs';
 
-const SESSION_TTL_SECONDS = 60 * 60 * 12;
+const SESSION_TTL_SECONDS = 60 * 60 * 24 * 10;
 
 function b64url(value) {
   return Buffer.from(value).toString('base64url');
@@ -49,15 +49,16 @@ export function createSessionToken(email, sessionId = crypto.randomBytes(18).toS
 // Mint a session token for a non-email subject — used by the Discord
 // bridge, which identifies users by Discord user id rather than email.
 // `sub` should be a stable, namespaced string like "discord:<hash>".
-export function createSessionTokenForSub(sub, sessionId = crypto.randomBytes(18).toString('base64url')) {
+export function createSessionTokenForSub(sub, sessionId = crypto.randomBytes(18).toString('base64url'), claims = {}) {
   if (!sub || typeof sub !== 'string') {
     throw new Error('createSessionTokenForSub: sub must be a non-empty string');
   }
   const expiresAt = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
+  const safeClaims = claims && typeof claims === 'object' && !Array.isArray(claims) ? claims : {};
   return {
     sessionId,
     expiresAt,
-    token: signPayload({ sid: sessionId, sub, exp: expiresAt })
+    token: signPayload({ ...safeClaims, sid: sessionId, sub, exp: expiresAt })
   };
 }
 

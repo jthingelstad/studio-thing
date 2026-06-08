@@ -35,6 +35,12 @@ import {
   loadUserConversationSummaries,
   renameUserConversation
 } from '../shared/conversation-store.mjs';
+import {
+  createQueuedDispatch,
+  dispatchAvailability,
+  getUserDispatch,
+  listUserDispatches
+} from '../shared/dispatch-store.mjs';
 
 const AUTH_RATE_LIMIT_MAX = 30;
 const MAGIC_LINK_RATE_LIMIT_MAX = 6;
@@ -61,6 +67,20 @@ function normalizeSource(value) {
   return ALLOWED_SOURCES.has(raw) ? raw : 'site';
 }
 
+function magicLinkBaseWithReturnPath(returnPath = '') {
+  const raw = String(returnPath || '').trim();
+  if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return undefined;
+  try {
+    const base = new URL(process.env.THINGY_MAGIC_LINK_BASE_URL || 'https://thingy.thingelstad.com/');
+    base.pathname = raw.slice(0, 160);
+    base.search = '';
+    base.hash = '';
+    return base.toString();
+  } catch {
+    return undefined;
+  }
+}
+
 function clientIdentityHash(event) {
   return stableHash(`${clientSourceIp(event) || 'unknown'}\0${userAgent(event) || ''}`);
 }
@@ -71,14 +91,6 @@ function dynamoString(value) {
 
 function dynamoNumber(value) {
   return { N: String(Number(value || 0)) };
-}
-
-function truthy(value) {
-  return ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
-}
-
-function magicLinkAuthEnabled() {
-  return truthy(process.env.THINGY_MAGIC_LINK_AUTH_ENABLED);
 }
 
 async function recordSession(sessionId, email, expiresAt) {
@@ -97,6 +109,26 @@ async function recordSession(sessionId, email, expiresAt) {
   }));
   logEvent('info', 'session_recorded', {
     email_hash: emailHash(email),
+    duration_ms: Math.round(performance.now() - start)
+  });
+}
+
+async function recordSessionForSub(sessionId, sub, expiresAt) {
+  const tableName = process.env.TABLE_NAME;
+  if (!tableName) return;
+  const start = performance.now();
+  await dynamodb.send(new PutItemCommand({
+    TableName: tableName,
+    Item: {
+      pk: dynamoString(`session#${sessionId}`),
+      sk: dynamoString('session'),
+      email_hash: dynamoString(String(sub || '')),
+      expires_at: dynamoNumber(expiresAt),
+      ttl: dynamoNumber(expiresAt)
+    }
+  }));
+  logEvent('info', 'session_refreshed_recorded', {
+    subscriber_hash: sub,
     duration_ms: Math.round(performance.now() - start)
   });
 }
@@ -179,6 +211,35 @@ function entitlementsForSessionPayload(payload) {
   return Array.from(entitlements);
 }
 
+async function refreshSession(event, body, start) {
+  const bearer = extractBearer(event, body);
+  const payload = verifyToken(bearer);
+  if (!payload?.sub) {
+    logEvent('info', 'auth_refresh_rejected');
+    return jsonResponse(401, { error: 'Sign in again to continue.' }, event);
+  }
+  const entitlements = entitlementsForSessionPayload(payload);
+  const modes = availableConversationModes(entitlements);
+  const { sessionId, expiresAt, token } = createSessionTokenForSub(payload.sub, undefined, { entitlements });
+  await recordSessionForSub(sessionId, payload.sub, expiresAt);
+  logEvent('info', 'auth_refreshed', {
+    subscriber_hash: payload.sub,
+    entitlements,
+    duration_ms: Math.round(performance.now() - start)
+  });
+  return jsonResponse(200, {
+    status: 'refreshed',
+    token,
+    expires_at: expiresAt,
+    entitlements,
+    modes,
+    profile: {
+      entitlements,
+      modes
+    }
+  }, event);
+}
+
 async function storeMagicLink({ token, email, source, event, subscriberStatusValue, nowSeconds, expiresAt }) {
   const tableName = process.env.TABLE_NAME;
   if (!tableName) throw new Error('TABLE_NAME is required');
@@ -200,7 +261,7 @@ async function storeMagicLink({ token, email, source, event, subscriberStatusVal
   }));
 }
 
-async function sendLoginMagicLink({ email, subscriber, source, event, start }) {
+async function sendLoginMagicLink({ email, subscriber, source, event, start, returnPath = '' }) {
   const hashedEmail = emailHash(email);
   const magicLimit = Number(process.env.THINGY_MAGIC_LINK_RATE_LIMIT_MAX || MAGIC_LINK_RATE_LIMIT_MAX);
   if (!(await checkRateLimit(`auth#magic:${hashedEmail}`, magicLimit))) {
@@ -211,7 +272,7 @@ async function sendLoginMagicLink({ email, subscriber, source, event, start }) {
   const ttlSeconds = magicLinkTtlSeconds();
   const expiresAt = nowSeconds + ttlSeconds;
   const token = createMagicToken();
-  const link = buildMagicLink(token);
+  const link = buildMagicLink(token, magicLinkBaseWithReturnPath(returnPath));
   const status = subscriberStatus(subscriber);
   let memory = null;
   try {
@@ -676,6 +737,237 @@ async function handleUserConversations(event, body, start) {
   return jsonResponse(400, { error: 'Unsupported conversation action.' }, event);
 }
 
+function dispatchAuth(event, body) {
+  const payload = verifyToken(extractBearer(event, body));
+  return payload || null;
+}
+
+function normalizeDispatchText(value, max = 1400) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+function dispatchProfile(payload) {
+  const entitlements = entitlementsForSessionPayload(payload);
+  const owner = entitlements.includes('owner') || isOwnerSubscriberHash(payload?.sub);
+  return {
+    subscriberHash: String(payload?.sub || ''),
+    entitlements,
+    supportingMember: entitlements.includes('supporting_member'),
+    owner
+  };
+}
+
+async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '' }) {
+  const response = await bedrock.send(new ConverseCommand({
+    modelId: process.env.BEDROCK_DISPATCH_CLARIFY_MODEL || agentModel(),
+    system: [{
+      text: [
+        'You are Thingy, Jamie Thingelstad\'s archive sidekick.',
+        'A reader is shaping a one-off Thingy Dispatch from Jamie\'s published archive.',
+        'Ask at most one useful clarification question before expensive generation.',
+        'If the request is already specific enough, do not ask a question.',
+        'Return only compact JSON: {"needs_clarification":true|false,"question":"...","direction":"confirmed generation direction"}'
+      ].join('\n')
+    }],
+    messages: [{
+      role: 'user',
+      content: [{
+        text: [
+          `Reader prompt: ${prompt}`,
+          priorQuestion ? `Prior clarification question: ${priorQuestion}` : '',
+          priorAnswer ? `Reader answer: ${priorAnswer}` : ''
+        ].filter(Boolean).join('\n')
+      }]
+    }],
+    inferenceConfig: {
+      maxTokens: 420,
+      temperature: 0.2
+    }
+  }));
+  const text = bedrockMessageText(response.output?.message || {});
+  const raw = text.match(/\{[\s\S]*\}/)?.[0] || text;
+  let parsed = {};
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    parsed = {};
+  }
+  const question = normalizeDispatchText(parsed.question, 260);
+  const direction = normalizeDispatchText(parsed.direction || prompt, 1000);
+  return {
+    needs_clarification: Boolean(parsed.needs_clarification && question),
+    question,
+    direction: direction || prompt
+  };
+}
+
+async function handleDispatch(event, body, start) {
+  const payload = dispatchAuth(event, body);
+  const profile = payload ? dispatchProfile(payload) : null;
+  if (!profile?.subscriberHash) {
+    return jsonResponse(401, { error: 'Please sign in to use Dispatch.' }, event);
+  }
+  const tableName = process.env.TABLE_NAME;
+  if (!tableName) return jsonResponse(500, { error: 'Dispatch is unavailable right now.' }, event);
+
+  const action = String(body.action || 'list').trim().toLowerCase();
+  try {
+    if (action === 'clarify') {
+      const prompt = normalizeDispatchText(body.prompt || body.topic, 1200);
+      if (prompt.length < 8) return jsonResponse(400, { error: 'Dispatch needs a topic or question.' }, event);
+      const clarification = await clarifyDispatch({
+        prompt,
+        priorQuestion: body.clarification_question,
+        priorAnswer: body.clarification_answer
+      });
+      logEvent('info', 'dispatch_clarified', {
+        subscriber_hash: profile.subscriberHash,
+        needs_clarification: clarification.needs_clarification,
+        duration_ms: Math.round(performance.now() - start)
+      });
+      return jsonResponse(200, {
+        ...clarification,
+        entitlements: profile.entitlements,
+        supporting_member: profile.supportingMember,
+        owner: profile.owner
+      }, event);
+    }
+
+    if (action === 'list') {
+      const dispatches = await listUserDispatches({
+        dynamodb,
+        tableName,
+        subscriberHash: profile.subscriberHash,
+        limit: body.limit || 12
+      });
+      const availability = await dispatchAvailability({
+        dynamodb,
+        tableName,
+        subscriberHash: profile.subscriberHash,
+        owner: profile.owner
+      });
+      return jsonResponse(200, {
+        dispatches: dispatches.map((row) => ({
+          id: row.id,
+          dispatch_id: row.dispatch_id,
+          status: row.status,
+          topic: row.topic,
+          direction: row.direction,
+          subject: row.subject,
+          title: row.title,
+          preview: row.preview,
+          error: row.error,
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+          queued_at: row.queued_at,
+          started_at: row.started_at,
+          sent_at: row.sent_at,
+          failed_at: row.failed_at,
+          source_count: row.source_count
+        })),
+        availability,
+        entitlements: profile.entitlements,
+        supporting_member: profile.supportingMember,
+        owner: profile.owner
+      }, event);
+    }
+
+    if (action === 'status') {
+      const dispatch = await getUserDispatch({
+        dynamodb,
+        tableName,
+        subscriberHash: profile.subscriberHash,
+        dispatchId: body.dispatch_id || body.id
+      });
+      if (!dispatch) return jsonResponse(404, { error: 'Dispatch not found.' }, event);
+      return jsonResponse(200, {
+        dispatch: {
+          id: dispatch.id,
+          dispatch_id: dispatch.dispatch_id,
+          status: dispatch.status,
+          topic: dispatch.topic,
+          direction: dispatch.direction,
+          subject: dispatch.subject,
+          title: dispatch.title,
+          preview: dispatch.preview,
+          error: dispatch.error,
+          created_at: dispatch.created_at,
+          updated_at: dispatch.updated_at,
+          queued_at: dispatch.queued_at,
+          started_at: dispatch.started_at,
+          sent_at: dispatch.sent_at,
+          failed_at: dispatch.failed_at,
+          source_count: dispatch.source_count
+        }
+      }, event);
+    }
+
+    if (action === 'create') {
+      if (!profile.supportingMember && !profile.owner) {
+        return jsonResponse(403, {
+          error: 'Dispatch is available to Weekly Thing Supporting Members.',
+          status: 'supporting_member_required',
+          message: 'You can shape the Dispatch here. Sending it requires a Supporting Membership.'
+        }, event);
+      }
+      const prompt = normalizeDispatchText(body.prompt || body.topic, 1200);
+      const direction = normalizeDispatchText(body.direction || prompt, 1600);
+      const toEmail = normalizeEmail(body.email || body.to_email);
+      if (!prompt || !direction) return jsonResponse(400, { error: 'Dispatch needs a confirmed direction.' }, event);
+      if (!EMAIL_RE.test(toEmail) || emailHash(toEmail) !== profile.subscriberHash) {
+        return jsonResponse(403, { error: 'Dispatch can only be sent to your signed-in email address.' }, event);
+      }
+      const availability = await dispatchAvailability({
+        dynamodb,
+        tableName,
+        subscriberHash: profile.subscriberHash,
+        owner: profile.owner
+      });
+      if (!availability.allowed) {
+        return jsonResponse(429, { error: availability.message || 'Dispatch is rate limited.', availability }, event);
+      }
+      const dispatch = await createQueuedDispatch({
+        dynamodb,
+        tableName,
+        subscriberHash: profile.subscriberHash,
+        emailHash: profile.subscriberHash,
+        toEmail,
+        topic: body.topic || prompt,
+        prompt,
+        direction,
+        clarificationQuestion: body.clarification_question,
+        clarificationAnswer: body.clarification_answer
+      });
+      logEvent('info', 'dispatch_queued', {
+        subscriber_hash: profile.subscriberHash,
+        dispatch_id: dispatch.id,
+        owner: profile.owner,
+        duration_ms: Math.round(performance.now() - start)
+      });
+      return jsonResponse(202, {
+        dispatch: {
+          id: dispatch.id,
+          dispatch_id: dispatch.dispatch_id,
+          status: dispatch.status,
+          topic: dispatch.topic,
+          direction: dispatch.direction,
+          created_at: dispatch.created_at,
+          queued_at: dispatch.queued_at
+        }
+      }, event);
+    }
+  } catch (error) {
+    logEvent('error', 'dispatch_action_failed', {
+      subscriber_hash: profile.subscriberHash,
+      action,
+      error_type: error.constructor?.name || 'Error'
+    });
+    return jsonResponse(502, { error: 'Dispatch is unavailable right now.' }, event);
+  }
+
+  return jsonResponse(400, { error: 'Unsupported Dispatch action.' }, event);
+}
+
 async function authHandler(event) {
   const start = performance.now();
   const body = parseBody(event);
@@ -695,6 +987,7 @@ async function authHandler(event) {
     'subscribe',
     'resend_confirmation',
     'complete_magic_link',
+    'refresh_session',
     'discord_bridge',
     'list_operator_conversations',
     'get_operator_conversation'
@@ -724,6 +1017,10 @@ async function authHandler(event) {
 
   if (action === 'complete_magic_link') {
     return await completeMagicLink(event, body, start);
+  }
+
+  if (action === 'refresh_session') {
+    return await refreshSession(event, body, start);
   }
 
   if (!EMAIL_RE.test(email)) {
@@ -786,15 +1083,12 @@ async function authHandler(event) {
     logEvent('info', 'auth_subscriber_inactive', { email_hash: hashedEmail });
     return jsonResponse(403, { status, error: 'That subscription is not active.' }, event);
   }
-  if (magicLinkAuthEnabled()) {
-    try {
-      return await sendLoginMagicLink({ email, subscriber, source, event, start });
-    } catch (error) {
-      logEvent('error', 'auth_magic_link_send_failed', errorFields(error, { email_hash: hashedEmail }));
-      return jsonResponse(502, { error: 'Could not send a sign-in email right now.' }, event);
-    }
+  try {
+    return await sendLoginMagicLink({ email, subscriber, source, event, start, returnPath: body.return_path });
+  } catch (error) {
+    logEvent('error', 'auth_magic_link_send_failed', errorFields(error, { email_hash: hashedEmail }));
+    return jsonResponse(502, { error: 'Could not send a sign-in email right now.' }, event);
   }
-  return authSuccessResponse(email, subscriber, source, event, start);
 }
 
 function healthHandler(event) {
@@ -820,6 +1114,8 @@ export async function handler(event, context) {
       response = await authHandler(event);
     } else if (method === 'POST' && path.endsWith('/conversations')) {
       response = await handleUserConversations(event, parseBody(event), start);
+    } else if (method === 'POST' && path.endsWith('/dispatch')) {
+      response = await handleDispatch(event, parseBody(event), start);
     } else {
       response = jsonResponse(404, { error: 'Not found.' }, event);
     }

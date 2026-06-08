@@ -92,7 +92,8 @@ Env vars are set in CloudFormation at deploy time from the repo-root `.env`. The
 - `DISCORD_CONVERSATION_WEBHOOK_URL` — optional incoming webhook used by the eval Lambda to post reviewed conversation cards to Discord
 - `BUTTONDOWN_API_KEY` — subscriber email verification
 - `FASTMAIL_JMAP_TOKEN` — optional Fastmail JMAP token used to send Thingy magic-link login emails from `thingy@thingelstad.com`
-- `THINGY_MAGIC_LINK_AUTH_ENABLED=true` — switches `/auth` from direct subscriber validation to possession-based email magic links
+
+Public Thingy email sessions always require possession-based magic-link authentication before minting a token. There is no direct-session deploy flag. Session tokens last ten days and can be refreshed while still valid.
 
 ## Conversation modes
 

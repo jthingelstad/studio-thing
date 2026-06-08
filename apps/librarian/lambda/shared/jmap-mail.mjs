@@ -206,6 +206,18 @@ export function magicLinkEmailSubject() {
 }
 
 export function buildMagicLinkJmapCalls({ context, fromEmail, fromName, to, text, html }) {
+  return buildJmapEmailCalls({
+    context,
+    fromEmail,
+    fromName,
+    to,
+    subject: magicLinkEmailSubject(),
+    text,
+    html
+  });
+}
+
+export function buildJmapEmailCalls({ context, fromEmail, fromName, to, subject, text, html }) {
   return [
     ['Email/set', {
       accountId: context.mailAccountId,
@@ -251,6 +263,35 @@ export function buildMagicLinkJmapCalls({ context, fromEmail, fromName, to, text
       }
     }, 'submit']
   ];
+}
+
+export async function sendJmapEmail({ to, subject, text, html, fromEmail = jmapFromEmail(), fromName = jmapFromName() }) {
+  const token = jmapToken();
+  if (!token) throw new Error('FASTMAIL_JMAP_TOKEN is not configured');
+  const session = await jmapSession();
+  const sendContext = await loadSendContext(session, fromEmail);
+  const response = await jmapCall(sendContext.apiUrl, buildJmapEmailCalls({
+    context: sendContext,
+    fromEmail,
+    fromName,
+    to,
+    subject,
+    text,
+    html
+  }));
+  const emailSet = requireMethodResponse(response.methodResponses, 'Email/set', 'email');
+  const submit = requireMethodResponse(response.methodResponses, 'EmailSubmission/set', 'submit');
+  if (emailSet.notCreated?.draft) {
+    throw new Error(`JMAP email create failed: ${emailSet.notCreated.draft.type || 'notCreated'}`);
+  }
+  if (submit.notCreated?.send) {
+    throw new Error(`JMAP submission failed: ${submit.notCreated.send.type || 'notCreated'}`);
+  }
+  if (!submit.created?.send?.id) throw new Error('JMAP submission did not create a send record');
+  return {
+    ok: true,
+    submission_id: submit.created.send.id
+  };
 }
 
 export async function sendMagicLinkEmail({ to, magicLink, expiresMinutes, context = {} }) {
