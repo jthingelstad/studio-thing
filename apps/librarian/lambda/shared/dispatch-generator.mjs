@@ -12,12 +12,37 @@ function cleanText(value, max = 1000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+function cleanBlockText(value, max = 5000) {
+  const text = Array.isArray(value) ? value.join('\n\n') : String(value || '');
+  return text
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+/g, ' ').trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+    .slice(0, max);
+}
+
+export function dispatchSubject(value, fallbackTitle = '') {
+  const raw = cleanText(value || fallbackTitle || 'From the archive', 110);
+  const withoutPrefix = raw.replace(/^(?:thingy\s+)?dispatch\s*[-:\u2014\u2013]\s*/i, '').trim();
+  const title = cleanText(withoutPrefix || fallbackTitle || 'From the archive', 88);
+  return `Thingy Dispatch - ${title}`;
+}
+
 function escapeHtml(value) {
   return String(value || '')
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;');
+}
+
+function requestedAtText(value) {
+  const date = value ? new Date(value) : new Date();
+  if (!Number.isFinite(date.getTime())) return String(value || '');
+  return `${date.toISOString().slice(0, 16).replace('T', ' ')}Z`;
 }
 
 function tokenize(value) {
@@ -197,7 +222,7 @@ function dispatchUserPrompt({ dispatch, sources }) {
     '',
     'Return JSON with this shape:',
     '{',
-    '  "subject": "email subject line, starts with Dispatch:",',
+    '  "subject": "email subject line, starts with Thingy Dispatch -",',
     '  "preview": "one sentence preview",',
     '  "title": "Dispatch title",',
     '  "intro": "2-3 paragraph Thingy-authored opening",',
@@ -213,7 +238,7 @@ export function dispatchTemplateTestPayload(dispatch, sources = []) {
   const refs = sources.slice(0, 6).map((source) => `[${source.id}]`).join(', ');
   const primaryRefs = refs || '[S1]';
   return normalizeDispatchPayload({
-    subject: `Dispatch Template Test: ${topic}`,
+    subject: `Thingy Dispatch - Template Test: ${topic}`,
     preview: 'A low-cost Thingy Dispatch template test using placeholder copy and real archive source metadata.',
     title: `Template Test: ${topic}`,
     intro: [
@@ -255,9 +280,24 @@ export function parseDispatchJson(text) {
 }
 
 function paragraphs(text) {
-  return String(text || '')
+  const parts = String(text || '')
     .split(/\n{2,}/)
-    .map((part) => cleanText(part, 3000))
+    .map((part) => cleanBlockText(part, 3000))
+    .filter(Boolean);
+  if (parts.length > 1) return parts;
+  return cleanBlockText(text, 3000)
+    .split(/(?<=[.!?])\s+(?=[A-Z])/)
+    .reduce((acc, sentence) => {
+      const trimmed = sentence.trim();
+      if (!trimmed) return acc;
+      const last = acc[acc.length - 1] || '';
+      if (!last || last.length > 520 || acc.length < 1) {
+        acc.push(trimmed);
+      } else {
+        acc[acc.length - 1] = `${last} ${trimmed}`.trim();
+      }
+      return acc;
+    }, [])
     .filter(Boolean);
 }
 
@@ -270,30 +310,43 @@ function inlineSourceRefs(text, sources = []) {
   return escapeHtml(text).replace(/\[(S\d+)\]/g, (match, id) => {
     const source = map[id];
     if (!source?.url) return `<strong>${id}</strong>`;
-    return `<a href="${escapeHtml(source.url)}" style="color:#315f54;text-decoration:underline;">${escapeHtml(source.label || id)}</a>`;
+    return `<a href="${escapeHtml(source.url)}" style="color:#1f6fd6;text-decoration:underline;">${escapeHtml(source.label || id)}</a>`;
   });
 }
 
 function normalizeDispatchPayload(payload = {}, fallbackTopic = '') {
   const sections = Array.isArray(payload.sections) ? payload.sections : [];
   return {
-    subject: cleanText(payload.subject || `Dispatch: ${fallbackTopic || 'From the archive'}`, 110),
+    subject: dispatchSubject(payload.subject, payload.title || fallbackTopic),
     preview: cleanText(payload.preview || '', 220),
     title: cleanText(payload.title || fallbackTopic || 'Dispatch from Thingy', 140),
-    intro: cleanText(payload.intro || '', 4000),
+    intro: cleanBlockText(payload.intro || '', 4000),
     sections: sections.slice(0, 7).map((section, index) => ({
       heading: cleanText(section?.heading || `Thread ${index + 1}`, 120),
-      body: cleanText(section?.body || '', 5000)
+      body: cleanBlockText(section?.body || '', 5000)
     })).filter((section) => section.body),
-    closing: cleanText(payload.closing || '', 2000),
+    closing: cleanBlockText(payload.closing || '', 2000),
     followups: Array.isArray(payload.followups)
       ? payload.followups.map((item) => cleanText(item, 160)).filter(Boolean).slice(0, 5)
       : []
   };
 }
 
-export function dispatchTextEmail(dispatchPayload, sources = []) {
+function dispatchRequestLine(context = {}) {
+  const email = cleanText(context.toEmail || context.to_email || '', 180);
+  const requestedAt = requestedAtText(context.requestedAt || context.requested_at || context.createdAt || context.created_at || '');
+  if (email && requestedAt) return `This Thingy Dispatch was requested by ${email} on ${requestedAt}.`;
+  if (email) return `This Thingy Dispatch was requested by ${email}.`;
+  if (requestedAt) return `This Thingy Dispatch was requested on ${requestedAt}.`;
+  return 'This Thingy Dispatch was requested by a Weekly Thing reader.';
+}
+
+export function dispatchTextEmail(dispatchPayload, sources = [], context = {}) {
   const lines = [
+    dispatchRequestLine(context),
+    '',
+    '---',
+    '',
     dispatchPayload.title,
     '',
     dispatchPayload.preview,
@@ -316,17 +369,17 @@ export function dispatchTextEmail(dispatchPayload, sources = []) {
   return lines.filter((line, index, all) => line || all[index - 1]).join('\n');
 }
 
-export function dispatchHtmlEmail(dispatchPayload, sources = []) {
+export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
   const sectionHtml = dispatchPayload.sections.map((section) => `
-    <tr><td style="padding:22px 30px 4px;">
-      <h2 style="font-family:Georgia,'Times New Roman',serif;font-size:24px;line-height:1.2;margin:0 0 10px;color:#17231f;">${escapeHtml(section.heading)}</h2>
-      ${paragraphs(section.body).map((p) => `<p style="font-size:16px;line-height:1.62;margin:0 0 14px;color:#24322e;">${inlineSourceRefs(p, sources)}</p>`).join('')}
+    <tr><td style="padding:24px 28px 4px;">
+      <h2 style="font-family:Charter,'Iowan Old Style','Source Serif 4',Georgia,serif;font-size:24px;line-height:1.25;margin:0 0 12px;color:#14181f;font-weight:500;border-top:1px solid #f0f3f8;padding-top:24px;">${escapeHtml(section.heading)}</h2>
+      ${paragraphs(section.body).map((p) => `<p style="font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;">${inlineSourceRefs(p, sources)}</p>`).join('')}
     </td></tr>`).join('');
 
   const followupHtml = dispatchPayload.followups.length ? `
-    <tr><td style="padding:18px 30px;background:#f3f6f0;border-top:1px solid #dfe8df;">
-      <h2 style="font-family:Georgia,'Times New Roman',serif;font-size:21px;line-height:1.2;margin:0 0 10px;color:#17231f;">Keep Pulling This Thread</h2>
-      <ul style="padding-left:20px;margin:0;color:#24322e;font-size:15px;line-height:1.55;">
+    <tr><td style="padding:22px 28px;background:#f7f9fc;border-top:1px solid #e6ebf2;">
+      <h2 style="font-family:Charter,'Iowan Old Style','Source Serif 4',Georgia,serif;font-size:21px;line-height:1.2;margin:0 0 10px;color:#14181f;font-weight:500;">Keep Pulling This Thread</h2>
+      <ul style="padding-left:22px;margin:0;color:#14181f;font-size:16px;line-height:1.55;">
         ${dispatchPayload.followups.map((item) => `<li style="margin:0 0 8px;">${escapeHtml(item)}</li>`).join('')}
       </ul>
     </td></tr>` : '';
@@ -334,33 +387,38 @@ export function dispatchHtmlEmail(dispatchPayload, sources = []) {
   const sourcesHtml = sources.map((source) => `
     <li style="margin:0 0 8px;">
       <strong>${escapeHtml(source.id)}</strong> ${escapeHtml(source.label)} ·
-      ${source.url ? `<a href="${escapeHtml(source.url)}" style="color:#315f54;">${escapeHtml(source.title)}</a>` : escapeHtml(source.title)}
-      ${source.publish_date ? `<span style="color:#7c8a84;">(${escapeHtml(source.publish_date)})</span>` : ''}
+      ${source.url ? `<a href="${escapeHtml(source.url)}" style="color:#1f6fd6;text-decoration:underline;">${escapeHtml(source.title)}</a>` : escapeHtml(source.title)}
+      ${source.publish_date ? `<span style="color:#7d8694;">(${escapeHtml(source.publish_date)})</span>` : ''}
     </li>`).join('');
+
+  const requestLine = dispatchRequestLine(context);
 
   return `<!doctype html>
 <html>
-  <body style="margin:0;background:#f5f3ee;color:#17231f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f3ee;margin:0;padding:28px 12px;">
+  <body style="margin:0;background:#fcfcfa;color:#14181f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fcfcfa;margin:0;padding:24px 12px;">
       <tr><td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;background:#fffdf8;border:1px solid #ded8ca;">
-          <tr><td style="padding:28px 30px 20px;border-bottom:4px solid #203c35;">
-            <div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:#587268;">Thingy Dispatch</div>
-            <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:36px;line-height:1.08;margin:10px 0 8px;color:#14211d;font-weight:700;">${escapeHtml(dispatchPayload.title)}</h1>
-            ${dispatchPayload.preview ? `<p style="font-size:17px;line-height:1.45;margin:0;color:#4a5b54;">${escapeHtml(dispatchPayload.preview)}</p>` : ''}
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;background:#fcfcfa;">
+          <tr><td style="padding:0 28px 18px;">
+            <p style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;line-height:1.45;letter-spacing:.04em;text-transform:uppercase;color:#7d8694;margin:0;padding:0 0 14px;border-bottom:1px solid #e6ebf2;">${escapeHtml(requestLine)}</p>
           </td></tr>
-          <tr><td style="padding:24px 30px 4px;">
-            ${paragraphs(dispatchPayload.intro).map((p) => `<p style="font-size:17px;line-height:1.65;margin:0 0 15px;color:#24322e;">${inlineSourceRefs(p, sources)}</p>`).join('')}
+          <tr><td style="padding:4px 28px 20px;border-bottom:1px solid #e6ebf2;">
+            <div style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:#1f6fd6;margin:0 0 10px;">Thingy Dispatch</div>
+            <h1 style="font-family:Charter,'Iowan Old Style','Source Serif 4',Georgia,serif;font-size:34px;line-height:1.1;margin:0 0 8px;color:#14181f;font-weight:500;">${escapeHtml(dispatchPayload.title)}</h1>
+            ${dispatchPayload.preview ? `<p style="font-size:17px;line-height:1.45;margin:0;color:#3d4654;">${escapeHtml(dispatchPayload.preview)}</p>` : ''}
+          </td></tr>
+          <tr><td style="padding:26px 28px 4px;">
+            ${paragraphs(dispatchPayload.intro).map((p) => `<p style="font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;">${inlineSourceRefs(p, sources)}</p>`).join('')}
           </td></tr>
           ${sectionHtml}
-          ${dispatchPayload.closing ? `<tr><td style="padding:18px 30px 26px;">${paragraphs(dispatchPayload.closing).map((p) => `<p style="font-size:16px;line-height:1.62;margin:0 0 14px;color:#24322e;">${inlineSourceRefs(p, sources)}</p>`).join('')}</td></tr>` : ''}
+          ${dispatchPayload.closing ? `<tr><td style="padding:18px 28px 28px;">${paragraphs(dispatchPayload.closing).map((p) => `<p style="font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;">${inlineSourceRefs(p, sources)}</p>`).join('')}</td></tr>` : ''}
           ${followupHtml}
-          <tr><td style="padding:22px 30px;border-top:1px solid #d8d4c9;">
-            <h2 style="font-family:Georgia,'Times New Roman',serif;font-size:20px;line-height:1.2;margin:0 0 10px;color:#17231f;">Sources</h2>
-            <ol style="padding-left:20px;margin:0;color:#24322e;font-size:14px;line-height:1.45;">${sourcesHtml}</ol>
+          <tr><td style="padding:24px 28px;border-top:1px solid #e6ebf2;">
+            <h2 style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;line-height:1.2;letter-spacing:.12em;text-transform:uppercase;margin:0 0 12px;color:#1f6fd6;font-weight:600;">Sources</h2>
+            <ol style="padding-left:22px;margin:0;color:#14181f;font-size:14px;line-height:1.45;">${sourcesHtml}</ol>
           </td></tr>
-          <tr><td style="padding:18px 30px;background:#203c35;color:#edf5f1;">
-            <p style="font-size:13px;line-height:1.5;margin:0;">Prepared by Thingy from Jamie Thingelstad's published archive. Written by Thingy, not Jamie.</p>
+          <tr><td style="padding:22px 28px;border-top:1px solid #e6ebf2;">
+            <p style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;line-height:1.5;letter-spacing:.04em;color:#7d8694;margin:0;">Prepared by Thingy from Jamie Thingelstad's published archive. Written by Thingy, not Jamie.</p>
           </td></tr>
         </table>
       </td></tr>
@@ -380,11 +438,15 @@ export async function generateDispatch(dispatch) {
 
   if (dispatch.template_test) {
     const payload = dispatchTemplateTestPayload(dispatch, sources);
-    const html = dispatchHtmlEmail(payload, sources);
-    const fallbackText = dispatchTextEmail(payload, sources);
+    const deliveryContext = {
+      toEmail: dispatch.to_email,
+      requestedAt: dispatch.queued_at || dispatch.created_at
+    };
+    const html = dispatchHtmlEmail(payload, sources, deliveryContext);
+    const fallbackText = dispatchTextEmail(payload, sources, deliveryContext);
     const sent = await sendJmapEmail({
       to: dispatch.to_email,
-      subject: payload.subject.startsWith('Dispatch') ? payload.subject : `Dispatch Template Test: ${payload.subject}`,
+      subject: payload.subject,
       text: fallbackText,
       html
     });
@@ -413,11 +475,15 @@ export async function generateDispatch(dispatch) {
   const parsed = parseDispatchJson(text);
   if (!parsed) throw new Error('Dispatch generation returned invalid JSON.');
   const payload = normalizeDispatchPayload(parsed, dispatch.topic || dispatch.prompt);
-  const html = dispatchHtmlEmail(payload, sources);
-  const fallbackText = dispatchTextEmail(payload, sources);
+  const deliveryContext = {
+    toEmail: dispatch.to_email,
+    requestedAt: dispatch.queued_at || dispatch.created_at
+  };
+  const html = dispatchHtmlEmail(payload, sources, deliveryContext);
+  const fallbackText = dispatchTextEmail(payload, sources, deliveryContext);
   const sent = await sendJmapEmail({
     to: dispatch.to_email,
-    subject: payload.subject.startsWith('Dispatch:') ? payload.subject : `Dispatch: ${payload.subject}`,
+    subject: payload.subject,
     text: fallbackText,
     html
   });

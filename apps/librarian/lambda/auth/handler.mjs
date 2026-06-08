@@ -753,6 +753,30 @@ function normalizeDispatchText(value, max = 1400) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+function isMeaningfulDispatchPrompt(value) {
+  const text = normalizeDispatchText(value, 1200);
+  if (text.length >= 8) return true;
+  return /[a-z0-9]{2,}/i.test(text);
+}
+
+function dispatchConversationLines(messages = []) {
+  if (!Array.isArray(messages)) return [];
+  return messages
+    .slice(-10)
+    .map((message) => {
+      const role = message?.role === 'user' ? 'Reader' : 'Thingy';
+      const text = normalizeDispatchText(message?.text, 500);
+      return text ? `${role}: ${text}` : '';
+    })
+    .filter(Boolean);
+}
+
+function terseDispatchSeed(value) {
+  const text = normalizeDispatchText(value, 1200);
+  if (/[?!.]/.test(text)) return false;
+  return text.length > 0 && text.length <= 28 && text.split(/\s+/).filter(Boolean).length <= 3;
+}
+
 function dispatchProfile(payload) {
   const entitlements = entitlementsForSessionPayload(payload);
   const owner = entitlements.includes('owner') || isOwnerSubscriberHash(payload?.sub);
@@ -764,17 +788,23 @@ function dispatchProfile(payload) {
   };
 }
 
-async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '' }) {
+async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '', messages = [] }) {
   const model = fastModel();
+  const transcript = dispatchConversationLines(messages);
   const response = await bedrock.send(new ConverseCommand({
     modelId: model,
     system: [{
       text: [
         'You are Thingy, Jamie Thingelstad\'s archive sidekick.',
         'A reader is shaping a one-off Thingy Dispatch from Jamie\'s published archive.',
+        'This is a conversational drafting surface, not a form validator.',
+        'Terse archive concepts like "RSS", "AI", "POSSE", or "IndieWeb" are valid Dispatch seeds.',
+        'For a terse or broad first seed, ask one concrete clarification that offers useful archive angles.',
+        'When the reader answers a prior clarification, fold that answer into the confirmed direction instead of asking the same thing again.',
+        'When the reader adjusts a ready direction, revise the direction and briefly acknowledge the change.',
         'Ask at most one useful clarification question before expensive generation.',
         'If the request is already specific enough, do not ask a question.',
-        'Return only compact JSON: {"needs_clarification":true|false,"question":"...","direction":"confirmed generation direction"}'
+        'Return only compact JSON: {"needs_clarification":true|false,"question":"...","direction":"confirmed generation direction","message":"Thingy response to show the reader"}'
       ].join('\n')
     }],
     messages: [{
@@ -783,7 +813,8 @@ async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '' })
         text: [
           `Reader prompt: ${prompt}`,
           priorQuestion ? `Prior clarification question: ${priorQuestion}` : '',
-          priorAnswer ? `Reader answer: ${priorAnswer}` : ''
+          priorAnswer ? `Reader answer: ${priorAnswer}` : '',
+          transcript.length ? `Recent Dispatch conversation:\n${transcript.join('\n')}` : ''
         ].filter(Boolean).join('\n')
       }]
     }],
@@ -802,10 +833,20 @@ async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '' })
   }
   const question = normalizeDispatchText(parsed.question, 260);
   const direction = normalizeDispatchText(parsed.direction || prompt, 1000);
+  const alreadyAnswered = Boolean(priorQuestion && priorAnswer);
+  const shouldClarifyTerseSeed = terseDispatchSeed(prompt) && !priorQuestion && !priorAnswer;
+  const needsClarification = Boolean((parsed.needs_clarification || shouldClarifyTerseSeed) && !alreadyAnswered);
+  const fallbackQuestion = question || `Good seed. What angle should this Dispatch take on ${normalizeDispatchText(prompt, 80)}?`;
+  const message = normalizeDispatchText(parsed.message, 700) || (
+    needsClarification
+      ? fallbackQuestion
+      : `I have enough to shape this Dispatch around: ${direction || prompt}`
+  );
   return {
-    needs_clarification: Boolean(parsed.needs_clarification && question),
-    question,
-    direction: direction || prompt
+    needs_clarification: needsClarification,
+    question: needsClarification ? fallbackQuestion : '',
+    direction: direction || prompt,
+    message
   };
 }
 
@@ -822,11 +863,12 @@ async function handleDispatch(event, body, start) {
   try {
     if (action === 'clarify') {
       const prompt = normalizeDispatchText(body.prompt || body.topic, 1200);
-      if (prompt.length < 8) return jsonResponse(400, { error: 'Dispatch needs a topic or question.' }, event);
+      if (!isMeaningfulDispatchPrompt(prompt)) return jsonResponse(400, { error: 'Dispatch needs a topic or question.' }, event);
       const clarification = await clarifyDispatch({
         prompt,
         priorQuestion: body.clarification_question,
-        priorAnswer: body.clarification_answer
+        priorAnswer: body.clarification_answer,
+        messages: body.messages
       });
       logEvent('info', 'dispatch_clarified', {
         subscriber_hash: profile.subscriberHash,

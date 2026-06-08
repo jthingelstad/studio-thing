@@ -3,6 +3,8 @@ import test from 'node:test';
 import { dispatchAvailabilityFromRows, dispatchForClient } from '../shared/dispatch-store.mjs';
 import {
   dispatchHtmlEmail,
+  dispatchSubject,
+  dispatchTextEmail,
   dispatchTemplateTestPayload,
   parseDispatchJson,
   selectDispatchSources
@@ -84,7 +86,7 @@ test('dispatch template test payload renders placeholder content with real sourc
   }, sources);
   const html = dispatchHtmlEmail(payload, sources);
 
-  assert.match(payload.subject, /^Dispatch Template Test:/);
+  assert.match(payload.subject, /^Thingy Dispatch - Template Test:/);
   assert.match(payload.intro, /intentionally does not contain generated long-form Dispatch writing/);
   assert.match(html, /Thingy Dispatch/);
   assert.match(html, /Template Test:/);
@@ -124,7 +126,7 @@ test('parseDispatchJson handles fenced JSON', () => {
   assert.deepEqual(parseDispatchJson('```json\n{"title":"Dispatch"}\n```'), { title: 'Dispatch' });
 });
 
-test('dispatchHtmlEmail renders Thingy authorship boundary and linked sources', () => {
+test('dispatchHtmlEmail renders request provenance authorship boundary and linked sources', () => {
   const html = dispatchHtmlEmail({
     title: 'Ownership Dispatch',
     preview: 'A short preview.',
@@ -139,8 +141,41 @@ test('dispatchHtmlEmail renders Thingy authorship boundary and linked sources', 
     url: 'https://weekly.example/10',
     source_kind: 'weekly_thing',
     publish_date: '2026-01-01'
-  }]);
+  }], {
+    toEmail: 'reader@example.com',
+    requestedAt: '2026-06-08T12:00:00.000Z'
+  });
   assert.match(html, /Thingy Dispatch/);
+  assert.match(html, /requested by reader@example\.com on 2026-06-08 12:00Z/);
   assert.match(html, /Written by Thingy, not Jamie/);
   assert.match(html, /https:\/\/weekly\.example\/10/);
+});
+
+test('dispatch email rendering preserves paragraph breaks and normalizes subject prefix', () => {
+  const payload = dispatchTemplateTestPayload({
+    prompt: 'Explore RSS',
+    direction: 'RSS and ownership'
+  }, []);
+  const html = dispatchHtmlEmail({
+    ...payload,
+    subject: 'A custom generated title',
+    intro: 'First paragraph has useful setup.\n\nSecond paragraph should not be eaten.',
+    sections: [{
+      heading: 'The thread',
+      body: 'Sentence one. Sentence two should not run into sentence three. Sentence three keeps breathing room.'
+    }]
+  }, [], {
+    toEmail: 'reader@example.com',
+    requestedAt: '2026-06-08T12:00:00.000Z'
+  });
+  const text = dispatchTextEmail(payload, [], {
+    toEmail: 'reader@example.com',
+    requestedAt: '2026-06-08T12:00:00.000Z'
+  });
+
+  assert.equal(payload.subject, 'Thingy Dispatch - Template Test: RSS and ownership');
+  assert.equal(dispatchSubject('Dispatch: Old shape title'), 'Thingy Dispatch - Old shape title');
+  assert.match(html, /First paragraph has useful setup\./);
+  assert.match(html, /Second paragraph should not be eaten\./);
+  assert.match(text, /This Thingy Dispatch was requested by reader@example\.com on 2026-06-08 12:00Z\./);
 });
