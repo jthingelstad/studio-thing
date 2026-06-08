@@ -41,6 +41,7 @@ export function dispatchFromItem(item = {}) {
     started_at: String(row.started_at || ''),
     sent_at: String(row.sent_at || ''),
     failed_at: String(row.failed_at || ''),
+    template_test: Boolean(row.template_test),
     model: String(row.model || ''),
     input_tokens: Number(row.input_tokens || 0),
     output_tokens: Number(row.output_tokens || 0),
@@ -73,6 +74,7 @@ function publicDispatch(row) {
     started_at: row.started_at,
     sent_at: row.sent_at,
     failed_at: row.failed_at,
+    template_test: Boolean(row.template_test),
     source_count: row.source_count
   };
 }
@@ -269,6 +271,7 @@ export async function createQueuedDispatch({
   direction,
   clarificationQuestion = '',
   clarificationAnswer = '',
+  templateTest = false,
   now = new Date().toISOString(),
   dispatchId = crypto.randomUUID()
 }) {
@@ -289,6 +292,7 @@ export async function createQueuedDispatch({
       direction: dynamoString(String(direction || prompt || topic || '').slice(0, 1800)),
       clarification_question: dynamoString(String(clarificationQuestion || '').slice(0, 800)),
       clarification_answer: dynamoString(String(clarificationAnswer || '').slice(0, 1200)),
+      template_test: { BOOL: Boolean(templateTest) },
       created_at: dynamoString(now),
       updated_at: dynamoString(now),
       queued_at: dynamoString(now)
@@ -309,7 +313,8 @@ export async function queueDraftDispatch({
   prompt,
   direction,
   clarificationQuestion = '',
-  clarificationAnswer = ''
+  clarificationAnswer = '',
+  templateTest = false
 }) {
   const id = validDispatchId(dispatchId);
   if (!id) throw new Error('dispatchId is invalid');
@@ -331,6 +336,7 @@ export async function queueDraftDispatch({
       '#direction = :direction',
       '#clarification_question = :clarification_question',
       '#clarification_answer = :clarification_answer',
+      '#template_test = :template_test',
       '#updated_at = :now',
       '#queued_at = :now'
     ].join(', '),
@@ -344,6 +350,7 @@ export async function queueDraftDispatch({
       '#direction': 'direction',
       '#clarification_question': 'clarification_question',
       '#clarification_answer': 'clarification_answer',
+      '#template_test': 'template_test',
       '#updated_at': 'updated_at',
       '#queued_at': 'queued_at'
     },
@@ -356,6 +363,7 @@ export async function queueDraftDispatch({
       ':direction': dynamoString(String(direction || prompt || topic || existing.direction || '').slice(0, 1800)),
       ':clarification_question': dynamoString(String(clarificationQuestion || existing.clarification_question || '').slice(0, 800)),
       ':clarification_answer': dynamoString(String(clarificationAnswer || existing.clarification_answer || '').slice(0, 1200)),
+      ':template_test': { BOOL: Boolean(templateTest) },
       ':now': dynamoString(now),
       ':draft': dynamoString('draft'),
       ':shaping': dynamoString('shaping'),

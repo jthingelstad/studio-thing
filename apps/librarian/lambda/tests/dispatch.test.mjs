@@ -3,6 +3,7 @@ import test from 'node:test';
 import { dispatchAvailabilityFromRows, dispatchForClient } from '../shared/dispatch-store.mjs';
 import {
   dispatchHtmlEmail,
+  dispatchTemplateTestPayload,
   parseDispatchJson,
   selectDispatchSources
 } from '../shared/dispatch-generator.mjs';
@@ -46,6 +47,7 @@ test('dispatchForClient includes draft state but omits generated content', () =>
     clarification_question: { S: 'What angle?' },
     clarification_answer: { S: 'The personal web.' },
     title: { S: 'Open web Dispatch' },
+    template_test: { BOOL: true },
     messages: {
       L: [{
         M: {
@@ -61,9 +63,32 @@ test('dispatchForClient includes draft state but omits generated content', () =>
   assert.equal(client.id, 'd1');
   assert.equal(client.status, 'ready');
   assert.equal(client.prompt, 'Explore the open web');
+  assert.equal(client.template_test, true);
   assert.equal(client.messages.length, 1);
   assert.equal(client.content_html, undefined);
   assert.equal(client.content_text, undefined);
+});
+
+test('dispatch template test payload renders placeholder content with real source links', () => {
+  const sources = [{
+    id: 'S1',
+    label: 'WT10',
+    title: 'Open web',
+    url: 'https://weekly.example/10',
+    source_kind: 'weekly_thing',
+    publish_date: '2026-01-01'
+  }];
+  const payload = dispatchTemplateTestPayload({
+    prompt: 'Explore RSS',
+    direction: 'Template-test the Dispatch email around RSS and ownership.'
+  }, sources);
+  const html = dispatchHtmlEmail(payload, sources);
+
+  assert.match(payload.subject, /^Dispatch Template Test:/);
+  assert.match(payload.intro, /intentionally does not contain generated long-form Dispatch writing/);
+  assert.match(html, /Thingy Dispatch/);
+  assert.match(html, /Template Test:/);
+  assert.match(html, /https:\/\/weekly\.example\/10/);
 });
 
 test('selectDispatchSources scores archive chunks and dedupes by url', () => {

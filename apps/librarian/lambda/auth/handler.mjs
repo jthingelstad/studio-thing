@@ -919,6 +919,10 @@ async function handleDispatch(event, body, start) {
       const prompt = normalizeDispatchText(body.prompt || body.topic, 1200);
       const direction = normalizeDispatchText(body.direction || prompt, 1600);
       const toEmail = normalizeEmail(body.email || body.to_email);
+      const templateTest = Boolean(body.template_test || body.templateTest || body.test_mode === 'template');
+      if (templateTest && !profile.owner) {
+        return jsonResponse(403, { error: 'Dispatch template tests are owner-only.' }, event);
+      }
       if (!prompt || !direction) return jsonResponse(400, { error: 'Dispatch needs a confirmed direction.' }, event);
       if (!EMAIL_RE.test(toEmail) || emailHash(toEmail) !== profile.subscriberHash) {
         return jsonResponse(403, { error: 'Dispatch can only be sent to your signed-in email address.' }, event);
@@ -945,7 +949,8 @@ async function handleDispatch(event, body, start) {
           prompt,
           direction,
           clarificationQuestion: body.clarification_question,
-          clarificationAnswer: body.clarification_answer
+          clarificationAnswer: body.clarification_answer,
+          templateTest
         })
         : await createQueuedDispatch({
           dynamodb,
@@ -957,11 +962,13 @@ async function handleDispatch(event, body, start) {
           prompt,
           direction,
           clarificationQuestion: body.clarification_question,
-          clarificationAnswer: body.clarification_answer
+          clarificationAnswer: body.clarification_answer,
+          templateTest
         });
       logEvent('info', 'dispatch_queued', {
         subscriber_hash: profile.subscriberHash,
         dispatch_id: dispatch.id,
+        template_test: templateTest,
         owner: profile.owner,
         duration_ms: Math.round(performance.now() - start)
       });

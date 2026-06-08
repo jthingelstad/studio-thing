@@ -119,12 +119,13 @@ def render_report(rows: list[dict[str, Any]], *, days: int) -> str:
     cards = []
     for row in rows:
         content = str(row.get("content_html") or row.get("content_text") or "")
+        test_badge = " · <span class='pill'>template test</span>" if row.get("template_test") else ""
         cards.append(f"""
         <article class="card status-{h(row.get('status'))}">
           <header>
             <span class="status">{h(row.get('status'))}</span>
             <h2>{h(row.get('title') or row.get('topic') or 'Untitled Dispatch')}</h2>
-            <p class="meta">reader·{h(str(row.get('subscriber_hash') or '')[:8])} · {h(local_time(row.get('created_at')))} · {h(row.get('source_count') or 0)} sources</p>
+            <p class="meta">reader·{h(str(row.get('subscriber_hash') or '')[:8])} · {h(local_time(row.get('created_at')))} · {h(row.get('source_count') or 0)} sources{test_badge}</p>
           </header>
           <dl>
             <dt>Prompt</dt><dd>{h(compact(row.get('prompt'), 800))}</dd>
@@ -201,4 +202,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

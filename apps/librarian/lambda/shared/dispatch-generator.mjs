@@ -139,6 +139,27 @@ export function selectDispatchSources(chunks = [], query = '', limit = MAX_SOURC
   return selected;
 }
 
+function fallbackDispatchSources(chunks = [], limit = 8) {
+  const selected = [];
+  const seenUrls = new Set();
+  for (const chunk of chunks.map((item) => normalizeChunk(item))) {
+    const key = chunk.url || `${chunk.source_kind}:${chunk.title}:${chunk.section}`;
+    if (!chunk.text || seenUrls.has(key)) continue;
+    seenUrls.add(key);
+    selected.push({
+      id: `S${selected.length + 1}`,
+      label: chunk.label,
+      title: chunk.title,
+      url: chunk.url,
+      source_kind: chunk.source_kind,
+      publish_date: chunk.publish_date,
+      excerpt: cleanText(chunk.text, 900)
+    });
+    if (selected.length >= limit) break;
+  }
+  return selected;
+}
+
 function sourcePacketText(sources = []) {
   return sources.map((source) => [
     `[${source.id}] ${source.label} · ${source.title}`,
@@ -185,6 +206,40 @@ function dispatchUserPrompt({ dispatch, sources }) {
     '  "followups": ["question to continue in Thingy"]',
     '}'
   ].filter(Boolean).join('\n');
+}
+
+export function dispatchTemplateTestPayload(dispatch, sources = []) {
+  const topic = cleanText(dispatch.direction || dispatch.prompt || dispatch.topic || 'Dispatch template test', 180);
+  const refs = sources.slice(0, 6).map((source) => `[${source.id}]`).join(', ');
+  const primaryRefs = refs || '[S1]';
+  return normalizeDispatchPayload({
+    subject: `Dispatch Template Test: ${topic}`,
+    preview: 'A low-cost Thingy Dispatch template test using placeholder copy and real archive source metadata.',
+    title: `Template Test: ${topic}`,
+    intro: [
+      'This is a Thingy Dispatch template test. It intentionally does not contain generated long-form Dispatch writing.',
+      `The goal is to exercise the real queue, delivery, storage, and email rendering path while using placeholder copy. Source references such as ${primaryRefs} are included so link rendering and source styling can be reviewed.`
+    ].join('\n\n'),
+    sections: [
+      {
+        heading: 'Opening Shape',
+        body: `This section stands in for the first substantive Dispatch thread. It should feel like ordinary email body copy, include enough length to exercise paragraph spacing, and carry source references like ${primaryRefs}.`
+      },
+      {
+        heading: 'Archive Thread',
+        body: `This section exists to test the visual rhythm of headings, body text, links, and citations. It is deliberately template copy, not generated analysis. Review margins, type size, source link color, and how repeated paragraphs feel in real email clients. ${primaryRefs}`
+      },
+      {
+        heading: 'Reader Takeaway',
+        body: 'This final section tests the closing cadence before the follow-up block. It should make it easy to spot whether the Dispatch template feels close enough to The Weekly Thing without pretending Jamie wrote or approved the content.'
+      }
+    ],
+    closing: 'Template test complete. This closing exists so the footer boundary and source block can be reviewed without invoking the advanced writing model.',
+    followups: [
+      'What should Thingy make easier to inspect in Dispatch test emails?',
+      'Does the Dispatch template feel too close to, or too far from, The Weekly Thing?'
+    ]
+  }, topic);
 }
 
 export function parseDispatchJson(text) {
@@ -317,8 +372,32 @@ export function dispatchHtmlEmail(dispatchPayload, sources = []) {
 export async function generateDispatch(dispatch) {
   const chunks = await loadDispatchCorpus();
   const query = [dispatch.prompt, dispatch.direction, dispatch.clarification_answer].filter(Boolean).join(' ');
-  const sources = selectDispatchSources(chunks, query, MAX_SOURCE_PACKETS);
+  let sources = selectDispatchSources(chunks, query, MAX_SOURCE_PACKETS);
+  if (dispatch.template_test && sources.length < 4) {
+    sources = fallbackDispatchSources(chunks, 8);
+  }
   if (sources.length < 4) throw new Error('Not enough archive sources matched this Dispatch topic.');
+
+  if (dispatch.template_test) {
+    const payload = dispatchTemplateTestPayload(dispatch, sources);
+    const html = dispatchHtmlEmail(payload, sources);
+    const fallbackText = dispatchTextEmail(payload, sources);
+    const sent = await sendJmapEmail({
+      to: dispatch.to_email,
+      subject: payload.subject.startsWith('Dispatch') ? payload.subject : `Dispatch Template Test: ${payload.subject}`,
+      text: fallbackText,
+      html
+    });
+    return {
+      ...payload,
+      text: fallbackText,
+      html,
+      model: 'template-test',
+      usage: { inputTokens: 0, outputTokens: 0 },
+      sources: sources.map(({ excerpt, ...source }) => source),
+      submission_id: sent.submission_id
+    };
+  }
 
   const model = advancedModel();
   const response = await bedrock.send(new ConverseCommand({
