@@ -5,6 +5,7 @@ import { sendJmapEmail } from './jmap-mail.mjs';
 
 const MAX_SOURCE_PACKETS = 18;
 const TOKEN_RE = /[a-z0-9][a-z0-9'-]{1,}/gi;
+const THINGY_URL = 'https://thingy.thingelstad.com/';
 
 let corpusCache = null;
 
@@ -341,9 +342,37 @@ function dispatchRequestLine(context = {}) {
   return 'This Thingy Dispatch was requested by a Weekly Thing reader.';
 }
 
+function dispatchRequestSummary(context = {}) {
+  return cleanBlockText(
+    context.requestSummary || context.request_summary || context.direction || context.prompt || context.topic || '',
+    520
+  );
+}
+
+function dispatchAttributionText() {
+  return `Prepared by Thingy (${THINGY_URL}) from Jamie Thingelstad's published archive. Written by Thingy, not Jamie.`;
+}
+
+function dispatchProvenanceLines(context = {}) {
+  const lines = [dispatchRequestLine(context)];
+  const summary = dispatchRequestSummary(context);
+  if (summary) lines.push(`Request: ${summary}`);
+  lines.push(dispatchAttributionText());
+  return lines;
+}
+
+function dispatchProvenanceHtml(context = {}) {
+  return dispatchProvenanceLines(context).map((line) => {
+    if (line.startsWith('Prepared by Thingy')) {
+      return `<p style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;line-height:1.5;letter-spacing:.02em;color:#7d8694;margin:8px 0 0;">Prepared by <a href="${THINGY_URL}" style="color:#1f6fd6;text-decoration:underline;">Thingy</a> from Jamie Thingelstad's published archive. Written by Thingy, not Jamie.</p>`;
+    }
+    return `<p style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;line-height:1.5;letter-spacing:.02em;color:#7d8694;margin:8px 0 0;">${escapeHtml(line)}</p>`;
+  }).join('');
+}
+
 export function dispatchTextEmail(dispatchPayload, sources = [], context = {}) {
   const lines = [
-    dispatchRequestLine(context),
+    ...dispatchProvenanceLines(context),
     '',
     '---',
     '',
@@ -365,7 +394,7 @@ export function dispatchTextEmail(dispatchPayload, sources = [], context = {}) {
   }
   lines.push('Sources:');
   sources.forEach((source) => lines.push(`- [${source.id}] ${source.label} · ${source.title}${source.url ? ` — ${source.url}` : ''}`));
-  lines.push('', "Prepared by Thingy from Jamie Thingelstad's published archive. Written by Thingy, not Jamie.");
+  lines.push('', dispatchAttributionText());
   return lines.filter((line, index, all) => line || all[index - 1]).join('\n');
 }
 
@@ -391,8 +420,6 @@ export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
       ${source.publish_date ? `<span style="color:#7d8694;">(${escapeHtml(source.publish_date)})</span>` : ''}
     </li>`).join('');
 
-  const requestLine = dispatchRequestLine(context);
-
   return `<!doctype html>
 <html>
   <body style="margin:0;background:#fcfcfa;color:#14181f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
@@ -400,7 +427,7 @@ export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
       <tr><td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;background:#fcfcfa;">
           <tr><td style="padding:0 28px 18px;">
-            <p style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;line-height:1.45;letter-spacing:.04em;text-transform:uppercase;color:#7d8694;margin:0;padding:0 0 14px;border-bottom:1px solid #e6ebf2;">${escapeHtml(requestLine)}</p>
+            <div style="padding:0 0 14px;border-bottom:1px solid #e6ebf2;">${dispatchProvenanceHtml(context)}</div>
           </td></tr>
           <tr><td style="padding:4px 28px 20px;border-bottom:1px solid #e6ebf2;">
             <div style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:#1f6fd6;margin:0 0 10px;">Thingy Dispatch</div>
@@ -418,7 +445,7 @@ export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
             <ol style="padding-left:22px;margin:0;color:#14181f;font-size:14px;line-height:1.45;">${sourcesHtml}</ol>
           </td></tr>
           <tr><td style="padding:22px 28px;border-top:1px solid #e6ebf2;">
-            <p style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;line-height:1.5;letter-spacing:.04em;color:#7d8694;margin:0;">Prepared by Thingy from Jamie Thingelstad's published archive. Written by Thingy, not Jamie.</p>
+            <p style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;line-height:1.5;letter-spacing:.04em;color:#7d8694;margin:0;">Prepared by <a href="${THINGY_URL}" style="color:#1f6fd6;text-decoration:underline;">Thingy</a> from Jamie Thingelstad's published archive. Written by Thingy, not Jamie.</p>
           </td></tr>
         </table>
       </td></tr>
@@ -440,7 +467,8 @@ export async function generateDispatch(dispatch) {
     const payload = dispatchTemplateTestPayload(dispatch, sources);
     const deliveryContext = {
       toEmail: dispatch.to_email,
-      requestedAt: dispatch.queued_at || dispatch.created_at
+      requestedAt: dispatch.queued_at || dispatch.created_at,
+      requestSummary: dispatch.direction || dispatch.prompt || dispatch.topic
     };
     const html = dispatchHtmlEmail(payload, sources, deliveryContext);
     const fallbackText = dispatchTextEmail(payload, sources, deliveryContext);
@@ -477,7 +505,8 @@ export async function generateDispatch(dispatch) {
   const payload = normalizeDispatchPayload(parsed, dispatch.topic || dispatch.prompt);
   const deliveryContext = {
     toEmail: dispatch.to_email,
-    requestedAt: dispatch.queued_at || dispatch.created_at
+    requestedAt: dispatch.queued_at || dispatch.created_at,
+    requestSummary: dispatch.direction || dispatch.prompt || dispatch.topic
   };
   const html = dispatchHtmlEmail(payload, sources, deliveryContext);
   const fallbackText = dispatchTextEmail(payload, sources, deliveryContext);

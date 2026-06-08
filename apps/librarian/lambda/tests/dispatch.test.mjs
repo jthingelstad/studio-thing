@@ -143,10 +143,13 @@ test('dispatchHtmlEmail renders request provenance authorship boundary and linke
     publish_date: '2026-01-01'
   }], {
     toEmail: 'reader@example.com',
-    requestedAt: '2026-06-08T12:00:00.000Z'
+    requestedAt: '2026-06-08T12:00:00.000Z',
+    requestSummary: 'Explore ownership and the open web from the archive.'
   });
   assert.match(html, /Thingy Dispatch/);
   assert.match(html, /requested by reader@example\.com on 2026-06-08 12:00Z/);
+  assert.match(html, /Request: Explore ownership and the open web from the archive\./);
+  assert.match(html, /href="https:\/\/thingy\.thingelstad\.com\/"/);
   assert.match(html, /Written by Thingy, not Jamie/);
   assert.match(html, /https:\/\/weekly\.example\/10/);
 });
@@ -170,7 +173,8 @@ test('dispatch email rendering preserves paragraph breaks and normalizes subject
   });
   const text = dispatchTextEmail(payload, [], {
     toEmail: 'reader@example.com',
-    requestedAt: '2026-06-08T12:00:00.000Z'
+    requestedAt: '2026-06-08T12:00:00.000Z',
+    requestSummary: 'RSS and ownership'
   });
 
   assert.equal(payload.subject, 'Thingy Dispatch — Template Test: RSS and ownership');
@@ -178,4 +182,6 @@ test('dispatch email rendering preserves paragraph breaks and normalizes subject
   assert.match(html, /First paragraph has useful setup\./);
   assert.match(html, /Second paragraph should not be eaten\./);
   assert.match(text, /This Thingy Dispatch was requested by reader@example\.com on 2026-06-08 12:00Z\./);
+  assert.match(text, /Request: RSS and ownership/);
+  assert.match(text, /Prepared by Thingy \(https:\/\/thingy\.thingelstad\.com\/\)/);
 });
