@@ -777,6 +777,10 @@ function terseDispatchSeed(value) {
   return text.length > 0 && text.length <= 28 && text.split(/\s+/).filter(Boolean).length <= 3;
 }
 
+function readyMessageClaimsStarted(value) {
+  return /\b(?:generating now|generate now|drafting now|sending now|emailing now)\b/i.test(String(value || ''));
+}
+
 function dispatchProfile(payload) {
   const entitlements = entitlementsForSessionPayload(payload);
   const owner = entitlements.includes('owner') || isOwnerSubscriberHash(payload?.sub);
@@ -842,7 +846,7 @@ async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '', m
       ? fallbackQuestion
       : `I have enough to shape this Dispatch around: ${direction || prompt}`
   );
-  if (!needsClarification && message.includes('?')) {
+  if (!needsClarification && (message.includes('?') || readyMessageClaimsStarted(message))) {
     message = `I have enough to shape this Dispatch around: ${direction || prompt}`;
   }
   return {
