@@ -4,6 +4,7 @@ import { renderFaqAnswer, searchFaq } from '../shared/faq.mjs';
 import { buildMagicLink, createMagicToken, magicTokenHash, validMagicToken } from '../shared/magic-link.mjs';
 import { buildMagicLinkJmapCalls, magicLinkEmailHtml, magicLinkEmailText, requireMethodResponse } from '../shared/jmap-mail.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, verifyToken } from '../shared/session.mjs';
+import { magicLinkBaseWithReturnPath } from '../auth/handler.mjs';
 import {
   authProfile,
   memoryContextBlock,
@@ -248,6 +249,23 @@ test('magic link builder adds login_token without leaking extra state', () => {
   assert.equal(url.origin, 'https://thingy.thingelstad.com');
   assert.equal(url.searchParams.get('prompt'), 'hello');
   assert.equal(url.searchParams.get('login_token'), token);
+});
+
+test('magic link base lands on signin with the app return path preserved', () => {
+  const original = process.env.THINGY_MAGIC_LINK_BASE_URL;
+  process.env.THINGY_MAGIC_LINK_BASE_URL = 'https://thingy.example/';
+  try {
+    const token = createMagicToken();
+    const base = magicLinkBaseWithReturnPath('/dispatch/?from=https%3A%2F%2Fweekly.example%2Fissue');
+    const url = new URL(buildMagicLink(token, base));
+    assert.equal(url.origin, 'https://thingy.example');
+    assert.equal(url.pathname, '/signin/');
+    assert.equal(url.searchParams.get('return'), '/dispatch/?from=https%3A%2F%2Fweekly.example%2Fissue');
+    assert.equal(url.searchParams.get('login_token'), token);
+  } finally {
+    if (original === undefined) delete process.env.THINGY_MAGIC_LINK_BASE_URL;
+    else process.env.THINGY_MAGIC_LINK_BASE_URL = original;
+  }
 });
 
 test('magic link email text includes expiration and fallback URL', () => {

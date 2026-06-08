@@ -70,13 +70,16 @@ function normalizeSource(value) {
   return ALLOWED_SOURCES.has(raw) ? raw : 'site';
 }
 
-function magicLinkBaseWithReturnPath(returnPath = '') {
+export function magicLinkBaseWithReturnPath(returnPath = '') {
   const raw = String(returnPath || '').trim();
-  if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return undefined;
+  const safeReturnPath = raw && raw.startsWith('/') && !raw.startsWith('//')
+    ? raw.slice(0, 500)
+    : '/chat/';
   try {
     const base = new URL(process.env.THINGY_MAGIC_LINK_BASE_URL || 'https://thingy.thingelstad.com/');
-    base.pathname = raw.slice(0, 160);
+    base.pathname = '/signin/';
     base.search = '';
+    base.searchParams.set('return', safeReturnPath);
     base.hash = '';
     return base.toString();
   } catch {
