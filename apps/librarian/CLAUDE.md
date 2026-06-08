@@ -99,7 +99,7 @@ These are set at deploy time from `.env`, written into the Lambda environment by
 | `AUTH_RATE_LIMIT_MAX` | auth | Hourly cap per IP |
 | `THINGY_DEFAULT_MODEL` | all | `us.anthropic.claude-sonnet-4-6`; main chat/default persona work |
 | `THINGY_FAST_MODEL` | all | `us.anthropic.claude-haiku-4-5-20251001-v1:0`; small structured/background work |
-| `THINGY_ADVANCED_MODEL` | all | `us.anthropic.claude-sonnet-4-6`; high-synthesis work like Dispatch generation; currently same as default until Opus access is enabled |
+| `THINGY_ADVANCED_MODEL` | all | `us.anthropic.claude-opus-4-6-v1`; high-synthesis work like Dispatch generation |
 | `BEDROCK_EMBEDDING_MODEL` | stream | `cohere.embed-english-v3` |
 | `BEDROCK_RERANK_MODEL` | stream | `cohere.rerank-v3-5:0` |
 | `BEDROCK_RERANK_REGION` | stream | `us-west-2` (only region with the rerank model) |
@@ -108,7 +108,7 @@ These are set at deploy time from `.env`, written into the Lambda environment by
 
 - **Rerank lives in us-west-2 only.** The rest of the stack is us-east-1. `BedrockAgentRuntimeClient` is constructed with explicit `region: 'us-west-2'` override. Don't move it.
 - **Embedding model is Cohere v3** at 1024 dimensions. Bumping to v4 would invalidate the entire embedded corpus — re-embed cost is $1-2 + ~3 minutes. Plan for it; don't drift accidentally.
-- **Thingy models** use cross-region inference profiles. Default is Sonnet 4.6 for main chat/persona work, fast is Haiku 4.5 for structured/background work, and advanced currently points to Sonnet 4.6 for Dispatch generation until Opus access is enabled. The deploy smoke test checks all three before CloudFormation runs.
+- **Thingy models** use cross-region inference profiles. Default is Sonnet 4.6 for main chat/persona work, fast is Haiku 4.5 for structured/background work, and advanced is Opus 4.6 for Dispatch generation. The deploy smoke test checks all three before CloudFormation runs.
 
 ## Conventions
 
