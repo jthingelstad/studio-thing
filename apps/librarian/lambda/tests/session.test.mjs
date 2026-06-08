@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderFaqAnswer, searchFaq } from '../shared/faq.mjs';
 import { buildMagicLink, createMagicToken, magicTokenHash, validMagicToken } from '../shared/magic-link.mjs';
-import { buildMagicLinkJmapCalls, magicLinkEmailHtml, magicLinkEmailText, requireMethodResponse } from '../shared/jmap-mail.mjs';
+import { buildJmapEmailCalls, buildMagicLinkJmapCalls, magicLinkEmailHtml, magicLinkEmailText, requireMethodResponse } from '../shared/jmap-mail.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, verifyToken } from '../shared/session.mjs';
 import { magicLinkBaseWithReturnPath } from '../auth/handler.mjs';
 import {
@@ -336,6 +336,7 @@ test('JMAP magic link payload creates a draft and submits it through Sent', () =
   });
   assert.equal(emailSet.create.draft.bodyValues.text.value, 'hello');
   assert.equal(emailSet.create.draft.bodyValues.html.value, '<p>hello</p>');
+  assert.equal(emailSet.create.draft.subject, 'Thingy is ready for you');
 
   const submissionSet = calls[1][1];
   assert.equal(calls[1][0], 'EmailSubmission/set');
@@ -350,6 +351,26 @@ test('JMAP magic link payload creates a draft and submits it through Sent', () =
     'mailboxIds/drafts-1': null,
     'keywords/$draft': null
   });
+});
+
+test('JMAP generic email payload uses supplied subject', () => {
+  const calls = buildJmapEmailCalls({
+    context: {
+      mailAccountId: 'mail-account',
+      submissionAccountId: 'submission-account',
+      identityId: 'identity-1',
+      draftMailboxId: 'drafts-1',
+      sentMailboxId: 'sent-1'
+    },
+    fromEmail: 'thingy@example.com',
+    fromName: 'Thingy',
+    to: 'reader@example.com',
+    subject: 'Thingy Dispatch — The Output Is Not the Point',
+    text: 'dispatch text',
+    html: '<p>dispatch html</p>'
+  });
+
+  assert.equal(calls[0][1].create.draft.subject, 'Thingy Dispatch — The Output Is Not the Point');
 });
 
 test('buttondown subscriber status maps active and inactive states', () => {

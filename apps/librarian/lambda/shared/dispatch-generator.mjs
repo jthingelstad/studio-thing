@@ -239,9 +239,9 @@ export function dispatchTemplateTestPayload(dispatch, sources = []) {
   const refs = sources.slice(0, 6).map((source) => `[${source.id}]`).join(', ');
   const primaryRefs = refs || '[S1]';
   return normalizeDispatchPayload({
-    subject: `Thingy Dispatch — Template Test: ${topic}`,
+    subject: `Thingy Dispatch — ${topic}`,
     preview: 'A low-cost Thingy Dispatch template test using placeholder copy and real archive source metadata.',
-    title: `Template Test: ${topic}`,
+    title: topic,
     intro: [
       'This is a Thingy Dispatch template test. It intentionally does not contain generated long-form Dispatch writing.',
       `The goal is to exercise the real queue, delivery, storage, and email rendering path while using placeholder copy. Source references such as ${primaryRefs} are included so link rendering and source styling can be reviewed.`
@@ -315,12 +315,19 @@ function inlineSourceRefs(text, sources = []) {
   });
 }
 
+function inlineDispatchMarkup(text, sources = []) {
+  return inlineSourceRefs(text, sources)
+    .replace(/\*\*([^*\n][\s\S]*?[^*\n])\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*\n][^*\n]*?[^*\n])\*(?!\*)/g, '$1<em>$2</em>');
+}
+
 function normalizeDispatchPayload(payload = {}, fallbackTopic = '') {
   const sections = Array.isArray(payload.sections) ? payload.sections : [];
+  const title = cleanText(payload.title || fallbackTopic || 'Dispatch from Thingy', 140);
   return {
-    subject: dispatchSubject(payload.subject, payload.title || fallbackTopic),
+    subject: dispatchSubject(title || payload.subject, fallbackTopic),
     preview: cleanText(payload.preview || '', 220),
-    title: cleanText(payload.title || fallbackTopic || 'Dispatch from Thingy', 140),
+    title,
     intro: cleanBlockText(payload.intro || '', 4000),
     sections: sections.slice(0, 7).map((section, index) => ({
       heading: cleanText(section?.heading || `Thread ${index + 1}`, 120),
@@ -362,12 +369,13 @@ function dispatchProvenanceLines(context = {}) {
 }
 
 function dispatchProvenanceHtml(context = {}) {
-  return dispatchProvenanceLines(context).map((line) => {
-    if (line.startsWith('Prepared by Thingy')) {
-      return `<p style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;line-height:1.5;letter-spacing:.02em;color:#7d8694;margin:8px 0 0;">Prepared by <a href="${THINGY_URL}" style="color:#1f6fd6;text-decoration:underline;">Thingy</a> from Jamie Thingelstad's published archive. Written by Thingy, not Jamie.</p>`;
-    }
-    return `<p style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;line-height:1.5;letter-spacing:.02em;color:#7d8694;margin:8px 0 0;">${escapeHtml(line)}</p>`;
-  }).join('');
+  const request = dispatchRequestLine(context);
+  const summary = dispatchRequestSummary(context);
+  return [
+    `<p style="font-size:14px;line-height:1.45;color:#4a5565;margin:0 0 10px;"><strong style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#1f6fd6;margin:0 0 3px;">Requested</strong>${escapeHtml(request)}</p>`,
+    summary ? `<p style="font-size:14px;line-height:1.45;color:#4a5565;margin:0 0 10px;"><strong style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#1f6fd6;margin:0 0 3px;">Request</strong>${escapeHtml(summary)}</p>` : '',
+    `<p style="font-size:14px;line-height:1.45;color:#4a5565;margin:0;"><strong style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#1f6fd6;margin:0 0 3px;">Attribution</strong>Prepared by <a href="${THINGY_URL}" style="color:#1f6fd6;text-decoration:underline;">Thingy</a> from Jamie Thingelstad's published archive. Written by Thingy, not Jamie.</p>`
+  ].filter(Boolean).join('');
 }
 
 export function dispatchTextEmail(dispatchPayload, sources = [], context = {}) {
@@ -402,14 +410,14 @@ export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
   const sectionHtml = dispatchPayload.sections.map((section) => `
     <tr><td style="padding:24px 28px 4px;">
       <h2 style="font-family:Charter,'Iowan Old Style','Source Serif 4',Georgia,serif;font-size:24px;line-height:1.25;margin:0 0 12px;color:#14181f;font-weight:500;border-top:1px solid #f0f3f8;padding-top:24px;">${escapeHtml(section.heading)}</h2>
-      ${paragraphs(section.body).map((p) => `<p style="font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;">${inlineSourceRefs(p, sources)}</p>`).join('')}
+      ${paragraphs(section.body).map((p) => `<p style="font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;">${inlineDispatchMarkup(p, sources)}</p>`).join('')}
     </td></tr>`).join('');
 
   const followupHtml = dispatchPayload.followups.length ? `
     <tr><td style="padding:22px 28px;background:#f7f9fc;border-top:1px solid #e6ebf2;">
       <h2 style="font-family:Charter,'Iowan Old Style','Source Serif 4',Georgia,serif;font-size:21px;line-height:1.2;margin:0 0 10px;color:#14181f;font-weight:500;">Keep Pulling This Thread</h2>
       <ul style="padding-left:22px;margin:0;color:#14181f;font-size:16px;line-height:1.55;">
-        ${dispatchPayload.followups.map((item) => `<li style="margin:0 0 8px;">${escapeHtml(item)}</li>`).join('')}
+        ${dispatchPayload.followups.map((item) => `<li style="margin:0 0 8px;">${inlineDispatchMarkup(item, sources)}</li>`).join('')}
       </ul>
     </td></tr>` : '';
 
@@ -423,11 +431,12 @@ export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
   return `<!doctype html>
 <html>
   <body style="margin:0;background:#fcfcfa;color:#14181f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+    <div style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;color:transparent;line-height:1px;font-size:1px;">${escapeHtml(dispatchPayload.preview || dispatchPayload.title || 'Thingy Dispatch')}</div>
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fcfcfa;margin:0;padding:24px 12px;">
       <tr><td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;background:#fcfcfa;">
           <tr><td style="padding:0 28px 18px;">
-            <div style="padding:0 0 14px;border-bottom:1px solid #e6ebf2;">${dispatchProvenanceHtml(context)}</div>
+            <div style="padding:14px 16px;border:1px solid #e6ebf2;background:#f7f9fc;">${dispatchProvenanceHtml(context)}</div>
           </td></tr>
           <tr><td style="padding:4px 28px 20px;border-bottom:1px solid #e6ebf2;">
             <div style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:#1f6fd6;margin:0 0 10px;">Thingy Dispatch</div>
@@ -435,10 +444,10 @@ export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
             ${dispatchPayload.preview ? `<p style="font-size:17px;line-height:1.45;margin:0;color:#3d4654;">${escapeHtml(dispatchPayload.preview)}</p>` : ''}
           </td></tr>
           <tr><td style="padding:26px 28px 4px;">
-            ${paragraphs(dispatchPayload.intro).map((p) => `<p style="font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;">${inlineSourceRefs(p, sources)}</p>`).join('')}
+            ${paragraphs(dispatchPayload.intro).map((p) => `<p style="font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;">${inlineDispatchMarkup(p, sources)}</p>`).join('')}
           </td></tr>
           ${sectionHtml}
-          ${dispatchPayload.closing ? `<tr><td style="padding:18px 28px 28px;">${paragraphs(dispatchPayload.closing).map((p) => `<p style="font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;">${inlineSourceRefs(p, sources)}</p>`).join('')}</td></tr>` : ''}
+          ${dispatchPayload.closing ? `<tr><td style="padding:18px 28px 28px;">${paragraphs(dispatchPayload.closing).map((p) => `<p style="font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;">${inlineDispatchMarkup(p, sources)}</p>`).join('')}</td></tr>` : ''}
           ${followupHtml}
           <tr><td style="padding:24px 28px;border-top:1px solid #e6ebf2;">
             <h2 style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;line-height:1.2;letter-spacing:.12em;text-transform:uppercase;margin:0 0 12px;color:#1f6fd6;font-weight:600;">Sources</h2>

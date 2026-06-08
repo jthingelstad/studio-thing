@@ -86,10 +86,11 @@ test('dispatch template test payload renders placeholder content with real sourc
   }, sources);
   const html = dispatchHtmlEmail(payload, sources);
 
-  assert.match(payload.subject, /^Thingy Dispatch — Template Test:/);
+  assert.equal(payload.subject, 'Thingy Dispatch — Template-test the Dispatch email around RSS and ownership.');
+  assert.equal(payload.title, 'Template-test the Dispatch email around RSS and ownership.');
   assert.match(payload.intro, /intentionally does not contain generated long-form Dispatch writing/);
   assert.match(html, /Thingy Dispatch/);
-  assert.match(html, /Template Test:/);
+  assert.match(html, /template test/i);
   assert.match(html, /https:\/\/weekly\.example\/10/);
 });
 
@@ -130,8 +131,8 @@ test('dispatchHtmlEmail renders request provenance authorship boundary and linke
   const html = dispatchHtmlEmail({
     title: 'Ownership Dispatch',
     preview: 'A short preview.',
-    intro: 'Thingy found a thread [S1].',
-    sections: [{ heading: 'The thread', body: 'This depends on [S1].' }],
+    intro: 'Thingy found a *thread* [S1].',
+    sections: [{ heading: 'The thread', body: 'This depends on **ownership** and [S1].' }],
     closing: 'Keep exploring.',
     followups: ['What changed over time?']
   }, [{
@@ -148,7 +149,9 @@ test('dispatchHtmlEmail renders request provenance authorship boundary and linke
   });
   assert.match(html, /Thingy Dispatch/);
   assert.match(html, /requested by reader@example\.com on 2026-06-08 12:00Z/);
-  assert.match(html, /Request: Explore ownership and the open web from the archive\./);
+  assert.match(html, /<strong[^>]*>Request<\/strong>Explore ownership and the open web from the archive\./);
+  assert.match(html, /<em>thread<\/em>/);
+  assert.match(html, /<strong>ownership<\/strong>/);
   assert.match(html, /href="https:\/\/thingy\.thingelstad\.com\/"/);
   assert.match(html, /Written by Thingy, not Jamie/);
   assert.match(html, /https:\/\/weekly\.example\/10/);
@@ -177,8 +180,9 @@ test('dispatch email rendering preserves paragraph breaks and normalizes subject
     requestSummary: 'RSS and ownership'
   });
 
-  assert.equal(payload.subject, 'Thingy Dispatch — Template Test: RSS and ownership');
+  assert.equal(payload.subject, 'Thingy Dispatch — RSS and ownership');
   assert.equal(dispatchSubject('Dispatch: Old shape title'), 'Thingy Dispatch — Old shape title');
+  assert.match(html, /display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;color:transparent;line-height:1px;font-size:1px;">A low-cost Thingy Dispatch template test/);
   assert.match(html, /First paragraph has useful setup\./);
   assert.match(html, /Second paragraph should not be eaten\./);
   assert.match(text, /This Thingy Dispatch was requested by reader@example\.com on 2026-06-08 12:00Z\./);

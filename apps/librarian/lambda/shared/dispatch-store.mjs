@@ -1,4 +1,4 @@
-import { GetItemCommand, PutItemCommand, QueryCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import { DeleteItemCommand, GetItemCommand, PutItemCommand, QueryCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import crypto from 'node:crypto';
 import { dynamoList, dynamoNumber, dynamoString, fromDynamoAttr, userConversationPk } from './user-conversations.mjs';
 
@@ -104,6 +104,19 @@ export async function getUserDispatch({ dynamodb, tableName, subscriberHash, dis
   if (!id) return null;
   const rows = await listUserDispatches({ dynamodb, tableName, subscriberHash, limit: 50 });
   return rows.find((row) => row.id === id) || null;
+}
+
+export async function deleteUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId }) {
+  const dispatch = await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId });
+  if (!dispatch) return null;
+  await dynamodb.send(new DeleteItemCommand({
+    TableName: tableName,
+    Key: {
+      pk: dynamoString(userConversationPk(subscriberHash)),
+      sk: dynamoString(dispatchSk(dispatch.created_at, dispatch.id))
+    }
+  }));
+  return dispatch;
 }
 
 export function dispatchAvailabilityFromRows(rows = [], {

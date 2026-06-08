@@ -37,6 +37,7 @@ import {
 } from '../shared/conversation-store.mjs';
 import {
   createQueuedDispatch,
+  deleteUserDispatch,
   dispatchForClient,
   dispatchAvailability,
   getUserDispatch,
@@ -954,6 +955,26 @@ async function handleDispatch(event, body, start) {
       if (!dispatch) return jsonResponse(404, { error: 'Dispatch not found.' }, event);
       return jsonResponse(200, {
         dispatch: dispatchForClient(dispatch)
+      }, event);
+    }
+
+    if (action === 'delete') {
+      const dispatch = await deleteUserDispatch({
+        dynamodb,
+        tableName,
+        subscriberHash: profile.subscriberHash,
+        dispatchId: body.dispatch_id || body.id
+      });
+      if (!dispatch) return jsonResponse(404, { error: 'Dispatch not found.' }, event);
+      logEvent('info', 'dispatch_deleted', {
+        subscriber_hash: profile.subscriberHash,
+        dispatch_id: dispatch.id,
+        status: dispatch.status,
+        duration_ms: Math.round(performance.now() - start)
+      });
+      return jsonResponse(200, {
+        status: 'deleted',
+        dispatch_id: dispatch.id
       }, event);
     }
 

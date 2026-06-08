@@ -227,7 +227,7 @@ export function buildJmapEmailCalls({ context, fromEmail, fromName, to, subject,
           keywords: { '$draft': true },
           from: [{ name: fromName, email: fromEmail }],
           to: [{ email: to }],
-          subject: magicLinkEmailSubject(),
+          subject,
           bodyStructure: {
             type: 'multipart/alternative',
             subParts: [
