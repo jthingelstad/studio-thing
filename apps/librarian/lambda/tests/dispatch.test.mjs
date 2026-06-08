@@ -86,7 +86,7 @@ test('dispatch template test payload renders placeholder content with real sourc
   }, sources);
   const html = dispatchHtmlEmail(payload, sources);
 
-  assert.match(payload.subject, /^Thingy Dispatch - Template Test:/);
+  assert.match(payload.subject, /^Thingy Dispatch — Template Test:/);
   assert.match(payload.intro, /intentionally does not contain generated long-form Dispatch writing/);
   assert.match(html, /Thingy Dispatch/);
   assert.match(html, /Template Test:/);
@@ -173,8 +173,8 @@ test('dispatch email rendering preserves paragraph breaks and normalizes subject
     requestedAt: '2026-06-08T12:00:00.000Z'
   });
 
-  assert.equal(payload.subject, 'Thingy Dispatch - Template Test: RSS and ownership');
-  assert.equal(dispatchSubject('Dispatch: Old shape title'), 'Thingy Dispatch - Old shape title');
+  assert.equal(payload.subject, 'Thingy Dispatch — Template Test: RSS and ownership');
+  assert.equal(dispatchSubject('Dispatch: Old shape title'), 'Thingy Dispatch — Old shape title');
   assert.match(html, /First paragraph has useful setup\./);
   assert.match(html, /Second paragraph should not be eaten\./);
   assert.match(text, /This Thingy Dispatch was requested by reader@example\.com on 2026-06-08 12:00Z\./);

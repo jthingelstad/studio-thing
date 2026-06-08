@@ -28,7 +28,7 @@ export function dispatchSubject(value, fallbackTitle = '') {
   const raw = cleanText(value || fallbackTitle || 'From the archive', 110);
   const withoutPrefix = raw.replace(/^(?:thingy\s+)?dispatch\s*[-:\u2014\u2013]\s*/i, '').trim();
   const title = cleanText(withoutPrefix || fallbackTitle || 'From the archive', 88);
-  return `Thingy Dispatch - ${title}`;
+  return `Thingy Dispatch — ${title}`;
 }
 
 function escapeHtml(value) {
@@ -222,7 +222,7 @@ function dispatchUserPrompt({ dispatch, sources }) {
     '',
     'Return JSON with this shape:',
     '{',
-    '  "subject": "email subject line, starts with Thingy Dispatch -",',
+    '  "subject": "email subject line, starts with Thingy Dispatch —",',
     '  "preview": "one sentence preview",',
     '  "title": "Dispatch title",',
     '  "intro": "2-3 paragraph Thingy-authored opening",',
@@ -238,7 +238,7 @@ export function dispatchTemplateTestPayload(dispatch, sources = []) {
   const refs = sources.slice(0, 6).map((source) => `[${source.id}]`).join(', ');
   const primaryRefs = refs || '[S1]';
   return normalizeDispatchPayload({
-    subject: `Thingy Dispatch - Template Test: ${topic}`,
+    subject: `Thingy Dispatch — Template Test: ${topic}`,
     preview: 'A low-cost Thingy Dispatch template test using placeholder copy and real archive source metadata.',
     title: `Template Test: ${topic}`,
     intro: [
