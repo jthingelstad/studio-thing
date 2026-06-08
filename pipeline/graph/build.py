@@ -25,7 +25,7 @@ def main() -> int:
     parser.add_argument("--corpus", default=str(CORPUS_PATH))
     parser.add_argument("--output", default=str(GRAPH_PATH))
     parser.add_argument("--use-bedrock-extraction", action="store_true")
-    parser.add_argument("--model", default=os.environ.get("BEDROCK_AGENT_MODEL", DEFAULT_MODEL))
+    parser.add_argument("--model", default=os.environ.get("THINGY_DEFAULT_MODEL", DEFAULT_MODEL))
     parser.add_argument("--upload-bucket", default=os.environ.get("AWS_S3_BUCKET"))
     parser.add_argument("--upload-key", default=os.environ.get("LIBRARIAN_GRAPH_KEY", "librarian/graph.json"))
     parser.add_argument("--upload", action="store_true")

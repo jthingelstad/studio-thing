@@ -64,7 +64,9 @@ Local `.env` values used by upload/build scripts:
 - `AWS_DEFAULT_REGION`
 - `LIBRARIAN_API_URL` (written by deploy; used by static site build)
 - `LIBRARIAN_STREAM_URL` (written by deploy; used by static site build)
-- `BEDROCK_AGENT_MODEL` (optional; defaults to `us.anthropic.claude-sonnet-4-6`, the US Bedrock inference profile for Claude Sonnet 4.6)
+- `THINGY_DEFAULT_MODEL` (optional; defaults to `us.anthropic.claude-sonnet-4-6`, the US Bedrock inference profile for Claude Sonnet 4.6)
+- `THINGY_FAST_MODEL` (optional; defaults to `us.anthropic.claude-haiku-4-5-20251001-v1:0`, used for small structured/background work)
+- `THINGY_ADVANCED_MODEL` (optional; defaults to `us.anthropic.claude-sonnet-4-6`, used for high-synthesis work like Dispatch generation; currently same as default until Opus access is enabled)
 - `BEDROCK_EMBEDDING_MODEL` (optional; defaults to `cohere.embed-english-v3`)
 - `BEDROCK_RERANK_MODEL` (optional; defaults to `cohere.rerank-v3-5:0`)
 - `BEDROCK_RERANK_REGION` (optional; defaults to `us-west-2`, where the Bedrock Rerank API exposes Cohere Rerank 3.5)

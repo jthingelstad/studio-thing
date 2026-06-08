@@ -1,6 +1,6 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
-import { bedrock, s3, agentModel } from './aws-clients.mjs';
+import { bedrock, s3, advancedModel } from './aws-clients.mjs';
 import { sendJmapEmail } from './jmap-mail.mjs';
 
 const MAX_SOURCE_PACKETS = 18;
@@ -320,7 +320,7 @@ export async function generateDispatch(dispatch) {
   const sources = selectDispatchSources(chunks, query, MAX_SOURCE_PACKETS);
   if (sources.length < 4) throw new Error('Not enough archive sources matched this Dispatch topic.');
 
-  const model = process.env.BEDROCK_DISPATCH_MODEL || agentModel();
+  const model = advancedModel();
   const response = await bedrock.send(new ConverseCommand({
     modelId: model,
     system: [{ text: dispatchSystemPrompt() }, { cachePoint: { type: 'default' } }],

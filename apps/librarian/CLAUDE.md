@@ -57,7 +57,7 @@ The `--skip-corpus-upload` flag is the **default for any code-only change**. Ful
 
 Deploy steps:
 
-1. Smoke-test the Bedrock agent model (`smoke_test_agent_model`) — refuses to deploy if the model isn't invokable from this account.
+1. Smoke-test the three Thingy model buckets — refuses to deploy if any configured default/fast/advanced model isn't invokable from this account.
 2. Package both Lambda bundles (`auth/` + `chat/` separately).
 3. Upload zip to `s3://weekly-thing-librarian/code/{auth,chat}-lambda/<ts>.zip`.
 4. If not `--skip-corpus-upload`: upload all three API corpora — Weekly Thing corpus + graph, blog corpus, and podcast corpus.
@@ -97,7 +97,9 @@ These are set at deploy time from `.env`, written into the Lambda environment by
 | `THINGY_MAGIC_LINK_BASE_URL` | auth | Public URL used when building `?login_token=` links, default `https://thingy.thingelstad.com/` |
 | `LOG_LEVEL` | both | `INFO` default |
 | `AUTH_RATE_LIMIT_MAX` | auth | Hourly cap per IP |
-| `BEDROCK_AGENT_MODEL` | both | `us.anthropic.claude-sonnet-4-6` |
+| `THINGY_DEFAULT_MODEL` | all | `us.anthropic.claude-sonnet-4-6`; main chat/default persona work |
+| `THINGY_FAST_MODEL` | all | `us.anthropic.claude-haiku-4-5-20251001-v1:0`; small structured/background work |
+| `THINGY_ADVANCED_MODEL` | all | `us.anthropic.claude-sonnet-4-6`; high-synthesis work like Dispatch generation; currently same as default until Opus access is enabled |
 | `BEDROCK_EMBEDDING_MODEL` | stream | `cohere.embed-english-v3` |
 | `BEDROCK_RERANK_MODEL` | stream | `cohere.rerank-v3-5:0` |
 | `BEDROCK_RERANK_REGION` | stream | `us-west-2` (only region with the rerank model) |
@@ -106,7 +108,7 @@ These are set at deploy time from `.env`, written into the Lambda environment by
 
 - **Rerank lives in us-west-2 only.** The rest of the stack is us-east-1. `BedrockAgentRuntimeClient` is constructed with explicit `region: 'us-west-2'` override. Don't move it.
 - **Embedding model is Cohere v3** at 1024 dimensions. Bumping to v4 would invalidate the entire embedded corpus — re-embed cost is $1-2 + ~3 minutes. Plan for it; don't drift accidentally.
-- **Agent model** is currently `us.anthropic.claude-sonnet-4-6` (cross-region inference profile). The smoke test at deploy time catches "this account doesn't have access" before the deploy lands.
+- **Thingy models** use cross-region inference profiles. Default is Sonnet 4.6 for main chat/persona work, fast is Haiku 4.5 for structured/background work, and advanced currently points to Sonnet 4.6 for Dispatch generation until Opus access is enabled. The deploy smoke test checks all three before CloudFormation runs.
 
 ## Conventions
 

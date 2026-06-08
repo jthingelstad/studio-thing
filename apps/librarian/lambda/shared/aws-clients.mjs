@@ -6,8 +6,24 @@ export const bedrock = new BedrockRuntimeClient({});
 export const dynamodb = new DynamoDBClient({});
 export const s3 = new S3Client({});
 
+export const DEFAULT_THINGY_MODEL = 'us.anthropic.claude-sonnet-4-6';
+export const FAST_THINGY_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0';
+export const ADVANCED_THINGY_MODEL = 'us.anthropic.claude-sonnet-4-6';
+
+export function thingyDefaultModel() {
+  return process.env.THINGY_DEFAULT_MODEL || DEFAULT_THINGY_MODEL;
+}
+
+export function fastModel() {
+  return process.env.THINGY_FAST_MODEL || FAST_THINGY_MODEL;
+}
+
+export function advancedModel() {
+  return process.env.THINGY_ADVANCED_MODEL || ADVANCED_THINGY_MODEL;
+}
+
 export function agentModel() {
-  return process.env.BEDROCK_AGENT_MODEL || 'us.anthropic.claude-sonnet-4-6';
+  return thingyDefaultModel();
 }
 
 export function embeddingModel() {

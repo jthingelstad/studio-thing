@@ -1,6 +1,6 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { BatchWriteItemCommand, GetItemCommand, PutItemCommand, QueryCommand, ScanCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
-import { bedrock, dynamodb, agentModel } from '../shared/aws-clients.mjs';
+import { bedrock, dynamodb, agentModel, fastModel } from '../shared/aws-clients.mjs';
 import { createSubscriber, ensureThingyTag, fetchSubscriber, sanitizeAttribution, sendSubscriberReminder, subscriberStatus } from '../shared/buttondown.mjs';
 import { eventSummary, jsonResponse, methodAndPath, parseBody, clientSourceIp, userAgent } from '../shared/http.mjs';
 import { buildMagicLink, createMagicToken, magicLinkTtlSeconds, magicTokenHash, validMagicToken } from '../shared/magic-link.mjs';
@@ -142,8 +142,9 @@ function bedrockMessageText(message) {
 
 async function generatePremiumThankYou() {
   const start = performance.now();
+  const model = fastModel();
   const response = await bedrock.send(new ConverseCommand({
-    modelId: agentModel(),
+    modelId: model,
     system: [{ text: premiumThankYouSystemPrompt() }, { cachePoint: { type: 'default' } }],
     messages: [{ role: 'user', content: [{ text: 'Generate a fresh thank-you under 28 words.' }] }],
     inferenceConfig: { maxTokens: 120, temperature: 0.7 }
@@ -151,7 +152,7 @@ async function generatePremiumThankYou() {
   const text = bedrockMessageText(response.output?.message || {}).replace(/\s+/g, ' ').trim();
   if (!text || text.length > 220) throw new Error('Bedrock returned invalid premium thank-you');
   logEvent('info', 'premium_thank_you_generated', {
-    model: agentModel(),
+    model,
     duration_ms: Math.round(performance.now() - start),
     message_chars: text.length
   });
@@ -761,8 +762,9 @@ function dispatchProfile(payload) {
 }
 
 async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '' }) {
+  const model = fastModel();
   const response = await bedrock.send(new ConverseCommand({
-    modelId: process.env.BEDROCK_DISPATCH_CLARIFY_MODEL || agentModel(),
+    modelId: model,
     system: [{
       text: [
         'You are Thingy, Jamie Thingelstad\'s archive sidekick.',

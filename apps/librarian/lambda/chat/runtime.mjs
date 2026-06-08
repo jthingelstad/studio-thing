@@ -51,7 +51,9 @@ import {
   normalizeConversationMode
 } from '../shared/conversation-modes.mjs';
 
-const DEFAULT_AGENT_MODEL = 'us.anthropic.claude-sonnet-4-6';
+const DEFAULT_THINGY_MODEL = 'us.anthropic.claude-sonnet-4-6';
+const FAST_THINGY_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0';
+const ADVANCED_THINGY_MODEL = 'us.anthropic.claude-sonnet-4-6';
 const DEFAULT_EMBEDDING_MODEL = 'cohere.embed-english-v3';
 const DEFAULT_RERANK_MODEL = 'cohere.rerank-v3-5:0';
 const DEFAULT_EMBEDDING_DIMENSIONS = 1024;
@@ -87,7 +89,15 @@ function logEvent(level, message, fields = {}) {
 }
 
 function agentModel() {
-  return process.env.BEDROCK_AGENT_MODEL || DEFAULT_AGENT_MODEL;
+  return process.env.THINGY_DEFAULT_MODEL || DEFAULT_THINGY_MODEL;
+}
+
+function fastModel() {
+  return process.env.THINGY_FAST_MODEL || FAST_THINGY_MODEL;
+}
+
+function advancedModel() {
+  return process.env.THINGY_ADVANCED_MODEL || ADVANCED_THINGY_MODEL;
 }
 
 function embeddingModel() {
@@ -1408,7 +1418,7 @@ async function evaluatePromptPreflight(question, scope, history = [], context = 
   const start = performance.now();
   try {
     const response = await bedrock.send(new ConverseCommand({
-      modelId: process.env.BEDROCK_PREFLIGHT_MODEL || agentModel(),
+      modelId: fastModel(),
       system: [{ text: PREFLIGHT_SYSTEM_PROMPT }],
       messages: [{
         role: 'user',
@@ -2835,6 +2845,8 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       ok: true,
       service: 'weekly-thing-librarian-stream',
       model: agentModel(),
+      fast_model: fastModel(),
+      advanced_model: advancedModel(),
       embedding_model: embeddingModel(),
       rerank_model: rerankModel()
     }));
@@ -3080,7 +3092,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
           preflight,
           toolTrace: { calls: [] },
           metrics: {
-            model: process.env.BEDROCK_PREFLIGHT_MODEL || agentModel(),
+            model: fastModel(),
             stop_reason: 'preflight_direct'
           },
           logEvent

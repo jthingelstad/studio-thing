@@ -165,10 +165,14 @@ Resources:
                   - bedrock:InvokeModelWithResponseStream
                 Resource:
                   - !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/us.anthropic.claude-sonnet-4-6
+                  - !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0
                   - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.nova-pro-v1:0
                   - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/anthropic.claude-sonnet-4-6
+                  - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0
                   - arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-sonnet-4-6
+                  - arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0
                   - arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-sonnet-4-6
+                  - arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0
                   - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/cohere.embed-english-v3
                   - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/cohere.rerank-v3-5:0
                   - arn:aws:bedrock:us-west-2::foundation-model/cohere.rerank-v3-5:0
@@ -202,7 +206,9 @@ Resources:
           FASTMAIL_JMAP_TOKEN: !Ref FastmailJmapToken
           THINGY_MAGIC_LINK_FROM_EMAIL: !Ref ThingyMagicLinkFromEmail
           THINGY_MAGIC_LINK_BASE_URL: !Ref ThingyMagicLinkBaseUrl
-          BEDROCK_AGENT_MODEL: us.anthropic.claude-sonnet-4-6
+          THINGY_DEFAULT_MODEL: "us.anthropic.claude-sonnet-4-6"
+          THINGY_FAST_MODEL: "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+          THINGY_ADVANCED_MODEL: "us.anthropic.claude-sonnet-4-6"
       Handler: auth/handler.handler
       MemorySize: 1024
       Role: !GetAtt LibrarianFunctionRole.Arn
@@ -232,10 +238,12 @@ Resources:
           SESSION_SECRET: !Ref SessionSecret
           DISCORD_BRIDGE_SECRET: !Ref DiscordBridgeSecret
           LOG_LEVEL: !Ref LogLevel
-          BEDROCK_AGENT_MODEL: us.anthropic.claude-sonnet-4-6
-          BEDROCK_EMBEDDING_MODEL: cohere.embed-english-v3
-          BEDROCK_RERANK_MODEL: cohere.rerank-v3-5:0
-          BEDROCK_RERANK_REGION: us-west-2
+          THINGY_DEFAULT_MODEL: "us.anthropic.claude-sonnet-4-6"
+          THINGY_FAST_MODEL: "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+          THINGY_ADVANCED_MODEL: "us.anthropic.claude-sonnet-4-6"
+          BEDROCK_EMBEDDING_MODEL: "cohere.embed-english-v3"
+          BEDROCK_RERANK_MODEL: "cohere.rerank-v3-5:0"
+          BEDROCK_RERANK_REGION: "us-west-2"
       Handler: chat/handler.handler
       MemorySize: 3008
       ReservedConcurrentExecutions: 5
@@ -258,7 +266,9 @@ Resources:
         Variables:
           TABLE_NAME: !Ref LibrarianTable
           LOG_LEVEL: !Ref LogLevel
-          BEDROCK_AGENT_MODEL: us.anthropic.claude-sonnet-4-6
+          THINGY_DEFAULT_MODEL: "us.anthropic.claude-sonnet-4-6"
+          THINGY_FAST_MODEL: "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+          THINGY_ADVANCED_MODEL: "us.anthropic.claude-sonnet-4-6"
           DISCORD_CONVERSATION_WEBHOOK_URL: !Ref DiscordConversationWebhookUrl
       Handler: eval/handler.handler
       MemorySize: 1024
@@ -286,7 +296,9 @@ Resources:
           BLOG_CORPUS_KEY: !Ref BlogCorpusKey
           PODCAST_CORPUS_KEY: !Ref PodcastCorpusKey
           LOG_LEVEL: !Ref LogLevel
-          BEDROCK_AGENT_MODEL: us.anthropic.claude-sonnet-4-6
+          THINGY_DEFAULT_MODEL: "us.anthropic.claude-sonnet-4-6"
+          THINGY_FAST_MODEL: "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+          THINGY_ADVANCED_MODEL: "us.anthropic.claude-sonnet-4-6"
           FASTMAIL_JMAP_TOKEN: !Ref FastmailJmapToken
           THINGY_MAGIC_LINK_FROM_EMAIL: !Ref ThingyMagicLinkFromEmail
       Handler: dispatch/handler.handler
@@ -527,10 +539,14 @@ Resources:
                   - bedrock:InvokeModel
                 Resource:
                   - !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/us.anthropic.claude-sonnet-4-6
+                  - !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0
                   - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.nova-pro-v1:0
                   - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/anthropic.claude-sonnet-4-6
+                  - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0
                   - arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-sonnet-4-6
+                  - arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0
                   - arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-sonnet-4-6
+                  - arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0
 
   LibrarianDashboard:
     Type: AWS::CloudWatch::Dashboard

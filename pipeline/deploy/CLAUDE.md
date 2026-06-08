@@ -34,7 +34,7 @@ CI in `.github/workflows/deploy.yml` uploads all three corpus artifacts when pro
 
 ## `aws.py` flow
 
-1. **Smoke-test the Bedrock agent model** (`smoke_test_agent_model`) via a minimal `InvokeModel` against `BEDROCK_AGENT_MODEL` (default `us.anthropic.claude-sonnet-4-6`). Refuses to deploy if the model isn't accessible from this account. Pass `--skip-smoke-test` to override.
+1. **Smoke-test the Thingy model buckets** via minimal `InvokeModel` calls against `THINGY_DEFAULT_MODEL`, `THINGY_FAST_MODEL`, and `THINGY_ADVANCED_MODEL`. Refuses to deploy if any configured model isn't accessible from this account. Pass `--skip-smoke-test` to override.
 2. **Ensure the private S3 bucket exists** (`ensure_private_bucket(bucket)`). Default bucket: `LIBRARIAN_BUCKET` env var or `weekly-thing-librarian`.
 3. **Package both Lambda bundles** (`auth/` + `chat/`) — separate npm install + zip per bundle. Bundles ship independently because the auth Lambda is REST and the chat Lambda is response-streamed Function URL.
 4. **Upload zips** to `s3://{bucket}/code/{auth,chat}-lambda/<unix-ts>.zip`. Timestamp keys so CloudFormation always sees a new version.
@@ -70,9 +70,11 @@ The CloudFormation stack uses an IAM service role for execution; the local AWS c
 
 - **Embed model** (`cohere.embed-english-v3`): **us-east-1**.
 - **Rerank model** (`cohere.rerank-v3-5:0`): **us-west-2** — only region with the rerank model. The Lambda's `BedrockAgentRuntimeClient` is constructed with explicit `region: 'us-west-2'` override.
-- **Agent model** (`us.anthropic.claude-sonnet-4-6`): cross-region inference profile.
+- **Default model** (`us.anthropic.claude-sonnet-4-6`): cross-region inference profile for main chat/persona work.
+- **Fast model** (`us.anthropic.claude-haiku-4-5-20251001-v1:0`): cross-region inference profile for small structured/background work.
+- **Advanced model** (`us.anthropic.claude-sonnet-4-6`): cross-region inference profile for Dispatch generation; currently same as default until Opus access is enabled.
 
-Don't move the rerank region. Don't change the agent model without smoke-testing it against the deploy's account.
+Don't move the rerank region. Don't change model bucket assignments without smoke-testing them against the deploy's account.
 
 ## CloudFormation template
 

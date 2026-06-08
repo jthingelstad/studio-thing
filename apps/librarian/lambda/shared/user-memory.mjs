@@ -446,9 +446,10 @@ export async function synthesizeSessionQuestions(questions) {
   );
   try {
     const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime');
-    const { bedrock, agentModel } = await import('./aws-clients.mjs');
+    const { bedrock, fastModel } = await import('./aws-clients.mjs');
+    const model = fastModel();
     const response = await bedrock.send(new ConverseCommand({
-      modelId: agentModel(),
+      modelId: model,
       system: [{ text: system }, { cachePoint: { type: 'default' } }],
       messages: [{ role: 'user', content: [{ text: list }] }],
       inferenceConfig: { maxTokens: SYNTHESIS_MAX_TOKENS, temperature: 0.3 }

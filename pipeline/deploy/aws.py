@@ -38,18 +38,26 @@ PRIVATE_PODCAST_CORPUS_KEY = "artifacts/podcast_corpus.json"
 DEFAULT_ALLOWED_ORIGINS = "https://weekly.thingelstad.com,https://thingy.thingelstad.com,http://localhost:8080,http://127.0.0.1:8080,http://localhost:4178,http://127.0.0.1:4178"
 PROJECT_TAG_KEY = "project"
 PROJECT_TAG_VALUE = "Thingy"
+THINGY_MODEL_ENV_NAMES = (
+    "THINGY_DEFAULT_MODEL",
+    "THINGY_FAST_MODEL",
+    "THINGY_ADVANCED_MODEL",
+)
 
 
-def agent_model_from_template() -> str:
+def thingy_models_from_template() -> dict[str, str]:
     text = TEMPLATE.read_text()
-    match = re.search(r"BEDROCK_AGENT_MODEL:\s*(\S+)", text)
-    if not match:
-        raise RuntimeError(f"Could not find BEDROCK_AGENT_MODEL in {TEMPLATE}")
-    return match.group(1)
+    models: dict[str, str] = {}
+    for name in THINGY_MODEL_ENV_NAMES:
+        match = re.search(rf"{name}:\s*(\S+)", text)
+        if not match:
+            raise RuntimeError(f"Could not find {name} in {TEMPLATE}")
+        models[name] = match.group(1).strip("'\"")
+    return models
 
 
-def smoke_test_agent_model(model_id: str) -> None:
-    print(f"Smoke testing Bedrock InvokeModel for {model_id}...")
+def smoke_test_model(model_id: str, label: str = "model") -> None:
+    print(f"Smoke testing Bedrock InvokeModel for {label} {model_id}...")
     region = os.environ.get("AWS_DEFAULT_REGION") or os.environ.get("AWS_REGION") or "us-east-1"
     client = boto3.client("bedrock-runtime", region_name=region)
     body = json.dumps(
@@ -74,6 +82,11 @@ def smoke_test_agent_model(model_id: str) -> None:
             ) from exc
         raise
     print("  OK")
+
+
+def smoke_test_thingy_models(models: dict[str, str]) -> None:
+    for label, model_id in models.items():
+        smoke_test_model(model_id, label)
 
 
 def require_env(name: str) -> str:
@@ -469,7 +482,7 @@ def main() -> int:
         raise RuntimeError("Provide --bucket or LIBRARIAN_BUCKET")
 
     if not args.skip_smoke_test:
-        smoke_test_agent_model(agent_model_from_template())
+        smoke_test_thingy_models(thingy_models_from_template())
 
     if not args.skip_bucket_bootstrap:
         ensure_private_bucket(bucket)

@@ -1,6 +1,6 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { GetItemCommand, QueryCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
-import { bedrock, dynamodb, agentModel } from '../shared/aws-clients.mjs';
+import { bedrock, dynamodb, fastModel } from '../shared/aws-clients.mjs';
 import { errorFields, logEvent } from '../shared/logging.mjs';
 import { turnForPrompt } from '../shared/eval-transcript.mjs';
 import {
@@ -181,8 +181,9 @@ Be specific, do not manufacture criticism, and treat lines labeled Runtime/Prefl
 
 async function evaluateConversation({ conversation, turns }) {
   const transcript = turns.map(turnForPrompt).join('\n\n');
+  const model = fastModel();
   const response = await bedrock.send(new ConverseCommand({
-    modelId: process.env.BEDROCK_EVAL_MODEL || agentModel(),
+    modelId: model,
     system: [{ text: evalSystemPrompt() }, { cachePoint: { type: 'default' } }],
     messages: [{
       role: 'user',
@@ -207,7 +208,7 @@ async function evaluateConversation({ conversation, turns }) {
   const normalized = normalizeEvalPayload(parsed || {});
   return {
     ...normalized,
-    model: process.env.BEDROCK_EVAL_MODEL || agentModel(),
+    model,
     usage: response.usage || {}
   };
 }
