@@ -150,11 +150,15 @@ test('dispatchHtmlEmail renders request provenance authorship boundary and linke
   assert.match(html, /Thingy Dispatch/);
   assert.match(html, /requested by reader@example\.com on 2026-06-08 12:00Z/);
   assert.match(html, /<strong[^>]*>Request<\/strong>Explore ownership and the open web from the archive\./);
+  assert.doesNotMatch(html, />Requested</);
+  assert.doesNotMatch(html, />Attribution</);
   assert.match(html, /<em>thread<\/em>/);
   assert.match(html, /<strong>ownership<\/strong>/);
   assert.match(html, /href="https:\/\/thingy\.thingelstad\.com\/"/);
   assert.match(html, /Written by Thingy, not Jamie/);
   assert.match(html, /https:\/\/weekly\.example\/10/);
+  assert.doesNotMatch(html, /<strong>S1<\/strong>/);
+  assert.doesNotMatch(html, /\(2026-01-01\)/);
 });
 
 test('dispatch email rendering preserves paragraph breaks and normalizes subject prefix', () => {
@@ -188,4 +192,38 @@ test('dispatch email rendering preserves paragraph breaks and normalizes subject
   assert.match(text, /This Thingy Dispatch was requested by reader@example\.com on 2026-06-08 12:00Z\./);
   assert.match(text, /Request: RSS and ownership/);
   assert.match(text, /Prepared by Thingy \(https:\/\/thingy\.thingelstad\.com\/\)/);
+});
+
+test('dispatch renderer turns source refs and followups into normal links', () => {
+  const html = dispatchHtmlEmail({
+    title: 'Home Automation',
+    preview: 'A dispatch about coordination.',
+    intro: 'In Weekly Thing 336, Jamie draws a privacy line around smart devices. [S1]\n\nThe blog post "My GTD Structure" maps routine work into a system. [S2]',
+    sections: [{
+      heading: 'Thread',
+      body: 'This leans on [S1] when no source title is nearby.'
+    }],
+    closing: '',
+    followups: ['How does this connect to OmniFocus?']
+  }, [{
+    id: 'S1',
+    label: 'WT336',
+    title: 'Weekly Thing 336 / Culture, Retention, Transmission',
+    url: '/archive/336/',
+    source_kind: 'weekly_thing',
+    publish_date: '2026-01-01'
+  }, {
+    id: 'S2',
+    label: 'Blog',
+    title: 'My GTD Structure',
+    url: 'https://www.thingelstad.com/2024/09/02/my-gtd-structure.html',
+    source_kind: 'blog',
+    publish_date: '2024-09-02'
+  }]);
+
+  assert.match(html, /<a href="https:\/\/weekly\.thingelstad\.com\/archive\/336\/"[^>]*>Weekly Thing 336<\/a>/);
+  assert.match(html, /<a href="https:\/\/www\.thingelstad\.com\/2024\/09\/02\/my-gtd-structure\.html"[^>]*>My GTD Structure<\/a>/);
+  assert.match(html, /href="https:\/\/thingy\.thingelstad\.com\/chat\/\?prompt=How\+does\+this\+connect\+to\+OmniFocus%3F"/);
+  assert.doesNotMatch(html, /<strong>S1<\/strong> WT336/);
+  assert.doesNotMatch(html, /\(2024-09-02\)/);
 });

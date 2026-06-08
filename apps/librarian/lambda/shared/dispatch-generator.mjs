@@ -40,6 +40,25 @@ function escapeHtml(value) {
     .replaceAll('"', '&quot;');
 }
 
+function escapeRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function sourceHref(source = {}) {
+  const url = String(source.url || '').trim();
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith('/archive/')) return `https://weekly.thingelstad.com${url}`;
+  if (url.startsWith('/')) return `${THINGY_URL.replace(/\/$/, '')}${url}`;
+  return url;
+}
+
+function thingyPromptUrl(prompt) {
+  const url = new URL('/chat/', THINGY_URL);
+  url.searchParams.set('prompt', cleanText(prompt, 400));
+  return url.toString();
+}
+
 function requestedAtText(value) {
   const date = value ? new Date(value) : new Date();
   if (!Number.isFinite(date.getTime())) return String(value || '');
@@ -207,7 +226,8 @@ Rules:
 - The shape may be inspired by The Weekly Thing: warm opening, titled sections, source links, closing follow-up prompts.
 - Do not make it materially fancier or more promotional than The Weekly Thing.
 - Target about 1,200 words.
-- Include source references like [S1] in section bodies where claims depend on a source.
+- Include source references like [S1] where claims depend on a source, but attach them directly after the source title, issue name, or linked phrase rather than at the end of a sentence. Example: Weekly Thing 336 [S1] says... not ...says something. [S1]
+- Write follow-up prompts as questions a reader can click to continue in Thingy.
 - Return only JSON.`;
 }
 
@@ -306,17 +326,70 @@ function sourceLinkMap(sources = []) {
   return Object.fromEntries(sources.map((source) => [source.id, source]));
 }
 
-function inlineSourceRefs(text, sources = []) {
+function linkStyle() {
+  return 'color:#1f6fd6;text-decoration:underline;';
+}
+
+function linkHtml(href, label) {
+  return `<a href="${escapeHtml(href)}" style="${linkStyle()}">${label}</a>`;
+}
+
+function sourceMentionPatterns(source = {}) {
+  const patterns = [];
+  const title = cleanText(source.title || '', 180);
+  if (title) patterns.push(escapeRegExp(escapeHtml(title)));
+  const label = cleanText(source.label || '', 60);
+  if (label) patterns.push(escapeRegExp(escapeHtml(label)));
+  const wtMatch = label.match(/^WT(\d+)$/i);
+  if (wtMatch) {
+    patterns.push(`Weekly Thing\\s+#?${wtMatch[1]}`);
+    patterns.push(`WT${wtMatch[1]}`);
+  }
+  const podcastMatch = label.match(/^Another Thing\s+(\d+)$/i);
+  if (podcastMatch) patterns.push(`Another Thing\\s+${podcastMatch[1]}`);
+  return Array.from(new Set(patterns.filter(Boolean)));
+}
+
+function linkFirstSourceMention(html, source = {}) {
+  const href = sourceHref(source);
+  if (!href) return { html, linked: false };
+  for (const pattern of sourceMentionPatterns(source)) {
+    const regex = new RegExp(`(?<![\\w/])(${pattern})(?![^<]*>)`, 'i');
+    if (regex.test(html)) {
+      return {
+        html: html.replace(regex, (_, label) => linkHtml(href, label)),
+        linked: true
+      };
+    }
+  }
+  return { html, linked: false };
+}
+
+function replaceRemainingSourceRefs(html, sources = []) {
   const map = sourceLinkMap(sources);
-  return escapeHtml(text).replace(/\[(S\d+)\]/g, (match, id) => {
+  return html.replace(/\s*\[(S\d+)\]/g, (match, id) => {
     const source = map[id];
-    if (!source?.url) return `<strong>${id}</strong>`;
-    return `<a href="${escapeHtml(source.url)}" style="color:#1f6fd6;text-decoration:underline;">${escapeHtml(source.label || id)}</a>`;
+    const href = sourceHref(source);
+    if (!source || !href) return ` <strong>${id}</strong>`;
+    return ` ${linkHtml(href, escapeHtml(source.label || source.title || id))}`;
   });
 }
 
+function inlineSourceRefs(text, sources = []) {
+  return replaceRemainingSourceRefs(escapeHtml(text), sources);
+}
+
 function inlineDispatchMarkup(text, sources = []) {
-  return inlineSourceRefs(text, sources)
+  let html = escapeHtml(text);
+  const referencedIds = Array.from(new Set((String(text || '').match(/\[(S\d+)\]/g) || []).map((id) => id.slice(1, -1))));
+  for (const id of referencedIds) {
+    const source = sourceLinkMap(sources)[id];
+    const linked = linkFirstSourceMention(html, source);
+    html = linked.html;
+    if (linked.linked) html = html.replace(new RegExp(`\\s*\\[${escapeRegExp(id)}\\]`, 'g'), '');
+  }
+  html = html.replace(/\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)/g, (_, label, href) => linkHtml(href, label));
+  return replaceRemainingSourceRefs(html, sources)
     .replace(/\*\*([^*\n][\s\S]*?[^*\n])\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^*])\*([^*\n][^*\n]*?[^*\n])\*(?!\*)/g, '$1<em>$2</em>');
 }
@@ -371,11 +444,11 @@ function dispatchProvenanceLines(context = {}) {
 function dispatchProvenanceHtml(context = {}) {
   const request = dispatchRequestLine(context);
   const summary = dispatchRequestSummary(context);
+  const attribution = `${request} Prepared by Thingy from Jamie Thingelstad's published archive. Written by Thingy, not Jamie.`;
   return [
-    `<p style="font-size:14px;line-height:1.45;color:#4a5565;margin:0 0 10px;"><strong style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#1f6fd6;margin:0 0 3px;">Requested</strong>${escapeHtml(request)}</p>`,
-    summary ? `<p style="font-size:14px;line-height:1.45;color:#4a5565;margin:0 0 10px;"><strong style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#1f6fd6;margin:0 0 3px;">Request</strong>${escapeHtml(summary)}</p>` : '',
-    `<p style="font-size:14px;line-height:1.45;color:#4a5565;margin:0;"><strong style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#1f6fd6;margin:0 0 3px;">Attribution</strong>Prepared by <a href="${THINGY_URL}" style="color:#1f6fd6;text-decoration:underline;">Thingy</a> from Jamie Thingelstad's published archive. Written by Thingy, not Jamie.</p>`
-  ].filter(Boolean).join('');
+    `<p style="font-size:14px;line-height:1.45;color:#4a5565;margin:0 0 10px;"><strong style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#1f6fd6;margin:0 0 3px;">Request</strong>${summary ? inlineDispatchMarkup(summary) : 'Thingy Dispatch'}</p>`,
+    `<p style="font-size:13px;line-height:1.45;color:#5d6675;margin:0;font-style:italic;">${escapeHtml(attribution).replace('Prepared by Thingy', `Prepared by <a href="${THINGY_URL}" style="${linkStyle()}">Thingy</a>`)}</p>`
+  ].join('');
 }
 
 export function dispatchTextEmail(dispatchPayload, sources = [], context = {}) {
@@ -397,11 +470,11 @@ export function dispatchTextEmail(dispatchPayload, sources = [], context = {}) {
   if (dispatchPayload.closing) lines.push(dispatchPayload.closing, '');
   if (dispatchPayload.followups.length) {
     lines.push('Continue in Thingy:');
-    dispatchPayload.followups.forEach((item) => lines.push(`- ${item}`));
+    dispatchPayload.followups.forEach((item) => lines.push(`- ${item} — ${thingyPromptUrl(item)}`));
     lines.push('');
   }
   lines.push('Sources:');
-  sources.forEach((source) => lines.push(`- [${source.id}] ${source.label} · ${source.title}${source.url ? ` — ${source.url}` : ''}`));
+  sources.forEach((source) => lines.push(`- ${source.label} · ${source.title}${sourceHref(source) ? ` — ${sourceHref(source)}` : ''}`));
   lines.push('', dispatchAttributionText());
   return lines.filter((line, index, all) => line || all[index - 1]).join('\n');
 }
@@ -417,21 +490,21 @@ export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
     <tr><td style="padding:22px 28px;background:#f7f9fc;border-top:1px solid #e6ebf2;">
       <h2 style="font-family:Charter,'Iowan Old Style','Source Serif 4',Georgia,serif;font-size:21px;line-height:1.2;margin:0 0 10px;color:#14181f;font-weight:500;">Keep Pulling This Thread</h2>
       <ul style="padding-left:22px;margin:0;color:#14181f;font-size:16px;line-height:1.55;">
-        ${dispatchPayload.followups.map((item) => `<li style="margin:0 0 8px;">${inlineDispatchMarkup(item, sources)}</li>`).join('')}
+        ${dispatchPayload.followups.map((item) => `<li style="margin:0 0 8px;"><a href="${escapeHtml(thingyPromptUrl(item))}" style="${linkStyle()}">${inlineDispatchMarkup(item, sources)}</a></li>`).join('')}
       </ul>
     </td></tr>` : '';
 
   const sourcesHtml = sources.map((source) => `
     <li style="margin:0 0 8px;">
-      <strong>${escapeHtml(source.id)}</strong> ${escapeHtml(source.label)} ·
-      ${source.url ? `<a href="${escapeHtml(source.url)}" style="color:#1f6fd6;text-decoration:underline;">${escapeHtml(source.title)}</a>` : escapeHtml(source.title)}
-      ${source.publish_date ? `<span style="color:#7d8694;">(${escapeHtml(source.publish_date)})</span>` : ''}
+      ${escapeHtml(source.label)} ·
+      ${sourceHref(source) ? `<a href="${escapeHtml(sourceHref(source))}" style="${linkStyle()}">${escapeHtml(source.title)}</a>` : escapeHtml(source.title)}
     </li>`).join('');
 
   return `<!doctype html>
 <html>
   <body style="margin:0;background:#fcfcfa;color:#14181f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
     <div style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;color:transparent;line-height:1px;font-size:1px;">${escapeHtml(dispatchPayload.preview || dispatchPayload.title || 'Thingy Dispatch')}</div>
+    <div style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;color:transparent;line-height:1px;font-size:1px;">&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fcfcfa;margin:0;padding:24px 12px;">
       <tr><td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;background:#fcfcfa;">
