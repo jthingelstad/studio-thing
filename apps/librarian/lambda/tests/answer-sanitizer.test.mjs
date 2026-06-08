@@ -51,6 +51,14 @@ test('removes got-what-i-need process narration', () => {
   assert.equal(out, "Here's a useful answer from an old post.");
 });
 
+test('removes have-enough synthesis process narration', () => {
+  const answer = 'Good. I have enough to build a sharp thesis and map the evidence. Let me synthesize.\n\n---\n\n## The Sharpest Thesis\n\nA real answer.';
+
+  const out = sanitizeAnswerProse(answer);
+
+  assert.equal(out, '## The Sharpest Thesis\n\nA real answer.');
+});
+
 test('removes let-me-dig process narration', () => {
   const answer = "Let me dig into the archive to map that out.\n\n## Thingy Trail\n\n1. A real answer.";
 
