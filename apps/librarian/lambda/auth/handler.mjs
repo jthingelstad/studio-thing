@@ -837,11 +837,14 @@ async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '', m
   const shouldClarifyTerseSeed = terseDispatchSeed(prompt) && !priorQuestion && !priorAnswer;
   const needsClarification = Boolean((parsed.needs_clarification || shouldClarifyTerseSeed) && !alreadyAnswered);
   const fallbackQuestion = question || `Good seed. What angle should this Dispatch take on ${normalizeDispatchText(prompt, 80)}?`;
-  const message = normalizeDispatchText(parsed.message, 700) || (
+  let message = normalizeDispatchText(parsed.message, 700) || (
     needsClarification
       ? fallbackQuestion
       : `I have enough to shape this Dispatch around: ${direction || prompt}`
   );
+  if (!needsClarification && message.includes('?')) {
+    message = `I have enough to shape this Dispatch around: ${direction || prompt}`;
+  }
   return {
     needs_clarification: needsClarification,
     question: needsClarification ? fallbackQuestion : '',
