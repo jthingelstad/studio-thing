@@ -344,7 +344,7 @@ Resources:
       Enabled: true
       FilterCriteria:
         Filters:
-          - Pattern: '{"dynamodb":{"NewImage":{"item_type":{"S":["dispatch"]},"status":{"S":["queued"]}}}}'
+          - Pattern: '{"dynamodb":{"NewImage":{"item_type":{"S":["dispatch"]},"status":{"S":["queued","ready_to_send"]}}}}'
 
   LibrarianStreamFunctionUrl:
     Type: AWS::Lambda::Url

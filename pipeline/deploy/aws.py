@@ -206,6 +206,13 @@ def ensure_private_bucket(bucket: str) -> None:
             "Transitions": [{"Days": 90, "StorageClass": "GLACIER_IR"}],
             "NoncurrentVersionExpiration": {"NoncurrentDays": 90},
         },
+        {
+            "ID": "expire-thingy-dispatch-artifacts",
+            "Status": "Enabled",
+            "Filter": {"Prefix": "artifacts/dispatches/"},
+            "Expiration": {"Days": 365},
+            "NoncurrentVersionExpiration": {"NoncurrentDays": 30},
+        },
     ]
     try:
         current_lifecycle_rules = s3.get_bucket_lifecycle_configuration(Bucket=bucket).get("Rules", [])

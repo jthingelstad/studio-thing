@@ -10,6 +10,7 @@ import {
   dispatchFromItem,
   markDispatchFailed,
   markDispatchReadyToSend,
+  markDispatchReadyToRetry,
   markDispatchSent
 } from './dispatch-store.mjs';
 import { fromDynamoAttr } from './user-conversations.mjs';
@@ -75,6 +76,24 @@ function subscriberHashFromUserPk(pk) {
   return text.startsWith('user#') ? text.slice('user#'.length) : '';
 }
 
+class DeliveryRetryScheduledError extends Error {
+  constructor(cause) {
+    super(`Dispatch delivery preparation will retry: ${cause?.message || cause || 'unknown error'}`);
+    this.name = 'DeliveryRetryScheduledError';
+    this.cause = cause;
+    this.retryScheduled = true;
+  }
+}
+
+class DeliveryFinalizedError extends Error {
+  constructor(cause) {
+    super(`Dispatch delivery failed and was finalized: ${cause?.message || cause || 'unknown error'}`);
+    this.name = 'DeliveryFinalizedError';
+    this.cause = cause;
+    this.deliveryFinalized = true;
+  }
+}
+
 function dispatchRefsFromStream(event = {}) {
   const refs = [];
   const seen = new Set();
@@ -124,13 +143,37 @@ async function sendReadyDispatch({ tableName, subscriberHash, dispatch }) {
     subscriberHash,
     dispatch
   });
-  const result = await resultFromDispatch(sending);
-  const sent = await sendJmapEmail({
-    to: sending.to_email,
-    subject: result.subject,
-    text: result.text,
-    html: result.html
-  });
+  let result;
+  try {
+    result = await resultFromDispatch(sending);
+  } catch (error) {
+    await markDispatchReadyToRetry({
+      dynamodb,
+      tableName,
+      subscriberHash,
+      dispatch: sending,
+      error
+    });
+    throw new DeliveryRetryScheduledError(error);
+  }
+  let sent;
+  try {
+    sent = await sendJmapEmail({
+      to: sending.to_email,
+      subject: result.subject,
+      text: result.text,
+      html: result.html
+    });
+  } catch (error) {
+    await markDispatchFailed({
+      dynamodb,
+      tableName,
+      subscriberHash,
+      dispatch: sending,
+      error: `Dispatch delivery failed after a JMAP send attempt began. It was not retried to avoid sending a duplicate email. ${error?.message || error || ''}`
+    });
+    throw new DeliveryFinalizedError(error);
+  }
   await markDispatchSent({
     dynamodb,
     tableName,
@@ -225,6 +268,20 @@ export async function processDispatchStream({ event = {}, tableName }) {
       });
     } catch (error) {
       failed += 1;
+      if (error?.retryScheduled) {
+        logEvent('warning', 'dispatch_delivery_retry_scheduled', errorFields(error.cause || error, {
+          subscriber_hash: ref.subscriberHash,
+          dispatch_id: claimed.id
+        }));
+        continue;
+      }
+      if (error?.deliveryFinalized) {
+        logEvent('warning', 'dispatch_delivery_failed', errorFields(error.cause || error, {
+          subscriber_hash: ref.subscriberHash,
+          dispatch_id: claimed.id
+        }));
+        continue;
+      }
       await markDispatchFailed({
         dynamodb,
         tableName,
@@ -237,7 +294,7 @@ export async function processDispatchStream({ event = {}, tableName }) {
           dispatch_id: claimed.id
         }));
       });
-      logEvent('warning', 'dispatch_generation_failed', errorFields(error, {
+      logEvent('warning', claimed.status === 'ready_to_send' ? 'dispatch_delivery_failed' : 'dispatch_generation_failed', errorFields(error, {
         subscriber_hash: ref.subscriberHash,
         dispatch_id: claimed.id
       }));

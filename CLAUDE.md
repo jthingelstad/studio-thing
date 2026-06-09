@@ -1,7 +1,8 @@
 # CLAUDE.md — Studio
 
-Orientation for Claude Code working in this repo. Read `README.md` for the human
-overview and `ALIGNMENT.md` for the current cross-repo map.
+Orientation for Claude Code working in this repo. Read `AGENTS.md` first for
+working commands and environment gotchas, `README.md` for the human overview,
+and `ALIGNMENT.md` for the current cross-repo map.
 
 ## What this repo is
 

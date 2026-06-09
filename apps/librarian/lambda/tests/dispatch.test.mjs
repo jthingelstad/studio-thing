@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { dispatchAvailabilityFromRows, dispatchForClient, dispatchIsActive } from '../shared/dispatch-store.mjs';
+import {
+  createQueuedDispatch,
+  deleteUserDispatch,
+  dispatchAvailabilityFromRows,
+  dispatchForClient,
+  dispatchIsActive,
+  getUserDispatch
+} from '../shared/dispatch-store.mjs';
 import { discordDispatchCard } from '../shared/dispatch-worker.mjs';
 import { dispatchContentArtifactKey } from '../shared/dispatch-artifacts.mjs';
 import {
@@ -101,6 +108,59 @@ test('dispatch content artifact keys are scoped and filesystem-safe', () => {
     dispatchContentArtifactKey({ subscriberHash: 'abc/../def', dispatchId: 'dispatch#1?' }),
     'artifacts/dispatches/abc_.._def/dispatch_1_.json'
   );
+});
+
+test('dispatches are addressable by id lookup rows', async () => {
+  const items = new Map();
+  const dynamodb = {
+    async send(command) {
+      const input = command.input || {};
+      const key = input.Key ? `${input.Key.pk.S}\0${input.Key.sk.S}` : '';
+      if (command.constructor.name === 'PutItemCommand') {
+        items.set(`${input.Item.pk.S}\0${input.Item.sk.S}`, input.Item);
+        return {};
+      }
+      if (command.constructor.name === 'GetItemCommand') {
+        return { Item: items.get(key) };
+      }
+      if (command.constructor.name === 'DeleteItemCommand') {
+        items.delete(key);
+        return {};
+      }
+      throw new Error(`unexpected command ${command.constructor.name}`);
+    }
+  };
+
+  const created = await createQueuedDispatch({
+    dynamodb,
+    tableName: 'table',
+    subscriberHash: 'reader-hash',
+    emailHash: 'reader-hash',
+    toEmail: 'reader@example.com',
+    topic: 'RSS',
+    prompt: 'Explore RSS',
+    direction: 'Explore RSS and ownership.',
+    dispatchId: 'dispatch-123',
+    now: '2026-06-08T12:00:00.000Z'
+  });
+  assert.equal(created.id, 'dispatch-123');
+
+  const loaded = await getUserDispatch({
+    dynamodb,
+    tableName: 'table',
+    subscriberHash: 'reader-hash',
+    dispatchId: 'dispatch-123'
+  });
+  assert.equal(loaded.id, 'dispatch-123');
+  assert.equal(loaded.topic, 'RSS');
+
+  await deleteUserDispatch({
+    dynamodb,
+    tableName: 'table',
+    subscriberHash: 'reader-hash',
+    dispatchId: 'dispatch-123'
+  });
+  assert.equal(items.size, 0);
 });
 
 test('dispatch template test payload renders placeholder content with real source links', () => {

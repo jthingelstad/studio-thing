@@ -13,6 +13,10 @@ export function dispatchSk(createdAt, dispatchId) {
   return `dispatch#${createdAt}#${dispatchId}`;
 }
 
+function dispatchLookupSk(dispatchId) {
+  return `dispatch-id#${dispatchId}`;
+}
+
 export function validDispatchId(value) {
   const text = String(value || '').trim();
   return DISPATCH_ID_RE.test(text) ? text : '';
@@ -135,8 +139,39 @@ export async function listUserDispatches({ dynamodb, tableName, subscriberHash, 
 export async function getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId }) {
   const id = validDispatchId(dispatchId);
   if (!id) return null;
-  const rows = await listUserDispatches({ dynamodb, tableName, subscriberHash, limit: 50 });
-  return rows.find((row) => row.id === id) || null;
+  const lookup = await dynamodb.send(new GetItemCommand({
+    TableName: tableName,
+    Key: {
+      pk: dynamoString(userConversationPk(subscriberHash)),
+      sk: dynamoString(dispatchLookupSk(id))
+    }
+  }));
+  const createdAt = fromDynamoAttr(lookup.Item?.created_at);
+  const dispatchSortKey = fromDynamoAttr(lookup.Item?.dispatch_sk) || (createdAt ? dispatchSk(createdAt, id) : '');
+  if (!dispatchSortKey) return null;
+  const response = await dynamodb.send(new GetItemCommand({
+    TableName: tableName,
+    Key: {
+      pk: dynamoString(userConversationPk(subscriberHash)),
+      sk: dynamoString(dispatchSortKey)
+    }
+  }));
+  return response.Item ? dispatchFromItem(response.Item) : null;
+}
+
+async function putDispatchLookup({ dynamodb, tableName, subscriberHash, dispatchId, createdAt, now = createdAt }) {
+  await dynamodb.send(new PutItemCommand({
+    TableName: tableName,
+    Item: {
+      pk: dynamoString(userConversationPk(subscriberHash)),
+      sk: dynamoString(dispatchLookupSk(dispatchId)),
+      item_type: dynamoString('dispatch_lookup'),
+      dispatch_id: dynamoString(dispatchId),
+      dispatch_sk: dynamoString(dispatchSk(createdAt, dispatchId)),
+      created_at: dynamoString(createdAt),
+      updated_at: dynamoString(now)
+    }
+  }));
 }
 
 export async function deleteUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId }) {
@@ -147,6 +182,13 @@ export async function deleteUserDispatch({ dynamodb, tableName, subscriberHash, 
     Key: {
       pk: dynamoString(userConversationPk(subscriberHash)),
       sk: dynamoString(dispatchSk(dispatch.created_at, dispatch.id))
+    }
+  }));
+  await dynamodb.send(new DeleteItemCommand({
+    TableName: tableName,
+    Key: {
+      pk: dynamoString(userConversationPk(subscriberHash)),
+      sk: dynamoString(dispatchLookupSk(dispatch.id))
     }
   }));
   return dispatch;
@@ -257,6 +299,7 @@ export async function upsertDispatchDraft({
       Item: item,
       ConditionExpression: 'attribute_not_exists(pk)'
     }));
+    await putDispatchLookup({ dynamodb, tableName, subscriberHash, dispatchId: id, createdAt: now });
     return await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: id });
   }
 
@@ -347,6 +390,7 @@ export async function createQueuedDispatch({
     },
     ConditionExpression: 'attribute_not_exists(pk)'
   }));
+  await putDispatchLookup({ dynamodb, tableName, subscriberHash, dispatchId: id, createdAt: now });
   return await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: id });
 }
 
@@ -467,7 +511,9 @@ function sourceDynamoItem(source = {}) {
 }
 
 export async function markDispatchReadyToSend({ dynamodb, tableName, subscriberHash, dispatch, result, artifact }) {
-  const now = new Date().toISOString();
+  const nowDate = new Date();
+  const now = nowDate.toISOString();
+  const leaseExpiresAt = isoAfter(process.env.DISPATCH_SEND_LEASE_SECONDS || DEFAULT_SEND_LEASE_SECONDS, nowDate);
   await dynamodb.send(new UpdateItemCommand({
     TableName: tableName,
     Key: {
@@ -487,7 +533,8 @@ export async function markDispatchReadyToSend({ dynamodb, tableName, subscriberH
       '#source_count = :source_count',
       '#sources = :sources',
       '#content_artifact_bucket = :content_artifact_bucket',
-      '#content_artifact_key = :content_artifact_key'
+      '#content_artifact_key = :content_artifact_key',
+      '#lease_expires_at = :lease_expires_at'
     ].join(', '),
     ConditionExpression: '#status = :generating AND #worker_run_id = :worker_run_id',
     ExpressionAttributeNames: {
@@ -504,7 +551,8 @@ export async function markDispatchReadyToSend({ dynamodb, tableName, subscriberH
       '#source_count': 'source_count',
       '#sources': 'sources',
       '#content_artifact_bucket': 'content_artifact_bucket',
-      '#content_artifact_key': 'content_artifact_key'
+      '#content_artifact_key': 'content_artifact_key',
+      '#lease_expires_at': 'lease_expires_at'
     },
     ExpressionAttributeValues: {
       ':generating': dynamoString('generating'),
@@ -520,7 +568,8 @@ export async function markDispatchReadyToSend({ dynamodb, tableName, subscriberH
       ':source_count': dynamoNumber((result.sources || []).length),
       ':sources': dynamoList(result.sources || [], sourceDynamoItem),
       ':content_artifact_bucket': dynamoString(artifact?.bucket || ''),
-      ':content_artifact_key': dynamoString(artifact?.key || '')
+      ':content_artifact_key': dynamoString(artifact?.key || ''),
+      ':lease_expires_at': dynamoString(leaseExpiresAt)
     }
   }));
   return await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: dispatch.id });
@@ -590,6 +639,42 @@ export async function markDispatchSent({ dynamodb, tableName, subscriberHash, di
   }));
 }
 
+export async function markDispatchReadyToRetry({ dynamodb, tableName, subscriberHash, dispatch, error }) {
+  const nowDate = new Date();
+  const now = nowDate.toISOString();
+  const leaseExpiresAt = isoAfter(process.env.DISPATCH_SEND_LEASE_SECONDS || DEFAULT_SEND_LEASE_SECONDS, nowDate);
+  await dynamodb.send(new UpdateItemCommand({
+    TableName: tableName,
+    Key: {
+      pk: dynamoString(userConversationPk(subscriberHash)),
+      sk: dynamoString(dispatchSk(dispatch.created_at, dispatch.id))
+    },
+    UpdateExpression: [
+      'SET #status = :ready_to_send',
+      '#updated_at = :now',
+      '#lease_expires_at = :lease_expires_at',
+      '#error = :error'
+    ].join(', '),
+    ConditionExpression: '#status = :sending AND #send_attempt_id = :send_attempt_id AND attribute_not_exists(#submission_id)',
+    ExpressionAttributeNames: {
+      '#status': 'status',
+      '#send_attempt_id': 'send_attempt_id',
+      '#submission_id': 'submission_id',
+      '#updated_at': 'updated_at',
+      '#lease_expires_at': 'lease_expires_at',
+      '#error': 'error'
+    },
+    ExpressionAttributeValues: {
+      ':sending': dynamoString('sending'),
+      ':ready_to_send': dynamoString('ready_to_send'),
+      ':send_attempt_id': dynamoString(dispatch.send_attempt_id),
+      ':now': dynamoString(now),
+      ':lease_expires_at': dynamoString(leaseExpiresAt),
+      ':error': dynamoString(String(error?.message || error || 'Dispatch delivery will retry.').slice(0, 1000))
+    }
+  }));
+}
+
 export async function markDispatchFailed({ dynamodb, tableName, subscriberHash, dispatch, error }) {
   const now = new Date().toISOString();
   await dynamodb.send(new UpdateItemCommand({
@@ -644,22 +729,27 @@ export async function recoverStaleDispatches({ dynamodb, tableName, subscriberHa
         }
       })).then(() => { recovered += 1; }).catch(() => {});
     } else if (row.status === 'ready_to_send') {
-      const now = new Date().toISOString();
+      const nowDate = new Date();
+      const now = nowDate.toISOString();
+      const leaseExpiresAt = isoAfter(process.env.DISPATCH_SEND_LEASE_SECONDS || DEFAULT_SEND_LEASE_SECONDS, nowDate);
       await dynamodb.send(new UpdateItemCommand({
         TableName: tableName,
         Key: {
           pk: dynamoString(userConversationPk(subscriberHash)),
           sk: dynamoString(dispatchSk(row.created_at, row.id))
         },
-        UpdateExpression: 'SET #updated_at = :now',
-        ConditionExpression: '#status = :ready_to_send',
+        UpdateExpression: 'SET #updated_at = :now, #lease_expires_at = :lease_expires_at',
+        ConditionExpression: '#status = :ready_to_send AND #lease_expires_at = :old_lease_expires_at',
         ExpressionAttributeNames: {
           '#status': 'status',
-          '#updated_at': 'updated_at'
+          '#updated_at': 'updated_at',
+          '#lease_expires_at': 'lease_expires_at'
         },
         ExpressionAttributeValues: {
           ':ready_to_send': dynamoString('ready_to_send'),
-          ':now': dynamoString(now)
+          ':now': dynamoString(now),
+          ':lease_expires_at': dynamoString(leaseExpiresAt),
+          ':old_lease_expires_at': dynamoString(row.lease_expires_at)
         }
       })).then(() => { recovered += 1; }).catch(() => {});
     } else if (row.status === 'sending') {
