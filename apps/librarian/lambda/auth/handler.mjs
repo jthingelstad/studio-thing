@@ -6,7 +6,7 @@ import { eventSummary, jsonResponse, methodAndPath, parseBody, clientSourceIp, u
 import { buildMagicLink, createMagicToken, magicLinkTtlSeconds, magicTokenHash, validMagicToken } from '../shared/magic-link.mjs';
 import { sendMagicLinkEmail } from '../shared/jmap-mail.mjs';
 import { checkRateLimit } from '../shared/rate-limit.mjs';
-import { createSessionToken, createSessionTokenForSub, emailHash, extractBearer, normalizeEmail, verifyToken } from '../shared/session.mjs';
+import { createSessionToken, createSessionTokenForSub, emailHash, extractBearer, normalizeEmail, stableHash, verifyToken } from '../shared/session.mjs';
 import { authProfile, getUserMemory, recordDiscordConnection, recordUserPreferredName } from '../shared/user-memory.mjs';
 import {
   DISCORD_LINK_TTL_SECONDS,
