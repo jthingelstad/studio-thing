@@ -16,6 +16,13 @@ import {
 import { renderTemplate, agentUserPrompt } from '../shared/prompts.mjs';
 import { subscriberStatus } from '../shared/buttondown.mjs';
 import {
+  createLinkCode,
+  createLinkState,
+  discordUserHash,
+  isSupportingEntitlement,
+  normalizeDiscordIdentity
+} from '../shared/discord-link.mjs';
+import {
   availableConversationModes,
   canUseConversationMode,
   entitlementsForSubscriber,
@@ -187,6 +194,27 @@ test('authProfile returns returning=false for first-time users', () => {
   assert.deepEqual(authProfile(null), { returning: false });
 });
 
+test('Discord link helpers normalize identity and hide raw user ids behind hashes', () => {
+  const state = createLinkState();
+  const code = createLinkCode();
+  assert.match(state, /^[A-Za-z0-9_-]{20,}$/);
+  assert.match(code, /^[A-Z0-9]{6,8}$/);
+  assert.match(discordUserHash('1234567890'), /^[a-f0-9]{64}$/);
+  assert.equal(discordUserHash('bad user id with spaces'), '');
+  assert.deepEqual(
+    normalizeDiscordIdentity({ username: 'thingy', global_name: 'Thingy Bot', guild_id: 'guild-1' }),
+    {
+      username: 'thingy',
+      global_name: 'Thingy Bot',
+      display_name: 'Thingy Bot',
+      guild_id: 'guild-1'
+    }
+  );
+  assert.equal(isSupportingEntitlement(['reader']), false);
+  assert.equal(isSupportingEntitlement(['reader', 'supporting_member']), true);
+  assert.equal(isSupportingEntitlement(['reader', 'owner']), true);
+});
+
 test('memoryFromItem shapes stored preferred names', () => {
   const memory = memoryFromItem({
     version: { N: '3' },
@@ -197,7 +225,18 @@ test('memoryFromItem shapes stored preferred names', () => {
     current_session_questions: { L: [{ M: { ts: { S: '2026-01-02T00:00:00Z' }, question: { S: 'What about RSS?' } } }] },
     synthesized_history: { L: [] },
     remembered_facts: { L: [] },
-    interests: { L: [{ S: 'RSS' }] }
+    interests: { L: [{ S: 'RSS' }] },
+    discord_connection: {
+      M: {
+        connected: { BOOL: true },
+        username: { S: 'thingy_user' },
+        global_name: { S: 'Thingy User' },
+        display_name: { S: 'Thingy User' },
+        guild_id: { S: 'guild-1' },
+        connected_at: { S: '2026-01-02T00:00:00Z' },
+        last_verified_at: { S: '2026-01-03T00:00:00Z' }
+      }
+    }
   }, 'subscriber-hash');
 
   assert.equal(memory.sub, 'subscriber-hash');
@@ -205,6 +244,7 @@ test('memoryFromItem shapes stored preferred names', () => {
   assert.equal(memory.preferred_name, 'Jamie');
   assert.equal(memory.current_session_questions[0].question, 'What about RSS?');
   assert.deepEqual(memory.interests, ['RSS']);
+  assert.equal(memory.discord_connection.display_name, 'Thingy User');
 });
 
 test('recordUserPreferredName reports failure when memory storage is not configured', async () => {
@@ -310,6 +350,7 @@ test('authProfile and memoryContextBlock surface durable reader memory', () => {
   const profile = authProfile(memory);
   assert.equal(profile.remembered_facts.length, 2);
   assert.deepEqual(profile.interests, ['IndieWeb']);
+  assert.equal(profile.discord_connection, null);
 
   const block = memoryContextBlock(memory);
   assert.match(block, /Remembered reader details/);

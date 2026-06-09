@@ -118,6 +118,38 @@ function writeStringList(values) {
   return { L: (values || []).map((value) => dynamoString(value)) };
 }
 
+function readDiscordConnection(value) {
+  const item = value?.M || null;
+  if (!item) return null;
+  const connectedAt = item.connected_at?.S || '';
+  const username = item.username?.S || '';
+  const globalName = item.global_name?.S || '';
+  if (!connectedAt && !username && !globalName) return null;
+  return {
+    connected: item.connected?.BOOL !== false,
+    username,
+    global_name: globalName,
+    display_name: item.display_name?.S || globalName || username,
+    guild_id: item.guild_id?.S || '',
+    connected_at: connectedAt,
+    last_verified_at: item.last_verified_at?.S || connectedAt
+  };
+}
+
+function writeDiscordConnection(connection = {}) {
+  return {
+    M: {
+      connected: { BOOL: connection.connected !== false },
+      username: dynamoString(connection.username || ''),
+      global_name: dynamoString(connection.global_name || ''),
+      display_name: dynamoString(connection.display_name || connection.global_name || connection.username || ''),
+      guild_id: dynamoString(connection.guild_id || ''),
+      connected_at: dynamoString(connection.connected_at || ''),
+      last_verified_at: dynamoString(connection.last_verified_at || connection.connected_at || '')
+    }
+  };
+}
+
 function ttlFromNow() {
   const days = Number(process.env.LIBRARIAN_USER_MEMORY_TTL_DAYS || TTL_DAYS_DEFAULT);
   return Math.floor(Date.now() / 1000) + days * 86400;
@@ -210,7 +242,8 @@ export function memoryFromItem(item, sub = '') {
     remembered_facts: (item.remembered_facts?.L || [])
       .map(readFact)
       .filter(Boolean),
-    interests: readStringList(item.interests)
+    interests: readStringList(item.interests),
+    discord_connection: readDiscordConnection(item.discord_connection)
   };
 }
 
@@ -434,6 +467,58 @@ export async function recordUserPreferredName(sub, name) {
   }
 }
 
+export async function recordDiscordConnection(sub, connection = {}) {
+  const tableName = process.env.TABLE_NAME;
+  if (!tableName || !sub) return { ok: false, error: 'Missing memory write context.' };
+  const nowIso = new Date().toISOString();
+  const value = {
+    connected: true,
+    username: String(connection.username || '').trim().slice(0, 80),
+    global_name: String(connection.global_name || '').trim().slice(0, 80),
+    display_name: String(connection.display_name || connection.global_name || connection.username || '').trim().slice(0, 80),
+    guild_id: String(connection.guild_id || '').trim().slice(0, 80),
+    connected_at: String(connection.connected_at || nowIso),
+    last_verified_at: String(connection.last_verified_at || nowIso)
+  };
+  try {
+    const { UpdateItemCommand } = await import('@aws-sdk/client-dynamodb');
+    const { dynamodb } = await import('./aws-clients.mjs');
+    const response = await dynamodb.send(new UpdateItemCommand({
+      TableName: tableName,
+      Key: memoryKey(sub),
+      UpdateExpression: [
+        'SET #discord_connection = :discord_connection',
+        '#first_seen_at = if_not_exists(#first_seen_at, :now)',
+        '#last_seen_at = :now',
+        '#ttl = :ttl',
+        '#version = if_not_exists(#version, :zero) + :one'
+      ].join(', '),
+      ExpressionAttributeNames: {
+        '#discord_connection': 'discord_connection',
+        '#first_seen_at': 'first_seen_at',
+        '#last_seen_at': 'last_seen_at',
+        '#ttl': 'ttl',
+        '#version': 'version'
+      },
+      ExpressionAttributeValues: {
+        ':discord_connection': writeDiscordConnection(value),
+        ':now': dynamoString(nowIso),
+        ':ttl': dynamoNumber(ttlFromNow()),
+        ':zero': dynamoNumber(0),
+        ':one': dynamoNumber(1)
+      },
+      ReturnValues: 'ALL_NEW'
+    }));
+    logEvent('info', 'user_discord_connection_recorded');
+    return { ok: true, memory: memoryFromItem(response?.Attributes, sub), discord_connection: value };
+  } catch (error) {
+    logEvent('warning', 'user_discord_connection_write_failed', {
+      error_type: error?.constructor?.name || 'Error'
+    });
+    return { ok: false, error: 'Memory write failed.' };
+  }
+}
+
 // Bedrock-summarize a session's questions into one short paragraph.
 // Surfaces the conversational arc, not a per-question recap. Returns
 // '' on failure so the caller can decide whether to skip the synth.
@@ -488,7 +573,8 @@ export function authProfile(memory) {
     current_session_questions: (memory.current_session_questions || []).slice(-5),
     prior_session_summaries: (memory.synthesized_history || []).slice(-3),
     remembered_facts: (memory.remembered_facts || []).slice(-8),
-    interests: (memory.interests || []).slice(-8)
+    interests: (memory.interests || []).slice(-8),
+    discord_connection: memory.discord_connection || null
   };
 }
 

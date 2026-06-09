@@ -49,10 +49,9 @@ Parameters:
     NoEcho: true
     Default: ""
     Description: >
-      Shared secret for the Discord bridge auth action. When set, the
-      /auth endpoint accepts action=discord_bridge requests carrying this
-      secret + a discord_user_id and mints a session token for that user.
-      Leave empty to disable the bridge action (returns 503).
+      Shared secret for trusted Discord bridge calls, including web-account
+      linking, role validation, Discord mention answers, and operator
+      retrieval. Leave empty to disable bridge-only actions.
   DiscordConversationWebhookUrl:
     Type: String
     NoEcho: true
