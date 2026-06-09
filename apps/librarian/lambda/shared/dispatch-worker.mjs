@@ -2,6 +2,7 @@ import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
 import { dynamodb } from './aws-clients.mjs';
 import { errorFields, logEvent } from './logging.mjs';
 import { renderDispatch } from './dispatch-generator.mjs';
+import { getDispatchContentArtifact, putDispatchContentArtifact } from './dispatch-artifacts.mjs';
 import { sendJmapEmail } from './jmap-mail.mjs';
 import {
   claimReadyToSendDispatch,
@@ -94,13 +95,19 @@ function dispatchRefsFromStream(event = {}) {
   return refs;
 }
 
-function resultFromDispatch(dispatch = {}) {
+async function resultFromDispatch(dispatch = {}) {
+  const artifact = dispatch.content_artifact_bucket && dispatch.content_artifact_key
+    ? await getDispatchContentArtifact({
+      bucket: dispatch.content_artifact_bucket,
+      key: dispatch.content_artifact_key
+    })
+    : {};
   return {
     subject: dispatch.subject,
     title: dispatch.title,
     preview: dispatch.preview,
-    text: dispatch.content_text,
-    html: dispatch.content_html,
+    text: artifact.text || dispatch.content_text,
+    html: artifact.html || dispatch.content_html,
     model: dispatch.model,
     usage: {
       inputTokens: dispatch.input_tokens || 0,
@@ -117,7 +124,7 @@ async function sendReadyDispatch({ tableName, subscriberHash, dispatch }) {
     subscriberHash,
     dispatch
   });
-  const result = resultFromDispatch(sending);
+  const result = await resultFromDispatch(sending);
   const sent = await sendJmapEmail({
     to: sending.to_email,
     subject: result.subject,
@@ -176,12 +183,18 @@ export async function processDispatchStream({ event = {}, tableName }) {
         }));
       } else {
         const rendered = await renderDispatch(claimed);
+        const artifact = await putDispatchContentArtifact({
+          subscriberHash: ref.subscriberHash,
+          dispatchId: claimed.id,
+          result: rendered
+        });
         const ready = await markDispatchReadyToSend({
           dynamodb,
           tableName,
           subscriberHash: ref.subscriberHash,
           dispatch: claimed,
-          result: rendered
+          result: rendered,
+          artifact
         });
         ({ dispatch: sentDispatch, result } = await sendReadyDispatch({
           tableName,

@@ -55,6 +55,8 @@ export function dispatchFromItem(item = {}) {
     source_count: Number(row.source_count || 0),
     sources: Array.isArray(row.sources) ? row.sources : [],
     messages: Array.isArray(row.messages) ? row.messages : [],
+    content_artifact_bucket: String(row.content_artifact_bucket || ''),
+    content_artifact_key: String(row.content_artifact_key || ''),
     content_text: String(row.content_text || ''),
     content_html: String(row.content_html || '')
   };
@@ -464,7 +466,7 @@ function sourceDynamoItem(source = {}) {
   };
 }
 
-export async function markDispatchReadyToSend({ dynamodb, tableName, subscriberHash, dispatch, result }) {
+export async function markDispatchReadyToSend({ dynamodb, tableName, subscriberHash, dispatch, result, artifact }) {
   const now = new Date().toISOString();
   await dynamodb.send(new UpdateItemCommand({
     TableName: tableName,
@@ -484,8 +486,8 @@ export async function markDispatchReadyToSend({ dynamodb, tableName, subscriberH
       '#output_tokens = :output_tokens',
       '#source_count = :source_count',
       '#sources = :sources',
-      '#content_text = :content_text',
-      '#content_html = :content_html'
+      '#content_artifact_bucket = :content_artifact_bucket',
+      '#content_artifact_key = :content_artifact_key'
     ].join(', '),
     ConditionExpression: '#status = :generating AND #worker_run_id = :worker_run_id',
     ExpressionAttributeNames: {
@@ -501,8 +503,8 @@ export async function markDispatchReadyToSend({ dynamodb, tableName, subscriberH
       '#output_tokens': 'output_tokens',
       '#source_count': 'source_count',
       '#sources': 'sources',
-      '#content_text': 'content_text',
-      '#content_html': 'content_html'
+      '#content_artifact_bucket': 'content_artifact_bucket',
+      '#content_artifact_key': 'content_artifact_key'
     },
     ExpressionAttributeValues: {
       ':generating': dynamoString('generating'),
@@ -517,8 +519,8 @@ export async function markDispatchReadyToSend({ dynamodb, tableName, subscriberH
       ':output_tokens': dynamoNumber(result.usage?.outputTokens || result.usage?.output_tokens || 0),
       ':source_count': dynamoNumber((result.sources || []).length),
       ':sources': dynamoList(result.sources || [], sourceDynamoItem),
-      ':content_text': dynamoString(String(result.text || '').slice(0, 60000)),
-      ':content_html': dynamoString(String(result.html || '').slice(0, 120000))
+      ':content_artifact_bucket': dynamoString(artifact?.bucket || ''),
+      ':content_artifact_key': dynamoString(artifact?.key || '')
     }
   }));
   return await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: dispatch.id });

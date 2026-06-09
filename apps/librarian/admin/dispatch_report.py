@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import html
+import json
 import os
 from collections import Counter
 from datetime import UTC, datetime, timedelta
@@ -113,12 +114,31 @@ def render_sources(sources: list[dict[str, Any]]) -> str:
     return "<ol>" + "\n".join(items) + "</ol>"
 
 
+def load_dispatch_content(row: dict[str, Any]) -> tuple[str, bool]:
+    if row.get("content_html"):
+        return str(row.get("content_html") or ""), True
+    if row.get("content_text"):
+        return str(row.get("content_text") or ""), False
+    bucket = str(row.get("content_artifact_bucket") or "")
+    key = str(row.get("content_artifact_key") or "")
+    if not bucket or not key:
+        return "", False
+    try:
+        body = boto3.client("s3").get_object(Bucket=bucket, Key=key)["Body"].read()
+        payload = json.loads(body.decode("utf-8"))
+        html_content = str(payload.get("html") or "")
+        text_content = str(payload.get("text") or "")
+        return (html_content, True) if html_content else (text_content, False)
+    except Exception as exc:  # noqa: BLE001 - report generation should keep going.
+        return f"Could not load Dispatch artifact s3://{bucket}/{key}: {exc}", False
+
+
 def render_report(rows: list[dict[str, Any]], *, days: int) -> str:
     counts = Counter(str(row.get("status") or "unknown") for row in rows)
     status_pills = " ".join(f"<span class='pill'>{h(k)} {v}</span>" for k, v in counts.most_common())
     cards = []
     for row in rows:
-        content = str(row.get("content_html") or row.get("content_text") or "")
+        content, content_is_html = load_dispatch_content(row)
         test_badge = " · <span class='pill'>template test</span>" if row.get("template_test") else ""
         cards.append(f"""
         <article class="card status-{h(row.get('status'))}">
@@ -140,7 +160,7 @@ def render_report(rows: list[dict[str, Any]], *, days: int) -> str:
           </details>
           <details>
             <summary>Stored content</summary>
-            <div class="content">{content if row.get('content_html') else '<pre>' + h(content) + '</pre>'}</div>
+            <div class="content">{content if content_is_html else '<pre>' + h(content) + '</pre>'}</div>
           </details>
         </article>
         """)

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { dispatchAvailabilityFromRows, dispatchForClient, dispatchIsActive } from '../shared/dispatch-store.mjs';
 import { discordDispatchCard } from '../shared/dispatch-worker.mjs';
+import { dispatchContentArtifactKey } from '../shared/dispatch-artifacts.mjs';
 import {
   dispatchHtmlEmail,
   dispatchSubject,
@@ -79,6 +80,8 @@ test('dispatchForClient includes draft state but omits generated content', () =>
         }
       }]
     },
+    content_artifact_bucket: { S: 'private-bucket' },
+    content_artifact_key: { S: 'artifacts/dispatches/abc/d1.json' },
     content_html: { S: '<p>private</p>' },
     content_text: { S: 'private' }
   });
@@ -87,8 +90,17 @@ test('dispatchForClient includes draft state but omits generated content', () =>
   assert.equal(client.prompt, 'Explore the open web');
   assert.equal(client.template_test, true);
   assert.equal(client.messages.length, 1);
+  assert.equal(client.content_artifact_bucket, undefined);
+  assert.equal(client.content_artifact_key, undefined);
   assert.equal(client.content_html, undefined);
   assert.equal(client.content_text, undefined);
+});
+
+test('dispatch content artifact keys are scoped and filesystem-safe', () => {
+  assert.equal(
+    dispatchContentArtifactKey({ subscriberHash: 'abc/../def', dispatchId: 'dispatch#1?' }),
+    'artifacts/dispatches/abc_.._def/dispatch_1_.json'
+  );
 });
 
 test('dispatch template test payload renders placeholder content with real source links', () => {

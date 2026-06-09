@@ -159,6 +159,13 @@ Resources:
                   - !Sub arn:aws:s3:::${CorpusBucket}/${GraphKey}
                   - !Sub arn:aws:s3:::${CorpusBucket}/${BlogCorpusKey}
                   - !Sub arn:aws:s3:::${CorpusBucket}/${PodcastCorpusKey}
+                  - !Sub arn:aws:s3:::${CorpusBucket}/artifacts/dispatches/*
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                Resource:
+                  - !Sub arn:aws:s3:::${CorpusBucket}/artifacts/dispatches/*
               - Effect: Allow
                 Action:
                   - bedrock:InvokeModel
