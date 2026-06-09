@@ -19,6 +19,7 @@ import {
   userConversationPk,
   validConversationId
 } from './user-conversations.mjs';
+import { conversationTtlSeconds } from './retention.mjs';
 
 function noopLog() {}
 
@@ -198,7 +199,8 @@ export async function createUserConversation({
       created_at: dynamoString(now),
       updated_at: dynamoString(now),
       last_message_at: dynamoString(''),
-      turn_count: dynamoNumber(0)
+      turn_count: dynamoNumber(0),
+      ttl: dynamoNumber(conversationTtlSeconds(now))
     },
     ConditionExpression: 'attribute_not_exists(pk)'
   }));
@@ -221,17 +223,19 @@ export async function renameUserConversation({
       pk: dynamoString(userConversationPk(subscriberHash)),
       sk: dynamoString(conversationSk(validId))
     },
-    UpdateExpression: 'SET #title = :title, #title_source = :title_source, #updated_at = :updated_at',
+    UpdateExpression: 'SET #title = :title, #title_source = :title_source, #updated_at = :updated_at, #ttl = :ttl',
     ConditionExpression: 'attribute_exists(pk)',
     ExpressionAttributeNames: {
       '#title': 'title',
       '#title_source': 'title_source',
-      '#updated_at': 'updated_at'
+      '#updated_at': 'updated_at',
+      '#ttl': 'ttl'
     },
     ExpressionAttributeValues: {
       ':title': dynamoString(conversationTitle(title)),
       ':title_source': dynamoString('user'),
-      ':updated_at': dynamoString(now)
+      ':updated_at': dynamoString(now),
+      ':ttl': dynamoNumber(conversationTtlSeconds(now))
     }
   }));
   return await getUserConversationMetadata({ dynamodb, tableName, subscriberHash, conversationId: validId });
@@ -278,7 +282,8 @@ async function putTurn({
     stop_reason: dynamoString(metrics.stop_reason),
     tool_count: dynamoNumber(toolNames.length),
     tool_names: dynamoStringList(toolNames, 20, 80),
-    tool_trace_json: toolTraceDynamoString(toolTrace)
+    tool_trace_json: toolTraceDynamoString(toolTrace),
+    ttl: dynamoNumber(conversationTtlSeconds(createdAt))
   };
   if (artifact) {
     item.artifact_kind = dynamoString(artifact.kind || 'artifact');
@@ -323,7 +328,8 @@ async function upsertConversation({
       '#last_message_at = :now',
       '#last_request_id = :request_id',
       preserveLastQuestion ? '#last_question = if_not_exists(#last_question, :question)' : '#last_question = :question',
-      '#turn_count = if_not_exists(#turn_count, :zero) + :turn_increment'
+      '#turn_count = if_not_exists(#turn_count, :zero) + :turn_increment',
+      '#ttl = :ttl'
     ].join(', '),
     ExpressionAttributeNames: {
       '#item_type': 'item_type',
@@ -338,7 +344,8 @@ async function upsertConversation({
       '#last_message_at': 'last_message_at',
       '#last_request_id': 'last_request_id',
       '#last_question': 'last_question',
-      '#turn_count': 'turn_count'
+      '#turn_count': 'turn_count',
+      '#ttl': 'ttl'
     },
     ExpressionAttributeValues: {
       ':item_type': dynamoString('conversation'),
@@ -352,7 +359,8 @@ async function upsertConversation({
       ':request_id': dynamoString(requestId),
       ':question': dynamoString(String(lastQuestion || '').slice(0, 500)),
       ':zero': dynamoNumber(0),
-      ':turn_increment': dynamoNumber(incrementTurns ? 1 : 0)
+      ':turn_increment': dynamoNumber(incrementTurns ? 1 : 0),
+      ':ttl': dynamoNumber(conversationTtlSeconds(now))
     },
     ReturnValues: 'ALL_NEW'
   }));
@@ -530,7 +538,8 @@ export async function updateUserConversationEvaluation({
         '#eval_reader = :eval_reader',
         '#eval_thingy = :eval_thingy',
         '#eval_takeaway = :eval_takeaway',
-        '#updated_at = :updated_at'
+        '#updated_at = :updated_at',
+        '#ttl = :ttl'
       ].join(', '),
       ConditionExpression: 'attribute_exists(pk)',
       ExpressionAttributeNames: {
@@ -550,7 +559,8 @@ export async function updateUserConversationEvaluation({
         '#eval_reader': 'eval_reader',
         '#eval_thingy': 'eval_thingy',
         '#eval_takeaway': 'eval_takeaway',
-        '#updated_at': 'updated_at'
+        '#updated_at': 'updated_at',
+        '#ttl': 'ttl'
       },
       ExpressionAttributeValues: {
         ':summary': dynamoString(String(summary.summary || '').slice(0, 1000)),
@@ -569,7 +579,8 @@ export async function updateUserConversationEvaluation({
         ':eval_reader': dynamoString(String(assessment.reader || '').slice(0, 1000)),
         ':eval_thingy': dynamoString(String(assessment.thingy || '').slice(0, 1000)),
         ':eval_takeaway': dynamoString(String(assessment.takeaway || '').slice(0, 600)),
-        ':updated_at': dynamoString(now)
+        ':updated_at': dynamoString(now),
+        ':ttl': dynamoNumber(conversationTtlSeconds(now))
       },
       ReturnValues: 'ALL_NEW'
     }));
@@ -582,18 +593,20 @@ export async function updateUserConversationEvaluation({
             pk: dynamoString(userConversationPk(subscriberHash)),
             sk: dynamoString(conversationSk(validId))
           },
-          UpdateExpression: 'SET #title = :title, #title_source = :title_source, #updated_at = :updated_at',
+          UpdateExpression: 'SET #title = :title, #title_source = :title_source, #updated_at = :updated_at, #ttl = :ttl',
           ConditionExpression: 'attribute_exists(pk) AND (attribute_not_exists(#title_source) OR #title_source <> :user_title_source)',
           ExpressionAttributeNames: {
             '#title': 'title',
             '#title_source': 'title_source',
-            '#updated_at': 'updated_at'
+            '#updated_at': 'updated_at',
+            '#ttl': 'ttl'
           },
           ExpressionAttributeValues: {
             ':title': dynamoString(evaluatedTitle),
             ':title_source': dynamoString('eval'),
             ':user_title_source': dynamoString('user'),
-            ':updated_at': dynamoString(now)
+            ':updated_at': dynamoString(now),
+            ':ttl': dynamoNumber(conversationTtlSeconds(now))
           },
           ReturnValues: 'ALL_NEW'
         }));
@@ -634,15 +647,17 @@ export async function markUserConversationEvalPosted({
       pk: dynamoString(userConversationPk(subscriberHash)),
       sk: dynamoString(conversationSk(validId))
     },
-    UpdateExpression: 'SET #eval_posted_to_chatter_at = :posted_at, #updated_at = :updated_at',
+    UpdateExpression: 'SET #eval_posted_to_chatter_at = :posted_at, #updated_at = :updated_at, #ttl = :ttl',
     ConditionExpression: 'attribute_exists(pk)',
     ExpressionAttributeNames: {
       '#eval_posted_to_chatter_at': 'eval_posted_to_chatter_at',
-      '#updated_at': 'updated_at'
+      '#updated_at': 'updated_at',
+      '#ttl': 'ttl'
     },
     ExpressionAttributeValues: {
       ':posted_at': dynamoString(postedAt),
-      ':updated_at': dynamoString(postedAt)
+      ':updated_at': dynamoString(postedAt),
+      ':ttl': dynamoNumber(conversationTtlSeconds(postedAt))
     },
     ReturnValues: 'ALL_NEW'
   }));

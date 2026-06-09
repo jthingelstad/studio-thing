@@ -6,7 +6,8 @@ import {
   dispatchAvailabilityFromRows,
   dispatchForClient,
   dispatchIsActive,
-  getUserDispatch
+  getUserDispatch,
+  upsertDispatchDraft
 } from '../shared/dispatch-store.mjs';
 import { discordDispatchCard } from '../shared/dispatch-worker.mjs';
 import { dispatchContentArtifactKey } from '../shared/dispatch-artifacts.mjs';
@@ -144,6 +145,11 @@ test('dispatches are addressable by id lookup rows', async () => {
     now: '2026-06-08T12:00:00.000Z'
   });
   assert.equal(created.id, 'dispatch-123');
+  assert.equal(created.ttl, 0);
+
+  const queuedItems = [...items.values()];
+  assert.equal(queuedItems.length, 2);
+  assert.equal(queuedItems.some((item) => item.ttl), false);
 
   const loaded = await getUserDispatch({
     dynamodb,
@@ -161,6 +167,41 @@ test('dispatches are addressable by id lookup rows', async () => {
     dispatchId: 'dispatch-123'
   });
   assert.equal(items.size, 0);
+});
+
+test('dispatch drafts get short-lived ttl on canonical and lookup rows', async () => {
+  const items = new Map();
+  const dynamodb = {
+    async send(command) {
+      const input = command.input || {};
+      const key = input.Key ? `${input.Key.pk.S}\0${input.Key.sk.S}` : '';
+      if (command.constructor.name === 'PutItemCommand') {
+        items.set(`${input.Item.pk.S}\0${input.Item.sk.S}`, input.Item);
+        return {};
+      }
+      if (command.constructor.name === 'GetItemCommand') {
+        return { Item: items.get(key) };
+      }
+      throw new Error(`unexpected command ${command.constructor.name}`);
+    }
+  };
+  const now = '2026-06-08T12:00:00.000Z';
+  const expectedTtl = Math.floor(Date.parse(now) / 1000) + (7 * 24 * 60 * 60);
+
+  const draft = await upsertDispatchDraft({
+    dynamodb,
+    tableName: 'table',
+    subscriberHash: 'reader-hash',
+    dispatchId: 'dispatch-draft-1',
+    prompt: 'Explore RSS',
+    now
+  });
+
+  assert.equal(draft.id, 'dispatch-draft-1');
+  assert.equal(draft.ttl, expectedTtl);
+  for (const item of items.values()) {
+    assert.equal(Number(item.ttl.N), expectedTtl);
+  }
 });
 
 test('dispatch template test payload renders placeholder content with real source links', () => {

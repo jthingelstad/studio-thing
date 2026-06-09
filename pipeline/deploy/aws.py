@@ -210,7 +210,7 @@ def ensure_private_bucket(bucket: str) -> None:
             "ID": "expire-thingy-dispatch-artifacts",
             "Status": "Enabled",
             "Filter": {"Prefix": "artifacts/dispatches/"},
-            "Expiration": {"Days": 365},
+            "Expiration": {"Days": 90},
             "NoncurrentVersionExpiration": {"NoncurrentDays": 30},
         },
     ]

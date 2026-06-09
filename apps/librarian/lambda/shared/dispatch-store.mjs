@@ -1,6 +1,7 @@
 import { DeleteItemCommand, GetItemCommand, PutItemCommand, QueryCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import crypto from 'node:crypto';
 import { dynamoList, dynamoNumber, dynamoString, fromDynamoAttr, userConversationPk } from './user-conversations.mjs';
+import { dispatchDraftTtlSeconds, dispatchHistoryTtlSeconds } from './retention.mjs';
 
 const DISPATCH_ID_RE = /^[A-Za-z0-9_.:-]{1,96}$/;
 const ACTIVE_STATUSES = new Set(['queued', 'generating', 'ready_to_send', 'sending']);
@@ -52,6 +53,7 @@ export function dispatchFromItem(item = {}) {
     send_attempt_id: String(row.send_attempt_id || ''),
     sent_at: String(row.sent_at || ''),
     failed_at: String(row.failed_at || ''),
+    ttl: Number(row.ttl || 0),
     template_test: Boolean(row.template_test),
     model: String(row.model || ''),
     input_tokens: Number(row.input_tokens || 0),
@@ -159,19 +161,50 @@ export async function getUserDispatch({ dynamodb, tableName, subscriberHash, dis
   return response.Item ? dispatchFromItem(response.Item) : null;
 }
 
-async function putDispatchLookup({ dynamodb, tableName, subscriberHash, dispatchId, createdAt, now = createdAt }) {
+async function putDispatchLookup({ dynamodb, tableName, subscriberHash, dispatchId, createdAt, now = createdAt, ttl = 0 }) {
+  const item = {
+    pk: dynamoString(userConversationPk(subscriberHash)),
+    sk: dynamoString(dispatchLookupSk(dispatchId)),
+    item_type: dynamoString('dispatch_lookup'),
+    dispatch_id: dynamoString(dispatchId),
+    dispatch_sk: dynamoString(dispatchSk(createdAt, dispatchId)),
+    created_at: dynamoString(createdAt),
+    updated_at: dynamoString(now)
+  };
+  if (Number(ttl) > 0) item.ttl = dynamoNumber(ttl);
   await dynamodb.send(new PutItemCommand({
     TableName: tableName,
-    Item: {
-      pk: dynamoString(userConversationPk(subscriberHash)),
-      sk: dynamoString(dispatchLookupSk(dispatchId)),
-      item_type: dynamoString('dispatch_lookup'),
-      dispatch_id: dynamoString(dispatchId),
-      dispatch_sk: dynamoString(dispatchSk(createdAt, dispatchId)),
-      created_at: dynamoString(createdAt),
-      updated_at: dynamoString(now)
-    }
+    Item: item
   }));
+}
+
+async function updateDispatchLookupTtl({ dynamodb, tableName, subscriberHash, dispatchId, now, ttl = 0 }) {
+  const setTtl = Number(ttl) > 0;
+  try {
+    await dynamodb.send(new UpdateItemCommand({
+      TableName: tableName,
+      Key: {
+        pk: dynamoString(userConversationPk(subscriberHash)),
+        sk: dynamoString(dispatchLookupSk(dispatchId))
+      },
+      UpdateExpression: setTtl
+        ? 'SET #updated_at = :now, #ttl = :ttl'
+        : 'SET #updated_at = :now REMOVE #ttl',
+      ConditionExpression: 'attribute_exists(pk)',
+      ExpressionAttributeNames: {
+        '#updated_at': 'updated_at',
+        '#ttl': 'ttl'
+      },
+      ExpressionAttributeValues: setTtl ? {
+        ':now': dynamoString(now),
+        ':ttl': dynamoNumber(ttl)
+      } : {
+        ':now': dynamoString(now)
+      }
+    }));
+  } catch (error) {
+    if (error?.name !== 'ConditionalCheckFailedException') throw error;
+  }
 }
 
 export async function deleteUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId }) {
@@ -276,6 +309,7 @@ export async function upsertDispatchDraft({
   const id = validDispatchId(dispatchId) || crypto.randomUUID();
   const existing = dispatchId ? await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: id }) : null;
   const normalizedStatus = draftStatus(status);
+  const ttl = dispatchDraftTtlSeconds(now);
   const item = {
     pk: dynamoString(userConversationPk(subscriberHash)),
     sk: dynamoString(dispatchSk(now, id)),
@@ -291,7 +325,8 @@ export async function upsertDispatchDraft({
     title: dynamoString(String(title || topic || prompt || 'Dispatch').replace(/\s+/g, ' ').trim().slice(0, 120)),
     messages: dynamoList(messages, dispatchMessageDynamoItem),
     created_at: dynamoString(now),
-    updated_at: dynamoString(now)
+    updated_at: dynamoString(now),
+    ttl: dynamoNumber(ttl)
   };
   if (!existing) {
     await dynamodb.send(new PutItemCommand({
@@ -299,7 +334,7 @@ export async function upsertDispatchDraft({
       Item: item,
       ConditionExpression: 'attribute_not_exists(pk)'
     }));
-    await putDispatchLookup({ dynamodb, tableName, subscriberHash, dispatchId: id, createdAt: now });
+    await putDispatchLookup({ dynamodb, tableName, subscriberHash, dispatchId: id, createdAt: now, now, ttl });
     return await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: id });
   }
 
@@ -318,7 +353,8 @@ export async function upsertDispatchDraft({
       '#clarification_answer = :clarification_answer',
       '#title = :title',
       '#messages = :messages',
-      '#updated_at = :now'
+      '#updated_at = :now',
+      '#ttl = :ttl'
     ].join(', '),
     ConditionExpression: '#status IN (:draft, :shaping, :needs_clarification, :ready)',
     ExpressionAttributeNames: {
@@ -330,7 +366,8 @@ export async function upsertDispatchDraft({
       '#clarification_answer': 'clarification_answer',
       '#title': 'title',
       '#messages': 'messages',
-      '#updated_at': 'updated_at'
+      '#updated_at': 'updated_at',
+      '#ttl': 'ttl'
     },
     ExpressionAttributeValues: {
       ':status': dynamoString(normalizedStatus),
@@ -342,12 +379,14 @@ export async function upsertDispatchDraft({
       ':title': dynamoString(String(title || topic || prompt || existing.title || 'Dispatch').replace(/\s+/g, ' ').trim().slice(0, 120)),
       ':messages': { L: compactMessages(messages) },
       ':now': dynamoString(now),
+      ':ttl': dynamoNumber(ttl),
       ':draft': dynamoString('draft'),
       ':shaping': dynamoString('shaping'),
       ':needs_clarification': dynamoString('needs_clarification'),
       ':ready': dynamoString('ready')
     }
   }));
+  await updateDispatchLookupTtl({ dynamodb, tableName, subscriberHash, dispatchId: id, now, ttl });
   return await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: id });
 }
 
@@ -431,7 +470,7 @@ export async function queueDraftDispatch({
       '#template_test = :template_test',
       '#updated_at = :now',
       '#queued_at = :now'
-    ].join(', '),
+    ].join(', ') + ' REMOVE #ttl',
     ConditionExpression: '#status IN (:draft, :shaping, :needs_clarification, :ready)',
     ExpressionAttributeNames: {
       '#status': 'status',
@@ -444,7 +483,8 @@ export async function queueDraftDispatch({
       '#clarification_answer': 'clarification_answer',
       '#template_test': 'template_test',
       '#updated_at': 'updated_at',
-      '#queued_at': 'queued_at'
+      '#queued_at': 'queued_at',
+      '#ttl': 'ttl'
     },
     ExpressionAttributeValues: {
       ':queued': dynamoString('queued'),
@@ -463,6 +503,7 @@ export async function queueDraftDispatch({
       ':ready': dynamoString('ready')
     }
   }));
+  await updateDispatchLookupTtl({ dynamodb, tableName, subscriberHash, dispatchId: id, now, ttl: 0 });
   return await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: id });
 }
 
@@ -477,14 +518,15 @@ export async function claimQueuedDispatch({ dynamodb, tableName, subscriberHash,
       pk: dynamoString(userConversationPk(subscriberHash)),
       sk: dynamoString(dispatchSk(dispatch.created_at, dispatch.id))
     },
-    UpdateExpression: 'SET #status = :generating, #updated_at = :now, #started_at = :now, #lease_expires_at = :lease_expires_at, #worker_run_id = :worker_run_id',
+    UpdateExpression: 'SET #status = :generating, #updated_at = :now, #started_at = :now, #lease_expires_at = :lease_expires_at, #worker_run_id = :worker_run_id REMOVE #ttl',
     ConditionExpression: '#status = :queued',
     ExpressionAttributeNames: {
       '#status': 'status',
       '#updated_at': 'updated_at',
       '#started_at': 'started_at',
       '#lease_expires_at': 'lease_expires_at',
-      '#worker_run_id': 'worker_run_id'
+      '#worker_run_id': 'worker_run_id',
+      '#ttl': 'ttl'
     },
     ExpressionAttributeValues: {
       ':queued': dynamoString('queued'),
@@ -535,7 +577,7 @@ export async function markDispatchReadyToSend({ dynamodb, tableName, subscriberH
       '#content_artifact_bucket = :content_artifact_bucket',
       '#content_artifact_key = :content_artifact_key',
       '#lease_expires_at = :lease_expires_at'
-    ].join(', '),
+    ].join(', ') + ' REMOVE #ttl',
     ConditionExpression: '#status = :generating AND #worker_run_id = :worker_run_id',
     ExpressionAttributeNames: {
       '#status': 'status',
@@ -552,7 +594,8 @@ export async function markDispatchReadyToSend({ dynamodb, tableName, subscriberH
       '#sources': 'sources',
       '#content_artifact_bucket': 'content_artifact_bucket',
       '#content_artifact_key': 'content_artifact_key',
-      '#lease_expires_at': 'lease_expires_at'
+      '#lease_expires_at': 'lease_expires_at',
+      '#ttl': 'ttl'
     },
     ExpressionAttributeValues: {
       ':generating': dynamoString('generating'),
@@ -586,7 +629,7 @@ export async function claimReadyToSendDispatch({ dynamodb, tableName, subscriber
       pk: dynamoString(userConversationPk(subscriberHash)),
       sk: dynamoString(dispatchSk(dispatch.created_at, dispatch.id))
     },
-    UpdateExpression: 'SET #status = :sending, #updated_at = :now, #send_started_at = :now, #lease_expires_at = :lease_expires_at, #send_attempt_id = :send_attempt_id',
+    UpdateExpression: 'SET #status = :sending, #updated_at = :now, #send_started_at = :now, #lease_expires_at = :lease_expires_at, #send_attempt_id = :send_attempt_id REMOVE #ttl',
     ConditionExpression: '#status = :ready_to_send AND attribute_not_exists(#submission_id)',
     ExpressionAttributeNames: {
       '#status': 'status',
@@ -594,7 +637,8 @@ export async function claimReadyToSendDispatch({ dynamodb, tableName, subscriber
       '#send_started_at': 'send_started_at',
       '#lease_expires_at': 'lease_expires_at',
       '#send_attempt_id': 'send_attempt_id',
-      '#submission_id': 'submission_id'
+      '#submission_id': 'submission_id',
+      '#ttl': 'ttl'
     },
     ExpressionAttributeValues: {
       ':ready_to_send': dynamoString('ready_to_send'),
@@ -609,6 +653,7 @@ export async function claimReadyToSendDispatch({ dynamodb, tableName, subscriber
 
 export async function markDispatchSent({ dynamodb, tableName, subscriberHash, dispatch, submissionId }) {
   const now = new Date().toISOString();
+  const ttl = dispatchHistoryTtlSeconds(now);
   await dynamodb.send(new UpdateItemCommand({
     TableName: tableName,
     Key: {
@@ -619,7 +664,8 @@ export async function markDispatchSent({ dynamodb, tableName, subscriberHash, di
       'SET #status = :sent',
       '#updated_at = :now',
       '#sent_at = :now',
-      '#submission_id = :submission_id'
+      '#submission_id = :submission_id',
+      '#ttl = :ttl'
     ].join(', '),
     ConditionExpression: '#status = :sending AND #send_attempt_id = :send_attempt_id AND attribute_not_exists(#submission_id)',
     ExpressionAttributeNames: {
@@ -627,16 +673,19 @@ export async function markDispatchSent({ dynamodb, tableName, subscriberHash, di
       '#send_attempt_id': 'send_attempt_id',
       '#updated_at': 'updated_at',
       '#sent_at': 'sent_at',
-      '#submission_id': 'submission_id'
+      '#submission_id': 'submission_id',
+      '#ttl': 'ttl'
     },
     ExpressionAttributeValues: {
       ':sending': dynamoString('sending'),
       ':send_attempt_id': dynamoString(dispatch.send_attempt_id),
       ':sent': dynamoString('sent'),
       ':now': dynamoString(now),
-      ':submission_id': dynamoString(submissionId)
+      ':submission_id': dynamoString(submissionId),
+      ':ttl': dynamoNumber(ttl)
     }
   }));
+  await updateDispatchLookupTtl({ dynamodb, tableName, subscriberHash, dispatchId: dispatch.id, now, ttl });
 }
 
 export async function markDispatchReadyToRetry({ dynamodb, tableName, subscriberHash, dispatch, error }) {
@@ -654,7 +703,7 @@ export async function markDispatchReadyToRetry({ dynamodb, tableName, subscriber
       '#updated_at = :now',
       '#lease_expires_at = :lease_expires_at',
       '#error = :error'
-    ].join(', '),
+    ].join(', ') + ' REMOVE #ttl',
     ConditionExpression: '#status = :sending AND #send_attempt_id = :send_attempt_id AND attribute_not_exists(#submission_id)',
     ExpressionAttributeNames: {
       '#status': 'status',
@@ -662,7 +711,8 @@ export async function markDispatchReadyToRetry({ dynamodb, tableName, subscriber
       '#submission_id': 'submission_id',
       '#updated_at': 'updated_at',
       '#lease_expires_at': 'lease_expires_at',
-      '#error': 'error'
+      '#error': 'error',
+      '#ttl': 'ttl'
     },
     ExpressionAttributeValues: {
       ':sending': dynamoString('sending'),
@@ -677,27 +727,31 @@ export async function markDispatchReadyToRetry({ dynamodb, tableName, subscriber
 
 export async function markDispatchFailed({ dynamodb, tableName, subscriberHash, dispatch, error }) {
   const now = new Date().toISOString();
+  const ttl = dispatchHistoryTtlSeconds(now);
   await dynamodb.send(new UpdateItemCommand({
     TableName: tableName,
     Key: {
       pk: dynamoString(userConversationPk(subscriberHash)),
       sk: dynamoString(dispatchSk(dispatch.created_at, dispatch.id))
     },
-    UpdateExpression: 'SET #status = :failed, #updated_at = :now, #failed_at = :now, #error = :error',
+    UpdateExpression: 'SET #status = :failed, #updated_at = :now, #failed_at = :now, #error = :error, #ttl = :ttl',
     ConditionExpression: '#status <> :sent',
     ExpressionAttributeNames: {
       '#status': 'status',
       '#updated_at': 'updated_at',
       '#failed_at': 'failed_at',
-      '#error': 'error'
+      '#error': 'error',
+      '#ttl': 'ttl'
     },
     ExpressionAttributeValues: {
       ':failed': dynamoString('failed'),
       ':sent': dynamoString('sent'),
       ':now': dynamoString(now),
-      ':error': dynamoString(String(error?.message || error || 'Dispatch failed.').slice(0, 1000))
+      ':error': dynamoString(String(error?.message || error || 'Dispatch failed.').slice(0, 1000)),
+      ':ttl': dynamoNumber(ttl)
     }
   }));
+  await updateDispatchLookupTtl({ dynamodb, tableName, subscriberHash, dispatchId: dispatch.id, now, ttl });
 }
 
 export async function recoverStaleDispatches({ dynamodb, tableName, subscriberHash, rows = [] }) {
@@ -713,13 +767,14 @@ export async function recoverStaleDispatches({ dynamodb, tableName, subscriberHa
           pk: dynamoString(userConversationPk(subscriberHash)),
           sk: dynamoString(dispatchSk(row.created_at, row.id))
         },
-        UpdateExpression: 'SET #status = :queued, #updated_at = :now, #queued_at = :now',
+        UpdateExpression: 'SET #status = :queued, #updated_at = :now, #queued_at = :now REMOVE #ttl',
         ConditionExpression: '#status = :generating AND #lease_expires_at = :lease_expires_at',
         ExpressionAttributeNames: {
           '#status': 'status',
           '#updated_at': 'updated_at',
           '#queued_at': 'queued_at',
-          '#lease_expires_at': 'lease_expires_at'
+          '#lease_expires_at': 'lease_expires_at',
+          '#ttl': 'ttl'
         },
         ExpressionAttributeValues: {
           ':generating': dynamoString('generating'),
@@ -738,12 +793,13 @@ export async function recoverStaleDispatches({ dynamodb, tableName, subscriberHa
           pk: dynamoString(userConversationPk(subscriberHash)),
           sk: dynamoString(dispatchSk(row.created_at, row.id))
         },
-        UpdateExpression: 'SET #updated_at = :now, #lease_expires_at = :lease_expires_at',
+        UpdateExpression: 'SET #updated_at = :now, #lease_expires_at = :lease_expires_at REMOVE #ttl',
         ConditionExpression: '#status = :ready_to_send AND #lease_expires_at = :old_lease_expires_at',
         ExpressionAttributeNames: {
           '#status': 'status',
           '#updated_at': 'updated_at',
-          '#lease_expires_at': 'lease_expires_at'
+          '#lease_expires_at': 'lease_expires_at',
+          '#ttl': 'ttl'
         },
         ExpressionAttributeValues: {
           ':ready_to_send': dynamoString('ready_to_send'),
