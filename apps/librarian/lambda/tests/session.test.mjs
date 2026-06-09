@@ -145,6 +145,16 @@ test('conversation mode entitlements unlock the expected modes', () => {
     assert.equal(canUseConversationMode('research_guide', supportingEntitlements), true);
     assert.equal(canUseConversationMode('thought_partner', supportingEntitlements), false);
 
+    const giftedEntitlements = entitlementsForSubscriber({
+      email: 'gifted@example.com',
+      subscriber: { type: 'gifted', tags: [] },
+      status: 'active'
+    });
+    assert.deepEqual(giftedEntitlements, ['reader', 'supporting_member']);
+    assert.equal(canUseConversationMode('research_guide', giftedEntitlements), true);
+    assert.equal(canUseConversationMode('thought_partner', giftedEntitlements), false);
+    assert.equal(canUseConversationMode('trusted_circle', giftedEntitlements), false);
+
     const trustedEntitlements = entitlementsForSubscriber({
       email: 'family@example.com',
       subscriber: { type: 'regular', tags: [{ name: 'thingy-family' }] },

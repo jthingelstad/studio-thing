@@ -73,10 +73,11 @@ export function isOwnerSubscriberHash(subscriberHash) {
 
 export function entitlementsForSubscriber({ email = '', subscriber = null, status = '' } = {}) {
   const normalizedStatus = String(status || subscriber?.type || '').trim().toLowerCase();
+  const subscriberType = String(subscriber?.type || '').trim().toLowerCase();
   const tags = subscriberTagNames(subscriber);
   const entitlements = new Set(['reader']);
 
-  if (normalizedStatus === 'premium' || tags.includes('thingy-supporting-member')) {
+  if (['premium', 'gifted'].includes(normalizedStatus) || ['premium', 'gifted'].includes(subscriberType) || tags.includes('thingy-supporting-member')) {
     entitlements.add('supporting_member');
   }
   if (tags.some((tag) => ['thingy-trusted-circle', 'thingy-family', 'thingy-close-friends'].includes(tag))) {
