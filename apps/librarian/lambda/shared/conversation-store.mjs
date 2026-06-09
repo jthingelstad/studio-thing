@@ -192,7 +192,7 @@ export async function createUserConversation({
       item_type: dynamoString('conversation'),
       conversation_id: dynamoString(validId),
       title: dynamoString(conversationTitle(title || '')),
-      title_source: dynamoString('user'),
+      title_source: dynamoString('auto'),
       preview: dynamoString(conversationPreview(preview || title || '')),
       scope: dynamoString(scope || 'all'),
       mode: dynamoString(mode || 'thingy'),
