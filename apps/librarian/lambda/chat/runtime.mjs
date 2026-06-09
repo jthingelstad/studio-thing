@@ -1,8 +1,19 @@
 import crypto from 'node:crypto';
-import { BedrockRuntimeClient, ConverseCommand, ConverseStreamCommand, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
-import { BedrockAgentRuntimeClient, RerankCommand } from '@aws-sdk/client-bedrock-agent-runtime';
-import { DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { ConverseCommand, ConverseStreamCommand, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
+import { RerankCommand } from '@aws-sdk/client-bedrock-agent-runtime';
+import { UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import {
+  agentModel,
+  advancedModel,
+  bedrock,
+  bedrockAgentRuntime,
+  dynamodb,
+  embeddingModel,
+  fastModel,
+  rerankModel,
+  s3
+} from '../shared/aws-clients.mjs';
 import { readConverseStream } from '../shared/bedrock-stream.mjs';
 import { sanitizeAnswerProse } from '../shared/answer-sanitizer.mjs';
 import { buildArchiveLens } from '../shared/archive-lens.mjs';
@@ -19,11 +30,13 @@ import { countsByPublishYear, yearCountSummary, yearlyContentSignals } from '../
 import { shouldEmitExperienceForTurn } from '../shared/experience.mjs';
 import { searchFaq } from '../shared/faq.mjs';
 import { errorFields, truthyEnv } from '../shared/logging.mjs';
+import { methodAndPath, normalizeHeaders, parseBody } from '../shared/http.mjs';
 import {
   agentSystemPrompt,
   agentUserPrompt,
   loadToolSpecs
 } from '../shared/prompts.mjs';
+import { extractBearer, verifyToken } from '../shared/session.mjs';
 import {
   getUserMemory,
   memoryContextBlock,
@@ -51,11 +64,6 @@ import {
   normalizeConversationMode
 } from '../shared/conversation-modes.mjs';
 
-const DEFAULT_THINGY_MODEL = 'us.anthropic.claude-sonnet-4-6';
-const FAST_THINGY_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0';
-const ADVANCED_THINGY_MODEL = 'us.anthropic.claude-sonnet-4-6';
-const DEFAULT_EMBEDDING_MODEL = 'cohere.embed-english-v3';
-const DEFAULT_RERANK_MODEL = 'cohere.rerank-v3-5:0';
 const DEFAULT_EMBEDDING_DIMENSIONS = 1024;
 const DEFAULT_MAX_TOOL_TURNS = 7;
 const DEFAULT_CHAT_SLOW_NOTICE_MS = 75000;
@@ -66,10 +74,6 @@ const TOKEN_RE = /[a-z0-9][a-z0-9'-]{1,}/gi;
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_HISTORY_CHARS = 4000;
 
-const s3 = new S3Client({});
-const dynamodb = new DynamoDBClient({});
-const bedrock = new BedrockRuntimeClient({});
-const bedrockAgentRuntime = new BedrockAgentRuntimeClient({ region: process.env.BEDROCK_RERANK_REGION || 'us-west-2' });
 let corpusCache;
 let blogCorpusCache;
 let podcastCorpusCache;
@@ -86,26 +90,6 @@ function logEvent(level, message, fields = {}) {
     timestamp: Math.floor(Date.now() / 1000),
     ...Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined && value !== null))
   }));
-}
-
-function agentModel() {
-  return process.env.THINGY_DEFAULT_MODEL || DEFAULT_THINGY_MODEL;
-}
-
-function fastModel() {
-  return process.env.THINGY_FAST_MODEL || FAST_THINGY_MODEL;
-}
-
-function advancedModel() {
-  return process.env.THINGY_ADVANCED_MODEL || ADVANCED_THINGY_MODEL;
-}
-
-function embeddingModel() {
-  return process.env.BEDROCK_EMBEDDING_MODEL || DEFAULT_EMBEDDING_MODEL;
-}
-
-function rerankModel() {
-  return process.env.BEDROCK_RERANK_MODEL || DEFAULT_RERANK_MODEL;
 }
 
 function rerankModelArn() {
@@ -140,57 +124,6 @@ function privacyPreflight(question) {
   }, question);
 }
 
-function normalizeHeaders(headers) {
-  return Object.fromEntries(Object.entries(headers || {}).map(([key, value]) => [key.toLowerCase(), value]));
-}
-
-function clientSourceIp(event) {
-  return event.requestContext?.http?.sourceIp || event.requestContext?.identity?.sourceIp || '';
-}
-
-function methodAndPath(event) {
-  const method = (event.requestContext?.http?.method || event.httpMethod || 'GET').toUpperCase();
-  const path = (event.rawPath || event.path || '/').replace(/\/$/, '') || '/';
-  return { method, path };
-}
-
-function parseBody(event) {
-  const body = event.body || '{}';
-  const text = event.isBase64Encoded ? Buffer.from(body, 'base64').toString('utf8') : body;
-  try {
-    const parsed = JSON.parse(text);
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-  } catch {
-    return {};
-  }
-}
-
-function b64urlDecode(value) {
-  const padding = '='.repeat((4 - (value.length % 4)) % 4);
-  return Buffer.from(value + padding, 'base64url');
-}
-
-function sessionSecret() {
-  const value = process.env.SESSION_SECRET || process.env.LIBRARIAN_SIGNING_SECRET;
-  if (!value) throw new Error('SESSION_SECRET is required');
-  return value;
-}
-
-function verifyToken(token) {
-  try {
-    const [encoded, signature] = String(token || '').split('.', 2);
-    if (!encoded || !signature) return null;
-    const expected = crypto.createHmac('sha256', sessionSecret()).update(encoded).digest();
-    const supplied = b64urlDecode(signature);
-    if (expected.length !== supplied.length || !crypto.timingSafeEqual(expected, supplied)) return null;
-    const payload = JSON.parse(b64urlDecode(encoded).toString('utf8'));
-    if (Number(payload.exp || 0) < Math.floor(Date.now() / 1000)) return null;
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
 function bridgeSecretOk(body) {
   // Constant-time equality against DISCORD_BRIDGE_SECRET. Returns `null`
   // when the secret isn't configured (so callers can return 503 instead
@@ -204,12 +137,6 @@ function bridgeSecretOk(body) {
   const expectedBuf = Buffer.from(expected, 'utf8');
   const suppliedBuf = Buffer.from(String(body.bridge_secret || ''), 'utf8');
   return expectedBuf.length === suppliedBuf.length && crypto.timingSafeEqual(expectedBuf, suppliedBuf);
-}
-
-function extractBearer(event, body) {
-  const auth = String(normalizeHeaders(event.headers || {}).authorization || '');
-  if (auth.toLowerCase().startsWith('bearer ')) return auth.slice(7).trim();
-  return String(body.token || '');
 }
 
 async function checkRateLimit(identity, maxRequests = Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)) {

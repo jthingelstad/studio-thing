@@ -1,0 +1,181 @@
+import crypto from 'node:crypto';
+import { BatchWriteItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb';
+import { dynamodb } from '../shared/aws-clients.mjs';
+import { jsonResponse } from '../shared/http.mjs';
+import { extractBearer, verifyToken } from '../shared/session.mjs';
+import { logEvent } from '../shared/logging.mjs';
+import {
+  availableConversationModes,
+  canUseConversationMode,
+  normalizeConversationMode
+} from '../shared/conversation-modes.mjs';
+import {
+  createUserConversation,
+  getUserConversation,
+  loadUserConversationSummaries,
+  renameUserConversation
+} from '../shared/conversation-store.mjs';
+import {
+  USER_CONVERSATION_LIMIT,
+  conversationSk,
+  dynamoString as conversationDynamoString,
+  turnSkPrefix,
+  userConversationPk,
+  validConversationId
+} from '../shared/user-conversations.mjs';
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function batchDeleteKeys(tableName, keys, maxAttempts = 5) {
+  let deleted = 0;
+  for (let index = 0; index < keys.length; index += 25) {
+    let requests = keys.slice(index, index + 25).map((Key) => ({ DeleteRequest: { Key } }));
+    for (let attempt = 1; requests.length && attempt <= maxAttempts; attempt += 1) {
+      const response = await dynamodb.send(new BatchWriteItemCommand({
+        RequestItems: {
+          [tableName]: requests
+        }
+      }));
+      const unprocessed = response.UnprocessedItems?.[tableName] || [];
+      deleted += requests.length - unprocessed.length;
+      requests = unprocessed;
+      if (requests.length && attempt < maxAttempts) {
+        await sleep(50 * (2 ** (attempt - 1)));
+      }
+    }
+    if (requests.length) {
+      throw new Error(`DynamoDB left ${requests.length} delete request(s) unprocessed`);
+    }
+  }
+  return deleted;
+}
+
+function conversationAuth(event, body) {
+  const payload = verifyToken(extractBearer(event, body));
+  return payload || null;
+}
+
+function conversationTableUnavailable(event) {
+  return jsonResponse(500, { error: 'Thingy conversation history is unavailable right now.' }, event);
+}
+
+export async function handleUserConversations(event, body, {
+  start = performance.now(),
+  entitlementsForSessionPayload
+} = {}) {
+  const payload = conversationAuth(event, body);
+  const subscriberHash = payload ? String(payload.sub || '') : '';
+  if (!subscriberHash) {
+    return jsonResponse(401, { error: 'Please validate your subscriber email to use Thingy.' }, event);
+  }
+  const entitlements = entitlementsForSessionPayload(payload);
+  const modes = availableConversationModes(entitlements);
+  const tableName = process.env.TABLE_NAME;
+  if (!tableName) return conversationTableUnavailable(event);
+
+  const action = String(body.action || 'list').trim().toLowerCase();
+  try {
+    if (action === 'list') {
+      const conversations = await loadUserConversationSummaries({
+        dynamodb,
+        tableName,
+        subscriberHash,
+        limit: body.limit || USER_CONVERSATION_LIMIT,
+        logEvent
+      });
+      logEvent('info', 'user_conversations_listed', {
+        subscriber_hash: subscriberHash,
+        count: conversations.length,
+        duration_ms: Math.round(performance.now() - start)
+      });
+      return jsonResponse(200, { conversations, entitlements, modes }, event);
+    }
+
+    if (action === 'get') {
+      const conversationId = validConversationId(body.conversation_id || body.id);
+      if (!conversationId) return jsonResponse(400, { error: 'conversation_id is required.' }, event);
+      const result = await getUserConversation({ dynamodb, tableName, subscriberHash, conversationId, limit: body.limit });
+      if (!result) return jsonResponse(404, { error: 'Conversation not found.' }, event);
+      return jsonResponse(200, result, event);
+    }
+
+    if (action === 'create') {
+      const mode = normalizeConversationMode(body.mode);
+      if (!canUseConversationMode(mode, entitlements)) {
+        return jsonResponse(403, { error: 'That Thingy mode is not available for this account.' }, event);
+      }
+      const conversationId = crypto.randomUUID();
+      const conversation = await createUserConversation({
+        dynamodb,
+        tableName,
+        subscriberHash,
+        conversationId,
+        title: body.title || body.message || '',
+        preview: body.message || body.title || '',
+        scope: body.scope || 'all',
+        mode
+      });
+      return jsonResponse(200, { conversation }, event);
+    }
+
+    if (action === 'rename') {
+      const conversationId = validConversationId(body.conversation_id || body.id);
+      if (!conversationId) return jsonResponse(400, { error: 'conversation_id is required.' }, event);
+      const conversation = await renameUserConversation({
+        dynamodb,
+        tableName,
+        subscriberHash,
+        conversationId,
+        title: body.title
+      });
+      return jsonResponse(200, { conversation }, event);
+    }
+
+    if (action === 'delete' || action === 'trash') {
+      const conversationId = validConversationId(body.conversation_id || body.id);
+      if (!conversationId) return jsonResponse(400, { error: 'conversation_id is required.' }, event);
+      const keys = [{
+        pk: conversationDynamoString(userConversationPk(subscriberHash)),
+        sk: conversationDynamoString(conversationSk(conversationId))
+      }];
+      let exclusiveStartKey;
+      do {
+        const response = await dynamodb.send(new QueryCommand({
+          TableName: tableName,
+          KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
+          ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
+          ExpressionAttributeValues: {
+            ':pk': conversationDynamoString(userConversationPk(subscriberHash)),
+            ':prefix': conversationDynamoString(turnSkPrefix(conversationId))
+          },
+          ExclusiveStartKey: exclusiveStartKey
+        }));
+        for (const item of response.Items || []) keys.push({ pk: item.pk, sk: item.sk });
+        exclusiveStartKey = response.LastEvaluatedKey;
+      } while (exclusiveStartKey);
+
+      const deletedItems = await batchDeleteKeys(tableName, keys);
+      logEvent('info', 'user_conversation_deleted', {
+        subscriber_hash: subscriberHash,
+        conversation_id: conversationId,
+        deleted_items: deletedItems,
+        duration_ms: Math.round(performance.now() - start)
+      });
+      return jsonResponse(200, { ok: true, conversation_id: conversationId, deleted_items: deletedItems }, event);
+    }
+  } catch (error) {
+    if (error.name === 'ConditionalCheckFailedException') {
+      return jsonResponse(404, { error: 'Conversation not found.' }, event);
+    }
+    logEvent('error', 'user_conversations_action_failed', {
+      subscriber_hash: subscriberHash,
+      action,
+      error_type: error.constructor?.name || 'Error'
+    });
+    return jsonResponse(502, { error: 'Thingy could not update conversations right now.' }, event);
+  }
+
+  return jsonResponse(400, { error: 'Unsupported conversation action.' }, event);
+}
