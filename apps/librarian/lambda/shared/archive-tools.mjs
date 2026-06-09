@@ -37,6 +37,17 @@ function citationsFor(chunks) {
   return citations;
 }
 
+export function collectToolCitations(toolResults = []) {
+  const sources = [];
+  for (const result of toolResults || []) {
+    if (!result || result.error) continue;
+    if (Array.isArray(result.results)) sources.push(...result.results);
+    if (result.source) sources.push(result.source);
+    if (result.issue) sources.push(result.issue);
+  }
+  return citationsFor(sources);
+}
+
 function issueKey(value) {
   return String(value || '').replace(/^#/, '').trim();
 }
