@@ -8,7 +8,7 @@ The Lambda code is **Node.js** (Node 20 runtime, arm64). Everything else in this
 
 Three Lambdas in `infra/cloudformation.yaml`:
 
-- **`LibrarianFunction`** (`lambda/auth/handler.mjs`) — REST API behind API Gateway. Handles Buttondown subscriber lookup, Fastmail/JMAP magic-link login, HMAC session mint/redeem, user conversation list/get/create/rename/delete, Discord bridge mint, and operator-only canonical conversation reads. Memory 1024 MB, timeout 35s.
+- **`LibrarianFunction`** (`lambda/auth/handler.mjs`) — REST API behind API Gateway. Handles Buttondown subscriber lookup, Fastmail/JMAP magic-link login, HMAC session mint/redeem, user conversation list/get/create/rename/delete, Discord bridge token minting, profile updates, and Dispatch drafting routes. Memory 1024 MB, timeout 35s.
 - **`LibrarianStreamFunction`** (`lambda/chat/handler.mjs` → `runtime.mjs`) — Function URL with `RESPONSE_STREAM`. Handles `/chat` (SSE-streamed agent loop with server-side history), `/welcome`, `/curiosity-map`, `/feedback`, and `/retrieve` (semantic JSON-only retrieval for workshop_bot). Memory 1536 MB, timeout 90s, ReservedConcurrentExecutions = 5.
 - **`LibrarianEvalFunction`** (`lambda/eval/handler.mjs`) — DynamoDB Stream consumer. Reviews server-side conversations out of band, writes summary/quality/flags back to canonical conversation rows, and posts operator cards directly to Discord through `DISCORD_CONVERSATION_WEBHOOK_URL`. Memory 1024 MB, timeout 180s, ReservedConcurrentExecutions = 1.
 
@@ -95,7 +95,7 @@ These are set at deploy time from `.env`, written into the Lambda environment by
 | `BLOG_CORPUS_KEY`, `PODCAST_CORPUS_KEY` | stream | Optional source-specific corpora loaded lazily |
 | `BUTTONDOWN_API_KEY` | auth | Email subscriber verification |
 | `SESSION_SECRET` | both | HMAC secret for session JWTs |
-| `DISCORD_BRIDGE_SECRET` | auth + stream | Bridge-secret auth for operator conversation reads + `/retrieve` |
+| `DISCORD_BRIDGE_SECRET` | auth + stream | Bridge-secret auth for Discord token minting + `/retrieve` |
 | `DISCORD_CONVERSATION_WEBHOOK_URL` | eval + dispatch | Discord incoming webhook for posting reviewed conversation cards and sent Dispatch cards to `#chatter` |
 | `FASTMAIL_JMAP_TOKEN` | auth | Fastmail JMAP bearer token for sending magic links; aliases `THINGY_FASTMAIL_JMAP_TOKEN` / `THINGY_JMAP_TOKEN` also work locally |
 | `THINGY_MAGIC_LINK_FROM_EMAIL` | auth | Magic-link From address, default `thingy@thingelstad.com` |

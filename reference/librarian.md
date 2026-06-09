@@ -72,7 +72,7 @@ Local `.env` values used by upload/build scripts:
 - `BEDROCK_RERANK_REGION` (optional; defaults to `us-west-2`, where the Bedrock Rerank API exposes Cohere Rerank 3.5)
 - `LIBRARIAN_LOG_LEVEL` (optional; defaults to `INFO`)
 - `LIBRARIAN_AUTH_RATE_LIMIT_MAX` (optional; defaults to 30 auth attempts per client identity per hour)
-- `DISCORD_BRIDGE_SECRET` for operator conversation reads and bridge-secret retrieval.
+- `DISCORD_BRIDGE_SECRET` for Discord bridge token minting and bridge-secret retrieval.
 - `DISCORD_CONVERSATION_WEBHOOK_URL` for event-driven eval cards posted directly to Discord.
 - `FASTMAIL_JMAP_TOKEN` / `THINGY_FASTMAIL_JMAP_TOKEN` / `THINGY_JMAP_TOKEN` for magic-link email.
 - `THINGY_MAGIC_LINK_FROM_EMAIL` and `THINGY_MAGIC_LINK_BASE_URL` for login email construction.
@@ -122,7 +122,7 @@ The workshop-bot Discord bridge (`apps/workshop_bot/personas/thingy.py`) gets a 
 
 The bridge action is gated by `DISCORD_BRIDGE_SECRET` (CloudFormation parameter `DiscordBridgeSecret`). When that env var is empty the action returns 503 ("Discord bridge is not enabled"), so the bridge is off by default until the secret is configured. Token mints are rate-limited per Discord user (default 60/hour, override via `DISCORD_BRIDGE_RATE_LIMIT_MAX`).
 
-Operator conversation reads are email-less and gated by the **same** `DISCORD_BRIDGE_SECRET` (operator secret, not a per-user session token). `list_conversations` returns conversation summaries from canonical server-side rows; `get_conversation` returns the full transcript/turns for a conversation. The Discord bot uses those endpoints for follow-up actions, while the Eval Lambda posts review summaries directly to Discord through `DISCORD_CONVERSATION_WEBHOOK_URL`. Discord is notification/review tooling only and is not in the reader request path.
+Operator conversation review is API-owned. The Eval Lambda posts review summaries directly to Discord through `DISCORD_CONVERSATION_WEBHOOK_URL`, and the local operator report reads canonical rows from DynamoDB. The Discord bridge no longer exposes transcript-read slash commands or `/auth` operator read actions; Discord is notification/member-presence tooling only and is not in the reader request path.
 
 ### Per-user memory
 

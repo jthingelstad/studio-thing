@@ -8,7 +8,7 @@ The AWS Lambda agent that answers reader questions against Jamie Thingelstad's p
 
 Three Lambdas behind one CloudFormation stack:
 
-- **Auth Lambda** (REST via API Gateway) — handles Buttondown subscriber lookup, Fastmail/JMAP magic-link login, HMAC-signed session tokens, conversation list/get/create/rename/delete, operator-only canonical conversation reads, and per-answer feedback reactions.
+- **Auth Lambda** (REST via API Gateway) — handles Buttondown subscriber lookup, Fastmail/JMAP magic-link login, HMAC-signed session tokens, conversation list/get/create/rename/delete, Discord bridge token minting, Dispatch drafting routes, profile updates, and per-answer feedback reactions.
 - **Stream Lambda** (Function URL, response streaming) — handles `/chat` (SSE-streamed agent loop with server-side conversation history), `/welcome`, `/curiosity-map`, `/feedback`, and `/retrieve` (semantic JSON retrieval used by `workshop_bot` for its `archive__retrieve` tool + several pre-injection helpers).
 - **Eval Lambda** (DynamoDB Stream trigger) — reviews updated server-side conversations out of band, writes summary/quality metadata back to DynamoDB, and posts operator cards directly to Discord via incoming webhook when configured.
 
@@ -24,7 +24,7 @@ apps/librarian/
 │   ├── chat/         ← Stream Lambda — /chat, /welcome, /curiosity-map, /retrieve
 │   │   ├── handler.mjs    (thin re-export)
 │   │   └── runtime.mjs    (~1100 lines; agent loop, retrieval, routes)
-│   ├── auth/         ← Auth Lambda — /auth, /feedback, operator conversation reads
+│   ├── auth/         ← Auth Lambda — /auth, /feedback, conversations, Dispatch routes
 │   ├── eval/         ← Eval Lambda — conversation reviews + Discord webhook cards
 │   ├── shared/       ← AWS clients, Bedrock streaming parser, FAQ search, session crypto, rate limiting
 │   ├── prompts/      ← editable system prompts (packaged into both Lambdas)
@@ -74,7 +74,7 @@ then uploads the updated corpus artifacts.
 | POST | `/curiosity-map` | session token (bearer) | Generate and optionally store a curiosity-map artifact |
 | POST | `/retrieve` | bridge secret (body) | JSON semantic retrieval — top-K archive passages, used by `workshop_bot` |
 | POST | `/feedback` | session token (bearer) | Per-answer reactions plus optional comments |
-| POST | `/auth` | none / bridge secret / session token | Magic-link auth, Discord bridge mint, user conversation management, and operator conversation reads |
+| POST | `/auth` | none / bridge secret / session token | Magic-link auth, Discord bridge mint, user conversation management, profile updates, and Dispatch drafting |
 
 ## Tech stack
 
@@ -90,7 +90,7 @@ then uploads the updated corpus artifacts.
 Env vars are set in CloudFormation at deploy time from the repo-root `.env`. The full list (with deploy-side handling) is in [`CLAUDE.md`](CLAUDE.md). The headline secrets:
 
 - `SESSION_SECRET` — HMAC signing key for session tokens
-- `DISCORD_BRIDGE_SECRET` — operator-only secret for conversation reads and `/retrieve`
+- `DISCORD_BRIDGE_SECRET` — shared secret for Discord token minting and `/retrieve`
 - `DISCORD_CONVERSATION_WEBHOOK_URL` — optional incoming webhook used by eval and Dispatch Lambdas to post operator cards to Discord
 - `BUTTONDOWN_API_KEY` — subscriber email verification
 - `FASTMAIL_JMAP_TOKEN` — optional Fastmail JMAP token used to send Thingy magic-link login emails from `thingy@thingelstad.com`
