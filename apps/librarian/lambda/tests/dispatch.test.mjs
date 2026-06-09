@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { dispatchAvailabilityFromRows, dispatchForClient } from '../shared/dispatch-store.mjs';
+import { dispatchAvailabilityFromRows, dispatchForClient, dispatchIsActive } from '../shared/dispatch-store.mjs';
 import { discordDispatchCard } from '../shared/dispatch-worker.mjs';
 import {
   dispatchHtmlEmail,
@@ -37,6 +37,25 @@ test('dispatch availability enforces active and rolling 24-hour limits', () => {
   assert.equal(dispatchAvailabilityFromRows([
     { id: 'd3', status: 'ready' }
   ], { nowSeconds }).allowed, true);
+});
+
+test('dispatch availability ignores stale leased active rows', () => {
+  const nowSeconds = Math.floor(Date.parse('2026-06-08T12:00:00Z') / 1000);
+  const staleGenerating = {
+    id: 'd1',
+    status: 'generating',
+    lease_expires_at: '2026-06-08T11:50:00Z'
+  };
+  const freshGenerating = {
+    id: 'd2',
+    status: 'generating',
+    lease_expires_at: '2026-06-08T12:05:00Z'
+  };
+
+  assert.equal(dispatchIsActive(staleGenerating, { nowSeconds }), false);
+  assert.equal(dispatchIsActive(freshGenerating, { nowSeconds }), true);
+  assert.equal(dispatchAvailabilityFromRows([staleGenerating], { nowSeconds }).allowed, true);
+  assert.equal(dispatchAvailabilityFromRows([freshGenerating], { nowSeconds }).allowed, false);
 });
 
 test('dispatchForClient includes draft state but omits generated content', () => {
@@ -300,4 +319,27 @@ test('dispatch Discord card summarizes sent dispatch without body content', () =
   assert.match(card, /Tokens:\*\* in 12 \/ out 34/);
   assert.doesNotMatch(card, /full dispatch body/);
   assert.ok(card.length <= 1900);
+});
+
+test('dispatch Discord card escapes user-controlled markdown', () => {
+  const card = discordDispatchCard({
+    dispatch: {
+      id: 'dispatch-[1]',
+      to_email: 'reader_name@example.com',
+      direction: 'Explore **bold** `code` and [links](https://example.com).'
+    },
+    result: {
+      subject: 'Thingy Dispatch — [Title] *emphasis*',
+      preview: 'Preview with > quote and _underlines_.',
+      model: 'anthropic.model',
+      usage: { inputTokens: 1, outputTokens: 2 },
+      sources: [{ label: 'WT_1', title: 'A *Source*' }]
+    }
+  });
+
+  assert.match(card, /dispatch-\\\[1\\\]/);
+  assert.match(card, /\\\*\\\*bold\\\*\\\*/);
+  assert.match(card, /\\`code\\`/);
+  assert.match(card, /\\\[links\\\]\\\(https:\/\/example\.com\\\)/);
+  assert.match(card, /WT\\_1 · A \\\*Source\\\*/);
 });

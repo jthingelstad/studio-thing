@@ -3,9 +3,11 @@ import crypto from 'node:crypto';
 import { dynamoList, dynamoNumber, dynamoString, fromDynamoAttr, userConversationPk } from './user-conversations.mjs';
 
 const DISPATCH_ID_RE = /^[A-Za-z0-9_.:-]{1,96}$/;
-const ACTIVE_STATUSES = new Set(['queued', 'generating']);
+const ACTIVE_STATUSES = new Set(['queued', 'generating', 'ready_to_send', 'sending']);
 const DRAFT_STATUSES = new Set(['draft', 'shaping', 'needs_clarification', 'ready']);
 const DEFAULT_COOLDOWN_SECONDS = 24 * 60 * 60;
+const DEFAULT_GENERATION_LEASE_SECONDS = 14 * 60;
+const DEFAULT_SEND_LEASE_SECONDS = 5 * 60;
 
 export function dispatchSk(createdAt, dispatchId) {
   return `dispatch#${createdAt}#${dispatchId}`;
@@ -39,6 +41,11 @@ export function dispatchFromItem(item = {}) {
     updated_at: String(row.updated_at || ''),
     queued_at: String(row.queued_at || ''),
     started_at: String(row.started_at || ''),
+    lease_expires_at: String(row.lease_expires_at || ''),
+    worker_run_id: String(row.worker_run_id || ''),
+    ready_at: String(row.ready_at || ''),
+    send_started_at: String(row.send_started_at || ''),
+    send_attempt_id: String(row.send_attempt_id || ''),
     sent_at: String(row.sent_at || ''),
     failed_at: String(row.failed_at || ''),
     template_test: Boolean(row.template_test),
@@ -72,6 +79,8 @@ function publicDispatch(row) {
     updated_at: row.updated_at,
     queued_at: row.queued_at,
     started_at: row.started_at,
+    ready_at: row.ready_at,
+    send_started_at: row.send_started_at,
     sent_at: row.sent_at,
     failed_at: row.failed_at,
     template_test: Boolean(row.template_test),
@@ -82,6 +91,28 @@ function publicDispatch(row) {
 export function dispatchForClient(row) {
   const normalized = typeof row?.id === 'string' || typeof row?.dispatch_id === 'string';
   return publicDispatch(normalized ? row : dispatchFromItem(row));
+}
+
+function isoAfter(seconds, now = new Date()) {
+  return new Date(now.getTime() + Math.max(1, Number(seconds) || 1) * 1000).toISOString();
+}
+
+function dispatchLeaseExpired(row = {}, nowSeconds = Math.floor(Date.now() / 1000)) {
+  const expiresAt = Date.parse(row.lease_expires_at || '');
+  return Number.isFinite(expiresAt) && Math.floor(expiresAt / 1000) <= nowSeconds;
+}
+
+function recoverableActiveStatus(status) {
+  return status === 'generating' || status === 'ready_to_send';
+}
+
+export function dispatchIsActive(row = {}, {
+  nowSeconds = Math.floor(Date.now() / 1000)
+} = {}) {
+  if (!ACTIVE_STATUSES.has(row.status)) return false;
+  if (recoverableActiveStatus(row.status) && dispatchLeaseExpired(row, nowSeconds)) return false;
+  if (row.status === 'sending' && dispatchLeaseExpired(row, nowSeconds)) return false;
+  return true;
 }
 
 export async function listUserDispatches({ dynamodb, tableName, subscriberHash, limit = 12 }) {
@@ -124,7 +155,7 @@ export function dispatchAvailabilityFromRows(rows = [], {
   cooldownSeconds = DEFAULT_COOLDOWN_SECONDS,
   owner = false
 } = {}) {
-  const latestActive = rows.find((row) => ACTIVE_STATUSES.has(row.status));
+  const latestActive = rows.find((row) => dispatchIsActive(row, { nowSeconds }));
   const latestSent = rows.find((row) => row.status === 'sent' && row.sent_at);
   if (latestActive) {
     return {
@@ -153,7 +184,9 @@ export function dispatchAvailabilityFromRows(rows = [], {
 }
 
 export async function dispatchAvailability({ dynamodb, tableName, subscriberHash, owner = false }) {
-  const rows = await listUserDispatches({ dynamodb, tableName, subscriberHash, limit: 20 });
+  let rows = await listUserDispatches({ dynamodb, tableName, subscriberHash, limit: 20 });
+  const recovered = await recoverStaleDispatches({ dynamodb, tableName, subscriberHash, rows });
+  if (recovered) rows = await listUserDispatches({ dynamodb, tableName, subscriberHash, limit: 20 });
   return dispatchAvailabilityFromRows(rows, { owner });
 }
 
@@ -388,27 +421,34 @@ export async function queueDraftDispatch({
 }
 
 export async function claimQueuedDispatch({ dynamodb, tableName, subscriberHash, dispatch }) {
-  const now = new Date().toISOString();
+  const nowDate = new Date();
+  const now = nowDate.toISOString();
+  const workerRunId = crypto.randomUUID();
+  const leaseExpiresAt = isoAfter(process.env.DISPATCH_GENERATION_LEASE_SECONDS || DEFAULT_GENERATION_LEASE_SECONDS, nowDate);
   await dynamodb.send(new UpdateItemCommand({
     TableName: tableName,
     Key: {
       pk: dynamoString(userConversationPk(subscriberHash)),
       sk: dynamoString(dispatchSk(dispatch.created_at, dispatch.id))
     },
-    UpdateExpression: 'SET #status = :generating, #updated_at = :now, #started_at = :now',
+    UpdateExpression: 'SET #status = :generating, #updated_at = :now, #started_at = :now, #lease_expires_at = :lease_expires_at, #worker_run_id = :worker_run_id',
     ConditionExpression: '#status = :queued',
     ExpressionAttributeNames: {
       '#status': 'status',
       '#updated_at': 'updated_at',
-      '#started_at': 'started_at'
+      '#started_at': 'started_at',
+      '#lease_expires_at': 'lease_expires_at',
+      '#worker_run_id': 'worker_run_id'
     },
     ExpressionAttributeValues: {
       ':queued': dynamoString('queued'),
       ':generating': dynamoString('generating'),
-      ':now': dynamoString(now)
+      ':now': dynamoString(now),
+      ':lease_expires_at': dynamoString(leaseExpiresAt),
+      ':worker_run_id': dynamoString(workerRunId)
     }
   }));
-  return { ...dispatch, status: 'generating', updated_at: now, started_at: now };
+  return { ...dispatch, status: 'generating', updated_at: now, started_at: now, lease_expires_at: leaseExpiresAt, worker_run_id: workerRunId };
 }
 
 function sourceDynamoItem(source = {}) {
@@ -424,7 +464,99 @@ function sourceDynamoItem(source = {}) {
   };
 }
 
-export async function markDispatchSent({ dynamodb, tableName, subscriberHash, dispatch, result }) {
+export async function markDispatchReadyToSend({ dynamodb, tableName, subscriberHash, dispatch, result }) {
+  const now = new Date().toISOString();
+  await dynamodb.send(new UpdateItemCommand({
+    TableName: tableName,
+    Key: {
+      pk: dynamoString(userConversationPk(subscriberHash)),
+      sk: dynamoString(dispatchSk(dispatch.created_at, dispatch.id))
+    },
+    UpdateExpression: [
+      'SET #status = :ready_to_send',
+      '#updated_at = :now',
+      '#ready_at = :now',
+      '#subject = :subject',
+      '#title = :title',
+      '#preview = :preview',
+      '#model = :model',
+      '#input_tokens = :input_tokens',
+      '#output_tokens = :output_tokens',
+      '#source_count = :source_count',
+      '#sources = :sources',
+      '#content_text = :content_text',
+      '#content_html = :content_html'
+    ].join(', '),
+    ConditionExpression: '#status = :generating AND #worker_run_id = :worker_run_id',
+    ExpressionAttributeNames: {
+      '#status': 'status',
+      '#worker_run_id': 'worker_run_id',
+      '#updated_at': 'updated_at',
+      '#ready_at': 'ready_at',
+      '#subject': 'subject',
+      '#title': 'title',
+      '#preview': 'preview',
+      '#model': 'model',
+      '#input_tokens': 'input_tokens',
+      '#output_tokens': 'output_tokens',
+      '#source_count': 'source_count',
+      '#sources': 'sources',
+      '#content_text': 'content_text',
+      '#content_html': 'content_html'
+    },
+    ExpressionAttributeValues: {
+      ':generating': dynamoString('generating'),
+      ':ready_to_send': dynamoString('ready_to_send'),
+      ':worker_run_id': dynamoString(dispatch.worker_run_id),
+      ':now': dynamoString(now),
+      ':subject': dynamoString(result.subject),
+      ':title': dynamoString(result.title),
+      ':preview': dynamoString(result.preview),
+      ':model': dynamoString(result.model),
+      ':input_tokens': dynamoNumber(result.usage?.inputTokens || result.usage?.input_tokens || 0),
+      ':output_tokens': dynamoNumber(result.usage?.outputTokens || result.usage?.output_tokens || 0),
+      ':source_count': dynamoNumber((result.sources || []).length),
+      ':sources': dynamoList(result.sources || [], sourceDynamoItem),
+      ':content_text': dynamoString(String(result.text || '').slice(0, 60000)),
+      ':content_html': dynamoString(String(result.html || '').slice(0, 120000))
+    }
+  }));
+  return await getUserDispatch({ dynamodb, tableName, subscriberHash, dispatchId: dispatch.id });
+}
+
+export async function claimReadyToSendDispatch({ dynamodb, tableName, subscriberHash, dispatch }) {
+  const nowDate = new Date();
+  const now = nowDate.toISOString();
+  const sendAttemptId = crypto.randomUUID();
+  const leaseExpiresAt = isoAfter(process.env.DISPATCH_SEND_LEASE_SECONDS || DEFAULT_SEND_LEASE_SECONDS, nowDate);
+  await dynamodb.send(new UpdateItemCommand({
+    TableName: tableName,
+    Key: {
+      pk: dynamoString(userConversationPk(subscriberHash)),
+      sk: dynamoString(dispatchSk(dispatch.created_at, dispatch.id))
+    },
+    UpdateExpression: 'SET #status = :sending, #updated_at = :now, #send_started_at = :now, #lease_expires_at = :lease_expires_at, #send_attempt_id = :send_attempt_id',
+    ConditionExpression: '#status = :ready_to_send AND attribute_not_exists(#submission_id)',
+    ExpressionAttributeNames: {
+      '#status': 'status',
+      '#updated_at': 'updated_at',
+      '#send_started_at': 'send_started_at',
+      '#lease_expires_at': 'lease_expires_at',
+      '#send_attempt_id': 'send_attempt_id',
+      '#submission_id': 'submission_id'
+    },
+    ExpressionAttributeValues: {
+      ':ready_to_send': dynamoString('ready_to_send'),
+      ':sending': dynamoString('sending'),
+      ':now': dynamoString(now),
+      ':lease_expires_at': dynamoString(leaseExpiresAt),
+      ':send_attempt_id': dynamoString(sendAttemptId)
+    }
+  }));
+  return { ...dispatch, status: 'sending', updated_at: now, send_started_at: now, lease_expires_at: leaseExpiresAt, send_attempt_id: sendAttemptId };
+}
+
+export async function markDispatchSent({ dynamodb, tableName, subscriberHash, dispatch, submissionId }) {
   const now = new Date().toISOString();
   await dynamodb.send(new UpdateItemCommand({
     TableName: tableName,
@@ -436,48 +568,22 @@ export async function markDispatchSent({ dynamodb, tableName, subscriberHash, di
       'SET #status = :sent',
       '#updated_at = :now',
       '#sent_at = :now',
-      '#subject = :subject',
-      '#title = :title',
-      '#preview = :preview',
-      '#model = :model',
-      '#input_tokens = :input_tokens',
-      '#output_tokens = :output_tokens',
-      '#source_count = :source_count',
-      '#sources = :sources',
-      '#content_text = :content_text',
-      '#content_html = :content_html',
       '#submission_id = :submission_id'
     ].join(', '),
+    ConditionExpression: '#status = :sending AND #send_attempt_id = :send_attempt_id AND attribute_not_exists(#submission_id)',
     ExpressionAttributeNames: {
       '#status': 'status',
+      '#send_attempt_id': 'send_attempt_id',
       '#updated_at': 'updated_at',
       '#sent_at': 'sent_at',
-      '#subject': 'subject',
-      '#title': 'title',
-      '#preview': 'preview',
-      '#model': 'model',
-      '#input_tokens': 'input_tokens',
-      '#output_tokens': 'output_tokens',
-      '#source_count': 'source_count',
-      '#sources': 'sources',
-      '#content_text': 'content_text',
-      '#content_html': 'content_html',
       '#submission_id': 'submission_id'
     },
     ExpressionAttributeValues: {
+      ':sending': dynamoString('sending'),
+      ':send_attempt_id': dynamoString(dispatch.send_attempt_id),
       ':sent': dynamoString('sent'),
       ':now': dynamoString(now),
-      ':subject': dynamoString(result.subject),
-      ':title': dynamoString(result.title),
-      ':preview': dynamoString(result.preview),
-      ':model': dynamoString(result.model),
-      ':input_tokens': dynamoNumber(result.usage?.inputTokens || result.usage?.input_tokens || 0),
-      ':output_tokens': dynamoNumber(result.usage?.outputTokens || result.usage?.output_tokens || 0),
-      ':source_count': dynamoNumber((result.sources || []).length),
-      ':sources': dynamoList(result.sources || [], sourceDynamoItem),
-      ':content_text': dynamoString(String(result.text || '').slice(0, 60000)),
-      ':content_html': dynamoString(String(result.html || '').slice(0, 120000)),
-      ':submission_id': dynamoString(result.submission_id)
+      ':submission_id': dynamoString(submissionId)
     }
   }));
 }
@@ -491,6 +597,7 @@ export async function markDispatchFailed({ dynamodb, tableName, subscriberHash, 
       sk: dynamoString(dispatchSk(dispatch.created_at, dispatch.id))
     },
     UpdateExpression: 'SET #status = :failed, #updated_at = :now, #failed_at = :now, #error = :error',
+    ConditionExpression: '#status <> :sent',
     ExpressionAttributeNames: {
       '#status': 'status',
       '#updated_at': 'updated_at',
@@ -499,8 +606,69 @@ export async function markDispatchFailed({ dynamodb, tableName, subscriberHash, 
     },
     ExpressionAttributeValues: {
       ':failed': dynamoString('failed'),
+      ':sent': dynamoString('sent'),
       ':now': dynamoString(now),
       ':error': dynamoString(String(error?.message || error || 'Dispatch failed.').slice(0, 1000))
     }
   }));
+}
+
+export async function recoverStaleDispatches({ dynamodb, tableName, subscriberHash, rows = [] }) {
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  let recovered = 0;
+  for (const row of rows) {
+    if (!dispatchLeaseExpired(row, nowSeconds)) continue;
+    if (row.status === 'generating') {
+      const now = new Date().toISOString();
+      await dynamodb.send(new UpdateItemCommand({
+        TableName: tableName,
+        Key: {
+          pk: dynamoString(userConversationPk(subscriberHash)),
+          sk: dynamoString(dispatchSk(row.created_at, row.id))
+        },
+        UpdateExpression: 'SET #status = :queued, #updated_at = :now, #queued_at = :now',
+        ConditionExpression: '#status = :generating AND #lease_expires_at = :lease_expires_at',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+          '#updated_at': 'updated_at',
+          '#queued_at': 'queued_at',
+          '#lease_expires_at': 'lease_expires_at'
+        },
+        ExpressionAttributeValues: {
+          ':generating': dynamoString('generating'),
+          ':queued': dynamoString('queued'),
+          ':now': dynamoString(now),
+          ':lease_expires_at': dynamoString(row.lease_expires_at)
+        }
+      })).then(() => { recovered += 1; }).catch(() => {});
+    } else if (row.status === 'ready_to_send') {
+      const now = new Date().toISOString();
+      await dynamodb.send(new UpdateItemCommand({
+        TableName: tableName,
+        Key: {
+          pk: dynamoString(userConversationPk(subscriberHash)),
+          sk: dynamoString(dispatchSk(row.created_at, row.id))
+        },
+        UpdateExpression: 'SET #updated_at = :now',
+        ConditionExpression: '#status = :ready_to_send',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+          '#updated_at': 'updated_at'
+        },
+        ExpressionAttributeValues: {
+          ':ready_to_send': dynamoString('ready_to_send'),
+          ':now': dynamoString(now)
+        }
+      })).then(() => { recovered += 1; }).catch(() => {});
+    } else if (row.status === 'sending') {
+      await markDispatchFailed({
+        dynamodb,
+        tableName,
+        subscriberHash,
+        dispatch: row,
+        error: 'Dispatch delivery could not be confirmed. It was not retried to avoid sending a duplicate email.'
+      }).then(() => { recovered += 1; }).catch(() => {});
+    }
+  }
+  return recovered;
 }

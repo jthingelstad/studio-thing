@@ -1,7 +1,6 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { bedrock, s3, advancedModel } from './aws-clients.mjs';
-import { sendJmapEmail } from './jmap-mail.mjs';
 
 const MAX_SOURCE_PACKETS = 18;
 const TOKEN_RE = /[a-z0-9][a-z0-9'-]{1,}/gi;
@@ -581,7 +580,7 @@ export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
 </html>`;
 }
 
-export async function generateDispatch(dispatch) {
+export async function renderDispatch(dispatch) {
   const chunks = await loadDispatchCorpus();
   const query = [dispatch.prompt, dispatch.direction, dispatch.clarification_answer].filter(Boolean).join(' ');
   let sources = selectDispatchSources(chunks, query, MAX_SOURCE_PACKETS);
@@ -599,20 +598,13 @@ export async function generateDispatch(dispatch) {
     };
     const html = dispatchHtmlEmail(payload, sources, deliveryContext);
     const fallbackText = dispatchTextEmail(payload, sources, deliveryContext);
-    const sent = await sendJmapEmail({
-      to: dispatch.to_email,
-      subject: payload.subject,
-      text: fallbackText,
-      html
-    });
     return {
       ...payload,
       text: fallbackText,
       html,
       model: 'template-test',
       usage: { inputTokens: 0, outputTokens: 0 },
-      sources: sources.map(({ excerpt, ...source }) => source),
-      submission_id: sent.submission_id
+      sources: sources.map(({ excerpt, ...source }) => source)
     };
   }
 
@@ -637,19 +629,14 @@ export async function generateDispatch(dispatch) {
   };
   const html = dispatchHtmlEmail(payload, sources, deliveryContext);
   const fallbackText = dispatchTextEmail(payload, sources, deliveryContext);
-  const sent = await sendJmapEmail({
-    to: dispatch.to_email,
-    subject: payload.subject,
-    text: fallbackText,
-    html
-  });
   return {
     ...payload,
     text: fallbackText,
     html,
     model,
     usage: response.usage || {},
-    sources: sources.map(({ excerpt, ...source }) => source),
-    submission_id: sent.submission_id
+    sources: sources.map(({ excerpt, ...source }) => source)
   };
 }
+
+export const generateDispatch = renderDispatch;

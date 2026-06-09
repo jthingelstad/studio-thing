@@ -1,11 +1,14 @@
 import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
 import { dynamodb } from './aws-clients.mjs';
 import { errorFields, logEvent } from './logging.mjs';
-import { generateDispatch } from './dispatch-generator.mjs';
+import { renderDispatch } from './dispatch-generator.mjs';
+import { sendJmapEmail } from './jmap-mail.mjs';
 import {
+  claimReadyToSendDispatch,
   claimQueuedDispatch,
   dispatchFromItem,
   markDispatchFailed,
+  markDispatchReadyToSend,
   markDispatchSent
 } from './dispatch-store.mjs';
 import { fromDynamoAttr } from './user-conversations.mjs';
@@ -25,19 +28,23 @@ function sourceLabels(sources = [], limit = 10) {
   return labels;
 }
 
+function escapeDiscordMarkdown(value) {
+  return String(value || '').replace(/([\\*_~`>|[\]()])/g, '\\$1');
+}
+
 export function discordDispatchCard({ dispatch = {}, result = {} }) {
   const sources = sourceLabels(result.sources || []);
-  const subject = compactLine(result.subject || dispatch.subject || result.title || dispatch.title || 'Thingy Dispatch', 180);
-  const request = compactLine(dispatch.direction || dispatch.prompt || dispatch.topic || '', 360);
+  const subject = escapeDiscordMarkdown(compactLine(result.subject || dispatch.subject || result.title || dispatch.title || 'Thingy Dispatch', 180));
+  const request = escapeDiscordMarkdown(compactLine(dispatch.direction || dispatch.prompt || dispatch.topic || '', 360));
   const lines = [
-    `**Thingy Dispatch · \`${dispatch.id || dispatch.dispatch_id || 'unknown'}\`** · sent${dispatch.template_test ? ' · template test' : ''}`,
+    `**Thingy Dispatch · \`${escapeDiscordMarkdown(dispatch.id || dispatch.dispatch_id || 'unknown')}\`** · sent${dispatch.template_test ? ' · template test' : ''}`,
     `**Subject:** ${subject}`,
-    dispatch.to_email ? `**Reader:** ${compactLine(dispatch.to_email, 180)}` : '',
+    dispatch.to_email ? `**Reader:** ${escapeDiscordMarkdown(compactLine(dispatch.to_email, 180))}` : '',
     request ? `**Request:** ${request}` : '',
-    result.preview ? `**Preview:** ${compactLine(result.preview, 260)}` : '',
-    result.model ? `**Model:** ${result.model}` : '',
+    result.preview ? `**Preview:** ${escapeDiscordMarkdown(compactLine(result.preview, 260))}` : '',
+    result.model ? `**Model:** ${escapeDiscordMarkdown(result.model)}` : '',
     `**Tokens:** in ${result.usage?.inputTokens || result.usage?.input_tokens || 0} / out ${result.usage?.outputTokens || result.usage?.output_tokens || 0}`,
-    `**Sources:** ${sources.length ? sources.join(', ') : '—'}`,
+    `**Sources:** ${sources.length ? escapeDiscordMarkdown(sources.join(', ')) : '—'}`,
     'Use the Thingy Dispatch operator report for full content and source review.'
   ].filter(Boolean);
   const content = lines.join('\n');
@@ -75,7 +82,7 @@ function dispatchRefsFromStream(event = {}) {
     if (!image) continue;
     const itemType = fromDynamoAttr(image.item_type);
     const status = fromDynamoAttr(image.status);
-    if (itemType !== 'dispatch' || status !== 'queued') continue;
+    if (itemType !== 'dispatch' || !['queued', 'ready_to_send'].includes(status)) continue;
     const subscriberHash = subscriberHashFromUserPk(fromDynamoAttr(image.pk));
     const dispatch = dispatchFromItem(image);
     if (!subscriberHash || !dispatch.id || !dispatch.created_at) continue;
@@ -87,6 +94,46 @@ function dispatchRefsFromStream(event = {}) {
   return refs;
 }
 
+function resultFromDispatch(dispatch = {}) {
+  return {
+    subject: dispatch.subject,
+    title: dispatch.title,
+    preview: dispatch.preview,
+    text: dispatch.content_text,
+    html: dispatch.content_html,
+    model: dispatch.model,
+    usage: {
+      inputTokens: dispatch.input_tokens || 0,
+      outputTokens: dispatch.output_tokens || 0
+    },
+    sources: dispatch.sources || []
+  };
+}
+
+async function sendReadyDispatch({ tableName, subscriberHash, dispatch }) {
+  const sending = await claimReadyToSendDispatch({
+    dynamodb,
+    tableName,
+    subscriberHash,
+    dispatch
+  });
+  const result = resultFromDispatch(sending);
+  const sent = await sendJmapEmail({
+    to: sending.to_email,
+    subject: result.subject,
+    text: result.text,
+    html: result.html
+  });
+  await markDispatchSent({
+    dynamodb,
+    tableName,
+    subscriberHash,
+    dispatch: sending,
+    submissionId: sent.submission_id
+  });
+  return { dispatch: sending, result: { ...result, submission_id: sent.submission_id } };
+}
+
 export async function processDispatchStream({ event = {}, tableName }) {
   const refs = dispatchRefsFromStream(event);
   let generated = 0;
@@ -95,12 +142,16 @@ export async function processDispatchStream({ event = {}, tableName }) {
   for (const ref of refs) {
     let claimed;
     try {
-      claimed = await claimQueuedDispatch({
-        dynamodb,
-        tableName,
-        subscriberHash: ref.subscriberHash,
-        dispatch: ref.dispatch
-      });
+      if (ref.dispatch.status === 'ready_to_send') {
+        claimed = ref.dispatch;
+      } else {
+        claimed = await claimQueuedDispatch({
+          dynamodb,
+          tableName,
+          subscriberHash: ref.subscriberHash,
+          dispatch: ref.dispatch
+        });
+      }
     } catch (error) {
       if (error instanceof ConditionalCheckFailedException || error.name === 'ConditionalCheckFailedException') {
         skipped += 1;
@@ -115,32 +166,47 @@ export async function processDispatchStream({ event = {}, tableName }) {
     }
 
     try {
-      const result = await generateDispatch(claimed);
-      await markDispatchSent({
-        dynamodb,
-        tableName,
-        subscriberHash: ref.subscriberHash,
-        dispatch: claimed,
-        result
-      });
+      let sentDispatch = claimed;
+      let result;
+      if (claimed.status === 'ready_to_send') {
+        ({ dispatch: sentDispatch, result } = await sendReadyDispatch({
+          tableName,
+          subscriberHash: ref.subscriberHash,
+          dispatch: claimed
+        }));
+      } else {
+        const rendered = await renderDispatch(claimed);
+        const ready = await markDispatchReadyToSend({
+          dynamodb,
+          tableName,
+          subscriberHash: ref.subscriberHash,
+          dispatch: claimed,
+          result: rendered
+        });
+        ({ dispatch: sentDispatch, result } = await sendReadyDispatch({
+          tableName,
+          subscriberHash: ref.subscriberHash,
+          dispatch: ready
+        }));
+      }
       try {
-        const webhookResult = await postDiscordDispatchWebhook({ dispatch: claimed, result });
+        const webhookResult = await postDiscordDispatchWebhook({ dispatch: sentDispatch, result });
         if (webhookResult.posted) {
           logEvent('info', 'dispatch_posted_to_discord', {
             subscriber_hash: ref.subscriberHash,
-            dispatch_id: claimed.id
+            dispatch_id: sentDispatch.id
           });
         }
       } catch (webhookError) {
         logEvent('warning', 'dispatch_discord_post_failed', errorFields(webhookError, {
           subscriber_hash: ref.subscriberHash,
-          dispatch_id: claimed.id
+          dispatch_id: sentDispatch.id
         }));
       }
       generated += 1;
       logEvent('info', 'dispatch_sent', {
         subscriber_hash: ref.subscriberHash,
-        dispatch_id: claimed.id,
+        dispatch_id: sentDispatch.id,
         source_count: result.sources?.length || 0,
         output_tokens: result.usage?.outputTokens || 0
       });

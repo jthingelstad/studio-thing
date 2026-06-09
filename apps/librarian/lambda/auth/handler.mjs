@@ -43,6 +43,7 @@ import {
   getUserDispatch,
   listUserDispatches,
   queueDraftDispatch,
+  recoverStaleDispatches,
   upsertDispatchDraft
 } from '../shared/dispatch-store.mjs';
 
@@ -965,17 +966,17 @@ async function handleDispatch(event, body, start) {
     }
 
     if (action === 'list') {
-      const dispatches = await listUserDispatches({
-        dynamodb,
-        tableName,
-        subscriberHash: profile.subscriberHash,
-        limit: body.limit || 12
-      });
       const availability = await dispatchAvailability({
         dynamodb,
         tableName,
         subscriberHash: profile.subscriberHash,
         owner: profile.owner
+      });
+      const dispatches = await listUserDispatches({
+        dynamodb,
+        tableName,
+        subscriberHash: profile.subscriberHash,
+        limit: body.limit || 12
       });
       return jsonResponse(200, {
         dispatches: dispatches.map(dispatchForClient),
@@ -987,13 +988,27 @@ async function handleDispatch(event, body, start) {
     }
 
     if (action === 'status') {
-      const dispatch = await getUserDispatch({
+      let dispatch = await getUserDispatch({
         dynamodb,
         tableName,
         subscriberHash: profile.subscriberHash,
         dispatchId: body.dispatch_id || body.id
       });
       if (!dispatch) return jsonResponse(404, { error: 'Dispatch not found.' }, event);
+      const recovered = await recoverStaleDispatches({
+        dynamodb,
+        tableName,
+        subscriberHash: profile.subscriberHash,
+        rows: [dispatch]
+      });
+      if (recovered) {
+        dispatch = await getUserDispatch({
+          dynamodb,
+          tableName,
+          subscriberHash: profile.subscriberHash,
+          dispatchId: body.dispatch_id || body.id
+        }) || dispatch;
+      }
       return jsonResponse(200, {
         dispatch: dispatchForClient(dispatch)
       }, event);
