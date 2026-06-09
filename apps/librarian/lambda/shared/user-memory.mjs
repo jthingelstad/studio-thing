@@ -181,34 +181,37 @@ export async function getUserMemory(sub) {
       Key: memoryKey(sub),
       ConsistentRead: false
     }));
-    if (!response?.Item) return null;
-    const item = response.Item;
-    return {
-      sub,
-      version: Number(item.version?.N || 0),
-      first_seen_at: item.first_seen_at?.S || '',
-      last_seen_at: item.last_seen_at?.S || '',
-      preferred_name: item.preferred_name?.S || '',
-      turn_count: Number(item.turn_count?.N || 0),
-      current_session_id: item.current_session_id?.S || '',
-      current_session_started_at: item.current_session_started_at?.S || '',
-      current_session_questions: (item.current_session_questions?.L || [])
-        .map(readQuestion)
-        .filter(Boolean),
-      synthesized_history: (item.synthesized_history?.L || [])
-        .map(readSynth)
-        .filter(Boolean),
-      remembered_facts: (item.remembered_facts?.L || [])
-        .map(readFact)
-        .filter(Boolean),
-      interests: readStringList(item.interests)
-    };
+    return memoryFromItem(response?.Item, sub);
   } catch (error) {
     logEvent('warning', 'user_memory_read_failed', {
       error_type: error?.constructor?.name || 'Error'
     });
     return null;
   }
+}
+
+export function memoryFromItem(item, sub = '') {
+  if (!item) return null;
+  return {
+    sub,
+    version: Number(item.version?.N || 0),
+    first_seen_at: item.first_seen_at?.S || '',
+    last_seen_at: item.last_seen_at?.S || '',
+    preferred_name: item.preferred_name?.S || '',
+    turn_count: Number(item.turn_count?.N || 0),
+    current_session_id: item.current_session_id?.S || '',
+    current_session_started_at: item.current_session_started_at?.S || '',
+    current_session_questions: (item.current_session_questions?.L || [])
+      .map(readQuestion)
+      .filter(Boolean),
+    synthesized_history: (item.synthesized_history?.L || [])
+      .map(readSynth)
+      .filter(Boolean),
+    remembered_facts: (item.remembered_facts?.L || [])
+      .map(readFact)
+      .filter(Boolean),
+    interests: readStringList(item.interests)
+  };
 }
 
 // Record one chat turn. Best-effort — failures don't propagate.
@@ -387,12 +390,12 @@ export async function rememberUserFact(sub, input = {}) {
 export async function recordUserPreferredName(sub, name) {
   const tableName = process.env.TABLE_NAME;
   const cleanName = String(name || '').trim().replace(/\s+/g, ' ').slice(0, 80);
-  if (!tableName || !sub || !cleanName) return;
+  if (!tableName || !sub || !cleanName) return { ok: false, error: 'Missing memory write context.' };
   const nowIso = new Date().toISOString();
   try {
     const { UpdateItemCommand } = await import('@aws-sdk/client-dynamodb');
     const { dynamodb } = await import('./aws-clients.mjs');
-    await dynamodb.send(new UpdateItemCommand({
+    const response = await dynamodb.send(new UpdateItemCommand({
       TableName: tableName,
       Key: {
         pk: dynamoString(`user#${sub}`),
@@ -418,13 +421,16 @@ export async function recordUserPreferredName(sub, name) {
         ':ttl': dynamoNumber(ttlFromNow()),
         ':zero': dynamoNumber(0),
         ':one': dynamoNumber(1)
-      }
+      },
+      ReturnValues: 'ALL_NEW'
     }));
     logEvent('info', 'user_preferred_name_recorded');
+    return { ok: true, memory: memoryFromItem(response?.Attributes, sub) };
   } catch (error) {
     logEvent('warning', 'user_preferred_name_write_failed', {
       error_type: error?.constructor?.name || 'Error'
     });
+    return { ok: false, error: 'Memory write failed.' };
   }
 }
 

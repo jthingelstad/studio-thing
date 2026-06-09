@@ -7,9 +7,11 @@ import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail
 import { entitlementsForSessionPayload, magicLinkBaseWithReturnPath } from '../auth/handler.mjs';
 import {
   authProfile,
+  memoryFromItem,
   memoryContextBlock,
   mergeRememberedFacts,
-  normalizeMemoryFact
+  normalizeMemoryFact,
+  recordUserPreferredName
 } from '../shared/user-memory.mjs';
 import { renderTemplate, agentUserPrompt } from '../shared/prompts.mjs';
 import { subscriberStatus } from '../shared/buttondown.mjs';
@@ -173,6 +175,39 @@ test('conversation mode entitlements unlock the expected modes', () => {
 
 test('authProfile returns returning=false for first-time users', () => {
   assert.deepEqual(authProfile(null), { returning: false });
+});
+
+test('memoryFromItem shapes stored preferred names', () => {
+  const memory = memoryFromItem({
+    version: { N: '3' },
+    first_seen_at: { S: '2026-01-01T00:00:00Z' },
+    last_seen_at: { S: '2026-01-02T00:00:00Z' },
+    preferred_name: { S: 'Jamie' },
+    turn_count: { N: '7' },
+    current_session_questions: { L: [{ M: { ts: { S: '2026-01-02T00:00:00Z' }, question: { S: 'What about RSS?' } } }] },
+    synthesized_history: { L: [] },
+    remembered_facts: { L: [] },
+    interests: { L: [{ S: 'RSS' }] }
+  }, 'subscriber-hash');
+
+  assert.equal(memory.sub, 'subscriber-hash');
+  assert.equal(memory.version, 3);
+  assert.equal(memory.preferred_name, 'Jamie');
+  assert.equal(memory.current_session_questions[0].question, 'What about RSS?');
+  assert.deepEqual(memory.interests, ['RSS']);
+});
+
+test('recordUserPreferredName reports failure when memory storage is not configured', async () => {
+  const priorTable = process.env.TABLE_NAME;
+  delete process.env.TABLE_NAME;
+  try {
+    const result = await recordUserPreferredName('subscriber-hash', 'Jamie');
+    assert.equal(result.ok, false);
+    assert.match(result.error, /Missing memory write context/);
+  } finally {
+    if (priorTable === undefined) delete process.env.TABLE_NAME;
+    else process.env.TABLE_NAME = priorTable;
+  }
 });
 
 test('authProfile reflects turn_count and surfaces recent topics', () => {

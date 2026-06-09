@@ -284,8 +284,16 @@ async function updateProfile(event, body, start) {
   if (preferredName.split(/\s+/).some((word) => blocked.has(word.toLowerCase()))) {
     return jsonResponse(400, { error: 'Enter a name Thingy should use.' }, event);
   }
-  await recordUserPreferredName(payload.sub, preferredName);
-  const memory = await getUserMemory(payload.sub);
+  const write = await recordUserPreferredName(payload.sub, preferredName);
+  if (!write?.ok) {
+    logEvent('warning', 'auth_profile_update_failed', {
+      subscriber_hash: payload.sub,
+      error: write?.error || 'unknown',
+      duration_ms: Math.round(performance.now() - start)
+    });
+    return jsonResponse(500, { error: 'Thingy could not save that name right now. Please try again.' }, event);
+  }
+  const memory = write.memory || await getUserMemory(payload.sub);
   const entitlements = entitlementsForSessionPayload(payload);
   const modes = availableConversationModes(entitlements);
   logEvent('info', 'auth_profile_updated', {
