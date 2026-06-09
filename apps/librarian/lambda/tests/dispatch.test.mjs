@@ -48,8 +48,18 @@ test('dispatch availability enforces active and rolling 24-hour limits', () => {
   ], { nowSeconds }).allowed, true);
 });
 
-test('dispatch availability ignores stale leased active rows', () => {
+test('dispatch availability ignores stale leased and unclaimed queued active rows', () => {
   const nowSeconds = Math.floor(Date.parse('2026-06-08T12:00:00Z') / 1000);
+  const staleQueued = {
+    id: 'd0',
+    status: 'queued',
+    queued_at: '2026-06-08T11:40:00Z'
+  };
+  const freshQueued = {
+    id: 'd0b',
+    status: 'queued',
+    queued_at: '2026-06-08T11:55:00Z'
+  };
   const staleGenerating = {
     id: 'd1',
     status: 'generating',
@@ -61,8 +71,12 @@ test('dispatch availability ignores stale leased active rows', () => {
     lease_expires_at: '2026-06-08T12:05:00Z'
   };
 
+  assert.equal(dispatchIsActive(staleQueued, { nowSeconds }), false);
+  assert.equal(dispatchIsActive(freshQueued, { nowSeconds }), true);
   assert.equal(dispatchIsActive(staleGenerating, { nowSeconds }), false);
   assert.equal(dispatchIsActive(freshGenerating, { nowSeconds }), true);
+  assert.equal(dispatchAvailabilityFromRows([staleQueued], { nowSeconds }).allowed, true);
+  assert.equal(dispatchAvailabilityFromRows([freshQueued], { nowSeconds }).allowed, false);
   assert.equal(dispatchAvailabilityFromRows([staleGenerating], { nowSeconds }).allowed, true);
   assert.equal(dispatchAvailabilityFromRows([freshGenerating], { nowSeconds }).allowed, false);
 });

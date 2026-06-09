@@ -1,5 +1,5 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
-import { BatchWriteItemCommand, GetItemCommand, PutItemCommand, QueryCommand, ScanCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import { BatchWriteItemCommand, GetItemCommand, PutItemCommand, QueryCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { bedrock, dynamodb, agentModel, fastModel } from '../shared/aws-clients.mjs';
 import { createSubscriber, ensureThingyTag, fetchSubscriber, sanitizeAttribution, sendSubscriberReminder, subscriberStatus } from '../shared/buttondown.mjs';
 import { eventSummary, jsonResponse, methodAndPath, parseBody, clientSourceIp, userAgent } from '../shared/http.mjs';
@@ -21,8 +21,6 @@ import { premiumThankYouSystemPrompt } from '../shared/prompts.mjs';
 import {
   USER_CONVERSATION_LIMIT,
   conversationSk,
-  conversationSummaryFromItem,
-  conversationTurnFromItem,
   dynamoString as conversationDynamoString,
   turnSkPrefix,
   userConversationPk,
@@ -31,7 +29,6 @@ import {
 import {
   createUserConversation,
   getUserConversation,
-  getUserConversationMetadata,
   loadUserConversationSummaries,
   renameUserConversation
 } from '../shared/conversation-store.mjs';
@@ -40,10 +37,6 @@ import { handleDispatch } from './dispatch-routes.mjs';
 const AUTH_RATE_LIMIT_MAX = 30;
 const MAGIC_LINK_RATE_LIMIT_MAX = 6;
 const DISCORD_BRIDGE_RATE_LIMIT_MAX = 60;
-const CONVERSATIONS_DEFAULT_LIMIT = 100;
-const CONVERSATIONS_MAX_LIMIT = 300;
-const CONVERSATIONS_DEFAULT_LOOKBACK_HOURS = 24;
-const CONVERSATIONS_MAX_SCAN_PAGES = 25;
 const DISCORD_USER_ID_RE = /^[A-Za-z0-9_:.-]{1,64}$/;
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const ALLOWED_SOURCES = new Set([
@@ -89,6 +82,34 @@ function dynamoString(value) {
 
 function dynamoNumber(value) {
   return { N: String(Number(value || 0)) };
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function batchDeleteKeys(tableName, keys, maxAttempts = 5) {
+  let deleted = 0;
+  for (let index = 0; index < keys.length; index += 25) {
+    let requests = keys.slice(index, index + 25).map((Key) => ({ DeleteRequest: { Key } }));
+    for (let attempt = 1; requests.length && attempt <= maxAttempts; attempt += 1) {
+      const response = await dynamodb.send(new BatchWriteItemCommand({
+        RequestItems: {
+          [tableName]: requests
+        }
+      }));
+      const unprocessed = response.UnprocessedItems?.[tableName] || [];
+      deleted += requests.length - unprocessed.length;
+      requests = unprocessed;
+      if (requests.length && attempt < maxAttempts) {
+        await sleep(50 * (2 ** (attempt - 1)));
+      }
+    }
+    if (requests.length) {
+      throw new Error(`DynamoDB left ${requests.length} delete request(s) unprocessed`);
+    }
+  }
+  return deleted;
 }
 
 async function recordSession(sessionId, email, expiresAt) {
@@ -199,8 +220,9 @@ async function authSuccessResponse(email, subscriber, source, event, start) {
   return jsonResponse(200, payload, event);
 }
 
-function entitlementsForSessionPayload(payload) {
-  const entitlements = new Set(Array.isArray(payload?.entitlements) ? payload.entitlements : ['reader']);
+export function entitlementsForSessionPayload(payload, nowSeconds = Math.floor(Date.now() / 1000)) {
+  const entitlementsFresh = Number(payload?.entitlements_verified_until || 0) > nowSeconds;
+  const entitlements = new Set(entitlementsFresh && Array.isArray(payload?.entitlements) ? payload.entitlements : ['reader']);
   if (isOwnerSubscriberHash(payload?.sub)) {
     entitlements.add('owner');
     entitlements.add('supporting_member');
@@ -219,7 +241,11 @@ async function refreshSession(event, body, start) {
   }
   const entitlements = entitlementsForSessionPayload(payload);
   const modes = availableConversationModes(entitlements);
-  const { sessionId, expiresAt, token } = createSessionTokenForSub(payload.sub, undefined, { entitlements });
+  const verifiedUntil = Number(payload.entitlements_verified_until || 0);
+  const claims = verifiedUntil > Math.floor(Date.now() / 1000)
+    ? { entitlements, entitlements_verified_until: verifiedUntil }
+    : { entitlements };
+  const { sessionId, expiresAt, token } = createSessionTokenForSub(payload.sub, undefined, claims);
   await recordSessionForSub(sessionId, payload.sub, expiresAt);
   const memory = await getUserMemory(payload.sub);
   logEvent('info', 'auth_refreshed', {
@@ -466,186 +492,6 @@ async function handleDiscordBridge(event, body, start) {
     profile: authProfile(memory)
   }, event);
 }
-
-// --- operator-only: canonical Thingy conversation reads ---
-// Gated by the same DISCORD_BRIDGE_SECRET as the bridge mint (operator
-// secret, never a per-user token). Used by workshop_bot to surface what
-// readers are asking Thingy. Conversation metadata and turns are the
-// canonical server-side records under user#<subscriberHash>.
-
-function bridgeSecretOk(body) {
-  const expected = process.env.DISCORD_BRIDGE_SECRET || '';
-  if (!expected) return null; // bridge disabled
-  const expectedBuf = Buffer.from(expected, 'utf8');
-  const suppliedBuf = Buffer.from(String(body.bridge_secret || ''), 'utf8');
-  return expectedBuf.length === suppliedBuf.length && crypto.timingSafeEqual(expectedBuf, suppliedBuf);
-}
-
-function normalizeListConversationsParams(body = {}, now = Date.now()) {
-  let since = String(body.since || '').trim();
-  if (!since || Number.isNaN(Date.parse(since))) {
-    since = new Date(now - CONVERSATIONS_DEFAULT_LOOKBACK_HOURS * 3600 * 1000).toISOString();
-  }
-  let limit = Number(body.limit || CONVERSATIONS_DEFAULT_LIMIT);
-  if (!Number.isFinite(limit) || limit <= 0) limit = CONVERSATIONS_DEFAULT_LIMIT;
-  limit = Math.min(Math.floor(limit), CONVERSATIONS_MAX_LIMIT);
-  return { since, limit };
-}
-
-function subscriberHashFromUserPk(pk) {
-  const text = String(pk || '');
-  return text.startsWith('user#') ? text.slice('user#'.length) : '';
-}
-
-async function handleListOperatorConversations(event, body, start) {
-  const secretState = bridgeSecretOk(body);
-  if (secretState === null) {
-    logEvent('warning', 'auth_operator_conversations_bridge_disabled');
-    return jsonResponse(503, { error: 'Discord bridge is not enabled.' }, event);
-  }
-  if (!secretState) {
-    logEvent('warning', 'auth_operator_conversations_bad_secret');
-    return jsonResponse(401, { error: 'Bridge secret rejected.' }, event);
-  }
-  const tableName = process.env.TABLE_NAME;
-  if (!tableName) return jsonResponse(500, { error: 'Conversation history is unavailable right now.' }, event);
-
-  const { since: sinceIso, limit } = normalizeListConversationsParams(body);
-  const evalStatus = String(body.eval_status || '').trim();
-  const rows = [];
-  let exclusiveStartKey;
-  let pages = 0;
-  try {
-    do {
-      const resp = await dynamodb.send(new ScanCommand({
-        TableName: tableName,
-        FilterExpression: 'begins_with(#pk, :user_prefix) AND begins_with(#sk, :conversation_prefix) AND #updated_at >= :since',
-        ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk', '#updated_at': 'updated_at' },
-        ExpressionAttributeValues: {
-          ':user_prefix': { S: 'user#' },
-          ':conversation_prefix': { S: 'conversation#' },
-          ':since': { S: sinceIso }
-        },
-        ExclusiveStartKey: exclusiveStartKey
-      }));
-      for (const item of resp.Items || []) {
-        const conversation = conversationSummaryFromItem(item);
-        if (evalStatus && conversation.eval_status !== evalStatus) continue;
-        rows.push({
-          ...conversation,
-          subscriber_hash: subscriberHashFromUserPk(item.pk?.S)
-        });
-      }
-      exclusiveStartKey = resp.LastEvaluatedKey;
-      pages += 1;
-    } while (exclusiveStartKey && pages < CONVERSATIONS_MAX_SCAN_PAGES);
-  } catch (error) {
-    logEvent('error', 'auth_operator_conversations_scan_failed', { error_type: error.constructor?.name || 'Error' });
-    return jsonResponse(502, { error: 'Could not read canonical conversations right now.' }, event);
-  }
-
-  const sorted = rows
-    .sort((a, b) => String(a.updated_at || '').localeCompare(String(b.updated_at || '')))
-    .slice(-limit);
-  const truncated = Boolean(exclusiveStartKey) || sorted.length < rows.length;
-  logEvent('info', 'auth_operator_conversations_listed', {
-    since: sinceIso,
-    returned: sorted.length,
-    scanned_pages: pages,
-    truncated,
-    duration_ms: Math.round(performance.now() - start)
-  });
-  return jsonResponse(200, {
-    since: sinceIso,
-    count: sorted.length,
-    truncated,
-    eval_status: evalStatus || null,
-    conversations: sorted
-  }, event);
-}
-
-async function findOperatorConversationMetadata(tableName, conversationId, subscriberHash = '') {
-  if (subscriberHash) {
-    const conversation = await getUserConversationMetadata({ dynamodb, tableName, subscriberHash, conversationId });
-    return conversation ? { conversation: { ...conversation, subscriber_hash: subscriberHash }, subscriberHash } : null;
-  }
-  let exclusiveStartKey;
-  let pages = 0;
-  do {
-    const response = await dynamodb.send(new ScanCommand({
-      TableName: tableName,
-      FilterExpression: 'begins_with(#pk, :user_prefix) AND #sk = :conversation_sk',
-      ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
-      ExpressionAttributeValues: {
-        ':user_prefix': { S: 'user#' },
-        ':conversation_sk': conversationDynamoString(conversationSk(conversationId))
-      },
-      ExclusiveStartKey: exclusiveStartKey
-    }));
-    const item = (response.Items || [])[0];
-    if (item) {
-      const foundSubscriberHash = subscriberHashFromUserPk(item.pk?.S);
-      return {
-        conversation: { ...conversationSummaryFromItem(item), subscriber_hash: foundSubscriberHash },
-        subscriberHash: foundSubscriberHash
-      };
-    }
-    exclusiveStartKey = response.LastEvaluatedKey;
-    pages += 1;
-  } while (exclusiveStartKey && pages < CONVERSATIONS_MAX_SCAN_PAGES);
-  return null;
-}
-
-async function handleGetOperatorConversation(event, body, start) {
-  const secretState = bridgeSecretOk(body);
-  if (secretState === null) {
-    logEvent('warning', 'auth_operator_conversation_bridge_disabled');
-    return jsonResponse(503, { error: 'Discord bridge is not enabled.' }, event);
-  }
-  if (!secretState) {
-    logEvent('warning', 'auth_operator_conversation_bad_secret');
-    return jsonResponse(401, { error: 'Bridge secret rejected.' }, event);
-  }
-  const tableName = process.env.TABLE_NAME;
-  if (!tableName) return jsonResponse(500, { error: 'Conversation history is unavailable right now.' }, event);
-
-  const conversationId = validConversationId(body.conversation_id || body.id);
-  if (!conversationId) return jsonResponse(400, { error: 'conversation_id is required.' }, event);
-  const subscriberHash = String(body.subscriber_hash || '').trim();
-  try {
-    const found = await findOperatorConversationMetadata(tableName, conversationId, subscriberHash);
-    if (!found) return jsonResponse(404, { error: 'Conversation not found.' }, event);
-    const limit = Math.max(1, Math.min(Number(body.limit || 80) || 80, 120));
-    const response = await dynamodb.send(new QueryCommand({
-      TableName: tableName,
-      KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
-      ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
-      ExpressionAttributeValues: {
-        ':pk': conversationDynamoString(userConversationPk(found.subscriberHash)),
-        ':prefix': conversationDynamoString(turnSkPrefix(conversationId))
-      },
-      ScanIndexForward: false,
-      Limit: limit
-    }));
-    const turns = (response.Items || [])
-      .map(conversationTurnFromItem)
-      .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
-    logEvent('info', 'auth_operator_conversation_loaded', {
-      subscriber_hash: found.subscriberHash,
-      conversation_id: conversationId,
-      turn_count: turns.length,
-      duration_ms: Math.round(performance.now() - start)
-    });
-    return jsonResponse(200, { conversation: found.conversation, turns }, event);
-  } catch (error) {
-    logEvent('error', 'auth_operator_conversation_load_failed', {
-      conversation_id: conversationId,
-      error_type: error.constructor?.name || 'Error'
-    });
-    return jsonResponse(502, { error: 'Could not read the conversation right now.' }, event);
-  }
-}
-
 function conversationAuth(event, body) {
   const payload = verifyToken(extractBearer(event, body));
   return payload || null;
@@ -747,20 +593,14 @@ async function handleUserConversations(event, body, start) {
         exclusiveStartKey = response.LastEvaluatedKey;
       } while (exclusiveStartKey);
 
-      for (let index = 0; index < keys.length; index += 25) {
-        await dynamodb.send(new BatchWriteItemCommand({
-          RequestItems: {
-            [tableName]: keys.slice(index, index + 25).map((Key) => ({ DeleteRequest: { Key } }))
-          }
-        }));
-      }
+      const deletedItems = await batchDeleteKeys(tableName, keys);
       logEvent('info', 'user_conversation_deleted', {
         subscriber_hash: subscriberHash,
         conversation_id: conversationId,
-        deleted_items: keys.length,
+        deleted_items: deletedItems,
         duration_ms: Math.round(performance.now() - start)
       });
-      return jsonResponse(200, { ok: true, conversation_id: conversationId, deleted_items: keys.length }, event);
+      return jsonResponse(200, { ok: true, conversation_id: conversationId, deleted_items: deletedItems }, event);
     }
   } catch (error) {
     if (error.name === 'ConditionalCheckFailedException') {
@@ -797,9 +637,7 @@ async function authHandler(event) {
     'complete_magic_link',
     'refresh_session',
     'update_profile',
-    'discord_bridge',
-    'list_operator_conversations',
-    'get_operator_conversation'
+    'discord_bridge'
   ].includes(action)) {
     logEvent('info', 'auth_rejected_invalid_action', { email_hash: hashedEmail, action });
     return jsonResponse(400, { error: 'Unsupported subscriber action.' }, event);
@@ -812,16 +650,6 @@ async function authHandler(event) {
   // surfaces "not enabled" rather than silently passing.
   if (action === 'discord_bridge') {
     return await handleDiscordBridge(event, body, start);
-  }
-
-  // Operator-only canonical conversation reads (thingy_bridge). Also email-less —
-  // gated by the bridge secret, not a subscriber session.
-  if (action === 'list_operator_conversations') {
-    return await handleListOperatorConversations(event, body, start);
-  }
-
-  if (action === 'get_operator_conversation') {
-    return await handleGetOperatorConversation(event, body, start);
   }
 
   if (action === 'complete_magic_link') {

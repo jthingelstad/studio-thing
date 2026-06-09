@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { normalizeHeaders } from './http.mjs';
 
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 10;
+const PRIVILEGED_ENTITLEMENTS = new Set(['supporting_member', 'trusted_circle', 'owner']);
 
 function b64url(value) {
   return Buffer.from(value).toString('base64url');
@@ -39,10 +40,16 @@ export function signPayload(payload) {
 export function createSessionToken(email, sessionId = crypto.randomBytes(18).toString('base64url'), claims = {}) {
   const expiresAt = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
   const safeClaims = claims && typeof claims === 'object' && !Array.isArray(claims) ? claims : {};
+  const payloadClaims = { ...safeClaims };
+  const entitlements = Array.isArray(payloadClaims.entitlements) ? payloadClaims.entitlements : [];
+  if (entitlements.some((entitlement) => PRIVILEGED_ENTITLEMENTS.has(entitlement))
+      && !Number(payloadClaims.entitlements_verified_until || 0)) {
+    payloadClaims.entitlements_verified_until = expiresAt;
+  }
   return {
     sessionId,
     expiresAt,
-    token: signPayload({ ...safeClaims, sid: sessionId, sub: emailHash(email), exp: expiresAt })
+    token: signPayload({ ...payloadClaims, sid: sessionId, sub: emailHash(email), exp: expiresAt })
   };
 }
 
@@ -55,10 +62,16 @@ export function createSessionTokenForSub(sub, sessionId = crypto.randomBytes(18)
   }
   const expiresAt = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
   const safeClaims = claims && typeof claims === 'object' && !Array.isArray(claims) ? claims : {};
+  const payloadClaims = { ...safeClaims };
+  const entitlements = Array.isArray(payloadClaims.entitlements) ? payloadClaims.entitlements : [];
+  if (entitlements.some((entitlement) => PRIVILEGED_ENTITLEMENTS.has(entitlement))
+      && !Number(payloadClaims.entitlements_verified_until || 0)) {
+    payloadClaims.entitlements_verified_until = expiresAt;
+  }
   return {
     sessionId,
     expiresAt,
-    token: signPayload({ ...safeClaims, sid: sessionId, sub, exp: expiresAt })
+    token: signPayload({ ...payloadClaims, sid: sessionId, sub, exp: expiresAt })
   };
 }
 

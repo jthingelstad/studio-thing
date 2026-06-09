@@ -289,6 +289,11 @@ async function dueConversations({ tableName, event = {} }) {
     return rows;
   }
 
+  if (!envBool('EVAL_ENABLE_TABLE_SCAN', false)) {
+    logEvent('info', 'conversation_eval_scan_disabled');
+    return [];
+  }
+
   const maxPages = Number(process.env.EVAL_SCAN_MAX_PAGES || DEFAULT_SCAN_PAGES);
   const maxConversations = Number(process.env.EVAL_MAX_CONVERSATIONS || DEFAULT_MAX_CONVERSATIONS);
   const postScanResults = envBool('EVAL_POST_SCAN_RESULTS', false);

@@ -7,6 +7,7 @@ const DISPATCH_ID_RE = /^[A-Za-z0-9_.:-]{1,96}$/;
 const ACTIVE_STATUSES = new Set(['queued', 'generating', 'ready_to_send', 'sending']);
 const DRAFT_STATUSES = new Set(['draft', 'shaping', 'needs_clarification', 'ready']);
 const DEFAULT_COOLDOWN_SECONDS = 24 * 60 * 60;
+const DEFAULT_QUEUE_STALE_SECONDS = 15 * 60;
 const DEFAULT_GENERATION_LEASE_SECONDS = 14 * 60;
 const DEFAULT_SEND_LEASE_SECONDS = 5 * 60;
 
@@ -110,6 +111,14 @@ function dispatchLeaseExpired(row = {}, nowSeconds = Math.floor(Date.now() / 100
   return Number.isFinite(expiresAt) && Math.floor(expiresAt / 1000) <= nowSeconds;
 }
 
+function dispatchQueuedStale(row = {}, nowSeconds = Math.floor(Date.now() / 1000)) {
+  if (row.status !== 'queued') return false;
+  const queuedAt = Date.parse(row.queued_at || row.updated_at || row.created_at || '');
+  if (!Number.isFinite(queuedAt)) return false;
+  const staleSeconds = Math.max(60, Number(process.env.DISPATCH_QUEUE_STALE_SECONDS || DEFAULT_QUEUE_STALE_SECONDS) || DEFAULT_QUEUE_STALE_SECONDS);
+  return Math.floor(queuedAt / 1000) + staleSeconds <= nowSeconds;
+}
+
 function recoverableActiveStatus(status) {
   return status === 'generating' || status === 'ready_to_send';
 }
@@ -118,6 +127,7 @@ export function dispatchIsActive(row = {}, {
   nowSeconds = Math.floor(Date.now() / 1000)
 } = {}) {
   if (!ACTIVE_STATUSES.has(row.status)) return false;
+  if (dispatchQueuedStale(row, nowSeconds)) return false;
   if (recoverableActiveStatus(row.status) && dispatchLeaseExpired(row, nowSeconds)) return false;
   if (row.status === 'sending' && dispatchLeaseExpired(row, nowSeconds)) return false;
   return true;
@@ -758,8 +768,17 @@ export async function recoverStaleDispatches({ dynamodb, tableName, subscriberHa
   const nowSeconds = Math.floor(Date.now() / 1000);
   let recovered = 0;
   for (const row of rows) {
-    if (!dispatchLeaseExpired(row, nowSeconds)) continue;
-    if (row.status === 'generating') {
+    if (row.status === 'queued' && dispatchQueuedStale(row, nowSeconds)) {
+      await markDispatchFailed({
+        dynamodb,
+        tableName,
+        subscriberHash,
+        dispatch: row,
+        error: 'Dispatch was queued but not claimed by the worker in time. Please generate it again.'
+      }).then(() => { recovered += 1; }).catch(() => {});
+    } else if (!dispatchLeaseExpired(row, nowSeconds)) {
+      continue;
+    } else if (row.status === 'generating') {
       const now = new Date().toISOString();
       await dynamodb.send(new UpdateItemCommand({
         TableName: tableName,

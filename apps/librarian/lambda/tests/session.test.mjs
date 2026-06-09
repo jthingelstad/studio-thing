@@ -4,7 +4,7 @@ import { renderFaqAnswer, searchFaq } from '../shared/faq.mjs';
 import { buildMagicLink, createMagicToken, magicTokenHash, validMagicToken } from '../shared/magic-link.mjs';
 import { buildJmapEmailCalls, buildMagicLinkJmapCalls, magicLinkEmailHtml, magicLinkEmailText, requireMethodResponse } from '../shared/jmap-mail.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, verifyToken } from '../shared/session.mjs';
-import { magicLinkBaseWithReturnPath } from '../auth/handler.mjs';
+import { entitlementsForSessionPayload, magicLinkBaseWithReturnPath } from '../auth/handler.mjs';
 import {
   authProfile,
   memoryContextBlock,
@@ -51,6 +51,47 @@ test('session token can carry safe entitlement claims', () => {
 
   assert.equal(payload.sid, 'session-2');
   assert.deepEqual(payload.entitlements, ['reader', 'owner']);
+  assert.ok(Number(payload.entitlements_verified_until || 0) >= Math.floor(Date.now() / 1000));
+});
+
+test('session refresh entitlements do not renew stale privileged claims', () => {
+  const priorOwnerEmails = process.env.THINGY_OWNER_EMAILS;
+  const priorOwnerHashes = process.env.THINGY_OWNER_EMAIL_HASHES;
+  process.env.THINGY_OWNER_EMAILS = 'jamie@thingelstad.com';
+  delete process.env.THINGY_OWNER_EMAIL_HASHES;
+
+  try {
+    const now = 1000;
+    assert.deepEqual(
+      entitlementsForSessionPayload({
+        sub: emailHash('reader@example.com'),
+        entitlements: ['reader', 'supporting_member'],
+        entitlements_verified_until: now - 1
+      }, now),
+      ['reader']
+    );
+    assert.deepEqual(
+      entitlementsForSessionPayload({
+        sub: emailHash('reader@example.com'),
+        entitlements: ['reader', 'supporting_member'],
+        entitlements_verified_until: now + 1
+      }, now),
+      ['reader', 'supporting_member']
+    );
+    assert.deepEqual(
+      entitlementsForSessionPayload({
+        sub: emailHash('jamie@thingelstad.com'),
+        entitlements: ['reader'],
+        entitlements_verified_until: now - 1
+      }, now),
+      ['reader', 'owner', 'supporting_member', 'trusted_circle']
+    );
+  } finally {
+    if (priorOwnerEmails === undefined) delete process.env.THINGY_OWNER_EMAILS;
+    else process.env.THINGY_OWNER_EMAILS = priorOwnerEmails;
+    if (priorOwnerHashes === undefined) delete process.env.THINGY_OWNER_EMAIL_HASHES;
+    else process.env.THINGY_OWNER_EMAIL_HASHES = priorOwnerHashes;
+  }
 });
 
 test('discord bridge token round trips with non-email sub', () => {
