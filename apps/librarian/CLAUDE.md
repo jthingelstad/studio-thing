@@ -43,14 +43,19 @@ The `bridgeSecretOk` helper in `runtime.mjs` mirrors the same check in `auth/han
 
 ## Deploy
 
-Always via `pipeline/deploy/aws.py`:
+Always via `make librarian-deploy` or `venv/bin/python pipeline/deploy/aws.py`.
+The deploy script needs the repo virtualenv packages (`boto3`, `python-dotenv`,
+etc.); plain system `python`/`python3` may fail.
 
 ```bash
 # Default: skip corpus reupload — code+infra only
-python pipeline/deploy/aws.py --skip-corpus-upload
+make librarian-deploy ARGS="--skip-corpus-upload"
 
 # Full deploy (rebuilds + embeds + uploads Weekly Thing, blog, and podcast corpora)
-python pipeline/deploy/aws.py
+make librarian-deploy
+
+# Direct equivalent when bypassing make
+venv/bin/python pipeline/deploy/aws.py --skip-corpus-upload
 ```
 
 The `--skip-corpus-upload` flag is the **default for any code-only change**. Full corpus reupload is slow and paid (Bedrock embed cost); only do it when one or more corpus artifacts are stale (new source content, schema change, embed model change).

@@ -36,14 +36,16 @@ apps/librarian/
 
 ## Deploy
 
-Always via `pipeline/deploy/aws.py`. Two flavors:
+Always via `make librarian-deploy` or `venv/bin/python pipeline/deploy/aws.py`.
+The deploy script needs the repo virtualenv packages (`boto3`, `python-dotenv`,
+etc.); plain system `python`/`python3` may fail.
 
 ```bash
 # Code + infra only (skip the slow + paid corpus reupload) — the default for code changes
-python pipeline/deploy/aws.py --skip-corpus-upload
+make librarian-deploy ARGS="--skip-corpus-upload"
 
 # Full deploy (rebuilds + embeds + uploads Weekly Thing, blog, and podcast corpora)
-python pipeline/deploy/aws.py
+make librarian-deploy
 
 # Run Node tests
 npm --prefix apps/librarian/lambda test
