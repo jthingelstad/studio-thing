@@ -176,9 +176,9 @@ You may recall in [WT311](https://weekly.thingelstad.com/archive/311/) I shared 
 
 Some prompts that are fun to explore with Thingy:
 
-- [How has the arc of AI evolved in the Weekly Thing?](https://weekly.thingelstad.com/thingy/?prompt=How+has+the+arc+of+AI+evolved+in+the+Weekly+Thing%3F)
-- [Compare Tik Tok, Facebook, and X from the archive.](https://weekly.thingelstad.com/thingy/?prompt=Compare+Tik+Tok%2C+Facebook%2C+and+X+from+the+archive.)
-- [Explain to me how Jamie connects Indie Web and Crypto? They seem very opposite to me.](https://weekly.thingelstad.com/thingy/?prompt=Explain+to+me+how+Jamie+connects+Indie+Web+and+Crypto%3F+They+seem+very+opposite+to+me.)
+- [How has the arc of AI evolved in the Weekly Thing?](https://thingy.thingelstad.com/chat/?prompt=How+has+the+arc+of+AI+evolved+in+the+Weekly+Thing%3F)
+- [Compare Tik Tok, Facebook, and X from the archive.](https://thingy.thingelstad.com/chat/?prompt=Compare+Tik+Tok%2C+Facebook%2C+and+X+from+the+archive.)
+- [Explain to me how Jamie connects Indie Web and Crypto? They seem very opposite to me.](https://thingy.thingelstad.com/chat/?prompt=Explain+to+me+how+Jamie+connects+Indie+Web+and+Crypto%3F+They+seem+very+opposite+to+me.)
 
 4️⃣ **[Search](https://weekly.thingelstad.com/search/) is now super powered.** The searching is indexed into the section of the weekly thing. This works way better than before.
 

@@ -43,7 +43,7 @@ One brain, several surfaces.
 | `pipeline/` | Production: build, stats, status, audio, corpus, graph, deploy. |
 | `data/issues/` | Editorial source of truth — the canonical per-issue content. |
 | `data/audio/` | Audio production source: manifest, scripts, bumpers. |
-| `data/blog/` | Blog drafts and post archive; feeds the (future) Micropub publish pipeline. |
+| `data/blog/` | Blog drafts and post archive; feeds the blog corpus and the future Micropub publish pipeline. |
 | `data/podcast/` | Normalized Another Thing episode metadata and transcripts for the podcast corpus. |
 | `content/buttondown/` | Author-managed Buttondown newsletter config (automations, transactional, theme). |
 | `ROADMAP.md`, `TASKS.md` | Product direction and concrete follow-ups for Thingy / Studio. |
@@ -54,11 +54,12 @@ One brain, several surfaces.
 ## Status: live producer
 
 Studio is now the canonical production source. The authoring bot commits canonical
-issue content here; this repo's production workflow builds the archive, corpus, graph,
-audio/status artifacts, deploys the Librarian runtime when needed, and hands generated
-11ty inputs to `weekly.thingelstad.com`. Weekly is a render surface: it receives those
-inputs, refreshes its own landing-page stats, builds Eleventy + Pagefind, and deploys
-to GitHub Pages.
+issue content here; this repo's production workflow builds the archive, Weekly Thing
+corpus, podcast corpus, graph, and status artifacts, deploys the Librarian runtime
+when needed, and hands generated 11ty inputs to `weekly.thingelstad.com`. Audio is
+rendered by the workshop bot during publish and tracked in `data/audio/manifest.json`.
+Weekly is a render surface: it receives those inputs, refreshes its own landing-page
+stats, builds Eleventy + Pagefind, and deploys to GitHub Pages.
 
 External publishing surfaces sync back into Studio before they become part of
 Thingy's API corpus. The `Studio — Sync External Content` workflow ingests new

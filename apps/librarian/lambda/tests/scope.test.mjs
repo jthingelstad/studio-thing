@@ -25,7 +25,15 @@ test('normalizeScope canonicalizes source scopes and common aliases', () => {
   assert.equal(normalizeScope('blog|podcast'), 'blog_podcast');
   assert.equal(normalizeScope('newsletter + another'), 'weekly_thing_podcast');
   assert.equal(normalizeScope('blog,unknown'), 'blog');
+  assert.equal(normalizeScope('weekly_thing_podcast'), 'weekly_thing_podcast');
+  assert.equal(normalizeScope('wt-podcast'), 'weekly_thing_podcast');
+  assert.equal(normalizeScope('blog_podcast'), 'blog_podcast');
+  assert.equal(normalizeScope('podcast_blog'), 'blog_podcast');
   assert.equal(normalizeScope('all'), 'all');
+  assert.equal(normalizeScope('weekly thing, blog'), 'both');
+  assert.equal(normalizeScope('weekly thing+podcast'), 'weekly_thing_podcast');
+  assert.equal(normalizeScope('blog|podcast'), 'blog_podcast');
+  assert.equal(normalizeScope('weekly thing,blog,podcast'), 'all');
   for (const scope of SCOPES) assert.equal(normalizeScope(scope), scope);
 });
 
@@ -63,5 +71,6 @@ test('scopePromptLine names the active corpus distinctly per scope', () => {
   assert.notEqual(wt, both);
   assert.notEqual(wtPodcast, both);
   assert.notEqual(blogPodcast, wtPodcast);
+  assert.notEqual(blogPodcast, all);
   assert.notEqual(both, all);
 });
