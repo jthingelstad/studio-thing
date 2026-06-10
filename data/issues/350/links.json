@@ -1,24 +1,6 @@
 {
   "notable_links": [],
-  "briefly_links": [
-    {
-      "text": "Star Trek Title Card Generator",
-      "url": "https://trek.epicrandomness.com/",
-      "domain": "trek.epicrandomness.com",
-      "heading_context": null,
-      "section": "Briefly"
-    },
-    {
-      "text": "swarm-forge: A simple tool for coordinating several AI agents",
-      "url": "https://github.com/unclebob/swarm-forge",
-      "domain": "github.com",
-      "heading_context": null,
-      "section": "Briefly"
-    }
-  ],
-  "domains": [
-    "github.com",
-    "trek.epicrandomness.com"
-  ],
-  "word_count": 353
+  "briefly_links": [],
+  "domains": [],
+  "word_count": 213
 }

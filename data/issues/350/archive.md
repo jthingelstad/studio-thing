@@ -2,26 +2,14 @@
 buttondown_id: ''
 number: 350
 subject: Weekly Thing 350 — (pending)
-publish_date: '2026-06-06T12:00:00Z'
+publish_date: '2026-05-30T12:00:00Z'
 slug: '350'
 description: ''
 image: https://files.thingelstad.com/weekly-thing/350/cover.jpg
 absolute_url: ''
-domains:
-- github.com
-- trek.epicrandomness.com
-links:
-- text: Star Trek Title Card Generator
-  url: https://trek.epicrandomness.com/
-  domain: trek.epicrandomness.com
-  heading_context: null
-  section: Briefly
-- text: 'swarm-forge: A simple tool for coordinating several AI agents'
-  url: https://github.com/unclebob/swarm-forge
-  domain: github.com
-  heading_context: null
-  section: Briefly
-word_count: 353
+domains: []
+links: []
+word_count: 213
 ---
 Note that this is issue 350, a milestone issue.
 
@@ -77,34 +65,6 @@ Cannon Lake, MN
 <img src="https://files.thingelstad.com/weekly-thing/350/journal/a0b63c1aef.jpg" alt="Chaos Rising Pokemon booster packs fanned out beside a card display tray holding holofoil cards including a gold Mega Greninja ex with 350 HP." />
 
 <img src="https://files.thingelstad.com/weekly-thing/350/journal/48bd92c6c7.jpg" alt="Gold holographic Mega Greninja EX Pokemon card numbered 122/086 from the Chaos Rising set, 350 HP, lying on a white surface." />
-
-
-### Friday, May 29
-
-[9:45 PM](https://www.thingelstad.com/2026/05/29/we-watched-the-instigators-this.html) — We watched The Instigators this evening. Meandering would be a good word for this one. Not our favorite.
-
-<img src="https://files.thingelstad.com/weekly-thing/350/journal/b40ff7e11a.jpg" alt="Movie poster for The Instigators, an Apple Original Film starring Matt Damon and Casey Affleck, in theaters August 2" />
-
-
-### Sunday, May 31
-
-[12:27 PM](https://www.thingelstad.com/2026/05/31/enjoying-a-little-day-trip.html) — Enjoying a little day trip starting with a coffee stop at [Getaway Motor Cafe](https://www.getawaymotorcafe.com) in Carver.
-
-<img src="https://files.thingelstad.com/weekly-thing/350/journal/ae65f6bef7.jpg" alt="Overhead view of a latte topped with black sesame seeds in a black-rimmed ceramic mug on a light wood table." />
-
-<img src="https://files.thingelstad.com/weekly-thing/350/journal/eb8b6c5b8d.jpg" alt="Brick exterior wall of Getaway Motor Cafe with white lettering, two wall sconces, checkered bunting, and a bike rack below." />
-
-[9:21 PM](https://www.thingelstad.com/2026/05/31/we-watched-lucky-logan-tonight.html) — We watched Lucky Logan tonight. Moved at a different pace than your typical heist movie. A lot of fun twists towards the end.
-
-<img src="https://files.thingelstad.com/weekly-thing/350/journal/fb3dde3229.jpg" alt="Movie poster for Logan Lucky featuring four actors posed around a bright yellow race car numbered 63, surrounded by scattered cash" />
-
----
-
-## Briefly
-
-A delightful little website for fellow Trekkies. → **[Star Trek Title Card Generator](https://trek.epicrandomness.com/)**
-
-Why have just a coding agent when you can have a coding team? I'm in a similar space with my Studio project and multiple agents. Multi-agent systems get tricky fast, but I'm 100% we will be here for many solutions. → **[swarm-forge: A simple tool for coordinating several AI agents](https://github.com/unclebob/swarm-forge)**
 
 ---
 
