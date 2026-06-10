@@ -194,6 +194,244 @@ def sightings_for(url: str) -> list[dict[str, Any]]:
     return [{"source": r["source"], "seen_at": r["seen_at"]} for r in rows]
 
 
+# ---------- linky_feedback (Jamie's explicit calibration signals) ----------
+
+
+def record_linky_feedback(
+    *,
+    url: str,
+    source: str,
+    action: str,
+    label: int,
+    title: Optional[str] = None,
+    discord_message_id: Optional[str] = None,
+    note: Optional[str] = None,
+) -> None:
+    """Record Jamie's explicit feedback on a Linky card.
+
+    This is the human preference journal, deliberately separate from
+    ``pinboard_popular_seen``. The popular-seen table answers dedup /
+    first-verdict questions and includes Linky's own "card posted"
+    decisions; this table only records Jamie's gestures so future scans
+    can calibrate against the real bar.
+    """
+    nurl = _norm_url(url)
+    action = (action or "").strip()
+    source = (source or "").strip()
+    if not nurl or not source or not action:
+        return
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO linky_feedback "
+            "(url, title, source, discord_message_id, action, label, note) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                nurl, title, source,
+                str(discord_message_id) if discord_message_id else None,
+                action, int(label), note,
+            ),
+        )
+
+
+def recent_linky_feedback(*, source: Optional[str] = None, limit: int = 40) -> list[dict[str, Any]]:
+    """Recent explicit Linky feedback, newest first."""
+    limit = max(1, min(int(limit or 40), 200))
+    sql = (
+        "SELECT url, title, source, discord_message_id, action, label, note, created_at "
+        "FROM linky_feedback "
+    )
+    params: list[Any] = []
+    if source:
+        sql += "WHERE source = ? "
+        params.append(source)
+    sql += "ORDER BY created_at DESC, id DESC LIMIT ?"
+    params.append(limit)
+    with connect() as conn:
+        rows = conn.execute(sql, params).fetchall()
+    return [dict(r) for r in rows]
+
+
+def linky_feedback_fingerprint(*, source: str = "popular") -> dict[str, Any]:
+    """Return the source's feedback fingerprint used to detect stale
+    synthesis rows."""
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT COUNT(*) AS feedback_count, MAX(created_at) AS feedback_latest_at "
+            "FROM linky_feedback WHERE source = ?",
+            (source,),
+        ).fetchone()
+    return {
+        "feedback_count": int(row["feedback_count"] or 0),
+        "feedback_latest_at": row["feedback_latest_at"],
+    }
+
+
+def get_linky_feedback_profile(*, source: str = "popular") -> Optional[dict[str, Any]]:
+    """Return the persisted synthesis profile for ``source`` if present."""
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT source, profile_md, feedback_count, feedback_latest_at, synthesized_at "
+            "FROM linky_feedback_profiles WHERE source = ?",
+            (source,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def upsert_linky_feedback_profile(
+    *,
+    source: str,
+    profile_md: str,
+    feedback_count: int,
+    feedback_latest_at: Optional[str],
+) -> None:
+    """Persist a synthesized profile."""
+    if not source or not (profile_md or "").strip():
+        return
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO linky_feedback_profiles "
+            "(source, profile_md, feedback_count, feedback_latest_at) "
+            "VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(source) DO UPDATE SET "
+            "  profile_md=excluded.profile_md, "
+            "  feedback_count=excluded.feedback_count, "
+            "  feedback_latest_at=excluded.feedback_latest_at, "
+            "  synthesized_at=datetime('now')",
+            (source, profile_md.strip(), int(feedback_count), feedback_latest_at),
+        )
+
+
+def _format_feedback_example(row: dict[str, Any], *, title_cap: int = 86) -> str:
+    title = " ".join((row.get("title") or row.get("url") or "(untitled)").split())
+    if len(title) > title_cap:
+        title = title[: title_cap - 3].rstrip() + "..."
+    action = row.get("action") or "feedback"
+    note = " ".join((row.get("note") or "").split())
+    suffix = f" - {note}" if note else ""
+    return f"- {title} ({action}){suffix}"
+
+
+def _feedback_action_counts(rows: list[dict[str, Any]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in rows:
+        action = row.get("action") or "feedback"
+        counts[action] = counts.get(action, 0) + 1
+    return counts
+
+
+def synthesize_linky_feedback_profile(*, source: str = "popular", limit: int = 80) -> dict[str, Any]:
+    """Rebuild and persist the durable taste profile for one source.
+
+    This deterministic synthesis turns explicit reactions into stable
+    operating rules plus representative positive/negative anchors. The
+    prompt then reads this profile before the freshest examples.
+    """
+    rows = recent_linky_feedback(source=source, limit=limit)
+    fingerprint = linky_feedback_fingerprint(source=source)
+    positives = [r for r in rows if int(r.get("label") or 0) > 0]
+    negatives = [r for r in rows if int(r.get("label") or 0) < 0]
+    hard_negatives = [
+        r for r in negatives
+        if r.get("action") == "rejected" or int(r.get("label") or 0) <= -2
+    ]
+    action_counts = _feedback_action_counts(rows)
+    action_summary = ", ".join(
+        f"{name}={count}" for name, count in sorted(action_counts.items())
+    ) or "none yet"
+
+    lines = [
+        "## Jamie taste profile",
+        "",
+        f"Source: `{source}`. Synthesized from "
+        f"{fingerprint['feedback_count']} explicit feedback signal(s).",
+        "Operating bar: Jamie manually highlights only about 1-3 of every "
+        "10 discovery items. Protect attention first; default to `SKIP:`.",
+        f"Action mix: {action_summary}.",
+        "",
+        "Learned rules:",
+        "- Treat reply, save, and Briefly reactions as strong positive examples.",
+        "- Treat reviewed/fine as a weak negative: acceptable link, but not worth surfacing again.",
+        "- Treat remove/rejected as a hard negative; avoid similar links unless a new angle is unmistakable.",
+        "- Prefer durable, specific, curious pieces over product pages, launch chatter, listicles, or thin community heat.",
+        "- A popular-feed score is supporting evidence only; it never overrides fit with Jamie's interests.",
+    ]
+
+    if positives:
+        lines.extend(["", "Positive taste anchors:"])
+        lines.extend(_format_feedback_example(r) for r in positives[:6])
+    else:
+        lines.extend(["", "Positive taste anchors: none recorded yet. Stay conservative."])
+
+    if negatives:
+        lines.extend(["", "Negative taste anchors:"])
+        lines.extend(_format_feedback_example(r) for r in negatives[:8])
+    else:
+        lines.extend(["", "Negative taste anchors: none recorded yet."])
+
+    if hard_negatives:
+        lines.extend(["", "Hard-negative anchors:"])
+        lines.extend(_format_feedback_example(r) for r in hard_negatives[:5])
+
+    profile_md = "\n".join(lines)
+    upsert_linky_feedback_profile(
+        source=source,
+        profile_md=profile_md,
+        feedback_count=fingerprint["feedback_count"],
+        feedback_latest_at=fingerprint["feedback_latest_at"],
+    )
+    return get_linky_feedback_profile(source=source) or {
+        "source": source,
+        "profile_md": profile_md,
+        **fingerprint,
+        "synthesized_at": None,
+    }
+
+
+def ensure_linky_feedback_profile(*, source: str = "popular") -> dict[str, Any]:
+    """Return a current synthesized profile, rebuilding when feedback changed."""
+    fingerprint = linky_feedback_fingerprint(source=source)
+    profile = get_linky_feedback_profile(source=source)
+    if (
+        profile is None
+        or int(profile.get("feedback_count") or 0) != fingerprint["feedback_count"]
+        or profile.get("feedback_latest_at") != fingerprint["feedback_latest_at"]
+    ):
+        return synthesize_linky_feedback_profile(source=source)
+    return profile
+
+
+def linky_feedback_summary(*, source: str = "popular", limit: int = 40) -> str:
+    """Render synthesized feedback plus recent examples as a prompt block.
+
+    The scan job injects this before each per-link decision. Keep it
+    short: the durable profile carries the rules; the recent examples
+    keep the profile grounded in fresh gestures.
+    """
+    profile = ensure_linky_feedback_profile(source=source)
+    rows = recent_linky_feedback(source=source, limit=limit)
+    lines = [profile["profile_md"]]
+    if not rows:
+        lines.extend(["", "## Recent calibration examples", "", "No explicit reaction history yet."])
+        return "\n".join(lines)
+
+    positives = [r for r in rows if int(r.get("label") or 0) > 0]
+    negatives = [r for r in rows if int(r.get("label") or 0) < 0]
+    lines.extend([
+        "",
+        "## Recent calibration examples",
+        "",
+        f"Recent explicit feedback: {len(positives)} positive gesture(s), "
+        f"{len(negatives)} negative gesture(s) in the last {len(rows)}.",
+    ])
+    if positives:
+        lines.extend(["", "Recent positives:"])
+        lines.extend(_format_feedback_example(r) for r in positives[:5])
+    if negatives:
+        lines.extend(["", "Recent negatives:"])
+        lines.extend(_format_feedback_example(r) for r in negatives[:8])
+    return "\n".join(lines)
+
+
 def popular_verdict(url: str) -> Optional[dict[str, Any]]:
     """Return ``{judged_interesting, judgment_note, verdict_source,
     first_seen_at, title, posted_by}`` for ``url`` if it has a row in
@@ -340,5 +578,3 @@ def record_feedbin_seen(
             "  pinboard_result=COALESCE(excluded.pinboard_result, feedbin_starred_seen.pinboard_result)",
             (guid, url, title or "", pinboard_result),
         )
-
-

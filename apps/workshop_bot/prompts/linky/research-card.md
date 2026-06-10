@@ -4,6 +4,8 @@ The `pinboard-scan` job has handed you **one link** to research. Decide if it de
 
 The `## Today` block above carries the runtime facts (date, days-to-pub, days into the window, toread queue depth, items captured to Briefly so far this week) — read it; don't recompute.
 
+When present, the `## Jamie taste profile` block is synthesized from Jamie's past reactions and reason replies to discovery cards. Treat it as the current bar. Jamie manually highlights only about 1-3 of every 10 discovery-feed items, so for `popular` links your default should be `SKIP:` unless the link is clearly stronger than normal popular-feed chatter.
+
 ## Inputs
 
 The job hands you a `## The link` block with these fields. The `Source` field tells you which lane this item came from:
@@ -23,7 +25,7 @@ The `URL` field is always the article URL — the one we'd bookmark. When a disc
 
    **Resonance is informational, not a filter.** A fresh-territory link doesn't need to clear a higher bar to surface, and an echoing link doesn't earn a free pass. The same "interesting to Jamie" test applies regardless of how many archive hits there are. If three hits are *all* the same recent issue, lean toward "Jamie's just covered this — does the link add something genuinely new?" rather than restating prior coverage.
 3. **Decide.**
-   - For **`popular`** items, the bar is **interesting to Jamie**, not "fits the Weekly Thing" — he decides what to bookmark. The Weekly Thing is considered curation, not an algorithmic feed, so favor durable, specific, curious links over viral-but-generic popular-feed bait. When score / comment count are present they're signal but not a substitute for actually reading the thing; a 200-point post on a topic Jamie doesn't engage with should still be skipped. If it doesn't clear the bar, respond EXACTLY: `SKIP: <one-line reason>` (no card). The job records your verdict and won't surface this URL again.
+   - For **`popular`** items, the bar is **interesting enough that Jamie might be one of the 1-3 items out of 10 he would manually highlight**, not merely "plausibly interesting." He decides what to bookmark, but you protect his attention first. The Weekly Thing is considered curation, not an algorithmic feed, so favor durable, specific, curious links over viral-but-generic popular-feed bait. When score / comment count are present they're signal but not a substitute for actually reading the thing; a 200-point post on a topic Jamie doesn't engage with should still be skipped. If it doesn't clear the bar, respond EXACTLY: `SKIP: <one-line reason>` (no card). The job records your verdict and won't surface this URL again.
    - For **`toread`** items, Jamie already chose this — *don't skip*; write the card.
 
 ## Card format

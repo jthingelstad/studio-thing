@@ -49,6 +49,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import re
 from typing import Optional
 
 import discord
@@ -97,6 +98,11 @@ _BRIEF_ACK = "🔖"
 _REVIEWED_ACK = "👀"
 _REJECT_ACK = "🚫"
 
+_NEGATIVE_REASON_RE = re.compile(
+    r"^\s*(remove|reject|rejected|skip|reviewed|fine)\s*:\s*(.+?)\s*$",
+    re.IGNORECASE | re.DOTALL,
+)
+
 
 # Sources whose URLs aren't yet in Jamie's Pinboard, so a save-gesture
 # (reaction or reply) creates a new bookmark. Derived from the registry
@@ -133,6 +139,56 @@ def _mark_card_researched(
         )
     except Exception:  # noqa: BLE001
         logger.exception("linky: mark_url_researched failed for %s", url)
+
+
+def _record_feedback(
+    row: dict, *, action: str, label: int, note: str = "",
+) -> None:
+    """Best-effort human preference journal for future Linky calibration."""
+    url = (row.get("url") or "").strip()
+    source = (row.get("source") or "").strip()
+    if not url or not source:
+        return
+    try:
+        db.record_linky_feedback(
+            url=url,
+            title=row.get("title"),
+            source=source,
+            discord_message_id=row.get("discord_message_id"),
+            action=action,
+            label=label,
+            note=note or None,
+        )
+    except Exception:  # noqa: BLE001
+        logger.exception("linky: record_linky_feedback failed for %s", url)
+
+
+def _is_reject_emoji(emoji: str) -> bool:
+    """Accept the canonical stop-sign plus a custom Discord ``:remove:``
+    reaction if the server uses one."""
+    if emoji == _REJECT_REACTION:
+        return True
+    return "remove" in (emoji or "").lower()
+
+
+def _parse_negative_reason_reply(text: str) -> Optional[tuple[str, int, str, str]]:
+    """Parse a Jamie reply that is feedback rather than a save-description.
+
+    Returns ``(action, label, note, ack)``. Discovery-card replies with
+    these prefixes do not create a Pinboard bookmark; they just calibrate
+    Linky. Normal replies keep the existing "save with this description"
+    behavior.
+    """
+    m = _NEGATIVE_REASON_RE.match(text or "")
+    if not m:
+        return None
+    verb = m.group(1).lower()
+    note = " ".join(m.group(2).split())
+    if not note:
+        return None
+    if verb in {"reviewed", "fine"}:
+        return "reviewed", -1, note[:500], _REVIEWED_ACK
+    return "rejected", -2, note[:500], _REJECT_ACK
 
 
 class LinkyBot(PersonaBot):
@@ -199,6 +255,38 @@ class LinkyBot(PersonaBot):
                 pass
             return True
 
+        reason_feedback = _parse_negative_reason_reply(reply_text)
+        source = row.get("source") or ""
+        if reason_feedback is not None and source in _DISCOVERY_SOURCES:
+            action, label, note, ack = reason_feedback
+            try:
+                await asyncio.to_thread(
+                    db.set_popular_seen_judgment,
+                    url=url,
+                    interesting=False,
+                    note=note,
+                    title=row.get("title"),
+                    verdict_source=source,
+                )
+                _record_feedback(row, action=action, label=label, note=note)
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("linky: negative reason reply failed for %s", url)
+                try:
+                    await message.add_reaction("❌")
+                    await message.reply(
+                        f"Sorry — couldn't record that feedback: `{type(exc).__name__}: {exc}`"[:1900],
+                        mention_author=False, suppress_embeds=True,
+                    )
+                except discord.DiscordException:
+                    pass
+                return True
+            try:
+                await message.add_reaction(ack)
+            except discord.DiscordException:
+                pass
+            logger.info("linky: reason reply -> %s url=%s note=%s", action, url, note[:120])
+            return True
+
         try:
             res = await asyncio.to_thread(
                 pinboard_client.set_description, url, reply_text,
@@ -227,6 +315,10 @@ class LinkyBot(PersonaBot):
             _mark_card_researched(
                 row, summary=reply_text[:500],
                 fit_note="saved via reply",
+            )
+            _record_feedback(
+                row, action="reply", label=2,
+                note=reply_text[:240],
             )
         logger.info(
             "linky: research reply -> set_description url=%s created=%s ok=%s",
@@ -259,7 +351,7 @@ class LinkyBot(PersonaBot):
             await self._handle_brief_reaction(payload, row)
         elif emoji == _REVIEWED_REACTION:
             await self._handle_reviewed_reaction(payload, row)
-        elif emoji == _REJECT_REACTION:
+        elif _is_reject_emoji(emoji):
             await self._handle_reject_reaction(payload, row)
         # Any other emoji on a card — ignored. (Linky's own ack
         # reactions land here too but get filtered by the owner check
@@ -302,6 +394,10 @@ class LinkyBot(PersonaBot):
                 row, summary="saved via ➕ (blank description)",
                 fit_note="saved via ➕ reaction",
             )
+            _record_feedback(
+                row, action="save", label=2,
+                note="saved for consideration",
+            )
         logger.info(
             "linky: save-reaction on %s -> created=%s result=%s",
             url, res.get("created"), res.get("result_code"),
@@ -336,6 +432,10 @@ class LinkyBot(PersonaBot):
             _mark_card_researched(
                 row, summary="saved via ⏩ (tagged _brief)",
                 fit_note="saved via ⏩ Briefly reaction",
+            )
+            _record_feedback(
+                row, action="brief", label=2,
+                note="earmarked for Briefly",
             )
         logger.info(
             "linky: brief-reaction on %s -> created=%s tags=%r result=%s",
@@ -396,6 +496,10 @@ class LinkyBot(PersonaBot):
             await self._react_card(payload, "❌")
             return
         await self._react_card(payload, _REVIEWED_ACK)
+        _record_feedback(
+            row, action="reviewed", label=-1,
+            note="reviewed, fine link, nothing to do",
+        )
         logger.info("linky: reviewed (discovery) on %s -> judgment=reviewed-fine", url)
 
     async def _handle_reject_reaction(
@@ -452,6 +556,10 @@ class LinkyBot(PersonaBot):
             await self._react_card(payload, "❌")
             return
         await self._react_card(payload, _REJECT_ACK)
+        _record_feedback(
+            row, action="rejected", label=-2,
+            note="removed from consideration",
+        )
         logger.info("linky: reject (discovery) on %s -> judgment=rejected", url)
 
     async def _react_card(

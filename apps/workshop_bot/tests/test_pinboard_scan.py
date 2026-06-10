@@ -147,6 +147,8 @@ class PinboardScanJobTests(_DBTestCase):
         self.assertIsNotNone(row, "linky_research_messages row missing")
         self.assertEqual(row["url"], "https://example.com/x")
         self.assertEqual(row["source"], "toread")
+        sent_user_msg = team.linky.core.call_args.kwargs["latest"]
+        self.assertNotIn("\n## Jamie taste profile\n\n", sent_user_msg)
 
     def test_skip_signal_marks_popular_seen_no_post(self):
         os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
@@ -253,8 +255,73 @@ class PinboardScanJobTests(_DBTestCase):
         self.assertEqual(row["title"], "A blog post")
         # The LLM saw the popular-feed source in its user message.
         sent_user_msg = team.linky.core.call_args.kwargs["latest"]
+        self.assertIn("## Jamie taste profile", sent_user_msg)
+        self.assertIn("1-3 of every 10", sent_user_msg)
         link_block = sent_user_msg.rsplit("## The link", 1)[-1]
         self.assertIn("Source:** `popular`", link_block)
+
+    def test_popular_prompt_includes_recent_jamie_feedback_examples(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
+        db.record_linky_feedback(
+            url="https://good.example/one", source="popular",
+            title="Digital sovereignty stack migration", action="brief",
+            label=2, note="earmarked for Briefly",
+        )
+        db.record_linky_feedback(
+            url="https://bad.example/one", source="popular",
+            title="Generic product launch", action="rejected",
+            label=-2, note="removed from consideration",
+        )
+        ctx, team = self._ctx_and_team(replies=[
+            "**[Candidate](https://example.com/candidate)**\n\nA.\n\nB."
+        ])
+        popular = [{
+            "url": "https://example.com/candidate", "title": "Candidate",
+            "description": "", "posted_by": "user1",
+        }]
+        patches = self._stub_sources(popular=popular)
+        try:
+            for p in patches:
+                p.start()
+            try:
+                asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            os.environ.pop("DISCORD_CHANNEL_RESEARCH", None)
+
+            os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
+        sent_user_msg = team.linky.core.call_args.kwargs["latest"]
+        self.assertIn("## Jamie taste profile", sent_user_msg)
+        self.assertIn("Positive taste anchors:", sent_user_msg)
+        self.assertIn("Digital sovereignty stack migration", sent_user_msg)
+        self.assertIn("Negative taste anchors:", sent_user_msg)
+        self.assertIn("Generic product launch", sent_user_msg)
+        self.assertIn("Hard-negative anchors:", sent_user_msg)
+        self.assertIn("## Recent calibration examples", sent_user_msg)
+
+    def test_feedback_profile_rebuilds_when_new_feedback_arrives(self):
+        db.record_linky_feedback(
+            url="https://old.example/one", source="popular",
+            title="Old signal", action="reviewed", label=-1,
+            note="too generic",
+        )
+        profile1 = db.ensure_linky_feedback_profile(source="popular")
+        self.assertIn("Old signal", profile1["profile_md"])
+        self.assertEqual(profile1["feedback_count"], 1)
+
+        db.record_linky_feedback(
+            url="https://new.example/one", source="popular",
+            title="New signal", action="rejected", label=-2,
+            note="product launch with no argument",
+        )
+        profile2 = db.ensure_linky_feedback_profile(source="popular")
+        self.assertEqual(profile2["feedback_count"], 2)
+        self.assertIn("New signal", profile2["profile_md"])
+        self.assertIn("Hard-negative anchors:", profile2["profile_md"])
 
     def test_popular_skip_marks_popular_seen(self):
         # SKIP from a discovery source lands in the same shared

@@ -344,6 +344,92 @@ def _m_0013_campaigns_schema_overhaul(conn: sqlite3.Connection) -> None:
         conn.execute("PRAGMA foreign_keys=ON")
 
 
+def _m_0014_linky_feedback(conn: sqlite3.Connection) -> None:
+    """Add Linky's explicit feedback journal and seed it from the existing
+    human-action traces that were previously scattered across dedup rows."""
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS linky_feedback (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          url TEXT NOT NULL,
+          title TEXT,
+          source TEXT NOT NULL,
+          discord_message_id TEXT,
+          action TEXT NOT NULL,
+          label INTEGER NOT NULL,
+          note TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+        """
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_linky_feedback_created "
+        "ON linky_feedback(created_at DESC, id DESC)"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_linky_feedback_url "
+        "ON linky_feedback(url)"
+    )
+
+    # Backfill Jamie's explicit discovery negatives from the old
+    # popular-seen ledger. Do not backfill "card posted" rows — those are
+    # Linky's judgments, not Jamie's.
+    conn.execute(
+        """
+        INSERT INTO linky_feedback
+          (url, title, source, action, label, note, created_at)
+        SELECT url, title, COALESCE(verdict_source, 'popular'),
+               CASE judgment_note
+                 WHEN 'rejected' THEN 'rejected'
+                 ELSE 'reviewed'
+               END,
+               CASE judgment_note
+                 WHEN 'rejected' THEN -2
+                 ELSE -1
+               END,
+               judgment_note, first_seen_at
+        FROM pinboard_popular_seen
+        WHERE judged_interesting = 0
+          AND judgment_note IN ('reviewed-fine', 'rejected')
+        """
+    )
+
+    # Backfill the prior save/reply traces from research_done. These rows
+    # do not always retain the original discovery source; use `popular`
+    # because today's active discovery source is Pinboard popular and
+    # these labels are used only as calibration examples.
+    conn.execute(
+        """
+        INSERT INTO linky_feedback
+          (url, title, source, action, label, note, created_at)
+        SELECT url, title, 'popular',
+               CASE
+                 WHEN fit_note LIKE 'saved via %reply%' THEN 'reply'
+                 WHEN fit_note LIKE 'saved via %Briefly%' THEN 'brief'
+                 ELSE 'save'
+               END,
+               2, fit_note, researched_at
+        FROM pinboard_research_done
+        WHERE fit_note LIKE 'saved via%'
+        """
+    )
+
+
+def _m_0015_linky_feedback_profiles(conn: sqlite3.Connection) -> None:
+    """Add durable per-source synthesis over Linky's feedback journal."""
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS linky_feedback_profiles (
+          source TEXT PRIMARY KEY,
+          profile_md TEXT NOT NULL,
+          feedback_count INTEGER NOT NULL,
+          feedback_latest_at TEXT,
+          synthesized_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+        """
+    )
+
+
 def _m_0010_strip_markers_from_issue_items_body_md(conn: sqlite3.Connection) -> None:
     """An older manual-seed path baked rendered ``<!-- cta:N -->`` /
     ``<!-- thanks:N -->`` markers into ``issue_items.body_md``. Marker
@@ -442,6 +528,16 @@ MIGRATIONS: tuple[Migration, ...] = (
             "drop ends_at/expected_*; drop campaign_metrics.traffic"
         ),
         apply=_m_0013_campaigns_schema_overhaul,
+    ),
+    Migration(
+        id="0014_linky_feedback",
+        description="Add Linky's explicit feedback journal for discovery calibration",
+        apply=_m_0014_linky_feedback,
+    ),
+    Migration(
+        id="0015_linky_feedback_profiles",
+        description="Add durable synthesized Linky feedback profiles",
+        apply=_m_0015_linky_feedback_profiles,
     ),
 )
 

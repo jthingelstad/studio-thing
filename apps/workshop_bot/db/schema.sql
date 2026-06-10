@@ -139,6 +139,39 @@ CREATE TABLE IF NOT EXISTS popular_seen_sightings (
 CREATE INDEX IF NOT EXISTS idx_popular_seen_sightings_url
   ON popular_seen_sightings(url);
 
+-- Jamie's explicit feedback on Linky's discovery/research cards. This is
+-- separate from `pinboard_popular_seen`: that table is a dedup/verdict ledger
+-- whose "interesting" rows include Linky's own card-post decisions; this table
+-- is the human calibration signal Linky can read before future scans.
+CREATE TABLE IF NOT EXISTS linky_feedback (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  url TEXT NOT NULL,
+  title TEXT,
+  source TEXT NOT NULL,
+  discord_message_id TEXT,
+  action TEXT NOT NULL,                         -- reply / save / brief / reviewed / rejected
+  label INTEGER NOT NULL,                       -- +2 positive, -1 weak negative, -2 hard negative
+  note TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_linky_feedback_created
+  ON linky_feedback(created_at DESC, id DESC);
+
+CREATE INDEX IF NOT EXISTS idx_linky_feedback_url
+  ON linky_feedback(url);
+
+-- Durable synthesis over `linky_feedback`. The scan prompt uses this
+-- profile first, then a few recent examples. Rebuilt when the feedback
+-- fingerprint changes.
+CREATE TABLE IF NOT EXISTS linky_feedback_profiles (
+  source TEXT PRIMARY KEY,
+  profile_md TEXT NOT NULL,
+  feedback_count INTEGER NOT NULL,
+  feedback_latest_at TEXT,
+  synthesized_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- Items from Jamie's Pinboard "to read" pile that Linky has already
 -- researched (URL fetched, summary written). Lets the research handler
 -- pick up where it left off across runs.

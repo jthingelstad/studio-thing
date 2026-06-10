@@ -1,8 +1,8 @@
-Weekly Thing 350 — full transcript (3 segments)
+Weekly Thing 350 — full transcript (5 segments)
 
 ═══ 000-the-weekly-thing-issue-350-weekly-thing.txt ═══
 
-The Weekly Thing, issue 350. Weekly Thing 350 — (pending). Published May 30, twenty twenty six. By Jamie Thingelstad.
+The Weekly Thing, issue 350. Weekly Thing 350 — (pending). Published June 6, twenty twenty six. By Jamie Thingelstad.
 
 Note that this is issue 350, a milestone issue.
 
@@ -32,6 +32,34 @@ Monday, May 25
 
 6:18 PM — Tyler and I opened our first batch of Chaos Rising Pokémon packs and I pulled the chase card — Mega Greninja Gold!
 
-═══ 002-that-brings-us-to-the-end-of-the-weekly.txt ═══
+Friday, May 29
+
+9:45 PM — We watched The Instigators this evening. Meandering would be a good word for this one. Not our favorite.
+
+Sunday, May 31
+
+12:27 PM — Enjoying a little day trip starting with a coffee stop at Getaway Motor Cafe in Carver.
+
+9:21 PM — We watched Lucky Logan tonight. Moved at a different pace than your typical heist movie. A lot of fun twists towards the end.
+
+═══ 002-thats-the-end-of-the-journal.txt ═══
+
+That's the end of the Journal.
+
+═══ 003-now-the-briefly-section.txt ═══
+
+Now, the Briefly section.
+
+There are two links this week.
+
+Link one of two. "Star Trek Title Card Generator"
+
+A delightful little website for fellow Trekkies.
+
+Link two of two. "swarm-forge: A simple tool for coordinating several AI agents"
+
+Why have just a coding agent when you can have a coding team? I'm in a similar space with my Studio project and multiple agents. Multi-agent systems get tricky fast, but I'm 100% we will be here for many solutions.
+
+═══ 004-that-brings-us-to-the-end-of-the-weekly.txt ═══
 
 That brings us to the end of the Weekly Thing, issue 350. Thanks for listening, and I'll see you next time.

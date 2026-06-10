@@ -122,7 +122,7 @@ DISCOVERY_FEEDS: tuple[FeedSpec, ...] = (
     FeedSpec(
         name="popular", label="Pinboard popular", pin_label="",
         fetch=lambda limit: pinboard.popular(limit=limit),
-        per_scan_cap=10, feed_limit=30, primary_priority=10,
+        per_scan_cap=5, feed_limit=30, primary_priority=10,
     ),
 )
 

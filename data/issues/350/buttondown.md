@@ -53,6 +53,34 @@ Cannon Lake, MN
 
 <img src="https://files.thingelstad.com/weekly-thing/350/journal/48bd92c6c7.jpg" alt="Gold holographic Mega Greninja EX Pokemon card numbered 122/086 from the Chaos Rising set, 350 HP, lying on a white surface." />
 
+
+### Friday, May 29
+
+[9:45 PM](https://www.thingelstad.com/2026/05/29/we-watched-the-instigators-this.html) — We watched The Instigators this evening. Meandering would be a good word for this one. Not our favorite.
+
+<img src="https://files.thingelstad.com/weekly-thing/350/journal/b40ff7e11a.jpg" alt="Movie poster for The Instigators, an Apple Original Film starring Matt Damon and Casey Affleck, in theaters August 2" />
+
+
+### Sunday, May 31
+
+[12:27 PM](https://www.thingelstad.com/2026/05/31/enjoying-a-little-day-trip.html) — Enjoying a little day trip starting with a coffee stop at [Getaway Motor Cafe](https://www.getawaymotorcafe.com) in Carver.
+
+<img src="https://files.thingelstad.com/weekly-thing/350/journal/ae65f6bef7.jpg" alt="Overhead view of a latte topped with black sesame seeds in a black-rimmed ceramic mug on a light wood table." />
+
+<img src="https://files.thingelstad.com/weekly-thing/350/journal/eb8b6c5b8d.jpg" alt="Brick exterior wall of Getaway Motor Cafe with white lettering, two wall sconces, checkered bunting, and a bike rack below." />
+
+[9:21 PM](https://www.thingelstad.com/2026/05/31/we-watched-lucky-logan-tonight.html) — We watched Lucky Logan tonight. Moved at a different pace than your typical heist movie. A lot of fun twists towards the end.
+
+<img src="https://files.thingelstad.com/weekly-thing/350/journal/fb3dde3229.jpg" alt="Movie poster for Logan Lucky featuring four actors posed around a bright yellow race car numbered 63, surrounded by scattered cash" />
+
+---
+
+## Briefly
+
+A delightful little website for fellow Trekkies. → **[Star Trek Title Card Generator](https://trek.epicrandomness.com/)**
+
+Why have just a coding agent when you can have a coding team? I'm in a similar space with my Studio project and multiple agents. Multi-agent systems get tricky fast, but I'm 100% we will be here for many solutions. → **[swarm-forge: A simple tool for coordinating several AI agents](https://github.com/unclebob/swarm-forge)**
+
 ---
 
 Would you like to discuss the topics in the Weekly Thing further? Check out the [Weekly Thing on Reddit](https://www.reddit.com/r/weeklything/). 👋

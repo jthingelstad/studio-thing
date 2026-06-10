@@ -121,6 +121,40 @@ class LinkyReplyHandlerTests(_DBTestCase):
         self.assertTrue(out)
         # 📌 distinguishes "new bookmark created" from "existing one updated".
         m.add_reaction.assert_awaited_with("📌")
+        feedback = db.recent_linky_feedback(source="popular")
+        self.assertEqual(len(feedback), 1)
+        self.assertEqual(feedback[0]["action"], "reply")
+        self.assertEqual(feedback[0]["label"], 2)
+        self.assertIn("Bookmark with this take", feedback[0]["note"])
+
+    def test_reason_reply_to_popular_card_records_negative_without_bookmark(self):
+        db.record_research_message(
+            discord_message_id="1005", url="http://negative.example/item",
+            source="popular", title="Generic product launch",
+        )
+        m = self._msg(
+            author_id=777,
+            content="remove: generic product launch with no argument",
+            reference_id=1005,
+        )
+        with self._patch_set(return_value={"result_code": "done"}) as p:
+            out = asyncio.run(self.bot._maybe_handle_research_reply(m))
+        self.assertTrue(out)
+        p.assert_not_called()
+        m.add_reaction.assert_awaited_with("🚫")
+        with db.connect() as conn:
+            row = conn.execute(
+                "SELECT judged_interesting, judgment_note FROM pinboard_popular_seen "
+                "WHERE url = ?",
+                ("http://negative.example/item",),
+            ).fetchone()
+        self.assertIsNotNone(row)
+        self.assertEqual(row["judged_interesting"], 0)
+        self.assertEqual(row["judgment_note"], "generic product launch with no argument")
+        feedback = db.recent_linky_feedback(source="popular")
+        self.assertEqual(feedback[0]["action"], "rejected")
+        self.assertEqual(feedback[0]["label"], -2)
+        self.assertEqual(feedback[0]["note"], "generic product launch with no argument")
 
     def test_empty_reply_consumed_with_question_mark(self):
         db.record_research_message(
@@ -221,6 +255,10 @@ class LinkySaveReactionTests(_DBTestCase):
         self.assertTrue(kwargs["shared"])
         self.assertFalse(kwargs["replace"])
         self.assertEqual(self.reactions, ["📌"])
+        feedback = db.recent_linky_feedback(source="popular")
+        self.assertEqual(len(feedback), 1)
+        self.assertEqual(feedback[0]["action"], "save")
+        self.assertEqual(feedback[0]["label"], 2)
 
     def test_retired_thumbs_up_is_ignored(self):
         # 👍 retired in the gesture overhaul — it's now just another
@@ -375,6 +413,9 @@ class LinkyReviewedReactionTests(_DBTestCase):
         self.assertEqual(row["judged_interesting"], 0)
         self.assertEqual(row["judgment_note"], "reviewed-fine")
         self.assertEqual(self.reactions, ["👀"])
+        feedback = db.recent_linky_feedback(source="popular")
+        self.assertEqual(feedback[0]["action"], "reviewed")
+        self.assertEqual(feedback[0]["label"], -1)
 
     def test_reviewed_on_toread_clears_toread_flag(self):
         db.record_research_message(
@@ -464,6 +505,26 @@ class LinkyRejectReactionTests(_DBTestCase):
             row = conn.execute(
                 "SELECT judged_interesting, judgment_note FROM pinboard_popular_seen "
                 "WHERE url = ?", ("https://disc.example/r",),
+            ).fetchone()
+        self.assertIsNotNone(row)
+        self.assertEqual(row["judged_interesting"], 0)
+        self.assertEqual(row["judgment_note"], "rejected")
+        self.assertEqual(self.reactions, ["🚫"])
+        feedback = db.recent_linky_feedback(source="popular")
+        self.assertEqual(feedback[0]["action"], "rejected")
+        self.assertEqual(feedback[0]["label"], -2)
+
+    def test_custom_remove_reaction_rejects_discovery(self):
+        db.record_research_message(
+            discord_message_id="6005", url="https://disc.example/custom-remove",
+            source="popular", title="Custom remove item",
+        )
+        p = self._payload(user_id=777, emoji="<:remove:123456>", message_id=6005)
+        asyncio.run(self.bot.on_raw_reaction_add(p))
+        with db.connect() as conn:
+            row = conn.execute(
+                "SELECT judged_interesting, judgment_note FROM pinboard_popular_seen "
+                "WHERE url = ?", ("https://disc.example/custom-remove",),
             ).fetchone()
         self.assertIsNotNone(row)
         self.assertEqual(row["judged_interesting"], 0)
@@ -573,6 +634,9 @@ class LinkyBriefReactionTests(_DBTestCase):
         self.assertEqual(kwargs["fallback_title"], "A Discovery Item")
         # 🔖 ack distinguishes Briefly-save from regular save (📌).
         self.assertEqual(self.reactions, ["🔖"])
+        feedback = db.recent_linky_feedback(source="popular")
+        self.assertEqual(feedback[0]["action"], "brief")
+        self.assertEqual(feedback[0]["label"], 2)
 
     def test_brief_reaction_on_toread_card_calls_tag_as_brief(self):
         # Unlike the ✅/👍 save which is discovery-only, ⏩ works on

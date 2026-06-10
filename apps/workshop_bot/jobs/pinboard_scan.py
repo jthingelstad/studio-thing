@@ -519,6 +519,7 @@ def _gather_candidates() -> tuple[
 async def _research_one(
     *, linky, prompt: str, linky_ctx_block: str, source: str,
     item: dict[str, Any], corpus=None, agent_run=None,
+    calibration_block: str = "",
 ) -> tuple[str, str]:
     """Run one per-link LLM call. Returns ``(kind, payload)`` per
     :func:`_parse_signal`. ``corpus`` is the archive ``CorpusHandle``
@@ -536,7 +537,11 @@ async def _research_one(
     cost is the bigger spend, so we economize there."""
     url = item.get("url") or ""
     item_block = _format_user_msg(source=source, item=item, corpus=corpus)
-    user_msg = f"{linky_ctx_block}\n\n{prompt}\n\n{item_block}"
+    pieces = [linky_ctx_block]
+    if calibration_block:
+        pieces.append(calibration_block)
+    pieces.extend([prompt, item_block])
+    user_msg = "\n\n".join(pieces)
     model_override = None if source == "toread" else "haiku"
     try:
         answer, _meta = await linky.core(latest=user_msg, history=[], model=model_override)
@@ -683,7 +688,7 @@ def _bump(counters: dict, key: str, source: str) -> None:
 async def _process_one(
     *, ctx: "_base.JobContext", linky, prompt: str, linky_ctx_block: str,
     source: str, item: dict[str, Any], counters: dict[str, int],
-    agent_run=None,
+    agent_run=None, calibration_blocks: Optional[dict[str, str]] = None,
 ) -> None:
     """Research one candidate end-to-end: LLM call, response classify, post
     if it's a card, record the message + mark seen/researched. Idempotent
@@ -707,6 +712,7 @@ async def _process_one(
     kind, payload = await _research_one(
         linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
         source=source, item=item, corpus=corpus, agent_run=agent_run,
+        calibration_block=(calibration_blocks or {}).get(source, ""),
     )
     if kind == "fail":
         # Don't mark seen — retry next scan.
@@ -882,6 +888,10 @@ async def _run_locked(ctx: "_base.JobContext", linky) -> "_base.JobResult":
     # this function's iteration matches what ``_gather_candidates``
     # already fetched.
     active = active_feeds()
+    calibration_blocks = {
+        spec.name: db.linky_feedback_summary(source=spec.name)
+        for spec in active
+    }
 
     # Group fresh items by primary source so the per-spec cap applies.
     # Only active feeds — disabled feeds contributed no fresh items so
@@ -900,6 +910,7 @@ async def _run_locked(ctx: "_base.JobContext", linky) -> "_base.JobResult":
             await _process_one(
                 ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
                 source="toread", item=item, counters=counters, agent_run=run_,
+                calibration_blocks=calibration_blocks,
             )
         # Then fresh discovery items, walking active feeds in priority order.
         for spec in active:
@@ -907,6 +918,7 @@ async def _run_locked(ctx: "_base.JobContext", linky) -> "_base.JobResult":
                 await _process_one(
                     ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
                     source=spec.name, item=item, counters=counters, agent_run=run_,
+                    calibration_blocks=calibration_blocks,
                 )
         # Finally, uplift candidates — re-evaluations of URLs that
         # appeared on a new feed since their first sighting. Already
@@ -915,6 +927,7 @@ async def _run_locked(ctx: "_base.JobContext", linky) -> "_base.JobResult":
             await _process_one(
                 ctx=ctx, linky=linky, prompt=prompt, linky_ctx_block=linky_ctx_block,
                 source=item["_source"], item=item, counters=counters, agent_run=run_,
+                calibration_blocks=calibration_blocks,
             )
         run_.records_written = counters["posted"]
 
