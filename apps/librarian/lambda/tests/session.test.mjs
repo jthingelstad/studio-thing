@@ -7,6 +7,7 @@ import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail
 import { entitlementsForSessionPayload, magicLinkBaseWithReturnPath } from '../auth/handler.mjs';
 import {
   authProfile,
+  discordConnectionMemoryUpdate,
   memoryFromItem,
   memoryContextBlock,
   mergeRememberedFacts,
@@ -18,6 +19,7 @@ import { subscriberStatus } from '../shared/buttondown.mjs';
 import {
   createLinkCode,
   createLinkState,
+  discordConnectionPut,
   discordUserHash,
   isSupportingEntitlement,
   normalizeDiscordIdentity
@@ -260,6 +262,41 @@ test('recordUserPreferredName reports failure when memory storage is not configu
   }
 });
 
+test('Discord link write builders store profile metadata as explicit fields', () => {
+  const connectedAt = '2026-06-10T12:00:00.000Z';
+  const memoryUpdate = discordConnectionMemoryUpdate('table-name', 'subscriber-hash', {
+    username: 'thingy_user',
+    global_name: 'Thingy User',
+    display_name: 'Thingy User',
+    guild_id: 'guild-1',
+    connected_at: connectedAt,
+    last_verified_at: connectedAt
+  }, connectedAt);
+  const discordValue = memoryUpdate.ExpressionAttributeValues[':discord_connection'].M;
+
+  assert.equal(memoryUpdate.Key.pk.S, 'user#subscriber-hash');
+  assert.equal(memoryUpdate.Key.sk.S, 'memory');
+  assert.equal(discordValue.username.S, 'thingy_user');
+  assert.equal(discordValue.display_name.S, 'Thingy User');
+  assert.equal(discordValue.connected.BOOL, true);
+
+  const bridgePut = discordConnectionPut('table-name', {
+    discord_user_hash: 'discord-hash',
+    subscriber_hash: 'subscriber-hash',
+    email: 'Reader@Example.com',
+    username: 'thingy_user',
+    display_name: 'Thingy User',
+    entitlements: ['reader', 'supporting_member'],
+    connected_at: connectedAt,
+    last_verified_at: connectedAt
+  });
+
+  assert.equal(bridgePut.Item.pk.S, 'discord_user#discord-hash');
+  assert.equal(bridgePut.Item.subscriber_hash.S, 'subscriber-hash');
+  assert.equal(bridgePut.Item.email.S, 'reader@example.com');
+  assert.deepEqual(JSON.parse(bridgePut.Item.entitlements_json.S), ['reader', 'supporting_member']);
+});
+
 test('authProfile reflects turn_count and surfaces recent topics', () => {
   const memory = {
     first_seen_at: '2026-01-01T00:00:00Z',
@@ -341,6 +378,12 @@ test('memory helpers normalize and dedupe explicit reader facts', () => {
 test('authProfile and memoryContextBlock surface durable reader memory', () => {
   const memory = {
     turn_count: 4,
+    discord_connection: {
+      connected: true,
+      username: 'thingy_user',
+      display_name: 'Thingy User',
+      connected_at: '2026-06-10T12:00:00.000Z'
+    },
     remembered_facts: [
       { category: 'interest', value: 'IndieWeb', remembered_at: '2026-01-01T00:00:00Z' },
       { category: 'preference', value: 'prefers concise answers', remembered_at: '2026-01-02T00:00:00Z' }
@@ -350,7 +393,7 @@ test('authProfile and memoryContextBlock surface durable reader memory', () => {
   const profile = authProfile(memory);
   assert.equal(profile.remembered_facts.length, 2);
   assert.deepEqual(profile.interests, ['IndieWeb']);
-  assert.equal(profile.discord_connection, null);
+  assert.equal(profile.discord_connection.display_name, 'Thingy User');
 
   const block = memoryContextBlock(memory);
   assert.match(block, /Remembered reader details/);

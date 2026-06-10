@@ -1,5 +1,5 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
-import { GetItemCommand, PutItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import { GetItemCommand, PutItemCommand, TransactWriteItemsCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { bedrock, dynamodb, agentModel, fastModel } from '../shared/aws-clients.mjs';
 import { createSubscriber, ensureThingyTag, fetchSubscriber, sanitizeAttribution, sendSubscriberReminder, subscriberStatus } from '../shared/buttondown.mjs';
 import { eventSummary, jsonResponse, methodAndPath, parseBody, clientSourceIp, userAgent } from '../shared/http.mjs';
@@ -7,13 +7,14 @@ import { buildMagicLink, createMagicToken, magicLinkTtlSeconds, magicTokenHash, 
 import { sendMagicLinkEmail } from '../shared/jmap-mail.mjs';
 import { checkRateLimit } from '../shared/rate-limit.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, extractBearer, normalizeEmail, stableHash, verifyToken } from '../shared/session.mjs';
-import { authProfile, getUserMemory, recordDiscordConnection, recordUserPreferredName } from '../shared/user-memory.mjs';
+import { authProfile, discordConnectionMemoryUpdate, getUserMemory, recordUserPreferredName } from '../shared/user-memory.mjs';
 import {
   DISCORD_LINK_TTL_SECONDS,
   createLinkCode,
   createLinkState,
   currentEntitlementsForEmail,
   discordCodeKey,
+  discordConnectionPut,
   discordStateKey,
   discordUserHash,
   dynamoNumber,
@@ -21,8 +22,7 @@ import {
   isSupportingEntitlement,
   linkHash,
   normalizeDiscordIdentity,
-  nowSeconds,
-  putDiscordConnection
+  nowSeconds
 } from '../shared/discord-link.mjs';
 import {
   availableConversationModes,
@@ -487,25 +487,6 @@ async function handleDiscordLinkConfirm(event, body, start) {
       error: 'Discord is available to Weekly Thing Supporting Members.'
     }, event);
   }
-  try {
-    await dynamodb.send(new UpdateItemCommand({
-      TableName: process.env.TABLE_NAME,
-      Key: codeKey,
-      UpdateExpression: 'SET #used_at = :used_at',
-      ConditionExpression: 'attribute_exists(pk) AND attribute_not_exists(#used_at) AND #expires_at >= :now',
-      ExpressionAttributeNames: {
-        '#used_at': 'used_at',
-        '#expires_at': 'expires_at'
-      },
-      ExpressionAttributeValues: {
-        ':used_at': dynamoNumber(now),
-        ':now': dynamoNumber(now)
-      }
-    }));
-  } catch (error) {
-    logEvent('info', 'discord_link_confirm_race', { subscriber_hash: subscriberHash, error_type: error.constructor?.name || 'Error' });
-    return jsonResponse(400, { status: 'discord_link_invalid', error: 'That Discord verification code is invalid or expired.' }, event);
-  }
   const identity = normalizeDiscordIdentity({
     username: body.username || codeItem.username?.S,
     global_name: body.global_name || codeItem.global_name?.S,
@@ -520,15 +501,58 @@ async function handleDiscordLinkConfirm(event, body, start) {
     connected_at: connectedAt,
     last_verified_at: connectedAt
   };
-  await putDiscordConnection({
+  const tableName = process.env.TABLE_NAME;
+  const connectionRecord = {
     ...discordConnection,
     discord_user_hash: suppliedUserHash,
     subscriber_hash: subscriberHash,
     email,
     entitlements
-  });
-  const memoryWrite = await recordDiscordConnection(subscriberHash, discordConnection);
-  const memory = memoryWrite.memory || await getUserMemory(subscriberHash);
+  };
+  const memoryUpdate = discordConnectionMemoryUpdate(tableName, subscriberHash, discordConnection, connectedAt);
+  if (!tableName || !memoryUpdate) {
+    logEvent('warning', 'discord_link_confirm_memory_unavailable', { subscriber_hash: subscriberHash });
+    return jsonResponse(500, { error: 'Thingy could not save that Discord link right now. Please try again.' }, event);
+  }
+  try {
+    await dynamodb.send(new TransactWriteItemsCommand({
+      TransactItems: [
+        {
+          Update: {
+            TableName: tableName,
+            Key: codeKey,
+            UpdateExpression: 'SET #used_at = :used_at',
+            ConditionExpression: 'attribute_exists(pk) AND attribute_not_exists(#used_at) AND #expires_at >= :now',
+            ExpressionAttributeNames: {
+              '#used_at': 'used_at',
+              '#expires_at': 'expires_at'
+            },
+            ExpressionAttributeValues: {
+              ':used_at': dynamoNumber(now),
+              ':now': dynamoNumber(now)
+            }
+          }
+        },
+        { Put: discordConnectionPut(tableName, connectionRecord) },
+        { Update: memoryUpdate }
+      ]
+    }));
+  } catch (error) {
+    const errorType = error.constructor?.name || 'Error';
+    logEvent('warning', 'discord_link_confirm_persist_failed', {
+      subscriber_hash: subscriberHash,
+      error_type: errorType
+    });
+    if (errorType === 'TransactionCanceledException') {
+      return jsonResponse(400, { status: 'discord_link_invalid', error: 'That Discord verification code is invalid or expired.' }, event);
+    }
+    return jsonResponse(500, { error: 'Thingy could not save that Discord link right now. Please try again.' }, event);
+  }
+  const memory = await getUserMemory(subscriberHash, { consistent: true });
+  if (!memory?.discord_connection) {
+    logEvent('warning', 'discord_link_confirm_profile_missing', { subscriber_hash: subscriberHash });
+    return jsonResponse(500, { error: 'Thingy could not save that Discord link right now. Please try again.' }, event);
+  }
   logEvent('info', 'discord_link_confirmed', {
     subscriber_hash: subscriberHash,
     discord_user_hash: suppliedUserHash.slice(0, 12),
@@ -541,7 +565,6 @@ async function handleDiscordLinkConfirm(event, body, start) {
     entitlements,
     profile: {
       ...authProfile(memory),
-      discord_connection: discordConnection,
       entitlements,
       modes: availableConversationModes(entitlements)
     },

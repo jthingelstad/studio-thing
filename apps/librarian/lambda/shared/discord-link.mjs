@@ -112,13 +112,12 @@ export async function loadDiscordConnection(discordUserId) {
   return readDiscordConnectionItem(response?.Item);
 }
 
-export async function putDiscordConnection(connection = {}) {
-  const tableName = process.env.TABLE_NAME;
+export function discordConnectionPut(tableName, connection = {}) {
   if (!tableName) throw new Error('TABLE_NAME is required');
   const userHash = String(connection.discord_user_hash || '').trim();
   if (!userHash) throw new Error('discord_user_hash is required');
   const entitlements = Array.isArray(connection.entitlements) ? connection.entitlements : [];
-  await dynamodb.send(new PutItemCommand({
+  return {
     TableName: tableName,
     Item: {
       ...discordConnectionKeyFromHash(userHash),
@@ -135,7 +134,12 @@ export async function putDiscordConnection(connection = {}) {
       entitlements_json: dynamoString(JSON.stringify(entitlements)),
       ttl: dynamoNumber(connection.ttl || nowSeconds() + 365 * 86400)
     }
-  }));
+  };
+}
+
+export async function putDiscordConnection(connection = {}) {
+  const tableName = process.env.TABLE_NAME;
+  await dynamodb.send(new PutItemCommand(discordConnectionPut(tableName, connection)));
 }
 
 export async function currentEntitlementsForEmail(email) {

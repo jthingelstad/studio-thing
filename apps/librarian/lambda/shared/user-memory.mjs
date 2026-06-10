@@ -202,7 +202,7 @@ export function mergeRememberedFacts(existing = [], incoming, nowIso = new Date(
 
 // ---------- public API ----------
 
-export async function getUserMemory(sub) {
+export async function getUserMemory(sub, options = {}) {
   const tableName = process.env.TABLE_NAME;
   if (!tableName || !sub) return null;
   try {
@@ -211,7 +211,7 @@ export async function getUserMemory(sub) {
     const response = await dynamodb.send(new GetItemCommand({
       TableName: tableName,
       Key: memoryKey(sub),
-      ConsistentRead: false
+      ConsistentRead: Boolean(options.consistent)
     }));
     return memoryFromItem(response?.Item, sub);
   } catch (error) {
@@ -467,11 +467,8 @@ export async function recordUserPreferredName(sub, name) {
   }
 }
 
-export async function recordDiscordConnection(sub, connection = {}) {
-  const tableName = process.env.TABLE_NAME;
-  if (!tableName || !sub) return { ok: false, error: 'Missing memory write context.' };
-  const nowIso = new Date().toISOString();
-  const value = {
+function normalizedDiscordConnection(connection = {}, nowIso = new Date().toISOString()) {
+  return {
     connected: true,
     username: String(connection.username || '').trim().slice(0, 80),
     global_name: String(connection.global_name || '').trim().slice(0, 80),
@@ -480,37 +477,52 @@ export async function recordDiscordConnection(sub, connection = {}) {
     connected_at: String(connection.connected_at || nowIso),
     last_verified_at: String(connection.last_verified_at || nowIso)
   };
+}
+
+export function discordConnectionMemoryUpdate(tableName, sub, connection = {}, nowIso = new Date().toISOString()) {
+  if (!tableName || !sub) return null;
+  const value = normalizedDiscordConnection(connection, nowIso);
+  return {
+    TableName: tableName,
+    Key: memoryKey(sub),
+    UpdateExpression: [
+      'SET #discord_connection = :discord_connection',
+      '#first_seen_at = if_not_exists(#first_seen_at, :now)',
+      '#last_seen_at = :now',
+      '#ttl = :ttl',
+      '#version = if_not_exists(#version, :zero) + :one'
+    ].join(', '),
+    ExpressionAttributeNames: {
+      '#discord_connection': 'discord_connection',
+      '#first_seen_at': 'first_seen_at',
+      '#last_seen_at': 'last_seen_at',
+      '#ttl': 'ttl',
+      '#version': 'version'
+    },
+    ExpressionAttributeValues: {
+      ':discord_connection': writeDiscordConnection(value),
+      ':now': dynamoString(nowIso),
+      ':ttl': dynamoNumber(ttlFromNow()),
+      ':zero': dynamoNumber(0),
+      ':one': dynamoNumber(1)
+    }
+  };
+}
+
+export async function recordDiscordConnection(sub, connection = {}) {
+  const tableName = process.env.TABLE_NAME;
+  const nowIso = new Date().toISOString();
+  const params = discordConnectionMemoryUpdate(tableName, sub, connection, nowIso);
+  if (!params) return { ok: false, error: 'Missing memory write context.' };
   try {
     const { UpdateItemCommand } = await import('@aws-sdk/client-dynamodb');
     const { dynamodb } = await import('./aws-clients.mjs');
     const response = await dynamodb.send(new UpdateItemCommand({
-      TableName: tableName,
-      Key: memoryKey(sub),
-      UpdateExpression: [
-        'SET #discord_connection = :discord_connection',
-        '#first_seen_at = if_not_exists(#first_seen_at, :now)',
-        '#last_seen_at = :now',
-        '#ttl = :ttl',
-        '#version = if_not_exists(#version, :zero) + :one'
-      ].join(', '),
-      ExpressionAttributeNames: {
-        '#discord_connection': 'discord_connection',
-        '#first_seen_at': 'first_seen_at',
-        '#last_seen_at': 'last_seen_at',
-        '#ttl': 'ttl',
-        '#version': 'version'
-      },
-      ExpressionAttributeValues: {
-        ':discord_connection': writeDiscordConnection(value),
-        ':now': dynamoString(nowIso),
-        ':ttl': dynamoNumber(ttlFromNow()),
-        ':zero': dynamoNumber(0),
-        ':one': dynamoNumber(1)
-      },
+      ...params,
       ReturnValues: 'ALL_NEW'
     }));
     logEvent('info', 'user_discord_connection_recorded');
-    return { ok: true, memory: memoryFromItem(response?.Attributes, sub), discord_connection: value };
+    return { ok: true, memory: memoryFromItem(response?.Attributes, sub), discord_connection: normalizedDiscordConnection(connection, nowIso) };
   } catch (error) {
     logEvent('warning', 'user_discord_connection_write_failed', {
       error_type: error?.constructor?.name || 'Error'
