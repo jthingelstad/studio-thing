@@ -10,9 +10,11 @@ import {
   discordConnectionMemoryUpdate,
   memoryFromItem,
   memoryContextBlock,
+  memorySynthesisStatus,
   mergeRememberedFacts,
   normalizeMemoryFact,
-  recordUserPreferredName
+  recordUserPreferredName,
+  sanitizeSessionSummary
 } from '../shared/user-memory.mjs';
 import { renderTemplate, agentUserPrompt } from '../shared/prompts.mjs';
 import { subscriberStatus } from '../shared/buttondown.mjs';
@@ -226,8 +228,21 @@ test('memoryFromItem shapes stored preferred names', () => {
     turn_count: { N: '7' },
     current_session_questions: { L: [{ M: { ts: { S: '2026-01-02T00:00:00Z' }, question: { S: 'What about RSS?' } } }] },
     synthesized_history: { L: [] },
-    remembered_facts: { L: [] },
+    remembered_facts: { L: [{ M: { category: { S: 'preference' }, value: { S: 'Prefers concise answers' }, remembered_at: { S: '2026-01-02T00:00:00Z' } } }] },
     interests: { L: [{ S: 'RSS' }] },
+    synthesized_memories: { L: [{ M: {
+      label: { S: 'RSS workflows' },
+      summary: { S: 'Often explores RSS and reader workflow ideas.' },
+      confidence: { N: '0.8' },
+      synthesized_at: { S: '2026-01-03T00:00:00Z' },
+      evidence: { L: [{ M: { event_id: { S: 'event-1' }, label: { S: 'Asked about RSS' } } }] }
+    } }] },
+    memory_synthesis: { M: {
+      last_synthesized_at: { S: '2026-01-03T00:00:00Z' },
+      last_event_at: { S: '2026-01-02T00:00:00Z' },
+      pending_event_count: { N: '0' },
+      status: { S: 'current' }
+    } },
     discord_connection: {
       M: {
         connected: { BOOL: true },
@@ -244,8 +259,13 @@ test('memoryFromItem shapes stored preferred names', () => {
   assert.equal(memory.sub, 'subscriber-hash');
   assert.equal(memory.version, 3);
   assert.equal(memory.preferred_name, 'Jamie');
+  assert.match(memory.current_session_questions[0].id, /^mem_recent_/);
   assert.equal(memory.current_session_questions[0].question, 'What about RSS?');
+  assert.match(memory.remembered_facts[0].id, /^mem_fact_/);
   assert.deepEqual(memory.interests, ['RSS']);
+  assert.match(memory.synthesized_memories[0].id, /^mem_learned_/);
+  assert.equal(memory.synthesized_memories[0].evidence[0].event_id, 'event-1');
+  assert.equal(memory.memory_synthesis.status, 'current');
   assert.equal(memory.discord_connection.display_name, 'Thingy User');
 });
 
@@ -337,6 +357,28 @@ test('authProfile caps recent topics at 5 + 3', () => {
   assert.equal(profile.prior_session_summaries[2].summary, 's7');
 });
 
+test('authProfile and memory context filter low-value synthesized summaries', () => {
+  assert.equal(sanitizeSessionSummary("I don't have any previous context about that."), '');
+  assert.equal(sanitizeSessionSummary('NO_USEFUL_SUMMARY'), '');
+  assert.equal(sanitizeSessionSummary('They explored RSS and OPML workflows.'), 'They explored RSS and OPML workflows.');
+
+  const memory = {
+    turn_count: 8,
+    synthesized_history: [
+      { started_at: '', ended_at: '', summary: "I don't have any previous context about Jamie's archive.", turn_count: 1 },
+      { started_at: '2026-04-01T00:00:00Z', ended_at: '2026-04-01T00:02:00Z', summary: 'They explored RSS and OPML workflows.', turn_count: 2 }
+    ]
+  };
+
+  const profile = authProfile(memory);
+  assert.equal(profile.prior_session_summaries.length, 1);
+  assert.equal(profile.prior_session_summaries[0].summary, 'They explored RSS and OPML workflows.');
+
+  const block = memoryContextBlock(memory);
+  assert.match(block, /RSS and OPML/);
+  assert.doesNotMatch(block, /previous context/);
+});
+
 test('memoryContextBlock returns empty string when nothing useful', () => {
   assert.equal(memoryContextBlock(null), '');
   assert.equal(memoryContextBlock({}), '');
@@ -399,6 +441,48 @@ test('authProfile and memoryContextBlock surface durable reader memory', () => {
   assert.match(block, /Remembered reader details/);
   assert.match(block, /interest: IndieWeb/);
   assert.match(block, /Reader interests/);
+});
+
+test('authProfile and memoryContextBlock surface synthesized learned memories', () => {
+  const memory = {
+    turn_count: 10,
+    synthesized_memories: [
+      {
+        id: 'mem_learned_test',
+        type: 'learned_interest',
+        label: 'Reader workflows',
+        summary: 'Often explores RSS, OPML, and reader workflow tools.',
+        confidence: 0.8
+      }
+    ],
+    memory_synthesis: {
+      last_synthesized_at: '2026-06-10T12:00:00.000Z',
+      last_event_at: '2026-06-10T11:00:00.000Z',
+      pending_event_count: 0,
+      status: 'current'
+    }
+  };
+  const profile = authProfile(memory);
+  assert.equal(profile.synthesized_memories[0].label, 'Reader workflows');
+  assert.equal(profile.memory_synthesis.status, 'current');
+
+  const block = memoryContextBlock(memory);
+  assert.match(block, /Learned reader context/);
+  assert.match(block, /RSS, OPML/);
+});
+
+test('memorySynthesisStatus reports stale when events occurred after synthesis', () => {
+  const status = memorySynthesisStatus({
+    memory_synthesis: {
+      last_synthesized_at: '2026-06-10T12:00:00.000Z'
+    }
+  }, [
+    { ts: '2026-06-10T11:00:00.000Z' },
+    { ts: '2026-06-10T12:30:00.000Z' }
+  ]);
+  assert.equal(status.status, 'stale');
+  assert.equal(status.pending_event_count, 1);
+  assert.equal(status.last_event_at, '2026-06-10T12:30:00.000Z');
 });
 
 test('email normalization is stable', () => {

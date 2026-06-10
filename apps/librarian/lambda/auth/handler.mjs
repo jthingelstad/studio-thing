@@ -7,7 +7,16 @@ import { buildMagicLink, createMagicToken, magicLinkTtlSeconds, magicTokenHash, 
 import { sendMagicLinkEmail } from '../shared/jmap-mail.mjs';
 import { checkRateLimit } from '../shared/rate-limit.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, extractBearer, normalizeEmail, stableHash, verifyToken } from '../shared/session.mjs';
-import { authProfile, discordConnectionMemoryUpdate, getUserMemory, recordUserPreferredName } from '../shared/user-memory.mjs';
+import {
+  authProfile,
+  deleteUserMemoryItem,
+  discordConnectionMemoryUpdate,
+  getUserMemory,
+  listUserMemoryEvents,
+  memorySynthesisStatus,
+  recordUserPreferredName,
+  synthesizeUserMemory
+} from '../shared/user-memory.mjs';
 import {
   DISCORD_LINK_TTL_SECONDS,
   createLinkCode,
@@ -286,6 +295,53 @@ async function updateProfile(event, body, start) {
       modes
     }
   }, event);
+}
+
+async function memoryProfileResponse(sub, event, extra = {}) {
+  const memory = await getUserMemory(sub, { consistent: true });
+  const events = await listUserMemoryEvents(sub);
+  const profile = {
+    ...authProfile(memory),
+    memory_synthesis: memorySynthesisStatus(memory || {}, events)
+  };
+  return jsonResponse(200, { status: 'ok', profile, ...extra }, event);
+}
+
+async function handleMemory(event, body, start) {
+  const payload = verifyToken(extractBearer(event, body));
+  if (!payload?.sub) {
+    logEvent('info', 'memory_action_rejected');
+    return jsonResponse(401, { error: 'Sign in again to continue.' }, event);
+  }
+  const action = String(body.action || 'get').trim().toLowerCase();
+  if (action === 'get') {
+    return await memoryProfileResponse(payload.sub, event);
+  }
+  if (action === 'delete') {
+    const result = await deleteUserMemoryItem(payload.sub, {
+      type: body.type,
+      id: body.id || body.memory_id,
+      value: body.value
+    });
+    if (!result.ok) return jsonResponse(404, { error: result.error || 'Memory item not found.' }, event);
+    logEvent('info', 'memory_item_deleted', {
+      subscriber_hash: payload.sub,
+      type: body.type || '',
+      duration_ms: Math.round(performance.now() - start)
+    });
+    return await memoryProfileResponse(payload.sub, event, { deleted: true });
+  }
+  if (action === 'synthesize' || action === 'update') {
+    const result = await synthesizeUserMemory(payload.sub, { mode: 'incremental' });
+    if (!result.ok) return jsonResponse(500, { error: result.error || 'Memory synthesis failed.' }, event);
+    return await memoryProfileResponse(payload.sub, event, { synthesized: true, generated_count: result.generated_count || 0 });
+  }
+  if (action === 'resynthesize') {
+    const result = await synthesizeUserMemory(payload.sub, { mode: 'full', from: body.from });
+    if (!result.ok) return jsonResponse(500, { error: result.error || 'Memory resynthesis failed.' }, event);
+    return await memoryProfileResponse(payload.sub, event, { synthesized: true, generated_count: result.generated_count || 0 });
+  }
+  return jsonResponse(400, { error: 'Unsupported memory action.' }, event);
 }
 
 function bridgeSecretOk(body) {
@@ -847,6 +903,8 @@ export async function handler(event, context) {
       response = healthHandler(event);
     } else if (method === 'POST' && path.endsWith('/auth')) {
       response = await authHandler(event);
+    } else if (method === 'POST' && path.endsWith('/memory')) {
+      response = await handleMemory(event, parseBody(event), start);
     } else if (method === 'POST' && path.endsWith('/conversations')) {
       response = await handleUserConversations(event, parseBody(event), { start, entitlementsForSessionPayload });
     } else if (method === 'POST' && path.endsWith('/dispatch')) {
