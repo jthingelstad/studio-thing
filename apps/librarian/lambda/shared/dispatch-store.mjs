@@ -10,6 +10,7 @@ const DEFAULT_COOLDOWN_SECONDS = 24 * 60 * 60;
 const DEFAULT_QUEUE_STALE_SECONDS = 15 * 60;
 const DEFAULT_GENERATION_LEASE_SECONDS = 14 * 60;
 const DEFAULT_SEND_LEASE_SECONDS = 5 * 60;
+const DEFAULT_SHAPING_STALE_SECONDS = 30;
 
 export function dispatchSk(createdAt, dispatchId) {
   return `dispatch#${createdAt}#${dispatchId}`;
@@ -117,6 +118,22 @@ function dispatchQueuedStale(row = {}, nowSeconds = Math.floor(Date.now() / 1000
   if (!Number.isFinite(queuedAt)) return false;
   const staleSeconds = Math.max(60, Number(process.env.DISPATCH_QUEUE_STALE_SECONDS || DEFAULT_QUEUE_STALE_SECONDS) || DEFAULT_QUEUE_STALE_SECONDS);
   return Math.floor(queuedAt / 1000) + staleSeconds <= nowSeconds;
+}
+
+function dispatchShapingStale(row = {}, nowSeconds = Math.floor(Date.now() / 1000)) {
+  if (row.status !== 'shaping') return false;
+  const updatedAt = Date.parse(row.updated_at || row.created_at || '');
+  if (!Number.isFinite(updatedAt)) return false;
+  const staleSeconds = Math.max(10, Number(process.env.DISPATCH_SHAPING_STALE_SECONDS || DEFAULT_SHAPING_STALE_SECONDS) || DEFAULT_SHAPING_STALE_SECONDS);
+  return Math.floor(updatedAt / 1000) + staleSeconds <= nowSeconds;
+}
+
+function recoveredDraftStatus(row = {}) {
+  if (row.clarification_question) return 'needs_clarification';
+  const direction = String(row.direction || '').trim();
+  const prompt = String(row.prompt || row.topic || '').trim();
+  if (direction && direction !== prompt) return 'ready';
+  return 'draft';
 }
 
 function recoverableActiveStatus(status) {
@@ -776,6 +793,27 @@ export async function recoverStaleDispatches({ dynamodb, tableName, subscriberHa
         dispatch: row,
         error: 'Dispatch was queued but not claimed by the worker in time. Please generate it again.'
       }).then(() => { recovered += 1; }).catch(() => {});
+    } else if (row.status === 'shaping' && dispatchShapingStale(row, nowSeconds)) {
+      const now = new Date().toISOString();
+      const status = recoveredDraftStatus(row);
+      await dynamodb.send(new UpdateItemCommand({
+        TableName: tableName,
+        Key: {
+          pk: dynamoString(userConversationPk(subscriberHash)),
+          sk: dynamoString(dispatchSk(row.created_at, row.id))
+        },
+        UpdateExpression: 'SET #status = :status, #updated_at = :now',
+        ConditionExpression: '#status = :shaping',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+          '#updated_at': 'updated_at'
+        },
+        ExpressionAttributeValues: {
+          ':shaping': dynamoString('shaping'),
+          ':status': dynamoString(status),
+          ':now': dynamoString(now)
+        }
+      })).then(() => { recovered += 1; }).catch(() => {});
     } else if (!dispatchLeaseExpired(row, nowSeconds)) {
       continue;
     } else if (row.status === 'generating') {

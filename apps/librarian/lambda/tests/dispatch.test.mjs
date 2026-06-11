@@ -7,6 +7,7 @@ import {
   dispatchForClient,
   dispatchIsActive,
   getUserDispatch,
+  recoverStaleDispatches,
   upsertDispatchDraft
 } from '../shared/dispatch-store.mjs';
 import { discordDispatchCard } from '../shared/dispatch-worker.mjs';
@@ -216,6 +217,38 @@ test('dispatch drafts get short-lived ttl on canonical and lookup rows', async (
   for (const item of items.values()) {
     assert.equal(Number(item.ttl.N), expectedTtl);
   }
+});
+
+test('stale shaping dispatch drafts recover to the implied draft state', async () => {
+  const updates = [];
+  const dynamodb = {
+    async send(command) {
+      const input = command.input || {};
+      if (command.constructor.name === 'UpdateItemCommand') {
+        updates.push(input);
+        return {};
+      }
+      throw new Error(`unexpected command ${command.constructor.name}`);
+    }
+  };
+
+  const recovered = await recoverStaleDispatches({
+    dynamodb,
+    tableName: 'table',
+    subscriberHash: 'reader-hash',
+    rows: [{
+      id: 'dispatch-1',
+      status: 'shaping',
+      prompt: 'RSS and publishing',
+      direction: 'How RSS reading habits feed a creative publishing workflow.',
+      created_at: '2026-06-08T12:00:00.000Z',
+      updated_at: '2026-06-08T12:00:00.000Z'
+    }]
+  });
+
+  assert.equal(recovered, 1);
+  assert.equal(updates.length, 1);
+  assert.equal(updates[0].ExpressionAttributeValues[':status'].S, 'ready');
 });
 
 test('dispatch template test payload renders placeholder content with real source links', () => {

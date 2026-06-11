@@ -627,6 +627,7 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
     systemBlocks.push({ text: memoryContext });
   }
   for (let turn = 0; turn <= maxTurns; turn += 1) {
+    const streamAnswerDeltas = toolResults.length > 0;
     const response = await bedrock.send(new ConverseStreamCommand({
       modelId: agentModel(),
       system: systemBlocks,
@@ -634,7 +635,14 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
       toolConfig: { tools: toolSpecs() },
       inferenceConfig: commandInferenceConfig()
     }));
-    const result = await readConverseStream(response);
+    const result = await readConverseStream(response, {
+      onTextDelta: streamAnswerDeltas
+        ? (delta) => {
+          if (shouldStopWriting()) return;
+          writeSse(responseStream, 'answer_delta', { delta });
+        }
+        : undefined
+    });
     const message = result.message;
     usage = result.usage || usage;
     stopReason = result.stopReason || stopReason;
