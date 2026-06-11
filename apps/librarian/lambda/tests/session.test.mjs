@@ -4,7 +4,7 @@ import { renderFaqAnswer, searchFaq } from '../shared/faq.mjs';
 import { buildMagicLink, createMagicToken, magicTokenHash, validMagicToken } from '../shared/magic-link.mjs';
 import { buildJmapEmailCalls, buildMagicLinkJmapCalls, magicLinkEmailHtml, magicLinkEmailText, requireMethodResponse } from '../shared/jmap-mail.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, verifyToken } from '../shared/session.mjs';
-import { entitlementsForSessionPayload, magicLinkBaseWithReturnPath } from '../auth/handler.mjs';
+import { entitlementsForSessionPayload, handler as authHandler, magicLinkBaseWithReturnPath } from '../auth/handler.mjs';
 import {
   authProfile,
   discordConnectionMemoryUpdate,
@@ -12,14 +12,18 @@ import {
   memoryFromItem,
   memoryContextBlock,
   memorySynthesisStatus,
+  mergeLearnedProfile,
   mergeRememberedFacts,
   normalizeMemoryFact,
+  parseSynthesizedMemoryJson,
   recordUserPreferredName,
   sanitizeSessionSummary,
   shouldAutoSynthesizeMemory
 } from '../shared/user-memory.mjs';
 import { renderTemplate, agentUserPrompt } from '../shared/prompts.mjs';
 import { subscriberStatus } from '../shared/buttondown.mjs';
+import { deleteThingyProfile, tokenIssuedAfterProfileDeletion } from '../shared/profile-deletion.mjs';
+import { dynamodb, s3 } from '../shared/aws-clients.mjs';
 import {
   createLinkCode,
   createLinkState,
@@ -51,6 +55,8 @@ test('session token round trips and rejects tampering', () => {
   const payload = verifyToken(token);
 
   assert.equal(payload.sid, 'session-1');
+  assert.ok(Number(payload.iat || 0) > 0);
+  assert.ok(Number(payload.iat_ms || 0) >= Number(payload.iat || 0) * 1000);
   assert.equal(payload.sub, emailHash('reader@example.com'));
   assert.ok(expiresAt >= now + 60 * 60 * 24 * 10 - 2);
   assert.ok(expiresAt <= now + 60 * 60 * 24 * 10 + 2);
@@ -66,7 +72,163 @@ test('session token can carry safe entitlement claims', () => {
 
   assert.equal(payload.sid, 'session-2');
   assert.deepEqual(payload.entitlements, ['reader', 'owner']);
+  assert.ok(Number(payload.iat || 0) > 0);
   assert.ok(Number(payload.entitlements_verified_until || 0) >= Math.floor(Date.now() / 1000));
+});
+
+test('profile deletion marker rejects tokens issued before deletion', () => {
+  const marker = {
+    deleted_at_ms: 2000,
+    deleted_at_seconds: 2
+  };
+  assert.equal(tokenIssuedAfterProfileDeletion({ sub: 'subscriber-hash', iat_ms: 1999 }, marker), false);
+  assert.equal(tokenIssuedAfterProfileDeletion({ sub: 'subscriber-hash', iat_ms: 2001 }, marker), true);
+  assert.equal(tokenIssuedAfterProfileDeletion({ sub: 'subscriber-hash', iat: 1 }, marker), false);
+  assert.equal(tokenIssuedAfterProfileDeletion({ sub: 'subscriber-hash' }, marker), false);
+  assert.equal(tokenIssuedAfterProfileDeletion({ sub: 'subscriber-hash' }, null), true);
+});
+
+test('legacy memory actions are rejected', async () => {
+  process.env.SESSION_SECRET = 'test-secret';
+  const priorTable = process.env.TABLE_NAME;
+  delete process.env.TABLE_NAME;
+  const { token } = createSessionToken('reader@example.com', 'legacy-memory-action');
+  try {
+    for (const action of ['synthesize', 'update', 'resynthesize']) {
+      const response = await authHandler({
+        httpMethod: 'POST',
+        path: '/memory',
+        headers: {
+          authorization: `Bearer ${token}`,
+          origin: 'https://thingy.thingelstad.com'
+        },
+        body: JSON.stringify({ action })
+      }, { awsRequestId: `legacy-${action}` });
+      assert.equal(response.statusCode, 400);
+      assert.match(JSON.parse(response.body).error, /Unsupported memory action/);
+    }
+  } finally {
+    if (priorTable === undefined) delete process.env.TABLE_NAME;
+    else process.env.TABLE_NAME = priorTable;
+  }
+});
+
+test('learned profile synthesis parsing and merging are deterministic', () => {
+  const observedJson = JSON.stringify({
+    memories: [{
+      id: 'model-invented-id',
+      type: 'observed_archive_theme',
+      label: 'RSS workflows',
+      summary: 'Often explores RSS, OPML, and reader workflow tools.',
+      confidence: 0.82,
+      evidence: [{ event_id: 'conversation-1', label: 'Asked about RSS and OPML' }]
+    }]
+  });
+  const first = parseSynthesizedMemoryJson(observedJson, '2026-06-10T12:00:00.000Z')[0];
+  const second = parseSynthesizedMemoryJson(observedJson, '2026-06-11T12:00:00.000Z')[0];
+
+  assert.equal(first.id, second.id);
+  assert.notEqual(first.id, 'model-invented-id');
+  assert.equal(first.type, 'observed_archive_theme');
+  assert.equal(first.evidence[0].event_id, 'conversation-1');
+
+  const initial = mergeLearnedProfile([], [first], '2026-06-10T12:00:00.000Z');
+  const refreshed = mergeLearnedProfile(initial, [second], '2026-06-11T12:00:00.000Z');
+  assert.equal(refreshed.length, 1);
+  assert.equal(refreshed[0].id, first.id);
+  assert.equal(refreshed[0].created_at, '2026-06-10T12:00:00.000Z');
+  assert.equal(refreshed[0].updated_at, '2026-06-11T12:00:00.000Z');
+
+  const preserved = mergeLearnedProfile(initial, [], '2026-06-12T12:00:00.000Z');
+  assert.equal(preserved.length, 1);
+  assert.equal(preserved[0].id, first.id);
+
+  const tombstoned = mergeLearnedProfile(initial, [second], '2026-06-12T12:00:00.000Z', [{
+    type: 'learned',
+    memory_id: first.id
+  }]);
+  assert.equal(tombstoned.length, 0);
+});
+
+test('deleteThingyProfile deletes Thingy-local rows, artifacts, and writes a marker', async () => {
+  const priorTable = process.env.TABLE_NAME;
+  process.env.TABLE_NAME = 'thingy-test-table';
+  const originalDynamoSend = dynamodb.send;
+  const originalS3Send = s3.send;
+  const dynamoCalls = [];
+  const s3Calls = [];
+
+  dynamodb.send = async (command) => {
+    dynamoCalls.push({ name: command.constructor.name, input: command.input });
+    if (command.constructor.name === 'QueryCommand') {
+      return {
+        Items: [
+          { pk: { S: 'user#subscriber-hash' }, sk: { S: 'memory' } },
+          {
+            pk: { S: 'user#subscriber-hash' },
+            sk: { S: 'dispatch#draft-1' },
+            content_artifact_bucket: { S: 'artifact-bucket' },
+            content_artifact_key: { S: 'dispatches/draft-1.json' }
+          },
+          { pk: { S: 'user#subscriber-hash' }, sk: { S: 'profile-deleted' } }
+        ]
+      };
+    }
+    if (command.constructor.name === 'ScanCommand') {
+      return {
+        Items: [
+          { pk: { S: 'session#abc' }, sk: { S: 'session' }, email_hash: { S: 'subscriber-hash' } },
+          { pk: { S: 'discord_user#xyz' }, sk: { S: 'connection' }, subscriber_hash: { S: 'subscriber-hash' } },
+          { pk: { S: 'user#subscriber-hash' }, sk: { S: 'memory' }, email_hash: { S: 'subscriber-hash' } }
+        ]
+      };
+    }
+    if (command.constructor.name === 'BatchWriteItemCommand') {
+      return { UnprocessedItems: {} };
+    }
+    if (command.constructor.name === 'PutItemCommand') {
+      return {};
+    }
+    throw new Error(`Unexpected Dynamo command ${command.constructor.name}`);
+  };
+
+  s3.send = async (command) => {
+    s3Calls.push({ name: command.constructor.name, input: command.input });
+    return {};
+  };
+
+  try {
+    const result = await deleteThingyProfile('subscriber-hash');
+    assert.equal(result.ok, true);
+    assert.equal(result.deleted_items, 4);
+    assert.equal(result.deleted_artifacts, 1);
+
+    const batch = dynamoCalls.find((call) => call.name === 'BatchWriteItemCommand');
+    const deletes = batch.input.RequestItems['thingy-test-table'].map((request) => request.DeleteRequest.Key);
+    assert.equal(deletes.length, 4);
+    assert.equal(deletes.some((key) => key.sk.S === 'profile-deleted'), false);
+    assert.ok(deletes.some((key) => key.pk.S === 'discord_user#xyz'));
+    assert.ok(deletes.some((key) => key.pk.S === 'session#abc'));
+
+    const put = dynamoCalls.find((call) => call.name === 'PutItemCommand');
+    assert.equal(put.input.Item.pk.S, 'user#subscriber-hash');
+    assert.equal(put.input.Item.sk.S, 'profile-deleted');
+    assert.ok(put.input.Item.deleted_at.S);
+    assert.ok(Number(put.input.Item.deleted_at_ms.N) > 0);
+
+    assert.deepEqual(s3Calls, [{
+      name: 'DeleteObjectCommand',
+      input: {
+        Bucket: 'artifact-bucket',
+        Key: 'dispatches/draft-1.json'
+      }
+    }]);
+  } finally {
+    dynamodb.send = originalDynamoSend;
+    s3.send = originalS3Send;
+    if (priorTable === undefined) delete process.env.TABLE_NAME;
+    else process.env.TABLE_NAME = priorTable;
+  }
 });
 
 test('session refresh entitlements do not renew stale privileged claims', () => {
@@ -265,6 +427,7 @@ test('memoryFromItem shapes stored preferred names', () => {
   assert.equal(memory.current_session_questions[0].question, 'What about RSS?');
   assert.match(memory.remembered_facts[0].id, /^mem_fact_/);
   assert.deepEqual(memory.interests, ['RSS']);
+  assert.match(memory.learned_profile[0].id, /^mem_learned_/);
   assert.match(memory.synthesized_memories[0].id, /^mem_learned_/);
   assert.equal(memory.synthesized_memories[0].evidence[0].event_id, 'event-1');
   assert.equal(memory.memory_synthesis.status, 'current');
@@ -472,9 +635,9 @@ test('authProfile and memoryContextBlock surface durable reader memory', () => {
   assert.equal(profile.discord_connection.display_name, 'Thingy User');
 
   const block = memoryContextBlock(memory);
-  assert.match(block, /Remembered reader details/);
-  assert.match(block, /interest: IndieWeb/);
-  assert.match(block, /Reader interests/);
+  assert.match(block, /Learned reader profile/);
+  assert.match(block, /explicit interest: IndieWeb/);
+  assert.match(block, /explicit preference: prefers concise answers/);
 });
 
 test('authProfile and memoryContextBlock surface synthesized learned memories', () => {
@@ -497,11 +660,12 @@ test('authProfile and memoryContextBlock surface synthesized learned memories', 
     }
   };
   const profile = authProfile(memory);
+  assert.equal(profile.learned_profile[0].label, 'Reader workflows');
   assert.equal(profile.synthesized_memories[0].label, 'Reader workflows');
   assert.equal(profile.memory_synthesis.status, 'current');
 
   const block = memoryContextBlock(memory);
-  assert.match(block, /Learned reader context/);
+  assert.match(block, /Learned reader profile/);
   assert.match(block, /RSS, OPML/);
 });
 

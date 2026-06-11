@@ -7,7 +7,7 @@
 //   - current_session_id            — sid of the in-flight session
 //   - current_session_questions     — rolling questions for that session
 //   - synthesized_history           — Bedrock-summarized past sessions
-//   - remembered_facts              — explicit reader-offered preferences/interests
+//   - learned_profile               — observed archive-use profile for this reader
 //
 // On each chat turn the runtime calls ``recordUserTurn(sub, {sid,
 // question})``. When ``sid`` differs from ``current_session_id``, the
@@ -29,7 +29,8 @@ import { logEvent } from './logging.mjs';
 
 const CURRENT_SESSION_QUESTIONS_MAX = 12;
 const SYNTHESIZED_HISTORY_MAX = 8;
-const SYNTHESIZED_MEMORIES_MAX = 12;
+const LEARNED_PROFILE_MAX = 12;
+const SYNTHESIZED_MEMORIES_MAX = LEARNED_PROFILE_MAX;
 const QUESTION_TRIM_CHARS = 400;
 const REMEMBERED_FACTS_MAX = 24;
 const INTERESTS_MAX = 16;
@@ -174,6 +175,17 @@ function writeEvidenceList(values = []) {
   };
 }
 
+function learnedMemoryType(value) {
+  return String(value || 'observed_archive_theme').trim().slice(0, 80) || 'observed_archive_theme';
+}
+
+function learnedMemoryStableId(memory = {}) {
+  const type = learnedMemoryType(memory.type);
+  const label = String(memory.label || '').trim().replace(/\s+/g, ' ').slice(0, 160);
+  const summary = String(memory.summary || '').trim().replace(/\s+/g, ' ').slice(0, 600);
+  return memoryItemId('learned', type, label || summary.slice(0, 80));
+}
+
 function readSynthesizedMemory(item) {
   if (!item || !item.M) return null;
   const label = item.M.label?.S || '';
@@ -181,9 +193,10 @@ function readSynthesizedMemory(item) {
   if (!label && !summary) return null;
   const created_at = item.M.created_at?.S || '';
   const synthesized_at = item.M.synthesized_at?.S || created_at;
+  const type = learnedMemoryType(item.M.type?.S);
   return {
-    id: item.M.id?.S || memoryItemId('learned', label, summary, synthesized_at),
-    type: item.M.type?.S || 'learned',
+    id: learnedMemoryStableId({ type, label, summary }),
+    type,
     label,
     summary,
     confidence: Number(item.M.confidence?.N || 0),
@@ -199,10 +212,11 @@ function writeSynthesizedMemoryItem(memory = {}) {
   const label = String(memory.label || '').trim().replace(/\s+/g, ' ').slice(0, 160);
   const summary = String(memory.summary || '').trim().replace(/\s+/g, ' ').slice(0, 600);
   const synthesizedAt = memory.synthesized_at || memory.updated_at || memory.created_at || '';
+  const type = learnedMemoryType(memory.type);
   return {
     M: {
-      id: dynamoString(memory.id || memoryItemId('learned', label, summary, synthesizedAt)),
-      type: dynamoString(String(memory.type || 'learned').slice(0, 80)),
+      id: dynamoString(learnedMemoryStableId({ type, label, summary })),
+      type: dynamoString(type),
       label: dynamoString(label),
       summary: dynamoString(summary),
       confidence: dynamoNumber(Math.max(0, Math.min(1, Number(memory.confidence || 0)))),
@@ -375,6 +389,7 @@ function interestsFromFacts(facts = [], fallback = []) {
 export function memoryDynamoItem(sub, memory = {}, nowIso = new Date().toISOString(), overrides = {}) {
   const version = Number(overrides.version ?? memory.version ?? 0);
   const discordConnection = overrides.discord_connection ?? memory.discord_connection;
+  const learnedProfile = overrides.learned_profile ?? memory.learned_profile ?? overrides.synthesized_memories ?? memory.synthesized_memories ?? [];
   const item = {
     pk: dynamoString(`user#${sub}`),
     sk: dynamoString('memory'),
@@ -389,7 +404,8 @@ export function memoryDynamoItem(sub, memory = {}, nowIso = new Date().toISOStri
     synthesized_history: { L: (overrides.synthesized_history || memory.synthesized_history || []).map(writeSynthItem) },
     remembered_facts: { L: (overrides.remembered_facts || memory.remembered_facts || []).map(writeFactItem) },
     interests: writeStringList(overrides.interests || memory.interests || []),
-    synthesized_memories: { L: (overrides.synthesized_memories || memory.synthesized_memories || []).map(writeSynthesizedMemoryItem) },
+    learned_profile: { L: learnedProfile.map(writeSynthesizedMemoryItem) },
+    synthesized_memories: { L: learnedProfile.map(writeSynthesizedMemoryItem) },
     memory_tombstones: { L: (overrides.memory_tombstones || memory.memory_tombstones || []).map(writeTombstoneItem) },
     memory_synthesis: writeSynthesisStatus(overrides.memory_synthesis || memory.memory_synthesis || {}),
     ttl: dynamoNumber(ttlFromNow())
@@ -510,6 +526,12 @@ export function memoryFromItem(item, sub = '') {
   const rememberedFacts = (item.remembered_facts?.L || [])
     .map(readFact)
     .filter(Boolean);
+  const legacySynthesizedMemories = (item.synthesized_memories?.L || [])
+    .map(readSynthesizedMemory)
+    .filter(Boolean);
+  const learnedProfile = (item.learned_profile?.L || [])
+    .map(readSynthesizedMemory)
+    .filter(Boolean);
   return {
     sub,
     version: Number(item.version?.N || 0),
@@ -527,9 +549,8 @@ export function memoryFromItem(item, sub = '') {
       .filter(Boolean),
     remembered_facts: rememberedFacts,
     interests: readStringList(item.interests),
-    synthesized_memories: (item.synthesized_memories?.L || [])
-      .map(readSynthesizedMemory)
-      .filter(Boolean),
+    learned_profile: learnedProfile.length ? learnedProfile : legacySynthesizedMemories,
+    synthesized_memories: learnedProfile.length ? learnedProfile : legacySynthesizedMemories,
     memory_tombstones: (item.memory_tombstones?.L || [])
       .map(readTombstone)
       .filter(Boolean),
@@ -872,24 +893,25 @@ export async function synthesizeSessionQuestions(questions) {
   }
 }
 
-function parseSynthesizedMemoryJson(text, nowIso = new Date().toISOString()) {
+export function parseSynthesizedMemoryJson(text, nowIso = new Date().toISOString()) {
   const raw = String(text || '').trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
-  if (!raw) return [];
+  if (!raw) return null;
   let parsed;
   try {
     parsed = JSON.parse(raw);
   } catch {
-    return [];
+    return null;
   }
   const rows = Array.isArray(parsed) ? parsed : Array.isArray(parsed.memories) ? parsed.memories : [];
   return rows.map((item) => {
     const label = String(item.label || item.title || '').trim().replace(/\s+/g, ' ').slice(0, 160);
     const summary = String(item.summary || item.description || '').trim().replace(/\s+/g, ' ').slice(0, 600);
     if (!label && !summary) return null;
+    const type = learnedMemoryType(item.type);
     const evidence = Array.isArray(item.evidence) ? item.evidence : [];
     return {
-      id: item.id || memoryItemId('learned', label, summary, nowIso),
-      type: String(item.type || 'learned').slice(0, 80),
+      id: learnedMemoryStableId({ type, label, summary }),
+      type,
       label: label || summary.slice(0, 80),
       summary,
       confidence: Math.max(0, Math.min(1, Number(item.confidence || 0.5))),
@@ -905,34 +927,37 @@ function parseSynthesizedMemoryJson(text, nowIso = new Date().toISOString()) {
   }).filter(Boolean).slice(0, SYNTHESIZED_MEMORIES_MAX);
 }
 
-function heuristicSynthesizedMemories(events = [], nowIso = new Date().toISOString()) {
-  const labels = events.map((event) => String(event.label || event.detail || '').trim()).filter(Boolean).slice(-6);
-  if (labels.length < 2) return [];
-  const summary = `Recent activity includes ${labels.slice(0, 4).join('; ')}.`;
-  return [{
-    id: memoryItemId('learned', 'recent archive interests', summary, nowIso),
-    type: 'learned',
-    label: 'Recent archive interests',
-    summary,
-    confidence: 0.35,
-    evidence: events.slice(-6).map((event) => ({ event_id: event.event_id || event.id || '', label: event.label || '' })),
-    created_at: nowIso,
-    updated_at: nowIso,
-    synthesized_at: nowIso,
-    synthesis_version: MEMORY_SYNTHESIS_VERSION
-  }];
+function tombstonedMemoryIds(tombstones = [], types = []) {
+  const allowed = new Set(types);
+  return new Set((tombstones || [])
+    .filter((item) => !allowed.size || allowed.has(item.type))
+    .map((item) => item.memory_id)
+    .filter(Boolean));
 }
 
-function mergeSynthesizedMemories(existing = [], incoming = []) {
-  const seen = new Set();
-  const merged = [];
-  for (const item of [...existing, ...incoming]) {
-    const key = String(item.id || item.label || item.summary || '').trim().toLowerCase();
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    merged.push(item);
+export function mergeLearnedProfile(existing = [], incoming = [], nowIso = new Date().toISOString(), tombstones = []) {
+  const deleted = tombstonedMemoryIds(tombstones, ['learned', 'synthesized_memory', 'learned_profile']);
+  const byId = new Map();
+  for (const item of existing || []) {
+    const id = learnedMemoryStableId(item);
+    if (!id || deleted.has(id)) continue;
+    byId.set(id, { ...item, id });
   }
-  return merged.slice(-SYNTHESIZED_MEMORIES_MAX);
+  for (const item of incoming || []) {
+    const id = learnedMemoryStableId(item);
+    if (!id || deleted.has(id)) continue;
+    const prior = byId.get(id) || {};
+    byId.set(id, {
+      ...prior,
+      ...item,
+      id,
+      created_at: prior.created_at || item.created_at || nowIso,
+      updated_at: nowIso,
+      synthesized_at: nowIso,
+      synthesis_version: MEMORY_SYNTHESIS_VERSION
+    });
+  }
+  return Array.from(byId.values()).slice(-LEARNED_PROFILE_MAX);
 }
 
 export function memorySynthesisStatus(memory = {}, events = []) {
@@ -977,22 +1002,24 @@ export function shouldAutoSynthesizeMemory(memory = {}, events = [], nowIso = ne
 }
 
 async function synthesizeEngagementMemories(events = [], memory = {}, nowIso = new Date().toISOString()) {
-  if (!events.length) return [];
+  if (!events.length) return { ok: true, memories: [] };
   const facts = (memory.remembered_facts || []).map((fact) => `${fact.category}: ${fact.value}`).join('\n');
   const eventLines = events.map((event, idx) => (
     `${idx + 1}. [${event.event_id || event.id || ''}] ${event.type || 'event'}: ${event.label || event.detail || ''}`
   )).join('\n').slice(0, 8000);
   const system = [
-    'You synthesize Thingy user engagement into durable, user-visible learned memories.',
-    'Create only memories supported by repeated or meaningful user activity.',
-    'Do not infer sensitive personal details. Do not invent facts.',
-    'Return strict JSON: {"memories":[{"type":"learned_interest|learned_preference|learned_pattern","label":"short label","summary":"one sentence","confidence":0.0,"evidence":[{"event_id":"id","label":"why"}]}]}.',
+    'You synthesize a Thingy reader profile from observed archive-use behavior.',
+    'Thingy is Jamie Thingelstad\'s archive agent. The profile should describe what the reader explores in the archive, not personal identity.',
+    'Create only durable, user-visible observations supported by repeated or meaningful questions, conversation topics, or explicit reader-offered notes.',
+    'Use stable labels that would remain the same if the same evidence were synthesized again.',
+    'Do not infer sensitive personal details, demographics, health, finances, family, schedules, addresses, or anything outside archive engagement.',
+    'Return strict JSON: {"memories":[{"type":"observed_archive_theme|exploration_style|source_affinity|recent_trajectory|explicit_reader_note","label":"stable short label","summary":"one sentence","confidence":0.0,"evidence":[{"event_id":"id","label":"why"}]}]}.',
     'Return {"memories":[]} when there is nothing useful to learn.'
   ].join(' ');
   const user = [
-    facts ? `Explicit remembered facts:\n${facts}` : 'No explicit remembered facts.',
+    facts ? `Explicit reader-offered notes, supplemental to observed behavior:\n${facts}` : 'No explicit reader-offered notes.',
     '',
-    `Engagement events:\n${eventLines}`
+    `Observed Thingy engagement events:\n${eventLines}`
   ].join('\n');
   try {
     const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime');
@@ -1006,22 +1033,22 @@ async function synthesizeEngagementMemories(events = [], memory = {}, nowIso = n
     const parts = response?.output?.message?.content || [];
     const text = parts.map((part) => part.text || '').filter(Boolean).join(' ').trim();
     const parsed = parseSynthesizedMemoryJson(text, nowIso);
-    return parsed.length ? parsed : heuristicSynthesizedMemories(events, nowIso);
+    return parsed ? { ok: true, memories: parsed } : { ok: false, memories: [], error: 'Memory synthesis returned invalid JSON.' };
   } catch (error) {
     logEvent('warning', 'user_memory_engagement_synthesis_failed', {
       error_type: error?.constructor?.name || 'Error'
     });
-    return heuristicSynthesizedMemories(events, nowIso);
+    return { ok: false, memories: [], error: 'Memory synthesis failed.' };
   }
 }
 
 export async function synthesizeUserMemory(sub, options = {}) {
   const tableName = process.env.TABLE_NAME;
   if (!tableName || !sub) return { ok: false, error: 'Missing memory context.' };
-  const mode = String(options.mode || 'incremental');
+  const mode = String(options.mode || 'refresh');
   const nowIso = new Date().toISOString();
   const existing = await getUserMemory(sub, { consistent: true }) || { sub };
-  const since = mode === 'full'
+  const since = mode === 'refresh'
     ? String(options.from || '').trim()
     : String(existing.memory_synthesis?.last_synthesized_at || options.from || '').trim();
   const events = await listUserMemoryEvents(sub, { since, limit: MEMORY_EVENT_LIMIT });
@@ -1040,9 +1067,15 @@ export async function synthesizeUserMemory(sub, options = {}) {
     .filter((event) => SYNTHESIZABLE_MEMORY_EVENT_TYPES.has(event.type || event.event_type || ''));
   const lastEventAt = allSynthesisEvents.reduce((latest, event) => event.ts && event.ts > latest ? event.ts : latest, existing.memory_synthesis?.last_event_at || '');
   const generated = await synthesizeEngagementMemories(synthesisEvents, existing, nowIso);
-  const synthesizedMemories = mode === 'full'
-    ? generated
-    : mergeSynthesizedMemories(existing.synthesized_memories || [], generated);
+  if (!generated.ok) {
+    return { ok: false, error: generated.error || 'Memory synthesis failed.', memory: existing, generated_count: 0 };
+  }
+  const learnedProfile = mergeLearnedProfile(
+    existing.learned_profile || existing.synthesized_memories || [],
+    generated.memories || [],
+    nowIso,
+    existing.memory_tombstones || []
+  );
   const nextVersion = Number(existing.version || 0) + 1;
   const nextStatus = {
     last_synthesized_at: nowIso,
@@ -1058,17 +1091,18 @@ export async function synthesizeUserMemory(sub, options = {}) {
     Item: memoryDynamoItem(sub, existing, nowIso, {
       version: nextVersion,
       last_seen_at: nowIso,
-      synthesized_memories: synthesizedMemories,
+      learned_profile: learnedProfile,
+      synthesized_memories: learnedProfile,
       memory_synthesis: nextStatus
     })
   }));
   logEvent('info', 'user_memory_synthesized', {
     mode,
     event_count: synthesisEvents.length,
-    synthesized_memories_len: synthesizedMemories.length
+    learned_profile_len: learnedProfile.length
   });
   const memory = await getUserMemory(sub, { consistent: true });
-  return { ok: true, memory, generated_count: generated.length };
+  return { ok: true, memory, generated_count: generated.memories.length };
 }
 
 export async function maybeSynthesizeUserMemory(sub, options = {}) {
@@ -1100,8 +1134,9 @@ export async function deleteUserMemoryItem(sub, input = {}) {
   let rememberedFacts = existing.remembered_facts || [];
   let synthesizedHistory = existing.synthesized_history || [];
   let currentQuestions = existing.current_session_questions || [];
-  let synthesizedMemories = existing.synthesized_memories || [];
+  let learnedProfile = existing.learned_profile || existing.synthesized_memories || [];
   let interests = existing.interests || [];
+  let deletedTombstones = [];
 
   if (['remembered_fact', 'fact', 'details', 'detail'].includes(type)) {
     const next = rememberedFacts.filter((item) => !match(item));
@@ -1122,16 +1157,29 @@ export async function deleteUserMemoryItem(sub, input = {}) {
     const next = currentQuestions.filter((item) => !match(item));
     deleted = next.length !== currentQuestions.length;
     currentQuestions = next;
-  } else if (['learned', 'synthesized_memory'].includes(type)) {
-    const next = synthesizedMemories.filter((item) => !match(item));
-    deleted = next.length !== synthesizedMemories.length;
-    synthesizedMemories = next;
+  } else if (['learned', 'synthesized_memory', 'learned_profile'].includes(type)) {
+    const learnedMatch = (item) => match(item) || item.id === id || learnedMemoryStableId(item) === id;
+    const removed = learnedProfile.filter((item) => learnedMatch(item));
+    const next = learnedProfile.filter((item) => !learnedMatch(item));
+    deleted = next.length !== learnedProfile.length;
+    learnedProfile = next;
+    deletedTombstones = removed.flatMap((item) => {
+      const stableId = learnedMemoryStableId(item);
+      return [...new Set([item.id, stableId].filter(Boolean))].map((memory_id) => ({
+        memory_id,
+        type: 'learned',
+        deleted_at: nowIso,
+        reason: 'user_deleted'
+      }));
+    });
   }
   if (!deleted) return { ok: false, error: 'Memory item not found.', memory: existing };
 
   const memoryTombstones = [
     ...(existing.memory_tombstones || []),
-    { memory_id: id || memoryItemId(type || 'memory', value), type, deleted_at: nowIso, reason: 'user_deleted' }
+    ...(deletedTombstones.length
+      ? deletedTombstones
+      : [{ memory_id: id || memoryItemId(type || 'memory', value), type, deleted_at: nowIso, reason: 'user_deleted' }])
   ].slice(-MEMORY_TOMBSTONES_MAX);
   const nextVersion = Number(existing.version || 0) + 1;
   const { PutItemCommand } = await import('@aws-sdk/client-dynamodb');
@@ -1145,7 +1193,8 @@ export async function deleteUserMemoryItem(sub, input = {}) {
       synthesized_history: synthesizedHistory,
       remembered_facts: rememberedFacts,
       interests,
-      synthesized_memories: synthesizedMemories,
+      learned_profile: learnedProfile,
+      synthesized_memories: learnedProfile,
       memory_tombstones: memoryTombstones
     })
   }));
@@ -1167,6 +1216,7 @@ export function authProfile(memory) {
     return { returning: false };
   }
   const turnCount = Number(memory.turn_count || 0);
+  const learnedProfile = (memory.learned_profile || memory.synthesized_memories || []).slice(-LEARNED_PROFILE_MAX);
   return {
     returning: turnCount > 0,
     first_seen_at: memory.first_seen_at,
@@ -1175,9 +1225,10 @@ export function authProfile(memory) {
     turn_count: turnCount,
     current_session_questions: (memory.current_session_questions || []).slice(-5),
     prior_session_summaries: usefulSynthesizedHistory(memory.synthesized_history).slice(-3),
+    learned_profile: learnedProfile,
     remembered_facts: (memory.remembered_facts || []).slice(-8),
     interests: (memory.interests || []).slice(-8),
-    synthesized_memories: (memory.synthesized_memories || []).slice(-8),
+    synthesized_memories: learnedProfile,
     memory_synthesis: memory.memory_synthesis || {},
     discord_connection: memory.discord_connection || null
   };
@@ -1189,8 +1240,20 @@ export function authProfile(memory) {
 export function memoryContextBlock(memory) {
   if (!memory) return '';
   const lines = [];
+  const learned = (memory.learned_profile || memory.synthesized_memories || []).slice(-6);
+  const facts = (memory.remembered_facts || []).slice(-4);
+  if (learned.length > 0 || facts.length > 0) {
+    lines.push('Learned reader profile from observed Thingy archive use:');
+    learned.forEach((item) => {
+      lines.push(`- ${item.label || item.type}: ${item.summary || item.label}`);
+    });
+    facts.forEach((fact) => {
+      lines.push(`- explicit ${fact.category}: ${fact.value}`);
+    });
+  }
   const summaries = usefulSynthesizedHistory(memory.synthesized_history).slice(-3);
   if (summaries.length > 0) {
+    if (lines.length > 0) lines.push('');
     lines.push('What this reader has been exploring across past sessions:');
     summaries.forEach((s, idx) => {
       const when = s.ended_at ? s.ended_at.slice(0, 10) : '';
@@ -1205,27 +1268,6 @@ export function memoryContextBlock(memory) {
     lines.push('Earlier in this same session they asked:');
     current.forEach((q) => {
       lines.push(`- ${q.question}`);
-    });
-  }
-  const facts = (memory.remembered_facts || []).slice(-8);
-  if (facts.length > 0) {
-    if (lines.length > 0) lines.push('');
-    lines.push('Remembered reader details explicitly offered by the reader:');
-    facts.forEach((fact) => {
-      lines.push(`- ${fact.category}: ${fact.value}`);
-    });
-  }
-  const interests = (memory.interests || []).slice(-8);
-  if (interests.length > 0) {
-    if (lines.length > 0) lines.push('');
-    lines.push(`Reader interests to consider when useful: ${interests.join(', ')}`);
-  }
-  const learned = (memory.synthesized_memories || []).slice(-6);
-  if (learned.length > 0) {
-    if (lines.length > 0) lines.push('');
-    lines.push('Learned reader context synthesized from prior engagement:');
-    learned.forEach((item) => {
-      lines.push(`- ${item.label || item.type}: ${item.summary || item.label}`);
     });
   }
   return lines.length > 0 ? lines.join('\n') : '';

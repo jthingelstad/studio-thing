@@ -38,7 +38,9 @@ export function signPayload(payload) {
 }
 
 export function createSessionToken(email, sessionId = crypto.randomBytes(18).toString('base64url'), claims = {}) {
-  const expiresAt = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
+  const issuedAtMs = Date.now();
+  const issuedAt = Math.floor(issuedAtMs / 1000);
+  const expiresAt = issuedAt + SESSION_TTL_SECONDS;
   const safeClaims = claims && typeof claims === 'object' && !Array.isArray(claims) ? claims : {};
   const payloadClaims = { ...safeClaims };
   const entitlements = Array.isArray(payloadClaims.entitlements) ? payloadClaims.entitlements : [];
@@ -49,7 +51,7 @@ export function createSessionToken(email, sessionId = crypto.randomBytes(18).toS
   return {
     sessionId,
     expiresAt,
-    token: signPayload({ ...payloadClaims, sid: sessionId, sub: emailHash(email), exp: expiresAt })
+    token: signPayload({ ...payloadClaims, sid: sessionId, sub: emailHash(email), exp: expiresAt, iat: issuedAt, iat_ms: issuedAtMs })
   };
 }
 
@@ -60,7 +62,9 @@ export function createSessionTokenForSub(sub, sessionId = crypto.randomBytes(18)
   if (!sub || typeof sub !== 'string') {
     throw new Error('createSessionTokenForSub: sub must be a non-empty string');
   }
-  const expiresAt = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
+  const issuedAtMs = Date.now();
+  const issuedAt = Math.floor(issuedAtMs / 1000);
+  const expiresAt = issuedAt + SESSION_TTL_SECONDS;
   const safeClaims = claims && typeof claims === 'object' && !Array.isArray(claims) ? claims : {};
   const payloadClaims = { ...safeClaims };
   const entitlements = Array.isArray(payloadClaims.entitlements) ? payloadClaims.entitlements : [];
@@ -71,7 +75,7 @@ export function createSessionTokenForSub(sub, sessionId = crypto.randomBytes(18)
   return {
     sessionId,
     expiresAt,
-    token: signPayload({ ...payloadClaims, sid: sessionId, sub, exp: expiresAt })
+    token: signPayload({ ...payloadClaims, sid: sessionId, sub, exp: expiresAt, iat: issuedAt, iat_ms: issuedAtMs })
   };
 }
 

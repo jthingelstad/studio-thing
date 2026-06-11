@@ -56,6 +56,7 @@ import {
   agentUserPrompt
 } from '../shared/prompts.mjs';
 import { extractBearer, verifyToken } from '../shared/session.mjs';
+import { sessionAllowedForThingyProfile } from '../shared/profile-deletion.mjs';
 import {
   getUserMemory,
   memoryContextBlock,
@@ -783,7 +784,7 @@ function jsonResponseStream(responseStream, statusCode) {
 async function handleCuriosityMapRoute({ event, responseStream, requestId, summary, start }) {
   const body = parseBody(event);
   const payload = verifyToken(extractBearer(event, body));
-  if (!payload) {
+  if (!payload || !(await sessionAllowedForThingyProfile(payload))) {
     const s401 = jsonResponseStream(responseStream, 401);
     s401.write(JSON.stringify({ error: 'Please validate your subscriber email to use the librarian.', request_id: requestId }));
     s401.end();
@@ -897,7 +898,8 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
   if (method === 'POST' && path.endsWith('/feedback')) {
     const body = parseBody(event);
     const payload = verifyToken(extractBearer(event, body));
-    const result = payload
+    const active = payload ? await sessionAllowedForThingyProfile(payload) : false;
+    const result = active
       ? await recordFeedback({
         subscriberHash: String(payload.sub || ''),
         requestId: body.request_id,
@@ -995,7 +997,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
 
     const body = parseBody(event);
     const payload = verifyToken(extractBearer(event, body));
-    if (!payload) {
+    if (!payload || !(await sessionAllowedForThingyProfile(payload))) {
       writeSse(stream, 'error', { error: 'Please validate your subscriber email to use the librarian.', request_id: requestId });
       return;
     }

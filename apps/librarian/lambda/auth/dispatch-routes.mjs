@@ -2,6 +2,7 @@ import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { bedrock, dynamodb, fastModel } from '../shared/aws-clients.mjs';
 import { jsonResponse } from '../shared/http.mjs';
 import { emailHash, extractBearer, normalizeEmail, verifyToken } from '../shared/session.mjs';
+import { sessionAllowedForThingyProfile } from '../shared/profile-deletion.mjs';
 import { isOwnerSubscriberHash } from '../shared/conversation-modes.mjs';
 import { errorFields, logEvent } from '../shared/logging.mjs';
 import {
@@ -29,9 +30,10 @@ function entitlementsForSessionPayload(payload) {
   return Array.from(entitlements);
 }
 
-function dispatchAuth(event, body) {
+async function dispatchAuth(event, body) {
   const payload = verifyToken(extractBearer(event, body));
-  return payload || null;
+  if (!payload || !(await sessionAllowedForThingyProfile(payload))) return null;
+  return payload;
 }
 
 function normalizeDispatchText(value, max = 1400) {
@@ -147,7 +149,7 @@ async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '', m
 }
 
 export async function handleDispatch(event, body, start = performance.now()) {
-  const payload = dispatchAuth(event, body);
+  const payload = await dispatchAuth(event, body);
   const profile = payload ? dispatchProfile(payload) : null;
   if (!profile?.subscriberHash) {
     return jsonResponse(401, { error: 'Please sign in to use Dispatch.' }, event);

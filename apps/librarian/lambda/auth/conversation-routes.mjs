@@ -3,6 +3,7 @@ import { BatchWriteItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb';
 import { dynamodb } from '../shared/aws-clients.mjs';
 import { jsonResponse } from '../shared/http.mjs';
 import { extractBearer, verifyToken } from '../shared/session.mjs';
+import { sessionAllowedForThingyProfile } from '../shared/profile-deletion.mjs';
 import { logEvent } from '../shared/logging.mjs';
 import {
   availableConversationModes,
@@ -52,9 +53,10 @@ async function batchDeleteKeys(tableName, keys, maxAttempts = 5) {
   return deleted;
 }
 
-function conversationAuth(event, body) {
+async function conversationAuth(event, body) {
   const payload = verifyToken(extractBearer(event, body));
-  return payload || null;
+  if (!payload || !(await sessionAllowedForThingyProfile(payload))) return null;
+  return payload;
 }
 
 function conversationTableUnavailable(event) {
@@ -65,7 +67,7 @@ export async function handleUserConversations(event, body, {
   start = performance.now(),
   entitlementsForSessionPayload
 } = {}) {
-  const payload = conversationAuth(event, body);
+  const payload = await conversationAuth(event, body);
   const subscriberHash = payload ? String(payload.sub || '') : '';
   if (!subscriberHash) {
     return jsonResponse(401, { error: 'Please validate your subscriber email to use Thingy.' }, event);

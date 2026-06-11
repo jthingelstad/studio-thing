@@ -18,6 +18,10 @@ import {
   synthesizeUserMemory
 } from '../shared/user-memory.mjs';
 import {
+  deleteThingyProfile,
+  sessionAllowedForThingyProfile
+} from '../shared/profile-deletion.mjs';
+import {
   DISCORD_LINK_TTL_SECONDS,
   createLinkCode,
   createLinkState,
@@ -219,7 +223,7 @@ function entitlementsWithOwner(subscriberHash, entitlements = []) {
 async function refreshSession(event, body, start) {
   const bearer = extractBearer(event, body);
   const payload = verifyToken(bearer);
-  if (!payload?.sub) {
+  if (!payload?.sub || !(await sessionAllowedForThingyProfile(payload))) {
     logEvent('info', 'auth_refresh_rejected');
     return jsonResponse(401, { error: 'Sign in again to continue.' }, event);
   }
@@ -253,7 +257,7 @@ async function refreshSession(event, body, start) {
 
 async function updateProfile(event, body, start) {
   const payload = verifyToken(extractBearer(event, body));
-  if (!payload?.sub) {
+  if (!payload?.sub || !(await sessionAllowedForThingyProfile(payload))) {
     logEvent('info', 'auth_update_profile_rejected');
     return jsonResponse(401, { error: 'Sign in again to continue.' }, event);
   }
@@ -331,19 +335,6 @@ async function memoryProfileResponse(sub, event, extra = {}) {
   const memory = await getUserMemory(sub, { consistent: true });
   const events = await listUserMemoryEvents(sub);
   const conversations = await memoryAccountConversations(sub);
-  const conversationModes = {};
-  const conversationEvalStatuses = {};
-  conversations.forEach((conversation) => {
-    const mode = conversation.mode || 'thingy';
-    conversationModes[mode] = (conversationModes[mode] || 0) + 1;
-    const status = conversation.eval_status || 'none';
-    conversationEvalStatuses[status] = (conversationEvalStatuses[status] || 0) + 1;
-  });
-  const eventTypes = {};
-  events.forEach((entry) => {
-    const type = entry.type || 'unknown';
-    eventTypes[type] = (eventTypes[type] || 0) + 1;
-  });
   const conversationDates = conversations
     .flatMap((conversation) => [conversation.created_at, conversation.updated_at, conversation.last_message_at])
     .filter(Boolean)
@@ -358,21 +349,20 @@ async function memoryProfileResponse(sub, event, extra = {}) {
     memory_turn_count: Number(memory?.turn_count || 0),
     conversation_count: conversations.length,
     conversation_turn_count: conversations.reduce((sum, conversation) => sum + Number(conversation.turn_count || 0), 0),
-    conversation_modes: conversationModes,
-    conversation_eval_statuses: conversationEvalStatuses,
+    activity_summary: {
+      memory_turn_count: Number(memory?.turn_count || 0),
+      conversation_count: conversations.length,
+      conversation_turn_count: conversations.reduce((sum, conversation) => sum + Number(conversation.turn_count || 0), 0)
+    },
     oldest_conversation_at: conversationDates[0] || '',
-    newest_conversation_at: conversationDates.at(-1) || '',
-    memory_event_count: events.length,
-    memory_event_types: eventTypes,
-    oldest_memory_event_at: events.map((entry) => entry.ts).filter(Boolean).sort()[0] || '',
-    newest_memory_event_at: events.map((entry) => entry.ts).filter(Boolean).sort().at(-1) || ''
+    newest_conversation_at: conversationDates.at(-1) || ''
   };
   return jsonResponse(200, { status: 'ok', profile, account, ...extra }, event);
 }
 
 async function handleMemory(event, body, start) {
   const payload = verifyToken(extractBearer(event, body));
-  if (!payload?.sub) {
+  if (!payload?.sub || !(await sessionAllowedForThingyProfile(payload))) {
     logEvent('info', 'memory_action_rejected');
     return jsonResponse(401, { error: 'Sign in again to continue.' }, event);
   }
@@ -394,20 +384,24 @@ async function handleMemory(event, body, start) {
     });
     return await memoryProfileResponse(payload.sub, event, { deleted: true });
   }
-  if (action === 'synthesize' || action === 'update') {
-    const result = await synthesizeUserMemory(payload.sub, { mode: 'incremental' });
-    if (!result.ok) return jsonResponse(500, { error: result.error || 'Memory synthesis failed.' }, event);
-    return await memoryProfileResponse(payload.sub, event, { synthesized: true, generated_count: result.generated_count || 0 });
-  }
-  if (action === 'resynthesize') {
+  if (action === 'refresh_profile') {
     const conversations = await memoryAccountConversations(payload.sub);
     const result = await synthesizeUserMemory(payload.sub, {
-      mode: 'full',
+      mode: 'refresh',
       from: body.from,
       extraEvents: conversationMemoryEvents(conversations)
     });
-    if (!result.ok) return jsonResponse(500, { error: result.error || 'Memory resynthesis failed.' }, event);
+    if (!result.ok) return jsonResponse(500, { error: result.error || 'Memory synthesis failed.' }, event);
     return await memoryProfileResponse(payload.sub, event, { synthesized: true, generated_count: result.generated_count || 0 });
+  }
+  if (action === 'delete_profile') {
+    const result = await deleteThingyProfile(payload.sub);
+    if (!result.ok) return jsonResponse(500, { error: result.error || 'Thingy could not delete this profile right now.' }, event);
+    logEvent('info', 'thingy_profile_delete_requested', {
+      subscriber_hash: payload.sub,
+      duration_ms: Math.round(performance.now() - start)
+    });
+    return jsonResponse(200, { status: 'deleted', ok: true, deleted_at: result.deleted_at }, event);
   }
   return jsonResponse(400, { error: 'Unsupported memory action.' }, event);
 }
@@ -489,7 +483,7 @@ async function handleDiscordLinkStart(event, body, start) {
 
 async function handleDiscordLinkCode(event, body, start) {
   const payload = verifyToken(extractBearer(event, body));
-  if (!payload?.sub) {
+  if (!payload?.sub || !(await sessionAllowedForThingyProfile(payload))) {
     logEvent('info', 'discord_link_code_rejected_auth');
     return jsonResponse(401, { error: 'Sign in again to connect Discord.' }, event);
   }

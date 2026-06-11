@@ -156,6 +156,10 @@ function isRecentThemeRut(theme, recentThemes = []) {
 
 function sparkThemeFromMemory(memory, conversations = []) {
   const recentThemes = recentSparkThemes(memory, conversations);
+  for (const item of memory?.learned_profile || memory?.synthesized_memories || []) {
+    const theme = cleanThemeCandidate(item.label || item.summary);
+    if (theme && !isRecentThemeRut(theme, recentThemes)) return theme;
+  }
   for (const interest of memory?.interests || []) {
     const theme = cleanThemeCandidate(interest);
     if (theme && !isRecentThemeRut(theme, recentThemes)) return theme;
@@ -332,6 +336,7 @@ function curiosityThemeCandidates(memory, conversations = []) {
   for (const item of (memory?.current_session_questions || []).slice(-8)) add(item?.question || item, 4, 'recent conversation', 'recent');
   for (const entry of (conversations || []).slice(0, 10)) add(entry?.title || '', 2.5, 'conversation history', 'recent');
   for (const item of (memory?.synthesized_history || []).slice(-5)) add(item?.summary || item, 2, 'remembered conversation pattern', 'recent');
+  for (const item of memory?.learned_profile || memory?.synthesized_memories || []) add(item?.label || item?.summary, 2.4, 'learned profile', 'memory');
   for (const interest of memory?.interests || []) add(interest, 2, 'remembered interest', 'memory');
   for (const fact of memory?.remembered_facts || []) {
     if (fact?.category === 'interest' || fact?.category === 'project') add(fact.value, 1.5, `remembered ${fact.category}`, 'memory');
