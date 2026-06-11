@@ -355,6 +355,31 @@ test('analyzeDispatchSourceFit classifies thin and broad Dispatch seeds', () => 
   assert.ok(broad.selected_sources.length >= 6);
 });
 
+test('analyzeDispatchSourceFit ignores generic Dispatch framing words', () => {
+  const chunks = [
+    {
+      source_kind: 'weekly_thing',
+      issue_number: 10,
+      title: 'Writing and publishing notes',
+      url: 'https://weekly.example/10',
+      text: 'Jamie writes about publishing, blogging, and owning the archive.'
+    },
+    {
+      source_kind: 'blog',
+      title: 'Court notes',
+      url: 'https://blog.example/court',
+      text: 'A courthouse visit with notes about civic process.'
+    }
+  ];
+  const fit = analyzeDispatchSourceFit(
+    chunks,
+    "A Dispatch about Jamie's published writing on pickleball strategy and court positioning.",
+    6
+  );
+  assert.equal(fit.coverage_status, 'thin');
+  assert.equal(fit.candidate_count, 0);
+});
+
 test('parseDispatchJson handles fenced JSON', () => {
   assert.deepEqual(parseDispatchJson('```json\n{"title":"Dispatch"}\n```'), { title: 'Dispatch' });
 });

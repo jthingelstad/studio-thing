@@ -120,6 +120,40 @@ function tokenize(value) {
   return words.filter((word) => word.length > 2 || allowedShortTerms.has(word));
 }
 
+const DISPATCH_SOURCE_STOPWORDS = new Set([
+  'about',
+  'and',
+  'archive',
+  'could',
+  'dispatch',
+  'especially',
+  'for',
+  'from',
+  'how',
+  'into',
+  'jamie',
+  'published',
+  'should',
+  'thingy',
+  'that',
+  'the',
+  'this',
+  'use',
+  'uses',
+  'what',
+  'when',
+  'where',
+  'why',
+  'with',
+  'would',
+  'writing',
+  'writings'
+]);
+
+function dispatchQueryTokens(query) {
+  return tokenize(query).filter((token) => !DISPATCH_SOURCE_STOPWORDS.has(token));
+}
+
 function sourceKindLabel(kind) {
   if (kind === 'weekly_thing') return 'Weekly Thing';
   if (kind === 'blog') return 'Blog';
@@ -191,12 +225,29 @@ function scoreChunk(chunk, queryTokens) {
     chunk.section,
     Array.isArray(chunk.topics) ? chunk.topics.join(' ') : '',
     chunk.text
-  ].join(' ').toLowerCase();
-  let score = 0;
-  for (const token of queryTokens) {
-    const count = haystack.split(token).length - 1;
-    if (count) score += Math.min(count, 4);
+  ].join(' ');
+  const haystackCounts = new Map();
+  for (const token of tokenize(haystack)) {
+    haystackCounts.set(token, (haystackCounts.get(token) || 0) + 1);
   }
+  let score = 0;
+  let distinctMatches = 0;
+  for (const token of queryTokens) {
+    const exact = haystackCounts.get(token) || 0;
+    let count = exact;
+    if (!count && token.length >= 5) {
+      for (const [haystackToken, value] of haystackCounts.entries()) {
+        if (haystackToken.startsWith(token) || token.startsWith(haystackToken)) {
+          count += value;
+        }
+      }
+    }
+    if (count) {
+      distinctMatches += 1;
+      score += Math.min(count, 4);
+    }
+  }
+  if (queryTokens.length >= 4 && distinctMatches < 2) return 0;
   if (!score) return 0;
   if (chunk.source_kind === 'weekly_thing') score += 0.25;
   if (chunk.url) score += 0.1;
@@ -204,7 +255,7 @@ function scoreChunk(chunk, queryTokens) {
 }
 
 export function selectDispatchSources(chunks = [], query = '', limit = MAX_SOURCE_PACKETS) {
-  const queryTokens = Array.from(new Set(tokenize(query)));
+  const queryTokens = Array.from(new Set(dispatchQueryTokens(query)));
   const scored = chunks
     .map((chunk) => normalizeChunk(chunk))
     .map((chunk) => ({ ...chunk, score: scoreChunk(chunk, queryTokens) }))
@@ -236,7 +287,7 @@ export function selectDispatchSources(chunks = [], query = '', limit = MAX_SOURC
 }
 
 export function analyzeDispatchSourceFit(chunks = [], query = '', limit = MAX_SOURCE_PACKETS) {
-  const queryTokens = Array.from(new Set(tokenize(query)));
+  const queryTokens = Array.from(new Set(dispatchQueryTokens(query)));
   const scored = chunks
     .map((chunk) => normalizeChunk(chunk))
     .map((chunk) => ({ ...chunk, score: scoreChunk(chunk, queryTokens) }))

@@ -256,7 +256,7 @@ async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '', m
   } catch {
     parsed = {};
   }
-  const question = normalizeDispatchText(parsed.question, 260);
+  const question = normalizeDispatchText(parsed.question, 520);
   const direction = normalizeDispatchText(parsed.direction || prompt, 1000);
   const alreadyAnswered = Boolean(priorQuestion && priorAnswer);
   const shouldClarifyTerseSeed = terseDispatchSeed(prompt) && !priorQuestion && !priorAnswer;
