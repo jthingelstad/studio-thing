@@ -172,6 +172,71 @@ test('learned profile parser accepts fenced or wrapped JSON', () => {
   assert.equal(parsed[0].evidence[0].event_id, 'conversation-privacy');
 });
 
+test('learned profile synthesis includes conversation summary detail', async () => {
+  const priorTable = process.env.TABLE_NAME;
+  process.env.TABLE_NAME = 'thingy-test-table';
+  const originalDynamoSend = dynamodb.send;
+  const originalBedrockSend = bedrock.send;
+  let storedItem = memoryDynamoItem('subscriber-hash', {
+    version: 2,
+    memory_synthesis: { status: 'current' }
+  }, '2026-06-10T12:00:00.000Z');
+  let capturedPrompt = '';
+
+  dynamodb.send = async (command) => {
+    if (command.constructor.name === 'GetItemCommand') return { Item: storedItem };
+    if (command.constructor.name === 'QueryCommand') return { Items: [] };
+    if (command.constructor.name === 'PutItemCommand') {
+      storedItem = command.input.Item;
+      return {};
+    }
+    throw new Error(`Unexpected Dynamo command ${command.constructor.name}`);
+  };
+  bedrock.send = async (command) => {
+    capturedPrompt = command.input.messages[0].content[0].text;
+    return {
+      output: {
+        message: {
+          content: [{
+            text: JSON.stringify({
+              memories: [{
+                type: 'observed_archive_theme',
+                label: 'Privacy and software systems',
+                summary: 'Often explores how privacy values shape archive, software, and productivity systems.',
+                confidence: 0.8,
+                evidence: [{ event_id: 'conversation-privacy', label: 'Privacy values and systems summary' }]
+              }]
+            })
+          }]
+        }
+      }
+    };
+  };
+
+  try {
+    const result = await synthesizeUserMemory('subscriber-hash', {
+      mode: 'refresh',
+      extraEvents: [{
+        id: 'conversation-privacy',
+        type: 'conversation_summary',
+        ts: '2026-06-10T13:00:00.000Z',
+        label: 'Privacy values → productivity tool choices',
+        detail: 'Reader asked for a trace connecting privacy philosophy to productivity systems across the archive.'
+      }]
+    });
+    assert.equal(result.ok, true);
+    assert.equal(result.generated_count, 1);
+    assert.match(capturedPrompt, /Privacy values → productivity tool choices/);
+    assert.match(capturedPrompt, /Reader asked for a trace connecting privacy philosophy/);
+    assert.equal(result.memory.learned_profile[0].label, 'Privacy and software systems');
+  } finally {
+    dynamodb.send = originalDynamoSend;
+    bedrock.send = originalBedrockSend;
+    if (priorTable === undefined) delete process.env.TABLE_NAME;
+    else process.env.TABLE_NAME = priorTable;
+  }
+});
+
 test('failed learned profile synthesis preserves existing profile', async () => {
   const priorTable = process.env.TABLE_NAME;
   process.env.TABLE_NAME = 'thingy-test-table';
@@ -233,6 +298,68 @@ test('failed learned profile synthesis preserves existing profile', async () => 
     assert.equal(result.preserved, true);
     assert.equal(result.memory.learned_profile[0].label, 'RSS workflows');
     assert.equal(result.memory.memory_synthesis.status, 'error');
+    assert.equal(putCount, 0);
+  } finally {
+    dynamodb.send = originalDynamoSend;
+    bedrock.send = originalBedrockSend;
+    if (priorTable === undefined) delete process.env.TABLE_NAME;
+    else process.env.TABLE_NAME = priorTable;
+  }
+});
+
+test('empty learned profile synthesis with evidence preserves existing profile', async () => {
+  const priorTable = process.env.TABLE_NAME;
+  process.env.TABLE_NAME = 'thingy-test-table';
+  const originalDynamoSend = dynamodb.send;
+  const originalBedrockSend = bedrock.send;
+  let putCount = 0;
+
+  dynamodb.send = async (command) => {
+    if (command.constructor.name === 'GetItemCommand') {
+      return {
+        Item: memoryDynamoItem('subscriber-hash', {
+          version: 2,
+          learned_profile: [{
+            type: 'observed_archive_theme',
+            label: 'RSS workflows',
+            summary: 'Often explores RSS and reader workflow tools.',
+            confidence: 0.8,
+            evidence: [{ event_id: 'event-1', label: 'Asked about RSS' }],
+            created_at: '2026-06-10T12:00:00.000Z',
+            updated_at: '2026-06-10T12:00:00.000Z',
+            synthesized_at: '2026-06-10T12:00:00.000Z'
+          }]
+        }, '2026-06-10T12:00:00.000Z')
+      };
+    }
+    if (command.constructor.name === 'QueryCommand') return { Items: [] };
+    if (command.constructor.name === 'PutItemCommand') {
+      putCount += 1;
+      return {};
+    }
+    throw new Error(`Unexpected Dynamo command ${command.constructor.name}`);
+  };
+  bedrock.send = async () => ({
+    output: { message: { content: [{ text: '{"memories":[]}' }] } }
+  });
+
+  try {
+    const result = await synthesizeUserMemory('subscriber-hash', {
+      mode: 'refresh',
+      extraEvents: [{
+        id: 'conversation-privacy',
+        type: 'conversation_summary',
+        ts: '2026-06-10T13:00:00.000Z',
+        label: 'Privacy values',
+        detail: 'Reader asked for privacy and systems traces across the archive.'
+      }]
+    });
+    assert.equal(result.ok, true);
+    assert.equal(result.generated_count, 0);
+    assert.match(result.error, /produced no learned profile/);
+    assert.match(result.refresh_error, /Existing profile was kept/);
+    assert.equal(result.preserved, true);
+    assert.equal(result.memory.learned_profile[0].label, 'RSS workflows');
     assert.equal(putCount, 0);
   } finally {
     dynamodb.send = originalDynamoSend;

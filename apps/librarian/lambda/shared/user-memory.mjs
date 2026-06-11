@@ -38,6 +38,7 @@ const SYNTHESIS_MAX_TOKENS = 160;
 const MEMORY_SYNTHESIS_MAX_TOKENS = 900;
 const MEMORY_SYNTHESIS_VERSION = 'thingy-memory-v1';
 const MEMORY_REFRESH_PRESERVED_ERROR = 'Profile refresh could not produce usable updates. Existing profile was kept.';
+const MEMORY_EMPTY_SYNTHESIS_ERROR = 'Profile refresh found evidence but produced no learned profile items.';
 const SYNTHESIZABLE_MEMORY_EVENT_TYPES = new Set(['chat_question', 'conversation_summary']);
 const AUTO_SYNTHESIS_MIN_PENDING_DEFAULT = 8;
 const AUTO_SYNTHESIS_FIRST_MIN_PENDING_DEFAULT = 3;
@@ -888,13 +889,19 @@ export function shouldAutoSynthesizeMemory(memory = {}, events = [], nowIso = ne
 
 async function synthesizeEngagementMemories(events = [], memory = {}, nowIso = new Date().toISOString()) {
   if (!events.length) return { ok: true, memories: [] };
-  const eventLines = events.map((event, idx) => (
-    `${idx + 1}. [${event.event_id || event.id || ''}] ${event.type || 'event'}: ${event.label || event.detail || ''}`
-  )).join('\n').slice(0, 8000);
+  const eventLines = events.map((event, idx) => {
+    const label = String(event.label || '').trim().replace(/\s+/g, ' ');
+    const detail = String(event.detail || '').trim().replace(/\s+/g, ' ');
+    const body = label && detail && detail !== label
+      ? `${label} — ${detail}`
+      : label || detail;
+    return `${idx + 1}. [${event.event_id || event.id || ''}] ${event.type || 'event'}: ${body}`;
+  }).join('\n').slice(0, 10000);
   const system = [
     'You synthesize a Thingy reader profile from observed archive-use behavior.',
     'Thingy is Jamie Thingelstad\'s archive agent. The profile should describe what the reader explores in the archive, not personal identity.',
     'Create only durable, user-visible observations supported by repeated or meaningful questions, conversation topics, and retained thread summaries.',
+    'When there are several substantive conversation summaries, return 2 to 6 profile items rather than an empty profile.',
     'Use stable labels that would remain the same if the same evidence were synthesized again.',
     'Do not infer sensitive personal details, demographics, health, finances, family, schedules, addresses, or anything outside archive engagement.',
     'Return strict JSON: {"memories":[{"type":"observed_archive_theme|exploration_style|source_affinity|recent_trajectory","label":"stable short label","summary":"one sentence","confidence":0.0,"evidence":[{"event_id":"id","label":"why"}]}]}.',
@@ -913,7 +920,9 @@ async function synthesizeEngagementMemories(events = [], memory = {}, nowIso = n
     const parts = response?.output?.message?.content || [];
     const text = parts.map((part) => part.text || '').filter(Boolean).join(' ').trim();
     const parsed = parseSynthesizedMemoryJson(text, nowIso);
-    return parsed ? { ok: true, memories: parsed } : { ok: false, memories: [], error: 'Memory synthesis returned invalid JSON.' };
+    if (!parsed) return { ok: false, memories: [], error: 'Memory synthesis returned invalid JSON.' };
+    if (!parsed.length && events.length) return { ok: false, memories: [], error: MEMORY_EMPTY_SYNTHESIS_ERROR };
+    return { ok: true, memories: parsed };
   } catch (error) {
     logEvent('warning', 'user_memory_engagement_synthesis_failed', {
       error_type: error?.constructor?.name || 'Error'
