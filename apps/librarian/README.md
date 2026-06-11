@@ -75,6 +75,7 @@ then uploads the updated corpus artifacts.
 | POST | `/retrieve` | bridge secret (body) | JSON semantic retrieval — top-K archive passages, used by `workshop_bot` |
 | POST | `/feedback` | session token (bearer) | Per-answer reactions plus optional comments |
 | POST | `/auth` | none / bridge secret / session token | Magic-link auth, Discord bridge mint, user conversation management, profile updates, and Dispatch drafting |
+| POST | `/memory` | session token (bearer) | User memory fetch, item deletion, incremental synthesis, and full resynthesis |
 
 ## Tech stack
 

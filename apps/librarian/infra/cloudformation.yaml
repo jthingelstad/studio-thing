@@ -415,6 +415,13 @@ Resources:
       RouteKey: POST /conversations
       Target: !Sub integrations/${LibrarianIntegration}
 
+  MemoryRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref LibrarianApi
+      RouteKey: POST /memory
+      Target: !Sub integrations/${LibrarianIntegration}
+
   DispatchRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
