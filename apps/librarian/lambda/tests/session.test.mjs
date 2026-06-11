@@ -149,6 +149,29 @@ test('learned profile synthesis parsing and merging are deterministic', () => {
   assert.equal(tombstoned.length, 0);
 });
 
+test('learned profile parser accepts fenced or wrapped JSON', () => {
+  const wrappedJson = [
+    'Here is the profile JSON:',
+    '```json',
+    JSON.stringify({
+      memories: [{
+        type: 'observed_archive_theme',
+        label: 'Archive privacy research',
+        summary: 'Often explores privacy-oriented archive and software-tooling questions.',
+        confidence: 0.7,
+        evidence: [{ event_id: 'conversation-privacy', label: 'Asked about privacy tooling' }]
+      }]
+    }),
+    '```',
+    'Done.'
+  ].join('\n');
+
+  const parsed = parseSynthesizedMemoryJson(wrappedJson, '2026-06-10T12:00:00.000Z');
+  assert.equal(parsed.length, 1);
+  assert.equal(parsed[0].label, 'Archive privacy research');
+  assert.equal(parsed[0].evidence[0].event_id, 'conversation-privacy');
+});
+
 test('failed learned profile synthesis preserves existing profile', async () => {
   const priorTable = process.env.TABLE_NAME;
   process.env.TABLE_NAME = 'thingy-test-table';
@@ -205,7 +228,8 @@ test('failed learned profile synthesis preserves existing profile', async () => 
     const result = await synthesizeUserMemory('subscriber-hash', { mode: 'refresh' });
     assert.equal(result.ok, true);
     assert.equal(result.generated_count, 0);
-    assert.match(result.refresh_error, /invalid JSON/);
+    assert.match(result.error, /invalid JSON/);
+    assert.match(result.refresh_error, /Existing profile was kept/);
     assert.equal(result.preserved, true);
     assert.equal(result.memory.learned_profile[0].label, 'RSS workflows');
     assert.equal(result.memory.memory_synthesis.status, 'error');
@@ -288,7 +312,7 @@ test('memory refresh route returns preserved profile on synthesis failure', asyn
     const body = JSON.parse(response.body);
     assert.equal(response.statusCode, 200);
     assert.equal(body.refreshed, false);
-    assert.match(body.refresh_error, /invalid JSON/);
+    assert.match(body.refresh_error, /Existing profile was kept/);
     assert.equal(body.preserved, true);
     assert.equal(body.profile.learned_profile[0].label, 'RSS workflows');
   } finally {

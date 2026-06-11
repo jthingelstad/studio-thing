@@ -37,6 +37,7 @@ const TTL_DAYS_DEFAULT = 365;
 const SYNTHESIS_MAX_TOKENS = 160;
 const MEMORY_SYNTHESIS_MAX_TOKENS = 900;
 const MEMORY_SYNTHESIS_VERSION = 'thingy-memory-v1';
+const MEMORY_REFRESH_PRESERVED_ERROR = 'Profile refresh could not produce usable updates. Existing profile was kept.';
 const SYNTHESIZABLE_MEMORY_EVENT_TYPES = new Set(['chat_question', 'conversation_summary']);
 const AUTO_SYNTHESIS_MIN_PENDING_DEFAULT = 8;
 const AUTO_SYNTHESIS_FIRST_MIN_PENDING_DEFAULT = 3;
@@ -722,8 +723,62 @@ export async function synthesizeSessionQuestions(questions) {
   }
 }
 
+function parseJsonValue(value) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+function balancedJsonSlice(text, start) {
+  const stack = [];
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < text.length; i += 1) {
+    const ch = text[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === '{') stack.push('}');
+    else if (ch === '[') stack.push(']');
+    else if (ch === '}' || ch === ']') {
+      if (stack.at(-1) !== ch) return '';
+      stack.pop();
+      if (stack.length === 0) return text.slice(start, i + 1);
+    }
+  }
+  return '';
+}
+
+function extractJsonPayload(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return '';
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidates = [
+    raw.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim(),
+    fenced?.[1]?.trim()
+  ].filter(Boolean);
+  for (const candidate of candidates) {
+    if (parseJsonValue(candidate)) return candidate;
+  }
+  for (let i = 0; i < raw.length; i += 1) {
+    if (raw[i] !== '{' && raw[i] !== '[') continue;
+    const candidate = balancedJsonSlice(raw, i);
+    if (candidate && parseJsonValue(candidate)) return candidate;
+  }
+  return '';
+}
+
 export function parseSynthesizedMemoryJson(text, nowIso = new Date().toISOString()) {
-  const raw = String(text || '').trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
+  const raw = extractJsonPayload(String(text || ''));
   if (!raw) return null;
   let parsed;
   try {
@@ -893,6 +948,11 @@ export async function synthesizeUserMemory(sub, options = {}) {
   const lastEventAt = allSynthesisEvents.reduce((latest, event) => event.ts && event.ts > latest ? event.ts : latest, existing.memory_synthesis?.last_event_at || '');
   const generated = await synthesizeEngagementMemories(synthesisEvents, existing, nowIso);
   if (!generated.ok) {
+    logEvent('warning', 'user_memory_synthesis_preserved', {
+      mode,
+      error: generated.error || 'Memory synthesis failed.',
+      event_count: synthesisEvents.length
+    });
     const memory = {
       ...existing,
       memory_synthesis: {
@@ -906,7 +966,7 @@ export async function synthesizeUserMemory(sub, options = {}) {
     return {
       ok: true,
       error: generated.error || 'Memory synthesis failed.',
-      refresh_error: generated.error || 'Memory synthesis failed.',
+      refresh_error: MEMORY_REFRESH_PRESERVED_ERROR,
       memory,
       generated_count: 0,
       preserved: true
