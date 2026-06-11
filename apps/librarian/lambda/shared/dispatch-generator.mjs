@@ -154,6 +154,14 @@ function dispatchQueryTokens(query) {
   return tokenize(query).filter((token) => !DISPATCH_SOURCE_STOPWORDS.has(token));
 }
 
+function tokenMatchesQuery(haystackToken, queryToken) {
+  if (haystackToken === queryToken) return true;
+  if (queryToken.length >= 5 && haystackToken.startsWith(queryToken)) return true;
+  if (queryToken.length >= 5 && queryToken.endsWith('s') && haystackToken === queryToken.slice(0, -1)) return true;
+  if (queryToken.length >= 5 && haystackToken.endsWith('s') && haystackToken.slice(0, -1) === queryToken) return true;
+  return false;
+}
+
 function sourceKindLabel(kind) {
   if (kind === 'weekly_thing') return 'Weekly Thing';
   if (kind === 'blog') return 'Blog';
@@ -226,22 +234,17 @@ function scoreChunk(chunk, queryTokens) {
     Array.isArray(chunk.topics) ? chunk.topics.join(' ') : '',
     chunk.text
   ].join(' ');
-  const haystackCounts = new Map();
-  for (const token of tokenize(haystack)) {
-    haystackCounts.set(token, (haystackCounts.get(token) || 0) + 1);
+  const matchCounts = new Map(queryTokens.map((token) => [token, 0]));
+  for (const haystackToken of tokenize(haystack)) {
+    for (const queryToken of queryTokens) {
+      if (tokenMatchesQuery(haystackToken, queryToken)) {
+        matchCounts.set(queryToken, (matchCounts.get(queryToken) || 0) + 1);
+      }
+    }
   }
   let score = 0;
   let distinctMatches = 0;
-  for (const token of queryTokens) {
-    const exact = haystackCounts.get(token) || 0;
-    let count = exact;
-    if (!count && token.length >= 5) {
-      for (const [haystackToken, value] of haystackCounts.entries()) {
-        if (haystackToken.startsWith(token) || token.startsWith(haystackToken)) {
-          count += value;
-        }
-      }
-    }
+  for (const count of matchCounts.values()) {
     if (count) {
       distinctMatches += 1;
       score += Math.min(count, 4);

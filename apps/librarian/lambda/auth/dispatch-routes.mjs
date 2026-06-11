@@ -142,6 +142,15 @@ function defaultPlannerMessage({ needsClarification, status, direction }) {
   return `I checked the archive and have enough to shape this Dispatch around: ${direction}`;
 }
 
+function plannerDetectedArchiveMismatch(parsed = {}) {
+  const text = [
+    parsed.coverage_status,
+    parsed.question,
+    parsed.message
+  ].filter(Boolean).join(' ');
+  return /\b(?:archive mismatch|no published writing|not finding enough|not enough direct|not among|not contain|under-supported|unrelated to your request)\b/i.test(text);
+}
+
 function normalizeDispatchBrief(parsedBrief = {}, { prompt, direction, coverageStatus, sources }) {
   const sourceReasons = Array.isArray(parsedBrief.selected_sources)
     ? parsedBrief.selected_sources.map((source) => source?.why || '')
@@ -261,11 +270,19 @@ async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '', m
   const alreadyAnswered = Boolean(priorQuestion && priorAnswer);
   const shouldClarifyTerseSeed = terseDispatchSeed(prompt) && !priorQuestion && !priorAnswer;
   const parsedStatus = validCoverageStatus(parsed.coverage_status, fit.coverage_status);
-  const coverageStatus = validCoverageStatus(fit.coverage_status, parsedStatus);
+  let coverageStatus = validCoverageStatus(fit.coverage_status, parsedStatus);
+  if (alreadyAnswered && ['focused', 'thin', 'ambiguous'].includes(parsedStatus)) {
+    coverageStatus = parsedStatus;
+  } else if (fit.coverage_status === 'focused' && parsedStatus === 'broad') {
+    coverageStatus = 'broad';
+  }
+  if (coverageStatus === 'focused' && plannerDetectedArchiveMismatch(parsed)) {
+    coverageStatus = 'thin';
+  }
   const adjacentTopics = textArray(parsed.adjacent_topics, 5, 120);
   const suggestedNarrowing = textArray(parsed.suggested_narrowing, 5, 160);
-  const shouldClarifyCoverage = coverageStatus === 'thin' || coverageStatus === 'broad';
-  const needsClarification = Boolean(shouldClarifyCoverage || ((parsed.needs_clarification || shouldClarifyTerseSeed) && !alreadyAnswered));
+  const shouldClarifyCoverage = !alreadyAnswered && (coverageStatus === 'thin' || coverageStatus === 'broad');
+  const needsClarification = Boolean(shouldClarifyCoverage || parsed.needs_clarification || shouldClarifyTerseSeed);
   const fallbackQuestion = question || coverageQuestion(coverageStatus, prompt, fit, adjacentTopics);
   let message = normalizeDispatchText(parsed.message, 700) || (
     defaultPlannerMessage({ needsClarification, status: coverageStatus, direction: direction || prompt })
