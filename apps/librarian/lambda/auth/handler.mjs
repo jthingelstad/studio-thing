@@ -43,6 +43,7 @@ import { errorFields, logEvent } from '../shared/logging.mjs';
 import { premiumThankYouSystemPrompt } from '../shared/prompts.mjs';
 import { handleUserConversations } from './conversation-routes.mjs';
 import { handleDispatch } from './dispatch-routes.mjs';
+import { loadUserConversationSummaries } from '../shared/conversation-store.mjs';
 
 const AUTH_RATE_LIMIT_MAX = 30;
 const MAGIC_LINK_RATE_LIMIT_MAX = 6;
@@ -297,14 +298,76 @@ async function updateProfile(event, body, start) {
   }, event);
 }
 
+async function memoryAccountConversations(sub) {
+  return await loadUserConversationSummaries({
+    dynamodb,
+    tableName: process.env.TABLE_NAME,
+    subscriberHash: sub,
+    limit: 50,
+    logEvent
+  });
+}
+
+function conversationMemoryEvents(conversations = []) {
+  return conversations.map((conversation) => {
+    const label = conversation.topic || conversation.title || conversation.preview || '';
+    const detail = conversation.summary || conversation.preview || conversation.title || '';
+    return {
+      id: `conversation-${conversation.id || conversation.conversation_id || ''}`,
+      type: 'conversation_summary',
+      ts: conversation.updated_at || conversation.last_message_at || conversation.created_at || '',
+      label,
+      detail,
+      metadata: {
+        conversation_id: conversation.id || conversation.conversation_id || '',
+        mode: conversation.mode || 'thingy',
+        turn_count: Number(conversation.turn_count || 0)
+      }
+    };
+  }).filter((event) => event.label || event.detail);
+}
+
 async function memoryProfileResponse(sub, event, extra = {}) {
   const memory = await getUserMemory(sub, { consistent: true });
   const events = await listUserMemoryEvents(sub);
+  const conversations = await memoryAccountConversations(sub);
+  const conversationModes = {};
+  const conversationEvalStatuses = {};
+  conversations.forEach((conversation) => {
+    const mode = conversation.mode || 'thingy';
+    conversationModes[mode] = (conversationModes[mode] || 0) + 1;
+    const status = conversation.eval_status || 'none';
+    conversationEvalStatuses[status] = (conversationEvalStatuses[status] || 0) + 1;
+  });
+  const eventTypes = {};
+  events.forEach((entry) => {
+    const type = entry.type || 'unknown';
+    eventTypes[type] = (eventTypes[type] || 0) + 1;
+  });
+  const conversationDates = conversations
+    .flatMap((conversation) => [conversation.created_at, conversation.updated_at, conversation.last_message_at])
+    .filter(Boolean)
+    .sort();
   const profile = {
     ...authProfile(memory),
     memory_synthesis: memorySynthesisStatus(memory || {}, events)
   };
-  return jsonResponse(200, { status: 'ok', profile, ...extra }, event);
+  const account = {
+    first_seen_at: memory?.first_seen_at || '',
+    last_seen_at: memory?.last_seen_at || '',
+    memory_turn_count: Number(memory?.turn_count || 0),
+    conversation_count: conversations.length,
+    conversation_turn_count: conversations.reduce((sum, conversation) => sum + Number(conversation.turn_count || 0), 0),
+    conversation_modes: conversationModes,
+    conversation_eval_statuses: conversationEvalStatuses,
+    oldest_conversation_at: conversationDates[0] || '',
+    newest_conversation_at: conversationDates.at(-1) || '',
+    memory_event_count: events.length,
+    memory_event_types: eventTypes,
+    oldest_memory_event_at: events.map((entry) => entry.ts).filter(Boolean).sort()[0] || '',
+    newest_memory_event_at: events.map((entry) => entry.ts).filter(Boolean).sort().at(-1) || ''
+  };
+  return jsonResponse(200, { status: 'ok', profile, account, ...extra }, event);
 }
 
 async function handleMemory(event, body, start) {
@@ -337,7 +400,12 @@ async function handleMemory(event, body, start) {
     return await memoryProfileResponse(payload.sub, event, { synthesized: true, generated_count: result.generated_count || 0 });
   }
   if (action === 'resynthesize') {
-    const result = await synthesizeUserMemory(payload.sub, { mode: 'full', from: body.from });
+    const conversations = await memoryAccountConversations(payload.sub);
+    const result = await synthesizeUserMemory(payload.sub, {
+      mode: 'full',
+      from: body.from,
+      extraEvents: conversationMemoryEvents(conversations)
+    });
     if (!result.ok) return jsonResponse(500, { error: result.error || 'Memory resynthesis failed.' }, event);
     return await memoryProfileResponse(payload.sub, event, { synthesized: true, generated_count: result.generated_count || 0 });
   }

@@ -39,6 +39,7 @@ const TTL_DAYS_DEFAULT = 365;
 const SYNTHESIS_MAX_TOKENS = 160;
 const MEMORY_SYNTHESIS_MAX_TOKENS = 900;
 const MEMORY_SYNTHESIS_VERSION = 'thingy-memory-v1';
+const SYNTHESIZABLE_MEMORY_EVENT_TYPES = new Set(['chat_question', 'remembered_fact', 'conversation_summary']);
 const LOW_SIGNAL_SUMMARY_PATTERNS = [
   /i don['’]t have (?:any )?(?:previous|prior) context/i,
   /i don['’]t see any previous conversation/i,
@@ -368,9 +369,10 @@ function interestsFromFacts(facts = [], fallback = []) {
   return mergeUniqueStrings([], fromFacts.length ? fromFacts : fallback, INTERESTS_MAX);
 }
 
-function memoryDynamoItem(sub, memory = {}, nowIso = new Date().toISOString(), overrides = {}) {
+export function memoryDynamoItem(sub, memory = {}, nowIso = new Date().toISOString(), overrides = {}) {
   const version = Number(overrides.version ?? memory.version ?? 0);
-  return {
+  const discordConnection = overrides.discord_connection ?? memory.discord_connection;
+  const item = {
     pk: dynamoString(`user#${sub}`),
     sk: dynamoString('memory'),
     version: dynamoNumber(version),
@@ -389,6 +391,8 @@ function memoryDynamoItem(sub, memory = {}, nowIso = new Date().toISOString(), o
     memory_synthesis: writeSynthesisStatus(overrides.memory_synthesis || memory.memory_synthesis || {}),
     ttl: dynamoNumber(ttlFromNow())
   };
+  if (discordConnection) item.discord_connection = writeDiscordConnection(discordConnection);
+  return item;
 }
 
 // ---------- public API ----------
@@ -930,11 +934,12 @@ function mergeSynthesizedMemories(existing = [], incoming = []) {
 
 export function memorySynthesisStatus(memory = {}, events = []) {
   const stored = memory?.memory_synthesis || {};
+  const synthesizableEvents = events.filter((event) => SYNTHESIZABLE_MEMORY_EVENT_TYPES.has(event.type || event.event_type || ''));
   const lastSynthesizedAt = String(stored.last_synthesized_at || '').trim();
-  const lastEventAt = events.reduce((latest, event) => (
+  const lastEventAt = synthesizableEvents.reduce((latest, event) => (
     event.ts && event.ts > latest ? event.ts : latest
   ), String(stored.last_event_at || '').trim());
-  const pending = events.filter((event) => event.ts && (!lastSynthesizedAt || event.ts > lastSynthesizedAt)).length;
+  const pending = synthesizableEvents.filter((event) => event.ts && (!lastSynthesizedAt || event.ts > lastSynthesizedAt)).length;
   const status = pending > 0
     ? 'stale'
     : lastSynthesizedAt
@@ -999,8 +1004,20 @@ export async function synthesizeUserMemory(sub, options = {}) {
     : String(existing.memory_synthesis?.last_synthesized_at || options.from || '').trim();
   const events = await listUserMemoryEvents(sub, { since, limit: MEMORY_EVENT_LIMIT });
   const allEvents = await listUserMemoryEvents(sub, { limit: MEMORY_EVENT_LIMIT });
-  const lastEventAt = allEvents.reduce((latest, event) => event.ts && event.ts > latest ? event.ts : latest, existing.memory_synthesis?.last_event_at || '');
-  const generated = await synthesizeEngagementMemories(events, existing, nowIso);
+  const extraEvents = (Array.isArray(options.extraEvents) ? options.extraEvents : [])
+    .map((event) => ({
+      ...event,
+      type: String(event.type || event.event_type || '').trim(),
+      ts: String(event.ts || event.updated_at || event.created_at || nowIso)
+    }))
+    .filter((event) => event.type && event.label);
+  const synthesisEvents = [...events, ...extraEvents]
+    .filter((event) => SYNTHESIZABLE_MEMORY_EVENT_TYPES.has(event.type || event.event_type || ''))
+    .sort((a, b) => String(a.ts || '').localeCompare(String(b.ts || '')));
+  const allSynthesisEvents = [...allEvents, ...extraEvents]
+    .filter((event) => SYNTHESIZABLE_MEMORY_EVENT_TYPES.has(event.type || event.event_type || ''));
+  const lastEventAt = allSynthesisEvents.reduce((latest, event) => event.ts && event.ts > latest ? event.ts : latest, existing.memory_synthesis?.last_event_at || '');
+  const generated = await synthesizeEngagementMemories(synthesisEvents, existing, nowIso);
   const synthesizedMemories = mode === 'full'
     ? generated
     : mergeSynthesizedMemories(existing.synthesized_memories || [], generated);
@@ -1025,7 +1042,7 @@ export async function synthesizeUserMemory(sub, options = {}) {
   }));
   logEvent('info', 'user_memory_synthesized', {
     mode,
-    event_count: events.length,
+    event_count: synthesisEvents.length,
     synthesized_memories_len: synthesizedMemories.length
   });
   const memory = await getUserMemory(sub, { consistent: true });

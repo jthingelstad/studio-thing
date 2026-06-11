@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { loadUserConversationSummaries } from '../shared/conversation-store.mjs';
 import {
   artifactDynamoString,
   artifactJsonForStorage,
@@ -109,6 +110,32 @@ test('conversationSummaryFromItem prefers eval topic for generated titles', () =
     title_source: { S: 'user' },
     eval_topic: { S: 'Evaluator topic' }
   }).title, 'My custom title');
+});
+
+test('loadUserConversationSummaries returns up to the account overview limit', async () => {
+  const items = Array.from({ length: 30 }, (_, index) => ({
+    sk: { S: `conversation#c${index}` },
+    conversation_id: { S: `c${index}` },
+    title: { S: `Conversation ${index}` },
+    updated_at: { S: `2026-06-${String(index + 1).padStart(2, '0')}T00:00:00.000Z` },
+    turn_count: { N: '1' }
+  }));
+  const dynamodb = {
+    async send(command) {
+      assert.equal(command.constructor.name, 'QueryCommand');
+      return { Items: items };
+    }
+  };
+
+  const summaries = await loadUserConversationSummaries({
+    dynamodb,
+    tableName: 'table-name',
+    subscriberHash: 'subscriber-hash',
+    limit: 50
+  });
+
+  assert.equal(summaries.length, 30);
+  assert.equal(summaries[0].id, 'c29');
 });
 
 test('turns expand into messages and compact history', () => {

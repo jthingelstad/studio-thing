@@ -8,6 +8,7 @@ import { entitlementsForSessionPayload, magicLinkBaseWithReturnPath } from '../a
 import {
   authProfile,
   discordConnectionMemoryUpdate,
+  memoryDynamoItem,
   memoryFromItem,
   memoryContextBlock,
   memorySynthesisStatus,
@@ -317,6 +318,38 @@ test('Discord link write builders store profile metadata as explicit fields', ()
   assert.deepEqual(JSON.parse(bridgePut.Item.entitlements_json.S), ['reader', 'supporting_member']);
 });
 
+test('full memory item rewrites preserve Discord connection metadata', () => {
+  const connectedAt = '2026-06-10T12:00:00.000Z';
+  const item = memoryDynamoItem('subscriber-hash', {
+    version: 4,
+    discord_connection: {
+      connected: true,
+      username: 'thingy_user',
+      global_name: 'Thingy User',
+      display_name: 'Thingy User',
+      guild_id: 'guild-1',
+      connected_at: connectedAt,
+      last_verified_at: connectedAt
+    },
+    current_session_questions: [{ ts: connectedAt, question: 'What about RSS?' }]
+  }, '2026-06-10T12:05:00.000Z', {
+    version: 5,
+    turn_count: 8
+  });
+
+  assert.equal(item.pk.S, 'user#subscriber-hash');
+  assert.equal(item.version.N, '5');
+  assert.equal(item.discord_connection.M.username.S, 'thingy_user');
+  assert.equal(item.discord_connection.M.display_name.S, 'Thingy User');
+  assert.equal(item.discord_connection.M.connected_at.S, connectedAt);
+});
+
+test('full memory item rewrites omit blank Discord connection metadata', () => {
+  const item = memoryDynamoItem('subscriber-hash', {}, '2026-06-10T12:05:00.000Z');
+
+  assert.equal(Object.hasOwn(item, 'discord_connection'), false);
+});
+
 test('authProfile reflects turn_count and surfaces recent topics', () => {
   const memory = {
     first_seen_at: '2026-01-01T00:00:00Z',
@@ -477,8 +510,35 @@ test('memorySynthesisStatus reports stale when events occurred after synthesis',
       last_synthesized_at: '2026-06-10T12:00:00.000Z'
     }
   }, [
-    { ts: '2026-06-10T11:00:00.000Z' },
-    { ts: '2026-06-10T12:30:00.000Z' }
+    { type: 'chat_question', ts: '2026-06-10T11:00:00.000Z' },
+    { type: 'chat_question', ts: '2026-06-10T12:30:00.000Z' }
+  ]);
+  assert.equal(status.status, 'stale');
+  assert.equal(status.pending_event_count, 1);
+  assert.equal(status.last_event_at, '2026-06-10T12:30:00.000Z');
+});
+
+test('memorySynthesisStatus ignores deletion audit events', () => {
+  const status = memorySynthesisStatus({
+    memory_synthesis: {
+      last_synthesized_at: '2026-06-10T12:00:00.000Z',
+      last_event_at: '2026-06-10T11:00:00.000Z'
+    }
+  }, [
+    { type: 'memory_deleted', ts: '2026-06-10T12:30:00.000Z' }
+  ]);
+  assert.equal(status.status, 'current');
+  assert.equal(status.pending_event_count, 0);
+  assert.equal(status.last_event_at, '2026-06-10T11:00:00.000Z');
+});
+
+test('memorySynthesisStatus treats conversation summaries as learnable events', () => {
+  const status = memorySynthesisStatus({
+    memory_synthesis: {
+      last_synthesized_at: '2026-06-10T12:00:00.000Z'
+    }
+  }, [
+    { type: 'conversation_summary', ts: '2026-06-10T12:30:00.000Z' }
   ]);
   assert.equal(status.status, 'stale');
   assert.equal(status.pending_event_count, 1);

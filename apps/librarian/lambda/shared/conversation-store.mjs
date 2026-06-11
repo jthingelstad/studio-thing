@@ -16,6 +16,7 @@ import {
   toolTraceDynamoString,
   turnSk,
   turnSkPrefix,
+  USER_CONVERSATION_LIMIT,
   userConversationPk,
   validConversationId
 } from './user-conversations.mjs';
@@ -104,7 +105,7 @@ export async function loadUserConversationSummaries({
     return (response.Items || [])
       .map(conversationSummaryFromItem)
       .sort((a, b) => String(b.updated_at || '').localeCompare(String(a.updated_at || '')))
-      .slice(0, Math.max(1, Math.min(Number(limit) || 8, 20)));
+      .slice(0, Math.max(1, Math.min(Number(limit) || 8, USER_CONVERSATION_LIMIT)));
   } catch (error) {
     log('warning', 'user_conversation_summaries_load_failed', {
       subscriber_hash: subscriberHash,
