@@ -1,6 +1,7 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { bedrock, s3, advancedModel } from './aws-clients.mjs';
+import { tinylyticsPixelHtml } from './tinylytics-email.mjs';
 
 const MAX_SOURCE_PACKETS = 18;
 const TOKEN_RE = /[a-z0-9][a-z0-9'-]{1,}/gi;
@@ -543,6 +544,9 @@ export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
       ${escapeHtml(source.label)} ·
       ${sourceHref(source) ? `<a href="${escapeHtml(sourceHref(source))}" style="${linkStyle()}">${escapeHtml(source.title)}</a>` : escapeHtml(source.title)}
     </li>`).join('');
+  const dispatchId = cleanText(context.dispatchId || context.dispatch_id || '', 120).replace(/[^a-zA-Z0-9._-]+/g, '-');
+  const trackingPixelPath = dispatchId ? `/email/thingy/dispatch/${dispatchId}` : '/email/thingy/dispatch';
+  const trackingPixel = tinylyticsPixelHtml(trackingPixelPath);
 
   return `<!doctype html>
 <html>
@@ -576,6 +580,7 @@ export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
         </table>
       </td></tr>
     </table>
+    ${trackingPixel}
   </body>
 </html>`;
 }
@@ -592,6 +597,7 @@ export async function renderDispatch(dispatch) {
   if (dispatch.template_test) {
     const payload = dispatchTemplateTestPayload(dispatch, sources);
     const deliveryContext = {
+      dispatchId: dispatch.id,
       toEmail: dispatch.to_email,
       requestedAt: dispatch.queued_at || dispatch.created_at,
       requestSummary: dispatch.direction || dispatch.prompt || dispatch.topic
@@ -623,6 +629,7 @@ export async function renderDispatch(dispatch) {
   if (!parsed) throw new Error('Dispatch generation returned invalid JSON.');
   const payload = normalizeDispatchPayload(parsed, dispatch.topic || dispatch.prompt);
   const deliveryContext = {
+    dispatchId: dispatch.id,
     toEmail: dispatch.to_email,
     requestedAt: dispatch.queued_at || dispatch.created_at,
     requestSummary: dispatch.direction || dispatch.prompt || dispatch.topic

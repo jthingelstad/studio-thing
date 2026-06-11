@@ -1,3 +1,5 @@
+import { tinylyticsPixelHtml } from './tinylytics-email.mjs';
+
 const JMAP_SESSION_URL = 'https://api.fastmail.com/jmap/session';
 const CAP_CORE = 'urn:ietf:params:jmap:core';
 const CAP_MAIL = 'urn:ietf:params:jmap:mail';
@@ -159,6 +161,7 @@ export function magicLinkEmailHtml({ magicLink, expiresMinutes, context = {}, im
   const greeting = escapeHtml(emailGreeting(context));
   const intro = escapeHtml(emailIntro(context));
   const memberLine = escapeHtml(emailMemberLine(context));
+  const trackingPixel = tinylyticsPixelHtml('/email/thingy/login');
   return `<!doctype html>
 <html>
   <body style="margin:0;background:#f5f7f4;color:#18221f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
@@ -197,6 +200,7 @@ export function magicLinkEmailHtml({ magicLink, expiresMinutes, context = {}, im
         </td>
       </tr>
     </table>
+    ${trackingPixel}
   </body>
 </html>`;
 }

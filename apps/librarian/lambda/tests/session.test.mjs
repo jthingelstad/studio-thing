@@ -641,6 +641,7 @@ test('magic link email copy reflects reader context', () => {
   assert.match(html, /Hi Jamie/);
   assert.match(html, /Open Thingy/);
   assert.match(html, /thingy\.png/);
+  assert.match(html, /https:\/\/tinylytics\.app\/pixel\/u5bRAyyJvMXUrz6zbTz5\.gif\?path=%2Femail%2Fthingy%2Flogin/);
   assert.doesNotMatch(html, /<bad>/);
 });
 

@@ -290,6 +290,7 @@ test('dispatchHtmlEmail renders request provenance authorship boundary and linke
     source_kind: 'weekly_thing',
     publish_date: '2026-01-01'
   }], {
+    dispatchId: 'dispatch-123',
     toEmail: 'reader@example.com',
     requestedAt: '2026-06-08T12:00:00.000Z',
     requestSummary: 'Explore ownership and the open web from the archive.'
@@ -304,6 +305,7 @@ test('dispatchHtmlEmail renders request provenance authorship boundary and linke
   assert.match(html, /href="https:\/\/thingy\.thingelstad\.com\/"/);
   assert.match(html, /Written by Thingy, not Jamie/);
   assert.match(html, /https:\/\/weekly\.example\/10/);
+  assert.match(html, /https:\/\/tinylytics\.app\/pixel\/u5bRAyyJvMXUrz6zbTz5\.gif\?path=%2Femail%2Fthingy%2Fdispatch%2Fdispatch-123/);
   assert.match(html, /href="#source-S1"[^>]*>1<\/a>/);
   assert.match(html, /id="source-S1"/);
   assert.doesNotMatch(html, /<strong>S1<\/strong>/);
