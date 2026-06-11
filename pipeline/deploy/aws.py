@@ -250,6 +250,8 @@ def deploy_stack(
     fastmail_jmap_token: str | None,
     thingy_magic_link_from_email: str,
     thingy_magic_link_base_url: str,
+    stream_custom_domain_name: str,
+    stream_certificate_arn: str,
     log_level: str,
     auth_rate_limit_max: str,
     cloudformation_role_arn: str | None,
@@ -331,6 +333,8 @@ def deploy_stack(
         {"ParameterKey": "AuthRateLimitMax", "ParameterValue": auth_rate_limit_max},
         {"ParameterKey": "ThingyMagicLinkFromEmail", "ParameterValue": thingy_magic_link_from_email},
         {"ParameterKey": "ThingyMagicLinkBaseUrl", "ParameterValue": thingy_magic_link_base_url},
+        {"ParameterKey": "StreamCustomDomainName", "ParameterValue": stream_custom_domain_name},
+        {"ParameterKey": "StreamCertificateArn", "ParameterValue": stream_certificate_arn},
     ]
     stack_options = {
         "TemplateBody": body,
@@ -479,6 +483,8 @@ def main() -> int:
     parser.add_argument("--auth-rate-limit-max", default=os.environ.get("LIBRARIAN_AUTH_RATE_LIMIT_MAX", "30"))
     parser.add_argument("--thingy-magic-link-from-email", default=os.environ.get("THINGY_MAGIC_LINK_FROM_EMAIL", "thingy@thingelstad.com"))
     parser.add_argument("--thingy-magic-link-base-url", default=os.environ.get("THINGY_MAGIC_LINK_BASE_URL", "https://thingy.thingelstad.com/"))
+    parser.add_argument("--stream-custom-domain-name", default=os.environ.get("LIBRARIAN_STREAM_CUSTOM_DOMAIN_NAME", ""))
+    parser.add_argument("--stream-certificate-arn", default=os.environ.get("LIBRARIAN_STREAM_CERTIFICATE_ARN", ""))
     parser.add_argument("--skip-corpus-upload", action="store_true")
     parser.add_argument("--skip-bucket-bootstrap", action="store_true")
     parser.add_argument("--skip-smoke-test", action="store_true")
@@ -532,6 +538,8 @@ def main() -> int:
         fastmail_jmap_token=fastmail_jmap_token,
         thingy_magic_link_from_email=args.thingy_magic_link_from_email,
         thingy_magic_link_base_url=args.thingy_magic_link_base_url,
+        stream_custom_domain_name=args.stream_custom_domain_name,
+        stream_certificate_arn=args.stream_certificate_arn,
         log_level=args.log_level.upper(),
         auth_rate_limit_max=str(args.auth_rate_limit_max),
         cloudformation_role_arn=args.cloudformation_role_arn,

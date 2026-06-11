@@ -86,6 +86,22 @@ Parameters:
     Type: String
     Default: https://thingy.thingelstad.com/
     Description: Public Thingy URL used when building sign-in magic links.
+  StreamCustomDomainName:
+    Type: String
+    Default: ""
+    Description: Optional stable custom domain for the streaming Lambda URL.
+  StreamCertificateArn:
+    Type: String
+    Default: ""
+    Description: Optional us-east-1 ACM certificate ARN for StreamCustomDomainName.
+
+Conditions:
+  HasStreamCustomDomainName: !Not [!Equals [!Ref StreamCustomDomainName, ""]]
+  HasStreamCertificateArn: !Not [!Equals [!Ref StreamCertificateArn, ""]]
+  CreateLibrarianStreamDistribution: !And
+    - !Condition HasStreamCustomDomainName
+    - !Condition HasStreamCertificateArn
+
 Resources:
   LibrarianTable:
     Type: AWS::DynamoDB::Table
@@ -400,6 +416,61 @@ Resources:
       InvokedViaFunctionUrl: true
       Principal: "*"
 
+  LibrarianStreamDistribution:
+    Type: AWS::CloudFront::Distribution
+    Condition: CreateLibrarianStreamDistribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref StreamCustomDomainName
+        Comment: Thingy Librarian streaming Lambda URL
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - DELETE
+            - GET
+            - HEAD
+            - OPTIONS
+            - PATCH
+            - POST
+            - PUT
+          CachedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          Compress: false
+          DefaultTTL: 0
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            Headers:
+              - Accept
+              - Access-Control-Request-Headers
+              - Access-Control-Request-Method
+              - Authorization
+              - Content-Type
+              - Origin
+            QueryString: true
+          MaxTTL: 0
+          MinTTL: 0
+          TargetOriginId: LibrarianStreamFunctionUrlOrigin
+          ViewerProtocolPolicy: https-only
+        Enabled: true
+        HttpVersion: http2
+        IPV6Enabled: true
+        Origins:
+          - CustomOriginConfig:
+              HTTPSPort: 443
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols:
+                - TLSv1.2
+            DomainName: !Select [2, !Split ["/", !GetAtt LibrarianStreamFunctionUrl.FunctionUrl]]
+            Id: LibrarianStreamFunctionUrlOrigin
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !Ref StreamCertificateArn
+          MinimumProtocolVersion: TLSv1.2_2021
+          SslSupportMethod: sni-only
+
   LibrarianApi:
     Type: AWS::ApiGatewayV2::Api
     Properties:
@@ -646,7 +717,17 @@ Outputs:
     Value: !Sub https://${LibrarianApi}.execute-api.${AWS::Region}.amazonaws.com
   LibrarianStreamUrl:
     Description: Streaming URL for the Archive Librarian chat API.
+    Value: !If
+      - CreateLibrarianStreamDistribution
+      - !Sub https://${StreamCustomDomainName}
+      - !GetAtt LibrarianStreamFunctionUrl.FunctionUrl
+  LibrarianRawStreamUrl:
+    Description: Raw Lambda Function URL for the Archive Librarian chat API.
     Value: !GetAtt LibrarianStreamFunctionUrl.FunctionUrl
+  LibrarianStreamDistributionDomainName:
+    Condition: CreateLibrarianStreamDistribution
+    Description: CloudFront distribution hostname for the Archive Librarian chat API.
+    Value: !GetAtt LibrarianStreamDistribution.DomainName
   BedrockEvalRoleArn:
     Description: IAM role ARN used by on-demand Bedrock Model Evaluation jobs.
     Value: !GetAtt BedrockEvaluationRole.Arn
