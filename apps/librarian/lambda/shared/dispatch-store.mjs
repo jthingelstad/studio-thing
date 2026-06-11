@@ -1,6 +1,6 @@
 import { DeleteItemCommand, GetItemCommand, PutItemCommand, QueryCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import crypto from 'node:crypto';
-import { dynamoList, dynamoNumber, dynamoString, fromDynamoAttr, userConversationPk } from './user-conversations.mjs';
+import { boundedJsonForStorage, dynamoList, dynamoNumber, dynamoString, fromDynamoAttr, userConversationPk } from './user-conversations.mjs';
 import { dispatchDraftTtlSeconds, dispatchHistoryTtlSeconds } from './retention.mjs';
 
 const DISPATCH_ID_RE = /^[A-Za-z0-9_.:-]{1,96}$/;
@@ -11,6 +11,55 @@ const DEFAULT_QUEUE_STALE_SECONDS = 15 * 60;
 const DEFAULT_GENERATION_LEASE_SECONDS = 14 * 60;
 const DEFAULT_SEND_LEASE_SECONDS = 5 * 60;
 const DEFAULT_SHAPING_STALE_SECONDS = 30;
+
+function cleanDispatchText(value, max = 500) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+function compactDispatchBriefSource(source = {}) {
+  return {
+    id: cleanDispatchText(source.id, 40),
+    label: cleanDispatchText(source.label, 80),
+    title: cleanDispatchText(source.title, 180),
+    url: cleanDispatchText(source.url, 500),
+    source_kind: cleanDispatchText(source.source_kind, 40),
+    publish_date: cleanDispatchText(source.publish_date, 40),
+    why: cleanDispatchText(source.why, 220)
+  };
+}
+
+function compactDispatchBrief(brief = {}) {
+  if (!brief || typeof brief !== 'object' || Array.isArray(brief)) return null;
+  return {
+    user_goal: cleanDispatchText(brief.user_goal, 500),
+    working_angle: cleanDispatchText(brief.working_angle, 700),
+    coverage_status: cleanDispatchText(brief.coverage_status, 40),
+    generation_instructions: cleanDispatchText(brief.generation_instructions, 1200),
+    preheader_basis: cleanDispatchText(brief.preheader_basis, 240),
+    excluded_scope: Array.isArray(brief.excluded_scope)
+      ? brief.excluded_scope.map((item) => cleanDispatchText(item, 180)).filter(Boolean).slice(0, 8)
+      : [],
+    selected_sources: Array.isArray(brief.selected_sources)
+      ? brief.selected_sources.map(compactDispatchBriefSource).filter((source) => source.title || source.url).slice(0, 12)
+      : []
+  };
+}
+
+function dispatchBriefJson(brief = {}) {
+  const compact = compactDispatchBrief(brief);
+  return compact ? boundedJsonForStorage(compact, 12000) : '';
+}
+
+function dispatchBriefFromRow(row = {}) {
+  if (row.brief && typeof row.brief === 'object' && !Array.isArray(row.brief)) return compactDispatchBrief(row.brief) || {};
+  const raw = String(row.brief_json || '');
+  if (!raw) return {};
+  try {
+    return compactDispatchBrief(JSON.parse(raw)) || {};
+  } catch {
+    return {};
+  }
+}
 
 export function dispatchSk(createdAt, dispatchId) {
   return `dispatch#${createdAt}#${dispatchId}`;
@@ -57,6 +106,8 @@ export function dispatchFromItem(item = {}) {
     failed_at: String(row.failed_at || ''),
     ttl: Number(row.ttl || 0),
     template_test: Boolean(row.template_test),
+    brief: dispatchBriefFromRow(row),
+    brief_json: String(row.brief_json || ''),
     model: String(row.model || ''),
     input_tokens: Number(row.input_tokens || 0),
     output_tokens: Number(row.output_tokens || 0),
@@ -84,6 +135,7 @@ function publicDispatch(row) {
     prompt: row.prompt,
     clarification_question: row.clarification_question,
     clarification_answer: row.clarification_answer,
+    brief: row.brief || {},
     messages: row.messages,
     created_at: row.created_at,
     updated_at: row.updated_at,
@@ -304,10 +356,12 @@ function dispatchMessageDynamoItem(message = {}) {
   const role = String(message.role || 'assistant').trim().toLowerCase();
   return {
     M: {
+      id: dynamoString(String(message.id || '').slice(0, 120)),
       role: dynamoString(['user', 'assistant', 'system'].includes(role) ? role : 'assistant'),
       text: dynamoString(String(message.text || '').slice(0, 2400)),
       time: dynamoString(String(message.time || '').slice(0, 60)),
-      kind: dynamoString(String(message.kind || '').slice(0, 80))
+      kind: dynamoString(String(message.kind || '').slice(0, 80)),
+      status: dynamoString(String(message.status || '').slice(0, 40))
     }
   };
 }
@@ -329,6 +383,7 @@ export async function upsertDispatchDraft({
   direction = '',
   clarificationQuestion = '',
   clarificationAnswer = '',
+  brief = null,
   title = '',
   messages = [],
   now = new Date().toISOString()
@@ -349,6 +404,7 @@ export async function upsertDispatchDraft({
     direction: dynamoString(String(direction || prompt || topic || '').slice(0, 1800)),
     clarification_question: dynamoString(String(clarificationQuestion || '').slice(0, 800)),
     clarification_answer: dynamoString(String(clarificationAnswer || '').slice(0, 1200)),
+    brief_json: dynamoString(dispatchBriefJson(brief)),
     title: dynamoString(String(title || topic || prompt || 'Dispatch').replace(/\s+/g, ' ').trim().slice(0, 120)),
     messages: dynamoList(messages, dispatchMessageDynamoItem),
     created_at: dynamoString(now),
@@ -378,6 +434,7 @@ export async function upsertDispatchDraft({
       '#direction = :direction',
       '#clarification_question = :clarification_question',
       '#clarification_answer = :clarification_answer',
+      '#brief_json = :brief_json',
       '#title = :title',
       '#messages = :messages',
       '#updated_at = :now',
@@ -391,6 +448,7 @@ export async function upsertDispatchDraft({
       '#direction': 'direction',
       '#clarification_question': 'clarification_question',
       '#clarification_answer': 'clarification_answer',
+      '#brief_json': 'brief_json',
       '#title': 'title',
       '#messages': 'messages',
       '#updated_at': 'updated_at',
@@ -403,6 +461,7 @@ export async function upsertDispatchDraft({
       ':direction': dynamoString(String(direction || prompt || topic || existing.direction || '').slice(0, 1800)),
       ':clarification_question': dynamoString(String(clarificationQuestion || '').slice(0, 800)),
       ':clarification_answer': dynamoString(String(clarificationAnswer || existing.clarification_answer || '').slice(0, 1200)),
+      ':brief_json': dynamoString(dispatchBriefJson(brief) || existing.brief_json || ''),
       ':title': dynamoString(String(title || topic || prompt || existing.title || 'Dispatch').replace(/\s+/g, ' ').trim().slice(0, 120)),
       ':messages': { L: compactMessages(messages) },
       ':now': dynamoString(now),
@@ -428,6 +487,7 @@ export async function createQueuedDispatch({
   direction,
   clarificationQuestion = '',
   clarificationAnswer = '',
+  brief = null,
   templateTest = false,
   now = new Date().toISOString(),
   dispatchId = crypto.randomUUID()
@@ -449,6 +509,7 @@ export async function createQueuedDispatch({
       direction: dynamoString(String(direction || prompt || topic || '').slice(0, 1800)),
       clarification_question: dynamoString(String(clarificationQuestion || '').slice(0, 800)),
       clarification_answer: dynamoString(String(clarificationAnswer || '').slice(0, 1200)),
+      brief_json: dynamoString(dispatchBriefJson(brief)),
       template_test: { BOOL: Boolean(templateTest) },
       created_at: dynamoString(now),
       updated_at: dynamoString(now),
@@ -472,6 +533,7 @@ export async function queueDraftDispatch({
   direction,
   clarificationQuestion = '',
   clarificationAnswer = '',
+  brief = null,
   templateTest = false
 }) {
   const id = validDispatchId(dispatchId);
@@ -494,6 +556,7 @@ export async function queueDraftDispatch({
       '#direction = :direction',
       '#clarification_question = :clarification_question',
       '#clarification_answer = :clarification_answer',
+      '#brief_json = :brief_json',
       '#template_test = :template_test',
       '#updated_at = :now',
       '#queued_at = :now'
@@ -508,6 +571,7 @@ export async function queueDraftDispatch({
       '#direction': 'direction',
       '#clarification_question': 'clarification_question',
       '#clarification_answer': 'clarification_answer',
+      '#brief_json': 'brief_json',
       '#template_test': 'template_test',
       '#updated_at': 'updated_at',
       '#queued_at': 'queued_at',
@@ -522,6 +586,7 @@ export async function queueDraftDispatch({
       ':direction': dynamoString(String(direction || prompt || topic || existing.direction || '').slice(0, 1800)),
       ':clarification_question': dynamoString(String(clarificationQuestion || existing.clarification_question || '').slice(0, 800)),
       ':clarification_answer': dynamoString(String(clarificationAnswer || existing.clarification_answer || '').slice(0, 1200)),
+      ':brief_json': dynamoString(dispatchBriefJson(brief) || existing.brief_json || ''),
       ':template_test': { BOOL: Boolean(templateTest) },
       ':now': dynamoString(now),
       ':draft': dynamoString('draft'),

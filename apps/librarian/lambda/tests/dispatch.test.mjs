@@ -13,6 +13,7 @@ import {
 import { discordDispatchCard } from '../shared/dispatch-worker.mjs';
 import { dispatchContentArtifactKey } from '../shared/dispatch-artifacts.mjs';
 import {
+  analyzeDispatchSourceFit,
   dispatchHtmlEmail,
   dispatchSubject,
   dispatchTextEmail,
@@ -93,6 +94,7 @@ test('dispatchForClient includes draft state but omits generated content', () =>
     clarification_question: { S: 'What angle?' },
     clarification_answer: { S: 'The personal web.' },
     title: { S: 'Open web Dispatch' },
+    brief_json: { S: JSON.stringify({ coverage_status: 'focused', working_angle: 'RSS as ownership infrastructure' }) },
     template_test: { BOOL: true },
     messages: {
       L: [{
@@ -112,6 +114,8 @@ test('dispatchForClient includes draft state but omits generated content', () =>
   assert.equal(client.status, 'ready');
   assert.equal(client.prompt, 'Explore the open web');
   assert.equal(client.template_test, true);
+  assert.equal(client.brief.coverage_status, 'focused');
+  assert.equal(client.brief.working_angle, 'RSS as ownership infrastructure');
   assert.equal(client.messages.length, 1);
   assert.equal(client.content_artifact_bucket, undefined);
   assert.equal(client.content_artifact_key, undefined);
@@ -209,11 +213,27 @@ test('dispatch drafts get short-lived ttl on canonical and lookup rows', async (
     subscriberHash: 'reader-hash',
     dispatchId: 'dispatch-draft-1',
     prompt: 'Explore RSS',
+    brief: {
+      coverage_status: 'focused',
+      working_angle: 'RSS as ownership infrastructure',
+      selected_sources: [{ id: 'S1', label: 'WT10', title: 'Open web', why: 'Primary source' }]
+    },
+    messages: [{
+      id: 'archive-fit',
+      role: 'assistant',
+      kind: 'progress',
+      status: 'complete',
+      text: 'Checked archive coverage.'
+    }],
     now
   });
 
   assert.equal(draft.id, 'dispatch-draft-1');
   assert.equal(draft.ttl, expectedTtl);
+  assert.equal(draft.brief.coverage_status, 'focused');
+  assert.equal(draft.brief.selected_sources[0].why, 'Primary source');
+  assert.equal(draft.messages[0].id, 'archive-fit');
+  assert.equal(draft.messages[0].status, 'complete');
   for (const item of items.values()) {
     assert.equal(Number(item.ttl.N), expectedTtl);
   }
@@ -301,6 +321,38 @@ test('selectDispatchSources scores archive chunks and dedupes by url', () => {
   assert.equal(selected[0].id, 'S1');
   assert.equal(selected[0].label, 'WT10');
   assert.ok(selected.some((source) => source.source_kind === 'blog'));
+});
+
+test('analyzeDispatchSourceFit classifies thin and broad Dispatch seeds', () => {
+  const chunks = [
+    {
+      source_kind: 'weekly_thing',
+      issue_number: 10,
+      title: 'Open web',
+      url: 'https://weekly.example/10',
+      text: 'RSS and open web ownership matter.'
+    },
+    {
+      source_kind: 'blog',
+      title: 'Owning your notes',
+      url: 'https://blog.example/notes',
+      text: 'Personal ownership and automation with notes.'
+    },
+    ...Array.from({ length: 36 }, (_, index) => ({
+      source_kind: index % 2 ? 'blog' : 'weekly_thing',
+      title: `AI note ${index}`,
+      url: `https://example.com/ai-${index}`,
+      text: `AI automation agents archive source ${index}`
+    }))
+  ];
+  const thin = analyzeDispatchSourceFit(chunks, 'quantum garden party', 6);
+  assert.equal(thin.coverage_status, 'thin');
+  assert.equal(thin.selected_sources.length, 0);
+
+  const broad = analyzeDispatchSourceFit(chunks, 'AI', 18);
+  assert.equal(broad.coverage_status, 'broad');
+  assert.ok(broad.candidate_count >= 34);
+  assert.ok(broad.selected_sources.length >= 6);
 });
 
 test('parseDispatchJson handles fenced JSON', () => {

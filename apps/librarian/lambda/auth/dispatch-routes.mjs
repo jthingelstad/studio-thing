@@ -16,6 +16,7 @@ import {
   recoverStaleDispatches,
   upsertDispatchDraft
 } from '../shared/dispatch-store.mjs';
+import { analyzeDispatchSourceFit, loadDispatchCorpus } from '../shared/dispatch-generator.mjs';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -68,6 +69,120 @@ function readyMessageClaimsStarted(value) {
   return /\b(?:generating now|generate now|drafting now|sending now|emailing now)\b/i.test(String(value || ''));
 }
 
+function sourceKindSummary(sourceKinds = {}) {
+  return Object.entries(sourceKinds)
+    .filter(([, count]) => Number(count) > 0)
+    .map(([kind, count]) => `${count} ${kind.replace(/_/g, ' ')}`)
+    .join(', ');
+}
+
+function plannerSource(source = {}, index = 0, why = '') {
+  return {
+    id: String(source.id || `S${index + 1}`),
+    label: normalizeDispatchText(source.label, 80),
+    title: normalizeDispatchText(source.title, 180),
+    url: normalizeDispatchText(source.url, 500),
+    source_kind: normalizeDispatchText(source.source_kind, 40),
+    publish_date: normalizeDispatchText(source.publish_date, 40),
+    why: normalizeDispatchText(why || source.why, 220)
+  };
+}
+
+function plannerSources(sources = [], reasons = []) {
+  return sources
+    .slice(0, 10)
+    .map((source, index) => plannerSource(source, index, reasons[index]))
+    .filter((source) => source.title || source.url);
+}
+
+function plannerSourcePackets(sources = []) {
+  return sources.slice(0, 10).map((source) => [
+    `[${source.id}] ${source.label} · ${source.title}`,
+    source.publish_date ? `Date: ${source.publish_date}` : '',
+    source.url ? `URL: ${source.url}` : '',
+    `Excerpt: ${normalizeDispatchText(source.excerpt, 520)}`
+  ].filter(Boolean).join('\n')).join('\n\n');
+}
+
+function textArray(value, max = 5, itemMax = 180) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => normalizeDispatchText(item, itemMax)).filter(Boolean).slice(0, max);
+}
+
+function validCoverageStatus(value, fallback = 'focused') {
+  const status = String(value || '').trim().toLowerCase();
+  return ['thin', 'focused', 'broad', 'ambiguous'].includes(status) ? status : fallback;
+}
+
+function coverageQuestion(status, prompt, fit, adjacentTopics = []) {
+  const topic = normalizeDispatchText(prompt, 80) || 'that';
+  if (status === 'thin') {
+    const adjacent = adjacentTopics.length
+      ? ` I found stronger adjacent material around ${adjacentTopics.slice(0, 3).join(', ')}.`
+      : '';
+    return `I am not finding enough direct archive support for ${topic}.${adjacent} Want me to redirect the Dispatch toward one of those adjacent threads?`;
+  }
+  if (status === 'broad') {
+    return `There is a lot in Jamie's archive around ${topic}. Which angle should I narrow this toward so the Dispatch does not drown in source material?`;
+  }
+  if (fit.selected_sources.length < 4) {
+    return `I only found ${fit.selected_sources.length} usable archive matches. What adjacent angle should I use?`;
+  }
+  return `What angle should this Dispatch take on ${topic}?`;
+}
+
+function defaultPlannerMessage({ needsClarification, status, direction }) {
+  if (needsClarification && status === 'thin') {
+    return 'I checked the archive first, and this looks under-supported as stated. I can still help redirect it toward something Jamie has written enough about.';
+  }
+  if (needsClarification && status === 'broad') {
+    return 'I checked the archive first, and this topic is broad enough that I should narrow it before Dispatch generation.';
+  }
+  if (needsClarification) return 'I checked the archive and need one steering choice before I generate a useful Dispatch.';
+  return `I checked the archive and have enough to shape this Dispatch around: ${direction}`;
+}
+
+function normalizeDispatchBrief(parsedBrief = {}, { prompt, direction, coverageStatus, sources }) {
+  const sourceReasons = Array.isArray(parsedBrief.selected_sources)
+    ? parsedBrief.selected_sources.map((source) => source?.why || '')
+    : [];
+  return {
+    user_goal: normalizeDispatchText(parsedBrief.user_goal || prompt, 500),
+    working_angle: normalizeDispatchText(parsedBrief.working_angle || direction || prompt, 700),
+    coverage_status: coverageStatus,
+    selected_sources: plannerSources(sources, sourceReasons),
+    excluded_scope: textArray(parsedBrief.excluded_scope, 8, 180),
+    generation_instructions: normalizeDispatchText(parsedBrief.generation_instructions || direction || prompt, 1200),
+    preheader_basis: normalizeDispatchText(parsedBrief.preheader_basis || direction || prompt, 240)
+  };
+}
+
+function toolActivityForPlan({ fit, coverageStatus, needsClarification, brief }) {
+  const kindSummary = sourceKindSummary(fit.source_kinds || {});
+  return [
+    {
+      id: 'archive-fit',
+      label: 'Checked archive coverage',
+      status: 'complete',
+      summary: `${fit.selected_sources.length} source packets selected from ${fit.candidate_count} candidate matches.`
+    },
+    {
+      id: 'source-balance',
+      label: 'Balanced source packet',
+      status: 'complete',
+      summary: kindSummary ? `Coverage includes ${kindSummary}.` : 'Coverage is concentrated in the strongest available sources.'
+    },
+    {
+      id: 'dispatch-brief',
+      label: 'Prepared Dispatch brief',
+      status: needsClarification ? 'waiting' : 'complete',
+      summary: needsClarification
+        ? `Archive fit is ${coverageStatus}; waiting for one steering choice.`
+        : `Archive fit is ${coverageStatus}; brief is ready with ${brief.selected_sources.length} planned sources.`
+    }
+  ];
+}
+
 function bedrockMessageText(message) {
   return (message?.content || []).map((part) => part.text || '').filter(Boolean).join('\n').trim();
 }
@@ -86,20 +201,30 @@ function dispatchProfile(payload) {
 async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '', messages = [] }) {
   const model = fastModel();
   const transcript = dispatchConversationLines(messages);
+  const fitQuery = [prompt, priorQuestion, priorAnswer, transcript.join(' ')].filter(Boolean).join(' ');
+  const chunks = await loadDispatchCorpus();
+  const fit = analyzeDispatchSourceFit(chunks, fitQuery);
+  const sourcePackets = plannerSourcePackets(fit.selected_sources);
   const response = await bedrock.send(new ConverseCommand({
     modelId: model,
     system: [{
       text: [
         'You are Thingy, Jamie Thingelstad\'s archive sidekick.',
         'A reader is shaping a one-off Thingy Dispatch from Jamie\'s published archive.',
-        'This is a conversational drafting surface, not a form validator.',
+        'This is an agentic planning conversation, not a form validator.',
+        'You already checked source-fit against Jamie\'s archive. Use that evidence before deciding whether to ask a question.',
         'Terse archive concepts like "RSS", "AI", "POSSE", or "IndieWeb" are valid Dispatch seeds.',
-        'For a terse or broad first seed, ask one concrete clarification that offers useful archive angles.',
+        'If archive coverage is thin, disclose that clearly and suggest adjacent source-supported directions.',
+        'If archive coverage is broad, ask one narrowing question so generation is not flooded with sources.',
+        'If archive coverage is focused, create a compact Dispatch brief and let the reader generate.',
         'When the reader answers a prior clarification, fold that answer into the confirmed direction instead of asking the same thing again.',
         'When the reader adjusts a ready direction, revise the direction and briefly acknowledge the change.',
-        'Ask at most one useful clarification question before expensive generation.',
+        'Ask one useful clarification question at a time.',
+        'If a prior answer still leaves archive coverage thin or broad, ask a different steering question rather than forcing generation.',
         'If the request is already specific enough, do not ask a question.',
-        'Return only compact JSON: {"needs_clarification":true|false,"question":"...","direction":"confirmed generation direction","message":"Thingy response to show the reader"}'
+        'Never claim generation, drafting, sending, or emailing has started.',
+        'Return only compact JSON with this shape:',
+        '{"needs_clarification":true|false,"coverage_status":"thin|focused|broad|ambiguous","question":"...","direction":"confirmed generation direction","message":"Thingy response to show the reader","adjacent_topics":["..."],"suggested_narrowing":["..."],"brief":{"user_goal":"...","working_angle":"...","excluded_scope":["..."],"generation_instructions":"...","preheader_basis":"...","selected_sources":[{"id":"S1","why":"why this source belongs"}]}}'
       ].join('\n')
     }],
     messages: [{
@@ -109,12 +234,17 @@ async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '', m
           `Reader prompt: ${prompt}`,
           priorQuestion ? `Prior clarification question: ${priorQuestion}` : '',
           priorAnswer ? `Reader answer: ${priorAnswer}` : '',
-          transcript.length ? `Recent Dispatch conversation:\n${transcript.join('\n')}` : ''
+          transcript.length ? `Recent Dispatch conversation:\n${transcript.join('\n')}` : '',
+          `Archive coverage status: ${fit.coverage_status}`,
+          `Archive candidate matches: ${fit.candidate_count}`,
+          `Selected source packet count: ${fit.selected_sources.length}`,
+          fit.source_kinds ? `Source balance: ${sourceKindSummary(fit.source_kinds) || 'none'}` : '',
+          sourcePackets ? `Selected source packets:\n${sourcePackets}` : 'Selected source packets: none'
         ].filter(Boolean).join('\n')
       }]
     }],
     inferenceConfig: {
-      maxTokens: 420,
+      maxTokens: 1000,
       temperature: 0.2
     }
   }));
@@ -130,21 +260,36 @@ async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '', m
   const direction = normalizeDispatchText(parsed.direction || prompt, 1000);
   const alreadyAnswered = Boolean(priorQuestion && priorAnswer);
   const shouldClarifyTerseSeed = terseDispatchSeed(prompt) && !priorQuestion && !priorAnswer;
-  const needsClarification = Boolean((parsed.needs_clarification || shouldClarifyTerseSeed) && !alreadyAnswered);
-  const fallbackQuestion = question || `Good seed. What angle should this Dispatch take on ${normalizeDispatchText(prompt, 80)}?`;
+  const parsedStatus = validCoverageStatus(parsed.coverage_status, fit.coverage_status);
+  const coverageStatus = validCoverageStatus(fit.coverage_status, parsedStatus);
+  const adjacentTopics = textArray(parsed.adjacent_topics, 5, 120);
+  const suggestedNarrowing = textArray(parsed.suggested_narrowing, 5, 160);
+  const shouldClarifyCoverage = coverageStatus === 'thin' || coverageStatus === 'broad';
+  const needsClarification = Boolean(shouldClarifyCoverage || ((parsed.needs_clarification || shouldClarifyTerseSeed) && !alreadyAnswered));
+  const fallbackQuestion = question || coverageQuestion(coverageStatus, prompt, fit, adjacentTopics);
   let message = normalizeDispatchText(parsed.message, 700) || (
-    needsClarification
-      ? fallbackQuestion
-      : `I have enough to shape this Dispatch around: ${direction || prompt}`
+    defaultPlannerMessage({ needsClarification, status: coverageStatus, direction: direction || prompt })
   );
   if (!needsClarification && (message.includes('?') || readyMessageClaimsStarted(message))) {
-    message = `I have enough to shape this Dispatch around: ${direction || prompt}`;
+    message = defaultPlannerMessage({ needsClarification, status: coverageStatus, direction: direction || prompt });
   }
+  const brief = normalizeDispatchBrief(parsed.brief || {}, {
+    prompt,
+    direction: direction || prompt,
+    coverageStatus,
+    sources: fit.selected_sources
+  });
   return {
     needs_clarification: needsClarification,
     question: needsClarification ? fallbackQuestion : '',
     direction: direction || prompt,
-    message
+    message,
+    coverage_status: coverageStatus,
+    selected_sources: brief.selected_sources,
+    adjacent_topics: adjacentTopics,
+    suggested_narrowing: suggestedNarrowing,
+    brief,
+    tool_activity: toolActivityForPlan({ fit, coverageStatus, needsClarification, brief })
   };
 }
 
@@ -159,7 +304,7 @@ export async function handleDispatch(event, body, start = performance.now()) {
 
   const action = String(body.action || 'list').trim().toLowerCase();
   try {
-    if (action === 'clarify') {
+    if (action === 'clarify' || action === 'plan') {
       const prompt = normalizeDispatchText(body.prompt || body.topic, 1200);
       if (!isMeaningfulDispatchPrompt(prompt)) return jsonResponse(400, { error: 'Dispatch needs a topic or question.' }, event);
       const clarification = await clarifyDispatch({
@@ -171,6 +316,8 @@ export async function handleDispatch(event, body, start = performance.now()) {
       logEvent('info', 'dispatch_clarified', {
         subscriber_hash: profile.subscriberHash,
         needs_clarification: clarification.needs_clarification,
+        coverage_status: clarification.coverage_status,
+        source_count: clarification.selected_sources?.length || 0,
         duration_ms: Math.round(performance.now() - start)
       });
       return jsonResponse(200, {
@@ -196,6 +343,7 @@ export async function handleDispatch(event, body, start = performance.now()) {
         direction,
         clarificationQuestion: body.clarification_question,
         clarificationAnswer: body.clarification_answer,
+        brief: body.brief,
         title,
         messages: Array.isArray(body.messages) ? body.messages : []
       });
@@ -324,6 +472,7 @@ export async function handleDispatch(event, body, start = performance.now()) {
           direction,
           clarificationQuestion: body.clarification_question,
           clarificationAnswer: body.clarification_answer,
+          brief: body.brief,
           templateTest
         })
         : await createQueuedDispatch({
@@ -337,6 +486,7 @@ export async function handleDispatch(event, body, start = performance.now()) {
           direction,
           clarificationQuestion: body.clarification_question,
           clarificationAnswer: body.clarification_answer,
+          brief: body.brief,
           templateTest
         });
       logEvent('info', 'dispatch_queued', {
