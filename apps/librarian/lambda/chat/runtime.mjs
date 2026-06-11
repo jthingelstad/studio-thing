@@ -59,6 +59,7 @@ import { extractBearer, verifyToken } from '../shared/session.mjs';
 import {
   getUserMemory,
   memoryContextBlock,
+  maybeSynthesizeUserMemory,
   recordUserPreferredName,
   recordUserTurn
 } from '../shared/user-memory.mjs';
@@ -156,6 +157,24 @@ async function checkRateLimit(identity, maxRequests = Number(process.env.RATE_LI
   const count = Number(response.Attributes?.count?.N || '0');
   logEvent('info', 'rate_limit_checked', { identity_hash: identity, count, limit: maxRequests, allowed: count <= maxRequests });
   return count <= maxRequests;
+}
+
+async function updateUserMemoryAfterTurn(subscriberHash, payload, question, preferredName) {
+  await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName });
+  try {
+    const result = await maybeSynthesizeUserMemory(subscriberHash);
+    if (result?.ok && !result.skipped) {
+      logEvent('info', 'user_memory_auto_synthesized', {
+        subscriber_hash: subscriberHash,
+        generated_count: result.generated_count || 0
+      });
+    }
+  } catch (error) {
+    logEvent('warning', 'user_memory_auto_synthesis_failed', {
+      subscriber_hash: subscriberHash,
+      error_type: error?.constructor?.name || 'Error'
+    });
+  }
 }
 
 async function recordFeedback({ subscriberHash, requestId, reaction, comment }) {
@@ -1125,7 +1144,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
         writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation, mode: modeAccess.mode });
         // Guarded/direct turns still update memory — the question text was
         // recorded above, so let the user-memory row reflect that turn too.
-        await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName: effectiveUserProfile.preferred_name });
+        await updateUserMemoryAfterTurn(subscriberHash, payload, question, effectiveUserProfile.preferred_name);
         return;
       }
 
@@ -1230,7 +1249,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       // Update per-user memory after the answer ships. If the sid has
       // rotated since the prior turn, this also triggers a Bedrock-
       // synthesized summary of the previous session.
-      await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName: effectiveUserProfile.preferred_name });
+      await updateUserMemoryAfterTurn(subscriberHash, payload, question, effectiveUserProfile.preferred_name);
       logEvent('info', 'chat_completed', {
         subscriber_hash: subscriberHash,
         request_id: requestId,

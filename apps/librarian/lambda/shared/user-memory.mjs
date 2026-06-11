@@ -40,6 +40,9 @@ const SYNTHESIS_MAX_TOKENS = 160;
 const MEMORY_SYNTHESIS_MAX_TOKENS = 900;
 const MEMORY_SYNTHESIS_VERSION = 'thingy-memory-v1';
 const SYNTHESIZABLE_MEMORY_EVENT_TYPES = new Set(['chat_question', 'remembered_fact', 'conversation_summary']);
+const AUTO_SYNTHESIS_MIN_PENDING_DEFAULT = 8;
+const AUTO_SYNTHESIS_FIRST_MIN_PENDING_DEFAULT = 3;
+const AUTO_SYNTHESIS_MAX_PENDING_AGE_HOURS_DEFAULT = 24;
 const LOW_SIGNAL_SUMMARY_PATTERNS = [
   /i don['’]t have (?:any )?(?:previous|prior) context/i,
   /i don['’]t see any previous conversation/i,
@@ -954,6 +957,25 @@ export function memorySynthesisStatus(memory = {}, events = []) {
   };
 }
 
+export function shouldAutoSynthesizeMemory(memory = {}, events = [], nowIso = new Date().toISOString(), options = {}) {
+  const stored = memory?.memory_synthesis || {};
+  const lastSynthesizedAt = String(stored.last_synthesized_at || '').trim();
+  const pendingEvents = (events || [])
+    .filter((event) => SYNTHESIZABLE_MEMORY_EVENT_TYPES.has(event.type || event.event_type || ''))
+    .filter((event) => event.ts && (!lastSynthesizedAt || event.ts > lastSynthesizedAt))
+    .sort((a, b) => String(a.ts || '').localeCompare(String(b.ts || '')));
+  const pending = pendingEvents.length;
+  if (!pending) return false;
+  const minPending = Number(options.minPending || process.env.THINGY_MEMORY_AUTO_SYNTHESIS_MIN_PENDING || AUTO_SYNTHESIS_MIN_PENDING_DEFAULT);
+  const firstMinPending = Number(options.firstMinPending || process.env.THINGY_MEMORY_AUTO_SYNTHESIS_FIRST_MIN_PENDING || AUTO_SYNTHESIS_FIRST_MIN_PENDING_DEFAULT);
+  if (!lastSynthesizedAt && pending >= firstMinPending) return true;
+  if (pending >= minPending) return true;
+  const maxAgeHours = Number(options.maxPendingAgeHours || process.env.THINGY_MEMORY_AUTO_SYNTHESIS_MAX_PENDING_AGE_HOURS || AUTO_SYNTHESIS_MAX_PENDING_AGE_HOURS_DEFAULT);
+  const oldest = Date.parse(pendingEvents[0]?.ts || '');
+  const now = Date.parse(nowIso);
+  return Number.isFinite(oldest) && Number.isFinite(now) && now - oldest >= maxAgeHours * 60 * 60 * 1000;
+}
+
 async function synthesizeEngagementMemories(events = [], memory = {}, nowIso = new Date().toISOString()) {
   if (!events.length) return [];
   const facts = (memory.remembered_facts || []).map((fact) => `${fact.category}: ${fact.value}`).join('\n');
@@ -1047,6 +1069,18 @@ export async function synthesizeUserMemory(sub, options = {}) {
   });
   const memory = await getUserMemory(sub, { consistent: true });
   return { ok: true, memory, generated_count: generated.length };
+}
+
+export async function maybeSynthesizeUserMemory(sub, options = {}) {
+  const tableName = process.env.TABLE_NAME;
+  if (!tableName || !sub) return { ok: false, skipped: true, reason: 'missing_context' };
+  const nowIso = String(options.nowIso || new Date().toISOString());
+  const memory = await getUserMemory(sub, { consistent: true }) || { sub };
+  const events = await listUserMemoryEvents(sub, { limit: MEMORY_EVENT_LIMIT });
+  if (!shouldAutoSynthesizeMemory(memory, events, nowIso, options)) {
+    return { ok: true, skipped: true, reason: 'not_due' };
+  }
+  return await synthesizeUserMemory(sub, { mode: 'incremental' });
 }
 
 export async function deleteUserMemoryItem(sub, input = {}) {

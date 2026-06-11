@@ -15,7 +15,8 @@ import {
   mergeRememberedFacts,
   normalizeMemoryFact,
   recordUserPreferredName,
-  sanitizeSessionSummary
+  sanitizeSessionSummary,
+  shouldAutoSynthesizeMemory
 } from '../shared/user-memory.mjs';
 import { renderTemplate, agentUserPrompt } from '../shared/prompts.mjs';
 import { subscriberStatus } from '../shared/buttondown.mjs';
@@ -543,6 +544,38 @@ test('memorySynthesisStatus treats conversation summaries as learnable events', 
   assert.equal(status.status, 'stale');
   assert.equal(status.pending_event_count, 1);
   assert.equal(status.last_event_at, '2026-06-10T12:30:00.000Z');
+});
+
+test('shouldAutoSynthesizeMemory triggers quickly before first synthesis', () => {
+  const due = shouldAutoSynthesizeMemory({}, [
+    { type: 'chat_question', ts: '2026-06-10T12:00:00.000Z' },
+    { type: 'chat_question', ts: '2026-06-10T12:05:00.000Z' },
+    { type: 'conversation_summary', ts: '2026-06-10T12:10:00.000Z' }
+  ], '2026-06-10T12:15:00.000Z');
+  assert.equal(due, true);
+});
+
+test('shouldAutoSynthesizeMemory ignores non-learnable audit events', () => {
+  const due = shouldAutoSynthesizeMemory({
+    memory_synthesis: {
+      last_synthesized_at: '2026-06-10T12:00:00.000Z'
+    }
+  }, [
+    { type: 'memory_deleted', ts: '2026-06-10T12:05:00.000Z' },
+    { type: 'auth_profile_viewed', ts: '2026-06-10T12:10:00.000Z' }
+  ], '2026-06-10T12:15:00.000Z');
+  assert.equal(due, false);
+});
+
+test('shouldAutoSynthesizeMemory triggers when pending events age out', () => {
+  const due = shouldAutoSynthesizeMemory({
+    memory_synthesis: {
+      last_synthesized_at: '2026-06-10T12:00:00.000Z'
+    }
+  }, [
+    { type: 'chat_question', ts: '2026-06-10T12:30:00.000Z' }
+  ], '2026-06-11T13:00:00.000Z');
+  assert.equal(due, true);
 });
 
 test('email normalization is stable', () => {
