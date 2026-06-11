@@ -419,6 +419,40 @@ test('dispatch renderer formats markdown lists and source-only refs as footnotes
   assert.doesNotMatch(html, /<p[^>]*>1\. A technology/);
 });
 
+test('dispatch renderer converts markdown blockquotes to email HTML', () => {
+  const html = dispatchHtmlEmail({
+    title: 'Quoted Dispatch',
+    preview: 'A dispatch with a quote.',
+    intro: '',
+    sections: [{
+      heading: 'Archive Voice',
+      body: [
+        'The archive frames the point this way:',
+        '',
+        '> Privacy is not a feature toggle.',
+        '> It is a design constraint with *teeth*. [S1]',
+        '',
+        'That quote shapes the rest of the Dispatch.'
+      ].join('\n')
+    }],
+    closing: '',
+    followups: []
+  }, [{
+    id: 'S1',
+    label: 'Blog',
+    title: 'Privacy as Design Constraint',
+    url: 'https://www.thingelstad.com/2024/01/01/privacy-design.html',
+    source_kind: 'blog'
+  }]);
+
+  assert.match(html, /<blockquote style="border-left:4px solid #d8e1dd/);
+  assert.match(html, /Privacy is not a feature toggle\./);
+  assert.match(html, /<em>teeth<\/em>\.<sup/);
+  assert.match(html, /href="#source-S1"[^>]*>1<\/a>/);
+  assert.doesNotMatch(html, /&gt; Privacy is not/);
+  assert.doesNotMatch(html, /> Privacy is not/);
+});
+
 test('dispatch Discord card summarizes sent dispatch without body content', () => {
   const card = discordDispatchCard({
     dispatch: {

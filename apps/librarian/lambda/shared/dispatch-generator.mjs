@@ -1,5 +1,6 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
+import MarkdownIt from 'markdown-it';
 import { bedrock, s3, advancedModel } from './aws-clients.mjs';
 import { tinylyticsPixelHtml } from './tinylytics-email.mjs';
 
@@ -8,6 +9,54 @@ const TOKEN_RE = /[a-z0-9][a-z0-9'-]{1,}/gi;
 const THINGY_URL = 'https://thingy.thingelstad.com/';
 
 let corpusCache = null;
+
+const dispatchMarkdown = new MarkdownIt({
+  html: false,
+  linkify: false,
+  typographer: false,
+  breaks: false
+});
+
+function withAttrs(tokens, idx, attrs = {}) {
+  for (const [key, value] of Object.entries(attrs)) tokens[idx].attrSet(key, value);
+  return dispatchMarkdown.renderer.renderToken(tokens, idx, {});
+}
+
+dispatchMarkdown.renderer.rules.paragraph_open = (tokens, idx) => withAttrs(tokens, idx, {
+  style: 'font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;'
+});
+
+dispatchMarkdown.renderer.rules.bullet_list_open = (tokens, idx) => withAttrs(tokens, idx, {
+  style: 'padding-left:24px;margin:0 0 18px;color:#14181f;font-size:17px;line-height:1.6;'
+});
+
+dispatchMarkdown.renderer.rules.ordered_list_open = (tokens, idx) => withAttrs(tokens, idx, {
+  style: 'padding-left:24px;margin:0 0 18px;color:#14181f;font-size:17px;line-height:1.6;'
+});
+
+dispatchMarkdown.renderer.rules.list_item_open = (tokens, idx) => withAttrs(tokens, idx, {
+  style: 'margin:0 0 8px;'
+});
+
+dispatchMarkdown.renderer.rules.blockquote_open = (tokens, idx) => withAttrs(tokens, idx, {
+  style: 'border-left:4px solid #d8e1dd;margin:0 0 18px;padding:0 0 0 16px;color:#4a5565;'
+});
+
+dispatchMarkdown.renderer.rules.heading_open = (tokens, idx) => {
+  const level = tokens[idx].tag === 'h2' ? '20px' : '18px';
+  return withAttrs(tokens, idx, {
+    style: `font-size:${level};line-height:1.35;margin:4px 0 12px;color:#14181f;font-weight:700;`
+  });
+};
+
+dispatchMarkdown.renderer.rules.link_open = (tokens, idx) => {
+  tokens[idx].attrSet('style', linkStyle());
+  return dispatchMarkdown.renderer.renderToken(tokens, idx, {});
+};
+
+dispatchMarkdown.renderer.rules.code_inline = (tokens, idx) => (
+  `<code style="font-family:Menlo,Consolas,monospace;font-size:.92em;background:#f1f5f3;border-radius:4px;padding:1px 4px;">${escapeHtml(tokens[idx].content)}</code>`
+);
 
 function cleanText(value, max = 1000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -301,28 +350,6 @@ export function parseDispatchJson(text) {
   }
 }
 
-function paragraphs(text) {
-  const parts = String(text || '')
-    .split(/\n{2,}/)
-    .map((part) => cleanBlockText(part, 3000))
-    .filter(Boolean);
-  if (parts.length > 1) return parts;
-  return cleanBlockText(text, 3000)
-    .split(/(?<=[.!?])\s+(?=[A-Z])/)
-    .reduce((acc, sentence) => {
-      const trimmed = sentence.trim();
-      if (!trimmed) return acc;
-      const last = acc[acc.length - 1] || '';
-      if (!last || last.length > 520 || acc.length < 1) {
-        acc.push(trimmed);
-      } else {
-        acc[acc.length - 1] = `${last} ${trimmed}`.trim();
-      }
-      return acc;
-    }, [])
-    .filter(Boolean);
-}
-
 function sourceLinkMap(sources = []) {
   return Object.fromEntries(sources.map((source) => [source.id, source]));
 }
@@ -386,10 +413,6 @@ function replaceRemainingSourceRefs(html, sources = []) {
   });
 }
 
-function inlineSourceRefs(text, sources = []) {
-  return replaceRemainingSourceRefs(escapeHtml(text), sources);
-}
-
 function inlineDispatchMarkup(text, sources = []) {
   let html = escapeHtml(text);
   const referencedIds = Array.from(new Set((String(text || '').match(/\[(S\d+)\]/g) || []).map((id) => id.slice(1, -1))));
@@ -405,38 +428,22 @@ function inlineDispatchMarkup(text, sources = []) {
     .replace(/(^|[^*])\*([^*\n][^*\n]*?[^*\n])\*(?!\*)/g, '$1<em>$2</em>');
 }
 
-function orderedListItem(line = '') {
-  const match = String(line || '').match(/^\s*\d+[\.)]\s+(.+)$/);
-  return match ? match[1].trim() : '';
-}
-
-function unorderedListItem(line = '') {
-  const match = String(line || '').match(/^\s*[-*]\s+(.+)$/);
-  return match ? match[1].trim() : '';
+function applyDispatchSourceRefs(html, text, sources = []) {
+  let next = html;
+  const referencedIds = Array.from(new Set((String(text || '').match(/\[(S\d+)\]/g) || []).map((id) => id.slice(1, -1))));
+  for (const id of referencedIds) {
+    const source = sourceLinkMap(sources)[id];
+    const linked = linkFirstSourceMention(next, source);
+    next = linked.html;
+    if (linked.linked) next = next.replace(new RegExp(`\\s*\\[${escapeRegExp(id)}\\]`, 'g'), '');
+  }
+  return replaceRemainingSourceRefs(next, sources);
 }
 
 function renderDispatchBlocks(text, sources = []) {
-  const blocks = String(text || '')
-    .replace(/\r\n?/g, '\n')
-    .split(/\n{2,}/)
-    .map((block) => cleanBlockText(block, 4000))
-    .filter(Boolean);
-  const html = [];
-  for (const block of blocks) {
-    const lines = block.split('\n').map((line) => line.trim()).filter(Boolean);
-    const ordered = lines.map(orderedListItem);
-    if (ordered.length && ordered.every(Boolean)) {
-      html.push(`<ol style="padding-left:24px;margin:0 0 18px;color:#14181f;font-size:17px;line-height:1.6;">${ordered.map((item) => `<li style="margin:0 0 8px;">${inlineDispatchMarkup(item, sources)}</li>`).join('')}</ol>`);
-      continue;
-    }
-    const unordered = lines.map(unorderedListItem);
-    if (unordered.length && unordered.every(Boolean)) {
-      html.push(`<ul style="padding-left:24px;margin:0 0 18px;color:#14181f;font-size:17px;line-height:1.6;">${unordered.map((item) => `<li style="margin:0 0 8px;">${inlineDispatchMarkup(item, sources)}</li>`).join('')}</ul>`);
-      continue;
-    }
-    html.push(...paragraphs(block).map((p) => `<p style="font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;">${inlineDispatchMarkup(p, sources)}</p>`));
-  }
-  return html.join('');
+  const markdown = cleanBlockText(text, 5000);
+  if (!markdown) return '';
+  return applyDispatchSourceRefs(dispatchMarkdown.render(markdown), markdown, sources);
 }
 
 function normalizeDispatchPayload(payload = {}, fallbackTopic = '') {
