@@ -392,7 +392,12 @@ async function handleMemory(event, body, start) {
       extraEvents: conversationMemoryEvents(conversations)
     });
     if (!result.ok) return jsonResponse(500, { error: result.error || 'Memory synthesis failed.' }, event);
-    return await memoryProfileResponse(payload.sub, event, { synthesized: true, generated_count: result.generated_count || 0 });
+    return await memoryProfileResponse(payload.sub, event, {
+      refreshed: !result.refresh_error,
+      refresh_error: result.refresh_error || '',
+      generated_count: result.generated_count || 0,
+      preserved: Boolean(result.preserved)
+    });
   }
   if (action === 'delete_profile') {
     const result = await deleteThingyProfile(payload.sub);

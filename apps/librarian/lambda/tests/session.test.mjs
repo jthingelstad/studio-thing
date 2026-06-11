@@ -13,17 +13,16 @@ import {
   memoryContextBlock,
   memorySynthesisStatus,
   mergeLearnedProfile,
-  mergeRememberedFacts,
-  normalizeMemoryFact,
   parseSynthesizedMemoryJson,
   recordUserPreferredName,
   sanitizeSessionSummary,
-  shouldAutoSynthesizeMemory
+  shouldAutoSynthesizeMemory,
+  synthesizeUserMemory
 } from '../shared/user-memory.mjs';
 import { renderTemplate, agentUserPrompt } from '../shared/prompts.mjs';
 import { subscriberStatus } from '../shared/buttondown.mjs';
 import { deleteThingyProfile, tokenIssuedAfterProfileDeletion } from '../shared/profile-deletion.mjs';
-import { dynamodb, s3 } from '../shared/aws-clients.mjs';
+import { bedrock, dynamodb, s3 } from '../shared/aws-clients.mjs';
 import {
   createLinkCode,
   createLinkState,
@@ -150,6 +149,156 @@ test('learned profile synthesis parsing and merging are deterministic', () => {
   assert.equal(tombstoned.length, 0);
 });
 
+test('failed learned profile synthesis preserves existing profile', async () => {
+  const priorTable = process.env.TABLE_NAME;
+  process.env.TABLE_NAME = 'thingy-test-table';
+  const originalDynamoSend = dynamodb.send;
+  const originalBedrockSend = bedrock.send;
+  let putCount = 0;
+
+  dynamodb.send = async (command) => {
+    if (command.constructor.name === 'GetItemCommand') {
+      return {
+        Item: memoryDynamoItem('subscriber-hash', {
+          version: 2,
+          learned_profile: [{
+            type: 'observed_archive_theme',
+            label: 'RSS workflows',
+            summary: 'Often explores RSS and reader workflow tools.',
+            confidence: 0.8,
+            evidence: [{ event_id: 'event-1', label: 'Asked about RSS' }],
+            created_at: '2026-06-10T12:00:00.000Z',
+            updated_at: '2026-06-10T12:00:00.000Z',
+            synthesized_at: '2026-06-10T12:00:00.000Z'
+          }],
+          memory_synthesis: {
+            last_synthesized_at: '2026-06-10T12:00:00.000Z',
+            last_event_at: '2026-06-10T11:00:00.000Z',
+            status: 'current'
+          }
+        }, '2026-06-10T12:00:00.000Z')
+      };
+    }
+    if (command.constructor.name === 'QueryCommand') {
+      return {
+        Items: [{
+          pk: { S: 'user#subscriber-hash' },
+          sk: { S: 'memory-event#2026-06-10T13:00:00.000Z#event-2' },
+          event_id: { S: 'event-2' },
+          event_type: { S: 'chat_question' },
+          ts: { S: '2026-06-10T13:00:00.000Z' },
+          label: { S: 'What did Jamie write about RSS?' }
+        }]
+      };
+    }
+    if (command.constructor.name === 'PutItemCommand') {
+      putCount += 1;
+      return {};
+    }
+    throw new Error(`Unexpected Dynamo command ${command.constructor.name}`);
+  };
+  bedrock.send = async () => ({
+    output: { message: { content: [{ text: 'not json' }] } }
+  });
+
+  try {
+    const result = await synthesizeUserMemory('subscriber-hash', { mode: 'refresh' });
+    assert.equal(result.ok, true);
+    assert.equal(result.generated_count, 0);
+    assert.match(result.refresh_error, /invalid JSON/);
+    assert.equal(result.preserved, true);
+    assert.equal(result.memory.learned_profile[0].label, 'RSS workflows');
+    assert.equal(result.memory.memory_synthesis.status, 'error');
+    assert.equal(putCount, 0);
+  } finally {
+    dynamodb.send = originalDynamoSend;
+    bedrock.send = originalBedrockSend;
+    if (priorTable === undefined) delete process.env.TABLE_NAME;
+    else process.env.TABLE_NAME = priorTable;
+  }
+});
+
+test('memory refresh route returns preserved profile on synthesis failure', async () => {
+  process.env.SESSION_SECRET = 'test-secret';
+  const priorTable = process.env.TABLE_NAME;
+  process.env.TABLE_NAME = 'thingy-test-table';
+  const originalDynamoSend = dynamodb.send;
+  const originalBedrockSend = bedrock.send;
+  const { token } = createSessionToken('reader@example.com', 'refresh-route');
+  const sub = emailHash('reader@example.com');
+  const memoryItem = memoryDynamoItem(sub, {
+    version: 2,
+    learned_profile: [{
+      type: 'observed_archive_theme',
+      label: 'RSS workflows',
+      summary: 'Often explores RSS and reader workflow tools.',
+      confidence: 0.8,
+      evidence: [{ event_id: 'event-1', label: 'Asked about RSS' }],
+      created_at: '2026-06-10T12:00:00.000Z',
+      updated_at: '2026-06-10T12:00:00.000Z',
+      synthesized_at: '2026-06-10T12:00:00.000Z'
+    }],
+    memory_synthesis: {
+      last_synthesized_at: '2026-06-10T12:00:00.000Z',
+      last_event_at: '2026-06-10T11:00:00.000Z',
+      status: 'current'
+    }
+  }, '2026-06-10T12:00:00.000Z');
+
+  dynamodb.send = async (command) => {
+    if (command.constructor.name === 'GetItemCommand') {
+      if (command.input.Key?.sk?.S === 'profile-deleted') return {};
+      return { Item: memoryItem };
+    }
+    if (command.constructor.name === 'QueryCommand') {
+      const prefix = command.input.ExpressionAttributeValues?.[':prefix']?.S || '';
+      if (prefix === 'memory-event#') {
+        return {
+          Items: [{
+            pk: { S: `user#${sub}` },
+            sk: { S: 'memory-event#2026-06-10T13:00:00.000Z#event-2' },
+            event_id: { S: 'event-2' },
+            event_type: { S: 'chat_question' },
+            ts: { S: '2026-06-10T13:00:00.000Z' },
+            label: { S: 'What did Jamie write about RSS?' }
+          }]
+        };
+      }
+      return { Items: [] };
+    }
+    if (command.constructor.name === 'PutItemCommand') {
+      throw new Error('refresh route should not overwrite memory on invalid synthesis');
+    }
+    throw new Error(`Unexpected Dynamo command ${command.constructor.name}`);
+  };
+  bedrock.send = async () => ({
+    output: { message: { content: [{ text: 'not json' }] } }
+  });
+
+  try {
+    const response = await authHandler({
+      httpMethod: 'POST',
+      path: '/memory',
+      headers: {
+        authorization: `Bearer ${token}`,
+        origin: 'https://thingy.thingelstad.com'
+      },
+      body: JSON.stringify({ action: 'refresh_profile' })
+    }, { awsRequestId: 'refresh-profile-failure' });
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 200);
+    assert.equal(body.refreshed, false);
+    assert.match(body.refresh_error, /invalid JSON/);
+    assert.equal(body.preserved, true);
+    assert.equal(body.profile.learned_profile[0].label, 'RSS workflows');
+  } finally {
+    dynamodb.send = originalDynamoSend;
+    bedrock.send = originalBedrockSend;
+    if (priorTable === undefined) delete process.env.TABLE_NAME;
+    else process.env.TABLE_NAME = priorTable;
+  }
+});
+
 test('deleteThingyProfile deletes Thingy-local rows, artifacts, and writes a marker', async () => {
   const priorTable = process.env.TABLE_NAME;
   process.env.TABLE_NAME = 'thingy-test-table';
@@ -160,7 +309,7 @@ test('deleteThingyProfile deletes Thingy-local rows, artifacts, and writes a mar
 
   dynamodb.send = async (command) => {
     dynamoCalls.push({ name: command.constructor.name, input: command.input });
-    if (command.constructor.name === 'QueryCommand') {
+    if (command.constructor.name === 'QueryCommand' && !command.input.IndexName) {
       return {
         Items: [
           { pk: { S: 'user#subscriber-hash' }, sk: { S: 'memory' } },
@@ -174,12 +323,18 @@ test('deleteThingyProfile deletes Thingy-local rows, artifacts, and writes a mar
         ]
       };
     }
-    if (command.constructor.name === 'ScanCommand') {
+    if (command.constructor.name === 'QueryCommand' && command.input.IndexName === 'EmailHashIndex') {
       return {
         Items: [
-          { pk: { S: 'session#abc' }, sk: { S: 'session' }, email_hash: { S: 'subscriber-hash' } },
-          { pk: { S: 'discord_user#xyz' }, sk: { S: 'connection' }, subscriber_hash: { S: 'subscriber-hash' } },
-          { pk: { S: 'user#subscriber-hash' }, sk: { S: 'memory' }, email_hash: { S: 'subscriber-hash' } }
+          { pk: { S: 'session#abc' }, sk: { S: 'session' } },
+          { pk: { S: 'user#subscriber-hash' }, sk: { S: 'memory' } }
+        ]
+      };
+    }
+    if (command.constructor.name === 'QueryCommand' && command.input.IndexName === 'SubscriberHashIndex') {
+      return {
+        Items: [
+          { pk: { S: 'discord_user#xyz' }, sk: { S: 'connection' } }
         ]
       };
     }
@@ -209,6 +364,9 @@ test('deleteThingyProfile deletes Thingy-local rows, artifacts, and writes a mar
     assert.equal(deletes.some((key) => key.sk.S === 'profile-deleted'), false);
     assert.ok(deletes.some((key) => key.pk.S === 'discord_user#xyz'));
     assert.ok(deletes.some((key) => key.pk.S === 'session#abc'));
+    assert.equal(dynamoCalls.some((call) => call.name === 'ScanCommand'), false);
+    assert.ok(dynamoCalls.some((call) => call.input.IndexName === 'EmailHashIndex'));
+    assert.ok(dynamoCalls.some((call) => call.input.IndexName === 'SubscriberHashIndex'));
 
     const put = dynamoCalls.find((call) => call.name === 'PutItemCommand');
     assert.equal(put.input.Item.pk.S, 'user#subscriber-hash');
@@ -223,6 +381,71 @@ test('deleteThingyProfile deletes Thingy-local rows, artifacts, and writes a mar
         Key: 'dispatches/draft-1.json'
       }
     }]);
+  } finally {
+    dynamodb.send = originalDynamoSend;
+    s3.send = originalS3Send;
+    if (priorTable === undefined) delete process.env.TABLE_NAME;
+    else process.env.TABLE_NAME = priorTable;
+  }
+});
+
+test('memory delete_profile route deletes local rows and writes marker', async () => {
+  process.env.SESSION_SECRET = 'test-secret';
+  const priorTable = process.env.TABLE_NAME;
+  process.env.TABLE_NAME = 'thingy-test-table';
+  const originalDynamoSend = dynamodb.send;
+  const originalS3Send = s3.send;
+  const { token } = createSessionToken('reader@example.com', 'delete-profile-route');
+  const dynamoCalls = [];
+  const s3Calls = [];
+
+  dynamodb.send = async (command) => {
+    dynamoCalls.push({ name: command.constructor.name, input: command.input });
+    if (command.constructor.name === 'GetItemCommand') return {};
+    if (command.constructor.name === 'QueryCommand' && !command.input.IndexName) {
+      return {
+        Items: [{
+          pk: { S: `user#${emailHash('reader@example.com')}` },
+          sk: { S: 'dispatch#draft-1' },
+          content_artifact_bucket: { S: 'artifact-bucket' },
+          content_artifact_key: { S: 'dispatches/draft-1.json' }
+        }]
+      };
+    }
+    if (command.constructor.name === 'QueryCommand' && command.input.IndexName === 'EmailHashIndex') {
+      return { Items: [{ pk: { S: 'session#abc' }, sk: { S: 'session' } }] };
+    }
+    if (command.constructor.name === 'QueryCommand' && command.input.IndexName === 'SubscriberHashIndex') {
+      return { Items: [{ pk: { S: 'discord_user#xyz' }, sk: { S: 'connection' } }] };
+    }
+    if (command.constructor.name === 'BatchWriteItemCommand') return { UnprocessedItems: {} };
+    if (command.constructor.name === 'PutItemCommand') return {};
+    throw new Error(`Unexpected Dynamo command ${command.constructor.name}`);
+  };
+  s3.send = async (command) => {
+    s3Calls.push({ name: command.constructor.name, input: command.input });
+    return {};
+  };
+
+  try {
+    const response = await authHandler({
+      httpMethod: 'POST',
+      path: '/memory',
+      headers: {
+        authorization: `Bearer ${token}`,
+        origin: 'https://thingy.thingelstad.com'
+      },
+      body: JSON.stringify({ action: 'delete_profile' })
+    }, { awsRequestId: 'delete-profile-route' });
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 200);
+    assert.equal(body.status, 'deleted');
+    assert.ok(body.deleted_at);
+    assert.ok(dynamoCalls.some((call) => call.name === 'BatchWriteItemCommand'));
+    assert.ok(dynamoCalls.some((call) => call.input.IndexName === 'EmailHashIndex'));
+    assert.ok(dynamoCalls.some((call) => call.input.IndexName === 'SubscriberHashIndex'));
+    assert.equal(dynamoCalls.some((call) => call.name === 'ScanCommand'), false);
+    assert.equal(s3Calls.length, 1);
   } finally {
     dynamodb.send = originalDynamoSend;
     s3.send = originalS3Send;
@@ -392,9 +615,7 @@ test('memoryFromItem shapes stored preferred names', () => {
     turn_count: { N: '7' },
     current_session_questions: { L: [{ M: { ts: { S: '2026-01-02T00:00:00Z' }, question: { S: 'What about RSS?' } } }] },
     synthesized_history: { L: [] },
-    remembered_facts: { L: [{ M: { category: { S: 'preference' }, value: { S: 'Prefers concise answers' }, remembered_at: { S: '2026-01-02T00:00:00Z' } } }] },
-    interests: { L: [{ S: 'RSS' }] },
-    synthesized_memories: { L: [{ M: {
+    learned_profile: { L: [{ M: {
       label: { S: 'RSS workflows' },
       summary: { S: 'Often explores RSS and reader workflow ideas.' },
       confidence: { N: '0.8' },
@@ -425,11 +646,11 @@ test('memoryFromItem shapes stored preferred names', () => {
   assert.equal(memory.preferred_name, 'Jamie');
   assert.match(memory.current_session_questions[0].id, /^mem_recent_/);
   assert.equal(memory.current_session_questions[0].question, 'What about RSS?');
-  assert.match(memory.remembered_facts[0].id, /^mem_fact_/);
-  assert.deepEqual(memory.interests, ['RSS']);
   assert.match(memory.learned_profile[0].id, /^mem_learned_/);
-  assert.match(memory.synthesized_memories[0].id, /^mem_learned_/);
-  assert.equal(memory.synthesized_memories[0].evidence[0].event_id, 'event-1');
+  assert.equal(memory.learned_profile[0].evidence[0].event_id, 'event-1');
+  assert.equal(Object.hasOwn(memory, 'remembered_facts'), false);
+  assert.equal(Object.hasOwn(memory, 'interests'), false);
+  assert.equal(Object.hasOwn(memory, 'synthesized_memories'), false);
   assert.equal(memory.memory_synthesis.status, 'current');
   assert.equal(memory.discord_connection.display_name, 'Thingy User');
 });
@@ -572,8 +793,7 @@ test('authProfile and memory context filter low-value synthesized summaries', ()
   assert.equal(profile.prior_session_summaries[0].summary, 'They explored RSS and OPML workflows.');
 
   const block = memoryContextBlock(memory);
-  assert.match(block, /RSS and OPML/);
-  assert.doesNotMatch(block, /previous context/);
+  assert.equal(block, '');
 });
 
 test('memoryContextBlock returns empty string when nothing useful', () => {
@@ -582,7 +802,7 @@ test('memoryContextBlock returns empty string when nothing useful', () => {
   assert.equal(memoryContextBlock({ synthesized_history: [], current_session_questions: [] }), '');
 });
 
-test('memoryContextBlock formats prior summaries and current questions', () => {
+test('memoryContextBlock ignores prior summaries and current questions without learned profile', () => {
   const block = memoryContextBlock({
     synthesized_history: [
       { summary: 'RSS exploration.', ended_at: '2026-03-01T00:00:00Z' }
@@ -591,30 +811,10 @@ test('memoryContextBlock formats prior summaries and current questions', () => {
       { question: 'What did Jamie say about Atom?' }
     ]
   });
-  assert.match(block, /past sessions/);
-  assert.match(block, /RSS exploration\./);
-  assert.match(block, /\(2026-03-01\)/);
-  assert.match(block, /Earlier in this same session/);
-  assert.match(block, /Atom\?/);
+  assert.equal(block, '');
 });
 
-test('memory helpers normalize and dedupe explicit reader facts', () => {
-  assert.deepEqual(
-    normalizeMemoryFact({ category: 'name', value: ' Jamie  Thingelstad ' }),
-    { category: 'preferred_name', value: 'Jamie Thingelstad', source: '' }
-  );
-  assert.equal(normalizeMemoryFact({ category: 'private', value: 'secret' }), null);
-
-  const facts = mergeRememberedFacts([
-    { category: 'interest', value: 'RSS', remembered_at: '2026-01-01T00:00:00Z' }
-  ], { category: 'interest', value: 'rss', source: 'reader said so' }, '2026-02-01T00:00:00Z');
-  assert.equal(facts.length, 1);
-  assert.equal(facts[0].value, 'rss');
-  assert.equal(facts[0].source, 'reader said so');
-  assert.equal(facts[0].remembered_at, '2026-02-01T00:00:00Z');
-});
-
-test('authProfile and memoryContextBlock surface durable reader memory', () => {
+test('authProfile surfaces Discord metadata without explicit memory fields', () => {
   const memory = {
     turn_count: 4,
     discord_connection: {
@@ -622,31 +822,22 @@ test('authProfile and memoryContextBlock surface durable reader memory', () => {
       username: 'thingy_user',
       display_name: 'Thingy User',
       connected_at: '2026-06-10T12:00:00.000Z'
-    },
-    remembered_facts: [
-      { category: 'interest', value: 'IndieWeb', remembered_at: '2026-01-01T00:00:00Z' },
-      { category: 'preference', value: 'prefers concise answers', remembered_at: '2026-01-02T00:00:00Z' }
-    ],
-    interests: ['IndieWeb']
+    }
   };
   const profile = authProfile(memory);
-  assert.equal(profile.remembered_facts.length, 2);
-  assert.deepEqual(profile.interests, ['IndieWeb']);
   assert.equal(profile.discord_connection.display_name, 'Thingy User');
-
-  const block = memoryContextBlock(memory);
-  assert.match(block, /Learned reader profile/);
-  assert.match(block, /explicit interest: IndieWeb/);
-  assert.match(block, /explicit preference: prefers concise answers/);
+  assert.equal(Object.hasOwn(profile, 'remembered_facts'), false);
+  assert.equal(Object.hasOwn(profile, 'interests'), false);
+  assert.equal(Object.hasOwn(profile, 'synthesized_memories'), false);
 });
 
-test('authProfile and memoryContextBlock surface synthesized learned memories', () => {
+test('authProfile and memoryContextBlock surface learned profile memories', () => {
   const memory = {
     turn_count: 10,
-    synthesized_memories: [
+    learned_profile: [
       {
         id: 'mem_learned_test',
-        type: 'learned_interest',
+        type: 'observed_archive_theme',
         label: 'Reader workflows',
         summary: 'Often explores RSS, OPML, and reader workflow tools.',
         confidence: 0.8
@@ -661,7 +852,6 @@ test('authProfile and memoryContextBlock surface synthesized learned memories', 
   };
   const profile = authProfile(memory);
   assert.equal(profile.learned_profile[0].label, 'Reader workflows');
-  assert.equal(profile.synthesized_memories[0].label, 'Reader workflows');
   assert.equal(profile.memory_synthesis.status, 'current');
 
   const block = memoryContextBlock(memory);

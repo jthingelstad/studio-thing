@@ -4,7 +4,6 @@ import { searchFaq } from './faq.mjs';
 import { loadToolSpecs } from './prompts.mjs';
 import { compactSource, loadCorpus, loadGraph, parseYearRange, retrieve, tokenize } from './retrieval.mjs';
 import { normalizeScope, scopeKinds } from './scope.mjs';
-import { rememberUserFact } from './user-memory.mjs';
 
 function isExternalSource(item) {
   return ['blog', 'podcast'].includes(item?.source_kind) || (!item?.issue_number && Boolean(item?.url));
@@ -1055,11 +1054,6 @@ async function toolClaimCheck(input = {}, { scope } = {}) {
   return { results };
 }
 
-async function toolRememberUser(input = {}, { subscriberHash } = {}) {
-  if (!subscriberHash) return { ok: false, error: 'No authenticated user memory is available.' };
-  return rememberUserFact(subscriberHash, input);
-}
-
 export const ARCHIVE_TOOLS = {
   search_faq: toolSearchFaq,
   search_archive: toolSearchArchive,
@@ -1078,8 +1072,7 @@ export const ARCHIVE_TOOLS = {
   source_neighborhood: toolSourceNeighborhood,
   entity_lens: toolEntityLens,
   archive_gems: toolArchiveGems,
-  claim_check: toolClaimCheck,
-  remember_user: toolRememberUser
+  claim_check: toolClaimCheck
 };
 
 export function toolSpecs() {

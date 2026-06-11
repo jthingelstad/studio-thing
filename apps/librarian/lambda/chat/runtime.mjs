@@ -1,6 +1,5 @@
 import crypto from 'node:crypto';
 import { ConverseCommand, ConverseStreamCommand } from '@aws-sdk/client-bedrock-runtime';
-import { UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import {
   agentModel,
   advancedModel,
@@ -50,6 +49,7 @@ import {
   passThroughPreflight
 } from '../shared/prompt-preflight.mjs';
 import { errorFields, truthyEnv } from '../shared/logging.mjs';
+import { checkRateLimit } from '../shared/rate-limit.mjs';
 import { methodAndPath, normalizeHeaders, parseBody } from '../shared/http.mjs';
 import {
   agentSystemPrompt,
@@ -85,7 +85,6 @@ import {
 const DEFAULT_MAX_TOOL_TURNS = 7;
 const DEFAULT_CHAT_SLOW_NOTICE_MS = 75000;
 const DEFAULT_CHAT_DEADLINE_MS = 180000;
-const RATE_LIMIT_WINDOW_SECONDS = 60 * 60;
 const RATE_LIMIT_MAX = 20;
 
 function logEvent(level, message, fields = {}) {
@@ -136,28 +135,6 @@ function bridgeSecretOk(body) {
   const expectedBuf = Buffer.from(expected, 'utf8');
   const suppliedBuf = Buffer.from(String(body.bridge_secret || ''), 'utf8');
   return expectedBuf.length === suppliedBuf.length && crypto.timingSafeEqual(expectedBuf, suppliedBuf);
-}
-
-async function checkRateLimit(identity, maxRequests = Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)) {
-  const tableName = process.env.TABLE_NAME;
-  if (!tableName) return true;
-  const now = Math.floor(Date.now() / 1000);
-  const window = Math.floor(now / RATE_LIMIT_WINDOW_SECONDS);
-  const key = `rate#${identity}#${window}`;
-  const response = await dynamodb.send(new UpdateItemCommand({
-    TableName: tableName,
-    Key: { pk: { S: key }, sk: { S: 'rate' } },
-    UpdateExpression: 'ADD #count :one SET #ttl = :ttl',
-    ExpressionAttributeNames: { '#count': 'count', '#ttl': 'ttl' },
-    ExpressionAttributeValues: {
-      ':one': { N: '1' },
-      ':ttl': { N: String(now + RATE_LIMIT_WINDOW_SECONDS * 2) }
-    },
-    ReturnValues: 'UPDATED_NEW'
-  }));
-  const count = Number(response.Attributes?.count?.N || '0');
-  logEvent('info', 'rate_limit_checked', { identity_hash: identity, count, limit: maxRequests, allowed: count <= maxRequests });
-  return count <= maxRequests;
 }
 
 async function updateUserMemoryAfterTurn(subscriberHash, payload, question, preferredName) {
@@ -472,8 +449,6 @@ function toolActivityCommentary(name, input = {}) {
       return query ? `Looking for a surprising archive spark around ${query}.` : 'Looking for a surprising archive spark.';
     case 'claim_check':
       return query ? `Verifying ${query} against archive evidence.` : 'Verifying the claim against archive evidence.';
-    case 'remember_user':
-      return 'Saving the reader preference for future turns.';
     default:
       return 'Using an archive tool to narrow the answer.';
   }
@@ -544,11 +519,11 @@ async function evaluatePromptPreflight(question, scope, history = [], context = 
     const text = bedrockMessageText(message);
     const parsed = parsePreflightJson(text);
     const preflight = normalizePreflightDecision(parsed || {}, question);
-      logEvent('info', 'prompt_preflight_completed', {
-        action: preflight.action,
-        category: preflight.category,
-        mode: normalizeConversationMode(context.mode),
-        duration_ms: Math.round(performance.now() - start),
+    logEvent('info', 'prompt_preflight_completed', {
+      action: preflight.action,
+      category: preflight.category,
+      mode: normalizeConversationMode(context.mode),
+      duration_ms: Math.round(performance.now() - start),
       output_tokens: response.usage?.outputTokens
     });
     return preflight;
@@ -617,9 +592,9 @@ function traceToolResult(result) {
 
 async function streamBedrockAgentAnswer(question, history, responseStream, options = {}) {
   const start = performance.now();
-    const scope = normalizeScope(options.scope);
-    const mode = normalizeConversationMode(options.mode);
-    const memoryContext = String(options.memoryContext || '').trim();
+  const scope = normalizeScope(options.scope);
+  const mode = normalizeConversationMode(options.mode);
+  const memoryContext = String(options.memoryContext || '').trim();
   const readerContext = String(options.readerContext || '').trim();
   const agentQuestion = agentQuestionForPreflight(question, options.preflight);
   const shouldStopWriting = () => Boolean(options.deadlineExceeded?.());
@@ -646,9 +621,9 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   // Active scope varies per request, so it goes after the cachePoint as its
   // own block — it tells the agent which corpus it may speak from without
   // busting the static prompt's prefix cache.
-    systemBlocks.push({ text: scopePromptLine(scope) });
-    systemBlocks.push({ text: conversationModePrompt(mode) });
-    if (memoryContext) {
+  systemBlocks.push({ text: scopePromptLine(scope) });
+  systemBlocks.push({ text: conversationModePrompt(mode) });
+  if (memoryContext) {
     systemBlocks.push({ text: memoryContext });
   }
   for (let turn = 0; turn <= maxTurns; turn += 1) {
@@ -731,14 +706,14 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   if (experience && !shouldStopWriting()) {
     writeSse(responseStream, 'experience', { experience });
   }
-    logEvent('info', 'agent_streamed', {
-      request_id: options.requestId,
-      conversation_id: options.conversationId,
-      model: agentModel(),
-      scope,
-      mode,
-      tool_turns: toolResults.length,
-      citation_count: citations.length,
+  logEvent('info', 'agent_streamed', {
+    request_id: options.requestId,
+    conversation_id: options.conversationId,
+    model: agentModel(),
+    scope,
+    mode,
+    tool_turns: toolResults.length,
+    citation_count: citations.length,
     experience_kind: experience?.kind,
     duration_ms: Math.round(performance.now() - start),
     answer_chars: answer.length,
@@ -790,22 +765,22 @@ async function handleCuriosityMapRoute({ event, responseStream, requestId, summa
     s401.end();
     logEvent('warning', 'curiosity_map_unauthorized', { ...summary });
     return;
-    }
-    const subscriberHash = String(payload.sub || '');
-    const requestedConversationId = validConversationId(body.conversation_id || body.conversationId);
-    const modeAccess = await resolveRequestedConversationMode({
-      body,
-      payload,
-      subscriberHash,
-      conversationId: requestedConversationId
-    });
-    if (!modeAccess.ok) {
-      const s403 = jsonResponseStream(responseStream, 403);
-      s403.write(JSON.stringify({ error: modeAccess.error, request_id: requestId }));
-      s403.end();
-      return;
-    }
-    if (!(await checkRateLimit(`curiosity_map#${subscriberHash}`, Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)))) {
+  }
+  const subscriberHash = String(payload.sub || '');
+  const requestedConversationId = validConversationId(body.conversation_id || body.conversationId);
+  const modeAccess = await resolveRequestedConversationMode({
+    body,
+    payload,
+    subscriberHash,
+    conversationId: requestedConversationId
+  });
+  if (!modeAccess.ok) {
+    const s403 = jsonResponseStream(responseStream, 403);
+    s403.write(JSON.stringify({ error: modeAccess.error, request_id: requestId }));
+    s403.end();
+    return;
+  }
+  if (!(await checkRateLimit(`curiosity_map#${subscriberHash}`, Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)))) {
     const s429 = jsonResponseStream(responseStream, 429);
     s429.write(JSON.stringify({ error: 'Thingy is at the hourly limit for this session.', request_id: requestId }));
     s429.end();
@@ -827,17 +802,17 @@ async function handleCuriosityMapRoute({ event, responseStream, requestId, summa
       scope,
       center: body.center || body.topic || body.query
     });
-      const conversationId = requestedConversationId || crypto.randomUUID();
+    const conversationId = requestedConversationId || crypto.randomUUID();
     const center = map.center?.label || String(map.title || '').replace(/^Curiosity Map:\s*/i, '') || 'archive';
     const conversation = await recordUserArtifactConversation({
       dynamodb,
       tableName: process.env.TABLE_NAME,
       subscriberHash,
-        conversationId,
-        artifact: map,
-        scope,
-        mode: modeAccess.mode,
-        requestId,
+      conversationId,
+      artifact: map,
+      scope,
+      mode: modeAccess.mode,
+      requestId,
       title: map.title || 'Curiosity Map',
       preview: `Explore branches from ${center}.`,
       logEvent,
@@ -847,11 +822,11 @@ async function handleCuriosityMapRoute({ event, responseStream, requestId, summa
     s200.write(JSON.stringify({ ...map, request_id: requestId, conversation_id: conversationId, conversation }));
     s200.end();
     logEvent('info', 'curiosity_map_completed', {
-        ...summary,
-        subscriber_hash: subscriberHash,
-        conversation_id: conversationId,
-        mode: modeAccess.mode,
-        attached_to_existing_conversation: Boolean(requestedConversationId),
+      ...summary,
+      subscriber_hash: subscriberHash,
+      conversation_id: conversationId,
+      mode: modeAccess.mode,
+      attached_to_existing_conversation: Boolean(requestedConversationId),
       node_count: map.nodes?.length || 0,
       source_count: map.sources?.length || 0,
       scope,
@@ -1045,13 +1020,13 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
         logEvent('warning', 'welcome_spark_failed', { error_type: error.constructor?.name || 'Error' });
       }
       if (spark) writeSse(stream, 'experience', { experience: spark });
-        const answer = await generateWelcome({ readerContext, memoryContext, conversations, scope, mode: modeAccess.mode, spark });
-        writeSse(stream, 'answer_delta', { delta: answer });
-        writeSse(stream, 'done', { request_id: requestId, mode: modeAccess.mode });
-        logEvent('info', 'welcome_completed', {
-          subscriber_hash: subscriberHash,
-          mode: modeAccess.mode,
-          conversation_count: conversations.length,
+      const answer = await generateWelcome({ readerContext, memoryContext, conversations, scope, mode: modeAccess.mode, spark });
+      writeSse(stream, 'answer_delta', { delta: answer });
+      writeSse(stream, 'done', { request_id: requestId, mode: modeAccess.mode });
+      logEvent('info', 'welcome_completed', {
+        subscriber_hash: subscriberHash,
+        mode: modeAccess.mode,
+        conversation_count: conversations.length,
         has_memory: Boolean(memory),
         has_preferred_name: Boolean(effectiveProfile.preferred_name),
         has_spark: Boolean(spark),
@@ -1060,208 +1035,208 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       return;
     }
 
-      const question = String(body.message || '').trim();
-      const scope = normalizeScope(body.scope);
-      const userProfile = normalizeUserProfile(body.user_profile);
-      const suppliedPreferredName = userProfile.preferred_name || extractPreferredNameFromMessage(question);
-      let effectiveUserProfile = {
-        ...userProfile,
-        preferred_name: suppliedPreferredName || userProfile.preferred_name
+    const question = String(body.message || '').trim();
+    const scope = normalizeScope(body.scope);
+    const userProfile = normalizeUserProfile(body.user_profile);
+    const suppliedPreferredName = userProfile.preferred_name || extractPreferredNameFromMessage(question);
+    let effectiveUserProfile = {
+      ...userProfile,
+      preferred_name: suppliedPreferredName || userProfile.preferred_name
+    };
+    let readerContext = readerContextPrompt(body.client_context, effectiveUserProfile);
+    const requestedConversationId = validConversationId(body.conversation_id || body.conversationId);
+    const conversationId = requestedConversationId || crypto.randomUUID();
+    const modeAccess = await resolveRequestedConversationMode({
+      body,
+      payload,
+      subscriberHash,
+      conversationId: requestedConversationId
+    });
+    if (!modeAccess.ok) {
+      writeSse(stream, 'error', { error: modeAccess.error, request_id: requestId });
+      return;
+    }
+    const history = await loadUserConversationHistory({
+      dynamodb,
+      tableName: process.env.TABLE_NAME,
+      subscriberHash,
+      conversationId,
+      logEvent
+    });
+    if (!question) {
+      writeSse(stream, 'error', { error: 'Ask a question about the archive.', request_id: requestId });
+      return;
+    }
+    if (question.length > Number(process.env.MAX_QUESTION_CHARS || '1200')) {
+      writeSse(stream, 'error', { error: 'Please ask a shorter question.', request_id: requestId });
+      return;
+    }
+    if (!(await checkRateLimit(String(payload.sub)))) {
+      writeSse(stream, 'error', { error: 'The librarian is at the hourly limit for this session.', request_id: requestId });
+      return;
+    }
+    if (effectiveUserProfile.preferred_name) {
+      await recordUserPreferredName(subscriberHash, effectiveUserProfile.preferred_name);
+    }
+
+    // Fetch user memory before preflight so memory/conversation-meta prompts
+    // are not answered by the evaluator from an empty context.
+    const userMemory = await getUserMemory(subscriberHash);
+    const memoryContext = memoryContextBlock(userMemory);
+    if (!effectiveUserProfile.preferred_name && userMemory?.preferred_name) {
+      effectiveUserProfile = {
+        ...effectiveUserProfile,
+        preferred_name: userMemory.preferred_name
       };
-      let readerContext = readerContextPrompt(body.client_context, effectiveUserProfile);
-      const requestedConversationId = validConversationId(body.conversation_id || body.conversationId);
-      const conversationId = requestedConversationId || crypto.randomUUID();
-      const modeAccess = await resolveRequestedConversationMode({
-        body,
-        payload,
-        subscriberHash,
-        conversationId: requestedConversationId
-      });
-      if (!modeAccess.ok) {
-        writeSse(stream, 'error', { error: modeAccess.error, request_id: requestId });
-        return;
-      }
-      const history = await loadUserConversationHistory({
-        dynamodb,
-        tableName: process.env.TABLE_NAME,
-        subscriberHash,
-        conversationId,
-        logEvent
-      });
-      if (!question) {
-        writeSse(stream, 'error', { error: 'Ask a question about the archive.', request_id: requestId });
-        return;
-      }
-      if (question.length > Number(process.env.MAX_QUESTION_CHARS || '1200')) {
-        writeSse(stream, 'error', { error: 'Please ask a shorter question.', request_id: requestId });
-        return;
-      }
-      if (!(await checkRateLimit(String(payload.sub)))) {
-        writeSse(stream, 'error', { error: 'The librarian is at the hourly limit for this session.', request_id: requestId });
-        return;
-      }
-      if (effectiveUserProfile.preferred_name) {
-        await recordUserPreferredName(subscriberHash, effectiveUserProfile.preferred_name);
-      }
+      readerContext = readerContextPrompt(body.client_context, effectiveUserProfile);
+    }
 
-      // Fetch user memory before preflight so memory/conversation-meta prompts
-      // are not answered by the evaluator from an empty context.
-      const userMemory = await getUserMemory(subscriberHash);
-      const memoryContext = memoryContextBlock(userMemory);
-      if (!effectiveUserProfile.preferred_name && userMemory?.preferred_name) {
-        effectiveUserProfile = {
-          ...effectiveUserProfile,
-          preferred_name: userMemory.preferred_name
-        };
-        readerContext = readerContextPrompt(body.client_context, effectiveUserProfile);
-      }
-
-      writeSse(stream, 'meta', { request_id: requestId, conversation_id: conversationId, mode: modeAccess.mode });
-      writeSse(stream, 'status', { message: 'Understanding the request...' });
-      const preflight = await evaluatePromptPreflight(question, scope, history, { readerContext, memoryContext, mode: modeAccess.mode });
-      if (preflight.action === 'direct') {
-        preflight.direct_answer = sanitizeAnswerProse(preflight.direct_answer);
-        const citations = [];
-        writeSse(stream, 'answer_delta', { delta: preflight.direct_answer });
-        writeSse(stream, 'citations', { citations });
-        const conversation = await recordUserConversationTurn({
-          dynamodb,
-          tableName: process.env.TABLE_NAME,
-          subscriberHash,
-          conversationId,
-          question,
-          answer: preflight.direct_answer,
-          scope,
-          mode: modeAccess.mode,
-          requestId,
-          citations,
-          preflight,
-          toolTrace: { calls: [] },
-          metrics: {
-            model: fastModel(),
-            stop_reason: 'preflight_direct'
-          },
-          logEvent
-        });
-        writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation, mode: modeAccess.mode });
-        // Guarded/direct turns still update memory — the question text was
-        // recorded above, so let the user-memory row reflect that turn too.
-        await updateUserMemoryAfterTurn(subscriberHash, payload, question, effectiveUserProfile.preferred_name);
-        return;
-      }
-
-      writeSse(stream, 'status', { message: 'Investigating the archive...' });
-      let deadlineExceeded = false;
-      const deadlineMs = chatDeadlineMs();
-      const slowNoticeMs = Math.min(chatSlowNoticeMs(), Math.max(1000, deadlineMs - 1000));
-      const slowNoticeTimer = setTimeout(() => {
-        if (deadlineExceeded) return;
-        try {
-          writeSse(stream, 'status', {
-            message: 'This is a deeper archive pass. Thingy is still working...'
-          });
-        } catch {}
-        logEvent('info', 'chat_slow_notice_sent', {
-          request_id: requestId,
-          conversation_id: conversationId,
-          subscriber_hash: subscriberHash,
-          mode: modeAccess.mode,
-          slow_notice_ms: slowNoticeMs,
-          deadline_ms: deadlineMs
-        });
-      }, slowNoticeMs);
-      const deadlineTimer = setTimeout(() => {
-        deadlineExceeded = true;
-        try {
-          writeSse(stream, 'error', {
-            error: 'Thingy spent too long in the archive. Please try again with a narrower angle.',
-            request_id: requestId
-          });
-        } catch {}
-        try { stream.end(); } catch {}
-        logEvent('warning', 'chat_deadline_exceeded', {
-          request_id: requestId,
-          conversation_id: conversationId,
-          subscriber_hash: subscriberHash,
-          mode: modeAccess.mode,
-          deadline_ms: deadlineMs
-        });
-      }, deadlineMs);
-      let result;
-      try {
-        result = await streamBedrockAgentAnswer(question, history, stream, {
-          memoryContext,
-          readerContext,
-          scope,
-          mode: modeAccess.mode,
-          preflight,
-          subscriberHash,
-          requestId,
-          conversationId,
-          deadlineExceeded: () => deadlineExceeded
-        });
-      } finally {
-        clearTimeout(slowNoticeTimer);
-        clearTimeout(deadlineTimer);
-      }
-      if (deadlineExceeded) {
-        await recordUserConversationTurn({
-          dynamodb,
-          tableName: process.env.TABLE_NAME,
-          subscriberHash,
-          conversationId,
-          question,
-          answer: 'Thingy spent too long in the archive before it could return a reliable answer.',
-          scope,
-          mode: modeAccess.mode,
-          requestId,
-          citations: [],
-          preflight,
-          toolTrace: result?.toolTrace || { calls: [] },
-          metrics: {
-            model: result?.metrics?.model || agentModel(),
-            duration_ms: Math.round(performance.now() - start),
-            output_tokens: result?.metrics?.output_tokens,
-            stop_reason: 'app_deadline_exceeded'
-          },
-          logEvent
-        });
-        return;
-      }
-      const answer = result.answer;
-      const citations = result.citations;
+    writeSse(stream, 'meta', { request_id: requestId, conversation_id: conversationId, mode: modeAccess.mode });
+    writeSse(stream, 'status', { message: 'Understanding the request...' });
+    const preflight = await evaluatePromptPreflight(question, scope, history, { readerContext, memoryContext, mode: modeAccess.mode });
+    if (preflight.action === 'direct') {
+      preflight.direct_answer = sanitizeAnswerProse(preflight.direct_answer);
+      const citations = [];
+      writeSse(stream, 'answer_delta', { delta: preflight.direct_answer });
+      writeSse(stream, 'citations', { citations });
       const conversation = await recordUserConversationTurn({
         dynamodb,
         tableName: process.env.TABLE_NAME,
         subscriberHash,
         conversationId,
         question,
-        answer,
+        answer: preflight.direct_answer,
         scope,
         mode: modeAccess.mode,
         requestId,
         citations,
         preflight,
-        toolTrace: result.toolTrace,
-        metrics: result.metrics,
+        toolTrace: { calls: [] },
+        metrics: {
+          model: fastModel(),
+          stop_reason: 'preflight_direct'
+        },
         logEvent
       });
-      writeSse(stream, 'citations', { citations });
       writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation, mode: modeAccess.mode });
-      // Update per-user memory after the answer ships. If the sid has
-      // rotated since the prior turn, this also triggers a Bedrock-
-      // synthesized summary of the previous session.
+      // Guarded/direct turns still update memory — the question text was
+      // recorded above, so let the user-memory row reflect that turn too.
       await updateUserMemoryAfterTurn(subscriberHash, payload, question, effectiveUserProfile.preferred_name);
-      logEvent('info', 'chat_completed', {
-        subscriber_hash: subscriberHash,
+      return;
+    }
+
+    writeSse(stream, 'status', { message: 'Investigating the archive...' });
+    let deadlineExceeded = false;
+    const deadlineMs = chatDeadlineMs();
+    const slowNoticeMs = Math.min(chatSlowNoticeMs(), Math.max(1000, deadlineMs - 1000));
+    const slowNoticeTimer = setTimeout(() => {
+      if (deadlineExceeded) return;
+      try {
+        writeSse(stream, 'status', {
+          message: 'This is a deeper archive pass. Thingy is still working...'
+        });
+      } catch {}
+      logEvent('info', 'chat_slow_notice_sent', {
         request_id: requestId,
         conversation_id: conversationId,
+        subscriber_hash: subscriberHash,
         mode: modeAccess.mode,
-        question_chars: question.length,
-        history_count: history.length,
-        citation_count: citations.length,
-        duration_ms: Math.round(performance.now() - start)
+        slow_notice_ms: slowNoticeMs,
+        deadline_ms: deadlineMs
       });
+    }, slowNoticeMs);
+    const deadlineTimer = setTimeout(() => {
+      deadlineExceeded = true;
+      try {
+        writeSse(stream, 'error', {
+          error: 'Thingy spent too long in the archive. Please try again with a narrower angle.',
+          request_id: requestId
+        });
+      } catch {}
+      try { stream.end(); } catch {}
+      logEvent('warning', 'chat_deadline_exceeded', {
+        request_id: requestId,
+        conversation_id: conversationId,
+        subscriber_hash: subscriberHash,
+        mode: modeAccess.mode,
+        deadline_ms: deadlineMs
+      });
+    }, deadlineMs);
+    let result;
+    try {
+      result = await streamBedrockAgentAnswer(question, history, stream, {
+        memoryContext,
+        readerContext,
+        scope,
+        mode: modeAccess.mode,
+        preflight,
+        subscriberHash,
+        requestId,
+        conversationId,
+        deadlineExceeded: () => deadlineExceeded
+      });
+    } finally {
+      clearTimeout(slowNoticeTimer);
+      clearTimeout(deadlineTimer);
+    }
+    if (deadlineExceeded) {
+      await recordUserConversationTurn({
+        dynamodb,
+        tableName: process.env.TABLE_NAME,
+        subscriberHash,
+        conversationId,
+        question,
+        answer: 'Thingy spent too long in the archive before it could return a reliable answer.',
+        scope,
+        mode: modeAccess.mode,
+        requestId,
+        citations: [],
+        preflight,
+        toolTrace: result?.toolTrace || { calls: [] },
+        metrics: {
+          model: result?.metrics?.model || agentModel(),
+          duration_ms: Math.round(performance.now() - start),
+          output_tokens: result?.metrics?.output_tokens,
+          stop_reason: 'app_deadline_exceeded'
+        },
+        logEvent
+      });
+      return;
+    }
+    const answer = result.answer;
+    const citations = result.citations;
+    const conversation = await recordUserConversationTurn({
+      dynamodb,
+      tableName: process.env.TABLE_NAME,
+      subscriberHash,
+      conversationId,
+      question,
+      answer,
+      scope,
+      mode: modeAccess.mode,
+      requestId,
+      citations,
+      preflight,
+      toolTrace: result.toolTrace,
+      metrics: result.metrics,
+      logEvent
+    });
+    writeSse(stream, 'citations', { citations });
+    writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation, mode: modeAccess.mode });
+    // Update per-user memory after the answer ships. If the sid has
+    // rotated since the prior turn, this also triggers a Bedrock-
+    // synthesized summary of the previous session.
+    await updateUserMemoryAfterTurn(subscriberHash, payload, question, effectiveUserProfile.preferred_name);
+    logEvent('info', 'chat_completed', {
+      subscriber_hash: subscriberHash,
+      request_id: requestId,
+      conversation_id: conversationId,
+      mode: modeAccess.mode,
+      question_chars: question.length,
+      history_count: history.length,
+      citation_count: citations.length,
+      duration_ms: Math.round(performance.now() - start)
+    });
   } catch (error) {
     logEvent('error', 'request_failed', errorFields(error, {
       ...summary,

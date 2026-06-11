@@ -244,22 +244,5 @@
       }
     }
   },
-  {
-    "toolSpec": {
-      "name": "remember_user",
-      "description": "Persist a durable reader memory when the reader explicitly tells Thingy something useful to remember, such as their preferred name, archive interests, answer-style preferences, current project, or relationship to the archive. Do not use for inferred facts, sensitive/private personal details, family details, addresses, phone numbers, schedules, finances, health, or anything the reader did not clearly offer. category must be one of: preferred_name, interest, preference, project, relationship_to_archive, note. Use sparingly and naturally; after using it, continue the conversation without making the memory write feel like a form.",
-      "inputSchema": {
-        "json": {
-          "type": "object",
-          "properties": {
-            "category": { "type": "string" },
-            "value": { "type": "string" },
-            "source": { "type": "string" }
-          },
-          "required": ["category", "value"]
-        }
-      }
-    }
-  },
   { "cachePoint": { "type": "default" } }
 ]

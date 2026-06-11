@@ -1,10 +1,12 @@
-import { BatchWriteItemCommand, GetItemCommand, PutItemCommand, QueryCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
+import { BatchWriteItemCommand, GetItemCommand, PutItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb';
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { dynamodb, s3 } from './aws-clients.mjs';
 import { errorFields, logEvent } from './logging.mjs';
 import { dynamoNumber, dynamoString, fromDynamoAttr } from './user-conversations.mjs';
 
 const PROFILE_DELETION_SK = 'profile-deleted';
+const EMAIL_HASH_INDEX = 'EmailHashIndex';
+const SUBSCRIBER_HASH_INDEX = 'SubscriberHashIndex';
 
 function deletionKey(sub) {
   return { pk: dynamoString(`user#${sub}`), sk: dynamoString(PROFILE_DELETION_SK) };
@@ -49,19 +51,19 @@ async function queryUserItems(tableName, sub) {
   return items;
 }
 
-async function scanLinkedItems(tableName, sub) {
+async function queryLinkedIndex(tableName, indexName, attributeName, sub) {
   const items = [];
   let ExclusiveStartKey;
   do {
-    const response = await dynamodb.send(new ScanCommand({
+    const response = await dynamodb.send(new QueryCommand({
       TableName: tableName,
-      ProjectionExpression: '#pk, #sk, #email_hash, #subscriber_hash',
-      FilterExpression: '#email_hash = :sub OR #subscriber_hash = :sub',
+      IndexName: indexName,
+      ProjectionExpression: '#pk, #sk',
+      KeyConditionExpression: '#hash = :sub',
       ExpressionAttributeNames: {
         '#pk': 'pk',
         '#sk': 'sk',
-        '#email_hash': 'email_hash',
-        '#subscriber_hash': 'subscriber_hash'
+        '#hash': attributeName
       },
       ExpressionAttributeValues: { ':sub': dynamoString(sub) },
       ExclusiveStartKey
@@ -70,6 +72,14 @@ async function scanLinkedItems(tableName, sub) {
     ExclusiveStartKey = response.LastEvaluatedKey;
   } while (ExclusiveStartKey);
   return items;
+}
+
+async function queryLinkedItems(tableName, sub) {
+  const [emailItems, subscriberItems] = await Promise.all([
+    queryLinkedIndex(tableName, EMAIL_HASH_INDEX, 'email_hash', sub),
+    queryLinkedIndex(tableName, SUBSCRIBER_HASH_INDEX, 'subscriber_hash', sub)
+  ]);
+  return [...emailItems, ...subscriberItems];
 }
 
 async function batchDeleteKeys(tableName, keys = []) {
@@ -148,7 +158,7 @@ export async function deleteThingyProfile(sub) {
   const nowIso = new Date(nowMs).toISOString();
   const markerKey = deletionKey(sub);
   const userItems = await queryUserItems(tableName, sub);
-  const linkedItems = await scanLinkedItems(tableName, sub);
+  const linkedItems = await queryLinkedItems(tableName, sub);
   const keyed = new Map();
   for (const item of [...userItems, ...linkedItems]) {
     const key = itemKey(item);
