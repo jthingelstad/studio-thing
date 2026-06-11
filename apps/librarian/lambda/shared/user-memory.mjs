@@ -35,7 +35,7 @@ const MEMORY_TOMBSTONES_MAX = 48;
 const MEMORY_EVENT_LIMIT = 120;
 const TTL_DAYS_DEFAULT = 365;
 const SYNTHESIS_MAX_TOKENS = 160;
-const MEMORY_SYNTHESIS_MAX_TOKENS = 900;
+const MEMORY_SYNTHESIS_MAX_TOKENS = 1600;
 const MEMORY_SYNTHESIS_VERSION = 'thingy-memory-v1';
 const MEMORY_REFRESH_PRESERVED_ERROR = 'Profile refresh could not produce usable updates. Existing profile was kept.';
 const MEMORY_EMPTY_SYNTHESIS_ERROR = 'Profile refresh found evidence but produced no learned profile items.';
@@ -901,8 +901,9 @@ async function synthesizeEngagementMemories(events = [], memory = {}, nowIso = n
     'You synthesize a Thingy reader profile from observed archive-use behavior.',
     'Thingy is Jamie Thingelstad\'s archive agent. The profile should describe what the reader explores in the archive, not personal identity.',
     'Create only durable, user-visible observations supported by repeated or meaningful questions, conversation topics, and retained thread summaries.',
-    'When there are several substantive conversation summaries, return 2 to 6 profile items rather than an empty profile.',
+    'When there are several substantive conversation summaries, return 2 to 4 profile items rather than an empty profile.',
     'Use stable labels that would remain the same if the same evidence were synthesized again.',
+    'Keep output compact: each summary must be one sentence under 35 words; each item gets at most 2 evidence entries; evidence labels must be short fragments under 8 words.',
     'Do not infer sensitive personal details, demographics, health, finances, family, schedules, addresses, or anything outside archive engagement.',
     'Return strict JSON: {"memories":[{"type":"observed_archive_theme|exploration_style|source_affinity|recent_trajectory","label":"stable short label","summary":"one sentence","confidence":0.0,"evidence":[{"event_id":"id","label":"why"}]}]}.',
     'Return {"memories":[]} when there is nothing useful to learn.'
