@@ -98,11 +98,22 @@ Resources:
           AttributeType: S
         - AttributeName: sk
           AttributeType: S
+        - AttributeName: email_hash
+          AttributeType: S
       KeySchema:
         - AttributeName: pk
           KeyType: HASH
         - AttributeName: sk
           KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: EmailHashIndex
+          KeySchema:
+            - AttributeName: email_hash
+              KeyType: HASH
+            - AttributeName: sk
+              KeyType: RANGE
+          Projection:
+            ProjectionType: KEYS_ONLY
       TimeToLiveSpecification:
         AttributeName: ttl
         Enabled: true
@@ -143,7 +154,9 @@ Resources:
                   - dynamodb:BatchWriteItem
                   - dynamodb:Query
                   - dynamodb:Scan
-                Resource: !GetAtt LibrarianTable.Arn
+                Resource:
+                  - !GetAtt LibrarianTable.Arn
+                  - !Sub "${LibrarianTable.Arn}/index/*"
               - Effect: Allow
                 Action:
                   - dynamodb:DescribeStream
