@@ -141,8 +141,9 @@ function themesSimilar(first, second) {
 }
 
 function recentSparkThemes(memory, conversations = []) {
+  const recentPrompts = memory?.recent_prompts?.length ? memory.recent_prompts : memory?.current_session_questions || [];
   const values = [
-    ...((memory?.current_session_questions || []).slice(-5).map((item) => item?.question || item)),
+    ...(recentPrompts.slice(-5).map((item) => item?.question || item)),
     ...((memory?.synthesized_history || []).slice(-3).map((item) => item?.summary || item)),
     ...((conversations || []).slice(0, 6).map((item) => item?.title || item))
   ];
@@ -324,7 +325,8 @@ function curiosityThemeCandidates(memory, conversations = []) {
     const theme = cleanThemeCandidate(value);
     if (theme) addCuriosityCandidate(candidates, theme, { weight, reason, kind });
   };
-  for (const item of (memory?.current_session_questions || []).slice(-8)) add(item?.question || item, 4, 'recent conversation', 'recent');
+  const recentPrompts = memory?.recent_prompts?.length ? memory.recent_prompts : memory?.current_session_questions || [];
+  for (const item of recentPrompts.slice(-8)) add(item?.question || item, 4, 'recent prompt', 'recent');
   for (const entry of (conversations || []).slice(0, 10)) add(entry?.title || '', 2.5, 'conversation history', 'recent');
   for (const item of (memory?.synthesized_history || []).slice(-5)) add(item?.summary || item, 2, 'remembered conversation pattern', 'recent');
   for (const item of memory?.learned_profile || []) add(item?.label || item?.summary, 2.4, 'learned profile', 'memory');

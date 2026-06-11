@@ -14,6 +14,7 @@ import {
   memorySynthesisStatus,
   mergeLearnedProfile,
   parseSynthesizedMemoryJson,
+  recordUserTurn,
   recordUserPreferredName,
   sanitizeSessionSummary,
   shouldAutoSynthesizeMemory,
@@ -46,6 +47,7 @@ import {
   parsePreflightJson,
   passThroughPreflight
 } from '../shared/prompt-preflight.mjs';
+import { normalizeUserProfile, readerContextPrompt } from '../shared/chat-context.mjs';
 
 test('session token round trips and rejects tampering', () => {
   process.env.SESSION_SECRET = 'test-secret';
@@ -765,6 +767,10 @@ test('memoryFromItem shapes stored preferred names', () => {
     preferred_name: { S: 'Jamie' },
     turn_count: { N: '7' },
     current_session_questions: { L: [{ M: { ts: { S: '2026-01-02T00:00:00Z' }, question: { S: 'What about RSS?' } } }] },
+    recent_prompts: { L: [
+      { M: { ts: { S: '2026-01-01T00:00:00Z' }, question: { S: 'Tell me about OPML.' } } },
+      { M: { ts: { S: '2026-01-02T00:00:00Z' }, question: { S: 'What about RSS?' } } }
+    ] },
     synthesized_history: { L: [] },
     learned_profile: { L: [{ M: {
       label: { S: 'RSS workflows' },
@@ -797,6 +803,8 @@ test('memoryFromItem shapes stored preferred names', () => {
   assert.equal(memory.preferred_name, 'Jamie');
   assert.match(memory.current_session_questions[0].id, /^mem_recent_/);
   assert.equal(memory.current_session_questions[0].question, 'What about RSS?');
+  assert.equal(memory.recent_prompts.length, 2);
+  assert.equal(memory.recent_prompts[0].question, 'Tell me about OPML.');
   assert.match(memory.learned_profile[0].id, /^mem_learned_/);
   assert.equal(memory.learned_profile[0].evidence[0].event_id, 'event-1');
   assert.equal(Object.hasOwn(memory, 'remembered_facts'), false);
@@ -804,6 +812,51 @@ test('memoryFromItem shapes stored preferred names', () => {
   assert.equal(Object.hasOwn(memory, 'synthesized_memories'), false);
   assert.equal(memory.memory_synthesis.status, 'current');
   assert.equal(memory.discord_connection.display_name, 'Thingy User');
+});
+
+test('recordUserTurn appends durable recent prompts across sessions', async () => {
+  const priorTable = process.env.TABLE_NAME;
+  process.env.TABLE_NAME = 'thingy-test-table';
+  const originalDynamoSend = dynamodb.send;
+  let storedItem = memoryDynamoItem('subscriber-hash', {
+    version: 4,
+    current_session_id: 'session-a',
+    current_session_started_at: '2026-01-01T00:00:00.000Z',
+    current_session_questions: [
+      { ts: '2026-01-01T00:00:00.000Z', question: 'What about RSS?' }
+    ],
+    recent_prompts: Array.from({ length: 24 }, (_, index) => ({
+      ts: `2026-01-01T00:${String(index).padStart(2, '0')}:00.000Z`,
+      question: `Prompt ${index}`
+    }))
+  }, '2026-01-01T00:00:00.000Z');
+  let writtenMemory = null;
+
+  dynamodb.send = async (command) => {
+    if (command.constructor.name === 'GetItemCommand') return { Item: storedItem };
+    if (command.constructor.name === 'PutItemCommand') {
+      if (command.input.Item?.sk?.S === 'memory') writtenMemory = command.input.Item;
+      return {};
+    }
+    throw new Error(`Unexpected Dynamo command ${command.constructor.name}`);
+  };
+
+  try {
+    await recordUserTurn('subscriber-hash', {
+      sid: 'session-a',
+      question: 'How does RSS connect to owned distribution?'
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const memory = memoryFromItem(writtenMemory, 'subscriber-hash');
+    assert.equal(memory.recent_prompts.length, 24);
+    assert.equal(memory.recent_prompts[0].question, 'Prompt 1');
+    assert.equal(memory.recent_prompts.at(-1).question, 'How does RSS connect to owned distribution?');
+    assert.equal(memory.current_session_questions.at(-1).question, 'How does RSS connect to owned distribution?');
+  } finally {
+    dynamodb.send = originalDynamoSend;
+    if (priorTable === undefined) delete process.env.TABLE_NAME;
+    else process.env.TABLE_NAME = priorTable;
+  }
 });
 
 test('recordUserPreferredName reports failure when memory storage is not configured', async () => {
@@ -896,6 +949,11 @@ test('authProfile reflects turn_count and surfaces recent topics', () => {
       { ts: '2026-04-01T00:00:00Z', question: 'What about RSS?' },
       { ts: '2026-04-01T00:01:00Z', question: 'Did Jamie mention Atom?' }
     ],
+    recent_prompts: [
+      { ts: '2026-03-01T00:00:00Z', question: 'Tell me about OPML.' },
+      { ts: '2026-04-01T00:00:00Z', question: 'What about RSS?' },
+      { ts: '2026-04-01T00:01:00Z', question: 'Did Jamie mention Atom?' }
+    ],
     synthesized_history: [
       { started_at: '2026-03-01', ended_at: '2026-03-01', summary: 'RSS week.', turn_count: 3 },
       { started_at: '2026-03-15', ended_at: '2026-03-15', summary: 'Indie web week.', turn_count: 4 }
@@ -906,23 +964,28 @@ test('authProfile reflects turn_count and surfaces recent topics', () => {
   assert.equal(profile.turn_count, 7);
   assert.equal(profile.preferred_name, 'Jamie');
   assert.equal(profile.current_session_questions.length, 2);
+  assert.equal(profile.recent_prompts.length, 3);
+  assert.equal(profile.recent_prompts[0].question, 'Tell me about OPML.');
   assert.equal(profile.prior_session_summaries.length, 2);
   assert.equal(profile.prior_session_summaries[1].summary, 'Indie web week.');
 });
 
-test('authProfile caps recent topics at 5 + 3', () => {
+test('authProfile caps recent topics at 5 current, 10 recent, and 3 summaries', () => {
   const memory = {
     turn_count: 50,
     current_session_questions: Array.from({ length: 12 }, (_, i) => ({ ts: '', question: `q${i}` })),
+    recent_prompts: Array.from({ length: 24 }, (_, i) => ({ ts: '', question: `prompt${i}` })),
     synthesized_history: Array.from({ length: 8 }, (_, i) => ({
       summary: `s${i}`, started_at: '', ended_at: '', turn_count: 1
     }))
   };
   const profile = authProfile(memory);
   assert.equal(profile.current_session_questions.length, 5);
+  assert.equal(profile.recent_prompts.length, 10);
   assert.equal(profile.prior_session_summaries.length, 3);
   // Most recent kept.
   assert.equal(profile.current_session_questions[4].question, 'q11');
+  assert.equal(profile.recent_prompts[9].question, 'prompt23');
   assert.equal(profile.prior_session_summaries[2].summary, 's7');
 });
 
@@ -950,19 +1013,45 @@ test('authProfile and memory context filter low-value synthesized summaries', ()
 test('memoryContextBlock returns empty string when nothing useful', () => {
   assert.equal(memoryContextBlock(null), '');
   assert.equal(memoryContextBlock({}), '');
-  assert.equal(memoryContextBlock({ synthesized_history: [], current_session_questions: [] }), '');
+  assert.equal(memoryContextBlock({ synthesized_history: [], current_session_questions: [], recent_prompts: [] }), '');
 });
 
-test('memoryContextBlock ignores prior summaries and current questions without learned profile', () => {
+test('memoryContextBlock uses recent prompts even before learned profile synthesis', () => {
   const block = memoryContextBlock({
     synthesized_history: [
       { summary: 'RSS exploration.', ended_at: '2026-03-01T00:00:00Z' }
     ],
-    current_session_questions: [
-      { question: 'What did Jamie say about Atom?' }
+    recent_prompts: [
+      { question: 'What did Jamie say about Atom?' },
+      { question: 'How does OPML connect to RSS readers?' }
     ]
   });
-  assert.equal(block, '');
+  assert.match(block, /Recent reader prompts/);
+  assert.match(block, /What did Jamie say about Atom/);
+  assert.match(block, /How does OPML connect/);
+});
+
+test('reader context prefers durable recent prompts over current-session fallback', () => {
+  const profile = normalizeUserProfile({
+    turn_count: 9,
+    recent_prompts: [
+      { question: 'What did Jamie say about RSS?' },
+      { question: 'How does OPML connect to readers?' }
+    ],
+    current_session_questions: [
+      { question: 'Fallback current-session question.' }
+    ]
+  });
+  const prompt = readerContextPrompt({}, profile);
+
+  assert.deepEqual(profile.recent_prompts, [
+    'What did Jamie say about RSS?',
+    'How does OPML connect to readers?'
+  ]);
+  assert.match(prompt, /Client-known recent Thingy prompts/);
+  assert.match(prompt, /What did Jamie say about RSS/);
+  assert.doesNotMatch(prompt, /Client-known current session questions/);
+  assert.doesNotMatch(prompt, /Fallback current-session question/);
 });
 
 test('authProfile surfaces Discord metadata without explicit memory fields', () => {

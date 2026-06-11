@@ -49,8 +49,10 @@ function isMeaningfulDispatchPrompt(value) {
 
 function dispatchConversationLines(messages = []) {
   if (!Array.isArray(messages)) return [];
+  const ignoredKinds = new Set(['brief', 'progress', 'sent', 'welcome']);
   return messages
     .slice(-10)
+    .filter((message) => !ignoredKinds.has(String(message?.kind || '')))
     .map((message) => {
       const role = message?.role === 'user' ? 'Reader' : 'Thingy';
       const text = normalizeDispatchText(message?.text, 500);
@@ -133,7 +135,7 @@ function coverageQuestion(status, prompt, fit, adjacentTopics = []) {
 
 function defaultPlannerMessage({ needsClarification, status, direction }) {
   if (needsClarification && status === 'thin') {
-    return 'I checked the archive first, and this looks under-supported as stated. I can still help redirect it toward something Jamie has written enough about.';
+    return "I checked Jamie's archive, and I do not have enough direct source material for that Dispatch as stated. I should redirect this toward something Jamie has actually written enough about.";
   }
   if (needsClarification && status === 'broad') {
     return 'I checked the archive first, and this topic is broad enough that I should narrow it before Dispatch generation.';
@@ -149,6 +151,10 @@ function plannerDetectedArchiveMismatch(parsed = {}) {
     parsed.message
   ].filter(Boolean).join(' ');
   return /\b(?:archive mismatch|no published writing|not finding enough|not enough direct|not among|not contain|under-supported|unrelated to your request)\b/i.test(text);
+}
+
+function plannerMessageAcknowledgesThinCoverage(value) {
+  return /\b(?:do not have enough|don't have enough|not finding enough|not enough direct|under-supported|thin|redirect|adjacent|not focused|not written enough)\b/i.test(String(value || ''));
 }
 
 function normalizeDispatchBrief(parsedBrief = {}, { prompt, direction, coverageStatus, sources }) {
@@ -283,10 +289,15 @@ async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '', m
   const suggestedNarrowing = textArray(parsed.suggested_narrowing, 5, 160);
   const shouldClarifyCoverage = !alreadyAnswered && (coverageStatus === 'thin' || coverageStatus === 'broad');
   const needsClarification = Boolean(shouldClarifyCoverage || parsed.needs_clarification || shouldClarifyTerseSeed);
-  const fallbackQuestion = question || coverageQuestion(coverageStatus, prompt, fit, adjacentTopics);
+  const fallbackQuestion = coverageStatus === 'thin'
+    ? coverageQuestion(coverageStatus, prompt, fit, adjacentTopics)
+    : question || coverageQuestion(coverageStatus, prompt, fit, adjacentTopics);
   let message = normalizeDispatchText(parsed.message, 700) || (
     defaultPlannerMessage({ needsClarification, status: coverageStatus, direction: direction || prompt })
   );
+  if (needsClarification && coverageStatus === 'thin' && !plannerMessageAcknowledgesThinCoverage(message)) {
+    message = defaultPlannerMessage({ needsClarification, status: coverageStatus, direction: direction || prompt });
+  }
   if (!needsClarification && (message.includes('?') || readyMessageClaimsStarted(message))) {
     message = defaultPlannerMessage({ needsClarification, status: coverageStatus, direction: direction || prompt });
   }

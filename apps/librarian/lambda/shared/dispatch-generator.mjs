@@ -124,22 +124,47 @@ const DISPATCH_SOURCE_STOPWORDS = new Set([
   'about',
   'and',
   'archive',
+  'before',
+  'brief',
+  'checking',
+  'clear',
+  'confirmed',
   'could',
+  'coverage',
+  'current',
+  'direction',
   'dispatch',
   'especially',
   'for',
+  'follow',
   'from',
+  'generate',
+  'generation',
+  'give',
+  'help',
   'how',
   'into',
   'jamie',
+  'looking',
+  'meaningful',
+  'original',
+  'packet',
   'published',
+  'reader',
   'should',
+  'shape',
+  'shaping',
+  'seed',
   'thingy',
   'that',
   'the',
   'this',
+  'topic',
+  'turn',
+  'up',
   'use',
   'uses',
+  'want',
   'what',
   'when',
   'where',
@@ -154,8 +179,30 @@ function dispatchQueryTokens(query) {
   return tokenize(query).filter((token) => !DISPATCH_SOURCE_STOPWORDS.has(token));
 }
 
+function tokenVariants(token) {
+  const value = String(token || '');
+  const variants = new Set([value]);
+  if (value.length >= 5 && value.endsWith('ing')) {
+    const stem = value.slice(0, -3);
+    variants.add(stem);
+    variants.add(`${stem}e`);
+  }
+  if (value.length >= 5 && value.endsWith('ed')) {
+    const stem = value.slice(0, -2);
+    variants.add(stem);
+    variants.add(`${stem}e`);
+  }
+  if (value.length >= 5 && value.endsWith('ies')) variants.add(`${value.slice(0, -3)}y`);
+  if (value.length >= 5 && value.endsWith('es')) variants.add(value.slice(0, -2));
+  if (value.length >= 5 && value.endsWith('s')) variants.add(value.slice(0, -1));
+  return variants;
+}
+
 function tokenMatchesQuery(haystackToken, queryToken) {
   if (haystackToken === queryToken) return true;
+  const haystackVariants = tokenVariants(haystackToken);
+  const queryVariants = tokenVariants(queryToken);
+  if (haystackVariants.has(queryToken) || queryVariants.has(haystackToken)) return true;
   if (queryToken.length >= 5 && haystackToken.startsWith(queryToken)) return true;
   if (queryToken.length >= 5 && queryToken.endsWith('s') && haystackToken === queryToken.slice(0, -1)) return true;
   if (queryToken.length >= 5 && haystackToken.endsWith('s') && haystackToken.slice(0, -1) === queryToken) return true;
@@ -250,7 +297,7 @@ function scoreChunk(chunk, queryTokens) {
       score += Math.min(count, 4);
     }
   }
-  if (queryTokens.length >= 4 && distinctMatches < 2) return 0;
+  if (queryTokens.length >= 2 && distinctMatches < 2) return 0;
   if (!score) return 0;
   if (chunk.source_kind === 'weekly_thing') score += 0.25;
   if (chunk.url) score += 0.1;

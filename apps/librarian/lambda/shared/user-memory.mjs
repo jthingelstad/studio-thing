@@ -6,6 +6,7 @@
 //   - first_seen_at / last_seen_at / turn_count
 //   - current_session_id            — sid of the in-flight session
 //   - current_session_questions     — rolling questions for that session
+//   - recent_prompts                — rolling raw prompts across sessions
 //   - synthesized_history           — Bedrock-summarized past sessions
 //   - learned_profile               — observed archive-use profile for this reader
 //
@@ -28,6 +29,8 @@ import crypto from 'node:crypto';
 import { logEvent } from './logging.mjs';
 
 const CURRENT_SESSION_QUESTIONS_MAX = 12;
+const RECENT_PROMPTS_MAX = 24;
+const PROFILE_RECENT_PROMPTS_MAX = 10;
 const SYNTHESIZED_HISTORY_MAX = 8;
 const LEARNED_PROFILE_MAX = 12;
 const QUESTION_TRIM_CHARS = 400;
@@ -318,6 +321,7 @@ export function memoryDynamoItem(sub, memory = {}, nowIso = new Date().toISOStri
     current_session_id: dynamoString(overrides.current_session_id ?? memory.current_session_id ?? ''),
     current_session_started_at: dynamoString(overrides.current_session_started_at ?? memory.current_session_started_at ?? ''),
     current_session_questions: { L: (overrides.current_session_questions || memory.current_session_questions || []).map(writeQuestionItem) },
+    recent_prompts: { L: (overrides.recent_prompts || memory.recent_prompts || []).map(writeQuestionItem) },
     synthesized_history: { L: (overrides.synthesized_history || memory.synthesized_history || []).map(writeSynthItem) },
     learned_profile: { L: learnedProfile.map(writeSynthesizedMemoryItem) },
     memory_tombstones: { L: (overrides.memory_tombstones || memory.memory_tombstones || []).map(writeTombstoneItem) },
@@ -452,6 +456,9 @@ export function memoryFromItem(item, sub = '') {
     current_session_questions: (item.current_session_questions?.L || [])
       .map(readQuestion)
       .filter(Boolean),
+    recent_prompts: (item.recent_prompts?.L || [])
+      .map(readQuestion)
+      .filter(Boolean),
     synthesized_history: (item.synthesized_history?.L || [])
       .map(readSynth)
       .filter(Boolean),
@@ -484,6 +491,7 @@ export async function recordUserTurn(sub, { sid, question, preferredName }) {
     let currentSessionId = existing?.current_session_id || '';
     let currentSessionStartedAt = existing?.current_session_started_at || '';
     let currentSessionQuestions = existing?.current_session_questions || [];
+    let recentPrompts = existing?.recent_prompts || [];
 
     const sessionRotated = incomingSid && currentSessionId && currentSessionId !== incomingSid;
     if (sessionRotated && currentSessionQuestions.length > 0) {
@@ -512,6 +520,10 @@ export async function recordUserTurn(sub, { sid, question, preferredName }) {
         ...currentSessionQuestions,
         { ts: nowIso, question: trimmedQuestion }
       ].slice(-CURRENT_SESSION_QUESTIONS_MAX);
+      recentPrompts = [
+        ...recentPrompts,
+        { ts: nowIso, question: trimmedQuestion }
+      ].slice(-RECENT_PROMPTS_MAX);
     }
 
     const priorVersion = Number(existing?.version || 0);
@@ -524,6 +536,7 @@ export async function recordUserTurn(sub, { sid, question, preferredName }) {
       current_session_id: currentSessionId,
       current_session_started_at: currentSessionStartedAt,
       current_session_questions: currentSessionQuestions,
+      recent_prompts: recentPrompts,
       synthesized_history: synthesizedHistory
     });
     const { PutItemCommand } = await import('@aws-sdk/client-dynamodb');
@@ -1044,6 +1057,7 @@ export async function deleteUserMemoryItem(sub, input = {}) {
   );
   let synthesizedHistory = existing.synthesized_history || [];
   let currentQuestions = existing.current_session_questions || [];
+  let recentPrompts = existing.recent_prompts || [];
   let learnedProfile = existing.learned_profile || [];
   let deletedTombstones = [];
 
@@ -1052,9 +1066,11 @@ export async function deleteUserMemoryItem(sub, input = {}) {
     deleted = next.length !== synthesizedHistory.length;
     synthesizedHistory = next;
   } else if (['recent', 'question'].includes(type)) {
-    const next = currentQuestions.filter((item) => !match(item));
-    deleted = next.length !== currentQuestions.length;
-    currentQuestions = next;
+    const nextCurrent = currentQuestions.filter((item) => !match(item));
+    const nextRecent = recentPrompts.filter((item) => !match(item));
+    deleted = nextCurrent.length !== currentQuestions.length || nextRecent.length !== recentPrompts.length;
+    currentQuestions = nextCurrent;
+    recentPrompts = nextRecent;
   } else if (['learned', 'learned_profile'].includes(type)) {
     const learnedMatch = (item) => match(item) || item.id === id || learnedMemoryStableId(item) === id;
     const removed = learnedProfile.filter((item) => learnedMatch(item));
@@ -1088,6 +1104,7 @@ export async function deleteUserMemoryItem(sub, input = {}) {
       version: nextVersion,
       last_seen_at: nowIso,
       current_session_questions: currentQuestions,
+      recent_prompts: recentPrompts,
       synthesized_history: synthesizedHistory,
       learned_profile: learnedProfile,
       memory_tombstones: memoryTombstones
@@ -1112,6 +1129,8 @@ export function authProfile(memory) {
   }
   const turnCount = Number(memory.turn_count || 0);
   const learnedProfile = (memory.learned_profile || []).slice(-LEARNED_PROFILE_MAX);
+  const recentPrompts = (memory.recent_prompts?.length ? memory.recent_prompts : memory.current_session_questions || [])
+    .slice(-PROFILE_RECENT_PROMPTS_MAX);
   return {
     returning: turnCount > 0,
     first_seen_at: memory.first_seen_at,
@@ -1119,6 +1138,7 @@ export function authProfile(memory) {
     preferred_name: memory.preferred_name || '',
     turn_count: turnCount,
     current_session_questions: (memory.current_session_questions || []).slice(-5),
+    recent_prompts: recentPrompts,
     prior_session_summaries: usefulSynthesizedHistory(memory.synthesized_history).slice(-3),
     learned_profile: learnedProfile,
     memory_synthesis: memory.memory_synthesis || {},
@@ -1133,10 +1153,22 @@ export function memoryContextBlock(memory) {
   if (!memory) return '';
   const lines = [];
   const learned = (memory.learned_profile || []).slice(-6);
-  if (learned.length <= 0) return '';
-  lines.push('Learned reader profile from observed Thingy archive use:');
-  learned.forEach((item) => {
-    lines.push(`- ${item.label || item.type}: ${item.summary || item.label}`);
-  });
+  const recentPrompts = (memory.recent_prompts?.length ? memory.recent_prompts : memory.current_session_questions || [])
+    .slice(-5)
+    .map((item) => String(item?.question || item || '').trim().replace(/\s+/g, ' ').slice(0, 220))
+    .filter(Boolean);
+  if (learned.length > 0) {
+    lines.push('Learned reader profile from observed Thingy archive use:');
+    learned.forEach((item) => {
+      lines.push(`- ${item.label || item.type}: ${item.summary || item.label}`);
+    });
+  }
+  if (recentPrompts.length > 0) {
+    if (lines.length) lines.push('');
+    lines.push('Recent reader prompts from Thingy profile:');
+    recentPrompts.forEach((question) => {
+      lines.push(`- ${question}`);
+    });
+  }
   return lines.length > 0 ? lines.join('\n') : '';
 }

@@ -355,6 +355,36 @@ test('analyzeDispatchSourceFit classifies thin and broad Dispatch seeds', () => 
   assert.ok(broad.selected_sources.length >= 6);
 });
 
+test('analyzeDispatchSourceFit rejects broad adjacent matches without direct subject support', () => {
+  const chunks = Array.from({ length: 40 }, (_, index) => ({
+    source_kind: index % 2 ? 'blog' : 'weekly_thing',
+    title: `Travel note ${index}`,
+    url: `https://example.com/africa-${index}`,
+    text: `Africa travel leadership productivity archive source ${index}.`
+  }));
+
+  const fit = analyzeDispatchSourceFit(chunks, 'Biking in Africa', 8);
+
+  assert.equal(fit.coverage_status, 'thin');
+  assert.equal(fit.candidate_count, 0);
+  assert.equal(fit.selected_sources.length, 0);
+});
+
+test('analyzeDispatchSourceFit accepts direct subject support with simple inflections', () => {
+  const chunks = Array.from({ length: 5 }, (_, index) => ({
+    source_kind: 'blog',
+    title: `Bike note ${index}`,
+    url: `https://example.com/bike-africa-${index}`,
+    text: `A bike trip through African regions and riding infrastructure source ${index}.`
+  }));
+
+  const fit = analyzeDispatchSourceFit(chunks, 'Biking in Africa', 8);
+
+  assert.notEqual(fit.coverage_status, 'thin');
+  assert.equal(fit.candidate_count, 5);
+  assert.ok(fit.selected_sources.length >= 4);
+});
+
 test('analyzeDispatchSourceFit ignores generic Dispatch framing words', () => {
   const chunks = [
     {
