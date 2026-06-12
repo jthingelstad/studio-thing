@@ -20,7 +20,7 @@ import hashlib
 import logging
 import os
 from collections import Counter, defaultdict
-from typing import Any, Iterable, Iterator, Optional
+from typing import Any, Iterator, Optional
 
 import stripe
 

@@ -118,7 +118,7 @@ def render_anatomy_lines(state: dict) -> list[str]:
 def render_editorial_lines(state: dict) -> list[str]:
     oc = state["open_comments"]
     return [
-        f"↑ Reorder — " + ("applied (thesis set)" if state["reorder_applied"] else "not run"),
+        "↑ Reorder — " + ("applied (thesis set)" if state["reorder_applied"] else "not run"),
         f"🔎 Review — {oc} open note{'' if oc == 1 else 's'} · [view drawer]({state['review_url']})",
     ]
 

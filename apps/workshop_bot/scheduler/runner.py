@@ -18,7 +18,6 @@ Jamie sees it without tailing logs. It does not crash the bot.
 from __future__ import annotations
 
 import argparse
-import asyncio
 import functools
 import logging
 import os

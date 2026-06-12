@@ -6,7 +6,6 @@ and a handler function that exists and is async.
 
 from __future__ import annotations
 
-import asyncio
 import functools
 import inspect
 import sys

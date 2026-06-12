@@ -37,7 +37,7 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from ..tools import db, github_repo, renderers, s3
 from . import _base, render_audio

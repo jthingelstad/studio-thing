@@ -13,7 +13,6 @@ import logging
 from typing import Optional
 
 from ..tools import db
-from ..tools.llm import anthropic_client
 from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.review_text")
@@ -74,6 +73,6 @@ async def run(
     )
     return _base.JobResult(
         True,
-        f"Eddy posted a review to #editorial." if posted else "(couldn't post Eddy's review)",
+        "Eddy posted a review to #editorial." if posted else "(couldn't post Eddy's review)",
         data={"posted": bool(posted), "truncated": truncated},
     )

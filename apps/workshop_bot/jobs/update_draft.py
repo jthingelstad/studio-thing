@@ -38,7 +38,7 @@ from typing import Optional
 from zoneinfo import ZoneInfo
 
 from ..personas.base import is_pass_response
-from ..tools import alt_text, archive_context, db, issue_items, issue_items_render, issue_items_sync, render, renderers, s3
+from ..tools import alt_text, archive_context, db, issue_items, issue_items_render, issue_items_sync, render, s3
 from ..tools.content import context, draft as draft_mod
 from ..tools.llm import anthropic_client
 from . import _base, _cover, _currently

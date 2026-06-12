@@ -17,7 +17,6 @@ from bumpers import (
     ensure_bumpers,
 )
 from manifest import (
-    BUMPERS_KEY,
     bumper_path,
     hash_text,
     issue_entries,

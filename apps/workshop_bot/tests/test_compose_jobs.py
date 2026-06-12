@@ -8,10 +8,8 @@ import asyncio
 import json
 import os
 import sys
-import unittest
-from datetime import date
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
@@ -23,14 +21,12 @@ _stubs.install()
 from apps.workshop_bot.jobs import (  # noqa: E402
     _base, compose_cta, compose_haiku, compose_meta, compose_thesis, reorder,
 )
-from apps.workshop_bot.tools import db, s3 # noqa: E402
+from apps.workshop_bot.tools import db # noqa: E402
 from apps.workshop_bot.tools.discord import interaction
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
     FakeBotChannel as _FakeBotChannel,
-    FakeWorkspace,
     filled_final as _filled_final,
-    patch_s3 as _patch_s3,
 )
 
 

@@ -206,7 +206,7 @@ def main() -> None:
         if not args.dry_run:
             path.write_text(new_body, encoding="utf-8")
 
-    print(f"\n[micropost-photos] summary:", flush=True)
+    print("\n[micropost-photos] summary:", flush=True)
     for k, v in total_stats.items():
         print(f"  {k}: {v}", flush=True)
 

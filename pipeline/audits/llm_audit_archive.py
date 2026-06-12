@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Literal
 
 import anthropic
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 sys.stdout.reconfigure(line_buffering=True)
 

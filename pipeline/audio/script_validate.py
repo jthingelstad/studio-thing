@@ -317,7 +317,7 @@ def rule_empty_section(text: str, lines: list[str]) -> list[Finding]:
                         "error",
                         index + 1,
                         _truncate(raw),
-                        f"Section intro followed immediately by closing — no entries",
+                        "Section intro followed immediately by closing — no entries",
                     )
                 )
     return findings

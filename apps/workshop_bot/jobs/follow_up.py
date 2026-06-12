@@ -27,7 +27,6 @@ Triggers — exactly one of:
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from datetime import date, datetime, time, timedelta
 from typing import Any, Optional
@@ -35,7 +34,6 @@ from typing import Any, Optional
 from ..personas.base import is_pass_response
 from ..tools import db
 from ..tools.content import context
-from ..tools.llm import anthropic_client
 from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.follow_up")
@@ -282,7 +280,7 @@ async def _sweep_locked(ctx: "_base.JobContext") -> "_base.JobResult":
                 reply, _meta = await bot.core(latest=user_msg, history=[], model=None)
                 agent_run.record_meta(_meta)
                 agent_run.records_written = 1 if (reply and reply.strip()) else 0
-        except Exception as exc:  # noqa: BLE001
+        except Exception:  # noqa: BLE001
             logger.exception("follow-up-sweep: #%s (%s) agent run failed", row["id"], persona)
             # Leave it open — try again next sweep.
             skipped += 1

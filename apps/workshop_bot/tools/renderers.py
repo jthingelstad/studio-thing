@@ -40,7 +40,7 @@ import logging
 import re
 import sys
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional
+from typing import Callable, Optional
 
 import yaml
 

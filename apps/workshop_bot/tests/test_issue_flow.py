@@ -6,7 +6,6 @@ sweep. Shared fixtures come from ``tests/_fixtures.py``."""
 from __future__ import annotations
 
 import asyncio
-import json
 import os
 import sys
 import unittest
@@ -22,12 +21,10 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base, issue_status, start_issue, update_draft  # noqa: E402
-from apps.workshop_bot.tools import db, issue_items, s3  # noqa: E402
+from apps.workshop_bot.tools import db, issue_items  # noqa: E402
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
     FakeBotChannel as _FakeBotChannel,
-    FakeWorkspace,
-    patch_s3 as _patch_s3,
 )
 
 
@@ -238,10 +235,8 @@ class IssueStatusTests(_DBTestCase):
 
 # ---------- Step 4: real fills + section_status + context + Eddy review ----------
 
-from datetime import date, datetime  # noqa: E402
-from unittest.mock import AsyncMock, MagicMock  # noqa: E402
 
-from apps.workshop_bot.tools.content import context, draft as draft_mod, microblog
+from apps.workshop_bot.tools.content import draft as draft_mod, microblog
 from apps.workshop_bot.systems.pinboard import client as pinboard_client  # noqa: E402
 
 
@@ -359,7 +354,6 @@ class UpdateDraftRealFillsTests(_DBTestCase):
         result = asyncio.run(update_draft.run(_base.JobContext()))
         self.assertTrue(result.ok, result.message)
         html = self.ws.files[(458, "draft.html")]
-        import re
         # Subtitle reads: "DRAFT · WT458 · generated 2026-MM-DD HH:MM TZ · …"
         self.assertRegex(
             html,
@@ -539,7 +533,6 @@ class DraftReviewTests(_DBTestCase):
     """update_draft._draft_review — the editorial pass embedded in draft.html."""
 
     def _args(self):
-        from datetime import date
         st = draft_mod.section_status(458, draft_text=_base.starter_template(), list_objects=set())
         return {"issue_number": 458}, st, None, date.today(), "## Notable\n\n### [A](http://a)\n\nblurb."
 

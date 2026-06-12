@@ -446,7 +446,7 @@ def convert_mailchimp_new(body):
                 is_section = True
                 break
         # Also match lines that look like section names: short text with emoji, no URLs
-        if not is_section and len(stripped) < 40 and not "(" in stripped and not stripped.startswith("*"):
+        if not is_section and len(stripped) < 40 and "(" not in stripped and not stripped.startswith("*"):
             # Check if it's a known section name pattern (text + emoji)
             if re.match(r"^[A-Z][\w\s]+[^\w\s]$", stripped) and any(
                 ord(c) > 0x2000 for c in stripped

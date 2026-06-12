@@ -8,11 +8,10 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))

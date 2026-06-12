@@ -37,7 +37,6 @@ import json
 import logging
 import os
 import random
-import shutil
 import subprocess
 import sys
 import time
@@ -69,7 +68,6 @@ from apps.workshop_bot.jobs import (
     compose_haiku,
     compose_meta,
     reorder,
-    reset_issue,
     update_draft,
 )
 from apps.workshop_bot.tools import db, s3

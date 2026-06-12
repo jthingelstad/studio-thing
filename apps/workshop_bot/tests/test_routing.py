@@ -23,7 +23,6 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 
-from apps.workshop_bot.personas import base  # noqa: E402
 from apps.workshop_bot.personas.eddy import EddyBot  # noqa: E402
 
 

@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Optional
 
 from ..systems.stripe import client as stripe_client
 from ..tools import support_state

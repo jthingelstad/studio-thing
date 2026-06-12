@@ -184,14 +184,14 @@ def main() -> None:
             if r["wayback"]:
                 lines.append(f"- Wayback snapshot: {r['wayback']}")
             else:
-                lines.append(f"- Wayback snapshot: *(none found)*")
+                lines.append("- Wayback snapshot: *(none found)*")
             lines.append(f"- Referenced in: Weekly Thing #{r['issue']}")
             if r["heading"]:
                 lines.append(f"- Newsletter heading: `{r['heading']}`")
             if r["body"]:
                 # Collapse newlines for markdown table readability; quote it
                 b = re.sub(r"\s+", " ", r["body"]).strip()
-                lines.append(f"- Body paragraph from newsletter:")
+                lines.append("- Body paragraph from newsletter:")
                 lines.append(f"  > {b}")
             lines.append("")
         lines.append("")

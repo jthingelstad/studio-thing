@@ -35,7 +35,6 @@ silent state change.
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from ..tools import db, issue_items, s3
 from . import _base

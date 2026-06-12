@@ -21,7 +21,6 @@ from typing import TYPE_CHECKING, Optional
 import discord
 from discord import app_commands
 
-from ...jobs import _base as jobs_base
 from ...jobs import follow_up as followup_job
 from ...jobs import status as status_job
 from ...jobs import (

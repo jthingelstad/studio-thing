@@ -37,7 +37,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-import os
 import re
 import sys
 from pathlib import Path
@@ -194,7 +193,7 @@ def main() -> int:
     print(f"Cache rows hit  : {len(found_basenames)}/{len(cache)}")
     missing = [k for k in cache if k not in found_basenames]
     if missing:
-        print(f"Cache rows with no upstream match (will be left as-is):")
+        print("Cache rows with no upstream match (will be left as-is):")
         for k in missing:
             print(f"  - {k}")
 

@@ -531,7 +531,7 @@ def write_reports(reports: list[IssueReport]) -> None:
     lines: list[str] = []
     lines.append("# Archive Audit Report")
     lines.append("")
-    lines.append(f"Generated from `_site/archive/*/index.html` — the user-facing rendered HTML.")
+    lines.append("Generated from `_site/archive/*/index.html` — the user-facing rendered HTML.")
     lines.append("")
     lines.append(f"- Total issues scanned: **{len(reports)}**")
     lines.append(f"- Issues with at least one finding: **{len(relevant)}**")

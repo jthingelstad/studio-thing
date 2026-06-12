@@ -25,7 +25,6 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
-from typing import Iterable
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
@@ -144,10 +143,10 @@ def main() -> None:
     out_final = REPO / "tmp" / "wt348-rendered-final.md"
     out_draft.write_text(rend_draft, encoding="utf-8")
     out_final.write_text(rend_final, encoding="utf-8")
-    print(f"\nRe-renders written to:")
+    print("\nRe-renders written to:")
     print(f"  {out_draft}")
     print(f"  {out_final}")
-    print(f"\nDiff with:")
+    print("\nDiff with:")
     print(f"  diff {SNAPSHOT_DIR / 'draft.md'} {out_draft}")
     print(f"  diff {SNAPSHOT_DIR / 'final.md'} {out_final}")
 

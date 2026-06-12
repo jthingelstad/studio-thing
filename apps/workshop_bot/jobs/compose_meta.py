@@ -154,7 +154,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 cards_issue=n,
                 cards_filename="subject-options",
                 cards_title=f"WT{n} — subject options",
-                cards_subtitle=f"5 candidates · react 1️⃣–5️⃣ in #editorial to pick",
+                cards_subtitle="5 candidates · react 1️⃣–5️⃣ in #editorial to pick",
             )
             if not subject:
                 # Subject options were posted to #editorial; Jamie didn't

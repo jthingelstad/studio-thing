@@ -24,8 +24,8 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base, pinboard_scan  # noqa: E402
-from apps.workshop_bot.tools import db, s3  # noqa: E402
-from apps.workshop_bot.tests._fixtures import DBTestCase as _DBTestCase, FakeWorkspace  # noqa: E402
+from apps.workshop_bot.tools import db  # noqa: E402
+from apps.workshop_bot.tests._fixtures import DBTestCase as _DBTestCase  # noqa: E402
 
 
 class _FakeLinkyTeam:
@@ -177,7 +177,6 @@ class PinboardScanJobTests(_DBTestCase):
         self.assertEqual(result.data["skip"], 1)
         team.channel.send.assert_not_awaited()
         # popular_seen has the row with judged_interesting = 0.
-        import sqlite3 as _sql
         with db.connect() as conn:
             row = conn.execute(
                 "SELECT judged_interesting, judgment_note FROM pinboard_popular_seen "

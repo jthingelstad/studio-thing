@@ -40,7 +40,6 @@ import re
 
 from ..tools import db, s3
 from ..tools.content import context
-from ..tools.discord import interaction
 from ..tools.llm import anthropic_client
 from . import _base, _llm_job
 
@@ -147,7 +146,7 @@ async def _fill_slot(
         cards_issue=n,
         cards_filename=f"{kind}-{slot_n}-options",
         cards_title=f"WT{n} — {cfg['label']} options ({kind}:{slot_n})",
-        cards_subtitle=f"1–2 framings · react in #supporters to pick",
+        cards_subtitle="1–2 framings · react in #supporters to pick",
     )
     if not pick:
         await _llm_job.try_send(

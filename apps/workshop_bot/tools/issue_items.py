@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Iterable, Optional
+from typing import Any, Optional
 
 from .db.connection import connect
 

@@ -50,7 +50,7 @@ def _install_stubs() -> None:
 _install_stubs()
 
 
-from apps.workshop_bot.systems._base import SystemServer, ToolDef  # noqa: E402
+from apps.workshop_bot.systems._base import ToolDef  # noqa: E402
 from apps.workshop_bot.tools.llm import agent_tools
 
 

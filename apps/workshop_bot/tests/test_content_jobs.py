@@ -11,7 +11,6 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
-import tempfile
 import unittest
 from datetime import date
 from pathlib import Path
@@ -24,8 +23,8 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.jobs import _base, update_draft  # noqa: E402
-from apps.workshop_bot.tools import db, s3 # noqa: E402
+from apps.workshop_bot.jobs import _base  # noqa: E402
+from apps.workshop_bot.tools import db # noqa: E402
 from apps.workshop_bot.tools.content import context, microblog
 from apps.workshop_bot.tools.discord import interaction
 
@@ -34,8 +33,6 @@ from apps.workshop_bot.tools.discord import interaction
 # test_build_publish.py, test_linky_reactions.py).
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
-    FakeWorkspace,
-    patch_s3 as _patch_s3,
 )
 
 

@@ -21,7 +21,6 @@ _stubs.install()
 from apps.workshop_bot.tools import db, renderers  # noqa: E402
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
-    FakeWorkspace,
 )
 
 

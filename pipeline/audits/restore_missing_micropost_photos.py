@@ -58,7 +58,7 @@ def normalize_photo_url(url: str) -> str:
 def fetch_photos(client: httpx.Client, url: str) -> tuple[int, list[str]]:
     try:
         r = client.get(url, follow_redirects=True, timeout=20.0)
-    except Exception as e:
+    except Exception:
         return (-1, [])
     if r.status_code != 200:
         return (r.status_code, [])
@@ -198,7 +198,7 @@ def main() -> None:
             if not args.dry_run:
                 path.write_text(body, encoding="utf-8")
 
-    print(f"\n[restore] summary:", flush=True)
+    print("\n[restore] summary:", flush=True)
     for k, v in totals.items():
         print(f"  {k}: {v}", flush=True)
 

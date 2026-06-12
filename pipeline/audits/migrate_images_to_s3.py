@@ -19,7 +19,6 @@ override with `--bucket`.
 """
 
 import argparse
-import io
 import re
 import sys
 from pathlib import Path
@@ -169,7 +168,7 @@ def main():
         verb = "would" if args.dry_run else ""
         print(f"#{issue}: {status} | {verb} rewrite → {new_url}")
 
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"  uploaded:    {uploaded}")
     print(f"  already:     {already}")
     print(f"  URL rewrites:{total_rewrites} occurrences across {rewritten_files} file(s)")
