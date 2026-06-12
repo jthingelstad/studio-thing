@@ -364,7 +364,7 @@ def make_ctx(channels_by_env: dict[str, CapturingChannel], *, model_mode: str) -
 
     # Override ctx.channel so resolve_bot_and_channel finds our fakes
     # by env var (no real Discord lookup).
-    original_channel = ctx.channel
+    _original_channel = ctx.channel
 
     def fake_channel(env_var: str, *, persona=None):
         ch = channels_by_env.get(env_var)

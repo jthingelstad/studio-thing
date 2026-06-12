@@ -141,7 +141,7 @@ class PinboardScanJobTests(_DBTestCase):
         self.assertEqual(result.data["posted"], 1)
         team.channel.send.assert_awaited_once()
         # Recorded the message id for reply lookup.
-        sent_msg_id = team.channel.send.return_value or team.channel.send.await_args
+        _sent_msg_id = team.channel.send.return_value or team.channel.send.await_args
         # The fake_send AsyncMock side_effect assigned msg ids starting at 1001.
         row = db.lookup_research_message("1001")
         self.assertIsNotNone(row, "linky_research_messages row missing")
@@ -982,7 +982,7 @@ class PinboardScanJobTests(_DBTestCase):
             os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         sent = team.linky.core.call_args.kwargs["latest"]
         # Find the snippet line and check its length.
-        snippet_lines = [l for l in sent.splitlines() if l.startswith("  > ")]
+        snippet_lines = [ln for ln in sent.splitlines() if ln.startswith("  > ")]
         self.assertEqual(len(snippet_lines), 1)
         body = snippet_lines[0][4:]  # strip "  > "
         # Cap is 180 chars + ellipsis (so up to ~181). Definitely much

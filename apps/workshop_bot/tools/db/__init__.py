@@ -16,7 +16,7 @@ from .migrations import (
     applied_ids,
     pending,
 )
-from .store import *
+from .store import *  # noqa: F403
 
 __all__ = [
     "DEFAULT_DB_PATH",

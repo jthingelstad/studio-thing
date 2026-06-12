@@ -94,8 +94,8 @@ def load_links(fp):
     fm = yaml.safe_load(m.group(1))
     subject = fm.get("subject", "")
     links = fm.get("links") or []
-    main = [l["text"] for l in links if l.get("section") in MAIN_SECTIONS and l.get("text")]
-    allx = [l["text"] for l in links if l.get("section") in ALL_EDITORIAL_SECTIONS and l.get("text")]
+    main = [lnk["text"] for lnk in links if lnk.get("section") in MAIN_SECTIONS and lnk.get("text")]
+    allx = [lnk["text"] for lnk in links if lnk.get("section") in ALL_EDITORIAL_SECTIONS and lnk.get("text")]
     return subject, main, allx
 
 

@@ -114,7 +114,7 @@ class UpsertTests(_DBCase):
 
     def test_section_change_reassigns_position_to_end_of_new_section(self):
         # Seed notable so the moved item must get a fresh position there.
-        a_notable = issue_items.upsert_item(
+        _a_notable = issue_items.upsert_item(
             issue_number=349, section="notable", source="pinboard",
             source_id="n1", body_md="x",
         )
@@ -400,9 +400,9 @@ class EditorialCommentTests(_DBCase):
             issue_number=349, section="brief", source="pinboard",
             source_id="b", body_md="y",
         )
-        c1 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="…")
-        c2 = issue_items.write_comment(issue_number=349, scope="item", item_id=b, body_md="…")
-        c3 = issue_items.write_comment(issue_number=349, scope="hygiene", body_md="…")
+        _c1 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="…")
+        _c2 = issue_items.write_comment(issue_number=349, scope="item", item_id=b, body_md="…")
+        _c3 = issue_items.write_comment(issue_number=349, scope="hygiene", body_md="…")
         # New pass starts with c4 — supersede everything else.
         c4 = issue_items.write_comment(issue_number=349, scope="hygiene", body_md="fresh pass")
         replaced = issue_items.supersede_all_open(349, by_id=c4["id"])

@@ -74,7 +74,7 @@ class BuildCardTests(_DBTestCase):
         st = build_card.gather_state(458)
         self.assertTrue(st["build_ready"])
         lines = build_card.render_anatomy_lines(st)
-        labels = [l.split(" — ")[0].split(" ", 1)[1] for l in lines]  # strip the ✅/☐ icon
+        labels = [ln.split(" — ")[0].split(" ", 1)[1] for ln in lines]  # strip the ✅/☐ icon
         # Haiku moved to Publish phase (Eddy writes it via compose-haiku
         # off the Publish card; not authored content). Build anatomy is
         # the content Jamie authors.
@@ -238,7 +238,7 @@ class PublishCardTests(_DBTestCase):
         # Echoes missing in publish phase → failure line.
         st = publish_card.gather_state(458)
         lines = publish_card.render_shared_lines(st)
-        echoes_line = next(l for l in lines if "Echoes" in l)
+        echoes_line = next(ln for ln in lines if "Echoes" in ln)
         self.assertIn("❌", echoes_line)
         self.assertIn("compose-echoes failed", echoes_line)
 

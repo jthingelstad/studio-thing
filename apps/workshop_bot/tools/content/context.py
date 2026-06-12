@@ -210,9 +210,8 @@ def build_linky_context(*, ref_date: Optional[date] = None) -> dict[str, Any]:
     n = int(window["issue_number"])
     try:
         sd = datetime.strptime(window["start_date"], "%Y-%m-%d").date()
-        ed = datetime.strptime(window["end_date"], "%Y-%m-%d").date()
     except (TypeError, ValueError):
-        sd = ed = None
+        sd = None
 
     # toread_count / brief_captured_this_week stay None on purpose. Both used
     # to be derived from a posts_all(results=1000) call here — but that hit

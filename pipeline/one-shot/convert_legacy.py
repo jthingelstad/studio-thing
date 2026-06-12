@@ -433,7 +433,6 @@ def convert_mailchimp_new(body):
         is_section = False
         for section_name in KNOWN_SECTIONS:
             # Match exactly or with trailing whitespace, or the name without emoji
-            section_base = section_name.split()[0] if " " in section_name else section_name
             if stripped == section_name or stripped.rstrip() == section_name.rstrip():
                 result.append(f"## {stripped}")
                 result.append("")

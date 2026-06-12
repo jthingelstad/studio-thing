@@ -205,7 +205,7 @@ class PinboardDedupTests(unittest.TestCase):
     def test_mark_popular_seen_records_judgment(self):
         items = [{"url": "https://a.example/1", "title": "A"}]
         db.mark_popular_seen(items, judged={"https://a.example/1": (True, "fits ai theme")})
-        rows = db.query_agent_notes()  # unrelated; just confirming nothing crashes
+        _rows = db.query_agent_notes()  # unrelated; just confirming nothing crashes
         # Verify directly.
         with db.connect() as conn:
             row = conn.execute(

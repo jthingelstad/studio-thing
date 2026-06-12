@@ -315,11 +315,13 @@ class DailyMetricsTests(_DBCase):
         # No campaigns, flat subscriber growth → PASS, no post.
         patches = self._patch_clients(growth={"added": 1, "churned": 0, "net": 1, "by_source": {}},
                                       sources_by_source={}, attribution_by_ref={})
-        for p in patches: p.start()
+        for p in patches:
+            p.start()
         try:
             result = asyncio.run(daily_metrics.run(_base.JobContext()))
         finally:
-            for p in patches: p.stop()
+            for p in patches:
+                p.stop()
         self.assertTrue(result.ok)
         self.assertFalse(result.data["posted"])
         self.assertIn("nothing material moved", result.message.lower())
@@ -331,20 +333,27 @@ class DailyMetricsTests(_DBCase):
             copy="The placement copy that ran.",
         )
         # Fake Marky bot.
-        channel = MagicMock(); channel.send = AsyncMock()
-        marky = MagicMock(); marky.user = object(); marky.get_channel = MagicMock(return_value=channel)
+        channel = MagicMock()
+        channel.send = AsyncMock()
+        marky = MagicMock()
+        marky.user = object()
+        marky.get_channel = MagicMock(return_value=channel)
         marky.core = AsyncMock(return_value=("dd-may: first hits — 200 visits, 5 signups.", {"iterations": 1}))
-        team = MagicMock(); team.bots = {"marky": marky}
-        deps = MagicMock(); deps.team = team
+        team = MagicMock()
+        team.bots = {"marky": marky}
+        deps = MagicMock()
+        deps.team = team
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         patches = self._patch_clients(growth={"added": 2, "churned": 0, "net": 2, "by_source": {}},
                                       sources_by_source={"dd-2026-05-15": 200},
                                       attribution_by_ref={"dd-2026-05-15": 5})
-        for p in patches: p.start()
+        for p in patches:
+            p.start()
         try:
             result = asyncio.run(daily_metrics.run(_base.JobContext(deps=deps)))
         finally:
-            for p in patches: p.stop()
+            for p in patches:
+                p.stop()
             os.environ.pop("DISCORD_CHANNEL_PROMOTION", None)
         self.assertTrue(result.ok, result.message)
         self.assertTrue(result.data["posted"])
@@ -363,19 +372,26 @@ class DailyMetricsTests(_DBCase):
         self.assertEqual(snap["cost"], 80.0)
 
     def test_subscriber_spike_triggers_report(self):
-        channel = MagicMock(); channel.send = AsyncMock()
-        marky = MagicMock(); marky.user = object(); marky.get_channel = MagicMock(return_value=channel)
+        channel = MagicMock()
+        channel.send = AsyncMock()
+        marky = MagicMock()
+        marky.user = object()
+        marky.get_channel = MagicMock(return_value=channel)
         marky.core = AsyncMock(return_value=("Subscriber net +12 this week.", {}))
-        team = MagicMock(); team.bots = {"marky": marky}
-        deps = MagicMock(); deps.team = team
+        team = MagicMock()
+        team.bots = {"marky": marky}
+        deps = MagicMock()
+        deps.team = team
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         patches = self._patch_clients(growth={"added": 14, "churned": 2, "net": 12, "by_source": {"embed": 14}},
                                       sources_by_source={}, attribution_by_ref={})
-        for p in patches: p.start()
+        for p in patches:
+            p.start()
         try:
             result = asyncio.run(daily_metrics.run(_base.JobContext(deps=deps)))
         finally:
-            for p in patches: p.stop()
+            for p in patches:
+                p.stop()
             os.environ.pop("DISCORD_CHANNEL_PROMOTION", None)
         self.assertTrue(result.ok, result.message)
         self.assertTrue(result.data["posted"])
@@ -404,19 +420,26 @@ class DailyMetricsTests(_DBCase):
         self.assertEqual(called, {"signups": 0, "traffic": 0})
 
     def test_moved_when_marky_pass_not_posted(self):
-        channel = MagicMock(); channel.send = AsyncMock()
-        marky = MagicMock(); marky.user = object(); marky.get_channel = MagicMock(return_value=channel)
+        channel = MagicMock()
+        channel.send = AsyncMock()
+        marky = MagicMock()
+        marky.user = object()
+        marky.get_channel = MagicMock(return_value=channel)
         marky.core = AsyncMock(return_value=("PASS", {}))
-        team = MagicMock(); team.bots = {"marky": marky}
-        deps = MagicMock(); deps.team = team
+        team = MagicMock()
+        team.bots = {"marky": marky}
+        deps = MagicMock()
+        deps.team = team
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         patches = self._patch_clients(growth={"added": 5, "churned": 0, "net": 5, "by_source": {}},
                                       sources_by_source={}, attribution_by_ref={})
-        for p in patches: p.start()
+        for p in patches:
+            p.start()
         try:
             result = asyncio.run(daily_metrics.run(_base.JobContext(deps=deps)))
         finally:
-            for p in patches: p.stop()
+            for p in patches:
+                p.stop()
             os.environ.pop("DISCORD_CHANNEL_PROMOTION", None)
         self.assertTrue(result.ok)
         self.assertFalse(result.data["posted"])

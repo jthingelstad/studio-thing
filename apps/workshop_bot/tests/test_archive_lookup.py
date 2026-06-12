@@ -27,9 +27,9 @@ def _seed_issue(conn, *, number, subject="", publish_date="2024-01-01",
                 word_count=0, audio_url="", domains=None, links=None) -> None:
     """Insert one fully-formed ``issues`` row + optional ``issue_links``."""
     links = links or []
-    notable = [l for l in links if l["section"] == "notable"]
-    briefly = [l for l in links if l["section"] == "briefly"]
-    domains = domains if domains is not None else sorted({l["domain"] for l in links})
+    notable = [lnk for lnk in links if lnk["section"] == "notable"]
+    briefly = [lnk for lnk in links if lnk["section"] == "briefly"]
+    domains = domains if domains is not None else sorted({lnk["domain"] for lnk in links})
     era = archive_lookup.derive_era(number)
     conn.execute(
         "INSERT INTO issues "

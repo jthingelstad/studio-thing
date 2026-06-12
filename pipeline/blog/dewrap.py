@@ -363,7 +363,9 @@ def run(
 
         if not write:
             paras, lines_removed, splits = _change_stats(changes_local)
-            total_paras += paras; total_lines += lines_removed; total_splits += splits
+            total_paras += paras
+            total_lines += lines_removed
+            total_splits += splits
             rec.update(paragraphs_dewrapped=paras, lines_removed=lines_removed,
                        link_splits_fixed=splits, source="local-cache")
             split = f" link-splits×{splits}" if splits else ""
@@ -408,7 +410,9 @@ def run(
             continue
 
         n_written += 1
-        total_paras += paras; total_lines += lines_removed; total_splits += splits
+        total_paras += paras
+        total_lines += lines_removed
+        total_splits += splits
         rec.update(paragraphs_dewrapped=paras, lines_removed=lines_removed,
                    link_splits_fixed=splits, written=True, source="micro.blog-live")
         split = f" link-splits×{splits}" if splits else ""

@@ -300,7 +300,8 @@ class InteractionPrimitiveTests(unittest.TestCase):
     def _click(view, custom_id, *, user_id="777"):
         btn = next(c for c in view.children if getattr(c, "custom_id", None) == custom_id)
         inter = MagicMock()
-        inter.user = MagicMock(); inter.user.id = user_id
+        inter.user = MagicMock()
+        inter.user.id = user_id
         inter.response = MagicMock()
         inter.response.defer = AsyncMock()
         inter.response.send_message = AsyncMock()
@@ -312,10 +313,12 @@ class InteractionPrimitiveTests(unittest.TestCase):
         async def _send(content, **kw):
             if kw.get("view") is not None:
                 holder["view"] = kw["view"]
-            m = MagicMock(); m.id = 4242
+            m = MagicMock()
+            m.id = 4242
             return m
 
-        channel = MagicMock(); channel.send = _send
+        channel = MagicMock()
+        channel.send = _send
         task = asyncio.create_task(call(channel))
         for _ in range(100):  # let it post + reach the wait
             if "view" in holder:
@@ -356,10 +359,12 @@ class InteractionPrimitiveTests(unittest.TestCase):
                 async def _send(content, **kw):
                     if kw.get("view") is not None:
                         holder["view"] = kw["view"]
-                    m = MagicMock(); m.id = 1
+                    m = MagicMock()
+                    m.id = 1
                     return m
 
-                channel = MagicMock(); channel.send = _send
+                channel = MagicMock()
+                channel.send = _send
                 task = asyncio.create_task(
                     interaction.await_choice(MagicMock(), channel, ["a"], prompt="p", timeout=0.2)
                 )
@@ -376,7 +381,8 @@ class InteractionPrimitiveTests(unittest.TestCase):
 
     def test_await_choice_no_owner(self):
         os.environ.pop("DISCORD_OWNER_USER_ID", None)
-        channel = MagicMock(); channel.send = AsyncMock()
+        channel = MagicMock()
+        channel.send = AsyncMock()
         out = asyncio.run(interaction.await_choice(MagicMock(), channel, ["a"], prompt="pick"))
         self.assertIsNone(out)
         channel.send.assert_not_awaited()
@@ -384,7 +390,8 @@ class InteractionPrimitiveTests(unittest.TestCase):
     def test_await_choice_zero_options(self):
         os.environ["DISCORD_OWNER_USER_ID"] = "777"
         try:
-            channel = MagicMock(); channel.send = AsyncMock()
+            channel = MagicMock()
+            channel.send = AsyncMock()
             self.assertIsNone(asyncio.run(interaction.await_choice(MagicMock(), channel, [], prompt="p")))
         finally:
             os.environ.pop("DISCORD_OWNER_USER_ID", None)

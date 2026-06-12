@@ -38,11 +38,16 @@ class _DBCase(unittest.TestCase):
 
 
 def _fake_eddy_team(reply: str = "Looks solid — tighten the second paragraph."):
-    channel = MagicMock(); channel.send = AsyncMock()
-    eddy = MagicMock(); eddy.user = object(); eddy.get_channel = MagicMock(return_value=channel)
+    channel = MagicMock()
+    channel.send = AsyncMock()
+    eddy = MagicMock()
+    eddy.user = object()
+    eddy.get_channel = MagicMock(return_value=channel)
     eddy.core = AsyncMock(return_value=(reply, {"iterations": 1}))
-    team = MagicMock(); team.bots = {"eddy": eddy}
-    deps = MagicMock(); deps.team = team
+    team = MagicMock()
+    team.bots = {"eddy": eddy}
+    deps = MagicMock()
+    deps.team = team
     return deps, eddy, channel
 
 

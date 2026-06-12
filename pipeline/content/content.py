@@ -367,7 +367,7 @@ def _workspace_get_text(issue_number: str, filename: str) -> str | None:
         if legacy != keys[0]:
             keys.append(legacy)
     client = boto3.client("s3")
-    last_exc: Exception | None = None
+    _last_exc: Exception | None = None
     for key in keys:
         try:
             resp = client.get_object(Bucket=WEEKLY_THING_ASSETS_BUCKET, Key=key)
@@ -375,7 +375,7 @@ def _workspace_get_text(issue_number: str, filename: str) -> str | None:
         except ClientError as exc:
             code = exc.response.get("Error", {}).get("Code", "")
             if code in ("NoSuchKey", "404"):
-                last_exc = exc
+                _last_exc = exc
                 continue
             raise
     return None

@@ -115,7 +115,7 @@ class InjectHandleMarkersTests(_DBCase):
         self.assertEqual(out, review)
 
     def test_inject_handles_multiple_anchored_bullets_in_order(self):
-        a = self._seed()
+        _a = self._seed()
         issue_items.upsert_item(
             issue_number=349, section="brief", source="pinboard",
             source_id="b", body_md="x",

@@ -53,11 +53,16 @@ class _DBCase(unittest.TestCase):
 
 
 def _marky_deps(reply="🪧 Promotion drafts — WT458\n\n## LinkedIn\n1. ..."):
-    channel = MagicMock(); channel.send = AsyncMock()
-    marky = MagicMock(); marky.user = object(); marky.get_channel = MagicMock(return_value=channel)
+    channel = MagicMock()
+    channel.send = AsyncMock()
+    marky = MagicMock()
+    marky.user = object()
+    marky.get_channel = MagicMock(return_value=channel)
     marky.core = AsyncMock(return_value=(reply, {"iterations": 1}))
-    team = MagicMock(); team.bots = {"marky": marky}
-    deps = MagicMock(); deps.team = team
+    team = MagicMock()
+    team.bots = {"marky": marky}
+    deps = MagicMock()
+    deps.team = team
     return deps, marky, channel
 
 

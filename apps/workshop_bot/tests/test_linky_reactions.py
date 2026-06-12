@@ -242,11 +242,13 @@ class LinkySaveReactionTests(_DBTestCase):
         )
         p = self._payload(user_id=777, emoji="➕", message_id=2001)
         get_p, add_p, add_mock = self._patch_pinboard()
-        get_p.start(); add_p.start()
+        get_p.start()
+        add_p.start()
         try:
             asyncio.run(self.bot.on_raw_reaction_add(p))
         finally:
-            add_p.stop(); get_p.stop()
+            add_p.stop()
+            get_p.stop()
         add_mock.assert_called_once()
         kwargs = add_mock.call_args.kwargs
         self.assertEqual(kwargs["url"], "http://p/1")
@@ -268,11 +270,13 @@ class LinkySaveReactionTests(_DBTestCase):
         )
         p = self._payload(user_id=777, emoji="👍", message_id=2002)
         get_p, add_p, add_mock = self._patch_pinboard()
-        get_p.start(); add_p.start()
+        get_p.start()
+        add_p.start()
         try:
             asyncio.run(self.bot.on_raw_reaction_add(p))
         finally:
-            add_p.stop(); get_p.stop()
+            add_p.stop()
+            get_p.stop()
         add_mock.assert_not_called()
         self.assertEqual(self.reactions, [])
 
@@ -282,11 +286,13 @@ class LinkySaveReactionTests(_DBTestCase):
         )
         p = self._payload(user_id=777, emoji="❤️", message_id=2003)
         get_p, add_p, add_mock = self._patch_pinboard()
-        get_p.start(); add_p.start()
+        get_p.start()
+        add_p.start()
         try:
             asyncio.run(self.bot.on_raw_reaction_add(p))
         finally:
-            add_p.stop(); get_p.stop()
+            add_p.stop()
+            get_p.stop()
         add_mock.assert_not_called()
         self.assertEqual(self.reactions, [])
 
@@ -296,11 +302,13 @@ class LinkySaveReactionTests(_DBTestCase):
         )
         p = self._payload(user_id=888, emoji="➕", message_id=2004)
         get_p, add_p, add_mock = self._patch_pinboard()
-        get_p.start(); add_p.start()
+        get_p.start()
+        add_p.start()
         try:
             asyncio.run(self.bot.on_raw_reaction_add(p))
         finally:
-            add_p.stop(); get_p.stop()
+            add_p.stop()
+            get_p.stop()
         add_mock.assert_not_called()
 
     def test_save_reaction_on_toread_card_is_noop(self):
@@ -311,22 +319,26 @@ class LinkySaveReactionTests(_DBTestCase):
         )
         p = self._payload(user_id=777, emoji="➕", message_id=2005)
         get_p, add_p, add_mock = self._patch_pinboard()
-        get_p.start(); add_p.start()
+        get_p.start()
+        add_p.start()
         try:
             asyncio.run(self.bot.on_raw_reaction_add(p))
         finally:
-            add_p.stop(); get_p.stop()
+            add_p.stop()
+            get_p.stop()
         add_mock.assert_not_called()
         self.assertEqual(self.reactions, ["⚠️"])
 
     def test_unknown_message_id_ignored(self):
         p = self._payload(user_id=777, emoji="➕", message_id=999999)
         get_p, add_p, add_mock = self._patch_pinboard()
-        get_p.start(); add_p.start()
+        get_p.start()
+        add_p.start()
         try:
             asyncio.run(self.bot.on_raw_reaction_add(p))
         finally:
-            add_p.stop(); get_p.stop()
+            add_p.stop()
+            get_p.stop()
         add_mock.assert_not_called()
 
     def test_save_on_already_bookmarked_discovery_still_acks(self):
@@ -340,11 +352,13 @@ class LinkySaveReactionTests(_DBTestCase):
         get_p, add_p, add_mock = self._patch_pinboard(
             existing_posts=[{"href": "http://p/6"}],
         )
-        get_p.start(); add_p.start()
+        get_p.start()
+        add_p.start()
         try:
             asyncio.run(self.bot.on_raw_reaction_add(p))
         finally:
-            add_p.stop(); get_p.stop()
+            add_p.stop()
+            get_p.stop()
         add_mock.assert_not_called()
         self.assertEqual(self.reactions, ["📌"])
 
@@ -356,11 +370,13 @@ class LinkySaveReactionTests(_DBTestCase):
         get_p, add_p, _ = self._patch_pinboard(
             add_side_effect=RuntimeError("boom"),
         )
-        get_p.start(); add_p.start()
+        get_p.start()
+        add_p.start()
         try:
             asyncio.run(self.bot.on_raw_reaction_add(p))
         finally:
-            add_p.stop(); get_p.stop()
+            add_p.stop()
+            get_p.stop()
         self.assertEqual(self.reactions, ["❌"])
 
 

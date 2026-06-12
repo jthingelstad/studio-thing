@@ -292,9 +292,8 @@ def _render_was_now(
     if original_synth == list(order_synth):
         return f"**{kind_label}** — no change"
     by_synth = {row_to_synth[int(r["id"])]: r for r in rows}
-    titles_for = lambda ids: " · ".join(
-        f"{i+1}. {_row_label(by_synth[sid])}" for i, sid in enumerate(ids)
-    )
+    def titles_for(ids):
+        return " · ".join(f"{i+1}. {_row_label(by_synth[sid])}" for i, sid in enumerate(ids))
     return (
         f"**{kind_label}** — reordered\n"
         f"  was: {titles_for(original_synth)}\n"
@@ -455,7 +454,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     # race row mutations — the asset key is symbolic now that final.md
     # is no longer written.
     asset = f"{n}/issue_items"
-    html_url: Optional[str] = None
+    _html_url: Optional[str] = None
     try:
         with _base.job_lock([asset], NAME):
             base_prompt = anthropic_client.load_prompt("eddy-reorder")

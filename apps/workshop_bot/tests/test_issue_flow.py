@@ -374,8 +374,10 @@ class UpdateDraftRealFillsTests(_DBTestCase):
             fake_eddy.user = object()
             fake_eddy.get_channel = MagicMock(return_value=fake_channel)
             fake_eddy.core = AsyncMock(return_value=("PASS", {"iterations": 1}))
-            team = MagicMock(); team.bots = {"eddy": fake_eddy}
-            deps = MagicMock(); deps.team = team
+            team = MagicMock()
+            team.bots = {"eddy": fake_eddy}
+            deps = MagicMock()
+            deps.team = team
             ctx = _base.JobContext(deps=deps)
             result = asyncio.run(update_draft.run(ctx))
             self.assertTrue(result.ok, result.message)

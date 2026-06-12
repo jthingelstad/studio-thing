@@ -98,10 +98,8 @@ class RefreshLoopHtmlIntegrationTests(_DBCase):
         # upload returns a fake URL we can assert was woven into the
         # prompt label.
         bot, channel = self._bot_and_channel(reply="1. Alpha\n2. Beta\n")
-        parser = lambda text: [
-            line.split(".", 1)[1].strip()
-            for line in text.splitlines() if line.strip()
-        ]
+        def parser(text):
+            return [line.split(".", 1)[1].strip() for line in text.splitlines() if line.strip()]
         with patch.object(
             render, "render_and_upload_option_cards",
             return_value="https://files.thingelstad.com/weekly-thing/349/subject-options.html",
@@ -135,7 +133,8 @@ class RefreshLoopHtmlIntegrationTests(_DBCase):
 
     def test_cards_not_uploaded_when_kwargs_missing(self):
         bot, channel = self._bot_and_channel(reply="1. Alpha\n2. Beta\n")
-        parser = lambda text: ["Alpha", "Beta"]
+        def parser(text):
+            return ["Alpha", "Beta"]
         with patch.object(
             render, "render_and_upload_option_cards",
             return_value="https://x/y.html",
@@ -156,7 +155,8 @@ class RefreshLoopHtmlIntegrationTests(_DBCase):
 
     def test_failed_upload_does_not_break_pick(self):
         bot, channel = self._bot_and_channel(reply="1. Alpha\n")
-        parser = lambda text: ["Alpha"]
+        def parser(text):
+            return ["Alpha"]
         with patch.object(
             render, "render_and_upload_option_cards",
             return_value=None,

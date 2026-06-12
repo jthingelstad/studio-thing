@@ -110,7 +110,7 @@ class StoreReviewCommentsTests(_DBCase):
         bodies = sorted(c["body_md"] for c in open_now)
         self.assertEqual(bodies, ["Also this.", "v2 comment."])
         # The v1 comment still exists in history under its original handle.
-        v1 = issue_items.get_comment_by_handle("E349-N1")
+        _v1 = issue_items.get_comment_by_handle("E349-N1")
         # The handle now points at the v2 comment (handles are stable per ordinal).
         # But the original v1 row still exists — we can confirm via the
         # raw count of all comments (open + replaced).
