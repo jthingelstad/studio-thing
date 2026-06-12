@@ -2,7 +2,7 @@ anthropic
 apscheduler>=3.10
 beautifulsoup4
 boto3
-discord.py>=2.4
+discord.py>=2.7.1
 httpx
 lxml
 markdown
