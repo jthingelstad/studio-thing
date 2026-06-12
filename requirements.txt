@@ -15,4 +15,5 @@ pyyaml
 rank_bm25
 requests
 stripe
+ruff>=0.4
 -e ./librarian-core
