@@ -21,11 +21,11 @@ All Lambdas share the same IAM role (`LibrarianFunctionRole`) and `shared/` help
 1. Verify bearer token (HMAC-signed session JWT — `verifyToken`, `SESSION_SECRET`).
 2. Rate-limit per subscriber hash (DynamoDB, hourly).
 3. Resolve requested conversation mode from token entitlements and existing conversation metadata.
-4. Load the relevant server-side conversation turns and user memory.
+4. Load the relevant server-side conversation turns and the basic user profile (preferred name, turn count).
 5. Load scoped corpus artifacts from S3 (cached on warm starts).
 6. Run prompt preflight for privacy/scope handling.
-7. Run the Bedrock Converse agent loop with tool use. Tools include `search_faq`, `search_archive`, `get_source`, `find_links`, `corpus_stats`, `latest_content`, `list_content`, `archive_lens`, `entity_lens`, `source_neighborhood`, `archive_gems`, `claim_check`, and `remember_user`.
-8. Stream answer deltas, archive-work status, final citations, and experience artifacts via SSE; record the turn to DynamoDB; update per-user memory.
+7. Run the Bedrock Converse agent loop with tool use. Tools include `search_faq`, `search_archive`, `get_source`, `find_links`, `corpus_stats`, `latest_content`, `list_content`, `archive_lens`, `entity_lens`, `source_neighborhood`, `archive_gems`, `claim_check`.
+8. Stream answer deltas, archive-work status, final citations, and experience artifacts via SSE; record the turn to DynamoDB; bump the per-user profile counters. Dispatch-planner conversations (`mode: dispatch`) also get `check_dispatch_fit` and `update_dispatch_brief` tools, and briefs stream to the client as `dispatch_brief` SSE events.
 
 The retrieval pipeline (functions live in `runtime.mjs`):
 

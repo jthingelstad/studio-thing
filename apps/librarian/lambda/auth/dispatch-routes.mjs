@@ -369,6 +369,7 @@ export async function handleDispatch(event, body, start = performance.now()) {
         topic: body.topic || prompt || title,
         prompt,
         direction,
+        conversationId: body.conversation_id || body.conversationId,
         clarificationQuestion: body.clarification_question,
         clarificationAnswer: body.clarification_answer,
         brief: body.brief,

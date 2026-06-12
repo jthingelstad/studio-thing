@@ -646,3 +646,73 @@ test('dispatch Discord card escapes user-controlled markdown', () => {
   assert.match(card, /\\\[links\\\]\\\(https:\/\/example\.com\\\)/);
   assert.match(card, /WT\\_1 · A \\\*Source\\\*/);
 });
+
+test('dispatch planner mode is hidden from pickers but usable by readers', async () => {
+  const { availableConversationModes, canUseConversationMode, conversationModePrompt } = await import('../shared/conversation-modes.mjs');
+  assert.equal(availableConversationModes(['reader']).some((mode) => mode.id === 'dispatch'), false);
+  assert.equal(availableConversationModes(['reader', 'owner']).some((mode) => mode.id === 'dispatch'), false);
+  assert.equal(canUseConversationMode('dispatch', ['reader']), true);
+  const prompt = conversationModePrompt('dispatch');
+  assert.match(prompt, /Dispatch Planner/);
+  assert.match(prompt, /check_dispatch_fit/);
+  assert.match(prompt, /update_dispatch_brief/);
+  assert.match(prompt, /Never claim generation/);
+});
+
+test('update_dispatch_brief normalizes drafts and gates ready briefs on coverage', async () => {
+  const { DISPATCH_PLANNER_TOOLS } = await import('../shared/dispatch-planner-tools.mjs');
+  const update = DISPATCH_PLANNER_TOOLS.update_dispatch_brief;
+
+  const missing = await update({});
+  assert.match(missing.error, /user_goal or working_angle/);
+
+  const draft = await update({
+    user_goal: '  A Dispatch about   RSS workflows  ',
+    working_angle: 'How RSS shaped owned distribution',
+    coverage_status: 'nonsense',
+    generation_instructions: 'Trace RSS from early issues to now.',
+    selected_sources: [
+      { title: 'WT 101', url: 'https://weekly.thingelstad.com/101', why: 'dense RSS issue' },
+      { label: '' }
+    ],
+    status: 'unexpected'
+  });
+  assert.equal(draft.ok, true);
+  assert.equal(draft.brief.user_goal, 'A Dispatch about RSS workflows');
+  assert.equal(draft.brief.coverage_status, 'ambiguous');
+  assert.equal(draft.brief.status, 'draft');
+  assert.equal(draft.brief.selected_sources.length, 1);
+  assert.equal(draft.brief.selected_sources[0].id, 'S1');
+
+  const prematureReady = await update({
+    user_goal: 'RSS Dispatch',
+    working_angle: 'RSS and owned distribution',
+    coverage_status: 'broad',
+    generation_instructions: 'Write it.',
+    status: 'ready'
+  });
+  assert.match(prematureReady.error, /focused coverage/);
+  assert.equal(prematureReady.brief.status, 'ready');
+
+  const ready = await update({
+    user_goal: 'RSS Dispatch',
+    working_angle: 'RSS and owned distribution',
+    coverage_status: 'focused',
+    generation_instructions: 'Trace the thread with dates and links.',
+    selected_sources: [{ id: 'S1', title: 'WT 101', url: 'https://weekly.thingelstad.com/101' }],
+    status: 'ready'
+  });
+  assert.equal(ready.ok, true);
+  assert.equal(ready.status, 'ready');
+});
+
+test('dispatch planner tool specs expose both planning tools', async () => {
+  const { dispatchPlannerToolSpecs } = await import('../shared/dispatch-planner-tools.mjs');
+  const specs = dispatchPlannerToolSpecs();
+  const names = specs.map((spec) => spec.toolSpec.name);
+  assert.deepEqual(names, ['check_dispatch_fit', 'update_dispatch_brief']);
+  for (const spec of specs) {
+    assert.equal(typeof spec.toolSpec.description, 'string');
+    assert.equal(spec.toolSpec.inputSchema.json.type, 'object');
+  }
+});

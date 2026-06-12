@@ -75,14 +75,14 @@ then uploads the updated corpus artifacts.
 | POST | `/retrieve` | bridge secret (body) | JSON semantic retrieval — top-K archive passages, used by `workshop_bot` |
 | POST | `/feedback` | session token (bearer) | Per-answer reactions plus optional comments |
 | POST | `/auth` | none / bridge secret / session token | Magic-link auth, Discord bridge mint, user conversation management, profile updates, and Dispatch drafting |
-| POST | `/memory` | session token (bearer) | Thingy profile fetch, learned item deletion, profile refresh, and profile deletion (`get`, `delete`, `refresh_profile`, `delete_profile`) |
+| POST | `/memory` | session token (bearer) | Thingy profile fetch and profile deletion (`get`, `delete_profile`; `refresh_profile` is a legacy no-op) |
 
 ## Tech stack
 
 - **Node 20** (arm64) — Lambda runtime
 - **AWS SDK v3** — `@aws-sdk/client-bedrock-runtime`, `client-bedrock-agent-runtime`, `client-dynamodb`, `client-s3`
 - **Bedrock** — Cohere `embed-english-v3` (us-east-1), Cohere `rerank-v3-5:0` (us-west-2), Claude Sonnet 4.6 (cross-region inference)
-- **DynamoDB** — conversation log, rate limits, per-user memory
+- **DynamoDB** — conversation log, rate limits, per-user profile row
 - **S3** — pre-embedded corpus, graph artifacts
 - **API Gateway** + **Lambda Function URL** (response streaming) — two HTTP front doors; the Eval Lambda is event-driven by DynamoDB Streams
 

@@ -9,13 +9,9 @@ import { checkRateLimit } from '../shared/rate-limit.mjs';
 import { createSessionToken, createSessionTokenForSub, emailHash, extractBearer, normalizeEmail, stableHash, verifyToken } from '../shared/session.mjs';
 import {
   authProfile,
-  deleteUserMemoryItem,
   discordConnectionMemoryUpdate,
   getUserMemory,
-  listUserMemoryEvents,
-  memorySynthesisStatus,
-  recordUserPreferredName,
-  synthesizeUserMemory
+  recordUserPreferredName
 } from '../shared/user-memory.mjs';
 import {
   deleteThingyProfile,
@@ -312,37 +308,14 @@ async function memoryAccountConversations(sub) {
   });
 }
 
-function conversationMemoryEvents(conversations = []) {
-  return conversations.map((conversation) => {
-    const label = conversation.topic || conversation.title || conversation.preview || '';
-    const detail = conversation.summary || conversation.preview || conversation.title || '';
-    return {
-      id: `conversation-${conversation.id || conversation.conversation_id || ''}`,
-      type: 'conversation_summary',
-      ts: conversation.updated_at || conversation.last_message_at || conversation.created_at || '',
-      label,
-      detail,
-      metadata: {
-        conversation_id: conversation.id || conversation.conversation_id || '',
-        mode: conversation.mode || 'thingy',
-        turn_count: Number(conversation.turn_count || 0)
-      }
-    };
-  }).filter((event) => event.label || event.detail);
-}
-
 async function memoryProfileResponse(sub, event, extra = {}) {
   const memory = await getUserMemory(sub, { consistent: true });
-  const events = await listUserMemoryEvents(sub);
   const conversations = await memoryAccountConversations(sub);
   const conversationDates = conversations
     .flatMap((conversation) => [conversation.created_at, conversation.updated_at, conversation.last_message_at])
     .filter(Boolean)
     .sort();
-  const profile = {
-    ...authProfile(memory),
-    memory_synthesis: memorySynthesisStatus(memory || {}, events)
-  };
+  const profile = authProfile(memory);
   const account = {
     first_seen_at: memory?.first_seen_at || '',
     last_seen_at: memory?.last_seen_at || '',
@@ -370,34 +343,10 @@ async function handleMemory(event, body, start) {
   if (action === 'get') {
     return await memoryProfileResponse(payload.sub, event);
   }
-  if (action === 'delete') {
-    const result = await deleteUserMemoryItem(payload.sub, {
-      type: body.type,
-      id: body.id || body.memory_id,
-      value: body.value
-    });
-    if (!result.ok) return jsonResponse(404, { error: result.error || 'Memory item not found.' }, event);
-    logEvent('info', 'memory_item_deleted', {
-      subscriber_hash: payload.sub,
-      type: body.type || '',
-      duration_ms: Math.round(performance.now() - start)
-    });
-    return await memoryProfileResponse(payload.sub, event, { deleted: true });
-  }
   if (action === 'refresh_profile') {
-    const conversations = await memoryAccountConversations(payload.sub);
-    const result = await synthesizeUserMemory(payload.sub, {
-      mode: 'refresh',
-      from: body.from,
-      extraEvents: conversationMemoryEvents(conversations)
-    });
-    if (!result.ok) return jsonResponse(500, { error: result.error || 'Memory synthesis failed.' }, event);
-    return await memoryProfileResponse(payload.sub, event, {
-      refreshed: !result.refresh_error,
-      refresh_error: result.refresh_error || '',
-      generated_count: result.generated_count || 0,
-      preserved: Boolean(result.preserved)
-    });
+    // No-op kept so web clients deployed before the synthesized-memory
+    // removal get a normal profile back instead of an error.
+    return await memoryProfileResponse(payload.sub, event, { refreshed: false });
   }
   if (action === 'delete_profile') {
     const result = await deleteThingyProfile(payload.sub);

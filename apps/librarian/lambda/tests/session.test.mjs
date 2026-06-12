@@ -10,15 +10,8 @@ import {
   discordConnectionMemoryUpdate,
   memoryDynamoItem,
   memoryFromItem,
-  memoryContextBlock,
-  memorySynthesisStatus,
-  mergeLearnedProfile,
-  parseSynthesizedMemoryJson,
   recordUserTurn,
-  recordUserPreferredName,
-  sanitizeSessionSummary,
-  shouldAutoSynthesizeMemory,
-  synthesizeUserMemory
+  recordUserPreferredName
 } from '../shared/user-memory.mjs';
 import { renderTemplate, agentUserPrompt } from '../shared/prompts.mjs';
 import { subscriberStatus } from '../shared/buttondown.mjs';
@@ -95,7 +88,7 @@ test('legacy memory actions are rejected', async () => {
   delete process.env.TABLE_NAME;
   const { token } = createSessionToken('reader@example.com', 'legacy-memory-action');
   try {
-    for (const action of ['synthesize', 'update', 'resynthesize']) {
+    for (const action of ['synthesize', 'update', 'resynthesize', 'delete']) {
       const response = await authHandler({
         httpMethod: 'POST',
         path: '/memory',
@@ -109,344 +102,6 @@ test('legacy memory actions are rejected', async () => {
       assert.match(JSON.parse(response.body).error, /Unsupported memory action/);
     }
   } finally {
-    if (priorTable === undefined) delete process.env.TABLE_NAME;
-    else process.env.TABLE_NAME = priorTable;
-  }
-});
-
-test('learned profile synthesis parsing and merging are deterministic', () => {
-  const observedJson = JSON.stringify({
-    memories: [{
-      id: 'model-invented-id',
-      type: 'observed_archive_theme',
-      label: 'RSS workflows',
-      summary: 'Often explores RSS, OPML, and reader workflow tools.',
-      confidence: 0.82,
-      evidence: [{ event_id: 'conversation-1', label: 'Asked about RSS and OPML' }]
-    }]
-  });
-  const first = parseSynthesizedMemoryJson(observedJson, '2026-06-10T12:00:00.000Z')[0];
-  const second = parseSynthesizedMemoryJson(observedJson, '2026-06-11T12:00:00.000Z')[0];
-
-  assert.equal(first.id, second.id);
-  assert.notEqual(first.id, 'model-invented-id');
-  assert.equal(first.type, 'observed_archive_theme');
-  assert.equal(first.evidence[0].event_id, 'conversation-1');
-
-  const initial = mergeLearnedProfile([], [first], '2026-06-10T12:00:00.000Z');
-  const refreshed = mergeLearnedProfile(initial, [second], '2026-06-11T12:00:00.000Z');
-  assert.equal(refreshed.length, 1);
-  assert.equal(refreshed[0].id, first.id);
-  assert.equal(refreshed[0].created_at, '2026-06-10T12:00:00.000Z');
-  assert.equal(refreshed[0].updated_at, '2026-06-11T12:00:00.000Z');
-
-  const preserved = mergeLearnedProfile(initial, [], '2026-06-12T12:00:00.000Z');
-  assert.equal(preserved.length, 1);
-  assert.equal(preserved[0].id, first.id);
-
-  const tombstoned = mergeLearnedProfile(initial, [second], '2026-06-12T12:00:00.000Z', [{
-    type: 'learned',
-    memory_id: first.id
-  }]);
-  assert.equal(tombstoned.length, 0);
-});
-
-test('learned profile parser accepts fenced or wrapped JSON', () => {
-  const wrappedJson = [
-    'Here is the profile JSON:',
-    '```json',
-    JSON.stringify({
-      memories: [{
-        type: 'observed_archive_theme',
-        label: 'Archive privacy research',
-        summary: 'Often explores privacy-oriented archive and software-tooling questions.',
-        confidence: 0.7,
-        evidence: [{ event_id: 'conversation-privacy', label: 'Asked about privacy tooling' }]
-      }]
-    }),
-    '```',
-    'Done.'
-  ].join('\n');
-
-  const parsed = parseSynthesizedMemoryJson(wrappedJson, '2026-06-10T12:00:00.000Z');
-  assert.equal(parsed.length, 1);
-  assert.equal(parsed[0].label, 'Archive privacy research');
-  assert.equal(parsed[0].evidence[0].event_id, 'conversation-privacy');
-});
-
-test('learned profile synthesis includes conversation summary detail', async () => {
-  const priorTable = process.env.TABLE_NAME;
-  process.env.TABLE_NAME = 'thingy-test-table';
-  const originalDynamoSend = dynamodb.send;
-  const originalBedrockSend = bedrock.send;
-  let storedItem = memoryDynamoItem('subscriber-hash', {
-    version: 2,
-    memory_synthesis: { status: 'current' }
-  }, '2026-06-10T12:00:00.000Z');
-  let capturedPrompt = '';
-
-  dynamodb.send = async (command) => {
-    if (command.constructor.name === 'GetItemCommand') return { Item: storedItem };
-    if (command.constructor.name === 'QueryCommand') return { Items: [] };
-    if (command.constructor.name === 'PutItemCommand') {
-      storedItem = command.input.Item;
-      return {};
-    }
-    throw new Error(`Unexpected Dynamo command ${command.constructor.name}`);
-  };
-  bedrock.send = async (command) => {
-    capturedPrompt = command.input.messages[0].content[0].text;
-    return {
-      output: {
-        message: {
-          content: [{
-            text: JSON.stringify({
-              memories: [{
-                type: 'observed_archive_theme',
-                label: 'Privacy and software systems',
-                summary: 'Often explores how privacy values shape archive, software, and productivity systems.',
-                confidence: 0.8,
-                evidence: [{ event_id: 'conversation-privacy', label: 'Privacy values and systems summary' }]
-              }]
-            })
-          }]
-        }
-      }
-    };
-  };
-
-  try {
-    const result = await synthesizeUserMemory('subscriber-hash', {
-      mode: 'refresh',
-      extraEvents: [{
-        id: 'conversation-privacy',
-        type: 'conversation_summary',
-        ts: '2026-06-10T13:00:00.000Z',
-        label: 'Privacy values → productivity tool choices',
-        detail: 'Reader asked for a trace connecting privacy philosophy to productivity systems across the archive.'
-      }]
-    });
-    assert.equal(result.ok, true);
-    assert.equal(result.generated_count, 1);
-    assert.match(capturedPrompt, /Privacy values → productivity tool choices/);
-    assert.match(capturedPrompt, /Reader asked for a trace connecting privacy philosophy/);
-    assert.equal(result.memory.learned_profile[0].label, 'Privacy and software systems');
-  } finally {
-    dynamodb.send = originalDynamoSend;
-    bedrock.send = originalBedrockSend;
-    if (priorTable === undefined) delete process.env.TABLE_NAME;
-    else process.env.TABLE_NAME = priorTable;
-  }
-});
-
-test('failed learned profile synthesis preserves existing profile', async () => {
-  const priorTable = process.env.TABLE_NAME;
-  process.env.TABLE_NAME = 'thingy-test-table';
-  const originalDynamoSend = dynamodb.send;
-  const originalBedrockSend = bedrock.send;
-  let putCount = 0;
-
-  dynamodb.send = async (command) => {
-    if (command.constructor.name === 'GetItemCommand') {
-      return {
-        Item: memoryDynamoItem('subscriber-hash', {
-          version: 2,
-          learned_profile: [{
-            type: 'observed_archive_theme',
-            label: 'RSS workflows',
-            summary: 'Often explores RSS and reader workflow tools.',
-            confidence: 0.8,
-            evidence: [{ event_id: 'event-1', label: 'Asked about RSS' }],
-            created_at: '2026-06-10T12:00:00.000Z',
-            updated_at: '2026-06-10T12:00:00.000Z',
-            synthesized_at: '2026-06-10T12:00:00.000Z'
-          }],
-          memory_synthesis: {
-            last_synthesized_at: '2026-06-10T12:00:00.000Z',
-            last_event_at: '2026-06-10T11:00:00.000Z',
-            status: 'current'
-          }
-        }, '2026-06-10T12:00:00.000Z')
-      };
-    }
-    if (command.constructor.name === 'QueryCommand') {
-      return {
-        Items: [{
-          pk: { S: 'user#subscriber-hash' },
-          sk: { S: 'memory-event#2026-06-10T13:00:00.000Z#event-2' },
-          event_id: { S: 'event-2' },
-          event_type: { S: 'chat_question' },
-          ts: { S: '2026-06-10T13:00:00.000Z' },
-          label: { S: 'What did Jamie write about RSS?' }
-        }]
-      };
-    }
-    if (command.constructor.name === 'PutItemCommand') {
-      putCount += 1;
-      return {};
-    }
-    throw new Error(`Unexpected Dynamo command ${command.constructor.name}`);
-  };
-  bedrock.send = async () => ({
-    output: { message: { content: [{ text: 'not json' }] } }
-  });
-
-  try {
-    const result = await synthesizeUserMemory('subscriber-hash', { mode: 'refresh' });
-    assert.equal(result.ok, true);
-    assert.equal(result.generated_count, 0);
-    assert.match(result.error, /invalid JSON/);
-    assert.match(result.refresh_error, /Existing profile was kept/);
-    assert.equal(result.preserved, true);
-    assert.equal(result.memory.learned_profile[0].label, 'RSS workflows');
-    assert.equal(result.memory.memory_synthesis.status, 'error');
-    assert.equal(putCount, 0);
-  } finally {
-    dynamodb.send = originalDynamoSend;
-    bedrock.send = originalBedrockSend;
-    if (priorTable === undefined) delete process.env.TABLE_NAME;
-    else process.env.TABLE_NAME = priorTable;
-  }
-});
-
-test('empty learned profile synthesis with evidence preserves existing profile', async () => {
-  const priorTable = process.env.TABLE_NAME;
-  process.env.TABLE_NAME = 'thingy-test-table';
-  const originalDynamoSend = dynamodb.send;
-  const originalBedrockSend = bedrock.send;
-  let putCount = 0;
-
-  dynamodb.send = async (command) => {
-    if (command.constructor.name === 'GetItemCommand') {
-      return {
-        Item: memoryDynamoItem('subscriber-hash', {
-          version: 2,
-          learned_profile: [{
-            type: 'observed_archive_theme',
-            label: 'RSS workflows',
-            summary: 'Often explores RSS and reader workflow tools.',
-            confidence: 0.8,
-            evidence: [{ event_id: 'event-1', label: 'Asked about RSS' }],
-            created_at: '2026-06-10T12:00:00.000Z',
-            updated_at: '2026-06-10T12:00:00.000Z',
-            synthesized_at: '2026-06-10T12:00:00.000Z'
-          }]
-        }, '2026-06-10T12:00:00.000Z')
-      };
-    }
-    if (command.constructor.name === 'QueryCommand') return { Items: [] };
-    if (command.constructor.name === 'PutItemCommand') {
-      putCount += 1;
-      return {};
-    }
-    throw new Error(`Unexpected Dynamo command ${command.constructor.name}`);
-  };
-  bedrock.send = async () => ({
-    output: { message: { content: [{ text: '{"memories":[]}' }] } }
-  });
-
-  try {
-    const result = await synthesizeUserMemory('subscriber-hash', {
-      mode: 'refresh',
-      extraEvents: [{
-        id: 'conversation-privacy',
-        type: 'conversation_summary',
-        ts: '2026-06-10T13:00:00.000Z',
-        label: 'Privacy values',
-        detail: 'Reader asked for privacy and systems traces across the archive.'
-      }]
-    });
-    assert.equal(result.ok, true);
-    assert.equal(result.generated_count, 0);
-    assert.match(result.error, /produced no learned profile/);
-    assert.match(result.refresh_error, /Existing profile was kept/);
-    assert.equal(result.preserved, true);
-    assert.equal(result.memory.learned_profile[0].label, 'RSS workflows');
-    assert.equal(putCount, 0);
-  } finally {
-    dynamodb.send = originalDynamoSend;
-    bedrock.send = originalBedrockSend;
-    if (priorTable === undefined) delete process.env.TABLE_NAME;
-    else process.env.TABLE_NAME = priorTable;
-  }
-});
-
-test('memory refresh route returns preserved profile on synthesis failure', async () => {
-  process.env.SESSION_SECRET = 'test-secret';
-  const priorTable = process.env.TABLE_NAME;
-  process.env.TABLE_NAME = 'thingy-test-table';
-  const originalDynamoSend = dynamodb.send;
-  const originalBedrockSend = bedrock.send;
-  const { token } = createSessionToken('reader@example.com', 'refresh-route');
-  const sub = emailHash('reader@example.com');
-  const memoryItem = memoryDynamoItem(sub, {
-    version: 2,
-    learned_profile: [{
-      type: 'observed_archive_theme',
-      label: 'RSS workflows',
-      summary: 'Often explores RSS and reader workflow tools.',
-      confidence: 0.8,
-      evidence: [{ event_id: 'event-1', label: 'Asked about RSS' }],
-      created_at: '2026-06-10T12:00:00.000Z',
-      updated_at: '2026-06-10T12:00:00.000Z',
-      synthesized_at: '2026-06-10T12:00:00.000Z'
-    }],
-    memory_synthesis: {
-      last_synthesized_at: '2026-06-10T12:00:00.000Z',
-      last_event_at: '2026-06-10T11:00:00.000Z',
-      status: 'current'
-    }
-  }, '2026-06-10T12:00:00.000Z');
-
-  dynamodb.send = async (command) => {
-    if (command.constructor.name === 'GetItemCommand') {
-      if (command.input.Key?.sk?.S === 'profile-deleted') return {};
-      return { Item: memoryItem };
-    }
-    if (command.constructor.name === 'QueryCommand') {
-      const prefix = command.input.ExpressionAttributeValues?.[':prefix']?.S || '';
-      if (prefix === 'memory-event#') {
-        return {
-          Items: [{
-            pk: { S: `user#${sub}` },
-            sk: { S: 'memory-event#2026-06-10T13:00:00.000Z#event-2' },
-            event_id: { S: 'event-2' },
-            event_type: { S: 'chat_question' },
-            ts: { S: '2026-06-10T13:00:00.000Z' },
-            label: { S: 'What did Jamie write about RSS?' }
-          }]
-        };
-      }
-      return { Items: [] };
-    }
-    if (command.constructor.name === 'PutItemCommand') {
-      throw new Error('refresh route should not overwrite memory on invalid synthesis');
-    }
-    throw new Error(`Unexpected Dynamo command ${command.constructor.name}`);
-  };
-  bedrock.send = async () => ({
-    output: { message: { content: [{ text: 'not json' }] } }
-  });
-
-  try {
-    const response = await authHandler({
-      httpMethod: 'POST',
-      path: '/memory',
-      headers: {
-        authorization: `Bearer ${token}`,
-        origin: 'https://thingy.thingelstad.com'
-      },
-      body: JSON.stringify({ action: 'refresh_profile' })
-    }, { awsRequestId: 'refresh-profile-failure' });
-    const body = JSON.parse(response.body);
-    assert.equal(response.statusCode, 200);
-    assert.equal(body.refreshed, false);
-    assert.match(body.refresh_error, /Existing profile was kept/);
-    assert.equal(body.preserved, true);
-    assert.equal(body.profile.learned_profile[0].label, 'RSS workflows');
-  } finally {
-    dynamodb.send = originalDynamoSend;
-    bedrock.send = originalBedrockSend;
     if (priorTable === undefined) delete process.env.TABLE_NAME;
     else process.env.TABLE_NAME = priorTable;
   }
@@ -759,32 +414,19 @@ test('Discord link helpers normalize identity and hide raw user ids behind hashe
   assert.equal(isSupportingEntitlement(['reader', 'owner']), true);
 });
 
-test('memoryFromItem shapes stored preferred names', () => {
+test('memoryFromItem keeps the basic profile and ignores legacy synthesized fields', () => {
   const memory = memoryFromItem({
     version: { N: '3' },
     first_seen_at: { S: '2026-01-01T00:00:00Z' },
     last_seen_at: { S: '2026-01-02T00:00:00Z' },
     preferred_name: { S: 'Jamie' },
     turn_count: { N: '7' },
+    // Legacy attributes still present on pre-simplification rows.
     current_session_questions: { L: [{ M: { ts: { S: '2026-01-02T00:00:00Z' }, question: { S: 'What about RSS?' } } }] },
-    recent_prompts: { L: [
-      { M: { ts: { S: '2026-01-01T00:00:00Z' }, question: { S: 'Tell me about OPML.' } } },
-      { M: { ts: { S: '2026-01-02T00:00:00Z' }, question: { S: 'What about RSS?' } } }
-    ] },
+    recent_prompts: { L: [{ M: { ts: { S: '2026-01-01T00:00:00Z' }, question: { S: 'Tell me about OPML.' } } }] },
     synthesized_history: { L: [] },
-    learned_profile: { L: [{ M: {
-      label: { S: 'RSS workflows' },
-      summary: { S: 'Often explores RSS and reader workflow ideas.' },
-      confidence: { N: '0.8' },
-      synthesized_at: { S: '2026-01-03T00:00:00Z' },
-      evidence: { L: [{ M: { event_id: { S: 'event-1' }, label: { S: 'Asked about RSS' } } }] }
-    } }] },
-    memory_synthesis: { M: {
-      last_synthesized_at: { S: '2026-01-03T00:00:00Z' },
-      last_event_at: { S: '2026-01-02T00:00:00Z' },
-      pending_event_count: { N: '0' },
-      status: { S: 'current' }
-    } },
+    learned_profile: { L: [{ M: { label: { S: 'RSS workflows' }, summary: { S: 'Often explores RSS.' } } }] },
+    memory_synthesis: { M: { status: { S: 'current' } } },
     discord_connection: {
       M: {
         connected: { BOOL: true },
@@ -801,34 +443,30 @@ test('memoryFromItem shapes stored preferred names', () => {
   assert.equal(memory.sub, 'subscriber-hash');
   assert.equal(memory.version, 3);
   assert.equal(memory.preferred_name, 'Jamie');
-  assert.match(memory.current_session_questions[0].id, /^mem_recent_/);
-  assert.equal(memory.current_session_questions[0].question, 'What about RSS?');
-  assert.equal(memory.recent_prompts.length, 2);
-  assert.equal(memory.recent_prompts[0].question, 'Tell me about OPML.');
-  assert.match(memory.learned_profile[0].id, /^mem_learned_/);
-  assert.equal(memory.learned_profile[0].evidence[0].event_id, 'event-1');
-  assert.equal(Object.hasOwn(memory, 'remembered_facts'), false);
-  assert.equal(Object.hasOwn(memory, 'interests'), false);
-  assert.equal(Object.hasOwn(memory, 'synthesized_memories'), false);
-  assert.equal(memory.memory_synthesis.status, 'current');
+  assert.equal(memory.turn_count, 7);
+  assert.equal(Object.hasOwn(memory, 'current_session_questions'), false);
+  assert.equal(Object.hasOwn(memory, 'recent_prompts'), false);
+  assert.equal(Object.hasOwn(memory, 'synthesized_history'), false);
+  assert.equal(Object.hasOwn(memory, 'learned_profile'), false);
+  assert.equal(Object.hasOwn(memory, 'memory_synthesis'), false);
   assert.equal(memory.discord_connection.display_name, 'Thingy User');
 });
 
-test('recordUserTurn appends durable recent prompts across sessions', async () => {
+test('recordUserTurn increments the turn counter and keeps the profile basics', async () => {
   const priorTable = process.env.TABLE_NAME;
   process.env.TABLE_NAME = 'thingy-test-table';
   const originalDynamoSend = dynamodb.send;
-  let storedItem = memoryDynamoItem('subscriber-hash', {
+  const storedItem = memoryDynamoItem('subscriber-hash', {
     version: 4,
-    current_session_id: 'session-a',
-    current_session_started_at: '2026-01-01T00:00:00.000Z',
-    current_session_questions: [
-      { ts: '2026-01-01T00:00:00.000Z', question: 'What about RSS?' }
-    ],
-    recent_prompts: Array.from({ length: 24 }, (_, index) => ({
-      ts: `2026-01-01T00:${String(index).padStart(2, '0')}:00.000Z`,
-      question: `Prompt ${index}`
-    }))
+    first_seen_at: '2026-01-01T00:00:00.000Z',
+    preferred_name: 'Jamie',
+    turn_count: 7,
+    discord_connection: {
+      connected: true,
+      username: 'thingy_user',
+      display_name: 'Thingy User',
+      connected_at: '2026-01-01T00:00:00.000Z'
+    }
   }, '2026-01-01T00:00:00.000Z');
   let writtenMemory = null;
 
@@ -842,16 +480,15 @@ test('recordUserTurn appends durable recent prompts across sessions', async () =
   };
 
   try {
-    await recordUserTurn('subscriber-hash', {
-      sid: 'session-a',
-      question: 'How does RSS connect to owned distribution?'
-    });
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await recordUserTurn('subscriber-hash', {});
     const memory = memoryFromItem(writtenMemory, 'subscriber-hash');
-    assert.equal(memory.recent_prompts.length, 24);
-    assert.equal(memory.recent_prompts[0].question, 'Prompt 1');
-    assert.equal(memory.recent_prompts.at(-1).question, 'How does RSS connect to owned distribution?');
-    assert.equal(memory.current_session_questions.at(-1).question, 'How does RSS connect to owned distribution?');
+    assert.equal(memory.turn_count, 8);
+    assert.equal(memory.version, 5);
+    assert.equal(memory.preferred_name, 'Jamie');
+    assert.equal(memory.first_seen_at, '2026-01-01T00:00:00.000Z');
+    assert.equal(memory.discord_connection.display_name, 'Thingy User');
+    assert.equal(Object.hasOwn(writtenMemory, 'recent_prompts'), false);
+    assert.equal(Object.hasOwn(writtenMemory, 'learned_profile'), false);
   } finally {
     dynamodb.send = originalDynamoSend;
     if (priorTable === undefined) delete process.env.TABLE_NAME;
@@ -919,13 +556,13 @@ test('full memory item rewrites preserve Discord connection metadata', () => {
       guild_id: 'guild-1',
       connected_at: connectedAt,
       last_verified_at: connectedAt
-    },
-    current_session_questions: [{ ts: connectedAt, question: 'What about RSS?' }]
+    }
   }, '2026-06-10T12:05:00.000Z', {
     version: 5,
     turn_count: 8
   });
 
+  assert.equal(item.turn_count.N, '8');
   assert.equal(item.pk.S, 'user#subscriber-hash');
   assert.equal(item.version.N, '5');
   assert.equal(item.discord_connection.M.username.S, 'thingy_user');
@@ -939,104 +576,32 @@ test('full memory item rewrites omit blank Discord connection metadata', () => {
   assert.equal(Object.hasOwn(item, 'discord_connection'), false);
 });
 
-test('authProfile reflects turn_count and surfaces recent topics', () => {
+test('authProfile reflects turn_count and keeps legacy keys as empty arrays', () => {
   const memory = {
     first_seen_at: '2026-01-01T00:00:00Z',
     last_seen_at: '2026-04-01T00:00:00Z',
     preferred_name: 'Jamie',
-    turn_count: 7,
-    current_session_questions: [
-      { ts: '2026-04-01T00:00:00Z', question: 'What about RSS?' },
-      { ts: '2026-04-01T00:01:00Z', question: 'Did Jamie mention Atom?' }
-    ],
-    recent_prompts: [
-      { ts: '2026-03-01T00:00:00Z', question: 'Tell me about OPML.' },
-      { ts: '2026-04-01T00:00:00Z', question: 'What about RSS?' },
-      { ts: '2026-04-01T00:01:00Z', question: 'Did Jamie mention Atom?' }
-    ],
-    synthesized_history: [
-      { started_at: '2026-03-01', ended_at: '2026-03-01', summary: 'RSS week.', turn_count: 3 },
-      { started_at: '2026-03-15', ended_at: '2026-03-15', summary: 'Indie web week.', turn_count: 4 }
-    ]
+    turn_count: 7
   };
   const profile = authProfile(memory);
   assert.equal(profile.returning, true);
   assert.equal(profile.turn_count, 7);
   assert.equal(profile.preferred_name, 'Jamie');
-  assert.equal(profile.current_session_questions.length, 2);
-  assert.equal(profile.recent_prompts.length, 3);
-  assert.equal(profile.recent_prompts[0].question, 'Tell me about OPML.');
-  assert.equal(profile.prior_session_summaries.length, 2);
-  assert.equal(profile.prior_session_summaries[1].summary, 'Indie web week.');
+  // Frozen contract shape for web clients deployed before the
+  // synthesized-memory removal.
+  assert.deepEqual(profile.current_session_questions, []);
+  assert.deepEqual(profile.recent_prompts, []);
+  assert.deepEqual(profile.prior_session_summaries, []);
+  assert.deepEqual(profile.learned_profile, []);
+  assert.deepEqual(profile.memory_synthesis, {});
 });
 
-test('authProfile caps recent topics at 5 current, 10 recent, and 3 summaries', () => {
-  const memory = {
-    turn_count: 50,
-    current_session_questions: Array.from({ length: 12 }, (_, i) => ({ ts: '', question: `q${i}` })),
-    recent_prompts: Array.from({ length: 24 }, (_, i) => ({ ts: '', question: `prompt${i}` })),
-    synthesized_history: Array.from({ length: 8 }, (_, i) => ({
-      summary: `s${i}`, started_at: '', ended_at: '', turn_count: 1
-    }))
-  };
-  const profile = authProfile(memory);
-  assert.equal(profile.current_session_questions.length, 5);
-  assert.equal(profile.recent_prompts.length, 10);
-  assert.equal(profile.prior_session_summaries.length, 3);
-  // Most recent kept.
-  assert.equal(profile.current_session_questions[4].question, 'q11');
-  assert.equal(profile.recent_prompts[9].question, 'prompt23');
-  assert.equal(profile.prior_session_summaries[2].summary, 's7');
-});
-
-test('authProfile and memory context filter low-value synthesized summaries', () => {
-  assert.equal(sanitizeSessionSummary("I don't have any previous context about that."), '');
-  assert.equal(sanitizeSessionSummary('NO_USEFUL_SUMMARY'), '');
-  assert.equal(sanitizeSessionSummary('They explored RSS and OPML workflows.'), 'They explored RSS and OPML workflows.');
-
-  const memory = {
-    turn_count: 8,
-    synthesized_history: [
-      { started_at: '', ended_at: '', summary: "I don't have any previous context about Jamie's archive.", turn_count: 1 },
-      { started_at: '2026-04-01T00:00:00Z', ended_at: '2026-04-01T00:02:00Z', summary: 'They explored RSS and OPML workflows.', turn_count: 2 }
-    ]
-  };
-
-  const profile = authProfile(memory);
-  assert.equal(profile.prior_session_summaries.length, 1);
-  assert.equal(profile.prior_session_summaries[0].summary, 'They explored RSS and OPML workflows.');
-
-  const block = memoryContextBlock(memory);
-  assert.equal(block, '');
-});
-
-test('memoryContextBlock returns empty string when nothing useful', () => {
-  assert.equal(memoryContextBlock(null), '');
-  assert.equal(memoryContextBlock({}), '');
-  assert.equal(memoryContextBlock({ synthesized_history: [], current_session_questions: [], recent_prompts: [] }), '');
-});
-
-test('memoryContextBlock uses recent prompts even before learned profile synthesis', () => {
-  const block = memoryContextBlock({
-    synthesized_history: [
-      { summary: 'RSS exploration.', ended_at: '2026-03-01T00:00:00Z' }
-    ],
-    recent_prompts: [
-      { question: 'What did Jamie say about Atom?' },
-      { question: 'How does OPML connect to RSS readers?' }
-    ]
-  });
-  assert.match(block, /Recent reader prompts/);
-  assert.match(block, /What did Jamie say about Atom/);
-  assert.match(block, /How does OPML connect/);
-});
-
-test('reader context prefers durable recent prompts over current-session fallback', () => {
+test('reader context carries profile basics and ignores legacy prompt arrays', () => {
   const profile = normalizeUserProfile({
     turn_count: 9,
+    preferred_name: 'Jamie',
     recent_prompts: [
-      { question: 'What did Jamie say about RSS?' },
-      { question: 'How does OPML connect to readers?' }
+      { question: 'What did Jamie say about RSS?' }
     ],
     current_session_questions: [
       { question: 'Fallback current-session question.' }
@@ -1044,14 +609,12 @@ test('reader context prefers durable recent prompts over current-session fallbac
   });
   const prompt = readerContextPrompt({}, profile);
 
-  assert.deepEqual(profile.recent_prompts, [
-    'What did Jamie say about RSS?',
-    'How does OPML connect to readers?'
-  ]);
-  assert.match(prompt, /Client-known recent Thingy prompts/);
-  assert.match(prompt, /What did Jamie say about RSS/);
-  assert.doesNotMatch(prompt, /Client-known current session questions/);
-  assert.doesNotMatch(prompt, /Fallback current-session question/);
+  assert.equal(Object.hasOwn(profile, 'recent_prompts'), false);
+  assert.equal(Object.hasOwn(profile, 'current_session_questions'), false);
+  assert.match(prompt, /Reader preferred name: Jamie/);
+  assert.match(prompt, /Prior Thingy turns known to client: 9/);
+  assert.doesNotMatch(prompt, /Client-known recent Thingy prompts/);
+  assert.doesNotMatch(prompt, /What did Jamie say about RSS/);
 });
 
 test('authProfile surfaces Discord metadata without explicit memory fields', () => {
@@ -1069,107 +632,6 @@ test('authProfile surfaces Discord metadata without explicit memory fields', () 
   assert.equal(Object.hasOwn(profile, 'remembered_facts'), false);
   assert.equal(Object.hasOwn(profile, 'interests'), false);
   assert.equal(Object.hasOwn(profile, 'synthesized_memories'), false);
-});
-
-test('authProfile and memoryContextBlock surface learned profile memories', () => {
-  const memory = {
-    turn_count: 10,
-    learned_profile: [
-      {
-        id: 'mem_learned_test',
-        type: 'observed_archive_theme',
-        label: 'Reader workflows',
-        summary: 'Often explores RSS, OPML, and reader workflow tools.',
-        confidence: 0.8
-      }
-    ],
-    memory_synthesis: {
-      last_synthesized_at: '2026-06-10T12:00:00.000Z',
-      last_event_at: '2026-06-10T11:00:00.000Z',
-      pending_event_count: 0,
-      status: 'current'
-    }
-  };
-  const profile = authProfile(memory);
-  assert.equal(profile.learned_profile[0].label, 'Reader workflows');
-  assert.equal(profile.memory_synthesis.status, 'current');
-
-  const block = memoryContextBlock(memory);
-  assert.match(block, /Learned reader profile/);
-  assert.match(block, /RSS, OPML/);
-});
-
-test('memorySynthesisStatus reports stale when events occurred after synthesis', () => {
-  const status = memorySynthesisStatus({
-    memory_synthesis: {
-      last_synthesized_at: '2026-06-10T12:00:00.000Z'
-    }
-  }, [
-    { type: 'chat_question', ts: '2026-06-10T11:00:00.000Z' },
-    { type: 'chat_question', ts: '2026-06-10T12:30:00.000Z' }
-  ]);
-  assert.equal(status.status, 'stale');
-  assert.equal(status.pending_event_count, 1);
-  assert.equal(status.last_event_at, '2026-06-10T12:30:00.000Z');
-});
-
-test('memorySynthesisStatus ignores deletion audit events', () => {
-  const status = memorySynthesisStatus({
-    memory_synthesis: {
-      last_synthesized_at: '2026-06-10T12:00:00.000Z',
-      last_event_at: '2026-06-10T11:00:00.000Z'
-    }
-  }, [
-    { type: 'memory_deleted', ts: '2026-06-10T12:30:00.000Z' }
-  ]);
-  assert.equal(status.status, 'current');
-  assert.equal(status.pending_event_count, 0);
-  assert.equal(status.last_event_at, '2026-06-10T11:00:00.000Z');
-});
-
-test('memorySynthesisStatus treats conversation summaries as learnable events', () => {
-  const status = memorySynthesisStatus({
-    memory_synthesis: {
-      last_synthesized_at: '2026-06-10T12:00:00.000Z'
-    }
-  }, [
-    { type: 'conversation_summary', ts: '2026-06-10T12:30:00.000Z' }
-  ]);
-  assert.equal(status.status, 'stale');
-  assert.equal(status.pending_event_count, 1);
-  assert.equal(status.last_event_at, '2026-06-10T12:30:00.000Z');
-});
-
-test('shouldAutoSynthesizeMemory triggers quickly before first synthesis', () => {
-  const due = shouldAutoSynthesizeMemory({}, [
-    { type: 'chat_question', ts: '2026-06-10T12:00:00.000Z' },
-    { type: 'chat_question', ts: '2026-06-10T12:05:00.000Z' },
-    { type: 'conversation_summary', ts: '2026-06-10T12:10:00.000Z' }
-  ], '2026-06-10T12:15:00.000Z');
-  assert.equal(due, true);
-});
-
-test('shouldAutoSynthesizeMemory ignores non-learnable audit events', () => {
-  const due = shouldAutoSynthesizeMemory({
-    memory_synthesis: {
-      last_synthesized_at: '2026-06-10T12:00:00.000Z'
-    }
-  }, [
-    { type: 'memory_deleted', ts: '2026-06-10T12:05:00.000Z' },
-    { type: 'auth_profile_viewed', ts: '2026-06-10T12:10:00.000Z' }
-  ], '2026-06-10T12:15:00.000Z');
-  assert.equal(due, false);
-});
-
-test('shouldAutoSynthesizeMemory triggers when pending events age out', () => {
-  const due = shouldAutoSynthesizeMemory({
-    memory_synthesis: {
-      last_synthesized_at: '2026-06-10T12:00:00.000Z'
-    }
-  }, [
-    { type: 'chat_question', ts: '2026-06-10T12:30:00.000Z' }
-  ], '2026-06-11T13:00:00.000Z');
-  assert.equal(due, true);
 });
 
 test('email normalization is stable', () => {

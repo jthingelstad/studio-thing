@@ -24,6 +24,10 @@ import {
   weeklyIssueCatalog
 } from '../shared/archive-tools.mjs';
 import {
+  DISPATCH_PLANNER_TOOLS,
+  dispatchPlannerToolSpecs
+} from '../shared/dispatch-planner-tools.mjs';
+import {
   conversationContext,
   extractPreferredNameFromMessage,
   normalizeUserProfile,
@@ -59,8 +63,6 @@ import { extractBearer, verifyToken } from '../shared/session.mjs';
 import { sessionAllowedForThingyProfile } from '../shared/profile-deletion.mjs';
 import {
   getUserMemory,
-  memoryContextBlock,
-  maybeSynthesizeUserMemory,
   recordUserPreferredName,
   recordUserTurn
 } from '../shared/user-memory.mjs';
@@ -137,22 +139,8 @@ function bridgeSecretOk(body) {
   return expectedBuf.length === suppliedBuf.length && crypto.timingSafeEqual(expectedBuf, suppliedBuf);
 }
 
-async function updateUserMemoryAfterTurn(subscriberHash, payload, question, preferredName) {
-  await recordUserTurn(subscriberHash, { sid: String(payload.sid || ''), question, preferredName });
-  try {
-    const result = await maybeSynthesizeUserMemory(subscriberHash);
-    if (result?.ok && !result.skipped) {
-      logEvent('info', 'user_memory_auto_synthesized', {
-        subscriber_hash: subscriberHash,
-        generated_count: result.generated_count || 0
-      });
-    }
-  } catch (error) {
-    logEvent('warning', 'user_memory_auto_synthesis_failed', {
-      subscriber_hash: subscriberHash,
-      error_type: error?.constructor?.name || 'Error'
-    });
-  }
+async function updateUserMemoryAfterTurn(subscriberHash, preferredName) {
+  await recordUserTurn(subscriberHash, { preferredName });
 }
 
 async function recordFeedback({ subscriberHash, requestId, reaction, comment }) {
@@ -490,9 +478,6 @@ function preflightUserPrompt(question, scope, history, context = {}) {
     'Reader context available to the main agent:',
     context.readerContext || 'No reader-local context supplied.',
     '',
-    'Durable reader memory available to the main agent:',
-    context.memoryContext || 'No durable reader memory supplied.',
-    '',
     'Reader prompt:',
     String(question || '').trim()
   ].join('\n');
@@ -594,7 +579,6 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   const start = performance.now();
   const scope = normalizeScope(options.scope);
   const mode = normalizeConversationMode(options.mode);
-  const memoryContext = String(options.memoryContext || '').trim();
   const readerContext = String(options.readerContext || '').trim();
   const agentQuestion = agentQuestionForPreflight(question, options.preflight);
   const shouldStopWriting = () => Boolean(options.deadlineExceeded?.());
@@ -614,25 +598,29 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   let usage = {};
   let stopReason = '';
   const maxTurns = Number(process.env.MAX_TOOL_TURNS || DEFAULT_MAX_TOOL_TURNS);
-  // The static system prompt is cached. Per-user memory is appended after
-  // the cachePoint as a separate block — uncached, since it varies per
-  // request, but it doesn't bust the prefix cache for the static prompt.
+  // Dispatch planner conversations get the brief/coverage tools on top of
+  // the archive tools; every other mode keeps the archive set only.
+  const toolHandlers = mode === 'dispatch'
+    ? { ...ARCHIVE_TOOLS, ...DISPATCH_PLANNER_TOOLS }
+    : ARCHIVE_TOOLS;
+  const activeToolSpecs = mode === 'dispatch'
+    ? [...toolSpecs(), ...dispatchPlannerToolSpecs()]
+    : toolSpecs();
+  // The static system prompt is cached; per-request blocks go after the
+  // cachePoint so they don't bust the static prompt's prefix cache.
   const systemBlocks = [{ text: AGENT_SYSTEM_PROMPT }, { cachePoint: { type: 'default' } }];
   // Active scope varies per request, so it goes after the cachePoint as its
   // own block — it tells the agent which corpus it may speak from without
   // busting the static prompt's prefix cache.
   systemBlocks.push({ text: scopePromptLine(scope) });
   systemBlocks.push({ text: conversationModePrompt(mode) });
-  if (memoryContext) {
-    systemBlocks.push({ text: memoryContext });
-  }
   for (let turn = 0; turn <= maxTurns; turn += 1) {
     const streamAnswerDeltas = toolResults.length > 0;
     const response = await bedrock.send(new ConverseStreamCommand({
       modelId: agentModel(),
       system: systemBlocks,
       messages,
-      toolConfig: { tools: toolSpecs() },
+      toolConfig: { tools: activeToolSpecs },
       inferenceConfig: commandInferenceConfig()
     }));
     const result = await readConverseStream(response, {
@@ -665,7 +653,7 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
           commentary: visibleNote
         });
       }
-      const handler = ARCHIVE_TOOLS[toolUse.name];
+      const handler = toolHandlers[toolUse.name];
       let result;
       const toolStart = performance.now();
       let ok = true;
@@ -679,6 +667,16 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
           tool_name: toolUse.name
         }));
         result = { error: `${toolUse.name} failed: ${error.constructor?.name || 'Error'}` };
+      }
+      if (toolUse.name === 'update_dispatch_brief' && result?.brief && !shouldStopWriting()) {
+        // Mirror the brief to the client as it forms; the reader locks it
+        // from the brief card, which queues generation via /dispatch.
+        writeSse(responseStream, 'dispatch_brief', {
+          brief: result.brief,
+          status: result.status || result.brief.status || 'draft',
+          request_id: options.requestId,
+          conversation_id: options.conversationId
+        });
       }
       toolTrace.calls.push({
         name: toolUse.name,
@@ -796,7 +794,6 @@ async function handleCuriosityMapRoute({ event, responseStream, requestId, summa
   }
   try {
     const scope = normalizeScope(body.scope);
-    const memory = await getUserMemory(subscriberHash);
     const conversations = await loadUserConversationSummaries({
       dynamodb,
       tableName: process.env.TABLE_NAME,
@@ -805,7 +802,6 @@ async function handleCuriosityMapRoute({ event, responseStream, requestId, summa
       logEvent
     });
     const map = await buildCuriosityMap({
-      memory,
       conversations,
       scope,
       center: body.center || body.topic || body.query
@@ -1007,7 +1003,6 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
         turn_count: userProfile.turn_count ?? Number(memory?.turn_count || 0)
       };
       const readerContext = readerContextPrompt(body.client_context, effectiveProfile);
-      const memoryContext = memoryContextBlock(memory);
       const conversations = await loadUserConversationSummaries({
         dynamodb,
         tableName: process.env.TABLE_NAME,
@@ -1023,12 +1018,12 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       writeSse(stream, 'status', { message: 'Thingy is getting oriented...' });
       let spark = null;
       try {
-        spark = await buildWelcomeSpark({ memory, conversations, scope });
+        spark = await buildWelcomeSpark({ conversations, scope });
       } catch (error) {
         logEvent('warning', 'welcome_spark_failed', { error_type: error.constructor?.name || 'Error' });
       }
       if (spark) writeSse(stream, 'experience', { experience: spark });
-      const answer = await generateWelcome({ readerContext, memoryContext, conversations, scope, mode: modeAccess.mode, spark });
+      const answer = await generateWelcome({ readerContext, conversations, scope, mode: modeAccess.mode, spark });
       writeSse(stream, 'answer_delta', { delta: answer });
       writeSse(stream, 'done', { request_id: requestId, mode: modeAccess.mode });
       logEvent('info', 'welcome_completed', {
@@ -1087,10 +1082,9 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       await recordUserPreferredName(subscriberHash, effectiveUserProfile.preferred_name);
     }
 
-    // Fetch user memory before preflight so memory/conversation-meta prompts
-    // are not answered by the evaluator from an empty context.
+    // Fetch the user profile row so the preferred name reaches the prompt
+    // even when the client didn't supply it.
     const userMemory = await getUserMemory(subscriberHash);
-    const memoryContext = memoryContextBlock(userMemory);
     if (!effectiveUserProfile.preferred_name && userMemory?.preferred_name) {
       effectiveUserProfile = {
         ...effectiveUserProfile,
@@ -1101,7 +1095,11 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
 
     writeSse(stream, 'meta', { request_id: requestId, conversation_id: conversationId, mode: modeAccess.mode });
     writeSse(stream, 'status', { message: 'Understanding the request...' });
-    const preflight = await evaluatePromptPreflight(question, scope, history, { readerContext, memoryContext, mode: modeAccess.mode });
+    // Dispatch planner turns always run the planning agent — the preflight
+    // evaluator's direct-answer shortcut would skip the coverage tools.
+    const preflight = modeAccess.mode === 'dispatch'
+      ? passThroughPreflight(question, 'Dispatch planner conversations always run the planning agent.')
+      : await evaluatePromptPreflight(question, scope, history, { readerContext, mode: modeAccess.mode });
     if (preflight.action === 'direct') {
       preflight.direct_answer = sanitizeAnswerProse(preflight.direct_answer);
       const citations = [];
@@ -1129,7 +1127,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation, mode: modeAccess.mode });
       // Guarded/direct turns still update memory — the question text was
       // recorded above, so let the user-memory row reflect that turn too.
-      await updateUserMemoryAfterTurn(subscriberHash, payload, question, effectiveUserProfile.preferred_name);
+      await updateUserMemoryAfterTurn(subscriberHash, effectiveUserProfile.preferred_name);
       return;
     }
 
@@ -1173,7 +1171,6 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     let result;
     try {
       result = await streamBedrockAgentAnswer(question, history, stream, {
-        memoryContext,
         readerContext,
         scope,
         mode: modeAccess.mode,
@@ -1234,7 +1231,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     // Update per-user memory after the answer ships. If the sid has
     // rotated since the prior turn, this also triggers a Bedrock-
     // synthesized summary of the previous session.
-    await updateUserMemoryAfterTurn(subscriberHash, payload, question, effectiveUserProfile.preferred_name);
+    await updateUserMemoryAfterTurn(subscriberHash, effectiveUserProfile.preferred_name);
     logEvent('info', 'chat_completed', {
       subscriber_hash: subscriberHash,
       request_id: requestId,

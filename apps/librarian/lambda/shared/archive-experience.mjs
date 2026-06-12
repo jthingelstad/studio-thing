@@ -140,14 +140,11 @@ function themesSimilar(first, second) {
   return overlap >= Math.min(2, a.length, b.length);
 }
 
-function recentSparkThemes(memory, conversations = []) {
-  const recentPrompts = memory?.recent_prompts?.length ? memory.recent_prompts : memory?.current_session_questions || [];
-  const values = [
-    ...(recentPrompts.slice(-5).map((item) => item?.question || item)),
-    ...((memory?.synthesized_history || []).slice(-3).map((item) => item?.summary || item)),
-    ...((conversations || []).slice(0, 6).map((item) => item?.title || item))
-  ];
-  return values.map(cleanThemeCandidate).filter(Boolean);
+function recentSparkThemes(conversations = []) {
+  return (conversations || [])
+    .slice(0, 6)
+    .map((item) => cleanThemeCandidate(item?.title || item))
+    .filter(Boolean);
 }
 
 function isRecentThemeRut(theme, recentThemes = []) {
@@ -155,16 +152,8 @@ function isRecentThemeRut(theme, recentThemes = []) {
   return recentThemes.filter((recent) => themesSimilar(theme, recent)).length >= 2;
 }
 
-function sparkThemeFromMemory(memory, conversations = []) {
-  const recentThemes = recentSparkThemes(memory, conversations);
-  for (const item of memory?.learned_profile || []) {
-    const theme = cleanThemeCandidate(item.label || item.summary);
-    if (theme && !isRecentThemeRut(theme, recentThemes)) return theme;
-  }
-  for (const summary of [...(memory?.synthesized_history || [])].reverse()) {
-    const theme = cleanThemeCandidate(summary.summary);
-    if (theme && !isRecentThemeRut(theme, recentThemes)) return theme;
-  }
+function sparkThemeFromConversations(conversations = []) {
+  const recentThemes = recentSparkThemes(conversations);
   for (const conversation of conversations || []) {
     const theme = cleanThemeCandidate(conversation.title);
     if (theme && !isRecentThemeRut(theme, recentThemes)) return theme;
@@ -226,8 +215,8 @@ function welcomeSparkSources(results = [], theme = '') {
   return (visiblyThemed.length >= 2 ? visiblyThemed : sorted).slice(0, 3);
 }
 
-export async function buildWelcomeSpark({ memory, conversations, scope }) {
-  const theme = sparkThemeFromMemory(memory, conversations);
+export async function buildWelcomeSpark({ conversations, scope }) {
+  const theme = sparkThemeFromConversations(conversations);
   const result = await ARCHIVE_TOOLS.archive_gems({
     theme,
     mood: theme ? '' : 'serendipity',
@@ -319,17 +308,13 @@ function addCuriosityCandidate(candidates, label, { weight = 1, reason = '', sou
   candidates.set(key, existing);
 }
 
-function curiosityThemeCandidates(memory, conversations = []) {
+function curiosityThemeCandidates(conversations = []) {
   const candidates = new Map();
   const add = (value, weight, reason, kind = 'recent') => {
     const theme = cleanThemeCandidate(value);
     if (theme) addCuriosityCandidate(candidates, theme, { weight, reason, kind });
   };
-  const recentPrompts = memory?.recent_prompts?.length ? memory.recent_prompts : memory?.current_session_questions || [];
-  for (const item of recentPrompts.slice(-8)) add(item?.question || item, 4, 'recent prompt', 'recent');
   for (const entry of (conversations || []).slice(0, 10)) add(entry?.title || '', 2.5, 'conversation history', 'recent');
-  for (const item of (memory?.synthesized_history || []).slice(-5)) add(item?.summary || item, 2, 'remembered conversation pattern', 'recent');
-  for (const item of memory?.learned_profile || []) add(item?.label || item?.summary, 2.4, 'learned profile', 'memory');
   return [...candidates.values()].sort((a, b) => b.weight - a.weight || a.label.localeCompare(b.label));
 }
 
@@ -369,10 +354,10 @@ function addSourceCuriosityTerms(candidates, source, center) {
   }
 }
 
-export async function buildCuriosityMap({ memory, conversations, scope, center }) {
+export async function buildCuriosityMap({ conversations, scope, center }) {
   const requestedCenter = cleanCuriosityLabel(center);
-  const userCandidates = curiosityThemeCandidates(memory, conversations);
-  const fallbackTheme = cleanCuriosityLabel(sparkThemeFromMemory(memory, conversations));
+  const userCandidates = curiosityThemeCandidates(conversations);
+  const fallbackTheme = cleanCuriosityLabel(sparkThemeFromConversations(conversations));
   const centerTheme = cleanCuriosityLabel(requestedCenter || userCandidates[0]?.label || fallbackTheme) || 'Archive';
   const scopeValue = normalizeScope(scope);
   const archiveResult = centerTheme && centerTheme !== 'Archive'
@@ -406,7 +391,7 @@ export async function buildCuriosityMap({ memory, conversations, scope, center }
       kind: 'center',
       weight: 1,
       prompt: curiosityPrompt(centerTheme, centerTheme, 'center'),
-      why: 'Current center of gravity from your memory and recent conversations.'
+      why: 'Current center of gravity from your recent conversations.'
     },
     ...sorted.map((candidate, index) => ({
       id: curiosityNodeId(candidate.label),
@@ -472,7 +457,7 @@ export function experienceFromToolResults(toolResults = [], answer = '', questio
   return null;
 }
 
-function welcomePrompt({ readerContext, memoryContext, conversations, scope, mode, spark }) {
+function welcomePrompt({ readerContext, conversations, scope, mode, spark }) {
   const recent = (conversations || []).slice(0, 6);
   const modeDefinition = conversationModeDefinition(mode);
   const conversationLines = recent.length
@@ -485,9 +470,6 @@ function welcomePrompt({ readerContext, memoryContext, conversations, scope, mod
     '',
     'Reader and session context:',
     readerContext || 'No reader-local context supplied.',
-    '',
-    'Prior user memory:',
-    memoryContext || 'No prior user memory found.',
     '',
     'Recent Thingy conversations:',
     conversationLines,
@@ -504,7 +486,7 @@ function welcomePrompt({ readerContext, memoryContext, conversations, scope, mod
     'Requirements:',
     '- Start with a natural greeting that can use the reader local time if supplied.',
     '- If a preferred name is known, use it. If no preferred name is known, ask what Thingy should call the reader, but keep it conversational.',
-    '- If this looks like their first time, give a little more orientation. If returning, welcome them back and lightly reference the kind of things they have explored before when memory exists.',
+    '- If this looks like their first time, give a little more orientation. If returning, welcome them back and lightly reference recent conversations when they exist.',
     '- If an archive spark is supplied, mention it as a small invitation, not a citation-heavy answer. The UI may show it as a card.',
     '- In Thought Partner mode, welcome Jamie as the author and invite a reflective thread rather than explaining Thingy to a general reader.',
     '- If they are a Weekly Thing Supporting Member, acknowledge that gracefully without making the whole message about it.',
@@ -514,14 +496,14 @@ function welcomePrompt({ readerContext, memoryContext, conversations, scope, mod
   ].join('\n');
 }
 
-export async function generateWelcome({ readerContext, memoryContext, conversations, scope, mode, spark }) {
+export async function generateWelcome({ readerContext, conversations, scope, mode, spark }) {
   const start = performance.now();
   const response = await bedrock.send(new ConverseCommand({
     modelId: agentModel(),
     system: [{ text: AGENT_SYSTEM_PROMPT }, { cachePoint: { type: 'default' } }],
     messages: [{
       role: 'user',
-      content: [{ text: welcomePrompt({ readerContext, memoryContext, conversations, scope, mode, spark }) }]
+      content: [{ text: welcomePrompt({ readerContext, conversations, scope, mode, spark }) }]
     }],
     inferenceConfig: welcomeInferenceConfig()
   }));

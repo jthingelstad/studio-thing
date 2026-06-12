@@ -47,15 +47,6 @@ export function normalizeUserProfile(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
   const status = cleanContextString(value.status, 30).toLowerCase();
   const turnCount = Number(value.turn_count);
-  const currentSessionQuestions = Array.isArray(value.current_session_questions)
-    ? value.current_session_questions.map((item) => cleanContextString(item?.question || item, 180)).filter(Boolean).slice(-5)
-    : [];
-  const recentPrompts = Array.isArray(value.recent_prompts)
-    ? value.recent_prompts.map((item) => cleanContextString(item?.question || item, 180)).filter(Boolean).slice(-8)
-    : [];
-  const priorSessionSummaries = Array.isArray(value.prior_session_summaries)
-    ? value.prior_session_summaries.map((item) => cleanContextString(item?.summary || item, 240)).filter(Boolean).slice(-3)
-    : [];
   return {
     status: cleanContextString(status, 30),
     supporting_member: value.supporting_member === true || status === 'premium',
@@ -64,10 +55,7 @@ export function normalizeUserProfile(value) {
     awaiting_name: value.awaiting_name === true,
     first_seen_at: cleanContextString(value.first_seen_at, 40),
     last_seen_at: cleanContextString(value.last_seen_at, 40),
-    turn_count: Number.isFinite(turnCount) && turnCount >= 0 ? Math.trunc(turnCount) : null,
-    current_session_questions: currentSessionQuestions,
-    recent_prompts: recentPrompts,
-    prior_session_summaries: priorSessionSummaries
+    turn_count: Number.isFinite(turnCount) && turnCount >= 0 ? Math.trunc(turnCount) : null
   };
 }
 
@@ -113,17 +101,6 @@ export function readerContextPrompt(clientContext, userProfile) {
   if (profile.returning) lines.push('Client profile says this is a returning Thingy reader.');
   if (profile.first_seen_at) lines.push(`First seen by Thingy: ${profile.first_seen_at}`);
   if (profile.last_seen_at) lines.push(`Last seen by Thingy: ${profile.last_seen_at}`);
-  if (profile.prior_session_summaries.length) {
-    lines.push('Client-known prior session summaries:');
-    profile.prior_session_summaries.forEach((summary) => lines.push(`- ${summary}`));
-  }
-  if (profile.recent_prompts.length) {
-    lines.push('Client-known recent Thingy prompts:');
-    profile.recent_prompts.forEach((question) => lines.push(`- ${question}`));
-  } else if (profile.current_session_questions.length) {
-    lines.push('Client-known current session questions:');
-    profile.current_session_questions.forEach((question) => lines.push(`- ${question}`));
-  }
   return lines.length ? lines.join('\n') : 'No reader-local context supplied.';
 }
 
