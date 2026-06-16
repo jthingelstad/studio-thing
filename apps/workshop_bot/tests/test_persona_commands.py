@@ -180,6 +180,30 @@ class PattyTreeTests(unittest.TestCase):
         self.assertEqual(_cmd_names(followup), {"list", "add", "cancel"})
 
 
+# ── /scout ────────────────────────────────────────────────────────────
+
+class ScoutTreeTests(unittest.TestCase):
+    def test_scout_tree(self):
+        tree = commands_module.register_scout_commands(_stub_bot())
+        scout = _top_group(tree, "scout")
+        # Part 1 ships exactly two read-only verbs. The production-management
+        # subgroup migrates over in Part 2 after WT350 publishes.
+        self.assertEqual(_cmd_names(scout), {"status", "slate"})
+
+    def test_scout_requires_manage_guild(self):
+        tree = commands_module.register_scout_commands(_stub_bot())
+        self.assertIsNotNone(_top_group(tree, "scout").default_permissions)
+
+    def test_scout_does_not_yet_own_issue_subgroup(self):
+        """Part 1 leaves the /eddy issue * subgroup intact. Confirm Scout has
+        not silently grown an issue subgroup, which would diverge from the
+        agreed staged migration."""
+        tree = commands_module.register_scout_commands(_stub_bot())
+        scout = _top_group(tree, "scout")
+        sub_names = {getattr(c, "name", None) for c in scout.commands}
+        self.assertNotIn("issue", sub_names)
+
+
 # ── retired surfaces ──────────────────────────────────────────────────
 
 class RetiredSurfacesTests(unittest.TestCase):
@@ -193,6 +217,7 @@ class RetiredSurfacesTests(unittest.TestCase):
             commands_module.register_linky_commands,
             commands_module.register_marky_commands,
             commands_module.register_patty_commands,
+            commands_module.register_scout_commands,
         ):
             tree = fn(_stub_bot())
             for g in tree.groups:
@@ -230,6 +255,7 @@ class DescriptionLengthTests(unittest.TestCase):
             commands_module.register_linky_commands,
             commands_module.register_marky_commands,
             commands_module.register_patty_commands,
+            commands_module.register_scout_commands,
         ):
             tree = fn(_stub_bot())
             for group in tree.groups:

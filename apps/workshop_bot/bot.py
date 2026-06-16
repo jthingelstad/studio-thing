@@ -32,6 +32,7 @@ from .personas.eddy import EddyBot
 from .personas.linky import LinkyBot
 from .personas.marky import MarkyBot
 from .personas.patty import PattyBot
+from .personas.scout import ScoutBot
 from .personas.team import TeamRegistry
 from .scheduler.runner import Runner as SchedulerRunner
 from .systems.buttondown.server import ButtondownServer
@@ -91,6 +92,7 @@ PERSONAS: list[tuple[str, str, type]] = [
     ("linky", "DISCORD_TOKEN_LINKY", LinkyBot),
     ("marky", "DISCORD_TOKEN_MARKY", MarkyBot),
     ("patty", "DISCORD_TOKEN_PATTY", PattyBot),
+    ("scout", "DISCORD_TOKEN_SCOUT", ScoutBot),
 ]
 
 

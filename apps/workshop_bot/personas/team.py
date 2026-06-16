@@ -31,8 +31,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger("workshop.team")
 
 # Order matters — first persona answers cold; later personas see earlier
-# replies in their history and can build on / push back.
-TEAM_ORDER: tuple[str, ...] = ("eddy", "marky", "patty", "linky")
+# replies in their history and can build on / push back. Scout opens with
+# the slate framing (what's in flight, who's next, what's blocked) so the
+# rest of the team can answer in context of state.
+TEAM_ORDER: tuple[str, ...] = ("scout", "eddy", "marky", "patty", "linky")
 
 # Bound how many message ids we remember to avoid unbounded growth on a
 # long-lived process. ``OrderedDict``-as-set gives FIFO eviction.

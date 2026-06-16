@@ -65,9 +65,9 @@ All config via env vars in `.env` (see `.env.example` at the repo root). The bot
 
 | Variable | Notes |
 |---|---|
-| `DISCORD_TOKEN_EDDY` / `_LINKY` / `_MARKY` / `_PATTY` | Per-persona bot tokens. A persona with a missing token is skipped at startup; the rest still run. |
+| `DISCORD_TOKEN_EDDY` / `_LINKY` / `_MARKY` / `_PATTY` / `_SCOUT` | Per-persona bot tokens. A persona with a missing token is skipped at startup; the rest still run. |
 | `DISCORD_SERVER_ID`, `DISCORD_WORKSHOP_CATEGORY_ID`, `DISCORD_TEAM_ROLE_ID` | Server scoping |
-| `DISCORD_CHANNEL_EDITORIAL`, `_RESEARCH`, `_PROMOTION`, `_SUPPORTERS`, `_WORKSHOP`, `_CHATTER` | Per-channel IDs |
+| `DISCORD_CHANNEL_EDITORIAL`, `_RESEARCH`, `_PROMOTION`, `_SUPPORTERS`, `_PRODUCTION`, `_WORKSHOP`, `_CHATTER` | Per-channel IDs |
 | `DISCORD_OWNER_USER_ID` | Operator account (Jamie) — gates picker reactions |
 
 (`DISCORD_TOKEN_THINGY` + `DISCORD_CHANNEL_ASK_THINGY` are read by [`../thingy_bridge/`](../thingy_bridge/), not by workshop_bot.)
