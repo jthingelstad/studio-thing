@@ -754,17 +754,22 @@ class StripeServerTests(unittest.TestCase):
 
         original = st_client.stripe.Charge
         st_client.stripe.Charge = _FakeCharge  # type: ignore[assignment]
+        # `current_nonprofit` is sourced from `apps/site/_data/support.json`,
+        # which is generated and gitignored (absent in a clean checkout / CI).
+        # Stub the resolver so this test exercises year_to_date's passthrough
+        # of the value; the on-disk support file is a separate concern.
+        original_np = st_client._current_nonprofit_short_name
+        st_client._current_nonprofit_short_name = lambda: "Test Nonprofit"  # type: ignore[assignment]
         try:
             out = self.tools["year_to_date"].handler(deps=None)
         finally:
             st_client.stripe.Charge = original  # type: ignore[assignment]
+            st_client._current_nonprofit_short_name = original_np  # type: ignore[assignment]
         self.assertEqual(out["count"], 2)
         self.assertEqual(out["total_usd"], 15.0)
         self.assertEqual(out["average_usd"], 7.50)
-        # Reads from support.json's `current.short_name` — assert it's
-        # non-empty rather than pinning a specific org so the test doesn't
-        # rot when the annual nonprofit changes.
-        self.assertTrue(out["current_nonprofit"])
+        # year_to_date surfaces the current nonprofit's short name verbatim.
+        self.assertEqual(out["current_nonprofit"], "Test Nonprofit")
 
 
 class RegistryIntegrationTests(unittest.TestCase):

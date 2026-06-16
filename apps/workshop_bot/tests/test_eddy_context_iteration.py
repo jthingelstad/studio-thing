@@ -3,9 +3,7 @@ draft_iteration_count, open_comments breakdown, review_tier."""
 
 from __future__ import annotations
 
-import os
 import sys
-import tempfile
 import unittest
 from datetime import date
 from pathlib import Path
@@ -17,23 +15,16 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
+from apps.workshop_bot.tests._fixtures import DBTestCase  # noqa: E402
 from apps.workshop_bot.tools import db, issue_items  # noqa: E402
 from apps.workshop_bot.tools.content import context  # noqa: E402
 
 
-class _DBCase(unittest.TestCase):
-    def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self._orig = os.environ.get("WORKSHOP_DB_PATH")
-        os.environ["WORKSHOP_DB_PATH"] = str(Path(self._tmp.name) / "t.db")
-        db.run_migrations()
-
-    def tearDown(self):
-        if self._orig is None:
-            os.environ.pop("WORKSHOP_DB_PATH", None)
-        else:
-            os.environ["WORKSHOP_DB_PATH"] = self._orig
-        self._tmp.cleanup()
+class _DBCase(DBTestCase):
+    """Temp-DB + in-memory S3 workspace (FakeWorkspace). The S3 stub matters
+    for ``build_eddy_context`` → ``draft.section_status`` so it reads the fake
+    workspace instead of reaching real S3/AWS (which fails with
+    NoCredentialsError in CI). Adds an issue-window helper."""
 
     def _window(self, n=349, pub="2026-05-23"):
         from apps.workshop_bot.tools.content import issue as issue_mod
