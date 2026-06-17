@@ -2,9 +2,9 @@
 
 Run with `python -m apps.workshop_bot.bot` from the repo root.
 
-Spins up four discord.py Client instances (one per author-facing
-persona — Eddy, Linky, Marky, Patty), each with its own bot token.
-The corpus is built once at startup and shared across all four.
+Spins up five discord.py Client instances (one per author-facing
+persona — Scout, Eddy, Linky, Marky, Patty), each with its own bot
+token. The corpus is built once at startup and shared across all five.
 Migrations run idempotently every start.
 
 The reader-facing Thingy bot lives in a separate process
@@ -235,8 +235,13 @@ async def _gateway_watchdog(
 
 
 async def run() -> int:
+    resolved = collect_tokens()
+    if not resolved:
+        logger.error("no Discord tokens found; nothing to start")
+        return 2
+
     try:
-        anthropic_client.validate_keys()
+        anthropic_client.validate_keys(name for name, _, _ in resolved)
     except RuntimeError as exc:
         logger.error("%s", exc)
         return 2
@@ -257,11 +262,6 @@ async def run() -> int:
     registry.register_system(StripeServer())
     registry.register_system(TinylyticsServer())
     deps = Deps(corpus=corpus_handle, team=team, registry=registry)
-
-    resolved = collect_tokens()
-    if not resolved:
-        logger.error("no Discord tokens found; nothing to start")
-        return 2
 
     bots = [(name, cls(deps), token) for (name, token, cls) in resolved]
     for name, b, _ in bots:
@@ -357,7 +357,7 @@ async def run() -> int:
 
     # One watchdog per persona. If any of them goes silent-zombie, the
     # whole process exits so launchd respawns with fresh sessions for
-    # all four — restarting one Client mid-flight is messier than a
+    # all five — restarting one Client mid-flight is messier than a
     # full cycle.
     for n, b, _ in bots:
         tasks.append(asyncio.create_task(

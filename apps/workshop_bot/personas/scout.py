@@ -7,11 +7,9 @@ judgement, promotion framing, and supporter fit stay with Linky, Marky,
 and Patty respectively. Scout coordinates them around concrete
 productions.
 
-This file is Scout's persona shell. Part 1 (additive only) ships
-read-only ``/scout status`` and ``/scout slate``. The production-
-management migration from Eddy (phase-card lifecycle, ``/eddy issue``
-state-transition slash subgroup) ships in a follow-up after WT350
-publishes.
+This file is Scout's persona shell. Scout owns ``/scout status``,
+``/scout slate``, the production ``/scout issue …`` lifecycle, and the
+Build/Publish persistent cards in ``#production``.
 """
 
 from __future__ import annotations
@@ -27,7 +25,7 @@ class ScoutBot(PersonaBot):
     empty_greeting = "Hey — looking at the slate, or asking about a specific production?"
     preferred_model = "sonnet"
     slash_commands_summary = (
-        "/scout commands: status · slate"
+        "/scout commands: status · slate · issue {start,update,status,build,built,reopen,publish,put-to-bed,reset}"
     )
 
     def __init__(self, deps: Deps) -> None:

@@ -1,19 +1,20 @@
 # Workshop Bot — Discord agent runtime
 
-Author-only Discord bot for *The Weekly Thing*. Four agent personas help Jamie assemble each week's issue: **Eddy** (editor), **Linky** (link curator), **Marky** (promotion + analytics), **Patty** (supporter steward).
+Author-only Discord bot for *The Weekly Thing*. Five agent personas help Jamie assemble each week's issue: **Scout** (producer), **Eddy** (editor), **Linky** (link curator), **Marky** (promotion + analytics), **Patty** (supporter steward).
 
 > Operational memory for working in this codebase lives in [`CLAUDE.md`](CLAUDE.md). This README is the human-facing overview — what the bot is, how to run it, what env vars it needs. Don't expect the jobs table or per-job semantics here; those live in CLAUDE.md.
 
 ## What it is
 
-One Python process running four `discord.py` clients in the same asyncio loop, plus an APScheduler instance. Each persona is its own Discord application (own bot token, own avatar) so messages appear under the right name. Slash commands are per-persona (`/eddy …`, `/linky …`, `/marky …`, `/patty …`), gated by Discord's `manage_guild` permission.
+One Python process running five `discord.py` clients in the same asyncio loop, plus an APScheduler instance. Each persona is its own Discord application (own bot token, own avatar) so messages appear under the right name. Slash commands are per-persona (`/scout …`, `/eddy …`, `/linky …`, `/marky …`, `/patty …`), gated by Discord's `manage_guild` permission.
 
 | Persona | Role | Default model | Home channel |
 |---|---|---|---|
-| **Eddy** (he/him) | Editor — drafts review, the editorial reorder pass, subject/haiku generation | Opus 4.7 | `#editorial` |
-| **Linky** (he/him) | Curator — Pinboard scan every 3h 07:05–22:05 CT, ad-hoc URL research | Sonnet 4.6 | `#research` |
-| **Marky** (she/her) | Promotion — syndication drafts post-ship, daily metrics, campaign ledger | Sonnet 4.6 | `#promotion` |
-| **Patty** (she/her) | Supporter steward — per-issue membership CTA in **Thingy's** voice (Patty is invisible to readers) | Sonnet 4.6 | `#supporters` |
+| **Scout** | Producer — production slate, issue lifecycle, Build/Publish cards | Sonnet 4.6 | `#production` |
+| **Eddy** | Editor — draft review, editorial reorder, subject/haiku generation | Sonnet 4.6 (Opus for review jobs) | `#editorial` |
+| **Linky** | Curator — Pinboard scan every 3h 07:00–22:00 CT, ad-hoc URL research | Sonnet 4.6 | `#research` / `#discovery` |
+| **Marky** | Promotion — syndication drafts post-ship, daily metrics, campaign ledger | Sonnet 4.6 | `#promotion` |
+| **Patty** | Supporter steward — per-issue membership CTA in **Thingy's** voice (Patty is invisible to readers) | Sonnet 4.6 | `#supporters` |
 
 The reader-facing Thingy bot (the `#ask-thingy` Q&A surface) lives in [`../thingy_bridge/`](../thingy_bridge/) as a separate process. The split lets workshop_bot restart for an author-flow change without dropping `#ask-thingy`.
 
@@ -67,7 +68,7 @@ All config via env vars in `.env` (see `.env.example` at the repo root). The bot
 |---|---|
 | `DISCORD_TOKEN_EDDY` / `_LINKY` / `_MARKY` / `_PATTY` / `_SCOUT` | Per-persona bot tokens. A persona with a missing token is skipped at startup; the rest still run. |
 | `DISCORD_SERVER_ID`, `DISCORD_WORKSHOP_CATEGORY_ID`, `DISCORD_TEAM_ROLE_ID` | Server scoping |
-| `DISCORD_CHANNEL_EDITORIAL`, `_RESEARCH`, `_PROMOTION`, `_SUPPORTERS`, `_PRODUCTION`, `_WORKSHOP`, `_CHATTER` | Per-channel IDs |
+| `DISCORD_CHANNEL_EDITORIAL`, `_RESEARCH`, `_DISCOVERY`, `_PROMOTION`, `_SUPPORTERS`, `_PRODUCTION`, `_WORKSHOP`, `_CHATTER` | Per-channel IDs |
 | `DISCORD_OWNER_USER_ID` | Operator account (Jamie) — gates picker reactions |
 
 (`DISCORD_TOKEN_THINGY` + `DISCORD_CHANNEL_ASK_THINGY` are read by [`../thingy_bridge/`](../thingy_bridge/), not by workshop_bot.)
@@ -76,7 +77,8 @@ All config via env vars in `.env` (see `.env.example` at the repo root). The bot
 
 | Variable | What it powers |
 |---|---|
-| `ANTHROPIC_API_KEY` | Claude API for all persona LLM calls |
+| `ANTHROPIC_EDDY_API_KEY` / `_LINKY` / `_MARKY` / `_PATTY` / `_SCOUT` | Claude API keys for persona LLM calls. Bot startup validates a key for each configured Discord persona token. |
+| `ANTHROPIC_GENERAL_API_KEY` | Offline eval and non-persona pipeline LLM calls. |
 | `BUTTONDOWN_API_KEY` | `buttondown__*` tools, ship sequence |
 | `TINYLYTICS_API_KEY` + `TINYLYTICS_SITE_UID` | `tinylytics__*` tools (Marky) |
 | `PINBOARD_API_TOKEN` | `pinboard__*` tools (Linky) |
@@ -111,7 +113,7 @@ All config via env vars in `.env` (see `.env.example` at the repo root). The bot
 - `beautifulsoup4` — HTML cleanup for `web__fetch_url` and RSS
 - `python-dotenv` — env loading
 
-Models are configurable per-persona (`preferred_model` class attr), per-message (`--haiku` / `--sonnet` / `--opus` flag in the message body), or globally (`WORKSHOP_DEFAULT_MODEL`). Cascade: per-message flag → persona preferred → env default → `haiku` fallback.
+Models are configurable per-persona (`preferred_model` class attr), per-message (`--haiku` / `--sonnet` / `--opus` flag in the message body), or globally (`WORKSHOP_DEFAULT_MODEL`). Cascade: per-message flag → persona preferred → env default → `haiku` fallback. API keys are purpose-scoped so Anthropic usage can be attributed by persona.
 
 ## Storage at a glance
 

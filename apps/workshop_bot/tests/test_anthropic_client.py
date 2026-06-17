@@ -1,6 +1,6 @@
 """Tests for the purpose-keyed Anthropic client factory.
 
-Each call purpose (the four personas + "general") bills to its own API key so
+Each call purpose (the five personas + "general") bills to its own API key so
 the Anthropic console attributes spend per agent. The factory fails fast on an
 unknown purpose or a missing key rather than silently sharing one key.
 """
@@ -68,6 +68,20 @@ class ValidateKeysTests(unittest.TestCase):
     def test_passes_when_all_present(self):
         with mock.patch.dict(os.environ, _ALL_KEYS, clear=False):
             anthropic_client.validate_keys()  # should not raise
+
+    def test_can_validate_only_enabled_purposes(self):
+        env = {
+            "ANTHROPIC_EDDY_API_KEY": "k-eddy",
+            "ANTHROPIC_SCOUT_API_KEY": "k-scout",
+        }
+        with mock.patch.dict(os.environ, env, clear=True):
+            anthropic_client.validate_keys(purposes=["scout", "eddy"])  # should not raise
+
+    def test_subset_validation_rejects_unknown_purpose(self):
+        with mock.patch.dict(os.environ, _ALL_KEYS, clear=True):
+            with self.assertRaises(RuntimeError) as cm:
+                anthropic_client.validate_keys(purposes=["scout", "bogus"])
+        self.assertIn("bogus", str(cm.exception))
 
     def test_raises_listing_every_missing_key(self):
         env = dict(_ALL_KEYS)

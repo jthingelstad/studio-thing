@@ -2,7 +2,8 @@
 
 *Create the issue.* — Overview: [`../publishing-process.md`](../publishing-process.md)
 
-**Owner:** Eddy (editor), with Linky feeding curated links. **Channel:** `#editorial`.
+**Owner:** Scout (producer), with Eddy on editorial quality and Linky feeding curated links.
+**Channel:** `#production`.
 **Question:** *"Is the issue written, and is it good?"* Build fills in gradually all week.
 
 The issue is **one uniform, channel-agnostic content artifact** with a fixed anatomy in **reading
@@ -21,13 +22,13 @@ Journal specifics in [`../journal-handling.md`](../journal-handling.md); the Ech
 - Each refresh re-projects the draft and runs **one Opus editorial review**
   (`prompts/eddy/draft-review.md`) — anchored, suggestions-only — shown in the `draft.html`
   "Show review" drawer and counted on the Build card. It re-runs only when the draft changed.
-- The **Build card** (`#editorial`) is the live surface: the anatomy in reading order, the review
-  count, reorder status, and the author buttons (Refresh · Reorder · Echoes · Edit · Mark built).
+- The **Build card** (`#production`) is the live surface: the anatomy in reading order, the review
+  count, reorder status, and the author buttons (Refresh · Reorder · Edit · Mark built).
 
 ## Gates
 
-- **Entry:** `/eddy issue start <n> <pub-date> <days>` opens the window (`phase = build`).
-- **Exit:** **`mark built`** (`/eddy issue built` or the Build-card button) — declares the content
+- **Entry:** `/scout issue start <n> <pub-date> <days>` opens the window (`phase = build`).
+- **Exit:** **`mark built`** (`/scout issue built` or the Build-card button) — declares the content
   written and moves the issue to [Publish](publish.md). Gated on the required *authored* content
   being present (the three sections + intro + cover). Haiku is no longer a Build gate — it's
   produced on the Publish side.

@@ -61,7 +61,7 @@ class BuildCardView(discord.ui.View):
 
 def build_view(state: dict) -> "BuildCardView":
     """A Build view with **Mark built** disabled until the required content is
-    present (the three sections + intro + cover + haiku)."""
+    present (the three sections + intro + cover)."""
     view = BuildCardView()
     ready = bool((state or {}).get("build_ready"))
     for child in view.children:

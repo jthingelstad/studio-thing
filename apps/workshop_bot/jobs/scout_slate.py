@@ -1,10 +1,10 @@
 """``/scout slate`` — Scout's production-slate snapshot.
 
-Read-only summary of what's in flight, by surface. In Part 1 the only
-surface tracked is ``newsletter`` (one in-flight ``issue_windows`` row
+Read-only summary of what's in flight, by surface. Today the only fully
+tracked surface is ``newsletter`` (one in-flight ``issue_windows`` row
 at most). The job signature already accepts a ``kind`` filter so the
-Part 2 migration to a multi-surface ``productions`` table can extend
-this without rewriting callers.
+multi-surface ``productions`` table can extend this without rewriting
+callers.
 
 The slate snapshot is the closest thing Scout has to a state-of-the-
 world view today. Phase 2 will widen the per-surface block (Build /

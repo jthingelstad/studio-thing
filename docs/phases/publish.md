@@ -2,8 +2,8 @@
 
 *Send it out.* — Overview: [`../publishing-process.md`](../publishing-process.md)
 
-**Owner:** Eddy + the `pipeline/`. **Channel:** `#editorial`. **Question:** *"Is it out the door,
-per channel?"*
+**Owner:** Scout + the `pipeline/`, with Eddy owning the shared editorial envelope.
+**Channel:** `#production`. **Question:** *"Is it out the door, per channel?"*
 
 Build is uniform; **Publish fans out per channel, and that divergence is the feature.** Each
 channel renders the same body its own way and ships its own way. Some inputs are shared across all
@@ -34,15 +34,15 @@ publish-stamped `buttondown_id`/`absolute_url`.
 
 ## Gates
 
-- **Entry:** `mark built`. On entry the ship flow runs **`compose-thesis`** (Eddy reads the
+- **Entry:** `/scout issue built` / `mark built`. On entry the ship flow runs **`compose-thesis`** (Eddy reads the
   now-frozen content and writes the framing every other Publish job will anchor on) and
   **auto-requests the CTA from Patty** (see [`../programs/membership.md`](../programs/membership.md))
   so a framing is waiting — Jamie only *picks* the CTA, never triggers it. Subject, description,
   and haiku come from the operator pressing buttons on the Publish card.
-- **Exit:** `put-to-bed` — files the issue into the `issues` table, closes the window
+- **Exit:** `/scout issue put-to-bed` — files the issue into the `issues` table, closes the window
   (`is_active = 0`). The issue is now *published* and becomes the [Share](share.md) target.
 
-The **Publish card** (`#editorial`) is the live surface: **Eddy's thesis at the top** (the
+The **Publish card** (`#production`) is the live surface: **Eddy's thesis at the top** (the
 read that anchors everything below), then the shared-envelope rows (subject + description +
 haiku + CTA), then the per-channel rows with gated 🚀 buttons (a destination's button stays
 disabled until its gate passes), and each leg's outcome reported back on the card.

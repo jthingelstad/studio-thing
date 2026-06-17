@@ -37,7 +37,7 @@ One brain, several surfaces.
 
 | Path | What it is |
 |---|---|
-| `apps/workshop_bot/` | The authoring staff (Eddy / Linky / Marky / Patty) — Discord-based agents that help produce each issue. The Studio core. |
+| `apps/workshop_bot/` | The authoring staff (Scout / Eddy / Linky / Marky / Patty) — Discord-based agents that help produce each issue. The Studio core. |
 | `apps/librarian/` | The Librarian API: Lambda, infra, conversations, eval, and admin. Deployed from Studio; queried live by Thingy. |
 | `librarian-core/` | The shared `librarian_core` Python package — corpus, graph, retrieval, links. The library behind the API and the pipeline. |
 | `pipeline/` | Production: build, stats, status, audio, corpus, graph, deploy. |

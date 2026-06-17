@@ -1,4 +1,4 @@
-"""PersonaBot — shared base for the four discord.py clients.
+"""PersonaBot — shared base for the five discord.py clients.
 
 Each persona is a subclass that sets a few class attributes (name, tools,
 preferred model, home channel env var) and inherits the routing,
@@ -105,7 +105,7 @@ def dialog_channel_ids() -> set[int]:
 
 
 class PersonaBot(discord.Client):
-    """Base class for the four persona bots.
+    """Base class for the five persona bots.
 
     Subclasses set:
       - ``persona`` / ``name``         — identity
@@ -122,7 +122,7 @@ class PersonaBot(discord.Client):
 
     ``on_message`` dispatches when:
       - this specific bot is @-mentioned (single-persona reply), or
-      - the @Team role is mentioned (TeamRegistry runs all four sequentially,
+      - the @Team role is mentioned (TeamRegistry runs all five sequentially,
         one bot orchestrating), or
       - a human posts in this persona's home channel and no other bot is
         mentioned.
@@ -137,7 +137,7 @@ class PersonaBot(discord.Client):
     # second line of the startup card. Each subclass sets it.
     slash_commands_summary: ClassVar[str] = ""
 
-    # Class-level lock so peer-reaction slot checks across the four persona
+    # Class-level lock so peer-reaction slot checks across the five persona
     # clients (all in this same asyncio event loop) serialize. Protects
     # against the TOCTOU race when two peers are evaluating the same human
     # anchor concurrently.

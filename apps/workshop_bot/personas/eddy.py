@@ -25,7 +25,7 @@ class EddyBot(PersonaBot):
     # job's ``bot.core(..., model="opus")`` callsite.
     preferred_model = "sonnet"
     slash_commands_summary = (
-        "/eddy commands: issue {start,update,status,final,haiku,subject,publish} · "
+        "/eddy commands: issue {echoes,reorder,haiku,subject} · edit · currently · "
         "status · review · archive · followup"
     )
 

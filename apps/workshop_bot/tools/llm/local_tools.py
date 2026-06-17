@@ -259,7 +259,7 @@ def t_read_length(deps, url: str) -> dict[str, Any]:
 # ---------- current issue window (operator-set) ----------
 
 # Canonical implementations live in `tools/issue.py`. Jamie sets the
-# active window via the ``/eddy issue start`` slash command; agents
+# active window via the ``/scout issue start`` slash command; agents
 # read it here via ``issue__current_window`` (active row) and
 # ``issue__list_windows`` (historical metadata).
 t_current_issue_window = issue.t_current_issue_window
@@ -478,7 +478,7 @@ def t_campaigns_set_actual_signups(
 
 # The mutating tools (`set`, `clear`, `add_type`, `reorder`) write the
 # DB change and return; they do NOT refire `update-draft`. The daily
-# 17:00 CT run (or a manual `/eddy issue update`) projects the new
+# 17:00 CT run (or a manual `/scout issue update`) projects the new
 # state into the rendered draft.
 
 
@@ -511,7 +511,7 @@ def t_currently_list_entries(
     if n is None:
         n = _active_issue_number()
         if n is None:
-            return {"error": "no active issue window — Jamie starts one via /eddy issue start"}
+            return {"error": "no active issue window — Jamie starts one via /scout issue start"}
     entries = db.currently_get_entries(n)
     return {
         "issue_number": n,
@@ -542,7 +542,7 @@ def t_currently_set(deps, label: str, value: str) -> dict[str, Any]:
     (e.g. "Printing")."""
     n = _active_issue_number()
     if n is None:
-        return {"error": "no active issue window — Jamie starts one via /eddy issue start"}
+        return {"error": "no active issue window — Jamie starts one via /scout issue start"}
     try:
         res = db.currently_set_entry(n, label, value)
     except db.CurrentlyError as exc:
@@ -561,7 +561,7 @@ def t_currently_clear(deps, label: str) -> dict[str, Any]:
     next scheduled (or manual) ``update-draft``."""
     n = _active_issue_number()
     if n is None:
-        return {"error": "no active issue window — Jamie starts one via /eddy issue start"}
+        return {"error": "no active issue window — Jamie starts one via /scout issue start"}
     deleted = db.currently_clear_entry(n, label)
     return {
         "ok": True,
@@ -592,7 +592,7 @@ def t_currently_reorder(deps, labels: list[str]) -> dict[str, Any]:
     lands in the next scheduled (or manual) ``update-draft``."""
     n = _active_issue_number()
     if n is None:
-        return {"error": "no active issue window — Jamie starts one via /eddy issue start"}
+        return {"error": "no active issue window — Jamie starts one via /scout issue start"}
     if not isinstance(labels, list) or not labels:
         return {"error": "`labels` must be a non-empty list of label strings"}
     try:
@@ -629,7 +629,7 @@ def t_draft_section_status(deps) -> dict[str, Any]:
     window = db.get_active_issue_window()
     if window is None:
         return {
-            "error": "No active issue window. Jamie sets it via /eddy issue start."
+            "error": "No active issue window. Jamie sets it via /scout issue start."
         }
     try:
         return draft.section_status(int(window["issue_number"]))

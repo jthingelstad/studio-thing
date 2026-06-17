@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Iterable, Optional
 
 import anthropic
 
@@ -101,7 +101,7 @@ _clients: dict[str, anthropic.Anthropic] = {}
 def client(purpose: str = "general") -> anthropic.Anthropic:
     """Anthropic client whose key bills the given purpose.
 
-    ``purpose`` is one of the four persona names or ``"general"``. Fails fast
+    ``purpose`` is one of the persona names or ``"general"``. Fails fast
     on an unknown purpose or a missing/empty key env var rather than silently
     falling back to a shared key (which would mis-attribute spend).
     """
@@ -119,10 +119,33 @@ def client(purpose: str = "general") -> anthropic.Anthropic:
     return _clients[purpose]
 
 
-def validate_keys() -> None:
-    """Raise if any required Anthropic key is missing. Called at bot startup so
-    a misconfigured key fails fast instead of mis-billing or crashing mid-run."""
-    missing = [env for env in _KEY_ENV_BY_PURPOSE.values() if not os.environ.get(env)]
+def validate_keys(purposes: Optional[Iterable[str]] = None) -> None:
+    """Raise if any required Anthropic key is missing.
+
+    ``purposes`` lets callers validate only the enabled runtime surface. For
+    example, bot startup validates the persona keys for configured Discord
+    tokens, while the offline eval harness validates the selected persona set.
+    Omitting it preserves the stricter "all known purposes" check.
+    """
+    if purposes is None:
+        required = list(_KEY_ENV_BY_PURPOSE)
+    else:
+        required = []
+        for purpose in purposes:
+            if purpose not in required:
+                required.append(purpose)
+    unknown = [purpose for purpose in required if purpose not in _KEY_ENV_BY_PURPOSE]
+    if unknown:
+        raise RuntimeError(
+            "unknown Anthropic client purpose(s): "
+            + ", ".join(sorted(unknown))
+            + f"; expected one of {sorted(_KEY_ENV_BY_PURPOSE)}"
+        )
+    missing = [
+        _KEY_ENV_BY_PURPOSE[purpose]
+        for purpose in required
+        if not os.environ.get(_KEY_ENV_BY_PURPOSE[purpose])
+    ]
     if missing:
         raise RuntimeError(
             "missing required Anthropic API keys: " + ", ".join(sorted(missing))
@@ -158,5 +181,4 @@ def load_prompt(name: str) -> str:
 # per-link cost. Personas now answer "what issues exist around X?"
 # via ``archive__search`` (BM25), with ``archive__get_issue`` /
 # ``archive__quote_search`` for deeper retrieval.
-
 

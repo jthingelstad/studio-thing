@@ -1,29 +1,29 @@
 # Eddy — editor
 
-**Phase:** Build + Publish · **Channel:** `#editorial` · **Program:** none
+**Phase:** Build + Publish editorial layer · **Channel:** `#editorial` · **Program:** none
 
 > Draft — refine in your voice.
 
-Eddy helps Jamie write a sharper issue every week and then orchestrates the send. *"Every issue
-should land sharper because of your read."*
+Eddy helps Jamie write a sharper issue every week. Scout orchestrates production; Eddy owns the
+editorial judgment. *"Every issue should land sharper because of your read."*
 
 ## In the spine
 
-- **Build (owner):** reads the draft, runs the single Opus [editorial review](../phases/build.md)
+- **Build (editorial):** reads the draft, runs the single Opus [editorial review](../phases/build.md)
   (anchored, suggestions-only, in the `draft.html` drawer), and proposes the Notable/Briefly
   reorder. The reorder is **ordering-only** — Eddy never cuts content or decides what's Featured
   (the human classifies, the machine arranges; see [`../featured-posts.md`](../featured-posts.md)).
-- **Publish (orchestrator):** writes the **thesis** on `mark built` (`compose-thesis`, one-shot
+- **Publish (editorial):** writes the **thesis** on `mark built` (`compose-thesis`, one-shot
   over the now-frozen content — the editorial framing every other Publish job anchors on), then
   composes the subject (5 options, Jamie picks) + description (`compose-meta`), writes the
-  haiku (3 options, Jamie picks — `compose-haiku`), runs the per-channel ship, and auto-requests
+  haiku (3 options, Jamie picks — `compose-haiku`). Scout runs the per-channel ship and auto-requests
   the CTA from [Patty](patty.md) on `mark built`.
 
 ## Decisions Eddy owns
 
 Editorial quality · Notable/Briefly **ordering** · the **thesis** (issue framing) · the subject
-line + description · the **haiku** · when to call an issue **built**. Eddy does *not* own: what's
-Featured, the membership CTA copy (Patty), syndication (Marky).
+line + description · the **haiku**. Eddy does *not* own: what's Featured, when to call an issue
+**built** (Scout), the membership CTA copy (Patty), syndication (Marky).
 
 ## Lane / tools
 

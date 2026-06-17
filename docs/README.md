@@ -19,7 +19,7 @@ Share), concurrency, and who owns what. Everything else is detail behind it.
 | The Echoes section (Thingy's archive note) | [`echoes.md`](echoes.md) |
 | How it should sound | [`voice-and-style.md`](voice-and-style.md) |
 | The standing programs | [`programs/membership.md`](programs/membership.md) · [`programs/campaigns.md`](programs/campaigns.md) |
-| A persona's role | [`agents/`](agents/) — eddy · linky · marky · patty · thingy |
+| A persona's role | [`agents/`](agents/) — scout · eddy · linky · marky · patty · thingy |
 | How issues are identified + titled | [`identifiers.md`](identifiers.md) |
 
 ## What's *not* here

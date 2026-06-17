@@ -78,6 +78,12 @@ def register_scout_commands(
     @app_commands.describe(
         kind="Optional surface filter (newsletter / blog / podcast / membership)",
     )
+    @app_commands.choices(kind=[
+        app_commands.Choice(name="newsletter", value="newsletter"),
+        app_commands.Choice(name="blog", value="blog"),
+        app_commands.Choice(name="podcast", value="podcast"),
+        app_commands.Choice(name="membership", value="membership"),
+    ])
     async def scout_slate_cmd(  # type: ignore[misc]
         interaction: discord.Interaction, kind: str = ""
     ) -> None:

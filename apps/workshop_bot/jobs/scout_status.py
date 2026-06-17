@@ -4,9 +4,9 @@ Mirrors ``jobs/status.py`` (the ``/eddy status`` view) but framed from
 the production-management perspective: what's on the slate, what's the
 phase, what's blocked. All DB-only; no S3, no external APIs.
 
-In Part 1 the slate is newsletter-only — exactly one in-flight
-``issue_windows`` row at most. Phase 2 will widen this to multi-surface
-``productions`` rows; the job signature is the same either way.
+Today the slate is newsletter-only — exactly one in-flight
+``issue_windows`` row at most. The multi-surface ``productions`` schema
+will widen this while keeping the same job signature.
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""Scout (producer) — Part 1 wiring tests.
+"""Scout (producer) wiring tests.
 
 Scope is intentionally narrow: the persona class is registered with the
 right identity, it's first in ``TEAM_ORDER`` so it opens ``@Team``
@@ -45,7 +45,7 @@ class ScoutIdentityTests(unittest.TestCase):
         self.assertEqual(ScoutBot.name, "Scout")
         self.assertEqual(ScoutBot.home_channel_env, "DISCORD_CHANNEL_PRODUCTION")
         self.assertEqual(ScoutBot.preferred_model, "sonnet")
-        self.assertTrue(ScoutBot.slash_commands_summary)
+        self.assertIn("issue", ScoutBot.slash_commands_summary)
 
     def test_scout_first_in_team_order(self):
         # Scout opens the @Team round with the slate framing so the others

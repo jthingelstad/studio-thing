@@ -49,7 +49,7 @@ Two truths fall out of this and explain most of the design:
 | Voice & tone | [`voice-and-style.md`](voice-and-style.md) |
 | The Echoes archive note (a section) | [`echoes.md`](echoes.md) |
 | A standing program | [`programs/membership.md`](programs/membership.md) · [`programs/campaigns.md`](programs/campaigns.md) |
-| A persona's role | [`agents/`](agents/) (eddy · linky · marky · patty · thingy) |
+| A persona's role | [`agents/`](agents/) (scout · eddy · linky · marky · patty · thingy) |
 | How issues are identified + titled | [`identifiers.md`](identifiers.md) |
 
 ---
@@ -76,8 +76,8 @@ state, not a frozen artifact (the healthy successor to the retired `final.md` lo
 | Transition | Trigger | Effect |
 |---|---|---|
 | → **build** | `start-issue` | Window opens (`phase=build`); Build card posts; editorial review runs on refreshes |
-| **build → publish** | **`mark built`** (`/eddy issue built` or the Build-card button) | Build card finalizes; Eddy writes the **thesis** (`compose-thesis` over the now-frozen content — anchors every downstream Publish job); Publish card posts; CTA auto-requested from Patty; attention shifts from content-quality to send-readiness |
-| **publish → build** | reopen (`/eddy issue reopen`) | Back to Build to fix content |
+| **build → publish** | **`mark built`** (`/scout issue built` or the Build-card button) | Build card finalizes; Eddy writes the **thesis** (`compose-thesis` over the now-frozen content — anchors every downstream Publish job); Publish card posts; CTA auto-requested from Patty; attention shifts from content-quality to send-readiness |
+| **publish → build** | reopen (`/scout issue reopen`) | Back to Build to fix content |
 | **publish → (published)** | `put-to-bed` | Files the issue; `is_active = 0`; becomes the Share target |
 
 This is what makes *"Build doesn't ask about Publish things"* enforceable: subject / description /
@@ -89,7 +89,8 @@ CTA only surface when `phase = publish`.
 
 | Persona | Phase(s) | Program | Channel | In one line |
 |---|---|---|---|---|
-| **Eddy** | Build + Publish | — | `#editorial` | Authors/reviews the issue and orchestrates the send |
+| **Scout** | Build + Publish | Production slate | `#production` | Owns the lifecycle, phase cards, handoffs, and blockers |
+| **Eddy** | Build + Publish | — | `#editorial` | Owns editorial judgment: review, ordering, thesis, subject, description, haiku |
 | **Linky** | feeds Build | — | `#research` / `#discovery` | Researches candidate links into the curation queue |
 | **Patty** | (touches Publish) | **Membership** | `#supporters` | Runs the annual fundraising drive; supplies the CTA |
 | **Marky** | Share | **Campaigns** | `#promotion` | Syndicates published issues; runs growth/engagement campaigns |

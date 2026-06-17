@@ -1,14 +1,14 @@
 """Tests for the per-persona slash-command surface.
 
-Each persona owns its own slash tree (``/eddy``, ``/linky``, ``/marky``,
-``/patty``), each registered on that persona's Discord bot. These
+Each persona owns its own slash tree (``/scout``, ``/eddy``, ``/linky``,
+``/marky``, ``/patty``), each registered on that persona's Discord bot. These
 tests cover the wiring layer:
 
-  - the four register fns each attach the right top-level group to a
+  - the five register fns each attach the right top-level group to a
     fresh tree.
   - the expected subgroups + verbs exist for each persona.
   - the top-level group requires ``manage_guild`` permission.
-  - ``issue start`` describes its required args (under /eddy).
+  - ``issue start`` describes its required args (under /scout).
   - retired surfaces (``/workshop``, ``heartbeat``, ``next-issue``,
     ``job``) are gone.
 """
@@ -212,6 +212,18 @@ class ScoutTreeTests(unittest.TestCase):
         for arg in ("number", "pub_date", "day_count"):
             self.assertIn(arg, described, msg=f"missing describe for {arg}")
 
+    def test_scout_slate_has_surface_choices(self):
+        tree = commands_module.register_scout_commands(_stub_bot())
+        slate = next(
+            c for c in _top_group(tree, "scout").commands
+            if getattr(c, "_cmd_name", None) == "slate"
+        )
+        choices = getattr(slate, "_choices", {}).get("kind", [])
+        self.assertEqual(
+            {c.value for c in choices},
+            {"newsletter", "blog", "podcast", "membership"},
+        )
+
 
 # ── retired surfaces ──────────────────────────────────────────────────
 
@@ -274,6 +286,35 @@ class DescriptionLengthTests(unittest.TestCase):
                         1 <= len(desc) <= 100,
                         msg=f"{label}: description is {len(desc)} chars (Discord limit 1–100): {desc!r}",
                     )
+
+
+class ProductionOwnershipReferenceTests(unittest.TestCase):
+    """Model-visible production references should point at Scout, not Eddy."""
+
+    def test_stale_eddy_production_command_references_absent(self):
+        paths = [
+            "apps/workshop_bot/tools/content/issue.py",
+            "apps/workshop_bot/tools/issue_items.py",
+            "apps/workshop_bot/tools/llm/local_tools.py",
+            "apps/workshop_bot/systems/pinboard/server.py",
+            "apps/workshop_bot/prompts/eddy/prompt.md",
+            "apps/workshop_bot/tools/README.md",
+            "apps/workshop_bot/CLAUDE.md",
+            "docs/phases/build.md",
+            "docs/phases/publish.md",
+            "docs/publishing-process.md",
+        ]
+        stale = (
+            "/eddy issue start",
+            "/eddy issue update",
+            "/eddy issue built",
+            "/eddy issue publish",
+            "/eddy issue reset",
+        )
+        for rel in paths:
+            text = (REPO / rel).read_text(encoding="utf-8")
+            for needle in stale:
+                self.assertNotIn(needle, text, msg=f"{needle!r} still present in {rel}")
 
 
 if __name__ == "__main__":

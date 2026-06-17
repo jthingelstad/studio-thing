@@ -8,8 +8,8 @@ Each persona's ``core()`` calls ``run()`` here. The loop:
    ``tool_result`` block per call as the next user message.
 4. Repeats until either we get a final text response or hit max_iterations.
 
-Cache control: the shared team prompt is the largest stable block and gets
-the first ephemeral mark (cached across all four personas via prefix-match);
+    Cache control: the shared team prompt is the largest stable block and gets
+    the first ephemeral mark (cached across all five personas via prefix-match);
 the issue index gets a second mark so persona-prompt edits don't bust the
 issue-index cache. The tool list also gets an ephemeral mark on its last
 entry.

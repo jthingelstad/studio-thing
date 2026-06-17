@@ -2,7 +2,7 @@
 
 Per-persona trees, each registered on its own Discord bot:
 
-- ``/eddy``  — editor + lead (issue assembly verbs, status, follow-ups,
+- ``/eddy``  — editor + lead (editorial verbs, status, follow-ups,
   ad-hoc editorial commands)
 - ``/linky`` — link curator (scan, follow-ups)
 - ``/marky`` — promotion + campaigns + engagement
@@ -10,8 +10,8 @@ Per-persona trees, each registered on its own Discord bot:
 - ``/scout`` — producer (production slate, ops status)
 
 There is no longer a single ``/workshop`` tree — each persona owns its
-own commands. Eddy still carries the ``/eddy issue …`` artifact subgroup
-through WT350; Scout takes over state transitions in Part 2.
+own commands. Scout owns production state transitions under
+``/scout issue …``; Eddy keeps the editorial ``/eddy issue …`` verbs.
 """
 
 from .eddy import register_eddy_commands

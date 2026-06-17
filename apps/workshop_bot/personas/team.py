@@ -1,6 +1,6 @@
 """Team-mention coordinator.
 
-When Jamie @-mentions the Team role, all four persona bots receive the
+When Jamie @-mentions the Team role, all five persona bots receive the
 same Discord event. Without coordination they'd all answer in parallel
 without seeing each other. The TeamRegistry:
 

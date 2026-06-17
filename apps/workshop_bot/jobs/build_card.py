@@ -146,7 +146,7 @@ def render_embed(state: dict) -> "discord.Embed":
     )
     embed.add_field(name="The issue (reading order)", value="\n".join(render_anatomy_lines(state)), inline=False)
     embed.add_field(name="Editorial", value="\n".join(render_editorial_lines(state)), inline=False)
-    when = "ready" if state["build_ready"] else "fill the required sections + intro/cover/haiku first"
+    when = "ready" if state["build_ready"] else "fill the required sections + intro/cover first"
     embed.set_footer(text=f"Mark built when done → opens Publish ({when}) · refreshed {datetime.now().strftime('%a %H:%M')}")
     return embed
 

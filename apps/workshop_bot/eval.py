@@ -12,7 +12,7 @@ Run:
     python -m apps.workshop_bot.eval --regen                  # regenerate question set
     python -m apps.workshop_bot.eval --persona eddy           # one persona only
 
-Cost: ~80 Haiku calls + 4 question-gen calls. <$1 per run.
+Cost: ~100 Haiku calls + 5 question-gen calls. <$1 per run.
 """
 
 from __future__ import annotations
@@ -36,6 +36,7 @@ from .personas.eddy import EddyBot
 from .personas.linky import LinkyBot
 from .personas.marky import MarkyBot
 from .personas.patty import PattyBot
+from .personas.scout import ScoutBot
 from .systems.buttondown.server import ButtondownServer
 from .systems.pinboard.server import PinboardServer
 from .systems.stripe.server import StripeServer
@@ -52,6 +53,7 @@ QUESTIONS_PATH = TMP / "workshop_eval_questions.json"
 PROMPTS_DIR = REPO / "apps" / "workshop_bot" / "prompts"
 
 PERSONAS: dict[str, type] = {
+    "scout": ScoutBot,
     "eddy": EddyBot,
     "linky": LinkyBot,
     "marky": MarkyBot,
@@ -138,6 +140,16 @@ def load_or_generate_questions(regen: bool) -> dict[str, list[str]]:
     QUESTIONS_PATH.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
     logger.info("wrote %s", QUESTIONS_PATH)
     return out
+
+
+def questions_cache_ready() -> bool:
+    if not QUESTIONS_PATH.exists():
+        return False
+    try:
+        data = json.loads(QUESTIONS_PATH.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return False
+    return all(p in data and len(data[p]) == QUESTIONS_PER_PERSONA for p in PERSONAS)
 
 
 async def run_persona(
@@ -230,8 +242,12 @@ def _build_registry() -> agent_tools.ToolRegistry:
 
 
 async def run(args: argparse.Namespace) -> int:
+    selected = {args.persona: PERSONAS[args.persona]} if args.persona else PERSONAS
+    required_purposes = set(selected)
+    if args.regen or not questions_cache_ready():
+        required_purposes.add("general")
     try:
-        anthropic_client.validate_keys()
+        anthropic_client.validate_keys(required_purposes)
     except RuntimeError as exc:
         logger.error("%s", exc)
         return 2
@@ -247,7 +263,6 @@ async def run(args: argparse.Namespace) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     logger.info("writing reports to %s", out_dir)
 
-    selected = {args.persona: PERSONAS[args.persona]} if args.persona else PERSONAS
     summary_rows: list[dict[str, Any]] = []
     for name, cls in selected.items():
         summary_rows.append(
