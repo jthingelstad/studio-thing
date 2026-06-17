@@ -9,7 +9,7 @@ pass, or he edited intro.md after buttondown.md was assembled — this is
 the way to clear that carried-forward state without reaching for the AWS
 console.
 
-``/eddy issue reset {final|publish}`` deletes the corresponding step
+``/scout issue reset {final|publish}`` deletes the corresponding step
 artifacts in S3 and (for ``final``) clears any row-level editorial state
 (promotions) so a re-run starts from a clean editorial slate.
 
@@ -107,13 +107,13 @@ async def run(ctx: "_base.JobContext", *, step: str) -> "_base.JobResult":
         summary_parts.append(f"{promotions_cleared} promotion(s) cleared")
     if not summary_parts:
         msg = f"ℹ️ nothing to reset — `{step}` artifacts weren't present for WT{n}."
-        await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
+        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
         return _base.JobResult(True, msg, data={"issue_number": n, "step": step, "deleted": []})
 
     summary = "; ".join(summary_parts)
     next_hint = {
         "final": "Re-run `/eddy issue reorder` to propose a fresh editorial pass.",
-        "publish": "The next `update-draft` tick re-renders `buttondown.md`; then `/eddy issue publish`.",
+        "publish": "The next `update-draft` tick re-renders `buttondown.md`; then `/scout issue publish`.",
     }[step]
     msg = (
         f"🔁 **reset-{step}** for WT{n} — {summary}.\n"

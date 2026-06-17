@@ -610,12 +610,12 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     if window is None:
         return _base.JobResult(
             False,
-            "❌ no active issue window — run `/eddy issue start <n> <pub-date> <days>` first.",
+            "❌ no active issue window — run `/scout issue start <n> <pub-date> <days>` first.",
         )
     n = int(window["issue_number"])
 
     progress = await ctx.progress(
-        "DISCORD_CHANNEL_EDITORIAL", _initial_progress(n), persona="eddy",
+        "DISCORD_CHANNEL_PRODUCTION", _initial_progress(n), persona="scout",
     )
 
     async def _refresh(**kwargs) -> None:

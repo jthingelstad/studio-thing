@@ -1,13 +1,16 @@
 """``/eddy`` slash tree.
 
-Eddy is the editor + lead persona. He hosts the issue-assembly artifact
-verbs (``/eddy issue start | update | status | final | haiku | subject |
-publish``), the cross-cutting bot-health snapshot (``/eddy status``), and
-his own follow-ups (``/eddy followup …``). The CTA composer that used
-to live at ``/workshop issue cta`` moved to ``/patty cta`` (commit 3).
+Eddy is the editor. He hosts the **editorial** issue verbs
+(``/eddy issue echoes | reorder | haiku | subject``), the cross-cutting
+bot-health snapshot (``/eddy status``), the ``/eddy edit`` /
+``/eddy currently`` content editors, ad-hoc ``/eddy review`` /
+``/eddy archive``, and his own follow-ups (``/eddy followup …``).
 
-Ad-hoc editorial commands (``/eddy review``, ``/eddy archive``) land
-in commit 5.
+The **production** verbs (start / update / status / build / built /
+reopen / publish / put-to-bed / reset) and the Build/Publish phase cards
+moved to Scout (``/scout issue …``, ``#production``) — Scout owns the
+production slate; Eddy owns editorial shape. The CTA composer lives at
+``/patty cta``.
 
 The dispatch shapes (fast-job vs interactive-job) mirror the legacy
 ``/workshop`` tree exactly — only the prefix changes. See
@@ -25,20 +28,13 @@ from ...jobs import follow_up as followup_job
 from ...jobs import status as status_job
 from ...jobs import (
     archive_lookup,
-    build_card,
     compose_echoes,
     compose_haiku,
     compose_meta,
     currently as currently_job,
     edit_asset,
-    issue_status,
-    publish as publish_job,
-    put_to_bed as put_to_bed_job,
     reorder,
-    reset_issue,
     review_text,
-    start_issue,
-    update_draft,
 )
 from ...tools import db as _db
 from ._shared import _ctx, make_ack, make_run_and_ack, make_run_interactive
@@ -86,73 +82,11 @@ def register_eddy_commands(
     # ── /eddy issue ───────────────────────────────────────────────────
 
     @issue.command(
-        name="start",
-        description="Begin assembling a new issue (number, Saturday pub date, day count).",
-    )
-    @app_commands.describe(
-        number="Issue number being assembled (e.g. 458)",
-        pub_date="Publishing Saturday (YYYY-MM-DD)",
-        day_count="Days to include before the cutoff — usually 7, sometimes 14",
-    )
-    async def issue_start_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction,
-        number: int,
-        pub_date: str,
-        day_count: int = 7,
-    ) -> None:
-        await _run_and_ack(
-            interaction,
-            lambda: start_issue.run(
-                _ctx(bot),
-                number=number,
-                pub_date=pub_date,
-                day_count=int(day_count),
-                set_by=str(interaction.user),
-            ),
-            "issue start",
-        )
-
-    @issue.command(
-        name="update",
-        description="Re-project upstream content (Pinboard + micro.blog + assets) into draft.md.",
-    )
-    async def issue_update_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: update_draft.run(_ctx(bot)), "issue update")
-
-    @issue.command(
-        name="status",
-        description="Read-only state report on the in-flight issue (sections + assets).",
-    )
-    async def issue_status_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: issue_status.run(_ctx(bot)), "issue status")
-
-    @issue.command(
-        name="build",
-        description="Post (or re-pin) the Build card — the content phase surface.",
-    )
-    async def issue_build_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: build_card.run(_ctx(bot)), "issue build")
-
-    @issue.command(
         name="echoes",
         description="Write the Echoes note (Thingy's archive callback) for the in-flight issue.",
     )
     async def issue_echoes_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: compose_echoes.run(_ctx(bot)), "issue echoes")
-
-    @issue.command(
-        name="built",
-        description="Mark the issue built → moves it from Build to Publish (opens the send controls).",
-    )
-    async def issue_built_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: build_card.mark_built(_ctx(bot)), "issue built")
-
-    @issue.command(
-        name="reopen",
-        description="Reopen a published-phase issue for content edits → back to Build.",
-    )
-    async def issue_reopen_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: build_card.reopen(_ctx(bot)), "issue reopen")
 
     @issue.command(
         name="reorder",
@@ -182,72 +116,6 @@ def register_eddy_commands(
         await _run_interactive(
             interaction, lambda: compose_meta.run(_ctx(bot)), "issue subject",
             "Starting `issue subject` — 5 subject options then a description will post in #editorial; react there to pick.",
-        )
-
-    # /eddy issue publish — destination-aware ship. `destination` chooses
-    # one of (audio, buttondown, website) or "all" (audio → buttondown
-    # → website, the standard ship order). Each leg is independently
-    # idempotent. Discord limits group nesting to one level, so this is
-    # a single command with a choice arg rather than a publish subgroup.
-    @issue.command(
-        name="publish",
-        description="Ship the issue. Destination = all | audio | buttondown | website.",
-    )
-    @app_commands.describe(
-        destination="Which destination to ship to. 'all' runs audio → buttondown → website.",
-    )
-    @app_commands.choices(destination=[
-        app_commands.Choice(name="all", value="all"),
-        app_commands.Choice(name="audio", value="audio"),
-        app_commands.Choice(name="buttondown", value="buttondown"),
-        app_commands.Choice(name="website", value="website"),
-    ])
-    async def issue_publish_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction, destination: str = "all",
-    ) -> None:
-        dest = (destination or "all").strip().lower()
-        handler = {
-            "all": publish_job.publish_all,
-            "audio": publish_job.publish_audio,
-            "buttondown": publish_job.publish_buttondown,
-            "website": publish_job.publish_website,
-        }.get(dest, publish_job.publish_all)
-        await _run_and_ack(
-            interaction, lambda: handler(_ctx(bot)),
-            f"issue publish {dest}",
-        )
-
-    # /eddy issue put-to-bed — newsroom closing bookend to /eddy issue start.
-    # Takes no arguments; operates on the active issue window. Files the
-    # shipped issue into the `issues` + `issue_links` data layer and flips
-    # is_active=0 so workshop is between issues until the next start.
-    @issue.command(
-        name="put-to-bed",
-        description="File the just-shipped active issue into the data layer and close the window.",
-    )
-    async def issue_put_to_bed_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(
-            interaction, lambda: put_to_bed_job.run(_ctx(bot)), "issue put-to-bed",
-        )
-
-    @issue.command(
-        name="reset",
-        description="Drop the previous-step artifacts so the in-flight issue can be re-published.",
-    )
-    @app_commands.describe(
-        step="Artifacts to clear: 'reorder' (promotions + thesis) or 'publish' (buttondown.md/.html).",
-    )
-    @app_commands.choices(step=[
-        app_commands.Choice(name="reorder", value="final"),
-        app_commands.Choice(name="publish", value="publish"),
-    ])
-    async def issue_reset_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction, step: str,
-    ) -> None:
-        await _run_and_ack(
-            interaction,
-            lambda: reset_issue.run(_ctx(bot), step=str(step)),
-            f"issue reset {step}",
         )
 
     # ── /eddy followup ────────────────────────────────────────────────

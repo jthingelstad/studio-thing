@@ -1,4 +1,4 @@
-"""Persistent button View for the Publish card (`#editorial`, registered on Eddy).
+"""Persistent button View for the Publish card (`#production`, registered on Scout).
 
 Shared envelope (subject/description) + CTA pick, then the gated per-channel 🚀
 ship buttons. Gating disables a ship button until its channel is ready.

@@ -360,28 +360,29 @@ class UpdateDraftRealFillsTests(_DBTestCase):
             r"generated \d{4}-\d{2}-\d{2} \d{2}:\d{2} [A-Z]{2,5}",
         )
 
-    def test_run_refreshes_build_card_in_editorial(self):
+    def test_run_refreshes_build_card_in_production(self):
         # update-draft no longer posts a fresh `📋` status + `✍️` review every
         # tick. During the Build phase it refreshes the one pinned Build card
-        # (an embed with the content anatomy), independent of Eddy's PASS.
-        os.environ["DISCORD_CHANNEL_EDITORIAL"] = "12345"
+        # (an embed with the content anatomy). The card now lives in
+        # #production under Scout (the production owner), not #editorial.
+        os.environ["DISCORD_CHANNEL_PRODUCTION"] = "12345"
         try:
             self._set_window()  # start-issue defaults phase='build'
             fake_channel = MagicMock()
             fake_channel.send = AsyncMock()
             fake_channel.id = 12345
-            fake_eddy = MagicMock()
-            fake_eddy.user = object()
-            fake_eddy.get_channel = MagicMock(return_value=fake_channel)
-            fake_eddy.core = AsyncMock(return_value=("PASS", {"iterations": 1}))
+            fake_scout = MagicMock()
+            fake_scout.user = object()
+            fake_scout.get_channel = MagicMock(return_value=fake_channel)
+            fake_scout.core = AsyncMock(return_value=("PASS", {"iterations": 1}))
             team = MagicMock()
-            team.bots = {"eddy": fake_eddy}
+            team.bots = {"scout": fake_scout}
             deps = MagicMock()
             deps.team = team
             ctx = _base.JobContext(deps=deps)
             result = asyncio.run(update_draft.run(ctx))
             self.assertTrue(result.ok, result.message)
-            # A Build-card embed landed in #editorial (sent with embed=…).
+            # A Build-card embed landed in #production (sent with embed=…).
             embed_calls = [
                 c for c in fake_channel.send.call_args_list
                 if c.kwargs.get("embed") is not None
@@ -392,7 +393,7 @@ class UpdateDraftRealFillsTests(_DBTestCase):
             field_text = "\n".join(f"{f['name']}\n{f['value']}" for f in embed.fields)
             self.assertIn("The issue (reading order)", field_text)
         finally:
-            os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
+            os.environ.pop("DISCORD_CHANNEL_PRODUCTION", None)
 
     def test_currently_entries_render_into_the_draft(self):
         self._set_window()

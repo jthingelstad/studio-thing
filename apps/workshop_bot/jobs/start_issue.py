@@ -157,7 +157,7 @@ def build_workshop_pointer(*, issue_number: int, window: dict, set_by: Optional[
             "thanks_1_md": f"{base}atoms/thanks-1.md",
             "echoes_md": f"{base}atoms/echoes.md",
             # ----- Daily-rendered artifacts (live at issue root) ----
-            # Produced by tools/renderers on every /eddy issue update
+            # Produced by tools/renderers on every /scout issue update
             # tick. final.md is gone — section ordering + promotions
             # live in workshop.db's issue_items table now.
             "draft_md": f"{base}draft.md",
@@ -232,7 +232,7 @@ async def run(
         return _base.JobResult(
             False,
             f"⚠️ window recorded for #{n}, but couldn't seed `draft.md`: "
-            f"`{type(exc).__name__}: {exc}` — try `/eddy issue update`.",
+            f"`{type(exc).__name__}: {exc}` — try `/scout issue update`.",
         )
 
     # Currently nudges — Mon + Wed of the cycle, posted in #editorial by

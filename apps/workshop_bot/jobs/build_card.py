@@ -1,4 +1,4 @@
-"""Build card — the **content** phase surface (`#editorial`, Eddy).
+"""Build card — the **production** phase surface (`#production`, Scout).
 
 Phase 1 of the publishing spine (`docs/publishing-process.md`): "is the issue
 written and good?" One pinned card showing the issue's anatomy in **reading
@@ -127,7 +127,7 @@ def render_embed(state: dict) -> "discord.Embed":
     if state.get("issue_number") is None:
         return discord.Embed(
             title="📄 Build — no active issue",
-            description="Run `/eddy issue start <n> <pub-date> <days>` to begin a cycle.",
+            description="Run `/scout issue start <n> <pub-date> <days>` to begin a cycle.",
             color=discord.Color.greyple(),
         )
     n = state["issue_number"]
@@ -161,7 +161,7 @@ def _build_view(state: dict):
 
 
 async def post_or_update(ctx: "_base.JobContext", n: Optional[int] = None, *, window: Optional[dict] = None) -> Optional[int]:
-    """Render + upsert the Build card (pinned in #editorial)."""
+    """Render + upsert the Build card (pinned in #production)."""
     window = window or db.get_active_issue_window()
     if window is None:
         return None
@@ -170,7 +170,7 @@ async def post_or_update(ctx: "_base.JobContext", n: Optional[int] = None, *, wi
     embed = render_embed(state)
     view = _build_view(state)
     return await _cards.upsert_card(
-        ctx, kind=KIND, channel_env=_cards.EDITORIAL_ENV, persona="eddy", n=n, embed=embed, view=view,
+        ctx, kind=KIND, channel_env=_cards.PRODUCTION_ENV, persona="scout", n=n, embed=embed, view=view,
     )
 
 
@@ -187,7 +187,7 @@ async def mark_built(ctx: "_base.JobContext") -> "_base.JobResult":
     CTA prompt picks up the freshly-written thesis as its anchor."""
     window = db.get_active_issue_window()
     if window is None:
-        return _base.JobResult(False, "No active issue window. Run `/eddy issue start`.")
+        return _base.JobResult(False, "No active issue window. Run `/scout issue start`.")
     n = int(window["issue_number"])
     if window.get("phase") == "publish":
         return _base.JobResult(True, f"WT{n} is already in **Publish**.", data={"issue_number": n, "phase": "publish"})
@@ -207,10 +207,10 @@ async def mark_built(ctx: "_base.JobContext") -> "_base.JobResult":
     # Finalize the Build card to a compact record + unpin.
     summary = discord.Embed(
         title=f"📄 Build · WT{n} — ✅ Built",
-        description="Moved to **Publish**. Reopen with `/eddy issue reopen` if you need to edit content.",
+        description="Moved to **Publish**. Reopen with `/scout issue reopen` if you need to edit content.",
         color=discord.Color.green(),
     )
-    await _cards.finalize_card(ctx, kind=KIND, channel_env=_cards.EDITORIAL_ENV, persona="eddy", n=n, embed=summary)
+    await _cards.finalize_card(ctx, kind=KIND, channel_env=_cards.PRODUCTION_ENV, persona="scout", n=n, embed=summary)
 
     # Compose the thesis from the just-frozen content first — it's the
     # editorial framing every subsequent Publish job anchors on.
@@ -247,15 +247,15 @@ async def mark_built(ctx: "_base.JobContext") -> "_base.JobResult":
 
 
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
-    """`/eddy issue build` — (re)post + pin the Build card."""
+    """`/scout issue build` — (re)post + pin the Build card."""
     window = db.get_active_issue_window()
     if window is None:
-        return _base.JobResult(False, "No active issue window. Run `/eddy issue start <n> <pub-date> <days>`.")
+        return _base.JobResult(False, "No active issue window. Run `/scout issue start <n> <pub-date> <days>`.")
     n = int(window["issue_number"])
     mid = await post_or_update(ctx, n, window=window)
     if mid is None:
         return _base.JobResult(False, f"❌ couldn't post the Build card for #{n} (channel unavailable?).")
-    return _base.JobResult(True, f"📄 Build card for **WT{n}** is up in #editorial (pinned).", data={"issue_number": n, "message_id": mid})
+    return _base.JobResult(True, f"📄 Build card for **WT{n}** is up in #production (pinned).", data={"issue_number": n, "message_id": mid})
 
 
 async def reopen(ctx: "_base.JobContext") -> "_base.JobResult":

@@ -48,7 +48,7 @@ def _newsletter_block() -> tuple[list[str], dict]:
     lines: list[str] = ["**Newsletter** — `weekly.thingelstad.com`"]
     w = db.get_active_issue_window()
     if w is None:
-        lines.append("  └ *(no in-flight issue — `/eddy issue start` to open one)*")
+        lines.append("  └ *(no in-flight issue — `/scout issue start` to open one)*")
         return lines, {"in_flight": None}
 
     n = int(w["issue_number"])

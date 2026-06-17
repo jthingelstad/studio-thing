@@ -1,10 +1,10 @@
-"""``/eddy issue put-to-bed`` — file the just-shipped issue into the data
+"""``/scout issue put-to-bed`` — file the just-shipped issue into the data
 layer and close the active window.
 
-The newsroom closing bookend to ``/eddy issue start``. Operates on the
+The newsroom closing bookend to ``/scout issue start``. Operates on the
 currently-active issue (the one row in ``issue_windows`` with
 ``is_active = 1``); takes no arguments. After it runs, **workshop has
-no active issue** until the next ``/eddy issue start`` is invoked.
+no active issue** until the next ``/scout issue start`` is invoked.
 
 The handler, in one DB transaction:
 
@@ -175,7 +175,7 @@ def file_issue(
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     window = db.get_active_issue_window()
     if window is None:
-        msg = "🛏️ nothing to put to bed — no active issue. Run `/eddy issue start <N>` to begin the next one."
+        msg = "🛏️ nothing to put to bed — no active issue. Run `/scout issue start <N>` to begin the next one."
         return _base.JobResult(False, msg)
     n = int(window["issue_number"])
 
@@ -183,17 +183,17 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     if meta is None:
         msg = (
             f"❌ can't put **WT{n}** to bed — `data/issues/{n}/metadata.json` not found locally. "
-            "Run `/eddy issue publish website` first to commit the artifacts."
+            "Run `/scout issue publish website` first to commit the artifacts."
         )
-        await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
+        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
         return _base.JobResult(False, msg, data={"issue_number": n})
 
     if not (meta.get("buttondown_id") and meta.get("absolute_url")):
         msg = (
             f"❌ can't put **WT{n}** to bed — `metadata.json` is missing `buttondown_id` "
-            f"and/or `absolute_url`. Run `/eddy issue publish buttondown` first."
+            f"and/or `absolute_url`. Run `/scout issue publish buttondown` first."
         )
-        await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
+        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
         return _base.JobResult(False, msg, data={"issue_number": n})
 
     links = _read_links(n)
@@ -204,7 +204,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     except Exception as exc:  # noqa: BLE001
         logger.exception("put-to-bed: file_issue failed for WT%d", n)
         msg = f"⚠️ couldn't put **WT{n}** to bed: `{type(exc).__name__}: {exc}`"
-        await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
+        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
         return _base.JobResult(False, msg, data={"issue_number": n})
 
     notable_n = len(links.get("notable_links") or [])
@@ -219,10 +219,10 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         f"- audio: {audio_tag}",
         f"- era: `{derive_era(n)}`",
         "",
-        "Workshop is between issues. Run `/eddy issue start <N+1>` when ready.",
+        "Workshop is between issues. Run `/scout issue start <N+1>` when ready.",
     ]
     msg = "\n".join(lines)
-    await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
+    await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
 
     # Close out the Build + Publish cards (the issue leaves the active window)
     # and hand off to the Share phase: surface the Share card in #promotion and
@@ -232,7 +232,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     try:
         from . import _cards, promotion_prep, share_card
         for kind in ("build", "publish"):
-            await _cards.clear_card(ctx, kind=kind, channel_env=_cards.EDITORIAL_ENV, persona="eddy", n=n)
+            await _cards.clear_card(ctx, kind=kind, channel_env=_cards.PRODUCTION_ENV, persona="scout", n=n)
         await share_card.post_or_update(ctx)
         await promotion_prep.run(_base.JobContext(deps=ctx.deps, trigger="put-to-bed"))
     except Exception:  # noqa: BLE001

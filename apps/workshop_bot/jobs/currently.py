@@ -22,7 +22,7 @@ and per-issue values live in ``workshop.db`` (``currently_types`` /
 
 Mutations write to the DB and stop there — they don't refire
 ``update-draft``. The next scheduled (daily 17:00 CT) or manual
-``/eddy issue update`` projects the new state into ``draft.md``.
+``/scout issue update`` projects the new state into ``draft.md``.
 
 Type ordering inside an issue is editorial — entries default to
 insertion order; Eddy (or Jamie via ``/eddy currently reorder``) can
@@ -54,7 +54,7 @@ _MODAL_MAX = 4000
 def _resolve_active_issue() -> tuple[Optional[int], Optional[str]]:
     window = db.get_active_issue_window()
     if window is None:
-        return None, "❌ no active issue window — run `/eddy issue start` first."
+        return None, "❌ no active issue window — run `/scout issue start` first."
     return int(window["issue_number"]), None
 
 

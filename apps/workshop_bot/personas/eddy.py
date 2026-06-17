@@ -33,11 +33,8 @@ class EddyBot(PersonaBot):
         super().__init__(deps)
         self.command_tree = register_eddy_commands(self)
 
-    def persistent_views(self) -> list:
-        # The Build + Publish phase cards live in #editorial and must keep
-        # routing clicks across restarts — register the canonical (all-enabled)
-        # views so custom_id dispatch survives a reboot.
-        from .views.build_card_view import BuildCardView
-        from .views.publish_card_view import PublishCardView
-
-        return [BuildCardView(), PublishCardView()]
+    # The Build + Publish phase cards moved to Scout (#production) — their
+    # persistent button-Views are now registered on ScoutBot, since a
+    # component interaction routes to the application that posted the
+    # message. Eddy no longer owns a long-lived control card, so it
+    # inherits the base (empty) persistent_views.

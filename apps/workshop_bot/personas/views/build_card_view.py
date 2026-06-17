@@ -1,7 +1,9 @@
-"""Persistent button View for the Build card (`#editorial`, registered on Eddy).
+"""Persistent button View for the Build card (`#production`, registered on Scout).
 
 Content-author actions + the Mark-built transition. Subject/Description/CTA and
-the ship buttons live on the *Publish* card — Build never surfaces them.
+the ship buttons live on the *Publish* card — Build never surfaces them. The
+Reorder button still fires Eddy's editorial reorder (which posts its proposal
+in #editorial) — production surface, editorial action.
 """
 
 from __future__ import annotations

@@ -24,6 +24,7 @@ logger = logging.getLogger("workshop.jobs.cards")
 
 EDITORIAL_ENV = "DISCORD_CHANNEL_EDITORIAL"
 PROMOTION_ENV = "DISCORD_CHANNEL_PROMOTION"
+PRODUCTION_ENV = "DISCORD_CHANNEL_PRODUCTION"
 
 
 # ---------- small render primitives ----------

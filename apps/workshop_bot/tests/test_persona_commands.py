@@ -74,25 +74,23 @@ class EddyTreeTests(unittest.TestCase):
             self.assertIn(name, subs)
 
     def test_eddy_issue_verbs(self):
+        # Production verbs moved to /scout issue; Eddy keeps the editorial set.
         tree = commands_module.register_eddy_commands(_stub_bot())
         issue = _subgroup(_top_group(tree, "eddy"), "issue")
         self.assertEqual(
             _cmd_names(issue),
-            {"start", "update", "status", "build", "echoes", "built", "reopen",
-             "reorder", "haiku", "subject", "publish", "put-to-bed", "reset"},
+            {"echoes", "reorder", "haiku", "subject"},
         )
 
-    def test_eddy_issue_publish_destinations(self):
-        # Discord limits group nesting to one level — publish lives as
-        # a leaf with a destination choice arg, not a subgroup.
+    def test_eddy_issue_has_no_production_verbs(self):
+        # Guard the split: none of the production lifecycle verbs should
+        # remain under /eddy issue after the migration to /scout.
         tree = commands_module.register_eddy_commands(_stub_bot())
         issue = _subgroup(_top_group(tree, "eddy"), "issue")
-        publish_cmd = next(
-            c for c in issue.commands if getattr(c, "_cmd_name", None) == "publish"
-        )
-        choices = getattr(publish_cmd, "_choices", {}).get("destination", [])
-        choice_values = {c.value for c in choices}
-        self.assertEqual(choice_values, {"all", "audio", "buttondown", "website"})
+        names = _cmd_names(issue)
+        for moved in ("start", "update", "status", "build", "built",
+                      "reopen", "publish", "put-to-bed", "reset"):
+            self.assertNotIn(moved, names, msg=f"production verb '{moved}' still on /eddy issue")
 
     def test_eddy_top_level_status(self):
         tree = commands_module.register_eddy_commands(_stub_bot())
@@ -103,14 +101,6 @@ class EddyTreeTests(unittest.TestCase):
         tree = commands_module.register_eddy_commands(_stub_bot())
         followup = _subgroup(_top_group(tree, "eddy"), "followup")
         self.assertEqual(_cmd_names(followup), {"list", "add", "cancel"})
-
-    def test_eddy_issue_start_describes_required_args(self):
-        tree = commands_module.register_eddy_commands(_stub_bot())
-        issue = _subgroup(_top_group(tree, "eddy"), "issue")
-        start = next(c for c in issue.commands if getattr(c, "_cmd_name", None) == "start")
-        described = getattr(start, "_describe", {})
-        for arg in ("number", "pub_date", "day_count"):
-            self.assertIn(arg, described, msg=f"missing describe for {arg}")
 
     def test_eddy_requires_manage_guild(self):
         tree = commands_module.register_eddy_commands(_stub_bot())
@@ -183,25 +173,44 @@ class PattyTreeTests(unittest.TestCase):
 # ── /scout ────────────────────────────────────────────────────────────
 
 class ScoutTreeTests(unittest.TestCase):
-    def test_scout_tree(self):
+    def test_scout_top_level_verbs(self):
         tree = commands_module.register_scout_commands(_stub_bot())
         scout = _top_group(tree, "scout")
-        # Part 1 ships exactly two read-only verbs. The production-management
-        # subgroup migrates over in Part 2 after WT350 publishes.
-        self.assertEqual(_cmd_names(scout), {"status", "slate"})
+        names = _cmd_names(scout)
+        self.assertIn("status", names)
+        self.assertIn("slate", names)
 
     def test_scout_requires_manage_guild(self):
         tree = commands_module.register_scout_commands(_stub_bot())
         self.assertIsNotNone(_top_group(tree, "scout").default_permissions)
 
-    def test_scout_does_not_yet_own_issue_subgroup(self):
-        """Part 1 leaves the /eddy issue * subgroup intact. Confirm Scout has
-        not silently grown an issue subgroup, which would diverge from the
-        agreed staged migration."""
+    def test_scout_owns_production_issue_verbs(self):
         tree = commands_module.register_scout_commands(_stub_bot())
-        scout = _top_group(tree, "scout")
-        sub_names = {getattr(c, "name", None) for c in scout.commands}
-        self.assertNotIn("issue", sub_names)
+        issue = _subgroup(_top_group(tree, "scout"), "issue")
+        self.assertEqual(
+            _cmd_names(issue),
+            {"start", "update", "status", "build", "built", "reopen",
+             "publish", "put-to-bed", "reset"},
+        )
+
+    def test_scout_issue_publish_destinations(self):
+        # Discord limits group nesting to one level — publish is a leaf
+        # with a destination choice arg, not a subgroup.
+        tree = commands_module.register_scout_commands(_stub_bot())
+        issue = _subgroup(_top_group(tree, "scout"), "issue")
+        publish_cmd = next(
+            c for c in issue.commands if getattr(c, "_cmd_name", None) == "publish"
+        )
+        choices = getattr(publish_cmd, "_choices", {}).get("destination", [])
+        self.assertEqual({c.value for c in choices}, {"all", "audio", "buttondown", "website"})
+
+    def test_scout_issue_start_describes_required_args(self):
+        tree = commands_module.register_scout_commands(_stub_bot())
+        issue = _subgroup(_top_group(tree, "scout"), "issue")
+        start = next(c for c in issue.commands if getattr(c, "_cmd_name", None) == "start")
+        described = getattr(start, "_describe", {})
+        for arg in ("number", "pub_date", "day_count"):
+            self.assertIn(arg, described, msg=f"missing describe for {arg}")
 
 
 # ── retired surfaces ──────────────────────────────────────────────────

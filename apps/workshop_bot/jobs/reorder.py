@@ -67,7 +67,7 @@ NAME = "reorder"
 
 _NEXT_STEPS = (
     "Next, in any order: `/eddy issue haiku`, `/eddy issue subject`, "
-    "`/patty cta` — then `/eddy issue publish` (it'll list "
+    "`/patty cta` — then `/scout issue publish` (it'll list "
     "anything still missing if you run it early)."
 )
 
@@ -80,7 +80,7 @@ _NEXT_STEPS = (
 # decision away from Jamie (each slot still prompts him in
 # #supporters via the standard refresh-loop UX).
 _NEXT_STEPS_WITH_CTA_AUTOFIRE = (
-    "Next: `/eddy issue haiku`, `/eddy issue subject`, then `/eddy issue publish`. "
+    "Next: `/eddy issue haiku`, `/eddy issue subject`, then `/scout issue publish`. "
     "Patty's `compose-cta` auto-fires now — react in `#supporters` per slot."
 )
 
@@ -436,7 +436,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     }
     if not any(rows_by_section.values()):
         return _base.JobResult(
-            False, f"❌ no `issue_items` rows for WT{n} — run `/eddy issue update` first.",
+            False, f"❌ no `issue_items` rows for WT{n} — run `/scout issue update` first.",
         )
 
     synth_to_row, row_to_synth = _build_synth_maps(rows_by_section)
@@ -503,7 +503,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                                     f"{', '.join('`' + p + '`' for p in patched)} "
                                     f"— appended in original order to keep the rest "
                                     f"of the proposal intact. Override with "
-                                    f"`/eddy issue reset final` if the auto-fix is "
+                                    f"`/scout issue reset final` if the auto-fix is "
                                     f"the wrong call.",
                                     suppress_embeds=True,
                                 )

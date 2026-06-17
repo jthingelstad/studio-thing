@@ -35,7 +35,7 @@ def render_status_card(window: dict, st: dict) -> str:
     """Render the readiness checklist as a Discord-ready markdown card.
 
     Shared with ``update-draft`` so the post-update snapshot to ``#editorial``
-    is byte-identical to what ``/eddy issue status`` prints.
+    is byte-identical to what ``/scout issue status`` prints.
     """
     n = int(window["issue_number"])
 
@@ -74,7 +74,7 @@ def render_status_card(window: dict, st: dict) -> str:
         f"  {m(st['currently_present'])} Currently (DB-backed)",
         "  " + (f"✅ CTAs: {', '.join('`' + c + '`' for c in st['cta_files'])}" if st["cta_files"] else "⚪ CTAs: none (run `/patty cta` to compose)"),
         "",
-        ("✅ **ship-ready** — `/eddy issue publish` would proceed." if st["ship_ready"]
+        ("✅ **ship-ready** — `/scout issue publish` would proceed." if st["ship_ready"]
          else f"❌ **not ship-ready** — missing: {', '.join(st['required_missing'])}"),
     ]
     return "\n".join(lines)
@@ -84,7 +84,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     window = db.get_active_issue_window()
     if window is None:
         return _base.JobResult(
-            False, "No active issue window. Run `/eddy issue start <n> <pub-date> <days>`."
+            False, "No active issue window. Run `/scout issue start <n> <pub-date> <days>`."
         )
     n = int(window["issue_number"])
     try:

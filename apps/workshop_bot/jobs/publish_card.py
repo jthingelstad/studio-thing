@@ -1,4 +1,4 @@
-"""Publish card — the **send** phase surface (`#editorial`, Eddy + pipeline).
+"""Publish card — the **send** phase surface (`#production`, Scout + pipeline).
 
 Phase 2 of the publishing spine (`docs/publishing-process.md`): "is it out the
 door, per channel?" Posted on `mark built`. Shows the shared envelope (subject,
@@ -233,7 +233,7 @@ async def post_or_update(ctx: "_base.JobContext", n: Optional[int] = None, *, wi
     embed = render_embed(state)
     view = _build_view(state)
     return await _cards.upsert_card(
-        ctx, kind=KIND, channel_env=_cards.EDITORIAL_ENV, persona="eddy", n=n, embed=embed, view=view,
+        ctx, kind=KIND, channel_env=_cards.PRODUCTION_ENV, persona="scout", n=n, embed=embed, view=view,
     )
 
 

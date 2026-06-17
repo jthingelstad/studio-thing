@@ -32,7 +32,7 @@ After a successful write, the job optionally re-fires
 ``draft.md`` (intro / outro / haiku / currently / cover). Edits to
 ``cta-N.md`` / ``thanks-N.md`` don't auto-fire anything — they only
 affect ``buttondown.md``, and that's a deliberate step (the next
-``update-draft`` tick re-renders, or ``/eddy issue publish``).
+``update-draft`` tick re-renders, or ``/scout issue publish``).
 """
 
 from __future__ import annotations
@@ -192,7 +192,7 @@ def build_modal(
     filename, label, refire, placeholder = _ASSETS[asset_key]
     window = db.get_active_issue_window()
     if window is None:
-        return None, "❌ no active issue window — run `/eddy issue start` first."
+        return None, "❌ no active issue window — run `/scout issue start` first."
     n = int(window["issue_number"])
     current = _read_current(n, filename)
     if len(current) > _MODAL_MAX:

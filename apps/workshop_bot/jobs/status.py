@@ -49,13 +49,13 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
 
     w = db.get_active_issue_window()
     if w is None:
-        lines.append("• issue window: *(none — `/eddy issue start` to set one)*")
+        lines.append("• issue window: *(none — `/scout issue start` to set one)*")
     else:
         n = int(w["issue_number"])
         lines.append(
             f"• issue window: **WT{n}** · pub {w['pub_date']} ({_rel(w['pub_date'])}) · "
             f"cutoff {w['end_date']} · {w.get('day_count', 7)}-day "
-            f"— `/eddy issue status` for content state"
+            f"— `/scout issue status` for content state"
         )
 
     g = db.get_active_goal()
