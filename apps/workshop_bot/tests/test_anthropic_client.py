@@ -27,6 +27,7 @@ _ALL_KEYS = {
     "ANTHROPIC_LINKY_API_KEY": "k-linky",
     "ANTHROPIC_MARKY_API_KEY": "k-marky",
     "ANTHROPIC_PATTY_API_KEY": "k-patty",
+    "ANTHROPIC_SCOUT_API_KEY": "k-scout",
     "ANTHROPIC_GENERAL_API_KEY": "k-general",
 }
 

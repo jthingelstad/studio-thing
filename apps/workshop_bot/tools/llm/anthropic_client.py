@@ -79,10 +79,10 @@ logger = logging.getLogger("workshop.anthropic")
 # bot restart to take effect.
 _prompt_cache: dict[str, str] = {}
 
-_KNOWN_PERSONAS = ("eddy", "linky", "marky", "patty")
+_KNOWN_PERSONAS = ("eddy", "linky", "marky", "patty", "scout")
 
 # Each call purpose bills to its own Anthropic key so the console Usage view
-# attributes spend per agent (the four personas) vs. per one-off project work
+# attributes spend per agent (the five personas) vs. per one-off project work
 # ("general": the blog alt-text backfill and the pipeline scripts). Keys share
 # one workspace, so this is visibility — not spend-cap isolation.
 _KEY_ENV_BY_PURPOSE = {
@@ -90,6 +90,7 @@ _KEY_ENV_BY_PURPOSE = {
     "linky":   "ANTHROPIC_LINKY_API_KEY",
     "marky":   "ANTHROPIC_MARKY_API_KEY",
     "patty":   "ANTHROPIC_PATTY_API_KEY",
+    "scout":   "ANTHROPIC_SCOUT_API_KEY",
     "general": "ANTHROPIC_GENERAL_API_KEY",
 }
 
