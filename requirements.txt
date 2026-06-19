@@ -1,6 +1,6 @@
 anthropic>=0.100
 apscheduler>=3.11.2
-beautifulsoup4>=4.13
+beautifulsoup4>=4.15.0
 boto3>=1.40
 discord.py>=2.7.1
 httpx>=0.28
