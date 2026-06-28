@@ -32,7 +32,6 @@ class IdentityGateTests(unittest.IsolatedAsyncioTestCase):
         req = make_mocked_request("GET", "/", headers={server.IDENTITY_HEADER: "jthingelstad@github"})
         resp = await server._identity_mw(req, _ok)
         self.assertEqual(resp.status, 200)
-        self.assertEqual(req["login"], "jthingelstad@github")
 
     async def test_foreign_login_is_forbidden(self):
         req = make_mocked_request("GET", "/", headers={server.IDENTITY_HEADER: "someone@else"})

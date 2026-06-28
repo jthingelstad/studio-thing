@@ -17,6 +17,7 @@ _env = jinja2.Environment(
 
 
 def render(template: str, request: web.Request, *, status: int = 200, **ctx) -> web.Response:
-    ctx.setdefault("login", request.get("login"))
+    # The identity is validated by the server middleware; read it back off the Tailscale header.
+    ctx.setdefault("login", request.headers.get("Tailscale-User-Login", ""))
     body = _env.get_template(template).render(**ctx)
     return web.Response(text=body, content_type="text/html", status=status)

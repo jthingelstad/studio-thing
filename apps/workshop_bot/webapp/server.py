@@ -42,8 +42,7 @@ async def _identity_mw(request: web.Request, handler):
     allowed = _allowed_login()
     if not login or (allowed and login != allowed):
         return web.Response(status=403, text="Forbidden — Tailscale identity required.\n")
-    request["login"] = login
-    return await handler(request)
+    return await handler(request)  # routes read the identity from the header (render.py)
 
 
 async def start_webapp() -> None:
