@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out Studio
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           # Use a PAT so the resulting push can trigger the production
           # workflow. GITHUB_TOKEN pushes do not trigger downstream workflows.
@@ -57,7 +57,7 @@ jobs:
           python pipeline/blog/ingest_blog.py --since-last
 
       - name: Check out Another Thing
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: jthingelstad/another.thingelstad.com
           path: external/another.thingelstad.com

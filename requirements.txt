@@ -1,20 +1,20 @@
 anthropic>=0.100
 apscheduler>=3.11.2
-beautifulsoup4>=4.13
+beautifulsoup4>=4.15.0
 boto3>=1.40
 discord.py>=2.7.1
 httpx>=0.28
 jinja2>=3.1
 lxml>=5.0
-markdown>=3.7
-openai>=2.0
+markdown>=3.10.2
+openai>=2.43.0
 Pillow>=12.0
 pydantic>=2.10
 python-dotenv>=1.0
 pytest>=9.0
 pyyaml>=6.0
-rank_bm25>=0.2
+rank_bm25>=0.2.2
 requests>=2.32
-stripe>=11.0
+stripe>=15.2.1
 ruff>=0.15.17
 -e ./librarian-core
