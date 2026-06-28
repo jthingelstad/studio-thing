@@ -39,6 +39,7 @@ from .systems.buttondown.server import ButtondownServer
 from .systems.pinboard.server import PinboardServer
 from .systems.stripe.server import StripeServer
 from .systems.tinylytics.server import TinylyticsServer
+from .webapp import start_webapp
 from .tools import db
 from .tools.content import corpus
 from .tools.llm import agent_tools, anthropic_client
@@ -425,6 +426,12 @@ async def run() -> int:
                 logger.exception("scheduler: failed to start")
 
     tasks.append(asyncio.create_task(_post_startup(), name="startup-announce"))
+
+    # Private (tailnet-only) web app — Jamie's operator surface (Scout slate, growing). Non-fatal.
+    try:
+        await start_webapp()
+    except Exception:  # noqa: BLE001
+        logger.exception("webapp: failed to start (non-fatal)")
 
     try:
         await stop_event.wait()

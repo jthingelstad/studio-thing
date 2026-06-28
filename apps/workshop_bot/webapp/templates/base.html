@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Studio{% endblock %} · Workshop</title>
+  <style>
+    :root { --ink:#1b1b1f; --soft:#6b6b76; --rule:#e6e6ea; --accent:#3b5bdb; --bg:#fafafb; --chip:#eef1fb; }
+    * { box-sizing: border-box; }
+    body { font: 16px/1.55 -apple-system, system-ui, sans-serif; color: var(--ink); background: var(--bg); margin: 0; }
+    header.top { position: sticky; top: 0; background: #fff; border-bottom: 1px solid var(--rule);
+                 padding: .6rem 1rem; display: flex; gap: .25rem 1rem; align-items: center; flex-wrap: wrap; }
+    header.top .brand { font-weight: 700; letter-spacing: -.01em; margin-right: .5rem; }
+    header.top a { color: var(--ink); text-decoration: none; padding: .35rem .6rem; border-radius: 7px; font-size: .95rem; }
+    header.top a.active, header.top a:hover { background: var(--chip); }
+    header.top a.soon { color: #aaa; pointer-events: none; }
+    header.top .sp { flex: 1; }
+    header.top .who { color: var(--soft); font-size: .85rem; }
+    main { max-width: 46rem; margin: 1.5rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.4rem; margin: .2rem 0 1rem; }
+    .muted { color: var(--soft); }
+    .card { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 1rem 1.1rem; }
+    .badge { display: inline-block; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em;
+             background: var(--chip); color: var(--accent); padding: .15rem .5rem; border-radius: 999px; }
+    code { background: #f0f0f3; padding: .08rem .35rem; border-radius: 4px; font-size: .92em; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <span class="brand">Studio</span>
+    <a href="/" class="{{ 'active' if nav=='slate' else '' }}">Slate</a>
+    <a class="soon" title="coming soon">Blog</a>
+    <a class="soon" title="coming soon">Podcast</a>
+    <span class="sp"></span>
+    <span class="who">{{ login }}</span>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
