@@ -114,8 +114,10 @@ def by_name(feeds: tuple[FeedSpec, ...], name: str) -> FeedSpec | None:
 # iteration order in the job's loops (toread is handled separately,
 # but discovery feeds fire in this order), and the highest
 # ``primary_priority`` wins when cross-source merging picks a primary.
-# The active set is intentionally just **Pinboard popular**. The toread
-# lane (Jamie's own public-toread pile) is separately wired in the job.
+# Pinboard popular is temporarily paused: keep the spec here, disabled,
+# so historical `popular` cards still resolve and re-enabling is a one-line
+# change. The toread lane (Jamie's own public-toread pile) is separately
+# wired in the job and keeps running.
 # Keep this registry generic so future feeds can be added by one new
 # ``FeedSpec`` instead of changing the scan loop.
 DISCOVERY_FEEDS: tuple[FeedSpec, ...] = (
@@ -123,6 +125,7 @@ DISCOVERY_FEEDS: tuple[FeedSpec, ...] = (
         name="popular", label="Pinboard popular", pin_label="",
         fetch=lambda limit: pinboard.popular(limit=limit),
         per_scan_cap=5, feed_limit=30, primary_priority=10,
+        enabled=False,
     ),
 )
 

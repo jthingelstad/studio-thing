@@ -1,7 +1,7 @@
 """``/linky`` slash tree.
 
 Linky owns link curation. ``/linky scan`` manually re-fires the
-hourly ``pinboard-scan`` job; ``/linky followup …`` manages Linky's
+scheduled ``pinboard-scan`` job; ``/linky followup …`` manages Linky's
 own commitments. Ad-hoc commands (``/linky research <url>``,
 ``/linky pile``, ``/linky stats``) added in commit 6.
 """
@@ -49,7 +49,7 @@ def register_linky_commands(
 
     @linky.command(
         name="scan",
-        description="Run Linky's Pinboard scan now (toread + discovery feeds) → #research.",
+        description="Run Linky's Pinboard toread scan now (discovery feeds are paused).",
     )
     async def linky_scan_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: pinboard_scan.run(_ctx(bot)), "scan")

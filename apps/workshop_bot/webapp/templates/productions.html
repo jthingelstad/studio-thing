@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% set nav = "productions" %}
+{% block title %}Productions{% endblock %}
+{% block content %}
+  <div style="display:flex; align-items:baseline; gap:1rem;">
+    <h1 style="flex:1;">Productions</h1>
+    <a class="btn" href="/productions/new">+ New project</a>
+  </div>
+  <p class="muted">
+    {% if show_all %}
+      Everything Scout has produced — in-flight and shipped.
+      <a href="/productions">show in-flight only</a>
+    {% else %}
+      What Scout is working on now, across every surface — add a new project for any type, or edit
+      one in place. <a href="/productions?all=1">show shipped archive</a>
+    {% endif %}
+    <span class="badge">working space</span>
+  </p>
+
+  {% for g in groups %}
+    <div class="secthead">
+      <h2>{{ g.label }}</h2>
+      {% if g.surface %}<span class="surface">{{ g.surface }}</span>{% endif %}
+      {% if not show_all and g.shipped %}<span class="surface">· {{ g.shipped }} shipped</span>{% endif %}
+    </div>
+    <div class="card">
+      {% if g.rows %}
+        {% for p in g.rows %}
+          <div class="row {{ 'done' if p.status in ('done','archived','abandoned') else '' }}">
+            <span class="id">{{ p.id }}</span>
+            <span class="ph">{{ p.phase }}</span>
+            <span class="ti">{{ p.title }}{% if p.status != 'active' %} <span class="muted">· {{ p.status }}</span>{% endif %}</span>
+            {% if p.due_at %}<span class="due">due {{ p.due_at }}</span>{% endif %}
+            <a href="/productions/{{ p.id }}/edit">edit</a>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="muted">{{ 'No ' + g.label|lower + ' productions yet.' if show_all else 'Nothing in flight.' }}</div>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% endblock %}

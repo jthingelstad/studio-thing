@@ -128,28 +128,27 @@ class ScoutSlateSnapshotTests(_DBCase):
         self.assertEqual(data.get("error"), "unknown_kind")
         self.assertIn("Unknown", "\n".join(lines))
 
-    def test_newsletter_block_reflects_active_window(self):
-        db.set_issue_window(
-            issue_number=351,
-            pub_date="2026-06-27",
-            end_date="2026-06-26",
-            start_date="2026-06-19",
-            day_count=7,
-            set_by="test",
-        )
+    def test_newsletter_block_reflects_active_windows(self):
+        # Newsletters are concurrent — the block lists every in-flight issue.
+        for n, pub in ((351, "2026-06-27"), (352, "2026-07-04")):
+            db.set_issue_window(
+                issue_number=n, pub_date=pub, end_date="2026-06-26",
+                start_date="2026-06-19", day_count=7, set_by="test",
+            )
         lines, data = scout_slate.snapshot(kind="newsletter")
-        self.assertIn("WT351", "\n".join(lines))
-        self.assertEqual(
-            data["newsletter"]["in_flight"]["issue_number"], 351,
-        )
+        text = "\n".join(lines)
+        self.assertIn("WT351", text)
+        self.assertIn("WT352", text)
+        numbers = {e["issue_number"] for e in data["newsletter"]["in_flight"]}
+        self.assertEqual(numbers, {351, 352})
 
-    def test_blog_and_podcast_blocks_marked_deferred(self):
-        # Phase 2 will replace these stubs; the deferred flag is the contract
-        # for callers so they don't misread the absent rows as "nothing in
-        # flight" vs "we don't track this yet".
+    def test_blog_and_podcast_blocks_read_from_registry(self):
+        # The blog/podcast blocks now project active productions rows.
+        db.create_production(production_type="article", title="On focus")
         _, data = scout_slate.snapshot()
-        self.assertTrue(data["blog"].get("deferred"))
-        self.assertTrue(data["podcast"].get("deferred"))
+        self.assertEqual(data["blog"]["in_flight"][0]["id"], "ART1")
+        # No podcast rows yet → empty in_flight list (tracked, just nothing live).
+        self.assertEqual(data["podcast"]["in_flight"], [])
 
     def test_run_returns_well_shaped_jobresult(self):
         res = _run(scout_slate.run(_base.JobContext()))

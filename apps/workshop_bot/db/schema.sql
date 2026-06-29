@@ -106,7 +106,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriber_events_external
   ON subscriber_events_seen(external_id, event_type);
 
 -- URLs Linky has already shown to Jamie from the discovery feed set
--- (currently Pinboard popular only). Records the *first* sighting
+-- (Pinboard popular is currently defined but disabled). Records the *first* sighting
 -- + Linky's verdict on that sighting. The companion
 -- `popular_seen_sightings` table records *every* (url, source)
 -- sighting across all feeds and all scans, so cross-source signal
@@ -238,30 +238,90 @@ CREATE TABLE IF NOT EXISTS issue_windows (
   is_active INTEGER NOT NULL DEFAULT 0,
   set_at TEXT NOT NULL DEFAULT (datetime('now')),
   set_by TEXT,
-  -- Publishing-spine phase of the active issue: 'build' (writing the
-  -- issue) → 'publish' (sending it per channel). See
-  -- docs/publishing-process.md. start-issue seeds 'build'; `mark built`
-  -- flips to 'publish'; put-to-bed closes the window and the issue moves
-  -- to Share (tracked as the last-published issue, not via this column).
-  phase TEXT NOT NULL DEFAULT 'build'
+  -- Publishing-spine phase of the active issue: 'write' → 'build' →
+  -- 'publish' → 'share'. See docs/publishing-process.md. start-issue seeds
+  -- 'build'; `mark built` flips to 'publish'; put-to-bed moves it to 'share'.
+  -- The phase vocabulary is owned in code (tools/content/production_types.py);
+  -- set_issue_phase validates against it.
+  phase TEXT NOT NULL DEFAULT 'build',
+  -- Publish record — stamped by `publish buttondown` when the issue ships.
+  -- These are publish-path state, NOT authored content (which lives in
+  -- production_content); kept here on the newsletter's detail table so the
+  -- status gate + archive front matter read them without a content round-trip.
+  buttondown_id TEXT NOT NULL DEFAULT '',
+  absolute_url  TEXT NOT NULL DEFAULT ''
 );
 
--- At most one active window at a time.
-CREATE UNIQUE INDEX IF NOT EXISTS idx_issue_windows_active_unique
+-- Multiple newsletters may be in flight at once (some in build, some in
+-- share) — there is NO single-active constraint. is_active = 1 means
+-- "in flight, not yet put to bed". The legacy partial-unique index
+-- idx_issue_windows_active_unique is dropped by migration 0017. A plain
+-- index keeps the "list active windows" scan cheap.
+CREATE INDEX IF NOT EXISTS idx_issue_windows_active
   ON issue_windows(is_active) WHERE is_active = 1;
 
--- Per-phase persistent cards. Each phase surface (build / publish / share)
--- is one Discord message the bot edits in place + re-finds across restarts.
--- Keyed by (issue_number, kind) so an issue can carry a Build card and a
--- Publish card in #editorial and hand to a Share card in #promotion.
-CREATE TABLE IF NOT EXISTS issue_cards (
-  issue_number INTEGER NOT NULL,
-  kind TEXT NOT NULL,                            -- 'build' | 'publish' | 'share'
-  message_id INTEGER NOT NULL,
-  channel_id INTEGER NOT NULL,
-  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-  PRIMARY KEY (issue_number, kind)
+-- (The issue_cards table — per-phase Discord card handles — was retired with
+-- the phase cards; production status is the web scoreboard now. Migration 0020
+-- drops it on existing DBs.)
+
+-- Productions — the generic, multi-type, multi-instance production registry.
+-- One row per production unit of ANY type (newsletter / article / podcast /
+-- project), the spine that supersedes the single-active issue_windows model:
+-- several productions of several types run concurrently, each in its own phase.
+--
+-- issue_windows stays as the *newsletter detail/working table* (it carries the
+-- rich window fields + the issue_cards linkage + the live publish path), linked
+-- from here by detail_issue_number. New types keep light type-specific fields
+-- in the `details` JSON blob until/unless they grow their own detail table.
+--
+-- id is the human display code: WT350 / ART7 / POD3 / PRJ2 — {prefix}{seq}.
+-- seq is the issue_number for newsletters (operator-chosen) and a per-type
+-- ordinal otherwise. phase is validated PER TYPE by the code-side registry in
+-- tools/content/production_types.py — deliberately NOT a CHECK constraint, so
+-- adding a phase to a type's vocabulary needs no migration.
+CREATE TABLE IF NOT EXISTS productions (
+  id                  TEXT PRIMARY KEY,              -- 'WT350' | 'ART7' | 'POD3' | 'PRJ2'
+  production_type     TEXT NOT NULL,                 -- 'newsletter'|'article'|'podcast'|'project'
+  seq                 INTEGER NOT NULL,              -- issue_number (newsletter) | per-type ordinal
+  title               TEXT NOT NULL,
+  phase               TEXT NOT NULL,                 -- per-type vocab; validated in code
+  status              TEXT NOT NULL DEFAULT 'active',-- 'active'|'done'|'archived'|'abandoned'
+  due_at              TEXT,                          -- ISO date; newsletter = pub_date
+  pub_date            TEXT,                          -- newsletter Saturday; NULL otherwise
+  source              TEXT NOT NULL DEFAULT '',      -- surface label, e.g. 'weekly.thingelstad.com'
+  details             TEXT,                          -- JSON: type-specific fields
+  detail_issue_number INTEGER,                       -- newsletter -> issue_windows.issue_number
+  created_at          TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at          TEXT NOT NULL DEFAULT (datetime('now')),
+  created_by          TEXT,
+  updated_by          TEXT,
+  UNIQUE(production_type, seq)
 );
+
+CREATE INDEX IF NOT EXISTS idx_productions_type_status
+  ON productions(production_type, status);
+CREATE INDEX IF NOT EXISTS idx_productions_status_due
+  ON productions(status, due_at);
+
+-- Authored content, moved out of the S3 atoms/ prefix. One row per
+-- (production_id, name). `body` is the raw text the S3 atom held — JSON blocks
+-- (cover, metadata) are stored as their literal JSON string (callers json.loads
+-- them), cta/thanks keep their `kind:` YAML frontmatter verbatim. Presence == a
+-- row exists. This single table serves every production type: newsletter atoms
+-- (intro/outro/cover/haiku/metadata/thesis/echoes/cta-N/thanks-N), an article
+-- body, a podcast script/notes. S3 is now publishing-only (generated outputs +
+-- binaries); nothing reads authored content from S3.
+CREATE TABLE IF NOT EXISTS production_content (
+  production_id TEXT NOT NULL,                 -- 'WT350' | 'ART7' | 'POD3'
+  name          TEXT NOT NULL,                 -- 'intro.md' | 'cover.json' | 'cta-1.md' | 'body.md'
+  body          TEXT NOT NULL DEFAULT '',
+  updated_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_by    TEXT,
+  PRIMARY KEY (production_id, name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_production_content_pid
+  ON production_content(production_id);
 
 -- Job locks — single-asset serialization for the jobs pipeline. A job
 -- acquires a row per file it intends to write before starting; another

@@ -150,8 +150,8 @@ class MemoryRoundtripTests(unittest.TestCase):
 
 
 class PinboardDedupTests(unittest.TestCase):
-    """Linky's popular feed (every 6h) and to-read research (twice daily)
-    rely on these dedup helpers to avoid re-showing items each tick.
+    """Linky's discovery feeds when enabled and to-read research rely on
+    these dedup helpers to avoid re-showing items each tick.
     """
 
     def setUp(self):

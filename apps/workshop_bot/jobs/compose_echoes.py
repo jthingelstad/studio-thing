@@ -74,7 +74,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
-from ..tools import db, s3, thingy_retrieve
+from ..tools import content_store, db, thingy_retrieve
 from ..tools.llm import anthropic_client
 from . import _base, _llm_job
 
@@ -552,7 +552,7 @@ async def run(
 
             # Write to S3 workspace (under atoms/) + mirror locally (the
             # ship paths read from local).
-            s3.write_issue_file(n, "echoes.md", text + "\n")
+            content_store.write_issue(n, "echoes.md", text + "\n")
             local_dir = ISSUES_ROOT / str(n)
             local_dir.mkdir(parents=True, exist_ok=True)
             (local_dir / "echoes.md").write_text(text + "\n", encoding="utf-8")
@@ -585,7 +585,5 @@ def _read_thesis(issue_number: int) -> str:
     is missing — e.g. compose-thesis failed earlier in mark-built, or
     Jamie re-fires compose-echoes on a legacy issue without a thesis
     — degrade gracefully to body-only context."""
-    res = s3.read_issue_file(issue_number, "thesis.md")
-    if res.get("found") and isinstance(res.get("text"), str):
-        return res["text"].strip()
-    return ""
+    body = content_store.read_issue(issue_number, "thesis.md")
+    return body.strip() if body else ""

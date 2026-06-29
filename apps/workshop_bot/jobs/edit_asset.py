@@ -43,7 +43,7 @@ from typing import Optional
 import discord
 from discord import ui
 
-from ..tools import db, s3
+from ..tools import content_store, db
 from . import _base
 
 logger = logging.getLogger("workshop.jobs.edit_asset")
@@ -92,16 +92,14 @@ def _read_current(issue_number: int, filename: str) -> str:
     transport error logs and falls through to ``""`` — better to let
     Jamie type into an empty modal than to refuse the edit outright."""
     try:
-        res = s3.read_issue_file(issue_number, filename)
+        body = content_store.read_issue(issue_number, filename)
     except Exception as exc:  # noqa: BLE001
         logger.warning(
-            "edit-asset: S3 read failed for WT%d/%s — opening empty modal: %s",
+            "edit-asset: content read failed for WT%d/%s — opening empty modal: %s",
             issue_number, filename, exc,
         )
         return ""
-    if res.get("found") and isinstance(res.get("text"), str):
-        return res["text"]
-    return ""
+    return body if body else ""
 
 
 class _AssetEditModal(ui.Modal):
@@ -154,7 +152,7 @@ class _AssetEditModal(ui.Modal):
     async def on_submit(self, interaction) -> None:  # type: ignore[override]
         new_text = self.input.value or ""
         try:
-            s3.write_issue_file(self.issue_number, self.filename, new_text)
+            content_store.write_issue(self.issue_number, self.filename, new_text)
         except Exception as exc:  # noqa: BLE001
             logger.exception(
                 "edit-asset: write failed for WT%d/%s",

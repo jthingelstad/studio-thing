@@ -197,6 +197,45 @@ def build_eddy_context(
     }
 
 
+def build_scout_context(*, ref_date: Optional[date] = None) -> dict[str, Any]:
+    """Scout's ``## Today`` block — the state of the production slate.
+
+    Backs the agentic check-in (``scout-checkin``): Scout speaks in #production
+    only when something on the slate is worth flagging (else ``PASS``). Reuses
+    the slate snapshot + per-newsletter readiness so the model sees what's in
+    flight across every surface, not just the newsletter."""
+    today = ref_date or _today()
+    # Lazy imports — context lives in tools/, these are jobs/; importing at
+    # module load would risk a cycle.
+    from ...jobs import production_state, scout_slate
+
+    _lines, slate = scout_slate.snapshot()
+    newsletters = []
+    for w in db.list_active_issue_windows():
+        n = int(w["issue_number"])
+        phase = (w.get("phase") or "build").lower()
+        try:
+            st = (production_state.publish_state(n) if phase in ("publish", "share")
+                  else production_state.build_state(n))
+        except Exception:  # noqa: BLE001 — context is best-effort
+            st = {}
+        newsletters.append({
+            "issue": n,
+            "phase": phase,
+            "pub_date": w.get("pub_date"),
+            "days_to_pub": (_days_until(w["pub_date"], today) if w.get("pub_date") else None),
+            "build_ready": st.get("build_ready"),
+            "open_comments": st.get("open_comments"),
+            "missing": st.get("email_missing") or st.get("required_missing"),
+        })
+    return {
+        "today": today.isoformat(),
+        "weekday": today.strftime("%a"),
+        "slate": slate,
+        "active_newsletters": newsletters,
+    }
+
+
 def build_linky_context(*, ref_date: Optional[date] = None) -> dict[str, Any]:
     """Linky's ``## Today`` block for a pinboard-scan: today's date,
     days-to-publish, days into the window, toread queue depth, and how many

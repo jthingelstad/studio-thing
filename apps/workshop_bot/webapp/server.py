@@ -21,6 +21,9 @@ log = logging.getLogger("workshop.webapp")
 # The header Tailscale `serve` injects for tailnet requests (verified live, 2026-06-28).
 IDENTITY_HEADER = "Tailscale-User-Login"
 
+# Typed app key for the bot's deps handle (aiohttp 3.14 wants AppKey, not a str key).
+DEPS: web.AppKey = web.AppKey("deps", object)
+
 _runner: web.AppRunner | None = None
 
 
@@ -45,12 +48,16 @@ async def _identity_mw(request: web.Request, handler):
     return await handler(request)  # routes read the identity from the header (render.py)
 
 
-async def start_webapp() -> None:
-    """Start the loopback aiohttp server (idempotent). Call once from the bot's run loop."""
+async def start_webapp(deps=None) -> None:
+    """Start the loopback aiohttp server (idempotent). Call once from the bot's
+    run loop. ``deps`` (the bot's corpus/team/registry handle) is stored on the
+    app so web handlers can run jobs that post to Discord (the front-door
+    behaviour — a web action still announces in #production etc.)."""
     global _runner
     if _runner is not None:
         return
     app = web.Application(middlewares=[_identity_mw])
+    app[DEPS] = deps
     add_routes(app)
     runner = web.AppRunner(app)
     await runner.setup()

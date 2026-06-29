@@ -16,7 +16,7 @@ import re
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from .. import archive_lookup, db, issue_items as issue_items_mod, s3, support_state, web
+from .. import archive_lookup, content_store, db, issue_items as issue_items_mod, s3, support_state, web
 from ..content import archive, draft, issue
 from .tool_registry import ToolRegistry, active_persona, active_react_target
 from ._specs import SPECS
@@ -385,20 +385,35 @@ def t_workspace_list_all(deps) -> dict[str, Any]:
 
 
 def t_workspace_list_files(deps, issue_number: int) -> dict[str, Any]:
-    """List the per-issue files in the S3 workspace
-    (``s3://files.thingelstad.com/weekly-thing/{N}/``)."""
+    """List the per-issue workspace — authored content (DB) plus the generated
+    artifacts + binaries in S3."""
     try:
-        return s3.list_issue(int(issue_number))
+        n = int(issue_number)
+        listing = s3.list_issue(n)
+        objs = list(listing.get("objects", []))
+        have = {o.get("filename") for o in objs}
+        for name in content_store.list_issue(n):
+            if name not in have:
+                objs.append({"filename": name, "key": f"db/content/{name}", "size": None})
+        listing["objects"] = objs
+        return listing
     except s3.S3PathError as exc:
         return {"error": str(exc)}
 
 
 def t_workspace_read(deps, issue_number: int, filename: str) -> dict[str, Any]:
-    """Read one file from the per-issue S3 workspace. Text only — binary
-    objects (photos) are reported but not returned. Filename must be a
+    """Read one authored file for the issue. Authored content (intro.md,
+    cover.json, metadata.json, cta-N.md, …) comes from the DB content store;
+    other names (generated artifacts) fall through to S3. Filename must be a
     bare component (no slashes, no '..')."""
     try:
-        return s3.read_issue_file(int(issue_number), filename)
+        n = int(issue_number)
+        if content_store.is_atom_name(filename):
+            body = content_store.read_issue(n, filename)
+            if body is None:
+                return {"found": False, "name": filename}
+            return {"found": True, "name": filename, "text": body}
+        return s3.read_issue_file(n, filename)
     except s3.S3PathError as exc:
         return {"error": str(exc)}
 
@@ -406,13 +421,16 @@ def t_workspace_read(deps, issue_number: int, filename: str) -> dict[str, Any]:
 def t_workspace_write(
     deps, issue_number: int, filename: str, content: str
 ) -> dict[str, Any]:
-    """Write one file to the per-issue S3 workspace. Use for the issue
-    text/JSON assets the assemble pipeline reads (e.g. ``intro.md``,
-    ``currently.md``, ``metadata.json``, ``cta-1.md``). 256KB max per
-    file. Allowed extensions: md, txt, json, yaml, yml, csv, html.
-    Filename must be a bare component."""
+    """Write one authored file for the issue. Authored content (e.g. ``intro.md``,
+    ``metadata.json``, ``cta-1.md``) is stored in the DB content store — the same
+    rows the web project page edits; other names fall through to S3. Filename
+    must be a bare component."""
     try:
-        return s3.write_issue_file(int(issue_number), filename, content)
+        n = int(issue_number)
+        if content_store.is_atom_name(filename):
+            content_store.write_issue(n, filename, content, by="agent")
+            return {"name": filename, "written": True, "size": len(content or "")}
+        return s3.write_issue_file(n, filename, content)
     except s3.S3PathError as exc:
         return {"error": str(exc)}
 

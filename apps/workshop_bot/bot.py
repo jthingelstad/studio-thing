@@ -429,7 +429,7 @@ async def run() -> int:
 
     # Private (tailnet-only) web app — Jamie's operator surface (Scout slate, growing). Non-fatal.
     try:
-        await start_webapp()
+        await start_webapp(deps=deps)
     except Exception:  # noqa: BLE001
         logger.exception("webapp: failed to start (non-fatal)")
 

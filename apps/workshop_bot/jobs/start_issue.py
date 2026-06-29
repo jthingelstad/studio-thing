@@ -18,7 +18,7 @@ from datetime import date, datetime, time, timedelta, timezone
 from typing import Optional
 from zoneinfo import ZoneInfo
 
-from ..tools import db, s3
+from ..tools import db
 from ..tools.content import issue
 from . import _base, update_draft
 
@@ -173,7 +173,7 @@ def build_workshop_pointer(*, issue_number: int, window: dict, set_by: Optional[
     }
 
 
-async def run(
+async def define(
     ctx: "_base.JobContext",
     *,
     number,
@@ -181,6 +181,8 @@ async def run(
     day_count: int = 7,
     set_by: Optional[str] = None,
 ) -> "_base.JobResult":
+    """Define a newsletter as *planned* — a DB row only, no workspace seeding.
+    The web "create newsletter" path. Validates the number + Saturday pub_date."""
     try:
         n = int(number)
     except (TypeError, ValueError):
@@ -191,69 +193,60 @@ async def run(
         window = issue.compute_window(pub_date, int(day_count))
     except issue.IssueWindowError as exc:
         return _base.JobResult(False, f"❌ {exc}")
-
     try:
-        db.set_issue_window(
+        db.plan_issue_window(
             issue_number=n,
             pub_date=window["pub_date"],
             end_date=window["end_date"],
             start_date=window["start_date"],
             day_count=window["day_count"],
-            set_by=set_by or "start-issue",
+            set_by=set_by or "define",
         )
     except Exception as exc:  # noqa: BLE001
-        logger.exception("start-issue: db write failed for #%d", n)
+        logger.exception("define: db write failed for #%d", n)
         return _base.JobResult(
-            False, f"❌ couldn't save the issue window: `{type(exc).__name__}: {exc}`"
+            False, f"❌ couldn't save the issue: `{type(exc).__name__}: {exc}`"
         )
+    return _base.JobResult(
+        True,
+        f"🗓️ Issue **WT{n}** defined (planned) — pub {window['pub_date']}. "
+        f"Start working on it to open the workspace.",
+        data={"issue_number": n, "window": window, "phase": "planned"},
+    )
 
-    # Refresh the workshop pointer JSON Shortcuts read to discover the
-    # current in-flight issue. Best-effort — a hiccup here doesn't block the
-    # job; surface it in the result so Jamie knows Shortcuts may be stale.
+
+async def start_working(
+    ctx: "_base.JobContext", n: int, *, set_by: Optional[str] = None
+) -> "_base.JobResult":
+    """Move a planned newsletter into **build** and seed the working pipeline:
+    the Shortcuts pointer, the Currently nudges, and the first update-draft.
+    Authored content lives in the DB now — there is no draft.md seed; the
+    first update-draft generates it."""
+    n = int(n)
+    window = db.get_active_issue_window(n)
+    if window is None:
+        return _base.JobResult(False, f"❌ no issue window for WT{n} — define it first.")
+    db.set_issue_phase(n, "build")
+    window = db.get_active_issue_window(n)
+
     pointer_url: Optional[str] = None
     pointer_warning: Optional[str] = None
     try:
-        from ..tools import s3 as _s3  # local alias so the import line above stays read-only
+        from ..tools import s3 as _s3
         pointer = build_workshop_pointer(
             issue_number=n, window=window, set_by=set_by, bucket=_s3._bucket(),
         )
         res = _s3.write_workshop_pointer(pointer)
         pointer_url = res.get("url")
     except Exception as exc:  # noqa: BLE001
-        logger.warning("start-issue: workshop.json write failed for #%d: %s", n, exc)
+        logger.warning("start-working: workshop.json write failed for #%d: %s", n, exc)
         pointer_warning = f"`{type(exc).__name__}: {exc}`"
 
-    # Seed draft.md from the starter template — this also creates the S3
-    # prefix weekly-thing/{n}/ if it didn't exist.
-    try:
-        s3.write_issue_file(n, "draft.md", _base.starter_template())
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("start-issue: failed to seed draft.md for #%d", n)
-        return _base.JobResult(
-            False,
-            f"⚠️ window recorded for #{n}, but couldn't seed `draft.md`: "
-            f"`{type(exc).__name__}: {exc}` — try `/scout issue update`.",
-        )
-
-    # Currently nudges — Mon + Wed of the cycle, posted in #editorial by
-    # follow-up-sweep when each row's due_at passes. Late starts skip past
-    # rows. Best-effort: a DB hiccup here doesn't block the job.
     nudges = _schedule_currently_nudges(
         issue_number=n, pub_date_iso=window["pub_date"], set_by=set_by,
     )
 
-    # Fire update-draft so the first draft has real content. It owns the
-    # draft.md lock; start-issue never holds it, so there's no collision.
     sub = await update_draft.run(_base.JobContext(deps=ctx.deps, trigger="chained"))
-
-    # Post + pin the Build card so the one live content surface exists from the
-    # start of the cycle (phase='build'). update-draft (just fired) also
-    # refreshes it; this guarantees it lands even if that hiccuped.
-    try:
-        from . import build_card
-        await build_card.post_or_update(ctx, n, window=window)
-    except Exception:  # noqa: BLE001
-        logger.exception("start-issue: Build card post failed for #%d", n)
 
     days_word = "day" if window["day_count"] == 1 else "days"
     pointer_line = (
@@ -262,7 +255,7 @@ async def run(
         if pointer_warning else None
     )
     lines = [
-        f"✅ Issue **#{n}** is now in flight.",
+        f"✅ Issue **WT{n}** is now in flight (build).",
         f"- Publish: **{window['pub_date']}** (Sat)",
         f"- Content cutoff (end_date): **{window['end_date']}**",
         f"- Window start (prior cutoff): **{window['start_date']}**",
@@ -283,3 +276,19 @@ async def run(
               "workshop_pointer_url": pointer_url,
               "currently_nudges": [row["id"] for row in nudges]},
     )
+
+
+async def run(
+    ctx: "_base.JobContext",
+    *,
+    number,
+    pub_date: str,
+    day_count: int = 7,
+    set_by: Optional[str] = None,
+) -> "_base.JobResult":
+    """One-shot define + start_working (the legacy `/scout issue start`)."""
+    res = await define(ctx, number=number, pub_date=pub_date, day_count=day_count, set_by=set_by)
+    if not res.ok:
+        return res
+    n = int(res.data["issue_number"])
+    return await start_working(ctx, n, set_by=set_by)

@@ -29,7 +29,7 @@ import json
 import logging
 import re
 
-from ..tools import db, s3
+from ..tools import content_store, db
 from ..tools.llm import anthropic_client
 from . import _base, _llm_job
 
@@ -198,17 +198,17 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             # subject/description are generated here; everything else either
             # is deterministic (number/slug/image/publish_date) or comes from
             # downstream jobs we shouldn't clobber.
-            existing = s3.read_issue_file(n, "metadata.json")
-            if existing.get("found") and isinstance(existing.get("text"), str):
+            existing = content_store.read_issue(n, "metadata.json")
+            if existing:
                 try:
-                    prior = json.loads(existing["text"])
+                    prior = json.loads(existing)
                 except (ValueError, TypeError):
                     prior = None
                 if isinstance(prior, dict):
                     for key, value in prior.items():
                         if key not in metadata:
                             metadata[key] = value
-            s3.write_issue_file(n, "metadata.json", json.dumps(metadata, indent=2) + "\n")
+            content_store.write_issue(n, "metadata.json", json.dumps(metadata, indent=2) + "\n")
             desc_line = description if description else "_(empty — set it in Buttondown or re-run compose-meta)_"
             # Best-effort: metadata.json is on S3 either way; a Discord
             # glitch on the success card shouldn't fail the job.

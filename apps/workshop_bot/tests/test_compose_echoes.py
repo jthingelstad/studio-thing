@@ -33,7 +33,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base, compose_echoes  # noqa: E402
-from apps.workshop_bot.tools import db, thingy_retrieve  # noqa: E402
+from apps.workshop_bot.tools import content_store, db, thingy_retrieve  # noqa: E402
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
     FakeBotChannel as _FakeBotChannel,
@@ -189,8 +189,8 @@ class ComposeEchoesRunTests(_DBTestCase):
         self.assertTrue(result.ok, result.message)
         self.assertTrue(result.data["echoes_written"])
         # S3 mirror — written under the atoms/ prefix as echoes.md now.
-        self.assertIn((458, "echoes.md"), self.ws.files)
-        self.assertIn("WT281", self.ws.files[(458, "echoes.md")])
+        self.assertIsNotNone(content_store.read_issue(458, "echoes.md"))
+        self.assertIn("WT281", content_store.read_issue(458, "echoes.md"))
         # Local mirror
         local_path = compose_echoes.ISSUES_ROOT / "458" / "echoes.md"
         self.assertTrue(local_path.exists())
@@ -241,7 +241,7 @@ class ComposeEchoesRunTests(_DBTestCase):
         self.assertIn("Thingy retrieval unavailable", result.message)
         self.assertTrue(result.data.get("retrieval_failed"))
         # No echoes.md written
-        self.assertNotIn((458, "echoes.md"), self.ws.files)
+        self.assertIsNone(content_store.read_issue(458, "echoes.md"))
         # No Sonnet call attempted (FakeBotChannel records calls)
         sent = fc.channel.send.await_args_list[0].args[0]
         self.assertIn("Thingy retrieval unavailable", sent)
@@ -258,7 +258,7 @@ class ComposeEchoesRunTests(_DBTestCase):
             ctx, baseline_body="## Notable\n\nbody",
         ))
         self.assertTrue(result.ok, result.message)
-        written = self.ws.files[(458, "echoes.md")]
+        written = content_store.read_issue(458, "echoes.md")
         self.assertIn(
             "[WT281](https://weekly.thingelstad.com/archive/281/)",
             written,
@@ -276,7 +276,7 @@ class ComposeEchoesRunTests(_DBTestCase):
             ctx, baseline_body="## Notable\n\nbody",
         ))
         self.assertTrue(result.ok, result.message)
-        written = self.ws.files[(458, "echoes.md")]
+        written = content_store.read_issue(458, "echoes.md")
         # Exactly one occurrence of the link — no double-wrapping.
         self.assertEqual(written.count(link), 1)
         # And no nested `[[..]](..)` pathology.

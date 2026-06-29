@@ -21,7 +21,7 @@ _stubs.install()
 from apps.workshop_bot.jobs import (  # noqa: E402
     _base, compose_cta, compose_haiku, compose_meta, compose_thesis, reorder,
 )
-from apps.workshop_bot.tools import db # noqa: E402
+from apps.workshop_bot.tools import content_store, db # noqa: E402
 from apps.workshop_bot.tools.discord import interaction
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
@@ -53,7 +53,7 @@ class ComposeHaikuTests(_DBTestCase):
         with patch.object(interaction, "await_choice", AsyncMock(return_value=1)):
             result = asyncio.run(compose_haiku.run(ctx))
         self.assertTrue(result.ok, result.message)
-        self.assertEqual(self.ws.files[(458, "haiku.md")].strip(), "a\nb\nc")
+        self.assertEqual(content_store.read_issue(458, "haiku.md").strip(), "a\nb\nc")
 
     def test_refresh_then_pick(self):
         self._window()
@@ -62,7 +62,7 @@ class ComposeHaikuTests(_DBTestCase):
         with patch.object(interaction, "await_choice", AsyncMock(side_effect=["refresh", 0])):
             result = asyncio.run(compose_haiku.run(ctx))
         self.assertTrue(result.ok, result.message)
-        self.assertEqual(self.ws.files[(458, "haiku.md")].strip(), "one\ntwo\nthree")
+        self.assertEqual(content_store.read_issue(458, "haiku.md").strip(), "one\ntwo\nthree")
         self.assertEqual(fc.bot.core.await_count, 2)  # initial + refresh
 
     def test_no_pick_no_write(self):
@@ -72,7 +72,7 @@ class ComposeHaikuTests(_DBTestCase):
         with patch.object(interaction, "await_choice", AsyncMock(return_value=None)):
             result = asyncio.run(compose_haiku.run(ctx))
         self.assertFalse(result.ok)
-        self.assertNotIn((458, "haiku.md"), self.ws.files)
+        self.assertIsNone(content_store.read_issue(458, "haiku.md"))
 
     def test_forces_sonnet_model(self):
         # Picker output is short and well within Sonnet — overriding the
@@ -115,7 +115,7 @@ class ComposeMetaTests(_DBTestCase):
             result = asyncio.run(compose_meta.run(ctx))
         self.assertTrue(result.ok, result.message)
         import json as _j
-        meta = _j.loads(self.ws.files[(458, "metadata.json")])
+        meta = _j.loads(content_store.read_issue(458, "metadata.json"))
         self.assertEqual(meta["number"], 458)
         self.assertEqual(meta["subject"], "WT458 — The Death of Scrum")
         self.assertEqual(meta["description"], desc_reply)
@@ -171,7 +171,7 @@ class ComposeMetaTests(_DBTestCase):
         with patch.object(interaction, "await_choice", AsyncMock(side_effect=[0])):
             result = asyncio.run(compose_meta.run(ctx))
         self.assertTrue(result.ok, result.message)
-        meta = _j.loads(self.ws.files[(458, "metadata.json")])
+        meta = _j.loads(content_store.read_issue(458, "metadata.json"))
         self.assertEqual(meta["subject"], "WT458 — Fresh Pick")
         self.assertEqual(meta["description"], "Brand new description.")
         self.assertEqual(meta["buttondown_id"], "em_existing_id_123")
@@ -192,7 +192,7 @@ class ComposeMetaTests(_DBTestCase):
             result = asyncio.run(compose_meta.run(ctx))
         self.assertTrue(result.ok, result.message)
         import json as _j
-        meta = _j.loads(self.ws.files[(458, "metadata.json")])
+        meta = _j.loads(content_store.read_issue(458, "metadata.json"))
         self.assertEqual(meta["subject"], "WT458 — Picked Subject")
         self.assertEqual(meta["description"], "")
 
@@ -221,7 +221,7 @@ class ComposeMetaTests(_DBTestCase):
         with patch.object(interaction, "await_choice", AsyncMock(return_value=None)):
             result = asyncio.run(compose_meta.run(ctx))
         self.assertFalse(result.ok)
-        self.assertNotIn((458, "metadata.json"), self.ws.files)
+        self.assertIsNone(content_store.read_issue(458, "metadata.json"))
 
     def test_parse_numbered_list_tolerates_wrappers(self):
         text = ("Sure — here you go:\n\n"
@@ -304,18 +304,18 @@ class ComposeCtaTests(_DBTestCase):
         self.assertEqual(result.data["slots_written"], 3)
         self.assertEqual(result.data["slots_total"], 3)
         # All three atom files written with the right frontmatter kind.
-        cta1 = self.ws.files[(458, "cta-1.md")]
-        cta2 = self.ws.files[(458, "cta-2.md")]
-        thanks1 = self.ws.files[(458, "thanks-1.md")]
+        cta1 = content_store.read_issue(458, "cta-1.md")
+        cta2 = content_store.read_issue(458, "cta-2.md")
+        thanks1 = content_store.read_issue(458, "thanks-1.md")
         self.assertIn("kind: supporter", cta1)
         self.assertIn("cta-1 copy", cta1)
         self.assertIn("kind: supporter", cta2)
         self.assertIn("cta-2 copy", cta2)
         self.assertIn("kind: thanks", thanks1)
         self.assertIn("thanks-1 copy", thanks1)
-        self.assertIn("cta-1 copy", self.ws.files[(458, "cta-1.md")])
-        self.assertIn("cta-2 copy", self.ws.files[(458, "cta-2.md")])
-        self.assertIn("thanks-1 copy", self.ws.files[(458, "thanks-1.md")])
+        self.assertIn("cta-1 copy", content_store.read_issue(458, "cta-1.md"))
+        self.assertIn("cta-2 copy", content_store.read_issue(458, "cta-2.md"))
+        self.assertIn("thanks-1 copy", content_store.read_issue(458, "thanks-1.md"))
 
     def test_already_filled_slot_skipped(self):
         """A slot whose copy file already has body content is skipped — the
@@ -334,7 +334,7 @@ class ComposeCtaTests(_DBTestCase):
         self.assertEqual(result.data["slots_skipped"], 1)
         self.assertEqual(result.data["slots_written"], 2)
         # cta-1.md unchanged.
-        self.assertIn("already filled.", self.ws.files[(458, "cta-1.md")])
+        self.assertIn("already filled.", content_store.read_issue(458, "cta-1.md"))
 
     def test_await_choice_timeout_leaves_slot_unwritten(self):
         self._window()
@@ -346,9 +346,9 @@ class ComposeCtaTests(_DBTestCase):
         self.assertTrue(result.ok)
         # All three slots time out → none written.
         self.assertEqual(result.data["slots_written"], 0)
-        self.assertNotIn((458, "cta-1.md"), self.ws.files)
-        self.assertNotIn((458, "cta-2.md"), self.ws.files)
-        self.assertNotIn((458, "thanks-1.md"), self.ws.files)
+        self.assertIsNone(content_store.read_issue(458, "cta-1.md"))
+        self.assertIsNone(content_store.read_issue(458, "cta-2.md"))
+        self.assertIsNone(content_store.read_issue(458, "thanks-1.md"))
 
     def test_unparseable_reply_eventually_gives_up(self):
         """refresh_loop retries up to MAX_REFRESH_ROUNDS on unparseable JSON.
@@ -360,7 +360,7 @@ class ComposeCtaTests(_DBTestCase):
         result = asyncio.run(compose_cta.run(ctx))
         self.assertTrue(result.ok)
         self.assertEqual(result.data["slots_written"], 0)
-        self.assertNotIn((458, "cta-1.md"), self.ws.files)
+        self.assertIsNone(content_store.read_issue(458, "cta-1.md"))
 
     def test_channel_send_failure_does_not_lose_written_slot(self):
         """If Discord glitches on the summary post, the file is already on
@@ -374,7 +374,7 @@ class ComposeCtaTests(_DBTestCase):
             result = asyncio.run(compose_cta.run(ctx))
         self.assertTrue(result.ok, result.message)
         self.assertEqual(result.data["slots_written"], 3)
-        self.assertIn("x", self.ws.files[(458, "cta-1.md")])
+        self.assertIn("x", content_store.read_issue(458, "cta-1.md"))
 
     def test_concurrent_run_is_blocked_by_job_lock(self):
         self._window()
@@ -505,7 +505,7 @@ class ReorderTests(_DBTestCase):
         self.assertEqual(urls, ["http://b", "http://a"])
         # thesis.md is NOT written here — that moved to compose-thesis
         # at mark-built (Build → Publish transition).
-        self.assertNotIn((458, "thesis.md"), self.ws.files)
+        self.assertIsNone(content_store.read_issue(458, "thesis.md"))
         # final.md is no longer written either.
         self.assertNotIn((458, "final.md"), self.ws.files)
 
@@ -519,7 +519,7 @@ class ReorderTests(_DBTestCase):
         notable_rows = issue_items.list_items(458, section="notable")
         urls = [r["url"] for r in notable_rows]
         self.assertEqual(urls, ["http://a", "http://b"])
-        self.assertNotIn((458, "thesis.md"), self.ws.files)
+        self.assertIsNone(content_store.read_issue(458, "thesis.md"))
         self.assertNotIn((458, "final.md"), self.ws.files)
 
     def test_timeout_leaves_rows_unchanged(self):
@@ -532,7 +532,7 @@ class ReorderTests(_DBTestCase):
         notable_rows = issue_items.list_items(458, section="notable")
         urls = [r["url"] for r in notable_rows]
         self.assertEqual(urls, ["http://a", "http://b"])
-        self.assertNotIn((458, "thesis.md"), self.ws.files)
+        self.assertIsNone(content_store.read_issue(458, "thesis.md"))
         self.assertNotIn((458, "final.md"), self.ws.files)
 
     # ---- JSON validation ----
@@ -544,7 +544,7 @@ class ReorderTests(_DBTestCase):
         result = asyncio.run(reorder.run(ctx))
         self.assertTrue(result.ok, result.message)
         self.assertIn("rows unchanged", result.message)
-        self.assertNotIn((458, "thesis.md"), self.ws.files)
+        self.assertIsNone(content_store.read_issue(458, "thesis.md"))
         self.assertNotIn((458, "final.md"), self.ws.files)
 
     def test_keeps_eddy_default_model_for_proposal(self):
@@ -635,7 +635,7 @@ class ComposeThesisTests(_DBTestCase):
         ctx, fc = self._ctx(reply="  A crisp editorial thesis.  ")
         result = asyncio.run(compose_thesis.run(ctx))
         self.assertTrue(result.ok, result.message)
-        self.assertEqual(self.ws.files[(458, "thesis.md")], "A crisp editorial thesis.\n")
+        self.assertEqual(content_store.read_issue(458, "thesis.md"), "A crisp editorial thesis.\n")
         self.assertEqual(result.data["thesis"], "A crisp editorial thesis.")
         self.assertEqual(result.data["issue_number"], 458)
         self.assertEqual(fc.bot.core.await_count, 1)
@@ -656,7 +656,7 @@ class ComposeThesisTests(_DBTestCase):
         result = asyncio.run(compose_thesis.run(ctx))
         self.assertFalse(result.ok)
         self.assertIn("no draft body", result.message)
-        self.assertNotIn((458, "thesis.md"), self.ws.files)
+        self.assertIsNone(content_store.read_issue(458, "thesis.md"))
         self.assertEqual(fc.bot.core.await_count, 0)
 
     def test_empty_eddy_response_no_write(self):
@@ -668,7 +668,7 @@ class ComposeThesisTests(_DBTestCase):
         result = asyncio.run(compose_thesis.run(ctx))
         self.assertFalse(result.ok)
         self.assertIn("empty thesis", result.message)
-        self.assertNotIn((458, "thesis.md"), self.ws.files)
+        self.assertIsNone(content_store.read_issue(458, "thesis.md"))
         self.assertEqual(fc.bot.core.await_count, 1)
 
     def test_skips_when_eddy_unavailable(self):

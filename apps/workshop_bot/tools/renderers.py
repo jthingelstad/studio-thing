@@ -549,13 +549,12 @@ CTA_SLOT_POSITIONS: dict[str, str] = {
 
 
 def _read_atom(issue_number: int, filename: str) -> str:
-    """Read an atom file; return its stripped text (or empty)."""
-    from . import s3 as _s3
+    """Read authored content for the issue; return its stripped text (or empty).
+    Content lives in the DB store now (S3 is publishing-only)."""
+    from . import content_store
 
-    res = _s3.read_issue_file(issue_number, filename)
-    if res.get("found") and isinstance(res.get("text"), str):
-        return res["text"].strip()
-    return ""
+    body = content_store.read_issue(issue_number, filename)
+    return body.strip() if body else ""
 
 
 
@@ -597,6 +596,16 @@ def _load_metadata(issue_number: int, window: Optional[dict] = None) -> dict:
         metadata.setdefault("publish_date", window.get("pub_date", "") + "T12:00:00Z" if window.get("pub_date") else "")
     else:
         metadata.setdefault("publish_date", "")
+    # Publish-stamped fields live on the issue window (the newsletter's publish
+    # record), not in the authored content row — overlay them so the archive
+    # front matter + status gate see the real Buttondown id / URL.
+    from . import db
+    pub = window if (window and "buttondown_id" in window) else db.get_issue_window(issue_number)
+    if pub:
+        if pub.get("buttondown_id"):
+            metadata["buttondown_id"] = pub["buttondown_id"]
+        if pub.get("absolute_url"):
+            metadata["absolute_url"] = pub["absolute_url"]
     return metadata
 
 

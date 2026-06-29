@@ -196,6 +196,11 @@ async def publish_buttondown(ctx: "_base.JobContext") -> "_base.JobResult":
     absolute_url = bd_result.get("absolute_url", "") or ""
     subject = bd_result.get("subject") or f"WT{n}"
 
+    # Stamp the publish record onto the issue window (the canonical store for
+    # these publish-path fields now — not the authored content). The archive
+    # re-render + status gate read them from here.
+    db.set_issue_publish_record(n, buttondown_id=bid, absolute_url=absolute_url)
+
     # Re-render archive so its front matter carries the absolute_url
     # Buttondown just returned. Best-effort — a render failure here
     # doesn't undo the Buttondown publish.
