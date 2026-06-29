@@ -27,7 +27,45 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from apps.workshop_bot.jobs import _base
-from apps.workshop_bot.tools import db, s3
+from apps.workshop_bot.tools import content_store, db, s3
+
+
+class _MirroringFiles(dict):
+    """A ``(issue_number, filename) -> body`` dict that mirrors authored-content
+    (atom) entries into the real ``content_store`` DB. Production code reads
+    authored content from the DB now (S3 is publishing-only), so tests that seed
+    atoms via the fake S3 workspace (``ws.files[(n, "intro.md")] = …`` or
+    ``write_issue_file``) need that content to land in the store too. Best-effort:
+    if there's no migrated DB in context, the mirror silently skips."""
+
+    def _mirror(self, key, value):
+        try:
+            n, name = key
+            if content_store.is_atom_name(name):
+                content_store.write_issue(int(n), name, value)
+        except Exception:  # noqa: BLE001
+            pass
+
+    def _unmirror(self, key):
+        try:
+            n, name = key
+            if content_store.is_atom_name(name):
+                content_store.delete_issue(int(n), name)
+        except Exception:  # noqa: BLE001
+            pass
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        self._mirror(key, value)
+
+    def __delitem__(self, key):
+        super().__delitem__(key)
+        self._unmirror(key)
+
+    def pop(self, key, *args):
+        result = super().pop(key, *args)
+        self._unmirror(key)
+        return result
 
 
 class FakeWorkspace:
@@ -37,7 +75,7 @@ class FakeWorkspace:
     and ``self.workshop_pointer`` (a single dict)."""
 
     def __init__(self) -> None:
-        self.files: dict[tuple[int, str], str] = {}
+        self.files: dict[tuple[int, str], str] = _MirroringFiles()
         self.workshop_pointer: dict | None = None
 
     def read_issue_file(self, issue_number, filename, *, max_bytes=None):

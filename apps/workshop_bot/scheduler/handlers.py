@@ -33,7 +33,7 @@ logger = logging.getLogger("workshop.scheduler.handlers")
 def _content_job_runner(name: str):
     from ..jobs import (
         daily_metrics, feedbin_ingest, follow_up, pinboard_scan,
-        promotion_prep, update_draft,
+        promotion_prep, scout_checkin, update_draft,
     )
 
     return {
@@ -43,6 +43,7 @@ def _content_job_runner(name: str):
         "daily-metrics": daily_metrics.run,
         "follow-up-sweep": follow_up.sweep,
         "feedbin-ingest": feedbin_ingest.run,
+        "scout-checkin": scout_checkin.run,
     }.get(name)
 
 

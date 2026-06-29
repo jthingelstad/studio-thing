@@ -25,7 +25,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from ..tools import db, s3
+from ..tools import content_store, db
 from ..tools.llm import anthropic_client
 from . import _base, _llm_job
 
@@ -81,7 +81,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
 
     thesis = answer.strip()
     try:
-        await asyncio.to_thread(s3.write_issue_file, n, "thesis.md", thesis + "\n")
+        await asyncio.to_thread(content_store.write_issue, n, "thesis.md", thesis + "\n")
     except Exception as exc:  # noqa: BLE001
         logger.exception("compose-thesis: S3 write failed for WT%d", n)
         return _base.JobResult(

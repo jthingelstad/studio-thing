@@ -12,10 +12,10 @@ job=…)``. Today:
   ``draft.md``; PASSes if no issue is in flight; runs Eddy's Opus review
   into the draft.html drawer during the Build phase.
 - ``pinboard-scan`` — every 3h 07:00–22:00 CT, year-round (07/10/13/16/19/22).
-  Linky's per-link research pass over Jamie's public toread bookmarks +
-  the active discovery feed set (currently Pinboard popular only); each
-  card posts as its own ``#research`` message. PASSes silently on empty
-  scans.
+  Linky's per-link research pass over Jamie's public toread bookmarks.
+  Discovery feeds are currently paused, so the scheduled scan does not
+  pull Pinboard Popular; each toread card posts to ``#research``. PASSes
+  silently on empty scans.
 - ``daily-metrics`` — daily 19:00 CT. Polls active campaigns, checks
   subscriber growth + engagement; PASSes silently when nothing material
   moved, else posts a report.
@@ -74,11 +74,11 @@ JOBS: tuple[JobSpec, ...] = (
         id="linky-pinboard-scan",
         cron="5 7-22/3 * * *",                           # Every 3h at :05 from 07:00–22:00 Central
                                                          # (07/10/13/16/19/22), year-round. Per-link
-                                                         # research pass over the toread + active
-                                                         # discovery feed set (currently
-                                                         # Pinboard popular only); each card posts as its
-                                                         # own #research message. PASSes silently
-                                                         # when all source lists come back empty.
+                                                         # research pass over the toread lane. Discovery
+                                                         # feeds are currently paused, so no Pinboard
+                                                         # Popular pull runs; each card posts as its own
+                                                         # #research message. PASSes silently when all
+                                                         # source lists come back empty.
         func=functools.partial(handlers.content_job, job="pinboard-scan"),
     ),
     JobSpec(
@@ -114,6 +114,16 @@ JOBS: tuple[JobSpec, ...] = (
                                                          # note + context, posts a check-in.
                                                          # PASSes silently when nothing's due.
         func=functools.partial(handlers.content_job, job="follow-up-sweep"),
+    ),
+    JobSpec(
+        id="scout-slate-checkin",
+        cron="30 17 * * *",                              # Daily 17:30 Central, just after the 17:00
+                                                         # update-draft projection. Scout reviews the
+                                                         # slate and posts a brief note to #production
+                                                         # only if something's worth flagging; else
+                                                         # PASSes. Replaces the mechanical phase-card
+                                                         # refresh — the web page is the scoreboard.
+        func=functools.partial(handlers.content_job, job="scout-checkin"),
     ),
 )
 

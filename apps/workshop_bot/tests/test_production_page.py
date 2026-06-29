@@ -1,0 +1,117 @@
+"""The per-production web page /productions/{id} — the work surface."""
+
+from __future__ import annotations
+
+import os
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO))
+
+from apps.workshop_bot.tests import _stubs  # noqa: E402
+
+_stubs.install()
+
+from aiohttp import web  # noqa: E402
+from aiohttp.test_utils import TestClient, TestServer  # noqa: E402
+
+from apps.workshop_bot.tools import content_store, db  # noqa: E402
+from apps.workshop_bot.tests._fixtures import FakeWorkspace, patch_s3  # noqa: E402
+from apps.workshop_bot.webapp import routes, server  # noqa: E402
+
+LOGIN = "jthingelstad@github"
+H = {server.IDENTITY_HEADER: LOGIN}
+
+
+class ProductionPageTests(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self._orig = os.environ.get("WORKSHOP_DB_PATH")
+        os.environ["WORKSHOP_DB_PATH"] = str(Path(self._tmp.name) / "t.db")
+        os.environ.setdefault("TAILSCALE_ALLOWED_LOGIN", LOGIN)
+        db.run_migrations()
+        self.ws = FakeWorkspace()
+        self._patchers = patch_s3(self.ws)
+        for p in self._patchers:
+            p.start()
+
+    def tearDown(self):
+        for p in self._patchers:
+            p.stop()
+        if self._orig is None:
+            os.environ.pop("WORKSHOP_DB_PATH", None)
+        else:
+            os.environ["WORKSHOP_DB_PATH"] = self._orig
+        self._tmp.cleanup()
+
+    async def _client(self):
+        app = web.Application(middlewares=[server._identity_mw])
+        app[server.DEPS] = None
+        routes.add_routes(app)
+        client = TestClient(TestServer(app))
+        await client.start_server()
+        self.addAsyncCleanup(client.close)
+        return client
+
+    async def test_planned_page_offers_start_working(self):
+        c = await self._client()
+        db.plan_issue_window(issue_number=360, pub_date="2026-06-27",
+                             end_date="2026-06-26", start_date="2026-06-19", day_count=7)
+        body = await (await c.get("/productions/WT360", headers=H)).text()
+        self.assertIn("Start working", body)
+        self.assertNotIn(">Content<", body)  # no editing until started
+
+    async def test_build_page_edits_content(self):
+        c = await self._client()
+        db.plan_issue_window(issue_number=360, pub_date="2026-06-27",
+                             end_date="2026-06-26", start_date="2026-06-19", day_count=7)
+        db.set_issue_phase(360, "build")
+        # save the intro via the atom handler
+        r = await c.post("/productions/WT360/atom", headers=H, allow_redirects=False,
+                         data={"name": "intro.md", "value": "Hello intro"})
+        self.assertEqual(r.status, 302)
+        self.assertEqual(content_store.read_issue(360, "intro.md"), "Hello intro")
+        body = await (await c.get("/productions/WT360", headers=H)).text()
+        self.assertIn("Hello intro", body)
+        self.assertIn(">Content<", body)
+
+    async def test_currently_and_cover_handlers(self):
+        c = await self._client()
+        db.plan_issue_window(issue_number=360, pub_date="2026-06-27",
+                             end_date="2026-06-26", start_date="2026-06-19", day_count=7)
+        db.set_issue_phase(360, "build")
+        await c.post("/productions/WT360/currently", headers=H, allow_redirects=False,
+                     data={"op": "set", "label": "Reading", "value": "A book"})
+        self.assertEqual([(e["type_label"], e["value"]) for e in db.currently_get_entries(360)],
+                         [("Reading", "A book")])
+        await c.post("/productions/WT360/cover", headers=H, allow_redirects=False,
+                     data={"caption": "A creek", "location": "MPLS", "timestamp": "", "alt": ""})
+        import json
+        self.assertEqual(json.loads(content_store.read_issue(360, "cover.json"))["caption"], "A creek")
+
+    async def test_generic_article_page(self):
+        c = await self._client()
+        db.create_production(production_type="article", title="On Focus")
+        content_store.set("ART1", "body.md", "Draft body text")
+        body = await (await c.get("/productions/ART1", headers=H)).text()
+        self.assertIn("Draft body text", body)
+        self.assertIn("Set phase", body)
+        # edit the body
+        r = await c.post("/productions/ART1/atom", headers=H, allow_redirects=False,
+                         data={"name": "body.md", "value": "Revised body"})
+        self.assertEqual(r.status, 302)
+        self.assertEqual(content_store.get("ART1", "body.md"), "Revised body")
+
+    async def test_foreign_origin_post_is_403(self):
+        c = await self._client()
+        db.create_production(production_type="article", title="x")
+        r = await c.post("/productions/ART1/atom", headers={**H, "Origin": "https://evil.example"},
+                         allow_redirects=False, data={"name": "body.md", "value": "y"})
+        self.assertEqual(r.status, 403)
+
+
+if __name__ == "__main__":
+    unittest.main()

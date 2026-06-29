@@ -41,12 +41,14 @@ logger = logging.getLogger("workshop.jobs.follow_up")
 NAME = "follow-up-sweep"
 
 _PERSONA_HOME_CHANNEL = {
+    "scout": "DISCORD_CHANNEL_PRODUCTION",
     "eddy": "DISCORD_CHANNEL_EDITORIAL",
     "linky": "DISCORD_CHANNEL_RESEARCH",
     "marky": "DISCORD_CHANNEL_PROMOTION",
     "patty": "DISCORD_CHANNEL_SUPPORTERS",
 }
 _CONTEXT_BUILDER = {
+    "scout": context.build_scout_context,
     "eddy": context.build_eddy_context,
     "linky": context.build_linky_context,
     "marky": context.build_marky_context,

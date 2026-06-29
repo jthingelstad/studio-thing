@@ -21,8 +21,8 @@ import discord
 from discord import app_commands
 
 from ...jobs import (
-    build_card,
     issue_status,
+    production_ops,
     publish as publish_job,
     put_to_bed as put_to_bed_job,
     reset_issue,
@@ -140,25 +140,18 @@ def register_scout_commands(
         await _run_and_ack(interaction, lambda: issue_status.run(_ctx(bot)), "issue status")
 
     @issue.command(
-        name="build",
-        description="Post (or re-pin) the Build card — the production phase surface.",
-    )
-    async def issue_build_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: build_card.run(_ctx(bot)), "issue build")
-
-    @issue.command(
         name="built",
-        description="Mark the issue built → moves it from Build to Publish (opens the send controls).",
+        description="Mark the issue built → moves it from Build to Publish (escape hatch; use the web page).",
     )
     async def issue_built_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: build_card.mark_built(_ctx(bot)), "issue built")
+        await _run_and_ack(interaction, lambda: production_ops.mark_built(_ctx(bot)), "issue built")
 
     @issue.command(
         name="reopen",
         description="Reopen a published-phase issue for content edits → back to Build.",
     )
     async def issue_reopen_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: build_card.reopen(_ctx(bot)), "issue reopen")
+        await _run_and_ack(interaction, lambda: production_ops.reopen(_ctx(bot)), "issue reopen")
 
     # /scout issue publish — destination-aware ship. `destination` chooses
     # one of (audio, buttondown, website) or "all" (audio → buttondown

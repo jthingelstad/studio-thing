@@ -187,9 +187,10 @@ class ScoutTreeTests(unittest.TestCase):
     def test_scout_owns_production_issue_verbs(self):
         tree = commands_module.register_scout_commands(_stub_bot())
         issue = _subgroup(_top_group(tree, "scout"), "issue")
+        # `build` (a pure card poster) was retired with the phase cards.
         self.assertEqual(
             _cmd_names(issue),
-            {"start", "update", "status", "build", "built", "reopen",
+            {"start", "update", "status", "built", "reopen",
              "publish", "put-to-bed", "reset"},
         )
 

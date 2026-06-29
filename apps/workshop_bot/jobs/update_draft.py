@@ -38,7 +38,7 @@ from typing import Optional
 from zoneinfo import ZoneInfo
 
 from ..personas.base import is_pass_response
-from ..tools import alt_text, archive_context, db, issue_items, issue_items_render, issue_items_sync, render, s3
+from ..tools import alt_text, archive_context, content_store, db, issue_items, issue_items_render, issue_items_sync, render, s3
 from ..tools.content import context, draft as draft_mod
 from ..tools.llm import anthropic_client
 from . import _base, _cover, _currently
@@ -82,10 +82,9 @@ _LOCAL_TZ = ZoneInfo("America/Chicago")
 # ---------- fills ----------
 
 def _read_asset(issue_number: int, filename: str) -> str:
-    res = s3.read_issue_file(issue_number, filename)
-    if res.get("found") and isinstance(res.get("text"), str):
-        return res["text"].strip()
-    return ""
+    # Authored content lives in the DB content store now (S3 is publishing-only).
+    body = content_store.read_issue(issue_number, filename)
+    return body.strip() if body else ""
 
 
 def _gather_fills(window: dict) -> tuple[dict[str, str], list[dict]]:
@@ -589,22 +588,6 @@ def _sources_summary(sync_result: dict, fills: dict) -> str:
     return ", ".join(bits)
 
 
-async def _refresh_phase_card(ctx: "_base.JobContext", n: int, window: dict) -> None:
-    """Refresh the phase-appropriate card in place — Build during `build`,
-    Publish during `publish`. Best-effort; a Discord hiccup never fails the
-    daily projection."""
-    phase = (window or {}).get("phase", "build")
-    try:
-        if phase == "publish":
-            from . import publish_card
-            await publish_card.post_or_update(ctx, n, window=window)
-        else:
-            from . import build_card
-            await build_card.post_or_update(ctx, n, window=window)
-    except Exception:  # noqa: BLE001
-        logger.exception("update-draft: phase card refresh failed for #%d", n)
-
-
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     window = db.get_active_issue_window()
     if window is None:
@@ -724,11 +707,6 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             prev_hash = (prev_digest or {}).get("source_hash")
             if prev_digest is not None and prev_hash == source_hash:
                 html_url = s3.issue_file_url(n, "draft.html")
-                # Still refresh the phase card — it reads live DB + metadata, so
-                # a metadata-only change (subject set, CTA added, comment closed)
-                # surfaces even when the draft body is byte-identical. No new
-                # #editorial message; the pinned card is edited in place.
-                await _refresh_phase_card(ctx, n, window)
                 await _refresh(
                     header=f"✅ **WT{n}** — no changes since last refresh",
                     sources="✅", sources_detail=sources_detail,
@@ -809,14 +787,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 sources="✅", sources_detail=sources_detail,
                 review="✅", review_detail=review_detail,
                 html="✅", html_detail=html_detail,
-                card="🔄", card_detail="_(refreshing console…)_",
             )
-
-            # Refresh the phase card in place — this REPLACED the old per-tick
-            # `📋` status + `✍️` review messages that flooded #editorial. The
-            # Build card (during build) / Publish card (during publish) reads
-            # live DB + S3 and carries the buttons. Best-effort.
-            await _refresh_phase_card(ctx, n, window)
 
             await _refresh(
                 header=f"✅ Refreshed **WT{n}** draft",

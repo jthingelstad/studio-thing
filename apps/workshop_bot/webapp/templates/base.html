@@ -23,14 +23,34 @@
     .badge { display: inline-block; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em;
              background: var(--chip); color: var(--accent); padding: .15rem .5rem; border-radius: 999px; }
     code { background: #f0f0f3; padding: .08rem .35rem; border-radius: 4px; font-size: .92em; }
+    .row { display: flex; gap: .6rem; align-items: baseline; padding: .4rem 0; border-top: 1px solid var(--rule); }
+    .row:first-child { border-top: 0; }
+    .row .id { font-weight: 600; min-width: 5rem; }
+    .row .ph { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--accent);
+               background: var(--chip); padding: .1rem .45rem; border-radius: 999px; }
+    .row .ti { flex: 1; }
+    .row .due { color: var(--soft); font-size: .85rem; }
+    .row.done .id, .row.done .ti { color: var(--soft); }
+    .secthead { display: flex; align-items: baseline; gap: .5rem; margin: 1.4rem 0 .3rem; }
+    .secthead h2 { font-size: 1.05rem; margin: 0; }
+    .secthead .surface { color: var(--soft); font-size: .8rem; }
+    a.btn, button.btn { display: inline-block; background: var(--accent); color: #fff; border: 0;
+            padding: .45rem .8rem; border-radius: 8px; font-size: .9rem; text-decoration: none; cursor: pointer; }
+    a.btn.ghost { background: var(--chip); color: var(--accent); }
+    form.pform label { display: block; margin: .9rem 0 .25rem; font-weight: 600; font-size: .9rem; }
+    form.pform input, form.pform select, form.pform textarea { width: 100%; padding: .5rem .6rem;
+            border: 1px solid var(--rule); border-radius: 8px; font: inherit; background: #fff; }
+    form.pform .hint { color: var(--soft); font-size: .8rem; margin-top: .2rem; }
+    .err { background: #fdecea; border: 1px solid #f5c6c2; color: #8a1f17; padding: .6rem .8rem;
+           border-radius: 8px; margin-bottom: 1rem; }
+    .actions { margin-top: 1.3rem; display: flex; gap: .6rem; align-items: center; }
   </style>
 </head>
 <body>
   <header class="top">
     <span class="brand">Studio</span>
     <a href="/" class="{{ 'active' if nav=='slate' else '' }}">Slate</a>
-    <a class="soon" title="coming soon">Blog</a>
-    <a class="soon" title="coming soon">Podcast</a>
+    <a href="/productions" class="{{ 'active' if nav=='productions' else '' }}">Productions</a>
     <span class="sp"></span>
     <span class="who">{{ login }}</span>
   </header>

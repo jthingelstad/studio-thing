@@ -38,7 +38,7 @@ import asyncio
 import logging
 import re
 
-from ..tools import db, s3
+from ..tools import content_store, db, s3
 from ..tools.content import context
 from ..tools.llm import anthropic_client
 from . import _base, _llm_job
@@ -72,10 +72,9 @@ def _filename_for(kind: str, n: int) -> str:
 
 def _slot_filled(issue_number: int, filename: str) -> bool:
     """True if the per-slot file already exists with a non-empty body."""
-    res = s3.read_issue_file(issue_number, filename)
-    if not (res.get("found") and isinstance(res.get("text"), str)):
+    text = content_store.read_issue(issue_number, filename)
+    if not text:
         return False
-    text = res["text"]
     # Strip frontmatter (``---\n…\n---``) before checking for body content.
     body = re.sub(r"^---\s*\n.*?\n---\s*\n", "", text, count=1, flags=re.DOTALL)
     return bool(body.strip())
@@ -156,7 +155,7 @@ async def _fill_slot(
         )
         return False
     content = f"---\nkind: {cfg['frontmatter_kind']}\n---\n\n{pick}\n"
-    s3.write_issue_file(n, _filename_for(kind, slot_n), content)
+    content_store.write_issue(n, _filename_for(kind, slot_n), content)
     return True
 
 

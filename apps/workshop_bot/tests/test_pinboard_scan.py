@@ -13,6 +13,7 @@ import asyncio
 import os
 import sys
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -26,6 +27,15 @@ _stubs.install()
 from apps.workshop_bot.jobs import _base, pinboard_scan  # noqa: E402
 from apps.workshop_bot.tools import db  # noqa: E402
 from apps.workshop_bot.tests._fixtures import DBTestCase as _DBTestCase  # noqa: E402
+
+
+def _active_popular_feeds():
+    """Enable the dormant Popular feed for tests that exercise discovery code."""
+    return [
+        replace(spec, enabled=True)
+        for spec in pinboard_scan.DISCOVERY_FEEDS
+        if spec.name == "popular"
+    ]
 
 
 class _FakeLinkyTeam:
@@ -80,14 +90,17 @@ class PinboardScanJobTests(_DBTestCase):
         return _base.JobContext(deps=_deps_with_linky_team(team)), team
 
     def _stub_sources(
-        self, *, popular=None, toread=None,
+        self, *, popular=None, toread=None, enable_discovery=True,
     ):
         from apps.workshop_bot.systems.pinboard import client as pbc
-        return [
+        patches = [
             patch.object(pbc, "popular", lambda limit=30: list(popular or [])),
             patch.object(pbc, "toread_public_unresearched",
                          lambda limit=25: list(toread or [])),
         ]
+        if enable_discovery:
+            patches.append(patch.object(pinboard_scan, "active_feeds", _active_popular_feeds))
+        return patches
 
     def test_pass_when_both_sources_empty(self):
         ctx, team = self._ctx_and_team()
@@ -109,6 +122,36 @@ class PinboardScanJobTests(_DBTestCase):
             os.environ.pop("DISCORD_CHANNEL_DISCOVERY", None)
         self.assertTrue(result.ok)
         self.assertEqual(result.data["posted"], 0)
+        team.linky.core.assert_not_awaited()
+        team.channel.send.assert_not_awaited()
+
+    def test_disabled_discovery_does_not_pull_popular_or_post_chatter(self):
+        os.environ["DISCORD_CHANNEL_RESEARCH"] = "999"
+        os.environ["DISCORD_CHANNEL_DISCOVERY"] = "999"
+        os.environ["DISCORD_CHANNEL_CHATTER"] = "999"
+        ctx, team = self._ctx_and_team()
+        from apps.workshop_bot.systems.pinboard import client as pbc
+
+        popular = MagicMock(side_effect=AssertionError("popular feed should be disabled"))
+        patches = [
+            patch.object(pbc, "popular", popular),
+            patch.object(pbc, "toread_public_unresearched", lambda limit=25: []),
+        ]
+        try:
+            for p in patches:
+                p.start()
+            try:
+                result = asyncio.run(pinboard_scan.run(ctx))
+            finally:
+                for p in patches:
+                    p.stop()
+        finally:
+            for k in ("DISCORD_CHANNEL_RESEARCH", "DISCORD_CHANNEL_DISCOVERY",
+                      "DISCORD_CHANNEL_CHATTER"):
+                os.environ.pop(k, None)
+        self.assertTrue(result.ok)
+        self.assertEqual(result.data["posted"], 0)
+        popular.assert_not_called()
         team.linky.core.assert_not_awaited()
         team.channel.send.assert_not_awaited()
 
@@ -1161,6 +1204,7 @@ class ChatterSummaryTests(_DBTestCase):
             raise RuntimeError("Read timed out")
 
         patches = [
+            patch.object(pinboard_scan, "active_feeds", _active_popular_feeds),
             patch.object(pbc, "popular", _boom),
             patch.object(pbc, "toread_public_unresearched", lambda limit=25: []),
         ]
@@ -1200,6 +1244,7 @@ class ChatterSummaryTests(_DBTestCase):
             {"url": "https://b.example/2", "title": "Two"},
         ]
         patches = [
+            patch.object(pinboard_scan, "active_feeds", _active_popular_feeds),
             patch.object(pbc, "popular", lambda limit=30: list(popular_items)),
             patch.object(pbc, "toread_public_unresearched", lambda limit=25: []),
         ]

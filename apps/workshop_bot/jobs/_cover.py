@@ -25,7 +25,7 @@ import json
 import logging
 from typing import Optional
 
-from ..tools import alt_text, s3
+from ..tools import alt_text, content_store
 
 logger = logging.getLogger("workshop.jobs.cover")
 
@@ -40,15 +40,14 @@ COVER_IMAGE_URL = "https://files.thingelstad.com/weekly-thing/{n}/cover.jpg"
 
 def render(issue_number: int) -> str:
     n = int(issue_number)
-    raw = s3.read_issue_file(n, JSON_FILE)
-    if raw.get("found") and isinstance(raw.get("text"), str) and raw["text"].strip():
-        rendered = _render_json(raw["text"], n)
+    raw = content_store.read_issue(n, JSON_FILE)
+    if raw and raw.strip():
+        rendered = _render_json(raw, n)
         if rendered:
             return rendered
         # malformed/empty JSON → fall through to the legacy markdown form
-    md = s3.read_issue_file(n, MD_FILE)
-    text = md.get("text") if md.get("found") else None
-    return text.strip() if isinstance(text, str) else ""
+    md = content_store.read_issue(n, MD_FILE)
+    return md.strip() if md else ""
 
 
 def alt(issue_number: int) -> str:
@@ -83,7 +82,7 @@ def alt(issue_number: int) -> str:
     # the alt for the current render and the next run will re-generate.
     data["alt"] = generated
     try:
-        s3.write_issue_file(n, JSON_FILE, json.dumps(data, indent=2))
+        content_store.write_issue(n, JSON_FILE, json.dumps(data, indent=2))
         logger.info("cover: persisted generated alt to cover.json for #%d", n)
     except Exception as exc:  # noqa: BLE001
         logger.warning(
@@ -94,11 +93,11 @@ def alt(issue_number: int) -> str:
 
 
 def _load_cover_json(issue_number: int) -> Optional[dict]:
-    raw = s3.read_issue_file(int(issue_number), JSON_FILE)
-    if not raw.get("found") or not isinstance(raw.get("text"), str) or not raw["text"].strip():
+    raw = content_store.read_issue(int(issue_number), JSON_FILE)
+    if not raw or not raw.strip():
         return None
     try:
-        data = json.loads(raw["text"])
+        data = json.loads(raw)
     except (ValueError, TypeError):
         return None
     return data if isinstance(data, dict) else None

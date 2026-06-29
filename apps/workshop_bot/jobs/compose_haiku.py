@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from ..tools import db, s3
+from ..tools import content_store, db
 from ..tools.llm import anthropic_client
 from . import _base, _llm_job
 
@@ -94,7 +94,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     data={"options_posted": True, "haiku_written": False},
                 )
             chosen = chosen.strip() + "\n"
-            s3.write_issue_file(n, "haiku.md", chosen)
+            content_store.write_issue(n, "haiku.md", chosen)
             # Best-effort: haiku.md is on S3 either way; a Discord glitch
             # on the success card shouldn't fail the job.
             await _llm_job.try_send(

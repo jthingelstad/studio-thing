@@ -3,9 +3,9 @@
 - ``#research`` carries items with commitment from Jamie (Pinboard
   ``toread`` bookmarks, including the Feedbin starred mirror). State:
   CONSIDERING.
-- ``#discovery`` carries items Linky surfaces from discovery feeds
-  (today: Pinboard popular). State: PROPOSED — no Pinboard bookmark
-  yet.
+- ``#discovery`` carries items Linky surfaces from discovery feeds when
+  a feed is enabled. Pinboard Popular is currently paused. State:
+  PROPOSED — no Pinboard bookmark yet.
 
 Each Linky card represents a link in some lifecycle state. Jamie's
 gestures move the link through states; the same gesture means the same
@@ -106,10 +106,11 @@ _NEGATIVE_REASON_RE = re.compile(
 
 # Sources whose URLs aren't yet in Jamie's Pinboard, so a save-gesture
 # (reaction or reply) creates a new bookmark. Derived from the registry
-# so adding a feed is a single edit in ``tools/feed_registry.py`` —
-# no parallel set to maintain here. ``toread``-sourced URLs are already
-# bookmarked; for those the reply updates the description and the
-# save-reaction is a no-op.
+# so adding a feed is a single edit in ``tools/feed_registry.py``. Use
+# the full registry, not just active feeds, so historical discovery cards
+# still react correctly while a feed is paused. ``toread``-sourced URLs
+# are already bookmarked; for those the reply updates the description and
+# the save-reaction is a no-op.
 _DISCOVERY_SOURCES: frozenset[str] = frozenset(spec.name for spec in DISCOVERY_FEEDS)
 
 

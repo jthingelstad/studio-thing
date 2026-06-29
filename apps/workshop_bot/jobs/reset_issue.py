@@ -36,7 +36,7 @@ from __future__ import annotations
 
 import logging
 
-from ..tools import db, issue_items, s3
+from ..tools import content_store, db, issue_items, s3
 from . import _base
 
 logger = logging.getLogger("workshop.jobs.reset_issue")
@@ -56,14 +56,19 @@ def _delete_if_present(issue_number: int, filenames: tuple[str, ...]) -> list[st
     """Best-effort delete. Returns the list of filenames that were
     actually present (and therefore deleted). Missing files are not an
     error — reset is idempotent."""
-    listing = s3.list_issue(int(issue_number))
+    n = int(issue_number)
+    listing = s3.list_issue(n)
     present = {o.get("filename") for o in listing.get("objects", []) if o.get("filename")}
+    present |= set(content_store.list_issue(n))  # authored content lives in the DB now
     deleted: list[str] = []
     for fn in filenames:
         if fn not in present:
             continue
         try:
-            s3.delete_issue_file(int(issue_number), fn)
+            if content_store.is_atom_name(fn):
+                content_store.delete_issue(n, fn)
+            else:
+                s3.delete_issue_file(n, fn)
             deleted.append(fn)
         except Exception:  # noqa: BLE001
             logger.exception("reset-issue: delete failed for %s/%s", issue_number, fn)

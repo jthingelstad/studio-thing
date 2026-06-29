@@ -10,6 +10,7 @@ stable surface. Edit the domain module, not this aggregator:
                          messages, feedbin dedup
 - ``_followups``       — agent/Jamie commitments (the targeted heartbeat)
 - ``_issues``          — issue windows + publishing-spine phase/cards
+- ``_productions``     — the generic multi-type production registry
 - ``_locks``           — job locks (single-asset serialization)
 - ``_goals_campaigns`` — Patty's goals + Marky's campaign ledger
 - ``_currently``       — per-issue ``## Currently`` values + canonical types
@@ -23,6 +24,7 @@ from ._subscribers import *  # noqa: F401,F403
 from ._discovery import *  # noqa: F401,F403
 from ._followups import *  # noqa: F401,F403
 from ._issues import *  # noqa: F401,F403
+from ._productions import *  # noqa: F401,F403
 from ._locks import *  # noqa: F401,F403
 from ._goals_campaigns import *  # noqa: F401,F403
 from ._currently import *  # noqa: F401,F403

@@ -77,10 +77,15 @@ class RegistryInvariantsTests(unittest.TestCase):
         self.assertIsNone(by_name(DISCOVERY_FEEDS, "no-such-feed"))
 
     def test_active_feeds_matches_registry(self):
-        """Pinboard popular is the only active discovery feed today."""
+        """Discovery is paused; Pinboard popular remains defined but inactive."""
         names = sorted(s.name for s in active_feeds())
-        self.assertEqual(names, ["popular"],
+        self.assertEqual(names, [],
                          f"unexpected active feeds: {names}")
+
+    def test_popular_spec_is_temporarily_disabled(self):
+        popular = by_name(DISCOVERY_FEEDS, "popular")
+        self.assertIsNotNone(popular)
+        self.assertFalse(popular.enabled)
 
     def test_active_feeds_filters_disabled_specs(self):
         feeds = (

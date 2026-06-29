@@ -16,7 +16,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base, reset_issue  # noqa: E402
-from apps.workshop_bot.tools import db, issue_items  # noqa: E402
+from apps.workshop_bot.tools import content_store, db, issue_items  # noqa: E402
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
     FakeBotChannel as _FakeBotChannel,
@@ -50,7 +50,7 @@ class ResetFinalTests(_Case):
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="final"))
         self.assertTrue(result.ok, result.message)
-        self.assertNotIn((349, "thesis.md"), self.ws.files)
+        self.assertIsNone(content_store.read_issue(349, "thesis.md"))
         # Confirmation posted to #editorial.
         fc.channel.send.assert_awaited()
         # Message reads naturally.
@@ -86,7 +86,7 @@ class ResetFinalTests(_Case):
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="final"))
         self.assertTrue(result.ok)
-        self.assertNotIn((349, "thesis.md"), self.ws.files)
+        self.assertIsNone(content_store.read_issue(349, "thesis.md"))
         self.assertIn((349, "buttondown.md"), self.ws.files)
 
 

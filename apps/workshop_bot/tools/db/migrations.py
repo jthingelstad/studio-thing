@@ -396,7 +396,7 @@ def _m_0014_linky_feedback(conn: sqlite3.Connection) -> None:
 
     # Backfill the prior save/reply traces from research_done. These rows
     # do not always retain the original discovery source; use `popular`
-    # because today's active discovery source is Pinboard popular and
+    # because Pinboard popular is the historical discovery source and
     # these labels are used only as calibration examples.
     conn.execute(
         """
@@ -428,6 +428,97 @@ def _m_0015_linky_feedback_profiles(conn: sqlite3.Connection) -> None:
         )
         """
     )
+
+
+def _m_0016_backfill_newsletter_productions(conn: sqlite3.Connection) -> None:
+    """Seed the new ``productions`` registry from existing newsletter state.
+
+    Two idempotent steps:
+
+    1. Backfill every *published* issue (the ``issues`` archive) as an immutable
+       ``newsletter`` production in the terminal ``share``/``done`` state. These
+       rows never change, so they can never drift from the archive. ``INSERT OR
+       IGNORE`` on the ``WT{n}`` primary key makes a re-run a no-op.
+    2. Retire the stale in-flight WT350 window. WT350 was an abandoned
+       in-progress record at the time of the concurrency refactor; under the new
+       multi-active model (the single-active index is dropped) it would otherwise
+       linger forever as a live newsletter. Deactivate it so it isn't surfaced as
+       in-flight. (No production row is seeded for it — it was never shipped.)
+
+    The ``productions`` table itself is created by the schema.sql re-apply
+    (``CREATE TABLE IF NOT EXISTS``), so this migration only moves data.
+    """
+    conn.execute(
+        "INSERT OR IGNORE INTO productions "
+        "(id, production_type, seq, title, phase, status, due_at, pub_date, "
+        " source, detail_issue_number, created_at, updated_at) "
+        "SELECT 'WT' || number, 'newsletter', number, "
+        "       CASE WHEN subject != '' THEN subject "
+        "            ELSE 'Weekly Thing ' || number END, "
+        "       'share', 'done', publish_date, publish_date, "
+        "       'weekly.thingelstad.com', number, filed_at, filed_at "
+        "FROM issues"
+    )
+    conn.execute(
+        "UPDATE issue_windows SET is_active = 0 "
+        "WHERE issue_number = 350 AND is_active = 1"
+    )
+
+
+def _m_0017_multiple_active_issue_windows(conn: sqlite3.Connection) -> None:
+    """Drop the single-active constraint so multiple newsletters can be in
+    flight concurrently. The old partial-unique index
+    ``idx_issue_windows_active_unique`` enforced "at most one active window";
+    the schema.sql re-apply creates the replacement plain index
+    ``idx_issue_windows_active``. Dropping the unique index here lets existing
+    DBs carry several ``is_active = 1`` rows."""
+    conn.execute("DROP INDEX IF EXISTS idx_issue_windows_active_unique")
+
+
+def _m_0018_backfill_content_to_db(conn: sqlite3.Connection) -> None:
+    """Copy in-flight productions' authored atoms from S3 into
+    ``production_content`` (the content store). Only active issue windows carry
+    live content; shipped issues never re-render. Idempotent (INSERT OR IGNORE).
+    A no-op when nothing is in flight (no S3 calls)."""
+    from .. import content_store, s3
+    rows = conn.execute(
+        "SELECT issue_number FROM issue_windows WHERE is_active = 1"
+    ).fetchall()
+    for r in rows:
+        n = int(r["issue_number"])
+        try:
+            listing = s3.list_issue(n)
+        except Exception:  # noqa: BLE001 — best-effort backfill
+            continue
+        for obj in listing.get("objects", []):
+            name = obj.get("filename")
+            if not name or not content_store.is_atom_name(name):
+                continue
+            try:
+                res = s3.read_issue_file(n, name)
+            except Exception:  # noqa: BLE001
+                continue
+            if res.get("found") and isinstance(res.get("text"), str):
+                conn.execute(
+                    "INSERT OR IGNORE INTO production_content (production_id, name, body) "
+                    "VALUES (?, ?, ?)",
+                    (content_store.pid_for_issue(n), name, res["text"]),
+                )
+
+
+def _m_0019_issue_windows_publish_record(conn: sqlite3.Connection) -> None:
+    """Add the publish-record columns to issue_windows. ``buttondown_id`` /
+    ``absolute_url`` are stamped by `publish buttondown` — publish-path state
+    pulled out of the authored ``metadata.json`` (which is now a content row)
+    so the two don't share a dual-life file."""
+    _add_column_if_missing(conn, "issue_windows", "buttondown_id", "TEXT NOT NULL DEFAULT ''")
+    _add_column_if_missing(conn, "issue_windows", "absolute_url", "TEXT NOT NULL DEFAULT ''")
+
+
+def _m_0020_drop_issue_cards(conn: sqlite3.Connection) -> None:
+    """Drop the issue_cards table — the Discord phase cards were retired in
+    favour of the web production page; nothing reads these handles anymore."""
+    conn.execute("DROP TABLE IF EXISTS issue_cards")
 
 
 def _m_0010_strip_markers_from_issue_items_body_md(conn: sqlite3.Connection) -> None:
@@ -538,6 +629,34 @@ MIGRATIONS: tuple[Migration, ...] = (
         id="0015_linky_feedback_profiles",
         description="Add durable synthesized Linky feedback profiles",
         apply=_m_0015_linky_feedback_profiles,
+    ),
+    Migration(
+        id="0016_backfill_newsletter_productions",
+        description=(
+            "Seed productions registry from published issues (share/done); "
+            "retire the stale in-flight WT350 window"
+        ),
+        apply=_m_0016_backfill_newsletter_productions,
+    ),
+    Migration(
+        id="0017_multiple_active_issue_windows",
+        description="Drop the single-active issue_windows constraint (concurrency)",
+        apply=_m_0017_multiple_active_issue_windows,
+    ),
+    Migration(
+        id="0018_backfill_content_to_db",
+        description="Copy in-flight authored atoms from S3 into production_content",
+        apply=_m_0018_backfill_content_to_db,
+    ),
+    Migration(
+        id="0019_issue_windows_publish_record",
+        description="Add issue_windows.buttondown_id/absolute_url (publish record)",
+        apply=_m_0019_issue_windows_publish_record,
+    ),
+    Migration(
+        id="0020_drop_issue_cards",
+        description="Drop the issue_cards table (phase cards retired)",
+        apply=_m_0020_drop_issue_cards,
     ),
 )
 

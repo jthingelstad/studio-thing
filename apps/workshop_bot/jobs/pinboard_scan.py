@@ -829,10 +829,14 @@ async def _post_chatter_summary(
     counters: dict[str, Any],
 ) -> None:
     """One-line scan summary to #chatter so Jamie has visibility into Linky's
-    activity even on quiet scans. Focused on the popular feed (today's only
-    active discovery source): feed health when down, review counts when up.
+    activity even on quiet scans. Focused on the popular feed when that
+    discovery feed is active: feed health when down, review counts when up.
+    When discovery is paused, stay quiet rather than posting misleading
+    "popular — nothing new" status lines.
     Best-effort — never raises."""
     try:
+        if "popular" not in {spec.name for spec in active_feeds()}:
+            return
         if "popular" in fetch_errors:
             err_name = type(fetch_errors["popular"]).__name__
             msg = (

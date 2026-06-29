@@ -9,7 +9,7 @@ from .connection import connect
 
 # ---------- follow-ups (agent commitments — the targeted heartbeat) ----------
 
-FOLLOW_UP_PERSONAS = ("eddy", "linky", "marky", "patty")
+FOLLOW_UP_PERSONAS = ("scout", "eddy", "linky", "marky", "patty")
 FOLLOW_UP_KINDS = ("time", "issue")
 
 

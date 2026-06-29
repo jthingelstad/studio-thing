@@ -16,7 +16,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base, edit_asset  # noqa: E402
-from apps.workshop_bot.tools import db, s3  # noqa: E402
+from apps.workshop_bot.tools import content_store, db  # noqa: E402
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
 )
@@ -112,7 +112,7 @@ class ModalSubmitTests(_Case):
         with patch.object(_base, "schedule_update_draft_refire") as mock_sched:
             asyncio.run(modal.on_submit(interaction))
         # New content written.
-        self.assertEqual(self.ws.files[(349, "intro.md")], "new content (edited)")
+        self.assertEqual(content_store.read_issue(349, "intro.md"), "new content (edited)")
         # Ack message went to Jamie (ephemeral).
         interaction.response.send_message.assert_awaited()
         kwargs = interaction.response.send_message.call_args.kwargs
@@ -131,7 +131,7 @@ class ModalSubmitTests(_Case):
         with patch.object(_base, "schedule_update_draft_refire") as mock_sched:
             asyncio.run(modal.on_submit(interaction))
         self.assertEqual(
-            self.ws.files[(349, "cta-1.md")],
+            content_store.read_issue(349, "cta-1.md"),
             "---\nkind: supporter\n---\n\nNew CTA copy.",
         )
         msg = interaction.response.send_message.call_args.args[0]
@@ -148,21 +148,21 @@ class ModalSubmitTests(_Case):
         interaction = self._interaction()
         with patch.object(_base, "schedule_update_draft_refire"):
             asyncio.run(modal.on_submit(interaction))
-        self.assertEqual(self.ws.files[(349, "outro.md")], "")
+        self.assertEqual(content_store.read_issue(349, "outro.md"), "")
 
     def test_submit_creates_file_that_didnt_exist(self):
         # The /eddy edit-as-create path: no existing intro.md on S3,
         # submit writes the file fresh.
         self._window()
         # Confirm baseline: intro.md is not in the workspace.
-        self.assertNotIn((349, "intro.md"), self.ws.files)
+        self.assertIsNone(content_store.read_issue(349, "intro.md"))
         modal, _ = edit_asset.build_modal(self._ctx(), asset_key="intro")
         modal.input.value = "Brand new intro paragraph for WT349."
         interaction = self._interaction()
         with patch.object(_base, "schedule_update_draft_refire") as mock_sched:
             asyncio.run(modal.on_submit(interaction))
         self.assertEqual(
-            self.ws.files[(349, "intro.md")],
+            content_store.read_issue(349, "intro.md"),
             "Brand new intro paragraph for WT349.",
         )
         # intro flows into draft.md, so the refire fires.
@@ -174,12 +174,12 @@ class ModalSubmitTests(_Case):
         modal.input.value = "line one\nline two\nline three"
         interaction = self._interaction()
         with patch.object(
-            s3, "write_issue_file", side_effect=RuntimeError("S3 boom"),
+            content_store, "write_issue", side_effect=RuntimeError("DB boom"),
         ), patch.object(_base, "schedule_update_draft_refire") as mock_sched:
             asyncio.run(modal.on_submit(interaction))
         msg = interaction.response.send_message.call_args.args[0]
         self.assertIn("Couldn't write", msg)
-        self.assertIn("S3 boom", msg)
+        self.assertIn("DB boom", msg)
         # No refire on failure.
         mock_sched.assert_not_called()
 

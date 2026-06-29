@@ -126,32 +126,35 @@ class IssueWindowDbTests(unittest.TestCase):
         self.assertEqual(active["day_count"], 7)
         self.assertEqual(active["set_by"], "jamie#0001")
 
-    def test_setting_new_window_deactivates_prior(self):
-        # Issue 348 first.
+    def test_multiple_windows_stay_active_concurrently(self):
+        # Newsletters are concurrent — setting a new window does NOT deactivate
+        # the prior one (the single-active model is retired). Both 348 and 349
+        # can be in flight at once.
         w1 = issue.compute_window("2026-05-09", 7)
         db.set_issue_window(
             issue_number=348,
             pub_date=w1["pub_date"], end_date=w1["end_date"],
             start_date=w1["start_date"], day_count=w1["day_count"],
         )
-        # Then issue 349 — this must atomically deactivate 348 so the
-        # partial unique index doesn't trip.
         w2 = issue.compute_window("2026-05-16", 7)
         db.set_issue_window(
             issue_number=349,
             pub_date=w2["pub_date"], end_date=w2["end_date"],
             start_date=w2["start_date"], day_count=w2["day_count"],
         )
+        # Arg-less get_active resolves the most-recently-set window (legacy
+        # "the active issue" behaviour) ...
         active = db.get_active_issue_window()
         assert active is not None
         self.assertEqual(active["issue_number"], 349)
-        # 348 still exists, just deactivated, so agents can read its
-        # historical metadata via list_windows.
-        all_windows = db.list_issue_windows()
-        self.assertEqual([w["issue_number"] for w in all_windows], [349, 348])
+        # ... but both remain in flight, surfaced by list_active_issue_windows.
+        actives = db.list_active_issue_windows()
+        self.assertEqual([w["issue_number"] for w in actives], [349, 348])
+        # And targeting an explicit number returns that specific window.
+        self.assertEqual(db.get_active_issue_window(348)["issue_number"], 348)
         prior = db.get_issue_window(348)
         assert prior is not None
-        self.assertEqual(prior["is_active"], 0)
+        self.assertEqual(prior["is_active"], 1)
 
     def test_resetting_same_issue_updates_in_place(self):
         # Jamie can correct a typo by re-running with the same number.

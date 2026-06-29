@@ -163,7 +163,15 @@ def file_issue(
                     )
 
             conn.execute(
-                "UPDATE issue_windows SET is_active = 0 WHERE issue_number = ?",
+                "UPDATE issue_windows SET is_active = 0, phase = 'share' "
+                "WHERE issue_number = ?",
+                (number,),
+            )
+            # Move the newsletter's registry row to its terminal Share state so
+            # the slate/feed show it as shipped (mirrors set_issue_phase).
+            conn.execute(
+                "UPDATE productions SET phase = 'share', status = 'done', "
+                "updated_at = datetime('now') WHERE id = 'WT'||?",
                 (number,),
             )
             conn.execute("COMMIT")
@@ -224,19 +232,15 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     msg = "\n".join(lines)
     await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
 
-    # Close out the Build + Publish cards (the issue leaves the active window)
-    # and hand off to the Share phase: surface the Share card in #promotion and
-    # auto-fire promotion-prep so Marky drafts the syndication copy (the
-    # phase-driven replacement for the old RSS-poll trigger — Marky still never
-    # auto-*posts*; the draft just lands in #promotion for Jamie). Best-effort.
+    # Hand off to the Share phase: auto-fire promotion-prep so Marky drafts the
+    # syndication copy (Marky never auto-*posts*; the draft just lands in
+    # #promotion for Jamie). The issue's status is now the web scoreboard.
+    # Best-effort.
     try:
-        from . import _cards, promotion_prep, share_card
-        for kind in ("build", "publish"):
-            await _cards.clear_card(ctx, kind=kind, channel_env=_cards.PRODUCTION_ENV, persona="scout", n=n)
-        await share_card.post_or_update(ctx)
+        from . import promotion_prep
         await promotion_prep.run(_base.JobContext(deps=ctx.deps, trigger="put-to-bed"))
     except Exception:  # noqa: BLE001
-        logger.exception("put-to-bed: Share handoff failed for WT%d", n)
+        logger.exception("put-to-bed: Share handoff (promotion-prep) failed for WT%d", n)
 
     return _base.JobResult(
         True,
