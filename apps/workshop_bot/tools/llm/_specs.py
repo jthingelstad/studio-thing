@@ -748,4 +748,166 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["name", "signups"],
         },
     },
+    "productions__list": {
+        "name": "productions__list",
+        "description": (
+            "List productions of ANY type — newsletter, article (a blog "
+            "essay), podcast episode, or project. Optionally filter by "
+            "production_type and/or status (active/done/archived). This is how "
+            "you see everything Jamie has in flight, not just the newsletter."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "production_type": {"type": "string", "enum": ["newsletter", "article", "podcast", "project"]},
+                "status": {"type": "string", "enum": ["active", "done", "archived", "abandoned"]},
+            },
+            "required": [],
+        },
+    },
+    "productions__get": {
+        "name": "productions__get",
+        "description": "Full detail for one production by id (e.g. 'WT350', 'ART7', 'POD3').",
+        "input_schema": {
+            "type": "object",
+            "properties": {"production_id": {"type": "string"}},
+            "required": ["production_id"],
+        },
+    },
+    "productions__create": {
+        "name": "productions__create",
+        "description": (
+            "Create a production of any type (id is auto-assigned, e.g. ART8). "
+            "Use for articles/podcasts/projects; for a newsletter issue use the "
+            "start-issue flow instead."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "production_type": {"type": "string", "enum": ["article", "podcast", "project"]},
+                "title": {"type": "string"},
+                "due_at": {"type": "string", "description": "Optional target date (YYYY-MM-DD)."},
+            },
+            "required": ["production_type", "title"],
+        },
+    },
+    "productions__set_phase": {
+        "name": "productions__set_phase",
+        "description": (
+            "Move a production to a phase in its type's vocabulary (article: "
+            "idea/outline/draft/publish; podcast: idea/outline/script/record/"
+            "publish; newsletter: planned/write/build/publish/share)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "production_id": {"type": "string"},
+                "phase": {"type": "string"},
+            },
+            "required": ["production_id", "phase"],
+        },
+    },
+    "production_content__read": {
+        "name": "production_content__read",
+        "description": (
+            "Read an authored content block of any production — e.g. an "
+            "article's 'body.md', a podcast's 'script.md'/'notes.md'. Returns "
+            "{found, text}."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "production_id": {"type": "string"},
+                "name": {"type": "string", "description": "Block name, e.g. 'body.md'."},
+            },
+            "required": ["production_id", "name"],
+        },
+    },
+    "production_content__write": {
+        "name": "production_content__write",
+        "description": (
+            "Write an authored content block of a production. IMPORTANT: Jamie "
+            "writes his own prose — NEVER use this to draft his sentences. Use "
+            "it for structure/outline scaffolds, notes, or metadata you've been "
+            "asked to record, not to ghostwrite the piece."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "production_id": {"type": "string"},
+                "name": {"type": "string"},
+                "body": {"type": "string"},
+            },
+            "required": ["production_id", "name", "body"],
+        },
+    },
+    "production_content__list": {
+        "name": "production_content__list",
+        "description": "List the content block names present for a production.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"production_id": {"type": "string"}},
+            "required": ["production_id"],
+        },
+    },
+    "tasks__list": {
+        "name": "tasks__list",
+        "description": (
+            "List the tasks on a production — the shared board. Each task has an "
+            "owner (jamie or an agent) and a status. Optionally filter by status."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "production_id": {"type": "string"},
+                "status": {"type": "string", "enum": ["todo", "doing", "done", "blocked"]},
+            },
+            "required": ["production_id"],
+        },
+    },
+    "tasks__add": {
+        "name": "tasks__add",
+        "description": (
+            "Add a task to a production's board. Assign an owner — yourself, "
+            "another agent, or jamie. Use this to capture and route work "
+            "('Linky: 3 sources on X', 'Jamie: rewrite the open')."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "production_id": {"type": "string"},
+                "title": {"type": "string"},
+                "owner": {"type": "string", "enum": ["jamie", "scout", "eddy", "linky", "marky", "patty"]},
+                "phase": {"type": "string"},
+                "detail": {"type": "string"},
+            },
+            "required": ["production_id", "title"],
+        },
+    },
+    "tasks__update": {
+        "name": "tasks__update",
+        "description": (
+            "Update a task — claim it (set owner to yourself + status 'doing'), "
+            "reassign, retitle, or change status (todo/doing/done/blocked)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "task_id": {"type": "integer"},
+                "status": {"type": "string", "enum": ["todo", "doing", "done", "blocked"]},
+                "owner": {"type": "string", "enum": ["jamie", "scout", "eddy", "linky", "marky", "patty"]},
+                "title": {"type": "string"},
+            },
+            "required": ["task_id"],
+        },
+    },
+    "tasks__complete": {
+        "name": "tasks__complete",
+        "description": "Mark a task done.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"task_id": {"type": "integer"}},
+            "required": ["task_id"],
+        },
+    },
 }

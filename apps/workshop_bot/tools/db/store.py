@@ -25,6 +25,7 @@ from ._discovery import *  # noqa: F401,F403
 from ._followups import *  # noqa: F401,F403
 from ._issues import *  # noqa: F401,F403
 from ._productions import *  # noqa: F401,F403
+from ._tasks import *  # noqa: F401,F403
 from ._locks import *  # noqa: F401,F403
 from ._goals_campaigns import *  # noqa: F401,F403
 from ._currently import *  # noqa: F401,F403

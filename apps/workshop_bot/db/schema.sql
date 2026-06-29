@@ -323,6 +323,30 @@ CREATE TABLE IF NOT EXISTS production_content (
 CREATE INDEX IF NOT EXISTS idx_production_content_pid
   ON production_content(production_id);
 
+-- Production tasks — the interactive half of the production state engine. Each
+-- production is phase + content + TASKS; a task has an owner (jamie or one of
+-- the five agents) and a status, and working the tasks carries the production
+-- through its phases. `origin='added'` rows are ad-hoc/assigned (here); the
+-- `origin='computed'` required tasks are projected from content state by
+-- jobs/scout_production_feed.py and are not stored. Agents claim + complete
+-- their owned tasks via the tasks__* tools.
+CREATE TABLE IF NOT EXISTS production_tasks (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  production_id TEXT NOT NULL,
+  title         TEXT NOT NULL,
+  owner         TEXT NOT NULL DEFAULT 'jamie',  -- jamie | scout | eddy | linky | marky | patty
+  status        TEXT NOT NULL DEFAULT 'todo',   -- todo | doing | done | blocked
+  origin        TEXT NOT NULL DEFAULT 'added',  -- added | computed
+  phase         TEXT,                           -- the phase this task belongs to (optional)
+  detail        TEXT,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  created_by    TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_production_tasks_pid
+  ON production_tasks(production_id, status);
+
 -- Job locks — single-asset serialization for the jobs pipeline. A job
 -- acquires a row per file it intends to write before starting; another
 -- job that wants the same file sees the row and bails with an "already
