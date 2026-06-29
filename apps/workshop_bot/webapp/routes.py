@@ -413,10 +413,55 @@ async def production_publish(request: web.Request) -> web.Response:
     raise web.HTTPFound(f"/productions/{row['id']}")
 
 
+# ---------- the seeds garden ----------
+
+async def seeds_page(request: web.Request) -> web.Response:
+    clusters, ungrouped = await asyncio.to_thread(_seeds_garden_data)
+    return render("seeds.html", request, clusters=clusters, ungrouped=ungrouped)
+
+
+def _seeds_garden_data():
+    clusters = []
+    for c in db.seed_cluster_list(status="open"):
+        full = db.seed_cluster_get(c["id"])
+        clusters.append(full)
+    ungrouped = [s for s in db.seed_list(status="open") if s.get("cluster_id") is None]
+    return clusters, ungrouped
+
+
+async def seeds_add(request: web.Request) -> web.Response:
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    data = await request.post()
+    body = (data.get("body") or "").strip()
+    if body:
+        title = (data.get("title") or "").strip() or None
+        await asyncio.to_thread(db.seed_add, body, title=title, source="web",
+                                created_by=_login(request))
+    raise web.HTTPFound("/seeds")
+
+
+async def seeds_graduate(request: web.Request) -> web.Response:
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    data = await request.post()
+    cluster_id = data.get("cluster_id")
+    ptype = data.get("production_type", "article")
+    title = (data.get("title") or "").strip()
+    if cluster_id and title:
+        from ..tools.llm import local_tools
+        await asyncio.to_thread(local_tools.t_seeds_graduate, None, ptype, title,
+                                int(cluster_id))
+    raise web.HTTPFound("/seeds")
+
+
 def add_routes(app: web.Application) -> None:
     app.add_routes([
         web.get("/healthz", healthz),
         web.get("/", slate_page),
+        web.get("/seeds", seeds_page),
+        web.post("/seeds/add", seeds_add),
+        web.post("/seeds/graduate", seeds_graduate),
         web.get("/productions", productions_list),
         web.get("/productions/new", production_new_form),
         web.post("/productions/new", production_create),

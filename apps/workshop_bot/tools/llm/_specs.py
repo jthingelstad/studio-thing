@@ -910,4 +910,119 @@ SPECS: dict[str, dict[str, Any]] = {
             "required": ["task_id"],
         },
     },
+    "seeds__list": {
+        "name": "seeds__list",
+        "description": (
+            "List seeds in Jamie's idea garden — his snippets of things he might "
+            "write (a sentence to an outline each). Optionally filter by status "
+            "(open/clustered/graduated/archived) or cluster_id. This is the raw "
+            "material you (Eddy) tend: curate, cluster, connect to his archive, "
+            "and route toward articles/podcasts."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "cluster_id": {"type": "integer"},
+            },
+            "required": [],
+        },
+    },
+    "seeds__get": {
+        "name": "seeds__get",
+        "description": "Full detail of one seed by id.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"seed_id": {"type": "integer"}},
+            "required": ["seed_id"],
+        },
+    },
+    "seeds__add": {
+        "name": "seeds__add",
+        "description": "Capture a new idea snippet into the garden (Jamie's idea, in his words).",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "body": {"type": "string"},
+                "title": {"type": "string"},
+                "tags": {"type": "string", "description": "Comma-separated tags."},
+            },
+            "required": ["body"],
+        },
+    },
+    "seeds__update": {
+        "name": "seeds__update",
+        "description": (
+            "Curate a seed: retag, retitle, mutate the framing, or change status. "
+            "Mutating a SEED (a pre-writing idea fragment) is idea development and "
+            "fine — but the eventual article's prose is Jamie's; never ghostwrite "
+            "the piece."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "seed_id": {"type": "integer"},
+                "body": {"type": "string"},
+                "title": {"type": "string"},
+                "tags": {"type": "string"},
+                "status": {"type": "string", "enum": ["open", "clustered", "graduated", "archived"]},
+            },
+            "required": ["seed_id"],
+        },
+    },
+    "seeds__cluster": {
+        "name": "seeds__cluster",
+        "description": (
+            "Group related seeds into a cluster with a label, your framing note, "
+            "and a suggested production type — 'these three could be a podcast', "
+            "'this + your 2019 thread is an article'. This is how an idea becomes "
+            "a candidate production."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "seed_ids": {"type": "array", "items": {"type": "integer"}},
+                "label": {"type": "string"},
+                "note": {"type": "string", "description": "Your framing of why these belong together."},
+                "suggested_type": {"type": "string", "enum": ["article", "podcast", "project"]},
+            },
+            "required": ["seed_ids", "label"],
+        },
+    },
+    "seeds__connect": {
+        "name": "seeds__connect",
+        "description": (
+            "Connect a seed to Jamie's OWN writing via semantic archive retrieval "
+            "— so you can show him 'you've circled this since #287'. Depth from his "
+            "20 years of thinking is where meaningful insight comes from. Returns "
+            "issue citations."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "seed_id": {"type": "integer"},
+                "k": {"type": "integer", "description": "How many connections (default 5)."},
+            },
+            "required": ["seed_id"],
+        },
+    },
+    "seeds__graduate": {
+        "name": "seeds__graduate",
+        "description": (
+            "Graduate a ripe cluster (or a set of seeds) into an article/podcast "
+            "production. The seeds + your direction note are carried in as raw "
+            "material ('seeds.md'); JAMIE writes the piece. Returns the new "
+            "production id."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "production_type": {"type": "string", "enum": ["article", "podcast", "project"]},
+                "title": {"type": "string"},
+                "cluster_id": {"type": "integer"},
+                "seed_ids": {"type": "array", "items": {"type": "integer"}},
+            },
+            "required": ["production_type", "title"],
+        },
+    },
 }

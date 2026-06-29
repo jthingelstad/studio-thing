@@ -1,16 +1,6 @@
 {
-  "notable_links": [
-    {
-      "text": "Weekly Thing on Reddit",
-      "url": "https://www.reddit.com/r/weeklything/",
-      "domain": "www.reddit.com",
-      "heading_context": null,
-      "section": null
-    }
-  ],
+  "notable_links": [],
   "briefly_links": [],
-  "domains": [
-    "www.reddit.com"
-  ],
-  "word_count": 24
+  "domains": [],
+  "word_count": 539
 }

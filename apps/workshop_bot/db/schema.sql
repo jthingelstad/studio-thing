@@ -347,6 +347,40 @@ CREATE TABLE IF NOT EXISTS production_tasks (
 CREATE INDEX IF NOT EXISTS idx_production_tasks_pid
   ON production_tasks(production_id, status);
 
+-- Seeds — Jamie's idea garden. Each seed is a snippet (a sentence to an
+-- outline) of something he might write. Eddy tends the garden: curating,
+-- tagging, clustering, merging/mutating (suggestions on the IDEA, never his
+-- prose), connecting each to his own archive, and routing ripe clusters to a
+-- production type ("these three could be a podcast"). A seed graduates into an
+-- article/podcast production; Jamie writes the piece.
+CREATE TABLE IF NOT EXISTS seed_clusters (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  label          TEXT NOT NULL,
+  note           TEXT,                         -- Eddy's framing of the cluster
+  suggested_type TEXT,                         -- 'article' | 'podcast' | ...
+  status         TEXT NOT NULL DEFAULT 'open', -- open | graduated | archived
+  graduated_to   TEXT,                         -- productions.id once graduated
+  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS seeds (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  body        TEXT NOT NULL,                   -- the snippet (Jamie's, or a merged/mutated suggestion)
+  title       TEXT,                            -- optional short label
+  source      TEXT,                            -- 'import' | 'discord' | 'web' | ...
+  tags        TEXT,                            -- comma-separated, Eddy-curated
+  cluster_id  INTEGER REFERENCES seed_clusters(id),
+  status      TEXT NOT NULL DEFAULT 'open',    -- open | clustered | graduated | archived
+  graduated_to TEXT,                           -- productions.id if graduated
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  created_by  TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_seeds_status ON seeds(status);
+CREATE INDEX IF NOT EXISTS idx_seeds_cluster ON seeds(cluster_id);
+
 -- Job locks — single-asset serialization for the jobs pipeline. A job
 -- acquires a row per file it intends to write before starting; another
 -- job that wants the same file sees the row and bails with an "already

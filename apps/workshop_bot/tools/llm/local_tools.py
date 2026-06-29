@@ -913,6 +913,98 @@ def t_tasks_complete(deps, task_id: int) -> dict[str, Any]:
     return {"ok": True, "task_id": row["id"], "status": "done"}
 
 
+# ---------- seeds garden (Eddy tends Jamie's idea snippets) ----------
+
+def t_seeds_list(deps, status: str = None, cluster_id: int = None) -> dict[str, Any]:
+    """List seeds in Jamie's idea garden (optionally by status or cluster)."""
+    return {"seeds": db.seed_list(status=status, cluster_id=cluster_id)}
+
+
+def t_seeds_get(deps, seed_id: int) -> dict[str, Any]:
+    s = db.seed_get(int(seed_id))
+    return s if s else {"error": f"no such seed: {seed_id}"}
+
+
+def t_seeds_add(deps, body: str, title: str = None, tags: str = None) -> dict[str, Any]:
+    """Capture a new idea snippet into the garden."""
+    s = db.seed_add(body, title=title, tags=tags, source="agent", created_by="agent")
+    return {"ok": True, "seed_id": s["id"]}
+
+
+def t_seeds_update(deps, seed_id: int, body: str = None, title: str = None,
+                   tags: str = None, status: str = None) -> dict[str, Any]:
+    """Curate a seed: retag, retitle, mutate the framing (a suggestion on the
+    IDEA — Jamie owns the prose of the eventual piece), or change status."""
+    s = db.seed_update(int(seed_id), body=body, title=title, tags=tags, status=status)
+    return {"ok": True, "seed_id": s.get("id")} if s else {"error": f"no such seed: {seed_id}"}
+
+
+def t_seeds_cluster(deps, seed_ids: list, label: str, note: str = None,
+                    suggested_type: str = None) -> dict[str, Any]:
+    """Group related seeds into a cluster with a label, your framing note, and a
+    suggested production type ("these three could be a podcast")."""
+    cl = db.seed_cluster_create(label, note=note, suggested_type=suggested_type,
+                                seed_ids=[int(i) for i in (seed_ids or [])])
+    return {"ok": True, "cluster_id": cl["id"], "seeds": len(cl.get("seeds", []))}
+
+
+def t_seeds_connect(deps, seed_id: int, k: int = 5) -> dict[str, Any]:
+    """Connect a seed to Jamie's own writing — semantic retrieval over the
+    archive so you can say "you've circled this since #287". Returns citations."""
+    s = db.seed_get(int(seed_id))
+    if not s:
+        return {"error": f"no such seed: {seed_id}"}
+    query = (s.get("title") or "") + " " + (s.get("body") or "")
+    from .. import thingy_retrieve
+    try:
+        passages = thingy_retrieve.retrieve(query.strip(), k=int(k))
+    except thingy_retrieve.ThingyRetrieveError as exc:
+        return {"error": f"archive retrieval unavailable: {exc}"}
+    return {"seed_id": int(seed_id), "connections": [
+        {"issue": p.get("issue_number"), "date": (p.get("publish_date") or "")[:10],
+         "subject": p.get("subject")}
+        for p in passages
+    ]}
+
+
+def t_seeds_graduate(deps, production_type: str, title: str,
+                     cluster_id: int = None, seed_ids: list = None) -> dict[str, Any]:
+    """Graduate a ripe cluster (or seeds) into an article/podcast production. The
+    seeds + your direction note are carried into the production as raw material
+    ('seeds.md'); Jamie writes the piece. Returns the new production id."""
+    if cluster_id is not None:
+        cl = db.seed_cluster_get(int(cluster_id))
+        if not cl:
+            return {"error": f"no such cluster: {cluster_id}"}
+        seeds = cl.get("seeds", [])
+        note = cl.get("note")
+    elif seed_ids:
+        seeds = [db.seed_get(int(i)) for i in seed_ids]
+        seeds = [s for s in seeds if s]
+        note = None
+    else:
+        return {"error": "pass cluster_id or seed_ids"}
+    if not seeds:
+        return {"error": "no seeds to graduate"}
+    try:
+        row = db.create_production(production_type=production_type, title=title, created_by="agent")
+    except ValueError as exc:
+        return {"error": str(exc)}
+    pid = row["id"]
+    parts = []
+    if note:
+        parts.append(f"# Direction (Eddy)\n\n{note}")
+    parts.append("# Seeds\n\n" + "\n\n---\n\n".join(
+        (f"**{s['title']}**\n\n" if s.get("title") else "") + (s.get("body") or "")
+        for s in seeds
+    ))
+    content_store.set(pid, "seeds.md", "\n\n".join(parts), by="agent")
+    db.seed_mark_graduated([s["id"] for s in seeds], pid)
+    if cluster_id is not None:
+        db.seed_cluster_update(int(cluster_id), status="graduated", graduated_to=pid)
+    return {"ok": True, "production_id": pid, "type": production_type, "seeds": len(seeds)}
+
+
 FUNCS: dict[str, Callable[..., Any]] = {
     "archive__search": t_search_archive,
     "archive__retrieve": t_retrieve_archive,
@@ -969,6 +1061,13 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "tasks__add": t_tasks_add,
     "tasks__update": t_tasks_update,
     "tasks__complete": t_tasks_complete,
+    "seeds__list": t_seeds_list,
+    "seeds__get": t_seeds_get,
+    "seeds__add": t_seeds_add,
+    "seeds__update": t_seeds_update,
+    "seeds__cluster": t_seeds_cluster,
+    "seeds__connect": t_seeds_connect,
+    "seeds__graduate": t_seeds_graduate,
 }
 
 

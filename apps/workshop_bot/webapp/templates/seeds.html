@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% set nav = "seeds" %}
+{% block title %}Seeds{% endblock %}
+{% block content %}
+  <h1>Seeds</h1>
+  <p class="muted">Your idea garden — snippets of things you might write. Eddy tends it:
+    clustering, connecting to your archive, and routing the ripe ones into articles &amp; podcasts
+    (you write the words). <span class="badge">idea engine</span></p>
+
+  <div class="secthead"><h2>Capture an idea</h2></div>
+  <div class="card">
+    <form method="post" action="/seeds/add" class="pform">
+      <label>Title <span class="muted">(optional)</span></label>
+      <input name="title">
+      <label>Idea</label>
+      <textarea name="body" rows="3" placeholder="A sentence, a fragment, an outline…"></textarea>
+      <div class="actions"><button class="btn" type="submit">Plant it</button></div>
+    </form>
+  </div>
+
+  {% for c in clusters %}
+    <div class="secthead">
+      <h2>{{ c.label }}</h2>
+      {% if c.suggested_type %}<span class="surface">→ {{ c.suggested_type }}</span>{% endif %}
+    </div>
+    <div class="card">
+      {% if c.note %}<p class="muted" style="margin-top:0;">{{ c.note }}</p>{% endif %}
+      {% for s in c.seeds %}
+        <div class="row"><span class="ti">{% if s.title %}<strong>{{ s.title }}</strong> · {% endif %}{{ s.body }}</span></div>
+      {% endfor %}
+      <form method="post" action="/seeds/graduate" class="row" style="border-top:1px solid var(--rule); gap:.5rem;">
+        <input type="hidden" name="cluster_id" value="{{ c.id }}">
+        <select name="production_type">
+          <option value="article" {{ 'selected' if c.suggested_type == 'article' else '' }}>article</option>
+          <option value="podcast" {{ 'selected' if c.suggested_type == 'podcast' else '' }}>podcast</option>
+          <option value="project">project</option>
+        </select>
+        <input name="title" placeholder="Title for the production" style="flex:1;">
+        <button class="btn" type="submit">Graduate →</button>
+      </form>
+    </div>
+  {% endfor %}
+
+  <div class="secthead"><h2>Unclustered <span class="surface">{{ ungrouped|length }}</span></h2></div>
+  <div class="card">
+    {% for s in ungrouped %}
+      <div class="row"><span class="id">#{{ s.id }}</span><span class="ti">{% if s.title %}<strong>{{ s.title }}</strong> · {% endif %}{{ s.body }}</span></div>
+    {% else %}
+      <div class="muted">No loose seeds — plant one above, or ask Eddy to cluster.</div>
+    {% endfor %}
+  </div>
+{% endblock %}
