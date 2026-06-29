@@ -806,6 +806,205 @@ def t_react_add(deps, emoji: str) -> dict[str, Any]:
 
 
 
+# ---------- productions registry (any production type) ----------
+
+def t_productions_list(deps, production_type: str = None, status: str = None) -> dict[str, Any]:
+    """List productions of any type (newsletter / article / podcast / project)."""
+    rows = db.list_productions(production_type=production_type, status=status, limit=100)
+    return {"productions": [
+        {"id": r["id"], "type": r["production_type"], "title": r["title"],
+         "phase": r["phase"], "status": r["status"], "due_at": r.get("due_at")}
+        for r in rows
+    ]}
+
+
+def t_productions_get(deps, production_id: str) -> dict[str, Any]:
+    """Full detail for one production by id (e.g. 'WT350', 'ART7', 'POD3')."""
+    row = db.get_production(production_id)
+    if not row:
+        return {"error": f"no such production: {production_id}"}
+    return row
+
+
+def t_productions_create(deps, production_type: str, title: str, due_at: str = None) -> dict[str, Any]:
+    """Create a production of any type. For newsletters prefer the start-issue
+    flow; this is for articles / podcasts / projects."""
+    try:
+        row = db.create_production(production_type=production_type, title=title,
+                                   due_at=due_at, created_by="agent")
+    except ValueError as exc:
+        return {"error": str(exc)}
+    return {"ok": True, "id": row["id"], "type": row["production_type"], "phase": row["phase"]}
+
+
+def t_productions_set_phase(deps, production_id: str, phase: str) -> dict[str, Any]:
+    """Move a production to a phase in its type's vocabulary."""
+    row = db.get_production(production_id)
+    if not row:
+        return {"error": f"no such production: {production_id}"}
+    try:
+        if row["production_type"] == "newsletter":
+            db.set_issue_phase(int(row["seq"]), phase)  # mirrors the registry
+        else:
+            db.set_production_phase(production_id, phase, updated_by="agent")
+    except ValueError as exc:
+        return {"error": str(exc)}
+    return {"ok": True, "id": production_id, "phase": phase}
+
+
+# ---------- production content (any production, DB-backed) ----------
+
+def t_production_content_read(deps, production_id: str, name: str) -> dict[str, Any]:
+    """Read an authored content block of any production (e.g. ART7/'body.md')."""
+    body = content_store.get(production_id, name)
+    if body is None:
+        return {"found": False, "name": name}
+    return {"found": True, "name": name, "text": body}
+
+
+def t_production_content_write(deps, production_id: str, name: str, body: str) -> dict[str, Any]:
+    """Write an authored content block. NOTE: never write Jamie's prose for
+    him — use this for structure/notes/metadata, not to draft his sentences."""
+    content_store.set(production_id, name, body, by="agent")
+    return {"ok": True, "name": name, "size": len(body or "")}
+
+
+def t_production_content_list(deps, production_id: str) -> dict[str, Any]:
+    """List the content block names present for a production."""
+    return {"names": content_store.list(production_id)}
+
+
+# ---------- production tasks (the state engine's interactive half) ----------
+
+def t_tasks_list(deps, production_id: str, status: str = None) -> dict[str, Any]:
+    """The added/assigned tasks on a production (the board)."""
+    return {"tasks": db.list_tasks(production_id, status=status)}
+
+
+def t_tasks_add(deps, production_id: str, title: str, owner: str = "jamie",
+                phase: str = None, detail: str = None) -> dict[str, Any]:
+    """Add a task to a production. owner ∈ jamie/scout/eddy/linky/marky/patty."""
+    try:
+        row = db.add_task(production_id, title, owner=owner, phase=phase,
+                          detail=detail, created_by="agent")
+    except ValueError as exc:
+        return {"error": str(exc)}
+    return {"ok": True, "task_id": row["id"], "owner": row["owner"], "status": row["status"]}
+
+
+def t_tasks_update(deps, task_id: int, status: str = None, owner: str = None,
+                   title: str = None) -> dict[str, Any]:
+    """Update a task — claim it (owner=<you>, status='doing'), reassign, retitle,
+    or change status (todo/doing/done/blocked)."""
+    try:
+        row = db.update_task(int(task_id), status=status, owner=owner, title=title)
+    except ValueError as exc:
+        return {"error": str(exc)}
+    if not row:
+        return {"error": f"no such task: {task_id}"}
+    return {"ok": True, "task_id": row["id"], "owner": row["owner"], "status": row["status"]}
+
+
+def t_tasks_complete(deps, task_id: int) -> dict[str, Any]:
+    """Mark a task done."""
+    row = db.complete_task(int(task_id))
+    if not row:
+        return {"error": f"no such task: {task_id}"}
+    return {"ok": True, "task_id": row["id"], "status": "done"}
+
+
+# ---------- seeds garden (Eddy tends Jamie's idea snippets) ----------
+
+def t_seeds_list(deps, status: str = None, cluster_id: int = None) -> dict[str, Any]:
+    """List seeds in Jamie's idea garden (optionally by status or cluster)."""
+    return {"seeds": db.seed_list(status=status, cluster_id=cluster_id)}
+
+
+def t_seeds_get(deps, seed_id: int) -> dict[str, Any]:
+    s = db.seed_get(int(seed_id))
+    return s if s else {"error": f"no such seed: {seed_id}"}
+
+
+def t_seeds_add(deps, body: str, title: str = None, tags: str = None) -> dict[str, Any]:
+    """Capture a new idea snippet into the garden."""
+    s = db.seed_add(body, title=title, tags=tags, source="agent", created_by="agent")
+    return {"ok": True, "seed_id": s["id"]}
+
+
+def t_seeds_update(deps, seed_id: int, body: str = None, title: str = None,
+                   tags: str = None, status: str = None) -> dict[str, Any]:
+    """Curate a seed: retag, retitle, mutate the framing (a suggestion on the
+    IDEA — Jamie owns the prose of the eventual piece), or change status."""
+    s = db.seed_update(int(seed_id), body=body, title=title, tags=tags, status=status)
+    return {"ok": True, "seed_id": s.get("id")} if s else {"error": f"no such seed: {seed_id}"}
+
+
+def t_seeds_cluster(deps, seed_ids: list, label: str, note: str = None,
+                    suggested_type: str = None) -> dict[str, Any]:
+    """Group related seeds into a cluster with a label, your framing note, and a
+    suggested production type ("these three could be a podcast")."""
+    cl = db.seed_cluster_create(label, note=note, suggested_type=suggested_type,
+                                seed_ids=[int(i) for i in (seed_ids or [])])
+    return {"ok": True, "cluster_id": cl["id"], "seeds": len(cl.get("seeds", []))}
+
+
+def t_seeds_connect(deps, seed_id: int, k: int = 5) -> dict[str, Any]:
+    """Connect a seed to Jamie's own writing — semantic retrieval over the
+    archive so you can say "you've circled this since #287". Returns citations."""
+    s = db.seed_get(int(seed_id))
+    if not s:
+        return {"error": f"no such seed: {seed_id}"}
+    query = (s.get("title") or "") + " " + (s.get("body") or "")
+    from .. import thingy_retrieve
+    try:
+        passages = thingy_retrieve.retrieve(query.strip(), k=int(k))
+    except thingy_retrieve.ThingyRetrieveError as exc:
+        return {"error": f"archive retrieval unavailable: {exc}"}
+    return {"seed_id": int(seed_id), "connections": [
+        {"issue": p.get("issue_number"), "date": (p.get("publish_date") or "")[:10],
+         "subject": p.get("subject")}
+        for p in passages
+    ]}
+
+
+def t_seeds_graduate(deps, production_type: str, title: str,
+                     cluster_id: int = None, seed_ids: list = None) -> dict[str, Any]:
+    """Graduate a ripe cluster (or seeds) into an article/podcast production. The
+    seeds + your direction note are carried into the production as raw material
+    ('seeds.md'); Jamie writes the piece. Returns the new production id."""
+    if cluster_id is not None:
+        cl = db.seed_cluster_get(int(cluster_id))
+        if not cl:
+            return {"error": f"no such cluster: {cluster_id}"}
+        seeds = cl.get("seeds", [])
+        note = cl.get("note")
+    elif seed_ids:
+        seeds = [db.seed_get(int(i)) for i in seed_ids]
+        seeds = [s for s in seeds if s]
+        note = None
+    else:
+        return {"error": "pass cluster_id or seed_ids"}
+    if not seeds:
+        return {"error": "no seeds to graduate"}
+    try:
+        row = db.create_production(production_type=production_type, title=title, created_by="agent")
+    except ValueError as exc:
+        return {"error": str(exc)}
+    pid = row["id"]
+    parts = []
+    if note:
+        parts.append(f"# Direction (Eddy)\n\n{note}")
+    parts.append("# Seeds\n\n" + "\n\n---\n\n".join(
+        (f"**{s['title']}**\n\n" if s.get("title") else "") + (s.get("body") or "")
+        for s in seeds
+    ))
+    content_store.set(pid, "seeds.md", "\n\n".join(parts), by="agent")
+    db.seed_mark_graduated([s["id"] for s in seeds], pid)
+    if cluster_id is not None:
+        db.seed_cluster_update(int(cluster_id), status="graduated", graduated_to=pid)
+    return {"ok": True, "production_id": pid, "type": production_type, "seeds": len(seeds)}
+
+
 FUNCS: dict[str, Callable[..., Any]] = {
     "archive__search": t_search_archive,
     "archive__retrieve": t_retrieve_archive,
@@ -851,6 +1050,24 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "campaigns__get": t_campaigns_get,
     "campaigns__history": t_campaigns_history,
     "campaigns__set_actual_signups": t_campaigns_set_actual_signups,
+    "productions__list": t_productions_list,
+    "productions__get": t_productions_get,
+    "productions__create": t_productions_create,
+    "productions__set_phase": t_productions_set_phase,
+    "production_content__read": t_production_content_read,
+    "production_content__write": t_production_content_write,
+    "production_content__list": t_production_content_list,
+    "tasks__list": t_tasks_list,
+    "tasks__add": t_tasks_add,
+    "tasks__update": t_tasks_update,
+    "tasks__complete": t_tasks_complete,
+    "seeds__list": t_seeds_list,
+    "seeds__get": t_seeds_get,
+    "seeds__add": t_seeds_add,
+    "seeds__update": t_seeds_update,
+    "seeds__cluster": t_seeds_cluster,
+    "seeds__connect": t_seeds_connect,
+    "seeds__graduate": t_seeds_graduate,
 }
 
 

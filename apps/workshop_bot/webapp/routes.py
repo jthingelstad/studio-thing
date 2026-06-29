@@ -266,6 +266,7 @@ def _generic_page_data(row) -> dict:
     return {
         "row": row, "ptype": row["production_type"], "phase": row["phase"], "blocks": blocks,
         "phases": list(ptypes.phases_for(row["production_type"])),
+        "seeds_md": content_store.get(pid, "seeds.md"),
     }
 
 
@@ -391,6 +392,43 @@ async def production_phase(request: web.Request) -> web.Response:
     raise web.HTTPFound(f"/productions/{row['id']}")
 
 
+def _export_doc(row) -> tuple[str, str]:
+    """Build the handoff markdown for a production + its filename."""
+    pid, ptype, title = row["id"], row["production_type"], row["title"]
+    if ptype == "podcast":
+        script = content_store.get(pid, "script.md") or ""
+        notes = content_store.get(pid, "notes.md") or ""
+        doc = f"# {title}\n\n## Script\n\n{script}\n\n## Show notes\n\n{notes}\n"
+    else:  # article / project (and any other) — a single body
+        body = content_store.get(pid, "body.md") or content_store.get(pid, "notes.md") or ""
+        doc = f"# {title}\n\n{body}\n"
+    return doc, f"{pid}.md"
+
+
+async def production_export(request: web.Request) -> web.Response:
+    """Hand off the finished piece — a clean Markdown download to publish
+    manually (Micro.blog for an article, the Another repo for a podcast).
+    Publishing stays manual; this is the export at the handoff point."""
+    row = await _load_row(request)
+    doc, fname = await asyncio.to_thread(_export_doc, row)
+    return web.Response(text=doc, content_type="text/markdown",
+                        headers={"Content-Disposition": f'attachment; filename="{fname}"'})
+
+
+async def production_preview(request: web.Request) -> web.Response:
+    """Render a non-newsletter production's body as a styled HTML page (for the
+    in-page preview iframe)."""
+    from ..tools import render
+    row = await _load_row(request)
+    pid = row["id"]
+    body = (content_store.get(pid, "body.md") or content_store.get(pid, "script.md")
+            or content_store.get(pid, "notes.md") or "")
+    html_doc = await asyncio.to_thread(
+        render.markdown_to_html_page, body or "_(nothing written yet — this is yours to write)_",
+        title=row["title"], subtitle=f"{pid} · {row['production_type']}")
+    return web.Response(text=html_doc, content_type="text/html")
+
+
 async def production_publish(request: web.Request) -> web.Response:
     if not _same_origin(request):
         raise web.HTTPForbidden(text="bad origin")
@@ -413,14 +451,144 @@ async def production_publish(request: web.Request) -> web.Response:
     raise web.HTTPFound(f"/productions/{row['id']}")
 
 
+# ---------- the seeds garden ----------
+
+async def seeds_page(request: web.Request) -> web.Response:
+    clusters, ungrouped = await asyncio.to_thread(_seeds_garden_data)
+    return render("seeds.html", request, clusters=clusters, ungrouped=ungrouped)
+
+
+def _seeds_garden_data():
+    clusters = []
+    for c in db.seed_cluster_list(status="open"):
+        full = db.seed_cluster_get(c["id"])
+        clusters.append(full)
+    ungrouped = [s for s in db.seed_list(status="open") if s.get("cluster_id") is None]
+    return clusters, ungrouped
+
+
+async def seeds_add(request: web.Request) -> web.Response:
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    data = await request.post()
+    body = (data.get("body") or "").strip()
+    if body:
+        title = (data.get("title") or "").strip() or None
+        await asyncio.to_thread(db.seed_add, body, title=title, source="web",
+                                created_by=_login(request))
+    raise web.HTTPFound("/seeds")
+
+
+async def seeds_graduate(request: web.Request) -> web.Response:
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    data = await request.post()
+    cluster_id = data.get("cluster_id")
+    ptype = data.get("production_type", "article")
+    title = (data.get("title") or "").strip()
+    if cluster_id and title:
+        from ..tools.llm import local_tools
+        await asyncio.to_thread(local_tools.t_seeds_graduate, None, ptype, title,
+                                int(cluster_id))
+    raise web.HTTPFound("/seeds")
+
+
+# ---------- in-web chat (work with the agents on one screen) ----------
+
+_CHAT_TASKS: set = set()
+_CHAT_PERSONAS = ("eddy", "scout", "linky", "marky", "patty")
+
+
+def _chat_context_block(context_key: str) -> str:
+    """Tell the agent what it's working on, injected ahead of Jamie's message."""
+    if context_key == "seeds":
+        clusters = db.seed_cluster_list(status="open")
+        loose = [s for s in db.seed_list(status="open") if s.get("cluster_id") is None]
+        return (f"## Context — Jamie's seeds garden\nYou're tending the idea garden: "
+                f"{len(loose)} unclustered seeds, {len(clusters)} clusters. Use the seeds__* "
+                f"tools to curate / cluster / connect to his archive / route to a type. "
+                f"Remember: Jamie writes the prose; you develop the ideas.")
+    row = db.get_production(context_key)
+    if not row:
+        return ""
+    names = content_store.list(row["id"])
+    return (f"## Context — production {row['id']} ({row['production_type']}, "
+            f"phase {row['phase']})\nTitle: {row['title']}. Content blocks: "
+            f"{', '.join(names) or '(none yet)'}. Use production_content__* / tasks__* to "
+            f"work it. Jamie writes the prose; you develop, research, structure, and edit.")
+
+
+async def _run_agent_chat(app, context_key: str, persona: str, message: str, prior: list) -> None:
+    log = logging.getLogger("workshop.webapp.chat")
+    try:
+        deps = app.get(server.DEPS)
+        team = getattr(deps, "team", None) if deps is not None else None
+        bots = getattr(team, "bots", None) if team is not None else None
+        bot = bots.get(persona) if isinstance(bots, dict) else (bots.get(persona) if bots else None)
+        if bot is None:
+            await asyncio.to_thread(
+                db.chat_add, context_key, "assistant",
+                "_(the agents aren't reachable from the web app right now — talk to them in Discord)_",
+                persona=persona)
+            return
+        ctx_block = await asyncio.to_thread(_chat_context_block, context_key)
+        history = [{"role": m["role"], "content": m["content"]} for m in prior]
+        latest = f"{ctx_block}\n\n{message}" if ctx_block else message
+        reply, _meta = await bot.core(latest=latest, history=history)
+        await asyncio.to_thread(db.chat_add, context_key, "assistant",
+                                reply or "_(no reply)_", persona=persona)
+    except Exception as exc:  # noqa: BLE001
+        log.exception("chat agent run failed for %s/%s", context_key, persona)
+        await asyncio.to_thread(db.chat_add, context_key, "assistant",
+                                f"_(error running {persona}: {type(exc).__name__})_", persona=persona)
+
+
+async def chat_post(request: web.Request) -> web.Response:
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    data = await request.post()
+    context_key = (data.get("context_key") or "").strip()
+    message = (data.get("message") or "").strip()
+    persona = (data.get("persona") or "eddy").strip().lower()
+    if not context_key or not message:
+        raise web.HTTPBadRequest(text="missing context_key or message")
+    # A leading @persona overrides the picker.
+    if message.startswith("@"):
+        head, _, rest = message[1:].partition(" ")
+        if head.lower() in _CHAT_PERSONAS:
+            persona, message = head.lower(), rest.strip() or message
+    if persona not in _CHAT_PERSONAS:
+        persona = "eddy"
+    prior = await asyncio.to_thread(db.chat_list, context_key)
+    await asyncio.to_thread(db.chat_add, context_key, "user", message)
+    task = asyncio.create_task(_run_agent_chat(request.app, context_key, persona, message, prior))
+    _CHAT_TASKS.add(task)
+    task.add_done_callback(_CHAT_TASKS.discard)
+    return web.json_response({"ok": True, "persona": persona})
+
+
+async def chat_get(request: web.Request) -> web.Response:
+    context_key = request.query.get("context_key", "")
+    since = int(request.query.get("since") or 0)
+    msgs = await asyncio.to_thread(db.chat_list, context_key, since_id=since)
+    return web.json_response({"messages": msgs})
+
+
 def add_routes(app: web.Application) -> None:
     app.add_routes([
         web.get("/healthz", healthz),
         web.get("/", slate_page),
+        web.get("/chat", chat_get),
+        web.post("/chat", chat_post),
+        web.get("/seeds", seeds_page),
+        web.post("/seeds/add", seeds_add),
+        web.post("/seeds/graduate", seeds_graduate),
         web.get("/productions", productions_list),
         web.get("/productions/new", production_new_form),
         web.post("/productions/new", production_create),
         web.get("/productions/{pid}", production_page),
+        web.get("/productions/{pid}/export", production_export),
+        web.get("/productions/{pid}/preview", production_preview),
         web.get("/productions/{pid}/edit", production_edit_form),
         web.post("/productions/{pid}/edit", production_update),
         web.post("/productions/{pid}/start", production_start),

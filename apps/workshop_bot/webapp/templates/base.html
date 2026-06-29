@@ -44,12 +44,18 @@
     .err { background: #fdecea; border: 1px solid #f5c6c2; color: #8a1f17; padding: .6rem .8rem;
            border-radius: 8px; margin-bottom: 1rem; }
     .actions { margin-top: 1.3rem; display: flex; gap: .6rem; align-items: center; }
+    .chatlog { max-height: 22rem; overflow-y: auto; display: flex; flex-direction: column; gap: .5rem; padding-bottom: .6rem; }
+    .chatmsg { padding: .45rem .65rem; border-radius: 9px; font-size: .92rem; max-width: 90%; }
+    .chatmsg strong { color: var(--accent); margin-right: .3rem; }
+    .chatmsg.me { background: var(--chip); align-self: flex-end; }
+    .chatmsg.agent { background: #f4f4f6; align-self: flex-start; }
   </style>
 </head>
 <body>
   <header class="top">
     <span class="brand">Studio</span>
     <a href="/" class="{{ 'active' if nav=='slate' else '' }}">Slate</a>
+    <a href="/seeds" class="{{ 'active' if nav=='seeds' else '' }}">Seeds</a>
     <a href="/productions" class="{{ 'active' if nav=='productions' else '' }}">Productions</a>
     <span class="sp"></span>
     <span class="who">{{ login }}</span>

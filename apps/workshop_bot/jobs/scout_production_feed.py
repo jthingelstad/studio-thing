@@ -354,23 +354,82 @@ def newsletter_productions() -> list[dict[str, Any]]:
 def _generic_productions(production_type: str) -> list[dict[str, Any]]:
     """Project active rows of a generic production type (article / podcast /
     project) from the registry. These have no per-phase task breakdown yet —
-    status is derived from the phase (complete at the terminal phase)."""
+    status is derived from the phase + the task board (the state engine
+    projection): computed/required tasks from content state, plus the
+    added/assigned tasks from production_tasks."""
+    from ..tools import content_store
     from ..tools.content import production_types as ptypes
 
     out: list[dict[str, Any]] = []
     for p in db.list_productions(production_type=production_type, status="active"):
+        pid = p["id"]
         phase = str(p.get("phase") or "")
+        names = set(content_store.list(pid))
+        tasks = _generic_computed_tasks(production_type, pid, phase, names, p.get("due_at"))
+        # Merge the added/assigned tasks from the board.
+        for t in db.list_tasks(pid):
+            if t["status"] == "done":
+                continue
+            tasks.append(_task(
+                production_type=production_type, production_id=pid, phase=phase,
+                slug=f"task-{t['id']}", title=t["title"],
+                status="blocked" if t["status"] == "blocked" else "open",
+                due_at=_local_due(p.get("due_at")),
+                reason=f"Board task owned by {t['owner']}.",
+                source_command="web: production board", owner=t["owner"],
+            ))
         out.append({
             "production_type": production_type,
-            "production_id": p["id"],
-            "title": p.get("title") or p["id"],
+            "production_id": pid,
+            "title": p.get("title") or pid,
             "phase": phase,
             "due_at": _local_due(p.get("due_at")),
             "source": "studio-thing/apps/workshop_bot",
-            "status": "complete" if ptypes.is_terminal(production_type, phase) else "open",
-            "tasks": [],
+            "status": _production_status(tasks) if tasks
+                      else ("complete" if ptypes.is_terminal(production_type, phase) else "open"),
+            "tasks": tasks,
         })
     return out
+
+
+# Authored content block expected per non-newsletter type.
+_BODY_BLOCK = {"article": "body.md", "podcast": "script.md", "project": "notes.md"}
+
+
+def _generic_computed_tasks(production_type: str, pid: str, phase: str,
+                            names: set, due_raw: str | None) -> list[dict[str, Any]]:
+    """The required tasks projected from a non-newsletter production's state.
+    Jamie writes the prose; agents develop/research/edit — the task titles
+    reflect that division (never 'write it for him')."""
+    due = _local_due(due_raw)
+    body = _BODY_BLOCK.get(production_type, "body.md")
+    has_body = body in names
+
+    def task(slug, title, status, owner, reason):
+        return _task(production_type=production_type, production_id=pid, phase=phase,
+                     slug=slug, title=title, status=status, due_at=due,
+                     reason=reason, source_command="web: production page", owner=owner)
+
+    tasks: list[dict[str, Any]] = []
+    if phase in ("idea", "open"):
+        tasks.append(task("develop", "Develop the idea — research + connect to the archive",
+                          "ready", "eddy", "Idea phase: cluster/connect/shape before drafting."))
+    elif phase == "outline":
+        tasks.append(task("outline", "Shape the outline (Jamie writes; studio may propose structure)",
+                          "open", "jamie", "Outline phase."))
+    elif phase in ("draft", "script"):
+        if not has_body:
+            tasks.append(task("draft", f"Write the {production_type} ({body}) — your words",
+                              "open", "jamie", f"{body} is empty."))
+        else:
+            tasks.append(task("review", "Eddy: review the draft (suggestions only)",
+                              "ready", "eddy", "Draft present — ready for an editorial read."))
+    elif phase == "record":
+        tasks.append(task("record", "Record the episode", "open", "jamie", "Record phase."))
+    elif phase == "publish":
+        tasks.append(task("handoff", f"Hand off {pid} to its publish surface",
+                          "ready", "jamie", "Publish phase: export + publish manually."))
+    return tasks
 
 
 def article_productions() -> list[dict[str, Any]]:
