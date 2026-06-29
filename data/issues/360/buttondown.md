@@ -1,8 +1,4 @@
-<!-- buttondown-editor-mode: plaintext -->Hello intro
-
----
-
-## Journal
+<!-- buttondown-editor-mode: plaintext -->## Journal
 
 ### Sunday, June 21
 
