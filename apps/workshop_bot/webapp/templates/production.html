@@ -164,4 +164,7 @@
     {% for b in blocks %}{{ block_editor(b, rows=10) }}{% endfor %}
   </div>
 {% endif %}
+
+  {% set chat_key = row.id %}
+  {% include "_chat.html" %}
 {% endblock %}

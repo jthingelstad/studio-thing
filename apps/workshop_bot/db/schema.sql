@@ -381,6 +381,23 @@ CREATE TABLE IF NOT EXISTS seeds (
 CREATE INDEX IF NOT EXISTS idx_seeds_status ON seeds(status);
 CREATE INDEX IF NOT EXISTS idx_seeds_cluster ON seeds(cluster_id);
 
+-- In-web conversations — the chat threads on the seeds garden + each production
+-- page. context_key is the thing being discussed ('ART7', 'WT350', 'seeds').
+-- A web handler records Jamie's message, runs the addressed persona's agent
+-- loop in the background (the agent's tools edit the same rows), and records the
+-- reply; the page polls for new messages. This is "working together" in the web.
+CREATE TABLE IF NOT EXISTS production_chats (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  context_key TEXT NOT NULL,
+  role        TEXT NOT NULL,                 -- 'user' (Jamie) | 'assistant'
+  persona     TEXT,                          -- which agent (assistant rows)
+  content     TEXT NOT NULL,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_production_chats_ctx
+  ON production_chats(context_key, id);
+
 -- Job locks — single-asset serialization for the jobs pipeline. A job
 -- acquires a row per file it intends to write before starting; another
 -- job that wants the same file sees the row and bails with an "already

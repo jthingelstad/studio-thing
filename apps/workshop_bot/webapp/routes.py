@@ -455,10 +455,93 @@ async def seeds_graduate(request: web.Request) -> web.Response:
     raise web.HTTPFound("/seeds")
 
 
+# ---------- in-web chat (work with the agents on one screen) ----------
+
+_CHAT_TASKS: set = set()
+_CHAT_PERSONAS = ("eddy", "scout", "linky", "marky", "patty")
+
+
+def _chat_context_block(context_key: str) -> str:
+    """Tell the agent what it's working on, injected ahead of Jamie's message."""
+    if context_key == "seeds":
+        clusters = db.seed_cluster_list(status="open")
+        loose = [s for s in db.seed_list(status="open") if s.get("cluster_id") is None]
+        return (f"## Context — Jamie's seeds garden\nYou're tending the idea garden: "
+                f"{len(loose)} unclustered seeds, {len(clusters)} clusters. Use the seeds__* "
+                f"tools to curate / cluster / connect to his archive / route to a type. "
+                f"Remember: Jamie writes the prose; you develop the ideas.")
+    row = db.get_production(context_key)
+    if not row:
+        return ""
+    names = content_store.list(row["id"])
+    return (f"## Context — production {row['id']} ({row['production_type']}, "
+            f"phase {row['phase']})\nTitle: {row['title']}. Content blocks: "
+            f"{', '.join(names) or '(none yet)'}. Use production_content__* / tasks__* to "
+            f"work it. Jamie writes the prose; you develop, research, structure, and edit.")
+
+
+async def _run_agent_chat(app, context_key: str, persona: str, message: str, prior: list) -> None:
+    log = logging.getLogger("workshop.webapp.chat")
+    try:
+        deps = app.get(server.DEPS)
+        team = getattr(deps, "team", None) if deps is not None else None
+        bots = getattr(team, "bots", None) if team is not None else None
+        bot = bots.get(persona) if isinstance(bots, dict) else (bots.get(persona) if bots else None)
+        if bot is None:
+            await asyncio.to_thread(
+                db.chat_add, context_key, "assistant",
+                "_(the agents aren't reachable from the web app right now — talk to them in Discord)_",
+                persona=persona)
+            return
+        ctx_block = await asyncio.to_thread(_chat_context_block, context_key)
+        history = [{"role": m["role"], "content": m["content"]} for m in prior]
+        latest = f"{ctx_block}\n\n{message}" if ctx_block else message
+        reply, _meta = await bot.core(latest=latest, history=history)
+        await asyncio.to_thread(db.chat_add, context_key, "assistant",
+                                reply or "_(no reply)_", persona=persona)
+    except Exception as exc:  # noqa: BLE001
+        log.exception("chat agent run failed for %s/%s", context_key, persona)
+        await asyncio.to_thread(db.chat_add, context_key, "assistant",
+                                f"_(error running {persona}: {type(exc).__name__})_", persona=persona)
+
+
+async def chat_post(request: web.Request) -> web.Response:
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    data = await request.post()
+    context_key = (data.get("context_key") or "").strip()
+    message = (data.get("message") or "").strip()
+    persona = (data.get("persona") or "eddy").strip().lower()
+    if not context_key or not message:
+        raise web.HTTPBadRequest(text="missing context_key or message")
+    # A leading @persona overrides the picker.
+    if message.startswith("@"):
+        head, _, rest = message[1:].partition(" ")
+        if head.lower() in _CHAT_PERSONAS:
+            persona, message = head.lower(), rest.strip() or message
+    if persona not in _CHAT_PERSONAS:
+        persona = "eddy"
+    prior = await asyncio.to_thread(db.chat_list, context_key)
+    await asyncio.to_thread(db.chat_add, context_key, "user", message)
+    task = asyncio.create_task(_run_agent_chat(request.app, context_key, persona, message, prior))
+    _CHAT_TASKS.add(task)
+    task.add_done_callback(_CHAT_TASKS.discard)
+    return web.json_response({"ok": True, "persona": persona})
+
+
+async def chat_get(request: web.Request) -> web.Response:
+    context_key = request.query.get("context_key", "")
+    since = int(request.query.get("since") or 0)
+    msgs = await asyncio.to_thread(db.chat_list, context_key, since_id=since)
+    return web.json_response({"messages": msgs})
+
+
 def add_routes(app: web.Application) -> None:
     app.add_routes([
         web.get("/healthz", healthz),
         web.get("/", slate_page),
+        web.get("/chat", chat_get),
+        web.post("/chat", chat_post),
         web.get("/seeds", seeds_page),
         web.post("/seeds/add", seeds_add),
         web.post("/seeds/graduate", seeds_graduate),
