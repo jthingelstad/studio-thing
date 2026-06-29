@@ -125,6 +125,16 @@ JOBS: tuple[JobSpec, ...] = (
                                                          # refresh — the web page is the scoreboard.
         func=functools.partial(handlers.content_job, job="scout-checkin"),
     ),
+    JobSpec(
+        id="garden-checkin",
+        cron="0 9 * * 1",                                # Monday 09:00 Central. Eddy tends the idea
+                                                         # garden and, if a cluster is ripe or a
+                                                         # pattern is worth naming, posts one note to
+                                                         # #editorial; else PASSes. Proactive idea
+                                                         # development — the slow-rhythm counterpart
+                                                         # to the daily slate check-in.
+        func=functools.partial(handlers.content_job, job="garden-checkin"),
+    ),
 )
 
 

@@ -266,6 +266,7 @@ def _generic_page_data(row) -> dict:
     return {
         "row": row, "ptype": row["production_type"], "phase": row["phase"], "blocks": blocks,
         "phases": list(ptypes.phases_for(row["production_type"])),
+        "seeds_md": content_store.get(pid, "seeds.md"),
     }
 
 
@@ -389,6 +390,43 @@ async def production_phase(request: web.Request) -> web.Response:
     except ValueError as exc:
         raise web.HTTPBadRequest(text=str(exc))
     raise web.HTTPFound(f"/productions/{row['id']}")
+
+
+def _export_doc(row) -> tuple[str, str]:
+    """Build the handoff markdown for a production + its filename."""
+    pid, ptype, title = row["id"], row["production_type"], row["title"]
+    if ptype == "podcast":
+        script = content_store.get(pid, "script.md") or ""
+        notes = content_store.get(pid, "notes.md") or ""
+        doc = f"# {title}\n\n## Script\n\n{script}\n\n## Show notes\n\n{notes}\n"
+    else:  # article / project (and any other) — a single body
+        body = content_store.get(pid, "body.md") or content_store.get(pid, "notes.md") or ""
+        doc = f"# {title}\n\n{body}\n"
+    return doc, f"{pid}.md"
+
+
+async def production_export(request: web.Request) -> web.Response:
+    """Hand off the finished piece — a clean Markdown download to publish
+    manually (Micro.blog for an article, the Another repo for a podcast).
+    Publishing stays manual; this is the export at the handoff point."""
+    row = await _load_row(request)
+    doc, fname = await asyncio.to_thread(_export_doc, row)
+    return web.Response(text=doc, content_type="text/markdown",
+                        headers={"Content-Disposition": f'attachment; filename="{fname}"'})
+
+
+async def production_preview(request: web.Request) -> web.Response:
+    """Render a non-newsletter production's body as a styled HTML page (for the
+    in-page preview iframe)."""
+    from ..tools import render
+    row = await _load_row(request)
+    pid = row["id"]
+    body = (content_store.get(pid, "body.md") or content_store.get(pid, "script.md")
+            or content_store.get(pid, "notes.md") or "")
+    html_doc = await asyncio.to_thread(
+        render.markdown_to_html_page, body or "_(nothing written yet — this is yours to write)_",
+        title=row["title"], subtitle=f"{pid} · {row['production_type']}")
+    return web.Response(text=html_doc, content_type="text/html")
 
 
 async def production_publish(request: web.Request) -> web.Response:
@@ -549,6 +587,8 @@ def add_routes(app: web.Application) -> None:
         web.get("/productions/new", production_new_form),
         web.post("/productions/new", production_create),
         web.get("/productions/{pid}", production_page),
+        web.get("/productions/{pid}/export", production_export),
+        web.get("/productions/{pid}/preview", production_preview),
         web.get("/productions/{pid}/edit", production_edit_form),
         web.post("/productions/{pid}/edit", production_update),
         web.post("/productions/{pid}/start", production_start),

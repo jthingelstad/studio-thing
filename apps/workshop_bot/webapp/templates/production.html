@@ -159,9 +159,21 @@
     </form>
   </div>
 
-  <div class="secthead"><h2>Content</h2></div>
+  {% if seeds_md %}
+  <div class="secthead"><h2>Raw material</h2><span class="surface">from the idea garden</span></div>
+  <div class="card"><pre style="white-space:pre-wrap; margin:0; font:inherit;">{{ seeds_md }}</pre></div>
+  {% endif %}
+
+  <div class="secthead"><h2>Content</h2>
+    <a class="surface" href="/productions/{{ row.id }}/export">export ↓</a></div>
   <div class="card">
+    <p class="muted" style="margin-top:0;">You write the words. The studio develops, researches, and edits — never drafts your prose.</p>
     {% for b in blocks %}{{ block_editor(b, rows=10) }}{% endfor %}
+  </div>
+
+  <div class="secthead"><h2>Preview</h2></div>
+  <div class="card" style="padding:.4rem;">
+    <iframe src="/productions/{{ row.id }}/preview" style="width:100%; height:420px; border:0; border-radius:8px;"></iframe>
   </div>
 {% endif %}
 
