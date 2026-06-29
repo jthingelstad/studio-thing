@@ -81,9 +81,11 @@ class ToolRegistryCompositionTests(unittest.TestCase):
             "memory__remember",
             "issue__current_window",
             "issue__list_windows",
-            "workspace__list_files",
-            "workspace__read",
-            "workspace__write",
+            "production_content__read",
+            "production_content__write",
+            "production_content__list",
+            "tasks__add",
+            "seeds__cluster",
             "draft__section_status",
             "site__support_state",
             "web__fetch_url",
@@ -94,15 +96,18 @@ class ToolRegistryCompositionTests(unittest.TestCase):
         names = set(self.registry.all_names())
         # The inbox tools (typed inter-agent handoffs) and the per-persona
         # S3 scratchpad tools were removed in the content-loop redesign;
-        # ``s3_issues__*`` was renamed to ``workspace__*``. The Thingy
-        # bridge tools moved to ``apps/thingy_bridge/`` with the bridge
-        # extraction — they should never show up in workshop_bot's
-        # agent-tool registry.
+        # the issue-keyed ``workspace__*`` tools (ex ``s3_issues__*``) were
+        # then retired in the productions rearchitecture in favour of the
+        # type-general ``production_content__*`` tools. The Thingy bridge
+        # tools moved to ``apps/thingy_bridge/`` with the bridge extraction —
+        # none should show up in workshop_bot's agent-tool registry.
         for gone in (
             "inbox__post", "inbox__list", "inbox__read", "inbox__mark_read",
             "s3_personas__list", "s3_personas__read_file", "s3_personas__write_file",
             "s3_issues__list", "s3_issues__list_workspaces",
             "s3_issues__read_file", "s3_issues__write_file",
+            "workspace__list_all", "workspace__list_files",
+            "workspace__read", "workspace__write",
             "thingy__list_conversations", "thingy__get_conversation",
             "thingy__sync", "thingy__chat", "thingy__feedback",
         ):

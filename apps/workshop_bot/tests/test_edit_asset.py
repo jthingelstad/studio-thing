@@ -186,7 +186,10 @@ class ModalSubmitTests(_Case):
 
 class SlashCommandWiringTests(unittest.TestCase):
 
-    def test_eddy_edit_command_present(self):
+    def test_eddy_edit_and_currently_commands_retired(self):
+        """`/eddy edit` and `/eddy currently` were retired — content editing
+        moved to the web production page. The edit_asset / currently jobs
+        themselves stay (driven by the web + agent tools + cron)."""
         from apps.workshop_bot.personas import commands as commands_module
 
         class _StubBot:
@@ -201,7 +204,10 @@ class SlashCommandWiringTests(unittest.TestCase):
             getattr(c, "_cmd_name", getattr(c, "name", None))
             for c in eddy_group.commands
         }
-        self.assertIn("edit", leaf_names)
+        self.assertNotIn("edit", leaf_names)
+        self.assertNotIn("currently", leaf_names)
+        # The compose/editorial commands that have no web equivalent stay.
+        self.assertIn("issue", leaf_names)
 
 
 if __name__ == "__main__":

@@ -31,12 +31,9 @@ from ...jobs import (
     compose_echoes,
     compose_haiku,
     compose_meta,
-    currently as currently_job,
-    edit_asset,
     reorder,
     review_text,
 )
-from ...tools import db as _db
 from ._shared import _ctx, make_ack, make_run_and_ack, make_run_interactive
 
 if TYPE_CHECKING:
@@ -72,11 +69,6 @@ def register_eddy_commands(
     )
     followup = app_commands.Group(
         name="followup", description="Eddy's follow-up commitments", parent=eddy
-    )
-    currently = app_commands.Group(
-        name="currently",
-        description="The in-flight issue's ## Currently section (per-type)",
-        parent=eddy,
     )
 
     # ── /eddy issue ───────────────────────────────────────────────────
@@ -174,39 +166,6 @@ def register_eddy_commands(
             "followup cancel",
         )
 
-    # ── /eddy edit ────────────────────────────────────────────────────
-
-    @eddy.command(
-        name="edit",
-        description="Edit a small per-issue asset (intro/outro/haiku/cover/currently/cta/thanks) in a modal.",
-    )
-    @app_commands.describe(
-        asset="Which asset to edit (modal pops with the current contents)",
-    )
-    @app_commands.choices(asset=[
-        app_commands.Choice(name=key, value=key) for key in edit_asset.ASSET_CHOICES
-    ])
-    async def edit_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction, asset: str,
-    ) -> None:
-        modal, err = edit_asset.build_modal(_ctx(bot), asset_key=str(asset))
-        if modal is None:
-            try:
-                await interaction.response.send_message(err or "❌ couldn't build modal.", ephemeral=True)
-            except Exception:  # noqa: BLE001
-                pass
-            return
-        try:
-            await interaction.response.send_modal(modal)
-        except Exception as exc:  # noqa: BLE001
-            try:
-                await interaction.response.send_message(
-                    f"❌ couldn't open the editor: `{type(exc).__name__}: {exc}`",
-                    ephemeral=True,
-                )
-            except Exception:  # noqa: BLE001
-                pass
-
     # ── /eddy status ──────────────────────────────────────────────────
 
     @eddy.command(
@@ -248,144 +207,6 @@ def register_eddy_commands(
             interaction,
             lambda: archive_lookup.run(_ctx(bot), issue_number=int(issue)),
             "archive",
-        )
-
-    # ── /eddy currently ───────────────────────────────────────────────
-
-    async def _type_autocomplete(  # type: ignore[misc]
-        _interaction: discord.Interaction, current: str,
-    ) -> list[app_commands.Choice[str]]:
-        try:
-            rows = _db.currently_list_types()
-        except Exception:  # noqa: BLE001
-            return []
-        needle = (current or "").strip().lower()
-        choices: list[app_commands.Choice[str]] = []
-        for row in rows:
-            label = row["label"]
-            if needle and needle not in label.lower():
-                continue
-            choices.append(app_commands.Choice(name=label, value=label))
-            if len(choices) >= 25:
-                break
-        return choices
-
-    @currently.command(
-        name="list",
-        description="Show the in-flight issue's Currently entries + unfilled types.",
-    )
-    async def currently_list_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(
-            interaction,
-            lambda: currently_job.list_state(_ctx(bot)),
-            "currently list",
-        )
-
-    @currently.command(
-        name="edit",
-        description="Edit one Currently entry in a modal (markdown links OK).",
-    )
-    @app_commands.describe(type="Which Currently type to edit (e.g. Listening, Reading).")
-    @app_commands.autocomplete(type=_type_autocomplete)
-    async def currently_edit_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction, type: str,
-    ) -> None:
-        modal, err = currently_job.build_modal(_ctx(bot), type_label=str(type))
-        if modal is None:
-            try:
-                await interaction.response.send_message(
-                    err or "❌ couldn't build modal.", ephemeral=True,
-                )
-            except Exception:  # noqa: BLE001
-                pass
-            return
-        try:
-            await interaction.response.send_modal(modal)
-        except Exception as exc:  # noqa: BLE001
-            try:
-                await interaction.response.send_message(
-                    f"❌ couldn't open the editor: `{type(exc).__name__}: {exc}`",
-                    ephemeral=True,
-                )
-            except Exception:  # noqa: BLE001
-                pass
-
-    @currently.command(
-        name="set",
-        description="Quick-set one Currently entry (no modal — for plain-text values).",
-    )
-    @app_commands.describe(
-        type="Currently type (autocompletes from canonical pool).",
-        value="The entry text. Markdown OK; preserved verbatim.",
-    )
-    @app_commands.autocomplete(type=_type_autocomplete)
-    async def currently_set_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction, type: str, value: str,
-    ) -> None:
-        await _run_and_ack(
-            interaction,
-            lambda: currently_job.set_value(_ctx(bot), type_label=str(type), value=str(value)),
-            f"currently set {type}",
-        )
-
-    @currently.command(
-        name="clear",
-        description="Remove one Currently entry from the in-flight issue.",
-    )
-    @app_commands.describe(type="Currently type to clear.")
-    @app_commands.autocomplete(type=_type_autocomplete)
-    async def currently_clear_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction, type: str,
-    ) -> None:
-        await _run_and_ack(
-            interaction,
-            lambda: currently_job.clear_value(_ctx(bot), type_label=str(type)),
-            f"currently clear {type}",
-        )
-
-    @currently.command(
-        name="reorder",
-        description="Reorder Currently entries — comma-separated permutation of filled labels.",
-    )
-    @app_commands.describe(
-        labels="Comma-separated list of currently-filled labels in the desired order.",
-    )
-    async def currently_reorder_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction, labels: str,
-    ) -> None:
-        await _run_and_ack(
-            interaction,
-            lambda: currently_job.reorder(_ctx(bot), labels=str(labels)),
-            "currently reorder",
-        )
-
-    @currently.command(
-        name="add-type",
-        description="Add a new canonical Currently type (e.g. Printing). No code change needed.",
-    )
-    @app_commands.describe(label="New type label, e.g. Printing.")
-    async def currently_add_type_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction, label: str,
-    ) -> None:
-        await _run_and_ack(
-            interaction,
-            lambda: currently_job.add_type(_ctx(bot), label=str(label)),
-            "currently add-type",
-        )
-
-    @currently.command(
-        name="retire-type",
-        description="Retire a canonical Currently type (past entries still render).",
-    )
-    @app_commands.describe(label="Type label to retire.")
-    @app_commands.autocomplete(label=_type_autocomplete)
-    async def currently_retire_type_cmd(  # type: ignore[misc]
-        interaction: discord.Interaction, label: str,
-    ) -> None:
-        await _run_and_ack(
-            interaction,
-            lambda: currently_job.retire_type(_ctx(bot), label=str(label)),
-            "currently retire-type",
         )
 
     tree.add_command(eddy)

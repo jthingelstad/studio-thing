@@ -15,7 +15,7 @@ The mental model below much of this file describes (phase **cards** as the front
 - **The idea engine:** `seeds` + `seed_clusters` tables (`tools/db/_seeds.py`) hold Jamie's idea snippets; Eddy tends the garden (cluster/connect-to-archive/route) and *graduates* a ripe cluster into an article/podcast production carrying the seeds — Jamie writes it. `scripts/import_seeds.py` imports a directory of snippet files.
 - **Agent tools (the bridge, `tools/llm/local_tools.py` + `_specs.py`):** `productions__*`, `production_content__*`, `tasks__*` (the board), `seeds__*` — every agent can see and work any production. Delegation = assign a task (`tasks__add(..., owner=…)`), not the old (never-implemented) `delegate_to`.
 - **Proactive layer:** PASS-by-default check-ins — `jobs/scout_checkin.py` (daily 17:30, the slate) and `jobs/garden_checkin.py` (Monday 09:00, ripe ideas) replace the old mechanical card refresh.
-- **Deferred / known gaps:** `editorial_comments` is still `issue_number`-keyed (Eddy's *stored* anchored comments are newsletter-only; on articles his feedback lives in the per-production chat thread + task board); the issue-keyed `workspace__*` tools still exist alongside the general `production_content__*`; some newsletter content slash-commands remain as escape hatches.
+- **Deferred / known gaps:** `editorial_comments` is still `issue_number`-keyed (Eddy's *stored* anchored comments are newsletter-only; on articles his feedback lives in the per-production chat thread + task board); the `workspace__*` agent tools have been **retired** in favour of the type-general `production_content__*`; `/eddy edit` and `/eddy currently` have been **retired** (content editing moved to the web production page — the underlying edit-asset / currently jobs stay, driven by the web + agent tools + cron). The compose/publish/ledger slash-commands (`/eddy issue {echoes,reorder,haiku,subject}`, `/scout issue {…publish…}`, `/patty cta`, `/marky campaign`, `/patty goal`) remain as escape hatches until their web equivalents land.
 
 The rest of this file documents the newsletter pipeline in depth — still accurate for the newsletter type, but read it through the lens above.
 
@@ -29,7 +29,7 @@ Every workshop_bot action — pulling content into the draft, reordering for the
 
 Each persona hosts its own slash tree on its own Discord bot (no single `/workshop` umbrella anymore):
 
-- `/eddy issue {echoes,reorder,haiku,subject}` (editorial only — production verbs moved to `/scout issue …`) · `/eddy edit <asset>` · `/eddy currently {list,edit,set,clear,reorder,add-type,retire-type}` · `/eddy status` · `/eddy review <text>` · `/eddy archive <issue>` · `/eddy followup {list,add,cancel}`
+- `/eddy issue {echoes,reorder,haiku,subject}` (editorial only — production verbs moved to `/scout issue …`) · `/eddy status` · `/eddy review <text>` · `/eddy archive <issue>` · `/eddy followup {list,add,cancel}` — (`/eddy edit` + `/eddy currently` retired; edit atoms / Currently on the web production page)
 - `/linky scan` · `/linky research <url>` · `/linky pile` · `/linky stats` · `/linky followup {list,add,cancel}`
 - `/marky prep` · `/marky metrics` · `/marky engagement` · `/marky referrers` · `/marky campaign {add,edit,report,copy,sunset}` · `/marky followup {list,add,cancel}`
 - `/patty cta` · `/patty goal {set,done}` · `/patty progress` · `/patty nonprofit` · `/patty supporters` · `/patty followup {list,add,cancel}`

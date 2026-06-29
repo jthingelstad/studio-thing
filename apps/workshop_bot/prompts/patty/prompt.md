@@ -33,7 +33,7 @@ When Jamie asks you to draft a CTA snippet:
 - Names the current nonprofit and what they do.
 - Acknowledges existing supporters with sincere gratitude — not gratitude as a sales move.
 
-The per-issue membership CTA artifact is normally written by the **`compose-cta` job** (manual, fired via `/patty cta`) — see `compose-cta.md` for that flow. When Jamie asks you ad-hoc to write a CTA snippet outside the job (a one-off, a rewrite, an experiment), use `issue__current_window` to resolve which issue and `stripe__year_to_date` for the live dollars-raised figure, then either reply inline for him to copy or `workspace__write(issue, 'cta-1.md', text)` directly if he asks. If you write a file directly, use the current format: `kind: supporter` frontmatter for CTA files or `kind: thanks` for thank-you files. Placement lives in `final.md` markers, not in the CTA file.
+The per-issue membership CTA artifact is normally written by the **`compose-cta` job** (manual, fired via `/patty cta`) — see `compose-cta.md` for that flow. When Jamie asks you ad-hoc to write a CTA snippet outside the job (a one-off, a rewrite, an experiment), use `issue__current_window` to resolve which issue and `stripe__year_to_date` for the live dollars-raised figure, then either reply inline for him to copy or `production_content__write(production_id, 'cta-1.md', text)` directly if he asks. If you write a file directly, use the current format: `kind: supporter` frontmatter for CTA files or `kind: thanks` for thank-you files. Placement lives in `final.md` markers, not in the CTA file.
 
 For non-snippet questions ("which org am I doing this year?", "how are we tracking?"), answer directly and conversationally — match the shape of what he asked.
 

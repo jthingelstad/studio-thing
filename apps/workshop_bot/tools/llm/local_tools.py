@@ -16,7 +16,7 @@ import re
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from .. import archive_lookup, content_store, db, issue_items as issue_items_mod, s3, support_state, web
+from .. import archive_lookup, content_store, db, issue_items as issue_items_mod, support_state, web
 from ..content import archive, draft, issue
 from .tool_registry import ToolRegistry, active_persona, active_react_target
 from ._specs import SPECS
@@ -377,62 +377,9 @@ def t_followup_cancel(deps, followup_id: int) -> dict[str, Any]:
 
 # ---------- S3 issue workspace (universal) ----------
 
-def t_workspace_list_all(deps) -> dict[str, Any]:
-    """List every issue workspace folder in S3 with file counts and
-    last-modified timestamps. The highest issue number is the issue
-    currently being assembled."""
-    return s3.list_workspaces()
-
-
-def t_workspace_list_files(deps, issue_number: int) -> dict[str, Any]:
-    """List the per-issue workspace — authored content (DB) plus the generated
-    artifacts + binaries in S3."""
-    try:
-        n = int(issue_number)
-        listing = s3.list_issue(n)
-        objs = list(listing.get("objects", []))
-        have = {o.get("filename") for o in objs}
-        for name in content_store.list_issue(n):
-            if name not in have:
-                objs.append({"filename": name, "key": f"db/content/{name}", "size": None})
-        listing["objects"] = objs
-        return listing
-    except s3.S3PathError as exc:
-        return {"error": str(exc)}
-
-
-def t_workspace_read(deps, issue_number: int, filename: str) -> dict[str, Any]:
-    """Read one authored file for the issue. Authored content (intro.md,
-    cover.json, metadata.json, cta-N.md, …) comes from the DB content store;
-    other names (generated artifacts) fall through to S3. Filename must be a
-    bare component (no slashes, no '..')."""
-    try:
-        n = int(issue_number)
-        if content_store.is_atom_name(filename):
-            body = content_store.read_issue(n, filename)
-            if body is None:
-                return {"found": False, "name": filename}
-            return {"found": True, "name": filename, "text": body}
-        return s3.read_issue_file(n, filename)
-    except s3.S3PathError as exc:
-        return {"error": str(exc)}
-
-
-def t_workspace_write(
-    deps, issue_number: int, filename: str, content: str
-) -> dict[str, Any]:
-    """Write one authored file for the issue. Authored content (e.g. ``intro.md``,
-    ``metadata.json``, ``cta-1.md``) is stored in the DB content store — the same
-    rows the web project page edits; other names fall through to S3. Filename
-    must be a bare component."""
-    try:
-        n = int(issue_number)
-        if content_store.is_atom_name(filename):
-            content_store.write_issue(n, filename, content, by="agent")
-            return {"name": filename, "written": True, "size": len(content or "")}
-        return s3.write_issue_file(n, filename, content)
-    except s3.S3PathError as exc:
-        return {"error": str(exc)}
+# The workspace__* tools (issue-number-keyed S3 read/write) were retired in
+# favour of the type-general production_content__* tools (DB content store).
+# Authored content for any production lives in the DB now; S3 is publishing-only.
 
 
 # ---------- campaigns (Marky's ad-placement ledger) ----------
@@ -1031,10 +978,6 @@ FUNCS: dict[str, Callable[..., Any]] = {
     "followup__schedule": t_followup_schedule,
     "followup__list": t_followup_list,
     "followup__cancel": t_followup_cancel,
-    "workspace__list_all": t_workspace_list_all,
-    "workspace__list_files": t_workspace_list_files,
-    "workspace__read": t_workspace_read,
-    "workspace__write": t_workspace_write,
     "currently__list_types": t_currently_list_types,
     "currently__list_entries": t_currently_list_entries,
     "currently__set": t_currently_set,

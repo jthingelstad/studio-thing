@@ -33,10 +33,6 @@ from .local_tools import (
     t_recall,
     t_remember,
     t_search_archive,
-    t_workspace_list_all,
-    t_workspace_list_files,
-    t_workspace_read,
-    t_workspace_write,
 )
 from .tool_registry import (
     Tool,
@@ -75,8 +71,4 @@ __all__ = [
     "t_recall",
     "t_remember",
     "t_search_archive",
-    "t_workspace_list_all",
-    "t_workspace_list_files",
-    "t_workspace_read",
-    "t_workspace_write",
 ]
