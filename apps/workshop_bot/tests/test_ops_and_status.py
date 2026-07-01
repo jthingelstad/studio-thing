@@ -126,7 +126,7 @@ class AgentRunRecordMetaTests(_DBCase):
 
     def test_single_meta_populates_columns(self):
         meta = {
-            "model": "claude-sonnet-4-6",
+            "model": "claude-sonnet-5",
             "usage": {"input": 1500, "output": 700,
                       "cache_read": 200, "cache_create": 50},
             "iterations": 1,
@@ -135,7 +135,7 @@ class AgentRunRecordMetaTests(_DBCase):
             run.record_meta(meta)
         rows = db.recent_agent_runs(limit=1)
         r = rows[0]
-        self.assertEqual(r["model"], "claude-sonnet-4-6")
+        self.assertEqual(r["model"], "claude-sonnet-5")
         self.assertEqual(r["input_tokens"], 1500)
         self.assertEqual(r["output_tokens"], 700)
         self.assertEqual(r["cache_read_tokens"], 200)
@@ -145,13 +145,13 @@ class AgentRunRecordMetaTests(_DBCase):
         """Pinboard-scan's per-link loop calls record_meta many times
         under one outer AgentRun. Tokens should sum, not overwrite."""
         with db.AgentRun("linky", trigger="pinboard-scan") as run:
-            run.record_meta({"model": "claude-sonnet-4-6",
+            run.record_meta({"model": "claude-sonnet-5",
                              "usage": {"input": 1000, "output": 200,
                                        "cache_read": 0, "cache_create": 0}})
-            run.record_meta({"model": "claude-sonnet-4-6",
+            run.record_meta({"model": "claude-sonnet-5",
                              "usage": {"input": 800, "output": 150,
                                        "cache_read": 100, "cache_create": 0}})
-            run.record_meta({"model": "claude-sonnet-4-6",
+            run.record_meta({"model": "claude-sonnet-5",
                              "usage": {"input": 1200, "output": 300,
                                        "cache_read": 0, "cache_create": 25}})
         r = db.recent_agent_runs(limit=1)[0]

@@ -26,7 +26,7 @@ Every workshop_bot agent invocation records its token usage to the `agent_runs` 
 | `duration_ms` | INTEGER | wall-clock for the run |
 | `error` | TEXT | exception summary on failure |
 | `records_written` | INTEGER | semantic outcome — 1 = real reply, 0 = PASS / empty |
-| `model` | TEXT | e.g., `Codex-sonnet-4-6`, `Codex-opus-4-7`, `Codex-haiku-4-5-20251001`. NULL when no LLM call ran. |
+| `model` | TEXT | e.g., `claude-sonnet-5`, `claude-opus-4-7`, `claude-haiku-4-5-20251001`. NULL when no LLM call ran. |
 | `input_tokens` | INTEGER | sum of input tokens across all LLM calls in this run |
 | `output_tokens` | INTEGER | sum of output tokens |
 | `cache_read_tokens` | INTEGER | prompt-cache hits (90% cheaper) |
@@ -42,9 +42,10 @@ Keep this in sync with [Anthropic's pricing page](https://www.anthropic.com/pric
 
 | model | input | output | cache_read | cache_create |
 |---|---|---|---|---|
-| `Codex-sonnet-4-6` | $3.00 | $15.00 | $0.30 | $3.75 |
-| `Codex-opus-4-7` | $15.00 | $75.00 | $1.50 | $18.75 |
-| `Codex-haiku-4-5-20251001` | $1.00 | $5.00 | $0.10 | $1.25 |
+| `claude-sonnet-5` | $3.00 | $15.00 | $0.30 | $3.75 |
+| `claude-sonnet-4-6` | $3.00 | $15.00 | $0.30 | $3.75 |
+| `claude-opus-4-7` | $15.00 | $75.00 | $1.50 | $18.75 |
+| `claude-haiku-4-5-20251001` | $1.00 | $5.00 | $0.10 | $1.25 |
 
 Costs for a single row:
 ```
@@ -62,9 +63,10 @@ A reusable rate-table snippet (paste as the leading CTE):
 ```sql
 WITH rates(model, in_rate, out_rate, cr_rate, cc_rate) AS (
   VALUES
-    ('Codex-sonnet-4-6',        3.00, 15.00, 0.30, 3.75),
-    ('Codex-opus-4-7',         15.00, 75.00, 1.50, 18.75),
-    ('Codex-haiku-4-5-20251001', 1.00,  5.00, 0.10, 1.25)
+    ('claude-sonnet-5',          3.00, 15.00, 0.30, 3.75),
+    ('claude-sonnet-4-6',        3.00, 15.00, 0.30, 3.75),
+    ('claude-opus-4-7',         15.00, 75.00, 1.50, 18.75),
+    ('claude-haiku-4-5-20251001', 1.00,  5.00, 0.10, 1.25)
 ),
 priced AS (
   SELECT

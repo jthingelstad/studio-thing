@@ -33,6 +33,16 @@ class CostHelper(unittest.TestCase):
         )
         self.assertEqual(cost, 18.00)
 
+    def test_sonnet_tier_points_at_sonnet_5(self):
+        # The default persona tier resolves to Sonnet 5, and its concrete
+        # id is priced (1M in + 1M out ⇒ $3 + $15 = $18.00).
+        self.assertEqual(anthropic_client.MODELS["sonnet"], "claude-sonnet-5")
+        self.assertEqual(
+            anthropic_client.cost_usd(
+                "claude-sonnet-5", input_tokens=1_000_000, output_tokens=1_000_000),
+            18.00,
+        )
+
     def test_cache_tokens_priced_separately(self):
         # Cache reads are cheap (~10% of input), cache writes a touch
         # pricier than input — verify both lanes contribute.

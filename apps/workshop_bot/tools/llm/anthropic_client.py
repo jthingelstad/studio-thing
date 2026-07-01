@@ -18,7 +18,7 @@ REPO = Path(__file__).resolve().parents[4]
 PROMPTS_DIR = REPO / "apps" / "workshop_bot" / "prompts"
 
 MODELS = {
-    "sonnet": "claude-sonnet-4-6",
+    "sonnet": "claude-sonnet-5",
     "opus": "claude-opus-4-7",
     "haiku": "claude-haiku-4-5-20251001",
 }
@@ -27,8 +27,12 @@ MODELS = {
 # only in the workshop-bot-llm-usage SKILL.md) so any in-process tool —
 # AgentRun, the exercise harness, ad-hoc scripts — can compute cost
 # without duplicating the table. Update both this and SKILL.md when
-# Anthropic changes rates.
+# Anthropic changes rates. The claude-sonnet-4-6 row is retained so cost
+# lookups on historical agent_runs (pre-Sonnet-5) still resolve.
+# NOTE: the claude-sonnet-5 rates mirror 4.6 as a provisional placeholder —
+# confirm against Anthropic's pricing page and correct if they differ.
 RATES_USD_PER_MTOK: dict[str, dict[str, float]] = {
+    "claude-sonnet-5":           {"input":  3.00, "output": 15.00, "cache_read": 0.30, "cache_create":  3.75},
     "claude-sonnet-4-6":         {"input":  3.00, "output": 15.00, "cache_read": 0.30, "cache_create":  3.75},
     "claude-opus-4-7":           {"input": 15.00, "output": 75.00, "cache_read": 1.50, "cache_create": 18.75},
     "claude-haiku-4-5-20251001": {"input":  1.00, "output":  5.00, "cache_read": 0.10, "cache_create":  1.25},
