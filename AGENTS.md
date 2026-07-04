@@ -6,10 +6,17 @@ overview and `ALIGNMENT.md` for the current cross-repo map.
 ## What this repo is
 
 Studio is the **brain** behind Jamie's publishing: the Librarian API behind Thingy, the
-Discord-based authoring agents (**Eddy, Linky, Patty, Marky**) that help with publishing,
+five-agent staff (**Scout, Eddy, Linky, Marky, Patty**) that helps with *all* publishing,
 and the **corpus** of all writing and drafts across every outlet — the blog, Another
 Thing, and the Weekly Thing. Everything downstream — blog, newsletter, podcast, Thingy —
 is a separate **surface** that consumes what Studio produces.
+
+Since the 2026-06 rearchitecture, **productions** (newsletter / article / podcast /
+project) are the unit of work, a private tailnet-only **web app** is the work surface
+(Discord is the agents' room), authored content lives in the workshop **DB** (S3 is
+publishing-only), and a **seeds** idea garden feeds new productions. **The one rule:
+Jamie writes every word.** See `apps/workshop_bot/CLAUDE.md` ("The studio now") for the
+full model.
 
 The decision rule for where code belongs:
 
@@ -19,7 +26,8 @@ The decision rule for where code belongs:
 
 ## Layout
 
-- `apps/workshop_bot/` — the authoring staff (Eddy/Linky/Marky/Patty). Studio core.
+- `apps/workshop_bot/` — the staff (Scout/Eddy/Linky/Marky/Patty), the productions
+  state engine, the seeds idea garden, and the tailnet web app (`webapp/`). Studio core.
 - `apps/librarian/` — Librarian API (Lambda + infra + admin). Deployed from Studio.
 - `librarian-core/` — shared `librarian_core` package (corpus/graph/retrieval/links).
 - `pipeline/` — production: build, stats, status, audio, corpus, graph, deploy.

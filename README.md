@@ -46,7 +46,7 @@ One brain, several surfaces.
 | `data/blog/` | Blog drafts and post archive; feeds the blog corpus and the future Micropub publish pipeline. |
 | `data/podcast/` | Normalized Another Thing episode metadata and transcripts for the podcast corpus. |
 | `content/buttondown/` | Author-managed Buttondown newsletter config (automations, transactional, theme). |
-| `ROADMAP.md`, `TASKS.md` | Product direction and concrete follow-ups for Thingy / Studio. |
+| `docs/librarian-tasks.md` | Backend follow-ups for the Librarian API. The Thingy product roadmap lives in `thingy.thingelstad.com/docs/ROADMAP.md`. |
 | `docs/`, `notes/`, `reference/` | Architecture, staff, and editorial reference. |
 | `tests/` | Python tests covering librarian / corpus / content / audio. |
 | `Makefile`, `requirements.txt` | Production command surface and Python deps. |
