@@ -160,7 +160,7 @@ class ComposeMetaTests(_DBTestCase):
         self._window()
         import json as _j
         _seed_issue_body(458)
-        self.ws.write_issue_file(458, "metadata.json", _j.dumps({
+        content_store.write_issue(458, "metadata.json", _j.dumps({
             "number": 458,
             "subject": "old subject",
             "description": "old description",
@@ -331,7 +331,7 @@ class ComposeCtaTests(_DBTestCase):
         to re-roll."""
         self._window()
         # Pre-fill cta-1.md.
-        self.ws.write_issue_file(458, "cta-1.md", "---\nkind: supporter\n---\n\nalready filled.")
+        content_store.write_issue(458, "cta-1.md", "---\nkind: supporter\n---\n\nalready filled.")
         fc = _FakeBotChannel(persona="patty", reply='{"framings": ["new copy"]}')
         os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
@@ -371,8 +371,9 @@ class ComposeCtaTests(_DBTestCase):
         self.assertIsNone(content_store.read_issue(458, "cta-1.md"))
 
     def test_channel_send_failure_does_not_lose_written_slot(self):
-        """If Discord glitches on the summary post, the file is already on
-        S3 — the job must still complete and report the written slots."""
+        """If Discord glitches on the summary post, the content is already
+        in the store — the job must still complete and report the written
+        slots."""
         self._window()
         fc = _FakeBotChannel(persona="patty", reply='{"framings": ["x"]}')
         fc.channel.send = AsyncMock(side_effect=RuntimeError("discord down"))
@@ -400,7 +401,7 @@ class ComposeCtaTests(_DBTestCase):
         """If thesis.md exists, both CTA and thanks prompts get the thesis
         injected as a `## Thesis` block at the top of the user message."""
         self._window()
-        self.ws.write_issue_file(458, "thesis.md", "Capital and code.")
+        content_store.write_issue(458, "thesis.md", "Capital and code.")
         fc = _FakeBotChannel(persona="patty", reply='{"framings": ["x"]}')
         os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
         ctx = _base.JobContext(deps=fc.deps())

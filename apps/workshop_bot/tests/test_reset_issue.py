@@ -46,7 +46,7 @@ class ResetFinalTests(_Case):
 
     def test_deletes_thesis(self):
         self._window()
-        self.ws.write_issue_file(349, "thesis.md", "thesis line")
+        content_store.write_issue(349, "thesis.md", "thesis line")
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="final"))
         self.assertTrue(result.ok, result.message)
@@ -64,7 +64,7 @@ class ResetFinalTests(_Case):
             source_id="p1", body_md="x",
         )
         issue_items.promote(rid, promoted_position="after_notable", promoted_heading="Feature")
-        self.ws.write_issue_file(349, "thesis.md", "thesis line")
+        content_store.write_issue(349, "thesis.md", "thesis line")
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="final"))
         self.assertTrue(result.ok)
@@ -81,8 +81,8 @@ class ResetFinalTests(_Case):
 
     def test_does_not_touch_publish_artifacts(self):
         self._window()
-        self.ws.write_issue_file(349, "thesis.md", "t")
-        self.ws.write_issue_file(349, "buttondown.md", "p")
+        content_store.write_issue(349, "thesis.md", "t")
+        self.ws.write_issue_file(349, "buttondown.md", "p")  # generated S3 artifact
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="final"))
         self.assertTrue(result.ok)
@@ -94,7 +94,7 @@ class ResetPublishTests(_Case):
 
     def test_deletes_buttondown_md(self):
         self._window()
-        self.ws.write_issue_file(349, "buttondown.md", "p")
+        self.ws.write_issue_file(349, "buttondown.md", "p")  # generated S3 artifact
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="publish"))
         self.assertTrue(result.ok)
@@ -102,12 +102,12 @@ class ResetPublishTests(_Case):
 
     def test_does_not_touch_thesis(self):
         self._window()
-        self.ws.write_issue_file(349, "thesis.md", "t")
-        self.ws.write_issue_file(349, "buttondown.md", "p")
+        content_store.write_issue(349, "thesis.md", "t")
+        self.ws.write_issue_file(349, "buttondown.md", "p")  # generated S3 artifact
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="publish"))
         self.assertTrue(result.ok)
-        self.assertIn((349, "thesis.md"), self.ws.files)
+        self.assertIsNotNone(content_store.read_issue(349, "thesis.md"))
         self.assertNotIn((349, "buttondown.md"), self.ws.files)
 
     def test_does_not_touch_buttondown_id(self):
@@ -115,15 +115,16 @@ class ResetPublishTests(_Case):
         # same Buttondown draft via the stored buttondown_id, not POST
         # a fresh one.
         self._window()
-        self.ws.write_issue_file(
+        content_store.write_issue(
             349, "metadata.json",
             '{"subject":"x","buttondown_id":"em_abc123"}',
         )
-        self.ws.write_issue_file(349, "buttondown.md", "p")
+        self.ws.write_issue_file(349, "buttondown.md", "p")  # generated S3 artifact
         ctx, fc = self._ctx()
         asyncio.run(reset_issue.run(ctx, step="publish"))
-        self.assertIn((349, "metadata.json"), self.ws.files)
-        self.assertIn("em_abc123", self.ws.files[(349, "metadata.json")])
+        meta = content_store.read_issue(349, "metadata.json")
+        self.assertIsNotNone(meta)
+        self.assertIn("em_abc123", meta)
 
     def test_does_not_clear_promotions(self):
         # Promotions belong to the editorial pass, not the publish pass.
@@ -133,7 +134,7 @@ class ResetPublishTests(_Case):
             source_id="p1", body_md="x",
         )
         issue_items.promote(rid, promoted_position="after_notable", promoted_heading="F")
-        self.ws.write_issue_file(349, "buttondown.md", "p")
+        self.ws.write_issue_file(349, "buttondown.md", "p")  # generated S3 artifact
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="publish"))
         self.assertTrue(result.ok)

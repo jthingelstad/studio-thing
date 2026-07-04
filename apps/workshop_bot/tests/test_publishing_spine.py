@@ -33,7 +33,7 @@ from apps.workshop_bot.jobs import (  # noqa: E402
     promotion_prep,
     put_to_bed,
 )
-from apps.workshop_bot.tools import db, renderers  # noqa: E402
+from apps.workshop_bot.tools import content_store, db, renderers  # noqa: E402
 from apps.workshop_bot.tests._fixtures import DBTestCase as _DBTestCase  # noqa: E402
 
 _OK = _base.JobResult(True, "ok")
@@ -77,9 +77,9 @@ class BuildStateTests(_DBTestCase):
                                      ("journal", "microblog", "j1")):
             issue_items.upsert_item(issue_number=n, section=section,
                                     source=source, source_id=sid, body_md="x")
-        self.ws.write_issue_file(n, "intro.md", "Opening.")
-        self.ws.write_issue_file(n, "haiku.md", "a\nb\nc")
-        self.ws.write_issue_file(n, "cover.jpg", "binary")
+        content_store.write_issue(n, "intro.md", "Opening.")
+        content_store.write_issue(n, "haiku.md", "a\nb\nc")
+        self.ws.write_issue_file(n, "cover.jpg", "binary")  # genuine S3 binary
 
     def test_build_ready_when_content_present(self):
         _window(458)
@@ -140,15 +140,15 @@ class BuildStateTests(_DBTestCase):
 
 class PublishStateTests(_DBTestCase):
     def _seed_built(self, n=458, *, subject="", description="", buttondown_id=""):
-        self.ws.write_issue_file(n, "intro.md", "x")
-        self.ws.write_issue_file(n, "haiku.md", "a\nb\nc")
-        self.ws.write_issue_file(n, "cover.jpg", "bin")
+        content_store.write_issue(n, "intro.md", "x")
+        content_store.write_issue(n, "haiku.md", "a\nb\nc")
+        self.ws.write_issue_file(n, "cover.jpg", "bin")  # genuine S3 binary
         meta = {"number": n, "slug": str(n)}
         if subject:
             meta["subject"] = subject
         if description:
             meta["description"] = description
-        self.ws.write_issue_file(n, "metadata.json", json.dumps(meta))
+        content_store.write_issue(n, "metadata.json", json.dumps(meta))
         if buttondown_id:
             # Publish-stamped fields live on the issue window now.
             db.set_issue_publish_record(
@@ -180,8 +180,8 @@ class PublishStateTests(_DBTestCase):
         _window(458)
         db.set_issue_phase(458, "publish")
         self._seed_built(subject="S", description="d")
-        self.ws.write_issue_file(458, "thesis.md", "An issue about X.")
-        self.ws.write_issue_file(458, "echoes.md", "Echoes prose.")
+        content_store.write_issue(458, "thesis.md", "An issue about X.")
+        content_store.write_issue(458, "echoes.md", "Echoes prose.")
         st = production_state.publish_state(458)
         self.assertFalse(st["thesis_failed"])
         self.assertFalse(st["echoes_failed"])
@@ -192,7 +192,7 @@ class PublishStateTests(_DBTestCase):
         _window(458)
         db.set_issue_phase(458, "publish")
         self._seed_built(subject="S", description="d")
-        self.ws.write_issue_file(458, "echoes.md", "Echoes prose.")  # thesis missing
+        content_store.write_issue(458, "echoes.md", "Echoes prose.")  # thesis missing
         st = production_state.publish_state(458)
         self.assertTrue(st["thesis_failed"])
         self.assertFalse(st["echoes_failed"])
@@ -212,7 +212,7 @@ class PublishStateTests(_DBTestCase):
         _window(458)
         db.set_issue_phase(458, "publish")
         self._seed_built(subject="S", description="d")
-        self.ws.write_issue_file(458, "echoes.md", "Echoes prose.")  # thesis missing
+        content_store.write_issue(458, "echoes.md", "Echoes prose.")  # thesis missing
         with patch.object(compose_thesis, "run", new=AsyncMock(return_value=_OK)) as m_thesis, \
              patch.object(compose_echoes, "run", new=AsyncMock(return_value=_OK)) as m_echoes:
             res = asyncio.run(production_ops.recompose(_base.JobContext()))

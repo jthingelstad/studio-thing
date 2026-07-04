@@ -51,7 +51,7 @@ class BuildModalTests(_Case):
 
     def test_modal_prefilled_with_current_content(self):
         self._window()
-        self.ws.write_issue_file(349, "intro.md", "Welcome to year nine.")
+        content_store.write_issue(349, "intro.md", "Welcome to year nine.")
         modal, err = edit_asset.build_modal(self._ctx(), asset_key="intro")
         self.assertIsNone(err)
         self.assertIsNotNone(modal)
@@ -74,20 +74,20 @@ class BuildModalTests(_Case):
         # Placeholder is set so the empty field has a hint of what to write.
         self.assertTrue(modal.input.placeholder)
         # Existing content path: default is set, not None.
-        self.ws.write_issue_file(349, "outro.md", "the existing outro")
+        content_store.write_issue(349, "outro.md", "the existing outro")
         modal2, _ = edit_asset.build_modal(self._ctx(), asset_key="outro")
         self.assertEqual(modal2.input.default, "the existing outro")
 
     def test_cta_modal_builds(self):
         self._window()
-        self.ws.write_issue_file(349, "cta-1.md", "---\nkind: supporter\n---\n\nx")
+        content_store.write_issue(349, "cta-1.md", "---\nkind: supporter\n---\n\nx")
         modal, err = edit_asset.build_modal(self._ctx(), asset_key="cta-1")
         self.assertIsNone(err)
         self.assertIsNotNone(modal)
 
     def test_oversized_body_refuses(self):
         self._window()
-        self.ws.write_issue_file(349, "intro.md", "a" * (edit_asset._MODAL_MAX + 1))
+        content_store.write_issue(349, "intro.md", "a" * (edit_asset._MODAL_MAX + 1))
         modal, err = edit_asset.build_modal(self._ctx(), asset_key="intro")
         self.assertIsNone(modal)
         self.assertIn("4,000", err)
@@ -104,7 +104,7 @@ class ModalSubmitTests(_Case):
 
     def test_submit_writes_file_and_acks(self):
         self._window()
-        self.ws.write_issue_file(349, "intro.md", "old content")
+        content_store.write_issue(349, "intro.md", "old content")
         modal, _ = edit_asset.build_modal(self._ctx(), asset_key="intro")
         modal.input.value = "new content (edited)"
         interaction = self._interaction()
@@ -135,7 +135,7 @@ class ModalSubmitTests(_Case):
     def test_submit_empty_value_writes_empty_file(self):
         # Allowed — Jamie may want to clear an asset and re-author it.
         self._window()
-        self.ws.write_issue_file(349, "outro.md", "old outro")
+        content_store.write_issue(349, "outro.md", "old outro")
         modal, _ = edit_asset.build_modal(self._ctx(), asset_key="outro")
         modal.input.value = ""
         interaction = self._interaction()

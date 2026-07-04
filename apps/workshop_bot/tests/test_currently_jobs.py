@@ -85,17 +85,9 @@ class SetAndClearTests(_NoopRefireMixin, DBTestCase):
         self.assertFalse(r.ok)
         self.assertIn("add-type", r.message.lower())
 
-    def test_clear_removes_and_renumbers(self):
-        _run(currently_job.set_value(_base.JobContext(), type_label="Listening", value="L"))
-        _run(currently_job.set_value(_base.JobContext(), type_label="Watching", value="W"))
-        _run(currently_job.set_value(_base.JobContext(), type_label="Reading", value="R"))
-        r = _run(currently_job.clear_value(_base.JobContext(), type_label="Watching"))
-        self.assertTrue(r.ok)
-        rows = db.currently_get_entries(458)
-        self.assertEqual(
-            [(x["type_label"], x["position"]) for x in rows],
-            [("Listening", 1), ("Reading", 2)],
-        )
+    # Clear-with-entry semantics (delete + renumber) are canonical in
+    # test_currently.py::test_clear_drops_and_renumbers; the job is a thin
+    # wrapper whose routing is covered by the no-op path below.
 
     def test_clear_missing_entry_returns_friendly_no_op(self):
         r = _run(currently_job.clear_value(_base.JobContext(), type_label="Reading"))
@@ -135,9 +127,9 @@ class TypePoolTests(_NoopRefireMixin, DBTestCase):
         # New type appears in the pool.
         self.assertIn("Surfing", [t["label"] for t in db.currently_list_types()])
 
-    def test_add_type_duplicate_refused(self):
-        r = _run(currently_job.add_type(_base.JobContext(), label="Reading"))
-        self.assertFalse(r.ok)
+    # Duplicate-add refusal is canonical in test_currently.py::
+    # test_add_type_duplicate_refused; the job's CurrentlyError→error
+    # mapping is covered by test_set_unknown_type_errors_with_hint.
 
     def test_retire_type_marks_inactive(self):
         r = _run(currently_job.retire_type(_base.JobContext(), label="Drinking"))

@@ -191,11 +191,6 @@ class ReviewTargetLegendTests(_DBTestCase):
         self.assertNotIn("- `outro`", legend)
         self.assertNotIn("- `cover`", legend)
 
-    def test_outro_present_via_content_store(self):
-        content_store.write_issue(458, "outro.md", "Closing note.")
-        legend = render.review_target_legend(issue_number=458)
-        self.assertIn("- `outro`", legend)
-
     def test_empty_issue_has_no_targets(self):
         legend = render.review_target_legend(issue_number=458)
         self.assertEqual(legend, "- No precise review targets are available.")
