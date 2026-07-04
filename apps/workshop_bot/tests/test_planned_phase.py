@@ -2,7 +2,7 @@
 
 `define` registers a newsletter as a DB row only (no workspace seeding);
 `start_working` moves it to build and seeds the pipeline (pointer + first
-update-draft). The web "create newsletter" path calls `define`.
+sync-issue). The web "create newsletter" path calls `define`.
 """
 
 from __future__ import annotations
@@ -62,8 +62,10 @@ class StartWorkingTests(_DBTestCase):
         win = db.get_active_issue_window(360)
         self.assertEqual(win["phase"], "build")
         self.assertEqual(db.get_production("WT360")["phase"], "build")
-        # The pipeline ran: update-draft generated draft.md.
-        self.assertIn((360, "draft.md"), self.ws.files)
+        # No draft.md seeding — the DB is the draft; start_working chains
+        # the upstream sync instead.
+        self.assertNotIn((360, "draft.md"), self.ws.files)
+        self.assertIn("sync-issue", res.message)
 
     def test_start_working_without_window_errors(self):
         ctx = _base.JobContext()

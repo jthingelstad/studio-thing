@@ -1,4 +1,9 @@
-"""Runtime bookkeeping: draft digests + agent-run telemetry (moved from store.py)."""
+"""Runtime bookkeeping: agent-run telemetry (moved from store.py).
+
+(The ``draft_digests`` helpers that lived here died with the retired
+``update-draft`` projection — the DB is the draft; there is no snapshot
+to diff against.)
+"""
 
 from __future__ import annotations
 
@@ -6,54 +11,6 @@ import time
 from typing import Any, Optional
 
 from .connection import connect
-
-
-# ---------- draft digests (Eddy's delta context for update-draft) ----------
-
-
-def insert_draft_digest(
-    *,
-    issue: int,
-    word_count: int,
-    notable_count: int,
-    brief_count: int,
-    journal_count: int,
-    intro_present: bool,
-    currently_present: bool,
-    haiku_present: bool,
-    cover_present: bool,
-    source_hash: Optional[str] = None,
-) -> int:
-    with connect() as conn:
-        cur = conn.execute(
-            "INSERT INTO draft_digests "
-            "(issue, word_count, notable_count, brief_count, journal_count, "
-            " intro_present, currently_present, haiku_present, cover_present, source_hash) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                int(issue), int(word_count), int(notable_count), int(brief_count),
-                int(journal_count),
-                1 if intro_present else 0, 1 if currently_present else 0,
-                1 if haiku_present else 0, 1 if cover_present else 0, source_hash,
-            ),
-        )
-        return int(cur.lastrowid or 0)
-
-
-def latest_draft_digest(issue: int) -> Optional[dict[str, Any]]:
-    """Most recent digest row for ``issue`` — i.e. the prior update-draft
-    run's snapshot, used to compute the delta for the current run."""
-    with connect() as conn:
-        row = conn.execute(
-            "SELECT id, issue, ran_at, word_count, notable_count, brief_count, "
-            "       journal_count, intro_present, currently_present, haiku_present, "
-            "       cover_present, source_hash "
-            "FROM draft_digests WHERE issue = ? ORDER BY ran_at DESC, id DESC LIMIT 1",
-            (int(issue),),
-        ).fetchone()
-    return dict(row) if row else None
-
-
 
 
 def recent_agent_runs(limit: int = 8) -> list[dict[str, Any]]:

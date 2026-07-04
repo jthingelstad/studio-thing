@@ -49,10 +49,15 @@ Full detail: `apps/workshop_bot/CLAUDE.md` ("The studio now") and `docs/publishi
   podcast corpus.
 - **Done (2026-06-28/29):** the productions + web-work-surface rearchitecture landed (PRs #26/#27
   plus the M3/R3 retirement pass). Tested and in production use.
-- **In transition:** the new `/scout issue publish` flow is validated on 1 of 3–4 ships; the iOS
-  Shortcuts pipeline stays as the recovery path until then. Escape-hatch slash commands
-  (`/eddy issue …`, `/scout issue publish …`, `/patty cta`, `/marky campaign`, `/patty goal`)
-  remain until web equivalents land.
+- **Done (2026-07-04):** the S3-collaboration layer ripped out — **the DB is the draft.** The
+  `update-draft` daily projection, `draft.md`/`draft.html`, `draft_digests`, the `workshop.json`
+  pointer, and the **iOS-Shortcuts pipeline are retired**. Replacements: `sync-issue` (inbound
+  Pinboard/micro.blog mirror), render-then-ship publish legs, on-demand `eddy-review`, live web
+  preview, web cover upload. Also: the atom editor (build 1) — `/productions/WT{n}/editor` with
+  promote/deselect/reorder over `issue_items`.
+- **In transition:** WT350 will be the first ship through the fully-clean path. Escape-hatch slash
+  commands (`/eddy issue …`, `/scout issue publish …`, `/patty cta`, `/marky campaign`,
+  `/patty goal`) remain until web equivalents land.
 - **Operational model:** Studio ships canonical content and pushes generated 11ty inputs to Weekly.
   Weekly refreshes only its own landing-page stats, then renders and deploys.
 

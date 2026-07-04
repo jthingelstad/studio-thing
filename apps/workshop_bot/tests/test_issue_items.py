@@ -174,6 +174,89 @@ class UpsertTests(_DBCase):
         self.assertEqual([r["id"] for r in promoted], [a])
 
 
+# ---------------- editor columns (atom editor, build 1) ----------------
+
+class EditorColumnsTests(_DBCase):
+
+    def _pin(self, source_id, section="brief", title="T", body="b"):
+        return issue_items.upsert_item(
+            issue_number=349, section=section, source="pinboard",
+            source_id=source_id, url=f"https://x/{source_id}",
+            title=title, body_md=body,
+        )
+
+    def test_section_override_flips_effective_section(self):
+        issue_items.upsert_item(
+            issue_number=349, section="notable", source="pinboard",
+            source_id="n1", url="https://n/1", title="N", body_md="n",
+        )
+        b = self._pin("b1")
+        issue_items.set_section_override(b, "notable")
+        notable = issue_items.list_items(349, section="notable")
+        self.assertEqual([r["id"] for r in notable][-1], b)
+        self.assertEqual(issue_items.list_items(349, section="brief"), [])
+        # Flipped item appended at end of the target list, not interleaved.
+        self.assertEqual(notable[-1]["position"], 2)
+        # Clear reverts to the sync-owned section.
+        issue_items.set_section_override(b, None)
+        self.assertEqual(
+            [r["id"] for r in issue_items.list_items(349, section="brief")], [b])
+
+    def test_override_and_excluded_survive_sync_upsert(self):
+        b = self._pin("b1", body="original")
+        issue_items.set_section_override(b, "notable")
+        e = self._pin("b2")
+        issue_items.set_excluded(e, True)
+        # Simulate the daily sync refresh: same (issue, source, source_id).
+        issue_items.upsert_item(
+            issue_number=349, section="brief", source="pinboard",
+            source_id="b1", url="https://x/b1", title="T", body_md="refreshed",
+        )
+        issue_items.upsert_item(
+            issue_number=349, section="brief", source="pinboard",
+            source_id="b2", url="https://x/b2", title="T", body_md="refreshed",
+        )
+        flipped = issue_items.get_item(b)
+        self.assertEqual(flipped["section_override"], "notable")   # survived
+        self.assertEqual(flipped["body_md"], "refreshed")          # sync owns body
+        self.assertEqual(issue_items.get_item(e)["excluded"], 1)   # survived
+        self.assertEqual(
+            [r["id"] for r in issue_items.list_items(349, section="notable")], [b])
+
+    def test_excluded_hidden_from_render_paths_but_listable(self):
+        a = self._pin("b1")
+        bb = self._pin("b2")
+        issue_items.set_excluded(a, True)
+        self.assertEqual(
+            [r["id"] for r in issue_items.list_items(349, section="brief")], [bb])
+        both = issue_items.list_items(349, section="brief", include_excluded=True)
+        self.assertEqual([r["id"] for r in both], [a, bb])
+        # A deselected promoted item doesn't render either.
+        issue_items.promote(a, promoted_position="before_notable", promoted_heading="F")
+        self.assertEqual(issue_items.promoted_items(349), [])
+
+    def test_reorder_validates_against_effective_view(self):
+        a = self._pin("b1")
+        bb = self._pin("b2")
+        c = self._pin("b3")
+        issue_items.set_excluded(c, True)
+        # Excluded row is not part of the permutation.
+        issue_items.reorder(349, "brief", [bb, a])
+        self.assertEqual(
+            [r["id"] for r in issue_items.list_items(349, section="brief")], [bb, a])
+        with self.assertRaises(issue_items.ReorderError):
+            issue_items.reorder(349, "brief", [bb, a, c])
+
+    def test_set_override_validates(self):
+        with self.assertRaises(ValueError):
+            issue_items.set_section_override(9999, "notable")
+        b = self._pin("b1")
+        with self.assertRaises(ValueError):
+            issue_items.set_section_override(b, "bogus")
+        with self.assertRaises(ValueError):
+            issue_items.set_excluded(9999, True)
+
+
 # ---------------- reorder ----------------
 
 class ReorderTests(_DBCase):

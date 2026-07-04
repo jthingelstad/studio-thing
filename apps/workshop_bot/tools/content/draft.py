@@ -1,10 +1,13 @@
-"""Parse the in-flight ``draft.md`` for section + asset completeness.
+"""Section + asset completeness for the in-flight issue.
 
-Pure markdown parsing — the only S3 access is in ``section_status``, which
-reads the workspace unless the caller supplies the draft text / file
-listing. Shared by ``update-draft`` (Eddy's review context), the
-``issue-status`` job, ``build_eddy_context``, and the
-``draft__section_status`` agent tool.
+**The DB is the draft**: ``section_status`` computes directly from
+``issue_items`` rows, the DB content store, and ``currently_entries`` —
+the only S3 access is the workspace listing for binaries (``cover.jpg``).
+Shared by ``eddy-review`` (Eddy's review context), the ``issue-status``
+job, ``build_eddy_context``, and the ``draft__section_status`` agent tool.
+
+The markdown parse helpers (``parse_blocks`` / ``count_*``) remain for
+callers that analyse rendered bodies.
 """
 
 from __future__ import annotations
@@ -92,21 +95,24 @@ def word_count(draft_text: str) -> int:
 _COUNTERS = {"notable": count_notable, "brief": count_brief, "journal": count_journal}
 
 
+def _atom_present(issue_number: int, name: str) -> bool:
+    from .. import content_store
+
+    body = content_store.read_issue(issue_number, name)
+    return bool(body and body.strip())
+
+
 def section_status(
     issue_number: int,
     *,
-    draft_text: Optional[str] = None,
     list_objects: Optional[set] = None,
 ) -> dict[str, Any]:
-    """Compute the in-flight issue's section + asset completeness.
+    """Compute the in-flight issue's section + asset completeness straight
+    from the DB (the draft). ``list_objects`` overrides the S3 workspace
+    listing (binaries: ``cover.jpg``) for tests."""
+    from .. import content_store, db as _db, issue_items
 
-    Reads ``draft.md`` and the workspace listing from S3 unless overrides
-    are supplied (tests / callers that already have them).
-    """
     n = int(issue_number)
-    if draft_text is None:
-        res = s3.read_issue_file(n, "draft.md")
-        draft_text = res["text"] if (res.get("found") and isinstance(res.get("text"), str)) else ""
     if list_objects is None:
         try:
             listing = s3.list_issue(n)
@@ -116,48 +122,54 @@ def section_status(
         except Exception:
             list_objects = set()
 
-    blocks = parse_blocks(draft_text)
     sections: dict[str, Any] = {}
     for name in ("notable", "brief", "journal"):
-        content = blocks.get(name, "")
-        placeholder = is_placeholder(content)
-        items = _COUNTERS[name](content)
+        rows = issue_items.list_items(n, section=name, include_promoted=False)
         sections[name] = {
-            "present": bool(content) and not placeholder and items > 0,
-            "item_count": items,
-            "placeholder": placeholder,
+            "present": len(rows) > 0,
+            "item_count": len(rows),
+            "placeholder": False,
         }
-    cta_files = sorted(
-        f for f in list_objects
-        if f and (
-            (f.startswith("cta-") and f.endswith(".md"))
-            or (f.startswith("thanks-") and f.endswith(".md"))
-        )
-    )
-    assets = {name: (name in list_objects) for name in REQUIRED_ASSETS + OPTIONAL_ASSETS}
-    # Daily-rendered artifacts — produced by update-draft via the
-    # three pure renderers.
-    assets["draft.md"] = ("draft.md" in list_objects) or bool(draft_text)
-    assets["archive.md"] = "archive.md" in list_objects
-    assets["buttondown.md"] = "buttondown.md" in list_objects
 
-    intro_present = bool(blocks.get("intro")) or assets.get("intro.md", False)
-    currently_present = (
-        bool(blocks.get("currently"))
-        or assets.get("currently.json", False)
-        or assets.get("currently.md", False)
+    content_names = set(content_store.list_issue(n))
+    cta_files = sorted(
+        f for f in content_names
+        if (f.startswith("cta-") and f.endswith(".md"))
+        or (f.startswith("thanks-") and f.endswith(".md"))
     )
-    currently_content = blocks.get("currently", "").strip()
-    haiku_present = bool(blocks.get("haiku")) or assets.get("haiku.md", False)
+    assets: dict[str, bool] = {}
+    for name in REQUIRED_ASSETS + OPTIONAL_ASSETS:
+        if name == "cover.jpg":
+            assets[name] = name in list_objects
+        else:
+            assets[name] = _atom_present(n, name)
+
+    currently_entries = _db.currently_get_entries(n)
+    currently_content = "\n".join(
+        f"**{e['type_label']}:** {e.get('value') or ''}" for e in currently_entries
+    ).strip()
+
+    intro_present = assets.get("intro.md", False)
+    currently_present = bool(currently_entries)
+    haiku_present = assets.get("haiku.md", False)
     cover_present = assets.get("cover.jpg", False)
 
     required_missing: list[str] = [a for a in REQUIRED_ASSETS if not assets.get(a)]
     if not all(sections[s]["present"] for s in ("notable", "brief", "journal")):
         required_missing.append("sections (notable/brief/journal)")
 
+    # Word count over the body rendered from current DB state (in-memory,
+    # no artifacts). Lazy import — renderers pulls the wider tools graph.
+    from .. import renderers
+
+    try:
+        body = renderers.render_body_for_issue(n)
+    except Exception:  # noqa: BLE001 — status must not fail on a render error
+        body = ""
+
     return {
         "issue_number": n,
-        "word_count": word_count(draft_text),
+        "word_count": word_count(body),
         "sections": sections,
         "assets": assets,
         "cta_files": cta_files,

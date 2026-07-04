@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% set nav = "productions" %}
+{% block title %}{{ row.id }} · editor{% endblock %}
+{% block content %}
+  <div style="display:flex; align-items:baseline; gap:.6rem;">
+    <h1 style="flex:1; margin-bottom:.2rem;">{{ row.id }} <span class="ph">editor</span></h1>
+    <a class="btn ghost" href="/productions/{{ row.id }}">← production</a>
+  </div>
+  <p class="muted">{{ row.title }} — the issue as one ordered list of atoms.
+    Derived atoms (pins, journal posts) mirror their upstream source; edit those
+    at the source. Deselecting keeps the atom, it just doesn't ship.</p>
+
+  {% set kind_labels = {"intro": "Intro", "currently": "Currently", "photo": "Photo",
+                        "notable": "Notable", "journal": "Journal", "brief": "Briefly",
+                        "outro": "Outro", "echoes": "Echoes", "closer": "Closer"} %}
+  {% for g in groups %}
+    <div class="secthead"><h2>{{ kind_labels.get(g.kind, g.kind) }}</h2></div>
+    <div class="card">
+      {% for a in g.atoms %}
+        <div class="row" style="{{ 'opacity:.45;' if not a.selected else '' }} display:block; padding:.6rem 0;">
+          <div style="display:flex; align-items:baseline; gap:.5rem;">
+            <span class="ti" style="flex:1;">
+              {% if a.url %}<a href="{{ a.url }}" target="_blank" rel="noopener">{{ a.title }}</a>{% else %}{{ a.title }}{% endif %}
+              {% if a.overridden %}<span class="badge">moved</span>{% endif %}
+              {% if a.promoted %}<span class="badge">featured</span>{% endif %}
+              {% if not a.selected %}<span class="badge">deselected</span>{% endif %}
+              <span class="muted">· {{ a.source }}</span>
+            </span>
+            {% if a.item_id %}
+              {% if a.selected and not a.promoted %}
+                <form method="post" action="/productions/{{ row.id }}/editor/move" style="display:inline;">
+                  <input type="hidden" name="item_id" value="{{ a.item_id }}">
+                  <button class="btn ghost" name="dir" value="up" title="move up">↑</button>
+                  <button class="btn ghost" name="dir" value="down" title="move down">↓</button>
+                </form>
+              {% endif %}
+              {% if a.flippable and a.selected %}
+                <form method="post" action="/productions/{{ row.id }}/editor/flip" style="display:inline;">
+                  <input type="hidden" name="item_id" value="{{ a.item_id }}">
+                  {% if a.overridden %}
+                    <button class="btn ghost" name="target" value="clear">undo move</button>
+                  {% elif a.kind == "brief" %}
+                    <button class="btn ghost" name="target" value="notable">→ Notable</button>
+                  {% else %}
+                    <button class="btn ghost" name="target" value="brief">→ Briefly</button>
+                  {% endif %}
+                </form>
+              {% endif %}
+              <form method="post" action="/productions/{{ row.id }}/editor/select" style="display:inline;">
+                <input type="hidden" name="item_id" value="{{ a.item_id }}">
+                {% if a.selected %}
+                  <button class="btn ghost" name="selected" value="0">deselect</button>
+                {% else %}
+                  <button class="btn" name="selected" value="1">reselect</button>
+                {% endif %}
+              </form>
+            {% endif %}
+          </div>
+          {% if a.editable %}
+            <form method="post" action="/productions/{{ row.id }}/editor/atom" class="pform" style="margin:.3rem 0 0;">
+              <input type="hidden" name="key" value="{{ a.key }}">
+              <textarea name="value" rows="{{ 2 if a.kind == 'currently' else 4 }}">{{ a.body }}</textarea>
+              <div class="actions"><button class="btn" type="submit">Save</button></div>
+            </form>
+          {% elif a.body %}
+            <div class="muted" style="white-space:pre-wrap; margin:.3rem 0 0; font-size:.92em;">{{ a.body }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+      {% if not g.atoms %}<div class="muted">Nothing here yet.</div>{% endif %}
+    </div>
+  {% endfor %}
+{% endblock %}

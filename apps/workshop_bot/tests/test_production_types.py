@@ -49,6 +49,14 @@ class ProductionTypesTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             pt.default_phase("zine")
 
+    def test_status_vocabulary(self):
+        self.assertEqual(
+            pt.STATUSES, ("active", "paused", "done", "archived", "abandoned"))
+        for s in pt.STATUSES:
+            self.assertTrue(pt.is_valid_status(s))
+        self.assertFalse(pt.is_valid_status("shipped"))
+        self.assertFalse(pt.is_valid_status(""))
+
 
 if __name__ == "__main__":
     unittest.main()

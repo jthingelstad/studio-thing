@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import sys
 from pathlib import Path
@@ -530,7 +531,16 @@ def concat_transcript_for_review(
 # =====================================================================
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-ISSUES_LOCAL_DIR = _REPO_ROOT / "data" / "issues"
+# The local repo mirror for rendered issue artifacts — the ship sequence
+# commits these files (``publish website``), and Studio CI builds corpus +
+# Weekly inputs from the committed tree. ``WORKSHOP_ISSUES_DIR`` overrides
+# the location so test runs can never dirty the real ``data/issues/``
+# (``tests/_stubs.install()`` always sets it to a temp dir).
+ISSUES_LOCAL_DIR = (
+    Path(os.environ["WORKSHOP_ISSUES_DIR"])
+    if os.environ.get("WORKSHOP_ISSUES_DIR")
+    else _REPO_ROOT / "data" / "issues"
+)
 
 # CTA / Thanks slot positions in the email. Hardcoded so Eddy doesn't
 # need to declare placement editorially — Patty authors the copy
@@ -686,6 +696,22 @@ def _gather_inputs_for_issue(issue_number: int, *, window: Optional[dict] = None
         "cta_atoms": cta_atoms,
         "echoes": echoes,
     }
+
+
+def render_body_for_issue(
+    issue_number: int, *, window: Optional[dict] = None,
+) -> str:
+    """The issue body rendered straight from current DB state — **no S3, no
+    local writes, no artifacts**. The DB is the draft; this is how you read
+    it. Consumers: the LLM jobs (compose-*, reorder, promotion-prep, Eddy's
+    review) and the web preview."""
+    inputs = _gather_inputs_for_issue(issue_number, window=window)
+    return render_archive_body(
+        atoms=inputs["atoms"],
+        sections=inputs["sections"],
+        features=inputs["features"],
+        echoes=inputs["echoes"],
+    )
 
 
 def _splice_cta_into_sections(

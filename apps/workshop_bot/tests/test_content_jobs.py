@@ -175,35 +175,21 @@ class JobLockTests(_DBTestCase):
 # ---------- start-issue ----------
 
 class EddyContextTests(_DBTestCase):
-    def test_delta_against_prior_digest(self):
+    def test_counts_from_db_rows(self):
         from apps.workshop_bot.tools.content import issue as issue_mod
+        from apps.workshop_bot.tools import issue_items
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")
-        # Prior run: 2 Notable, 0 intro.
-        db.insert_draft_digest(issue=458, word_count=1200, notable_count=2, brief_count=1,
-                               journal_count=0, intro_present=False, currently_present=False,
-                               haiku_present=False, cover_present=False, source_hash="aaa")
-        d = _base.replace_block(_base.starter_template(), "notable",
-                                "### [A](http://a)\n\nx\n\n### [B](http://b)\n\ny\n\n### [C](http://c)\n\nz")
-        d = _base.replace_block(d, "intro", "Now there's an intro.")
-        self.ws.write_issue_file(458, "draft.md", d)
+        for i in range(3):
+            issue_items.upsert_item(issue_number=458, section="notable",
+                                    source="pinboard", source_id=f"n{i}", body_md="x")
         ctx = context.build_eddy_context(ref_date=date(2026, 5, 12))
         self.assertEqual(ctx["active_issue"], 458)
         self.assertEqual(ctx["sections"]["notable"]["item_count"], 3)
-        delta = ctx["delta_since_last_run"]
-        self.assertIsNotNone(delta)
-        self.assertEqual(delta["notable"], 1)  # 3 - 2
-        self.assertTrue(delta["intro_now_present"])
-
-    def test_no_digest_means_no_delta(self):
-        from apps.workshop_bot.tools.content import issue as issue_mod
-        w = issue_mod.compute_window("2026-05-16", 7)
-        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
-                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
-        ctx = context.build_eddy_context(ref_date=date(2026, 5, 12))
-        self.assertIsNone(ctx["delta_since_last_run"])
+        # The delta vocabulary died with draft_digests (the DB is the draft;
+        # there is no projection snapshot to diff).
+        self.assertNotIn("delta_since_last_run", ctx)
 
     def test_no_window(self):
         ctx = context.build_eddy_context(ref_date=date(2026, 5, 12))

@@ -118,7 +118,9 @@ def build_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> di
         "currently_entries": [c.get("type_label") for c in currently],
         "reorder_applied": "thesis.md" in files,
         "open_comments": open_comments,
-        "review_url": s3.issue_file_url(n, "draft.html"),
+        # The DB is the draft: preview renders live on the web app (the S3
+        # draft.html artifact is retired).
+        "review_url": f"/productions/WT{n}/preview",
         "build_ready": build_ready,
     }
 
@@ -183,7 +185,7 @@ def publish_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> 
         "email_missing": email_missing,
         "audio_shipped": f"weekly-thing-{n}.mp3" in files,
         "email_shipped": bool(buttondown_id),
-        "review_url": s3.issue_file_url(n, "draft.html"),
+        "review_url": f"/productions/WT{n}/preview",
         "gates": {
             BTN_RECOMPOSE: recompose_needed,
             BTN_EMAIL: email_ready,

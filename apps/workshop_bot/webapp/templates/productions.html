@@ -9,34 +9,44 @@
   <p class="muted">
     {% if show_all %}
       Everything Scout has produced — in-flight and shipped.
-      <a href="/productions">show in-flight only</a>
+      <a href="/productions">show working view</a>
     {% else %}
       What Scout is working on now, across every surface — add a new project for any type, or edit
-      one in place. <a href="/productions?all=1">show shipped archive</a>
+      one in place. Paused items stay listed; <a href="/productions?all=1">show shipped archive</a>
     {% endif %}
     <span class="badge">working space</span>
   </p>
 
-  {% for g in groups %}
-    <div class="secthead">
-      <h2>{{ g.label }}</h2>
-      {% if g.surface %}<span class="surface">{{ g.surface }}</span>{% endif %}
-      {% if not show_all and g.shipped %}<span class="surface">· {{ g.shipped }} shipped</span>{% endif %}
+  <form method="post" action="/productions/bulk-status">
+    <div class="card" style="display:flex; gap:.5rem; align-items:center; padding:.5rem .8rem; margin-bottom:1rem;">
+      <span class="muted" style="flex:1;">With selected:</span>
+      <button class="btn ghost" type="submit" name="action" value="pause">Pause</button>
+      <button class="btn ghost" type="submit" name="action" value="activate">Activate</button>
+      <button class="btn ghost" type="submit" name="action" value="archive">Archive</button>
     </div>
-    <div class="card">
-      {% if g.rows %}
-        {% for p in g.rows %}
-          <div class="row {{ 'done' if p.status in ('done','archived','abandoned') else '' }}">
-            <span class="id">{{ p.id }}</span>
-            <span class="ph">{{ p.phase }}</span>
-            <span class="ti">{{ p.title }}{% if p.status != 'active' %} <span class="muted">· {{ p.status }}</span>{% endif %}</span>
-            {% if p.due_at %}<span class="due">due {{ p.due_at }}</span>{% endif %}
-            <a href="/productions/{{ p.id }}/edit">edit</a>
-          </div>
-        {% endfor %}
-      {% else %}
-        <div class="muted">{{ 'No ' + g.label|lower + ' productions yet.' if show_all else 'Nothing in flight.' }}</div>
-      {% endif %}
-    </div>
-  {% endfor %}
+
+    {% for g in groups %}
+      <div class="secthead">
+        <h2>{{ g.label }}</h2>
+        {% if g.surface %}<span class="surface">{{ g.surface }}</span>{% endif %}
+        {% if not show_all and g.shipped %}<span class="surface">· {{ g.shipped }} shipped</span>{% endif %}
+      </div>
+      <div class="card">
+        {% if g.rows %}
+          {% for p in g.rows %}
+            <div class="row {{ 'done' if p.status in ('done','archived','abandoned','paused') else '' }}">
+              <input type="checkbox" name="pid" value="{{ p.id }}" style="margin-right:.2rem;">
+              <span class="id">{{ p.id }}</span>
+              <span class="ph">{{ p.phase }}</span>
+              <span class="ti"><a href="/productions/{{ p.id }}" style="text-decoration:none; color:inherit;">{{ p.title }}</a>{% if p.status != 'active' %} <span class="muted">· {{ p.status }}</span>{% endif %}</span>
+              {% if p.due_at %}<span class="due">due {{ p.due_at }}</span>{% endif %}
+              <a href="/productions/{{ p.id }}/edit">edit</a>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="muted">{{ 'No ' + g.label|lower + ' productions yet.' if show_all else 'Nothing in flight.' }}</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </form>
 {% endblock %}

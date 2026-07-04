@@ -1,33 +1,31 @@
 """``/scout issue publish {audio,buttondown,website}`` — ship to a destination.
 
-The destination-aware replacement for the old ``send-to-buttondown``
-umbrella. Each subcommand ships to one destination and is independently
-idempotent. The no-arg parent (``/scout issue publish``) runs all three
-in the right order:
+**Render-then-ship.** The DB is the draft; each subcommand renders exactly
+the artifacts it ships, at ship time, from current DB state — there is no
+daily projection to be stale against. Each is independently idempotent. The
+no-arg parent (``/scout issue publish``) runs all three in the right order:
 
-1. **audio** — TTS the per-block transcript files (already rendered
-   daily by ``update-draft``), concat with bumpers + loudnorm, upload
-   the MP3 to S3, update the local ``data/audio/manifest.json``. This
-   runs first so the archive can carry the audio fields in its front
-   matter.
-2. **buttondown** — POST or PATCH the daily-rendered ``buttondown.md``
-   to Buttondown's API. Captures ``buttondown_id`` + ``absolute_url``
-   into ``metadata.json``. Re-renders the archive afterwards so its
-   front matter carries the freshly-minted ``absolute_url``.
-3. **website** — single atomic GitHub commit of
-   ``data/issues/{N}/{archive.md, metadata.json, links.json,
-   transcript/*.txt}`` + ``data/audio/manifest.json``. The commit
-   triggers the static-site deploy workflow.
+1. **audio** — render the transcript from DB, TTS the per-block files,
+   concat with bumpers + loudnorm, upload the MP3 to S3, update the local
+   ``data/audio/manifest.json``. Runs first so the archive can carry the
+   audio fields in its front matter.
+2. **buttondown** — render ``buttondown.md`` from DB, POST or PATCH it to
+   Buttondown's API. Captures ``buttondown_id`` + ``absolute_url`` onto the
+   issue window, then re-renders the archive so its front matter carries
+   the freshly-minted URL.
+3. **website** — render archive + transcript from DB, then a single atomic
+   GitHub commit of ``data/issues/{N}/{archive.md, metadata.json,
+   links.json, transcript/*.txt}`` + ``data/audio/manifest.json``. The
+   commit triggers the static-site deploy workflow.
 
-Every subcommand assumes ``update-draft`` ran recently — the daily
-renderers write the artifacts each subcommand reads. Pre-flight gates
-(``haiku.md``, ``metadata.json``, ``intro.md``, ``cover.jpg``) refuse
-in ``#editorial`` before any destructive call.
+Pre-flight gates (``haiku.md``, ``metadata.json``, ``intro.md`` in the DB
+content store; ``cover.jpg`` on S3) refuse in ``#editorial`` before any
+destructive call.
 
-Idempotent end-to-end. ``publish audio`` no-ops when the transcript
-hash matches the manifest; ``publish buttondown`` PATCHes the same
-draft on re-run; ``publish website``'s GitHub put_tree no-ops when
-every blob SHA already matches the tree.
+Idempotent end-to-end. ``publish audio`` no-ops when the transcript hash
+matches the manifest; ``publish buttondown`` PATCHes the same draft on
+re-run; ``publish website``'s GitHub put_tree no-ops when every blob SHA
+already matches the tree.
 """
 
 from __future__ import annotations
@@ -45,16 +43,19 @@ from . import _base, render_audio
 logger = logging.getLogger("workshop.jobs.publish")
 
 REPO = Path(__file__).resolve().parents[3]
-ISSUES_ROOT = REPO / "data" / "issues"
+# Same env-aware location the renderers write to (WORKSHOP_ISSUES_DIR
+# redirects both in tests), so render-then-ship reads what was just rendered.
+ISSUES_ROOT = renderers.ISSUES_LOCAL_DIR
 AUDIO_MANIFEST = REPO / "data" / "audio" / "manifest.json"
 
-# Required atoms before the destructive Buttondown POST fires.
+# Required atoms before the destructive Buttondown POST fires. The .md/.json
+# atoms live in the DB content store; cover.jpg is an S3 binary.
 REQUIRED_FOR_BUTTONDOWN = ("haiku.md", "metadata.json", "intro.md", "cover.jpg")
 _FIX_HINT = {
     "haiku.md": "→ `/eddy issue haiku`",
     "metadata.json": "→ `/eddy issue subject`",
-    "intro.md": "→ write it, push via Shortcut",
-    "cover.jpg": "→ Shortcuts uploads this",
+    "intro.md": "→ write it on the web editor",
+    "cover.jpg": "→ upload it on the web production page",
 }
 
 
@@ -74,8 +75,9 @@ def _draft_url(buttondown_id: str) -> str:
 
 def _collect_ship_files(issue_number: int) -> list[tuple[str, bytes]]:
     """Read every shipable artifact from the local repo + pair each
-    with its repo-relative destination path. The daily renderers
-    mirror to ``data/issues/{N}/`` so this reads straight from disk.
+    with its repo-relative destination path. ``publish_website`` renders
+    to ``data/issues/{N}/`` immediately before calling this, so the disk
+    reads are always fresh.
 
     Includes: archive.md, metadata.json, links.json, transcript/*.txt,
     optional echoes.md, and the updated data/audio/manifest.json.
@@ -87,7 +89,7 @@ def _collect_ship_files(issue_number: int) -> list[tuple[str, bytes]]:
     if not archive_path.exists():
         raise RuntimeError(
             f"archive.md missing locally — refusing to publish website. "
-            f"Expected {archive_path}. Did `/scout issue update` run today?"
+            f"Expected {archive_path} (rendered by this publish leg just now)."
         )
     files.append((f"data/issues/{issue_number}/archive.md", archive_path.read_bytes()))
 
@@ -119,13 +121,25 @@ def _collect_ship_files(issue_number: int) -> list[tuple[str, bytes]]:
 
 
 def _required_missing(issue_number: int) -> list[str]:
-    """Return the required atoms not yet present in the issue workspace."""
+    """Return the required atoms not yet present. Authored atoms are checked
+    in the DB content store (the draft); ``cover.jpg`` is an S3 binary."""
+    from ..tools import content_store
+
+    missing: list[str] = []
+    for name in REQUIRED_FOR_BUTTONDOWN:
+        if name == "cover.jpg":
+            continue
+        body = content_store.read_issue(issue_number, name)
+        if not (body and body.strip()):
+            missing.append(name)
     try:
         listing = s3.list_issue(issue_number)
         files = {o.get("filename") for o in listing.get("objects", []) if o.get("filename")}
     except Exception:  # noqa: BLE001
         files = set()
-    return [r for r in REQUIRED_FOR_BUTTONDOWN if r not in files]
+    if "cover.jpg" not in files:
+        missing.append("cover.jpg")
+    return missing
 
 
 def _missing_list_message(issue_number: int, missing: list[str], dest: str) -> str:
@@ -139,11 +153,21 @@ def _missing_list_message(issue_number: int, missing: list[str], dest: str) -> s
 
 
 async def publish_audio(ctx: "_base.JobContext") -> "_base.JobResult":
-    """TTS the current transcript and upload the MP3. Idempotent on
-    transcript hash (no-ops when the manifest entry matches)."""
+    """Render the transcript from current DB state, then TTS + upload the
+    MP3. Idempotent on transcript hash (no-ops when the manifest entry
+    matches)."""
     window = db.get_active_issue_window()
     if window is None:
         return _base.JobResult(False, "❌ no active issue window — run `/scout issue start` first.")
+    n = int(window["issue_number"])
+    try:
+        await asyncio.to_thread(renderers.render_transcript_for_issue, n, window=window)
+    except Exception as exc:  # noqa: BLE001
+        return _base.JobResult(
+            False,
+            f"❌ couldn't render the transcript for #{n}: `{type(exc).__name__}: {exc}`",
+            data={"issue_number": n},
+        )
     return await render_audio.run(ctx)
 
 
@@ -167,19 +191,16 @@ async def publish_buttondown(ctx: "_base.JobContext") -> "_base.JobResult":
         await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
         return _base.JobResult(False, msg, data={"issue_number": n, "missing": missing})
 
-    # buttondown.md must exist (update-draft renders it daily). If it
-    # doesn't, force a re-render now.
-    pub_res = await asyncio.to_thread(s3.read_issue_file, n, "buttondown.md")
-    if not (pub_res.get("found") and isinstance(pub_res.get("text"), str) and pub_res["text"].strip()):
-        # Force a fresh render now (daily run may not have fired yet).
-        try:
-            await asyncio.to_thread(renderers.render_email_for_issue, n, window=window)
-        except Exception as exc:  # noqa: BLE001
-            return _base.JobResult(
-                False,
-                f"❌ couldn't render buttondown.md for #{n}: `{type(exc).__name__}: {exc}`",
-                data={"issue_number": n},
-            )
+    # Render-then-ship: buttondown.md is rendered fresh from current DB
+    # state right now — the POST always ships what the DB says.
+    try:
+        await asyncio.to_thread(renderers.render_email_for_issue, n, window=window)
+    except Exception as exc:  # noqa: BLE001
+        return _base.JobResult(
+            False,
+            f"❌ couldn't render buttondown.md for #{n}: `{type(exc).__name__}: {exc}`",
+            data={"issue_number": n},
+        )
 
     pipeline_content = await asyncio.to_thread(_import_pipeline_content)
     try:
@@ -234,13 +255,25 @@ async def publish_buttondown(ctx: "_base.JobContext") -> "_base.JobResult":
 
 
 async def publish_website(ctx: "_base.JobContext") -> "_base.JobResult":
-    """Commit the current daily-rendered archive + transcript +
-    manifest to GitHub. Idempotent — put_tree no-ops when every blob
+    """Render archive + transcript from current DB state, then commit them +
+    the manifest to GitHub. Idempotent — put_tree no-ops when every blob
     SHA matches the existing tree."""
     window = db.get_active_issue_window()
     if window is None:
         return _base.JobResult(False, "❌ no active issue window — run `/scout issue start` first.")
     n = int(window["issue_number"])
+
+    # Render-then-ship: the committed tree always reflects current DB state.
+    try:
+        await asyncio.to_thread(renderers.render_archive_for_issue, n, window=window)
+        await asyncio.to_thread(renderers.render_transcript_for_issue, n, window=window)
+    except Exception as exc:  # noqa: BLE001
+        msg = (
+            f"❌ `/scout issue publish website` for **WT{n}** couldn't render: "
+            f"`{type(exc).__name__}: {exc}`"
+        )
+        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
+        return _base.JobResult(False, msg, data={"issue_number": n})
 
     try:
         files = await asyncio.to_thread(_collect_ship_files, n)

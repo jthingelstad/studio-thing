@@ -58,7 +58,6 @@ class BuildModalTests(_Case):
         self.assertEqual(modal.input.default, "Welcome to year nine.")
         self.assertEqual(modal.filename, "intro.md")
         self.assertEqual(modal.issue_number, 349)
-        self.assertTrue(modal.refire_update_draft)
 
     def test_modal_for_missing_file_pre_fills_empty(self):
         # Edit doubles as create — opening a modal for a file that
@@ -79,12 +78,12 @@ class BuildModalTests(_Case):
         modal2, _ = edit_asset.build_modal(self._ctx(), asset_key="outro")
         self.assertEqual(modal2.input.default, "the existing outro")
 
-    def test_cta_does_not_refire_update_draft(self):
+    def test_cta_modal_builds(self):
         self._window()
         self.ws.write_issue_file(349, "cta-1.md", "---\nkind: supporter\n---\n\nx")
         modal, err = edit_asset.build_modal(self._ctx(), asset_key="cta-1")
         self.assertIsNone(err)
-        self.assertFalse(modal.refire_update_draft)
+        self.assertIsNotNone(modal)
 
     def test_oversized_body_refuses(self):
         self._window()
@@ -109,9 +108,8 @@ class ModalSubmitTests(_Case):
         modal, _ = edit_asset.build_modal(self._ctx(), asset_key="intro")
         modal.input.value = "new content (edited)"
         interaction = self._interaction()
-        with patch.object(_base, "schedule_update_draft_refire") as mock_sched:
-            asyncio.run(modal.on_submit(interaction))
-        # New content written.
+        asyncio.run(modal.on_submit(interaction))
+        # New content written — the DB is the draft; the save IS the update.
         self.assertEqual(content_store.read_issue(349, "intro.md"), "new content (edited)")
         # Ack message went to Jamie (ephemeral).
         interaction.response.send_message.assert_awaited()
@@ -119,25 +117,20 @@ class ModalSubmitTests(_Case):
         self.assertTrue(kwargs.get("ephemeral"))
         msg = interaction.response.send_message.call_args.args[0]
         self.assertIn("intro.md", msg)
-        self.assertIn("Re-firing", msg)
-        # Refire triggered for intro (it flows into draft.md).
-        mock_sched.assert_called_once()
+        self.assertIn("Done.", msg)
 
-    def test_submit_on_cta_does_not_refire_update_draft(self):
+    def test_submit_on_cta_writes_and_acks(self):
         self._window()
         modal, _ = edit_asset.build_modal(self._ctx(), asset_key="cta-1")
         modal.input.value = "---\nkind: supporter\n---\n\nNew CTA copy."
         interaction = self._interaction()
-        with patch.object(_base, "schedule_update_draft_refire") as mock_sched:
-            asyncio.run(modal.on_submit(interaction))
+        asyncio.run(modal.on_submit(interaction))
         self.assertEqual(
             content_store.read_issue(349, "cta-1.md"),
             "---\nkind: supporter\n---\n\nNew CTA copy.",
         )
         msg = interaction.response.send_message.call_args.args[0]
         self.assertIn("Done.", msg)
-        self.assertNotIn("Re-firing", msg)
-        mock_sched.assert_not_called()
 
     def test_submit_empty_value_writes_empty_file(self):
         # Allowed — Jamie may want to clear an asset and re-author it.
@@ -146,8 +139,7 @@ class ModalSubmitTests(_Case):
         modal, _ = edit_asset.build_modal(self._ctx(), asset_key="outro")
         modal.input.value = ""
         interaction = self._interaction()
-        with patch.object(_base, "schedule_update_draft_refire"):
-            asyncio.run(modal.on_submit(interaction))
+        asyncio.run(modal.on_submit(interaction))
         self.assertEqual(content_store.read_issue(349, "outro.md"), "")
 
     def test_submit_creates_file_that_didnt_exist(self):
@@ -159,14 +151,11 @@ class ModalSubmitTests(_Case):
         modal, _ = edit_asset.build_modal(self._ctx(), asset_key="intro")
         modal.input.value = "Brand new intro paragraph for WT349."
         interaction = self._interaction()
-        with patch.object(_base, "schedule_update_draft_refire") as mock_sched:
-            asyncio.run(modal.on_submit(interaction))
+        asyncio.run(modal.on_submit(interaction))
         self.assertEqual(
             content_store.read_issue(349, "intro.md"),
             "Brand new intro paragraph for WT349.",
         )
-        # intro flows into draft.md, so the refire fires.
-        mock_sched.assert_called_once()
 
     def test_submit_propagates_write_failure_to_ack(self):
         self._window()
@@ -175,13 +164,11 @@ class ModalSubmitTests(_Case):
         interaction = self._interaction()
         with patch.object(
             content_store, "write_issue", side_effect=RuntimeError("DB boom"),
-        ), patch.object(_base, "schedule_update_draft_refire") as mock_sched:
+        ):
             asyncio.run(modal.on_submit(interaction))
         msg = interaction.response.send_message.call_args.args[0]
         self.assertIn("Couldn't write", msg)
         self.assertIn("DB boom", msg)
-        # No refire on failure.
-        mock_sched.assert_not_called()
 
 
 class SlashCommandWiringTests(unittest.TestCase):

@@ -26,9 +26,17 @@ from apps.workshop_bot.tools.discord import interaction
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
     FakeBotChannel as _FakeBotChannel,
-    filled_final as _filled_final,
 )
 
+
+
+def _seed_issue_body(n: int = 458) -> None:
+    """Seed one notable row so ``draft_body`` (rendered live from the DB —
+    the DB is the draft) returns a non-empty body."""
+    from apps.workshop_bot.tools import issue_items
+    issue_items.upsert_item(issue_number=n, section="notable", source="pinboard",
+                            source_id="seed1", url="https://ex/a", title="Seed item",
+                            body_md="Seed blurb about capital and code.")
 
 class ComposeHaikuTests(_DBTestCase):
     def _window(self, n=458):
@@ -48,7 +56,7 @@ class ComposeHaikuTests(_DBTestCase):
 
     def test_writes_haiku_on_pick(self):
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        _seed_issue_body(458)
         ctx, fc = self._ctx()
         with patch.object(interaction, "await_choice", AsyncMock(return_value=1)):
             result = asyncio.run(compose_haiku.run(ctx))
@@ -57,7 +65,7 @@ class ComposeHaikuTests(_DBTestCase):
 
     def test_refresh_then_pick(self):
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        _seed_issue_body(458)
         ctx, fc = self._ctx()
         with patch.object(interaction, "await_choice", AsyncMock(side_effect=["refresh", 0])):
             result = asyncio.run(compose_haiku.run(ctx))
@@ -67,7 +75,7 @@ class ComposeHaikuTests(_DBTestCase):
 
     def test_no_pick_no_write(self):
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        _seed_issue_body(458)
         ctx, fc = self._ctx()
         with patch.object(interaction, "await_choice", AsyncMock(return_value=None)):
             result = asyncio.run(compose_haiku.run(ctx))
@@ -78,7 +86,7 @@ class ComposeHaikuTests(_DBTestCase):
         # Picker output is short and well within Sonnet — overriding the
         # persona's Opus default saves ~$0.18/issue.
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        _seed_issue_body(458)
         ctx, fc = self._ctx()
         with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
             asyncio.run(compose_haiku.run(ctx))
@@ -98,7 +106,7 @@ class ComposeMetaTests(_DBTestCase):
 
     def test_writes_metadata_json(self):
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        _seed_issue_body(458)
         subj_reply = ("Here are the options:\n\n"
                       "1. WT458 — The Death of Scrum\n2. WT458 — Value Over Token Consumption\n"
                       "3. WT458 — How Companies Learn With AI\n4. WT458 — Agentic Coding Is a Trap\n"
@@ -132,7 +140,7 @@ class ComposeMetaTests(_DBTestCase):
         # must override to Sonnet (Eddy's default is Opus). Saves ~$0.40/issue
         # since this job makes two LLM calls.
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        _seed_issue_body(458)
         fc = _FakeBotChannel(persona="eddy")
         fc.bot.core = AsyncMock(side_effect=[
             ("1. WT458 — Pick\n2. WT458 — B", {}),
@@ -151,7 +159,7 @@ class ComposeMetaTests(_DBTestCase):
         # same draft rather than POSTing a duplicate.
         self._window()
         import json as _j
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        _seed_issue_body(458)
         self.ws.write_issue_file(458, "metadata.json", _j.dumps({
             "number": 458,
             "subject": "old subject",
@@ -178,7 +186,7 @@ class ComposeMetaTests(_DBTestCase):
 
     def test_empty_description_reply_writes_empty_description(self):
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        _seed_issue_body(458)
         # Model returns an empty description (whitespace only) — metadata.json
         # still written with the picked subject and an empty description.
         fc = _FakeBotChannel(persona="eddy")
@@ -214,7 +222,7 @@ class ComposeMetaTests(_DBTestCase):
 
     def test_no_subject_pick_fails_cleanly(self):
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _base.starter_template())
+        _seed_issue_body(458)
         fc = _FakeBotChannel(persona="eddy", reply="1. WT458 — A\n2. WT458 — B")
         os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
@@ -258,14 +266,14 @@ class ComposeMetaTests(_DBTestCase):
         self.assertIsNone(r.error_reason)
 
     def test_editorial_review_model_is_opus(self):
-        """One stored editorial pass, on Opus by default (the weekday-scaled
-        `#editorial` card and its model split were retired). Env override wins."""
-        from apps.workshop_bot.jobs import update_draft
+        """One stored editorial pass, on Opus by default (now the on-demand
+        ``eddy-review`` job). Env override wins."""
+        from apps.workshop_bot.jobs import eddy_review
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("WORKSHOP_EDDY_DRAFT_REVIEW_MODEL", None)
-            self.assertEqual(update_draft._draft_review_model(), "opus")
+            self.assertEqual(eddy_review._review_model(), "opus")
         with patch.dict(os.environ, {"WORKSHOP_EDDY_DRAFT_REVIEW_MODEL": "sonnet"}):
-            self.assertEqual(update_draft._draft_review_model(), "sonnet")
+            self.assertEqual(eddy_review._review_model(), "sonnet")
 
 
 
@@ -630,7 +638,7 @@ class ComposeThesisTests(_DBTestCase):
 
     def test_writes_thesis_md(self):
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _filled_final())
+        _seed_issue_body(458)
         # Surrounding whitespace exercises the strip before write.
         ctx, fc = self._ctx(reply="  A crisp editorial thesis.  ")
         result = asyncio.run(compose_thesis.run(ctx))
@@ -663,7 +671,7 @@ class ComposeThesisTests(_DBTestCase):
         # Eddy returns whitespace — the job treats it as empty, reports
         # unsuccessful, and writes no thesis.md (the call still happened).
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _filled_final())
+        _seed_issue_body(458)
         ctx, fc = self._ctx(reply="   ")
         result = asyncio.run(compose_thesis.run(ctx))
         self.assertFalse(result.ok)
@@ -674,7 +682,7 @@ class ComposeThesisTests(_DBTestCase):
     def test_skips_when_eddy_unavailable(self):
         # Eddy not logged in (no .user) — skip cleanly without an LLM call.
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _filled_final())
+        _seed_issue_body(458)
         ctx, fc = self._ctx()
         fc.bot.user = None
         result = asyncio.run(compose_thesis.run(ctx))
@@ -688,7 +696,7 @@ class ComposeThesisTests(_DBTestCase):
         # override the model; this guards against a future refactor
         # hardcoding a tier on the thesis pass.
         self._window()
-        self.ws.write_issue_file(458, "draft.md", _filled_final())
+        _seed_issue_body(458)
         ctx, fc = self._ctx(reply="A thesis.")
         asyncio.run(compose_thesis.run(ctx))
         self.assertIsNone(fc.bot.core.await_args.kwargs["model"])

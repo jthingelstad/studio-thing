@@ -29,7 +29,7 @@ from ...jobs import (
     scout_slate,
     scout_status,
     start_issue,
-    update_draft,
+    sync_issue,
 )
 from ._shared import _ctx, make_ack, make_run_and_ack
 
@@ -127,10 +127,10 @@ def register_scout_commands(
 
     @issue.command(
         name="update",
-        description="Re-project upstream content (Pinboard + micro.blog + assets) into draft.md.",
+        description="Sync issue items from upstream (Pinboard + micro.blog). The DB is the draft.",
     )
     async def issue_update_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
-        await _run_and_ack(interaction, lambda: update_draft.run(_ctx(bot)), "issue update")
+        await _run_and_ack(interaction, lambda: sync_issue.run(_ctx(bot)), "issue update")
 
     @issue.command(
         name="status",

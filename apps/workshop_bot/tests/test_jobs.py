@@ -123,7 +123,7 @@ class JobConfigTests(unittest.TestCase):
         self.assertFalse([i for i in ids if i.endswith("-heartbeat")], f"unexpected heartbeat job(s): {ids}")
         self.assertFalse(hasattr(handlers, "heartbeat"), "handlers.heartbeat should be gone")
         # The content-loop jobs are present.
-        for jid in ("update-draft-daily", "linky-pinboard-scan", "marky-daily-metrics"):
+        for jid in ("sync-issue-daily", "linky-pinboard-scan", "marky-daily-metrics"):
             self.assertIn(jid, ids)
         # Sharing is phase-driven now — no RSS-poll job.
         self.assertNotIn("marky-rss-check", ids)

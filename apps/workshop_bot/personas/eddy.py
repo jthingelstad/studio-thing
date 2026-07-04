@@ -20,9 +20,9 @@ class EddyBot(PersonaBot):
     # Sonnet is the default for all of Eddy's general work — mentions,
     # reorder, composition (subject/haiku/description/echoes/thesis),
     # follow-ups. Two editorial-review surfaces override up to Opus:
-    # ``update-draft:html-review`` (the canonical draft.html drawer
-    # pass) and ``review-text`` (``/eddy review <text>``). See each
-    # job's ``bot.core(..., model="opus")`` callsite.
+    # ``eddy-review`` (the on-demand editorial pass) and ``review-text``
+    # (``/eddy review <text>``). See each job's
+    # ``bot.core(..., model="opus")`` callsite.
     preferred_model = "sonnet"
     slash_commands_summary = (
         "/eddy commands: issue {echoes,reorder,haiku,subject} · edit · currently · "

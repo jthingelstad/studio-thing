@@ -95,17 +95,27 @@ PROMOTION_BODY_CAP = ISSUE_BODY_CAP + 8_000
 
 
 def draft_body(issue_number: int) -> str:
-    """Read ``draft.md`` for the issue. Empty string if not present.
+    """The issue body rendered live from current DB state — the DB is the
+    draft. Empty string when the issue has no actual content yet (an empty
+    issue still renders its static tail — the Reddit line — which isn't a
+    body worth composing against).
 
-    Compose-* jobs use this to anchor on the same body the operator is
-    seeing in the draft review drawer. (Previously named
-    ``final_or_draft``, which fell back from a since-retired ``final.md``
-    artifact; the create-final → reorder rework dropped final.md.)
+    Compose-* jobs use this to anchor on the same body the operator sees in
+    the web preview. (Previously read the ``draft.md`` S3 projection, which
+    died with the retired ``update-draft`` job.)
     """
-    res = s3.read_issue_file(issue_number, "draft.md")
-    if res.get("found") and isinstance(res.get("text"), str) and res["text"].strip():
-        return res["text"]
-    return ""
+    from ..tools import content_store, issue_items, renderers
+
+    n = int(issue_number)
+    has_rows = bool(issue_items.list_items(n))
+    intro = content_store.read_issue(n, "intro.md")
+    if not has_rows and not (intro and intro.strip()):
+        return ""
+    try:
+        return renderers.render_body_for_issue(n).strip()
+    except Exception:  # noqa: BLE001 — compose jobs degrade to no body
+        logger.exception("draft_body: render failed for #%d", n)
+        return ""
 
 
 def thesis_block(issue_number: int) -> str:

@@ -72,6 +72,10 @@ def create_production(
     first phase and is validated against the type's vocabulary.
     """
     pt = ptypes.get_type(production_type)  # raises ValueError on unknown type
+    if not ptypes.is_valid_status(status):
+        raise ValueError(
+            f"status {status!r} not valid; one of {ptypes.STATUSES}"
+        )
     if seq is None:
         seq = next_production_seq(production_type)
     seq = int(seq)
@@ -152,6 +156,10 @@ def update_production(
 ) -> dict[str, Any]:
     """Update only the fields passed (non-None). Always bumps ``updated_at``.
     ``details`` replaces the stored blob wholesale (caller merges if needed)."""
+    if status is not None and not ptypes.is_valid_status(status):
+        raise ValueError(
+            f"status {status!r} not valid; one of {ptypes.STATUSES}"
+        )
     sets, params = [], []
     if title is not None:
         sets.append("title = ?")

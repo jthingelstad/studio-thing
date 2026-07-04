@@ -24,7 +24,7 @@ import asyncio
 import logging
 from typing import Optional
 
-from ..tools import archive_context, db, s3
+from ..tools import archive_context, db
 from ..tools.content import context
 from ..tools.llm import anthropic_client
 from . import _base, _llm_job
@@ -58,17 +58,17 @@ def _resolve_latest_issue(explicit: Optional[int]) -> tuple[Optional[int], Optio
 
 async def run(ctx: "_base.JobContext", *, issue_number: Optional[int] = None) -> "_base.JobResult":
     # Resolve the last-published issue from the DB (filled by put-to-bed);
-    # the channel-neutral body lives at draft.md in S3.
+    # the channel-neutral body renders live from DB state (the DB is the
+    # draft — the S3 draft.md projection is retired).
     n, ship_date = await asyncio.to_thread(_resolve_latest_issue, issue_number)
     if n is None:
         return _base.JobResult(False, "❌ no published issue yet — put an issue to bed first.")
-    res = await asyncio.to_thread(s3.read_issue_file, n, "draft.md")
-    if not (res.get("found") and isinstance(res.get("text"), str) and res["text"].strip()):
+    publish_body = await asyncio.to_thread(_llm_job.draft_body, n)
+    if not publish_body.strip():
         return _base.JobResult(
             False,
-            f"❌ no `draft.md` for WT{n} in the workspace — can't draft promotion until it's built.",
+            f"❌ WT{n} renders empty — can't draft promotion until it's built.",
         )
-    publish_body = res["text"]
 
     bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "marky", "DISCORD_CHANNEL_PROMOTION")
     if bot is None:

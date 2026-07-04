@@ -54,30 +54,29 @@ NAME = "edit-asset"
 # small margin so future schema changes don't push us over silently.
 _MODAL_MAX = 4000
 
-# Asset → (filename, friendly_label, refire_update_draft, placeholder).
-# Adding a new asset: append a row here and the slash-command choice
-# list at /eddy edit. Files that flow into draft.md should
-# refire_update_draft=True so the preview refreshes after the write.
-# The placeholder is shown when the modal opens with an empty value
-# (asset doesn't exist yet) — a one-line hint of what belongs here.
-_ASSETS: dict[str, tuple[str, str, bool, str]] = {
-    "intro":    ("intro.md",    "intro",         True,
+# Asset → (filename, friendly_label, placeholder). Adding a new asset:
+# append a row here and the slash-command choice list at /eddy edit. The
+# DB is the draft — a save IS the update, nothing to refire; the web
+# preview renders live. The placeholder is shown when the modal opens
+# with an empty value (asset doesn't exist yet).
+_ASSETS: dict[str, tuple[str, str, str]] = {
+    "intro":    ("intro.md",    "intro",
                  "Opening prose for the issue. 1–4 short paragraphs in Jamie's voice."),
-    "outro":    ("outro.md",    "outro",         True,
+    "outro":    ("outro.md",    "outro",
                  "Closing prose — sign-off paragraph(s) after the Briefly section."),
-    "haiku":    ("haiku.md",    "haiku",         True,
+    "haiku":    ("haiku.md",    "haiku",
                  "Three lines, 5-7-5 syllables. Bold + hard breaks added at render time."),
-    "cover":    ("cover.json",  "cover caption", True,
+    "cover":    ("cover.json",  "cover caption",
                  '{"caption": "...", "location": "Minneapolis, MN", "timestamp": "May 23, 2026"}'),
-    "thesis":   ("thesis.md",   "thesis",        False,
+    "thesis":   ("thesis.md",   "thesis",
                  "1–3 sentences naming what the issue is about — Eddy's editorial anchor."),
-    "echoes":   ("echoes.md",   "echoes",        False,
+    "echoes":   ("echoes.md",   "echoes",
                  "Thingy's 2–4 sentence archive note that closes the issue — markdown prose."),
-    "cta-1":    ("cta-1.md",    "CTA slot 1",    False,
+    "cta-1":    ("cta-1.md",    "CTA slot 1",
                  "---\nkind: supporter\n---\n\nCall-to-action copy (Thingy's voice)."),
-    "cta-2":    ("cta-2.md",    "CTA slot 2",    False,
+    "cta-2":    ("cta-2.md",    "CTA slot 2",
                  "---\nkind: supporter\n---\n\nSecond CTA slot copy."),
-    "thanks-1": ("thanks-1.md", "thanks slot 1", False,
+    "thanks-1": ("thanks-1.md", "thanks slot 1",
                  "---\nkind: thanks\n---\n\nThank-you copy shown only to premium members."),
 }
 
@@ -103,9 +102,9 @@ def _read_current(issue_number: int, filename: str) -> str:
 
 
 class _AssetEditModal(ui.Modal):
-    """The modal Discord shows after ``/eddy edit``. Pre-filled with
-    the asset's current S3 contents; the submit handler writes the
-    new value back and (when applicable) re-fires ``update-draft``.
+    """The modal Discord shows after ``/eddy edit``. Pre-filled with the
+    asset's current DB contents; the submit handler writes the new value
+    back. The DB is the draft — the save IS the update.
     """
 
     def __init__(
@@ -116,7 +115,6 @@ class _AssetEditModal(ui.Modal):
         asset_key: str,
         filename: str,
         label: str,
-        refire_update_draft: bool,
         current_text: str,
         placeholder: str = "",
     ) -> None:
@@ -126,7 +124,6 @@ class _AssetEditModal(ui.Modal):
         self.issue_number = int(issue_number)
         self.asset_key = asset_key
         self.filename = filename
-        self.refire_update_draft = refire_update_draft
         # Discord placeholders cap at 100 chars. An over-long hint
         # silently drops the field, so trim before passing.
         ph = (placeholder or "").strip()
@@ -166,14 +163,9 @@ class _AssetEditModal(ui.Modal):
             return
         await interaction.response.send_message(
             f"✅ Updated `{self.filename}` for WT{self.issue_number} "
-            f"({len(new_text)} chars). "
-            + ("Re-firing `update-draft`…" if self.refire_update_draft else "Done."),
+            f"({len(new_text)} chars). Done.",
             ephemeral=True,
         )
-        if self.refire_update_draft:
-            # Best-effort: any error surfaces via the agent_runs log; we
-            # don't want to block the modal acknowledgement on it.
-            _base.schedule_update_draft_refire(self.ctx, self.issue_number)
 
 
 def build_modal(
@@ -187,7 +179,7 @@ def build_modal(
     """
     if asset_key not in _ASSETS:
         return None, f"❌ unknown asset `{asset_key}` — must be one of: {', '.join(ASSET_CHOICES)}."
-    filename, label, refire, placeholder = _ASSETS[asset_key]
+    filename, label, placeholder = _ASSETS[asset_key]
     window = db.get_active_issue_window()
     if window is None:
         return None, "❌ no active issue window — run `/scout issue start` first."
@@ -200,7 +192,7 @@ def build_modal(
         )
     modal = _AssetEditModal(
         ctx=ctx, issue_number=n, asset_key=asset_key,
-        filename=filename, label=label, refire_update_draft=refire,
+        filename=filename, label=label,
         current_text=current, placeholder=placeholder,
     )
     return modal, None

@@ -217,6 +217,7 @@ def list_items(
     *,
     section: Optional[str] = None,
     include_promoted: bool = True,
+    include_excluded: bool = False,
 ) -> list[dict[str, Any]]:
     """List items for an issue, optionally filtered to one section.
 
@@ -224,17 +225,28 @@ def list_items(
     drops items lifted to a featured section — useful when rendering the
     parent section's body (a promoted item shouldn't also appear in its
     parent).
+
+    **Editor-aware (atom editor, build 1):** the ``section`` filter matches
+    the *effective* section — ``COALESCE(section_override, section)`` — so a
+    briefly ↔ notable flip made in the web editor flows through every
+    consumer (draft, renderers, reorder, status) uniformly. Rows deselected
+    in the editor (``excluded = 1``) are dropped unless
+    ``include_excluded=True`` (the editor itself lists them so they can be
+    re-selected). With no overrides/exclusions set, results are identical to
+    the pre-editor behavior.
     """
     sql = "SELECT * FROM issue_items WHERE issue_number = ?"
     args: list[Any] = [issue_number]
     if section is not None:
         if section not in SECTIONS:
             raise ValueError(f"unknown section: {section!r}")
-        sql += " AND section = ?"
+        sql += " AND COALESCE(section_override, section) = ?"
         args.append(section)
     if not include_promoted:
         sql += " AND is_promoted = 0"
-    sql += " ORDER BY section, position"
+    if not include_excluded:
+        sql += " AND excluded = 0"
+    sql += " ORDER BY COALESCE(section_override, section), position"
     with connect() as conn:
         rows = conn.execute(sql, args).fetchall()
     return [_row_to_dict(r) for r in rows]
@@ -243,11 +255,11 @@ def list_items(
 def promoted_items(issue_number: int) -> list[dict[str, Any]]:
     """Items lifted into a standalone featured section, ordered by
     declaration. Each row carries ``promoted_position`` and
-    ``promoted_heading``."""
+    ``promoted_heading``. Editor-deselected rows don't render."""
     with connect() as conn:
         rows = conn.execute(
             "SELECT * FROM issue_items "
-            "WHERE issue_number = ? AND is_promoted = 1 "
+            "WHERE issue_number = ? AND is_promoted = 1 AND excluded = 0 "
             "ORDER BY id",
             (issue_number,),
         ).fetchall()
@@ -276,9 +288,12 @@ def reorder(issue_number: int, section: str, ordered_ids: list[int]) -> None:
             f"{section}: duplicate id(s) in order: {', '.join(str(d) for d in dupes)}"
         )
     with connect() as conn:
+        # Effective section + not excluded — must mirror list_items so the
+        # permutation check validates against exactly what the proposal saw.
         rows = conn.execute(
             "SELECT id FROM issue_items "
-            "WHERE issue_number = ? AND section = ? AND is_promoted = 0",
+            "WHERE issue_number = ? AND COALESCE(section_override, section) = ? "
+            "  AND is_promoted = 0 AND excluded = 0",
             (issue_number, section),
         ).fetchall()
         have = {int(r["id"]) for r in rows}
@@ -334,6 +349,92 @@ def promote(
             "WHERE id = ?",
             (promoted_position, heading, int(item_id)),
         )
+
+
+def set_section_override(item_id: int, override: Optional[str]) -> None:
+    """Editor-owned briefly ↔ notable flip (atom editor, build 1).
+
+    ``override`` is a section name or ``None`` to clear (revert to the
+    sync-owned section). Setting an override assigns a fresh position at the
+    end of the *target* effective section — same rule ``upsert_item`` uses on
+    an upstream re-tag — so the flipped item lands at the end of its new list
+    instead of smuggling a stale ordinal in. ``issue_items_sync`` never
+    writes this column, so the flip survives the daily upstream refresh.
+    """
+    if override is not None and override not in SECTIONS:
+        raise ValueError(f"unknown section: {override!r}")
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT issue_number, section, section_override FROM issue_items "
+            "WHERE id = ?", (int(item_id),),
+        ).fetchone()
+        if row is None:
+            raise ValueError(f"item_id={item_id!r} not found")
+        target = override or str(row["section"])
+        current = str(row["section_override"] or row["section"])
+        if target == current:  # no-op flip (e.g. clearing an unset override)
+            if override == row["section_override"]:
+                return
+        next_pos = conn.execute(
+            "SELECT COALESCE(MAX(position), 0) + 1 AS next_pos FROM issue_items "
+            "WHERE issue_number = ? AND COALESCE(section_override, section) = ?",
+            (int(row["issue_number"]), target),
+        ).fetchone()["next_pos"]
+        conn.execute(
+            "UPDATE issue_items SET section_override = ?, position = ?, "
+            "  updated_at = datetime('now') WHERE id = ?",
+            (override, int(next_pos), int(item_id)),
+        )
+
+
+def set_excluded(item_id: int, excluded: bool) -> None:
+    """Editor-owned select/deselect (atom editor, build 1). A deselected row
+    stays in the table (reversible; survives sync — the pruner only removes
+    rows whose *upstream* item disappeared) but no longer renders anywhere."""
+    with connect() as conn:
+        cur = conn.execute(
+            "UPDATE issue_items SET excluded = ?, updated_at = datetime('now') "
+            "WHERE id = ?",
+            (1 if excluded else 0, int(item_id)),
+        )
+        if not cur.rowcount:
+            raise ValueError(f"item_id={item_id!r} not found")
+
+
+def move_item(item_id: int, direction: str) -> bool:
+    """Editor-owned up/down reorder within the item's *effective* section
+    (atom editor, build 1). Swaps positions with the adjacent non-promoted,
+    non-excluded neighbour. Returns False when already at the edge."""
+    if direction not in ("up", "down"):
+        raise ValueError(f"direction must be 'up' or 'down', got {direction!r}")
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT id, issue_number, COALESCE(section_override, section) AS eff "
+            "FROM issue_items WHERE id = ?", (int(item_id),),
+        ).fetchone()
+        if row is None:
+            raise ValueError(f"item_id={item_id!r} not found")
+        rows = conn.execute(
+            "SELECT id FROM issue_items "
+            "WHERE issue_number = ? AND COALESCE(section_override, section) = ? "
+            "  AND is_promoted = 0 AND excluded = 0 "
+            "ORDER BY position, id",
+            (int(row["issue_number"]), str(row["eff"])),
+        ).fetchall()
+        ids = [int(r["id"]) for r in rows]
+        if int(item_id) not in ids:
+            return False  # promoted/excluded rows don't take part
+        i = ids.index(int(item_id))
+        j = i - 1 if direction == "up" else i + 1
+        if j < 0 or j >= len(ids):
+            return False
+        ids[i], ids[j] = ids[j], ids[i]
+        for pos, iid in enumerate(ids, start=1):
+            conn.execute(
+                "UPDATE issue_items SET position = ?, updated_at = datetime('now') "
+                "WHERE id = ?", (pos, iid),
+            )
+    return True
 
 
 def unpromote(item_id: int) -> None:

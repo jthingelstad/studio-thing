@@ -32,12 +32,13 @@ logger = logging.getLogger("workshop.scheduler.handlers")
 # are lazy so loading scheduler.handlers doesn't pull the whole jobs graph.
 def _content_job_runner(name: str):
     from ..jobs import (
-        daily_metrics, feedbin_ingest, follow_up, garden_checkin, pinboard_scan,
-        promotion_prep, scout_checkin, update_draft,
+        daily_metrics, eddy_review, feedbin_ingest, follow_up, garden_checkin,
+        pinboard_scan, promotion_prep, scout_checkin, sync_issue,
     )
 
     return {
-        "update-draft": update_draft.run,
+        "sync-issue": sync_issue.run,
+        "eddy-review": eddy_review.run,
         "pinboard-scan": pinboard_scan.run,
         "promotion-prep": promotion_prep.run,
         "daily-metrics": daily_metrics.run,

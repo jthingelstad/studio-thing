@@ -68,7 +68,7 @@ from apps.workshop_bot.jobs import (
     compose_haiku,
     compose_meta,
     reorder,
-    update_draft,
+    sync_issue,
 )
 from apps.workshop_bot.tools import db, s3
 from apps.workshop_bot.tools.discord import interaction
@@ -434,7 +434,7 @@ def do_reset(mode: str, issue_number: int) -> dict[str, list[str]]:
 def pipeline_for(mode: str) -> list[tuple[str, Callable]]:
     """Return ``[(job_name, run_callable), …]`` in execution order."""
     full = [
-        ("update-draft", update_draft.run),
+        ("sync-issue", sync_issue.run),
         ("reorder", reorder.run),
         ("compose-haiku", compose_haiku.run),
         ("compose-meta", compose_meta.run),

@@ -66,6 +66,15 @@ def _marky_deps(reply="🪧 Promotion drafts — WT458\n\n## LinkedIn\n1. ..."):
     return deps, marky, channel
 
 
+
+def _seed_body(n=458, blurb="blurb", title="Thing", url="http://x"):
+    """Seed a notable row so the promotion body (rendered live from the DB)
+    is non-empty. Returns the row id."""
+    from apps.workshop_bot.tools import issue_items
+    return issue_items.upsert_item(issue_number=n, section="notable",
+                                   source="pinboard", source_id=f"seed-{n}",
+                                   url=url, title=title, body_md=blurb)
+
 class PromotionPrepJobTests(_DBCase):
     def setUp(self):
         super().setUp()
@@ -89,17 +98,17 @@ class PromotionPrepJobTests(_DBCase):
         os.environ.pop("DISCORD_CHANNEL_PROMOTION", None)
         super().tearDown()
 
-    def test_no_draft_md_errors(self):
+    def test_empty_issue_errors(self):
         deps, marky, channel = _marky_deps()
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         with patch.object(db, "get_latest_issue", lambda: {"number": 458, "publish_date": "2026-05-16"}):
             result = asyncio.run(promotion_prep.run(_base.JobContext(deps=deps)))
         self.assertFalse(result.ok)
-        self.assertIn("no `draft.md`", result.message)
+        self.assertIn("renders empty", result.message)
         marky.core.assert_not_awaited()
 
     def test_drafts_and_posts(self):
-        self.ws.files[(458, "draft.md")] = "## Notable\n\n### [Thing](http://x)\n\nblurb\n"
+        _seed_body(458)
         deps, marky, channel = _marky_deps()
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         result = asyncio.run(promotion_prep.run(_base.JobContext(deps=deps), issue_number=458))
@@ -107,13 +116,13 @@ class PromotionPrepJobTests(_DBCase):
         self.assertTrue(result.data["posted"])
         marky.core.assert_awaited()
         channel.send.assert_awaited()
-        # The publish body was fed to Marky.
+        # The publish body (rendered from DB rows) was fed to Marky.
         sent = marky.core.call_args.kwargs["latest"]
         self.assertIn("### [Thing](http://x)", sent)
         self.assertIn("## Today", sent)
 
     def test_skips_when_no_team(self):
-        self.ws.files[(458, "draft.md")] = "## Notable\n\nx"
+        _seed_body(458)
         result = asyncio.run(promotion_prep.run(_base.JobContext(), issue_number=458))
         self.assertTrue(result.ok)
         self.assertFalse(result.data["posted"])
@@ -124,8 +133,7 @@ class PromotionPrepJobTests(_DBCase):
         # the user-message size.
         from apps.workshop_bot.jobs import _llm_job
         cap = _llm_job.PROMOTION_BODY_CAP
-        huge = "## Notable\n\n" + ("x" * (cap + 5_000))
-        self.ws.files[(458, "draft.md")] = huge
+        _seed_body(458, blurb="x" * (cap + 5_000))
         deps, marky, channel = _marky_deps()
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         result = asyncio.run(promotion_prep.run(_base.JobContext(deps=deps), issue_number=458))
@@ -141,7 +149,7 @@ class PromotionPrepJobTests(_DBCase):
         """When Thingy /retrieve returns hits, the Recurring thread
         context block lands in the prompt so Marky can write multi-issue
         arc framings."""
-        self.ws.files[(458, "draft.md")] = "## Notable\n\n### [Thing](http://x)\n\nblurb on agents and tooling\n"
+        _seed_body(458, blurb="blurb on agents and tooling")
         deps, marky, channel = _marky_deps()
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         self._retrieve_mock.return_value = [
@@ -167,7 +175,7 @@ class PromotionPrepJobTests(_DBCase):
     def test_thread_context_block_renders_outage_when_retrieval_fails(self):
         """A Lambda outage doesn't block the job — the block surfaces
         the error and Marky proceeds as a one-off."""
-        self.ws.files[(458, "draft.md")] = "## Notable\n\nbody"
+        _seed_body(458)
         deps, marky, channel = _marky_deps()
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         self._retrieve_mock.side_effect = self._ThingyRetrieveError("timeout")
@@ -181,7 +189,7 @@ class PromotionPrepJobTests(_DBCase):
         # Pre-acquire the whole-job lock so the next run bails before doing
         # any work — proves a re-fire (manual + the put-to-bed auto-fire, say)
         # doesn't produce duplicate #promotion posts.
-        self.ws.files[(458, "draft.md")] = "## Notable\n\nx"
+        _seed_body(458)
         deps, marky, channel = _marky_deps()
         os.environ["DISCORD_CHANNEL_PROMOTION"] = "1"
         with _base.job_lock([f"job:{promotion_prep.NAME}"], promotion_prep.NAME):

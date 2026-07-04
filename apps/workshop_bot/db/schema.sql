@@ -285,7 +285,7 @@ CREATE TABLE IF NOT EXISTS productions (
   seq                 INTEGER NOT NULL,              -- issue_number (newsletter) | per-type ordinal
   title               TEXT NOT NULL,
   phase               TEXT NOT NULL,                 -- per-type vocab; validated in code
-  status              TEXT NOT NULL DEFAULT 'active',-- 'active'|'done'|'archived'|'abandoned'
+  status              TEXT NOT NULL DEFAULT 'active',-- production_types.STATUSES (validated in code)
   due_at              TEXT,                          -- ISO date; newsletter = pub_date
   pub_date            TEXT,                          -- newsletter Saturday; NULL otherwise
   source              TEXT NOT NULL DEFAULT '',      -- surface label, e.g. 'weekly.thingelstad.com'
@@ -410,26 +410,10 @@ CREATE TABLE IF NOT EXISTS job_locks (
   pid INTEGER NOT NULL
 );
 
--- Draft digests — one row per update-draft run, so Eddy's post-update
--- review can compute "since yesterday: +2 Notable, +380 words, intro now
--- present" rather than re-summarizing the whole draft.
-CREATE TABLE IF NOT EXISTS draft_digests (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  issue INTEGER NOT NULL,
-  ran_at TEXT NOT NULL DEFAULT (datetime('now')),
-  word_count INTEGER,
-  notable_count INTEGER,
-  brief_count INTEGER,
-  journal_count INTEGER,
-  intro_present INTEGER,
-  currently_present INTEGER,
-  haiku_present INTEGER,
-  cover_present INTEGER,
-  source_hash TEXT
-);
-
-CREATE INDEX IF NOT EXISTS idx_draft_digests_issue
-  ON draft_digests(issue, ran_at DESC, id DESC);
+-- draft_digests (the update-draft projection snapshots) was dropped with
+-- the retired update-draft job — the DB is the draft; there's no
+-- projection to diff. DROP below so long-lived DBs converge.
+DROP TABLE IF EXISTS draft_digests;
 
 -- Goals — Patty's milestone progression. At most one row with
 -- achieved_at IS NULL (the active goal). Jamie marks achieved_at when a
@@ -641,6 +625,8 @@ CREATE TABLE IF NOT EXISTS issue_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   issue_number INTEGER NOT NULL,
   section TEXT NOT NULL,
+  section_override TEXT,                      -- editor-owned (atom editor); render reads COALESCE(section_override, section); sync never writes it
+  excluded INTEGER NOT NULL DEFAULT 0,        -- editor-owned; deselected from the issue (render skips); survives sync
   position INTEGER NOT NULL,
   is_promoted INTEGER NOT NULL DEFAULT 0,
   promoted_position TEXT,

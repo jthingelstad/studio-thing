@@ -69,9 +69,14 @@ class PhaseModelTests(_DBTestCase):
 
 class BuildStateTests(_DBTestCase):
     def _seed_full_content(self, n=458):
-        # Authored atoms mirror into the content store; cover.jpg stays an S3
-        # binary; draft.md is the generated projection (S3).
-        self.ws.write_issue_file(n, "draft.md", filled_final(intro="Opening.", haiku="a\nb\nc"))
+        # The DB is the draft: sections are issue_items rows, authored atoms
+        # live in the content store; cover.jpg stays an S3 binary.
+        from apps.workshop_bot.tools import issue_items
+        for section, source, sid in (("notable", "pinboard", "n1"),
+                                     ("brief", "pinboard", "b1"),
+                                     ("journal", "microblog", "j1")):
+            issue_items.upsert_item(issue_number=n, section=section,
+                                    source=source, source_id=sid, body_md="x")
         self.ws.write_issue_file(n, "intro.md", "Opening.")
         self.ws.write_issue_file(n, "haiku.md", "a\nb\nc")
         self.ws.write_issue_file(n, "cover.jpg", "binary")

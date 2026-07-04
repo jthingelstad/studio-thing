@@ -98,6 +98,15 @@ class UpdateTests(_DBCase):
         with self.assertRaises(ValueError):
             db.set_production_phase("ART999", "draft")
 
+    def test_status_validated_on_update_and_create(self):
+        db.create_production(production_type="article", title="a")
+        db.update_production("ART1", status="paused")
+        self.assertEqual(db.get_production("ART1")["status"], "paused")
+        with self.assertRaises(ValueError):
+            db.update_production("ART1", status="snoozed")
+        with self.assertRaises(ValueError):
+            db.create_production(production_type="article", title="b", status="nope")
+
 
 class BackfillTests(_DBCase):
     def _seed_issue(self, n, subject, pub):

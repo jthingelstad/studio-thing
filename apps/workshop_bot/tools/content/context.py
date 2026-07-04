@@ -41,49 +41,27 @@ def _days_until(target_iso: str, ref: date) -> Optional[int]:
     return (t - ref).days
 
 
-def _digest_delta(st: dict[str, Any], prev: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
-    if not prev:
-        return None
-
-    def _p(key: str) -> int:
-        try:
-            return int(prev.get(key) or 0)
-        except (TypeError, ValueError):
-            return 0
-
-    def _was(key: str) -> bool:
-        return bool(prev.get(key))
-
-    return {
-        "prev_ran_at": prev.get("ran_at"),
-        "word_count": st["word_count"] - _p("word_count"),
-        "notable": st["sections"]["notable"]["item_count"] - _p("notable_count"),
-        "brief": st["sections"]["brief"]["item_count"] - _p("brief_count"),
-        "journal": st["sections"]["journal"]["item_count"] - _p("journal_count"),
-        "intro_now_present": st["intro_present"] and not _was("intro_present"),
-        "currently_now_present": st["currently_present"] and not _was("currently_present"),
-        "haiku_now_present": st["haiku_present"] and not _was("haiku_present"),
-        "cover_now_present": st["cover_present"] and not _was("cover_present"),
-        "draft_unchanged": prev.get("source_hash") == st.get("source_hash"),
-    }
-
-
 def _draft_iteration_count(issue_number: int) -> int:
-    """How many ``update-draft`` runs have produced a digest for this
-    issue. Counts the rows in ``draft_digests`` — one per real run —
-    which is the right "how many times have we reviewed this?" signal
-    for tier selection. Includes the run that just wrote the latest
-    digest, so a 1 means "this is our first pass".
-    """
+    """How many editorial review passes Eddy has run for this issue —
+    the "how many times have we reviewed this?" signal for tier
+    selection. Counts Eddy's review ``agent_runs`` inside the issue's
+    window (agent_runs has no issue column; the window bounds scope it).
+    +1 because the count is read at the start of the *current* pass, so
+    1 means "this is our first pass"."""
     try:
+        window = db.get_active_issue_window(int(issue_number))
+        since = (window or {}).get("start_date") or "1970-01-01"
         with db.connect() as conn:
             row = conn.execute(
-                "SELECT COUNT(*) AS n FROM draft_digests WHERE issue = ?",
-                (int(issue_number),),
+                "SELECT COUNT(*) AS n FROM agent_runs "
+                "WHERE agent_name = 'eddy' "
+                "  AND trigger IN ('eddy-review', 'update-draft:html-review') "
+                "  AND started_at >= ?",
+                (since,),
             ).fetchone()
-            return int(row["n"]) if row else 0
+            return (int(row["n"]) if row else 0) + 1
     except Exception:  # noqa: BLE001
-        return 0
+        return 1
 
 
 def _open_comments_counts(issue_number: int) -> dict[str, Any]:
@@ -149,11 +127,12 @@ def build_eddy_context(
     section_status: Optional[dict[str, Any]] = None,
     prev_digest: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
-    """Eddy's ``## Today`` block for the post-update review.
+    """Eddy's ``## Today`` block for the editorial review (``eddy-review``).
 
-    ``section_status`` / ``prev_digest`` can be supplied by ``update-draft``
-    (it already has them) to avoid a second S3 round-trip; otherwise they're
-    fetched here.
+    ``section_status`` can be supplied by the caller (it already has it) to
+    avoid recomputation. ``prev_digest`` is retired vocabulary (the
+    ``draft_digests`` projection table is gone) — accepted and ignored so
+    older callers keep working.
     """
     today = ref_date or _today()
     window = db.get_active_issue_window()
@@ -161,7 +140,6 @@ def build_eddy_context(
         return {"today": today.isoformat(), "weekday": today.strftime("%a"), "active_issue": None}
     n = int(window["issue_number"])
     st = section_status if section_status is not None else draft.section_status(n)
-    prev = prev_digest if prev_digest is not None else db.latest_draft_digest(n)
     days_to_pub = _days_until(window["pub_date"], today)
     iteration_count = _draft_iteration_count(n)
     open_comments = _open_comments_counts(n)
@@ -193,7 +171,6 @@ def build_eddy_context(
         "cover_present": st["cover_present"],
         "cta_files": st["cta_files"],
         "required_missing": st["required_missing"],
-        "delta_since_last_run": _digest_delta(st, prev),
     }
 
 

@@ -14,13 +14,13 @@ brand new, nothing else is in flight for it, and the chained
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta
 from typing import Optional
 from zoneinfo import ZoneInfo
 
 from ..tools import db
 from ..tools.content import issue
-from . import _base, update_draft
+from . import _base, sync_issue
 
 logger = logging.getLogger("workshop.jobs.start_issue")
 
@@ -117,62 +117,6 @@ def _schedule_currently_nudges(
     return inserted
 
 
-def build_workshop_pointer(*, issue_number: int, window: dict, set_by: Optional[str], bucket: str) -> dict:
-    """Shape the JSON the iOS Shortcuts read from
-    ``https://{bucket}/weekly-thing/workshop.json`` to know the current
-    in-flight issue. Has the window, the predictable workspace URLs (the
-    Shortcuts upload to the first four; the bot writes the rest), and the
-    issue's future archive URL."""
-    n = int(issue_number)
-    base = f"https://{bucket}/weekly-thing/{n}/"
-    return {
-        "issue_number": n,
-        "pub_date": window["pub_date"],
-        "end_date": window["end_date"],
-        "start_date": window["start_date"],
-        "day_count": int(window["day_count"]),
-        "workspace_url": base,
-        "workspace_prefix": f"weekly-thing/{n}/",
-        "archive_url": f"{_ARCHIVE_BASE}{n}/",
-        "reddit_tag_url": (
-            f"https://www.reddit.com/r/weeklything/?f="
-            f"flair_name%3A%22Weekly%20Thing%20{n}%22"
-        ),
-        "files": {
-            # ----- Author-content atoms (live under atoms/) ---------
-            # Shortcut-authored (Jamie's iOS flow): cover, intro, outro.
-            # Currently is DB-backed (workshop.db); edited via Eddy or
-            # `/eddy currently …` — not surfaced here.
-            "cover_jpg": f"{base}cover.jpg",
-            "cover_json": f"{base}atoms/cover.json",
-            "intro_md": f"{base}atoms/intro.md",
-            "outro_md": f"{base}atoms/outro.md",
-            # Bot-composed atoms (compose-haiku, compose-meta,
-            # compose-thesis, compose-cta, compose-echoes).
-            "haiku_md": f"{base}atoms/haiku.md",
-            "metadata_json": f"{base}atoms/metadata.json",
-            "thesis_md": f"{base}atoms/thesis.md",
-            "cta_1_md": f"{base}atoms/cta-1.md",
-            "cta_2_md": f"{base}atoms/cta-2.md",
-            "thanks_1_md": f"{base}atoms/thanks-1.md",
-            "echoes_md": f"{base}atoms/echoes.md",
-            # ----- Daily-rendered artifacts (live at issue root) ----
-            # Produced by tools/renderers on every /scout issue update
-            # tick. final.md is gone — section ordering + promotions
-            # live in workshop.db's issue_items table now.
-            "draft_md": f"{base}draft.md",
-            "draft_html": f"{base}draft.html",
-            "archive_md": f"{base}archive.md",
-            "links_json": f"{base}links.json",
-            "buttondown_md": f"{base}buttondown.md",
-            "transcript_full_txt": f"{base}transcript-full.txt",
-            "proposal_html": f"{base}proposal.html",
-        },
-        "set_at": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
-        "set_by": set_by or "start-issue",
-    }
-
-
 async def define(
     ctx: "_base.JobContext",
     *,
@@ -218,10 +162,11 @@ async def define(
 async def start_working(
     ctx: "_base.JobContext", n: int, *, set_by: Optional[str] = None
 ) -> "_base.JobResult":
-    """Move a planned newsletter into **build** and seed the working pipeline:
-    the Shortcuts pointer, the Currently nudges, and the first update-draft.
-    Authored content lives in the DB now — there is no draft.md seed; the
-    first update-draft generates it."""
+    """Move a planned newsletter into **build**: set the phase, schedule the
+    Currently nudges, and run the first upstream sync. The DB is the draft —
+    there is no workspace seeding, no draft.md, and no Shortcuts pointer
+    (the iOS-Shortcuts pipeline is retired; the web app is the work
+    surface)."""
     n = int(n)
     window = db.get_active_issue_window(n)
     if window is None:
@@ -229,31 +174,13 @@ async def start_working(
     db.set_issue_phase(n, "build")
     window = db.get_active_issue_window(n)
 
-    pointer_url: Optional[str] = None
-    pointer_warning: Optional[str] = None
-    try:
-        from ..tools import s3 as _s3
-        pointer = build_workshop_pointer(
-            issue_number=n, window=window, set_by=set_by, bucket=_s3._bucket(),
-        )
-        res = _s3.write_workshop_pointer(pointer)
-        pointer_url = res.get("url")
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("start-working: workshop.json write failed for #%d: %s", n, exc)
-        pointer_warning = f"`{type(exc).__name__}: {exc}`"
-
     nudges = _schedule_currently_nudges(
         issue_number=n, pub_date_iso=window["pub_date"], set_by=set_by,
     )
 
-    sub = await update_draft.run(_base.JobContext(deps=ctx.deps, trigger="chained"))
+    sub = await sync_issue.run(_base.JobContext(deps=ctx.deps, trigger="chained"))
 
     days_word = "day" if window["day_count"] == 1 else "days"
-    pointer_line = (
-        f"- Shortcuts pointer: 📄 {pointer_url}" if pointer_url
-        else f"- ⚠️ couldn't refresh `workshop.json` for Shortcuts: {pointer_warning}"
-        if pointer_warning else None
-    )
     lines = [
         f"✅ Issue **WT{n}** is now in flight (build).",
         f"- Publish: **{window['pub_date']}** (Sat)",
@@ -261,19 +188,16 @@ async def start_working(
         f"- Window start (prior cutoff): **{window['start_date']}**",
         f"- Span: **{window['day_count']} {days_word}**",
     ]
-    if pointer_line:
-        lines.append(pointer_line)
     if nudges:
         when_summary = " · ".join(
             f"`#{row['id']}` {(row.get('due_at') or '')[:16].replace('T', ' ')}"
             for row in nudges
         )
         lines.append(f"- Currently nudges scheduled: {when_summary}")
-    lines.append(f"- `update-draft`: {sub.message}")
+    lines.append(f"- `sync-issue`: {sub.message}")
     return _base.JobResult(
         True, "\n".join(lines),
-        data={"issue_number": n, "window": window, "update_draft": sub.data,
-              "workshop_pointer_url": pointer_url,
+        data={"issue_number": n, "window": window, "sync_issue": sub.data,
               "currently_nudges": [row["id"] for row in nudges]},
     )
 

@@ -102,6 +102,50 @@ class WebappProductionsTests(unittest.IsolatedAsyncioTestCase):
         all_body = await (await c.get("/productions?all=1", headers=H)).text()
         self.assertIn("WT10", all_body)      # archive revealed with ?all=1
 
+    async def test_list_shows_paused_but_not_archived_by_default(self):
+        c = await self._client()
+        db.create_production(production_type="article", title="Working")
+        db.create_production(production_type="article", title="Shelved", status="paused")
+        db.create_production(production_type="article", title="Filed", status="archived")
+        body = await (await c.get("/productions", headers=H)).text()
+        self.assertIn("Working", body)
+        self.assertIn("Shelved", body)       # paused stays findable
+        self.assertNotIn("Filed", body)      # archived tucked behind ?all=1
+        all_body = await (await c.get("/productions?all=1", headers=H)).text()
+        self.assertIn("Filed", all_body)
+
+    async def test_bulk_status_pauses_selected(self):
+        c = await self._client()
+        db.create_production(production_type="article", title="a")
+        db.create_production(production_type="article", title="b")
+        db.create_production(production_type="article", title="c")
+        r = await c.post("/productions/bulk-status", headers=H, allow_redirects=False,
+                         data=[("action", "pause"), ("pid", "ART1"), ("pid", "ART3")])
+        self.assertEqual(r.status, 302)
+        self.assertEqual(db.get_production("ART1")["status"], "paused")
+        self.assertEqual(db.get_production("ART2")["status"], "active")
+        self.assertEqual(db.get_production("ART3")["status"], "paused")
+
+    async def test_bulk_status_unknown_action_is_400(self):
+        c = await self._client()
+        r = await c.post("/productions/bulk-status", headers=H, allow_redirects=False,
+                         data={"action": "explode", "pid": "ART1"})
+        self.assertEqual(r.status, 400)
+
+    async def test_single_status_route_and_validation(self):
+        c = await self._client()
+        db.create_production(production_type="article", title="a")
+        r = await c.post("/productions/ART1/status", headers=H, allow_redirects=False,
+                         data={"status": "paused"})
+        self.assertEqual(r.status, 302)
+        self.assertEqual(db.get_production("ART1")["status"], "paused")
+        r = await c.post("/productions/ART1/status", headers=H, allow_redirects=False,
+                         data={"status": "bogus"})
+        self.assertEqual(r.status, 400)
+        r = await c.post("/productions/ART99/status", headers=H, allow_redirects=False,
+                         data={"status": "paused"})
+        self.assertEqual(r.status, 404)
+
     async def test_invalid_phase_is_400(self):
         c = await self._client()
         r = await c.post("/productions/new", headers=H, allow_redirects=False,

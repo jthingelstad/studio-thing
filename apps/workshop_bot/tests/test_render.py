@@ -16,7 +16,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.tools import cdn, db, issue_items, render, s3  # noqa: E402
+from apps.workshop_bot.tools import cdn, db, issue_items, render  # noqa: E402
 
 
 def _seed_348_items() -> None:
@@ -254,27 +254,6 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
         # Empty / whitespace review_md is treated the same as none.
         page2 = render.markdown_to_html_page("# X\n\nbody.", title="t", review_md="   \n  ")
         self.assertNotIn('id="rv-toggle"', page2)
-
-
-class RenderAndUploadHtmlTests(unittest.TestCase):
-    def test_uploads_and_returns_url(self):
-        calls = {}
-
-        def fake_write_html(issue, filename, html_text):
-            calls["issue"], calls["filename"], calls["len"] = issue, filename, len(html_text)
-            return {"url": f"https://files.thingelstad.com/weekly-thing/{issue}/{filename}", "key": "k"}
-
-        with patch.object(s3, "write_issue_html", fake_write_html):
-            url = render.render_and_upload_html(458, "draft", "# WT458\n\nbody", title="WT458 — draft",
-                                                subtitle="DRAFT", strip_block_markers=True)
-        self.assertEqual(url, "https://files.thingelstad.com/weekly-thing/458/draft.html")
-        self.assertEqual(calls["filename"], "draft.html")
-        self.assertGreater(calls["len"], 0)
-
-    def test_returns_none_on_failure(self):
-        with patch.object(s3, "write_issue_html", side_effect=RuntimeError("s3 down")):
-            url = render.render_and_upload_html(458, "draft", "x", title="t")
-        self.assertIsNone(url)
 
 
 class CdnInvalidateTests(unittest.TestCase):

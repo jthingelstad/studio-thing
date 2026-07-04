@@ -1,5 +1,5 @@
-"""``_store_review_comments`` — parse Eddy's review markdown into
-``editorial_comments`` rows with stable handles."""
+"""``eddy_review._store_review_comments`` — parse Eddy's review markdown
+into ``editorial_comments`` rows with stable handles."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.jobs import update_draft  # noqa: E402
+from apps.workshop_bot.jobs import eddy_review  # noqa: E402
 from apps.workshop_bot.tools import db, issue_items  # noqa: E402
 
 
@@ -62,7 +62,7 @@ class StoreReviewCommentsTests(_DBCase):
             "- <!-- target:n1 --> Lead Notable item feels weak; consider swapping with n2.\n\n"
             "- <!-- target:j1 --> Journal post on Tuesday lands well.\n"
         )
-        count, _ = update_draft._store_review_comments(349, review)
+        count = eddy_review._store_review_comments(349, review)
         self.assertEqual(count, 2)
         comments = issue_items.list_open_comments(349)
         self.assertEqual(len(comments), 2)
@@ -75,7 +75,7 @@ class StoreReviewCommentsTests(_DBCase):
             "- <!-- target:brief --> Brief is leaning too tech-heavy this week.\n\n"
             "- <!-- target:intro --> Intro buries the lede in trip logistics.\n"
         )
-        count, _ = update_draft._store_review_comments(349, review)
+        count = eddy_review._store_review_comments(349, review)
         self.assertEqual(count, 2)
         handles = sorted(c["handle"] for c in issue_items.list_open_comments(349))
         self.assertEqual(handles, ["E349-B1", "E349-I1"])
@@ -85,25 +85,25 @@ class StoreReviewCommentsTests(_DBCase):
             "- <!-- target:hygiene --> Anchor text on N3 doesn't match its domain.\n\n"
             "- <!-- target:whole --> Word count is on the high end.\n"
         )
-        count, _ = update_draft._store_review_comments(349, review)
+        count = eddy_review._store_review_comments(349, review)
         self.assertEqual(count, 2)
         handles = sorted(c["handle"] for c in issue_items.list_open_comments(349))
         self.assertEqual(handles, ["E349-W1", "E349-X1"])
 
     def test_unanchored_segments_skipped(self):
         review = "Just an observation about the issue as a whole, no target marker."
-        count, _ = update_draft._store_review_comments(349, review)
+        count = eddy_review._store_review_comments(349, review)
         self.assertEqual(count, 0)
 
     def test_supersedes_prior_pass(self):
         self._seed()
         # First pass.
         review1 = "- <!-- target:n1 --> v1 comment.\n"
-        update_draft._store_review_comments(349, review1)
+        eddy_review._store_review_comments(349, review1)
         self.assertEqual(len(issue_items.list_open_comments(349)), 1)
         # Second pass — supersedes.
         review2 = "- <!-- target:n1 --> v2 comment.\n- <!-- target:n2 --> Also this.\n"
-        update_draft._store_review_comments(349, review2)
+        eddy_review._store_review_comments(349, review2)
         open_now = issue_items.list_open_comments(349)
         # Only the new pass survives as open.
         self.assertEqual(len(open_now), 2)
@@ -124,7 +124,7 @@ class StoreReviewCommentsTests(_DBCase):
     def test_out_of_range_item_falls_back_to_section_scope(self):
         self._seed()  # only 2 notable rows seeded
         review = "- <!-- target:n5 --> Item that no longer exists.\n"
-        count, _ = update_draft._store_review_comments(349, review)
+        count = eddy_review._store_review_comments(349, review)
         self.assertEqual(count, 1)
         c = issue_items.list_open_comments(349)[0]
         # Fell back to section scope; handle uses N for notable.

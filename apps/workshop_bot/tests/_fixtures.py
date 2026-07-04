@@ -71,12 +71,10 @@ class _MirroringFiles(dict):
 class FakeWorkspace:
     """In-memory replacement for ``apps.workshop_bot.tools.s3``'s per-issue
     surface. Each test case constructs a fresh one in ``setUp``; reads /
-    writes go through ``self.files`` (keyed by ``(issue_number, filename)``)
-    and ``self.workshop_pointer`` (a single dict)."""
+    writes go through ``self.files`` (keyed by ``(issue_number, filename)``)."""
 
     def __init__(self) -> None:
         self.files: dict[tuple[int, str], str] = _MirroringFiles()
-        self.workshop_pointer: dict | None = None
 
     def read_issue_file(self, issue_number, filename, *, max_bytes=None):
         key = (int(issue_number), filename)
@@ -94,11 +92,10 @@ class FakeWorkspace:
         # No CloudFront invalidation in tests.
         return self.write_issue_file(issue_number, filename, html_text)
 
-    def write_workshop_pointer(self, data):
-        self.workshop_pointer = data
-        return {"key": "weekly-thing/workshop.json", "bucket": "files.thingelstad.com",
-                "url": "https://files.thingelstad.com/weekly-thing/workshop.json",
-                "size": len(str(data)), "written": True}
+    def write_issue_binary(self, issue_number, filename, data, content_type="application/octet-stream"):
+        self.files[(int(issue_number), filename)] = data.decode("latin-1") if isinstance(data, (bytes, bytearray)) else str(data)
+        return {"key": f"weekly-thing/{issue_number}/{filename}", "written": True,
+                "size": len(data), "url": f"https://files.thingelstad.com/weekly-thing/{issue_number}/{filename}"}
 
     def list_issue(self, issue_number):
         n = int(issue_number)
@@ -150,7 +147,7 @@ def patch_s3(ws: FakeWorkspace):
         patch.object(s3, "read_issue_file", ws.read_issue_file),
         patch.object(s3, "write_issue_file", ws.write_issue_file),
         patch.object(s3, "write_issue_html", ws.write_issue_html),
-        patch.object(s3, "write_workshop_pointer", ws.write_workshop_pointer),
+        patch.object(s3, "write_issue_binary", ws.write_issue_binary),
         patch.object(s3, "list_issue", ws.list_issue),
         patch.object(s3, "delete_issue_file", ws.delete_issue_file),
         patch.object(s3, "write_transcript_file", ws.write_transcript_file),

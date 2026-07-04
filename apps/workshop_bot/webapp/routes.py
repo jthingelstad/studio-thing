@@ -25,6 +25,7 @@ from ..jobs import (
     _base, production_ops, production_state, publish, put_to_bed, scout_slate, start_issue,
 )
 from ..tools import content_store, db, issue_items, s3
+from ..tools.content import atoms_view
 from ..tools.content import production_types as ptypes
 from . import server
 from .render import render
@@ -101,13 +102,54 @@ async def productions_list(request: web.Request) -> web.Response:
     for key in _TYPE_ORDER:
         pt = ptypes.PRODUCTION_TYPES[key]
         items = [r for r in rows if r["production_type"] == key]
-        active = [r for r in items if r["status"] == "active"]
-        shipped = len(items) - len(active)
+        # Working view: active first, then paused (shelved but findable).
+        # done/archived/abandoned live behind ?all=1.
+        working = ([r for r in items if r["status"] == "active"]
+                   + [r for r in items if r["status"] == "paused"])
+        shipped = len(items) - len(working)
         groups.append({
             "key": key, "label": pt.label, "surface": pt.surface,
-            "rows": items if show_all else active, "shipped": shipped,
+            "rows": items if show_all else working, "shipped": shipped,
         })
     return render("productions.html", request, groups=groups, show_all=show_all)
+
+
+# Bulk lifecycle actions from the registry list (checkbox select → one POST).
+_BULK_ACTIONS = {"pause": "paused", "archive": "archived", "activate": "active"}
+
+
+async def productions_bulk_status(request: web.Request) -> web.Response:
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    data = await request.post()
+    login = _login(request)
+    status = _BULK_ACTIONS.get(data.get("action", ""))
+    if not status:
+        raise web.HTTPBadRequest(text=f"unknown bulk action: {data.get('action')!r}")
+    pids = [p for p in data.getall("pid", []) if p]
+    for pid in pids:
+        row = await asyncio.to_thread(db.get_production, pid)
+        if row:
+            await asyncio.to_thread(
+                db.update_production, pid, status=status, updated_by=login)
+    raise web.HTTPFound("/productions")
+
+
+async def production_status(request: web.Request) -> web.Response:
+    """Single-production quick status change (buttons on the production page)."""
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    pid = request.match_info["pid"]
+    data = await request.post()
+    status = (data.get("status") or "").strip()
+    if not ptypes.is_valid_status(status):
+        raise web.HTTPBadRequest(text=f"unknown status: {status!r}")
+    row = await asyncio.to_thread(db.get_production, pid)
+    if not row:
+        raise web.HTTPNotFound(text=f"no such production: {pid}")
+    await asyncio.to_thread(
+        db.update_production, pid, status=status, updated_by=_login(request))
+    raise web.HTTPFound(f"/productions/{pid}")
 
 
 def _render_form(request, *, mode, row=None, error=None, status=200):
@@ -115,7 +157,7 @@ def _render_form(request, *, mode, row=None, error=None, status=200):
     return render(
         "production_form.html", request,
         status=status, mode=mode, row=row, error=error,
-        types=types, phases_json=_PHASES_JSON,
+        types=types, phases_json=_PHASES_JSON, statuses=ptypes.STATUSES,
     )
 
 
@@ -210,6 +252,116 @@ async def production_update(request: web.Request) -> web.Response:
     raise web.HTTPFound("/productions")
 
 
+# ---------- the atom editor (build 1: read-side projection + skeleton) ----------
+
+# Authored atoms whose body the editor may write (content_store names).
+_EDITOR_ATOM_NAMES = atoms_view.AUTHORED_NAMES
+
+
+async def _load_newsletter(request: web.Request) -> tuple[dict, int]:
+    """The (production row, issue_number) pair for an editor route; 404 on a
+    missing production, 400 on a non-newsletter (build 1 is newsletter-only)."""
+    pid = request.match_info["pid"]
+    row = await asyncio.to_thread(db.get_production, pid)
+    if not row:
+        raise web.HTTPNotFound(text=f"no such production: {pid}")
+    if row["production_type"] != "newsletter":
+        raise web.HTTPBadRequest(text="the atom editor is newsletter-only (build 1)")
+    return row, int(row["seq"])
+
+
+async def editor_page(request: web.Request) -> web.Response:
+    row, n = await _load_newsletter(request)
+    atoms = await asyncio.to_thread(atoms_view.build, n, row["id"])
+    # Group for section headers: consecutive same-kind runs.
+    groups: list[dict] = []
+    for a in atoms:
+        if not groups or groups[-1]["kind"] != a["kind"]:
+            groups.append({"kind": a["kind"], "atoms": []})
+        groups[-1]["atoms"].append(a)
+    return render("editor.html", request, row=row, issue_number=n, groups=groups)
+
+
+def _editor_url(row: dict) -> str:
+    return f"/productions/{row['id']}/editor"
+
+
+async def editor_atom_save(request: web.Request) -> web.Response:
+    """Save an authored atom's body (intro/outro/echoes/closer) or a
+    currently entry. Derived atoms are read-only in build 1 (their bodies
+    mirror Pinboard / micro.blog until the write-back lands)."""
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    row, n = await _load_newsletter(request)
+    data = await request.post()
+    key = (data.get("key") or "").strip()
+    value = data.get("value") or ""
+    login = _login(request)
+    if key.startswith("content:"):
+        name = key[len("content:"):]
+        if name not in _EDITOR_ATOM_NAMES:
+            raise web.HTTPBadRequest(text=f"not an editor-writable atom: {name!r}")
+        await asyncio.to_thread(content_store.set, row["id"], name, value,
+                                by=f"web:{login}")
+    elif key.startswith("currently:"):
+        label = key[len("currently:"):]
+        try:
+            await asyncio.to_thread(db.currently_set_entry, n, label, value)
+        except ValueError as exc:
+            raise web.HTTPBadRequest(text=str(exc))
+    else:
+        raise web.HTTPBadRequest(text=f"unknown atom key: {key!r}")
+    raise web.HTTPFound(_editor_url(row))
+
+
+async def editor_item_flip(request: web.Request) -> web.Response:
+    """The promotion verb, briefly ↔ notable: sets the editor-owned
+    section_override ('clear' reverts to the sync-owned section)."""
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    row, _ = await _load_newsletter(request)
+    data = await request.post()
+    target = (data.get("target") or "").strip()
+    try:
+        item_id = int(data.get("item_id") or 0)
+        await asyncio.to_thread(
+            issue_items.set_section_override, item_id,
+            None if target == "clear" else target)
+    except ValueError as exc:
+        raise web.HTTPBadRequest(text=str(exc))
+    raise web.HTTPFound(_editor_url(row))
+
+
+async def editor_item_select(request: web.Request) -> web.Response:
+    """Select / deselect a derived atom (the Journal filter — reversible)."""
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    row, _ = await _load_newsletter(request)
+    data = await request.post()
+    try:
+        item_id = int(data.get("item_id") or 0)
+        await asyncio.to_thread(
+            issue_items.set_excluded, item_id, data.get("selected") == "0")
+    except ValueError as exc:
+        raise web.HTTPBadRequest(text=str(exc))
+    raise web.HTTPFound(_editor_url(row))
+
+
+async def editor_item_move(request: web.Request) -> web.Response:
+    """Up/down within the atom's effective section (edges are a no-op)."""
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    row, _ = await _load_newsletter(request)
+    data = await request.post()
+    try:
+        item_id = int(data.get("item_id") or 0)
+        await asyncio.to_thread(
+            issue_items.move_item, item_id, (data.get("dir") or "").strip())
+    except ValueError as exc:
+        raise web.HTTPBadRequest(text=str(exc))
+    raise web.HTTPFound(_editor_url(row))
+
+
 # ---------- the production page (the work surface) ----------
 
 # Newsletter authored content blocks editable on the page (name, label).
@@ -218,8 +370,6 @@ _NEWSLETTER_BLOCKS = [
     ("thesis.md", "Thesis"), ("echoes.md", "Echoes"),
     ("cta-1.md", "CTA · slot 1"), ("cta-2.md", "CTA · slot 2"), ("thanks-1.md", "Thanks"),
 ]
-# Saving these re-fires update-draft so the rendered draft refreshes.
-_REFIRE = {"intro.md", "outro.md", "haiku.md", "cover.json"}
 # Authored content blocks for the non-newsletter types.
 _GENERIC_BLOCKS = {
     "article": [("body.md", "Body")],
@@ -254,7 +404,8 @@ def _newsletter_page_data(row) -> dict:
         "currently": db.currently_get_entries(n),
         "currently_types": [t["label"] for t in db.currently_list_types()],
         "comments": issue_items.list_open_comments(n),
-        "review_url": s3.issue_file_url(n, "draft.html"),
+        # Live DB render — the DB is the draft (S3 draft.html is retired).
+        "review_url": f"/productions/{row['id']}/preview",
         "phases": list(ptypes.phases_for("newsletter")),
     }
 
@@ -307,8 +458,7 @@ async def production_atom_save(request: web.Request) -> web.Response:
         raise web.HTTPBadRequest(text="missing name")
     value = data.get("value") or ""
     await asyncio.to_thread(content_store.set, row["id"], name, value, by=f"web:{_login(request)}")
-    if row["production_type"] == "newsletter" and name in _REFIRE:
-        _base.schedule_update_draft_refire(_ctx(request), int(row["seq"]))
+    # The DB is the draft — a save IS the update. No projection to refire.
     raise web.HTTPFound(f"/productions/{row['id']}")
 
 
@@ -322,7 +472,6 @@ async def production_cover_save(request: web.Request) -> web.Response:
     cover = {k: (data.get(k) or "").strip() for k in ("caption", "location", "timestamp", "alt")}
     await asyncio.to_thread(content_store.set, row["id"], "cover.json",
                             json.dumps(cover, indent=2), by=f"web:{_login(request)}")
-    _base.schedule_update_draft_refire(_ctx(request), int(row["seq"]))
     raise web.HTTPFound(f"/productions/{row['id']}")
 
 
@@ -416,16 +565,22 @@ async def production_export(request: web.Request) -> web.Response:
 
 
 async def production_preview(request: web.Request) -> web.Response:
-    """Render a non-newsletter production's body as a styled HTML page (for the
-    in-page preview iframe)."""
-    from ..tools import render
+    """Render a production's body as a styled HTML page (for the in-page
+    preview iframe). Newsletters render live from current DB state — the DB
+    is the draft, there is no stored preview artifact."""
+    from ..tools import render, renderers
     row = await _load_row(request)
     pid = row["id"]
-    body = (content_store.get(pid, "body.md") or content_store.get(pid, "script.md")
-            or content_store.get(pid, "notes.md") or "")
+    if row["production_type"] == "newsletter":
+        body = await asyncio.to_thread(renderers.render_body_for_issue, int(row["seq"]))
+        subtitle = f"{pid} · rendered live from the DB"
+    else:
+        body = (content_store.get(pid, "body.md") or content_store.get(pid, "script.md")
+                or content_store.get(pid, "notes.md") or "")
+        subtitle = f"{pid} · {row['production_type']}"
     html_doc = await asyncio.to_thread(
         render.markdown_to_html_page, body or "_(nothing written yet — this is yours to write)_",
-        title=row["title"], subtitle=f"{pid} · {row['production_type']}")
+        title=row["title"], subtitle=subtitle)
     return web.Response(text=html_doc, content_type="text/html")
 
 
@@ -448,6 +603,60 @@ async def production_publish(request: web.Request) -> web.Response:
         await put_to_bed.run(ctx)
     elif leg in legs:
         await legs[leg](ctx)
+    raise web.HTTPFound(f"/productions/{row['id']}")
+
+
+async def production_sync(request: web.Request) -> web.Response:
+    """Refresh issue_items from upstream (Pinboard + micro.blog) — the DB is
+    the draft; this is its inbound mirror."""
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    row = await _load_row(request)
+    if row["production_type"] != "newsletter":
+        raise web.HTTPBadRequest(text="not a newsletter")
+    from ..jobs import sync_issue
+    await sync_issue.run(_ctx(request))
+    raise web.HTTPFound(f"/productions/{row['id']}")
+
+
+async def production_review(request: web.Request) -> web.Response:
+    """Run Eddy's on-demand editorial review (Opus) over the DB-rendered
+    draft; anchored comments land in editorial_comments."""
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    row = await _load_row(request)
+    if row["production_type"] != "newsletter":
+        raise web.HTTPBadRequest(text="not a newsletter")
+    from ..jobs import eddy_review
+    await eddy_review.run(_ctx(request))
+    raise web.HTTPFound(f"/productions/{row['id']}")
+
+
+# Cover uploads: the web replaces the retired iOS-Shortcuts PUT path.
+_COVER_MAX_BYTES = 25 * 1024 * 1024
+
+
+async def production_cover_upload(request: web.Request) -> web.Response:
+    """Upload the issue's cover image binary to the S3 workspace
+    (``cover.jpg``). Replaces the retired iOS-Shortcuts upload path."""
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    row = await _load_row(request)
+    if row["production_type"] != "newsletter":
+        raise web.HTTPBadRequest(text="not a newsletter")
+    n = int(row["seq"])
+    reader = await request.multipart()
+    field = await reader.next()
+    while field is not None and field.name != "cover":
+        field = await reader.next()
+    if field is None:
+        raise web.HTTPBadRequest(text="no cover file in upload")
+    data = await field.read(decode=False)
+    if not data:
+        raise web.HTTPBadRequest(text="empty upload")
+    if len(data) > _COVER_MAX_BYTES:
+        raise web.HTTPBadRequest(text="cover too large (25MB max)")
+    await asyncio.to_thread(s3.write_issue_binary, n, "cover.jpg", data, "image/jpeg")
     raise web.HTTPFound(f"/productions/{row['id']}")
 
 
@@ -584,9 +793,15 @@ def add_routes(app: web.Application) -> None:
         web.post("/seeds/add", seeds_add),
         web.post("/seeds/graduate", seeds_graduate),
         web.get("/productions", productions_list),
+        web.post("/productions/bulk-status", productions_bulk_status),
         web.get("/productions/new", production_new_form),
         web.post("/productions/new", production_create),
         web.get("/productions/{pid}", production_page),
+        web.get("/productions/{pid}/editor", editor_page),
+        web.post("/productions/{pid}/editor/atom", editor_atom_save),
+        web.post("/productions/{pid}/editor/flip", editor_item_flip),
+        web.post("/productions/{pid}/editor/select", editor_item_select),
+        web.post("/productions/{pid}/editor/move", editor_item_move),
         web.get("/productions/{pid}/export", production_export),
         web.get("/productions/{pid}/preview", production_preview),
         web.get("/productions/{pid}/edit", production_edit_form),
@@ -597,5 +812,9 @@ def add_routes(app: web.Application) -> None:
         web.post("/productions/{pid}/meta", production_meta_save),
         web.post("/productions/{pid}/currently", production_currently),
         web.post("/productions/{pid}/phase", production_phase),
+        web.post("/productions/{pid}/status", production_status),
         web.post("/productions/{pid}/publish", production_publish),
+        web.post("/productions/{pid}/sync", production_sync),
+        web.post("/productions/{pid}/review", production_review),
+        web.post("/productions/{pid}/cover-upload", production_cover_upload),
     ])

@@ -5,10 +5,29 @@
   <div style="display:flex; align-items:baseline; gap:.6rem;">
     <h1 style="flex:1; margin-bottom:.2rem;">{{ row.id }} <span class="ph">{{ phase }}</span></h1>
     <a class="btn ghost" href="/productions">← all</a>
+    {% if ptype == "newsletter" %}<a class="btn ghost" href="/productions/{{ row.id }}/editor">editor</a>{% endif %}
+    {% if row.status == 'active' %}
+      <form method="post" action="/productions/{{ row.id }}/status" style="display:inline;">
+        <input type="hidden" name="status" value="paused">
+        <button class="btn ghost" type="submit">Pause</button>
+      </form>
+    {% else %}
+      <form method="post" action="/productions/{{ row.id }}/status" style="display:inline;">
+        <input type="hidden" name="status" value="active">
+        <button class="btn ghost" type="submit">Resume</button>
+      </form>
+    {% endif %}
+    {% if row.status != 'archived' %}
+      <form method="post" action="/productions/{{ row.id }}/status" style="display:inline;">
+        <input type="hidden" name="status" value="archived">
+        <button class="btn ghost" type="submit">Archive</button>
+      </form>
+    {% endif %}
     <a class="btn ghost" href="/productions/{{ row.id }}/edit">settings</a>
   </div>
   <p class="muted">{{ row.title }}{% if row.due_at %} · due {{ row.due_at }}{% endif %}
-    {% if row.pub_date %} · pub {{ row.pub_date }}{% endif %}</p>
+    {% if row.pub_date %} · pub {{ row.pub_date }}{% endif %}
+    {% if row.status != 'active' %} · <strong>{{ row.status }}</strong>{% endif %}</p>
 
 {% macro block_editor(b, rows=4) %}
   <form method="post" action="/productions/{{ row.id }}/atom" class="pform" style="margin:.4rem 0 1rem;">
@@ -72,7 +91,14 @@
 
   {# ---- draft preview ---- #}
   {% if phase != "planned" %}
-  <div class="secthead"><h2>Draft</h2><a class="surface" href="{{ review_url }}" target="_blank">open ↗</a></div>
+  <div class="secthead"><h2>Draft</h2>
+    <form method="post" action="/productions/{{ row.id }}/sync" style="display:inline;">
+      <button class="btn ghost" type="submit" title="Pull Pinboard + micro.blog into the issue">Sync sources</button>
+    </form>
+    <form method="post" action="/productions/{{ row.id }}/review" style="display:inline;">
+      <button class="btn ghost" type="submit" title="Run Eddy's editorial review (Opus)">Eddy review</button>
+    </form>
+    <a class="surface" href="{{ review_url }}" target="_blank">open ↗</a></div>
   <div class="card" style="padding:.4rem;">
     <iframe src="{{ review_url }}" style="width:100%; height:460px; border:0; border-radius:8px;"></iframe>
   </div>
@@ -119,6 +145,11 @@
       <label>Timestamp</label><input name="timestamp" value="{{ cover.get('timestamp','') }}">
       <label>Alt text</label><input name="alt" value="{{ cover.get('alt','') }}">
       <div class="actions"><button class="btn" type="submit">Save cover</button></div>
+    </form>
+    <form method="post" action="/productions/{{ row.id }}/cover-upload" enctype="multipart/form-data" class="pform" style="margin-top:.5rem;">
+      <label>Cover image <span class="muted">· uploads to the workspace as cover.jpg</span></label>
+      <input type="file" name="cover" accept="image/jpeg">
+      <div class="actions"><button class="btn" type="submit">Upload cover</button></div>
     </form>
   </div>
 

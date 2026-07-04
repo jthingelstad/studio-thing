@@ -81,6 +81,21 @@ PRODUCTION_TYPES: dict[str, ProductionType] = {
 }
 
 
+# Production lifecycle statuses (orthogonal to the per-type phase vocabulary).
+# 'active'    in-flight work — on the slate, enumerated by check-ins.
+# 'paused'    deliberately shelved "not now" — off the slate, still in the
+#             default registry view so it stays findable.
+# 'done'      shipped (phase reached terminal).
+# 'archived'  filed away — visible only behind the registry's ?all=1 view.
+# 'abandoned' explicitly killed.
+STATUSES: tuple[str, ...] = ("active", "paused", "done", "archived", "abandoned")
+
+
+def is_valid_status(status: str) -> bool:
+    """Whether ``status`` is in the production lifecycle vocabulary."""
+    return status in STATUSES
+
+
 def get_type(production_type: str) -> ProductionType:
     """Return the :class:`ProductionType` for ``production_type`` or raise."""
     try:

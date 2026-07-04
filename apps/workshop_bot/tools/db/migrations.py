@@ -521,6 +521,26 @@ def _m_0020_drop_issue_cards(conn: sqlite3.Connection) -> None:
     conn.execute("DROP TABLE IF EXISTS issue_cards")
 
 
+def _m_0021_issue_items_editor_columns(conn: sqlite3.Connection) -> None:
+    """Add the editor-owned columns to issue_items (atom editor, build 1).
+
+    ``section_override`` / ``excluded`` belong to the web issue editor;
+    ``issue_items_sync`` never writes them, so a promote (briefly ↔ notable)
+    or a deselect survives the daily upstream refresh. Render reads
+    ``COALESCE(section_override, section)`` and skips ``excluded`` rows.
+    Both default to no-op, so existing renders are byte-identical."""
+    _add_column_if_missing(conn, "issue_items", "section_override", "TEXT")
+    _add_column_if_missing(conn, "issue_items", "excluded",
+                           "INTEGER NOT NULL DEFAULT 0")
+
+
+def _m_0022_drop_draft_digests(conn: sqlite3.Connection) -> None:
+    """Drop draft_digests — the update-draft projection is retired (the DB
+    is the draft; there's no snapshot to diff against). Review-tier
+    iteration counts now come from agent_runs."""
+    conn.execute("DROP TABLE IF EXISTS draft_digests")
+
+
 def _m_0010_strip_markers_from_issue_items_body_md(conn: sqlite3.Connection) -> None:
     """An older manual-seed path baked rendered ``<!-- cta:N -->`` /
     ``<!-- thanks:N -->`` markers into ``issue_items.body_md``. Marker
@@ -657,6 +677,16 @@ MIGRATIONS: tuple[Migration, ...] = (
         id="0020_drop_issue_cards",
         description="Drop the issue_cards table (phase cards retired)",
         apply=_m_0020_drop_issue_cards,
+    ),
+    Migration(
+        id="0021_issue_items_editor_columns",
+        description="Add issue_items.section_override/excluded (atom editor)",
+        apply=_m_0021_issue_items_editor_columns,
+    ),
+    Migration(
+        id="0022_drop_draft_digests",
+        description="Drop draft_digests (update-draft projection retired)",
+        apply=_m_0022_drop_draft_digests,
     ),
 )
 

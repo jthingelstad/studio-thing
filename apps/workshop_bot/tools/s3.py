@@ -16,7 +16,6 @@ shared credentials file, instance role).
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import re
@@ -365,6 +364,36 @@ def write_issue_file(
     }
 
 
+def write_issue_binary(
+    issue_number: int,
+    filename: str,
+    data: bytes,
+    content_type: str = "application/octet-stream",
+) -> dict[str, Any]:
+    """Write a binary object (cover.jpg, images) under the issue's scoped
+    prefix. The web cover-upload path — replaces the retired iOS-Shortcuts
+    PUT. CDN invalidation is best-effort like :func:`write_issue_file`."""
+    key = _resolve_key(issue_number, filename)
+    if not isinstance(data, (bytes, bytearray)):
+        raise S3PathError("data must be bytes")
+    bucket = _bucket()
+    _client().put_object(Bucket=bucket, Key=key, Body=bytes(data), ContentType=content_type)
+    logger.info("s3.write_issue_binary(%d, %s) -> %d bytes", issue_number, filename, len(data))
+    try:
+        from . import cdn
+        cdn.invalidate([f"/{key}"])
+    except Exception as exc:  # noqa: BLE001 — invalidation is best-effort
+        logger.warning("s3.write_issue_binary: CDN invalidation skipped (%s)", exc)
+    return {
+        "key": key,
+        "bucket": bucket,
+        "url": f"https://{bucket}/{key}",
+        "size": len(data),
+        "content_type": content_type,
+        "written": True,
+    }
+
+
 def delete_issue_file(issue_number: int, filename: str) -> dict[str, Any]:
     """Delete a text/JSON file from an issue's workspace. Idempotent on
     the S3 side (``DeleteObject`` is a 204 whether the key existed or
@@ -392,42 +421,8 @@ def delete_issue_file(issue_number: int, filename: str) -> dict[str, Any]:
 
 
 # Pointer file at the top of the weekly-thing/ namespace (NOT inside an issue
-# folder) — iOS Shortcuts fetch this URL to know the current in-flight issue
-# (number, dates, predictable workspace URLs). Written by `jobs/start_issue.py`
-# every time the issue window is set.
-WORKSHOP_POINTER_KEY = f"{ROOT_PREFIX}/workshop.json"
-
-
-def write_workshop_pointer(data: dict[str, Any]) -> dict[str, Any]:
-    """Write the workshop pointer JSON to
-    ``s3://{bucket}/weekly-thing/workshop.json`` (no-cache + CloudFront
-    invalidation, so Shortcuts always see the latest). ``data`` is serialised
-    verbatim — callers shape the schema."""
-    bucket = _bucket()
-    body = (json.dumps(data, indent=2, sort_keys=False) + "\n").encode("utf-8")
-    _client().put_object(
-        Bucket=bucket, Key=WORKSHOP_POINTER_KEY, Body=body,
-        ContentType="application/json; charset=utf-8",
-        # `no-store` — browsers must not cache. Stronger than `no-cache`
-        # (which allows caching with revalidation). We need this because
-        # CloudFront's Response Headers Policy doesn't apply to 304 Not
-        # Modified responses; a cached entry that goes through conditional
-        # revalidation would come back without the CORS header. `no-store`
-        # keeps the browser from ever caching it, so every fetch from
-        # weekly.thingelstad.com gets a fresh 200 with the CORS header.
-        CacheControl="no-store",
-    )
-    logger.info("s3.write_workshop_pointer -> %d bytes", len(body))
-    try:
-        from . import cdn
-        cdn.invalidate([f"/{WORKSHOP_POINTER_KEY}"])
-    except Exception as exc:  # noqa: BLE001 — invalidation is best-effort
-        logger.warning("s3.write_workshop_pointer: CDN invalidation skipped (%s)", exc)
-    return {
-        "key": WORKSHOP_POINTER_KEY, "bucket": bucket,
-        "url": f"https://{bucket}/{WORKSHOP_POINTER_KEY}",
-        "size": len(body), "written": True,
-    }
+# (The ``workshop.json`` Shortcuts pointer and its writer are retired —
+# the iOS-Shortcuts pipeline is gone; the web app is the work surface.)
 
 
 def write_issue_html(issue_number: int, filename: str, html_text: str) -> dict[str, Any]:

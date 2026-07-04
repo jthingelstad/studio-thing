@@ -30,6 +30,23 @@ def install() -> None:
 
     _install_discord()
     _install_anthropic()
+    _sandbox_issues_dir()
+
+
+def _sandbox_issues_dir() -> None:
+    """Point ``renderers.ISSUES_LOCAL_DIR`` at a temp dir for the whole test
+    process (via ``WORKSHOP_ISSUES_DIR``, read at renderers import time —
+    every test file installs stubs before importing tools). Without this, any
+    test that exercises the impure for-issue renderers outside the
+    ``DBTestCase`` sandbox silently writes into the real ``data/issues/``
+    tree (observed: ``data/issues/360/buttondown.md`` dirtied by
+    ``test_production_page``)."""
+    import os
+    import tempfile
+
+    if not os.environ.get("WORKSHOP_ISSUES_DIR"):
+        os.environ["WORKSHOP_ISSUES_DIR"] = tempfile.mkdtemp(
+            prefix="workshop-issues-")
 
 
 def _install_discord() -> None:

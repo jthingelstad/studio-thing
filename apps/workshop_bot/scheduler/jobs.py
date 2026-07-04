@@ -63,12 +63,12 @@ JOBS: tuple[JobSpec, ...] = (
     # ad-hoc / eval use but isn't scheduled.
     # ---------- Content-loop jobs ----------
     JobSpec(
-        id="update-draft-daily",
-        cron="0 17 * * *",                               # Daily 17:00 Central — projects the day's
-                                                         # upstream content into draft.md. PASSes
-                                                         # cleanly if no issue is in flight; Eddy's
-                                                         # Opus review runs during the Build phase.
-        func=functools.partial(handlers.content_job, job="update-draft"),
+        id="sync-issue-daily",
+        cron="0 17 * * *",                               # Daily 17:00 Central — refreshes issue_items
+                                                         # from Pinboard + micro.blog (the DB is the
+                                                         # draft; this is its inbound mirror). PASSes
+                                                         # cleanly if no issue is in flight.
+        func=functools.partial(handlers.content_job, job="sync-issue"),
     ),
     JobSpec(
         id="linky-pinboard-scan",

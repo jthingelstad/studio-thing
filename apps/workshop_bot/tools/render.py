@@ -1173,31 +1173,6 @@ def render_and_upload_proposal(
         return None
 
 
-def render_and_upload_html(
-    issue_number: int,
-    name: str,
-    md: str,
-    *,
-    title: str,
-    subtitle: Optional[str] = None,
-    convenience_links: Optional[list[tuple[str, str]]] = None,
-    meta: Optional[dict] = None,
-    strip_block_markers: bool = False,
-    review_md: Optional[str] = None,
-) -> Optional[str]:
-    """Render ``md`` to ``{name}.html`` in the issue workspace (no-cache +
-    CDN invalidation) and return its public URL. Best-effort: returns None
-    (logged) on any failure — the caller treats the HTML preview as
-    optional."""
-    try:
-        page = markdown_to_html_page(
-            md, title=title, subtitle=subtitle,
-            convenience_links=convenience_links, meta=meta,
-            strip_block_markers=strip_block_markers, review_md=review_md,
-            issue_number=int(issue_number),
-        )
-        res = s3.write_issue_html(int(issue_number), f"{name}.html", page)
-        return res.get("url")
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("render: couldn't write %s.html for #%s: %s", name, issue_number, exc)
-        return None
+# (``render_and_upload_html`` — the S3 draft.html preview writer — was
+# retired with the update-draft job. The web app renders previews live via
+# ``markdown_to_html_page``; the DB is the draft.)

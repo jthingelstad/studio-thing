@@ -35,19 +35,19 @@ class _DBCase(DBTestCase):
 
 
 class IterationCountTests(_DBCase):
+    """Iteration counts come from Eddy's review agent_runs inside the
+    issue window (draft_digests died with the update-draft projection)."""
 
-    def test_zero_when_no_digests(self):
-        self.assertEqual(context._draft_iteration_count(349), 0)
+    def test_one_when_no_prior_reviews(self):
+        self._window(349)
+        self.assertEqual(context._draft_iteration_count(349), 1)
 
-    def test_counts_digest_rows(self):
+    def test_counts_prior_review_runs(self):
+        self._window(349)
         for _ in range(3):
-            db.insert_draft_digest(
-                issue=349, word_count=100,
-                notable_count=0, brief_count=0, journal_count=0,
-                intro_present=0, currently_present=0, haiku_present=0,
-                cover_present=0, source_hash="abc",
-            )
-        self.assertEqual(context._draft_iteration_count(349), 3)
+            with db.AgentRun("eddy", trigger="eddy-review") as run:
+                run.records_written = 1
+        self.assertEqual(context._draft_iteration_count(349), 4)
 
 
 class OpenCommentsCountsTests(_DBCase):
@@ -112,20 +112,15 @@ class BuildEddyContextTests(_DBCase):
 
     def test_includes_iteration_fields(self):
         self._window(n=349, pub="2026-05-23")  # pub Saturday
-        # Two prior runs.
-        for _ in range(2):
-            db.insert_draft_digest(
-                issue=349, word_count=100,
-                notable_count=1, brief_count=2, journal_count=3,
-                intro_present=1, currently_present=1, haiku_present=0,
-                cover_present=1, source_hash="abc",
-            )
+        # One prior review pass (agent_runs is the iteration signal now).
+        with db.AgentRun("eddy", trigger="eddy-review") as run:
+            run.records_written = 1
         a = issue_items.upsert_item(
             issue_number=349, section="notable", source="pinboard",
             source_id="a", body_md="x",
         )
         issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="…")
-        # Simulate today = Wed, pub = Sat (3 days out, 2 iterations done → early).
+        # Simulate today = Wed, pub = Sat (3 days out, 1 prior pass → early).
         ctx = context.build_eddy_context(ref_date=date(2026, 5, 20))
         self.assertEqual(ctx["draft_iteration_count"], 2)
         self.assertEqual(ctx["open_comments"]["total"], 1)
@@ -136,13 +131,9 @@ class BuildEddyContextTests(_DBCase):
 
     def test_ship_eve_tier_late_in_cycle(self):
         self._window(n=349, pub="2026-05-23")
-        for _ in range(10):
-            db.insert_draft_digest(
-                issue=349, word_count=3000,
-                notable_count=4, brief_count=10, journal_count=15,
-                intro_present=1, currently_present=1, haiku_present=1,
-                cover_present=1, source_hash="ghi",
-            )
+        for _ in range(9):
+            with db.AgentRun("eddy", trigger="eddy-review") as run:
+                run.records_written = 1
         ctx = context.build_eddy_context(ref_date=date(2026, 5, 22))  # 1 day out
         self.assertEqual(ctx["review_tier"], "ship_eve")
         self.assertEqual(ctx["days_to_pub"], 1)

@@ -52,7 +52,7 @@
     {% if is_edit %}
       <label for="status">Status</label>
       <select id="status" name="status">
-        {% for s in ['active','done','archived','abandoned'] %}
+        {% for s in statuses %}
           <option value="{{ s }}" {{ 'selected' if row.status == s else '' }}>{{ s }}</option>
         {% endfor %}
       </select>
