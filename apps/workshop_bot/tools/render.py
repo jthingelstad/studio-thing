@@ -1,23 +1,17 @@
-"""Render an issue's markdown to a standalone HTML preview page.
+"""Render markdown to standalone, self-contained HTML pages.
 
-``update-draft`` writes ``draft.md`` and a ``draft.html`` twin so Jamie
-can pull the in-progress issue up in a browser. ``draft.html`` is the
-only review surface — ``archive.md`` / ``buttondown.md`` / ``transcript/``
-are ship-shaped artifacts for their destinations and have no rendered
-HTML view. The page is self-contained — a small bit of CSS + JS, no
-remote assets — and the ``.html`` is uploaded with ``Cache-Control:
-no-cache`` plus a CloudFront invalidation so the browser always sees the
-latest.
+The DB is the draft — the S3 ``draft.html`` preview (and its
+editorial-review drawer) is retired. What lives here now:
 
-If a ``review_md`` is supplied (the ``update-draft`` HTML pass), it's
-rendered into a slide-in drawer that's **hidden by default** and revealed
-by a fixed "Show review" button — so the same shareable link reads as the
-clean draft until someone toggles the editorial suggestions on.
-
-``render_and_upload_html(issue, name, md, …)`` does the whole thing:
-render → wrap → ``s3.write_issue_html`` (which sets the no-cache header
-and invalidates the CDN path) → return the public URL (or None on any
-failure, logged — the caller treats the preview as best-effort).
+- ``markdown_to_html_page`` — the styled page the web app's live
+  production preview serves (markdown → CSS'd article, optional banner /
+  meta block / block-marker stripping). No JS, no remote assets.
+- ``review_target_legend`` — the anchored-comment target IDs Eddy's
+  on-demand review uses (``editorial_comments`` rows surfaced on the web
+  production page), derived from current DB state.
+- The option-cards pages (subject / haiku / CTA pickers) and the
+  side-by-side reorder-proposal page — both still uploaded to the issue
+  workspace via ``s3.write_issue_html`` (no-cache + CDN invalidation).
 """
 
 from __future__ import annotations
@@ -33,21 +27,6 @@ from .content import draft as draft_mod
 logger = logging.getLogger("workshop.render")
 
 _BLOCK_MARKER_RE = re.compile(r"<!--\s*/?block:[a-z0-9_-]+\s*-->\n?", re.IGNORECASE)
-_REVIEW_TARGET_RE = re.compile(
-    r"<!--\s*target:([a-z0-9_-]+)\s*-->" r"|\[target:([a-z0-9_-]+)\]",
-    re.IGNORECASE,
-)
-# Handle markers (``<!-- handle:E349-N1 -->``) are injected by
-# ``update_draft._inject_handle_markers`` next to each target marker
-# after the comment is stored. The renderer converts them into a
-# visible badge + a copy-to-clipboard button so Jamie can paste the
-# handle back into Discord to continue the conversation.
-_REVIEW_HANDLE_RE = re.compile(
-    r"<!--\s*handle:(E\d+-[A-Z]\d+)\s*-->",
-    re.IGNORECASE,
-)
-_VALID_TARGET_RE = re.compile(r"^[a-z0-9_-]+$", re.IGNORECASE)
-_VALID_HANDLE_RE = re.compile(r"^E\d+-[A-Z]\d+$", re.IGNORECASE)
 _SECTION_LABELS = {
     "intro": "Intro",
     "currently": "Currently",
@@ -80,7 +59,6 @@ body {
   -webkit-font-smoothing: antialiased;
   max-width: 680px; margin: 0 auto; padding: 32px 28px 64px;
   color: var(--wt-ink); background: var(--wt-bg);
-  transition: margin 0.22s ease;
 }
 article > :first-child { margin-top: 0; }
 h1, h2, h3, h4 {
@@ -138,95 +116,6 @@ dl.meta dd {
   color: var(--wt-ink);
 }
 dl.meta dd:last-child { margin-bottom: 0; }
-/* Editorial-review drawer — hidden until "Show review" is pressed. */
-#rv-toggle {
-  position: fixed; top: 14px; right: 14px; z-index: 30; cursor: pointer;
-  font-family: var(--wt-mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
-  padding: 8px 14px; border-radius: 999px; border: 1px solid var(--wt-accent);
-  background: var(--wt-accent-soft); color: var(--wt-accent-deep);
-}
-#rv-toggle:hover { background: var(--wt-accent); color: #fff; }
-#rv-panel {
-  position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 94vw);
-  overflow-y: auto; padding: 58px 24px 32px; z-index: 20;
-  background: var(--wt-bg); border-left: 1px solid var(--wt-line);
-  box-shadow: -10px 0 28px rgba(0, 0, 0, 0.12);
-  transform: translateX(100%); transition: transform 0.22s ease;
-}
-body.rv-open #rv-panel { transform: translateX(0); }
-/* When the drawer is open and there's room, left-align the draft so the
-   review panel and the content are visible side by side instead of the
-   panel sitting on top of the text. On narrow windows the panel overlays. */
-@media (min-width: 880px) {
-  body.rv-open {
-    margin-left: 40px;
-    margin-right: calc(min(440px, 94vw) + 40px);
-  }
-}
-#rv-panel .rv-h {
-  font-family: var(--wt-mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--wt-accent); border: none; padding: 0; margin: 0 0 2px;
-}
-#rv-panel .rv-sub {
-  font-family: var(--wt-mono); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase;
-  color: var(--wt-muted); margin: 0 0 18px;
-}
-#rv-panel h2 { font-size: 18px; margin: 22px 0 6px; padding: 0; border: none; }
-#rv-panel h3 { font-size: 15.5px; margin: 14px 0 4px; }
-#rv-panel p, #rv-panel li { font-size: 14.5px; line-height: 1.55; }
-#rv-panel ul, #rv-panel ol { padding-left: 20px; margin: 0 0 12px; }
-#rv-panel blockquote { font-size: 14px; margin: 8px 0 12px; padding: 2px 0 2px 14px; }
-.rv-anchor {
-  display: block; position: relative; height: 0; width: 0; overflow: visible;
-  scroll-margin-top: 24px;
-}
-.rv-target-active {
-  outline: 2px solid color-mix(in srgb, var(--wt-accent) 54%, transparent);
-  outline-offset: 5px; border-radius: 3px;
-  background: color-mix(in srgb, var(--wt-accent-soft) 52%, transparent);
-  transition: background 0.16s ease, outline-color 0.16s ease;
-}
-#rv-panel .rv-review-item {
-  cursor: pointer; border-radius: 3px; transition: background 0.16s ease;
-}
-#rv-panel .rv-review-active {
-  background: var(--wt-accent-soft);
-}
-#rv-panel .rv-target-ref { display: none; }
-/* Handle badge — sits at the start of a review bullet, gives Jamie a
-   stable ID (E349-N1) he can copy and paste into Discord to continue
-   the conversation about that specific comment. */
-#rv-panel .rv-handle {
-  display: inline-flex; align-items: center; gap: 4px;
-  margin: 0 8px 0 0; padding: 1px 6px 1px 8px;
-  font-family: var(--wt-mono); font-size: 11.5px; letter-spacing: 0.02em;
-  background: var(--wt-accent-soft); color: var(--wt-accent-deep);
-  border-radius: 999px; vertical-align: baseline;
-}
-#rv-panel .rv-handle-text { font-weight: 600; }
-#rv-panel .rv-handle-copy {
-  cursor: pointer; border: 0; padding: 0 6px;
-  font-family: var(--wt-mono); font-size: 10.5px; letter-spacing: 0.04em;
-  text-transform: uppercase;
-  background: transparent; color: var(--wt-accent);
-  border-left: 1px solid color-mix(in srgb, var(--wt-accent) 30%, transparent);
-}
-#rv-panel .rv-handle-copy:hover { color: var(--wt-accent-deep); }
-#rv-panel .rv-handle.rv-handle-copied { background: color-mix(in srgb, #2da44e 18%, var(--wt-accent-soft)); }
-#rv-panel .rv-handle.rv-handle-copied .rv-handle-copy { color: #1a7f37; }
-#rv-connectors {
-  display: none; position: fixed; inset: 0; width: 100vw; height: 100vh;
-  pointer-events: none; z-index: 25; overflow: visible;
-}
-body.rv-open #rv-connectors { display: block; }
-#rv-connectors path {
-  fill: none; stroke: var(--wt-accent); stroke-width: 2;
-  stroke-linecap: round; opacity: 0.68;
-}
-@media (max-width: 600px) { #rv-panel { width: 94vw; } }
-@media (max-width: 879px) { #rv-connectors { display: none !important; } }
-@media print { #rv-toggle, #rv-panel { display: none !important; } }
-
 @media (max-width: 600px) {
   body { padding: 20px 18px 48px; font-size: 16px; }
   h1 { font-size: 26px; } h2 { font-size: 22px; } li { font-size: 16px; }
@@ -252,250 +141,52 @@ _PAGE = """\
 <style>{css}</style>
 </head>
 <body>
-{review_chrome}{review_connectors}
 {banner}{meta}<article>
 {body}
 </article>
-{review_script}</body>
+</body>
 </html>
 """
 
-# The review drawer's HTML (button + aside) — injected only when there's a
-# review. ``{review_html}`` is the rendered review markdown.
-_REVIEW_CHROME = """\
-<button id="rv-toggle" type="button" aria-expanded="false">Show review</button>
-<aside id="rv-panel" aria-label="Editorial review">
-<p class="rv-h">Editorial review</p>
-<p class="rv-sub">Suggestions only — the draft itself is unchanged.</p>
-{review_html}
-</aside>
-"""
 
-# Toggles ``body.rv-open`` and swaps the button label. Passed as a value
-# (not literal in ``_PAGE``) so the braces don't trip ``str.format``.
-_REVIEW_SCRIPT = """\
-<script>(function(){
-var b=document.getElementById('rv-toggle');if(!b)return;
-var panel=document.getElementById('rv-panel');
-var svg=document.getElementById('rv-connectors');
-var activeReview=null,activeTarget=null,activeId=null;
-function byTarget(id){return document.querySelector('[data-review-anchor="'+id+'"]');}
-function targetBox(anchor){
-  if(!anchor)return null;
-  var el=anchor.nextElementSibling||anchor.parentElement;
-  while(el&&el.classList&&el.classList.contains('rv-anchor'))el=el.nextElementSibling;
-  return el||anchor;
-}
-function clear(){
-  if(activeReview)activeReview.classList.remove('rv-review-active');
-  if(activeTarget)activeTarget.classList.remove('rv-target-active');
-  if(svg)svg.innerHTML='';
-  activeReview=activeTarget=null;activeId=null;
-}
-function draw(){
-  if(!activeReview||!activeTarget||!svg||!document.body.classList.contains('rv-open')||window.innerWidth<880){if(svg)svg.innerHTML='';return;}
-  var rr=activeReview.getBoundingClientRect();
-  var tr=activeTarget.getBoundingClientRect();
-  if(rr.bottom<0||rr.top>window.innerHeight||tr.bottom<0||tr.top>window.innerHeight){svg.innerHTML='';return;}
-  var x1=tr.right+8,y1=tr.top+(Math.min(tr.height,80)/2);
-  var x2=rr.left-10,y2=rr.top+(Math.min(rr.height,80)/2);
-  var mid=x1+Math.max(48,(x2-x1)/2);
-  svg.innerHTML='<path d="M '+x1+' '+y1+' C '+mid+' '+y1+', '+mid+' '+y2+', '+x2+' '+y2+'"></path>';
-}
-function activate(item,scroll){
-  var id=item&&item.getAttribute('data-review-target');if(!id)return;
-  var anchor=byTarget(id);if(!anchor)return;
-  clear();
-  activeReview=item;activeTarget=targetBox(anchor);activeId=id;
-  activeReview.classList.add('rv-review-active');
-  activeTarget.classList.add('rv-target-active');
-  if(scroll&&activeTarget.scrollIntoView)activeTarget.scrollIntoView({block:'center',behavior:'smooth'});
-  draw();
-}
-Array.prototype.forEach.call(document.querySelectorAll('#rv-panel .rv-target-ref'),function(ref){
-  var id=ref.getAttribute('data-review-target');if(!id||!byTarget(id))return;
-  var item=ref.closest('li,p,blockquote,h2,h3')||ref.parentElement;if(!item)return;
-  item.classList.add('rv-review-item');
-  item.setAttribute('data-review-target',id);
-  item.setAttribute('tabindex','0');
-  item.addEventListener('mouseenter',function(){activate(item,true);});
-  item.addEventListener('focusin',function(){activate(item,true);});
-  item.addEventListener('click',function(){activate(item,true);});
-});
-b.addEventListener('click',function(){
-  var on=document.body.classList.toggle('rv-open');
-  b.textContent=on?'Hide review':'Show review';
-  b.setAttribute('aria-expanded',on?'true':'false');
-  if(on&&panel)panel.scrollTop=0;
-  if(!on)clear();else if(activeId)draw();
-});
-/* Handle badge copy buttons. Clipboard API is async; on success we
-   briefly mark the badge with rv-handle-copied so the user gets
-   visible feedback. Clicking the badge anywhere also activates the
-   surrounding review item (via the activate() handler above), so
-   the copy button stops propagation to avoid double-firing. */
-Array.prototype.forEach.call(document.querySelectorAll('#rv-panel .rv-handle-copy'),function(btn){
-  btn.addEventListener('click',function(e){
-    e.stopPropagation();
-    var badge=btn.parentElement;if(!badge)return;
-    var handle=badge.getAttribute('data-handle')||(badge.textContent||'').trim();
-    if(!handle)return;
-    function done(){
-      badge.classList.add('rv-handle-copied');
-      var prev=btn.textContent;btn.textContent='copied';
-      setTimeout(function(){badge.classList.remove('rv-handle-copied');btn.textContent=prev||'copy';},1200);
-    }
-    if(navigator.clipboard&&navigator.clipboard.writeText){
-      navigator.clipboard.writeText(handle).then(done,function(){
-        /* fallback: select the text so the user can ⌘C */
-        var range=document.createRange();range.selectNodeContents(badge.querySelector('.rv-handle-text'));
-        var sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
-      });
-    }else{
-      var range=document.createRange();range.selectNodeContents(badge.querySelector('.rv-handle-text'));
-      var sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
-    }
-  });
-});
-window.addEventListener('scroll',draw,{passive:true});
-window.addEventListener('resize',draw);
-if(panel)panel.addEventListener('scroll',draw,{passive:true});
-})();</script>
-"""
-
-
-def _safe_target_id(value: str) -> str:
-    target = (value or "").strip().lower()
-    return target if _VALID_TARGET_RE.match(target) else ""
-
-
-def _anchor_html(target: str) -> str:
-    safe = _safe_target_id(target)
-    if not safe:
-        return ""
-    return (
-        f'<div class="rv-anchor" id="rv-target-{safe}" '
-        f'data-review-anchor="{safe}" aria-hidden="true"></div>'
-    )
-
-
-def _replace_block(text: str, name: str, body: str) -> str:
-    pattern = re.compile(
-        rf"(<!--\s*block:{re.escape(name)}\s*-->\n?)(.*?)(<!--\s*/block:{re.escape(name)}\s*-->)",
-        re.IGNORECASE | re.DOTALL,
-    )
-    return pattern.sub(lambda m: f"{m.group(1)}{body}{m.group(3)}", text, count=1)
-
-
-_SECTION_PREFIX = {"notable": "n", "brief": "b", "journal": "j"}
-
-
-def _annotate_chunk_targets(name: str, body: str, *, issue_number: int) -> str:
-    """Walk the section's rows (in current position order) and prepend
-    a hidden HTML anchor at the start of the line containing each
-    item's URL, so the drawer's connector lines can find the target.
-
-    Anchoring at line-start avoids breaking markdown link syntax —
-    inserting before the URL itself would land *inside* ``[Title](url)``
-    and confuse the renderer (the anchor would end up inside the
-    href).
-    """
-    if name not in _SECTION_PREFIX:
-        return body
-    rows = issue_items.list_items(int(issue_number), section=name, include_promoted=False)
-    out = body
-    prefix = _SECTION_PREFIX[name]
-    for i, row in enumerate(rows, start=1):
-        url = (row.get("url") or "").strip()
-        if not url:
-            continue
-        url_idx = out.find(url)
-        if url_idx < 0:
-            continue
-        line_start = out.rfind("\n", 0, url_idx) + 1
-        anchor = _anchor_html(f"{prefix}{i}")
-        if not anchor:
-            continue
-        out = out[:line_start] + anchor + "\n" + out[line_start:]
-    return out
-
-
-def _annotate_review_targets(md: str, *, issue_number: int) -> str:
-    """Convert draft block markers and per-item rows into HTML anchors.
-
-    The anchors exist only in the preview HTML; the underlying draft markdown
-    and publish flow stay unchanged.
-    """
-    out = md or ""
-    for name in draft_mod.SECTION_BLOCKS:
-        pattern = re.compile(
-            rf"(<!--\s*block:{re.escape(name)}\s*-->\n?)(.*?)(<!--\s*/block:{re.escape(name)}\s*-->)",
-            re.IGNORECASE | re.DOTALL,
-        )
-        match = pattern.search(out)
-        if not match:
-            continue
-        body = _annotate_chunk_targets(name, match.group(2), issue_number=issue_number)
-        out = _replace_block(out, name, body)
-        out = re.sub(
-            rf"<!--\s*block:{re.escape(name)}\s*-->\n?",
-            _anchor_html(name) + "\n",
-            out,
-            count=1,
-            flags=re.IGNORECASE,
-        )
-    return out
-
-
-def _prepare_review_md(review_md: str) -> str:
-    src = review_md or ""
-
-    def _target_repl(match: re.Match) -> str:
-        safe = _safe_target_id(match.group(1) or match.group(2) or "")
-        if not safe:
-            return ""
-        return f'<span class="rv-target-ref" data-review-target="{safe}"></span>'
-
-    src = _REVIEW_TARGET_RE.sub(_target_repl, src)
-
-    def _handle_repl(match: re.Match) -> str:
-        raw = (match.group(1) or "").strip().upper()
-        if not _VALID_HANDLE_RE.match(raw):
-            return ""
-        # The badge sits inline next to the bullet text. Aria-label
-        # explains the copy action for screen readers; data-handle is
-        # what the inline JS reads when the button is clicked. The
-        # ``<noscript>`` fallback keeps the handle text readable when
-        # JS is off (the badge just becomes static text).
-        return (
-            f'<span class="rv-handle" data-handle="{raw}">'
-            f'<span class="rv-handle-text">{raw}</span>'
-            f'<button type="button" class="rv-handle-copy" '
-            f'aria-label="Copy {raw} to clipboard">copy</button>'
-            f'</span>'
-        )
-
-    src = _REVIEW_HANDLE_RE.sub(_handle_repl, src)
-    return src
-
-
-def review_target_legend(md: str, *, issue_number: int) -> str:
-    """Return the target IDs Eddy can use in the draft-review drawer.
+def review_target_legend(*, issue_number: int,
+                         section_status: Optional[dict] = None) -> str:
+    """Return the target IDs Eddy can use for anchored review comments
+    (``editorial_comments`` rows surfaced on the web production page).
 
     The list combines:
 
     - Section-level ids (``intro``, ``currently``, ``cover``, ``notable``,
-      ``journal``, ``brief``, ``outro``, ``haiku``) — derived from the
-      draft text's block presence (atom sections only show up when
-      their block has content).
+      ``journal``, ``brief``, ``outro``, ``haiku``) — derived from DB
+      state (``draft.section_status`` + the content store for ``outro``);
+      a section only shows up when it has content.
     - Per-item ids (``n1``/``b2``/``j3``, etc.) — derived from
       ``issue_items`` rows in current position order, with the
       section's letter as the prefix.
+
+    ``section_status`` lets a caller that already computed
+    ``draft_mod.section_status(issue_number)`` pass it in (it does an S3
+    listing + a body render); omitted, it's computed here.
     """
-    blocks = draft_mod.parse_blocks(md or "")
+    from . import content_store
+
+    n = int(issue_number)
+    st = section_status if section_status is not None else draft_mod.section_status(n)
+    st_sections = st.get("sections") or {}
+    outro_body = content_store.read_issue(n, "outro.md")
+    present = {
+        "intro": bool(st.get("intro_present")),
+        "currently": bool(st.get("currently_present")),
+        "cover": bool(st.get("cover_present")),
+        "notable": bool((st_sections.get("notable") or {}).get("present")),
+        "journal": bool((st_sections.get("journal") or {}).get("present")),
+        "brief": bool((st_sections.get("brief") or {}).get("present")),
+        "outro": bool(outro_body and outro_body.strip()),
+        "haiku": bool(st.get("haiku_present")),
+    }
     lines: list[str] = []
     for name in draft_mod.SECTION_BLOCKS:
-        if blocks.get(name):
+        if present.get(name):
             lines.append(f"- `{name}` — {_SECTION_LABELS.get(name, name)}")
     notable_rows = issue_items.list_items(
         int(issue_number), section="notable", include_promoted=False,
@@ -579,9 +270,7 @@ def _render_meta(meta: Optional[dict]) -> str:
 def markdown_to_html_page(md: str, *, title: str, subtitle: Optional[str] = None,
                           convenience_links: Optional[list[tuple[str, str]]] = None,
                           meta: Optional[dict] = None,
-                          strip_block_markers: bool = False,
-                          review_md: Optional[str] = None,
-                          issue_number: Optional[int] = None) -> str:
+                          strip_block_markers: bool = False) -> str:
     """Wrap ``md`` (rendered to HTML) in a standalone, self-contained page.
     If ``strip_block_markers``, the ``<!-- block:X -->`` comments are
     removed first. ``subtitle``, if given, renders as a small banner above
@@ -590,35 +279,18 @@ def markdown_to_html_page(md: str, *, title: str, subtitle: Optional[str] = None
     renders as a second line of cross-links in the same banner.
     ``meta`` (an optional ``{"subject": …, "description": …}`` dict)
     renders as a definition list between the banner and the article
-    body. ``review_md``, if given, is rendered into a slide-in drawer
-    that's hidden until the fixed "Show review" button is pressed.
-
-    ``issue_number`` is required when ``review_md`` is supplied — the
-    per-item drawer anchors (n1/b2/j3) are derived from ``issue_items``
-    rows for that issue. When omitted (preview-only paths with no
-    drawer), the row-based anchor pass is skipped.
+    body.
     """
     src = md or ""
-    has_review = bool(review_md and review_md.strip())
-    if has_review and issue_number is not None:
-        src = _annotate_review_targets(src, issue_number=int(issue_number))
     if strip_block_markers:
         src = _BLOCK_MARKER_RE.sub("", src)
         src = re.sub(r"\n{3,}", "\n\n", src).strip() + "\n"
     body = _markdown_to_html(src)
     banner = _render_banner(subtitle, convenience_links)
     meta_block = _render_meta(meta)
-    if has_review:
-        review_chrome = _REVIEW_CHROME.format(review_html=_markdown_to_html(_prepare_review_md(review_md)))
-        review_connectors = '<svg id="rv-connectors" aria-hidden="true"></svg>\n'
-        review_script = _REVIEW_SCRIPT
-    else:
-        review_chrome = review_connectors = review_script = ""
     return _PAGE.format(
         title=_html.escape(title), css=_CSS, banner=banner, meta=meta_block,
         body=body,
-        review_chrome=review_chrome, review_connectors=review_connectors,
-        review_script=review_script,
     )
 
 

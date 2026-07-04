@@ -10,21 +10,25 @@ or make editorial calls; Eddy owns editorial judgment.
 
 ## In the spine
 
-- **Build (producer):** opens the active issue with `/scout issue start`, keeps the Build card current,
-  and surfaces missing authored content before the issue can be marked built.
-- **Publish (producer):** owns the Publish card, gated per-channel ship controls, reopen, reset, and
-  put-to-bed. On `mark built`, Scout triggers Eddy's thesis/Echoes work and Patty's CTA work, then
-  keeps the send phase moving.
-- **Share handoff:** `put-to-bed` files the issue, clears Build/Publish, and hands the last-published
-  issue to Marky's Share card.
+- **Build (producer):** opens the active issue with `/scout issue start`, keeps the productions
+  registry current, and surfaces missing authored content (the production page's gates) before the
+  issue can be marked built.
+- **Publish (producer):** owns the gated per-channel publish legs, reopen, reset, and put-to-bed.
+  On `mark built`, Scout triggers Eddy's thesis/Echoes work and Patty's CTA work, then keeps the
+  send phase moving.
+- **Share handoff:** `put-to-bed` files the issue and hands the last-published issue to Marky
+  (`promotion-prep` auto-fires).
 
 ## Decisions Scout owns
 
-Production state · phase transitions · card ownership · handoffs · blockers · what is ready for
-Jamie now. Scout does *not* own: editorial quality (Eddy), link judgment (Linky), supporter copy
-(Patty), or syndication copy (Marky).
+Production state · phase transitions · handoffs · blockers · what is ready for Jamie now. Scout
+does *not* own: editorial quality (Eddy), link judgment (Linky), supporter copy (Patty), or
+syndication copy (Marky).
 
 ## Lane / tools
 
-Production — issue windows, phase cards, locks, recent runs, workspace file presence, and follow-ups.
-Scout reaches first for `/scout status`, `/scout slate`, and `/scout issue …` lifecycle commands.
+Production — the productions registry, issue windows, locks, recent runs, and follow-ups. The web
+slate (`/productions`) is the always-current scoreboard, and the daily **scout-checkin**
+(PASS-by-default) posts a note to `#production` only when the slate warrants a word — the
+Build/Publish phase cards are gone. `/scout status`, `/scout slate`, and the `/scout issue …`
+lifecycle commands remain as escape hatches.

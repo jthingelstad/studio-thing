@@ -11,12 +11,13 @@ in the overview).
 Per-issue syndication of the just-published issue:
 
 - A **LinkedIn** post and the **r/WeeklyThing** megathread + per-link discussion threads, drafted
-  by `promotion-prep` — **auto-fired when the issue enters Share** (`put-to-bed`), re-runnable from
-  the Share card. (Marky **never auto-posts** — drafts only; Jamie posts.)
+  by `promotion-prep` — **auto-fired when the issue enters Share** (`put-to-bed`), re-runnable via
+  `/marky prep`. (Marky **never auto-posts** — drafts only; Jamie posts.)
 - Current campaign performance + subscriber/engagement metrics shown as **context** (read-only).
 
-There is no hard "done" — metrics keep accruing. The **Share card** (`#promotion`) is the live
-surface: the syndication launchpad (Draft promo · Refresh metrics) plus that campaign context.
+There is no hard "done" — metrics keep accruing. Marky's drafts land in `#promotion`; the
+production page (phase `share`) carries the issue's published state, and campaign context comes
+from `/marky metrics` / `/marky campaign report`.
 
 ## Phase vs program
 

@@ -21,7 +21,6 @@ from typing import Any, Callable, NamedTuple, Optional
 
 from ..tools import db, render
 from ..tools.discord import interaction
-from ..tools import s3
 from . import _base
 
 
@@ -130,7 +129,11 @@ def thesis_block(issue_number: int) -> str:
     (compose jobs degrade gracefully to today's behaviour of reading
     just the body).
     """
-    res = s3.read_issue_file(issue_number, "thesis.md")
+    # The DB is the draft — thesis.md is a content row, not an S3 object.
+    from ..tools import content_store
+
+    body = content_store.read_issue(int(issue_number), "thesis.md")
+    res = {"found": bool(body and body.strip()), "text": body or ""}
     if not (res.get("found") and isinstance(res.get("text"), str)):
         return ""
     text = (res["text"] or "").strip()

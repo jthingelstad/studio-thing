@@ -11,11 +11,10 @@ Shared by ``update-draft`` (the draft's ``currently`` block) and
 ``build-publish`` (the ``## Currently`` section in ``buttondown.md``) so
 the two never diverge.
 
-The legacy iOS-Shortcut path (``currently.json`` / ``currently.md`` in
-S3) is retired. A one-time backfill in ``db._bootstrap_currently_from_s3``
-seeds the in-flight issue from any leftover ``currently.json`` on first
-boot; from there everything happens through the ``currently__*`` agent
-tools, the ``/eddy currently`` slash subgroup, and Eddy's conversational
+The legacy iOS-Shortcut path (``currently.json`` / ``currently.md``) is
+fully retired (its one-time S3 backfill bridge is gone too). Everything
+happens through the ``currently__*`` agent tools, the web editor, and
+Eddy's conversational
 flow in ``#editorial``.
 """
 

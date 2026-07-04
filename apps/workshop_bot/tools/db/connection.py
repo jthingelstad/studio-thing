@@ -109,7 +109,6 @@ def run_migrations() -> "_MigrationReport":
         schema_path=SCHEMA_PATH if SCHEMA_PATH.exists() else None,
     )
     _applied_schema_hash[path] = hashlib.sha256(schema_content).hexdigest()
-    _bootstrap_currently_from_s3()
     logger.info(
         "workshop.db ready at %s (%d applied this run, %d skipped)",
         path, len(report.applied), len(report.skipped),
@@ -149,29 +148,5 @@ class _MigrationReport:
         return self.schema_hash[:8] if self.schema_hash else ""
 
 
-def _bootstrap_currently_from_s3() -> None:
-    """One-time bridge: when the active in-flight issue has any legacy
-    ``currently.json`` in S3 but no ``currently_entries`` rows yet, seed
-    the rows so the new DB-backed renderer sees the existing values.
-    Idempotent — once entries exist, subsequent boots no-op. Failures
-    are swallowed (logged) so DB init never fails on an S3 hiccup."""
-    try:
-        from .store import currently_backfill_from_s3, get_active_issue_window
-    except Exception:  # noqa: BLE001
-        return
-    try:
-        window = get_active_issue_window()
-    except Exception:  # noqa: BLE001
-        return
-    if not window:
-        return
-    try:
-        inserted = currently_backfill_from_s3(int(window["issue_number"]))
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("currently backfill from S3 failed: %s", exc)
-        return
-    if inserted:
-        logger.info(
-            "currently backfill: seeded %d entries for WT%d from currently.json",
-            inserted, int(window["issue_number"]),
-        )
+# (The one-time ``currently.json`` → DB backfill bridge that ran here died
+# with the iOS-Shortcuts pipeline — nothing can produce that file anymore.)

@@ -124,55 +124,6 @@ class RenderCurrentlyTests(DBTestCase):
         # Among the used ones at the bottom of the K window, the older
         # (lower last_used_issue) ranks earlier.
 
-    def test_backfill_from_s3_seeds_in_flight_issue(self):
-        from unittest.mock import patch as _patch
-        from apps.workshop_bot.tools import s3
-        # Stub s3.read_issue_file to return a Shortcut-shaped currently.json
-        # the first time, then "not found" on the second call (post-backfill
-        # the DB has rows so backfill no-ops without re-reading).
-        payload = (
-            '{"Listening": "Noah Kahan", "Watching": "Shrinking", '
-            '"Reading": " [The Lathe of Heaven](https://example.com) "}'
-        )
-        def fake_read(n, filename, **_):
-            if filename == "currently.json":
-                return {"found": True, "text": payload, "size": len(payload)}
-            return {"found": False}
-
-        with _patch.object(s3, "read_issue_file", fake_read):
-            n = db.currently_backfill_from_s3(348)
-        self.assertEqual(n, 3)
-        rows = db.currently_get_entries(348)
-        self.assertEqual(
-            [(r["type_label"], r["position"]) for r in rows],
-            [("Listening", 1), ("Watching", 2), ("Reading", 3)],
-        )
-        # Markdown link survived round-trip with the trailing whitespace trimmed.
-        reading = next(r for r in rows if r["type_label"] == "Reading")
-        self.assertEqual(reading["value"], "[The Lathe of Heaven](https://example.com)")
-
-        # A second call is a no-op because currently_entries already has rows.
-        # The fake_read shouldn't get hit, but even if it did, no INSERT happens.
-        with _patch.object(s3, "read_issue_file", lambda *a, **kw: {"found": False}):
-            again = db.currently_backfill_from_s3(348)
-        self.assertEqual(again, 0)
-
-    def test_backfill_creates_missing_canonical_types(self):
-        from unittest.mock import patch as _patch
-        from apps.workshop_bot.tools import s3
-        # An ad-hoc legacy type that isn't in the seed pool.
-        payload = '{"Using": "POAP2RSS"}'
-
-        def fake_read(n, filename, **_):
-            if filename == "currently.json":
-                return {"found": True, "text": payload, "size": len(payload)}
-            return {"found": False}
-
-        with _patch.object(s3, "read_issue_file", fake_read):
-            n = db.currently_backfill_from_s3(326)
-        self.assertEqual(n, 1)
-        self.assertIsNotNone(db.currently_get_type("Using"))
-
 
 if __name__ == "__main__":
     unittest.main()

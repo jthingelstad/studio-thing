@@ -5,8 +5,9 @@ world. The whole monorepo — `apps/workshop_bot`, `pipeline/`, the site build, 
 `CLAUDE.md`s — designs against this. When a surface, job, or persona feels confusing, the test is:
 *does it respect this model?*
 
-This page is the **front door**: the shape, the concurrency, the phase machinery, and who owns
-what. The detail lives in the per-phase and per-program docs linked below — keep this short.
+This page is the **front door**: the shape, the concurrency, the phase machinery, the operator
+surface, and who owns what. The detail lives in the per-phase and per-program docs linked below —
+keep this short.
 
 ---
 
@@ -36,7 +37,7 @@ Two truths fall out of this and explain most of the design:
    carrying `phase`) is the Build/Publish issue; the *last-published* issue is the Share issue.
 2. **Programs are not phases.** Membership and Campaigns are standing initiatives with their own
    cadence, objectives, and tools. A phase only *draws on* a program at a touchpoint (Publish pulls
-   a CTA from Membership; Share feeds Campaigns). Programs get **no per-issue card**.
+   a CTA from Membership; Share feeds Campaigns). Programs have **no per-issue lifecycle**.
 
 ---
 
@@ -58,9 +59,9 @@ Two truths fall out of this and explain most of the design:
 
 - **Active window** (`issue_windows.is_active = 1`) — the issue in **Build or Publish** (its
   `phase` says which).
-- **Last-published** — the most recent issue filed by `put-to-bed`; the issue in **Share**. (Marky
-  reads its `buttondown.md` via RSS — "Marky operates on the last *published* issue" is exactly
-  this.)
+- **Last-published** — the most recent issue filed by `put-to-bed`; the issue in **Share**.
+  (`put-to-bed` auto-fires `promotion-prep` — "Marky operates on the last *published* issue" is
+  exactly this.)
 
 **Worked example:** WT349 is in Build. Marked built → Publish (still the active window). Put to bed
 → WT349 becomes last-published (Share), and `start-issue` makes WT350 the active window in Build.
@@ -75,8 +76,8 @@ state, not a frozen artifact (the healthy successor to the retired `final.md` lo
 
 | Transition | Trigger | Effect |
 |---|---|---|
-| → **build** | `start-issue` | Window opens (`phase=build`); Build card posts; editorial review runs on refreshes |
-| **build → publish** | **`mark built`** (`/scout issue built` or the Build-card button) | Build card finalizes; Eddy writes the **thesis** (`compose-thesis` over the now-frozen content — anchors every downstream Publish job); Publish card posts; CTA auto-requested from Patty; attention shifts from content-quality to send-readiness |
+| → **build** | `start-issue` | Window opens (`phase=build`); `sync-issue` starts mirroring sources into the DB; the production page goes live |
+| **build → publish** | **`mark built`** (the production page or `/scout issue built`) | Eddy writes the **thesis** (`compose-thesis` over the now-frozen content — anchors every downstream Publish job) + **Echoes**; CTA auto-requested from Patty; the page's publish controls unlock; attention shifts from content-quality to send-readiness |
 | **publish → build** | reopen (`/scout issue reopen`) | Back to Build to fix content |
 | **publish → (published)** | `put-to-bed` | Files the issue; `is_active = 0`; becomes the Share target |
 
@@ -85,11 +86,26 @@ CTA only surface when `phase = publish`.
 
 ---
 
+## The operator surface
+
+The **web production page** (`/productions/WT{n}`, tailnet-only) is the front door: phase state +
+gates, the Sync-sources button, Eddy's on-demand review (anchored comments surfaced inline), the
+per-channel publish buttons, and cover upload. Authoring happens in the **atom editor**
+(`/productions/WT{n}/editor`); reading the draft is the **live preview**
+(`/productions/WT{n}/preview`), rendered from current DB state on every load.
+
+Content is **DB-resident** (`production_content` + `issue_items`) — there is no draft artifact.
+Ship-shaped artifacts (email body, archive, transcripts) are rendered at publish time by the leg
+that ships them. Slash commands (`/scout issue …`, `/eddy issue …`, `/eddy edit`, …) remain only as
+**escape hatches** for repair scenarios, not the happy path.
+
+---
+
 ## Persona ⇄ phase / program map
 
 | Persona | Phase(s) | Program | Channel | In one line |
 |---|---|---|---|---|
-| **Scout** | Build + Publish | Production slate | `#production` | Owns the lifecycle, phase cards, handoffs, and blockers |
+| **Scout** | Build + Publish | Production slate | `#production` | Owns the lifecycle, the productions registry + web slate, handoffs, and blockers |
 | **Eddy** | Build + Publish | — | `#editorial` | Owns editorial judgment: review, ordering, thesis, subject, description, haiku |
 | **Linky** | feeds Build | — | `#research` / `#discovery` | Researches candidate links into the curation queue |
 | **Patty** | (touches Publish) | **Membership** | `#supporters` | Runs the annual fundraising drive; supplies the CTA |

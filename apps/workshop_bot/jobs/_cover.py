@@ -1,22 +1,21 @@
 """Render the issue's cover block text (caption + date/location) and alt text.
 
-Prefers a structured ``cover.json`` — ``{"caption": …, "location": …,
+Reads the structured ``cover.json`` — ``{"caption": …, "location": …,
 "timestamp": …, "alt": …}`` rendered as ``caption\n\ntimestamp  \nlocation``
 (the shape the published issue uses, with a markdown hard break between
-the timestamp and the location). Falls back to a verbatim ``cover.md``
-(the legacy iOS-Shortcut form). Empty / missing either way → ``""``.
+the timestamp and the location). Empty / missing / malformed → ``""``.
+(The legacy verbatim ``cover.md`` iOS-Shortcut fallback died with the
+Shortcuts pipeline.)
 
 ``alt(issue_number)`` returns the cover's alt text. ``cover.json.alt``
-*is* the source of truth — if Jamie set one in the Shortcut or via
-``/eddy edit cover``, that wins. If the field is missing or empty,
-``alt`` makes one vision call, writes the result back into ``cover.json``
-on S3, and returns it. The next call reads ``cover.json.alt`` directly —
-no separate cache. The caption is passed to the vision call so the
-generated alt doesn't duplicate the text printed below the image.
+*is* the source of truth — if Jamie set one on the web cover form, that
+wins. If the field is missing or empty, ``alt`` makes one vision call,
+writes the result back into ``cover.json``, and returns it. The caption
+is passed to the vision call so the generated alt doesn't duplicate the
+text printed below the image.
 
-This is *only* the text/alt for the cover; both ``update-draft`` and
-``build-publish`` prepend the cover image themselves, so the two stay in
-sync via this one helper.
+This is *only* the text/alt for the cover; the renderers prepend the
+cover image themselves, so all formats stay in sync via this one helper.
 """
 
 from __future__ import annotations
@@ -30,7 +29,6 @@ from ..tools import alt_text, content_store
 logger = logging.getLogger("workshop.jobs.cover")
 
 JSON_FILE = "cover.json"
-MD_FILE = "cover.md"
 
 # The cover image URL pattern (mirrors ``update_draft._COVER_IMAGE``). Defined
 # here so ``alt(n)`` can fetch the bytes for the vision call from the same
@@ -42,12 +40,8 @@ def render(issue_number: int) -> str:
     n = int(issue_number)
     raw = content_store.read_issue(n, JSON_FILE)
     if raw and raw.strip():
-        rendered = _render_json(raw, n)
-        if rendered:
-            return rendered
-        # malformed/empty JSON → fall through to the legacy markdown form
-    md = content_store.read_issue(n, MD_FILE)
-    return md.strip() if md else ""
+        return _render_json(raw, n) or ""
+    return ""
 
 
 def alt(issue_number: int) -> str:

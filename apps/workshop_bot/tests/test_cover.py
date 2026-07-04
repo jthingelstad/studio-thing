@@ -55,22 +55,13 @@ class RenderCoverTests(unittest.TestCase):
         with patch.object(_cover, "content_store", _FakeFiles({"cover.json": '{"caption":"Cap.","location":"Here"}'})):
             self.assertEqual(_cover.render(1), "Cap.\n\nHere")
 
-    def test_json_takes_precedence_over_md(self):
-        with patch.object(_cover, "content_store", _FakeFiles({
-            "cover.json": '{"caption":"json caption","location":"L","timestamp":"T"}',
-            "cover.md": "the markdown one",
-        })):
-            self.assertEqual(_cover.render(1), "json caption\n\nT  \nL")
 
-    def test_falls_back_to_md(self):
-        with patch.object(_cover, "content_store", _FakeFiles({"cover.md": "Docks on the lake.\n\nApril 26, 2026  \nExcelsior, MN"})):
-            self.assertEqual(_cover.render(1), "Docks on the lake.\n\nApril 26, 2026  \nExcelsior, MN")
-
-    def test_invalid_or_non_object_json_falls_back(self):
-        with patch.object(_cover, "content_store", _FakeFiles({"cover.json": "broken {", "cover.md": "fallback"})):
-            self.assertEqual(_cover.render(1), "fallback")
-        with patch.object(_cover, "content_store", _FakeFiles({"cover.json": '["nope"]', "cover.md": "fallback2"})):
-            self.assertEqual(_cover.render(1), "fallback2")
+    def test_invalid_or_non_object_json_renders_empty(self):
+        # The legacy cover.md fallback died with the Shortcuts pipeline.
+        with patch.object(_cover, "content_store", _FakeFiles({"cover.json": "broken {"})):
+            self.assertEqual(_cover.render(1), "")
+        with patch.object(_cover, "content_store", _FakeFiles({"cover.json": '["nope"]'})):
+            self.assertEqual(_cover.render(1), "")
 
     def test_empty_then_empty(self):
         with patch.object(_cover, "content_store", _FakeFiles({"cover.json": "{}"})):

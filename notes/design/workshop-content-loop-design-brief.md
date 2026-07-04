@@ -1,3 +1,5 @@
+> **OBSOLETE (historical).** This brief describes the S3-workspace / draft.md / Shortcuts era. Superseded by the 2026-06 productions rearchitecture and the 2026-07 "DB is the draft" rip — see `apps/workshop_bot/CLAUDE.md` and `notes/design/issue-atoms.md` for current reality.
+
 # Workshop Content Production Loop — Design Brief
 
 > Redesign of how `apps/workshop_bot/` helps Jamie assemble each Weekly Thing issue. The runtime (personas, S3 workspace, Discord plumbing) is mature; this brief defines what work happens, who does it, and on what trigger.

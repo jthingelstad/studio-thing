@@ -5,9 +5,6 @@
 the only S3 access is the workspace listing for binaries (``cover.jpg``).
 Shared by ``eddy-review`` (Eddy's review context), the ``issue-status``
 job, ``build_eddy_context``, and the ``draft__section_status`` agent tool.
-
-The markdown parse helpers (``parse_blocks`` / ``count_*``) remain for
-callers that analyse rendered bodies.
 """
 
 from __future__ import annotations
@@ -35,64 +32,12 @@ SECTION_BLOCKS = (
 # from a file). ``final.md`` is gone — section ordering and promotions
 # live in the DB now.
 REQUIRED_ASSETS = ("haiku.md", "metadata.json", "intro.md", "cover.jpg")
-# Currently is optional; it's DB-backed via ``currently_entries`` —
-# the legacy ``currently.json`` / ``currently.md`` paths are retired
-# but checked here for backwards-compatible status reporting.
-OPTIONAL_ASSETS = ("currently.json", "currently.md")
-
-
-def _block(text: str, name: str) -> str:
-    open_tag = f"<!-- block:{name} -->"
-    close_tag = f"<!-- /block:{name} -->"
-    i = text.find(open_tag)
-    if i < 0:
-        return ""
-    j = text.find(close_tag, i + len(open_tag))
-    if j < 0:
-        return ""
-    return text[i + len(open_tag):j].strip()
-
-
-def parse_blocks(draft_text: str) -> dict[str, str]:
-    return {name: _block(draft_text, name) for name in SECTION_BLOCKS}
-
-
-def count_notable(content: str) -> int:
-    """Notable items are H3 link headings: ``### [Title](url)``."""
-    return len(re.findall(r"(?m)^\s{0,3}###\s+\[", content))
-
-
-def count_brief(content: str) -> int:
-    """Briefly items are bolded links: ``**[Title](url)**``."""
-    return len(re.findall(r"\*\*\[[^\]]+\]\(", content))
-
-
-def count_journal(content: str) -> int:
-    """Journal entries start with a date link ``[Mon DD, YYYY at …](url)``
-    (the common case) or an H3 link (the rare elevated entry)."""
-    n = len(re.findall(r"(?m)^\s*\[[^\]]+\]\(https?://", content))
-    n += len(re.findall(r"(?m)^\s{0,3}###\s+\[", content))
-    return n
-
-
-_PLACEHOLDER_RE = re.compile(
-    r"^_.*\b(pulled from|will be pulled|couldn't pull|couldn’t pull)\b.*_$",
-    re.IGNORECASE | re.DOTALL,
-)
-
-
-def is_placeholder(content: str) -> bool:
-    c = content.strip()
-    return bool(c) and bool(_PLACEHOLDER_RE.match(c))
 
 
 def word_count(draft_text: str) -> int:
     """Word count of the draft, ignoring HTML comments / block markers."""
     stripped = re.sub(r"<!--.*?-->", "", draft_text or "", flags=re.DOTALL)
     return len(stripped.split())
-
-
-_COUNTERS = {"notable": count_notable, "brief": count_brief, "journal": count_journal}
 
 
 def _atom_present(issue_number: int, name: str) -> bool:
@@ -138,7 +83,7 @@ def section_status(
         or (f.startswith("thanks-") and f.endswith(".md"))
     )
     assets: dict[str, bool] = {}
-    for name in REQUIRED_ASSETS + OPTIONAL_ASSETS:
+    for name in REQUIRED_ASSETS:
         if name == "cover.jpg":
             assets[name] = name in list_objects
         else:

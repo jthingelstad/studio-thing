@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import sys
-import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -16,14 +15,15 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.tools import cdn, db, issue_items, render  # noqa: E402
+from apps.workshop_bot.tools import cdn, content_store, issue_items, render  # noqa: E402
+from apps.workshop_bot.tests._fixtures import DBTestCase as _DBTestCase  # noqa: E402
 
 
 def _seed_348_items() -> None:
-    """Seed the rows the row-driven legend / anchor pass needs.
+    """Seed the rows the row-driven legend needs.
 
     Mirrors the WT348-shaped fixtures used elsewhere — 2 Notable, 1
-    Briefly, 1 Journal — keyed to URLs the test markdown carries."""
+    Briefly, 1 Journal."""
     issue_items.upsert_item(
         issue_number=458, section="notable", source="manual",
         source_id="n-a", url="http://a", title="A", body_md="blurb.",
@@ -159,101 +159,46 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
         self.assertIn("<pre>", page)
         self.assertIn("# raw", page)
 
-    def test_review_md_adds_a_toggle_drawer_hidden_by_default(self):
-        page = render.markdown_to_html_page(
-            "# WT458\n\n## Notable\n\n### [A](http://a)\n\nblurb.",
-            title="WT458 — draft", subtitle="DRAFT · WT458",
-            review_md="## Notable\n\n- The `wuphf` blurb runs long — cut the Office tangent.\n",
-        )
-        # The toggle button + the drawer + the rendered review are all there.
-        self.assertIn('<button id="rv-toggle"', page)
-        self.assertIn('<aside id="rv-panel"', page)
-        self.assertIn("Editorial review", page)
-        self.assertIn("the Office tangent", page)
-        # Hidden by default: the drawer is off-screen until body.rv-open.
-        self.assertIn("transform: translateX(100%)", page)
-        self.assertIn("body.rv-open #rv-panel { transform: translateX(0); }", page)
-        # When open (and there's room) the draft shifts left so the panel
-        # doesn't cover it.
-        self.assertIn("body.rv-open {", page)
-        # A toggle script wires the button to body.rv-open.
-        self.assertIn("classList.toggle('rv-open')", page)
-        # The actual draft content is untouched (not edited by the review).
-        self.assertIn("<h2>Notable</h2>", page)
-        self.assertIn('<a href="http://a">A</a>', page)
-
-    def test_review_target_markers_add_anchors_and_connector_chrome(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            os.environ["WORKSHOP_DB_PATH"] = str(Path(tmp) / "t.db")
-            try:
-                db.run_migrations()
-                _seed_348_items()
-                md = (
-                    "<!-- block:intro -->\nOpening note.\n<!-- /block:intro -->\n\n"
-                    "## Notable\n\n"
-                    "<!-- block:notable -->\n"
-                    "### [A](http://a)\n\nblurb.\n\n\n"
-                    "### [B](http://b)\n\nsecond blurb.\n"
-                    "<!-- /block:notable -->\n\n"
-                    "## Briefly\n\n"
-                    "<!-- block:brief -->\nBrief note → **[C](http://c)**\n<!-- /block:brief -->"
-                )
-                page = render.markdown_to_html_page(
-                    md,
-                    title="WT458 — draft",
-                    strip_block_markers=True,
-                    review_md="- <!-- target:n2 --> The second Notable item should move up.\n",
-                    issue_number=458,
-                )
-            finally:
-                os.environ.pop("WORKSHOP_DB_PATH", None)
-        self.assertIn('id="rv-target-intro"', page)
-        self.assertIn('data-review-anchor="n1"', page)
-        self.assertIn('data-review-anchor="n2"', page)
-        self.assertIn('data-review-anchor="b1"', page)
-        self.assertIn('class="rv-target-ref" data-review-target="n2"', page)
-        self.assertIn('<svg id="rv-connectors"', page)
-        self.assertIn("rv-target-active", page)
-        self.assertIn("data-review-target", page)
-        self.assertIn("mouseenter',function(){activate(item,true);}", page)
-        self.assertIn("focusin',function(){activate(item,true);}", page)
-        self.assertNotIn("target:n2", page)
-        self.assertNotIn("block:notable", page)
-
-    def test_review_target_legend_lists_sections_and_items(self):
-        md = (
-            "<!-- block:intro -->\nOpening note.\n<!-- /block:intro -->\n\n"
-            "## Notable\n\n"
-            "<!-- block:notable -->\n"
-            "### [A](http://a)\n\nblurb.\n"
-            "<!-- /block:notable -->\n\n"
-            "## Journal\n\n"
-            "<!-- block:journal -->\n"
-            "[Tuesday @ 3:02 PM](https://example.com/post)\n\nstatus.\n"
-            "<!-- /block:journal -->"
-        )
-        with tempfile.TemporaryDirectory() as tmp:
-            os.environ["WORKSHOP_DB_PATH"] = str(Path(tmp) / "t.db")
-            try:
-                db.run_migrations()
-                _seed_348_items()
-                legend = render.review_target_legend(md, issue_number=458)
-            finally:
-                os.environ.pop("WORKSHOP_DB_PATH", None)
-        self.assertIn("`intro`", legend)
-        self.assertIn("`notable`", legend)
-        self.assertIn("`n1` — Notable: A", legend)
-        self.assertIn("`j1` — Journal: Tuesday @ 3:02 PM", legend)
-
-    def test_no_review_md_no_chrome(self):
+    def test_no_drawer_chrome_or_script(self):
+        # The retired editorial-review drawer never renders — the preview
+        # page is pure article HTML with no JS at all.
         page = render.markdown_to_html_page("# X\n\nbody.", title="t")
         self.assertNotIn('id="rv-toggle"', page)
         self.assertNotIn('id="rv-panel"', page)
         self.assertNotIn('id="rv-connectors"', page)
         self.assertNotIn("<script>", page)
-        # Empty / whitespace review_md is treated the same as none.
-        page2 = render.markdown_to_html_page("# X\n\nbody.", title="t", review_md="   \n  ")
-        self.assertNotIn('id="rv-toggle"', page2)
+
+
+class ReviewTargetLegendTests(_DBTestCase):
+    """``review_target_legend`` derives section presence from DB state
+    (``section_status`` + the content store) — the rendered body carries
+    no block markers anymore, so nothing is parsed from markdown."""
+
+    def test_legend_lists_sections_and_items_from_db_state(self):
+        content_store.write_issue(458, "intro.md", "Opening note.")
+        _seed_348_items()
+        legend = render.review_target_legend(issue_number=458)
+        self.assertIn("- `intro`", legend)
+        self.assertIn("- `notable`", legend)
+        self.assertIn("- `journal`", legend)
+        self.assertIn("- `brief`", legend)
+        self.assertIn("`n1` — Notable: A", legend)
+        self.assertIn("`n2` — Notable: B", legend)
+        self.assertIn("`b1` — Briefly: C", legend)
+        self.assertIn("`j1` — Journal: Tuesday @ 3:02 PM", legend)
+        # Nothing seeded for these — they stay out of the legend.
+        self.assertNotIn("- `haiku`", legend)
+        self.assertNotIn("- `outro`", legend)
+        self.assertNotIn("- `cover`", legend)
+
+    def test_outro_present_via_content_store(self):
+        content_store.write_issue(458, "outro.md", "Closing note.")
+        legend = render.review_target_legend(issue_number=458)
+        self.assertIn("- `outro`", legend)
+
+    def test_empty_issue_has_no_targets(self):
+        legend = render.review_target_legend(issue_number=458)
+        self.assertEqual(legend, "- No precise review targets are available.")
 
 
 class CdnInvalidateTests(unittest.TestCase):

@@ -34,7 +34,7 @@ from apps.workshop_bot.jobs import (  # noqa: E402
     put_to_bed,
 )
 from apps.workshop_bot.tools import db, renderers  # noqa: E402
-from apps.workshop_bot.tests._fixtures import DBTestCase as _DBTestCase, filled_final  # noqa: E402
+from apps.workshop_bot.tests._fixtures import DBTestCase as _DBTestCase  # noqa: E402
 
 _OK = _base.JobResult(True, "ok")
 
@@ -140,7 +140,6 @@ class BuildStateTests(_DBTestCase):
 
 class PublishStateTests(_DBTestCase):
     def _seed_built(self, n=458, *, subject="", description="", buttondown_id=""):
-        self.ws.write_issue_file(n, "draft.md", filled_final(intro="x", haiku="a\nb\nc"))
         self.ws.write_issue_file(n, "intro.md", "x")
         self.ws.write_issue_file(n, "haiku.md", "a\nb\nc")
         self.ws.write_issue_file(n, "cover.jpg", "bin")

@@ -210,7 +210,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     st = await asyncio.to_thread(draft_mod.section_status, n)
     eddy_ctx = context.build_eddy_context(
         ref_date=date.today(), section_status=st, prev_digest=None)
-    target_legend = render.review_target_legend(draft_text, issue_number=n)
+    target_legend = render.review_target_legend(issue_number=n, section_status=st)
     # Pre-inject semantic echoes from the archive (fail-soft).
     echo_passages, echo_error = await asyncio.to_thread(
         archive_context.fetch_archive_context,

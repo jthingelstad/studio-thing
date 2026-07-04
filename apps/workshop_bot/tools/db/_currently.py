@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any, Optional
 
 from .connection import connect
@@ -303,63 +302,3 @@ def currently_suggest_stale(
             "gap_issues": gap,
         })
     return out
-
-
-def currently_backfill_from_s3(issue_number: int) -> int:
-    """Seed ``currently_entries`` for ``issue_number`` from the legacy
-    ``currently.json`` in S3, if present. Idempotent: no-ops when the
-    issue already has any DB entries. Returns the number of rows
-    inserted (0 on no-op or missing JSON).
-
-    Used as a one-time bridge so the in-flight issue's existing
-    Shortcut-authored content survives the renderer migration. After
-    the issue ships once via the new flow, the DB has rows and this
-    is a no-op forever."""
-    n = int(issue_number)
-    with connect() as conn:
-        existing = conn.execute(
-            "SELECT 1 FROM currently_entries WHERE issue_number = ? LIMIT 1",
-            (n,),
-        ).fetchone()
-    if existing is not None:
-        return 0
-    try:
-        from .. import s3  # local import — avoid module-load cycle with tools/s3.py
-    except Exception:  # noqa: BLE001
-        return 0
-    try:
-        raw = s3.read_issue_file(n, "currently.json")
-    except Exception:  # noqa: BLE001
-        return 0
-    if not raw.get("found"):
-        return 0
-    text = raw.get("text")
-    if not isinstance(text, str) or not text.strip():
-        return 0
-    try:
-        data = json.loads(text)
-    except (ValueError, TypeError):
-        return 0
-    if not isinstance(data, dict):
-        return 0
-    inserted = 0
-    for raw_label, raw_value in data.items():
-        label = str(raw_label or "").strip().rstrip(":").strip()
-        value = str(raw_value or "").strip()
-        if not label or not value:
-            continue
-        if currently_get_type(label) is None:
-            try:
-                currently_add_type(label)
-            except CurrentlyError:
-                # Race with another writer is fine — just look it up again.
-                if currently_get_type(label) is None:
-                    continue
-        try:
-            currently_set_entry(n, label, value)
-            inserted += 1
-        except CurrentlyError:
-            continue
-    return inserted
-
-
