@@ -126,6 +126,12 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
 
     if reply and reply.strip() and not is_pass_response(reply):
         await ctx.post(channel, reply.strip(), persona="eddy")
+        # Log the share explicitly — both cron and web-button runs land here,
+        # so this is the one place that records "Eddy told Jamie in #editorial"
+        # regardless of how the pass was triggered.
+        logger.info(
+            "garden-checkin: Eddy posted a tending report to #editorial (%d chars)",
+            len(reply.strip()))
         return _base.JobResult(
             True, "garden-checkin: posted the tending report", data={"posted": True})
     logger.info("garden-checkin: PASS (garden tidy — clustering work, if any, is saved)")
