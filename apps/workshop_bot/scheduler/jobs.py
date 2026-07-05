@@ -127,12 +127,14 @@ JOBS: tuple[JobSpec, ...] = (
     ),
     JobSpec(
         id="garden-checkin",
-        cron="0 9 * * 1",                                # Monday 09:00 Central. Eddy tends the idea
-                                                         # garden and, if a cluster is ripe or a
-                                                         # pattern is worth naming, posts one note to
-                                                         # #editorial; else PASSes. Proactive idea
-                                                         # development — the slow-rhythm counterpart
-                                                         # to the daily slate check-in.
+        cron="0 9 * * 1",                                # Monday 09:00 Central. Eddy's real tending
+                                                         # pass: clusters a batch of loose seeds with
+                                                         # the seeds tools, curates tags/titles (never
+                                                         # seed bodies), connects clusters to the
+                                                         # archive, then posts a report (at most one
+                                                         # ripe candidate) to #editorial — or PASSes
+                                                         # when the garden is tidy. Graduation stays
+                                                         # Jamie-only, from the /seeds page.
         func=functools.partial(handlers.content_job, job="garden-checkin"),
     ),
 )

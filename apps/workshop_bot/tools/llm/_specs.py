@@ -883,10 +883,10 @@ SPECS: dict[str, dict[str, Any]] = {
     "seeds__update": {
         "name": "seeds__update",
         "description": (
-            "Curate a seed: retag, retitle, mutate the framing, or change status. "
-            "Mutating a SEED (a pre-writing idea fragment) is idea development and "
-            "fine — but the eventual article's prose is Jamie's; never ghostwrite "
-            "the piece."
+            "Curate a seed: retag, retitle, mutate the framing, change status, or "
+            "file it into an existing cluster (cluster_id). Mutating a SEED (a "
+            "pre-writing idea fragment) is idea development and fine — but the "
+            "eventual article's prose is Jamie's; never ghostwrite the piece."
         ),
         "input_schema": {
             "type": "object",
@@ -896,6 +896,8 @@ SPECS: dict[str, dict[str, Any]] = {
                 "title": {"type": "string"},
                 "tags": {"type": "string"},
                 "status": {"type": "string", "enum": ["open", "clustered", "graduated", "archived"]},
+                "cluster_id": {"type": "integer",
+                               "description": "File the seed into this existing cluster."},
             },
             "required": ["seed_id"],
         },

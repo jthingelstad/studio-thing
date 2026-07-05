@@ -879,10 +879,16 @@ def t_seeds_add(deps, body: str, title: str = None, tags: str = None) -> dict[st
 
 
 def t_seeds_update(deps, seed_id: int, body: str = None, title: str = None,
-                   tags: str = None, status: str = None) -> dict[str, Any]:
+                   tags: str = None, status: str = None,
+                   cluster_id: int = None) -> dict[str, Any]:
     """Curate a seed: retag, retitle, mutate the framing (a suggestion on the
-    IDEA — Jamie owns the prose of the eventual piece), or change status."""
-    s = db.seed_update(int(seed_id), body=body, title=title, tags=tags, status=status)
+    IDEA — Jamie owns the prose of the eventual piece), change status, or file
+    it into an existing cluster (``cluster_id`` — flips status to 'clustered'
+    unless a status is passed explicitly, matching ``seeds__cluster``)."""
+    if cluster_id is not None and status is None:
+        status = "clustered"
+    s = db.seed_update(int(seed_id), body=body, title=title, tags=tags, status=status,
+                       cluster_id=int(cluster_id) if cluster_id is not None else None)
     return {"ok": True, "seed_id": s.get("id")} if s else {"error": f"no such seed: {seed_id}"}
 
 

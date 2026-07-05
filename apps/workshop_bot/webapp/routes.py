@@ -688,6 +688,17 @@ async def seeds_add(request: web.Request) -> web.Response:
     raise web.HTTPFound("/seeds")
 
 
+async def seeds_tend(request: web.Request) -> web.Response:
+    """Run Eddy's garden tending pass (the Monday ``garden-checkin`` job) on
+    demand: he clusters/curates the loose seeds with the seeds tools and posts
+    a report to #editorial unless the garden is tidy (PASS)."""
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    from ..jobs import garden_checkin
+    await garden_checkin.run(_ctx(request))
+    raise web.HTTPFound("/seeds")
+
+
 async def seeds_graduate(request: web.Request) -> web.Response:
     if not _same_origin(request):
         raise web.HTTPForbidden(text="bad origin")
@@ -791,6 +802,7 @@ def add_routes(app: web.Application) -> None:
         web.post("/chat", chat_post),
         web.get("/seeds", seeds_page),
         web.post("/seeds/add", seeds_add),
+        web.post("/seeds/tend", seeds_tend),
         web.post("/seeds/graduate", seeds_graduate),
         web.get("/productions", productions_list),
         web.post("/productions/bulk-status", productions_bulk_status),

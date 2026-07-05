@@ -18,6 +18,12 @@
     </form>
   </div>
 
+  <form method="post" action="/seeds/tend" class="actions" style="margin:.75rem 0; display:flex; align-items:center; gap:.75rem;">
+    <button class="btn" type="submit">Tend garden</button>
+    <span class="muted">Eddy clusters the loose seeds, curates tags/titles, and connects clusters
+      to the archive — a report lands in #editorial unless the garden is tidy.</span>
+  </form>
+
   {% for c in clusters %}
     <div class="secthead">
       <h2>{{ c.label }}</h2>
