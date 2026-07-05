@@ -133,7 +133,12 @@
   {# ---- content atoms ---- #}
   <div class="secthead"><h2>Content</h2></div>
   <div class="card">
-    {% for b in blocks %}{{ block_editor(b) }}{% endfor %}
+    {% for b in blocks %}{{ block_editor(b) }}{% if b.name == "intro.md" %}
+      <form method="post" action="/productions/{{ row.id }}/continuity" style="margin:-.6rem 0 1rem;">
+        <button class="btn ghost" type="submit" title="What have I already published on this intro's topic? (Eddy notes in #editorial)">Check continuity</button>
+        <span class="muted">Eddy surfaces your prior published takes on this topic in #editorial.</span>
+      </form>
+    {% endif %}{% endfor %}
   </div>
 
   {# ---- cover ---- #}

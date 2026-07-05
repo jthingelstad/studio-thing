@@ -632,6 +632,24 @@ async def production_review(request: web.Request) -> web.Response:
     raise web.HTTPFound(f"/productions/{row['id']}")
 
 
+async def production_continuity(request: web.Request) -> web.Response:
+    """Continuity-while-you-write for the newsletter intro — the highest-value
+    writing surface. Surfaces what Jamie has already published on the intro's
+    topic (via ``continuity_check``), excluding this issue so it can't match
+    itself. Eddy's note lands in #editorial."""
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    row = await _load_row(request)
+    if row["production_type"] != "newsletter":
+        raise web.HTTPBadRequest(text="continuity check is newsletter-only")
+    n = int(row["seq"])
+    intro = await asyncio.to_thread(content_store.read_issue, n, "intro.md")
+    from ..jobs import continuity_check
+    await continuity_check.run_for_text(
+        _ctx(request), text=intro or "", label=f"WT{n} intro", exclude_issue=n)
+    raise web.HTTPFound(f"/productions/{row['id']}")
+
+
 # Cover uploads: the web replaces the retired iOS-Shortcuts PUT path.
 _COVER_MAX_BYTES = 25 * 1024 * 1024
 
@@ -696,6 +714,22 @@ async def seeds_tend(request: web.Request) -> web.Response:
         raise web.HTTPForbidden(text="bad origin")
     from ..jobs import garden_checkin
     await garden_checkin.run(_ctx(request))
+    raise web.HTTPFound("/seeds")
+
+
+async def seeds_continuity(request: web.Request) -> web.Response:
+    """Continuity-while-you-write for a seed: surface what Jamie has already
+    published on this idea (via ``continuity_check``) so he can build on or
+    push against his prior takes. Eddy's note lands in #editorial."""
+    if not _same_origin(request):
+        raise web.HTTPForbidden(text="bad origin")
+    seed_id = request.match_info["seed_id"]
+    seed = await asyncio.to_thread(db.seed_get, int(seed_id))
+    if not seed:
+        raise web.HTTPNotFound(text=f"no such seed: {seed_id}")
+    from ..jobs import continuity_check
+    label = f"seed: {seed.get('title') or seed['id']}"
+    await continuity_check.run_for_text(_ctx(request), text=seed.get("body") or "", label=label)
     raise web.HTTPFound("/seeds")
 
 
@@ -803,6 +837,7 @@ def add_routes(app: web.Application) -> None:
         web.get("/seeds", seeds_page),
         web.post("/seeds/add", seeds_add),
         web.post("/seeds/tend", seeds_tend),
+        web.post("/seeds/{seed_id}/continuity", seeds_continuity),
         web.post("/seeds/graduate", seeds_graduate),
         web.get("/productions", productions_list),
         web.post("/productions/bulk-status", productions_bulk_status),
@@ -828,5 +863,6 @@ def add_routes(app: web.Application) -> None:
         web.post("/productions/{pid}/publish", production_publish),
         web.post("/productions/{pid}/sync", production_sync),
         web.post("/productions/{pid}/review", production_review),
+        web.post("/productions/{pid}/continuity", production_continuity),
         web.post("/productions/{pid}/cover-upload", production_cover_upload),
     ])

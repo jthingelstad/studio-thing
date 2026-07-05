@@ -32,7 +32,12 @@
     <div class="card">
       {% if c.note %}<p class="muted" style="margin-top:0;">{{ c.note }}</p>{% endif %}
       {% for s in c.seeds %}
-        <div class="row"><span class="ti">{% if s.title %}<strong>{{ s.title }}</strong> · {% endif %}{{ s.body }}</span></div>
+        <div class="row">
+          <span class="ti">{% if s.title %}<strong>{{ s.title }}</strong> · {% endif %}{{ s.body }}</span>
+          <form method="post" action="/seeds/{{ s.id }}/continuity" style="display:inline;">
+            <button class="btn ghost" type="submit" title="What have I already published on this? (Eddy notes in #editorial)">Check continuity</button>
+          </form>
+        </div>
       {% endfor %}
       <form method="post" action="/seeds/graduate" class="row" style="border-top:1px solid var(--rule); gap:.5rem;">
         <input type="hidden" name="cluster_id" value="{{ c.id }}">
@@ -50,7 +55,13 @@
   <div class="secthead"><h2>Unclustered <span class="surface">{{ ungrouped|length }}</span></h2></div>
   <div class="card">
     {% for s in ungrouped %}
-      <div class="row"><span class="id">#{{ s.id }}</span><span class="ti">{% if s.title %}<strong>{{ s.title }}</strong> · {% endif %}{{ s.body }}</span></div>
+      <div class="row">
+        <span class="id">#{{ s.id }}</span>
+        <span class="ti">{% if s.title %}<strong>{{ s.title }}</strong> · {% endif %}{{ s.body }}</span>
+        <form method="post" action="/seeds/{{ s.id }}/continuity" style="display:inline;">
+          <button class="btn ghost" type="submit" title="What have I already published on this? (Eddy notes in #editorial)">Check continuity</button>
+        </form>
+      </div>
     {% else %}
       <div class="muted">No loose seeds — plant one above, or ask Eddy to cluster.</div>
     {% endfor %}
