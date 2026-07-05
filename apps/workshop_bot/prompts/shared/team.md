@@ -109,7 +109,7 @@ There are no per-persona heartbeats. The issue-assembly work runs on a **jobs sp
 
 ## Production content (the DB content store)
 
-Authored content for **every** production lives in the database, not S3 — newsletter atoms (`intro`, `outro`, `cover`, `haiku`, `metadata`, `thesis`, `echoes`, `cta-1`, `cta-2`, `thanks-1`), an article's `body.md`, a podcast's `script.md`/`notes.md`. (S3 is publishing-only now: rendered artifacts, images, audio.) Work it with:
+Authored content for **every** production lives in the database, not S3 — newsletter atoms (`intro`, `outro`, `cover`, `haiku`, `metadata`, `echoes`, `cta-1`, `cta-2`, `thanks-1`), an article's `body.md`, a podcast's `script.md`/`notes.md`. (S3 is publishing-only now: rendered artifacts, images, audio.) Work it with:
 
 - `production_content__list(production_id)` — the content block names present for a production.
 - `production_content__read(production_id, name)` — read a block (e.g. `production_content__read("ART7", "body.md")`).

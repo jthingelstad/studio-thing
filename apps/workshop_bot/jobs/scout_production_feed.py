@@ -185,22 +185,17 @@ def _newsletter_publish_tasks(state: Mapping[str, Any], *, due_at: Optional[str]
     tasks: list[dict[str, Any]] = []
 
     if state.get("recompose_needed"):
-        missing = []
-        if state.get("thesis_failed"):
-            missing.append("thesis")
-        if state.get("echoes_failed"):
-            missing.append("Echoes")
         tasks.append(_task(
             production_type="newsletter",
             production_id=production_id,
             phase=phase,
             slug="recompose",
-            title=f"Retry {production_id} publish composes",
+            title=f"Retry {production_id} Echoes compose",
             status="ready",
             priority="high",
             estimate_minutes=30,
             due_at=due_at,
-            reason=f"Publish is missing {', '.join(missing) or 'required compose output'}.",
+            reason="Publish is missing Echoes.",
             source_command="Publish card: Retry composes",
         ))
 

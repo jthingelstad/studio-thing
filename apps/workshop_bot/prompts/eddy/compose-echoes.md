@@ -16,11 +16,9 @@ way that invites continued exploration rather than concluding a topic.
 
 Below this prompt you'll see:
 
-- **This issue's thesis** (when present) — Eddy's 1–3 sentence framing,
-  written at `mark-built` just before this job fires. Read it for what
-  *this* week is doing — your threads should connect to that, not to
-  generic theme-matching.
 - The current issue draft — Currently, Notable, Journal, Briefly, etc.
+  Read it for what *this* week is doing — your threads should connect to
+  that, not to generic theme-matching.
   **Engage with specific items**: Notable link titles, Briefly entries,
   Journal posts. Echoes that talk about the issue's "theme" without
   naming a single thing in it land flat.
@@ -47,8 +45,8 @@ detail, but keep paragraphs tight (~50–75 words each).
 The paragraphs are not strictly ordered, but a shape that works:
 
 - **Paragraph 1 — the strongest thread.** A specific anchor in this
-  week's issue (a Notable link, a Journal entry, a throughline named
-  by the thesis) tied to 1–2 past issues that genuinely echo it.
+  week's issue (a Notable link, a Journal entry, a throughline running
+  through the draft) tied to 1–2 past issues that genuinely echo it.
 - **Paragraph 2 — a second, different angle.** Don't repeat the first
   paragraph's thread — go somewhere else in this issue (another
   link, the Journal, a place/person/project that recurs) and find
@@ -145,8 +143,8 @@ end to year nine"), or generic exhortation ("keep exploring!").
 ## Echoes is mandatory
 
 Every issue ships with this section; there is no SKIP option. The
-thesis above tells you what *this* week is specifically about — anchor
-on that. If neither the semantic snippets nor the anniversary
+issue draft above tells you what *this* week is specifically about —
+anchor on that. If neither the semantic snippets nor the anniversary
 candidates produce strong material, lean further into specific
 issue-content callbacks: pick one Notable link from this issue and find
 the closest precedent in the candidate set, even if it's not a perfect

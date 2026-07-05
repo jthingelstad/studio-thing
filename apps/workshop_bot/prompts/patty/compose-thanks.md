@@ -14,9 +14,8 @@ recent achieved goals + durations, current nonprofit. **Read it; don't
 recompute.** The recent issues' `buttondown.md` files below show how prior
 thank-yous have read.
 
-If `## Thesis` is present, the issue has an editorial thesis from Eddy.
-The thank-you can lightly echo that theme so the acknowledgment feels
-woven into the issue's arc, not a separate aside.
+The thank-you can lightly echo this week's theme so the acknowledgment
+feels woven into the issue's arc, not a separate aside.
 
 ## Voice — Thingy's, not yours, not Jamie's
 

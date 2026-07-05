@@ -154,8 +154,7 @@ class ScoutProductionFeedTests(_DBCase):
             "haiku_present": False,
             "cta_files": [],
             "recompose_needed": True,
-            "thesis_failed": True,
-            "echoes_failed": False,
+            "echoes_failed": True,
             "email_shipped": False,
             "audio_shipped": False,
             "gates": {

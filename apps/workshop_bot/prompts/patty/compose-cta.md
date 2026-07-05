@@ -15,9 +15,8 @@ achieved goals + durations, current nonprofit. **Read it; don't recompute.**
 The recent issues' `buttondown.md` files below have prior CTAs verbatim —
 ground the arc in them.
 
-If `## Thesis` is present, the issue has a stated editorial thesis from
-Eddy. **Anchor the framing on it.** A CTA that echoes the issue's theme
-reads as part of the issue, not a separate ad break.
+**Anchor the framing on the issue's theme.** A CTA that echoes what this
+week is about reads as part of the issue, not a separate ad break.
 
 ## Voice — Thingy's, not yours, not Jamie's
 

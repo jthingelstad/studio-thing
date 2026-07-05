@@ -47,7 +47,7 @@
     {% if phase in ("publish", "share") %}
       <div class="row"><span class="ti">Subject</span><span>{{ "✅" if state.subject else "☐" }} {{ state.subject or "—" }}</span></div>
       <div class="row"><span class="ti">Description</span><span>{{ "✅" if state.description else "☐" }}</span></div>
-      <div class="row"><span class="ti">Haiku · Echoes · Thesis</span><span>{{ "✅" if state.haiku_present else "☐" }} {{ "✅" if state.echoes_present else "☐" }} {{ "✅" if state.thesis else "☐" }}</span></div>
+      <div class="row"><span class="ti">Haiku · Echoes</span><span>{{ "✅" if state.haiku_present else "☐" }} {{ "✅" if state.echoes_present else "☐" }}</span></div>
       <div class="row"><span class="ti">CTA</span><span>{{ state.cta_files|join(", ") or "—" }}</span></div>
       <div class="row"><span class="ti">Email · Website · Podcast</span><span>{{ "✅ sent" if state.email_shipped else "🟢 ready" if state.gates["publish:email"] else "⛔" }} · {{ "🟢" if state.gates["publish:website"] else "☐" }} · {{ "✅" if state.audio_shipped else "🟢" if state.gates["publish:podcast"] else "☐" }}</span></div>
     {% else %}

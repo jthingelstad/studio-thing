@@ -3,12 +3,6 @@ curated newsletter by Jamie Thingelstad. The description appears
 in three places: social card previews (OG metadata), the header
 of each issue's page, and the issue index in llms.txt.
 
-If a `## Thesis` block appears above, that's the editorial thesis
-for this issue. Treat it as background context for what the
-description should emphasize — but the description itself is still
-a comma-separated topic list lifted from the body, not a rewrite
-of the thesis.
-
 Input: the full body text of one issue.
 
 Output: a single line — a comma-separated list of concrete topics

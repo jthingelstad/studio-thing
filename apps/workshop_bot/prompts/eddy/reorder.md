@@ -6,11 +6,11 @@ issue are surfaced below with stable synthetic ids (`n1`/`b2`/`j3`).
 arc.** You don't write any content; code applies your proposal as row
 mutations. Journal stays in chronological order — you don't touch it.
 
-You don't write a thesis here either. That moved — a separate
-`compose-thesis` job runs at `mark-built` (the Build → Publish phase
-transition), reads the frozen content, and writes `thesis.md` for the
-downstream subject/description/haiku/CTA prompts. Reorder is now
-purely about ordering.
+You don't write any editorial framing here either — no thesis, no
+summary. The Publish-phase composers (`compose-envelope` for the
+subject/description/haiku, `compose-echoes`) run at `mark-built` and
+anchor directly on the frozen draft. Reorder is now purely about
+ordering.
 
 ## What you do
 
@@ -74,10 +74,10 @@ Rules:
   exactly once in `notable_order`; every parsed Brief id appears exactly
   once in `brief_order`. No duplicates, no extras.
 - **Do not include `thesis`, `journal_order`, `promotions`, or
-  `membership_blocks`** — all four are ignored if present. Thesis is
-  written separately at `mark-built`; Journal renders in its natural
-  publish-date position; Featured posts come from upstream tagging;
-  membership-block placement is hardcoded at render time.
+  `membership_blocks`** — all four are ignored if present. Editorial
+  framing is composed separately at `mark-built`; Journal renders in its
+  natural publish-date position; Featured posts come from upstream
+  tagging; membership-block placement is hardcoded at render time.
 - Stick to this shape exactly — anything else makes the JSON unparseable
   and the job refuses with 🔄 to retry.
 

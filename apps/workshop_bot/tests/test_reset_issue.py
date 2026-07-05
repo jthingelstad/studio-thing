@@ -44,32 +44,40 @@ class _Case(_DBTestCase):
 
 class ResetFinalTests(_Case):
 
-    def test_deletes_thesis(self):
-        self._window()
-        content_store.write_issue(349, "thesis.md", "thesis line")
-        ctx, fc = self._ctx()
-        result = asyncio.run(reset_issue.run(ctx, step="final"))
-        self.assertTrue(result.ok, result.message)
-        self.assertIsNone(content_store.read_issue(349, "thesis.md"))
-        # Confirmation posted to #editorial.
-        fc.channel.send.assert_awaited()
-        # Message reads naturally.
-        self.assertIn("reset-final", result.message)
-        self.assertIn("WT349", result.message)
-
     def test_clears_promotions(self):
+        # `final` deletes no files (thesis retired); its work is clearing
+        # the row-level promotions so a re-run proposes fresh.
         self._window()
         rid = issue_items.upsert_item(
             issue_number=349, section="journal", source="microblog",
             source_id="p1", body_md="x",
         )
         issue_items.promote(rid, promoted_position="after_notable", promoted_heading="Feature")
-        content_store.write_issue(349, "thesis.md", "thesis line")
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="final"))
         self.assertTrue(result.ok)
         self.assertEqual(result.data["promotions_cleared"], 1)
         self.assertEqual(issue_items.promoted_items(349), [])
+        # Confirmation posted; message reads naturally.
+        fc.channel.send.assert_awaited()
+        self.assertIn("reset-final", result.message)
+        self.assertIn("WT349", result.message)
+
+    def test_leaves_authored_content_alone(self):
+        # `final` clears promotions but never deletes authored atoms.
+        self._window()
+        content_store.write_issue(349, "intro.md", "Opening.")
+        rid = issue_items.upsert_item(
+            issue_number=349, section="journal", source="microblog",
+            source_id="p1", body_md="x",
+        )
+        issue_items.promote(rid, promoted_position="after_notable", promoted_heading="F")
+        ctx, fc = self._ctx()
+        result = asyncio.run(reset_issue.run(ctx, step="final"))
+        self.assertTrue(result.ok)
+        self.assertEqual(result.data["deleted"], [])
+        self.assertEqual(result.data["promotions_cleared"], 1)
+        self.assertEqual(content_store.read_issue(349, "intro.md"), "Opening.")
 
     def test_idempotent_when_artifacts_absent(self):
         self._window()
@@ -81,12 +89,17 @@ class ResetFinalTests(_Case):
 
     def test_does_not_touch_publish_artifacts(self):
         self._window()
-        content_store.write_issue(349, "thesis.md", "t")
+        rid = issue_items.upsert_item(
+            issue_number=349, section="journal", source="microblog",
+            source_id="p1", body_md="x",
+        )
+        issue_items.promote(rid, promoted_position="after_notable", promoted_heading="F")
         self.ws.write_issue_file(349, "buttondown.md", "p")  # generated S3 artifact
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="final"))
         self.assertTrue(result.ok)
-        self.assertIsNone(content_store.read_issue(349, "thesis.md"))
+        # final clears promotions but leaves the publish-step artifact.
+        self.assertEqual(result.data["promotions_cleared"], 1)
         self.assertIn((349, "buttondown.md"), self.ws.files)
 
 
@@ -100,14 +113,14 @@ class ResetPublishTests(_Case):
         self.assertTrue(result.ok)
         self.assertNotIn((349, "buttondown.md"), self.ws.files)
 
-    def test_does_not_touch_thesis(self):
+    def test_does_not_touch_authored_content(self):
         self._window()
-        content_store.write_issue(349, "thesis.md", "t")
+        content_store.write_issue(349, "intro.md", "Opening.")
         self.ws.write_issue_file(349, "buttondown.md", "p")  # generated S3 artifact
         ctx, fc = self._ctx()
         result = asyncio.run(reset_issue.run(ctx, step="publish"))
         self.assertTrue(result.ok)
-        self.assertIsNotNone(content_store.read_issue(349, "thesis.md"))
+        self.assertEqual(content_store.read_issue(349, "intro.md"), "Opening.")
         self.assertNotIn((349, "buttondown.md"), self.ws.files)
 
     def test_does_not_touch_buttondown_id(self):

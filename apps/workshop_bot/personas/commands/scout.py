@@ -204,7 +204,7 @@ def register_scout_commands(
         description="Drop the previous-step artifacts so the in-flight issue can be re-published.",
     )
     @app_commands.describe(
-        step="Artifacts to clear: 'reorder' (promotions + thesis) or 'publish' (buttondown.md/.html).",
+        step="Artifacts to clear: 'reorder' (promotions) or 'publish' (buttondown.md).",
     )
     @app_commands.choices(step=[
         app_commands.Choice(name="reorder", value="final"),

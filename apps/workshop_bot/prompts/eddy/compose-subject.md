@@ -4,12 +4,6 @@ prompt is the current subject-line generator — the canonical format is
 `WT<NUM> — <Theme>` with an em-dash and a 3–6-word title-case theme
 phrase (rules below).
 
-If a `## Thesis` block appears above, that's the editorial thesis for
-this issue (set during compose-thesis). Use it as the anchor for your
-subject options — the subject and the thesis should read as expressions
-of the same idea. Without a thesis, derive the theme from the issue
-text directly (today's behaviour).
-
 A `## Thread context` block appears between the issue text and this
 prompt's tail when retrieval is available. It carries the past archive
 passages most semantically related to this issue (Bedrock embed +

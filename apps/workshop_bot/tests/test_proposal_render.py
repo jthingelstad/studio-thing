@@ -33,7 +33,7 @@ class ProposalHtmlTests(unittest.TestCase):
                 synth_to_row[synth] = int(row["id"])
                 row_to_synth[int(row["id"])] = synth
         return render.reorder_proposal_html(
-            issue_number=349, thesis="Test thesis.",
+            issue_number=349,
             rows_by_section=rows_by_section, proposal=proposal,
             synth_to_row=synth_to_row, row_to_synth=row_to_synth,
         )
@@ -71,8 +71,8 @@ class ProposalHtmlTests(unittest.TestCase):
         # Look backwards from the data-side attribute for the class list.
         snippet = page[max(0, proposed_n2 - 80):proposed_n2]
         self.assertIn("moved", snippet)
-        # Thesis renders.
-        self.assertIn("Test thesis.", page)
+        # Thesis is retired — no thesis block on the page.
+        self.assertNotIn('class="thesis"', page)
 
     def test_no_change_proposal_shows_note(self):
         rows = {

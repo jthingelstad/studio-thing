@@ -536,12 +536,6 @@ h1 {
   font-family: var(--wt-mono); font-size: 11.5px; letter-spacing: 0.06em;
   text-transform: uppercase; color: var(--wt-muted); margin: 0 0 18px;
 }
-.thesis {
-  font-family: var(--wt-serif); font-size: 18px; line-height: 1.45;
-  background: var(--wt-accent-soft); border-left: 3px solid var(--wt-accent);
-  padding: 14px 18px; border-radius: 3px; margin: 0 0 24px;
-  color: var(--wt-ink-soft); font-style: italic;
-}
 .legend {
   display: flex; flex-wrap: wrap; gap: 14px;
   font-family: var(--wt-mono); font-size: 11px; letter-spacing: 0.04em;
@@ -710,7 +704,6 @@ def _proposal_section_html(
 def reorder_proposal_html(
     *,
     issue_number: int,
-    thesis: str,
     rows_by_section: dict[str, list[dict]],
     proposal: dict,
     synth_to_row: dict[str, int],
@@ -783,11 +776,6 @@ def reorder_proposal_html(
 
     body = (
         f'<h1>{_html.escape(title)}</h1>'
-        '<p class="subtitle">react ✅ / ❌ / 🔄 in #editorial · the page refreshes on each round</p>'
-        f'<p class="thesis">{_html.escape((thesis or "").strip())}</p>'
-        if thesis and thesis.strip()
-        else
-        f'<h1>{_html.escape(title)}</h1>'
         '<p class="subtitle">react ✅ / ❌ / 🔄 in #editorial</p>'
     )
     body += legend + no_change
@@ -820,7 +808,6 @@ def reorder_proposal_html(
 def render_and_upload_proposal(
     *,
     issue_number: int,
-    thesis: str,
     rows_by_section: dict[str, list[dict]],
     proposal: dict,
     synth_to_row: dict[str, int],
@@ -831,7 +818,7 @@ def render_and_upload_proposal(
     treats the page as a nice-to-have on top of the Discord pick)."""
     try:
         page = reorder_proposal_html(
-            issue_number=int(issue_number), thesis=thesis,
+            issue_number=int(issue_number),
             rows_by_section=rows_by_section, proposal=proposal,
             synth_to_row=synth_to_row, row_to_synth=row_to_synth,
         )

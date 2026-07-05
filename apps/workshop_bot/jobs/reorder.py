@@ -27,12 +27,12 @@ to the side-by-side ``final-proposal.html`` preview. Jamie reacts
 ✅ / ❌ / 🔄. On ❌ the existing row order survives. On 🔄 we re-prompt
 up to :data:`_llm_job.MAX_REFRESH_ROUNDS`.
 
-**Thesis lives elsewhere now.** This job used to also ask Eddy for a
-1-3 sentence thesis and write ``thesis.md``. That moved to the
-``compose-thesis`` job, which fires at ``mark-built`` (the Build →
-Publish phase transition) — running over the *frozen* authored content,
-not the in-flight draft. The phase transition is the natural place for
-a framing that anchors every downstream Publish job.
+**Editorial framing lives elsewhere now.** This job used to also ask
+Eddy for a 1-3 sentence thesis and write ``thesis.md``. That machinery
+is retired: the Publish-phase composers (``compose-envelope`` for
+subject/description/haiku, ``compose-echoes``) each anchor directly on
+the runtime-assembled draft — the DB is the draft, so it *is* the shared
+editorial anchor, no separate thesis artifact needed.
 
 **Other legacy that's also gone.** The name is from a retired era when
 this job assembled an explicit ``final.md`` artifact, chose
@@ -480,7 +480,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     # Auto-fix path: if the only failure is "missing id(s)"
                     # in one of the *_order arrays, append the omitted ids
                     # in original order and re-validate. Preserves the
-                    # editorial reorder + thesis rather than dropping the
+                    # editorial reorder rather than dropping the
                     # whole proposal to passthrough. Other shape /
                     # permutation errors fall through to the LLM retry.
                     auto_fixed = False
@@ -534,7 +534,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 # decision surface.
                 proposal_url = await asyncio.to_thread(
                     render.render_and_upload_proposal,
-                    issue_number=n, thesis="",
+                    issue_number=n,
                     rows_by_section=rows_by_section, proposal=data,
                     synth_to_row=synth_to_row, row_to_synth=row_to_synth,
                 )
@@ -567,8 +567,8 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
 
                 if approved is True:
                     # Apply: mutate rows. The daily renderers pull from
-                    # the mutated DB state. Thesis + Echoes are no longer
-                    # written here — compose-thesis and compose-echoes
+                    # the mutated DB state. The envelope + Echoes are not
+                    # written here — compose-envelope and compose-echoes
                     # both fire at mark-built over the frozen content.
                     await asyncio.to_thread(_apply_proposal, n, data, synth_to_row)
                     # Render the three artifacts now so they reflect the
@@ -614,7 +614,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             return _base.JobResult(
                 True,
                 f"`reorder` for WT{n} exhausted retries; rows unchanged. {_NEXT_STEPS}",
-                data={"issue_number": n, "thesis_written": False},
+                data={"issue_number": n},
             )
     except _base.JobLocked as exc:
         return _base.JobResult(False, f"⏳ `reorder` already running ({exc.holder_desc}).")

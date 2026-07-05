@@ -116,7 +116,6 @@ def build_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> di
         "outro_present": "outro.md" in files,
         "cover_present": st["cover_present"],
         "currently_entries": [c.get("type_label") for c in currently],
-        "reorder_applied": "thesis.md" in files,
         "open_comments": open_comments,
         # The DB is the draft: preview renders live on the web app (the S3
         # draft.html artifact is retired).
@@ -144,8 +143,6 @@ def publish_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> 
     )
     haiku_present = bool(st["assets"].get("haiku.md"))
     echoes_present = "echoes.md" in files
-    thesis_body = content_store.read_issue(n, "thesis.md")
-    thesis_text = thesis_body.strip() if thesis_body else ""
 
     any_section = any(st["sections"][k]["present"] for k in ("notable", "brief", "journal"))
     email_ready = bool(subject and description and haiku_present
@@ -161,17 +158,17 @@ def publish_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> 
             email_missing.append(req)
 
     phase = window.get("phase", "publish")
-    thesis_failed = phase == "publish" and not thesis_text
+    # Echoes is the only auto-fired one-shot with a recompose path. The
+    # envelope (subject/description/haiku) is interactive — re-run via its
+    # own commands, not the recompose button — so it isn't gated here.
     echoes_failed = phase == "publish" and not echoes_present
-    recompose_needed = thesis_failed or echoes_failed
+    recompose_needed = echoes_failed
 
     return {
         "issue_number": n,
         "phase": phase,
         "pub_date": window.get("pub_date", ""),
         "days_to_pub": issue_status._days_to(window.get("pub_date", "")),
-        "thesis": thesis_text,
-        "thesis_failed": thesis_failed,
         "subject": subject,
         "description": description,
         "haiku_present": haiku_present,

@@ -4,10 +4,10 @@ fires that accompany them. No Discord, no cards.
 These are the real logic lifted out of the phase-card modules so the web
 project page (and, until they're retired, the cards) call one place:
 - `mark_built`  — Build → Publish: gate on build-ready, flip phase, then fire
-  compose-thesis → compose-echoes → compose-cta (in that order so each picks up
-  the prior's output as its anchor).
+  compose-envelope → compose-echoes → compose-cta. Each anchors directly on the
+  runtime-assembled draft (the DB is the draft), so order is independent.
 - `reopen`      — Publish → Build.
-- `recompose`   — retry whichever of thesis/echoes failed to auto-fire.
+- `recompose`   — retry compose-echoes if it failed to auto-fire.
 """
 
 from __future__ import annotations
@@ -22,10 +22,10 @@ logger = logging.getLogger("workshop.jobs.production_ops")
 
 
 async def mark_built(ctx: "_base.JobContext", n: Optional[int] = None) -> "_base.JobResult":
-    """Build → Publish. Flips phase and fires compose-thesis → echoes → cta.
+    """Build → Publish. Flips phase and fires compose-envelope → echoes → cta.
     Refuses if content isn't complete. Card-free — callers handle any surface
-    refresh. Order matters: thesis lands before cta so the CTA prompt anchors
-    on the freshly-written thesis."""
+    refresh. The composes each anchor on the runtime-assembled draft directly,
+    so their order is independent."""
     window = db.get_active_issue_window(n)
     if window is None:
         return _base.JobResult(False, "No active issue window.")
@@ -45,8 +45,8 @@ async def mark_built(ctx: "_base.JobContext", n: Optional[int] = None) -> "_base
 
     db.set_issue_phase(n, "publish")
 
-    from . import compose_cta, compose_echoes, compose_thesis
-    for name, job in (("compose-thesis", compose_thesis),
+    from . import compose_cta, compose_echoes, compose_envelope
+    for name, job in (("compose-envelope", compose_envelope),
                       ("compose-echoes", compose_echoes),
                       ("compose-cta", compose_cta)):
         try:
@@ -56,8 +56,8 @@ async def mark_built(ctx: "_base.JobContext", n: Optional[int] = None) -> "_base
 
     return _base.JobResult(
         True,
-        f"✅ **WT{n}** marked built — now in **Publish**. Thesis + Echoes written; "
-        f"CTA requested from Patty.",
+        f"✅ **WT{n}** marked built — now in **Publish**. Envelope "
+        f"(subject/description/haiku) + Echoes composed; CTA requested from Patty.",
         data={"issue_number": n, "phase": "publish"},
     )
 
@@ -74,35 +74,28 @@ async def reopen(ctx: "_base.JobContext", n: Optional[int] = None) -> "_base.Job
 
 
 async def recompose(ctx: "_base.JobContext", n: Optional[int] = None) -> "_base.JobResult":
-    """Re-fire compose-thesis and/or compose-echoes for whichever is missing in
-    Publish phase. Idempotent: a no-op when both are present."""
+    """Re-fire compose-echoes if it failed to auto-fire at mark-built.
+    Idempotent: a no-op when echoes is present. (The envelope —
+    subject/description/haiku — is interactive and re-run via
+    ``/eddy issue subject`` / ``haiku`` or ``compose-envelope``, not here.)"""
     import asyncio
     window = db.get_active_issue_window(n)
     if window is None:
         return _base.JobResult(False, "No active issue window.")
     state = await asyncio.to_thread(production_state.publish_state, window=window)
     if not state.get("recompose_needed"):
-        return _base.JobResult(True, "✅ Nothing to recompose — thesis + echoes are both present.",
-                               data={"thesis_failed": False, "echoes_failed": False})
+        return _base.JobResult(True, "✅ Nothing to recompose — Echoes is present.",
+                               data={"echoes_failed": False})
 
-    from . import compose_echoes, compose_thesis
-    fired: list[str] = []
-    errors: list[str] = []
-    for failed_key, name, job in (("thesis_failed", "thesis", compose_thesis),
-                                  ("echoes_failed", "echoes", compose_echoes)):
-        if not state.get(failed_key):
-            continue
-        try:
-            res = await job.run(_base.JobContext(deps=ctx.deps, trigger="recompose"))
-            fired.append(name)
-            if not res.ok:
-                errors.append(f"{name}: {res.message}")
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("recompose: compose-%s raised", name)
-            errors.append(f"{name}: {exc!r}")
-
-    if errors:
-        return _base.JobResult(False, "⚠️ Recompose hit errors: " + " · ".join(errors),
-                               data={"fired": fired, "errors": errors})
-    return _base.JobResult(True, f"✅ Recompose ran — refreshed {', '.join(fired)}.",
-                           data={"fired": fired, "errors": []})
+    from . import compose_echoes
+    try:
+        res = await compose_echoes.run(_base.JobContext(deps=ctx.deps, trigger="recompose"))
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("recompose: compose-echoes raised")
+        return _base.JobResult(False, f"⚠️ Recompose hit an error: echoes: {exc!r}",
+                               data={"fired": [], "errors": [f"echoes: {exc!r}"]})
+    if not res.ok:
+        return _base.JobResult(False, f"⚠️ Recompose hit an error: echoes: {res.message}",
+                               data={"fired": ["echoes"], "errors": [f"echoes: {res.message}"]})
+    return _base.JobResult(True, "✅ Recompose ran — refreshed echoes.",
+                           data={"fired": ["echoes"], "errors": []})

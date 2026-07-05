@@ -308,7 +308,7 @@ CREATE INDEX IF NOT EXISTS idx_productions_status_due
 -- (cover, metadata) are stored as their literal JSON string (callers json.loads
 -- them), cta/thanks keep their `kind:` YAML frontmatter verbatim. Presence == a
 -- row exists. This single table serves every production type: newsletter atoms
--- (intro/outro/cover/haiku/metadata/thesis/echoes/cta-N/thanks-N), an article
+-- (intro/outro/cover/haiku/metadata/echoes/cta-N/thanks-N), an article
 -- body, a podcast script/notes. S3 is now publishing-only (generated outputs +
 -- binaries); nothing reads authored content from S3.
 CREATE TABLE IF NOT EXISTS production_content (

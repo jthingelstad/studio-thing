@@ -27,7 +27,7 @@ from apps.workshop_bot.jobs import (  # noqa: E402
     _base,
     compose_cta,
     compose_echoes,
-    compose_thesis,
+    compose_envelope,
     production_ops,
     production_state,
     promotion_prep,
@@ -50,7 +50,7 @@ def _patch_composes():
     """Patch the three compose jobs (lazily imported inside production_ops) so
     mark_built's auto-fires don't hit Anthropic."""
     return (
-        patch.object(compose_thesis, "run", new=AsyncMock(return_value=_OK)),
+        patch.object(compose_envelope, "run", new=AsyncMock(return_value=_OK)),
         patch.object(compose_echoes, "run", new=AsyncMock(return_value=_OK)),
         patch.object(compose_cta, "run", new=AsyncMock(return_value=_OK)),
     )
@@ -105,12 +105,12 @@ class BuildStateTests(_DBTestCase):
         _window(458)
         self._seed_full_content()
         pt, pe, pc = _patch_composes()
-        with pt as m_thesis, pe as m_echoes, pc as m_cta:
+        with pt as m_envelope, pe as m_echoes, pc as m_cta:
             res = asyncio.run(production_ops.mark_built(_base.JobContext()))
         self.assertTrue(res.ok, res.message)
         self.assertEqual(res.data["phase"], "publish")
         self.assertEqual(db.get_active_issue_window()["phase"], "publish")
-        m_thesis.assert_awaited_once()
+        m_envelope.assert_awaited_once()
         m_echoes.assert_awaited_once()
         m_cta.assert_awaited_once()
 
@@ -119,7 +119,7 @@ class BuildStateTests(_DBTestCase):
         # the ack is success — the logged exception is the recovery signal.
         _window(458)
         self._seed_full_content()
-        with patch.object(compose_thesis, "run", new=AsyncMock(return_value=_OK)), \
+        with patch.object(compose_envelope, "run", new=AsyncMock(return_value=_OK)), \
              patch.object(compose_echoes, "run", new=AsyncMock(return_value=_OK)), \
              patch.object(compose_cta, "run", new=AsyncMock(side_effect=RuntimeError("LLM hiccup"))):
             res = asyncio.run(production_ops.mark_built(_base.JobContext()))
@@ -176,26 +176,25 @@ class PublishStateTests(_DBTestCase):
         self.assertTrue(st["email_shipped"])
         self.assertTrue(st["gates"][production_state.BTN_WEBSITE])
 
-    def test_recompose_gate_off_when_thesis_and_echoes_present(self):
+    def test_recompose_gate_off_when_echoes_present(self):
         _window(458)
         db.set_issue_phase(458, "publish")
         self._seed_built(subject="S", description="d")
-        content_store.write_issue(458, "thesis.md", "An issue about X.")
         content_store.write_issue(458, "echoes.md", "Echoes prose.")
         st = production_state.publish_state(458)
-        self.assertFalse(st["thesis_failed"])
         self.assertFalse(st["echoes_failed"])
         self.assertFalse(st["recompose_needed"])
         self.assertFalse(st["gates"][production_state.BTN_RECOMPOSE])
+        # Thesis is retired — no thesis key in the state.
+        self.assertNotIn("thesis", st)
+        self.assertNotIn("thesis_failed", st)
 
-    def test_recompose_gate_on_when_thesis_failed_in_publish(self):
+    def test_recompose_gate_on_when_echoes_failed_in_publish(self):
         _window(458)
         db.set_issue_phase(458, "publish")
-        self._seed_built(subject="S", description="d")
-        content_store.write_issue(458, "echoes.md", "Echoes prose.")  # thesis missing
+        self._seed_built(subject="S", description="d")  # echoes missing
         st = production_state.publish_state(458)
-        self.assertTrue(st["thesis_failed"])
-        self.assertFalse(st["echoes_failed"])
+        self.assertTrue(st["echoes_failed"])
         self.assertTrue(st["recompose_needed"])
         self.assertTrue(st["gates"][production_state.BTN_RECOMPOSE])
 
@@ -208,17 +207,14 @@ class PublishStateTests(_DBTestCase):
         self.assertFalse(st["recompose_needed"])
         self.assertFalse(st["gates"][production_state.BTN_RECOMPOSE])
 
-    def test_recompose_refires_missing_thesis(self):
+    def test_recompose_refires_missing_echoes(self):
         _window(458)
         db.set_issue_phase(458, "publish")
-        self._seed_built(subject="S", description="d")
-        content_store.write_issue(458, "echoes.md", "Echoes prose.")  # thesis missing
-        with patch.object(compose_thesis, "run", new=AsyncMock(return_value=_OK)) as m_thesis, \
-             patch.object(compose_echoes, "run", new=AsyncMock(return_value=_OK)) as m_echoes:
+        self._seed_built(subject="S", description="d")  # echoes missing
+        with patch.object(compose_echoes, "run", new=AsyncMock(return_value=_OK)) as m_echoes:
             res = asyncio.run(production_ops.recompose(_base.JobContext()))
         self.assertTrue(res.ok, res.message)
-        m_thesis.assert_awaited_once()
-        m_echoes.assert_not_awaited()  # echoes already present
+        m_echoes.assert_awaited_once()
 
 
 class PutToBedTests(_DBTestCase):

@@ -68,8 +68,6 @@ _ASSETS: dict[str, tuple[str, str, str]] = {
                  "Three lines, 5-7-5 syllables. Bold + hard breaks added at render time."),
     "cover":    ("cover.json",  "cover caption",
                  '{"caption": "...", "location": "Minneapolis, MN", "timestamp": "May 23, 2026"}'),
-    "thesis":   ("thesis.md",   "thesis",
-                 "1–3 sentences naming what the issue is about — Eddy's editorial anchor."),
     "echoes":   ("echoes.md",   "echoes",
                  "Thingy's 2–4 sentence archive note that closes the issue — markdown prose."),
     "cta-1":    ("cta-1.md",    "CTA slot 1",

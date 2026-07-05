@@ -21,12 +21,6 @@ Per slot:
   thank-you, Thingy's voice, gratitude register — never an ask). Reader
   sees this only when they *are* a premium member.
 
-If ``thesis.md`` is present (written by ``compose-thesis`` at
-``mark-built``), the thesis is injected into both prompts as a
-``## Thesis`` block at the top, so the framings anchor on the issue's
-stated editorial intent. Missing ``thesis.md`` is fine — the job falls
-back to reading just the body.
-
 Slots that already have a non-empty copy file are skipped — re-running
 the job won't re-prompt for ones Jamie has already picked. To re-roll a
 specific slot, delete its ``cta-N.md`` / ``thanks-N.md`` first.
@@ -120,13 +114,13 @@ def _pretty(framings: list[str]) -> list[str]:
 
 async def _fill_slot(
     *, bot, channel, n: int, kind: str, slot_n: int,
-    arc_excerpts: str, patty_ctx_block: str, thesis_block: str,
+    arc_excerpts: str, patty_ctx_block: str,
 ) -> bool:
     """Generate framings for one slot, post the picker, write the picked
     body to the slot's file. Returns True if a file was written."""
     cfg = _KIND_CONFIG[kind]
     base_prompt = anthropic_client.load_prompt(cfg["prompt"])
-    head = thesis_block + ("\n" if thesis_block else "") + patty_ctx_block
+    head = patty_ctx_block
     user_msg = (
         f"{head}\n\n{base_prompt}\n\n"
         f"---\n\nRecent issues (for arc continuity — prior CTAs/thanks are in these):\n\n"
@@ -185,7 +179,6 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             patty_ctx = await asyncio.to_thread(context.build_patty_context)
             patty_ctx_block = context.render_block(patty_ctx)
             arc_excerpts = await asyncio.to_thread(_recent_publish_excerpts, n)
-            thesis_block = await asyncio.to_thread(_llm_job.thesis_block, n)
 
             written = 0
             skipped = 0
@@ -204,7 +197,6 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     bot=bot, channel=channel, n=n, kind=kind, slot_n=slot_n,
                     arc_excerpts=arc_excerpts,
                     patty_ctx_block=patty_ctx_block,
-                    thesis_block=thesis_block,
                 ):
                     written += 1
 

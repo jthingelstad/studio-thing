@@ -24,7 +24,7 @@ from .db.connection import connect
 # name-agnostic — this set only gates the agent-tool routing in local_tools.
 ATOM_NAMES = frozenset({
     "intro.md", "outro.md", "cover.json", "haiku.md",
-    "metadata.json", "thesis.md", "echoes.md",
+    "metadata.json", "echoes.md",
 })
 _NUMBERED_RE = re.compile(r"^(cta|thanks)-\d+\.md$")
 

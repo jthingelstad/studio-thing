@@ -117,31 +117,6 @@ def draft_body(issue_number: int) -> str:
         return ""
 
 
-def thesis_block(issue_number: int) -> str:
-    """Return ``## Thesis\\n\\n{thesis}\\n`` if ``thesis.md`` exists for
-    the issue, else an empty string.
-
-    ``compose-thesis`` writes ``thesis.md`` (one to three sentences naming
-    what the issue is about). The compose-* jobs read it via this helper
-    and inject the thesis as a ``## Thesis`` block at the top of their
-    user message — so subject, description, haiku, and CTA framings all
-    anchor on the same editorial intent. A missing thesis is fine
-    (compose jobs degrade gracefully to today's behaviour of reading
-    just the body).
-    """
-    # The DB is the draft — thesis.md is a content row, not an S3 object.
-    from ..tools import content_store
-
-    body = content_store.read_issue(int(issue_number), "thesis.md")
-    res = {"found": bool(body and body.strip()), "text": body or ""}
-    if not (res.get("found") and isinstance(res.get("text"), str)):
-        return ""
-    text = (res["text"] or "").strip()
-    if not text:
-        return ""
-    return f"## Thesis\n\n{text}\n"
-
-
 def parse_json_payload(reply: str) -> Optional[dict[str, Any]]:
     """Extract and parse the first JSON object in ``reply`` (the model is
     asked to return only JSON; tolerate code fences / surrounding prose)."""
@@ -227,26 +202,104 @@ async def refresh_loop(
                 "follow the prompt's format exactly, no surrounding prose.)"
             )
             continue
-        shown = pretty(options) if pretty else options
-        # Optional HTML option-cards page — uploaded on every round so
-        # the URL stays valid across 🔄 refreshes (the URL is stable;
-        # only the contents change).
-        round_label = prompt_label
-        if cards_issue is not None and cards_filename and cards_title:
-            url = await asyncio.to_thread(
-                render.render_and_upload_option_cards,
-                int(cards_issue), cards_filename, cards_title, options,
-                subtitle=cards_subtitle, body_kind=cards_body_kind,
-            )
-            if url:
-                round_label = f"{prompt_label}\n📄 {url}"
-        pick = await interaction.await_choice(bot, channel, shown, prompt=round_label)
+        pick = await _present_and_pick(
+            bot, channel, options=options, pretty=pretty,
+            prompt_label=prompt_label,
+            cards_issue=cards_issue, cards_filename=cards_filename,
+            cards_title=cards_title, cards_subtitle=cards_subtitle,
+            cards_body_kind=cards_body_kind,
+        )
         if pick == "refresh":
             user_msg = base_msg + "\n\n(Jamie asked for fresh options — give different framings, please.)"
             continue
         if pick is None or pick >= len(options):
             return None
         return options[pick]
+    return None
+
+
+async def _present_and_pick(
+    bot,
+    channel,
+    *,
+    options: list[str],
+    pretty: Optional[Callable[[list[str]], list[str]]] = None,
+    prompt_label: str,
+    cards_issue: Optional[int] = None,
+    cards_filename: Optional[str] = None,
+    cards_title: Optional[str] = None,
+    cards_subtitle: Optional[str] = None,
+    cards_body_kind: str = "serif",
+):
+    """Render one round of option cards (best-effort) and wait for Jamie's
+    pick. Shared by :func:`refresh_loop` (options come fresh from the model
+    each round) and :func:`replay_pick` (options were produced up-front in a
+    single batched call). Returns the raw ``interaction.await_choice`` result
+    (0-based index, ``"refresh"``, or ``None``)."""
+    shown = pretty(options) if pretty else options
+    # Optional HTML option-cards page — uploaded on every round so the URL
+    # stays valid across 🔄 refreshes (the URL is stable; only the contents
+    # change). Best-effort: a render failure just omits the URL.
+    round_label = prompt_label
+    if cards_issue is not None and cards_filename and cards_title:
+        url = await asyncio.to_thread(
+            render.render_and_upload_option_cards,
+            int(cards_issue), cards_filename, cards_title, options,
+            subtitle=cards_subtitle, body_kind=cards_body_kind,
+        )
+        if url:
+            round_label = f"{prompt_label}\n📄 {url}"
+    return await interaction.await_choice(bot, channel, shown, prompt=round_label)
+
+
+async def replay_pick(
+    bot,
+    channel,
+    *,
+    options: list[str],
+    pretty: Optional[Callable[[list[str]], list[str]]] = None,
+    prompt_label: str,
+    regenerate: Optional[Callable[[], "asyncio.Future"]] = None,
+    rounds: int = MAX_REFRESH_ROUNDS,
+    cards_issue: Optional[int] = None,
+    cards_filename: Optional[str] = None,
+    cards_title: Optional[str] = None,
+    cards_subtitle: Optional[str] = None,
+    cards_body_kind: str = "serif",
+) -> Optional[str]:
+    """Run the option-cards pick UX over options that were **already
+    generated** — no model call on the happy path. This is the second half of
+    the batched-envelope flow: one LLM call produces every option up front
+    (subjects + description + haikus), then each slot's picker replays its
+    options here without re-prompting the model.
+
+    Returns the picked string, or ``None`` on timeout / exhausted rounds.
+
+    A 🔄 refresh re-invokes ``regenerate`` (an async callable returning a
+    fresh ``list[str]`` for *this slot only*) when one is supplied — so Jamie
+    can still ask for genuinely different framings, at the cost of one extra
+    model call for that slot. When ``regenerate`` is ``None``, a refresh just
+    re-shows the same options."""
+    current = list(options)
+    for _round in range(rounds):
+        if not current:
+            return None
+        pick = await _present_and_pick(
+            bot, channel, options=current, pretty=pretty,
+            prompt_label=prompt_label,
+            cards_issue=cards_issue, cards_filename=cards_filename,
+            cards_title=cards_title, cards_subtitle=cards_subtitle,
+            cards_body_kind=cards_body_kind,
+        )
+        if pick == "refresh":
+            if regenerate is not None:
+                fresh = await regenerate()
+                if fresh:
+                    current = list(fresh)
+            continue
+        if pick is None or pick >= len(current):
+            return None
+        return current[pick]
     return None
 
 

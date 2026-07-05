@@ -11,10 +11,10 @@ about Jamie, not Jamie's first person. It's the deliberate handoff at
 the foot of every issue from Jamie's voice to the archive's.
 
 **Trigger:** auto-fired inside ``mark-built`` (the Build → Publish
-phase transition), alongside ``compose-thesis`` and the CTA auto-
-request. Runs over the *frozen* content the same way thesis does. Was
-previously triggered by ``reorder`` on ✅; that ran over mid-edit
-state, which produced echoes that didn't reflect the shipped issue.
+phase transition), alongside ``compose-envelope`` and the CTA auto-
+request. Runs over the *frozen* content. Was previously triggered by
+``reorder`` on ✅; that ran over mid-edit state, which produced echoes
+that didn't reflect the shipped issue.
 
 **Mandatory.** No SKIP path — Echoes ships in every issue. If neither
 the thematic-resonance mode nor the anniversary mode produces
@@ -41,11 +41,9 @@ the stronger one for this issue:
 Inputs to the Opus call:
 
 - The current issue draft (atoms + assembled body via
-  ``_llm_job.draft_body``).
-- The just-written thesis (``atoms/thesis.md``) — the editorial
-  framing every Publish-phase job anchors on. Feeds into the prompt
-  as ``## This issue's thesis`` so Echoes can specifically echo what
-  *this* week is doing, not surface-match.
+  ``_llm_job.draft_body``) — the shared anchor for every Publish-phase
+  job, so Echoes can specifically echo what *this* week is doing rather
+  than surface-match.
 - The bodies of the last 6 echoes (``data/issues/{N-k}/echoes.md``,
   newest-first; silently skipped if missing) — calibrates voice +
   prevents theme repetition.
@@ -352,18 +350,11 @@ def _build_user_message(
     prior: list[tuple[int, str]],
     passages: list[dict[str, Any]],
     anniversaries: list[dict[str, Any]],
-    thesis: str = "",
 ) -> str:
-    thesis_block = (
-        f"## This issue's thesis (Eddy's framing, written at mark-built)\n\n"
-        f"{thesis.strip()}\n\n---\n\n"
-        if thesis.strip() else ""
-    )
     return (
         f"You're writing **Echoes** (Thingy's archive note) for **The Weekly "
         f"Thing #{issue_number}**, publishing {publish_date}.\n\n"
         f"---\n\n"
-        f"{thesis_block}"
         f"## Current issue draft\n\n"
         f"```markdown\n{baseline_body.strip()}\n```\n\n"
         f"---\n\n"
@@ -513,10 +504,6 @@ async def run(
             anniversaries = await asyncio.to_thread(
                 _anniversary_candidates, publish_date, n,
             )
-            # The thesis is written first at mark-built (compose-thesis).
-            # Read it as the editorial anchor — Echoes echoes specifically
-            # what THIS issue is doing, not generic surface matches.
-            thesis_text = await asyncio.to_thread(_read_thesis, n)
             user_body = _build_user_message(
                 issue_number=n,
                 publish_date=publish_date,
@@ -524,7 +511,6 @@ async def run(
                 prior=prior,
                 passages=passages,
                 anniversaries=anniversaries,
-                thesis=thesis_text,
             )
             user_msg = f"{base_prompt}\n\n---\n\n{user_body}"[: _llm_job.CREATE_FINAL_BODY_CAP]
 
@@ -575,15 +561,3 @@ async def run(
             "echoes": text, "word_count": word_count,
         },
     )
-
-
-def _read_thesis(issue_number: int) -> str:
-    """Read ``atoms/thesis.md`` for the issue; return empty if missing.
-
-    Compose-echoes is informed by the thesis (the editorial framing
-    written at mark-built, just before this job fires). When the thesis
-    is missing — e.g. compose-thesis failed earlier in mark-built, or
-    Jamie re-fires compose-echoes on a legacy issue without a thesis
-    — degrade gracefully to body-only context."""
-    body = content_store.read_issue(issue_number, "thesis.md")
-    return body.strip() if body else ""

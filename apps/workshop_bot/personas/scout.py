@@ -2,7 +2,7 @@
 
 Scout owns the production slate: what's in flight, which stage each
 production is in, who needs to act next, what's blocked. The editorial
-work (thesis, ordering, tone, fit) stays with Eddy; the research, link
+work (framing, ordering, tone, fit) stays with Eddy; the research, link
 judgement, promotion framing, and supporter fit stay with Linky, Marky,
 and Patty respectively. Scout coordinates them around concrete
 productions.

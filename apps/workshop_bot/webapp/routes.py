@@ -367,7 +367,7 @@ async def editor_item_move(request: web.Request) -> web.Response:
 # Newsletter authored content blocks editable on the page (name, label).
 _NEWSLETTER_BLOCKS = [
     ("intro.md", "Intro"), ("outro.md", "Outro"), ("haiku.md", "Haiku"),
-    ("thesis.md", "Thesis"), ("echoes.md", "Echoes"),
+    ("echoes.md", "Echoes"),
     ("cta-1.md", "CTA · slot 1"), ("cta-2.md", "CTA · slot 2"), ("thanks-1.md", "Thanks"),
 ]
 # Authored content blocks for the non-newsletter types.

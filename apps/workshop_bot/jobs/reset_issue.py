@@ -2,15 +2,14 @@
 
 All publish subcommands are idempotent (there's no ``final.md`` lock
 anymore), but some carry forward state Jamie may want to drop: the
-``reorder`` step writes ``thesis.md`` + row-level promotions, and the
-``publish`` step writes ``buttondown.md``. When Jamie *wants* to back
-up — content has shifted enough that he needs to re-do the editorial
-pass, or he edited intro.md after buttondown.md was assembled — this is
-the way to clear that carried-forward state without reaching for the AWS
-console.
+``reorder`` step carries row-level promotions, and the ``publish`` step
+writes ``buttondown.md``. When Jamie *wants* to back up — content has
+shifted enough that he needs to re-do the editorial pass, or he edited
+intro.md after buttondown.md was assembled — this is the way to clear
+that carried-forward state without reaching for the AWS console.
 
 ``/scout issue reset {final|publish}`` deletes the corresponding step
-artifacts in S3 and (for ``final``) clears any row-level editorial state
+artifacts in S3 and (for ``final``) clears the row-level editorial state
 (promotions) so a re-run starts from a clean editorial slate.
 
 What stays put:
@@ -46,8 +45,11 @@ NAME = "reset-issue"
 # What each step's carried-forward artifacts look like in the workspace.
 # Listed here so the job's behavior is data-driven and the help text reads
 # accurately without keeping the docstring in sync separately.
+# ``final`` deletes no files (the reorder step no longer writes any
+# carried-forward artifact — thesis is retired); its work is clearing the
+# row-level promotions below. ``publish`` drops the rendered email body.
 _STEP_ARTIFACTS: dict[str, tuple[str, ...]] = {
-    "final": ("thesis.md",),
+    "final": (),
     "publish": ("buttondown.md",),
 }
 
