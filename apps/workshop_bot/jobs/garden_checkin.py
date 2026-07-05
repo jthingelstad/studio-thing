@@ -27,10 +27,15 @@ logger = logging.getLogger("workshop.jobs.garden_checkin")
 
 NAME = "garden-checkin"
 
-# How many ungrouped seeds Eddy is shown per pass. The garden can hold a couple
-# hundred loose seeds; the pass is incremental — the context block tells him
-# how many remain beyond the batch so he knows the rest come around later.
-BATCH_CAP = 60
+# How many ungrouped seeds Eddy is shown per pass. Kept small on purpose: the
+# agent loop caps each turn at 4096 output tokens (agent_loop.MAX_OUTPUT_TOKENS),
+# and Eddy has to fit his tool calls (seeds__cluster / seeds__update) inside
+# that budget across the loop's iterations. A big batch (60) made him try to
+# reason about the whole pile in one turn, blow the token cap before emitting a
+# single tool call, and commit nothing. ~15 keeps a pass tractable; the garden
+# is tended incrementally (Monday cron + the /seeds "Tend garden" button), and
+# the context block tells him how many remain beyond the batch.
+BATCH_CAP = 15
 
 # Per-seed body truncation in the context block (characters). Enough to grasp
 # the idea for clustering; `seeds__get` has the full text when he needs it.
@@ -107,7 +112,12 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     reply = ""
     try:
         with db.AgentRun("eddy", trigger="garden-tend") as agent_run:
-            reply, _meta = await bot.core(latest=user_msg, history=[], model=None)
+            # Force a tool call on the opening turn — otherwise Eddy narrates a
+            # clustering plan in prose, burns the 4096-token output budget, and
+            # commits nothing (stop=max_tokens, tools=[]). Turn 1 must act.
+            reply, _meta = await bot.core(
+                latest=user_msg, history=[], model=None,
+                first_turn_tool_choice={"type": "any"})
             agent_run.record_meta(_meta)
             agent_run.records_written = 1 if (reply and reply.strip()) else 0
     except Exception:  # noqa: BLE001

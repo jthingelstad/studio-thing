@@ -207,6 +207,7 @@ def run(
     deps: Any,
     model: Optional[str] = None,
     max_iterations: int = DEFAULT_MAX_ITERATIONS,
+    first_turn_tool_choice: Optional[dict[str, Any]] = None,
 ) -> tuple[str, dict[str, Any]]:
     """Run a tool-using turn. Returns (final_text, metadata).
 
@@ -215,7 +216,14 @@ def run(
     "cache_control": {"type": "ephemeral"}}, ...]``) when a caller wants
     to place a per-call cache breakpoint on a stable leading block (e.g.
     ``_draft_review`` parks its multi-KB review prompt in a cached block
-    so the daily run benefits from prompt caching too)."""
+    so the daily run benefits from prompt caching too).
+
+    ``first_turn_tool_choice`` (e.g. ``{"type": "any"}``) forces the model to
+    open with a tool call instead of prose on the *first* iteration only —
+    later turns revert to ``auto`` so the model can still finish with a text
+    report. Use it for work-not-chat jobs where the model otherwise narrates
+    a plan and burns the output budget before calling a tool (the garden
+    tending pass hit exactly that: 4096 tokens of prose, zero tool calls)."""
     history = list(history or [])
     chosen_model = anthropic_client.MODELS[
         model or anthropic_client.default_model()
@@ -236,13 +244,19 @@ def run(
     last_text = ""
 
     for iteration in range(max_iterations):
-        response = client.messages.create(
+        create_kwargs: dict[str, Any] = dict(
             model=chosen_model,
             max_tokens=MAX_OUTPUT_TOKENS,
             system=system_blocks,
             tools=tool_specs,
             messages=messages,
         )
+        # Force a tool call on the opening turn only (then let it converge to
+        # a text report). Guarded on tools being present — tool_choice with an
+        # empty tool list is a 400.
+        if first_turn_tool_choice and iteration == 0 and tool_specs:
+            create_kwargs["tool_choice"] = first_turn_tool_choice
+        response = client.messages.create(**create_kwargs)
         _accumulate_usage(usage_total, response.usage)
 
         # Pull text + tool_use from this turn.
@@ -323,6 +337,7 @@ async def run_async(
     deps: Any,
     model: Optional[str] = None,
     max_iterations: int = DEFAULT_MAX_ITERATIONS,
+    first_turn_tool_choice: Optional[dict[str, Any]] = None,
 ) -> tuple[str, dict[str, Any]]:
     """Async wrapper around ``run`` so the calling Discord client's event loop
     keeps running (gateway heartbeats, other messages) during the LLM turn."""
@@ -335,4 +350,5 @@ async def run_async(
         deps=deps,
         model=model,
         max_iterations=max_iterations,
+        first_turn_tool_choice=first_turn_tool_choice,
     )

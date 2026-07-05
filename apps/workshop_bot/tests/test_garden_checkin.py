@@ -102,6 +102,16 @@ class GardenTendTests(_DBCase):
         self.assertFalse(res.data["posted"])
         ctx.post.assert_not_awaited()
 
+    def test_forces_tool_call_on_opening_turn(self):
+        # Eddy must ACT (call seeds__cluster) before narrating, or he burns the
+        # 4096-token output budget on prose and commits nothing. The job forces
+        # a tool call on the first turn.
+        db.seed_add("an idea")
+        _res, _ctx, bot = _run_with("PASS")
+        self.assertEqual(
+            bot.core.await_args.kwargs.get("first_turn_tool_choice"),
+            {"type": "any"})
+
     def test_report_posts(self):
         db.seed_add("an idea")
         res, ctx, _bot_ = _run_with(

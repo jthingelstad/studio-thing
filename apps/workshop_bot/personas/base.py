@@ -247,8 +247,13 @@ class PersonaBot(discord.Client):
         latest: "str | list[dict[str, Any]]",
         history: Optional[list[dict[str, str]]] = None,
         model: Optional[str] = None,
+        first_turn_tool_choice: Optional[dict[str, Any]] = None,
     ) -> tuple[str, dict[str, Any]]:
         """Single source of truth for a persona turn.
+
+        ``first_turn_tool_choice`` (e.g. ``{"type": "any"}``) forces a tool
+        call on the opening turn for work-not-chat jobs that otherwise
+        narrate a plan and never act (see ``garden-tend``).
 
         ``latest`` is the user-message payload — typically a plain string,
         but callers can pass a list of Anthropic content blocks when they
@@ -280,6 +285,7 @@ class PersonaBot(discord.Client):
             tools=self.deps.registry.names_for(self.persona),
             deps=self.deps,
             model=self._resolve_model(model),
+            first_turn_tool_choice=first_turn_tool_choice,
         )
 
     async def on_message(self, message: discord.Message) -> None:  # type: ignore[override]
