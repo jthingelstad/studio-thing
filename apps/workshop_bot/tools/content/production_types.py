@@ -1,21 +1,8 @@
-"""The production-type registry — the per-type phase vocabularies, owned in code.
+"""Newsletter issue phase vocabulary.
 
-This is the single source of truth for *what kinds of things Scout produces* and
-*what phases each kind moves through*. It replaces the newsletter-only
-``_ISSUE_PHASES`` constant (``tools/db/_issues.py``) with a generic, multi-type
-model so the ``productions`` table (and the web app + agent tools that read it)
-can carry newsletters, blog articles, podcast episodes, and simple single-stage
-projects side by side.
-
-Why a code registry and not a DB CHECK: a phase vocabulary is editorial, not
-structural — adding "review" to the article flow should be a one-line edit here,
-never a table rebuild. ``db.set_production_phase`` validates against this module.
-
-Phase vocabularies (ordered, earliest → terminal):
-- newsletter : write → build → publish → share
-- article    : idea → outline → draft → publish
-- podcast    : idea → outline → script → record → publish
-- project    : open → done            (generic single-arc work, e.g. membership)
+The ``productions`` table remains as the internal mirror for newsletter issue
+rows, but Studio is no longer a multi-surface production manager. The only
+first-class production type is ``newsletter``.
 """
 
 from __future__ import annotations
@@ -25,14 +12,14 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class ProductionType:
-    """One kind of production Scout runs.
+    """One production kind Studio understands.
 
     ``key``            the stable type id stored in ``productions.production_type``.
     ``label``          human display name.
-    ``id_prefix``      the ``productions.id`` prefix — ``WT350``/``ART7``/``POD3``/``PRJ2``.
+    ``id_prefix``      the ``productions.id`` prefix — ``WT350``.
     ``phases``         the ordered phase vocabulary (``phases[0]`` is the default).
     ``terminal_phase`` the phase meaning "shipped/done" (must be in ``phases``).
-    ``surface``        the publishing surface label (empty for generic projects).
+    ``surface``        the public publishing surface label.
     """
 
     key: str
@@ -53,30 +40,6 @@ PRODUCTION_TYPES: dict[str, ProductionType] = {
         phases=("planned", "write", "build", "publish", "share"),
         terminal_phase="share",
         surface="weekly.thingelstad.com",
-    ),
-    "article": ProductionType(
-        key="article",
-        label="Article",
-        id_prefix="ART",
-        phases=("idea", "outline", "draft", "publish"),
-        terminal_phase="publish",
-        surface="thingelstad.com",
-    ),
-    "podcast": ProductionType(
-        key="podcast",
-        label="Podcast",
-        id_prefix="POD",
-        phases=("idea", "outline", "script", "record", "publish"),
-        terminal_phase="publish",
-        surface="another.thingelstad.com",
-    ),
-    "project": ProductionType(
-        key="project",
-        label="Project",
-        id_prefix="PRJ",
-        phases=("open", "done"),
-        terminal_phase="done",
-        surface="",
     ),
 }
 
@@ -129,7 +92,7 @@ def is_terminal(production_type: str, phase: str) -> bool:
 
 
 def prefix_for(production_type: str) -> str:
-    """The ``productions.id`` prefix for a type (``WT``/``ART``/``POD``/``PRJ``)."""
+    """The ``productions.id`` prefix for a type (``WT``)."""
     return get_type(production_type).id_prefix
 
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Studio{% endblock %} · Workshop</title>
+  <title>{% block title %}Studio{% endblock %} · Newsletter</title>
   <style>
     :root { --ink:#1b1b1f; --soft:#6b6b76; --rule:#e6e6ea; --accent:#3b5bdb; --bg:#fafafb; --chip:#eef1fb; }
     * { box-sizing: border-box; }
@@ -54,9 +54,8 @@
 <body>
   <header class="top">
     <span class="brand">Studio</span>
-    <a href="/" class="{{ 'active' if nav=='slate' else '' }}">Slate</a>
-    <a href="/seeds" class="{{ 'active' if nav=='seeds' else '' }}">Seeds</a>
-    <a href="/productions" class="{{ 'active' if nav=='productions' else '' }}">Productions</a>
+    <a href="/" class="{{ 'active' if nav=='home' else '' }}">Current Issue</a>
+    <a href="/productions" class="{{ 'active' if nav=='productions' else '' }}">Issues</a>
     <span class="sp"></span>
     <span class="who">{{ login }}</span>
   </header>

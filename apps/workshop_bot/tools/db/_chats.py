@@ -1,8 +1,8 @@
-"""In-web conversation threads — the chat on the seeds garden + production pages.
+"""In-web Eddy conversation threads for newsletter issue pages.
 
-``context_key`` is the thing being discussed ('ART7', 'WT350', 'seeds'). A web
-handler records Jamie's message, runs the addressed persona's agent loop in the
-background, and records the reply; the page polls ``chat_list`` for new messages.
+``context_key`` is the issue being discussed ('WT350'). A web handler records
+Jamie's message, runs Eddy's agent loop in the background, and records the
+reply; the page polls ``chat_list`` for new messages.
 """
 
 from __future__ import annotations

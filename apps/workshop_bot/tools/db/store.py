@@ -8,11 +8,11 @@ stable surface. Edit the domain module, not this aggregator:
 - ``_subscribers``     — subscriber-event dedup + recent feed
 - ``_discovery``       — Linky popular/sightings/to-read research, research-card
                          messages, feedbin dedup
-- ``_followups``       — agent/Jamie commitments (the targeted heartbeat)
+- ``_followups``       — Eddy/Jamie commitments
 - ``_issues``          — issue windows + publishing-spine phase/cards
-- ``_productions``     — the generic multi-type production registry
+- ``_productions``     — newsletter issue registry mirror
 - ``_locks``           — job locks (single-asset serialization)
-- ``_goals_campaigns`` — Patty's goals + Marky's campaign ledger
+- ``_goals_campaigns`` — retired goals/campaign ledger helpers
 - ``_currently``       — per-issue ``## Currently`` values + canonical types
 - ``_runtime``         — draft digests + agent-run telemetry
 """
@@ -26,7 +26,6 @@ from ._followups import *  # noqa: F401,F403
 from ._issues import *  # noqa: F401,F403
 from ._productions import *  # noqa: F401,F403
 from ._tasks import *  # noqa: F401,F403
-from ._seeds import *  # noqa: F401,F403
 from ._chats import *  # noqa: F401,F403
 from ._locks import *  # noqa: F401,F403
 from ._goals_campaigns import *  # noqa: F401,F403

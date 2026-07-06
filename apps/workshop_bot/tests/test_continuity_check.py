@@ -4,7 +4,7 @@ Covers the job (``run_for_text``): retrieval is mocked (never the live
 Librarian), Eddy's call is stubbed (never the live LLM). Asserts Eddy sees the
 retrieved passages, the note posts to #editorial on success, a retrieval error
 posts the fallback without crashing, the prompt pins the never-rewrite rule,
-and the seed / production web routes 302 and invoke the job.
+and the newsletter issue web route 302s and invokes the job.
 """
 
 from __future__ import annotations
@@ -173,31 +173,6 @@ class ContinuityCheckWebTests(unittest.IsolatedAsyncioTestCase):
         await client.start_server()
         self.addAsyncCleanup(client.close)
         return client
-
-    async def test_seed_continuity_route_runs_job_and_redirects(self):
-        c = await self._client()
-        seed = db.seed_add("Owning your words on your own domain", title="Own your words")
-        with patch.object(continuity_check, "run_for_text",
-                          AsyncMock(return_value=_base.JobResult(True, "ok"))) as job:
-            r = await c.post(f"/seeds/{seed['id']}/continuity", headers=H,
-                             allow_redirects=False)
-        self.assertEqual(r.status, 302)
-        self.assertEqual(r.headers["Location"], "/seeds")
-        job.assert_awaited_once()
-        self.assertEqual(job.await_args.kwargs["text"], "Owning your words on your own domain")
-        self.assertIn("Own your words", job.await_args.kwargs["label"])
-
-    async def test_seed_continuity_unknown_seed_is_404(self):
-        c = await self._client()
-        r = await c.post("/seeds/9999/continuity", headers=H, allow_redirects=False)
-        self.assertEqual(r.status, 404)
-
-    async def test_seeds_page_has_continuity_button(self):
-        c = await self._client()
-        seed = db.seed_add("an idea worth checking")
-        body = await (await c.get("/seeds", headers=H)).text()
-        self.assertIn(f'action="/seeds/{seed["id"]}/continuity"', body)
-        self.assertIn("Check continuity", body)
 
     async def test_production_continuity_route_runs_job_for_intro(self):
         c = await self._client()

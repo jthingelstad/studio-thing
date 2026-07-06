@@ -116,15 +116,15 @@ class JobConfigTests(unittest.TestCase):
         self.assertIsNone(jobs_module.by_id("nonexistent"))
 
     def test_heartbeats_retired(self):
-        # Every per-persona heartbeat was retired as the content-loop jobs
-        # took over (Linky→pinboard-scan, Eddy job-triggered, Patty's only
-        # job is compose-cta, Marky→promotion-prep + daily-metrics).
+        # Every per-persona heartbeat was retired. The newsletter-only
+        # scheduler stays quiet: daily issue sync + targeted Eddy follow-ups.
         ids = [j.id for j in jobs_module.JOBS]
         self.assertFalse([i for i in ids if i.endswith("-heartbeat")], f"unexpected heartbeat job(s): {ids}")
         self.assertFalse(hasattr(handlers, "heartbeat"), "handlers.heartbeat should be gone")
-        # The content-loop jobs are present.
-        for jid in ("sync-issue-daily", "linky-pinboard-scan", "marky-daily-metrics"):
+        for jid in ("sync-issue-daily", "follow-up-sweep"):
             self.assertIn(jid, ids)
+        for gone in ("linky-pinboard-scan", "marky-daily-metrics", "garden-checkin", "scout-checkin"):
+            self.assertNotIn(gone, ids)
         # Sharing is phase-driven now — no RSS-poll job.
         self.assertNotIn("marky-rss-check", ids)
 

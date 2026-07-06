@@ -42,8 +42,8 @@ class _FakeMessages:
         self._turn += 1
         if self._turn == 1:
             return types.SimpleNamespace(
-                content=[_block(type="tool_use", id="t1", name="seeds__cluster",
-                                input={"label": "X", "seed_ids": [1]})],
+                content=[_block(type="tool_use", id="t1", name="draft__section_status",
+                                input={})],
                 stop_reason="tool_use", usage=_usage())
         return types.SimpleNamespace(
             content=[_block(type="text", text="done — clustered one.")],
@@ -59,11 +59,11 @@ class FirstTurnToolChoiceTests(unittest.TestCase):
                           return_value=fake_client), \
              patch.object(agent_loop, "_build_system_blocks", return_value=[]), \
              patch.object(agent_loop, "_build_tool_specs",
-                          return_value=[{"name": "seeds__cluster"}]), \
+                          return_value=[{"name": "draft__section_status"}]), \
              patch.object(agent_loop, "_execute_tool",
                           return_value='{"ok": true}'):
             text, meta = agent_loop.run(
-                persona="eddy", user_message="tend", tools=["seeds__cluster"],
+                persona="eddy", user_message="review", tools=["draft__section_status"],
                 deps=deps, **extra)
         return fake, text, meta
 

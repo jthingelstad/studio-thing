@@ -681,15 +681,13 @@ SPECS: dict[str, dict[str, Any]] = {
     "productions__list": {
         "name": "productions__list",
         "description": (
-            "List productions of ANY type — newsletter, article (a blog "
-            "essay), podcast episode, or project. Optionally filter by "
-            "production_type and/or status (active/done/archived). This is how "
-            "you see everything Jamie has in flight, not just the newsletter."
+            "List newsletter issues. Optionally filter by status "
+            "(active/done/archived)."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "production_type": {"type": "string", "enum": ["newsletter", "article", "podcast", "project"]},
+                "production_type": {"type": "string", "enum": ["newsletter"]},
                 "status": {"type": "string", "enum": ["active", "done", "archived", "abandoned"]},
             },
             "required": [],
@@ -697,7 +695,7 @@ SPECS: dict[str, dict[str, Any]] = {
     },
     "productions__get": {
         "name": "productions__get",
-        "description": "Full detail for one production by id (e.g. 'WT350', 'ART7', 'POD3').",
+        "description": "Full detail for one newsletter issue by id (e.g. 'WT350').",
         "input_schema": {
             "type": "object",
             "properties": {"production_id": {"type": "string"}},
@@ -707,14 +705,12 @@ SPECS: dict[str, dict[str, Any]] = {
     "productions__create": {
         "name": "productions__create",
         "description": (
-            "Create a production of any type (id is auto-assigned, e.g. ART8). "
-            "Use for articles/podcasts/projects; for a newsletter issue use the "
-            "start-issue flow instead."
+            "Retired. Newsletter issues are created in the Studio web UI."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "production_type": {"type": "string", "enum": ["article", "podcast", "project"]},
+                "production_type": {"type": "string", "enum": ["newsletter"]},
                 "title": {"type": "string"},
                 "due_at": {"type": "string", "description": "Optional target date (YYYY-MM-DD)."},
             },
@@ -724,9 +720,8 @@ SPECS: dict[str, dict[str, Any]] = {
     "productions__set_phase": {
         "name": "productions__set_phase",
         "description": (
-            "Move a production to a phase in its type's vocabulary (article: "
-            "idea/outline/draft/publish; podcast: idea/outline/script/record/"
-            "publish; newsletter: planned/write/build/publish/share)."
+            "Move a newsletter issue to a phase in its vocabulary "
+            "(planned/write/build/publish/share)."
         ),
         "input_schema": {
             "type": "object",
@@ -740,8 +735,7 @@ SPECS: dict[str, dict[str, Any]] = {
     "production_content__read": {
         "name": "production_content__read",
         "description": (
-            "Read an authored content block of any production — e.g. an "
-            "article's 'body.md', a podcast's 'script.md'/'notes.md'. Returns "
+            "Read an authored content block of a newsletter issue. Returns "
             "{found, text}."
         ),
         "input_schema": {
@@ -798,16 +792,14 @@ SPECS: dict[str, dict[str, Any]] = {
     "tasks__add": {
         "name": "tasks__add",
         "description": (
-            "Add a task to a production's board. Assign an owner — yourself, "
-            "another agent, or jamie. Use this to capture and route work "
-            "('Linky: 3 sources on X', 'Jamie: rewrite the open')."
+            "Add a task to an issue's board. Assign it to jamie or Eddy."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
                 "production_id": {"type": "string"},
                 "title": {"type": "string"},
-                "owner": {"type": "string", "enum": ["jamie", "scout", "eddy", "linky", "marky", "patty"]},
+                "owner": {"type": "string", "enum": ["jamie", "eddy"]},
                 "phase": {"type": "string"},
                 "detail": {"type": "string"},
             },
@@ -825,7 +817,7 @@ SPECS: dict[str, dict[str, Any]] = {
             "properties": {
                 "task_id": {"type": "integer"},
                 "status": {"type": "string", "enum": ["todo", "doing", "done", "blocked"]},
-                "owner": {"type": "string", "enum": ["jamie", "scout", "eddy", "linky", "marky", "patty"]},
+                "owner": {"type": "string", "enum": ["jamie", "eddy"]},
                 "title": {"type": "string"},
             },
             "required": ["task_id"],
@@ -838,123 +830,6 @@ SPECS: dict[str, dict[str, Any]] = {
             "type": "object",
             "properties": {"task_id": {"type": "integer"}},
             "required": ["task_id"],
-        },
-    },
-    "seeds__list": {
-        "name": "seeds__list",
-        "description": (
-            "List seeds in Jamie's idea garden — his snippets of things he might "
-            "write (a sentence to an outline each). Optionally filter by status "
-            "(open/clustered/graduated/archived) or cluster_id. This is the raw "
-            "material you (Eddy) tend: curate, cluster, connect to his archive, "
-            "and route toward articles/podcasts."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "status": {"type": "string"},
-                "cluster_id": {"type": "integer"},
-            },
-            "required": [],
-        },
-    },
-    "seeds__get": {
-        "name": "seeds__get",
-        "description": "Full detail of one seed by id.",
-        "input_schema": {
-            "type": "object",
-            "properties": {"seed_id": {"type": "integer"}},
-            "required": ["seed_id"],
-        },
-    },
-    "seeds__add": {
-        "name": "seeds__add",
-        "description": "Capture a new idea snippet into the garden (Jamie's idea, in his words).",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "body": {"type": "string"},
-                "title": {"type": "string"},
-                "tags": {"type": "string", "description": "Comma-separated tags."},
-            },
-            "required": ["body"],
-        },
-    },
-    "seeds__update": {
-        "name": "seeds__update",
-        "description": (
-            "Curate a seed: retag, retitle, mutate the framing, change status, or "
-            "file it into an existing cluster (cluster_id). Mutating a SEED (a "
-            "pre-writing idea fragment) is idea development and fine — but the "
-            "eventual article's prose is Jamie's; never ghostwrite the piece."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "seed_id": {"type": "integer"},
-                "body": {"type": "string"},
-                "title": {"type": "string"},
-                "tags": {"type": "string"},
-                "status": {"type": "string", "enum": ["open", "clustered", "graduated", "archived"]},
-                "cluster_id": {"type": "integer",
-                               "description": "File the seed into this existing cluster."},
-            },
-            "required": ["seed_id"],
-        },
-    },
-    "seeds__cluster": {
-        "name": "seeds__cluster",
-        "description": (
-            "Group related seeds into a cluster with a label, your framing note, "
-            "and a suggested production type — 'these three could be a podcast', "
-            "'this + your 2019 thread is an article'. This is how an idea becomes "
-            "a candidate production."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "seed_ids": {"type": "array", "items": {"type": "integer"}},
-                "label": {"type": "string"},
-                "note": {"type": "string", "description": "Your framing of why these belong together."},
-                "suggested_type": {"type": "string", "enum": ["article", "podcast", "project"]},
-            },
-            "required": ["seed_ids", "label"],
-        },
-    },
-    "seeds__connect": {
-        "name": "seeds__connect",
-        "description": (
-            "Connect a seed to Jamie's OWN writing via semantic archive retrieval "
-            "— so you can show him 'you've circled this since #287'. Depth from his "
-            "20 years of thinking is where meaningful insight comes from. Returns "
-            "issue citations."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "seed_id": {"type": "integer"},
-                "k": {"type": "integer", "description": "How many connections (default 5)."},
-            },
-            "required": ["seed_id"],
-        },
-    },
-    "seeds__graduate": {
-        "name": "seeds__graduate",
-        "description": (
-            "Graduate a ripe cluster (or a set of seeds) into an article/podcast "
-            "production. The seeds + your direction note are carried in as raw "
-            "material ('seeds.md'); JAMIE writes the piece. Returns the new "
-            "production id."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "production_type": {"type": "string", "enum": ["article", "podcast", "project"]},
-                "title": {"type": "string"},
-                "cluster_id": {"type": "integer"},
-                "seed_ids": {"type": "array", "items": {"type": "integer"}},
-            },
-            "required": ["production_type", "title"],
         },
     },
 }

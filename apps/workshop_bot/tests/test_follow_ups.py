@@ -1,5 +1,4 @@
-"""Tests for the follow-up mechanism — db helpers, the `follow-up-sweep`
-job, the `followup__*` tools, and the `/workshop followup` wiring."""
+"""Tests for Eddy follow-ups, the `follow-up-sweep` job, and tools."""
 
 from __future__ import annotations
 
@@ -101,8 +100,8 @@ class DbHelperTests(_DBCase):
         self.assertEqual([r["id"] for r in db.open_follow_ups()], [b])
 
     def test_create_helper(self):
-        row = follow_up.create(persona="patty", note="check the goal", in_days=7, created_by="jamie")
-        self.assertEqual(row["persona"], "patty")
+        row = follow_up.create(persona="eddy", note="check the issue", in_days=7, created_by="jamie")
+        self.assertEqual(row["persona"], "eddy")
         self.assertEqual(row["trigger_kind"], "time")
         self.assertEqual(row["created_by"], "jamie")
         with self.assertRaises(follow_up.FollowUpError):
@@ -242,12 +241,9 @@ class FollowupToolTests(_DBCase):
         self.assertNotIn("error", out)
         self.assertEqual(out["persona"], "eddy")
         fid = out["id"]
-        # Marky shouldn't see Eddy's follow-up.
-        self.assertEqual(self._as("marky", agent_tools.t_followup_list), [])
+        # The tool lists only Eddy's pending work in the one-agent system.
         eddy_list = self._as("eddy", agent_tools.t_followup_list)
         self.assertEqual([r["id"] for r in eddy_list], [fid])
-        # Marky can't cancel it.
-        self.assertEqual(self._as("marky", agent_tools.t_followup_cancel, followup_id=fid)["cancelled"], False)
         self.assertEqual(self._as("eddy", agent_tools.t_followup_cancel, followup_id=fid)["cancelled"], True)
         self.assertEqual(self._as("eddy", agent_tools.t_followup_list), [])
 
@@ -258,11 +254,11 @@ class FollowupToolTests(_DBCase):
         self.assertIn("error", out)
 
     def test_schedule_in_days(self):
-        out = self._as("patty", agent_tools.t_followup_schedule, note="goal check", in_days=14)
+        out = self._as("eddy", agent_tools.t_followup_schedule, note="issue check", in_days=14)
         self.assertNotIn("error", out)
         row = db.get_follow_up(out["id"])
-        self.assertEqual(row["persona"], "patty")
-        self.assertEqual(row["created_by"], "patty")
+        self.assertEqual(row["persona"], "eddy")
+        self.assertEqual(row["created_by"], "eddy")
         self.assertTrue(row["due_at"].endswith("T18:00:00"))
 
 
@@ -279,21 +275,11 @@ class WiringTests(unittest.TestCase):
 
     def test_followup_subgroup_wired(self):
         from apps.workshop_bot.personas import commands
-        # Each persona has its own /…/followup with the same three verbs.
-        for fn, persona in (
-            (commands.register_eddy_commands, "eddy"),
-            (commands.register_linky_commands, "linky"),
-            (commands.register_marky_commands, "marky"),
-            (commands.register_patty_commands, "patty"),
-        ):
-            tree = fn(MagicMock())
-            top = next(g for g in tree.groups if getattr(g, "name", None) == persona)
-            fu = next(c for c in top.commands if getattr(c, "name", None) == "followup")
-            self.assertEqual(
-                {getattr(c, "_cmd_name", None) for c in fu.commands},
-                {"list", "add", "cancel"},
-                msg=f"unexpected followup verbs under /{persona}",
-            )
+        tree = commands.register_eddy_commands(MagicMock())
+        top = next(g for g in tree.groups if getattr(g, "name", None) == "eddy")
+        fu = next(c for c in top.commands if getattr(c, "name", None) == "followup")
+        self.assertEqual({getattr(c, "_cmd_name", None) for c in fu.commands},
+                         {"list", "add", "cancel"})
 
     def test_followup_tools_registered(self):
         for name in ("followup__schedule", "followup__list", "followup__cancel"):

@@ -222,8 +222,7 @@ def run(
     open with a tool call instead of prose on the *first* iteration only —
     later turns revert to ``auto`` so the model can still finish with a text
     report. Use it for work-not-chat jobs where the model otherwise narrates
-    a plan and burns the output budget before calling a tool (the garden
-    tending pass hit exactly that: 4096 tokens of prose, zero tool calls)."""
+    a plan and burns the output budget before calling a tool."""
     history = list(history or [])
     chosen_model = anthropic_client.MODELS[
         model or anthropic_client.default_model()

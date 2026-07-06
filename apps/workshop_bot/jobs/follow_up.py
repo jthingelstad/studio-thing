@@ -1,17 +1,13 @@
-"""``follow-up-sweep`` + the per-persona ``/<persona> followup …`` reads/writes.
+"""``follow-up-sweep`` + Eddy follow-up reads/writes.
 
-The workshop has no per-persona heartbeats — that was a deliberate call in
-the jobs-spine redesign (a cadence tick with nothing real to say is just
-noise). This is the one targeted exception: when an agent (or Jamie)
-commits to revisiting something at a future *time* ("I'll check in tomorrow
+Studio has no assistant heartbeat — a cadence tick with nothing real to say is
+just noise. This is the one targeted exception: when Eddy (or Jamie) commits
+to revisiting something at a future *time* ("I'll check in tomorrow
 evening") or when the issue reaches a *number* ("when we get to 387"), it's
 recorded in the ``follow_ups`` table; the hourly ``follow-up-sweep`` job
-fires the due ones — it runs the named persona's agent loop with the note
-plus current context and posts a short check-in to the persona's channel.
-PASSes silently when nothing's due.
+fires the due ones. PASSes silently when nothing's due.
 
-Public surface (each persona hosts its own ``/<persona> followup`` subgroup —
-``/eddy followup``, ``/linky followup``, ``/marky followup``, ``/patty followup``):
+Public surface:
 - ``sweep(ctx)``        — the hourly job (cron-only; not exposed as a slash).
 - ``list_open(ctx)``    — `/<persona> followup list` — the pending follow-ups.
 - ``add(ctx, …)``       — `/<persona> followup add` — schedule one (Jamie).
@@ -40,20 +36,8 @@ logger = logging.getLogger("workshop.jobs.follow_up")
 
 NAME = "follow-up-sweep"
 
-_PERSONA_HOME_CHANNEL = {
-    "scout": "DISCORD_CHANNEL_PRODUCTION",
-    "eddy": "DISCORD_CHANNEL_EDITORIAL",
-    "linky": "DISCORD_CHANNEL_RESEARCH",
-    "marky": "DISCORD_CHANNEL_PROMOTION",
-    "patty": "DISCORD_CHANNEL_SUPPORTERS",
-}
-_CONTEXT_BUILDER = {
-    "scout": context.build_scout_context,
-    "eddy": context.build_eddy_context,
-    "linky": context.build_linky_context,
-    "marky": context.build_marky_context,
-    "patty": context.build_patty_context,
-}
+_PERSONA_HOME_CHANNEL = {"eddy": "DISCORD_CHANNEL_EDITORIAL"}
+_CONTEXT_BUILDER = {"eddy": context.build_eddy_context}
 _DEFAULT_EVENING_HOUR = 18
 _MAX_PER_SWEEP = 8  # bound how many we fire in one tick; the rest catch the next sweep
 
@@ -196,10 +180,10 @@ async def add(
 
 async def list_open(ctx: "_base.JobContext", *, persona: Optional[str] = None) -> "_base.JobResult":
     rows = db.open_follow_ups(persona=(persona or None))
-    add_hint = f"`/{persona} followup add`" if persona else "`/<persona> followup add`"
-    cancel_hint = f"`/{persona} followup cancel <id>`" if persona else "`/<persona> followup cancel <id>`"
+    add_hint = "`/eddy followup add`"
+    cancel_hint = "`/eddy followup cancel <id>`"
     if not rows:
-        return _base.JobResult(True, "No pending follow-ups." + ("" if persona else f" (Agents schedule these with `followup__schedule`; you can too via {add_hint}.)"))
+        return _base.JobResult(True, f"No pending follow-ups. Add one with {add_hint}.")
     lines = [f"**Pending follow-ups** ({len(rows)}):"]
     for r in rows:
         lines.append(f"`#{r['id']}` · **{r['persona']}** · {trigger_desc(r)} · \"{(r['note'] or '').strip()}\"")

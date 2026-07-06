@@ -48,46 +48,46 @@ class SpecConsistencyTests(unittest.TestCase):
 
 
 class ProductionsToolTests(_DBCase):
-    def test_create_list_get_content_setphase(self):
-        r = lt.t_productions_create(None, "article", "On Focus")
-        self.assertTrue(r["ok"])
-        self.assertEqual(r["id"], "ART1")
-        lt.t_production_content_write(None, "ART1", "body.md", "Jamie's prose")
-        self.assertEqual(lt.t_production_content_read(None, "ART1", "body.md")["text"], "Jamie's prose")
-        self.assertEqual(lt.t_production_content_list(None, "ART1")["names"], ["body.md"])
-        ids = [p["id"] for p in lt.t_productions_list(None, production_type="article")["productions"]]
-        self.assertEqual(ids, ["ART1"])
-        self.assertTrue(lt.t_productions_set_phase(None, "ART1", "draft")["ok"])
-        self.assertEqual(lt.t_productions_get(None, "ART1")["phase"], "draft")
+    def test_list_get_content_setphase_for_newsletter_issue(self):
+        db.plan_issue_window(issue_number=360, pub_date="2026-07-11",
+                             end_date="2026-07-10", start_date="2026-07-03", day_count=7)
+        lt.t_production_content_write(None, "WT360", "intro.md", "Jamie's prose")
+        self.assertEqual(lt.t_production_content_read(None, "WT360", "intro.md")["text"], "Jamie's prose")
+        self.assertEqual(lt.t_production_content_list(None, "WT360")["names"], ["intro.md"])
+        ids = [p["id"] for p in lt.t_productions_list(None)["productions"]]
+        self.assertEqual(ids, ["WT360"])
+        self.assertTrue(lt.t_productions_set_phase(None, "WT360", "build")["ok"])
+        self.assertEqual(lt.t_productions_get(None, "WT360")["phase"], "build")
 
     def test_unknown_production_and_type_errors(self):
         self.assertIn("error", lt.t_productions_get(None, "ART999"))
         self.assertIn("error", lt.t_productions_create(None, "zine", "x"))
-        self.assertIn("error", lt.t_productions_set_phase(None, "ART999", "draft"))
+        self.assertIn("error", lt.t_productions_create(None, "newsletter", "WT360"))
+        self.assertIn("error", lt.t_productions_set_phase(None, "WT999", "build"))
 
 
 class TasksTests(_DBCase):
     def setUp(self):
         super().setUp()
-        db.create_production(production_type="article", title="x")  # ART1
+        db.create_production(production_type="newsletter", title="WT360", seq=360)
 
     def test_add_claim_list_complete(self):
-        t = lt.t_tasks_add(None, "ART1", "Find sources", owner="linky")
-        self.assertEqual(t["owner"], "linky")
-        lt.t_tasks_update(None, t["task_id"], owner="linky", status="doing")
-        tasks = lt.t_tasks_list(None, "ART1")["tasks"]
+        t = lt.t_tasks_add(None, "WT360", "Check archive echoes", owner="eddy")
+        self.assertEqual(t["owner"], "eddy")
+        lt.t_tasks_update(None, t["task_id"], owner="eddy", status="doing")
+        tasks = lt.t_tasks_list(None, "WT360")["tasks"]
         self.assertEqual(tasks[0]["status"], "doing")
         lt.t_tasks_complete(None, t["task_id"])
         self.assertEqual(db.get_task(t["task_id"])["status"], "done")
 
     def test_owner_and_status_validation(self):
-        self.assertIn("error", lt.t_tasks_add(None, "ART1", "x", owner="bogus"))
-        t = lt.t_tasks_add(None, "ART1", "y")
+        self.assertIn("error", lt.t_tasks_add(None, "WT360", "x", owner="linky"))
+        t = lt.t_tasks_add(None, "WT360", "y")
         self.assertIn("error", lt.t_tasks_update(None, t["task_id"], status="bogus"))
 
     def test_list_tasks_for_owner(self):
-        db.add_task("ART1", "a", owner="eddy")
-        db.add_task("ART1", "b", owner="linky")
+        db.add_task("WT360", "a", owner="eddy")
+        db.add_task("WT360", "b", owner="jamie")
         mine = db.list_tasks_for_owner("eddy")
         self.assertEqual([t["title"] for t in mine], ["a"])
 

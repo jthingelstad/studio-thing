@@ -190,7 +190,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     window = db.get_active_issue_window()
     if window is None:
         return _base.JobResult(
-            False, "❌ no active issue window — run `/scout issue start` first.")
+            False, "❌ no active issue window — start one in Studio first.")
     n = int(window["issue_number"])
 
     team = getattr(getattr(ctx, "deps", None), "team", None)

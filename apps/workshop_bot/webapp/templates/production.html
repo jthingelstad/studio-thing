@@ -4,8 +4,8 @@
 {% block content %}
   <div style="display:flex; align-items:baseline; gap:.6rem;">
     <h1 style="flex:1; margin-bottom:.2rem;">{{ row.id }} <span class="ph">{{ phase }}</span></h1>
-    <a class="btn ghost" href="/productions">← all</a>
-    {% if ptype == "newsletter" %}<a class="btn ghost" href="/productions/{{ row.id }}/editor">editor</a>{% endif %}
+    <a class="btn ghost" href="/productions">← issues</a>
+    <a class="btn ghost" href="/productions/{{ row.id }}/editor">editor</a>
     {% if row.status == 'active' %}
       <form method="post" action="/productions/{{ row.id }}/status" style="display:inline;">
         <input type="hidden" name="status" value="paused">
@@ -38,7 +38,6 @@
   </form>
 {% endmacro %}
 
-{% if ptype == "newsletter" %}
   {# ---- status ---- #}
   <div class="secthead"><h2>Status</h2>
     <span class="surface">~{{ state.word_count or 0 }} words
@@ -49,7 +48,7 @@
       <div class="row"><span class="ti">Description</span><span>{{ "✅" if state.description else "☐" }}</span></div>
       <div class="row"><span class="ti">Haiku · Echoes</span><span>{{ "✅" if state.haiku_present else "☐" }} {{ "✅" if state.echoes_present else "☐" }}</span></div>
       <div class="row"><span class="ti">CTA</span><span>{{ state.cta_files|join(", ") or "—" }}</span></div>
-      <div class="row"><span class="ti">Email · Website · Podcast</span><span>{{ "✅ sent" if state.email_shipped else "🟢 ready" if state.gates["publish:email"] else "⛔" }} · {{ "🟢" if state.gates["publish:website"] else "☐" }} · {{ "✅" if state.audio_shipped else "🟢" if state.gates["publish:podcast"] else "☐" }}</span></div>
+      <div class="row"><span class="ti">Email · Website · Audio</span><span>{{ "✅ sent" if state.email_shipped else "🟢 ready" if state.gates["publish:email"] else "⛔" }} · {{ "🟢" if state.gates["publish:website"] else "☐" }} · {{ "✅" if state.audio_shipped else "🟢" if state.gates["publish:podcast"] else "☐" }}</span></div>
     {% else %}
       <div class="row"><span class="ti">Intro · Cover · Outro</span><span>{{ "✅" if state.intro_present else "☐" }} · {{ "✅" if state.cover_present else "☐" }} · {{ "✅" if state.outro_present else "☐" }}</span></div>
       {% for k, lbl in [("notable","Notable"),("journal","Journal"),("brief","Briefly")] %}
@@ -65,7 +64,7 @@
   <div class="card actions" style="flex-wrap:wrap;">
     {% if phase == "planned" %}
       <form method="post" action="/productions/{{ row.id }}/start"><button class="btn">Start working →</button></form>
-      <span class="muted">opens the workspace (seeds the draft, schedules Currently nudges)</span>
+      <span class="muted">opens the issue workspace and runs the first source sync</span>
     {% elif phase in ("write", "build") %}
       <form method="post" action="/productions/{{ row.id }}/phase">
         <input type="hidden" name="phase" value="publish">
@@ -73,7 +72,7 @@
       </form>
       {% if not state.build_ready %}<span class="muted">needs the three sections + intro + cover</span>{% endif %}
     {% elif phase == "publish" %}
-      {% for leg, lbl in [("email","Email"),("website","Website"),("podcast","Podcast"),("all","Ship all")] %}
+      {% for leg, lbl in [("email","Email"),("website","Website"),("audio","Audio"),("all","Ship all")] %}
         <form method="post" action="/productions/{{ row.id }}/publish" style="display:inline;"
               onsubmit="return confirm('Ship {{ lbl }} for {{ row.id }}? This is live.');">
           <input type="hidden" name="leg" value="{{ leg }}"><button class="btn" type="submit">{{ lbl }}</button>
@@ -182,37 +181,4 @@
     {% endfor %}
   </div>
   {% endif %}
-
-{% else %}
-  {# ---- generic (article / podcast / project) ---- #}
-  <div class="secthead"><h2>Phase</h2></div>
-  <div class="card">
-    <form method="post" action="/productions/{{ row.id }}/phase" class="row" style="border:0; gap:.5rem;">
-      <select name="phase">
-        {% for p in phases %}<option {{ "selected" if p == phase else "" }}>{{ p }}</option>{% endfor %}
-      </select>
-      <button class="btn" type="submit">Set phase</button>
-    </form>
-  </div>
-
-  {% if seeds_md %}
-  <div class="secthead"><h2>Raw material</h2><span class="surface">from the idea garden</span></div>
-  <div class="card"><pre style="white-space:pre-wrap; margin:0; font:inherit;">{{ seeds_md }}</pre></div>
-  {% endif %}
-
-  <div class="secthead"><h2>Content</h2>
-    <a class="surface" href="/productions/{{ row.id }}/export">export ↓</a></div>
-  <div class="card">
-    <p class="muted" style="margin-top:0;">You write the words. The studio develops, researches, and edits — never drafts your prose.</p>
-    {% for b in blocks %}{{ block_editor(b, rows=10) }}{% endfor %}
-  </div>
-
-  <div class="secthead"><h2>Preview</h2></div>
-  <div class="card" style="padding:.4rem;">
-    <iframe src="/productions/{{ row.id }}/preview" style="width:100%; height:420px; border:0; border-radius:8px;"></iframe>
-  </div>
-{% endif %}
-
-  {% set chat_key = row.id %}
-  {% include "_chat.html" %}
 {% endblock %}

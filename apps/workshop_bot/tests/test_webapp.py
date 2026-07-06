@@ -1,22 +1,11 @@
-"""Web app: the Discord-markdown line formatter and the Tailscale identity gate."""
+"""Web app: the Tailscale identity gate."""
 
 import unittest
 
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from apps.workshop_bot.webapp import routes, server
-
-
-class FormatTests(unittest.TestCase):
-    def test_bold_code_italic_and_escape(self):
-        self.assertEqual(routes._fmt("**WT350** [build]"), "<strong>WT350</strong> [build]")
-        self.assertEqual(routes._fmt("on `weekly.thingelstad.com`"),
-                         "on <code>weekly.thingelstad.com</code>")
-        self.assertEqual(routes._fmt("*(no in-flight tracker yet)*"),
-                         "<em>(no in-flight tracker yet)</em>")
-        # raw HTML is escaped before formatting
-        self.assertIn("&lt;script&gt;", routes._fmt("<script>"))
+from apps.workshop_bot.webapp import server
 
 
 async def _ok(request):

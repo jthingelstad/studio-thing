@@ -1,4 +1,4 @@
-"""Follow-ups — agent/Jamie commitments, the targeted heartbeat (moved from store.py)."""
+"""Follow-ups — Eddy/Jamie commitments."""
 
 from __future__ import annotations
 
@@ -7,9 +7,9 @@ from typing import Any, Optional
 from .connection import connect
 
 
-# ---------- follow-ups (agent commitments — the targeted heartbeat) ----------
+# ---------- follow-ups ----------
 
-FOLLOW_UP_PERSONAS = ("scout", "eddy", "linky", "marky", "patty")
+FOLLOW_UP_PERSONAS = ("eddy",)
 FOLLOW_UP_KINDS = ("time", "issue")
 
 
@@ -96,5 +96,4 @@ def cancel_follow_up(follow_up_id: int, *, persona: Optional[str] = None) -> boo
     with connect() as conn:
         cur = conn.execute(sql, params)
         return cur.rowcount > 0
-
 

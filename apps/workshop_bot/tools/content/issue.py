@@ -1,9 +1,9 @@
-"""In-flight issue window — operator-set, persisted in SQLite.
+"""In-flight newsletter issue window — persisted in SQLite.
 
 Replaces the old auto-derived resolver (S3 folder names + corpus
-latest). Jamie sets the active window via the ``/scout issue start``
-slash command; agents read it via ``issue__current_window`` and look up
-historical windows via ``issue__list_windows``.
+latest). Jamie sets the active window in Studio; Eddy reads it via
+``issue__current_window`` and can look up historical windows via
+``issue__list_windows``.
 
 Date semantics
 --------------
@@ -29,7 +29,7 @@ from .. import db
 
 
 class IssueWindowError(ValueError):
-    """Raised when ``/scout issue start`` arguments don't validate."""
+    """Raised when issue-window arguments don't validate."""
 
 
 def compute_window(pub_date_iso: str, day_count: int) -> dict[str, Any]:
@@ -75,8 +75,8 @@ def t_current_issue_window(deps) -> dict[str, Any]:
     if row is None:
         return {
             "error": (
-                "No active issue window. Jamie sets this via "
-                "/scout issue start <number> <YYYY-MM-DD> <day_count>."
+                "No active issue window. Jamie starts one in Studio with "
+                "an issue number, Saturday publish date, and day count."
             ),
         }
     return row

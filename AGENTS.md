@@ -5,18 +5,19 @@ overview and `ALIGNMENT.md` for the current cross-repo map.
 
 ## What this repo is
 
-Studio is the **brain** behind Jamie's publishing: the Librarian API behind Thingy, the
-five-agent staff (**Scout, Eddy, Linky, Marky, Patty**) that helps with *all* publishing,
-and the **corpus** of all writing and drafts across every outlet — the blog, Another
-Thing, and the Weekly Thing. Everything downstream — blog, newsletter, podcast, Thingy —
-is a separate **surface** that consumes what Studio produces.
+Studio is the private publishing system for **The Weekly Thing** newsletter. The
+goal is not a general publishing brain; it is to make each newsletter issue
+easy to assemble, review, package, and ship.
 
-Since the 2026-06 rearchitecture, **productions** (newsletter / article / podcast /
-project) are the unit of work, a private tailnet-only **web app** is the work surface
-(Discord is the agents' room), authored content lives in the workshop **DB** (S3 is
-publishing-only), and a **seeds** idea garden feeds new productions. **The one rule:
-Jamie writes every word.** See `apps/workshop_bot/CLAUDE.md` ("The studio now") for the
-full model.
+The first-class work object is a **newsletter issue**. The private tailnet-only
+**web app** is the work surface. Eddy is the only active assistant. Authored
+content lives in the workshop **DB**; S3 is publishing-only. **The one rule:
+Jamie writes every word.** See `apps/workshop_bot/CLAUDE.md` for the current
+runtime model.
+
+Retired from the active product: Scout, Linky, Marky, Patty, generic
+productions, projects, blog-post production, podcast production, seeds,
+gardening, campaigns, and proactive slate/garden check-ins.
 
 The decision rule for where code belongs:
 
@@ -26,8 +27,8 @@ The decision rule for where code belongs:
 
 ## Layout
 
-- `apps/workshop_bot/` — the staff (Scout/Eddy/Linky/Marky/Patty), the productions
-  state engine, the seeds idea garden, and the tailnet web app (`webapp/`). Studio core.
+- `apps/workshop_bot/` — Eddy, the newsletter issue state engine, and the
+  tailnet web app (`webapp/`). Studio core.
 - `apps/librarian/` — Librarian API (Lambda + infra + admin). Deployed from Studio.
 - `librarian-core/` — shared `librarian_core` package (corpus/graph/retrieval/links).
 - `pipeline/` — production: build, stats, status, audio, corpus, graph, deploy.

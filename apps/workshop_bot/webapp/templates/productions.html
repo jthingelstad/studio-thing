@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 {% set nav = "productions" %}
-{% block title %}Productions{% endblock %}
+{% block title %}Newsletter Issues{% endblock %}
 {% block content %}
   <div style="display:flex; align-items:baseline; gap:1rem;">
-    <h1 style="flex:1;">Productions</h1>
-    <a class="btn" href="/productions/new">+ New project</a>
+    <h1 style="flex:1;">Newsletter Issues</h1>
+    <a class="btn" href="/productions/new">+ New issue</a>
   </div>
   <p class="muted">
     {% if show_all %}
-      Everything Scout has produced — in-flight and shipped.
+      Every newsletter issue Studio knows about — in-flight and shipped.
       <a href="/productions">show working view</a>
     {% else %}
-      What Scout is working on now, across every surface — add a new project for any type, or edit
-      one in place. Paused items stay listed; <a href="/productions?all=1">show shipped archive</a>
+      Current and planned newsletter issues. Paused items stay listed;
+      <a href="/productions?all=1">show shipped archive</a>
     {% endif %}
-    <span class="badge">working space</span>
+    <span class="badge">newsletter</span>
   </p>
 
   <form method="post" action="/productions/bulk-status">
@@ -44,7 +44,7 @@
             </div>
           {% endfor %}
         {% else %}
-          <div class="muted">{{ 'No ' + g.label|lower + ' productions yet.' if show_all else 'Nothing in flight.' }}</div>
+          <div class="muted">{{ 'No issues yet.' if show_all else 'No active or planned issues.' }}</div>
         {% endif %}
       </div>
     {% endfor %}

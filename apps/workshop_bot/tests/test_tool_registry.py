@@ -85,9 +85,7 @@ class ToolRegistryCompositionTests(unittest.TestCase):
             "production_content__write",
             "production_content__list",
             "tasks__add",
-            "seeds__cluster",
             "draft__section_status",
-            "site__support_state",
             "web__fetch_url",
         ):
             self.assertIn(tool, names)
@@ -110,6 +108,10 @@ class ToolRegistryCompositionTests(unittest.TestCase):
             "workspace__read", "workspace__write",
             "thingy__list_conversations", "thingy__get_conversation",
             "thingy__sync", "thingy__chat", "thingy__feedback",
+            "seeds__add", "seeds__list", "seeds__cluster", "seeds__graduate",
+            "site__support_state",
+            "campaigns__list", "campaigns__get", "campaigns__history",
+            "campaigns__set_actual_signups",
         ):
             self.assertNotIn(gone, names, msg=f"decommissioned tool {gone!r} should be gone")
         # Defense-in-depth: no thingy_* name at all should appear in

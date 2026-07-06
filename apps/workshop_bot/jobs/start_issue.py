@@ -210,7 +210,7 @@ async def run(
     day_count: int = 7,
     set_by: Optional[str] = None,
 ) -> "_base.JobResult":
-    """One-shot define + start_working (the legacy `/scout issue start`)."""
+    """One-shot define + start_working."""
     res = await define(ctx, number=number, pub_date=pub_date, day_count=day_count, set_by=set_by)
     if not res.ok:
         return res

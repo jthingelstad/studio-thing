@@ -1,9 +1,7 @@
 """Web app routes.
 
-- ``/``                       Scout's production slate (read-only, reuses
-                             ``jobs.scout_slate.snapshot()``).
-- ``/productions``           the productions registry — add / edit projects of
-                             any type (the shared working space's first CRUD).
+- ``/``                       current newsletter issue, or the issue list.
+- ``/productions``           newsletter issue registry (legacy route name).
 
 Forms POST to handlers that route through the same ``db`` helpers + jobs the
 Discord surface uses, so the web app and the agents edit the same rows. Identity
@@ -14,35 +12,17 @@ POST (the only residual CSRF vector behind the tailnet + Tailscale-identity gate
 from __future__ import annotations
 
 import asyncio
-import html
 import json
 import logging
-import re
 
 from aiohttp import web
 
-from ..jobs import (
-    _base, production_ops, production_state, publish, put_to_bed, scout_slate, start_issue,
-)
+from ..jobs import _base, production_ops, production_state, publish, put_to_bed, start_issue
 from ..tools import content_store, db, issue_items, s3
 from ..tools.content import atoms_view
 from ..tools.content import production_types as ptypes
 from . import server
 from .render import render
-
-# The slate lines are Discord-flavored markdown; render a safe subset for the web.
-_BOLD = re.compile(r"\*\*(.+?)\*\*")
-_CODE = re.compile(r"`([^`]+)`")
-_ITALIC = re.compile(r"(?<![*\w])\*(?!\*)(.+?)(?<!\*)\*(?![*\w])")
-
-
-def _fmt(line: str) -> str:
-    s = html.escape(line)
-    s = _BOLD.sub(r"<strong>\1</strong>", s)
-    s = _ITALIC.sub(r"<em>\1</em>", s)
-    s = _CODE.sub(r"<code>\1</code>", s)
-    return s
-
 
 def _login(request: web.Request) -> str:
     """The signed-in Tailscale login (guaranteed present by the middleware)."""
@@ -62,40 +42,30 @@ def _same_origin(request: web.Request) -> bool:
     )
 
 
-# ---------- the slate (page one, unchanged) ----------
+# ---------- home ----------
 
 
 async def healthz(request: web.Request) -> web.Response:
     return web.Response(text="ok\n")
 
 
-async def slate_page(request: web.Request) -> web.Response:
-    lines, data = await asyncio.to_thread(scout_slate.snapshot)
-    rows = [{"html": _fmt(line), "child": line.startswith(("  ", " ")) or "└" in line}
-            for line in lines]
-    return render("slate.html", request, rows=rows, data=data)
+async def home_page(request: web.Request) -> web.Response:
+    win = await asyncio.to_thread(db.get_active_issue_window)
+    if win:
+        raise web.HTTPFound(f"/productions/WT{int(win['issue_number'])}")
+    raise web.HTTPFound("/productions")
 
 
-# ---------- productions registry (add / edit) ----------
+# ---------- newsletter issue registry (add / edit) ----------
 
 # Ordered (key, label) for the type selector / list grouping.
-_TYPE_ORDER = ("newsletter", "article", "podcast", "project")
+_TYPE_ORDER = ("newsletter",)
 _PHASES_JSON = json.dumps({k: list(ptypes.phases_for(k)) for k in _TYPE_ORDER})
 
 
-def _details_from_form(data) -> dict:
-    """Collect per-type detail fields (any ``detail_*`` input) into a dict."""
-    out = {}
-    for key, val in data.items():
-        if key.startswith("detail_") and isinstance(val, str) and val.strip():
-            out[key[len("detail_"):]] = val.strip()
-    return out
-
-
 async def productions_list(request: web.Request) -> web.Response:
-    # The working space shows in-flight productions by default; the shipped
-    # archive (every put-to-bed newsletter, backfilled) is tucked behind ?all=1
-    # so the page doesn't drown in 14 years of done issues.
+    # The working view shows in-flight issues by default; the shipped archive is
+    # tucked behind ?all=1 so the page doesn't drown in 14 years of done issues.
     show_all = request.query.get("all") == "1"
     rows = await asyncio.to_thread(db.list_productions, limit=2000)
     groups = []
@@ -178,42 +148,27 @@ async def production_create(request: web.Request) -> web.Response:
         raise web.HTTPForbidden(text="bad origin")
     data = await request.post()
     login = _login(request)
-    ptype = data.get("production_type", "")
+    ptype = data.get("production_type", "newsletter") or "newsletter"
     title = (data.get("title") or "").strip()
     if ptype not in ptypes.PRODUCTION_TYPES:
         return _render_form(request, mode="new", error="Unknown production type.", status=400)
     if not title:
         return _render_form(request, mode="new", error="Title is required.", status=400)
 
-    if ptype == "newsletter":
-        # Define the newsletter as *planned* — a DB row only, no workspace.
-        # "Start working" (on the project page) seeds the pipeline later.
-        try:
-            seq = int(data.get("seq") or 0)
-        except (TypeError, ValueError):
-            return _render_form(request, mode="new", error="Issue number must be an integer.", status=400)
-        pub_date = (data.get("pub_date") or "").strip()
-        day_count = int(data.get("day_count") or 7)
-        ctx = _base.JobContext(deps=request.app.get(server.DEPS), trigger="web")
-        res = await start_issue.define(ctx, number=seq, pub_date=pub_date,
-                                       day_count=day_count, set_by=login or "web")
-        if not res.ok:
-            return _render_form(request, mode="new", error=res.message, status=400)
-        raise web.HTTPFound(f"/productions/WT{seq}")
-
-    phase = data.get("phase") or ptypes.default_phase(ptype)
-    if not ptypes.is_valid_phase(ptype, phase):
-        return _render_form(request, mode="new", error=f"Invalid phase for {ptype}.", status=400)
-    seq_raw = data.get("seq")
-    seq = int(seq_raw) if seq_raw else None
-    row = await asyncio.to_thread(
-        db.create_production,
-        production_type=ptype, title=title, seq=seq, phase=phase,
-        due_at=(data.get("due_at") or None),
-        details=(_details_from_form(data) or None),
-        created_by=login,
-    )
-    raise web.HTTPFound(f"/productions/{row['id']}/edit")
+    # Define the newsletter as *planned* — a DB row only, no workspace.
+    # "Start working" (on the issue page) opens the live pipeline later.
+    try:
+        seq = int(data.get("seq") or 0)
+    except (TypeError, ValueError):
+        return _render_form(request, mode="new", error="Issue number must be an integer.", status=400)
+    pub_date = (data.get("pub_date") or "").strip()
+    day_count = int(data.get("day_count") or 7)
+    ctx = _base.JobContext(deps=request.app.get(server.DEPS), trigger="web")
+    res = await start_issue.define(ctx, number=seq, pub_date=pub_date,
+                                   day_count=day_count, set_by=login or "web")
+    if not res.ok:
+        return _render_form(request, mode="new", error=res.message, status=400)
+    raise web.HTTPFound(f"/productions/WT{seq}")
 
 
 async def production_update(request: web.Request) -> web.Response:
@@ -230,23 +185,13 @@ async def production_update(request: web.Request) -> web.Response:
     phase = data.get("phase") or None
 
     try:
-        if ptype == "newsletter":
-            # Phase changes go through the window (set_issue_phase mirrors the
-            # registry); the live publish state stays authoritative in issue_windows.
-            if phase and phase != row["phase"]:
-                await asyncio.to_thread(db.set_issue_phase, int(row["seq"]), phase)
-            await asyncio.to_thread(db.update_production, pid, title=title, updated_by=login)
-        else:
-            if phase and phase != row["phase"]:
-                await asyncio.to_thread(db.set_production_phase, pid, phase, updated_by=login)
-            await asyncio.to_thread(
-                db.update_production, pid,
-                title=title,
-                due_at=(data.get("due_at") or None),
-                status=(data.get("status") or None),
-                details=(_details_from_form(data) or None),
-                updated_by=login,
-            )
+        if ptype != "newsletter":
+            raise ValueError("Studio only supports newsletter issues.")
+        # Phase changes go through the window (set_issue_phase mirrors the
+        # registry); the live publish state stays authoritative in issue_windows.
+        if phase and phase != row["phase"]:
+            await asyncio.to_thread(db.set_issue_phase, int(row["seq"]), phase)
+        await asyncio.to_thread(db.update_production, pid, title=title, updated_by=login)
     except ValueError as exc:
         return _render_form(request, mode="edit", row=row, error=str(exc), status=400)
     raise web.HTTPFound("/productions")
@@ -370,14 +315,6 @@ _NEWSLETTER_BLOCKS = [
     ("echoes.md", "Echoes"),
     ("cta-1.md", "CTA · slot 1"), ("cta-2.md", "CTA · slot 2"), ("thanks-1.md", "Thanks"),
 ]
-# Authored content blocks for the non-newsletter types.
-_GENERIC_BLOCKS = {
-    "article": [("body.md", "Body")],
-    "podcast": [("script.md", "Script"), ("notes.md", "Show notes")],
-    "project": [("notes.md", "Notes")],
-}
-
-
 def _ctx(request):
     return _base.JobContext(deps=request.app.get(server.DEPS), trigger="web")
 
@@ -410,24 +347,14 @@ def _newsletter_page_data(row) -> dict:
     }
 
 
-def _generic_page_data(row) -> dict:
-    pid = row["id"]
-    blocks = [{"name": name, "label": label, "value": content_store.get(pid, name) or ""}
-              for name, label in _GENERIC_BLOCKS.get(row["production_type"], [])]
-    return {
-        "row": row, "ptype": row["production_type"], "phase": row["phase"], "blocks": blocks,
-        "phases": list(ptypes.phases_for(row["production_type"])),
-        "seeds_md": content_store.get(pid, "seeds.md"),
-    }
-
-
 async def production_page(request: web.Request) -> web.Response:
     pid = request.match_info["pid"]
     row = await asyncio.to_thread(db.get_production, pid)
     if not row:
         raise web.HTTPNotFound(text=f"no such production: {pid}")
-    builder = _newsletter_page_data if row["production_type"] == "newsletter" else _generic_page_data
-    data = await asyncio.to_thread(builder, row)
+    if row["production_type"] != "newsletter":
+        raise web.HTTPGone(text="Studio now only supports newsletter issues.")
+    data = await asyncio.to_thread(_newsletter_page_data, row)
     return render("production.html", request, **data)
 
 
@@ -523,45 +450,20 @@ async def production_phase(request: web.Request) -> web.Response:
     target = (data.get("phase") or "").strip()
     ctx = _ctx(request)
     try:
-        if row["production_type"] == "newsletter":
-            n, cur = int(row["seq"]), row["phase"]
-            if target == "publish" and cur == "build":
-                await production_ops.mark_built(ctx, n)
-            elif target == "build" and cur == "publish":
-                await production_ops.reopen(ctx, n)
-            elif target == "build" and cur in ("planned", "write"):
-                await start_issue.start_working(ctx, n, set_by=_login(request))
-            else:
-                await asyncio.to_thread(db.set_issue_phase, n, target)
+        if row["production_type"] != "newsletter":
+            raise ValueError("Studio now only supports newsletter issues.")
+        n, cur = int(row["seq"]), row["phase"]
+        if target == "publish" and cur == "build":
+            await production_ops.mark_built(ctx, n)
+        elif target == "build" and cur == "publish":
+            await production_ops.reopen(ctx, n)
+        elif target == "build" and cur in ("planned", "write"):
+            await start_issue.start_working(ctx, n, set_by=_login(request))
         else:
-            await asyncio.to_thread(db.set_production_phase, row["id"], target,
-                                    updated_by=_login(request))
+            await asyncio.to_thread(db.set_issue_phase, n, target)
     except ValueError as exc:
         raise web.HTTPBadRequest(text=str(exc))
     raise web.HTTPFound(f"/productions/{row['id']}")
-
-
-def _export_doc(row) -> tuple[str, str]:
-    """Build the handoff markdown for a production + its filename."""
-    pid, ptype, title = row["id"], row["production_type"], row["title"]
-    if ptype == "podcast":
-        script = content_store.get(pid, "script.md") or ""
-        notes = content_store.get(pid, "notes.md") or ""
-        doc = f"# {title}\n\n## Script\n\n{script}\n\n## Show notes\n\n{notes}\n"
-    else:  # article / project (and any other) — a single body
-        body = content_store.get(pid, "body.md") or content_store.get(pid, "notes.md") or ""
-        doc = f"# {title}\n\n{body}\n"
-    return doc, f"{pid}.md"
-
-
-async def production_export(request: web.Request) -> web.Response:
-    """Hand off the finished piece — a clean Markdown download to publish
-    manually (Micro.blog for an article, the Another repo for a podcast).
-    Publishing stays manual; this is the export at the handoff point."""
-    row = await _load_row(request)
-    doc, fname = await asyncio.to_thread(_export_doc, row)
-    return web.Response(text=doc, content_type="text/markdown",
-                        headers={"Content-Disposition": f'attachment; filename="{fname}"'})
 
 
 async def production_preview(request: web.Request) -> web.Response:
@@ -571,13 +473,10 @@ async def production_preview(request: web.Request) -> web.Response:
     from ..tools import render, renderers
     row = await _load_row(request)
     pid = row["id"]
-    if row["production_type"] == "newsletter":
-        body = await asyncio.to_thread(renderers.render_body_for_issue, int(row["seq"]))
-        subtitle = f"{pid} · rendered live from the DB"
-    else:
-        body = (content_store.get(pid, "body.md") or content_store.get(pid, "script.md")
-                or content_store.get(pid, "notes.md") or "")
-        subtitle = f"{pid} · {row['production_type']}"
+    if row["production_type"] != "newsletter":
+        raise web.HTTPGone(text="Studio now only supports newsletter issues.")
+    body = await asyncio.to_thread(renderers.render_body_for_issue, int(row["seq"]))
+    subtitle = f"{pid} · rendered live from the DB"
     html_doc = await asyncio.to_thread(
         render.markdown_to_html_page, body or "_(nothing written yet — this is yours to write)_",
         title=row["title"], subtitle=subtitle)
@@ -596,7 +495,8 @@ async def production_publish(request: web.Request) -> web.Response:
     legs = {
         "email": publish.publish_buttondown,
         "website": publish.publish_website,
-        "podcast": publish.publish_audio,
+        "audio": publish.publish_audio,
+        "podcast": publish.publish_audio,  # legacy form value
         "all": publish.publish_all,
     }
     if leg == "bed":
@@ -678,98 +578,21 @@ async def production_cover_upload(request: web.Request) -> web.Response:
     raise web.HTTPFound(f"/productions/{row['id']}")
 
 
-# ---------- the seeds garden ----------
-
-async def seeds_page(request: web.Request) -> web.Response:
-    clusters, ungrouped = await asyncio.to_thread(_seeds_garden_data)
-    return render("seeds.html", request, clusters=clusters, ungrouped=ungrouped)
-
-
-def _seeds_garden_data():
-    clusters = []
-    for c in db.seed_cluster_list(status="open"):
-        full = db.seed_cluster_get(c["id"])
-        clusters.append(full)
-    ungrouped = [s for s in db.seed_list(status="open") if s.get("cluster_id") is None]
-    return clusters, ungrouped
-
-
-async def seeds_add(request: web.Request) -> web.Response:
-    if not _same_origin(request):
-        raise web.HTTPForbidden(text="bad origin")
-    data = await request.post()
-    body = (data.get("body") or "").strip()
-    if body:
-        title = (data.get("title") or "").strip() or None
-        await asyncio.to_thread(db.seed_add, body, title=title, source="web",
-                                created_by=_login(request))
-    raise web.HTTPFound("/seeds")
-
-
-async def seeds_tend(request: web.Request) -> web.Response:
-    """Run Eddy's garden tending pass (the Monday ``garden-checkin`` job) on
-    demand: he clusters/curates the loose seeds with the seeds tools and posts
-    a report to #editorial unless the garden is tidy (PASS)."""
-    if not _same_origin(request):
-        raise web.HTTPForbidden(text="bad origin")
-    from ..jobs import garden_checkin
-    await garden_checkin.run(_ctx(request))
-    raise web.HTTPFound("/seeds")
-
-
-async def seeds_continuity(request: web.Request) -> web.Response:
-    """Continuity-while-you-write for a seed: surface what Jamie has already
-    published on this idea (via ``continuity_check``) so he can build on or
-    push against his prior takes. Eddy's note lands in #editorial."""
-    if not _same_origin(request):
-        raise web.HTTPForbidden(text="bad origin")
-    seed_id = request.match_info["seed_id"]
-    seed = await asyncio.to_thread(db.seed_get, int(seed_id))
-    if not seed:
-        raise web.HTTPNotFound(text=f"no such seed: {seed_id}")
-    from ..jobs import continuity_check
-    label = f"seed: {seed.get('title') or seed['id']}"
-    await continuity_check.run_for_text(_ctx(request), text=seed.get("body") or "", label=label)
-    raise web.HTTPFound("/seeds")
-
-
-async def seeds_graduate(request: web.Request) -> web.Response:
-    if not _same_origin(request):
-        raise web.HTTPForbidden(text="bad origin")
-    data = await request.post()
-    cluster_id = data.get("cluster_id")
-    ptype = data.get("production_type", "article")
-    title = (data.get("title") or "").strip()
-    if cluster_id and title:
-        from ..tools.llm import local_tools
-        await asyncio.to_thread(local_tools.t_seeds_graduate, None, ptype, title,
-                                int(cluster_id))
-    raise web.HTTPFound("/seeds")
-
-
-# ---------- in-web chat (work with the agents on one screen) ----------
+# ---------- in-web Eddy chat (secondary/ad-hoc) ----------
 
 _CHAT_TASKS: set = set()
-_CHAT_PERSONAS = ("eddy", "scout", "linky", "marky", "patty")
+_CHAT_PERSONAS = ("eddy",)
 
 
 def _chat_context_block(context_key: str) -> str:
     """Tell the agent what it's working on, injected ahead of Jamie's message."""
-    if context_key == "seeds":
-        clusters = db.seed_cluster_list(status="open")
-        loose = [s for s in db.seed_list(status="open") if s.get("cluster_id") is None]
-        return (f"## Context — Jamie's seeds garden\nYou're tending the idea garden: "
-                f"{len(loose)} unclustered seeds, {len(clusters)} clusters. Use the seeds__* "
-                f"tools to curate / cluster / connect to his archive / route to a type. "
-                f"Remember: Jamie writes the prose; you develop the ideas.")
     row = db.get_production(context_key)
     if not row:
         return ""
     names = content_store.list(row["id"])
-    return (f"## Context — production {row['id']} ({row['production_type']}, "
-            f"phase {row['phase']})\nTitle: {row['title']}. Content blocks: "
-            f"{', '.join(names) or '(none yet)'}. Use production_content__* / tasks__* to "
-            f"work it. Jamie writes the prose; you develop, research, structure, and edit.")
+    return (f"## Context — newsletter issue {row['id']} (phase {row['phase']})\n"
+            f"Title: {row['title']}. Content blocks: {', '.join(names) or '(none yet)'}. "
+            "Jamie writes the prose; you review, package, and help ship the issue.")
 
 
 async def _run_agent_chat(app, context_key: str, persona: str, message: str, prior: list) -> None:
@@ -782,7 +605,7 @@ async def _run_agent_chat(app, context_key: str, persona: str, message: str, pri
         if bot is None:
             await asyncio.to_thread(
                 db.chat_add, context_key, "assistant",
-                "_(the agents aren't reachable from the web app right now — talk to them in Discord)_",
+                "_(Eddy is not reachable from the web app right now.)_",
                 persona=persona)
             return
         ctx_block = await asyncio.to_thread(_chat_context_block, context_key)
@@ -831,14 +654,9 @@ async def chat_get(request: web.Request) -> web.Response:
 def add_routes(app: web.Application) -> None:
     app.add_routes([
         web.get("/healthz", healthz),
-        web.get("/", slate_page),
+        web.get("/", home_page),
         web.get("/chat", chat_get),
         web.post("/chat", chat_post),
-        web.get("/seeds", seeds_page),
-        web.post("/seeds/add", seeds_add),
-        web.post("/seeds/tend", seeds_tend),
-        web.post("/seeds/{seed_id}/continuity", seeds_continuity),
-        web.post("/seeds/graduate", seeds_graduate),
         web.get("/productions", productions_list),
         web.post("/productions/bulk-status", productions_bulk_status),
         web.get("/productions/new", production_new_form),
@@ -849,7 +667,6 @@ def add_routes(app: web.Application) -> None:
         web.post("/productions/{pid}/editor/flip", editor_item_flip),
         web.post("/productions/{pid}/editor/select", editor_item_select),
         web.post("/productions/{pid}/editor/move", editor_item_move),
-        web.get("/productions/{pid}/export", production_export),
         web.get("/productions/{pid}/preview", production_preview),
         web.get("/productions/{pid}/edit", production_edit_form),
         web.post("/productions/{pid}/edit", production_update),

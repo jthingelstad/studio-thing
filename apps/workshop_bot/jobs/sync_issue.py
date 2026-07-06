@@ -13,8 +13,7 @@ draft.md projection, daily artifact renders, the S3 draft.html preview, the
 embedded Opus review — was the S3-collaboration era and is gone: see
 ``eddy-review`` for the on-demand review).
 
-Triggers: daily 17:00 CT cron, ``/scout issue update``, the web editor's
-Sync button.
+Triggers: daily 17:00 CT cron and the web editor's Sync button.
 """
 
 from __future__ import annotations
@@ -48,7 +47,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     if window is None:
         return _base.JobResult(
             False,
-            "❌ no active issue window — run `/scout issue start <n> <pub-date> <days>` first.",
+            "❌ no active issue window — start one in Studio first.",
         )
     n = int(window["issue_number"])
 

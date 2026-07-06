@@ -1,70 +1,76 @@
 # Studio
 
-The **brain** behind Jamie Thingelstad's publishing. Studio is where capture,
-research, the editorial source of truth, production, and the authoring staff live.
-Everything downstream of it — the blog, the newsletter, the podcast, Thingy — is a
-**surface** that consumes what Studio produces.
+Studio is the private publishing website for **The Weekly Thing** newsletter.
+Its job is narrow: help Jamie assemble, review, package, publish, and file each
+newsletter issue.
 
-> **The rule that decides where anything goes:** if it's a publishing surface, it's
-> its own repo/host, downstream. If it's *upstream* of publishing — capture, research,
-> the editorial source of truth, production, or the staff — it lives here in Studio.
+The current product is intentionally smaller than the earlier "publishing
+brain" model:
 
-This repo was extracted from the `weekly.thingelstad.com` monorepo with
-`git filter-repo`, so **history and blame are preserved** for everything it contains.
-See `ALIGNMENT.md` for the current architecture map. `STUDIO_MIGRATION_PLAN.md`
-and the phase runbooks remain as historical migration records.
+- The newsletter issue is the unit of work.
+- The Studio web app is the primary work surface.
+- Eddy is the only assistant.
+- Jamie writes every word.
+- Blog posts, podcast episodes, projects, seeds, and idea gardening are out of
+  scope.
+
+Everything downstream remains a surface. Studio prepares and ships canonical
+newsletter artifacts; `weekly.thingelstad.com` renders and publishes the public
+site.
 
 ## Architecture
 
-One brain, several surfaces.
+| Repo / host | Role |
+|---|---|
+| **Studio** (this repo) | Private newsletter publishing app, issue source of truth, publish pipeline, Librarian API/corpus build inputs |
+| weekly.thingelstad.com | Public newsletter site and archive render surface |
+| thingy.thingelstad.com | Query surface backed by the Librarian API |
 
-| Repo / host | Role | Class |
-|---|---|---|
-| **Studio** (this repo) | Brain: authoring staff, production pipeline, editorial source of truth, corpus, Librarian API | hub |
-| thingelstad.com | Blog on Micro.blog | publish surface (no repo) |
-| another.thingelstad.com | Podcast, custom site | publish surface (own repo) |
-| weekly.thingelstad.com | Newsletter site (11ty) + audio links | publish surface (own repo) |
-| thingy.thingelstad.com | Thingy web UI + Discord bridge | query surface (own repo) |
-
-**Two classes of surface:**
-
-- **Publishing surfaces** (blog, newsletter, podcast) consume **static artifacts** —
-  committed files and feeds. No live dependency on Studio.
-- **Query surface** (Thingy) is a **live client** of the Librarian API at runtime. That
-  makes the **Librarian API a versioned contract**, not just an internal function.
-
-## What's in here
+## What's Here
 
 | Path | What it is |
 |---|---|
-| `apps/workshop_bot/` | The authoring staff (Scout / Eddy / Linky / Marky / Patty) — Discord-based agents that help produce each issue. The Studio core. |
-| `apps/librarian/` | The Librarian API: Lambda, infra, conversations, eval, and admin. Deployed from Studio; queried live by Thingy. |
-| `librarian-core/` | The shared `librarian_core` Python package — corpus, graph, retrieval, links. The library behind the API and the pipeline. |
-| `pipeline/` | Production: build, stats, status, audio, corpus, graph, deploy. |
-| `data/issues/` | Editorial source of truth — the canonical per-issue content. |
-| `data/audio/` | Audio production source: manifest, scripts, bumpers. |
-| `data/blog/` | Blog drafts and post archive; feeds the blog corpus and the future Micropub publish pipeline. |
-| `data/podcast/` | Normalized Another Thing episode metadata and transcripts for the podcast corpus. |
-| `content/buttondown/` | Author-managed Buttondown newsletter config (automations, transactional, theme). |
-| `docs/librarian-tasks.md` | Backend follow-ups for the Librarian API. The Thingy product roadmap lives in `thingy.thingelstad.com/docs/ROADMAP.md`. |
-| `docs/`, `notes/`, `reference/` | Architecture, staff, and editorial reference. |
-| `tests/` | Python tests covering librarian / corpus / content / audio. |
-| `Makefile`, `requirements.txt` | Production command surface and Python deps. |
+| `apps/workshop_bot/` | Studio web app, Eddy runtime, newsletter issue jobs, and the workshop DB |
+| `apps/librarian/` | Librarian API Lambda + infra |
+| `librarian-core/` | Shared corpus/graph/retrieval package |
+| `pipeline/` | Build, audio, corpus, graph, deploy, and weekly handoff pipeline |
+| `data/issues/` | Canonical shipped issue content |
+| `data/audio/` | Audio production source and manifest |
+| `content/buttondown/` | Buttondown newsletter config |
+| `docs/`, `notes/`, `reference/` | Architecture and editorial reference |
+| `tests/` | Python tests |
 
-## Status: live producer
+## Newsletter Flow
 
-Studio is now the canonical production source. The authoring bot commits canonical
-issue content here; this repo's production workflow builds the archive, Weekly Thing
-corpus, podcast corpus, graph, and status artifacts, deploys the Librarian runtime
-when needed, and hands generated 11ty inputs to `weekly.thingelstad.com`. Audio is
-rendered by the workshop bot during publish and tracked in `data/audio/manifest.json`.
-Weekly is a render surface: it receives those inputs, refreshes its own landing-page
-stats, builds Eleventy + Pagefind, and deploys to GitHub Pages.
+1. Define or open the current issue in Studio.
+2. Sync sources into the issue DB from Pinboard and micro.blog.
+3. Edit issue atoms and item ordering in the web UI.
+4. Preview the issue live from the DB.
+5. Run Eddy's on-demand editorial review when useful.
+6. Save the email envelope and shipping fields.
+7. Publish email, website, and audio from the Studio web UI.
+8. Put the issue to bed so it is filed into the local issue data layer.
 
-External publishing surfaces sync back into Studio before they become part of
-Thingy's API corpus. The `Studio — Sync External Content` workflow ingests new
-thingelstad.com posts from Micro.blog into `data/blog/posts/` and imports Another
-Thing episode metadata/transcripts from the podcast repo into
-`data/podcast/another-thing/episodes/`. Those commits trigger the production
-workflow, which rebuilds and uploads the Weekly Thing, blog, and podcast corpus
-artifacts for the Librarian API.
+The DB is the draft. There is no S3 collaboration layer, no Shortcuts pipeline,
+and no separate idea-garden workflow.
+
+## Development
+
+Use the repo-local virtualenv:
+
+```sh
+venv/bin/python
+venv/bin/pytest
+```
+
+Run the workshop tests from the repo root:
+
+```sh
+venv/bin/python -m unittest discover -s apps/workshop_bot/tests -t .
+```
+
+Before editing, check for user work:
+
+```sh
+git status --short
+```

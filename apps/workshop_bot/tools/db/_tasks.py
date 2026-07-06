@@ -1,10 +1,7 @@
-"""Production tasks — the interactive half of the production state engine.
+"""Newsletter issue tasks.
 
-A production is phase + content + tasks. These are the *added/assigned* tasks
-(the `origin='computed'` required tasks are projected from content state by
-``jobs/scout_production_feed.py`` and never stored). Each task has an owner
-(``jamie`` or one of the five agents) and a status; agents claim + complete
-their owned tasks via the ``tasks__*`` agent tools and the web task board.
+An issue is phase + content + tasks. Each task has an owner (``jamie`` or
+``eddy``) and a status.
 """
 
 from __future__ import annotations
@@ -13,7 +10,7 @@ from typing import Any, Optional
 
 from .connection import connect
 
-TASK_OWNERS = ("jamie", "scout", "eddy", "linky", "marky", "patty")
+TASK_OWNERS = ("jamie", "eddy")
 TASK_STATUSES = ("todo", "doing", "done", "blocked")
 
 _COLUMNS = (

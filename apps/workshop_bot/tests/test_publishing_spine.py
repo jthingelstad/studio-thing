@@ -30,7 +30,6 @@ from apps.workshop_bot.jobs import (  # noqa: E402
     compose_envelope,
     production_ops,
     production_state,
-    promotion_prep,
     put_to_bed,
 )
 from apps.workshop_bot.tools import content_store, db, renderers  # noqa: E402
@@ -218,8 +217,7 @@ class PublishStateTests(_DBTestCase):
 
 
 class PutToBedTests(_DBTestCase):
-    """`put-to-bed` files the shipped issue and hands off to Marky by firing
-    promotion-prep. (The card clear / Share-card post were retired.)"""
+    """`put-to-bed` files the shipped issue and closes the active window."""
 
     def _seed_filing_artifacts(self, n=458):
         issues_dir = Path(self._tmpdir.name) / "data" / "issues" / str(n)
@@ -240,7 +238,7 @@ class PutToBedTests(_DBTestCase):
         audio_path.write_text(json.dumps({str(n): {}}), encoding="utf-8")
         return issues_dir.parent, audio_path
 
-    def test_put_to_bed_files_issue_and_fires_promotion_prep(self):
+    def test_put_to_bed_files_issue(self):
         n = 458
         _window(n)
         db.set_issue_phase(n, "publish")
@@ -248,35 +246,28 @@ class PutToBedTests(_DBTestCase):
         ctx = _base.JobContext()
         with patch.object(put_to_bed, "ISSUES_ROOT", issues_root), \
              patch.object(put_to_bed, "AUDIO_MANIFEST", audio_manifest), \
-             patch.object(promotion_prep, "run", new=AsyncMock(return_value=_OK)) as mock_prep, \
              patch.object(ctx, "post", new=AsyncMock(return_value=True)):
             res = asyncio.run(put_to_bed.run(ctx))
         self.assertTrue(res.ok, res.message)
-        # Window is closed; issue filed; promotion-prep auto-fired.
+        # Window is closed; issue filed.
         self.assertIsNone(db.get_active_issue_window())
-        mock_prep.assert_awaited_once()
         latest = db.get_latest_issue()
         self.assertIsNotNone(latest)
         self.assertEqual(int(latest["number"]), n)
 
-    def test_promotion_prep_failure_does_not_undo_the_filing(self):
-        # The handoff is best-effort: if promotion-prep raises, the issue is
-        # still filed and the window still closed.
+    def test_missing_metadata_refuses_without_closing_window(self):
         n = 458
         _window(n)
         db.set_issue_phase(n, "publish")
-        issues_root, audio_manifest = self._seed_filing_artifacts(n)
+        issues_root = Path(self._tmpdir.name) / "data" / "issues"
+        audio_manifest = Path(self._tmpdir.name) / "data" / "audio" / "manifest.json"
         ctx = _base.JobContext()
         with patch.object(put_to_bed, "ISSUES_ROOT", issues_root), \
              patch.object(put_to_bed, "AUDIO_MANIFEST", audio_manifest), \
-             patch.object(promotion_prep, "run", new=AsyncMock(side_effect=RuntimeError("down"))), \
              patch.object(ctx, "post", new=AsyncMock(return_value=True)):
             res = asyncio.run(put_to_bed.run(ctx))
-        self.assertTrue(res.ok, res.message)
-        self.assertIsNone(db.get_active_issue_window())
-        latest = db.get_latest_issue()
-        self.assertIsNotNone(latest)
-        self.assertEqual(int(latest["number"]), n)
+        self.assertFalse(res.ok)
+        self.assertIsNotNone(db.get_active_issue_window())
 
 
 class EchoesRenameTests(unittest.TestCase):

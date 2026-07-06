@@ -253,7 +253,7 @@ class PersonaBot(discord.Client):
 
         ``first_turn_tool_choice`` (e.g. ``{"type": "any"}``) forces a tool
         call on the opening turn for work-not-chat jobs that otherwise
-        narrate a plan and never act (see ``garden-tend``).
+        narrate a plan and never act.
 
         ``latest`` is the user-message payload — typically a plain string,
         but callers can pass a list of Anthropic content blocks when they

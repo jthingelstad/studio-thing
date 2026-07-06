@@ -523,22 +523,22 @@ class CampaignAgentToolTests(_DBCase):
         out = self.at.t_campaigns_set_actual_signups(deps=None, name="nope", signups=0)
         self.assertIn("error", out)
 
-    def test_tools_registered_in_funcs_specs(self):
+    def test_campaign_tools_are_retired_from_agent_registry(self):
         for name in (
             "campaigns__list",
             "campaigns__get",
             "campaigns__history",
             "campaigns__set_actual_signups",
         ):
-            self.assertIn(name, self.at.FUNCS, name)
-            self.assertIn(name, self.at.SPECS, name)
+            self.assertNotIn(name, self.at.FUNCS, name)
+            self.assertIn(name, self.at.SPECS, name)  # legacy schema kept for direct helper tests
 
 
 class WiringTests(unittest.TestCase):
-    def test_scheduler_has_daily_metrics_and_no_heartbeats(self):
+    def test_scheduler_retired_daily_metrics_and_heartbeats(self):
         from apps.workshop_bot.scheduler import jobs as J
         ids = {j.id for j in J.JOBS}
-        self.assertIn("marky-daily-metrics", ids)
+        self.assertNotIn("marky-daily-metrics", ids)
         for hb in ("marky-heartbeat", "eddy-heartbeat", "patty-heartbeat", "linky-heartbeat"):
             self.assertNotIn(hb, ids)
 

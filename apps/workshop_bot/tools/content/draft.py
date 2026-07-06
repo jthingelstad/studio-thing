@@ -27,7 +27,7 @@ SECTION_BLOCKS = (
     "outro", "haiku",
 )
 
-# Atoms that ``/scout issue publish buttondown`` refuses without (the
+# Atoms that Publish Email refuses without (the
 # Notable/Brief/Journal *sections* are checked from draft blocks, not
 # from a file). ``final.md`` is gone — section ordering and promotions
 # live in the DB now.

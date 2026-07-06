@@ -67,21 +67,15 @@ NAME = "reorder"
 
 _NEXT_STEPS = (
     "Next, in any order: `/eddy issue haiku`, `/eddy issue subject`, "
-    "`/patty cta` — then `/scout issue publish` (it'll list "
-    "anything still missing if you run it early)."
+    "then publish from Studio (it'll list anything still missing if you run it early)."
 )
 
-# When reorder lands with declared membership-block slots, the
-# next deterministic step is compose-cta (Patty filling each slot).
-# WT348 surfaced this as a forgetting-Patty failure mode: Jamie
-# skipped /patty cta entirely and the shipped issue went out without
-# the supporter CTA / premium thanks. Auto-firing it as a background
-# task removes the remember-to-run gap without taking the pick
-# decision away from Jamie (each slot still prompts him in
-# #supporters via the standard refresh-loop UX).
+# When reorder lands with declared membership-block slots, CTA composition
+# still auto-fires as a background task so the known supporter atoms are not
+# forgotten before publish.
 _NEXT_STEPS_WITH_CTA_AUTOFIRE = (
-    "Next: `/eddy issue haiku`, `/eddy issue subject`, then `/scout issue publish`. "
-    "Patty's `compose-cta` auto-fires now — react in `#supporters` per slot."
+    "Next: `/eddy issue haiku`, `/eddy issue subject`, then publish from Studio. "
+    "CTA composition auto-fires now — review the supporter slots in Discord."
 )
 
 # Synthetic-id prefix per section (the LLM-facing ids).
@@ -436,7 +430,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     }
     if not any(rows_by_section.values()):
         return _base.JobResult(
-            False, f"❌ no `issue_items` rows for WT{n} — run `/scout issue update` first.",
+            False, f"❌ no `issue_items` rows for WT{n} — sync sources in Studio first.",
         )
 
     synth_to_row, row_to_synth = _build_synth_maps(rows_by_section)
@@ -503,7 +497,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                                     f"{', '.join('`' + p + '`' for p in patched)} "
                                     f"— appended in original order to keep the rest "
                                     f"of the proposal intact. Override with "
-                                    f"`/scout issue reset final` if the auto-fix is "
+                                    f"reset the reorder step in Studio if the auto-fix is "
                                     f"the wrong call.",
                                     suppress_embeds=True,
                                 )

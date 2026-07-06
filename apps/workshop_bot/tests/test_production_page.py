@@ -19,6 +19,7 @@ from aiohttp import web  # noqa: E402
 from aiohttp.test_utils import TestClient, TestServer  # noqa: E402
 
 from apps.workshop_bot.tools import content_store, db  # noqa: E402
+from apps.workshop_bot.tools.db.connection import connect  # noqa: E402
 from apps.workshop_bot.tests._fixtures import FakeWorkspace, patch_s3  # noqa: E402
 from apps.workshop_bot.webapp import routes, server  # noqa: E402
 
@@ -92,24 +93,23 @@ class ProductionPageTests(unittest.IsolatedAsyncioTestCase):
         import json
         self.assertEqual(json.loads(content_store.read_issue(360, "cover.json"))["caption"], "A creek")
 
-    async def test_generic_article_page(self):
+    async def test_legacy_non_newsletter_page_is_gone(self):
         c = await self._client()
-        db.create_production(production_type="article", title="On Focus")
-        content_store.set("ART1", "body.md", "Draft body text")
-        body = await (await c.get("/productions/ART1", headers=H)).text()
-        self.assertIn("Draft body text", body)
-        self.assertIn("Set phase", body)
-        # edit the body
-        r = await c.post("/productions/ART1/atom", headers=H, allow_redirects=False,
-                         data={"name": "body.md", "value": "Revised body"})
-        self.assertEqual(r.status, 302)
-        self.assertEqual(content_store.get("ART1", "body.md"), "Revised body")
+        with connect() as conn:
+            conn.execute(
+                "INSERT INTO productions (id, production_type, seq, title, phase, status) "
+                "VALUES ('ART1', 'article', 1, 'legacy article', 'draft', 'active')"
+            )
+        r = await c.get("/productions/ART1", headers=H)
+        self.assertEqual(r.status, 410)
 
     async def test_foreign_origin_post_is_403(self):
         c = await self._client()
-        db.create_production(production_type="article", title="x")
-        r = await c.post("/productions/ART1/atom", headers={**H, "Origin": "https://evil.example"},
-                         allow_redirects=False, data={"name": "body.md", "value": "y"})
+        db.plan_issue_window(issue_number=360, pub_date="2026-06-27",
+                             end_date="2026-06-26", start_date="2026-06-19", day_count=7)
+        db.set_issue_phase(360, "build")
+        r = await c.post("/productions/WT360/atom", headers={**H, "Origin": "https://evil.example"},
+                         allow_redirects=False, data={"name": "intro.md", "value": "y"})
         self.assertEqual(r.status, 403)
 
 

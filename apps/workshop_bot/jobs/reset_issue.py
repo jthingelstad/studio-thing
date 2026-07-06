@@ -8,9 +8,9 @@ shifted enough that he needs to re-do the editorial pass, or he edited
 intro.md after buttondown.md was assembled — this is the way to clear
 that carried-forward state without reaching for the AWS console.
 
-``/scout issue reset {final|publish}`` deletes the corresponding step
-artifacts in S3 and (for ``final``) clears the row-level editorial state
-(promotions) so a re-run starts from a clean editorial slate.
+Reset deletes the corresponding step artifacts in S3 and (for ``final``)
+clears the row-level editorial state (promotions) so a re-run starts from a
+clean editorial slate.
 
 What stays put:
 
@@ -20,8 +20,7 @@ What stays put:
   :func:`issue_items.clear_issue` directly — that's a heavier
   operation that should be a deliberate, separate step.)
 - ``cta-N.md`` / ``thanks-N.md`` files survive a ``reset final`` —
-  they're authored copy, and Patty re-skips already-filled slots on the
-  next ``compose-cta``.
+  they're authored copy.
 - ``metadata.json``'s ``buttondown_id`` survives a ``reset publish``
   so the next ``send-to-buttondown`` PATCHes the same Buttondown
   draft rather than orphaning it with a fresh POST.
@@ -114,13 +113,13 @@ async def run(ctx: "_base.JobContext", *, step: str) -> "_base.JobResult":
         summary_parts.append(f"{promotions_cleared} promotion(s) cleared")
     if not summary_parts:
         msg = f"ℹ️ nothing to reset — `{step}` artifacts weren't present for WT{n}."
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
+        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
         return _base.JobResult(True, msg, data={"issue_number": n, "step": step, "deleted": []})
 
     summary = "; ".join(summary_parts)
     next_hint = {
         "final": "Re-run `/eddy issue reorder` to propose a fresh editorial pass.",
-        "publish": "The next `update-draft` tick re-renders `buttondown.md`; then `/scout issue publish`.",
+        "publish": "Publish Email again in Studio to re-render and push `buttondown.md`.",
     }[step]
     msg = (
         f"🔁 **reset-{step}** for WT{n} — {summary}.\n"

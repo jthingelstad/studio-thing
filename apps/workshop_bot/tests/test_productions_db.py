@@ -35,77 +35,74 @@ class _DBCase(unittest.TestCase):
 
 
 class CreateAndReadTests(_DBCase):
-    def test_create_each_type_and_id_scheme(self):
-        a = db.create_production(production_type="article", title="On focus")
-        p = db.create_production(production_type="podcast", title="Ep 1")
-        j = db.create_production(production_type="project", title="50 supporters")
-        self.assertEqual(a["id"], "ART1")
-        self.assertEqual(p["id"], "POD1")
-        self.assertEqual(j["id"], "PRJ1")
-        self.assertEqual(a["phase"], "idea")   # default = phases[0]
-        self.assertEqual(j["phase"], "open")
+    def test_create_newsletter_issue_id_scheme(self):
+        row = db.create_production(production_type="newsletter", title="WT360", seq=360)
+        self.assertEqual(row["id"], "WT360")
+        self.assertEqual(row["phase"], "planned")
+        self.assertEqual(row["source"], "weekly.thingelstad.com")
 
-    def test_seq_autoincrements_per_type_independently(self):
-        db.create_production(production_type="article", title="a1")
-        db.create_production(production_type="podcast", title="p1")
-        a2 = db.create_production(production_type="article", title="a2")
-        self.assertEqual(a2["id"], "ART2")  # podcast row didn't bump the article seq
+    def test_seq_autoincrements_for_newsletter_rows_when_not_explicit(self):
+        db.create_production(production_type="newsletter", title="a1", seq=360)
+        row = db.create_production(production_type="newsletter", title="a2")
+        self.assertEqual(row["id"], "WT361")
 
     def test_details_round_trip_as_dict(self):
-        a = db.create_production(production_type="article", title="x",
+        a = db.create_production(production_type="newsletter", title="WT360", seq=360,
                                  details={"slug": "x", "outline": "1,2,3"})
-        got = db.get_production("ART1")
+        got = db.get_production("WT360")
         self.assertEqual(got["details"], {"slug": "x", "outline": "1,2,3"})
         self.assertEqual(a["details"], got["details"])
 
     def test_list_filters(self):
-        db.create_production(production_type="article", title="a", phase="draft")
-        db.create_production(production_type="podcast", title="p")
-        self.assertEqual(len(db.list_productions(production_type="article")), 1)
-        self.assertEqual(len(db.list_productions(phase="draft")), 1)
+        db.create_production(production_type="newsletter", title="WT360", seq=360, phase="build")
+        db.create_production(production_type="newsletter", title="WT361", seq=361)
+        self.assertEqual(len(db.list_productions(production_type="newsletter")), 2)
+        self.assertEqual(len(db.list_productions(phase="build")), 1)
         self.assertEqual(len(db.list_productions(status="active")), 2)
         self.assertEqual(len(db.list_productions(status="done")), 0)
 
-    def test_unknown_type_rejected(self):
-        with self.assertRaises(ValueError):
-            db.create_production(production_type="zine", title="x")
+    def test_retired_types_rejected(self):
+        for production_type in ("article", "podcast", "project", "zine"):
+            with self.subTest(production_type=production_type):
+                with self.assertRaises(ValueError):
+                    db.create_production(production_type=production_type, title="x")
 
     def test_unique_type_seq_collision(self):
-        db.create_production(production_type="article", title="a", seq=5)
+        db.create_production(production_type="newsletter", title="a", seq=360)
         import sqlite3
         with self.assertRaises(sqlite3.IntegrityError):
-            db.create_production(production_type="article", title="b", seq=5)
+            db.create_production(production_type="newsletter", title="b", seq=360)
 
 
 class UpdateTests(_DBCase):
     def test_update_only_passed_fields_and_bumps_updated_at(self):
-        db.create_production(production_type="article", title="orig")
-        before = db.get_production("ART1")
-        db.update_production("ART1", title="renamed", updated_by="web:jamie")
-        after = db.get_production("ART1")
+        db.create_production(production_type="newsletter", title="orig", seq=360)
+        before = db.get_production("WT360")
+        db.update_production("WT360", title="renamed", updated_by="web:jamie")
+        after = db.get_production("WT360")
         self.assertEqual(after["title"], "renamed")
         self.assertEqual(after["updated_by"], "web:jamie")
         self.assertGreaterEqual(after["updated_at"], before["updated_at"])
 
     def test_set_phase_validates_per_type(self):
-        db.create_production(production_type="article", title="a")
-        db.set_production_phase("ART1", "draft")
-        self.assertEqual(db.get_production("ART1")["phase"], "draft")
+        db.create_production(production_type="newsletter", title="a", seq=360)
+        db.set_production_phase("WT360", "build")
+        self.assertEqual(db.get_production("WT360")["phase"], "build")
         with self.assertRaises(ValueError):
-            db.set_production_phase("ART1", "record")  # podcast phase, not article
+            db.set_production_phase("WT360", "record")  # retired podcast phase
 
     def test_set_phase_unknown_production(self):
         with self.assertRaises(ValueError):
-            db.set_production_phase("ART999", "draft")
+            db.set_production_phase("WT999", "build")
 
     def test_status_validated_on_update_and_create(self):
-        db.create_production(production_type="article", title="a")
-        db.update_production("ART1", status="paused")
-        self.assertEqual(db.get_production("ART1")["status"], "paused")
+        db.create_production(production_type="newsletter", title="a", seq=360)
+        db.update_production("WT360", status="paused")
+        self.assertEqual(db.get_production("WT360")["status"], "paused")
         with self.assertRaises(ValueError):
-            db.update_production("ART1", status="snoozed")
+            db.update_production("WT360", status="snoozed")
         with self.assertRaises(ValueError):
-            db.create_production(production_type="article", title="b", status="nope")
+            db.create_production(production_type="newsletter", title="b", seq=361, status="nope")
 
 
 class BackfillTests(_DBCase):

@@ -541,6 +541,12 @@ def _m_0022_drop_draft_digests(conn: sqlite3.Connection) -> None:
     conn.execute("DROP TABLE IF EXISTS draft_digests")
 
 
+def _m_0023_drop_seeds_garden(conn: sqlite3.Connection) -> None:
+    """Drop the retired seeds/garden tables."""
+    conn.execute("DROP TABLE IF EXISTS seeds")
+    conn.execute("DROP TABLE IF EXISTS seed_clusters")
+
+
 def _m_0010_strip_markers_from_issue_items_body_md(conn: sqlite3.Connection) -> None:
     """An older manual-seed path baked rendered ``<!-- cta:N -->`` /
     ``<!-- thanks:N -->`` markers into ``issue_items.body_md``. Marker
@@ -574,7 +580,7 @@ SCHEMA_MIGRATION_ID = "0001_schema_sql"
 MIGRATIONS: tuple[Migration, ...] = (
     Migration(
         id=SCHEMA_MIGRATION_ID,
-        description="Apply schema.sql — create-or-update all tables, indexes, and seeds",
+        description="Apply schema.sql — create-or-update all tables and indexes",
         apply=_m_0001_initial_schema,
     ),
     Migration(
@@ -687,6 +693,11 @@ MIGRATIONS: tuple[Migration, ...] = (
         id="0022_drop_draft_digests",
         description="Drop draft_digests (update-draft projection retired)",
         apply=_m_0022_drop_draft_digests,
+    ),
+    Migration(
+        id="0023_drop_seeds_garden",
+        description="Drop seeds/seed_clusters (garden retired)",
+        apply=_m_0023_drop_seeds_garden,
     ),
 )
 

@@ -1,7 +1,7 @@
 """``continuity-check`` — the archive as a collaborator *while Jamie writes*.
 
-When Jamie writes something — a seed, a newsletter intro — the studio
-surfaces what he's **already published** on that topic, so he doesn't
+When Jamie writes a newsletter intro, Studio surfaces what he's **already
+published** on that topic, so he doesn't
 unknowingly repeat himself and can build on (or deliberately contradict)
 his prior takes. This is continuity-while-you-write, not a review.
 
@@ -18,9 +18,8 @@ Fail-soft: a retrieval outage posts a brief "couldn't reach the archive" note
 and returns rather than crashing — losing the nudge shouldn't wedge the write
 surface that triggered it.
 
-Triggered on demand from the web: the /seeds "Check continuity" per-seed button
-and the newsletter production page's intro action. Posts to ``#editorial`` as
-Eddy.
+Triggered on demand from the newsletter issue page's intro action. Posts to
+``#editorial`` as Eddy.
 """
 
 from __future__ import annotations
@@ -137,8 +136,8 @@ async def run_for_text(
 
     body = f"🔁 Continuity check — **{label}**\n{note}"
     await ctx.post(r.channel, body, persona="eddy")
-    # One place logs "Eddy shared a continuity note", like garden_checkin logs
-    # its tending share — regardless of which surface triggered the check.
+    # One place logs "Eddy shared a continuity note" regardless of which
+    # surface triggered the check.
     logger.info(
         "continuity-check: Eddy posted a continuity note for %s (%d chars)",
         label, len(note))

@@ -33,7 +33,8 @@ class WebChatTests(unittest.IsolatedAsyncioTestCase):
         os.environ["WORKSHOP_DB_PATH"] = str(Path(self._tmp.name) / "t.db")
         os.environ.setdefault("TAILSCALE_ALLOWED_LOGIN", LOGIN)
         db.run_migrations()
-        db.create_production(production_type="article", title="Essay")  # ART1
+        db.create_production(production_type="newsletter", title="WT360",
+                             seq=360, phase="build")
 
     def tearDown(self):
         if self._orig is None:
@@ -57,45 +58,41 @@ class WebChatTests(unittest.IsolatedAsyncioTestCase):
         deps = SimpleNamespace(team=SimpleNamespace(bots={"eddy": eddy}))
         c = await self._client(deps)
         r = await c.post("/chat", headers=H,
-                         data={"context_key": "ART1", "message": "How do I open?", "persona": "eddy"})
+                         data={"context_key": "WT360", "message": "How do I open?", "persona": "eddy"})
         self.assertEqual((await r.json())["persona"], "eddy")
         for _ in range(20):
             await asyncio.sleep(0.05)
-            msgs = (await (await c.get("/chat?context_key=ART1", headers=H)).json())["messages"]
+            msgs = (await (await c.get("/chat?context_key=WT360", headers=H)).json())["messages"]
             if any(m["role"] == "assistant" for m in msgs):
                 break
         roles = [(m["role"], m["content"]) for m in msgs]
         self.assertIn(("user", "How do I open?"), roles)
         self.assertIn(("assistant", "Open with the tension."), roles)
-        self.assertIn("production ART1", eddy.core.call_args.kwargs["latest"])
+        self.assertIn("newsletter issue WT360", eddy.core.call_args.kwargs["latest"])
 
-    async def test_at_mention_overrides_persona(self):
-        linky = MagicMock()
-        linky.core = AsyncMock(return_value=("Here are 3 links.", {}))
-        deps = SimpleNamespace(team=SimpleNamespace(bots={"linky": linky}))
+    async def test_unknown_persona_falls_back_to_eddy(self):
+        eddy = MagicMock()
+        eddy.core = AsyncMock(return_value=("Let's stay with the issue.", {}))
+        deps = SimpleNamespace(team=SimpleNamespace(bots={"eddy": eddy}))
         c = await self._client(deps)
-        await c.post("/chat", headers=H,
-                     data={"context_key": "seeds", "message": "@linky find sources", "persona": "eddy"})
-        for _ in range(20):
-            await asyncio.sleep(0.05)
-            if linky.core.called:
-                break
-        self.assertTrue(linky.core.called)
+        r = await c.post("/chat", headers=H,
+                         data={"context_key": "WT360", "message": "@linky find sources", "persona": "linky"})
+        self.assertEqual((await r.json())["persona"], "eddy")
 
     async def test_offline_when_no_team(self):
         c = await self._client(None)
-        await c.post("/chat", headers=H, data={"context_key": "ART1", "message": "hi", "persona": "eddy"})
+        await c.post("/chat", headers=H, data={"context_key": "WT360", "message": "hi", "persona": "eddy"})
         for _ in range(20):
             await asyncio.sleep(0.05)
-            msgs = (await (await c.get("/chat?context_key=ART1", headers=H)).json())["messages"]
+            msgs = (await (await c.get("/chat?context_key=WT360", headers=H)).json())["messages"]
             if any(m["role"] == "assistant" for m in msgs):
                 break
-        self.assertTrue(any("aren't reachable" in m["content"] for m in msgs if m["role"] == "assistant"))
+        self.assertTrue(any("Eddy is not reachable" in m["content"] for m in msgs if m["role"] == "assistant"))
 
     async def test_foreign_origin_is_403(self):
         c = await self._client(None)
         r = await c.post("/chat", headers={**H, "Origin": "https://evil.example"},
-                         data={"context_key": "ART1", "message": "hi"})
+                         data={"context_key": "WT360", "message": "hi"})
         self.assertEqual(r.status, 403)
 
 

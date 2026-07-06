@@ -1,9 +1,9 @@
-"""``/scout issue publish {audio,buttondown,website}`` — ship to a destination.
+"""Ship the active newsletter issue to audio, Buttondown, and the website.
 
 **Render-then-ship.** The DB is the draft; each subcommand renders exactly
 the artifacts it ships, at ship time, from current DB state — there is no
 daily projection to be stale against. Each is independently idempotent. The
-no-arg parent (``/scout issue publish``) runs all three in the right order:
+The all-destination path runs all three in the right order:
 
 1. **audio** — render the transcript from DB, TTS the per-block files,
    concat with bumpers + loudnorm, upload the MP3 to S3, update the local
@@ -143,7 +143,8 @@ def _required_missing(issue_number: int) -> list[str]:
 
 
 def _missing_list_message(issue_number: int, missing: list[str], dest: str) -> str:
-    lines = [f"⛔ `/scout issue publish {dest}` for **WT{issue_number}** can't run — missing:"]
+    labels = {"buttondown": "Email", "website": "Website", "audio": "Audio"}
+    lines = [f"⛔ Publish {labels.get(dest, dest)} for **WT{issue_number}** can't run — missing:"]
     for r in missing:
         lines.append(f"  ❌ `{r}` {_FIX_HINT.get(r, '')}".rstrip())
     return "\n".join(lines)
@@ -158,7 +159,7 @@ async def publish_audio(ctx: "_base.JobContext") -> "_base.JobResult":
     matches)."""
     window = db.get_active_issue_window()
     if window is None:
-        return _base.JobResult(False, "❌ no active issue window — run `/scout issue start` first.")
+        return _base.JobResult(False, "❌ no active issue window — start one in Studio first.")
     n = int(window["issue_number"])
     try:
         await asyncio.to_thread(renderers.render_transcript_for_issue, n, window=window)
@@ -182,13 +183,13 @@ async def publish_buttondown(ctx: "_base.JobContext") -> "_base.JobResult":
     present."""
     window = db.get_active_issue_window()
     if window is None:
-        return _base.JobResult(False, "❌ no active issue window — run `/scout issue start` first.")
+        return _base.JobResult(False, "❌ no active issue window — start one in Studio first.")
     n = int(window["issue_number"])
 
     missing = _required_missing(n)
     if missing:
         msg = _missing_list_message(n, missing, "buttondown")
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
+        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n, "missing": missing})
 
     # Render-then-ship: buttondown.md is rendered fresh from current DB
@@ -209,7 +210,7 @@ async def publish_buttondown(ctx: "_base.JobContext") -> "_base.JobResult":
         )
     except pipeline_content.ButtondownPublishError as exc:
         msg = f"❌ Buttondown publish for **WT{n}** failed: {exc}"
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
+        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n, "stage": "buttondown POST/PATCH"})
 
     action = bd_result["action"]
@@ -235,8 +236,8 @@ async def publish_buttondown(ctx: "_base.JobContext") -> "_base.JobResult":
     draft_url = _draft_url(bid)
     lines = [f"{head_emoji} {head_verb} Buttondown draft for **WT{n}** — `{subject}`"]
     lines.append(f"📨 [open in Buttondown]({draft_url}) — review, schedule, send.")
-    lines.append("_Re-run `/scout issue publish buttondown` to push edits — idempotent._")
-    await ctx.post("DISCORD_CHANNEL_PRODUCTION", "\n".join(lines), persona="scout")
+    lines.append("_Re-run Publish Email in Studio to push edits — idempotent._")
+    await ctx.post("DISCORD_CHANNEL_PRODUCTION", "\n".join(lines), persona="eddy")
     return _base.JobResult(
         True,
         f"Buttondown {action} for WT{n} (id=`{bid}`).",
@@ -260,7 +261,7 @@ async def publish_website(ctx: "_base.JobContext") -> "_base.JobResult":
     SHA matches the existing tree."""
     window = db.get_active_issue_window()
     if window is None:
-        return _base.JobResult(False, "❌ no active issue window — run `/scout issue start` first.")
+        return _base.JobResult(False, "❌ no active issue window — start one in Studio first.")
     n = int(window["issue_number"])
 
     # Render-then-ship: the committed tree always reflects current DB state.
@@ -269,17 +270,17 @@ async def publish_website(ctx: "_base.JobContext") -> "_base.JobResult":
         await asyncio.to_thread(renderers.render_transcript_for_issue, n, window=window)
     except Exception as exc:  # noqa: BLE001
         msg = (
-            f"❌ `/scout issue publish website` for **WT{n}** couldn't render: "
+            f"❌ Publish Website for **WT{n}** couldn't render: "
             f"`{type(exc).__name__}: {exc}`"
         )
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
+        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n})
 
     try:
         files = await asyncio.to_thread(_collect_ship_files, n)
     except RuntimeError as exc:
-        msg = f"❌ `/scout issue publish website` for **WT{n}** can't run: {exc}"
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
+        msg = f"❌ Publish Website for **WT{n}** can't run: {exc}"
+        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n})
 
     # Subject for the commit message — read the metadata.
@@ -298,22 +299,22 @@ async def publish_website(ctx: "_base.JobContext") -> "_base.JobResult":
         )
     except github_repo.MissingTokenError:
         msg = (
-            f"⚠️ `/scout issue publish website` for **WT{n}** — `GITHUB_PAT_TOKEN` "
+            f"⚠️ Publish Website for **WT{n}** — `GITHUB_PAT_TOKEN` "
             "isn't set; commit skipped. Set the env var and re-run."
         )
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
+        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n})
     except Exception as exc:  # noqa: BLE001
         logger.exception("publish_website: GitHub commit failed for WT%d", n)
-        msg = f"⚠️ `/scout issue publish website` for **WT{n}** failed: `{type(exc).__name__}: {exc}`"
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="scout")
+        msg = f"⚠️ Publish Website for **WT{n}** failed: `{type(exc).__name__}: {exc}`"
+        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n})
 
     commit_url = f"https://github.com/{github_repo._repo()}/commit/{commit_sha}"
     await ctx.post(
         "DISCORD_CHANNEL_PRODUCTION",
         f"🌐 Website commit for **WT{n}** — [`{commit_sha[:7]}`]({commit_url}) on main.",
-        persona="scout",
+        persona="eddy",
     )
     return _base.JobResult(
         True,
@@ -330,10 +331,10 @@ async def publish_all(ctx: "_base.JobContext") -> "_base.JobResult":
     stage is the same subcommand function called individually — so a
     failure mid-sequence stops the chain but leaves a clean partial
     state (e.g. audio + buttondown shipped, website failed; just
-    re-run `/scout issue publish website` to finish)."""
+    re-run Publish Website in Studio to finish)."""
     window = db.get_active_issue_window()
     if window is None:
-        return _base.JobResult(False, "❌ no active issue window — run `/scout issue start` first.")
+        return _base.JobResult(False, "❌ no active issue window — start one in Studio first.")
     n = int(window["issue_number"])
 
     progress = await ctx.progress(
@@ -342,7 +343,7 @@ async def publish_all(ctx: "_base.JobContext") -> "_base.JobResult":
         f"⏳ `publish audio` _(slowest step — TTS + bumpers + S3 upload)_\n"
         f"⏳ `publish buttondown`\n"
         f"⏳ `publish website`",
-        persona="scout",
+        persona="eddy",
     )
 
     async def _refresh(text: str) -> None:
@@ -379,7 +380,7 @@ async def publish_all(ctx: "_base.JobContext") -> "_base.JobResult":
             f"❌ Ship failed for **WT{n}** at `publish buttondown` — see #editorial above.\n"
             f"✅ `publish audio`\n"
             f"❌ `publish buttondown`\n"
-            f"⏸ `publish website` (skipped — re-run `/scout issue publish website` after fix)"
+            f"⏸ `publish website` (skipped — re-run Publish Website in Studio after fix)"
         )
         return bd_result
 
@@ -396,7 +397,7 @@ async def publish_all(ctx: "_base.JobContext") -> "_base.JobResult":
             f"⚠️ Ship for **WT{n}** mostly done — website commit failed.\n"
             f"✅ `publish audio`\n"
             f"✅ `publish buttondown`\n"
-            f"❌ `publish website` — re-run `/scout issue publish website` after fix"
+            f"❌ `publish website` — re-run Publish Website in Studio after fix"
         )
         return web_result
 

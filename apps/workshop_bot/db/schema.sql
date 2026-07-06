@@ -264,32 +264,29 @@ CREATE INDEX IF NOT EXISTS idx_issue_windows_active
 -- the phase cards; production status is the web scoreboard now. Migration 0020
 -- drops it on existing DBs.)
 
--- Productions — the generic, multi-type, multi-instance production registry.
--- One row per production unit of ANY type (newsletter / article / podcast /
--- project), the spine that supersedes the single-active issue_windows model:
--- several productions of several types run concurrently, each in its own phase.
+-- Productions — the internal newsletter issue registry. The table name
+-- survives the old multi-type architecture, but Studio now treats newsletter
+-- issues as the only first-class work object.
 --
 -- issue_windows stays as the *newsletter detail/working table* (it carries the
--- rich window fields + the issue_cards linkage + the live publish path), linked
--- from here by detail_issue_number. New types keep light type-specific fields
--- in the `details` JSON blob until/unless they grow their own detail table.
+-- rich window fields + the live publish path), linked from here by
+-- detail_issue_number. `details` is retained for compatibility and small issue
+-- metadata.
 --
--- id is the human display code: WT350 / ART7 / POD3 / PRJ2 — {prefix}{seq}.
--- seq is the issue_number for newsletters (operator-chosen) and a per-type
--- ordinal otherwise. phase is validated PER TYPE by the code-side registry in
--- tools/content/production_types.py — deliberately NOT a CHECK constraint, so
--- adding a phase to a type's vocabulary needs no migration.
+-- id is the human display code: WT350. seq is the issue_number. phase is
+-- validated by the code-side registry in tools/content/production_types.py —
+-- deliberately NOT a CHECK constraint, so adding a phase needs no migration.
 CREATE TABLE IF NOT EXISTS productions (
-  id                  TEXT PRIMARY KEY,              -- 'WT350' | 'ART7' | 'POD3' | 'PRJ2'
-  production_type     TEXT NOT NULL,                 -- 'newsletter'|'article'|'podcast'|'project'
-  seq                 INTEGER NOT NULL,              -- issue_number (newsletter) | per-type ordinal
+  id                  TEXT PRIMARY KEY,              -- 'WT350'
+  production_type     TEXT NOT NULL,                 -- 'newsletter'
+  seq                 INTEGER NOT NULL,              -- issue_number
   title               TEXT NOT NULL,
   phase               TEXT NOT NULL,                 -- per-type vocab; validated in code
   status              TEXT NOT NULL DEFAULT 'active',-- production_types.STATUSES (validated in code)
   due_at              TEXT,                          -- ISO date; newsletter = pub_date
   pub_date            TEXT,                          -- newsletter Saturday; NULL otherwise
   source              TEXT NOT NULL DEFAULT '',      -- surface label, e.g. 'weekly.thingelstad.com'
-  details             TEXT,                          -- JSON: type-specific fields
+  details             TEXT,                          -- JSON: small compatibility fields
   detail_issue_number INTEGER,                       -- newsletter -> issue_windows.issue_number
   created_at          TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at          TEXT NOT NULL DEFAULT (datetime('now')),
@@ -307,13 +304,11 @@ CREATE INDEX IF NOT EXISTS idx_productions_status_due
 -- (production_id, name). `body` is the raw text the S3 atom held — JSON blocks
 -- (cover, metadata) are stored as their literal JSON string (callers json.loads
 -- them), cta/thanks keep their `kind:` YAML frontmatter verbatim. Presence == a
--- row exists. This single table serves every production type: newsletter atoms
--- (intro/outro/cover/haiku/metadata/echoes/cta-N/thanks-N), an article
--- body, a podcast script/notes. S3 is now publishing-only (generated outputs +
--- binaries); nothing reads authored content from S3.
+-- row exists. S3 is now publishing-only (generated outputs + binaries);
+-- nothing reads authored content from S3.
 CREATE TABLE IF NOT EXISTS production_content (
-  production_id TEXT NOT NULL,                 -- 'WT350' | 'ART7' | 'POD3'
-  name          TEXT NOT NULL,                 -- 'intro.md' | 'cover.json' | 'cta-1.md' | 'body.md'
+  production_id TEXT NOT NULL,                 -- 'WT350'
+  name          TEXT NOT NULL,                 -- 'intro.md' | 'cover.json' | 'cta-1.md'
   body          TEXT NOT NULL DEFAULT '',
   updated_at    TEXT NOT NULL DEFAULT (datetime('now')),
   updated_by    TEXT,
@@ -323,18 +318,16 @@ CREATE TABLE IF NOT EXISTS production_content (
 CREATE INDEX IF NOT EXISTS idx_production_content_pid
   ON production_content(production_id);
 
--- Production tasks — the interactive half of the production state engine. Each
--- production is phase + content + TASKS; a task has an owner (jamie or one of
--- the five agents) and a status, and working the tasks carries the production
--- through its phases. `origin='added'` rows are ad-hoc/assigned (here); the
--- `origin='computed'` required tasks are projected from content state by
--- jobs/scout_production_feed.py and are not stored. Agents claim + complete
--- their owned tasks via the tasks__* tools.
+-- Issue tasks — the interactive half of the newsletter state engine. Each
+-- issue is phase + content + tasks; a task has an owner (jamie or Eddy) and a
+-- status. `origin='added'` rows are ad-hoc/assigned (here); the
+-- `origin='computed'` required tasks are projected from content state and are
+-- not stored. Eddy can claim + complete his owned tasks via the tasks__* tools.
 CREATE TABLE IF NOT EXISTS production_tasks (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   production_id TEXT NOT NULL,
   title         TEXT NOT NULL,
-  owner         TEXT NOT NULL DEFAULT 'jamie',  -- jamie | scout | eddy | linky | marky | patty
+  owner         TEXT NOT NULL DEFAULT 'jamie',  -- jamie | eddy
   status        TEXT NOT NULL DEFAULT 'todo',   -- todo | doing | done | blocked
   origin        TEXT NOT NULL DEFAULT 'added',  -- added | computed
   phase         TEXT,                           -- the phase this task belongs to (optional)
@@ -347,45 +340,9 @@ CREATE TABLE IF NOT EXISTS production_tasks (
 CREATE INDEX IF NOT EXISTS idx_production_tasks_pid
   ON production_tasks(production_id, status);
 
--- Seeds — Jamie's idea garden. Each seed is a snippet (a sentence to an
--- outline) of something he might write. Eddy tends the garden: curating,
--- tagging, clustering, merging/mutating (suggestions on the IDEA, never his
--- prose), connecting each to his own archive, and routing ripe clusters to a
--- production type ("these three could be a podcast"). A seed graduates into an
--- article/podcast production; Jamie writes the piece.
-CREATE TABLE IF NOT EXISTS seed_clusters (
-  id             INTEGER PRIMARY KEY AUTOINCREMENT,
-  label          TEXT NOT NULL,
-  note           TEXT,                         -- Eddy's framing of the cluster
-  suggested_type TEXT,                         -- 'article' | 'podcast' | ...
-  status         TEXT NOT NULL DEFAULT 'open', -- open | graduated | archived
-  graduated_to   TEXT,                         -- productions.id once graduated
-  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at     TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE TABLE IF NOT EXISTS seeds (
-  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  body        TEXT NOT NULL,                   -- the snippet (Jamie's, or a merged/mutated suggestion)
-  title       TEXT,                            -- optional short label
-  source      TEXT,                            -- 'import' | 'discord' | 'web' | ...
-  tags        TEXT,                            -- comma-separated, Eddy-curated
-  cluster_id  INTEGER REFERENCES seed_clusters(id),
-  status      TEXT NOT NULL DEFAULT 'open',    -- open | clustered | graduated | archived
-  graduated_to TEXT,                           -- productions.id if graduated
-  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
-  created_by  TEXT
-);
-
-CREATE INDEX IF NOT EXISTS idx_seeds_status ON seeds(status);
-CREATE INDEX IF NOT EXISTS idx_seeds_cluster ON seeds(cluster_id);
-
--- In-web conversations — the chat threads on the seeds garden + each production
--- page. context_key is the thing being discussed ('ART7', 'WT350', 'seeds').
--- A web handler records Jamie's message, runs the addressed persona's agent
--- loop in the background (the agent's tools edit the same rows), and records the
--- reply; the page polls for new messages. This is "working together" in the web.
+-- In-web conversations — legacy Eddy chat threads on newsletter issue pages.
+-- The primary workflow is the Studio web UI; chat is retained only as a
+-- lightweight repair/ad-hoc surface.
 CREATE TABLE IF NOT EXISTS production_chats (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   context_key TEXT NOT NULL,

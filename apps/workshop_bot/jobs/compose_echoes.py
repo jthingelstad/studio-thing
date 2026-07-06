@@ -444,7 +444,7 @@ async def run(
     window = db.get_active_issue_window()
     if window is None:
         return _base.JobResult(
-            False, "❌ no active issue window — run `/scout issue start` first.",
+            False, "❌ no active issue window — start one in Studio first.",
         )
     n = int(window["issue_number"])
     publish_date = (window.get("pub_date") or "")[:10] or "(unknown date)"
@@ -453,7 +453,7 @@ async def run(
         baseline_body = await asyncio.to_thread(_llm_job.draft_body, n)
     if not baseline_body or not baseline_body.strip():
         return _base.JobResult(
-            False, f"❌ no body available for WT{n} — run `/scout issue update` first.",
+            False, f"❌ no body available for WT{n} — sync sources in Studio first.",
         )
 
     bot, channel, reason = _llm_job.resolve_bot_and_channel(

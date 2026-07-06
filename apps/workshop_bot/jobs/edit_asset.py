@@ -27,12 +27,9 @@ This module deliberately does NOT touch the assembled documents
 (``draft.md`` / ``archive.md`` / ``buttondown.md``). Those are renders,
 not authored text — they regenerate from the atoms.
 
-After a successful write, the job optionally re-fires
-``update-draft`` so the preview refreshes for atoms that flow into
-``draft.md`` (intro / outro / haiku / currently / cover). Edits to
-``cta-N.md`` / ``thanks-N.md`` don't auto-fire anything — they only
-affect ``buttondown.md``, and that's a deliberate step (the next
-``update-draft`` tick re-renders, or ``/scout issue publish``).
+After a successful write, Studio reads the DB atom directly. Edits to
+``cta-N.md`` / ``thanks-N.md`` affect ``buttondown.md`` when the issue is
+published.
 """
 
 from __future__ import annotations
@@ -180,7 +177,7 @@ def build_modal(
     filename, label, placeholder = _ASSETS[asset_key]
     window = db.get_active_issue_window()
     if window is None:
-        return None, "❌ no active issue window — run `/scout issue start` first."
+        return None, "❌ no active issue window — start one in Studio first."
     n = int(window["issue_number"])
     current = _read_current(n, filename)
     if len(current) > _MODAL_MAX:

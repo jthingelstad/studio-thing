@@ -193,9 +193,8 @@ class StatusJobTests(_DBCase):
         self.assertTrue(res.ok)
         self.assertIn("workshop_bot status", res.message)
         self.assertIn("issue window: *(none", res.message)
-        # seeded goal shows
-        self.assertIn("members → 50", res.message)
-        self.assertIn("none live", res.message)
+        self.assertNotIn("members → 50", res.message)
+        self.assertNotIn("campaigns", res.message)
         self.assertIn("none held", res.message)
         self.assertIn("none recorded yet", res.message)
 
@@ -213,7 +212,7 @@ class StatusJobTests(_DBCase):
             db.release_job_lock("460/draft.md")
         self.assertTrue(res.ok)
         self.assertIn("WT460", res.message)
-        self.assertIn("dd-may", res.message)
+        self.assertNotIn("dd-may", res.message)
         self.assertIn("460/draft.md", res.message)
         self.assertIn("update-draft", res.message)
         self.assertIn("eddy", res.message)

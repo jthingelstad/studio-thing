@@ -1,11 +1,10 @@
-"""Workshop bot entrypoint.
+"""Newsletter Studio runtime.
 
 Run with `python -m apps.workshop_bot.bot` from the repo root.
 
-Spins up five discord.py Client instances (one per author-facing
-persona — Scout, Eddy, Linky, Marky, Patty), each with its own bot
-token. The corpus is built once at startup and shared across all five.
-Migrations run idempotently every start.
+Spins up Eddy, the newsletter assistant, plus the private Studio web app.
+The corpus is built once at startup and shared with Eddy. Migrations run
+idempotently every start.
 
 The reader-facing Thingy bot lives in a separate process
 (`apps/thingy_bridge/`) — see that app's README for the bridge launch
@@ -29,16 +28,10 @@ from dotenv import load_dotenv
 
 from .personas.base import Deps
 from .personas.eddy import EddyBot
-from .personas.linky import LinkyBot
-from .personas.marky import MarkyBot
-from .personas.patty import PattyBot
-from .personas.scout import ScoutBot
 from .personas.team import TeamRegistry
 from .scheduler.runner import Runner as SchedulerRunner
 from .systems.buttondown.server import ButtondownServer
 from .systems.pinboard.server import PinboardServer
-from .systems.stripe.server import StripeServer
-from .systems.tinylytics.server import TinylyticsServer
 from .webapp import start_webapp
 from .tools import db
 from .tools.content import corpus
@@ -47,8 +40,7 @@ from .tools.discord import startup
 
 logger = logging.getLogger("workshop.bot")
 
-# Stagger between persona logins on cold start so 5 simultaneous /users/@me
-# calls from the same IP don't trip Discord's CloudFlare global rate limit.
+# Kept even with one persona so a future login retry path stays simple.
 LOGIN_STAGGER_SECONDS = 2.0
 
 # Exponential backoff schedule when a login is rate-limited (Discord error
@@ -90,10 +82,6 @@ WATCHDOG_GRACE_SECS = 90.0
 
 PERSONAS: list[tuple[str, str, type]] = [
     ("eddy", "DISCORD_TOKEN_EDDY", EddyBot),
-    ("linky", "DISCORD_TOKEN_LINKY", LinkyBot),
-    ("marky", "DISCORD_TOKEN_MARKY", MarkyBot),
-    ("patty", "DISCORD_TOKEN_PATTY", PattyBot),
-    ("scout", "DISCORD_TOKEN_SCOUT", ScoutBot),
 ]
 
 
@@ -260,8 +248,6 @@ async def run() -> int:
     agent_tools.register_local_helpers(registry)
     registry.register_system(ButtondownServer())
     registry.register_system(PinboardServer())
-    registry.register_system(StripeServer())
-    registry.register_system(TinylyticsServer())
     deps = Deps(corpus=corpus_handle, team=team, registry=registry)
 
     bots = [(name, cls(deps), token) for (name, token, cls) in resolved]
@@ -356,10 +342,8 @@ async def run() -> int:
         if await _sleep_or_stop(LOGIN_STAGGER_SECONDS):
             break
 
-    # One watchdog per persona. If any of them goes silent-zombie, the
-    # whole process exits so launchd respawns with fresh sessions for
-    # all five — restarting one Client mid-flight is messier than a
-    # full cycle.
+    # One watchdog per persona. If Eddy goes silent-zombie, the whole process
+    # exits so launchd respawns the Studio runtime.
     for n, b, _ in bots:
         tasks.append(asyncio.create_task(
             _gateway_watchdog(n, b, stop_event),
@@ -372,11 +356,8 @@ async def run() -> int:
     runner = SchedulerRunner(team, deps=deps) if scheduler_enabled else None
 
     async def _post_startup() -> None:
-        # Each persona's on_ready posts its own startup card to #chatter
-        # (under its own avatar). This task just waits for ready, logs
-        # a consolidated audit, and — if any persona missed the window
-        # — has Eddy post a single "⚠️ not ready" follow-up so #chatter
-        # captures the gap.
+        # Eddy's on_ready posts its own startup card to #chatter. This task
+        # waits for ready, logs a consolidated audit, and starts the scheduler.
         ready_bots: list = []
         missing: list[str] = []
         for name, client, _ in bots:
@@ -402,8 +383,7 @@ async def run() -> int:
         if missing:
             consolidated += f"\n\n⚠️ not ready after {READY_WAIT_SECONDS}s: {', '.join(missing)}"
         logger.info("startup audit:\n%s", consolidated)
-        # If any persona missed the window, have Eddy (lead) post a
-        # single follow-up note so the gap shows up in #chatter.
+        # If Eddy missed the window, post a single follow-up note if possible.
         if missing:
             announcer = next(
                 (b for n, b, _ in bots if n == startup.ANNOUNCER and b in ready_bots),
@@ -416,9 +396,7 @@ async def run() -> int:
                 )
             except Exception:  # noqa: BLE001
                 logger.exception("startup: couldn't post missing-personas note")
-        # Start scheduled jobs once we have at least one ready persona —
-        # individual jobs gracefully skip if their target persona is
-        # missing, so we don't need to wait for everyone.
+        # Start scheduled jobs once Eddy is ready.
         if runner is not None:
             try:
                 runner.start()
@@ -427,7 +405,7 @@ async def run() -> int:
 
     tasks.append(asyncio.create_task(_post_startup(), name="startup-announce"))
 
-    # Private (tailnet-only) web app — Jamie's operator surface (Scout slate, growing). Non-fatal.
+    # Private (tailnet-only) web app — Jamie's newsletter publishing surface. Non-fatal.
     try:
         await start_webapp(deps=deps)
     except Exception:  # noqa: BLE001

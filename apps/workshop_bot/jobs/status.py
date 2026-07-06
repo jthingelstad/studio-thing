@@ -1,14 +1,12 @@
-"""``/eddy status`` — a read-only operational snapshot of the bot.
+"""``/eddy status`` — a read-only operational snapshot of Studio.
 
 Not a content-loop job; it's the "what's the bot doing / is anything
 stuck" view. All DB-only (no S3, no external APIs), so it's snappy. For
 the in-flight issue's *content* completeness, use ``/eddy issue
-status``; for campaign performance vs. expectation, use
-``/marky campaign report``.
+status``.
 
-Shows: the active issue window, the active goal + live campaigns, any
-held job locks (a deadlock would show here), and the last several
-``agent_runs`` rows.
+Shows: the active issue window, any held job locks (a deadlock would show
+here), and the last several ``agent_runs`` rows.
 """
 
 from __future__ import annotations
@@ -49,31 +47,14 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
 
     w = db.get_active_issue_window()
     if w is None:
-        lines.append("• issue window: *(none — `/scout issue start` to set one)*")
+        lines.append("• issue window: *(none — start one in Studio)*")
     else:
         n = int(w["issue_number"])
         lines.append(
             f"• issue window: **WT{n}** · pub {w['pub_date']} ({_rel(w['pub_date'])}) · "
             f"cutoff {w['end_date']} · {w.get('day_count', 7)}-day "
-            f"— `/scout issue status` for content state"
+            f"— use Studio for content state"
         )
-
-    g = db.get_active_goal()
-    if g is None:
-        lines.append("• goal: *(none — `/patty goal set <kind> <value>`)*")
-    else:
-        lines.append(
-            f"• goal: **{g['target_kind']} → {g['target_value']}** "
-            f"(since {g.get('started_at', '?')})" + (f" — {g['notes']}" if g.get("notes") else "")
-        )
-
-    camps = db.active_campaigns()
-    if camps:
-        lines.append("• campaigns (live):")
-        for c in camps:
-            lines.append(f"  └ `{c['name']}` · ref `{c['ref']}` · since {c.get('started_at', '?')}")
-    else:
-        lines.append("• campaigns: *(none live)*")
 
     locks = db.list_job_locks()
     if locks:
@@ -103,5 +84,5 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     return _base.JobResult(
         True,
         "\n".join(lines),
-        data={"issue_window": w, "goal": g, "campaigns": camps, "locks": locks, "runs": runs},
+        data={"issue_window": w, "locks": locks, "runs": runs},
     )

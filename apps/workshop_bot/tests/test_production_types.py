@@ -26,11 +26,12 @@ class ProductionTypesTests(unittest.TestCase):
         self.assertEqual(len(prefixes), len(set(prefixes)))
 
     def test_expected_vocabularies(self):
+        self.assertEqual(tuple(pt.PRODUCTION_TYPES), ("newsletter",))
         self.assertEqual(pt.phases_for("newsletter"), ("planned", "write", "build", "publish", "share"))
-        self.assertEqual(pt.phases_for("article"), ("idea", "outline", "draft", "publish"))
-        self.assertEqual(pt.phases_for("podcast"),
-                         ("idea", "outline", "script", "record", "publish"))
-        self.assertEqual(pt.phases_for("project"), ("open", "done"))
+        for retired in ("article", "podcast", "project"):
+            with self.subTest(retired=retired):
+                with self.assertRaises(ValueError):
+                    pt.phases_for(retired)
 
     def test_is_valid_phase(self):
         self.assertTrue(pt.is_valid_phase("newsletter", "share"))
@@ -39,9 +40,9 @@ class ProductionTypesTests(unittest.TestCase):
         self.assertFalse(pt.is_valid_phase("zine", "idea"))
 
     def test_is_terminal(self):
-        self.assertTrue(pt.is_terminal("article", "publish"))
-        self.assertFalse(pt.is_terminal("article", "draft"))
-        self.assertTrue(pt.is_terminal("project", "done"))
+        self.assertTrue(pt.is_terminal("newsletter", "share"))
+        self.assertFalse(pt.is_terminal("newsletter", "publish"))
+        self.assertFalse(pt.is_terminal("article", "publish"))
 
     def test_get_type_raises_on_unknown(self):
         with self.assertRaises(ValueError):

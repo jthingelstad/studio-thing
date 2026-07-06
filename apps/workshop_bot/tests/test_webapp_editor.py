@@ -22,6 +22,7 @@ from aiohttp import web  # noqa: E402
 from aiohttp.test_utils import TestClient, TestServer  # noqa: E402
 
 from apps.workshop_bot.tools import content_store, db, issue_items  # noqa: E402
+from apps.workshop_bot.tools.db.connection import connect  # noqa: E402
 from apps.workshop_bot.webapp import routes, server  # noqa: E402
 
 LOGIN = "jthingelstad@github"
@@ -78,7 +79,11 @@ class WebappEditorTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_editor_is_newsletter_only_and_404s(self):
         c = await self._client()
-        db.create_production(production_type="article", title="x")
+        with connect() as conn:
+            conn.execute(
+                "INSERT INTO productions (id, production_type, seq, title, phase, status) "
+                "VALUES ('ART1', 'article', 1, 'legacy article', 'draft', 'active')"
+            )
         r = await c.get("/productions/ART1/editor", headers=H)
         self.assertEqual(r.status, 400)
         r = await c.get("/productions/WT999/editor", headers=H)

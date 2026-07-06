@@ -1,10 +1,9 @@
 """Job runtime — context, single-asset locking, draft-block helpers.
 
 Every workshop_bot user-facing action is a *job*: deterministic Python in
-this package, fired by per-persona slash surfaces (``/eddy``, ``/linky``, ``/marky``, ``/patty``) and (for
-some) by cron. A job reads from source systems and the per-issue S3
-workspace, may make small encapsulated LLM calls, and writes back into the
-workspace or workshop.db.
+this package, fired by Studio, Eddy, or the small scheduler. A job reads from
+source systems and workshop.db, may make small encapsulated LLM calls, and
+writes back into workshop.db or publishing artifacts.
 
 **Concurrency.** Jobs run serialized *per asset*. The lock unit is the file
 a job intends to write, not the issue — two jobs that write the same file
