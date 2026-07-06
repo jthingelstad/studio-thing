@@ -2,183 +2,282 @@
 {% set nav = "productions" %}
 {% block title %}{{ row.id }}{% endblock %}
 {% block content %}
-  <div style="display:flex; align-items:baseline; gap:.6rem;">
-    <h1 style="flex:1; margin-bottom:.2rem;">{{ row.id }} <span class="ph">{{ phase }}</span></h1>
-    <a class="btn ghost" href="/productions">← issues</a>
-    <a class="btn ghost" href="/productions/{{ row.id }}/editor">editor</a>
-    {% if row.status == 'active' %}
-      <form method="post" action="/productions/{{ row.id }}/status" style="display:inline;">
-        <input type="hidden" name="status" value="paused">
-        <button class="btn ghost" type="submit">Pause</button>
-      </form>
-    {% else %}
-      <form method="post" action="/productions/{{ row.id }}/status" style="display:inline;">
-        <input type="hidden" name="status" value="active">
-        <button class="btn ghost" type="submit">Resume</button>
-      </form>
-    {% endif %}
-    {% if row.status != 'archived' %}
-      <form method="post" action="/productions/{{ row.id }}/status" style="display:inline;">
-        <input type="hidden" name="status" value="archived">
-        <button class="btn ghost" type="submit">Archive</button>
-      </form>
-    {% endif %}
-    <a class="btn ghost" href="/productions/{{ row.id }}/edit">settings</a>
-  </div>
-  <p class="muted">{{ row.title }}{% if row.due_at %} · due {{ row.due_at }}{% endif %}
-    {% if row.pub_date %} · pub {{ row.pub_date }}{% endif %}
-    {% if row.status != 'active' %} · <strong>{{ row.status }}</strong>{% endif %}</p>
+{% set current_phase_index = phases.index(phase) if phase in phases else 0 %}
 
-{% macro block_editor(b, rows=4) %}
-  <form method="post" action="/productions/{{ row.id }}/atom" class="pform" style="margin:.4rem 0 1rem;">
+{% macro readiness(ok, label, value="") %}
+  <div class="readiness-row">
+    <span class="dot {{ 'ready' if ok else 'warn' }}"></span>
+    <span class="label">{{ label }}</span>
+    <span class="value">{{ value }}</span>
+  </div>
+{% endmacro %}
+
+{% macro block_editor(b) %}
+  <form method="post" action="/productions/{{ row.id }}/atom" class="pform atom-editor">
     <input type="hidden" name="name" value="{{ b.name }}">
-    <label>{{ b.label }} <span class="muted">· {{ b.name }}</span></label>
-    <textarea name="value" rows="{{ rows }}">{{ b.value }}</textarea>
-    <div class="actions"><button class="btn" type="submit">Save</button></div>
+    <label>{{ b.label }} <span class="muted">{{ b.name }}</span></label>
+    <textarea name="value" rows="{{ 7 if b.name in ('intro.md', 'outro.md') else 4 }}">{{ b.value }}</textarea>
+    <div class="actions">
+      <button class="btn" type="submit">Save</button>
+      {% if b.name == "intro.md" %}
+        <button class="btn ghost" type="submit" formaction="/productions/{{ row.id }}/continuity"
+                title="Ask Eddy to surface prior published takes on this intro topic">Check continuity</button>
+      {% endif %}
+    </div>
   </form>
 {% endmacro %}
 
-  {# ---- status ---- #}
-  <div class="secthead"><h2>Status</h2>
-    <span class="surface">~{{ state.word_count or 0 }} words
-      {% if state.days_to_pub %}· {{ state.days_to_pub }}{% endif %}</span></div>
-  <div class="card">
-    {% if phase in ("publish", "share") %}
-      <div class="row"><span class="ti">Subject</span><span>{{ "✅" if state.subject else "☐" }} {{ state.subject or "—" }}</span></div>
-      <div class="row"><span class="ti">Description</span><span>{{ "✅" if state.description else "☐" }}</span></div>
-      <div class="row"><span class="ti">Haiku · Echoes</span><span>{{ "✅" if state.haiku_present else "☐" }} {{ "✅" if state.echoes_present else "☐" }}</span></div>
-      <div class="row"><span class="ti">CTA</span><span>{{ state.cta_files|join(", ") or "—" }}</span></div>
-      <div class="row"><span class="ti">Email · Website · Audio</span><span>{{ "✅ sent" if state.email_shipped else "🟢 ready" if state.gates["publish:email"] else "⛔" }} · {{ "🟢" if state.gates["publish:website"] else "☐" }} · {{ "✅" if state.audio_shipped else "🟢" if state.gates["publish:podcast"] else "☐" }}</span></div>
-    {% else %}
-      <div class="row"><span class="ti">Intro · Cover · Outro</span><span>{{ "✅" if state.intro_present else "☐" }} · {{ "✅" if state.cover_present else "☐" }} · {{ "✅" if state.outro_present else "☐" }}</span></div>
-      {% for k, lbl in [("notable","Notable"),("journal","Journal"),("brief","Briefly")] %}
-        <div class="row"><span class="ti">{{ lbl }}</span><span>{{ state.sections[k].item_count }} item(s){{ " · placeholder" if state.sections[k].placeholder else "" }}</span></div>
-      {% endfor %}
-      <div class="row"><span class="ti">Currently · open notes</span><span>{{ state.currently_entries|length }} · {{ state.open_comments }}</span></div>
-      <div class="row"><span class="ti">Build ready</span><span>{{ "✅ yes" if state.build_ready else "⚠️ not yet" }}</span></div>
-    {% endif %}
-  </div>
-
-  {# ---- pipeline actions ---- #}
-  <div class="secthead"><h2>Pipeline</h2></div>
-  <div class="card actions" style="flex-wrap:wrap;">
-    {% if phase == "planned" %}
-      <form method="post" action="/productions/{{ row.id }}/start"><button class="btn">Start working →</button></form>
-      <span class="muted">opens the issue workspace and runs the first source sync</span>
-    {% elif phase in ("write", "build") %}
-      <form method="post" action="/productions/{{ row.id }}/phase">
-        <input type="hidden" name="phase" value="publish">
-        <button class="btn" type="submit" {{ "" if state.build_ready else "disabled" }}>Mark built → Publish</button>
-      </form>
-      {% if not state.build_ready %}<span class="muted">needs the three sections + intro + cover</span>{% endif %}
-    {% elif phase == "publish" %}
-      {% for leg, lbl in [("email","Email"),("website","Website"),("audio","Audio"),("all","Ship all")] %}
-        <form method="post" action="/productions/{{ row.id }}/publish" style="display:inline;"
-              onsubmit="return confirm('Ship {{ lbl }} for {{ row.id }}? This is live.');">
-          <input type="hidden" name="leg" value="{{ leg }}"><button class="btn" type="submit">{{ lbl }}</button>
-        </form>
-      {% endfor %}
-      <form method="post" action="/productions/{{ row.id }}/publish" style="display:inline;"
-            onsubmit="return confirm('Put {{ row.id }} to bed?');">
-        <input type="hidden" name="leg" value="bed"><button class="btn ghost" type="submit">Put to bed</button>
-      </form>
-      <form method="post" action="/productions/{{ row.id }}/phase" style="display:inline;">
-        <input type="hidden" name="phase" value="build"><button class="btn ghost" type="submit">Reopen → Build</button>
-      </form>
-    {% endif %}
-  </div>
-
-  {# ---- draft preview ---- #}
-  {% if phase != "planned" %}
-  <div class="secthead"><h2>Draft</h2>
-    <form method="post" action="/productions/{{ row.id }}/sync" style="display:inline;">
-      <button class="btn ghost" type="submit" title="Pull Pinboard + micro.blog into the issue">Sync sources</button>
-    </form>
-    <form method="post" action="/productions/{{ row.id }}/review" style="display:inline;">
-      <button class="btn ghost" type="submit" title="Run Eddy's editorial review (Opus)">Eddy review</button>
-    </form>
-    <a class="surface" href="{{ review_url }}" target="_blank">open ↗</a></div>
-  <div class="card" style="padding:.4rem;">
-    <iframe src="{{ review_url }}" style="width:100%; height:460px; border:0; border-radius:8px;"></iframe>
-  </div>
-
-  {# ---- Currently ---- #}
-  <div class="secthead"><h2>Currently</h2></div>
-  <div class="card">
-    {% for c in currently %}
-      <div class="row">
-        <span class="id">{{ c.type_label }}</span>
-        <form method="post" action="/productions/{{ row.id }}/currently" class="row" style="flex:1; border:0; padding:0; gap:.4rem;">
-          <input type="hidden" name="op" value="set"><input type="hidden" name="label" value="{{ c.type_label }}">
-          <input name="value" value="{{ c.value }}" style="flex:1;">
-          <button class="btn" type="submit">Save</button>
-        </form>
-        <form method="post" action="/productions/{{ row.id }}/currently">
-          <input type="hidden" name="op" value="clear"><input type="hidden" name="label" value="{{ c.type_label }}">
-          <button class="btn ghost" type="submit">clear</button>
-        </form>
+  <div class="page-head">
+    <div class="title-stack">
+      <div class="title-kicker">
+        <span class="badge neutral">{{ row.id }}</span>
+        <span class="badge {{ 'ready' if phase in ('publish', 'share') else '' }}">{{ phase }}</span>
+        {% if row.status != 'active' %}<span class="badge warn">{{ row.status }}</span>{% endif %}
       </div>
-    {% else %}
-      <div class="muted">No Currently entries yet.</div>
-    {% endfor %}
-    <form method="post" action="/productions/{{ row.id }}/currently" class="row" style="border-top:1px solid var(--rule); gap:.4rem;">
-      <input type="hidden" name="op" value="set">
-      <select name="label">{% for t in currently_types %}<option>{{ t }}</option>{% endfor %}</select>
-      <input name="value" placeholder="value" style="flex:1;">
-      <button class="btn" type="submit">Add</button>
-    </form>
-  </div>
-
-  {# ---- content atoms ---- #}
-  <div class="secthead"><h2>Content</h2></div>
-  <div class="card">
-    {% for b in blocks %}{{ block_editor(b) }}{% if b.name == "intro.md" %}
-      <form method="post" action="/productions/{{ row.id }}/continuity" style="margin:-.6rem 0 1rem;">
-        <button class="btn ghost" type="submit" title="What have I already published on this intro's topic? (Eddy notes in #editorial)">Check continuity</button>
-        <span class="muted">Eddy surfaces your prior published takes on this topic in #editorial.</span>
-      </form>
-    {% endif %}{% endfor %}
-  </div>
-
-  {# ---- cover ---- #}
-  <div class="secthead"><h2>Cover</h2></div>
-  <div class="card">
-    <form method="post" action="/productions/{{ row.id }}/cover" class="pform">
-      <label>Caption</label><input name="caption" value="{{ cover.get('caption','') }}">
-      <label>Location</label><input name="location" value="{{ cover.get('location','') }}">
-      <label>Timestamp</label><input name="timestamp" value="{{ cover.get('timestamp','') }}">
-      <label>Alt text</label><input name="alt" value="{{ cover.get('alt','') }}">
-      <div class="actions"><button class="btn" type="submit">Save cover</button></div>
-    </form>
-    <form method="post" action="/productions/{{ row.id }}/cover-upload" enctype="multipart/form-data" class="pform" style="margin-top:.5rem;">
-      <label>Cover image <span class="muted">· uploads to the workspace as cover.jpg</span></label>
-      <input type="file" name="cover" accept="image/jpeg">
-      <div class="actions"><button class="btn" type="submit">Upload cover</button></div>
-    </form>
-  </div>
-
-  {# ---- subject / description ---- #}
-  <div class="secthead"><h2>Email envelope</h2></div>
-  <div class="card">
-    <form method="post" action="/productions/{{ row.id }}/meta" class="pform">
-      <label>Subject</label><input name="subject" value="{{ meta.get('subject','') }}">
-      <label>Description</label><textarea name="description" rows="2">{{ meta.get('description','') }}</textarea>
-      <div class="actions"><button class="btn" type="submit">Save</button></div>
-    </form>
-  </div>
-
-  {# ---- editorial ---- #}
-  <div class="secthead"><h2>Eddy's notes</h2><span class="surface">{{ comments|length }} open</span></div>
-  <div class="card">
-    {% for c in comments %}
-      <div class="row" style="display:block;">
-        <span class="badge">{{ c.handle }}</span>
-        {% if c.anchor_text %}<span class="muted"> · {{ c.anchor_text }}</span>{% endif %}
-        <div>{{ c.body_md }}</div>
+      <h1>{{ row.title }}</h1>
+      <div class="title-meta">
+        {% if row.pub_date %}<span>Publishes {{ row.pub_date }}</span>{% endif %}
+        {% if row.due_at %}<span>Due {{ row.due_at }}</span>{% endif %}
+        <span>{{ "~" + (state.word_count|string) + " words" if state.word_count is defined else "No draft yet" }}</span>
+        {% if state.days_to_pub is defined and state.days_to_pub is not none %}<span>{{ state.days_to_pub }}</span>{% endif %}
       </div>
-    {% else %}
-      <div class="muted">No open editorial notes.</div>
-    {% endfor %}
+    </div>
+    <div class="toolbar">
+      <a class="btn ghost" href="/productions">Issues</a>
+      {% if phase != "planned" %}<a class="btn ghost" href="/productions/{{ row.id }}/editor">Editor</a>{% endif %}
+      <a class="btn ghost" href="/productions/{{ row.id }}/edit">Settings</a>
+      {% if row.status == 'active' %}
+        <form class="inline-form" method="post" action="/productions/{{ row.id }}/status">
+          <input type="hidden" name="status" value="paused">
+          <button class="btn ghost" type="submit">Pause</button>
+        </form>
+      {% else %}
+        <form class="inline-form" method="post" action="/productions/{{ row.id }}/status">
+          <input type="hidden" name="status" value="active">
+          <button class="btn ghost" type="submit">Resume</button>
+        </form>
+      {% endif %}
+      {% if row.status != 'archived' %}
+        <form class="inline-form" method="post" action="/productions/{{ row.id }}/status">
+          <input type="hidden" name="status" value="archived">
+          <button class="btn danger" type="submit">Archive</button>
+        </form>
+      {% endif %}
+    </div>
   </div>
+
+  {% if phase == "planned" %}
+    <div class="issue-layout">
+      <section class="main-stack">
+        <div class="panel planned-empty">
+          <div>
+            <h2>Issue is planned</h2>
+            <p>The newsletter exists on the calendar. Start working when it is time to open the live issue workspace and run the first source sync.</p>
+            <form method="post" action="/productions/{{ row.id }}/start" class="actions" style="justify-content:center;">
+              <button class="btn" type="submit">Start working</button>
+            </form>
+          </div>
+        </div>
+      </section>
+      <aside class="rail-stack">
+        <section class="panel">
+          <div class="phase-rail">
+            {% for p in phases %}
+              <span class="phase-step {{ 'current' if p == phase else 'done' if loop.index0 < current_phase_index else '' }}">{{ p }}</span>
+            {% endfor %}
+          </div>
+          <div class="readiness-list">
+            {{ readiness(false, "Workspace", "not opened") }}
+            {{ readiness(false, "Draft", "waiting") }}
+            {{ readiness(false, "Eddy review", "later") }}
+          </div>
+        </section>
+      </aside>
+    </div>
+  {% else %}
+    <div class="issue-layout">
+      <section class="main-stack">
+        <section class="panel flush">
+          <div class="panel-head">
+            <h2>Draft Preview</h2>
+            <div class="toolbar">
+              <form method="post" action="/productions/{{ row.id }}/sync">
+                <button class="btn ghost" type="submit" title="Pull Pinboard and micro.blog into the issue">Sync sources</button>
+              </form>
+              <form method="post" action="/productions/{{ row.id }}/review">
+                <button class="btn ghost" type="submit" title="Run Eddy's editorial review">Eddy review</button>
+              </form>
+              <a class="btn ghost" href="{{ review_url }}" target="_blank" rel="noopener">Open</a>
+            </div>
+          </div>
+          <div class="iframe-shell">
+            <iframe src="{{ review_url }}" class="draft-frame"></iframe>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head" style="padding:0 0 .85rem; min-height:auto;">
+            <h2>Content</h2>
+            <span class="meta">Authored atoms</span>
+          </div>
+          <div class="content-stack">
+            {% for b in blocks %}{{ block_editor(b) }}{% endfor %}
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head" style="padding:0 0 .85rem; min-height:auto;">
+            <h2>Cover</h2>
+            <span class="meta">{{ "ready" if state.cover_present else "missing" }}</span>
+          </div>
+          <form method="post" action="/productions/{{ row.id }}/cover" class="pform">
+            <div class="form-grid">
+              <div class="full"><label>Caption</label><input name="caption" value="{{ cover.get('caption','') }}"></div>
+              <div><label>Location</label><input name="location" value="{{ cover.get('location','') }}"></div>
+              <div><label>Timestamp</label><input name="timestamp" value="{{ cover.get('timestamp','') }}"></div>
+              <div class="full"><label>Alt text</label><input name="alt" value="{{ cover.get('alt','') }}"></div>
+            </div>
+            <div class="actions"><button class="btn" type="submit">Save cover</button></div>
+          </form>
+          <form method="post" action="/productions/{{ row.id }}/cover-upload" enctype="multipart/form-data" class="pform">
+            <label>Cover image <span class="muted">uploads as cover.jpg</span></label>
+            <input type="file" name="cover" accept="image/jpeg">
+            <div class="actions"><button class="btn ghost" type="submit">Upload cover</button></div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head" style="padding:0 0 .85rem; min-height:auto;">
+            <h2>Email Envelope</h2>
+            <span class="meta">{{ "ready" if meta.get('subject') and meta.get('description') else "drafting" }}</span>
+          </div>
+          <form method="post" action="/productions/{{ row.id }}/meta" class="pform">
+            <label>Subject</label><input name="subject" value="{{ meta.get('subject','') }}">
+            <label>Description</label><textarea name="description" rows="2">{{ meta.get('description','') }}</textarea>
+            <div class="actions"><button class="btn" type="submit">Save envelope</button></div>
+          </form>
+        </section>
+      </section>
+
+      <aside class="rail-stack">
+        <section class="panel">
+          <div class="panel-head" style="padding:0 0 .85rem; min-height:auto;">
+            <h2>Readiness</h2>
+            <span class="meta">{{ "ready" if (phase in ("publish", "share") or state.build_ready) else "needs work" }}</span>
+          </div>
+          <div class="metric-strip">
+            <div class="metric"><span class="value">{{ state.word_count or 0 }}</span><span class="label">words</span></div>
+            <div class="metric"><span class="value">{{ state.currently_entries|length if state.currently_entries is defined else currently|length }}</span><span class="label">currently</span></div>
+            <div class="metric"><span class="value">{{ comments|length }}</span><span class="label">notes</span></div>
+          </div>
+          <div class="readiness-list">
+            {% if phase in ("publish", "share") %}
+              {{ readiness(state.subject, "Subject", state.subject or "missing") }}
+              {{ readiness(state.description, "Description", "ready" if state.description else "missing") }}
+              {{ readiness(state.haiku_present, "Haiku", "ready" if state.haiku_present else "missing") }}
+              {{ readiness(state.echoes_present, "Echoes", "ready" if state.echoes_present else "missing") }}
+              {{ readiness(state.gates["publish:email"], "Email", "sent" if state.email_shipped else "ready" if state.gates["publish:email"] else (state.email_missing|join(", ") or "blocked")) }}
+              {{ readiness(state.gates["publish:website"], "Website", "ready" if state.gates["publish:website"] else "waiting") }}
+              {{ readiness(state.gates["publish:podcast"], "Audio", "shipped" if state.audio_shipped else "ready" if state.gates["publish:podcast"] else "waiting") }}
+            {% else %}
+              {{ readiness(state.intro_present, "Intro", "ready" if state.intro_present else "missing") }}
+              {{ readiness(state.cover_present, "Cover", "ready" if state.cover_present else "missing") }}
+              {{ readiness(state.outro_present, "Outro", "ready" if state.outro_present else "optional") }}
+              {% for k, lbl in [("notable","Notable"),("journal","Journal"),("brief","Briefly")] %}
+                {% set s = state.sections[k] %}
+                {{ readiness(s.present, lbl, (s.item_count|string) + " item(s)" + (" placeholder" if s.placeholder else "")) }}
+              {% endfor %}
+              {{ readiness(state.currently_entries|length, "Currently", (state.currently_entries|length|string) + " item(s)") }}
+              {{ readiness(state.open_comments == 0, "Eddy notes", (state.open_comments|string) + " open") }}
+              {{ readiness(state.build_ready, "Build ready", "yes" if state.build_ready else "not yet") }}
+            {% endif %}
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head" style="padding:0 0 .85rem; min-height:auto;">
+            <h2>Pipeline</h2>
+            <span class="meta">{{ phase }}</span>
+          </div>
+          <div class="phase-rail">
+            {% for p in phases %}
+              <span class="phase-step {{ 'current' if p == phase else 'done' if loop.index0 < current_phase_index else '' }}">{{ p }}</span>
+            {% endfor %}
+          </div>
+          <div class="actions" style="margin-top:.65rem;">
+            {% if phase in ("write", "build") %}
+              <form method="post" action="/productions/{{ row.id }}/phase">
+                <input type="hidden" name="phase" value="publish">
+                <button class="btn" type="submit" {{ "" if state.build_ready else "disabled" }}>Mark built</button>
+              </form>
+              {% if not state.build_ready %}<span class="muted">Needs sections, intro, and cover.</span>{% endif %}
+            {% elif phase == "publish" %}
+              {% for leg, lbl in [("email","Email"),("website","Website"),("audio","Audio"),("all","Ship all")] %}
+                <form method="post" action="/productions/{{ row.id }}/publish"
+                      onsubmit="return confirm('Ship {{ lbl }} for {{ row.id }}? This is live.');">
+                  <input type="hidden" name="leg" value="{{ leg }}"><button class="btn" type="submit">{{ lbl }}</button>
+                </form>
+              {% endfor %}
+              <form method="post" action="/productions/{{ row.id }}/publish"
+                    onsubmit="return confirm('Put {{ row.id }} to bed?');">
+                <input type="hidden" name="leg" value="bed"><button class="btn ghost" type="submit">Put to bed</button>
+              </form>
+              <form method="post" action="/productions/{{ row.id }}/phase">
+                <input type="hidden" name="phase" value="build"><button class="btn ghost" type="submit">Reopen build</button>
+              </form>
+            {% else %}
+              <span class="muted">No pipeline action for this phase.</span>
+            {% endif %}
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head" style="padding:0 0 .85rem; min-height:auto;">
+            <h2>Currently</h2>
+            <span class="meta">{{ currently|length }} item(s)</span>
+          </div>
+          {% for c in currently %}
+            <div class="row">
+              <span class="id">{{ c.type_label }}</span>
+              <form method="post" action="/productions/{{ row.id }}/currently" class="field-inline">
+                <input type="hidden" name="op" value="set"><input type="hidden" name="label" value="{{ c.type_label }}">
+                <input name="value" value="{{ c.value }}">
+                <button class="btn ghost" type="submit">Save</button>
+              </form>
+              <form method="post" action="/productions/{{ row.id }}/currently">
+                <input type="hidden" name="op" value="clear"><input type="hidden" name="label" value="{{ c.type_label }}">
+                <button class="btn danger" type="submit">Clear</button>
+              </form>
+            </div>
+          {% else %}
+            <div class="muted">No Currently entries yet.</div>
+          {% endfor %}
+          <form method="post" action="/productions/{{ row.id }}/currently" class="row">
+            <input type="hidden" name="op" value="set">
+            <div class="field-inline">
+              <select name="label">{% for t in currently_types %}<option>{{ t }}</option>{% endfor %}</select>
+              <input name="value" placeholder="value">
+              <button class="btn" type="submit">Add</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head" style="padding:0 0 .85rem; min-height:auto;">
+            <h2>Eddy's Notes</h2>
+            <span class="meta">{{ comments|length }} open</span>
+          </div>
+          {% for c in comments %}
+            <div class="row" style="display:block;">
+              <span class="badge neutral">{{ c.handle }}</span>
+              {% if c.anchor_text %}<span class="muted">{{ c.anchor_text }}</span>{% endif %}
+              <div style="margin-top:.35rem;">{{ c.body_md }}</div>
+            </div>
+          {% else %}
+            <div class="muted">No open editorial notes.</div>
+          {% endfor %}
+        </section>
+      </aside>
+    </div>
   {% endif %}
 {% endblock %}

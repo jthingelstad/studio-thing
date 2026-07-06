@@ -1,15 +1,17 @@
 {# Reusable Eddy chat panel. Set `chat_key` before including. #}
 <div class="secthead"><h2>Ask Eddy</h2><span class="surface">secondary</span></div>
-<div class="card">
+<section class="panel">
   <div id="chatlog" class="chatlog"></div>
-  <form id="chatform" class="row" style="gap:.4rem; border-top:1px solid var(--rule);">
-    <select id="chatpersona" title="who to address">
-      <option value="eddy">Eddy</option>
-    </select>
-    <input id="chatmsg" placeholder="Ask Eddy..." style="flex:1;" autocomplete="off">
-    <button class="btn" type="submit">Send</button>
+  <form id="chatform" class="row">
+    <div class="field-inline">
+      <select id="chatpersona" title="Who to address">
+        <option value="eddy">Eddy</option>
+      </select>
+      <input id="chatmsg" placeholder="Ask Eddy..." autocomplete="off">
+      <button class="btn" type="submit">Send</button>
+    </div>
   </form>
-</div>
+</section>
 <script>
 (function(){
   const key = {{ chat_key|tojson }};

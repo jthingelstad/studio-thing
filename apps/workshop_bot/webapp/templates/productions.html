@@ -2,51 +2,60 @@
 {% set nav = "productions" %}
 {% block title %}Newsletter Issues{% endblock %}
 {% block content %}
-  <div style="display:flex; align-items:baseline; gap:1rem;">
-    <h1 style="flex:1;">Newsletter Issues</h1>
-    <a class="btn" href="/productions/new">+ New issue</a>
+  <div class="page-head compact">
+    <div class="title-stack">
+      <div class="title-kicker"><span class="badge neutral">newsletter</span></div>
+      <h1>Newsletter Issues</h1>
+      <div class="title-meta">
+        {% if show_all %}
+          <span>Every issue Studio knows about.</span>
+          <a href="/productions">Show working view</a>
+        {% else %}
+          <span>Current and planned issues.</span>
+          <a href="/productions?all=1">Show shipped archive</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="toolbar"><a class="btn" href="/productions/new">New issue</a></div>
   </div>
-  <p class="muted">
-    {% if show_all %}
-      Every newsletter issue Studio knows about — in-flight and shipped.
-      <a href="/productions">show working view</a>
-    {% else %}
-      Current and planned newsletter issues. Paused items stay listed;
-      <a href="/productions?all=1">show shipped archive</a>
-    {% endif %}
-    <span class="badge">newsletter</span>
-  </p>
 
   <form method="post" action="/productions/bulk-status">
-    <div class="card" style="display:flex; gap:.5rem; align-items:center; padding:.5rem .8rem; margin-bottom:1rem;">
-      <span class="muted" style="flex:1;">With selected:</span>
-      <button class="btn ghost" type="submit" name="action" value="pause">Pause</button>
-      <button class="btn ghost" type="submit" name="action" value="activate">Activate</button>
-      <button class="btn ghost" type="submit" name="action" value="archive">Archive</button>
-    </div>
+    <section class="panel tight">
+      <div class="toolbar">
+        <span class="muted" style="margin-right:auto;">With selected</span>
+        <button class="btn ghost" type="submit" name="action" value="pause">Pause</button>
+        <button class="btn ghost" type="submit" name="action" value="activate">Activate</button>
+        <button class="btn danger" type="submit" name="action" value="archive">Archive</button>
+      </div>
+    </section>
 
     {% for g in groups %}
       <div class="secthead">
         <h2>{{ g.label }}</h2>
         {% if g.surface %}<span class="surface">{{ g.surface }}</span>{% endif %}
-        {% if not show_all and g.shipped %}<span class="surface">· {{ g.shipped }} shipped</span>{% endif %}
+        {% if not show_all and g.shipped %}<span class="surface">{{ g.shipped }} shipped</span>{% endif %}
       </div>
-      <div class="card">
+      <section class="panel flush">
         {% if g.rows %}
-          {% for p in g.rows %}
-            <div class="row {{ 'done' if p.status in ('done','archived','abandoned','paused') else '' }}">
-              <input type="checkbox" name="pid" value="{{ p.id }}" style="margin-right:.2rem;">
-              <span class="id">{{ p.id }}</span>
-              <span class="ph">{{ p.phase }}</span>
-              <span class="ti"><a href="/productions/{{ p.id }}" style="text-decoration:none; color:inherit;">{{ p.title }}</a>{% if p.status != 'active' %} <span class="muted">· {{ p.status }}</span>{% endif %}</span>
-              {% if p.due_at %}<span class="due">due {{ p.due_at }}</span>{% endif %}
-              <a href="/productions/{{ p.id }}/edit">edit</a>
-            </div>
-          {% endfor %}
+          <div class="issue-list">
+            {% for p in g.rows %}
+              <div class="issue-row {{ 'done' if p.status in ('done','archived','abandoned','paused') else '' }}">
+                <input type="checkbox" name="pid" value="{{ p.id }}">
+                <span class="id">{{ p.id }}</span>
+                <span class="ph">{{ p.phase }}</span>
+                <span class="title">
+                  <a href="/productions/{{ p.id }}">{{ p.title }}</a>
+                  {% if p.status != 'active' %}<span class="muted"> {{ p.status }}</span>{% endif %}
+                </span>
+                {% if p.due_at %}<span class="due">due {{ p.due_at }}</span>{% else %}<span class="due"></span>{% endif %}
+                <a class="edit-link" href="/productions/{{ p.id }}/edit">Edit</a>
+              </div>
+            {% endfor %}
+          </div>
         {% else %}
-          <div class="muted">{{ 'No issues yet.' if show_all else 'No active or planned issues.' }}</div>
+          <div class="panel-body muted">{{ 'No issues yet.' if show_all else 'No active or planned issues.' }}</div>
         {% endif %}
-      </div>
+      </section>
     {% endfor %}
   </form>
 {% endblock %}
