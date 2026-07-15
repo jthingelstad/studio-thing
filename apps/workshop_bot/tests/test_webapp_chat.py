@@ -52,6 +52,15 @@ class WebChatTests(unittest.IsolatedAsyncioTestCase):
         self.addAsyncCleanup(client.close)
         return client
 
+    async def _messages_after_assistant(self, client):
+        msgs = []
+        for _ in range(20):
+            await asyncio.sleep(0.05)
+            msgs = (await (await client.get("/chat?context_key=WT360", headers=H)).json())["messages"]
+            if any(m["role"] == "assistant" for m in msgs):
+                break
+        return msgs
+
     async def test_chat_runs_the_addressed_agent_with_context(self):
         eddy = MagicMock()
         eddy.core = AsyncMock(return_value=("Open with the tension.", {}))
@@ -60,11 +69,7 @@ class WebChatTests(unittest.IsolatedAsyncioTestCase):
         r = await c.post("/chat", headers=H,
                          data={"context_key": "WT360", "message": "How do I open?", "persona": "eddy"})
         self.assertEqual((await r.json())["persona"], "eddy")
-        for _ in range(20):
-            await asyncio.sleep(0.05)
-            msgs = (await (await c.get("/chat?context_key=WT360", headers=H)).json())["messages"]
-            if any(m["role"] == "assistant" for m in msgs):
-                break
+        msgs = await self._messages_after_assistant(c)
         roles = [(m["role"], m["content"]) for m in msgs]
         self.assertIn(("user", "How do I open?"), roles)
         self.assertIn(("assistant", "Open with the tension."), roles)
@@ -78,15 +83,13 @@ class WebChatTests(unittest.IsolatedAsyncioTestCase):
         r = await c.post("/chat", headers=H,
                          data={"context_key": "WT360", "message": "@linky find sources", "persona": "linky"})
         self.assertEqual((await r.json())["persona"], "eddy")
+        msgs = await self._messages_after_assistant(c)
+        self.assertTrue(any("Let's stay with the issue." in m["content"] for m in msgs))
 
     async def test_offline_when_no_team(self):
         c = await self._client(None)
         await c.post("/chat", headers=H, data={"context_key": "WT360", "message": "hi", "persona": "eddy"})
-        for _ in range(20):
-            await asyncio.sleep(0.05)
-            msgs = (await (await c.get("/chat?context_key=WT360", headers=H)).json())["messages"]
-            if any(m["role"] == "assistant" for m in msgs):
-                break
+        msgs = await self._messages_after_assistant(c)
         self.assertTrue(any("Eddy is not reachable" in m["content"] for m in msgs if m["role"] == "assistant"))
 
     async def test_foreign_origin_is_403(self):
