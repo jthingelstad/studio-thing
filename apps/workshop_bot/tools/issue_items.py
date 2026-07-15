@@ -82,6 +82,13 @@ class ReorderError(ValueError):
 
 def _row_to_dict(row) -> dict[str, Any]:
     d = dict(row)
+    if "body_override" in d:
+        source_body = d.get("body_md")
+        override = d.get("body_override")
+        d["source_body_md"] = source_body
+        d["body_overridden"] = override is not None
+        if override is not None:
+            d["body_md"] = override
     raw = d.get("metadata_json")
     if raw:
         try:
@@ -114,7 +121,9 @@ def upsert_item(
     ``promoted_position``, and ``promoted_heading`` — those are editorial
     state (``position`` from ``reorder``; the promotion fields from the
     ``Featured``-category promotion path), not re-derived from the
-    upstream item on every sync.
+    upstream item on every sync. Editor-owned columns such as
+    ``section_override``, ``excluded``, and ``body_override`` are not written
+    here, so web edits survive daily source refreshes.
     Only the upstream-derivable fields (url, title, body_md, metadata,
     section) get refreshed; section is allowed to change in case Jamie
     re-tags a Pinboard item ``_brief`` mid-cycle.
@@ -226,14 +235,16 @@ def list_items(
     parent section's body (a promoted item shouldn't also appear in its
     parent).
 
-    **Editor-aware (atom editor, build 1):** the ``section`` filter matches
+    **Editor-aware:** the ``section`` filter matches
     the *effective* section — ``COALESCE(section_override, section)`` — so a
     briefly ↔ notable flip made in the web editor flows through every
     consumer (draft, renderers, reorder, status) uniformly. Rows deselected
     in the editor (``excluded = 1``) are dropped unless
     ``include_excluded=True`` (the editor itself lists them so they can be
-    re-selected). With no overrides/exclusions set, results are identical to
-    the pre-editor behavior.
+    re-selected). ``body_override`` is exposed as the effective ``body_md``;
+    callers that need the upstream source text can read ``source_body_md``.
+    With no overrides/exclusions set, results are identical to the
+    pre-editor behavior.
     """
     sql = "SELECT * FROM issue_items WHERE issue_number = ?"
     args: list[Any] = [issue_number]
@@ -396,6 +407,24 @@ def set_excluded(item_id: int, excluded: bool) -> None:
             "UPDATE issue_items SET excluded = ?, updated_at = datetime('now') "
             "WHERE id = ?",
             (1 if excluded else 0, int(item_id)),
+        )
+        if not cur.rowcount:
+            raise ValueError(f"item_id={item_id!r} not found")
+
+
+def set_body_override(item_id: int, body_md: Optional[str]) -> None:
+    """Editor-owned body replacement for an ``issue_items`` row.
+
+    ``None`` clears the override and reverts render output to the
+    source-owned ``body_md``. An empty string is a real override: it removes
+    the item's commentary/body from the issue while leaving title and URL
+    source-owned.
+    """
+    with connect() as conn:
+        cur = conn.execute(
+            "UPDATE issue_items SET body_override = ?, updated_at = datetime('now') "
+            "WHERE id = ?",
+            (body_md, int(item_id)),
         )
         if not cur.rowcount:
             raise ValueError(f"item_id={item_id!r} not found")

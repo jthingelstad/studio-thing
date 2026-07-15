@@ -573,9 +573,11 @@ CREATE INDEX IF NOT EXISTS idx_currently_entries_render
 -- Body shape:
 --   - title — H3 link text (Notable, elevated Journal) or "" (status posts)
 --   - url — primary link target
---   - body_md — commentary (Notable), full post body (Journal — already
---     image-rehosted), pre-arrow commentary (Brief; the bolded link is
+--   - body_md — source-owned commentary (Notable), full post body (Journal —
+--     already image-rehosted), pre-arrow commentary (Brief; the bolded link is
 --     rendered from title+url, not stored in body_md)
+--   - body_override — editor-owned replacement body used by Studio renderers;
+--     sync never writes it, so inline editorial edits survive refresh
 --   - metadata_json — per-source extras: weekday-time label (Journal),
 --     brief tag flag, image rehost manifest, etc.
 CREATE TABLE IF NOT EXISTS issue_items (
@@ -593,6 +595,7 @@ CREATE TABLE IF NOT EXISTS issue_items (
   url TEXT,
   title TEXT,
   body_md TEXT,
+  body_override TEXT,                         -- editor-owned body replacement; render reads COALESCE(body_override, body_md); sync never writes it
   metadata_json TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),

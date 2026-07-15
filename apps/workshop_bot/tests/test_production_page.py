@@ -77,7 +77,9 @@ class ProductionPageTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(content_store.read_issue(360, "intro.md"), "Hello intro")
         body = await (await c.get("/productions/WT360", headers=H)).text()
         self.assertIn("Hello intro", body)
-        self.assertIn(">Content<", body)
+        self.assertIn(">Issue Canvas<", body)
+        self.assertIn(">Edit text<", body)
+        self.assertNotIn(">Content<", body)
 
     async def test_currently_and_cover_handlers(self):
         c = await self._client()

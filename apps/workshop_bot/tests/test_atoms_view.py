@@ -57,7 +57,7 @@ class AtomsViewTests(_DBCase):
         self.assertIn("Cannon Lake", photo["body"])
         notable = atoms[3]
         self.assertEqual(notable["item_id"], self.n1)
-        self.assertFalse(notable["editable"])   # derived: mirrors Pinboard
+        self.assertTrue(notable["editable"])
         self.assertTrue(notable["flippable"])
         self.assertEqual(notable["url"], "https://a")
         journal = atoms[4]
@@ -80,6 +80,15 @@ class AtomsViewTests(_DBCase):
         kinds = [a["kind"] for a in atoms]
         self.assertEqual(kinds.count("notable"), 2)
         self.assertEqual(kinds.count("brief"), 0)
+
+    def test_body_override_reflected(self):
+        self._seed()
+        issue_items.set_body_override(self.n1, "Edited **body**.")
+        notable = [a for a in atoms_view.build(349) if a["item_id"] == self.n1][0]
+        self.assertEqual(notable["body"], "Edited **body**.")
+        self.assertIn("Edited", notable["rendered_body"])
+        self.assertEqual(notable["source_body"], "notable body")
+        self.assertTrue(notable["body_overridden"])
 
     def test_empty_issue_still_projects_skeleton(self):
         atoms = atoms_view.build(999)

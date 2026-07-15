@@ -77,6 +77,17 @@ class WebappEditorTests(unittest.IsolatedAsyncioTestCase):
         self.assertLess(body.index("<h2>Notable"), body.index("<h2>Journal"))
         self.assertLess(body.index("<h2>Journal"), body.index("<h2>Briefly"))
 
+    async def test_production_page_renders_live_issue_canvas(self):
+        c = await self._client()
+        r = await c.get("/productions/WT349", headers=H)
+        body = await r.text()
+        self.assertEqual(r.status, 200)
+        self.assertIn("Issue Canvas", body)
+        self.assertIn("A pin", body)
+        self.assertIn("Edit text", body)
+        self.assertNotIn("Draft Preview", body)
+        self.assertNotIn("<iframe", body)
+
     async def test_editor_is_newsletter_only_and_404s(self):
         c = await self._client()
         with connect() as conn:
@@ -103,6 +114,31 @@ class WebappEditorTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(r.status, 302)
         entries = db.currently_get_entries(349)
         self.assertEqual(entries[0]["value"], "atoms")
+
+    async def test_atom_save_issue_item_body_override(self):
+        c = await self._client()
+        r = await c.post("/productions/WT349/editor/atom", headers=H,
+                         allow_redirects=False,
+                         data={
+                             "key": f"item:{self.n1}",
+                             "value": "Edited in Studio.",
+                             "return_to": f"/productions/WT349#atom-item-{self.n1}",
+                         })
+        self.assertEqual(r.status, 302)
+        self.assertEqual(
+            r.headers["Location"], f"/productions/WT349#atom-item-{self.n1}")
+        row = issue_items.get_item(self.n1)
+        self.assertEqual(row["body_md"], "Edited in Studio.")
+        self.assertEqual(row["source_body_md"], "a")
+        r = await c.post("/productions/WT349/editor/atom", headers=H,
+                         allow_redirects=False,
+                         data={
+                             "key": f"item:{self.n1}",
+                             "value": "ignored",
+                             "clear_override": "1",
+                         })
+        self.assertEqual(r.status, 302)
+        self.assertEqual(issue_items.get_item(self.n1)["body_md"], "a")
 
     async def test_atom_save_rejects_non_editor_names(self):
         c = await self._client()

@@ -74,6 +74,8 @@ def _resolve_n(n: Optional[int], window: Optional[dict]) -> tuple[Optional[int],
     dict that has dates but no issue_number)."""
     window = window or db.get_active_issue_window()
     if window is None:
+        if n is not None:
+            return int(n), {}
         return None, None
     derived = window.get("issue_number")
     if derived is not None:

@@ -205,6 +205,7 @@ class EditorColumnsTests(_DBCase):
     def test_override_and_excluded_survive_sync_upsert(self):
         b = self._pin("b1", body="original")
         issue_items.set_section_override(b, "notable")
+        issue_items.set_body_override(b, "edited in Studio")
         e = self._pin("b2")
         issue_items.set_excluded(e, True)
         # Simulate the daily sync refresh: same (issue, source, source_id).
@@ -218,10 +219,21 @@ class EditorColumnsTests(_DBCase):
         )
         flipped = issue_items.get_item(b)
         self.assertEqual(flipped["section_override"], "notable")   # survived
-        self.assertEqual(flipped["body_md"], "refreshed")          # sync owns body
+        self.assertEqual(flipped["body_md"], "edited in Studio")   # render uses override
+        self.assertEqual(flipped["source_body_md"], "refreshed")   # sync owns source body
+        self.assertTrue(flipped["body_overridden"])
         self.assertEqual(issue_items.get_item(e)["excluded"], 1)   # survived
         self.assertEqual(
             [r["id"] for r in issue_items.list_items(349, section="notable")], [b])
+
+    def test_body_override_can_clear_to_source_body(self):
+        b = self._pin("b1", body="original")
+        issue_items.set_body_override(b, "edited")
+        self.assertEqual(issue_items.get_item(b)["body_md"], "edited")
+        issue_items.set_body_override(b, None)
+        row = issue_items.get_item(b)
+        self.assertEqual(row["body_md"], "original")
+        self.assertFalse(row["body_overridden"])
 
     def test_excluded_hidden_from_render_paths_but_listable(self):
         a = self._pin("b1")
@@ -255,6 +267,8 @@ class EditorColumnsTests(_DBCase):
             issue_items.set_section_override(b, "bogus")
         with self.assertRaises(ValueError):
             issue_items.set_excluded(9999, True)
+        with self.assertRaises(ValueError):
+            issue_items.set_body_override(9999, "x")
 
 
 # ---------------- reorder ----------------

@@ -23,13 +23,13 @@ Atom shape (dict):
     body        markdown body ('' when absent)
     source      provenance: 'pinboard' | 'microblog' | 'original' | 'generated'
     url         upstream URL when derived (the pin / blog post)
-    editable    body editable in the web editor (authored atoms only in
-                build 1 — derived bodies mirror their upstream until the
-                Pinboard write-back lands)
+    editable    body editable in the web editor
     selected    False when the editor deselected it (issue_items.excluded)
     flippable   participates in the briefly ↔ notable promotion verb
     item_id     issue_items row id (derived atoms only)
     overridden  True when section_override is set (flip active)
+    body_overridden True when body_override replaces the source body
+    source_body upstream/source-owned body (derived atoms only)
     promoted    True when lifted to a standalone featured section
 """
 
@@ -38,7 +38,7 @@ from __future__ import annotations
 import json
 from typing import Any, Optional
 
-from .. import content_store, issue_items
+from .. import content_store, issue_items, issue_items_render
 from .. import db
 
 # Reading order of the issue, per the design brief. Notable/journal/brief
@@ -69,6 +69,7 @@ def _authored_atom(production_id: str, kind: str) -> dict[str, Any]:
     return {
         "kind": kind, "key": f"content:{name}",
         "title": kind.capitalize(), "body": body,
+        "rendered_body": body,
         "source": "generated" if kind in ("echoes", "closer") else "original",
         "url": None, "editable": True, "selected": True,
         "flippable": False, "item_id": None,
@@ -82,6 +83,7 @@ def _currently_atoms(issue_number: int) -> list[dict[str, Any]]:
         out.append({
             "kind": "currently", "key": f"currently:{e['type_label']}",
             "title": e["type_label"], "body": e.get("value") or "",
+            "rendered_body": e.get("value") or "",
             "source": "original", "url": None, "editable": True,
             "selected": True, "flippable": False, "item_id": None,
             "overridden": False, "promoted": False,
@@ -103,6 +105,7 @@ def _photo_atom(production_id: str) -> dict[str, Any]:
     return {
         "kind": "photo", "key": "photo:cover.json",
         "title": "Photo", "body": body,
+        "rendered_body": body,
         "source": "original", "url": None, "editable": False,
         "selected": True, "flippable": False, "item_id": None,
         "overridden": False, "promoted": False,
@@ -111,16 +114,24 @@ def _photo_atom(production_id: str) -> dict[str, Any]:
 
 def _item_atom(row: dict[str, Any]) -> dict[str, Any]:
     effective = str(row.get("section_override") or row["section"])
+    rendered = {
+        "notable": issue_items_render._render_notable_item,
+        "journal": issue_items_render._render_journal_entry,
+        "brief": issue_items_render._render_brief_item,
+    }[effective](row)
     return {
         "kind": effective, "key": f"item:{row['id']}",
         "title": row.get("title") or "(untitled)",
         "body": row.get("body_md") or "",
+        "rendered_body": rendered,
         "source": row["source"], "url": row.get("url"),
-        "editable": False,  # derived bodies mirror upstream in build 1
+        "editable": True,
         "selected": not row.get("excluded"),
         "flippable": effective in ("notable", "brief"),
         "item_id": int(row["id"]),
         "overridden": row.get("section_override") is not None,
+        "body_overridden": bool(row.get("body_overridden")),
+        "source_body": row.get("source_body_md"),
         "promoted": bool(row.get("is_promoted")),
     }
 

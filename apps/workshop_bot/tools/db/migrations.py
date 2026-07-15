@@ -547,6 +547,17 @@ def _m_0023_drop_seeds_garden(conn: sqlite3.Connection) -> None:
     conn.execute("DROP TABLE IF EXISTS seed_clusters")
 
 
+def _m_0024_issue_items_body_override(conn: sqlite3.Connection) -> None:
+    """Add editor-owned body overrides for atomic Studio edits.
+
+    ``body_md`` remains the source-owned Pinboard / micro.blog mirror.
+    ``body_override`` is what Jamie edits in Studio; render reads prefer it
+    and ``issue_items_sync`` never writes it, matching the existing
+    ``section_override`` / ``excluded`` editor-state pattern.
+    """
+    _add_column_if_missing(conn, "issue_items", "body_override", "TEXT")
+
+
 def _m_0010_strip_markers_from_issue_items_body_md(conn: sqlite3.Connection) -> None:
     """An older manual-seed path baked rendered ``<!-- cta:N -->`` /
     ``<!-- thanks:N -->`` markers into ``issue_items.body_md``. Marker
@@ -698,6 +709,11 @@ MIGRATIONS: tuple[Migration, ...] = (
         id="0023_drop_seeds_garden",
         description="Drop seeds/seed_clusters (garden retired)",
         apply=_m_0023_drop_seeds_garden,
+    ),
+    Migration(
+        id="0024_issue_items_body_override",
+        description="Add issue_items.body_override for atomic Studio body edits",
+        apply=_m_0024_issue_items_body_override,
     ),
 )
 

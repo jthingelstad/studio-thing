@@ -7,6 +7,9 @@ from pathlib import Path
 
 import jinja2
 from aiohttp import web
+from markupsafe import Markup
+
+from ..tools import render as issue_render
 
 _env = jinja2.Environment(
     loader=jinja2.FileSystemLoader(str(Path(__file__).parent / "templates")),
@@ -14,6 +17,14 @@ _env = jinja2.Environment(
     trim_blocks=True,
     lstrip_blocks=True,
 )
+
+
+def _markdown_fragment(value: object) -> Markup:
+    text = value if isinstance(value, str) else ""
+    return Markup(issue_render._markdown_to_html(text))
+
+
+_env.filters["markdown"] = _markdown_fragment
 
 
 def render(template: str, request: web.Request, *, status: int = 200, **ctx) -> web.Response:

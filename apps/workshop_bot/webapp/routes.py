@@ -18,7 +18,7 @@ import logging
 from aiohttp import web
 
 from ..jobs import _base, production_ops, production_state, publish, put_to_bed, start_issue
-from ..tools import content_store, db, issue_items, s3
+from ..tools import content_store, db, issue_items, issue_items_render, s3
 from ..tools.content import atoms_view
 from ..tools.content import production_types as ptypes
 from . import server
@@ -218,12 +218,7 @@ async def _load_newsletter(request: web.Request) -> tuple[dict, int]:
 async def editor_page(request: web.Request) -> web.Response:
     row, n = await _load_newsletter(request)
     atoms = await asyncio.to_thread(atoms_view.build, n, row["id"])
-    # Group for section headers: consecutive same-kind runs.
-    groups: list[dict] = []
-    for a in atoms:
-        if not groups or groups[-1]["kind"] != a["kind"]:
-            groups.append({"kind": a["kind"], "atoms": []})
-        groups[-1]["atoms"].append(a)
+    groups = _atom_groups(atoms)
     return render("editor.html", request, row=row, issue_number=n, groups=groups)
 
 
@@ -231,10 +226,25 @@ def _editor_url(row: dict) -> str:
     return f"/productions/{row['id']}/editor"
 
 
+def _atom_groups(atoms: list[dict]) -> list[dict]:
+    groups: list[dict] = []
+    for a in atoms:
+        if not groups or groups[-1]["kind"] != a["kind"]:
+            groups.append({"kind": a["kind"], "atoms": []})
+        groups[-1]["atoms"].append(a)
+    return groups
+
+
+def _post_return(row: dict, data, default: str) -> str:
+    target = (data.get("return_to") or "").strip()
+    base = f"/productions/{row['id']}"
+    if target == base or target.startswith(f"{base}#") or target.startswith(f"{base}/"):
+        return target
+    return default
+
+
 async def editor_atom_save(request: web.Request) -> web.Response:
-    """Save an authored atom's body (intro/outro/echoes/closer) or a
-    currently entry. Derived atoms are read-only in build 1 (their bodies
-    mirror Pinboard / micro.blog until the write-back lands)."""
+    """Save an atom body from the editor or live issue canvas."""
     if not _same_origin(request):
         raise web.HTTPForbidden(text="bad origin")
     row, n = await _load_newsletter(request)
@@ -254,9 +264,19 @@ async def editor_atom_save(request: web.Request) -> web.Response:
             await asyncio.to_thread(db.currently_set_entry, n, label, value)
         except ValueError as exc:
             raise web.HTTPBadRequest(text=str(exc))
+    elif key.startswith("item:"):
+        try:
+            item_id = int(key[len("item:"):])
+            item = await asyncio.to_thread(issue_items.get_item, item_id)
+            if not item or int(item["issue_number"]) != n:
+                raise ValueError(f"item_id={item_id!r} not found for WT{n}")
+            override = None if data.get("clear_override") == "1" else value
+            await asyncio.to_thread(issue_items.set_body_override, item_id, override)
+        except ValueError as exc:
+            raise web.HTTPBadRequest(text=str(exc))
     else:
         raise web.HTTPBadRequest(text=f"unknown atom key: {key!r}")
-    raise web.HTTPFound(_editor_url(row))
+    raise web.HTTPFound(_post_return(row, data, _editor_url(row)))
 
 
 async def editor_item_flip(request: web.Request) -> web.Response:
@@ -274,7 +294,7 @@ async def editor_item_flip(request: web.Request) -> web.Response:
             None if target == "clear" else target)
     except ValueError as exc:
         raise web.HTTPBadRequest(text=str(exc))
-    raise web.HTTPFound(_editor_url(row))
+    raise web.HTTPFound(_post_return(row, data, _editor_url(row)))
 
 
 async def editor_item_select(request: web.Request) -> web.Response:
@@ -289,7 +309,7 @@ async def editor_item_select(request: web.Request) -> web.Response:
             issue_items.set_excluded, item_id, data.get("selected") == "0")
     except ValueError as exc:
         raise web.HTTPBadRequest(text=str(exc))
-    raise web.HTTPFound(_editor_url(row))
+    raise web.HTTPFound(_post_return(row, data, _editor_url(row)))
 
 
 async def editor_item_move(request: web.Request) -> web.Response:
@@ -304,17 +324,11 @@ async def editor_item_move(request: web.Request) -> web.Response:
             issue_items.move_item, item_id, (data.get("dir") or "").strip())
     except ValueError as exc:
         raise web.HTTPBadRequest(text=str(exc))
-    raise web.HTTPFound(_editor_url(row))
+    raise web.HTTPFound(_post_return(row, data, _editor_url(row)))
 
 
 # ---------- the production page (the work surface) ----------
 
-# Newsletter authored content blocks editable on the page (name, label).
-_NEWSLETTER_BLOCKS = [
-    ("intro.md", "Intro"), ("outro.md", "Outro"), ("haiku.md", "Haiku"),
-    ("echoes.md", "Echoes"),
-    ("cta-1.md", "CTA · slot 1"), ("cta-2.md", "CTA · slot 2"), ("thanks-1.md", "Thanks"),
-]
 def _ctx(request):
     return _base.JobContext(deps=request.app.get(server.DEPS), trigger="web")
 
@@ -331,11 +345,12 @@ def _newsletter_page_data(row) -> dict:
     phase = row["phase"]
     state = (production_state.publish_state(n) if phase in ("publish", "share")
              else production_state.build_state(n))
-    blocks = [{"name": name, "label": label, "value": content_store.read_issue(n, name) or ""}
-              for name, label in _NEWSLETTER_BLOCKS]
+    atoms = atoms_view.build(n, row["id"])
     return {
         "row": row, "ptype": "newsletter", "n": n, "phase": phase, "state": state,
-        "blocks": blocks,
+        "atoms": atoms,
+        "atom_groups": _atom_groups(atoms),
+        "notable_preamble": issue_items_render.reddit_tag_line(n),
         "cover": _json_content(content_store.read_issue(n, "cover.json") or ""),
         "meta": _json_content(content_store.read_issue(n, "metadata.json") or ""),
         "currently": db.currently_get_entries(n),

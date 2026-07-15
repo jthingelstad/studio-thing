@@ -12,19 +12,106 @@
   </div>
 {% endmacro %}
 
-{% macro block_editor(b) %}
-  <form method="post" action="/productions/{{ row.id }}/atom" class="pform atom-editor">
-    <input type="hidden" name="name" value="{{ b.name }}">
-    <label>{{ b.label }} <span class="muted">{{ b.name }}</span></label>
-    <textarea name="value" rows="{{ 7 if b.name in ('intro.md', 'outro.md') else 4 }}">{{ b.value }}</textarea>
-    <div class="actions">
-      <button class="btn" type="submit">Save</button>
-      {% if b.name == "intro.md" %}
-        <button class="btn ghost" type="submit" formaction="/productions/{{ row.id }}/continuity"
-                title="Ask Eddy to surface prior published takes on this intro topic">Check continuity</button>
+{% set section_labels = {
+  "intro": "Intro",
+  "currently": "Currently",
+  "photo": "Photo",
+  "notable": "Notable",
+  "journal": "Journal",
+  "brief": "Briefly",
+  "outro": "Outro",
+  "echoes": "Echoes",
+  "closer": "Closer"
+} %}
+
+{% macro atom_row(a) %}
+  {% set anchor = "atom-" ~ (a.key|replace(":", "-")) %}
+  <article class="issue-atom {{ 'is-muted' if not a.selected else '' }}" id="{{ anchor }}">
+    <header class="atom-head">
+      <div class="atom-title">
+        <span class="atom-kind">{{ section_labels.get(a.kind, a.kind) }}</span>
+        <h3>
+          {% if a.url %}<a href="{{ a.url }}" target="_blank" rel="noopener">{{ a.title }}</a>{% else %}{{ a.title }}{% endif %}
+        </h3>
+        <div class="atom-meta">
+          <span>{{ a.source }}</span>
+          {% if a.body_overridden %}<span>edited in Studio</span>{% endif %}
+          {% if not a.selected %}<span>deselected</span>{% endif %}
+        </div>
+      </div>
+      {% if a.item_id %}
+        <div class="atom-tools">
+          <form method="post" action="/productions/{{ row.id }}/editor/move">
+            <input type="hidden" name="item_id" value="{{ a.item_id }}">
+            <input type="hidden" name="dir" value="up">
+            <input type="hidden" name="return_to" value="/productions/{{ row.id }}#{{ anchor }}">
+            <button class="btn ghost icon-btn" type="submit" title="Move up" aria-label="Move up">&uarr;</button>
+          </form>
+          <form method="post" action="/productions/{{ row.id }}/editor/move">
+            <input type="hidden" name="item_id" value="{{ a.item_id }}">
+            <input type="hidden" name="dir" value="down">
+            <input type="hidden" name="return_to" value="/productions/{{ row.id }}#{{ anchor }}">
+            <button class="btn ghost icon-btn" type="submit" title="Move down" aria-label="Move down">&darr;</button>
+          </form>
+          {% if a.flippable %}
+            <form method="post" action="/productions/{{ row.id }}/editor/flip">
+              <input type="hidden" name="item_id" value="{{ a.item_id }}">
+              <input type="hidden" name="return_to" value="/productions/{{ row.id }}#{{ anchor }}">
+              {% if a.overridden %}
+                <input type="hidden" name="target" value="clear">
+                <button class="btn ghost" type="submit">Source section</button>
+              {% else %}
+                <input type="hidden" name="target" value="{{ 'brief' if a.kind == 'notable' else 'notable' }}">
+                <button class="btn ghost" type="submit">{{ "Briefly" if a.kind == "notable" else "Notable" }}</button>
+              {% endif %}
+            </form>
+          {% endif %}
+          <form method="post" action="/productions/{{ row.id }}/editor/select">
+            <input type="hidden" name="item_id" value="{{ a.item_id }}">
+            <input type="hidden" name="selected" value="{{ '0' if a.selected else '1' }}">
+            <input type="hidden" name="return_to" value="/productions/{{ row.id }}#{{ anchor }}">
+            <button class="btn {{ 'danger' if a.selected else 'ghost' }}" type="submit">{{ "Remove" if a.selected else "Restore" }}</button>
+          </form>
+        </div>
+      {% endif %}
+    </header>
+
+    <div class="atom-render">
+      {% if a.rendered_body %}
+        {{ a.rendered_body|markdown }}
+      {% else %}
+        <p class="empty-copy">Not written yet.</p>
       {% endif %}
     </div>
-  </form>
+
+    {% if a.editable %}
+      <details class="atom-edit">
+        <summary>Edit text</summary>
+        <form method="post" action="/productions/{{ row.id }}/editor/atom" class="pform">
+          <input type="hidden" name="key" value="{{ a.key }}">
+          <input type="hidden" name="return_to" value="/productions/{{ row.id }}#{{ anchor }}">
+          <label>Markdown body</label>
+          <textarea name="value" rows="{{ 8 if a.kind in ('intro', 'journal', 'outro') else 4 }}">{{ a.body }}</textarea>
+          <div class="actions">
+            <button class="btn" type="submit">Save</button>
+            {% if a.key == "content:intro.md" %}
+              <button class="btn ghost" type="submit" formaction="/productions/{{ row.id }}/continuity"
+                      title="Ask Eddy to surface prior published takes on this intro topic">Check continuity</button>
+            {% endif %}
+            {% if a.body_overridden %}
+              <button class="btn ghost" type="submit" name="clear_override" value="1">Use source text</button>
+            {% endif %}
+          </div>
+        </form>
+        {% if a.body_overridden and a.source_body is not none %}
+          <details class="source-body">
+            <summary>Source text</summary>
+            <pre>{{ a.source_body }}</pre>
+          </details>
+        {% endif %}
+      </details>
+    {% endif %}
+  </article>
 {% endmacro %}
 
   <div class="page-head">
@@ -44,7 +131,6 @@
     </div>
     <div class="toolbar">
       <a class="btn ghost" href="/productions">Issues</a>
-      {% if phase != "planned" %}<a class="btn ghost" href="/productions/{{ row.id }}/editor">Editor</a>{% endif %}
       <a class="btn ghost" href="/productions/{{ row.id }}/edit">Settings</a>
       {% if row.status == 'active' %}
         <form class="inline-form" method="post" action="/productions/{{ row.id }}/status">
@@ -99,7 +185,7 @@
       <section class="main-stack">
         <section class="panel flush">
           <div class="panel-head">
-            <h2>Draft Preview</h2>
+            <h2>Issue Canvas</h2>
             <div class="toolbar">
               <form method="post" action="/productions/{{ row.id }}/sync">
                 <button class="btn ghost" type="submit" title="Pull Pinboard and micro.blog into the issue">Sync sources</button>
@@ -107,21 +193,25 @@
               <form method="post" action="/productions/{{ row.id }}/review">
                 <button class="btn ghost" type="submit" title="Run Eddy's editorial review">Eddy review</button>
               </form>
-              <a class="btn ghost" href="{{ review_url }}" target="_blank" rel="noopener">Open</a>
             </div>
           </div>
-          <div class="iframe-shell">
-            <iframe src="{{ review_url }}" class="draft-frame"></iframe>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-head" style="padding:0 0 .85rem; min-height:auto;">
-            <h2>Content</h2>
-            <span class="meta">Authored atoms</span>
-          </div>
-          <div class="content-stack">
-            {% for b in blocks %}{{ block_editor(b) }}{% endfor %}
+          <div class="issue-canvas">
+            {% for g in atom_groups %}
+              <section class="canvas-section">
+                <div class="canvas-section-head">
+                  <h3>{{ section_labels.get(g.kind, g.kind) }}</h3>
+                  <span>{{ g.atoms|length }} atom{{ "" if g.atoms|length == 1 else "s" }}</span>
+                </div>
+                {% if g.kind == "notable" %}
+                  <div class="issue-preamble">{{ notable_preamble|markdown }}</div>
+                {% endif %}
+                {% for a in g.atoms %}
+                  {{ atom_row(a) }}
+                {% endfor %}
+              </section>
+            {% else %}
+              <div class="empty-canvas">Nothing is in this issue yet.</div>
+            {% endfor %}
           </div>
         </section>
 
