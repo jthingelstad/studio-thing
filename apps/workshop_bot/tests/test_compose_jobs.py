@@ -1,5 +1,5 @@
-"""Tests for the compose-* jobs: compose-haiku, compose-meta, compose-cta,
-and reorder. Extracted from ``test_content_jobs.py`` in Item 1.
+"""Tests for the compose-* jobs: compose-haiku, compose-meta, and reorder.
+Extracted from ``test_content_jobs.py`` in Item 1.
 Shared fixtures from ``tests/_fixtures.py``."""
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import (  # noqa: E402
-    _base, compose_cta, compose_haiku, compose_meta, reorder,
+    _base, compose_haiku, compose_meta, reorder,
 )
 from apps.workshop_bot.tools import content_store, db # noqa: E402
 from apps.workshop_bot.tools.discord import interaction
@@ -276,142 +276,6 @@ class ComposeMetaTests(_DBTestCase):
             self.assertEqual(eddy_review._review_model(), "sonnet")
 
 
-
-class ComposeCtaTests(_DBTestCase):
-    """Patty's compose-cta now writes a fixed slot set: cta-1.md,
-    cta-2.md, thanks-1.md. No final.md scan — render_email decides
-    placement via hardcoded CTA_SLOT_POSITIONS. Per-slot picker UX
-    unchanged."""
-
-    def tearDown(self):
-        os.environ.pop("DISCORD_CHANNEL_SUPPORTERS", None)
-        super().tearDown()
-
-    def _window(self):
-        from apps.workshop_bot.tools.content import issue as issue_mod
-        w = issue_mod.compute_window("2026-05-16", 7)
-        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
-                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
-
-    def test_writes_all_three_atoms(self):
-        """Patty composes copy for cta-1, cta-2, thanks-1 every run —
-        no marker discovery, no opt-in via final.md."""
-        self._window()
-        replies = iter([
-            ('{"framings": ["cta-1 copy"]}', {"iterations": 1}),
-            ('{"framings": ["cta-2 copy"]}', {"iterations": 1}),
-            ('{"framings": ["thanks-1 copy"]}', {"iterations": 1}),
-        ])
-        fc = _FakeBotChannel(persona="patty")
-        fc.bot.core = AsyncMock(side_effect=lambda **kw: next(replies))
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
-            result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        self.assertEqual(result.data["slots_written"], 3)
-        self.assertEqual(result.data["slots_total"], 3)
-        # All three atom files written with the right frontmatter kind.
-        cta1 = content_store.read_issue(458, "cta-1.md")
-        cta2 = content_store.read_issue(458, "cta-2.md")
-        thanks1 = content_store.read_issue(458, "thanks-1.md")
-        self.assertIn("kind: supporter", cta1)
-        self.assertIn("cta-1 copy", cta1)
-        self.assertIn("kind: supporter", cta2)
-        self.assertIn("cta-2 copy", cta2)
-        self.assertIn("kind: thanks", thanks1)
-        self.assertIn("thanks-1 copy", thanks1)
-        self.assertIn("cta-1 copy", content_store.read_issue(458, "cta-1.md"))
-        self.assertIn("cta-2 copy", content_store.read_issue(458, "cta-2.md"))
-        self.assertIn("thanks-1 copy", content_store.read_issue(458, "thanks-1.md"))
-
-    def test_already_filled_slot_skipped(self):
-        """A slot whose copy file already has body content is skipped — the
-        job is idempotent for already-filled slots; Jamie deletes the file
-        to re-roll."""
-        self._window()
-        # Pre-fill cta-1.md.
-        content_store.write_issue(458, "cta-1.md", "---\nkind: supporter\n---\n\nalready filled.")
-        fc = _FakeBotChannel(persona="patty", reply='{"framings": ["new copy"]}')
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
-            result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        # 1 skipped (cta-1.md already filled); 2 written (cta-2, thanks-1).
-        self.assertEqual(result.data["slots_skipped"], 1)
-        self.assertEqual(result.data["slots_written"], 2)
-        # cta-1.md unchanged.
-        self.assertIn("already filled.", content_store.read_issue(458, "cta-1.md"))
-
-    def test_await_choice_timeout_leaves_slot_unwritten(self):
-        self._window()
-        fc = _FakeBotChannel(persona="patty", reply='{"framings": ["a", "b"]}')
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        with patch.object(interaction, "await_choice", AsyncMock(return_value=None)):
-            result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok)
-        # All three slots time out → none written.
-        self.assertEqual(result.data["slots_written"], 0)
-        self.assertIsNone(content_store.read_issue(458, "cta-1.md"))
-        self.assertIsNone(content_store.read_issue(458, "cta-2.md"))
-        self.assertIsNone(content_store.read_issue(458, "thanks-1.md"))
-
-    def test_unparseable_reply_eventually_gives_up(self):
-        """refresh_loop retries up to MAX_REFRESH_ROUNDS on unparseable JSON.
-        After exhaustion, no file is written."""
-        self._window()
-        fc = _FakeBotChannel(persona="patty", reply="sorry, can't draft right now")
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok)
-        self.assertEqual(result.data["slots_written"], 0)
-        self.assertIsNone(content_store.read_issue(458, "cta-1.md"))
-
-    def test_channel_send_failure_does_not_lose_written_slot(self):
-        """If Discord glitches on the summary post, the content is already
-        in the store — the job must still complete and report the written
-        slots."""
-        self._window()
-        fc = _FakeBotChannel(persona="patty", reply='{"framings": ["x"]}')
-        fc.channel.send = AsyncMock(side_effect=RuntimeError("discord down"))
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
-            result = asyncio.run(compose_cta.run(ctx))
-        self.assertTrue(result.ok, result.message)
-        self.assertEqual(result.data["slots_written"], 3)
-        self.assertIn("x", content_store.read_issue(458, "cta-1.md"))
-
-    def test_concurrent_run_is_blocked_by_job_lock(self):
-        self._window()
-        fc = _FakeBotChannel(persona="patty", reply='{"framings": []}')
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        # Pre-acquire one of the per-slot locks the job opens.
-        with _base.job_lock([f"{458}/cta-1.md"], compose_cta.NAME):
-            result = asyncio.run(compose_cta.run(ctx))
-        self.assertFalse(result.ok)
-        self.assertIn("already running", result.message)
-        fc.bot.core.assert_not_awaited()
-
-    def test_no_thesis_block_in_prompt(self):
-        """Thesis injection is retired — the CTA prompt no longer carries a
-        `## Thesis` block even when a legacy thesis.md happens to exist."""
-        self._window()
-        content_store.write_issue(458, "thesis.md", "Capital and code.")
-        fc = _FakeBotChannel(persona="patty", reply='{"framings": ["x"]}')
-        os.environ["DISCORD_CHANNEL_SUPPORTERS"] = "123"
-        ctx = _base.JobContext(deps=fc.deps())
-        with patch.object(interaction, "await_choice", AsyncMock(return_value=0)):
-            asyncio.run(compose_cta.run(ctx))
-        sent = fc.bot.core.call_args.kwargs["latest"]
-        self.assertNotIn("## Thesis", sent)
-
-
-
 class ReorderTests(_DBTestCase):
     """Row-backed reorder pass. Eddy returns a JSON object
     (``notable_order`` / ``brief_order``) with synthetic ids
@@ -596,13 +460,13 @@ class ReorderTests(_DBTestCase):
         # no passthrough fall-through (compose-echoes is mocked, doesn't count).
         self.assertEqual(fc.bot.core.await_count, 1)
 
-    # ---- compose-cta autofire + inline markers retired ----
+    # ---- CTA autofire + inline markers retired ----
     #
     # CTA placement is no longer an Eddy decision — render_email
-    # splices supporter CTAs at hardcoded positions, and Patty composes
-    # the three known atom files (cta-1.md, cta-2.md, thanks-1.md)
-    # independently. The membership_blocks proposal field still parses
-    # for backward compat but the apply step ignores it.
+    # can still splice existing supporter CTA atoms at hardcoded positions,
+    # but Studio no longer runs an assistant CTA composer. The
+    # membership_blocks proposal field still parses for backward compat but
+    # the apply step ignores it.
 
     # ---- Featured-from-category (replaces Eddy's promotions) ----
     #
@@ -616,6 +480,5 @@ class ReorderTests(_DBTestCase):
     # promoted, brief-cannot-be-promoted, too-many-promotions,
     # membership-block-after-promoted-id, promoted-id-also-in-order — all
     # gone; the scenarios they tested aren't reachable any more.)
-
 
 

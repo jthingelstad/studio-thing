@@ -1,11 +1,7 @@
-"""Startup self-check + per-persona announcements.
+"""Startup self-check + Eddy announcement.
 
-Each persona's ``on_ready`` audits its own channels and posts a single
-readiness line to ``#chatter`` under its own avatar. Eddy additionally
-posts a deployment header (git hash + dirty flag) at the top of the
-sequence, and — once the post-startup task in ``bot.py`` has waited
-for everyone — posts a follow-up "⚠️ X not ready" line if any persona
-missed the ready window.
+Eddy's ``on_ready`` audits the configured channels and posts a single
+readiness line to ``#chatter`` with the deployment hash.
 """
 
 from __future__ import annotations
@@ -28,20 +24,6 @@ CHANNELS_BY_PERSONA: dict[str, list[tuple[str, str]]] = {
     "eddy":  [("DISCORD_CHANNEL_EDITORIAL",  "primary"),
               ("DISCORD_CHANNEL_WORKSHOP",   "workshop"),
               ("DISCORD_CHANNEL_CHATTER",  "chatter")],
-    "marky": [("DISCORD_CHANNEL_PROMOTION",  "primary"),
-              ("DISCORD_CHANNEL_WORKSHOP",   "workshop"),
-              ("DISCORD_CHANNEL_CHATTER",  "chatter")],
-    "patty": [("DISCORD_CHANNEL_SUPPORTERS", "primary"),
-              ("DISCORD_CHANNEL_WORKSHOP",   "workshop"),
-              ("DISCORD_CHANNEL_CHATTER",  "chatter")],
-    "linky": [("DISCORD_CHANNEL_RESEARCH",   "primary"),
-              ("DISCORD_CHANNEL_WORKSHOP",   "workshop"),
-              ("DISCORD_CHANNEL_CHATTER",  "chatter")],
-    "scout": [("DISCORD_CHANNEL_PRODUCTION", "primary"),
-              ("DISCORD_CHANNEL_WORKSHOP",   "workshop"),
-              ("DISCORD_CHANNEL_CHATTER",  "chatter")],
-    # Thingy (the public reader-facing bridge) moved to its own process —
-    # see apps/thingy_bridge/.
 }
 
 REQUIRED_PERMS = ("view_channel", "send_messages", "read_message_history")

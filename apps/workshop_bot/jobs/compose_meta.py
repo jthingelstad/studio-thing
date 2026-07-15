@@ -39,9 +39,8 @@ NAME = "compose-meta"
 _SUBJECT_OPTION_CAP = 8  # parse at most this many subjects (prompt asks for 5)
 
 # How many archive passages to surface to the subject-options call.
-# Smaller than promotion-prep's window because the subject task is
-# focused (5 short lines) — Sonnet just needs enough context to
-# recognize a thread, not to draft prose around it.
+# The subject task is focused (5 short lines), so Sonnet only needs
+# enough context to recognize a thread.
 _SUBJECT_THREAD_K = 6
 _SUBJECT_THREAD_QUERY_CHARS = 2500
 

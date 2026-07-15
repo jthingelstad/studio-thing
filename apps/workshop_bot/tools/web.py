@@ -1,4 +1,4 @@
-"""Light-weight URL fetcher for Linky's research tool.
+"""Light-weight URL fetcher for Eddy's research and review tools.
 
 Fetches a URL with a sensible timeout, drops navigation/script chrome,
 and returns a plain-text excerpt the LLM can reason over without

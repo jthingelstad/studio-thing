@@ -16,7 +16,7 @@ The build is the canonical site flow: `data/issues/` is editorial truth, `apps/s
 
 ## Other modules
 
-- **`domain_exclusions.py`** — the canonical list of domains stripped from the `domains[]` front-matter field + the home-page domain stats (own domains, Buttondown, image CDNs, URL shorteners, social, Wikipedia, YouTube, generic CDNs). `apps/workshop_bot/tools/avoid_domains.py` is a hand-maintained *copy* used for Pinboard pre-filtering — keep loosely in sync; an exact match isn't required since the bot's copy gates Linky's scan, nothing it touches ships.
+- **`domain_exclusions.py`** — the canonical list of domains stripped from the `domains[]` front-matter field + the home-page domain stats (own domains, Buttondown, image CDNs, URL shorteners, social, Wikipedia, YouTube, generic CDNs).
 - **`refresh_marketing_copy.py`** — generates `apps/site/_data/voiceSamples.json` (home-page pull-quotes) + rewrites its own persistent context, **`marketing-brief.md`** (in this dir; the canonical *human* voice doc is `docs/voice-and-style.md`, which the brief should track). Stratified sample of ~32 issues over the last 2 years; Sonnet picks 3-5 verbatim pull-quotes. Machine-verified verbatim against issue bodies before writing. **Not in CI** — explicit `make refresh-copy-dry` / `make refresh-copy`. Expected cost: $0.20-0.40 per run.
 - **`fetch_emails.py`** — pulls subscriber events from Buttondown. Operator script; not in the build path.
 - **`generate_descriptions.py`** — backfill helper that generates meta descriptions for archive issues missing one. One-off; mostly retired.

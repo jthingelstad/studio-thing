@@ -1,7 +1,6 @@
-"""Shared helpers for the slash-command surface.
+"""Shared helpers for Eddy's slash-command surface.
 
-Every persona's slash tree (``/eddy``, ``/linky``, ``/marky``, ``/patty``)
-uses the same three building blocks:
+Eddy's slash tree uses the same dispatch building blocks:
 
 - :func:`_ctx(bot)` — produces a :class:`JobContext` bound to that bot's
   ``deps`` so the command's handler can invoke jobs.
@@ -11,12 +10,12 @@ uses the same three building blocks:
 - :func:`make_run_and_ack(_ack, logger_label)` — the fast-job dispatch:
   defer → run → ack with the JobResult message.
 - :func:`make_run_interactive(...)` — the interactive-job dispatch (haiku
-  picker, subject picker, CTA picker): ack immediately, then run the job
+  picker, subject picker): ack immediately, then run the job
   (which posts its own outcome to a channel because it can wait on a
   reaction far longer than the 15-min interaction token).
 
-The ``logger_label`` argument is just the ``/eddy`` / ``/linky`` / etc.
-prefix; it shows up in workshop.log when something goes wrong.
+The ``logger_label`` argument is the ``/eddy`` prefix; it shows up in
+workshop.log when something goes wrong.
 """
 
 from __future__ import annotations
@@ -47,7 +46,7 @@ def _clip(text: str) -> str:
 
 
 def make_ack(logger_label: str):
-    """Build the ``_ack`` coroutine for one persona's slash tree."""
+    """Build the ``_ack`` coroutine for Eddy's slash tree."""
 
     async def _ack(interaction, text: str, *, file: discord.File | None = None) -> None:
         try:

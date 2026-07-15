@@ -96,9 +96,8 @@ class ToolRegistryCompositionTests(unittest.TestCase):
         # S3 scratchpad tools were removed in the content-loop redesign;
         # the issue-keyed ``workspace__*`` tools (ex ``s3_issues__*``) were
         # then retired in the productions rearchitecture in favour of the
-        # type-general ``production_content__*`` tools. The Thingy bridge
-        # tools moved to ``apps/thingy_bridge/`` with the bridge extraction —
-        # none should show up in workshop_bot's agent-tool registry.
+        # type-general ``production_content__*`` tools. Librarian bridge
+        # internals are not part of workshop_bot's agent-tool registry.
         for gone in (
             "inbox__post", "inbox__list", "inbox__read", "inbox__mark_read",
             "s3_personas__list", "s3_personas__read_file", "s3_personas__write_file",
@@ -168,11 +167,11 @@ class ToolRegistryCompositionTests(unittest.TestCase):
 
         registry = agent_tools.ToolRegistry()
         registry.register("test__echo", {"description": "x", "input_schema": {}}, handler)
-        result = registry.dispatch("test__echo", deps=None, args={}, persona="marky")
+        result = registry.dispatch("test__echo", deps=None, args={}, persona="eddy")
         self.assertEqual(result, "ok")
-        self.assertEqual(seen, ["marky"])
+        self.assertEqual(seen, ["eddy"])
         # ContextVar was reset after dispatch.
-        self.assertNotEqual(agent_tools.active_persona.get(), "marky")
+        self.assertNotEqual(agent_tools.active_persona.get(), "eddy")
 
 
 class SystemServerRegistrationTests(unittest.TestCase):
@@ -205,12 +204,12 @@ class SystemServerRegistrationTests(unittest.TestCase):
 
 
 class RestrictedSystemTests(unittest.TestCase):
-    """A system declaring `restricted_to` is only visible to the named personas."""
+    """A system declaring `restricted_to` is only visible to allowed callers."""
 
     def _registry_with_restricted_fake(self):
         class RestrictedServer:
             name = "vault"
-            restricted_to = {"patty"}
+            restricted_to = {"eddy"}
 
             def list_tools(self):
                 return [
@@ -231,8 +230,8 @@ class RestrictedSystemTests(unittest.TestCase):
         # all_names() ignores restrictions — it's the unscoped view.
         self.assertIn("vault__read", registry.all_names())
         # names_for(persona) is the scoped view the agent loop uses.
-        self.assertIn("vault__read", registry.names_for("patty"))
-        for other in ("eddy", "linky", "marky"):
+        self.assertIn("vault__read", registry.names_for("eddy"))
+        for other in ("other", "legacy"):
             self.assertNotIn(
                 "vault__read",
                 registry.names_for(other),
@@ -241,12 +240,12 @@ class RestrictedSystemTests(unittest.TestCase):
 
     def test_dispatch_refuses_restricted_tool_for_other_persona(self):
         registry = self._registry_with_restricted_fake()
-        # Patty can call it.
-        out = registry.dispatch("vault__read", deps=None, args={}, persona="patty")
+        # Eddy can call it.
+        out = registry.dispatch("vault__read", deps=None, args={}, persona="eddy")
         self.assertEqual(out, {"secret": "ok"})
-        # Marky cannot — even if she tries to invoke it directly.
+        # Other callers cannot — even if they try to invoke it directly.
         with self.assertRaises(PermissionError):
-            registry.dispatch("vault__read", deps=None, args={}, persona="marky")
+            registry.dispatch("vault__read", deps=None, args={}, persona="other")
 
     def test_unrestricted_system_visible_to_everyone(self):
         class OpenServer:
@@ -265,7 +264,7 @@ class RestrictedSystemTests(unittest.TestCase):
 
         registry = agent_tools.ToolRegistry()
         registry.register_system(OpenServer())
-        for persona in ("eddy", "linky", "marky", "patty"):
+        for persona in ("eddy", "other"):
             self.assertIn("public__ping", registry.names_for(persona))
 
 

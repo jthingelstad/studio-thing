@@ -1,9 +1,9 @@
-"""Tests for PersonaBot routing + peer-reaction slot rule.
+"""Tests for Eddy's PersonaBot routing helpers.
 
 These exercise pure-Python parts of ``personas/base.py`` against fake
 discord.py shapes. Full ``on_message`` dispatch isn't tested
-end-to-end (it requires async signal handling + channel cache) but
-the message-classification and slot rule are testable in isolation.
+end-to-end (it requires async signal handling + channel cache), but
+message parsing and model resolution are testable in isolation.
 """
 
 from __future__ import annotations
@@ -45,22 +45,6 @@ class _FakeMessage:
         self.id = id(self)
         self.channel = None
         self.guild = object()
-
-
-class _FakeChannel:
-    def __init__(self, messages):
-        self._messages = messages
-        self.id = id(self)
-
-    def history(self, *, limit, before=None):
-        async def gen():
-            for m in list(reversed(self._messages))[:limit]:
-                yield m
-        return gen()
-
-
-def _run(coro):
-    return asyncio.run(coro)
 
 
 def _make_eddy() -> EddyBot:
@@ -131,67 +115,6 @@ class ParseBodyTests(unittest.TestCase):
         )
         body, _model = self.bot._parse_body(msg)
         self.assertEqual(body, "three things")
-
-
-# ---------- _can_react_to_peer slot rule ----------
-
-class CanReactToPeerTests(unittest.TestCase):
-    def setUp(self):
-        self.bot = _make_eddy()
-
-    def test_no_human_anchor_means_no_react(self):
-        # Channel has only bot messages — no human anchor in window.
-        ch = _FakeChannel([
-            _FakeMessage(
-                author=_FakeUser(id=2000, bot=True),
-                content="bot 1 says",
-            ),
-            _FakeMessage(
-                author=_FakeUser(id=3000, bot=True),
-                content="bot 2 says",
-            ),
-        ])
-        self.assertFalse(_run(self.bot._can_react_to_peer(ch)))
-
-    def test_human_anchor_with_no_self_post_can_react(self):
-        ch = _FakeChannel([
-            _FakeMessage(
-                author=_FakeUser(id=42, bot=False),
-                content="Jamie's question",
-            ),
-            _FakeMessage(
-                author=_FakeUser(id=2000, bot=True),
-                content="other bot replied",
-            ),
-        ])
-        self.assertTrue(_run(self.bot._can_react_to_peer(ch)))
-
-    def test_human_anchor_with_self_post_blocked(self):
-        # Eddy already posted since the human anchor — slot used.
-        ch = _FakeChannel([
-            _FakeMessage(
-                author=_FakeUser(id=42, bot=False),
-                content="Jamie's question",
-            ),
-            _FakeMessage(
-                author=_FakeUser(id=1000, bot=True),  # self
-                content="Eddy already replied",
-            ),
-            _FakeMessage(
-                author=_FakeUser(id=2000, bot=True),
-                content="another bot",
-            ),
-        ])
-        self.assertFalse(_run(self.bot._can_react_to_peer(ch)))
-
-    def test_history_failure_returns_false(self):
-        class _Boom:
-            def history(self, *, limit, before=None):
-                async def gen():
-                    raise RuntimeError("boom")
-                    yield  # pragma: no cover
-                return gen()
-        self.assertFalse(_run(self.bot._can_react_to_peer(_Boom())))
 
 
 # ---------- home channel resolution ----------

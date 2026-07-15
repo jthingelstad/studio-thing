@@ -28,9 +28,7 @@ from apps.workshop_bot.tools import db # noqa: E402
 from apps.workshop_bot.tools.content import context, microblog
 from apps.workshop_bot.tools.discord import interaction
 
-# Shared fixtures used by this file and the split-out per-topic test
-# files (test_pinboard_scan.py, test_issue_flow.py, test_compose_jobs.py,
-# test_build_publish.py, test_linky_reactions.py).
+# Shared fixtures used by this file and the split-out per-topic test files.
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
 )
@@ -261,22 +259,6 @@ class MicroblogTests(unittest.TestCase):
         self.assertTrue(kwargs["headers"]["Authorization"].startswith("Bearer "))
 
 
-class LinkyContextTests(_DBTestCase):
-    def test_build_linky_context(self):
-        from apps.workshop_bot.tools.content import issue as issue_mod, context
-        w = issue_mod.compute_window("2026-05-16", 7)
-        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
-                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
-        ctx = context.build_linky_context(ref_date=date(2026, 5, 12))
-        self.assertEqual(ctx["active_issue"], 458)
-        self.assertEqual(ctx["days_into_window"], (date(2026, 5, 12) - date(2026, 5, 8)).days)
-        # toread_count / brief_captured_this_week stay None — they used to be
-        # derived from a redundant posts_all(1000) call here; that call was
-        # dropped to avoid clustering /posts/all hits in a single scan.
-        self.assertIsNone(ctx["toread_count"])
-        self.assertIsNone(ctx["brief_captured_this_week"])
-
-
 class InteractionPrimitiveTests(unittest.TestCase):
     """The picker is button-based: post a view, the owner clicks a button, the
     callback resolves the awaiting coroutine. These drive the real path —
@@ -393,45 +375,4 @@ class InteractionPrimitiveTests(unittest.TestCase):
             self.assertIs(no, False)
         finally:
             os.environ.pop("DISCORD_OWNER_USER_ID", None)
-
-
-class GoalsAndPattyContextTests(_DBTestCase):
-    def test_goal_seeded(self):
-        g = db.get_active_goal()
-        self.assertIsNotNone(g)
-        self.assertEqual(g["target_kind"], "members")
-        self.assertEqual(g["target_value"], 50)
-
-    def test_goal_lifecycle(self):
-        g = db.get_active_goal()
-        self.assertTrue(db.mark_goal_achieved(g["id"], achieved_at="2026-08-01"))
-        self.assertIsNone(db.get_active_goal())
-        nid = db.insert_goal(target_kind="dollars", target_value=10000, started_at="2026-08-02")
-        active = db.get_active_goal()
-        self.assertEqual(active["id"], nid)
-        recent = db.recent_achieved_goals(3)
-        self.assertEqual(len(recent), 1)
-        self.assertEqual(recent[0]["target_kind"], "members")
-
-    def test_patty_context_anniversary_math(self):
-        from apps.workshop_bot.tools.content import context
-        # 2026-05-11 (Mon) -> next May 13 is 2026-05-13, 2 days out, 0 issues before.
-        ctx = context.build_patty_context(ref_date=date(2026, 5, 11))
-        self.assertEqual(ctx["days_to_anniversary"], 2)
-        self.assertEqual(ctx["next_anniversary"], "2026-05-13")
-        self.assertEqual(ctx["expected_issues_before_anniversary"], 0)
-        # From 2026-05-20: next anniversary is 2027-05-13. Saturdays in
-        # range minus July/August/Dec15-Jan15 Saturdays.
-        ctx2 = context.build_patty_context(ref_date=date(2026, 5, 20))
-        self.assertEqual(ctx2["next_anniversary"], "2027-05-13")
-        self.assertGreater(ctx2["expected_issues_before_anniversary"], 30)  # ~52 weeks - ~13 no-publish
-
-    def test_no_publish_saturday(self):
-        from apps.workshop_bot.tools.content import context
-        self.assertTrue(context._is_no_publish_saturday(date(2026, 7, 4)))
-        self.assertTrue(context._is_no_publish_saturday(date(2026, 8, 15)))
-        self.assertTrue(context._is_no_publish_saturday(date(2026, 12, 20)))
-        self.assertTrue(context._is_no_publish_saturday(date(2027, 1, 10)))
-        self.assertFalse(context._is_no_publish_saturday(date(2026, 5, 16)))
-        self.assertFalse(context._is_no_publish_saturday(date(2026, 12, 13)))
 

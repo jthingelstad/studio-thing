@@ -94,18 +94,18 @@ class MemoryRoundtripTests(unittest.TestCase):
             agent_tools.t_remember(deps=None, content="eddy-thing", kind="observation")
         finally:
             agent_tools.active_persona.reset(t1)
-        # Marky remembers something else
-        t2 = agent_tools.active_persona.set("marky")
+        # A historical agent namespace can still have notes.
+        t2 = agent_tools.active_persona.set("historical")
         try:
-            agent_tools.t_remember(deps=None, content="marky-thing", kind="observation")
-            # default recall sees only Marky's own
+            agent_tools.t_remember(deps=None, content="historical-thing", kind="observation")
+            # default recall sees only the active namespace's notes
             results = agent_tools.t_recall(deps=None)
             agents = {r["agent_name"] for r in results}
-            self.assertEqual(agents, {"marky"})
+            self.assertEqual(agents, {"historical"})
             # wildcard recall sees both
             results = agent_tools.t_recall(deps=None, agent_name="*")
             agents = {r["agent_name"] for r in results}
-            self.assertEqual(agents, {"eddy", "marky"})
+            self.assertEqual(agents, {"eddy", "historical"})
         finally:
             agent_tools.active_persona.reset(t2)
 
@@ -118,9 +118,9 @@ class MemoryRoundtripTests(unittest.TestCase):
             agent_tools.active_persona.reset(t)
 
     def test_forget_marks_resolved(self):
-        t = agent_tools.active_persona.set("patty")
+        t = agent_tools.active_persona.set("eddy")
         try:
-            r = agent_tools.t_remember(deps=None, content="cta drafted", kind="todo")
+            r = agent_tools.t_remember(deps=None, content="review follow-up drafted", kind="todo")
             note_id = r["id"]
             self.assertEqual(len(agent_tools.t_recall(deps=None)), 1)
             agent_tools.t_forget_note(deps=None, note_id=note_id, status="resolved")
@@ -132,7 +132,7 @@ class MemoryRoundtripTests(unittest.TestCase):
             agent_tools.active_persona.reset(t)
 
     def test_query_substring(self):
-        t = agent_tools.active_persona.set("linky")
+        t = agent_tools.active_persona.set("eddy")
         try:
             agent_tools.t_remember(
                 deps=None, content="cybersecurity is heating up again",
@@ -147,90 +147,6 @@ class MemoryRoundtripTests(unittest.TestCase):
             self.assertEqual(r[0]["key"], "theme:cybersecurity")
         finally:
             agent_tools.active_persona.reset(t)
-
-
-class PinboardDedupTests(unittest.TestCase):
-    """Linky's discovery feeds when enabled and to-read research rely on
-    these dedup helpers to avoid re-showing items each tick.
-    """
-
-    def setUp(self):
-        self._tmpdir = tempfile.TemporaryDirectory()
-        self._orig_path = os.environ.get("WORKSHOP_DB_PATH")
-        os.environ["WORKSHOP_DB_PATH"] = str(Path(self._tmpdir.name) / "test.db")
-        db.run_migrations()
-
-    def tearDown(self):
-        if self._orig_path is None:
-            os.environ.pop("WORKSHOP_DB_PATH", None)
-        else:
-            os.environ["WORKSHOP_DB_PATH"] = self._orig_path
-        self._tmpdir.cleanup()
-
-    def test_filter_unseen_popular_first_run(self):
-        items = [
-            {"url": "https://a.example/1", "title": "A", "posted_by": "alice"},
-            {"url": "https://b.example/2", "title": "B", "posted_by": "bob"},
-        ]
-        unseen = db.filter_unseen_popular(items)
-        self.assertEqual({i["url"] for i in unseen}, {i["url"] for i in items})
-
-    def test_mark_popular_seen_then_filter(self):
-        items = [
-            {"url": "https://a.example/1", "title": "A"},
-            {"url": "https://b.example/2", "title": "B"},
-        ]
-        n = db.mark_popular_seen(items)
-        self.assertEqual(n, 2)
-        # second call: same items, all seen
-        unseen = db.filter_unseen_popular(items)
-        self.assertEqual(unseen, [])
-
-    def test_filter_unseen_popular_uses_normalized_urls(self):
-        original = "https://a.example/story?utm_source=newsletter#comments"
-        variant = "https://a.example/story"
-        self.assertEqual(db.mark_popular_seen([{"url": original, "title": "A"}]), 1)
-        unseen = db.filter_unseen_popular([
-            {"url": variant, "title": "A again"},
-            {"url": "https://b.example/2", "title": "B"},
-        ])
-        self.assertEqual([item["url"] for item in unseen], ["https://b.example/2"])
-
-    def test_mark_popular_seen_idempotent(self):
-        item = [{"url": "https://a.example/1", "title": "A"}]
-        self.assertEqual(db.mark_popular_seen(item), 1)
-        # No-op on second insert.
-        self.assertEqual(db.mark_popular_seen(item), 0)
-
-    def test_mark_popular_seen_records_judgment(self):
-        items = [{"url": "https://a.example/1", "title": "A"}]
-        db.mark_popular_seen(items, judged={"https://a.example/1": (True, "fits ai theme")})
-        _rows = db.query_agent_notes()  # unrelated; just confirming nothing crashes
-        # Verify directly.
-        with db.connect() as conn:
-            row = conn.execute(
-                "SELECT judged_interesting, judgment_note FROM pinboard_popular_seen "
-                "WHERE url = ?",
-                ("https://a.example/1",),
-            ).fetchone()
-        self.assertEqual(row["judged_interesting"], 1)
-        self.assertEqual(row["judgment_note"], "fits ai theme")
-
-    def test_filter_unresearched_urls(self):
-        urls = ["u1", "u2", "u3"]
-        self.assertEqual(db.filter_unresearched_urls(urls), urls)
-        db.mark_url_researched(url="u2", title="t2", summary="s2")
-        self.assertEqual(db.filter_unresearched_urls(urls), ["u1", "u3"])
-
-    def test_mark_url_researched_idempotent(self):
-        self.assertTrue(db.mark_url_researched(url="x", title="t", summary="s"))
-        self.assertFalse(db.mark_url_researched(url="x", title="t", summary="s"))
-
-    def test_filter_helpers_handle_empty(self):
-        self.assertEqual(db.filter_unseen_popular([]), [])
-        self.assertEqual(db.filter_unresearched_urls([]), [])
-        self.assertEqual(db.mark_popular_seen([]), 0)
-
 
 if __name__ == "__main__":
     unittest.main()

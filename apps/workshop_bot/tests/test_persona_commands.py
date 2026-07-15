@@ -1,16 +1,11 @@
-"""Tests for the per-persona slash-command surface.
+"""Tests for Eddy's slash-command surface.
 
-Each persona owns its own slash tree (``/scout``, ``/eddy``, ``/linky``,
-``/marky``, ``/patty``), each registered on that persona's Discord bot. These
-tests cover the wiring layer:
+Studio now runs one assistant, Eddy. These tests cover the wiring layer:
 
-  - the five register fns each attach the right top-level group to a
-    fresh tree.
-  - the expected subgroups + verbs exist for each persona.
+  - the register fn attaches the ``/eddy`` top-level group to a fresh tree.
+  - the expected subgroups + verbs exist.
   - the top-level group requires ``manage_guild`` permission.
-  - ``issue start`` describes its required args (under /scout).
-  - retired surfaces (``/workshop``, ``heartbeat``, ``next-issue``,
-    ``job``) are gone.
+  - retired persona surfaces and legacy commands are gone.
 """
 
 from __future__ import annotations
@@ -74,7 +69,6 @@ class EddyTreeTests(unittest.TestCase):
             self.assertIn(name, subs)
 
     def test_eddy_issue_verbs(self):
-        # Production verbs moved to /scout issue; Eddy keeps the editorial set.
         tree = commands_module.register_eddy_commands(_stub_bot())
         issue = _subgroup(_top_group(tree, "eddy"), "issue")
         self.assertEqual(
@@ -83,8 +77,8 @@ class EddyTreeTests(unittest.TestCase):
         )
 
     def test_eddy_issue_has_no_production_verbs(self):
-        # Guard the split: none of the production lifecycle verbs should
-        # remain under /eddy issue after the migration to /scout.
+        # Issue lifecycle work belongs in the Studio web surface; the chat
+        # tree stays focused on Eddy's editorial helpers.
         tree = commands_module.register_eddy_commands(_stub_bot())
         issue = _subgroup(_top_group(tree, "eddy"), "issue")
         names = _cmd_names(issue)
@@ -108,124 +102,6 @@ class EddyTreeTests(unittest.TestCase):
         self.assertIsNotNone(eddy.default_permissions)
 
 
-# ── /linky ────────────────────────────────────────────────────────────
-
-class LinkyTreeTests(unittest.TestCase):
-    def test_linky_tree(self):
-        tree = commands_module.register_linky_commands(_stub_bot())
-        linky = _top_group(tree, "linky")
-        self.assertIn("scan", _cmd_names(linky))
-        self.assertIn("feedbin", _cmd_names(linky))
-        self.assertIn("followup", {getattr(c, "name", None) for c in linky.commands})
-
-    def test_linky_followup_verbs(self):
-        tree = commands_module.register_linky_commands(_stub_bot())
-        followup = _subgroup(_top_group(tree, "linky"), "followup")
-        self.assertEqual(_cmd_names(followup), {"list", "add", "cancel"})
-
-    def test_linky_requires_manage_guild(self):
-        tree = commands_module.register_linky_commands(_stub_bot())
-        self.assertIsNotNone(_top_group(tree, "linky").default_permissions)
-
-
-# ── /marky ────────────────────────────────────────────────────────────
-
-class MarkyTreeTests(unittest.TestCase):
-    def test_marky_top_level_verbs(self):
-        tree = commands_module.register_marky_commands(_stub_bot())
-        names = _cmd_names(_top_group(tree, "marky"))
-        for v in ("prep", "metrics"):
-            self.assertIn(v, names)
-
-    def test_marky_campaign_verbs(self):
-        tree = commands_module.register_marky_commands(_stub_bot())
-        campaign = _subgroup(_top_group(tree, "marky"), "campaign")
-        self.assertEqual(
-            _cmd_names(campaign),
-            {"add", "edit", "report", "copy", "sunset"},
-        )
-
-    def test_marky_followup_verbs(self):
-        tree = commands_module.register_marky_commands(_stub_bot())
-        followup = _subgroup(_top_group(tree, "marky"), "followup")
-        self.assertEqual(_cmd_names(followup), {"list", "add", "cancel"})
-
-
-# ── /patty ────────────────────────────────────────────────────────────
-
-class PattyTreeTests(unittest.TestCase):
-    def test_patty_top_level_cta(self):
-        tree = commands_module.register_patty_commands(_stub_bot())
-        names = _cmd_names(_top_group(tree, "patty"))
-        self.assertIn("cta", names)
-
-    def test_patty_goal_verbs(self):
-        tree = commands_module.register_patty_commands(_stub_bot())
-        goal = _subgroup(_top_group(tree, "patty"), "goal")
-        self.assertEqual(_cmd_names(goal), {"set", "done"})
-
-    def test_patty_followup_verbs(self):
-        tree = commands_module.register_patty_commands(_stub_bot())
-        followup = _subgroup(_top_group(tree, "patty"), "followup")
-        self.assertEqual(_cmd_names(followup), {"list", "add", "cancel"})
-
-
-# ── /scout ────────────────────────────────────────────────────────────
-
-class ScoutTreeTests(unittest.TestCase):
-    def test_scout_top_level_verbs(self):
-        tree = commands_module.register_scout_commands(_stub_bot())
-        scout = _top_group(tree, "scout")
-        names = _cmd_names(scout)
-        self.assertIn("status", names)
-        self.assertIn("slate", names)
-
-    def test_scout_requires_manage_guild(self):
-        tree = commands_module.register_scout_commands(_stub_bot())
-        self.assertIsNotNone(_top_group(tree, "scout").default_permissions)
-
-    def test_scout_owns_production_issue_verbs(self):
-        tree = commands_module.register_scout_commands(_stub_bot())
-        issue = _subgroup(_top_group(tree, "scout"), "issue")
-        # `build` (a pure card poster) was retired with the phase cards.
-        self.assertEqual(
-            _cmd_names(issue),
-            {"start", "update", "status", "built", "reopen",
-             "publish", "put-to-bed", "reset"},
-        )
-
-    def test_scout_issue_publish_destinations(self):
-        # Discord limits group nesting to one level — publish is a leaf
-        # with a destination choice arg, not a subgroup.
-        tree = commands_module.register_scout_commands(_stub_bot())
-        issue = _subgroup(_top_group(tree, "scout"), "issue")
-        publish_cmd = next(
-            c for c in issue.commands if getattr(c, "_cmd_name", None) == "publish"
-        )
-        choices = getattr(publish_cmd, "_choices", {}).get("destination", [])
-        self.assertEqual({c.value for c in choices}, {"all", "audio", "buttondown", "website"})
-
-    def test_scout_issue_start_describes_required_args(self):
-        tree = commands_module.register_scout_commands(_stub_bot())
-        issue = _subgroup(_top_group(tree, "scout"), "issue")
-        start = next(c for c in issue.commands if getattr(c, "_cmd_name", None) == "start")
-        described = getattr(start, "_describe", {})
-        for arg in ("number", "pub_date", "day_count"):
-            self.assertIn(arg, described, msg=f"missing describe for {arg}")
-
-    def test_scout_slate_has_surface_choices(self):
-        tree = commands_module.register_scout_commands(_stub_bot())
-        slate = next(
-            c for c in _top_group(tree, "scout").commands
-            if getattr(c, "_cmd_name", None) == "slate"
-        )
-        choices = getattr(slate, "_choices", {}).get("kind", [])
-        self.assertEqual(
-            {c.value for c in choices},
-            {"newsletter", "blog", "podcast", "membership"},
-        )
-
-
 # ── retired surfaces ──────────────────────────────────────────────────
 
 class RetiredSurfacesTests(unittest.TestCase):
@@ -233,19 +109,21 @@ class RetiredSurfacesTests(unittest.TestCase):
         # The /workshop tree was removed in commit 4 of the per-persona migration.
         self.assertFalse(hasattr(commands_module, "register_workshop_commands"))
 
-    def test_retired_command_names_absent_across_all_trees(self):
-        for fn in (
-            commands_module.register_eddy_commands,
-            commands_module.register_linky_commands,
-            commands_module.register_marky_commands,
-            commands_module.register_patty_commands,
-            commands_module.register_scout_commands,
+    def test_retired_persona_register_fns_absent(self):
+        for fn_name in (
+            "register_scout_commands",
+            "register_linky_commands",
+            "register_marky_commands",
+            "register_patty_commands",
         ):
-            tree = fn(_stub_bot())
-            for g in tree.groups:
-                names = _all_command_names(g)
-                for retired in ("heartbeat", "next-issue", "job"):
-                    self.assertNotIn(retired, names, msg=f"retired '{retired}' found in {g.name}")
+            self.assertFalse(hasattr(commands_module, fn_name), msg=f"{fn_name} should be retired")
+
+    def test_retired_command_names_absent_across_all_trees(self):
+        tree = commands_module.register_eddy_commands(_stub_bot())
+        for g in tree.groups:
+            names = _all_command_names(g)
+            for retired in ("heartbeat", "next-issue", "job"):
+                self.assertNotIn(retired, names, msg=f"retired '{retired}' found in {g.name}")
 
 
 class DescriptionLengthTests(unittest.TestCase):
@@ -272,32 +150,24 @@ class DescriptionLengthTests(unittest.TestCase):
         return out
 
     def test_all_descriptions_within_discord_limit(self):
-        for fn in (
-            commands_module.register_eddy_commands,
-            commands_module.register_linky_commands,
-            commands_module.register_marky_commands,
-            commands_module.register_patty_commands,
-            commands_module.register_scout_commands,
-        ):
-            tree = fn(_stub_bot())
-            for group in tree.groups:
-                for label, desc in self._collect(group, f"/{group.name}"):
-                    self.assertIsInstance(desc, str, msg=f"{label}: missing description")
-                    self.assertTrue(
-                        1 <= len(desc) <= 100,
-                        msg=f"{label}: description is {len(desc)} chars (Discord limit 1–100): {desc!r}",
-                    )
+        tree = commands_module.register_eddy_commands(_stub_bot())
+        for group in tree.groups:
+            for label, desc in self._collect(group, f"/{group.name}"):
+                self.assertIsInstance(desc, str, msg=f"{label}: missing description")
+                self.assertTrue(
+                    1 <= len(desc) <= 100,
+                    msg=f"{label}: description is {len(desc)} chars (Discord limit 1–100): {desc!r}",
+                )
 
 
 class ProductionOwnershipReferenceTests(unittest.TestCase):
-    """Model-visible production references should point at Scout, not Eddy."""
+    """Model-visible references should not point at retired command surfaces."""
 
-    def test_stale_eddy_production_command_references_absent(self):
+    def test_retired_command_references_absent(self):
         paths = [
             "apps/workshop_bot/tools/content/issue.py",
             "apps/workshop_bot/tools/issue_items.py",
             "apps/workshop_bot/tools/llm/local_tools.py",
-            "apps/workshop_bot/systems/pinboard/server.py",
             "apps/workshop_bot/prompts/eddy/prompt.md",
             "apps/workshop_bot/tools/README.md",
             "apps/workshop_bot/CLAUDE.md",
@@ -306,6 +176,10 @@ class ProductionOwnershipReferenceTests(unittest.TestCase):
             "docs/publishing-process.md",
         ]
         stale = (
+            "/scout",
+            "/linky",
+            "/marky",
+            "/patty",
             "/eddy issue start",
             "/eddy issue update",
             "/eddy issue built",

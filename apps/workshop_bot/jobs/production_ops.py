@@ -1,11 +1,9 @@
-"""Headless production lifecycle transitions — phase flips and the compose
-fires that accompany them. No Discord, no cards.
+"""Headless issue lifecycle transitions.
 
-These are the real logic lifted out of the phase-card modules so the web
-project page (and, until they're retired, the cards) call one place:
+The web issue page calls one place for phase flips and related compose work:
 - `mark_built`  — Build → Publish: gate on build-ready, flip phase, then fire
-  compose-envelope → compose-echoes → compose-cta. Each anchors directly on the
-  runtime-assembled draft (the DB is the draft), so order is independent.
+  Eddy's compose-envelope and compose-echoes jobs. Each anchors directly on
+  the runtime-assembled draft (the DB is the draft), so order is independent.
 - `reopen`      — Publish → Build.
 - `recompose`   — retry compose-echoes if it failed to auto-fire.
 """
@@ -22,7 +20,7 @@ logger = logging.getLogger("workshop.jobs.production_ops")
 
 
 async def mark_built(ctx: "_base.JobContext", n: Optional[int] = None) -> "_base.JobResult":
-    """Build → Publish. Flips phase and fires compose-envelope → echoes → cta.
+    """Build → Publish. Flip phase and fire Eddy's publish-package composes.
     Refuses if content isn't complete. Card-free — callers handle any surface
     refresh. The composes each anchor on the runtime-assembled draft directly,
     so their order is independent."""
@@ -45,10 +43,9 @@ async def mark_built(ctx: "_base.JobContext", n: Optional[int] = None) -> "_base
 
     db.set_issue_phase(n, "publish")
 
-    from . import compose_cta, compose_echoes, compose_envelope
+    from . import compose_echoes, compose_envelope
     for name, job in (("compose-envelope", compose_envelope),
-                      ("compose-echoes", compose_echoes),
-                      ("compose-cta", compose_cta)):
+                      ("compose-echoes", compose_echoes)):
         try:
             await job.run(_base.JobContext(deps=ctx.deps, trigger="mark-built"))
         except Exception:  # noqa: BLE001
@@ -57,7 +54,7 @@ async def mark_built(ctx: "_base.JobContext", n: Optional[int] = None) -> "_base
     return _base.JobResult(
         True,
         f"✅ **WT{n}** marked built — now in **Publish**. Envelope "
-        f"(subject/description/haiku) + Echoes composed; CTA requested from Patty.",
+        f"(subject/description/haiku) + Echoes composed.",
         data={"issue_number": n, "phase": "publish"},
     )
 

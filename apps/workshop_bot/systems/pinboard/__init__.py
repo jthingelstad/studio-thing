@@ -1,1 +1,1 @@
-"""Pinboard system module — Linky's bookmark surface."""
+"""Pinboard client for newsletter issue source sync."""

@@ -542,11 +542,10 @@ ISSUES_LOCAL_DIR = (
     else _REPO_ROOT / "data" / "issues"
 )
 
-# CTA / Thanks slot positions in the email. Hardcoded so Eddy doesn't
-# need to declare placement editorially — Patty authors the copy
-# (cta-1.md / cta-2.md / thanks-1.md) and the renderer splices it in
-# at these fixed positions. Slots whose atom file is missing are
-# simply skipped (no marker, no Liquid block, nothing).
+# CTA / Thanks slot positions in the email. Hardcoded so issue authorship
+# does not carry placement markers. If Jamie writes cta-1.md / cta-2.md /
+# thanks-1.md, the renderer splices those atoms in at fixed positions.
+# Missing atoms are skipped.
 CTA_SLOT_POSITIONS: dict[str, str] = {
     # "cta:1" splices after the Notable section (between Notable and
     # the next divider). "cta:2" splices after Journal. "thanks:1"
@@ -572,7 +571,7 @@ def _read_atom(issue_number: int, filename: str) -> str:
 def _read_atom_body_after_frontmatter(issue_number: int, filename: str) -> str:
     """Read an atom file and return its body, stripping any leading
     YAML front matter block (used by ``cta-N.md`` / ``thanks-N.md``
-    which carry a ``kind: supporter`` front matter from compose-cta)."""
+    which may carry ``kind`` front matter)."""
     raw = _read_atom(issue_number, filename)
     if not raw:
         return ""
@@ -685,7 +684,7 @@ def _gather_inputs_for_issue(issue_number: int, *, window: Optional[dict] = None
 
     metadata = _load_metadata(issue_number, window)
 
-    # Echoes (Thingy's archive note) — optional atom.
+    # Echoes archive note — optional atom.
     echoes = _read_atom(issue_number, "echoes.md")
 
     return {
@@ -703,8 +702,8 @@ def render_body_for_issue(
 ) -> str:
     """The issue body rendered straight from current DB state — **no S3, no
     local writes, no artifacts**. The DB is the draft; this is how you read
-    it. Consumers: the LLM jobs (compose-*, reorder, promotion-prep, Eddy's
-    review) and the web preview."""
+    it. Consumers: the LLM jobs (compose-*, reorder, Eddy's review) and the
+    web preview."""
     inputs = _gather_inputs_for_issue(issue_number, window=window)
     return render_archive_body(
         atoms=inputs["atoms"],

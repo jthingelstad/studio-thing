@@ -2,8 +2,7 @@
 
 Not a content-loop job; it's the "what's the bot doing / is anything
 stuck" view. All DB-only (no S3, no external APIs), so it's snappy. For
-the in-flight issue's *content* completeness, use ``/eddy issue
-status``.
+the in-flight issue's *content* completeness, use the Studio web app.
 
 Shows: the active issue window, any held job locks (a deadlock would show
 here), and the last several ``agent_runs`` rows.

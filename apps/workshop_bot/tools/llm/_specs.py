@@ -189,8 +189,7 @@ SPECS: dict[str, dict[str, Any]] = {
         "description": (
             "Corpus-wide totals from the DB record: total_issues, total_links, total_notable, "
             "total_briefly, total_words, unique_domains, issues_with_audio, audio_coverage_pct, "
-            "first_date, last_date. The numbers Marky reports in retros and the home-page hero "
-            "displays. No arguments."
+            "first_date, last_date. Useful for archive overviews and site stats. No arguments."
         ),
         "input_schema": {"type": "object", "properties": {}},
     },
@@ -209,14 +208,6 @@ SPECS: dict[str, dict[str, Any]] = {
             },
             "required": ["issue_number"],
         },
-    },
-    "site__support_state": {
-        "name": "site__support_state",
-        "description": (
-            "Current support program state: this year's nonprofit, supporter count, amount raised, "
-            "past nonprofits. No arguments."
-        ),
-        "input_schema": {"type": "object", "properties": {}},
     },
     "web__fetch_url": {
         "name": "web__fetch_url",
@@ -530,16 +521,12 @@ SPECS: dict[str, dict[str, Any]] = {
         "name": "react__add",
         "description": (
             "Add a single emoji reaction to the message you're currently "
-            "responding to (mention, peer message, or team-round trigger). "
+            "responding to (mention or direct message context). "
             "Posts under your persona's avatar — Eddy's react shows as Eddy. "
-            "Especially useful in `#workshop`: when a peer's message lands "
-            "but you wouldn't add anything in prose, drop a brief reaction "
-            "and PASS instead of staying invisible. Use sparingly — one "
-            "reaction per message, only when the emoji is your honest take. "
-            "Picks should match your persona: Eddy 📝👀🤔, Linky 🔗📚⏩, "
-            "Marky 📈🔥, Patty 🤝💚 — but anything fitting works. Returns "
+            "Use sparingly — one reaction per message, only when the emoji "
+            "is your honest take. Returns "
             "{ok, emoji} on success, {error: …} if there's no message in "
-            "context (heartbeat path) or Discord rejects the emoji."
+            "context or Discord rejects the emoji."
         ),
         "input_schema": {
             "type": "object",
@@ -590,92 +577,6 @@ SPECS: dict[str, dict[str, Any]] = {
                     "description": "Optional. Defaults to in-flight issue.",
                 },
             },
-        },
-    },
-    "campaigns__list": {
-        "name": "campaigns__list",
-        "description": (
-            "List campaigns from Marky's ad-placement ledger. Default "
-            "returns every campaign — live and sunset — newest first. "
-            "Each row carries id, name, ref, url, platform, status, "
-            "started_at, actual_signups (the denormalised KPI), cost, "
-            "copy, notes. Pair with campaigns__get for a single "
-            "campaign + its latest metric, or campaigns__history for "
-            "the trajectory."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "type": "string",
-                    "description": (
-                        "Optional filter: 'live' (currently polling), "
-                        "'sunset' (historical). Omit for all."
-                    ),
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "Max rows. Default 50, max 200.",
-                },
-            },
-        },
-    },
-    "campaigns__get": {
-        "name": "campaigns__get",
-        "description": (
-            "Read one campaign by name (e.g. 'DD388'). Returns the row "
-            "plus the most recent metric snapshot under 'latest_metric'. "
-            "For the full poll trajectory use campaigns__history."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {"name": {"type": "string"}},
-            "required": ["name"],
-        },
-    },
-    "campaigns__history": {
-        "name": "campaigns__history",
-        "description": (
-            "Recent campaign_metrics rows for one campaign, newest "
-            "first. Use to read a placement's trajectory — when traffic "
-            "landed, how it tapered. Default limit 30 days of polls; "
-            "cap 365."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string"},
-                "limit": {
-                    "type": "integer",
-                    "description": "Max rows. Default 30, max 365.",
-                },
-            },
-            "required": ["name"],
-        },
-    },
-    "campaigns__set_actual_signups": {
-        "name": "campaigns__set_actual_signups",
-        "description": (
-            "Write the campaign's current attribution-realised signups "
-            "count (the KPI denormalised on the campaign row). The "
-            "daily-metrics job updates this after each poll, so the "
-            "routine flow doesn't need this tool. Use it for manual "
-            "corrections — you read attribution yourself via "
-            "buttondown__attribution_summary and the stored value is "
-            "stale or missing — or for ad-hoc placements you're "
-            "tracking outside daily-metrics. Returns the updated "
-            "campaign row."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string"},
-                "signups": {
-                    "type": "integer",
-                    "description": "Current cumulative signups count (≥0).",
-                },
-            },
-            "required": ["name", "signups"],
         },
     },
     "productions__list": {

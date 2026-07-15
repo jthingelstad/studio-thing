@@ -192,7 +192,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             f"❌ can't put **WT{n}** to bed — `data/issues/{n}/metadata.json` not found locally. "
             "Publish Website from Studio first to commit the artifacts."
         )
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
+        await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n})
 
     if not (meta.get("buttondown_id") and meta.get("absolute_url")):
@@ -200,7 +200,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             f"❌ can't put **WT{n}** to bed — `metadata.json` is missing `buttondown_id` "
             f"and/or `absolute_url`. Publish Email from Studio first."
         )
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
+        await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n})
 
     links = _read_links(n)
@@ -211,7 +211,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     except Exception as exc:  # noqa: BLE001
         logger.exception("put-to-bed: file_issue failed for WT%d", n)
         msg = f"⚠️ couldn't put **WT{n}** to bed: `{type(exc).__name__}: {exc}`"
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
+        await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n})
 
     notable_n = len(links.get("notable_links") or [])
@@ -229,7 +229,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         "Studio is between issues. Start the next issue when ready.",
     ]
     msg = "\n".join(lines)
-    await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
+    await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
 
     return _base.JobResult(
         True,

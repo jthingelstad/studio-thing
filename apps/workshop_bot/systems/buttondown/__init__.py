@@ -1,1 +1,1 @@
-"""Buttondown system module — read-only API surface for Marky."""
+"""Buttondown system module for newsletter publishing and subscriber stats."""

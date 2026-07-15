@@ -1,10 +1,10 @@
-"""HTTP client for the Thingy Lambda's ``/retrieve`` endpoint.
+"""HTTP client for the Librarian Lambda's ``/retrieve`` endpoint.
 
 Workshop_bot's in-process archive corpus is BM25 (lexical), which is
 fine for most agent jobs but not for ``compose-echoes`` — that job
 needs to find an archive entry that *thematically* resonates with the
-current issue, and BM25 only matches on shared vocabulary. Thingy's
-Lambda already runs the high-quality pipeline (Bedrock Cohere embed →
+current issue, and BM25 only matches on shared vocabulary. Librarian's
+Lambda runs the high-quality pipeline (Bedrock Cohere embed →
 vector search → Cohere rerank) against the pre-embedded corpus; this
 client exposes that pipeline as a retrieval-only call (no Sonnet,
 no per-user token, operator bridge-secret auth).
@@ -29,9 +29,8 @@ import requests
 
 logger = logging.getLogger("workshop.thingy_retrieve")
 
-# Default points at the production Stream Lambda URL — same env var
-# thingy_bridge uses, so a single LIBRARIAN_STREAM_URL override flips
-# both clients to a staging stack.
+# Default points at the production Stream Lambda URL, so a single
+# LIBRARIAN_STREAM_URL override flips retrieval to a staging stack.
 DEFAULT_STREAM_URL = "https://jcvud66qqpq53frvno5stoqntm0zqntw.lambda-url.us-east-1.on.aws/"
 
 # Bedrock embed + rerank typically completes in 1–3s; the timeout is
@@ -53,7 +52,7 @@ def _bridge_secret() -> str:
     secret = os.environ.get("LIBRARIAN_BRIDGE_SECRET", "").strip()
     if not secret:
         raise ThingyRetrieveError(
-            "LIBRARIAN_BRIDGE_SECRET is not set; Thingy retrieval is disabled"
+            "LIBRARIAN_BRIDGE_SECRET is not set; Librarian retrieval is disabled"
         )
     return secret
 
@@ -90,18 +89,18 @@ def retrieve(
     try:
         response = requests.post(url, json=payload, timeout=timeout_secs)
     except requests.RequestException as exc:
-        raise ThingyRetrieveError(f"Thingy /retrieve unreachable: {exc}") from exc
+        raise ThingyRetrieveError(f"Librarian /retrieve unreachable: {exc}") from exc
     if response.status_code >= 400:
         snippet = response.text[:200].replace("\n", " ")
         raise ThingyRetrieveError(
-            f"Thingy /retrieve returned {response.status_code}: {snippet}"
+            f"Librarian /retrieve returned {response.status_code}: {snippet}"
         )
     try:
         data = response.json()
     except ValueError as exc:
-        raise ThingyRetrieveError(f"Thingy /retrieve returned non-JSON: {exc}") from exc
+        raise ThingyRetrieveError(f"Librarian /retrieve returned non-JSON: {exc}") from exc
     passages = data.get("passages")
     if not isinstance(passages, list):
-        raise ThingyRetrieveError("Thingy /retrieve response missing 'passages' list")
+        raise ThingyRetrieveError("Librarian /retrieve response missing 'passages' list")
     logger.info("thingy_retrieve query=%r k=%d → %d passages", query[:80], k, len(passages))
     return passages

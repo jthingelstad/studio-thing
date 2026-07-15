@@ -6,9 +6,8 @@ Spins up Eddy, the newsletter assistant, plus the private Studio web app.
 The corpus is built once at startup and shared with Eddy. Migrations run
 idempotently every start.
 
-The reader-facing Thingy bot lives in a separate process
-(`apps/thingy_bridge/`) — see that app's README for the bridge launch
-story.
+The Librarian API is a separate subsystem in this mono repo
+(`apps/librarian/`) and is not started by this runtime.
 """
 
 from __future__ import annotations
@@ -31,7 +30,6 @@ from .personas.eddy import EddyBot
 from .personas.team import TeamRegistry
 from .scheduler.runner import Runner as SchedulerRunner
 from .systems.buttondown.server import ButtondownServer
-from .systems.pinboard.server import PinboardServer
 from .webapp import start_webapp
 from .tools import db
 from .tools.content import corpus
@@ -247,7 +245,6 @@ async def run() -> int:
     registry = agent_tools.ToolRegistry()
     agent_tools.register_local_helpers(registry)
     registry.register_system(ButtondownServer())
-    registry.register_system(PinboardServer())
     deps = Deps(corpus=corpus_handle, team=team, registry=registry)
 
     bots = [(name, cls(deps), token) for (name, token, cls) in resolved]

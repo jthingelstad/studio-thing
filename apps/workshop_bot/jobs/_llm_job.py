@@ -77,21 +77,6 @@ ISSUE_BODY_CAP = 20_000
 # don't need the extra headroom.
 CREATE_FINAL_BODY_CAP = ISSUE_BODY_CAP + 6_000
 
-# `promotion-prep` reads ``buttondown.md`` — the byte-shaped email body, which
-# carries the intro + the optional Currently block + the cover block + every
-# non-empty section + the membership-CTA Liquid scaffold + the haiku close
-# + the email-only tracking pixel. It's the bulkiest of the three artifacts;
-# give Marky the whole thing when she's drafting syndication framings.
-PROMOTION_BODY_CAP = ISSUE_BODY_CAP + 8_000
-
-# Retired vocabulary: membership-block placement no longer lives in any
-# artifact. ``compose-cta`` composes three fixed atoms (``cta-1``,
-# ``cta-2``, ``thanks-1``) and ``render_email``'s hardcoded
-# ``CTA_SLOT_POSITIONS`` map decides where each lands at render time. The
-# old per-file ``placement:`` frontmatter and the ``<!-- cta:N -->``
-# inline markers are both gone — nothing reads ``final.md`` (it isn't
-# written anymore).
-
 
 def draft_body(issue_number: int) -> str:
     """The issue body rendered live from current DB state — the DB is the

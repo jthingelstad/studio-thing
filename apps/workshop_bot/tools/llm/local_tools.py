@@ -47,7 +47,7 @@ def t_search_archive(deps, query: str, k: int = 8) -> list[dict[str, Any]]:
 
 
 def t_retrieve_archive(deps, query: str, k: int = 8) -> list[dict[str, Any]] | dict[str, Any]:
-    """Semantic archive retrieval via Thingy's /retrieve (Bedrock Cohere
+    """Semantic archive retrieval via Librarian /retrieve (Bedrock Cohere
     embed → vector search → Cohere rerank). Returns the same shape as
     ``archive__search`` so callers can swap freely. Use this for THEME
     / CONCEPT lookups ("end-to-end messaging"); use ``archive__search``
@@ -235,18 +235,10 @@ def t_archive_lookup_list_links(
     return archive_lookup.list_issue_links(int(issue_number), section=section)
 
 
-# ---------- retired support-program helper ----------
-
-def t_get_support_state(deps) -> str:
-    """Current nonprofit, supporter count, amount raised, past nonprofits."""
-    return support_state.render_state(support_state.read())
-
-
 # ---------- web ----------
 
 def t_fetch_url(deps, url: str, max_chars: int = 12_000) -> dict[str, Any]:
-    """Fetch a URL and return readable text. Use for Linky to actually read what
-    a bookmark is about before recommending it."""
+    """Fetch a URL and return readable text before Eddy comments on it."""
     return web.fetch_text(url, max_chars=int(max_chars))
 
 
@@ -379,63 +371,6 @@ def t_followup_cancel(deps, followup_id: int) -> dict[str, Any]:
 # The workspace__* tools (issue-number-keyed S3 read/write) were retired in
 # favour of the type-general production_content__* tools (DB content store).
 # Authored content for any production lives in the DB now; S3 is publishing-only.
-
-
-# ---------- retired campaign ledger helpers ----------
-
-
-def t_campaigns_list(
-    deps, status: Optional[str] = None, limit: int = 50
-) -> list[dict[str, Any]]:
-    """Read the campaign ledger. Default returns every campaign — live
-    and sunset — newest first. Status filter accepts ``'live'`` or
-    ``'sunset'``."""
-    rows = db.list_campaigns(status=status)
-    n = max(1, min(int(limit), 200))
-    return rows[:n]
-
-
-def t_campaigns_get(deps, name: str) -> dict[str, Any]:
-    """Read one campaign by name. Returns the row plus its most recent
-    metric snapshot (``latest_metric``: signups, traffic, ran_at) or
-    ``{"error": …}`` if no such campaign."""
-    row = db.get_campaign(name)
-    if not row:
-        return {"error": f"unknown campaign {name!r}"}
-    return {**row, "latest_metric": db.latest_campaign_metric(name)}
-
-
-def t_campaigns_history(
-    deps, name: str, limit: int = 30
-) -> dict[str, Any]:
-    """Recent metric rows for one campaign, newest first. Use to read a
-    trajectory — when a placement landed, how it tapered, whether it
-    plateaued. Returns ``{"error": …}`` if no such campaign."""
-    if db.get_campaign(name) is None:
-        return {"error": f"unknown campaign {name!r}"}
-    return {
-        "name": name,
-        "metrics": db.recent_campaign_metrics(name, limit=int(limit)),
-    }
-
-
-def t_campaigns_set_actual_signups(
-    deps, name: str, signups: int
-) -> dict[str, Any]:
-    """Write the current attribution-realised signups count for a
-    campaign. ``daily-metrics`` updates this column after each poll, so
-    in the routine flow there's no need to call this tool. Use it for
-    manual corrections (you ran ``buttondown__attribution_summary``
-    yourself and noticed the stored value is stale) or for ad-hoc
-    placements outside the daily-metrics path. Returns the updated row,
-    or ``{"error": …}`` if no such campaign."""
-    n = int(signups)
-    if n < 0:
-        return {"error": "signups must be ≥ 0"}
-    if not db.set_actual_signups(name, n):
-        return {"error": f"unknown campaign {name!r}"}
-    row = db.get_campaign(name) or {}
-    return {"ok": True, "campaign": row}
 
 
 # ---------- currently (per-issue ## Currently section) ----------
@@ -904,9 +839,8 @@ FUNCS: dict[str, Callable[..., Any]] = {
 def register_local_helpers(registry: ToolRegistry) -> None:
     """Register the local-helper tools (everything in ``FUNCS`` / ``SPECS``).
 
-    External systems (``buttondown``, ``pinboard``, ``stripe``,
-    ``tinylytics``) are added separately via ``registry.register_system``
-    from ``bot.py``.
+    External systems such as Buttondown are added separately via
+    ``registry.register_system`` from ``bot.py``.
     """
     for name in sorted(FUNCS):
         spec = SPECS[name]

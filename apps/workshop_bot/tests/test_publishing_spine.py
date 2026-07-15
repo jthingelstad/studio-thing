@@ -25,7 +25,6 @@ _stubs.install()
 
 from apps.workshop_bot.jobs import (  # noqa: E402
     _base,
-    compose_cta,
     compose_echoes,
     compose_envelope,
     production_ops,
@@ -46,12 +45,11 @@ def _window(n=458, pub="2026-05-23"):
 
 
 def _patch_composes():
-    """Patch the three compose jobs (lazily imported inside production_ops) so
+    """Patch the compose jobs (lazily imported inside production_ops) so
     mark_built's auto-fires don't hit Anthropic."""
     return (
         patch.object(compose_envelope, "run", new=AsyncMock(return_value=_OK)),
         patch.object(compose_echoes, "run", new=AsyncMock(return_value=_OK)),
-        patch.object(compose_cta, "run", new=AsyncMock(return_value=_OK)),
     )
 
 
@@ -103,15 +101,14 @@ class BuildStateTests(_DBTestCase):
     def test_mark_built_flips_to_publish_and_fires_composes(self):
         _window(458)
         self._seed_full_content()
-        pt, pe, pc = _patch_composes()
-        with pt as m_envelope, pe as m_echoes, pc as m_cta:
+        pt, pe = _patch_composes()
+        with pt as m_envelope, pe as m_echoes:
             res = asyncio.run(production_ops.mark_built(_base.JobContext()))
         self.assertTrue(res.ok, res.message)
         self.assertEqual(res.data["phase"], "publish")
         self.assertEqual(db.get_active_issue_window()["phase"], "publish")
         m_envelope.assert_awaited_once()
         m_echoes.assert_awaited_once()
-        m_cta.assert_awaited_once()
 
     def test_mark_built_recovers_when_a_compose_raises(self):
         # If a compose auto-fire blows up, the phase still flips to Publish and
@@ -119,8 +116,7 @@ class BuildStateTests(_DBTestCase):
         _window(458)
         self._seed_full_content()
         with patch.object(compose_envelope, "run", new=AsyncMock(return_value=_OK)), \
-             patch.object(compose_echoes, "run", new=AsyncMock(return_value=_OK)), \
-             patch.object(compose_cta, "run", new=AsyncMock(side_effect=RuntimeError("LLM hiccup"))):
+             patch.object(compose_echoes, "run", new=AsyncMock(side_effect=RuntimeError("LLM hiccup"))):
             res = asyncio.run(production_ops.mark_built(_base.JobContext()))
         self.assertTrue(res.ok, res.message)
         self.assertEqual(db.get_active_issue_window()["phase"], "publish")
@@ -276,7 +272,7 @@ class EchoesRenameTests(unittest.TestCase):
             atoms={"intro": "Hi.", "haiku": "a\nb\nc"},
             sections={"notable": "### [A](http://a)\n\nx"},
             features=[],
-            echoes="Thingy connects this to [WT287](https://weekly.thingelstad.com/archive/287/).",
+            echoes="The archive connects this to [WT287](https://weekly.thingelstad.com/archive/287/).",
         )
         self.assertIn("## Echoes", body)
         self.assertNotIn("## The Closer", body)

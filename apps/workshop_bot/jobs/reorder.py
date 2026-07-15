@@ -59,7 +59,7 @@ from typing import Any, Optional
 from ..tools import db, issue_items, issue_items_render, render, renderers, s3
 from ..tools.discord import discord_io, interaction
 from ..tools.llm import anthropic_client
-from . import _base, _llm_job, compose_cta
+from . import _base, _llm_job
 
 logger = logging.getLogger("workshop.jobs.reorder")
 
@@ -68,14 +68,6 @@ NAME = "reorder"
 _NEXT_STEPS = (
     "Next, in any order: `/eddy issue haiku`, `/eddy issue subject`, "
     "then publish from Studio (it'll list anything still missing if you run it early)."
-)
-
-# When reorder lands with declared membership-block slots, CTA composition
-# still auto-fires as a background task so the known supporter atoms are not
-# forgotten before publish.
-_NEXT_STEPS_WITH_CTA_AUTOFIRE = (
-    "Next: `/eddy issue haiku`, `/eddy issue subject`, then publish from Studio. "
-    "CTA composition auto-fires now — review the supporter slots in Discord."
 )
 
 # Synthetic-id prefix per section (the LLM-facing ids).
@@ -371,36 +363,6 @@ def _apply_proposal(
 # ---------- I/O ----------
 
 _ASSETS_BASE = "https://files.thingelstad.com/weekly-thing"
-
-
-def _schedule_compose_cta(
-    ctx: "_base.JobContext", *, issue_number: int, slots_declared: int,
-) -> None:
-    """Fire ``compose-cta`` as a background asyncio task so reorder
-    can return immediately. Any error inside compose-cta is logged
-    rather than re-raised — the JobResult for reorder has already
-    been built and the user's slash ack is in flight; an exception
-    here would land nowhere useful.
-    """
-    async def _run() -> None:
-        try:
-            result = await compose_cta.run(ctx)
-            logger.info(
-                "reorder → compose-cta autofire for WT%d (%d slot(s)): %s",
-                issue_number, slots_declared, getattr(result, "message", ""),
-            )
-        except Exception:  # noqa: BLE001
-            logger.exception(
-                "reorder → compose-cta autofire failed for WT%d",
-                issue_number,
-            )
-
-    try:
-        asyncio.create_task(_run())
-    except RuntimeError:
-        # No running loop (test contexts without an event loop). Skip
-        # silently — the test harness drives compose-cta directly.
-        logger.debug("reorder: no event loop for compose-cta autofire")
 
 
 def _md_html_links(issue_number: int, name: str, html_url: Optional[str]) -> str:

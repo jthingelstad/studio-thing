@@ -124,7 +124,7 @@ class StripMentionsTests(unittest.TestCase):
 
 
 class BuildHistoryTests(unittest.TestCase):
-    """The original regression: a peer-bot message used to crash because
+    """The original regression: another bot's message used to crash because
     the internal callsite called ``_short_bot_name`` while the function
     had been renamed to ``short_bot_name``. This pins the fix."""
 
@@ -139,7 +139,7 @@ class BuildHistoryTests(unittest.TestCase):
             ),
             _FakeMessage(
                 author=_FakeAuthor(
-                    id=peer_id, bot=True, display_name="Weekly Thing - Marky", name="marky"
+                    id=peer_id, bot=True, display_name="Weekly Thing - Utility", name="utility"
                 ),
                 content="dropping by",
             ),
@@ -153,12 +153,12 @@ class BuildHistoryTests(unittest.TestCase):
                 _FakeChannel(msgs), before=None, bot_user_id=bot_id, limit=10,
             )
         )
-        # Peer bot rendered with its short name; self message is assistant.
+        # Other bot rendered with its short name; self message is assistant.
         roles = [m["role"] for m in history]
         contents = [m["content"] for m in history]
         self.assertIn("user", roles)
         self.assertIn("assistant", roles)
-        self.assertTrue(any("[Marky]" in c for c in contents))
+        self.assertTrue(any("[Utility]" in c for c in contents))
         self.assertTrue(any("hey there" in c for c in contents))
 
     def test_self_messages_become_assistant_role(self):

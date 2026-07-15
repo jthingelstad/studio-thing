@@ -60,29 +60,12 @@ def _owner_mention_block() -> Optional[str]:
 
 
 def _build_system_blocks(persona: str) -> list[dict[str, Any]]:
-    """[team] [owner?] [persona] — cache marker on team AND persona.
+    """Build cached system blocks for Eddy.
 
-    Two cache markers cover two breakpoints: the team prompt alone (the
-    floor — shared across all personas) and team+owner+persona together
-    (the typical hit — re-use across consecutive calls from the same
-    persona). Anthropic returns a hit on the longest prefix it can match,
-    so when the persona's prompt is also stable, callers pay cache_read
-    rates on the whole system block instead of input rates on the
-    persona portion. The persona prompt is ~1.5-2.7K tokens; this is
-    a meaningful win for Eddy/Marky who run Opus/Sonnet. Linky on
-    Haiku may not benefit — Haiku's cache minimum is ~2K tokens and
-    Linky's prompt is just under, so the longer prefix may not cache.
-    The team prompt (~4K tokens) caches regardless.
-
-    Note: an earlier version of this function also accepted an
-    ``issue_index`` block — a pre-rendered one-line-per-issue cheat
-    sheet of every Weekly Thing ever published (~47.5k tokens for
-    348 issues) injected as a cached system block. It was Linky's
-    biggest single cost driver. Personas can answer the same
-    "what issues exist around X?" question via ``archive__search``
-    (with ``archive__get_issue`` / ``archive__quote_search`` for
-    deeper retrieval), so the cheat sheet was retired — the tool
-    surface replaces it on demand. See ``prompts/shared/team.md``."""
+    The shared Studio prompt and Eddy prompt are stable enough to benefit
+    from Anthropic prompt caching across consecutive calls. An earlier version
+    also injected a pre-rendered one-line-per-issue cheat sheet of every
+    Weekly Thing ever published; archive tools replaced that on demand."""
     blocks: list[dict[str, Any]] = [
         {
             "type": "text",

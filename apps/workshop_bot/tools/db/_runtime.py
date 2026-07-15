@@ -43,9 +43,8 @@ class AgentRun:
 
       - **Bare job name** for jobs that make one LLM call (or one
         logical batch under a single context manager):
-        ``compose-haiku``, ``compose-cta``, ``daily-metrics``,
-        ``promotion-prep``, ``pinboard-scan``, ``review-text``,
-        ``linky-research``, ``reorder``, ``follow-up``.
+        ``compose-haiku``, ``compose-echoes``, ``review-text``,
+        ``reorder``, ``follow-up``.
       - **``<job>:<sub>``** when a *single job module* opens multiple
         ``AgentRun`` blocks for distinguishable LLM passes that you
         want to query independently in ``agent_runs``:

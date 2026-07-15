@@ -83,18 +83,14 @@ logger = logging.getLogger("workshop.anthropic")
 # bot restart to take effect.
 _prompt_cache: dict[str, str] = {}
 
-_KNOWN_PERSONAS = ("eddy", "linky", "marky", "patty", "scout")
+_KNOWN_PERSONAS = ("eddy",)
 
 # Each call purpose bills to its own Anthropic key so the console Usage view
-# attributes spend per agent (the five personas) vs. per one-off project work
-# ("general": the blog alt-text backfill and the pipeline scripts). Keys share
-# one workspace, so this is visibility — not spend-cap isolation.
+# attributes spend for Eddy vs. one-off project work ("general": pipeline
+# scripts, archive/API support tasks). Keys share one workspace, so this is
+# visibility — not spend-cap isolation.
 _KEY_ENV_BY_PURPOSE = {
     "eddy":    "ANTHROPIC_EDDY_API_KEY",
-    "linky":   "ANTHROPIC_LINKY_API_KEY",
-    "marky":   "ANTHROPIC_MARKY_API_KEY",
-    "patty":   "ANTHROPIC_PATTY_API_KEY",
-    "scout":   "ANTHROPIC_SCOUT_API_KEY",
     "general": "ANTHROPIC_GENERAL_API_KEY",
 }
 
@@ -162,8 +158,7 @@ def _resolve_prompt_path(name: str) -> Path:
     - ``"team"`` → ``prompts/shared/team.md``
     - ``"<persona>"`` → ``prompts/<persona>/prompt.md``
     - ``"<persona>-<file>"`` → ``prompts/<persona>/<file>.md`` (e.g.
-      ``"eddy-draft-review"`` → ``prompts/eddy/draft-review.md``,
-      ``"linky-research-card"`` → ``prompts/linky/research-card.md``)
+      ``"eddy-draft-review"`` → ``prompts/eddy/draft-review.md``)
     """
     if name == "team":
         return PROMPTS_DIR / "shared" / "team.md"
@@ -179,10 +174,6 @@ def load_prompt(name: str) -> str:
     return _prompt_cache[name]
 
 
-# ``format_issue_index`` was deleted in the cost-reduction pass — the
-# one-line-per-issue cheat sheet (~47.5k tokens for 348 issues) was
-# injected into every persona's system prompt and dominated Linky's
-# per-link cost. Personas now answer "what issues exist around X?"
-# via ``archive__search`` (BM25), with ``archive__get_issue`` /
-# ``archive__quote_search`` for deeper retrieval.
-
+# ``format_issue_index`` was deleted in the cost-reduction pass. Agents now
+# answer "what issues exist around X?" via archive tools on demand instead of
+# carrying a huge one-line-per-issue cheat sheet in every prompt.

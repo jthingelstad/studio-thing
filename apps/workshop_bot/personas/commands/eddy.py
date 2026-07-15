@@ -1,16 +1,13 @@
 """``/eddy`` slash tree.
 
-Eddy is the editor. He hosts the **editorial** issue verbs
+Eddy is Studio's only active assistant. He hosts the **editorial** issue verbs
 (``/eddy issue echoes | reorder | haiku | subject``), the cross-cutting
 bot-health snapshot (``/eddy status``), the ``/eddy edit`` /
 ``/eddy currently`` content editors, ad-hoc ``/eddy review`` /
 ``/eddy archive``, and his own follow-ups (``/eddy followup …``).
 
-The **production** verbs (start / update / status / build / built /
-reopen / publish / put-to-bed / reset) and the Build/Publish phase cards
-moved to Scout (``/scout issue …``, ``#production``) — Scout owns the
-production slate; Eddy owns editorial shape. The CTA composer lives at
-``/patty cta``.
+Issue lifecycle controls live in the Studio web app. Chat stays narrow and
+agent-shaped rather than becoming a second production UI.
 
 The dispatch shapes (fast-job vs interactive-job) mirror the legacy
 ``/workshop`` tree exactly — only the prefix changes. See
@@ -75,7 +72,7 @@ def register_eddy_commands(
 
     @issue.command(
         name="echoes",
-        description="Write the Echoes note (Thingy's archive callback) for the in-flight issue.",
+        description="Write the Echoes archive note for the in-flight issue.",
     )
     async def issue_echoes_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: compose_echoes.run(_ctx(bot)), "issue echoes")
@@ -170,7 +167,7 @@ def register_eddy_commands(
 
     @eddy.command(
         name="status",
-        description="Ops snapshot — issue window, goal/campaigns, held job locks, recent runs.",
+        description="Ops snapshot — issue window, held job locks, recent runs.",
     )
     async def status_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_and_ack(interaction, lambda: status_job.run(_ctx(bot)), "status")

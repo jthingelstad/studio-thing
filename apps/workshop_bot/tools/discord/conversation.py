@@ -27,7 +27,7 @@ def strip_mentions(text: str) -> str:
 
 
 def short_bot_name(display_name: str) -> str:
-    """`Weekly Thing - Marky` → `Marky`. Falls back to the raw name."""
+    """`Weekly Thing - Eddy` → `Eddy`. Falls back to the raw name."""
     parts = (display_name or "").rsplit(" - ", 1)
     return parts[-1].strip() or display_name
 

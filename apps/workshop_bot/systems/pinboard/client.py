@@ -282,10 +282,8 @@ def issue_window_candidates(start_date: str, end_date: str) -> dict[str, list[di
 def bookmark_blank(url: str, *, fallback_title: str | None = None) -> dict[str, Any]:
     """Save ``url`` as ``toread=yes shared=yes`` with a blank description
     if it isn't bookmarked yet; if it is, leave the existing record
-    alone and report ``created=False``. The persona's ✅ / 👍 save
-    handler uses this — symmetric with :func:`set_description` (reply
-    path) and :func:`tag_as_brief` (⏩ path); all three live here so
-    the fetch-merge-write pattern is in one place.
+    alone and report ``created=False``. Kept as a low-level Pinboard
+    helper for repair scripts.
 
     Returns ``{result_code, pinboard_url, created}``. ``created`` is
     True when ``posts_add`` actually wrote a new bookmark, False when
@@ -316,12 +314,9 @@ def bookmark_blank(url: str, *, fallback_title: str | None = None) -> dict[str, 
 
 
 def tag_as_brief(url: str, *, fallback_title: str | None = None) -> dict[str, Any]:
-    """Atomic 'add the `_brief` tag, keep everything else.' Used by
-    Linky's reaction listener — Jamie reacts ⏩ to one of Linky's
-    `#research` cards and that URL gets flagged as a Briefly candidate
-    on Pinboard. Preserves the existing title, description, ``toread``,
-    and ``shared`` flags; the tag list is split, deduped, ``_brief``
-    appended (if absent), and rejoined.
+    """Atomic 'add the `_brief` tag, keep everything else.' Preserves the
+    existing title, description, ``toread``, and ``shared`` flags; the tag
+    list is split, deduped, ``_brief`` appended (if absent), and rejoined.
 
     If the URL isn't bookmarked yet (a discovery-source reaction), the
     new bookmark gets created as ``toread=yes shared=yes`` with
@@ -370,11 +365,8 @@ def tag_as_brief(url: str, *, fallback_title: str | None = None) -> dict[str, An
 
 
 def set_description(url: str, description: str, *, fallback_title: str | None = None) -> dict[str, Any]:
-    """Atomic 'overwrite the description, keep everything else.' Used by
-    Linky's reply listener — Jamie replies to one of Linky's #research
-    cards in Discord and the reply text becomes the Pinboard bookmark's
-    description verbatim. Preserves the existing title, tags, ``toread``,
-    and ``shared`` flags.
+    """Atomic 'overwrite the description, keep everything else.' Preserves
+    the existing title, tags, ``toread``, and ``shared`` flags.
 
     If the URL isn't bookmarked yet (the popular-feed case), it gets
     created as ``toread=yes shared=yes`` with this description and
@@ -430,8 +422,8 @@ def set_description(url: str, description: str, *, fallback_title: str | None = 
 
 def delete_bookmark(url: str) -> dict[str, Any]:
     """Remove ``url`` from Jamie's Pinboard entirely (mutating). Wraps
-    ``/posts/delete``. Used by Linky's 🛑 reaction on a #research card —
-    Jamie's "remove from consideration entirely" gesture.
+    ``/posts/delete``. Used when Jamie removes a source from
+    consideration entirely.
 
     Idempotent on missing URLs: Pinboard returns ``result_code="item
     not found"`` rather than raising. We surface that verbatim so the
@@ -456,10 +448,9 @@ def delete_bookmark(url: str) -> dict[str, Any]:
 
 
 def clear_toread(url: str) -> dict[str, Any]:
-    """Atomic 'clear the ``toread`` flag, keep everything else.' Used by
-    Linky's ✅/👍 reaction listener on toread-source cards — Jamie's
-    "I've read it, take it out of the queue" gesture, the mirror of the
-    discovery-feed save ("I want this — put it INTO the queue").
+    """Atomic 'clear the ``toread`` flag, keep everything else.'
+
+    This is Jamie's "I've read it, take it out of the queue" gesture.
 
     Preserves the existing title, description, tags, and ``shared``
     flag. If the URL isn't bookmarked yet, returns ``{error}`` — there's
@@ -494,33 +485,6 @@ def clear_toread(url: str) -> dict[str, Any]:
     }
 
 
-def toread_public_unresearched(*, limit: int = 25) -> list[dict[str, Any]]:
-    """Jamie's public toread bookmarks that Linky hasn't researched yet —
-    the input list for the hourly per-link scan's toread lane. Newest
-    first. Filters at three layers:
-
-    - ``toread=yes`` (Pinboard's flag — Jamie hasn't worked through it)
-    - ``shared=yes`` (public; private bookmarks aren't candidates)
-    - not in ``pinboard_research_done`` (Linky already posted a card)
-    """
-    from ...tools import db as _db
-
-    raw = all_unread(limit=int(limit) * 4)  # over-fetch to absorb the filter cuts
-    public = [
-        p for p in raw
-        if p.get("shared", "yes") != "no"
-        and (p.get("href") or p.get("url"))
-    ]
-    urls = [(p.get("href") or p.get("url")) for p in public]
-    unresearched = set(_db.filter_unresearched_urls(urls))
-    out = [
-        normalize_post(p)
-        for p in public
-        if (p.get("href") or p.get("url")) in unresearched
-    ]
-    return out[: int(limit)]
-
-
 def capture_blurb(url: str, blurb: str) -> dict[str, Any]:
     """Atomic 'capture this for Briefly': writes ``blurb`` as the bookmark's
     description, adds the ``_brief`` tag, and clears ``toread``. Preserves
@@ -528,8 +492,7 @@ def capture_blurb(url: str, blurb: str) -> dict[str, Any]:
     so this is fetch → merge → ``posts/add`` with ``replace=yes``.
 
     Returns ``{result_code, pinboard_url, tags, replaced}``. If the bookmark
-    isn't in Jamie's Pinboard yet, returns ``{error: "not bookmarked"}`` —
-    Linky only captures items already in the queue.
+    isn't in Jamie's Pinboard yet, returns ``{error: "not bookmarked"}``.
     """
     existing = posts_get(url)
     posts = existing.get("posts") or []
@@ -715,7 +678,7 @@ def posts_add(
 
 
 def normalize_post(post: dict[str, Any]) -> dict[str, Any]:
-    """Trim a Pinboard record to the fields Linky cares about."""
+    """Trim a Pinboard record to the fields newsletter issue sync needs."""
     href = post.get("href", "")
     return {
         "url": href,

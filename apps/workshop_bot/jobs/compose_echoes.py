@@ -1,18 +1,17 @@
-"""``compose-echoes`` — write **Echoes**, Thingy's archive note that
-closes every issue.
+"""``compose-echoes`` — write **Echoes**, the archive note that closes
+every issue.
 
 Reader-facing section heading is ``## Echoes``; the on-disk atom name
 matches (``echoes.md``, under ``atoms/`` like the other composed
 atoms).
 
-Echoes runs in **Thingy's voice** (the public librarian persona; voice
-anchor at ``prompts/shared/thingy-voice-reference.md``) — third-person
-about Jamie, not Jamie's first person. It's the deliberate handoff at
-the foot of every issue from Jamie's voice to the archive's.
+Echoes runs in an archive-librarian voice: third-person about Jamie, not
+Jamie's first person. It's the deliberate handoff at the foot of every
+issue from Jamie's voice to the archive's.
 
 **Trigger:** auto-fired inside ``mark-built`` (the Build → Publish
-phase transition), alongside ``compose-envelope`` and the CTA auto-
-request. Runs over the *frozen* content. Was previously triggered by
+phase transition), alongside ``compose-envelope``. Runs over the
+*frozen* content. Was previously triggered by
 ``reorder`` on ✅; that ran over mid-edit state, which produced echoes
 that didn't reflect the shipped issue.
 
@@ -25,18 +24,18 @@ by (1) running on Opus (the single highest-leverage voice surface),
 (3) feeding the recent Echoes verbatim so the model can calibrate
 voice from real samples and avoid theme repetition.
 
-The job offers Thingy **two candidate sets** in the prompt; she picks
+The job offers Eddy **two candidate sets** in the prompt; he picks
 the stronger one for this issue:
 
 - **Mode 1 — Thematic Resonance** (preferred when the connection is
-  real). Top-K archive passages retrieved via Thingy's own ``/retrieve``
+  real). Top-K archive passages retrieved via Librarian's ``/retrieve``
   endpoint (Bedrock Cohere embed → vector search → Cohere rerank).
-  Sourced through ``tools/thingy_retrieve.py``. Thingy-grade semantic
+  Sourced through ``tools/thingy_retrieve.py``. Librarian semantic
   retrieval, not the in-process BM25 corpus.
 - **Mode 2 — Anniversary Echo** (always-available fallback). For each
   offset in ``_ANNIVERSARY_OFFSETS`` (one, five, eight years back), the
   job finds the issue published nearest to that date and pulls a body
-  preview. The prompt asks Thingy to pull a specific detail.
+  preview. The prompt asks for a specific detail.
 
 Inputs to the Opus call:
 
@@ -51,7 +50,7 @@ Inputs to the Opus call:
 - Anniversary candidates (Mode 2 candidates).
 
 Output is a 2-to-4-sentence markdown paragraph (≈40–80 words) in
-**Thingy's voice**, with referenced issue(s) rendered as markdown
+the archive voice, with referenced issue(s) rendered as markdown
 links (``[WT###](https://weekly.thingelstad.com/archive/N/)``).
 Written to ``echoes.md`` in S3 (under ``atoms/``) + local
 ``data/issues/{N}/``.
@@ -86,8 +85,8 @@ ISSUES_ROOT = REPO / "data" / "issues"
 # Used by _anniversary_candidates() to look up issue numbers + dates.
 EMAILS_JSON = REPO / "apps" / "site" / "_data" / "emails.json"
 
-# Echoes is a once-per-issue voice surface in Thingy's distinct librarian
-# voice, with archive citations that have to be earned — Opus pays off
+# Echoes is a once-per-issue archive voice surface, with citations that
+# have to be earned — Opus pays off
 # at ~$5/yr more than Sonnet for the quality differential. Override down
 # to Sonnet for cost-test or quick fallback via ``WORKSHOP_ECHOES_MODEL``.
 _ECHOES_DEFAULT_MODEL = "opus"
@@ -105,10 +104,10 @@ _ARCHIVE_URL_TPL = "https://weekly.thingelstad.com/archive/{n}/"
 # "recent history" window without bloating the prompt.
 _PRIOR_ECHOES_COUNT = 6
 
-# How many passages to retrieve from Thingy. 20 gives Sonnet a thick
+# How many passages to retrieve from the Librarian API. 20 gives Sonnet a thick
 # pool to pick from (≈ 6 distinct issues represented on average; the
-# rerank inside Thingy biases hard toward the best matches at the top),
-# while staying under Thingy's internal `numberOfResults` ceiling and
+# rerank biases hard toward the best matches at the top),
+# while staying under the retrieval result ceiling and
 # keeping the prompt at a manageable ~10–15 KB after preview-cap.
 _ARCHIVE_SNIPPET_COUNT = 20
 # Per-passage body cap. The Lambda already trims to ~1200 chars in
@@ -262,7 +261,7 @@ def _anniversary_candidates(
 
 
 def _retrieve_passages(query: str, current_number: int) -> list[dict[str, Any]]:
-    """Fetch the top archive passages for ``query`` via Thingy's
+    """Fetch the top archive passages for ``query`` via the Librarian
     ``/retrieve`` endpoint (Bedrock embed + Cohere rerank). Drops any
     passage from the current in-flight issue (the model shouldn't cite
     the issue it's closing). Raises ``thingy_retrieve.ThingyRetrieveError``
@@ -352,7 +351,7 @@ def _build_user_message(
     anniversaries: list[dict[str, Any]],
 ) -> str:
     return (
-        f"You're writing **Echoes** (Thingy's archive note) for **The Weekly "
+        f"You're writing **Echoes** (the archive note) for **The Weekly "
         f"Thing #{issue_number}**, publishing {publish_date}.\n\n"
         f"---\n\n"
         f"## Current issue draft\n\n"
@@ -375,8 +374,8 @@ def _build_user_message(
         f"preview.\n\n"
         f"{_format_anniversary_candidates(anniversaries)}\n\n"
         f"---\n\n"
-        f"Now write the Echoes note: 2-5 sentences (≈60-110 words) in Thingy's "
-        f"voice (third-person Jamie), OR the literal SKIP line. Every cited "
+        f"Now write the Echoes note: 2-5 sentences (≈60-110 words) in the "
+        f"archive voice (third-person Jamie), OR the literal SKIP line. Every cited "
         f"issue must be a markdown link "
         f"`[WT###](https://weekly.thingelstad.com/archive/N/)`. Open with the "
         f"echoes note itself — no meta-commentary about which candidate set you "
@@ -432,7 +431,7 @@ async def run(
     *,
     baseline_body: Optional[str] = None,
 ) -> "_base.JobResult":
-    """Write Thingy's Echoes archive note for the in-flight issue.
+    """Write the Echoes archive note for the in-flight issue.
 
     Mandatory + auto-fired inside ``mark-built``. Reads the frozen
     content via ``_llm_job.draft_body`` unless an explicit
@@ -491,7 +490,7 @@ async def run(
                 # gracefully on missing echoes.md), but the operator
                 # should know Echoes is missing for this issue.
                 msg = (
-                    f"❌ compose-echoes for WT{n}: Thingy retrieval unavailable "
+                    f"❌ compose-echoes for WT{n}: Librarian retrieval unavailable "
                     f"(`{exc}`). Echoes section will be missing from this issue "
                     f"unless re-run via `/eddy issue echoes` once retrieval recovers."
                 )

@@ -465,7 +465,7 @@ def clear_promotions(issue_number: int) -> None:
 
 def clear_issue(issue_number: int) -> None:
     """Delete every item row for an issue. Used by the WT348 migration
-    test fixture and by hypothetical ``/scout issue reset items`` flows;
+    test fixture and by reset flows in the Studio web app;
     not part of the normal cycle.
     """
     with connect() as conn:

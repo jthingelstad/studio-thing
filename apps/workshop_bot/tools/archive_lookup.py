@@ -166,7 +166,7 @@ def recent_issues(n: int = 10) -> list[dict[str, Any]]:
 
 def aggregate_stats() -> dict[str, Any]:
     """Corpus-wide totals: issue count, link count, domain count, total
-    words, audio coverage. The numbers Marky and the home page report on."""
+    words, audio coverage. Useful for archive overviews and site stats."""
     with connect() as conn:
         issues_row = conn.execute(
             "SELECT COUNT(*) AS total_issues, "

@@ -51,8 +51,7 @@ The runtime reads the repo-root `.env`.
 |---|---|
 | `DISCORD_TOKEN_EDDY` | Eddy's Discord bot token |
 | `DISCORD_SERVER_ID` | Guild-scoped slash command sync |
-| `DISCORD_CHANNEL_EDITORIAL` | Eddy's home channel |
-| `DISCORD_CHANNEL_PRODUCTION` | Publish/status notifications |
+| `DISCORD_CHANNEL_EDITORIAL` | Eddy's home channel and publish/status notifications |
 | `DISCORD_CHANNEL_CHATTER` | Startup/status line |
 | `ANTHROPIC_EDDY_API_KEY` | Eddy LLM calls |
 | `ANTHROPIC_GENERAL_API_KEY` | Offline eval and non-persona pipeline calls |

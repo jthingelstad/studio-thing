@@ -1,9 +1,9 @@
-"""Tests for compose-echoes — Echoes (Thingy's archive note) generator.
+"""Tests for compose-echoes — Echoes archive note generator.
 
 compose-echoes auto-fires inside ``mark-built`` (the Build → Publish
 phase transition). It reads the frozen issue body, the last 6 issues'
 echoes bodies (for anti-repetition), and the top archive passages from
-Thingy's `/retrieve` endpoint (Bedrock embed + Cohere rerank), then
+Librarian's `/retrieve` endpoint (Bedrock embed + Cohere rerank), then
 asks Opus for a 2-4 sentence paragraph. The output lands in
 data/issues/{N}/echoes.md on both S3 (under atoms/) and local; the
 daily renderers splice the ``## Echoes`` section into archive/email/
@@ -11,7 +11,7 @@ transcript from there — there is no final.md assembly.
 
 Tests cover: refusal paths (no window, no body, no Eddy), happy path
 (echoes.md written to local + S3), prior-echoes lookup (reads up to 6,
-skips missing), Thingy retrieval failure (fail-loud), and the
+skips missing), Librarian retrieval failure (fail-loud), and the
 bare-reference linkifier.
 """
 
@@ -211,7 +211,7 @@ class ComposeEchoesRunTests(_DBTestCase):
         self.assertIn("empty reply", result.message)
 
     def test_retrieve_called_with_baseline_body(self):
-        """The Thingy retrieval query is the baseline body — that's how
+        """The Librarian retrieval query is the baseline body — that's how
         Sonnet gets candidates that are semantically aligned with the
         current draft. Confirm the wiring."""
         self._window()
@@ -226,7 +226,7 @@ class ComposeEchoesRunTests(_DBTestCase):
         self.assertEqual(kwargs.get("k"), compose_echoes._ARCHIVE_SNIPPET_COUNT)
 
     def test_retrieval_failure_fails_loud(self):
-        """If Thingy /retrieve is unreachable or refuses, the job fails
+        """If Librarian /retrieve is unreachable or refuses, the job fails
         loud — no silent fallback to BM25 / inventory / nothing. The
         quality bar for echoes requires real semantic retrieval."""
         self._window()
@@ -238,13 +238,13 @@ class ComposeEchoesRunTests(_DBTestCase):
             ctx, baseline_body="## Notable\n\nbody",
         ))
         self.assertFalse(result.ok)
-        self.assertIn("Thingy retrieval unavailable", result.message)
+        self.assertIn("Librarian retrieval unavailable", result.message)
         self.assertTrue(result.data.get("retrieval_failed"))
         # No echoes.md written
         self.assertIsNone(content_store.read_issue(458, "echoes.md"))
         # No Sonnet call attempted (FakeBotChannel records calls)
         sent = fc.channel.send.await_args_list[0].args[0]
-        self.assertIn("Thingy retrieval unavailable", sent)
+        self.assertIn("Librarian retrieval unavailable", sent)
 
     def test_reply_linkifies_bare_issue_references(self):
         """The model is asked to render references as markdown links,
@@ -285,7 +285,7 @@ class ComposeEchoesRunTests(_DBTestCase):
     def test_passages_from_current_issue_excluded(self):
         """A passage from the in-flight issue itself should never appear
         in the candidates — citing the issue you're closing makes no
-        sense, and Thingy doesn't know which issue is in-flight."""
+        sense, and retrieval doesn't know which issue is in-flight."""
         self._window(n=281)
         # Retrieve returns a passage for WT281 plus one for WT200; the
         # WT281 one should be filtered out before reaching the prompt.

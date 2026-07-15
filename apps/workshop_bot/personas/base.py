@@ -1,8 +1,7 @@
-"""PersonaBot — shared base for the five discord.py clients.
+"""PersonaBot — shared base for Eddy's discord.py client.
 
-Each persona is a subclass that sets a few class attributes (name, tools,
-preferred model, home channel env var) and inherits the routing,
-peer-reaction protocol, and team-round handling defined here.
+Eddy sets a few class attributes (name, preferred model, home channel env
+var) and inherits the mention/home-channel routing defined here.
 """
 
 from __future__ import annotations
@@ -34,8 +33,6 @@ MODEL_FLAGS: dict[str, str] = {
     "--opus": "opus",
 }
 MODEL_FLAG_RE = re.compile(r"\B(--haiku|--sonnet|--opus)\b")
-
-ROUND_HISTORY_DEPTH = 20  # how far back to scan for a human round anchor
 
 # Strip common markdown / punctuation / quoting; if what's left is just the
 # word PASS, treat it as a no-reply signal regardless of how the model wrapped it.
@@ -88,24 +85,8 @@ def _read_env_int(key: str) -> Optional[int]:
         return None
 
 
-def team_role_id() -> Optional[str]:
-    """Read once; env doesn't change at runtime."""
-    raw = (os.environ.get("DISCORD_TEAM_ROLE_ID") or "").strip()
-    return raw or None
-
-
-def dialog_channel_ids() -> set[int]:
-    """Channel IDs where inter-agent reactions are allowed.
-
-    Only #workshop. #chatter is a status firehose — agents post there but
-    never react to each other (avoids turning the log stream into chatter).
-    """
-    cid = _read_env_int("DISCORD_CHANNEL_WORKSHOP")
-    return {cid} if cid is not None else set()
-
-
 class PersonaBot(discord.Client):
-    """Base class for the five persona bots.
+    """Base class for Eddy.
 
     Subclasses set:
       - ``persona`` / ``name``         — identity
@@ -117,13 +98,10 @@ class PersonaBot(discord.Client):
                                          env default for this persona
 
     Tool surface comes from ``deps.registry`` (the ``ToolRegistry``
-    composed at boot in ``bot.py``). Every persona sees every tool;
-    lane discipline lives in the persona prompt.
+    composed at boot in ``bot.py``).
 
     ``on_message`` dispatches when:
       - this specific bot is @-mentioned (single-persona reply), or
-      - the @Team role is mentioned (TeamRegistry runs all five sequentially,
-        one bot orchestrating), or
       - a human posts in this persona's home channel and no other bot is
         mentioned.
     """
@@ -136,12 +114,6 @@ class PersonaBot(discord.Client):
     # One-line summary of this persona's slash commands, posted as the
     # second line of the startup card. Each subclass sets it.
     slash_commands_summary: ClassVar[str] = ""
-
-    # Class-level lock so peer-reaction slot checks across the five persona
-    # clients (all in this same asyncio event loop) serialize. Protects
-    # against the TOCTOU race when two peers are evaluating the same human
-    # anchor concurrently.
-    _peer_react_lock: ClassVar[asyncio.Lock] = asyncio.Lock()
 
     def __init__(self, deps: Deps) -> None:
         intents = discord.Intents.default()
@@ -194,9 +166,8 @@ class PersonaBot(discord.Client):
 
     async def _post_startup_card(self) -> None:
         """Audit this persona's channels and post a one-line readiness
-        card to #chatter under this persona's avatar. Eddy prepends a
-        deployment header (git hash + dirty flag) as the lead persona;
-        the other three just post their own line."""
+        card to #chatter under Eddy's avatar. Eddy prepends a deployment
+        header (git hash + dirty flag)."""
         from ..tools.discord import startup
 
         # Lead persona (Eddy by convention) carries the deployment header.
@@ -261,16 +232,14 @@ class PersonaBot(discord.Client):
         ``_draft_review`` parks its multi-KB review prompt in its own
         cached block).
 
-        Pulls the full tool surface from ``deps.registry``; every persona
-        sees every tool. Lane discipline is enforced by the persona prompt.
+        Pulls Eddy's allowed tool surface from ``deps.registry``.
 
         Note: an earlier version of this method also rendered the full
-        348-issue archive into a system text block (``issue_index``) so
-        the model had a built-in "what issues exist?" cheat sheet. That
-        block was ~47.5k tokens on every call — half Linky's per-link
-        cost. Retired in favour of ``archive__search`` (BM25), with
-        ``archive__get_issue`` / ``archive__quote_search`` for deeper
-        retrieval. ``team.md`` directs the model at the tool surface.
+            348-issue archive into a system text block (``issue_index``) so
+            the model had a built-in "what issues exist?" cheat sheet. That
+            block was ~47.5k tokens on every call. Retired in favour of
+            ``archive__search`` (BM25), with ``archive__get_issue`` /
+            ``archive__quote_search`` for deeper retrieval.
         """
         if isinstance(latest, str):
             payload: "str | list[dict[str, Any]]" = (
@@ -297,29 +266,10 @@ class PersonaBot(discord.Client):
         if self.user is None:
             return
 
-        # Inter-agent reactions in #workshop only. (#chatter is a status
-        # firehose — agents post there but never react to each other.) One
-        # reaction per "round" (anchored on the last human message in this
-        # channel). LLM decides whether to PASS.
         if message.author.bot:
-            if message.channel.id not in dialog_channel_ids():
-                return
-            # Don't peer-react to messages the team orchestrator posted —
-            # the team is already running each persona in sequence.
-            if self.deps.team is not None and self.deps.team.is_team_post(message.id):
-                return
-            async with PersonaBot._peer_react_lock:
-                if not await self._can_react_to_peer(message.channel):
-                    return
-                await self._react_to_peer(message)
             return
 
         is_self_mention = self.user in message.mentions
-        role_id = team_role_id()
-        is_team_mention = bool(
-            role_id
-            and any(str(r.id) == role_id for r in (message.role_mentions or []))
-        )
         # "Stopping by my desk" — Jamie posts in this persona's home channel
         # without an @-mention. Yield to any specific persona he @-mentioned.
         is_home = self._is_home_channel(message.channel.id)
@@ -328,7 +278,7 @@ class PersonaBot(discord.Client):
         )
         home_dispatch = is_home and not other_bot_mentioned
 
-        if not (is_self_mention or is_team_mention or home_dispatch):
+        if not (is_self_mention or home_dispatch):
             return
 
         body, model = self._parse_body(message)
@@ -337,27 +287,6 @@ class PersonaBot(discord.Client):
         except Exception:  # noqa: BLE001 — Discord's attachment errors are unlabeled
             logger.exception("%s: attachment read failed", self.name)
             attachment_text = ""
-
-        # Team mention: only one bot orchestrates the round; the rest bow out.
-        if is_team_mention and self.deps.team is not None:
-            if not await self.deps.team.claim(message.id):
-                return
-            logger.info("%s claimed team round for message %s", self.name, message.id)
-            try:
-                await self.deps.team.orchestrate(
-                    message=message, body=body, attachment=attachment_text, model=model,
-                )
-            except Exception as exc:  # noqa: BLE001
-                logger.exception("%s: team orchestration raised", self.name)
-                try:
-                    await message.reply(
-                        f"Sorry — team round hit an error: `{type(exc).__name__}: {exc}`"[:1900],
-                        mention_author=False,
-                        suppress_embeds=True,
-                    )
-                except discord.DiscordException:
-                    logger.error("could not reply with error: %s", traceback.format_exc())
-            return
 
         # Single-persona path.
         history: list[dict[str, str]] = await conversation.build_history(
@@ -442,11 +371,6 @@ class PersonaBot(discord.Client):
         text = message.content or ""
         # Strip our own user mention.
         text = text.replace(f"<@{self.user.id}>", "").replace(f"<@!{self.user.id}>", "")
-        # Strip the team role mention if present.
-        role_id = team_role_id()
-        if role_id:
-            text = text.replace(f"<@&{role_id}>", "")
-
         # --haiku / --sonnet / --opus flags override the persona/env default.
         model: Optional[str] = None
         match = MODEL_FLAG_RE.search(text)
@@ -455,92 +379,3 @@ class PersonaBot(discord.Client):
             text = MODEL_FLAG_RE.sub("", text)
 
         return text.strip(), model
-
-    # ---- Inter-agent reactions ----
-
-    async def _can_react_to_peer(self, channel) -> bool:
-        """Slot rule: there must be a human round anchor in recent history,
-        and this bot must not have already posted since that anchor.
-        """
-        try:
-            self_count = 0
-            async for msg in channel.history(limit=ROUND_HISTORY_DEPTH):
-                if not msg.author.bot:
-                    return self_count == 0  # found human anchor; have I spoken?
-                if msg.author.id == self.user.id:
-                    self_count += 1
-        except Exception:  # noqa: BLE001
-            logger.exception("%s: round-anchor scan failed", self.name)
-        return False  # no human anchor → don't react
-
-    async def _react_to_peer(self, message: discord.Message) -> None:
-        # Build the same kind of history we'd build for a normal turn.
-        history = await conversation.build_history(
-            message.channel,
-            before=message,
-            bot_user_id=self.user.id,
-        )
-
-        peer_name = (
-            getattr(message.author, "display_name", "") or message.author.name or "a colleague"
-        )
-        peer_name = conversation.short_bot_name(peer_name)
-
-        peer_text = (message.content or "").strip()
-        if not peer_text:
-            return
-
-        meta = (
-            f"[META: This is {peer_name}'s message in #{getattr(message.channel, 'name', '?')} "
-            "— you were NOT addressed. Default is PASS. Silence is the right answer for "
-            "most overheard exchanges. Only break in if Jamie specifically needs YOUR "
-            "lens here (editorial, promotion, supporter, or link-curation — whichever "
-            "you are). Do NOT react just to be social, supportive, or to add color. Do "
-            "NOT validate or echo what they said. If you do react, your reply must be "
-            "1-3 short sentences, no preamble, no \"good point\", no headings. "
-            "Alternatively, if the message lands but you wouldn't add anything new "
-            "in prose, you can drop a brief emoji reaction with `react__add` and then "
-            "PASS — that's a low-cost co-sign without filling the channel. If in "
-            "any doubt, respond with exactly: PASS]"
-        )
-        body = f"{meta}\n\n[{peer_name}] {peer_text}"
-
-        # Reuse the persona's core() — same agent loop, same tools.
-        token = agent_tools.active_react_target.set(
-            (message.channel.id, message.id)
-        )
-        try:
-            answer, run_meta = await self.handle_peer(
-                body=body, history=history, model=None,
-            )
-        except Exception:  # noqa: BLE001
-            logger.exception("%s: peer reaction core failed", self.name)
-            return
-        finally:
-            agent_tools.active_react_target.reset(token)
-
-        if not answer or is_pass_response(answer):
-            logger.info("%s PASS on peer message from %s", self.name, peer_name)
-            return
-
-        logger.info(
-            "%s reacting to %s (%d iter, %d tool calls)",
-            self.name, peer_name,
-            (run_meta or {}).get("iterations", 0),
-            len((run_meta or {}).get("tool_calls") or []),
-        )
-        try:
-            for chunk in discord_io.split_for_discord(answer):
-                await message.channel.send(chunk, suppress_embeds=True)
-        except discord.DiscordException:
-            logger.exception("%s: failed to send peer reaction", self.name)
-
-    async def handle_peer(
-        self,
-        *,
-        body: str,
-        history: list[dict[str, str]],
-        model: Optional[str] = None,
-    ) -> tuple[str, dict]:
-        """Persona-level peer reaction. Default: dispatch through core()."""
-        return await self.core(latest=body, history=history, model=model)

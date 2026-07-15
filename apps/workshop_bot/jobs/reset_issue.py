@@ -113,7 +113,7 @@ async def run(ctx: "_base.JobContext", *, step: str) -> "_base.JobResult":
         summary_parts.append(f"{promotions_cleared} promotion(s) cleared")
     if not summary_parts:
         msg = f"ℹ️ nothing to reset — `{step}` artifacts weren't present for WT{n}."
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
+        await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
         return _base.JobResult(True, msg, data={"issue_number": n, "step": step, "deleted": []})
 
     summary = "; ".join(summary_parts)

@@ -7,15 +7,15 @@ What's in an issue, in reading order, and how each part is formatted. The author
 
 | # | Section | Heading | Source | Required? |
 |---|---|---|---|---|
-| 1 | Intro | (none — prose) | `intro.md` (Jamie, Drafts → Shortcut) | ✅ |
+| 1 | Intro | (none — prose) | `intro.md` (Jamie, Studio editor) | ✅ |
 | 2 | Currently | `## Currently` | `currently_entries` DB (`/eddy currently`) | optional |
-| 3 | Cover | (image + caption) | `cover.json` + `cover.jpg` (Jamie, Shortcut) | ✅ |
+| 3 | Cover | (image + caption) | `cover.json` + `cover.jpg` (Jamie, Studio) | ✅ |
 | 4 | Notable | `## Notable` | Pinboard bookmarks in-window, untagged | ✅ (≥1 of the 3 lists) |
 | 5 | Journal | `## Journal` | micro.blog posts in-window — see [`journal-handling.md`](journal-handling.md) | ✅ |
 | 6 | Briefly | `## Briefly` | Pinboard bookmarks tagged `_brief` | ✅ |
-| 7 | Outro | (none — prose) | `outro.md` (Jamie, Drafts → Shortcut) | optional |
+| 7 | Outro | (none — prose) | `outro.md` (Jamie, Studio editor) | optional |
 | 8 | Haiku | (bold tercet) | `haiku.md` (`compose-haiku`, Jamie picks) | ✅ |
-| 9 | Echoes | `## Echoes` | `closer.md` (written by Thingy) — see [`echoes.md`](echoes.md) | ✅ |
+| 9 | Echoes | `## Echoes` | `echoes.md` — see [`echoes.md`](echoes.md) | ✅ |
 
 **Featured** posts splice in before Notable — see [`featured-posts.md`](featured-posts.md). 
 

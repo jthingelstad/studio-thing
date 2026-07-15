@@ -1,18 +1,17 @@
-"""Eval harness — run 20 generated questions per persona without Discord.
+"""Eval harness — run generated Eddy questions without Discord.
 
-Asks Haiku to generate 20 realistic questions Jamie would send to each
-persona (cached to tmp/workshop_eval_questions.json so we don't regenerate
-on every iteration). Then dispatches each question to the matching
-persona's ``core()`` and writes per-persona markdown reports plus a
-SUMMARY.md.
+Asks Haiku to generate realistic questions Jamie would send to Eddy
+(cached to tmp/workshop_eval_questions.json so we don't regenerate on
+every iteration). Then dispatches each question to Eddy's ``core()`` and
+writes a markdown report plus SUMMARY.md.
 
 Run:
 
-    python -m apps.workshop_bot.eval                          # full run
+    python -m apps.workshop_bot.eval                          # Eddy run
     python -m apps.workshop_bot.eval --regen                  # regenerate question set
-    python -m apps.workshop_bot.eval --persona eddy           # one persona only
+    python -m apps.workshop_bot.eval --persona eddy
 
-Cost: ~100 Haiku calls + 5 question-gen calls. <$1 per run.
+Cost: ~20 Haiku calls + 1 question-gen call.
 """
 
 from __future__ import annotations
@@ -33,14 +32,7 @@ from dotenv import load_dotenv
 
 from .personas.base import Deps
 from .personas.eddy import EddyBot
-from .personas.linky import LinkyBot
-from .personas.marky import MarkyBot
-from .personas.patty import PattyBot
-from .personas.scout import ScoutBot
 from .systems.buttondown.server import ButtondownServer
-from .systems.pinboard.server import PinboardServer
-from .systems.stripe.server import StripeServer
-from .systems.tinylytics.server import TinylyticsServer
 from .tools import db
 from .tools.content import corpus
 from .tools.llm import agent_tools, anthropic_client
@@ -53,11 +45,7 @@ QUESTIONS_PATH = TMP / "workshop_eval_questions.json"
 PROMPTS_DIR = REPO / "apps" / "workshop_bot" / "prompts"
 
 PERSONAS: dict[str, type] = {
-    "scout": ScoutBot,
     "eddy": EddyBot,
-    "linky": LinkyBot,
-    "marky": MarkyBot,
-    "patty": PattyBot,
 }
 
 QUESTIONS_PER_PERSONA = 20
@@ -235,9 +223,6 @@ def _build_registry() -> agent_tools.ToolRegistry:
     registry = agent_tools.ToolRegistry()
     agent_tools.register_local_helpers(registry)
     registry.register_system(ButtondownServer())
-    registry.register_system(PinboardServer())
-    registry.register_system(StripeServer())
-    registry.register_system(TinylyticsServer())
     return registry
 
 

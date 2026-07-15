@@ -1,10 +1,4 @@
-"""Eddy — editor.
-
-Eddy hosts the ``/eddy`` slash tree (issue assembly, status,
-follow-ups, ad-hoc editorial commands). Each persona owns its own
-slash tree; ``PersonaBot.on_ready`` syncs ``self.command_tree`` if
-present.
-"""
+"""Eddy — the active Studio assistant."""
 
 from __future__ import annotations
 
@@ -33,8 +27,5 @@ class EddyBot(PersonaBot):
         super().__init__(deps)
         self.command_tree = register_eddy_commands(self)
 
-    # The Build + Publish phase cards moved to Scout (#production) — their
-    # persistent button-Views are now registered on ScoutBot, since a
-    # component interaction routes to the application that posted the
-    # message. Eddy no longer owns a long-lived control card, so it
-    # inherits the base (empty) persistent_views.
+    # The Studio web app owns long-lived issue controls. Eddy only hosts
+    # narrow chat helpers, so it inherits the base empty persistent_views.

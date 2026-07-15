@@ -14,7 +14,6 @@ import asyncio
 import sys
 import types
 import unittest
-from collections import OrderedDict
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
@@ -64,7 +63,6 @@ _install_stubs()
 
 
 from apps.workshop_bot.personas import base  # noqa: E402
-from apps.workshop_bot.personas import team as team_mod  # noqa: E402
 from apps.workshop_bot.tools.content import issue
 from apps.workshop_bot.tools.llm import agent_loop, agent_tools
 from apps.workshop_bot.tools.discord import conversation, discord_io
@@ -161,12 +159,12 @@ class SplitForDiscordTests(unittest.TestCase):
 
 
 class ShortBotNameTests(unittest.TestCase):
-    """`Weekly Thing - Marky` → `Marky`. Used in conversation history so each
-    persona can tell who's speaking.
+    """`Weekly Thing - Eddy` → `Eddy`. Used in conversation history so bot
+    display names are compact.
     """
 
     def test_strips_prefix(self):
-        self.assertEqual(conversation.short_bot_name("Weekly Thing - Marky"), "Marky")
+        self.assertEqual(conversation.short_bot_name("Weekly Thing - Eddy"), "Eddy")
 
     def test_no_separator(self):
         self.assertEqual(conversation.short_bot_name("Eddy"), "Eddy")
@@ -176,7 +174,7 @@ class ShortBotNameTests(unittest.TestCase):
 
     def test_takes_last_segment(self):
         self.assertEqual(
-            conversation.short_bot_name("Some - Bot - Patty"), "Patty"
+            conversation.short_bot_name("Some - Bot - Utility"), "Utility"
         )
 
 
@@ -469,25 +467,6 @@ class ReactAddTests(unittest.TestCase):
         finally:
             loop.call_soon_threadsafe(loop.stop)
             t.join(timeout=2)
-
-
-class TrimOrderedSetTests(unittest.TestCase):
-    """``_trim_ordered_set`` evicts oldest entries first. The prior trim
-    relied on plain-set order, which Python sets don't guarantee."""
-
-    def test_trim_oldest(self):
-        d: "OrderedDict[int, None]" = OrderedDict()
-        for i in range(10):
-            d[i] = None
-        team_mod._trim_ordered_set(d, cap=4)
-        self.assertEqual(list(d.keys()), [6, 7, 8, 9])
-
-    def test_no_trim_when_under_cap(self):
-        d: "OrderedDict[int, None]" = OrderedDict()
-        for i in range(3):
-            d[i] = None
-        team_mod._trim_ordered_set(d, cap=10)
-        self.assertEqual(list(d.keys()), [0, 1, 2])
 
 
 if __name__ == "__main__":

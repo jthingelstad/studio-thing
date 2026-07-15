@@ -8,7 +8,7 @@ from typing import Any, Optional
 from .connection import connect
 
 
-# ---------- subscriber events (Marky) ----------
+# ---------- subscriber events ----------
 
 def upsert_subscriber_event(
     *,
@@ -53,5 +53,4 @@ def recent_subscriber_events(
     with connect() as conn:
         rows = conn.execute(sql, params).fetchall()
     return [dict(r) for r in rows]
-
 

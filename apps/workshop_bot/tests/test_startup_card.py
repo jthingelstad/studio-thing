@@ -1,9 +1,8 @@
-"""Tests for the per-persona startup card (commit 7 of the per-persona
-slash-tree split).
+"""Tests for Eddy's startup card.
 
-Each persona's ``on_ready`` formats its own one-line readiness card via
-:func:`startup.format_persona_line`. Eddy as lead carries the
-deployment header (git hash + dirty flag) on top of his line.
+``on_ready`` formats a one-line readiness card via
+:func:`startup.format_persona_line`. Eddy carries the deployment header
+(git hash + dirty flag) on top of his line.
 """
 
 from __future__ import annotations
@@ -89,10 +88,10 @@ class FormatPersonaLineTests(unittest.TestCase):
 class AuditOneTests(unittest.TestCase):
     def test_audit_one_returns_per_env_rows(self):
         import os
-        bot = _fake_bot(name="Linky", persona="linky")
+        bot = _fake_bot(name="Eddy", persona="eddy")
         bot.get_channel = MagicMock(return_value=None)
-        # The audit checks the env vars in CHANNELS_BY_PERSONA["linky"].
-        orig = {k: os.environ.get(k) for k in ("DISCORD_CHANNEL_RESEARCH",
+        # The audit checks the env vars in CHANNELS_BY_PERSONA["eddy"].
+        orig = {k: os.environ.get(k) for k in ("DISCORD_CHANNEL_EDITORIAL",
                                                 "DISCORD_CHANNEL_WORKSHOP",
                                                 "DISCORD_CHANNEL_CHATTER")}
         try:

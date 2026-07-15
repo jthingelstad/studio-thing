@@ -189,7 +189,7 @@ async def publish_buttondown(ctx: "_base.JobContext") -> "_base.JobResult":
     missing = _required_missing(n)
     if missing:
         msg = _missing_list_message(n, missing, "buttondown")
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
+        await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n, "missing": missing})
 
     # Render-then-ship: buttondown.md is rendered fresh from current DB
@@ -210,7 +210,7 @@ async def publish_buttondown(ctx: "_base.JobContext") -> "_base.JobResult":
         )
     except pipeline_content.ButtondownPublishError as exc:
         msg = f"❌ Buttondown publish for **WT{n}** failed: {exc}"
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
+        await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n, "stage": "buttondown POST/PATCH"})
 
     action = bd_result["action"]
@@ -237,7 +237,7 @@ async def publish_buttondown(ctx: "_base.JobContext") -> "_base.JobResult":
     lines = [f"{head_emoji} {head_verb} Buttondown draft for **WT{n}** — `{subject}`"]
     lines.append(f"📨 [open in Buttondown]({draft_url}) — review, schedule, send.")
     lines.append("_Re-run Publish Email in Studio to push edits — idempotent._")
-    await ctx.post("DISCORD_CHANNEL_PRODUCTION", "\n".join(lines), persona="eddy")
+    await ctx.post("DISCORD_CHANNEL_EDITORIAL", "\n".join(lines), persona="eddy")
     return _base.JobResult(
         True,
         f"Buttondown {action} for WT{n} (id=`{bid}`).",
@@ -273,14 +273,14 @@ async def publish_website(ctx: "_base.JobContext") -> "_base.JobResult":
             f"❌ Publish Website for **WT{n}** couldn't render: "
             f"`{type(exc).__name__}: {exc}`"
         )
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
+        await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n})
 
     try:
         files = await asyncio.to_thread(_collect_ship_files, n)
     except RuntimeError as exc:
         msg = f"❌ Publish Website for **WT{n}** can't run: {exc}"
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
+        await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n})
 
     # Subject for the commit message — read the metadata.
@@ -302,17 +302,17 @@ async def publish_website(ctx: "_base.JobContext") -> "_base.JobResult":
             f"⚠️ Publish Website for **WT{n}** — `GITHUB_PAT_TOKEN` "
             "isn't set; commit skipped. Set the env var and re-run."
         )
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
+        await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n})
     except Exception as exc:  # noqa: BLE001
         logger.exception("publish_website: GitHub commit failed for WT%d", n)
         msg = f"⚠️ Publish Website for **WT{n}** failed: `{type(exc).__name__}: {exc}`"
-        await ctx.post("DISCORD_CHANNEL_PRODUCTION", msg, persona="eddy")
+        await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n})
 
     commit_url = f"https://github.com/{github_repo._repo()}/commit/{commit_sha}"
     await ctx.post(
-        "DISCORD_CHANNEL_PRODUCTION",
+        "DISCORD_CHANNEL_EDITORIAL",
         f"🌐 Website commit for **WT{n}** — [`{commit_sha[:7]}`]({commit_url}) on main.",
         persona="eddy",
     )
@@ -338,7 +338,7 @@ async def publish_all(ctx: "_base.JobContext") -> "_base.JobResult":
     n = int(window["issue_number"])
 
     progress = await ctx.progress(
-        "DISCORD_CHANNEL_PRODUCTION",
+        "DISCORD_CHANNEL_EDITORIAL",
         f"🚀 Shipping **WT{n}**…\n"
         f"⏳ `publish audio` _(slowest step — TTS + bumpers + S3 upload)_\n"
         f"⏳ `publish buttondown`\n"

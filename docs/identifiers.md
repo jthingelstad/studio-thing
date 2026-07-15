@@ -4,16 +4,16 @@ How a Weekly Thing issue is identified and titled, and where each form is allowe
 to appear. Two things are defined here: the **short identifier** (`WT<NUM>`) and the
 **email subject line** (`WT<NUM> — <Theme>`).
 
-Where this sits in the system: the identifier is what every surface — and
-[Thingy](agents/thingy.md) — uses to refer to an issue; the subject line is a **Publish-phase**
-input composed by [Eddy](agents/eddy.md) (see [`phases/publish.md`](phases/publish.md)). For the
+Where this sits in the system: the identifier is what every surface uses to
+refer to an issue; the subject line is a **Publish-phase** input composed by
+[Eddy](agents/eddy.md) (see [`phases/publish.md`](phases/publish.md)). For the
 per-section body formatting and the platform eras, see [`sections.md`](sections.md).
 
 ## The short identifier: `WT<NUM>`
 
 `WT<NUM>` is the one canonical short way to refer to an issue — `WT347`, not `#347`,
 not `Issue 347`, not `Weekly Thing 347`. It is what appears in page chrome, feed
-metadata, podcast titles, the llms.txt index, Thingy's answers, and Jamie's own
+metadata, podcast titles, the llms.txt index, archive Q&A answers, and Jamie's own
 prose inside issues.
 
 `<NUM>` is the issue's `number` (assigned by the content pipeline from the subject
@@ -100,14 +100,14 @@ and `Weekly Thing 345 / Codex, Headless, Wikiwise` shows `Codex, Headless, Wikiw
 | Per-issue links feed (`/archive/N/links.xml`) `<title>` / `<subtitle>` | `Links from <subject>` / `Links featured in WT<NUM> …` | |
 | Podcast feed (`podcast.xml`) episode `<title>` | `WT<NUM> — <Theme>` for new issues; legacy `#<NUM> — <tail>` for the pre-convention episodes | branches on whether `subject` starts with `WT`; `<itunes:episode>`/`<guid>` stay numeric |
 | `llms.txt` issue list | `WT<NUM> — <Theme>` for new issues; legacy `#<NUM> — <subject>` otherwise | same per-issue branch |
-| Thingy (archive Q&A) — inline citations, hover tooltips | `WT<NUM>` | regardless of issue age; see below |
+| Archive Q&A — inline citations, hover tooltips | `WT<NUM>` | regardless of issue age; see below |
 | Prose inside issues (Notable "discuss on Reddit" line excepted) | `WT<NUM>` | Jamie's own writing convention |
 | `/archive/<NUM>/` and other URLs | bare `<NUM>` | path scheme, not a display form |
 
-## Thingy (the reader-facing archive agent — [`agents/thingy.md`](agents/thingy.md))
+## Archive Q&A
 
-Thingy always refers to issues as `WT<NUM>` in its answers, for any issue, old or
-new. This is enforced at two layers:
+Reader-facing archive answers should refer to issues as `WT<NUM>`, for any issue,
+old or new. This is enforced at two layers:
 
 - **Prompt:** `apps/librarian/lambda/prompts/answer-style.md` tells the model to cite
   inline as `WT295` or `(WT295, WT297)` — never a bare `#295` or "issue 295".

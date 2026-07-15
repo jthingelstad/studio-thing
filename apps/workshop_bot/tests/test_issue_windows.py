@@ -3,7 +3,7 @@
 Uses a real SQLite tempfile so the partial-unique-on-is_active index is
 actually exercised. The window is the operator-set source of truth for
 "which issue is in flight"; getting this wrong silently would route
-Patty's Thursday member.json job to the wrong issue.
+publish work to the wrong issue.
 """
 
 from __future__ import annotations
@@ -55,7 +55,7 @@ class IssueWindowDbTests(unittest.TestCase):
         self.assertIn("0008_agent_runs_cache_create_tokens", ids)
         self.assertIn("0009_retire_non_pinboard_discovery_feeds", ids)
 
-    def test_retired_linky_feed_data_migration_prunes_stale_sources(self):
+    def test_retired_discovery_feed_data_migration_prunes_stale_sources(self):
         with db.connect() as conn:
             conn.execute(
                 "DELETE FROM schema_migrations "

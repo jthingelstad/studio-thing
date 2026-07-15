@@ -1,16 +1,16 @@
 # Echoes — the archive note
 
-A **section** (the last one in every issue — see [`sections.md`](sections.md)), **written by
-[Thingy](agents/thingy.md)**: a short note connecting this week's issue to the nine-year archive.
-Renders as `## Echoes`. *Internally the job/file is still `compose-closer` / `closer.md`; the
-reader-facing name is **Echoes**.*
+A **section** near the end of every issue — see [`sections.md`](sections.md). It
+is a short note connecting this week's issue to the archive and renders as
+`## Echoes`.
 
 ## What it is
 
-2–5 sentences (~60–110 words), in **Thingy's voice** — third-person about Jamie, warm, librarian.
+2–5 sentences (~60–110 words), in an archive-librarian voice: third-person
+about Jamie, warm, and grounded in citations.
 Every cited issue is a markdown link: `[WT###](https://weekly.thingelstad.com/archive/N/)`.
 
-## Two modes (Thingy picks whichever has the stronger signal)
+## Two modes
 
 1. **Thematic resonance** (preferred) — a genuine echo between this issue and 1–3 past issues,
    surfaced via semantic retrieval over the archive.
@@ -18,11 +18,10 @@ Every cited issue is a markdown link: `[WT###](https://weekly.thingelstad.com/ar
 
 ## Rules
 
-- **SKIP is allowed** — if there's no real connection this week, no Echoes section ships.
+- Echoes is expected for every issue; if retrieval is unavailable, fail loud and rerun.
 - Anti-repetition: it sees the last several Echoes and avoids reusing themes.
 - Quality bar: it requires real semantic retrieval (fails loud rather than degrading silently).
 
 ## How it's run
 
-Auto-fired when Eddy's reorder pass is accepted, **or** on demand via `/eddy issue echoes` / the
-Build-card **Echoes** button (so it's never trapped behind the reorder step).
+Auto-fired when the issue is marked built, or on demand via `/eddy issue echoes`.

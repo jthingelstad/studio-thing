@@ -1,11 +1,10 @@
-"""Shared helpers for jobs that want to pre-inject Thingy-grade
-archive context into their Sonnet prompts.
+"""Shared helpers for jobs that want to pre-inject Librarian archive
+context into their prompts.
 
-The pattern is the same one ``compose-echoes`` uses: call Thingy's
-``/retrieve`` for the top semantic matches against a query, then
+The pattern is the same one ``compose-echoes`` uses: call the Librarian
+``/retrieve`` endpoint for the top semantic matches against a query, then
 format them as a labelled prompt block. Several jobs need this:
 
-- ``promotion-prep`` — "is this the third issue on a thread?"
 - ``compose-subject`` — same question, different output
 - (and ``draft-review`` per-Notable echoes use a similar shape)
 

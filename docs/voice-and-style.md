@@ -1,8 +1,8 @@
 # Voice & Style
 
-How The Weekly Thing sounds. This is the **issue voice** — Jamie writing the intro, journal, and
-link commentary. (Thingy, the librarian persona who writes [Echoes](echoes.md) and the
-membership CTA, has a distinct voice — see [`agents/thingy.md`](agents/thingy.md).)
+How The Weekly Thing sounds. This is the **issue voice** — Jamie writing the
+intro, journal, and link commentary. [Echoes](echoes.md) uses a distinct
+archive-librarian voice, but it is still part of the newsletter issue.
 
 ## Voice
 
@@ -18,8 +18,8 @@ membership CTA, has a distinct voice — see [`agents/thingy.md`](agents/thingy.
 - Continuous since May 13, 2017. Three channels, one voice.
 - **Commentary and Discovery:** every link has a reason it's in the issue. We learn together.
 - Privacy-preserving by design: no click tracking. Specifically avoiding audience capture.
-- Free for everyone; membership is pure charity (100% to a non-profit — see
-  [`programs/membership.md`](programs/membership.md)).
+- Free for everyone; supporting membership has historically been pure charity
+  with contributions directed to a non-profit.
 - Place + family ground issues in a specific lived life.
 
 ## Guardrails (these override everything)

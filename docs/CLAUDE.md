@@ -24,8 +24,8 @@ verified against. The human-facing index is [`README.md`](README.md).
   either the doc is the target (change the code) or the doc is stale (update it). Don't let them
   drift silently.
 - **Keep docs small.** One concern per file, ~1 screen each (≤~120 lines); scannable bullets/tables
-  over prose; **link, don't duplicate** — each doc owns its slice and cross-links the rest. If a
-  doc sprawls, split it (the `phases/` + `programs/` + `agents/` layout exists for this).
+  over prose; **link, don't duplicate** — each doc owns its slice and cross-links the rest. The
+  active model is intentionally narrow: Build, Publish, and Eddy.
 
 ## Voice: two files, one canonical
 

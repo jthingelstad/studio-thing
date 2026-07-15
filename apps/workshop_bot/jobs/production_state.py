@@ -2,7 +2,7 @@
 
 Pure DB + S3 reads, no Discord. This is the single source of production status,
 consumed by the web project page, the machine-readable feed
-(`jobs/scout_production_feed.py`), the lifecycle transitions
+the lifecycle transitions
 (`jobs/production_ops.py`), and — until they're retired — the phase cards.
 
 It absorbs the state that used to live inside the card modules

@@ -1,6 +1,6 @@
 # Workshop bot tools
 
-This directory holds the **local-helper** tool surface available to the workshop personas (Scout, Eddy, Linky, Marky, Patty) inside the agent loop. External-system tools live one directory up at `apps/workshop_bot/systems/<name>/` (`buttondown`, `pinboard`, `stripe`, `tinylytics`). Thingy is a bridge persona and does not run the agent loop, so it gets none of these.
+This directory holds the **local-helper** tool surface available to Eddy inside the agent loop. External-system tools live one directory up at `apps/workshop_bot/systems/<name>/`. Librarian/Thingy API work is a separate subsystem in this mono repo and does not run through workshop_bot's agent loop.
 
 The intent of this README is to be a primer — a future reviewer (human or another agent) should be able to read this once and understand what's available, how to add to it, and what conventions to follow without re-deriving them from `tools/llm/agent_tools.py`.
 
@@ -31,7 +31,7 @@ Tools that don't need any of these ignore the parameter — Python's `(deps, **k
 
 ### `active_persona` — the ContextVar
 
-`agent_tools.active_persona` is a `ContextVar[str]` set by the loop before each tool call to the calling persona's name (`"eddy"`, `"marky"`, etc.). The memory tools (`memory__remember`, `memory__recall`, `memory__forget`) read this so per-persona state is correctly attributed without threading the persona name through every call.
+`agent_tools.active_persona` is a `ContextVar[str]` set by the loop before each tool call to the calling agent's name (`"eddy"` in the active runtime). The memory tools (`memory__remember`, `memory__recall`, `memory__forget`) read this so notes are correctly attributed without threading the agent name through every call.
 
 The default `"unknown"` should never appear in production; if it does, the loop is calling a tool outside its `_execute_tool` wrapper.
 
@@ -42,42 +42,37 @@ The default `"unknown"` should never appear in production; if it does, the loop 
 3. Add `"<namespace>__<action>": t_<name>` to `FUNCS`.
 4. Add a unit test under `apps/workshop_bot/tests/`.
 
-Every persona sees the full tool surface composed in `bot.py`; lane discipline lives in persona prompts (`prompts/<persona>/prompt.md`), not in a per-persona allowlist.
+Eddy sees the full tool surface composed in `bot.py`; scope discipline lives in Eddy's prompt and in the product boundary that Studio is for newsletter issue production.
 
 ### Adding a new external-system tool
 
-If the new tool wraps an external API, prefer adding it to a `SystemServer` under `apps/workshop_bot/systems/<name>/server.py` rather than as a local helper. See the four existing system modules for the shape — `list_tools()` returns a list of `ToolDef` records and the registry namespaces them automatically. Adding a brand-new system means a new directory + a one-line `registry.register_system(NewServer())` in `bot.py`.
+If the new tool wraps an external API, prefer adding it to a `SystemServer` under `apps/workshop_bot/systems/<name>/server.py` rather than as a local helper. `list_tools()` returns a list of `ToolDef` records and the registry namespaces them automatically. Adding a brand-new system means a new directory + a one-line `registry.register_system(NewServer())` in `bot.py`.
 
 ## Tool inventory — local helpers
 
-These are the tools registered by `register_local_helpers`. Every persona sees all of them.
+These are the tools registered by `register_local_helpers`.
 
 | Tool | Purpose |
 |---|---|
-| `archive__retrieve(query, k)` | **Semantic** retrieval via Thingy's `/retrieve` (Bedrock Cohere embed + rerank). Match by meaning, not vocabulary. ~1s round trip, ~$0.001/call. Use for themes/concepts. |
+| `archive__retrieve(query, k)` | **Semantic** retrieval via Librarian `/retrieve` (Bedrock Cohere embed + rerank). Match by meaning, not vocabulary. ~1s round trip, ~$0.001/call. Use for themes/concepts. |
 | `archive__search(query, k)` | **Lexical** BM25 search over archive chunks. Cheap, fast. Use for specific phrases, person/product names. |
 | `archive__get_issue(number)` | Full body of one issue. |
 | `archive__get_section(number, section)` | One named section (`Notable`, `Briefly`, `Featured`, `Microposts`, `Journal`, etc.) of one issue. |
 | `archive__list_recent(limit)` | Last N issues, newest first, with subject + abstract. |
 | `archive__quote_search(phrase, limit)` | Exact substring across all bodies — verify a phrase appears before claiming it does. |
-| `memory__remember(content, kind, key?, related_issue?, expires_in_days?)` | Write a per-persona note to SQLite. `kind` ∈ `preference, observation, todo, context, theme`. |
-| `memory__recall(query?, kind?, agent_name?, limit?)` | Read notes. Default: own active notes. `agent_name="*"` reads all personas; pass a name to read theirs. |
+| `memory__remember(content, kind, key?, related_issue?, expires_in_days?)` | Write an Eddy note to SQLite. `kind` ∈ `preference, observation, todo, context, theme`. |
+| `memory__recall(query?, kind?, agent_name?, limit?)` | Read notes. Default: Eddy's active notes. `agent_name="*"` reads all notes; pass a name to read a historical agent namespace. |
 | `memory__forget(note_id, status)` | Mark a note `resolved` (todo done) or `stale` (no longer applies). Notes are never hard-deleted. |
-| `issue__current_window()` | Return the active in-flight issue window — `{issue_number, pub_date, end_date, start_date, day_count}`. Operator-set via `/scout issue start`. Returns `{error: ...}` when unset. |
+| `issue__current_window()` | Return the active in-flight issue window — `{issue_number, pub_date, end_date, start_date, day_count}`. Set from Studio. Returns `{error: ...}` when unset. |
 | `issue__list_windows(limit?)` | Recent issue windows, newest first, with `is_active` flag. Use to answer "when did issue #N ship?". |
 | `workspace__list_all()` | List every per-issue workspace folder. Use for per-folder modification times; for the active issue's number/dates, prefer `issue__current_window`. |
 | `workspace__list_files(issue_number)` | List the files under one workspace folder. |
 | `workspace__read(issue_number, filename)` | Read a text file from `s3://files.thingelstad.com/weekly-thing/{N}/{filename}`. |
 | `workspace__write(issue_number, filename, content)` | Write a text file to that path. Locked: bare filename only, text-only extension allowlist, 256 KB max. |
 | `web__fetch_url(url, max_chars?)` | Fetch a URL and return readable text. ~12 KB cap by default. |
-| `site__support_state()` | Current nonprofit + supporter count + past nonprofits, read from `apps/site/_data/{stats,support}.json` (no live API). |
 | `react__add(emoji)` | Add one emoji reaction to the message being responded to (posts under the persona's avatar). No-op outside a Discord message turn. |
 | `editorial__get_comment(handle)` | Resolve one editorial review comment by its stable handle (`E349-N1`, `E349-X3`, …). Returns body + verdict + the anchored item (when item-scoped) + the replacement handle when superseded. Use when Jamie asks about a handle ("tell me about E349-N1"). |
 | `editorial__list_open(issue_number?)` | List open (not-yet-superseded) editorial comments for an issue with their handles + short snippets. Defaults to the in-flight issue. Useful for "what did you flag on this issue?" — follow up per-handle with `editorial__get_comment`. |
-| `campaigns__list(status?, limit?)` | All campaigns from Marky's ad-placement ledger, newest first. Default returns every row (live + sunset). Status filter accepts `'live'` or `'sunset'`. Each row carries id, name, ref, url, platform, status, started_at, actual_signups (the denormalised KPI), cost, copy, notes. |
-| `campaigns__get(name)` | One campaign by name + its most recent metric snapshot (`latest_metric`). Returns `{error}` for unknown names. |
-| `campaigns__history(name, limit?)` | Recent `campaign_metrics` rows for one campaign, newest first — the placement's trajectory. Default 30 rows, max 365. |
-| `campaigns__set_actual_signups(name, signups)` | Write the campaign's current attribution-realised signups. `daily-metrics` updates this column automatically after each poll; the tool is for manual corrections or ad-hoc placements outside the daily flow. |
 
 ## Tool inventory — system modules
 
@@ -86,9 +81,6 @@ Composed at boot in `bot.py` via `registry.register_system(...)`. Source code li
 | Namespace | Purpose | Auth |
 |---|---|---|
 | `buttondown__*` | Subscriber + email engagement (counts, list_subscribers, recent_unsubscribes, subscriber_sources, subscriber_growth, list_recent_emails, email_engagement). Email addresses hashed inside the module. | `BUTTONDOWN_API_KEY` |
-| `pinboard__*` (Linky-only) | Bookmark surfaces (recent, unread, popular, stored_recent, tag_summary, lookup_url, save, …). Restricted to Linky. | `PINBOARD_API_TOKEN` |
-| `stripe__*` (Patty-only) | Read-only donation surface (balance, recent_donations, donations_by_month, donations_by_ref, year_to_date). Donor name + email hashed inside the module. Restricted to Patty — donor data never enters the other personas' transcripts. | `STRIPE_API_KEY` |
-| `tinylytics__*` | Site engagement (summary, top_pages, referrers, sources, leaderboard, journeys, kudos, insights, uptime, attribution). | `TINYLYTICS_API_KEY`, `TINYLYTICS_SITE_UID` |
 
 ## Path-locking convention (S3 tools)
 
@@ -106,9 +98,9 @@ Any new S3-touching tool should follow the same pattern: a private `_resolve_key
 - **Concrete descriptions over clever ones.** The spec description is the model's only signal for when to call. "Use to ground 'what's working lately' instead of guessing" beats "fetch analytics summary".
 - **Cap result size.** A tool that can return arbitrary content (HTTP fetch, S3 read) should cap bytes at the helper level, not rely on the agent-loop truncation. Truncated tool results read poorly.
 - **JSON-serializable returns.** No `datetime`, no `Path`, no custom classes — convert at the tool boundary.
-- **Hash sensitive data.** `buttondown__list_subscribers` and `stripe__recent_donations` hash emails/names inside the system module. Apply the same rule to any future tool that touches PII.
-- **Per-persona scope via `active_persona`.** When a tool's behavior depends on which persona called it, read `active_persona.get()` rather than asking the model to pass its own name — the model can lie or get confused, the ContextVar can't.
-- **`PASS` no-reply convention.** Personas / jobs can return the literal string `PASS` (no quotes, no markdown) to indicate "nothing worth saying right now". The team-orchestration handler and the agent-loop jobs (Eddy's review, `pinboard-scan`, `daily-metrics`) swallow `PASS` responses without posting. Keep this consistent in new prompts.
+- **Hash sensitive data.** `buttondown__list_subscribers` hashes emails inside the system module. Apply the same rule to any future tool that touches PII.
+- **Agent scope via `active_persona`.** When a tool's behavior depends on which agent called it, read `active_persona.get()` rather than asking the model to pass its own name — the model can lie or get confused, the ContextVar can't.
+- **`PASS` no-reply convention.** Eddy/jobs can return the literal string `PASS` (no quotes, no markdown) to indicate "nothing worth saying right now". Agent-loop jobs such as Eddy's review swallow `PASS` responses without posting. Keep this consistent in new prompts.
 
 ## Module layout
 
@@ -128,16 +120,14 @@ tools/
 ├── issue_items.py         ← row-backed in-flight content model (Notable/Brief/Journal as rows) + editorial_comments (handles like E349-N1)
 ├── issue_items_sync.py    ← Pinboard + micro.blog → issue_items rows (UPSERT, prune-on-disappearance)
 ├── issue_items_render.py  ← rows → section markdown bytes (preamble, items, featured sections, marker-interleaved variants)
-├── db/                    ← SQLite — agent_notes, agent_runs, link_candidates, issue_windows, job_locks, draft_digests, goals, campaigns, issue_items, editorial_comments, …
+├── db/                    ← SQLite — agent_notes, agent_runs, issue_windows, job_locks, tasks, chats, issue_items, editorial_comments, …
 ├── render.py              ← markdown → standalone HTML preview page (the `draft.html` twin) + option-cards page (subject/haiku/cta pickers) + side-by-side proposal page (reorder view) + handle badges for the editorial drawer
 ├── cdn.py                 ← CloudFront invalidation (best-effort) for the public assets bucket
-├── avoid_domains.py       ← popular-feed exclusion set (copy of pipeline/content/domain_exclusions.py) — used by pinboard__popular_unseen
-├── rss.py                 ← latest_published_issue() from weekly.thingelstad.com/feed.xml (Marky's trigger)
+├── rss.py                 ← latest_published_issue() from weekly.thingelstad.com/feed.xml
 ├── s3.py                  ← per-issue workspace S3 helper (path-locked) — backs workspace__*; + write_journal_image (binary, journal/ sub-prefix, not an agent tool)
-├── support_state.py       ← Reads apps/site/_data/{stats,support}.json
 └── web.py                 ← fetch_url helper (readable text only)
 ```
 
-External-API clients (`buttondown`, `pinboard`, `stripe`, `tinylytics`) live one directory up at `apps/workshop_bot/systems/<name>/client.py`; their server modules expose the dotted-namespace tool surface.
+External-API clients live one directory up at `apps/workshop_bot/systems/<name>/client.py`; active server modules expose the dotted-namespace tool surface.
 
 Updated as new tools land.

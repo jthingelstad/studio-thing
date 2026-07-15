@@ -1,43 +1,31 @@
-# Phase 1 — Build
+# Build
 
-*Create the issue.* — Overview: [`../publishing-process.md`](../publishing-process.md)
+Build is the working phase for the current newsletter issue.
 
-**Owner:** Scout (producer), with Eddy on editorial quality and Linky feeding curated links.
-**Channel:** `#production`.
-**Question:** *"Is the issue written, and is it good?"* Build fills in gradually all week.
+**Owner:** Jamie, with Eddy as the only assistant.
+**Surface:** Studio web app. Discord is secondary.
 
-The issue is **one uniform, channel-agnostic content artifact** with a fixed anatomy in **reading
-order** — every channel composes from the same shape (`tools/renderers.py:_compose_published_body`).
-The sections, their order, and per-section formatting rules live in [`../sections.md`](../sections.md);
-Journal specifics in [`../journal-handling.md`](../journal-handling.md); the Echoes section in
-[`../echoes.md`](../echoes.md).
+The issue is the first-class object. Content lives in the workshop DB:
+Notable/Briefly from Pinboard, Journal from micro.blog, and authored atoms
+such as Intro, Currently, Haiku, cover metadata, subject, and description.
+Ship-shaped files are rendered from the DB when a publish action needs them.
 
-## What happens
+## What Happens
 
-- Content arrives from upstream all week: Notable/Briefly from Pinboard, Journal from micro.blog
-  (mirrored into DB rows by the daily `sync-issue`), Intro/Outro/Currently written by Jamie in the
-  web editor, the cover uploaded on the production page, Echoes composed.
-  (See [`../sections.md`](../sections.md) for the full source map.) **Haiku is not Build content** —
-  Eddy writes it on the [Publish](publish.md) side, alongside subject/description/CTA, since it's
-  shipping work, not authoring.
-- **Reading the draft = rendering the DB.** The live preview (`/productions/WT{n}/preview`)
-  renders the issue from current row state on every load — there is no `draft.md`/`draft.html`
-  artifact and no daily projection tick.
-- Editorial review is **on-demand**: the production page's Review button runs Eddy's single Opus
-  pass (`eddy-review`) — anchored, suggestions-only — storing comments surfaced on the page.
-- The **production page** (`/productions/WT{n}`) is the live surface: the anatomy in reading
-  order, open comments, gates, and the controls (Sync · Review · editor · Mark built).
+- Start or resume the current issue in Studio.
+- Run `sync-issue-daily` or a manual sync to mirror Pinboard and micro.blog
+  into `issue_items`.
+- Jamie writes and edits issue atoms in the web editor.
+- Eddy can review the rendered issue on demand and store anchored editorial
+  comments.
+- The preview renders live from DB state; it is not a separate source of truth.
 
-## Gates
+## Exit Gate
 
-- **Entry:** `/scout issue start <n> <pub-date> <days>` opens the window (`phase = build`).
-- **Exit:** **`mark built`** (the production page or `/scout issue built`) — declares the content
-  written and moves the issue to [Publish](publish.md). Gated on the required *authored* content
-  being present (the three sections + intro + cover). Haiku is no longer a Build gate — it's
-  produced on the Publish side.
+Build exits when the issue is actually ready to package. Studio's Mark built
+action moves the active issue window to `phase = publish` and auto-runs Eddy's
+publish-prep jobs that are still in scope: envelope and Echoes.
 
-## The one rule
-
-**Build never asks about Publish things.** Subject, description, the membership CTA, the haiku,
-and the thesis are *Publish* inputs — Eddy produces them once the issue is built, not mid-week.
-Surfacing them during Build was the original operator friction this whole model fixes.
+Build should not expand into blog posts, podcasts, campaigns, projects, seeds,
+or idea gardening. Those can come back only after newsletter issue production is
+clearly working.

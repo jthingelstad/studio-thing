@@ -104,9 +104,8 @@ class ButtondownServer:
                     "over a trailing window — the answer to 'did the "
                     "dd-2026-05-15 placement convert'. Returns {ref, days, "
                     "signups}. (Wraps `attribution_summary` and reads "
-                    "by_ref[ref]; this is the verb daily-metrics / "
-                    "campaign-report reach for. Use a window matching the "
-                    "campaign's age — 7d fresh, 30d after a few weeks.)"
+                    "by_ref[ref]. Use a window matching the campaign's age "
+                    "— 7d fresh, 30d after a few weeks.)"
                 ),
                 input_schema={
                     "type": "object",
