@@ -1,6 +1,7 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { bedrock, dynamodb, fastModel } from '../shared/aws-clients.mjs';
 import { jsonResponse } from '../shared/http.mjs';
+import type { LibrarianHttpEvent } from '../shared/http.mjs';
 import { emailHash, extractBearer, normalizeEmail, verifyToken } from '../shared/session.mjs';
 import { sessionAllowedForThingyProfile } from '../shared/profile-deletion.mjs';
 import { isOwnerSubscriberHash } from '../shared/conversation-modes.mjs';
@@ -20,8 +21,40 @@ import { analyzeDispatchSourceFit, loadDispatchCorpus } from '../shared/dispatch
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-function entitlementsForSessionPayload(payload) {
-  const entitlements = new Set(Array.isArray(payload?.entitlements) ? payload.entitlements : ['reader']);
+type JsonRecord = Record<string, unknown>;
+type DispatchFit = ReturnType<typeof analyzeDispatchSourceFit>;
+
+interface DispatchSource extends JsonRecord {
+  id?: unknown;
+  label?: unknown;
+  title?: unknown;
+  url?: unknown;
+  source_kind?: unknown;
+  publish_date?: unknown;
+  why?: unknown;
+  excerpt?: unknown;
+  text?: unknown;
+}
+
+interface ClarifyDispatchInput {
+  prompt: string;
+  priorQuestion?: unknown;
+  priorAnswer?: unknown;
+  messages?: unknown;
+}
+
+function objectValue(value: unknown): JsonRecord {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as JsonRecord) : {};
+}
+
+function sourceValue(value: unknown): DispatchSource {
+  return objectValue(value) as DispatchSource;
+}
+
+function entitlementsForSessionPayload(payload: JsonRecord) {
+  const entitlements = new Set<string>(
+    Array.isArray(payload?.entitlements) ? payload.entitlements.map(String) : ['reader']
+  );
   if (isOwnerSubscriberHash(payload?.sub)) {
     entitlements.add('owner');
     entitlements.add('supporting_member');
@@ -31,54 +64,59 @@ function entitlementsForSessionPayload(payload) {
   return Array.from(entitlements);
 }
 
-async function dispatchAuth(event, body) {
+async function dispatchAuth(event: LibrarianHttpEvent, body: JsonRecord) {
   const payload = verifyToken(extractBearer(event, body));
   if (!payload || !(await sessionAllowedForThingyProfile(payload))) return null;
   return payload;
 }
 
-function normalizeDispatchText(value, max = 1400) {
-  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+function normalizeDispatchText(value: unknown, max = 1400) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max);
 }
 
-function isMeaningfulDispatchPrompt(value) {
+function isMeaningfulDispatchPrompt(value: unknown) {
   const text = normalizeDispatchText(value, 1200);
   if (text.length >= 8) return true;
   return /[a-z0-9]{2,}/i.test(text);
 }
 
-function dispatchConversationLines(messages = []) {
+function dispatchConversationLines(messages: unknown = []) {
   if (!Array.isArray(messages)) return [];
   const ignoredKinds = new Set(['brief', 'progress', 'sent', 'welcome']);
   return messages
     .slice(-10)
-    .filter((message) => !ignoredKinds.has(String(message?.kind || '')))
-    .map((message) => {
-      const role = message?.role === 'user' ? 'Reader' : 'Thingy';
-      const text = normalizeDispatchText(message?.text, 500);
+    .filter((value) => !ignoredKinds.has(String(objectValue(value).kind || '')))
+    .map((value) => {
+      const message = objectValue(value);
+      const role = message.role === 'user' ? 'Reader' : 'Thingy';
+      const text = normalizeDispatchText(message.text, 500);
       return text ? `${role}: ${text}` : '';
     })
     .filter(Boolean);
 }
 
-function terseDispatchSeed(value) {
+function terseDispatchSeed(value: unknown) {
   const text = normalizeDispatchText(value, 1200);
   if (/[?!.]/.test(text)) return false;
   return text.length > 0 && text.length <= 28 && text.split(/\s+/).filter(Boolean).length <= 3;
 }
 
-function readyMessageClaimsStarted(value) {
+function readyMessageClaimsStarted(value: unknown) {
   return /\b(?:generating now|generate now|drafting now|sending now|emailing now)\b/i.test(String(value || ''));
 }
 
-function sourceKindSummary(sourceKinds = {}) {
+function sourceKindSummary(sourceKinds: JsonRecord = {}) {
   return Object.entries(sourceKinds)
     .filter(([, count]) => Number(count) > 0)
     .map(([kind, count]) => `${count} ${kind.replace(/_/g, ' ')}`)
     .join(', ');
 }
 
-function plannerSource(source = {}, index = 0, why = '') {
+function plannerSource(value: unknown, index = 0, why: unknown = '') {
+  const source = sourceValue(value);
   return {
     id: String(source.id || `S${index + 1}`),
     label: normalizeDispatchText(source.label, 80),
@@ -90,33 +128,46 @@ function plannerSource(source = {}, index = 0, why = '') {
   };
 }
 
-function plannerSources(sources = [], reasons = []) {
+function plannerSources(sources: unknown[] = [], reasons: unknown[] = []) {
   return sources
     .slice(0, 10)
     .map((source, index) => plannerSource(source, index, reasons[index]))
     .filter((source) => source.title || source.url);
 }
 
-function plannerSourcePackets(sources = []) {
-  return sources.slice(0, 10).map((source) => [
-    `[${source.id}] ${source.label} · ${source.title}`,
-    source.publish_date ? `Date: ${source.publish_date}` : '',
-    source.url ? `URL: ${source.url}` : '',
-    `Excerpt: ${normalizeDispatchText(source.excerpt, 520)}`
-  ].filter(Boolean).join('\n')).join('\n\n');
+function plannerSourcePackets(sources: unknown[] = []) {
+  return sources
+    .slice(0, 10)
+    .map((value) => {
+      const source = sourceValue(value);
+      return [
+        `[${source.id}] ${source.label} · ${source.title}`,
+        source.publish_date ? `Date: ${source.publish_date}` : '',
+        source.url ? `URL: ${source.url}` : '',
+        `Excerpt: ${normalizeDispatchText(source.excerpt, 520)}`
+      ]
+        .filter(Boolean)
+        .join('\n');
+    })
+    .join('\n\n');
 }
 
-function textArray(value, max = 5, itemMax = 180) {
+function textArray(value: unknown, max = 5, itemMax = 180) {
   if (!Array.isArray(value)) return [];
-  return value.map((item) => normalizeDispatchText(item, itemMax)).filter(Boolean).slice(0, max);
+  return value
+    .map((item) => normalizeDispatchText(item, itemMax))
+    .filter(Boolean)
+    .slice(0, max);
 }
 
-function validCoverageStatus(value, fallback = 'focused') {
-  const status = String(value || '').trim().toLowerCase();
+function validCoverageStatus(value: unknown, fallback = 'focused') {
+  const status = String(value || '')
+    .trim()
+    .toLowerCase();
   return ['thin', 'focused', 'broad', 'ambiguous'].includes(status) ? status : fallback;
 }
 
-function coverageQuestion(status, prompt, fit, adjacentTopics = []) {
+function coverageQuestion(status: string, prompt: unknown, fit: DispatchFit, adjacentTopics: string[] = []) {
   const topic = normalizeDispatchText(prompt, 80) || 'that';
   if (status === 'thin') {
     const adjacent = adjacentTopics.length
@@ -133,33 +184,50 @@ function coverageQuestion(status, prompt, fit, adjacentTopics = []) {
   return `What angle should this Dispatch take on ${topic}?`;
 }
 
-function defaultPlannerMessage({ needsClarification, status, direction }) {
+function defaultPlannerMessage({
+  needsClarification,
+  status,
+  direction
+}: {
+  needsClarification: boolean;
+  status: string;
+  direction: unknown;
+}) {
   if (needsClarification && status === 'thin') {
     return "I checked Jamie's archive, and I do not have enough direct source material for that Dispatch as stated. I should redirect this toward something Jamie has actually written enough about.";
   }
   if (needsClarification && status === 'broad') {
     return 'I checked the archive first, and this topic is broad enough that I should narrow it before Dispatch generation.';
   }
-  if (needsClarification) return 'I checked the archive and need one steering choice before I generate a useful Dispatch.';
+  if (needsClarification)
+    return 'I checked the archive and need one steering choice before I generate a useful Dispatch.';
   return `I checked the archive and have enough to shape this Dispatch around: ${direction}`;
 }
 
-function plannerDetectedArchiveMismatch(parsed = {}) {
-  const text = [
-    parsed.coverage_status,
-    parsed.question,
-    parsed.message
-  ].filter(Boolean).join(' ');
-  return /\b(?:archive mismatch|no published writing|not finding enough|not enough direct|not among|not contain|under-supported|unrelated to your request)\b/i.test(text);
+function plannerDetectedArchiveMismatch(parsed: JsonRecord = {}) {
+  const text = [parsed.coverage_status, parsed.question, parsed.message].filter(Boolean).join(' ');
+  return /\b(?:archive mismatch|no published writing|not finding enough|not enough direct|not among|not contain|under-supported|unrelated to your request)\b/i.test(
+    text
+  );
 }
 
-function plannerMessageAcknowledgesThinCoverage(value) {
-  return /\b(?:do not have enough|don't have enough|not finding enough|not enough direct|under-supported|thin|redirect|adjacent|not focused|not written enough)\b/i.test(String(value || ''));
+function plannerMessageAcknowledgesThinCoverage(value: unknown) {
+  return /\b(?:do not have enough|don't have enough|not finding enough|not enough direct|under-supported|thin|redirect|adjacent|not focused|not written enough)\b/i.test(
+    String(value || '')
+  );
 }
 
-function normalizeDispatchBrief(parsedBrief = {}, { prompt, direction, coverageStatus, sources }) {
+function normalizeDispatchBrief(
+  parsedBrief: JsonRecord = {},
+  {
+    prompt,
+    direction,
+    coverageStatus,
+    sources
+  }: { prompt: unknown; direction: unknown; coverageStatus: string; sources: unknown[] }
+) {
   const sourceReasons = Array.isArray(parsedBrief.selected_sources)
-    ? parsedBrief.selected_sources.map((source) => source?.why || '')
+    ? parsedBrief.selected_sources.map((source) => sourceValue(source).why || '')
     : [];
   return {
     user_goal: normalizeDispatchText(parsedBrief.user_goal || prompt, 500),
@@ -172,7 +240,17 @@ function normalizeDispatchBrief(parsedBrief = {}, { prompt, direction, coverageS
   };
 }
 
-function toolActivityForPlan({ fit, coverageStatus, needsClarification, brief }) {
+function toolActivityForPlan({
+  fit,
+  coverageStatus,
+  needsClarification,
+  brief
+}: {
+  fit: DispatchFit;
+  coverageStatus: string;
+  needsClarification: boolean;
+  brief: ReturnType<typeof normalizeDispatchBrief>;
+}) {
   const kindSummary = sourceKindSummary(fit.source_kinds || {});
   return [
     {
@@ -185,7 +263,9 @@ function toolActivityForPlan({ fit, coverageStatus, needsClarification, brief })
       id: 'source-balance',
       label: 'Balanced source packet',
       status: 'complete',
-      summary: kindSummary ? `Coverage includes ${kindSummary}.` : 'Coverage is concentrated in the strongest available sources.'
+      summary: kindSummary
+        ? `Coverage includes ${kindSummary}.`
+        : 'Coverage is concentrated in the strongest available sources.'
     },
     {
       id: 'dispatch-brief',
@@ -198,11 +278,16 @@ function toolActivityForPlan({ fit, coverageStatus, needsClarification, brief })
   ];
 }
 
-function bedrockMessageText(message) {
-  return (message?.content || []).map((part) => part.text || '').filter(Boolean).join('\n').trim();
+function bedrockMessageText(message: unknown) {
+  const content = objectValue(message).content;
+  return (Array.isArray(content) ? content : [])
+    .map((part) => normalizeDispatchText(objectValue(part).text, 4000))
+    .filter(Boolean)
+    .join('\n')
+    .trim();
 }
 
-function dispatchProfile(payload) {
+function dispatchProfile(payload: JsonRecord) {
   const entitlements = entitlementsForSessionPayload(payload);
   const owner = entitlements.includes('owner') || isOwnerSubscriberHash(payload?.sub);
   return {
@@ -213,61 +298,71 @@ function dispatchProfile(payload) {
   };
 }
 
-async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '', messages = [] }) {
+async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '', messages = [] }: ClarifyDispatchInput) {
   const model = fastModel();
   const transcript = dispatchConversationLines(messages);
   const fitQuery = [prompt, priorQuestion, priorAnswer, transcript.join(' ')].filter(Boolean).join(' ');
   const chunks = await loadDispatchCorpus();
   const fit = analyzeDispatchSourceFit(chunks, fitQuery);
   const sourcePackets = plannerSourcePackets(fit.selected_sources);
-  const response = await bedrock.send(new ConverseCommand({
-    modelId: model,
-    system: [{
-      text: [
-        'You are Thingy, Jamie Thingelstad\'s archive sidekick.',
-        'A reader is shaping a one-off Thingy Dispatch from Jamie\'s published archive.',
-        'This is an agentic planning conversation, not a form validator.',
-        'You already checked source-fit against Jamie\'s archive. Use that evidence before deciding whether to ask a question.',
-        'Terse archive concepts like "RSS", "AI", "POSSE", or "IndieWeb" are valid Dispatch seeds.',
-        'If archive coverage is thin, disclose that clearly and suggest adjacent source-supported directions.',
-        'If archive coverage is broad, ask one narrowing question so generation is not flooded with sources.',
-        'If archive coverage is focused, create a compact Dispatch brief and let the reader generate.',
-        'When the reader answers a prior clarification, fold that answer into the confirmed direction instead of asking the same thing again.',
-        'When the reader adjusts a ready direction, revise the direction and briefly acknowledge the change.',
-        'Ask one useful clarification question at a time.',
-        'If a prior answer still leaves archive coverage thin or broad, ask a different steering question rather than forcing generation.',
-        'If the request is already specific enough, do not ask a question.',
-        'Never claim generation, drafting, sending, or emailing has started.',
-        'Return only compact JSON with this shape:',
-        '{"needs_clarification":true|false,"coverage_status":"thin|focused|broad|ambiguous","question":"...","direction":"confirmed generation direction","message":"Thingy response to show the reader","adjacent_topics":["..."],"suggested_narrowing":["..."],"brief":{"user_goal":"...","working_angle":"...","excluded_scope":["..."],"generation_instructions":"...","preheader_basis":"...","selected_sources":[{"id":"S1","why":"why this source belongs"}]}}'
-      ].join('\n')
-    }],
-    messages: [{
-      role: 'user',
-      content: [{
-        text: [
-          `Reader prompt: ${prompt}`,
-          priorQuestion ? `Prior clarification question: ${priorQuestion}` : '',
-          priorAnswer ? `Reader answer: ${priorAnswer}` : '',
-          transcript.length ? `Recent Dispatch conversation:\n${transcript.join('\n')}` : '',
-          `Archive coverage status: ${fit.coverage_status}`,
-          `Archive candidate matches: ${fit.candidate_count}`,
-          `Selected source packet count: ${fit.selected_sources.length}`,
-          fit.source_kinds ? `Source balance: ${sourceKindSummary(fit.source_kinds) || 'none'}` : '',
-          sourcePackets ? `Selected source packets:\n${sourcePackets}` : 'Selected source packets: none'
-        ].filter(Boolean).join('\n')
-      }]
-    }],
-    inferenceConfig: {
-      maxTokens: 1000,
-      temperature: 0.2
-    }
-  }));
+  const response = await bedrock.send(
+    new ConverseCommand({
+      modelId: model,
+      system: [
+        {
+          text: [
+            "You are Thingy, Jamie Thingelstad's archive sidekick.",
+            "A reader is shaping a one-off Thingy Dispatch from Jamie's published archive.",
+            'This is an agentic planning conversation, not a form validator.',
+            "You already checked source-fit against Jamie's archive. Use that evidence before deciding whether to ask a question.",
+            'Terse archive concepts like "RSS", "AI", "POSSE", or "IndieWeb" are valid Dispatch seeds.',
+            'If archive coverage is thin, disclose that clearly and suggest adjacent source-supported directions.',
+            'If archive coverage is broad, ask one narrowing question so generation is not flooded with sources.',
+            'If archive coverage is focused, create a compact Dispatch brief and let the reader generate.',
+            'When the reader answers a prior clarification, fold that answer into the confirmed direction instead of asking the same thing again.',
+            'When the reader adjusts a ready direction, revise the direction and briefly acknowledge the change.',
+            'Ask one useful clarification question at a time.',
+            'If a prior answer still leaves archive coverage thin or broad, ask a different steering question rather than forcing generation.',
+            'If the request is already specific enough, do not ask a question.',
+            'Never claim generation, drafting, sending, or emailing has started.',
+            'Return only compact JSON with this shape:',
+            '{"needs_clarification":true|false,"coverage_status":"thin|focused|broad|ambiguous","question":"...","direction":"confirmed generation direction","message":"Thingy response to show the reader","adjacent_topics":["..."],"suggested_narrowing":["..."],"brief":{"user_goal":"...","working_angle":"...","excluded_scope":["..."],"generation_instructions":"...","preheader_basis":"...","selected_sources":[{"id":"S1","why":"why this source belongs"}]}}'
+          ].join('\n')
+        }
+      ],
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              text: [
+                `Reader prompt: ${prompt}`,
+                priorQuestion ? `Prior clarification question: ${priorQuestion}` : '',
+                priorAnswer ? `Reader answer: ${priorAnswer}` : '',
+                transcript.length ? `Recent Dispatch conversation:\n${transcript.join('\n')}` : '',
+                `Archive coverage status: ${fit.coverage_status}`,
+                `Archive candidate matches: ${fit.candidate_count}`,
+                `Selected source packet count: ${fit.selected_sources.length}`,
+                fit.source_kinds ? `Source balance: ${sourceKindSummary(fit.source_kinds) || 'none'}` : '',
+                sourcePackets ? `Selected source packets:\n${sourcePackets}` : 'Selected source packets: none'
+              ]
+                .filter(Boolean)
+                .join('\n')
+            }
+          ]
+        }
+      ],
+      inferenceConfig: {
+        maxTokens: 1000,
+        temperature: 0.2
+      }
+    })
+  );
   const text = bedrockMessageText(response.output?.message || {});
   const raw = text.match(/\{[\s\S]*\}/)?.[0] || text;
-  let parsed = {};
+  let parsed: JsonRecord = {};
   try {
-    parsed = JSON.parse(raw);
+    parsed = objectValue(JSON.parse(raw));
   } catch {
     parsed = {};
   }
@@ -289,19 +384,20 @@ async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '', m
   const suggestedNarrowing = textArray(parsed.suggested_narrowing, 5, 160);
   const shouldClarifyCoverage = !alreadyAnswered && (coverageStatus === 'thin' || coverageStatus === 'broad');
   const needsClarification = Boolean(shouldClarifyCoverage || parsed.needs_clarification || shouldClarifyTerseSeed);
-  const fallbackQuestion = coverageStatus === 'thin'
-    ? coverageQuestion(coverageStatus, prompt, fit, adjacentTopics)
-    : question || coverageQuestion(coverageStatus, prompt, fit, adjacentTopics);
-  let message = normalizeDispatchText(parsed.message, 700) || (
-    defaultPlannerMessage({ needsClarification, status: coverageStatus, direction: direction || prompt })
-  );
+  const fallbackQuestion =
+    coverageStatus === 'thin'
+      ? coverageQuestion(coverageStatus, prompt, fit, adjacentTopics)
+      : question || coverageQuestion(coverageStatus, prompt, fit, adjacentTopics);
+  let message =
+    normalizeDispatchText(parsed.message, 700) ||
+    defaultPlannerMessage({ needsClarification, status: coverageStatus, direction: direction || prompt });
   if (needsClarification && coverageStatus === 'thin' && !plannerMessageAcknowledgesThinCoverage(message)) {
     message = defaultPlannerMessage({ needsClarification, status: coverageStatus, direction: direction || prompt });
   }
   if (!needsClarification && (message.includes('?') || readyMessageClaimsStarted(message))) {
     message = defaultPlannerMessage({ needsClarification, status: coverageStatus, direction: direction || prompt });
   }
-  const brief = normalizeDispatchBrief(parsed.brief || {}, {
+  const brief = normalizeDispatchBrief(objectValue(parsed.brief), {
     prompt,
     direction: direction || prompt,
     coverageStatus,
@@ -321,7 +417,7 @@ async function clarifyDispatch({ prompt, priorQuestion = '', priorAnswer = '', m
   };
 }
 
-export async function handleDispatch(event, body, start = performance.now()) {
+export async function handleDispatch(event: LibrarianHttpEvent, body: JsonRecord, start = performance.now()) {
   const payload = await dispatchAuth(event, body);
   const profile = payload ? dispatchProfile(payload) : null;
   if (!profile?.subscriberHash) {
@@ -330,11 +426,14 @@ export async function handleDispatch(event, body, start = performance.now()) {
   const tableName = process.env.TABLE_NAME;
   if (!tableName) return jsonResponse(500, { error: 'Dispatch is unavailable right now.' }, event);
 
-  const action = String(body.action || 'list').trim().toLowerCase();
+  const action = String(body.action || 'list')
+    .trim()
+    .toLowerCase();
   try {
     if (action === 'clarify' || action === 'plan') {
       const prompt = normalizeDispatchText(body.prompt || body.topic, 1200);
-      if (!isMeaningfulDispatchPrompt(prompt)) return jsonResponse(400, { error: 'Dispatch needs a topic or question.' }, event);
+      if (!isMeaningfulDispatchPrompt(prompt))
+        return jsonResponse(400, { error: 'Dispatch needs a topic or question.' }, event);
       const clarification = await clarifyDispatch({
         prompt,
         priorQuestion: body.clarification_question,
@@ -348,12 +447,16 @@ export async function handleDispatch(event, body, start = performance.now()) {
         source_count: clarification.selected_sources?.length || 0,
         duration_ms: Math.round(performance.now() - start)
       });
-      return jsonResponse(200, {
-        ...clarification,
-        entitlements: profile.entitlements,
-        supporting_member: profile.supportingMember,
-        owner: profile.owner
-      }, event);
+      return jsonResponse(
+        200,
+        {
+          ...clarification,
+          entitlements: profile.entitlements,
+          supporting_member: profile.supportingMember,
+          owner: profile.owner
+        },
+        event
+      );
     }
 
     if (action === 'save_draft') {
@@ -364,30 +467,35 @@ export async function handleDispatch(event, body, start = performance.now()) {
         dynamodb,
         tableName,
         subscriberHash: profile.subscriberHash,
-        dispatchId: body.dispatch_id || body.id,
-        status: body.status || body.stage || 'draft',
-        topic: body.topic || prompt || title,
+        dispatchId: String(body.dispatch_id || body.id || ''),
+        status: String(body.status || body.stage || 'draft'),
+        topic: String(body.topic || prompt || title),
         prompt,
         direction,
-        conversationId: body.conversation_id || body.conversationId,
-        clarificationQuestion: body.clarification_question,
-        clarificationAnswer: body.clarification_answer,
-        brief: body.brief,
+        conversationId: String(body.conversation_id || body.conversationId || ''),
+        clarificationQuestion: String(body.clarification_question || ''),
+        clarificationAnswer: String(body.clarification_answer || ''),
+        brief: body.brief as null | undefined,
         title,
-        messages: Array.isArray(body.messages) ? body.messages : []
+        messages: (Array.isArray(body.messages) ? body.messages : []) as never[]
       });
+      if (!dispatch) throw new Error('Dispatch draft could not be loaded after saving.');
       logEvent('info', 'dispatch_draft_saved', {
         subscriber_hash: profile.subscriberHash,
         dispatch_id: dispatch.id,
         status: dispatch.status,
         duration_ms: Math.round(performance.now() - start)
       });
-      return jsonResponse(200, {
-        dispatch: dispatchForClient(dispatch),
-        entitlements: profile.entitlements,
-        supporting_member: profile.supportingMember,
-        owner: profile.owner
-      }, event);
+      return jsonResponse(
+        200,
+        {
+          dispatch: dispatchForClient(dispatch),
+          entitlements: profile.entitlements,
+          supporting_member: profile.supportingMember,
+          owner: profile.owner
+        },
+        event
+      );
     }
 
     if (action === 'list') {
@@ -401,15 +509,19 @@ export async function handleDispatch(event, body, start = performance.now()) {
         dynamodb,
         tableName,
         subscriberHash: profile.subscriberHash,
-        limit: body.limit || 12
+        limit: Number(body.limit || 12)
       });
-      return jsonResponse(200, {
-        dispatches: dispatches.map(dispatchForClient),
-        availability,
-        entitlements: profile.entitlements,
-        supporting_member: profile.supportingMember,
-        owner: profile.owner
-      }, event);
+      return jsonResponse(
+        200,
+        {
+          dispatches: dispatches.map(dispatchForClient),
+          availability,
+          entitlements: profile.entitlements,
+          supporting_member: profile.supportingMember,
+          owner: profile.owner
+        },
+        event
+      );
     }
 
     if (action === 'status') {
@@ -424,19 +536,24 @@ export async function handleDispatch(event, body, start = performance.now()) {
         dynamodb,
         tableName,
         subscriberHash: profile.subscriberHash,
-        rows: [dispatch]
+        rows: [dispatch] as never[]
       });
       if (recovered) {
-        dispatch = await getUserDispatch({
-          dynamodb,
-          tableName,
-          subscriberHash: profile.subscriberHash,
-          dispatchId: body.dispatch_id || body.id
-        }) || dispatch;
+        dispatch =
+          (await getUserDispatch({
+            dynamodb,
+            tableName,
+            subscriberHash: profile.subscriberHash,
+            dispatchId: body.dispatch_id || body.id
+          })) || dispatch;
       }
-      return jsonResponse(200, {
-        dispatch: dispatchForClient(dispatch)
-      }, event);
+      return jsonResponse(
+        200,
+        {
+          dispatch: dispatchForClient(dispatch)
+        },
+        event
+      );
     }
 
     if (action === 'delete') {
@@ -453,19 +570,27 @@ export async function handleDispatch(event, body, start = performance.now()) {
         status: dispatch.status,
         duration_ms: Math.round(performance.now() - start)
       });
-      return jsonResponse(200, {
-        status: 'deleted',
-        dispatch_id: dispatch.id
-      }, event);
+      return jsonResponse(
+        200,
+        {
+          status: 'deleted',
+          dispatch_id: dispatch.id
+        },
+        event
+      );
     }
 
     if (action === 'create') {
       if (!profile.supportingMember && !profile.owner) {
-        return jsonResponse(403, {
-          error: 'Dispatch is available to Weekly Thing Supporting Members.',
-          status: 'supporting_member_required',
-          message: 'You can shape the Dispatch here. Sending it requires a Supporting Membership.'
-        }, event);
+        return jsonResponse(
+          403,
+          {
+            error: 'Dispatch is available to Weekly Thing Supporting Members.',
+            status: 'supporting_member_required',
+            message: 'You can shape the Dispatch here. Sending it requires a Supporting Membership.'
+          },
+          event
+        );
       }
       const prompt = normalizeDispatchText(body.prompt || body.topic, 1200);
       const direction = normalizeDispatchText(body.direction || prompt, 1600);
@@ -490,34 +615,35 @@ export async function handleDispatch(event, body, start = performance.now()) {
       const existingDispatchId = body.dispatch_id || body.id;
       const dispatch = existingDispatchId
         ? await queueDraftDispatch({
-          dynamodb,
-          tableName,
-          subscriberHash: profile.subscriberHash,
-          dispatchId: existingDispatchId,
-          emailHash: profile.subscriberHash,
-          toEmail,
-          topic: body.topic || prompt,
-          prompt,
-          direction,
-          clarificationQuestion: body.clarification_question,
-          clarificationAnswer: body.clarification_answer,
-          brief: body.brief,
-          templateTest
-        })
+            dynamodb,
+            tableName,
+            subscriberHash: profile.subscriberHash,
+            dispatchId: existingDispatchId,
+            emailHash: profile.subscriberHash,
+            toEmail,
+            topic: body.topic || prompt,
+            prompt,
+            direction,
+            clarificationQuestion: String(body.clarification_question || ''),
+            clarificationAnswer: String(body.clarification_answer || ''),
+            brief: body.brief as null | undefined,
+            templateTest
+          })
         : await createQueuedDispatch({
-          dynamodb,
-          tableName,
-          subscriberHash: profile.subscriberHash,
-          emailHash: profile.subscriberHash,
-          toEmail,
-          topic: body.topic || prompt,
-          prompt,
-          direction,
-          clarificationQuestion: body.clarification_question,
-          clarificationAnswer: body.clarification_answer,
-          brief: body.brief,
-          templateTest
-        });
+            dynamodb,
+            tableName,
+            subscriberHash: profile.subscriberHash,
+            emailHash: profile.subscriberHash,
+            toEmail,
+            topic: body.topic || prompt,
+            prompt,
+            direction,
+            clarificationQuestion: String(body.clarification_question || ''),
+            clarificationAnswer: String(body.clarification_answer || ''),
+            brief: body.brief as null | undefined,
+            templateTest
+          });
+      if (!dispatch) throw new Error('Dispatch could not be loaded after queueing.');
       logEvent('info', 'dispatch_queued', {
         subscriber_hash: profile.subscriberHash,
         dispatch_id: dispatch.id,
@@ -525,9 +651,13 @@ export async function handleDispatch(event, body, start = performance.now()) {
         owner: profile.owner,
         duration_ms: Math.round(performance.now() - start)
       });
-      return jsonResponse(202, {
-        dispatch: dispatchForClient(dispatch)
-      }, event);
+      return jsonResponse(
+        202,
+        {
+          dispatch: dispatchForClient(dispatch)
+        },
+        event
+      );
     }
   } catch (error) {
     logEvent('error', 'dispatch_action_failed', {
