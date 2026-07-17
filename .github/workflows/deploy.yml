@@ -52,7 +52,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: apps/librarian/lambda/package-lock.json
 
-      - run: uv sync --locked --no-dev
+      - run: uv sync --locked
       - run: echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Lint
