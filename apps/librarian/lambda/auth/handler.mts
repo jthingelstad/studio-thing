@@ -1,22 +1,42 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { GetItemCommand, PutItemCommand, TransactWriteItemsCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import type { AttributeValue, TransactWriteItem } from '@aws-sdk/client-dynamodb';
 import { bedrock, dynamodb, agentModel, fastModel } from '../shared/aws-clients.mjs';
-import { createSubscriber, ensureThingyTag, fetchSubscriber, sanitizeAttribution, sendSubscriberReminder, subscriberStatus } from '../shared/buttondown.mjs';
+import {
+  createSubscriber,
+  ensureThingyTag,
+  fetchSubscriber,
+  sanitizeAttribution,
+  sendSubscriberReminder,
+  subscriberStatus
+} from '../shared/buttondown.mjs';
 import { eventSummary, jsonResponse, methodAndPath, parseBody, clientSourceIp, userAgent } from '../shared/http.mjs';
-import { buildMagicLink, createMagicToken, magicLinkTtlSeconds, magicTokenHash, validMagicToken } from '../shared/magic-link.mjs';
+import type { LibrarianHttpEvent, LibrarianHttpResponse } from '../shared/http.mjs';
+import {
+  buildMagicLink,
+  createMagicToken,
+  magicLinkTtlSeconds,
+  magicTokenHash,
+  validMagicToken
+} from '../shared/magic-link.mjs';
 import { sendMagicLinkEmail } from '../shared/jmap-mail.mjs';
 import { checkRateLimit } from '../shared/rate-limit.mjs';
-import { createSessionToken, createSessionTokenForSub, emailHash, extractBearer, normalizeEmail, stableHash, verifyToken } from '../shared/session.mjs';
+import {
+  createSessionToken,
+  createSessionTokenForSub,
+  emailHash,
+  extractBearer,
+  normalizeEmail,
+  stableHash,
+  verifyToken
+} from '../shared/session.mjs';
 import {
   authProfile,
   discordConnectionMemoryUpdate,
   getUserMemory,
   recordUserPreferredName
 } from '../shared/user-memory.mjs';
-import {
-  deleteThingyProfile,
-  sessionAllowedForThingyProfile
-} from '../shared/profile-deletion.mjs';
+import { deleteThingyProfile, sessionAllowedForThingyProfile } from '../shared/profile-deletion.mjs';
 import {
   DISCORD_LINK_TTL_SECONDS,
   createLinkCode,
@@ -48,27 +68,30 @@ import { loadUserConversationSummaries } from '../shared/conversation-store.mjs'
 const AUTH_RATE_LIMIT_MAX = 30;
 const MAGIC_LINK_RATE_LIMIT_MAX = 6;
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-const ALLOWED_SOURCES = new Set([
-  'thingy',
-  'site',
-  'hero',
-  'mid1',
-  'mid2',
-  'footer',
-  'about',
-  'issue'
-]);
-function normalizeSource(value) {
-  const raw = String(value || '').trim().toLowerCase();
+const ALLOWED_SOURCES = new Set(['thingy', 'site', 'hero', 'mid1', 'mid2', 'footer', 'about', 'issue']);
+
+type JsonRecord = Record<string, unknown>;
+type Subscriber = Awaited<ReturnType<typeof fetchSubscriber>>;
+
+function objectValue(value: unknown): JsonRecord {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as JsonRecord) : {};
+}
+
+function errorName(error: unknown) {
+  return error instanceof Error ? error.constructor.name : 'Error';
+}
+
+function normalizeSource(value: unknown) {
+  const raw = String(value || '')
+    .trim()
+    .toLowerCase();
   if (!raw) return 'site';
   return ALLOWED_SOURCES.has(raw) ? raw : 'site';
 }
 
 export function magicLinkBaseWithReturnPath(returnPath = '') {
   const raw = String(returnPath || '').trim();
-  const safeReturnPath = raw && raw.startsWith('/') && !raw.startsWith('//')
-    ? raw.slice(0, 500)
-    : '/chat/';
+  const safeReturnPath = raw && raw.startsWith('/') && !raw.startsWith('//') ? raw.slice(0, 500) : '/chat/';
   try {
     const base = new URL(process.env.THINGY_MAGIC_LINK_BASE_URL || 'https://thingy.thingelstad.com/');
     base.pathname = '/signin/';
@@ -81,64 +104,77 @@ export function magicLinkBaseWithReturnPath(returnPath = '') {
   }
 }
 
-function clientIdentityHash(event) {
+function clientIdentityHash(event: LibrarianHttpEvent) {
   return stableHash(`${clientSourceIp(event) || 'unknown'}\0${userAgent(event) || ''}`);
 }
 
-async function recordSession(sessionId, email, expiresAt) {
+async function recordSession(sessionId: string, email: unknown, expiresAt: number) {
   const tableName = process.env.TABLE_NAME;
   if (!tableName) return;
   const start = performance.now();
-  await dynamodb.send(new PutItemCommand({
-    TableName: tableName,
-    Item: {
-      pk: dynamoString(`session#${sessionId}`),
-      sk: dynamoString('session'),
-      email_hash: dynamoString(emailHash(email)),
-      expires_at: dynamoNumber(expiresAt),
-      ttl: dynamoNumber(expiresAt)
-    }
-  }));
+  await dynamodb.send(
+    new PutItemCommand({
+      TableName: tableName,
+      Item: {
+        pk: dynamoString(`session#${sessionId}`),
+        sk: dynamoString('session'),
+        email_hash: dynamoString(emailHash(email)),
+        expires_at: dynamoNumber(expiresAt),
+        ttl: dynamoNumber(expiresAt)
+      }
+    })
+  );
   logEvent('info', 'session_recorded', {
     email_hash: emailHash(email),
     duration_ms: Math.round(performance.now() - start)
   });
 }
 
-async function recordSessionForSub(sessionId, sub, expiresAt) {
+async function recordSessionForSub(sessionId: string, sub: unknown, expiresAt: number) {
   const tableName = process.env.TABLE_NAME;
   if (!tableName) return;
   const start = performance.now();
-  await dynamodb.send(new PutItemCommand({
-    TableName: tableName,
-    Item: {
-      pk: dynamoString(`session#${sessionId}`),
-      sk: dynamoString('session'),
-      email_hash: dynamoString(String(sub || '')),
-      expires_at: dynamoNumber(expiresAt),
-      ttl: dynamoNumber(expiresAt)
-    }
-  }));
+  await dynamodb.send(
+    new PutItemCommand({
+      TableName: tableName,
+      Item: {
+        pk: dynamoString(`session#${sessionId}`),
+        sk: dynamoString('session'),
+        email_hash: dynamoString(String(sub || '')),
+        expires_at: dynamoNumber(expiresAt),
+        ttl: dynamoNumber(expiresAt)
+      }
+    })
+  );
   logEvent('info', 'session_refreshed_recorded', {
     subscriber_hash: sub,
     duration_ms: Math.round(performance.now() - start)
   });
 }
 
-function bedrockMessageText(message) {
-  return (message?.content || []).map((part) => part.text || '').filter(Boolean).join('\n').trim();
+function bedrockMessageText(message: unknown) {
+  const content = objectValue(message).content;
+  return (Array.isArray(content) ? content : [])
+    .map((part) => String(objectValue(part).text || ''))
+    .filter(Boolean)
+    .join('\n')
+    .trim();
 }
 
 async function generatePremiumThankYou() {
   const start = performance.now();
   const model = fastModel();
-  const response = await bedrock.send(new ConverseCommand({
-    modelId: model,
-    system: [{ text: premiumThankYouSystemPrompt() }, { cachePoint: { type: 'default' } }],
-    messages: [{ role: 'user', content: [{ text: 'Generate a fresh thank-you under 28 words.' }] }],
-    inferenceConfig: { maxTokens: 120, temperature: 0.7 }
-  }));
-  const text = bedrockMessageText(response.output?.message || {}).replace(/\s+/g, ' ').trim();
+  const response = await bedrock.send(
+    new ConverseCommand({
+      modelId: model,
+      system: [{ text: premiumThankYouSystemPrompt() }, { cachePoint: { type: 'default' } }],
+      messages: [{ role: 'user', content: [{ text: 'Generate a fresh thank-you under 28 words.' }] }],
+      inferenceConfig: { maxTokens: 120, temperature: 0.7 }
+    })
+  );
+  const text = bedrockMessageText(response.output?.message || {})
+    .replace(/\s+/g, ' ')
+    .trim();
   if (!text || text.length > 220) throw new Error('Bedrock returned invalid premium thank-you');
   logEvent('info', 'premium_thank_you_generated', {
     model,
@@ -148,7 +184,13 @@ async function generatePremiumThankYou() {
   return text;
 }
 
-async function authSuccessResponse(email, subscriber, source, event, start) {
+async function authSuccessResponse(
+  email: string,
+  subscriber: Subscriber,
+  source: string,
+  event: LibrarianHttpEvent,
+  start: number
+) {
   const status = subscriberStatus(subscriber);
   const entitlements = entitlementsForSubscriber({ email, subscriber, status });
   const modes = availableConversationModes(entitlements);
@@ -163,10 +205,12 @@ async function authSuccessResponse(email, subscriber, source, event, start) {
   if (source === 'thingy') {
     // Best-effort: ensure the wt-thingy user tag is on this subscriber. Don't
     // block the auth response — a transient Buttondown error must not break login.
-    ensureThingyTag(subscriber).catch(() => { /* swallowed; ensureThingyTag logs internally */ });
+    ensureThingyTag(subscriber).catch(() => {
+      /* swallowed; ensureThingyTag logs internally */
+    });
   }
   const memory = await getUserMemory(emailHash(email));
-  const payload = {
+  const payload: JsonRecord = {
     status,
     email: normalizeEmail(email),
     token,
@@ -185,7 +229,7 @@ async function authSuccessResponse(email, subscriber, source, event, start) {
     } catch (error) {
       logEvent('warning', 'premium_thank_you_generation_failed', {
         email_hash: emailHash(email),
-        error_type: error.constructor?.name || 'Error'
+        error_type: errorName(error)
       });
       payload.message = 'Thanks for being a Weekly Thing Supporting Member!';
     }
@@ -193,9 +237,11 @@ async function authSuccessResponse(email, subscriber, source, event, start) {
   return jsonResponse(200, payload, event);
 }
 
-export function entitlementsForSessionPayload(payload, nowSeconds = Math.floor(Date.now() / 1000)) {
+export function entitlementsForSessionPayload(payload: JsonRecord, nowSeconds = Math.floor(Date.now() / 1000)) {
   const entitlementsFresh = Number(payload?.entitlements_verified_until || 0) > nowSeconds;
-  const entitlements = new Set(entitlementsFresh && Array.isArray(payload?.entitlements) ? payload.entitlements : ['reader']);
+  const entitlements = new Set<string>(
+    entitlementsFresh && Array.isArray(payload.entitlements) ? payload.entitlements.map(String) : ['reader']
+  );
   if (isOwnerSubscriberHash(payload?.sub)) {
     entitlements.add('owner');
     entitlements.add('supporting_member');
@@ -205,8 +251,8 @@ export function entitlementsForSessionPayload(payload, nowSeconds = Math.floor(D
   return Array.from(entitlements);
 }
 
-function entitlementsWithOwner(subscriberHash, entitlements = []) {
-  const values = new Set(Array.isArray(entitlements) ? entitlements : []);
+function entitlementsWithOwner(subscriberHash: unknown, entitlements: readonly unknown[] = []) {
+  const values = new Set<string>(Array.isArray(entitlements) ? entitlements.map(String) : []);
   if (isOwnerSubscriberHash(subscriberHash)) {
     values.add('owner');
     values.add('supporting_member');
@@ -216,7 +262,7 @@ function entitlementsWithOwner(subscriberHash, entitlements = []) {
   return Array.from(values);
 }
 
-async function refreshSession(event, body, start) {
+async function refreshSession(event: LibrarianHttpEvent, body: JsonRecord, start: number) {
   const bearer = extractBearer(event, body);
   const payload = verifyToken(bearer);
   if (!payload?.sub || !(await sessionAllowedForThingyProfile(payload))) {
@@ -226,10 +272,12 @@ async function refreshSession(event, body, start) {
   const entitlements = entitlementsForSessionPayload(payload);
   const modes = availableConversationModes(entitlements);
   const verifiedUntil = Number(payload.entitlements_verified_until || 0);
-  const claims = verifiedUntil > Math.floor(Date.now() / 1000)
-    ? { entitlements, entitlements_verified_until: verifiedUntil }
-    : { entitlements };
-  const { sessionId, expiresAt, token } = createSessionTokenForSub(payload.sub, undefined, claims);
+  const claims =
+    verifiedUntil > Math.floor(Date.now() / 1000)
+      ? { entitlements, entitlements_verified_until: verifiedUntil }
+      : { entitlements };
+  const subscriberHash = String(payload.sub);
+  const { sessionId, expiresAt, token } = createSessionTokenForSub(subscriberHash, undefined, claims);
   await recordSessionForSub(sessionId, payload.sub, expiresAt);
   const memory = await getUserMemory(payload.sub);
   logEvent('info', 'auth_refreshed', {
@@ -237,21 +285,25 @@ async function refreshSession(event, body, start) {
     entitlements,
     duration_ms: Math.round(performance.now() - start)
   });
-  return jsonResponse(200, {
-    status: 'refreshed',
-    token,
-    expires_at: expiresAt,
-    entitlements,
-    modes,
-    profile: {
-      ...authProfile(memory),
+  return jsonResponse(
+    200,
+    {
+      status: 'refreshed',
+      token,
+      expires_at: expiresAt,
       entitlements,
-      modes
-    }
-  }, event);
+      modes,
+      profile: {
+        ...authProfile(memory),
+        entitlements,
+        modes
+      }
+    },
+    event
+  );
 }
 
-async function updateProfile(event, body, start) {
+async function updateProfile(event: LibrarianHttpEvent, body: JsonRecord, start: number) {
   const payload = verifyToken(extractBearer(event, body));
   if (!payload?.sub || !(await sessionAllowedForThingyProfile(payload))) {
     logEvent('info', 'auth_update_profile_rejected');
@@ -277,7 +329,7 @@ async function updateProfile(event, body, start) {
     });
     return jsonResponse(500, { error: 'Thingy could not save that name right now. Please try again.' }, event);
   }
-  const memory = write.memory || await getUserMemory(payload.sub);
+  const memory = write.memory || (await getUserMemory(payload.sub));
   const entitlements = entitlementsForSessionPayload(payload);
   const modes = availableConversationModes(entitlements);
   logEvent('info', 'auth_profile_updated', {
@@ -285,30 +337,36 @@ async function updateProfile(event, body, start) {
     has_preferred_name: Boolean(preferredName),
     duration_ms: Math.round(performance.now() - start)
   });
-  return jsonResponse(200, {
-    status: 'updated',
-    entitlements,
-    modes,
-    profile: {
-      ...authProfile(memory),
-      preferred_name: memory?.preferred_name || preferredName,
+  return jsonResponse(
+    200,
+    {
+      status: 'updated',
       entitlements,
-      modes
-    }
-  }, event);
+      modes,
+      profile: {
+        ...authProfile(memory),
+        preferred_name: memory?.preferred_name || preferredName,
+        entitlements,
+        modes
+      }
+    },
+    event
+  );
 }
 
-async function memoryAccountConversations(sub) {
+async function memoryAccountConversations(sub: string) {
+  const tableName = process.env.TABLE_NAME;
+  if (!tableName) return [];
   return await loadUserConversationSummaries({
     dynamodb,
-    tableName: process.env.TABLE_NAME,
+    tableName,
     subscriberHash: sub,
     limit: 50,
     logEvent
   });
 }
 
-async function memoryProfileResponse(sub, event, extra = {}) {
+async function memoryProfileResponse(sub: string, event: LibrarianHttpEvent, extra: JsonRecord = {}) {
   const memory = await getUserMemory(sub, { consistent: true });
   const conversations = await memoryAccountConversations(sub);
   const conversationDates = conversations
@@ -325,7 +383,10 @@ async function memoryProfileResponse(sub, event, extra = {}) {
     activity_summary: {
       memory_turn_count: Number(memory?.turn_count || 0),
       conversation_count: conversations.length,
-      conversation_turn_count: conversations.reduce((sum, conversation) => sum + Number(conversation.turn_count || 0), 0)
+      conversation_turn_count: conversations.reduce(
+        (sum, conversation) => sum + Number(conversation.turn_count || 0),
+        0
+      )
     },
     oldest_conversation_at: conversationDates[0] || '',
     newest_conversation_at: conversationDates.at(-1) || ''
@@ -333,24 +394,27 @@ async function memoryProfileResponse(sub, event, extra = {}) {
   return jsonResponse(200, { status: 'ok', profile, account, ...extra }, event);
 }
 
-async function handleMemory(event, body, start) {
+async function handleMemory(event: LibrarianHttpEvent, body: JsonRecord, start: number) {
   const payload = verifyToken(extractBearer(event, body));
   if (!payload?.sub || !(await sessionAllowedForThingyProfile(payload))) {
     logEvent('info', 'memory_action_rejected');
     return jsonResponse(401, { error: 'Sign in again to continue.' }, event);
   }
-  const action = String(body.action || 'get').trim().toLowerCase();
+  const action = String(body.action || 'get')
+    .trim()
+    .toLowerCase();
   if (action === 'get') {
-    return await memoryProfileResponse(payload.sub, event);
+    return await memoryProfileResponse(String(payload.sub), event);
   }
   if (action === 'refresh_profile') {
     // No-op kept so web clients deployed before the synthesized-memory
     // removal get a normal profile back instead of an error.
-    return await memoryProfileResponse(payload.sub, event, { refreshed: false });
+    return await memoryProfileResponse(String(payload.sub), event, { refreshed: false });
   }
   if (action === 'delete_profile') {
     const result = await deleteThingyProfile(payload.sub);
-    if (!result.ok) return jsonResponse(500, { error: result.error || 'Thingy could not delete this profile right now.' }, event);
+    if (!result.ok)
+      return jsonResponse(500, { error: result.error || 'Thingy could not delete this profile right now.' }, event);
     logEvent('info', 'thingy_profile_delete_requested', {
       subscriber_hash: payload.sub,
       duration_ms: Math.round(performance.now() - start)
@@ -360,7 +424,7 @@ async function handleMemory(event, body, start) {
   return jsonResponse(400, { error: 'Unsupported memory action.' }, event);
 }
 
-function bridgeSecretOk(body) {
+function bridgeSecretOk(body: JsonRecord) {
   const expected = process.env.DISCORD_BRIDGE_SECRET || '';
   if (!expected) return null;
   const supplied = String(body.bridge_secret || body.secret || '');
@@ -369,7 +433,7 @@ function bridgeSecretOk(body) {
   return expectedBuf.length === suppliedBuf.length && crypto.timingSafeEqual(expectedBuf, suppliedBuf);
 }
 
-function discordLinkBaseWithState(state) {
+function discordLinkBaseWithState(state: string) {
   try {
     const base = new URL(process.env.THINGY_MAGIC_LINK_BASE_URL || 'https://thingy.thingelstad.com/');
     base.pathname = '/discord/';
@@ -382,18 +446,20 @@ function discordLinkBaseWithState(state) {
   }
 }
 
-async function getDynamoItem(key, consistent = true) {
+async function getDynamoItem(key: Record<string, AttributeValue>, consistent = true) {
   const tableName = process.env.TABLE_NAME;
   if (!tableName) throw new Error('TABLE_NAME is required');
-  const response = await dynamodb.send(new GetItemCommand({
-    TableName: tableName,
-    Key: key,
-    ConsistentRead: consistent
-  }));
+  const response = await dynamodb.send(
+    new GetItemCommand({
+      TableName: tableName,
+      Key: key,
+      ConsistentRead: consistent
+    })
+  );
   return response?.Item || null;
 }
 
-async function handleDiscordLinkStart(event, body, start) {
+async function handleDiscordLinkStart(event: LibrarianHttpEvent, body: JsonRecord, start: number) {
   const secretState = bridgeSecretOk(body);
   if (secretState === null) {
     logEvent('warning', 'discord_link_start_disabled');
@@ -409,33 +475,39 @@ async function handleDiscordLinkStart(event, body, start) {
   const state = createLinkState();
   const now = nowSeconds();
   const expiresAt = now + DISCORD_LINK_TTL_SECONDS;
-  await dynamodb.send(new PutItemCommand({
-    TableName: process.env.TABLE_NAME,
-    Item: {
-      ...discordStateKey(state),
-      discord_user_hash: dynamoString(userHash),
-      username: dynamoString(identity.username),
-      global_name: dynamoString(identity.global_name),
-      display_name: dynamoString(identity.display_name),
-      guild_id: dynamoString(identity.guild_id),
-      created_at: dynamoNumber(now),
-      expires_at: dynamoNumber(expiresAt),
-      ttl: dynamoNumber(expiresAt)
-    }
-  }));
+  await dynamodb.send(
+    new PutItemCommand({
+      TableName: process.env.TABLE_NAME,
+      Item: {
+        ...discordStateKey(state),
+        discord_user_hash: dynamoString(userHash),
+        username: dynamoString(identity.username),
+        global_name: dynamoString(identity.global_name),
+        display_name: dynamoString(identity.display_name),
+        guild_id: dynamoString(identity.guild_id),
+        created_at: dynamoNumber(now),
+        expires_at: dynamoNumber(expiresAt),
+        ttl: dynamoNumber(expiresAt)
+      }
+    })
+  );
   logEvent('info', 'discord_link_started', {
     discord_user_hash: userHash.slice(0, 12),
     duration_ms: Math.round(performance.now() - start)
   });
-  return jsonResponse(200, {
-    status: 'discord_link_started',
-    state,
-    link: discordLinkBaseWithState(state),
-    expires_at: expiresAt
-  }, event);
+  return jsonResponse(
+    200,
+    {
+      status: 'discord_link_started',
+      state,
+      link: discordLinkBaseWithState(state),
+      expires_at: expiresAt
+    },
+    event
+  );
 }
 
-async function handleDiscordLinkCode(event, body, start) {
+async function handleDiscordLinkCode(event: LibrarianHttpEvent, body: JsonRecord, start: number) {
   const payload = verifyToken(extractBearer(event, body));
   if (!payload?.sub || !(await sessionAllowedForThingyProfile(payload))) {
     logEvent('info', 'discord_link_code_rejected_auth');
@@ -449,10 +521,14 @@ async function handleDiscordLinkCode(event, body, start) {
   const entitlements = entitlementsWithOwner(payload.sub, entitlement.entitlements);
   if (!isSupportingEntitlement(entitlements)) {
     logEvent('info', 'discord_link_code_not_supporting', { subscriber_hash: payload.sub, status: entitlement.status });
-    return jsonResponse(403, {
-      status: 'supporting_member_required',
-      error: 'Discord is available to Weekly Thing Supporting Members.'
-    }, event);
+    return jsonResponse(
+      403,
+      {
+        status: 'supporting_member_required',
+        error: 'Discord is available to Weekly Thing Supporting Members.'
+      },
+      event
+    );
   }
   const state = String(body.state || '').trim();
   if (!state) return jsonResponse(400, { error: 'Start in Discord with /thingy verify first.' }, event);
@@ -460,7 +536,11 @@ async function handleDiscordLinkCode(event, body, start) {
   const expiresAt = Number(stateItem?.expires_at?.N || 0);
   const now = nowSeconds();
   if (!stateItem || expiresAt < now) {
-    return jsonResponse(400, { status: 'discord_link_expired', error: 'That Discord verification link expired. Run /thingy verify again.' }, event);
+    return jsonResponse(
+      400,
+      { status: 'discord_link_expired', error: 'That Discord verification link expired. Run /thingy verify again.' },
+      event
+    );
   }
   const code = createLinkCode();
   const codeExpiresAt = now + DISCORD_LINK_TTL_SECONDS;
@@ -471,59 +551,70 @@ async function handleDiscordLinkCode(event, body, start) {
     display_name: stateItem.display_name?.S,
     guild_id: stateItem.guild_id?.S
   });
-  await dynamodb.send(new PutItemCommand({
-    TableName: process.env.TABLE_NAME,
-    Item: {
-      ...discordCodeKey(code),
-      state_hash: dynamoString(stateHash),
-      subscriber_hash: dynamoString(payload.sub),
-      email: dynamoString(email),
-      email_hash: dynamoString(emailHash(email)),
-      discord_user_hash: dynamoString(stateItem.discord_user_hash?.S || ''),
-      username: dynamoString(identity.username),
-      global_name: dynamoString(identity.global_name),
-      display_name: dynamoString(identity.display_name),
-      guild_id: dynamoString(identity.guild_id),
-      entitlements_json: dynamoString(JSON.stringify(entitlements)),
-      created_at: dynamoNumber(now),
-      expires_at: dynamoNumber(codeExpiresAt),
-      ttl: dynamoNumber(codeExpiresAt)
-    }
-  }));
-  await dynamodb.send(new UpdateItemCommand({
-    TableName: process.env.TABLE_NAME,
-    Key: discordStateKey(state),
-    UpdateExpression: 'SET #subscriber_hash = :subscriber_hash, #email_hash = :email_hash, #code_hash = :code_hash',
-    ExpressionAttributeNames: {
-      '#subscriber_hash': 'subscriber_hash',
-      '#email_hash': 'email_hash',
-      '#code_hash': 'code_hash'
-    },
-    ExpressionAttributeValues: {
-      ':subscriber_hash': dynamoString(payload.sub),
-      ':email_hash': dynamoString(emailHash(email)),
-      ':code_hash': dynamoString(linkHash(code))
-    }
-  }));
+  await dynamodb.send(
+    new PutItemCommand({
+      TableName: process.env.TABLE_NAME,
+      Item: {
+        ...discordCodeKey(code),
+        state_hash: dynamoString(stateHash),
+        subscriber_hash: dynamoString(payload.sub),
+        email: dynamoString(email),
+        email_hash: dynamoString(emailHash(email)),
+        discord_user_hash: dynamoString(stateItem.discord_user_hash?.S || ''),
+        username: dynamoString(identity.username),
+        global_name: dynamoString(identity.global_name),
+        display_name: dynamoString(identity.display_name),
+        guild_id: dynamoString(identity.guild_id),
+        entitlements_json: dynamoString(JSON.stringify(entitlements)),
+        created_at: dynamoNumber(now),
+        expires_at: dynamoNumber(codeExpiresAt),
+        ttl: dynamoNumber(codeExpiresAt)
+      }
+    })
+  );
+  await dynamodb.send(
+    new UpdateItemCommand({
+      TableName: process.env.TABLE_NAME,
+      Key: discordStateKey(state),
+      UpdateExpression: 'SET #subscriber_hash = :subscriber_hash, #email_hash = :email_hash, #code_hash = :code_hash',
+      ExpressionAttributeNames: {
+        '#subscriber_hash': 'subscriber_hash',
+        '#email_hash': 'email_hash',
+        '#code_hash': 'code_hash'
+      },
+      ExpressionAttributeValues: {
+        ':subscriber_hash': dynamoString(payload.sub),
+        ':email_hash': dynamoString(emailHash(email)),
+        ':code_hash': dynamoString(linkHash(code))
+      }
+    })
+  );
   logEvent('info', 'discord_link_code_created', {
     subscriber_hash: payload.sub,
     discord_user_hash: String(stateItem.discord_user_hash?.S || '').slice(0, 12),
     duration_ms: Math.round(performance.now() - start)
   });
-  return jsonResponse(200, {
-    status: 'discord_link_code_created',
-    code,
-    expires_at: codeExpiresAt,
-    discord_user: identity,
-    entitlements
-  }, event);
+  return jsonResponse(
+    200,
+    {
+      status: 'discord_link_code_created',
+      code,
+      expires_at: codeExpiresAt,
+      discord_user: identity,
+      entitlements
+    },
+    event
+  );
 }
 
-async function handleDiscordLinkConfirm(event, body, start) {
+async function handleDiscordLinkConfirm(event: LibrarianHttpEvent, body: JsonRecord, start: number) {
   const secretState = bridgeSecretOk(body);
   if (secretState === null) return jsonResponse(503, { error: 'Discord linking is not enabled.' }, event);
   if (!secretState) return jsonResponse(401, { error: 'Bridge secret rejected.' }, event);
-  const code = String(body.code || '').trim().toUpperCase().replace(/\s+/g, '');
+  const code = String(body.code || '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, '');
   if (!code) return jsonResponse(400, { error: 'code is required.' }, event);
   const suppliedUserHash = discordUserHash(body.discord_user_id);
   if (!suppliedUserHash) return jsonResponse(400, { error: 'discord_user_id is required.' }, event);
@@ -537,7 +628,11 @@ async function handleDiscordLinkConfirm(event, body, start) {
       reason: !codeItem ? 'not_found' : expiresAt < now ? 'expired' : codeItem.used_at ? 'used' : 'wrong_user',
       discord_user_hash: suppliedUserHash.slice(0, 12)
     });
-    return jsonResponse(400, { status: 'discord_link_invalid', error: 'That Discord verification code is invalid or expired.' }, event);
+    return jsonResponse(
+      400,
+      { status: 'discord_link_invalid', error: 'That Discord verification code is invalid or expired.' },
+      event
+    );
   }
   const email = normalizeEmail(codeItem.email?.S || '');
   const subscriberHash = codeItem.subscriber_hash?.S || '';
@@ -547,17 +642,24 @@ async function handleDiscordLinkConfirm(event, body, start) {
   } catch (error) {
     logEvent('warning', 'discord_link_confirm_entitlement_lookup_failed', {
       subscriber_hash: subscriberHash,
-      error_type: error.constructor?.name || 'Error'
+      error_type: errorName(error)
     });
     return jsonResponse(502, { error: 'Could not verify supporting membership right now.' }, event);
   }
   const entitlements = entitlementsWithOwner(subscriberHash, entitlement.entitlements);
   if (!isSupportingEntitlement(entitlements) || emailHash(email) !== subscriberHash) {
-    logEvent('info', 'discord_link_confirm_not_supporting', { subscriber_hash: subscriberHash, status: entitlement.status });
-    return jsonResponse(403, {
-      status: 'supporting_member_required',
-      error: 'Discord is available to Weekly Thing Supporting Members.'
-    }, event);
+    logEvent('info', 'discord_link_confirm_not_supporting', {
+      subscriber_hash: subscriberHash,
+      status: entitlement.status
+    });
+    return jsonResponse(
+      403,
+      {
+        status: 'supporting_member_required',
+        error: 'Discord is available to Weekly Thing Supporting Members.'
+      },
+      event
+    );
   }
   const identity = normalizeDiscordIdentity({
     username: body.username || codeItem.username?.S,
@@ -587,36 +689,42 @@ async function handleDiscordLinkConfirm(event, body, start) {
     return jsonResponse(500, { error: 'Thingy could not save that Discord link right now. Please try again.' }, event);
   }
   try {
-    await dynamodb.send(new TransactWriteItemsCommand({
-      TransactItems: [
-        {
-          Update: {
-            TableName: tableName,
-            Key: codeKey,
-            UpdateExpression: 'SET #used_at = :used_at',
-            ConditionExpression: 'attribute_exists(pk) AND attribute_not_exists(#used_at) AND #expires_at >= :now',
-            ExpressionAttributeNames: {
-              '#used_at': 'used_at',
-              '#expires_at': 'expires_at'
-            },
-            ExpressionAttributeValues: {
-              ':used_at': dynamoNumber(now),
-              ':now': dynamoNumber(now)
+    await dynamodb.send(
+      new TransactWriteItemsCommand({
+        TransactItems: [
+          {
+            Update: {
+              TableName: tableName,
+              Key: codeKey,
+              UpdateExpression: 'SET #used_at = :used_at',
+              ConditionExpression: 'attribute_exists(pk) AND attribute_not_exists(#used_at) AND #expires_at >= :now',
+              ExpressionAttributeNames: {
+                '#used_at': 'used_at',
+                '#expires_at': 'expires_at'
+              },
+              ExpressionAttributeValues: {
+                ':used_at': dynamoNumber(now),
+                ':now': dynamoNumber(now)
+              }
             }
-          }
-        },
-        { Put: discordConnectionPut(tableName, connectionRecord) },
-        { Update: memoryUpdate }
-      ]
-    }));
+          },
+          { Put: discordConnectionPut(tableName, connectionRecord) },
+          { Update: memoryUpdate as TransactWriteItem['Update'] }
+        ]
+      })
+    );
   } catch (error) {
-    const errorType = error.constructor?.name || 'Error';
+    const errorType = errorName(error);
     logEvent('warning', 'discord_link_confirm_persist_failed', {
       subscriber_hash: subscriberHash,
       error_type: errorType
     });
     if (errorType === 'TransactionCanceledException') {
-      return jsonResponse(400, { status: 'discord_link_invalid', error: 'That Discord verification code is invalid or expired.' }, event);
+      return jsonResponse(
+        400,
+        { status: 'discord_link_invalid', error: 'That Discord verification code is invalid or expired.' },
+        event
+      );
     }
     return jsonResponse(500, { error: 'Thingy could not save that Discord link right now. Please try again.' }, event);
   }
@@ -630,42 +738,78 @@ async function handleDiscordLinkConfirm(event, body, start) {
     discord_user_hash: suppliedUserHash.slice(0, 12),
     duration_ms: Math.round(performance.now() - start)
   });
-  return jsonResponse(200, {
-    status: 'discord_linked',
-    ok: true,
-    supporting_member: true,
-    entitlements,
-    profile: {
-      ...authProfile(memory),
+  return jsonResponse(
+    200,
+    {
+      status: 'discord_linked',
+      ok: true,
+      supporting_member: true,
       entitlements,
-      modes: availableConversationModes(entitlements)
+      profile: {
+        ...authProfile(memory),
+        entitlements,
+        modes: availableConversationModes(entitlements)
+      },
+      discord_connection: discordConnection
     },
-    discord_connection: discordConnection
-  }, event);
+    event
+  );
 }
 
-async function storeMagicLink({ token, email, source, event, subscriberStatusValue, nowSeconds, expiresAt }) {
+async function storeMagicLink({
+  token,
+  email,
+  source,
+  event,
+  subscriberStatusValue,
+  nowSeconds,
+  expiresAt
+}: {
+  token: string;
+  email: string;
+  source: string;
+  event: LibrarianHttpEvent;
+  subscriberStatusValue: string;
+  nowSeconds: number;
+  expiresAt: number;
+}) {
   const tableName = process.env.TABLE_NAME;
   if (!tableName) throw new Error('TABLE_NAME is required');
   const tokenHash = magicTokenHash(token);
-  await dynamodb.send(new PutItemCommand({
-    TableName: tableName,
-    Item: {
-      pk: dynamoString(`magic#${tokenHash}`),
-      sk: dynamoString('magic'),
-      email: dynamoString(normalizeEmail(email)),
-      email_hash: dynamoString(emailHash(email)),
-      source: dynamoString(source),
-      subscriber_status: dynamoString(subscriberStatusValue),
-      client_hash: dynamoString(clientIdentityHash(event)),
-      created_at: dynamoNumber(nowSeconds),
-      expires_at: dynamoNumber(expiresAt),
-      ttl: dynamoNumber(expiresAt)
-    }
-  }));
+  await dynamodb.send(
+    new PutItemCommand({
+      TableName: tableName,
+      Item: {
+        pk: dynamoString(`magic#${tokenHash}`),
+        sk: dynamoString('magic'),
+        email: dynamoString(normalizeEmail(email)),
+        email_hash: dynamoString(emailHash(email)),
+        source: dynamoString(source),
+        subscriber_status: dynamoString(subscriberStatusValue),
+        client_hash: dynamoString(clientIdentityHash(event)),
+        created_at: dynamoNumber(nowSeconds),
+        expires_at: dynamoNumber(expiresAt),
+        ttl: dynamoNumber(expiresAt)
+      }
+    })
+  );
 }
 
-async function sendLoginMagicLink({ email, subscriber, source, event, start, returnPath = '' }) {
+async function sendLoginMagicLink({
+  email,
+  subscriber,
+  source,
+  event,
+  start,
+  returnPath = ''
+}: {
+  email: string;
+  subscriber: Subscriber;
+  source: string;
+  event: LibrarianHttpEvent;
+  start: number;
+  returnPath?: string;
+}) {
   const hashedEmail = emailHash(email);
   const magicLimit = Number(process.env.THINGY_MAGIC_LINK_RATE_LIMIT_MAX || MAGIC_LINK_RATE_LIMIT_MAX);
   if (!(await checkRateLimit(`auth#magic:${hashedEmail}`, magicLimit))) {
@@ -704,21 +848,29 @@ async function sendLoginMagicLink({ email, subscriber, source, event, start, ret
     expires_at: expiresAt,
     duration_ms: Math.round(performance.now() - start)
   });
-  return jsonResponse(200, {
-    status: 'magic_link_sent',
-    email: normalizeEmail(email),
-    expires_at: expiresAt,
-    message: 'Check your email for a sign-in link to Thingy.'
-  }, event);
+  return jsonResponse(
+    200,
+    {
+      status: 'magic_link_sent',
+      email: normalizeEmail(email),
+      expires_at: expiresAt,
+      message: 'Check your email for a sign-in link to Thingy.'
+    },
+    event
+  );
 }
 
-async function completeMagicLink(event, body, start) {
+async function completeMagicLink(event: LibrarianHttpEvent, body: JsonRecord, start: number) {
   const tableName = process.env.TABLE_NAME;
   if (!tableName) return jsonResponse(500, { error: 'Thingy sign-in is unavailable right now.' }, event);
   const token = validMagicToken(body.login_token || body.magic_token || body.token);
   if (!token) {
     logEvent('info', 'auth_magic_link_invalid_token');
-    return jsonResponse(400, { status: 'magic_link_invalid', error: 'That sign-in link is invalid or expired.' }, event);
+    return jsonResponse(
+      400,
+      { status: 'magic_link_invalid', error: 'That sign-in link is invalid or expired.' },
+      event
+    );
   }
   const tokenHash = magicTokenHash(token);
   const key = {
@@ -735,53 +887,71 @@ async function completeMagicLink(event, body, start) {
       token_hash_prefix: tokenHash.slice(0, 10),
       reason: !item ? 'not_found' : expiresAt < nowSeconds ? 'expired' : 'used'
     });
-    return jsonResponse(400, { status: 'magic_link_invalid', error: 'That sign-in link is invalid or expired.' }, event);
+    return jsonResponse(
+      400,
+      { status: 'magic_link_invalid', error: 'That sign-in link is invalid or expired.' },
+      event
+    );
   }
   try {
-    await dynamodb.send(new UpdateItemCommand({
-      TableName: tableName,
-      Key: key,
-      UpdateExpression: 'SET #used_at = :used_at, #used_client_hash = :client_hash',
-      ConditionExpression: 'attribute_exists(pk) AND attribute_not_exists(#used_at) AND #expires_at >= :now',
-      ExpressionAttributeNames: {
-        '#used_at': 'used_at',
-        '#used_client_hash': 'used_client_hash',
-        '#expires_at': 'expires_at'
-      },
-      ExpressionAttributeValues: {
-        ':used_at': dynamoNumber(nowSeconds),
-        ':client_hash': dynamoString(clientIdentityHash(event)),
-        ':now': dynamoNumber(nowSeconds)
-      }
-    }));
+    await dynamodb.send(
+      new UpdateItemCommand({
+        TableName: tableName,
+        Key: key,
+        UpdateExpression: 'SET #used_at = :used_at, #used_client_hash = :client_hash',
+        ConditionExpression: 'attribute_exists(pk) AND attribute_not_exists(#used_at) AND #expires_at >= :now',
+        ExpressionAttributeNames: {
+          '#used_at': 'used_at',
+          '#used_client_hash': 'used_client_hash',
+          '#expires_at': 'expires_at'
+        },
+        ExpressionAttributeValues: {
+          ':used_at': dynamoNumber(nowSeconds),
+          ':client_hash': dynamoString(clientIdentityHash(event)),
+          ':now': dynamoNumber(nowSeconds)
+        }
+      })
+    );
   } catch (error) {
     logEvent('info', 'auth_magic_link_redeem_race', {
       token_hash_prefix: tokenHash.slice(0, 10),
-      error_type: error.constructor?.name || 'Error'
+      error_type: errorName(error)
     });
-    return jsonResponse(400, { status: 'magic_link_invalid', error: 'That sign-in link is invalid or expired.' }, event);
+    return jsonResponse(
+      400,
+      { status: 'magic_link_invalid', error: 'That sign-in link is invalid or expired.' },
+      event
+    );
   }
 
   let subscriber;
   try {
     subscriber = await fetchSubscriber(email);
   } catch (error) {
-    logEvent('error', 'auth_magic_link_buttondown_lookup_failed', { email_hash: emailHash(email), error_type: error.constructor?.name || 'Error' });
+    logEvent('error', 'auth_magic_link_buttondown_lookup_failed', {
+      email_hash: emailHash(email),
+      error_type: errorName(error)
+    });
     return jsonResponse(502, { error: 'Could not validate subscriber status right now.' }, event);
   }
   const status = subscriberStatus(subscriber);
   if (status !== 'active' && status !== 'premium') {
-    logEvent('info', 'auth_magic_link_subscriber_not_active', { email_hash: emailHash(email), subscriber_status: status });
+    logEvent('info', 'auth_magic_link_subscriber_not_active', {
+      email_hash: emailHash(email),
+      subscriber_status: status
+    });
     return jsonResponse(403, { status, error: 'That subscription is not active.' }, event);
   }
   return authSuccessResponse(email, subscriber, 'thingy', event, start);
 }
 
-async function authHandler(event) {
+async function authHandler(event: LibrarianHttpEvent) {
   const start = performance.now();
   const body = parseBody(event);
   const email = normalizeEmail(body.email);
-  const action = String(body.action || 'check').trim().toLowerCase();
+  const action = String(body.action || 'check')
+    .trim()
+    .toLowerCase();
   const source = normalizeSource(body.source);
   const attribution = sanitizeAttribution(body.attribution);
   const hashedEmail = email ? emailHash(email) : undefined;
@@ -791,17 +961,19 @@ async function authHandler(event) {
     logEvent('warning', 'auth_rate_limited', { email_hash: hashedEmail });
     return jsonResponse(429, { error: 'Too many access attempts. Please try again later.' }, event);
   }
-  if (![
-    'check',
-    'subscribe',
-    'resend_confirmation',
-    'complete_magic_link',
-    'refresh_session',
-    'update_profile',
-    'discord_link_start',
-    'discord_link_code',
-    'discord_link_confirm'
-  ].includes(action)) {
+  if (
+    ![
+      'check',
+      'subscribe',
+      'resend_confirmation',
+      'complete_magic_link',
+      'refresh_session',
+      'update_profile',
+      'discord_link_start',
+      'discord_link_code',
+      'discord_link_confirm'
+    ].includes(action)
+  ) {
     logEvent('info', 'auth_rejected_invalid_action', { email_hash: hashedEmail, action });
     return jsonResponse(400, { error: 'Unsupported subscriber action.' }, event);
   }
@@ -845,13 +1017,21 @@ async function authHandler(event) {
         subscriber_source: source,
         campaign_ref: attribution?.ref || null
       });
-      return jsonResponse(200, {
-        status: 'subscribed',
-        subscriber_status: status,
-        message: 'Check your inbox to confirm your subscription.'
-      }, event);
+      return jsonResponse(
+        200,
+        {
+          status: 'subscribed',
+          subscriber_status: status,
+          message: 'Check your inbox to confirm your subscription.'
+        },
+        event
+      );
     } catch (error) {
-      logEvent('error', 'buttondown_subscriber_create_failed', { email_hash: hashedEmail, subscriber_source: source, error_type: error.constructor?.name || 'Error' });
+      logEvent('error', 'buttondown_subscriber_create_failed', {
+        email_hash: hashedEmail,
+        subscriber_source: source,
+        error_type: errorName(error)
+      });
       return jsonResponse(502, { error: 'Could not add that email right now.' }, event);
     }
   }
@@ -859,13 +1039,24 @@ async function authHandler(event) {
   if (action === 'resend_confirmation') {
     try {
       await sendSubscriberReminder(email);
-      return jsonResponse(200, { status: 'reminder_sent', message: 'Confirmation email sent. Check your inbox.' }, event);
+      return jsonResponse(
+        200,
+        { status: 'reminder_sent', message: 'Confirmation email sent. Check your inbox.' },
+        event
+      );
     } catch (error) {
-      logEvent('error', 'buttondown_subscriber_reminder_failed', { email_hash: hashedEmail, error_type: error.constructor?.name || 'Error' });
-      return jsonResponse(502, {
-        status: 'reminder_unavailable',
-        error: 'Could not resend the confirmation email right now. Please look for the original confirmation email.'
-      }, event);
+      logEvent('error', 'buttondown_subscriber_reminder_failed', {
+        email_hash: hashedEmail,
+        error_type: errorName(error)
+      });
+      return jsonResponse(
+        502,
+        {
+          status: 'reminder_unavailable',
+          error: 'Could not resend the confirmation email right now. Please look for the original confirmation email.'
+        },
+        event
+      );
     }
   }
 
@@ -873,7 +1064,7 @@ async function authHandler(event) {
   try {
     subscriber = await fetchSubscriber(email);
   } catch (error) {
-    logEvent('error', 'buttondown_lookup_failed', { email_hash: hashedEmail, error_type: error.constructor?.name || 'Error' });
+    logEvent('error', 'buttondown_lookup_failed', { email_hash: hashedEmail, error_type: errorName(error) });
     return jsonResponse(502, { error: 'Could not validate subscriber status right now.' }, event);
   }
 
@@ -891,26 +1082,37 @@ async function authHandler(event) {
     return jsonResponse(403, { status, error: 'That subscription is not active.' }, event);
   }
   try {
-    return await sendLoginMagicLink({ email, subscriber, source, event, start, returnPath: body.return_path });
+    return await sendLoginMagicLink({
+      email,
+      subscriber,
+      source,
+      event,
+      start,
+      returnPath: String(body.return_path || '')
+    });
   } catch (error) {
     logEvent('error', 'auth_magic_link_send_failed', errorFields(error, { email_hash: hashedEmail }));
     return jsonResponse(502, { error: 'Could not send a sign-in email right now.' }, event);
   }
 }
 
-function healthHandler(event) {
-  return jsonResponse(200, {
-    ok: true,
-    service: 'weekly-thing-librarian-auth',
-    model: agentModel()
-  }, event);
+function healthHandler(event: LibrarianHttpEvent) {
+  return jsonResponse(
+    200,
+    {
+      ok: true,
+      service: 'weekly-thing-librarian-auth',
+      model: agentModel()
+    },
+    event
+  );
 }
 
-export async function handler(event, context) {
+export async function handler(event: LibrarianHttpEvent, context: { awsRequestId?: string } = {}) {
   const start = performance.now();
   const summary = eventSummary(event, context);
   logEvent('info', 'request_started', summary, 'weekly-thing-librarian-auth');
-  let response;
+  let response: LibrarianHttpResponse;
   try {
     const { method, path } = methodAndPath(event);
     if (method === 'OPTIONS') {
@@ -933,10 +1135,15 @@ export async function handler(event, context) {
     response = jsonResponse(500, { error: 'Thingy is unavailable right now.' }, event);
   }
   response.headers = { ...(response.headers || {}), 'x-request-id': summary.request_id || '' };
-  logEvent('info', 'request_completed', {
-    ...summary,
-    status_code: response.statusCode,
-    duration_ms: Math.round(performance.now() - start)
-  }, 'weekly-thing-librarian-auth');
+  logEvent(
+    'info',
+    'request_completed',
+    {
+      ...summary,
+      status_code: response.statusCode,
+      duration_ms: Math.round(performance.now() - start)
+    },
+    'weekly-thing-librarian-auth'
+  );
   return response;
 }

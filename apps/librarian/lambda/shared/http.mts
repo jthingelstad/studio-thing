@@ -16,6 +16,12 @@ interface LibrarianRequestContext {
   awsRequestId?: string;
 }
 
+export interface LibrarianHttpResponse {
+  statusCode: number;
+  headers: Record<string, string>;
+  body: string;
+}
+
 export function allowedOrigins() {
   return String(process.env.ALLOWED_ORIGIN || 'https://weekly.thingelstad.com')
     .split(',')
@@ -41,7 +47,7 @@ export function jsonResponse(
   payload: unknown,
   event?: LibrarianHttpEvent | null,
   headers: Record<string, string> = {}
-) {
+): LibrarianHttpResponse {
   return {
     statusCode,
     headers: {
