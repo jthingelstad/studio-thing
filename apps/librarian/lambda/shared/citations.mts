@@ -30,7 +30,7 @@
  *
  */
 export interface Citation {
-  issue_number?: string | number;
+  issue_number?: string | number | null;
   source_kind?: string;
   url?: string;
   subject?: string;
@@ -41,7 +41,7 @@ export interface Citation {
 
 interface IssueMetadata {
   number?: string | number;
-  issue_number?: string | number;
+  issue_number?: string | number | null;
   subject?: string;
   publish_date?: string;
   url?: string;

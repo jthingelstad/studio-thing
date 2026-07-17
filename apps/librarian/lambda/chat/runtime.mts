@@ -1,5 +1,16 @@
 import crypto from 'node:crypto';
 import { ConverseCommand, ConverseStreamCommand } from '@aws-sdk/client-bedrock-runtime';
+import type {
+  ContentBlock,
+  Message,
+  SystemContentBlock,
+  TokenUsage,
+  Tool,
+  ToolResultBlock
+} from '@aws-sdk/client-bedrock-runtime';
+import type { Writable } from 'node:stream';
+import type { LibrarianHttpEvent } from '../shared/http.mjs';
+import type { CorpusChunk } from '../shared/retrieval.mjs';
 import {
   agentModel,
   advancedModel,
@@ -17,16 +28,8 @@ import {
   experienceFromToolResults,
   generateWelcome
 } from '../shared/archive-experience.mjs';
-import {
-  ARCHIVE_TOOLS,
-  collectToolCitations,
-  toolSpecs,
-  weeklyIssueCatalog
-} from '../shared/archive-tools.mjs';
-import {
-  DISPATCH_PLANNER_TOOLS,
-  dispatchPlannerToolSpecs
-} from '../shared/dispatch-planner-tools.mjs';
+import { ARCHIVE_TOOLS, collectToolCitations, toolSpecs, weeklyIssueCatalog } from '../shared/archive-tools.mjs';
+import { DISPATCH_PLANNER_TOOLS, dispatchPlannerToolSpecs } from '../shared/dispatch-planner-tools.mjs';
 import {
   conversationContext,
   extractPreferredNameFromMessage,
@@ -35,15 +38,10 @@ import {
   tokenEntitlements
 } from '../shared/chat-context.mjs';
 import { prioritizeCitationsForAnswer } from '../shared/citations.mjs';
+import type { Citation } from '../shared/citations.mjs';
 import { normalizeScope, scopePromptLine } from '../shared/scope.mjs';
-import {
-  compactSource,
-  retrieve
-} from '../shared/retrieval.mjs';
-import {
-  currentEntitlementsForEmail,
-  loadDiscordConnection
-} from '../shared/discord-link.mjs';
+import { compactSource, retrieve } from '../shared/retrieval.mjs';
+import { currentEntitlementsForEmail, loadDiscordConnection } from '../shared/discord-link.mjs';
 import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
 import {
   PREFLIGHT_SYSTEM_PROMPT,
@@ -54,20 +52,11 @@ import {
 import { errorFields, truthyEnv } from '../shared/logging.mjs';
 import { checkRateLimit } from '../shared/rate-limit.mjs';
 import { methodAndPath, normalizeHeaders, parseBody } from '../shared/http.mjs';
-import {
-  agentSystemPrompt,
-  agentUserPrompt
-} from '../shared/prompts.mjs';
+import { agentSystemPrompt, agentUserPrompt } from '../shared/prompts.mjs';
 import { extractBearer, verifyToken } from '../shared/session.mjs';
 import { sessionAllowedForThingyProfile } from '../shared/profile-deletion.mjs';
-import {
-  getUserMemory,
-  recordUserPreferredName,
-  recordUserTurn
-} from '../shared/user-memory.mjs';
-import {
-  validConversationId
-} from '../shared/user-conversations.mjs';
+import { getUserMemory, recordUserPreferredName, recordUserTurn } from '../shared/user-memory.mjs';
+import { validConversationId } from '../shared/user-conversations.mjs';
 import {
   getUserConversationMetadata,
   loadUserConversationHistory,
@@ -88,17 +77,50 @@ const DEFAULT_CHAT_SLOW_NOTICE_MS = 75000;
 const DEFAULT_CHAT_DEADLINE_MS = 180000;
 const RATE_LIMIT_MAX = 20;
 
-function logEvent(level, message, fields = {}) {
-  console.log(JSON.stringify({
-    level,
-    message,
-    service: 'weekly-thing-librarian-stream',
-    timestamp: Math.floor(Date.now() / 1000),
-    ...Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined && value !== null))
-  }));
+type JsonRecord = Record<string, unknown>;
+type Claims = Record<string, unknown>;
+type ChatHistory = Parameters<typeof conversationContext>[0];
+type ResponseStream = Writable;
+type RequestSummary = Record<string, unknown>;
+type PreflightDecision = ReturnType<typeof normalizePreflightDecision>;
+type BedrockJson = NonNullable<Extract<NonNullable<ToolResultBlock['content']>[number], { json?: unknown }>['json']>;
+
+interface AgentStreamOptions {
+  scope?: unknown;
+  mode?: unknown;
+  readerContext?: unknown;
+  preflight?: PreflightDecision | null;
+  deadlineExceeded?: () => boolean;
+  subscriberHash?: string;
+  requestId?: string;
+  conversationId?: string;
 }
 
-function privacyGuardAnswer(question) {
+interface ToolTrace extends JsonRecord {
+  calls: Array<Record<string, unknown>>;
+}
+
+function objectValue(value: unknown): JsonRecord {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as JsonRecord) : {};
+}
+
+function errorName(error: unknown) {
+  return error instanceof Error ? error.constructor.name : 'Error';
+}
+
+function logEvent(level: string, message: string, fields: JsonRecord = {}) {
+  console.log(
+    JSON.stringify({
+      level,
+      message,
+      service: 'weekly-thing-librarian-stream',
+      timestamp: Math.floor(Date.now() / 1000),
+      ...Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined && value !== null))
+    })
+  );
+}
+
+function privacyGuardAnswer(question: unknown) {
   const text = String(question || '').toLowerCase();
   const blockedPatterns = [
     /\b(home|street|personal)\s+address\b/,
@@ -112,18 +134,21 @@ function privacyGuardAnswer(question) {
   return "I cannot help find or share Jamie's private home address or phone number. For public contact, use the contact links Jamie publishes on thingelstad.com or reply through the newsletter's normal public channels.";
 }
 
-function privacyPreflight(question) {
+function privacyPreflight(question: unknown) {
   const answer = privacyGuardAnswer(question);
   if (!answer) return null;
-  return normalizePreflightDecision({
-    action: 'direct',
-    category: 'privacy_refusal',
-    direct_answer: answer,
-    rationale: 'Deterministic privacy guard matched an explicit private-address or phone-number request.'
-  }, question);
+  return normalizePreflightDecision(
+    {
+      action: 'direct',
+      category: 'privacy_refusal',
+      direct_answer: answer,
+      rationale: 'Deterministic privacy guard matched an explicit private-address or phone-number request.'
+    },
+    question
+  );
 }
 
-function bridgeSecretOk(body) {
+function bridgeSecretOk(body: JsonRecord) {
   // Constant-time equality against DISCORD_BRIDGE_SECRET. Returns `null`
   // when the secret isn't configured (so callers can return 503 instead
   // of 401 — telling operators "feature is off" vs "your secret is wrong").
@@ -138,15 +163,28 @@ function bridgeSecretOk(body) {
   return expectedBuf.length === suppliedBuf.length && crypto.timingSafeEqual(expectedBuf, suppliedBuf);
 }
 
-async function updateUserMemoryAfterTurn(subscriberHash, preferredName) {
+async function updateUserMemoryAfterTurn(subscriberHash: string, preferredName: unknown) {
   await recordUserTurn(subscriberHash, { preferredName });
 }
 
-async function recordFeedback({ subscriberHash, requestId, reaction, comment }) {
+async function recordFeedback({
+  subscriberHash,
+  requestId,
+  reaction,
+  comment
+}: {
+  subscriberHash: string;
+  requestId: unknown;
+  reaction: unknown;
+  comment: unknown;
+}) {
   const tableName = process.env.TABLE_NAME;
   const validRequestId = validFeedbackRequestId(requestId);
   const validReaction = normalizeFeedbackReaction(reaction);
-  const feedbackComment = String(comment || '').trim().replace(/\s+/g, ' ').slice(0, 1000);
+  const feedbackComment = String(comment || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .slice(0, 1000);
   if (!tableName) return { statusCode: 500, payload: { error: 'Thingy feedback is unavailable right now.' } };
   if (!validRequestId || !validReaction) {
     return { statusCode: 400, payload: { error: 'Feedback requires a valid request_id and reaction.' } };
@@ -165,7 +203,10 @@ async function recordFeedback({ subscriberHash, requestId, reaction, comment }) 
       logEvent
     });
     if (!result.found) {
-      return { statusCode: 404, payload: { error: 'Conversation not found for feedback.', request_id: validRequestId } };
+      return {
+        statusCode: 404,
+        payload: { error: 'Conversation not found for feedback.', request_id: validRequestId }
+      };
     }
     logEvent('info', 'feedback_recorded', {
       subscriber_hash: subscriberHash,
@@ -173,22 +214,38 @@ async function recordFeedback({ subscriberHash, requestId, reaction, comment }) 
       reaction: validReaction,
       has_comment: Boolean(feedbackComment)
     });
-    return { statusCode: 200, payload: { ok: true, request_id: validRequestId, reaction: validReaction, has_comment: Boolean(feedbackComment) } };
+    return {
+      statusCode: 200,
+      payload: { ok: true, request_id: validRequestId, reaction: validReaction, has_comment: Boolean(feedbackComment) }
+    };
   } catch (error) {
-    logEvent('warning', 'feedback_record_failed', { request_id: validRequestId, error_type: error.constructor?.name || 'Error' });
-    return { statusCode: 500, payload: { error: 'Thingy could not save feedback right now.', request_id: validRequestId } };
+    logEvent('warning', 'feedback_record_failed', { request_id: validRequestId, error_type: errorName(error) });
+    return {
+      statusCode: 500,
+      payload: { error: 'Thingy could not save feedback right now.', request_id: validRequestId }
+    };
   }
 }
 
-async function resolveRequestedConversationMode({ body, payload, subscriberHash, conversationId }) {
+async function resolveRequestedConversationMode({
+  body,
+  payload,
+  subscriberHash,
+  conversationId
+}: {
+  body: JsonRecord;
+  payload: Claims;
+  subscriberHash: string;
+  conversationId: string;
+}) {
   const entitlements = tokenEntitlements(payload);
   const existing = conversationId
     ? await getUserConversationMetadata({
-      dynamodb,
-      tableName: process.env.TABLE_NAME,
-      subscriberHash,
-      conversationId
-    })
+        dynamodb,
+        tableName: process.env.TABLE_NAME,
+        subscriberHash,
+        conversationId
+      })
     : null;
   const mode = existing?.mode || normalizeConversationMode(body.mode);
   if (!canUseConversationMode(mode, entitlements)) {
@@ -197,15 +254,15 @@ async function resolveRequestedConversationMode({ body, payload, subscriberHash,
   return { ok: true, mode, entitlements, conversation: existing };
 }
 
-function bedrockMessageText(message) {
-  const parts = [];
+function bedrockMessageText(message: Message | undefined) {
+  const parts: string[] = [];
   for (const content of message?.content || []) {
-    if (content.text) parts.push(content.text);
+    if ('text' in content && content.text) parts.push(content.text);
   }
   return parts.join('\n').trim();
 }
 
-function sourceLinkLabel(source = {}) {
+function sourceLinkLabel(source: CorpusChunk) {
   const kind = String(source.source_kind || '').toLowerCase();
   if (kind === 'blog') return source.subject || 'thingelstad.com';
   if (kind === 'podcast') {
@@ -216,7 +273,7 @@ function sourceLinkLabel(source = {}) {
   return source.subject || source.url || 'Archive source';
 }
 
-function sourceUrl(source = {}) {
+function sourceUrl(source: CorpusChunk) {
   return source.url || source.transcript_url || source.audio_url || '';
 }
 
@@ -233,28 +290,54 @@ function thingyBaseUrl() {
   }
 }
 
-function continuationUrl(question) {
+function continuationUrl(question: unknown) {
   const url = new URL('/chat/', thingyBaseUrl());
   url.searchParams.set('prompt', String(question || '').slice(0, 500));
   url.searchParams.set('from', 'discord');
   return url.toString();
 }
 
-function discordContextMessages(value) {
+function discordContextMessages(value: unknown) {
   const items = Array.isArray(value) ? value : [];
-  return items.slice(-8).map((item) => {
-    const author = String(item.author || item.display_name || 'member').replace(/\s+/g, ' ').slice(0, 40);
-    const content = String(item.content || '').replace(/\s+/g, ' ').slice(0, 260);
-    return content ? `${author}: ${content}` : '';
-  }).filter(Boolean).join('\n') || 'No extra Discord thread context supplied.';
+  return (
+    items
+      .slice(-8)
+      .map((value) => {
+        const item = objectValue(value);
+        const author = String(item.author || item.display_name || 'member')
+          .replace(/\s+/g, ' ')
+          .slice(0, 40);
+        const content = String(item.content || '')
+          .replace(/\s+/g, ' ')
+          .slice(0, 260);
+        return content ? `${author}: ${content}` : '';
+      })
+      .filter(Boolean)
+      .join('\n') || 'No extra Discord thread context supplied.'
+  );
 }
 
-async function generateDiscordMentionAnswer({ question, contextMessages, sources }) {
-  const sourceBlock = sources.map((source, index) => [
-    `[${index + 1}] ${sourceLinkLabel(source)}`,
-    `URL: ${sourceUrl(source)}`,
-    `Excerpt: ${String(source.text || '').replace(/\s+/g, ' ').slice(0, 900)}`
-  ].join('\n')).join('\n\n') || 'No sources found.';
+async function generateDiscordMentionAnswer({
+  question,
+  contextMessages,
+  sources
+}: {
+  question: string;
+  contextMessages: string;
+  sources: CorpusChunk[];
+}) {
+  const sourceBlock =
+    sources
+      .map((source, index) =>
+        [
+          `[${index + 1}] ${sourceLinkLabel(source)}`,
+          `URL: ${sourceUrl(source)}`,
+          `Excerpt: ${String(source.text || '')
+            .replace(/\s+/g, ' ')
+            .slice(0, 900)}`
+        ].join('\n')
+      )
+      .join('\n\n') || 'No sources found.';
   const system = [
     'You are Thingy in a Supporting Member Discord #general channel.',
     "Answer only from Jamie Thingelstad's published archive and the supplied Discord context.",
@@ -272,16 +355,30 @@ async function generateDiscordMentionAnswer({ question, contextMessages, sources
     'Retrieved archive sources:',
     sourceBlock
   ].join('\n');
-  const response = await bedrock.send(new ConverseCommand({
-    modelId: agentModel(),
-    system: [{ text: system }, { cachePoint: { type: 'default' } }],
-    messages: [{ role: 'user', content: [{ text: user }] }],
-    inferenceConfig: { maxTokens: 600, temperature: 0.4 }
-  }));
-  return sanitizeAnswerProse(bedrockMessageText(response.output?.message || {}));
+  const response = await bedrock.send(
+    new ConverseCommand({
+      modelId: agentModel(),
+      system: [{ text: system }, { cachePoint: { type: 'default' } }],
+      messages: [{ role: 'user', content: [{ text: user }] }],
+      inferenceConfig: { maxTokens: 600, temperature: 0.4 }
+    })
+  );
+  return sanitizeAnswerProse(bedrockMessageText(response.output?.message));
 }
 
-async function handleDiscordMentionRoute({ event, responseStream, requestId, summary, start }) {
+async function handleDiscordMentionRoute({
+  event,
+  responseStream,
+  requestId,
+  summary,
+  start
+}: {
+  event: LibrarianHttpEvent;
+  responseStream: ResponseStream;
+  requestId: string;
+  summary: RequestSummary;
+  start: number;
+}) {
   const body = parseBody(event);
   const secretState = bridgeSecretOk(body);
   if (secretState === null) {
@@ -306,11 +403,13 @@ async function handleDiscordMentionRoute({ event, responseStream, requestId, sum
   const connection = await loadDiscordConnection(body.discord_user_id);
   if (!connection?.subscriber_hash || !connection.email) {
     const s403 = jsonResponseStream(responseStream, 403);
-    s403.write(JSON.stringify({
-      status: 'discord_link_required',
-      error: 'Thingy can answer linked Supporting Members in Discord.',
-      verify_hint: 'Run /thingy verify in the validation channel.'
-    }));
+    s403.write(
+      JSON.stringify({
+        status: 'discord_link_required',
+        error: 'Thingy can answer linked Supporting Members in Discord.',
+        verify_hint: 'Run /thingy verify in the validation channel.'
+      })
+    );
     s403.end();
     return;
   }
@@ -320,26 +419,40 @@ async function handleDiscordMentionRoute({ event, responseStream, requestId, sum
   } catch (error) {
     logEvent('warning', 'discord_mention_entitlement_lookup_failed', {
       subscriber_hash: connection.subscriber_hash,
-      error_type: error.constructor?.name || 'Error'
+      error_type: errorName(error)
     });
     const s502 = jsonResponseStream(responseStream, 502);
-    s502.write(JSON.stringify({ status: 'entitlement_unavailable', error: 'Thingy could not verify Supporting Membership right now.' }));
+    s502.write(
+      JSON.stringify({
+        status: 'entitlement_unavailable',
+        error: 'Thingy could not verify Supporting Membership right now.'
+      })
+    );
     s502.end();
     return;
   }
   if (!entitlement.supporting_member) {
     const s403 = jsonResponseStream(responseStream, 403);
-    s403.write(JSON.stringify({
-      status: 'supporting_member_required',
-      error: 'Discord Thingy is available to Weekly Thing Supporting Members.',
-      remove_role: true
-    }));
+    s403.write(
+      JSON.stringify({
+        status: 'supporting_member_required',
+        error: 'Discord Thingy is available to Weekly Thing Supporting Members.',
+        remove_role: true
+      })
+    );
     s403.end();
     return;
   }
-  if (!(await checkRateLimit(`discord_mention#${connection.subscriber_hash}`, Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)))) {
+  if (
+    !(await checkRateLimit(
+      `discord_mention#${connection.subscriber_hash}`,
+      Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)
+    ))
+  ) {
     const s429 = jsonResponseStream(responseStream, 429);
-    s429.write(JSON.stringify({ status: 'rate_limited', error: 'Thingy is at the hourly Discord limit for this member.' }));
+    s429.write(
+      JSON.stringify({ status: 'rate_limited', error: 'Thingy is at the hourly Discord limit for this member.' })
+    );
     s429.end();
     return;
   }
@@ -370,37 +483,51 @@ async function handleDiscordMentionRoute({ event, responseStream, requestId, sum
     });
   } catch (error) {
     const s500 = jsonResponseStream(responseStream, 500);
-    s500.write(JSON.stringify({ status: 'failed', error: 'Thingy could not answer in Discord right now.', request_id: requestId }));
+    s500.write(
+      JSON.stringify({
+        status: 'failed',
+        error: 'Thingy could not answer in Discord right now.',
+        request_id: requestId
+      })
+    );
     s500.end();
-    logEvent('error', 'discord_mention_failed', { ...summary, subscriber_hash: connection.subscriber_hash, error_type: error.constructor?.name || 'Error' });
+    logEvent('error', 'discord_mention_failed', {
+      ...summary,
+      subscriber_hash: connection.subscriber_hash,
+      error_type: errorName(error)
+    });
   }
 }
 
-function writeSse(stream, event, data) {
+function writeSse(stream: ResponseStream, event: string, data: unknown) {
   stream.write(`event: ${event}\n`);
   stream.write(`data: ${JSON.stringify(data)}\n\n`);
 }
 
-function activityCommentaryText(value) {
+function activityCommentaryText(value: unknown) {
   return String(value || '')
     .replace(/\s+/g, ' ')
     .replace(/([.!?])(?=\S)/g, '$1 ')
     .trim();
 }
 
-function shortToolValue(value, max = 80) {
-  const text = String(value || '').trim().replace(/\s+/g, ' ');
+function shortToolValue(value: unknown, max = 80) {
+  const text = String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ');
   return text.length <= max ? text : `${text.slice(0, max - 1).trim()}…`;
 }
 
-function quotedToolValue(value) {
+function quotedToolValue(value: unknown) {
   const text = shortToolValue(value);
   return text ? `“${text}”` : '';
 }
 
-function toolActivityCommentary(name, input = {}) {
-  const value = input && typeof input === 'object' ? input : {};
-  const query = quotedToolValue(value.query || value.topic || value.theme || value.entity || value.domain || value.claim);
+function toolActivityCommentary(name: string, input: unknown = {}) {
+  const value = objectValue(input);
+  const query = quotedToolValue(
+    value.query || value.topic || value.theme || value.entity || value.domain || value.claim
+  );
   switch (name) {
     case 'search_faq':
       return query ? `Checking the FAQ for ${query}.` : 'Checking the public FAQ first.';
@@ -413,9 +540,13 @@ function toolActivityCommentary(name, input = {}) {
         ? 'Opening a promising source for fuller context.'
         : 'Opening source detail for context.';
     case 'get_issue':
-      return value.issue_number ? `Opening WT${shortToolValue(value.issue_number, 12)} for issue-level context.` : 'Opening a Weekly Thing issue.';
+      return value.issue_number
+        ? `Opening WT${shortToolValue(value.issue_number, 12)} for issue-level context.`
+        : 'Opening a Weekly Thing issue.';
     case 'get_section':
-      return value.issue_number ? `Opening a specific section from WT${shortToolValue(value.issue_number, 12)}.` : 'Opening a specific archive section.';
+      return value.issue_number
+        ? `Opening a specific section from WT${shortToolValue(value.issue_number, 12)}.`
+        : 'Opening a specific archive section.';
     case 'find_links':
     case 'domain_history':
       return query ? `Tracing link metadata around ${query}.` : 'Tracing link and domain metadata.';
@@ -433,7 +564,9 @@ function toolActivityCommentary(name, input = {}) {
     case 'entity_lens':
       return query ? `Checking where ${query} appears across the archive.` : 'Checking where the named entity appears.';
     case 'archive_gems':
-      return query ? `Looking for a surprising archive spark around ${query}.` : 'Looking for a surprising archive spark.';
+      return query
+        ? `Looking for a surprising archive spark around ${query}.`
+        : 'Looking for a surprising archive spark.';
     case 'claim_check':
       return query ? `Verifying ${query} against archive evidence.` : 'Verifying the claim against archive evidence.';
     default:
@@ -465,7 +598,12 @@ function preflightInferenceConfig() {
   };
 }
 
-function preflightUserPrompt(question, scope, history, context = {}) {
+function preflightUserPrompt(
+  question: unknown,
+  scope: unknown,
+  history: ChatHistory,
+  context: { mode?: unknown; readerContext?: unknown } = {}
+) {
   return [
     `Active source scope: ${normalizeScope(scope)}`,
     `Conversation mode: ${conversationModeDefinition(context.mode).label}`,
@@ -482,7 +620,12 @@ function preflightUserPrompt(question, scope, history, context = {}) {
   ].join('\n');
 }
 
-async function evaluatePromptPreflight(question, scope, history = [], context = {}) {
+async function evaluatePromptPreflight(
+  question: string,
+  scope: unknown,
+  history: ChatHistory = [],
+  context: { mode?: unknown; readerContext?: unknown } = {}
+) {
   const hardPrivacy = privacyPreflight(question);
   if (hardPrivacy) return hardPrivacy;
   if (!truthyEnv('LIBRARIAN_PREFLIGHT_ENABLED', '1')) {
@@ -490,16 +633,20 @@ async function evaluatePromptPreflight(question, scope, history = [], context = 
   }
   const start = performance.now();
   try {
-    const response = await bedrock.send(new ConverseCommand({
-      modelId: fastModel(),
-      system: [{ text: PREFLIGHT_SYSTEM_PROMPT }],
-      messages: [{
-        role: 'user',
-        content: [{ text: preflightUserPrompt(question, scope, history, context) }]
-      }],
-      inferenceConfig: preflightInferenceConfig()
-    }));
-    const message = response.output?.message || {};
+    const response = await bedrock.send(
+      new ConverseCommand({
+        modelId: fastModel(),
+        system: [{ text: PREFLIGHT_SYSTEM_PROMPT }],
+        messages: [
+          {
+            role: 'user',
+            content: [{ text: preflightUserPrompt(question, scope, history, context) }]
+          }
+        ],
+        inferenceConfig: preflightInferenceConfig()
+      })
+    );
+    const message = response.output?.message;
     const text = bedrockMessageText(message);
     const parsed = parsePreflightJson(text);
     const preflight = normalizePreflightDecision(parsed || {}, question);
@@ -512,30 +659,27 @@ async function evaluatePromptPreflight(question, scope, history = [], context = 
     });
     return preflight;
   } catch (error) {
-    logEvent('warning', 'prompt_preflight_failed', { error_type: error.constructor?.name || 'Error' });
+    logEvent('warning', 'prompt_preflight_failed', { error_type: errorName(error) });
     return passThroughPreflight(question);
   }
 }
 
-function agentQuestionForPreflight(question, preflight) {
+function agentQuestionForPreflight(question: string, preflight: PreflightDecision | null | undefined) {
   if (!preflight || preflight.action !== 'rewrite') return question;
-  const parts = [
-    'Original reader prompt:',
-    question,
-    '',
-    'Preflight evaluator rewrite:',
-    preflight.rewritten_question
-  ];
+  const parts = ['Original reader prompt:', question, '', 'Preflight evaluator rewrite:', preflight.rewritten_question];
   if (preflight.answer_guidance) {
     parts.push('', 'Evaluator guidance:', preflight.answer_guidance);
   }
-  parts.push('', 'Answer the reader by honoring the original prompt through the archive-shaped rewrite. Do not mention the preflight evaluator.');
+  parts.push(
+    '',
+    'Answer the reader by honoring the original prompt through the archive-shaped rewrite. Do not mention the preflight evaluator.'
+  );
   return parts.join('\n');
 }
 
 const AGENT_SYSTEM_PROMPT = agentSystemPrompt();
 
-function compactTraceValue(value, maxChars = 1200) {
+function compactTraceValue(value: unknown, maxChars = 1200) {
   if (value == null) return value;
   if (typeof value === 'string') return value.slice(0, maxChars);
   try {
@@ -547,8 +691,8 @@ function compactTraceValue(value, maxChars = 1200) {
   }
 }
 
-function countResultItems(result) {
-  if (!result || typeof result !== 'object') return 0;
+function countResultItems(value: unknown) {
+  const result = objectValue(value);
   return [
     result.results,
     result.results_a,
@@ -558,11 +702,11 @@ function countResultItems(result) {
     result.incoming_links,
     result.outgoing_links,
     result.cross_source_links
-  ].reduce((total, value) => total + (Array.isArray(value) ? value.length : 0), 0);
+  ].reduce<number>((total, value) => total + (Array.isArray(value) ? value.length : 0), 0);
 }
 
-function traceToolResult(result) {
-  if (!result || typeof result !== 'object') return {};
+function traceToolResult(value: unknown) {
+  const result = objectValue(value);
   return {
     error: result.error ? String(result.error).slice(0, 300) : '',
     result_count: countResultItems(result),
@@ -574,40 +718,50 @@ function traceToolResult(result) {
   };
 }
 
-async function streamBedrockAgentAnswer(question, history, responseStream, options = {}) {
+async function streamBedrockAgentAnswer(
+  question: string,
+  history: ChatHistory,
+  responseStream: ResponseStream,
+  options: AgentStreamOptions = {}
+) {
   const start = performance.now();
   const scope = normalizeScope(options.scope);
   const mode = normalizeConversationMode(options.mode);
   const readerContext = String(options.readerContext || '').trim();
   const agentQuestion = agentQuestionForPreflight(question, options.preflight);
   const shouldStopWriting = () => Boolean(options.deadlineExceeded?.());
-  const messages = [{
-    role: 'user',
-    content: [{
-      text: agentUserPrompt({
-        conversation_context: conversationContext(history),
-        reader_context: readerContext || 'No reader-local context supplied.',
-        question: agentQuestion
-      })
-    }]
-  }];
-  const toolResults = [];
-  const toolTrace = { calls: [] };
+  const messages: Message[] = [
+    {
+      role: 'user',
+      content: [
+        {
+          text: agentUserPrompt({
+            conversation_context: conversationContext(history),
+            reader_context: readerContext || 'No reader-local context supplied.',
+            question: agentQuestion
+          })
+        }
+      ]
+    }
+  ];
+  const toolResults: JsonRecord[] = [];
+  const toolTrace: ToolTrace = { calls: [] };
   let answer = '';
-  let usage = {};
+  let usage: TokenUsage | undefined;
   let stopReason = '';
   const maxTurns = Number(process.env.MAX_TOOL_TURNS || DEFAULT_MAX_TOOL_TURNS);
   // Dispatch planner conversations get the brief/coverage tools on top of
   // the archive tools; every other mode keeps the archive set only.
-  const toolHandlers = mode === 'dispatch'
-    ? { ...ARCHIVE_TOOLS, ...DISPATCH_PLANNER_TOOLS }
-    : ARCHIVE_TOOLS;
-  const activeToolSpecs = mode === 'dispatch'
-    ? [...toolSpecs(), ...dispatchPlannerToolSpecs()]
-    : toolSpecs();
+  type ToolHandler = (input?: JsonRecord, context?: JsonRecord) => unknown | Promise<unknown>;
+  const toolHandlers = (
+    mode === 'dispatch' ? { ...ARCHIVE_TOOLS, ...DISPATCH_PLANNER_TOOLS } : ARCHIVE_TOOLS
+  ) as Record<string, ToolHandler>;
+  const activeToolSpecs = (
+    mode === 'dispatch' ? [...toolSpecs(), ...dispatchPlannerToolSpecs()] : toolSpecs()
+  ) as Tool[];
   // The static system prompt is cached; per-request blocks go after the
   // cachePoint so they don't bust the static prompt's prefix cache.
-  const systemBlocks = [{ text: AGENT_SYSTEM_PROMPT }, { cachePoint: { type: 'default' } }];
+  const systemBlocks: SystemContentBlock[] = [{ text: AGENT_SYSTEM_PROMPT }, { cachePoint: { type: 'default' } }];
   // Active scope varies per request, so it goes after the cachePoint as its
   // own block — it tells the agent which corpus it may speak from without
   // busting the static prompt's prefix cache.
@@ -615,77 +769,90 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   systemBlocks.push({ text: conversationModePrompt(mode) });
   for (let turn = 0; turn <= maxTurns; turn += 1) {
     const streamAnswerDeltas = toolResults.length > 0;
-    const response = await bedrock.send(new ConverseStreamCommand({
-      modelId: agentModel(),
-      system: systemBlocks,
-      messages,
-      toolConfig: { tools: activeToolSpecs },
-      inferenceConfig: commandInferenceConfig()
-    }));
+    const response = await bedrock.send(
+      new ConverseStreamCommand({
+        modelId: agentModel(),
+        system: systemBlocks,
+        messages,
+        toolConfig: { tools: activeToolSpecs },
+        inferenceConfig: commandInferenceConfig()
+      })
+    );
     const result = await readConverseStream(response, {
       onTextDelta: streamAnswerDeltas
         ? (delta) => {
-          if (shouldStopWriting()) return;
-          writeSse(responseStream, 'answer_delta', { delta });
-        }
+            if (shouldStopWriting()) return;
+            writeSse(responseStream, 'answer_delta', { delta });
+          }
         : undefined
     });
     const message = result.message;
     usage = result.usage || usage;
     stopReason = result.stopReason || stopReason;
     messages.push(message);
-    const toolUses = (message.content || []).filter((block) => block.toolUse).map((block) => block.toolUse);
+    const toolUses = (message.content || []).flatMap((block) =>
+      'toolUse' in block && block.toolUse ? [block.toolUse] : []
+    );
     if (!toolUses.length) {
       answer = bedrockMessageText(message) || result.text;
       break;
     }
     const commentary = activityCommentaryText(result.text);
-    const resultBlocks = [];
+    const resultBlocks: ContentBlock[] = [];
     for (const [index, toolUse] of toolUses.entries()) {
-      const toolNote = toolActivityCommentary(toolUse.name, toolUse.input || {});
+      const toolName = String(toolUse.name || 'unknown_tool');
+      const toolUseId = String(toolUse.toolUseId || '');
+      const toolInput = objectValue(toolUse.input);
+      const toolNote = toolActivityCommentary(toolName, toolInput);
       const visibleNote = [index === 0 ? commentary : '', toolNote].filter(Boolean).join(' ');
       if (!shouldStopWriting()) {
         writeSse(responseStream, 'status', {
           kind: 'tool',
-          tool_name: toolUse.name,
-          message: `Checking ${toolUse.name.replaceAll('_', ' ')}...`,
+          tool_name: toolName,
+          message: `Checking ${toolName.replaceAll('_', ' ')}...`,
           commentary: visibleNote
         });
       }
-      const handler = toolHandlers[toolUse.name];
-      let result;
+      const handler = toolHandlers[toolName];
+      let result: JsonRecord;
       const toolStart = performance.now();
       let ok = true;
       try {
-        result = handler ? await handler(toolUse.input || {}, { scope, subscriberHash: options.subscriberHash }) : { error: `Unknown tool: ${toolUse.name}` };
+        result = handler
+          ? objectValue(await handler(toolInput, { scope, subscriberHash: options.subscriberHash }))
+          : { error: `Unknown tool: ${toolName}` };
       } catch (error) {
         ok = false;
-        logEvent('error', 'tool_call_failed', errorFields(error, {
-          request_id: options.requestId,
-          conversation_id: options.conversationId,
-          tool_name: toolUse.name
-        }));
-        result = { error: `${toolUse.name} failed: ${error.constructor?.name || 'Error'}` };
+        logEvent(
+          'error',
+          'tool_call_failed',
+          errorFields(error, {
+            request_id: options.requestId,
+            conversation_id: options.conversationId,
+            tool_name: toolName
+          })
+        );
+        result = { error: `${toolName} failed: ${errorName(error)}` };
       }
-      if (toolUse.name === 'update_dispatch_brief' && result?.brief && !shouldStopWriting()) {
+      if (toolName === 'update_dispatch_brief' && result.brief && !shouldStopWriting()) {
         // Mirror the brief to the client as it forms; the reader locks it
         // from the brief card, which queues generation via /dispatch.
         writeSse(responseStream, 'dispatch_brief', {
           brief: result.brief,
-          status: result.status || result.brief.status || 'draft',
+          status: result.status || objectValue(result.brief).status || 'draft',
           request_id: options.requestId,
           conversation_id: options.conversationId
         });
       }
       toolTrace.calls.push({
-        name: toolUse.name,
-        input: compactTraceValue(toolUse.input || {}, 1000),
-        ok: ok && !result?.error,
+        name: toolName,
+        input: compactTraceValue(toolInput, 1000),
+        ok: ok && !result.error,
         duration_ms: Math.round(performance.now() - toolStart),
         result: traceToolResult(result)
       });
       toolResults.push(result);
-      resultBlocks.push({ toolResult: { toolUseId: toolUse.toolUseId, content: [{ json: result }] } });
+      resultBlocks.push({ toolResult: { toolUseId, content: [{ json: result as BedrockJson }] } });
     }
     messages.push({
       role: 'user',
@@ -740,7 +907,7 @@ async function streamBedrockAgentAnswer(question, history, responseStream, optio
   };
 }
 
-function streamFromResponse(responseStream, event, statusCode) {
+function streamFromResponse(responseStream: ResponseStream, _event: LibrarianHttpEvent, statusCode: number) {
   return awslambda.HttpResponseStream.from(responseStream, {
     statusCode,
     headers: {
@@ -751,7 +918,7 @@ function streamFromResponse(responseStream, event, statusCode) {
   });
 }
 
-function jsonResponseStream(responseStream, statusCode) {
+function jsonResponseStream(responseStream: ResponseStream, statusCode: number) {
   return awslambda.HttpResponseStream.from(responseStream, {
     statusCode,
     headers: {
@@ -761,12 +928,26 @@ function jsonResponseStream(responseStream, statusCode) {
   });
 }
 
-async function handleCuriosityMapRoute({ event, responseStream, requestId, summary, start }) {
+async function handleCuriosityMapRoute({
+  event,
+  responseStream,
+  requestId,
+  summary,
+  start
+}: {
+  event: LibrarianHttpEvent;
+  responseStream: ResponseStream;
+  requestId: string;
+  summary: RequestSummary;
+  start: number;
+}) {
   const body = parseBody(event);
   const payload = verifyToken(extractBearer(event, body));
   if (!payload || !(await sessionAllowedForThingyProfile(payload))) {
     const s401 = jsonResponseStream(responseStream, 401);
-    s401.write(JSON.stringify({ error: 'Please validate your subscriber email to use the librarian.', request_id: requestId }));
+    s401.write(
+      JSON.stringify({ error: 'Please validate your subscriber email to use the librarian.', request_id: requestId })
+    );
     s401.end();
     logEvent('warning', 'curiosity_map_unauthorized', { ...summary });
     return;
@@ -785,7 +966,9 @@ async function handleCuriosityMapRoute({ event, responseStream, requestId, summa
     s403.end();
     return;
   }
-  if (!(await checkRateLimit(`curiosity_map#${subscriberHash}`, Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)))) {
+  if (
+    !(await checkRateLimit(`curiosity_map#${subscriberHash}`, Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)))
+  ) {
     const s429 = jsonResponseStream(responseStream, 429);
     s429.write(JSON.stringify({ error: 'Thingy is at the hourly limit for this session.', request_id: requestId }));
     s429.end();
@@ -839,11 +1022,11 @@ async function handleCuriosityMapRoute({ event, responseStream, requestId, summa
     const s500 = jsonResponseStream(responseStream, 500);
     s500.write(JSON.stringify({ error: 'Thingy could not draw a curiosity map right now.', request_id: requestId }));
     s500.end();
-    logEvent('error', 'curiosity_map_failed', { ...summary, error_type: error.constructor?.name || 'Error' });
+    logEvent('error', 'curiosity_map_failed', { ...summary, error_type: errorName(error) });
   }
 }
 
-export const handler = awslambda.streamifyResponse(async (event, responseStream, context) => {
+export const handler = awslambda.streamifyResponse<LibrarianHttpEvent>(async (event, responseStream, context) => {
   const start = performance.now();
   const requestId = context?.awsRequestId || event.requestContext?.requestId || crypto.randomUUID();
   const { method, path } = methodAndPath(event);
@@ -859,15 +1042,17 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
 
   if (method === 'GET' && path.endsWith('/health')) {
     const stream = jsonResponseStream(responseStream, 200);
-    stream.write(JSON.stringify({
-      ok: true,
-      service: 'weekly-thing-librarian-stream',
-      model: agentModel(),
-      fast_model: fastModel(),
-      advanced_model: advancedModel(),
-      embedding_model: embeddingModel(),
-      rerank_model: rerankModel()
-    }));
+    stream.write(
+      JSON.stringify({
+        ok: true,
+        service: 'weekly-thing-librarian-stream',
+        model: agentModel(),
+        fast_model: fastModel(),
+        advanced_model: advancedModel(),
+        embedding_model: embeddingModel(),
+        rerank_model: rerankModel()
+      })
+    );
     stream.end();
     logEvent('info', 'request_completed', { ...summary, duration_ms: Math.round(performance.now() - start) });
     return;
@@ -877,18 +1062,26 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     const body = parseBody(event);
     const payload = verifyToken(extractBearer(event, body));
     const active = payload ? await sessionAllowedForThingyProfile(payload) : false;
-    const result = active
-      ? await recordFeedback({
-        subscriberHash: String(payload.sub || ''),
-        requestId: body.request_id,
-        reaction: body.reaction,
-        comment: body.comment
-      })
-      : { statusCode: 401, payload: { error: 'Please validate your subscriber email to use the librarian.', request_id: requestId } };
+    const result =
+      active && payload
+        ? await recordFeedback({
+            subscriberHash: String(payload.sub || ''),
+            requestId: body.request_id,
+            reaction: body.reaction,
+            comment: body.comment
+          })
+        : {
+            statusCode: 401,
+            payload: { error: 'Please validate your subscriber email to use the librarian.', request_id: requestId }
+          };
     const stream = jsonResponseStream(responseStream, result.statusCode);
     stream.write(JSON.stringify(result.payload));
     stream.end();
-    logEvent('info', 'request_completed', { ...summary, status_code: result.statusCode, duration_ms: Math.round(performance.now() - start) });
+    logEvent('info', 'request_completed', {
+      ...summary,
+      status_code: result.statusCode,
+      duration_ms: Math.round(performance.now() - start)
+    });
     return;
   }
 
@@ -924,7 +1117,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     }
     const requestedK = Number(body.k || 12);
     const limit = Math.max(1, Math.min(Number.isFinite(requestedK) ? requestedK : 12, 40));
-    const filters = (body.filters && typeof body.filters === 'object') ? body.filters : {};
+    const filters = objectValue(body.filters);
     // Optional scope (default weekly_thing). workshop_bot sends no scope, so
     // it keeps getting WT-only passages — unaffected by the blog corpus.
     filters.scope = normalizeScope(body.scope ?? filters.scope);
@@ -932,12 +1125,14 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       const passages = await retrieve(query, limit, filters);
       const compact = passages.map((p) => compactSource(p, 1200));
       const s200 = jsonResponseStream(responseStream, 200);
-      s200.write(JSON.stringify({
-        passages: compact,
-        embedding_model: embeddingModel(),
-        rerank_model: rerankModel(),
-        request_id: requestId
-      }));
+      s200.write(
+        JSON.stringify({
+          passages: compact,
+          embedding_model: embeddingModel(),
+          rerank_model: rerankModel(),
+          request_id: requestId
+        })
+      );
       s200.end();
       logEvent('info', 'retrieve_completed', {
         ...summary,
@@ -950,7 +1145,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       const s500 = jsonResponseStream(responseStream, 500);
       s500.write(JSON.stringify({ error: 'Retrieval failed.', request_id: requestId }));
       s500.end();
-      logEvent('error', 'retrieve_failed', { ...summary, error_type: error.constructor?.name || 'Error' });
+      logEvent('error', 'retrieve_failed', { ...summary, error_type: errorName(error) });
     }
     return;
   }
@@ -976,24 +1171,27 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     const body = parseBody(event);
     const payload = verifyToken(extractBearer(event, body));
     if (!payload || !(await sessionAllowedForThingyProfile(payload))) {
-      writeSse(stream, 'error', { error: 'Please validate your subscriber email to use the librarian.', request_id: requestId });
+      writeSse(stream, 'error', {
+        error: 'Please validate your subscriber email to use the librarian.',
+        request_id: requestId
+      });
       return;
     }
     subscriberHash = String(payload.sub || '');
 
-      if (path.endsWith('/welcome')) {
-        const scope = normalizeScope(body.scope);
-        const modeAccess = await resolveRequestedConversationMode({
-          body,
-          payload,
-          subscriberHash,
-          conversationId: ''
-        });
-        if (!modeAccess.ok) {
-          writeSse(stream, 'error', { error: modeAccess.error, request_id: requestId });
-          return;
-        }
-        const userProfile = normalizeUserProfile(body.user_profile);
+    if (path.endsWith('/welcome')) {
+      const scope = normalizeScope(body.scope);
+      const modeAccess = await resolveRequestedConversationMode({
+        body,
+        payload,
+        subscriberHash,
+        conversationId: ''
+      });
+      if (!modeAccess.ok) {
+        writeSse(stream, 'error', { error: modeAccess.error, request_id: requestId });
+        return;
+      }
+      const userProfile = normalizeUserProfile(body.user_profile);
       const memory = await getUserMemory(subscriberHash);
       const effectiveProfile = {
         ...userProfile,
@@ -1009,7 +1207,9 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
         limit: 8,
         logEvent
       });
-      if (!(await checkRateLimit(`welcome#${String(payload.sub)}`, Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)))) {
+      if (
+        !(await checkRateLimit(`welcome#${String(payload.sub)}`, Number(process.env.RATE_LIMIT_MAX || RATE_LIMIT_MAX)))
+      ) {
         writeSse(stream, 'error', { error: 'Thingy is at the hourly limit for this session.', request_id: requestId });
         return;
       }
@@ -1019,7 +1219,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       try {
         spark = await buildWelcomeSpark({ conversations, scope });
       } catch (error) {
-        logEvent('warning', 'welcome_spark_failed', { error_type: error.constructor?.name || 'Error' });
+        logEvent('warning', 'welcome_spark_failed', { error_type: errorName(error) });
       }
       if (spark) writeSse(stream, 'experience', { experience: spark });
       const answer = await generateWelcome({ readerContext, conversations, scope, mode: modeAccess.mode, spark });
@@ -1074,7 +1274,10 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       return;
     }
     if (!(await checkRateLimit(String(payload.sub)))) {
-      writeSse(stream, 'error', { error: 'The librarian is at the hourly limit for this session.', request_id: requestId });
+      writeSse(stream, 'error', {
+        error: 'The librarian is at the hourly limit for this session.',
+        request_id: requestId
+      });
       return;
     }
     if (effectiveUserProfile.preferred_name) {
@@ -1096,12 +1299,13 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     writeSse(stream, 'status', { message: 'Understanding the request...' });
     // Dispatch planner turns always run the planning agent — the preflight
     // evaluator's direct-answer shortcut would skip the coverage tools.
-    const preflight = modeAccess.mode === 'dispatch'
-      ? passThroughPreflight(question, 'Dispatch planner conversations always run the planning agent.')
-      : await evaluatePromptPreflight(question, scope, history, { readerContext, mode: modeAccess.mode });
+    const preflight =
+      modeAccess.mode === 'dispatch'
+        ? passThroughPreflight(question, 'Dispatch planner conversations always run the planning agent.')
+        : await evaluatePromptPreflight(question, scope, history, { readerContext, mode: modeAccess.mode });
     if (preflight.action === 'direct') {
       preflight.direct_answer = sanitizeAnswerProse(preflight.direct_answer);
-      const citations = [];
+      const citations: Citation[] = [];
       writeSse(stream, 'answer_delta', { delta: preflight.direct_answer });
       writeSse(stream, 'citations', { citations });
       const conversation = await recordUserConversationTurn({
@@ -1123,7 +1327,12 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
         },
         logEvent
       });
-      writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation, mode: modeAccess.mode });
+      writeSse(stream, 'done', {
+        request_id: requestId,
+        conversation_id: conversationId,
+        conversation,
+        mode: modeAccess.mode
+      });
       // Guarded/direct turns still update memory — the question text was
       // recorded above, so let the user-memory row reflect that turn too.
       await updateUserMemoryAfterTurn(subscriberHash, effectiveUserProfile.preferred_name);
@@ -1158,7 +1367,9 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
           request_id: requestId
         });
       } catch {}
-      try { stream.end(); } catch {}
+      try {
+        stream.end();
+      } catch {}
       logEvent('warning', 'chat_deadline_exceeded', {
         request_id: requestId,
         conversation_id: conversationId,
@@ -1226,7 +1437,12 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       logEvent
     });
     writeSse(stream, 'citations', { citations });
-    writeSse(stream, 'done', { request_id: requestId, conversation_id: conversationId, conversation, mode: modeAccess.mode });
+    writeSse(stream, 'done', {
+      request_id: requestId,
+      conversation_id: conversationId,
+      conversation,
+      mode: modeAccess.mode
+    });
     // Update per-user memory after the answer ships. If the sid has
     // rotated since the prior turn, this also triggers a Bedrock-
     // synthesized summary of the previous session.
@@ -1242,11 +1458,18 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
       duration_ms: Math.round(performance.now() - start)
     });
   } catch (error) {
-    logEvent('error', 'request_failed', errorFields(error, {
-      ...summary,
-      subscriber_hash: subscriberHash
-    }));
-    writeSse(stream, 'error', { error: 'The librarian could not generate an answer right now.', request_id: requestId });
+    logEvent(
+      'error',
+      'request_failed',
+      errorFields(error, {
+        ...summary,
+        subscriber_hash: subscriberHash
+      })
+    );
+    writeSse(stream, 'error', {
+      error: 'The librarian could not generate an answer right now.',
+      request_id: requestId
+    });
   } finally {
     logEvent('info', 'request_completed', { ...summary, duration_ms: Math.round(performance.now() - start) });
     stream.end();

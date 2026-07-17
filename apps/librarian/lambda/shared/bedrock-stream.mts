@@ -1,4 +1,10 @@
-import type { ConverseStreamResponse } from '@aws-sdk/client-bedrock-runtime';
+import type {
+  ContentBlock,
+  ConverseStreamResponse,
+  ConversationRole,
+  Message,
+  TokenUsage
+} from '@aws-sdk/client-bedrock-runtime';
 
 type JsonObject = Record<string, unknown>;
 
@@ -33,13 +39,13 @@ export async function readConverseStream(
   { onTextDelta }: ReadConverseStreamOptions = {}
 ) {
   const blocks = new Map<number, StreamBlock>();
-  const message: { role: string; content: Array<{ text: string } | { toolUse: JsonObject }> } = {
+  const message: Message = {
     role: 'assistant',
     content: []
   };
   let text = '';
   let stopReason = '';
-  let usage = {};
+  let usage: TokenUsage | undefined;
   let trace = {};
 
   const blockFor = (index: number): StreamBlock => {
@@ -49,7 +55,7 @@ export async function readConverseStream(
 
   for await (const event of response.stream || []) {
     if (event.messageStart?.role) {
-      message.role = event.messageStart.role;
+      message.role = event.messageStart.role as ConversationRole;
       continue;
     }
 
@@ -108,7 +114,7 @@ export async function readConverseStream(
       }
       return { text: block.text || '' };
     })
-    .filter((block) => block.toolUse || block.text);
+    .filter((block) => block.toolUse || block.text) as ContentBlock[];
 
   return { message, text: text.trim(), stopReason, usage, trace };
 }
