@@ -1,14 +1,61 @@
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import MarkdownIt from 'markdown-it';
+import type Token from 'markdown-it/lib/token.mjs';
 import { bedrock, s3, advancedModel } from './aws-clients.mjs';
 import { tinylyticsPixelHtml } from './tinylytics-email.mjs';
+import type { DispatchRecord } from './dispatch-store.mjs';
 
 const MAX_SOURCE_PACKETS = 18;
 const TOKEN_RE = /[a-z0-9][a-z0-9'-]{1,}/gi;
 const THINGY_URL = 'https://thingy.thingelstad.com/';
 
-let corpusCache = null;
+type JsonRecord = Record<string, unknown>;
+
+export interface DispatchSource extends JsonRecord {
+  id: string;
+  label: string;
+  title: string;
+  url: string;
+  source_kind: string;
+  publish_date: string;
+  excerpt: string;
+}
+
+interface ArchiveChunk extends JsonRecord {
+  source_kind: string;
+  issue_number: string | number;
+  episode_number: string | number;
+  title: string;
+  label: string;
+  publish_date: string;
+  url: string;
+  section: string;
+  topics: string[];
+  text: string;
+  score?: number;
+}
+
+interface DispatchSection {
+  heading: string;
+  body: string;
+}
+
+export interface DispatchPayload {
+  subject: string;
+  preview: string;
+  title: string;
+  intro: string;
+  sections: DispatchSection[];
+  closing: string;
+  followups: string[];
+}
+
+function objectValue(value: unknown): JsonRecord {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as JsonRecord) : {};
+}
+
+let corpusCache: ArchiveChunk[] | null = null;
 
 const dispatchMarkdown = new MarkdownIt({
   html: false,
@@ -17,30 +64,35 @@ const dispatchMarkdown = new MarkdownIt({
   breaks: false
 });
 
-function withAttrs(tokens, idx, attrs = {}) {
+function withAttrs(tokens: Token[], idx: number, attrs: Record<string, string> = {}) {
   for (const [key, value] of Object.entries(attrs)) tokens[idx].attrSet(key, value);
   return dispatchMarkdown.renderer.renderToken(tokens, idx, {});
 }
 
-dispatchMarkdown.renderer.rules.paragraph_open = (tokens, idx) => withAttrs(tokens, idx, {
-  style: 'font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;'
-});
+dispatchMarkdown.renderer.rules.paragraph_open = (tokens, idx) =>
+  withAttrs(tokens, idx, {
+    style: 'font-size:17px;line-height:1.6;margin:0 0 18px;color:#14181f;'
+  });
 
-dispatchMarkdown.renderer.rules.bullet_list_open = (tokens, idx) => withAttrs(tokens, idx, {
-  style: 'padding-left:24px;margin:0 0 18px;color:#14181f;font-size:17px;line-height:1.6;'
-});
+dispatchMarkdown.renderer.rules.bullet_list_open = (tokens, idx) =>
+  withAttrs(tokens, idx, {
+    style: 'padding-left:24px;margin:0 0 18px;color:#14181f;font-size:17px;line-height:1.6;'
+  });
 
-dispatchMarkdown.renderer.rules.ordered_list_open = (tokens, idx) => withAttrs(tokens, idx, {
-  style: 'padding-left:24px;margin:0 0 18px;color:#14181f;font-size:17px;line-height:1.6;'
-});
+dispatchMarkdown.renderer.rules.ordered_list_open = (tokens, idx) =>
+  withAttrs(tokens, idx, {
+    style: 'padding-left:24px;margin:0 0 18px;color:#14181f;font-size:17px;line-height:1.6;'
+  });
 
-dispatchMarkdown.renderer.rules.list_item_open = (tokens, idx) => withAttrs(tokens, idx, {
-  style: 'margin:0 0 8px;'
-});
+dispatchMarkdown.renderer.rules.list_item_open = (tokens, idx) =>
+  withAttrs(tokens, idx, {
+    style: 'margin:0 0 8px;'
+  });
 
-dispatchMarkdown.renderer.rules.blockquote_open = (tokens, idx) => withAttrs(tokens, idx, {
-  style: 'border-left:4px solid #d8e1dd;margin:0 0 18px;padding:0 0 0 16px;color:#4a5565;'
-});
+dispatchMarkdown.renderer.rules.blockquote_open = (tokens, idx) =>
+  withAttrs(tokens, idx, {
+    style: 'border-left:4px solid #d8e1dd;margin:0 0 18px;padding:0 0 0 16px;color:#4a5565;'
+  });
 
 dispatchMarkdown.renderer.rules.heading_open = (tokens, idx) => {
   const level = tokens[idx].tag === 'h2' ? '20px' : '18px';
@@ -54,15 +106,17 @@ dispatchMarkdown.renderer.rules.link_open = (tokens, idx) => {
   return dispatchMarkdown.renderer.renderToken(tokens, idx, {});
 };
 
-dispatchMarkdown.renderer.rules.code_inline = (tokens, idx) => (
-  `<code style="font-family:Menlo,Consolas,monospace;font-size:.92em;background:#f1f5f3;border-radius:4px;padding:1px 4px;">${escapeHtml(tokens[idx].content)}</code>`
-);
+dispatchMarkdown.renderer.rules.code_inline = (tokens, idx) =>
+  `<code style="font-family:Menlo,Consolas,monospace;font-size:.92em;background:#f1f5f3;border-radius:4px;padding:1px 4px;">${escapeHtml(tokens[idx].content)}</code>`;
 
-function cleanText(value, max = 1000) {
-  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+function cleanText(value: unknown, max = 1000) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max);
 }
 
-function cleanBlockText(value, max = 5000) {
+function cleanBlockText(value: unknown, max = 5000) {
   const text = Array.isArray(value) ? value.join('\n\n') : String(value || '');
   return text
     .replace(/\r\n?/g, '\n')
@@ -74,14 +128,14 @@ function cleanBlockText(value, max = 5000) {
     .slice(0, max);
 }
 
-export function dispatchSubject(value, fallbackTitle = '') {
+export function dispatchSubject(value: unknown, fallbackTitle = '') {
   const raw = cleanText(value || fallbackTitle || 'From the archive', 110);
   const withoutPrefix = raw.replace(/^(?:thingy\s+)?dispatch\s*[-:\u2014\u2013]\s*/i, '').trim();
   const title = cleanText(withoutPrefix || fallbackTitle || 'From the archive', 88);
   return `Thingy Dispatch — ${title}`;
 }
 
-function escapeHtml(value) {
+function escapeHtml(value: unknown) {
   return String(value || '')
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -89,11 +143,12 @@ function escapeHtml(value) {
     .replaceAll('"', '&quot;');
 }
 
-function escapeRegExp(value) {
+function escapeRegExp(value: unknown) {
   return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function sourceHref(source = {}) {
+function sourceHref(value: unknown) {
+  const source = objectValue(value);
   const url = String(source.url || '').trim();
   if (!url) return '';
   if (/^https?:\/\//i.test(url)) return url;
@@ -102,20 +157,23 @@ function sourceHref(source = {}) {
   return url;
 }
 
-function thingyPromptUrl(prompt) {
+function thingyPromptUrl(prompt: unknown) {
   const url = new URL('/chat/', THINGY_URL);
   url.searchParams.set('prompt', cleanText(prompt, 400));
   return url.toString();
 }
 
-function requestedAtText(value) {
-  const date = value ? new Date(value) : new Date();
+function requestedAtText(value: unknown) {
+  const date = value ? new Date(String(value)) : new Date();
   if (!Number.isFinite(date.getTime())) return String(value || '');
   return `${date.toISOString().slice(0, 16).replace('T', ' ')}Z`;
 }
 
-function tokenize(value) {
-  const words = String(value || '').toLowerCase().match(TOKEN_RE) || [];
+function tokenize(value: unknown) {
+  const words =
+    String(value || '')
+      .toLowerCase()
+      .match(TOKEN_RE) || [];
   const allowedShortTerms = new Set(['ai', 'ar', 'vr', 'xr']);
   return words.filter((word) => word.length > 2 || allowedShortTerms.has(word));
 }
@@ -175,11 +233,11 @@ const DISPATCH_SOURCE_STOPWORDS = new Set([
   'writings'
 ]);
 
-function dispatchQueryTokens(query) {
+function dispatchQueryTokens(query: unknown) {
   return tokenize(query).filter((token) => !DISPATCH_SOURCE_STOPWORDS.has(token));
 }
 
-function tokenVariants(token) {
+function tokenVariants(token: string) {
   const value = String(token || '');
   const variants = new Set([value]);
   if (value.length >= 5 && value.endsWith('ing')) {
@@ -198,7 +256,7 @@ function tokenVariants(token) {
   return variants;
 }
 
-function tokenMatchesQuery(haystackToken, queryToken) {
+function tokenMatchesQuery(haystackToken: string, queryToken: string) {
   if (haystackToken === queryToken) return true;
   const haystackVariants = tokenVariants(haystackToken);
   const queryVariants = tokenVariants(queryToken);
@@ -209,49 +267,60 @@ function tokenMatchesQuery(haystackToken, queryToken) {
   return false;
 }
 
-function sourceKindLabel(kind) {
+function sourceKindLabel(kind: unknown) {
   if (kind === 'weekly_thing') return 'Weekly Thing';
   if (kind === 'blog') return 'Blog';
   if (kind === 'podcast') return 'Another Thing';
   return 'Archive';
 }
 
-function chunkTitle(chunk = {}) {
+function chunkTitle(chunk: JsonRecord) {
   return cleanText(chunk.subject || chunk.title || chunk.episode_title || chunk.section || 'Archive source', 140);
 }
 
-function chunkUrl(chunk = {}) {
+function chunkUrl(chunk: JsonRecord) {
   if (chunk.url) return String(chunk.url);
   if (chunk.issue_number) return `https://weekly.thingelstad.com/archive/${chunk.issue_number}/`;
   return '';
 }
 
-function chunkLabel(chunk = {}) {
+function chunkLabel(chunk: JsonRecord) {
   if (chunk.issue_number) return `WT${chunk.issue_number}`;
   if (chunk.source_kind === 'podcast' && chunk.episode_number) return `Another Thing ${chunk.episode_number}`;
   if (chunk.source_kind === 'blog') return 'Blog';
   return sourceKindLabel(chunk.source_kind);
 }
 
-function normalizeChunk(chunk = {}) {
+function normalizeChunk(value: unknown): ArchiveChunk {
+  const chunk = objectValue(value);
   return {
-    source_kind: String(chunk.source_kind || (chunk.episode_number ? 'podcast' : chunk.issue_number ? 'weekly_thing' : 'blog')),
-    issue_number: chunk.issue_number || '',
-    episode_number: chunk.episode_number || '',
+    source_kind: String(
+      chunk.source_kind || (chunk.episode_number ? 'podcast' : chunk.issue_number ? 'weekly_thing' : 'blog')
+    ),
+    issue_number:
+      typeof chunk.issue_number === 'string' || typeof chunk.issue_number === 'number' ? chunk.issue_number : '',
+    episode_number:
+      typeof chunk.episode_number === 'string' || typeof chunk.episode_number === 'number' ? chunk.episode_number : '',
     title: chunkTitle(chunk),
     label: chunkLabel(chunk),
     publish_date: String(chunk.publish_date || chunk.date || ''),
     url: chunkUrl(chunk),
     section: cleanText(chunk.section || chunk.content_kind || '', 80),
-    topics: Array.isArray(chunk.topics) ? chunk.topics.map((item) => cleanText(item, 40)).filter(Boolean).slice(0, 8) : [],
+    topics: Array.isArray(chunk.topics)
+      ? chunk.topics
+          .map((item) => cleanText(item, 40))
+          .filter(Boolean)
+          .slice(0, 8)
+      : [],
     text: cleanText(chunk.text || chunk.summary || chunk.description || '', 1600)
   };
 }
 
-async function loadJsonFromS3(bucket, key) {
+async function loadJsonFromS3(bucket: string | undefined, key: string) {
   if (!bucket || !key) return null;
   const response = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
-  return JSON.parse(await response.Body.transformToString());
+  if (!response.Body) throw new Error(`Dispatch corpus object ${key} has no body.`);
+  return objectValue(JSON.parse(await response.Body.transformToString()));
 }
 
 export async function loadDispatchCorpus() {
@@ -261,11 +330,12 @@ export async function loadDispatchCorpus() {
     process.env.CORPUS_KEY || 'librarian/corpus.json',
     process.env.BLOG_CORPUS_KEY,
     process.env.PODCAST_CORPUS_KEY
-  ].filter(Boolean);
-  const all = [];
+  ].filter((key): key is string => Boolean(key));
+  const all: ArchiveChunk[] = [];
   for (const key of keys) {
     const corpus = await loadJsonFromS3(bucket, key);
-    for (const chunk of corpus?.chunks || []) {
+    const chunks = Array.isArray(corpus?.chunks) ? corpus.chunks : [];
+    for (const chunk of chunks) {
       const normalized = normalizeChunk(chunk);
       if (normalized.text) all.push(normalized);
     }
@@ -274,7 +344,7 @@ export async function loadDispatchCorpus() {
   return corpusCache;
 }
 
-function scoreChunk(chunk, queryTokens) {
+function scoreChunk(chunk: ArchiveChunk, queryTokens: string[]) {
   const haystack = [
     chunk.title,
     chunk.section,
@@ -304,7 +374,11 @@ function scoreChunk(chunk, queryTokens) {
   return score;
 }
 
-export function selectDispatchSources(chunks = [], query = '', limit = MAX_SOURCE_PACKETS) {
+export function selectDispatchSources(
+  chunks: unknown[] = [],
+  query: unknown = '',
+  limit = MAX_SOURCE_PACKETS
+): DispatchSource[] {
   const queryTokens = Array.from(new Set(dispatchQueryTokens(query)));
   const scored = chunks
     .map((chunk) => normalizeChunk(chunk))
@@ -312,9 +386,9 @@ export function selectDispatchSources(chunks = [], query = '', limit = MAX_SOURC
     .filter((chunk) => chunk.score > 0)
     .sort((a, b) => b.score - a.score || String(b.publish_date).localeCompare(String(a.publish_date)));
 
-  const selected = [];
-  const seenUrls = new Set();
-  const perKind = new Map();
+  const selected: DispatchSource[] = [];
+  const seenUrls = new Set<string>();
+  const perKind = new Map<string, number>();
   for (const chunk of scored) {
     const key = chunk.url || `${chunk.source_kind}:${chunk.title}:${chunk.section}`;
     if (seenUrls.has(key)) continue;
@@ -336,7 +410,7 @@ export function selectDispatchSources(chunks = [], query = '', limit = MAX_SOURC
   return selected;
 }
 
-export function analyzeDispatchSourceFit(chunks = [], query = '', limit = MAX_SOURCE_PACKETS) {
+export function analyzeDispatchSourceFit(chunks: unknown[] = [], query: unknown = '', limit = MAX_SOURCE_PACKETS) {
   const queryTokens = Array.from(new Set(dispatchQueryTokens(query)));
   const scored = chunks
     .map((chunk) => normalizeChunk(chunk))
@@ -351,7 +425,7 @@ export function analyzeDispatchSourceFit(chunks = [], query = '', limit = MAX_SO
   } else if (words.length <= 3 || scored.length >= 34 || (selected.length >= 16 && words.length <= 8)) {
     coverageStatus = 'broad';
   }
-  const perKind = selected.reduce((counts, source) => {
+  const perKind = selected.reduce<Record<string, number>>((counts, source) => {
     counts[source.source_kind] = (counts[source.source_kind] || 0) + 1;
     return counts;
   }, {});
@@ -364,9 +438,9 @@ export function analyzeDispatchSourceFit(chunks = [], query = '', limit = MAX_SO
   };
 }
 
-function fallbackDispatchSources(chunks = [], limit = 8) {
-  const selected = [];
-  const seenUrls = new Set();
+function fallbackDispatchSources(chunks: unknown[] = [], limit = 8): DispatchSource[] {
+  const selected: DispatchSource[] = [];
+  const seenUrls = new Set<string>();
   for (const chunk of chunks.map((item) => normalizeChunk(item))) {
     const key = chunk.url || `${chunk.source_kind}:${chunk.title}:${chunk.section}`;
     if (!chunk.text || seenUrls.has(key)) continue;
@@ -385,13 +459,19 @@ function fallbackDispatchSources(chunks = [], limit = 8) {
   return selected;
 }
 
-function sourcePacketText(sources = []) {
-  return sources.map((source) => [
-    `[${source.id}] ${source.label} · ${source.title}`,
-    source.publish_date ? `Date: ${source.publish_date}` : '',
-    source.url ? `URL: ${source.url}` : '',
-    `Excerpt: ${source.excerpt}`
-  ].filter(Boolean).join('\n')).join('\n\n');
+function sourcePacketText(sources: DispatchSource[] = []) {
+  return sources
+    .map((source) =>
+      [
+        `[${source.id}] ${source.label} · ${source.title}`,
+        source.publish_date ? `Date: ${source.publish_date}` : '',
+        source.url ? `URL: ${source.url}` : '',
+        `Excerpt: ${source.excerpt}`
+      ]
+        .filter(Boolean)
+        .join('\n')
+    )
+    .join('\n\n');
 }
 
 function dispatchSystemPrompt() {
@@ -412,7 +492,7 @@ Rules:
 - Return only JSON.`;
 }
 
-function dispatchUserPrompt({ dispatch, sources }) {
+function dispatchUserPrompt({ dispatch, sources }: { dispatch: DispatchRecord; sources: DispatchSource[] }) {
   const brief = dispatchBriefForPrompt(dispatch.brief);
   return [
     `Reader request: ${dispatch.prompt || dispatch.topic}`,
@@ -434,11 +514,14 @@ function dispatchUserPrompt({ dispatch, sources }) {
     '  "closing": "short closing from Thingy",',
     '  "followups": ["question to continue in Thingy"]',
     '}'
-  ].filter(Boolean).join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 }
 
-function dispatchBriefForPrompt(brief) {
-  if (!brief || typeof brief !== 'object' || Array.isArray(brief)) return '';
+function dispatchBriefForPrompt(value: unknown) {
+  const brief = objectValue(value);
+  if (!Object.keys(brief).length) return '';
   const compact = {
     user_goal: cleanText(brief.user_goal, 400),
     working_angle: cleanText(brief.working_angle, 500),
@@ -446,74 +529,98 @@ function dispatchBriefForPrompt(brief) {
     generation_instructions: cleanBlockText(brief.generation_instructions, 900),
     preheader_basis: cleanText(brief.preheader_basis, 240),
     excluded_scope: Array.isArray(brief.excluded_scope)
-      ? brief.excluded_scope.map((item) => cleanText(item, 160)).filter(Boolean).slice(0, 6)
+      ? brief.excluded_scope
+          .map((item) => cleanText(item, 160))
+          .filter(Boolean)
+          .slice(0, 6)
       : [],
     selected_sources: Array.isArray(brief.selected_sources)
-      ? brief.selected_sources.slice(0, 10).map((source) => ({
-        label: cleanText(source?.label, 60),
-        title: cleanText(source?.title, 180),
-        url: cleanText(source?.url, 500),
-        source_kind: cleanText(source?.source_kind, 40),
-        why: cleanText(source?.why, 220)
-      }))
+      ? brief.selected_sources.slice(0, 10).map((value) => {
+          const source = objectValue(value);
+          return {
+            label: cleanText(source.label, 60),
+            title: cleanText(source.title, 180),
+            url: cleanText(source.url, 500),
+            source_kind: cleanText(source.source_kind, 40),
+            why: cleanText(source.why, 220)
+          };
+        })
       : []
   };
   return JSON.stringify(compact);
 }
 
-function prioritizeBriefSources(sources = [], brief = {}) {
-  const planned = Array.isArray(brief?.selected_sources) ? brief.selected_sources : [];
+function prioritizeBriefSources(sources: DispatchSource[] = [], value: unknown = {}): DispatchSource[] {
+  const brief = objectValue(value);
+  const planned = Array.isArray(brief.selected_sources) ? brief.selected_sources : [];
   if (!planned.length) return sources;
   const keys = new Set();
-  for (const source of planned) {
-    const url = cleanText(source?.url, 500).toLowerCase();
-    const title = cleanText(source?.title, 180).toLowerCase();
+  for (const value of planned) {
+    const source = objectValue(value);
+    const url = cleanText(source.url, 500).toLowerCase();
+    const title = cleanText(source.title, 180).toLowerCase();
     if (url) keys.add(`url:${url}`);
     if (title) keys.add(`title:${title}`);
   }
   if (!keys.size) return sources;
-  return [...sources].sort((a, b) => {
-    const aHit = keys.has(`url:${cleanText(a.url, 500).toLowerCase()}`) || keys.has(`title:${cleanText(a.title, 180).toLowerCase()}`);
-    const bHit = keys.has(`url:${cleanText(b.url, 500).toLowerCase()}`) || keys.has(`title:${cleanText(b.title, 180).toLowerCase()}`);
-    return Number(bHit) - Number(aHit);
-  }).map((source, index) => ({ ...source, id: `S${index + 1}` }));
+  return [...sources]
+    .sort((a, b) => {
+      const aHit =
+        keys.has(`url:${cleanText(a.url, 500).toLowerCase()}`) ||
+        keys.has(`title:${cleanText(a.title, 180).toLowerCase()}`);
+      const bHit =
+        keys.has(`url:${cleanText(b.url, 500).toLowerCase()}`) ||
+        keys.has(`title:${cleanText(b.title, 180).toLowerCase()}`);
+      return Number(bHit) - Number(aHit);
+    })
+    .map((source, index) => ({ ...source, id: `S${index + 1}` }));
 }
 
-export function dispatchTemplateTestPayload(dispatch, sources = []) {
+export function dispatchTemplateTestPayload(
+  dispatch: Pick<DispatchRecord, 'direction' | 'prompt' | 'topic'>,
+  sources: DispatchSource[] = []
+): DispatchPayload {
   const topic = cleanText(dispatch.direction || dispatch.prompt || dispatch.topic || 'Dispatch template test', 180);
-  const refs = sources.slice(0, 6).map((source) => `[${source.id}]`).join(', ');
+  const refs = sources
+    .slice(0, 6)
+    .map((source) => `[${source.id}]`)
+    .join(', ');
   const primaryRefs = refs || '[S1]';
-  return normalizeDispatchPayload({
-    subject: `Thingy Dispatch — ${topic}`,
-    preview: 'A low-cost Thingy Dispatch template test using placeholder copy and real archive source metadata.',
-    title: topic,
-    intro: [
-      'This is a Thingy Dispatch template test. It intentionally does not contain generated long-form Dispatch writing.',
-      `The goal is to exercise the real queue, delivery, storage, and email rendering path while using placeholder copy. Source references such as ${primaryRefs} are included so link rendering and source styling can be reviewed.`
-    ].join('\n\n'),
-    sections: [
-      {
-        heading: 'Opening Shape',
-        body: `This section stands in for the first substantive Dispatch thread. It should feel like ordinary email body copy, include enough length to exercise paragraph spacing, and carry source references like ${primaryRefs}.`
-      },
-      {
-        heading: 'Archive Thread',
-        body: `This section exists to test the visual rhythm of headings, body text, links, and citations. It is deliberately template copy, not generated analysis. Review margins, type size, source link color, and how repeated paragraphs feel in real email clients. ${primaryRefs}`
-      },
-      {
-        heading: 'Reader Takeaway',
-        body: 'This final section tests the closing cadence before the follow-up block. It should make it easy to spot whether the Dispatch template feels close enough to The Weekly Thing without pretending Jamie wrote or approved the content.'
-      }
-    ],
-    closing: 'Template test complete. This closing exists so the footer boundary and source block can be reviewed without invoking the advanced writing model.',
-    followups: [
-      'What should Thingy make easier to inspect in Dispatch test emails?',
-      'Does the Dispatch template feel too close to, or too far from, The Weekly Thing?'
-    ]
-  }, topic);
+  return normalizeDispatchPayload(
+    {
+      subject: `Thingy Dispatch — ${topic}`,
+      preview: 'A low-cost Thingy Dispatch template test using placeholder copy and real archive source metadata.',
+      title: topic,
+      intro: [
+        'This is a Thingy Dispatch template test. It intentionally does not contain generated long-form Dispatch writing.',
+        `The goal is to exercise the real queue, delivery, storage, and email rendering path while using placeholder copy. Source references such as ${primaryRefs} are included so link rendering and source styling can be reviewed.`
+      ].join('\n\n'),
+      sections: [
+        {
+          heading: 'Opening Shape',
+          body: `This section stands in for the first substantive Dispatch thread. It should feel like ordinary email body copy, include enough length to exercise paragraph spacing, and carry source references like ${primaryRefs}.`
+        },
+        {
+          heading: 'Archive Thread',
+          body: `This section exists to test the visual rhythm of headings, body text, links, and citations. It is deliberately template copy, not generated analysis. Review margins, type size, source link color, and how repeated paragraphs feel in real email clients. ${primaryRefs}`
+        },
+        {
+          heading: 'Reader Takeaway',
+          body: 'This final section tests the closing cadence before the follow-up block. It should make it easy to spot whether the Dispatch template feels close enough to The Weekly Thing without pretending Jamie wrote or approved the content.'
+        }
+      ],
+      closing:
+        'Template test complete. This closing exists so the footer boundary and source block can be reviewed without invoking the advanced writing model.',
+      followups: [
+        'What should Thingy make easier to inspect in Dispatch test emails?',
+        'Does the Dispatch template feel too close to, or too far from, The Weekly Thing?'
+      ]
+    },
+    topic
+  );
 }
 
-export function parseDispatchJson(text) {
+export function parseDispatchJson(text: unknown): JsonRecord | null {
   const raw = String(text || '').trim();
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
   const candidate = fenced ? fenced[1] : (raw.match(/\{[\s\S]*\}/) || [raw])[0];
@@ -525,7 +632,7 @@ export function parseDispatchJson(text) {
   }
 }
 
-function sourceLinkMap(sources = []) {
+function sourceLinkMap(sources: DispatchSource[] = []): Record<string, DispatchSource> {
   return Object.fromEntries(sources.map((source) => [source.id, source]));
 }
 
@@ -533,7 +640,7 @@ function linkStyle() {
   return 'color:#1f6fd6;text-decoration:underline;';
 }
 
-function linkHtml(href, label) {
+function linkHtml(href: unknown, label: unknown) {
   return `<a href="${escapeHtml(href)}" style="${linkStyle()}">${label}</a>`;
 }
 
@@ -542,14 +649,15 @@ function sourceFootnoteNumber(id = '') {
   return match ? match[1] : String(id || '');
 }
 
-function sourceFootnoteHtml(source = {}, id = '') {
-  const label = escapeHtml(sourceFootnoteNumber(source.id || id));
+function sourceFootnoteHtml(source: DispatchSource | undefined, id = '') {
+  const label = escapeHtml(sourceFootnoteNumber(source?.id || id));
   if (!source?.id) return `<strong>${escapeHtml(id)}</strong>`;
   return `<sup style="font-size:11px;line-height:0;vertical-align:super;"><a href="#source-${escapeHtml(source.id)}" style="${linkStyle()}">${label}</a></sup>`;
 }
 
-function sourceMentionPatterns(source = {}) {
-  const patterns = [];
+function sourceMentionPatterns(source: DispatchSource | undefined) {
+  if (!source) return [];
+  const patterns: string[] = [];
   const title = cleanText(source.title || '', 180);
   if (title) patterns.push(escapeRegExp(escapeHtml(title)));
   const label = cleanText(source.label || '', 60);
@@ -564,7 +672,7 @@ function sourceMentionPatterns(source = {}) {
   return Array.from(new Set(patterns.filter(Boolean)));
 }
 
-function linkFirstSourceMention(html, source = {}) {
+function linkFirstSourceMention(html: string, source: DispatchSource | undefined) {
   const href = sourceHref(source);
   if (!href) return { html, linked: false };
   for (const pattern of sourceMentionPatterns(source)) {
@@ -579,7 +687,7 @@ function linkFirstSourceMention(html, source = {}) {
   return { html, linked: false };
 }
 
-function replaceRemainingSourceRefs(html, sources = []) {
+function replaceRemainingSourceRefs(html: string, sources: DispatchSource[] = []) {
   const map = sourceLinkMap(sources);
   return html.replace(/\s*\[(S\d+)\]/g, (match, id) => {
     const source = map[id];
@@ -588,9 +696,11 @@ function replaceRemainingSourceRefs(html, sources = []) {
   });
 }
 
-function inlineDispatchMarkup(text, sources = []) {
+function inlineDispatchMarkup(text: unknown, sources: DispatchSource[] = []) {
   let html = escapeHtml(text);
-  const referencedIds = Array.from(new Set((String(text || '').match(/\[(S\d+)\]/g) || []).map((id) => id.slice(1, -1))));
+  const referencedIds = Array.from(
+    new Set((String(text || '').match(/\[(S\d+)\]/g) || []).map((id) => id.slice(1, -1)))
+  );
   for (const id of referencedIds) {
     const source = sourceLinkMap(sources)[id];
     const linked = linkFirstSourceMention(html, source);
@@ -603,9 +713,11 @@ function inlineDispatchMarkup(text, sources = []) {
     .replace(/(^|[^*])\*([^*\n][^*\n]*?[^*\n])\*(?!\*)/g, '$1<em>$2</em>');
 }
 
-function applyDispatchSourceRefs(html, text, sources = []) {
+function applyDispatchSourceRefs(html: string, text: unknown, sources: DispatchSource[] = []) {
   let next = html;
-  const referencedIds = Array.from(new Set((String(text || '').match(/\[(S\d+)\]/g) || []).map((id) => id.slice(1, -1))));
+  const referencedIds = Array.from(
+    new Set((String(text || '').match(/\[(S\d+)\]/g) || []).map((id) => id.slice(1, -1)))
+  );
   for (const id of referencedIds) {
     const source = sourceLinkMap(sources)[id];
     const linked = linkFirstSourceMention(next, source);
@@ -615,13 +727,14 @@ function applyDispatchSourceRefs(html, text, sources = []) {
   return replaceRemainingSourceRefs(next, sources);
 }
 
-function renderDispatchBlocks(text, sources = []) {
+function renderDispatchBlocks(text: unknown, sources: DispatchSource[] = []) {
   const markdown = cleanBlockText(text, 5000);
   if (!markdown) return '';
   return applyDispatchSourceRefs(dispatchMarkdown.render(markdown), markdown, sources);
 }
 
-function normalizeDispatchPayload(payload = {}, fallbackTopic = '') {
+function normalizeDispatchPayload(value: unknown = {}, fallbackTopic = ''): DispatchPayload {
+  const payload = objectValue(value);
   const sections = Array.isArray(payload.sections) ? payload.sections : [];
   const title = cleanText(payload.title || fallbackTopic || 'Dispatch from Thingy', 140);
   return {
@@ -629,27 +742,38 @@ function normalizeDispatchPayload(payload = {}, fallbackTopic = '') {
     preview: cleanText(payload.preview || '', 220),
     title,
     intro: cleanBlockText(payload.intro || '', 4000),
-    sections: sections.slice(0, 7).map((section, index) => ({
-      heading: cleanText(section?.heading || `Thread ${index + 1}`, 120),
-      body: cleanBlockText(section?.body || '', 5000)
-    })).filter((section) => section.body),
+    sections: sections
+      .slice(0, 7)
+      .map((value, index) => {
+        const section = objectValue(value);
+        return {
+          heading: cleanText(section.heading || `Thread ${index + 1}`, 120),
+          body: cleanBlockText(section.body || '', 5000)
+        };
+      })
+      .filter((section) => section.body),
     closing: cleanBlockText(payload.closing || '', 2000),
     followups: Array.isArray(payload.followups)
-      ? payload.followups.map((item) => cleanText(item, 160)).filter(Boolean).slice(0, 5)
+      ? payload.followups
+          .map((item) => cleanText(item, 160))
+          .filter(Boolean)
+          .slice(0, 5)
       : []
   };
 }
 
-function dispatchRequestLine(context = {}) {
+function dispatchRequestLine(context: JsonRecord = {}) {
   const email = cleanText(context.toEmail || context.to_email || '', 180);
-  const requestedAt = requestedAtText(context.requestedAt || context.requested_at || context.createdAt || context.created_at || '');
+  const requestedAt = requestedAtText(
+    context.requestedAt || context.requested_at || context.createdAt || context.created_at || ''
+  );
   if (email && requestedAt) return `This Thingy Dispatch was requested by ${email} on ${requestedAt}.`;
   if (email) return `This Thingy Dispatch was requested by ${email}.`;
   if (requestedAt) return `This Thingy Dispatch was requested on ${requestedAt}.`;
   return 'This Thingy Dispatch was requested by a Weekly Thing reader.';
 }
 
-function dispatchRequestSummary(context = {}) {
+function dispatchRequestSummary(context: JsonRecord = {}) {
   return cleanBlockText(
     context.requestSummary || context.request_summary || context.direction || context.prompt || context.topic || '',
     520
@@ -660,7 +784,7 @@ function dispatchAttributionText() {
   return `Prepared by Thingy (${THINGY_URL}) from Jamie Thingelstad's published archive. Written by Thingy, not Jamie.`;
 }
 
-function dispatchProvenanceLines(context = {}) {
+function dispatchProvenanceLines(context: JsonRecord = {}) {
   const lines = [dispatchRequestLine(context)];
   const summary = dispatchRequestSummary(context);
   if (summary) lines.push(`Request: ${summary}`);
@@ -668,7 +792,7 @@ function dispatchProvenanceLines(context = {}) {
   return lines;
 }
 
-function dispatchProvenanceHtml(context = {}) {
+function dispatchProvenanceHtml(context: JsonRecord = {}) {
   const request = dispatchRequestLine(context);
   const summary = dispatchRequestSummary(context);
   const attribution = `${request} Prepared by Thingy from Jamie Thingelstad's published archive. Written by Thingy, not Jamie.`;
@@ -678,7 +802,11 @@ function dispatchProvenanceHtml(context = {}) {
   ].join('');
 }
 
-export function dispatchTextEmail(dispatchPayload, sources = [], context = {}) {
+export function dispatchTextEmail(
+  dispatchPayload: DispatchPayload,
+  sources: DispatchSource[] = [],
+  context: JsonRecord = {}
+) {
   const lines = [
     ...dispatchProvenanceLines(context),
     '',
@@ -701,31 +829,47 @@ export function dispatchTextEmail(dispatchPayload, sources = [], context = {}) {
     lines.push('');
   }
   lines.push('Sources:');
-  sources.forEach((source) => lines.push(`- ${source.label} · ${source.title}${sourceHref(source) ? ` — ${sourceHref(source)}` : ''}`));
+  sources.forEach((source) =>
+    lines.push(`- ${source.label} · ${source.title}${sourceHref(source) ? ` — ${sourceHref(source)}` : ''}`)
+  );
   lines.push('', dispatchAttributionText());
   return lines.filter((line, index, all) => line || all[index - 1]).join('\n');
 }
 
-export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
-  const sectionHtml = dispatchPayload.sections.map((section) => `
+export function dispatchHtmlEmail(
+  dispatchPayload: DispatchPayload,
+  sources: DispatchSource[] = [],
+  context: JsonRecord = {}
+) {
+  const sectionHtml = dispatchPayload.sections
+    .map(
+      (section) => `
     <tr><td style="padding:24px 28px 4px;">
       <h2 style="font-family:Charter,'Iowan Old Style','Source Serif 4',Georgia,serif;font-size:24px;line-height:1.25;margin:0 0 12px;color:#14181f;font-weight:500;border-top:1px solid #f0f3f8;padding-top:24px;">${escapeHtml(section.heading)}</h2>
       ${renderDispatchBlocks(section.body, sources)}
-    </td></tr>`).join('');
+    </td></tr>`
+    )
+    .join('');
 
-  const followupHtml = dispatchPayload.followups.length ? `
+  const followupHtml = dispatchPayload.followups.length
+    ? `
     <tr><td style="padding:22px 28px;background:#f7f9fc;border-top:1px solid #e6ebf2;">
       <h2 style="font-family:Charter,'Iowan Old Style','Source Serif 4',Georgia,serif;font-size:21px;line-height:1.2;margin:0 0 10px;color:#14181f;font-weight:500;">Keep Pulling This Thread</h2>
       <ul style="padding-left:22px;margin:0;color:#14181f;font-size:16px;line-height:1.55;">
         ${dispatchPayload.followups.map((item) => `<li style="margin:0 0 8px;"><a href="${escapeHtml(thingyPromptUrl(item))}" style="${linkStyle()}">${inlineDispatchMarkup(item, sources)}</a></li>`).join('')}
       </ul>
-    </td></tr>` : '';
+    </td></tr>`
+    : '';
 
-  const sourcesHtml = sources.map((source) => `
+  const sourcesHtml = sources
+    .map(
+      (source) => `
     <li id="source-${escapeHtml(source.id)}" style="margin:0 0 8px;">
       ${escapeHtml(source.label)} ·
       ${sourceHref(source) ? `<a href="${escapeHtml(sourceHref(source))}" style="${linkStyle()}">${escapeHtml(source.title)}</a>` : escapeHtml(source.title)}
-    </li>`).join('');
+    </li>`
+    )
+    .join('');
   const dispatchId = cleanText(context.dispatchId || context.dispatch_id || '', 120).replace(/[^a-zA-Z0-9._-]+/g, '-');
   const trackingPixelPath = dispatchId ? `/email/thingy/dispatch/${dispatchId}` : '/email/thingy/dispatch';
   const trackingPixel = tinylyticsPixelHtml(trackingPixelPath);
@@ -767,11 +911,16 @@ export function dispatchHtmlEmail(dispatchPayload, sources = [], context = {}) {
 </html>`;
 }
 
-export async function renderDispatch(dispatch) {
+export async function renderDispatch(dispatch: DispatchRecord) {
   const chunks = await loadDispatchCorpus();
-  const brief = dispatch.brief && typeof dispatch.brief === 'object' ? dispatch.brief : {};
+  const brief = objectValue(dispatch.brief);
   const plannedSourceText = Array.isArray(brief.selected_sources)
-    ? brief.selected_sources.map((source) => [source?.title, source?.label, source?.why].filter(Boolean).join(' ')).join(' ')
+    ? brief.selected_sources
+        .map((value) => {
+          const source = objectValue(value);
+          return [source.title, source.label, source.why].filter(Boolean).join(' ');
+        })
+        .join(' ')
     : '';
   const query = [
     dispatch.prompt,
@@ -781,7 +930,9 @@ export async function renderDispatch(dispatch) {
     brief.working_angle,
     brief.generation_instructions,
     plannedSourceText
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
   let sources = prioritizeBriefSources(selectDispatchSources(chunks, query, MAX_SOURCE_PACKETS), brief);
   if (dispatch.template_test && sources.length < 4) {
     sources = fallbackDispatchSources(chunks, 8);
@@ -794,7 +945,8 @@ export async function renderDispatch(dispatch) {
       dispatchId: dispatch.id,
       toEmail: dispatch.to_email,
       requestedAt: dispatch.queued_at || dispatch.created_at,
-      requestSummary: brief.preheader_basis || brief.working_angle || dispatch.direction || dispatch.prompt || dispatch.topic
+      requestSummary:
+        brief.preheader_basis || brief.working_angle || dispatch.direction || dispatch.prompt || dispatch.topic
     };
     const html = dispatchHtmlEmail(payload, sources, deliveryContext);
     const fallbackText = dispatchTextEmail(payload, sources, deliveryContext);
@@ -809,16 +961,21 @@ export async function renderDispatch(dispatch) {
   }
 
   const model = advancedModel();
-  const response = await bedrock.send(new ConverseCommand({
-    modelId: model,
-    system: [{ text: dispatchSystemPrompt() }, { cachePoint: { type: 'default' } }],
-    messages: [{ role: 'user', content: [{ text: dispatchUserPrompt({ dispatch, sources }) }] }],
-    inferenceConfig: {
-      maxTokens: Number(process.env.BEDROCK_DISPATCH_MAX_TOKENS || '4200'),
-      temperature: Number(process.env.BEDROCK_DISPATCH_TEMPERATURE || '0.55')
-    }
-  }));
-  const text = (response.output?.message?.content || []).map((part) => part.text || '').join('\n').trim();
+  const response = await bedrock.send(
+    new ConverseCommand({
+      modelId: model,
+      system: [{ text: dispatchSystemPrompt() }, { cachePoint: { type: 'default' } }],
+      messages: [{ role: 'user', content: [{ text: dispatchUserPrompt({ dispatch, sources }) }] }],
+      inferenceConfig: {
+        maxTokens: Number(process.env.BEDROCK_DISPATCH_MAX_TOKENS || '4200'),
+        temperature: Number(process.env.BEDROCK_DISPATCH_TEMPERATURE || '0.55')
+      }
+    })
+  );
+  const text = (response.output?.message?.content || [])
+    .map((part) => part.text || '')
+    .join('\n')
+    .trim();
   const parsed = parseDispatchJson(text);
   if (!parsed) throw new Error('Dispatch generation returned invalid JSON.');
   const payload = normalizeDispatchPayload(parsed, dispatch.topic || dispatch.prompt);
@@ -826,7 +983,8 @@ export async function renderDispatch(dispatch) {
     dispatchId: dispatch.id,
     toEmail: dispatch.to_email,
     requestedAt: dispatch.queued_at || dispatch.created_at,
-    requestSummary: brief.preheader_basis || brief.working_angle || dispatch.direction || dispatch.prompt || dispatch.topic
+    requestSummary:
+      brief.preheader_basis || brief.working_angle || dispatch.direction || dispatch.prompt || dispatch.topic
   };
   const html = dispatchHtmlEmail(payload, sources, deliveryContext);
   const fallbackText = dispatchTextEmail(payload, sources, deliveryContext);

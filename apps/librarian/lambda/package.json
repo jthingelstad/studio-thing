@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.162",
+    "@types/markdown-it": "^14.1.2",
     "@types/node": "^24.13.3",
     "oxlint": "^1.74.0",
     "prettier": "^3.9.5",
