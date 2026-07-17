@@ -18,22 +18,49 @@
 // have the AWS SDK installed.
 
 import { logEvent } from './logging.mjs';
+import type { AttributeValue, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 
 const TTL_DAYS_DEFAULT = 365;
 
-function dynamoString(value) {
+type DynamoItem = Record<string, AttributeValue>;
+
+interface DiscordConnection {
+  connected?: boolean;
+  username?: string;
+  global_name?: string;
+  display_name?: string;
+  guild_id?: string;
+  connected_at?: string;
+  last_verified_at?: string;
+}
+
+export interface UserMemory {
+  sub?: string;
+  version?: number;
+  first_seen_at?: string;
+  last_seen_at?: string;
+  preferred_name?: string;
+  turn_count?: number;
+  discord_connection?: DiscordConnection | null;
+}
+
+function errorName(error: unknown) {
+  return error instanceof Error ? error.constructor.name : 'Error';
+}
+
+function dynamoString(value: unknown): AttributeValue {
   return { S: String(value ?? '') };
 }
 
-function dynamoNumber(value) {
+function dynamoNumber(value: unknown): AttributeValue {
   return { N: String(Number(value || 0)) };
 }
 
-function memoryKey(sub) {
+function memoryKey(sub: unknown): DynamoItem {
   return { pk: dynamoString(`user#${sub}`), sk: dynamoString('memory') };
 }
 
-function readDiscordConnection(value) {
+function readDiscordConnection(value: AttributeValue | undefined): DiscordConnection | null {
   const item = value?.M || null;
   if (!item) return null;
   const connectedAt = item.connected_at?.S || '';
@@ -51,7 +78,7 @@ function readDiscordConnection(value) {
   };
 }
 
-function writeDiscordConnection(connection = {}) {
+function writeDiscordConnection(connection: DiscordConnection = {}): AttributeValue {
   return {
     M: {
       connected: { BOOL: connection.connected !== false },
@@ -70,10 +97,15 @@ function ttlFromNow() {
   return Math.floor(Date.now() / 1000) + days * 86400;
 }
 
-export function memoryDynamoItem(sub, memory = {}, nowIso = new Date().toISOString(), overrides = {}) {
+export function memoryDynamoItem(
+  sub: unknown,
+  memory: UserMemory = {},
+  nowIso = new Date().toISOString(),
+  overrides: UserMemory = {}
+): DynamoItem {
   const version = Number(overrides.version ?? memory.version ?? 0);
   const discordConnection = overrides.discord_connection ?? memory.discord_connection;
-  const item = {
+  const item: DynamoItem = {
     pk: dynamoString(`user#${sub}`),
     sk: dynamoString('memory'),
     version: dynamoNumber(version),
@@ -89,30 +121,32 @@ export function memoryDynamoItem(sub, memory = {}, nowIso = new Date().toISOStri
 
 // ---------- public API ----------
 
-export async function getUserMemory(sub, options = {}) {
+export async function getUserMemory(sub: unknown, options: { consistent?: boolean } = {}) {
   const tableName = process.env.TABLE_NAME;
   if (!tableName || !sub) return null;
   try {
     const { GetItemCommand } = await import('@aws-sdk/client-dynamodb');
     const { dynamodb } = await import('./aws-clients.mjs');
-    const response = await dynamodb.send(new GetItemCommand({
-      TableName: tableName,
-      Key: memoryKey(sub),
-      ConsistentRead: Boolean(options.consistent)
-    }));
+    const response = await dynamodb.send(
+      new GetItemCommand({
+        TableName: tableName,
+        Key: memoryKey(sub),
+        ConsistentRead: Boolean(options.consistent)
+      })
+    );
     return memoryFromItem(response?.Item, sub);
   } catch (error) {
     logEvent('warning', 'user_memory_read_failed', {
-      error_type: error?.constructor?.name || 'Error'
+      error_type: errorName(error)
     });
     return null;
   }
 }
 
-export function memoryFromItem(item, sub = '') {
+export function memoryFromItem(item: DynamoItem | undefined, sub: unknown = ''): UserMemory | null {
   if (!item) return null;
   return {
-    sub,
+    sub: String(sub || ''),
     version: Number(item.version?.N || 0),
     first_seen_at: item.first_seen_at?.S || '',
     last_seen_at: item.last_seen_at?.S || '',
@@ -123,14 +157,17 @@ export function memoryFromItem(item, sub = '') {
 }
 
 // Record one chat turn. Best-effort — failures don't propagate.
-export async function recordUserTurn(sub, { preferredName } = {}) {
+export async function recordUserTurn(sub: unknown, { preferredName }: { preferredName?: unknown } = {}) {
   const tableName = process.env.TABLE_NAME;
   if (!tableName || !sub) return;
   const start = Date.now();
   try {
     const existing = await getUserMemory(sub);
     const nowIso = new Date().toISOString();
-    const cleanPreferredName = String(preferredName || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    const cleanPreferredName = String(preferredName || '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .slice(0, 80);
     const priorVersion = Number(existing?.version || 0);
     const nextVersion = priorVersion + 1;
     const item = memoryDynamoItem(sub, existing || {}, nowIso, {
@@ -145,18 +182,16 @@ export async function recordUserTurn(sub, { preferredName } = {}) {
     // (or absent for a brand-new row). On contention, log and skip —
     // one lost turn count is better than clobbering a concurrent write.
     try {
-      await dynamodb.send(new PutItemCommand({
-        TableName: tableName,
-        Item: item,
-        ConditionExpression: priorVersion === 0
-          ? 'attribute_not_exists(version)'
-          : 'version = :prior_version',
-        ExpressionAttributeValues: priorVersion === 0
-          ? undefined
-          : { ':prior_version': dynamoNumber(priorVersion) }
-      }));
+      await dynamodb.send(
+        new PutItemCommand({
+          TableName: tableName,
+          Item: item,
+          ConditionExpression: priorVersion === 0 ? 'attribute_not_exists(version)' : 'version = :prior_version',
+          ExpressionAttributeValues: priorVersion === 0 ? undefined : { ':prior_version': dynamoNumber(priorVersion) }
+        })
+      );
     } catch (error) {
-      if (error?.name === 'ConditionalCheckFailedException') {
+      if (error instanceof Error && error.name === 'ConditionalCheckFailedException') {
         logEvent('info', 'user_memory_write_contended', {
           prior_version: priorVersion
         });
@@ -171,68 +206,89 @@ export async function recordUserTurn(sub, { preferredName } = {}) {
     });
   } catch (error) {
     logEvent('warning', 'user_memory_write_failed', {
-      error_type: error?.constructor?.name || 'Error'
+      error_type: errorName(error)
     });
   }
 }
 
-export async function recordUserPreferredName(sub, name) {
+export async function recordUserPreferredName(sub: unknown, name: unknown) {
   const tableName = process.env.TABLE_NAME;
-  const cleanName = String(name || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+  const cleanName = String(name || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .slice(0, 80);
   if (!tableName || !sub || !cleanName) return { ok: false, error: 'Missing memory write context.' };
   const nowIso = new Date().toISOString();
   try {
     const { UpdateItemCommand } = await import('@aws-sdk/client-dynamodb');
     const { dynamodb } = await import('./aws-clients.mjs');
-    const response = await dynamodb.send(new UpdateItemCommand({
-      TableName: tableName,
-      Key: memoryKey(sub),
-      UpdateExpression: [
-        'SET #preferred_name = :preferred_name',
-        '#first_seen_at = if_not_exists(#first_seen_at, :now)',
-        '#last_seen_at = :now',
-        '#ttl = :ttl',
-        '#version = if_not_exists(#version, :zero) + :one'
-      ].join(', '),
-      ExpressionAttributeNames: {
-        '#preferred_name': 'preferred_name',
-        '#first_seen_at': 'first_seen_at',
-        '#last_seen_at': 'last_seen_at',
-        '#ttl': 'ttl',
-        '#version': 'version'
-      },
-      ExpressionAttributeValues: {
-        ':preferred_name': dynamoString(cleanName),
-        ':now': dynamoString(nowIso),
-        ':ttl': dynamoNumber(ttlFromNow()),
-        ':zero': dynamoNumber(0),
-        ':one': dynamoNumber(1)
-      },
-      ReturnValues: 'ALL_NEW'
-    }));
+    const response = await dynamodb.send(
+      new UpdateItemCommand({
+        TableName: tableName,
+        Key: memoryKey(sub),
+        UpdateExpression: [
+          'SET #preferred_name = :preferred_name',
+          '#first_seen_at = if_not_exists(#first_seen_at, :now)',
+          '#last_seen_at = :now',
+          '#ttl = :ttl',
+          '#version = if_not_exists(#version, :zero) + :one'
+        ].join(', '),
+        ExpressionAttributeNames: {
+          '#preferred_name': 'preferred_name',
+          '#first_seen_at': 'first_seen_at',
+          '#last_seen_at': 'last_seen_at',
+          '#ttl': 'ttl',
+          '#version': 'version'
+        },
+        ExpressionAttributeValues: {
+          ':preferred_name': dynamoString(cleanName),
+          ':now': dynamoString(nowIso),
+          ':ttl': dynamoNumber(ttlFromNow()),
+          ':zero': dynamoNumber(0),
+          ':one': dynamoNumber(1)
+        },
+        ReturnValues: 'ALL_NEW'
+      })
+    );
     logEvent('info', 'user_preferred_name_recorded');
     return { ok: true, memory: memoryFromItem(response?.Attributes, sub) };
   } catch (error) {
     logEvent('warning', 'user_preferred_name_write_failed', {
-      error_type: error?.constructor?.name || 'Error'
+      error_type: errorName(error)
     });
     return { ok: false, error: 'Memory write failed.' };
   }
 }
 
-function normalizedDiscordConnection(connection = {}, nowIso = new Date().toISOString()) {
+function normalizedDiscordConnection(
+  connection: DiscordConnection = {},
+  nowIso = new Date().toISOString()
+): DiscordConnection {
   return {
     connected: true,
-    username: String(connection.username || '').trim().slice(0, 80),
-    global_name: String(connection.global_name || '').trim().slice(0, 80),
-    display_name: String(connection.display_name || connection.global_name || connection.username || '').trim().slice(0, 80),
-    guild_id: String(connection.guild_id || '').trim().slice(0, 80),
+    username: String(connection.username || '')
+      .trim()
+      .slice(0, 80),
+    global_name: String(connection.global_name || '')
+      .trim()
+      .slice(0, 80),
+    display_name: String(connection.display_name || connection.global_name || connection.username || '')
+      .trim()
+      .slice(0, 80),
+    guild_id: String(connection.guild_id || '')
+      .trim()
+      .slice(0, 80),
     connected_at: String(connection.connected_at || nowIso),
     last_verified_at: String(connection.last_verified_at || nowIso)
   };
 }
 
-export function discordConnectionMemoryUpdate(tableName, sub, connection = {}, nowIso = new Date().toISOString()) {
+export function discordConnectionMemoryUpdate(
+  tableName: string | undefined,
+  sub: unknown,
+  connection: DiscordConnection = {},
+  nowIso = new Date().toISOString()
+): UpdateItemCommandInput | null {
   if (!tableName || !sub) return null;
   const value = normalizedDiscordConnection(connection, nowIso);
   return {
@@ -262,7 +318,7 @@ export function discordConnectionMemoryUpdate(tableName, sub, connection = {}, n
   };
 }
 
-export async function recordDiscordConnection(sub, connection = {}) {
+export async function recordDiscordConnection(sub: unknown, connection: DiscordConnection = {}) {
   const tableName = process.env.TABLE_NAME;
   const nowIso = new Date().toISOString();
   const params = discordConnectionMemoryUpdate(tableName, sub, connection, nowIso);
@@ -270,15 +326,21 @@ export async function recordDiscordConnection(sub, connection = {}) {
   try {
     const { UpdateItemCommand } = await import('@aws-sdk/client-dynamodb');
     const { dynamodb } = await import('./aws-clients.mjs');
-    const response = await dynamodb.send(new UpdateItemCommand({
-      ...params,
-      ReturnValues: 'ALL_NEW'
-    }));
+    const response = await dynamodb.send(
+      new UpdateItemCommand({
+        ...params,
+        ReturnValues: 'ALL_NEW'
+      })
+    );
     logEvent('info', 'user_discord_connection_recorded');
-    return { ok: true, memory: memoryFromItem(response?.Attributes, sub), discord_connection: normalizedDiscordConnection(connection, nowIso) };
+    return {
+      ok: true,
+      memory: memoryFromItem(response?.Attributes, sub),
+      discord_connection: normalizedDiscordConnection(connection, nowIso)
+    };
   } catch (error) {
     logEvent('warning', 'user_discord_connection_write_failed', {
-      error_type: error?.constructor?.name || 'Error'
+      error_type: errorName(error)
     });
     return { ok: false, error: 'Memory write failed.' };
   }
@@ -288,7 +350,7 @@ export async function recordDiscordConnection(sub, connection = {}) {
 // `returning` flag so the frontend (web or Discord) can welcome them back.
 // The empty arrays are a frozen contract shape: web clients deployed
 // before the synthesized-memory removal still read these keys.
-export function authProfile(memory) {
+export function authProfile(memory: UserMemory | null | undefined) {
   if (!memory) {
     return { returning: false };
   }

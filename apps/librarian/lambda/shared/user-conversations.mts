@@ -1,3 +1,5 @@
+import type { AttributeValue } from '@aws-sdk/client-dynamodb';
+
 export const USER_CONVERSATION_LIMIT = 50;
 export const USER_CONVERSATION_TURN_LIMIT = 80;
 export const MAX_HISTORY_MESSAGES = 8;
@@ -7,51 +9,82 @@ export const MAX_TOOL_TRACE_JSON_CHARS = 16000;
 
 const CONVERSATION_ID_RE = /^[A-Za-z0-9_.:-]{1,96}$/;
 
-export function userConversationPk(subscriberHash) {
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
+type JsonObject = Record<string, unknown>;
+type DynamoItem = Record<string, AttributeValue>;
+
+export interface ConversationTurn {
+  conversation_id?: unknown;
+  request_id?: unknown;
+  created_at?: unknown;
+  scope?: unknown;
+  mode?: unknown;
+  question?: unknown;
+  answer?: unknown;
+  citations?: unknown[];
+  artifact?: JsonObject | null;
+  tool_names?: unknown[];
+  [key: string]: unknown;
+}
+
+function objectValue(value: unknown): JsonObject {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as JsonObject) : {};
+}
+
+export function userConversationPk(subscriberHash: unknown) {
   return `user#${subscriberHash}`;
 }
 
-export function conversationSk(conversationId) {
+export function conversationSk(conversationId: unknown) {
   return `conversation#${conversationId}`;
 }
 
-export function turnSkPrefix(conversationId) {
+export function turnSkPrefix(conversationId: unknown) {
   return `turn#${conversationId}#`;
 }
 
-export function turnSk(conversationId, createdAt, requestId) {
+export function turnSk(conversationId: unknown, createdAt: unknown, requestId: unknown) {
   return `${turnSkPrefix(conversationId)}${createdAt}#${requestId}`;
 }
 
-export function validConversationId(value) {
+export function validConversationId(value: unknown) {
   const text = String(value || '').trim();
   return CONVERSATION_ID_RE.test(text) ? text : '';
 }
 
-export function conversationTitle(question) {
-  const text = String(question || '').replace(/\s+/g, ' ').trim();
+export function conversationTitle(question: unknown) {
+  const text = String(question || '')
+    .replace(/\s+/g, ' ')
+    .trim();
   return text ? text.slice(0, 80) : 'Untitled chat';
 }
 
-export function conversationPreview(question) {
-  return String(question || '').replace(/\s+/g, ' ').trim().slice(0, 160);
+export function conversationPreview(question: unknown) {
+  return String(question || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 160);
 }
 
-export function dynamoString(value) {
+export function dynamoString(value: unknown): AttributeValue {
   return { S: String(value || '') };
 }
 
-export function dynamoNumber(value) {
+export function dynamoNumber(value: unknown): AttributeValue {
   return { N: String(Number(value || 0)) };
 }
 
-export function dynamoList(values, mapper = dynamoString) {
-  return { L: (values || []).map(mapper) };
+export function dynamoList(
+  values: readonly unknown[] = [],
+  mapper: (value: unknown) => AttributeValue = dynamoString
+): AttributeValue {
+  return { L: values.map(mapper) };
 }
 
-export function fromDynamoAttr(av) {
+export function fromDynamoAttr(av: AttributeValue | undefined): JsonValue {
   if (av == null || typeof av !== 'object') return null;
-  if ('S' in av) return av.S;
+  if ('S' in av) return av.S ?? '';
   if ('N' in av) return Number(av.N);
   if ('BOOL' in av) return Boolean(av.BOOL);
   if ('NULL' in av) return null;
@@ -60,8 +93,8 @@ export function fromDynamoAttr(av) {
   return null;
 }
 
-export function preflightDynamoItem(preflight) {
-  const value = preflight && typeof preflight === 'object' ? preflight : {};
+export function preflightDynamoItem(preflight: unknown): AttributeValue {
+  const value = objectValue(preflight);
   return {
     M: {
       action: dynamoString(value.action),
@@ -75,91 +108,109 @@ export function preflightDynamoItem(preflight) {
   };
 }
 
-function boundedText(value, max = 500) {
-  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+function boundedText(value: unknown, max = 500) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max);
 }
 
-function compactSourceRef(source) {
+function compactSourceRef(source: unknown) {
   if (!source || typeof source !== 'object') return null;
+  const value = objectValue(source);
   return {
-    title: boundedText(source.title || source.subject, 160),
-    url: boundedText(source.url, 500),
-    source_kind: boundedText(source.source_kind || source.kind, 40),
-    publish_date: boundedText(source.publish_date, 40),
-    reason: boundedText(source.reason, 240)
+    title: boundedText(value.title || value.subject, 160),
+    url: boundedText(value.url, 500),
+    source_kind: boundedText(value.source_kind || value.kind, 40),
+    publish_date: boundedText(value.publish_date, 40),
+    reason: boundedText(value.reason, 240)
   };
 }
 
-function compactCuriosityMapArtifact(artifact) {
+function compactCuriosityMapArtifact(artifact: JsonObject) {
+  const center = objectValue(artifact.center);
   return {
     kind: 'curiosity_map',
     artifact_version: 1,
     compacted: true,
     title: boundedText(artifact.title, 120),
     scope: boundedText(artifact.scope, 40),
-    center: artifact.center && typeof artifact.center === 'object' ? {
-      id: boundedText(artifact.center.id, 80),
-      label: boundedText(artifact.center.label, 120),
-      kind: boundedText(artifact.center.kind, 40),
-      prompt: boundedText(artifact.center.prompt, 300),
-      why: boundedText(artifact.center.why, 240)
-    } : null,
-    nodes: Array.isArray(artifact.nodes) ? artifact.nodes.slice(0, 8).map((node) => ({
-      id: boundedText(node?.id, 80),
-      label: boundedText(node?.label, 120),
-      kind: boundedText(node?.kind, 40),
-      weight: Number(node?.weight || 0),
-      prompt: boundedText(node?.prompt, 300),
-      why: boundedText(node?.why, 240),
-      source_refs: Array.isArray(node?.source_refs)
-        ? node.source_refs.slice(0, 2).map(compactSourceRef).filter(Boolean)
-        : []
-    })) : [],
-    edges: Array.isArray(artifact.edges) ? artifact.edges.slice(0, 12).map((edge) => ({
-      from: boundedText(edge?.from, 80),
-      to: boundedText(edge?.to, 80),
-      why: boundedText(edge?.why, 240)
-    })) : [],
-    sources: Array.isArray(artifact.sources)
-      ? artifact.sources.slice(0, 5).map(compactSourceRef).filter(Boolean)
+    center:
+      Object.keys(center).length > 0
+        ? {
+            id: boundedText(center.id, 80),
+            label: boundedText(center.label, 120),
+            kind: boundedText(center.kind, 40),
+            prompt: boundedText(center.prompt, 300),
+            why: boundedText(center.why, 240)
+          }
+        : null,
+    nodes: Array.isArray(artifact.nodes)
+      ? artifact.nodes.slice(0, 8).map((node) => {
+          const value = objectValue(node);
+          return {
+            id: boundedText(value.id, 80),
+            label: boundedText(value.label, 120),
+            kind: boundedText(value.kind, 40),
+            weight: Number(value.weight || 0),
+            prompt: boundedText(value.prompt, 300),
+            why: boundedText(value.why, 240),
+            source_refs: Array.isArray(value.source_refs)
+              ? value.source_refs.slice(0, 2).map(compactSourceRef).filter(Boolean)
+              : []
+          };
+        })
       : [],
+    edges: Array.isArray(artifact.edges)
+      ? artifact.edges.slice(0, 12).map((edge) => {
+          const value = objectValue(edge);
+          return {
+            from: boundedText(value.from, 80),
+            to: boundedText(value.to, 80),
+            why: boundedText(value.why, 240)
+          };
+        })
+      : [],
+    sources: Array.isArray(artifact.sources) ? artifact.sources.slice(0, 5).map(compactSourceRef).filter(Boolean) : [],
     prompt: boundedText(artifact.prompt, 300)
   };
 }
 
-export function compactArtifactForStorage(artifact) {
+export function compactArtifactForStorage(artifact: unknown) {
   if (!artifact || typeof artifact !== 'object' || Array.isArray(artifact)) return null;
-  if (artifact.kind === 'curiosity_map') return compactCuriosityMapArtifact(artifact);
+  const value = artifact as JsonObject;
+  if (value.kind === 'curiosity_map') return compactCuriosityMapArtifact(value);
   return {
-    kind: boundedText(artifact.kind || 'artifact', 80),
-    artifact_version: Number(artifact.artifact_version || artifact.version || 1),
+    kind: boundedText(value.kind || 'artifact', 80),
+    artifact_version: Number(value.artifact_version || value.version || 1),
     compacted: true,
-    title: boundedText(artifact.title, 160),
-    summary: boundedText(artifact.summary || artifact.description, 1000)
+    title: boundedText(value.title, 160),
+    summary: boundedText(value.summary || value.description, 1000)
   };
 }
 
-export function artifactJsonForStorage(artifact) {
+export function artifactJsonForStorage(artifact: unknown) {
   if (!artifact || typeof artifact !== 'object' || Array.isArray(artifact)) return '';
+  const value = artifact as JsonObject;
   const full = JSON.stringify(artifact);
   if (full.length <= MAX_ARTIFACT_JSON_CHARS) return full;
   const compact = compactArtifactForStorage(artifact);
   const compactJson = JSON.stringify(compact || {});
   if (compactJson.length <= MAX_ARTIFACT_JSON_CHARS) return compactJson;
   return JSON.stringify({
-    kind: boundedText(artifact.kind || 'artifact', 80),
-    artifact_version: Number(artifact.artifact_version || artifact.version || 1),
+    kind: boundedText(value.kind || 'artifact', 80),
+    artifact_version: Number(value.artifact_version || value.version || 1),
     compacted: true,
-    title: boundedText(artifact.title, 160),
+    title: boundedText(value.title, 160),
     omitted: true
   });
 }
 
-export function artifactDynamoString(artifact) {
+export function artifactDynamoString(artifact: unknown) {
   return dynamoString(artifactJsonForStorage(artifact));
 }
 
-export function boundedJsonForStorage(value, maxChars = MAX_TOOL_TRACE_JSON_CHARS) {
+export function boundedJsonForStorage(value: unknown, maxChars = MAX_TOOL_TRACE_JSON_CHARS) {
   if (value == null) return '';
   try {
     const json = JSON.stringify(value);
@@ -174,11 +225,11 @@ export function boundedJsonForStorage(value, maxChars = MAX_TOOL_TRACE_JSON_CHAR
   }
 }
 
-export function toolTraceDynamoString(trace) {
+export function toolTraceDynamoString(trace: unknown) {
   return dynamoString(boundedJsonForStorage(trace, MAX_TOOL_TRACE_JSON_CHARS));
 }
 
-export function citationDynamoItem(citation) {
+export function citationDynamoItem(citation: JsonObject): AttributeValue {
   return {
     M: {
       issue_number: dynamoString(citation.issue_number),
@@ -191,20 +242,18 @@ export function citationDynamoItem(citation) {
   };
 }
 
-function itemObject(item) {
+function itemObject(item: DynamoItem | undefined): Record<string, JsonValue> {
   return Object.fromEntries(Object.entries(item || {}).map(([key, value]) => [key, fromDynamoAttr(value)]));
 }
 
-export function conversationSummaryFromItem(item) {
+export function conversationSummaryFromItem(item: DynamoItem | undefined) {
   const o = itemObject(item);
   const id = o.conversation_id || String(o.sk || '').replace(/^conversation#/, '');
   const tags = Array.isArray(o.tags) ? o.tags : [];
   const evalFlags = Array.isArray(o.eval_flags) ? o.eval_flags : [];
   const evalImprovements = Array.isArray(o.eval_improvements) ? o.eval_improvements : [];
   const titleSource = o.title_source || '';
-  const title = titleSource === 'user'
-    ? o.title
-    : (titleSource === 'eval' ? o.title : (o.eval_topic || o.title));
+  const title = titleSource === 'user' ? o.title : titleSource === 'eval' ? o.title : o.eval_topic || o.title;
   return {
     id,
     conversation_id: id,
@@ -213,10 +262,10 @@ export function conversationSummaryFromItem(item) {
     preview: o.preview || '',
     summary: o.summary || '',
     topic: o.topic || '',
-	    tags,
-	    scope: o.scope || 'all',
-	    mode: o.mode || 'thingy',
-	    created_at: o.created_at || '',
+    tags,
+    scope: o.scope || 'all',
+    mode: o.mode || 'thingy',
+    created_at: o.created_at || '',
     updated_at: o.updated_at || o.created_at || '',
     last_message_at: o.last_message_at || o.updated_at || '',
     last_request_id: o.last_request_id || '',
@@ -236,7 +285,7 @@ export function conversationSummaryFromItem(item) {
   };
 }
 
-export function conversationTurnFromItem(item) {
+export function conversationTurnFromItem(item: DynamoItem | undefined): ConversationTurn {
   const o = itemObject(item);
   let artifact = null;
   if (typeof o.artifact_json === 'string' && o.artifact_json) {
@@ -251,9 +300,9 @@ export function conversationTurnFromItem(item) {
     conversation_id: o.conversation_id || '',
     request_id: o.request_id || '',
     created_at: o.created_at || '',
-	    scope: o.scope || 'all',
-	    mode: o.mode || 'thingy',
-	    question: o.question || '',
+    scope: o.scope || 'all',
+    mode: o.mode || 'thingy',
+    question: o.question || '',
     answer: o.answer || '',
     question_chars: Number(o.question_chars || 0),
     answer_chars: Number(o.answer_chars || 0),
@@ -269,22 +318,23 @@ export function conversationTurnFromItem(item) {
     stop_reason: o.stop_reason || '',
     tool_count: Number(o.tool_count || 0),
     tool_names: Array.isArray(o.tool_names) ? o.tool_names : [],
-    tool_trace: typeof o.tool_trace_json === 'string' && o.tool_trace_json
-      ? (() => {
-        try {
-          const parsed = JSON.parse(o.tool_trace_json);
-          return parsed && typeof parsed === 'object' ? parsed : null;
-        } catch {
-          return null;
-        }
-      })()
-      : null,
+    tool_trace:
+      typeof o.tool_trace_json === 'string' && o.tool_trace_json
+        ? (() => {
+            try {
+              const parsed = JSON.parse(o.tool_trace_json);
+              return parsed && typeof parsed === 'object' ? parsed : null;
+            } catch {
+              return null;
+            }
+          })()
+        : null,
     artifact
   };
 }
 
-export function messagesFromTurns(turns = []) {
-  const messages = [];
+export function messagesFromTurns(turns: ConversationTurn[] = []) {
+  const messages: Array<Record<string, unknown>> = [];
   for (const turn of [...turns].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))) {
     if (turn.question) {
       messages.push({
@@ -320,15 +370,21 @@ export function messagesFromTurns(turns = []) {
   return messages;
 }
 
-export function historyFromTurns(turns = [], options = {}) {
+export function historyFromTurns(
+  turns: ConversationTurn[] = [],
+  options: { maxMessages?: number; maxChars?: number } = {}
+) {
   const maxMessages = Number(options.maxMessages || MAX_HISTORY_MESSAGES);
   const maxChars = Number(options.maxChars || MAX_HISTORY_CHARS);
   const messages = messagesFromTurns(turns);
   let chars = 0;
-  const result = [];
+  const result: Array<{ role: 'user' | 'assistant'; content: string }> = [];
   for (const item of messages.slice(-maxMessages).reverse()) {
     const role = item.role === 'assistant' ? 'assistant' : item.role === 'user' ? 'user' : '';
-    const content = String(item.content || '').trim().replace(/\s+/g, ' ').slice(0, 700);
+    const content = String(item.content || '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .slice(0, 700);
     if (!role || !content) continue;
     chars += content.length;
     if (chars > maxChars) break;
