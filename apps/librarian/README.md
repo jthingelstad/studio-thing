@@ -36,7 +36,7 @@ apps/librarian/
 
 ## Deploy
 
-Always via `make librarian-deploy` or `venv/bin/python pipeline/deploy/aws.py`.
+Always via `make librarian-deploy` or `uv run --locked python pipeline/deploy/aws.py`.
 The deploy script needs the repo virtualenv packages (`boto3`, `python-dotenv`,
 etc.); plain system `python`/`python3` may fail.
 

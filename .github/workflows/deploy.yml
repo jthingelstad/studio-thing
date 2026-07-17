@@ -18,7 +18,8 @@ on:
       - 'librarian-core/**'
       - 'apps/librarian/**'
       - '.github/workflows/deploy.yml'
-      - 'requirements.txt'
+      - 'pyproject.toml'
+      - 'uv.lock'
   workflow_dispatch:
     inputs:
       push_to_weekly:
@@ -41,10 +42,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v7
         with:
-          python-version: '3.14'
-          cache: 'pip'
+          enable-cache: true
 
       - uses: actions/setup-node@v6
         with:
@@ -52,7 +52,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: apps/librarian/lambda/package-lock.json
 
-      - run: pip install -r requirements.txt
+      - run: uv sync --locked --no-dev
+      - run: echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Lint
         run: ruff check .
@@ -96,7 +97,8 @@ jobs:
 
           shared_corpus=false
           if has_change \
-            '^requirements\.txt$' \
+            '^pyproject\.toml$' \
+            '^uv\.lock$' \
             '^librarian-core/' \
             '^pipeline/deploy/upload_corpus\.py$'; then
             shared_corpus=true

@@ -14,7 +14,7 @@ AWS deploy tooling for the Thingy Lambda stack. No README — this directory is 
 
 ## Invocation
 
-Always via `make librarian-deploy` or `venv/bin/python pipeline/deploy/aws.py`.
+Always via `make librarian-deploy` or `uv run --locked python pipeline/deploy/aws.py`.
 The deploy script requires the repo virtualenv packages (`boto3`,
 `python-dotenv`, etc.); plain system `python`/`python3` may fail.
 
@@ -26,7 +26,7 @@ make librarian-deploy ARGS="--skip-corpus-upload"
 make librarian-deploy
 
 # Direct equivalent when bypassing make
-venv/bin/python pipeline/deploy/aws.py --skip-corpus-upload
+uv run --locked python pipeline/deploy/aws.py --skip-corpus-upload
 ```
 
 The `--skip-corpus-upload` flag is the default for any **code-only** change (Lambda code, CloudFormation tweaks, env-var changes). Full corpus reupload refreshes **Weekly Thing + blog + podcast** and is **slow/paid**. Each source-specific uploader reuses embeddings from the previously deployed S3 artifact when chunk ids match. Only do a full deploy when:

@@ -15,8 +15,8 @@ fires one Micropub ``replace.content`` update per modified post.
 
 Run from the repo root:
 
-    venv/bin/python -m pipeline.one-shot.backfill_microblog_alts            # dry-run
-    venv/bin/python -m pipeline.one-shot.backfill_microblog_alts --apply    # writes
+    uv run --locked python -m pipeline.one-shot.backfill_microblog_alts            # dry-run
+    uv run --locked python -m pipeline.one-shot.backfill_microblog_alts --apply    # writes
 
 Default behaviour is a dry-run — shows the proposed splices for every
 post and exits without writing. ``--apply`` actually POSTs the updates.

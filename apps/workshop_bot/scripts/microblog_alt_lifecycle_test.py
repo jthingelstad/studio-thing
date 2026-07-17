@@ -24,7 +24,7 @@ crash, because step 7 runs in a `finally` block.
 
 Requires ``MICROBLOG_API_KEY`` in env. Run from the repo root:
 
-    venv/bin/python -m apps.workshop_bot.scripts.microblog_alt_lifecycle_test
+    uv run --locked python -m apps.workshop_bot.scripts.microblog_alt_lifecycle_test
 """
 
 from __future__ import annotations

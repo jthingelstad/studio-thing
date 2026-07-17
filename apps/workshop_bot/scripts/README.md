@@ -12,14 +12,14 @@ apps/workshop_bot/scripts/admin.sh start     # launchctl bootstrap
 apps/workshop_bot/scripts/admin.sh stop      # launchctl bootout
 apps/workshop_bot/scripts/admin.sh restart
 apps/workshop_bot/scripts/admin.sh status
-apps/workshop_bot/scripts/admin.sh upgrade   # stop → git pull → pip install -r → start
+apps/workshop_bot/scripts/admin.sh upgrade   # stop → fast-forward → uv sync --locked → start
 apps/workshop_bot/scripts/admin.sh backup    # invokes backup_db.py
 apps/workshop_bot/scripts/admin.sh tail      # tail -F logs/workshop.{log,err}
 ```
 
-The plist runs `python -m apps.workshop_bot.bot` with the repo root as working directory.
+The plist runs `.venv/bin/python -m apps.workshop_bot.bot` with the repo root as working directory.
 
-**Venv resolution** — `admin.sh` looks (in order) at `$WORKSHOP_VENV`, `<repo>/venv`, `apps/workshop_bot/venv`. If none exists, `install` and `upgrade` print the create-venv command and exit.
+**Environment** — `admin.sh` uses the uv-managed `<repo>/.venv` exclusively.
 
 **Logs** land at `apps/workshop_bot/logs/workshop.log` and `workshop.err` (gitignored).
 
@@ -53,8 +53,7 @@ python apps/workshop_bot/scripts/clean.py --db   # also remove apps/workshop_bot
 
 ```bash
 # from the repo root
-python3 -m venv venv
-venv/bin/pip install -r requirements.txt
+uv sync --locked --no-dev
 
 # .env should already be at the repo root with bot tokens / API keys
 apps/workshop_bot/scripts/admin.sh install

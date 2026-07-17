@@ -6,7 +6,7 @@ a circular "W" mark above the wordmark in serif italic.
 
 Run from the repo root:
 
-    source venv/bin/activate
+    uv sync --locked
     python pipeline/audio/generate_cover.py
 """
 

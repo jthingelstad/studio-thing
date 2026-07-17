@@ -25,9 +25,9 @@ long-running daemons pick up schema edits without a restart.
 
 Operator surface — from the repo root::
 
-    venv/bin/python -m apps.workshop_bot.tools.db.migrations status
-    venv/bin/python -m apps.workshop_bot.tools.db.migrations pending
-    venv/bin/python -m apps.workshop_bot.tools.db.migrations apply
+    uv run --locked python -m apps.workshop_bot.tools.db.migrations status
+    uv run --locked python -m apps.workshop_bot.tools.db.migrations pending
+    uv run --locked python -m apps.workshop_bot.tools.db.migrations apply
 """
 
 from __future__ import annotations

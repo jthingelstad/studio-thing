@@ -12,7 +12,7 @@ or ``absolute_url`` — those get filed when they actually ship via
 
 Usage::
 
-    venv/bin/python pipeline/one-shot/backfill_issues_data_layer.py
+    uv run --locked python pipeline/one-shot/backfill_issues_data_layer.py
 
 The companion live-issue path is ``apps/workshop_bot/jobs/put_to_bed.py``;
 they share field-extraction helpers via the ``archive_lookup`` /

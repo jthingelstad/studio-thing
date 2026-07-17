@@ -79,7 +79,7 @@ garden concepts without an explicit product decision.
 Use the repo-local virtualenv:
 
 ```sh
-venv/bin/python -m unittest discover -s apps/workshop_bot/tests -t .
+uv run --locked python -m unittest discover -s apps/workshop_bot/tests -t .
 ```
 
-Do not assume `python`, `python3`, or `.venv/` are available here.
+Use uv from the repo root; do not use bare `python`, `python3`, or pip-managed environments.

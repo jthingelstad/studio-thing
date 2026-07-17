@@ -1,0 +1,37 @@
+[project]
+name = "studio-thing"
+version = "0.0.0"
+description = "Private publishing system for The Weekly Thing"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "anthropic>=0.116.0",
+    "apscheduler>=3.11.3",
+    "beautifulsoup4>=4.15.0",
+    "boto3>=1.40",
+    "discord.py>=2.7.1",
+    "httpx>=0.28.1",
+    "jinja2>=3.1",
+    "librarian-core",
+    "lxml>=5.0",
+    "markdown>=3.10.2",
+    "openai>=2.43.0",
+    "pillow>=12.3.0",
+    "pydantic>=2.13.4",
+    "python-dotenv>=1.2.2",
+    "pyyaml>=6.0.3",
+    "rank-bm25>=0.2.2",
+    "requests>=2.32",
+    "stripe>=15.3.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1,<10",
+    "ruff>=0.15.20",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+librarian-core = { path = "librarian-core", editable = true }

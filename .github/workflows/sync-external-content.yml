@@ -38,12 +38,12 @@ jobs:
           # workflow. GITHUB_TOKEN pushes do not trigger downstream workflows.
           token: ${{ secrets.STUDIO_PAT_TOKEN || github.token }}
 
-      - uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v7
         with:
-          python-version: '3.14'
-          cache: 'pip'
+          enable-cache: true
 
-      - run: pip install -r requirements.txt
+      - run: uv sync --locked --no-dev
+      - run: echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Ingest thingelstad.com blog from Micro.blog
         env:

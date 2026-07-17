@@ -8,39 +8,37 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSHOP_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPO_ROOT="$(cd "$WORKSHOP_DIR/../.." && pwd)"
 LOG_DIR="$WORKSHOP_DIR/logs"
-
-resolve_venv() {
-    if [ -n "${WORKSHOP_VENV:-}" ] && [ -x "$WORKSHOP_VENV/bin/python" ]; then
-        echo "$WORKSHOP_VENV"
-        return
-    fi
-    if [ -x "$REPO_ROOT/venv/bin/python" ]; then
-        echo "$REPO_ROOT/venv"
-        return
-    fi
-    if [ -x "$WORKSHOP_DIR/venv/bin/python" ]; then
-        echo "$WORKSHOP_DIR/venv"
-        return
-    fi
-    return 1
-}
+VENV="$REPO_ROOT/.venv"
 
 require_venv() {
-    if ! VENV="$(resolve_venv)"; then
-        echo "Error: no Python venv found." >&2
-        echo "  Looked in: \$WORKSHOP_VENV, $REPO_ROOT/venv, $WORKSHOP_DIR/venv" >&2
-        echo "  Create one with:  python3 -m venv $REPO_ROOT/venv && $REPO_ROOT/venv/bin/pip install -r $REPO_ROOT/requirements.txt" >&2
+    if [ ! -x "$VENV/bin/python" ]; then
+        echo "Error: uv project environment not found at $VENV." >&2
+        echo "  Create it with:  cd $REPO_ROOT && uv sync --locked --no-dev" >&2
         exit 1
     fi
-    echo "$VENV"
 }
 
 status() {
-    if launchctl list | grep -q "$LABEL"; then
-        echo "workshop-bot is running."
-    else
+    local details state pid last_exit
+    if ! details="$(launchctl print "gui/$(id -u)/$LABEL" 2>/dev/null)"; then
         echo "workshop-bot is stopped."
+        return
     fi
+    state="$(printf '%s\n' "$details" | awk '$1 == "state" { print $3; exit }')"
+    pid="$(printf '%s\n' "$details" | awk '$1 == "pid" { print $3; exit }')"
+    if [ "$state" = "running" ] && [ -n "$pid" ]; then
+        echo "workshop-bot is running (pid $pid)."
+        return
+    fi
+    last_exit="$(printf '%s\n' "$details" | awk -F'= ' '/last exit code/ { print $2; exit }')"
+    echo "workshop-bot is loaded but not running (state: ${state:-unknown}, last exit: ${last_exit:-unknown})."
+}
+
+require_running() {
+    local details
+    details="$(launchctl print "gui/$(id -u)/$LABEL" 2>/dev/null)" || return 1
+    printf '%s\n' "$details" | grep -q 'state = running' &&
+        printf '%s\n' "$details" | grep -q 'pid = '
 }
 
 stop_bot() {
@@ -60,6 +58,11 @@ start_bot() {
     launchctl bootstrap "gui/$(id -u)" "$PLIST"
     sleep 3
     status
+    if ! require_running; then
+        echo "Error: Workshop Bot failed to reach running state." >&2
+        tail -n 40 "$LOG_DIR/workshop.err" >&2 || true
+        exit 1
+    fi
 }
 
 restart_bot() {
@@ -68,7 +71,7 @@ restart_bot() {
 }
 
 install_bot() {
-    VENV="$(require_venv)"
+    require_venv
     mkdir -p "$LOG_DIR"
     echo "==> Installing launchd plist..."
     echo "    venv:    $VENV"
@@ -115,20 +118,22 @@ PLIST
 }
 
 upgrade_bot() {
-    VENV="$(require_venv)"
+    require_venv
     stop_bot
 
     echo "==> Pulling latest from origin..."
-    (cd "$REPO_ROOT" && git pull origin main)
+    (cd "$REPO_ROOT" && git pull --ff-only origin main)
 
-    echo "==> Updating dependencies..."
-    "$VENV/bin/pip" install -q -r "$REPO_ROOT/requirements.txt"
+    echo "==> Synchronizing locked uv environment..."
+    (cd "$REPO_ROOT" && uv sync --locked --no-dev)
+    uv pip check --python "$VENV/bin/python"
+    "$VENV/bin/python" -c 'import apps.workshop_bot.bot, aiohttp, anthropic, discord'
 
     start_bot
 }
 
 backup_db() {
-    VENV="$(require_venv)"
+    require_venv
     echo "==> Backing up workshop.db..."
     "$VENV/bin/python" "$SCRIPT_DIR/backup_db.py"
 }

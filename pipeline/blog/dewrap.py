@@ -448,7 +448,7 @@ def run(
               flush=True)
     if write and n_written:
         print("\n  micro.blog updated. Local cache is now STALE — refresh it with:\n"
-              "    venv/bin/python pipeline/blog/ingest_blog.py\n"
+              "    uv run --locked python pipeline/blog/ingest_blog.py\n"
               "  then re-embed: npm run librarian:deploy:blog", flush=True)
     return 0
 

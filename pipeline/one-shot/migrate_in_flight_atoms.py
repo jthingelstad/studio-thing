@@ -16,7 +16,7 @@ falls back to root. Until then, dual-read makes both copies safe.
 
 Usage:
 
-    venv/bin/python pipeline/one-shot/migrate_in_flight_atoms.py [--issue N]
+    uv run --locked python pipeline/one-shot/migrate_in_flight_atoms.py [--issue N]
 
 If ``--issue`` is omitted, the active issue from ``workshop.db`` is
 migrated. Idempotent — re-runs only copy atoms that aren't already at

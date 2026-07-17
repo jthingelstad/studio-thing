@@ -56,17 +56,18 @@ and no separate idea-garden workflow.
 
 ## Development
 
-Use the repo-local virtualenv:
+Use the locked uv project environment:
 
 ```sh
-venv/bin/python
-venv/bin/pytest
+uv sync --locked
+uv run --locked python
+uv run --locked pytest
 ```
 
 Run the workshop tests from the repo root:
 
 ```sh
-venv/bin/python -m unittest discover -s apps/workshop_bot/tests -t .
+uv run --locked python -m unittest discover -s apps/workshop_bot/tests -t .
 ```
 
 Before editing, check for user work:

@@ -14,7 +14,7 @@ browser-side secrets. By default it writes to Jamie's Desktop so iCloud can
 sync it to other devices:
 
 ```bash
-venv/bin/python apps/librarian/admin/operator_report.py
+uv run --locked python apps/librarian/admin/operator_report.py
 open ~/Desktop/Thingy\ Operator\ Report.html
 ```
 
@@ -22,13 +22,13 @@ Useful options:
 
 ```bash
 # 30-day report
-venv/bin/python apps/librarian/admin/operator_report.py --days 30
+uv run --locked python apps/librarian/admin/operator_report.py --days 30
 
 # Custom output
-venv/bin/python apps/librarian/admin/operator_report.py --output tmp/thingy-report.html
+uv run --locked python apps/librarian/admin/operator_report.py --output tmp/thingy-report.html
 
 # Override the owner/Jamie label if needed
-venv/bin/python apps/librarian/admin/operator_report.py --owner-email jamie@thingelstad.com
+uv run --locked python apps/librarian/admin/operator_report.py --owner-email jamie@thingelstad.com
 ```
 
 The report includes quality counts, eval flags, explicit feedback, daily
@@ -47,7 +47,7 @@ direction, status, generated subject/title, sources, delivery errors, token
 counts, and stored email content for eval/debugging.
 
 ```bash
-venv/bin/python apps/librarian/admin/dispatch_report.py
+uv run --locked python apps/librarian/admin/dispatch_report.py
 open ~/Desktop/Thingy\ Dispatch\ Report.html
 ```
 

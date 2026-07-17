@@ -1,6 +1,6 @@
 .PHONY: build clean content-build librarian-corpus librarian-corpus-upload librarian-blog-corpus-upload librarian-podcast-import librarian-podcast-corpus librarian-podcast-corpus-upload librarian-corpora-upload librarian-graph librarian-graph-upload librarian-deploy audio audio-issue refresh-copy refresh-copy-dry test test-lambda test-workshop test-workshop-env
 
-PYTHON ?= $(if $(wildcard venv/bin/python),venv/bin/python,python3)
+PYTHON ?= uv run --locked python
 
 librarian-corpus:
 	$(PYTHON) pipeline/corpus/build.py

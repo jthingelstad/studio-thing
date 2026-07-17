@@ -70,16 +70,17 @@ There may be user work in progress. Do not revert unrelated changes.
 
 ## Python environment
 
-This repo uses `venv/`, not `.venv/`.
+This repo uses uv with a locked `.venv/` on Python 3.14.
 
 Use:
 
 ```sh
-venv/bin/python
-venv/bin/pytest
+uv sync --locked
+uv run --locked python
+uv run --locked pytest
 ```
 
-Do not assume `python`, `python3`, or `.venv/bin/activate` will work in this checkout.
+Do not use bare `python`, `python3`, or pip-managed environments in this checkout.
 
 ## Thingy / Librarian
 
@@ -104,7 +105,7 @@ make librarian-deploy ARGS="--skip-corpus-upload"
 Direct equivalent:
 
 ```sh
-venv/bin/python pipeline/deploy/aws.py --skip-corpus-upload
+uv run --locked python pipeline/deploy/aws.py --skip-corpus-upload
 ```
 
 Only do a full corpus deploy when corpus artifacts, embedding schema, or source content

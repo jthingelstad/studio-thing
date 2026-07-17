@@ -24,11 +24,10 @@ campaign work, and proactive slate/garden check-ins.
 
 ```bash
 # from the repo root
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
+uv sync --locked
 cp .env.example .env
 
-python -m apps.workshop_bot.bot
+uv run --locked python -m apps.workshop_bot.bot
 ```
 
 For production use, run under launchd via `scripts/admin.sh` and keep the Mac
@@ -37,7 +36,7 @@ awake so the Discord gateway and web app stay reachable.
 ## Tests
 
 ```bash
-venv/bin/pytest apps/workshop_bot/tests
+uv run --locked pytest apps/workshop_bot/tests
 ```
 
 `make test-workshop-env` loads `.env` first; use only for runtime-config smoke
