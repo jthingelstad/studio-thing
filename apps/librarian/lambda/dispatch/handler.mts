@@ -1,7 +1,12 @@
 import { processDispatchStream } from '../shared/dispatch-worker.mjs';
 import { logEvent } from '../shared/logging.mjs';
+import type { DynamoDBStreamEvent } from 'aws-lambda';
 
-export async function handler(event = {}, context = {}) {
+interface DispatchContext {
+  awsRequestId?: string;
+}
+
+export async function handler(event: DynamoDBStreamEvent = { Records: [] }, context: DispatchContext = {}) {
   const start = performance.now();
   const tableName = process.env.TABLE_NAME;
   if (!tableName) throw new Error('TABLE_NAME is required');
@@ -16,4 +21,3 @@ export async function handler(event = {}, context = {}) {
   logEvent('info', 'dispatch_worker_completed', payload, 'weekly-thing-librarian-dispatch');
   return payload;
 }
-

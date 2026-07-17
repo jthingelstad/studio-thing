@@ -18,16 +18,41 @@ import { analyzeDispatchSourceFit, loadDispatchCorpus } from './dispatch-generat
 const BRIEF_STATUSES = new Set(['draft', 'ready']);
 const COVERAGE_STATUSES = new Set(['thin', 'focused', 'broad', 'ambiguous']);
 
-function cleanText(value, max = 500) {
-  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+type PlannerInput = Record<string, unknown>;
+
+interface PlannerSource extends PlannerInput {
+  id?: unknown;
+  label?: unknown;
+  title?: unknown;
+  url?: unknown;
+  source_kind?: unknown;
+  publish_date?: unknown;
+  why?: unknown;
+  excerpt?: unknown;
+  text?: unknown;
 }
 
-function textArray(value, max = 8, itemMax = 180) {
+function asPlannerInput(value: unknown): PlannerInput {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as PlannerInput) : {};
+}
+
+function cleanText(value: unknown, max = 500) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max);
+}
+
+function textArray(value: unknown, max = 8, itemMax = 180) {
   if (!Array.isArray(value)) return [];
-  return value.map((item) => cleanText(item, itemMax)).filter(Boolean).slice(0, max);
+  return value
+    .map((item) => cleanText(item, itemMax))
+    .filter(Boolean)
+    .slice(0, max);
 }
 
-function normalizeBriefSource(source = {}, index = 0) {
+function normalizeBriefSource(value: unknown, index = 0) {
+  const source = asPlannerInput(value) as PlannerSource;
   return {
     id: cleanText(source.id, 24) || `S${index + 1}`,
     label: cleanText(source.label, 80),
@@ -39,10 +64,14 @@ function normalizeBriefSource(source = {}, index = 0) {
   };
 }
 
-export function normalizePlannerBrief(input = {}) {
+export function normalizePlannerBrief(input: PlannerInput = {}) {
   const sources = Array.isArray(input.selected_sources) ? input.selected_sources : [];
-  const coverage = String(input.coverage_status || '').trim().toLowerCase();
-  const status = String(input.status || '').trim().toLowerCase();
+  const coverage = String(input.coverage_status || '')
+    .trim()
+    .toLowerCase();
+  const status = String(input.status || '')
+    .trim()
+    .toLowerCase();
   return {
     user_goal: cleanText(input.user_goal, 500),
     working_angle: cleanText(input.working_angle, 700),
@@ -58,7 +87,8 @@ export function normalizePlannerBrief(input = {}) {
   };
 }
 
-function fitPacketForModel(source = {}, index = 0) {
+function fitPacketForModel(value: unknown, index = 0) {
+  const source = asPlannerInput(value) as PlannerSource;
   return {
     id: String(source.id || `S${index + 1}`),
     label: cleanText(source.label, 80),
@@ -70,7 +100,7 @@ function fitPacketForModel(source = {}, index = 0) {
   };
 }
 
-async function toolCheckDispatchFit(input = {}) {
+async function toolCheckDispatchFit(input: PlannerInput = {}) {
   const query = cleanText(input.query || input.topic || input.prompt, 1200);
   if (!query) return { error: 'check_dispatch_fit needs a query.' };
   const chunks = await loadDispatchCorpus();
@@ -84,14 +114,15 @@ async function toolCheckDispatchFit(input = {}) {
   };
 }
 
-async function toolUpdateDispatchBrief(input = {}) {
+async function toolUpdateDispatchBrief(input: PlannerInput = {}) {
   const brief = normalizePlannerBrief(input);
   if (!brief.user_goal && !brief.working_angle) {
     return { error: 'update_dispatch_brief needs at least a user_goal or working_angle.' };
   }
   if (brief.status === 'ready' && (brief.coverage_status !== 'focused' || !brief.selected_sources.length)) {
     return {
-      error: 'A ready brief needs focused coverage and at least one selected source. Keep status "draft" or run check_dispatch_fit and narrow the angle first.',
+      error:
+        'A ready brief needs focused coverage and at least one selected source. Keep status "draft" or run check_dispatch_fit and narrow the angle first.',
       brief
     };
   }
@@ -108,7 +139,8 @@ export function dispatchPlannerToolSpecs() {
     {
       toolSpec: {
         name: 'check_dispatch_fit',
-        description: 'Check how well Jamie\'s published archive supports a working Dispatch topic. Returns a coverage status (thin, focused, broad, ambiguous), the candidate match count, the source-kind balance, and the strongest source packets. Call this before making any claim about archive coverage, and again whenever the working angle changes.',
+        description:
+          "Check how well Jamie's published archive supports a working Dispatch topic. Returns a coverage status (thin, focused, broad, ambiguous), the candidate match count, the source-kind balance, and the strongest source packets. Call this before making any claim about archive coverage, and again whenever the working angle changes.",
         inputSchema: {
           json: {
             type: 'object',
@@ -126,14 +158,22 @@ export function dispatchPlannerToolSpecs() {
     {
       toolSpec: {
         name: 'update_dispatch_brief',
-        description: 'Publish the current Dispatch brief so the reader can see the package forming. Call this whenever the plan changes meaningfully, and always once the plan is ready. Set status "ready" only when coverage is focused, sources are selected, and the direction is confirmed with the reader.',
+        description:
+          'Publish the current Dispatch brief so the reader can see the package forming. Call this whenever the plan changes meaningfully, and always once the plan is ready. Set status "ready" only when coverage is focused, sources are selected, and the direction is confirmed with the reader.',
         inputSchema: {
           json: {
             type: 'object',
             properties: {
-              user_goal: { type: 'string', description: 'What the reader wants this Dispatch to do, in one or two sentences.' },
+              user_goal: {
+                type: 'string',
+                description: 'What the reader wants this Dispatch to do, in one or two sentences.'
+              },
               working_angle: { type: 'string', description: 'The confirmed angle the Dispatch will take.' },
-              coverage_status: { type: 'string', enum: ['thin', 'focused', 'broad', 'ambiguous'], description: 'Archive coverage for this angle, from check_dispatch_fit evidence.' },
+              coverage_status: {
+                type: 'string',
+                enum: ['thin', 'focused', 'broad', 'ambiguous'],
+                description: 'Archive coverage for this angle, from check_dispatch_fit evidence.'
+              },
               selected_sources: {
                 type: 'array',
                 description: 'Sources the Dispatch should draw from, taken from check_dispatch_fit packets.',
@@ -155,9 +195,16 @@ export function dispatchPlannerToolSpecs() {
                 items: { type: 'string' },
                 description: 'Angles or material deliberately left out of this Dispatch.'
               },
-              generation_instructions: { type: 'string', description: 'Instructions for the Dispatch writer: angle, emphasis, tone, and how to use the sources.' },
+              generation_instructions: {
+                type: 'string',
+                description: 'Instructions for the Dispatch writer: angle, emphasis, tone, and how to use the sources.'
+              },
               preheader_basis: { type: 'string', description: 'One line the email preheader can be built from.' },
-              status: { type: 'string', enum: ['draft', 'ready'], description: '"draft" while the plan is still moving; "ready" when the reader can lock and generate.' }
+              status: {
+                type: 'string',
+                enum: ['draft', 'ready'],
+                description: '"draft" while the plan is still moving; "ready" when the reader can lock and generate.'
+              }
             },
             required: ['user_goal', 'working_angle', 'coverage_status', 'generation_instructions']
           }
