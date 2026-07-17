@@ -12,22 +12,22 @@ const EMPTY_CORPUS = { version: 0, chunks: [], issues: [], topics: [], links: []
 const SERVICE_NAME = 'weekly-thing-librarian-stream';
 
 export interface CorpusChunk {
-  issue_number?: unknown;
+  issue_number?: string | number | null;
   source_kind?: string;
-  subject?: unknown;
-  publish_date?: unknown;
-  issue_year?: unknown;
-  section?: unknown;
-  url?: unknown;
-  transcript_url?: unknown;
-  audio_url?: unknown;
-  episode_number?: unknown;
-  show?: unknown;
-  topics?: unknown[];
-  domains?: unknown[];
+  subject?: string;
+  publish_date?: string;
+  issue_year?: string | number;
+  section?: string;
+  url?: string;
+  transcript_url?: string;
+  audio_url?: string;
+  episode_number?: string | number;
+  show?: string;
+  topics?: string[];
+  domains?: string[];
   also_in_issues?: unknown;
-  text?: unknown;
-  summary?: unknown;
+  text?: string;
+  summary?: string;
   embedding?: number[];
   age_label?: string;
   retrieval_reason?: string;
