@@ -2,11 +2,32 @@ import crypto from 'node:crypto';
 
 export const DEFAULT_CONVERSATION_MODE = 'thingy';
 
-const MODE_DEFINITIONS = {
+export type ConversationMode = 'thingy' | 'research_guide' | 'thought_partner' | 'trusted_circle' | 'dispatch';
+
+interface ModeDefinition {
+  id: ConversationMode;
+  label: string;
+  description: string;
+  required_entitlement: string;
+  hidden?: boolean;
+}
+
+interface Subscriber {
+  type?: string;
+  tags?: Array<string | { name?: string }>;
+}
+
+interface SubscriberEntitlementInput {
+  email?: unknown;
+  subscriber?: Subscriber | null;
+  status?: unknown;
+}
+
+const MODE_DEFINITIONS: Record<ConversationMode, ModeDefinition> = {
   thingy: {
     id: 'thingy',
     label: 'Thingy',
-    description: 'Explore Jamie Thingelstad\'s published archive with the default archive agent.',
+    description: "Explore Jamie Thingelstad's published archive with the default archive agent.",
     required_entitlement: 'reader'
   },
   research_guide: {
@@ -40,27 +61,31 @@ const MODE_DEFINITIONS = {
 
 const DEFAULT_OWNER_EMAIL = 'jamie@thingelstad.com';
 
-function normalizeEmail(value) {
-  return String(value || '').trim().toLowerCase();
+function normalizeEmail(value: unknown) {
+  return String(value || '')
+    .trim()
+    .toLowerCase();
 }
 
-function emailHash(value) {
+function emailHash(value: unknown) {
   return crypto.createHash('sha256').update(normalizeEmail(value)).digest('hex');
 }
 
-function csv(value) {
+function csv(value: unknown) {
   return String(value || '')
     .split(/[,\s]+/)
     .map((part) => part.trim())
     .filter(Boolean);
 }
 
-export function subscriberTagNames(subscriber) {
+export function subscriberTagNames(subscriber: Subscriber | null | undefined) {
   const tags = Array.isArray(subscriber?.tags) ? subscriber.tags : [];
-  const names = [];
+  const names: string[] = [];
   for (const tag of tags) {
     const name = typeof tag === 'string' ? tag : tag?.name;
-    const clean = String(name || '').trim().toLowerCase();
+    const clean = String(name || '')
+      .trim()
+      .toLowerCase();
     if (clean && !names.includes(clean)) names.push(clean);
   }
   return names;
@@ -72,21 +97,37 @@ export function ownerEmailHashes() {
   return Array.from(new Set([...emails, ...hashes].map((value) => value.toLowerCase())));
 }
 
-export function isOwnerEmail(email) {
+export function isOwnerEmail(email: unknown) {
   return ownerEmailHashes().includes(emailHash(email));
 }
 
-export function isOwnerSubscriberHash(subscriberHash) {
-  return ownerEmailHashes().includes(String(subscriberHash || '').trim().toLowerCase());
+export function isOwnerSubscriberHash(subscriberHash: unknown) {
+  return ownerEmailHashes().includes(
+    String(subscriberHash || '')
+      .trim()
+      .toLowerCase()
+  );
 }
 
-export function entitlementsForSubscriber({ email = '', subscriber = null, status = '' } = {}) {
-  const normalizedStatus = String(status || subscriber?.type || '').trim().toLowerCase();
-  const subscriberType = String(subscriber?.type || '').trim().toLowerCase();
+export function entitlementsForSubscriber({
+  email = '',
+  subscriber = null,
+  status = ''
+}: SubscriberEntitlementInput = {}) {
+  const normalizedStatus = String(status || subscriber?.type || '')
+    .trim()
+    .toLowerCase();
+  const subscriberType = String(subscriber?.type || '')
+    .trim()
+    .toLowerCase();
   const tags = subscriberTagNames(subscriber);
-  const entitlements = new Set(['reader']);
+  const entitlements = new Set<string>(['reader']);
 
-  if (['premium', 'gifted'].includes(normalizedStatus) || ['premium', 'gifted'].includes(subscriberType) || tags.includes('thingy-supporting-member')) {
+  if (
+    ['premium', 'gifted'].includes(normalizedStatus) ||
+    ['premium', 'gifted'].includes(subscriberType) ||
+    tags.includes('thingy-supporting-member')
+  ) {
     entitlements.add('supporting_member');
   }
   if (tags.some((tag) => ['thingy-trusted-circle', 'thingy-family', 'thingy-close-friends'].includes(tag))) {
@@ -101,43 +142,46 @@ export function entitlementsForSubscriber({ email = '', subscriber = null, statu
   return Array.from(entitlements);
 }
 
-export function normalizeConversationMode(value) {
-  const key = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
-  return MODE_DEFINITIONS[key] ? key : DEFAULT_CONVERSATION_MODE;
+export function normalizeConversationMode(value: unknown): ConversationMode {
+  const key = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
+  return key in MODE_DEFINITIONS ? (key as ConversationMode) : DEFAULT_CONVERSATION_MODE;
 }
 
-export function canUseConversationMode(mode, entitlements = []) {
+export function canUseConversationMode(mode: unknown, entitlements: readonly unknown[] = []) {
   const normalized = normalizeConversationMode(mode);
   const required = MODE_DEFINITIONS[normalized]?.required_entitlement || 'reader';
-  return new Set(entitlements || []).has(required);
+  return new Set(entitlements.map((value) => String(value))).has(required);
 }
 
-export function resolveConversationMode(value, entitlements = []) {
+export function resolveConversationMode(value: unknown, entitlements: readonly unknown[] = []) {
   const normalized = normalizeConversationMode(value);
   return canUseConversationMode(normalized, entitlements) ? normalized : DEFAULT_CONVERSATION_MODE;
 }
 
-export function conversationModeDefinition(mode) {
+export function conversationModeDefinition(mode: unknown) {
   return MODE_DEFINITIONS[normalizeConversationMode(mode)] || MODE_DEFINITIONS[DEFAULT_CONVERSATION_MODE];
 }
 
-export function availableConversationModes(entitlements = []) {
+export function availableConversationModes(entitlements: readonly unknown[] = []) {
   return Object.values(MODE_DEFINITIONS)
     .filter((mode) => !mode.hidden && canUseConversationMode(mode.id, entitlements))
     .map((mode) => ({ ...mode }));
 }
 
-export function entitlementContext(entitlements = []) {
-  const values = Array.from(new Set((entitlements || []).map((item) => String(item || '').trim()).filter(Boolean)));
+export function entitlementContext(entitlements: readonly unknown[] = []) {
+  const values = Array.from(new Set(entitlements.map((item) => String(item || '').trim()).filter(Boolean)));
   return values.length ? values : ['reader'];
 }
 
-export function conversationModePrompt(mode) {
+export function conversationModePrompt(mode: unknown) {
   const normalized = normalizeConversationMode(mode);
   if (normalized === 'dispatch') {
     return [
       'Conversation mode: Dispatch Planner.',
-      'The reader is shaping a one-off Thingy Dispatch email built from Jamie\'s published archive. Your goal is to converge on a locked Dispatch brief through a short, honest conversation.',
+      "The reader is shaping a one-off Thingy Dispatch email built from Jamie's published archive. Your goal is to converge on a locked Dispatch brief through a short, honest conversation.",
       'Ground every coverage claim in tool evidence: call check_dispatch_fit with the working topic before asserting what the archive supports, and again whenever the angle changes. Use the other archive tools to inspect specific sources when that helps.',
       'Be honest about coverage. If the archive is thin on the request, say so plainly and propose adjacent directions the sources actually support. Never invent archive support — a Dispatch built from one stray sentence is worse than no Dispatch.',
       'If the topic is broad, ask one narrowing question at a time so generation is not flooded with sources. If the request is already focused, do not invent extra questions.',
@@ -171,7 +215,7 @@ export function conversationModePrompt(mode) {
   if (normalized === 'trusted_circle') {
     return [
       'Conversation mode: Trusted Circle.',
-      'Use a warmer closer-reader tone while staying grounded in Jamie\'s published archive.',
+      "Use a warmer closer-reader tone while staying grounded in Jamie's published archive.",
       'Be comfortable being brief and gently opinionated when the reader asks for a nudge rather than a report.',
       'When recommending one source, ground the recommendation in at least one concrete detail from the source or retrieved evidence; do not rely on the title alone.',
       'Do not assume private facts or privileged access.'

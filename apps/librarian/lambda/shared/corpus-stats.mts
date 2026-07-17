@@ -1,10 +1,45 @@
-export function yearFromPublishDate(value) {
+interface CorpusRecord {
+  publish_date?: unknown;
+  subject?: unknown;
+  title?: unknown;
+  domains?: unknown[];
+  section?: unknown;
+  post_kind?: unknown;
+  source_kind?: unknown;
+  url?: unknown;
+  summary?: unknown;
+  text?: unknown;
+}
+
+interface YearCount {
+  year: number;
+  count: number;
+}
+
+interface YearBucket {
+  year: number;
+  count: number;
+  chunk_count: number;
+  subjectTerms: Map<string, number>;
+  textTerms: Map<string, number>;
+  domains: Map<string, number>;
+  sections: Map<string, number>;
+  samples: Array<{ subject: string; publish_date: string; url: string; section: string }>;
+}
+
+interface YearlyContentOptions {
+  topYearLimit?: number;
+  sampleLimit?: number;
+  chunks?: CorpusRecord[];
+}
+
+export function yearFromPublishDate(value: unknown) {
   const match = String(value || '').match(/\b(?:19|20)\d{2}\b/);
   return match ? Number(match[0]) : 0;
 }
 
-export function countsByPublishYear(records = []) {
-  const counts = new Map();
+export function countsByPublishYear(records: CorpusRecord[] = []) {
+  const counts = new Map<number, number>();
   for (const record of records || []) {
     const year = yearFromPublishDate(record?.publish_date);
     if (!year) continue;
@@ -15,7 +50,7 @@ export function countsByPublishYear(records = []) {
     .map(([year, count]) => ({ year, count }));
 }
 
-export function yearCountSummary(countsByYear = []) {
+export function yearCountSummary(countsByYear: YearCount[] = []) {
   const rows = (countsByYear || [])
     .filter((row) => Number.isFinite(Number(row?.year)) && Number.isFinite(Number(row?.count)))
     .map((row) => ({ year: Number(row.year), count: Number(row.count) }));
@@ -23,56 +58,106 @@ export function yearCountSummary(countsByYear = []) {
   const highestCount = Math.max(...rows.map((row) => row.count));
   const lowestCount = Math.min(...rows.map((row) => row.count));
   return {
-    highest_years: rows
-      .filter((row) => row.count === highestCount)
-      .sort((a, b) => b.year - a.year),
-    lowest_years: rows
-      .filter((row) => row.count === lowestCount)
-      .sort((a, b) => b.year - a.year)
+    highest_years: rows.filter((row) => row.count === highestCount).sort((a, b) => b.year - a.year),
+    lowest_years: rows.filter((row) => row.count === lowestCount).sort((a, b) => b.year - a.year)
   };
 }
 
 const STOPWORDS = new Set([
-  'about', 'after', 'again', 'also', 'and', 'another', 'because', 'before', 'being',
-  'been', 'blog', 'but', 'can', 'could', 'did', 'does', 'doing', 'don', 'from',
-  'had', 'has', 'have', 'into', 'its', 'jamie', 'just', 'like', 'more', 'not',
-  'one', 'our', 'out', 'over', 'post', 'she', 'some', 'than', 'that', 'the',
-  'their', 'there', 'these', 'they', 'thing', 'this', 'was', 'were', 'with',
-  'weekly', 'what', 'when', 'where', 'which', 'while', 'who', 'will', 'would',
-  'you', 'your'
+  'about',
+  'after',
+  'again',
+  'also',
+  'and',
+  'another',
+  'because',
+  'before',
+  'being',
+  'been',
+  'blog',
+  'but',
+  'can',
+  'could',
+  'did',
+  'does',
+  'doing',
+  'don',
+  'from',
+  'had',
+  'has',
+  'have',
+  'into',
+  'its',
+  'jamie',
+  'just',
+  'like',
+  'more',
+  'not',
+  'one',
+  'our',
+  'out',
+  'over',
+  'post',
+  'she',
+  'some',
+  'than',
+  'that',
+  'the',
+  'their',
+  'there',
+  'these',
+  'they',
+  'thing',
+  'this',
+  'was',
+  'were',
+  'with',
+  'weekly',
+  'what',
+  'when',
+  'where',
+  'which',
+  'while',
+  'who',
+  'will',
+  'would',
+  'you',
+  'your'
 ]);
 
-function increment(map, key, amount = 1) {
+function increment(map: Map<string, number>, key: unknown, amount = 1) {
   const normalized = String(key || '').trim();
   if (!normalized) return;
   map.set(normalized, (map.get(normalized) || 0) + amount);
 }
 
-function topCounts(map, key, limit = 8) {
+function topCounts(map: Map<string, number>, key: string, limit = 8) {
   return Array.from(map.entries())
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, limit)
     .map(([name, count]) => ({ [key]: name, count }));
 }
 
-function terms(value, { maxChars = 0 } = {}) {
+function terms(value: unknown, { maxChars = 0 }: { maxChars?: number } = {}): string[] {
   const text = String(value || '');
   const input = maxChars ? text.slice(0, maxChars) : text;
-  return input
-    .toLowerCase()
-    .match(/[a-z][a-z0-9'-]{2,}/g)
-    ?.filter((term) => !STOPWORDS.has(term) && !/^\d+$/.test(term)) || [];
+  return (
+    input
+      .toLowerCase()
+      .match(/[a-z][a-z0-9'-]{2,}/g)
+      ?.filter((term) => !STOPWORDS.has(term) && !/^\d+$/.test(term)) || []
+  );
 }
 
-function subjectTerms(value) {
+function subjectTerms(value: unknown) {
   return terms(value);
 }
 
-function textTerms(value) {
+function textTerms(value: unknown) {
   return Array.from(new Set(terms(value, { maxChars: 1800 })));
 }
 
-function bucketFor(buckets, year) {
+function bucketFor(buckets: Map<number, YearBucket>, year: number): YearBucket {
   if (!buckets.has(year)) {
     buckets.set(year, {
       year,
@@ -85,14 +170,14 @@ function bucketFor(buckets, year) {
       samples: []
     });
   }
-  return buckets.get(year);
+  return buckets.get(year)!;
 }
 
-export function yearlyContentSignals(records = [], options = {}) {
+export function yearlyContentSignals(records: CorpusRecord[] = [], options: YearlyContentOptions = {}) {
   const topYearLimit = Math.max(Number(options.topYearLimit || 40), 1);
   const sampleLimit = Math.max(Number(options.sampleLimit || 4), 0);
   const chunks = Array.isArray(options.chunks) ? options.chunks : [];
-  const buckets = new Map();
+  const buckets = new Map<number, YearBucket>();
   for (const record of records || []) {
     const year = yearFromPublishDate(record?.publish_date);
     if (!year) continue;
@@ -105,10 +190,10 @@ export function yearlyContentSignals(records = [], options = {}) {
     increment(bucket.sections, record.section || record.post_kind || record.source_kind || 'item');
     if (bucket.samples.length < sampleLimit) {
       bucket.samples.push({
-        subject: record.subject || '',
-        publish_date: record.publish_date || '',
-        url: record.url || '',
-        section: record.section || ''
+        subject: String(record.subject || ''),
+        publish_date: String(record.publish_date || ''),
+        url: String(record.url || ''),
+        section: String(record.section || '')
       });
     }
   }

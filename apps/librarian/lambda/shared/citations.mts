@@ -28,23 +28,41 @@
  * never match them. They are always kept (the agent cites these sources by
  * title/link, not number) and appended after the issue citations.
  *
- * @param {Array<{issue_number?: string|number, source_kind?: string, url?: string}>} citations
- * @param {string} answer
- * @param {Map<string, object>|object} issueCatalog optional WT issue metadata keyed by number
- * @returns {Array}
  */
-function isExternalCitation(citation) {
-  return ['blog', 'podcast'].includes(citation?.source_kind) || (citation?.issue_number == null && Boolean(citation?.url));
+export interface Citation {
+  issue_number?: string | number;
+  source_kind?: string;
+  url?: string;
+  subject?: string;
+  publish_date?: string;
+  section?: string;
+  [key: string]: unknown;
 }
 
-function catalogIssue(issueCatalog, issueNumber) {
+interface IssueMetadata {
+  number?: string | number;
+  issue_number?: string | number;
+  subject?: string;
+  publish_date?: string;
+  url?: string;
+}
+
+type IssueCatalog = Map<string | number, IssueMetadata> | Record<string, IssueMetadata> | null;
+
+function isExternalCitation(citation: Citation) {
+  return (
+    ['blog', 'podcast'].includes(citation.source_kind || '') || (citation.issue_number == null && Boolean(citation.url))
+  );
+}
+
+function catalogIssue(issueCatalog: IssueCatalog, issueNumber: string | number): IssueMetadata | null {
   const key = String(issueNumber || '').trim();
   if (!key || !issueCatalog) return null;
   if (issueCatalog instanceof Map) return issueCatalog.get(key) || issueCatalog.get(Number(key)) || null;
   return issueCatalog[key] || null;
 }
 
-function citationFromIssue(issueNumber, issueCatalog) {
+function citationFromIssue(issueNumber: string | number, issueCatalog: IssueCatalog): Citation | null {
   const issue = catalogIssue(issueCatalog, issueNumber);
   if (!issue) return null;
   const number = String(issue.number ?? issue.issue_number ?? issueNumber);
@@ -58,19 +76,23 @@ function citationFromIssue(issueNumber, issueCatalog) {
   };
 }
 
-export function prioritizeCitationsForAnswer(citations, answer, issueCatalog = null) {
-  const external = [];
-  const issueCitations = [];
+export function prioritizeCitationsForAnswer(
+  citations: Citation[],
+  answer: unknown,
+  issueCatalog: IssueCatalog = null
+): Citation[] {
+  const external: Citation[] = [];
+  const issueCitations: Citation[] = [];
   for (const citation of citations) {
     (isExternalCitation(citation) ? external : issueCitations).push(citation);
   }
   const mentioned = [...String(answer || '').matchAll(/(?:WT|#)(\d+)/g)].map((match) => Number(match[1]));
   if (!mentioned.length) return [...issueCitations, ...external];
-  const firstSeen = new Map();
+  const firstSeen = new Map<number, number>();
   mentioned.forEach((issueNumber, index) => {
     if (!firstSeen.has(issueNumber)) firstSeen.set(issueNumber, index);
   });
-  const byIssue = new Map();
+  const byIssue = new Map<number, Citation>();
   for (const citation of issueCitations) {
     const num = Number(citation.issue_number);
     if (!firstSeen.has(num)) continue;
@@ -84,7 +106,7 @@ export function prioritizeCitationsForAnswer(citations, answer, issueCatalog = n
   const orderedIssues = [...byIssue.values()].sort((a, b) => {
     const rankA = firstSeen.get(Number(a.issue_number));
     const rankB = firstSeen.get(Number(b.issue_number));
-    return rankA - rankB;
+    return (rankA ?? Number.MAX_SAFE_INTEGER) - (rankB ?? Number.MAX_SAFE_INTEGER);
   });
   return [...orderedIssues, ...external];
 }
