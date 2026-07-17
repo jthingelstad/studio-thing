@@ -38,7 +38,7 @@ export function yearFromPublishDate(value: unknown) {
   return match ? Number(match[0]) : 0;
 }
 
-export function countsByPublishYear(records: CorpusRecord[] = []) {
+export function countsByPublishYear(records: Array<{ publish_date?: unknown }> = []) {
   const counts = new Map<number, number>();
   for (const record of records || []) {
     const year = yearFromPublishDate(record?.publish_date);

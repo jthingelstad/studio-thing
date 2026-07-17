@@ -3,16 +3,77 @@ import { countsByPublishYear, yearCountSummary, yearFromPublishDate } from './co
 const TOKEN_RE = /[a-z0-9][a-z0-9'-]{1,}/gi;
 const DEFAULT_LIMIT = 18;
 
-function tokenize(value) {
+export interface LensItem {
+  source_kind?: string;
+  issue_number?: string | number | null;
+  episode_number?: string | number;
+  microblog_id?: string | number;
+  show?: string;
+  subject?: string;
+  title?: string;
+  publish_date?: string;
+  section?: string;
+  summary?: string;
+  text?: string;
+  url?: string;
+  transcript_url?: string;
+  audio_url?: string;
+  also_in_issues?: unknown;
+  topics?: string[] | Set<string>;
+  domains?: string[] | Set<string>;
+  [key: string]: unknown;
+}
+
+interface LensSource extends LensItem {
+  match_count: number;
+  sections: Set<string>;
+  topics: Set<string>;
+  domains: Set<string>;
+  match_reasons: Set<string>;
+  evidence: Array<{ section: string; text: string }>;
+}
+
+interface ArchiveLensInput {
+  topic?: unknown;
+  operation?: unknown;
+  records?: LensItem[];
+  chunks?: LensItem[];
+  yearRange?: unknown;
+  limit?: number;
+}
+
+interface YearBucket {
+  year: number;
+  source_count: number;
+  evidence_count: number;
+  sources: ReturnType<typeof compactLensSource>[];
+  sections: Map<string, number>;
+  domains: Map<string, number>;
+}
+
+interface SourceBucket {
+  source_kind: string;
+  source_count: number;
+  evidence_count: number;
+  dates: string[];
+  sources: ReturnType<typeof compactLensSource>[];
+}
+
+function tokenize(value: unknown) {
   return Array.from(String(value || '').matchAll(TOKEN_RE), (match) => match[0].toLowerCase());
 }
 
-function compactWhitespace(value) {
-  return String(value || '').replace(/\s+/g, ' ').trim();
+function compactWhitespace(value: unknown) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
-export function normalizeLensOperation(value) {
-  const raw = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+export function normalizeLensOperation(value: unknown) {
+  const raw = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
   if (['first', 'last', 'first_last', 'first_and_last', 'earliest_latest'].includes(raw)) return 'first_last';
   if (['year', 'years', 'by_year', 'yearly', 'themes_by_year'].includes(raw)) return 'by_year';
   if (['sources', 'source', 'source_compare', 'compare_sources', 'by_source'].includes(raw)) return 'source_compare';
@@ -20,17 +81,23 @@ export function normalizeLensOperation(value) {
   return 'timeline';
 }
 
-export function parseLensYearRange(value) {
+export function parseLensYearRange(value: unknown): [number | null, number | null] {
   if (!value) return [null, null];
   if (Array.isArray(value) && value.length >= 2) return [Number(value[0]) || null, Number(value[1]) || null];
-  if (typeof value === 'object') return [Number(value.start || value.from) || null, Number(value.end || value.to) || null];
-  const years = String(value).match(/\b(?:19|20)\d{2}\b/g)?.map(Number) || [];
+  if (typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    return [Number(record.start || record.from) || null, Number(record.end || record.to) || null];
+  }
+  const years =
+    String(value)
+      .match(/\b(?:19|20)\d{2}\b/g)
+      ?.map(Number) || [];
   if (years.length > 1) return [Math.min(...years), Math.max(...years)];
   if (years.length === 1) return [years[0], years[0]];
   return [null, null];
 }
 
-function inYearRange(item, yearRange) {
+function inYearRange(item: LensItem, yearRange: unknown) {
   const [start, end] = parseLensYearRange(yearRange);
   const year = yearFromPublishDate(item.publish_date);
   if (start && (!year || year < start)) return false;
@@ -38,45 +105,46 @@ function inYearRange(item, yearRange) {
   return true;
 }
 
-function topicTokens(topic) {
+function topicTokens(topic: unknown) {
   return tokenize(topic).filter((token) => token.length > 2);
 }
 
-export function matchesLensTopic(item, topic) {
+export function matchesLensTopic(item: LensItem, topic: unknown) {
   const rawTopic = compactWhitespace(topic).toLowerCase();
   if (!rawTopic) return true;
-  const haystack = compactWhitespace([
-    item.subject,
-    item.title,
-    item.section,
-    item.summary,
-    item.text,
-    (item.topics || []).join(' '),
-    (item.domains || []).join(' ')
-  ].join(' ')).toLowerCase();
+  const haystack = compactWhitespace(
+    [
+      item.subject,
+      item.title,
+      item.section,
+      item.summary,
+      item.text,
+      Array.from(item.topics || []).join(' '),
+      Array.from(item.domains || []).join(' ')
+    ].join(' ')
+  ).toLowerCase();
   if (haystack.includes(rawTopic)) return true;
   const tokens = topicTokens(topic);
   if (!tokens.length) return false;
-  const matchCount = tokens.filter((token) => (
-    haystack.includes(token) ||
-    (token.length >= 6 && haystack.includes(token.slice(0, 5)))
-  )).length;
+  const matchCount = tokens.filter(
+    (token) => haystack.includes(token) || (token.length >= 6 && haystack.includes(token.slice(0, 5)))
+  ).length;
   return tokens.length <= 2 ? matchCount === tokens.length : matchCount >= Math.ceil(tokens.length * 0.7);
 }
 
-export function lensMatchReasons(item, topic) {
+export function lensMatchReasons(item: LensItem, topic: unknown) {
   const rawTopic = compactWhitespace(topic).toLowerCase();
   const tokens = topicTokens(topic);
-  const fields = [
+  const fields: Array<[string, unknown]> = [
     ['subject', item.subject],
     ['title', item.title],
     ['section', item.section],
     ['summary', item.summary],
     ['text', item.text],
-    ['topics', (item.topics || []).join(' ')],
-    ['domains', (item.domains || []).join(' ')]
+    ['topics', Array.from(item.topics || []).join(' ')],
+    ['domains', Array.from(item.domains || []).join(' ')]
   ];
-  const reasons = [];
+  const reasons: Array<{ field: string; match: string }> = [];
   for (const [field, value] of fields) {
     const text = compactWhitespace(value).toLowerCase();
     if (!text) continue;
@@ -84,16 +152,15 @@ export function lensMatchReasons(item, topic) {
       reasons.push({ field, match: rawTopic });
       continue;
     }
-    const matched = tokens.filter((token) => (
-      text.includes(token) ||
-      (token.length >= 6 && text.includes(token.slice(0, 5)))
-    ));
+    const matched = tokens.filter(
+      (token) => text.includes(token) || (token.length >= 6 && text.includes(token.slice(0, 5)))
+    );
     if (matched.length) reasons.push({ field, match: matched.slice(0, 4).join(', ') });
   }
   return reasons;
 }
 
-function sourceKey(item) {
+function sourceKey(item: LensItem) {
   return [
     item.source_kind || '',
     item.issue_number || item.episode_number || item.microblog_id || '',
@@ -101,7 +168,7 @@ function sourceKey(item) {
   ].join('\0');
 }
 
-function sourceFromChunk(chunk) {
+function sourceFromChunk(chunk: LensItem): LensItem {
   return {
     source_kind: chunk.source_kind || 'weekly_thing',
     issue_number: chunk.issue_number ?? null,
@@ -120,7 +187,7 @@ function sourceFromChunk(chunk) {
   };
 }
 
-function snippetFor(text, topic) {
+function snippetFor(text: unknown, topic: unknown) {
   const clean = compactWhitespace(text);
   if (!clean) return '';
   const lower = clean.toLowerCase();
@@ -136,7 +203,7 @@ function snippetFor(text, topic) {
   return clean.slice(Math.max(0, index - 140), Math.min(clean.length, index + 260));
 }
 
-function mergeSource(existing, chunk, topic) {
+function mergeSource(existing: LensSource, chunk: LensItem, topic: unknown) {
   existing.match_count += 1;
   existing.sections.add(chunk.section || '');
   for (const domain of chunk.domains || []) existing.domains.add(domain);
@@ -151,7 +218,7 @@ function mergeSource(existing, chunk, topic) {
   }
 }
 
-function compactLensSource(item) {
+function compactLensSource(item: LensSource) {
   return {
     source_kind: item.source_kind,
     issue_number: item.issue_number ?? null,
@@ -162,24 +229,30 @@ function compactLensSource(item) {
     publish_date: item.publish_date,
     year: yearFromPublishDate(item.publish_date) || null,
     section: item.section || '',
-    sections: Array.from(item.sections || []).filter(Boolean).slice(0, 8),
+    sections: Array.from(item.sections || [])
+      .filter(Boolean)
+      .slice(0, 8),
     url: item.url,
     transcript_url: item.transcript_url,
     audio_url: item.audio_url,
     also_in_issues: item.also_in_issues,
     match_count: item.match_count || 0,
-    topics: Array.from(item.topics || []).filter(Boolean).slice(0, 12),
-    domains: Array.from(item.domains || []).filter(Boolean).slice(0, 12),
+    topics: Array.from(item.topics || [])
+      .filter(Boolean)
+      .slice(0, 12),
+    domains: Array.from(item.domains || [])
+      .filter(Boolean)
+      .slice(0, 12),
     match_reasons: Array.from(item.match_reasons || []).slice(0, 8),
     evidence: item.evidence || []
   };
 }
 
-function sortByDateAsc(items) {
+function sortByDateAsc<T extends LensItem>(items: T[]): T[] {
   return [...items].sort((a, b) => String(a.publish_date || '').localeCompare(String(b.publish_date || '')));
 }
 
-function topCounts(map, key, limit = 10) {
+function topCounts(map: Map<string, number>, key: string, limit = 10) {
   return Array.from(map.entries())
     .filter(([name]) => name)
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
@@ -187,8 +260,8 @@ function topCounts(map, key, limit = 10) {
     .map(([name, count]) => ({ [key]: name, count }));
 }
 
-function yearBuckets(items) {
-  const buckets = new Map();
+function yearBuckets(items: LensSource[]) {
+  const buckets = new Map<number, YearBucket>();
   for (const item of items) {
     const year = yearFromPublishDate(item.publish_date);
     if (!year) continue;
@@ -202,7 +275,7 @@ function yearBuckets(items) {
         domains: new Map()
       });
     }
-    const bucket = buckets.get(year);
+    const bucket = buckets.get(year)!;
     bucket.source_count += 1;
     bucket.evidence_count += item.match_count || 0;
     for (const section of item.sections || []) bucket.sections.set(section, (bucket.sections.get(section) || 0) + 1);
@@ -221,8 +294,8 @@ function yearBuckets(items) {
     }));
 }
 
-function sourceBuckets(items) {
-  const buckets = new Map();
+function sourceBuckets(items: LensSource[]) {
+  const buckets = new Map<string, SourceBucket>();
   for (const item of items) {
     const key = item.source_kind || 'unknown';
     if (!buckets.has(key)) {
@@ -234,7 +307,7 @@ function sourceBuckets(items) {
         sources: []
       });
     }
-    const bucket = buckets.get(key);
+    const bucket = buckets.get(key)!;
     bucket.source_count += 1;
     bucket.evidence_count += item.match_count || 0;
     if (item.publish_date) bucket.dates.push(item.publish_date);
@@ -252,17 +325,21 @@ function sourceBuckets(items) {
     }));
 }
 
-function readingPath(items, limit) {
+function readingPath(items: LensSource[], limit: number) {
   const chronological = sortByDateAsc(items);
   if (!chronological.length) return [];
-  const chosen = new Map();
-  const add = (item, reason) => {
+  const chosen = new Map<string, ReturnType<typeof compactLensSource> & { reason: string }>();
+  const add = (item: LensSource | undefined, reason: string) => {
     if (!item) return;
     chosen.set(sourceKey(item), { ...compactLensSource(item), reason });
   };
   add(chronological[0], 'earliest matched source');
   const buckets = yearBuckets(items).sort((a, b) => b.evidence_count - a.evidence_count);
-  add(buckets[0]?.sample_sources?.[0], 'densest year for this topic');
+  const densestYear = buckets[0]?.year;
+  add(
+    densestYear ? items.find((item) => yearFromPublishDate(item.publish_date) === densestYear) : undefined,
+    'densest year for this topic'
+  );
   add(chronological[Math.floor(chronological.length / 2)], 'middle-era bridge');
   add(chronological.at(-1), 'latest matched source');
   for (const item of chronological) {
@@ -272,14 +349,21 @@ function readingPath(items, limit) {
   return Array.from(chosen.values()).slice(0, limit);
 }
 
-export function buildArchiveLens({ topic = '', operation = 'timeline', records = [], chunks = [], yearRange = null, limit = DEFAULT_LIMIT } = {}) {
+export function buildArchiveLens({
+  topic = '',
+  operation = 'timeline',
+  records = [],
+  chunks = [],
+  yearRange = null,
+  limit = DEFAULT_LIMIT
+}: ArchiveLensInput = {}) {
   const normalizedOperation = normalizeLensOperation(operation);
   const maxResults = Math.min(Math.max(Number(limit || DEFAULT_LIMIT), 1), 40);
-  const sources = new Map();
+  const sources = new Map<string, LensSource>();
 
   for (const record of records || []) {
     if (!inYearRange(record, yearRange) || !matchesLensTopic(record, topic)) continue;
-    const source = {
+    const source: LensSource = {
       ...record,
       match_count: 1,
       sections: new Set([record.section || '']),
@@ -306,7 +390,7 @@ export function buildArchiveLens({ topic = '', operation = 'timeline', records =
         evidence: []
       });
     }
-    mergeSource(sources.get(key), chunk, topic);
+    mergeSource(sources.get(key)!, chunk, topic);
   }
 
   const matched = sortByDateAsc(Array.from(sources.values()).filter((item) => item.publish_date));
@@ -324,16 +408,17 @@ export function buildArchiveLens({ topic = '', operation = 'timeline', records =
     counts_by_year: countsByYear,
     year_count_summary: yearCountSummary(countsByYear),
     first: matched[0] ? compactLensSource(matched[0]) : null,
-    latest: matched.at(-1) ? compactLensSource(matched.at(-1)) : null,
-    results: normalizedOperation === 'first_last'
-      ? [matched[0], matched.at(-1)].filter(Boolean).map(compactLensSource)
-      : normalizedOperation === 'reading_path'
-        ? readingPath(matched, Math.min(maxResults, 8))
-        : normalizedOperation === 'source_compare'
-          ? bySource.flatMap((bucket) => bucket.sample_sources).slice(0, maxResults)
-          : normalizedOperation === 'by_year'
-            ? years.flatMap((bucket) => bucket.sample_sources.slice(0, 2)).slice(0, maxResults)
-            : timeline,
+    latest: matched.at(-1) ? compactLensSource(matched.at(-1)!) : null,
+    results:
+      normalizedOperation === 'first_last'
+        ? [matched[0], matched.at(-1)].filter((item): item is LensSource => Boolean(item)).map(compactLensSource)
+        : normalizedOperation === 'reading_path'
+          ? readingPath(matched, Math.min(maxResults, 8))
+          : normalizedOperation === 'source_compare'
+            ? bySource.flatMap((bucket) => bucket.sample_sources).slice(0, maxResults)
+            : normalizedOperation === 'by_year'
+              ? years.flatMap((bucket) => bucket.sample_sources.slice(0, 2)).slice(0, maxResults)
+              : timeline,
     timeline,
     latest_sources: latest,
     years,
