@@ -9,7 +9,7 @@
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.1079.0",
     "@aws-sdk/client-bedrock-runtime": "^3.1079.0",
-    "@aws-sdk/client-dynamodb": "^3.1079.0",
+    "@aws-sdk/client-dynamodb": "^3.1090.0",
     "@aws-sdk/client-s3": "^3.1079.0",
     "markdown-it": "^14.3.0"
   }
