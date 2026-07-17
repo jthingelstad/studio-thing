@@ -24,7 +24,6 @@ _stubs.install()
 
 from apps.workshop_bot.tools import renderers  # noqa: E402
 
-
 SAMPLE_ATOMS = {
     "intro": "Welcome to the issue.",
     "currently": "**Listening:** music",

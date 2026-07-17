@@ -16,7 +16,8 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.jobs import _base, currently as currently_job  # noqa: E402
+from apps.workshop_bot.jobs import _base  # noqa: E402
+from apps.workshop_bot.jobs import currently as currently_job
 from apps.workshop_bot.tests._fixtures import DBTestCase  # noqa: E402
 from apps.workshop_bot.tools import db  # noqa: E402
 

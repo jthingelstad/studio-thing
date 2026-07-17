@@ -15,11 +15,10 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
 
-from apps.workshop_bot.tests import test_pure_helpers  # noqa: F401, E402
-
 from aiohttp import web  # noqa: E402
 from aiohttp.test_utils import TestClient, TestServer  # noqa: E402
 
+from apps.workshop_bot.tests import test_pure_helpers  # noqa: F401, E402
 from apps.workshop_bot.tools import db  # noqa: E402
 from apps.workshop_bot.webapp import routes, server  # noqa: E402
 

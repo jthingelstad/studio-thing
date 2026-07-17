@@ -1,8 +1,9 @@
-target-version = "py312"
-extend-exclude = ["venv", "librarian-core"]
+target-version = "py314"
+line-length = 100
+extend-exclude = ["venv"]
 
 [lint]
-select = ["E4", "E7", "E9", "F"]
+select = ["E4", "E7", "E9", "F", "I"]
 
 [lint.per-file-ignores]
 "apps/workshop_bot/tests/*" = ["E402"]

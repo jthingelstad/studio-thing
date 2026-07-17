@@ -20,13 +20,21 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.jobs import _base, eddy_review, issue_status, start_issue, sync_issue  # noqa: E402
-from apps.workshop_bot.tools import content_store, db, issue_items  # noqa: E402
-from apps.workshop_bot.tools.content import draft as draft_mod  # noqa: E402
+from apps.workshop_bot.jobs import (  # noqa: E402
+    _base,
+    eddy_review,
+    issue_status,
+    start_issue,
+    sync_issue,
+)
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
+)
+from apps.workshop_bot.tests._fixtures import (
     FakeBotChannel as _FakeBotChannel,
 )
+from apps.workshop_bot.tools import content_store, db, issue_items  # noqa: E402
+from apps.workshop_bot.tools.content import draft as draft_mod  # noqa: E402
 
 
 def _no_sync(n, window):

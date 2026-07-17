@@ -20,7 +20,6 @@ from pathlib import Path
 
 import boto3
 from dotenv import load_dotenv
-
 from librarian_core.corpus import (
     DEFAULT_EMBEDDING_DIMENSIONS,
     DEFAULT_EMBEDDING_MODEL,

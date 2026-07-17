@@ -25,7 +25,6 @@ _stubs.install()
 
 from apps.workshop_bot.personas.eddy import EddyBot  # noqa: E402
 
-
 # ---------- minimal discord.py shapes for testing ----------
 
 class _FakeUser:

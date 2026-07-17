@@ -20,8 +20,8 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base, start_issue  # noqa: E402
-from apps.workshop_bot.tools import db  # noqa: E402
 from apps.workshop_bot.tests._fixtures import DBTestCase as _DBTestCase  # noqa: E402
+from apps.workshop_bot.tools import db  # noqa: E402
 
 SAT = "2026-06-27"  # a Saturday
 

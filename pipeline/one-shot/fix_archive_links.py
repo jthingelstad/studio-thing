@@ -6,6 +6,7 @@ a recorded before/after; the script aborts and reports if any target
 string is not found or is ambiguous.
 """
 from __future__ import annotations
+
 import sys
 from pathlib import Path
 

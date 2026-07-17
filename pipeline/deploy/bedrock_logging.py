@@ -12,7 +12,6 @@ import boto3
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 
-
 REPO = Path(__file__).resolve().parents[2]
 DEFAULT_BUCKET = "weekly-thing-librarian"
 DEFAULT_PREFIX = "logs/invocations"

@@ -52,6 +52,7 @@ class DownscaleForVisionTests(unittest.TestCase):
     def _png_bytes(size_px: int) -> bytes:
         """Build a real PNG of size_px × size_px in memory (no fixture file)."""
         from io import BytesIO
+
         from PIL import Image
         img = Image.new("RGB", (size_px, size_px), color="white")
         buf = BytesIO()
@@ -74,6 +75,7 @@ class DownscaleForVisionTests(unittest.TestCase):
         self.assertLess(approx_base64_size, 5 * 1024 * 1024)
         # And the long edge should be at or under the documented sweet spot.
         from io import BytesIO
+
         from PIL import Image
         with Image.open(BytesIO(out_body)) as img:
             self.assertLessEqual(max(img.size), alt_text._VISION_LONG_EDGE_MAX)

@@ -6,7 +6,6 @@ from typing import Any, Optional
 
 from .connection import connect
 
-
 # ---------- follow-ups ----------
 
 FOLLOW_UP_PERSONAS = ("eddy",)

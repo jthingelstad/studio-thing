@@ -7,7 +7,6 @@ from typing import Any
 
 from rank_bm25 import BM25Okapi
 
-
 STOPLIST = {
     "the", "a", "an", "and", "or", "but", "if", "of", "to", "in", "on", "at",
     "for", "with", "by", "from", "as", "is", "are", "was", "were", "be", "been",

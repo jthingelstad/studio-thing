@@ -39,7 +39,6 @@ load_dotenv(REPO / ".env")
 from apps.workshop_bot.tools.archive_lookup import derive_era  # noqa: E402
 from apps.workshop_bot.tools.db.connection import connect  # noqa: E402
 
-
 DATA_ISSUES = REPO / "data" / "issues"
 AUDIO_MANIFEST = REPO / "data" / "audio" / "manifest.json"
 

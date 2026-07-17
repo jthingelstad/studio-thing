@@ -17,9 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 from librarian_core.paths import ANOTHER_THING_EPISODES_DIR, PODCAST_DIR
-
 
 FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n?", re.S)
 

@@ -16,14 +16,12 @@ from pathlib import Path
 
 import boto3
 from dotenv import load_dotenv
-
 from librarian_core.corpus import (
     DEFAULT_EMBEDDING_DIMENSIONS,
     DEFAULT_EMBEDDING_MODEL,
     add_bedrock_embeddings,
     build_podcast_corpus,
 )
-
 from upload_corpus import (  # noqa: E402
     build_chunk_cache,
     fetch_existing_corpus,

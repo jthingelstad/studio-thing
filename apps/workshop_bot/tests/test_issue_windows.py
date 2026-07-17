@@ -21,8 +21,7 @@ sys.path.insert(0, str(REPO))
 # from there is the cheapest way to ensure they're in sys.modules before
 # the package imports discord/anthropic.
 from apps.workshop_bot.tests import test_pure_helpers  # noqa: F401, E402
-
-from apps.workshop_bot.tools import db # noqa: E402
+from apps.workshop_bot.tools import db  # noqa: E402
 from apps.workshop_bot.tools.content import issue
 
 

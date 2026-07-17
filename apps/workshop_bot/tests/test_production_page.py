@@ -18,9 +18,9 @@ _stubs.install()
 from aiohttp import web  # noqa: E402
 from aiohttp.test_utils import TestClient, TestServer  # noqa: E402
 
+from apps.workshop_bot.tests._fixtures import FakeWorkspace, patch_s3  # noqa: E402
 from apps.workshop_bot.tools import content_store, db  # noqa: E402
 from apps.workshop_bot.tools.db.connection import connect  # noqa: E402
-from apps.workshop_bot.tests._fixtures import FakeWorkspace, patch_s3  # noqa: E402
 from apps.workshop_bot.webapp import routes, server  # noqa: E402
 
 LOGIN = "jthingelstad@github"

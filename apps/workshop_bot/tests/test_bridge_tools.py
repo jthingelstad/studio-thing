@@ -13,7 +13,6 @@ REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
 
 from apps.workshop_bot.tests import test_pure_helpers  # noqa: F401, E402
-
 from apps.workshop_bot.tools import db  # noqa: E402
 from apps.workshop_bot.tools.llm import local_tools as lt  # noqa: E402
 from apps.workshop_bot.tools.llm._specs import SPECS  # noqa: E402

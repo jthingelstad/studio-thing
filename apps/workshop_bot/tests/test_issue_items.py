@@ -13,9 +13,8 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.tools import db, issue_items  # noqa: E402
 from apps.workshop_bot.tests._fixtures import TempDBTestCase as _DBCase  # noqa: E402
-
+from apps.workshop_bot.tools import db, issue_items  # noqa: E402
 
 # ---------------- upsert + list ----------------
 

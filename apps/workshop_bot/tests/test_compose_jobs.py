@@ -19,15 +19,19 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import (  # noqa: E402
-    _base, compose_haiku, compose_meta, reorder,
+    _base,
+    compose_haiku,
+    compose_meta,
+    reorder,
 )
-from apps.workshop_bot.tools import content_store, db # noqa: E402
-from apps.workshop_bot.tools.discord import interaction
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
+)
+from apps.workshop_bot.tests._fixtures import (
     FakeBotChannel as _FakeBotChannel,
 )
-
+from apps.workshop_bot.tools import content_store, db  # noqa: E402
+from apps.workshop_bot.tools.discord import interaction
 
 
 def _seed_issue_body(n: int = 458) -> None:

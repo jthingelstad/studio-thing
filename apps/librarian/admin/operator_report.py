@@ -22,7 +22,6 @@ import boto3
 from boto3.dynamodb.types import TypeDeserializer
 from dotenv import load_dotenv
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_STACK = "weekly-thing-librarian"
 DEFAULT_OUTPUT = Path.home() / "Desktop" / "Thingy Operator Report.html"

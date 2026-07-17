@@ -33,12 +33,13 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base, compose_echoes  # noqa: E402
-from apps.workshop_bot.tools import content_store, db, thingy_retrieve  # noqa: E402
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
+)
+from apps.workshop_bot.tests._fixtures import (
     FakeBotChannel as _FakeBotChannel,
 )
-
+from apps.workshop_bot.tools import content_store, db, thingy_retrieve  # noqa: E402
 
 _FAKE_PASSAGES = [
     {

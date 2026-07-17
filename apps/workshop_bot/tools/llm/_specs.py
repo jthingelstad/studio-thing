@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 SPECS: dict[str, dict[str, Any]] = {
     "archive__search": {
         "name": "archive__search",

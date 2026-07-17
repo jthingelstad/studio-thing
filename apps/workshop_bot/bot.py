@@ -30,11 +30,11 @@ from .personas.eddy import EddyBot
 from .personas.team import TeamRegistry
 from .scheduler.runner import Runner as SchedulerRunner
 from .systems.buttondown.server import ButtondownServer
-from .webapp import start_webapp
 from .tools import db
 from .tools.content import corpus
-from .tools.llm import agent_tools, anthropic_client
 from .tools.discord import startup
+from .tools.llm import agent_tools, anthropic_client
+from .webapp import start_webapp
 
 logger = logging.getLogger("workshop.bot")
 

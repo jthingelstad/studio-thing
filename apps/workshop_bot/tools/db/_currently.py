@@ -6,7 +6,6 @@ from typing import Any, Optional
 
 from .connection import connect
 
-
 # ---------- currently (per-issue `## Currently` values + canonical types) ----------
 
 

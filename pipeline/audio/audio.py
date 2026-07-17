@@ -10,13 +10,14 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from dotenv import load_dotenv
-
 from bumpers import (
     bumper_hashes,
     ensure_bumpers,
 )
+from cover import ensure_cover
+from dotenv import load_dotenv
 from manifest import (
+    SCRIPT_STATUS_SCHEMA_VERSION,
     bumper_path,
     hash_text,
     issue_entries,
@@ -25,13 +26,11 @@ from manifest import (
     read_script_review,
     read_script_status,
     script_path,
-    SCRIPT_STATUS_SCHEMA_VERSION,
     write_manifest,
     write_script_review,
     write_script_status,
 )
 from script_validate import VALIDATOR_VERSION, run_validators
-from cover import ensure_cover
 from synthesize import (
     AUDIO_VOICE,
     LOUDNORM_VERSION,
@@ -550,6 +549,7 @@ def _body_text(issue: str) -> str:
 
 def cmd_scripts_review(args: argparse.Namespace) -> None:
     from concurrent.futures import ThreadPoolExecutor, as_completed
+
     from script_review import HAIKU_MODEL, REVIEWER_VERSION, make_client, review_issue
 
     review = read_script_review()

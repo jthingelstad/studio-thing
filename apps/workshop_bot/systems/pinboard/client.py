@@ -249,7 +249,8 @@ def issue_window_candidates(start_date: str, end_date: str) -> dict[str, list[di
     widened a day on each side so the local-date filter never trims
     something the API already returned.
     """
-    from datetime import datetime as _dt, timedelta as _td
+    from datetime import datetime as _dt
+    from datetime import timedelta as _td
 
     sd = _dt.strptime(start_date, "%Y-%m-%d").date()
     ed = _dt.strptime(end_date, "%Y-%m-%d").date()

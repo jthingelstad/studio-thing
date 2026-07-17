@@ -23,7 +23,6 @@ from dotenv import load_dotenv
 from .links import extract_domains
 from .paths import ARCHIVE_DIR, BLOG_DIR, FAQ_PATH, PODCAST_DIR, SITE_DIR
 
-
 DEFAULT_EMBEDDING_MODEL = "cohere.embed-english-v3"
 DEFAULT_EMBEDDING_DIMENSIONS = 1024
 COHERE_EMBED_MAX_TEXT_CHARS = 2048

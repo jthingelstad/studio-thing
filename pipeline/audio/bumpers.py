@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from manifest import (
-    BUMPERS_DIR,
     BUMPER_NAMES,
+    BUMPERS_DIR,
     bumper_path,
     bumpers_state,
     hash_text,

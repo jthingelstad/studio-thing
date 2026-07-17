@@ -15,8 +15,8 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.tools import cdn, content_store, issue_items, render  # noqa: E402
 from apps.workshop_bot.tests._fixtures import DBTestCase as _DBTestCase  # noqa: E402
+from apps.workshop_bot.tools import cdn, content_store, issue_items, render  # noqa: E402
 
 
 def _seed_348_items() -> None:

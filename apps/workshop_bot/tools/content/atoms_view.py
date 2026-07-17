@@ -38,8 +38,7 @@ from __future__ import annotations
 import json
 from typing import Any, Optional
 
-from .. import content_store, issue_items, issue_items_render
-from .. import db
+from .. import content_store, db, issue_items, issue_items_render
 
 # Reading order of the issue, per the design brief. Notable/journal/brief
 # expand to one atom per row; the authored kinds are one atom each.

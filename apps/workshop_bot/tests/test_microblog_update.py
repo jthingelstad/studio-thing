@@ -6,12 +6,13 @@ import os
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
 
 from apps.workshop_bot.tests import _stubs  # noqa: E402
+
 _stubs.install()
 
 from apps.workshop_bot.tools.content import microblog  # noqa: E402

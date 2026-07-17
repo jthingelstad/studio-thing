@@ -9,6 +9,7 @@ Only processes lines matching ^# text at the start (standard markdown H1),
 and only in the body portion (after YAML front matter).
 """
 from __future__ import annotations
+
 import re
 import sys
 from pathlib import Path

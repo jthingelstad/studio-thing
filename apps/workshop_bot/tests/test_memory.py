@@ -52,7 +52,7 @@ def _install_stubs() -> None:
 _install_stubs()
 
 
-from apps.workshop_bot.tools import db # noqa: E402
+from apps.workshop_bot.tools import db  # noqa: E402
 from apps.workshop_bot.tools.llm import agent_tools
 
 

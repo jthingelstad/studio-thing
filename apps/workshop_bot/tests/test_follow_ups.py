@@ -18,10 +18,9 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base, follow_up  # noqa: E402
-from apps.workshop_bot.tools import db # noqa: E402
-from apps.workshop_bot.tools.llm import agent_tools
 from apps.workshop_bot.tests._fixtures import TempDBTestCase as _DBCase  # noqa: E402
-
+from apps.workshop_bot.tools import db  # noqa: E402
+from apps.workshop_bot.tools.llm import agent_tools
 
 # ---------- pure trigger parsing ----------
 

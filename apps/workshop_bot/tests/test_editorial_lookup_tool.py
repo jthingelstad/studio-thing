@@ -17,7 +17,8 @@ _stubs.install()
 
 from apps.workshop_bot.tools import db, issue_items  # noqa: E402
 from apps.workshop_bot.tools.llm.local_tools import (  # noqa: E402
-    t_editorial_get_comment, t_editorial_list_open,
+    t_editorial_get_comment,
+    t_editorial_list_open,
 )
 
 

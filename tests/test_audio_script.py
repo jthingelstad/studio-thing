@@ -5,7 +5,6 @@ from pathlib import Path
 
 import yaml
 
-
 REPO = Path(__file__).resolve().parents[1]
 AUDIO = REPO / "pipeline" / "audio"
 sys.path.insert(0, str(AUDIO))

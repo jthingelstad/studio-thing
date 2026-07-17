@@ -232,8 +232,9 @@ def _downscale_for_vision(body: bytes, media_type: str) -> tuple[bytes, str]:
     """
     if len(body) <= _VISION_BINARY_PASSTHROUGH_MAX:
         try:
-            from PIL import Image  # noqa: PLC0415
             from io import BytesIO  # noqa: PLC0415
+
+            from PIL import Image  # noqa: PLC0415
 
             with Image.open(BytesIO(body)) as probe:
                 if max(probe.size) <= _VISION_LONG_EDGE_MAX:
@@ -242,8 +243,9 @@ def _downscale_for_vision(body: bytes, media_type: str) -> tuple[bytes, str]:
             return body, media_type
 
     try:
-        from PIL import Image  # noqa: PLC0415
         from io import BytesIO  # noqa: PLC0415
+
+        from PIL import Image  # noqa: PLC0415
 
         with Image.open(BytesIO(body)) as img:
             img.thumbnail(

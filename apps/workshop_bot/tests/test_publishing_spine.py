@@ -31,8 +31,8 @@ from apps.workshop_bot.jobs import (  # noqa: E402
     production_state,
     put_to_bed,
 )
-from apps.workshop_bot.tools import content_store, db, renderers  # noqa: E402
 from apps.workshop_bot.tests._fixtures import DBTestCase as _DBTestCase  # noqa: E402
+from apps.workshop_bot.tools import content_store, db, renderers  # noqa: E402
 
 _OK = _base.JobResult(True, "ok")
 

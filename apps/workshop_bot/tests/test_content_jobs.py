@@ -24,15 +24,14 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base  # noqa: E402
-from apps.workshop_bot.tools import db # noqa: E402
-from apps.workshop_bot.tools.content import context, microblog
-from apps.workshop_bot.tools.discord import interaction
 
 # Shared fixtures used by this file and the split-out per-topic test files.
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
 )
-
+from apps.workshop_bot.tools import db  # noqa: E402
+from apps.workshop_bot.tools.content import context, microblog
+from apps.workshop_bot.tools.discord import interaction
 
 # ---------- draft-block helpers ----------
 
@@ -174,8 +173,8 @@ class JobLockTests(_DBTestCase):
 
 class EddyContextTests(_DBTestCase):
     def test_counts_from_db_rows(self):
-        from apps.workshop_bot.tools.content import issue as issue_mod
         from apps.workshop_bot.tools import issue_items
+        from apps.workshop_bot.tools.content import issue as issue_mod
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
                             start_date=w["start_date"], day_count=w["day_count"], set_by="test")

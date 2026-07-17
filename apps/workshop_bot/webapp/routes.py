@@ -24,6 +24,7 @@ from ..tools.content import production_types as ptypes
 from . import server
 from .render import render
 
+
 def _login(request: web.Request) -> str:
     """The signed-in Tailscale login (guaranteed present by the middleware)."""
     return request.headers.get(server.IDENTITY_HEADER, "")

@@ -17,7 +17,8 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 
 _stubs.install()
 
-from apps.workshop_bot.jobs import _base, status as status_job  # noqa: E402
+from apps.workshop_bot.jobs import _base  # noqa: E402
+from apps.workshop_bot.jobs import status as status_job
 from apps.workshop_bot.tools import db  # noqa: E402
 
 

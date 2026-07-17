@@ -16,10 +16,10 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base, edit_asset  # noqa: E402
-from apps.workshop_bot.tools import content_store, db  # noqa: E402
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
 )
+from apps.workshop_bot.tools import content_store, db  # noqa: E402
 
 
 class _Case(_DBTestCase):

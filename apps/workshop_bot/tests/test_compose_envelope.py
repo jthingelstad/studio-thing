@@ -26,13 +26,14 @@ from apps.workshop_bot.tests import _stubs  # noqa: E402
 _stubs.install()
 
 from apps.workshop_bot.jobs import _base, compose_envelope  # noqa: E402
-from apps.workshop_bot.tools import content_store, db  # noqa: E402
-from apps.workshop_bot.tools.discord import interaction  # noqa: E402
 from apps.workshop_bot.tests._fixtures import (  # noqa: E402
     DBTestCase as _DBTestCase,
+)
+from apps.workshop_bot.tests._fixtures import (
     FakeBotChannel as _FakeBotChannel,
 )
-
+from apps.workshop_bot.tools import content_store, db  # noqa: E402
+from apps.workshop_bot.tools.discord import interaction  # noqa: E402
 
 _ENVELOPE_REPLY = json.dumps({
     "subjects": [

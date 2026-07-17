@@ -15,7 +15,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 sys.stdout.reconfigure(line_buffering=True)
 

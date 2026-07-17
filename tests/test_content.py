@@ -7,7 +7,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
 REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "pipeline" / "content"
 sys.path.insert(0, str(SCRIPTS))

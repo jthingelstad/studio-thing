@@ -14,7 +14,6 @@ from pathlib import Path
 
 import boto3
 from dotenv import load_dotenv
-
 from librarian_core.graph import DEFAULT_MODEL, build_graph, load_corpus
 from librarian_core.paths import CORPUS_PATH, GRAPH_PATH
 

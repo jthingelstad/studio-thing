@@ -42,7 +42,6 @@ from typing import Any, Optional
 
 from .content import microblog
 
-
 # Membership-block markers (``<!-- cta:N -->`` / ``<!-- thanks:N -->``)
 # are a retired editorial vocabulary — they're NEVER in a row's
 # ``body_md``. An older manual-seed path baked a rendered marker into a

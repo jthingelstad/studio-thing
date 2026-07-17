@@ -9,10 +9,10 @@ on this side of the API is the stats refresh that powers stats.json
 """
 
 import os
+import sys
 
 import requests
 import stripe
-import sys
 from dotenv import load_dotenv
 
 sys.stdout.reconfigure(line_buffering=True)

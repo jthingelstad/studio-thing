@@ -19,7 +19,6 @@ from typing import Any, Optional
 
 from .db.connection import connect
 
-
 _ISSUE_COLUMNS = (
     "number", "subject", "slug", "description", "publish_date",
     "image", "absolute_url", "buttondown_id",

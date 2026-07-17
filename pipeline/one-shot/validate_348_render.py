@@ -29,11 +29,13 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 
-from apps.workshop_bot.tools import (
-    db, issue_assembly, issue_items, issue_items_render,
-)
 from apps.workshop_bot.jobs import _base
-
+from apps.workshop_bot.tools import (
+    db,
+    issue_assembly,
+    issue_items,
+    issue_items_render,
+)
 
 SNAPSHOT_DIR = REPO / "tmp" / "wt348-snapshot"
 

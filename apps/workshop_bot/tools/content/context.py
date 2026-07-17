@@ -17,6 +17,7 @@ from typing import Any, Optional
 from .. import db
 from . import draft
 
+
 def _today() -> date:
     # Issue cadence is Jamie's local time; for date-only math the offset
     # doesn't matter, and the daily cron fires at 17:00 CT so the date is

@@ -23,7 +23,8 @@ from datetime import date
 
 from ..personas.base import is_pass_response
 from ..tools import archive_context, db, issue_items, render, renderers
-from ..tools.content import context, draft as draft_mod
+from ..tools.content import context
+from ..tools.content import draft as draft_mod
 from ..tools.llm import anthropic_client
 from . import _base
 

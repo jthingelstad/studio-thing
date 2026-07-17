@@ -7,7 +7,6 @@ from typing import Any, Optional
 
 from .connection import connect
 
-
 # ---------- job locks (single-asset serialization for the jobs pipeline) ----------
 
 

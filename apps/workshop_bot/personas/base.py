@@ -17,12 +17,12 @@ from typing import TYPE_CHECKING, Any, ClassVar, Optional
 import discord
 
 from ..tools import db
-from ..tools.llm import agent_loop, agent_tools, anthropic_client
 from ..tools.discord import conversation, discord_io
+from ..tools.llm import agent_loop, agent_tools, anthropic_client
 
 if TYPE_CHECKING:
-    from ..tools.llm.agent_tools import ToolRegistry
     from ..tools.content.corpus import CorpusHandle
+    from ..tools.llm.agent_tools import ToolRegistry
     from .team import TeamRegistry
 
 logger = logging.getLogger("workshop.persona")

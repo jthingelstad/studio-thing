@@ -36,7 +36,6 @@ _install_stubs()
 
 from apps.workshop_bot.tools.discord import conversation
 
-
 # ---------- minimal fakes for discord.py history iteration ----------
 
 class _FakeAuthor:

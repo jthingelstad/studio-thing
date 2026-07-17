@@ -7,7 +7,6 @@ from typing import Any, Optional
 
 from .connection import connect
 
-
 # ---------- subscriber events ----------
 
 def upsert_subscriber_event(

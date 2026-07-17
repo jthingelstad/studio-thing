@@ -19,7 +19,6 @@ import boto3
 
 from .corpus import build_corpus
 
-
 DEFAULT_MODEL = "us.anthropic.claude-sonnet-4-6"
 ENTITY_RE = re.compile(r"\b(?:[A-Z][A-Za-z0-9&'.-]+(?:\s+[A-Z][A-Za-z0-9&'.-]+){0,4})\b")
 STOP_ENTITIES = {

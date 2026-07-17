@@ -56,7 +56,8 @@ def _install_stubs() -> None:
 _install_stubs()
 
 
-from apps.workshop_bot.scheduler import handlers, jobs as jobs_module  # noqa: E402
+from apps.workshop_bot.scheduler import handlers  # noqa: E402
+from apps.workshop_bot.scheduler import jobs as jobs_module
 
 
 class JobConfigTests(unittest.TestCase):

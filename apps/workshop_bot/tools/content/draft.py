@@ -55,7 +55,8 @@ def section_status(
     """Compute the in-flight issue's section + asset completeness straight
     from the DB (the draft). ``list_objects`` overrides the S3 workspace
     listing (binaries: ``cover.jpg``) for tests."""
-    from .. import content_store, db as _db, issue_items
+    from .. import content_store, issue_items
+    from .. import db as _db
 
     n = int(issue_number)
     if list_objects is None:
