@@ -5,7 +5,76 @@ const CAP_CORE = 'urn:ietf:params:jmap:core';
 const CAP_MAIL = 'urn:ietf:params:jmap:mail';
 const CAP_SUBMISSION = 'urn:ietf:params:jmap:submission';
 
-function envValue(...names) {
+type JsonObject = Record<string, unknown>;
+type JmapMethodResponse = [string, JsonObject, string];
+
+interface JmapSession {
+  apiUrl?: string;
+  primaryAccounts?: Record<string, string>;
+}
+
+interface JmapResponse {
+  methodResponses?: JmapMethodResponse[];
+}
+
+interface JmapIdentity {
+  id?: string;
+  email?: string;
+}
+
+interface JmapMailbox {
+  id?: string;
+  role?: string;
+}
+
+interface SendContext {
+  apiUrl: string;
+  mailAccountId: string;
+  submissionAccountId: string;
+  identityId: string;
+  draftMailboxId: string;
+  sentMailboxId: string;
+}
+
+interface ReaderEmailContext {
+  preferred_name?: unknown;
+  returning?: unknown;
+  turn_count?: unknown;
+  subscriber_status?: unknown;
+}
+
+interface MagicLinkEmailInput {
+  magicLink: string;
+  expiresMinutes: number;
+  context?: ReaderEmailContext;
+  imageUrl?: string;
+}
+
+interface JmapEmailCallInput {
+  context: SendContext;
+  fromEmail: string;
+  fromName: string;
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+}
+
+interface SendJmapEmailInput {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+  fromEmail?: string;
+  fromName?: string;
+}
+
+interface JmapSetResult {
+  notCreated?: Record<string, { type?: string }>;
+  created?: Record<string, { id?: string }>;
+}
+
+function envValue(...names: string[]) {
   for (const name of names) {
     const value = String(process.env[name] || '').trim();
     if (value) return value;
@@ -33,7 +102,7 @@ export function jmapConfigured() {
   return Boolean(jmapToken());
 }
 
-async function jmapFetch(url, options = {}) {
+async function jmapFetch<T extends JsonObject = JsonObject>(url: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -44,15 +113,15 @@ async function jmapFetch(url, options = {}) {
     }
   });
   if (!response.ok) throw new Error(`JMAP HTTP ${response.status}`);
-  return await response.json();
+  return (await response.json()) as T;
 }
 
-async function jmapSession() {
-  return await jmapFetch(JMAP_SESSION_URL);
+async function jmapSession(): Promise<JmapSession> {
+  return await jmapFetch<JmapSession & JsonObject>(JMAP_SESSION_URL);
 }
 
-async function jmapCall(apiUrl, calls) {
-  return await jmapFetch(apiUrl, {
+async function jmapCall(apiUrl: string, calls: unknown[]): Promise<JmapResponse> {
+  return await jmapFetch<JmapResponse & JsonObject>(apiUrl, {
     method: 'POST',
     body: JSON.stringify({
       using: [CAP_CORE, CAP_MAIL, CAP_SUBMISSION],
@@ -61,8 +130,8 @@ async function jmapCall(apiUrl, calls) {
   });
 }
 
-export function requireMethodResponse(responses = [], name, id) {
-  const found = (responses || []).find((item) => item[2] === id && (item[0] === name || item[0] === 'error'));
+export function requireMethodResponse(responses: JmapMethodResponse[] = [], name: string, id: string): JsonObject {
+  const found = responses.find((item) => item[2] === id && (item[0] === name || item[0] === 'error'));
   if (!found) throw new Error(`JMAP ${name} response missing`);
   if (found[0] === 'error') {
     throw new Error(`JMAP ${name} failed: ${found[1]?.type || found[1]?.description || 'error'}`);
@@ -70,16 +139,16 @@ export function requireMethodResponse(responses = [], name, id) {
   return found[1] || {};
 }
 
-function primaryAccount(session, capability) {
+function primaryAccount(session: JmapSession, capability: string) {
   return session?.primaryAccounts?.[capability] || session?.primaryAccounts?.[CAP_MAIL] || '';
 }
 
-function pickIdentity(identities = [], fromEmail = '') {
+function pickIdentity(identities: JmapIdentity[] = [], fromEmail = '') {
   const wanted = String(fromEmail || '').toLowerCase();
   return identities.find((identity) => String(identity.email || '').toLowerCase() === wanted) || identities[0] || null;
 }
 
-async function loadSendContext(session, fromEmail) {
+async function loadSendContext(session: JmapSession, fromEmail: string): Promise<SendContext> {
   const mailAccountId = primaryAccount(session, CAP_MAIL);
   const submissionAccountId = primaryAccount(session, CAP_SUBMISSION) || mailAccountId;
   if (!mailAccountId || !submissionAccountId || !session.apiUrl) {
@@ -89,8 +158,12 @@ async function loadSendContext(session, fromEmail) {
     ['Identity/get', { accountId: submissionAccountId, ids: null }, 'identity'],
     ['Mailbox/get', { accountId: mailAccountId, ids: null }, 'mailboxes']
   ]);
-  const identities = requireMethodResponse(response.methodResponses, 'Identity/get', 'identity').list || [];
-  const mailboxes = requireMethodResponse(response.methodResponses, 'Mailbox/get', 'mailboxes').list || [];
+  const identities =
+    (requireMethodResponse(response.methodResponses, 'Identity/get', 'identity').list as JmapIdentity[] | undefined) ||
+    [];
+  const mailboxes =
+    (requireMethodResponse(response.methodResponses, 'Mailbox/get', 'mailboxes').list as JmapMailbox[] | undefined) ||
+    [];
   const drafts = mailboxes.find((mailbox) => mailbox.role === 'drafts');
   const sent = mailboxes.find((mailbox) => mailbox.role === 'sent');
   const identity = pickIdentity(identities, fromEmail);
@@ -107,27 +180,27 @@ async function loadSendContext(session, fromEmail) {
   };
 }
 
-function emailGreeting(context = {}) {
+function emailGreeting(context: ReaderEmailContext = {}) {
   const name = String(context.preferred_name || '').trim();
   if (name) return `Hi ${name}. Thingy is ready.`;
   if (context.returning) return 'Welcome back. Thingy is ready.';
   return 'Thingy is ready.';
 }
 
-function emailIntro(context = {}) {
+function emailIntro(context: ReaderEmailContext = {}) {
   if (context.returning && Number(context.turn_count || 0) > 0) {
     return 'Your archive thread is waiting. Use this private link to step back into Thingy.';
   }
   return "Use this private link to meet Thingy, Jamie Thingelstad's archive agent.";
 }
 
-function emailMemberLine(context = {}) {
+function emailMemberLine(context: ReaderEmailContext = {}) {
   return context.subscriber_status === 'premium'
     ? 'Thanks for being a Weekly Thing Supporting Member.'
     : 'Thingy will open the archive in your browser.';
 }
 
-export function magicLinkEmailText({ magicLink, expiresMinutes, context = {} }) {
+export function magicLinkEmailText({ magicLink, expiresMinutes, context = {} }: MagicLinkEmailInput) {
   return [
     emailGreeting(context),
     '',
@@ -142,7 +215,7 @@ export function magicLinkEmailText({ magicLink, expiresMinutes, context = {} }) 
   ].join('\n');
 }
 
-function escapeHtml(value) {
+function escapeHtml(value: unknown) {
   return String(value || '')
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -150,7 +223,12 @@ function escapeHtml(value) {
     .replaceAll('"', '&quot;');
 }
 
-export function magicLinkEmailHtml({ magicLink, expiresMinutes, context = {}, imageUrl = jmapImageUrl() }) {
+export function magicLinkEmailHtml({
+  magicLink,
+  expiresMinutes,
+  context = {},
+  imageUrl = jmapImageUrl()
+}: MagicLinkEmailInput) {
   const safeLink = escapeHtml(magicLink);
   const safeImageUrl = escapeHtml(imageUrl);
   const safeMinutes = escapeHtml(String(expiresMinutes));
@@ -205,7 +283,14 @@ export function magicLinkEmailSubject() {
   return 'Thingy is ready for you';
 }
 
-export function buildMagicLinkJmapCalls({ context, fromEmail, fromName, to, text, html }) {
+export function buildMagicLinkJmapCalls({
+  context,
+  fromEmail,
+  fromName,
+  to,
+  text,
+  html
+}: Omit<JmapEmailCallInput, 'subject'>) {
   return buildJmapEmailCalls({
     context,
     fromEmail,
@@ -217,70 +302,96 @@ export function buildMagicLinkJmapCalls({ context, fromEmail, fromName, to, text
   });
 }
 
-export function buildJmapEmailCalls({ context, fromEmail, fromName, to, subject, text, html }) {
+export function buildJmapEmailCalls({
+  context,
+  fromEmail,
+  fromName,
+  to,
+  subject,
+  text,
+  html
+}: JmapEmailCallInput): unknown[] {
   return [
-    ['Email/set', {
-      accountId: context.mailAccountId,
-      create: {
-        draft: {
-          mailboxIds: { [context.draftMailboxId]: true },
-          keywords: { '$draft': true },
-          from: [{ name: fromName, email: fromEmail }],
-          to: [{ email: to }],
-          subject,
-          bodyStructure: {
-            type: 'multipart/alternative',
-            subParts: [
-              { partId: 'text', type: 'text/plain' },
-              { partId: 'html', type: 'text/html' }
-            ]
-          },
-          bodyValues: {
-            text: { value: text, charset: 'utf-8' },
-            html: { value: html, charset: 'utf-8' }
+    [
+      'Email/set',
+      {
+        accountId: context.mailAccountId,
+        create: {
+          draft: {
+            mailboxIds: { [context.draftMailboxId]: true },
+            keywords: { $draft: true },
+            from: [{ name: fromName, email: fromEmail }],
+            to: [{ email: to }],
+            subject,
+            bodyStructure: {
+              type: 'multipart/alternative',
+              subParts: [
+                { partId: 'text', type: 'text/plain' },
+                { partId: 'html', type: 'text/html' }
+              ]
+            },
+            bodyValues: {
+              text: { value: text, charset: 'utf-8' },
+              html: { value: html, charset: 'utf-8' }
+            }
           }
-        }
-      }
-    }, 'email'],
-    ['EmailSubmission/set', {
-      accountId: context.submissionAccountId,
-      onSuccessUpdateEmail: {
-        '#send': {
-          [`mailboxIds/${context.sentMailboxId}`]: true,
-          [`mailboxIds/${context.draftMailboxId}`]: null,
-          'keywords/$draft': null
         }
       },
-      create: {
-        send: {
-          emailId: '#draft',
-          identityId: context.identityId,
-          envelope: {
-            mailFrom: { email: fromEmail },
-            rcptTo: [{ email: to }]
+      'email'
+    ],
+    [
+      'EmailSubmission/set',
+      {
+        accountId: context.submissionAccountId,
+        onSuccessUpdateEmail: {
+          '#send': {
+            [`mailboxIds/${context.sentMailboxId}`]: true,
+            [`mailboxIds/${context.draftMailboxId}`]: null,
+            'keywords/$draft': null
+          }
+        },
+        create: {
+          send: {
+            emailId: '#draft',
+            identityId: context.identityId,
+            envelope: {
+              mailFrom: { email: fromEmail },
+              rcptTo: [{ email: to }]
+            }
           }
         }
-      }
-    }, 'submit']
+      },
+      'submit'
+    ]
   ];
 }
 
-export async function sendJmapEmail({ to, subject, text, html, fromEmail = jmapFromEmail(), fromName = jmapFromName() }) {
+export async function sendJmapEmail({
+  to,
+  subject,
+  text,
+  html,
+  fromEmail = jmapFromEmail(),
+  fromName = jmapFromName()
+}: SendJmapEmailInput) {
   const token = jmapToken();
   if (!token) throw new Error('FASTMAIL_JMAP_TOKEN is not configured');
   const session = await jmapSession();
   const sendContext = await loadSendContext(session, fromEmail);
-  const response = await jmapCall(sendContext.apiUrl, buildJmapEmailCalls({
-    context: sendContext,
-    fromEmail,
-    fromName,
-    to,
-    subject,
-    text,
-    html
-  }));
-  const emailSet = requireMethodResponse(response.methodResponses, 'Email/set', 'email');
-  const submit = requireMethodResponse(response.methodResponses, 'EmailSubmission/set', 'submit');
+  const response = await jmapCall(
+    sendContext.apiUrl,
+    buildJmapEmailCalls({
+      context: sendContext,
+      fromEmail,
+      fromName,
+      to,
+      subject,
+      text,
+      html
+    })
+  );
+  const emailSet = requireMethodResponse(response.methodResponses, 'Email/set', 'email') as JmapSetResult;
+  const submit = requireMethodResponse(response.methodResponses, 'EmailSubmission/set', 'submit') as JmapSetResult;
   if (emailSet.notCreated?.draft) {
     throw new Error(`JMAP email create failed: ${emailSet.notCreated.draft.type || 'notCreated'}`);
   }
@@ -294,7 +405,12 @@ export async function sendJmapEmail({ to, subject, text, html, fromEmail = jmapF
   };
 }
 
-export async function sendMagicLinkEmail({ to, magicLink, expiresMinutes, context = {} }) {
+export async function sendMagicLinkEmail({
+  to,
+  magicLink,
+  expiresMinutes,
+  context = {}
+}: MagicLinkEmailInput & { to: string }) {
   const token = jmapToken();
   if (!token) throw new Error('FASTMAIL_JMAP_TOKEN is not configured');
   const fromEmail = jmapFromEmail();
@@ -302,16 +418,19 @@ export async function sendMagicLinkEmail({ to, magicLink, expiresMinutes, contex
   const sendContext = await loadSendContext(session, fromEmail);
   const text = magicLinkEmailText({ magicLink, expiresMinutes, context });
   const html = magicLinkEmailHtml({ magicLink, expiresMinutes, context });
-  const response = await jmapCall(sendContext.apiUrl, buildMagicLinkJmapCalls({
-    context: sendContext,
-    fromEmail,
-    fromName: jmapFromName(),
-    to,
-    text,
-    html
-  }));
-  const emailSet = requireMethodResponse(response.methodResponses, 'Email/set', 'email');
-  const submit = requireMethodResponse(response.methodResponses, 'EmailSubmission/set', 'submit');
+  const response = await jmapCall(
+    sendContext.apiUrl,
+    buildMagicLinkJmapCalls({
+      context: sendContext,
+      fromEmail,
+      fromName: jmapFromName(),
+      to,
+      text,
+      html
+    })
+  );
+  const emailSet = requireMethodResponse(response.methodResponses, 'Email/set', 'email') as JmapSetResult;
+  const submit = requireMethodResponse(response.methodResponses, 'EmailSubmission/set', 'submit') as JmapSetResult;
   if (emailSet.notCreated?.draft) {
     throw new Error(`JMAP email create failed: ${emailSet.notCreated.draft.type || 'notCreated'}`);
   }
