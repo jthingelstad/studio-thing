@@ -16,7 +16,7 @@ import {
 import { renderTemplate, agentUserPrompt } from '../dist/shared/prompts.mjs';
 import { subscriberStatus } from '../dist/shared/buttondown.mjs';
 import { deleteThingyProfile, tokenIssuedAfterProfileDeletion } from '../dist/shared/profile-deletion.mjs';
-import { bedrock, dynamodb, s3 } from '../dist/shared/aws-clients.mjs';
+import { dynamodb, s3 } from '../dist/shared/aws-clients.mjs';
 import {
   createLinkCode,
   createLinkState,

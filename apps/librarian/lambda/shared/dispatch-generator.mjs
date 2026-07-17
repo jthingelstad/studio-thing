@@ -804,7 +804,7 @@ export async function renderDispatch(dispatch) {
       html,
       model: 'template-test',
       usage: { inputTokens: 0, outputTokens: 0 },
-      sources: sources.map(({ excerpt, ...source }) => source)
+      sources: sources.map(({ excerpt: _excerpt, ...source }) => source)
     };
   }
 
@@ -836,7 +836,7 @@ export async function renderDispatch(dispatch) {
     html,
     model,
     usage: response.usage || {},
-    sources: sources.map(({ excerpt, ...source }) => source)
+    sources: sources.map(({ excerpt: _excerpt, ...source }) => source)
   };
 }
 

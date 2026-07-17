@@ -4,7 +4,9 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { S3Client } from '@aws-sdk/client-s3';
 
 export const bedrock = new BedrockRuntimeClient({});
-export const bedrockAgentRuntime = new BedrockAgentRuntimeClient({ region: process.env.BEDROCK_RERANK_REGION || 'us-west-2' });
+export const bedrockAgentRuntime = new BedrockAgentRuntimeClient({
+  region: process.env.BEDROCK_RERANK_REGION || 'us-west-2'
+});
 export const dynamodb = new DynamoDBClient({});
 export const s3 = new S3Client({});
 

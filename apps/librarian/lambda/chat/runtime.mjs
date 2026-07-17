@@ -32,7 +32,6 @@ import {
   extractPreferredNameFromMessage,
   normalizeUserProfile,
   readerContextPrompt,
-  sanitizeHistory,
   tokenEntitlements
 } from '../shared/chat-context.mjs';
 import { prioritizeCitationsForAnswer } from '../shared/citations.mjs';

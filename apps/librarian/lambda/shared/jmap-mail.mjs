@@ -61,10 +61,6 @@ async function jmapCall(apiUrl, calls) {
   });
 }
 
-function methodResponse(responses = [], name, id) {
-  return (responses || []).find((item) => item[0] === name && item[2] === id)?.[1] || {};
-}
-
 export function requireMethodResponse(responses = [], name, id) {
   const found = (responses || []).find((item) => item[2] === id && (item[0] === name || item[0] === 'error'));
   if (!found) throw new Error(`JMAP ${name} response missing`);

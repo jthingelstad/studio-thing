@@ -1,7 +1,8 @@
 const WT_ARCHIVE_URL_RE = /https?:\/\/weekly\.thingelstad\.com\/archive\/(\d+)\/?/gi;
 const WT_ARCHIVE_PATH_RE = /`?\/archive\/(\d+)\/`?/gi;
 const RAW_URL_RE = /(?<!\]\()https?:\/\/[^\s<>)]+/gi;
-const PROCESS_NARRATION_RE = /\b(?:let me\s+(?:pull|look|search|check|find|tell|dig|synthesize)|i(?: have|(?:'|’)ve got) (?:everything|what) i need|i have enough(?:\s+to\b)?|i found enough|i can now answer|i(?:'|’)ll\s+(?:pull|look|search|check|find|dig))\b/i;
+const PROCESS_NARRATION_RE =
+  /\b(?:let me\s+(?:pull|look|search|check|find|tell|dig|synthesize)|i(?: have|(?:'|’)ve got) (?:everything|what) i need|i have enough(?:\s+to\b)?|i found enough|i can now answer|i(?:'|’)ll\s+(?:pull|look|search|check|find|dig))\b/i;
 const PREFLIGHT_PAREN_RE = /\n{0,2}\s*\(Preflight:[\s\S]*?\)\s*$/i;
 const PREFLIGHT_BLOCK_RE = /(?:^|\n)#{0,3}\s*\*{0,2}Preflight\*{0,2}:?[\s\S]*$/i;
 
@@ -37,7 +38,10 @@ export function sanitizeAnswerProse(answer: unknown) {
     .replace(PREFLIGHT_PAREN_RE, '')
     .replace(PREFLIGHT_BLOCK_RE, '')
     .replace(/(?:^|[ \t])(?:The\s+)?(?:archive\s+)?URL\s+is\s+`?\/archive\/\d+\/`?\.?/gim, '')
-    .replace(/(?:^|[ \t])(?:The\s+)?(?:archive\s+)?URL\s+is\s+https?:\/\/weekly\.thingelstad\.com\/archive\/\d+\/?\.?/gim, '')
+    .replace(
+      /(?:^|[ \t])(?:The\s+)?(?:archive\s+)?URL\s+is\s+https?:\/\/weekly\.thingelstad\.com\/archive\/\d+\/?\.?/gim,
+      ''
+    )
     .replace(WT_ARCHIVE_URL_RE, 'WT$1')
     .replace(WT_ARCHIVE_PATH_RE, 'WT$1')
     .replace(RAW_URL_RE, '');

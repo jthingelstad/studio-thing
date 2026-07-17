@@ -36,15 +36,15 @@ interface GetDispatchArtifactOptions {
 }
 
 function safeKeyPart(value: unknown) {
-  return String(value || 'unknown').replace(/[^A-Za-z0-9_.:-]/g, '_').slice(0, 120) || 'unknown';
+  return (
+    String(value || 'unknown')
+      .replace(/[^A-Za-z0-9_.:-]/g, '_')
+      .slice(0, 120) || 'unknown'
+  );
 }
 
 export function dispatchContentArtifactKey({ subscriberHash, dispatchId }: DispatchArtifactIdentity) {
-  return [
-    dispatchArtifactPrefix(),
-    safeKeyPart(subscriberHash),
-    `${safeKeyPart(dispatchId)}.json`
-  ].join('/');
+  return [dispatchArtifactPrefix(), safeKeyPart(subscriberHash), `${safeKeyPart(dispatchId)}.json`].join('/');
 }
 
 export async function putDispatchContentArtifact({ subscriberHash, dispatchId, result }: PutDispatchArtifactOptions) {
@@ -60,12 +60,14 @@ export async function putDispatchContentArtifact({ subscriberHash, dispatchId, r
     text: String(result?.text || ''),
     html: String(result?.html || '')
   };
-  await s3.send(new PutObjectCommand({
-    Bucket: bucket,
-    Key: key,
-    Body: JSON.stringify(payload),
-    ContentType: 'application/json; charset=utf-8'
-  }));
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: JSON.stringify(payload),
+      ContentType: 'application/json; charset=utf-8'
+    })
+  );
   return { bucket, key };
 }
 

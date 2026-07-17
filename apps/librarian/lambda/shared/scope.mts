@@ -19,16 +19,30 @@ export type LibrarianScope = (typeof SCOPES)[number];
 export type LibrarianSourceKind = 'weekly_thing' | 'blog' | 'podcast';
 
 function sourceToken(value: unknown): LibrarianSourceKind | '' {
-  const raw = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
-  if (raw === 'weekly_thing' || raw === 'wt' || raw === 'weeklything' || raw === 'issues' || raw === 'archive' || raw === 'newsletter') return 'weekly_thing';
+  const raw = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
+  if (
+    raw === 'weekly_thing' ||
+    raw === 'wt' ||
+    raw === 'weeklything' ||
+    raw === 'issues' ||
+    raw === 'archive' ||
+    raw === 'newsletter'
+  )
+    return 'weekly_thing';
   if (raw === 'blog' || raw === 'thingelstad' || raw === 'thingelstad_com') return 'blog';
-  if (raw === 'podcast' || raw === 'podcasts' || raw === 'another_thing' || raw === 'anotherthing' || raw === 'another') return 'podcast';
+  if (raw === 'podcast' || raw === 'podcasts' || raw === 'another_thing' || raw === 'anotherthing' || raw === 'another')
+    return 'podcast';
   return '';
 }
 
 /** Coerce arbitrary input into one of SCOPES, defaulting to weekly_thing. */
 export function normalizeScope(value: unknown): LibrarianScope {
-  const input = String(value || '').trim().toLowerCase();
+  const input = String(value || '')
+    .trim()
+    .toLowerCase();
   const raw = input.replace(/[\s-]+/g, '_');
   const source = sourceToken(raw);
   if (source) return source;
@@ -36,9 +50,7 @@ export function normalizeScope(value: unknown): LibrarianScope {
   if (raw === 'weekly_thing_podcast' || raw === 'wt_podcast') return 'weekly_thing_podcast';
   if (raw === 'blog_podcast' || raw === 'podcast_blog') return 'blog_podcast';
   if (raw === 'all' || raw === 'everything') return 'all';
-  const tokens = input.split(/[,+|]/)
-    .map(sourceToken)
-    .filter(Boolean);
+  const tokens = input.split(/[,+|]/).map(sourceToken).filter(Boolean);
   const selected = new Set(tokens);
   if (selected.size === 3) return 'all';
   if (selected.has('weekly_thing') && selected.has('blog') && selected.size === 2) return 'both';
@@ -68,18 +80,18 @@ export function scopeKinds(scope: unknown): LibrarianSourceKind[] {
 export function scopePromptLine(scope: unknown) {
   switch (normalizeScope(scope)) {
     case 'blog':
-      return 'Active source scope: **thingelstad.com blog only**. Answer from Jamie\'s personal blog posts (his 20-year blog), not the Weekly Thing newsletter. Blog sources have no WT issue number — cite them by title and link, not by WT<N>.';
+      return "Active source scope: **thingelstad.com blog only**. Answer from Jamie's personal blog posts (his 20-year blog), not the Weekly Thing newsletter. Blog sources have no WT issue number — cite them by title and link, not by WT<N>.";
     case 'podcast':
-      return 'Active source scope: **Another Thing podcast only**. Answer from podcast episode transcripts and show notes, not the Weekly Thing newsletter or Jamie\'s blog. Podcast sources have no WT issue number — cite them by episode title and link, not by WT<N>.';
+      return "Active source scope: **Another Thing podcast only**. Answer from podcast episode transcripts and show notes, not the Weekly Thing newsletter or Jamie's blog. Podcast sources have no WT issue number — cite them by episode title and link, not by WT<N>.";
     case 'both':
       return 'Active source scope: **Weekly Thing archive + thingelstad.com blog**. Draw on both. Cite Weekly Thing issues as WT<N> and blog posts by title and link. When a source carries `also_in_issues`, the blog post was also featured in those Weekly Thing issue(s) — you may note the cross-reference (e.g. "Jamie also featured this in WT###").';
     case 'weekly_thing_podcast':
-      return 'Active source scope: **Weekly Thing archive + Another Thing podcast**. Draw on both selected sources, not Jamie\'s blog. Cite Weekly Thing issues as WT<N>; cite podcast sources by episode title/link.';
+      return "Active source scope: **Weekly Thing archive + Another Thing podcast**. Draw on both selected sources, not Jamie's blog. Cite Weekly Thing issues as WT<N>; cite podcast sources by episode title/link.";
     case 'blog_podcast':
       return 'Active source scope: **thingelstad.com blog + Another Thing podcast**. Draw on both selected sources, not the Weekly Thing archive. Cite blog posts by title/link; cite podcast sources by episode title/link. These sources have no WT issue number.';
     case 'all':
       return 'Active source scope: **Weekly Thing archive + thingelstad.com blog + Another Thing podcast**. Draw on all selected sources. Cite Weekly Thing issues as WT<N>; cite blog posts by title/link; cite podcast sources by episode title/link. Blog and podcast sources have no WT issue number.';
     default:
-      return 'Active source scope: **Weekly Thing archive only**. Answer from Weekly Thing issues and the site/FAQ pages. If the reader explicitly asks about Jamie\'s personal blog or Another Thing podcast, tell them that source scope is available but not currently selected.';
+      return "Active source scope: **Weekly Thing archive only**. Answer from Weekly Thing issues and the site/FAQ pages. If the reader explicitly asks about Jamie's personal blog or Another Thing podcast, tell them that source scope is available but not currently selected.";
   }
 }

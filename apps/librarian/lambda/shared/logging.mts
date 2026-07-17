@@ -15,13 +15,15 @@ export function logEvent(
   fields: LogFields = {},
   service = process.env.LIBRARIAN_SERVICE_NAME || 'weekly-thing-librarian'
 ) {
-  console.log(JSON.stringify({
-    level,
-    message,
-    service,
-    timestamp: Math.floor(Date.now() / 1000),
-    ...Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined && value !== null))
-  }));
+  console.log(
+    JSON.stringify({
+      level,
+      message,
+      service,
+      timestamp: Math.floor(Date.now() / 1000),
+      ...Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined && value !== null))
+    })
+  );
 }
 
 function sanitizeErrorMessage(message: unknown) {
@@ -49,6 +51,8 @@ export function errorFields(error: unknown, fields: LogFields = {}) {
 }
 
 export function truthyEnv(name: string, defaultValue = '0') {
-  const value = String(process.env[name] ?? defaultValue).trim().toLowerCase();
+  const value = String(process.env[name] ?? defaultValue)
+    .trim()
+    .toLowerCase();
   return !['', '0', 'false', 'no', 'off'].includes(value);
 }

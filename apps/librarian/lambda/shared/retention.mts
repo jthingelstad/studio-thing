@@ -14,9 +14,7 @@ function retentionDays(envName: string, fallback: number) {
 function epochSeconds(value: DateInput = new Date()) {
   const date = value instanceof Date ? value : new Date(value);
   const milliseconds = date.getTime();
-  return Number.isFinite(milliseconds)
-    ? Math.floor(milliseconds / 1000)
-    : Math.floor(Date.now() / 1000);
+  return Number.isFinite(milliseconds) ? Math.floor(milliseconds / 1000) : Math.floor(Date.now() / 1000);
 }
 
 export function ttlSecondsFrom(value: DateInput, days: number) {
@@ -24,10 +22,7 @@ export function ttlSecondsFrom(value: DateInput, days: number) {
 }
 
 export function conversationTtlSeconds(now: DateInput = new Date()) {
-  return ttlSecondsFrom(
-    now,
-    retentionDays('THINGY_CONVERSATION_RETENTION_DAYS', DEFAULT_CONVERSATION_RETENTION_DAYS)
-  );
+  return ttlSecondsFrom(now, retentionDays('THINGY_CONVERSATION_RETENTION_DAYS', DEFAULT_CONVERSATION_RETENTION_DAYS));
 }
 
 export function dispatchDraftTtlSeconds(now: DateInput = new Date()) {

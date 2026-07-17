@@ -6,7 +6,7 @@ import { sanitizeAnswerProse } from './answer-sanitizer.mjs';
 import { shouldEmitExperienceForTurn } from './experience.mjs';
 import { logEvent as sharedLogEvent } from './logging.mjs';
 import { agentSystemPrompt } from './prompts.mjs';
-import { compactSource, retrieve, tokenize } from './retrieval.mjs';
+import { tokenize } from './retrieval.mjs';
 import { normalizeScope } from './scope.mjs';
 import { conversationModeDefinition, conversationModePrompt, normalizeConversationMode } from './conversation-modes.mjs';
 
@@ -393,7 +393,7 @@ export async function buildCuriosityMap({ conversations, scope, center }) {
       prompt: curiosityPrompt(centerTheme, centerTheme, 'center'),
       why: 'Current center of gravity from your recent conversations.'
     },
-    ...sorted.map((candidate, index) => ({
+    ...sorted.map((candidate) => ({
       id: curiosityNodeId(candidate.label),
       label: candidate.label,
       kind: candidate.kind || 'adjacent',

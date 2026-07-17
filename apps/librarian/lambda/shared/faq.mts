@@ -5,20 +5,50 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const FAQ_PATH = path.join(ROOT, 'faq.json');
 const TOKEN_RE = /[a-z0-9][a-z0-9'-]{1,}/gi;
-let faqCache;
+
+type Replacements = Record<string, unknown>;
+
+interface FaqSourceEntry {
+  question: string;
+  answer: string;
+}
+
+interface FaqSection {
+  title: string;
+  entries?: FaqSourceEntry[];
+}
+
+interface FaqData {
+  sections?: FaqSection[];
+}
+
+interface FaqEntry {
+  section: string;
+  question: string;
+  answer: string;
+  answer_text: string;
+  url: string;
+}
+
+interface SearchFaqOptions {
+  limit?: number;
+  replacements?: Replacements;
+}
+
+let faqCache: FaqData | undefined;
 
 export function loadFaq() {
   if (!faqCache) {
-    faqCache = JSON.parse(fs.readFileSync(FAQ_PATH, 'utf8'));
+    faqCache = JSON.parse(fs.readFileSync(FAQ_PATH, 'utf8')) as FaqData;
   }
   return faqCache;
 }
 
-export function renderFaqAnswer(answer, replacements = {}) {
+export function renderFaqAnswer(answer: unknown, replacements: Replacements = {}) {
   return String(answer || '').replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key) => String(replacements[key] ?? ''));
 }
 
-export function markdownToPlainText(markdown) {
+export function markdownToPlainText(markdown: unknown) {
   return String(markdown || '')
     .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
@@ -31,12 +61,12 @@ export function markdownToPlainText(markdown) {
     .trim();
 }
 
-function tokenize(value) {
+function tokenize(value: unknown) {
   return Array.from(String(value || '').matchAll(TOKEN_RE), (match) => match[0].toLowerCase());
 }
 
-export function faqEntries(replacements = {}) {
-  const entries = [];
+export function faqEntries(replacements: Replacements = {}): FaqEntry[] {
+  const entries: FaqEntry[] = [];
   for (const section of loadFaq().sections || []) {
     for (const entry of section.entries || []) {
       const answer = renderFaqAnswer(entry.answer, replacements);
@@ -52,7 +82,7 @@ export function faqEntries(replacements = {}) {
   return entries;
 }
 
-export function searchFaq(query, { limit = 5, replacements = {} } = {}) {
+export function searchFaq(query: unknown, { limit = 5, replacements = {} }: SearchFaqOptions = {}) {
   const queryTerms = tokenize(query);
   if (!queryTerms.length) return [];
   const scored = [];

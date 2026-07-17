@@ -1,25 +1,50 @@
-export function parseToolUseInput(value) {
+import type { ConverseStreamResponse } from '@aws-sdk/client-bedrock-runtime';
+
+type JsonObject = Record<string, unknown>;
+
+interface StreamToolUse {
+  toolUseId: string;
+  name: string;
+  input: string;
+}
+
+interface StreamBlock {
+  text?: string;
+  toolUse?: StreamToolUse;
+}
+
+interface ReadConverseStreamOptions {
+  onTextDelta?: (text: string) => void;
+}
+
+export function parseToolUseInput(value: unknown): JsonObject {
   const text = String(value || '').trim();
   if (!text) return {};
   try {
-    const parsed = JSON.parse(text);
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    const parsed: unknown = JSON.parse(text);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as JsonObject) : {};
   } catch {
     return {};
   }
 }
 
-export async function readConverseStream(response, { onTextDelta } = {}) {
-  const blocks = new Map();
-  const message = { role: 'assistant', content: [] };
+export async function readConverseStream(
+  response: ConverseStreamResponse,
+  { onTextDelta }: ReadConverseStreamOptions = {}
+) {
+  const blocks = new Map<number, StreamBlock>();
+  const message: { role: string; content: Array<{ text: string } | { toolUse: JsonObject }> } = {
+    role: 'assistant',
+    content: []
+  };
   let text = '';
   let stopReason = '';
   let usage = {};
   let trace = {};
 
-  const blockFor = (index) => {
+  const blockFor = (index: number): StreamBlock => {
     if (!blocks.has(index)) blocks.set(index, { text: '' });
-    return blocks.get(index);
+    return blocks.get(index)!;
   };
 
   for await (const event of response.stream || []) {
@@ -31,15 +56,21 @@ export async function readConverseStream(response, { onTextDelta } = {}) {
     if (event.contentBlockStart) {
       const index = event.contentBlockStart.contentBlockIndex ?? blocks.size;
       const toolUse = event.contentBlockStart.start?.toolUse;
-      blocks.set(index, toolUse
-        ? { toolUse: { toolUseId: toolUse.toolUseId, name: toolUse.name, input: '' } }
-        : { text: '' });
+      blocks.set(
+        index,
+        toolUse
+          ? { toolUse: { toolUseId: toolUse.toolUseId ?? '', name: toolUse.name ?? '', input: '' } }
+          : { text: '' }
+      );
       continue;
     }
 
     if (event.contentBlockDelta) {
       const index = event.contentBlockDelta.contentBlockIndex ?? blocks.size;
-      const delta = event.contentBlockDelta.delta || {};
+      const delta = (event.contentBlockDelta.delta || {}) as {
+        text?: string;
+        toolUse?: { input?: string };
+      };
       const block = blockFor(index);
 
       if (delta.text) {

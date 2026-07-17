@@ -7,10 +7,14 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = resolve(root, 'dist');
 
 rmSync(dist, { recursive: true, force: true });
-execFileSync(process.execPath, [resolve(root, 'node_modules/typescript/bin/tsc'), '-p', resolve(root, 'tsconfig.build.json')], {
-  cwd: root,
-  stdio: 'inherit'
-});
+execFileSync(
+  process.execPath,
+  [resolve(root, 'node_modules/typescript/bin/tsc'), '-p', resolve(root, 'tsconfig.build.json')],
+  {
+    cwd: root,
+    stdio: 'inherit'
+  }
+);
 
 cpSync(resolve(root, 'prompts'), resolve(dist, 'prompts'), { recursive: true });
 mkdirSync(resolve(dist, 'shared'), { recursive: true });

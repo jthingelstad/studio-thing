@@ -1,5 +1,7 @@
 export function normalizeFeedbackReaction(value: unknown) {
-  const reaction = String(value || '').trim().toLowerCase();
+  const reaction = String(value || '')
+    .trim()
+    .toLowerCase();
   return reaction === 'up' || reaction === 'down' ? reaction : '';
 }
 
