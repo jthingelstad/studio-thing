@@ -117,11 +117,12 @@ old or new. This is enforced at two layers:
   cited reference into a link (`[WT287](https://weekly.thingelstad.com/archive/287/)`).
   A reference with no matching citation is left exactly as written — a stray `#5`
   that isn't an issue number is never touched. The Lambda's citation-ordering pass
-  (`runtime.mjs`) likewise recognizes both forms when sorting sources by mention
+  (`apps/librarian/lambda/shared/citations.mts`) likewise recognizes both forms when sorting sources by mention
   order.
 
 Note: the corpus-embedding and rerank context strings (`librarian-core`'s
-`Weekly Thing #{n}: {subject}` chunk header, the matching header in `runtime.mjs`)
+`Weekly Thing #{n}: {subject}` chunk header, the matching header in
+`apps/librarian/lambda/shared/retrieval.mts`)
 still use the `#` form. That text is model-internal context, never shown to a user,
 and rewriting it would force a paid re-embed for no benefit — so it's intentionally
 left alone.

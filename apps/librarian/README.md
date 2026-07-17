@@ -6,11 +6,12 @@ The AWS Lambda agent that answers reader questions against Jamie Thingelstad's p
 
 ## What it is
 
-Three Lambdas behind one CloudFormation stack:
+Four Lambdas behind one CloudFormation stack:
 
 - **Auth Lambda** (REST via API Gateway) — handles Buttondown subscriber lookup, Fastmail/JMAP magic-link login, HMAC-signed session tokens, conversation list/get/create/rename/delete, Discord bridge token minting, Dispatch drafting routes, profile updates, and per-answer feedback reactions.
 - **Stream Lambda** (Function URL, response streaming) — handles `/chat` (SSE-streamed agent loop with server-side conversation history), `/welcome`, `/curiosity-map`, `/feedback`, and `/retrieve` (semantic JSON retrieval used by `workshop_bot` for its `archive__retrieve` tool + several pre-injection helpers).
 - **Eval Lambda** (DynamoDB Stream trigger) — reviews updated server-side conversations out of band, writes summary/quality metadata back to DynamoDB, and posts operator cards directly to Discord via incoming webhook when configured.
+- **Dispatch Lambda** (DynamoDB Stream trigger) — generates queued Dispatch drafts, sends approved email through Fastmail/JMAP, persists lifecycle state, and posts operator cards to Discord.
 
 The Q&A intelligence lives entirely here. Retrieval is **Bedrock Cohere embed → vector search → Cohere rerank** against a pre-embedded corpus in S3, with BM25 lexical fallback. Generation is Claude Sonnet via Bedrock Converse (cross-region inference profile, tool use enabled).
 
@@ -22,12 +23,13 @@ apps/librarian/
 ├── CLAUDE.md         ← operational memory
 ├── lambda/           ← Node.js Lambda code (runtime: Node 24, arm64)
 │   ├── chat/         ← Stream Lambda — /chat, /welcome, /curiosity-map, /retrieve
-│   │   ├── handler.mjs    (thin re-export)
-│   │   └── runtime.mjs    (~1100 lines; agent loop, retrieval, routes)
+│   │   ├── handler.mts    (streaming entrypoint)
+│   │   └── runtime.mts    (agent loop and routes)
 │   ├── auth/         ← Auth Lambda — /auth, /feedback, conversations, Dispatch routes
 │   ├── eval/         ← Eval Lambda — conversation reviews + Discord webhook cards
-│   ├── shared/       ← AWS clients, Bedrock streaming parser, FAQ search, session crypto, rate limiting
-│   ├── prompts/      ← editable system prompts (packaged into both Lambdas)
+│   ├── dispatch/     ← Dispatch Lambda — generation, delivery, and lifecycle worker
+│   ├── shared/       ← AWS clients, retrieval, Bedrock streaming, sessions, Dispatch helpers
+│   ├── prompts/      ← editable system prompts (packaged into both deployment artifacts)
 │   └── tests/        ← Node tests
 ├── infra/
 │   └── cloudformation.yaml   ← full stack: Lambdas, API Gateway, DynamoDB, IAM, CloudWatch

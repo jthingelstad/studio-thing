@@ -136,7 +136,7 @@ So **`?ref=` and `?utm_source=` are first-class campaign attribution** in Tinyly
 
 **API gotcha:** `group_by` doesn't accept `source` — only `path | country | referrer | browser_name | platform_name`. To aggregate by source, paginate raw hits and tally client-side; that's what `tinylytics.sources` does. (A feature request to add `source` to the `group_by` enum would be a clean upstream fix.)
 
-**Subscriber attribution is separate:** ref tags also flow site-side → `attribution-capture.njk` → Buttondown subscriber `metadata.ref` + `source:<tag>` tag (see `apps/librarian/lambda/shared/buttondown.mjs`). For "did this campaign convert to a subscriber" use `buttondown.attribution_summary`; for "did this campaign drive site traffic" use `tinylytics.sources`. The two answer different questions.
+**Subscriber attribution is separate:** ref tags also flow site-side → `attribution-capture.njk` → Buttondown subscriber `metadata.ref` + `source:<tag>` tag (see `apps/librarian/lambda/shared/buttondown.mts`). For "did this campaign convert to a subscriber" use `buttondown.attribution_summary`; for "did this campaign drive site traffic" use `tinylytics.sources`. The two answer different questions.
 
 (There's no per-link click breakdown either: clicks register as ordinary hits on the destination page, with the `referrer` field set to the source page. Aggregating "clicks on link X from page Y" requires walking individual hits.)
 

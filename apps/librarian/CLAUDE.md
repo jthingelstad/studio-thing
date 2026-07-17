@@ -2,21 +2,22 @@
 
 Operational notes for the Thingy Lambda stack. Human-facing overview lives in [`README.md`](README.md). The full runtime guide (env vars, IAM cleanup plan, retrieval architecture in depth, Tinylytics events, deployment checklist) is at [`../../reference/librarian.md`](../../reference/librarian.md). This file is the "what to keep in mind when editing here" memory.
 
-## Architecture: three Lambdas, one CloudFormation stack
+## Architecture: four Lambdas, one CloudFormation stack
 
 The Lambda code is **Node.js** (Node 24 runtime, arm64). Everything else in this monorepo is Python — that's intentional: the Lambda needs the AWS SDK v3 + response-streaming primitives, both of which are smoother in Node.
 
-Three Lambdas in `infra/cloudformation.yaml`:
+Four Lambdas in `infra/cloudformation.yaml`:
 
-- **`LibrarianFunction`** (`lambda/auth/handler.mjs`) — REST API behind API Gateway. Handles Buttondown subscriber lookup, Fastmail/JMAP magic-link login, HMAC session mint/redeem, user conversation list/get/create/rename/delete, Discord bridge token minting, profile updates, and Dispatch drafting routes. Memory 1024 MB, timeout 35s.
-- **`LibrarianStreamFunction`** (`lambda/chat/handler.mjs` → `runtime.mjs`) — Function URL with `RESPONSE_STREAM`. Handles `/chat` (SSE-streamed agent loop with server-side history), `/welcome`, `/curiosity-map`, `/feedback`, and `/retrieve` (semantic JSON-only retrieval for workshop_bot). Memory 1536 MB, timeout 90s, ReservedConcurrentExecutions = 5.
-- **`LibrarianEvalFunction`** (`lambda/eval/handler.mjs`) — DynamoDB Stream consumer. Reviews server-side conversations out of band, writes summary/quality/flags back to canonical conversation rows, and posts operator cards directly to Discord through `DISCORD_CONVERSATION_WEBHOOK_URL`. Memory 1024 MB, timeout 180s, ReservedConcurrentExecutions = 1.
+- **`LibrarianFunction`** (`lambda/auth/handler.mts`) — REST API behind API Gateway. Handles Buttondown subscriber lookup, Fastmail/JMAP magic-link login, HMAC session mint/redeem, user conversation list/get/create/rename/delete, Discord bridge token minting, profile updates, and Dispatch drafting routes. Memory 1024 MB, timeout 35s.
+- **`LibrarianStreamFunction`** (`lambda/chat/handler.mts` → `runtime.mts`) — Function URL with `RESPONSE_STREAM`. Handles `/chat` (SSE-streamed agent loop with server-side history), `/welcome`, `/curiosity-map`, `/feedback`, and `/retrieve` (semantic JSON-only retrieval for workshop_bot). Memory 3008 MB, timeout 300s, ReservedConcurrentExecutions = 5.
+- **`LibrarianEvalFunction`** (`lambda/eval/handler.mts`) — DynamoDB Stream consumer. Reviews server-side conversations out of band, writes summary/quality/flags back to canonical conversation rows, and posts operator cards directly to Discord through `DISCORD_CONVERSATION_WEBHOOK_URL`. Memory 1024 MB, timeout 180s, ReservedConcurrentExecutions = 1.
+- **`LibrarianDispatchFunction`** (`lambda/dispatch/handler.mts`) — DynamoDB Stream consumer. Generates queued Dispatch drafts, renders and sends approved email through Fastmail/JMAP, persists lifecycle state, and posts operator cards to Discord. Memory 2048 MB, timeout 300s, ReservedConcurrentExecutions = 1.
 
-All Lambdas share the same IAM role (`LibrarianFunctionRole`) and `shared/` helpers. The auth + stream bundles also include the `prompts/` directory.
+All Lambdas share the same IAM role (`LibrarianFunctionRole`) and `shared/` helpers. The two deployment artifacts also include the `prompts/` directory.
 
 ### The `/chat` agent loop
 
-`lambda/chat/runtime.mjs` is the meat of it (~1100 lines). On each turn:
+`lambda/chat/runtime.mts` is the main request loop. On each turn:
 
 1. Verify bearer token (HMAC-signed session JWT — `verifyToken`, `SESSION_SECRET`).
 2. Rate-limit per subscriber hash (DynamoDB, hourly).
@@ -27,7 +28,7 @@ All Lambdas share the same IAM role (`LibrarianFunctionRole`) and `shared/` help
 7. Run the Bedrock Converse agent loop with tool use. Tools include `search_faq`, `search_archive`, `get_source`, `find_links`, `corpus_stats`, `latest_content`, `list_content`, `archive_lens`, `entity_lens`, `source_neighborhood`, `archive_gems`, `claim_check`.
 8. Stream answer deltas, archive-work status, final citations, and experience artifacts via SSE; record the turn to DynamoDB; bump the per-user profile counters. Dispatch-planner conversations (`mode: dispatch`) also get `check_dispatch_fit` and `update_dispatch_brief` tools, and briefs stream to the client as `dispatch_brief` SSE events.
 
-The retrieval pipeline (functions live in `runtime.mjs`):
+The retrieval pipeline lives in `lambda/shared/retrieval.mts`:
 
 - **`embedQuery`** — Bedrock Cohere `embed-english-v3` (us-east-1).
 - **`retrieveSemantic`** — cosine similarity against pre-embedded corpus chunks.
@@ -39,7 +40,7 @@ The retrieval pipeline (functions live in `runtime.mjs`):
 
 Added in May 2026. Same `retrieve()` function `/chat` uses, exposed as a JSON-only POST with bridge-secret auth (no per-user session token). Returns `{passages, embedding_model, rerank_model, request_id}`. Called by `workshop_bot` for its `archive__retrieve` agent tool + several pre-injection helpers (compose-closer, pinboard-scan resonance, draft-review echoes, promotion-prep thread context, compose-subject thread awareness).
 
-The `bridgeSecretOk` helper in `runtime.mjs` mirrors the same check in `auth/handler.mjs` — both compare against `DISCORD_BRIDGE_SECRET` via `crypto.timingSafeEqual`. It's duplicated rather than shared because the two bundles ship separately and adding a shared `crypto` helper to `shared/` would add build complexity for 5 lines.
+The `bridgeSecretOk` helper in `chat/runtime.mts` mirrors the same check in `auth/handler.mts` — both compare against `DISCORD_BRIDGE_SECRET` via `crypto.timingSafeEqual`. It's duplicated rather than shared because the two artifacts ship separately and adding a shared `crypto` helper would add build complexity for 5 lines.
 
 ## Deploy
 
@@ -63,7 +64,7 @@ The `--skip-corpus-upload` flag is the **default for any code-only change**. Ful
 Deploy steps:
 
 1. Smoke-test the three Thingy model buckets — refuses to deploy if any configured default/fast/advanced model isn't invokable from this account.
-2. Package both Lambda bundles (`auth/` + `chat/` separately).
+2. Package the shared auth/eval/dispatch artifact and the separate streaming chat artifact.
 3. Upload zip to `s3://weekly-thing-librarian/code/{auth,chat}-lambda/<ts>.zip`.
 4. If not `--skip-corpus-upload`: upload all three API corpora — Weekly Thing corpus + graph, blog corpus, and podcast corpus.
 5. CloudFormation `update-stack` with the new code keys + secrets from `.env` (`SESSION_SECRET`, `DISCORD_BRIDGE_SECRET`, `DISCORD_CONVERSATION_WEBHOOK_URL`, `BUTTONDOWN_API_KEY`).
@@ -122,10 +123,10 @@ These are set at deploy time from `.env`, written into the Lambda environment by
 - **All structured logging via `logEvent(level, message, fields)`** — JSON output, CloudWatch-Insights-readable.
 - **Magic-link auth is mandatory.** Public `/auth` always sends a Fastmail/JMAP magic link before minting an email session; there is no direct session fallback after subscriber validation.
 - **Session tokens are HMAC-signed** (not encrypted). The `sub` claim is the SHA256 hash of the subscriber email (`emailHash()`). Discord bridge subs are prefixed `discord:` so they're trivially distinguishable. Reader sessions last ten days, and a still-valid session can be refreshed by `/auth` `action=refresh_session`.
-- **Privacy guarding** lives in `runtime.mjs#privacyGuardAnswer`. Don't bypass; readers ask questions that leak their own PII and we don't echo it.
+- **Privacy guarding** lives in `chat/runtime.mts#privacyGuardAnswer`. Don't bypass; readers ask questions that leak their own PII and we don't echo it.
 - **Conversation modes are entitlement-gated.** `thingy` is for all readers, `research_guide` requires `supporting_member`, `thought_partner` requires `owner`, and `trusted_circle` requires `trusted_circle`.
 - **Citations use `#NNN` for Weekly Thing sources.** Blog and podcast sources should be cited by title/permalink because they do not have issue numbers.
-- **Bridge-secret check is `crypto.timingSafeEqual`** — duplicated in two files (`runtime.mjs` + `auth/handler.mjs`) because the two bundles ship separately. Don't refactor to a shared helper without re-checking the bundle topology.
+- **Bridge-secret check is `crypto.timingSafeEqual`** — duplicated in two files (`chat/runtime.mts` + `auth/handler.mts`) because the two artifacts ship separately. Don't refactor to a shared helper without re-checking the bundle topology.
 
 ## Known follow-ups
 
