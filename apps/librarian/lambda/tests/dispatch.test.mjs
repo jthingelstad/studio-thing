@@ -9,9 +9,9 @@ import {
   getUserDispatch,
   recoverStaleDispatches,
   upsertDispatchDraft
-} from '../shared/dispatch-store.mjs';
-import { discordDispatchCard } from '../shared/dispatch-worker.mjs';
-import { dispatchContentArtifactKey } from '../shared/dispatch-artifacts.mjs';
+} from '../dist/shared/dispatch-store.mjs';
+import { discordDispatchCard } from '../dist/shared/dispatch-worker.mjs';
+import { dispatchContentArtifactKey } from '../dist/shared/dispatch-artifacts.mjs';
 import {
   analyzeDispatchSourceFit,
   dispatchHtmlEmail,
@@ -20,7 +20,7 @@ import {
   dispatchTemplateTestPayload,
   parseDispatchJson,
   selectDispatchSources
-} from '../shared/dispatch-generator.mjs';
+} from '../dist/shared/dispatch-generator.mjs';
 
 test('dispatch availability enforces active and rolling 24-hour limits', () => {
   const nowSeconds = Math.floor(Date.parse('2026-06-08T12:00:00Z') / 1000);
@@ -648,7 +648,7 @@ test('dispatch Discord card escapes user-controlled markdown', () => {
 });
 
 test('dispatch planner mode is hidden from pickers but usable by readers', async () => {
-  const { availableConversationModes, canUseConversationMode, conversationModePrompt } = await import('../shared/conversation-modes.mjs');
+  const { availableConversationModes, canUseConversationMode, conversationModePrompt } = await import('../dist/shared/conversation-modes.mjs');
   assert.equal(availableConversationModes(['reader']).some((mode) => mode.id === 'dispatch'), false);
   assert.equal(availableConversationModes(['reader', 'owner']).some((mode) => mode.id === 'dispatch'), false);
   assert.equal(canUseConversationMode('dispatch', ['reader']), true);
@@ -660,7 +660,7 @@ test('dispatch planner mode is hidden from pickers but usable by readers', async
 });
 
 test('update_dispatch_brief normalizes drafts and gates ready briefs on coverage', async () => {
-  const { DISPATCH_PLANNER_TOOLS } = await import('../shared/dispatch-planner-tools.mjs');
+  const { DISPATCH_PLANNER_TOOLS } = await import('../dist/shared/dispatch-planner-tools.mjs');
   const update = DISPATCH_PLANNER_TOOLS.update_dispatch_brief;
 
   const missing = await update({});
@@ -707,7 +707,7 @@ test('update_dispatch_brief normalizes drafts and gates ready briefs on coverage
 });
 
 test('dispatch planner tool specs expose both planning tools', async () => {
-  const { dispatchPlannerToolSpecs } = await import('../shared/dispatch-planner-tools.mjs');
+  const { dispatchPlannerToolSpecs } = await import('../dist/shared/dispatch-planner-tools.mjs');
   const specs = dispatchPlannerToolSpecs();
   const names = specs.map((spec) => spec.toolSpec.name);
   assert.deepEqual(names, ['check_dispatch_fit', 'update_dispatch_brief']);

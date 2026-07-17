@@ -4,7 +4,7 @@ import {
   answerFramesExperience,
   isExperienceRequest,
   shouldEmitExperienceForTurn
-} from '../shared/experience.mjs';
+} from '../dist/shared/experience.mjs';
 
 test('ordinary topical questions do not request archive experience cards', () => {
   assert.equal(isExperienceRequest('Tell me about Jamie and publishing.'), false);

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { collectToolCitations } from '../shared/archive-tools.mjs';
+import { collectToolCitations } from '../dist/shared/archive-tools.mjs';
 
 test('archive tool citations are exported for chat runtime', () => {
   const citations = collectToolCitations([
@@ -34,7 +34,7 @@ test('chat runtime imports with the Lambda response-stream shim', async () => {
     streamifyResponse: (handler) => handler
   };
 
-  const runtime = await import('../chat/runtime.mjs');
+  const runtime = await import('../dist/chat/runtime.mjs');
 
   assert.equal(typeof runtime.handler, 'function');
 });

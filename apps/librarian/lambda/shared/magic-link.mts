@@ -13,12 +13,12 @@ export function createMagicToken() {
   return crypto.randomBytes(MAGIC_TOKEN_BYTES).toString('base64url');
 }
 
-export function validMagicToken(token) {
+export function validMagicToken(token: unknown) {
   const value = String(token || '').trim();
   return MAGIC_TOKEN_RE.test(value) ? value : '';
 }
 
-export function magicTokenHash(token) {
+export function magicTokenHash(token: unknown) {
   return crypto.createHash('sha256').update(validMagicToken(token)).digest('hex');
 }
 
@@ -26,7 +26,7 @@ export function magicLinkBaseUrl() {
   return String(process.env.THINGY_MAGIC_LINK_BASE_URL || 'https://thingy.thingelstad.com/').trim();
 }
 
-export function buildMagicLink(token, baseUrl = magicLinkBaseUrl()) {
+export function buildMagicLink(token: unknown, baseUrl = magicLinkBaseUrl()) {
   const value = validMagicToken(token);
   if (!value) throw new Error('Invalid magic token');
   const url = new URL(baseUrl || 'https://thingy.thingelstad.com/');

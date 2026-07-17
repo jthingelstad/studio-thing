@@ -4,7 +4,7 @@ Operational notes for the Thingy Lambda stack. Human-facing overview lives in [`
 
 ## Architecture: three Lambdas, one CloudFormation stack
 
-The Lambda code is **Node.js** (Node 20 runtime, arm64). Everything else in this monorepo is Python — that's intentional: the Lambda needs the AWS SDK v3 + response-streaming primitives, both of which are smoother in Node.
+The Lambda code is **Node.js** (Node 24 runtime, arm64). Everything else in this monorepo is Python — that's intentional: the Lambda needs the AWS SDK v3 + response-streaming primitives, both of which are smoother in Node.
 
 Three Lambdas in `infra/cloudformation.yaml`:
 

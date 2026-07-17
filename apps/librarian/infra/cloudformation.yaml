@@ -262,7 +262,7 @@ Resources:
       Handler: auth/handler.handler
       MemorySize: 1024
       Role: !GetAtt LibrarianFunctionRole.Arn
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Timeout: 35
       Tags:
         - Key: project
@@ -298,7 +298,7 @@ Resources:
       MemorySize: 3008
       ReservedConcurrentExecutions: 5
       Role: !GetAtt LibrarianFunctionRole.Arn
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Timeout: 300
       Tags:
         - Key: project
@@ -324,7 +324,7 @@ Resources:
       MemorySize: 1024
       ReservedConcurrentExecutions: 1
       Role: !GetAtt LibrarianFunctionRole.Arn
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Timeout: 180
       Tags:
         - Key: project
@@ -356,7 +356,7 @@ Resources:
       MemorySize: 2048
       ReservedConcurrentExecutions: 1
       Role: !GetAtt LibrarianFunctionRole.Arn
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Timeout: 300
       Tags:
         - Key: project

@@ -22,6 +22,7 @@ REPO = Path(__file__).resolve().parents[2]
 STACK_NAME = "weekly-thing-librarian"
 TEMPLATE = REPO / "apps" / "librarian" / "infra" / "cloudformation.yaml"
 LAMBDA_DIR = REPO / "apps" / "librarian" / "lambda"
+LAMBDA_DIST_DIR = LAMBDA_DIR / "dist"
 BUILD_DIR = REPO / "tmp" / "librarian_lambda"
 STREAM_BUILD_DIR = REPO / "tmp" / "librarian_chat_lambda"
 ZIP_PATH = REPO / "tmp" / "librarian_lambda.zip"
@@ -41,6 +42,7 @@ THINGY_MODEL_ENV_NAMES = (
     "THINGY_FAST_MODEL",
     "THINGY_ADVANCED_MODEL",
 )
+_lambda_dist_ready = False
 
 
 def thingy_models_from_template() -> dict[str, str]:
@@ -98,7 +100,17 @@ def run(args: list[str], cwd: Path = REPO) -> None:
     subprocess.run(args, cwd=cwd, check=True)
 
 
+def ensure_lambda_dist() -> None:
+    global _lambda_dist_ready
+    if _lambda_dist_ready:
+        return
+    run(["npm", "ci", "--no-audit", "--no-fund"], cwd=LAMBDA_DIR)
+    run(["npm", "run", "build"], cwd=LAMBDA_DIR)
+    _lambda_dist_ready = True
+
+
 def copy_lambda_source(build_dir: Path) -> None:
+    ensure_lambda_dist()
     if build_dir.exists():
         shutil.rmtree(build_dir)
     build_dir.mkdir(parents=True)
@@ -108,7 +120,7 @@ def copy_lambda_source(build_dir: Path) -> None:
     run(["npm", "ci", "--omit=dev", "--no-audit", "--no-fund"], cwd=build_dir)
 
     for name in ("auth", "chat", "dispatch", "eval", "shared", "prompts"):
-        shutil.copytree(LAMBDA_DIR / name, build_dir / name, dirs_exist_ok=True)
+        shutil.copytree(LAMBDA_DIST_DIR / name, build_dir / name, dirs_exist_ok=True)
 
 
 def zip_build_dir(build_dir: Path, zip_path: Path) -> None:

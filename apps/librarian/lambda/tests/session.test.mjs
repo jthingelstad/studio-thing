@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { renderFaqAnswer, searchFaq } from '../shared/faq.mjs';
-import { buildMagicLink, createMagicToken, magicTokenHash, validMagicToken } from '../shared/magic-link.mjs';
-import { buildJmapEmailCalls, buildMagicLinkJmapCalls, magicLinkEmailHtml, magicLinkEmailText, requireMethodResponse } from '../shared/jmap-mail.mjs';
-import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, verifyToken } from '../shared/session.mjs';
-import { entitlementsForSessionPayload, handler as authHandler, magicLinkBaseWithReturnPath } from '../auth/handler.mjs';
+import { renderFaqAnswer, searchFaq } from '../dist/shared/faq.mjs';
+import { buildMagicLink, createMagicToken, magicTokenHash, validMagicToken } from '../dist/shared/magic-link.mjs';
+import { buildJmapEmailCalls, buildMagicLinkJmapCalls, magicLinkEmailHtml, magicLinkEmailText, requireMethodResponse } from '../dist/shared/jmap-mail.mjs';
+import { createSessionToken, createSessionTokenForSub, emailHash, normalizeEmail, verifyToken } from '../dist/shared/session.mjs';
+import { entitlementsForSessionPayload, handler as authHandler, magicLinkBaseWithReturnPath } from '../dist/auth/handler.mjs';
 import {
   authProfile,
   discordConnectionMemoryUpdate,
@@ -12,11 +12,11 @@ import {
   memoryFromItem,
   recordUserTurn,
   recordUserPreferredName
-} from '../shared/user-memory.mjs';
-import { renderTemplate, agentUserPrompt } from '../shared/prompts.mjs';
-import { subscriberStatus } from '../shared/buttondown.mjs';
-import { deleteThingyProfile, tokenIssuedAfterProfileDeletion } from '../shared/profile-deletion.mjs';
-import { bedrock, dynamodb, s3 } from '../shared/aws-clients.mjs';
+} from '../dist/shared/user-memory.mjs';
+import { renderTemplate, agentUserPrompt } from '../dist/shared/prompts.mjs';
+import { subscriberStatus } from '../dist/shared/buttondown.mjs';
+import { deleteThingyProfile, tokenIssuedAfterProfileDeletion } from '../dist/shared/profile-deletion.mjs';
+import { bedrock, dynamodb, s3 } from '../dist/shared/aws-clients.mjs';
 import {
   createLinkCode,
   createLinkState,
@@ -24,23 +24,23 @@ import {
   discordUserHash,
   isSupportingEntitlement,
   normalizeDiscordIdentity
-} from '../shared/discord-link.mjs';
+} from '../dist/shared/discord-link.mjs';
 import {
   availableConversationModes,
   canUseConversationMode,
   entitlementsForSubscriber,
   isOwnerEmail,
   normalizeConversationMode
-} from '../shared/conversation-modes.mjs';
-import { normalizeFeedbackReaction, validFeedbackRequestId } from '../shared/feedback.mjs';
-import { readConverseStream } from '../shared/bedrock-stream.mjs';
+} from '../dist/shared/conversation-modes.mjs';
+import { normalizeFeedbackReaction, validFeedbackRequestId } from '../dist/shared/feedback.mjs';
+import { readConverseStream } from '../dist/shared/bedrock-stream.mjs';
 import {
   PREFLIGHT_SYSTEM_PROMPT,
   normalizePreflightDecision,
   parsePreflightJson,
   passThroughPreflight
-} from '../shared/prompt-preflight.mjs';
-import { normalizeUserProfile, readerContextPrompt } from '../shared/chat-context.mjs';
+} from '../dist/shared/prompt-preflight.mjs';
+import { normalizeUserProfile, readerContextPrompt } from '../dist/shared/chat-context.mjs';
 
 test('session token round trips and rejects tampering', () => {
   process.env.SESSION_SECRET = 'test-secret';

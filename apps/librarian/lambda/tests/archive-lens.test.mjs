@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildArchiveLens, lensMatchReasons, matchesLensTopic, normalizeLensOperation } from '../shared/archive-lens.mjs';
+import { buildArchiveLens, lensMatchReasons, matchesLensTopic, normalizeLensOperation } from '../dist/shared/archive-lens.mjs';
 
 const records = [
   {

@@ -4,12 +4,14 @@ export const DEFAULT_CONVERSATION_RETENTION_DAYS = 45;
 export const DEFAULT_DISPATCH_DRAFT_RETENTION_DAYS = 7;
 export const DEFAULT_DISPATCH_HISTORY_RETENTION_DAYS = 90;
 
-function retentionDays(envName, fallback) {
+type DateInput = Date | string | number;
+
+function retentionDays(envName: string, fallback: number) {
   const value = Number(process.env[envName] || fallback);
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
-function epochSeconds(value = new Date()) {
+function epochSeconds(value: DateInput = new Date()) {
   const date = value instanceof Date ? value : new Date(value);
   const milliseconds = date.getTime();
   return Number.isFinite(milliseconds)
@@ -17,25 +19,25 @@ function epochSeconds(value = new Date()) {
     : Math.floor(Date.now() / 1000);
 }
 
-export function ttlSecondsFrom(value, days) {
+export function ttlSecondsFrom(value: DateInput, days: number) {
   return epochSeconds(value) + Math.ceil(Number(days) * SECONDS_PER_DAY);
 }
 
-export function conversationTtlSeconds(now = new Date()) {
+export function conversationTtlSeconds(now: DateInput = new Date()) {
   return ttlSecondsFrom(
     now,
     retentionDays('THINGY_CONVERSATION_RETENTION_DAYS', DEFAULT_CONVERSATION_RETENTION_DAYS)
   );
 }
 
-export function dispatchDraftTtlSeconds(now = new Date()) {
+export function dispatchDraftTtlSeconds(now: DateInput = new Date()) {
   return ttlSecondsFrom(
     now,
     retentionDays('THINGY_DISPATCH_DRAFT_RETENTION_DAYS', DEFAULT_DISPATCH_DRAFT_RETENTION_DAYS)
   );
 }
 
-export function dispatchHistoryTtlSeconds(now = new Date()) {
+export function dispatchHistoryTtlSeconds(now: DateInput = new Date()) {
   return ttlSecondsFrom(
     now,
     retentionDays('THINGY_DISPATCH_HISTORY_RETENTION_DAYS', DEFAULT_DISPATCH_HISTORY_RETENTION_DAYS)

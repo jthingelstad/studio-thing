@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { DEFAULT_SCOPE, SCOPES, normalizeScope, scopeKinds, scopePromptLine } from '../shared/scope.mjs';
+import { DEFAULT_SCOPE, SCOPES, normalizeScope, scopeKinds, scopePromptLine } from '../dist/shared/scope.mjs';
 
 test('normalizeScope defaults to weekly_thing for empty/unknown input', () => {
   assert.equal(normalizeScope(undefined), 'weekly_thing');

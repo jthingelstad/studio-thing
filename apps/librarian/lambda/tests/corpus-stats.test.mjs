@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { countsByPublishYear, yearCountSummary, yearFromPublishDate, yearlyContentSignals } from '../shared/corpus-stats.mjs';
+import { countsByPublishYear, yearCountSummary, yearFromPublishDate, yearlyContentSignals } from '../dist/shared/corpus-stats.mjs';
 
 test('yearFromPublishDate extracts a publication year', () => {
   assert.equal(yearFromPublishDate('2026-06-05T12:00:00Z'), 2026);

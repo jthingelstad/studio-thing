@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 _site/
+apps/librarian/lambda/dist/
 
 # Local cache
 cache/

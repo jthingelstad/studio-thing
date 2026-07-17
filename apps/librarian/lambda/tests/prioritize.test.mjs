@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { prioritizeCitationsForAnswer } from '../shared/citations.mjs';
+import { prioritizeCitationsForAnswer } from '../dist/shared/citations.mjs';
 
 const c = (issueNumber, section = 'Issue') => ({
   issue_number: String(issueNumber),

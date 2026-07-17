@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { loadUserConversationSummaries } from '../shared/conversation-store.mjs';
+import { loadUserConversationSummaries } from '../dist/shared/conversation-store.mjs';
 import {
   artifactDynamoString,
   artifactJsonForStorage,
@@ -15,7 +15,7 @@ import {
   turnSkPrefix,
   userConversationPk,
   validConversationId
-} from '../shared/user-conversations.mjs';
+} from '../dist/shared/user-conversations.mjs';
 
 test('fromDynamoAttr unmarshals the attribute types canonical conversation rows use', () => {
   assert.equal(fromDynamoAttr({ S: 'hello' }), 'hello');

@@ -13,11 +13,33 @@ function dispatchArtifactPrefix() {
   return String(process.env.DISPATCH_ARTIFACT_PREFIX || DEFAULT_PREFIX).replace(/^\/+|\/+$/g, '') || DEFAULT_PREFIX;
 }
 
-function safeKeyPart(value) {
+interface DispatchArtifactIdentity {
+  subscriberHash: string;
+  dispatchId: string;
+}
+
+interface DispatchArtifactResult {
+  subject?: unknown;
+  title?: unknown;
+  preview?: unknown;
+  text?: unknown;
+  html?: unknown;
+}
+
+interface PutDispatchArtifactOptions extends DispatchArtifactIdentity {
+  result?: DispatchArtifactResult | null;
+}
+
+interface GetDispatchArtifactOptions {
+  bucket?: string;
+  key?: string;
+}
+
+function safeKeyPart(value: unknown) {
   return String(value || 'unknown').replace(/[^A-Za-z0-9_.:-]/g, '_').slice(0, 120) || 'unknown';
 }
 
-export function dispatchContentArtifactKey({ subscriberHash, dispatchId }) {
+export function dispatchContentArtifactKey({ subscriberHash, dispatchId }: DispatchArtifactIdentity) {
   return [
     dispatchArtifactPrefix(),
     safeKeyPart(subscriberHash),
@@ -25,7 +47,7 @@ export function dispatchContentArtifactKey({ subscriberHash, dispatchId }) {
   ].join('/');
 }
 
-export async function putDispatchContentArtifact({ subscriberHash, dispatchId, result }) {
+export async function putDispatchContentArtifact({ subscriberHash, dispatchId, result }: PutDispatchArtifactOptions) {
   const bucket = dispatchArtifactBucket();
   const key = dispatchContentArtifactKey({ subscriberHash, dispatchId });
   const payload = {
@@ -47,11 +69,12 @@ export async function putDispatchContentArtifact({ subscriberHash, dispatchId, r
   return { bucket, key };
 }
 
-export async function getDispatchContentArtifact({ bucket, key }) {
+export async function getDispatchContentArtifact({ bucket, key }: GetDispatchArtifactOptions) {
   if (!bucket || !key) return {};
   const response = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+  if (!response.Body) throw new Error('Dispatch artifact body was empty.');
   const raw = await response.Body.transformToString();
-  const parsed = JSON.parse(raw);
+  const parsed = JSON.parse(raw) as { text?: unknown; html?: unknown };
   return {
     text: String(parsed.text || ''),
     html: String(parsed.html || '')

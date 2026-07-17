@@ -182,7 +182,7 @@ jobs:
         run: uv run --locked python -m unittest discover -s tests -p 'test_*.py' -t .
 
       - name: Run Lambda tests
-        run: npm --prefix apps/librarian/lambda test
+        run: npm --prefix apps/librarian/lambda run verify
 
       # Note: landing-page stats (subscriber/supporter numbers) are NOT produced
       # here — weekly fetches its own in its CI. Studio no longer refreshes or

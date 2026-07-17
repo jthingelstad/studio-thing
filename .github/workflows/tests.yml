@@ -45,4 +45,4 @@ jobs:
           cache-dependency-path: apps/librarian/lambda/package-lock.json
       - run: npm ci
       - run: npm audit --audit-level=high
-      - run: npm test
+      - run: npm run verify

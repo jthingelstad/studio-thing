@@ -20,7 +20,7 @@ The Q&A intelligence lives entirely here. Retrieval is **Bedrock Cohere embed �
 apps/librarian/
 ├── README.md         ← this file
 ├── CLAUDE.md         ← operational memory
-├── lambda/           ← Node.js Lambda code (runtime: Node 20, arm64)
+├── lambda/           ← Node.js Lambda code (runtime: Node 24, arm64)
 │   ├── chat/         ← Stream Lambda — /chat, /welcome, /curiosity-map, /retrieve
 │   │   ├── handler.mjs    (thin re-export)
 │   │   └── runtime.mjs    (~1100 lines; agent loop, retrieval, routes)
@@ -79,7 +79,7 @@ then uploads the updated corpus artifacts.
 
 ## Tech stack
 
-- **Node 20** (arm64) — Lambda runtime
+- **Node 24** (arm64) — Lambda runtime
 - **AWS SDK v3** — `@aws-sdk/client-bedrock-runtime`, `client-bedrock-agent-runtime`, `client-dynamodb`, `client-s3`
 - **Bedrock** — Cohere `embed-english-v3` (us-east-1), Cohere `rerank-v3-5:0` (us-west-2), Claude Sonnet 4.6 (cross-region inference)
 - **DynamoDB** — conversation log, rate limits, per-user profile row

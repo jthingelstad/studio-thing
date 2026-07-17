@@ -4,7 +4,7 @@ import {
   conversationTtlSeconds,
   dispatchDraftTtlSeconds,
   dispatchHistoryTtlSeconds
-} from '../shared/retention.mjs';
+} from '../dist/shared/retention.mjs';
 
 test('Thingy retention windows default to the agreed shorter durations', () => {
   const now = '2026-06-08T12:00:00.000Z';

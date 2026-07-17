@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { sanitizeAnswerProse } from '../shared/answer-sanitizer.mjs';
+import { sanitizeAnswerProse } from '../dist/shared/answer-sanitizer.mjs';
 
 test('removes archive URL sentence from latest-content prose', () => {
   const answer = 'Weekly Thing — WT350, published May 30, 2026. The archive URL is `/archive/350/`.\n\nBlog — newest post.';

@@ -15,8 +15,10 @@
 
 export const SCOPES = ['weekly_thing', 'blog', 'podcast', 'both', 'weekly_thing_podcast', 'blog_podcast', 'all'];
 export const DEFAULT_SCOPE = 'weekly_thing';
+export type LibrarianScope = (typeof SCOPES)[number];
+export type LibrarianSourceKind = 'weekly_thing' | 'blog' | 'podcast';
 
-function sourceToken(value) {
+function sourceToken(value: unknown): LibrarianSourceKind | '' {
   const raw = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
   if (raw === 'weekly_thing' || raw === 'wt' || raw === 'weeklything' || raw === 'issues' || raw === 'archive' || raw === 'newsletter') return 'weekly_thing';
   if (raw === 'blog' || raw === 'thingelstad' || raw === 'thingelstad_com') return 'blog';
@@ -25,7 +27,7 @@ function sourceToken(value) {
 }
 
 /** Coerce arbitrary input into one of SCOPES, defaulting to weekly_thing. */
-export function normalizeScope(value) {
+export function normalizeScope(value: unknown): LibrarianScope {
   const input = String(value || '').trim().toLowerCase();
   const raw = input.replace(/[\s-]+/g, '_');
   const source = sourceToken(raw);
@@ -42,12 +44,12 @@ export function normalizeScope(value) {
   if (selected.has('weekly_thing') && selected.has('blog') && selected.size === 2) return 'both';
   if (selected.has('weekly_thing') && selected.has('podcast') && selected.size === 2) return 'weekly_thing_podcast';
   if (selected.has('blog') && selected.has('podcast') && selected.size === 2) return 'blog_podcast';
-  if (selected.size === 1) return Array.from(selected)[0];
+  if (selected.size === 1) return Array.from(selected)[0] as LibrarianScope;
   return DEFAULT_SCOPE;
 }
 
 /** Corpus kinds a scope scans, in retrieval order (WT first for mixed scopes). */
-export function scopeKinds(scope) {
+export function scopeKinds(scope: unknown): LibrarianSourceKind[] {
   const normalized = normalizeScope(scope);
   if (normalized === 'blog') return ['blog'];
   if (normalized === 'podcast') return ['podcast'];
@@ -63,7 +65,7 @@ export function scopeKinds(scope) {
  * may speak from. Injected as a system block after the cached static
  * prompt, so it varies per request without busting the prompt cache.
  */
-export function scopePromptLine(scope) {
+export function scopePromptLine(scope: unknown) {
   switch (normalizeScope(scope)) {
     case 'blog':
       return 'Active source scope: **thingelstad.com blog only**. Answer from Jamie\'s personal blog posts (his 20-year blog), not the Weekly Thing newsletter. Blog sources have no WT issue number — cite them by title and link, not by WT<N>.';

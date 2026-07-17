@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildSubscriberBody, cleanTagSegment, hasThingyTag, sanitizeAttribution } from '../shared/buttondown.mjs';
+import { buildSubscriberBody, cleanTagSegment, hasThingyTag, sanitizeAttribution } from '../dist/shared/buttondown.mjs';
 
 test('cleanTagSegment preserves casing and strips unsafe chars', () => {
   assert.equal(cleanTagSegment('DenseDiscovery-388'), 'DenseDiscovery-388');

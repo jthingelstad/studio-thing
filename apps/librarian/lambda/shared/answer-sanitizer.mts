@@ -5,7 +5,7 @@ const PROCESS_NARRATION_RE = /\b(?:let me\s+(?:pull|look|search|check|find|tell|
 const PREFLIGHT_PAREN_RE = /\n{0,2}\s*\(Preflight:[\s\S]*?\)\s*$/i;
 const PREFLIGHT_BLOCK_RE = /(?:^|\n)#{0,3}\s*\*{0,2}Preflight\*{0,2}:?[\s\S]*$/i;
 
-function cleanSpacing(value) {
+function cleanSpacing(value: unknown) {
   return String(value || '')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
@@ -14,7 +14,7 @@ function cleanSpacing(value) {
     .trim();
 }
 
-function stripLeadingProcessNarration(value) {
+function stripLeadingProcessNarration(value: unknown) {
   let text = String(value || '');
   const answerMarker = text.search(/\b(?:here(?:'|’)s|here is)\b|^#{1,3}\s+/im);
   if (answerMarker > 0 && PROCESS_NARRATION_RE.test(text.slice(0, answerMarker))) {
@@ -27,7 +27,7 @@ function stripLeadingProcessNarration(value) {
   return blocks.join('\n\n').replace(/^(?:-{3,}|\*{3,}|_{3,})\s*/g, '');
 }
 
-export function sanitizeAnswerProse(answer) {
+export function sanitizeAnswerProse(answer: unknown) {
   let text = String(answer || '');
   if (!text) return '';
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { turnForPrompt } from '../shared/eval-transcript.mjs';
+import { turnForPrompt } from '../dist/shared/eval-transcript.mjs';
 
 test('eval prompt includes long answers without silent mid-answer clipping', () => {
   const answer = [

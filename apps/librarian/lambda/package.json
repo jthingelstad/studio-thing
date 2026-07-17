@@ -7,7 +7,10 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "test": "node --test tests/*.test.mjs"
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "verify": "npm run typecheck && npm test"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.1090.0",
@@ -15,5 +18,10 @@
     "@aws-sdk/client-dynamodb": "^3.1090.0",
     "@aws-sdk/client-s3": "^3.1090.0",
     "markdown-it": "^14.3.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.162",
+    "@types/node": "^24.13.3",
+    "typescript": "^7.0.2"
   }
 }

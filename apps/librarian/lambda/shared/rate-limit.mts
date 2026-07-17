@@ -4,7 +4,7 @@ import { logEvent } from './logging.mjs';
 
 const RATE_LIMIT_WINDOW_SECONDS = 60 * 60;
 
-export async function checkRateLimit(identity, maxRequests = Number(process.env.RATE_LIMIT_MAX || '20')) {
+export async function checkRateLimit(identity: string, maxRequests = Number(process.env.RATE_LIMIT_MAX || '20')) {
   const tableName = process.env.TABLE_NAME;
   if (!tableName) return true;
   const now = Math.floor(Date.now() / 1000);
