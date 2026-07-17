@@ -475,9 +475,9 @@ export async function handleDispatch(event: LibrarianHttpEvent, body: JsonRecord
         conversationId: String(body.conversation_id || body.conversationId || ''),
         clarificationQuestion: String(body.clarification_question || ''),
         clarificationAnswer: String(body.clarification_answer || ''),
-        brief: body.brief as null | undefined,
+        brief: body.brief,
         title,
-        messages: (Array.isArray(body.messages) ? body.messages : []) as never[]
+        messages: Array.isArray(body.messages) ? body.messages : []
       });
       if (!dispatch) throw new Error('Dispatch draft could not be loaded after saving.');
       logEvent('info', 'dispatch_draft_saved', {
@@ -536,7 +536,7 @@ export async function handleDispatch(event: LibrarianHttpEvent, body: JsonRecord
         dynamodb,
         tableName,
         subscriberHash: profile.subscriberHash,
-        rows: [dispatch] as never[]
+        rows: [dispatch]
       });
       if (recovered) {
         dispatch =
@@ -626,7 +626,7 @@ export async function handleDispatch(event: LibrarianHttpEvent, body: JsonRecord
             direction,
             clarificationQuestion: String(body.clarification_question || ''),
             clarificationAnswer: String(body.clarification_answer || ''),
-            brief: body.brief as null | undefined,
+            brief: body.brief,
             templateTest
           })
         : await createQueuedDispatch({
@@ -640,7 +640,7 @@ export async function handleDispatch(event: LibrarianHttpEvent, body: JsonRecord
             direction,
             clarificationQuestion: String(body.clarification_question || ''),
             clarificationAnswer: String(body.clarification_answer || ''),
-            brief: body.brief as null | undefined,
+            brief: body.brief,
             templateTest
           });
       if (!dispatch) throw new Error('Dispatch could not be loaded after queueing.');
