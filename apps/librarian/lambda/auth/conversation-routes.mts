@@ -1,7 +1,9 @@
 import crypto from 'node:crypto';
 import { BatchWriteItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb';
+import type { AttributeValue, QueryCommandOutput, WriteRequest } from '@aws-sdk/client-dynamodb';
 import { dynamodb } from '../shared/aws-clients.mjs';
 import { jsonResponse } from '../shared/http.mjs';
+import type { LibrarianHttpEvent } from '../shared/http.mjs';
 import { extractBearer, verifyToken } from '../shared/session.mjs';
 import { sessionAllowedForThingyProfile } from '../shared/profile-deletion.mjs';
 import { logEvent } from '../shared/logging.mjs';
@@ -25,25 +27,35 @@ import {
   validConversationId
 } from '../shared/user-conversations.mjs';
 
-function sleep(ms) {
+type RequestBody = Record<string, unknown>;
+type Claims = Record<string, unknown>;
+
+interface ConversationRouteOptions {
+  start?: number;
+  entitlementsForSessionPayload: (payload: Claims) => readonly unknown[];
+}
+
+function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function batchDeleteKeys(tableName, keys, maxAttempts = 5) {
+async function batchDeleteKeys(tableName: string, keys: Array<Record<string, AttributeValue>>, maxAttempts = 5) {
   let deleted = 0;
   for (let index = 0; index < keys.length; index += 25) {
-    let requests = keys.slice(index, index + 25).map((Key) => ({ DeleteRequest: { Key } }));
+    let requests: WriteRequest[] = keys.slice(index, index + 25).map((Key) => ({ DeleteRequest: { Key } }));
     for (let attempt = 1; requests.length && attempt <= maxAttempts; attempt += 1) {
-      const response = await dynamodb.send(new BatchWriteItemCommand({
-        RequestItems: {
-          [tableName]: requests
-        }
-      }));
+      const response = await dynamodb.send(
+        new BatchWriteItemCommand({
+          RequestItems: {
+            [tableName]: requests
+          }
+        })
+      );
       const unprocessed = response.UnprocessedItems?.[tableName] || [];
       deleted += requests.length - unprocessed.length;
       requests = unprocessed;
       if (requests.length && attempt < maxAttempts) {
-        await sleep(50 * (2 ** (attempt - 1)));
+        await sleep(50 * 2 ** (attempt - 1));
       }
     }
     if (requests.length) {
@@ -53,38 +65,43 @@ async function batchDeleteKeys(tableName, keys, maxAttempts = 5) {
   return deleted;
 }
 
-async function conversationAuth(event, body) {
+async function conversationAuth(event: LibrarianHttpEvent, body: RequestBody) {
   const payload = verifyToken(extractBearer(event, body));
   if (!payload || !(await sessionAllowedForThingyProfile(payload))) return null;
   return payload;
 }
 
-function conversationTableUnavailable(event) {
+function conversationTableUnavailable(event: LibrarianHttpEvent) {
   return jsonResponse(500, { error: 'Thingy conversation history is unavailable right now.' }, event);
 }
 
-export async function handleUserConversations(event, body, {
-  start = performance.now(),
-  entitlementsForSessionPayload
-} = {}) {
+export async function handleUserConversations(
+  event: LibrarianHttpEvent,
+  body: RequestBody,
+  { start = performance.now(), entitlementsForSessionPayload }: ConversationRouteOptions
+) {
   const payload = await conversationAuth(event, body);
-  const subscriberHash = payload ? String(payload.sub || '') : '';
-  if (!subscriberHash) {
+  if (!payload) {
     return jsonResponse(401, { error: 'Please validate your subscriber email to use Thingy.' }, event);
   }
+  const subscriberHash = String(payload.sub || '');
+  if (!subscriberHash)
+    return jsonResponse(401, { error: 'Please validate your subscriber email to use Thingy.' }, event);
   const entitlements = entitlementsForSessionPayload(payload);
   const modes = availableConversationModes(entitlements);
   const tableName = process.env.TABLE_NAME;
   if (!tableName) return conversationTableUnavailable(event);
 
-  const action = String(body.action || 'list').trim().toLowerCase();
+  const action = String(body.action || 'list')
+    .trim()
+    .toLowerCase();
   try {
     if (action === 'list') {
       const conversations = await loadUserConversationSummaries({
         dynamodb,
         tableName,
         subscriberHash,
-        limit: body.limit || USER_CONVERSATION_LIMIT,
+        limit: Number(body.limit || USER_CONVERSATION_LIMIT),
         logEvent
       });
       logEvent('info', 'user_conversations_listed', {
@@ -98,7 +115,13 @@ export async function handleUserConversations(event, body, {
     if (action === 'get') {
       const conversationId = validConversationId(body.conversation_id || body.id);
       if (!conversationId) return jsonResponse(400, { error: 'conversation_id is required.' }, event);
-      const result = await getUserConversation({ dynamodb, tableName, subscriberHash, conversationId, limit: body.limit });
+      const result = await getUserConversation({
+        dynamodb,
+        tableName,
+        subscriberHash,
+        conversationId,
+        limit: body.limit === undefined ? undefined : Number(body.limit)
+      });
       if (!result) return jsonResponse(404, { error: 'Conversation not found.' }, event);
       return jsonResponse(200, result, event);
     }
@@ -138,22 +161,26 @@ export async function handleUserConversations(event, body, {
     if (action === 'delete' || action === 'trash') {
       const conversationId = validConversationId(body.conversation_id || body.id);
       if (!conversationId) return jsonResponse(400, { error: 'conversation_id is required.' }, event);
-      const keys = [{
-        pk: conversationDynamoString(userConversationPk(subscriberHash)),
-        sk: conversationDynamoString(conversationSk(conversationId))
-      }];
-      let exclusiveStartKey;
+      const keys: Array<Record<string, AttributeValue>> = [
+        {
+          pk: conversationDynamoString(userConversationPk(subscriberHash)),
+          sk: conversationDynamoString(conversationSk(conversationId))
+        }
+      ];
+      let exclusiveStartKey: Record<string, AttributeValue> | undefined;
       do {
-        const response = await dynamodb.send(new QueryCommand({
-          TableName: tableName,
-          KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
-          ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
-          ExpressionAttributeValues: {
-            ':pk': conversationDynamoString(userConversationPk(subscriberHash)),
-            ':prefix': conversationDynamoString(turnSkPrefix(conversationId))
-          },
-          ExclusiveStartKey: exclusiveStartKey
-        }));
+        const response: QueryCommandOutput = await dynamodb.send(
+          new QueryCommand({
+            TableName: tableName,
+            KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
+            ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' },
+            ExpressionAttributeValues: {
+              ':pk': conversationDynamoString(userConversationPk(subscriberHash)),
+              ':prefix': conversationDynamoString(turnSkPrefix(conversationId))
+            },
+            ExclusiveStartKey: exclusiveStartKey
+          })
+        );
         for (const item of response.Items || []) keys.push({ pk: item.pk, sk: item.sk });
         exclusiveStartKey = response.LastEvaluatedKey;
       } while (exclusiveStartKey);
@@ -168,13 +195,13 @@ export async function handleUserConversations(event, body, {
       return jsonResponse(200, { ok: true, conversation_id: conversationId, deleted_items: deletedItems }, event);
     }
   } catch (error) {
-    if (error.name === 'ConditionalCheckFailedException') {
+    if (error instanceof Error && error.name === 'ConditionalCheckFailedException') {
       return jsonResponse(404, { error: 'Conversation not found.' }, event);
     }
     logEvent('error', 'user_conversations_action_failed', {
       subscriber_hash: subscriberHash,
       action,
-      error_type: error.constructor?.name || 'Error'
+      error_type: error instanceof Error ? error.constructor.name : 'Error'
     });
     return jsonResponse(502, { error: 'Thingy could not update conversations right now.' }, event);
   }

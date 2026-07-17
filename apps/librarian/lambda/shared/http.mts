@@ -1,4 +1,4 @@
-interface LibrarianHttpEvent {
+export interface LibrarianHttpEvent {
   headers?: Record<string, unknown> | null;
   body?: string | null;
   isBase64Encoded?: boolean;
