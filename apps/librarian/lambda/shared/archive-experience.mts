@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
+import type { Message } from '@aws-sdk/client-bedrock-runtime';
 import { agentModel, bedrock } from './aws-clients.mjs';
 import { ARCHIVE_TOOLS } from './archive-tools.mjs';
 import { sanitizeAnswerProse } from './answer-sanitizer.mjs';
@@ -8,37 +9,128 @@ import { logEvent as sharedLogEvent } from './logging.mjs';
 import { agentSystemPrompt } from './prompts.mjs';
 import { tokenize } from './retrieval.mjs';
 import { normalizeScope } from './scope.mjs';
-import { conversationModeDefinition, conversationModePrompt, normalizeConversationMode } from './conversation-modes.mjs';
+import {
+  conversationModeDefinition,
+  conversationModePrompt,
+  normalizeConversationMode
+} from './conversation-modes.mjs';
 
 const AGENT_SYSTEM_PROMPT = agentSystemPrompt();
 const SERVICE_NAME = 'weekly-thing-librarian-stream';
 
-function logEvent(level, message, fields = {}) {
+interface ExperienceRecord {
+  source_kind?: string;
+  issue_number?: string | number | null;
+  number?: string | number;
+  episode_number?: string | number;
+  microblog_id?: string | number;
+  issue_year?: string | number;
+  post_year?: string | number;
+  subject?: string;
+  title?: string;
+  publish_date?: string;
+  section?: string;
+  url?: string;
+  show?: string;
+  reason?: string;
+  also_in_issues?: unknown;
+  audio_url?: string;
+  transcript_url?: string;
+  topics?: string[];
+  domains?: string[];
+  [key: string]: unknown;
+}
+
+interface ConversationSummary {
+  title?: string;
+  turn_count?: number;
+  updated_at?: string;
+}
+
+interface ExperienceItem extends ExperienceRecord {
+  label: string;
+  year: number | null;
+}
+
+interface ArchiveExperience {
+  kind: string;
+  title: string;
+  intro: string;
+  theme?: string | null;
+  items: ExperienceItem[];
+  prompt: string;
+}
+
+interface ToolExperienceResult {
+  reading_path?: ExperienceRecord[];
+  results?: ExperienceRecord[];
+  topic?: string;
+  theme?: string;
+  mode?: unknown;
+}
+
+interface CuriosityCandidate {
+  label: string;
+  weight: number;
+  reasons: string[];
+  sources: ExperienceRecord[];
+  kind: string;
+}
+
+interface CuriosityCandidateOptions {
+  weight?: number;
+  reason?: string;
+  source?: ExperienceRecord | null;
+  kind?: string;
+}
+
+interface ConversationScopeInput {
+  conversations?: ConversationSummary[];
+  scope?: unknown;
+}
+
+interface CuriosityMapInput extends ConversationScopeInput {
+  center?: unknown;
+}
+
+interface WelcomeInput extends ConversationScopeInput {
+  readerContext?: unknown;
+  mode?: unknown;
+  spark?: ArchiveExperience | null;
+}
+
+function logEvent(level: string, message: string, fields: Record<string, unknown> = {}) {
   sharedLogEvent(level, message, fields, SERVICE_NAME);
 }
 
-function bedrockMessageText(message) {
-  const parts = [];
+function bedrockMessageText(message: Message | undefined) {
+  const parts: string[] = [];
   for (const content of message?.content || []) {
     if (content.text) parts.push(content.text);
   }
   return parts.join('\n').trim();
 }
 
-function issueKey(value) {
-  return String(value || '').replace(/^#/, '').trim();
+function issueKey(value: unknown) {
+  return String(value || '')
+    .replace(/^#/, '')
+    .trim();
 }
 
-function normalizeSourceKind(value) {
-  const raw = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+function normalizeSourceKind(value: unknown) {
+  const raw = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
   if (!raw) return '';
-  if (['weekly_thing', 'weeklything', 'newsletter', 'issue', 'issues', 'archive', 'wt', 'chunk'].includes(raw)) return 'weekly_thing';
+  if (['weekly_thing', 'weeklything', 'newsletter', 'issue', 'issues', 'archive', 'wt', 'chunk'].includes(raw))
+    return 'weekly_thing';
   if (['blog', 'thingelstad', 'thingelstad_com', 'post', 'posts', 'micropost'].includes(raw)) return 'blog';
   if (['podcast', 'podcasts', 'another', 'another_thing', 'episode', 'episodes'].includes(raw)) return 'podcast';
   return '';
 }
 
-function urlKey(value) {
+function urlKey(value: unknown) {
   const raw = String(value || '').trim();
   if (!raw) return '';
   try {
@@ -47,16 +139,24 @@ function urlKey(value) {
     if (host === 'micro.thingelstad.com') host = 'thingelstad.com';
     return `${host}${url.pathname.replace(/\/$/, '')}`.toLowerCase();
   } catch {
-    return raw.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
+    return raw
+      .toLowerCase()
+      .replace(/^https?:\/\//, '')
+      .replace(/^www\./, '')
+      .replace(/\/$/, '');
   }
 }
 
-function recordYear(record) {
-  return Number(record?.issue_year || record?.post_year || String(record?.publish_date || '').match(/\b(?:19|20)\d{2}\b/)?.[0] || 0);
+function recordYear(record: ExperienceRecord) {
+  return Number(
+    record?.issue_year || record?.post_year || String(record?.publish_date || '').match(/\b(?:19|20)\d{2}\b/)?.[0] || 0
+  );
 }
 
-function sourceRecordKey(record) {
-  const kind = normalizeSourceKind(record?.source_kind || '') || (record?.episode_number ? 'podcast' : record?.microblog_id ? 'blog' : record?.issue_number ? 'weekly_thing' : '');
+function sourceRecordKey(record: ExperienceRecord) {
+  const kind =
+    normalizeSourceKind(record?.source_kind || '') ||
+    (record?.episode_number ? 'podcast' : record?.microblog_id ? 'blog' : record?.issue_number ? 'weekly_thing' : '');
   if (kind === 'weekly_thing') return `weekly_thing\0${issueKey(record.issue_number || record.number)}`;
   if (kind === 'blog') return `blog\0${record.microblog_id || urlKey(record.url)}`;
   if (kind === 'podcast') return `podcast\0${record.episode_number || record.number || urlKey(record.url)}`;
@@ -70,7 +170,7 @@ function welcomeInferenceConfig() {
   };
 }
 
-function sourceKindLabel(kind) {
+function sourceKindLabel(kind: unknown) {
   const normalized = normalizeSourceKind(kind);
   if (normalized === 'weekly_thing') return 'Weekly Thing';
   if (normalized === 'blog') return 'Blog';
@@ -78,20 +178,21 @@ function sourceKindLabel(kind) {
   return 'Archive';
 }
 
-function sourceDisplayTitle(source = {}) {
+function sourceDisplayTitle(source: ExperienceRecord = {}) {
   const sourceKind = normalizeSourceKind(source.source_kind);
   if (source.issue_number) return `WT${source.issue_number}: ${source.subject || 'Weekly Thing'}`;
-  if (sourceKind === 'podcast' && source.episode_number) return `Episode ${source.episode_number}: ${source.subject || 'Another Thing'}`;
+  if (sourceKind === 'podcast' && source.episode_number)
+    return `Episode ${source.episode_number}: ${source.subject || 'Another Thing'}`;
   return source.subject || source.title || source.url || 'Archive source';
 }
 
-function sourceHref(source = {}) {
+function sourceHref(source: ExperienceRecord = {}) {
   if (source.url) return source.url;
   if (source.issue_number) return `/archive/${source.issue_number}/`;
   return '';
 }
 
-function experienceSource(source = {}, reason = '') {
+function experienceSource(source: ExperienceRecord = {}, reason = ''): ExperienceItem {
   const sourceKind = normalizeSourceKind(source.source_kind || (source.issue_number ? 'weekly_thing' : ''));
   return {
     source_kind: sourceKind || source.source_kind || '',
@@ -112,26 +213,39 @@ function experienceSource(source = {}, reason = '') {
   };
 }
 
-function cleanThemeCandidate(value) {
+function cleanThemeCandidate(value: unknown) {
   const text = String(value || '').trim();
-  if (!text || /\b(?:self-referential|identify itself|what it had just been asked|immediately preceding query|thingy'?s identity|no substantive content|substantive content to summarize|no specific details)\b/i.test(text)) return '';
-  const focused = text.match(/\b(?:about|exploring|explored|on|around|thread(?:s)? (?:of|around))\s+([^.,;:!?]+)/i)?.[1] || text;
+  if (
+    !text ||
+    /\b(?:self-referential|identify itself|what it had just been asked|immediately preceding query|thingy'?s identity|no substantive content|substantive content to summarize|no specific details)\b/i.test(
+      text
+    )
+  )
+    return '';
+  const focused =
+    text.match(/\b(?:about|exploring|explored|on|around|thread(?:s)? (?:of|around))\s+([^.,;:!?]+)/i)?.[1] || text;
   const cleaned = focused
     .replace(/[`*_#[\]()>]/g, ' ')
-    .replace(/\b(?:the|this|that|user|reader|thingy|trail|jamie|archive|weekly thing|blog|podcast|question|questions|asked|asking|about|explored|exploring|conversation|session|centered|wanted|understand|thinking|perspective|structured|walkthrough|framed|through|likely|specific|details|summarize|substantive|content)\b/gi, ' ')
+    .replace(
+      /\b(?:the|this|that|user|reader|thingy|trail|jamie|archive|weekly thing|blog|podcast|question|questions|asked|asking|about|explored|exploring|conversation|session|centered|wanted|understand|thinking|perspective|structured|walkthrough|framed|through|likely|specific|details|summarize|substantive|content)\b/gi,
+      ' '
+    )
     .replace(/\s+/g, ' ')
     .trim();
   if (!cleaned || cleaned.length < 3) return '';
-  const words = cleaned.split(/\s+/).filter((word) => word.length > 2).slice(0, 5);
+  const words = cleaned
+    .split(/\s+/)
+    .filter((word) => word.length > 2)
+    .slice(0, 5);
   if (!words.length) return '';
   return words.join(' ').trim();
 }
 
-function themeTokens(value) {
+function themeTokens(value: unknown) {
   return [...new Set(tokenize(value).filter((token) => token.length > 2))].slice(0, 6);
 }
 
-function themesSimilar(first, second) {
+function themesSimilar(first: unknown, second: unknown) {
   const a = themeTokens(first);
   const b = themeTokens(second);
   if (!a.length || !b.length) return false;
@@ -140,19 +254,19 @@ function themesSimilar(first, second) {
   return overlap >= Math.min(2, a.length, b.length);
 }
 
-function recentSparkThemes(conversations = []) {
+function recentSparkThemes(conversations: ConversationSummary[] = []) {
   return (conversations || [])
     .slice(0, 6)
     .map((item) => cleanThemeCandidate(item?.title || item))
     .filter(Boolean);
 }
 
-function isRecentThemeRut(theme, recentThemes = []) {
+function isRecentThemeRut(theme: unknown, recentThemes: string[] = []) {
   if (!theme) return false;
   return recentThemes.filter((recent) => themesSimilar(theme, recent)).length >= 2;
 }
 
-function sparkThemeFromConversations(conversations = []) {
+function sparkThemeFromConversations(conversations: ConversationSummary[] = []) {
   const recentThemes = recentSparkThemes(conversations);
   for (const conversation of conversations || []) {
     const theme = cleanThemeCandidate(conversation.title);
@@ -161,15 +275,20 @@ function sparkThemeFromConversations(conversations = []) {
   return '';
 }
 
-function formatExperienceForPrompt(experience) {
+function formatExperienceForPrompt(experience: ArchiveExperience | null | undefined) {
   if (!experience?.items?.length) return 'No archive spark selected.';
   return [
     `${experience.title}: ${experience.intro}`,
-    ...experience.items.slice(0, 3).map((item, index) => `- ${index + 1}. ${item.title}${item.publish_date ? ` (${String(item.publish_date).slice(0, 10)})` : ''}${item.reason ? ` — ${item.reason}` : ''}`)
+    ...experience.items
+      .slice(0, 3)
+      .map(
+        (item, index) =>
+          `- ${index + 1}. ${item.title}${item.publish_date ? ` (${String(item.publish_date).slice(0, 10)})` : ''}${item.reason ? ` — ${item.reason}` : ''}`
+      )
   ].join('\n');
 }
 
-function welcomeThemeRelevance(source, theme) {
+function welcomeThemeRelevance(source: ExperienceRecord, theme: unknown) {
   const tokens = tokenize(theme).filter((token) => token.length > 2);
   if (!tokens.length) return 0;
   const titleText = [source.subject, source.title].join(' ').toLowerCase();
@@ -179,7 +298,7 @@ function welcomeThemeRelevance(source, theme) {
   return titleMatches * 3 + topicMatches * 2;
 }
 
-function experienceSourceKey(source = {}) {
+function experienceSourceKey(source: ExperienceRecord = {}) {
   const kind = normalizeSourceKind(source.source_kind || (source.issue_number ? 'weekly_thing' : ''));
   if (kind === 'weekly_thing' && source.issue_number) return `weekly_thing\0${issueKey(source.issue_number)}`;
   if (kind === 'podcast' && source.episode_number) return `podcast\0${source.episode_number}`;
@@ -188,16 +307,16 @@ function experienceSourceKey(source = {}) {
   return sourceRecordKey(source);
 }
 
-function welcomeSparkSources(results = [], theme = '') {
-  const seen = new Set();
-  const sources = [];
+function welcomeSparkSources(results: ExperienceRecord[] = [], theme = '') {
+  const seen = new Set<string>();
+  const sources: ExperienceRecord[] = [];
   for (const source of results || []) {
     const key = experienceSourceKey(source);
     if (seen.has(key)) continue;
     seen.add(key);
     sources.push(source);
   }
-  const reasonRank = (source) => {
+  const reasonRank = (source: ExperienceRecord) => {
     const reason = String(source.reason || '').toLowerCase();
     if (reason.includes('densest') || reason.includes('representative')) return 0;
     if (reason.includes('middle')) return 1;
@@ -205,9 +324,12 @@ function welcomeSparkSources(results = [], theme = '') {
     if (reason.includes('earliest')) return 4;
     return 3;
   };
-  const sorted = sources.sort((a, b) => reasonRank(a) - reasonRank(b)
-    || welcomeThemeRelevance(b, theme) - welcomeThemeRelevance(a, theme)
-    || (recordYear(b) || 0) - (recordYear(a) || 0));
+  const sorted = sources.sort(
+    (a, b) =>
+      reasonRank(a) - reasonRank(b) ||
+      welcomeThemeRelevance(b, theme) - welcomeThemeRelevance(a, theme) ||
+      (recordYear(b) || 0) - (recordYear(a) || 0)
+  );
   const visiblyThemed = sorted.filter((source) => {
     const reason = String(source.reason || '').toLowerCase();
     return welcomeThemeRelevance(source, theme) > 0 || reason.includes('densest') || reason.includes('latest');
@@ -215,15 +337,20 @@ function welcomeSparkSources(results = [], theme = '') {
   return (visiblyThemed.length >= 2 ? visiblyThemed : sorted).slice(0, 3);
 }
 
-export async function buildWelcomeSpark({ conversations, scope }) {
+export async function buildWelcomeSpark({ conversations = [], scope }: ConversationScopeInput) {
   const theme = sparkThemeFromConversations(conversations);
-  const result = await ARCHIVE_TOOLS.archive_gems({
-    theme,
-    mood: theme ? '' : 'serendipity',
-    limit: theme ? 5 : 3
-  }, { scope });
+  const result = (await ARCHIVE_TOOLS.archive_gems(
+    {
+      theme,
+      mood: theme ? '' : 'serendipity',
+      limit: theme ? 5 : 3
+    },
+    { scope }
+  )) as ToolExperienceResult;
   const sources = theme ? welcomeSparkSources(result.results || [], theme) : (result.results || []).slice(0, 3);
-  const items = sources.map((source) => experienceSource(source, source.reason || (theme ? `connects to ${theme}` : 'worth resurfacing')));
+  const items = sources.map((source) =>
+    experienceSource(source, source.reason || (theme ? `connects to ${theme}` : 'worth resurfacing'))
+  );
   if (!items.length) return null;
   return {
     kind: 'spark',
@@ -233,20 +360,61 @@ export async function buildWelcomeSpark({ conversations, scope }) {
       : 'A small source Thingy found while getting oriented.',
     theme: theme || null,
     items,
-    prompt: theme ? `Find an adjacent Thingy Trail that starts near ${theme} but branches somewhere new.` : 'Surprise me with a Thingy Trail.'
+    prompt: theme
+      ? `Find an adjacent Thingy Trail that starts near ${theme} but branches somewhere new.`
+      : 'Surprise me with a Thingy Trail.'
   };
 }
 
 const CURIOSITY_STOPWORDS = new Set([
-  'able', 'across', 'again', 'also', 'another', 'around', 'because', 'before', 'between',
-  'conversation', 'could', 'curious', 'different', 'explore', 'exploring', 'getting',
-  'jamie', 'librarian', 'little', 'looking', 'maybe', 'might', 'more', 'needs',
-  'people', 'really', 'response', 'should', 'source', 'sources', 'thingelstad',
-  'thingy', 'things', 'think', 'thinking', 'through', 'topic', 'trying', 'using',
-  'weekly', 'would', 'write', 'writing', 'you', 'your'
+  'able',
+  'across',
+  'again',
+  'also',
+  'another',
+  'around',
+  'because',
+  'before',
+  'between',
+  'conversation',
+  'could',
+  'curious',
+  'different',
+  'explore',
+  'exploring',
+  'getting',
+  'jamie',
+  'librarian',
+  'little',
+  'looking',
+  'maybe',
+  'might',
+  'more',
+  'needs',
+  'people',
+  'really',
+  'response',
+  'should',
+  'source',
+  'sources',
+  'thingelstad',
+  'thingy',
+  'things',
+  'think',
+  'thinking',
+  'through',
+  'topic',
+  'trying',
+  'using',
+  'weekly',
+  'would',
+  'write',
+  'writing',
+  'you',
+  'your'
 ]);
 
-function titleCaseTheme(value) {
+function titleCaseTheme(value: unknown) {
   return String(value || '')
     .trim()
     .replace(/\s+/g, ' ')
@@ -262,7 +430,7 @@ function titleCaseTheme(value) {
     .join(' ');
 }
 
-function cleanCuriosityLabel(value) {
+function cleanCuriosityLabel(value: unknown) {
   const base = cleanThemeCandidate(value) || String(value || '').trim();
   const cleaned = base
     .replace(/^curiosity\s+map:\s*/i, ' ')
@@ -278,20 +446,26 @@ function cleanCuriosityLabel(value) {
   return titleCaseTheme(cleaned);
 }
 
-function curiosityNodeId(value) {
+function curiosityNodeId(value: unknown) {
   const slug = tokenize(value).slice(0, 6).join('-');
   return slug || crypto.randomUUID().slice(0, 8);
 }
 
-function curiosityPrompt(center, label, kind = 'adjacent') {
+function curiosityPrompt(center: unknown, label: unknown, kind = 'adjacent') {
   if (kind === 'center') return `Build me a Thingy Trail around ${center}.`;
   return `Trace ${center} into ${label} across Jamie's archive.`;
 }
 
-function addCuriosityCandidate(candidates, label, { weight = 1, reason = '', source = null, kind = 'adjacent' } = {}) {
+function addCuriosityCandidate(
+  candidates: Map<string, CuriosityCandidate>,
+  label: unknown,
+  { weight = 1, reason = '', source = null, kind = 'adjacent' }: CuriosityCandidateOptions = {}
+) {
   const cleaned = cleanCuriosityLabel(label);
   if (!cleaned || cleaned.length < 3) return;
-  const tokens = tokenize(cleaned).filter((token) => token.length > 1).slice(0, 6);
+  const tokens = tokenize(cleaned)
+    .filter((token) => token.length > 1)
+    .slice(0, 6);
   if (!tokens.length || tokens.every((token) => CURIOSITY_STOPWORDS.has(token))) return;
   const key = tokens.join(' ');
   const existing = candidates.get(key) || {
@@ -308,17 +482,22 @@ function addCuriosityCandidate(candidates, label, { weight = 1, reason = '', sou
   candidates.set(key, existing);
 }
 
-function curiosityThemeCandidates(conversations = []) {
-  const candidates = new Map();
-  const add = (value, weight, reason, kind = 'recent') => {
+function curiosityThemeCandidates(conversations: ConversationSummary[] = []) {
+  const candidates = new Map<string, CuriosityCandidate>();
+  const add = (value: unknown, weight: number, reason: string, kind = 'recent') => {
     const theme = cleanThemeCandidate(value);
     if (theme) addCuriosityCandidate(candidates, theme, { weight, reason, kind });
   };
-  for (const entry of (conversations || []).slice(0, 10)) add(entry?.title || '', 2.5, 'conversation history', 'recent');
+  for (const entry of (conversations || []).slice(0, 10))
+    add(entry?.title || '', 2.5, 'conversation history', 'recent');
   return [...candidates.values()].sort((a, b) => b.weight - a.weight || a.label.localeCompare(b.label));
 }
 
-function addSourceCuriosityTerms(candidates, source, center) {
+function addSourceCuriosityTerms(
+  candidates: Map<string, CuriosityCandidate>,
+  source: ExperienceRecord,
+  center: string
+) {
   const centerTokens = new Set(themeTokens(center));
   const sourceTitle = sourceDisplayTitle(source);
   const sourceReason = source.reason || `appears near ${center} in the archive`;
@@ -354,17 +533,24 @@ function addSourceCuriosityTerms(candidates, source, center) {
   }
 }
 
-export async function buildCuriosityMap({ conversations, scope, center }) {
+export async function buildCuriosityMap({ conversations = [], scope, center }: CuriosityMapInput) {
   const requestedCenter = cleanCuriosityLabel(center);
   const userCandidates = curiosityThemeCandidates(conversations);
   const fallbackTheme = cleanCuriosityLabel(sparkThemeFromConversations(conversations));
   const centerTheme = cleanCuriosityLabel(requestedCenter || userCandidates[0]?.label || fallbackTheme) || 'Archive';
   const scopeValue = normalizeScope(scope);
-  const archiveResult = centerTheme && centerTheme !== 'Archive'
-    ? await ARCHIVE_TOOLS.archive_gems({ theme: centerTheme, limit: 7 }, { scope: scopeValue })
-    : await ARCHIVE_TOOLS.archive_gems({ mood: 'serendipity', limit: 7 }, { scope: scopeValue });
+  const archiveResult = (
+    centerTheme && centerTheme !== 'Archive'
+      ? await ARCHIVE_TOOLS.archive_gems({ theme: centerTheme, limit: 7 }, { scope: scopeValue })
+      : await ARCHIVE_TOOLS.archive_gems(
+          { mood: 'serendipity', limit: 7 },
+          {
+            scope: scopeValue
+          }
+        )
+  ) as ToolExperienceResult;
   const archiveSources = welcomeSparkSources(archiveResult.results || [], centerTheme);
-  const candidates = new Map();
+  const candidates = new Map<string, CuriosityCandidate>();
   for (const candidate of userCandidates) {
     if (!themesSimilar(candidate.label, centerTheme)) {
       addCuriosityCandidate(candidates, candidate.label, {
@@ -376,7 +562,10 @@ export async function buildCuriosityMap({ conversations, scope, center }) {
   }
   for (const source of archiveSources) addSourceCuriosityTerms(candidates, source, centerTheme);
   if (candidates.size < 4 && centerTheme !== 'Archive') {
-    const broad = await ARCHIVE_TOOLS.archive_gems({ mood: 'serendipity', limit: 5 }, { scope: scopeValue });
+    const broad = (await ARCHIVE_TOOLS.archive_gems(
+      { mood: 'serendipity', limit: 5 },
+      { scope: scopeValue }
+    )) as ToolExperienceResult;
     for (const source of broad.results || []) addSourceCuriosityTerms(candidates, source, centerTheme);
   }
   const sorted = [...candidates.values()]
@@ -400,7 +589,9 @@ export async function buildCuriosityMap({ conversations, scope, center }) {
       weight: Number(Math.max(0.2, Math.min(0.95, candidate.weight / Math.max(sorted[0]?.weight || 1, 1))).toFixed(2)),
       prompt: curiosityPrompt(centerTheme, candidate.label),
       why: candidate.reasons?.[0] || `A nearby thread Thingy found from ${centerTheme}.`,
-      source_refs: candidate.sources.slice(0, 2).map((source) => experienceSource(source, source.reason || candidate.reasons?.[0] || 'archive evidence'))
+      source_refs: candidate.sources
+        .slice(0, 2)
+        .map((source) => experienceSource(source, source.reason || candidate.reasons?.[0] || 'archive evidence'))
     }))
   ];
   const edges = nodes.slice(1).map((node) => ({
@@ -415,12 +606,14 @@ export async function buildCuriosityMap({ conversations, scope, center }) {
     center: nodes[0],
     nodes,
     edges,
-    sources: archiveSources.slice(0, 5).map((source) => experienceSource(source, source.reason || `connected to ${centerTheme}`)),
+    sources: archiveSources
+      .slice(0, 5)
+      .map((source) => experienceSource(source, source.reason || `connected to ${centerTheme}`)),
     prompt: `Find the most surprising Thingy Trail that branches out from ${centerTheme}.`
   };
 }
 
-export function experienceFromToolResults(toolResults = [], answer = '', question = '') {
+export function experienceFromToolResults(toolResults: ToolExperienceResult[] = [], answer = '', question = '') {
   if (!shouldEmitExperienceForTurn({ question, answer })) return null;
   for (const result of toolResults) {
     const path = Array.isArray(result.reading_path) ? result.reading_path : [];
@@ -433,11 +626,15 @@ export function experienceFromToolResults(toolResults = [], answer = '', questio
         intro: 'A guided path through the archive sources Thingy found.',
         theme: topic || null,
         items: sources.map((source) => experienceSource(source, source.reason || 'part of the trail')),
-        prompt: topic ? `What adjacent thread branches out from Jamie's ${topic} trail?` : 'Show me the most surprising turn in this trail.'
+        prompt: topic
+          ? `What adjacent thread branches out from Jamie's ${topic} trail?`
+          : 'Show me the most surprising turn in this trail.'
       };
     }
     if (Array.isArray(result.results) && result.mode) {
-      const items = result.results.slice(0, 5).map((source) => experienceSource(source, source.reason || 'archive gem'));
+      const items = result.results
+        .slice(0, 5)
+        .map((source) => experienceSource(source, source.reason || 'archive gem'));
       if (items.length) {
         const themed = Boolean(result.theme);
         return {
@@ -446,27 +643,40 @@ export function experienceFromToolResults(toolResults = [], answer = '', questio
           intro: themed ? `A path through ${result.theme}.` : 'A few sources worth opening next.',
           theme: result.theme || null,
           items,
-          prompt: themed ? `Find an adjacent thread that branches out from ${result.theme}.` : 'Give me another archive spark.'
+          prompt: themed
+            ? `Find an adjacent thread that branches out from ${result.theme}.`
+            : 'Give me another archive spark.'
         };
       }
     }
   }
   if (/thingy trail|reading path|archive spark/i.test(answer)) {
-    return { kind: 'trail', title: 'Thingy Trail', intro: 'A guided path through the archive.', items: [], prompt: 'Continue this trail.' };
+    return {
+      kind: 'trail',
+      title: 'Thingy Trail',
+      intro: 'A guided path through the archive.',
+      items: [],
+      prompt: 'Continue this trail.'
+    };
   }
   return null;
 }
 
-function welcomePrompt({ readerContext, conversations, scope, mode, spark }) {
+function welcomePrompt({ readerContext, conversations = [], scope, mode, spark }: WelcomeInput) {
   const recent = (conversations || []).slice(0, 6);
   const modeDefinition = conversationModeDefinition(mode);
   const conversationLines = recent.length
-    ? recent.map((entry) => `- ${entry.title || 'Untitled chat'} (${entry.turn_count || 0} turns, updated ${String(entry.updated_at || '').slice(0, 10) || 'unknown'})`).join('\n')
+    ? recent
+        .map(
+          (entry) =>
+            `- ${entry.title || 'Untitled chat'} (${entry.turn_count || 0} turns, updated ${String(entry.updated_at || '').slice(0, 10) || 'unknown'})`
+        )
+        .join('\n')
     : 'No prior conversations found.';
   return [
-    'Write Thingy\'s opening message for a newly loaded chat.',
+    "Write Thingy's opening message for a newly loaded chat.",
     '',
-    'Thingy is Jamie Thingelstad\'s archive agent. It can help the reader connect ideas, compare eras, recall prior threads, and explore The Weekly Thing newsletter, the thingelstad.com blog, and Another Thing podcast.',
+    "Thingy is Jamie Thingelstad's archive agent. It can help the reader connect ideas, compare eras, recall prior threads, and explore The Weekly Thing newsletter, the thingelstad.com blog, and Another Thing podcast.",
     '',
     'Reader and session context:',
     readerContext || 'No reader-local context supplied.',
@@ -496,18 +706,22 @@ function welcomePrompt({ readerContext, conversations, scope, mode, spark }) {
   ].join('\n');
 }
 
-export async function generateWelcome({ readerContext, conversations, scope, mode, spark }) {
+export async function generateWelcome({ readerContext, conversations = [], scope, mode, spark }: WelcomeInput) {
   const start = performance.now();
-  const response = await bedrock.send(new ConverseCommand({
-    modelId: agentModel(),
-    system: [{ text: AGENT_SYSTEM_PROMPT }, { cachePoint: { type: 'default' } }],
-    messages: [{
-      role: 'user',
-      content: [{ text: welcomePrompt({ readerContext, conversations, scope, mode, spark }) }]
-    }],
-    inferenceConfig: welcomeInferenceConfig()
-  }));
-  const answer = sanitizeAnswerProse(bedrockMessageText(response.output?.message || {})).trim();
+  const response = await bedrock.send(
+    new ConverseCommand({
+      modelId: agentModel(),
+      system: [{ text: AGENT_SYSTEM_PROMPT }, { cachePoint: { type: 'default' } }],
+      messages: [
+        {
+          role: 'user',
+          content: [{ text: welcomePrompt({ readerContext, conversations, scope, mode, spark }) }]
+        }
+      ],
+      inferenceConfig: welcomeInferenceConfig()
+    })
+  );
+  const answer = sanitizeAnswerProse(bedrockMessageText(response.output?.message)).trim();
   logEvent('info', 'welcome_generated', {
     model: agentModel(),
     mode: normalizeConversationMode(mode),
