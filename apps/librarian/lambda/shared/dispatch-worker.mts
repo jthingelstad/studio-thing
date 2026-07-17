@@ -1,4 +1,6 @@
 import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
+import type { AttributeValue } from '@aws-sdk/client-dynamodb';
+import type { DynamoDBStreamEvent } from 'aws-lambda';
 import { dynamodb } from './aws-clients.mjs';
 import { errorFields, logEvent } from './logging.mjs';
 import { renderDispatch } from './dispatch-generator.mjs';
@@ -13,15 +15,41 @@ import {
   markDispatchReadyToRetry,
   markDispatchSent
 } from './dispatch-store.mjs';
+import type { DispatchRecord } from './dispatch-store.mjs';
+import type { DispatchSource } from './dispatch-generator.mjs';
 import { fromDynamoAttr } from './user-conversations.mjs';
 
-function compactLine(value, max = 240) {
-  const text = String(value || '').replace(/\s+/g, ' ').trim();
+interface DispatchResult {
+  subject: string;
+  title: string;
+  preview: string;
+  text: string;
+  html: string;
+  model: string;
+  usage: {
+    inputTokens?: number;
+    outputTokens?: number;
+    input_tokens?: number;
+    output_tokens?: number;
+  };
+  sources: DispatchSource[];
+  submission_id?: string;
+}
+
+interface DispatchRef {
+  subscriberHash: string;
+  dispatch: DispatchRecord;
+}
+
+function compactLine(value: unknown, max = 240) {
+  const text = String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim();
   return text.length <= max ? text : `${text.slice(0, max - 1).trim()}…`;
 }
 
-function sourceLabels(sources = [], limit = 10) {
-  const labels = [];
+function sourceLabels(sources: DispatchSource[] = [], limit = 10) {
+  const labels: string[] = [];
   for (const source of sources || []) {
     const label = [source.label, source.title].filter(Boolean).join(' · ');
     if (label && !labels.includes(label)) labels.push(label);
@@ -30,14 +58,25 @@ function sourceLabels(sources = [], limit = 10) {
   return labels;
 }
 
-function escapeDiscordMarkdown(value) {
+function escapeDiscordMarkdown(value: unknown) {
   return String(value || '').replace(/([\\*_~`>|[\]()])/g, '\\$1');
 }
 
-export function discordDispatchCard({ dispatch = {}, result = {} }) {
+export function discordDispatchCard({
+  dispatch = {},
+  result = {}
+}: {
+  dispatch?: Partial<DispatchRecord>;
+  result?: Partial<DispatchResult>;
+}) {
   const sources = sourceLabels(result.sources || []);
-  const subject = escapeDiscordMarkdown(compactLine(result.subject || dispatch.subject || result.title || dispatch.title || 'Thingy Dispatch', 180));
-  const request = escapeDiscordMarkdown(compactLine(dispatch.direction || dispatch.prompt || dispatch.topic || '', 360));
+  const usage = result.usage || {};
+  const subject = escapeDiscordMarkdown(
+    compactLine(result.subject || dispatch.subject || result.title || dispatch.title || 'Thingy Dispatch', 180)
+  );
+  const request = escapeDiscordMarkdown(
+    compactLine(dispatch.direction || dispatch.prompt || dispatch.topic || '', 360)
+  );
   const lines = [
     `**Thingy Dispatch · \`${escapeDiscordMarkdown(dispatch.id || dispatch.dispatch_id || 'unknown')}\`** · sent${dispatch.template_test ? ' · template test' : ''}`,
     `**Subject:** ${subject}`,
@@ -45,7 +84,7 @@ export function discordDispatchCard({ dispatch = {}, result = {} }) {
     request ? `**Request:** ${request}` : '',
     result.preview ? `**Preview:** ${escapeDiscordMarkdown(compactLine(result.preview, 260))}` : '',
     result.model ? `**Model:** ${escapeDiscordMarkdown(result.model)}` : '',
-    `**Tokens:** in ${result.usage?.inputTokens || result.usage?.input_tokens || 0} / out ${result.usage?.outputTokens || result.usage?.output_tokens || 0}`,
+    `**Tokens:** in ${usage.inputTokens || usage.input_tokens || 0} / out ${usage.outputTokens || usage.output_tokens || 0}`,
     `**Sources:** ${sources.length ? escapeDiscordMarkdown(sources.join(', ')) : '—'}`,
     'Use the Thingy Dispatch operator report for full content and source review.'
   ].filter(Boolean);
@@ -53,7 +92,7 @@ export function discordDispatchCard({ dispatch = {}, result = {} }) {
   return content.length <= 1900 ? content : `${content.slice(0, 1890).trim()}…`;
 }
 
-async function postDiscordDispatchWebhook({ dispatch, result }) {
+async function postDiscordDispatchWebhook({ dispatch, result }: { dispatch: DispatchRecord; result: DispatchResult }) {
   const url = String(process.env.DISCORD_CONVERSATION_WEBHOOK_URL || '').trim();
   if (!url) return { skipped: true };
   const response = await fetch(url, {
@@ -71,40 +110,49 @@ async function postDiscordDispatchWebhook({ dispatch, result }) {
   return { posted: true };
 }
 
-function subscriberHashFromUserPk(pk) {
+function subscriberHashFromUserPk(pk: unknown) {
   const text = String(pk || '');
   return text.startsWith('user#') ? text.slice('user#'.length) : '';
 }
 
 class DeliveryRetryScheduledError extends Error {
-  constructor(cause) {
-    super(`Dispatch delivery preparation will retry: ${cause?.message || cause || 'unknown error'}`);
+  retryScheduled = true;
+
+  constructor(cause: unknown) {
+    super(
+      `Dispatch delivery preparation will retry: ${(cause instanceof Error ? cause.message : cause) || 'unknown error'}`,
+      { cause }
+    );
     this.name = 'DeliveryRetryScheduledError';
-    this.cause = cause;
-    this.retryScheduled = true;
   }
 }
 
 class DeliveryFinalizedError extends Error {
-  constructor(cause) {
-    super(`Dispatch delivery failed and was finalized: ${cause?.message || cause || 'unknown error'}`);
+  deliveryFinalized = true;
+
+  constructor(cause: unknown) {
+    super(
+      `Dispatch delivery failed and was finalized: ${(cause instanceof Error ? cause.message : cause) || 'unknown error'}`,
+      {
+        cause
+      }
+    );
     this.name = 'DeliveryFinalizedError';
-    this.cause = cause;
-    this.deliveryFinalized = true;
   }
 }
 
-function dispatchRefsFromStream(event = {}) {
-  const refs = [];
-  const seen = new Set();
+function dispatchRefsFromStream(event: DynamoDBStreamEvent) {
+  const refs: DispatchRef[] = [];
+  const seen = new Set<string>();
   for (const record of event.Records || []) {
     const image = record.dynamodb?.NewImage || null;
     if (!image) continue;
-    const itemType = fromDynamoAttr(image.item_type);
-    const status = fromDynamoAttr(image.status);
+    const sdkImage = image as unknown as Record<string, AttributeValue>;
+    const itemType = String(fromDynamoAttr(sdkImage.item_type) || '');
+    const status = String(fromDynamoAttr(sdkImage.status) || '');
     if (itemType !== 'dispatch' || !['queued', 'ready_to_send'].includes(status)) continue;
-    const subscriberHash = subscriberHashFromUserPk(fromDynamoAttr(image.pk));
-    const dispatch = dispatchFromItem(image);
+    const subscriberHash = subscriberHashFromUserPk(fromDynamoAttr(sdkImage.pk));
+    const dispatch = dispatchFromItem(sdkImage);
     if (!subscriberHash || !dispatch.id || !dispatch.created_at) continue;
     const key = `${subscriberHash}\0${dispatch.id}`;
     if (seen.has(key)) continue;
@@ -114,13 +162,14 @@ function dispatchRefsFromStream(event = {}) {
   return refs;
 }
 
-async function resultFromDispatch(dispatch = {}) {
-  const artifact = dispatch.content_artifact_bucket && dispatch.content_artifact_key
-    ? await getDispatchContentArtifact({
-      bucket: dispatch.content_artifact_bucket,
-      key: dispatch.content_artifact_key
-    })
-    : {};
+async function resultFromDispatch(dispatch: DispatchRecord): Promise<DispatchResult> {
+  const artifact =
+    dispatch.content_artifact_bucket && dispatch.content_artifact_key
+      ? await getDispatchContentArtifact({
+          bucket: dispatch.content_artifact_bucket,
+          key: dispatch.content_artifact_key
+        })
+      : {};
   return {
     subject: dispatch.subject,
     title: dispatch.title,
@@ -132,11 +181,19 @@ async function resultFromDispatch(dispatch = {}) {
       inputTokens: dispatch.input_tokens || 0,
       outputTokens: dispatch.output_tokens || 0
     },
-    sources: dispatch.sources || []
+    sources: dispatch.sources as DispatchSource[]
   };
 }
 
-async function sendReadyDispatch({ tableName, subscriberHash, dispatch }) {
+async function sendReadyDispatch({
+  tableName,
+  subscriberHash,
+  dispatch
+}: {
+  tableName: string;
+  subscriberHash: string;
+  dispatch: DispatchRecord;
+}) {
   const sending = await claimReadyToSendDispatch({
     dynamodb,
     tableName,
@@ -170,7 +227,7 @@ async function sendReadyDispatch({ tableName, subscriberHash, dispatch }) {
       tableName,
       subscriberHash,
       dispatch: sending,
-      error: `Dispatch delivery failed after a JMAP send attempt began. It was not retried to avoid sending a duplicate email. ${error?.message || error || ''}`
+      error: `Dispatch delivery failed after a JMAP send attempt began. It was not retried to avoid sending a duplicate email. ${error instanceof Error ? error.message : error || ''}`
     });
     throw new DeliveryFinalizedError(error);
   }
@@ -184,7 +241,13 @@ async function sendReadyDispatch({ tableName, subscriberHash, dispatch }) {
   return { dispatch: sending, result: { ...result, submission_id: sent.submission_id } };
 }
 
-export async function processDispatchStream({ event = {}, tableName }) {
+export async function processDispatchStream({
+  event = { Records: [] },
+  tableName
+}: {
+  event?: DynamoDBStreamEvent;
+  tableName: string;
+}) {
   const refs = dispatchRefsFromStream(event);
   let generated = 0;
   let skipped = 0;
@@ -203,15 +266,22 @@ export async function processDispatchStream({ event = {}, tableName }) {
         });
       }
     } catch (error) {
-      if (error instanceof ConditionalCheckFailedException || error.name === 'ConditionalCheckFailedException') {
+      if (
+        error instanceof ConditionalCheckFailedException ||
+        (error instanceof Error && error.name === 'ConditionalCheckFailedException')
+      ) {
         skipped += 1;
         continue;
       }
       failed += 1;
-      logEvent('warning', 'dispatch_claim_failed', errorFields(error, {
-        subscriber_hash: ref.subscriberHash,
-        dispatch_id: ref.dispatch.id
-      }));
+      logEvent(
+        'warning',
+        'dispatch_claim_failed',
+        errorFields(error, {
+          subscriber_hash: ref.subscriberHash,
+          dispatch_id: ref.dispatch.id
+        })
+      );
       continue;
     }
 
@@ -239,6 +309,7 @@ export async function processDispatchStream({ event = {}, tableName }) {
           result: rendered,
           artifact
         });
+        if (!ready) throw new Error('Dispatch could not be loaded after generation.');
         ({ dispatch: sentDispatch, result } = await sendReadyDispatch({
           tableName,
           subscriberHash: ref.subscriberHash,
@@ -254,10 +325,14 @@ export async function processDispatchStream({ event = {}, tableName }) {
           });
         }
       } catch (webhookError) {
-        logEvent('warning', 'dispatch_discord_post_failed', errorFields(webhookError, {
-          subscriber_hash: ref.subscriberHash,
-          dispatch_id: sentDispatch.id
-        }));
+        logEvent(
+          'warning',
+          'dispatch_discord_post_failed',
+          errorFields(webhookError, {
+            subscriber_hash: ref.subscriberHash,
+            dispatch_id: sentDispatch.id
+          })
+        );
       }
       generated += 1;
       logEvent('info', 'dispatch_sent', {
@@ -268,18 +343,26 @@ export async function processDispatchStream({ event = {}, tableName }) {
       });
     } catch (error) {
       failed += 1;
-      if (error?.retryScheduled) {
-        logEvent('warning', 'dispatch_delivery_retry_scheduled', errorFields(error.cause || error, {
-          subscriber_hash: ref.subscriberHash,
-          dispatch_id: claimed.id
-        }));
+      if (error instanceof DeliveryRetryScheduledError) {
+        logEvent(
+          'warning',
+          'dispatch_delivery_retry_scheduled',
+          errorFields(error.cause || error, {
+            subscriber_hash: ref.subscriberHash,
+            dispatch_id: claimed.id
+          })
+        );
         continue;
       }
-      if (error?.deliveryFinalized) {
-        logEvent('warning', 'dispatch_delivery_failed', errorFields(error.cause || error, {
-          subscriber_hash: ref.subscriberHash,
-          dispatch_id: claimed.id
-        }));
+      if (error instanceof DeliveryFinalizedError) {
+        logEvent(
+          'warning',
+          'dispatch_delivery_failed',
+          errorFields(error.cause || error, {
+            subscriber_hash: ref.subscriberHash,
+            dispatch_id: claimed.id
+          })
+        );
         continue;
       }
       await markDispatchFailed({
@@ -289,15 +372,23 @@ export async function processDispatchStream({ event = {}, tableName }) {
         dispatch: claimed,
         error
       }).catch((markError) => {
-        logEvent('warning', 'dispatch_mark_failed_failed', errorFields(markError, {
+        logEvent(
+          'warning',
+          'dispatch_mark_failed_failed',
+          errorFields(markError, {
+            subscriber_hash: ref.subscriberHash,
+            dispatch_id: claimed.id
+          })
+        );
+      });
+      logEvent(
+        'warning',
+        claimed.status === 'ready_to_send' ? 'dispatch_delivery_failed' : 'dispatch_generation_failed',
+        errorFields(error, {
           subscriber_hash: ref.subscriberHash,
           dispatch_id: claimed.id
-        }));
-      });
-      logEvent('warning', claimed.status === 'ready_to_send' ? 'dispatch_delivery_failed' : 'dispatch_generation_failed', errorFields(error, {
-        subscriber_hash: ref.subscriberHash,
-        dispatch_id: claimed.id
-      }));
+        })
+      );
     }
   }
   return {
