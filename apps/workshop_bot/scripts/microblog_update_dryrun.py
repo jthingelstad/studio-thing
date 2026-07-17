@@ -76,19 +76,20 @@ def _splice_alt_into_first_img(body: str) -> tuple[str, str] | None:
             # No alt attribute at all — splice one in after src.
             new_tag = _IMG_SRC_RE.sub(
                 lambda sm: f'{sm.group(1)} alt="{_PLACEHOLDER_ALT}"',
-                tag, count=1,
+                tag,
+                count=1,
             )
             if new_tag != tag:
                 return (
-                    body[: m.start()] + new_tag + body[m.end():],
+                    body[: m.start()] + new_tag + body[m.end() :],
                     f"<img> at offset {m.start()}: added alt='{_PLACEHOLDER_ALT}'",
                 )
         elif alt_m.group(1).strip() == "":
             # Empty alt — replace it.
             new_alt = f'alt="{_PLACEHOLDER_ALT}"'
-            new_tag = tag[: alt_m.start()] + new_alt + tag[alt_m.end():]
+            new_tag = tag[: alt_m.start()] + new_alt + tag[alt_m.end() :]
             return (
-                body[: m.start()] + new_tag + body[m.end():],
+                body[: m.start()] + new_tag + body[m.end() :],
                 f"<img> at offset {m.start()}: filled empty alt with '{_PLACEHOLDER_ALT}'",
             )
     # Then markdown images.
@@ -96,7 +97,7 @@ def _splice_alt_into_first_img(body: str) -> tuple[str, str] | None:
     if md_m is not None:
         replacement = f"![{_PLACEHOLDER_ALT}]({md_m.group(1)})"
         return (
-            body[: md_m.start()] + replacement + body[md_m.end():],
+            body[: md_m.start()] + replacement + body[md_m.end() :],
             f"![]() at offset {md_m.start()}: filled empty alt with '{_PLACEHOLDER_ALT}'",
         )
     return None
@@ -141,13 +142,15 @@ def _diff_props(before: dict, after: dict) -> tuple[list[str], list[str]]:
     before_content = _content_str(before.get("content"))
     after_content = _content_str(after.get("content"))
     if before_content != after_content:
-        content_diff = list(difflib.unified_diff(
-            before_content.splitlines(),
-            after_content.splitlines(),
-            fromfile="content (before)",
-            tofile="content (after)",
-            lineterm="",
-        ))
+        content_diff = list(
+            difflib.unified_diff(
+                before_content.splitlines(),
+                after_content.splitlines(),
+                fromfile="content (before)",
+                tofile="content (after)",
+                lineterm="",
+            )
+        )
     other_changed: list[str] = []
     keys = set(before.keys()) | set(after.keys())
     for key in sorted(keys):
@@ -162,7 +165,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("post_url", help="The micro.blog post URL to update.")
     ap.add_argument(
-        "--preview", action="store_true",
+        "--preview",
+        action="store_true",
         help="Show what would be sent. Don't actually POST the update.",
     )
     args = ap.parse_args()

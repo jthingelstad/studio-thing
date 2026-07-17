@@ -64,5 +64,8 @@ async def start_webapp(deps=None) -> None:
     site = web.TCPSite(runner, "127.0.0.1", _port())
     await site.start()
     _runner = runner  # module-global keeps it alive
-    log.info("workshop webapp on 127.0.0.1:%d (tailnet-only via tailscale serve :8443; allowed=%s)",
-             _port(), _allowed_login() or "(any tailnet user)")
+    log.info(
+        "workshop webapp on 127.0.0.1:%d (tailnet-only via tailscale serve :8443; allowed=%s)",
+        _port(),
+        _allowed_login() or "(any tailnet user)",
+    )

@@ -25,21 +25,40 @@ def _seed_348_items() -> None:
     Mirrors the WT348-shaped fixtures used elsewhere — 2 Notable, 1
     Briefly, 1 Journal."""
     issue_items.upsert_item(
-        issue_number=458, section="notable", source="manual",
-        source_id="n-a", url="http://a", title="A", body_md="blurb.",
+        issue_number=458,
+        section="notable",
+        source="manual",
+        source_id="n-a",
+        url="http://a",
+        title="A",
+        body_md="blurb.",
     )
     issue_items.upsert_item(
-        issue_number=458, section="notable", source="manual",
-        source_id="n-b", url="http://b", title="B", body_md="second blurb.",
+        issue_number=458,
+        section="notable",
+        source="manual",
+        source_id="n-b",
+        url="http://b",
+        title="B",
+        body_md="second blurb.",
     )
     issue_items.upsert_item(
-        issue_number=458, section="brief", source="manual",
-        source_id="b-c", url="http://c", title="C", body_md="Brief note",
+        issue_number=458,
+        section="brief",
+        source="manual",
+        source_id="b-c",
+        url="http://c",
+        title="C",
+        body_md="Brief note",
     )
     issue_items.upsert_item(
-        issue_number=458, section="journal", source="manual",
-        source_id="j-p", url="https://example.com/post",
-        title="", body_md="status.",
+        issue_number=458,
+        section="journal",
+        source="manual",
+        source_id="j-p",
+        url="https://example.com/post",
+        title="",
+        body_md="status.",
         metadata={"label": "Tuesday @ 3:02 PM"},
     )
 
@@ -50,8 +69,8 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
         self.assertTrue(page.startswith("<!DOCTYPE html>"))
         self.assertIn("<title>WT458 — draft</title>", page)
         self.assertIn('<meta name="robots" content="noindex, nofollow">', page)
-        self.assertIn("<style>", page)              # self-contained CSS
-        self.assertIn("<h1>Hi</h1>", page)          # markdown rendered
+        self.assertIn("<style>", page)  # self-contained CSS
+        self.assertIn("<h1>Hi</h1>", page)  # markdown rendered
         self.assertIn("<strong>bold</strong>", page)
         self.assertIn("</html>", page)
 
@@ -68,7 +87,8 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
 
     def test_convenience_links_render_in_banner(self):
         page = render.markdown_to_html_page(
-            "x", title="t",
+            "x",
+            title="t",
             subtitle="DRAFT · WT458",
             convenience_links=[
                 ("buttondown.md", "https://files.example/458/buttondown.md"),
@@ -89,7 +109,8 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
 
     def test_convenience_links_alone_with_no_subtitle(self):
         page = render.markdown_to_html_page(
-            "x", title="t",
+            "x",
+            title="t",
             convenience_links=[("archive.md", "https://files.example/458/archive.md")],
         )
         # Banner still appears (just with the links, no subtitle text).
@@ -116,7 +137,8 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
         # render — keeps the chrome quiet during the early-issue window
         # before compose-meta has filled the field.
         page = render.markdown_to_html_page(
-            "x", title="t",
+            "x",
+            title="t",
             meta={"subject": "WT458 — pending", "description": ""},
         )
         self.assertIn("<dt>Subject</dt>", page)
@@ -126,12 +148,16 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
         # No meta dict → no dl element at all (don't draw an empty box).
         page = render.markdown_to_html_page("x", title="t")
         self.assertNotIn('<dl class="meta">', page)
-        page2 = render.markdown_to_html_page("x", title="t", meta={"subject": "", "description": ""})
+        page2 = render.markdown_to_html_page(
+            "x", title="t", meta={"subject": "", "description": ""}
+        )
         self.assertNotIn('<dl class="meta">', page2)
 
     def test_strips_block_markers(self):
-        md = ("<!-- block:intro -->\nHello.\n<!-- /block:intro -->\n\n## Notable\n\n"
-              "<!-- block:notable -->\n### [A](http://a)\n<!-- /block:notable -->")
+        md = (
+            "<!-- block:intro -->\nHello.\n<!-- /block:intro -->\n\n## Notable\n\n"
+            "<!-- block:notable -->\n### [A](http://a)\n<!-- /block:notable -->"
+        )
         page = render.markdown_to_html_page(md, title="t", strip_block_markers=True)
         self.assertNotIn("block:intro", page)
         self.assertNotIn("block:notable", page)
@@ -140,13 +166,16 @@ class MarkdownToHtmlPageTests(unittest.TestCase):
         self.assertIn('<a href="http://a">A</a>', page)
 
     def test_renders_image(self):
-        page = render.markdown_to_html_page("![cap](https://files.thingelstad.com/x.jpg)", title="t")
+        page = render.markdown_to_html_page(
+            "![cap](https://files.thingelstad.com/x.jpg)", title="t"
+        )
         self.assertIn('<img alt="cap" src="https://files.thingelstad.com/x.jpg"', page)
 
     def test_no_markdown_lib_falls_back_to_pre(self):
         # If python-markdown isn't importable, the preview shows raw source
         # in a <pre> rather than crashing.
         import builtins
+
         real_import = builtins.__import__
 
         def fake_import(name, *a, **k):
@@ -220,8 +249,10 @@ class CdnInvalidateTests(unittest.TestCase):
         batch = fake_client.create_invalidation.call_args.kwargs
         self.assertEqual(batch["DistributionId"], "DIST123")
         # Both paths forced to start with "/".
-        self.assertEqual(batch["InvalidationBatch"]["Paths"]["Items"],
-                         ["/weekly-thing/458/draft.html", "/weekly-thing/458/final.html"])
+        self.assertEqual(
+            batch["InvalidationBatch"]["Paths"]["Items"],
+            ["/weekly-thing/458/draft.html", "/weekly-thing/458/final.html"],
+        )
 
     def test_invalidation_failure_swallowed(self):
         os.environ["WEEKLY_THING_CDN_DISTRIBUTION_ID"] = "DIST123"

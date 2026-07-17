@@ -37,8 +37,7 @@ EMAILS_JSON = ROOT / "apps" / "site" / "_data" / "emails.json"
 def get_base_and_auth():
     key = os.environ.get("MAILCHIMP_API_KEY")
     if not key or "-" not in key:
-        raise RuntimeError(
-            "MAILCHIMP_API_KEY missing or malformed (expected ...-us2)")
+        raise RuntimeError("MAILCHIMP_API_KEY missing or malformed (expected ...-us2)")
     dc = key.rsplit("-", 1)[-1]
     return f"https://{dc}.api.mailchimp.com/3.0", ("anystring", key)
 
@@ -73,8 +72,7 @@ def fetch_all_campaigns(base, auth):
 
 
 def fetch_content(base, auth, campaign_id):
-    r = requests.get(
-        f"{base}/campaigns/{campaign_id}/content", auth=auth, timeout=30)
+    r = requests.get(f"{base}/campaigns/{campaign_id}/content", auth=auth, timeout=30)
     r.raise_for_status()
     return r.json()
 
@@ -101,8 +99,10 @@ def build_issue_map(campaigns, emails_by_date):
         if send_date in emails_by_date:
             mapping[emails_by_date[send_date]] = c["id"]
         else:
-            print(f"  WARN: no Buttondown issue matches campaign "
-                  f"{c['id']} ({send_date} - {c['settings']['subject_line']})")
+            print(
+                f"  WARN: no Buttondown issue matches campaign "
+                f"{c['id']} ({send_date} - {c['settings']['subject_line']})"
+            )
     return mapping
 
 
@@ -159,8 +159,9 @@ def main():
         if isinstance(n, int) and pd:
             emails_by_date[pd] = n
     mapping = build_issue_map(campaigns, emails_by_date)
-    ISSUE_MAP_CACHE.write_text(json.dumps(
-        {str(k): v for k, v in sorted(mapping.items())}, indent=2))
+    ISSUE_MAP_CACHE.write_text(
+        json.dumps({str(k): v for k, v in sorted(mapping.items())}, indent=2)
+    )
     print(f"Mapped {len(mapping)} campaigns to Buttondown issues → {ISSUE_MAP_CACHE}")
     print(f"  issue range: #{min(mapping)} – #{max(mapping)}")
 

@@ -60,8 +60,7 @@ class AgentRunRecordMetaTests(_DBCase):
     def test_single_meta_populates_columns(self):
         meta = {
             "model": "claude-sonnet-5",
-            "usage": {"input": 1500, "output": 700,
-                      "cache_read": 200, "cache_create": 50},
+            "usage": {"input": 1500, "output": 700, "cache_read": 200, "cache_create": 50},
             "iterations": 1,
         }
         with db.AgentRun("eddy", trigger="compose-meta:subject") as run:
@@ -78,15 +77,24 @@ class AgentRunRecordMetaTests(_DBCase):
         """A job can call record_meta many times under one outer AgentRun.
         Tokens should sum, not overwrite."""
         with db.AgentRun("eddy", trigger="multi-step-job") as run:
-            run.record_meta({"model": "claude-sonnet-5",
-                             "usage": {"input": 1000, "output": 200,
-                                       "cache_read": 0, "cache_create": 0}})
-            run.record_meta({"model": "claude-sonnet-5",
-                             "usage": {"input": 800, "output": 150,
-                                       "cache_read": 100, "cache_create": 0}})
-            run.record_meta({"model": "claude-sonnet-5",
-                             "usage": {"input": 1200, "output": 300,
-                                       "cache_read": 0, "cache_create": 25}})
+            run.record_meta(
+                {
+                    "model": "claude-sonnet-5",
+                    "usage": {"input": 1000, "output": 200, "cache_read": 0, "cache_create": 0},
+                }
+            )
+            run.record_meta(
+                {
+                    "model": "claude-sonnet-5",
+                    "usage": {"input": 800, "output": 150, "cache_read": 100, "cache_create": 0},
+                }
+            )
+            run.record_meta(
+                {
+                    "model": "claude-sonnet-5",
+                    "usage": {"input": 1200, "output": 300, "cache_read": 0, "cache_create": 25},
+                }
+            )
         r = db.recent_agent_runs(limit=1)[0]
         self.assertEqual(r["input_tokens"], 3000)
         self.assertEqual(r["output_tokens"], 650)
@@ -111,7 +119,7 @@ class AgentRunRecordMetaTests(_DBCase):
             run.record_meta(None)
             run.record_meta({})
             run.record_meta({"model": "claude-opus-4-7"})  # no usage
-            run.record_meta({"usage": {"input": 100}})    # partial usage
+            run.record_meta({"usage": {"input": 100}})  # partial usage
         r = db.recent_agent_runs(limit=1)[0]
         self.assertEqual(r["model"], "claude-opus-4-7")
         self.assertEqual(r["input_tokens"], 100)
@@ -132,8 +140,13 @@ class StatusJobTests(_DBCase):
         self.assertIn("none recorded yet", res.message)
 
     def test_populated_snapshot(self):
-        db.set_issue_window(issue_number=460, pub_date="2026-05-30", end_date="2026-05-29",
-                            start_date="2026-05-22", day_count=7)
+        db.set_issue_window(
+            issue_number=460,
+            pub_date="2026-05-30",
+            end_date="2026-05-29",
+            start_date="2026-05-22",
+            day_count=7,
+        )
         with db.AgentRun("eddy", trigger="manual"):
             pass
         held = db.acquire_job_lock(asset="460/draft.md", job="update-draft", pid=os.getpid())
@@ -153,6 +166,7 @@ class StatusJobTests(_DBCase):
 class WiringTests(unittest.TestCase):
     def test_status_command_wired(self):
         from apps.workshop_bot.personas import commands
+
         # /eddy status is a top-level subcommand on Eddy's tree.
         eddy_tree = commands.register_eddy_commands(MagicMock())
         eddy = next(g for g in eddy_tree.groups if getattr(g, "name", None) == "eddy")

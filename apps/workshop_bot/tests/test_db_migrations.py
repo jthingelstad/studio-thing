@@ -49,8 +49,8 @@ class _DBCase(unittest.TestCase):
 
 # ---------- runner contract ----------
 
-class RunnerContract(_DBCase):
 
+class RunnerContract(_DBCase):
     def test_fresh_db_applies_every_migration(self):
         report = db.run_migrations()
         applied = set(report.applied)
@@ -58,7 +58,8 @@ class RunnerContract(_DBCase):
         # MIGRATIONS appears in ``applied`` because the DB is brand new.
         for m in db.MIGRATIONS:
             self.assertIn(
-                m.id, applied,
+                m.id,
+                applied,
                 f"fresh DB should apply migration {m.id}",
             )
 
@@ -69,8 +70,11 @@ class RunnerContract(_DBCase):
         # apply (it always reruns). Everything else is skipped.
         conn_mod._applied_schema_hash.clear()  # force the runner to fire
         report = db.run_migrations()
-        self.assertEqual(report.applied, (mig.SCHEMA_MIGRATION_ID,),
-                         f"only schema migration should re-run; got {report.applied}")
+        self.assertEqual(
+            report.applied,
+            (mig.SCHEMA_MIGRATION_ID,),
+            f"only schema migration should re-run; got {report.applied}",
+        )
         # All non-schema migrations land in skipped.
         skipped = set(report.skipped)
         for m in db.MIGRATIONS:
@@ -110,15 +114,12 @@ class RunnerContract(_DBCase):
             lambda: conn_mod._open_raw(conn_mod.db_path()),
             migrations=migrations,
         )
-        self.assertEqual(calls, ["schema"],
-                         "schema migration must always re-run")
+        self.assertEqual(calls, ["schema"], "schema migration must always re-run")
 
     def test_recorded_ids_persist_in_schema_migrations(self):
         db.run_migrations()
         with conn_mod._open_raw(conn_mod.db_path()) as conn:
-            rows = {r["id"] for r in conn.execute(
-                "SELECT id FROM schema_migrations"
-            )}
+            rows = {r["id"] for r in conn.execute("SELECT id FROM schema_migrations")}
         for m in db.MIGRATIONS:
             self.assertIn(m.id, rows)
 
@@ -130,7 +131,9 @@ class RunnerContract(_DBCase):
             raise RuntimeError("planned failure")
 
         bad = mig.Migration(
-            id="9999_bad", description="raises during apply", apply=boom,
+            id="9999_bad",
+            description="raises during apply",
+            apply=boom,
         )
         migrations = db.MIGRATIONS + (bad,)
         with self.assertRaises(RuntimeError):
@@ -141,7 +144,8 @@ class RunnerContract(_DBCase):
         with conn_mod._open_raw(conn_mod.db_path()) as conn:
             recorded = mig.applied_ids(conn)
         self.assertNotIn(
-            "9999_bad", recorded,
+            "9999_bad",
+            recorded,
             "failed migration must not be recorded",
         )
 
@@ -154,40 +158,39 @@ class RunnerContract(_DBCase):
         # all others are already applied.
         pending_ids = {m.id for m in pend}
         self.assertEqual(
-            pending_ids, {mig.SCHEMA_MIGRATION_ID},
+            pending_ids,
+            {mig.SCHEMA_MIGRATION_ID},
             f"expected only schema-sql pending; got {pending_ids}",
         )
 
 
 # ---------- migration list integrity ----------
 
-class MigrationListIntegrity(unittest.TestCase):
 
+class MigrationListIntegrity(unittest.TestCase):
     def test_ids_unique(self):
         ids = [m.id for m in db.MIGRATIONS]
-        self.assertEqual(len(ids), len(set(ids)),
-                         f"duplicate migration ids: {ids}")
+        self.assertEqual(len(ids), len(set(ids)), f"duplicate migration ids: {ids}")
 
     def test_ids_sorted_ascending(self):
         ids = [m.id for m in db.MIGRATIONS]
-        self.assertEqual(ids, sorted(ids),
-                         "migration ids must appear in MIGRATIONS in sorted order")
+        self.assertEqual(
+            ids, sorted(ids), "migration ids must appear in MIGRATIONS in sorted order"
+        )
 
     def test_every_apply_is_callable(self):
         for m in db.MIGRATIONS:
-            self.assertTrue(callable(m.apply),
-                            f"{m.id}: apply must be callable")
+            self.assertTrue(callable(m.apply), f"{m.id}: apply must be callable")
 
     def test_descriptions_nonempty(self):
         for m in db.MIGRATIONS:
-            self.assertTrue(m.description.strip(),
-                            f"{m.id}: description must be non-empty")
+            self.assertTrue(m.description.strip(), f"{m.id}: description must be non-empty")
 
 
 # ---------- CLI ----------
 
-class CLI(_DBCase):
 
+class CLI(_DBCase):
     def test_status_lists_all_migrations(self):
         db.run_migrations()
         # Capture stdout while invoking the CLI.
@@ -199,8 +202,7 @@ class CLI(_DBCase):
         self.assertIn("workshop.db", out)
         self.assertIn("applied", out)
         for m in db.MIGRATIONS:
-            self.assertIn(m.id, out,
-                          f"status output should mention {m.id}")
+            self.assertIn(m.id, out, f"status output should mention {m.id}")
 
     def test_pending_returns_zero_after_apply(self):
         db.run_migrations()

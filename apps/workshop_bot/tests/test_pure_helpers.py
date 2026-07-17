@@ -114,9 +114,7 @@ class IsPassResponseTests(unittest.TestCase):
 
     def test_pass_followed_by_content_is_not_pass(self):
         # If PASS comes first and content follows, it isn't a PASS verdict.
-        self.assertFalse(
-            base.is_pass_response("PASS\nactually wait, here's a thing")
-        )
+        self.assertFalse(base.is_pass_response("PASS\nactually wait, here's a thing"))
 
     def test_empty_string(self):
         self.assertFalse(base.is_pass_response(""))
@@ -173,9 +171,7 @@ class ShortBotNameTests(unittest.TestCase):
         self.assertEqual(conversation.short_bot_name(""), "")
 
     def test_takes_last_segment(self):
-        self.assertEqual(
-            conversation.short_bot_name("Some - Bot - Utility"), "Utility"
-        )
+        self.assertEqual(conversation.short_bot_name("Some - Bot - Utility"), "Utility")
 
 
 class StripMentionsTests(unittest.TestCase):
@@ -216,9 +212,7 @@ class TruncateMarkerTests(unittest.TestCase):
         result = agent_loop._execute_tool("test__huge", deps=deps, raw_input={})
         self.assertIn("[truncated;", result)
         self.assertNotIn('..."[truncated]"', result)
-        self.assertLessEqual(
-            len(result), agent_loop.MAX_TOOL_RESULT_CHARS + 200
-        )
+        self.assertLessEqual(len(result), agent_loop.MAX_TOOL_RESULT_CHARS + 200)
 
 
 class ExecuteToolRestrictedTests(unittest.TestCase):
@@ -243,9 +237,7 @@ class ExecuteToolRestrictedTests(unittest.TestCase):
         )
         deps = types.SimpleNamespace(registry=registry)
 
-        result = agent_loop._execute_tool(
-            "vault__read", deps=deps, raw_input={}, persona="eddy"
-        )
+        result = agent_loop._execute_tool("vault__read", deps=deps, raw_input={}, persona="eddy")
         self.assertIn("not available to persona", result)
         self.assertEqual(called, [])
 
@@ -262,9 +254,7 @@ class ExecuteToolRestrictedTests(unittest.TestCase):
         )
         deps = types.SimpleNamespace(registry=registry)
 
-        result = agent_loop._execute_tool(
-            "vault__read", deps=deps, raw_input={}, persona="patty"
-        )
+        result = agent_loop._execute_tool("vault__read", deps=deps, raw_input={}, persona="patty")
         self.assertIn('"ok": true', result)
 
 
@@ -454,16 +444,12 @@ class ReactAddTests(unittest.TestCase):
 
             bot = _FakeBot()
             bot.loop = loop  # type: ignore[attr-defined]
-            deps = types.SimpleNamespace(
-                team=types.SimpleNamespace(bots={"eddy": bot})
-            )
+            deps = types.SimpleNamespace(team=types.SimpleNamespace(bots={"eddy": bot}))
             agent_tools.active_react_target.set((42, 4242))
 
             out = agent_tools.t_react_add(deps, emoji="📝")
             self.assertEqual(out, {"ok": True, "emoji": "📝"})
-            self.assertEqual(
-                captured, {"emoji": "📝", "channel_id": 42, "message_id": 4242}
-            )
+            self.assertEqual(captured, {"emoji": "📝", "channel_id": 42, "message_id": 4242})
         finally:
             loop.call_soon_threadsafe(loop.stop)
             t.join(timeout=2)

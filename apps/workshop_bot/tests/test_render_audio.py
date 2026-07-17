@@ -59,9 +59,12 @@ class ProgressHookTests(unittest.TestCase):
         # __module__ points at a module registered under a NON-"synthesize" key
         # (the case that broke the old sys.modules['synthesize'] lookup).
         import types
+
         syn = types.ModuleType("pipeline.audio.synthesize")
+
         def _blocks():  # noqa: ANN202
             pass
+
         _blocks.__module__ = "pipeline.audio.synthesize"
         syn.synthesize_blocks_to_mp3 = _blocks
         audio_mod = types.ModuleType("audio")
@@ -74,6 +77,7 @@ class ProgressHookTests(unittest.TestCase):
 
     def test_print_intercept_forwards_classified_lines(self):
         import types
+
         syn = types.ModuleType("synth_under_test")
         events: list[str] = []
         with render_audio._print_intercept(syn, progress_cb=events.append):
@@ -112,8 +116,12 @@ class RenderAudioTests(_DBTestCase):
 
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(
-            issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
-            start_date=w["start_date"], day_count=w["day_count"], set_by="test",
+            issue_number=n,
+            pub_date=w["pub_date"],
+            end_date=w["end_date"],
+            start_date=w["start_date"],
+            day_count=w["day_count"],
+            set_by="test",
         )
 
     def _ctx(self):
@@ -124,11 +132,14 @@ class RenderAudioTests(_DBTestCase):
     def _seed_transcripts(self, n=458):
         d = render_audio.TRANSCRIPT_DIR_TPL / str(n) / "transcript"
         d.mkdir(parents=True, exist_ok=True)
-        (d / "000-preamble.txt").write_text("The Weekly Thing for May 16, 2026.\n", encoding="utf-8")
+        (d / "000-preamble.txt").write_text(
+            "The Weekly Thing for May 16, 2026.\n", encoding="utf-8"
+        )
         (d / "001-intro.txt").write_text("Welcome to the issue.\n", encoding="utf-8")
 
-    def _fake_audio_pipeline(self, *, audio_url="https://x/y.mp3",
-                             duration=360, byte_size=4_500_000, changed=True):
+    def _fake_audio_pipeline(
+        self, *, audio_url="https://x/y.mp3", duration=360, byte_size=4_500_000, changed=True
+    ):
         """Build (audio_mod, bumpers_mod, manifest_mod) MagicMocks that the
         job's _import_audio_pipeline hook would have produced. build_issue
         side-effects the manifest dict in place with the new entry."""
@@ -185,10 +196,14 @@ class RenderAudioTests(_DBTestCase):
         audio_mod, bumpers_mod, manifest_mod = self._fake_audio_pipeline()
         audio_mod.build_issue = MagicMock(side_effect=RuntimeError("TTS API down"))
 
-        with patch.object(
-            render_audio, "_import_audio_pipeline",
-            return_value=(audio_mod, bumpers_mod, manifest_mod),
-        ), patch.object(render_audio, "_materialize_apps_site_archive"):
+        with (
+            patch.object(
+                render_audio,
+                "_import_audio_pipeline",
+                return_value=(audio_mod, bumpers_mod, manifest_mod),
+            ),
+            patch.object(render_audio, "_materialize_apps_site_archive"),
+        ):
             result = asyncio.run(render_audio.run(ctx))
 
         self.assertFalse(result.ok)
@@ -203,13 +218,18 @@ class RenderAudioTests(_DBTestCase):
 
         audio_mod, bumpers_mod, manifest_mod = self._fake_audio_pipeline(
             audio_url="https://files.thingelstad.com/weekly-thing/458/weekly-thing-458.mp3",
-            duration=420, byte_size=5_200_000,
+            duration=420,
+            byte_size=5_200_000,
         )
 
-        with patch.object(
-            render_audio, "_import_audio_pipeline",
-            return_value=(audio_mod, bumpers_mod, manifest_mod),
-        ), patch.object(render_audio, "_materialize_apps_site_archive"):
+        with (
+            patch.object(
+                render_audio,
+                "_import_audio_pipeline",
+                return_value=(audio_mod, bumpers_mod, manifest_mod),
+            ),
+            patch.object(render_audio, "_materialize_apps_site_archive"),
+        ):
             result = asyncio.run(render_audio.run(ctx))
 
         self.assertTrue(result.ok, result.message)
@@ -233,10 +253,14 @@ class RenderAudioTests(_DBTestCase):
         ctx, _fc = self._ctx()
 
         audio_mod, bumpers_mod, manifest_mod = self._fake_audio_pipeline(changed=False)
-        with patch.object(
-            render_audio, "_import_audio_pipeline",
-            return_value=(audio_mod, bumpers_mod, manifest_mod),
-        ), patch.object(render_audio, "_materialize_apps_site_archive"):
+        with (
+            patch.object(
+                render_audio,
+                "_import_audio_pipeline",
+                return_value=(audio_mod, bumpers_mod, manifest_mod),
+            ),
+            patch.object(render_audio, "_materialize_apps_site_archive"),
+        ):
             result = asyncio.run(render_audio.run(ctx))
 
         self.assertTrue(result.ok, result.message)

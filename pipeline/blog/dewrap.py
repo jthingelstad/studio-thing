@@ -68,10 +68,20 @@ BACKUP_DIR = RUN_DIR / "backups"
 # hundred requests land in quick succession (observed: ~390 writes before the
 # block kicks in). A small fixed gap between posts plus exponential backoff on a
 # throttle response keeps a full-corpus write under the limit without aborting.
-_API_THROTTLE_S = 0.5            # gap between posts (each post = 1 read + 1 write)
+_API_THROTTLE_S = 0.5  # gap between posts (each post = 1 read + 1 write)
 _RETRY_BACKOFFS = (5, 15, 45, 90)  # seconds to wait on a throttle response
-_THROTTLE_MARKERS = ("403", "429", "rate limit", "too many requests",
-                     "500", "502", "503", "504", "timed out", "timeout")
+_THROTTLE_MARKERS = (
+    "403",
+    "429",
+    "rate limit",
+    "too many requests",
+    "500",
+    "502",
+    "503",
+    "504",
+    "timed out",
+    "timeout",
+)
 
 # Front matter is `---\n<inner>\n---\n` at the very top (byte-stable).
 _FM_RE = re.compile(r"\A---\n(?P<fm>.*?)\n---\n(?P<body>.*)\Z", re.DOTALL)
@@ -96,6 +106,7 @@ _HR_RE = re.compile(r"^\s*(?:[-*_]\s*){3,}$")
 
 # ── local store ───────────────────────────────────────────────────────
 
+
 def _read_raw(path: Path) -> tuple[dict[str, Any], str, str]:
     """Return ``(metadata, fm_text, body_raw)``. ``body_raw`` is the body verbatim
     (NOT stripped) so a no-change rewrite is byte-identical to the original."""
@@ -115,6 +126,7 @@ def _post_year(metadata: dict[str, Any]) -> Optional[int]:
 
 
 # ── sampling ──────────────────────────────────────────────────────────
+
 
 def select_posts(
     *, count: Optional[int], year_max: int, seed: int, include_microposts: bool
@@ -137,9 +149,11 @@ def select_posts(
             continue
         pool.append(path)
 
-    print(f"  candidate pool: {len(pool)} posts "
-          f"(post_kind={'any' if include_microposts else 'post'}, year ≤ {year_max})",
-          flush=True)
+    print(
+        f"  candidate pool: {len(pool)} posts "
+        f"(post_kind={'any' if include_microposts else 'post'}, year ≤ {year_max})",
+        flush=True,
+    )
     if count is None or count >= len(pool):
         return pool
     return random.Random(seed).sample(pool, count)
@@ -157,13 +171,20 @@ def find_by_microblog_id(mbid: str) -> Optional[Path]:
 
 # ── de-wrap core (deterministic) ──────────────────────────────────────
 
+
 def _is_prose_block(lines: list[str]) -> bool:
     """A flat-prose block has no structural markers — no heading / list / quote /
     hr / table (`|`) / HTML line (incl. ``<img>``). Those keep their line breaks."""
     for ln in lines:
-        if (_HEADING_RE.match(ln) or _ULIST_RE.match(ln) or _OLIST_RE.match(ln)
-                or _QUOTE_RE.match(ln) or _HR_RE.match(ln) or "|" in ln
-                or ln.lstrip().startswith("<")):
+        if (
+            _HEADING_RE.match(ln)
+            or _ULIST_RE.match(ln)
+            or _OLIST_RE.match(ln)
+            or _QUOTE_RE.match(ln)
+            or _HR_RE.match(ln)
+            or "|" in ln
+            or ln.lstrip().startswith("<")
+        ):
             return False
     return True
 
@@ -175,7 +196,8 @@ def _is_wrap_block(lines: list[str]) -> bool:
         return False
     return any(
         _WRAP_MIN_LEN <= len(ln) <= _WRAP_MAX_LEN
-        and not ln.endswith("  ") and not ln.endswith("\\")
+        and not ln.endswith("  ")
+        and not ln.endswith("\\")
         for ln in lines[:-1]
     )
 
@@ -187,7 +209,7 @@ def _inside_link_dest(s: str) -> bool:
     i = s.rfind("](")
     if i == -1:
         return False
-    return ")" not in s[i + 2:]
+    return ")" not in s[i + 2 :]
 
 
 def _join_wrapped(lines: list[str]) -> list[str]:
@@ -199,10 +221,10 @@ def _join_wrapped(lines: list[str]) -> list[str]:
     cur = lines[0]
     for nxt in lines[1:]:
         if cur.endswith("\\") or cur.endswith("  "):
-            out.append(cur)            # intentional hard break — don't merge across it
+            out.append(cur)  # intentional hard break — don't merge across it
             cur = nxt
         elif _inside_link_dest(cur.rstrip()):
-            cur = cur.rstrip() + nxt.lstrip()        # mid-URL: no space
+            cur = cur.rstrip() + nxt.lstrip()  # mid-URL: no space
         else:
             cur = cur.rstrip() + " " + nxt.lstrip()  # normal prose wrap: single space
     out.append(cur)
@@ -228,13 +250,15 @@ def dewrap_body(body: str) -> tuple[str, list[dict[str, Any]]]:
         if _is_wrap_block(block):
             joined = _join_wrapped(block)
             if joined != block:
-                changes.append({
-                    "line_start": block_start,
-                    "lines_before": len(block),
-                    "lines_after": len(joined),
-                    "link_split": bool(_LINK_SPLIT_RE.search("\n".join(block))),
-                    "sample": block[0][:80],
-                })
+                changes.append(
+                    {
+                        "line_start": block_start,
+                        "lines_before": len(block),
+                        "lines_after": len(joined),
+                        "link_split": bool(_LINK_SPLIT_RE.search("\n".join(block))),
+                        "sample": block[0][:80],
+                    }
+                )
             out.extend(joined)
         else:
             out.extend(block)
@@ -263,6 +287,7 @@ def dewrap_body(body: str) -> tuple[str, list[dict[str, Any]]]:
 
 # ── per-post processing ───────────────────────────────────────────────
 
+
 def _backup_live(mbid: Any, live_body: str) -> Path:
     """Back up the live micro.blog body before a write, keyed by microblog_id (same
     scheme as the alt-text backfill). Overwrites any prior backup so it always holds
@@ -290,15 +315,21 @@ def _with_retry(fn, *, what: str, mbid: Any):
         except Exception as exc:  # noqa: BLE001 — re-raised unless retryable
             if wait is None or not _is_throttle(exc):
                 raise
-            print(f"  … [{mbid}] {what} throttled ({exc}); backoff {wait}s "
-                  f"(retry {i + 1}/{len(_RETRY_BACKOFFS)})", flush=True)
+            print(
+                f"  … [{mbid}] {what} throttled ({exc}); backoff {wait}s "
+                f"(retry {i + 1}/{len(_RETRY_BACKOFFS)})",
+                flush=True,
+            )
             time.sleep(wait)
 
 
 def _print_diff(old: str, new: str, label: str) -> None:
     for ln in difflib.unified_diff(
-        old.split("\n"), new.split("\n"),
-        fromfile=label, tofile=label + "  (dewrapped)", lineterm="",
+        old.split("\n"),
+        new.split("\n"),
+        fromfile=label,
+        tofile=label + "  (dewrapped)",
+        lineterm="",
     ):
         print(f"    {ln}", flush=True)
 
@@ -313,16 +344,29 @@ def _change_stats(changes: list[dict[str, Any]]) -> tuple[int, int, int]:
 
 # ── orchestration ─────────────────────────────────────────────────────
 
+
 def run(
-    *, count: Optional[int], year_max: int, seed: int, include_microposts: bool,
-    only: Optional[str], write: bool, show_diff: bool,
+    *,
+    count: Optional[int],
+    year_max: int,
+    seed: int,
+    include_microposts: bool,
+    only: Optional[str],
+    write: bool,
+    show_diff: bool,
 ) -> int:
-    mode = "WRITE → micro.blog (cache NOT synced; re-ingest after)" if write \
+    mode = (
+        "WRITE → micro.blog (cache NOT synced; re-ingest after)"
+        if write
         else "DRY-RUN (local-cache preview, no writes, no API)"
+    )
     print(f"\n── blog de-wrap · {mode} ──", flush=True)
     if write:
-        print(f"  backups → {BACKUP_DIR.relative_to(REPO)}/{{microblog_id}}.md  "
-              "(pre-write live body)", flush=True)
+        print(
+            f"  backups → {BACKUP_DIR.relative_to(REPO)}/{{microblog_id}}.md  "
+            "(pre-write live body)",
+            flush=True,
+        )
 
     if only:
         path = find_by_microblog_id(only)
@@ -331,8 +375,9 @@ def run(
             return 1
         paths = [path]
     else:
-        paths = select_posts(count=count, year_max=year_max, seed=seed,
-                             include_microposts=include_microposts)
+        paths = select_posts(
+            count=count, year_max=year_max, seed=seed, include_microposts=include_microposts
+        )
     print(f"  processing {len(paths)} post(s)\n", flush=True)
 
     posts_out: list[dict[str, Any]] = []
@@ -358,7 +403,9 @@ def run(
 
         rec: dict[str, Any] = {
             "path": str(path.relative_to(REPO)),
-            "microblog_id": mbid, "url": url, "year": year,
+            "microblog_id": mbid,
+            "url": url,
+            "year": year,
         }
 
         if not write:
@@ -366,11 +413,18 @@ def run(
             total_paras += paras
             total_lines += lines_removed
             total_splits += splits
-            rec.update(paragraphs_dewrapped=paras, lines_removed=lines_removed,
-                       link_splits_fixed=splits, source="local-cache")
+            rec.update(
+                paragraphs_dewrapped=paras,
+                lines_removed=lines_removed,
+                link_splits_fixed=splits,
+                source="local-cache",
+            )
             split = f" link-splits×{splits}" if splits else ""
-            print(f"  [{mbid}] {year}  would fix: -{lines_removed} lines across "
-                  f"{paras} para(s){split}  {path.name}", flush=True)
+            print(
+                f"  [{mbid}] {year}  would fix: -{lines_removed} lines across "
+                f"{paras} para(s){split}  {path.name}",
+                flush=True,
+            )
             if show_diff or only:
                 _print_diff(body_local, new_local, rec["path"])
             posts_out.append(rec)
@@ -382,8 +436,9 @@ def run(
             print(f"  ! [{mbid}] no url in front matter — cannot write, skipping", flush=True)
             continue
         try:
-            props = _with_retry(lambda: microblog.source_for_url(url),
-                                what="live re-fetch", mbid=mbid)
+            props = _with_retry(
+                lambda: microblog.source_for_url(url), what="live re-fetch", mbid=mbid
+            )
             live_body = microblog._content_to_markdown(props.get("content"))
         except Exception as exc:  # noqa: BLE001
             n_failed += 1
@@ -394,45 +449,64 @@ def run(
         new_live, changes_live = dewrap_body(live_body)
         if not changes_live or new_live == live_body:
             n_noop += 1
-            print(f"  = [{mbid}] no wraps live (clean / edited since ingest) — skipped  "
-                  f"{path.name}", flush=True)
+            print(
+                f"  = [{mbid}] no wraps live (clean / edited since ingest) — skipped  {path.name}",
+                flush=True,
+            )
             continue
 
         paras, lines_removed, splits = _change_stats(changes_live)
         _backup_live(mbid, live_body)
         try:
-            _with_retry(lambda: microblog.update_post_content(url, new_live),
-                        what="write", mbid=mbid)
+            _with_retry(
+                lambda: microblog.update_post_content(url, new_live), what="write", mbid=mbid
+            )
         except Exception as exc:  # noqa: BLE001
             n_failed += 1
-            print(f"  ! [{mbid}] micro.blog write FAILED (backup kept, retry next run): {exc}",
-                  flush=True)
+            print(
+                f"  ! [{mbid}] micro.blog write FAILED (backup kept, retry next run): {exc}",
+                flush=True,
+            )
             continue
 
         n_written += 1
         total_paras += paras
         total_lines += lines_removed
         total_splits += splits
-        rec.update(paragraphs_dewrapped=paras, lines_removed=lines_removed,
-                   link_splits_fixed=splits, written=True, source="micro.blog-live")
+        rec.update(
+            paragraphs_dewrapped=paras,
+            lines_removed=lines_removed,
+            link_splits_fixed=splits,
+            written=True,
+            source="micro.blog-live",
+        )
         split = f" link-splits×{splits}" if splits else ""
-        print(f"  ✓ [{mbid}] {year}  wrote: -{lines_removed} lines across "
-              f"{paras} para(s){split}  {url}", flush=True)
+        print(
+            f"  ✓ [{mbid}] {year}  wrote: -{lines_removed} lines across "
+            f"{paras} para(s){split}  {url}",
+            flush=True,
+        )
         if show_diff or only:
             _print_diff(live_body, new_live, rec["path"])
         posts_out.append(rec)
 
-    _write_report(count=count, year_max=year_max, seed=seed, only=only, write=write,
-                  totals={
-                      "candidates": n_candidates,
-                      "written": n_written,
-                      "noop_live": n_noop,
-                      "failed": n_failed,
-                      "paragraphs_dewrapped": total_paras,
-                      "lines_removed": total_lines,
-                      "link_splits_fixed": total_splits,
-                  },
-                  posts=posts_out)
+    _write_report(
+        count=count,
+        year_max=year_max,
+        seed=seed,
+        only=only,
+        write=write,
+        totals={
+            "candidates": n_candidates,
+            "written": n_written,
+            "noop_live": n_noop,
+            "failed": n_failed,
+            "paragraphs_dewrapped": total_paras,
+            "lines_removed": total_lines,
+            "link_splits_fixed": total_splits,
+        },
+        posts=posts_out,
+    )
 
     print("\n── summary ──", flush=True)
     print(f"  wrap candidates (cache): {n_candidates}", flush=True)
@@ -444,54 +518,95 @@ def run(
     print(f"  lines removed:           {total_lines}", flush=True)
     print(f"  link-splits rejoined:    {total_splits}", flush=True)
     if not write and n_candidates:
-        print("\n  dry-run — nothing written. Re-run with --write to apply to micro.blog.",
-              flush=True)
+        print(
+            "\n  dry-run — nothing written. Re-run with --write to apply to micro.blog.", flush=True
+        )
     if write and n_written:
-        print("\n  micro.blog updated. Local cache is now STALE — refresh it with:\n"
-              "    uv run --locked python pipeline/blog/ingest_blog.py\n"
-              "  then re-embed: npm run librarian:deploy:blog", flush=True)
+        print(
+            "\n  micro.blog updated. Local cache is now STALE — refresh it with:\n"
+            "    uv run --locked python pipeline/blog/ingest_blog.py\n"
+            "  then re-embed: npm run librarian:deploy:blog",
+            flush=True,
+        )
     return 0
 
 
-def _write_report(*, count: Optional[int], year_max: int, seed: int,
-                  only: Optional[str], write: bool, totals: dict[str, Any],
-                  posts: list[dict[str, Any]]) -> None:
+def _write_report(
+    *,
+    count: Optional[int],
+    year_max: int,
+    seed: int,
+    only: Optional[str],
+    write: bool,
+    totals: dict[str, Any],
+    posts: list[dict[str, Any]],
+) -> None:
     RUN_DIR.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     path = RUN_DIR / f"dewrap-{ts}.json"
     slim = [{k: v for k, v in p.items() if not k.startswith("_")} for p in posts]
-    path.write_text(json.dumps({
-        "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "mode": "write" if write else "dry-run",
-        "count": count,
-        "year_max": year_max,
-        "seed": seed,
-        "only": only,
-        "totals": totals,
-        "posts": slim,
-    }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(
+            {
+                "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "mode": "write" if write else "dry-run",
+                "count": count,
+                "year_max": year_max,
+                "seed": seed,
+                "only": only,
+                "totals": totals,
+                "posts": slim,
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     print(f"\n  report: {path.relative_to(REPO)}", flush=True)
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="De-wrap pandoc-wrapped blog prose (dry-run by default)")
-    ap.add_argument("--count", type=int, default=100,
-                    help="how many posts to sample (default 100; ignored with --all/--only)")
-    ap.add_argument("--all", action="store_true",
-                    help="process the whole eligible pool (no sampling cap)")
-    ap.add_argument("--year-max", type=int, default=2017,
-                    help="only touch posts published in or before this year (default 2017)")
-    ap.add_argument("--seed", type=int, default=0,
-                    help="random seed for reproducible sampling (default 0)")
-    ap.add_argument("--include-microposts", action="store_true",
-                    help="include post_kind=micropost (default: long-form posts only)")
-    ap.add_argument("--only", default=None,
-                    help="process a single post by microblog_id (ignores sampling)")
-    ap.add_argument("--write", action="store_true",
-                    help="apply the de-wrap to micro.blog (default is dry-run); re-fetches "
-                         "live + backs up the original body first. Cache is refreshed by re-ingest.")
-    ap.add_argument("--show-diff", action="store_true",
-                    help="print a unified diff for every changed post (always on for --only)")
+    ap = argparse.ArgumentParser(
+        description="De-wrap pandoc-wrapped blog prose (dry-run by default)"
+    )
+    ap.add_argument(
+        "--count",
+        type=int,
+        default=100,
+        help="how many posts to sample (default 100; ignored with --all/--only)",
+    )
+    ap.add_argument(
+        "--all", action="store_true", help="process the whole eligible pool (no sampling cap)"
+    )
+    ap.add_argument(
+        "--year-max",
+        type=int,
+        default=2017,
+        help="only touch posts published in or before this year (default 2017)",
+    )
+    ap.add_argument(
+        "--seed", type=int, default=0, help="random seed for reproducible sampling (default 0)"
+    )
+    ap.add_argument(
+        "--include-microposts",
+        action="store_true",
+        help="include post_kind=micropost (default: long-form posts only)",
+    )
+    ap.add_argument(
+        "--only", default=None, help="process a single post by microblog_id (ignores sampling)"
+    )
+    ap.add_argument(
+        "--write",
+        action="store_true",
+        help="apply the de-wrap to micro.blog (default is dry-run); re-fetches "
+        "live + backs up the original body first. Cache is refreshed by re-ingest.",
+    )
+    ap.add_argument(
+        "--show-diff",
+        action="store_true",
+        help="print a unified diff for every changed post (always on for --only)",
+    )
     args = ap.parse_args()
 
     if not BLOG_POSTS_DIR.exists():
@@ -500,9 +615,12 @@ def main() -> int:
 
     return run(
         count=None if args.all else args.count,
-        year_max=args.year_max, seed=args.seed,
-        include_microposts=args.include_microposts, only=args.only,
-        write=args.write, show_diff=args.show_diff,
+        year_max=args.year_max,
+        seed=args.seed,
+        include_microposts=args.include_microposts,
+        only=args.only,
+        write=args.write,
+        show_diff=args.show_diff,
     )
 
 

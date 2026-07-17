@@ -80,10 +80,19 @@ class WebappProductionsTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_edit_changes_newsletter_phase(self):
         c = await self._client()
-        db.plan_issue_window(issue_number=360, pub_date="2026-07-11",
-                             end_date="2026-07-10", start_date="2026-07-03", day_count=7)
-        r = await c.post("/productions/WT360/edit", headers=H, allow_redirects=False,
-                         data={"title": "WT360 edited", "phase": "write"})
+        db.plan_issue_window(
+            issue_number=360,
+            pub_date="2026-07-11",
+            end_date="2026-07-10",
+            start_date="2026-07-03",
+            day_count=7,
+        )
+        r = await c.post(
+            "/productions/WT360/edit",
+            headers=H,
+            allow_redirects=False,
+            data={"title": "WT360 edited", "phase": "write"},
+        )
         self.assertEqual(r.status, 302)
         row = db.get_production("WT360")
         self.assertEqual(row["phase"], "write")
@@ -92,8 +101,9 @@ class WebappProductionsTests(unittest.IsolatedAsyncioTestCase):
     async def test_list_hides_shipped_archive_by_default(self):
         c = await self._client()
         db.create_production(production_type="newsletter", title="WT360", seq=360)
-        db.create_production(production_type="newsletter", title="WT359", seq=359,
-                             phase="share", status="done")
+        db.create_production(
+            production_type="newsletter", title="WT359", seq=359, phase="share", status="done"
+        )
         body = await (await c.get("/productions", headers=H)).text()
         self.assertIn("WT360", body)
         self.assertNotIn("WT359", body)
@@ -105,8 +115,12 @@ class WebappProductionsTests(unittest.IsolatedAsyncioTestCase):
         c = await self._client()
         db.create_production(production_type="newsletter", title="WT360", seq=360)
         db.create_production(production_type="newsletter", title="WT361", seq=361)
-        r = await c.post("/productions/bulk-status", headers=H, allow_redirects=False,
-                         data=[("action", "pause"), ("pid", "WT360")])
+        r = await c.post(
+            "/productions/bulk-status",
+            headers=H,
+            allow_redirects=False,
+            data=[("action", "pause"), ("pid", "WT360")],
+        )
         self.assertEqual(r.status, 302)
         self.assertEqual(db.get_production("WT360")["status"], "paused")
         self.assertEqual(db.get_production("WT361")["status"], "active")
@@ -114,36 +128,57 @@ class WebappProductionsTests(unittest.IsolatedAsyncioTestCase):
     async def test_single_status_route_and_validation(self):
         c = await self._client()
         db.create_production(production_type="newsletter", title="WT360", seq=360)
-        r = await c.post("/productions/WT360/status", headers=H, allow_redirects=False,
-                         data={"status": "paused"})
+        r = await c.post(
+            "/productions/WT360/status", headers=H, allow_redirects=False, data={"status": "paused"}
+        )
         self.assertEqual(r.status, 302)
         self.assertEqual(db.get_production("WT360")["status"], "paused")
-        r = await c.post("/productions/WT360/status", headers=H, allow_redirects=False,
-                         data={"status": "bogus"})
+        r = await c.post(
+            "/productions/WT360/status", headers=H, allow_redirects=False, data={"status": "bogus"}
+        )
         self.assertEqual(r.status, 400)
-        r = await c.post("/productions/WT999/status", headers=H, allow_redirects=False,
-                         data={"status": "paused"})
+        r = await c.post(
+            "/productions/WT999/status", headers=H, allow_redirects=False, data={"status": "paused"}
+        )
         self.assertEqual(r.status, 404)
 
     async def test_invalid_create_inputs_are_400(self):
         c = await self._client()
-        r = await c.post("/productions/new", headers=H, allow_redirects=False,
-                         data={"production_type": "article", "title": "x"})
+        r = await c.post(
+            "/productions/new",
+            headers=H,
+            allow_redirects=False,
+            data={"production_type": "article", "title": "x"},
+        )
         self.assertEqual(r.status, 400)
-        r = await c.post("/productions/new", headers=H, allow_redirects=False,
-                         data={"production_type": "newsletter", "title": ""})
+        r = await c.post(
+            "/productions/new",
+            headers=H,
+            allow_redirects=False,
+            data={"production_type": "newsletter", "title": ""},
+        )
         self.assertEqual(r.status, 400)
-        r = await c.post("/productions/new", headers=H, allow_redirects=False,
-                         data={"production_type": "newsletter", "title": "WT360",
-                               "seq": "360", "pub_date": "2026-07-10"})
+        r = await c.post(
+            "/productions/new",
+            headers=H,
+            allow_redirects=False,
+            data={
+                "production_type": "newsletter",
+                "title": "WT360",
+                "seq": "360",
+                "pub_date": "2026-07-10",
+            },
+        )
         self.assertEqual(r.status, 400)
 
     async def test_foreign_origin_post_is_403(self):
         c = await self._client()
-        r = await c.post("/productions/new",
-                         headers={**H, "Origin": "https://evil.example"},
-                         allow_redirects=False,
-                         data={"production_type": "newsletter", "title": "WT360"})
+        r = await c.post(
+            "/productions/new",
+            headers={**H, "Origin": "https://evil.example"},
+            allow_redirects=False,
+            data={"production_type": "newsletter", "title": "WT360"},
+        )
         self.assertEqual(r.status, 403)
 
     async def test_no_identity_is_403(self):

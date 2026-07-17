@@ -111,7 +111,9 @@ def run_migrations() -> "_MigrationReport":
     _applied_schema_hash[path] = hashlib.sha256(schema_content).hexdigest()
     logger.info(
         "workshop.db ready at %s (%d applied this run, %d skipped)",
-        path, len(report.applied), len(report.skipped),
+        path,
+        len(report.applied),
+        len(report.skipped),
     )
     return _MigrationReport(
         path=path,

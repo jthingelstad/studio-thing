@@ -47,8 +47,7 @@ def _mirror_newsletter_production(
         "  detail_issue_number=excluded.detail_issue_number, "
         "  updated_at=datetime('now'), "
         "  updated_by=excluded.updated_by",
-        (n, n, n, phase, status, pub_date, pub_date, _NEWSLETTER_SURFACE,
-         n, set_by, set_by),
+        (n, n, n, phase, status, pub_date, pub_date, _NEWSLETTER_SURFACE, n, set_by, set_by),
     )
 
 
@@ -90,8 +89,12 @@ def set_issue_window(
                 (issue_number, pub_date, end_date, start_date, day_count, set_by),
             )
             _mirror_newsletter_production(
-                conn, issue_number=issue_number, phase="build",
-                pub_date=pub_date, status="active", set_by=set_by,
+                conn,
+                issue_number=issue_number,
+                phase="build",
+                pub_date=pub_date,
+                status="active",
+                set_by=set_by,
             )
             conn.execute("COMMIT")
         except Exception:
@@ -134,8 +137,12 @@ def plan_issue_window(
                 (issue_number, pub_date, end_date, start_date, day_count, set_by),
             )
             _mirror_newsletter_production(
-                conn, issue_number=issue_number, phase="planned",
-                pub_date=pub_date, status="active", set_by=set_by,
+                conn,
+                issue_number=issue_number,
+                phase="planned",
+                pub_date=pub_date,
+                status="active",
+                set_by=set_by,
             )
             conn.execute("COMMIT")
         except Exception:
@@ -232,8 +239,7 @@ def set_issue_phase(issue_number: int, phase: str) -> None:
                 (phase, n),
             )
             conn.execute(
-                "UPDATE productions SET phase = ?, updated_at = datetime('now') "
-                "WHERE id = 'WT'||?",
+                "UPDATE productions SET phase = ?, updated_at = datetime('now') WHERE id = 'WT'||?",
                 (phase, n),
             )
             conn.execute("COMMIT")
@@ -270,5 +276,3 @@ def list_issue_windows(*, limit: int = 12) -> list[dict[str, Any]]:
             (int(limit),),
         ).fetchall()
     return [dict(r) for r in rows]
-
-

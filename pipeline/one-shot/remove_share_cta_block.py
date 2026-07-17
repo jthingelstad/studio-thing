@@ -24,8 +24,8 @@ ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "apps" / "site" / "archive"
 # blank and not a bullet — that's the next structural element (a
 # `{% else %}` / `{% endif %}` template tag, or end-of-body, etc.).
 BLOCK_RE = re.compile(
-    r"\n+Here are some other things you can do[^\n]*\n"   # heading line
-    r"(?:\n|-\s[^\n]*\n)+",                               # bullets + blanks
+    r"\n+Here are some other things you can do[^\n]*\n"  # heading line
+    r"(?:\n|-\s[^\n]*\n)+",  # bullets + blanks
     re.MULTILINE,
 )
 
@@ -38,9 +38,7 @@ def process_file(fp, dry_run=False):
     fm = fm_match.group(1)
     body = fm_match.group(2)
 
-    raw_match = re.match(
-        r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL
-    )
+    raw_match = re.match(r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL)
     if not raw_match:
         return False
     raw_open, inner, raw_close = raw_match.groups()

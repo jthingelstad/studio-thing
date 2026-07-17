@@ -29,9 +29,7 @@ def process_file(fp, dry_run=False):
     fm = fm_match.group(1)
     body = fm_match.group(2)
 
-    raw_match = re.match(
-        r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL
-    )
+    raw_match = re.match(r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL)
     if not raw_match:
         return 0
     raw_open, inner, raw_close = raw_match.groups()
@@ -73,8 +71,10 @@ def main():
             action = "would modify" if args.dry_run else "modified"
             print(f"#{fp.stem}: {action} ({reps} replacement{'s' if reps != 1 else ''})")
 
-    print(f"\n{'Would modify' if args.dry_run else 'Modified'} {total_files} file(s), "
-          f"{total_reps} total replacements.")
+    print(
+        f"\n{'Would modify' if args.dry_run else 'Modified'} {total_files} file(s), "
+        f"{total_reps} total replacements."
+    )
 
 
 if __name__ == "__main__":

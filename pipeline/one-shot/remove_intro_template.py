@@ -56,7 +56,7 @@ def remove_intro(inner, openers):
     opener = after[: div_match.start()].strip()
     if opener not in openers:
         return inner, False
-    rest = after[div_match.end():]
+    rest = after[div_match.end() :]
     return inner[:comment_end] + rest, True
 
 
@@ -68,9 +68,7 @@ def process_file(fp, openers, dry_run=False):
     fm = fm_match.group(1)
     body = fm_match.group(2)
 
-    raw_match = re.match(
-        r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL
-    )
+    raw_match = re.match(r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL)
     if not raw_match:
         return False
     raw_open, inner, raw_close = raw_match.groups()

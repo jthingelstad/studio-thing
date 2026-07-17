@@ -32,7 +32,7 @@ def _row(row: Any) -> dict[str, Any]:
     if raw:
         try:
             d["details"] = json.loads(raw)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             d["details"] = None
     else:
         d["details"] = None
@@ -73,18 +73,13 @@ def create_production(
     """
     pt = ptypes.get_type(production_type)  # raises ValueError on unknown type
     if not ptypes.is_valid_status(status):
-        raise ValueError(
-            f"status {status!r} not valid; one of {ptypes.STATUSES}"
-        )
+        raise ValueError(f"status {status!r} not valid; one of {ptypes.STATUSES}")
     if seq is None:
         seq = next_production_seq(production_type)
     seq = int(seq)
     phase = phase or ptypes.default_phase(production_type)
     if not ptypes.is_valid_phase(production_type, phase):
-        raise ValueError(
-            f"phase {phase!r} not valid for {production_type!r}; "
-            f"one of {pt.phases}"
-        )
+        raise ValueError(f"phase {phase!r} not valid for {production_type!r}; one of {pt.phases}")
     production_id = f"{pt.id_prefix}{seq}"
     src = pt.surface if source is None else source
     details_json = json.dumps(details) if details else None
@@ -95,9 +90,19 @@ def create_production(
             " source, details, detail_issue_number, created_by, updated_by) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
-                production_id, production_type, seq, title, phase, status,
-                due_at, pub_date, src, details_json, detail_issue_number,
-                created_by, created_by,
+                production_id,
+                production_type,
+                seq,
+                title,
+                phase,
+                status,
+                due_at,
+                pub_date,
+                src,
+                details_json,
+                detail_issue_number,
+                created_by,
+                created_by,
             ),
         )
     return get_production(production_id) or {}
@@ -157,9 +162,7 @@ def update_production(
     """Update only the fields passed (non-None). Always bumps ``updated_at``.
     ``details`` replaces the stored blob wholesale (caller merges if needed)."""
     if status is not None and not ptypes.is_valid_status(status):
-        raise ValueError(
-            f"status {status!r} not valid; one of {ptypes.STATUSES}"
-        )
+        raise ValueError(f"status {status!r} not valid; one of {ptypes.STATUSES}")
     sets, params = [], []
     if title is not None:
         sets.append("title = ?")
@@ -199,8 +202,7 @@ def set_production_phase(
     ptype = row["production_type"]
     if not ptypes.is_valid_phase(ptype, phase):
         raise ValueError(
-            f"phase {phase!r} not valid for {ptype!r}; "
-            f"one of {ptypes.phases_for(ptype)}"
+            f"phase {phase!r} not valid for {ptype!r}; one of {ptypes.phases_for(ptype)}"
         )
     with connect() as conn:
         conn.execute(

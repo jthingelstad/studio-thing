@@ -38,8 +38,9 @@ GALLERY_URL_RE = re.compile(r"https?://gallery\.mailchimp\.com/[^\s\")\]]+")
 def collect_issues_with_gallery_images():
     """Return [(issue_number, archive_path, unique_gallery_url)]."""
     out = []
-    for fp in sorted(ARCHIVE_DIR.glob("*.md"),
-                     key=lambda p: int(p.stem) if p.stem.isdigit() else 9999):
+    for fp in sorted(
+        ARCHIVE_DIR.glob("*.md"), key=lambda p: int(p.stem) if p.stem.isdigit() else 9999
+    ):
         if not fp.stem.isdigit():
             continue
         content = fp.read_text()
@@ -48,8 +49,10 @@ def collect_issues_with_gallery_images():
         if not unique:
             continue
         if len(unique) > 1:
-            print(f"#{fp.stem}: WARNING — {len(unique)} unique gallery URLs; "
-                  f"only the first will be migrated. Others:")
+            print(
+                f"#{fp.stem}: WARNING — {len(unique)} unique gallery URLs; "
+                f"only the first will be migrated. Others:"
+            )
             for u in unique[1:]:
                 print(f"    {u}")
         out.append((int(fp.stem), fp, unique[0]))

@@ -18,6 +18,7 @@ Usage:
   python pipeline/audits/apply_audit_fixes.py --severities high
   python pipeline/audits/apply_audit_fixes.py --limit 20     # smoke test
 """
+
 from __future__ import annotations
 
 import argparse
@@ -56,7 +57,9 @@ load_dotenv(REPO / ".env")
 
 class Fix(BaseModel):
     action: str = Field(description="One of: replace, delete, skip, manual.")
-    find: str = Field(description="Exact verbatim string to find in the body. Empty if action is skip/manual.")
+    find: str = Field(
+        description="Exact verbatim string to find in the body. Empty if action is skip/manual."
+    )
     replace: str = Field(description="Exact replacement string. Empty for delete/skip/manual.")
     confidence: str = Field(description="One of: high, medium, low.")
     reason: str = Field(description="Brief one-sentence justification.")
@@ -112,14 +115,20 @@ def extract_fix(client: anthropic.Anthropic, issue: int, finding: dict) -> tuple
         resp = client.messages.parse(
             model=HAIKU,
             max_tokens=600,
-            system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
+            system=[
+                {"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}
+            ],
             messages=[{"role": "user", "content": user}],
             output_format=Fix,
         )
     except Exception as exc:  # noqa: BLE001
         return None, {"error": f"{exc.__class__.__name__}: {exc}"}
     duration = round(time.monotonic() - t0, 2)
-    fresh = resp.usage.input_tokens - (getattr(resp.usage, "cache_read_input_tokens", 0) or 0) - (getattr(resp.usage, "cache_creation_input_tokens", 0) or 0)
+    fresh = (
+        resp.usage.input_tokens
+        - (getattr(resp.usage, "cache_read_input_tokens", 0) or 0)
+        - (getattr(resp.usage, "cache_creation_input_tokens", 0) or 0)
+    )
     cost = (
         fresh * HAIKU_INPUT
         + resp.usage.output_tokens * HAIKU_OUTPUT
@@ -193,11 +202,15 @@ def apply_fixes(decisions: list[dict], apply: bool) -> dict:
             continue
         if fix["action"] == "manual":
             stats["manual_required"] += 1
-            by_issue.setdefault(issue, {"manual": [], "applied": [], "rejected": []})["manual"].append(d)
+            by_issue.setdefault(issue, {"manual": [], "applied": [], "rejected": []})[
+                "manual"
+            ].append(d)
             continue
         if fix["confidence"] != "high":
             stats["skipped_low_confidence"] += 1
-            by_issue.setdefault(issue, {"manual": [], "applied": [], "rejected": []})["rejected"].append({**d, "reject_reason": "low_confidence"})
+            by_issue.setdefault(issue, {"manual": [], "applied": [], "rejected": []})[
+                "rejected"
+            ].append({**d, "reject_reason": "low_confidence"})
             continue
         if fix["action"] not in {"replace", "delete"}:
             stats["skipped_action"] += 1
@@ -214,12 +227,16 @@ def apply_fixes(decisions: list[dict], apply: bool) -> dict:
         # Check uniqueness before locating, so we don't silently replace one of many.
         if body.count(find) > 1 or _normalize_quotes(body).count(_normalize_quotes(find)) > 1:
             stats["skipped_not_unique"] += 1
-            by_issue.setdefault(issue, {"manual": [], "applied": [], "rejected": []})["rejected"].append({**d, "reject_reason": "not_unique"})
+            by_issue.setdefault(issue, {"manual": [], "applied": [], "rejected": []})[
+                "rejected"
+            ].append({**d, "reject_reason": "not_unique"})
             continue
         position = find_in_body(body, find)
         if position is None:
             stats["skipped_not_found"] += 1
-            by_issue.setdefault(issue, {"manual": [], "applied": [], "rejected": []})["rejected"].append({**d, "reject_reason": "not_found"})
+            by_issue.setdefault(issue, {"manual": [], "applied": [], "rejected": []})[
+                "rejected"
+            ].append({**d, "reject_reason": "not_found"})
             continue
         start, end = position
         replacement = "" if fix["action"] == "delete" else fix["replace"]
@@ -227,18 +244,34 @@ def apply_fixes(decisions: list[dict], apply: bool) -> dict:
         if apply:
             body_path.write_text(new_body, encoding="utf-8")
         stats["auto_applied"] += 1
-        by_issue.setdefault(issue, {"manual": [], "applied": [], "rejected": []})["applied"].append(d)
+        by_issue.setdefault(issue, {"manual": [], "applied": [], "rejected": []})["applied"].append(
+            d
+        )
     return {"stats": stats, "by_issue": by_issue}
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Apply LLM audit findings to Buttondown bodies")
-    parser.add_argument("--apply", action="store_true", help="Actually write changes (default: dry run)")
-    parser.add_argument("--severities", default="high,medium", help="Comma-separated severities (default: high,medium)")
+    parser.add_argument(
+        "--apply", action="store_true", help="Actually write changes (default: dry run)"
+    )
+    parser.add_argument(
+        "--severities",
+        default="high,medium",
+        help="Comma-separated severities (default: high,medium)",
+    )
     parser.add_argument("--limit", type=int, help="Cap how many findings are processed")
     parser.add_argument("--workers", type=int, default=8, help="Parallel Haiku calls (default 8)")
-    parser.add_argument("--cache", default=str(TMP / "audit-fix-extractions.json"), help="Cache extracted fixes here")
-    parser.add_argument("--reuse-cache", action="store_true", help="Use cached extractions instead of re-calling Haiku")
+    parser.add_argument(
+        "--cache",
+        default=str(TMP / "audit-fix-extractions.json"),
+        help="Cache extracted fixes here",
+    )
+    parser.add_argument(
+        "--reuse-cache",
+        action="store_true",
+        help="Use cached extractions instead of re-calling Haiku",
+    )
     args = parser.parse_args()
 
     if not os.environ.get("ANTHROPIC_GENERAL_API_KEY"):
@@ -263,7 +296,14 @@ def main() -> None:
     for issue, finding in findings:
         key = f"{issue}:{finding['exact_snippet'][:80]}:{finding['suggested_fix'][:80]}"
         if key in cached:
-            decisions.append({"issue": issue, "finding": finding, "fix": cached[key]["fix"], "usage": cached[key].get("usage")})
+            decisions.append(
+                {
+                    "issue": issue,
+                    "finding": finding,
+                    "fix": cached[key]["fix"],
+                    "usage": cached[key].get("usage"),
+                }
+            )
         else:
             needs_extraction.append((issue, finding, key))
 
@@ -271,14 +311,19 @@ def main() -> None:
         print(f"Extracting {len(needs_extraction)} fix(es) via Haiku ({args.workers} workers)...")
         client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_GENERAL_API_KEY"])
         with ThreadPoolExecutor(max_workers=args.workers) as pool:
-            futures = {pool.submit(extract_fix, client, issue, finding): (issue, finding, key) for (issue, finding, key) in needs_extraction}
+            futures = {
+                pool.submit(extract_fix, client, issue, finding): (issue, finding, key)
+                for (issue, finding, key) in needs_extraction
+            }
             done = 0
             for fut in as_completed(futures):
                 issue, finding, key = futures[fut]
                 fix, usage = fut.result()
                 total_cost += usage.get("cost_usd", 0) if usage else 0
                 fix_dict = fix.model_dump() if fix else None
-                decisions.append({"issue": issue, "finding": finding, "fix": fix_dict, "usage": usage})
+                decisions.append(
+                    {"issue": issue, "finding": finding, "fix": fix_dict, "usage": usage}
+                )
                 cached[key] = {"fix": fix_dict, "usage": usage}
                 done += 1
                 if done % 50 == 0:
@@ -292,7 +337,9 @@ def main() -> None:
     for d in decisions:
         if d.get("fix"):
             action_counts[d["fix"]["action"]] = action_counts.get(d["fix"]["action"], 0) + 1
-            confidence_counts[d["fix"]["confidence"]] = confidence_counts.get(d["fix"]["confidence"], 0) + 1
+            confidence_counts[d["fix"]["confidence"]] = (
+                confidence_counts.get(d["fix"]["confidence"], 0) + 1
+            )
     print("\nAction distribution:")
     for k, v in sorted(action_counts.items(), key=lambda x: -x[1]):
         print(f"  {v:4d}  {k}")
@@ -329,7 +376,9 @@ def main() -> None:
             lines.append(f"### #{issue}")
             for d in bucket["applied"]:
                 f = d["fix"]
-                lines.append(f"- **{d['finding']['category']}/{d['finding']['severity']}** — `{f['find'][:120]}` → `{f['replace'][:120]}`  ")
+                lines.append(
+                    f"- **{d['finding']['category']}/{d['finding']['severity']}** — `{f['find'][:120]}` → `{f['replace'][:120]}`  "
+                )
                 lines.append(f"  Reason: {f['reason']}")
             lines.append("")
     lines.extend(["", "## Manual review required", ""])
@@ -338,7 +387,9 @@ def main() -> None:
         if bucket["manual"]:
             lines.append(f"### #{issue}")
             for d in bucket["manual"]:
-                lines.append(f"- **{d['finding']['category']}/{d['finding']['severity']}** — {d['finding']['why']}")
+                lines.append(
+                    f"- **{d['finding']['category']}/{d['finding']['severity']}** — {d['finding']['why']}"
+                )
                 lines.append(f"  Snippet: `{d['finding']['exact_snippet'][:120]}`")
                 lines.append(f"  Suggested: {d['finding']['suggested_fix']}")
             lines.append("")
@@ -350,7 +401,9 @@ def main() -> None:
             for d in bucket["rejected"]:
                 f = d["fix"]
                 reason = d.get("reject_reason", "?")
-                lines.append(f"- **{reason}** ({d['finding']['category']}) — `{f['find'][:100]}` → `{f['replace'][:100]}`  ")
+                lines.append(
+                    f"- **{reason}** ({d['finding']['category']}) — `{f['find'][:100]}` → `{f['replace'][:100]}`  "
+                )
                 lines.append(f"  Confidence: {f['confidence']}; reason: {f['reason']}")
             lines.append("")
     report_path.write_text("\n".join(lines), encoding="utf-8")

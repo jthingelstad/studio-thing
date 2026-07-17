@@ -125,7 +125,7 @@ class RenderEmailTests(unittest.TestCase):
         # No divider between the section body and the `{% if %}` —
         # adjacent sections only get one `<hr/>` for non-regular
         # audiences (the section join between Notable and Journal).
-        between = out[out.find("## Notable"):liquid_idx]
+        between = out[out.find("## Notable") : liquid_idx]
         self.assertNotIn("\n---\n", between.rsplit("\n", 5)[-1])
 
     def test_thanks_1_splices_after_brief_as_premium_only(self):
@@ -177,7 +177,10 @@ class RenderEmailTests(unittest.TestCase):
 
     def test_email_carries_editor_mode_and_pixel(self):
         out = renderers.render_email_body(
-            atoms=SAMPLE_ATOMS, sections=SAMPLE_SECTIONS, features=[], issue_number=458,
+            atoms=SAMPLE_ATOMS,
+            sections=SAMPLE_SECTIONS,
+            features=[],
+            issue_number=458,
         )
         self.assertTrue(out.startswith("<!-- buttondown-editor-mode: plaintext -->"))
         self.assertIn("tinylytics.app/pixel", out)
@@ -185,8 +188,11 @@ class RenderEmailTests(unittest.TestCase):
 
     def test_email_without_pixel_when_disabled(self):
         out = renderers.render_email_body(
-            atoms=SAMPLE_ATOMS, sections=SAMPLE_SECTIONS, features=[],
-            issue_number=458, include_pixel=False,
+            atoms=SAMPLE_ATOMS,
+            sections=SAMPLE_SECTIONS,
+            features=[],
+            issue_number=458,
+            include_pixel=False,
         )
         self.assertNotIn("tinylytics.app/pixel", out)
 
@@ -217,7 +223,9 @@ class RenderArchiveTests(unittest.TestCase):
 
     def test_archive_body_is_clean_prose(self):
         body = renderers.render_archive_body(
-            atoms=SAMPLE_ATOMS, sections=SAMPLE_SECTIONS, features=[],
+            atoms=SAMPLE_ATOMS,
+            sections=SAMPLE_SECTIONS,
+            features=[],
         )
         # No block markers (workshop never emits them here).
         self.assertNotIn("<!-- block:", body)
@@ -240,7 +248,9 @@ class RenderArchiveTests(unittest.TestCase):
         never produces Liquid. Defensive: pass them via the email
         path side, render archive separately, confirm no Liquid leaks."""
         body = renderers.render_archive_body(
-            atoms=SAMPLE_ATOMS, sections=SAMPLE_SECTIONS, features=[],
+            atoms=SAMPLE_ATOMS,
+            sections=SAMPLE_SECTIONS,
+            features=[],
         )
         self.assertNotIn("{% if", body)
         self.assertNotIn("Supporter", body)
@@ -274,7 +284,6 @@ class RenderArchiveTests(unittest.TestCase):
 
 
 class RenderTranscriptTests(unittest.TestCase):
-
     def _atoms_and_sections(self, *, cover: str = ""):
         atoms = {
             "intro": "An intro paragraph.",
@@ -293,7 +302,10 @@ class RenderTranscriptTests(unittest.TestCase):
     def test_transcript_splits_into_blocks(self):
         atoms, sections = self._atoms_and_sections()
         blocks = renderers.render_transcript_blocks(
-            atoms=atoms, sections=sections, features=[], metadata=SAMPLE_METADATA,
+            atoms=atoms,
+            sections=sections,
+            features=[],
+            metadata=SAMPLE_METADATA,
         )
         self.assertGreater(len(blocks), 0)
         # Each block has a NNN-{slug}.txt filename.
@@ -315,7 +327,9 @@ class RenderTranscriptTests(unittest.TestCase):
             ),
         )
         audio_body = renderers.render_audio_body(
-            atoms=atoms, sections=sections, features=[],
+            atoms=atoms,
+            sections=sections,
+            features=[],
         )
         # Cover atom content gone — alt text, caption, date, location.
         self.assertNotIn("Golden sunset", audio_body)
@@ -339,7 +353,10 @@ class RenderTranscriptTests(unittest.TestCase):
             ),
         )
         blocks = renderers.render_transcript_blocks(
-            atoms=atoms, sections=sections, features=[], metadata=SAMPLE_METADATA,
+            atoms=atoms,
+            sections=sections,
+            features=[],
+            metadata=SAMPLE_METADATA,
         )
         for name, content in blocks:
             self.assertNotIn("Golden sunset", content, name)
@@ -349,7 +366,7 @@ class RenderTranscriptTests(unittest.TestCase):
     def test_concat_transcript_for_review_marks_each_segment(self):
         blocks = [
             ("000-intro.txt", "Welcome to the issue."),
-            ("001-notable.txt", "Now, the Notable section.\n\nLink one. \"Title\"."),
+            ("001-notable.txt", 'Now, the Notable section.\n\nLink one. "Title".'),
             ("002-haiku.txt", "Haiku close."),
         ]
         out = renderers.concat_transcript_for_review(blocks, issue_number=458)

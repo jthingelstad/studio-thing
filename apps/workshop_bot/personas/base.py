@@ -200,7 +200,8 @@ class PersonaBot(discord.Client):
                 synced = await self.command_tree.sync()
             logger.info(
                 "%s: command tree synced (%d command(s)%s)",
-                self.persona, len(synced),
+                self.persona,
+                len(synced),
                 f", guild={guild_id}" if guild_id else "",
             )
         except Exception:  # noqa: BLE001
@@ -273,9 +274,7 @@ class PersonaBot(discord.Client):
         # "Stopping by my desk" — Jamie posts in this persona's home channel
         # without an @-mention. Yield to any specific persona he @-mentioned.
         is_home = self._is_home_channel(message.channel.id)
-        other_bot_mentioned = any(
-            m.bot and m != self.user for m in (message.mentions or [])
-        )
+        other_bot_mentioned = any(m.bot and m != self.user for m in (message.mentions or []))
         home_dispatch = is_home and not other_bot_mentioned
 
         if not (is_self_mention or home_dispatch):
@@ -329,15 +328,11 @@ class PersonaBot(discord.Client):
             await message.reply(self.empty_greeting, mention_author=False, suppress_embeds=True)
             return
 
-        token = agent_tools.active_react_target.set(
-            (message.channel.id, message.id)
-        )
+        token = agent_tools.active_react_target.set((message.channel.id, message.id))
         try:
             async with message.channel.typing():
                 with db.AgentRun(self.persona, trigger="mention") as run:
-                    answer, meta = await self.core(
-                        latest=latest, history=history, model=model
-                    )
+                    answer, meta = await self.core(latest=latest, history=history, model=model)
                     run.record_meta(meta)
                     output_id = db.insert_agent_output(
                         agent_name=self.persona,

@@ -17,8 +17,9 @@ class ProductionTypesTests(unittest.TestCase):
         for key, t in pt.PRODUCTION_TYPES.items():
             self.assertEqual(t.key, key)
             self.assertTrue(t.phases, f"{key} has no phases")
-            self.assertIn(t.terminal_phase, t.phases,
-                          f"{key} terminal {t.terminal_phase!r} not in phases")
+            self.assertIn(
+                t.terminal_phase, t.phases, f"{key} terminal {t.terminal_phase!r} not in phases"
+            )
             self.assertEqual(pt.default_phase(key), t.phases[0])
 
     def test_id_prefixes_are_unique(self):
@@ -27,7 +28,9 @@ class ProductionTypesTests(unittest.TestCase):
 
     def test_expected_vocabularies(self):
         self.assertEqual(tuple(pt.PRODUCTION_TYPES), ("newsletter",))
-        self.assertEqual(pt.phases_for("newsletter"), ("planned", "write", "build", "publish", "share"))
+        self.assertEqual(
+            pt.phases_for("newsletter"), ("planned", "write", "build", "publish", "share")
+        )
         for retired in ("article", "podcast", "project"):
             with self.subTest(retired=retired):
                 with self.assertRaises(ValueError):
@@ -51,8 +54,7 @@ class ProductionTypesTests(unittest.TestCase):
             pt.default_phase("zine")
 
     def test_status_vocabulary(self):
-        self.assertEqual(
-            pt.STATUSES, ("active", "paused", "done", "archived", "abandoned"))
+        self.assertEqual(pt.STATUSES, ("active", "paused", "done", "archived", "abandoned"))
         for s in pt.STATUSES:
             self.assertTrue(pt.is_valid_status(s))
         self.assertFalse(pt.is_valid_status("shipped"))

@@ -49,8 +49,10 @@ from .. import s3
 logger = logging.getLogger("workshop.journal_images")
 
 _DEFAULT_UPLOAD_HOSTS = (
-    "www.thingelstad.com", "micro.thingelstad.com",
-    "cdn.uploads.micro.blog", "uploads.micro.blog",
+    "www.thingelstad.com",
+    "micro.thingelstad.com",
+    "cdn.uploads.micro.blog",
+    "uploads.micro.blog",
 )
 _DEFAULT_MAX_DIM = 600
 _FETCH_TIMEOUT = 30.0
@@ -66,7 +68,9 @@ _SRC_RE = re.compile(r'\bsrc\s*=\s*(["\'])(.*?)\1', re.IGNORECASE | re.DOTALL)
 _ALT_RE = re.compile(r'\balt\s*=\s*(["\'])(.*?)\1', re.IGNORECASE | re.DOTALL)
 _MD_IMG_RE = re.compile(r'!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)')
 _IMG_EXT_RE = re.compile(r"\.(jpe?g|png|gif|webp)\b", re.IGNORECASE)
-_SAFE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,80}\.(jpe?g|png|gif|webp)$", re.IGNORECASE)
+_SAFE_NAME_RE = re.compile(
+    r"^[A-Za-z0-9][A-Za-z0-9._-]{0,80}\.(jpe?g|png|gif|webp)$", re.IGNORECASE
+)
 _RESIZABLE = {".jpg", ".jpeg", ".png"}
 
 
@@ -80,7 +84,7 @@ def _max_dim() -> int:
     try:
         v = int(os.environ.get("MICROBLOG_IMAGE_MAX_DIM") or _DEFAULT_MAX_DIM)
         return v if v > 0 else _DEFAULT_MAX_DIM
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return _DEFAULT_MAX_DIM
 
 
@@ -167,7 +171,9 @@ def _fetch(url: str) -> bytes | None:
         for chunk in resp.iter_content(64 * 1024):
             total += len(chunk)
             if total > _FETCH_MAX_BYTES:
-                logger.warning("journal_images: %s exceeds %d bytes — skipping", url, _FETCH_MAX_BYTES)
+                logger.warning(
+                    "journal_images: %s exceeds %d bytes — skipping", url, _FETCH_MAX_BYTES
+                )
                 return None
             chunks.append(chunk)
         return b"".join(chunks)

@@ -62,7 +62,7 @@ SKIP_URL_FRAGMENTS = (
     "cdn-images.mailchimp.com/icons",
     "weekly.thingelstad.com/images/logo/",
     "/outline-gray-",  # social block icons
-    "/color-",         # more social icons
+    "/color-",  # more social icons
     "tinyletterapp.com/",  # old Tinyletter CDN assets
 )
 
@@ -106,8 +106,9 @@ def url_host(url):
 def list_wrong_hosts(issue_map):
     counts = Counter()
     examples = {}
-    for fp in sorted(ARCHIVE_DIR.glob("*.md"),
-                     key=lambda p: int(p.stem) if p.stem.isdigit() else 9999):
+    for fp in sorted(
+        ARCHIVE_DIR.glob("*.md"), key=lambda p: int(p.stem) if p.stem.isdigit() else 9999
+    ):
         if not fp.stem.isdigit():
             continue
         n = int(fp.stem)
@@ -147,8 +148,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("issues", nargs="*", type=int)
     ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--list-wrong-hosts", action="store_true",
-                    help="Audit only: print hosts currently in image: field")
+    ap.add_argument(
+        "--list-wrong-hosts",
+        action="store_true",
+        help="Audit only: print hosts currently in image: field",
+    )
     args = ap.parse_args()
 
     campaigns = json.loads(CAMPAIGNS_CACHE.read_text())
@@ -203,9 +207,11 @@ def main():
         if not args.dry_run:
             fp.write_text(new_content)
 
-    print(f"\nUpdated: {counts['updated']}  "
-          f"No hero candidate: {counts['no_hero']}  "
-          f"No cache: {counts['no_cache']}")
+    print(
+        f"\nUpdated: {counts['updated']}  "
+        f"No hero candidate: {counts['no_hero']}  "
+        f"No cache: {counts['no_cache']}"
+    )
     if skipped_no_hero:
         print(f"Skipped (no hero): {skipped_no_hero}")
 

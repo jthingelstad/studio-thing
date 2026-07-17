@@ -58,6 +58,7 @@ def _journal_label(published_iso: Any) -> str:
 
 # ---------- Pinboard ----------
 
+
 def _pinboard_source_id(post: dict[str, Any]) -> str:
     """Pinboard hash is the stable identity. URL is the fallback when the
     hash is empty (rare — Pinboard always returns it for posts/all)."""
@@ -79,7 +80,10 @@ def _pinboard_metadata(post: dict[str, Any], section: str) -> dict[str, Any]:
 
 
 def sync_pinboard(
-    issue_number: int, window: dict[str, Any], *, prune: bool = True,
+    issue_number: int,
+    window: dict[str, Any],
+    *,
+    prune: bool = True,
 ) -> dict[str, int]:
     """Pull Pinboard's issue-window candidates into ``issue_items``.
 
@@ -115,12 +119,15 @@ def sync_pinboard(
     pruned = _prune_stale(n, source="pinboard", observed=observed_ids) if prune else 0
     logger.info(
         "sync_pinboard: WT%d observed=%d pruned=%d",
-        n, len(observed_ids), pruned,
+        n,
+        len(observed_ids),
+        pruned,
     )
     return {"observed": len(observed_ids), "pruned": pruned}
 
 
 # ---------- micro.blog ----------
+
 
 def _microblog_source_id(post: dict[str, Any]) -> str:
     """micro.blog post URL is the stable identity (each post has a
@@ -178,7 +185,10 @@ def _featured_heading(post: dict[str, Any]) -> str:
 
 
 def sync_microblog(
-    issue_number: int, window: dict[str, Any], *, prune: bool = True,
+    issue_number: int,
+    window: dict[str, Any],
+    *,
+    prune: bool = True,
 ) -> dict[str, Any]:
     """Pull micro.blog's in-window posts into ``issue_items`` (journal).
 
@@ -219,7 +229,8 @@ def sync_microblog(
         except Exception as exc:  # noqa: BLE001
             logger.warning(
                 "sync_microblog: image rehost failed for %s: %s",
-                sid, exc,
+                sid,
+                exc,
             )
             rehosted = post.get("content_md") or ""
         row_id = issue_items.upsert_item(
@@ -248,7 +259,11 @@ def sync_microblog(
     pruned = _prune_stale(n, source="microblog", observed=observed_ids) if prune else 0
     logger.info(
         "sync_microblog: WT%d observed=%d pruned=%d featured=%d alts_filled=%d",
-        n, len(observed_ids), pruned, featured_count, len(alts_filled),
+        n,
+        len(observed_ids),
+        pruned,
+        featured_count,
+        len(alts_filled),
     )
     return {
         "observed": len(observed_ids),
@@ -260,8 +275,12 @@ def sync_microblog(
 
 # ---------- pruning ----------
 
+
 def _prune_stale(
-    issue_number: int, *, source: str, observed: set[str],
+    issue_number: int,
+    *,
+    source: str,
+    observed: set[str],
 ) -> int:
     """Delete non-promoted rows for ``(issue, source)`` whose
     ``source_id`` is not in ``observed``. Promoted items are preserved
@@ -282,20 +301,17 @@ def _prune_stale(
             "WHERE issue_number = ? AND source = ? AND is_promoted = 0",
             (int(issue_number), source),
         ).fetchall()
-        stale_ids = [
-            int(r["id"]) for r in rows if str(r["source_id"]) not in observed
-        ]
+        stale_ids = [int(r["id"]) for r in rows if str(r["source_id"]) not in observed]
         if not stale_ids:
             return 0
         # SQLite limits parameter count; chunk just in case (unlikely
         # to exceed ~50 stale per issue but defensive).
         deleted = 0
         for i in range(0, len(stale_ids), 200):
-            chunk = stale_ids[i:i + 200]
+            chunk = stale_ids[i : i + 200]
             placeholders = ",".join("?" for _ in chunk)
             conn.execute(
-                f"UPDATE editorial_comments SET item_id = NULL "
-                f"WHERE item_id IN ({placeholders})",
+                f"UPDATE editorial_comments SET item_id = NULL WHERE item_id IN ({placeholders})",
                 chunk,
             )
             cur = conn.execute(
@@ -308,8 +324,12 @@ def _prune_stale(
 
 # ---------- combined entrypoint ----------
 
+
 def sync_all(
-    issue_number: int, window: dict[str, Any], *, prune: bool = True,
+    issue_number: int,
+    window: dict[str, Any],
+    *,
+    prune: bool = True,
 ) -> dict[str, dict[str, Any]]:
     """Run both syncs back-to-back. ``update-draft`` calls this once per
     refresh. Failures in one source don't block the other — each is
@@ -322,7 +342,8 @@ def sync_all(
     except Exception as exc:  # noqa: BLE001
         logger.warning(
             "sync_all: Pinboard sync failed for WT%d: %s",
-            issue_number, exc,
+            issue_number,
+            exc,
         )
         out["pinboard"] = {"observed": 0, "pruned": 0, "error": str(exc)}
     try:
@@ -330,7 +351,8 @@ def sync_all(
     except Exception as exc:  # noqa: BLE001
         logger.warning(
             "sync_all: micro.blog sync failed for WT%d: %s",
-            issue_number, exc,
+            issue_number,
+            exc,
         )
         out["microblog"] = {"observed": 0, "pruned": 0, "alts_filled": [], "error": str(exc)}
     return out

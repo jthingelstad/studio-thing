@@ -228,11 +228,13 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
             if title:
                 if current_section in LINK_SECTIONS:
                     link_index += 1
-                    output.extend([
-                        f"Link {number_word(link_index)} of "
-                        f"{number_word(current_section_total)}. \"{title}\"",
-                        "",
-                    ])
+                    output.extend(
+                        [
+                            f"Link {number_word(link_index)} of "
+                            f'{number_word(current_section_total)}. "{title}"',
+                            "",
+                        ]
+                    )
                 elif current_section in JOURNAL_SECTIONS:
                     link_index += 1
                     output.extend([f"Journal entry {number_word(link_index)}. {title}", ""])
@@ -259,11 +261,13 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
                 commentary = clean_inline(commentary_raw)
                 if title:
                     link_index += 1
-                    output.extend([
-                        f"Link {number_word(link_index)} of "
-                        f"{number_word(current_section_total)}. \"{title}\"",
-                        "",
-                    ])
+                    output.extend(
+                        [
+                            f"Link {number_word(link_index)} of "
+                            f'{number_word(current_section_total)}. "{title}"',
+                            "",
+                        ]
+                    )
                 if commentary:
                     output.extend([commentary, ""])
                 continue

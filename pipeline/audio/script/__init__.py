@@ -32,8 +32,10 @@ def body_to_audio_script(body: str, frontmatter: dict[str, Any]) -> str:
     """Render a TTS-ready audio script from an archive body + frontmatter."""
     if _issue_number(frontmatter) <= LEGACY_MAX_ISSUE:
         from . import legacy
+
         return legacy.body_to_audio_script(body, frontmatter)
     from . import modern
+
     return modern.body_to_audio_script(body, frontmatter)
 
 

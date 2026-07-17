@@ -32,6 +32,7 @@ ISSUE_BODY_CAP = 24_000
 
 # ---------- archive tools ----------
 
+
 def t_search_archive(deps, query: str, k: int = 8) -> list[dict[str, Any]]:
     """BM25 search over archive chunks. Cheap. Use first to find what's relevant."""
     chunks = deps.corpus.search(query, k=int(k))
@@ -172,6 +173,7 @@ def t_quote_search(deps, phrase: str, limit: int = 8) -> list[dict[str, Any]]:
 #            issues + issue_links tables, seeded by the one-shot backfill
 #            and kept current by /eddy issue put-to-bed) ----------
 
+
 def t_archive_lookup_get_issue(deps, number: int) -> dict[str, Any] | str:
     """Structured metadata for one shipped issue from the historical
     record (workshop.db ``issues`` row). Sub-millisecond SQL lookup.
@@ -181,14 +183,16 @@ def t_archive_lookup_get_issue(deps, number: int) -> dict[str, Any] | str:
     audio metadata, era) rather than prose."""
     try:
         n = int(number)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return f"could not parse issue number from {number!r}"
     row = archive_lookup.get_issue(n)
     return row if row is not None else f"no record for WT{n} (not yet filed)"
 
 
 def t_archive_lookup_find_by_domain(
-    deps, domain: str, limit: int = 50,
+    deps,
+    domain: str,
+    limit: int = 50,
 ) -> list[dict[str, Any]]:
     """Issues that cite ``domain`` in any link, newest first. Use when
     Jamie asks 'has Jamie linked to this site before?' or 'how often
@@ -229,7 +233,9 @@ def t_archive_lookup_stats(deps) -> dict[str, Any]:
 
 
 def t_archive_lookup_list_links(
-    deps, issue_number: int, section: Optional[str] = None,
+    deps,
+    issue_number: int,
+    section: Optional[str] = None,
 ) -> list[dict[str, Any]]:
     """Every link row for one issue, ordered by (section, position).
     Pass ``section`` to filter to 'notable' or 'briefly' only."""
@@ -237,6 +243,7 @@ def t_archive_lookup_list_links(
 
 
 # ---------- web ----------
+
 
 def t_fetch_url(deps, url: str, max_chars: int = 12_000) -> dict[str, Any]:
     """Fetch a URL and return readable text before Eddy comments on it."""
@@ -260,6 +267,7 @@ t_list_issue_windows = issue.t_list_issue_windows
 
 # ---------- memory (universal) ----------
 
+
 def t_remember(
     deps,
     content: str,
@@ -277,9 +285,10 @@ def t_remember(
     expires_at: Optional[str] = None
     if expires_in_days is not None:
         from datetime import datetime, timedelta, timezone
-        expires_at = (
-            datetime.now(timezone.utc) + timedelta(days=int(expires_in_days))
-        ).strftime("%Y-%m-%d %H:%M:%S")
+
+        expires_at = (datetime.now(timezone.utc) + timedelta(days=int(expires_in_days))).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
     # Persona name comes from the calling persona via deps.
     note_id = db.insert_agent_note(
         agent_name=active_persona.get() or "unknown",
@@ -328,6 +337,7 @@ def t_forget_note(deps, note_id: int, status: str = "resolved") -> dict[str, Any
 
 # ---------- follow-ups (universal — the targeted heartbeat) ----------
 
+
 def t_followup_schedule(
     deps,
     note: str,
@@ -340,19 +350,30 @@ def t_followup_schedule(
     ``in_days`` (relative offset, fires ~6pm that many days out), or
     ``at_issue`` (fires once that issue is in flight)."""
     from ...jobs.follow_up import FollowUpError, create, trigger_desc  # lazy: avoid an import cycle
+
     try:
         row = create(
-            persona=active_persona.get() or "eddy", note=note,
-            when=when, in_days=in_days, at_issue=at_issue, created_by=active_persona.get(),
+            persona=active_persona.get() or "eddy",
+            note=note,
+            when=when,
+            in_days=in_days,
+            at_issue=at_issue,
+            created_by=active_persona.get(),
         )
     except FollowUpError as exc:
         return {"error": str(exc)}
-    return {"id": row.get("id"), "persona": row.get("persona"), "fires": trigger_desc(row), "note": row.get("note")}
+    return {
+        "id": row.get("id"),
+        "persona": row.get("persona"),
+        "fires": trigger_desc(row),
+        "note": row.get("note"),
+    }
 
 
 def t_followup_list(deps) -> list[dict[str, Any]]:
     """Your pending follow-ups — id, when each fires, and the note."""
     from ...jobs.follow_up import trigger_desc  # lazy: avoid an import cycle
+
     return [
         {"id": r["id"], "fires": trigger_desc(r), "note": r["note"]}
         for r in db.open_follow_ups(persona=active_persona.get())
@@ -395,7 +416,8 @@ def t_currently_list_types(deps, include_inactive: bool = False) -> list[dict[st
 
 
 def t_currently_list_entries(
-    deps, issue_number: Optional[int] = None,
+    deps,
+    issue_number: Optional[int] = None,
 ) -> dict[str, Any]:
     """The active issue's filled Currently entries (or another issue's if
     ``issue_number`` is given), ordered by ``position`` (render order in
@@ -404,7 +426,7 @@ def t_currently_list_entries(
     if issue_number is not None:
         try:
             n = int(issue_number)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return {"error": f"issue_number must be an int (got {issue_number!r})"}
     if n is None:
         n = _active_issue_number()
@@ -510,12 +532,13 @@ def t_currently_suggest_stale(deps, k: int = 3) -> list[dict[str, Any]]:
     to ask Jamie about when opening the week's Currently conversation."""
     try:
         kk = max(1, int(k))
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         kk = 3
     return db.currently_suggest_stale(_active_issue_number(), k=kk)
 
 
 # ---------- draft completeness (in-flight issue) ----------
+
 
 def t_draft_section_status(deps) -> dict[str, Any]:
     """Section + asset completeness for the in-flight issue's ``draft.md``:
@@ -525,9 +548,7 @@ def t_draft_section_status(deps) -> dict[str, Any]:
     ``ship_ready`` flag. Deterministic — read it, don't recompute it."""
     window = db.get_active_issue_window()
     if window is None:
-        return {
-            "error": "No active issue window. Start one in Studio first."
-        }
+        return {"error": "No active issue window. Start one in Studio first."}
     try:
         return draft.section_status(int(window["issue_number"]))
     except Exception as exc:  # noqa: BLE001
@@ -535,6 +556,7 @@ def t_draft_section_status(deps) -> dict[str, Any]:
 
 
 # ---------- editorial comments ----------
+
 
 def t_editorial_get_comment(deps, handle: str) -> dict[str, Any]:
     """Fetch one editorial review comment by its stable handle
@@ -589,7 +611,7 @@ def t_editorial_get_comment(deps, handle: str) -> dict[str, Any]:
     if row.get("item_id"):
         item = issue_items_mod.get_item(int(row["item_id"]))
         if item is not None:
-            body = (item.get("body_md") or "")
+            body = item.get("body_md") or ""
             out["item"] = {
                 "id": item["id"],
                 "section": item["section"],
@@ -617,7 +639,7 @@ def t_editorial_list_open(deps, issue_number: Optional[int] = None) -> dict[str,
     if issue_number is not None:
         try:
             n = int(issue_number)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return {"error": f"issue_number must be an int (got {issue_number!r})"}
     if n is None:
         window = db.get_active_issue_window()
@@ -634,8 +656,10 @@ def t_editorial_list_open(deps, issue_number: Optional[int] = None) -> dict[str,
                 "scope": r["scope"],
                 "verdict": r["verdict"],
                 "section": r.get("section"),
-                "snippet": ((r.get("body_md") or "")[:140]
-                            + ("…" if len(r.get("body_md") or "") > 140 else "")),
+                "snippet": (
+                    (r.get("body_md") or "")[:140]
+                    + ("…" if len(r.get("body_md") or "") > 140 else "")
+                ),
             }
             for r in rows
         ],
@@ -643,6 +667,7 @@ def t_editorial_list_open(deps, issue_number: Optional[int] = None) -> dict[str,
 
 
 # ---------- Discord reactions ----------
+
 
 def t_react_add(deps, emoji: str) -> dict[str, Any]:
     """Add a single emoji reaction to the message currently being responded to.
@@ -684,17 +709,25 @@ def t_react_add(deps, emoji: str) -> dict[str, Any]:
     return {"ok": True, "emoji": emoji}
 
 
-
 # ---------- newsletter issue registry ----------
+
 
 def t_productions_list(deps, production_type: str = None, status: str = None) -> dict[str, Any]:
     """List newsletter issue rows."""
     rows = db.list_productions(production_type="newsletter", status=status, limit=100)
-    return {"productions": [
-        {"id": r["id"], "type": r["production_type"], "title": r["title"],
-         "phase": r["phase"], "status": r["status"], "due_at": r.get("due_at")}
-        for r in rows
-    ]}
+    return {
+        "productions": [
+            {
+                "id": r["id"],
+                "type": r["production_type"],
+                "title": r["title"],
+                "phase": r["phase"],
+                "status": r["status"],
+                "due_at": r.get("due_at"),
+            }
+            for r in rows
+        ]
+    }
 
 
 def t_productions_get(deps, production_id: str) -> dict[str, Any]:
@@ -707,7 +740,9 @@ def t_productions_get(deps, production_id: str) -> dict[str, Any]:
     return row
 
 
-def t_productions_create(deps, production_type: str, title: str, due_at: str = None) -> dict[str, Any]:
+def t_productions_create(
+    deps, production_type: str, title: str, due_at: str = None
+) -> dict[str, Any]:
     """Retired. Newsletter issues are created through the Studio web flow."""
     return {"error": "Create newsletter issues in Studio; generic productions are retired."}
 
@@ -727,6 +762,7 @@ def t_productions_set_phase(deps, production_id: str, phase: str) -> dict[str, A
 
 
 # ---------- production content (newsletter issue, DB-backed) ----------
+
 
 def t_production_content_read(deps, production_id: str, name: str) -> dict[str, Any]:
     """Read an authored content block for a newsletter issue."""
@@ -750,24 +786,33 @@ def t_production_content_list(deps, production_id: str) -> dict[str, Any]:
 
 # ---------- production tasks (the state engine's interactive half) ----------
 
+
 def t_tasks_list(deps, production_id: str, status: str = None) -> dict[str, Any]:
     """The added/assigned tasks on a production (the board)."""
     return {"tasks": db.list_tasks(production_id, status=status)}
 
 
-def t_tasks_add(deps, production_id: str, title: str, owner: str = "jamie",
-                phase: str = None, detail: str = None) -> dict[str, Any]:
+def t_tasks_add(
+    deps,
+    production_id: str,
+    title: str,
+    owner: str = "jamie",
+    phase: str = None,
+    detail: str = None,
+) -> dict[str, Any]:
     """Add a task to a newsletter issue. owner ∈ jamie/eddy."""
     try:
-        row = db.add_task(production_id, title, owner=owner, phase=phase,
-                          detail=detail, created_by="agent")
+        row = db.add_task(
+            production_id, title, owner=owner, phase=phase, detail=detail, created_by="agent"
+        )
     except ValueError as exc:
         return {"error": str(exc)}
     return {"ok": True, "task_id": row["id"], "owner": row["owner"], "status": row["status"]}
 
 
-def t_tasks_update(deps, task_id: int, status: str = None, owner: str = None,
-                   title: str = None) -> dict[str, Any]:
+def t_tasks_update(
+    deps, task_id: int, status: str = None, owner: str = None, title: str = None
+) -> dict[str, Any]:
     """Update a task — claim it (owner=<you>, status='doing'), reassign, retitle,
     or change status (todo/doing/done/blocked)."""
     try:

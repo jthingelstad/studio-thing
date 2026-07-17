@@ -10,6 +10,7 @@ Usage:
   python pipeline/status.py                 # human-readable table
   python pipeline/status.py --json PATH     # write JSON, no stdout table
 """
+
 from __future__ import annotations
 
 import argparse
@@ -53,7 +54,9 @@ def load_archive_frontmatter(path: Path) -> tuple[dict, str]:
     body = raw[end + 5 :]
     # strip the generated notice line if present
     body_lines = body.split("\n")
-    while body_lines and (not body_lines[0].strip() or body_lines[0].startswith(GENERATED_NOTICE_RE)):
+    while body_lines and (
+        not body_lines[0].strip() or body_lines[0].startswith(GENERATED_NOTICE_RE)
+    ):
         body_lines.pop(0)
     body = "\n".join(body_lines)
     fm: dict = {}
@@ -73,7 +76,9 @@ def body_has_local_edits(rel_path: str) -> bool:
     try:
         result = subprocess.run(
             ["git", "diff", "--quiet", "HEAD", "--", rel_path],
-            cwd=REPO, check=False, capture_output=True,
+            cwd=REPO,
+            check=False,
+            capture_output=True,
         )
         return result.returncode != 0
     except FileNotFoundError:
@@ -88,11 +93,13 @@ def s3_object_metadata(bucket: str, key: str) -> dict | None:
         return None
     try:
         head = boto3.client("s3").head_object(Bucket=bucket, Key=key)
-    except (ClientError, NoCredentialsError):
+    except ClientError, NoCredentialsError:
         return None
     metadata = {
         "size": head.get("ContentLength"),
-        "last_modified": head.get("LastModified").isoformat().replace("+00:00", "Z") if head.get("LastModified") else None,
+        "last_modified": head.get("LastModified").isoformat().replace("+00:00", "Z")
+        if head.get("LastModified")
+        else None,
         "etag": head.get("ETag", "").strip('"'),
     }
     # The corpus is too big to download whole, but the top-level metadata
@@ -101,9 +108,11 @@ def s3_object_metadata(bucket: str, key: str) -> dict | None:
     # effort; we keep the metadata even if the parse fails.
     if key.endswith("corpus.json"):
         try:
-            head_bytes = boto3.client("s3").get_object(
-                Bucket=bucket, Key=key, Range="bytes=0-2047"
-            )["Body"].read()
+            head_bytes = (
+                boto3.client("s3")
+                .get_object(Bucket=bucket, Key=key, Range="bytes=0-2047")["Body"]
+                .read()
+            )
             text = head_bytes.decode("utf-8", errors="ignore")
             for field in ("embedding_model", "embedding_dimensions", "issue_count", "chunk_count"):
                 m = re.search(rf'"{field}"\s*:\s*("?)([^,"\n}}]+)\1', text)
@@ -115,7 +124,7 @@ def s3_object_metadata(bucket: str, key: str) -> dict | None:
                         metadata[field] = None
                     else:
                         metadata[field] = val
-        except (ClientError, NoCredentialsError, UnicodeDecodeError):
+        except ClientError, NoCredentialsError, UnicodeDecodeError:
             pass
     return metadata
 
@@ -171,39 +180,48 @@ def collect_issues() -> list[dict]:
 
         manifest_script_hash = audio_entry.get("audio_script_hash", "")
         audio_in_manifest = bool(audio_entry)
-        audio_out_of_date = audio_in_manifest and current_script_hash != "" and current_script_hash != manifest_script_hash
+        audio_out_of_date = (
+            audio_in_manifest
+            and current_script_hash != ""
+            and current_script_hash != manifest_script_hash
+        )
 
-        rows.append({
-            "number": int(n),
-            "subject": archive_fm.get("subject", ""),
-            "publish_date": archive_fm.get("publish_date", ""),
-            "body": {
-                "tracked": body_exists,
-                "has_local_edits": body_local_edits,
-            },
-            "archive": {
-                "exists": archive_exists,
-                "word_count": int(archive_fm.get("word_count")) if archive_fm.get("word_count", "").isdigit() else None,
-            },
-            "audio": {
-                "in_manifest": audio_in_manifest,
-                "url": audio_entry.get("audio_url"),
-                "duration_seconds": audio_entry.get("audio_duration_seconds"),
-                "byte_size": audio_entry.get("byte_size"),
-                "voice": audio_entry.get("audio_voice"),
-                "rendered_at": audio_entry.get("generated_at"),
-                "manifest_script_hash": manifest_script_hash,
-                "current_script_hash": current_script_hash,
-                "out_of_date": audio_out_of_date,
-            },
-        })
+        rows.append(
+            {
+                "number": int(n),
+                "subject": archive_fm.get("subject", ""),
+                "publish_date": archive_fm.get("publish_date", ""),
+                "body": {
+                    "tracked": body_exists,
+                    "has_local_edits": body_local_edits,
+                },
+                "archive": {
+                    "exists": archive_exists,
+                    "word_count": int(archive_fm.get("word_count"))
+                    if archive_fm.get("word_count", "").isdigit()
+                    else None,
+                },
+                "audio": {
+                    "in_manifest": audio_in_manifest,
+                    "url": audio_entry.get("audio_url"),
+                    "duration_seconds": audio_entry.get("audio_duration_seconds"),
+                    "byte_size": audio_entry.get("byte_size"),
+                    "voice": audio_entry.get("audio_voice"),
+                    "rendered_at": audio_entry.get("generated_at"),
+                    "manifest_script_hash": manifest_script_hash,
+                    "current_script_hash": current_script_hash,
+                    "out_of_date": audio_out_of_date,
+                },
+            }
+        )
     return rows
 
 
 def deployed_artifacts() -> dict:
     return {
-        "corpus": s3_object_metadata(LIBRARIAN_BUCKET, LIBRARIAN_CORPUS_KEY) or {"unavailable": True},
-        "graph":  s3_object_metadata(LIBRARIAN_BUCKET, LIBRARIAN_GRAPH_KEY) or {"unavailable": True},
+        "corpus": s3_object_metadata(LIBRARIAN_BUCKET, LIBRARIAN_CORPUS_KEY)
+        or {"unavailable": True},
+        "graph": s3_object_metadata(LIBRARIAN_BUCKET, LIBRARIAN_GRAPH_KEY) or {"unavailable": True},
     }
 
 
@@ -250,17 +268,29 @@ def build_report() -> dict:
 def print_table(report: dict) -> None:
     s = report["summary"]
     print(f"Pipeline status — generated {report['generated_at']}")
-    thingy_state = "STALE" if s.get("librarian_likely_stale") else ("ok" if s.get("librarian_likely_stale") is False else "?")
-    print(f"  total: {s['total_issues']}  audio rendered: {s['audio_rendered']}  audio stale: {s['audio_out_of_date']}  audio missing: {s['audio_missing']}  archive edits: {s['archive_local_edits']}  thingy: {thingy_state}")
+    thingy_state = (
+        "STALE"
+        if s.get("librarian_likely_stale")
+        else ("ok" if s.get("librarian_likely_stale") is False else "?")
+    )
+    print(
+        f"  total: {s['total_issues']}  audio rendered: {s['audio_rendered']}  audio stale: {s['audio_out_of_date']}  audio missing: {s['audio_missing']}  archive edits: {s['archive_local_edits']}  thingy: {thingy_state}"
+    )
     if s.get("deployed_corpus_uploaded_at"):
-        print(f"  deployed corpus uploaded: {s['deployed_corpus_uploaded_at']}  latest archive change: {s.get('latest_archive_modified_at')}")
+        print(
+            f"  deployed corpus uploaded: {s['deployed_corpus_uploaded_at']}  latest archive change: {s.get('latest_archive_modified_at')}"
+        )
     print()
     print(f"  {'#':>4}  {'date':10}  {'audio':>5}  {'stale':5}  {'body':4}  subject")
-    print(f"  {'-'*4}  {'-'*10}  {'-'*5}  {'-'*5}  {'-'*4}  {'-'*40}")
+    print(f"  {'-' * 4}  {'-' * 10}  {'-' * 5}  {'-' * 5}  {'-' * 4}  {'-' * 40}")
     for row in report["issues"]:
         date = (row["publish_date"] or "")[:10]
         audio = "✓" if row["audio"]["in_manifest"] else "—"
-        stale = "STALE" if row["audio"]["out_of_date"] else ("—" if not row["audio"]["in_manifest"] else "ok")
+        stale = (
+            "STALE"
+            if row["audio"]["out_of_date"]
+            else ("—" if not row["audio"]["in_manifest"] else "ok")
+        )
         body = "EDIT" if row["body"]["has_local_edits"] else "ok"
         subj = (row["subject"] or "")[:60]
         print(f"  {row['number']:>4}  {date:10}  {audio:>5}  {stale:5}  {body:4}  {subj}")
@@ -268,7 +298,9 @@ def print_table(report: dict) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--json", help="Write JSON report to this path. If omitted, prints a human table.")
+    ap.add_argument(
+        "--json", help="Write JSON report to this path. If omitted, prints a human table."
+    )
     args = ap.parse_args()
 
     report = build_report()
@@ -277,7 +309,10 @@ def main() -> int:
         out = Path(args.json)
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        print(f"Wrote pipeline status report to {out.relative_to(REPO) if out.is_relative_to(REPO) else out}", flush=True)
+        print(
+            f"Wrote pipeline status report to {out.relative_to(REPO) if out.is_relative_to(REPO) else out}",
+            flush=True,
+        )
     else:
         print_table(report)
     return 0

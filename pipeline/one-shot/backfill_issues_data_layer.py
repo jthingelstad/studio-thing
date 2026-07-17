@@ -189,11 +189,15 @@ def run() -> int:
             link_n = len(links.get("notable_links") or []) + len(links.get("briefly_links") or [])
             total_links += link_n
             audio_tag = "🎧" if audio else "  "
-            print(f"  WT{number}: filed ({link_n} links) {audio_tag} {meta.get('subject','')[:70]}")
+            print(
+                f"  WT{number}: filed ({link_n} links) {audio_tag} {meta.get('subject', '')[:70]}"
+            )
             filed += 1
 
     print()
-    print(f"backfill: done. {filed} issues filed, {skipped_inflight} in-flight skipped, {total_links} link rows written.")
+    print(
+        f"backfill: done. {filed} issues filed, {skipped_inflight} in-flight skipped, {total_links} link rows written."
+    )
     return 0
 
 

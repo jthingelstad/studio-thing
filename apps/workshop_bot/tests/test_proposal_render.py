@@ -21,7 +21,6 @@ def _row(id_: int, section: str, title: str, url: str) -> dict:
 
 
 class ProposalHtmlTests(unittest.TestCase):
-
     def _build(self, *, proposal: dict, rows_by_section: dict):
         # Build the synth maps the same way reorder does — by row
         # position within each section.
@@ -34,8 +33,10 @@ class ProposalHtmlTests(unittest.TestCase):
                 row_to_synth[int(row["id"])] = synth
         return render.reorder_proposal_html(
             issue_number=349,
-            rows_by_section=rows_by_section, proposal=proposal,
-            synth_to_row=synth_to_row, row_to_synth=row_to_synth,
+            rows_by_section=rows_by_section,
+            proposal=proposal,
+            synth_to_row=synth_to_row,
+            row_to_synth=row_to_synth,
         )
 
     def test_renders_two_columns_with_current_and_proposed(self):
@@ -69,7 +70,7 @@ class ProposalHtmlTests(unittest.TestCase):
         proposed_n2 = page.find('data-side="proposed" data-id="n2"')
         self.assertGreater(proposed_n2, 0)
         # Look backwards from the data-side attribute for the class list.
-        snippet = page[max(0, proposed_n2 - 80):proposed_n2]
+        snippet = page[max(0, proposed_n2 - 80) : proposed_n2]
         self.assertIn("moved", snippet)
         # Thesis is retired — no thesis block on the page.
         self.assertNotIn('class="thesis"', page)
@@ -94,7 +95,10 @@ class ProposalHtmlTests(unittest.TestCase):
     def test_legend_present(self):
         rows = {"notable": [_row(1, "notable", "A", "http://a")], "brief": [], "journal": []}
         proposal = {
-            "thesis": "x.", "notable_order": ["n1"], "brief_order": [], "journal_order": [],
+            "thesis": "x.",
+            "notable_order": ["n1"],
+            "brief_order": [],
+            "journal_order": [],
         }
         page = self._build(proposal=proposal, rows_by_section=rows)
         self.assertIn('class="legend"', page)
@@ -103,8 +107,12 @@ class ProposalHtmlTests(unittest.TestCase):
     def test_connector_script_present(self):
         rows = {"notable": [_row(1, "notable", "A", "http://a")], "brief": [], "journal": []}
         proposal = {
-            "thesis": "x.", "notable_order": ["n1"], "brief_order": [], "journal_order": [],
-            "promotions": [], "membership_blocks": [],
+            "thesis": "x.",
+            "notable_order": ["n1"],
+            "brief_order": [],
+            "journal_order": [],
+            "promotions": [],
+            "membership_blocks": [],
         }
         page = self._build(proposal=proposal, rows_by_section=rows)
         # JS reads data-side anchors to draw lines.

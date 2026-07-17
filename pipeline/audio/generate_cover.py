@@ -20,8 +20,8 @@ REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "apps" / "site" / "img" / "podcast-cover.png"
 
 SIZE = 3000
-BG = (31, 111, 214)        # --accent
-INK = (252, 252, 250)       # near-white --bg
+BG = (31, 111, 214)  # --accent
+INK = (252, 252, 250)  # near-white --bg
 INK_SOFT = (225, 237, 255)  # --accent-soft
 
 CHARTER = "/System/Library/Fonts/Supplemental/Charter.ttc"
@@ -45,15 +45,21 @@ def main() -> None:
     mark_cx = SIZE // 2
     mark_cy = int(SIZE * 0.34)
     draw.ellipse(
-        [mark_cx - mark_radius, mark_cy - mark_radius,
-         mark_cx + mark_radius, mark_cy + mark_radius],
+        [
+            mark_cx - mark_radius,
+            mark_cy - mark_radius,
+            mark_cx + mark_radius,
+            mark_cy + mark_radius,
+        ],
         fill=INK,
     )
     w_font = ImageFont.truetype(GEORGIA_ITALIC, 540)
     bbox = draw.textbbox((0, 0), "W", font=w_font)
     draw.text(
-        (mark_cx - (bbox[2] - bbox[0]) / 2 - bbox[0],
-         mark_cy - (bbox[3] - bbox[1]) / 2 - bbox[1] - 8),
+        (
+            mark_cx - (bbox[2] - bbox[0]) / 2 - bbox[0],
+            mark_cy - (bbox[3] - bbox[1]) / 2 - bbox[1] - 8,
+        ),
         "W",
         font=w_font,
         fill=BG,

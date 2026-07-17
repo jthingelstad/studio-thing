@@ -37,9 +37,9 @@ POPULAR_FEED = "https://feeds.pinboard.in/rss/popular/"
 # Documented Pinboard cadence caps (seconds between calls per endpoint
 # family). See https://www.pinboard.in/api/ "Rate Limits".
 _CADENCE_SECONDS: dict[str, float] = {
-    "all": 5 * 60.0,       # /posts/all — 1 call / 5 min
-    "recent": 60.0,        # /posts/recent — 1 call / min
-    "standard": 3.0,       # everything else — 1 call / 3 sec
+    "all": 5 * 60.0,  # /posts/all — 1 call / 5 min
+    "recent": 60.0,  # /posts/recent — 1 call / min
+    "standard": 3.0,  # everything else — 1 call / 3 sec
 }
 
 # How long ``_throttle`` is willing to ``time.sleep`` to satisfy the
@@ -48,9 +48,9 @@ _CADENCE_SECONDS: dict[str, float] = {
 # (e.g. two ``/posts/all`` calls in a single job), not something
 # ``time.sleep`` should paper over by blocking a thread for minutes.
 _CADENCE_SLEEP_CAP: dict[str, float] = {
-    "all": 0.0,            # 5-min cap — never sleep; warn so the structural fix surfaces
-    "recent": 5.0,         # 60s cap — sleep up to 5s, else warn
-    "standard": 5.0,       # 3s cap — always sleep the gap (≤3s)
+    "all": 0.0,  # 5-min cap — never sleep; warn so the structural fix surfaces
+    "recent": 5.0,  # 60s cap — sleep up to 5s, else warn
+    "standard": 5.0,  # 3s cap — always sleep the gap (≤3s)
 }
 _last_request_at: dict[str, float] = {}
 
@@ -108,20 +108,25 @@ def _throttle(family: str) -> None:
             else:
                 logger.warning(
                     "pinboard: %s called %.1fs after previous call (documented cadence: %.0fs)",
-                    family, now - last, cap,
+                    family,
+                    now - last,
+                    cap,
                 )
     _last_request_at[family] = time.monotonic()
 
 
-def _get(path: str, params: dict[str, Any], *, family: str = "standard",
-         timeout: float = 20.0) -> requests.Response:
+def _get(
+    path: str, params: dict[str, Any], *, family: str = "standard", timeout: float = 20.0
+) -> requests.Response:
     """GET a v1 endpoint, throttle/log cadence, surface 429 Retry-After."""
     _throttle(family)
     resp = requests.get(f"{API_BASE}{path}", params=params, timeout=timeout)
     if resp.status_code == 429:
         retry_after = resp.headers.get("Retry-After", "?")
         logger.warning(
-            "pinboard: 429 from %s (Retry-After=%s)", path, retry_after,
+            "pinboard: 429 from %s (Retry-After=%s)",
+            path,
+            retry_after,
         )
     resp.raise_for_status()
     return resp
@@ -197,7 +202,10 @@ def posts_all(
     posts: list[dict[str, Any]] = resp.json() or []
     logger.info(
         "pinboard: fetched %d posts (fromdt=%s todt=%s tag=%s)",
-        len(posts), fromdt, todt, tag or "-",
+        len(posts),
+        fromdt,
+        todt,
+        tag or "-",
     )
     return posts
 
@@ -275,7 +283,10 @@ def issue_window_candidates(start_date: str, end_date: str) -> dict[str, list[di
     brief.sort(key=lambda r: r.get("added", ""))
     logger.info(
         "pinboard: issue window %s..%s -> %d notable, %d brief",
-        start_date, end_date, len(notable), len(brief),
+        start_date,
+        end_date,
+        len(notable),
+        len(brief),
     )
     return {"notable": notable, "brief": brief}
 
@@ -303,8 +314,13 @@ def bookmark_blank(url: str, *, fallback_title: str | None = None) -> dict[str, 
         }
     title = (fallback_title or url).strip() or url
     res = posts_add(
-        url=url, title=title, description="", tags="",
-        toread=True, shared=True, replace=False,
+        url=url,
+        title=title,
+        description="",
+        tags="",
+        toread=True,
+        shared=True,
+        replace=False,
     )
     logger.info("pinboard: bookmark_blank url=%s created=True", url)
     return {
@@ -332,8 +348,13 @@ def tag_as_brief(url: str, *, fallback_title: str | None = None) -> dict[str, An
     if not posts:
         title = (fallback_title or url).strip() or url
         res = posts_add(
-            url=url, title=title, description="", tags=BRIEF_TAG,
-            toread=True, shared=True, replace=False,
+            url=url,
+            title=title,
+            description="",
+            tags=BRIEF_TAG,
+            toread=True,
+            shared=True,
+            replace=False,
         )
         logger.info("pinboard: tag_as_brief url=%s created=True", url)
         return {
@@ -344,19 +365,25 @@ def tag_as_brief(url: str, *, fallback_title: str | None = None) -> dict[str, An
         }
     post = posts[0]
     title = post.get("description", "") or url  # Pinboard's "description" is the title
-    existing_desc = post.get("extended", "")     # Pinboard's "extended" is the body
+    existing_desc = post.get("extended", "")  # Pinboard's "extended" is the body
     tags = [t for t in (post.get("tags") or "").split() if t]
     if BRIEF_TAG not in tags:
         tags.append(BRIEF_TAG)
     tag_str = " ".join(tags)
-    shared = (post.get("shared", "yes") != "no")
-    toread = (post.get("toread", "no") == "yes")
+    shared = post.get("shared", "yes") != "no"
+    toread = post.get("toread", "no") == "yes"
     res = posts_add(
-        url=url, title=title, description=str(existing_desc or ""),
-        tags=tag_str, toread=toread, shared=shared, replace=True,
+        url=url,
+        title=title,
+        description=str(existing_desc or ""),
+        tags=tag_str,
+        toread=toread,
+        shared=shared,
+        replace=True,
     )
-    logger.info("pinboard: tag_as_brief url=%s tags=%s result=%s",
-                url, tag_str, res.get("result_code"))
+    logger.info(
+        "pinboard: tag_as_brief url=%s tags=%s result=%s", url, tag_str, res.get("result_code")
+    )
     return {
         "result_code": res.get("result_code"),
         "pinboard_url": res.get("pinboard_url") or bookmark_url(url),
@@ -365,7 +392,9 @@ def tag_as_brief(url: str, *, fallback_title: str | None = None) -> dict[str, An
     }
 
 
-def set_description(url: str, description: str, *, fallback_title: str | None = None) -> dict[str, Any]:
+def set_description(
+    url: str, description: str, *, fallback_title: str | None = None
+) -> dict[str, Any]:
     """Atomic 'overwrite the description, keep everything else.' Preserves
     the existing title, tags, ``toread``, and ``shared`` flags.
 
@@ -401,8 +430,8 @@ def set_description(url: str, description: str, *, fallback_title: str | None = 
     post = posts[0]
     title = post.get("description", "") or url  # Pinboard's "description" is the title
     tags = [t for t in (post.get("tags") or "").split() if t]  # preserve verbatim
-    shared = (post.get("shared", "yes") != "no")
-    toread = (post.get("toread", "no") == "yes")
+    shared = post.get("shared", "yes") != "no"
+    toread = post.get("toread", "no") == "yes"
     res = posts_add(
         url=url,
         title=title,
@@ -468,7 +497,7 @@ def clear_toread(url: str) -> dict[str, Any]:
     title = post.get("description", "") or url  # Pinboard's "description" is the title
     existing_desc = post.get("extended", "")
     tags = [t for t in (post.get("tags") or "").split() if t]
-    shared = (post.get("shared", "yes") != "no")
+    shared = post.get("shared", "yes") != "no"
     res = posts_add(
         url=url,
         title=title,
@@ -504,7 +533,7 @@ def capture_blurb(url: str, blurb: str) -> dict[str, Any]:
     tags = [t for t in (post.get("tags") or "").split() if t and t != "toread"]
     if BRIEF_TAG not in tags:
         tags.append(BRIEF_TAG)
-    shared = (post.get("shared", "yes") != "no")
+    shared = post.get("shared", "yes") != "no"
     res = posts_add(
         url=url,
         title=title,
@@ -514,7 +543,9 @@ def capture_blurb(url: str, blurb: str) -> dict[str, Any]:
         shared=shared,
         replace=True,
     )
-    logger.info("pinboard: capture_blurb url=%s tags=%s result=%s", url, tags, res.get("result_code"))
+    logger.info(
+        "pinboard: capture_blurb url=%s tags=%s result=%s", url, tags, res.get("result_code")
+    )
     return {
         "result_code": res.get("result_code"),
         "pinboard_url": res.get("pinboard_url") or bookmark_url(url),
@@ -610,10 +641,10 @@ def posts_dates(tag: str | None = None) -> dict[str, int]:
     resp = _get("/posts/dates", params)
     # Imported lazily to keep bs4 a soft dep.
     from xml.etree import ElementTree as ET
+
     root = ET.fromstring(resp.text)
     return {
-        elem.attrib["date"]: int(elem.attrib.get("count", "0"))
-        for elem in root.findall("date")
+        elem.attrib["date"]: int(elem.attrib.get("count", "0")) for elem in root.findall("date")
     }
 
 
@@ -626,10 +657,7 @@ def tags_get() -> list[dict[str, Any]]:
     params = {"auth_token": _token(), "format": "json"}
     resp = _get("/tags/get", params)
     data = resp.json() or {}
-    items = [
-        {"tag": str(tag), "count": int(count)}
-        for tag, count in data.items()
-    ]
+    items = [{"tag": str(tag), "count": int(count)} for tag, count in data.items()]
     items.sort(key=lambda r: r["count"], reverse=True)
     return items
 
@@ -670,7 +698,10 @@ def posts_add(
     result_code = str(data.get("result_code", ""))
     logger.info(
         "pinboard: posts/add url=%s result=%s replace=%s toread=%s",
-        url, result_code, replace, toread,
+        url,
+        result_code,
+        replace,
+        toread,
     )
     return {
         "result_code": result_code,
@@ -758,7 +789,5 @@ def tag_summary(*, limit: int = 200, top: int = 10) -> dict[str, Any]:
             counter[t] += 1
     return {
         "total_items": len(posts),
-        "top_tags": [
-            {"tag": t, "count": n} for t, n in counter.most_common(int(top))
-        ],
+        "top_tags": [{"tag": t, "count": n} for t, n in counter.most_common(int(top))],
     }

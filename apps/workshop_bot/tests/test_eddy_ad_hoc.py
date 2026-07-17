@@ -57,11 +57,17 @@ class ReviewTextTests(_DBCase):
         super().tearDown()
 
     def test_review_posts_eddy_reply_to_editorial(self):
-        deps, eddy, channel = _fake_eddy_team(reply="Tighten the second paragraph; the first is doing fine work.")
+        deps, eddy, channel = _fake_eddy_team(
+            reply="Tighten the second paragraph; the first is doing fine work."
+        )
         os.environ["DISCORD_CHANNEL_EDITORIAL"] = "1"
-        result = asyncio.run(review_text.run(
-            _base.JobContext(deps=deps), text="A sample paragraph to review.", invoker="jamie",
-        ))
+        result = asyncio.run(
+            review_text.run(
+                _base.JobContext(deps=deps),
+                text="A sample paragraph to review.",
+                invoker="jamie",
+            )
+        )
         self.assertTrue(result.ok, result.message)
         self.assertTrue(result.data["posted"])
         eddy.core.assert_awaited()
@@ -94,9 +100,12 @@ class ReviewTextTests(_DBCase):
         self.assertEqual(len(body), cap)
 
     def test_review_skips_when_no_team(self):
-        result = asyncio.run(review_text.run(
-            _base.JobContext(deps=None), text="anything",
-        ))
+        result = asyncio.run(
+            review_text.run(
+                _base.JobContext(deps=None),
+                text="anything",
+            )
+        )
         self.assertTrue(result.ok)
         self.assertFalse(result.data["posted"])
 

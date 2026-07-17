@@ -9,6 +9,7 @@ from .connection import connect
 
 # ---------- subscriber events ----------
 
+
 def upsert_subscriber_event(
     *,
     external_id: str,
@@ -34,8 +35,6 @@ def upsert_subscriber_event(
         return cur.rowcount > 0
 
 
-
-
 def recent_subscriber_events(
     *, limit: int = 30, event_type: Optional[str] = None
 ) -> list[dict[str, Any]]:
@@ -52,4 +51,3 @@ def recent_subscriber_events(
     with connect() as conn:
         rows = conn.execute(sql, params).fetchall()
     return [dict(r) for r in rows]
-

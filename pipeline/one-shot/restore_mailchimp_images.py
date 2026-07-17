@@ -70,7 +70,8 @@ def process_file(fp, campaigns, issue_map, dry_run=False):
     body = fm_match.group(2)
     raw_match = re.match(
         r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$",
-        body, re.DOTALL,
+        body,
+        re.DOTALL,
     )
     if not raw_match:
         return False, 0, []
@@ -135,8 +136,7 @@ def main():
     for fp in files:
         if not fp.exists():
             continue
-        changed, resolved, unresolved = process_file(
-            fp, campaigns, issue_map, dry_run=args.dry_run)
+        changed, resolved, unresolved = process_file(fp, campaigns, issue_map, dry_run=args.dry_run)
         if changed:
             total_issues += 1
             total_resolved += resolved
@@ -148,14 +148,14 @@ def main():
                     sample += f", … (+{len(unresolved) - 3})"
                 note = f"  UNRESOLVED: {sample}"
             action = "would restore" if args.dry_run else "restored"
-            print(f"#{fp.stem}: {action} {resolved} (of "
-                  f"{resolved + len(unresolved)}){note}")
+            print(f"#{fp.stem}: {action} {resolved} (of {resolved + len(unresolved)}){note}")
 
     action = "Would modify" if args.dry_run else "Modified"
     print(
         f"\n{action} {total_issues} file(s). "
         f"{total_resolved} filenames resolved, "
-        f"{total_unresolved} unresolved.")
+        f"{total_unresolved} unresolved."
+    )
 
 
 if __name__ == "__main__":

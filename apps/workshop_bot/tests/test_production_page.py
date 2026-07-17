@@ -59,20 +59,34 @@ class ProductionPageTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_planned_page_offers_start_working(self):
         c = await self._client()
-        db.plan_issue_window(issue_number=360, pub_date="2026-06-27",
-                             end_date="2026-06-26", start_date="2026-06-19", day_count=7)
+        db.plan_issue_window(
+            issue_number=360,
+            pub_date="2026-06-27",
+            end_date="2026-06-26",
+            start_date="2026-06-19",
+            day_count=7,
+        )
         body = await (await c.get("/productions/WT360", headers=H)).text()
         self.assertIn("Start working", body)
         self.assertNotIn(">Content<", body)  # no editing until started
 
     async def test_build_page_edits_content(self):
         c = await self._client()
-        db.plan_issue_window(issue_number=360, pub_date="2026-06-27",
-                             end_date="2026-06-26", start_date="2026-06-19", day_count=7)
+        db.plan_issue_window(
+            issue_number=360,
+            pub_date="2026-06-27",
+            end_date="2026-06-26",
+            start_date="2026-06-19",
+            day_count=7,
+        )
         db.set_issue_phase(360, "build")
         # save the intro via the atom handler
-        r = await c.post("/productions/WT360/atom", headers=H, allow_redirects=False,
-                         data={"name": "intro.md", "value": "Hello intro"})
+        r = await c.post(
+            "/productions/WT360/atom",
+            headers=H,
+            allow_redirects=False,
+            data={"name": "intro.md", "value": "Hello intro"},
+        )
         self.assertEqual(r.status, 302)
         self.assertEqual(content_store.read_issue(360, "intro.md"), "Hello intro")
         body = await (await c.get("/productions/WT360", headers=H)).text()
@@ -83,17 +97,35 @@ class ProductionPageTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_currently_and_cover_handlers(self):
         c = await self._client()
-        db.plan_issue_window(issue_number=360, pub_date="2026-06-27",
-                             end_date="2026-06-26", start_date="2026-06-19", day_count=7)
+        db.plan_issue_window(
+            issue_number=360,
+            pub_date="2026-06-27",
+            end_date="2026-06-26",
+            start_date="2026-06-19",
+            day_count=7,
+        )
         db.set_issue_phase(360, "build")
-        await c.post("/productions/WT360/currently", headers=H, allow_redirects=False,
-                     data={"op": "set", "label": "Reading", "value": "A book"})
-        self.assertEqual([(e["type_label"], e["value"]) for e in db.currently_get_entries(360)],
-                         [("Reading", "A book")])
-        await c.post("/productions/WT360/cover", headers=H, allow_redirects=False,
-                     data={"caption": "A creek", "location": "MPLS", "timestamp": "", "alt": ""})
+        await c.post(
+            "/productions/WT360/currently",
+            headers=H,
+            allow_redirects=False,
+            data={"op": "set", "label": "Reading", "value": "A book"},
+        )
+        self.assertEqual(
+            [(e["type_label"], e["value"]) for e in db.currently_get_entries(360)],
+            [("Reading", "A book")],
+        )
+        await c.post(
+            "/productions/WT360/cover",
+            headers=H,
+            allow_redirects=False,
+            data={"caption": "A creek", "location": "MPLS", "timestamp": "", "alt": ""},
+        )
         import json
-        self.assertEqual(json.loads(content_store.read_issue(360, "cover.json"))["caption"], "A creek")
+
+        self.assertEqual(
+            json.loads(content_store.read_issue(360, "cover.json"))["caption"], "A creek"
+        )
 
     async def test_legacy_non_newsletter_page_is_gone(self):
         c = await self._client()
@@ -107,11 +139,20 @@ class ProductionPageTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_foreign_origin_post_is_403(self):
         c = await self._client()
-        db.plan_issue_window(issue_number=360, pub_date="2026-06-27",
-                             end_date="2026-06-26", start_date="2026-06-19", day_count=7)
+        db.plan_issue_window(
+            issue_number=360,
+            pub_date="2026-06-27",
+            end_date="2026-06-26",
+            start_date="2026-06-19",
+            day_count=7,
+        )
         db.set_issue_phase(360, "build")
-        r = await c.post("/productions/WT360/atom", headers={**H, "Origin": "https://evil.example"},
-                         allow_redirects=False, data={"name": "intro.md", "value": "y"})
+        r = await c.post(
+            "/productions/WT360/atom",
+            headers={**H, "Origin": "https://evil.example"},
+            allow_redirects=False,
+            data={"name": "intro.md", "value": "y"},
+        )
         self.assertEqual(r.status, 403)
 
 

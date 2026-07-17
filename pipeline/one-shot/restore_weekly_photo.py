@@ -46,7 +46,7 @@ def extract_photo(html):
     m = re.search(r"My Weekly Photo", html)
     if not m:
         return None, None
-    segment = html[m.start():m.start() + 5000]
+    segment = html[m.start() : m.start() + 5000]
     img_m = IMG_TAG_RE.search(segment)
     if not img_m:
         return None, None
@@ -94,7 +94,8 @@ def process_file(fp, campaigns, issue_map, dry_run=False):
     body = fm_match.group(2)
     raw_match = re.match(
         r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$",
-        body, re.DOTALL,
+        body,
+        re.DOTALL,
     )
     if not raw_match:
         return None
@@ -105,7 +106,7 @@ def process_file(fp, campaigns, issue_map, dry_run=False):
         return None
 
     # Inspect the region right after the heading
-    after = inner[heading_m.end():]
+    after = inner[heading_m.end() :]
     # Pattern: \n+ followed by a non-blank line
     post_match = re.match(r"(\n+)([^\n]+)\n", after)
     if not post_match:
@@ -118,12 +119,12 @@ def process_file(fp, campaigns, issue_map, dry_run=False):
     if normalize(first_line) == normalize(alt) and alt:
         # Case A: first line is leftover alt duplicate — replace it.
         # Reconstruct: heading + original leading blanks + image + rest after this line
-        rest = after[post_match.end():]
+        rest = after[post_match.end() :]
         new_after = leading_blanks + img_markdown + "\n" + rest
         status = f"#{n}: replaced alt-duplicate with image"
     else:
         # Case B: first line is real commentary — insert image before it.
-        new_after = leading_blanks + img_markdown + "\n\n" + after[len(leading_blanks):]
+        new_after = leading_blanks + img_markdown + "\n\n" + after[len(leading_blanks) :]
         status = f"#{n}: inserted image before commentary"
 
     new_inner = inner[: heading_m.end()] + new_after
@@ -159,9 +160,11 @@ def main():
             results.append(status)
             print(status)
 
-    print(f"\n{'Would modify' if args.dry_run else 'Modified'} "
-          f"{sum(1 for r in results if 'replaced' in r or 'inserted' in r)} "
-          f"file(s); {sum(1 for r in results if 'skipped' in r or 'no change' in r)} skipped.")
+    print(
+        f"\n{'Would modify' if args.dry_run else 'Modified'} "
+        f"{sum(1 for r in results if 'replaced' in r or 'inserted' in r)} "
+        f"file(s); {sum(1 for r in results if 'skipped' in r or 'no change' in r)} skipped."
+    )
 
 
 if __name__ == "__main__":

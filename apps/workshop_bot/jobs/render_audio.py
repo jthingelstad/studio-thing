@@ -129,6 +129,7 @@ def _synthesize_mod(audio_mod):
     per-block events never reached the relay and the card stuck on "starting…".
     """
     import sys
+
     for fn_name in ("synthesize_blocks_to_mp3", "synthesize_text_to_mp3"):
         fn = getattr(audio_mod, fn_name, None)
         modname = getattr(fn, "__module__", None)
@@ -138,9 +139,8 @@ def _synthesize_mod(audio_mod):
     if mod is None:
         # Last resort: walk audio_mod's attributes for the synthesize module.
         for attr in vars(audio_mod).values():
-            if (
-                getattr(attr, "__name__", None) == "synthesize"
-                or hasattr(attr, "synthesize_blocks_to_mp3")
+            if getattr(attr, "__name__", None) == "synthesize" or hasattr(
+                attr, "synthesize_blocks_to_mp3"
             ):
                 mod = attr
                 break
@@ -204,6 +204,7 @@ class _print_intercept:
 
     def __init__(self, *mods, progress_cb: Optional[Callable[[str], None]] = None):
         import builtins
+
         self._mods = [m for m in mods if m is not None]
         self._cb = progress_cb
         self._saved: list[tuple[Any, bool, Any]] = []
@@ -260,9 +261,7 @@ def _ensure_bumpers(bumpers_mod, manifest: dict) -> bool:
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     window = db.get_active_issue_window()
     if window is None:
-        return _base.JobResult(
-            False, "❌ no active issue window — start one in Studio first."
-        )
+        return _base.JobResult(False, "❌ no active issue window — start one in Studio first.")
     n = int(window["issue_number"])
 
     transcript_dir = TRANSCRIPT_DIR_TPL / str(n) / "transcript"
@@ -354,9 +353,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             changed = entry.pop("_changed", False)
 
     except _base.JobLocked as exc:
-        return _base.JobResult(
-            False, f"⏳ `render-audio` is already running ({exc.holder_desc})."
-        )
+        return _base.JobResult(False, f"⏳ `render-audio` is already running ({exc.holder_desc}).")
     except Exception as exc:  # noqa: BLE001 — surface the error rather than crash the ship
         logger.exception("render-audio failed for WT%d", n)
         msg = f"❌ `render-audio` for **WT{n}** failed: `{exc}`"

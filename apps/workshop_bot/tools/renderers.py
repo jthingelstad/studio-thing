@@ -62,6 +62,7 @@ _DEFAULT_TINYLYTICS_UID = "a2YQr3ZMqkySNYSwz4uF"
 
 def _tinylytics_uid() -> str:
     import os
+
     return (os.environ.get("TINYLYTICS_SITE_UID") or _DEFAULT_TINYLYTICS_UID).strip()
 
 
@@ -122,12 +123,7 @@ def thanks_block(thanks_body: str) -> str:
     dividers.
     """
     body = thanks_body.strip()
-    return (
-        "{% if subscriber.subscriber_type == 'premium' %}\n\n"
-        "---\n\n"
-        f"{body}\n\n"
-        "{% endif %}"
-    )
+    return f"{{% if subscriber.subscriber_type == 'premium' %}}\n\n---\n\n{body}\n\n{{% endif %}}"
 
 
 _SECTION_HEADINGS = {
@@ -236,9 +232,15 @@ def _compose_published_body(
         if pos == "before_notable":
             parts.append(body.strip())
 
-    parts.append(_section_part("notable", sections, features, after_trailer=trailers.get("notable", "")))
-    parts.append(_section_part("journal", sections, features, after_trailer=trailers.get("journal", "")))
-    parts.append(_section_part("brief", sections, features, after_trailer=trailers.get("brief", "")))
+    parts.append(
+        _section_part("notable", sections, features, after_trailer=trailers.get("notable", ""))
+    )
+    parts.append(
+        _section_part("journal", sections, features, after_trailer=trailers.get("journal", ""))
+    )
+    parts.append(
+        _section_part("brief", sections, features, after_trailer=trailers.get("brief", ""))
+    )
 
     outro = (atoms.get("outro") or "").strip()
     if outro:
@@ -291,8 +293,11 @@ def render_email_body(
         trailers["brief"] = thanks_block(thanks_1)
 
     body = _compose_published_body(
-        atoms=atoms, sections=sections, features=features,
-        echoes=echoes, section_trailers=trailers,
+        atoms=atoms,
+        sections=sections,
+        features=features,
+        echoes=echoes,
+        section_trailers=trailers,
     )
 
     body = _EDITOR_MODE_COMMENT + body
@@ -317,13 +322,18 @@ def render_archive_body(
     CTA / thanks anything — supporter callouts are email-only.
     """
     return _compose_published_body(
-        atoms=atoms, sections=sections, features=features, echoes=echoes,
+        atoms=atoms,
+        sections=sections,
+        features=features,
+        echoes=echoes,
         section_trailers=None,
     )
 
 
 def render_archive_frontmatter(
-    *, metadata: dict, body: str,
+    *,
+    metadata: dict,
+    body: str,
 ) -> tuple[dict, dict]:
     """Compose the archive front matter dict from ``metadata.json``
     and a freshly-rendered body. Also returns the structured link
@@ -374,7 +384,10 @@ def render_archive(
     (as a dict). One-shot version of the three render_archive_* helpers
     for callers that want both outputs."""
     body = render_archive_body(
-        atoms=atoms, sections=sections, features=features, echoes=echoes,
+        atoms=atoms,
+        sections=sections,
+        features=features,
+        echoes=echoes,
     )
     front_matter, link_data = render_archive_frontmatter(metadata=metadata, body=body)
     links_json = render_archive_links_json(front_matter, link_data)
@@ -453,7 +466,10 @@ def render_audio_body(
     audio_atoms = dict(atoms)
     audio_atoms["cover"] = ""
     return _compose_published_body(
-        atoms=audio_atoms, sections=sections, features=features, echoes=echoes,
+        atoms=audio_atoms,
+        sections=sections,
+        features=features,
+        echoes=echoes,
         section_trailers=None,
     )
 
@@ -475,7 +491,10 @@ def render_transcript_blocks(
     all three formats are siblings, not a chain.
     """
     body = render_audio_body(
-        atoms=atoms, sections=sections, features=features, echoes=echoes,
+        atoms=atoms,
+        sections=sections,
+        features=features,
+        echoes=echoes,
     )
     # body_to_audio_script's frontmatter param wants the same keys
     # ``apps/site/archive/{N}.md`` exposes (number, subject,
@@ -511,9 +530,7 @@ def concat_transcript_for_review(
     """
     parts: list[str] = []
     if issue_number is not None:
-        parts.append(
-            f"Weekly Thing {issue_number} — full transcript ({len(blocks)} segments)"
-        )
+        parts.append(f"Weekly Thing {issue_number} — full transcript ({len(blocks)} segments)")
         parts.append("")
     for filename, content in blocks:
         parts.append(f"═══ {filename} ═══")
@@ -566,8 +583,6 @@ def _read_atom(issue_number: int, filename: str) -> str:
     return body.strip() if body else ""
 
 
-
-
 def _read_atom_body_after_frontmatter(issue_number: int, filename: str) -> str:
     """Read an atom file and return its body, stripping any leading
     YAML front matter block (used by ``cta-N.md`` / ``thanks-N.md``
@@ -591,24 +606,29 @@ def _load_metadata(issue_number: int, window: Optional[dict] = None) -> dict:
     if raw:
         try:
             metadata = json.loads(raw) or {}
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             metadata = {}
     metadata.setdefault("number", issue_number)
     metadata.setdefault("subject", f"Weekly Thing {issue_number} — (pending)")
     metadata.setdefault("slug", str(issue_number))
     metadata.setdefault("description", "")
-    metadata.setdefault("image",
-                        f"https://files.thingelstad.com/weekly-thing/{issue_number}/cover.jpg")
+    metadata.setdefault(
+        "image", f"https://files.thingelstad.com/weekly-thing/{issue_number}/cover.jpg"
+    )
     metadata.setdefault("absolute_url", "")
     metadata.setdefault("buttondown_id", "")
     if window:
-        metadata.setdefault("publish_date", window.get("pub_date", "") + "T12:00:00Z" if window.get("pub_date") else "")
+        metadata.setdefault(
+            "publish_date",
+            window.get("pub_date", "") + "T12:00:00Z" if window.get("pub_date") else "",
+        )
     else:
         metadata.setdefault("publish_date", "")
     # Publish-stamped fields live on the issue window (the newsletter's publish
     # record), not in the authored content row — overlay them so the archive
     # front matter + status gate see the real Buttondown id / URL.
     from . import db
+
     pub = window if (window and "buttondown_id" in window) else db.get_issue_window(issue_number)
     if pub:
         if pub.get("buttondown_id"):
@@ -666,12 +686,15 @@ def _gather_inputs_for_issue(issue_number: int, *, window: Optional[dict] = None
     }
 
     featured_rows = [
-        r for r in issue_items.list_items(issue_number, section="journal", include_promoted=True)
+        r
+        for r in issue_items.list_items(issue_number, section="journal", include_promoted=True)
         if r.get("is_promoted")
     ]
     features = [
-        (r.get("promoted_position") or "before_notable",
-         issue_items_render.render_featured_section(r))
+        (
+            r.get("promoted_position") or "before_notable",
+            issue_items_render.render_featured_section(r),
+        )
         for r in featured_rows
     ]
 
@@ -698,7 +721,9 @@ def _gather_inputs_for_issue(issue_number: int, *, window: Optional[dict] = None
 
 
 def render_body_for_issue(
-    issue_number: int, *, window: Optional[dict] = None,
+    issue_number: int,
+    *,
+    window: Optional[dict] = None,
 ) -> str:
     """The issue body rendered straight from current DB state — **no S3, no
     local writes, no artifacts**. The DB is the draft; this is how you read
@@ -714,7 +739,8 @@ def render_body_for_issue(
 
 
 def _splice_cta_into_sections(
-    sections: dict[str, str], cta_atoms: dict[str, str],
+    sections: dict[str, str],
+    cta_atoms: dict[str, str],
 ) -> dict[str, str]:
     """Splice CTA / Thanks atom copy directly into the section bodies
     at their hardcoded positions. Returns a new sections dict with the
@@ -732,7 +758,7 @@ def _splice_cta_into_sections(
         # — strip the "after_" prefix to get the parent section name.
         if not position.startswith("after_"):
             continue
-        parent = position[len("after_"):]
+        parent = position[len("after_") :]
         if parent not in spliced:
             continue
         marker = f"<!-- {slot_label.replace(':', ':')} -->"
@@ -784,7 +810,8 @@ def render_email_for_issue(issue_number: int, *, window: Optional[dict] = None) 
 
     inputs = _gather_inputs_for_issue(issue_number, window=window)
     sections_with_markers = _splice_cta_into_sections(
-        inputs["sections"], inputs["cta_atoms"],
+        inputs["sections"],
+        inputs["cta_atoms"],
     )
     body = render_email_body(
         atoms=inputs["atoms"],
@@ -805,7 +832,9 @@ def render_email_for_issue(issue_number: int, *, window: Optional[dict] = None) 
 
 
 def render_archive_for_issue(
-    issue_number: int, *, window: Optional[dict] = None,
+    issue_number: int,
+    *,
+    window: Optional[dict] = None,
 ) -> tuple[str, dict]:
     """Render the issue's archive.md + links.json from current DB +
     atom state and write them to S3 + local repo mirror. Tolerates
@@ -846,7 +875,9 @@ def render_archive_for_issue(
 
 
 def render_transcript_for_issue(
-    issue_number: int, *, window: Optional[dict] = None,
+    issue_number: int,
+    *,
+    window: Optional[dict] = None,
 ) -> list[tuple[str, str]]:
     """Render the issue's transcript/*.txt files from current DB +
     atom state. Independent of render_archive_for_issue: builds an
@@ -883,7 +914,8 @@ def render_transcript_for_issue(
     except Exception:  # noqa: BLE001
         logger.warning(
             "render_transcript_for_issue: couldn't list S3 transcript files "
-            "for #%d; skipping stale-file cleanup", issue_number,
+            "for #%d; skipping stale-file cleanup",
+            issue_number,
         )
         existing = []
     for name in existing:
@@ -892,8 +924,9 @@ def render_transcript_for_issue(
                 _s3.delete_transcript_file(issue_number, name)
             except Exception:  # noqa: BLE001
                 logger.warning(
-                    "render_transcript_for_issue: couldn't delete stale "
-                    "transcript %s for #%d", name, issue_number,
+                    "render_transcript_for_issue: couldn't delete stale transcript %s for #%d",
+                    name,
+                    issue_number,
                 )
 
     # Local mirror.
@@ -925,7 +958,9 @@ def render_transcript_for_issue(
 
 
 def render_all_for_issue(
-    issue_number: int, *, window: Optional[dict] = None,
+    issue_number: int,
+    *,
+    window: Optional[dict] = None,
 ) -> dict:
     """Render archive + email + transcript in that order. Each writer
     is wrapped in try/except so a single failure doesn't cascade —

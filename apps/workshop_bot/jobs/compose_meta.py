@@ -53,6 +53,7 @@ def _parse_numbered_list_factory(limit: int):
     """Build the parser passed to :func:`_llm_job.refresh_loop` — pulls
     items out of a ``1. … / 2. …`` numbered list, tolerating a stray
     preamble, code fences, or bold/quote wrappers."""
+
     def _parse(text: str) -> list[str]:
         out: list[str] = []
         for m in _NUM_LINE_RE.finditer(text or ""):
@@ -64,6 +65,7 @@ def _parse_numbered_list_factory(limit: int):
             if len(out) >= limit:
                 break
         return out
+
     return _parse
 
 
@@ -87,10 +89,13 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     body = await asyncio.to_thread(_llm_job.draft_body, n)
     if not body.strip():
         return _base.JobResult(False, f"❌ no `draft.md` for WT{n} yet.")
-    bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
+    bot, channel, reason = _llm_job.resolve_bot_and_channel(
+        ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL"
+    )
     if bot is None:
         return _base.JobResult(
-            True, f"(compose-meta skipped — {reason})",
+            True,
+            f"(compose-meta skipped — {reason})",
             data={"metadata_written": False},
         )
 
@@ -128,13 +133,13 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             # ---- step 1: subject (the 5-option prompt, verbatim) ----
             subject_prompt = anthropic_client.load_prompt("eddy-compose-subject")
             subject_msg = (
-                subject_prompt
-                .replace("<NUM>", str(n))
+                subject_prompt.replace("<NUM>", str(n))
                 .replace("<<<ISSUE_TEXT>>>", issue_text)
                 .replace("<<<THREAD_CONTEXT>>>", thread_block)
             )
             subject = await _llm_job.refresh_loop(
-                bot, channel,
+                bot,
+                channel,
                 base_msg=subject_msg,
                 parser=_parse_numbered_list_factory(_SUBJECT_OPTION_CAP),
                 prompt_label=f"📰 5 subject options for WT{n} — react to pick:",
@@ -193,14 +198,18 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             if existing:
                 try:
                     prior = json.loads(existing)
-                except (ValueError, TypeError):
+                except ValueError, TypeError:
                     prior = None
                 if isinstance(prior, dict):
                     for key, value in prior.items():
                         if key not in metadata:
                             metadata[key] = value
             content_store.write_issue(n, "metadata.json", json.dumps(metadata, indent=2) + "\n")
-            desc_line = description if description else "_(empty — set it in Buttondown or re-run compose-meta)_"
+            desc_line = (
+                description
+                if description
+                else "_(empty — set it in Buttondown or re-run compose-meta)_"
+            )
             # Best-effort: metadata.json is on S3 either way; a Discord
             # glitch on the success card shouldn't fail the job.
             await _llm_job.try_send(
@@ -211,9 +220,14 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 job_label="compose-meta",
             )
             return _base.JobResult(
-                True, f"`metadata.json` written for WT{n} — {subject}",
-                data={"issue_number": n, "metadata": metadata,
-                      "subject_options_posted": True, "metadata_written": True},
+                True,
+                f"`metadata.json` written for WT{n} — {subject}",
+                data={
+                    "issue_number": n,
+                    "metadata": metadata,
+                    "subject_options_posted": True,
+                    "metadata_written": True,
+                },
             )
     except _base.JobLocked as exc:
         return _base.JobResult(False, f"⏳ `compose-meta` already running ({exc.holder_desc}).")

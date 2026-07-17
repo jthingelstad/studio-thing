@@ -38,20 +38,36 @@ class SpecConsistencyTests(unittest.TestCase):
         self.assertEqual([n for n in lt.FUNCS if n not in SPECS], [])
 
     def test_new_bridge_tools_registered(self):
-        for name in ("productions__list", "productions__get", "productions__create",
-                     "productions__set_phase", "production_content__read",
-                     "production_content__write", "production_content__list",
-                     "tasks__list", "tasks__add", "tasks__update", "tasks__complete"):
+        for name in (
+            "productions__list",
+            "productions__get",
+            "productions__create",
+            "productions__set_phase",
+            "production_content__read",
+            "production_content__write",
+            "production_content__list",
+            "tasks__list",
+            "tasks__add",
+            "tasks__update",
+            "tasks__complete",
+        ):
             self.assertIn(name, lt.FUNCS)
             self.assertIn(name, SPECS)
 
 
 class ProductionsToolTests(_DBCase):
     def test_list_get_content_setphase_for_newsletter_issue(self):
-        db.plan_issue_window(issue_number=360, pub_date="2026-07-11",
-                             end_date="2026-07-10", start_date="2026-07-03", day_count=7)
+        db.plan_issue_window(
+            issue_number=360,
+            pub_date="2026-07-11",
+            end_date="2026-07-10",
+            start_date="2026-07-03",
+            day_count=7,
+        )
         lt.t_production_content_write(None, "WT360", "intro.md", "Jamie's prose")
-        self.assertEqual(lt.t_production_content_read(None, "WT360", "intro.md")["text"], "Jamie's prose")
+        self.assertEqual(
+            lt.t_production_content_read(None, "WT360", "intro.md")["text"], "Jamie's prose"
+        )
         self.assertEqual(lt.t_production_content_list(None, "WT360")["names"], ["intro.md"])
         ids = [p["id"] for p in lt.t_productions_list(None)["productions"]]
         self.assertEqual(ids, ["WT360"])

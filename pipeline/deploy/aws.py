@@ -138,7 +138,9 @@ def upload_file(bucket: str, key: str, path: Path, content_type: str) -> None:
 def ensure_private_bucket(bucket: str) -> None:
     """Create and harden the private Librarian artifact bucket when needed."""
     s3 = boto3.client("s3")
-    region = boto3.session.Session().region_name or os.environ.get("AWS_DEFAULT_REGION") or "us-east-1"
+    region = (
+        boto3.session.Session().region_name or os.environ.get("AWS_DEFAULT_REGION") or "us-east-1"
+    )
     try:
         s3.head_bucket(Bucket=bucket)
     except s3.exceptions.ClientError as exc:
@@ -147,7 +149,9 @@ def ensure_private_bucket(bucket: str) -> None:
         if status not in (301, 403, 404) and code not in {"404", "NoSuchBucket", "NotFound"}:
             raise
         if status == 403:
-            raise RuntimeError(f"Cannot access s3://{bucket}; choose a bucket you own or fix IAM") from exc
+            raise RuntimeError(
+                f"Cannot access s3://{bucket}; choose a bucket you own or fix IAM"
+            ) from exc
         kwargs = {"Bucket": bucket}
         if region != "us-east-1":
             kwargs["CreateBucketConfiguration"] = {"LocationConstraint": region}
@@ -168,10 +172,12 @@ def ensure_private_bucket(bucket: str) -> None:
     s3.put_bucket_encryption(
         Bucket=bucket,
         ServerSideEncryptionConfiguration={
-            "Rules": [{
-                "ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"},
-                "BucketKeyEnabled": False,
-            }]
+            "Rules": [
+                {
+                    "ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"},
+                    "BucketKeyEnabled": False,
+                }
+            ]
         },
     )
     try:
@@ -213,7 +219,9 @@ def ensure_private_bucket(bucket: str) -> None:
         },
     ]
     try:
-        current_lifecycle_rules = s3.get_bucket_lifecycle_configuration(Bucket=bucket).get("Rules", [])
+        current_lifecycle_rules = s3.get_bucket_lifecycle_configuration(Bucket=bucket).get(
+            "Rules", []
+        )
     except s3.exceptions.ClientError as exc:
         if exc.response.get("Error", {}).get("Code") != "NoSuchLifecycleConfiguration":
             raise
@@ -276,7 +284,10 @@ def deploy_stack(
     elif exists:
         session_parameter = {"ParameterKey": "SessionSecret", "UsePreviousValue": True}
     else:
-        session_parameter = {"ParameterKey": "SessionSecret", "ParameterValue": secrets.token_urlsafe(48)}
+        session_parameter = {
+            "ParameterKey": "SessionSecret",
+            "ParameterValue": secrets.token_urlsafe(48),
+        }
         generated_session_secret = True
 
     bridge_parameter: dict[str, str | bool]
@@ -298,7 +309,10 @@ def deploy_stack(
             "ParameterValue": discord_conversation_webhook_url,
         }
     elif exists and "DiscordConversationWebhookUrl" in existing_parameter_keys:
-        webhook_parameter = {"ParameterKey": "DiscordConversationWebhookUrl", "UsePreviousValue": True}
+        webhook_parameter = {
+            "ParameterKey": "DiscordConversationWebhookUrl",
+            "UsePreviousValue": True,
+        }
     else:
         webhook_parameter = {"ParameterKey": "DiscordConversationWebhookUrl", "ParameterValue": ""}
 
@@ -329,7 +343,10 @@ def deploy_stack(
         fastmail_parameter,
         {"ParameterKey": "LogLevel", "ParameterValue": log_level},
         {"ParameterKey": "AuthRateLimitMax", "ParameterValue": auth_rate_limit_max},
-        {"ParameterKey": "ThingyMagicLinkFromEmail", "ParameterValue": thingy_magic_link_from_email},
+        {
+            "ParameterKey": "ThingyMagicLinkFromEmail",
+            "ParameterValue": thingy_magic_link_from_email,
+        },
         {"ParameterKey": "ThingyMagicLinkBaseUrl", "ParameterValue": thingy_magic_link_base_url},
         {"ParameterKey": "StreamCustomDomainName", "ParameterValue": stream_custom_domain_name},
         {"ParameterKey": "StreamCertificateArn", "ParameterValue": stream_certificate_arn},
@@ -379,7 +396,9 @@ def stack_outputs(cloudformation, stack_name: str) -> dict[str, str]:
 
 
 def stack_resource_physical_id(cloudformation, stack_name: str, logical_id: str) -> str:
-    resource = cloudformation.describe_stack_resource(StackName=stack_name, LogicalResourceId=logical_id)["StackResourceDetail"]
+    resource = cloudformation.describe_stack_resource(
+        StackName=stack_name, LogicalResourceId=logical_id
+    )["StackResourceDetail"]
     return str(resource.get("PhysicalResourceId", ""))
 
 
@@ -403,7 +422,9 @@ def configure_log_retention(stack_name: str, days: int = 30) -> None:
         try:
             logs.tag_resource(resourceArn=log_group_arn, tags={PROJECT_TAG_KEY: PROJECT_TAG_VALUE})
         except ClientError:
-            logs.tag_log_group(logGroupName=log_group_name, tags={PROJECT_TAG_KEY: PROJECT_TAG_VALUE})
+            logs.tag_log_group(
+                logGroupName=log_group_name, tags={PROJECT_TAG_KEY: PROJECT_TAG_VALUE}
+            )
 
 
 def update_env_file(values: dict[str, str]) -> None:
@@ -432,57 +453,93 @@ def upload_librarian_corpora(args: argparse.Namespace, bucket: str) -> None:
     """
     tmp_dir = REPO / "tmp"
     tmp_dir.mkdir(parents=True, exist_ok=True)
-    run([
-        sys.executable,
-        "pipeline/deploy/upload_corpus.py",
-        "--bucket",
-        bucket,
-        "--key",
-        args.corpus_key,
-        "--graph-key",
-        args.graph_key,
-        "--keep-output",
-        str(tmp_dir / "librarian_embedded_corpus.json"),
-    ])
-    run([
-        sys.executable,
-        "pipeline/deploy/upload_blog_corpus.py",
-        "--bucket",
-        bucket,
-        "--key",
-        args.blog_corpus_key,
-        "--keep-output",
-        str(tmp_dir / "librarian_embedded_blog_corpus.json"),
-    ])
-    run([
-        sys.executable,
-        "pipeline/deploy/upload_podcast_corpus.py",
-        "--bucket",
-        bucket,
-        "--key",
-        args.podcast_corpus_key,
-        "--keep-output",
-        str(tmp_dir / "librarian_embedded_podcast_corpus.json"),
-    ])
+    run(
+        [
+            sys.executable,
+            "pipeline/deploy/upload_corpus.py",
+            "--bucket",
+            bucket,
+            "--key",
+            args.corpus_key,
+            "--graph-key",
+            args.graph_key,
+            "--keep-output",
+            str(tmp_dir / "librarian_embedded_corpus.json"),
+        ]
+    )
+    run(
+        [
+            sys.executable,
+            "pipeline/deploy/upload_blog_corpus.py",
+            "--bucket",
+            bucket,
+            "--key",
+            args.blog_corpus_key,
+            "--keep-output",
+            str(tmp_dir / "librarian_embedded_blog_corpus.json"),
+        ]
+    )
+    run(
+        [
+            sys.executable,
+            "pipeline/deploy/upload_podcast_corpus.py",
+            "--bucket",
+            bucket,
+            "--key",
+            args.podcast_corpus_key,
+            "--keep-output",
+            str(tmp_dir / "librarian_embedded_podcast_corpus.json"),
+        ]
+    )
 
 
 def main() -> int:
     load_dotenv()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stack-name", default=STACK_NAME)
-    parser.add_argument("--bucket", default=os.environ.get("LIBRARIAN_BUCKET") or DEFAULT_LIBRARIAN_BUCKET)
-    parser.add_argument("--allowed-origin", default=os.environ.get("LIBRARIAN_ALLOWED_ORIGIN", DEFAULT_ALLOWED_ORIGINS))
-    parser.add_argument("--corpus-key", default=os.environ.get("LIBRARIAN_CORPUS_KEY", PRIVATE_CORPUS_KEY))
-    parser.add_argument("--graph-key", default=os.environ.get("LIBRARIAN_GRAPH_KEY", PRIVATE_GRAPH_KEY))
-    parser.add_argument("--blog-corpus-key", default=os.environ.get("LIBRARIAN_BLOG_CORPUS_KEY", PRIVATE_BLOG_CORPUS_KEY))
-    parser.add_argument("--podcast-corpus-key", default=os.environ.get("LIBRARIAN_PODCAST_CORPUS_KEY", PRIVATE_PODCAST_CORPUS_KEY))
-    parser.add_argument("--cloudformation-role-arn", default=os.environ.get("LIBRARIAN_CLOUDFORMATION_ROLE_ARN"))
+    parser.add_argument(
+        "--bucket", default=os.environ.get("LIBRARIAN_BUCKET") or DEFAULT_LIBRARIAN_BUCKET
+    )
+    parser.add_argument(
+        "--allowed-origin",
+        default=os.environ.get("LIBRARIAN_ALLOWED_ORIGIN", DEFAULT_ALLOWED_ORIGINS),
+    )
+    parser.add_argument(
+        "--corpus-key", default=os.environ.get("LIBRARIAN_CORPUS_KEY", PRIVATE_CORPUS_KEY)
+    )
+    parser.add_argument(
+        "--graph-key", default=os.environ.get("LIBRARIAN_GRAPH_KEY", PRIVATE_GRAPH_KEY)
+    )
+    parser.add_argument(
+        "--blog-corpus-key",
+        default=os.environ.get("LIBRARIAN_BLOG_CORPUS_KEY", PRIVATE_BLOG_CORPUS_KEY),
+    )
+    parser.add_argument(
+        "--podcast-corpus-key",
+        default=os.environ.get("LIBRARIAN_PODCAST_CORPUS_KEY", PRIVATE_PODCAST_CORPUS_KEY),
+    )
+    parser.add_argument(
+        "--cloudformation-role-arn", default=os.environ.get("LIBRARIAN_CLOUDFORMATION_ROLE_ARN")
+    )
     parser.add_argument("--log-level", default=os.environ.get("LIBRARIAN_LOG_LEVEL", "INFO"))
-    parser.add_argument("--auth-rate-limit-max", default=os.environ.get("LIBRARIAN_AUTH_RATE_LIMIT_MAX", "30"))
-    parser.add_argument("--thingy-magic-link-from-email", default=os.environ.get("THINGY_MAGIC_LINK_FROM_EMAIL", "thingy@thingelstad.com"))
-    parser.add_argument("--thingy-magic-link-base-url", default=os.environ.get("THINGY_MAGIC_LINK_BASE_URL", "https://thingy.thingelstad.com/"))
-    parser.add_argument("--stream-custom-domain-name", default=os.environ.get("LIBRARIAN_STREAM_CUSTOM_DOMAIN_NAME", ""))
-    parser.add_argument("--stream-certificate-arn", default=os.environ.get("LIBRARIAN_STREAM_CERTIFICATE_ARN", ""))
+    parser.add_argument(
+        "--auth-rate-limit-max", default=os.environ.get("LIBRARIAN_AUTH_RATE_LIMIT_MAX", "30")
+    )
+    parser.add_argument(
+        "--thingy-magic-link-from-email",
+        default=os.environ.get("THINGY_MAGIC_LINK_FROM_EMAIL", "thingy@thingelstad.com"),
+    )
+    parser.add_argument(
+        "--thingy-magic-link-base-url",
+        default=os.environ.get("THINGY_MAGIC_LINK_BASE_URL", "https://thingy.thingelstad.com/"),
+    )
+    parser.add_argument(
+        "--stream-custom-domain-name",
+        default=os.environ.get("LIBRARIAN_STREAM_CUSTOM_DOMAIN_NAME", ""),
+    )
+    parser.add_argument(
+        "--stream-certificate-arn", default=os.environ.get("LIBRARIAN_STREAM_CERTIFICATE_ARN", "")
+    )
     parser.add_argument("--skip-corpus-upload", action="store_true")
     parser.add_argument("--skip-bucket-bootstrap", action="store_true")
     parser.add_argument("--skip-smoke-test", action="store_true")
@@ -552,7 +609,9 @@ def main() -> int:
         }
     )
     if generated_session_secret:
-        print("Generated an initial session secret for this stack. Future updates will reuse it unless LIBRARIAN_SESSION_SECRET is set.")
+        print(
+            "Generated an initial session secret for this stack. Future updates will reuse it unless LIBRARIAN_SESSION_SECRET is set."
+        )
     return 0
 
 

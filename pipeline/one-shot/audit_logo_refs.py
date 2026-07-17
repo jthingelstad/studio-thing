@@ -31,8 +31,9 @@ def main():
     hits = []
     url_cache = {}  # avoid re-HEADing identical URLs
 
-    for fp in sorted(ARCHIVE_DIR.glob("*.md"),
-                     key=lambda p: int(p.stem) if p.stem.isdigit() else 9999):
+    for fp in sorted(
+        ARCHIVE_DIR.glob("*.md"), key=lambda p: int(p.stem) if p.stem.isdigit() else 9999
+    ):
         if not fp.stem.isdigit():
             continue
         lines = fp.read_text().split("\n")
@@ -50,8 +51,7 @@ def main():
 
     # Write report
     lines_out = [
-        f"/assets/logos/ audit — {len(hits)} hits across "
-        f"{len({h[0] for h in hits})} issues",
+        f"/assets/logos/ audit — {len(hits)} hits across {len({h[0] for h in hits})} issues",
         "",
     ]
     current_issue = None
@@ -66,7 +66,8 @@ def main():
         f"Unique URLs: {len(url_cache)} — "
         f"{sum(1 for s in url_cache.values() if s == '200')} live, "
         f"{sum(1 for s in url_cache.values() if s == '404')} 404, "
-        f"{sum(1 for s in url_cache.values() if s not in ('200', '404'))} other.")
+        f"{sum(1 for s in url_cache.values() if s not in ('200', '404'))} other."
+    )
 
     report = "\n".join(lines_out)
     REPORT_FILE.write_text(report)

@@ -20,10 +20,7 @@ class ButtondownServer:
         return [
             ToolDef(
                 name="counts",
-                description=(
-                    "Top-level subscriber counts: total, premium, "
-                    "unsubscribed."
-                ),
+                description=("Top-level subscriber counts: total, premium, unsubscribed."),
                 input_schema={"type": "object", "properties": {}},
                 handler=lambda deps, **_kw: client.counts(),
             ),
@@ -49,8 +46,7 @@ class ButtondownServer:
             ToolDef(
                 name="recent_unsubscribes",
                 description=(
-                    "Recently churned subscribers. Same hashed shape as "
-                    "list_subscribers."
+                    "Recently churned subscribers. Same hashed shape as list_subscribers."
                 ),
                 input_schema={
                     "type": "object",
@@ -58,9 +54,7 @@ class ButtondownServer:
                         "limit": {"type": "integer", "description": "default 25"},
                     },
                 },
-                handler=lambda deps, limit=25, **_kw: client.recent_unsubscribes(
-                    limit=int(limit)
-                ),
+                handler=lambda deps, limit=25, **_kw: client.recent_unsubscribes(limit=int(limit)),
             ),
             ToolDef(
                 name="subscriber_sources",
@@ -74,9 +68,7 @@ class ButtondownServer:
                         "days": {"type": "integer", "description": "default 30"},
                     },
                 },
-                handler=lambda deps, days=30, **_kw: client.subscriber_sources(
-                    days=int(days)
-                ),
+                handler=lambda deps, days=30, **_kw: client.subscriber_sources(days=int(days)),
             ),
             ToolDef(
                 name="attribution_summary",
@@ -93,9 +85,7 @@ class ButtondownServer:
                         "days": {"type": "integer", "description": "default 30"},
                     },
                 },
-                handler=lambda deps, days=30, **_kw: client.attribution_summary(
-                    days=int(days)
-                ),
+                handler=lambda deps, days=30, **_kw: client.attribution_summary(days=int(days)),
             ),
             ToolDef(
                 name="campaign_signups",
@@ -110,7 +100,10 @@ class ButtondownServer:
                 input_schema={
                     "type": "object",
                     "properties": {
-                        "ref": {"type": "string", "description": "the ?ref= tag, e.g. 'dd-2026-05-15'"},
+                        "ref": {
+                            "type": "string",
+                            "description": "the ?ref= tag, e.g. 'dd-2026-05-15'",
+                        },
                         "days": {"type": "integer", "description": "trailing window; default 30"},
                     },
                     "required": ["ref"],
@@ -118,7 +111,11 @@ class ButtondownServer:
                 handler=lambda deps, ref, days=30, **_kw: {
                     "ref": str(ref),
                     "days": int(days),
-                    "signups": int((client.attribution_summary(days=int(days)).get("by_ref") or {}).get(str(ref), 0)),
+                    "signups": int(
+                        (client.attribution_summary(days=int(days)).get("by_ref") or {}).get(
+                            str(ref), 0
+                        )
+                    ),
                 },
             ),
             ToolDef(
@@ -134,9 +131,7 @@ class ButtondownServer:
                         "days": {"type": "integer", "description": "default 30"},
                     },
                 },
-                handler=lambda deps, days=30, **_kw: client.subscriber_growth(
-                    days=int(days)
-                ),
+                handler=lambda deps, days=30, **_kw: client.subscriber_growth(days=int(days)),
             ),
             ToolDef(
                 name="list_recent_emails",
@@ -150,9 +145,7 @@ class ButtondownServer:
                         "limit": {"type": "integer", "description": "default 25"},
                     },
                 },
-                handler=lambda deps, limit=25, **_kw: client.list_recent_emails(
-                    limit=int(limit)
-                ),
+                handler=lambda deps, limit=25, **_kw: client.list_recent_emails(limit=int(limit)),
             ),
             ToolDef(
                 name="email_engagement",
@@ -168,9 +161,7 @@ class ButtondownServer:
                     },
                     "required": ["email_id"],
                 },
-                handler=lambda deps, email_id, **_kw: client.email_engagement(
-                    email_id=email_id
-                ),
+                handler=lambda deps, email_id, **_kw: client.email_engagement(email_id=email_id),
             ),
         ]
 

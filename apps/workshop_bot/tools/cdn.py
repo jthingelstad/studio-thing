@@ -46,6 +46,7 @@ def invalidate(paths: list[str]) -> Optional[str]:
         return None
     try:
         import boto3
+
         client = boto3.client("cloudfront")
         resp = client.create_invalidation(
             DistributionId=dist,

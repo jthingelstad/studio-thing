@@ -149,8 +149,7 @@ _PAGE = """\
 """
 
 
-def review_target_legend(*, issue_number: int,
-                         section_status: Optional[dict] = None) -> str:
+def review_target_legend(*, issue_number: int, section_status: Optional[dict] = None) -> str:
     """Return the target IDs Eddy can use for anchored review comments
     (``editorial_comments`` rows surfaced on the web production page).
 
@@ -189,19 +188,25 @@ def review_target_legend(*, issue_number: int,
         if present.get(name):
             lines.append(f"- `{name}` — {_SECTION_LABELS.get(name, name)}")
     notable_rows = issue_items.list_items(
-        int(issue_number), section="notable", include_promoted=False,
+        int(issue_number),
+        section="notable",
+        include_promoted=False,
     )
     for i, row in enumerate(notable_rows, start=1):
         title = (row.get("title") or row.get("url") or "(untitled)").strip()
         lines.append(f"- `n{i}` — Notable: {title}")
     brief_rows = issue_items.list_items(
-        int(issue_number), section="brief", include_promoted=False,
+        int(issue_number),
+        section="brief",
+        include_promoted=False,
     )
     for i, row in enumerate(brief_rows, start=1):
         title = (row.get("title") or row.get("url") or "(untitled)").strip()
         lines.append(f"- `b{i}` — Briefly: {title}")
     journal_rows = issue_items.list_items(
-        int(issue_number), section="journal", include_promoted=False,
+        int(issue_number),
+        section="journal",
+        include_promoted=False,
     )
     for i, row in enumerate(journal_rows, start=1):
         title = (row.get("title") or "").strip()
@@ -223,11 +228,14 @@ def _markdown_to_html(md: str) -> str:
         return f"<pre>{_html.escape(md)}</pre>"
     # `smarty` gives the curly quotes / em-dashes the published issue has;
     # `extra` + `sane_lists` match the site's markdown handling closely enough.
-    return markdown.markdown(md, extensions=["extra", "sane_lists", "smarty"], output_format="html5")
+    return markdown.markdown(
+        md, extensions=["extra", "sane_lists", "smarty"], output_format="html5"
+    )
 
 
-def _render_banner(subtitle: Optional[str],
-                   convenience_links: Optional[list[tuple[str, str]]]) -> str:
+def _render_banner(
+    subtitle: Optional[str], convenience_links: Optional[list[tuple[str, str]]]
+) -> str:
     """Build the small mono-uppercase status banner that sits above the
     article. ``subtitle`` is the existing one-line "DRAFT · WT… · …"
     summary; ``convenience_links`` is an optional list of ``(label, url)``
@@ -267,10 +275,15 @@ def _render_meta(meta: Optional[dict]) -> str:
     return f'<dl class="meta">\n{items}\n</dl>\n'
 
 
-def markdown_to_html_page(md: str, *, title: str, subtitle: Optional[str] = None,
-                          convenience_links: Optional[list[tuple[str, str]]] = None,
-                          meta: Optional[dict] = None,
-                          strip_block_markers: bool = False) -> str:
+def markdown_to_html_page(
+    md: str,
+    *,
+    title: str,
+    subtitle: Optional[str] = None,
+    convenience_links: Optional[list[tuple[str, str]]] = None,
+    meta: Optional[dict] = None,
+    strip_block_markers: bool = False,
+) -> str:
     """Wrap ``md`` (rendered to HTML) in a standalone, self-contained page.
     If ``strip_block_markers``, the ``<!-- block:X -->`` comments are
     removed first. ``subtitle``, if given, renders as a small banner above
@@ -289,7 +302,10 @@ def markdown_to_html_page(md: str, *, title: str, subtitle: Optional[str] = None
     banner = _render_banner(subtitle, convenience_links)
     meta_block = _render_meta(meta)
     return _PAGE.format(
-        title=_html.escape(title), css=_CSS, banner=banner, meta=meta_block,
+        title=_html.escape(title),
+        css=_CSS,
+        banner=banner,
+        meta=meta_block,
         body=body,
     )
 
@@ -439,31 +455,23 @@ def option_cards_html(
             f'<div class="card-head">'
             f'<span class="card-num">option {i}</span>'
             f'<button type="button" class="card-copy" aria-label="Copy option {i}">copy</button>'
-            f'</div>'
+            f"</div>"
             f'<div class="{body_class}">{text}</div>'
-            f'</article>'
+            f"</article>"
         )
-    sub_html = (
-        f'<p class="subtitle">{_html.escape(subtitle)}</p>' if subtitle else ""
-    )
-    hint_html = (
-        f'<p class="hint">{_html.escape(hint)}</p>' if hint else ""
-    )
+    sub_html = f'<p class="subtitle">{_html.escape(subtitle)}</p>' if subtitle else ""
+    hint_html = f'<p class="hint">{_html.escape(hint)}</p>' if hint else ""
     return (
-        "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n"
-        "<meta charset=\"utf-8\">\n"
-        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
-        "<meta name=\"robots\" content=\"noindex, nofollow\">\n"
+        '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
+        '<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '<meta name="robots" content="noindex, nofollow">\n'
         f"<title>{_html.escape(title)}</title>\n"
         f"<style>{_OPTION_CARDS_CSS}</style>\n"
         "</head>\n<body>\n"
         f"<h1>{_html.escape(title)}</h1>\n"
         f"{sub_html}\n"
-        f"{hint_html}\n"
-        + "\n".join(cards)
-        + "\n"
-        + _OPTION_CARDS_SCRIPT
-        + "</body>\n</html>\n"
+        f"{hint_html}\n" + "\n".join(cards) + "\n" + _OPTION_CARDS_SCRIPT + "</body>\n</html>\n"
     )
 
 
@@ -484,15 +492,20 @@ def render_and_upload_option_cards(
     """
     try:
         page = option_cards_html(
-            title=title, options=options,
-            subtitle=subtitle, hint=hint, body_kind=body_kind,
+            title=title,
+            options=options,
+            subtitle=subtitle,
+            hint=hint,
+            body_kind=body_kind,
         )
         res = s3.write_issue_html(int(issue_number), f"{name}.html", page)
         return res.get("url")
     except Exception as exc:  # noqa: BLE001
         logger.warning(
             "render: couldn't write %s.html for #%s: %s",
-            name, issue_number, exc,
+            name,
+            issue_number,
+            exc,
         )
         return None
 
@@ -663,7 +676,11 @@ window.addEventListener('resize',draw);
 
 
 def _proposal_item_html(
-    *, side: str, synth_id: str, title: str, moved: bool,
+    *,
+    side: str,
+    synth_id: str,
+    title: str,
+    moved: bool,
 ) -> str:
     """One item row in the current-or-proposed column."""
     classes = ["item"]
@@ -673,7 +690,7 @@ def _proposal_item_html(
         f'<li class="{" ".join(classes)}" data-side="{side}" data-id="{synth_id}">'
         f'<span class="syn">{synth_id}</span>'
         f'<span class="title">{_html.escape(title)}</span>'
-        f'</li>'
+        f"</li>"
     )
 
 
@@ -689,15 +706,19 @@ def _proposal_section_html(
     """Render one section's column (current or proposed). ``moved_ids``
     highlights items whose position changed between the two sides."""
     moved_ids = moved_ids or set()
-    parts: list[str] = [f'<section><h3>{_html.escape(label)}</h3><ul>']
+    parts: list[str] = [f"<section><h3>{_html.escape(label)}</h3><ul>"]
     for row in items:
         synth = item_synth[int(row["id"])]
         title = (row.get("title") or row.get("url") or "(untitled)").strip()
-        parts.append(_proposal_item_html(
-            side=side, synth_id=synth, title=title,
-            moved=synth in moved_ids,
-        ))
-    parts.append('</ul></section>')
+        parts.append(
+            _proposal_item_html(
+                side=side,
+                synth_id=synth,
+                title=title,
+                moved=synth in moved_ids,
+            )
+        )
+    parts.append("</ul></section>")
     return "".join(parts)
 
 
@@ -745,10 +766,15 @@ def reorder_proposal_html(
     for section in ("notable", "journal", "brief"):
         items = rows_by_section.get(section, [])
         label = section_labels.get(section, section.capitalize())
-        cur_html.append(_proposal_section_html(
-            side="current", section=section, label=label,
-            items=items, item_synth=row_to_synth,
-        ))
+        cur_html.append(
+            _proposal_section_html(
+                side="current",
+                section=section,
+                label=label,
+                items=items,
+                item_synth=row_to_synth,
+            )
+        )
         # Build the proposed column. Journal is never reordered — fall back
         # to current row order so the proposed column shows items in their
         # natural publish-date sequence.
@@ -757,16 +783,21 @@ def reorder_proposal_html(
             order = [row_to_synth[int(r["id"])] for r in items]
         by_synth = {row_to_synth[int(r["id"])]: r for r in items}
         ordered_rows = [by_synth[sid] for sid in order if sid in by_synth]
-        prop_html.append(_proposal_section_html(
-            side="proposed", section=section, label=label,
-            items=ordered_rows, item_synth=row_to_synth,
-            moved_ids=_moved_for(section),
-        ))
+        prop_html.append(
+            _proposal_section_html(
+                side="proposed",
+                section=section,
+                label=label,
+                items=ordered_rows,
+                item_synth=row_to_synth,
+                moved_ids=_moved_for(section),
+            )
+        )
 
     legend = (
         '<div class="legend">'
         '<span><span class="swatch" style="background:var(--wt-move);"></span>moved</span>'
-        '</div>'
+        "</div>"
     )
 
     no_change = ""
@@ -774,34 +805,24 @@ def reorder_proposal_html(
     if not any_moved:
         no_change = '<p class="no-change-note">No changes proposed — current order stands.</p>'
 
-    body = (
-        f'<h1>{_html.escape(title)}</h1>'
-        '<p class="subtitle">react ✅ / ❌ / 🔄 in #editorial</p>'
-    )
+    body = f'<h1>{_html.escape(title)}</h1><p class="subtitle">react ✅ / ❌ / 🔄 in #editorial</p>'
     body += legend + no_change
     body += (
         '<div class="cols">'
         '<svg id="proposal-connectors" aria-hidden="true"></svg>'
-        '<div class="col col-current"><h2>Current order</h2>'
-        + "".join(cur_html)
-        + '</div>'
-        '<div class="col col-proposed"><h2>Proposed by Eddy</h2>'
-        + "".join(prop_html)
-        + '</div>'
-        '</div>'
+        '<div class="col col-current"><h2>Current order</h2>' + "".join(cur_html) + "</div>"
+        '<div class="col col-proposed"><h2>Proposed by Eddy</h2>' + "".join(prop_html) + "</div>"
+        "</div>"
     )
 
     return (
-        "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n"
-        "<meta charset=\"utf-8\">\n"
-        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
-        "<meta name=\"robots\" content=\"noindex, nofollow\">\n"
+        '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
+        '<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '<meta name="robots" content="noindex, nofollow">\n'
         f"<title>{_html.escape(title)}</title>\n"
         f"<style>{_PROPOSAL_CSS}</style>\n"
-        "</head>\n<body>\n"
-        + body
-        + "\n" + _PROPOSAL_SCRIPT
-        + "</body>\n</html>\n"
+        "</head>\n<body>\n" + body + "\n" + _PROPOSAL_SCRIPT + "</body>\n</html>\n"
     )
 
 
@@ -819,15 +840,18 @@ def render_and_upload_proposal(
     try:
         page = reorder_proposal_html(
             issue_number=int(issue_number),
-            rows_by_section=rows_by_section, proposal=proposal,
-            synth_to_row=synth_to_row, row_to_synth=row_to_synth,
+            rows_by_section=rows_by_section,
+            proposal=proposal,
+            synth_to_row=synth_to_row,
+            row_to_synth=row_to_synth,
         )
         res = s3.write_issue_html(int(issue_number), "final-proposal.html", page)
         return res.get("url")
     except Exception as exc:  # noqa: BLE001
         logger.warning(
             "render: couldn't write final-proposal.html for #%s: %s",
-            issue_number, exc,
+            issue_number,
+            exc,
         )
         return None
 

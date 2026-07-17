@@ -39,7 +39,8 @@ class CostHelper(unittest.TestCase):
         self.assertEqual(anthropic_client.MODELS["sonnet"], "claude-sonnet-5")
         self.assertEqual(
             anthropic_client.cost_usd(
-                "claude-sonnet-5", input_tokens=1_000_000, output_tokens=1_000_000),
+                "claude-sonnet-5", input_tokens=1_000_000, output_tokens=1_000_000
+            ),
             18.00,
         )
 
@@ -66,8 +67,11 @@ class CostHelper(unittest.TestCase):
         # Every model exposed in MODELS must have a rate — otherwise an
         # agent_runs row will quietly show cost_usd=None.
         for model_id in anthropic_client.MODELS.values():
-            self.assertIn(model_id, anthropic_client.RATES_USD_PER_MTOK,
-                          f"missing rates for registered model {model_id!r}")
+            self.assertIn(
+                model_id,
+                anthropic_client.RATES_USD_PER_MTOK,
+                f"missing rates for registered model {model_id!r}",
+            )
 
 
 if __name__ == "__main__":

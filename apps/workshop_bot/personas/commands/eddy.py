@@ -83,7 +83,9 @@ def register_eddy_commands(
     )
     async def issue_reorder_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_interactive(
-            interaction, lambda: reorder.run(_ctx(bot)), "issue reorder",
+            interaction,
+            lambda: reorder.run(_ctx(bot)),
+            "issue reorder",
             "Starting `issue reorder` — Eddy will post a reorder proposal in #editorial; react there.",
         )
 
@@ -93,7 +95,9 @@ def register_eddy_commands(
     )
     async def issue_haiku_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_interactive(
-            interaction, lambda: compose_haiku.run(_ctx(bot)), "issue haiku",
+            interaction,
+            lambda: compose_haiku.run(_ctx(bot)),
+            "issue haiku",
             "Starting `issue haiku` — options will post in #editorial; react there to pick.",
         )
 
@@ -103,7 +107,9 @@ def register_eddy_commands(
     )
     async def issue_subject_cmd(interaction: discord.Interaction) -> None:  # type: ignore[misc]
         await _run_interactive(
-            interaction, lambda: compose_meta.run(_ctx(bot)), "issue subject",
+            interaction,
+            lambda: compose_meta.run(_ctx(bot)),
+            "issue subject",
             "Starting `issue subject` — 5 subject options then a description will post in #editorial; react there to pick.",
         )
 
@@ -140,7 +146,9 @@ def register_eddy_commands(
         await _run_and_ack(
             interaction,
             lambda: followup_job.add(
-                _ctx(bot), note=note, persona="eddy",
+                _ctx(bot),
+                note=note,
+                persona="eddy",
                 when=(when or ""),
                 in_days=(None if int(in_days) < 0 else int(in_days)),
                 at_issue=(None if int(at_issue) < 0 else int(at_issue)),

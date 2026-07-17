@@ -28,7 +28,7 @@ def _today() -> date:
 def _days_until(target_iso: str, ref: date) -> Optional[int]:
     try:
         t = datetime.strptime(target_iso, "%Y-%m-%d").date()
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
     return (t - ref).days
 

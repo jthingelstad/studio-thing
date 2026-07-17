@@ -57,8 +57,9 @@ class RenderCurrentlyTests(DBTestCase):
         # After clear, the two surviving entries renumber 1..2 by their
         # prior relative order (insertion order minus the dropped one).
         rows = db.currently_get_entries(348)
-        self.assertEqual([(r["type_label"], r["position"]) for r in rows],
-                         [("Listening", 1), ("Reading", 2)])
+        self.assertEqual(
+            [(r["type_label"], r["position"]) for r in rows], [("Listening", 1), ("Reading", 2)]
+        )
         self.assertEqual(
             _currently.render(348),
             "**Listening:** L\n\n**Reading:** R",
@@ -72,8 +73,10 @@ class RenderCurrentlyTests(DBTestCase):
         self.assertEqual(_currently.render(348), "**Reading:** The Lathe of Heaven")
 
     def test_markdown_links_pass_through_verbatim(self):
-        value = ("The new [Noah Kahan](https://noahkahan.com) album, "
-                 "[The Great Divide](https://noahkahan.lnk.to/thegreatdivideTLOTB).")
+        value = (
+            "The new [Noah Kahan](https://noahkahan.com) album, "
+            "[The Great Divide](https://noahkahan.lnk.to/thegreatdivideTLOTB)."
+        )
         db.currently_set_entry(348, "Listening", value)
         self.assertEqual(_currently.render(348), f"**Listening:** {value}")
 
@@ -117,7 +120,7 @@ class RenderCurrentlyTests(DBTestCase):
 
     def test_suggest_stale_orders_never_used_first(self):
         db.currently_set_entry(347, "Listening", "x")  # used
-        db.currently_set_entry(348, "Watching", "x")   # used
+        db.currently_set_entry(348, "Watching", "x")  # used
         top = db.currently_suggest_stale(349, k=3)
         # Never-used labels rank before used ones, alphabetically.
         self.assertEqual(top[0]["last_used_issue"], None)

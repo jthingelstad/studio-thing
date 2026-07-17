@@ -79,7 +79,9 @@ class PriorEchoesTests(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self._issues_root_patch = patch.object(
-            compose_echoes, "ISSUES_ROOT", Path(self._tmp.name),
+            compose_echoes,
+            "ISSUES_ROOT",
+            Path(self._tmp.name),
         )
         self._issues_root_patch.start()
 
@@ -137,7 +139,9 @@ class ComposeEchoesRunTests(_DBTestCase):
             return_value=list(_FAKE_PASSAGES),
         )
         issues_root_patcher = patch.object(
-            compose_echoes, "ISSUES_ROOT", Path(self._tmp.name),
+            compose_echoes,
+            "ISSUES_ROOT",
+            Path(self._tmp.name),
         )
         self._mock_retrieve = retrieve_patcher.start()
         issues_root_patcher.start()
@@ -155,8 +159,12 @@ class ComposeEchoesRunTests(_DBTestCase):
 
         w = issue_mod.compute_window("2026-05-16", 7)
         db.set_issue_window(
-            issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
-            start_date=w["start_date"], day_count=w["day_count"], set_by="test",
+            issue_number=n,
+            pub_date=w["pub_date"],
+            end_date=w["end_date"],
+            start_date=w["start_date"],
+            day_count=w["day_count"],
+            set_by="test",
         )
 
     def _ctx(self, reply: str = "A genuine archive moment from WT281."):
@@ -183,10 +191,15 @@ class ComposeEchoesRunTests(_DBTestCase):
         """Reply is a real paragraph — echoes.md gets written to both S3
         (FakeWorkspace) and local ISSUES_ROOT/458/echoes.md."""
         self._window()
-        ctx, fc = self._ctx(reply="In WT281, Jamie wrote about local food systems. The thread runs through this issue too.")
-        result = asyncio.run(compose_echoes.run(
-            ctx, baseline_body="## Notable\n\n### [A](http://a)\n\nbody",
-        ))
+        ctx, fc = self._ctx(
+            reply="In WT281, Jamie wrote about local food systems. The thread runs through this issue too."
+        )
+        result = asyncio.run(
+            compose_echoes.run(
+                ctx,
+                baseline_body="## Notable\n\n### [A](http://a)\n\nbody",
+            )
+        )
         self.assertTrue(result.ok, result.message)
         self.assertTrue(result.data["echoes_written"])
         # S3 mirror — written under the atoms/ prefix as echoes.md now.
@@ -205,9 +218,12 @@ class ComposeEchoesRunTests(_DBTestCase):
     def test_empty_reply_fails_cleanly(self):
         self._window()
         ctx, fc = self._ctx(reply="")
-        result = asyncio.run(compose_echoes.run(
-            ctx, baseline_body="## Notable\n\nbody",
-        ))
+        result = asyncio.run(
+            compose_echoes.run(
+                ctx,
+                baseline_body="## Notable\n\nbody",
+            )
+        )
         self.assertFalse(result.ok)
         self.assertIn("empty reply", result.message)
 
@@ -235,9 +251,12 @@ class ComposeEchoesRunTests(_DBTestCase):
             "LIBRARIAN_BRIDGE_SECRET is not set",
         )
         ctx, fc = self._ctx(reply="should not be used")
-        result = asyncio.run(compose_echoes.run(
-            ctx, baseline_body="## Notable\n\nbody",
-        ))
+        result = asyncio.run(
+            compose_echoes.run(
+                ctx,
+                baseline_body="## Notable\n\nbody",
+            )
+        )
         self.assertFalse(result.ok)
         self.assertIn("Librarian retrieval unavailable", result.message)
         self.assertTrue(result.data.get("retrieval_failed"))
@@ -255,9 +274,12 @@ class ComposeEchoesRunTests(_DBTestCase):
         ctx, _fc = self._ctx(
             reply="In WT281 Jamie wrote about local food systems. The thread carries through to this issue.",
         )
-        result = asyncio.run(compose_echoes.run(
-            ctx, baseline_body="## Notable\n\nbody",
-        ))
+        result = asyncio.run(
+            compose_echoes.run(
+                ctx,
+                baseline_body="## Notable\n\nbody",
+            )
+        )
         self.assertTrue(result.ok, result.message)
         written = content_store.read_issue(458, "echoes.md")
         self.assertIn(
@@ -273,9 +295,12 @@ class ComposeEchoesRunTests(_DBTestCase):
         ctx, _fc = self._ctx(
             reply=f"In {link}, Jamie wrote about local food systems. The thread is alive again.",
         )
-        result = asyncio.run(compose_echoes.run(
-            ctx, baseline_body="## Notable\n\nbody",
-        ))
+        result = asyncio.run(
+            compose_echoes.run(
+                ctx,
+                baseline_body="## Notable\n\nbody",
+            )
+        )
         self.assertTrue(result.ok, result.message)
         written = content_store.read_issue(458, "echoes.md")
         # Exactly one occurrence of the link — no double-wrapping.
@@ -291,13 +316,30 @@ class ComposeEchoesRunTests(_DBTestCase):
         # Retrieve returns a passage for WT281 plus one for WT200; the
         # WT281 one should be filtered out before reaching the prompt.
         self._mock_retrieve.return_value = [
-            {"issue_number": 281, "subject": "self", "publish_date": "2024-06-08", "section": "x", "text": "self"},
-            {"issue_number": 200, "subject": "other", "publish_date": "2022-01-01", "section": "y", "text": "other"},
+            {
+                "issue_number": 281,
+                "subject": "self",
+                "publish_date": "2024-06-08",
+                "section": "x",
+                "text": "self",
+            },
+            {
+                "issue_number": 200,
+                "subject": "other",
+                "publish_date": "2022-01-01",
+                "section": "y",
+                "text": "other",
+            },
         ]
-        ctx, fc = self._ctx(reply="A reflection drawing on [Weekly Thing 200](https://weekly.thingelstad.com/archive/200/).")
-        result = asyncio.run(compose_echoes.run(
-            ctx, baseline_body="## Notable\n\nbody",
-        ))
+        ctx, fc = self._ctx(
+            reply="A reflection drawing on [Weekly Thing 200](https://weekly.thingelstad.com/archive/200/)."
+        )
+        result = asyncio.run(
+            compose_echoes.run(
+                ctx,
+                baseline_body="## Notable\n\nbody",
+            )
+        )
         self.assertTrue(result.ok, result.message)
 
 
@@ -310,14 +352,18 @@ class LinkifyArchiveRefsTests(unittest.TestCase):
         )
 
     def test_wraps_bare_weekly_thing_reference(self):
-        out = compose_echoes._linkify_archive_refs("In Weekly Thing 281 the theme was food systems.")
+        out = compose_echoes._linkify_archive_refs(
+            "In Weekly Thing 281 the theme was food systems."
+        )
         self.assertEqual(
             out,
             "In [Weekly Thing 281](https://weekly.thingelstad.com/archive/281/) the theme was food systems.",
         )
 
     def test_preserves_existing_markdown_link(self):
-        text = "In [Weekly Thing 281](https://weekly.thingelstad.com/archive/281/) the theme was food."
+        text = (
+            "In [Weekly Thing 281](https://weekly.thingelstad.com/archive/281/) the theme was food."
+        )
         self.assertEqual(compose_echoes._linkify_archive_refs(text), text)
 
     def test_does_not_double_wrap_when_label_is_already_a_link(self):
@@ -335,7 +381,9 @@ class LinkifyArchiveRefsTests(unittest.TestCase):
 
     def test_ignores_non_issue_numbers(self):
         # "WT" without a digit, or a year-like number not preceded by WT/Weekly Thing
-        out = compose_echoes._linkify_archive_refs("In 2017 the WT began, and 100 years before that.")
+        out = compose_echoes._linkify_archive_refs(
+            "In 2017 the WT began, and 100 years before that."
+        )
         self.assertNotIn("[", out)
 
     def test_empty_string_passes_through(self):
@@ -362,29 +410,34 @@ class AnniversaryCandidatesTests(unittest.TestCase):
 
     def _seed_emails(self, entries):
         import json as _json
+
         self._emails.write_text(_json.dumps(entries), encoding="utf-8")
 
     def _seed_archive(self, n, body):
         issue_dir = self._issues_root / str(n)
         issue_dir.mkdir(parents=True, exist_ok=True)
         (issue_dir / "archive.md").write_text(
-            f"---\nnumber: {n}\n---\n{body}", encoding="utf-8",
+            f"---\nnumber: {n}\n---\n{body}",
+            encoding="utf-8",
         )
 
     def test_finds_nearest_issue_at_each_offset(self):
         # Issues laid out so 1y/5y/8y back from 2026-05-17 resolve cleanly.
-        self._seed_emails([
-            {"number": 348, "subject": "WT348", "publish_date": "2026-05-17T11:00:00Z"},
-            {"number": 296, "subject": "WT296", "publish_date": "2025-05-18T12:00:00Z"},  # ~1y
-            {"number": 200, "subject": "WT200", "publish_date": "2021-05-15T12:00:00Z"},  # ~5y
-            {"number": 60,  "subject": "WT60",  "publish_date": "2018-05-19T12:00:00Z"},  # ~8y
-        ])
+        self._seed_emails(
+            [
+                {"number": 348, "subject": "WT348", "publish_date": "2026-05-17T11:00:00Z"},
+                {"number": 296, "subject": "WT296", "publish_date": "2025-05-18T12:00:00Z"},  # ~1y
+                {"number": 200, "subject": "WT200", "publish_date": "2021-05-15T12:00:00Z"},  # ~5y
+                {"number": 60, "subject": "WT60", "publish_date": "2018-05-19T12:00:00Z"},  # ~8y
+            ]
+        )
         self._seed_archive(296, "Body for WT296 about home automation.")
         self._seed_archive(200, "Body for WT200 about pandemic life.")
         self._seed_archive(60, "Body for WT60 about early WWDC keynotes.")
 
         out = compose_echoes._anniversary_candidates(
-            "2026-05-17T11:00:00Z", current_number=348,
+            "2026-05-17T11:00:00Z",
+            current_number=348,
         )
         self.assertEqual([c["issue_number"] for c in out], [296, 200, 60])
         self.assertEqual([c["years_ago"] for c in out], [1, 5, 8])
@@ -394,13 +447,16 @@ class AnniversaryCandidatesTests(unittest.TestCase):
 
     def test_deduplicates_when_offsets_collide(self):
         # Only one prior issue exists; all three offsets resolve to it.
-        self._seed_emails([
-            {"number": 348, "subject": "WT348", "publish_date": "2026-05-17T11:00:00Z"},
-            {"number": 100, "subject": "WT100", "publish_date": "2019-01-01T12:00:00Z"},
-        ])
+        self._seed_emails(
+            [
+                {"number": 348, "subject": "WT348", "publish_date": "2026-05-17T11:00:00Z"},
+                {"number": 100, "subject": "WT100", "publish_date": "2019-01-01T12:00:00Z"},
+            ]
+        )
         self._seed_archive(100, "Only candidate.")
         out = compose_echoes._anniversary_candidates(
-            "2026-05-17T11:00:00Z", current_number=348,
+            "2026-05-17T11:00:00Z",
+            current_number=348,
         )
         self.assertEqual(len(out), 1)
         self.assertEqual(out[0]["issue_number"], 100)
@@ -408,39 +464,49 @@ class AnniversaryCandidatesTests(unittest.TestCase):
     def test_skips_current_and_future_issues(self):
         # No issue numbered < 348 in the list — should return empty
         # (the current issue itself doesn't qualify as its own anniversary).
-        self._seed_emails([
-            {"number": 348, "subject": "WT348", "publish_date": "2026-05-17T11:00:00Z"},
-            {"number": 349, "subject": "WT349", "publish_date": "2026-05-24T11:00:00Z"},
-        ])
+        self._seed_emails(
+            [
+                {"number": 348, "subject": "WT348", "publish_date": "2026-05-17T11:00:00Z"},
+                {"number": 349, "subject": "WT349", "publish_date": "2026-05-24T11:00:00Z"},
+            ]
+        )
         out = compose_echoes._anniversary_candidates(
-            "2026-05-17T11:00:00Z", current_number=348,
+            "2026-05-17T11:00:00Z",
+            current_number=348,
         )
         self.assertEqual(out, [])
 
     def test_handles_missing_emails_json(self):
         out = compose_echoes._anniversary_candidates(
-            "2026-05-17T11:00:00Z", current_number=348,
+            "2026-05-17T11:00:00Z",
+            current_number=348,
         )
         self.assertEqual(out, [])
 
     def test_handles_unparseable_publish_date(self):
-        self._seed_emails([
-            {"number": 100, "subject": "WT100", "publish_date": "2019-01-01T12:00:00Z"},
-        ])
+        self._seed_emails(
+            [
+                {"number": 100, "subject": "WT100", "publish_date": "2019-01-01T12:00:00Z"},
+            ]
+        )
         out = compose_echoes._anniversary_candidates(
-            "not a real date", current_number=348,
+            "not a real date",
+            current_number=348,
         )
         self.assertEqual(out, [])
 
     def test_body_preview_truncates_long_archives(self):
-        self._seed_emails([
-            {"number": 348, "subject": "WT348", "publish_date": "2026-05-17T11:00:00Z"},
-            {"number": 100, "subject": "WT100", "publish_date": "2025-05-18T12:00:00Z"},
-        ])
+        self._seed_emails(
+            [
+                {"number": 348, "subject": "WT348", "publish_date": "2026-05-17T11:00:00Z"},
+                {"number": 100, "subject": "WT100", "publish_date": "2025-05-18T12:00:00Z"},
+            ]
+        )
         long_body = "x " * (compose_echoes._ANNIVERSARY_PREVIEW_CHARS)
         self._seed_archive(100, long_body)
         out = compose_echoes._anniversary_candidates(
-            "2026-05-17T11:00:00Z", current_number=348,
+            "2026-05-17T11:00:00Z",
+            current_number=348,
         )
         self.assertEqual(len(out), 1)
         self.assertTrue(out[0]["body_preview"].endswith("…"))
@@ -448,9 +514,17 @@ class AnniversaryCandidatesTests(unittest.TestCase):
 
 class FormatArchiveSnippetsTests(unittest.TestCase):
     def test_renders_passages_as_blockquoted_blocks(self):
-        out = compose_echoes._format_archive_snippets([
-            {"issue_number": 281, "subject": "S", "publish_date": "2024-06-08", "section": "Notable", "text": "T"},
-        ])
+        out = compose_echoes._format_archive_snippets(
+            [
+                {
+                    "issue_number": 281,
+                    "subject": "S",
+                    "publish_date": "2024-06-08",
+                    "section": "Notable",
+                    "text": "T",
+                },
+            ]
+        )
         self.assertIn("**WT281**", out)
         self.assertIn("S", out)
         self.assertIn("2024-06-08", out)
@@ -459,9 +533,17 @@ class FormatArchiveSnippetsTests(unittest.TestCase):
 
     def test_truncates_long_snippets(self):
         long_text = "x" * (compose_echoes._SNIPPET_PREVIEW_CHARS + 200)
-        out = compose_echoes._format_archive_snippets([
-            {"issue_number": 1, "subject": "S", "publish_date": "2017-05-13", "section": "Notable", "text": long_text},
-        ])
+        out = compose_echoes._format_archive_snippets(
+            [
+                {
+                    "issue_number": 1,
+                    "subject": "S",
+                    "publish_date": "2017-05-13",
+                    "section": "Notable",
+                    "text": long_text,
+                },
+            ]
+        )
         # Truncation marker present, full-length string not.
         self.assertIn("…", out)
         self.assertNotIn(long_text, out)

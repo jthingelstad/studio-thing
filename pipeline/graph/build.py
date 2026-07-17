@@ -20,13 +20,17 @@ from librarian_core.paths import CORPUS_PATH, GRAPH_PATH
 
 def main() -> int:
     load_dotenv()
-    parser = argparse.ArgumentParser(description="Build the offline archive graph used by the librarian tools.")
+    parser = argparse.ArgumentParser(
+        description="Build the offline archive graph used by the librarian tools."
+    )
     parser.add_argument("--corpus", default=str(CORPUS_PATH))
     parser.add_argument("--output", default=str(GRAPH_PATH))
     parser.add_argument("--use-bedrock-extraction", action="store_true")
     parser.add_argument("--model", default=os.environ.get("THINGY_DEFAULT_MODEL", DEFAULT_MODEL))
     parser.add_argument("--upload-bucket", default=os.environ.get("AWS_S3_BUCKET"))
-    parser.add_argument("--upload-key", default=os.environ.get("LIBRARIAN_GRAPH_KEY", "librarian/graph.json"))
+    parser.add_argument(
+        "--upload-key", default=os.environ.get("LIBRARIAN_GRAPH_KEY", "librarian/graph.json")
+    )
     parser.add_argument("--upload", action="store_true")
     args = parser.parse_args()
 
@@ -40,7 +44,12 @@ def main() -> int:
     if args.upload:
         if not args.upload_bucket:
             raise RuntimeError("Provide --upload-bucket or AWS_S3_BUCKET")
-        boto3.client("s3").upload_file(str(output), args.upload_bucket, args.upload_key, ExtraArgs={"ContentType": "application/json"})
+        boto3.client("s3").upload_file(
+            str(output),
+            args.upload_bucket,
+            args.upload_key,
+            ExtraArgs={"ContentType": "application/json"},
+        )
         print(f"Uploaded librarian graph to s3://{args.upload_bucket}/{args.upload_key}")
     return 0
 

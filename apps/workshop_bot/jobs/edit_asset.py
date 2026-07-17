@@ -57,22 +57,34 @@ _MODAL_MAX = 4000
 # preview renders live. The placeholder is shown when the modal opens
 # with an empty value (asset doesn't exist yet).
 _ASSETS: dict[str, tuple[str, str, str]] = {
-    "intro":    ("intro.md",    "intro",
-                 "Opening prose for the issue. 1–4 short paragraphs in Jamie's voice."),
-    "outro":    ("outro.md",    "outro",
-                 "Closing prose — sign-off paragraph(s) after the Briefly section."),
-    "haiku":    ("haiku.md",    "haiku",
-                 "Three lines, 5-7-5 syllables. Bold + hard breaks added at render time."),
-    "cover":    ("cover.json",  "cover caption",
-                 '{"caption": "...", "location": "Minneapolis, MN", "timestamp": "May 23, 2026"}'),
-    "echoes":   ("echoes.md",   "echoes",
-                 "Archive note that closes the issue — markdown prose."),
-    "cta-1":    ("cta-1.md",    "CTA slot 1",
-                 "---\nkind: supporter\n---\n\nCall-to-action copy."),
-    "cta-2":    ("cta-2.md",    "CTA slot 2",
-                 "---\nkind: supporter\n---\n\nSecond CTA slot copy."),
-    "thanks-1": ("thanks-1.md", "thanks slot 1",
-                 "---\nkind: thanks\n---\n\nThank-you copy shown only to premium members."),
+    "intro": (
+        "intro.md",
+        "intro",
+        "Opening prose for the issue. 1–4 short paragraphs in Jamie's voice.",
+    ),
+    "outro": (
+        "outro.md",
+        "outro",
+        "Closing prose — sign-off paragraph(s) after the Briefly section.",
+    ),
+    "haiku": (
+        "haiku.md",
+        "haiku",
+        "Three lines, 5-7-5 syllables. Bold + hard breaks added at render time.",
+    ),
+    "cover": (
+        "cover.json",
+        "cover caption",
+        '{"caption": "...", "location": "Minneapolis, MN", "timestamp": "May 23, 2026"}',
+    ),
+    "echoes": ("echoes.md", "echoes", "Archive note that closes the issue — markdown prose."),
+    "cta-1": ("cta-1.md", "CTA slot 1", "---\nkind: supporter\n---\n\nCall-to-action copy."),
+    "cta-2": ("cta-2.md", "CTA slot 2", "---\nkind: supporter\n---\n\nSecond CTA slot copy."),
+    "thanks-1": (
+        "thanks-1.md",
+        "thanks slot 1",
+        "---\nkind: thanks\n---\n\nThank-you copy shown only to premium members.",
+    ),
 }
 
 ASSET_CHOICES = tuple(_ASSETS.keys())
@@ -90,7 +102,9 @@ def _read_current(issue_number: int, filename: str) -> str:
     except Exception as exc:  # noqa: BLE001
         logger.warning(
             "edit-asset: content read failed for WT%d/%s — opening empty modal: %s",
-            issue_number, filename, exc,
+            issue_number,
+            filename,
+            exc,
         )
         return ""
     return body if body else ""
@@ -148,7 +162,8 @@ class _AssetEditModal(ui.Modal):
         except Exception as exc:  # noqa: BLE001
             logger.exception(
                 "edit-asset: write failed for WT%d/%s",
-                self.issue_number, self.filename,
+                self.issue_number,
+                self.filename,
             )
             await interaction.response.send_message(
                 f"❌ Couldn't write `{self.filename}` for WT{self.issue_number}: "
@@ -164,7 +179,9 @@ class _AssetEditModal(ui.Modal):
 
 
 def build_modal(
-    ctx: "_base.JobContext", *, asset_key: str,
+    ctx: "_base.JobContext",
+    *,
+    asset_key: str,
 ) -> tuple[Optional[_AssetEditModal], Optional[str]]:
     """Construct the modal for a given asset choice. Returns
     ``(modal, error_message)``: when the modal can be shown, ``modal``
@@ -186,8 +203,12 @@ def build_modal(
             f"{_MODAL_MAX:,}. Edit via the S3 console for this one."
         )
     modal = _AssetEditModal(
-        ctx=ctx, issue_number=n, asset_key=asset_key,
-        filename=filename, label=label,
-        current_text=current, placeholder=placeholder,
+        ctx=ctx,
+        issue_number=n,
+        asset_key=asset_key,
+        filename=filename,
+        label=label,
+        current_text=current,
+        placeholder=placeholder,
     )
     return modal, None

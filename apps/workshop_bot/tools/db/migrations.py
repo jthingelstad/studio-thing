@@ -74,6 +74,7 @@ class Migration:
 
 # ---------- run report ----------
 
+
 @dataclass(frozen=True)
 class RunReport:
     applied: tuple[str, ...]
@@ -92,6 +93,7 @@ class RunReport:
 
 # ---------- helpers usable inside Migration.apply bodies ----------
 
+
 def _has_column(conn: sqlite3.Connection, table: str, column: str) -> bool:
     try:
         cols = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})")}
@@ -101,7 +103,10 @@ def _has_column(conn: sqlite3.Connection, table: str, column: str) -> bool:
 
 
 def _add_column_if_missing(
-    conn: sqlite3.Connection, table: str, column: str, type_decl: str,
+    conn: sqlite3.Connection,
+    table: str,
+    column: str,
+    type_decl: str,
 ) -> None:
     """``ALTER TABLE … ADD COLUMN`` only when the column isn't already
     there. Tolerates a concurrent add (another process raced us)."""
@@ -180,14 +185,8 @@ def _m_0009_retire_non_pinboard_discovery_feeds(conn: sqlite3.Connection) -> Non
     used to pull from HN/Lobsters/etc.; today only Pinboard popular runs.
     Sightings + research messages from the retired sources get dropped;
     ``verdict_source`` references to them get nulled."""
-    conn.execute(
-        "DELETE FROM popular_seen_sightings "
-        "WHERE source NOT IN ('popular', 'toread')"
-    )
-    conn.execute(
-        "DELETE FROM linky_research_messages "
-        "WHERE source NOT IN ('popular', 'toread')"
-    )
+    conn.execute("DELETE FROM popular_seen_sightings WHERE source NOT IN ('popular', 'toread')")
+    conn.execute("DELETE FROM linky_research_messages WHERE source NOT IN ('popular', 'toread')")
     conn.execute(
         "UPDATE pinboard_popular_seen SET verdict_source = NULL "
         "WHERE verdict_source IS NOT NULL "
@@ -316,8 +315,7 @@ def _m_0013_campaigns_schema_overhaul(conn: sqlite3.Connection) -> None:
         ]
         for name, url in dd_url_backfills:
             conn.execute(
-                "UPDATE campaigns SET url = ?, platform = 'DenseDiscovery' "
-                "WHERE name = ?",
+                "UPDATE campaigns SET url = ?, platform = 'DenseDiscovery' WHERE name = ?",
                 (url, name),
             )
 
@@ -337,8 +335,7 @@ def _m_0013_campaigns_schema_overhaul(conn: sqlite3.Connection) -> None:
             bad = conn.execute(f"PRAGMA foreign_key_check({tbl})").fetchall()
             if bad:
                 raise RuntimeError(
-                    f"foreign key check failed on {tbl} after rebuild: "
-                    f"{[tuple(r) for r in bad]!r}"
+                    f"foreign key check failed on {tbl} after rebuild: {[tuple(r) for r in bad]!r}"
                 )
     finally:
         conn.execute("PRAGMA foreign_keys=ON")
@@ -366,10 +363,7 @@ def _m_0014_linky_feedback(conn: sqlite3.Connection) -> None:
         "CREATE INDEX IF NOT EXISTS idx_linky_feedback_created "
         "ON linky_feedback(created_at DESC, id DESC)"
     )
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_linky_feedback_url "
-        "ON linky_feedback(url)"
-    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_linky_feedback_url ON linky_feedback(url)")
 
     # Backfill Jamie's explicit discovery negatives from the old
     # popular-seen ledger. Do not backfill "card posted" rows — those are
@@ -460,8 +454,7 @@ def _m_0016_backfill_newsletter_productions(conn: sqlite3.Connection) -> None:
         "FROM issues"
     )
     conn.execute(
-        "UPDATE issue_windows SET is_active = 0 "
-        "WHERE issue_number = 350 AND is_active = 1"
+        "UPDATE issue_windows SET is_active = 0 WHERE issue_number = 350 AND is_active = 1"
     )
 
 
@@ -481,9 +474,8 @@ def _m_0018_backfill_content_to_db(conn: sqlite3.Connection) -> None:
     live content; shipped issues never re-render. Idempotent (INSERT OR IGNORE).
     A no-op when nothing is in flight (no S3 calls)."""
     from .. import content_store, s3
-    rows = conn.execute(
-        "SELECT issue_number FROM issue_windows WHERE is_active = 1"
-    ).fetchall()
+
+    rows = conn.execute("SELECT issue_number FROM issue_windows WHERE is_active = 1").fetchall()
     for r in rows:
         n = int(r["issue_number"])
         try:
@@ -530,8 +522,7 @@ def _m_0021_issue_items_editor_columns(conn: sqlite3.Connection) -> None:
     ``COALESCE(section_override, section)`` and skips ``excluded`` rows.
     Both default to no-op, so existing renders are byte-identical."""
     _add_column_if_missing(conn, "issue_items", "section_override", "TEXT")
-    _add_column_if_missing(conn, "issue_items", "excluded",
-                           "INTEGER NOT NULL DEFAULT 0")
+    _add_column_if_missing(conn, "issue_items", "excluded", "INTEGER NOT NULL DEFAULT 0")
 
 
 def _m_0022_drop_draft_digests(conn: sqlite3.Connection) -> None:
@@ -567,6 +558,7 @@ def _m_0010_strip_markers_from_issue_items_body_md(conn: sqlite3.Connection) -> 
     SQLite has no native regex, so this runs Python-side to clean any
     pre-existing rows once."""
     from ..issue_items_render import strip_membership_markers  # local — cycle
+
     rows = conn.execute(
         "SELECT id, body_md FROM issue_items "
         "WHERE body_md LIKE '%<!-- cta:%' OR body_md LIKE '%<!-- thanks:%'"
@@ -574,8 +566,7 @@ def _m_0010_strip_markers_from_issue_items_body_md(conn: sqlite3.Connection) -> 
     for row in rows:
         cleaned = strip_membership_markers(row["body_md"] or "")
         conn.execute(
-            "UPDATE issue_items SET body_md = ?, updated_at = datetime('now') "
-            "WHERE id = ?",
+            "UPDATE issue_items SET body_md = ?, updated_at = datetime('now') WHERE id = ?",
             (cleaned, int(row["id"])),
         )
 
@@ -720,6 +711,7 @@ MIGRATIONS: tuple[Migration, ...] = (
 
 # ---------- runner ----------
 
+
 def _record_migration(conn: sqlite3.Connection, migration_id: str) -> None:
     conn.execute(
         "INSERT OR IGNORE INTO schema_migrations (id) VALUES (?)",
@@ -738,7 +730,8 @@ def applied_ids(conn: sqlite3.Connection) -> set[str]:
 
 
 def pending(
-    conn: sqlite3.Connection, migrations: tuple[Migration, ...] = MIGRATIONS,
+    conn: sqlite3.Connection,
+    migrations: tuple[Migration, ...] = MIGRATIONS,
 ) -> list[Migration]:
     """Migrations whose ids are not yet in ``schema_migrations``. The
     schema-applying migration is treated as "always pending" — it
@@ -803,15 +796,14 @@ def run_migrations(
 
 # ---------- CLI ----------
 
+
 def _status_text(conn: sqlite3.Connection, db_path: Path) -> str:
     done = applied_ids(conn)
     applied_at_by_id: dict[str, str] = {}
     if "schema_migrations" in _tables(conn):
         cols = {c[1] for c in conn.execute("PRAGMA table_info(schema_migrations)")}
         if "applied_at" in cols:
-            for row in conn.execute(
-                "SELECT id, applied_at FROM schema_migrations"
-            ):
+            for row in conn.execute("SELECT id, applied_at FROM schema_migrations"):
                 applied_at_by_id[row["id"]] = str(row["applied_at"] or "")
     lines = [
         f"workshop.db (path: {db_path})",
@@ -843,9 +835,9 @@ def _pending_text(conn: sqlite3.Connection) -> str:
 
 
 def _tables(conn: sqlite3.Connection) -> set[str]:
-    return {row["name"] for row in conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table'"
-    )}
+    return {
+        row["name"] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    }
 
 
 def main(argv: Optional[list[str]] = None) -> int:

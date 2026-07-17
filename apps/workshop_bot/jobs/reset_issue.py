@@ -88,7 +88,8 @@ async def run(ctx: "_base.JobContext", *, step: str) -> "_base.JobResult":
     window = db.get_active_issue_window()
     if window is None:
         return _base.JobResult(
-            False, "❌ no active issue window — nothing to reset.",
+            False,
+            "❌ no active issue window — nothing to reset.",
         )
     n = int(window["issue_number"])
 
@@ -121,15 +122,15 @@ async def run(ctx: "_base.JobContext", *, step: str) -> "_base.JobResult":
         "final": "Re-run `/eddy issue reorder` to propose a fresh editorial pass.",
         "publish": "Publish Email again in Studio to re-render and push `buttondown.md`.",
     }[step]
-    msg = (
-        f"🔁 **reset-{step}** for WT{n} — {summary}.\n"
-        f"{next_hint}"
-    )
+    msg = f"🔁 **reset-{step}** for WT{n} — {summary}.\n{next_hint}"
     await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
     return _base.JobResult(
-        True, msg,
+        True,
+        msg,
         data={
-            "issue_number": n, "step": step, "deleted": deleted,
+            "issue_number": n,
+            "step": step,
+            "deleted": deleted,
             "promotions_cleared": promotions_cleared,
         },
     )

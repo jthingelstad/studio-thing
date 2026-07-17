@@ -41,8 +41,12 @@ class _NoopRefireMixin:
 
 def _set_active_window(n: int = 458, pub_date: str = "2026-05-23") -> None:
     db.set_issue_window(
-        issue_number=n, pub_date=pub_date, end_date="2026-05-22",
-        start_date="2026-05-15", day_count=7, set_by="test",
+        issue_number=n,
+        pub_date=pub_date,
+        end_date="2026-05-22",
+        start_date="2026-05-15",
+        day_count=7,
+        set_by="test",
     )
 
 
@@ -73,7 +77,9 @@ class SetAndClearTests(_NoopRefireMixin, DBTestCase):
     def test_set_update_preserves_position(self):
         _run(currently_job.set_value(_base.JobContext(), type_label="Listening", value="first"))
         _run(currently_job.set_value(_base.JobContext(), type_label="Reading", value="R"))
-        r = _run(currently_job.set_value(_base.JobContext(), type_label="Listening", value="updated"))
+        r = _run(
+            currently_job.set_value(_base.JobContext(), type_label="Listening", value="updated")
+        )
         self.assertEqual(r.data["position"], 1)
 
     def test_set_canonicalises_case(self):
@@ -167,7 +173,11 @@ class ModalTests(_NoopRefireMixin, DBTestCase):
 
     def test_build_modal_prefills_existing_value(self):
         _set_active_window()
-        _run(currently_job.set_value(_base.JobContext(), type_label="Reading", value="The Lathe of Heaven"))
+        _run(
+            currently_job.set_value(
+                _base.JobContext(), type_label="Reading", value="The Lathe of Heaven"
+            )
+        )
         modal, err = currently_job.build_modal(_base.JobContext(), type_label="Reading")
         self.assertIsNone(err)
         self.assertIsNotNone(modal)

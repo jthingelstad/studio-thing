@@ -16,10 +16,7 @@ class CurrentlyError(ValueError):
 def currently_list_types(*, include_inactive: bool = False) -> list[dict[str, Any]]:
     """Return canonical Currently types alphabetically, with their
     denormalised last-used recency. Active-only by default."""
-    sql = (
-        "SELECT label, is_active, last_used_issue, last_used_at "
-        "FROM currently_types"
-    )
+    sql = "SELECT label, is_active, last_used_issue, last_used_at FROM currently_types"
     if not include_inactive:
         sql += " WHERE is_active = 1"
     sql += " ORDER BY label COLLATE NOCASE"
@@ -62,8 +59,7 @@ def currently_retire_type(label: str) -> bool:
         return False
     with connect() as conn:
         cur = conn.execute(
-            "UPDATE currently_types SET is_active = 0 "
-            "WHERE label = ? COLLATE NOCASE",
+            "UPDATE currently_types SET is_active = 0 WHERE label = ? COLLATE NOCASE",
             (norm,),
         )
         return cur.rowcount > 0
@@ -129,8 +125,7 @@ def currently_set_entry(issue_number: int, label: str, value: str) -> dict[str, 
         conn.execute("BEGIN IMMEDIATE")
         try:
             existing = conn.execute(
-                "SELECT position FROM currently_entries "
-                "WHERE issue_number = ? AND type_label = ?",
+                "SELECT position FROM currently_entries WHERE issue_number = ? AND type_label = ?",
                 (n, canonical),
             ).fetchone()
             if existing is None:
@@ -226,8 +221,7 @@ def currently_reorder(issue_number: int, ordered_labels: list[str]) -> list[str]
         conn.execute("BEGIN IMMEDIATE")
         try:
             existing_rows = conn.execute(
-                "SELECT type_label FROM currently_entries "
-                "WHERE issue_number = ? ORDER BY position",
+                "SELECT type_label FROM currently_entries WHERE issue_number = ? ORDER BY position",
                 (n,),
             ).fetchall()
             existing = [r["type_label"] for r in existing_rows]
@@ -271,7 +265,10 @@ def currently_reorder(issue_number: int, ordered_labels: list[str]) -> list[str]
 
 
 def currently_suggest_stale(
-    active_issue: Optional[int], *, k: int = 3, include_inactive: bool = False,
+    active_issue: Optional[int],
+    *,
+    k: int = 3,
+    include_inactive: bool = False,
 ) -> list[dict[str, Any]]:
     """Top-K active types ordered by recency (never-used first, then
     least-recent). Each row carries ``gap_issues`` — how many issues since
@@ -294,10 +291,12 @@ def currently_suggest_stale(
         gap: Optional[int] = None
         if active_issue is not None and last is not None:
             gap = int(active_issue) - int(last)
-        out.append({
-            "label": r["label"],
-            "last_used_issue": last,
-            "last_used_at": r.get("last_used_at"),
-            "gap_issues": gap,
-        })
+        out.append(
+            {
+                "label": r["label"],
+                "last_used_issue": last,
+                "last_used_at": r.get("last_used_at"),
+                "gap_issues": gap,
+            }
+        )
     return out

@@ -24,7 +24,9 @@ def bedrock_log_statement(bucket: str, prefix: str, account_id: str, region: str
         "Effect": "Allow",
         "Principal": {"Service": "bedrock.amazonaws.com"},
         "Action": ["s3:PutObject"],
-        "Resource": [f"arn:aws:s3:::{bucket}/{clean_prefix}/AWSLogs/{account_id}/BedrockModelInvocationLogs/*"],
+        "Resource": [
+            f"arn:aws:s3:::{bucket}/{clean_prefix}/AWSLogs/{account_id}/BedrockModelInvocationLogs/*"
+        ],
         "Condition": {
             "StringEquals": {"aws:SourceAccount": account_id},
             "ArnLike": {"aws:SourceArn": f"arn:aws:bedrock:{region}:{account_id}:*"},
@@ -41,16 +43,25 @@ def merged_bucket_policy(bucket: str, prefix: str, account_id: str, region: str)
             raise
         policy = {"Version": "2012-10-17", "Statement": []}
     statement = bedrock_log_statement(bucket, prefix, account_id, region)
-    statements = [item for item in policy.get("Statement", []) if item.get("Sid") != statement["Sid"]]
+    statements = [
+        item for item in policy.get("Statement", []) if item.get("Sid") != statement["Sid"]
+    ]
     policy["Statement"] = [*statements, statement]
     return policy
 
 
 def current_logging_config() -> dict[str, Any]:
     try:
-        return boto3.client("bedrock").get_model_invocation_logging_configuration().get("loggingConfig", {})
+        return (
+            boto3.client("bedrock")
+            .get_model_invocation_logging_configuration()
+            .get("loggingConfig", {})
+        )
     except ClientError as exc:
-        if exc.response.get("Error", {}).get("Code") in {"ResourceNotFoundException", "ValidationException"}:
+        if exc.response.get("Error", {}).get("Code") in {
+            "ResourceNotFoundException",
+            "ValidationException",
+        }:
             return {}
         if exc.response.get("Error", {}).get("Code") == "AccessDeniedException":
             return {"error": "Access denied for bedrock:GetModelInvocationLoggingConfiguration"}
@@ -61,8 +72,14 @@ def main() -> int:
     load_dotenv(REPO / ".env")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bucket", default=os.environ.get("LIBRARIAN_BUCKET") or DEFAULT_BUCKET)
-    parser.add_argument("--prefix", default=os.environ.get("BEDROCK_INVOCATION_LOG_PREFIX", DEFAULT_PREFIX))
-    parser.add_argument("--apply", action="store_true", help="Apply the S3 bucket policy and Bedrock logging configuration.")
+    parser.add_argument(
+        "--prefix", default=os.environ.get("BEDROCK_INVOCATION_LOG_PREFIX", DEFAULT_PREFIX)
+    )
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="Apply the S3 bucket policy and Bedrock logging configuration.",
+    )
     args = parser.parse_args()
 
     session = boto3.session.Session()
@@ -86,7 +103,9 @@ def main() -> int:
     print(json.dumps(logging_config, indent=2))
 
     if not args.apply:
-        print("\nDry run only. Re-run with --apply to update the bucket policy and Bedrock account-level logging config.")
+        print(
+            "\nDry run only. Re-run with --apply to update the bucket policy and Bedrock account-level logging config."
+        )
         return 0
 
     policy = merged_bucket_policy(args.bucket, args.prefix, account_id, region)

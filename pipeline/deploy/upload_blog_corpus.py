@@ -41,13 +41,25 @@ from upload_corpus import (  # noqa: E402
 def main() -> int:
     load_dotenv()
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--bucket", default=os.environ.get("LIBRARIAN_BUCKET") or "weekly-thing-librarian")
-    parser.add_argument("--key", default=os.environ.get("LIBRARIAN_BLOG_CORPUS_KEY", "artifacts/blog_corpus.json"))
+    parser.add_argument(
+        "--bucket", default=os.environ.get("LIBRARIAN_BUCKET") or "weekly-thing-librarian"
+    )
+    parser.add_argument(
+        "--key", default=os.environ.get("LIBRARIAN_BLOG_CORPUS_KEY", "artifacts/blog_corpus.json")
+    )
     parser.add_argument("--embedding-model", default=DEFAULT_EMBEDDING_MODEL)
     parser.add_argument("--embedding-dimensions", type=int, default=DEFAULT_EMBEDDING_DIMENSIONS)
-    parser.add_argument("--keep-output", help="Optional local path for the embedded blog corpus JSON")
-    parser.add_argument("--full", action="store_true", help="Skip the incremental cache and re-embed every chunk")
-    parser.add_argument("--no-upload", action="store_true", help="Build + embed locally but skip the S3 upload (dry run)")
+    parser.add_argument(
+        "--keep-output", help="Optional local path for the embedded blog corpus JSON"
+    )
+    parser.add_argument(
+        "--full", action="store_true", help="Skip the incremental cache and re-embed every chunk"
+    )
+    parser.add_argument(
+        "--no-upload",
+        action="store_true",
+        help="Build + embed locally but skip the S3 upload (dry run)",
+    )
     args = parser.parse_args()
 
     if not args.bucket:
@@ -67,7 +79,9 @@ def main() -> int:
     if args.keep_output:
         out_path = Path(args.keep_output)
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(json.dumps(corpus, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        out_path.write_text(
+            json.dumps(corpus, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
         print(f"Wrote embedded blog corpus to {out_path}")
 
     if args.no_upload:
@@ -75,7 +89,9 @@ def main() -> int:
         return 0
 
     if not args.keep_output:
-        with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".json", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            "w", encoding="utf-8", suffix=".json", delete=False
+        ) as handle:
             handle.write(json.dumps(corpus, ensure_ascii=False) + "\n")
             out_path = Path(handle.name)
 

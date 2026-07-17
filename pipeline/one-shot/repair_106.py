@@ -46,9 +46,7 @@ def main():
     content = FP.read_text()
     fm_match = re.match(r"^(---\n.+?\n---\n)(.*)$", content, re.DOTALL)
     fm, body = fm_match.group(1), fm_match.group(2)
-    raw_match = re.match(
-        r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$",
-        body, re.DOTALL)
+    raw_match = re.match(r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL)
     raw_open, inner, raw_close = raw_match.groups()
 
     before = inner
@@ -91,8 +89,7 @@ def main():
         print("#106: no changes made.")
         return
 
-    print(f"#106: headings prefixed: {headings_added}, "
-          f"link blocks converted: {links_converted}")
+    print(f"#106: headings prefixed: {headings_added}, link blocks converted: {links_converted}")
 
     new_content = fm + raw_open + inner + raw_close
     FP.write_text(new_content)

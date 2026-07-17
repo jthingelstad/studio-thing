@@ -22,10 +22,16 @@ from .db.connection import connect
 # The newsletter authored-content names (the former S3 atoms). Other production
 # types use their own names (e.g. 'body.md', 'script.md'); the store itself is
 # name-agnostic — this set only gates the agent-tool routing in local_tools.
-ATOM_NAMES = frozenset({
-    "intro.md", "outro.md", "cover.json", "haiku.md",
-    "metadata.json", "echoes.md",
-})
+ATOM_NAMES = frozenset(
+    {
+        "intro.md",
+        "outro.md",
+        "cover.json",
+        "haiku.md",
+        "metadata.json",
+        "echoes.md",
+    }
+)
 _NUMBERED_RE = re.compile(r"^(cta|thanks)-\d+\.md$")
 
 
@@ -40,6 +46,7 @@ def pid_for_issue(n: int) -> str:
 
 
 # ---------- generic (production_id) API ----------
+
 
 def get(production_id: str, name: str) -> Optional[str]:
     """The content body for one block, or None if no row exists."""
@@ -83,6 +90,7 @@ def delete(production_id: str, name: str) -> None:
 
 
 # ---------- newsletter (issue-number) convenience wrappers ----------
+
 
 def read_issue(n: int, name: str) -> Optional[str]:
     return get(pid_for_issue(n), name)

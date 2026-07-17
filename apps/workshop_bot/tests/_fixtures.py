@@ -45,30 +45,55 @@ class FakeWorkspace:
     def read_issue_file(self, issue_number, filename, *, max_bytes=None):
         key = (int(issue_number), filename)
         if key in self.files:
-            return {"key": f"weekly-thing/{issue_number}/{filename}", "found": True,
-                    "text": self.files[key], "size": len(self.files[key])}
+            return {
+                "key": f"weekly-thing/{issue_number}/{filename}",
+                "found": True,
+                "text": self.files[key],
+                "size": len(self.files[key]),
+            }
         return {"key": f"weekly-thing/{issue_number}/{filename}", "found": False}
 
-    def write_issue_file(self, issue_number, filename, content, *, content_type=None, cache_control=None):
+    def write_issue_file(
+        self, issue_number, filename, content, *, content_type=None, cache_control=None
+    ):
         self.files[(int(issue_number), filename)] = content
-        return {"key": f"weekly-thing/{issue_number}/{filename}", "written": True,
-                "size": len(content), "url": f"https://files.thingelstad.com/weekly-thing/{issue_number}/{filename}"}
+        return {
+            "key": f"weekly-thing/{issue_number}/{filename}",
+            "written": True,
+            "size": len(content),
+            "url": f"https://files.thingelstad.com/weekly-thing/{issue_number}/{filename}",
+        }
 
     def write_issue_html(self, issue_number, filename, html_text):
         # No CloudFront invalidation in tests.
         return self.write_issue_file(issue_number, filename, html_text)
 
-    def write_issue_binary(self, issue_number, filename, data, content_type="application/octet-stream"):
-        self.files[(int(issue_number), filename)] = data.decode("latin-1") if isinstance(data, (bytes, bytearray)) else str(data)
-        return {"key": f"weekly-thing/{issue_number}/{filename}", "written": True,
-                "size": len(data), "url": f"https://files.thingelstad.com/weekly-thing/{issue_number}/{filename}"}
+    def write_issue_binary(
+        self, issue_number, filename, data, content_type="application/octet-stream"
+    ):
+        self.files[(int(issue_number), filename)] = (
+            data.decode("latin-1") if isinstance(data, (bytes, bytearray)) else str(data)
+        )
+        return {
+            "key": f"weekly-thing/{issue_number}/{filename}",
+            "written": True,
+            "size": len(data),
+            "url": f"https://files.thingelstad.com/weekly-thing/{issue_number}/{filename}",
+        }
 
     def list_issue(self, issue_number):
         n = int(issue_number)
-        objs = [{"filename": fn, "key": f"weekly-thing/{n}/{fn}", "size": len(txt)}
-                for (i, fn), txt in self.files.items() if i == n]
-        return {"bucket": "files.thingelstad.com", "issue_number": n,
-                "prefix": f"weekly-thing/{n}/", "objects": objs}
+        objs = [
+            {"filename": fn, "key": f"weekly-thing/{n}/{fn}", "size": len(txt)}
+            for (i, fn), txt in self.files.items()
+            if i == n
+        ]
+        return {
+            "bucket": "files.thingelstad.com",
+            "issue_number": n,
+            "prefix": f"weekly-thing/{n}/",
+            "objects": objs,
+        }
 
     def delete_issue_file(self, issue_number, filename):
         key = (int(issue_number), filename)
@@ -86,7 +111,8 @@ class FakeWorkspace:
             "key": f"weekly-thing/{issue_number}/transcript/{basename}",
             "bucket": "files.thingelstad.com",
             "url": f"https://files.thingelstad.com/weekly-thing/{issue_number}/transcript/{basename}",
-            "size": len(content), "written": True,
+            "size": len(content),
+            "written": True,
         }
 
     def delete_transcript_file(self, issue_number, basename):
@@ -99,11 +125,7 @@ class FakeWorkspace:
     def list_transcript_files(self, issue_number):
         n = int(issue_number)
         prefix = "transcript/"
-        return [
-            fn[len(prefix):]
-            for (i, fn) in self.files
-            if i == n and fn.startswith(prefix)
-        ]
+        return [fn[len(prefix) :] for (i, fn) in self.files if i == n and fn.startswith(prefix)]
 
 
 def patch_s3(ws: FakeWorkspace):
@@ -164,6 +186,7 @@ class DBTestCase(TempDBTestCase):
         # into the real repo tree and show up as untracked files on
         # every subsequent ``git status``.
         from apps.workshop_bot.tools import renderers as _renderers
+
         local_dir = Path(self._tmpdir.name) / "data" / "issues"
         self._patches.append(patch.object(_renderers, "ISSUES_LOCAL_DIR", local_dir))
         self._issues_local_dir = local_dir

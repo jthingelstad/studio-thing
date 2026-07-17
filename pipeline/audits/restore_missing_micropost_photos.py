@@ -20,6 +20,7 @@ Usage:
   python pipeline/audits/restore_missing_micropost_photos.py --dry-run
   python pipeline/audits/restore_missing_micropost_photos.py
 """
+
 from __future__ import annotations
 
 import argparse
@@ -39,9 +40,9 @@ OUT = REPO / "tmp"
 
 PHOTO_IMG_RE = re.compile(
     r'<img[^>]+src="(https?://'
-    r'(?:cdn\.uploads\.micro\.blog'
-    r'|(?:(?:www|micro)\.)?thingelstad\.com/uploads'
-    r'|files\.thingelstad\.com'
+    r"(?:cdn\.uploads\.micro\.blog"
+    r"|(?:(?:www|micro)\.)?thingelstad\.com/uploads"
+    r"|files\.thingelstad\.com"
     r')[^"]+)"',
     re.I,
 )
@@ -116,14 +117,20 @@ def inject_photos_after_h3(
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--include-buttondown", action="store_true",
-                    help="Also restore Buttondown-era cases (off by default)")
+    ap.add_argument(
+        "--include-buttondown",
+        action="store_true",
+        help="Also restore Buttondown-era cases (off by default)",
+    )
     args = ap.parse_args()
 
     missing_path = OUT / "missing-photos.json"
     if not missing_path.exists():
-        print("ERROR: tmp/missing-photos.json not found — run "
-              "pipeline/audits/audit_missing_micropost_photos.py first", flush=True)
+        print(
+            "ERROR: tmp/missing-photos.json not found — run "
+            "pipeline/audits/audit_missing_micropost_photos.py first",
+            flush=True,
+        )
         sys.exit(1)
 
     data = json.loads(missing_path.read_text())
@@ -135,9 +142,11 @@ def main() -> None:
     else:
         selected = [e for e in entries if era_of(e["issue"]) != "Buttondown"]
 
-    print(f"[restore] {len(selected)}/{len(entries)} entries selected "
-          f"(era filter: {'ALL' if args.include_buttondown else 'MailChimp + Tinyletter'})",
-          flush=True)
+    print(
+        f"[restore] {len(selected)}/{len(entries)} entries selected "
+        f"(era filter: {'ALL' if args.include_buttondown else 'MailChimp + Tinyletter'})",
+        flush=True,
+    )
 
     # Fetch each URL
     unique_urls = sorted({e["url"] for e in selected})
@@ -193,8 +202,9 @@ def main() -> None:
             totals["injected"] += changes_here
             totals["photos_added"] += photos_here
             tag = "[DRY]" if args.dry_run else "[APPLY]"
-            print(f"  {tag} #{issue_num}: {changes_here} microposts, {photos_here} photos",
-                  flush=True)
+            print(
+                f"  {tag} #{issue_num}: {changes_here} microposts, {photos_here} photos", flush=True
+            )
             if not args.dry_run:
                 path.write_text(body, encoding="utf-8")
 

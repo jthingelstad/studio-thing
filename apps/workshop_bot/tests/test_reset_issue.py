@@ -28,10 +28,15 @@ from apps.workshop_bot.tools import content_store, db, issue_items  # noqa: E402
 class _Case(_DBTestCase):
     def _window(self, n=349):
         from apps.workshop_bot.tools.content import issue as issue_mod
+
         w = issue_mod.compute_window("2026-05-23", 7)
         db.set_issue_window(
-            issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
-            start_date=w["start_date"], day_count=w["day_count"], set_by="test",
+            issue_number=n,
+            pub_date=w["pub_date"],
+            end_date=w["end_date"],
+            start_date=w["start_date"],
+            day_count=w["day_count"],
+            set_by="test",
         )
 
     def _ctx(self):
@@ -45,14 +50,16 @@ class _Case(_DBTestCase):
 
 
 class ResetFinalTests(_Case):
-
     def test_clears_promotions(self):
         # `final` deletes no files (thesis retired); its work is clearing
         # the row-level promotions so a re-run proposes fresh.
         self._window()
         rid = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p1", body_md="x",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p1",
+            body_md="x",
         )
         issue_items.promote(rid, promoted_position="after_notable", promoted_heading="Feature")
         ctx, fc = self._ctx()
@@ -70,8 +77,11 @@ class ResetFinalTests(_Case):
         self._window()
         content_store.write_issue(349, "intro.md", "Opening.")
         rid = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p1", body_md="x",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p1",
+            body_md="x",
         )
         issue_items.promote(rid, promoted_position="after_notable", promoted_heading="F")
         ctx, fc = self._ctx()
@@ -92,8 +102,11 @@ class ResetFinalTests(_Case):
     def test_does_not_touch_publish_artifacts(self):
         self._window()
         rid = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p1", body_md="x",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p1",
+            body_md="x",
         )
         issue_items.promote(rid, promoted_position="after_notable", promoted_heading="F")
         self.ws.write_issue_file(349, "buttondown.md", "p")  # generated S3 artifact
@@ -106,7 +119,6 @@ class ResetFinalTests(_Case):
 
 
 class ResetPublishTests(_Case):
-
     def test_deletes_buttondown_md(self):
         self._window()
         self.ws.write_issue_file(349, "buttondown.md", "p")  # generated S3 artifact
@@ -131,7 +143,8 @@ class ResetPublishTests(_Case):
         # a fresh one.
         self._window()
         content_store.write_issue(
-            349, "metadata.json",
+            349,
+            "metadata.json",
             '{"subject":"x","buttondown_id":"em_abc123"}',
         )
         self.ws.write_issue_file(349, "buttondown.md", "p")  # generated S3 artifact
@@ -145,8 +158,11 @@ class ResetPublishTests(_Case):
         # Promotions belong to the editorial pass, not the publish pass.
         self._window()
         rid = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p1", body_md="x",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p1",
+            body_md="x",
         )
         issue_items.promote(rid, promoted_position="after_notable", promoted_heading="F")
         self.ws.write_issue_file(349, "buttondown.md", "p")  # generated S3 artifact
@@ -159,7 +175,6 @@ class ResetPublishTests(_Case):
 
 
 class ResetValidationTests(_Case):
-
     def test_rejects_unknown_step(self):
         self._window()
         ctx, fc = self._ctx()

@@ -82,8 +82,7 @@ def list_tasks_for_owner(owner: str, *, status: Optional[str] = "todo") -> list[
         params.append(status)
     with connect() as conn:
         rows = conn.execute(
-            f"SELECT {_COLUMNS} FROM production_tasks WHERE {' AND '.join(clauses)} "
-            "ORDER BY id",
+            f"SELECT {_COLUMNS} FROM production_tasks WHERE {' AND '.join(clauses)} ORDER BY id",
             params,
         ).fetchall()
     return [dict(r) for r in rows]
@@ -104,8 +103,13 @@ def update_task(
     if status is not None and status not in TASK_STATUSES:
         raise ValueError(f"status must be one of {TASK_STATUSES}; got {status!r}")
     sets, params = [], []
-    for col, val in (("title", title), ("owner", owner), ("status", status),
-                     ("phase", phase), ("detail", detail)):
+    for col, val in (
+        ("title", title),
+        ("owner", owner),
+        ("status", status),
+        ("phase", phase),
+        ("detail", detail),
+    ):
         if val is not None:
             sets.append(f"{col} = ?")
             params.append(val)
@@ -114,9 +118,7 @@ def update_task(
     sets.append("updated_at = datetime('now')")
     params.append(int(task_id))
     with connect() as conn:
-        conn.execute(
-            f"UPDATE production_tasks SET {', '.join(sets)} WHERE id = ?", params
-        )
+        conn.execute(f"UPDATE production_tasks SET {', '.join(sets)} WHERE id = ?", params)
     return get_task(task_id) or {}
 
 

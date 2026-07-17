@@ -36,11 +36,17 @@ def fetch_existing_corpus(bucket: str, key: str) -> dict | None:
         body = boto3.client("s3").get_object(Bucket=bucket, Key=key)["Body"].read()
         corpus = json.loads(body)
     except (ClientError, NoCredentialsError) as exc:
-        code = getattr(exc, "response", {}).get("Error", {}).get("Code", "") if hasattr(exc, "response") else ""
+        code = (
+            getattr(exc, "response", {}).get("Error", {}).get("Code", "")
+            if hasattr(exc, "response")
+            else ""
+        )
         if code in {"NoSuchKey", "404", "NotFound"}:
             print(f"No existing corpus on s3://{bucket}/{key}; doing full embed")
         else:
-            print(f"Could not fetch existing corpus from s3://{bucket}/{key}: {exc}; doing full embed")
+            print(
+                f"Could not fetch existing corpus from s3://{bucket}/{key}: {exc}; doing full embed"
+            )
         return None
     except (json.JSONDecodeError, ValueError) as exc:
         print(f"Existing corpus on s3://{bucket}/{key} did not parse: {exc}; doing full embed")
@@ -96,14 +102,24 @@ def merge_cached_embeddings(corpus: dict, cache: dict[str, list[float]]) -> int:
 def main() -> int:
     load_dotenv()
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--bucket", default=os.environ.get("LIBRARIAN_BUCKET") or "weekly-thing-librarian")
-    parser.add_argument("--key", default=os.environ.get("LIBRARIAN_CORPUS_KEY", "artifacts/corpus.json"))
-    parser.add_argument("--graph-key", default=os.environ.get("LIBRARIAN_GRAPH_KEY", "artifacts/graph.json"))
+    parser.add_argument(
+        "--bucket", default=os.environ.get("LIBRARIAN_BUCKET") or "weekly-thing-librarian"
+    )
+    parser.add_argument(
+        "--key", default=os.environ.get("LIBRARIAN_CORPUS_KEY", "artifacts/corpus.json")
+    )
+    parser.add_argument(
+        "--graph-key", default=os.environ.get("LIBRARIAN_GRAPH_KEY", "artifacts/graph.json")
+    )
     parser.add_argument("--embedding-model", default=DEFAULT_EMBEDDING_MODEL)
     parser.add_argument("--embedding-dimensions", type=int, default=DEFAULT_EMBEDDING_DIMENSIONS)
     parser.add_argument("--keep-output", help="Optional local path for the embedded corpus JSON")
-    parser.add_argument("--skip-graph", action="store_true", help="Only upload the corpus, not the graph artifact")
-    parser.add_argument("--full", action="store_true", help="Skip the incremental cache and re-embed every chunk")
+    parser.add_argument(
+        "--skip-graph", action="store_true", help="Only upload the corpus, not the graph artifact"
+    )
+    parser.add_argument(
+        "--full", action="store_true", help="Skip the incremental cache and re-embed every chunk"
+    )
     args = parser.parse_args()
 
     if not args.bucket:
@@ -122,20 +138,33 @@ def main() -> int:
     if args.keep_output:
         upload_path = Path(args.keep_output)
         upload_path.parent.mkdir(parents=True, exist_ok=True)
-        upload_path.write_text(json.dumps(corpus, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        upload_path.write_text(
+            json.dumps(corpus, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
     else:
-        with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".json", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            "w", encoding="utf-8", suffix=".json", delete=False
+        ) as handle:
             handle.write(json.dumps(corpus, ensure_ascii=False) + "\n")
             upload_path = Path(handle.name)
 
-    boto3.client("s3").upload_file(str(upload_path), args.bucket, args.key, ExtraArgs={"ContentType": "application/json"})
+    boto3.client("s3").upload_file(
+        str(upload_path), args.bucket, args.key, ExtraArgs={"ContentType": "application/json"}
+    )
     print(f"Uploaded embedded librarian corpus to s3://{args.bucket}/{args.key}")
     if not args.skip_graph:
         graph = build_graph(corpus)
-        with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".json", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            "w", encoding="utf-8", suffix=".json", delete=False
+        ) as handle:
             handle.write(json.dumps(graph, ensure_ascii=False) + "\n")
             graph_path = Path(handle.name)
-        boto3.client("s3").upload_file(str(graph_path), args.bucket, args.graph_key, ExtraArgs={"ContentType": "application/json"})
+        boto3.client("s3").upload_file(
+            str(graph_path),
+            args.bucket,
+            args.graph_key,
+            ExtraArgs={"ContentType": "application/json"},
+        )
         print(f"Uploaded librarian graph to s3://{args.bucket}/{args.graph_key}")
     return 0
 

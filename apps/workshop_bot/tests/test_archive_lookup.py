@@ -23,8 +23,17 @@ from apps.workshop_bot.tools import archive_lookup  # noqa: E402
 from apps.workshop_bot.tools.db.connection import connect  # noqa: E402
 
 
-def _seed_issue(conn, *, number, subject="", publish_date="2024-01-01",
-                word_count=0, audio_url="", domains=None, links=None) -> None:
+def _seed_issue(
+    conn,
+    *,
+    number,
+    subject="",
+    publish_date="2024-01-01",
+    word_count=0,
+    audio_url="",
+    domains=None,
+    links=None,
+) -> None:
     """Insert one fully-formed ``issues`` row + optional ``issue_links``."""
     links = links or []
     notable = [lnk for lnk in links if lnk["section"] == "notable"]
@@ -38,30 +47,55 @@ def _seed_issue(conn, *, number, subject="", publish_date="2024-01-01",
         " domain_count, link_count, audio_url, audio_duration_s, audio_byte_size, "
         " audio_voice, era) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (number, subject, f"wt-{number}", "desc", publish_date, "",
-         f"https://example.test/wt-{number}", f"em_{number}",
-         word_count, len(notable), len(briefly), len(domains),
-         len(notable) + len(briefly), audio_url,
-         1234 if audio_url else None, 9999 if audio_url else None,
-         "openai-tts-1-hd:echo" if audio_url else "", era),
+        (
+            number,
+            subject,
+            f"wt-{number}",
+            "desc",
+            publish_date,
+            "",
+            f"https://example.test/wt-{number}",
+            f"em_{number}",
+            word_count,
+            len(notable),
+            len(briefly),
+            len(domains),
+            len(notable) + len(briefly),
+            audio_url,
+            1234 if audio_url else None,
+            9999 if audio_url else None,
+            "openai-tts-1-hd:echo" if audio_url else "",
+            era,
+        ),
     )
     for link in links:
         conn.execute(
             "INSERT INTO issue_links "
             "(issue_number, section, position, url, text, domain, heading_context) "
             "VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (number, link["section"], link.get("position", 0),
-             link["url"], link.get("text", ""), link["domain"],
-             link.get("heading_context", "")),
+            (
+                number,
+                link["section"],
+                link.get("position", 0),
+                link["url"],
+                link.get("text", ""),
+                link["domain"],
+                link.get("heading_context", ""),
+            ),
         )
 
 
 class GetIssueTests(DBTestCase):
     def test_get_issue_returns_full_row(self) -> None:
         with connect() as conn:
-            _seed_issue(conn, number=200, subject="WT 200 / Test",
-                        publish_date="2022-04-30", word_count=1500,
-                        audio_url="https://files/wt-200.mp3")
+            _seed_issue(
+                conn,
+                number=200,
+                subject="WT 200 / Test",
+                publish_date="2022-04-30",
+                word_count=1500,
+                audio_url="https://files/wt-200.mp3",
+            )
         row = archive_lookup.get_issue(200)
         self.assertIsNotNone(row)
         self.assertEqual(row["number"], 200)
@@ -81,30 +115,52 @@ class DomainAndLinkTests(DBTestCase):
         super().setUp()
         with connect() as conn:
             _seed_issue(
-                conn, number=100, publish_date="2019-06-01",
+                conn,
+                number=100,
+                publish_date="2019-06-01",
                 links=[
-                    {"section": "notable", "position": 0,
-                     "url": "https://daringfireball.net/x", "domain": "daringfireball.net",
-                     "text": "DF post"},
-                    {"section": "briefly", "position": 0,
-                     "url": "https://example.com/a", "domain": "example.com",
-                     "text": "Ex"},
+                    {
+                        "section": "notable",
+                        "position": 0,
+                        "url": "https://daringfireball.net/x",
+                        "domain": "daringfireball.net",
+                        "text": "DF post",
+                    },
+                    {
+                        "section": "briefly",
+                        "position": 0,
+                        "url": "https://example.com/a",
+                        "domain": "example.com",
+                        "text": "Ex",
+                    },
                 ],
             )
             _seed_issue(
-                conn, number=200, publish_date="2022-04-30",
+                conn,
+                number=200,
+                publish_date="2022-04-30",
                 links=[
-                    {"section": "notable", "position": 0,
-                     "url": "https://daringfireball.net/y", "domain": "daringfireball.net",
-                     "text": "DF post 2"},
+                    {
+                        "section": "notable",
+                        "position": 0,
+                        "url": "https://daringfireball.net/y",
+                        "domain": "daringfireball.net",
+                        "text": "DF post 2",
+                    },
                 ],
             )
             _seed_issue(
-                conn, number=300, publish_date="2025-01-04",
+                conn,
+                number=300,
+                publish_date="2025-01-04",
                 links=[
-                    {"section": "briefly", "position": 0,
-                     "url": "https://daringfireball.net/x", "domain": "daringfireball.net",
-                     "text": "DF re-share"},
+                    {
+                        "section": "briefly",
+                        "position": 0,
+                        "url": "https://daringfireball.net/x",
+                        "domain": "daringfireball.net",
+                        "text": "DF re-share",
+                    },
                 ],
             )
 
@@ -179,10 +235,19 @@ class RecentAndStatsTests(DBTestCase):
         with connect() as conn:
             for n in (10, 20, 30, 40, 50):
                 _seed_issue(
-                    conn, number=n, publish_date=f"2020-{n:02d}-01",
-                    word_count=1000 + n, audio_url=("https://x" if n >= 30 else ""),
-                    links=[{"section": "notable", "position": 0,
-                            "url": f"http://e.test/{n}", "domain": f"site-{n}.test"}],
+                    conn,
+                    number=n,
+                    publish_date=f"2020-{n:02d}-01",
+                    word_count=1000 + n,
+                    audio_url=("https://x" if n >= 30 else ""),
+                    links=[
+                        {
+                            "section": "notable",
+                            "position": 0,
+                            "url": f"http://e.test/{n}",
+                            "domain": f"site-{n}.test",
+                        }
+                    ],
                 )
 
     def test_recent_issues_orders_newest_first(self) -> None:

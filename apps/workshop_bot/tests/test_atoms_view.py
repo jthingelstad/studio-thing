@@ -19,24 +19,41 @@ from apps.workshop_bot.tools.content import atoms_view  # noqa: E402
 
 
 class AtomsViewTests(_DBCase):
-
     def _seed(self):
         content_store.set("WT349", "intro.md", "Hello **reader**.", by="t")
         content_store.set("WT349", "haiku.md", "five / seven / five", by="t")
         content_store.set(
-            "WT349", "cover.json",
-            '{"caption": "Sunset.", "location": "Cannon Lake, MN"}', by="t")
+            "WT349", "cover.json", '{"caption": "Sunset.", "location": "Cannon Lake, MN"}', by="t"
+        )
         db.currently_add_type("Building")
         db.currently_set_entry(349, "Building", "the atom editor")
         self.n1 = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="p1", url="https://a", title="A pin", body_md="notable body")
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="p1",
+            url="https://a",
+            title="A pin",
+            body_md="notable body",
+        )
         self.b1 = issue_items.upsert_item(
-            issue_number=349, section="brief", source="pinboard",
-            source_id="p2", url="https://b", title="B pin", body_md="brief body")
+            issue_number=349,
+            section="brief",
+            source="pinboard",
+            source_id="p2",
+            url="https://b",
+            title="B pin",
+            body_md="brief body",
+        )
         self.j1 = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="m1", url="https://j", title="A day", body_md="journal body")
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="m1",
+            url="https://j",
+            title="A day",
+            body_md="journal body",
+        )
 
     def test_reading_order_and_shape(self):
         self._seed()
@@ -44,8 +61,20 @@ class AtomsViewTests(_DBCase):
         kinds = [a["kind"] for a in atoms]
         # Reading order: intro, currently, photo, notable, journal, brief,
         # outro, echoes, closer — empty authored kinds still present.
-        self.assertEqual(kinds, ["intro", "currently", "photo", "notable",
-                                 "journal", "brief", "outro", "echoes", "closer"])
+        self.assertEqual(
+            kinds,
+            [
+                "intro",
+                "currently",
+                "photo",
+                "notable",
+                "journal",
+                "brief",
+                "outro",
+                "echoes",
+                "closer",
+            ],
+        )
         intro = atoms[0]
         self.assertEqual(intro["body"], "Hello **reader**.")
         self.assertTrue(intro["editable"])
@@ -75,7 +104,7 @@ class AtomsViewTests(_DBCase):
         self.assertEqual(flipped["kind"], "notable")
         self.assertTrue(flipped["overridden"])
         journal = [a for a in atoms if a["item_id"] == self.j1][0]
-        self.assertFalse(journal["selected"])   # deselected but still listed
+        self.assertFalse(journal["selected"])  # deselected but still listed
         # Order respects the flip: both notable atoms precede journal.
         kinds = [a["kind"] for a in atoms]
         self.assertEqual(kinds.count("notable"), 2)

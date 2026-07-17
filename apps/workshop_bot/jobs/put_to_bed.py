@@ -81,7 +81,10 @@ def _normalize_publish_date(raw: str) -> str:
 
 
 def file_issue(
-    *, meta: dict[str, Any], links: dict[str, Any], audio: dict[str, Any],
+    *,
+    meta: dict[str, Any],
+    links: dict[str, Any],
+    audio: dict[str, Any],
 ) -> None:
     """Atomic write: upsert the ``issues`` row + rebuild ``issue_links`` +
     flip the active window to inactive. Raises on failure (caller wraps
@@ -162,8 +165,7 @@ def file_issue(
                     )
 
             conn.execute(
-                "UPDATE issue_windows SET is_active = 0, phase = 'share' "
-                "WHERE issue_number = ?",
+                "UPDATE issue_windows SET is_active = 0, phase = 'share' WHERE issue_number = ?",
                 (number,),
             )
             # Move the newsletter's registry row to its terminal Share state so
@@ -182,7 +184,9 @@ def file_issue(
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     window = db.get_active_issue_window()
     if window is None:
-        msg = "🛏️ nothing to put to bed — no active issue. Start the next issue in Studio when ready."
+        msg = (
+            "🛏️ nothing to put to bed — no active issue. Start the next issue in Studio when ready."
+        )
         return _base.JobResult(False, msg)
     n = int(window["issue_number"])
 

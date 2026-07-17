@@ -30,7 +30,14 @@ ROOT_PREFIX = "weekly-thing"
 # strict — these names go into S3 keys without further escaping.
 FILENAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,80}$")
 ALLOWED_EXTENSIONS = {
-    ".md", ".markdown", ".txt", ".json", ".yaml", ".yml", ".csv", ".html",
+    ".md",
+    ".markdown",
+    ".txt",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".csv",
+    ".html",
 }
 WRITE_MAX_BYTES = 256 * 1024  # 256 KB
 READ_MAX_BYTES = 512 * 1024
@@ -54,8 +61,11 @@ TRANSCRIPT_EXTENSIONS = {".txt"}
 # Old shipped issues may still carry ``atoms/`` objects; nothing reads them.)
 ATOMS_PREFIX = "atoms"
 _JOURNAL_CONTENT_TYPES = {
-    ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
-    ".gif": "image/gif", ".webp": "image/webp",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
 }
 
 
@@ -64,10 +74,7 @@ class S3PathError(ValueError):
 
 
 def _bucket() -> str:
-    return (
-        os.environ.get("WEEKLY_THING_ASSETS_BUCKET")
-        or DEFAULT_BUCKET
-    ).strip()
+    return (os.environ.get("WEEKLY_THING_ASSETS_BUCKET") or DEFAULT_BUCKET).strip()
 
 
 def _client():
@@ -84,8 +91,7 @@ def _validate_filename(filename: str) -> str:
     name = (filename or "").strip()
     if not FILENAME_RE.match(name):
         raise S3PathError(
-            "filename must be a single path component using "
-            "letters, digits, '.', '_' or '-'"
+            "filename must be a single path component using letters, digits, '.', '_' or '-'"
         )
     if "/" in name or "\\" in name or ".." in name:
         raise S3PathError("filename may not contain path separators or '..'")
@@ -123,15 +129,14 @@ def list_issue(issue_number: int) -> dict[str, Any]:
         resp = client.list_objects_v2(**kw)
         for obj in resp.get("Contents", []) or []:
             key = obj["Key"]
-            rel = key[len(prefix):] if key.startswith(prefix) else key
+            rel = key[len(prefix) :] if key.startswith(prefix) else key
             out.append(
                 {
                     "filename": rel,
                     "key": key,
                     "size": obj.get("Size"),
                     "last_modified": (
-                        obj["LastModified"].isoformat()
-                        if obj.get("LastModified") else None
+                        obj["LastModified"].isoformat() if obj.get("LastModified") else None
                     ),
                     "etag": obj.get("ETag"),
                 }
@@ -149,7 +154,9 @@ def list_issue(issue_number: int) -> dict[str, Any]:
     }
 
 
-def read_issue_file(issue_number: int, filename: str, *, max_bytes: int = READ_MAX_BYTES) -> dict[str, Any]:
+def read_issue_file(
+    issue_number: int, filename: str, *, max_bytes: int = READ_MAX_BYTES
+) -> dict[str, Any]:
     """Read a text-ish file for an issue. Binary content is reported but not returned.
 
     Authored content is DB-resident (``content_store``); this reads only
@@ -187,9 +194,7 @@ def read_issue_file(issue_number: int, filename: str, *, max_bytes: int = READ_M
         "text": text,
         "size": len(body),
         "content_type": resp.get("ContentType"),
-        "last_modified": (
-            resp["LastModified"].isoformat() if resp.get("LastModified") else None
-        ),
+        "last_modified": (resp["LastModified"].isoformat() if resp.get("LastModified") else None),
     }
 
 
@@ -215,9 +220,7 @@ def write_issue_file(
         raise S3PathError("content must be a string")
     body = content.encode("utf-8")
     if len(body) > WRITE_MAX_BYTES:
-        raise S3PathError(
-            f"content is {len(body):,} bytes; max is {WRITE_MAX_BYTES:,}"
-        )
+        raise S3PathError(f"content is {len(body):,} bytes; max is {WRITE_MAX_BYTES:,}")
     if content_type is None:
         suffix = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
         content_type = {
@@ -231,7 +234,12 @@ def write_issue_file(
             ".html": "text/html; charset=utf-8",
         }.get(suffix, "text/plain; charset=utf-8")
     bucket = _bucket()
-    put_kwargs: dict[str, Any] = {"Bucket": bucket, "Key": key, "Body": body, "ContentType": content_type}
+    put_kwargs: dict[str, Any] = {
+        "Bucket": bucket,
+        "Key": key,
+        "Body": body,
+        "ContentType": content_type,
+    }
     if cache_control:
         put_kwargs["CacheControl"] = cache_control
     _client().put_object(**put_kwargs)
@@ -245,6 +253,7 @@ def write_issue_file(
     # Best-effort: a CloudFront hiccup logs and continues.
     try:
         from . import cdn
+
         cdn.invalidate([f"/{key}"])
     except Exception as exc:  # noqa: BLE001 — invalidation is best-effort
         logger.warning("s3.write_issue_file: CDN invalidation skipped (%s)", exc)
@@ -275,6 +284,7 @@ def write_issue_binary(
     logger.info("s3.write_issue_binary(%d, %s) -> %d bytes", issue_number, filename, len(data))
     try:
         from . import cdn
+
         cdn.invalidate([f"/{key}"])
     except Exception as exc:  # noqa: BLE001 — invalidation is best-effort
         logger.warning("s3.write_issue_binary: CDN invalidation skipped (%s)", exc)
@@ -318,8 +328,11 @@ def write_issue_html(issue_number: int, filename: str, html_text: str) -> dict[s
     if not filename.endswith(".html"):
         raise S3PathError("write_issue_html expects an .html filename")
     return write_issue_file(
-        int(issue_number), filename, html_text,
-        content_type="text/html; charset=utf-8", cache_control="no-cache, max-age=0",
+        int(issue_number),
+        filename,
+        html_text,
+        content_type="text/html; charset=utf-8",
+        cache_control="no-cache, max-age=0",
     )
 
 
@@ -359,7 +372,9 @@ def journal_image_exists(issue_number: int, filename: str) -> bool:
     except client.exceptions.NoSuchKey:
         return False
     except Exception as exc:  # noqa: BLE001 — botocore 404 is a ClientError, not NoSuchKey, on head
-        code = getattr(getattr(exc, "response", {}), "get", lambda *_a: {})("Error", {}).get("Code", "")
+        code = getattr(getattr(exc, "response", {}), "get", lambda *_a: {})("Error", {}).get(
+            "Code", ""
+        )
         if code in ("404", "NoSuchKey", "NotFound"):
             return False
         raise
@@ -374,14 +389,21 @@ def write_journal_image(
     if not isinstance(body, (bytes, bytearray)):
         raise S3PathError("journal image body must be bytes")
     if len(body) > JOURNAL_IMAGE_MAX_BYTES:
-        raise S3PathError(f"journal image is {len(body):,} bytes; max is {JOURNAL_IMAGE_MAX_BYTES:,}")
+        raise S3PathError(
+            f"journal image is {len(body):,} bytes; max is {JOURNAL_IMAGE_MAX_BYTES:,}"
+        )
     if content_type is None:
         suffix = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
         content_type = _JOURNAL_CONTENT_TYPES.get(suffix, "application/octet-stream")
     bucket = _bucket()
     _client().put_object(Bucket=bucket, Key=key, Body=bytes(body), ContentType=content_type)
     logger.info("s3.write_journal_image(%d, %s) -> %d bytes", issue_number, filename, len(body))
-    return {"key": key, "url": f"https://{bucket}/{key}", "size": len(body), "content_type": content_type}
+    return {
+        "key": key,
+        "url": f"https://{bucket}/{key}",
+        "size": len(body),
+        "content_type": content_type,
+    }
 
 
 # ---------- per-block transcript files (text; compose-transcript only) ----------
@@ -414,13 +436,18 @@ def write_transcript_file(issue_number: int, basename: str, content: str) -> dic
         raise S3PathError(f"transcript content is {len(body):,} bytes; max is {WRITE_MAX_BYTES:,}")
     bucket = _bucket()
     _client().put_object(
-        Bucket=bucket, Key=key, Body=body,
+        Bucket=bucket,
+        Key=key,
+        Body=body,
         ContentType="text/plain; charset=utf-8",
     )
     logger.info("s3.write_transcript_file(%d, %s) -> %d bytes", issue_number, basename, len(body))
     return {
-        "key": key, "bucket": bucket,
-        "url": f"https://{bucket}/{key}", "size": len(body), "written": True,
+        "key": key,
+        "bucket": bucket,
+        "url": f"https://{bucket}/{key}",
+        "size": len(body),
+        "written": True,
     }
 
 
@@ -439,7 +466,7 @@ def list_transcript_files(issue_number: int) -> list[str]:
     issue_data = list_issue(int(issue_number))
     prefix = f"{TRANSCRIPT_PREFIX}/"
     return [
-        o["filename"][len(prefix):]
+        o["filename"][len(prefix) :]
         for o in issue_data.get("objects", [])
         if isinstance(o.get("filename"), str) and o["filename"].startswith(prefix)
     ]

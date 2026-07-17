@@ -13,6 +13,7 @@ reference it against whatever they still have in their backups.
 
 Output: tmp/missing-microblog-posts.md (overwrites)
 """
+
 from __future__ import annotations
 
 import json
@@ -114,30 +115,36 @@ def main() -> None:
             slug = m.group(4)
         else:
             date, slug = "", ""
-        records.append({
-            "url": url,
-            "micro_blog_url": micro_blog_canonical(url),
-            "wayback": wb_map.get(url),
-            "issue": issue,
-            "date": date,
-            "slug": slug,
-            "heading": heading,
-            "body": body_para,
-        })
+        records.append(
+            {
+                "url": url,
+                "micro_blog_url": micro_blog_canonical(url),
+                "wayback": wb_map.get(url),
+                "issue": issue,
+                "date": date,
+                "slug": slug,
+                "heading": heading,
+                "body": body_para,
+            }
+        )
 
     records.sort(key=lambda r: (r["date"], r["url"]))
 
     # Also JSON output for programmatic use
     json_out = OUT / "missing-microblog-posts.json"
     json_out.write_text(
-        json.dumps({
-            "note": "199 missing micro.blog posts referenced from The Weekly Thing archive. "
-                    "All 404 on thingelstad.com and jthingelstad.micro.blog. "
-                    "Most have Wayback Machine snapshots.",
-            "count": len(records),
-            "with_wayback": sum(1 for r in records if r["wayback"]),
-            "records": records,
-        }, indent=2, ensure_ascii=False),
+        json.dumps(
+            {
+                "note": "199 missing micro.blog posts referenced from The Weekly Thing archive. "
+                "All 404 on thingelstad.com and jthingelstad.micro.blog. "
+                "Most have Wayback Machine snapshots.",
+                "count": len(records),
+                "with_wayback": sum(1 for r in records if r["wayback"]),
+                "records": records,
+            },
+            indent=2,
+            ensure_ascii=False,
+        ),
         encoding="utf-8",
     )
     print(f"[enrich] wrote {json_out}", flush=True)
@@ -146,28 +153,37 @@ def main() -> None:
     lines: list[str] = []
     lines.append("# Missing micro.blog posts — recovery packet for micro.blog")
     lines.append("")
-    lines.append("These URLs on `https://www.thingelstad.com/` (a micro.blog-hosted site) all return **HTTP 404** today. Each was a real micropost referenced as an H3 link in Jamie Thingelstad's *The Weekly Thing* newsletter archive. The Wayback Machine still has snapshots for most of them, confirming the posts existed and are now lost.")
+    lines.append(
+        "These URLs on `https://www.thingelstad.com/` (a micro.blog-hosted site) all return **HTTP 404** today. Each was a real micropost referenced as an H3 link in Jamie Thingelstad's *The Weekly Thing* newsletter archive. The Wayback Machine still has snapshots for most of them, confirming the posts existed and are now lost."
+    )
     lines.append("")
     lines.append("**Status across every URL variant tried:**")
     lines.append("- `https://www.thingelstad.com/YYYY/MM/DD/<slug>.html` → 404")
     lines.append("- Canonical: `https://jthingelstad.micro.blog/YYYY/MM/DD/<slug>.html` → 404")
     lines.append("- Trailing-slash, no-suffix, `.md` variants → 404")
     lines.append("")
-    lines.append(f"**Total missing: {len(records)} posts** (concentrated 2018–2019). Wayback snapshots found for **{sum(1 for r in records if r['wayback'])}** of them.")
+    lines.append(
+        f"**Total missing: {len(records)} posts** (concentrated 2018–2019). Wayback snapshots found for **{sum(1 for r in records if r['wayback'])}** of them."
+    )
     lines.append("")
-    lines.append("Distribution suggests batch-level loss rather than individual deletions — specific days have clusters (e.g. 11 posts from April 13 & 17, 2019 are all missing; 18 posts from a single week in May 2018 are all missing).")
+    lines.append(
+        "Distribution suggests batch-level loss rather than individual deletions — specific days have clusters (e.g. 11 posts from April 13 & 17, 2019 are all missing; 18 posts from a single week in May 2018 are all missing)."
+    )
     lines.append("")
     lines.append("---")
     lines.append("")
     lines.append("## Per-post detail")
     lines.append("")
-    lines.append("For each missing post: the dead URL, the Wayback snapshot URL (where available), and the context from the Weekly Thing issue — heading and body paragraph as they appear in the newsletter. When these posts are restored, the archive's H3 link text and body paragraph can be used to verify the recovered post matches.")
+    lines.append(
+        "For each missing post: the dead URL, the Wayback snapshot URL (where available), and the context from the Weekly Thing issue — heading and body paragraph as they appear in the newsletter. When these posts are restored, the archive's H3 link text and body paragraph can be used to verify the recovered post matches."
+    )
     lines.append("")
     lines.append("Grouped by month.")
     lines.append("")
 
     # Group by YYYY-MM
     from collections import defaultdict
+
     by_month: dict[str, list[dict]] = defaultdict(list)
     for r in records:
         key = r["date"][:7] if r["date"] else "unknown"

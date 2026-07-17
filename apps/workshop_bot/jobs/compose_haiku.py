@@ -48,10 +48,13 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     body = await asyncio.to_thread(_llm_job.draft_body, n)
     if not body.strip():
         return _base.JobResult(False, f"❌ no `draft.md` for WT{n} yet.")
-    bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
+    bot, channel, reason = _llm_job.resolve_bot_and_channel(
+        ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL"
+    )
     if bot is None:
         return _base.JobResult(
-            True, f"(compose-haiku skipped — {reason})",
+            True,
+            f"(compose-haiku skipped — {reason})",
             data={"options_posted": False, "haiku_written": False},
         )
 
@@ -61,10 +64,11 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             base_prompt = anthropic_client.load_prompt("eddy-compose-haiku")
             base_msg = (
                 f"{base_prompt}\n\n---\n\nThe issue (WT{n}):\n\n"
-                f"```markdown\n{body[:_llm_job.ISSUE_BODY_CAP]}\n```"
+                f"```markdown\n{body[: _llm_job.ISSUE_BODY_CAP]}\n```"
             )
             chosen = await _llm_job.refresh_loop(
-                bot, channel,
+                bot,
+                channel,
                 base_msg=base_msg,
                 parser=_parse_haiku_options,
                 pretty=_pretty_haiku_options,
@@ -91,12 +95,19 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             # Best-effort: haiku.md is on S3 either way; a Discord glitch
             # on the success card shouldn't fail the job.
             await _llm_job.try_send(
-                channel, f"✅ Haiku set for WT{n}.", job_label="compose-haiku",
+                channel,
+                f"✅ Haiku set for WT{n}.",
+                job_label="compose-haiku",
             )
             return _base.JobResult(
-                True, f"`haiku.md` written for WT{n}.",
-                data={"issue_number": n, "haiku": chosen,
-                      "options_posted": True, "haiku_written": True},
+                True,
+                f"`haiku.md` written for WT{n}.",
+                data={
+                    "issue_number": n,
+                    "haiku": chosen,
+                    "options_posted": True,
+                    "haiku_written": True,
+                },
             )
     except _base.JobLocked as exc:
         return _base.JobResult(False, f"⏳ `compose-haiku` already running ({exc.holder_desc}).")

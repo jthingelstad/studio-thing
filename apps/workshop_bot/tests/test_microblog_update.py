@@ -19,7 +19,6 @@ from apps.workshop_bot.tools.content import microblog  # noqa: E402
 
 
 class _ApiKeyCase(unittest.TestCase):
-
     def setUp(self) -> None:
         self._orig_key = os.environ.get("MICROBLOG_API_KEY")
         os.environ["MICROBLOG_API_KEY"] = "test-token"
@@ -32,7 +31,6 @@ class _ApiKeyCase(unittest.TestCase):
 
 
 class SourceForUrlTests(_ApiKeyCase):
-
     def test_returns_properties_dict(self):
         resp = MagicMock()
         resp.status_code = 200
@@ -77,7 +75,6 @@ class SourceForUrlTests(_ApiKeyCase):
 
 
 class UpdatePostContentTests(_ApiKeyCase):
-
     def test_sends_micropub_update_payload(self):
         resp = MagicMock()
         resp.status_code = 200
@@ -90,14 +87,18 @@ class UpdatePostContentTests(_ApiKeyCase):
                 "new body with alt",
             )
         _, kwargs = mock_post.call_args
-        self.assertEqual(kwargs["json"], {
-            "action": "update",
-            "url": "https://micro.example/2026/05/22/post.html",
-            "replace": {"content": ["new body with alt"]},
-        })
+        self.assertEqual(
+            kwargs["json"],
+            {
+                "action": "update",
+                "url": "https://micro.example/2026/05/22/post.html",
+                "replace": {"content": ["new body with alt"]},
+            },
+        )
         self.assertIn("Bearer test-token", kwargs["headers"]["Authorization"])
         self.assertEqual(
-            kwargs["headers"]["Content-Type"], "application/json",
+            kwargs["headers"]["Content-Type"],
+            "application/json",
         )
 
     def test_raises_on_http_error(self):
@@ -128,7 +129,6 @@ class UpdatePostContentTests(_ApiKeyCase):
 
 
 class FillMissingAltsTests(_ApiKeyCase):
-
     def _patched_update(self):
         """Patch update_post_content so tests don't hit the network. Returns
         the MagicMock so callers can inspect call_args."""
@@ -138,14 +138,16 @@ class FillMissingAltsTests(_ApiKeyCase):
         )
 
     def test_fills_html_img_empty_alt_and_writes_back(self):
-        posts = [{
-            "url": "https://micro.example/2026/05/22/p.html",
-            "title": "Race day",
-            "content_md": (
-                'Race day!\n\n'
-                '<img src="https://www.thingelstad.com/uploads/2026/abc.jpg" alt="">'
-            ),
-        }]
+        posts = [
+            {
+                "url": "https://micro.example/2026/05/22/p.html",
+                "title": "Race day",
+                "content_md": (
+                    "Race day!\n\n"
+                    '<img src="https://www.thingelstad.com/uploads/2026/abc.jpg" alt="">'
+                ),
+            }
+        ]
         vision = MagicMock(side_effect=lambda **kwargs: "Runners crossing the finish line at dusk")
         with self._patched_update() as mock_update:
             filled = microblog.fill_missing_alts(posts, vision_call=vision)
@@ -168,27 +170,33 @@ class FillMissingAltsTests(_ApiKeyCase):
         self.assertIn('alt="Runners crossing the finish line at dusk"', write_body)
 
     def test_fills_markdown_image_empty_alt(self):
-        posts = [{
-            "url": "https://micro.example/p.html",
-            "title": "",
-            "content_md": "See ![](https://example.com/x.png) here.",
-        }]
+        posts = [
+            {
+                "url": "https://micro.example/p.html",
+                "title": "",
+                "content_md": "See ![](https://example.com/x.png) here.",
+            }
+        ]
         vision = MagicMock(return_value="a screenshot of a terminal")
         with self._patched_update() as mock_update:
             filled = microblog.fill_missing_alts(posts, vision_call=vision)
         self.assertEqual(len(filled), 1)
-        self.assertIn("![a screenshot of a terminal](https://example.com/x.png)", posts[0]["content_md"])
+        self.assertIn(
+            "![a screenshot of a terminal](https://example.com/x.png)", posts[0]["content_md"]
+        )
         mock_update.assert_called_once()
 
     def test_skips_images_with_existing_alt(self):
-        posts = [{
-            "url": "https://micro.example/p.html",
-            "title": "x",
-            "content_md": (
-                '<img src="https://example.com/a.jpg" alt="already set">\n'
-                '![also done](https://example.com/b.jpg)'
-            ),
-        }]
+        posts = [
+            {
+                "url": "https://micro.example/p.html",
+                "title": "x",
+                "content_md": (
+                    '<img src="https://example.com/a.jpg" alt="already set">\n'
+                    "![also done](https://example.com/b.jpg)"
+                ),
+            }
+        ]
         vision = MagicMock(return_value="should not be called")
         with self._patched_update() as mock_update:
             filled = microblog.fill_missing_alts(posts, vision_call=vision)
@@ -197,11 +205,13 @@ class FillMissingAltsTests(_ApiKeyCase):
         mock_update.assert_not_called()
 
     def test_does_not_write_back_when_vision_returns_empty(self):
-        posts = [{
-            "url": "https://micro.example/p.html",
-            "title": "x",
-            "content_md": '<img src="https://example.com/a.jpg" alt="">',
-        }]
+        posts = [
+            {
+                "url": "https://micro.example/p.html",
+                "title": "x",
+                "content_md": '<img src="https://example.com/a.jpg" alt="">',
+            }
+        ]
         vision = MagicMock(return_value="")  # cap exhausted / vision failed
         with self._patched_update() as mock_update:
             filled = microblog.fill_missing_alts(posts, vision_call=vision)
@@ -211,14 +221,16 @@ class FillMissingAltsTests(_ApiKeyCase):
         self.assertIn('alt=""', posts[0]["content_md"])
 
     def test_writes_back_once_per_post_with_multiple_images(self):
-        posts = [{
-            "url": "https://micro.example/p.html",
-            "title": "Gallery",
-            "content_md": (
-                '<img src="https://example.com/a.jpg" alt="">'
-                '<img src="https://example.com/b.jpg" alt="">'
-            ),
-        }]
+        posts = [
+            {
+                "url": "https://micro.example/p.html",
+                "title": "Gallery",
+                "content_md": (
+                    '<img src="https://example.com/a.jpg" alt="">'
+                    '<img src="https://example.com/b.jpg" alt="">'
+                ),
+            }
+        ]
         vision = MagicMock(side_effect=lambda *, image_url, **_: f"alt for {image_url[-5:]}")
         with self._patched_update() as mock_update:
             filled = microblog.fill_missing_alts(posts, vision_call=vision)
@@ -229,11 +241,13 @@ class FillMissingAltsTests(_ApiKeyCase):
         self.assertEqual(filled[1]["image_src"], "https://example.com/b.jpg")
 
     def test_writeback_failure_reverts_in_memory(self):
-        posts = [{
-            "url": "https://micro.example/p.html",
-            "title": "x",
-            "content_md": '<img src="https://example.com/a.jpg" alt="">',
-        }]
+        posts = [
+            {
+                "url": "https://micro.example/p.html",
+                "title": "x",
+                "content_md": '<img src="https://example.com/a.jpg" alt="">',
+            }
+        ]
         original_md = posts[0]["content_md"]
         vision = MagicMock(return_value="a generated alt")
         with patch(
@@ -248,15 +262,19 @@ class FillMissingAltsTests(_ApiKeyCase):
         self.assertEqual(posts[0]["content_md"], original_md)
 
     def test_write_back_false_does_not_call_micropub(self):
-        posts = [{
-            "url": "https://micro.example/p.html",
-            "title": "x",
-            "content_md": '<img src="https://example.com/a.jpg" alt="">',
-        }]
+        posts = [
+            {
+                "url": "https://micro.example/p.html",
+                "title": "x",
+                "content_md": '<img src="https://example.com/a.jpg" alt="">',
+            }
+        ]
         vision = MagicMock(return_value="alt")
         with self._patched_update() as mock_update:
             filled = microblog.fill_missing_alts(
-                posts, vision_call=vision, write_back=False,
+                posts,
+                vision_call=vision,
+                write_back=False,
             )
         mock_update.assert_not_called()
         self.assertEqual(len(filled), 1)
@@ -270,14 +288,16 @@ class FillMissingAltsTests(_ApiKeyCase):
         # action) but the broken truncation was real downstream. Verify
         # the quote-aware regex sees the full value AND classifies it as
         # filled (no vision, no write-back).
-        posts = [{
-            "url": "https://micro.example/p.html",
-            "title": "S'mores",
-            "content_md": (
-                '<img src="https://example.com/x.jpg" '
-                'alt="Hand holding a s\'more over a campfire">'
-            ),
-        }]
+        posts = [
+            {
+                "url": "https://micro.example/p.html",
+                "title": "S'mores",
+                "content_md": (
+                    '<img src="https://example.com/x.jpg" '
+                    'alt="Hand holding a s\'more over a campfire">'
+                ),
+            }
+        ]
         vision = MagicMock(return_value="should not be called")
         with self._patched_update() as mock_update:
             filled = microblog.fill_missing_alts(posts, vision_call=vision)

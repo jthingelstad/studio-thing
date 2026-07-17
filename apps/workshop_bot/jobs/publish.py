@@ -66,6 +66,7 @@ def _import_pipeline_content():
     if pipeline_content_dir not in sys.path:
         sys.path.insert(0, pipeline_content_dir)
     import content  # noqa: F401
+
     return content
 
 
@@ -95,7 +96,9 @@ def _collect_ship_files(issue_number: int) -> list[tuple[str, bytes]]:
 
     metadata_path = issue_dir / "metadata.json"
     if not metadata_path.exists():
-        raise RuntimeError(f"metadata.json missing at {metadata_path} — refusing to publish website.")
+        raise RuntimeError(
+            f"metadata.json missing at {metadata_path} — refusing to publish website."
+        )
     files.append((f"data/issues/{issue_number}/metadata.json", metadata_path.read_bytes()))
 
     links_path = issue_dir / "links.json"
@@ -109,10 +112,12 @@ def _collect_ship_files(issue_number: int) -> list[tuple[str, bytes]]:
     transcript_dir = issue_dir / "transcript"
     if transcript_dir.is_dir():
         for path in sorted(transcript_dir.glob("*.txt")):
-            files.append((
-                f"data/issues/{issue_number}/transcript/{path.name}",
-                path.read_bytes(),
-            ))
+            files.append(
+                (
+                    f"data/issues/{issue_number}/transcript/{path.name}",
+                    path.read_bytes(),
+                )
+            )
 
     if AUDIO_MANIFEST.exists():
         files.append(("data/audio/manifest.json", AUDIO_MANIFEST.read_bytes()))
@@ -206,12 +211,15 @@ async def publish_buttondown(ctx: "_base.JobContext") -> "_base.JobResult":
     pipeline_content = await asyncio.to_thread(_import_pipeline_content)
     try:
         bd_result: dict[str, Any] = await asyncio.to_thread(
-            pipeline_content.buttondown_publish_idempotent, str(n),
+            pipeline_content.buttondown_publish_idempotent,
+            str(n),
         )
     except pipeline_content.ButtondownPublishError as exc:
         msg = f"❌ Buttondown publish for **WT{n}** failed: {exc}"
         await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
-        return _base.JobResult(False, msg, data={"issue_number": n, "stage": "buttondown POST/PATCH"})
+        return _base.JobResult(
+            False, msg, data={"issue_number": n, "stage": "buttondown POST/PATCH"}
+        )
 
     action = bd_result["action"]
     bid = bd_result["id"]
@@ -269,10 +277,7 @@ async def publish_website(ctx: "_base.JobContext") -> "_base.JobResult":
         await asyncio.to_thread(renderers.render_archive_for_issue, n, window=window)
         await asyncio.to_thread(renderers.render_transcript_for_issue, n, window=window)
     except Exception as exc:  # noqa: BLE001
-        msg = (
-            f"❌ Publish Website for **WT{n}** couldn't render: "
-            f"`{type(exc).__name__}: {exc}`"
-        )
+        msg = f"❌ Publish Website for **WT{n}** couldn't render: `{type(exc).__name__}: {exc}`"
         await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
         return _base.JobResult(False, msg, data={"issue_number": n})
 
@@ -295,7 +300,9 @@ async def publish_website(ctx: "_base.JobContext") -> "_base.JobResult":
 
     try:
         commit_sha = await asyncio.to_thread(
-            github_repo.put_tree, files, f"Ship WT{n} — {subject}",
+            github_repo.put_tree,
+            files,
+            f"Ship WT{n} — {subject}",
         )
     except github_repo.MissingTokenError:
         msg = (

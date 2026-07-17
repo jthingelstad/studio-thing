@@ -125,7 +125,10 @@ SPECS: dict[str, dict[str, Any]] = {
         "input_schema": {
             "type": "object",
             "properties": {
-                "domain": {"type": "string", "description": "Lowercase domain, e.g. 'daringfireball.net'"},
+                "domain": {
+                    "type": "string",
+                    "description": "Lowercase domain, e.g. 'daringfireball.net'",
+                },
                 "limit": {"type": "integer", "description": "default 50"},
             },
             "required": ["domain"],
@@ -315,10 +318,22 @@ SPECS: dict[str, dict[str, Any]] = {
         "input_schema": {
             "type": "object",
             "properties": {
-                "note": {"type": "string", "description": "What you're following up on — self-contained."},
-                "when": {"type": "string", "description": "ISO date YYYY-MM-DD or datetime YYYY-MM-DDTHH:MM."},
-                "in_days": {"type": "integer", "description": "Relative offset in days (1 = tomorrow evening)."},
-                "at_issue": {"type": "integer", "description": "Fire once this issue number is in flight."},
+                "note": {
+                    "type": "string",
+                    "description": "What you're following up on — self-contained.",
+                },
+                "when": {
+                    "type": "string",
+                    "description": "ISO date YYYY-MM-DD or datetime YYYY-MM-DDTHH:MM.",
+                },
+                "in_days": {
+                    "type": "integer",
+                    "description": "Relative offset in days (1 = tomorrow evening).",
+                },
+                "at_issue": {
+                    "type": "integer",
+                    "description": "Fire once this issue number is in flight.",
+                },
             },
             "required": ["note"],
         },
@@ -581,8 +596,7 @@ SPECS: dict[str, dict[str, Any]] = {
     "productions__list": {
         "name": "productions__list",
         "description": (
-            "List newsletter issues. Optionally filter by status "
-            "(active/done/archived)."
+            "List newsletter issues. Optionally filter by status (active/done/archived)."
         ),
         "input_schema": {
             "type": "object",
@@ -604,9 +618,7 @@ SPECS: dict[str, dict[str, Any]] = {
     },
     "productions__create": {
         "name": "productions__create",
-        "description": (
-            "Retired. Newsletter issues are created in the Studio web UI."
-        ),
+        "description": ("Retired. Newsletter issues are created in the Studio web UI."),
         "input_schema": {
             "type": "object",
             "properties": {
@@ -635,8 +647,7 @@ SPECS: dict[str, dict[str, Any]] = {
     "production_content__read": {
         "name": "production_content__read",
         "description": (
-            "Read an authored content block of a newsletter issue. Returns "
-            "{found, text}."
+            "Read an authored content block of a newsletter issue. Returns {found, text}."
         ),
         "input_schema": {
             "type": "object",
@@ -691,9 +702,7 @@ SPECS: dict[str, dict[str, Any]] = {
     },
     "tasks__add": {
         "name": "tasks__add",
-        "description": (
-            "Add a task to an issue's board. Assign it to jamie or Eddy."
-        ),
+        "description": ("Add a task to an issue's board. Assign it to jamie or Eddy."),
         "input_schema": {
             "type": "object",
             "properties": {

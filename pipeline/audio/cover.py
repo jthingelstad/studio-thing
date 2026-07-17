@@ -44,14 +44,23 @@ def _probe_dimensions(path: Path) -> tuple[int, int] | None:
     try:
         result = subprocess.run(
             [
-                "ffprobe", "-v", "error",
-                "-select_streams", "v:0",
-                "-show_entries", "stream=width,height",
-                "-of", "json", str(path),
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "v:0",
+                "-show_entries",
+                "stream=width,height",
+                "-of",
+                "json",
+                str(path),
             ],
-            check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
         )
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    except subprocess.CalledProcessError, FileNotFoundError:
         return None
     streams = json.loads(result.stdout).get("streams") or []
     if not streams:
@@ -77,9 +86,12 @@ def _crop_to_square(src: Path, dst: Path) -> bool:
     try:
         subprocess.run(
             ["ffmpeg", "-y", "-i", str(src), "-vf", crop_filter, str(dst)],
-            check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
         )
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    except subprocess.CalledProcessError, FileNotFoundError:
         return False
     return True
 
@@ -91,7 +103,7 @@ def _download(url: str, dest: Path) -> bool:
             if response.status != 200:
                 return False
             data = response.read()
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError):
+    except urllib.error.URLError, urllib.error.HTTPError, TimeoutError:
         return False
     if not data:
         return False

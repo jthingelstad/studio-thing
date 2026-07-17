@@ -20,11 +20,25 @@ from typing import Any, Optional
 from .db.connection import connect
 
 _ISSUE_COLUMNS = (
-    "number", "subject", "slug", "description", "publish_date",
-    "image", "absolute_url", "buttondown_id",
-    "word_count", "notable_count", "briefly_count", "domain_count", "link_count",
-    "audio_url", "audio_duration_s", "audio_byte_size", "audio_voice",
-    "era", "filed_at",
+    "number",
+    "subject",
+    "slug",
+    "description",
+    "publish_date",
+    "image",
+    "absolute_url",
+    "buttondown_id",
+    "word_count",
+    "notable_count",
+    "briefly_count",
+    "domain_count",
+    "link_count",
+    "audio_url",
+    "audio_duration_s",
+    "audio_byte_size",
+    "audio_voice",
+    "era",
+    "filed_at",
 )
 
 _ISSUE_SELECT = "SELECT " + ", ".join(_ISSUE_COLUMNS) + " FROM issues"
@@ -45,7 +59,9 @@ def get_issue(number: int) -> Optional[dict[str, Any]]:
 
 
 def find_issues_by_domain(
-    domain: str, *, limit: int = 50,
+    domain: str,
+    *,
+    limit: int = 50,
 ) -> list[dict[str, Any]]:
     """Issues that cite ``domain`` in any link, newest issue first.
 
@@ -80,9 +96,7 @@ def find_issues_in_range(start: str, end: str) -> list[dict[str, Any]]:
     newest first. Dates are ISO YYYY-MM-DD strings."""
     with connect() as conn:
         rows = conn.execute(
-            _ISSUE_SELECT
-            + " WHERE publish_date BETWEEN ? AND ? "
-            + "ORDER BY publish_date DESC",
+            _ISSUE_SELECT + " WHERE publish_date BETWEEN ? AND ? " + "ORDER BY publish_date DESC",
             (start, end),
         ).fetchall()
     return [_row_to_dict(r) for r in rows]
@@ -178,9 +192,7 @@ def aggregate_stats() -> dict[str, Any]:
             "       MAX(publish_date) AS last_date "
             "FROM issues"
         ).fetchone()
-        domain_count = conn.execute(
-            "SELECT COUNT(*) AS n FROM domain_stats"
-        ).fetchone()["n"]
+        domain_count = conn.execute("SELECT COUNT(*) AS n FROM domain_stats").fetchone()["n"]
     total = int(issues_row["total_issues"] or 0)
     with_audio = int(issues_row["issues_with_audio"] or 0)
     return {
@@ -198,7 +210,9 @@ def aggregate_stats() -> dict[str, Any]:
 
 
 def list_issue_links(
-    issue_number: int, *, section: Optional[str] = None,
+    issue_number: int,
+    *,
+    section: Optional[str] = None,
 ) -> list[dict[str, Any]]:
     """All ``issue_links`` rows for one issue, ordered by section + position."""
     sql = (

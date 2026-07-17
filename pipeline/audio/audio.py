@@ -96,9 +96,7 @@ def archive_path(issue: str) -> Path:
 
 def all_archive_issues() -> list[str]:
     issues = [
-        path.stem
-        for path in ARCHIVE_DIR.glob("*.md")
-        if path.stem not in {"archive", "redirects"}
+        path.stem for path in ARCHIVE_DIR.glob("*.md") if path.stem not in {"archive", "redirects"}
     ]
     return sorted(issues, key=issue_sort_key)
 
@@ -325,7 +323,9 @@ def build_issue(
                 return False
             chunk_count = len(blocks) if blocks else len(chunk_plan(text))
             mode = "per-block" if blocks else "legacy"
-            print(f"Issue #{issue}: body missing in S3, synthesizing ({chunk_count} {mode} chunk(s))")
+            print(
+                f"Issue #{issue}: body missing in S3, synthesizing ({chunk_count} {mode} chunk(s))"
+            )
             body_path, body_duration = render_body(issue, text, blocks=blocks)
             body_url, body_size = upload_body(issue, body_path)
             print(f"Issue #{issue}: uploaded body {body_url}")
@@ -421,13 +421,16 @@ def cmd_build(args: argparse.Namespace) -> None:
     changed = False
     for issue in issues:
         try:
-            changed = build_issue(
-                issue,
-                manifest,
-                dry_run=args.dry_run,
-                force=args.force,
-                reassemble_only=args.reassemble_only,
-            ) or changed
+            changed = (
+                build_issue(
+                    issue,
+                    manifest,
+                    dry_run=args.dry_run,
+                    force=args.force,
+                    reassemble_only=args.reassemble_only,
+                )
+                or changed
+            )
         except Exception as exc:  # noqa: BLE001 — keep batch moving on per-issue failure
             print(f"Issue #{issue}: failed ({exc.__class__.__name__}: {exc})")
             if args.fail_fast:
@@ -583,7 +586,9 @@ def cmd_scripts_review(args: argparse.Namespace) -> None:
             continue
         work.append((issue, script_hash, body, script))
 
-    print(f"scripts review: {len(work)} to review, {skipped} cached, {len(issues) - len(work) - skipped} skipped")
+    print(
+        f"scripts review: {len(work)} to review, {skipped} cached, {len(issues) - len(work) - skipped} skipped"
+    )
     if not work:
         write_script_review(review)
         return
@@ -670,7 +675,9 @@ def issues_blocked_by_validation(issues: list[str]) -> dict[str, list[dict[str, 
             blocked[issue] = [{"rule": "unvalidated", "message": "no validation record"}]
             continue
         if record.get("script_hash") != current_hash:
-            blocked[issue] = [{"rule": "stale_validation", "message": "validation predates current script"}]
+            blocked[issue] = [
+                {"rule": "stale_validation", "message": "validation predates current script"}
+            ]
             continue
         errors = record.get("errors") or []
         if errors:
@@ -701,15 +708,21 @@ def main() -> None:
     build_group.add_argument("--issue", help="Issue number to render")
     build_group.add_argument("--latest", action="store_true", help="Render latest issue only")
     build_group.add_argument("--all", action="store_true", help="Render all issues")
-    build_parser.add_argument("--dry-run", action="store_true", help="Write script and chunk plan only")
+    build_parser.add_argument(
+        "--dry-run", action="store_true", help="Write script and chunk plan only"
+    )
     build_parser.add_argument("--force", action="store_true", help="Render even if cached")
-    build_parser.add_argument("--limit", type=int, help="Cap how many issues are processed in this run")
+    build_parser.add_argument(
+        "--limit", type=int, help="Cap how many issues are processed in this run"
+    )
     build_parser.add_argument(
         "--reassemble-only",
         action="store_true",
         help="Only reassemble final MP3s for issues that already have a body in S3 (no TTS)",
     )
-    build_parser.add_argument("--fail-fast", action="store_true", help="Abort on first per-issue failure")
+    build_parser.add_argument(
+        "--fail-fast", action="store_true", help="Abort on first per-issue failure"
+    )
     build_parser.add_argument(
         "--allow-unvalidated",
         action="store_true",
@@ -718,7 +731,9 @@ def main() -> None:
 
     bumpers_parser = subparsers.add_parser("bumpers", help="Manage podcast intro/outro bumpers")
     bumpers_subparsers = bumpers_parser.add_subparsers(dest="bumpers_command", required=True)
-    bumpers_build = bumpers_subparsers.add_parser("build", help="Render bumpers if missing or text changed")
+    bumpers_build = bumpers_subparsers.add_parser(
+        "build", help="Render bumpers if missing or text changed"
+    )
     bumpers_build.add_argument("--force", action="store_true", help="Re-render even if up to date")
 
     scripts_parser = subparsers.add_parser("scripts", help="Manage committed audio scripts")

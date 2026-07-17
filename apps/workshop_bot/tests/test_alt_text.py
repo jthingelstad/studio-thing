@@ -54,6 +54,7 @@ class DownscaleForVisionTests(unittest.TestCase):
         from io import BytesIO
 
         from PIL import Image
+
         img = Image.new("RGB", (size_px, size_px), color="white")
         buf = BytesIO()
         img.save(buf, format="PNG")
@@ -77,6 +78,7 @@ class DownscaleForVisionTests(unittest.TestCase):
         from io import BytesIO
 
         from PIL import Image
+
         with Image.open(BytesIO(out_body)) as img:
             self.assertLessEqual(max(img.size), alt_text._VISION_LONG_EDGE_MAX)
 
@@ -98,8 +100,9 @@ class FetchImageBytesTests(unittest.TestCase):
     _GIF = b"GIF89a" + b"\x00" * 32
 
     def _fetch(self, body, content_type):
-        with patch.object(alt_text.requests, "get",
-                          return_value=_fake_image_response(body, content_type)):
+        with patch.object(
+            alt_text.requests, "get", return_value=_fake_image_response(body, content_type)
+        ):
             return alt_text._fetch_image_bytes("https://www.thingelstad.com/uploads/x")
 
     def test_octet_stream_png_accepted_via_sniff(self):
@@ -153,8 +156,10 @@ class GenerateAltTests(_AltTextCapResetCase):
         client.messages.create.return_value = _fake_vision(
             "Minnehaha Creek rushing over rocks below the falls"
         )
-        with patch.object(alt_text.anthropic_client, "client", return_value=client), \
-             patch.object(alt_text.requests, "get", return_value=_fake_image_response()):
+        with (
+            patch.object(alt_text.anthropic_client, "client", return_value=client),
+            patch.object(alt_text.requests, "get", return_value=_fake_image_response()),
+        ):
             out = alt_text.generate_alt(
                 image_url="https://www.thingelstad.com/uploads/2026/abc.jpg",
                 context="A walk at the falls today.",
@@ -173,8 +178,10 @@ class GenerateAltTests(_AltTextCapResetCase):
         alt_text.begin_run()
         client = MagicMock()
         client.messages.create.return_value = _fake_vision("first alt")
-        with patch.object(alt_text.anthropic_client, "client", return_value=client), \
-             patch.object(alt_text.requests, "get", return_value=_fake_image_response()):
+        with (
+            patch.object(alt_text.anthropic_client, "client", return_value=client),
+            patch.object(alt_text.requests, "get", return_value=_fake_image_response()),
+        ):
             first = alt_text.generate_alt(image_url="https://x/a.jpg")
             second = alt_text.generate_alt(image_url="https://x/b.jpg")
         self.assertEqual(first, "first alt")
@@ -183,8 +190,10 @@ class GenerateAltTests(_AltTextCapResetCase):
 
     def test_fetch_failure_returns_empty(self):
         client = MagicMock()
-        with patch.object(alt_text.anthropic_client, "client", return_value=client), \
-             patch.object(alt_text.requests, "get", side_effect=RuntimeError("network")):
+        with (
+            patch.object(alt_text.anthropic_client, "client", return_value=client),
+            patch.object(alt_text.requests, "get", side_effect=RuntimeError("network")),
+        ):
             out = alt_text.generate_alt(image_url="https://x/y.jpg")
         self.assertEqual(out, "")
         client.messages.create.assert_not_called()
@@ -192,15 +201,19 @@ class GenerateAltTests(_AltTextCapResetCase):
     def test_vision_failure_returns_empty(self):
         client = MagicMock()
         client.messages.create.side_effect = RuntimeError("API down")
-        with patch.object(alt_text.anthropic_client, "client", return_value=client), \
-             patch.object(alt_text.requests, "get", return_value=_fake_image_response()):
+        with (
+            patch.object(alt_text.anthropic_client, "client", return_value=client),
+            patch.object(alt_text.requests, "get", return_value=_fake_image_response()),
+        ):
             out = alt_text.generate_alt(image_url="https://x/y.jpg")
         self.assertEqual(out, "")
 
     def test_empty_image_url_returns_empty_no_call(self):
         client = MagicMock()
-        with patch.object(alt_text.anthropic_client, "client", return_value=client), \
-             patch.object(alt_text.requests, "get") as g:
+        with (
+            patch.object(alt_text.anthropic_client, "client", return_value=client),
+            patch.object(alt_text.requests, "get") as g,
+        ):
             out = alt_text.generate_alt(image_url="")
         self.assertEqual(out, "")
         client.messages.create.assert_not_called()
@@ -211,8 +224,10 @@ class GenerateAltTests(_AltTextCapResetCase):
         # duplicating it.
         client = MagicMock()
         client.messages.create.return_value = _fake_vision("Just the alt")
-        with patch.object(alt_text.anthropic_client, "client", return_value=client), \
-             patch.object(alt_text.requests, "get", return_value=_fake_image_response()):
+        with (
+            patch.object(alt_text.anthropic_client, "client", return_value=client),
+            patch.object(alt_text.requests, "get", return_value=_fake_image_response()),
+        ):
             alt_text.generate_alt(
                 image_url="https://files.thingelstad.com/weekly-thing/458/cover.jpg",
                 caption="Minnehaha Creek rushing toward the Mississippi.",
@@ -252,8 +267,10 @@ class DeadUrlTests(unittest.TestCase):
     def test_404_records_dead_and_refunds_budget(self):
         client = MagicMock()
         before = alt_text.calls_remaining()
-        with patch.object(alt_text.anthropic_client, "client", return_value=client), \
-             patch.object(alt_text.requests, "get", return_value=_fake_404_response()):
+        with (
+            patch.object(alt_text.anthropic_client, "client", return_value=client),
+            patch.object(alt_text.requests, "get", return_value=_fake_404_response()),
+        ):
             out = alt_text.generate_alt(image_url="https://x/gone.jpg")
         self.assertEqual(out, "")
         client.messages.create.assert_not_called()
@@ -265,11 +282,13 @@ class DeadUrlTests(unittest.TestCase):
         alt_text._dead_urls.add("https://x/gone.jpg")
         client = MagicMock()
         before = alt_text.calls_remaining()
-        with patch.object(alt_text.anthropic_client, "client", return_value=client), \
-             patch.object(alt_text.requests, "get") as g:
+        with (
+            patch.object(alt_text.anthropic_client, "client", return_value=client),
+            patch.object(alt_text.requests, "get") as g,
+        ):
             out = alt_text.generate_alt(image_url="https://x/gone.jpg")
         self.assertEqual(out, "")
-        g.assert_not_called()                       # no fetch
+        g.assert_not_called()  # no fetch
         client.messages.create.assert_not_called()  # no vision call
         self.assertEqual(alt_text.calls_remaining(), before)  # no budget spent
 
@@ -278,8 +297,10 @@ class DeadUrlTests(unittest.TestCase):
             log = os.path.join(d, "dead-urls.txt")
             alt_text.begin_run(dead_url_log=log)
             client = MagicMock()
-            with patch.object(alt_text.anthropic_client, "client", return_value=client), \
-                 patch.object(alt_text.requests, "get", return_value=_fake_404_response()):
+            with (
+                patch.object(alt_text.anthropic_client, "client", return_value=client),
+                patch.object(alt_text.requests, "get", return_value=_fake_404_response()),
+            ):
                 alt_text.generate_alt(image_url="https://x/gone.jpg")
             self.assertIn("https://x/gone.jpg", Path(log).read_text().splitlines())
 
@@ -287,8 +308,10 @@ class DeadUrlTests(unittest.TestCase):
             alt_text._dead_urls.clear()
             alt_text.begin_run(dead_url_log=log)
             self.assertIn("https://x/gone.jpg", alt_text._dead_urls)
-            with patch.object(alt_text.anthropic_client, "client", return_value=client), \
-                 patch.object(alt_text.requests, "get") as g:
+            with (
+                patch.object(alt_text.anthropic_client, "client", return_value=client),
+                patch.object(alt_text.requests, "get") as g,
+            ):
                 out = alt_text.generate_alt(image_url="https://x/gone.jpg")
             self.assertEqual(out, "")
             g.assert_not_called()

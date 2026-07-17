@@ -66,9 +66,7 @@ class ToolRegistry:
 
     def register_system(self, server: SystemServer) -> None:
         restricted_raw = getattr(server, "restricted_to", None)
-        restricted = (
-            frozenset(restricted_raw) if restricted_raw is not None else None
-        )
+        restricted = frozenset(restricted_raw) if restricted_raw is not None else None
         for tdef in server.list_tools():
             full = f"{server.name}__{tdef.name}"
             spec = {
@@ -111,9 +109,7 @@ class ToolRegistry:
         if tool is None:
             raise KeyError(f"unknown tool {name!r}")
         if tool.restricted_to is not None and persona not in tool.restricted_to:
-            raise PermissionError(
-                f"tool {name!r} is not visible to persona {persona!r}"
-            )
+            raise PermissionError(f"tool {name!r} is not visible to persona {persona!r}")
         token = active_persona.set(persona)
         try:
             return tool.func(deps, **(args or {}))

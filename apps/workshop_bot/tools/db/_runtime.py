@@ -115,8 +115,7 @@ class AgentRun:
         self._t0 = time.monotonic()
         with connect() as conn:
             cur = conn.execute(
-                "INSERT INTO agent_runs (agent_name, trigger, status) "
-                "VALUES (?, ?, 'pending')",
+                "INSERT INTO agent_runs (agent_name, trigger, status) VALUES (?, ?, 'pending')",
                 (self.agent_name, self.trigger),
             )
             self.run_id = int(cur.lastrowid or 0)
@@ -141,7 +140,17 @@ class AgentRun:
                 "records_written=?, model=?, input_tokens=?, output_tokens=?, "
                 "cache_read_tokens=?, cache_create_tokens=?, "
                 "ended_at=datetime('now') WHERE id=?",
-                (status, duration_ms, self.error, self.records_written,
-                 self.model, in_t, out_t, cr_t, cc_t, self.run_id),
+                (
+                    status,
+                    duration_ms,
+                    self.error,
+                    self.records_written,
+                    self.model,
+                    in_t,
+                    out_t,
+                    cr_t,
+                    cc_t,
+                    self.run_id,
+                ),
             )
         # Don't suppress exceptions

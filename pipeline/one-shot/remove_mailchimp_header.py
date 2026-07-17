@@ -61,9 +61,7 @@ def process_file(fp, dry_run=False):
     fm = fm_match.group(1)
     body = fm_match.group(2)
 
-    raw_match = re.match(
-        r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL
-    )
+    raw_match = re.match(r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL)
     if not raw_match:
         return None
     raw_open, inner, raw_close = raw_match.groups()
@@ -73,7 +71,7 @@ def process_file(fp, dry_run=False):
     if not ec:
         return None
     comment = ec.group(1)
-    after = inner[ec.end():]
+    after = inner[ec.end() :]
 
     new_after, nb = HEADER_B.subn("", after, count=1)
     variant = None

@@ -14,8 +14,9 @@ from .connection import connect
 _COLS = "id, context_key, role, persona, content, created_at"
 
 
-def chat_add(context_key: str, role: str, content: str,
-             *, persona: Optional[str] = None) -> dict[str, Any]:
+def chat_add(
+    context_key: str, role: str, content: str, *, persona: Optional[str] = None
+) -> dict[str, Any]:
     with connect() as conn:
         cur = conn.execute(
             "INSERT INTO production_chats (context_key, role, persona, content) "
@@ -23,9 +24,7 @@ def chat_add(context_key: str, role: str, content: str,
             (context_key, role, persona, content),
         )
         cid = int(cur.lastrowid)
-        row = conn.execute(
-            f"SELECT {_COLS} FROM production_chats WHERE id = ?", (cid,)
-        ).fetchone()
+        row = conn.execute(f"SELECT {_COLS} FROM production_chats WHERE id = ?", (cid,)).fetchone()
     return dict(row)
 
 

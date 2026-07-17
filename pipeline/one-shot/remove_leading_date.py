@@ -42,9 +42,7 @@ def process_file(fp, dry_run=False):
     fm = fm_match.group(1)
     body = fm_match.group(2)
 
-    raw_match = re.match(
-        r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL
-    )
+    raw_match = re.match(r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL)
     if not raw_match:
         return None
     raw_open, inner, raw_close = raw_match.groups()
@@ -53,21 +51,21 @@ def process_file(fp, dry_run=False):
     if not ec:
         return None
     comment = ec.group(1)
-    after = inner[ec.end():]
+    after = inner[ec.end() :]
 
     removed = []
     # Strip the date if present.
     m = DATE_RE.match(after)
     if m:
         removed.append(m.group("date"))
-        after = after[m.end():]
+        after = after[m.end() :]
     # Strip up to 2 location lines that follow.
     for _ in range(2):
         m = LOCATION_RE.match(after)
         if not m:
             break
         removed.append(m.group("loc").strip("\u200e "))
-        after = after[m.end():]
+        after = after[m.end() :]
 
     if not removed:
         return None

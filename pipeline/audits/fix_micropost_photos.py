@@ -22,6 +22,7 @@ Usage:
   python pipeline/audits/fix_micropost_photos.py --dry-run
   python pipeline/audits/fix_micropost_photos.py            # applies edits
 """
+
 from __future__ import annotations
 
 import argparse
@@ -36,8 +37,8 @@ sys.stdout.reconfigure(line_buffering=True)
 REPO = Path(__file__).resolve().parents[2]
 ARCHIVE = REPO / "apps" / "site" / "archive"
 
-H3_RE = re.compile(r'^### \[[^\]]+\]\((https?://[^)]+)\)')
-MP_LINE_RE = re.compile(r'^mp-photo-alt\[\](?:=mp-photo-alt\[\])*=?\s*$')
+H3_RE = re.compile(r"^### \[[^\]]+\]\((https?://[^)]+)\)")
+MP_LINE_RE = re.compile(r"^mp-photo-alt\[\](?:=mp-photo-alt\[\])*=?\s*$")
 # Extract img tags whose src is a post photo — covers:
 #   cdn.uploads.micro.blog/…              (modern micro.blog CDN)
 #   micro.thingelstad.com/uploads/…       (legacy micro.blog subdomain)
@@ -46,9 +47,9 @@ MP_LINE_RE = re.compile(r'^mp-photo-alt\[\](?:=mp-photo-alt\[\])*=?\s*$')
 # Explicitly excludes avatars/chrome (avatars.micro.blog, jthingelstad/avatar.jpg).
 IMG_SRC_RE = re.compile(
     r'<img[^>]+src="(https?://'
-    r'(?:cdn\.uploads\.micro\.blog'
-    r'|(?:(?:www|micro)\.)?thingelstad\.com/uploads'
-    r'|files\.thingelstad\.com'
+    r"(?:cdn\.uploads\.micro\.blog"
+    r"|(?:(?:www|micro)\.)?thingelstad\.com/uploads"
+    r"|files\.thingelstad\.com"
     r')[^"]+)"',
     re.I,
 )
@@ -86,7 +87,9 @@ def fetch_photos(client: httpx.Client, url: str) -> tuple[int, list[str]]:
     return (200, unique)
 
 
-def transform(body: str, photo_map: dict[str, list[str]], status_map: dict[str, int]) -> tuple[str, dict]:
+def transform(
+    body: str, photo_map: dict[str, list[str]], status_map: dict[str, int]
+) -> tuple[str, dict]:
     """Return (new_body, stats)."""
     lines = body.split("\n")
     out: list[str] = []
@@ -162,8 +165,11 @@ def main() -> None:
         if urls_in_file:
             work[p] = urls_in_file
 
-    print(f"[micropost-photos] {len(work)} files contain tokens; "
-          f"{len(urls_needed)} unique URLs to fetch", flush=True)
+    print(
+        f"[micropost-photos] {len(work)} files contain tokens; "
+        f"{len(urls_needed)} unique URLs to fetch",
+        flush=True,
+    )
 
     # Pass 2: fetch all unique URLs
     photo_map: dict[str, list[str]] = {}
@@ -174,7 +180,9 @@ def main() -> None:
             photo_map[url] = photos
             status_map[url] = status
             tag = "ok" if status == 200 else ("404" if status == 404 else f"err{status}")
-            print(f"  [{i:2}/{len(urls_needed)}] {tag} {len(photos)} photos — {url[-60:]}", flush=True)
+            print(
+                f"  [{i:2}/{len(urls_needed)}] {tag} {len(photos)} photos — {url[-60:]}", flush=True
+            )
 
     # Pass 3: transform files
     total_stats = {

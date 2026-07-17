@@ -16,7 +16,9 @@ content = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(content)
 
 
-def _write_canonical_issue(root: Path, number: int, *, body: str, links=None, absolute_url=None) -> None:
+def _write_canonical_issue(
+    root: Path, number: int, *, body: str, links=None, absolute_url=None
+) -> None:
     """Write a complete data/issues/{N}/ trio (archive.md, metadata.json,
     links.json) under ``root``. Mirrors the shape workshop_bot's
     compose-archive job produces in S3. Pass ``absolute_url=""`` to simulate an
@@ -40,21 +42,33 @@ def _write_canonical_issue(root: Path, number: int, *, body: str, links=None, ab
     )
     (issue_dir / "archive.md").write_text(f"---\n{front_matter}---\n{body}\n", encoding="utf-8")
     (issue_dir / "metadata.json").write_text(
-        json.dumps({
-            "number": number, "buttondown_id": f"em_{number}",
-            "subject": f"Weekly Thing {number} / Test", "slug": str(number),
-            "description": "Test description.",
-            "image": f"https://files.thingelstad.com/weekly-thing/{number}/cover.jpg",
-            "publish_date": f"2026-05-{10 + number:02d}T12:00:00Z",
-            "absolute_url": absolute_url,
-        }, indent=2) + "\n",
+        json.dumps(
+            {
+                "number": number,
+                "buttondown_id": f"em_{number}",
+                "subject": f"Weekly Thing {number} / Test",
+                "slug": str(number),
+                "description": "Test description.",
+                "image": f"https://files.thingelstad.com/weekly-thing/{number}/cover.jpg",
+                "publish_date": f"2026-05-{10 + number:02d}T12:00:00Z",
+                "absolute_url": absolute_url,
+            },
+            indent=2,
+        )
+        + "\n",
         encoding="utf-8",
     )
     (issue_dir / "links.json").write_text(
-        json.dumps({
-            "notable_links": links or [], "briefly_links": [],
-            "domains": [], "word_count": 10,
-        }, indent=2) + "\n",
+        json.dumps(
+            {
+                "notable_links": links or [],
+                "briefly_links": [],
+                "domains": [],
+                "word_count": 10,
+            },
+            indent=2,
+        )
+        + "\n",
         encoding="utf-8",
     )
 
@@ -80,9 +94,7 @@ class ParseArchiveFileTests(unittest.TestCase):
             with tempfile.TemporaryDirectory() as tmp:
                 path = Path(tmp) / "1.md"
                 path.write_text(
-                    f"{legacy}\n"
-                    "---\nsubject: Old\nslug: '1'\n---\n"
-                    "Body\n",
+                    f"{legacy}\n---\nsubject: Old\nslug: '1'\n---\nBody\n",
                     encoding="utf-8",
                 )
                 front_matter, body = content.parse_archive_file(path)
@@ -95,14 +107,18 @@ class CanonicalReadTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _write_canonical_issue(
-                root, 42,
+                root,
+                42,
                 body="## Notable\n\n### [Thing](http://example.com/x)\n\nA note.",
-                links=[{
-                    "text": "Thing", "url": "http://example.com/x",
-                    "domain": "example.com",
-                    "heading_context": "[Thing](http://example.com/x)",
-                    "section": "Notable",
-                }],
+                links=[
+                    {
+                        "text": "Thing",
+                        "url": "http://example.com/x",
+                        "domain": "example.com",
+                        "heading_context": "[Thing](http://example.com/x)",
+                        "section": "Notable",
+                    }
+                ],
             )
             issue = content.issue_from_canonical(root / "42")
         self.assertEqual(issue["number"], 42)
@@ -154,14 +170,24 @@ class WriteArchiveTests(unittest.TestCase):
             try:
                 content.ARCHIVE_DIR = archive_dir
                 content.DATA_DIR = data_dir
-                issues = [{
-                    "id": "em_1", "number": 1, "subject": "WT1",
-                    "publish_date": "2026-01-01T12:00:00Z", "slug": "1",
-                    "description": "d", "image": "", "absolute_url": "https://x",
-                    "domains": [], "links": [], "word_count": 5,
-                    "notable_links": [], "briefly_links": [],
-                    "body": "Hello",
-                }]
+                issues = [
+                    {
+                        "id": "em_1",
+                        "number": 1,
+                        "subject": "WT1",
+                        "publish_date": "2026-01-01T12:00:00Z",
+                        "slug": "1",
+                        "description": "d",
+                        "image": "",
+                        "absolute_url": "https://x",
+                        "domains": [],
+                        "links": [],
+                        "word_count": 5,
+                        "notable_links": [],
+                        "briefly_links": [],
+                        "body": "Hello",
+                    }
+                ]
                 content.write_archive_md(issues)
                 content.write_emails_json(issues)
                 written = (archive_dir / "1.md").read_text(encoding="utf-8")

@@ -38,16 +38,31 @@ def _seed_issue_body(n: int = 458) -> None:
     """Seed one notable row so ``draft_body`` (rendered live from the DB —
     the DB is the draft) returns a non-empty body."""
     from apps.workshop_bot.tools import issue_items
-    issue_items.upsert_item(issue_number=n, section="notable", source="pinboard",
-                            source_id="seed1", url="https://ex/a", title="Seed item",
-                            body_md="Seed blurb about capital and code.")
+
+    issue_items.upsert_item(
+        issue_number=n,
+        section="notable",
+        source="pinboard",
+        source_id="seed1",
+        url="https://ex/a",
+        title="Seed item",
+        body_md="Seed blurb about capital and code.",
+    )
+
 
 class ComposeHaikuTests(_DBTestCase):
     def _window(self, n=458):
         from apps.workshop_bot.tools.content import issue as issue_mod
+
         w = issue_mod.compute_window("2026-05-16", 7)
-        db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
-                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        db.set_issue_window(
+            issue_number=n,
+            pub_date=w["pub_date"],
+            end_date=w["end_date"],
+            start_date=w["start_date"],
+            day_count=w["day_count"],
+            set_by="test",
+        )
 
     def tearDown(self):
         os.environ.pop("DISCORD_CHANNEL_EDITORIAL", None)
@@ -104,29 +119,43 @@ class ComposeMetaTests(_DBTestCase):
 
     def _window(self, n=458):
         from apps.workshop_bot.tools.content import issue as issue_mod
+
         w = issue_mod.compute_window("2026-05-16", 7)
-        db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
-                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        db.set_issue_window(
+            issue_number=n,
+            pub_date=w["pub_date"],
+            end_date=w["end_date"],
+            start_date=w["start_date"],
+            day_count=w["day_count"],
+            set_by="test",
+        )
 
     def test_writes_metadata_json(self):
         self._window()
         _seed_issue_body(458)
-        subj_reply = ("Here are the options:\n\n"
-                      "1. WT458 — The Death of Scrum\n2. WT458 — Value Over Token Consumption\n"
-                      "3. WT458 — How Companies Learn With AI\n4. WT458 — Agentic Coding Is a Trap\n"
-                      "5. WT458 — Scrum, FilamentHound, DO_NOT_TRACK")
+        subj_reply = (
+            "Here are the options:\n\n"
+            "1. WT458 — The Death of Scrum\n2. WT458 — Value Over Token Consumption\n"
+            "3. WT458 — How Companies Learn With AI\n4. WT458 — Agentic Coding Is a Trap\n"
+            "5. WT458 — Scrum, FilamentHound, DO_NOT_TRACK"
+        )
         # The description prompt now returns a single comma-separated line
         # (no numbered list, no picker) — the job takes it verbatim.
-        desc_reply = ("Claude personal guidance, Redis array type, watchOS maps, "
-                      "AI company learning, agentic coding, Death of Scrum.")
+        desc_reply = (
+            "Claude personal guidance, Redis array type, watchOS maps, "
+            "AI company learning, agentic coding, Death of Scrum."
+        )
         fc = _FakeBotChannel(persona="eddy")
-        fc.bot.core = AsyncMock(side_effect=[(subj_reply, {"iterations": 1}), (desc_reply, {"iterations": 1})])
+        fc.bot.core = AsyncMock(
+            side_effect=[(subj_reply, {"iterations": 1}), (desc_reply, {"iterations": 1})]
+        )
         os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
         with patch.object(interaction, "await_choice", AsyncMock(side_effect=[0])):
             result = asyncio.run(compose_meta.run(ctx))
         self.assertTrue(result.ok, result.message)
         import json as _j
+
         meta = _j.loads(content_store.read_issue(458, "metadata.json"))
         self.assertEqual(meta["number"], 458)
         self.assertEqual(meta["subject"], "WT458 — The Death of Scrum")
@@ -146,10 +175,12 @@ class ComposeMetaTests(_DBTestCase):
         self._window()
         _seed_issue_body(458)
         fc = _FakeBotChannel(persona="eddy")
-        fc.bot.core = AsyncMock(side_effect=[
-            ("1. WT458 — Pick\n2. WT458 — B", {}),
-            ("Description line.", {}),
-        ])
+        fc.bot.core = AsyncMock(
+            side_effect=[
+                ("1. WT458 — Pick\n2. WT458 — B", {}),
+                ("Description line.", {}),
+            ]
+        )
         os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
         with patch.object(interaction, "await_choice", AsyncMock(side_effect=[0])):
@@ -163,21 +194,30 @@ class ComposeMetaTests(_DBTestCase):
         # same draft rather than POSTing a duplicate.
         self._window()
         import json as _j
+
         _seed_issue_body(458)
-        content_store.write_issue(458, "metadata.json", _j.dumps({
-            "number": 458,
-            "subject": "old subject",
-            "description": "old description",
-            "image": "https://files.thingelstad.com/weekly-thing/458/cover.jpg",
-            "slug": "458",
-            "publish_date": "2026-05-16T12:00:00Z",
-            "buttondown_id": "em_existing_id_123",
-        }))
+        content_store.write_issue(
+            458,
+            "metadata.json",
+            _j.dumps(
+                {
+                    "number": 458,
+                    "subject": "old subject",
+                    "description": "old description",
+                    "image": "https://files.thingelstad.com/weekly-thing/458/cover.jpg",
+                    "slug": "458",
+                    "publish_date": "2026-05-16T12:00:00Z",
+                    "buttondown_id": "em_existing_id_123",
+                }
+            ),
+        )
         fc = _FakeBotChannel(persona="eddy")
-        fc.bot.core = AsyncMock(side_effect=[
-            ("1. WT458 — Fresh Pick\n2. WT458 — B", {}),
-            ("Brand new description.", {}),
-        ])
+        fc.bot.core = AsyncMock(
+            side_effect=[
+                ("1. WT458 — Fresh Pick\n2. WT458 — B", {}),
+                ("Brand new description.", {}),
+            ]
+        )
         os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
         with patch.object(interaction, "await_choice", AsyncMock(side_effect=[0])):
@@ -194,16 +234,19 @@ class ComposeMetaTests(_DBTestCase):
         # Model returns an empty description (whitespace only) — metadata.json
         # still written with the picked subject and an empty description.
         fc = _FakeBotChannel(persona="eddy")
-        fc.bot.core = AsyncMock(side_effect=[
-            ("1. WT458 — Picked Subject\n2. WT458 — B", {}),
-            ("   \n  \n", {}),
-        ])
+        fc.bot.core = AsyncMock(
+            side_effect=[
+                ("1. WT458 — Picked Subject\n2. WT458 — B", {}),
+                ("   \n  \n", {}),
+            ]
+        )
         os.environ["DISCORD_CHANNEL_EDITORIAL"] = "123"
         ctx = _base.JobContext(deps=fc.deps())
         with patch.object(interaction, "await_choice", AsyncMock(side_effect=[0])):
             result = asyncio.run(compose_meta.run(ctx))
         self.assertTrue(result.ok, result.message)
         import json as _j
+
         meta = _j.loads(content_store.read_issue(458, "metadata.json"))
         self.assertEqual(meta["subject"], "WT458 — Picked Subject")
         self.assertEqual(meta["description"], "")
@@ -236,11 +279,13 @@ class ComposeMetaTests(_DBTestCase):
         self.assertIsNone(content_store.read_issue(458, "metadata.json"))
 
     def test_parse_numbered_list_tolerates_wrappers(self):
-        text = ("Sure — here you go:\n\n"
-                "1.  **WT458 — One**  \n"
-                "2. `WT458 — Two`\n"
-                "3. WT458 — Three\n\n"
-                "Hope that helps.")
+        text = (
+            "Sure — here you go:\n\n"
+            "1.  **WT458 — One**  \n"
+            "2. `WT458 — Two`\n"
+            "3. WT458 — Three\n\n"
+            "Hope that helps."
+        )
         parser = compose_meta._parse_numbered_list_factory(8)
         self.assertEqual(
             parser(text),
@@ -255,11 +300,13 @@ class ComposeMetaTests(_DBTestCase):
     def test_compose_max_refresh_rounds_is_shared(self):
         # All three compose-flow jobs share a single constant.
         from apps.workshop_bot.jobs import _llm_job
+
         self.assertEqual(_llm_job.MAX_REFRESH_ROUNDS, 3)
 
     def test_resolved_bot_is_a_named_tuple(self):
         """Tuple unpack stays as before, AND callers can use field access."""
         from apps.workshop_bot.jobs._llm_job import ResolvedBot
+
         r = ResolvedBot("BOT", "CHANNEL", None)
         # tuple-unpack — what existing callers do
         bot, channel, reason = r
@@ -273,6 +320,7 @@ class ComposeMetaTests(_DBTestCase):
         """One stored editorial pass, on Opus by default (now the on-demand
         ``eddy-review`` job). Env override wins."""
         from apps.workshop_bot.jobs import eddy_review
+
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("WORKSHOP_EDDY_DRAFT_REVIEW_MODEL", None)
             self.assertEqual(eddy_review._review_model(), "opus")
@@ -299,43 +347,86 @@ class ReorderTests(_DBTestCase):
         ids the test replies use (``n1``/``n2``/``b1``/``b2``/``j1``/
         ``j2``/``j3``) map to insertion order."""
         from apps.workshop_bot.tools import issue_items
+
         issue_items.upsert_item(
-            issue_number=458, section="notable", source="pinboard",
-            source_id="hash-A", url="http://a", title="A", body_md="body A",
+            issue_number=458,
+            section="notable",
+            source="pinboard",
+            source_id="hash-A",
+            url="http://a",
+            title="A",
+            body_md="body A",
         )
         issue_items.upsert_item(
-            issue_number=458, section="notable", source="pinboard",
-            source_id="hash-B", url="http://b", title="B", body_md="body B",
+            issue_number=458,
+            section="notable",
+            source="pinboard",
+            source_id="hash-B",
+            url="http://b",
+            title="B",
+            body_md="body B",
         )
         issue_items.upsert_item(
-            issue_number=458, section="brief", source="pinboard",
-            source_id="hash-X", url="http://x", title="X", body_md="First.",
+            issue_number=458,
+            section="brief",
+            source="pinboard",
+            source_id="hash-X",
+            url="http://x",
+            title="X",
+            body_md="First.",
         )
         issue_items.upsert_item(
-            issue_number=458, section="brief", source="pinboard",
-            source_id="hash-Y", url="http://y", title="Y", body_md="Second.",
+            issue_number=458,
+            section="brief",
+            source="pinboard",
+            source_id="hash-Y",
+            url="http://y",
+            title="Y",
+            body_md="Second.",
         )
         issue_items.upsert_item(
-            issue_number=458, section="journal", source="microblog",
-            source_id="https://j1", url="https://j1", title="", body_md="j-body1",
+            issue_number=458,
+            section="journal",
+            source="microblog",
+            source_id="https://j1",
+            url="https://j1",
+            title="",
+            body_md="j-body1",
             metadata={"label": "Sunday @ 1:00 PM", "published": "2026-05-10T18:00:00Z"},
         )
         issue_items.upsert_item(
-            issue_number=458, section="journal", source="microblog",
-            source_id="https://j2", url="https://j2", title="", body_md="j-body2",
+            issue_number=458,
+            section="journal",
+            source="microblog",
+            source_id="https://j2",
+            url="https://j2",
+            title="",
+            body_md="j-body2",
             metadata={"label": "Monday @ 2:00 PM", "published": "2026-05-11T19:00:00Z"},
         )
         issue_items.upsert_item(
-            issue_number=458, section="journal", source="microblog",
-            source_id="https://j3", url="https://j3", title="", body_md="j-body3",
+            issue_number=458,
+            section="journal",
+            source="microblog",
+            source_id="https://j3",
+            url="https://j3",
+            title="",
+            body_md="j-body3",
             metadata={"label": "Tuesday @ 3:00 PM", "published": "2026-05-12T20:00:00Z"},
         )
 
     def _setup(self, reply: str, *, seed: bool = True):
         from apps.workshop_bot.tools.content import issue as issue_mod
+
         w = issue_mod.compute_window("2026-05-16", 7)
-        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
-                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        db.set_issue_window(
+            issue_number=458,
+            pub_date=w["pub_date"],
+            end_date=w["end_date"],
+            start_date=w["start_date"],
+            day_count=w["day_count"],
+            set_by="test",
+        )
         if seed:
             self._seed_rows()
         fc = _FakeBotChannel(persona="eddy", reply=reply)
@@ -370,6 +461,7 @@ class ReorderTests(_DBTestCase):
 
     def test_accept_mutates_row_order(self):
         from apps.workshop_bot.tools import issue_items
+
         # Reorder: notable [n2, n1], leave brief + journal identity.
         ctx, fc = self._setup(self._basic_reply(notable_order=("n2", "n1")))
         with patch.object(interaction, "await_approval", AsyncMock(return_value=True)):
@@ -386,6 +478,7 @@ class ReorderTests(_DBTestCase):
 
     def test_reject_leaves_rows_unchanged(self):
         from apps.workshop_bot.tools import issue_items
+
         ctx, fc = self._setup(self._basic_reply(notable_order=("n2", "n1")))
         with patch.object(interaction, "await_approval", AsyncMock(return_value=False)):
             result = asyncio.run(reorder.run(ctx))
@@ -399,6 +492,7 @@ class ReorderTests(_DBTestCase):
 
     def test_timeout_leaves_rows_unchanged(self):
         from apps.workshop_bot.tools import issue_items
+
         ctx, fc = self._setup(self._basic_reply())
         with patch.object(interaction, "await_approval", AsyncMock(return_value=None)):
             result = asyncio.run(reorder.run(ctx))
@@ -456,8 +550,7 @@ class ReorderTests(_DBTestCase):
         # The user-visible auto-fix note hit #editorial.
         sent_messages = [c.args[0] for c in fc.channel.send.await_args_list]
         self.assertTrue(
-            any("omitted `n2`" in m and "appended in original order" in m
-                for m in sent_messages),
+            any("omitted `n2`" in m and "appended in original order" in m for m in sent_messages),
             f"expected auto-fix note in sends; got: {sent_messages!r}",
         )
         # And only ONE LLM call happened for the proposal — no retry round,
@@ -484,5 +577,3 @@ class ReorderTests(_DBTestCase):
     # promoted, brief-cannot-be-promoted, too-many-promotions,
     # membership-block-after-promoted-id, promoted-id-also-in-order — all
     # gone; the scenarios they tested aren't reachable any more.)
-
-

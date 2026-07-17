@@ -58,7 +58,8 @@ def fetch_archive_context(
         return [], str(exc)
     if exclude_issue is not None:
         passages = [
-            p for p in passages
+            p
+            for p in passages
             if not (isinstance(p, dict) and p.get("issue_number") == exclude_issue)
         ]
     return passages, None
@@ -83,7 +84,9 @@ def format_archive_context_block(
         parts.append(f"_(retrieval unavailable: {error} — proceed without thread context.)_")
         return "\n".join(parts)
     if not passages:
-        parts.append("_(no archive passages surfaced for this query — treat this as fresh territory.)_")
+        parts.append(
+            "_(no archive passages surfaced for this query — treat this as fresh territory.)_"
+        )
         return "\n".join(parts)
     blocks: list[str] = []
     for p in passages:

@@ -81,7 +81,8 @@ def alt(issue_number: int) -> str:
     except Exception as exc:  # noqa: BLE001
         logger.warning(
             "cover: couldn't persist generated alt to cover.json for #%d: %s",
-            n, exc,
+            n,
+            exc,
         )
     return generated
 
@@ -92,7 +93,7 @@ def _load_cover_json(issue_number: int) -> Optional[dict]:
         return None
     try:
         data = json.loads(raw)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
     return data if isinstance(data, dict) else None
 
@@ -100,11 +101,15 @@ def _load_cover_json(issue_number: int) -> Optional[dict]:
 def _render_json(text: str, issue_number: int) -> str:
     try:
         data = json.loads(text)
-    except (ValueError, TypeError):
-        logger.warning("cover.json for #%d isn't valid JSON; falling back to cover.md", issue_number)
+    except ValueError, TypeError:
+        logger.warning(
+            "cover.json for #%d isn't valid JSON; falling back to cover.md", issue_number
+        )
         return ""
     if not isinstance(data, dict):
-        logger.warning("cover.json for #%d isn't a JSON object; falling back to cover.md", issue_number)
+        logger.warning(
+            "cover.json for #%d isn't a JSON object; falling back to cover.md", issue_number
+        )
         return ""
     caption = str(data.get("caption") or "").strip()
     timestamp = str(data.get("timestamp") or "").strip()

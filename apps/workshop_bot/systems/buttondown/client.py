@@ -24,6 +24,7 @@ logger = logging.getLogger("workshop.systems.buttondown")
 
 # ---------- low-level HTTP ----------
 
+
 def _headers() -> dict[str, str]:
     key = os.environ.get("BUTTONDOWN_API_KEY")
     if not key:
@@ -83,6 +84,7 @@ def _normalize(row: dict[str, Any]) -> dict[str, Any]:
 
 
 # ---------- subscriber surfaces ----------
+
 
 def recent_subscribers(
     *,
@@ -180,7 +182,7 @@ def _extract_ref_tag(row: dict[str, Any]) -> str:
     for tag in row.get("tags") or []:
         name = tag if isinstance(tag, str) else (tag or {}).get("name")
         if isinstance(name, str) and name.startswith("source:"):
-            slug = name[len("source:"):].strip()
+            slug = name[len("source:") :].strip()
             if slug:
                 return slug
     return ""
@@ -277,9 +279,7 @@ def subscriber_growth(*, days: int = 30, max_pages: int = 20) -> dict[str, Any]:
         max_pages=max_pages,
     ):
         when = _parse_dt(
-            row.get("unsubscription_date")
-            or row.get("churn_date")
-            or row.get("creation_date")
+            row.get("unsubscription_date") or row.get("churn_date") or row.get("creation_date")
         )
         if when is not None and when < cutoff:
             break
@@ -311,9 +311,7 @@ def list_recent_emails(*, limit: int = 25) -> list[dict[str, Any]]:
     """Most recent sent emails — id, subject, send timestamps, recipients,
     opens, clicks, unsubscriptions. No body."""
     params = {"page_size": min(int(limit), 100), "ordering": "-publish_date"}
-    resp = requests.get(
-        f"{API_BASE}/emails", headers=_headers(), params=params, timeout=20
-    )
+    resp = requests.get(f"{API_BASE}/emails", headers=_headers(), params=params, timeout=20)
     resp.raise_for_status()
     data = resp.json() or {}
     out: list[dict[str, Any]] = []
@@ -333,9 +331,7 @@ def email_engagement(*, email_id: str) -> dict[str, Any]:
     """
     if not email_id or not isinstance(email_id, str):
         return {"error": "email_id is required"}
-    resp = requests.get(
-        f"{API_BASE}/emails/{email_id}", headers=_headers(), timeout=15
-    )
+    resp = requests.get(f"{API_BASE}/emails/{email_id}", headers=_headers(), timeout=15)
     if resp.status_code == 404:
         return {"error": f"no email with id {email_id!r}"}
     resp.raise_for_status()
@@ -371,6 +367,7 @@ def _email_summary(row: dict[str, Any]) -> dict[str, Any]:
 
 
 # ---------- helpers ----------
+
 
 def _parse_dt(raw: Any) -> Optional[_dt.datetime]:
     if not raw:

@@ -76,8 +76,10 @@ class MemoryRoundtripTests(unittest.TestCase):
         token = agent_tools.active_persona.set("eddy")
         try:
             r1 = agent_tools.t_remember(
-                deps=None, content="Jamie said no AI takes for a few weeks",
-                kind="preference", key="jamie:ai-fatigue",
+                deps=None,
+                content="Jamie said no AI takes for a few weeks",
+                kind="preference",
+                key="jamie:ai-fatigue",
             )
             self.assertTrue(r1["saved"])
             results = agent_tools.t_recall(deps=None)
@@ -126,7 +128,8 @@ class MemoryRoundtripTests(unittest.TestCase):
             agent_tools.t_forget_note(deps=None, note_id=note_id, status="resolved")
             self.assertEqual(len(agent_tools.t_recall(deps=None)), 0)
             self.assertEqual(
-                len(agent_tools.t_recall(deps=None, include_resolved=True)), 1,
+                len(agent_tools.t_recall(deps=None, include_resolved=True)),
+                1,
             )
         finally:
             agent_tools.active_persona.reset(t)
@@ -135,18 +138,23 @@ class MemoryRoundtripTests(unittest.TestCase):
         t = agent_tools.active_persona.set("eddy")
         try:
             agent_tools.t_remember(
-                deps=None, content="cybersecurity is heating up again",
-                kind="theme", key="theme:cybersecurity",
+                deps=None,
+                content="cybersecurity is heating up again",
+                kind="theme",
+                key="theme:cybersecurity",
             )
             agent_tools.t_remember(
-                deps=None, content="climate finance week",
-                kind="theme", key="theme:climate",
+                deps=None,
+                content="climate finance week",
+                kind="theme",
+                key="theme:climate",
             )
             r = agent_tools.t_recall(deps=None, query="cyber")
             self.assertEqual(len(r), 1)
             self.assertEqual(r[0]["key"], "theme:cybersecurity")
         finally:
             agent_tools.active_persona.reset(t)
+
 
 if __name__ == "__main__":
     unittest.main()

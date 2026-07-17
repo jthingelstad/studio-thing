@@ -62,8 +62,9 @@ def remote_blob_shas(branch: str) -> dict[str, str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--push", action="store_true",
-                    help="Commit to the website repo. Default is a dry-run diff.")
+    ap.add_argument(
+        "--push", action="store_true", help="Commit to the website repo. Default is a dry-run diff."
+    )
     ap.add_argument("--branch", default="main")
     args = ap.parse_args()
 
@@ -91,8 +92,10 @@ def main() -> int:
         else:
             unchanged += 1
 
-    print(f"DRY RUN vs {github_repo._repo()}@{args.branch}: "
-          f"{len(added)} added, {len(changed)} changed, {unchanged} unchanged.")
+    print(
+        f"DRY RUN vs {github_repo._repo()}@{args.branch}: "
+        f"{len(added)} added, {len(changed)} changed, {unchanged} unchanged."
+    )
     for p in added:
         print(f"  + {p}")
     for p in changed:

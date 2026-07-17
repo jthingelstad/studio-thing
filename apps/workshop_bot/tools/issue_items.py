@@ -64,11 +64,14 @@ SECTION_HANDLE_LETTER: dict[str, str] = {
 HYGIENE_LETTER = "X"
 ISSUE_LETTER = "W"
 ALL_HANDLE_LETTERS = (
-    *SECTION_HANDLE_LETTER.values(), HYGIENE_LETTER, ISSUE_LETTER,
+    *SECTION_HANDLE_LETTER.values(),
+    HYGIENE_LETTER,
+    ISSUE_LETTER,
 )
 
 
 # ---------- exceptions ----------
+
 
 class ReorderError(ValueError):
     """Raised when a reorder request can't be applied (not a permutation).
@@ -79,6 +82,7 @@ class ReorderError(ValueError):
 
 
 # ---------- row → dict ----------
+
 
 def _row_to_dict(row) -> dict[str, Any]:
     d = dict(row)
@@ -93,7 +97,7 @@ def _row_to_dict(row) -> dict[str, Any]:
     if raw:
         try:
             d["metadata"] = json.loads(raw)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             d["metadata"] = None
     else:
         d["metadata"] = None
@@ -101,6 +105,7 @@ def _row_to_dict(row) -> dict[str, Any]:
 
 
 # ---------- CRUD ----------
+
 
 def upsert_item(
     *,
@@ -204,8 +209,15 @@ def upsert_item(
             " url, title, body_md, metadata_json) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
-                issue_number, section, int(next_pos), source, source_id,
-                url, title, body_md, meta_json,
+                issue_number,
+                section,
+                int(next_pos),
+                source,
+                source_id,
+                url,
+                title,
+                body_md,
+                meta_json,
             ),
         )
         return int(cur.lastrowid or 0)
@@ -279,6 +291,7 @@ def promoted_items(issue_number: int) -> list[dict[str, Any]]:
 
 # ---------- mutations ----------
 
+
 def reorder(issue_number: int, section: str, ordered_ids: list[int]) -> None:
     """Rewrite ``position`` for every non-promoted item in
     (issue, section) to match ``ordered_ids``.
@@ -318,8 +331,7 @@ def reorder(issue_number: int, section: str, ordered_ids: list[int]) -> None:
             )
         if missing:
             raise ReorderError(
-                f"{section}: order is missing id(s): "
-                f"{', '.join(str(x) for x in missing)}"
+                f"{section}: order is missing id(s): {', '.join(str(x) for x in missing)}"
             )
         # Apply in one transaction. Use position values starting at
         # (max_existing + 1) to dodge any intermediate collisions, then
@@ -327,14 +339,16 @@ def reorder(issue_number: int, section: str, ordered_ids: list[int]) -> None:
         # isn't strictly necessary, but it's cheap insurance.
         for i, item_id in enumerate(ordered_ids, start=1):
             conn.execute(
-                "UPDATE issue_items SET position = ?, updated_at = datetime('now') "
-                "WHERE id = ?",
+                "UPDATE issue_items SET position = ?, updated_at = datetime('now') WHERE id = ?",
                 (i, int(item_id)),
             )
 
 
 def promote(
-    item_id: int, *, promoted_position: str, promoted_heading: str,
+    item_id: int,
+    *,
+    promoted_position: str,
+    promoted_heading: str,
 ) -> None:
     """Lift an item out of its parent section into a standalone
     featured section. Idempotent — re-calling with the same args is a
@@ -346,8 +360,7 @@ def promote(
     """
     if promoted_position not in PROMOTION_POSITIONS:
         raise ValueError(
-            f"promoted_position must be one of {PROMOTION_POSITIONS}, "
-            f"got {promoted_position!r}"
+            f"promoted_position must be one of {PROMOTION_POSITIONS}, got {promoted_position!r}"
         )
     heading = (promoted_heading or "").strip()
     if not heading:
@@ -376,8 +389,8 @@ def set_section_override(item_id: int, override: Optional[str]) -> None:
         raise ValueError(f"unknown section: {override!r}")
     with connect() as conn:
         row = conn.execute(
-            "SELECT issue_number, section, section_override FROM issue_items "
-            "WHERE id = ?", (int(item_id),),
+            "SELECT issue_number, section, section_override FROM issue_items WHERE id = ?",
+            (int(item_id),),
         ).fetchone()
         if row is None:
             raise ValueError(f"item_id={item_id!r} not found")
@@ -404,8 +417,7 @@ def set_excluded(item_id: int, excluded: bool) -> None:
     rows whose *upstream* item disappeared) but no longer renders anywhere."""
     with connect() as conn:
         cur = conn.execute(
-            "UPDATE issue_items SET excluded = ?, updated_at = datetime('now') "
-            "WHERE id = ?",
+            "UPDATE issue_items SET excluded = ?, updated_at = datetime('now') WHERE id = ?",
             (1 if excluded else 0, int(item_id)),
         )
         if not cur.rowcount:
@@ -422,8 +434,7 @@ def set_body_override(item_id: int, body_md: Optional[str]) -> None:
     """
     with connect() as conn:
         cur = conn.execute(
-            "UPDATE issue_items SET body_override = ?, updated_at = datetime('now') "
-            "WHERE id = ?",
+            "UPDATE issue_items SET body_override = ?, updated_at = datetime('now') WHERE id = ?",
             (body_md, int(item_id)),
         )
         if not cur.rowcount:
@@ -439,7 +450,8 @@ def move_item(item_id: int, direction: str) -> bool:
     with connect() as conn:
         row = conn.execute(
             "SELECT id, issue_number, COALESCE(section_override, section) AS eff "
-            "FROM issue_items WHERE id = ?", (int(item_id),),
+            "FROM issue_items WHERE id = ?",
+            (int(item_id),),
         ).fetchone()
         if row is None:
             raise ValueError(f"item_id={item_id!r} not found")
@@ -460,8 +472,8 @@ def move_item(item_id: int, direction: str) -> bool:
         ids[i], ids[j] = ids[j], ids[i]
         for pos, iid in enumerate(ids, start=1):
             conn.execute(
-                "UPDATE issue_items SET position = ?, updated_at = datetime('now') "
-                "WHERE id = ?", (pos, iid),
+                "UPDATE issue_items SET position = ?, updated_at = datetime('now') WHERE id = ?",
+                (pos, iid),
             )
     return True
 
@@ -525,6 +537,7 @@ def compact_positions(issue_number: int, section: str) -> None:
 
 # ---------- editorial comments ----------
 
+
 def _next_handle_ordinal(issue_number: int, letter: str) -> int:
     """Highest ordinal in use for (issue, letter), plus one. Handles are
     never reused — superseded comments still occupy their slot, so
@@ -535,13 +548,12 @@ def _next_handle_ordinal(issue_number: int, letter: str) -> int:
     prefix = f"E{int(issue_number)}-{letter}"
     with connect() as conn:
         rows = conn.execute(
-            "SELECT handle FROM editorial_comments "
-            "WHERE issue_number = ? AND handle LIKE ?",
+            "SELECT handle FROM editorial_comments WHERE issue_number = ? AND handle LIKE ?",
             (issue_number, f"{prefix}%"),
         ).fetchall()
     max_ord = 0
     for r in rows:
-        tail = str(r["handle"])[len(prefix):]
+        tail = str(r["handle"])[len(prefix) :]
         try:
             n = int(tail)
         except ValueError:
@@ -615,9 +627,15 @@ def write_comment(
             " anchor_text, body_md, reasoning_md) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
-                handle, int(issue_number), scope,
+                handle,
+                int(issue_number),
+                scope,
                 int(item_id) if item_id is not None else None,
-                section, verdict, anchor_text, body_md, reasoning_md,
+                section,
+                verdict,
+                anchor_text,
+                body_md,
+                reasoning_md,
             ),
         )
         return {

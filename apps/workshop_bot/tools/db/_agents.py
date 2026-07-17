@@ -146,8 +146,7 @@ def query_agent_notes(
         like = f"%{query}%"
         params.extend([like, like])
     sql_parts.append(
-        "AND (expires_at IS NULL OR expires_at > datetime('now')) "
-        "ORDER BY created_at DESC LIMIT ?"
+        "AND (expires_at IS NULL OR expires_at > datetime('now')) ORDER BY created_at DESC LIMIT ?"
     )
     params.append(limit)
     with connect() as conn:
@@ -162,5 +161,3 @@ def update_agent_note_status(note_id: int, status: str) -> bool:
             (status, note_id),
         )
         return cur.rowcount > 0
-
-

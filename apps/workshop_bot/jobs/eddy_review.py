@@ -76,7 +76,7 @@ def _split_review_into_segments(review_md: str) -> list[str]:
                 positions.append(m.start())
         positions.append(len(block))
         for i in range(len(positions) - 1):
-            piece = block[positions[i]:positions[i + 1]].strip()
+            piece = block[positions[i] : positions[i + 1]].strip()
             if piece:
                 segments.append(piece)
     return segments
@@ -138,30 +138,41 @@ def _store_review_comments(issue_number: int, review_md: str) -> int:
                 rid = _row_id_for_synth(issue_number, target)
                 if rid is None:
                     issue_items.write_comment(
-                        issue_number=issue_number, scope="section",
-                        section=section_or_letter, body_md=body_md,
+                        issue_number=issue_number,
+                        scope="section",
+                        section=section_or_letter,
+                        body_md=body_md,
                         verdict="suggestion",
                     )
                 else:
                     issue_items.write_comment(
-                        issue_number=issue_number, scope="item",
-                        item_id=rid, body_md=body_md, verdict="suggestion",
+                        issue_number=issue_number,
+                        scope="item",
+                        item_id=rid,
+                        body_md=body_md,
+                        verdict="suggestion",
                     )
             elif scope in ("section",):
                 issue_items.write_comment(
-                    issue_number=issue_number, scope="section",
-                    section=section_or_letter, body_md=body_md,
+                    issue_number=issue_number,
+                    scope="section",
+                    section=section_or_letter,
+                    body_md=body_md,
                     verdict="suggestion",
                 )
             elif scope == "hygiene":
                 issue_items.write_comment(
-                    issue_number=issue_number, scope="hygiene",
-                    body_md=body_md, verdict="suggestion",
+                    issue_number=issue_number,
+                    scope="hygiene",
+                    body_md=body_md,
+                    verdict="suggestion",
                 )
             else:
                 issue_items.write_comment(
-                    issue_number=issue_number, scope="issue",
-                    body_md=body_md, verdict="suggestion",
+                    issue_number=issue_number,
+                    scope="issue",
+                    body_md=body_md,
+                    verdict="suggestion",
                 )
         except Exception:  # noqa: BLE001
             logger.exception("eddy-review: failed to store review comment")
@@ -190,8 +201,7 @@ def _store_review_comments(issue_number: int, review_md: str) -> int:
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     window = db.get_active_issue_window()
     if window is None:
-        return _base.JobResult(
-            False, "❌ no active issue window — start one in Studio first.")
+        return _base.JobResult(False, "❌ no active issue window — start one in Studio first.")
     n = int(window["issue_number"])
 
     team = getattr(getattr(ctx, "deps", None), "team", None)
@@ -210,12 +220,15 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
 
     st = await asyncio.to_thread(draft_mod.section_status, n)
     eddy_ctx = context.build_eddy_context(
-        ref_date=date.today(), section_status=st, prev_digest=None)
+        ref_date=date.today(), section_status=st, prev_digest=None
+    )
     target_legend = render.review_target_legend(issue_number=n, section_status=st)
     # Pre-inject semantic echoes from the archive (fail-soft).
     echo_passages, echo_error = await asyncio.to_thread(
         archive_context.fetch_archive_context,
-        draft_text[:_ECHO_QUERY_CHARS], k=_ECHO_K, exclude_issue=n,
+        draft_text[:_ECHO_QUERY_CHARS],
+        k=_ECHO_K,
+        exclude_issue=n,
     )
     echo_block = archive_context.format_archive_context_block(
         echo_passages,

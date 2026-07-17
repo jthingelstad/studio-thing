@@ -43,7 +43,9 @@ def ensure_audio_tools() -> None:
     missing = [name for name in ("ffmpeg", "ffprobe") if not shutil.which(name)]
     if missing:
         names = ", ".join(missing)
-        raise RuntimeError(f"Missing required audio tool(s): {names}. Install ffmpeg before building audio.")
+        raise RuntimeError(
+            f"Missing required audio tool(s): {names}. Install ffmpeg before building audio."
+        )
 
 
 # Lines that open a new semantic block in the generated audio script (section
@@ -192,15 +194,25 @@ def synthesize_text_to_mp3(text: str, output_path: Path, label: str = "audio") -
         encoding="utf-8",
     )
     _run(
-        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(list_path), "-c", "copy", str(output_path)],
+        [
+            "ffmpeg",
+            "-y",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            str(list_path),
+            "-c",
+            "copy",
+            str(output_path),
+        ],
         cwd=REPO,
     )
     return output_path
 
 
-def synthesize_blocks_to_mp3(
-    blocks: list[str], output_path: Path, label: str = "audio"
-) -> Path:
+def synthesize_blocks_to_mp3(blocks: list[str], output_path: Path, label: str = "audio") -> Path:
     """TTS each block as its own utterance, concat into a single MP3 at
     output_path. No normalization.
 
@@ -240,7 +252,19 @@ def synthesize_blocks_to_mp3(
         encoding="utf-8",
     )
     _run(
-        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(list_path), "-c", "copy", str(output_path)],
+        [
+            "ffmpeg",
+            "-y",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            str(list_path),
+            "-c",
+            "copy",
+            str(output_path),
+        ],
         cwd=REPO,
     )
     return output_path
@@ -284,7 +308,19 @@ def assemble_final(
         encoding="utf-8",
     )
     _run(
-        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_path), "-c", "copy", str(raw_combined)],
+        [
+            "ffmpeg",
+            "-y",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            str(concat_path),
+            "-c",
+            "copy",
+            str(raw_combined),
+        ],
         cwd=REPO,
     )
 
@@ -303,27 +339,44 @@ def assemble_final(
     cmd: list[str] = [
         "ffmpeg",
         "-y",
-        "-i", str(raw_combined),
-        "-i", str(cover_path),
-        "-map", "0:a",
-        "-map", "1:v",
-        "-c:v", "copy",
-        "-disposition:v", "attached_pic",
-        "-af", filter_chain,
-        "-ar", str(FINAL_SAMPLE_RATE),
-        "-ac", str(FINAL_CHANNELS),
-        "-c:a", "libmp3lame",
-        "-b:a", FINAL_BITRATE,
-        "-write_xing", "1",
-        "-id3v2_version", "3",
+        "-i",
+        str(raw_combined),
+        "-i",
+        str(cover_path),
+        "-map",
+        "0:a",
+        "-map",
+        "1:v",
+        "-c:v",
+        "copy",
+        "-disposition:v",
+        "attached_pic",
+        "-af",
+        filter_chain,
+        "-ar",
+        str(FINAL_SAMPLE_RATE),
+        "-ac",
+        str(FINAL_CHANNELS),
+        "-c:a",
+        "libmp3lame",
+        "-b:a",
+        FINAL_BITRATE,
+        "-write_xing",
+        "1",
+        "-id3v2_version",
+        "3",
     ]
     for key, value in metadata.items():
         cmd.extend(["-metadata", f"{key}={value}"])
-    cmd.extend([
-        "-metadata:s:v", "title=Album cover",
-        "-metadata:s:v", "comment=Cover (front)",
-        str(output_path),
-    ])
+    cmd.extend(
+        [
+            "-metadata:s:v",
+            "title=Album cover",
+            "-metadata:s:v",
+            "comment=Cover (front)",
+            str(output_path),
+        ]
+    )
     _run(cmd, cwd=REPO)
     return output_path, probe_duration_seconds(output_path)
 
@@ -359,7 +412,19 @@ def _ffmpeg_concat_copy(input_paths: list[Path], output_path: Path) -> None:
         encoding="utf-8",
     )
     _run(
-        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(list_path), "-c", "copy", str(output_path)],
+        [
+            "ffmpeg",
+            "-y",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            str(list_path),
+            "-c",
+            "copy",
+            str(output_path),
+        ],
         cwd=REPO,
     )
 
@@ -404,7 +469,9 @@ def _loudnorm_measure(input_path: Path) -> dict[str, str]:
 
 
 def _run(cmd: list[str], cwd: Path) -> None:
-    subprocess.run(cmd, cwd=cwd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    subprocess.run(
+        cmd, cwd=cwd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
 
 
 def probe_duration_seconds(path: Path) -> int:

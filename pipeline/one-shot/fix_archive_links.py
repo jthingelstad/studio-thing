@@ -5,6 +5,7 @@ pipeline/audits/audit_archive.py. Each fix is an exact-string replacement with
 a recorded before/after; the script aborts and reports if any target
 string is not found or is ambiguous.
 """
+
 from __future__ import annotations
 
 import sys

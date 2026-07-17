@@ -153,11 +153,7 @@ class AudioScriptTests(unittest.TestCase):
             "subject": "Weekly Thing 349",
             "publish_date": "2026-05-23T12:00:00Z",
         }
-        body = (
-            "## Notable\n\n"
-            "### [Only link](https://example.com/x)\n\n"
-            "Just the one.\n"
-        )
+        body = "## Notable\n\n### [Only link](https://example.com/x)\n\nJust the one.\n"
         rendered = audio_script.body_to_audio_script(body, frontmatter)
         self.assertIn("There is one link this week.", rendered)
         self.assertIn('Link one of one. "Only link"', rendered)
@@ -172,11 +168,7 @@ class AudioScriptTests(unittest.TestCase):
             "subject": "Weekly Thing 349",
             "publish_date": "2026-05-23T12:00:00Z",
         }
-        body = (
-            "## Notable\n\n"
-            "## Briefly\n\n"
-            "Some commentary → **[A link](https://example.com/x)**\n"
-        )
+        body = "## Notable\n\n## Briefly\n\nSome commentary → **[A link](https://example.com/x)**\n"
         rendered = audio_script.body_to_audio_script(body, frontmatter)
         # Empty Notable section drops cleanly — no intro, no count line.
         self.assertNotIn("Now, the Notable section.", rendered)
@@ -218,7 +210,10 @@ This is `inline code` with [a link](https://example.com), e.g. a test & sample.
 """
         rendered = audio_script.body_to_audio_script(body, frontmatter)
 
-        self.assertIn("Quote.\nThis is quoted text versus normal text. It cost 12 dollars and 50 cents on the twenty first.\nEnd quote.", rendered)
+        self.assertIn(
+            "Quote.\nThis is quoted text versus normal text. It cost 12 dollars and 50 cents on the twenty first.\nEnd quote.",
+            rendered,
+        )
         self.assertNotIn("skip me", rendered)
         self.assertIn("inline code with a link, for example a test and sample.", rendered)
 

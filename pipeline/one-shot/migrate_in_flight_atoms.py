@@ -91,16 +91,16 @@ def migrate(issue_number: int) -> dict:
 def _active_issue_number() -> int:
     window = db.get_active_issue_window()
     if window is None:
-        raise SystemExit(
-            "No active issue window in workshop.db — pass --issue N explicitly."
-        )
+        raise SystemExit("No active issue window in workshop.db — pass --issue N explicitly.")
     return int(window["issue_number"])
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--issue", type=int, default=None,
+        "--issue",
+        type=int,
+        default=None,
         help="Issue number to migrate. Defaults to the active issue from workshop.db.",
     )
     args = parser.parse_args()
@@ -111,9 +111,7 @@ def main() -> int:
     if result["copied"]:
         print(f"  ✅ copied to atoms/: {', '.join(result['copied'])}")
     if result["skipped_already_at_new"]:
-        print(
-            f"  ↩️  already at new path: {', '.join(result['skipped_already_at_new'])}"
-        )
+        print(f"  ↩️  already at new path: {', '.join(result['skipped_already_at_new'])}")
     if result["missing"]:
         print(
             "  ⚠️  not present (skipped — write via the normal flow when ready): "

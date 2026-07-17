@@ -38,8 +38,10 @@ class _FakeFiles:
 
 class RenderCoverTests(unittest.TestCase):
     def test_json_full_renders_caption_then_date_hardbreak_location(self):
-        cj = ('{"caption":"Minnehaha Creek rushing towards the Mississippi River just after the Falls.",'
-              '"location":"Minneapolis, MN","timestamp":"May 10, 2026"}')
+        cj = (
+            '{"caption":"Minnehaha Creek rushing towards the Mississippi River just after the Falls.",'
+            '"location":"Minneapolis, MN","timestamp":"May 10, 2026"}'
+        )
         with patch.object(_cover, "content_store", _FakeFiles({"cover.json": cj})):
             self.assertEqual(
                 _cover.render(348),
@@ -48,13 +50,22 @@ class RenderCoverTests(unittest.TestCase):
             )
 
     def test_json_partial_fields(self):
-        with patch.object(_cover, "content_store", _FakeFiles({"cover.json": '{"caption":"Just a caption."}'})):
+        with patch.object(
+            _cover, "content_store", _FakeFiles({"cover.json": '{"caption":"Just a caption."}'})
+        ):
             self.assertEqual(_cover.render(1), "Just a caption.")
-        with patch.object(_cover, "content_store", _FakeFiles({"cover.json": '{"timestamp":"May 1, 2026","location":"Minneapolis, MN"}'})):
+        with patch.object(
+            _cover,
+            "content_store",
+            _FakeFiles({"cover.json": '{"timestamp":"May 1, 2026","location":"Minneapolis, MN"}'}),
+        ):
             self.assertEqual(_cover.render(1), "May 1, 2026  \nMinneapolis, MN")
-        with patch.object(_cover, "content_store", _FakeFiles({"cover.json": '{"caption":"Cap.","location":"Here"}'})):
+        with patch.object(
+            _cover,
+            "content_store",
+            _FakeFiles({"cover.json": '{"caption":"Cap.","location":"Here"}'}),
+        ):
             self.assertEqual(_cover.render(1), "Cap.\n\nHere")
-
 
     def test_invalid_or_non_object_json_renders_empty(self):
         # The legacy cover.md fallback died with the Shortcuts pipeline.
@@ -82,8 +93,10 @@ class AltCoverTests(unittest.TestCase):
         cj = json.dumps({"caption": "A creek.", "alt": "operator-supplied"})
         fake = _FakeFiles({"cover.json": cj})
         vision = MagicMock()
-        with patch.object(_cover, "content_store", fake), \
-             patch.object(alt_text, "generate_alt", vision):
+        with (
+            patch.object(_cover, "content_store", fake),
+            patch.object(alt_text, "generate_alt", vision),
+        ):
             self.assertEqual(_cover.alt(458), "operator-supplied")
         vision.assert_not_called()
         # And no write-back when nothing changed.
@@ -93,14 +106,18 @@ class AltCoverTests(unittest.TestCase):
         cj = json.dumps({"caption": "A creek.", "location": "MPLS", "timestamp": "May 10"})
         fake = _FakeFiles({"cover.json": cj})
         vision = MagicMock(return_value="Water tumbling over basalt below the falls")
-        with patch.object(_cover, "content_store", fake), \
-             patch.object(alt_text, "generate_alt", vision):
+        with (
+            patch.object(_cover, "content_store", fake),
+            patch.object(alt_text, "generate_alt", vision),
+        ):
             self.assertEqual(_cover.alt(458), "Water tumbling over basalt below the falls")
         # Vision call got the caption (and not the alt, which didn't exist).
         vision.assert_called_once()
         _, kwargs = vision.call_args
         self.assertEqual(kwargs["caption"], "A creek.")
-        self.assertEqual(kwargs["image_url"], "https://files.thingelstad.com/weekly-thing/458/cover.jpg")
+        self.assertEqual(
+            kwargs["image_url"], "https://files.thingelstad.com/weekly-thing/458/cover.jpg"
+        )
         # Wrote the updated cover.json back to S3.
         self.assertEqual(len(fake.writes), 1)
         issue, filename, content = fake.writes[0]
@@ -115,8 +132,10 @@ class AltCoverTests(unittest.TestCase):
     def test_returns_empty_when_no_cover_json(self):
         fake = _FakeFiles({})  # neither cover.json nor cover.md
         vision = MagicMock()
-        with patch.object(_cover, "content_store", fake), \
-             patch.object(alt_text, "generate_alt", vision):
+        with (
+            patch.object(_cover, "content_store", fake),
+            patch.object(alt_text, "generate_alt", vision),
+        ):
             self.assertEqual(_cover.alt(1), "")
         vision.assert_not_called()
         self.assertEqual(fake.writes, [])
@@ -125,8 +144,10 @@ class AltCoverTests(unittest.TestCase):
         # Cap exhausted / image fetch failed / vision empty — all surface
         # as "". We should NOT write back the empty.
         fake = _FakeFiles({"cover.json": '{"caption":"x"}'})
-        with patch.object(_cover, "content_store", fake), \
-             patch.object(alt_text, "generate_alt", return_value=""):
+        with (
+            patch.object(_cover, "content_store", fake),
+            patch.object(alt_text, "generate_alt", return_value=""),
+        ):
             self.assertEqual(_cover.alt(1), "")
         self.assertEqual(fake.writes, [])
 
@@ -136,8 +157,10 @@ class AltCoverTests(unittest.TestCase):
         cj = json.dumps({"caption": "x"})
         fake = _FakeFiles({"cover.json": cj})
         fake.write_issue = MagicMock(side_effect=RuntimeError("DB boom"))
-        with patch.object(_cover, "content_store", fake), \
-             patch.object(alt_text, "generate_alt", return_value="a fresh alt"):
+        with (
+            patch.object(_cover, "content_store", fake),
+            patch.object(alt_text, "generate_alt", return_value="a fresh alt"),
+        ):
             self.assertEqual(_cover.alt(1), "a fresh alt")
 
 

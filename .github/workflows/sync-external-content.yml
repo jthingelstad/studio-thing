@@ -30,6 +30,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Check out Studio
         uses: actions/checkout@v7
@@ -43,7 +44,6 @@ jobs:
           enable-cache: true
 
       - run: uv sync --locked --no-dev
-      - run: echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Ingest thingelstad.com blog from Micro.blog
         env:
@@ -54,7 +54,7 @@ jobs:
             echo "MICROBLOG_API_KEY is not configured; skipping blog ingest."
             exit 0
           fi
-          python pipeline/blog/ingest_blog.py --since-last
+          uv run --locked --no-dev python pipeline/blog/ingest_blog.py --since-last
 
       - name: Check out Another Thing
         uses: actions/checkout@v7
@@ -65,7 +65,7 @@ jobs:
 
       - name: Import Another Thing episodes
         run: |
-          python pipeline/podcast/import_another_thing.py \
+          uv run --locked --no-dev python pipeline/podcast/import_another_thing.py \
             --source-dir external/another.thingelstad.com/content/episodes \
             --output-dir data/podcast/another-thing/episodes
 

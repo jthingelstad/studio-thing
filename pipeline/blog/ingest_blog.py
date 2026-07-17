@@ -75,6 +75,7 @@ _URL_DATE_RE = re.compile(r"/(\d{4})/(\d{2})/(\d{2})/")
 
 # ── micro.blog Micropub source query ──────────────────────────────────
 
+
 def _micropub_url() -> str:
     return (os.environ.get("MICROBLOG_MICROPUB_URL") or DEFAULT_MICROPUB_URL).strip()
 
@@ -140,9 +141,11 @@ def iter_posts(*, limit: int | None, known_uids: set[int] | None):
             if limit is not None and len(out) >= limit:
                 break
         dates = [p["date"] for p in out]
-        print(f"  offset={offset}: {len(page)} items, +{new_this_page} new, "
-              f"{len(out)} total"
-              + (f" (oldest {min(dates)})" if dates else ""), flush=True)
+        print(
+            f"  offset={offset}: {len(page)} items, +{new_this_page} new, "
+            f"{len(out)} total" + (f" (oldest {min(dates)})" if dates else ""),
+            flush=True,
+        )
         if limit is not None and len(out) >= limit:
             break
         # incremental: a fully-known page means everything older is known too
@@ -156,6 +159,7 @@ def iter_posts(*, limit: int | None, known_uids: set[int] | None):
 
 
 # ── mf2 item → rendered post ──────────────────────────────────────────
+
 
 def _post_date(url: str, published: str) -> str | None:
     m = _URL_DATE_RE.search(url or "")
@@ -196,7 +200,7 @@ def render_post(item: dict[str, Any]) -> dict[str, Any] | None:
     uid_raw = _first(props, "uid")
     try:
         uid = int(uid_raw)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
     url = str(_first(props, "url") or "").strip()
     published = str(_first(props, "published", "publish-date") or "").strip()
@@ -221,6 +225,7 @@ def render_post(item: dict[str, Any]) -> dict[str, Any] | None:
 
 # ── file + manifest ───────────────────────────────────────────────────
 
+
 def _yaml_scalar(value: str) -> str:
     escaped = value.replace("\\", "\\\\").replace('"', '\\"')
     return f'"{escaped}"'
@@ -234,16 +239,18 @@ def _yaml_list(values: list[str]) -> str:
 
 def _front_matter(post: dict[str, Any]) -> str:
     # Fixed key order → byte-stable on re-ingest (keeps the embed cache warm).
-    return "\n".join([
-        "---",
-        f"microblog_id: {post['id']}",
-        f"url: {_yaml_scalar(post['url'])}",
-        f"title: {_yaml_scalar(post['title'])}",
-        f"published: {_yaml_scalar(post['published'])}",
-        f"post_kind: {post['post_kind']}",
-        f"categories: {_yaml_list(post['categories'])}",
-        "---",
-    ])
+    return "\n".join(
+        [
+            "---",
+            f"microblog_id: {post['id']}",
+            f"url: {_yaml_scalar(post['url'])}",
+            f"title: {_yaml_scalar(post['title'])}",
+            f"published: {_yaml_scalar(post['published'])}",
+            f"post_kind: {post['post_kind']}",
+            f"categories: {_yaml_list(post['categories'])}",
+            "---",
+        ]
+    )
 
 
 def write_post(post: dict[str, Any]) -> Path:
@@ -270,6 +277,7 @@ def write_index(index: dict[str, Any]) -> None:
 
 # ── report ────────────────────────────────────────────────────────────
 
+
 def _authorship_verdict(posts: list[dict[str, Any]]) -> str:
     if not posts:
         return "no posts to judge"
@@ -281,11 +289,15 @@ def _authorship_verdict(posts: list[dict[str, Any]]) -> str:
 
 # ── main ──────────────────────────────────────────────────────────────
 
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Ingest the thingelstad.com blog → data/blog/")
     ap.add_argument("--limit", type=int, default=None, help="stop after N posts (spike)")
-    ap.add_argument("--since-last", action="store_true",
-                    help="incremental: only posts not already in the manifest")
+    ap.add_argument(
+        "--since-last",
+        action="store_true",
+        help="incremental: only posts not already in the manifest",
+    )
     ap.add_argument("--dry-run", action="store_true", help="fetch + report, write nothing")
     args = ap.parse_args()
 
@@ -295,8 +307,12 @@ def main() -> int:
         known_uids = {int(k) for k in index.get("posts", {})}
         print(f"incremental: manifest has {len(known_uids)} known post(s)", flush=True)
 
-    print("fetching micro.blog q=source"
-          + (f" (limit={args.limit})" if args.limit else " (full archive)") + "…", flush=True)
+    print(
+        "fetching micro.blog q=source"
+        + (f" (limit={args.limit})" if args.limit else " (full archive)")
+        + "…",
+        flush=True,
+    )
     posts = iter_posts(limit=args.limit, known_uids=known_uids)
 
     print("\n── ingest report ──", flush=True)
@@ -334,18 +350,25 @@ def main() -> int:
         write_post(p)
         written += 1
         posts_index[str(p["id"])] = {
-            "path": p["path"], "url": p["url"],
-            "published": p["published"], "title": p["title"],
+            "path": p["path"],
+            "url": p["url"],
+            "published": p["published"],
+            "title": p["title"],
         }
         highest = max(highest, p["id"])
-    write_index({
-        "highest_id": highest,
-        "post_count": len(posts_index),
-        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "posts": posts_index,
-    })
-    print(f"\nwrote {written} post file(s); manifest tracks "
-          f"{len(posts_index)} post(s), highest_id={highest}", flush=True)
+    write_index(
+        {
+            "highest_id": highest,
+            "post_count": len(posts_index),
+            "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "posts": posts_index,
+        }
+    )
+    print(
+        f"\nwrote {written} post file(s); manifest tracks "
+        f"{len(posts_index)} post(s), highest_id={highest}",
+        flush=True,
+    )
     return 0
 
 

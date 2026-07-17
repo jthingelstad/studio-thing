@@ -21,9 +21,11 @@ REPO = Path(__file__).resolve().parents[3]
 
 # persona name -> list of (env var holding channel id, friendly label)
 CHANNELS_BY_PERSONA: dict[str, list[tuple[str, str]]] = {
-    "eddy":  [("DISCORD_CHANNEL_EDITORIAL",  "primary"),
-              ("DISCORD_CHANNEL_WORKSHOP",   "workshop"),
-              ("DISCORD_CHANNEL_CHATTER",  "chatter")],
+    "eddy": [
+        ("DISCORD_CHANNEL_EDITORIAL", "primary"),
+        ("DISCORD_CHANNEL_WORKSHOP", "workshop"),
+        ("DISCORD_CHANNEL_CHATTER", "chatter"),
+    ],
 }
 
 REQUIRED_PERMS = ("view_channel", "send_messages", "read_message_history")
@@ -152,7 +154,9 @@ def format_summary(audit_results: dict, *, hash_str: str, dirty: bool) -> str:
         lines.append(f"{marker} **{persona.capitalize()}** — " + " · ".join(bits))
     if any_issue:
         lines.append("")
-        lines.append("⚠️ One or more channels are unreachable or missing permissions. Check `.env` and the Discord role.")
+        lines.append(
+            "⚠️ One or more channels are unreachable or missing permissions. Check `.env` and the Discord role."
+        )
     return "\n".join(lines)
 
 
@@ -172,6 +176,10 @@ async def announce(announcer: "PersonaBot", message: str) -> None:
         return
     try:
         await channel.send(message, suppress_embeds=True)
-        logger.info("startup announcement posted to #%s by %s", getattr(channel, "name", "?"), announcer.name)
+        logger.info(
+            "startup announcement posted to #%s by %s",
+            getattr(channel, "name", "?"),
+            announcer.name,
+        )
     except Exception:  # noqa: BLE001
         logger.exception("failed to post startup announcement")

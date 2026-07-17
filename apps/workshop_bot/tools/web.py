@@ -19,8 +19,7 @@ DEFAULT_TIMEOUT = 15
 MAX_BYTES = 1_500_000  # 1.5 MB hard cap
 MAX_TEXT_CHARS = 12_000
 USER_AGENT = (
-    "Mozilla/5.0 (compatible; WeeklyThing-WorkshopBot/1.0; "
-    "+https://weekly.thingelstad.com/about/)"
+    "Mozilla/5.0 (compatible; WeeklyThing-WorkshopBot/1.0; +https://weekly.thingelstad.com/about/)"
 )
 
 
@@ -39,7 +38,10 @@ def fetch_text(url: str, *, max_chars: int = MAX_TEXT_CHARS) -> dict[str, Any]:
     headers = {"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml"}
     try:
         with requests.get(
-            url, headers=headers, timeout=DEFAULT_TIMEOUT, stream=True,
+            url,
+            headers=headers,
+            timeout=DEFAULT_TIMEOUT,
+            stream=True,
             allow_redirects=True,
         ) as resp:
             ctype = resp.headers.get("Content-Type", "")
@@ -109,8 +111,12 @@ def read_length(url: str) -> dict[str, Any]:
     res = fetch_text(url, max_chars=200_000)
     text = (res or {}).get("text") or ""
     if not text:
-        return {"url": url, "bucket": "unknown", "word_count": 0,
-                "error": (res or {}).get("error") or "no readable text"}
+        return {
+            "url": url,
+            "bucket": "unknown",
+            "word_count": 0,
+            "error": (res or {}).get("error") or "no readable text",
+        }
     wc = len(text.split())
     bucket = "short" if wc < _READ_SHORT_MAX else ("long" if wc > _READ_LONG_MIN else "medium")
     return {"url": (res or {}).get("url") or url, "bucket": bucket, "word_count": wc}

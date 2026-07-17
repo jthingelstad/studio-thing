@@ -99,7 +99,9 @@ def _render_final_from_rows(atoms: dict[str, str]) -> str:
         if p.get("promoted_position")
     ]
     return issue_assembly.assemble_final(
-        atoms=atoms, section_bodies=section_bodies, features=features,
+        atoms=atoms,
+        section_bodies=section_bodies,
+        features=features,
     )
 
 

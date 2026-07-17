@@ -39,9 +39,16 @@ _OK = _base.JobResult(True, "ok")
 
 def _window(n=458, pub="2026-05-23"):
     from apps.workshop_bot.tools.content import issue as issue_mod
+
     w = issue_mod.compute_window(pub, 7)
-    db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
-                        start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+    db.set_issue_window(
+        issue_number=n,
+        pub_date=w["pub_date"],
+        end_date=w["end_date"],
+        start_date=w["start_date"],
+        day_count=w["day_count"],
+        set_by="test",
+    )
 
 
 def _patch_composes():
@@ -69,11 +76,15 @@ class BuildStateTests(_DBTestCase):
         # The DB is the draft: sections are issue_items rows, authored atoms
         # live in the content store; cover.jpg stays an S3 binary.
         from apps.workshop_bot.tools import issue_items
-        for section, source, sid in (("notable", "pinboard", "n1"),
-                                     ("brief", "pinboard", "b1"),
-                                     ("journal", "microblog", "j1")):
-            issue_items.upsert_item(issue_number=n, section=section,
-                                    source=source, source_id=sid, body_md="x")
+
+        for section, source, sid in (
+            ("notable", "pinboard", "n1"),
+            ("brief", "pinboard", "b1"),
+            ("journal", "microblog", "j1"),
+        ):
+            issue_items.upsert_item(
+                issue_number=n, section=section, source=source, source_id=sid, body_md="x"
+            )
         content_store.write_issue(n, "intro.md", "Opening.")
         content_store.write_issue(n, "haiku.md", "a\nb\nc")
         self.ws.write_issue_file(n, "cover.jpg", "binary")  # genuine S3 binary
@@ -115,8 +126,12 @@ class BuildStateTests(_DBTestCase):
         # the ack is success — the logged exception is the recovery signal.
         _window(458)
         self._seed_full_content()
-        with patch.object(compose_envelope, "run", new=AsyncMock(return_value=_OK)), \
-             patch.object(compose_echoes, "run", new=AsyncMock(side_effect=RuntimeError("LLM hiccup"))):
+        with (
+            patch.object(compose_envelope, "run", new=AsyncMock(return_value=_OK)),
+            patch.object(
+                compose_echoes, "run", new=AsyncMock(side_effect=RuntimeError("LLM hiccup"))
+            ),
+        ):
             res = asyncio.run(production_ops.mark_built(_base.JobContext()))
         self.assertTrue(res.ok, res.message)
         self.assertEqual(db.get_active_issue_window()["phase"], "publish")
@@ -147,7 +162,8 @@ class PublishStateTests(_DBTestCase):
         if buttondown_id:
             # Publish-stamped fields live on the issue window now.
             db.set_issue_publish_record(
-                n, buttondown_id=buttondown_id,
+                n,
+                buttondown_id=buttondown_id,
                 absolute_url="https://weekly.thingelstad.com/archive/%d/" % n,
             )
 
@@ -218,17 +234,30 @@ class PutToBedTests(_DBTestCase):
     def _seed_filing_artifacts(self, n=458):
         issues_dir = Path(self._tmpdir.name) / "data" / "issues" / str(n)
         issues_dir.mkdir(parents=True, exist_ok=True)
-        (issues_dir / "metadata.json").write_text(json.dumps({
-            "number": n,
-            "subject": f"WT{n} — Test ship",
-            "publish_date": "2026-05-23T12:00:00Z",
-            "slug": str(n),
-            "buttondown_id": "em_test",
-            "absolute_url": f"https://buttondown.com/weekly-thing/archive/{n}/",
-        }), encoding="utf-8")
-        (issues_dir / "links.json").write_text(json.dumps({
-            "notable_links": [], "briefly_links": [], "domains": [], "word_count": 0,
-        }), encoding="utf-8")
+        (issues_dir / "metadata.json").write_text(
+            json.dumps(
+                {
+                    "number": n,
+                    "subject": f"WT{n} — Test ship",
+                    "publish_date": "2026-05-23T12:00:00Z",
+                    "slug": str(n),
+                    "buttondown_id": "em_test",
+                    "absolute_url": f"https://buttondown.com/weekly-thing/archive/{n}/",
+                }
+            ),
+            encoding="utf-8",
+        )
+        (issues_dir / "links.json").write_text(
+            json.dumps(
+                {
+                    "notable_links": [],
+                    "briefly_links": [],
+                    "domains": [],
+                    "word_count": 0,
+                }
+            ),
+            encoding="utf-8",
+        )
         audio_path = Path(self._tmpdir.name) / "data" / "audio" / "manifest.json"
         audio_path.parent.mkdir(parents=True, exist_ok=True)
         audio_path.write_text(json.dumps({str(n): {}}), encoding="utf-8")
@@ -240,9 +269,11 @@ class PutToBedTests(_DBTestCase):
         db.set_issue_phase(n, "publish")
         issues_root, audio_manifest = self._seed_filing_artifacts(n)
         ctx = _base.JobContext()
-        with patch.object(put_to_bed, "ISSUES_ROOT", issues_root), \
-             patch.object(put_to_bed, "AUDIO_MANIFEST", audio_manifest), \
-             patch.object(ctx, "post", new=AsyncMock(return_value=True)):
+        with (
+            patch.object(put_to_bed, "ISSUES_ROOT", issues_root),
+            patch.object(put_to_bed, "AUDIO_MANIFEST", audio_manifest),
+            patch.object(ctx, "post", new=AsyncMock(return_value=True)),
+        ):
             res = asyncio.run(put_to_bed.run(ctx))
         self.assertTrue(res.ok, res.message)
         # Window is closed; issue filed.
@@ -258,9 +289,11 @@ class PutToBedTests(_DBTestCase):
         issues_root = Path(self._tmpdir.name) / "data" / "issues"
         audio_manifest = Path(self._tmpdir.name) / "data" / "audio" / "manifest.json"
         ctx = _base.JobContext()
-        with patch.object(put_to_bed, "ISSUES_ROOT", issues_root), \
-             patch.object(put_to_bed, "AUDIO_MANIFEST", audio_manifest), \
-             patch.object(ctx, "post", new=AsyncMock(return_value=True)):
+        with (
+            patch.object(put_to_bed, "ISSUES_ROOT", issues_root),
+            patch.object(put_to_bed, "AUDIO_MANIFEST", audio_manifest),
+            patch.object(ctx, "post", new=AsyncMock(return_value=True)),
+        ):
             res = asyncio.run(put_to_bed.run(ctx))
         self.assertFalse(res.ok)
         self.assertIsNotNone(db.get_active_issue_window())

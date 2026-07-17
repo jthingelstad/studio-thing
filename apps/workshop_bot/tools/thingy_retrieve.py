@@ -92,9 +92,7 @@ def retrieve(
         raise ThingyRetrieveError(f"Librarian /retrieve unreachable: {exc}") from exc
     if response.status_code >= 400:
         snippet = response.text[:200].replace("\n", " ")
-        raise ThingyRetrieveError(
-            f"Librarian /retrieve returned {response.status_code}: {snippet}"
-        )
+        raise ThingyRetrieveError(f"Librarian /retrieve returned {response.status_code}: {snippet}")
     try:
         data = response.json()
     except ValueError as exc:

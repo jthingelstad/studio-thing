@@ -35,7 +35,9 @@ async def run(
     if not text:
         return _base.JobResult(False, "❌ no text to review — pass the draft as the `text` arg.")
 
-    bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
+    bot, channel, reason = _llm_job.resolve_bot_and_channel(
+        ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL"
+    )
     if bot is None:
         return _base.JobResult(True, f"(review-text skipped — {reason})", data={"posted": False})
 
@@ -61,7 +63,9 @@ async def run(
         agent_run.records_written = 1 if (answer and answer.strip()) else 0
 
     if not answer or not answer.strip():
-        return _base.JobResult(False, "review-text: Eddy returned an empty response.", data={"posted": False})
+        return _base.JobResult(
+            False, "review-text: Eddy returned an empty response.", data={"posted": False}
+        )
 
     header = f"📝 **Ad-hoc review** — requested by {invoker or 'an operator'}"
     if truncated:

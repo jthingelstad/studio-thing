@@ -160,6 +160,7 @@ class Runner:
 
 # ---- CLI: inspect configured jobs ----
 
+
 def _build_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -183,10 +184,7 @@ def main() -> int:
             # functools.partial(content_job, job="<name>"); unwrap once so
             # the printed reference points at the real coroutine function
             # rather than crashing on a missing __name__.
-            underlying = (
-                job.func.func if isinstance(job.func, functools.partial)
-                else job.func
-            )
+            underlying = job.func.func if isinstance(job.func, functools.partial) else job.func
             bound = (
                 "(" + ", ".join(f"{k}={v!r}" for k, v in job.func.keywords.items()) + ")"
                 if isinstance(job.func, functools.partial) and job.func.keywords

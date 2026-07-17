@@ -160,13 +160,16 @@ async def _gateway_watchdog(
     except asyncio.TimeoutError:
         logger.warning(
             "[%s] watchdog: not ready within %.0fs; arming anyway",
-            name, READY_WAIT_SECONDS,
+            name,
+            READY_WAIT_SECONDS,
         )
     armed_at = time.monotonic()
     last_change_at = armed_at
     logger.info(
         "[%s] watchdog: armed (no-ack threshold %.0fs, grace %.0fs)",
-        name, ack_stale_secs, grace_secs,
+        name,
+        ack_stale_secs,
+        grace_secs,
     )
 
     while not stop_event.is_set():
@@ -198,7 +201,9 @@ async def _gateway_watchdog(
                 logger.error(
                     "[%s] watchdog: bot.latency has been non-finite for "
                     "%.0fs (threshold %.0fs); exiting so launchd restarts us",
-                    name, non_finite_for, ack_stale_secs,
+                    name,
+                    non_finite_for,
+                    ack_stale_secs,
                 )
                 os._exit(1)
             continue
@@ -216,7 +221,9 @@ async def _gateway_watchdog(
                 "[%s] watchdog: bot.latency hasn't changed in %.0fs "
                 "(threshold %.0fs); HEARTBEAT_ACKs have stopped — "
                 "exiting so launchd restarts us",
-                name, stale, ack_stale_secs,
+                name,
+                stale,
+                ack_stale_secs,
             )
             os._exit(1)
 
@@ -238,7 +245,9 @@ async def run() -> int:
     latest = report.latest_id or "(none)"
     logger.info(
         "workshop.db ready (%d applied, latest: %s, schema_hash: %s)",
-        applied_count, latest, report.short_hash or "(unhashed)",
+        applied_count,
+        latest,
+        report.short_hash or "(unhashed)",
     )
     corpus_handle = corpus.load()
     team = TeamRegistry()
@@ -289,14 +298,18 @@ async def run() -> int:
                 raise
             except discord.HTTPException as e:
                 if getattr(e, "code", None) == 40062 or e.status == 429:
-                    base = RATE_LIMIT_BACKOFFS[
-                        min(attempt, len(RATE_LIMIT_BACKOFFS) - 1)
-                    ] if attempt < len(RATE_LIMIT_BACKOFFS) else RATE_LIMIT_BACKOFF_CAP
+                    base = (
+                        RATE_LIMIT_BACKOFFS[min(attempt, len(RATE_LIMIT_BACKOFFS) - 1)]
+                        if attempt < len(RATE_LIMIT_BACKOFFS)
+                        else RATE_LIMIT_BACKOFF_CAP
+                    )
                     jitter = base * RATE_LIMIT_JITTER * (2 * random.random() - 1)
                     delay = max(60.0, base + jitter)
                     logger.warning(
                         "[%s] Discord rate-limited login (code=%s); sleeping %.0fs before retry",
-                        name, getattr(e, "code", "?"), delay,
+                        name,
+                        getattr(e, "code", "?"),
+                        delay,
                     )
                     if await _sleep_or_stop(delay):
                         return
@@ -342,13 +355,17 @@ async def run() -> int:
     # One watchdog per persona. If Eddy goes silent-zombie, the whole process
     # exits so launchd respawns the Studio runtime.
     for n, b, _ in bots:
-        tasks.append(asyncio.create_task(
-            _gateway_watchdog(n, b, stop_event),
-            name=f"watchdog:{n}",
-        ))
+        tasks.append(
+            asyncio.create_task(
+                _gateway_watchdog(n, b, stop_event),
+                name=f"watchdog:{n}",
+            )
+        )
 
-    scheduler_enabled = (
-        os.environ.get("WORKSHOP_SCHEDULER_ENABLED", "1").strip() not in ("0", "false", "")
+    scheduler_enabled = os.environ.get("WORKSHOP_SCHEDULER_ENABLED", "1").strip() not in (
+        "0",
+        "false",
+        "",
     )
     runner = SchedulerRunner(team, deps=deps) if scheduler_enabled else None
 
@@ -360,13 +377,15 @@ async def run() -> int:
         for name, client, _ in bots:
             try:
                 await asyncio.wait_for(
-                    client.ready_event.wait(), timeout=READY_WAIT_SECONDS,
+                    client.ready_event.wait(),
+                    timeout=READY_WAIT_SECONDS,
                 )
                 ready_bots.append(client)
             except asyncio.TimeoutError:
                 logger.warning(
                     "%s: not ready after %ds; proceeding without it",
-                    name, READY_WAIT_SECONDS,
+                    name,
+                    READY_WAIT_SECONDS,
                 )
                 missing.append(name)
         if not ready_bots:
@@ -375,7 +394,9 @@ async def run() -> int:
         # Log the consolidated audit for postmortem readability.
         results = startup.audit(ready_bots)
         consolidated = startup.format_summary(
-            results, hash_str=startup.git_hash(), dirty=startup.git_dirty(),
+            results,
+            hash_str=startup.git_hash(),
+            dirty=startup.git_dirty(),
         )
         if missing:
             consolidated += f"\n\n⚠️ not ready after {READY_WAIT_SECONDS}s: {', '.join(missing)}"

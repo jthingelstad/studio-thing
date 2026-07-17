@@ -8,6 +8,7 @@ captures H2/H3) and visual hierarchy (H1 is reserved for the page title).
 Only processes lines matching ^# text at the start (standard markdown H1),
 and only in the body portion (after YAML front matter).
 """
+
 from __future__ import annotations
 
 import re
@@ -36,7 +37,7 @@ def main() -> None:
             print(f"[#{num}] no front matter, skipping", flush=True)
             continue
         fm = m.group(1)
-        body = text[m.end():]
+        body = text[m.end() :]
 
         # Step 1: demote link-title H2 → H3 FIRST (before H1 demotion
         # creates new H2s that would be mis-matched).
@@ -50,8 +51,7 @@ def main() -> None:
 
         path.write_text(fm + body, encoding="utf-8")
         print(
-            f"[#{num}] demoted {section_count} section H1→H2, "
-            f"{link_count} link H2→H3",
+            f"[#{num}] demoted {section_count} section H1→H2, {link_count} link H2→H3",
             flush=True,
         )
 

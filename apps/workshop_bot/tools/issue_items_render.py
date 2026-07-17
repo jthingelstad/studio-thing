@@ -66,6 +66,7 @@ def strip_membership_markers(text: str) -> str:
 
 # ---------- preamble helpers ----------
 
+
 def reddit_tag_line(issue_number: int) -> str:
     """The pinned "discuss on Reddit" preamble at the top of Notable.
 
@@ -81,6 +82,7 @@ def reddit_tag_line(issue_number: int) -> str:
 
 
 # ---------- per-row renderers ----------
+
 
 def _row_str(row: dict[str, Any], key: str) -> str:
     """Pull a string field from a row, treating None/empty as ''. Strips
@@ -212,6 +214,7 @@ def _render_journal_entry(row: dict[str, Any]) -> str:
 
 # ---------- section renderers ----------
 
+
 def render_notable(rows: list[dict[str, Any]], issue_number: int) -> str:
     """Render the Notable block body: preamble + items.
 
@@ -273,6 +276,7 @@ def render_journal(rows: list[dict[str, Any]]) -> str:
 # after specific items in a section, back when membership-block placement
 # was an inline marker. Placement is now hardcoded in ``render_email``'s
 # ``CTA_SLOT_POSITIONS`` map; these are unused and kept only for reference.
+
 
 def _build_marker_seq(
     row: dict[str, Any],
@@ -356,6 +360,7 @@ def render_journal_with_markers(
 
 # ---------- featured (promoted) sections ----------
 
+
 def render_featured_sections(rows: list[dict[str, Any]]) -> str:
     """Render every promoted row as a sequence of ``## {heading}\\n\\n{body}``
     sections, joined with two blank lines so they read as standalone
@@ -382,9 +387,7 @@ def render_featured_section(row: dict[str, Any]) -> str:
     section = (row.get("section") or "").strip()
     heading = (row.get("promoted_heading") or "").strip()
     if not heading:
-        raise ValueError(
-            f"promoted row id={row.get('id')!r} is missing promoted_heading"
-        )
+        raise ValueError(f"promoted row id={row.get('id')!r} is missing promoted_heading")
     if section == "notable":
         body = _render_notable_item(row)
     elif section == "brief":
@@ -392,7 +395,5 @@ def render_featured_section(row: dict[str, Any]) -> str:
     elif section == "journal":
         body = _render_journal_entry(row)
     else:
-        raise ValueError(
-            f"promoted row id={row.get('id')!r} has unknown section {section!r}"
-        )
+        raise ValueError(f"promoted row id={row.get('id')!r} has unknown section {section!r}")
     return f"## {heading}\n\n{body}"

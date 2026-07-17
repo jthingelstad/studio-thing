@@ -96,6 +96,7 @@ def _echoes_model() -> str:
     override = (os.environ.get("WORKSHOP_ECHOES_MODEL") or "").strip()
     return override or _ECHOES_DEFAULT_MODEL
 
+
 # Public archive URL — used to convert "Weekly Thing N" references in the
 # echoes body into clickable markdown links.
 _ARCHIVE_URL_TPL = "https://weekly.thingelstad.com/archive/{n}/"
@@ -214,7 +215,7 @@ def _anniversary_candidates(
         return []
     try:
         rows = json.loads(EMAILS_JSON.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return []
     if not isinstance(rows, list):
         return []
@@ -250,13 +251,15 @@ def _anniversary_candidates(
         if num in seen_numbers:
             continue
         seen_numbers.add(num)
-        out.append({
-            "issue_number": num,
-            "subject": subject,
-            "publish_date": when.strftime("%Y-%m-%d"),
-            "years_ago": years,
-            "body_preview": _read_archive_body_preview(num, _ANNIVERSARY_PREVIEW_CHARS),
-        })
+        out.append(
+            {
+                "issue_number": num,
+                "subject": subject,
+                "publish_date": when.strftime("%Y-%m-%d"),
+                "years_ago": years,
+                "body_preview": _read_archive_body_preview(num, _ANNIVERSARY_PREVIEW_CHARS),
+            }
+        )
     return out
 
 
@@ -268,8 +271,7 @@ def _retrieve_passages(query: str, current_number: int) -> list[dict[str, Any]]:
     on any failure — see module docstring for why this is fail-loud."""
     passages = thingy_retrieve.retrieve(query, k=_ARCHIVE_SNIPPET_COUNT)
     return [
-        p for p in passages
-        if not (isinstance(p, dict) and p.get("issue_number") == current_number)
+        p for p in passages if not (isinstance(p, dict) and p.get("issue_number") == current_number)
     ]
 
 
@@ -322,7 +324,9 @@ def _format_anniversary_candidates(
     years-ago framing, issue number, subject, publish date, and a body
     preview the model can mine for a specific detail to surface."""
     if not candidates:
-        return "_(no anniversary candidates available — the archive doesn't reach back this far yet.)_"
+        return (
+            "_(no anniversary candidates available — the archive doesn't reach back this far yet.)_"
+        )
     blocks: list[str] = []
     for c in candidates:
         years = c.get("years_ago")
@@ -337,7 +341,9 @@ def _format_anniversary_candidates(
         if preview:
             blocks.append(f"{header}\n\n{preview}")
         else:
-            blocks.append(f"{header}\n\n_(body unavailable in local archive — cite carefully or skip.)_")
+            blocks.append(
+                f"{header}\n\n_(body unavailable in local archive — cite carefully or skip.)_"
+            )
     return "\n\n---\n\n".join(blocks)
 
 
@@ -443,7 +449,8 @@ async def run(
     window = db.get_active_issue_window()
     if window is None:
         return _base.JobResult(
-            False, "❌ no active issue window — start one in Studio first.",
+            False,
+            "❌ no active issue window — start one in Studio first.",
         )
     n = int(window["issue_number"])
     publish_date = (window.get("pub_date") or "")[:10] or "(unknown date)"
@@ -452,15 +459,19 @@ async def run(
         baseline_body = await asyncio.to_thread(_llm_job.draft_body, n)
     if not baseline_body or not baseline_body.strip():
         return _base.JobResult(
-            False, f"❌ no body available for WT{n} — sync sources in Studio first.",
+            False,
+            f"❌ no body available for WT{n} — sync sources in Studio first.",
         )
 
     bot, channel, reason = _llm_job.resolve_bot_and_channel(
-        ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL",
+        ctx,
+        "eddy",
+        "DISCORD_CHANNEL_EDITORIAL",
     )
     if bot is None:
         return _base.JobResult(
-            True, f"(compose-echoes skipped — {reason})",
+            True,
+            f"(compose-echoes skipped — {reason})",
             data={"echoes_written": False},
         )
 
@@ -472,7 +483,8 @@ async def run(
             except OSError as exc:
                 logger.warning("compose-echoes: prompt missing: %s", exc)
                 return _base.JobResult(
-                    False, f"❌ compose-echoes prompt missing: `{exc}`",
+                    False,
+                    f"❌ compose-echoes prompt missing: `{exc}`",
                 )
 
             prior = await asyncio.to_thread(_prior_echoes, n)
@@ -497,11 +509,14 @@ async def run(
                 logger.warning("compose-echoes thingy_retrieve failed: %s", exc)
                 await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
                 return _base.JobResult(
-                    False, msg,
+                    False,
+                    msg,
                     data={"issue_number": n, "retrieval_failed": True},
                 )
             anniversaries = await asyncio.to_thread(
-                _anniversary_candidates, publish_date, n,
+                _anniversary_candidates,
+                publish_date,
+                n,
             )
             user_body = _build_user_message(
                 issue_number=n,
@@ -515,7 +530,9 @@ async def run(
 
             with db.AgentRun("eddy", trigger="compose-echoes") as agent_run:
                 reply, meta = await bot.core(
-                    latest=user_msg, history=[], model=_echoes_model(),
+                    latest=user_msg,
+                    history=[],
+                    model=_echoes_model(),
                 )
                 agent_run.record_meta(meta)
                 agent_run.records_written = 1 if reply else 0
@@ -543,20 +560,20 @@ async def run(
             (local_dir / "echoes.md").write_text(text + "\n", encoding="utf-8")
     except _base.JobLocked as exc:
         return _base.JobResult(
-            False, f"⏳ `compose-echoes` already running ({exc.holder_desc}).",
+            False,
+            f"⏳ `compose-echoes` already running ({exc.holder_desc}).",
         )
 
     word_count = len(text.split())
-    msg = (
-        f"📚 compose-echoes for **WT{n}**: {word_count}-word Echoes note written.\n"
-        f"> {text}"
-    )
+    msg = f"📚 compose-echoes for **WT{n}**: {word_count}-word Echoes note written.\n> {text}"
     await ctx.post("DISCORD_CHANNEL_EDITORIAL", msg, persona="eddy")
     return _base.JobResult(
         True,
         f"compose-echoes for WT{n}: written ({word_count} words).",
         data={
-            "issue_number": n, "echoes_written": True,
-            "echoes": text, "word_count": word_count,
+            "issue_number": n,
+            "echoes_written": True,
+            "echoes": text,
+            "word_count": word_count,
         },
     )

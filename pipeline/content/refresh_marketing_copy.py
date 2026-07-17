@@ -19,6 +19,7 @@ Usage:
   python pipeline/content/refresh_marketing_copy.py
   python pipeline/content/refresh_marketing_copy.py --sample-size 24 --seed 42
 """
+
 from __future__ import annotations
 
 import argparse
@@ -67,29 +68,49 @@ RAW_WRAP_RE = re.compile(r"\{%\s*(?:end)?raw\s*%\}")
 
 # ───────────────────────── structured output models ─────────────────────────
 
+
 class Theme(BaseModel):
     label: str = Field(description="2–4 word theme label")
     description: str = Field(description="One concrete sentence. No hype. No superlatives.")
-    exampleIssue: int = Field(description="An issue number from the sample that best exemplifies the theme.")
+    exampleIssue: int = Field(
+        description="An issue number from the sample that best exemplifies the theme."
+    )
 
 
 class VoiceSample(BaseModel):
-    text: str = Field(description="Verbatim excerpt from the issue body. 1–3 sentences, ≤350 chars. No ellipses or editorial brackets unless present in source.")
+    text: str = Field(
+        description="Verbatim excerpt from the issue body. 1–3 sentences, ≤350 chars. No ellipses or editorial brackets unless present in source."
+    )
     issueNumber: int
     issueTitle: str = Field(description="Formatted as '#N — Subject' using the real subject line.")
 
 
 class SonnetFindings(BaseModel):
-    themes: list[Theme] = Field(description="3–6 recurring themes visible across the sample (not just topics — recurring moves/angles).")
-    voiceMarkers: list[str] = Field(description="3–6 short evidence-based observations about how Jamie writes.")
-    candidateQuotes: list[VoiceSample] = Field(description="6–12 candidate pull-quotes, verbatim. Favor passages where Jamie's voice is on display.")
-    selectedQuotes: list[VoiceSample] = Field(description="3–5 quotes from candidateQuotes, ordered by strength. These become the voice samples on the home page.")
-    observations: str = Field(description="2–4 sentence running-notes paragraph for the brief's Open observations section.")
-    recurringThemesNotes: str = Field(description="Markdown-bulleted list (3–6 bullets) for the brief's Recurring themes section. Each bullet ≤20 words.")
-    updatedBrief: str = Field(description="Full rewritten content of pipeline/content/marketing-brief.md. Preserve the Voice / What makes it unique / What to avoid sections verbatim from the existing brief; only update Recurring themes and Open observations sections using your recurringThemesNotes and observations. Preserve all headings and markdown formatting.")
+    themes: list[Theme] = Field(
+        description="3–6 recurring themes visible across the sample (not just topics — recurring moves/angles)."
+    )
+    voiceMarkers: list[str] = Field(
+        description="3–6 short evidence-based observations about how Jamie writes."
+    )
+    candidateQuotes: list[VoiceSample] = Field(
+        description="6–12 candidate pull-quotes, verbatim. Favor passages where Jamie's voice is on display."
+    )
+    selectedQuotes: list[VoiceSample] = Field(
+        description="3–5 quotes from candidateQuotes, ordered by strength. These become the voice samples on the home page."
+    )
+    observations: str = Field(
+        description="2–4 sentence running-notes paragraph for the brief's Open observations section."
+    )
+    recurringThemesNotes: str = Field(
+        description="Markdown-bulleted list (3–6 bullets) for the brief's Recurring themes section. Each bullet ≤20 words."
+    )
+    updatedBrief: str = Field(
+        description="Full rewritten content of pipeline/content/marketing-brief.md. Preserve the Voice / What makes it unique / What to avoid sections verbatim from the existing brief; only update Recurring themes and Open observations sections using your recurringThemesNotes and observations. Preserve all headings and markdown formatting."
+    )
 
 
 # ───────────────────────── loading / sampling ─────────────────────────
+
 
 def load_issue(num: int) -> tuple[str, str]:
     path = ARCHIVE / f"{num}.md"
@@ -111,9 +132,7 @@ def parse_pub(e: dict) -> datetime:
 def stratified_sample(emails: list[dict], n: int, window_days: int, seed: int) -> list[int]:
     cutoff = datetime.now(timezone.utc) - timedelta(days=window_days)
     in_window = [
-        e for e in emails
-        if e.get("publish_date") and e.get("number")
-        and parse_pub(e) >= cutoff
+        e for e in emails if e.get("publish_date") and e.get("number") and parse_pub(e) >= cutoff
     ]
     in_window.sort(key=parse_pub, reverse=True)
 
@@ -194,6 +213,7 @@ Real subscriber quotes. They may inform your understanding of voice but do not a
 
 # ───────────────────────── API call ─────────────────────────
 
+
 def call_sonnet(
     client: anthropic.Anthropic,
     brief: str,
@@ -230,13 +250,17 @@ def call_sonnet(
 
 # ───────────────────────── verification ─────────────────────────
 
+
 def _norm(s: str) -> str:
     return (
-        s.replace("‘", "'").replace("’", "'")
-         .replace("“", '"').replace("”", '"')
-         .replace("–", "-").replace("—", "-")
-         .replace(" ", " ")
-         .strip()
+        s.replace("‘", "'")
+        .replace("’", "'")
+        .replace("“", '"')
+        .replace("”", '"')
+        .replace("–", "-")
+        .replace("—", "-")
+        .replace(" ", " ")
+        .strip()
     )
 
 
@@ -270,6 +294,7 @@ def select_voice_samples(
 
 # ───────────────────────── main ─────────────────────────
 
+
 def format_corpus(numbers: list[int]) -> tuple[str, dict[int, str]]:
     parts: list[str] = []
     bodies: dict[int, str] = {}
@@ -280,7 +305,9 @@ def format_corpus(numbers: list[int]) -> tuple[str, dict[int, str]]:
         bodies[n] = body
         truncated = body
         if len(body) > MAX_BODY_CHARS:
-            truncated = body[:MAX_BODY_CHARS] + "\n\n…(issue continues — body truncated for analysis)…"
+            truncated = (
+                body[:MAX_BODY_CHARS] + "\n\n…(issue continues — body truncated for analysis)…"
+            )
         parts.append(f"===== Issue #{n} — {subject} =====\n\n{truncated}\n")
     return "\n\n".join(parts), bodies
 
@@ -290,9 +317,7 @@ def write_outputs(
     verified_samples: list[VoiceSample],
 ) -> None:
     VOICE_PATH.write_text(
-        json.dumps(
-            [s.model_dump() for s in verified_samples], indent=2, ensure_ascii=False
-        ) + "\n"
+        json.dumps([s.model_dump() for s in verified_samples], indent=2, ensure_ascii=False) + "\n"
     )
     print(f"[refresh] wrote {VOICE_PATH.relative_to(REPO)}", flush=True)
 
@@ -305,7 +330,9 @@ def print_git_diff_stat(paths: list[Path]) -> None:
         rel = [str(p.relative_to(REPO)) for p in paths]
         r = subprocess.run(
             ["git", "-C", str(REPO), "diff", "--stat", "--", *rel],
-            capture_output=True, text=True, check=False,
+            capture_output=True,
+            text=True,
+            check=False,
         )
         if r.stdout.strip():
             print("\n--- git diff --stat ---")
@@ -316,11 +343,20 @@ def print_git_diff_stat(paths: list[Path]) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dry-run", action="store_true", help="Run the full pipeline but don't write output files.")
+    ap.add_argument(
+        "--dry-run", action="store_true", help="Run the full pipeline but don't write output files."
+    )
     ap.add_argument("--sample-size", type=int, default=DEFAULT_SAMPLE)
     ap.add_argument("--window-days", type=int, default=DEFAULT_WINDOW_DAYS)
-    ap.add_argument("--seed", type=int, default=int(time.time()) // 86400, help="Random seed for sampling. Defaults to today's day-of-epoch so two runs on the same day are deterministic.")
-    ap.add_argument("--print-sample", action="store_true", help="Print the sampled issue numbers and exit.")
+    ap.add_argument(
+        "--seed",
+        type=int,
+        default=int(time.time()) // 86400,
+        help="Random seed for sampling. Defaults to today's day-of-epoch so two runs on the same day are deterministic.",
+    )
+    ap.add_argument(
+        "--print-sample", action="store_true", help="Print the sampled issue numbers and exit."
+    )
     args = ap.parse_args()
 
     if "ANTHROPIC_GENERAL_API_KEY" not in __import__("os").environ and not args.print_sample:
@@ -330,7 +366,10 @@ def main() -> int:
     print(f"[refresh] loading archive index from {EMAILS_PATH.relative_to(REPO)}", flush=True)
     emails = json.loads(EMAILS_PATH.read_text())
     numbers = stratified_sample(emails, args.sample_size, args.window_days, args.seed)
-    print(f"[refresh] sampled {len(numbers)} issues over last {args.window_days} days (seed={args.seed})", flush=True)
+    print(
+        f"[refresh] sampled {len(numbers)} issues over last {args.window_days} days (seed={args.seed})",
+        flush=True,
+    )
     print(f"[refresh] issues: {numbers}", flush=True)
 
     if args.print_sample:
@@ -353,30 +392,45 @@ def main() -> int:
         f"{sonnet_usage['duration_s']}s, ~${sonnet_usage['est_cost_usd']}",
         flush=True,
     )
-    print(f"[refresh]  themes: {len(findings.themes)}, "
-          f"candidates: {len(findings.candidateQuotes)}, "
-          f"selected: {len(findings.selectedQuotes)}, "
-          f"markers: {len(findings.voiceMarkers)}", flush=True)
+    print(
+        f"[refresh]  themes: {len(findings.themes)}, "
+        f"candidates: {len(findings.candidateQuotes)}, "
+        f"selected: {len(findings.selectedQuotes)}, "
+        f"markers: {len(findings.voiceMarkers)}",
+        flush=True,
+    )
 
     verified, rejected = select_voice_samples(findings, bodies)
     if rejected:
-        print(f"[refresh] WARNING: dropped {len(rejected)} voice sample(s) not found verbatim:", flush=True)
+        print(
+            f"[refresh] WARNING: dropped {len(rejected)} voice sample(s) not found verbatim:",
+            flush=True,
+        )
         for r in rejected:
             print(f"  - #{r['issue']}: {r['text']}...", flush=True)
     if len(verified) < 3:
-        print(f"[refresh] WARNING: only {len(verified)} verbatim voice samples — consider re-running.", flush=True)
+        print(
+            f"[refresh] WARNING: only {len(verified)} verbatim voice samples — consider re-running.",
+            flush=True,
+        )
 
     # Run log
     run_log_path = TMP / f"copy-refresh-{int(time.time())}.json"
-    run_log_path.write_text(json.dumps({
-        "sample": numbers,
-        "seed": args.seed,
-        "sonnet_usage": sonnet_usage,
-        "total_cost_usd": sonnet_usage["est_cost_usd"],
-        "findings": findings.model_dump(),
-        "verified_samples": [s.model_dump() for s in verified],
-        "rejected_samples": rejected,
-    }, indent=2, ensure_ascii=False))
+    run_log_path.write_text(
+        json.dumps(
+            {
+                "sample": numbers,
+                "seed": args.seed,
+                "sonnet_usage": sonnet_usage,
+                "total_cost_usd": sonnet_usage["est_cost_usd"],
+                "findings": findings.model_dump(),
+                "verified_samples": [s.model_dump() for s in verified],
+                "rejected_samples": rejected,
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     print(f"[refresh] run log: {run_log_path.relative_to(REPO)}", flush=True)
     print(f"[refresh] total estimated cost: ~${sonnet_usage['est_cost_usd']}", flush=True)
 

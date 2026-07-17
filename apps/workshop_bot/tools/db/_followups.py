@@ -27,8 +27,15 @@ def insert_follow_up(
             "INSERT INTO follow_ups "
             "(persona, channel_env, trigger_kind, due_at, trigger_issue, note, created_by) "
             "VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (persona, channel_env, trigger_kind, due_at,
-             int(trigger_issue) if trigger_issue is not None else None, note, created_by),
+            (
+                persona,
+                channel_env,
+                trigger_kind,
+                due_at,
+                int(trigger_issue) if trigger_issue is not None else None,
+                note,
+                created_by,
+            ),
         )
         return int(cur.lastrowid or 0)
 
@@ -95,4 +102,3 @@ def cancel_follow_up(follow_up_id: int, *, persona: Optional[str] = None) -> boo
     with connect() as conn:
         cur = conn.execute(sql, params)
         return cur.rowcount > 0
-

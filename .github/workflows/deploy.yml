@@ -37,6 +37,7 @@ concurrency:
 jobs:
   produce:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
         with:
@@ -48,18 +49,29 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: apps/librarian/lambda/package-lock.json
 
       - run: uv sync --locked
-      - run: echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Lint
         run: uv run --locked ruff check .
 
+      - name: Format
+        run: uv run --locked ruff format --check .
+
+      - name: Audit locked Python dependencies
+        run: |
+          uv export --locked --no-dev --no-emit-project --format requirements-txt > /tmp/requirements.txt
+          sed -i '/^-e \.\/librarian-core$/d' /tmp/requirements.txt
+          uvx --from pip-audit==2.10.1 pip-audit --requirement /tmp/requirements.txt --disable-pip
+
       - name: Install Lambda dependencies
         run: npm --prefix apps/librarian/lambda ci
+
+      - name: Audit Lambda dependencies
+        run: npm --prefix apps/librarian/lambda audit --audit-level=high
 
       - name: Detect changed production surfaces
         id: changes
@@ -67,11 +79,13 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             # Manual production runs are intentionally full refreshes.
-            echo "weekly_corpus=true" >> "$GITHUB_OUTPUT"
-            echo "blog_corpus=true" >> "$GITHUB_OUTPUT"
-            echo "podcast_corpus=true" >> "$GITHUB_OUTPUT"
-            echo "site_handoff=true" >> "$GITHUB_OUTPUT"
-            echo "lambda=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "weekly_corpus=true"
+              echo "blog_corpus=true"
+              echo "podcast_corpus=true"
+              echo "site_handoff=true"
+              echo "lambda=true"
+            } >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -149,21 +163,23 @@ jobs:
             lambda=true
           fi
 
-          echo "weekly_corpus=$weekly_corpus" >> "$GITHUB_OUTPUT"
-          echo "blog_corpus=$blog_corpus" >> "$GITHUB_OUTPUT"
-          echo "podcast_corpus=$podcast_corpus" >> "$GITHUB_OUTPUT"
-          echo "site_handoff=$site_handoff" >> "$GITHUB_OUTPUT"
-          echo "lambda=$lambda" >> "$GITHUB_OUTPUT"
+          {
+            echo "weekly_corpus=$weekly_corpus"
+            echo "blog_corpus=$blog_corpus"
+            echo "podcast_corpus=$podcast_corpus"
+            echo "site_handoff=$site_handoff"
+            echo "lambda=$lambda"
+          } >> "$GITHUB_OUTPUT"
 
       # Materialize apps/site/archive/{N}.md + _data/emails.json from the
       # canonical data/issues/{N}/ store. Runs before tests because
       # test_audio_script reads archive files as fixtures, and apps/site/ is a
       # transient build artifact in Studio (built here, not committed).
       - name: Build archive from data/issues/
-        run: python pipeline/content/content.py build
+        run: uv run --locked python pipeline/content/content.py build
 
       - name: Run Python tests
-        run: python -m unittest discover -s tests -p 'test_*.py' -t .
+        run: uv run --locked python -m unittest discover -s tests -p 'test_*.py' -t .
 
       - name: Run Lambda tests
         run: npm --prefix apps/librarian/lambda test
@@ -174,24 +190,22 @@ jobs:
 
       - name: Build Weekly Thing corpus
         if: steps.changes.outputs.weekly_corpus == 'true'
-        run: python pipeline/corpus/build.py
+        run: uv run --locked python pipeline/corpus/build.py
 
       - name: Build podcast corpus
         if: steps.changes.outputs.podcast_corpus == 'true'
-        run: python pipeline/corpus/build_podcast.py
+        run: uv run --locked python pipeline/corpus/build_podcast.py
 
       # data/librarian/graph.json powers the site's topic pages.
       - name: Build graph for site topics
         if: steps.changes.outputs.weekly_corpus == 'true' || steps.changes.outputs.site_handoff == 'true'
-        run: python pipeline/graph/build.py
+        run: uv run --locked python pipeline/graph/build.py
 
       # Embed every corpus the Librarian API can load. Each upload reuses
       # cached embeddings from the previous S3 artifact when chunk ids match.
-      # continue-on-error so a Bedrock hiccup doesn't block the website handoff.
       - name: Upload embedded Weekly Thing corpus + graph to S3
         if: steps.changes.outputs.weekly_corpus == 'true'
-        continue-on-error: true
-        run: python pipeline/deploy/upload_corpus.py
+        run: uv run --locked python pipeline/deploy/upload_corpus.py
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -200,8 +214,7 @@ jobs:
 
       - name: Upload embedded blog corpus to S3
         if: steps.changes.outputs.blog_corpus == 'true'
-        continue-on-error: true
-        run: python pipeline/deploy/upload_blog_corpus.py
+        run: uv run --locked python pipeline/deploy/upload_blog_corpus.py
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -210,8 +223,7 @@ jobs:
 
       - name: Upload embedded podcast corpus to S3
         if: steps.changes.outputs.podcast_corpus == 'true'
-        continue-on-error: true
-        run: python pipeline/deploy/upload_podcast_corpus.py
+        run: uv run --locked python pipeline/deploy/upload_podcast_corpus.py
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -225,8 +237,7 @@ jobs:
 
       - name: Deploy Thingy Lambda
         if: steps.lambda-changes.outputs.changed == 'true'
-        continue-on-error: true
-        run: python pipeline/deploy/aws.py --skip-corpus-upload --skip-smoke-test
+        run: uv run --locked python pipeline/deploy/aws.py --skip-corpus-upload
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -240,7 +251,7 @@ jobs:
       # corpus timestamp; non-fatal if S3 fails.
       - name: Generate pipeline status report
         continue-on-error: true
-        run: python pipeline/status.py --json apps/site/_data/status.json
+        run: uv run --locked python pipeline/status.py --json apps/site/_data/status.json
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -255,10 +266,10 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "push" || "${{ inputs.push_to_weekly }}" == "true" ]]; then
             echo "Committing site inputs to the website repo."
-            python pipeline/deploy/push_site_inputs.py --push
+            uv run --locked python pipeline/deploy/push_site_inputs.py --push
           else
             echo "Manual dry-run diff only (set push_to_weekly = true to commit)."
-            python pipeline/deploy/push_site_inputs.py
+            uv run --locked python pipeline/deploy/push_site_inputs.py
           fi
         env:
           GITHUB_PAT_TOKEN: ${{ secrets.STUDIO_PAT_TOKEN }}

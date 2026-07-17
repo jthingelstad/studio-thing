@@ -87,6 +87,7 @@ def detect_format(body, issue_number):
 # TinyLetter HTML converter
 # ---------------------------------------------------------------------------
 
+
 def convert_tinyletter(body):
     """Convert TinyLetter HTML to clean markdown."""
     # Strip the editor mode comment and wrapper div
@@ -134,12 +135,8 @@ def convert_tinyletter(body):
 
     # Convert plain headings
     body = re.sub(r"<h1[^>]*>(.*?)</h1>", lambda m: f"# {m.group(1).strip()}", body)
-    body = re.sub(
-        r"<h2[^>]*>(.*?)</h2>", lambda m: f"## {m.group(1).strip()}", body
-    )
-    body = re.sub(
-        r"<h3[^>]*>(.*?)</h3>", lambda m: f"### {m.group(1).strip()}", body
-    )
+    body = re.sub(r"<h2[^>]*>(.*?)</h2>", lambda m: f"## {m.group(1).strip()}", body)
+    body = re.sub(r"<h3[^>]*>(.*?)</h3>", lambda m: f"### {m.group(1).strip()}", body)
 
     # Convert links: <a href="url" ...>text</a>
     def convert_link(m):
@@ -222,6 +219,7 @@ def convert_tinyletter(body):
 # MailChimp Old format converter (issues 23-52)
 # ---------------------------------------------------------------------------
 
+
 def convert_mailchimp_old(body):
     """Convert MailChimp old format (** Section\\n---- headers) to markdown."""
     body = re.sub(r"<!-- buttondown-editor-mode: plaintext -->", "", body)
@@ -303,7 +301,9 @@ def convert_mailchimp_old(body):
                     # It's a section heading
                     result.append(f"## {title_text}")
                     result.append("")
-                    in_microblog = "microblog" in title_text.lower() or "microposts" in title_text.lower()
+                    in_microblog = (
+                        "microblog" in title_text.lower() or "microposts" in title_text.lower()
+                    )
                 continue
 
         # Bare URL on its own line (not in a paragraph)
@@ -445,7 +445,12 @@ def convert_mailchimp_new(body):
                 is_section = True
                 break
         # Also match lines that look like section names: short text with emoji, no URLs
-        if not is_section and len(stripped) < 40 and "(" not in stripped and not stripped.startswith("*"):
+        if (
+            not is_section
+            and len(stripped) < 40
+            and "(" not in stripped
+            and not stripped.startswith("*")
+        ):
             # Check if it's a known section name pattern (text + emoji)
             if re.match(r"^[A-Z][\w\s]+[^\w\s]$", stripped) and any(
                 ord(c) > 0x2000 for c in stripped
@@ -530,6 +535,7 @@ def convert_mailchimp_new(body):
 # Shared utility: inline link conversion
 # ---------------------------------------------------------------------------
 
+
 def convert_bullet_item(text, in_microblog):
     """Convert a bullet item, handling microblog items specially.
 
@@ -576,6 +582,7 @@ def convert_inline_links(text):
 # Main
 # ---------------------------------------------------------------------------
 
+
 def convert_issue(issue_number, dry_run=False):
     """Convert a single issue. Returns (success, message)."""
     path = ARCHIVE_DIR / f"{issue_number}.md"
@@ -602,16 +609,22 @@ def convert_issue(issue_number, dry_run=False):
         return False, f"#{issue_number}: unknown format '{fmt}'"
 
     if dry_run:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"ISSUE #{issue_number} ({fmt})")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(converted[:2000])
         if len(converted) > 2000:
             print(f"\n... ({len(converted) - 2000} more chars)")
-        return True, f"#{issue_number}: would convert ({fmt}, {len(original_body)} → {len(converted)} bytes)"
+        return (
+            True,
+            f"#{issue_number}: would convert ({fmt}, {len(original_body)} → {len(converted)} bytes)",
+        )
 
     write_md_file(path, front_matter, converted)
-    return True, f"#{issue_number}: converted ({fmt}, {len(original_body)} → {len(converted)} bytes)"
+    return (
+        True,
+        f"#{issue_number}: converted ({fmt}, {len(original_body)} → {len(converted)} bytes)",
+    )
 
 
 def main():

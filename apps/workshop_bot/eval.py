@@ -108,7 +108,9 @@ def generate_questions(client: anthropic.Anthropic, persona_name: str) -> list[s
     text = "".join(b.text for b in response.content if b.type == "text")
     questions = parse_json_array(text)
     if len(questions) < QUESTIONS_PER_PERSONA:
-        raise RuntimeError(f"{persona_name}: got {len(questions)} questions, expected {QUESTIONS_PER_PERSONA}")
+        raise RuntimeError(
+            f"{persona_name}: got {len(questions)} questions, expected {QUESTIONS_PER_PERSONA}"
+        )
     return questions[:QUESTIONS_PER_PERSONA]
 
 
@@ -165,8 +167,12 @@ async def run_persona(
         usage = meta.get("usage") or {}
         logger.info(
             "%s %02d/%02d  %.1fs  in=%s out=%s%s",
-            name, i, len(questions), dt,
-            usage.get("input", "?"), usage.get("output", "?"),
+            name,
+            i,
+            len(questions),
+            dt,
+            usage.get("input", "?"),
+            usage.get("output", "?"),
             f"  ERROR={error}" if error else "",
         )
 
@@ -289,7 +295,9 @@ def main() -> int:
         datefmt="%H:%M:%S",
         stream=sys.stderr,
     )
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--regen", action="store_true", help="regenerate the cached question set")
     parser.add_argument("--persona", choices=list(PERSONAS), help="run only one persona")
     parser.add_argument("--model", default="haiku", choices=list(anthropic_client.MODELS))

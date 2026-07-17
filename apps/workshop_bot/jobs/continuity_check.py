@@ -74,7 +74,9 @@ async def run_for_text(
 
     passages, error = await asyncio.to_thread(
         archive_context.fetch_archive_context,
-        text[:_QUERY_CHARS], k=_RETRIEVE_K, exclude_issue=exclude_issue,
+        text[:_QUERY_CHARS],
+        k=_RETRIEVE_K,
+        exclude_issue=exclude_issue,
     )
     if error:
         # Fail-soft: the archive is unreachable this turn. Say so briefly and
@@ -86,7 +88,8 @@ async def run_for_text(
         await ctx.post(r.channel, msg, persona="eddy")
         logger.info("continuity-check: retrieval unavailable for %s (%s)", label, error)
         return _base.JobResult(
-            True, f"continuity-check: retrieval unavailable — {error}",
+            True,
+            f"continuity-check: retrieval unavailable — {error}",
             data={"posted": True, "retrieval_failed": True},
         )
 
@@ -128,7 +131,8 @@ async def run_for_text(
     note = (reply or "").strip()
     if not note:
         return _base.JobResult(
-            True, "continuity-check: Eddy had nothing to add",
+            True,
+            "continuity-check: Eddy had nothing to add",
             data={"posted": False},
         )
     if len(note) > _NOTE_CHAR_CAP:
@@ -139,9 +143,10 @@ async def run_for_text(
     # One place logs "Eddy shared a continuity note" regardless of which
     # surface triggered the check.
     logger.info(
-        "continuity-check: Eddy posted a continuity note for %s (%d chars)",
-        label, len(note))
+        "continuity-check: Eddy posted a continuity note for %s (%d chars)", label, len(note)
+    )
     return _base.JobResult(
-        True, f"continuity-check: posted a continuity note for {label}",
+        True,
+        f"continuity-check: posted a continuity note for {label}",
         data={"posted": True, "passages": len(passages)},
     )

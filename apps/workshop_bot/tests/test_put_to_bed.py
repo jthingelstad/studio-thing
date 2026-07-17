@@ -44,20 +44,29 @@ def _write_issue_files(root: Path, n: int, *, shipped: bool = True) -> None:
 
     links = {
         "notable_links": [
-            {"text": "A", "url": "https://daringfireball.net/x",
-             "domain": "daringfireball.net",
-             "heading_context": "[A](https://daringfireball.net/x)",
-             "section": "Notable"},
-            {"text": "B", "url": "https://example.com/y",
-             "domain": "example.com",
-             "heading_context": "[B](https://example.com/y)",
-             "section": "Notable"},
+            {
+                "text": "A",
+                "url": "https://daringfireball.net/x",
+                "domain": "daringfireball.net",
+                "heading_context": "[A](https://daringfireball.net/x)",
+                "section": "Notable",
+            },
+            {
+                "text": "B",
+                "url": "https://example.com/y",
+                "domain": "example.com",
+                "heading_context": "[B](https://example.com/y)",
+                "section": "Notable",
+            },
         ],
         "briefly_links": [
-            {"text": "C", "url": "https://other.test/z",
-             "domain": "other.test",
-             "heading_context": "**[C](https://other.test/z)**",
-             "section": "Briefly"},
+            {
+                "text": "C",
+                "url": "https://other.test/z",
+                "domain": "other.test",
+                "heading_context": "**[C](https://other.test/z)**",
+                "section": "Briefly",
+            },
         ],
         "domains": ["daringfireball.net", "example.com", "other.test"],
         "word_count": 2042,
@@ -99,10 +108,14 @@ class PutToBedTests(DBTestCase):
         self._fake_repo.mkdir(parents=True, exist_ok=True)
         self._repo_patcher = patch.object(put_to_bed, "REPO", self._fake_repo)
         self._issues_patcher = patch.object(
-            put_to_bed, "ISSUES_ROOT", self._fake_repo / "data" / "issues",
+            put_to_bed,
+            "ISSUES_ROOT",
+            self._fake_repo / "data" / "issues",
         )
         self._audio_patcher = patch.object(
-            put_to_bed, "AUDIO_MANIFEST", self._fake_repo / "data" / "audio" / "manifest.json",
+            put_to_bed,
+            "AUDIO_MANIFEST",
+            self._fake_repo / "data" / "audio" / "manifest.json",
         )
         self._repo_patcher.start()
         self._issues_patcher.start()

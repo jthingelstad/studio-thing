@@ -20,7 +20,6 @@ from apps.workshop_bot.tools import db, issue_items, issue_items_sync  # noqa: E
 
 
 class _DBCase(unittest.TestCase):
-
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self._orig = os.environ.get("WORKSHOP_DB_PATH")
@@ -54,7 +53,6 @@ def _pin_item(*, sid: str, url: str, title: str, desc: str = "", brief: bool = F
 
 
 class PinboardSyncTests(_DBCase):
-
     def test_populates_notable_and_brief_with_positions(self):
         candidates = {
             "notable": [
@@ -153,12 +151,13 @@ class PinboardSyncTests(_DBCase):
         ):
             issue_items_sync.sync_pinboard(349, WINDOW)
         # Anchor an editorial comment on h2.
-        h2 = [
-            r for r in issue_items.list_items(349, section="notable")
-            if r["title"] == "B"
-        ][0]["id"]
+        h2 = [r for r in issue_items.list_items(349, section="notable") if r["title"] == "B"][0][
+            "id"
+        ]
         comment = issue_items.write_comment(
-            issue_number=349, scope="item", item_id=h2,
+            issue_number=349,
+            scope="item",
+            item_id=h2,
             body_md="anchor text would go here",
         )
         # Upstream drops h2.
@@ -208,6 +207,7 @@ class PinboardSyncTests(_DBCase):
 
 # ---------------- micro.blog ----------------
 
+
 def _mb_post(
     *,
     url: str,
@@ -217,18 +217,21 @@ def _mb_post(
     categories: list[str] | None = None,
 ) -> dict:
     return {
-        "url": url, "title": title, "published": published, "content_md": content_md,
+        "url": url,
+        "title": title,
+        "published": published,
+        "content_md": content_md,
         "categories": list(categories or []),
     }
 
 
 class MicroblogSyncTests(_DBCase):
-
     def test_populates_journal_with_label_metadata(self):
         posts = [
             _mb_post(
                 url="https://www.thingelstad.com/2026/05/16/foo",
-                title="A titled post", content_md="hello",
+                title="A titled post",
+                content_md="hello",
                 published="2026-05-16T21:00:00Z",  # 4pm CT Saturday
             ),
             _mb_post(
@@ -237,12 +240,15 @@ class MicroblogSyncTests(_DBCase):
                 published="2026-05-17T15:30:00Z",  # 10:30am CT Sunday
             ),
         ]
-        with patch(
-            "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
-            return_value=posts,
-        ), patch(
-            "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
-            side_effect=lambda md, n: md,  # no-op (no images to rehost in fixtures)
+        with (
+            patch(
+                "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
+                return_value=posts,
+            ),
+            patch(
+                "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
+                side_effect=lambda md, n: md,  # no-op (no images to rehost in fixtures)
+            ),
         ):
             out = issue_items_sync.sync_microblog(349, WINDOW)
         self.assertEqual(out, {"observed": 2, "pruned": 0, "featured": 0, "alts_filled": []})
@@ -266,14 +272,19 @@ class MicroblogSyncTests(_DBCase):
                 content_md="![](https://oops.example/img.jpg)",
             ),
         ]
+
         def _boom(md, n):
             raise RuntimeError("download failed")
-        with patch(
-            "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
-            return_value=posts,
-        ), patch(
-            "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
-            side_effect=_boom,
+
+        with (
+            patch(
+                "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
+                return_value=posts,
+            ),
+            patch(
+                "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
+                side_effect=_boom,
+            ),
         ):
             out = issue_items_sync.sync_microblog(349, WINDOW)
         self.assertEqual(out["observed"], 1)
@@ -302,12 +313,15 @@ class MicroblogSyncTests(_DBCase):
                 categories=[],
             ),
         ]
-        with patch(
-            "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
-            return_value=posts,
-        ), patch(
-            "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
-            side_effect=lambda md, n: md,
+        with (
+            patch(
+                "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
+                return_value=posts,
+            ),
+            patch(
+                "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
+                side_effect=lambda md, n: md,
+            ),
         ):
             out = issue_items_sync.sync_microblog(349, WINDOW)
         self.assertEqual(out, {"observed": 2, "pruned": 0, "featured": 1, "alts_filled": []})
@@ -331,17 +345,21 @@ class MicroblogSyncTests(_DBCase):
         posts = [
             _mb_post(
                 url="https://www.thingelstad.com/2026/05/16/big",
-                title="The Big Post", content_md="x",
+                title="The Big Post",
+                content_md="x",
                 published="2026-05-16T15:00:00Z",
                 categories=["Featured"],
             ),
         ]
-        with patch(
-            "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
-            return_value=posts,
-        ), patch(
-            "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
-            side_effect=lambda md, n: md,
+        with (
+            patch(
+                "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
+                return_value=posts,
+            ),
+            patch(
+                "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
+                side_effect=lambda md, n: md,
+            ),
         ):
             issue_items_sync.sync_microblog(349, WINDOW)
         row = issue_items.list_items(349, section="journal", include_promoted=True)[0]
@@ -349,12 +367,15 @@ class MicroblogSyncTests(_DBCase):
 
         # Re-sync with the same post but no Featured category — promotion clears.
         posts[0]["categories"] = []
-        with patch(
-            "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
-            return_value=posts,
-        ), patch(
-            "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
-            side_effect=lambda md, n: md,
+        with (
+            patch(
+                "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
+                return_value=posts,
+            ),
+            patch(
+                "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
+                side_effect=lambda md, n: md,
+            ),
         ):
             out = issue_items_sync.sync_microblog(349, WINDOW)
         self.assertEqual(out["featured"], 0)
@@ -375,12 +396,15 @@ class MicroblogSyncTests(_DBCase):
                 categories=["Featured"],
             ),
         ]
-        with patch(
-            "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
-            return_value=posts,
-        ), patch(
-            "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
-            side_effect=lambda md, n: md,
+        with (
+            patch(
+                "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
+                return_value=posts,
+            ),
+            patch(
+                "apps.workshop_bot.tools.issue_items_sync.journal_images.rehost_in_markdown",
+                side_effect=lambda md, n: md,
+            ),
         ):
             issue_items_sync.sync_microblog(349, WINDOW)
         row = issue_items.list_items(349, section="journal", include_promoted=True)[0]
@@ -390,20 +414,23 @@ class MicroblogSyncTests(_DBCase):
 
 # ---------------- sync_all ----------------
 
-class SyncAllTests(_DBCase):
 
+class SyncAllTests(_DBCase):
     def test_failures_in_one_source_dont_block_the_other(self):
         # Pinboard works; micro.blog raises.
         candidates = {
             "notable": [_pin_item(sid="h1", url="https://a", title="A")],
             "brief": [],
         }
-        with patch(
-            "apps.workshop_bot.tools.issue_items_sync.pinboard.issue_window_candidates",
-            return_value=candidates,
-        ), patch(
-            "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
-            side_effect=RuntimeError("micropub 500"),
+        with (
+            patch(
+                "apps.workshop_bot.tools.issue_items_sync.pinboard.issue_window_candidates",
+                return_value=candidates,
+            ),
+            patch(
+                "apps.workshop_bot.tools.issue_items_sync.microblog.posts_in_window",
+                side_effect=RuntimeError("micropub 500"),
+            ),
         ):
             out = issue_items_sync.sync_all(349, WINDOW)
         self.assertEqual(out["pinboard"]["observed"], 1)

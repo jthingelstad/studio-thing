@@ -5,11 +5,9 @@ EXCLUDED_DOMAINS = {
     "weekly.thingelstad.com",
     "thingelstad.com",
     "www.thingelstad.com",
-
     # Buttondown
     "buttondown.com",
     "buttondown.email",
-
     # Image CDNs and hosting
     "imgur.com",
     "i.imgur.com",
@@ -17,7 +15,6 @@ EXCLUDED_DOMAINS = {
     "res.cloudinary.com",
     "images.unsplash.com",
     "unsplash.com",
-
     # URL shorteners
     "t.co",
     "bit.ly",
@@ -25,30 +22,25 @@ EXCLUDED_DOMAINS = {
     "ow.ly",
     "buff.ly",
     "goo.gl",
-
     # Generic utility / CDN
     "fonts.google.com",
     "fonts.googleapis.com",
     "cdnjs.cloudflare.com",
     "cdn.jsdelivr.net",
     "gravatar.com",
-
     # Email / unsubscribe
     "email.mg.buttondown.email",
     "manage.kmail-lists.com",
-
     # Common embed/media hosts (not interesting as "linked domains")
     "youtube.com",
     "www.youtube.com",
     "youtu.be",
     "open.spotify.com",
     "player.vimeo.com",
-
     # Reference / encyclopedic (inline references, not curated links)
     "en.wikipedia.org",
     "wikipedia.org",
     "en.m.wikipedia.org",
-
     # Social media (too generic to be interesting in domain lists)
     "twitter.com",
     "x.com",

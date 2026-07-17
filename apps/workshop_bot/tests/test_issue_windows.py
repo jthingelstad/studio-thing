@@ -45,9 +45,7 @@ class IssueWindowDbTests(unittest.TestCase):
 
     def test_migrations_record_schema_ledger(self):
         with db.connect() as conn:
-            rows = conn.execute(
-                "SELECT id FROM schema_migrations ORDER BY id"
-            ).fetchall()
+            rows = conn.execute("SELECT id FROM schema_migrations ORDER BY id").fetchall()
         ids = [r["id"] for r in rows]
         self.assertIn("0001_schema_sql", ids)
         self.assertIn("0002_campaigns_copy", ids)
@@ -79,8 +77,7 @@ class IssueWindowDbTests(unittest.TestCase):
                 ("keep-msg", "https://x.example/keep", "toread", "Keep"),
             )
             conn.execute(
-                "INSERT INTO pinboard_popular_seen "
-                "(url, title, verdict_source) VALUES (?, ?, ?)",
+                "INSERT INTO pinboard_popular_seen (url, title, verdict_source) VALUES (?, ?, ?)",
                 ("https://x.example/seen", "Seen", "hackernews"),
             )
 
@@ -88,12 +85,14 @@ class IssueWindowDbTests(unittest.TestCase):
 
         with db.connect() as conn:
             sources = [
-                r["source"] for r in conn.execute(
+                r["source"]
+                for r in conn.execute(
                     "SELECT source FROM popular_seen_sightings ORDER BY source"
                 ).fetchall()
             ]
             messages = [
-                r["discord_message_id"] for r in conn.execute(
+                r["discord_message_id"]
+                for r in conn.execute(
                     "SELECT discord_message_id FROM linky_research_messages "
                     "ORDER BY discord_message_id"
                 ).fetchall()
@@ -132,14 +131,18 @@ class IssueWindowDbTests(unittest.TestCase):
         w1 = issue.compute_window("2026-05-09", 7)
         db.set_issue_window(
             issue_number=348,
-            pub_date=w1["pub_date"], end_date=w1["end_date"],
-            start_date=w1["start_date"], day_count=w1["day_count"],
+            pub_date=w1["pub_date"],
+            end_date=w1["end_date"],
+            start_date=w1["start_date"],
+            day_count=w1["day_count"],
         )
         w2 = issue.compute_window("2026-05-16", 7)
         db.set_issue_window(
             issue_number=349,
-            pub_date=w2["pub_date"], end_date=w2["end_date"],
-            start_date=w2["start_date"], day_count=w2["day_count"],
+            pub_date=w2["pub_date"],
+            end_date=w2["end_date"],
+            start_date=w2["start_date"],
+            day_count=w2["day_count"],
         )
         # Arg-less get_active resolves the most-recently-set window (legacy
         # "the active issue" behaviour) ...
@@ -160,14 +163,18 @@ class IssueWindowDbTests(unittest.TestCase):
         w1 = issue.compute_window("2026-05-09", 7)
         db.set_issue_window(
             issue_number=348,
-            pub_date=w1["pub_date"], end_date=w1["end_date"],
-            start_date=w1["start_date"], day_count=w1["day_count"],
+            pub_date=w1["pub_date"],
+            end_date=w1["end_date"],
+            start_date=w1["start_date"],
+            day_count=w1["day_count"],
         )
         w2 = issue.compute_window("2026-05-09", 14)  # was meant to be a double
         db.set_issue_window(
             issue_number=348,
-            pub_date=w2["pub_date"], end_date=w2["end_date"],
-            start_date=w2["start_date"], day_count=w2["day_count"],
+            pub_date=w2["pub_date"],
+            end_date=w2["end_date"],
+            start_date=w2["start_date"],
+            day_count=w2["day_count"],
         )
         active = db.get_active_issue_window()
         assert active is not None
@@ -184,8 +191,10 @@ class IssueWindowDbTests(unittest.TestCase):
         w = issue.compute_window("2026-05-09", 7)
         db.set_issue_window(
             issue_number=348,
-            pub_date=w["pub_date"], end_date=w["end_date"],
-            start_date=w["start_date"], day_count=w["day_count"],
+            pub_date=w["pub_date"],
+            end_date=w["end_date"],
+            start_date=w["start_date"],
+            day_count=w["day_count"],
         )
         out = issue.t_current_issue_window(deps=None)
         self.assertEqual(out["issue_number"], 348)

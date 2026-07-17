@@ -33,15 +33,15 @@ logger = logging.getLogger("workshop.interaction")
 
 # Kept for any external reference / readability; the buttons render numbers.
 DIGIT_EMOJI = ("1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣")
-REFRESH_EMOJI = "\U0001f504"   # 🔄
+REFRESH_EMOJI = "\U0001f504"  # 🔄
 YES_EMOJI = "✅"
 NO_EMOJI = "❌"
 _MAX_OPTIONS = 5
 
 DEFAULT_TIMEOUT = 6 * 60 * 60.0  # 6h — generous; Jamie may step away
 
-ChoiceResult = Union[int, str, None]      # int index, "refresh", or None (timeout)
-ApprovalResult = Union[bool, str, None]   # True/False, "refresh", or None (timeout)
+ChoiceResult = Union[int, str, None]  # int index, "refresh", or None (timeout)
+ApprovalResult = Union[bool, str, None]  # True/False, "refresh", or None (timeout)
 
 
 def _owner_id() -> Optional[str]:
@@ -62,7 +62,8 @@ class _PickView(discord.ui.View):
 
     def add_choice(self, value, label: str, *, emoji: Optional[str] = None, style=None) -> None:
         btn = discord.ui.Button(
-            label=label, emoji=emoji,
+            label=label,
+            emoji=emoji,
             style=style or discord.ButtonStyle.secondary,
             custom_id=f"pick:{value}",
         )

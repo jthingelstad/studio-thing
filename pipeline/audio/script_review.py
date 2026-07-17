@@ -30,12 +30,18 @@ _HAIKU_CACHE_WRITE_PER_MTOK = 1.25
 
 class ReviewFinding(BaseModel):
     severity: str = Field(description="Either 'error' or 'warning'.")
-    where: str = Field(description="A short quoted phrase from the script (or 'preamble', 'closing') showing the location.")
-    what: str = Field(description="One concise sentence describing the objective problem. No suggestions.")
+    where: str = Field(
+        description="A short quoted phrase from the script (or 'preamble', 'closing') showing the location."
+    )
+    what: str = Field(
+        description="One concise sentence describing the objective problem. No suggestions."
+    )
 
 
 class ReviewResult(BaseModel):
-    findings: list[ReviewFinding] = Field(description="Empty list if no transformation issues were found.")
+    findings: list[ReviewFinding] = Field(
+        description="Empty list if no transformation issues were found."
+    )
 
 
 SYSTEM_PROMPT = """You audit transformation faithfulness between a newsletter body (Markdown) and the audio script generated from it.
@@ -110,7 +116,9 @@ def _truncate(text: str, limit: int = MAX_INPUT_CHARS) -> str:
     return text[:limit] + "\n\n[truncated]"
 
 
-def review_issue(client: anthropic.Anthropic, issue: str, body: str, script: str) -> tuple[ReviewResult, dict]:
+def review_issue(
+    client: anthropic.Anthropic, issue: str, body: str, script: str
+) -> tuple[ReviewResult, dict]:
     """Run the Haiku faithfulness review for one issue. Returns (result, usage_dict)."""
     user_content = (
         f"Issue #{issue}.\n\n"
@@ -142,7 +150,11 @@ def review_issue(client: anthropic.Anthropic, issue: str, body: str, script: str
 
 
 def _estimate_cost(usage: dict) -> float:
-    fresh = usage["input_tokens"] - usage.get("cache_read_input_tokens", 0) - usage.get("cache_creation_input_tokens", 0)
+    fresh = (
+        usage["input_tokens"]
+        - usage.get("cache_read_input_tokens", 0)
+        - usage.get("cache_creation_input_tokens", 0)
+    )
     cost = (
         fresh * _HAIKU_INPUT_PER_MTOK
         + usage["output_tokens"] * _HAIKU_OUTPUT_PER_MTOK

@@ -62,7 +62,8 @@ class FormatPersonaLineTests(unittest.TestCase):
         bot = _fake_bot()
         rows = [("DISCORD_CHANNEL_EDITORIAL", "editorial", [])]
         line = startup.format_persona_line(
-            bot, rows,
+            bot,
+            rows,
             header="**workshop-bot online** — `abc1234`",
         )
         lines = line.split("\n")
@@ -78,7 +79,9 @@ class FormatPersonaLineTests(unittest.TestCase):
         bot = _fake_bot()
         rows = [("DISCORD_CHANNEL_EDITORIAL", "editorial", [])]
         line = startup.format_persona_line(
-            bot, rows, commands_summary="/eddy commands: foo · bar",
+            bot,
+            rows,
+            commands_summary="/eddy commands: foo · bar",
         )
         self.assertEqual(line, "✓ **Eddy** online")
         self.assertNotIn("/eddy commands", line)
@@ -88,12 +91,18 @@ class FormatPersonaLineTests(unittest.TestCase):
 class AuditOneTests(unittest.TestCase):
     def test_audit_one_returns_per_env_rows(self):
         import os
+
         bot = _fake_bot(name="Eddy", persona="eddy")
         bot.get_channel = MagicMock(return_value=None)
         # The audit checks the env vars in CHANNELS_BY_PERSONA["eddy"].
-        orig = {k: os.environ.get(k) for k in ("DISCORD_CHANNEL_EDITORIAL",
-                                                "DISCORD_CHANNEL_WORKSHOP",
-                                                "DISCORD_CHANNEL_CHATTER")}
+        orig = {
+            k: os.environ.get(k)
+            for k in (
+                "DISCORD_CHANNEL_EDITORIAL",
+                "DISCORD_CHANNEL_WORKSHOP",
+                "DISCORD_CHANNEL_CHATTER",
+            )
+        }
         try:
             for k in orig:
                 os.environ.pop(k, None)

@@ -47,7 +47,9 @@ class StartIssueTests(_DBTestCase):
         ctx = _base.JobContext(trigger="manual")
         with patch.object(sync_issue.issue_items_sync, "sync_all", _no_sync):
             # 2026-05-16 is a Saturday.
-            result = asyncio.run(start_issue.run(ctx, number=458, pub_date="2026-05-16", day_count=7))
+            result = asyncio.run(
+                start_issue.run(ctx, number=458, pub_date="2026-05-16", day_count=7)
+            )
         self.assertTrue(result.ok, result.message)
         win = db.get_active_issue_window()
         self.assertIsNotNone(win)
@@ -80,8 +82,9 @@ class StartIssueTests(_DBTestCase):
     def test_start_issue_schedules_mon_and_wed_currently_nudges(self):
         ctx = _base.JobContext()
         with patch.object(sync_issue.issue_items_sync, "sync_all", _no_sync):
-            result = asyncio.run(start_issue.run(
-                ctx, number=458, pub_date="2026-05-16", day_count=7, set_by="jamie"))
+            result = asyncio.run(
+                start_issue.run(ctx, number=458, pub_date="2026-05-16", day_count=7, set_by="jamie")
+            )
         self.assertTrue(result.ok, result.message)
         nudges = result.data.get("currently_nudges") or []
         rows = [db.get_follow_up(int(i)) for i in nudges]
@@ -95,19 +98,24 @@ class SyncIssueTests(_DBTestCase):
         self.assertIn("no active issue window", result.message)
 
     def test_sync_reports_counts_and_source_errors(self):
-        db.set_issue_window(issue_number=458, pub_date="2026-05-16",
-                            end_date="2026-05-15", start_date="2026-05-08",
-                            day_count=7, set_by="t")
-        issue_items.upsert_item(issue_number=458, section="notable",
-                                source="pinboard", source_id="p1", body_md="x")
+        db.set_issue_window(
+            issue_number=458,
+            pub_date="2026-05-16",
+            end_date="2026-05-15",
+            start_date="2026-05-08",
+            day_count=7,
+            set_by="t",
+        )
+        issue_items.upsert_item(
+            issue_number=458, section="notable", source="pinboard", source_id="p1", body_md="x"
+        )
 
         def _sync(n, window):
-            return {"pinboard": {"observed": 3},
-                    "microblog": {"error": "boom"}}
+            return {"pinboard": {"observed": 3}, "microblog": {"error": "boom"}}
 
         with patch.object(sync_issue.issue_items_sync, "sync_all", _sync):
             result = asyncio.run(sync_issue.run(_base.JobContext()))
-        self.assertFalse(result.ok)          # a source error marks the run
+        self.assertFalse(result.ok)  # a source error marks the run
         self.assertIn("3 pinboard items", result.message)
         self.assertIn("microblog error: boom", result.message)
         self.assertIn("1 Notable", result.message)
@@ -119,12 +127,18 @@ class IssueStatusTests(_DBTestCase):
         self.assertFalse(result.ok)
 
     def test_reports_presence(self):
-        db.set_issue_window(issue_number=458, pub_date="2026-05-16",
-                            end_date="2026-05-15", start_date="2026-05-08",
-                            day_count=7, set_by="t")
+        db.set_issue_window(
+            issue_number=458,
+            pub_date="2026-05-16",
+            end_date="2026-05-15",
+            start_date="2026-05-08",
+            day_count=7,
+            set_by="t",
+        )
         content_store.write_issue(458, "intro.md", "Hello.")
-        issue_items.upsert_item(issue_number=458, section="notable",
-                                source="pinboard", source_id="p1", body_md="x")
+        issue_items.upsert_item(
+            issue_number=458, section="notable", source="pinboard", source_id="p1", body_md="x"
+        )
         result = asyncio.run(issue_status.run(_base.JobContext()))
         self.assertTrue(result.ok, result.message)
         st = result.data["section_status"]
@@ -137,17 +151,28 @@ class DraftSectionStatusTests(_DBTestCase):
     store, currently_entries — plus the S3 listing for binaries."""
 
     def _window(self):
-        db.set_issue_window(issue_number=458, pub_date="2026-05-16",
-                            end_date="2026-05-15", start_date="2026-05-08",
-                            day_count=7, set_by="t")
+        db.set_issue_window(
+            issue_number=458,
+            pub_date="2026-05-16",
+            end_date="2026-05-15",
+            start_date="2026-05-08",
+            day_count=7,
+            set_by="t",
+        )
 
     def test_counts_come_from_rows(self):
         self._window()
         for i in range(3):
-            issue_items.upsert_item(issue_number=458, section="notable",
-                                    source="pinboard", source_id=f"n{i}", body_md="x")
-        issue_items.upsert_item(issue_number=458, section="journal",
-                                source="microblog", source_id="j1", body_md="x")
+            issue_items.upsert_item(
+                issue_number=458,
+                section="notable",
+                source="pinboard",
+                source_id=f"n{i}",
+                body_md="x",
+            )
+        issue_items.upsert_item(
+            issue_number=458, section="journal", source="microblog", source_id="j1", body_md="x"
+        )
         st = draft_mod.section_status(458, list_objects=set())
         self.assertEqual(st["sections"]["notable"]["item_count"], 3)
         self.assertEqual(st["sections"]["journal"]["item_count"], 1)
@@ -155,22 +180,28 @@ class DraftSectionStatusTests(_DBTestCase):
 
     def test_excluded_rows_do_not_count(self):
         self._window()
-        a = issue_items.upsert_item(issue_number=458, section="notable",
-                                    source="pinboard", source_id="n1", body_md="x")
+        a = issue_items.upsert_item(
+            issue_number=458, section="notable", source="pinboard", source_id="n1", body_md="x"
+        )
         issue_items.set_excluded(a, True)
         st = draft_mod.section_status(458, list_objects=set())
         self.assertEqual(st["sections"]["notable"]["item_count"], 0)
 
     def test_assets_and_ship_ready(self):
         self._window()
-        for name, body in (("haiku.md", "a / b / c"), ("metadata.json", "{}"),
-                           ("intro.md", "Hello.")):
+        for name, body in (
+            ("haiku.md", "a / b / c"),
+            ("metadata.json", "{}"),
+            ("intro.md", "Hello."),
+        ):
             content_store.write_issue(458, name, body)
         for section, sid in (("notable", "n1"), ("brief", "b1")):
-            issue_items.upsert_item(issue_number=458, section=section,
-                                    source="pinboard", source_id=sid, body_md="x")
-        issue_items.upsert_item(issue_number=458, section="journal",
-                                source="microblog", source_id="j1", body_md="x")
+            issue_items.upsert_item(
+                issue_number=458, section=section, source="pinboard", source_id=sid, body_md="x"
+            )
+        issue_items.upsert_item(
+            issue_number=458, section="journal", source="microblog", source_id="j1", body_md="x"
+        )
         st = draft_mod.section_status(458, list_objects={"cover.jpg"})
         self.assertTrue(st["ship_ready"], st["required_missing"])
         self.assertTrue(st["cover_present"])
@@ -192,12 +223,23 @@ class EddyReviewJobTests(_DBTestCase):
     editorial_comments rows."""
 
     def _window_with_content(self):
-        db.set_issue_window(issue_number=458, pub_date="2026-05-16",
-                            end_date="2026-05-15", start_date="2026-05-08",
-                            day_count=7, set_by="t")
-        issue_items.upsert_item(issue_number=458, section="notable",
-                                source="pinboard", source_id="n1",
-                                url="https://a", title="A", body_md="blurb")
+        db.set_issue_window(
+            issue_number=458,
+            pub_date="2026-05-16",
+            end_date="2026-05-15",
+            start_date="2026-05-08",
+            day_count=7,
+            set_by="t",
+        )
+        issue_items.upsert_item(
+            issue_number=458,
+            section="notable",
+            source="pinboard",
+            source_id="n1",
+            url="https://a",
+            title="A",
+            body_md="blurb",
+        )
 
     def test_no_window_errors(self):
         result = asyncio.run(eddy_review.run(_base.JobContext()))
@@ -205,8 +247,7 @@ class EddyReviewJobTests(_DBTestCase):
 
     def test_no_team_errors_and_leaves_comments(self):
         self._window_with_content()
-        prior = issue_items.write_comment(
-            issue_number=458, scope="issue", body_md="prior guidance")
+        prior = issue_items.write_comment(issue_number=458, scope="issue", body_md="prior guidance")
         result = asyncio.run(eddy_review.run(_base.JobContext()))
         self.assertFalse(result.ok)
         # Review never ran — prior comments untouched.
@@ -217,8 +258,8 @@ class EddyReviewJobTests(_DBTestCase):
         self._window_with_content()
         item = issue_items.list_items(458, section="notable")[0]
         prior = issue_items.write_comment(
-            issue_number=458, scope="item", item_id=item["id"],
-            body_md="trim the second sentence")
+            issue_number=458, scope="item", item_id=item["id"], body_md="trim the second sentence"
+        )
         fc = _FakeBotChannel(persona="eddy", reply="PASS")
         result = asyncio.run(eddy_review.run(_base.JobContext(deps=fc.deps())))
         self.assertTrue(result.ok, result.message)
@@ -229,9 +270,11 @@ class EddyReviewJobTests(_DBTestCase):
 
     def test_anchored_review_writes_comments(self):
         self._window_with_content()
-        reply = ("## Notable\n\n"
-                 "- <!-- target:n1 --> Tighten the blurb.\n\n"
-                 "<!-- target:hygiene --> Alt text missing on the cover.")
+        reply = (
+            "## Notable\n\n"
+            "- <!-- target:n1 --> Tighten the blurb.\n\n"
+            "<!-- target:hygiene --> Alt text missing on the cover."
+        )
         fc = _FakeBotChannel(persona="eddy", reply=reply)
         result = asyncio.run(eddy_review.run(_base.JobContext(deps=fc.deps())))
         self.assertTrue(result.ok, result.message)
@@ -252,13 +295,18 @@ class EddyReviewJobTests(_DBTestCase):
         # The hygiene walk lives in the prompt itself — pin it so a future
         # edit can't silently drop the hygiene lens or the target markers.
         from apps.workshop_bot.tools.llm import anthropic_client
+
         anthropic_client._prompt_cache.pop("eddy-draft-review", None)
         prompt = anthropic_client.load_prompt("eddy-draft-review")
         self.assertIn("## Hygiene", prompt)
         self.assertIn("<!-- target:n2 -->", prompt)
-        for token in ("Anchor / heading hype", "Tonal lurch around links",
-                      "Sales-talk in your own writing", "Alt-text",
-                      "anchor/domain mismatch"):
+        for token in (
+            "Anchor / heading hype",
+            "Tonal lurch around links",
+            "Sales-talk in your own writing",
+            "Alt-text",
+            "anchor/domain mismatch",
+        ):
             self.assertIn(token, prompt)
 
 

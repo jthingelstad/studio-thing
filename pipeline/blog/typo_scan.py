@@ -63,6 +63,7 @@ _FM_RE = re.compile(r"\A---\n(?P<fm>.*?)\n---\n(?P<body>.*)\Z", re.DOTALL)
 
 # ── local store ───────────────────────────────────────────────────────
 
+
 def _read_blog_post(path: Path) -> tuple[dict[str, Any], str]:
     """Return ``(metadata, body)``. Raises on missing/malformed front matter."""
     raw = path.read_text(encoding="utf-8")
@@ -82,9 +83,8 @@ def _post_year(metadata: dict[str, Any]) -> Optional[int]:
 
 # ── sampling ──────────────────────────────────────────────────────────
 
-def select_posts(
-    *, count: int, year_max: int, seed: int, include_microposts: bool
-) -> list[Path]:
+
+def select_posts(*, count: int, year_max: int, seed: int, include_microposts: bool) -> list[Path]:
     """Random sample of candidate posts, weighted to the migrated era.
 
     Pool = ``post_kind: post`` (unless ``include_microposts``) published in or
@@ -104,9 +104,11 @@ def select_posts(
             continue
         pool.append(path)
 
-    print(f"  candidate pool: {len(pool)} posts "
-          f"(post_kind={'any' if include_microposts else 'post'}, year ≤ {year_max})",
-          flush=True)
+    print(
+        f"  candidate pool: {len(pool)} posts "
+        f"(post_kind={'any' if include_microposts else 'post'}, year ≤ {year_max})",
+        flush=True,
+    )
     if count >= len(pool):
         return pool
     return random.Random(seed).sample(pool, count)
@@ -186,9 +188,15 @@ def scan_typos(body: str, *, model: str, client: Any) -> dict[str, Any]:
 
 # ── orchestration ─────────────────────────────────────────────────────
 
+
 def run_scan(
-    *, count: int, year_max: int, seed: int, model: str,
-    include_microposts: bool, only: Optional[str],
+    *,
+    count: int,
+    year_max: int,
+    seed: int,
+    model: str,
+    include_microposts: bool,
+    only: Optional[str],
 ) -> int:
     print("\n── blog typo scan (read-only) ──", flush=True)
 
@@ -199,8 +207,9 @@ def run_scan(
             return 1
         paths = [path]
     else:
-        paths = select_posts(count=count, year_max=year_max, seed=seed,
-                             include_microposts=include_microposts)
+        paths = select_posts(
+            count=count, year_max=year_max, seed=seed, include_microposts=include_microposts
+        )
     print(f"  scanning {len(paths)} post(s); model={model}\n", flush=True)
 
     client = anthropic_client.client("general")
@@ -251,7 +260,9 @@ def run_scan(
         posts_out.append(record)
 
     cost = anthropic_client.cost_usd(
-        anthropic_client.MODELS[model], input_tokens=in_tok, output_tokens=out_tok,
+        anthropic_client.MODELS[model],
+        input_tokens=in_tok,
+        output_tokens=out_tok,
     )
     totals = {
         "posts_scanned": len(posts_out),
@@ -262,8 +273,15 @@ def run_scan(
         "output_tokens": out_tok,
         "cost_usd": cost,
     }
-    _write_report(model=model, count=count, year_max=year_max, seed=seed,
-                  only=only, totals=totals, posts=posts_out)
+    _write_report(
+        model=model,
+        count=count,
+        year_max=year_max,
+        seed=seed,
+        only=only,
+        totals=totals,
+        posts=posts_out,
+    )
 
     print("\n── summary ──", flush=True)
     print(f"  posts scanned:    {totals['posts_scanned']}", flush=True)
@@ -271,42 +289,72 @@ def run_scan(
     if n_parse_errors:
         print(f"  parse errors:     {n_parse_errors}", flush=True)
     print(f"  tokens:           {in_tok} in / {out_tok} out", flush=True)
-    print(f"  cost:             ${cost:.4f}" if cost is not None else "  cost: n/a",
-          flush=True)
+    print(f"  cost:             ${cost:.4f}" if cost is not None else "  cost: n/a", flush=True)
     return 0
 
 
-def _write_report(*, model: str, count: int, year_max: int, seed: int,
-                  only: Optional[str], totals: dict[str, Any],
-                  posts: list[dict[str, Any]]) -> None:
+def _write_report(
+    *,
+    model: str,
+    count: int,
+    year_max: int,
+    seed: int,
+    only: Optional[str],
+    totals: dict[str, Any],
+    posts: list[dict[str, Any]],
+) -> None:
     RUN_DIR.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     path = RUN_DIR / f"typos-{ts}.json"
-    path.write_text(json.dumps({
-        "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "model": model,
-        "count": count,
-        "year_max": year_max,
-        "seed": seed,
-        "only": only,
-        "totals": totals,
-        "posts": posts,
-    }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(
+            {
+                "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "model": model,
+                "count": count,
+                "year_max": year_max,
+                "seed": seed,
+                "only": only,
+                "totals": totals,
+                "posts": posts,
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     print(f"\n  report: {path.relative_to(REPO)}", flush=True)
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Read-only blog typo detector (Haiku)")
     ap.add_argument("--count", type=int, default=100, help="how many posts to sample (default 100)")
-    ap.add_argument("--year-max", type=int, default=2017,
-                    help="only sample posts published in or before this year (default 2017)")
-    ap.add_argument("--seed", type=int, default=0, help="random seed for reproducible sampling (default 0)")
-    ap.add_argument("--model", default="haiku", choices=sorted(anthropic_client.MODELS),
-                    help="LLM for the typo pass (default haiku)")
-    ap.add_argument("--include-microposts", action="store_true",
-                    help="include post_kind=micropost (default: long-form posts only)")
-    ap.add_argument("--only", default=None,
-                    help="scan a single post by microblog_id (calibration; ignores sampling)")
+    ap.add_argument(
+        "--year-max",
+        type=int,
+        default=2017,
+        help="only sample posts published in or before this year (default 2017)",
+    )
+    ap.add_argument(
+        "--seed", type=int, default=0, help="random seed for reproducible sampling (default 0)"
+    )
+    ap.add_argument(
+        "--model",
+        default="haiku",
+        choices=sorted(anthropic_client.MODELS),
+        help="LLM for the typo pass (default haiku)",
+    )
+    ap.add_argument(
+        "--include-microposts",
+        action="store_true",
+        help="include post_kind=micropost (default: long-form posts only)",
+    )
+    ap.add_argument(
+        "--only",
+        default=None,
+        help="scan a single post by microblog_id (calibration; ignores sampling)",
+    )
     args = ap.parse_args()
 
     if not BLOG_POSTS_DIR.exists():
@@ -314,8 +362,12 @@ def main() -> int:
         return 1
 
     return run_scan(
-        count=args.count, year_max=args.year_max, seed=args.seed, model=args.model,
-        include_microposts=args.include_microposts, only=args.only,
+        count=args.count,
+        year_max=args.year_max,
+        seed=args.seed,
+        model=args.model,
+        include_microposts=args.include_microposts,
+        only=args.only,
     )
 
 

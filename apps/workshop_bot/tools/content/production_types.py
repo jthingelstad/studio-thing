@@ -65,9 +65,7 @@ def get_type(production_type: str) -> ProductionType:
         return PRODUCTION_TYPES[production_type]
     except KeyError as exc:
         known = ", ".join(sorted(PRODUCTION_TYPES))
-        raise ValueError(
-            f"unknown production_type {production_type!r}; known: {known}"
-        ) from exc
+        raise ValueError(f"unknown production_type {production_type!r}; known: {known}") from exc
 
 
 def phases_for(production_type: str) -> tuple[str, ...]:

@@ -16,7 +16,7 @@ def _pid_alive(pid: int) -> bool:
     signal (won't happen in a single-user deployment, but treat as live)."""
     try:
         pid = int(pid)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return False
     if pid <= 0:
         return False
@@ -77,5 +77,3 @@ def list_job_locks() -> list[dict[str, Any]]:
             "SELECT asset, job, started_at, pid FROM job_locks ORDER BY started_at"
         ).fetchall()
     return [dict(r) for r in rows]
-
-

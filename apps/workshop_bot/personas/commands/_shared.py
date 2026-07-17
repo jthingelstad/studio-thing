@@ -69,7 +69,10 @@ def make_run_and_ack(ack_fn, logger_label: str):
             result = await coro_factory()
         except jobs_base.JobLocked as exc:
             logger.info("%s %s: blocked — %s", logger_label, label, exc.holder_desc)
-            await ack_fn(interaction, f"⏳ `{label}` is already running ({exc.holder_desc}) — try again shortly.")
+            await ack_fn(
+                interaction,
+                f"⏳ `{label}` is already running ({exc.holder_desc}) — try again shortly.",
+            )
             return
         except Exception as exc:  # noqa: BLE001
             logger.exception("%s %s failed", logger_label, label)

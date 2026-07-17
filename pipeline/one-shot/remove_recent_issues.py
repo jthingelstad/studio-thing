@@ -87,9 +87,7 @@ def process_file(fp, dry_run=False):
     body = fm_match.group(2)
 
     # Only operate inside {% raw %} ... {% endraw %}
-    raw_match = re.match(
-        r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL
-    )
+    raw_match = re.match(r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL)
     if not raw_match:
         return False
     raw_open, inner, raw_close = raw_match.groups()

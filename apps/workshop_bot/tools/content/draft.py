@@ -23,8 +23,14 @@ from .. import s3
 # ``promoted_position`` (driven by micro.blog's ``Featured`` category,
 # applied at sync time, rendered by ``tools/renderers``).
 SECTION_BLOCKS = (
-    "intro", "currently", "cover", "notable", "journal", "brief",
-    "outro", "haiku",
+    "intro",
+    "currently",
+    "cover",
+    "notable",
+    "journal",
+    "brief",
+    "outro",
+    "haiku",
 )
 
 # Atoms that Publish Email refuses without (the
@@ -79,7 +85,8 @@ def section_status(
 
     content_names = set(content_store.list_issue(n))
     cta_files = sorted(
-        f for f in content_names
+        f
+        for f in content_names
         if (f.startswith("cta-") and f.endswith(".md"))
         or (f.startswith("thanks-") and f.endswith(".md"))
     )

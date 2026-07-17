@@ -34,7 +34,11 @@ class PodcastCorpusTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / "another" / "content" / "episodes"
             output = Path(tmp) / "studio" / "data" / "podcast"
-            _episode(source, body="Show notes body.", transcript="Transcript body about starting a podcast.")
+            _episode(
+                source,
+                body="Show notes body.",
+                transcript="Transcript body about starting a podcast.",
+            )
 
             written = import_episodes(source_dir=source, output_dir=output)
             record = json.loads(written[0].read_text(encoding="utf-8"))
@@ -45,9 +49,13 @@ class PodcastCorpusTests(unittest.TestCase):
         self.assertEqual(record["number"], 1)
         self.assertEqual(record["title"], "How do you start a podcast?")
         self.assertEqual(record["publish_date"], "2025-10-05")
-        self.assertEqual(record["url"], "https://another.thingelstad.com/2025/10/05/how-do-you-start-a.html")
+        self.assertEqual(
+            record["url"], "https://another.thingelstad.com/2025/10/05/how-do-you-start-a.html"
+        )
         self.assertEqual(record["transcript_url"], record["url"] + "#transcript")
-        self.assertEqual(record["audio_url"], "https://another.thingelstad.com/uploads/2025/another-thing-1.mp3")
+        self.assertEqual(
+            record["audio_url"], "https://another.thingelstad.com/uploads/2025/another-thing-1.mp3"
+        )
         self.assertIn("starting a podcast", record["transcript_text"])
 
     def test_build_podcast_corpus_shape_and_ids(self):

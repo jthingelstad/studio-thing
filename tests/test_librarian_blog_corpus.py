@@ -12,8 +12,17 @@ from librarian_core.corpus import (
 )
 
 
-def _post(blog_dir: Path, *, mid: int, date: str, slug: str, title: str,
-          body: str, kind: str = "post", categories: str = "[]") -> None:
+def _post(
+    blog_dir: Path,
+    *,
+    mid: int,
+    date: str,
+    slug: str,
+    title: str,
+    body: str,
+    kind: str = "post",
+    categories: str = "[]",
+) -> None:
     y, m, _ = date.split("-")
     path = blog_dir / y / m / f"{date}-{slug}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -35,12 +44,23 @@ class BuildBlogCorpusTests(unittest.TestCase):
     def test_blog_chunks_shape_and_ids(self):
         with tempfile.TemporaryDirectory() as tmp:
             blog = Path(tmp) / "posts"
-            _post(blog, mid=111, date="2018-04-02", slug="on-systems-thinking",
-                  title="On Systems Thinking",
-                  body="Systems thinking is a discipline for seeing wholes.")
-            _post(blog, mid=222, date="2026-05-25", slug="quick-note",
-                  title="", kind="micropost",
-                  body="A quick thought about RSS feeds.")
+            _post(
+                blog,
+                mid=111,
+                date="2018-04-02",
+                slug="on-systems-thinking",
+                title="On Systems Thinking",
+                body="Systems thinking is a discipline for seeing wholes.",
+            )
+            _post(
+                blog,
+                mid=222,
+                date="2026-05-25",
+                slug="quick-note",
+                title="",
+                kind="micropost",
+                body="A quick thought about RSS feeds.",
+            )
             archive = Path(tmp) / "archive"
             archive.mkdir()
             corpus = build_blog_corpus(blog_dir=blog, archive_dir=archive)
@@ -67,7 +87,9 @@ class BuildBlogCorpusTests(unittest.TestCase):
         self.assertIsNone(post["issue_number"])
         self.assertEqual(post["publish_date"], "2018-04-02")
         self.assertEqual(post["issue_year"], 2018)
-        self.assertEqual(post["url"], "https://www.thingelstad.com/2018/04/02/on-systems-thinking.html")
+        self.assertEqual(
+            post["url"], "https://www.thingelstad.com/2018/04/02/on-systems-thinking.html"
+        )
 
         micro = by_prefix["blog:222:0"]
         self.assertEqual(micro["section"], "Micropost")
@@ -78,32 +100,51 @@ class BuildBlogCorpusTests(unittest.TestCase):
     def test_blog_links_and_domains_are_indexed(self):
         with tempfile.TemporaryDirectory() as tmp:
             blog = Path(tmp) / "posts"
-            _post(blog, mid=222, date="2026-05-24", slug="note", title="My Note",
-                  body="This is the target post.")
-            _post(blog, mid=111, date="2026-05-25", slug="links", title="Links",
-                  body=(
-                      "I liked [Example](https://example.com/story) and "
-                      "[my own note](https://micro.thingelstad.com/2026/05/24/note.html).\n\n"
-                      '<a href="https://sub.example.org/page">Sub Example</a>\n\n'
-                      "![Photo](https://images.example.net/photo.jpg)"
-                  ))
+            _post(
+                blog,
+                mid=222,
+                date="2026-05-24",
+                slug="note",
+                title="My Note",
+                body="This is the target post.",
+            )
+            _post(
+                blog,
+                mid=111,
+                date="2026-05-25",
+                slug="links",
+                title="Links",
+                body=(
+                    "I liked [Example](https://example.com/story) and "
+                    "[my own note](https://micro.thingelstad.com/2026/05/24/note.html).\n\n"
+                    '<a href="https://sub.example.org/page">Sub Example</a>\n\n'
+                    "![Photo](https://images.example.net/photo.jpg)"
+                ),
+            )
             archive = Path(tmp) / "archive"
             archive.mkdir()
             result = build_blog_corpus(blog_dir=blog, archive_dir=archive)
 
         self.assertEqual(result["link_count"], 3)
-        self.assertEqual([link["domain"] for link in result["links"]], [
-            "example.com",
-            "micro.thingelstad.com",
-            "sub.example.org",
-        ])
+        self.assertEqual(
+            [link["domain"] for link in result["links"]],
+            [
+                "example.com",
+                "micro.thingelstad.com",
+                "sub.example.org",
+            ],
+        )
         source_post = next(post for post in result["posts"] if post["microblog_id"] == 111)
-        source_chunk = next(chunk for chunk in result["chunks"] if chunk["id"].startswith("blog:111:"))
+        source_chunk = next(
+            chunk for chunk in result["chunks"] if chunk["id"].startswith("blog:111:")
+        )
         self.assertEqual(source_post["domains"], ["example.com", "sub.example.org"])
         self.assertEqual(source_chunk["domains"], ["example.com", "sub.example.org"])
         self.assertEqual(result["links"][0]["source_kind"], "blog")
         self.assertEqual(result["links"][0]["microblog_id"], 111)
-        self.assertEqual(result["links"][0]["post_url"], "https://www.thingelstad.com/2026/05/25/links.html")
+        self.assertEqual(
+            result["links"][0]["post_url"], "https://www.thingelstad.com/2026/05/25/links.html"
+        )
         self.assertEqual(result["links"][0]["text"], "Example")
         self.assertEqual(result["links"][0]["link_kind"], "external")
         self.assertEqual(result["links"][0]["link_category"], "external")
@@ -115,19 +156,26 @@ class BuildBlogCorpusTests(unittest.TestCase):
         self.assertEqual(internal["target_source_kind"], "blog")
         self.assertEqual(internal["target_blog_path"], "2026/05/24/note")
         self.assertEqual(internal["target_microblog_id"], 222)
-        self.assertEqual(internal["target_post_url"], "https://www.thingelstad.com/2026/05/24/note.html")
+        self.assertEqual(
+            internal["target_post_url"], "https://www.thingelstad.com/2026/05/24/note.html"
+        )
         self.assertNotIn("images.example.net", {link["domain"] for link in result["links"]})
 
     def test_blog_link_categories_flag_internal_edge_cases(self):
         with tempfile.TemporaryDirectory() as tmp:
             blog = Path(tmp) / "posts"
-            _post(blog, mid=111, date="2011-04-12", slug="awesome-new-community",
-                  title="Old link shapes",
-                  body=(
-                      "[Collection](https://www.thingelstad.com/collections/texas-hellweek-2001/) "
-                      "[Upload](https://www.thingelstad.com/uploads/2026/photo.jpg) "
-                      "[Malformed](http://micro.thingelstad.com/2011/04/12/www.cornertablerestaurant.com/csk.php)"
-                  ))
+            _post(
+                blog,
+                mid=111,
+                date="2011-04-12",
+                slug="awesome-new-community",
+                title="Old link shapes",
+                body=(
+                    "[Collection](https://www.thingelstad.com/collections/texas-hellweek-2001/) "
+                    "[Upload](https://www.thingelstad.com/uploads/2026/photo.jpg) "
+                    "[Malformed](http://micro.thingelstad.com/2011/04/12/www.cornertablerestaurant.com/csk.php)"
+                ),
+            )
             archive = Path(tmp) / "archive"
             archive.mkdir()
             result = build_blog_corpus(blog_dir=blog, archive_dir=archive)
@@ -141,14 +189,20 @@ class BuildBlogCorpusTests(unittest.TestCase):
     def test_blog_cross_source_links_are_not_external_domains(self):
         with tempfile.TemporaryDirectory() as tmp:
             blog = Path(tmp) / "posts"
-            _post(blog, mid=111, date="2026-05-25", slug="cross-source", title="Cross Source",
-                  body=(
-                      "[Weekly Thing](https://weekly.thingelstad.com/archive/350/) "
-                      "[Another Thing](https://another.thingelstad.com/2025/10/05/how-do-you-start-a.html) "
-                      "[Blog home](https://thingelstad.com/) "
-                      "[Micro home](https://micro.thingelstad.com/) "
-                      "[Photos](https://photos.thingelstad.com/album/)"
-                  ))
+            _post(
+                blog,
+                mid=111,
+                date="2026-05-25",
+                slug="cross-source",
+                title="Cross Source",
+                body=(
+                    "[Weekly Thing](https://weekly.thingelstad.com/archive/350/) "
+                    "[Another Thing](https://another.thingelstad.com/2025/10/05/how-do-you-start-a.html) "
+                    "[Blog home](https://thingelstad.com/) "
+                    "[Micro home](https://micro.thingelstad.com/) "
+                    "[Photos](https://photos.thingelstad.com/album/)"
+                ),
+            )
             archive = Path(tmp) / "archive"
             archive.mkdir()
             result = build_blog_corpus(blog_dir=blog, archive_dir=archive)
@@ -176,11 +230,22 @@ class BuildBlogCorpusTests(unittest.TestCase):
         # links[]) — the matching blog chunk should carry also_in_issues.
         with tempfile.TemporaryDirectory() as tmp:
             blog = Path(tmp) / "posts"
-            _post(blog, mid=111, date="2026-05-23", slug="a-pattern-ive-adopted",
-                  title="A Pattern I've Adopted",
-                  body="Here is a workflow pattern I have been using lately.")
-            _post(blog, mid=999, date="2026-05-24", slug="unreferenced",
-                  title="Unreferenced", body="Nobody links to this one.")
+            _post(
+                blog,
+                mid=111,
+                date="2026-05-23",
+                slug="a-pattern-ive-adopted",
+                title="A Pattern I've Adopted",
+                body="Here is a workflow pattern I have been using lately.",
+            )
+            _post(
+                blog,
+                mid=999,
+                date="2026-05-24",
+                slug="unreferenced",
+                title="Unreferenced",
+                body="Nobody links to this one.",
+            )
             archive = Path(tmp) / "archive"
             (archive / "350").mkdir(parents=True)
             (archive / "350" / "archive.md").write_text(
@@ -212,10 +277,16 @@ class BuildBlogCorpusTests(unittest.TestCase):
     def test_img_alt_inlined_and_tags_stripped(self):
         with tempfile.TemporaryDirectory() as tmp:
             blog = Path(tmp) / "posts"
-            _post(blog, mid=111, date="2026-05-25", slug="photo", title="",
-                  kind="micropost",
-                  body='Look up.\n\n<img src="https://www.thingelstad.com/uploads/x.jpg" '
-                       'width="600" alt="A hawk circling above a field.">')
+            _post(
+                blog,
+                mid=111,
+                date="2026-05-25",
+                slug="photo",
+                title="",
+                kind="micropost",
+                body='Look up.\n\n<img src="https://www.thingelstad.com/uploads/x.jpg" '
+                'width="600" alt="A hawk circling above a field.">',
+            )
             archive = Path(tmp) / "archive"
             archive.mkdir()
             corpus = build_blog_corpus(blog_dir=blog, archive_dir=archive)
@@ -228,8 +299,14 @@ class BuildBlogCorpusTests(unittest.TestCase):
     def test_privacy_denylist_blocks_subscriber_count(self):
         with tempfile.TemporaryDirectory() as tmp:
             blog = Path(tmp) / "posts"
-            _post(blog, mid=111, date="2026-05-25", slug="leak", title="Leak",
-                  body="We now have subscriber_count readers.")
+            _post(
+                blog,
+                mid=111,
+                date="2026-05-25",
+                slug="leak",
+                title="Leak",
+                body="We now have subscriber_count readers.",
+            )
             archive = Path(tmp) / "archive"
             archive.mkdir()
             with self.assertRaisesRegex(RuntimeError, "Privacy denylist"):

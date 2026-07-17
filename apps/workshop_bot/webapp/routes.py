@@ -75,13 +75,19 @@ async def productions_list(request: web.Request) -> web.Response:
         items = [r for r in rows if r["production_type"] == key]
         # Working view: active first, then paused (shelved but findable).
         # done/archived/abandoned live behind ?all=1.
-        working = ([r for r in items if r["status"] == "active"]
-                   + [r for r in items if r["status"] == "paused"])
+        working = [r for r in items if r["status"] == "active"] + [
+            r for r in items if r["status"] == "paused"
+        ]
         shipped = len(items) - len(working)
-        groups.append({
-            "key": key, "label": pt.label, "surface": pt.surface,
-            "rows": items if show_all else working, "shipped": shipped,
-        })
+        groups.append(
+            {
+                "key": key,
+                "label": pt.label,
+                "surface": pt.surface,
+                "rows": items if show_all else working,
+                "shipped": shipped,
+            }
+        )
     return render("productions.html", request, groups=groups, show_all=show_all)
 
 
@@ -101,8 +107,7 @@ async def productions_bulk_status(request: web.Request) -> web.Response:
     for pid in pids:
         row = await asyncio.to_thread(db.get_production, pid)
         if row:
-            await asyncio.to_thread(
-                db.update_production, pid, status=status, updated_by=login)
+            await asyncio.to_thread(db.update_production, pid, status=status, updated_by=login)
     raise web.HTTPFound("/productions")
 
 
@@ -118,17 +123,22 @@ async def production_status(request: web.Request) -> web.Response:
     row = await asyncio.to_thread(db.get_production, pid)
     if not row:
         raise web.HTTPNotFound(text=f"no such production: {pid}")
-    await asyncio.to_thread(
-        db.update_production, pid, status=status, updated_by=_login(request))
+    await asyncio.to_thread(db.update_production, pid, status=status, updated_by=_login(request))
     raise web.HTTPFound(f"/productions/{pid}")
 
 
 def _render_form(request, *, mode, row=None, error=None, status=200):
     types = [(k, ptypes.PRODUCTION_TYPES[k].label) for k in _TYPE_ORDER]
     return render(
-        "production_form.html", request,
-        status=status, mode=mode, row=row, error=error,
-        types=types, phases_json=_PHASES_JSON, statuses=ptypes.STATUSES,
+        "production_form.html",
+        request,
+        status=status,
+        mode=mode,
+        row=row,
+        error=error,
+        types=types,
+        phases_json=_PHASES_JSON,
+        statuses=ptypes.STATUSES,
     )
 
 
@@ -160,13 +170,16 @@ async def production_create(request: web.Request) -> web.Response:
     # "Start working" (on the issue page) opens the live pipeline later.
     try:
         seq = int(data.get("seq") or 0)
-    except (TypeError, ValueError):
-        return _render_form(request, mode="new", error="Issue number must be an integer.", status=400)
+    except TypeError, ValueError:
+        return _render_form(
+            request, mode="new", error="Issue number must be an integer.", status=400
+        )
     pub_date = (data.get("pub_date") or "").strip()
     day_count = int(data.get("day_count") or 7)
     ctx = _base.JobContext(deps=request.app.get(server.DEPS), trigger="web")
-    res = await start_issue.define(ctx, number=seq, pub_date=pub_date,
-                                   day_count=day_count, set_by=login or "web")
+    res = await start_issue.define(
+        ctx, number=seq, pub_date=pub_date, day_count=day_count, set_by=login or "web"
+    )
     if not res.ok:
         return _render_form(request, mode="new", error=res.message, status=400)
     raise web.HTTPFound(f"/productions/WT{seq}")
@@ -254,20 +267,19 @@ async def editor_atom_save(request: web.Request) -> web.Response:
     value = data.get("value") or ""
     login = _login(request)
     if key.startswith("content:"):
-        name = key[len("content:"):]
+        name = key[len("content:") :]
         if name not in _EDITOR_ATOM_NAMES:
             raise web.HTTPBadRequest(text=f"not an editor-writable atom: {name!r}")
-        await asyncio.to_thread(content_store.set, row["id"], name, value,
-                                by=f"web:{login}")
+        await asyncio.to_thread(content_store.set, row["id"], name, value, by=f"web:{login}")
     elif key.startswith("currently:"):
-        label = key[len("currently:"):]
+        label = key[len("currently:") :]
         try:
             await asyncio.to_thread(db.currently_set_entry, n, label, value)
         except ValueError as exc:
             raise web.HTTPBadRequest(text=str(exc))
     elif key.startswith("item:"):
         try:
-            item_id = int(key[len("item:"):])
+            item_id = int(key[len("item:") :])
             item = await asyncio.to_thread(issue_items.get_item, item_id)
             if not item or int(item["issue_number"]) != n:
                 raise ValueError(f"item_id={item_id!r} not found for WT{n}")
@@ -291,8 +303,8 @@ async def editor_item_flip(request: web.Request) -> web.Response:
     try:
         item_id = int(data.get("item_id") or 0)
         await asyncio.to_thread(
-            issue_items.set_section_override, item_id,
-            None if target == "clear" else target)
+            issue_items.set_section_override, item_id, None if target == "clear" else target
+        )
     except ValueError as exc:
         raise web.HTTPBadRequest(text=str(exc))
     raise web.HTTPFound(_post_return(row, data, _editor_url(row)))
@@ -306,8 +318,7 @@ async def editor_item_select(request: web.Request) -> web.Response:
     data = await request.post()
     try:
         item_id = int(data.get("item_id") or 0)
-        await asyncio.to_thread(
-            issue_items.set_excluded, item_id, data.get("selected") == "0")
+        await asyncio.to_thread(issue_items.set_excluded, item_id, data.get("selected") == "0")
     except ValueError as exc:
         raise web.HTTPBadRequest(text=str(exc))
     raise web.HTTPFound(_post_return(row, data, _editor_url(row)))
@@ -321,14 +332,14 @@ async def editor_item_move(request: web.Request) -> web.Response:
     data = await request.post()
     try:
         item_id = int(data.get("item_id") or 0)
-        await asyncio.to_thread(
-            issue_items.move_item, item_id, (data.get("dir") or "").strip())
+        await asyncio.to_thread(issue_items.move_item, item_id, (data.get("dir") or "").strip())
     except ValueError as exc:
         raise web.HTTPBadRequest(text=str(exc))
     raise web.HTTPFound(_post_return(row, data, _editor_url(row)))
 
 
 # ---------- the production page (the work surface) ----------
+
 
 def _ctx(request):
     return _base.JobContext(deps=request.app.get(server.DEPS), trigger="web")
@@ -337,18 +348,25 @@ def _ctx(request):
 def _json_content(get_value: str) -> dict:
     try:
         return json.loads(get_value) if (get_value or "").strip() else {}
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return {}
 
 
 def _newsletter_page_data(row) -> dict:
     n = int(row["seq"])
     phase = row["phase"]
-    state = (production_state.publish_state(n) if phase in ("publish", "share")
-             else production_state.build_state(n))
+    state = (
+        production_state.publish_state(n)
+        if phase in ("publish", "share")
+        else production_state.build_state(n)
+    )
     atoms = atoms_view.build(n, row["id"])
     return {
-        "row": row, "ptype": "newsletter", "n": n, "phase": phase, "state": state,
+        "row": row,
+        "ptype": "newsletter",
+        "n": n,
+        "phase": phase,
+        "state": state,
         "atoms": atoms,
         "atom_groups": _atom_groups(atoms),
         "notable_preamble": issue_items_render.reddit_tag_line(n),
@@ -413,8 +431,13 @@ async def production_cover_save(request: web.Request) -> web.Response:
         raise web.HTTPBadRequest(text="not a newsletter")
     data = await request.post()
     cover = {k: (data.get(k) or "").strip() for k in ("caption", "location", "timestamp", "alt")}
-    await asyncio.to_thread(content_store.set, row["id"], "cover.json",
-                            json.dumps(cover, indent=2), by=f"web:{_login(request)}")
+    await asyncio.to_thread(
+        content_store.set,
+        row["id"],
+        "cover.json",
+        json.dumps(cover, indent=2),
+        by=f"web:{_login(request)}",
+    )
     raise web.HTTPFound(f"/productions/{row['id']}")
 
 
@@ -451,8 +474,9 @@ async def production_currently(request: web.Request) -> web.Response:
         if op == "clear":
             await asyncio.to_thread(db.currently_clear_entry, n, data.get("label", ""))
         else:
-            await asyncio.to_thread(db.currently_set_entry, n,
-                                    data.get("label", ""), data.get("value", ""))
+            await asyncio.to_thread(
+                db.currently_set_entry, n, data.get("label", ""), data.get("value", "")
+            )
     except Exception:  # noqa: BLE001 — CurrentlyError etc; redirect back regardless
         logging.getLogger("workshop.webapp").warning("currently op failed for %s", row["id"])
     raise web.HTTPFound(f"/productions/{row['id']}")
@@ -487,6 +511,7 @@ async def production_preview(request: web.Request) -> web.Response:
     preview iframe). Newsletters render live from current DB state — the DB
     is the draft, there is no stored preview artifact."""
     from ..tools import render, renderers
+
     row = await _load_row(request)
     pid = row["id"]
     if row["production_type"] != "newsletter":
@@ -494,8 +519,11 @@ async def production_preview(request: web.Request) -> web.Response:
     body = await asyncio.to_thread(renderers.render_body_for_issue, int(row["seq"]))
     subtitle = f"{pid} · rendered live from the DB"
     html_doc = await asyncio.to_thread(
-        render.markdown_to_html_page, body or "_(nothing written yet — this is yours to write)_",
-        title=row["title"], subtitle=subtitle)
+        render.markdown_to_html_page,
+        body or "_(nothing written yet — this is yours to write)_",
+        title=row["title"],
+        subtitle=subtitle,
+    )
     return web.Response(text=html_doc, content_type="text/html")
 
 
@@ -531,6 +559,7 @@ async def production_sync(request: web.Request) -> web.Response:
     if row["production_type"] != "newsletter":
         raise web.HTTPBadRequest(text="not a newsletter")
     from ..jobs import sync_issue
+
     await sync_issue.run(_ctx(request))
     raise web.HTTPFound(f"/productions/{row['id']}")
 
@@ -544,6 +573,7 @@ async def production_review(request: web.Request) -> web.Response:
     if row["production_type"] != "newsletter":
         raise web.HTTPBadRequest(text="not a newsletter")
     from ..jobs import eddy_review
+
     await eddy_review.run(_ctx(request))
     raise web.HTTPFound(f"/productions/{row['id']}")
 
@@ -561,8 +591,10 @@ async def production_continuity(request: web.Request) -> web.Response:
     n = int(row["seq"])
     intro = await asyncio.to_thread(content_store.read_issue, n, "intro.md")
     from ..jobs import continuity_check
+
     await continuity_check.run_for_text(
-        _ctx(request), text=intro or "", label=f"WT{n} intro", exclude_issue=n)
+        _ctx(request), text=intro or "", label=f"WT{n} intro", exclude_issue=n
+    )
     raise web.HTTPFound(f"/productions/{row['id']}")
 
 
@@ -606,9 +638,11 @@ def _chat_context_block(context_key: str) -> str:
     if not row:
         return ""
     names = content_store.list(row["id"])
-    return (f"## Context — newsletter issue {row['id']} (phase {row['phase']})\n"
-            f"Title: {row['title']}. Content blocks: {', '.join(names) or '(none yet)'}. "
-            "Jamie writes the prose; you review, package, and help ship the issue.")
+    return (
+        f"## Context — newsletter issue {row['id']} (phase {row['phase']})\n"
+        f"Title: {row['title']}. Content blocks: {', '.join(names) or '(none yet)'}. "
+        "Jamie writes the prose; you review, package, and help ship the issue."
+    )
 
 
 async def _run_agent_chat(app, context_key: str, persona: str, message: str, prior: list) -> None:
@@ -620,20 +654,29 @@ async def _run_agent_chat(app, context_key: str, persona: str, message: str, pri
         bot = bots.get(persona) if isinstance(bots, dict) else (bots.get(persona) if bots else None)
         if bot is None:
             await asyncio.to_thread(
-                db.chat_add, context_key, "assistant",
+                db.chat_add,
+                context_key,
+                "assistant",
                 "_(Eddy is not reachable from the web app right now.)_",
-                persona=persona)
+                persona=persona,
+            )
             return
         ctx_block = await asyncio.to_thread(_chat_context_block, context_key)
         history = [{"role": m["role"], "content": m["content"]} for m in prior]
         latest = f"{ctx_block}\n\n{message}" if ctx_block else message
         reply, _meta = await bot.core(latest=latest, history=history)
-        await asyncio.to_thread(db.chat_add, context_key, "assistant",
-                                reply or "_(no reply)_", persona=persona)
+        await asyncio.to_thread(
+            db.chat_add, context_key, "assistant", reply or "_(no reply)_", persona=persona
+        )
     except Exception as exc:  # noqa: BLE001
         log.exception("chat agent run failed for %s/%s", context_key, persona)
-        await asyncio.to_thread(db.chat_add, context_key, "assistant",
-                                f"_(error running {persona}: {type(exc).__name__})_", persona=persona)
+        await asyncio.to_thread(
+            db.chat_add,
+            context_key,
+            "assistant",
+            f"_(error running {persona}: {type(exc).__name__})_",
+            persona=persona,
+        )
 
 
 async def chat_post(request: web.Request) -> web.Response:
@@ -668,34 +711,36 @@ async def chat_get(request: web.Request) -> web.Response:
 
 
 def add_routes(app: web.Application) -> None:
-    app.add_routes([
-        web.get("/healthz", healthz),
-        web.get("/", home_page),
-        web.get("/chat", chat_get),
-        web.post("/chat", chat_post),
-        web.get("/productions", productions_list),
-        web.post("/productions/bulk-status", productions_bulk_status),
-        web.get("/productions/new", production_new_form),
-        web.post("/productions/new", production_create),
-        web.get("/productions/{pid}", production_page),
-        web.get("/productions/{pid}/editor", editor_page),
-        web.post("/productions/{pid}/editor/atom", editor_atom_save),
-        web.post("/productions/{pid}/editor/flip", editor_item_flip),
-        web.post("/productions/{pid}/editor/select", editor_item_select),
-        web.post("/productions/{pid}/editor/move", editor_item_move),
-        web.get("/productions/{pid}/preview", production_preview),
-        web.get("/productions/{pid}/edit", production_edit_form),
-        web.post("/productions/{pid}/edit", production_update),
-        web.post("/productions/{pid}/start", production_start),
-        web.post("/productions/{pid}/atom", production_atom_save),
-        web.post("/productions/{pid}/cover", production_cover_save),
-        web.post("/productions/{pid}/meta", production_meta_save),
-        web.post("/productions/{pid}/currently", production_currently),
-        web.post("/productions/{pid}/phase", production_phase),
-        web.post("/productions/{pid}/status", production_status),
-        web.post("/productions/{pid}/publish", production_publish),
-        web.post("/productions/{pid}/sync", production_sync),
-        web.post("/productions/{pid}/review", production_review),
-        web.post("/productions/{pid}/continuity", production_continuity),
-        web.post("/productions/{pid}/cover-upload", production_cover_upload),
-    ])
+    app.add_routes(
+        [
+            web.get("/healthz", healthz),
+            web.get("/", home_page),
+            web.get("/chat", chat_get),
+            web.post("/chat", chat_post),
+            web.get("/productions", productions_list),
+            web.post("/productions/bulk-status", productions_bulk_status),
+            web.get("/productions/new", production_new_form),
+            web.post("/productions/new", production_create),
+            web.get("/productions/{pid}", production_page),
+            web.get("/productions/{pid}/editor", editor_page),
+            web.post("/productions/{pid}/editor/atom", editor_atom_save),
+            web.post("/productions/{pid}/editor/flip", editor_item_flip),
+            web.post("/productions/{pid}/editor/select", editor_item_select),
+            web.post("/productions/{pid}/editor/move", editor_item_move),
+            web.get("/productions/{pid}/preview", production_preview),
+            web.get("/productions/{pid}/edit", production_edit_form),
+            web.post("/productions/{pid}/edit", production_update),
+            web.post("/productions/{pid}/start", production_start),
+            web.post("/productions/{pid}/atom", production_atom_save),
+            web.post("/productions/{pid}/cover", production_cover_save),
+            web.post("/productions/{pid}/meta", production_meta_save),
+            web.post("/productions/{pid}/currently", production_currently),
+            web.post("/productions/{pid}/phase", production_phase),
+            web.post("/productions/{pid}/status", production_status),
+            web.post("/productions/{pid}/publish", production_publish),
+            web.post("/productions/{pid}/sync", production_sync),
+            web.post("/productions/{pid}/review", production_review),
+            web.post("/productions/{pid}/continuity", production_continuity),
+            web.post("/productions/{pid}/cover-upload", production_cover_upload),
+        ]
+    )

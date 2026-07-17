@@ -70,11 +70,13 @@ def _currently_nudge_due_at(pub_date_iso: str, days_before: int) -> Optional[str
     the date can't be parsed."""
     try:
         pub = date.fromisoformat(pub_date_iso)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
     target_date = pub - timedelta(days=int(days_before))
     aware = datetime.combine(
-        target_date, time(_CURRENTLY_NUDGE_HOUR, 0, 0), _CURRENTLY_LOCAL_TZ,
+        target_date,
+        time(_CURRENTLY_NUDGE_HOUR, 0, 0),
+        _CURRENTLY_LOCAL_TZ,
     )
     # follow_ups.due_at uses naive-local ISO; strip tzinfo so the
     # sweep's ``datetime.now()`` comparison matches.
@@ -82,7 +84,10 @@ def _currently_nudge_due_at(pub_date_iso: str, days_before: int) -> Optional[str
 
 
 def _schedule_currently_nudges(
-    *, issue_number: int, pub_date_iso: str, set_by: Optional[str],
+    *,
+    issue_number: int,
+    pub_date_iso: str,
+    set_by: Optional[str],
 ) -> list[dict]:
     """Insert the Mon + Wed Currently nudges into ``follow_ups``. Skips
     any whose computed time is already in the past (a late start-issue
@@ -94,7 +99,9 @@ def _schedule_currently_nudges(
         if due_at is None or due_at <= now_iso:
             logger.info(
                 "start-issue: skipping %s currently nudge for WT%d — due_at %r already passed",
-                label, issue_number, due_at,
+                label,
+                issue_number,
+                due_at,
             )
             continue
         try:
@@ -108,7 +115,9 @@ def _schedule_currently_nudges(
             )
         except Exception:  # noqa: BLE001
             logger.exception(
-                "start-issue: couldn't insert %s currently nudge for WT%d", label, issue_number,
+                "start-issue: couldn't insert %s currently nudge for WT%d",
+                label,
+                issue_number,
             )
             continue
         row = db.get_follow_up(int(fid))
@@ -129,7 +138,7 @@ async def define(
     The web "create newsletter" path. Validates the number + Saturday pub_date."""
     try:
         n = int(number)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return _base.JobResult(False, f"❌ issue number must be an integer; got {number!r}")
     if n <= 0:
         return _base.JobResult(False, f"❌ issue number must be positive; got {n}")
@@ -148,9 +157,7 @@ async def define(
         )
     except Exception as exc:  # noqa: BLE001
         logger.exception("define: db write failed for #%d", n)
-        return _base.JobResult(
-            False, f"❌ couldn't save the issue: `{type(exc).__name__}: {exc}`"
-        )
+        return _base.JobResult(False, f"❌ couldn't save the issue: `{type(exc).__name__}: {exc}`")
     return _base.JobResult(
         True,
         f"🗓️ Issue **WT{n}** defined (planned) — pub {window['pub_date']}. "
@@ -175,7 +182,9 @@ async def start_working(
     window = db.get_active_issue_window(n)
 
     nudges = _schedule_currently_nudges(
-        issue_number=n, pub_date_iso=window["pub_date"], set_by=set_by,
+        issue_number=n,
+        pub_date_iso=window["pub_date"],
+        set_by=set_by,
     )
 
     sub = await sync_issue.run(_base.JobContext(deps=ctx.deps, trigger="chained"))
@@ -190,15 +199,19 @@ async def start_working(
     ]
     if nudges:
         when_summary = " · ".join(
-            f"`#{row['id']}` {(row.get('due_at') or '')[:16].replace('T', ' ')}"
-            for row in nudges
+            f"`#{row['id']}` {(row.get('due_at') or '')[:16].replace('T', ' ')}" for row in nudges
         )
         lines.append(f"- Currently nudges scheduled: {when_summary}")
     lines.append(f"- `sync-issue`: {sub.message}")
     return _base.JobResult(
-        True, "\n".join(lines),
-        data={"issue_number": n, "window": window, "sync_issue": sub.data,
-              "currently_nudges": [row["id"] for row in nudges]},
+        True,
+        "\n".join(lines),
+        data={
+            "issue_number": n,
+            "window": window,
+            "sync_issue": sub.data,
+            "currently_nudges": [row["id"] for row in nudges],
+        },
     )
 
 

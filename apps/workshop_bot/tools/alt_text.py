@@ -35,7 +35,7 @@ logger = logging.getLogger("workshop.alt_text")
 
 _DEFAULT_CAP = 15
 _FETCH_TIMEOUT = 20.0
-_FETCH_MAX_BYTES = 6 * 1024 * 1024     # 6 MB — rehosted images are well under
+_FETCH_MAX_BYTES = 6 * 1024 * 1024  # 6 MB — rehosted images are well under
 
 # Anthropic's vision API caps base64 image bodies at 5 MB. Resize any
 # image we send to the vision call so we stay well under that and
@@ -74,8 +74,8 @@ _PROMPT_BASE = (
     "- 120 characters or fewer.\n"
     "- Factual and concrete — describe what's actually visible (the "
     "subject, setting, action).\n"
-    "- No preamble like \"photo of\", \"image of\", \"picture of\", \"a "
-    "view of\" — start with the subject itself.\n"
+    '- No preamble like "photo of", "image of", "picture of", "a '
+    'view of" — start with the subject itself.\n'
     "- One single line. No emoji. No quote marks, ampersands, or angle "
     "brackets (the text goes straight into an HTML alt attribute).\n"
     "- Skip people's identities you can't be confident about; describe "
@@ -84,7 +84,7 @@ _PROMPT_BASE = (
 
 _RESPONSE_HINT = (
     "Respond with just the alt text on one line — no leading/trailing "
-    "quotes, no \"alt:\" prefix, no explanation."
+    'quotes, no "alt:" prefix, no explanation.'
 )
 
 
@@ -186,7 +186,9 @@ def _fetch_image_bytes(url: str) -> Optional[tuple[bytes, str]]:
                 # Header didn't declare an image — trust the leading bytes.
                 sniffed = _sniff_image_type(chunk[:16])
                 if not sniffed:
-                    logger.warning("alt_text: %s is not an image (header=%s)", url, header_ctype or "?")
+                    logger.warning(
+                        "alt_text: %s is not an image (header=%s)", url, header_ctype or "?"
+                    )
                     return None
                 ctype = sniffed
             total += len(chunk)
@@ -260,18 +262,23 @@ def _downscale_for_vision(body: bytes, media_type: str) -> tuple[bytes, str]:
             new_body = buf.getvalue()
         logger.debug(
             "alt_text: resized %d-byte %s -> %d-byte image/jpeg",
-            len(body), media_type, len(new_body),
+            len(body),
+            media_type,
+            len(new_body),
         )
         return new_body, "image/jpeg"
     except Exception as exc:  # noqa: BLE001
         logger.warning(
             "alt_text: PIL resize failed (%s); sending original %d bytes",
-            exc, len(body),
+            exc,
+            len(body),
         )
         return body, media_type
 
 
-def _build_messages(*, image_b64: str, media_type: str, context: str, caption: Optional[str]) -> list[dict]:
+def _build_messages(
+    *, image_b64: str, media_type: str, context: str, caption: Optional[str]
+) -> list[dict]:
     """Compose the vision-call user content blocks."""
     text_parts = [_PROMPT_BASE]
     if caption and caption.strip():
@@ -337,7 +344,10 @@ def _generate_via_vision(*, image_url: str, context: str, caption: Optional[str]
             model=anthropic_client.MODELS[_VISION_MODEL_KEY],
             max_tokens=_VISION_MAX_TOKENS,
             messages=_build_messages(
-                image_b64=b64, media_type=media_type, context=context, caption=caption,
+                image_b64=b64,
+                media_type=media_type,
+                context=context,
+                caption=caption,
             ),
         )
     except Exception as exc:  # noqa: BLE001

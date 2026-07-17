@@ -31,8 +31,6 @@ class CorpusHandle:
 def load() -> CorpusHandle:
     logger.info("Building archive corpus...")
     corpus = build_corpus(include_issue_bodies=False)
-    logger.info(
-        "Corpus ready: %d issues, %d chunks", corpus["issue_count"], corpus["chunk_count"]
-    )
+    logger.info("Corpus ready: %d issues, %d chunks", corpus["issue_count"], corpus["chunk_count"])
     bm25 = build_index(corpus["chunks"])
     return CorpusHandle(corpus, bm25)

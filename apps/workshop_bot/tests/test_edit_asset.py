@@ -25,10 +25,15 @@ from apps.workshop_bot.tools import content_store, db  # noqa: E402
 class _Case(_DBTestCase):
     def _window(self, n=349):
         from apps.workshop_bot.tools.content import issue as issue_mod
+
         w = issue_mod.compute_window("2026-05-23", 7)
         db.set_issue_window(
-            issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
-            start_date=w["start_date"], day_count=w["day_count"], set_by="test",
+            issue_number=n,
+            pub_date=w["pub_date"],
+            end_date=w["end_date"],
+            start_date=w["start_date"],
+            day_count=w["day_count"],
+            set_by="test",
         )
 
     def _ctx(self):
@@ -38,7 +43,6 @@ class _Case(_DBTestCase):
 
 
 class BuildModalTests(_Case):
-
     def test_rejects_unknown_asset(self):
         modal, err = edit_asset.build_modal(self._ctx(), asset_key="totally-unknown")
         self.assertIsNone(modal)
@@ -95,7 +99,6 @@ class BuildModalTests(_Case):
 
 
 class ModalSubmitTests(_Case):
-
     def _interaction(self):
         interaction = MagicMock()
         interaction.response = MagicMock()
@@ -163,7 +166,9 @@ class ModalSubmitTests(_Case):
         modal.input.value = "line one\nline two\nline three"
         interaction = self._interaction()
         with patch.object(
-            content_store, "write_issue", side_effect=RuntimeError("DB boom"),
+            content_store,
+            "write_issue",
+            side_effect=RuntimeError("DB boom"),
         ):
             asyncio.run(modal.on_submit(interaction))
         msg = interaction.response.send_message.call_args.args[0]
@@ -172,7 +177,6 @@ class ModalSubmitTests(_Case):
 
 
 class SlashCommandWiringTests(unittest.TestCase):
-
     def test_eddy_edit_and_currently_commands_retired(self):
         """`/eddy edit` and `/eddy currently` were retired — content editing
         moved to the web production page. The edit_asset / currently jobs
@@ -181,15 +185,14 @@ class SlashCommandWiringTests(unittest.TestCase):
 
         class _StubBot:
             user = MagicMock()
+
             def get_partial_messageable(self, _id):
                 return None
+
         tree = commands_module.register_eddy_commands(_StubBot())
-        eddy_group = next(
-            g for g in tree.groups if getattr(g, "name", None) == "eddy"
-        )
+        eddy_group = next(g for g in tree.groups if getattr(g, "name", None) == "eddy")
         leaf_names = {
-            getattr(c, "_cmd_name", getattr(c, "name", None))
-            for c in eddy_group.commands
+            getattr(c, "_cmd_name", getattr(c, "name", None)) for c in eddy_group.commands
         }
         self.assertNotIn("edit", leaf_names)
         self.assertNotIn("currently", leaf_names)

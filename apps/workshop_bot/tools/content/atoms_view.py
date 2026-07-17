@@ -43,8 +43,15 @@ from .. import content_store, db, issue_items, issue_items_render
 # Reading order of the issue, per the design brief. Notable/journal/brief
 # expand to one atom per row; the authored kinds are one atom each.
 KIND_ORDER = (
-    "intro", "currently", "photo", "notable", "journal", "brief",
-    "outro", "echoes", "closer",
+    "intro",
+    "currently",
+    "photo",
+    "notable",
+    "journal",
+    "brief",
+    "outro",
+    "echoes",
+    "closer",
 )
 
 # Authored kinds → production_content name. ``closer`` is the haiku (the
@@ -66,27 +73,42 @@ def _authored_atom(production_id: str, kind: str) -> dict[str, Any]:
     name = _AUTHORED[kind]
     body = content_store.get(production_id, name) or ""
     return {
-        "kind": kind, "key": f"content:{name}",
-        "title": kind.capitalize(), "body": body,
+        "kind": kind,
+        "key": f"content:{name}",
+        "title": kind.capitalize(),
+        "body": body,
         "rendered_body": body,
         "source": "generated" if kind in ("echoes", "closer") else "original",
-        "url": None, "editable": True, "selected": True,
-        "flippable": False, "item_id": None,
-        "overridden": False, "promoted": False,
+        "url": None,
+        "editable": True,
+        "selected": True,
+        "flippable": False,
+        "item_id": None,
+        "overridden": False,
+        "promoted": False,
     }
 
 
 def _currently_atoms(issue_number: int) -> list[dict[str, Any]]:
     out = []
     for e in db.currently_get_entries(issue_number):
-        out.append({
-            "kind": "currently", "key": f"currently:{e['type_label']}",
-            "title": e["type_label"], "body": e.get("value") or "",
-            "rendered_body": e.get("value") or "",
-            "source": "original", "url": None, "editable": True,
-            "selected": True, "flippable": False, "item_id": None,
-            "overridden": False, "promoted": False,
-        })
+        out.append(
+            {
+                "kind": "currently",
+                "key": f"currently:{e['type_label']}",
+                "title": e["type_label"],
+                "body": e.get("value") or "",
+                "rendered_body": e.get("value") or "",
+                "source": "original",
+                "url": None,
+                "editable": True,
+                "selected": True,
+                "flippable": False,
+                "item_id": None,
+                "overridden": False,
+                "promoted": False,
+            }
+        )
     return out
 
 
@@ -96,18 +118,29 @@ def _photo_atom(production_id: str) -> dict[str, Any]:
     if raw:
         try:
             fields = json.loads(raw)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             fields = {}
     caption = str(fields.get("caption") or "")
     location = str(fields.get("location") or "")
-    body = caption if not location else (f"{caption}\n\n📍 {location}" if caption else f"📍 {location}")
+    body = (
+        caption
+        if not location
+        else (f"{caption}\n\n📍 {location}" if caption else f"📍 {location}")
+    )
     return {
-        "kind": "photo", "key": "photo:cover.json",
-        "title": "Photo", "body": body,
+        "kind": "photo",
+        "key": "photo:cover.json",
+        "title": "Photo",
+        "body": body,
         "rendered_body": body,
-        "source": "original", "url": None, "editable": False,
-        "selected": True, "flippable": False, "item_id": None,
-        "overridden": False, "promoted": False,
+        "source": "original",
+        "url": None,
+        "editable": False,
+        "selected": True,
+        "flippable": False,
+        "item_id": None,
+        "overridden": False,
+        "promoted": False,
     }
 
 
@@ -119,11 +152,13 @@ def _item_atom(row: dict[str, Any]) -> dict[str, Any]:
         "brief": issue_items_render._render_brief_item,
     }[effective](row)
     return {
-        "kind": effective, "key": f"item:{row['id']}",
+        "kind": effective,
+        "key": f"item:{row['id']}",
         "title": row.get("title") or "(untitled)",
         "body": row.get("body_md") or "",
         "rendered_body": rendered,
-        "source": row["source"], "url": row.get("url"),
+        "source": row["source"],
+        "url": row.get("url"),
         "editable": True,
         "selected": not row.get("excluded"),
         "flippable": effective in ("notable", "brief"),
@@ -144,8 +179,7 @@ def build(issue_number: int, production_id: Optional[str] = None) -> list[dict[s
     by_kind["currently"].extend(_currently_atoms(issue_number))
     by_kind["photo"].append(_photo_atom(pid))
     for section in _DERIVED_SECTIONS:
-        rows = issue_items.list_items(
-            issue_number, section=section, include_excluded=True)
+        rows = issue_items.list_items(issue_number, section=section, include_excluded=True)
         by_kind[section].extend(_item_atom(r) for r in rows)
     by_kind["outro"].append(_authored_atom(pid, "outro"))
     by_kind["echoes"].append(_authored_atom(pid, "echoes"))

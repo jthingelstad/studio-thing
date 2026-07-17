@@ -25,13 +25,17 @@ from apps.workshop_bot.tools import db, renderers  # noqa: E402
 
 
 class DailyRenderToleranceTests(_DBTestCase):
-
     def _window(self, n=458, pub="2026-05-23"):
         from apps.workshop_bot.tools.content import issue as issue_mod
+
         w = issue_mod.compute_window(pub, 7)
         db.set_issue_window(
-            issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
-            start_date=w["start_date"], day_count=w["day_count"], set_by="test",
+            issue_number=n,
+            pub_date=w["pub_date"],
+            end_date=w["end_date"],
+            start_date=w["start_date"],
+            day_count=w["day_count"],
+            set_by="test",
         )
         return w
 
@@ -76,9 +80,11 @@ class DailyRenderToleranceTests(_DBTestCase):
         # Wrap write_issue_file to count calls during the second render.
         calls = []
         original = self.ws.write_issue_file
+
         def counting_write(*args, **kwargs):
             calls.append(args)
             return original(*args, **kwargs)
+
         self.ws.write_issue_file = counting_write
         renderers.render_email_for_issue(458)
         # No buttondown.md write the second time around.
@@ -95,9 +101,11 @@ class DailyRenderToleranceTests(_DBTestCase):
         renderers.render_archive_for_issue(458)
         calls = []
         original = self.ws.write_issue_file
+
         def counting_write(*args, **kwargs):
             calls.append(args)
             return original(*args, **kwargs)
+
         self.ws.write_issue_file = counting_write
         renderers.render_archive_for_issue(458)
         wrote = [c[1] for c in calls if len(c) > 1]
@@ -111,7 +119,8 @@ class DailyRenderToleranceTests(_DBTestCase):
         # Patch render_email_body to blow up; archive and transcript
         # should still succeed.
         with patch.object(
-            renderers, "render_email_body",
+            renderers,
+            "render_email_body",
             side_effect=RuntimeError("forced failure"),
         ):
             result = renderers.render_all_for_issue(458)

@@ -97,7 +97,9 @@ def episode_record(path: Path, source_dir: Path) -> dict[str, Any]:
     }
 
 
-def import_episodes(source_dir: Path = ANOTHER_THING_EPISODES_DIR, output_dir: Path = PODCAST_DIR) -> list[Path]:
+def import_episodes(
+    source_dir: Path = ANOTHER_THING_EPISODES_DIR, output_dir: Path = PODCAST_DIR
+) -> list[Path]:
     if not source_dir.exists():
         raise RuntimeError(f"Another Thing episodes directory not found: {source_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -106,7 +108,9 @@ def import_episodes(source_dir: Path = ANOTHER_THING_EPISODES_DIR, output_dir: P
     for path in sorted(source_dir.glob("*.md")):
         record = episode_record(path, source_dir)
         output_path = output_dir / f"{int(record['number']):03d}-{record['slug']}.json"
-        output_path.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        output_path.write_text(
+            json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
         written.append(output_path)
         seen.add(output_path.name)
     for stale in output_dir.glob("*.json"):

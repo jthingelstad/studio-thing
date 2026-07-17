@@ -17,10 +17,15 @@ from apps.workshop_bot.tools import s3  # noqa: E402
 
 class ResolveKeyTests(unittest.TestCase):
     def test_all_names_resolve_flat_at_issue_root(self):
-        for name in ("intro.md", "haiku.md", "archive.md", "buttondown.md",
-                     "metadata.json", "cta-1.md"):
-            self.assertEqual(
-                s3._resolve_key(458, name), f"weekly-thing/458/{name}", name)
+        for name in (
+            "intro.md",
+            "haiku.md",
+            "archive.md",
+            "buttondown.md",
+            "metadata.json",
+            "cta-1.md",
+        ):
+            self.assertEqual(s3._resolve_key(458, name), f"weekly-thing/458/{name}", name)
 
     def test_rejects_bad_issue_number(self):
         with self.assertRaises(s3.S3PathError):
@@ -38,8 +43,12 @@ class ListIssueTests(unittest.TestCase):
         def fake_list(Bucket, Prefix, MaxKeys, ContinuationToken=None):  # noqa: N803
             return {
                 "Contents": [
-                    {"Key": item["Key"], "Size": item.get("Size", 0),
-                     "LastModified": None, "ETag": item.get("ETag", "")}
+                    {
+                        "Key": item["Key"],
+                        "Size": item.get("Size", 0),
+                        "LastModified": None,
+                        "ETag": item.get("ETag", ""),
+                    }
                     for item in self._listing
                 ],
                 "IsTruncated": False,
@@ -56,15 +65,14 @@ class ListIssueTests(unittest.TestCase):
         self._listing = [
             {"Key": "weekly-thing/458/journal/abc.jpg"},
             {"Key": "weekly-thing/458/transcript/000-intro.txt"},
-            {"Key": "weekly-thing/458/atoms/intro.md"},   # legacy leftover
+            {"Key": "weekly-thing/458/atoms/intro.md"},  # legacy leftover
             {"Key": "weekly-thing/458/archive.md"},
         ]
         out = s3.list_issue(458)
         filenames = {obj["filename"] for obj in out["objects"]}
         self.assertEqual(
             filenames,
-            {"journal/abc.jpg", "transcript/000-intro.txt",
-             "atoms/intro.md", "archive.md"},
+            {"journal/abc.jpg", "transcript/000-intro.txt", "atoms/intro.md", "archive.md"},
         )
 
 

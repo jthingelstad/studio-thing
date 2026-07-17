@@ -35,6 +35,7 @@ from apps.workshop_bot.tools.discord import interaction
 
 # ---------- draft-block helpers ----------
 
+
 class BlockHelperTests(unittest.TestCase):
     def test_replace_and_get_roundtrip(self):
         tpl = _base.starter_template()
@@ -71,9 +72,14 @@ class BlockHelperTests(unittest.TestCase):
         # Briefly → the "A haiku to leave you with…" close.
         tpl = _base.starter_template()
         markers = (
-            "<!-- block:intro -->", "## Currently", "<!-- block:cover -->",
-            "## Notable", "## Journal", "## Briefly",
-            "A haiku to leave you with", "<!-- block:haiku -->",
+            "<!-- block:intro -->",
+            "## Currently",
+            "<!-- block:cover -->",
+            "## Notable",
+            "## Journal",
+            "## Briefly",
+            "A haiku to leave you with",
+            "<!-- block:haiku -->",
         )
         order = [tpl.index(m) for m in markers]
         self.assertEqual(order, sorted(order), tpl)
@@ -83,6 +89,7 @@ class BlockHelperTests(unittest.TestCase):
 
 
 # ---------- section renderers (the repeated list loops) ----------
+
 
 class SectionRendererTests(unittest.TestCase):
     """Section-shape coverage moved to test_issue_items_render.py; what
@@ -95,28 +102,41 @@ class SectionRendererTests(unittest.TestCase):
         # must drive both the day H3 sub-header and the per-entry time.
         # 2026-05-12T02:21Z → 2026-05-11 21:21 CDT → Monday May 11, 9:21 PM.
         from apps.workshop_bot.tools import issue_items_render
-        out = issue_items_render.render_journal([
-            {"url": "https://www.thingelstad.com/2026/05/11/late.html",
-             "title": "", "body_md": "Posted late.",
-             "metadata": {"published": "2026-05-12T02:21:00Z"}},
-        ])
+
+        out = issue_items_render.render_journal(
+            [
+                {
+                    "url": "https://www.thingelstad.com/2026/05/11/late.html",
+                    "title": "",
+                    "body_md": "Posted late.",
+                    "metadata": {"published": "2026-05-12T02:21:00Z"},
+                },
+            ]
+        )
         self.assertIn("### Monday, May 11", out)
-        self.assertIn("[9:21 PM](https://www.thingelstad.com/2026/05/11/late.html) — Posted late.", out)
+        self.assertIn(
+            "[9:21 PM](https://www.thingelstad.com/2026/05/11/late.html) — Posted late.", out
+        )
         self.assertNotIn("2:21 AM", out)
         self.assertNotIn("May 12", out)
 
     def test_format_haiku(self):
-        self.assertEqual(_base.format_haiku("line one\nline two\nline three"),
-                         "**line one  \nline two  \nline three**")
+        self.assertEqual(
+            _base.format_haiku("line one\nline two\nline three"),
+            "**line one  \nline two  \nline three**",
+        )
         # Idempotent — peels an existing wrapper / re-runs cleanly.
-        self.assertEqual(_base.format_haiku("**line one  \nline two  \nline three**"),
-                         "**line one  \nline two  \nline three**")
+        self.assertEqual(
+            _base.format_haiku("**line one  \nline two  \nline three**"),
+            "**line one  \nline two  \nline three**",
+        )
         self.assertEqual(_base.format_haiku("**a\nb**"), "**a  \nb**")
         self.assertEqual(_base.format_haiku("   "), "")
         self.assertEqual(_base.format_haiku(""), "")
 
 
 # ---------- locking ----------
+
 
 class JobLockTests(_DBTestCase):
     def test_acquire_then_second_acquire_blocked(self):
@@ -171,16 +191,29 @@ class JobLockTests(_DBTestCase):
 
 # ---------- start-issue ----------
 
+
 class EddyContextTests(_DBTestCase):
     def test_counts_from_db_rows(self):
         from apps.workshop_bot.tools import issue_items
         from apps.workshop_bot.tools.content import issue as issue_mod
+
         w = issue_mod.compute_window("2026-05-16", 7)
-        db.set_issue_window(issue_number=458, pub_date=w["pub_date"], end_date=w["end_date"],
-                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        db.set_issue_window(
+            issue_number=458,
+            pub_date=w["pub_date"],
+            end_date=w["end_date"],
+            start_date=w["start_date"],
+            day_count=w["day_count"],
+            set_by="test",
+        )
         for i in range(3):
-            issue_items.upsert_item(issue_number=458, section="notable",
-                                    source="pinboard", source_id=f"n{i}", body_md="x")
+            issue_items.upsert_item(
+                issue_number=458,
+                section="notable",
+                source="pinboard",
+                source_id=f"n{i}",
+                body_md="x",
+            )
         ctx = context.build_eddy_context(ref_date=date(2026, 5, 12))
         self.assertEqual(ctx["active_issue"], 458)
         self.assertEqual(ctx["sections"]["notable"]["item_count"], 3)
@@ -208,7 +241,9 @@ class MicroblogTests(unittest.TestCase):
         self.assertEqual(microblog._content_to_markdown("raw **markdown**"), "raw **markdown**")
         self.assertEqual(microblog._content_to_markdown(["raw md from list"]), "raw md from list")
         self.assertEqual(microblog._content_to_markdown({"markdown": "explicit md"}), "explicit md")
-        self.assertIn("[x](http://y)", microblog._content_to_markdown({"html": '<a href="http://y">x</a>'}))
+        self.assertIn(
+            "[x](http://y)", microblog._content_to_markdown({"html": '<a href="http://y">x</a>'})
+        )
         self.assertEqual(microblog._content_to_markdown(None), "")
 
     def test_requires_api_key(self):
@@ -222,25 +257,37 @@ class MicroblogTests(unittest.TestCase):
         # raw markdown string, with photo uploads embedded as <img> tags.
         mf2 = {
             "items": [
-                {"type": "h-entry", "properties": {
-                    "uid": [5863257], "name": [""],
-                    "url": ["https://www.thingelstad.com/2026/05/12/a.html"],
-                    "published": ["2026-05-12T15:02:00+00:00"],
-                    "post-status": ["published"],
-                    "content": ['Got a card. ([cert](https://psacard.com/cert/x))\n\n<img src="https://www.thingelstad.com/uploads/2026/428e3db12e.jpg" width="363" height="600" alt="">'],
-                }},
-                {"type": "h-entry", "properties": {
-                    "url": ["https://www.thingelstad.com/2026/05/01/old.html"],
-                    "published": ["2026-05-01T09:00:00+00:00"],
-                    "post-status": ["published"],
-                    "content": ["out of window"],
-                }},
-                {"type": "h-entry", "properties": {
-                    "url": ["https://www.thingelstad.com/2026/05/13/draft.html"],
-                    "published": ["2026-05-13T09:00:00+00:00"],
-                    "post-status": ["draft"],
-                    "content": ["a draft, should be skipped"],
-                }},
+                {
+                    "type": "h-entry",
+                    "properties": {
+                        "uid": [5863257],
+                        "name": [""],
+                        "url": ["https://www.thingelstad.com/2026/05/12/a.html"],
+                        "published": ["2026-05-12T15:02:00+00:00"],
+                        "post-status": ["published"],
+                        "content": [
+                            'Got a card. ([cert](https://psacard.com/cert/x))\n\n<img src="https://www.thingelstad.com/uploads/2026/428e3db12e.jpg" width="363" height="600" alt="">'
+                        ],
+                    },
+                },
+                {
+                    "type": "h-entry",
+                    "properties": {
+                        "url": ["https://www.thingelstad.com/2026/05/01/old.html"],
+                        "published": ["2026-05-01T09:00:00+00:00"],
+                        "post-status": ["published"],
+                        "content": ["out of window"],
+                    },
+                },
+                {
+                    "type": "h-entry",
+                    "properties": {
+                        "url": ["https://www.thingelstad.com/2026/05/13/draft.html"],
+                        "published": ["2026-05-13T09:00:00+00:00"],
+                        "post-status": ["draft"],
+                        "content": ["a draft, should be skipped"],
+                    },
+                },
             ]
         }
         fake_resp = MagicMock()
@@ -251,7 +298,10 @@ class MicroblogTests(unittest.TestCase):
         self.assertEqual([p["url"] for p in out], ["https://www.thingelstad.com/2026/05/12/a.html"])
         # Native markdown — including the embedded <img> tag (rehosted later).
         self.assertIn("Got a card.", out[0]["content_md"])
-        self.assertIn('<img src="https://www.thingelstad.com/uploads/2026/428e3db12e.jpg"', out[0]["content_md"])
+        self.assertIn(
+            '<img src="https://www.thingelstad.com/uploads/2026/428e3db12e.jpg"',
+            out[0]["content_md"],
+        )
         # Hit the Micropub endpoint with the source query + bearer auth.
         kwargs = g.call_args.kwargs
         self.assertEqual(kwargs["params"], {"q": "source"})
@@ -297,10 +347,14 @@ class InteractionPrimitiveTests(unittest.TestCase):
     def test_await_choice_returns_index(self):
         os.environ["DISCORD_OWNER_USER_ID"] = "777"
         try:
-            out = asyncio.run(self._run(
-                lambda ch: interaction.await_choice(MagicMock(), ch, ["a", "b", "c"], prompt="pick"),
-                "pick:1",  # the "2" button → index 1
-            ))
+            out = asyncio.run(
+                self._run(
+                    lambda ch: interaction.await_choice(
+                        MagicMock(), ch, ["a", "b", "c"], prompt="pick"
+                    ),
+                    "pick:1",  # the "2" button → index 1
+                )
+            )
             self.assertEqual(out, 1)
         finally:
             os.environ.pop("DISCORD_OWNER_USER_ID", None)
@@ -308,10 +362,12 @@ class InteractionPrimitiveTests(unittest.TestCase):
     def test_await_choice_refresh(self):
         os.environ["DISCORD_OWNER_USER_ID"] = "777"
         try:
-            out = asyncio.run(self._run(
-                lambda ch: interaction.await_choice(MagicMock(), ch, ["a", "b"], prompt="pick"),
-                "pick:refresh",
-            ))
+            out = asyncio.run(
+                self._run(
+                    lambda ch: interaction.await_choice(MagicMock(), ch, ["a", "b"], prompt="pick"),
+                    "pick:refresh",
+                )
+            )
             self.assertEqual(out, "refresh")
         finally:
             os.environ.pop("DISCORD_OWNER_USER_ID", None)
@@ -359,19 +415,28 @@ class InteractionPrimitiveTests(unittest.TestCase):
         try:
             channel = MagicMock()
             channel.send = AsyncMock()
-            self.assertIsNone(asyncio.run(interaction.await_choice(MagicMock(), channel, [], prompt="p")))
+            self.assertIsNone(
+                asyncio.run(interaction.await_choice(MagicMock(), channel, [], prompt="p"))
+            )
         finally:
             os.environ.pop("DISCORD_OWNER_USER_ID", None)
 
     def test_await_approval(self):
         os.environ["DISCORD_OWNER_USER_ID"] = "777"
         try:
-            yes = asyncio.run(self._run(
-                lambda ch: interaction.await_approval(MagicMock(), ch, prompt="ok?"), "pick:True"))
+            yes = asyncio.run(
+                self._run(
+                    lambda ch: interaction.await_approval(MagicMock(), ch, prompt="ok?"),
+                    "pick:True",
+                )
+            )
             self.assertIs(yes, True)
-            no = asyncio.run(self._run(
-                lambda ch: interaction.await_approval(MagicMock(), ch, prompt="ok?"), "pick:False"))
+            no = asyncio.run(
+                self._run(
+                    lambda ch: interaction.await_approval(MagicMock(), ch, prompt="ok?"),
+                    "pick:False",
+                )
+            )
             self.assertIs(no, False)
         finally:
             os.environ.pop("DISCORD_OWNER_USER_ID", None)
-

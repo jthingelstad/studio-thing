@@ -48,7 +48,9 @@ def _truncate(text: str, length: int = 120) -> str:
     return text[: length - 1] + "…"
 
 
-def _line_findings(rule: str, severity: str, message: str, pattern: re.Pattern[str], lines: list[str]) -> list[Finding]:
+def _line_findings(
+    rule: str, severity: str, message: str, pattern: re.Pattern[str], lines: list[str]
+) -> list[Finding]:
     findings: list[Finding] = []
     for index, raw in enumerate(lines, start=1):
         match = pattern.search(raw)
@@ -73,7 +75,10 @@ _BARE_URL_RE = re.compile(r"https?://\S+")
 _EDITOR_MODE_RE = re.compile(r"buttondown-editor-mode", re.IGNORECASE)
 _MAILCHIMP_TEMPLATE_RE = re.compile(r"\*\|[A-Z_]+\|\*|Permalink \(\*\|")
 _UNICODE_ARROW_RE = re.compile(r"[→⟶⇒]| => ")
-_BOTCHED_DOLLAR_RE = re.compile(r"\bdollars?\.\d|\bdollars?\s*[KMBT]\b|\bdollars?\s+(?:thousand|million|billion|trillion)\b", re.IGNORECASE)
+_BOTCHED_DOLLAR_RE = re.compile(
+    r"\bdollars?\.\d|\bdollars?\s*[KMBT]\b|\bdollars?\s+(?:thousand|million|billion|trillion)\b",
+    re.IGNORECASE,
+)
 
 
 def rule_markdown_link(text: str, lines: list[str]) -> list[Finding]:
@@ -181,10 +186,7 @@ def rule_inline_emoji(text: str, lines: list[str]) -> list[Finding]:
     for index, raw in enumerate(lines, start=1):
         for char in raw:
             code = ord(char)
-            if (
-                0x1F000 <= code <= 0x1FAFF
-                or 0x2600 <= code <= 0x27BF
-            ):
+            if 0x1F000 <= code <= 0x1FAFF or 0x2600 <= code <= 0x27BF:
                 findings.append(
                     Finding(
                         "inline_emoji",
@@ -237,7 +239,9 @@ _MAX_CHUNK_CHARS = 3800
 _MIN_SCRIPT_CHARS = 200
 _LONG_SCRIPT_CHARS = 60_000
 _LONG_DIGIT_RUN_RE = re.compile(r"\d{8,}")
-_SECTION_INTRO_RE = re.compile(r"^Now, the (.+?) section\.|^Now, more links\.|^Now, for your information\.")
+_SECTION_INTRO_RE = re.compile(
+    r"^Now, the (.+?) section\.|^Now, more links\.|^Now, for your information\."
+)
 _SECTION_END_RE = re.compile(r"^That's the end of (.+)\.$")
 
 

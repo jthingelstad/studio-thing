@@ -35,6 +35,7 @@ TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 
 # ---------- result ----------
 
+
 @dataclass
 class JobResult:
     """What a job hands back. ``message`` is rendered to the invoker;
@@ -46,6 +47,7 @@ class JobResult:
 
 
 # ---------- context ----------
+
 
 class JobContext:
     """Per-run context handed to a job.
@@ -168,6 +170,7 @@ class JobContext:
 
 # ---------- progress messages ----------
 
+
 class ProgressMessage:
     """A Discord message that the job edits in place to show step-by-step
     progress. Used by long-running jobs (the ship sequence) so Discord
@@ -195,6 +198,7 @@ class ProgressMessage:
 
 # ---------- locking ----------
 
+
 class JobLocked(Exception):
     """Raised when a job can't acquire a lock because another *running* job
     holds it. Catch it and surface a friendly "already running" message."""
@@ -209,10 +213,7 @@ class JobLocked(Exception):
 
     @property
     def holder_desc(self) -> str:
-        return (
-            f"`{self.holder.get('job', '?')}`, started "
-            f"{self.holder.get('started_at', '?')} UTC"
-        )
+        return f"`{self.holder.get('job', '?')}`, started {self.holder.get('started_at', '?')} UTC"
 
 
 @contextmanager
@@ -242,6 +243,7 @@ def job_lock(assets: list[str], job: str) -> Iterator[None]:
 
 # ---------- draft blocks ----------
 
+
 def _open_tag(name: str) -> str:
     return f"<!-- block:{name} -->"
 
@@ -260,7 +262,7 @@ def get_block(text: str, name: str) -> Optional[str]:
     j = text.find(close_tag, i + len(open_tag))
     if j < 0:
         return None
-    return text[i + len(open_tag):j].strip()
+    return text[i + len(open_tag) : j].strip()
 
 
 def replace_block(text: str, name: str, content: str) -> str:
@@ -284,6 +286,7 @@ def starter_template() -> str:
 
 
 # ---------- content-formatting helpers ----------
+
 
 def format_haiku(text: str) -> str:
     """Render a haiku the way the published issue does:

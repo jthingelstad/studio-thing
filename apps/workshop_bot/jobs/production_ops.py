@@ -29,10 +29,12 @@ async def mark_built(ctx: "_base.JobContext", n: Optional[int] = None) -> "_base
         return _base.JobResult(False, "No active issue window.")
     n = int(window["issue_number"])
     if window.get("phase") == "publish":
-        return _base.JobResult(True, f"WT{n} is already in **Publish**.",
-                               data={"issue_number": n, "phase": "publish"})
+        return _base.JobResult(
+            True, f"WT{n} is already in **Publish**.", data={"issue_number": n, "phase": "publish"}
+        )
 
     import asyncio
+
     state = await asyncio.to_thread(production_state.build_state, n, window=window)
     if not state.get("build_ready"):
         return _base.JobResult(
@@ -44,8 +46,8 @@ async def mark_built(ctx: "_base.JobContext", n: Optional[int] = None) -> "_base
     db.set_issue_phase(n, "publish")
 
     from . import compose_echoes, compose_envelope
-    for name, job in (("compose-envelope", compose_envelope),
-                      ("compose-echoes", compose_echoes)):
+
+    for name, job in (("compose-envelope", compose_envelope), ("compose-echoes", compose_echoes)):
         try:
             await job.run(_base.JobContext(deps=ctx.deps, trigger="mark-built"))
         except Exception:  # noqa: BLE001
@@ -66,8 +68,11 @@ async def reopen(ctx: "_base.JobContext", n: Optional[int] = None) -> "_base.Job
         return _base.JobResult(False, "No active issue window.")
     n = int(window["issue_number"])
     db.set_issue_phase(n, "build")
-    return _base.JobResult(True, f"↩️ WT{n} reopened for edits — back in **Build**.",
-                           data={"issue_number": n, "phase": "build"})
+    return _base.JobResult(
+        True,
+        f"↩️ WT{n} reopened for edits — back in **Build**.",
+        data={"issue_number": n, "phase": "build"},
+    )
 
 
 async def recompose(ctx: "_base.JobContext", n: Optional[int] = None) -> "_base.JobResult":
@@ -76,23 +81,33 @@ async def recompose(ctx: "_base.JobContext", n: Optional[int] = None) -> "_base.
     subject/description/haiku — is interactive and re-run via
     ``/eddy issue subject`` / ``haiku`` or ``compose-envelope``, not here.)"""
     import asyncio
+
     window = db.get_active_issue_window(n)
     if window is None:
         return _base.JobResult(False, "No active issue window.")
     state = await asyncio.to_thread(production_state.publish_state, window=window)
     if not state.get("recompose_needed"):
-        return _base.JobResult(True, "✅ Nothing to recompose — Echoes is present.",
-                               data={"echoes_failed": False})
+        return _base.JobResult(
+            True, "✅ Nothing to recompose — Echoes is present.", data={"echoes_failed": False}
+        )
 
     from . import compose_echoes
+
     try:
         res = await compose_echoes.run(_base.JobContext(deps=ctx.deps, trigger="recompose"))
     except Exception as exc:  # noqa: BLE001
         logger.exception("recompose: compose-echoes raised")
-        return _base.JobResult(False, f"⚠️ Recompose hit an error: echoes: {exc!r}",
-                               data={"fired": [], "errors": [f"echoes: {exc!r}"]})
+        return _base.JobResult(
+            False,
+            f"⚠️ Recompose hit an error: echoes: {exc!r}",
+            data={"fired": [], "errors": [f"echoes: {exc!r}"]},
+        )
     if not res.ok:
-        return _base.JobResult(False, f"⚠️ Recompose hit an error: echoes: {res.message}",
-                               data={"fired": ["echoes"], "errors": [f"echoes: {res.message}"]})
-    return _base.JobResult(True, "✅ Recompose ran — refreshed echoes.",
-                           data={"fired": ["echoes"], "errors": []})
+        return _base.JobResult(
+            False,
+            f"⚠️ Recompose hit an error: echoes: {res.message}",
+            data={"fired": ["echoes"], "errors": [f"echoes: {res.message}"]},
+        )
+    return _base.JobResult(
+        True, "✅ Recompose ran — refreshed echoes.", data={"fired": ["echoes"], "errors": []}
+    )

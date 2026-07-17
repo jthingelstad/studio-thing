@@ -27,6 +27,7 @@ from apps.workshop_bot.personas.eddy import EddyBot  # noqa: E402
 
 # ---------- minimal discord.py shapes for testing ----------
 
+
 class _FakeUser:
     def __init__(self, *, id, bot=False, display_name="", name=""):
         self.id = id
@@ -59,6 +60,7 @@ def _make_eddy() -> EddyBot:
 
 
 # ---------- _parse_body ----------
+
 
 class ParseBodyTests(unittest.TestCase):
     def setUp(self):
@@ -118,6 +120,7 @@ class ParseBodyTests(unittest.TestCase):
 
 # ---------- home channel resolution ----------
 
+
 class HomeChannelTests(unittest.TestCase):
     def test_no_env_var_means_not_home(self):
         bot = _make_eddy()
@@ -132,6 +135,7 @@ class HomeChannelTests(unittest.TestCase):
 
 
 # ---------- model resolution cascade ----------
+
 
 class ResolveModelTests(unittest.TestCase):
     def test_override_wins_over_preferred(self):

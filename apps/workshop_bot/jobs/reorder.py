@@ -76,6 +76,7 @@ _SYNTH_PREFIX = {"notable": "n", "brief": "b", "journal": "j"}
 
 # ---------- synthetic id maps ----------
 
+
 def _build_synth_maps(
     rows_by_section: dict[str, list[dict[str, Any]]],
 ) -> tuple[dict[str, int], dict[int, str]]:
@@ -94,8 +95,11 @@ def _build_synth_maps(
 
 # ---------- LLM input formatting ----------
 
+
 def _format_section_chunks(
-    section: str, rows: list[dict[str, Any]], row_to_synth: dict[int, str],
+    section: str,
+    rows: list[dict[str, Any]],
+    row_to_synth: dict[int, str],
 ) -> str:
     if not rows:
         return f"_(no {section.capitalize()} items)_"
@@ -133,18 +137,20 @@ def _id_inventory_block(
             f"- **{section_title}** ({len(ids)} item(s)): "
             f"{', '.join('`' + i + '`' for i in ids) if ids else '_none_'}"
         )
-    lines.extend([
-        "",
-        "Your `notable_order` must cover every Notable id above exactly once. "
-        "Your `brief_order` must cover every Brief id above exactly once. "
-        "Journal entries are not reordered — every non-promoted Journal id "
-        "stays in its natural publish-date position, so do not include a "
-        "`journal_order` in your output (it will be ignored if you do). "
-        "Promotions remain Journal-only.",
-        "",
-        "---",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "Your `notable_order` must cover every Notable id above exactly once. "
+            "Your `brief_order` must cover every Brief id above exactly once. "
+            "Journal entries are not reordered — every non-promoted Journal id "
+            "stays in its natural publish-date position, so do not include a "
+            "`journal_order` in your output (it will be ignored if you do). "
+            "Promotions remain Journal-only.",
+            "",
+            "---",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -171,6 +177,7 @@ def _build_user_message(
 
 
 # ---------- proposal validation ----------
+
 
 class _ProposalError(Exception):
     """Operator-readable validation failure; surfaces to #editorial."""
@@ -242,17 +249,14 @@ def _validate_per_section_orders(
             )
         extra = sorted(order_set - want_set)
         if extra:
-            raise _ProposalError(
-                f"{section}_order: id(s) not in this section: {', '.join(extra)}"
-            )
+            raise _ProposalError(f"{section}_order: id(s) not in this section: {', '.join(extra)}")
         missing = sorted(want_set - order_set)
         if missing:
-            raise _ProposalError(
-                f"{section}_order: missing id(s): {', '.join(missing)}"
-            )
+            raise _ProposalError(f"{section}_order: missing id(s): {', '.join(missing)}")
 
 
 # ---------- editorial-surface rendering ----------
+
 
 def _row_label(row: dict[str, Any]) -> str:
     title = (row.get("title") or "").strip()
@@ -278,8 +282,10 @@ def _render_was_now(
     if original_synth == list(order_synth):
         return f"**{kind_label}** — no change"
     by_synth = {row_to_synth[int(r["id"])]: r for r in rows}
+
     def titles_for(ids):
-        return " · ".join(f"{i+1}. {_row_label(by_synth[sid])}" for i, sid in enumerate(ids))
+        return " · ".join(f"{i + 1}. {_row_label(by_synth[sid])}" for i, sid in enumerate(ids))
+
     return (
         f"**{kind_label}** — reordered\n"
         f"  was: {titles_for(original_synth)}\n"
@@ -296,9 +302,7 @@ def _render_journal_preserved(
     in their natural publish-date order, so Jamie can confirm the section."""
     if not rows:
         return "**Journal** — _(empty)_"
-    titles = " · ".join(
-        f"{i+1}. {_row_label(r)}" for i, r in enumerate(rows)
-    )
+    titles = " · ".join(f"{i + 1}. {_row_label(r)}" for i, r in enumerate(rows))
     return f"**Journal** — preserved in publish order\n  {titles}"
 
 
@@ -309,13 +313,13 @@ def _render_featured_plan(featured_rows: list[dict[str, Any]]) -> str:
     if not featured_rows:
         return ""
     lines = [
-        f"**Featured (from micro.blog \"Featured\" category):** "
+        f'**Featured (from micro.blog "Featured" category):** '
         f"{len(featured_rows)} post(s) elevated to standalone section(s) above Notable"
     ]
     for r in featured_rows:
         heading = (r.get("promoted_heading") or "").strip() or _row_label(r)
         url = (r.get("url") or "").strip()
-        lines.append(f"  · \"{heading}\" — {url}")
+        lines.append(f'  · "{heading}" — {url}')
     return "\n".join(lines)
 
 
@@ -331,8 +335,20 @@ def _render_editorial_card(
     parts = [
         f"📝 **reorder** for WT{issue_number}",
         "",
-        _render_was_now(rows_by_section["notable"], data["notable_order"], synth_to_row, row_to_synth, kind_label="Notable"),
-        _render_was_now(rows_by_section["brief"], data["brief_order"], synth_to_row, row_to_synth, kind_label="Briefly"),
+        _render_was_now(
+            rows_by_section["notable"],
+            data["notable_order"],
+            synth_to_row,
+            row_to_synth,
+            kind_label="Notable",
+        ),
+        _render_was_now(
+            rows_by_section["brief"],
+            data["brief_order"],
+            synth_to_row,
+            row_to_synth,
+            kind_label="Briefly",
+        ),
         _render_journal_preserved(rows_by_section["journal"], row_to_synth),
     ]
     featured_card = _render_featured_plan(featured_rows or [])
@@ -342,6 +358,7 @@ def _render_editorial_card(
 
 
 # ---------- apply ----------
+
 
 def _apply_proposal(
     issue_number: int,
@@ -374,6 +391,7 @@ def _md_html_links(issue_number: int, name: str, html_url: Optional[str]) -> str
 
 # ---------- main ----------
 
+
 async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     window = db.get_active_issue_window()
     if window is None:
@@ -392,7 +410,8 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
     }
     if not any(rows_by_section.values()):
         return _base.JobResult(
-            False, f"❌ no `issue_items` rows for WT{n} — sync sources in Studio first.",
+            False,
+            f"❌ no `issue_items` rows for WT{n} — sync sources in Studio first.",
         )
 
     synth_to_row, row_to_synth = _build_synth_maps(rows_by_section)
@@ -402,7 +421,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
             synth_section[row_to_synth[int(row["id"])]] = section
     rows_by_id = {int(r["id"]): r for rs in rows_by_section.values() for r in rs}
 
-    bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
+    bot, channel, reason = _llm_job.resolve_bot_and_channel(
+        ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL"
+    )
     if bot is None:
         return _base.JobResult(False, f"(reorder skipped — {reason})")
 
@@ -442,12 +463,14 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     auto_fixed = False
                     if data is not None and ": missing id(s):" in str(exc):
                         patched = _patch_missing_ids_into_orders(
-                            data, synth_section,
+                            data,
+                            synth_section,
                         )
                         if patched:
                             try:
                                 _validate_per_section_orders(
-                                    data, synth_section,
+                                    data,
+                                    synth_section,
                                 )
                             except _ProposalError:
                                 # Auto-patch didn't fully resolve; fall
@@ -475,11 +498,14 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                             f"`{exc}` — retrying with a tighter hint.",
                             suppress_embeds=True,
                         )
-                        user_msg = (base_user_msg + (
-                            f"\n\n(That response was rejected: `{exc}`. Follow the JSON schema "
-                            f"exactly — every parsed id must appear exactly once in its "
-                            f"section's order.)"
-                        ))[: _llm_job.CREATE_FINAL_BODY_CAP]
+                        user_msg = (
+                            base_user_msg
+                            + (
+                                f"\n\n(That response was rejected: `{exc}`. Follow the JSON schema "
+                                f"exactly — every parsed id must appear exactly once in its "
+                                f"section's order.)"
+                            )
+                        )[: _llm_job.CREATE_FINAL_BODY_CAP]
                         continue
 
                 # Editorial card → #editorial; Jamie ✅/❌/🔄. Render the
@@ -491,19 +517,26 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 proposal_url = await asyncio.to_thread(
                     render.render_and_upload_proposal,
                     issue_number=n,
-                    rows_by_section=rows_by_section, proposal=data,
-                    synth_to_row=synth_to_row, row_to_synth=row_to_synth,
+                    rows_by_section=rows_by_section,
+                    proposal=data,
+                    synth_to_row=synth_to_row,
+                    row_to_synth=row_to_synth,
                 )
                 # Featured-category posts come from upstream micro.blog tags
                 # (not Eddy). Surface them on the editorial card so Jamie sees
                 # what got elevated above Notable.
                 featured_rows = [
-                    r for r in issue_items.list_items(n, section="journal", include_promoted=True)
+                    r
+                    for r in issue_items.list_items(n, section="journal", include_promoted=True)
                     if r.get("is_promoted")
                 ]
                 card = _render_editorial_card(
-                    n, rows_by_section, data,
-                    synth_to_row, row_to_synth, rows_by_id,
+                    n,
+                    rows_by_section,
+                    data,
+                    synth_to_row,
+                    row_to_synth,
+                    rows_by_id,
                     featured_rows=featured_rows,
                 )
                 if proposal_url:
@@ -511,7 +544,8 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 for part in discord_io.split_for_discord(card):
                     await channel.send(part, suppress_embeds=True)
                 approved = await interaction.await_approval(
-                    bot, channel,
+                    bot,
+                    channel,
                     prompt=(
                         f"Accept Eddy's reorder for WT{n}? "
                         f"(❌ leaves the existing row order alone.)"
@@ -532,7 +566,9 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                     # would catch up, but give Jamie a current preview).
                     try:
                         await asyncio.to_thread(
-                            renderers.render_all_for_issue, n, window=window,
+                            renderers.render_all_for_issue,
+                            n,
+                            window=window,
                         )
                     except Exception:  # noqa: BLE001
                         logger.exception("reorder: post-apply render failed for #%d", n)

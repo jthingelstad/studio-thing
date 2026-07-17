@@ -31,9 +31,7 @@ def get_headers():
 
 def fetch_subscriber_count(headers):
     """Fetch total subscriber count from Buttondown."""
-    resp = requests.get(
-        f"{API_BASE}/subscribers", headers=headers, params={"page_size": 1}
-    )
+    resp = requests.get(f"{API_BASE}/subscribers", headers=headers, params={"page_size": 1})
     resp.raise_for_status()
     return resp.json().get("count", 0)
 

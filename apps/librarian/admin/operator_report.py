@@ -90,7 +90,9 @@ def stack_resource(logical_id: str, *, stack_name: str) -> str:
 def source_label(citation: dict[str, Any]) -> str:
     if citation.get("issue_number"):
         return f"WT{citation['issue_number']}"
-    return str(citation.get("subject") or citation.get("url") or citation.get("source_kind") or "").strip()
+    return str(
+        citation.get("subject") or citation.get("url") or citation.get("source_kind") or ""
+    ).strip()
 
 
 @dataclass
@@ -170,7 +172,9 @@ class Conversation:
             scope=str(row.get("scope") or "all"),
             mode=str(row.get("mode") or "thingy"),
             created_at=str(row.get("created_at") or ""),
-            updated_at=str(row.get("updated_at") or row.get("last_message_at") or row.get("created_at") or ""),
+            updated_at=str(
+                row.get("updated_at") or row.get("last_message_at") or row.get("created_at") or ""
+            ),
             turn_count=int(row.get("turn_count") or 0),
             eval_quality=str(row.get("eval_quality") or "unreviewed"),
             eval_flags=[str(flag) for flag in row.get("eval_flags") or [] if flag],
@@ -365,7 +369,9 @@ def metric_cards(conversations: list[Conversation]) -> dict[str, Any]:
     quality = Counter(c.eval_quality or "unreviewed" for c in conversations)
     modes = Counter(c.mode or "thingy" for c in conversations)
     flags = Counter(flag for c in conversations for flag in c.eval_flags)
-    feedback = Counter(t.feedback_reaction for c in conversations for t in c.turns if t.feedback_reaction)
+    feedback = Counter(
+        t.feedback_reaction for c in conversations for t in c.turns if t.feedback_reaction
+    )
     return {
         "total": len(conversations),
         "turns": sum(c.turn_count for c in conversations),
@@ -391,8 +397,8 @@ def render_counter(counter: Counter, *, empty: str = "None", limit: int = 12) ->
         rows.append(
             "<tr>"
             f"<td>{h(key)}</td>"
-            f"<td class=\"num\">{value}</td>"
-            f"<td><div class=\"bar\"><span style=\"width:{pct}%\"></span></div></td>"
+            f'<td class="num">{value}</td>'
+            f'<td><div class="bar"><span style="width:{pct}%"></span></div></td>'
             "</tr>"
         )
     return '<table class="compact"><tbody>' + "".join(rows) + "</tbody></table>"
@@ -423,11 +429,13 @@ def render_turn(turn: Turn, index: int) -> str:
             runtime += f" · {h(round(turn.duration_ms / 1000, 1))}s"
         metadata.append(runtime)
     if turn.preflight and (turn.preflight.get("category") or turn.preflight.get("action")):
-        metadata.append(f"Preflight: {h(turn.preflight.get('category'))}/{h(turn.preflight.get('action'))}")
+        metadata.append(
+            f"Preflight: {h(turn.preflight.get('category'))}/{h(turn.preflight.get('action'))}"
+        )
     meta = f'<p class="meta">{" · ".join(metadata)}</p>' if metadata else ""
     return (
         '<div class="turn">'
-        f'<h4>Turn {index} <span>{h(local_time(turn.created_at))}</span></h4>'
+        f"<h4>Turn {index} <span>{h(local_time(turn.created_at))}</span></h4>"
         f'<div class="bubble reader"><strong>Reader</strong><p>{h(turn.question)}</p></div>'
         f'<div class="bubble thingy"><strong>Thingy</strong><p>{h(turn.answer)}</p></div>'
         f"{feedback}{meta}"
@@ -448,33 +456,37 @@ def render_conversation_card(c: Conversation, *, open_by_default: bool = False) 
     search_text = compact(c.search_text, 4000)
     status_tokens = " ".join(c.filter_tokens)
     open_attr = " open" if open_by_default else ""
-    posted = f" · eval posted {h(local_time(c.eval_posted_to_chatter_at))}" if c.eval_posted_to_chatter_at else ""
+    posted = (
+        f" · eval posted {h(local_time(c.eval_posted_to_chatter_at))}"
+        if c.eval_posted_to_chatter_at
+        else ""
+    )
     return (
         f'<details class="conversation-card" data-quality="{h(c.eval_quality)}" data-status="{h(status_tokens)}" '
         f'data-scope="{h(c.scope)}" data-mode="{h(c.mode or "thingy")}" data-reader="{h(c.reader_kind)}" data-flags="{h(" ".join(c.eval_flags))}" data-search="{h(search_text)}"{open_attr}>'
         '<summary class="conversation-summary">'
         '<div class="conversation-topline">'
         f'<span class="quality q-{h(c.eval_quality)}">{h(c.eval_quality)}</span>'
-        f'<span>{h(local_time(c.updated_at))}</span>'
-        f'<span>{h(c.turn_count)} turn{"s" if c.turn_count != 1 else ""}</span>'
+        f"<span>{h(local_time(c.updated_at))}</span>"
+        f"<span>{h(c.turn_count)} turn{'s' if c.turn_count != 1 else ''}</span>"
         f'<span class="reader-badge reader-{h(c.reader_kind)}">{h(c.reader_label)}</span>'
-        f'<span>mode {h(c.mode or "thingy")}</span>'
-        f'<span>scope {h(c.scope)}</span>'
+        f"<span>mode {h(c.mode or 'thingy')}</span>"
+        f"<span>scope {h(c.scope)}</span>"
         "</div>"
-        f'<h2>{h(title)}</h2>'
+        f"<h2>{h(title)}</h2>"
         f'<p class="conversation-preview">{h(c.summary or "No eval summary yet.")}</p>'
         f'<div class="chipline">{owner}{mode_chip}{attention}{flags}</div>'
         "</summary>"
         '<div class="conversation-body">'
         f'<p class="meta"><code>{h(c.conversation_id)}</code>{posted}</p>'
         '<section class="eval-grid">'
-        f'<div><h3>Reader</h3><p>{h(c.eval_reader or "No reader assessment yet.")}</p></div>'
-        f'<div><h3>Thingy</h3><p>{h(c.eval_thingy or "No Thingy assessment yet.")}</p></div>'
-        f'<div><h3>Takeaway</h3><p>{h(c.eval_takeaway or "No takeaway yet.")}</p></div>'
+        f"<div><h3>Reader</h3><p>{h(c.eval_reader or 'No reader assessment yet.')}</p></div>"
+        f"<div><h3>Thingy</h3><p>{h(c.eval_thingy or 'No Thingy assessment yet.')}</p></div>"
+        f"<div><h3>Takeaway</h3><p>{h(c.eval_takeaway or 'No takeaway yet.')}</p></div>"
         "</section>"
-        f'{"<section><h3>Improvements</h3><ul>" + improvements + "</ul></section>" if improvements else ""}'
-        f'<section class="meta-block"><strong>Sources</strong><div>{sources or "<span class=\"muted\">None recorded</span>"}</div></section>'
-        f'<section class="meta-block"><strong>Tools</strong><div>{tools or "<span class=\"muted\">None recorded</span>"}</div></section>'
+        f"{'<section><h3>Improvements</h3><ul>' + improvements + '</ul></section>' if improvements else ''}"
+        f'<section class="meta-block"><strong>Sources</strong><div>{sources or '<span class="muted">None recorded</span>'}</div></section>'
+        f'<section class="meta-block"><strong>Tools</strong><div>{tools or '<span class="muted">None recorded</span>'}</div></section>'
         '<section class="transcript">'
         "<h3>Transcript</h3>"
         f"{turns}"
@@ -483,7 +495,14 @@ def render_conversation_card(c: Conversation, *, open_by_default: bool = False) 
     )
 
 
-def render_html(conversations: list[Conversation], *, since_iso: str, generated_at: str, stack_name: str, table_name: str) -> str:
+def render_html(
+    conversations: list[Conversation],
+    *,
+    since_iso: str,
+    generated_at: str,
+    stack_name: str,
+    table_name: str,
+) -> str:
     metrics = metric_cards(conversations)
     quality = metrics["quality"]
     modes = metrics["modes"]
@@ -494,10 +513,7 @@ def render_html(conversations: list[Conversation], *, since_iso: str, generated_
         dt = parse_iso(c.updated_at)
         by_day[(dt or utc_now()).date().isoformat()] += 1
     review_conversations = sort_for_review(conversations)
-    conversation_cards = "".join(
-        render_conversation_card(c)
-        for c in review_conversations
-    )
+    conversation_cards = "".join(render_conversation_card(c) for c in review_conversations)
     timeline = Counter(dict(sorted(by_day.items())))
     scopes = sorted({c.scope or "all" for c in conversations})
     modes_values = sorted({c.mode or "thingy" for c in conversations})
@@ -700,7 +716,9 @@ def build_report(args: argparse.Namespace) -> tuple[Path, int]:
     table_name = args.table_name or stack_resource("LibrarianTable", stack_name=stack_name)
     since_iso = args.since or iso_days_ago(args.days)
     owner_hash = email_hash(args.owner_email)
-    conversations = scan_conversations(table_name, since_iso=since_iso, max_pages=args.max_scan_pages)
+    conversations = scan_conversations(
+        table_name, since_iso=since_iso, max_pages=args.max_scan_pages
+    )
 
     for conversation in conversations:
         conversation.is_owner = conversation.subscriber_hash == owner_hash
@@ -723,13 +741,26 @@ def build_report(args: argparse.Namespace) -> tuple[Path, int]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate a local Thingy operator HTML report.")
-    parser.add_argument("--stack-name", default=os.environ.get("LIBRARIAN_STACK_NAME", DEFAULT_STACK))
+    parser.add_argument(
+        "--stack-name", default=os.environ.get("LIBRARIAN_STACK_NAME", DEFAULT_STACK)
+    )
     parser.add_argument("--table-name", default="")
-    parser.add_argument("--days", type=int, default=7, help="Look back this many days when --since is omitted.")
+    parser.add_argument(
+        "--days", type=int, default=7, help="Look back this many days when --since is omitted."
+    )
     parser.add_argument("--since", default="", help="ISO timestamp lower bound for updated_at.")
     parser.add_argument("--max-scan-pages", type=int, default=30)
-    parser.add_argument("--detail-limit", type=int, default=30, help="Number of prioritized conversations to expand.")
-    parser.add_argument("--owner-email", default=os.environ.get("THINGY_OPERATOR_OWNER_EMAIL", DEFAULT_OWNER_EMAIL), help="Email address to label as Jamie/owner in the report.")
+    parser.add_argument(
+        "--detail-limit",
+        type=int,
+        default=30,
+        help="Number of prioritized conversations to expand.",
+    )
+    parser.add_argument(
+        "--owner-email",
+        default=os.environ.get("THINGY_OPERATOR_OWNER_EMAIL", DEFAULT_OWNER_EMAIL),
+        help="Email address to label as Jamie/owner in the report.",
+    )
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
     return parser.parse_args()
 

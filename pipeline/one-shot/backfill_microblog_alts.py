@@ -75,9 +75,11 @@ def _splice_alt_into_img(tag: str, alt: str) -> str:
     safe = alt.replace('"', "")
     alt_m = _IMG_ALT_RE.search(tag)
     if alt_m is not None:
-        return tag[: alt_m.start()] + f'alt="{safe}"' + tag[alt_m.end():]
+        return tag[: alt_m.start()] + f'alt="{safe}"' + tag[alt_m.end() :]
     return _IMG_SRC_ATTR_RE.sub(
-        lambda sm: f'{sm.group(1)} alt="{safe}"', tag, count=1,
+        lambda sm: f'{sm.group(1)} alt="{safe}"',
+        tag,
+        count=1,
     )
 
 
@@ -88,6 +90,7 @@ def _cached_journal_alts() -> dict[str, str]:
     leaving the script as a no-op so re-runs are safe historical
     reference rather than errors)."""
     import sqlite3
+
     try:
         with db.connect() as conn:
             rows = conn.execute(
@@ -114,7 +117,8 @@ def _basename_in_url(url: str, basename: str) -> bool:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument(
-        "--apply", action="store_true",
+        "--apply",
+        action="store_true",
         help="Actually POST Micropub updates. Default is a dry-run.",
     )
     args = ap.parse_args()
@@ -175,7 +179,7 @@ def main() -> int:
                 # post — re-match against the mutated body.
                 continue
             new_tag = _splice_alt_into_img(tag, cached_alt)
-            new_body = new_body[:idx] + new_tag + new_body[idx + len(tag):]
+            new_body = new_body[:idx] + new_tag + new_body[idx + len(tag) :]
             per_post.append((cache_key, src, cached_alt))
             found_basenames.add(cache_key)
         if per_post:

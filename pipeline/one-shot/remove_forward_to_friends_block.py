@@ -57,9 +57,7 @@ def strip_cta_blocks(body: str) -> tuple[str, list[str]]:
     #   even indices = content blocks
     #   odd indices  = `---` separators
 
-    cta_indices = [
-        i for i in range(0, len(parts), 2) if is_cta_block(parts[i])
-    ]
+    cta_indices = [i for i in range(0, len(parts), 2) if is_cta_block(parts[i])]
     if not cta_indices:
         return body, []
 
@@ -87,9 +85,7 @@ def process_file(fp: Path, dry_run: bool = False) -> list[str] | None:
     fm = fm_match.group(1)
     body = fm_match.group(2)
 
-    raw_match = re.match(
-        r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL
-    )
+    raw_match = re.match(r"^(\{%\s*raw\s*%\}\n)(.*?)(\n\{%\s*endraw\s*%\}\n?)$", body, re.DOTALL)
     if raw_match:
         raw_open, inner, raw_close = raw_match.groups()
     else:

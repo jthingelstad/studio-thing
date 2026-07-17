@@ -137,8 +137,12 @@ class PutTreeTests(unittest.TestCase):
 
         with patch.object(github_repo, "requests") as fake_requests:
             fake_requests.get.side_effect = fake_get
-            fake_requests.post.side_effect = lambda *a, **k: post_calls.append(a) or AssertionError("no POST expected")
-            fake_requests.patch.side_effect = lambda *a, **k: patch_calls.append(a) or AssertionError("no PATCH expected")
+            fake_requests.post.side_effect = lambda *a, **k: (
+                post_calls.append(a) or AssertionError("no POST expected")
+            )
+            fake_requests.patch.side_effect = lambda *a, **k: (
+                patch_calls.append(a) or AssertionError("no PATCH expected")
+            )
             sha = github_repo.put_tree(
                 [("a.md", b"alpha"), ("b.md", b"beta")],
                 "should be a no-op",
@@ -252,6 +256,7 @@ class PutTreeTests(unittest.TestCase):
 
     def test_422_twice_raises_conflict(self):
         """Two consecutive 422s give up — RefUpdateConflict."""
+
         def fake_get(url, headers=None, params=None, timeout=None):
             if "/git/ref/heads/" in url:
                 return _resp(200, {"object": {"sha": "head"}})

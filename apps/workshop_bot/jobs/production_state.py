@@ -35,6 +35,7 @@ BTN_ALL = "publish:all"
 
 # ---------- S3 presence primitives (moved from jobs/_cards.py) ----------
 
+
 def read_metadata_raw(n: int) -> dict:
     """Read the authored metadata.json content verbatim (no placeholder
     injection) so callers can tell *authored* fields from *absent* ones. The
@@ -86,6 +87,7 @@ def _resolve_n(n: Optional[int], window: Optional[dict]) -> tuple[Optional[int],
 
 
 # ---------- the status state (moved from build_card / publish_card) ----------
+
 
 def build_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> dict:
     """Build-phase content state. Synchronous (blocking S3); async callers
@@ -147,15 +149,19 @@ def publish_state(n: Optional[int] = None, *, window: Optional[dict] = None) -> 
     echoes_present = "echoes.md" in files
 
     any_section = any(st["sections"][k]["present"] for k in ("notable", "brief", "journal"))
-    email_ready = bool(subject and description and haiku_present
-                       and st["intro_present"] and st["cover_present"])
+    email_ready = bool(
+        subject and description and haiku_present and st["intro_present"] and st["cover_present"]
+    )
     email_missing = []
     if not subject:
         email_missing.append("subject")
     if not description:
         email_missing.append("description")
-    for req, present in (("haiku", haiku_present),
-                         ("intro", st["intro_present"]), ("cover", st["cover_present"])):
+    for req, present in (
+        ("haiku", haiku_present),
+        ("intro", st["intro_present"]),
+        ("cover", st["cover_present"]),
+    ):
         if not present:
             email_missing.append(req)
 

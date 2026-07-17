@@ -138,7 +138,9 @@ YEAR_WORDS = {
     2029: "twenty twenty nine",
 }
 
-_HEART_EMOJI_RE = re.compile(r"(?:[❤♥\U0001F49B\U0001F49A\U0001F499\U0001F49C\U0001F5A4\U0001F90D\U0001F90E\U0001F9E1]️?)+")
+_HEART_EMOJI_RE = re.compile(
+    r"(?:[❤♥\U0001F49B\U0001F49A\U0001F499\U0001F49C\U0001F5A4\U0001F90D\U0001F90E\U0001F9E1]️?)+"
+)
 # Heart only acts as the verb "love" when followed by space + a word.
 # At end of sentence/line it's decorative — strip without "love".
 _HEART_AS_VERB_RE = re.compile(
@@ -156,7 +158,9 @@ def strip_emoji(text: str) -> str:
         for char in text
         if not (
             0x1F000 <= ord(char) <= 0x1FAFF
-            or 0x2300 <= ord(char) <= 0x24FF  # misc technical (⌚, ⌛, etc.) + enclosed alphanumerics
+            or 0x2300
+            <= ord(char)
+            <= 0x24FF  # misc technical (⌚, ⌛, etc.) + enclosed alphanumerics
             or 0x2600 <= ord(char) <= 0x27BF
             or 0x2B00 <= ord(char) <= 0x2BFF  # misc symbols and arrows
             or ord(char) == 0xFE0F  # variation selector
@@ -334,7 +338,9 @@ def strip_cover_blocks(body: str) -> str:
     return COVER_BLOCK_RE.sub("", body)
 
 
-_INTRO_LINE_RE = re.compile(r"^Now, the .+? section\.$|^Now, more links\.$|^Now, for your information\.$")
+_INTRO_LINE_RE = re.compile(
+    r"^Now, the .+? section\.$|^Now, more links\.$|^Now, for your information\.$"
+)
 _END_LINE_RE = re.compile(r"^That's the end of .+\.$")
 
 
@@ -364,14 +370,38 @@ def drop_empty_sections(lines: list[str]) -> list[str]:
 
 
 _NUMBER_WORDS = [
-    "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
-    "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
-    "seventeen", "eighteen", "nineteen", "twenty",
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+    "fifteen",
+    "sixteen",
+    "seventeen",
+    "eighteen",
+    "nineteen",
+    "twenty",
 ]
 
 _TENS_WORDS = {
-    20: "twenty", 30: "thirty", 40: "forty", 50: "fifty",
-    60: "sixty", 70: "seventy", 80: "eighty", 90: "ninety",
+    20: "twenty",
+    30: "thirty",
+    40: "forty",
+    50: "fifty",
+    60: "sixty",
+    70: "seventy",
+    80: "eighty",
+    90: "ninety",
 }
 
 

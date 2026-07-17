@@ -68,7 +68,9 @@ def _parse_sections(markdown_body: str) -> list[tuple[str | None, str]]:
     return sections
 
 
-def _add_link(links: list[dict], text: str, url: str, heading_context: str | None, section: str | None) -> None:
+def _add_link(
+    links: list[dict], text: str, url: str, heading_context: str | None, section: str | None
+) -> None:
     if not url or url.startswith("#") or url.startswith("mailto:"):
         return
     try:

@@ -22,7 +22,15 @@ def _install_stubs() -> None:
     if "discord" not in sys.modules:
         discord = types.ModuleType("discord")
         discord.Client = object  # type: ignore[attr-defined]
-        discord.Intents = type("I", (), {"default": staticmethod(lambda: types.SimpleNamespace(message_content=False, guilds=False))})  # type: ignore[attr-defined]
+        discord.Intents = type(
+            "I",
+            (),
+            {
+                "default": staticmethod(
+                    lambda: types.SimpleNamespace(message_content=False, guilds=False)
+                )
+            },
+        )  # type: ignore[attr-defined]
         discord.Message = object  # type: ignore[attr-defined]
         discord.DiscordException = Exception  # type: ignore[attr-defined]
         abc_mod = types.ModuleType("discord.abc")
@@ -37,6 +45,7 @@ _install_stubs()
 from apps.workshop_bot.tools.discord import conversation
 
 # ---------- minimal fakes for discord.py history iteration ----------
+
 
 class _FakeAuthor:
     def __init__(self, *, id, bot=False, display_name="", name=""):
@@ -65,9 +74,11 @@ class _FakeChannel:
 
     def history(self, *, limit, before=None):
         if self._raise:
+
             async def gen():  # noqa: ANN202
                 raise RuntimeError("history fetch failed")
                 yield  # pragma: no cover
+
             return gen()
         # newest-first
         ordered = list(reversed(self._messages))[:limit]
@@ -80,23 +91,28 @@ def _run(coro):
 
 # ---------- tests ----------
 
+
 class CoalesceMessagesTests(unittest.TestCase):
     def test_consecutive_same_role_merge(self):
-        out = conversation.coalesce_messages([
-            ("user", "first"),
-            ("user", "second"),
-            ("assistant", "reply"),
-        ])
+        out = conversation.coalesce_messages(
+            [
+                ("user", "first"),
+                ("user", "second"),
+                ("assistant", "reply"),
+            ]
+        )
         self.assertEqual(len(out), 2)
         self.assertEqual(out[0]["content"], "first\n\nsecond")
         self.assertEqual(out[1]["content"], "reply")
 
     def test_trims_leading_assistant_turns(self):
-        out = conversation.coalesce_messages([
-            ("assistant", "reply 1"),
-            ("assistant", "reply 2"),
-            ("user", "question"),
-        ])
+        out = conversation.coalesce_messages(
+            [
+                ("assistant", "reply 1"),
+                ("assistant", "reply 2"),
+                ("user", "question"),
+            ]
+        )
         self.assertEqual(len(out), 1)
         self.assertEqual(out[0]["role"], "user")
 
@@ -104,10 +120,12 @@ class CoalesceMessagesTests(unittest.TestCase):
         self.assertEqual(conversation.coalesce_messages([]), [])
 
     def test_all_assistant_input_returns_empty(self):
-        out = conversation.coalesce_messages([
-            ("assistant", "a"),
-            ("assistant", "b"),
-        ])
+        out = conversation.coalesce_messages(
+            [
+                ("assistant", "a"),
+                ("assistant", "b"),
+            ]
+        )
         self.assertEqual(out, [])
 
 
@@ -149,7 +167,10 @@ class BuildHistoryTests(unittest.TestCase):
         ]
         history = _run(
             conversation.build_history(
-                _FakeChannel(msgs), before=None, bot_user_id=bot_id, limit=10,
+                _FakeChannel(msgs),
+                before=None,
+                bot_user_id=bot_id,
+                limit=10,
             )
         )
         # Other bot rendered with its short name; self message is assistant.
@@ -174,7 +195,10 @@ class BuildHistoryTests(unittest.TestCase):
         ]
         history = _run(
             conversation.build_history(
-                _FakeChannel(msgs), before=None, bot_user_id=bot_id, limit=10,
+                _FakeChannel(msgs),
+                before=None,
+                bot_user_id=bot_id,
+                limit=10,
             )
         )
         self.assertEqual(history[-1]["role"], "assistant")
@@ -185,7 +209,9 @@ class BuildHistoryTests(unittest.TestCase):
         history = _run(
             conversation.build_history(
                 _FakeChannel([], raise_on_history=True),
-                before=None, bot_user_id=bot_id, limit=10,
+                before=None,
+                bot_user_id=bot_id,
+                limit=10,
             )
         )
         self.assertEqual(history, [])
@@ -204,7 +230,10 @@ class BuildHistoryTests(unittest.TestCase):
         ]
         history = _run(
             conversation.build_history(
-                _FakeChannel(msgs), before=None, bot_user_id=bot_id, limit=10,
+                _FakeChannel(msgs),
+                before=None,
+                bot_user_id=bot_id,
+                limit=10,
             )
         )
         self.assertEqual(len(history), 1)

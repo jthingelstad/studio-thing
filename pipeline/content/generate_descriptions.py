@@ -29,11 +29,18 @@ load_dotenv()
 ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "apps" / "site" / "archive"
 
 MAIN_SECTIONS = {
-    "Notable", "Featured", "Must Read",
-    "Notable Links 📌", "Featured Links 🏅", "Links 📌",
+    "Notable",
+    "Featured",
+    "Must Read",
+    "Notable Links 📌",
+    "Featured Links 🏅",
+    "Links 📌",
 }
 ALL_EDITORIAL_SECTIONS = MAIN_SECTIONS | {
-    "Briefly", "Recommended Links", "FYI", "Yet More Links 🍞",
+    "Briefly",
+    "Recommended Links",
+    "FYI",
+    "Yet More Links 🍞",
 }
 
 MODEL = "claude-sonnet-5"
@@ -95,13 +102,22 @@ def load_links(fp):
     subject = fm.get("subject", "")
     links = fm.get("links") or []
     main = [lnk["text"] for lnk in links if lnk.get("section") in MAIN_SECTIONS and lnk.get("text")]
-    allx = [lnk["text"] for lnk in links if lnk.get("section") in ALL_EDITORIAL_SECTIONS and lnk.get("text")]
+    allx = [
+        lnk["text"]
+        for lnk in links
+        if lnk.get("section") in ALL_EDITORIAL_SECTIONS and lnk.get("text")
+    ]
     return subject, main, allx
 
 
 INLINE_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
-OWN_DOMAINS = {"thingelstad.com", "weekly.thingelstad.com", "buttondown.com",
-               "buttondown.email", "micro.thingelstad.com"}
+OWN_DOMAINS = {
+    "thingelstad.com",
+    "weekly.thingelstad.com",
+    "buttondown.com",
+    "buttondown.email",
+    "micro.thingelstad.com",
+}
 
 
 def extract_inline_link_titles(fp, limit=20):
@@ -110,7 +126,7 @@ def extract_inline_link_titles(fp, limit=20):
     sections. Filters out utility/own-domain links."""
     c = fp.read_text()
     fm_m = re.match(r"^---\n.+?\n---\n", c, re.DOTALL)
-    body = c[fm_m.end():]
+    body = c[fm_m.end() :]
     raw = re.match(r"^\{%\s*raw\s*%\}\n(.*?)\n\{%\s*endraw\s*%\}\n?$", body, re.DOTALL)
     inner = raw.group(1) if raw else body
     inner = re.sub(r"<!--.*?-->", "", inner, flags=re.DOTALL)
@@ -145,7 +161,7 @@ def extract_body_text(fp, limit_chars=4000):
     template cruft, editor comments, HTML, subscribe/share boilerplate."""
     c = fp.read_text()
     fm_m = re.match(r"^---\n.+?\n---\n", c, re.DOTALL)
-    body = c[fm_m.end():]
+    body = c[fm_m.end() :]
     raw = re.match(r"^\{%\s*raw\s*%\}\n(.*?)\n\{%\s*endraw\s*%\}\n?$", body, re.DOTALL)
     inner = raw.group(1) if raw else body
     # Strip editor comment
@@ -191,11 +207,13 @@ def generate(client, titles, max_retries=2, source="titles"):
         resp = client.messages.create(
             model=MODEL,
             max_tokens=300,
-            system=[{
-                "type": "text",
-                "text": system,
-                "cache_control": {"type": "ephemeral"},
-            }],
+            system=[
+                {
+                    "type": "text",
+                    "text": system,
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ],
             messages=messages,
         )
         text = resp.content[0].text.strip()
@@ -203,8 +221,10 @@ def generate(client, titles, max_retries=2, source="titles"):
             return text
         messages = messages + [
             {"role": "assistant", "content": text},
-            {"role": "user", "content": RETRY_PROMPT.format(
-                over=len(text) - 160, length=len(text))},
+            {
+                "role": "user",
+                "content": RETRY_PROMPT.format(over=len(text) - 160, length=len(text)),
+            },
         ]
     return text
 
@@ -219,8 +239,9 @@ def update_description(fp, new_desc):
     # Replace only the description line; YAML-quote if needed.
     # Use yaml.dump on just {'description': new_desc} to get proper escaping,
     # then extract its serialized form.
-    serialized = yaml.dump({"description": new_desc}, default_flow_style=False,
-                           allow_unicode=True, width=2000).rstrip("\n")
+    serialized = yaml.dump(
+        {"description": new_desc}, default_flow_style=False, allow_unicode=True, width=2000
+    ).rstrip("\n")
     # serialized is like: "description: '...'" or "description: ..."
     new_fm = re.sub(r"^description:.*$", serialized, fm_text, count=1, flags=re.MULTILINE)
     if new_fm == fm_text:
@@ -232,13 +253,24 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("issues", nargs="*", type=int, help="Issue numbers")
     ap.add_argument("--write", action="store_true", help="Write new descriptions to front matter")
-    ap.add_argument("--all-empty", action="store_true", help="Operate on every issue (ignore issue args)")
-    ap.add_argument("--inline-fallback", action="store_true",
-                    help="For issues with no editorial-section links, extract inline markdown links from the body instead")
-    ap.add_argument("--body-fallback", action="store_true",
-                    help="For themed-essay issues, generate from body text instead of link titles")
-    ap.add_argument("--force-all", action="store_true",
-                    help="Prefer all-editorial titles over main-only when all has more entries (for re-running short outputs)")
+    ap.add_argument(
+        "--all-empty", action="store_true", help="Operate on every issue (ignore issue args)"
+    )
+    ap.add_argument(
+        "--inline-fallback",
+        action="store_true",
+        help="For issues with no editorial-section links, extract inline markdown links from the body instead",
+    )
+    ap.add_argument(
+        "--body-fallback",
+        action="store_true",
+        help="For themed-essay issues, generate from body text instead of link titles",
+    )
+    ap.add_argument(
+        "--force-all",
+        action="store_true",
+        help="Prefer all-editorial titles over main-only when all has more entries (for re-running short outputs)",
+    )
     args = ap.parse_args()
 
     client = Anthropic(api_key=os.environ["ANTHROPIC_GENERAL_API_KEY"])

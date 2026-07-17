@@ -20,6 +20,7 @@ Categories checked:
   empty-body          Virtually empty issue body
   unclosed-construct  Obvious unbalanced markdown artifact (unpaired **, etc.)
 """
+
 from __future__ import annotations
 
 import json
@@ -65,19 +66,19 @@ TEMPLATE_TAG_PATTERNS = [
 # Common mojibake / encoding artefacts.
 # Use unicode escapes so source stays ASCII-safe.
 _MOJIBAKE = (
-    "\u00e2\u20ac\u2122|"       # â€™  (right single quote)
-    "\u00e2\u20ac\u0153|"       # â€œ  (left double quote)
-    "\u00e2\u20ac\u009d|"       # â€  (right double quote)
-    "\u00e2\u20ac\u201d|"       # â€”  (em dash)
-    "\u00e2\u20ac\u2013|"       # â€–  (en dash)
-    "\u00e2\u20ac\u02dc|"       # â€˜  (left single quote)
-    "\u00e2\u20ac\u00a6|"       # â€¦  (ellipsis)
-    "\u00e2\u20ac\u00a2|"       # â€¢  (bullet)
-    "\u00c3\u00a9|"             # Ã©
-    "\u00c3\u00a8|"             # Ã¨
-    "\u00c3\u00b1|"             # Ã±
-    "\u00c3\u00bc|"             # Ã¼
-    "\u00c2\u00a0"              # Â<nbsp>
+    "\u00e2\u20ac\u2122|"  # â€™  (right single quote)
+    "\u00e2\u20ac\u0153|"  # â€œ  (left double quote)
+    "\u00e2\u20ac\u009d|"  # â€  (right double quote)
+    "\u00e2\u20ac\u201d|"  # â€”  (em dash)
+    "\u00e2\u20ac\u2013|"  # â€–  (en dash)
+    "\u00e2\u20ac\u02dc|"  # â€˜  (left single quote)
+    "\u00e2\u20ac\u00a6|"  # â€¦  (ellipsis)
+    "\u00e2\u20ac\u00a2|"  # â€¢  (bullet)
+    "\u00c3\u00a9|"  # Ã©
+    "\u00c3\u00a8|"  # Ã¨
+    "\u00c3\u00b1|"  # Ã±
+    "\u00c3\u00bc|"  # Ã¼
+    "\u00c2\u00a0"  # Â<nbsp>
 )
 ENCODING_PATTERNS = [
     (re.compile(_MOJIBAKE), "mojibake"),
@@ -153,7 +154,7 @@ def check_template_tags(content_html: str, rep: IssueReport) -> None:
             rep.add(
                 "template-tag-leak",
                 f"{kind}: {m.group(0)!r}",
-                snippet=trim(content_html[max(0, m.start() - 40): m.end() + 40]),
+                snippet=trim(content_html[max(0, m.start() - 40) : m.end() + 40]),
             )
 
 
@@ -168,7 +169,7 @@ def check_encoding(content_html: str, rep: IssueReport) -> None:
             rep.add(
                 "encoding",
                 f"{kind}: {key!r}",
-                snippet=trim(content_html[max(0, m.start() - 40): m.end() + 40]),
+                snippet=trim(content_html[max(0, m.start() - 40) : m.end() + 40]),
             )
 
 
@@ -209,7 +210,7 @@ def check_bare_urls(content_soup, rep: IssueReport) -> None:
             rep.add(
                 "bare-url",
                 url,
-                snippet=trim(text[max(0, m.start() - 30): m.end() + 30]),
+                snippet=trim(text[max(0, m.start() - 30) : m.end() + 30]),
             )
 
 
@@ -242,12 +243,7 @@ def check_headers(content_soup, rep: IssueReport) -> None:
         # Level skip detection: e.g. going directly from H2 to H4 mid-body.
         # Skip the "H1→H3" case when we're going to flag it as orphan-H3
         # below (avoids double-counting the same underlying problem).
-        skip_level_skip = (
-            level == 3
-            and prev_level == 1
-            and not saw_h2
-            and has_any_h3
-        )
+        skip_level_skip = level == 3 and prev_level == 1 and not saw_h2 and has_any_h3
         if prev_level and level - prev_level > 1 and level > 2 and not skip_level_skip:
             rep.add(
                 "header-hierarchy",
@@ -312,10 +308,10 @@ def check_empty_links(content_soup, rep: IssueReport) -> None:
 
 PROSE_BRACKET_RE = re.compile(
     r"^\[(?:"
-    r"\s*\d+\s*|"             # footnote-like [1]
-    r"\s*[a-z]\s*|"           # single letter [a]
-    r"\s*\.{3}\s*|"           # [...]
-    r"\s*\u2026\s*|"          # [ellipsis char]
+    r"\s*\d+\s*|"  # footnote-like [1]
+    r"\s*[a-z]\s*|"  # single letter [a]
+    r"\s*\.{3}\s*|"  # [...]
+    r"\s*\u2026\s*|"  # [ellipsis char]
     r"sic|updated|correction|note|source|citation needed|edit|added|emphasis (?:added|mine)"
     r"|source: .+"
     r")\]$",
@@ -393,8 +389,7 @@ def head_check(client: httpx.Client, url: str) -> tuple[str, int | None, str]:
         r = client.head(url, follow_redirects=True, timeout=8.0)
         if r.status_code == 405 or r.status_code == 403:
             # Some CDNs reject HEAD; retry with GET (range=1)
-            r = client.get(url, follow_redirects=True, timeout=8.0,
-                           headers={"Range": "bytes=0-0"})
+            r = client.get(url, follow_redirects=True, timeout=8.0, headers={"Range": "bytes=0-0"})
         return url, r.status_code, ""
     except Exception as e:
         return url, None, type(e).__name__ + ": " + str(e)[:120]
@@ -422,7 +417,9 @@ def check_broken_images(reports: list[IssueReport]) -> dict[str, tuple[int | Non
     return results
 
 
-def attach_broken_images(reports: list[IssueReport], results: dict[str, tuple[int | None, str]]) -> None:
+def attach_broken_images(
+    reports: list[IssueReport], results: dict[str, tuple[int | None, str]]
+) -> None:
     for rep in reports:
         seen: set[str] = set()
         for u in rep.image_urls:
@@ -475,7 +472,9 @@ def broken_image_summary(reports: list[IssueReport]) -> list[str]:
     lines: list[str] = []
     lines.append("## Broken images by host")
     lines.append("")
-    lines.append("Unique URLs per host, with the issues that reference them. Verify each host before deciding how to remediate (re-upload, 301, or remove).")
+    lines.append(
+        "Unique URLs per host, with the issues that reference them. Verify each host before deciding how to remediate (re-upload, 301, or remove)."
+    )
     lines.append("")
     for host in sorted(by_host, key=lambda k: -len(by_host[k])):
         entries = by_host[host]
@@ -485,7 +484,9 @@ def broken_image_summary(reports: list[IssueReport]) -> list[str]:
         for num, url, detail in entries:
             unique_urls.setdefault(url, set()).add(num)
             url_status[url] = detail
-        lines.append(f"### `{host}` — {len(entries)} refs, {len(unique_urls)} unique URLs, {len({n for es in entries for n, *_ in [es]})} issues")
+        lines.append(
+            f"### `{host}` — {len(entries)} refs, {len(unique_urls)} unique URLs, {len({n for es in entries for n, *_ in [es]})} issues"
+        )
         lines.append("")
         lines.append("| Issues | Status | URL |")
         lines.append("|---|---|---|")
@@ -502,10 +503,13 @@ def write_reports(reports: list[IssueReport]) -> None:
 
     json_path = OUT_DIR / "archive-audit.json"
     import datetime as _dt
+
     json_path.write_text(
         json.dumps(
             {
-                "generated_at": _dt.datetime.now(_dt.timezone.utc).isoformat().replace("+00:00", "Z"),
+                "generated_at": _dt.datetime.now(_dt.timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z"),
                 "total_issues": len(reports),
                 "issues_with_findings": len(relevant),
                 "reports": [r.to_dict() for r in reports],
@@ -564,7 +568,7 @@ def write_reports(reports: list[IssueReport]) -> None:
         cats = sorted({f.category for f in r.findings})
         lines.append(f"### Issue {r.number} — {r.subject}")
         lines.append("")
-        lines.append(f"<a id=\"issue-{r.number}\"></a>")
+        lines.append(f'<a id="issue-{r.number}"></a>')
         lines.append("")
         lines.append(f"- URL: `/archive/{r.number}/`")
         lines.append(f"- File: `{r.path}`")

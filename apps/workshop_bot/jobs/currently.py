@@ -50,6 +50,7 @@ _MODAL_MAX = 4000
 
 # ---------- internal helpers ----------
 
+
 def _resolve_active_issue() -> tuple[Optional[int], Optional[str]]:
     window = db.get_active_issue_window()
     if window is None:
@@ -70,9 +71,7 @@ def _resolve_type(label: str) -> tuple[Optional[str], Optional[str]]:
             f"Add it with `/eddy currently add-type {norm}` first."
         )
     if not row.get("is_active"):
-        return row["label"], (
-            f"⚠️ `{row['label']}` is retired. Reactivate by re-adding it."
-        )
+        return row["label"], (f"⚠️ `{row['label']}` is retired. Reactivate by re-adding it.")
     return row["label"], None
 
 
@@ -87,6 +86,7 @@ def _format_entries(entries: list[dict]) -> str:
 
 # ---------- list ----------
 
+
 async def list_state(ctx: "_base.JobContext") -> "_base.JobResult":
     """Read-only summary: current issue's filled entries + a stale hint."""
     n, err = _resolve_active_issue()
@@ -97,12 +97,15 @@ async def list_state(ctx: "_base.JobContext") -> "_base.JobResult":
     active_types = [t["label"] for t in db.currently_list_types() if t.get("is_active")]
     empty = [lbl for lbl in active_types if lbl not in filled]
     stale = db.currently_suggest_stale(n, k=3)
-    stale_line = ", ".join(
-        f"{s['label']} ({s['gap_issues']} ago)"
-        if s.get("gap_issues") is not None
-        else f"{s['label']} (never)"
-        for s in stale
-    ) or "_(no types yet)_"
+    stale_line = (
+        ", ".join(
+            f"{s['label']} ({s['gap_issues']} ago)"
+            if s.get("gap_issues") is not None
+            else f"{s['label']} (never)"
+            for s in stale
+        )
+        or "_(no types yet)_"
+    )
 
     lines = [
         f"**Currently · WT{n}**",
@@ -117,8 +120,12 @@ async def list_state(ctx: "_base.JobContext") -> "_base.JobResult":
 
 # ---------- set / clear / reorder ----------
 
+
 async def set_value(
-    ctx: "_base.JobContext", *, type_label: str, value: str,
+    ctx: "_base.JobContext",
+    *,
+    type_label: str,
+    value: str,
 ) -> "_base.JobResult":
     n, err = _resolve_active_issue()
     if n is None:
@@ -138,14 +145,15 @@ async def set_value(
         return _base.JobResult(False, f"❌ {exc}")
     return _base.JobResult(
         True,
-        f"✅ **{canonical}** set for WT{n} (position {res['position']}, "
-        f"{len(val)} chars).",
+        f"✅ **{canonical}** set for WT{n} (position {res['position']}, {len(val)} chars).",
         data={"issue_number": n, "label": canonical, "position": res["position"]},
     )
 
 
 async def clear_value(
-    ctx: "_base.JobContext", *, type_label: str,
+    ctx: "_base.JobContext",
+    *,
+    type_label: str,
 ) -> "_base.JobResult":
     n, err = _resolve_active_issue()
     if n is None:
@@ -159,7 +167,8 @@ async def clear_value(
     deleted = db.currently_clear_entry(n, canonical)
     if not deleted:
         return _base.JobResult(
-            True, f"_(nothing to clear — **{canonical}** isn't set for WT{n})_",
+            True,
+            f"_(nothing to clear — **{canonical}** isn't set for WT{n})_",
         )
     return _base.JobResult(
         True,
@@ -169,7 +178,9 @@ async def clear_value(
 
 
 async def reorder(
-    ctx: "_base.JobContext", *, labels: str,
+    ctx: "_base.JobContext",
+    *,
+    labels: str,
 ) -> "_base.JobResult":
     """``labels`` is a comma-separated permutation of the active issue's
     currently-filled type labels."""
@@ -179,7 +190,8 @@ async def reorder(
     raw = [p.strip() for p in (labels or "").split(",") if p.strip()]
     if not raw:
         return _base.JobResult(
-            False, "❌ give a comma-separated list of currently-filled type labels.",
+            False,
+            "❌ give a comma-separated list of currently-filled type labels.",
         )
     try:
         applied = db.currently_reorder(n, raw)
@@ -193,6 +205,7 @@ async def reorder(
 
 
 # ---------- type-pool management ----------
+
 
 async def add_type(ctx: "_base.JobContext", *, label: str) -> "_base.JobResult":
     norm = (label or "").strip()
@@ -219,11 +232,13 @@ async def retire_type(ctx: "_base.JobContext", *, label: str) -> "_base.JobResul
         return _base.JobResult(False, f"❌ no Currently type `{norm}`.")
     ok = db.currently_retire_type(norm)
     return _base.JobResult(
-        ok, f"🪦 retired Currently type **{norm}** (past entries still render).",
+        ok,
+        f"🪦 retired Currently type **{norm}** (past entries still render).",
     )
 
 
 # ---------- per-type Discord modal ----------
+
 
 class _CurrentlyEditModal(ui.Modal):
     """Single-field modal pre-filled with the active issue's value for
@@ -269,7 +284,9 @@ class _CurrentlyEditModal(ui.Modal):
                 )
             else:
                 res = db.currently_set_entry(
-                    self.issue_number, self.type_label, new_value,
+                    self.issue_number,
+                    self.type_label,
+                    new_value,
                 )
                 msg = (
                     f"✅ updated **{self.type_label}** for WT{self.issue_number} "
@@ -277,13 +294,15 @@ class _CurrentlyEditModal(ui.Modal):
                 )
         except db.CurrentlyError as exc:
             await interaction.response.send_message(
-                f"❌ couldn't update Currently: {exc}", ephemeral=True,
+                f"❌ couldn't update Currently: {exc}",
+                ephemeral=True,
             )
             return
         except Exception as exc:  # noqa: BLE001
             logger.exception(
                 "currently edit modal: write failed for WT%d / %s",
-                self.issue_number, self.type_label,
+                self.issue_number,
+                self.type_label,
             )
             await interaction.response.send_message(
                 f"❌ couldn't update **{self.type_label}** for WT{self.issue_number}: "
@@ -295,7 +314,9 @@ class _CurrentlyEditModal(ui.Modal):
 
 
 def build_modal(
-    ctx: "_base.JobContext", *, type_label: str,
+    ctx: "_base.JobContext",
+    *,
+    type_label: str,
 ) -> tuple[Optional[_CurrentlyEditModal], Optional[str]]:
     """Construct the per-type modal. Returns ``(modal, error_message)`` —
     one is ``None`` and the other carries the result."""
@@ -318,5 +339,8 @@ def build_modal(
             f"`/eddy currently clear {canonical}` then re-set in pieces."
         )
     return _CurrentlyEditModal(
-        ctx=ctx, issue_number=n, type_label=canonical, current_value=current,
+        ctx=ctx,
+        issue_number=n,
+        type_label=canonical,
+        current_value=current,
     ), None

@@ -48,10 +48,15 @@ class DataMigrations(unittest.TestCase):
         # Seed a row with the WT348 regression shape: a Notable item
         # whose body_md carries a baked ``<!-- cta:1 -->`` marker.
         from apps.workshop_bot.tools import issue_items
+
         item_id = issue_items.upsert_item(
-            issue_number=348, section="notable", source="manual",
-            source_id="wt348-n2", url="https://example.com/m5",
-            title="M5 exploit", body_md="Real commentary.\n\n\n<!-- cta:1 -->",
+            issue_number=348,
+            section="notable",
+            source="manual",
+            source_id="wt348-n2",
+            url="https://example.com/m5",
+            title="M5 exploit",
+            body_md="Real commentary.\n\n\n<!-- cta:1 -->",
         )
         # Manually un-record the migration so we re-run it (the upsert
         # above happened post-migration, so the seed row didn't get
@@ -90,9 +95,9 @@ class AutoMigrateOnConnect(unittest.TestCase):
         # leave the DB usable. (Previously you had to call run_migrations()
         # by hand or the next CREATE-dependent query would crash.)
         with db.connect() as conn:
-            tables = {r[0] for r in conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table'"
-            )}
+            tables = {
+                r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            }
         # Pick one table that's only present after the schema script runs.
         self.assertIn("issue_items", tables)
         self.assertIn("schema_migrations", tables)

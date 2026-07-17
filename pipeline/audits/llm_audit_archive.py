@@ -17,6 +17,7 @@ Usage:
   python pipeline/audits/llm_audit_archive.py --issues 15,45,132,247,319
   python pipeline/audits/llm_audit_archive.py --full
 """
+
 from __future__ import annotations
 
 import argparse
@@ -45,6 +46,7 @@ MAX_TOKENS_OUT = 4000
 
 
 # ---------- era detection ----------
+
 
 def era_for(num: int) -> str:
     if num <= 41:
@@ -172,15 +174,18 @@ def prior_findings_for(num: int, index: dict[int, dict]) -> list[dict]:
         return []
     out = []
     for f in rep.get("findings", []):
-        out.append({
-            "category": f.get("category"),
-            "detail": f.get("detail"),
-            "snippet": (f.get("snippet") or "")[:140],
-        })
+        out.append(
+            {
+                "category": f.get("category"),
+                "detail": f.get("detail"),
+                "snippet": (f.get("snippet") or "")[:140],
+            }
+        )
     return out
 
 
 # ---------- LLM call ----------
+
 
 async def audit_one(
     client: anthropic.AsyncAnthropic,
@@ -211,11 +216,13 @@ async def audit_one(
                 model=MODEL,
                 max_tokens=MAX_TOKENS_OUT,
                 thinking={"type": "disabled"},
-                system=[{
-                    "type": "text",
-                    "text": SYSTEM_PROMPT,
-                    "cache_control": {"type": "ephemeral"},
-                }],
+                system=[
+                    {
+                        "type": "text",
+                        "text": SYSTEM_PROMPT,
+                        "cache_control": {"type": "ephemeral"},
+                    }
+                ],
                 messages=[{"role": "user", "content": user_msg}],
                 output_format=Report,
             )
@@ -236,15 +243,19 @@ async def audit_one(
         duration = round(time.monotonic() - t0, 2)
 
     report: Report = resp.parsed_output
+
     # Verify snippets appear in body. Normalize typographic characters
     # first — models often substitute ASCII quotes for smart quotes and
     # vice versa, which otherwise rejects valid findings.
     def _norm(s: str) -> str:
         return (
-            s.replace("\u2018", "'").replace("\u2019", "'")
-             .replace("\u201c", '"').replace("\u201d", '"')
-             .replace("\u2013", "-").replace("\u2014", "-")
-             .replace("\u00a0", " ")
+            s.replace("\u2018", "'")
+            .replace("\u2019", "'")
+            .replace("\u201c", '"')
+            .replace("\u201d", '"')
+            .replace("\u2013", "-")
+            .replace("\u2014", "-")
+            .replace("\u00a0", " ")
         )
 
     norm_body = _norm(body)
@@ -289,6 +300,7 @@ async def audit_one(
 
 # ---------- orchestration ----------
 
+
 async def run(numbers: list[int], index: dict[int, dict]) -> list[dict]:
     client = anthropic.AsyncAnthropic(api_key=os.environ["ANTHROPIC_GENERAL_API_KEY"])
     sem = asyncio.Semaphore(CONCURRENCY)
@@ -304,11 +316,16 @@ async def run(numbers: list[int], index: dict[int, dict]) -> list[dict]:
 
 # ---------- reports ----------
 
+
 def write_reports(results: list[dict]) -> None:
     total_in = sum(r["usage"].get("input_tokens", 0) for r in results if r.get("usage"))
     total_out = sum(r["usage"].get("output_tokens", 0) for r in results if r.get("usage"))
-    total_read = sum(r["usage"].get("cache_read_input_tokens", 0) for r in results if r.get("usage"))
-    total_write = sum(r["usage"].get("cache_creation_input_tokens", 0) for r in results if r.get("usage"))
+    total_read = sum(
+        r["usage"].get("cache_read_input_tokens", 0) for r in results if r.get("usage")
+    )
+    total_write = sum(
+        r["usage"].get("cache_creation_input_tokens", 0) for r in results if r.get("usage")
+    )
     total_findings = sum(len(r.get("findings", [])) for r in results)
     total_rejected = sum(len(r.get("rejected_findings", [])) for r in results)
 
@@ -349,7 +366,9 @@ def write_reports(results: list[dict]) -> None:
     lines.append(f"Issues scanned: **{len(results)}**")
     lines.append(f"Verified findings: **{total_findings}**")
     lines.append(f"Rejected (snippet not found in source): {total_rejected}")
-    lines.append(f"Tokens: {total_in:,} in + {total_out:,} out (cache r/w {total_read:,}/{total_write:,})")
+    lines.append(
+        f"Tokens: {total_in:,} in + {total_out:,} out (cache r/w {total_read:,}/{total_write:,})"
+    )
     lines.append(f"Estimated cost: ~${est_cost:.2f}")
     lines.append("")
 
@@ -409,10 +428,9 @@ def write_reports(results: list[dict]) -> None:
 
 # ---------- CLI ----------
 
+
 def resolve_numbers(args) -> list[int]:
-    all_nums = sorted(
-        int(p.stem) for p in ARCHIVE.glob("*.md") if p.stem.isdigit()
-    )
+    all_nums = sorted(int(p.stem) for p in ARCHIVE.glob("*.md") if p.stem.isdigit())
     if args.issues:
         wanted = [int(x.strip()) for x in args.issues.split(",") if x.strip()]
         return [n for n in wanted if n in all_nums]
@@ -470,8 +488,11 @@ def main() -> None:
         print("[llm-audit] no prior static audit found — proceeding without", flush=True)
 
     numbers = resolve_numbers(args)
-    print(f"[llm-audit] auditing {len(numbers)} issue(s): {numbers[:20]}"
-          f"{'...' if len(numbers) > 20 else ''}", flush=True)
+    print(
+        f"[llm-audit] auditing {len(numbers)} issue(s): {numbers[:20]}"
+        f"{'...' if len(numbers) > 20 else ''}",
+        flush=True,
+    )
     results = asyncio.run(run(numbers, index))
     write_reports(results)
 

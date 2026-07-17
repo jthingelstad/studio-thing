@@ -38,5 +38,10 @@ async def content_job(ctx: "JobContext", *, job: str, **kwargs) -> str:
         return "skipped"
     job_ctx = jobs_base.JobContext(deps=getattr(ctx, "deps", None), trigger="scheduled")
     result = await runner(job_ctx, **kwargs)
-    logger.info("content_job %s -> ok=%s: %s", job, getattr(result, "ok", "?"), getattr(result, "message", ""))
+    logger.info(
+        "content_job %s -> ok=%s: %s",
+        job,
+        getattr(result, "ok", "?"),
+        getattr(result, "message", ""),
+    )
     return "ok" if getattr(result, "ok", False) else "noop"

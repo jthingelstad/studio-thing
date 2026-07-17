@@ -19,6 +19,7 @@ Output:
   tmp/missing-photos.json     structured
   tmp/missing-photos.md       review list
 """
+
 from __future__ import annotations
 
 import argparse
@@ -39,22 +40,22 @@ OUT.mkdir(exist_ok=True)
 
 # H3 micropost heading: `### [Day @ Time](URL)` with URL on thingelstad.com
 H3_MICROPOST_RE = re.compile(
-    r'^### \[[^\]]+\]\((https?://(?:www\.|micro\.)?thingelstad\.com/\d{4}/\d{2}/\d{2}/[^)]+)\)',
+    r"^### \[[^\]]+\]\((https?://(?:www\.|micro\.)?thingelstad\.com/\d{4}/\d{2}/\d{2}/[^)]+)\)",
     re.M,
 )
 
 # Same photo host set used by fix_micropost_photos.py
 PHOTO_IMG_RE = re.compile(
     r'<img[^>]+src="(https?://'
-    r'(?:cdn\.uploads\.micro\.blog'
-    r'|(?:(?:www|micro)\.)?thingelstad\.com/uploads'
-    r'|files\.thingelstad\.com'
+    r"(?:cdn\.uploads\.micro\.blog"
+    r"|(?:(?:www|micro)\.)?thingelstad\.com/uploads"
+    r"|files\.thingelstad\.com"
     r')[^"]+)"',
     re.I,
 )
 
 # Markdown images in source body: ![alt](url)
-MD_IMG_RE = re.compile(r'!\[[^\]]*\]\((https?://[^)\s]+)\)')
+MD_IMG_RE = re.compile(r"!\[[^\]]*\]\((https?://[^)\s]+)\)")
 
 
 def slice_between_h3s(body: str) -> list[tuple[int, int, str, str]]:
@@ -67,10 +68,10 @@ def slice_between_h3s(body: str) -> list[tuple[int, int, str, str]]:
         # Slice ends at the next H2/H3, or at end of body.
         # We want to scope to just this micropost, so stop at the next
         # heading of level 2 or 3.
-        next_heading_re = re.compile(r'^#{2,3} ', re.M)
+        next_heading_re = re.compile(r"^#{2,3} ", re.M)
         m2 = next_heading_re.search(body, m.end())
         slice_end = m2.start() if m2 else len(body)
-        out.append((h3_start, slice_end, url, body[m.end():slice_end]))
+        out.append((h3_start, slice_end, url, body[m.end() : slice_end]))
     return out
 
 
@@ -80,11 +81,14 @@ def count_source_images(md_slice: str) -> int:
     for m in MD_IMG_RE.finditer(md_slice):
         url = m.group(1)
         # Only count photos from known hosts (same rule as the fix script).
-        if any(h in url for h in [
-            "cdn.uploads.micro.blog",
-            "thingelstad.com/uploads",
-            "files.thingelstad.com",
-        ]):
+        if any(
+            h in url
+            for h in [
+                "cdn.uploads.micro.blog",
+                "thingelstad.com/uploads",
+                "files.thingelstad.com",
+            ]
+        ):
             count += 1
     return count
 
@@ -103,8 +107,9 @@ def count_live_photos(client: httpx.Client, url: str) -> tuple[int, int]:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--limit", type=int, default=0,
-                    help="For testing: only check first N microposts")
+    ap.add_argument(
+        "--limit", type=int, default=0, help="For testing: only check first N microposts"
+    )
     args = ap.parse_args()
 
     # Pass 1: scan all archive files, collect (issue, h3_url, source_img_count)
@@ -118,22 +123,29 @@ def main() -> None:
         slices = slice_between_h3s(body)
         for h3_start, slice_end, url, md_slice in slices:
             src_imgs = count_source_images(md_slice)
-            entries.append({
-                "issue": int(path.stem),
-                "url": url,
-                "source_img_count": src_imgs,
-            })
+            entries.append(
+                {
+                    "issue": int(path.stem),
+                    "url": url,
+                    "source_img_count": src_imgs,
+                }
+            )
 
-    print(f"[missing-photos] found {len(entries)} H3-micropost references "
-          f"across {len({e['issue'] for e in entries})} issues",
-          flush=True)
+    print(
+        f"[missing-photos] found {len(entries)} H3-micropost references "
+        f"across {len({e['issue'] for e in entries})} issues",
+        flush=True,
+    )
 
     # Pass 2: only fetch URLs where source has 0 photos — that's where we'd
     # miss single-photo posts. Posts with ≥1 source image already match the
     # "tokens + 1" replacement pattern and are not at risk.
     to_check = [e for e in entries if e["source_img_count"] == 0]
-    print(f"[missing-photos] {len(to_check)} entries have ZERO source images — "
-          f"checking each live page", flush=True)
+    print(
+        f"[missing-photos] {len(to_check)} entries have ZERO source images — "
+        f"checking each live page",
+        flush=True,
+    )
 
     if args.limit:
         to_check = to_check[: args.limit]
@@ -234,9 +246,11 @@ def main() -> None:
 
     # Console summary
     print()
-    print(f"RESULT: {len(missing)} microposts are missing photos that still exist on the live page "
-          f"({sum(r['live_photos'] for r in missing)} photos total).",
-          flush=True)
+    print(
+        f"RESULT: {len(missing)} microposts are missing photos that still exist on the live page "
+        f"({sum(r['live_photos'] for r in missing)} photos total).",
+        flush=True,
+    )
 
 
 if __name__ == "__main__":

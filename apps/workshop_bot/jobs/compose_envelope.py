@@ -56,11 +56,13 @@ def _extract_envelope(data) -> tuple[list[str], str, list[str]]:
 
     subjects = (
         [str(s).strip() for s in raw_subjects if str(s).strip()][:_SUBJECT_COUNT]
-        if isinstance(raw_subjects, list) else []
+        if isinstance(raw_subjects, list)
+        else []
     )
     haikus = (
         [str(h).strip() for h in raw_haikus if str(h).strip()][:_HAIKU_COUNT]
-        if isinstance(raw_haikus, list) else []
+        if isinstance(raw_haikus, list)
+        else []
     )
     description = str(description).strip() if isinstance(description, str) else ""
     return subjects, description, haikus
@@ -83,9 +85,7 @@ async def _generate(bot, *, base_msg: str, model: str) -> tuple[list[str], str, 
             reply, meta = await bot.core(latest=msg, history=[], model=model)
             agent_run.record_meta(meta)
             agent_run.records_written = 1 if (reply and reply.strip()) else 0
-        subjects, description, haikus = _extract_envelope(
-            _llm_job.parse_json_payload(reply or "")
-        )
+        subjects, description, haikus = _extract_envelope(_llm_job.parse_json_payload(reply or ""))
         if subjects and haikus:
             return subjects, description, haikus
         msg = base_msg + (
@@ -108,10 +108,12 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         return _base.JobResult(False, f"❌ no draft body for WT{n} yet.")
 
     bot, channel, reason = _llm_job.resolve_bot_and_channel(
-        ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL")
+        ctx, "eddy", "DISCORD_CHANNEL_EDITORIAL"
+    )
     if bot is None:
         return _base.JobResult(
-            True, f"(compose-envelope skipped — {reason})",
+            True,
+            f"(compose-envelope skipped — {reason})",
             data={"metadata_written": False, "haiku_written": False},
         )
 
@@ -122,15 +124,12 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
         with _base.job_lock(assets, NAME):
             prompt = anthropic_client.load_prompt("eddy-compose-envelope")
             issue_text = body[: _llm_job.ISSUE_BODY_CAP]
-            base_msg = (
-                prompt.replace("<NUM>", str(n)).replace("<<<ISSUE_TEXT>>>", issue_text)
-            )
+            base_msg = prompt.replace("<NUM>", str(n)).replace("<<<ISSUE_TEXT>>>", issue_text)
 
             # ---- one batched call ---- #
             # Sonnet, like the individual compose-meta / compose-haiku
             # pickers — the envelope is short, structured output.
-            subjects, description, haikus = await _generate(
-                bot, base_msg=base_msg, model="sonnet")
+            subjects, description, haikus = await _generate(bot, base_msg=base_msg, model="sonnet")
             if not subjects or not haikus:
                 msg = (
                     f"compose-envelope for WT{n}: Eddy didn't return a usable "
@@ -138,7 +137,8 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 )
                 await _llm_job.try_send(channel, f"⚠️ {msg}", job_label="compose-envelope")
                 return _base.JobResult(
-                    False, msg,
+                    False,
+                    msg,
                     data={"metadata_written": False, "haiku_written": False},
                 )
 
@@ -148,7 +148,8 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 return s
 
             subject = await _llm_job.replay_pick(
-                bot, channel,
+                bot,
+                channel,
                 options=subjects,
                 prompt_label=f"📰 {len(subjects)} subject options for WT{n} — react to pick:",
                 regenerate=_regen_subjects,
@@ -170,7 +171,8 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 return h
 
             haiku = await _llm_job.replay_pick(
-                bot, channel,
+                bot,
+                channel,
                 options=haikus,
                 pretty=_pretty_haiku_options,
                 prompt_label=f"📜 Haiku options for WT{n} — pick one:",
@@ -194,8 +196,7 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 return _base.JobResult(
                     False,
                     f"compose-envelope for WT{n}: metadata written, haiku not picked.",
-                    data={"metadata_written": True, "haiku_written": False,
-                          "subject": subject},
+                    data={"metadata_written": True, "haiku_written": False, "subject": subject},
                 )
 
             # ---- write both artifacts ---- #
@@ -215,14 +216,16 @@ async def run(ctx: "_base.JobContext") -> "_base.JobResult":
                 True,
                 f"Envelope written for WT{n} — {subject}",
                 data={
-                    "issue_number": n, "metadata": metadata,
-                    "metadata_written": True, "haiku_written": True,
-                    "subject": subject, "haiku": haiku.strip() + "\n",
+                    "issue_number": n,
+                    "metadata": metadata,
+                    "metadata_written": True,
+                    "haiku_written": True,
+                    "subject": subject,
+                    "haiku": haiku.strip() + "\n",
                 },
             )
     except _base.JobLocked as exc:
-        return _base.JobResult(
-            False, f"⏳ `compose-envelope` already running ({exc.holder_desc}).")
+        return _base.JobResult(False, f"⏳ `compose-envelope` already running ({exc.holder_desc}).")
 
 
 def _write_metadata(n: int, window, subject: str, description: str) -> dict:
@@ -243,7 +246,7 @@ def _write_metadata(n: int, window, subject: str, description: str) -> dict:
     if existing:
         try:
             prior = json.loads(existing)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             prior = None
         if isinstance(prior, dict):
             for key, value in prior.items():

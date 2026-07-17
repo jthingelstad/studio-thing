@@ -44,8 +44,7 @@ def _sandbox_issues_dir() -> None:
     import tempfile
 
     if not os.environ.get("WORKSHOP_ISSUES_DIR"):
-        os.environ["WORKSHOP_ISSUES_DIR"] = tempfile.mkdtemp(
-            prefix="workshop-issues-")
+        os.environ["WORKSHOP_ISSUES_DIR"] = tempfile.mkdtemp(prefix="workshop-issues-")
 
 
 def _install_discord() -> None:
@@ -124,8 +123,15 @@ def _install_discord() -> None:
 
     class _TextInput:
         def __init__(
-            self, *, label=None, style=None, default=None,
-            max_length=None, required=True, custom_id=None, placeholder=None,
+            self,
+            *,
+            label=None,
+            style=None,
+            default=None,
+            max_length=None,
+            required=True,
+            custom_id=None,
+            placeholder=None,
         ):
             self.label = label
             self.style = style
@@ -216,8 +222,15 @@ def _install_discord() -> None:
     # approximates by scanning for the marker the decorator leaves.
     class _Button:
         def __init__(
-            self, *, label=None, style=None, custom_id=None, disabled=False,
-            emoji=None, row=None, url=None,
+            self,
+            *,
+            label=None,
+            style=None,
+            custom_id=None,
+            disabled=False,
+            emoji=None,
+            row=None,
+            url=None,
         ):
             self.label = label
             self.style = style
@@ -253,10 +266,15 @@ def _install_discord() -> None:
     def _button(*, label=None, style=None, custom_id=None, disabled=False, emoji=None, row=None):
         def deco(fn):
             fn.__discord_button__ = {
-                "label": label, "style": style, "custom_id": custom_id,
-                "disabled": disabled, "emoji": emoji, "row": row,
+                "label": label,
+                "style": style,
+                "custom_id": custom_id,
+                "disabled": disabled,
+                "emoji": emoji,
+                "row": row,
             }
             return fn
+
         return deco
 
     ui_mod.View = _View  # type: ignore[attr-defined]
@@ -278,9 +296,7 @@ def _install_discord() -> None:
             return cls
 
     class _Group:
-        def __init__(
-            self, *, name=None, description=None, default_permissions=None, parent=None
-        ):
+        def __init__(self, *, name=None, description=None, default_permissions=None, parent=None):
             self.name = name
             self.description = description
             self.default_permissions = default_permissions
@@ -299,6 +315,7 @@ def _install_discord() -> None:
                 fn._cmd_description = description
                 self.commands.append(fn)
                 return fn
+
             return deco
 
     class _CommandTree:
@@ -313,12 +330,14 @@ def _install_discord() -> None:
         def deco(fn):
             fn._describe = kwargs
             return fn
+
         return deco
 
     def _choices(**kwargs):
         def deco(fn):
             fn._choices = kwargs
             return fn
+
         return deco
 
     def _autocomplete(**kwargs):
@@ -326,11 +345,13 @@ def _install_discord() -> None:
         per-parameter autocomplete callables on the decorated function so
         tests can introspect them; runtime dispatch isn't exercised in
         the test harness."""
+
         def deco(fn):
             existing = getattr(fn, "_autocomplete", {})
             existing.update(kwargs)
             fn._autocomplete = existing
             return fn
+
         return deco
 
     app_commands.Choice = _Choice  # type: ignore[attr-defined]

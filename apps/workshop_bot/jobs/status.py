@@ -26,7 +26,7 @@ _RUN_ICON = {"success": "✅", "error": "❌", "pending": "⏳"}
 def _rel(date_iso: str | None) -> str:
     try:
         d = (datetime.strptime(str(date_iso)[:10], "%Y-%m-%d").date() - datetime.now().date()).days
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return "?"
     if d == 0:
         return "today"
@@ -36,7 +36,7 @@ def _rel(date_iso: str | None) -> str:
 def _dur(ms) -> str:
     try:
         s = int(ms) / 1000.0
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return "?"
     return f"{s:.1f}s" if s < 60 else f"{s / 60:.1f}m"
 

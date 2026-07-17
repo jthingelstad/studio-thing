@@ -59,6 +59,7 @@ Post a brief check-in to Jamie now, in your channel — reference what you said 
 
 # ---------- trigger parsing (shared by the tool and the slash command) ----------
 
+
 class FollowUpError(ValueError):
     """Bad follow-up arguments — the message is safe to surface."""
 
@@ -93,9 +94,15 @@ def resolve_trigger(
 ) -> tuple[str, Optional[str], Optional[int]]:
     """Return ``(trigger_kind, due_at, trigger_issue)`` for exactly one of
     the three trigger specs. Raises :class:`FollowUpError` otherwise."""
-    given = [name for name, v in (("when", when), ("in_days", in_days), ("at_issue", at_issue)) if v not in (None, "")]
+    given = [
+        name
+        for name, v in (("when", when), ("in_days", in_days), ("at_issue", at_issue))
+        if v not in (None, "")
+    ]
     if len(given) != 1:
-        raise FollowUpError("Give exactly one of `when` (ISO date/datetime), `in_days`, or `at_issue`.")
+        raise FollowUpError(
+            "Give exactly one of `when` (ISO date/datetime), `in_days`, or `at_issue`."
+        )
     if when not in (None, ""):
         return "time", _parse_when(when), None
     if in_days not in (None, ""):
@@ -119,7 +126,9 @@ def resolve_trigger(
 def normalize_persona(persona: Optional[str], *, default: str = "eddy") -> str:
     p = (persona or default).strip().lower()
     if p not in db.FOLLOW_UP_PERSONAS:
-        raise FollowUpError(f"persona must be one of: {', '.join(db.FOLLOW_UP_PERSONAS)} (got `{p}`).")
+        raise FollowUpError(
+            f"persona must be one of: {', '.join(db.FOLLOW_UP_PERSONAS)} (got `{p}`)."
+        )
     return p
 
 
@@ -130,6 +139,7 @@ def trigger_desc(row: dict) -> str:
 
 
 # ---------- create / list / cancel ----------
+
 
 def create(
     *,
@@ -148,8 +158,13 @@ def create(
     persona = normalize_persona(persona)
     kind, due_at, trigger_issue = resolve_trigger(when=when, in_days=in_days, at_issue=at_issue)
     fid = db.insert_follow_up(
-        persona=persona, trigger_kind=kind, note=note, due_at=due_at, trigger_issue=trigger_issue,
-        channel_env=(channel_env or None), created_by=(created_by or None),
+        persona=persona,
+        trigger_kind=kind,
+        note=note,
+        due_at=due_at,
+        trigger_issue=trigger_issue,
+        channel_env=(channel_env or None),
+        created_by=(created_by or None),
     )
     return db.get_follow_up(fid) or {}
 
@@ -166,8 +181,12 @@ async def add(
 ) -> "_base.JobResult":
     try:
         row = create(
-            persona=persona, note=note,
-            when=(when or None), in_days=in_days, at_issue=at_issue, created_by=created_by,
+            persona=persona,
+            note=note,
+            when=(when or None),
+            in_days=in_days,
+            at_issue=at_issue,
+            created_by=created_by,
         )
     except FollowUpError as exc:
         return _base.JobResult(False, f"❌ {exc}")
@@ -186,25 +205,36 @@ async def list_open(ctx: "_base.JobContext", *, persona: Optional[str] = None) -
         return _base.JobResult(True, f"No pending follow-ups. Add one with {add_hint}.")
     lines = [f"**Pending follow-ups** ({len(rows)}):"]
     for r in rows:
-        lines.append(f"`#{r['id']}` · **{r['persona']}** · {trigger_desc(r)} · \"{(r['note'] or '').strip()}\"")
+        lines.append(
+            f'`#{r["id"]}` · **{r["persona"]}** · {trigger_desc(r)} · "{(r["note"] or "").strip()}"'
+        )
     lines.append(f"{cancel_hint} to drop one.")
     return _base.JobResult(True, "\n".join(lines))
 
 
-async def cancel(ctx: "_base.JobContext", *, followup_id: int, persona: Optional[str] = None) -> "_base.JobResult":
+async def cancel(
+    ctx: "_base.JobContext", *, followup_id: int, persona: Optional[str] = None
+) -> "_base.JobResult":
     row = db.get_follow_up(int(followup_id))
     if row is None:
         return _base.JobResult(False, f"❌ no follow-up `#{followup_id}`.")
     if row.get("cancelled_at"):
         return _base.JobResult(True, f"Follow-up `#{followup_id}` is already cancelled.")
     if row.get("fired_at"):
-        return _base.JobResult(True, f"Follow-up `#{followup_id}` already fired — nothing to cancel.")
+        return _base.JobResult(
+            True, f"Follow-up `#{followup_id}` already fired — nothing to cancel."
+        )
     if not db.cancel_follow_up(int(followup_id), persona=(persona or None)):
-        return _base.JobResult(False, f"❌ couldn't cancel `#{followup_id}` (not yours / already closed?).")
-    return _base.JobResult(True, f"🗑️ follow-up `#{followup_id}` cancelled.", data={"id": int(followup_id)})
+        return _base.JobResult(
+            False, f"❌ couldn't cancel `#{followup_id}` (not yours / already closed?)."
+        )
+    return _base.JobResult(
+        True, f"🗑️ follow-up `#{followup_id}` cancelled.", data={"id": int(followup_id)}
+    )
 
 
 # ---------- the hourly sweep ----------
+
 
 def _persona_context_block(persona: str) -> str:
     builder = _CONTEXT_BUILDER.get(persona)
@@ -232,7 +262,8 @@ async def sweep(ctx: "_base.JobContext") -> "_base.JobResult":
     except _base.JobLocked as exc:
         logger.info("follow-up-sweep: skipping — already running (%s)", exc.holder_desc)
         return _base.JobResult(
-            True, f"follow-up-sweep already running ({exc.holder_desc}); skipped.",
+            True,
+            f"follow-up-sweep already running ({exc.holder_desc}); skipped.",
         )
 
 
@@ -249,16 +280,23 @@ async def _sweep_locked(ctx: "_base.JobContext") -> "_base.JobResult":
     skipped = 0
     for row in due[:_MAX_PER_SWEEP]:
         persona = row["persona"]
-        channel_env = row.get("channel_env") or _PERSONA_HOME_CHANNEL.get(persona, "DISCORD_CHANNEL_EDITORIAL")
+        channel_env = row.get("channel_env") or _PERSONA_HOME_CHANNEL.get(
+            persona, "DISCORD_CHANNEL_EDITORIAL"
+        )
         bot, channel, reason = _llm_job.resolve_bot_and_channel(ctx, persona, channel_env)
         if bot is None:
             logger.warning("follow-up-sweep: leaving #%s open — %s", row["id"], reason)
             skipped += 1
             continue
-        trig = (f"It's now {now_iso}." if row["trigger_kind"] == "time"
-                else f"WT{active_issue} is now the in-flight issue.")
+        trig = (
+            f"It's now {now_iso}."
+            if row["trigger_kind"] == "time"
+            else f"WT{active_issue} is now the in-flight issue."
+        )
         user_msg = _FOLLOW_UP_PROMPT.format(
-            note=(row["note"] or "").strip(), trigger=trig, ctx_block=_persona_context_block(persona),
+            note=(row["note"] or "").strip(),
+            trigger=trig,
+            ctx_block=_persona_context_block(persona),
         )
         reply = ""
         try:
@@ -277,7 +315,9 @@ async def _sweep_locked(ctx: "_base.JobContext") -> "_base.JobResult":
             if await ctx.post(channel, reply.strip(), persona=persona):
                 posted += 1
         else:
-            logger.info("follow-up-sweep: #%s (%s) — agent PASSed, nothing posted", row["id"], persona)
+            logger.info(
+                "follow-up-sweep: #%s (%s) — agent PASSed, nothing posted", row["id"], persona
+            )
 
     note = f"follow-up-sweep: {fired} fired ({posted} posted)"
     if skipped:

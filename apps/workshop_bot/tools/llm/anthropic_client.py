@@ -32,10 +32,15 @@ MODELS = {
 # NOTE: the claude-sonnet-5 rates mirror 4.6 as a provisional placeholder —
 # confirm against Anthropic's pricing page and correct if they differ.
 RATES_USD_PER_MTOK: dict[str, dict[str, float]] = {
-    "claude-sonnet-5":           {"input":  3.00, "output": 15.00, "cache_read": 0.30, "cache_create":  3.75},
-    "claude-sonnet-4-6":         {"input":  3.00, "output": 15.00, "cache_read": 0.30, "cache_create":  3.75},
-    "claude-opus-4-7":           {"input": 15.00, "output": 75.00, "cache_read": 1.50, "cache_create": 18.75},
-    "claude-haiku-4-5-20251001": {"input":  1.00, "output":  5.00, "cache_read": 0.10, "cache_create":  1.25},
+    "claude-sonnet-5": {"input": 3.00, "output": 15.00, "cache_read": 0.30, "cache_create": 3.75},
+    "claude-sonnet-4-6": {"input": 3.00, "output": 15.00, "cache_read": 0.30, "cache_create": 3.75},
+    "claude-opus-4-7": {"input": 15.00, "output": 75.00, "cache_read": 1.50, "cache_create": 18.75},
+    "claude-haiku-4-5-20251001": {
+        "input": 1.00,
+        "output": 5.00,
+        "cache_read": 0.10,
+        "cache_create": 1.25,
+    },
 }
 
 
@@ -58,9 +63,9 @@ def cost_usd(
     if rates is None:
         return None
     return (
-        (input_tokens or 0)        * rates["input"]
-        + (output_tokens or 0)       * rates["output"]
-        + (cache_read_tokens or 0)   * rates["cache_read"]
+        (input_tokens or 0) * rates["input"]
+        + (output_tokens or 0) * rates["output"]
+        + (cache_read_tokens or 0) * rates["cache_read"]
         + (cache_create_tokens or 0) * rates["cache_create"]
     ) / 1_000_000
 
@@ -77,6 +82,7 @@ def default_model() -> str:
     raw = (os.environ.get("WORKSHOP_DEFAULT_MODEL") or FALLBACK_MODEL).lower()
     return raw if raw in MODELS else FALLBACK_MODEL
 
+
 logger = logging.getLogger("workshop.anthropic")
 
 # Prompts are cached in-process at first read. Edits to prompts/*.md require a
@@ -90,7 +96,7 @@ _KNOWN_PERSONAS = ("eddy",)
 # scripts, archive/API support tasks). Keys share one workspace, so this is
 # visibility — not spend-cap isolation.
 _KEY_ENV_BY_PURPOSE = {
-    "eddy":    "ANTHROPIC_EDDY_API_KEY",
+    "eddy": "ANTHROPIC_EDDY_API_KEY",
     "general": "ANTHROPIC_GENERAL_API_KEY",
 }
 
@@ -147,9 +153,7 @@ def validate_keys(purposes: Optional[Iterable[str]] = None) -> None:
         if not os.environ.get(_KEY_ENV_BY_PURPOSE[purpose])
     ]
     if missing:
-        raise RuntimeError(
-            "missing required Anthropic API keys: " + ", ".join(sorted(missing))
-        )
+        raise RuntimeError("missing required Anthropic API keys: " + ", ".join(sorted(missing)))
 
 
 def _resolve_prompt_path(name: str) -> Path:

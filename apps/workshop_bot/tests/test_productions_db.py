@@ -46,8 +46,12 @@ class CreateAndReadTests(_DBCase):
         self.assertEqual(row["id"], "WT361")
 
     def test_details_round_trip_as_dict(self):
-        a = db.create_production(production_type="newsletter", title="WT360", seq=360,
-                                 details={"slug": "x", "outline": "1,2,3"})
+        a = db.create_production(
+            production_type="newsletter",
+            title="WT360",
+            seq=360,
+            details={"slug": "x", "outline": "1,2,3"},
+        )
         got = db.get_production("WT360")
         self.assertEqual(got["details"], {"slug": "x", "outline": "1,2,3"})
         self.assertEqual(a["details"], got["details"])
@@ -69,6 +73,7 @@ class CreateAndReadTests(_DBCase):
     def test_unique_type_seq_collision(self):
         db.create_production(production_type="newsletter", title="a", seq=360)
         import sqlite3
+
         with self.assertRaises(sqlite3.IntegrityError):
             db.create_production(production_type="newsletter", title="b", seq=360)
 
@@ -134,8 +139,14 @@ class BackfillTests(_DBCase):
 class NewsletterConcurrencyTests(_DBCase):
     def _open(self, n, pub):
         w = issue.compute_window(pub, 7)
-        db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
-                            start_date=w["start_date"], day_count=w["day_count"], set_by="t")
+        db.set_issue_window(
+            issue_number=n,
+            pub_date=w["pub_date"],
+            end_date=w["end_date"],
+            start_date=w["start_date"],
+            day_count=w["day_count"],
+            set_by="t",
+        )
 
     def test_multiple_windows_active_and_mirrored_to_productions(self):
         self._open(351, "2026-06-27")

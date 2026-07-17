@@ -28,10 +28,16 @@ __all__ = [
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Build a citation-ready corpus for Another Thing transcripts.")
-    parser.add_argument("--input-dir", type=Path, default=PODCAST_DIR, help="Normalized episode JSON directory")
+    parser = argparse.ArgumentParser(
+        description="Build a citation-ready corpus for Another Thing transcripts."
+    )
+    parser.add_argument(
+        "--input-dir", type=Path, default=PODCAST_DIR, help="Normalized episode JSON directory"
+    )
     parser.add_argument("--output", default=str(PODCAST_CORPUS_PATH), help="Output JSON path")
-    parser.add_argument("--embed", action="store_true", help="Add Bedrock Cohere embeddings to each chunk")
+    parser.add_argument(
+        "--embed", action="store_true", help="Add Bedrock Cohere embeddings to each chunk"
+    )
     parser.add_argument("--embedding-model", default=DEFAULT_EMBEDDING_MODEL)
     parser.add_argument("--embedding-dimensions", type=int, default=DEFAULT_EMBEDDING_DIMENSIONS)
     args = parser.parse_args()
@@ -42,7 +48,9 @@ def main() -> int:
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(corpus, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote {corpus['chunk_count']} chunks from {corpus['episode_count']} episodes to {output}")
+    print(
+        f"Wrote {corpus['chunk_count']} chunks from {corpus['episode_count']} episodes to {output}"
+    )
     return 0
 
 

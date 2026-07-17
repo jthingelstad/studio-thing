@@ -61,8 +61,7 @@ class LibrarianCorpusTests(unittest.TestCase):
             archive = Path(tmp) / "archive"
             (archive / "1").mkdir(parents=True)
             (archive / "1" / "archive.md").write_text(
-                "---\nnumber: 1\nsubject: Weekly Thing 1\n---\n"
-                "Hello {{ subscriber.email }}\n",
+                "---\nnumber: 1\nsubject: Weekly Thing 1\n---\nHello {{ subscriber.email }}\n",
                 encoding="utf-8",
             )
 
@@ -105,7 +104,9 @@ class LibrarianCorpusTests(unittest.TestCase):
                 site_dir=site,
                 faq_path=Path(tmp) / "missing-faq.json",
             )
-        about = [c for c in result["chunks"] if c["source_kind"] == "site_page" and c["url"] == "/about/"]
+        about = [
+            c for c in result["chunks"] if c["source_kind"] == "site_page" and c["url"] == "/about/"
+        ]
         self.assertTrue(about, "expected at least one /about/ site_page chunk")
         about_text = " ".join(c["text"] for c in about)
         self.assertIn("May 2017", about_text)
@@ -129,25 +130,39 @@ class LibrarianCorpusTests(unittest.TestCase):
                 "<p>Members fund a nonprofit selected each year. {% if support.yearly_price %}Yearly is ${{ support.yearly_price }}.{% endif %}</p>",
                 encoding="utf-8",
             )
-            (site / "_data" / "support.json").write_text(json.dumps({
-                "yearly_price": 48,
-                "current": {
-                    "nonprofit": "Signal",
-                    "short_name": "Signal",
-                    "year_label": "Ninth Year",
-                    "description": "Encrypted messaging nonprofit.",
-                },
-                "past": [
-                    {"nonprofit": "Electronic Frontier Foundation", "short_name": "EFF", "year_label": "Year 8", "amount_raised": 1164.92},
-                    {"nonprofit": "Creative Commons", "year": 2024},
-                ],
-            }), encoding="utf-8")
+            (site / "_data" / "support.json").write_text(
+                json.dumps(
+                    {
+                        "yearly_price": 48,
+                        "current": {
+                            "nonprofit": "Signal",
+                            "short_name": "Signal",
+                            "year_label": "Ninth Year",
+                            "description": "Encrypted messaging nonprofit.",
+                        },
+                        "past": [
+                            {
+                                "nonprofit": "Electronic Frontier Foundation",
+                                "short_name": "EFF",
+                                "year_label": "Year 8",
+                                "amount_raised": 1164.92,
+                            },
+                            {"nonprofit": "Creative Commons", "year": 2024},
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
             result = corpus.build_corpus(
                 archive,
                 site_dir=site,
                 faq_path=Path(tmp) / "missing-faq.json",
             )
-        members = [c for c in result["chunks"] if c["url"] == "/members/" and c["section"] == "Supporting Membership"]
+        members = [
+            c
+            for c in result["chunks"]
+            if c["url"] == "/members/" and c["section"] == "Supporting Membership"
+        ]
         history = [c for c in result["chunks"] if c["id"] == "site:nonprofit-history:0"]
         self.assertTrue(members, "expected /members/ site_page chunks")
         self.assertTrue(history, "expected a site:nonprofit-history chunk")
@@ -169,23 +184,37 @@ class LibrarianCorpusTests(unittest.TestCase):
             self._seed_archive(archive)
             site = _empty_site(Path(tmp))
             faq_path = Path(tmp) / "faq.json"
-            faq_path.write_text(json.dumps({
-                "sections": [
+            faq_path.write_text(
+                json.dumps(
                     {
-                        "title": "The Basics",
-                        "entries": [
-                            {"question": "What is the Weekly Thing?", "answer": "A weekly newsletter."},
-                            {"question": "How long has it been running?", "answer": "Over {{yearsActive}} years and {{issueCount}} issues."},
-                        ],
-                    },
-                    {
-                        "title": "Membership",
-                        "entries": [
-                            {"question": "Does it cost anything?", "answer": "No, the newsletter is free."},
-                        ],
-                    },
-                ]
-            }), encoding="utf-8")
+                        "sections": [
+                            {
+                                "title": "The Basics",
+                                "entries": [
+                                    {
+                                        "question": "What is the Weekly Thing?",
+                                        "answer": "A weekly newsletter.",
+                                    },
+                                    {
+                                        "question": "How long has it been running?",
+                                        "answer": "Over {{yearsActive}} years and {{issueCount}} issues.",
+                                    },
+                                ],
+                            },
+                            {
+                                "title": "Membership",
+                                "entries": [
+                                    {
+                                        "question": "Does it cost anything?",
+                                        "answer": "No, the newsletter is free.",
+                                    },
+                                ],
+                            },
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
             result = corpus.build_corpus(archive, site_dir=site, faq_path=faq_path)
         faq = [c for c in result["chunks"] if c["source_kind"] == "faq"]
         self.assertEqual(len(faq), 3)
@@ -218,7 +247,9 @@ class LibrarianCorpusTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(RuntimeError, "Privacy denylist"):
                 corpus.build_corpus(
-                    archive, site_dir=site, faq_path=Path(tmp) / "missing-faq.json",
+                    archive,
+                    site_dir=site,
+                    faq_path=Path(tmp) / "missing-faq.json",
                 )
 
 

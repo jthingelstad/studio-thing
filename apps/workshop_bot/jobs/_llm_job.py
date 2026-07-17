@@ -36,6 +36,7 @@ class ResolvedBot(NamedTuple):
     channel: Any
     error_reason: Optional[str]
 
+
 logger = logging.getLogger("workshop.jobs.compose")
 
 
@@ -60,6 +61,7 @@ async def try_send(
     except Exception as exc:  # noqa: BLE001
         logger.warning("%s: channel.send failed: %s", job_label, exc)
         return False
+
 
 # How many times to re-prompt the model on a 🔄 refresh or an unparseable
 # response before giving up. Shared across compose_haiku, compose_meta,
@@ -112,7 +114,7 @@ def parse_json_payload(reply: str) -> Optional[dict[str, Any]]:
         return None
     try:
         data = json.loads(m.group(0))
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
     return data if isinstance(data, dict) else None
 
@@ -188,14 +190,21 @@ async def refresh_loop(
             )
             continue
         pick = await _present_and_pick(
-            bot, channel, options=options, pretty=pretty,
+            bot,
+            channel,
+            options=options,
+            pretty=pretty,
             prompt_label=prompt_label,
-            cards_issue=cards_issue, cards_filename=cards_filename,
-            cards_title=cards_title, cards_subtitle=cards_subtitle,
+            cards_issue=cards_issue,
+            cards_filename=cards_filename,
+            cards_title=cards_title,
+            cards_subtitle=cards_subtitle,
             cards_body_kind=cards_body_kind,
         )
         if pick == "refresh":
-            user_msg = base_msg + "\n\n(Jamie asked for fresh options — give different framings, please.)"
+            user_msg = (
+                base_msg + "\n\n(Jamie asked for fresh options — give different framings, please.)"
+            )
             continue
         if pick is None or pick >= len(options):
             return None
@@ -229,8 +238,12 @@ async def _present_and_pick(
     if cards_issue is not None and cards_filename and cards_title:
         url = await asyncio.to_thread(
             render.render_and_upload_option_cards,
-            int(cards_issue), cards_filename, cards_title, options,
-            subtitle=cards_subtitle, body_kind=cards_body_kind,
+            int(cards_issue),
+            cards_filename,
+            cards_title,
+            options,
+            subtitle=cards_subtitle,
+            body_kind=cards_body_kind,
         )
         if url:
             round_label = f"{prompt_label}\n📄 {url}"
@@ -270,10 +283,15 @@ async def replay_pick(
         if not current:
             return None
         pick = await _present_and_pick(
-            bot, channel, options=current, pretty=pretty,
+            bot,
+            channel,
+            options=current,
+            pretty=pretty,
             prompt_label=prompt_label,
-            cards_issue=cards_issue, cards_filename=cards_filename,
-            cards_title=cards_title, cards_subtitle=cards_subtitle,
+            cards_issue=cards_issue,
+            cards_filename=cards_filename,
+            cards_title=cards_title,
+            cards_subtitle=cards_subtitle,
             cards_body_kind=cards_body_kind,
         )
         if pick == "refresh":
@@ -289,7 +307,9 @@ async def replay_pick(
 
 
 def resolve_bot_and_channel(
-    ctx: "_base.JobContext", persona: str, channel_env: str,
+    ctx: "_base.JobContext",
+    persona: str,
+    channel_env: str,
 ) -> ResolvedBot:
     """Return a :class:`ResolvedBot` for ``persona``: ``bot`` (the
     persona's discord.Client subclass — has ``wait_for``), ``channel``

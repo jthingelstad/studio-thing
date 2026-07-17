@@ -35,21 +35,33 @@ from apps.workshop_bot.tests._fixtures import (
 from apps.workshop_bot.tools import content_store, db  # noqa: E402
 from apps.workshop_bot.tools.discord import interaction  # noqa: E402
 
-_ENVELOPE_REPLY = json.dumps({
-    "subjects": [
-        "WT458 — Alpha", "WT458 — Bravo", "WT458 — Charlie",
-        "WT458 — Delta", "WT458 — Echo",
-    ],
-    "description": "Alpha, Bravo, Charlie, Delta, Echo.",
-    "haikus": ["one\ntwo\nthree", "a\nb\nc", "x\ny\nz"],
-})
+_ENVELOPE_REPLY = json.dumps(
+    {
+        "subjects": [
+            "WT458 — Alpha",
+            "WT458 — Bravo",
+            "WT458 — Charlie",
+            "WT458 — Delta",
+            "WT458 — Echo",
+        ],
+        "description": "Alpha, Bravo, Charlie, Delta, Echo.",
+        "haikus": ["one\ntwo\nthree", "a\nb\nc", "x\ny\nz"],
+    }
+)
 
 
 def _seed_issue_body(n: int = 458) -> None:
     from apps.workshop_bot.tools import issue_items
-    issue_items.upsert_item(issue_number=n, section="notable", source="pinboard",
-                            source_id="seed1", url="https://ex/a", title="Seed item",
-                            body_md="Seed blurb about capital and code.")
+
+    issue_items.upsert_item(
+        issue_number=n,
+        section="notable",
+        source="pinboard",
+        source_id="seed1",
+        url="https://ex/a",
+        title="Seed item",
+        body_md="Seed blurb about capital and code.",
+    )
 
 
 class ComposeEnvelopeTests(_DBTestCase):
@@ -59,9 +71,16 @@ class ComposeEnvelopeTests(_DBTestCase):
 
     def _window(self, n=458):
         from apps.workshop_bot.tools.content import issue as issue_mod
+
         w = issue_mod.compute_window("2026-05-16", 7)
-        db.set_issue_window(issue_number=n, pub_date=w["pub_date"], end_date=w["end_date"],
-                            start_date=w["start_date"], day_count=w["day_count"], set_by="test")
+        db.set_issue_window(
+            issue_number=n,
+            pub_date=w["pub_date"],
+            end_date=w["end_date"],
+            start_date=w["start_date"],
+            day_count=w["day_count"],
+            set_by="test",
+        )
 
     def _ctx(self, reply=_ENVELOPE_REPLY):
         fc = _FakeBotChannel(persona="eddy", reply=reply)
@@ -100,8 +119,7 @@ class ComposeEnvelopeTests(_DBTestCase):
         _seed_issue_body(458)
         ctx, fc = self._ctx()
         # Subject: refresh (→ one extra batched call) then pick #1; haiku: pick #1.
-        with patch.object(interaction, "await_choice",
-                          AsyncMock(side_effect=["refresh", 0, 0])):
+        with patch.object(interaction, "await_choice", AsyncMock(side_effect=["refresh", 0, 0])):
             result = asyncio.run(compose_envelope.run(ctx))
         self.assertTrue(result.ok, result.message)
         # Initial batched call + one regenerate on the subject refresh.
@@ -145,6 +163,7 @@ class ComposeEnvelopeTests(_DBTestCase):
         self.assertFalse(result.ok)
         # Retried MAX_REFRESH_ROUNDS times, never reached a picker.
         from apps.workshop_bot.jobs import _llm_job
+
         self.assertEqual(fc.bot.core.await_count, _llm_job.MAX_REFRESH_ROUNDS)
         self.assertIsNone(content_store.read_issue(458, "metadata.json"))
         self.assertIsNone(content_store.read_issue(458, "haiku.md"))
@@ -152,12 +171,21 @@ class ComposeEnvelopeTests(_DBTestCase):
     def test_preserves_buttondown_id_on_rerun(self):
         self._window()
         _seed_issue_body(458)
-        content_store.write_issue(458, "metadata.json", json.dumps({
-            "number": 458, "subject": "old", "description": "old",
-            "image": "https://files.thingelstad.com/weekly-thing/458/cover.jpg",
-            "slug": "458", "publish_date": "2026-05-16T12:00:00Z",
-            "buttondown_id": "em_existing_123",
-        }))
+        content_store.write_issue(
+            458,
+            "metadata.json",
+            json.dumps(
+                {
+                    "number": 458,
+                    "subject": "old",
+                    "description": "old",
+                    "image": "https://files.thingelstad.com/weekly-thing/458/cover.jpg",
+                    "slug": "458",
+                    "publish_date": "2026-05-16T12:00:00Z",
+                    "buttondown_id": "em_existing_123",
+                }
+            ),
+        )
         ctx, fc = self._ctx()
         with patch.object(interaction, "await_choice", AsyncMock(side_effect=[0, 0])):
             result = asyncio.run(compose_envelope.run(ctx))
@@ -194,4 +222,5 @@ class ComposeEnvelopeTests(_DBTestCase):
 
 if __name__ == "__main__":
     import unittest
+
     unittest.main()

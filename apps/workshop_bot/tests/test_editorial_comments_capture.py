@@ -36,23 +36,34 @@ class _DBCase(unittest.TestCase):
 
 
 class StoreReviewCommentsTests(_DBCase):
-
     def _seed(self):
         issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="h1", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="h1",
+            body_md="x",
         )
         issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="h2", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="h2",
+            body_md="x",
         )
         issue_items.upsert_item(
-            issue_number=349, section="brief", source="pinboard",
-            source_id="b1", body_md="x",
+            issue_number=349,
+            section="brief",
+            source="pinboard",
+            source_id="b1",
+            body_md="x",
         )
         issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="https://j1", body_md="x",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="https://j1",
+            body_md="x",
         )
 
     def test_item_anchored_bullet_gets_item_handle(self):

@@ -35,42 +35,231 @@ STOP_ENTITIES = {
     # English function words and sentence-starters that the regex
     # captures because they appear capitalized at the start of
     # sentences. None of these are real entities.
-    "the", "this", "that", "these", "those", "there", "here",
-    "and", "but", "or", "so", "if", "as", "of", "in", "on", "at",
-    "for", "from", "with", "by", "to", "into", "onto",
-    "i", "i've", "i'm", "i'd", "i'll", "we", "we've", "we're",
-    "you", "you've", "you're", "they", "they've", "they're",
-    "he", "she", "it", "them", "us", "our", "your", "their", "his", "her",
-    "what", "when", "where", "why", "how", "who", "whom", "which",
-    "now", "then", "today", "tomorrow", "yesterday",
-    "first", "second", "third", "last", "next", "previous",
-    "good", "great", "new", "best", "most", "more", "less",
-    "all", "also", "some", "any", "every", "each", "many", "few",
-    "one", "two", "three", "four", "five", "six", "seven", "eight",
-    "nine", "ten", "much", "such", "very", "even", "only", "still",
-    "well", "back", "way", "ways", "lot", "lots", "interesting",
-    "really", "quite", "hard", "easy", "long", "short", "old",
-    "however", "moreover", "therefore", "thus", "hence", "furthermore",
-    "instead", "indeed", "anyway", "anyhow", "besides",
-    "yes", "no", "ok", "stop", "go",
-    "do", "does", "did", "done",
-    "is", "are", "was", "were", "be", "been", "being",
-    "have", "has", "had", "having",
-    "can", "could", "should", "would", "will", "may", "might", "must",
-    "found", "followed", "thought", "things", "thing",
+    "the",
+    "this",
+    "that",
+    "these",
+    "those",
+    "there",
+    "here",
+    "and",
+    "but",
+    "or",
+    "so",
+    "if",
+    "as",
+    "of",
+    "in",
+    "on",
+    "at",
+    "for",
+    "from",
+    "with",
+    "by",
+    "to",
+    "into",
+    "onto",
+    "i",
+    "i've",
+    "i'm",
+    "i'd",
+    "i'll",
+    "we",
+    "we've",
+    "we're",
+    "you",
+    "you've",
+    "you're",
+    "they",
+    "they've",
+    "they're",
+    "he",
+    "she",
+    "it",
+    "them",
+    "us",
+    "our",
+    "your",
+    "their",
+    "his",
+    "her",
+    "what",
+    "when",
+    "where",
+    "why",
+    "how",
+    "who",
+    "whom",
+    "which",
+    "now",
+    "then",
+    "today",
+    "tomorrow",
+    "yesterday",
+    "first",
+    "second",
+    "third",
+    "last",
+    "next",
+    "previous",
+    "good",
+    "great",
+    "new",
+    "best",
+    "most",
+    "more",
+    "less",
+    "all",
+    "also",
+    "some",
+    "any",
+    "every",
+    "each",
+    "many",
+    "few",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "much",
+    "such",
+    "very",
+    "even",
+    "only",
+    "still",
+    "well",
+    "back",
+    "way",
+    "ways",
+    "lot",
+    "lots",
+    "interesting",
+    "really",
+    "quite",
+    "hard",
+    "easy",
+    "long",
+    "short",
+    "old",
+    "however",
+    "moreover",
+    "therefore",
+    "thus",
+    "hence",
+    "furthermore",
+    "instead",
+    "indeed",
+    "anyway",
+    "anyhow",
+    "besides",
+    "yes",
+    "no",
+    "ok",
+    "stop",
+    "go",
+    "do",
+    "does",
+    "did",
+    "done",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "been",
+    "being",
+    "have",
+    "has",
+    "had",
+    "having",
+    "can",
+    "could",
+    "should",
+    "would",
+    "will",
+    "may",
+    "might",
+    "must",
+    "found",
+    "followed",
+    "thought",
+    "things",
+    "thing",
     # Days / months — frequently capitalized but not topical entities
-    "monday", "tuesday", "wednesday", "thursday", "friday",
-    "saturday", "sunday",
-    "january", "february", "march", "april", "may", "june", "july",
-    "august", "september", "october", "november", "december",
-    "jan", "feb", "mar", "apr", "jun", "jul",
-    "aug", "sep", "sept", "oct", "nov", "dec",
-    "day", "days", "week", "weeks", "month", "months", "year", "years",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "sept",
+    "oct",
+    "nov",
+    "dec",
+    "day",
+    "days",
+    "week",
+    "weeks",
+    "month",
+    "months",
+    "year",
+    "years",
 }
 TROPE_KEYWORDS = {
-    "open web and ownership": {"rss", "blog", "blogs", "website", "web", "open web", "feed", "feeds", "domain"},
-    "agency over convenience": {"privacy", "control", "convenience", "surveillance", "lock-in", "algorithm"},
-    "tools for thought": {"obsidian", "notes", "knowledge", "workflow", "productivity", "omnifocus"},
+    "open web and ownership": {
+        "rss",
+        "blog",
+        "blogs",
+        "website",
+        "web",
+        "open web",
+        "feed",
+        "feeds",
+        "domain",
+    },
+    "agency over convenience": {
+        "privacy",
+        "control",
+        "convenience",
+        "surveillance",
+        "lock-in",
+        "algorithm",
+    },
+    "tools for thought": {
+        "obsidian",
+        "notes",
+        "knowledge",
+        "workflow",
+        "productivity",
+        "omnifocus",
+    },
     "local community": {"minneapolis", "minnesota", "community", "event", "meetup"},
     "ai as collaborator": {"ai", "agent", "agents", "llm", "claude", "openai", "model"},
     "durable archives": {"archive", "links", "pinboard", "database", "memory"},
@@ -107,7 +296,11 @@ def heuristic_entities(issue: dict[str, Any], limit: int = 40) -> list[str]:
     counts: dict[str, int] = {}
     for match in ENTITY_RE.finditer(text):
         entity = clean_entity(match.group(0))
-        if len(entity) < 3 or entity.lower() in STOP_ENTITIES or entity.lower().startswith("weekly thing"):
+        if (
+            len(entity) < 3
+            or entity.lower() in STOP_ENTITIES
+            or entity.lower().startswith("weekly thing")
+        ):
             continue
         if entity.isupper() and len(entity) <= 2:
             continue
@@ -116,7 +309,9 @@ def heuristic_entities(issue: dict[str, Any], limit: int = 40) -> list[str]:
         domain = str(link.get("domain") or "").removeprefix("www.")
         if domain:
             counts[domain] = counts.get(domain, 0) + 2
-    return [entity for entity, _ in sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:limit]]
+    return [
+        entity for entity, _ in sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:limit]
+    ]
 
 
 def heuristic_tropes(issue: dict[str, Any]) -> list[str]:
@@ -192,12 +387,18 @@ def extract_with_bedrock(issue: dict[str, Any], model: str) -> dict[str, list[st
     match = re.search(r"\{.*\}", text, re.S)
     data = json.loads(match.group(0) if match else text)
     return {
-        "entities": [clean_entity(str(item)) for item in data.get("entities", []) if str(item).strip()][:50],
-        "tropes": [clean_entity(str(item)).lower() for item in data.get("tropes", []) if str(item).strip()][:20],
+        "entities": [
+            clean_entity(str(item)) for item in data.get("entities", []) if str(item).strip()
+        ][:50],
+        "tropes": [
+            clean_entity(str(item)).lower() for item in data.get("tropes", []) if str(item).strip()
+        ][:20],
     }
 
 
-def build_graph(corpus: dict[str, Any], *, use_bedrock: bool = False, model: str = DEFAULT_MODEL) -> dict[str, Any]:
+def build_graph(
+    corpus: dict[str, Any], *, use_bedrock: bool = False, model: str = DEFAULT_MODEL
+) -> dict[str, Any]:
     similarities = similarity_edges(corpus)
     issues: dict[str, dict[str, Any]] = {}
     entity_index: dict[str, list[str]] = {}
@@ -208,8 +409,13 @@ def build_graph(corpus: dict[str, Any], *, use_bedrock: bool = False, model: str
             try:
                 extracted = extract_with_bedrock(issue, model)
             except Exception as exc:
-                print(f"Bedrock extraction failed for #{number}: {type(exc).__name__}; using heuristics")
-                extracted = {"entities": heuristic_entities(issue), "tropes": heuristic_tropes(issue)}
+                print(
+                    f"Bedrock extraction failed for #{number}: {type(exc).__name__}; using heuristics"
+                )
+                extracted = {
+                    "entities": heuristic_entities(issue),
+                    "tropes": heuristic_tropes(issue),
+                }
         else:
             extracted = {"entities": heuristic_entities(issue), "tropes": heuristic_tropes(issue)}
         issues[number] = {

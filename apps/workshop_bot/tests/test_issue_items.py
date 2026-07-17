@@ -18,16 +18,26 @@ from apps.workshop_bot.tools import db, issue_items  # noqa: E402
 
 # ---------------- upsert + list ----------------
 
-class UpsertTests(_DBCase):
 
+class UpsertTests(_DBCase):
     def test_inserts_new_row_and_assigns_position(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="abc", url="https://x", title="A", body_md="hi",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="abc",
+            url="https://x",
+            title="A",
+            body_md="hi",
         )
         b = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="def", url="https://y", title="B", body_md="ho",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="def",
+            url="https://y",
+            title="B",
+            body_md="ho",
         )
         rows = issue_items.list_items(349, section="notable")
         self.assertEqual([r["id"] for r in rows], [a, b])
@@ -35,17 +45,32 @@ class UpsertTests(_DBCase):
 
     def test_upsert_existing_preserves_position(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="abc", url="https://x", title="A", body_md="hi",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="abc",
+            url="https://x",
+            title="A",
+            body_md="hi",
         )
         b = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="def", url="https://y", title="B", body_md="ho",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="def",
+            url="https://y",
+            title="B",
+            body_md="ho",
         )
         # Re-upsert ``a`` with a new title; position must stay 1.
         a2 = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="abc", url="https://x", title="A renamed", body_md="hi",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="abc",
+            url="https://x",
+            title="A renamed",
+            body_md="hi",
         )
         self.assertEqual(a, a2)
         item_a = issue_items.get_item(a)
@@ -59,14 +84,17 @@ class UpsertTests(_DBCase):
         # (the WT348 manual-seed regression) must render without the
         # marker — placement is editorial state, not row content.
         a = issue_items.upsert_item(
-            issue_number=348, section="notable", source="manual",
-            source_id="wt348-n1", url="https://example.com/a",
-            title="A", body_md="Commentary here.\n\n\n<!-- cta:1 -->",
+            issue_number=348,
+            section="notable",
+            source="manual",
+            source_id="wt348-n1",
+            url="https://example.com/a",
+            title="A",
+            body_md="Commentary here.\n\n\n<!-- cta:1 -->",
         )
         from apps.workshop_bot.tools import issue_items_render
-        rendered = issue_items_render._render_notable_item(
-            issue_items.get_item(a)
-        )
+
+        rendered = issue_items_render._render_notable_item(issue_items.get_item(a))
         self.assertNotIn("<!-- cta:", rendered)
         self.assertIn("Commentary here.", rendered)
 
@@ -78,14 +106,22 @@ class UpsertTests(_DBCase):
         # the seed. The exercise harness caught the count doubling from
         # 4/11/15 → 8/22/30.
         seeded = issue_items.upsert_item(
-            issue_number=348, section="notable", source="manual",
-            source_id="wt348-n1", url="https://example.com/a",
-            title="A", body_md="seed body",
+            issue_number=348,
+            section="notable",
+            source="manual",
+            source_id="wt348-n1",
+            url="https://example.com/a",
+            title="A",
+            body_md="seed body",
         )
         refreshed = issue_items.upsert_item(
-            issue_number=348, section="notable", source="pinboard",
-            source_id="hash-of-bookmark", url="https://example.com/a",
-            title="A (refreshed)", body_md="pinboard body",
+            issue_number=348,
+            section="notable",
+            source="pinboard",
+            source_id="hash-of-bookmark",
+            url="https://example.com/a",
+            title="A (refreshed)",
+            body_md="pinboard body",
         )
         # Must be the same row id — no duplicate.
         self.assertEqual(seeded, refreshed)
@@ -101,12 +137,22 @@ class UpsertTests(_DBCase):
 
     def test_upsert_can_move_item_between_sections(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="abc", url="https://x", title="A", body_md="hi",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="abc",
+            url="https://x",
+            title="A",
+            body_md="hi",
         )
         issue_items.upsert_item(
-            issue_number=349, section="brief", source="pinboard",
-            source_id="abc", url="https://x", title="A", body_md="hi",
+            issue_number=349,
+            section="brief",
+            source="pinboard",
+            source_id="abc",
+            url="https://x",
+            title="A",
+            body_md="hi",
         )
         item = issue_items.get_item(a)
         self.assertEqual(item["section"], "brief")
@@ -114,18 +160,27 @@ class UpsertTests(_DBCase):
     def test_section_change_reassigns_position_to_end_of_new_section(self):
         # Seed notable so the moved item must get a fresh position there.
         _a_notable = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="n1", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="n1",
+            body_md="x",
         )
         b_brief = issue_items.upsert_item(
-            issue_number=349, section="brief", source="pinboard",
-            source_id="b1", body_md="x",
+            issue_number=349,
+            section="brief",
+            source="pinboard",
+            source_id="b1",
+            body_md="x",
         )
         # Move b1 into notable; should get position 2 (after a_notable),
         # not its old brief position 1.
         issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="b1", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="b1",
+            body_md="x",
         )
         moved = issue_items.get_item(b_brief)
         self.assertEqual(moved["section"], "notable")
@@ -136,20 +191,28 @@ class UpsertTests(_DBCase):
     def test_rejects_unknown_section_or_source(self):
         with self.assertRaises(ValueError):
             issue_items.upsert_item(
-                issue_number=349, section="bogus", source="pinboard",
+                issue_number=349,
+                section="bogus",
+                source="pinboard",
                 source_id="x",
             )
         with self.assertRaises(ValueError):
             issue_items.upsert_item(
-                issue_number=349, section="notable", source="bogus",
+                issue_number=349,
+                section="notable",
+                source="bogus",
                 source_id="x",
             )
 
     def test_metadata_round_trips(self):
         item_id = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
+            issue_number=349,
+            section="journal",
+            source="microblog",
             source_id="https://www.thingelstad.com/2026/05/12/foo",
-            url="https://x", title="", body_md="body",
+            url="https://x",
+            title="",
+            body_md="body",
             metadata={"label": "Tuesday @ 9:00 PM", "images": ["a.jpg"]},
         )
         item = issue_items.get_item(item_id)
@@ -157,12 +220,18 @@ class UpsertTests(_DBCase):
 
     def test_list_filters_promoted(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p1", body_md="x",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p1",
+            body_md="x",
         )
         b = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p2", body_md="y",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p2",
+            body_md="y",
         )
         issue_items.promote(a, promoted_position="after_notable", promoted_heading="Featured")
         all_journal = issue_items.list_items(349, section="journal")
@@ -175,19 +244,28 @@ class UpsertTests(_DBCase):
 
 # ---------------- editor columns (atom editor, build 1) ----------------
 
-class EditorColumnsTests(_DBCase):
 
+class EditorColumnsTests(_DBCase):
     def _pin(self, source_id, section="brief", title="T", body="b"):
         return issue_items.upsert_item(
-            issue_number=349, section=section, source="pinboard",
-            source_id=source_id, url=f"https://x/{source_id}",
-            title=title, body_md=body,
+            issue_number=349,
+            section=section,
+            source="pinboard",
+            source_id=source_id,
+            url=f"https://x/{source_id}",
+            title=title,
+            body_md=body,
         )
 
     def test_section_override_flips_effective_section(self):
         issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="n1", url="https://n/1", title="N", body_md="n",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="n1",
+            url="https://n/1",
+            title="N",
+            body_md="n",
         )
         b = self._pin("b1")
         issue_items.set_section_override(b, "notable")
@@ -198,8 +276,7 @@ class EditorColumnsTests(_DBCase):
         self.assertEqual(notable[-1]["position"], 2)
         # Clear reverts to the sync-owned section.
         issue_items.set_section_override(b, None)
-        self.assertEqual(
-            [r["id"] for r in issue_items.list_items(349, section="brief")], [b])
+        self.assertEqual([r["id"] for r in issue_items.list_items(349, section="brief")], [b])
 
     def test_override_and_excluded_survive_sync_upsert(self):
         b = self._pin("b1", body="original")
@@ -209,21 +286,30 @@ class EditorColumnsTests(_DBCase):
         issue_items.set_excluded(e, True)
         # Simulate the daily sync refresh: same (issue, source, source_id).
         issue_items.upsert_item(
-            issue_number=349, section="brief", source="pinboard",
-            source_id="b1", url="https://x/b1", title="T", body_md="refreshed",
+            issue_number=349,
+            section="brief",
+            source="pinboard",
+            source_id="b1",
+            url="https://x/b1",
+            title="T",
+            body_md="refreshed",
         )
         issue_items.upsert_item(
-            issue_number=349, section="brief", source="pinboard",
-            source_id="b2", url="https://x/b2", title="T", body_md="refreshed",
+            issue_number=349,
+            section="brief",
+            source="pinboard",
+            source_id="b2",
+            url="https://x/b2",
+            title="T",
+            body_md="refreshed",
         )
         flipped = issue_items.get_item(b)
-        self.assertEqual(flipped["section_override"], "notable")   # survived
-        self.assertEqual(flipped["body_md"], "edited in Studio")   # render uses override
-        self.assertEqual(flipped["source_body_md"], "refreshed")   # sync owns source body
+        self.assertEqual(flipped["section_override"], "notable")  # survived
+        self.assertEqual(flipped["body_md"], "edited in Studio")  # render uses override
+        self.assertEqual(flipped["source_body_md"], "refreshed")  # sync owns source body
         self.assertTrue(flipped["body_overridden"])
-        self.assertEqual(issue_items.get_item(e)["excluded"], 1)   # survived
-        self.assertEqual(
-            [r["id"] for r in issue_items.list_items(349, section="notable")], [b])
+        self.assertEqual(issue_items.get_item(e)["excluded"], 1)  # survived
+        self.assertEqual([r["id"] for r in issue_items.list_items(349, section="notable")], [b])
 
     def test_body_override_can_clear_to_source_body(self):
         b = self._pin("b1", body="original")
@@ -238,8 +324,7 @@ class EditorColumnsTests(_DBCase):
         a = self._pin("b1")
         bb = self._pin("b2")
         issue_items.set_excluded(a, True)
-        self.assertEqual(
-            [r["id"] for r in issue_items.list_items(349, section="brief")], [bb])
+        self.assertEqual([r["id"] for r in issue_items.list_items(349, section="brief")], [bb])
         both = issue_items.list_items(349, section="brief", include_excluded=True)
         self.assertEqual([r["id"] for r in both], [a, bb])
         # A deselected promoted item doesn't render either.
@@ -253,8 +338,7 @@ class EditorColumnsTests(_DBCase):
         issue_items.set_excluded(c, True)
         # Excluded row is not part of the permutation.
         issue_items.reorder(349, "brief", [bb, a])
-        self.assertEqual(
-            [r["id"] for r in issue_items.list_items(349, section="brief")], [bb, a])
+        self.assertEqual([r["id"] for r in issue_items.list_items(349, section="brief")], [bb, a])
         with self.assertRaises(issue_items.ReorderError):
             issue_items.reorder(349, "brief", [bb, a, c])
 
@@ -272,15 +356,21 @@ class EditorColumnsTests(_DBCase):
 
 # ---------------- reorder ----------------
 
-class ReorderTests(_DBCase):
 
+class ReorderTests(_DBCase):
     def _seed_three(self):
         ids = []
         for sid in ("a", "b", "c"):
-            ids.append(issue_items.upsert_item(
-                issue_number=349, section="brief", source="pinboard",
-                source_id=sid, title=sid.upper(), body_md=f"body {sid}",
-            ))
+            ids.append(
+                issue_items.upsert_item(
+                    issue_number=349,
+                    section="brief",
+                    source="pinboard",
+                    source_id=sid,
+                    title=sid.upper(),
+                    body_md=f"body {sid}",
+                )
+            )
         return ids
 
     def test_simple_reverse(self):
@@ -311,16 +401,25 @@ class ReorderTests(_DBCase):
     def test_reorder_ignores_promoted_items(self):
         # Promoted items aren't in the per-section reorder list.
         a = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p1", body_md="x",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p1",
+            body_md="x",
         )
         b = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p2", body_md="y",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p2",
+            body_md="y",
         )
         c = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p3", body_md="z",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p3",
+            body_md="z",
         )
         issue_items.promote(b, promoted_position="after_notable", promoted_heading="Feature")
         issue_items.reorder(349, "journal", [c, a])  # only the non-promoted ids
@@ -329,12 +428,18 @@ class ReorderTests(_DBCase):
 
     def test_reorder_rejects_promoted_id_in_order(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p1", body_md="x",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p1",
+            body_md="x",
         )
         b = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p2", body_md="y",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p2",
+            body_md="y",
         )
         issue_items.promote(b, promoted_position="after_notable", promoted_heading="Feature")
         with self.assertRaises(issue_items.ReorderError):
@@ -343,12 +448,15 @@ class ReorderTests(_DBCase):
 
 # ---------------- promotions ----------------
 
-class PromotionTests(_DBCase):
 
+class PromotionTests(_DBCase):
     def test_promote_unpromote_roundtrip(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p1", body_md="x",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p1",
+            body_md="x",
         )
         issue_items.promote(a, promoted_position="after_journal", promoted_heading="Featured")
         item = issue_items.get_item(a)
@@ -362,28 +470,40 @@ class PromotionTests(_DBCase):
 
     def test_rejects_bad_position(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p1", body_md="x",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p1",
+            body_md="x",
         )
         with self.assertRaises(ValueError):
             issue_items.promote(a, promoted_position="bogus", promoted_heading="Featured")
 
     def test_rejects_empty_heading(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p1", body_md="x",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p1",
+            body_md="x",
         )
         with self.assertRaises(ValueError):
             issue_items.promote(a, promoted_position="after_journal", promoted_heading="   ")
 
     def test_clear_promotions(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p1", body_md="x",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p1",
+            body_md="x",
         )
         b = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="p2", body_md="y",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="p2",
+            body_md="y",
         )
         issue_items.promote(a, promoted_position="after_notable", promoted_heading="A")
         issue_items.promote(b, promoted_position="after_brief", promoted_heading="B")
@@ -393,25 +513,36 @@ class PromotionTests(_DBCase):
 
 # ---------------- compact + clear ----------------
 
-class CompactClearTests(_DBCase):
 
+class CompactClearTests(_DBCase):
     def test_compact_after_simulated_delete(self):
         ids = []
         for sid in ("a", "b", "c"):
-            ids.append(issue_items.upsert_item(
-                issue_number=349, section="brief", source="pinboard",
-                source_id=sid, body_md=sid,
-            ))
+            ids.append(
+                issue_items.upsert_item(
+                    issue_number=349,
+                    section="brief",
+                    source="pinboard",
+                    source_id=sid,
+                    body_md=sid,
+                )
+            )
         # Simulate a delete by clearing the issue and re-creating only two.
         # (compact_positions is the safety net for whatever path leaves gaps.)
         issue_items.clear_issue(349)
         a = issue_items.upsert_item(
-            issue_number=349, section="brief", source="pinboard",
-            source_id="a", body_md="a",
+            issue_number=349,
+            section="brief",
+            source="pinboard",
+            source_id="a",
+            body_md="a",
         )
         b = issue_items.upsert_item(
-            issue_number=349, section="brief", source="pinboard",
-            source_id="b", body_md="b",
+            issue_number=349,
+            section="brief",
+            source="pinboard",
+            source_id="b",
+            body_md="b",
         )
         # Manually create a gap, then compact.
         with db.connect() as conn:
@@ -424,28 +555,40 @@ class CompactClearTests(_DBCase):
 
 # ---------------- editorial comments ----------------
 
-class EditorialCommentTests(_DBCase):
 
+class EditorialCommentTests(_DBCase):
     def test_item_scope_assigns_handle_with_section_letter(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="abc", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="abc",
+            body_md="x",
         )
         c = issue_items.write_comment(
-            issue_number=349, scope="item", item_id=a,
-            body_md="Lead with this one.", verdict="suggestion",
+            issue_number=349,
+            scope="item",
+            item_id=a,
+            body_md="Lead with this one.",
+            verdict="suggestion",
         )
         self.assertEqual(c["handle"], "E349-N1")
         self.assertEqual(c["section"], "notable")  # derived from item
 
     def test_handle_ordinals_per_letter(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="a", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="a",
+            body_md="x",
         )
         b = issue_items.upsert_item(
-            issue_number=349, section="journal", source="microblog",
-            source_id="b", body_md="x",
+            issue_number=349,
+            section="journal",
+            source="microblog",
+            source_id="b",
+            body_md="x",
         )
         c1 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="…")
         c2 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="…")
@@ -460,22 +603,32 @@ class EditorialCommentTests(_DBCase):
 
     def test_handle_uniqueness_constraint(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="a", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="a",
+            body_md="x",
         )
         c1 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="…")
         # Manually inserting a duplicate handle blows up — UNIQUE index guard.
         import sqlite3
+
         with self.assertRaises(sqlite3.IntegrityError):
             issue_items.write_comment(
-                issue_number=349, scope="item", item_id=a, body_md="…",
+                issue_number=349,
+                scope="item",
+                item_id=a,
+                body_md="…",
                 handle=c1["handle"],
             )
 
     def test_supersede_chains(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="a", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="a",
+            body_md="x",
         )
         c1 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="v1")
         c2 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="v2")
@@ -489,12 +642,18 @@ class EditorialCommentTests(_DBCase):
 
     def test_supersede_all_open(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="a", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="a",
+            body_md="x",
         )
         b = issue_items.upsert_item(
-            issue_number=349, section="brief", source="pinboard",
-            source_id="b", body_md="y",
+            issue_number=349,
+            section="brief",
+            source="pinboard",
+            source_id="b",
+            body_md="y",
         )
         _c1 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="…")
         _c2 = issue_items.write_comment(issue_number=349, scope="item", item_id=b, body_md="…")
@@ -508,8 +667,11 @@ class EditorialCommentTests(_DBCase):
 
     def test_close_all_open_comments_drops_them_from_open_set(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="a", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="a",
+            body_md="x",
         )
         c1 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="v1")
         c2 = issue_items.write_comment(issue_number=349, scope="hygiene", body_md="v2")
@@ -532,8 +694,11 @@ class EditorialCommentTests(_DBCase):
         # Calling close twice in a row should be a clean no-op the
         # second time (the PASS path runs every update-draft).
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="a", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="a",
+            body_md="x",
         )
         issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="v")
         self.assertEqual(issue_items.close_all_open_comments(349), 1)
@@ -544,8 +709,11 @@ class EditorialCommentTests(_DBCase):
         # already filtered out of list_open_comments — close shouldn't
         # re-stamp its closed_at.
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="a", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="a",
+            body_md="x",
         )
         c1 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="v1")
         c2 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="v2")
@@ -559,12 +727,18 @@ class EditorialCommentTests(_DBCase):
 
     def test_handles_never_collide_across_issues(self):
         a349 = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="a", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="a",
+            body_md="x",
         )
         a350 = issue_items.upsert_item(
-            issue_number=350, section="notable", source="pinboard",
-            source_id="a", body_md="x",
+            issue_number=350,
+            section="notable",
+            source="pinboard",
+            source_id="a",
+            body_md="x",
         )
         c349 = issue_items.write_comment(issue_number=349, scope="item", item_id=a349, body_md="…")
         c350 = issue_items.write_comment(issue_number=350, scope="item", item_id=a350, body_md="…")
@@ -578,12 +752,16 @@ class EditorialCommentTests(_DBCase):
     def test_section_scope_requires_section(self):
         with self.assertRaises(ValueError):
             issue_items.write_comment(
-                issue_number=349, scope="section", body_md="x",
+                issue_number=349,
+                scope="section",
+                body_md="x",
             )
 
     def test_section_scope_uses_section_letter(self):
         c = issue_items.write_comment(
-            issue_number=349, scope="section", section="brief",
+            issue_number=349,
+            scope="section",
+            section="brief",
             body_md="Brief is leaning too tech-heavy.",
         )
         self.assertEqual(c["handle"], "E349-B1")

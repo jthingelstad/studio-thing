@@ -23,12 +23,13 @@ from apps.workshop_bot.tools.discord import interaction  # noqa: E402
 
 
 class OptionCardsHtmlTests(unittest.TestCase):
-
     def test_basic_page(self):
         page = render.option_cards_html(
             "WT349 — subject options",
-            ["WT349 — Mythos and the maintenance frontier",
-             "WT349 — When agents start carrying the cost"],
+            [
+                "WT349 — Mythos and the maintenance frontier",
+                "WT349 — When agents start carrying the cost",
+            ],
             subtitle="2 candidates",
         )
         self.assertTrue(page.startswith("<!DOCTYPE html>"))
@@ -42,13 +43,14 @@ class OptionCardsHtmlTests(unittest.TestCase):
         self.assertIn("WT349 — Mythos and the maintenance frontier", page)
         self.assertIn("WT349 — When agents start carrying the cost", page)
         # Copy buttons.
-        self.assertEqual(page.count("class=\"card-copy\""), 2)
+        self.assertEqual(page.count('class="card-copy"'), 2)
         # Copy script.
         self.assertIn("navigator.clipboard", page)
 
     def test_escapes_option_text(self):
         page = render.option_cards_html(
-            "Picker", ["<script>alert(1)</script>"],
+            "Picker",
+            ["<script>alert(1)</script>"],
         )
         self.assertNotIn("<script>alert(1)</script>", page)
         self.assertIn("&lt;script&gt;", page)
@@ -63,7 +65,9 @@ class OptionCardsHtmlTests(unittest.TestCase):
 
     def test_hint_renders(self):
         page = render.option_cards_html(
-            "Picker", ["a"], hint="Pick the one that fits the arc.",
+            "Picker",
+            ["a"],
+            hint="Pick the one that fits the arc.",
         )
         self.assertIn(">Pick the one that fits the arc.<", page)
 
@@ -84,7 +88,6 @@ class _DBCase(unittest.TestCase):
 
 
 class RefreshLoopHtmlIntegrationTests(_DBCase):
-
     def _bot_and_channel(self, reply: str):
         bot = MagicMock()
         bot.user = object()
@@ -98,24 +101,35 @@ class RefreshLoopHtmlIntegrationTests(_DBCase):
         # upload returns a fake URL we can assert was woven into the
         # prompt label.
         bot, channel = self._bot_and_channel(reply="1. Alpha\n2. Beta\n")
+
         def parser(text):
             return [line.split(".", 1)[1].strip() for line in text.splitlines() if line.strip()]
-        with patch.object(
-            render, "render_and_upload_option_cards",
-            return_value="https://files.thingelstad.com/weekly-thing/349/subject-options.html",
-        ) as mock_upload, patch.object(
-            interaction, "await_choice", AsyncMock(return_value=0),
-        ) as mock_choice:
-            picked = asyncio.run(_llm_job.refresh_loop(
-                bot, channel,
-                base_msg="prompt body",
-                parser=parser,
-                prompt_label="📰 5 subject options for WT349 — react to pick:",
-                trigger="compose-meta:subject",
-                cards_issue=349,
-                cards_filename="subject-options",
-                cards_title="WT349 — subject options",
-            ))
+
+        with (
+            patch.object(
+                render,
+                "render_and_upload_option_cards",
+                return_value="https://files.thingelstad.com/weekly-thing/349/subject-options.html",
+            ) as mock_upload,
+            patch.object(
+                interaction,
+                "await_choice",
+                AsyncMock(return_value=0),
+            ) as mock_choice,
+        ):
+            picked = asyncio.run(
+                _llm_job.refresh_loop(
+                    bot,
+                    channel,
+                    base_msg="prompt body",
+                    parser=parser,
+                    prompt_label="📰 5 subject options for WT349 — react to pick:",
+                    trigger="compose-meta:subject",
+                    cards_issue=349,
+                    cards_filename="subject-options",
+                    cards_title="WT349 — subject options",
+                )
+            )
         self.assertEqual(picked, "Alpha")
         # The upload happened with the parsed options.
         mock_upload.assert_called_once()
@@ -133,21 +147,32 @@ class RefreshLoopHtmlIntegrationTests(_DBCase):
 
     def test_cards_not_uploaded_when_kwargs_missing(self):
         bot, channel = self._bot_and_channel(reply="1. Alpha\n2. Beta\n")
+
         def parser(text):
             return ["Alpha", "Beta"]
-        with patch.object(
-            render, "render_and_upload_option_cards",
-            return_value="https://x/y.html",
-        ) as mock_upload, patch.object(
-            interaction, "await_choice", AsyncMock(return_value=0),
-        ) as mock_choice:
-            picked = asyncio.run(_llm_job.refresh_loop(
-                bot, channel,
-                base_msg="prompt body",
-                parser=parser,
-                prompt_label="React to pick:",
-                trigger="test",
-            ))
+
+        with (
+            patch.object(
+                render,
+                "render_and_upload_option_cards",
+                return_value="https://x/y.html",
+            ) as mock_upload,
+            patch.object(
+                interaction,
+                "await_choice",
+                AsyncMock(return_value=0),
+            ) as mock_choice,
+        ):
+            picked = asyncio.run(
+                _llm_job.refresh_loop(
+                    bot,
+                    channel,
+                    base_msg="prompt body",
+                    parser=parser,
+                    prompt_label="React to pick:",
+                    trigger="test",
+                )
+            )
         self.assertEqual(picked, "Alpha")
         mock_upload.assert_not_called()
         choice_kwargs = mock_choice.call_args.kwargs
@@ -155,24 +180,35 @@ class RefreshLoopHtmlIntegrationTests(_DBCase):
 
     def test_failed_upload_does_not_break_pick(self):
         bot, channel = self._bot_and_channel(reply="1. Alpha\n")
+
         def parser(text):
             return ["Alpha"]
-        with patch.object(
-            render, "render_and_upload_option_cards",
-            return_value=None,
-        ), patch.object(
-            interaction, "await_choice", AsyncMock(return_value=0),
-        ) as mock_choice:
-            picked = asyncio.run(_llm_job.refresh_loop(
-                bot, channel,
-                base_msg="prompt",
-                parser=parser,
-                prompt_label="React:",
-                trigger="test",
-                cards_issue=349,
-                cards_filename="x",
-                cards_title="X",
-            ))
+
+        with (
+            patch.object(
+                render,
+                "render_and_upload_option_cards",
+                return_value=None,
+            ),
+            patch.object(
+                interaction,
+                "await_choice",
+                AsyncMock(return_value=0),
+            ) as mock_choice,
+        ):
+            picked = asyncio.run(
+                _llm_job.refresh_loop(
+                    bot,
+                    channel,
+                    base_msg="prompt",
+                    parser=parser,
+                    prompt_label="React:",
+                    trigger="test",
+                    cards_issue=349,
+                    cards_filename="x",
+                    cards_title="X",
+                )
+            )
         self.assertEqual(picked, "Alpha")
         # Upload failed → no URL appended; pick still works.
         choice_kwargs = mock_choice.call_args.kwargs

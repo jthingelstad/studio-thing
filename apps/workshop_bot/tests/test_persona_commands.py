@@ -55,6 +55,7 @@ def _all_command_names(group) -> list[str]:
 
 # ── /eddy ─────────────────────────────────────────────────────────────
 
+
 class EddyTreeTests(unittest.TestCase):
     def test_register_attaches_eddy_group(self):
         tree = commands_module.register_eddy_commands(_stub_bot())
@@ -82,8 +83,17 @@ class EddyTreeTests(unittest.TestCase):
         tree = commands_module.register_eddy_commands(_stub_bot())
         issue = _subgroup(_top_group(tree, "eddy"), "issue")
         names = _cmd_names(issue)
-        for moved in ("start", "update", "status", "build", "built",
-                      "reopen", "publish", "put-to-bed", "reset"):
+        for moved in (
+            "start",
+            "update",
+            "status",
+            "build",
+            "built",
+            "reopen",
+            "publish",
+            "put-to-bed",
+            "reset",
+        ):
             self.assertNotIn(moved, names, msg=f"production verb '{moved}' still on /eddy issue")
 
     def test_eddy_top_level_status(self):
@@ -103,6 +113,7 @@ class EddyTreeTests(unittest.TestCase):
 
 
 # ── retired surfaces ──────────────────────────────────────────────────
+
 
 class RetiredSurfacesTests(unittest.TestCase):
     def test_no_workshop_register_fn(self):

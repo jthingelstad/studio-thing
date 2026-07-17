@@ -102,7 +102,11 @@ def script_status_path() -> Path:
 
 def read_script_status(path: Path = SCRIPT_STATUS_PATH) -> dict[str, Any]:
     if not path.exists():
-        return {"schema_version": SCRIPT_STATUS_SCHEMA_VERSION, "validator_version": "", "issues": {}}
+        return {
+            "schema_version": SCRIPT_STATUS_SCHEMA_VERSION,
+            "validator_version": "",
+            "issues": {},
+        }
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise RuntimeError(f"{path} must contain a JSON object")
@@ -117,8 +121,7 @@ def write_script_status(data: dict[str, Any], path: Path = SCRIPT_STATUS_PATH) -
     path.parent.mkdir(parents=True, exist_ok=True)
     issues = data.get("issues") or {}
     ordered_issues = {
-        key: issues[key]
-        for key in sorted((str(key) for key in issues.keys()), key=issue_sort_key)
+        key: issues[key] for key in sorted((str(key) for key in issues.keys()), key=issue_sort_key)
     }
     payload = {
         "schema_version": data.get("schema_version", SCRIPT_STATUS_SCHEMA_VERSION),
@@ -130,7 +133,12 @@ def write_script_status(data: dict[str, Any], path: Path = SCRIPT_STATUS_PATH) -
 
 def read_script_review(path: Path = SCRIPT_REVIEW_PATH) -> dict[str, Any]:
     if not path.exists():
-        return {"schema_version": SCRIPT_STATUS_SCHEMA_VERSION, "reviewer_version": "", "model": "", "issues": {}}
+        return {
+            "schema_version": SCRIPT_STATUS_SCHEMA_VERSION,
+            "reviewer_version": "",
+            "model": "",
+            "issues": {},
+        }
     data = json.loads(path.read_text(encoding="utf-8"))
     issues = data.get("issues") or {}
     data["issues"] = {str(key): value for key, value in issues.items()}
@@ -141,8 +149,7 @@ def write_script_review(data: dict[str, Any], path: Path = SCRIPT_REVIEW_PATH) -
     path.parent.mkdir(parents=True, exist_ok=True)
     issues = data.get("issues") or {}
     ordered_issues = {
-        key: issues[key]
-        for key in sorted((str(key) for key in issues.keys()), key=issue_sort_key)
+        key: issues[key] for key in sorted((str(key) for key in issues.keys()), key=issue_sort_key)
     }
     payload = {
         "schema_version": data.get("schema_version", SCRIPT_STATUS_SCHEMA_VERSION),

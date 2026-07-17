@@ -18,7 +18,9 @@ class IdentityGateTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(resp.status, 403)
 
     async def test_allowed_login_passes(self):
-        req = make_mocked_request("GET", "/", headers={server.IDENTITY_HEADER: "jthingelstad@github"})
+        req = make_mocked_request(
+            "GET", "/", headers={server.IDENTITY_HEADER: "jthingelstad@github"}
+        )
         resp = await server._identity_mw(req, _ok)
         self.assertEqual(resp.status, 200)
 

@@ -53,7 +53,7 @@ async def run(
 ) -> "_base.JobResult":
     try:
         n = int(issue_number)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return _base.JobResult(False, f"❌ `{issue_number!r}` isn't a valid issue number.")
     if n < 1:
         return _base.JobResult(False, "❌ issue number must be positive.")
@@ -88,6 +88,12 @@ async def run(
     return _base.JobResult(
         True,
         summary,
-        data={"issue_number": n, "subject": subject, "publish_date": pub_date,
-              "word_count": word_count, "sections": sections, "posted": bool(posted)},
+        data={
+            "issue_number": n,
+            "subject": subject,
+            "publish_date": pub_date,
+            "word_count": word_count,
+            "sections": sections,
+            "posted": bool(posted),
+        },
     )

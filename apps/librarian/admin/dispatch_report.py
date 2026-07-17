@@ -134,32 +134,36 @@ def load_dispatch_content(row: dict[str, Any]) -> tuple[str, bool]:
 
 def render_report(rows: list[dict[str, Any]], *, days: int) -> str:
     counts = Counter(str(row.get("status") or "unknown") for row in rows)
-    status_pills = " ".join(f"<span class='pill'>{h(k)} {v}</span>" for k, v in counts.most_common())
+    status_pills = " ".join(
+        f"<span class='pill'>{h(k)} {v}</span>" for k, v in counts.most_common()
+    )
     cards = []
     for row in rows:
         content, content_is_html = load_dispatch_content(row)
-        test_badge = " · <span class='pill'>template test</span>" if row.get("template_test") else ""
+        test_badge = (
+            " · <span class='pill'>template test</span>" if row.get("template_test") else ""
+        )
         cards.append(f"""
-        <article class="card status-{h(row.get('status'))}">
+        <article class="card status-{h(row.get("status"))}">
           <header>
-            <span class="status">{h(row.get('status'))}</span>
-            <h2>{h(row.get('title') or row.get('topic') or 'Untitled Dispatch')}</h2>
-            <p class="meta">reader·{h(str(row.get('subscriber_hash') or '')[:8])} · {h(local_time(row.get('created_at')))} · {h(row.get('source_count') or 0)} sources{test_badge}</p>
+            <span class="status">{h(row.get("status"))}</span>
+            <h2>{h(row.get("title") or row.get("topic") or "Untitled Dispatch")}</h2>
+            <p class="meta">reader·{h(str(row.get("subscriber_hash") or "")[:8])} · {h(local_time(row.get("created_at")))} · {h(row.get("source_count") or 0)} sources{test_badge}</p>
           </header>
           <dl>
-            <dt>Prompt</dt><dd>{h(compact(row.get('prompt'), 800))}</dd>
-            <dt>Direction</dt><dd>{h(compact(row.get('direction'), 800))}</dd>
-            <dt>Subject</dt><dd>{h(row.get('subject'))}</dd>
-            <dt>Runtime</dt><dd>{h(row.get('model'))} · in {h(row.get('input_tokens') or 0)} / out {h(row.get('output_tokens') or 0)} tokens</dd>
-            {f"<dt>Error</dt><dd class='error'>{h(row.get('error'))}</dd>" if row.get('error') else ""}
+            <dt>Prompt</dt><dd>{h(compact(row.get("prompt"), 800))}</dd>
+            <dt>Direction</dt><dd>{h(compact(row.get("direction"), 800))}</dd>
+            <dt>Subject</dt><dd>{h(row.get("subject"))}</dd>
+            <dt>Runtime</dt><dd>{h(row.get("model"))} · in {h(row.get("input_tokens") or 0)} / out {h(row.get("output_tokens") or 0)} tokens</dd>
+            {f"<dt>Error</dt><dd class='error'>{h(row.get('error'))}</dd>" if row.get("error") else ""}
           </dl>
           <details>
             <summary>Sources</summary>
-            {render_sources(row.get('sources') or [])}
+            {render_sources(row.get("sources") or [])}
           </details>
           <details>
             <summary>Stored content</summary>
-            <div class="content">{content if content_is_html else '<pre>' + h(content) + '</pre>'}</div>
+            <div class="content">{content if content_is_html else "<pre>" + h(content) + "</pre>"}</div>
           </details>
         </article>
         """)
@@ -196,7 +200,7 @@ def render_report(rows: list[dict[str, Any]], *, days: int) -> str:
     <h1>Thingy Dispatch Report</h1>
     <p class="muted">Generated {h(generated)} · last {days} days · {len(rows)} Dispatches</p>
     <div class="summary">{status_pills}</div>
-    {''.join(cards) if cards else '<p>No Dispatches found.</p>'}
+    {"".join(cards) if cards else "<p>No Dispatches found.</p>"}
   </main>
 </body>
 </html>"""
@@ -212,7 +216,11 @@ def main() -> None:
     args = parser.parse_args()
 
     load_dotenv(REPO_ROOT / ".env")
-    table_name = args.table or os.environ.get("TABLE_NAME") or stack_resource("LibrarianTable", stack_name=args.stack)
+    table_name = (
+        args.table
+        or os.environ.get("TABLE_NAME")
+        or stack_resource("LibrarianTable", stack_name=args.stack)
+    )
     rows = load_dispatches(table_name, days=args.days, limit=args.limit)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(render_report(rows, days=args.days), encoding="utf-8")

@@ -52,6 +52,7 @@ def _api_key() -> str:
 
 # --- date parsing / windowing ---
 
+
 def _parse_dt(raw: Any) -> datetime | None:
     if not raw:
         return None
@@ -112,9 +113,7 @@ def _categories(props: dict) -> list[str]:
 # --- HTML → markdown-ish, only for {html:…}-content posts (rare) ---
 
 _TAG_RE = re.compile(r"<[^>]+>")
-_A_RE = re.compile(
-    r'<a\b[^>]*?href=["\']([^"\']*)["\'][^>]*>(.*?)</a>', re.DOTALL | re.IGNORECASE
-)
+_A_RE = re.compile(r'<a\b[^>]*?href=["\']([^"\']*)["\'][^>]*>(.*?)</a>', re.DOTALL | re.IGNORECASE)
 _BLOCK_END_RE = re.compile(r"</(p|div|li|blockquote|h[1-6]|ul|ol)>", re.IGNORECASE)
 _BR_RE = re.compile(r"<br\s*/?>", re.IGNORECASE)
 
@@ -178,6 +177,7 @@ def _content_to_markdown(content: Any) -> str:
 
 # --- the source query ---
 
+
 def _source_posts() -> list[dict[str, Any]]:
     """All posts from the Micropub ``q=source`` query, as
     ``[{url, title, published, content_md}]``. Skips drafts. Raises on a
@@ -204,13 +204,15 @@ def _source_posts() -> list[dict[str, Any]]:
         status = _first(props, "post-status")
         if status and str(status).lower() not in ("published", "publish"):
             continue  # drafts etc.
-        out.append({
-            "url": str(_first(props, "url") or "").strip(),
-            "title": str(_first(props, "name") or "").strip(),
-            "published": str(_first(props, "published", "publish-date") or ""),
-            "content_md": _content_to_markdown(props.get("content")),
-            "categories": _categories(props),
-        })
+        out.append(
+            {
+                "url": str(_first(props, "url") or "").strip(),
+                "title": str(_first(props, "name") or "").strip(),
+                "published": str(_first(props, "published", "publish-date") or ""),
+                "content_md": _content_to_markdown(props.get("content")),
+                "categories": _categories(props),
+            }
+        )
     logger.info("microblog: q=source -> %d published posts", len(out))
     return out
 
@@ -302,9 +304,11 @@ def _splice_alt_into_img(tag: str, alt: str) -> str:
     safe = alt.replace('"', "")
     alt_m = _IMG_ALT_RE.search(tag)
     if alt_m is not None:
-        return tag[: alt_m.start()] + f'alt="{safe}"' + tag[alt_m.end():]
+        return tag[: alt_m.start()] + f'alt="{safe}"' + tag[alt_m.end() :]
     return _IMG_SRC_ATTR_RE.sub(
-        lambda sm: f'{sm.group(1)} alt="{safe}"', tag, count=1,
+        lambda sm: f'{sm.group(1)} alt="{safe}"',
+        tag,
+        count=1,
     )
 
 
@@ -371,15 +375,20 @@ def fill_missing_alts(
         post_filled: list[dict[str, Any]] = []
         for start, end, kind, src in reversed(targets):
             try:
-                alt = vision_call(
-                    image_url=src,
-                    context=content_md,
-                    caption=(post.get("title") or "").strip() or None,
-                ) or ""
+                alt = (
+                    vision_call(
+                        image_url=src,
+                        context=content_md,
+                        caption=(post.get("title") or "").strip() or None,
+                    )
+                    or ""
+                )
             except Exception as exc:  # noqa: BLE001
                 logger.warning(
                     "microblog: alt vision call failed for %s in %s: %s",
-                    src, url, exc,
+                    src,
+                    url,
+                    exc,
                 )
                 alt = ""
             if not alt:
@@ -391,12 +400,14 @@ def fill_missing_alts(
             else:  # "md" — ![](url) → ![alt](url)
                 safe = alt.replace("]", "").replace("[", "")
                 new_md = new_md[:start] + f"![{safe}]({src})" + new_md[end:]
-            post_filled.append({
-                "post_url": url,
-                "post_title": (post.get("title") or "").strip(),
-                "image_src": src,
-                "alt": alt,
-            })
+            post_filled.append(
+                {
+                    "post_url": url,
+                    "post_title": (post.get("title") or "").strip(),
+                    "image_src": src,
+                    "alt": alt,
+                }
+            )
         if not post_filled:
             continue
         if write_back:
@@ -406,7 +417,9 @@ def fill_missing_alts(
                 logger.warning(
                     "microblog: write-back failed for %s — %d alt(s) "
                     "generated but not persisted; will retry next sync: %s",
-                    url, len(post_filled), exc,
+                    url,
+                    len(post_filled),
+                    exc,
                 )
                 # In-memory copy stays as it was upstream so the current
                 # render doesn't carry alts that aren't actually on the

@@ -36,8 +36,10 @@ LOGIN = "jthingelstad@github"
 H = {server.IDENTITY_HEADER: LOGIN}
 
 _PASSAGE = {
-    "issue_number": 303, "subject": "The metering question",
-    "publish_date": "2020-05-10", "section": "Notable",
+    "issue_number": 303,
+    "subject": "The metering question",
+    "publish_date": "2020-05-10",
+    "section": "Notable",
     "text": "Jamie's earlier take on metering and usage-based pricing.",
 }
 
@@ -57,9 +59,15 @@ class _DBCase(unittest.TestCase):
         self._tmp.cleanup()
 
 
-def _run(*, text="Some new draft about metering.", label="seed: metering",
-         exclude_issue=None, reply="You've circled this in WT303 — same lean?",
-         passages=None, error=None):
+def _run(
+    *,
+    text="Some new draft about metering.",
+    label="seed: metering",
+    exclude_issue=None,
+    reply="You've circled this in WT303 — same lean?",
+    passages=None,
+    error=None,
+):
     """Run the job with retrieval + Eddy stubbed. Returns (res, ctx, bot, fetch)."""
     ctx = _base.JobContext()
     ctx.post = AsyncMock(return_value=True)
@@ -67,11 +75,13 @@ def _run(*, text="Some new draft about metering.", label="seed: metering",
     bot.core = AsyncMock(return_value=(reply, {"iterations": 1}))
     resolved = _llm_job.ResolvedBot(bot, "chan", None)
     fetch = MagicMock(return_value=(passages if passages is not None else [_PASSAGE], error))
-    with patch.object(continuity_check._llm_job, "resolve_bot_and_channel",
-                      return_value=resolved), \
-         patch.object(continuity_check.archive_context, "fetch_archive_context", fetch):
-        res = asyncio.run(continuity_check.run_for_text(
-            ctx, text=text, label=label, exclude_issue=exclude_issue))
+    with (
+        patch.object(continuity_check._llm_job, "resolve_bot_and_channel", return_value=resolved),
+        patch.object(continuity_check.archive_context, "fetch_archive_context", fetch),
+    ):
+        res = asyncio.run(
+            continuity_check.run_for_text(ctx, text=text, label=label, exclude_issue=exclude_issue)
+        )
     return res, ctx, bot, fetch
 
 
@@ -117,17 +127,18 @@ class ContinuityCheckJobTests(_DBCase):
     def test_records_agent_run(self):
         _run()
         runs = db.recent_agent_runs(limit=3)
-        self.assertTrue(any(r["trigger"] == "continuity-check" and r["agent_name"] == "eddy"
-                            for r in runs))
+        self.assertTrue(
+            any(r["trigger"] == "continuity-check" and r["agent_name"] == "eddy" for r in runs)
+        )
 
     def test_bot_unavailable_skips_cleanly(self):
         ctx = _base.JobContext()
         ctx.post = AsyncMock(return_value=True)
         resolved = _llm_job.ResolvedBot(None, None, "eddy unavailable")
-        with patch.object(continuity_check._llm_job, "resolve_bot_and_channel",
-                          return_value=resolved):
-            res = asyncio.run(continuity_check.run_for_text(
-                ctx, text="something", label="seed: x"))
+        with patch.object(
+            continuity_check._llm_job, "resolve_bot_and_channel", return_value=resolved
+        ):
+            res = asyncio.run(continuity_check.run_for_text(ctx, text="something", label="seed: x"))
         self.assertTrue(res.ok)
         self.assertIn("skipped", res.message)
         ctx.post.assert_not_awaited()
@@ -176,15 +187,25 @@ class ContinuityCheckWebTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_production_continuity_route_runs_job_for_intro(self):
         c = await self._client()
-        db.plan_issue_window(issue_number=360, pub_date="2026-06-27",
-                             end_date="2026-06-26", start_date="2026-06-19", day_count=7)
+        db.plan_issue_window(
+            issue_number=360,
+            pub_date="2026-06-27",
+            end_date="2026-06-26",
+            start_date="2026-06-19",
+            day_count=7,
+        )
         db.set_issue_phase(360, "build")
-        with patch.object(routes.content_store, "read_issue",
-                          return_value="This week's intro about metering."), \
-             patch.object(continuity_check, "run_for_text",
-                          AsyncMock(return_value=_base.JobResult(True, "ok"))) as job:
-            r = await c.post("/productions/WT360/continuity", headers=H,
-                             allow_redirects=False)
+        with (
+            patch.object(
+                routes.content_store, "read_issue", return_value="This week's intro about metering."
+            ),
+            patch.object(
+                continuity_check,
+                "run_for_text",
+                AsyncMock(return_value=_base.JobResult(True, "ok")),
+            ) as job,
+        ):
+            r = await c.post("/productions/WT360/continuity", headers=H, allow_redirects=False)
         self.assertEqual(r.status, 302)
         self.assertEqual(r.headers["Location"], "/productions/WT360")
         job.assert_awaited_once()
@@ -194,11 +215,18 @@ class ContinuityCheckWebTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_production_continuity_foreign_origin_is_403(self):
         c = await self._client()
-        db.plan_issue_window(issue_number=360, pub_date="2026-06-27",
-                             end_date="2026-06-26", start_date="2026-06-19", day_count=7)
-        r = await c.post("/productions/WT360/continuity",
-                         headers={**H, "Origin": "https://evil.example"},
-                         allow_redirects=False)
+        db.plan_issue_window(
+            issue_number=360,
+            pub_date="2026-06-27",
+            end_date="2026-06-26",
+            start_date="2026-06-19",
+            day_count=7,
+        )
+        r = await c.post(
+            "/productions/WT360/continuity",
+            headers={**H, "Origin": "https://evil.example"},
+            allow_redirects=False,
+        )
         self.assertEqual(r.status, 403)
 
 

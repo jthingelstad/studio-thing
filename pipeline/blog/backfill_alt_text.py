@@ -77,6 +77,7 @@ _FM_RE = re.compile(r"\A---\n(?P<fm>.*?)\n---\n(?P<body>.*)\Z", re.DOTALL)
 
 # ── local store ───────────────────────────────────────────────────────
 
+
 def _read_blog_post(path: Path) -> tuple[dict[str, Any], str, str]:
     """Return ``(metadata, body, front_matter_block)``. ``front_matter_block`` is
     the verbatim ``---\\n…\\n---\\n`` prefix so a rewrite stays byte-identical."""
@@ -133,9 +134,7 @@ def _scan_post(path: Path) -> dict[str, Any] | None:
     }
 
 
-def iter_candidate_posts(
-    *, year: int | None, limit_posts: int | None
-) -> Iterator[dict[str, Any]]:
+def iter_candidate_posts(*, year: int | None, limit_posts: int | None) -> Iterator[dict[str, Any]]:
     """Yield posts with ≥1 empty-alt image (``targets`` non-empty), in path
     order. ``--limit-posts`` counts only yielded posts."""
     yielded = 0
@@ -151,8 +150,10 @@ def iter_candidate_posts(
 
 # ── alt generation / splice ───────────────────────────────────────────
 
-def _splice(body: str, targets: list[tuple[int, int, str, str]], *,
-            caption: str | None) -> tuple[str, list[dict[str, Any]]]:
+
+def _splice(
+    body: str, targets: list[tuple[int, int, str, str]], *, caption: str | None
+) -> tuple[str, list[dict[str, Any]]]:
     """Generate alt for each target and splice it into ``body``. Splices
     end-to-start so earlier offsets stay valid (same as fill_missing_alts).
     Returns ``(new_body, filled)`` where ``filled`` is one entry per alt actually
@@ -169,7 +170,11 @@ def _splice(body: str, targets: list[tuple[int, int, str, str]], *,
         if not alt:
             continue
         if kind == "html":
-            new_body = new_body[:start] + microblog._splice_alt_into_img(new_body[start:end], alt) + new_body[end:]
+            new_body = (
+                new_body[:start]
+                + microblog._splice_alt_into_img(new_body[start:end], alt)
+                + new_body[end:]
+            )
         else:
             # Convert ![](url) → <img src alt>, micro.blog's default format
             # (5,200 of ~6,150 image posts already use <img>). HTML keeps the
@@ -184,6 +189,7 @@ def _splice(body: str, targets: list[tuple[int, int, str, str]], *,
 
 
 # ── modes ─────────────────────────────────────────────────────────────
+
 
 def run_audit(*, year: int | None, limit_posts: int | None) -> int:
     """Full free scan: tally every empty-alt image (split html-tag vs markdown)
@@ -209,11 +215,19 @@ def run_audit(*, year: int | None, limit_posts: int | None) -> int:
     print("\n── alt-text audit ──", flush=True)
     print(f"  scope:                  {year or 'all years'}", flush=True)
     print(f"  posts missing alt:       {posts}", flush=True)
-    print(f"  images missing alt:      {total}  ({html_missing} <img>, {md_missing} markdown)", flush=True)
-    print(f"  est. vision cost:        ${total * _COST_PER_IMAGE_LOW:,.2f} – ${total * _COST_PER_IMAGE_HIGH:,.2f}", flush=True)
+    print(
+        f"  images missing alt:      {total}  ({html_missing} <img>, {md_missing} markdown)",
+        flush=True,
+    )
+    print(
+        f"  est. vision cost:        ${total * _COST_PER_IMAGE_LOW:,.2f} – ${total * _COST_PER_IMAGE_HIGH:,.2f}",
+        flush=True,
+    )
     if total:
         print(f"\n  next: dry-run a sample →  python {_self()} --limit-posts 10", flush=True)
-        print(f"        then write batches  →  python {_self()} --write --max-vision 50", flush=True)
+        print(
+            f"        then write batches  →  python {_self()} --write --max-vision 50", flush=True
+        )
     return 0
 
 
@@ -254,8 +268,15 @@ def run_fill(*, write: bool, year: int | None, limit_posts: int | None, max_visi
             print(f"  [{mbid}] {url}", flush=True)
             for f in filled:
                 print(f"      + alt: {f['alt']}", flush=True)
-                results.append({**f, "post_url": url, "microblog_id": mbid,
-                                "post_kind": post["post_kind"], "written": False})
+                results.append(
+                    {
+                        **f,
+                        "post_url": url,
+                        "microblog_id": mbid,
+                        "post_kind": post["post_kind"],
+                        "written": False,
+                    }
+                )
             continue
 
         # --- write path: re-fetch live so we never clobber a newer edit ---
@@ -286,7 +307,10 @@ def run_fill(*, write: bool, year: int | None, limit_posts: int | None, max_visi
             microblog.update_post_content(url, new_body)
         except Exception as exc:  # noqa: BLE001
             writes_failed += 1
-            print(f"  ! [{mbid}] micro.blog write FAILED (backup kept, retry next run): {exc}", flush=True)
+            print(
+                f"  ! [{mbid}] micro.blog write FAILED (backup kept, retry next run): {exc}",
+                flush=True,
+            )
             continue
 
         _rewrite_body(post["path"], post["fm_block"], new_body)
@@ -296,8 +320,15 @@ def run_fill(*, write: bool, year: int | None, limit_posts: int | None, max_visi
         print(f"  ✓ [{mbid}] {url}", flush=True)
         for f in filled:
             print(f"      + alt: {f['alt']}", flush=True)
-            results.append({**f, "post_url": url, "microblog_id": mbid,
-                            "post_kind": post["post_kind"], "written": True})
+            results.append(
+                {
+                    **f,
+                    "post_url": url,
+                    "microblog_id": mbid,
+                    "post_kind": post["post_kind"],
+                    "written": True,
+                }
+            )
 
     vision_used = max_vision - alt_text.calls_remaining()
     summary = {
@@ -308,8 +339,14 @@ def run_fill(*, write: bool, year: int | None, limit_posts: int | None, max_visi
         "writes_failed": writes_failed,
         "synced_local": synced,
     }
-    _write_run_log(mode=mode, max_vision=max_vision, year=year,
-                   limit_posts=limit_posts, results=results, summary=summary)
+    _write_run_log(
+        mode=mode,
+        max_vision=max_vision,
+        year=year,
+        limit_posts=limit_posts,
+        results=results,
+        summary=summary,
+    )
 
     print("\n── summary ──", flush=True)
     print(f"  mode:           {mode}", flush=True)
@@ -320,27 +357,44 @@ def run_fill(*, write: bool, year: int | None, limit_posts: int | None, max_visi
         print(f"  writes ok:      {writes_ok}", flush=True)
         print(f"  writes failed:  {writes_failed}", flush=True)
         print(f"  local synced:   {synced}", flush=True)
-        print("\n  When done backfilling: run `npm run librarian:deploy:blog` to re-embed.", flush=True)
+        print(
+            "\n  When done backfilling: run `npm run librarian:deploy:blog` to re-embed.",
+            flush=True,
+        )
     else:
         print("\n  (dry-run — nothing written to micro.blog. Add --write to persist.)", flush=True)
     return 0
 
 
-def _write_run_log(*, mode: str, max_vision: int, year: int | None,
-                   limit_posts: int | None, results: list[dict[str, Any]],
-                   summary: dict[str, Any]) -> None:
+def _write_run_log(
+    *,
+    mode: str,
+    max_vision: int,
+    year: int | None,
+    limit_posts: int | None,
+    results: list[dict[str, Any]],
+    summary: dict[str, Any],
+) -> None:
     RUN_DIR.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     path = RUN_DIR / f"run-{ts}.json"
-    path.write_text(json.dumps({
-        "mode": mode,
-        "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "max_vision": max_vision,
-        "year": year,
-        "limit_posts": limit_posts,
-        "summary": summary,
-        "results": results,
-    }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(
+            {
+                "mode": mode,
+                "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "max_vision": max_vision,
+                "year": year,
+                "limit_posts": limit_posts,
+                "summary": summary,
+                "results": results,
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     print(f"\n  run log: {path.relative_to(REPO)}", flush=True)
 
 
@@ -350,14 +404,28 @@ def _self() -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Backfill alt text across the micro.blog history")
-    ap.add_argument("--audit", action="store_true",
-                    help="count missing-alt images + cost estimate (no vision, no writes)")
-    ap.add_argument("--write", action="store_true",
-                    help="write generated alt back to micro.blog + update local store (default: dry-run)")
-    ap.add_argument("--max-vision", type=int, default=_DEFAULT_MAX_VISION,
-                    help=f"cap vision calls this run (default {_DEFAULT_MAX_VISION}); re-run to continue")
-    ap.add_argument("--limit-posts", type=int, default=None,
-                    help="process only the first N candidate posts (spike / quality check)")
+    ap.add_argument(
+        "--audit",
+        action="store_true",
+        help="count missing-alt images + cost estimate (no vision, no writes)",
+    )
+    ap.add_argument(
+        "--write",
+        action="store_true",
+        help="write generated alt back to micro.blog + update local store (default: dry-run)",
+    )
+    ap.add_argument(
+        "--max-vision",
+        type=int,
+        default=_DEFAULT_MAX_VISION,
+        help=f"cap vision calls this run (default {_DEFAULT_MAX_VISION}); re-run to continue",
+    )
+    ap.add_argument(
+        "--limit-posts",
+        type=int,
+        default=None,
+        help="process only the first N candidate posts (spike / quality check)",
+    )
     ap.add_argument("--year", type=int, default=None, help="scope to one year's subtree")
     args = ap.parse_args()
 
@@ -367,8 +435,9 @@ def main() -> int:
 
     if args.audit:
         return run_audit(year=args.year, limit_posts=args.limit_posts)
-    return run_fill(write=args.write, year=args.year,
-                    limit_posts=args.limit_posts, max_vision=args.max_vision)
+    return run_fill(
+        write=args.write, year=args.year, limit_posts=args.limit_posts, max_vision=args.max_vision
+    )
 
 
 if __name__ == "__main__":

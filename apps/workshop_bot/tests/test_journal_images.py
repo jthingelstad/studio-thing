@@ -21,6 +21,7 @@ from apps.workshop_bot.tools.content import journal_images
 
 def _tiny_png_bytes() -> bytes:
     from PIL import Image
+
     buf = io.BytesIO()
     Image.new("RGB", (1200, 800), (10, 20, 30)).save(buf, format="PNG")
     return buf.getvalue()
@@ -28,6 +29,7 @@ def _tiny_png_bytes() -> bytes:
 
 def _tiny_jpeg_bytes() -> bytes:
     from PIL import Image
+
     buf = io.BytesIO()
     Image.new("RGB", (1800, 2969), (200, 100, 50)).save(buf, format="JPEG", quality=90)
     return buf.getvalue()
@@ -43,7 +45,9 @@ def _fake_get(body: bytes, content_type: str = "image/jpeg"):
 
 class ShouldRehostTests(unittest.TestCase):
     def test_blog_upload_image_yes(self):
-        self.assertTrue(journal_images._should_rehost("https://www.thingelstad.com/uploads/2026/428e3db12e.jpg"))
+        self.assertTrue(
+            journal_images._should_rehost("https://www.thingelstad.com/uploads/2026/428e3db12e.jpg")
+        )
         self.assertTrue(journal_images._should_rehost("https://cdn.uploads.micro.blog/123/abc.png"))
 
     def test_non_blog_image_no(self):
@@ -51,10 +55,16 @@ class ShouldRehostTests(unittest.TestCase):
         self.assertFalse(journal_images._should_rehost("https://m.media-amazon.com/images/x.jpg"))
 
     def test_already_local_no(self):
-        self.assertFalse(journal_images._should_rehost("https://files.thingelstad.com/weekly-thing/458/journal/x.jpg"))
+        self.assertFalse(
+            journal_images._should_rehost(
+                "https://files.thingelstad.com/weekly-thing/458/journal/x.jpg"
+            )
+        )
 
     def test_non_image_url_no(self):
-        self.assertFalse(journal_images._should_rehost("https://www.thingelstad.com/2026/05/12/a.html"))
+        self.assertFalse(
+            journal_images._should_rehost("https://www.thingelstad.com/2026/05/12/a.html")
+        )
 
     def test_thingelstad_non_uploads_path_no(self):
         # An image on Jamie's domain but not under /uploads/ is site chrome.
@@ -75,7 +85,9 @@ class LocalNameTests(unittest.TestCase):
         )
 
     def test_hashes_unsafe_basename(self):
-        name = journal_images._local_name("https://www.thingelstad.com/uploads/2026/some weird name!.png")
+        name = journal_images._local_name(
+            "https://www.thingelstad.com/uploads/2026/some weird name!.png"
+        )
         self.assertRegex(name, r"^[0-9a-f]{10}\.png$")
 
 
@@ -86,6 +98,7 @@ class ResizeTests(unittest.TestCase):
         self.assertEqual(ext, ".jpg")
         self.assertLess(len(out), len(big))
         from PIL import Image
+
         self.assertEqual(max(Image.open(io.BytesIO(out)).size), 600)
 
     def test_downscales_png(self):
@@ -93,6 +106,7 @@ class ResizeTests(unittest.TestCase):
         out, ext = journal_images._resize(big, ".png", 400)
         self.assertEqual(ext, ".png")
         from PIL import Image
+
         self.assertEqual(max(Image.open(io.BytesIO(out)).size), 400)
 
     def test_non_resizable_format_passthrough(self):
@@ -107,14 +121,24 @@ class RehostInMarkdownTests(unittest.TestCase):
     # whatever alt the source carries.
 
     def test_img_tag_rehosted_emits_native_img(self):
-        md = ('Got a card.\n\n'
-              '<img src="https://www.thingelstad.com/uploads/2026/428e3db12e.jpg" width="363" height="600" alt="my card">')
-        write_mock = MagicMock(side_effect=lambda issue, name, body, content_type=None: {
-            "url": f"https://files.thingelstad.com/weekly-thing/{issue}/journal/{name}",
-            "size": len(body), "content_type": "image/jpeg"})
-        with patch.object(s3, "journal_image_exists", lambda issue, name: False), \
-             patch.object(journal_images.requests, "get", return_value=_fake_get(_tiny_jpeg_bytes())), \
-             patch.object(s3, "write_journal_image", write_mock):
+        md = (
+            "Got a card.\n\n"
+            '<img src="https://www.thingelstad.com/uploads/2026/428e3db12e.jpg" width="363" height="600" alt="my card">'
+        )
+        write_mock = MagicMock(
+            side_effect=lambda issue, name, body, content_type=None: {
+                "url": f"https://files.thingelstad.com/weekly-thing/{issue}/journal/{name}",
+                "size": len(body),
+                "content_type": "image/jpeg",
+            }
+        )
+        with (
+            patch.object(s3, "journal_image_exists", lambda issue, name: False),
+            patch.object(
+                journal_images.requests, "get", return_value=_fake_get(_tiny_jpeg_bytes())
+            ),
+            patch.object(s3, "write_journal_image", write_mock),
+        ):
             out = journal_images.rehost_in_markdown(md, 458)
         # Native <img> form (NOT markdown ![]()) — explicit alt attribute slot.
         self.assertNotIn("![my card](", out)
@@ -135,11 +159,18 @@ class RehostInMarkdownTests(unittest.TestCase):
 
     def test_already_in_workspace_skips_download(self):
         md = '<img src="https://www.thingelstad.com/uploads/2026/abc.jpg" alt="">'
-        with patch.object(s3, "journal_image_exists", lambda issue, name: True), \
-             patch.object(s3, "journal_image_url",
-                          lambda issue, name: f"https://files.thingelstad.com/weekly-thing/{issue}/journal/{name}"), \
-             patch.object(journal_images.requests, "get") as g, \
-             patch.object(s3, "write_journal_image") as w:
+        with (
+            patch.object(s3, "journal_image_exists", lambda issue, name: True),
+            patch.object(
+                s3,
+                "journal_image_url",
+                lambda issue, name: (
+                    f"https://files.thingelstad.com/weekly-thing/{issue}/journal/{name}"
+                ),
+            ),
+            patch.object(journal_images.requests, "get") as g,
+            patch.object(s3, "write_journal_image") as w,
+        ):
             out = journal_images.rehost_in_markdown(md, 458)
         g.assert_not_called()
         w.assert_not_called()
@@ -153,8 +184,14 @@ class RehostInMarkdownTests(unittest.TestCase):
 
     def test_markdown_image_rewritten_to_img_tag(self):
         md = "Here: ![alt text](https://www.thingelstad.com/uploads/2026/q1.png)"
-        with patch.object(s3, "journal_image_exists", lambda i, n: True), \
-             patch.object(s3, "journal_image_url", lambda i, n: f"https://files.thingelstad.com/weekly-thing/{i}/journal/{n}"):
+        with (
+            patch.object(s3, "journal_image_exists", lambda i, n: True),
+            patch.object(
+                s3,
+                "journal_image_url",
+                lambda i, n: f"https://files.thingelstad.com/weekly-thing/{i}/journal/{n}",
+            ),
+        ):
             out = journal_images.rehost_in_markdown(md, 458)
         # Markdown source → native <img> output with the alt preserved.
         self.assertIn(
@@ -165,7 +202,9 @@ class RehostInMarkdownTests(unittest.TestCase):
         self.assertNotIn("![alt text](", out)
 
     def test_non_blog_image_url_left_alone(self):
-        md = '![](https://m.media-amazon.com/images/x.jpg) and <img src="https://example.com/y.png">'
+        md = (
+            '![](https://m.media-amazon.com/images/x.jpg) and <img src="https://example.com/y.png">'
+        )
         out = journal_images.rehost_in_markdown(md, 458)
         # Both URLs preserved verbatim, normalized to <img> form.
         self.assertIn('<img src="https://m.media-amazon.com/images/x.jpg"', out)
@@ -173,17 +212,27 @@ class RehostInMarkdownTests(unittest.TestCase):
 
     def test_rehost_failure_leaves_original_url(self):
         md = '<img src="https://www.thingelstad.com/uploads/2026/z.jpg" alt="">'
-        with patch.object(s3, "journal_image_exists", lambda i, n: False), \
-             patch.object(journal_images.requests, "get", side_effect=RuntimeError("network down")):
+        with (
+            patch.object(s3, "journal_image_exists", lambda i, n: False),
+            patch.object(journal_images.requests, "get", side_effect=RuntimeError("network down")),
+        ):
             out = journal_images.rehost_in_markdown(md, 458)
         self.assertIn('<img src="https://www.thingelstad.com/uploads/2026/z.jpg"', out)
 
     def test_adjacent_imgs_separated_by_blank_line(self):
-        md = ('Race day!\n\n'
-              '<img src="https://www.thingelstad.com/uploads/2026/a814739f8a.jpg" width="600" height="450" alt="">'
-              '<img src="https://www.thingelstad.com/uploads/2026/08388e7462.jpg" width="600" height="450" alt="">')
-        with patch.object(s3, "journal_image_exists", lambda i, n: True), \
-             patch.object(s3, "journal_image_url", lambda i, n: f"https://files.thingelstad.com/weekly-thing/{i}/journal/{n}"):
+        md = (
+            "Race day!\n\n"
+            '<img src="https://www.thingelstad.com/uploads/2026/a814739f8a.jpg" width="600" height="450" alt="">'
+            '<img src="https://www.thingelstad.com/uploads/2026/08388e7462.jpg" width="600" height="450" alt="">'
+        )
+        with (
+            patch.object(s3, "journal_image_exists", lambda i, n: True),
+            patch.object(
+                s3,
+                "journal_image_url",
+                lambda i, n: f"https://files.thingelstad.com/weekly-thing/{i}/journal/{n}",
+            ),
+        ):
             out = journal_images.rehost_in_markdown(md, 458)
         # Two <img> tags on separate paragraphs, not run together.
         self.assertNotIn("/><img", out)
@@ -208,9 +257,14 @@ class RehostInMarkdownTests(unittest.TestCase):
 
     def test_alt_passthrough(self):
         md = '<img src="https://www.thingelstad.com/uploads/2026/abc.jpg" alt="a real alt">'
-        with patch.object(s3, "journal_image_exists", lambda i, n: True), \
-             patch.object(s3, "journal_image_url",
-                          lambda i, n: f"https://files.thingelstad.com/weekly-thing/{i}/journal/{n}"):
+        with (
+            patch.object(s3, "journal_image_exists", lambda i, n: True),
+            patch.object(
+                s3,
+                "journal_image_url",
+                lambda i, n: f"https://files.thingelstad.com/weekly-thing/{i}/journal/{n}",
+            ),
+        ):
             out = journal_images.rehost_in_markdown(md, 458)
         # The alt from the source is preserved verbatim — no vision call,
         # no DB lookup. The URL gets rehosted; everything else passes through.
@@ -228,12 +282,17 @@ class RehostInMarkdownTests(unittest.TestCase):
             '<img src="https://www.thingelstad.com/uploads/2026/x.jpg" '
             'alt="Hand holding a s\'more over a campfire in a metal fire pit">'
         )
-        with patch.object(s3, "journal_image_exists", lambda i, n: True), \
-             patch.object(s3, "journal_image_url",
-                          lambda i, n: f"https://files.thingelstad.com/weekly-thing/{i}/journal/{n}"):
+        with (
+            patch.object(s3, "journal_image_exists", lambda i, n: True),
+            patch.object(
+                s3,
+                "journal_image_url",
+                lambda i, n: f"https://files.thingelstad.com/weekly-thing/{i}/journal/{n}",
+            ),
+        ):
             out = journal_images.rehost_in_markdown(md, 458)
         self.assertIn(
-            "alt=\"Hand holding a s&#x27;more over a campfire in a metal fire pit\"",
+            'alt="Hand holding a s&#x27;more over a campfire in a metal fire pit"',
             out,
         )
 

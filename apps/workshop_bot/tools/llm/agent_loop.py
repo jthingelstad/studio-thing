@@ -76,17 +76,17 @@ def _build_system_blocks(persona: str) -> list[dict[str, Any]]:
     owner = _owner_mention_block()
     if owner:
         blocks.append({"type": "text", "text": owner})
-    blocks.append({
-        "type": "text",
-        "text": anthropic_client.load_prompt(persona),
-        "cache_control": {"type": "ephemeral"},
-    })
+    blocks.append(
+        {
+            "type": "text",
+            "text": anthropic_client.load_prompt(persona),
+            "cache_control": {"type": "ephemeral"},
+        }
+    )
     return blocks
 
 
-def _build_tool_specs(
-    tool_names: list[str], deps: Any
-) -> list[dict[str, Any]]:
+def _build_tool_specs(tool_names: list[str], deps: Any) -> list[dict[str, Any]]:
     """Build Anthropic tool specs for ``tool_names`` from ``deps.registry``.
 
     Tool names use the API-safe ``<system>__<action>`` shape natively
@@ -123,18 +123,14 @@ def _execute_tool(
     # cross-persona context bleed, hallucination), refuse here so donor
     # data and other privacy-scoped surfaces never reach the wrong
     # persona's transcript.
-    if (
-        persona is not None
-        and tool.restricted_to is not None
-        and persona not in tool.restricted_to
-    ):
+    if persona is not None and tool.restricted_to is not None and persona not in tool.restricted_to:
         logger.warning(
             "tool %s refused: persona %r not in %s",
-            name, persona, sorted(tool.restricted_to),
+            name,
+            persona,
+            sorted(tool.restricted_to),
         )
-        return json.dumps(
-            {"error": f"tool {name!r} is not available to persona {persona!r}"}
-        )
+        return json.dumps({"error": f"tool {name!r} is not available to persona {persona!r}"})
     func = tool.func
     t0 = time.monotonic()
     token = None
@@ -207,9 +203,7 @@ def run(
     report. Use it for work-not-chat jobs where the model otherwise narrates
     a plan and burns the output budget before calling a tool."""
     history = list(history or [])
-    chosen_model = anthropic_client.MODELS[
-        model or anthropic_client.default_model()
-    ]
+    chosen_model = anthropic_client.MODELS[model or anthropic_client.default_model()]
     system_blocks = _build_system_blocks(persona)
     tool_specs = _build_tool_specs(tools, deps=deps)
 
@@ -279,15 +273,11 @@ def run(
         # stores them in API-safe ``<system>__<action>`` form natively.
         tool_result_blocks: list[dict[str, Any]] = []
         for tu in tool_uses:
-            payload = _execute_tool(
-                tu.name, deps, dict(tu.input or {}), persona=persona
-            )
+            payload = _execute_tool(tu.name, deps, dict(tu.input or {}), persona=persona)
             tool_result_blocks.append(
                 {"type": "tool_result", "tool_use_id": tu.id, "content": payload}
             )
-            tool_calls.append(
-                {"name": tu.name, "input": dict(tu.input or {})}
-            )
+            tool_calls.append({"name": tu.name, "input": dict(tu.input or {})})
         messages.append({"role": "user", "content": tool_result_blocks})
 
     # Hit max iterations without a stop_reason != tool_use.
@@ -298,8 +288,7 @@ def run(
         [c["name"] for c in tool_calls],
     )
     return (
-        last_text
-        or "I went around in circles on this one — give me a more specific ask?",
+        last_text or "I went around in circles on this one — give me a more specific ask?",
         {
             "model": chosen_model,
             "usage": usage_total,

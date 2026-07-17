@@ -55,8 +55,10 @@ def main():
             total_urls += n
             print(f"#{fp.stem}: {n} URL{'s' if n != 1 else ''}")
 
-    print(f"\n{'Would rewrite' if args.dry_run else 'Rewrote'} "
-          f"{total_urls} URL(s) in {total_files} file(s).")
+    print(
+        f"\n{'Would rewrite' if args.dry_run else 'Rewrote'} "
+        f"{total_urls} URL(s) in {total_files} file(s)."
+    )
 
 
 if __name__ == "__main__":

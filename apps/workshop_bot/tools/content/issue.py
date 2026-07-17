@@ -42,23 +42,15 @@ def compute_window(pub_date_iso: str, day_count: int) -> dict[str, Any]:
     try:
         pub = datetime.strptime(raw, "%Y-%m-%d").date()
     except ValueError as exc:
-        raise IssueWindowError(
-            f"pub_date must be YYYY-MM-DD; got {pub_date_iso!r}"
-        ) from exc
+        raise IssueWindowError(f"pub_date must be YYYY-MM-DD; got {pub_date_iso!r}") from exc
     if pub.weekday() != 5:  # 0=Mon … 5=Sat … 6=Sun
-        raise IssueWindowError(
-            f"pub_date {raw} is a {pub.strftime('%A')}; must be Saturday"
-        )
+        raise IssueWindowError(f"pub_date {raw} is a {pub.strftime('%A')}; must be Saturday")
     try:
         n = int(day_count)
     except (TypeError, ValueError) as exc:
-        raise IssueWindowError(
-            f"day_count must be a positive integer; got {day_count!r}"
-        ) from exc
+        raise IssueWindowError(f"day_count must be a positive integer; got {day_count!r}") from exc
     if n <= 0:
-        raise IssueWindowError(
-            f"day_count must be a positive integer; got {n}"
-        )
+        raise IssueWindowError(f"day_count must be a positive integer; got {n}")
     end = pub - timedelta(days=1)
     start = end - timedelta(days=n)
     return {

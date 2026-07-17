@@ -104,8 +104,10 @@ def _create_test_post(body: str) -> str:
         },
     }
     resp = requests.post(
-        microblog.micropub_url(), json=payload,
-        headers=_headers_json(), timeout=_TIMEOUT,
+        microblog.micropub_url(),
+        json=payload,
+        headers=_headers_json(),
+        timeout=_TIMEOUT,
     )
     if resp.status_code >= 400:
         raise RuntimeError(
@@ -132,8 +134,10 @@ def _create_test_post(body: str) -> str:
 def _delete_post(post_url: str) -> None:
     payload = {"action": "delete", "url": post_url}
     resp = requests.post(
-        microblog.micropub_url(), json=payload,
-        headers=_headers_json(), timeout=_TIMEOUT,
+        microblog.micropub_url(),
+        json=payload,
+        headers=_headers_json(),
+        timeout=_TIMEOUT,
     )
     if resp.status_code >= 400:
         raise RuntimeError(
@@ -149,12 +153,14 @@ def _splice_alt(body: str) -> tuple[str, str]:
     alt_m = _IMG_ALT_RE.search(tag)
     if alt_m is None:
         new_tag = _IMG_SRC_RE.sub(
-            lambda sm: f'{sm.group(0)} alt="{_PLACEHOLDER_ALT}"', tag, count=1,
+            lambda sm: f'{sm.group(0)} alt="{_PLACEHOLDER_ALT}"',
+            tag,
+            count=1,
         )
     else:
         new_alt = f'alt="{_PLACEHOLDER_ALT}"'
-        new_tag = tag[: alt_m.start()] + new_alt + tag[alt_m.end():]
-    new_body = body[: m.start()] + new_tag + body[m.end():]
+        new_tag = tag[: alt_m.start()] + new_alt + tag[alt_m.end() :]
+    new_body = body[: m.start()] + new_tag + body[m.end() :]
     return new_body, f"<img>: alt → '{_PLACEHOLDER_ALT}'"
 
 
@@ -193,10 +199,15 @@ def _diff_props(before: dict, after: dict) -> tuple[list[str], list[str]]:
     after_content = _content_str(after.get("content"))
     content_diff: list[str] = []
     if before_content != after_content:
-        content_diff = list(difflib.unified_diff(
-            before_content.splitlines(), after_content.splitlines(),
-            fromfile="content (before)", tofile="content (after)", lineterm="",
-        ))
+        content_diff = list(
+            difflib.unified_diff(
+                before_content.splitlines(),
+                after_content.splitlines(),
+                fromfile="content (before)",
+                tofile="content (after)",
+                lineterm="",
+            )
+        )
     other_changed: list[str] = []
     for key in sorted(set(before.keys()) | set(after.keys())):
         if key == "content":

@@ -71,7 +71,8 @@ class JobConfigTests(unittest.TestCase):
         for job in jobs_module.JOBS:
             with self.subTest(job=job.id):
                 self.assertEqual(
-                    len(job.cron.split()), 5,
+                    len(job.cron.split()),
+                    5,
                     f"cron {job.cron!r} should have 5 fields",
                 )
 
@@ -82,10 +83,7 @@ class JobConfigTests(unittest.TestCase):
                 # Every job is wired as ``functools.partial(content_job,
                 # job="<name>")``. Unwrap the partial so the underlying
                 # coroutine function and module land cleanly.
-                underlying = (
-                    job.func.func if isinstance(job.func, functools.partial)
-                    else job.func
-                )
+                underlying = job.func.func if isinstance(job.func, functools.partial) else job.func
                 self.assertTrue(
                     inspect.iscoroutinefunction(underlying),
                     f"job {job.id} func must be async",
@@ -120,11 +118,18 @@ class JobConfigTests(unittest.TestCase):
         # Every per-persona heartbeat was retired. The newsletter-only
         # scheduler stays quiet: daily issue sync + targeted Eddy follow-ups.
         ids = [j.id for j in jobs_module.JOBS]
-        self.assertFalse([i for i in ids if i.endswith("-heartbeat")], f"unexpected heartbeat job(s): {ids}")
+        self.assertFalse(
+            [i for i in ids if i.endswith("-heartbeat")], f"unexpected heartbeat job(s): {ids}"
+        )
         self.assertFalse(hasattr(handlers, "heartbeat"), "handlers.heartbeat should be gone")
         for jid in ("sync-issue-daily", "follow-up-sweep"):
             self.assertIn(jid, ids)
-        for gone in ("linky-pinboard-scan", "marky-daily-metrics", "garden-checkin", "scout-checkin"):
+        for gone in (
+            "linky-pinboard-scan",
+            "marky-daily-metrics",
+            "garden-checkin",
+            "scout-checkin",
+        ):
             self.assertNotIn(gone, ids)
         # Sharing is phase-driven now — no RSS-poll job.
         self.assertNotIn("marky-rss-check", ids)
@@ -133,10 +138,7 @@ class JobConfigTests(unittest.TestCase):
         # Sanity: every async handler we ship is wired to a JobSpec.
         wired: set[object] = set()
         for job in jobs_module.JOBS:
-            underlying = (
-                job.func.func if isinstance(job.func, functools.partial)
-                else job.func
-            )
+            underlying = job.func.func if isinstance(job.func, functools.partial) else job.func
             wired.add(underlying)
         for name in dir(handlers):
             obj = getattr(handlers, name)
@@ -146,7 +148,8 @@ class JobConfigTests(unittest.TestCase):
                 and not name.startswith("_")
             ):
                 self.assertIn(
-                    obj, wired,
+                    obj,
+                    wired,
                     f"handler {name} is defined but no JobSpec references it",
                 )
 

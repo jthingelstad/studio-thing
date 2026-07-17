@@ -139,9 +139,7 @@ def _get_tree_recursive(tree_sha: str) -> dict[str, str]:
         logger.warning("github_repo: tree %s truncated; cannot prove no-op", tree_sha)
         return {}
     return {
-        entry["path"]: entry["sha"]
-        for entry in tree.get("tree", [])
-        if entry.get("type") == "blob"
+        entry["path"]: entry["sha"] for entry in tree.get("tree", []) if entry.get("type") == "blob"
     }
 
 
@@ -227,9 +225,7 @@ def put_tree(
         tree_entries = []
         for path, content in changed:
             blob_sha = _create_blob(content)
-            tree_entries.append(
-                {"path": path, "mode": "100644", "type": "blob", "sha": blob_sha}
-            )
+            tree_entries.append({"path": path, "mode": "100644", "type": "blob", "sha": blob_sha})
 
         new_tree_sha = _create_tree(tree_sha, tree_entries)
         new_commit_sha = _create_commit(message, new_tree_sha, commit_sha)
@@ -259,6 +255,4 @@ def put_tree(
             f"PATCH /git/refs/heads/{branch} → {resp.status_code}: {resp.text[:300]}"
         )
 
-    raise RefUpdateConflict(
-        f"Lost ref-update race on {branch} twice in a row: {last_error}"
-    )
+    raise RefUpdateConflict(f"Lost ref-update race on {branch} twice in a row: {last_error}")

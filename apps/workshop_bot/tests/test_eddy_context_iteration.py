@@ -28,10 +28,16 @@ class _DBCase(DBTestCase):
 
     def _window(self, n=349, pub="2026-05-23"):
         from apps.workshop_bot.tools.content import issue as issue_mod
+
         w = issue_mod.compute_window(pub, 7)
-        db.set_issue_window(issue_number=n, pub_date=w["pub_date"],
-                            end_date=w["end_date"], start_date=w["start_date"],
-                            day_count=w["day_count"], set_by="test")
+        db.set_issue_window(
+            issue_number=n,
+            pub_date=w["pub_date"],
+            end_date=w["end_date"],
+            start_date=w["start_date"],
+            day_count=w["day_count"],
+            set_by="test",
+        )
 
 
 class IterationCountTests(_DBCase):
@@ -51,19 +57,24 @@ class IterationCountTests(_DBCase):
 
 
 class OpenCommentsCountsTests(_DBCase):
-
     def test_empty_when_no_comments(self):
         out = context._open_comments_counts(349)
         self.assertEqual(out, {"total": 0, "by_scope": {}, "by_section": {}})
 
     def test_breaks_down_by_scope_and_section(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="a", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="a",
+            body_md="x",
         )
         b = issue_items.upsert_item(
-            issue_number=349, section="brief", source="pinboard",
-            source_id="b", body_md="x",
+            issue_number=349,
+            section="brief",
+            source="pinboard",
+            source_id="b",
+            body_md="x",
         )
         issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="…")
         issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="…")
@@ -80,8 +91,11 @@ class OpenCommentsCountsTests(_DBCase):
 
     def test_excludes_superseded(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="a", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="a",
+            body_md="x",
         )
         c1 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="v1")
         c2 = issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="v2")
@@ -91,7 +105,6 @@ class OpenCommentsCountsTests(_DBCase):
 
 
 class ReviewTierTests(unittest.TestCase):
-
     def test_ship_eve_when_close_to_publish(self):
         self.assertEqual(context._review_tier(days_to_pub=0, iteration_count=5), "ship_eve")
         self.assertEqual(context._review_tier(days_to_pub=1, iteration_count=1), "ship_eve")
@@ -109,15 +122,17 @@ class ReviewTierTests(unittest.TestCase):
 
 
 class BuildEddyContextTests(_DBCase):
-
     def test_includes_iteration_fields(self):
         self._window(n=349, pub="2026-05-23")  # pub Saturday
         # One prior review pass (agent_runs is the iteration signal now).
         with db.AgentRun("eddy", trigger="eddy-review") as run:
             run.records_written = 1
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="a", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="a",
+            body_md="x",
         )
         issue_items.write_comment(issue_number=349, scope="item", item_id=a, body_md="…")
         # Simulate today = Wed, pub = Sat (3 days out, 1 prior pass → early).

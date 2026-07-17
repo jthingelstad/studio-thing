@@ -38,15 +38,22 @@ class _DBCase(unittest.TestCase):
 
 
 class GetCommentTests(_DBCase):
-
     def test_returns_item_anchored_comment_with_item_context(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="abc", url="https://x", title="A Long Article", body_md="lots of body",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="abc",
+            url="https://x",
+            title="A Long Article",
+            body_md="lots of body",
         )
         c = issue_items.write_comment(
-            issue_number=349, scope="item", item_id=a,
-            body_md="Lead with this one.", verdict="suggestion",
+            issue_number=349,
+            scope="item",
+            item_id=a,
+            body_md="Lead with this one.",
+            verdict="suggestion",
             anchor_text="lead",
         )
         out = t_editorial_get_comment(None, handle=c["handle"])
@@ -65,7 +72,9 @@ class GetCommentTests(_DBCase):
 
     def test_section_scoped_has_no_item_context(self):
         c = issue_items.write_comment(
-            issue_number=349, scope="section", section="brief",
+            issue_number=349,
+            scope="section",
+            section="brief",
             body_md="Brief feels tech-heavy this week.",
         )
         out = t_editorial_get_comment(None, handle=c["handle"])
@@ -75,7 +84,8 @@ class GetCommentTests(_DBCase):
 
     def test_case_insensitive_handle(self):
         c = issue_items.write_comment(
-            issue_number=349, scope="hygiene",
+            issue_number=349,
+            scope="hygiene",
             body_md="Anchor mismatch on N3.",
         )
         out = t_editorial_get_comment(None, handle=c["handle"].lower())
@@ -92,14 +102,23 @@ class GetCommentTests(_DBCase):
 
     def test_superseded_comment_exposes_replacement_handle(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="abc", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="abc",
+            body_md="x",
         )
         c1 = issue_items.write_comment(
-            issue_number=349, scope="item", item_id=a, body_md="v1",
+            issue_number=349,
+            scope="item",
+            item_id=a,
+            body_md="v1",
         )
         c2 = issue_items.write_comment(
-            issue_number=349, scope="item", item_id=a, body_md="v2",
+            issue_number=349,
+            scope="item",
+            item_id=a,
+            body_md="v2",
         )
         issue_items.supersede(c1["id"], c2["id"])
         out = t_editorial_get_comment(None, handle=c1["handle"])
@@ -110,23 +129,35 @@ class GetCommentTests(_DBCase):
 
 
 class ListOpenTests(_DBCase):
-
     def _seed(self):
         from apps.workshop_bot.tools.content import issue as issue_mod
+
         w = issue_mod.compute_window("2026-05-23", 7)
-        db.set_issue_window(issue_number=349, pub_date=w["pub_date"],
-                            end_date=w["end_date"], start_date=w["start_date"],
-                            day_count=w["day_count"], set_by="test")
+        db.set_issue_window(
+            issue_number=349,
+            pub_date=w["pub_date"],
+            end_date=w["end_date"],
+            start_date=w["start_date"],
+            day_count=w["day_count"],
+            set_by="test",
+        )
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="abc", title="A", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="abc",
+            title="A",
+            body_md="x",
         )
         issue_items.write_comment(
-            issue_number=349, scope="item", item_id=a,
+            issue_number=349,
+            scope="item",
+            item_id=a,
             body_md="Lead with this one — the framing is strong.",
         )
         issue_items.write_comment(
-            issue_number=349, scope="hygiene",
+            issue_number=349,
+            scope="hygiene",
             body_md="Anchor text on N3 doesn't match the destination domain — worth a quick fix.",
         )
 
@@ -150,12 +181,18 @@ class ListOpenTests(_DBCase):
 
     def test_snippets_truncated(self):
         a = issue_items.upsert_item(
-            issue_number=349, section="notable", source="pinboard",
-            source_id="abc", body_md="x",
+            issue_number=349,
+            section="notable",
+            source="pinboard",
+            source_id="abc",
+            body_md="x",
         )
         long_body = "a" * 500
         issue_items.write_comment(
-            issue_number=349, scope="item", item_id=a, body_md=long_body,
+            issue_number=349,
+            scope="item",
+            item_id=a,
+            body_md=long_body,
         )
         out = t_editorial_list_open(None, issue_number=349)
         snippet = out["comments"][0]["snippet"]

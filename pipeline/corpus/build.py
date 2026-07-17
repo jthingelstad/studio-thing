@@ -36,10 +36,18 @@ __all__ = [
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Build a citation-ready corpus for the archive librarian.")
+    parser = argparse.ArgumentParser(
+        description="Build a citation-ready corpus for the archive librarian."
+    )
     parser.add_argument("--output", default=str(CORPUS_PATH), help="Output JSON path")
-    parser.add_argument("--embed", action="store_true", help="Add Bedrock Cohere embeddings to each chunk")
-    parser.add_argument("--include-issue-bodies", action="store_true", help="Include full issue bodies and sections for runtime tools")
+    parser.add_argument(
+        "--embed", action="store_true", help="Add Bedrock Cohere embeddings to each chunk"
+    )
+    parser.add_argument(
+        "--include-issue-bodies",
+        action="store_true",
+        help="Include full issue bodies and sections for runtime tools",
+    )
     parser.add_argument("--embedding-model", default=DEFAULT_EMBEDDING_MODEL)
     parser.add_argument("--embedding-dimensions", type=int, default=DEFAULT_EMBEDDING_DIMENSIONS)
     args = parser.parse_args()
