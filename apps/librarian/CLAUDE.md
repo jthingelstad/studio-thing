@@ -45,8 +45,8 @@ The `bridgeSecretOk` helper in `chat/runtime.mts` mirrors the same check in `aut
 ## Deploy
 
 Always via `make librarian-deploy` or `uv run --locked python pipeline/deploy/aws.py`.
-The deploy script needs the repo virtualenv packages (`boto3`, `python-dotenv`,
-etc.); plain system `python`/`python3` may fail.
+The deploy script must run through the locked uv environment so dependencies such as
+`boto3` and `python-dotenv` are available; do not invoke it with bare system Python.
 
 ```bash
 # Default: skip corpus reupload — code+infra only

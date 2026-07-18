@@ -28,7 +28,7 @@ The plist runs `.venv/bin/python -m apps.workshop_bot.bot` with the repo root as
 Safe online SQLite backup of `apps/workshop_bot/data/workshop.db` (uses `sqlite3.Connection.backup()` — no need to stop the bot) plus tiered retention pruning.
 
 ```bash
-python apps/workshop_bot/scripts/backup_db.py
+uv run --locked python apps/workshop_bot/scripts/backup_db.py
 ```
 
 - Output: `~/workshop-backups/workshop-YYYY-MM-DD-HHMMSS.db.gz` (gzip level 6)
@@ -45,8 +45,8 @@ Override via env:
 Remove local cache cruft under `apps/workshop_bot/`.
 
 ```bash
-python apps/workshop_bot/scripts/clean.py        # __pycache__, .pytest_cache, .mypy_cache, .ruff_cache
-python apps/workshop_bot/scripts/clean.py --db   # also remove apps/workshop_bot/data/workshop.db (destructive)
+uv run --locked python apps/workshop_bot/scripts/clean.py        # __pycache__, .pytest_cache, .mypy_cache, .ruff_cache
+uv run --locked python apps/workshop_bot/scripts/clean.py --db   # also remove apps/workshop_bot/data/workshop.db (destructive)
 ```
 
 ## First-time setup on a new server

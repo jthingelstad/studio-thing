@@ -40,8 +40,8 @@ apps/librarian/
 ## Deploy
 
 Always via `make librarian-deploy` or `uv run --locked python pipeline/deploy/aws.py`.
-The deploy script needs the repo virtualenv packages (`boto3`, `python-dotenv`,
-etc.); plain system `python`/`python3` may fail.
+The deploy script must run through the locked uv environment so dependencies such as
+`boto3` and `python-dotenv` are available; do not invoke it with bare system Python.
 
 ```bash
 # Code + infra only (skip the slow + paid corpus reupload) — the default for code changes

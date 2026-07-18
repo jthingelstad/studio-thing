@@ -76,7 +76,7 @@ garden concepts without an explicit product decision.
 
 ## Tests
 
-Use the repo-local virtualenv:
+Use the locked uv environment from the repository root:
 
 ```sh
 uv run --locked python -m unittest discover -s apps/workshop_bot/tests -t .

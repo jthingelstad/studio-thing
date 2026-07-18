@@ -15,8 +15,8 @@ AWS deploy tooling for the Thingy Lambda stack. No README — this directory is 
 ## Invocation
 
 Always via `make librarian-deploy` or `uv run --locked python pipeline/deploy/aws.py`.
-The deploy script requires the repo virtualenv packages (`boto3`,
-`python-dotenv`, etc.); plain system `python`/`python3` may fail.
+The deploy script must run through the locked uv environment so dependencies such as
+`boto3` and `python-dotenv` are available; do not invoke it with bare system Python.
 
 ```bash
 # Default for code changes — skip the slow + paid corpus reupload

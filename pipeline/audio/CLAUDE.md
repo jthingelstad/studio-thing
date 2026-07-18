@@ -44,8 +44,8 @@ When the body script + voice haven't changed, `audio.py build` only re-runs stag
 Intro and outro bumpers live in `data/audio/bumpers/intro.mp3` and `data/audio/bumpers/outro.mp3` (committed — they're tiny, and committing means CI doesn't re-render them per build). Text lives in `pipeline/audio/bumpers.py`. The manifest tracks each bumper's `hash` / `voice` / `generated_at` under the top-level `_bumpers` key, so changes to the text invalidate every issue's **final** MP3 (but not the body).
 
 ```bash
-python pipeline/audio/audio.py bumpers build           # render any missing/changed bumper
-python pipeline/audio/audio.py bumpers build --force   # re-render both
+uv run --locked python pipeline/audio/audio.py bumpers build           # render any missing/changed bumper
+uv run --locked python pipeline/audio/audio.py bumpers build --force   # re-render both
 ```
 
 After updating bumper text, run `audio.py build --all` to reassemble. Issues whose bodies are already in S3 reassemble with no TTS spend.
@@ -68,10 +68,10 @@ Backfilling 300+ archived issues uses the three-stage flow to keep TTS spend del
 
 ```bash
 # 1. Generate every script. Cheap, fast, deterministic.
-python pipeline/audio/audio.py scripts build --all
+uv run --locked python pipeline/audio/audio.py scripts build --all
 
 # 2. Validate. Free.
-python pipeline/audio/audio.py scripts validate --all
+uv run --locked python pipeline/audio/audio.py scripts validate --all
 # ... finds N errors across M issues
 
 # 3. Triage:
@@ -83,7 +83,7 @@ python pipeline/audio/audio.py scripts validate --all
 # 4. Once validate is clean, commit script.py + data/audio/scripts/*.txt + script_status.json.
 
 # 5. TTS in batches:
-python pipeline/audio/audio.py build --all --limit 50
+uv run --locked python pipeline/audio/audio.py build --all --limit 50
 ```
 
 ## Artifacts

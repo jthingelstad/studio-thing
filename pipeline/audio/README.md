@@ -24,12 +24,12 @@ make audio
 make audio-issue ISSUE=345
 
 # Common CLI shapes
-python pipeline/audio/audio.py build --latest
-python pipeline/audio/audio.py build --issue 345
-python pipeline/audio/audio.py build --all
-python pipeline/audio/audio.py build --all --reassemble-only   # no TTS, only stage 2
-python pipeline/audio/audio.py status                          # what's stale
-python pipeline/audio/audio.py status --all
+uv run --locked python pipeline/audio/audio.py build --latest
+uv run --locked python pipeline/audio/audio.py build --issue 345
+uv run --locked python pipeline/audio/audio.py build --all
+uv run --locked python pipeline/audio/audio.py build --all --reassemble-only   # no TTS, only stage 2
+uv run --locked python pipeline/audio/audio.py status                          # what's stale
+uv run --locked python pipeline/audio/audio.py status --all
 ```
 
 For backfilling many issues at once, see the workflow in [`CLAUDE.md`](CLAUDE.md).
