@@ -701,8 +701,23 @@ test('update_dispatch_brief normalizes drafts and gates ready briefs on coverage
     generation_instructions: 'Write it.',
     status: 'ready'
   });
-  assert.match(prematureReady.error, /focused coverage/);
+  assert.match(prematureReady.error, /focused coverage or a curated packet/);
   assert.equal(prematureReady.brief.status, 'ready');
+
+  const curatedBroadReady = await update({
+    user_goal: 'RSS Dispatch',
+    working_angle: 'RSS and owned distribution',
+    coverage_status: 'broad',
+    generation_instructions: 'Trace the thread with dates and links.',
+    selected_sources: [
+      { id: 'S1', title: 'WT 101', url: 'https://weekly.thingelstad.com/101' },
+      { id: 'S2', title: 'WT 298', url: 'https://weekly.thingelstad.com/298' }
+    ],
+    status: 'ready'
+  });
+  assert.equal(curatedBroadReady.ok, true);
+  assert.equal(curatedBroadReady.status, 'ready');
+  assert.equal(curatedBroadReady.brief.coverage_status, 'focused');
 
   const ready = await update({
     user_goal: 'RSS Dispatch',

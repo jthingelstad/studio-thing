@@ -17,6 +17,7 @@ import { analyzeDispatchSourceFit, loadDispatchCorpus } from './dispatch-generat
 
 const BRIEF_STATUSES = new Set(['draft', 'ready']);
 const COVERAGE_STATUSES = new Set(['thin', 'focused', 'broad', 'ambiguous']);
+const MAX_READY_SOURCES = 6;
 
 type PlannerInput = Record<string, unknown>;
 
@@ -119,12 +120,28 @@ async function toolUpdateDispatchBrief(input: PlannerInput = {}) {
   if (!brief.user_goal && !brief.working_angle) {
     return { error: 'update_dispatch_brief needs at least a user_goal or working_angle.' };
   }
-  if (brief.status === 'ready' && (brief.coverage_status !== 'focused' || !brief.selected_sources.length)) {
-    return {
-      error:
-        'A ready brief needs focused coverage and at least one selected source. Keep status "draft" or run check_dispatch_fit and narrow the angle first.',
-      brief
-    };
+  if (brief.status === 'ready') {
+    const curatedBroadFit =
+      brief.coverage_status === 'broad' &&
+      brief.selected_sources.length > 0 &&
+      brief.selected_sources.length <= MAX_READY_SOURCES;
+    if (brief.coverage_status !== 'focused' && !curatedBroadFit) {
+      return {
+        error:
+          'A ready brief needs focused coverage or a curated packet of no more than six sources from a broad fit. Keep status "draft" or narrow the angle first.',
+        brief
+      };
+    }
+    if (!brief.selected_sources.length) {
+      return {
+        error: 'A ready brief needs at least one selected source.',
+        brief
+      };
+    }
+    // The fit tool describes the size of the raw archive result. Once the
+    // reader has confirmed a small, explicit packet, the brief itself is
+    // focused even when that raw result was broad.
+    if (curatedBroadFit) brief.coverage_status = 'focused';
   }
   return { ok: true, brief, status: brief.status };
 }
