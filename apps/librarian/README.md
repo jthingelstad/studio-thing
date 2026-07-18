@@ -83,14 +83,17 @@ then uploads the updated corpus artifacts.
 ## Versioned client contract
 
 The backend source of truth is `lambda/shared/librarian-contract.mts`. It generates
-`contracts/librarian-api.v1.json`, which Thingy vendors and uses for runtime validation.
-Both API front doors advertise `x-librarian-contract-version`, and clients may send the
-same header to negotiate compatibility. Requests without a version remain supported for
-older deployed clients; an explicit unsupported version receives `409`.
+`contracts/librarian-api.v1.json` plus a SHA-256 sidecar. Thingy fetches the published
+artifact, verifies the checksum, and generates its runtime validators and TypeScript
+types from that single source. Both API front doors advertise
+`x-librarian-contract-version`, and clients may send the same header to negotiate
+compatibility. Requests without a version remain supported for older deployed clients;
+an explicit unsupported version receives `409`.
 
 ```bash
 npm --prefix apps/librarian/lambda run contract:generate
-npm --prefix apps/librarian/lambda run contract:sync-thingy
+# In the Thingy checkout:
+npm --prefix web run contract:sync
 ```
 
 Contract changes are additive within `1.x`. A breaking endpoint or SSE event change must
