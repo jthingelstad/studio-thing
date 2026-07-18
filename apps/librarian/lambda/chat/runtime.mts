@@ -750,6 +750,11 @@ async function streamBedrockAgentAnswer(
   let usage: TokenUsage | undefined;
   let stopReason = '';
   const maxTurns = Number(process.env.MAX_TOOL_TURNS || DEFAULT_MAX_TOOL_TURNS);
+  // A Dispatch turn may use the entire normal research budget before it has
+  // published the required brief. Reserve a forced brief call and one final
+  // response turn so the client always receives the structured planner state.
+  const turnLimit = maxTurns + (mode === 'dispatch' ? 2 : 0);
+  let forceDispatchBrief = false;
   // Dispatch planner conversations get the brief/coverage tools on top of
   // the archive tools; every other mode keeps the archive set only.
   type ToolHandler = (input?: JsonRecord, context?: JsonRecord) => unknown | Promise<unknown>;
@@ -767,14 +772,21 @@ async function streamBedrockAgentAnswer(
   // busting the static prompt's prefix cache.
   systemBlocks.push({ text: scopePromptLine(scope) });
   systemBlocks.push({ text: conversationModePrompt(mode) });
-  for (let turn = 0; turn <= maxTurns; turn += 1) {
-    const streamAnswerDeltas = toolResults.length > 0;
+  for (let turn = 0; turn <= turnLimit; turn += 1) {
+    const requireDispatchBrief = forceDispatchBrief;
+    forceDispatchBrief = false;
+    // Dispatch research narration is tool-process text, not reader-facing
+    // prose. The final sanitized answer still arrives in the answer event.
+    const streamAnswerDeltas = toolResults.length > 0 && mode !== 'dispatch';
     const response = await bedrock.send(
       new ConverseStreamCommand({
         modelId: agentModel(),
         system: systemBlocks,
         messages,
-        toolConfig: { tools: activeToolSpecs },
+        toolConfig: {
+          tools: activeToolSpecs,
+          ...(requireDispatchBrief ? { toolChoice: { tool: { name: 'update_dispatch_brief' } } } : {})
+        },
         inferenceConfig: commandInferenceConfig()
       })
     );
@@ -794,10 +806,23 @@ async function streamBedrockAgentAnswer(
       'toolUse' in block && block.toolUse ? [block.toolUse] : []
     );
     if (!toolUses.length) {
+      const briefPublished = toolTrace.calls.some((call) => call.name === 'update_dispatch_brief' && call.ok);
+      if (mode === 'dispatch' && !briefPublished && turn < turnLimit) {
+        messages.push({
+          role: 'user',
+          content: [
+            {
+              text: 'Publish the full current planner state with update_dispatch_brief now. Use status draft if the reader still needs to narrow or confirm it.'
+            }
+          ]
+        });
+        forceDispatchBrief = true;
+        continue;
+      }
       answer = bedrockMessageText(message) || result.text;
       break;
     }
-    const commentary = activityCommentaryText(result.text);
+    const commentary = mode === 'dispatch' ? '' : activityCommentaryText(result.text);
     const resultBlocks: ContentBlock[] = [];
     for (const [index, toolUse] of toolUses.entries()) {
       const toolName = String(toolUse.name || 'unknown_tool');
@@ -834,7 +859,7 @@ async function streamBedrockAgentAnswer(
         );
         result = { error: `${toolName} failed: ${errorName(error)}` };
       }
-      if (toolName === 'update_dispatch_brief' && result.brief && !shouldStopWriting()) {
+      if (toolName === 'update_dispatch_brief' && result.brief && !result.error && !shouldStopWriting()) {
         // Mirror the brief to the client as it forms; the reader locks it
         // from the brief card, which queues generation via /dispatch.
         writeSse(responseStream, 'dispatch_brief', {

@@ -41,6 +41,13 @@ interface DispatchRef {
   dispatch: DispatchRecord;
 }
 
+export function isConditionalClaimConflict(error: unknown) {
+  return (
+    error instanceof ConditionalCheckFailedException ||
+    (error instanceof Error && error.name === 'ConditionalCheckFailedException')
+  );
+}
+
 function compactLine(value: unknown, max = 240) {
   const text = String(value || '')
     .replace(/\s+/g, ' ')
@@ -266,10 +273,7 @@ export async function processDispatchStream({
         });
       }
     } catch (error) {
-      if (
-        error instanceof ConditionalCheckFailedException ||
-        (error instanceof Error && error.name === 'ConditionalCheckFailedException')
-      ) {
+      if (isConditionalClaimConflict(error)) {
         skipped += 1;
         continue;
       }
@@ -342,6 +346,13 @@ export async function processDispatchStream({
         output_tokens: result.usage?.outputTokens || 0
       });
     } catch (error) {
+      // A ready-to-send record can be delivered by another stream invocation
+      // before this invocation claims it. That is an idempotent skip, not a
+      // delivery failure, and must not trigger a stale mark-failed attempt.
+      if (isConditionalClaimConflict(error)) {
+        skipped += 1;
+        continue;
+      }
       failed += 1;
       if (error instanceof DeliveryRetryScheduledError) {
         logEvent(

@@ -49,7 +49,6 @@ test('dispatch availability enforces active and rolling 24-hour limits', () => {
     { id: 'd3', status: 'ready' }
   ], { nowSeconds }).allowed, true);
 });
-
 test('dispatch availability ignores stale leased and unclaimed queued active rows', () => {
   const nowSeconds = Math.floor(Date.parse('2026-06-08T12:00:00Z') / 1000);
   const staleQueued = {
@@ -647,6 +646,15 @@ test('dispatch Discord card escapes user-controlled markdown', () => {
   assert.match(card, /WT\\_1 · A \\\*Source\\\*/);
 });
 
+test('Dispatch worker treats conditional claim races as idempotent conflicts', async () => {
+  const { isConditionalClaimConflict } = await import('../dist/shared/dispatch-worker.mjs');
+  const conflict = new Error('already claimed');
+  conflict.name = 'ConditionalCheckFailedException';
+
+  assert.equal(isConditionalClaimConflict(conflict), true);
+  assert.equal(isConditionalClaimConflict(new Error('JMAP unavailable')), false);
+});
+
 test('dispatch planner mode is hidden from pickers but usable by readers', async () => {
   const { availableConversationModes, canUseConversationMode, conversationModePrompt } = await import('../dist/shared/conversation-modes.mjs');
   assert.equal(availableConversationModes(['reader']).some((mode) => mode.id === 'dispatch'), false);
@@ -656,6 +664,8 @@ test('dispatch planner mode is hidden from pickers but usable by readers', async
   assert.match(prompt, /Dispatch Planner/);
   assert.match(prompt, /check_dispatch_fit/);
   assert.match(prompt, /update_dispatch_brief/);
+  assert.match(prompt, /Every turn must publish a brief/);
+  assert.match(prompt, /explicit source-limited direction/);
   assert.match(prompt, /Never claim generation/);
 });
 

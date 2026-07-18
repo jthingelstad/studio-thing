@@ -597,13 +597,16 @@ function contentRecords(corpus: Corpus, kind: string): ArchiveRecord[] {
   });
 }
 
-function sourceRecordKey(record: ArchiveRecord) {
+export function sourceRecordKey(record: ArchiveRecord) {
   const kind =
     normalizeSourceKind(record?.source_kind || '') ||
     (record?.episode_number ? 'podcast' : record?.microblog_id ? 'blog' : record?.issue_number ? 'weekly_thing' : '');
   if (kind === 'weekly_thing') return `weekly_thing\0${issueKey(record.issue_number || record.number)}`;
-  if (kind === 'blog') return `blog\0${record.microblog_id || urlKey(record.url)}`;
-  if (kind === 'podcast') return `podcast\0${record.episode_number || record.number || urlKey(record.url)}`;
+  // Blog and podcast corpus layers do not all carry the provider identifier.
+  // The canonical URL is present on records, chunks, and links, so prefer it
+  // whenever available and use provider identifiers only as a legacy fallback.
+  if (kind === 'blog') return `blog\0${urlKey(record.url) || record.microblog_id || ''}`;
+  if (kind === 'podcast') return `podcast\0${urlKey(record.url) || record.episode_number || record.number || ''}`;
   return `${kind || 'unknown'}\0${urlKey(record?.url)}`;
 }
 
@@ -624,20 +627,21 @@ function urlKey(value: unknown) {
   }
 }
 
-function sourceKeyFromChunk(chunk: ArchiveRecord, fallbackKind = '') {
+export function sourceKeyFromChunk(chunk: ArchiveRecord, fallbackKind = '') {
   const kind = normalizeSourceKind(chunk?.source_kind || fallbackKind) || fallbackKind;
   if (kind === 'weekly_thing' || chunk?.issue_number) return `weekly_thing\0${issueKey(chunk.issue_number)}`;
-  if (kind === 'blog') return `blog\0${chunk.microblog_id || urlKey(chunk.url)}`;
-  if (kind === 'podcast') return `podcast\0${chunk.episode_number || urlKey(chunk.url)}`;
+  if (kind === 'blog') return `blog\0${urlKey(chunk.url) || chunk.microblog_id || ''}`;
+  if (kind === 'podcast') return `podcast\0${urlKey(chunk.url) || chunk.episode_number || ''}`;
   return `${kind || 'unknown'}\0${urlKey(chunk?.url)}`;
 }
 
-function sourceKeyFromLink(link: ArchiveRecord) {
+export function sourceKeyFromLink(link: ArchiveRecord) {
   const kind = linkCorpusKind(link);
   if (kind === 'weekly_thing' || link.issue_number) return `weekly_thing\0${issueKey(link.issue_number)}`;
-  if (kind === 'blog') return `blog\0${link.microblog_id || urlKey(link.post_url || link.source_url || link.url)}`;
+  if (kind === 'blog')
+    return `blog\0${urlKey(link.post_url || link.source_url) || link.microblog_id || urlKey(link.url)}`;
   if (kind === 'podcast')
-    return `podcast\0${link.episode_number || urlKey(link.episode_url || link.source_url || link.url)}`;
+    return `podcast\0${urlKey(link.episode_url || link.source_url) || link.episode_number || urlKey(link.url)}`;
   return `${kind || 'unknown'}\0${urlKey(link.source_url)}`;
 }
 
