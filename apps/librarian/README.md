@@ -21,6 +21,7 @@ The Q&A intelligence lives entirely here. Retrieval is **Bedrock Cohere embed �
 apps/librarian/
 ├── README.md         ← this file
 ├── CLAUDE.md         ← operational memory
+├── contracts/        ← generated, versioned client contract artifacts
 ├── lambda/           ← Node.js Lambda code (runtime: Node 24, arm64)
 │   ├── chat/         ← Stream Lambda — /chat, /welcome, /curiosity-map, /retrieve
 │   │   ├── handler.mts    (streaming entrypoint)
@@ -78,6 +79,22 @@ then uploads the updated corpus artifacts.
 | POST | `/feedback` | session token (bearer) | Per-answer reactions plus optional comments |
 | POST | `/auth` | none / bridge secret / session token | Magic-link auth, Discord bridge mint, user conversation management, profile updates, and Dispatch drafting |
 | POST | `/memory` | session token (bearer) | Thingy profile fetch and profile deletion (`get`, `delete_profile`; `refresh_profile` is a legacy no-op) |
+
+## Versioned client contract
+
+The backend source of truth is `lambda/shared/librarian-contract.mts`. It generates
+`contracts/librarian-api.v1.json`, which Thingy vendors and uses for runtime validation.
+Both API front doors advertise `x-librarian-contract-version`, and clients may send the
+same header to negotiate compatibility. Requests without a version remain supported for
+older deployed clients; an explicit unsupported version receives `409`.
+
+```bash
+npm --prefix apps/librarian/lambda run contract:generate
+npm --prefix apps/librarian/lambda run contract:sync-thingy
+```
+
+Contract changes are additive within `1.x`. A breaking endpoint or SSE event change must
+introduce a new major artifact rather than weakening the existing schema.
 
 ## Tech stack
 

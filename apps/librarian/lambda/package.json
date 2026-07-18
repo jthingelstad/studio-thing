@@ -8,12 +8,14 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
+    "contract:generate": "node scripts/export-contract.mjs",
+    "contract:sync-thingy": "node scripts/export-contract.mjs ../../../../thingy.thingelstad.com/web/contracts/librarian-api.v1.json",
     "format": "prettier --write \"{auth,chat,dispatch,eval,shared}/**/*.mts\" \"scripts/**/*.mjs\" \"*.json\"",
     "format:check": "prettier --check \"{auth,chat,dispatch,eval,shared}/**/*.mts\" \"scripts/**/*.mjs\" \"*.json\"",
     "lint": "oxlint . --deny-warnings",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test tests/*.test.mjs",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm test"
+    "verify": "npm run contract:generate && npm run format:check && npm run lint && npm run typecheck && npm test"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.1090.0",

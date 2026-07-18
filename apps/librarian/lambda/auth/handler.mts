@@ -64,6 +64,7 @@ import { premiumThankYouSystemPrompt } from '../shared/prompts.mjs';
 import { handleUserConversations } from './conversation-routes.mjs';
 import { handleDispatch } from './dispatch-routes.mjs';
 import { loadUserConversationSummaries } from '../shared/conversation-store.mjs';
+import { LIBRARIAN_CONTRACT_VERSION, supportsRequestedContract } from '../shared/librarian-contract.mjs';
 
 const AUTH_RATE_LIMIT_MAX = 30;
 const MAGIC_LINK_RATE_LIMIT_MAX = 6;
@@ -1102,7 +1103,8 @@ function healthHandler(event: LibrarianHttpEvent) {
     {
       ok: true,
       service: 'weekly-thing-librarian-auth',
-      model: agentModel()
+      model: agentModel(),
+      contract_version: LIBRARIAN_CONTRACT_VERSION
     },
     event
   );
@@ -1115,7 +1117,16 @@ export async function handler(event: LibrarianHttpEvent, context: { awsRequestId
   let response: LibrarianHttpResponse;
   try {
     const { method, path } = methodAndPath(event);
-    if (method === 'OPTIONS') {
+    if (!supportsRequestedContract(event.headers || {})) {
+      response = jsonResponse(
+        409,
+        {
+          error: 'This Thingy client uses an unsupported Librarian contract version.',
+          contract_version: LIBRARIAN_CONTRACT_VERSION
+        },
+        event
+      );
+    } else if (method === 'OPTIONS') {
       response = jsonResponse(204, {}, event);
     } else if (method === 'GET' && path.endsWith('/health')) {
       response = healthHandler(event);

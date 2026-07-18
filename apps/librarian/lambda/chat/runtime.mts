@@ -71,6 +71,7 @@ import {
   conversationModePrompt,
   normalizeConversationMode
 } from '../shared/conversation-modes.mjs';
+import { LIBRARIAN_CONTRACT_VERSION, supportsRequestedContract } from '../shared/librarian-contract.mjs';
 
 const DEFAULT_MAX_TOOL_TURNS = 7;
 const DEFAULT_CHAT_SLOW_NOTICE_MS = 75000;
@@ -938,7 +939,8 @@ function streamFromResponse(responseStream: ResponseStream, _event: LibrarianHtt
     headers: {
       'content-type': 'text/event-stream; charset=utf-8',
       'cache-control': 'no-cache, no-transform',
-      'x-accel-buffering': 'no'
+      'x-accel-buffering': 'no',
+      'x-librarian-contract-version': LIBRARIAN_CONTRACT_VERSION
     }
   });
 }
@@ -948,7 +950,8 @@ function jsonResponseStream(responseStream: ResponseStream, statusCode: number) 
     statusCode,
     headers: {
       'content-type': 'application/json; charset=utf-8',
-      'cache-control': 'no-store'
+      'cache-control': 'no-store',
+      'x-librarian-contract-version': LIBRARIAN_CONTRACT_VERSION
     }
   });
 }
@@ -1056,6 +1059,22 @@ export const handler = awslambda.streamifyResponse<LibrarianHttpEvent>(async (ev
   const requestId = context?.awsRequestId || event.requestContext?.requestId || crypto.randomUUID();
   const { method, path } = methodAndPath(event);
   const summary = { request_id: requestId, method, path, origin: normalizeHeaders(event.headers || {}).origin };
+  if (!supportsRequestedContract(event.headers || {})) {
+    const stream = jsonResponseStream(responseStream, 409);
+    stream.write(
+      JSON.stringify({
+        error: 'This Thingy client uses an unsupported Librarian contract version.',
+        contract_version: LIBRARIAN_CONTRACT_VERSION,
+        request_id: requestId
+      })
+    );
+    stream.end();
+    logEvent('warning', 'contract_version_rejected', {
+      ...summary,
+      contract_version: LIBRARIAN_CONTRACT_VERSION
+    });
+    return;
+  }
   let subscriberHash = '';
   logEvent('info', 'request_started', summary);
 
@@ -1071,6 +1090,7 @@ export const handler = awslambda.streamifyResponse<LibrarianHttpEvent>(async (ev
       JSON.stringify({
         ok: true,
         service: 'weekly-thing-librarian-stream',
+        contract_version: LIBRARIAN_CONTRACT_VERSION,
         model: agentModel(),
         fast_model: fastModel(),
         advanced_model: advancedModel(),
@@ -1238,7 +1258,7 @@ export const handler = awslambda.streamifyResponse<LibrarianHttpEvent>(async (ev
         writeSse(stream, 'error', { error: 'Thingy is at the hourly limit for this session.', request_id: requestId });
         return;
       }
-      writeSse(stream, 'meta', { request_id: requestId });
+      writeSse(stream, 'meta', { request_id: requestId, contract_version: LIBRARIAN_CONTRACT_VERSION });
       writeSse(stream, 'status', { message: 'Thingy is getting oriented...' });
       let spark = null;
       try {
@@ -1320,7 +1340,12 @@ export const handler = awslambda.streamifyResponse<LibrarianHttpEvent>(async (ev
       readerContext = readerContextPrompt(body.client_context, effectiveUserProfile);
     }
 
-    writeSse(stream, 'meta', { request_id: requestId, conversation_id: conversationId, mode: modeAccess.mode });
+    writeSse(stream, 'meta', {
+      request_id: requestId,
+      conversation_id: conversationId,
+      mode: modeAccess.mode,
+      contract_version: LIBRARIAN_CONTRACT_VERSION
+    });
     writeSse(stream, 'status', { message: 'Understanding the request...' });
     // Dispatch planner turns always run the planning agent — the preflight
     // evaluator's direct-answer shortcut would skip the coverage tools.

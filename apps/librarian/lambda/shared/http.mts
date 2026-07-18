@@ -1,3 +1,5 @@
+import { LIBRARIAN_CONTRACT_VERSION } from './librarian-contract.mjs';
+
 export interface LibrarianHttpEvent {
   headers?: Record<string, unknown> | null;
   body?: string | null;
@@ -52,9 +54,11 @@ export function jsonResponse(
     statusCode,
     headers: {
       'content-type': 'application/json; charset=utf-8',
+      'x-librarian-contract-version': LIBRARIAN_CONTRACT_VERSION,
       'access-control-allow-origin': corsOrigin(event),
-      'access-control-allow-headers': 'content-type, authorization',
+      'access-control-allow-headers': 'content-type, authorization, x-librarian-contract-version',
       'access-control-allow-methods': 'GET,OPTIONS,POST',
+      'access-control-expose-headers': 'x-librarian-contract-version, x-request-id',
       ...headers
     },
     body: JSON.stringify(payload)

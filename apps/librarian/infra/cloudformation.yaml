@@ -393,10 +393,14 @@ Resources:
         AllowHeaders:
           - content-type
           - authorization
+          - x-librarian-contract-version
         AllowMethods:
           - GET
           - POST
         AllowOrigins: !Ref AllowedOrigin
+        ExposeHeaders:
+          - x-librarian-contract-version
+          - x-request-id
       InvokeMode: RESPONSE_STREAM
       TargetFunctionArn: !Ref LibrarianStreamFunction
 
@@ -448,6 +452,7 @@ Resources:
               - Access-Control-Request-Method
               - Authorization
               - Content-Type
+              - X-Librarian-Contract-Version
               - Origin
             QueryString: true
           MaxTTL: 0
@@ -482,11 +487,15 @@ Resources:
         AllowHeaders:
           - content-type
           - authorization
+          - x-librarian-contract-version
         AllowMethods:
           - GET
           - OPTIONS
           - POST
         AllowOrigins: !Ref AllowedOrigin
+        ExposeHeaders:
+          - x-librarian-contract-version
+          - x-request-id
 
   LibrarianIntegration:
     Type: AWS::ApiGatewayV2::Integration
