@@ -132,4 +132,4 @@ These are set at deploy time from `.env`, written into the Lambda environment by
 
 - **No end-to-end handler tests.** Mocking Bedrock + DynamoDB + S3 in Node test is non-trivial; the agent-loop path is exercised in production via real reader Q&A.
 - **No automated live QA harness.** Mode/auth/conversation/eval checks are still run manually against the live API when needed.
-- **Operator report is local/static.** A public or remote operator dashboard needs stronger owner/admin auth first.
+- **Operator reads are private.** Static conversation/Dispatch reports remain available locally, and Studio's `/thingy/` route provides read-only corpus health and a grouped quality queue behind Studio's loopback-only Tailscale identity gate. Any public or non-tailnet dashboard still needs stronger owner/admin auth first.

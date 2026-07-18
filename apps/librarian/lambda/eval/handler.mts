@@ -175,7 +175,7 @@ async function postDiscordWebhook({ conversation, turns }: { conversation: Conve
   return { posted: true };
 }
 
-function evalSystemPrompt() {
+export function evalSystemPrompt() {
   return `You are Thingy's background evaluator for Jamie Thingelstad's public archive agent.
 
 Thingy answers questions only from Jamie's public archive: The Weekly Thing, thingelstad.com, and Another Thing.
@@ -205,7 +205,7 @@ Read the transcript and return ONLY compact JSON:
   }
 }
 
-Be specific, do not manufacture criticism, and treat lines labeled Runtime/Preflight/Tools/Reader feedback as operator metadata. If Runtime stop_reason is app_deadline_exceeded or tool_use_exhausted, identify it as runtime exhaustion; prefer runtime_timeout and/or tool_gap over criticizing tone, citations, or answer depth as though Thingy chose to give a normal final answer. Do not call an answer truncated merely because it ends with a suggested follow-up question or "next thread worth pulling" prompt; only flag truncation when the prose visibly cuts off mid-word, mid-sentence, or mid-structure. If the transcript contains "[Evaluator transcript note: ... omitted]", that is evaluator-only compaction, not reader-visible truncation. Use prompt_leak only when internal metadata appeared in Thingy's actual answer text.`;
+Be specific, do not manufacture criticism, and treat lines labeled Runtime/Preflight/Tools/Reader feedback as operator metadata. Compare the answer's visible source labels or citation footer with the structured Citations metadata: use citation_mismatch when a cited source does not support the nearby claim, a visible source disagrees with the structured citation, or retrospective evidence is presented as if it were contemporaneous. Do not require every retrieved source to appear in the answer; judge only sources the answer actually relies on. If Runtime stop_reason is app_deadline_exceeded or tool_use_exhausted, identify it as runtime exhaustion; prefer runtime_timeout and/or tool_gap over criticizing tone, citations, or answer depth as though Thingy chose to give a normal final answer. Do not call an answer truncated merely because it ends with a suggested follow-up question or "next thread worth pulling" prompt; only flag truncation when the prose visibly cuts off mid-word, mid-sentence, or mid-structure. If the transcript contains "[Evaluator transcript note: ... omitted]", that is evaluator-only compaction, not reader-visible truncation. Use prompt_leak only when internal metadata appeared in Thingy's actual answer text.`;
 }
 
 async function evaluateConversation({ conversation, turns }: { conversation: ConversationSummary; turns: EvalTurn[] }) {

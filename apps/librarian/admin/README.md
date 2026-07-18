@@ -6,6 +6,19 @@ This is the home for scripts that talk to the *live* librarian stack — DynamoD
 
 ## Tools
 
+### Studio Thingy Operations
+
+Studio's existing tailnet-only website exposes a read-only **Thingy** section at
+`/thingy/`. It uses this admin package to compare the three deployed S3 corpus
+artifacts with Studio's source mirrors and to group evaluator flags and reader
+downvotes into a prioritized improvement queue.
+
+The page inherits Studio's loopback-only server, `tailscale serve` proxy, and
+explicit `jthingelstad@github` identity allowlist. AWS credentials remain in the
+server process; the browser receives rendered operational summaries only. Live
+reads are cached for five minutes, and an explicit refresh is available on the
+page.
+
 ### `operator_report.py`
 
 Generates a local, static HTML report from the canonical DynamoDB
@@ -54,7 +67,6 @@ open ~/Desktop/Thingy\ Dispatch\ Report.html
 ## Planned
 
 - **Log inspection** — convenience wrappers over CloudWatch Insights queries for the streaming, auth, and eval Lambdas.
-- **Improvement queue** — extract repeated evaluator takeaways and downvote comments into a concise follow-up list.
 
 ## Conventions
 

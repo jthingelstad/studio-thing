@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { evalSystemPrompt } from '../dist/eval/handler.mjs';
 import { turnForPrompt } from '../dist/shared/eval-transcript.mjs';
+
+test('eval criteria preserve citation, temporal, and runtime regression rules', () => {
+  const prompt = evalSystemPrompt();
+
+  assert.match(prompt, /visible source labels or citation footer/);
+  assert.match(prompt, /retrospective evidence is presented as if it were contemporaneous/);
+  assert.match(prompt, /app_deadline_exceeded or tool_use_exhausted/);
+  assert.match(prompt, /prefer runtime_timeout and\/or tool_gap/);
+});
 
 test('eval prompt includes long answers without silent mid-answer clipping', () => {
   const answer = [

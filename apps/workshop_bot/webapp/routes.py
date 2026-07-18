@@ -17,6 +17,8 @@ import logging
 
 from aiohttp import web
 
+from apps.librarian.admin import dashboard_data
+
 from ..jobs import _base, production_ops, production_state, publish, put_to_bed, start_issue
 from ..tools import content_store, db, issue_items, issue_items_render, s3
 from ..tools.content import atoms_view
@@ -55,6 +57,59 @@ async def home_page(request: web.Request) -> web.Response:
     if win:
         raise web.HTTPFound(f"/productions/WT{int(win['issue_number'])}")
     raise web.HTTPFound("/productions")
+
+
+# ---------- Thingy / Librarian operations ----------
+
+
+def _thingy_days(value: str) -> int:
+    try:
+        days = int(value or 90)
+    except ValueError:
+        return 90
+    return days if days in {30, 90, 180} else 90
+
+
+async def thingy_page(request: web.Request) -> web.Response:
+    """Read-only Thingy/Librarian health inside Studio's tailnet boundary."""
+
+    days = _thingy_days(request.query.get("days", "90"))
+    refresh = request.query.get("refresh") == "1"
+    dashboard = await asyncio.to_thread(
+        dashboard_data.load_dashboard, days=days, force_refresh=refresh
+    )
+
+    priority = request.query.get("priority", "all")
+    if priority not in {"all", "action", "regression", "critical", "high", "medium", "low"}:
+        priority = "all"
+    mode = request.query.get("mode", "all")
+    if mode != "all" and mode not in dashboard.modes:
+        mode = "all"
+    scope = request.query.get("scope", "__all")
+    if scope != "__all" and scope not in dashboard.scopes:
+        scope = "__all"
+
+    findings = list(dashboard.findings)
+    if priority == "action":
+        findings = [item for item in findings if item.priority in {"critical", "high"}]
+    elif priority == "regression":
+        findings = [item for item in findings if item.regression_candidate]
+    elif priority != "all":
+        findings = [item for item in findings if item.priority == priority]
+    if mode != "all":
+        findings = [item for item in findings if mode in item.modes]
+    if scope != "__all":
+        findings = [item for item in findings if scope in item.scopes]
+
+    return render(
+        "thingy.html",
+        request,
+        dashboard=dashboard,
+        findings=findings,
+        priority=priority,
+        selected_mode=mode,
+        selected_scope=scope,
+    )
 
 
 # ---------- newsletter issue registry (add / edit) ----------
@@ -715,6 +770,7 @@ def add_routes(app: web.Application) -> None:
         [
             web.get("/healthz", healthz),
             web.get("/", home_page),
+            web.get("/thingy/", thingy_page),
             web.get("/chat", chat_get),
             web.post("/chat", chat_post),
             web.get("/productions", productions_list),

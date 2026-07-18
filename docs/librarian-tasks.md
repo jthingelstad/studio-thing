@@ -17,12 +17,12 @@ pipeline, and the eval loop. The Thingy *product* roadmap and web-surface tasks 
 ## Operator Review
 
 - [ ] Add more client-side filters to the operator report if review volume grows: mode, source scope, eval flag, feedback reaction, runtime timeout, and Jamie-vs-reader.
-- [ ] Add an explicit report section for mode usage and mode-specific eval flags.
-- [ ] Convert repeated evaluator takeaways into a lightweight improvement queue.
+- [x] Add an explicit report section for mode usage and mode-specific eval flags.
+- [x] Convert repeated evaluator flags and reader feedback into a lightweight improvement queue.
 
 ## Corpus And Pipeline
 
-- [ ] Add a corpus freshness/status view that shows last successful source sync and corpus upload for Weekly Thing, blog, and podcast.
+- [x] Add a corpus freshness/status view that compares source-mirror changes and deployed corpus uploads for Weekly Thing, blog, and podcast.
 - [ ] Confirm that the external-content sync workflow runs after new blog posts and podcast episodes and that failures are visible.
 - [ ] Add a deploy summary that says whether corpus upload was skipped or refreshed and why.
 - [ ] Revisit whether old pre-server-side conversation records can be deleted from DynamoDB now that canonical conversation rows are the only supported structure.
@@ -30,5 +30,5 @@ pipeline, and the eval loop. The Thingy *product* roadmap and web-surface tasks 
 ## Quality And Tests
 
 - [ ] Add end-to-end Lambda handler tests or a repeatable live QA harness for modes, auth, conversations, and evaluator flow.
-- [ ] Add regression tests for citation-footer consistency and retrospective-vs-contemporaneous timeline evidence.
+- [ ] Add golden-answer regression cases for citation-footer consistency and retrospective-vs-contemporaneous timeline evidence. The evaluator criteria now have deterministic guards; response-level cases still need a repeatable model harness.
 - [ ] Add timeout-path tests so evaluator reports runtime exhaustion as runtime exhaustion, not answer-quality failure.

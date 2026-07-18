@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Studio{% endblock %} · Newsletter</title>
+  <title>{% block title %}Studio{% endblock %} · {% block title_product %}Newsletter{% endblock %}</title>
   <style>
     :root {
       --bg:#f8fafc;
@@ -193,12 +193,14 @@
       a.btn, button.btn { white-space: normal; }
     }
   </style>
+  {% block head %}{% endblock %}
 </head>
 <body>
   <header class="top">
     <span class="brand">Studio</span>
     <a href="/" class="{{ 'active' if nav=='home' else '' }}">Current Issue</a>
     <a href="/productions" class="{{ 'active' if nav=='productions' else '' }}">Issues</a>
+    <a href="/thingy/" class="{{ 'active' if nav=='thingy' else '' }}">Thingy</a>
     <span class="sp"></span>
     <span class="who">{{ login }}</span>
   </header>
